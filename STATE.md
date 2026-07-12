@@ -4,21 +4,21 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-12T23:12:22Z
+timestamp: 2026-07-12T23:18:09Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
-project: langchain-rs
+project: ferrochain
 mode: greenfield+semport
-current_step: "market-intelligence-assessment (D-443) trajectory-tail →0→0→0→0"
+current_step: "market-intelligence-assessment IN_PROGRESS (D-443) trajectory-tail →0→0→0→0"
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
 ---
 
 <!--
-  STATE.md SIZE BUDGET: 143 lines (wc-l) | margin from soft-target (200): +57 | margin from actual (500): +357
+  STATE.md SIZE BUDGET: 146 lines (wc-l) | margin from soft-target (200): +54 | margin from actual (500): +354
 
   Historical content belongs in cycle files, NOT here:
   - Burst narratives → cycles/<cycle>/burst-log.md
@@ -30,14 +30,14 @@ dtu_required: false
   Run /vsdd-factory:compact-state if this file grows past 200 lines.
 -->
 
-# Pipeline State: langchain-rs (working name)
+# Pipeline State: ferrochain
 
 ## Project Metadata
 
 | Field | Value |
 |-------|-------|
-| **Product** | langchain-rs (working name — final naming under research, D6) |
-| **Repository** | /Users/jmagady/Dev/langchain-rs |
+| **Product** | ferrochain (RESOLVED D6 — formerly working name langchain-rs; physical rename pending repo-init B2) |
+| **Repository** | /Users/jmagady/Dev/langchain-rs (rename to ferrochain pending B2) |
 | **Mode** | greenfield + semport (Python→Rust semantic port) |
 | **Language** | Rust (target), Python (reference corpus) |
 | **Target Workspace** | Single Cargo workspace (D4) |
@@ -45,7 +45,7 @@ dtu_required: false
 | **Started** | 2026-07-12 |
 | **Last Updated** | 2026-07-12 trajectory-tail →0→0→0→0 |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | market-intelligence-assessment (D-443) |
+| **Current Step** | market-intelligence-assessment (IN_PROGRESS) |
 
 ## Phase Progress
 
@@ -68,10 +68,10 @@ dtu_required: false
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Toolchain preflight | dx-engineer | DONE (WARN) | .factory/preflight-report.md |
 | Reference corpus clone (3 repos pinned) | devops-engineer | DONE | .factory/semport/reference-manifest.md |
 | External research — LangChain v1 architecture | research-agent | DONE | .factory/semport/langchain-research.md |
-| market-intelligence-assessment | research-agent | pending | — |
+| Naming decision study | research-agent | DONE | .factory/planning/naming-decision-study.md |
+| market-intelligence-assessment | business-analyst | IN_PROGRESS | .factory/planning/market-intelligence.md (pending) |
 | semport-analyze (reference corpus) | codebase-analyzer | pending | — |
 
 ## Decisions Log
@@ -83,7 +83,7 @@ dtu_required: false
 | D3 | Early integrations: OpenAI, Anthropic, Ollama first; then full partner set | Unblocks core use-cases earliest | pre-1 | 2026-07-12 | human |
 | D4 | Single Cargo workspace, one repo, one pipeline; crates publish individually | Simplest topology for first release cycle | pre-1 | 2026-07-12 | human |
 | D5 | semport-analyze must emit dependency-disposition.md per package (map/port/eliminate); numpy→ndarray, pandas→polars default; pydantic→serde/schemars requires dedicated ADR before BCs | Prevents unreviewed dep choices propagating into BCs | pre-1 | 2026-07-12 | human |
-| D6 | Naming UNDER RESEARCH — deciding between keep-langchain-rs-with-crate-suffix vs new distinct brand; `langchain` and `langgraph` crate names TAKEN on crates.io | Naming affects market positioning and crate publication strategy | pre-1 | 2026-07-12 | human |
+| D6 | RESOLVED — ferrochain (distinct brand; scored 23/25 vs 14/25 for langchain-* suffix; `langchain_rs` name blocked by crates.io name-normalization collision). Crate family: ferrochain, ferrochain-core, ferrochain-graph, ferrochain-checkpoint, ferrochain-openai, ferrochain-anthropic, ferrochain-ollama, ferrochain-community, ferrochain-splitters. Final crate names get ADR in architecture phase. Evidence: .factory/planning/naming-decision-study.md | Distinct brand maximizes positioning; suffix scheme is blocked | pre-1 | 2026-07-12 | human |
 
 ## Risk Register
 
@@ -94,6 +94,7 @@ dtu_required: false
 | R3 | LangGraph Platform SDK/CLI in scope → DTU_REQUIRED likely TRUE at P1-06 (proprietary SaaS backend; behavioral clone needed for holdout testing) | High | Phase 1/4 | Assess at P1-06; may become B-001 |
 | R4 | Competing active `langgraph` crate on crates.io (updated 2026-07-01) — positioning risk | Medium | Phase 1 | Feeds market-intelligence-assessment gate |
 | R5 | Three incompatible tag conventions across reference repos (PyPI `==`, bare semver, path-style) — tag-sort bug already triggered (langgraph mis-pinned at 0.3.34, corrected) | Low | Tooling | Semport tooling must handle all three |
+| R6 | ferrochain namespace (crates.io + GitHub org) verified available 2026-07-12 but NOT yet reserved — first-come-first-served | High | pre-1 | Pending human action: GitHub org registration + 0.0.0 placeholder crate publishes at repo-init |
 
 ## Skip Log
 
@@ -108,6 +109,7 @@ dtu_required: false
 | ID | Issue | Severity | Blocking Phase | Owner | Resolution |
 |----|-------|----------|----------------|-------|------------|
 | B1 | direnv not allowed — .envrc present but unenabled; 4 AWS/Anthropic key names declared | Low | pre-1 | human | Run `direnv allow .` from project root |
+| B2 | repo-initialization PARKED — pending human answer: GitHub org registration vs proceed. Physical rename (langchain-rs → ferrochain, repo rename, `git worktree repair`) executes at repo-init. | High | pre-1 | human | Human to decide: register ferrochain GitHub org + publish placeholder crates (resolves R6), then trigger repo-init |
 
 ## Convergence Status
 
@@ -132,8 +134,8 @@ dtu_required: false
 |-------|-------|
 | **Date** | 2026-07-12 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 1 complete. Next: (1) market-intelligence-assessment — mandatory GO/CAUTION/STOP gate; (2) semport-analyze over .reference/ corpus; (3) Phase 1 spec crystallization. trajectory-tail →0→0→0→0 |
-| **Key context** | Reference corpus pinned in .reference/ (gitignored). D1-D6 locked. Risks R1-R5 registered. .mcp.json gitignored (plaintext API keys resolved). direnv unenabled (B1). |
+| **Position** | pre-1, burst 2 in progress. market-intelligence-assessment IN_PROGRESS (business-analyst dispatched). D6 RESOLVED: project = ferrochain. B2 PARKED: repo-init awaiting human org decision. After market-intel gate: semport-analyze, then Phase 1. |
+| **Key context** | ferrochain name RESOLVED (D6). Namespace NOT yet reserved (R6 HIGH). Repo still at langchain-rs pending B2. D1-D5 locked. Risks R1-R6. .mcp.json gitignored. direnv unenabled (B1). |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content
@@ -141,3 +143,4 @@ dtu_required: false
 | Content | Location |
 |---------|----------|
 | Burst 1 narrative (pre-pipeline) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Naming decision study | `.factory/planning/naming-decision-study.md` |
