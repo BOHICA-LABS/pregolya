@@ -3,9 +3,9 @@ document_type: analysis-state-checkpoint
 corpus: adk-rust
 version: v1.0.0
 sha: a6c79b6f
-pass: A1
+pass: A3
 status: complete
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-13T08:00:00Z
 ---
 
 # adk-rust Comparative Analysis State
@@ -46,19 +46,28 @@ See patterns-observed.md for full catalogue.
 
 ## Open Items (queued for deep passes)
 
-| Item | Target Pass |
-|------|-------------|
-| Verify `anyhow`-in-public-signatures extent | A2 or A3 |
-| Clarify `adk-model` vs standalone provider crate relationship and drift surface | A2 |
-| Locate all `reqwest` timeout construction sites | A3 |
-| Classify ignored-vs-runnable integration tests | A2/A3 sweep |
+| Item | Target Pass | Status |
+|------|-------------|--------|
+| Verify `anyhow`-in-public-signatures extent | A2 or A3 | PARTIAL — A3 confirmed clean in library code, confined to CLI binaries; FINAL verdict deferred to A5 |
+| Clarify `adk-model` vs standalone provider crate relationship and drift surface | A2 | OPEN — P-16 (duplication observation) recorded; resolution deferred to A5 |
+| Locate all `reqwest` timeout construction sites | A3 | RESOLVED — P-42: 7 sites across server/auth/awp/acp/managed/enterprise, ALL without `.timeout()`; confirmed counter-example |
+| Classify ignored-vs-runnable integration tests | A2/A3 sweep | OPEN — carry to A4/A5 |
+| ADR question: unify graph-checkpoint + session persistence on one store | NEW (raised A2) | OPEN — ferrochain design decision at Phase 1 |
 
-## Queued Deep Passes
+## Deep Pass Status
 
 | Pass | Cluster | Crates | Status |
 |------|---------|--------|--------|
-| A2 | State / persistence / orchestration | adk-graph, adk-session, adk-memory, adk-artifact | DISPATCHED — in progress |
-| A3 | Server / platform / protocol | adk-server, adk-runner, adk-awp, adk-acp, adk-auth, adk-telemetry, adk-cli | DISPATCHED — in progress |
-| A4 | Quality / safety | adk-guardrail, adk-sandbox, adk-eval | queued |
-| A5 | Integration / providers | adk-realtime, adk-providers, adk-protocols, adk-payments | queued |
-| A6 | Retry / reflection deep dive | adk-core retry combinator, cross-crate retry usage | queued |
+| A1 | Broad sweep + 6 deep core crates | all 39 crates; deep: adk-core, adk-agent, adk-runner, adk-model, adk-graph (surface), adk-session (surface) | COMPLETE — 19P (10S/4N/5W) |
+| A2 | State / persistence / orchestration | adk-graph, adk-session, adk-memory, adk-artifact | COMPLETE — 15P P-20..P-34 (5S/3N/7W) |
+| A3 | Server / platform / protocol | adk-server, adk-runner, adk-awp, adk-acp, adk-auth, adk-telemetry, adk-cli | COMPLETE — 12P P-35..P-46 (4S/2N/6W) |
+| A4 | Safety / quality cluster | adk-guardrail, adk-sandbox, adk-eval, adk-retry-reflect, adk-skill, adk-plugin, adk-code, adk-browser | DISPATCHED — in progress |
+| A5 | Provider / capability cluster | adk-realtime, adk-providers, adk-protocols, adk-payments + P-16 duplication resolution + final anyhow verdict | DISPATCHED — in progress |
+
+## Pattern Count Summary
+
+| Pass | Patterns Added | Running Total | STRONG | NEUTRAL | WEAK |
+|------|---------------|---------------|--------|---------|------|
+| A1 | 19 (P-01..P-19) | 19 | 10 | 4 | 5 |
+| A2 | 15 (P-20..P-34) | 34 | 5 | 3 | 7 |
+| A3 | 12 (P-35..P-46) | 46 | 4 | 2 | 6 |

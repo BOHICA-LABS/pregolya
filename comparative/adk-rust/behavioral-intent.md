@@ -203,12 +203,338 @@ long_running_tool_ids present OR (no function calls AND no function responses AN
 AND no trailing code-exec result). 11 dedicated tests cover the truth table including the
 trailing-function-response edge and text-after-response edge. Confidence HIGH.
 
+---
+
+# Pass A2 — STATE / PERSISTENCE / ORCHESTRATION cluster behavioral intent
+
+Deep read: `adk-graph::{executor, state, checkpoint, delta, interrupt, time_travel, functional/
+typed_reducer}`, `adk-session::{service, encrypted, postgres, sqlite}`, `adk-memory::{service,
+adapter, inmemory}`, `adk-artifact::service`. Mapped against `.factory/semport/graph/
+behavioral-intent.md` (LangGraph §1–§6). Confidence tags as before.
+
+## 7. adk-graph execution model — STRUCTURAL comparison to Pregel super-steps
+
+The docstrings say "Pregel super-steps," but the mechanism is an **edge-following graph walk with
+a per-step isolated apply phase** — NOT LangGraph's channel-version-triggered BSP. Point-by-point
+against semport/graph §1:
+
+### 7.1 Super-step cycle (`PregelExecutor::run` / `execute_super_step`) — MED/HIGH
+- **Plan.** Next nodes come from `graph.get_next_nodes(executed_nodes, state)` — pure edge/
+  conditional-edge following. There is NO `versions_seen`, NO `channel_versions`, NO
+  "triggered iff channel written since node last saw it." LangGraph's version-based trigger
+  (semport/graph §1.1 step 1) is absent; this is classic dataflow scheduling, not Pregel triggering.
+- **Run.** All `pending_nodes` execute concurrently via `stream::iter(futures).buffer_unordered(n)`.
+  Each node gets `NodeContext::new(self.state.clone(), …)` — a frozen snapshot. **Write isolation
+  holds** (nodes cannot see each other's writes mid-step). Confidence HIGH (code + tests).
+- **Apply.** After all nodes resolve, `all_updates` is folded through `StateSchema::apply_update`
+  per (key,value). Confidence HIGH.
+- **Checkpoint.** `save_checkpoint` persists the whole state after the step. Confidence HIGH.
+
+### 7.2 Determinism — the critical divergence (maps to semport/graph §1.2, cross-cutting note 1)
+- **Update ORDER is nondeterministic.** `buffer_unordered` yields in completion order, so
+  `all_updates` (and thus reducer folding) is timing-dependent. LangGraph sorts tasks by
+  `task_path_str(path[:3])` for a deterministic apply order. For `Reducer::Append`/`Custom`
+  (non-commutative) two runs can diverge. **This breaks the D9 "deterministic merge order
+  regardless of execution shape" invariant.** (patterns-observed P-28.) Confidence HIGH (code).
+- **No content-addressed task IDs.** LangGraph's `xxh3_128(checkpoint_id ‖ ns ‖ step ‖ name ‖
+  kind ‖ triggers)` (semport/graph §1.2) has no analog. Nodes are keyed by name only; there is no
+  replay-idempotency key or pending-write matching.
+- **No "one writer per step" guard.** `Reducer::Overwrite` silently takes the last write in
+  nondeterministic order; LangGraph's `LastValue` raises `InvalidUpdateError` on >1 write/step
+  (semport/graph §1.4). adk has no concurrent-write detection at all.
+
+### 7.3 Write isolation — the part that DOES match (maps to semport/graph §1.1 step 3, note 1)
+Per-node `state.clone()` + deferred `apply_writes`-equivalent gives true BSP write isolation.
+This half of the invariant is correctly implemented (patterns-observed P-23). Confidence HIGH.
+
+### 7.4 Halting & recursion (maps to semport/graph §1.3)
+- Natural halt: `pending_nodes` empty. Recursion guard: `step >= config.recursion_limit` →
+  `GraphError::RecursionLimitExceeded` (test `test_recursion_limit`, limit 10). No env-driven
+  default like LangGraph's 10007; the limit is a per-config field. Confidence HIGH.
+- **Deferred nodes / fan-in join** (`filter_deferred_nodes`, `FanInTracker`): a genuine addition —
+  a deferred node waits until all upstream paths complete, with an optional `fan_in_timeout` that
+  proceeds on partial results (with `tracing::warn!`) or errors `FanInTimedOut` if zero arrived.
+  This is the `defer=True`/`NamedBarrierValue` join analog (semport/graph §1.4, §6.1), implemented
+  as scheduler state rather than a channel. Confidence HIGH.
+
+### 7.5 Replay-on-resume (maps to semport/graph §1.2, §5.2, cross-cutting note 2)
+`try_resume_from_checkpoint` restores `state`/`pending_nodes`/`step` and merges input on top, then
+re-runs `pending_nodes`. Because checkpoints are whole-state at step boundaries, resume re-runs an
+entire step's pending nodes. There is NO `_reapply_writes_to_succeeded_nodes` (skip committed,
+re-run uncommitted) — adk has no per-task write records to reapply. Coarser than LangGraph's
+"exactly-once for committed tasks, at-least-once for uncommitted" (semport/graph §5.2). Confidence
+HIGH.
+
+**Structural verdict (observation, not conclusion):** adk-graph reproduces BSP *write isolation*
+but not BSP *deterministic ordering*, *version-triggered scheduling*, *content-addressed task
+identity*, or *per-task replay*. It is a parallel edge-walker with a barrier-apply phase.
+
+## 8. Durability guarantees — what actually survives a crash
+
+### 8.1 adk-graph checkpointing (maps to semport/graph §2, §5) — HIGH
+- **Granularity:** whole-state snapshot + `pending_nodes` + `step`, saved AFTER each super-step.
+  No `put_writes`/per-task intermediate persist; no `ERROR/RESUME/INTERRUPT` markers; no
+  `sync|async|exit` durability modes. (patterns-observed P-29.)
+- **Atomicity:** `SqliteCheckpointer::save` is a single-row INSERT — atomic per checkpoint, but
+  there is no transaction spanning state-mutation + checkpoint (state is in-memory, so N/A) and no
+  two-phase put/put_writes. Interrupt path also saves a checkpoint before returning `Interrupted`.
+- **Crash-recovery contract:** crash mid-step ⇒ whole step lost ⇒ on restart all `pending_nodes`
+  re-execute (at-least-once for the entire step; no per-task credit). Node side-effect idempotency
+  is the user's problem, same caveat as LangGraph §5.3 but at coarser grain.
+- **"Latest" selection:** `ORDER BY created_at DESC` (wall-clock) with UUIDv4 ids — NOT a monotonic
+  logical clock (patterns-observed P-31; contrast LangGraph uuid6 §2.2). Ambiguous under same-tick
+  writes / clock skew.
+- **Delta compression:** `DeltaCheckpointer` wrapper (P-22/P-25) gives linear storage via
+  whole-state `MapDelta` + periodic full snapshots; round-trip `Diff` contract property-tested.
+
+### 8.2 adk-session persistence (maps to semport/graph §2 durability shape, §5) — HIGH
+- **Atomicity (STRONG):** every SQL backend wraps create/append_event in `pool.begin()`…
+  `tx.commit()` across `sessions`/`app_states`/`user_states`/`events`; error paths RAII-rollback.
+  An event and its state delta commit together — the atomicity property adk-graph lacks
+  (patterns-observed P-20). `temp:`-keys stripped pre-persist. Confidence HIGH.
+- **Rewind / time-travel semantics** (`sqlite::rewind`, `rewind_steps`; default = structured
+  "not supported" error): transactional; deletes events with `timestamp > target` PLUS a
+  same-timestamp `id != target` sweep, then rebuilds state by replaying remaining events' state
+  deltas in `ORDER BY timestamp`. **Timestamp-ordered, not sequence-ordered** — same fragility as
+  §8.1 (patterns-observed P-31). Only `inmemory` + `sqlite` implement rewind; postgres/redis/mongo/
+  neo4j/firestore/vertex fall to the default error (honest capability signaling, per A1 P-12).
+  Confidence HIGH (grep of `async fn rewind` = inmemory, sqlite, service-default only).
+- **Encryption at rest** (`EncryptedSession`, patterns-observed P-21/P-32): AES-256-GCM AEAD over
+  the state map only, key rotation via previous_keys + lazy re-encrypt. **Event content is NOT
+  encrypted** (append_event/list delegate through); re-encrypt errors are swallowed (`let _ =`).
+  Confidence HIGH.
+
+### 8.3 Graph fork vs LangGraph fork (maps to semport/graph §2.6) — HIGH
+`TimeTravelHandle::fork_at(step, new_thread_id)` COPIES the checkpoint under a new thread_id with a
+fresh UUID — fork-by-copy, not parent-pointer branching. LangGraph forks by writing a new
+checkpoint whose `parent` points at the historical checkpoint (a lineage tree). adk loses the
+branch lineage. `replay(from,to)` despite its docstring ("re-executes") merely filters and returns
+stored states — a doc/impl mismatch worth flagging. `resume_from` genuinely re-invokes. Confidence
+HIGH (code).
+
+## 9. Memory model vs Domain C (OpenClaw) personal memory — MED
+
+- **Trait surface:** `MemoryService` = `add_session`/`search` required; `add_entry`,
+  `delete_user` (GDPR), `delete_session`, `delete_entries`, project-scoped twins, `delete_project`
+  defaulted (mostly to "not implemented" errors — A1 P-12 honest-default, but see A1 P-19 risk).
+- **Scope model:** `search(project_id=None)` → global only; `search(project_id=Some(p))` →
+  global ∪ project p; `user_id`+`app_name` always partition (patterns-observed P-26). Default
+  in-memory search is **keyword intersection** (`has_intersection(words, query_words)`), not
+  embeddings; `min_score`/`limit` supported; embedding + vector backends exist (postgres/neo4j/
+  redis/mongodb + `embedding.rs`) but are not the default.
+- **Domain C mapping:** OpenClaw personal memory wants *per-user, durable, private* recall.
+  adk gives firm user partitioning (good) and cross-project isolation (good), but its "global tier
+  bleeds into every project view" default is the opposite of "strictly personal." For Domain C,
+  ferrochain would either disable the global tier or model personal memory as a user-private scope
+  with NO global overlay. GDPR erasure (`delete_user`) is a first-class method — aligned with a
+  personal-memory right-to-be-forgotten requirement. `MemoryServiceAdapter` binds
+  `(app_name,user_id,project_id?)` at construction to satisfy `adk_core::Memory::search(&str)` —
+  a clean DI seam, but `search_in_project` is a real override here (not the A1 P-19 silent-global
+  fallback), so THIS adapter is safe; the risk is only for backends that forget to override.
+
+## 10. Test-as-spec quality for the cluster (maps to test-inventory A2) — HIGH
+
+- **adk-graph:** 14 integration files, 208 test fns crate-wide, 8 `*_property_tests.rs`. Property
+  coverage on switch routing, error modes, cache, deferred fan-in, delta round-trip, time-travel,
+  timeout, workflow schema. `delta.rs` alone carries ~40 in-crate unit tests incl. the
+  `apply(diff)==new` round-trip across append/modify/remove/unicode/multiline. This is genuine
+  executable specification for the storage layer.
+- **Gap vs claims:** the property suite validates *storage and routing* laws thoroughly, but the
+  determinism gap (P-28) is NOT caught — there is no test asserting reducer-apply order is
+  independent of node completion order (there cannot be, because it isn't). The interrupt/resume
+  replay contract (P-30) is not tested because it does not exist. So the tests faithfully spec what
+  the engine does; they do not spec the LangGraph invariants the engine omits.
+- **adk-session:** transactional writes + rewind are covered; encryption round-trip + rotation are
+  tested. The "events not encrypted" boundary (P-32) is not asserted either way.
+
+## 11. A1 open items resolved in this cluster
+- **P-16 (provider duplication):** out of cluster — remains open for the provider deep pass.
+- **P-18 (anyhow leak):** within this cluster, NO anyhow in public signatures — adk-graph uses
+  `GraphError`/`Result`, adk-session/memory/artifact use `adk_core::Result`. Cluster is clean;
+  the workspace-wide `anyhow` verdict still needs the core/CLI grep (out of cluster).
+- **A1 "adk-graph 14 integration test files (3,185 LOC) — verify strength":** CONFIRMED STRONG —
+  property-test-dominant (patterns-observed P-24).
+- **A1 P-12/P-19 (defaulted capabilities masking behavior):** for MEMORY specifically, the
+  in-tree `MemoryServiceAdapter` DOES override `search_in_project`/`add_to_project` (no silent
+  global fallback), so the A1 P-19 cross-project-bleed risk is NOT realized in the shipped adapter;
+  it remains a latent risk only for third-party `MemoryService` impls that forget to override.
+  Session `rewind` default-errors (honest) rather than silent no-op — A1 P-12 mitigation confirmed.
+- **New open items (A2):** (a) does adk-graph's checkpointer ever integrate with adk-session, or
+  are they permanently disjoint (P-27)? — confirmed disjoint at v1.0.0. (b) `replay()` doc/impl
+  mismatch (claims re-execution, filters stored states) — flag for their maintainers, informative
+  for ferrochain. (c) postgres/redis/etc rewind unimplemented — is rewind a first-class contract or
+  sqlite-only convenience? Their default-error says "not a universal contract."
+
 ## State Checkpoint
 ```yaml
-pass: A1
-scope: behavioral-intent (6 core crates)
+pass: A2
+scope: behavioral-intent (state/persistence/orchestration cluster)
 status: complete
-files_read_deep: [adk-core/{lib,agent,error,model,tool,context,event,schema_adapter},
-                  adk-model/{provider,retry}, adk-runner/runner, adk-session/service]
+files_read_deep: [adk-graph/{executor,state,checkpoint,delta,interrupt,time_travel,
+                  functional/typed_reducer}, adk-session/{service,encrypted,postgres,sqlite},
+                  adk-memory/{service,adapter,inmemory}, adk-artifact/service]
+a1_scope: behavioral-intent (6 core crates)
+timestamp: 2026-07-13
+```
+
+---
+
+# Pass A3 — SERVER / PROTOCOL / AUTH behavioral intent
+
+Deep scope: `adk-server` (REST + A2A v1), `adk-auth`, `adk-managed::usage`, `adk-telemetry`.
+Evidence by function/type + behavioral anchor (TD-VSDD-091). Confidence: HIGH = test-grounded,
+MED = code-grounded, LOW = inferred. D16 Rust-blindness — observe only.
+
+## 12. adk-server run model & session lifecycle — MED
+
+- **Composition root:** `create_app_with_a2a(config, a2a_base_url)` (and `ServerBuilder`) build
+  one axum `Router`. `ServerConfig` carries `Arc<dyn AgentLoader>`, `Arc<dyn SessionService>`,
+  optional `ArtifactService`/`Memory`/`CacheCapable`/`EventsCompactionConfig`/`ContextCacheConfig`/
+  `AdkSpanExporter`/`RequestContextExtractor`. Arc-DI throughout (aligned with CLAUDE.md Arc-DI).
+- **Run endpoint:** `POST /api/run/{app}/{user}/{session}` (and `/run_sse` with session in body) →
+  `controllers::runtime::run_sse` streams an SSE event feed. The run is addressed by the
+  `(app_name,user_id,session_id)` triple; there is no first-class `run_id` resource in core (the
+  `background` feature adds a thin one). Confidence MED (code).
+- **Health contract:** `GET /api/health` calls `health_check()` on session (+ optional memory,
+  artifact) services; returns 200 `healthy` iff session is healthy AND memory/artifact are not
+  `unhealthy` (a `not_configured` optional service does not fail health). Structured per-component
+  JSON. Maps to k8s readiness. Confidence HIGH (deterministic handler).
+- **Graceful shutdown:** `ShutdownHandle` combines Ctrl-C / SIGTERM / programmatic /
+  `POST /api/shutdown` via a `CancellationToken`; `signal()` feeds
+  `axum::serve().with_graceful_shutdown()`. Clean drain contract. Confidence MED.
+
+## 13. A2A v1.0.0 behavioral contracts (11 JSON-RPC operations) — HIGH (test-grounded)
+
+`RequestHandler` is the shared dispatch layer for both JSON-RPC (`POST /a2a`) and REST transports.
+
+- **BC: message_send creates→works→completes a task, running the real agent.** With a
+  `RunnerConfig`, `message_send` ensures a session (`a2a-{context_id}` user, `context_id` session),
+  converts A2A parts → `adk_core::Content`, builds a `Runner` (threading every optional service),
+  runs it, concatenates response text, and records it as an `Artifact`; on agent error it
+  `fail_task`s and returns the failed task. State machine: SUBMITTED→WORKING→COMPLETED (or FAILED).
+  Confidence HIGH (`message_send_creates_and_completes_task`, resume/idempotency tests).
+- **BC: messageId idempotency.** An in-memory `idempotency_map: RwLock<HashMap<messageId,taskId>>`
+  returns the existing task for a repeated messageId; stale entries (task since deleted) are evicted
+  and reprocessed. Confidence HIGH (`message_send_idempotent_same_message_id`). **Concern:** the map
+  is in-memory + unbounded + non-durable (patterns P-43) — idempotency and resume break on restart.
+- **BC: INPUT_REQUIRED multi-turn resume.** A follow-up whose `contextId` maps (via
+  `find_task_by_context`, which excludes terminal states) to an `InputRequired` task RESUMES that
+  task (Working→Completed) rather than forking a new one; terminal-context or no-context → new task.
+  Confidence HIGH (`message_send_resumes_input_required_task`, `_creates_new_task_for_terminal_context`).
+- **BC: input validation.** ≥1 part; message/task id non-empty-after-trim and ≤256 chars; metadata
+  ≤64 KB. Each individually tested (patterns P-37). Confidence HIGH.
+- **BC: tasks_cancel rejects terminal tasks** (`TaskNotCancelable`); transitions non-terminal →
+  CANCELED via the executor state machine. Confidence HIGH.
+- **BC: push-config lifecycle** (create/get/list/delete) — server assigns a UUID config id; **but
+  create/delete re-persist via `delete_task` + `create_task`** because `TaskStore` has no atomic
+  push-config update (patterns — non-atomic, race window). Confidence HIGH (`push_config_lifecycle`).
+- **BC: message_stream is a STUB.** Unlike `message_send`, `message_stream` does NOT invoke the
+  runner — it emits `Task → Working → Completed` status events with in-code "placeholder — Runner
+  integration later". Streaming yields NO model output (patterns P-41). Confidence HIGH (code + the
+  `message_stream_yields_events` test asserts only status transitions, no content).
+- **BC: task-store trait + in-memory impl.** `TaskStore` (create/get/update_status/add_artifact/
+  add_history_message/find_task_by_context/list_tasks/delete_task) with `InMemoryTaskStore`
+  (`RwLock<HashMap>`). `TaskStoreEntry` = id/context_id/status/artifacts/history/metadata/
+  push_configs/created_at/updated_at. Durable impls possible via the trait; default is non-durable.
+
+## 14. A2A rate limiting (interceptor) — HIGH
+
+`RateLimitInterceptor` = per-`caller_id` token bucket (fractional tokens, elapsed-time refill,
+capped at `burst`); no-caller_id requests share a `"__global__"` bucket; rejection is JSON-RPC
+`-32002 "rate limit exceeded"`. Tested for burst, refill-over-time, per-client isolation,
+global-bucket, burst=0. Confidence HIGH. **Concern:** `buckets` map is in-memory + never evicted
+(patterns P-43). This is REQUEST-RATE limiting, NOT token/cost budget (see §16).
+
+## 15. Auth model (adk-auth) & credential discipline (question 4) — HIGH
+
+- **Auth is BYO-injected.** `adk-server::auth_bridge::RequestContextExtractor` (Send+Sync async
+  trait) is the ONLY auth seam: `extract(&Parts) -> Result<RequestContext, RequestContextError>`.
+  `auth_middleware` maps `MissingAuth`→401, `InvalidToken`→401, `ExtractionFailed`→500, and inserts
+  `Option<RequestContext>` into request extensions; scopes then reach tools via
+  `ToolContext::user_scopes()`. Confidence HIGH (code).
+- **adk-auth enterprise surface:** RBAC (`Permission` = Tool/Agent/AllTools/AllAgents; `Role` with
+  allow/deny; `AccessControl` check), `ScopeGuard`/`ScopedTool` declarative tool authorization,
+  `AuditSink` (File/InMemory/OTLP/Postgres), SSO/OIDC (`JwtRequestContextExtractor` +
+  Okta/Auth0/Azure/Google/generic OIDC via JWKS with previous-key rotation), and cloud secret
+  providers (AWS/Azure/GCP + a `cached` wrapper). Feature-gated (`sso`, `auth-bridge`,
+  `*-secrets`, `*-audit`). Confidence HIGH (module surface).
+- **BC: SecretProvider returns a bare `String`.** `SecretProvider::get_secret(name) -> Result<String,
+  AdkError>` and `SecretServiceAdapter` → `adk_core::SecretService` both surface the secret VALUE as
+  a plain `String` (the trait doc even `println!`s its length). **Divergence from ferrochain's
+  newtype+redacted-Debug credential rule** (patterns P-44): a `String` secret has default
+  `Debug`/`Display` and is leak-prone in logs/spans/errors. Confidence HIGH (signature).
+- **BC: A2A push auth** — `TaskPushNotificationConfig` carries Bearer `credentials` + a
+  `a2a-notification-token`; `HttpPushNotificationSender` adds both headers. The credential is a
+  `String` field on the config (same bare-string concern). SSRF validation gates the URL first
+  (patterns P-35). Confidence HIGH (code).
+- **Error mapping:** `RequestContextError` is `thiserror`-derived (not `anyhow`) — structured at the
+  boundary. Confidence HIGH.
+
+## 16. Budget / metering / cost governance (question 3) — HIGH (by absence)
+
+- **Token accounting exists:** `adk-managed::usage::UsageReport` normalizes provider token counts
+  (input/output/total + optional thinking/cache-read/cache-write; negatives clamped to 0; total
+  auto-computed) and `SessionUsageTracker::record_turn` accumulates cumulative + last-turn. Doc
+  states the platform uses this "for billing, monitoring, and cost tracking." Confidence HIGH
+  (11 unit tests incl. cross-provider uniformity, serde round-trip).
+- **Cost (dollars) lives on `adk-core::UsageMetadata`** (A1 §2: cost + is_byok + provider_usage), and
+  `adk-telemetry::semconv` exposes OTel `gen_ai.usage.*` token attributes for export.
+- **NO budget-governance primitive.** There is no tokens→cost-against-budget conversion, no per-run
+  or per-sub-agent ceiling, and no halt/degrade-at-ceiling anywhere in the cluster. `RunConfig` has
+  `max_transfer_depth` (a loop guard) but no budget field; `SessionUsageTracker` is never read to
+  gate execution; `RateLimitInterceptor` bounds request RATE, not spend; `adk-payments::guardrail::
+  amount_policy` is a COMMERCE spend policy (paying merchants), not an LLM-run budget. Confidence
+  HIGH (absence confirmed by grep across telemetry/auth/server/managed/enterprise + RunConfig read).
+- **Domain-B mapping:** this is exactly the budget-governance gap Domain B flagged as NEW
+  (`domain-b-dark-factory.md` items §186/§231/§208 — "checkpointer stores usage but no
+  budget-governance primitive planned"). adk-rust does NOT close it; it stops at accounting +
+  rate-limiting. A ferrochain budget primitive (per-run/per-agent token+cost ceiling with
+  halt-or-degrade) is genuine net-new design with no reference prior art, but `UsageReport`/
+  `SessionUsageTracker` is a clean accounting substrate to build ON.
+
+## 17. Background runs & cron (feature) — MED
+
+- **BC: background run lifecycle** — `POST /runs` → `RunStatus::Queued`, spawns a tokio task,
+  Queued→Running, timeout+cancel via `tokio::select!`, retry (re-queue up to `max_retries`),
+  terminal Completed/Failed/Cancelled/TimedOut. `GET /runs/{id}` reports status + retries-remaining;
+  `DELETE /runs/{id}` cancels non-terminal via `CancellationToken`. Confidence MED.
+- **BC: run EXECUTION is a placeholder.** `run_with_timeout`'s work future is commented "actual
+  workflow execution is a placeholder … For now, we simulate immediate completion" returning an
+  empty JSON object. The lifecycle/retry/timeout scaffolding is real; the workflow invocation is
+  NOT wired. `RunStore` is in-memory only (no durability across restarts — Domain-B durability gap,
+  patterns P-43). Confidence HIGH (code + comment).
+- **Cron:** `validate_cron_expression` + job CRUD + pause/resume + `start_cron_scheduler`,
+  `ConcurrencyPolicy`. Inventory-depth only.
+
+## 18. A1 / A2 open items resolved in this cluster
+- **P-18 (anyhow leak) — RESOLVED for the whole exposure cluster.** Cluster-wide grep: `anyhow`
+  appears in ZERO source files of `adk-server`/`adk-auth`/`adk-awp`/`adk-acp`/`awp-types`/
+  `adk-telemetry`/`adk-managed`/`adk-enterprise`. It is declared in `adk-server/Cargo.toml` and
+  `adk-deploy/Cargo.toml` but not used in their `src/`; it is USED only in `adk-cli` and `cargo-adk`
+  (binaries) — precisely the "confined to binaries/tests" carve-out ferrochain permits. **No anyhow
+  in any library public signature in this cluster.** Combined with A2's finding (state cluster also
+  clean), the only remaining anyhow check is the core-crate grep (out of this cluster's scope).
+- **reqwest timeout construction sites — RESOLVED (as a GAP).** Every outbound client is
+  `reqwest::Client::new()` with NO `.timeout()`: `a2a/client.rs` (×5), `a2a/v1/push.rs`,
+  `adk-auth::sso::jwks`, `adk-auth::sso::providers::oidc`. Cluster-wide grep for `.timeout(` = 0
+  hits. The inbound axum `TimeoutLayer` (default 30s) is a server-request timeout, unrelated to the
+  outbound clients. This is a divergence from ferrochain's mandatory-30s rule (patterns P-42);
+  ferrochain must set `.timeout()` on ALL outbound clients incl. server-side push/JWKS/remote-agent.
+- **New open items (A3):** (a) does any durable `TaskStore`/`RunStore` impl ship, or only in-memory?
+  — only in-memory ships at v1.0.0; the traits exist for external durable impls. (b) `message_stream`
+  and `background`-run execution are both placeholders — are they wired in a later ADK version? (out
+  of scope at pinned v1.0.0). (c) `a2a/client.rs` (RemoteA2aAgent) — the A2A CLIENT side (calling out
+  to peer agents) read at signature depth only; deep behavioral pass deferred if needed.
+
+## State Checkpoint
+```yaml
+pass: A3
+scope: behavioral-intent (server/protocol/auth cluster)
+status: complete
+files_read_deep: [adk-server/{lib,config,rest/mod,auth_bridge}, adk-server/a2a/v1/{request_handler,
+                  task_store, mod}, adk-server/a2a/rate_limit, adk-server/a2a/v1/push,
+                  adk-server/background/mod, adk-auth/{lib,secrets/provider}, adk-managed/usage,
+                  adk-telemetry/semconv]
+a1_scope: behavioral-intent (6 core crates); a2_scope: state/persistence/orchestration cluster
 timestamp: 2026-07-13
 ```

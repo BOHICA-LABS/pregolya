@@ -11,7 +11,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "adk-rust deep passes A2+A3 in progress (pass A1 COMPLETE — 19 patterns; A2/A3 dispatched parallel)"
+current_step: "adk-rust deep passes A4+A5 in progress (A1 COMPLETE 19P, A2 COMPLETE +15P=34P, A3 COMPLETE +12P=46P)"
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -44,9 +44,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — burst 38: adk-rust pass A1 COMPLETE (19 patterns: 10 STRONG/4 NEUTRAL/5 WEAK; ANALYSIS-STATE.md written). Passes A2+A3 DISPATCHED in parallel. |
+| **Last Updated** | 2026-07-13 — burst 39: adk-rust passes A2+A3 COMPLETE. A2: 15P P-20..P-34 (5S/3N/7W); adk-graph = Pregel vocabulary, edge-walker mechanism; nondeterministic merge order (P-28), step-boundary-only durability (P-29), notification-only interrupt (P-30). A3: 12P P-35..P-46 (4S/2N/6W); budget-governance gap NET-NEW confirmed (P-46); 7 reqwest zero-timeout (P-42). New ADR question: unify graph-checkpoint + session persistence? A4+A5 DISPATCHED parallel. |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | adk-rust deep passes A2 (state/persistence/orchestration) + A3 (server/platform/protocol) in progress |
+| **Current Step** | adk-rust deep passes A4 (guardrail/sandbox/eval/retry-reflect/skill/plugin/code/browser) + A5 (provider/capability cluster + P-16 resolution + final anyhow verdict) in progress |
 
 ## Phase Progress
 
@@ -69,7 +69,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 |------|-------|--------|--------|
 | Cert passes 13–17 (extraction cascade) | validate-extraction | DONE — GATE CLOSED | 3-CLEAN achieved (CP15+16+17). 32 total validation runs, ~100 corrections, zero in final 3 passes. All 11 error classes closed. Full record: burst-log.md bursts 33–37. |
 | adk-rust pass A1 (broad sweep + 6 deep core crates) | codebase-analyzer | COMPLETE | 19 patterns (10 STRONG/4 NEUTRAL/5 WEAK). Compliance flags: native-tls conflict, reqwest root-store delta. ANALYSIS-STATE.md written. Burst 38. |
-| adk-rust passes A2+A3 (state+server clusters) | codebase-analyzer | IN-PROGRESS | A2: adk-graph/session/memory/artifact. A3: adk-server/runner/awp/acp/auth/telemetry/cli. Dispatched parallel. |
+| adk-rust pass A2 (state/persistence/orchestration) | codebase-analyzer | COMPLETE | 15P P-20..P-34 (5S/3N/7W). adk-graph = Pregel vocabulary, edge-walker mechanism. Key: transactional session writes (P-20), AEAD encryption+rotation (P-21), DeltaCheckpointer (P-22), BSP write-isolation (P-23), property tests (P-24). Defects: nondeterministic merge order (P-28), step-boundary-only durability (P-29), notification-only interrupt (P-30). Burst 39. |
+| adk-rust pass A3 (server/platform/protocols) | codebase-analyzer | COMPLETE | 12P P-35..P-46 (4S/2N/6W). Session-centric A2A-native server; A2A stream+background = STUBS. SSRF-hardened webhooks (P-35), defense-in-depth middleware (P-36), A2A input validation (P-37), auth-as-injected-trait (P-38). Defects: 7 reqwest zero-timeout (P-42), secrets bare String (P-44), non-durable in-memory request-path state (P-43). Budget-governance gap NET-NEW (P-46). Burst 39. |
+| adk-rust passes A4+A5 (safety+quality / provider+capability) | codebase-analyzer | IN-PROGRESS | A4: guardrail/sandbox/eval/retry-reflect/skill/plugin/code/browser. A5: providers/realtime/protocols/payments + P-16 duplication resolution + final anyhow verdict. Dispatched parallel. |
 
 ## Decisions Log
 
@@ -139,8 +141,8 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 38 complete. adk-rust pass A1 COMPLETE: 39 crates swept, 6 deep, 19 patterns (10/4/5). ANALYSIS-STATE.md written to .factory/comparative/adk-rust/. Passes A2 (adk-graph/session/memory/artifact) + A3 (adk-server/runner/awp/acp/auth/telemetry/cli) DISPATCHED in parallel. Pending: A4 (guardrail/sandbox/eval), A5 (realtime/providers/protocols/payments), A6 (retry/reflection deep). After all passes: exhaustive sweep → strict-zero 3-CLEAN → comparative assessment → HUMAN DIRECTION GATE → Phase 1. |
-| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule in force. Open items from A1: anyhow-in-public-signatures verify; adk-model vs standalone drift surface; reqwest timeout sites; ignored-vs-runnable test classification. Compliance flags: native-tls (adk-realtime/livekit, hard conflict), reqwest rustls-tls-native-roots (root store delta). R6 OPEN: cargo login + publish-all.sh (time-sensitive). R8/R10/R11 OPEN: route to product-owner at Phase 1. |
+| **Position** | pre-1, burst 39 complete. adk-rust A1 COMPLETE (19P), A2 COMPLETE (15P P-20..P-34), A3 COMPLETE (12P P-35..P-46). Total: 46 patterns across A1-A3. ANALYSIS-STATE.md + patterns-observed.md updated in .factory/comparative/adk-rust/. Passes A4 (guardrail/sandbox/eval/retry-reflect/skill/plugin/code/browser) + A5 (provider/capability cluster, P-16 resolution, final anyhow verdict) DISPATCHED in parallel. Pending after A4+A5: exhaustive sweep → strict-zero 3-CLEAN → comparative assessment → HUMAN DIRECTION GATE → Phase 1. |
+| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule in force. RESOLVED from A1 open items: reqwest-timeout-sites (P-42 — 7 sites, zero timeouts, counter-example not template); anyhow-in-library confirmed clean (confined to CLI binaries; final verdict deferred to A5). UNRESOLVED: adk-model vs standalone drift surface (A5 will cover P-16 duplication). New ADR question raised: unify graph-checkpoint + session persistence on one store (adk answers disjoint, LangGraph unifies — to be decided at Phase 1). Compliance flags: native-tls (adk-realtime/livekit, hard conflict), reqwest rustls-tls-native-roots (root store delta). R6 OPEN: cargo login + publish-all.sh (time-sensitive). R8/R10/R11 OPEN: route to product-owner at Phase 1. |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content

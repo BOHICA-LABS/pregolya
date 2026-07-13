@@ -217,11 +217,217 @@ retry limits, configurable backoff (none/fixed/exponential-with-ceiling), allowl
 eligibility, customizable templates, global failure tracking for circuit-breaking. Closest
 LangGraph analog is retry edges. Potentially ferrochain-relevant reliability pattern.
 
+---
+
+# Pass A2 — cluster module structure (adk-graph, adk-session, adk-memory, adk-artifact)
+
+Deep structural read of the STATE/PERSISTENCE/ORCHESTRATION cluster. File-level map with the
+behavioral role of each module.
+
+## adk-graph (10,709 LOC, 55 files) — module roles
+| Module | Role | Notes for ferrochain-graph |
+|--------|------|----------------------------|
+| `executor.rs` | Pregel-named executor: `PregelExecutor::{run, run_stream, execute_super_step, filter_deferred_nodes, try_resume_from_checkpoint, save_checkpoint}` | The behavioral spine. Edge-following + per-step isolated apply. `run_stream` re-implements the loop per StreamMode (Values/Updates/Debug/Custom/Messages) — some duplication with `run`. ~730 LOC (near ferrochain's 750 gate). |
+| `state.rs` | `State = HashMap<String,Value>`, `Reducer{Overwrite,Append,Sum,Custom}`, `StateSchema`, `Checkpoint` struct | Reducers are value-level, not channel-typed. `Checkpoint` = state+step+pending_nodes+metadata+created_at. |
+| `checkpoint.rs` | `Checkpointer` trait (save/load/load_by_id/list/delete) + `MemoryCheckpointer` + `SqliteCheckpointer` | No `put_writes`; UUIDv4 ids; `created_at DESC` for latest. |
+| `delta.rs` | `Diff` trait + `Vec/HashMap/String` impls + `DeltaCheckpointer` wrapper + `DeltaConfig` | Whole-state MapDelta compression; ~40 tests. `String` Diff behind `delta-checkpoint` feature (uses `similar`). |
+| `interrupt.rs` | `Interrupt{Before,After,Dynamic{message,data}}` + `interrupt()`/`interrupt_with_data()` | 41 LOC — notification-only; no resume-value type. |
+| `time_travel.rs` | `TimeTravelHandle::{steps, resume_from, fork_at, replay}` | fork-by-copy (new thread_id); `replay` filters stored states (doc says re-executes — mismatch). |
+| `functional/` | `#[entrypoint]`/`#[task]` API: `context, reducers, typed_reducer, messages, schema, execution_log, error` | `TypedReducer{Replace,Append,Merge}` — the closer LangGraph-channel analog; `unsafe impl Send/Sync` smell (P-33). |
+| `action/` (16 files) | Prebuilt action nodes: http, database, email, file, code, transform, switch, merge, wait, rss, notification, set, loop_node, trigger[_runtime] | A batteries-included node library — no LangChain/LangGraph analog; scope beyond ferrochain-graph core. |
+| `node.rs`, `edge.rs`, `graph.rs` | `Node`/`NodeOutput{updates,interrupt,events}`, `Edge`, `StateGraph`/`CompiledGraph` builder | `NodeOutput.interrupt` is how dynamic interrupts surface. |
+| `cache.rs`, `deferred.rs`, `timeout.rs`, `agent.rs`, `workflow.rs`, `stream.rs`, `error.rs` | node-cache (feature), `FanInTracker`, timeout+`ProgressHandle`, agent-as-node, workflow sugar, `StreamEvent`/`StreamMode`, `GraphError` | `FanInTracker` = the join/barrier primitive; timeout has idle-timeout via progress handle. |
+
+## adk-session (8,089 LOC, 17 files) — module roles
+| Module | Role | Durability property |
+|--------|------|---------------------|
+| `service.rs` | `SessionService` trait + request DTOs (Create/Get/List/Delete/AppendEvent) with `try_identity()` typed accessors | Defaults: `rewind`/`rewind_steps`/`delete_all_sessions` → structured "not supported" error; `health_check` → Ok. `append_event_for_identity` default collapses triple → session_id (P-34). |
+| `postgres.rs`, `sqlite.rs`, `mongodb.rs`, `neo4j.rs`, `redis.rs`, `firestore.rs`, `vertex.rs` | 8 backends (inmemory is the 8th) | ALL SQL/doc backends use `pool.begin()`…`tx.commit()` for create+append (P-20). rewind implemented ONLY in `inmemory`+`sqlite`. |
+| `encrypted.rs` | `EncryptedSession<S>` AEAD wrapper + `DecryptedSession` view | Encrypts STATE only (P-21/P-32). |
+| `encryption_key.rs` | `EncryptionKey` (32-byte AES-256 key, `generate()`) | — |
+| `migration.rs` | schema migrations (uses transactions) | — |
+| `state.rs`, `state_utils.rs`, `session.rs`, `event.rs` | `State`/`Session`/`Events` traits + `Event` type + state-delta helpers | `temp:`-prefix stripped pre-persist. |
+
+## adk-memory (4,568 LOC, 12 files) — module roles
+`service.rs` (`MemoryService` trait, `MemoryEntry`, `SearchRequest{query,user_id,app_name,limit,
+min_score,project_id}`, `validate_project_id`), `inmemory.rs` (keyword-intersection search + global
+∪ project scope), `adapter.rs` (`MemoryServiceAdapter` → `adk_core::Memory`, binds identity at
+construction, overrides `search_in_project`/`add_to_project`), `embedding.rs` (vector path),
+`text.rs` (tokenization), backends `postgres/neo4j/redis/mongodb/sqlite`, `migration.rs`.
+
+## adk-artifact (969 LOC, 6 files) — module roles
+`service.rs` (`ArtifactService`: save/load/delete/list/versions, versioned binary storage scoped by
+app+user+session, path-traversal-validated filenames, explicit-or-auto-increment `version`),
+`inmemory.rs`, `file.rs` (filesystem backend), `scoped.rs` (scope wrapper), `lib.rs`. Smallest,
+simplest crate — versioned blob store; auto-increment version is the notable contract.
+
+## Cross-cluster structural note
+Two independent persistence trait hierarchies (`adk-graph::Checkpointer` vs
+`adk-session::SessionService`) with disjoint backends and divergent durability guarantees
+(patterns-observed P-27). The graph `action/` subtree (16 prebuilt node types) and adk-session's
+8 backends are the bulk of the cluster's LOC and are largely scope-beyond-core for ferrochain-graph.
+
 ## State Checkpoint
 ```yaml
-pass: A1
-scope: module-inventory
+pass: A2
+scope: module-inventory (state/persistence/orchestration cluster)
 status: complete
-crates_catalogued: 39
+crates_deep: [adk-graph, adk-session, adk-memory, adk-artifact]
+a1_crates_catalogued: 39
+timestamp: 2026-07-13
+```
+
+---
+
+# Pass A3 — SERVER / PROTOCOL / EXPOSURE cluster (adk-server + protocol crates + tooling)
+
+Deep scope: `adk-server` (20,752 LOC / 72 files), A2A v1.0.0, `adk-awp`/`awp-types`/`adk-acp`,
+`adk-auth`, `adk-telemetry`, `adk-managed`, + `adk-cli`/`adk-deploy`/`cargo-adk`/`adk-enterprise`
+at inventory depth. D16 Rust-blindness — observe, no verdicts.
+
+## adk-server module map (72 files)
+
+| Subtree | Files | Role |
+|---------|-------|------|
+| `rest/mod.rs` (35.6 KB) + `rest/controllers/` | ~10 | Native REST surface + middleware stack + `ServerBuilder` |
+| `rest/controllers/runtime.rs` (51.5 KB) | 1 | `run_sse` — the SSE run endpoint (largest file; would blow the 750-line gate) |
+| `rest/controllers/ui.rs` (33.4 KB) | 1 | ADK-UI protocol handlers (initialize/message/notifications/resources) |
+| `rest/controllers/{session,artifacts,debug,apps,a2a}.rs` | 5 | Per-resource REST controllers |
+| `a2a/` (top level) | 18 | A2A executor, client, agent-card, interceptor, rate_limit, jsonrpc, remote_agent |
+| `a2a/v1/` | 14 | A2A **v1.0.0**: request_handler (11 ops), task_store, state_machine, push, stream, rest_handler, jsonrpc_handler, card, version |
+| `auth_bridge.rs` | 1 | `RequestContextExtractor` trait (auth is BYO-injected) |
+| `config.rs` | 1 | `ServerConfig` + `SecurityConfig` |
+| `background/` | 2 | `background`-feature: background runs + cron scheduling (REST) |
+| `registry/` | 4 | `agent-registry`-feature: agent-card registry + routes + store |
+| `webhooks/` | 2 | `openai-webhooks`-feature: OpenAI webhook receiver |
+| `yaml_agent/` | ~6 | `yaml-agent`-feature: YAML agent defs + hot-reload watcher |
+| `ui_protocol.rs`/`ui_types.rs`/`web_ui.rs` | 3 | ADK web-UI static serving + protocol types |
+
+Feature-gating is pervasive: `a2a-v1`, `a2a-interceptors`, `background`, `agent-registry`,
+`openai-webhooks`, `yaml-agent` all shape the compiled route set (echoes A1 P-14).
+
+## Server endpoint catalog (native REST + A2A) — what the server actually exposes
+
+Native REST is nested under `/api`; A2A + UI + well-known live at root. From `rest::mod`
+route tables and `background::mod`:
+
+| Group | Method + Path | Notes |
+|-------|---------------|-------|
+| Health | `GET /api/health` | Per-component (session/memory/artifact) health, 200/503 |
+| Apps | `GET /api/apps`, `GET /api/list-apps` | List loadable agents/apps |
+| Sessions | `POST /api/sessions` | Create (body-addressed) |
+| Sessions | `GET/DELETE /api/sessions/{app}/{user}/{session}` | Triple-addressed get/delete |
+| Sessions | `GET/POST /api/apps/{app}/users/{user}/sessions` | List / create-from-path |
+| Sessions | `GET/POST/DELETE /api/apps/{app}/users/{user}/sessions/{session}` | Path-addressed CRUD |
+| Runtime | `POST /api/run/{app}/{user}/{session}` (SSE) | The run endpoint (SSE event stream) |
+| Runtime | `POST /api/run_sse` (SSE) | Compat run (session in body) |
+| Artifacts | `GET /api/sessions/{app}/{user}/{session}/artifacts[/{name}]` | List / fetch artifact |
+| Debug | `GET /api/debug/trace/session/{session_id}` | Session traces |
+| Debug | `GET /api/debug/graph/...`, `.../events/{event_id}[/graph]`, `/apps/{app}/eval_sets` | Trace/graph/eval introspection |
+| UI | `GET/POST /api/ui/{capabilities,initialize,message,update-model-context,notifications/*,resources/*}` | ADK-UI protocol (11 routes) |
+| Shutdown | `POST /api/shutdown` | Opt-in graceful shutdown (ServerBuilder) |
+| A2A | `GET /.well-known/agent.json` | Agent card (also `/.well-known/agent-card.json` in v1) |
+| A2A | `POST /a2a`, `POST /a2a/stream` | JSON-RPC + streaming JSON-RPC |
+| Background (feat) | `POST /runs`, `GET/DELETE /runs/{run_id}` | Background run submit/status/cancel |
+| Cron (feat) | `POST/GET /cron`, `GET/PATCH/DELETE /cron/{job_id}` | Cron job CRUD + pause/resume |
+
+## Structural comparison vs the 61-endpoint LangGraph-platform catalog (question 1 — OBSERVE only)
+
+Cross-ref: `.factory/semport/platform/module-inventory.md` §2. Under **D13** the LangGraph
+platform catalog is a *design reference only* (no wire-compat target, no DTU conformance) — so
+this is a pure structural observation, not a parity gap.
+
+**Resource-model axis is the dominant structural difference.**
+
+| Dimension | adk-server | LangGraph platform (SDK 1.2.9) |
+|-----------|-----------|-------------------------------|
+| Primary identity | `(app_name, user_id, session_id)` triple | `assistant_id` + `thread_id` + `run_id` |
+| "Configured agent" concept | `AgentLoader` / apps (no versioned assistant) | **Assistants** (versioned: create/patch/versions/latest/search/count) — 12 endpoints, none in adk |
+| Conversation container | **Session** (triple-addressed, event log) | **Thread** (state/history/checkpoint/copy/prune) — 14 endpoints |
+| Execution unit | **Run** = one SSE stream off a session (`run_sse`); no first-class run resource in core, `background` feature adds a thin `Run` (queued/running/…/cancel) | **Run** first-class: stream/create/wait/batch/cancel/join/reconnect/delete — 11 endpoints, incl. `multitask_strategy`, `on_disconnect`, `durability`, resumable stream, `Last-Event-ID` reconnect |
+| Scheduling | `cron` behind `background` feature (job CRUD) | **Crons** first-class (create/update/delete/search/count) — 6 endpoints |
+| Cross-thread KV | none in adk-server (memory is a separate service) | **Store** (put/get/delete/search/namespaces) — 5 endpoints |
+| Streaming shape | SSE off `/run`, plus A2A `/a2a/stream`; NO thread-join/reconnect, NO v3 command/subscribe | SSE + `Last-Event-ID` reconnect + `join` + v3 `/threads/{id}/stream/events` (SSE + WS) + `/commands` |
+| Inter-agent protocol | **A2A v1.0.0 native** (task/context model) — no LangGraph analog | none (platform is client↔server, not agent↔agent) |
+| Pagination side-channels | `page_size`/`page_token` on A2A `list_tasks` only | `X-Pagination-Next`, `Content-Location`, `Location`, `Prefer: return=minimal` |
+
+Net structural read (no verdict): adk-server is a **session-centric agent-runtime HTTP facade
+with A2A as its inter-agent protocol**; LangGraph platform is a **resource-oriented control plane**
+(assistant/thread/run/cron/store) with a richer run lifecycle (multitask reconciliation, durability
+modes, resumable/reconnectable streams). Different *shapes* of "serve an agent over HTTP": adk
+optimizes "invoke this app for this user's session, stream events, and expose the agent to peer
+agents"; LangGraph optimizes "manage versioned assistants running durable, reconnectable,
+schedulable runs against persistent threads with a shared KV store." Under D13 ferrochain-server
+owes fidelity to NEITHER wire contract — but the LangGraph run-lifecycle vocabulary (durability
+modes, multitask strategy, resumable streams, run/thread/assistant separation) is the richer
+design reference for the Domain-B durable-run workload, while adk's A2A-native posture and
+session-triple addressing are references for inter-agent delegation and multi-tenancy.
+
+## Protocol landscape: AWP / ACP / A2A / MCP relationships (question 2 — OBSERVE only)
+
+adk-rust hosts FOUR distinct agent protocols with orthogonal roles. Mapping vs ferrochain's
+declared posture (D1: `ferrochain-mcp` is the live integration surface). The "ADR-6
+protocol-scope-split" named in the task is **not yet materialized as a file** at pre-Phase-1
+(searched `.factory/` — present only in planning/cycle narrative), so this maps to the *known*
+posture, not a written ADR.
+
+| Protocol | Crate(s) | Role / direction | External spec dep | ferrochain analog |
+|----------|----------|------------------|-------------------|-------------------|
+| **MCP** (Model Context Protocol) | `adk-tool::mcp` (A1) | agent → tool/resource server (CONSUME tools) | rmcp-style client | `ferrochain-mcp` (D1) — **the one ferrochain has declared** |
+| **A2A** (Agent-to-Agent) | `adk-server::a2a` + `a2a-protocol-types` | agent ↔ agent RPC (DELEGATE tasks) — task/context/artifact, 11 JSON-RPC ops, SSE | `a2a-protocol-types` crate | none in ferrochain scope |
+| **ACP** (Agent Client Protocol) | `adk-acp` + `agent_client_protocol` | IDE/editor ↔ coding-agent (Claude Code/Codex) — wrap external ACP agents as tools, or expose ADK as ACP | `agent_client_protocol` crate | none in ferrochain scope |
+| **AWP** (Agentic Web Protocol) | `adk-awp` + `awp-types` | web/business → agent — public discovery (`.well-known`), JSON-LD capability manifests, trust tiers, human-vs-agent detection, consent, per-trust rate-limit, HMAC webhooks, commerce | own (`awp-types`) | none in ferrochain scope |
+
+**How they relate (evidence-grounded):**
+- **AWP is the outer web/trust/commerce envelope; A2A is the inner agent-RPC.** `awp-types` has an
+  `a2a` module (`A2aMessage`, `A2aMessageType`, `AwpTypedMessage`): AWP carries A2A messages as one
+  payload type and layers discovery/trust/consent/rate-limit/payment ON TOP. AWP re-exports
+  `PaymentIntent`/`PaymentPolicy` (links to `adk-payments`, the commerce crate).
+- **A2A and MCP are complementary, not competing:** MCP = how an agent *acquires* tools/resources;
+  A2A = how an agent *delegates a whole task* to a peer. `adk-tool::mcp` (consume) vs
+  `adk-server::a2a` (be-consumed-by-peers).
+- **ACP is orthogonal:** the IDE/CLI↔agent lane (Zed's Agent Client Protocol), with its own
+  permission model (`PermissionPolicy`/`PermissionDecision`) and usage tracker (`AcpUsage`).
+- **Only A2A is wired into the HTTP server.** AWP and ACP are standalone crates (AWP ships its own
+  axum `awp_routes`; ACP ships stdio + http transports). So "is the server A2A-native?" → **YES**:
+  A2A v1.0.0 is the server's first-class inter-agent protocol (feature `a2a-v1`), with the runner
+  wired in for real generation on `message_send`.
+
+**Mapping to ferrochain protocol-scope:** ferrochain has declared exactly ONE of the four (MCP,
+via `ferrochain-mcp`, D1). A2A/ACP/AWP are out of currently-declared ferrochain scope. The adk-rust
+evidence is a useful *landscape map* for a future ferrochain protocol-scope ADR: the four lanes are
+genuinely distinct (consume-tools / delegate-to-peer / IDE-integration / web-storefront), and a
+server can be A2A-native without touching AWP/ACP. Observe only — no recommendation on adoption.
+
+## adk-managed / adk-enterprise / adk-deploy / adk-cli / cargo-adk (inventory depth)
+
+- **adk-managed** (6,160 LOC) — managed agent runtime. `usage.rs` = `UsageReport`/
+  `SessionUsageTracker` (uniform token accounting for "billing, monitoring, cost tracking" per its
+  doc — but no ceiling; patterns A3 P-39/P-46), plus `event_mapping.rs`, `default_runtime.rs`,
+  `agent_builder.rs`, typed `error/events/tools`.
+- **adk-enterprise** (5,675 LOC) — enterprise **client** SDK (`client_events`, `client_sessions`,
+  `client_environment`, typed `session/environment/tool/agent/vault/memory/pagination`). A remote
+  client for a hosted control plane, not a server; `vault` types hint at a managed secret surface.
+- **adk-deploy** (1,605 LOC) — deployment helpers; declares `anyhow` (binary-adjacent).
+- **adk-cli** (2,128 LOC) — CLI binary (`serve`/`graph`/`skills`/`deploy`/`console`/`setup`); uses
+  `anyhow` (acceptable — binary).
+- **cargo-adk** (4,050 LOC) — `cargo adk` subcommand + `codegen`; uses `anyhow` (binary).
+
+## Cross-cluster structural note (Pass A3)
+The exposure cluster is A2A-native, session-triple-addressed, and feature-gated to the point where
+"the server's endpoint set" is a compile-time variable. Two execution seams are scaffolds rather
+than finished (`a2a message_stream` and `background` runs — see behavioral-intent A3 / patterns
+P-41). Token accounting exists (`adk-managed::usage`); budget governance does not (patterns P-46).
+Auth is entirely BYO via one injected trait, with `adk-auth` supplying the enterprise implementation.
+
+## State Checkpoint
+```yaml
+pass: A3
+scope: module-inventory (server/protocol/exposure cluster)
+status: complete
+crates_deep: [adk-server, adk-server/a2a/v1, adk-awp, awp-types, adk-acp, adk-auth, adk-telemetry, adk-managed]
+crates_inventory: [adk-enterprise, adk-deploy, adk-cli, cargo-adk]
+server_endpoints_catalogued: ~40 (native REST + A2A + background/cron feature routes)
+protocols_mapped: 4 (MCP, A2A, ACP, AWP)
 timestamp: 2026-07-13
 ```
