@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T18:30:00Z
+timestamp: 2026-07-13T18:45:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "3-CLEAN certification pass 2 in progress, streak 0/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes."
+current_step: "3-CLEAN certification pass 3 in progress, streak 1/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes."
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -43,9 +43,9 @@ dtu_required: false
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived upstream — curated-subset reference only), langchain-mcp-adapters==0.3.0 (SHA a61c783a) |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — burst 18: 3-CLEAN certification pass 1 COMPLETE — CLEAN(strict)=NO, CLEAN(PR-merge)=YES. 2 corrections (2 MEDIUM), streak 0/3. STRONG convergence: all 4 high-consequence exhaustive fixes RE-CONFIRMED; 16 additional corrections all-correct; 12 test citations accurate; propagation audit clean; cross-area consistent. Error surface = scope-label precision on counts only. Guardrail #7 codified: SCOPE-LABEL MATCHING. Certification pass 2 dispatched. |
+| **Last Updated** | 2026-07-13 — burst 19: 3-CLEAN certification pass 2 COMPLETE — CLEAN(strict)=YES, ZERO corrections. Streak 0/3→1/3. First CLEAN(strict) pass of entire gate. 58 checks: 21 behavioral claims ALL CONFIRMED; 21 numeric rows ALL delta=0 (guardrail 7 scope-label resolution); pass-1 fixes re-verified exact; cross-area consistency intact. Certification pass 3 dispatched. |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | 3-CLEAN certification pass 2 in progress (all 7 guardrails; rotated sampling avoiding pass-1's verified list; re-verifies pass-1's own fixes; platform↔graph number agreement check). Streak 0/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes. |
+| **Current Step** | 3-CLEAN certification pass 3 in progress (fresh context; all 7 guardrails; sampling rotated away from both pass-1 and pass-2 verified lists; weighted toward ADR-driving assertions and error-path claims). Streak 1/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes. |
 
 ## Phase Progress
 
@@ -68,11 +68,11 @@ dtu_required: false
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| extraction-validation pass 7 | validate-extraction | DONE | CLEAN(strict)=NO, CLEAN(PR-merge)=YES. 2 corrections (1 MEDIUM, 1 LOW), streak 0/3. MEDIUM: LoggingCallbackHandler misattributed to langchain-core (exists only in langchain_classic; core tracer roster corrected). LOW: BaseCallbackHandler 4→7 ignore flags (missing: ignore_retry, ignore_chat_model, ignore_custom_event). Propagation audit: ZERO stale values — failure class extinguished. ALL strata sampled. Cascade: 11→5→7→9→2→2→2; 49 total corrections. 6th guardrail: package-attribution. |
 | extraction-validation pass 8 | validate-extraction | DONE | CLEAN(strict)=NO. 7 corrections (5 MEDIUM, 2 LOW), streak 0/3 — streak has never started. PHANTOM BEHAVIOR: 4 partner-area docs claimed base_url gate on OpenAI Responses-API routing that does NOT exist in source (routing = feature-flag + model-name; base_url only gates stream_usage auto-enabling). AnyValue channel semantics documented as OPPOSITE of actual (docs: "never empty once written"; actual: cleared each unwritten step). langchain agents/ LOC corrected. Cascade: 11→5→7→9→2→2→2→7; 56 total corrections. Level-2 escalation to human; D14.1 approved. |
 | exhaustive verification sweep | validate-extraction (x7) | DONE | D14.1 protocol COMPLETE — all 7 areas full coverage. ~1,216 claims verified; ~45 corrections (3 CRITICAL, ~9 HIGH, ~11 MEDIUM). ZERO hallucinated symbols. 2 phantom artifacts removed. CRITICAL: graph recursion_limit 10,007 not 25; langchain hook return type dict[str,Any]\|None not dict\|Command\|None. R11 registered. 7 EXHAUSTIVE-SWEEP.md files written. |
 | 3-CLEAN certification pass 1 | validate-extraction | DONE | CLEAN(strict)=NO, CLEAN(PR-merge)=YES. 2 corrections (2 MEDIUM), streak 0/3. STRONG convergence: all 4 high-consequence exhaustive fixes RE-CONFIRMED; 16 additional corrections all-correct; 12 test citations accurate; propagation clean; cross-area consistent. Error surface = scope-label precision on counts only. |
-| 3-CLEAN certification pass 2 | validate-extraction | IN_PROGRESS | All 7 guardrails; rotated sampling avoiding pass-1 verified list; re-verifies pass-1 own fixes; platform↔graph number agreement check. Streak 0/3. |
+| 3-CLEAN certification pass 2 | validate-extraction | DONE | CLEAN(strict)=YES — ZERO corrections. Streak 0/3→1/3. 58 checks: 21 behavioral claims ALL CONFIRMED; 21 numeric rows ALL delta=0 (guardrail 7 scope-label resolution); pass-1 fixes re-verified exact; cross-area consistent. |
+| 3-CLEAN certification pass 3 | validate-extraction | IN_PROGRESS | Fresh context; all 7 guardrails; sampling rotated from both prior passes' verified lists; weighted toward ADR-driving assertions and error-path claims. Streak 1/3. |
 
 ## Decisions Log
 
@@ -146,9 +146,9 @@ dtu_required: false
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 18 complete. 3-CLEAN certification pass 1 COMPLETE: CLEAN(strict)=NO, CLEAN(PR-merge)=YES. 2 corrections (2 MEDIUM), streak 0/3. Both corrections were the exhaustive sweep's own over-corrections: sdk-py (63/20,787→45/18,728) and cli (46/9,997→19/8,383) row counts reverted to package-directory scope — M-05/M-06 had measured the broader libs/ trees, inconsistent with all other rows. STRONG convergence signal: all 4 high-consequence exhaustive fixes RE-CONFIRMED against source (recursion_limit 10,007, HookResult dict-only, JSX cascade append, phantom endpoint removal); 16 additional exhaustive corrections re-derived all-correct; 12 test citations accurate; propagation audit clean; 34-symbol API contract cross-area consistent. Guardrail #7 codified: SCOPE-LABEL MATCHING — every numeric row must be counted from exactly the scope its label denotes (package dir vs libs tree); correctors must resolve label scope BEFORE re-counting. Certification pass 2 DISPATCHED: all 7 guardrails; rotated sampling avoiding pass-1's verified list; re-verifies pass-1's own fixes; platform↔graph number agreement check. |
-| **Key context** | D1-D14.1 locked. D14.1: exhaustive-sweep-then-3-CLEAN (human-approved 2026-07-13); strict-zero bar unchanged. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R10 OPEN: NamedBarrierValue + EphemeralValue coverage gap — route to product-owner at Phase 1. R11 OPEN: MCP upstream test voids — mcp bare-ToolException re-raise path + mcp __aenter__ NotImplementedError contract (must be explicit ferrochain Red Gate tests). CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment. 7 guardrails active for certification passes (new: SCOPE-LABEL MATCHING). |
-| **Convergence counter** | 0 of 3 |
+| **Position** | pre-1, burst 19 complete. 3-CLEAN certification pass 2 COMPLETE: CLEAN(strict)=YES — ZERO corrections. Streak 0/3→1/3. First CLEAN(strict) pass of the entire gate (after 8 sampled passes + 7-area exhaustive sweep + certification pass 1). 58 checks: 21 behavioral claims across all 7 areas ALL CONFIRMED; 21 numeric rows ALL delta=0 under guardrail 7 scope-label resolution; certification-pass-1 fixes re-verified exact; cross-area consistency (platform↔graph figures, core↔langchain §5 symbols) intact. Certification pass 3 DISPATCHED: fresh context; all 7 guardrails; sampling rotated away from both certification passes' verified lists; weighted toward ADR-driving assertions and error-path claims. Advances to 2/3 on zero corrections; any finding resets to 0/3. |
+| **Key context** | D1-D14.1 locked. D14.1: exhaustive-sweep-then-3-CLEAN (human-approved 2026-07-13); strict-zero bar unchanged. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R10 OPEN: NamedBarrierValue + EphemeralValue coverage gap — route to product-owner at Phase 1. R11 OPEN: MCP upstream test voids — mcp bare-ToolException re-raise path + mcp __aenter__ NotImplementedError contract (must be explicit ferrochain Red Gate tests). CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment. 7 guardrails active for certification passes (SCOPE-LABEL MATCHING = 7th). |
+| **Convergence counter** | 1 of 3 |
 
 ## Historical Content
 
@@ -171,6 +171,8 @@ dtu_required: false
 | Burst 16 narrative (pass 8 COMPLETE/7 corrections — PHANTOM BEHAVIOR: base_url gate does not exist in source; AnyValue channel semantics OPPOSITE of actual; D14.1 exhaustive-sweep-then-3-CLEAN human-approved; 7 parallel area validators dispatched; CASCADE 11→5→7→9→2→2→2→7; 56 total) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 17 narrative (D14.1 exhaustive sweep COMPLETE — all 7 areas, ~1,216 claims, ~45 corrections, 3 CRITICAL, ZERO hallucinations, 2 phantoms removed; CRITICAL: graph recursion_limit 10,007 not 25; langchain hook return type corrected; R11 registered; 3-CLEAN certification pass 1 dispatched; streak 0/3) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 18 narrative (3-CLEAN certification pass 1 COMPLETE — CLEAN(strict)=NO, CLEAN(PR-merge)=YES; 2 MEDIUM corrections: sdk-py 63/20,787→45/18,728 + cli 46/9,997→19/8,383 reverted to package-dir scope; STRONG convergence: 4 high-consequence fixes RE-CONFIRMED; guardrail #7 SCOPE-LABEL MATCHING codified; pass 2 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Burst 19 narrative (3-CLEAN certification pass 2 COMPLETE — CLEAN(strict)=YES, ZERO corrections; streak 0/3→1/3; 58 checks all 7 areas; 21 behavioral claims confirmed; 21 numeric rows delta=0; pass-1 fixes re-verified; cross-area consistent; pass 3 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Burst 18 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Burst 14 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Burst 15 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Burst 16 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |

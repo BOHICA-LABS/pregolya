@@ -719,3 +719,19 @@ Both must be explicit ferrochain Red Gate tests (join R8 splitters code-point/by
 - logs/dispatcher-internal-2026-07-12.jsonl (dispatcher log updated)
 
 **Next steps:** 3-CLEAN certification pass 2 in progress. Requires 3 consecutive CLEAN(strict) passes (streak 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.
+
+---
+
+## Burst 19 — 2026-07-13 — 3-CLEAN certification pass 2 COMPLETE; pass 3 dispatched
+
+**Agent:** validate-extraction (certification pass 2)
+
+**Summary:** Certification pass 2 returned CLEAN(strict)=YES — ZERO corrections. This is the first CLEAN(strict) pass of the entire gate after 8 sampled passes + 7-area exhaustive sweep + certification pass 1. Streak advances from 0/3 to 1/3. 58 checks performed: 21 behavioral claims drawn from all 7 areas (rotated from prior verified lists) ALL CONFIRMED against pinned source; 21 numeric rows checked under guardrail 7 scope-label resolution — ALL delta=0; certification-pass-1 own fixes re-verified exact; cross-area consistency checks (platform↔graph figures, core↔langchain §5 symbols) intact. Certification pass 3 dispatched immediately (fresh context, all 7 guardrails, sampling weighted toward ADR-driving assertions and error-path claims, rotated away from both prior certification passes' verified lists). Advances to 2/3 on zero corrections; any finding resets streak to 0/3.
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated, Current Step; pass-2 row updated to DONE; pass-3 IN_PROGRESS row added; pass-7 row archived; Session Resume Checkpoint replaced; Historical Content updated with burst 19, burst-18 checkpoint entry)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 18 checkpoint archived)
+
+**Next steps:** 3-CLEAN certification pass 3 in progress (streak 1/3). Requires 2 more consecutive CLEAN(strict) passes. On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.
