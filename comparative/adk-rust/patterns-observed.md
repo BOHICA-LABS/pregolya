@@ -1552,8 +1552,10 @@ timestamp: 2026-07-13
   `V1ClientError` (thiserror) with version-negotiation parsing (`-32009` → supported-version
   extraction), agent-card caching with ETag/If-None-Match/Last-Modified/304, and exponential-backoff
   retry (`RetryConfig` default 3 attempts / 1s base, retrying 429 + 5xx + timeouts). Interface
-  selection prefers `JSONRPC` then falls back to `HTTP+JSON`. The SSE parse loop is duplicated across
-  legacy client, legacy remote-agent, and v1 remote-agent.
+  selection prefers `JSONRPC` then falls back to `HTTP+JSON`. The SSE parse loop is duplicated: <!-- [comparative-cert-10] CORRECTION: residual body-text inaccuracy from C3-01; original said "duplicated across legacy client, legacy remote-agent, and v1 remote-agent" implying all 3 have their own copy; C3-01 established only TWO SSE parse implementations exist (client.rs parse_sse_data + remote_agent.rs parse_sse_data_line); legacy RemoteA2aAgent::run DELEGATES to A2aClient::send_streaming_message — it has NO separate SSE parse loop; corrected to name only the two actual implementations -->
+  (1) legacy `A2aClient::send_streaming_message` inline loop + `parse_sse_data` (client.rs:186);
+  (2) `v1_remote::run` inline loop + `parse_sse_data_line` (remote_agent.rs:699).
+  Legacy `RemoteA2aAgent::run` delegates to `A2aClient::send_streaming_message` (no separate copy).
 - **Test asymmetry:** v1 has HIGH-confidence unit tests for the *pure* functions (error parsing,
   version-error parsing, interface selection, header construction, card storage) but the retry /
   caching / transport paths themselves are untested (would need a mock HTTP server; the live path is

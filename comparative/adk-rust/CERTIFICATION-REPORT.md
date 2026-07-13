@@ -1676,3 +1676,192 @@ Novel probe:       A6/A7 STRONG/NEUTRAL/WEAK/INFO distributions cross-document �
 Rotation:          5/6 behavioral+citation claims CONFIRMED; 1 inaccurate (C9-01); 0 hallucinated
 Streak:            0/3 (reset from 1/3 — C9 corrected 1 LOW-severity item)
 ```
+
+---
+
+# Certification Pass C10 — adk-rust Comparative Corpus
+
+---
+artifact: comparative/adk-rust/CERTIFICATION-REPORT
+document_type: certification-pass
+pass: C10
+corpus: adk-rust v1.0.0 (SHA a6c79b6f)
+reference: .reference/adk-rust (read-only)
+guardrails: all-twelve (lessons.md eleven + guardrail-12 attribute-only test counting)
+streak_in: 0/3
+date: 2026-07-13
+focus: C9 sibling check (12-field RunConfig) + member-count class closer (all struct/enum/trait member-count claims) + all-twelve guardrails rotation (never-verified pools: P-06/P-09/P-21/P-23/P-37; dependency-disposition A2 citation)
+---
+
+## CLEAN Status
+
+```
+CLEAN (strict):    NO  — 1 new correction (LOW severity)
+CLEAN (PR-merge):  YES — no CRIT/HIGH/MED findings remain uncorrected
+Streak position:   0/3 (reset from 0/3 — no change from incoming position)
+```
+
+---
+
+## Opener 1 — C9 Sibling Check (12-field RunConfig)
+
+Grepped all 9 analysis files (behavioral-intent.md, patterns-observed.md, module-inventory.md,
+dependency-disposition.md, test-inventory.md, ANALYSIS-STATE.md, SWEEP-behavioral-module.md,
+SWEEP-patterns.md, SWEEP-test-deps.md) for `12-field`, `12 field`, `twelve-field`, `RunConfig.*12`,
+`12.*RunConfig`.
+
+| File | Line | Content | Status |
+|------|------|---------|--------|
+| behavioral-intent.md line 91 | "**`RunConfig`** — 11-field run configuration" | ALREADY CORRECTED (C9-01) ✓ |
+| behavioral-intent.md line 92 | [comparative-cert-9] comment with "12-field" as historical reference | Historical, not active claim ✓ |
+| ANALYSIS-STATE.md | no hits | CLEAN ✓ |
+| All SWEEP files | no active "12-field" hits | CLEAN ✓ |
+| CERTIFICATION-REPORT.md history sections | retains "12-field" as correction-table original-claim records | Expected historical records ✓ |
+
+**Opener 1 verdict: CLEAN — zero active "12-field" RunConfig phrasing remains anywhere in the corpus.**
+
+---
+
+## Opener 2 — Member-Count Class Closer
+
+Enumerated every STRUCT/ENUM/TRAIT member-count claim across all 9 analysis files not previously
+verified in any SWEEP or C1-C9 pass. Patterns searched: `N-field`, `N fields`, `N variants`,
+`N params`, `N methods`, `N callbacks`, `N hooks`, `N ops`.
+
+### Previously verified (prior passes)
+
+| Claim | Source | Verified In |
+|-------|--------|------------|
+| ErrorComponent: 14 variants | behavioral-intent.md A1 §4 | C8 B2 |
+| ErrorCategory: 10 variants | behavioral-intent.md A1 §4 | C8 B3 |
+| RunConfig: 11 fields (corrected from 12) | behavioral-intent.md A1 §5 | C9-01 |
+| WasmBackend EnforcedLimits: 5 boolean fields | patterns-observed.md P-47 | C7 B-06 |
+| adk-rust-macros: 3 proc_macro_attribute items | module-inventory.md A5 | C5 B-07 |
+| ContentFilter: 6 keyword blocklist | patterns-observed.md P-59 / behavioral-intent.md A4 §1 | C7 B-01 |
+| livekit EventHandler: 6 non-audio callbacks / 6 property tests | patterns-observed.md P-92 | C2-02 (corrected from 7) |
+| adk-session: 8 backends | behavioral-intent.md A1 §6 | C6 C-01 |
+
+### Newly verified in C10
+
+| Claim | Source | Recounted | Delta | Command |
+|-------|--------|-----------|-------|---------|
+| Interrupt enum: 3 variants (Before/After/Dynamic) | patterns-observed.md P-30 line 406 | 3 | 0 | `grep -n "pub enum Interrupt" .reference/adk-rust/adk-graph/src/interrupt.rs` → Before, After, Dynamic |
+| request_handler: 11 ops | module-inventory.md A1 line 297 | 11 | 0 | Grep pub async fn in request_handler.rs: message_send, message_stream, tasks_get, tasks_cancel, tasks_list, tasks_subscribe, push_config_create, push_config_get, push_config_list, push_config_delete, agent_card_extended |
+| A2aV1Client: 11 A2A ops over JSON-RPC+REST | patterns-observed.md P-86 line 1551; ANALYSIS-STATE.md line 95 | 11 | 0 | Count pub async fn on A2aV1Client in client.rs: send_message, send_streaming_message, get_task, cancel_task, list_tasks, subscribe_to_task, create_push_notification_config, get_push_notification_config, list_push_notification_configs, delete_push_notification_config, get_extended_agent_card |
+| RequestContextError: 3 variants (MissingAuth/InvalidToken/ExtractionFailed) | patterns-observed.md P-38 "three error variants to 401/401/500" | 3 | 0 | `grep -n "pub enum RequestContextError" .reference/adk-rust/adk-server/src/auth_bridge.rs` → MissingAuth, InvalidToken, ExtractionFailed |
+| RunnerConfigBuilder: 3 required fields (NoAppName/NoAgent/NoSessionService) | patterns-observed.md P-09; adk-runner/src/builder.rs | 3 | 0 | `grep "pub struct No" .reference/adk-rust/adk-runner/src/builder.rs` → lines 36/40/44 |
+| tool_call_parser: 22 unit tests | patterns-observed.md P-68 "22 unit tests"; SWEEP-test-deps.md "22 formats" | 22 | 0 | `grep -c "#\[test\]\|#\[tokio::test\]" .reference/adk-rust/adk-model/src/tool_call_parser.rs` = 22 |
+| adk-model LLM provider families: 10 | module-inventory.md A1 table line 22 | 10 | 0 | `ls .reference/adk-rust/adk-model/src/` → 9 subdirs (anthropic/azure_ai/bedrock/deepseek/gemini/groq/ollama/openai/openrouter) + openai_compatible.rs = 10 |
+
+**Member-count sweep — claims checked: 15 total (8 previously verified + 7 newly verified). All Delta = 0. CLEAN.**
+
+Note: SWEEP-test-deps.md says "tool_call_parser 22 formats" (condensed notation for "22 format-related test functions"). The primary source patterns-observed.md P-68 correctly says "22 unit tests." The number 22 is correct; SWEEP's shorthand "formats" is condensed notation, not an error.
+
+---
+
+## Phase 1 — Behavioral Verification (All-Twelve Guardrails Rotation)
+
+Claims selected from never-verified pools (absent from SWEEP and C1-C9 verified lists).
+
+### Never-verified patterns P-06/P-09/P-21/P-23/P-37 (never sampled in C1-C9)
+
+| # | Source | Claim | Result |
+|---|--------|-------|--------|
+| B-01 | patterns-observed.md P-06 | `AppName`/`UserId`/`SessionId`/`InvocationId` newtypes (`TryFrom<&str>` validating) compose into `AdkIdentity` and `ExecutionIdentity`; `SessionService` offers `*_for_identity` methods using the full triple | CONFIRMED — identity.rs lines 348/406: `AdkIdentity`/`ExecutionIdentity` structs exist; all 4 newtypes implement `TryFrom<&str>` via macro (line 184/193); service.rs lines 230/254/278: `get_for_identity`/`delete_for_identity`/`append_event_for_identity` present |
+| B-02 | patterns-observed.md P-37 | `validate_message`/`validate_id`: message ≥1 part; IDs non-empty-after-trim and ≤256 chars; metadata JSON ≤64 KB — each bound individually tested | CONFIRMED — request_handler.rs lines 31-58: `id.trim().is_empty()` check (line 33), `id.len() > 256` check (line 38), `msg.parts.is_empty()` check (line 48), metadata JSON size check with 64 KB string (line 58); test at line 1096 confirms `assert!(err.to_string().contains("64 KB"))` |
+| B-03 | patterns-observed.md P-09 | `Runner::builder()` returns `RunnerConfigBuilder<NoAppName,NoAgent,NoSessionService>` (parameterized on phantom states); `build()` only callable once all three set | CONFIRMED — runner.rs line 128: `pub fn builder() -> crate::builder::RunnerConfigBuilder<NoAppName, NoAgent, NoSessionService>`; builder.rs lines 36/40/44: structs `NoAppName`/`NoAgent`/`NoSessionService`; build() on line 287 is only on the fully-typed impl |
+| B-04 | patterns-observed.md P-21 | `EncryptedSession<S>` wraps ANY `SessionService`; AES-256-GCM; random 96-bit nonce; stores `base64([12-byte nonce ‖ ciphertext])` under `__encrypted_state`; decryption tries current_key then each previous_key in order; lazy re-encrypt on previous-key hit | CONFIRMED — encrypted.rs line 44 (`ENCRYPTED_STATE_KEY = "__encrypted_state"`); line 50 (`pub struct EncryptedSession<S: SessionService>`); line 149 (`[0u8; 12]` nonce); lines 99-108 (try current_key first, then iterate previous_keys); module doc lines 10-13 verbatim match |
+| B-05 | patterns-observed.md P-23 | `execute_super_step` snapshots state into each node's `NodeContext::new(self.state.clone(), …)`, runs all pending nodes concurrently via `buffer_unordered`, collects all `output.updates` into `all_updates`, applies through reducers AFTER all nodes resolve | CONFIRMED — executor.rs line 572: `NodeContext::new(self.state.clone(), self.config.clone(), self.step)`; line 597: `stream::iter(futures).buffer_unordered(…).collect().await`; lines 600/633: `all_updates` Vec populated; line 644: "Apply all updates atomically using reducers" comment |
+
+Citation (never-verified from dependency-disposition.md A2):
+
+| # | Source | Citation | Result |
+|---|--------|----------|--------|
+| C-01 | dependency-disposition.md A2 | `aes-gcm` crate used in `adk-session::encrypted.rs` with `Aes256Gcm::new_from_slice(key)` | CONFIRMED — encrypted.rs lines 34-35: `use aes_gcm::{Aes256Gcm, KeyInit, Nonce};` + line 146: `Aes256Gcm::new_from_slice(key)` |
+
+| File | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| patterns-observed.md P-06/P-09/P-21/P-23/P-37 (5 behavioral) | 5 | 5 | 0 | 0 | 0 |
+| dependency-disposition.md A2 (1 citation) | 1 | 1 | 0 | 0 | 0 |
+
+**Phase 1 total (main rotation): 6 claims checked, 6 confirmed, 0 inaccurate, 0 hallucinated, 0 unverifiable**
+
+### Serendipitous discovery during member-count sweep — P-86 body text residual inaccuracy
+
+While verifying the "11 ops" claim for A2aV1Client in P-86, the observation body text was re-read. Lines 1555-1556 state: "The SSE parse loop is duplicated across legacy client, legacy remote-agent, and v1 remote-agent." This lists 3 entities. The C3-01 correction (Quality line) established that only TWO SSE parse implementations exist and that legacy RemoteA2aAgent::run DELEGATES to A2aClient::send_streaming_message (no separate parse loop). The body text listing legacy remote-agent alongside the two actual implementors implies it has its own copy — INACCURATE. **Correction applied: C10-01.**
+
+---
+
+## Phase 2 — Metric Verification (Never-Verified Claims)
+
+| Claim | Source | Claimed | Recounted | Delta | Command |
+|-------|--------|---------|-----------|-------|---------|
+| P-37 ID char limit | patterns-observed.md P-37 | ≤256 | 256 | 0 | `grep -n "id.len() > 256" .reference/adk-rust/adk-server/src/a2a/v1/request_handler.rs` → line 38 |
+| LlmAgent file size | behavioral-intent.md A4 §1 | 2,712 lines | 2,712 | 0 | `wc -l .reference/adk-rust/adk-agent/src/llm_agent.rs` = 2712 |
+| Runner::run function size | behavioral-intent.md §5 | ~800 lines | 822 | ~+22 (approx.) | awk offset from line 227 to line 1048 (next pub async fn run_str) = 822 lines; "~800" uses tilde prefix per document |
+| adk-model provider families | module-inventory.md A1 table | 10 | 10 | 0 | `ls .reference/adk-rust/adk-model/src/` → 9 subdirs + openai_compatible.rs = 10 |
+| Interrupt enum variants | patterns-observed.md P-30 | 3 | 3 | 0 | `grep "pub enum Interrupt" -A10 .reference/adk-rust/adk-graph/src/interrupt.rs` → Before, After, Dynamic |
+| auth_middleware error variants | patterns-observed.md P-38 | 3 (to 401/401/500) | 3 | 0 | `grep "pub enum RequestContextError" .reference/adk-rust/adk-server/src/auth_bridge.rs` → 3 variants confirmed; `grep -n "MissingAuth\|InvalidToken\|ExtractionFailed" .reference/adk-rust/adk-server/src/rest/mod.rs` → 401/401/500 mapping confirmed |
+
+**Approximation note:** Runner::run "~800 lines" has delta +22 (actual = 822). The "~" prefix was present in the document text. Per C5/C7 precedent for "~"-prefixed approximations: delta reported, no correction applied. Primary conclusion (monolithic function, ferrochain's 750-line hard gate would be violated by it) is unaffected.
+
+**Non-approximation rows: 5/5 pass (Delta = 0). Approximation row: 1 (delta reported; no correction per precedent).**
+
+---
+
+## Refinement Iterations: 1/3
+
+All findings resolved in first pass. One correction applied. No items require re-verification.
+
+---
+
+## New Corrections Applied in This Pass
+
+| # | Severity | Item | Original Claim | Corrected Value | File | Marker |
+|---|----------|------|---------------|-----------------|------|--------|
+| C10-01 | LOW | patterns-observed.md P-86 Observation body text: SSE parse loop entity list | "The SSE parse loop is duplicated across legacy client, legacy remote-agent, and v1 remote-agent" — implies all 3 entities have their own SSE parse loop implementation | Only TWO SSE parse implementations exist: (1) legacy `A2aClient::send_streaming_message` inline loop + `parse_sse_data` (client.rs:186); (2) `v1_remote::run` inline loop + `parse_sse_data_line` (remote_agent.rs:699). Legacy `RemoteA2aAgent::run` DELEGATES to `A2aClient::send_streaming_message` — it has NO separate SSE parse loop; body text erroneously included it as an implementor; C3-01 corrected the Quality line summary but this body-text sibling was missed | patterns-observed.md | `[comparative-cert-10]` |
+
+---
+
+## UNVERIFIABLE Items (4 a2a-v1 Phase-4 obligations, carried from C2-C9)
+
+Same four items — unchanged; no new UNVERIFIABLE items added.
+
+---
+
+## Hallucinated Items (Removed)
+
+None. Zero hallucinations detected across all passes C1-C10.
+
+---
+
+## Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Behavior | Correction Applied |
+|------|---------------|-----------------|-------------------|
+| patterns-observed.md P-86 Observation body (lines 1555-1556) | "The SSE parse loop is duplicated across legacy client, legacy remote-agent, and v1 remote-agent" | Only two SSE parse implementations: (1) legacy A2aClient in client.rs, (2) v1_remote in remote_agent.rs. Legacy RemoteA2aAgent::run delegates to A2aClient — NO separate parse loop, NOT a third copy (established by C3-01 correction comment in Quality line). Body text listing all 3 entities as implementors is inaccurate | Reworded body text to enumerate only the two actual implementations; legacy remote-agent's delegation role noted; `[comparative-cert-10]` marker applied |
+
+---
+
+## Confidence Assessment
+
+- Overall extraction accuracy: **99%** (6/6 main rotation behavioral+citation confirmed; 1 low-severity residual body-text inaccuracy corrected; 0 hallucinations; zero MEDIUM-or-higher errors across any pass C1-C10)
+- Member-count sweep: **100%** — 15 claims checked (8 from prior passes + 7 newly verified); all Delta = 0
+- Metric accuracy: **100%** on non-approximation claims (5/5 Delta=0); 1 approximation row delta noted per precedent
+- Hallucination rate: **0%** (maintained across all passes C1-C10)
+- Recommendation: **TRUST WITH CAVEATS** — same caveat classes as C9: (1) scc Code vs wc-l methodology inconsistency (UNVERIFIABLE without scc tool); (2) four a2a-v1 runtime items Phase-4 validation obligations; (3) adk-anthropic/src/types ~60 vs 82 approximation gap pre-existing acknowledged.
+
+---
+
+## Certification Final Verdict
+
+```
+CLEAN (strict):    NO
+CLEAN (PR-merge):  YES
+New corrections:   1 (LOW severity — P-86 Observation body text SSE parse loop entity list [C10-01]; residual from C3-01 scope that corrected Quality line but not body text)
+Opener 1:          CLEAN — zero active "12-field" RunConfig phrasing in any corpus file
+Opener 2:          15 member-count claims inventoried (8 prior-verified + 7 newly verified); all Delta=0; member-count class CLOSED
+Metric sweep:      5/5 non-approximation Delta=0; 1 approximation row (~800 lines → 822 actual; no correction per C5/C7 precedent)
+Rotation:          6/6 behavioral+citation claims CONFIRMED; 0 inaccurate in main rotation; 0 hallucinated
+Streak:            0/3 (reset — C10 corrected 1 LOW-severity item)
+```
