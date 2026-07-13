@@ -177,3 +177,38 @@ For pass 7 and subsequent passes, a notes-without-edits sweep is mandatory:
 ### Follow-up
 
 Add deepening-note sweep as a mandatory first-stratum in the validate-extraction agent prompt. This sweep directly catches the pass-6 failure shape and the broader class of "correction recognized, physical edit skipped" failures. Co-batch with counting-methodology, propagation, behavioral-locus, and semantic-precision guardrails in session-review upstream agent prompt hardening.
+
+---
+
+## Lesson: PROCESS-GAP — Package-Attribution Guardrail (2026-07-13)
+
+**Source:** Extraction-validation pass 7 (burst 15)
+**Category:** process-gap
+**Severity:** MEDIUM (single MEDIUM finding; inflated port scope — LoggingCallbackHandler wrongly attributed to langchain-core)
+
+### What happened
+
+Extraction-validation pass 7 found that `LoggingCallbackHandler` was attributed to `langchain-core` in the corpus. The class exists only in `langchain_classic` (the legacy `langchain` package, `langchain/callbacks/manager.py`). It does not exist in `langchain-core` at the pinned tag (langchain-core v0.3.x). As a result, the ferrochain-core port scope had been inflated to include a class that is not part of core at all.
+
+The correct core callback/tracer roster is: `LangChainTracer`, `ConsoleCallbackHandler`, `FunctionCallbackHandler`, `RootListenersTracer`, `EvaluatorCallbackHandler`, `RunCollectorCallbackHandler`. `LoggingCallbackHandler` belongs in a ferrochain-classic compatibility layer, not in ferrochain-core.
+
+The companion LOW finding: `BaseCallbackHandler` was documented with 4 ignore flags (`ignore_llm`, `ignore_chain`, `ignore_agent`, `ignore_retriever`). The actual count is 7 — `ignore_retry`, `ignore_chat_model`, and `ignore_custom_event` were missing. A Rust `CallbackHandler` trait derived from the 4-flag description would have lacked 3 opt-outs, producing behavioral divergence on retry and custom-event callbacks.
+
+### Why it matters
+
+Misattribution of a class to the wrong package has two consequences: (1) wrong port scope (implementers build what was never in the package), and (2) wrong exclusion scope (things that were in the package get missed because the investigator finds the class somewhere and stops looking). The failure is especially pernicious in the langchain ecosystem because `langchain-core`, `langchain` (classic), `langchain-community`, and other packages share naming conventions and sometimes re-export each other's symbols. A class that "seems core-like" is not necessarily in langchain-core.
+
+The propagation audit this pass found ZERO stale values for the first time across all passes — extinguishing the corpus-wide residue failure class. Package-attribution is now the new leading failure class.
+
+### Codification applied
+
+For pass 8 and subsequent passes, a package-attribution guardrail is active (6th guardrail):
+
+1. **Package-attribution check mandatory:** Any class, function, or type attributed to a specific package MUST be verified to exist in that package at the pinned tag — not just "in the ecosystem." Presence in any langchain-* package is not evidence of presence in langchain-core.
+2. **Re-export disambiguation:** When a class is re-exported across packages (e.g., langchain imports from langchain-core), attribute it to the defining package (where `class Foo:` is defined), not the importing package.
+3. **Scope inflation check:** For every callback/tracer/handler attributed to ferrochain-core scope, confirm the defining module is `langchain_core`, not `langchain` (classic), `langchain_community`, or another package.
+4. **Exhaustive flag/method inventory:** For abstract base classes (like `BaseCallbackHandler`), enumerate ALL abstract/optional fields and flags from the actual class definition — do not derive the count from usage examples or doc summaries which typically show the common subset.
+
+### Follow-up
+
+Add the package-attribution guardrail to the validate-extraction agent prompt upstream as the 6th guardrail — co-batch with all prior guardrails in session-review prompt hardening. The full 6-guardrail set is now: (1) AST-based counting, (2) cross-document propagation sweep, (3) behavioral-locus precision, (4) semantic-precision summary-word verification, (5) deepening-note sweep, (6) package-attribution verification.

@@ -546,3 +546,35 @@ Now consistent across all 5 langchain-area docs: 27 chat / 10 embeddings.
 - cycles/v0.0.0-pre-pipeline/lessons.md (two new lessons added: semantic-precision guardrail, notes-without-edits)
 
 **Next steps:** extraction-validation pass 7 in progress. Requires 3 CLEAN(strict) passes (streak still 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.
+
+---
+
+## Burst: pre-pipeline burst 15 — extraction-validation pass 7 COMPLETE, pass 8 dispatched (2026-07-13)
+
+**Adversary verdict:** n/a — pre-pipeline burst; extraction-validation cascade in progress; no spec or implementation artifacts subject to adversarial review yet.
+
+**Pass 7 results:** CLEAN(strict)=NO, CLEAN(PR-merge)=YES. 2 corrections (1 MEDIUM, 1 LOW). Both in the final never-sampled stratum (core callbacks/tracers §10).
+
+**MEDIUM finding:** LoggingCallbackHandler misattributed to langchain-core. It exists only in langchain_classic (legacy `langchain` package). Correct ferrochain-core tracer roster: LangChainTracer, ConsoleCallbackHandler, FunctionCallbackHandler, RootListenersTracer, EvaluatorCallbackHandler, RunCollectorCallbackHandler. LoggingCallbackHandler is a legacy/classic class, not a core class. Port scope corrected — ferrochain-core scope was inflated.
+
+**LOW finding:** BaseCallbackHandler has 7 ignore flags, not 4. Missing: ignore_retry, ignore_chat_model, ignore_custom_event. A Rust CallbackHandler trait derived from the 4-flag description would have lacked 3 opt-outs, producing behavioral divergence on retry and custom-event callbacks.
+
+**MILESTONES this pass:**
+- Propagation audit found ZERO stale values corpus-wide for the first time — failure class extinguished.
+- ALL areas and strata have been sampled at least once — no unexplored territory remains.
+- Verified this pass: all 7 graph streaming modes exact, CLI command inventory exact, middleware composition-order chains confirmed, tokio task_local claims factually correct.
+
+**6th guardrail codified:** Package-attribution — any class attributed to a package must exist in that package at the pinned tag. Added to lessons.md.
+
+**Cascade totals:** 49 corrections over 7 passes. Trajectory: 11→5→7→9→2→2→2.
+
+**Pass 8 dispatched:** Fresh context. Fresh-eyes stratified random re-verification with ALL 6 guardrails active simultaneously + corpus-wide semantic-precision word sweep. First pass with a genuine shot at CLEAN(strict). Streak 0/3.
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated/Current Step; Current Phase Steps — pass-3 row archived, pass-7 updated to DONE, pass-8 IN_PROGRESS row added; Session Resume Checkpoint replaced)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 14 checkpoint archived)
+- cycles/v0.0.0-pre-pipeline/lessons.md (6th lesson added: package-attribution guardrail)
+
+**Next steps:** extraction-validation pass 8 in progress. Requires 3 CLEAN(strict) passes (streak still 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.

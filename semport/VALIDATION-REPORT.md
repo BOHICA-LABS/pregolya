@@ -888,3 +888,145 @@ unusual edge cases.
 correction note. A reader scanning the module-inventory table would see 7, not 8. The
 correction was already documented in the deepening section; the fix just propagates it to
 the table cell where readers typically look first.
+
+---
+
+## Pass 7 — Fresh-Context Validation (2026-07-12)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-12.
+
+Validation strategy (strata per brief):
+(a) Core tracers/callbacks claims (never deep-sampled): §7 (callbacks) + §10 (tracers) in
+    core/behavioral-intent.md read against callbacks/base.py + tracers/* source.
+(b) Graph streaming-modes semantics vs stream source: 7-mode table in graph/behavioral-intent.md
+    §4 verified against types.py StreamMode Literal + _loop.py:_emit + types.py payload TypedDicts.
+(c) Platform CLI claims vs cli source: all 7 CLI commands, config.py/deploy.py LOC,
+    dev delegation, SDK StreamMode count verified against cli.py + schema.py.
+(d) Langchain middleware composition-order claims vs middleware source + factory.py:
+    _chain_tool_call_wrappers, _chain_model_call_handlers, all 4 middleware edge chains.
+(e) Rust-translation-strategy serde/tokio behavioral claims: tokio::task_local semantics,
+    spawn inheritance, serde tagged-enum patterns vs Rust reference.
+(f) Full propagation audit: all 7 areas swept for stale pre-correction values from passes 1-6.
+
+### Pass 7 — Phase 1: Behavioral Verification
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| core/behavioral-intent §7 (callbacks): event surface, ignore flags, manager contract, raise_error | 6 | 4 | 2 | 0 | 0 |
+| core/behavioral-intent §10 (tracers): concrete tracer list, astream_events, astream_log, test counts | 8 | 7 | 1 | 0 | 0 |
+| graph/behavioral-intent §4 (streaming modes): 7-mode table, payload shapes, debug types, values emit condition, messages metadata | 12 | 12 | 0 | 0 | 0 |
+| platform/behavioral-intent §8 (CLI): 7 commands, dev delegation, LOC claims | 8 | 8 | 0 | 0 | 0 |
+| platform/behavioral-intent §3 (SDK streaming): StreamMode 9 values, v2 format | 4 | 4 | 0 | 0 | 0 |
+| langchain/behavioral-intent §1.2 (middleware composition order): _chain_tool_call_wrappers/first=outermost, _chain_model_call_handlers/first=outermost | 4 | 4 | 0 | 0 | 0 |
+| langchain/behavioral-intent §1.4 (middleware edge chains): before_agent/before_model/after_model/after_agent chains, loop_entry/exit/entry/exit nodes | 8 | 8 | 0 | 0 | 0 |
+| core/rust-translation-strategy (serde/tokio): tokio::task_local semantics, spawn inheritance, serde patterns | 6 | 6 | 0 | 0 | 0 |
+| Propagation audit: all 7 areas for stale pre-correction values from passes 1-6 | 14 | 14 | 0 | 0 | 0 |
+
+**Pass 7 behavioral summary:** 70 items checked; 67 verified; 3 inaccurate (2 distinct facts);
+0 hallucinated; 0 unverifiable. Both inaccuracies are in the core/behavioral-intent.md callbacks
+section (statum (a) — the one never previously deep-sampled).
+
+### Pass 7 — Phase 2: Metric Verification
+
+All pass-1/2/3/4/5/6 metrics re-confirmed unchanged. Fresh metrics for pass-7 strata:
+
+| Claim | Claimed | Recounted | Delta | Command |
+|-------|---------|-----------|-------|---------|
+| `callbacks/base.py` LOC | 1,229 | 1,229 | 0 | `wc -l .reference/langchain/libs/core/langchain_core/callbacks/base.py` |
+| `callbacks/manager.py` LOC | 2,826 | 2,826 | 0 | `wc -l .../callbacks/manager.py` |
+| `tracers/` file count | 15 | 15 | 0 | `ls .../langchain_core/tracers/*.py \| wc -l` |
+| callbacks test files | 6 | 6 | 0 | `find .../unit_tests/callbacks -name "test_*.py" \| wc -l` |
+| callbacks test functions | 20 | 20 | 0 | `find .../callbacks -name "test_*.py" \| xargs grep -c "def test_" \| awk '{sum+=$1} END{print sum}'` |
+| ignore flag count in BaseCallbackHandler | 4 (claimed) | 7 | +3 | `grep -c "def ignore_" .../callbacks/base.py` |
+| CLI config.py LOC | 1,780 | 1,780 | 0 | `wc -l .reference/langgraph/libs/cli/langgraph_cli/config.py` |
+| CLI deploy.py LOC | 2,076 | 2,076 | 0 | `wc -l .reference/langgraph/libs/cli/langgraph_cli/deploy.py` |
+| SDK `StreamMode` Literal values | 9 | 9 | 0 | `manual read schema.py lines 51-61` |
+| langgraph `StreamMode` Literal values | 7 | 7 | 0 | `manual read types.py lines 120-122` |
+| `TaskPayload` fields | {id,name,input,triggers} | {id,name,input,triggers,metadata(NotRequired)} | +1 NotRequired | `manual read types.py lines 142-162` |
+| `CheckpointPayload` fields | {config,metadata,values,next,parent_config,tasks} | same | 0 | `manual read types.py lines 204-218` |
+
+**Note on ignore flag count:** The `ignore_llm`/`ignore_chain`/`ignore_agent`/`ignore_retriever`
+claim is an enumeration, not a count — but the 3 omitted flags (`ignore_retry`, `ignore_chat_model`,
+`ignore_custom_event`) are a factual omission. Delta shown as +3 missing flags.
+
+**Note on TaskPayload:** The `metadata` field is `NotRequired` (may not be present in all events);
+the analysis summary `{id,name,input,triggers}` is correct for the required fields but omits the
+optional `metadata` key that carries `langgraph_step/node/triggers` for stream_transformers. This
+is a minor omission; the claim is not wrong, just incomplete for the optional field.
+
+### Pass 7 — Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Value | Severity | Correction Applied |
+|------|---------------|--------------|----------|--------------------|
+| `core/behavioral-intent.md §10` tracers list | "`LangChainTracer` (posts to LangSmith), `ConsoleCallbackHandler`, `LoggingCallbackHandler`, `RootListenersTracer` ..." | `LoggingCallbackHandler` does NOT exist in langchain-core's tracers. It lives in `langchain_classic.callbacks.tracers.logging` (the legacy langchain package, not langchain-core). The correct langchain-core tracer list is: `LangChainTracer`, `ConsoleCallbackHandler` (via `FunctionCallbackHandler`), `RootListenersTracer`, `EvaluatorCallbackHandler`, `RunCollectorCallbackHandler`. | MEDIUM | Removed `LoggingCallbackHandler`, added package-location note with `[validation-corrected pass-7]` marker |
+| `core/behavioral-intent.md §7` ignore flags | "`ignore_llm`/`ignore_chain`/`ignore_agent`/`ignore_retriever`" | 7 flags total: `ignore_llm`, `ignore_retry`, `ignore_chain`, `ignore_agent`, `ignore_retriever`, `ignore_chat_model`, `ignore_custom_event`. Missing: `ignore_retry` (line 518), `ignore_chat_model` (line 538), `ignore_custom_event` (line 543) in callbacks/base.py. | LOW | Added all 7 flags with `[validation-corrected pass-7]` marker |
+
+### Pass 7 — Hallucinated Items
+
+None. Every behavioral claim, function, constant, and streaming payload verified against source.
+Zero hallucinations across all sampled strata. Note: `LoggingCallbackHandler` above is classified
+INACCURATE (wrong package attributed) rather than HALLUCINATED (the class genuinely exists, just
+not in langchain-core).
+
+### Pass 7 — Unverifiable Items
+
+| Item | Reason |
+|------|--------|
+| `async-trait` vs native async fn in traits (core/rust-translation-strategy §7, §10) | The analysis recommends `#[async_trait]` for the `dyn CallbackHandler` seam. Native async fn in traits is stable since Rust 1.75; the ferrochain toolchain pin hasn't been established yet (Phase 3 prerequisite). Both approaches are valid; this is a Phase 1 ADR decision, not a factual error. UNVERIFIABLE until toolchain is pinned. |
+| `tokio::task_local!` exact scope-guard API for re-scoping at spawn sites | The claim that config "must be explicitly captured and re-scoped when spawning concurrent batch/parallel branches" is correct in principle. The exact idiom (e.g., `TaskLocal::scope()` vs a custom guard) is a design choice not verifiable against source. Behavioral conclusion is correct. |
+
+### Pass 7 — Propagation Audit Results
+
+Swept all 7 areas for stale values from passes 1-6. All prior corrections confirmed properly
+propagated. No uncorrected siblings found:
+- "13 middleware" → no occurrence (all corrected to 15)
+- "30/33 chat providers" → no occurrence (all corrected to 27)
+- "11/14 embeddings providers" → no occurrence (all corrected to 10)
+- "18 checkpoint files" → no occurrence (corrected to 17)
+- "~62 test count" (as test count, not LOC) → no occurrence (corrected to ~48)
+- "60+" in partners → no occurrence (corrected)
+- "~1,830 tool_node.py LOC" → no occurrence (corrected to 2,030)
+- "7 files" block_translators in main table → corrected in pass-6 (table cell updated)
+- `ext-hook type omissions` → corrected in all 5 graph documents (pass-4)
+- tick() GraphRecursionError locus → corrected in graph/behavioral-intent.md (pass-5)
+
+The "~62–63k LOC" in graph/test-inventory.md refers to LOC (not test count); correctly noted
+in pass 6 propagation audit — not stale.
+
+### Pass 7 — Per-Area Verdicts
+
+| Area | Verdict | Pass-7 Corrections |
+|------|---------|-------------------|
+| core (passes 1+7+8) | PASS WITH CORRECTIONS — 2 items found in never-previously-deep-sampled callbacks/tracers section | 2 |
+| graph (pass 2) | PASS — streaming mode semantics confirmed accurate; propagation audit clean | 0 |
+| langchain (pass 3) | PASS — middleware composition order confirmed accurate; propagation audit clean | 0 |
+| partners (pass 4) | PASS — not re-examined; propagation audit clean | 0 |
+| splitters (pass 5) | PASS — not re-examined | 0 |
+| mcp (pass 5) | PASS — not re-examined | 0 |
+| platform (pass 6) | PASS — CLI command inventory confirmed; config.py/deploy.py LOC confirmed; SDK StreamMode confirmed | 0 |
+
+### Pass 7 — CLEAN Status
+
+```
+CLEAN (strict): no — 2 corrections of severity MEDIUM(1) + LOW(1)
+CLEAN (PR-merge): yes — zero CRIT/HIGH findings; both corrections are MEDIUM or LOW
+Streak: 0/3 (reset; pass-7 is not CLEAN strict)
+```
+
+**Most consequential finding:** The `LoggingCallbackHandler` package-attribution error in
+core/behavioral-intent.md §10. A Rust port implementer reading the tracers section would include
+`LoggingCallbackHandler` in the scope of `ferrochain-core` (porting it as a core tracer), when
+it actually belongs to the legacy `langchain_classic` package outside the scope of the port.
+The correct langchain-core tracer inventory does NOT include a logging-handler — the console
+output story is covered by `ConsoleCallbackHandler` in stdout.py. This is a scope-boundary error:
+it neither adds a non-existent function (the class exists) nor is a pure hallucination — it's
+a misattribution to the wrong package that would inflate the ferrochain-core scope.
+
+**Second most consequential finding:** The ignore-flag omission (§7). The 3 missing flags
+(`ignore_retry`, `ignore_chat_model`, `ignore_custom_event`) are relevant to the Rust port's
+`CallbackHandler` trait: a trait definition missing `fn ignore_chat_model()` and
+`fn ignore_custom_event()` would fail to faithfully replicate the Python callback opt-out
+contract. In particular, `ignore_chat_model` and `ignore_custom_event` are default-false
+(handlers receive these events by default), so omitting them from the trait is a gap,
+not just a documentation miss.

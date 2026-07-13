@@ -319,7 +319,7 @@ lifecycle. `BaseCallbackHandler` (`callbacks/base.py`) + `AsyncCallbackHandler`.
 `on_llm_error`, `on_chain_start/_end/_error`, `on_tool_start/_end/_error`,
 `on_retriever_start/_end/_error`, `on_agent_action`, `on_agent_finish`, `on_text`,
 `on_retry`, `on_custom_event`, `on_stream_event`. Ignore-flags
-(`ignore_llm`/`ignore_chain`/`ignore_agent`/`ignore_retriever`) let a handler opt out.
+(`ignore_llm`/`ignore_retry`/`ignore_chain`/`ignore_agent`/`ignore_retriever`/`ignore_chat_model`/`ignore_custom_event`) let a handler opt out. <!-- [validation-corrected pass-7]: original listed only 4 flags (ignore_llm/chain/agent/retriever); callbacks/base.py has 7: also ignore_retry (line 518), ignore_chat_model (line 538), ignore_custom_event (line 543) -->
 
 **Manager contract [S] `callbacks/manager.py` (2,826 LOC).** `CallbackManager` fans an
 event out to all registered handlers; `configure()` merges inheritable vs local
@@ -374,9 +374,8 @@ Tests: `rate_limiters/` (1 file, ~few tests) + language_models rate-limit tests.
 
 **What it does.** Callback handlers that build/emit a run tree. `BaseTracer`
 (`tracers/base.py`) accumulates `Run` objects; concrete tracers: `LangChainTracer`
-(posts to LangSmith), `ConsoleCallbackHandler`, `LoggingCallbackHandler`,
-`RootListenersTracer` (fires on_start/on_end/on_error listeners),
-`EvaluatorCallbackHandler`, `RunCollectorCallbackHandler`.
+(posts to LangSmith), `ConsoleCallbackHandler` (via `FunctionCallbackHandler` in stdout.py), `RootListenersTracer` (fires on_start/on_end/on_error listeners),
+`EvaluatorCallbackHandler`, `RunCollectorCallbackHandler`. <!-- [validation-corrected pass-7]: original listed `LoggingCallbackHandler` as a langchain-core concrete tracer; this class does NOT exist in langchain-core's tracers/; it lives in `langchain_classic.callbacks.tracers.logging` (the legacy langchain package). langchain-core's tracer modules are: base.py, langchain.py (LangChainTracer), root_listeners.py (RootListenersTracer), evaluation.py (EvaluatorCallbackHandler), run_collector.py (RunCollectorCallbackHandler), stdout.py (FunctionCallbackHandler/ConsoleCallbackHandler), plus event_stream.py/log_stream.py/context.py/memory_stream.py/schemas.py/_compat.py/_streaming.py. -->
 
 **`astream_events` (v1/v2) [S] `tracers/event_stream.py` (1,105).** Attaches a
 streaming tracer to a run and yields typed `StreamEvent` dicts

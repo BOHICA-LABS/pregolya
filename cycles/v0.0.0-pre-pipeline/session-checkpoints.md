@@ -17,6 +17,20 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-07-13) — burst 14 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 14 complete. Pass 6 COMPLETE: CLEAN(strict)=NO, CLEAN(PR-merge)=YES; 2 corrections (2 LOW). (1) merge_dicts identity-key semantics: "last-wins" summary was WRONG — actual behavior is keep-left-when-equal/concatenate-when-different (semantic-precision class; load-bearing for Rust merge_dicts implementation). (2) block_translators 7→8 files in core/module-inventory.md main table — correction NOTE existed in another section but table cell was never edited (notes-without-edits failure shape). Two new lessons codified in lessons.md. Cascade: 11→5→7→9→2→2; LOW-only two consecutive passes; approaching asymptote. Orchestrator note: if LOW-only pattern persists through passes 8-9, present trajectory data to human for D14 bar review (human decision, not orchestrator's). Pass 7 DISPATCHED (fresh context; corpus-wide propagation audit incl. deepening-note sweep; strata: tracers/callbacks, graph streaming modes, CLI claims, middleware composition order). Streak: 0/3. |
+| **Key context** | D1-D14 locked. D14: 3-CLEAN applies to extraction-validation gate (human mandate). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R10 OPEN: NamedBarrierValue + EphemeralValue coverage gap — route to product-owner at Phase 1. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment (third-parties only). Pass-6 lesson: semantic-precision guardrail — summary words ("last-wins", "always", "never") must be verified against actual branch logic; notes-without-edits — a NOTE in one section does not fix sibling table cells. |
+| **Convergence counter** | 0 of 3 |
+
+---
+
 ## Session Resume Checkpoint (2026-07-13) — burst 13 complete
 
 ### State
