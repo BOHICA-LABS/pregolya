@@ -71,7 +71,7 @@ The keystone provider crate because 5 other providers ride its wire. Structure:
     stateful `ResponsesStreamDecoder` struct. 🔴 (the stateful multi-index cursor is the
     trickiest single piece).
   - **routing**: `_use_responses_api(payload)` + `_model_prefers_responses_api(name)` → pure
-    fns; `base_url` set disables Responses auto-routing. 🟡
+    fns; routing is base_url-agnostic (users must explicitly set `use_responses_api=False` for non-OpenAI endpoints; there is no automatic gate). 🟡 <!-- [validation-corrected pass-8]: "`base_url` set disables Responses auto-routing" was inaccurate; `_use_responses_api` has no base_url check; only `stream_usage` auto-enabling is gated on base_url -->
 - **`ChatOpenAI`** impls `ChatModel: Runnable<Input=LanguageModelInput, Output=AiMessage>`.
 - **structured output** (3 methods) → `enum StructuredMethod { FunctionCalling, JsonMode,
   JsonSchema }`; `json_schema` uses schemars-generated schema (the **pydantic→schemars ADR**

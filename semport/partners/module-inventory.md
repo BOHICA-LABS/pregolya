@@ -87,8 +87,9 @@ Total partner src ≈ **52,193 LOC** across 15 packages; standard-tests adds **9
   payload builder (`_construct_responses_api_payload`/`_input`), result reconstructor
   (`_construct_lc_result_from_responses_api`), and streaming chunk converter
   (`_convert_responses_chunk_to_generation_chunk`, a stateful `_advance(output_idx, sub_idx)`
-  cursor). Responses API is preferred automatically for reasoning models unless `base_url`
-  is set (i.e. third-party OpenAI-compatible endpoints stay on Chat Completions).
+  cursor). Responses API is preferred automatically for reasoning models; routing is
+  base_url-agnostic — third-party OpenAI-compatible endpoint users must explicitly set
+  `use_responses_api=False` if needed. <!-- [validation-corrected pass-8]: "unless `base_url` is set" was inaccurate; `_use_responses_api` has no base_url check -->
 - **Tool calling** both directions: `_lc_tool_call_to_openai_tool_call`,
   `_convert_delta_to_message_chunk`, plus `_is_builtin_tool` (server-side tools like
   web_search / computer_use in Responses).

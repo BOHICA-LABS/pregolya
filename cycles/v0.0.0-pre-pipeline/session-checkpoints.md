@@ -156,3 +156,17 @@ traces_to: STATE.md
 | **Convergence counter** | 0 of 3 |
 
 ---
+
+## Session Resume Checkpoint (2026-07-13) — burst 15 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 15 complete. Pass 7 COMPLETE: CLEAN(strict)=NO, CLEAN(PR-merge)=YES; 2 corrections (1 MEDIUM, 1 LOW). MEDIUM: LoggingCallbackHandler misattributed to langchain-core — exists only in langchain_classic (legacy package); correct core tracer roster: LangChainTracer, ConsoleCallbackHandler, FunctionCallbackHandler, RootListenersTracer, EvaluatorCallbackHandler, RunCollectorCallbackHandler. LOW: BaseCallbackHandler has 7 ignore flags not 4 — missing: ignore_retry, ignore_chat_model, ignore_custom_event. MILESTONES: propagation audit ZERO stale values corpus-wide (failure class extinguished); ALL strata sampled — no unexplored territory. Cascade: 11→5→7→9→2→2→2; 49 total corrections over 7 passes. 6th guardrail codified: package-attribution. Pass 8 DISPATCHED (fresh context; all 6 guardrails; corpus-wide semantic-precision word sweep; first genuine shot at CLEAN(strict)). Streak: 0/3. |
+| **Key context** | D1-D14 locked. D14: 3-CLEAN applies to extraction-validation gate (human mandate). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R10 OPEN: NamedBarrierValue + EphemeralValue coverage gap — route to product-owner at Phase 1. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment (third-parties only). Pass-7 lesson: package-attribution guardrail — any class attributed to a package must exist in that package at the pinned tag. All 6 guardrails now active for pass 8. |
+| **Convergence counter** | 0 of 3 |
+
+---

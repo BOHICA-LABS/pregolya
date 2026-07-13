@@ -20,7 +20,7 @@ Measured with `find … -exec wc -l` on the checkout (2026-07-12).
 | Tests (`tests/`) | 63 `test_*.py` (+fixtures) | **31,653** | ~2.2× source; unit-test-heavy |
 | **Total** | ~96 | ~46,165 | |
 
-Source LOC concentrates almost entirely in **agents/** (≈12,600 LOC, 87%). The rest
+Source LOC concentrates almost entirely in **agents/** (13,026 LOC, ~90%). The rest <!-- [validation-corrected pass-8]: "≈12,600 LOC, 87%" was inaccurate; recount: `find .../langchain_v1/langchain/agents -name "*.py" | xargs wc -l` = 13,026; 13,026/14,512 = 89.8% ≈ 90% -->
 (`chat_models`, `embeddings`, `messages`, `tools`, `rate_limiters`) is thin factory /
 re-export glue over `langchain-core` and `langgraph`.
 
@@ -46,7 +46,7 @@ consumed as a dependency. Everything else re-exports `langchain-core`.
 ```
 langchain/
 ├── __init__.py            # just __version__ = "1.3.13"
-├── agents/                # THE package (87% of LOC)
+├── agents/                # THE package (~90% of LOC) <!-- [validation-corrected pass-8]: was "87%"; actual 13,026/14,512 = 89.8% -->
 │   ├── __init__.py        # exports create_agent, AgentState
 │   ├── factory.py         # create_agent (graph builder)
 │   ├── structured_output.py  # ToolStrategy / ProviderStrategy / AutoStrategy + bindings

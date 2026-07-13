@@ -36,11 +36,16 @@ Intent hierarchy per provider:
 
 ### BC-DRAFT-OAI-001: Chat Completions vs Responses API auto-routing
 **Precondition:** model configured, payload built.
-**Behavior:** `_use_responses_api(payload)` returns true when the payload contains
-Responses-only features (built-in server tools, `previous_response_id`, reasoning config) OR
-`_model_prefers_responses_api(model_name)` is true (reasoning-family models) AND no
-third-party `base_url` is set. When true, the request goes through the Responses payload
-builder + result reconstructor; otherwise Chat Completions.
+**Behavior:** `_use_responses_api(payload)` returns true when `self.use_responses_api` is
+explicitly True, OR when instance-level flags are set (output_version="responses/v1",
+context_management, include, reasoning, truncation, use_previous_response_id), OR
+`_model_prefers_responses_api(model_name)` is true (reasoning-family models), OR the
+module-level check finds Responses-only payload args (built-in server tools,
+`previous_response_id`, reasoning, etc.). There is NO `base_url` gate in this function —
+routing is base_url-agnostic. (Documentation notes suggest explicitly setting
+`use_responses_api=False` for non-OpenAI endpoints, but there is no code gate.)
+When true, the request goes through the Responses payload builder + result reconstructor;
+otherwise Chat Completions. <!-- [validation-corrected pass-8]: "AND no third-party base_url is set" was inaccurate; `_use_responses_api` (lines 1751-1764 in chat_models/base.py) has no base_url check. The base_url gate exists ONLY for `stream_usage` auto-enabling (lines 1217-1236), not for Responses API routing. Users with third-party base_url must explicitly set use_responses_api=True or False. -->
 **Postcondition:** identical `AiMessage` output shape regardless of path.
 **Evidence:** `_use_responses_api`, `_model_prefers_responses_api`, dual `_get_request_payload`
 paths, `_construct_lc_result_from_responses_api`. **Confidence: HIGH** (both paths fully coded + tested).
@@ -149,7 +154,7 @@ at architecture) rather than being reimplemented per crate:
 | Shared behavior | Where seen | Intent |
 |---|---|---|
 | **API-key env-var + SecretStr** | all: `secret_from_env("OPENAI_API_KEY")`, `ANTHROPIC_API_KEY`, `DEEPSEEK_API_KEY`, `XAI_API_KEY`, `GROQ_API_KEY`, ... | Resolve key from explicit param → env var → error; wrap in redacted secret. |
-| **base_url override** | openai (`base_url`/`OPENAI_API_BASE`/`OPENAI_BASE_URL`), anthropic (`ANTHROPIC_BASE_URL`), ollama (`base_url`), all thin subclasses | Point at proxies / emulators / compatible endpoints. Presence of base_url disables OpenAI Responses auto-routing. |
+| **base_url override** | openai (`base_url`/`OPENAI_API_BASE`/`OPENAI_BASE_URL`), anthropic (`ANTHROPIC_BASE_URL`), ollama (`base_url`), all thin subclasses | Point at proxies / emulators / compatible endpoints. NOTE: `base_url` does NOT automatically disable Responses API routing — `_use_responses_api` is base_url-agnostic. It DOES disable `stream_usage` auto-enabling (the only base_url gate, lines 1217-1236). Users with non-OpenAI endpoints should explicitly set `use_responses_api=False`. <!-- [validation-corrected pass-8]: "Presence of base_url disables OpenAI Responses auto-routing" was inaccurate; see BC-DRAFT-OAI-001 correction above --> |
 | **proxy support** | openai (`OPENAI_PROXY`), anthropic (`ANTHROPIC_PROXY`) | Route through an HTTP proxy. NOTE: intersects CLAUDE.md rustls-tls mandate (MITM-proxy concern). |
 | **max_retries → SDK-delegated backoff** | openai (`max_retries`, default None→SDK default), anthropic (`max_retries=2`), groq, fireworks | Retry transient errors with exponential backoff. **Currently delegated to the vendor SDK's built-in retry** — this is the single biggest thing a direct-HTTP port must reimplement (see rust-translation-strategy). |
 | **timeout (request + per-chunk stream)** | openai (`timeout`, `_astream_with_chunk_timeout`), anthropic (`default_request_timeout`), standard params `timeout=60` | Bound total request and per-SSE-chunk wall-clock. Aligns with CLAUDE.md 30s client timeout rule. |

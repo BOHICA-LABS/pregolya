@@ -55,7 +55,7 @@ substantially larger and more semantically dense port than langchain-core (pass 
 | `BinaryOperatorAggregate` | Fold updates with a binary op (e.g. `operator.add`). Supports `Overwrite` to bypass reducer (≤1 per step). The reducer-backed `Annotated[...]` state keys. |
 | `Topic` | PubSub list; `accumulate=True/False` (clear-per-step vs persist). Flattens list updates. Backs the `TASKS`/Send channel and multi-value fan-in. |
 | `EphemeralValue` | Holds a value for exactly one step (guard=True → ≤1 update). Not persisted across steps. |
-| `AnyValue` | Stores last value, assumes all updates equal; never empty once written. |
+| `AnyValue` | Stores last value, assumes all updates equal; available while a value is held, but cleared back to MISSING when `update([])` is called (as happens during `bump_step` for channels not written that step). <!-- [validation-corrected pass-8]: "never empty once written" was inaccurate; `update([])` with a non-MISSING value resets `self.value = MISSING` (any_value.py:53-58); pregel/_algo.py:326-333 calls `update(EMPTY_SEQ)` on every available-but-not-updated channel each step when bump_step=True, so AnyValue channels that are not re-written each step become empty. No tests cover this behavior (AnyValue has zero tests in the reference corpus). --> |
 | `NamedBarrierValue` / `NamedBarrierValueAfterFinish` | Barrier: becomes available only when all named upstream nodes have written. Backs join/synchronization. |
 | `UntrackedValue` | Value NOT persisted to checkpoint (sanitized out of writes/Sends). Runtime-only scratch. |
 | `DeltaChannel` (beta) | Stores deltas; periodic `_DeltaSnapshot` blobs; history reconstructed by walking parent chain. Heavy checkpoint-saver contract (copy/prune/delete must preserve ancestor chain). |

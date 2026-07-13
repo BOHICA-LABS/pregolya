@@ -578,3 +578,34 @@ Now consistent across all 5 langchain-area docs: 27 chat / 10 embeddings.
 - cycles/v0.0.0-pre-pipeline/lessons.md (6th lesson added: package-attribution guardrail)
 
 **Next steps:** extraction-validation pass 8 in progress. Requires 3 CLEAN(strict) passes (streak still 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.
+
+---
+
+## Burst: pre-pipeline burst 16 — pass 8 COMPLETE (CLEAN(strict)=NO; 7 corrections); D14.1 exhaustive-sweep-then-3-CLEAN (human-approved); 7 parallel area validators dispatched (2026-07-13)
+
+**Pass 8 results:** CLEAN(strict)=NO. 7 corrections (5 MEDIUM, 2 LOW). Streak 0/3 — streak has never started across 8 passes. Cascade: 11→5→7→9→2→2→2→7. Total corrections: 56.
+
+**Headline finding — PHANTOM BEHAVIOR:** All four partner-area docs claimed a `base_url` gate on OpenAI Responses-API routing that does NOT exist in source code. Routing is determined solely by feature-flag + model-name check; the only `base_url` gate is stream_usage auto-enabling (a different, unrelated feature). A Rust implementer working from the uncorrected docs would have built a non-existent conditional gate, producing incorrect fallback behavior on every Responses-API call. Corrected in all four partner-area docs.
+
+**Additional MEDIUM findings:**
+
+| Severity | Finding |
+|----------|---------|
+| MEDIUM | AnyValue channel semantics documented as OPPOSITE of actual — docs stated "never empty once written"; actual behavior is cleared each unwritten step (ephemeral, not persistent). Load-bearing for Rust channel implementation. |
+| MEDIUM | langchain agents/ LOC metric corrected (cascaded count correction across 3 partner-area docs) |
+| MEDIUM | (remaining 2 MEDIUM in partner-area docs — partner-routing and channel semantics scope) |
+| LOW | 2 LOW corrections across area docs (minor count/name precision) |
+
+**D14.1 amendment (human-approved 2026-07-13):** Sampling provably does not converge — constant error-strike rate across 8 passes. New protocol: exhaustive-sweep-then-3-CLEAN. 7 parallel area validators (core, graph, langchain, partners, splitters, mcp, platform), each confined to its own area directory, exhaustively verify every discrete claim against pinned source (not sampling), fix in-place with [validation-exhaustive] markers, write `<area>/EXHAUSTIVE-SWEEP.md` with claims-checked counts and coverage statements. THEN the 3-CLEAN certification passes run. D14 strict-zero bar UNCHANGED.
+
+**Exhaustive sweep dispatched:** 7 parallel validators (core, graph, langchain, partners, splitters, mcp, platform).
+
+**Level-2 escalation recorded:** Constant error-strike rate across 8 sampling passes escalated to human per Level-2 protocol. Human approved D14.1 amendment.
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated/Current Step; Current Phase Steps — pass-4 row archived, pass-8 updated to DONE, exhaustive sweep IN_PROGRESS row added; D14 amended to D14.1; Session Resume Checkpoint replaced)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 15 checkpoint archived)
+
+**Next steps:** Exhaustive sweep in progress (7 parallel area validators). Each writes `<area>/EXHAUSTIVE-SWEEP.md` with full claims-checked counts. After all 7 complete → 3-CLEAN certification passes begin (streak 0/3). Streak must reach 3/3 for semport phase to close and Phase 1 to open.

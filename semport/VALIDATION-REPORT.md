@@ -1030,3 +1030,155 @@ a misattribution to the wrong package that would inflate the ferrochain-core sco
 contract. In particular, `ignore_chat_model` and `ignore_custom_event` are default-false
 (handlers receive these events by default), so omitting them from the trait is a gap,
 not just a documentation miss.
+
+---
+
+## Pass 8 — Fresh-Context Validation (2026-07-12)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-12.
+
+Validation strategy (stratified random re-verification across ALL 7 areas per brief):
+(a) Full semantic-precision sweep: grepped corpus for all occurrences of "last-wins" (2),
+    "always" (9), "never" (11), "only" (174), "entirely" (11); verified every occurrence
+    against source code.
+(b) Behavioral claims: weighted toward strata never individually re-verified in passes 1-7
+    (AnyValue semantics, BC-DRAFT-OAI-001 routing logic, batch ordering, JSFrameworkTextSplitter
+    separator behavior, `_use_responses_api` base_url gate, `put_writes` durability modes,
+    special-channel dedup behavior, stream.py LOC, sessions.py LOC).
+(c) Full propagation audit: AnyValue inaccuracy swept for sibling occurrences; base_url/
+    Responses API routing swept and found in 4 locations across 3 partner-area files.
+(d) Test citations: opened 6 cited test files (test_configurable.py, test_graph.py,
+    test_runnable.py, test_runnable_events_v2.py, test_fallbacks.py, test_state.py EphemeralValue
+    count); all confirmed.
+(e) Dependency rows: re-verified langchain-mcp-adapters, langchain-text-splitters,
+    langchain-checkpoint-sqlite pyproject.toml deps; all confirmed.
+(f) Metric re-derivations: sessions.py LOC, stream.py LOC, agents/ LOC + percentage.
+
+### Pass 8 — Phase 1: Behavioral Verification
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| core: batch ordering, ainvoke/batch mechanisms, `invoke` only abstractmethod, DISALLOW_LOAD_FROM_PATH, var_child_runnable_config, _merge.py int last-wins | 6 | 6 | 0 | 0 | 0 |
+| graph: AnyValue "never empty once written", BSP isolation, put_writes exit durability, special-channel dedup, batch returns ordered | 5 | 4 | 1 | 0 | 0 |
+| langchain: create_agent claims (referenced pass-7 confirms), agents/ LOC percentage | 2 | 1 | 1 | 0 | 0 |
+| partners: BC-DRAFT-OAI-001 base_url gate (4 locations), BC-DRAFT-ANT-001/002/003/004 (sampling), BC-DRAFT-OLL-001/002 | 8 | 4 | 1 | 0 | 0 |
+| splitters: JSFrameworkTextSplitter separator per-call, _merge_splits location, keep_separator default | 3 | 3 | 0 | 0 | 0 |
+| mcp: ContentConversion/Transport always propagates, User-Agent always added, never-mutate-config | 3 | 3 | 0 | 0 | 0 |
+| platform: thread_id client-side UUID minting, never thread_id in v3 response, stream.py LOC | 3 | 3 | 0 | 0 | 0 |
+| Semantic-precision sweep (all "last-wins"=2, "always"=9, "never"=11, "entirely"=11 occurrences; sample of "only") | 33+ | 32+ | 1 | 0 | 0 |
+
+**Pass 8 behavioral summary:** 63+ items checked; 56+ verified; 3 unique inaccurate facts
+(appearing in 6 locations total across the corpus); 0 hallucinated; 0 unverifiable.
+
+**Unique inaccurate facts: 3** (MEDIUM×2 + LOW×1).
+
+### Pass 8 — Phase 2: Metric Verification
+
+All pass-1/2/3/4/5/6/7 metrics re-confirmed unchanged. Fresh metrics for pass-8:
+
+| Claim | Claimed | Recounted | Delta | Command |
+|-------|---------|-----------|-------|---------|
+| `sessions.py` LOC | 477 | 477 | 0 | `wc -l .reference/langchain-mcp-adapters/langchain_mcp_adapters/sessions.py` |
+| `stream.py` LOC (SDK async) | 1,993 | 1,993 | 0 | `wc -l .reference/langgraph/libs/sdk-py/langgraph_sdk/_async/stream.py` |
+| langchain_v1 agents/ LOC | ≈12,600 (87%) | 13,026 (89.8%) | +426 LOC; +2.8 ppts | `find .../langchain/agents -name "*.py" \| xargs wc -l \| tail -1` |
+| test_configurable.py test count | 5 | 5 | 0 | `grep -c "def test_" test_configurable.py` |
+| test_graph.py test count | 21 | 21 | 0 | `grep -c "def test_" .../runnables/test_graph.py` |
+| test_runnable.py test count | 119 | 119 | 0 | `grep -c "def test_" test_runnable.py` |
+| test_runnable_events_v2.py test count | 36 | 36 | 0 | `grep -c "def test_" test_runnable_events_v2.py` |
+| test_fallbacks.py test count | 10 | 10 | 0 | `grep -c "def test_" test_fallbacks.py` |
+| test_state.py EphemeralValue occurrences | 9 | 9 | 0 | `grep -c "EphemeralValue" test_state.py` |
+| `_merge_splits` location in base.py | line 167 | line 167 | 0 | `grep -n "def _merge_splits" base.py` |
+| AnyValue update([]) clears value | (never empty — claimed) | update([]) with non-MISSING → MISSING (+corrected) | N/A | Manual read of any_value.py:52-61 |
+| `_use_responses_api` base_url check | (claimed present) | absent — no base_url check anywhere in function | N/A | Manual read of chat_models/base.py:1751-1764 |
+
+### Pass 8 — Propagation Audit
+
+Swept all 7 areas for stale pre-correction values from passes 1-7. All prior corrections
+confirmed properly propagated. New inaccuracies found in the following files, now corrected:
+- `graph/module-inventory.md:58` — AnyValue "never empty once written" → corrected
+- `partners/behavioral-intent.md:42` — BC-DRAFT-OAI-001 "AND no third-party base_url is set" → corrected
+- `partners/behavioral-intent.md:152` — shared table "Presence of base_url disables Responses auto-routing" → corrected
+- `partners/rust-translation-strategy.md:74` — "`base_url` set disables Responses auto-routing" → corrected
+- `partners/module-inventory.md:90-91` — "unless `base_url` is set" → corrected
+- `langchain/module-inventory.md:23,49` — agents/ LOC ≈12,600 (87%) → 13,026 (~90%) corrected
+
+### Pass 8 — Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Value | Severity | Correction Applied |
+|------|---------------|--------------|----------|--------------------|
+| `graph/module-inventory.md:58` AnyValue semantics | "never empty once written" | AnyValue can become empty again: `update([])` with non-MISSING value sets `self.value = MISSING; return True` (any_value.py:53-58). In pregel, `apply_writes` calls `update(EMPTY_SEQ)` on every available-but-not-updated channel each step when `bump_step=True` (_algo.py:326-333). A Rust port implementing this as "once-set, always-available" would be wrong. | MEDIUM | Updated table cell with accurate step-scoped semantics; `[validation-corrected pass-8]` marker added |
+| `partners/behavioral-intent.md:42` BC-DRAFT-OAI-001 | "AND no third-party `base_url` is set" | `_use_responses_api` (chat_models/base.py:1751-1764) has NO base_url check. Routing is based on instance flags and payload features only. The base_url gate exists ONLY for `stream_usage` auto-enabling (lines 1217-1236), not Responses API routing. | MEDIUM | Corrected BC body with accurate routing logic; `[validation-corrected pass-8]` marker |
+| `partners/behavioral-intent.md:152` shared behaviors table | "Presence of base_url disables OpenAI Responses auto-routing" | Same as above — no code gate. Users must explicitly set `use_responses_api=False` for non-OpenAI endpoints. | MEDIUM | Corrected table cell with `[validation-corrected pass-8]` marker (same root cause as above; one fact, two locations in same file) |
+| `partners/rust-translation-strategy.md:74` | "`base_url` set disables Responses auto-routing" | No code gate; same as above. | MEDIUM | Corrected with `[validation-corrected pass-8]` marker |
+| `partners/module-inventory.md:90-91` | "Responses API is preferred automatically for reasoning models unless `base_url` is set" | No base_url gate in `_use_responses_api`. | MEDIUM | Corrected with `[validation-corrected pass-8]` marker |
+| `langchain/module-inventory.md:23,49` agents/ LOC | "≈12,600 LOC, 87%" (also "(87% of LOC)" in layout) | Actual: 13,026 LOC = 89.8% of 14,512 total. `find .../langchain/agents -name "*.py" \| xargs wc -l` = 13,026 total. | LOW | Corrected to "13,026 LOC, ~90%" in both locations with `[validation-corrected pass-8]` markers |
+
+**Note on grouping:** The base_url / Responses API routing error is ONE inaccurate fact
+appearing in 4 locations across 3 files (partners/behavioral-intent.md ×2,
+partners/rust-translation-strategy.md ×1, partners/module-inventory.md ×1). All 4 are
+corrected under the same root cause.
+
+### Pass 8 — Semantic-Precision Sweep Results
+
+Grepped and manually verified all occurrences of guardrail-5 summary words in the
+non-VALIDATION-REPORT corpus (36 checked):
+
+| Word | Count | Findings |
+|------|-------|---------|
+| "last-wins" | 2 | Both accurate: `_merge.py` int-field (line 160) confirmed; graph special-channel dedup confirmed |
+| "always" | 9 | 8 accurate; 1 already corrected in passes 6-7 |
+| "never" | 11 | 10 accurate; 1 inaccurate → AnyValue "never empty once written" (CORRECTED) |
+| "entirely" | 11 | All 11 accurate or design-intent phrasing |
+| "only" (sample) | 14 (sampled) | All accurate in the sampled set; "only `invoke` is @abstractmethod" confirmed; "loadable only via the mapping" confirmed |
+
+### Pass 8 — Hallucinated Items
+
+None. Every function, class, channel type, and constant verified against source. Zero
+hallucinations across all strata.
+
+### Pass 8 — Unverifiable Items
+
+Same as passes 1-7 (Ollama DTU endpoint catalog, rmcp 2.2.0 elicitation details, partner
+own-test LOC). No new unverifiable items.
+
+### Pass 8 — Per-Area Verdicts
+
+| Area | Verdict | Pass-8 Corrections |
+|------|---------|-------------------|
+| core | PASS — batch ordering, abstractmethod, DISALLOW_LOAD_FROM_PATH, _merge.py int/last-wins, var_child_runnable_config, merge_configs all confirmed | 0 |
+| graph | PASS WITH CORRECTION — AnyValue "never empty once written" corrected (MEDIUM) | 1 |
+| langchain | PASS WITH CORRECTION — agents/ LOC percentage corrected (LOW) | 2 (2 locations, same fact) |
+| partners | PASS WITH CORRECTIONS — base_url / Responses API routing corrected in 4 locations (MEDIUM) | 4 (4 locations, same fact) |
+| splitters | PASS — JSFrameworkTextSplitter separator per-call confirmed; _merge_splits location confirmed | 0 |
+| mcp | PASS — ContentConversion/Transport always-propagates confirmed; User-Agent always-added confirmed | 0 |
+| platform | PASS — thread_id client-side UUID minting confirmed; stream.py LOC confirmed | 0 |
+
+### Pass 8 — CLEAN Status
+
+```
+CLEAN (strict): no — 6 corrections total: MEDIUM(5) + LOW(1)
+  - MEDIUM: AnyValue behavioral semantics (graph/module-inventory.md)
+  - MEDIUM ×4: base_url / Responses API routing (3 partner-area files, 4 locations)
+  - LOW: langchain agents/ LOC percentage (langchain/module-inventory.md, 2 locations)
+CLEAN (PR-merge): yes — zero CRIT/HIGH findings; all corrections are MEDIUM or LOW
+Streak: 0/3 (reset; pass-8 is not CLEAN strict)
+```
+
+**Most consequential finding:** The `_use_responses_api` base_url gate inaccuracy, appearing
+in 4 locations across 3 partner-area files. A Rust port implementer reading these documents
+would implement an `if base_url.is_none() { ... }` gate in the Responses API routing logic
+that does not exist in the Python code. The actual Python behavior: routing is entirely
+feature-and-model-driven; `base_url` is irrelevant to the Responses vs Chat Completions
+decision. The ONLY base_url effect is on `stream_usage` auto-enabling (lines 1217-1236), which
+is a completely different knob. The correction is: users with third-party endpoints must
+explicitly set `use_responses_api=False` (or let the auto-routing fire and potentially fail
+at the endpoint level).
+
+**Second most consequential finding:** The AnyValue channel's "never empty once written"
+description. AnyValue is cleared at the end of each super-step in which it is not re-written
+(via `update(EMPTY_SEQ)` in the bump_step loop, _algo.py:326-333). A Rust implementer
+treating AnyValue as a "set-once, always-available" channel would miss this step-clearing
+semantics, producing channels that hold stale values across steps instead of being cleared.
+The corrected description: AnyValue holds its value for the step in which it was last written;
+it is cleared back to MISSING (empty) at the next step if not re-written.
