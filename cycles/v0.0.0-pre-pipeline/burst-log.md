@@ -995,3 +995,39 @@ Pass 9 is the 9th certification pass with no streak reaching 3. Human consulted 
 - `STATE.md` (D14 reaffirmed in Decisions Log, current_step updated, session checkpoint updated, burst 27 recorded in Historical Content)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 26 checkpoint archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+
+## Burst: pre-pipeline burst 28 — 3-CLEAN certification pass 10 COMPLETE + pass 11 dispatched (2026-07-13)
+
+**Event type:** Certification pass 10 COMPLETE; pass 11 DISPATCHED per D15.
+
+### Pass 10 result
+
+**CLEAN(strict)=NO.** 3 corrections, all LOW severity. ALL findings are propagation residue of prior cert-8/9 corrections — ZERO new source-level inaccuracies, zero hallucinations, 100% rotation samples confirmed.
+
+**Correction 1 (LOW): `core/dependency-disposition.md:196` R7 risk label**
+Prior wording: "MED (new/churning, v3 immature)". Cert-9 established that langchain-protocol v3 streaming has 107 dedicated tests (NOT immature from test-coverage perspective). The valid risk is schema volatility at version 0.0.x, not test immaturity. Label corrected to "MED (new/churning, v3 schema 0.0.x)". This is propagation bookkeeping — the substance of R7 was already corrected in cert-9 (test count 2→107, severity downgraded to Low); only the risk-column wording in dependency-disposition.md lagged.
+
+**Correction 2 (LOW): `graph/module-inventory.md` `interrupt.py` LOC 110→105 (notes-without-edits recurrence)**
+`EXHAUSTIVE-SWEEP.md` for the graph area previously noted "interrupt.py: VERIFIED (105 actual)" but the correction was never propagated to the module-inventory table row (which still read `~110`). This is the notes-without-edits failure pattern (guardrail #2) applied to EXHAUSTIVE-SWEEP notes rather than in-document correction notes. The recurrence confirms that EXHAUSTIVE-SWEEP "VERIFIED (N actual)" notes are themselves a vector for the notes-without-edits defect class — a finding that directly motivates the pass-11 opener task.
+
+**Correction 3 (LOW): `graph/test-inventory.md` YAML metadata `core_test_loc ~62000→63249`**
+YAML frontmatter carried `~62000` while the validation narrative in the same file already recorded the exact figure 63,249 (via `find .../langgraph/tests -name "*.py" | xargs wc -l`). The narrative "~62–63k LOC" was already accurate (brackets 63,249). The YAML metadata was the trailing stale value.
+
+### Signal
+
+Corpus source-claims have stopped yielding genuine new inaccuracies. All three pass-10 findings are bookkeeping residue from prior passes. This matches the convergence pattern predicted by the D15 dispatch rationale: corrections will eventually reach zero when all propagation paths are exhausted.
+
+### Pass 11 dispatch (per D15)
+
+Dispatched autonomously per D15 (no human check-in required). Opener: (1) bounded YAML/metadata numeric sweep across all 7 area EXHAUSTIVE-SWEEP.md files and their corresponding inventory tables — specifically checking for numeric values that appear in "VERIFIED (N actual)" notes but were not propagated to the adjacent table cell; (2) then full rotation through all areas. This opener directly closes the notes-without-edits recurrence class at its root.
+
+**Streak:** 0/3 (cert pass 10 was a correction; streak resets per D14 strict-zero bar).
+
+### Files modified
+
+- `semport/core/dependency-disposition.md` (R7 risk label cert-10 propagation correction)
+- `semport/graph/module-inventory.md` (interrupt.py LOC 110→105 notes-without-edits propagation fix)
+- `semport/graph/test-inventory.md` (core_test_loc YAML metadata 62000→63249)
+- `STATE.md` (pass 10 DONE, pass 11 dispatched, session checkpoint updated, burst 28 recorded)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 27 checkpoint archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)

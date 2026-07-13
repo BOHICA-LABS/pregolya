@@ -193,7 +193,7 @@ vectorstore crates. Recommend: keep a minimal `Vec<f32>` cosine/MMR in core, no
 | Dep | Disposition | Rust target | Risk |
 |---|---|---|---|
 | pydantic | PORT-equiv | serde + schemars + builders/validators | **HIGH** (schema gen, dump semantics) |
-| langchain-protocol | PORT | tagged enums (own module) | MED (new/churning, v3 immature) |
+| langchain-protocol | PORT | tagged enums (own module) | MED (new/churning, v3 schema 0.0.x) <!-- [validation-certification-10]: "v3 immature" was stale — cert-9 established v3 streaming has 107 dedicated tests (NOT immature from test-coverage perspective). The valid risk is schema volatility at 0.0.x, not test immaturity. Risk label updated accordingly. --> |
 | langsmith | ELIMINATE core / opt MAP | tracer trait + optional reqwest exporter | LOW |
 | tenacity | MAP | `backon`/`tokio-retry` or hand-rolled | MED (jitter formula) |
 | jsonpatch | MAP | `json-patch` (RFC 6902) | MED (diff output is observable) |

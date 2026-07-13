@@ -98,7 +98,7 @@ pass: 2
 artifact: test-inventory
 status: complete
 core_test_files: 49
-core_test_loc: ~62000
+core_test_loc: 63249 <!-- [validation-certification-10]: ~62000 was stale; main validation metric table (pass-1 row) confirmed 63,249 via `find .../langgraph/tests -name "*.py" | xargs wc -l`. Narrative "~62–63k LOC" on line 14 was already accurate (brackets 63,249). -->
 conformance_framework: libs/checkpoint-conformance (PORT FIRST)
 timestamp: 2026-07-12
 ```

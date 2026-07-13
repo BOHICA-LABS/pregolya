@@ -123,7 +123,7 @@ The `BaseCheckpointSaver` trait must be storage-shape-agnostic (see dependency-d
 |---|---|---|
 | `chat_agent_executor.py` | ~1,015 | `create_react_agent` — the ReAct tool-calling agent graph (model↔tools loop) built on StateGraph. `AgentState`/`AgentStatePydantic` (deprecated → moved to `langchain.agents`), structured-response support. NOTE: much moved to `langchain` v1 pkg; this is now largely a compat/re-export shim. |
 | `tool_node.py` | 2,030 <!-- [validation-corrected pass-4]: ~1,830 was stale; pass-1 identified correct value 2,030 (wc -l confirmed) but wrote "documentation updated implicitly" without editing the file; actual LOC = 2,030 --> | `ToolNode` (executes tool calls from the last AIMessage, returns ToolMessages), `tools_condition` (route to tools vs END), `InjectedState`/`InjectedStore` injection, `ValidationNode`. |
-| `interrupt.py` | ~110 | `HumanInterrupt`/`HumanInterruptConfig`/`ActionRequest`/`HumanResponse` — the standard HITL interrupt payload schema for review/edit/accept/respond. |
+| `interrupt.py` | 105 <!-- [validation-certification-10]: ~110 was stale; EXHAUSTIVE-SWEEP.md noted "105 actual" (wc -l confirmed) but the correction was never propagated to this table. Corrected to exact value 105. --> | `HumanInterrupt`/`HumanInterruptConfig`/`ActionRequest`/`HumanResponse` — the standard HITL interrupt payload schema for review/edit/accept/respond. |
 | `tool_validator.py`, `_tool_call_stream.py`, `_tool_call_transformer.py` | — | tool-call streaming projection + validation. |
 
 ## 5. SDK / CLI (INVENTORY ONLY — deep pass deferred)

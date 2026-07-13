@@ -3201,3 +3201,275 @@ Streak: 0/3 (not advanced; corrections found in this pass)
 **Most consequential finding:** The v3 streaming test coverage omission in `core/test-inventory.md`. The corpus advised Phase 1 architects to "treat [v3 streaming] as provisional" due to "immature" test coverage (only 2 tests). In reality, 107 dedicated tests exist across 3 test files in `language_models/`, all testing `ChatModelStream` and `AsyncChatModelStream` directly. The v3 protocol has substantial spec-quality test coverage and should NOT be treated as provisional on that basis. (The protocol version string `0.0.x` may still warrant feature-gating, but the rationale is schema volatility, not test immaturity.)
 
 **Second most consequential finding:** `BaseLLM.generate` batch-fail correction. A Rust port implementer reading "collects per-prompt exceptions when `run_manager` present" might implement partial-failure semantics (some prompts return results while others return errors). The actual semantics are all-or-nothing: `_generate(all_prompts)` is called once, any exception causes all per-prompt callbacks to fire with the SAME exception, then the exception propagates. There is no partial-success path in the base `generate` implementation.
+
+---
+
+## Certification Pass 10 — Fresh-Context Validation (2026-07-13)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-13.
+
+**Context:** Streak entering: 0/3. Advances to 1/3 ONLY on ZERO corrections of any severity.
+All ten guardrails binding (AST counting, propagation, test-citation, behavioral-locus,
+semantic-precision, package-attribution, scope-label, dependency-verbatim, deprecated-vs-active,
+enumeration-completeness).
+
+**Opening stratum — complete propagation verification for cert-8 and cert-9 corrections:**
+1. Checkpointer four-variant contract (cert-8): searched all 35 semport docs for "own persistence",
+   "True.*checkpointer" etc. Found only `graph/behavioral-intent.md` — correctly carries the
+   updated description. No sibling propagation needed.
+2. v3 test counts / "immature" retractions (cert-9): searched all docs for "v3 immature", "only 2
+   tests", "treat.*provisional" after excluding known-corrected lines. Found two occurrences:
+   - `core/test-inventory.md:119` — already corrected ✓
+   - `core/dependency-disposition.md:196` — **NOT corrected** (propagation miss) → corrected this pass
+   - `core/ANALYSIS-STATE.md:35` — `strategy: port-as-provisional` refers to the langchain-protocol
+     PACKAGE at 0.0.x (schema volatility rationale), NOT test coverage immaturity. Correctly
+     unchanged.
+3. BaseLLM batch-fail (cert-9): searched for "per-prompt.*exception", "collects.*exception.*per-prompt".
+   Found only `core/behavioral-intent.md:224` — correctly carries the batch-fail description. No
+   additional propagation.
+4. HTMLHeader keying (cert-9): searched for "keyed by DOM depth". Zero occurrences in corpus
+   (excluding VALIDATION-REPORT.md). Cert-9 sibling audit was complete.
+
+---
+
+### Phase 1 — Behavioral Verification
+
+#### Core (saturation: VERY HIGH — re-verifying 3 highest-consequence + 1 saturation-note item)
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| Runnable class has 69 total method defs (incl. nested inner fns) / 50 unique names; 68 concrete + 1 abstract (`invoke`) | `python3 ast.parse(base.py)` → all_methods=69, unique_names=50; direct body=65 + 4 nested inner fns = 69 total; unique incl. nested = 50 | CONFIRMED |
+| cert-9 correction: BaseLLM.generate batch-fail description correctly applied at `behavioral-intent.md:224` | "fires `on_llm_error` once per per-prompt `run_manager` on exception (all receive the SAME exception), then re-raises — batch-fail; NO per-prompt exception collection" — cert-9 text | CONFIRMED |
+| cert-9 correction: `dependency-disposition.md:196` still said "v3 immature" (propagation miss from cert-9 propagation audit) | Line 196 text confirmed stale before correction; "v3 immature" contradicts cert-9 established test coverage | INACCURATE — corrected this pass |
+
+#### Graph
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `test_large_cases.py` = 6,986 LOC / `test_large_cases_async.py` = 4,056 LOC | `wc -l = 6,986 / 4,056` | CONFIRMED |
+| `test_retry.py` = 2,943 LOC / `test_runtime.py` = 1,220 LOC / `test_graph_callbacks.py` = 344 LOC | `wc -l = 2,943 / 1,220 / 344` | CONFIRMED |
+| `interrupt.py` = ~110 LOC in `graph/module-inventory.md:126` (EXHAUSTIVE-SWEEP noted "105 actual") | `wc -l = 105`; module-inventory still said `~110`; correction never propagated to module-inventory | INACCURATE — corrected this pass |
+
+#### Langchain
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `_attempt_infer_model_provider` includes `"accounts/fireworks"→fireworks` as 4th branch | `base.py:556`: `if model_lower.startswith("accounts/fireworks"): return "fireworks"` | CONFIRMED |
+| `_BUILTIN_PROVIDERS` = 27 chat providers / 10 embeddings providers (post cert-2 correction) | `base.py lines 38-78`: AST count = 27 chat keys ✓; `embeddings/base.py lines 15-34`: 10 keys ✓ (previously verified) | CONFIRMED |
+| `_ConfigurableModel.__getattr__` queues declarative ops (`bind_tools`, `with_structured_output`) and replays on model construction | `chat_models/base.py`: `_ConfigurableModel._model(config)` builds via `_init_chat_model_helper` then replays queued ops — consistent with behavioral-intent description | CONFIRMED |
+
+#### Partners
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| Anthropic `base_url` env: `from_env(["ANTHROPIC_API_URL","ANTHROPIC_BASE_URL"])` at `chat_models.py:950`; `ANTHROPIC_API_URL` is primary | `chat_models.py:949-957`: exact match; `ANTHROPIC_API_URL` listed first in from_env list | CONFIRMED |
+| Ollama URL-embedded credentials: `parse_url_with_auth` + `merge_auth_headers` exists | `grep "def parse_url_with_auth\|def merge_auth_headers" _utils.py` — both confirmed present | CONFIRMED |
+| BC-DRAFT-OAI-001 base_url is NOT a gate for Responses API routing; only gate is `stream_usage` auto-enable | `chat_models/base.py:1751-1764`: `_use_responses_api` has no base_url branch; `1217-1236`: base_url check only for stream_usage | CONFIRMED |
+
+#### Splitters
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `Language` enum = 28 members (CPP through VISUALBASIC6, incl. `R` and `C`) | `python3 ast.parse(base.py)` → 28 AST-counted class attributes including 'R' and 'C' (single-char members missed by regex in earlier pass but confirmed by AST) | CONFIRMED |
+| `_LAZY_SPLITTERS` deferred via `__init__.py:83-91` / `def __getattr__` at line 91 | `grep "__getattr__\|_LAZY_SPLITTERS" __init__.py` — confirmed (cert-8 verification) | CONFIRMED |
+| `HTMLHeaderTextSplitter` active_headers dict: "keyed by user-defined header name" (cert-9 corrected "keyed by DOM depth") | `html.py:277-280,342`: `active_headers[header_name] = (node_text, level, dom_depth)` where `header_name = self.header_mapping[tag]` — user-defined string | CONFIRMED |
+
+#### MCP
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `_build_interceptor_chain` function at `tools.py:286` builds "onion pattern" composed handler | `tools.py:286`: `def _build_interceptor_chain(handler, tool_interceptors: list[ToolCallInterceptor] \| None, ...)` confirmed | CONFIRMED |
+| `prompts.py` = 59 LOC / `callbacks.py` = 141 LOC / `resources.py` = 103 LOC | `wc -l = 59 / 141 / 103` — all exact | CONFIRMED |
+| `AudioContent → NotImplementedError` at `tools.py:197-202` | confirmed cert-8 and cert-9; re-verified via grep this pass | CONFIRMED |
+
+#### Platform
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| SDK `StreamMode` Literal = 9 values: values, messages, updates, events, tasks, checkpoints, debug, custom, messages-tuple | `schema.py:51-61`: all 9 values confirmed | CONFIRMED |
+| `_async/http.py` = 312 LOC (SDK HTTP transport) | `wc -l = 312` | CONFIRMED |
+| `test_api_parity.py` exists in sdk-py/tests/ (keeps async/sync mirrors in lock-step) | `ls .reference/langgraph/libs/sdk-py/tests/test_api_parity.py` — exists | CONFIRMED |
+
+---
+
+### Phase 1 Summary
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| core | 3 | 2 | 1 | 0 | 0 |
+| graph | 4 | 2 | 2 | 0 | 0 |
+| langchain | 3 | 3 | 0 | 0 | 0 |
+| partners | 3 | 3 | 0 | 0 | 0 |
+| splitters | 3 | 3 | 0 | 0 | 0 |
+| mcp | 3 | 3 | 0 | 0 | 0 |
+| platform | 3 | 3 | 0 | 0 | 0 |
+| **TOTAL** | **22** | **19** | **3** | **0** | **0** |
+
+---
+
+### Phase 2 — Metric Verification
+
+All prior certification pass metrics re-confirmed unchanged (no new deltas for previously
+verified rows). Fresh metrics for cert-10:
+
+| Claim | Claimed | Recounted | Delta | Command |
+|-------|---------|-----------|-------|---------|
+| `test_pregel_stream_events_v3.py` LOC | 1,780 | 1,780 | 0 | `wc -l .../tests/test_pregel_stream_events_v3.py` |
+| `test_stream_events_v3.py` LOC | 1,180 | 1,180 | 0 | `wc -l .../tests/test_stream_events_v3.py` |
+| `test_stream_events_v3_e2e.py` LOC (`_e2e.py` in inventory) | 808 | 808 | 0 | `wc -l .../tests/test_stream_events_v3_e2e.py` |
+| `test_stream_messages_transformer.py` LOC | 940 | 940 | 0 | `wc -l .../tests/test_stream_messages_transformer.py` |
+| `test_stream_lifecycle_transformer.py` LOC | 712 | 712 | 0 | `wc -l .../tests/test_stream_lifecycle_transformer.py` |
+| `test_stream_data_transformers.py` LOC | 707 | 707 | 0 | `wc -l .../tests/test_stream_data_transformers.py` |
+| `test_stream_before_builtins.py` LOC | 296 | 296 | 0 | `wc -l .../tests/test_stream_before_builtins.py` |
+| `test_large_cases.py` LOC | 6,986 | 6,986 | 0 | `wc -l .../tests/test_large_cases.py` |
+| `test_large_cases_async.py` LOC | 4,056 | 4,056 | 0 | `wc -l .../tests/test_large_cases_async.py` |
+| `test_time_travel.py` LOC | 3,966 | 3,966 | 0 | `wc -l .../tests/test_time_travel.py` |
+| `test_time_travel_async.py` LOC | 3,211 | 3,211 | 0 | `wc -l .../tests/test_time_travel_async.py` |
+| `test_retry.py` LOC | 2,943 | 2,943 | 0 | `wc -l .../tests/test_retry.py` |
+| `test_runtime.py` LOC | 1,220 | 1,220 | 0 | `wc -l .../tests/test_runtime.py` |
+| `test_graph_callbacks.py` LOC | 344 | 344 | 0 | `wc -l .../tests/test_graph_callbacks.py` |
+| `test_memory.py` LOC (checkpoint) | 680 | 680 | 0 | `wc -l .../checkpoint/tests/test_memory.py` |
+| `test_encrypted.py` LOC (checkpoint) | 446 | 446 | 0 | `wc -l .../checkpoint/tests/test_encrypted.py` |
+| `test_store.py` LOC (checkpoint) | 1,046 | 1,046 | 0 | `wc -l .../checkpoint/tests/test_store.py` |
+| `test_tool_node.py` LOC (prebuilt) | 2,430 | 2,430 | 0 | `wc -l .../prebuilt/tests/test_tool_node.py` |
+| `test_react_agent.py` LOC (prebuilt) | 2,156 | 2,156 | 0 | `wc -l .../prebuilt/tests/test_react_agent.py` |
+| `test_react_agent_graph.py` LOC (prebuilt) | 52 | 52 | 0 | `wc -l .../prebuilt/tests/test_react_agent_graph.py` |
+| `test_on_tool_call.py` LOC (prebuilt) | 1,473 | 1,473 | 0 | `wc -l .../prebuilt/tests/test_on_tool_call.py` |
+| `interrupt.py` LOC (prebuilt, graph/module-inventory.md) | ~110 (stale) | 105 | -5 | `wc -l .../prebuilt/langgraph/prebuilt/interrupt.py` |
+| `core_test_loc` YAML metadata (graph/test-inventory.md) | ~62000 (stale) | 63,249 | -1,249 | `find .../langgraph/tests -name "*.py" \| xargs wc -l \| tail -1` |
+| Runnable class total method defs (incl. nested) | 69 | 69 | 0 | `python3 ast.parse(base.py)` walk all FunctionDef/AsyncFunctionDef in Runnable |
+| Runnable class unique method names (incl. nested) | 50 | 50 | 0 | same, `set()` of names |
+| `callbacks.py` LOC (MCP) | 141 | 141 | 0 | `wc -l .../langchain_mcp_adapters/callbacks.py` |
+| `resources.py` LOC (MCP) | 103 | 103 | 0 | `wc -l .../langchain_mcp_adapters/resources.py` |
+| `prompts.py` LOC (MCP) | 59 | 59 | 0 | `wc -l .../langchain_mcp_adapters/prompts.py` |
+| `test_html_security.py` LOC (splitters) | 130 | 130 | 0 | `wc -l .../tests/unit_tests/test_html_security.py` |
+| `integration_tests/test_text_splitter.py` LOC | 160 | 160 | 0 | `wc -l .../tests/integration_tests/test_text_splitter.py` |
+| SDK `_async/http.py` LOC | 312 | 312 | 0 | `wc -l .../langgraph_sdk/_async/http.py` |
+| SDK `StreamMode` Literal count | 9 | 9 | 0 | `grep -A20 "^StreamMode = Literal" schema.py \| grep -c '"'` |
+
+**Summary: 31 metric rows; 2 non-zero deltas** (`interrupt.py` ~110 → 105; `core_test_loc` ~62000 → 63249; both corrected).
+
+---
+
+### Test Citations (7 verified)
+
+| Area | Citation | Claimed | Verified |
+|------|----------|---------|---------|
+| core | `base.py` Runnable method count 69 total / 50 unique (ast.parse) | 69/50 | ✓ ast.parse confirms both |
+| graph | `test_large_cases.py` 6,986 LOC; `test_large_cases_async.py` 4,056 LOC | 6,986 / 4,056 | ✓ both exact |
+| langchain | `base.py:556` `accounts/fireworks` branch in `_attempt_infer_model_provider` | at line 556 | ✓ confirmed |
+| partners | Anthropic `from_env(["ANTHROPIC_API_URL","ANTHROPIC_BASE_URL"])` at `chat_models.py:950` | line 950 | ✓ confirmed |
+| splitters | Language enum 28 members incl. 'R' and 'C' (single-char; missed by regex) | 28 | ✓ AST count = 28 |
+| mcp | `callbacks.py` 141 LOC / `resources.py` 103 LOC / `prompts.py` 59 LOC | 141/103/59 | ✓ all exact |
+| platform | `_async/http.py` 312 LOC; `test_api_parity.py` exists | 312 / exists | ✓ both confirmed |
+
+---
+
+### Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Value | Severity | Correction Applied |
+|------|---------------|--------------|----------|--------------------|
+| `core/dependency-disposition.md:196` risk label | "MED (new/churning, v3 immature)" | Cert-9 established v3 streaming has 107 dedicated tests — NOT immature from test-coverage perspective. Valid risk is schema volatility at 0.0.x. Cert-9 corrected lines 84 and 119 of this file but missed line 196. | LOW | Changed to "MED (new/churning, v3 schema 0.0.x)"; added `[validation-certification-10]` marker |
+| `graph/module-inventory.md:126` interrupt.py LOC | `~110` | 105 (confirmed by `wc -l`). EXHAUSTIVE-SWEEP.md noted "VERIFIED (105 actual)" but the correction was never propagated to the module-inventory table. | LOW | Changed to `105`; added `[validation-certification-10]` marker |
+| `graph/test-inventory.md` YAML metadata `core_test_loc` | `~62000` | 63,249 (confirmed by `find .../langgraph/tests -name "*.py" | xargs wc -l`; also in main validation pass-1 metric table). Narrative on line 14 correctly said "~62–63k LOC" but YAML metadata was ~2% low. | LOW | Changed to `63249`; added `[validation-certification-10]` marker |
+
+---
+
+### Hallucinated Items
+
+None. Every function, class, constant, and structural claim verified against source. Zero
+hallucinations across all 21 sampled items.
+
+---
+
+### Unverifiable Items
+
+Same standing set as passes 1-9 and cert passes 1-9 (Ollama DTU endpoint catalog beyond
+what is in-source, rmcp 2.2.0 elicitation details, partner own-test LOC figures). No new
+unverifiable items.
+
+---
+
+### Propagation Audit (opening stratum)
+
+Exhaustive search across all 35 semport documents for stale pre-correction values from
+cert-8 and cert-9:
+
+- "own persistence" (cert-8 checkpointer correction): appears only in `graph/behavioral-intent.md`
+  at the corrected location (next to `BaseCheckpointSaver` instance). No propagation needed. ✓
+- "v3 immature" (cert-9 test-count correction): found at `core/dependency-disposition.md:196`
+  uncorrected — **corrected this pass**. All other files confirmed clean.
+- `core/ANALYSIS-STATE.md` `status: immature` / `strategy: port-as-provisional` for
+  `langchain-protocol`: refers to the package being at v0.0.17 (pre-1.0 schema volatility),
+  NOT test-coverage immaturity. The cert-9 correction establishes "rationale is version
+  volatility, not lack of tests." `port-as-provisional` with that rationale is STILL VALID.
+  No correction needed. ✓
+- "per-prompt.*exception" (cert-9 BaseLLM correction): appears only in `core/behavioral-intent.md:224`
+  at the corrected location ("fires `on_llm_error` once per per-prompt `run_manager` on exception
+  (all receive the SAME exception)"). No propagation needed. ✓
+- "keyed by DOM depth" (cert-9 HTMLHeader correction): zero occurrences in all files. ✓
+- `graph/module-inventory.md:126` `~110` LOC for `interrupt.py`: found and **corrected this pass**.
+
+---
+
+### Coverage-Saturation Notes
+
+- **core**: Fully saturated. AST method count verified. Batch-fail correction confirmed stable.
+  v3 schema 0.0.x risk label corrected. `_get_supported_usage_metadata_keys` not present in corpus
+  (no claim exists). No known unverified behavioral claims remain.
+- **graph**: Very high saturation. Full test-inventory LOC sweep (30+ files) completed. The
+  interrupt.py ~110 discrepancy corrected. Checkpointer True/False/None/instance four-variant
+  contract confirmed clean.
+- **langchain**: High saturation. `accounts/fireworks` rule, `_ConfigurableModel` lazy construction,
+  `_BUILTIN_PROVIDERS` counts all re-confirmed.
+- **partners**: High saturation. Anthropic env var order, Ollama credential URL, OAI Responses
+  routing confirmed.
+- **splitters**: High saturation. Language enum 28 members (incl. R and C) confirmed via AST.
+  HTMLHeader key type confirmed from cert-9.
+- **mcp**: High saturation. All module LOC claims exact. Interceptor chain function confirmed.
+- **platform**: High saturation. SDK StreamMode 9-value count confirmed. HTTP client LOC exact.
+
+---
+
+### Per-Area Verdicts
+
+| Area | Verdict | Cert-10 Corrections |
+|------|---------|-------------------|
+| core | FAIL (LOW) — `dependency-disposition.md:196` "v3 immature" propagation miss from cert-9 | 1 |
+| graph | FAIL (LOW) — `module-inventory.md:126` `~110` → `105` for interrupt.py; `test-inventory.md` YAML `core_test_loc: ~62000` → `63249` | 2 |
+| langchain | PASS — accounts/fireworks rule, _ConfigurableModel, provider counts re-confirmed | 0 |
+| partners | PASS — Anthropic env var order, Ollama credential URL, OAI Responses routing all confirmed | 0 |
+| splitters | PASS — Language enum 28 members (AST), HTMLHeader active_headers key confirmed | 0 |
+| mcp | PASS — module LOC exact (×3), interceptor chain function confirmed | 0 |
+| platform | PASS — StreamMode 9 values, HTTP client 312 LOC, test_api_parity.py existence confirmed | 0 |
+
+---
+
+### Certification Pass 10 — CLEAN Status
+
+```
+CLEAN (strict): no — 3 corrections of severity LOW(3)
+  - LOW: core/dependency-disposition.md:196 — "v3 immature" propagation miss from cert-9;
+         corrected to "v3 schema 0.0.x" (version-volatility rationale, not test-immaturity)
+  - LOW: graph/module-inventory.md:126 — interrupt.py "~110" → 105 (EXHAUSTIVE-SWEEP noted
+         actual=105 but correction was never propagated to the module-inventory table)
+  - LOW: graph/test-inventory.md YAML metadata — core_test_loc: ~62000 → 63249 (2% low;
+         narrative already said "~62–63k" correctly; metadata stale)
+CLEAN (PR-merge): yes — zero CRIT/HIGH/MED findings; all corrections are LOW
+Streak: 0/3 (not advanced; 3 LOW corrections found in this pass)
+```
+
+**Most consequential finding:** The `core/dependency-disposition.md:196` "v3 immature" propagation
+miss. A Phase 1 architect reading the disposition summary table would see "v3 immature" for
+langchain-protocol and conclude the v3 streaming test suite is thin — but cert-9 established 107
+dedicated tests exist. The valid deferral rationale (schema at 0.0.x / version volatility) is
+preserved in the corrected text. All three corrections are pure propagation/metadata cleanup;
+no new factual errors were found in any behavioral, structural, or LOC claim sampled this pass.
+
+**Opening stratum result:** Cert-8 and cert-9 corrections were propagated correctly to primary
+target files. One secondary propagation miss found (line 196 missed while lines 84 and 119 were
+corrected in cert-9). Two EXHAUSTIVE-SWEEP-to-module-inventory/metadata propagation gaps found
+(interrupt.py LOC ~110→105; core_test_loc ~62000→63249). These reveal a systemic pattern:
+when the EXHAUSTIVE-SWEEP notes "VERIFIED (N actual)" with a delta, the corresponding source
+file is not always updated. All three corrections applied in-place with `[validation-certification-10]` markers.
