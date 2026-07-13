@@ -1,11 +1,11 @@
 ---
 artifact: semport/reference-manifest
-version: 1.2.0
+version: 1.3.0
 created: 2026-07-12
 updated: 2026-07-12
 purpose: >
-  Pinned reference corpus for the langchain-rs semport analysis.
-  All three repos are shallow-cloned at their latest stable release tags
+  Pinned reference corpus for the ferrochain semport analysis.
+  All repos are shallow-cloned at their latest stable release tags
   so the codebase-analyzer has a stable, reproducible source of truth.
 ---
 
@@ -13,17 +13,19 @@ purpose: >
 
 ## Repository Index
 
-| Repo                | URL                                                 | Pinned Tag            | Commit SHA                               | Clone Date |
-|---------------------|-----------------------------------------------------|-----------------------|------------------------------------------|------------|
-| langchain           | https://github.com/langchain-ai/langchain           | langchain==1.3.13     | 42f8f79293cfb7589e5bc1d74a8ae4dfd0bf15e3 | 2026-07-12 |
-| langgraph           | https://github.com/langchain-ai/langgraph           | 1.2.9                 | 95af6a00718588e7b7ce17310e8006d267896a77 | 2026-07-12 |
-| langchain-community | https://github.com/langchain-ai/langchain-community | libs/community/v0.4.2 | 7c10a5fa327f6aaaf7c932822a9e5d144891406e | 2026-07-12 |
+| Repo                     | URL                                                       | Pinned Tag                           | Commit SHA                               | Clone Date |
+|--------------------------|-----------------------------------------------------------|--------------------------------------|------------------------------------------|------------|
+| langchain                | https://github.com/langchain-ai/langchain                 | langchain==1.3.13                    | 42f8f79293cfb7589e5bc1d74a8ae4dfd0bf15e3 | 2026-07-12 |
+| langgraph                | https://github.com/langchain-ai/langgraph                 | 1.2.9                                | 95af6a00718588e7b7ce17310e8006d267896a77 | 2026-07-12 |
+| langchain-community      | https://github.com/langchain-ai/langchain-community       | libs/community/v0.4.2                | 7c10a5fa327f6aaaf7c932822a9e5d144891406e | 2026-07-12 |
+| langchain-mcp-adapters   | https://github.com/langchain-ai/langchain-mcp-adapters    | langchain-mcp-adapters==0.3.0        | a61c783a7949719a8c3fbe4aeba961f45f3b7849 | 2026-07-12 |
 
 Local clone paths (relative to repo root, excluded from git via `.gitignore`):
 
 - `.reference/langchain/`
 - `.reference/langgraph/`
 - `.reference/langchain-community/`
+- `.reference/langchain-mcp-adapters/`
 
 All clones are shallow (`--depth 1`).
 

@@ -1,0 +1,9 @@
+[package]
+name = "ferrochain-core"
+version = "0.0.0"
+edition = "2021"
+description = "Reserved: Rust implementation of the LangChain v1 architecture. Under active development — see github.com/BOHICA-LABS/ferrochain"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/BOHICA-LABS/ferrochain"
+keywords = ["llm", "langchain", "agents", "ai", "rust"]
+categories = ["api-bindings"]
