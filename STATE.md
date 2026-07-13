@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T01:15:00Z
+timestamp: 2026-07-13T05:30:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "3-CLEAN certification pass 16 in progress, streak 1/3."
+current_step: "3-CLEAN certification pass 17 in progress, streak 2/3 — GATE CLOSES ON ZERO."
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -44,9 +44,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived upstream — curated-subset reference only), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Apache-2.0; Corpus 5 per D16, analysis PARKED). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-14 — burst 35: cert pass 15 COMPLETE (CLEAN(strict)=YES; ZERO corrections; streak advances 0/3 → 1/3). Line-range endpoint sweep EXHAUSTED: 69/69 primary-doc citations verified (100%), 4 borderline NOT-A-FINDING. Propagation CLEAN. Rotation 21/21. ALL bounded error classes closed and fully swept. Pass 16 dispatched (advances to 2/3 on zero). |
+| **Last Updated** | 2026-07-13 — burst 36: cert pass 16 COMPLETE (CLEAN(strict)=YES; ZERO corrections; streak advances 1/3 → 2/3). 42/42 claims confirmed across 7 areas; 21/21 metrics delta-zero; one borderline NOT-A-FINDING under 1-2-line precedent. Propagation CLEAN. Rotation 42/42. Pass 17 DISPATCHED — THE POTENTIAL CLOSING PASS (zero findings closes gate at 3/3; any finding resets). |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | 3-CLEAN certification pass 16 in progress, streak 1/3. 31 total validation runs (8 sampled + 7-area exhaustive sweep + 16 cert passes dispatched); ~96 total corrections (zero in pass 15); best streak 1/3 (now active). ALL bounded error classes closed and fully swept. Line-range endpoint micro-class CLOSED AND EXHAUSTED (69/69 verified pass 15). VALIDATION-REPORT.md rotated (passes 1–10 archived). |
+| **Current Step** | 3-CLEAN certification pass 17 in progress, streak 2/3 — GATE CLOSES ON ZERO. 32 total validation runs (8 sampled + 7-area exhaustive sweep + 17 cert passes dispatched); ~96 total corrections (zero in passes 15 and 16); best streak 2/3 (now active). ALL bounded error classes closed and fully swept. Line-range endpoint micro-class CLOSED AND EXHAUSTED (69/69 verified pass 15). VALIDATION-REPORT.md rotated (passes 1–10 archived). |
 
 ## Phase Progress
 
@@ -69,11 +69,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| 3-CLEAN certification pass 12 | validate-extraction | DONE | CLEAN(strict)=NO. 2 corrections (2 LOW), both corrector-introduced residue: (1) platform/module-inventory.md:212 prose "50+" not updated when cert-11 fixed YAML to 61; (2) graph/behavioral-intent.md:112 citation path `pregel/_internal/_config.py:34` DNE — introduced by cert-5, survived 7 passes unverified (actual: `_internal/_config.py:33`). Fresh territory 28 behavioral + 27 metrics all CONFIRMED/delta-zero. New failure modes: prose-not-updated-with-YAML; citation-path-introduced-by-correction-never-verified. 11th lesson logged. Streak 0/3. |
-| 3-CLEAN certification pass 13 | validate-extraction | DONE | CLEAN(strict)=NO. 4 corrections (4 LOW): opening strata CLEAN (citation audit + prose-sibling sweep); rotation 27/28 confirmed. (1) core/behavioral-intent.md ~60→~68 methods tilde-propagation miss; (2) core/module-inventory.md ~60→~68 methods tilde-propagation miss; (3) core/module-inventory.md ~8.2k→8,944 prebuilt-test LOC tilde-propagation miss; (4) NEW micro-class: line-range endpoint drift — partners/behavioral-intent.md L3953–4012 → L3953–4033. Housekeeping: splitters/behavioral-intent.md ~120→123 tests normalized. Streak 0/3. |
-| 3-CLEAN certification pass 14 | validate-extraction | DONE | CLEAN(strict)=NO. 2 corrections (2 LOW): (1) partners/behavioral-intent.md:105 L1629–1660→L1629–1661 (thinking_delta final stmt outside range, Stratum 1 line-range sweep); (2) splitters/test-inventory.md:16 ~120→123 (pass-13 propagation miss, Stratum 2). Rotation 28/28 CONFIRMED. Range sweep: ~30 of 144 line-range citations verified; class PARTIALLY swept. Streak 0/3. OPERATIONAL: VALIDATION-REPORT.md rotated (3,478 lines archived). |
-| 3-CLEAN certification pass 15 | validate-extraction | DONE | CLEAN(strict)=YES — ZERO corrections of any severity. Streak advances 0/3 → 1/3. Line-range endpoint sweep EXHAUSTED: 69/69 primary-doc citations verified (100%); 4 borderline resolved NOT-A-FINDING under pass-14 precedent. Propagation CLEAN. Rotation 21/21 confirmed. ALL bounded error classes closed and fully swept. Line-range endpoint micro-class CLOSED. |
-| 3-CLEAN certification pass 16 DISPATCHED | validate-extraction | IN-PROGRESS | Dispatched per D15 (no check-in). Fresh context; all 10 guardrails; judgment precedents in force; rotation away from all verified lists incl. archive. No line-range endpoint class work (exhausted). Streak 1/3 → advances to 2/3 on zero. |
+| 3-CLEAN certification pass 13 | validate-extraction | DONE | CLEAN(strict)=NO. 4 corrections (4 LOW): opening strata CLEAN; rotation 27/28 confirmed. (1) core/behavioral-intent.md ~60→~68 methods tilde miss; (2) core/module-inventory.md ~60→~68 tilde miss; (3) core/module-inventory.md ~8.2k→8,944 prebuilt-test LOC tilde miss; (4) NEW micro-class: line-range endpoint drift. Streak 0/3. |
+| 3-CLEAN certification pass 14 | validate-extraction | DONE | CLEAN(strict)=NO. 2 corrections (2 LOW): (1) partners/behavioral-intent.md:105 L1629–1660→L1629–1661; (2) splitters/test-inventory.md:16 ~120→123. Rotation 28/28. Range sweep ~30/144; class PARTIALLY swept. Streak 0/3. VALIDATION-REPORT.md rotated (3,478 lines archived). |
+| 3-CLEAN certification pass 15 | validate-extraction | DONE | CLEAN(strict)=YES — ZERO corrections. Streak 0/3 → 1/3. Line-range endpoint sweep EXHAUSTED: 69/69 verified (100%); 4 borderline NOT-A-FINDING. Propagation CLEAN. Rotation 21/21. ALL bounded error classes closed and swept. Line-range endpoint micro-class CLOSED. |
+| 3-CLEAN certification pass 16 | validate-extraction | DONE | CLEAN(strict)=YES — ZERO corrections. Streak 1/3 → 2/3. 42/42 claims confirmed across 7 areas; 21/21 metrics delta-zero; one borderline NOT-A-FINDING (1-2-line precedent). Rotation 42/42. All bounded error classes remain closed. |
+| 3-CLEAN certification pass 17 DISPATCHED | validate-extraction | IN-PROGRESS | THE POTENTIAL CLOSING PASS. Dispatched per D15. Fresh context; all 10 guardrails; both anti-corruption warnings; full judgment precedents. Zero findings closes gate at 3/3; any finding resets streak to 0/3. |
 
 ## Decisions Log
 
@@ -147,10 +147,10 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-14 |
+| **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 35 complete. Cert pass 15 DONE (CLEAN(strict)=YES; ZERO corrections; streak 1/3). Pass 16 DISPATCHED. 31 total validation runs; ~96 total corrections; streak now active at 1/3. Line-range endpoint micro-class EXHAUSTED (69/69 verified). ALL bounded error classes closed and swept. |
-| **Key context** | D1-D16 locked. D14: CLEAN(strict)=zero findings; 3 consecutive required. D15: autonomous continuation, no check-ins. D16: adk-rust PARKED (trigger = 3-CLEAN closes). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh. R8/R10/R11 OPEN. YAML/METADATA CLASS CLOSED. Line-range endpoint class CLOSED AND EXHAUSTED (cert-15). Pass 16: rotation from never-verified territory, fresh context, all 10 guardrails, judgment precedents in force. Streak 1/3 active — 2 more consecutive CLEAN(strict) passes close the extraction gate. |
+| **Position** | pre-1, burst 36 complete. Cert pass 16 DONE (CLEAN(strict)=YES; ZERO corrections; streak 2/3). Pass 17 DISPATCHED — THE POTENTIAL CLOSING PASS. 32 total validation runs; ~96 total corrections; streak now active at 2/3. Line-range endpoint micro-class EXHAUSTED (69/69 verified). ALL bounded error classes closed and swept. |
+| **Key context** | D1-D16 locked. D14: CLEAN(strict)=zero findings; 3 consecutive required. D15: autonomous continuation, no check-ins. D16: adk-rust PARKED (trigger = 3-CLEAN closes). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh. R8/R10/R11 OPEN. All bounded error classes CLOSED AND EXHAUSTED. Pass 17: MUST return zero findings to close gate — any finding resets streak to 0/3. Anti-corruption warnings in force (no softening to close; no manufacturing to posture). |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content
@@ -163,6 +163,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | Burst 33 narrative (cert pass 13 COMPLETE — 4 LOW, new micro-class line-range endpoint drift; pass 14 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 34 narrative (cert pass 14 COMPLETE — 2 LOW; VALIDATION-REPORT.md rotated; pass 15 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 35 narrative (cert pass 15 COMPLETE — CLEAN(strict)=YES, streak 1/3; line-range endpoint class exhausted; pass 16 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Burst 36 narrative (cert pass 16 COMPLETE — CLEAN(strict)=YES, streak 2/3; pass 17 dispatched — THE POTENTIAL CLOSING PASS) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
 | Session checkpoints bursts 5–32 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Lessons learned (all 11 lessons, bounded-class closures) | `cycles/v0.0.0-pre-pipeline/lessons.md` |

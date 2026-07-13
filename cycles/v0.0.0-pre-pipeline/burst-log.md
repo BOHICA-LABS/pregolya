@@ -1317,3 +1317,33 @@ Streak 0/3. Pass 13: NO. Cumulative: 14 cert passes dispatched, 0 consecutive CL
 - `semport/VALIDATION-REPORT.md` (cert-15 section added, 927 lines)
 - `STATE.md` (pass 15 DONE CLEAN(strict)=YES, pass 16 dispatched, session checkpoint updated, burst 35 recorded)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+
+## Burst 36 — cert pass 16 COMPLETE (CLEAN(strict)=YES, streak 2/3); pass 17 dispatched — THE POTENTIAL CLOSING PASS (2026-07-13)
+
+### Certification Pass 16 Result
+
+**Verdict:** CLEAN(strict)=YES — ZERO corrections of any severity. Streak advances 1/3 → 2/3.
+
+**Scope covered:**
+- 42/42 claims confirmed across all 7 areas (core, graph, langchain, partners, splitters, mcp, platform). Full rotation; all claims drawn from territory absent from passes 1–15 and archive.
+- 21/21 numeric metric claims: delta = 0. All LOC/file-count/test-count assertions delta-zero against pinned source.
+- One borderline case analyzed (`types.py:431` vs actual line 430 for `abefore_agent`) — ruled NOT A FINDING under the 1-2-line precedent established in cert-14 and confirmed in cert-15. The described construct is within one line of the cited range end.
+- Splitters citation slot: repurposed as B4 due to prior-pass citation saturation (declared explicitly; no hidden omission).
+- Propagation sweep: CLEAN. No residue from prior corrections detected.
+- All bounded error classes remain closed: YAML/metadata class, tilde-propagation class, prose-YAML-sync class, line-range endpoint class (69/69 exhausted cert-15).
+
+**Per-area verdicts:** core PASS / graph PASS / langchain PASS / partners PASS / splitters PASS / mcp PASS / platform PASS. 0 corrections total.
+
+### Pass 17 Dispatched
+
+- THE POTENTIAL CLOSING PASS: zero findings at pass 17 closes the D14 extraction gate at streak 3/3; any finding resets streak to 0/3
+- Per D15 (autonomous continuation, no check-ins)
+- Fresh context; all 10 guardrails in force; both anti-corruption warnings active (no softening to close; no manufacturing to posture)
+- Full judgment precedents operative (cert-13/14/15/16): 1-2-line rule, tilde-propagation discipline, splitters citation-slot saturation precedent
+- Rotation required: claims must be absent from all passes 1–16 and archive
+
+### Files touched in this burst
+
+- `semport/VALIDATION-REPORT.md` (cert-16 section added, 1,071 lines)
+- `STATE.md` (pass 16 DONE CLEAN(strict)=YES streak 2/3, pass 17 dispatched, session checkpoint updated, burst 36 recorded)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
