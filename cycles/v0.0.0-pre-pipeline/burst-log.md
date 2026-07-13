@@ -98,3 +98,42 @@ traces_to: STATE.md
 | R3 | LangGraph Platform SDK/CLI → DTU_REQUIRED likely TRUE at P1-06 (proprietary SaaS backend) |
 | R4 | Competing active `langgraph` crate on crates.io (updated 2026-07-01) |
 | R5 | Three incompatible tag conventions across reference repos — tag-sort bug already triggered |
+
+---
+
+## Burst: pre-pipeline burst 4 — D9/D10 recorded; semport pass 1 close; ANALYSIS-STATE.md persisted; passes 2-3 dispatched (2026-07-12)
+
+**Decisions recorded:**
+
+| ID | Action | Decision |
+|----|--------|----------|
+| D9 | NEW | ferrochain-graph design consultation gate. Before ANY ferrochain-graph execution-model ADR is finalized, architect MUST present ≥2 alternatives with production trade-offs (scheduling model, checkpoint atomicity, backpressure, cancellation, multi-tenant fairness) to human for design conversation. /Users/jmagady/Dev/vsdd-factory designated PRIOR ART / EVIDENCE, NOT a template. Gate applies at Phase 1c architecture. |
+| D10 | NEW | Production-grade constitution adopted. /Users/jmagady/Dev/ferrochain/CLAUDE.md (553 lines) authored by technical-writer from full harvest of /Users/jmagady/Dev/prism/CLAUDE.md. Binds all agents. Includes: Canonical Principle, six rules + self-audit checklist, TD-VSDD-053/059/060/091, BC-5.39.001 3-CLEAN, SID-1, SAP-1 (adapted), day-1 Rust conventions (rustls-tls mandatory, credential newtypes, no-unwrap, non_exhaustive discipline, tokio async-first), git non-negotiables. NOTE: CLAUDE.md sits on main (no initial commit yet) — committed at workspace-init (devops, Phase 1). |
+
+**Semport pass 1 close — langchain-core:**
+
+| Metric | Value |
+|--------|-------|
+| Source LOC | 60,101 |
+| Source files | 180 |
+| Tests | ~1,766 (~59,935 test LOC, ~1:1 ratio) |
+| Deliverables | 5 (module-inventory, behavioral-intent, test-inventory, dependency-disposition, rust-translation-strategy) |
+| ADR candidates | 5 (logged in rust-translation-strategy.md) |
+| Top risk | Runnables/LCEL (RED — research-grade) |
+| New dep discovered | langchain-protocol v0.0.17 (immature → R7) |
+
+**Risks updated:**
+
+| ID | Update |
+|----|--------|
+| R7 | NEW — langchain-protocol v0.0.17 discovered as upstream dep; immature; port-as-provisional strategy |
+
+**Files touched:**
+
+- STATE.md (D9, D10, R7 added; current_step updated; checkpoint updated; phase steps updated)
+- .factory/semport/core/ANALYSIS-STATE.md (created — analyzer checkpoint, 8 deepening items, hook-blocked direct write resolved by state-manager)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+
+**Phase step archival:** "Naming decision study" and "market-intelligence-assessment" rows rotated out of STATE.md Current Phase Steps (5-row limit); covered in burst 1 and burst 3 entries above.
+
+**Next steps:** semport passes 2-3 in progress (langgraph runtime+checkpoint+prebuilt → .factory/semport/graph/, langchain_v1 → .factory/semport/langchain/). Remaining queue after passes 2-3: partners deep pass (openai/anthropic/ollama), standard-tests, text-splitters, mcp-adapters, langgraph-platform SDK/CLI deep, core deepening pass.

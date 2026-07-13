@@ -1,0 +1,16 @@
+# Sidecar Learning
+
+Session-end markers for the VSDD factory. Run /session-review to synthesize.
+
+- Session ended at 2026-07-12T22:38:40Z (awaiting /session-review)
+- Session ended at 2026-07-12T22:40:27Z (awaiting /session-review)
+- Session ended at 2026-07-12T22:40:58Z (awaiting /session-review)
+- Session ended at 2026-07-12T22:41:53Z (awaiting /session-review)
+- Session ended at 2026-07-12T22:41:59Z (awaiting /session-review)
+- Session ended at 2026-07-12T22:52:33Z (awaiting /session-review)
+- Session ended at 2026-07-12T22:57:31Z (awaiting /session-review)
+- Session ended at 2026-07-12T23:14:58Z (awaiting /session-review)
+- Session ended at 2026-07-12T23:17:36Z (awaiting /session-review)
+- Session ended at 2026-07-12T23:19:45Z (awaiting /session-review)
+- Session ended at 2026-07-12T23:20:42Z (awaiting /session-review)
+- Session ended at 2026-07-12T23:23:01Z (awaiting /session-review)
