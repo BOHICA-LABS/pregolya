@@ -17,6 +17,20 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-07-13) — burst 12 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 12 complete. Pass 4 COMPLETE: CLEAN(strict)=NO — 9 corrections (5 MEDIUM, 4 LOW). Headline: checkpoint serialization ext-hook dispatch enumeration was INCOMPLETE across all 5 graph-area documents — Pydantic v2 (PRIMARY path for user graph state), Pydantic v1/SecretStr, Enum, dataclasses, NamedTuples, numpy omitted; langgraph named types (Command/Interrupt/TimeoutPolicy) are @dataclasses on the GENERIC dispatch, not a special path. A Rust implementer building from the uncorrected docs would have shipped a serializer unable to handle real graph state. All 5 graph docs corrected. Also: test-citation integrity failure (test_channels.py cited for barrier/ephemeral semantics it does not test) + propagation residue (stale ANALYSIS-STATE footer, ~62→~48 tokio-test estimate in partners strategy). R10 registered: NamedBarrierValue has NO dedicated unit test in langgraph reference corpus; EphemeralValue only 3 assert lines in test_state.py — product-owner must author BCs + tests from behavior. Pass 5 DISPATCHED with graph-area weighting (pregel loop, checkpoint SQL schemas, prebuilt, interrupts) + light-coverage partners inventory + test-citation integrity checks. Streak: 0/3. Cascade trend: corrections 11→5→7→9 — NOT count-decaying because each pass rotates into unexplored strata. |
+| **Key context** | D1-D14 locked. D14: 3-CLEAN applies to extraction-validation gate (human mandate). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R10 OPEN: NamedBarrierValue + EphemeralValue coverage gap — route to product-owner at Phase 1. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment (third-parties only). |
+| **Convergence counter** | 0 of 3 |
+
+---
+
 ## Session Resume Checkpoint (2026-07-13) — burst 11 complete
 
 ### State

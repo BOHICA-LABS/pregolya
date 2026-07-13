@@ -477,4 +477,36 @@ Now consistent across all 5 langchain-area docs: 27 chat / 10 embeddings.
 - cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
 - cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 11 checkpoint archived)
 
+---
+
+## Burst: pre-pipeline burst 13 — extraction-validation pass 5 COMPLETE, pass 6 dispatched (2026-07-13)
+
+**Summary:** Pass 5 returned CLEAN(strict)=NO, CLEAN(PR-merge)=YES — the first pass in the cascade with zero CRIT/HIGH/MED findings. 2 corrections (2 LOW). Streak remains 0/3 (CLEAN(strict) requires zero findings of ANY severity). Cascade correction trajectory: 11→5→7→9→2. Severity collapsed to LOW-only; strata approaching exhaustion.
+
+**Pass 5 findings:**
+
+1. **Behavioral-locus correction (LOW — load-bearing for Rust API):** `tick()` does NOT raise `GraphRecursionError`. It sets `status = out_of_steps` and returns `False`. The outer `invoke` loop converts `status` to an error. This distinction is load-bearing for the Rust API surface: `tick()` should be `-> bool`, not `-> Result<bool, GraphRecursionError>`. Corrected in graph-area documents.
+
+2. **Stale test-count values (LOW — documentation artifact):** Two occurrences of "60+ tests" in `partners/module-inventory.md` ASCII tree were stale. Actual count is 48 (per `ChatModelIntegrationTests`). Corrected to 48.
+
+**Verified-accurate (no corrections needed):**
+- PostgreSQL and SQLite checkpoint schemas: exact match to reference source
+- All 15 partner LOC counts: all exact
+- Pregel halt ordering: confirmed correct
+- Interrupt machinery: xxh3 IDs, `interrupt_counter` resume matching, `Command` field enumeration all confirmed
+- Zero hallucinations corpus-wide
+
+**Pass-5 lesson codified:** Behavioral-locus precision guardrail — validators must verify not just WHAT a function does but WHERE the behavior lives (tick() vs invoke loop). Added to lessons.md and injected as guardrail into pass-6 prompt.
+
+**Pass 6 dispatched:** Fresh context. Strata rotated to least-sampled areas: core messages/parsers/prompts claims, `create_agent` graph-construction vs `factory.py`, splitters boundary semantics, MCP behaviors. Behavioral-locus precision guardrail active. Streak 0/3.
+
+**Phase step archival:** "D14 locked + extraction-validation pass 1 COMPLETE" row rotated out of STATE.md Current Phase Steps (5-row limit); covered in burst 9 entry above.
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated/Current Step; Current Phase Steps — pass-1 archived, pass-5 updated to DONE, pass-6 IN_PROGRESS row added; Session Resume Checkpoint replaced; Historical Content updated)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 12 checkpoint archived)
+- cycles/v0.0.0-pre-pipeline/lessons.md (behavioral-locus precision guardrail lesson added)
+
 **Next steps:** extraction-validation pass 4 in progress. Requires 3 CLEAN(strict) passes (streak still 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.

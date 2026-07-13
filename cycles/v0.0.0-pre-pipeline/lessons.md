@@ -81,3 +81,35 @@ For pass 4 and subsequent passes, the mandatory first stratum is a whole-area pr
 ### Follow-up
 
 Fold the document-sibling-sweep into the validate-extraction agent prompt upstream — same session-review target as the counting-methodology gap (first process-gap lesson). Both gaps compound: AST-counting produces correct values, but those values must then propagate fully across all related documents in a single pass.
+
+---
+
+## Lesson: PROCESS-GAP — Behavioral-Locus Precision Guardrail (2026-07-13)
+
+**Source:** Extraction-validation pass 5 (burst 13)
+**Category:** process-gap
+**Severity:** LOW (single LOW finding; but pattern is subtle and load-bearing for Rust API surface)
+
+### What happened
+
+Extraction-validation pass 5 found a behavioral-locus error: `tick()` was documented as raising `GraphRecursionError` when the recursion limit is exceeded. The actual behavior is: `tick()` sets `status = out_of_steps` and returns `False`. The outer `invoke` loop detects the `out_of_steps` status and converts it to an error/exception.
+
+This distinction is load-bearing for the Rust API design. If `tick()` were specified as raising an exception, a Rust implementer would correctly model it as `-> Result<bool, GraphRecursionError>`. With the correct behavior, the Rust API should be `-> bool` with error propagation handled by the outer loop only.
+
+The corpus accurately documented WHAT happened (recursion limit error) but attributed the locus of the behavior to the wrong function layer.
+
+### Why it matters
+
+Behavioral-locus errors are harder to catch than factual errors because they are locally plausible — the overall behavior is correct, only the WHERE is wrong. In a multi-layer system like pregel (tick → invoke → run), attributing error-raising to the inner tick() vs the outer invoke() produces different API contracts that are both internally consistent but only one is correct.
+
+### Codification applied
+
+For pass 6 and subsequent passes, a behavioral-locus precision guardrail is active:
+
+1. **Locus identification mandatory:** When documenting behavior that spans multiple layers (inner function → outer loop → caller), explicitly identify which layer owns the observable behavior — return value, error raise, status mutation.
+2. **API-surface implication check:** For any claim about error-raising behavior in graph internals, check whether the Rust API implication matches (does this become a `Result<T, E>` or a `bool` + outer error conversion?).
+3. **Multi-layer verification:** When a function both mutates state AND has a caller-visible result, verify both independently — the state mutation locus and the error-propagation locus may differ.
+
+### Follow-up
+
+Fold the behavioral-locus precision guardrail into the validate-extraction agent prompt upstream — add as a mandatory verification step for any claim about error-raising behavior in multi-layer graph internals. Session-review target: same batch as counting-methodology and propagation gaps.
