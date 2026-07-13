@@ -3809,3 +3809,202 @@ Streak: 0/3 (not advanced; 2 LOW corrections found in this pass)
 **Pattern note:** Two consecutive passes (11, 12) have found low-severity residuals from prior correction sweeps: cert-11 missed a prose sentence when updating the YAML field; cert-5 added a citation with a wrong path prefix. Both classes (prose-not-updated-with-YAML, citation-path-not-verified) are now explicitly added to the rotation checklist for cert-13.
 
 **Closing note on ~120 tests approximation:** `splitters/behavioral-intent.md` claims "~120 tests" for `test_text_splitters.py`; actual count is 123. Delta +3 (2.4%). Tilde-prefixed inline estimates in prose are not YAML exact-value fields and are outside the scope of strict-zero corrections under BC-5.39.001 as long as the approximation is within normal rounding distance. Not corrected; noted here for completeness.
+
+---
+
+## Certification Pass 13
+
+**Date:** 2026-07-13
+**Streak entering:** 0/3
+**Protocol:** BC-5.39.001 3-CLEAN (D14 absolute strict-zero; D15 autonomous continuation)
+**Ground truth:** `.reference/langchain` (1.3.13), `.reference/langgraph` (1.2.9), `.reference/langchain-mcp-adapters` (0.3.0)
+
+### Opening Strata — Corrector-Introduced-Residue Class
+
+**Stratum 1 — Correction-marker citation audit:**
+
+Grepped all `[validation-*]` marker lines across 35 corpus documents. Extracted all `file.py:NNN` patterns adjacent to correction markers. Verified each citation against the reference corpus.
+
+Result: CLEAN. The `pregel/_internal/_config.py:34` path (the cert-5 introduced residue class) now appears only INSIDE a `[validation-certification-12]` correction comment explaining what was wrong — it is not an active citation. All currently-active citations adjacent to correction markers confirmed correct.
+
+**Stratum 2 — Prose-sibling sweep of corrected numerics:**
+
+Searched for old-value forms of all numerics corrected in passes 10–12 (59322, 61, 44, 2210, 1143, 2960, 63249, 105) in prose outside VALIDATION-REPORT and EXHAUSTIVE-SWEEP history sections.
+
+Result: CLEAN. No active prose sentences carrying old stale values found. The `40+` form appearing in `graph/module-inventory.md:195` is `files_scanned: 40+` (analyst methodology note, classified UNVERIFIABLE since cert-11; not a source-code factual claim). All other occurrences are in correction history records.
+
+**Stratum 3 — Tilde-prose normalization:**
+
+Mandatory housekeeping (per pass-12 closing note, NOT counted as new error):
+- `splitters/behavioral-intent.md:151`: `~120` → `123` — applied. `grep -c "^def test_" test_text_splitters.py = 123`.
+
+Tilde-prefix sweep found NEW ERRORS:
+
+1. `core/behavioral-intent.md:448` and `core/module-inventory.md:183`: both claim `~60 concrete/overloaded methods` for `Runnable`. The `rust-translation-strategy.md [validation-exhaustive]` marker explicitly established the exact value as 68 concrete + 1 abstract = 69 total (50 unique names). Both documents were not updated when the exhaustive sweep ran — propagation miss. Corrected to `~68` with `[validation-certification-13]` markers in both files.
+
+2. `graph/test-inventory.md:17`: claims `~8.2k LOC` for prebuilt tests (10 files). Fresh recount: `find libs/prebuilt/tests -name "*.py" | xargs wc -l | tail -1 = 8,944`. Delta +744 (~9%). The `~8.2k` approximation is outside normal rounding distance for a value where the exact number was not previously established. Corrected to `8,944 LOC` with `[validation-certification-13]` marker.
+
+**Stratum 3 result:** 3 LOW corrections. Streak resets to 0/3 immediately.
+
+---
+
+### Phase 1 — Behavioral Verification (rotation)
+
+Rotation discipline: 2 behavioral + 1 numeric + 1 citation per area; selected from claims not independently verified in cert passes 1–12.
+
+**Rotation note — langchain false-positive:** Initial rotation flagged `_make_model_to_tools_edge, factory.py:1846` as INACCURATE (outer function at 1840). Deeper inspection confirmed `def model_to_tools(` inner closure is at line 1846 — the original citation follows the established convention `tools_to_model (factory.py:1928)` (inner closure line, not outer wrapper). The erroneous correction was reverted. Net: CONFIRMED.
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| Core | 4 | 4 | 0 | 0 | 0 |
+| Graph | 4 | 4 | 0 | 0 | 0 |
+| Langchain | 4 | 4 | 0 | 0 | 0 |
+| Partners | 4 | 3 | 1 | 0 | 0 |
+| Splitters | 4 | 4 | 0 | 0 | 0 |
+| MCP | 4 | 4 | 0 | 0 | 0 |
+| Platform | 4 | 4 | 0 | 0 | 0 |
+| **Total** | **28** | **27** | **1** | **0** | **0** |
+
+**Per-area behavioral claims verified (cert-13):**
+
+**Core**
+- B1: `DEFAULT_RECURSION_LIMIT = 25` at `config.py:171`; `RunnableConfig(TypedDict, total=False)` class at `config.py:57` — CONFIRMED
+- B2: `messages/utils.py` = 2,406 LOC, 145 tests in `test_utils.py` — CONFIRMED (`wc -l = 2406`; `grep -c "^def test_" = 145`)
+- Numeric: `var_child_runnable_config` contextvar at `config.py:174` — CONFIRMED
+- Citation: `base.py:873` for `@abstractmethod` decorator (immediately before `def invoke` at line 874) — CONFIRMED
+
+**Graph**
+- B1: `BinaryOperatorAggregate.update`: folds `self.operator(self.value, v)` over writes; first write when `MISSING` seeds value; `Overwrite(v)` bypasses reducer; ≤1 `Overwrite` per step (else `InvalidUpdateError`) — CONFIRMED (`binop.py:123–143`)
+- B2: `WRITES_IDX_MAP = {ERROR: -1, SCHEDULED: -2, INTERRUPT: -3, RESUME: -4}` at `checkpoint/base/__init__.py:795` — CONFIRMED
+- Numeric: 49 `test_*.py` files in `libs/langgraph/tests` — CONFIRMED (`find tests -name "test_*.py" | wc -l = 49`; 61 total `.py` files including helpers/conftest)
+- Citation: `xxh3_128_hexdigest` content-addressed task IDs at checkpoint `v > 1` via `_xxhash_str` in `_algo.py:1404` — CONFIRMED (`from xxhash import xxh3_128_hexdigest` at `_algo.py:32`; `task_id_func = _xxhash_str if checkpoint["v"] > 1`)
+
+**Langchain**
+- B1: `create_agent` actual (4th overload) function definition at `factory.py:808` — CONFIRMED
+- B2: `AgentMiddleware` class definition at `types.py:383` — CONFIRMED
+- Numeric: `wrap_tool_call` return type `ToolMessage | Command[Any]` at `types.py:666`; `awrap_tool_call` at `types.py:744+` — CONFIRMED
+- Citation: `_make_model_to_tools_edge, factory.py:1846` — CONFIRMED after deeper inspection (line 1846 is `def model_to_tools(`, the inner closure implementing the classic agent loop; outer function at 1840; consistent with `tools_to_model (factory.py:1928)` convention)
+
+**Partners**
+- B1: `with_structured_output` at `langchain_openai/chat_models/base.py:2311` — CONFIRMED
+- B2: `_merge_messages` at `langchain_anthropic/chat_models.py:287` for consecutive-role merge — CONFIRMED
+- Numeric: `langchain_openai` src LOC = 13,597 — CONFIRMED (`find langchain_openai -name "*.py" | xargs wc -l | tail -1 = 13597`)
+- Citation: image token functions "L3953–4012" for `_url_to_size`, `_resize`, `_count_image_tokens` — INACCURATE; `_url_to_size` at 3953, `_count_image_tokens` at 4012, but `_resize` at 4033 (outside range). Corrected to `L3953–4033`. `[validation-certification-13]` applied.
+
+**Splitters**
+- B1: `RecursiveCharacterTextSplitter` has `keep_separator=True` default (base `TextSplitter` has `False`) — CONFIRMED (`character.py:101`; `base.py:67`)
+- B2: `add_start_index` records chunk offset via `text.find(chunk, max(0, offset))` at `base.py:139` — CONFIRMED
+- Numeric: `_LAZY_SPLITTERS` dict has 3 entries: `KonlpyTextSplitter`, `NLTKTextSplitter`, `SpacyTextSplitter` — CONFIRMED (`__init__.py:83–87`)
+- Citation: `jsx.py:103–108` for separator list construction (`self._separators + js_separators + component_separators + trailing`) — CONFIRMED (lines 103–108 confirmed)
+
+**MCP**
+- B1: `load_mcp_prompt`: role `"user"` → `HumanMessage`, role `"assistant"` → `AIMessage`, other roles or non-text content → `ValueError` — CONFIRMED (`prompts.py:27–35`)
+- B2: `callbacks.py` = 141 LOC, `interceptors.py` = 141 LOC — CONFIRMED (`wc -l` both = 141)
+- Numeric: `client.py` = 302 LOC — CONFIRMED (`wc -l = 302`)
+- Citation: `prompts.py` = 59 LOC, `resources.py` = 103 LOC — CONFIRMED (`wc -l` both exact)
+
+**Platform**
+- B1: error mapping in `errors.py`: 400 → `BadRequestError`, 401 → `AuthenticationError`, 403 → `PermissionDeniedError`, 404 → `NotFoundError`, 409 → `ConflictError`, 422 → `UnprocessableEntityError`, 429 → `RateLimitError`, ≥500 → `InternalServerError` — CONFIRMED (`errors.py:109–136, 194–208`)
+- B2: `request_reconnect` at `_async/http.py:138`; default `reconnect_limit=5`; follows `Location` header on failure — CONFIRMED (docstring at line 149 + logic at 168–184)
+- Numeric: `_async/http.py` = 312 LOC — CONFIRMED (`wc -l = 312`)
+- Citation: `test_api_parity.py` at `sdk-py/tests/` (async/sync mirror lock-step) — CONFIRMED (`find sdk-py -name "test_api_parity.py"` returns one result)
+
+---
+
+### Phase 2 — Metric Verification
+
+All numeric claims from both the opening strata and rotation independently recomputed.
+
+| Claim | Source File | Claimed | Recounted | Delta | Command |
+|-------|-------------|---------|-----------|-------|---------|
+| splitters test count (stratum-3 correction) | splitters/behavioral-intent.md | ~120 | 123 | +3 | `grep -c "^def test_" test_text_splitters.py` |
+| core Runnable concrete methods (stratum-3 correction) | core/behavioral-intent.md + module-inventory.md | ~60 | 68 concrete (69 total) | +8 | AST count baseline from rust-translation-strategy.md [validation-exhaustive] |
+| graph prebuilt test LOC (stratum-3 correction) | graph/test-inventory.md | ~8,200 | 8,944 | +744 | `find libs/prebuilt/tests -name "*.py" \| xargs wc -l \| tail -1` |
+| core DEFAULT_RECURSION_LIMIT | core/behavioral-intent.md | 25 | 25 | 0 | `grep -n "DEFAULT_RECURSION_LIMIT" config.py` → line 171, value 25 |
+| core messages/utils.py LOC | core/behavioral-intent.md | 2,406 | 2,406 | 0 | `wc -l messages/utils.py` |
+| core messages/utils.py test count | core/behavioral-intent.md | 145 | 145 | 0 | `grep -c "^def test_" test_utils.py` |
+| core var_child_runnable_config line | core/behavioral-intent.md | config.py:174 | 174 | 0 | `grep -n "var_child_runnable_config" config.py` |
+| core @abstractmethod line for invoke | core/behavioral-intent.md | base.py:873 | 873 | 0 | `grep -n "@abstractmethod" base.py` (sole occurrence before Runnable.invoke) |
+| graph 49 test files | graph/test-inventory.md | 49 | 49 | 0 | `find tests -name "test_*.py" \| wc -l` |
+| graph WRITES_IDX_MAP values | graph/behavioral-intent.md | {ERROR:-1, SCHED:-2, INT:-3, RESUME:-4} | same | 0 | `sed -n '795p' checkpoint/base/__init__.py` |
+| langchain create_agent def line | langchain/behavioral-intent.md | factory.py:808 | 808 | 0 | `grep -n "def create_agent" factory.py` (4th def, the actual function) |
+| langchain AgentMiddleware def line | langchain/behavioral-intent.md | types.py:383 | 383 | 0 | `grep -n "class AgentMiddleware" types.py` |
+| langchain model_to_tools inner closure line | langchain/behavioral-intent.md | factory.py:1846 | 1846 | 0 | `grep -n "def model_to_tools" factory.py` |
+| partners openai src LOC | partners/module-inventory.md | 13,597 | 13,597 | 0 | `find langchain_openai -name "*.py" \| xargs wc -l \| tail -1` |
+| partners _url_to_size line | partners/behavioral-intent.md | L3953 (start of range) | 3953 | 0 | `grep -n "def _url_to_size" base.py` |
+| partners _count_image_tokens line | partners/behavioral-intent.md | L4012 (end of range) | 4012 | 0 | `grep -n "def _count_image_tokens" base.py` |
+| partners _resize line (range claim) | partners/behavioral-intent.md | ≤4012 (within L3953–4012) | 4033 | +21 | `grep -n "def _resize" base.py` → 4033 > 4012 |
+| mcp client.py LOC | mcp/behavioral-intent.md | 302 | 302 | 0 | `wc -l client.py` |
+| mcp callbacks.py LOC | mcp/behavioral-intent.md | 141 | 141 | 0 | `wc -l callbacks.py` |
+| mcp interceptors.py LOC | mcp/behavioral-intent.md | 141 | 141 | 0 | `wc -l interceptors.py` |
+| mcp prompts.py LOC | mcp/behavioral-intent.md | 59 | 59 | 0 | `wc -l prompts.py` |
+| mcp resources.py LOC | mcp/behavioral-intent.md | 103 | 103 | 0 | `wc -l resources.py` |
+| platform _async/http.py LOC | platform/behavioral-intent.md | 312 | 312 | 0 | `wc -l _async/http.py` |
+
+---
+
+### Refinement Iterations: 1/3
+
+**Iteration 1:** Found 3 Stratum-3 items and 1 rotation item requiring correction:
+1. `core/behavioral-intent.md:448` prose `~60 → ~68` concrete methods
+2. `core/module-inventory.md:183` prose `~60 → ~68` concrete methods
+3. `graph/test-inventory.md:17` prose `~8.2k → 8,944 LOC` prebuilt tests
+4. `partners/behavioral-intent.md` citation range `L3953–4012 → L3953–4033` (includes `_resize` at 4033)
+
+All corrected in-place. One false-positive (langchain `factory.py:1846`) identified, investigated, and confirmed correct — no net correction. Iteration 2 sweep: no additional residuals from these corrections. Iteration 3 consistency check: no orphaned references created (all corrections are independent point fixes).
+
+---
+
+### Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Behavior | Correction Applied |
+|------|---------------|-----------------|-------------------|
+| `core/behavioral-intent.md:448` | `~60 concrete/overloaded methods` for Runnable | Exhaustive sweep (rust-translation-strategy.md) established 68 concrete + 1 abstract = 69 total; `~60` understates by 8 | Corrected to `~68`; `[validation-certification-13]` marker added |
+| `core/module-inventory.md:183` | `~60 concrete/overloaded methods` for Runnable | Same propagation miss as behavioral-intent.md | Corrected to `~68`; `[validation-certification-13]` marker added |
+| `graph/test-inventory.md:17` | `~8.2k LOC` for prebuilt tests (10 files) | Exact recount: 8,944 LOC; delta +744 (~9%) | Corrected to `8,944 LOC`; `[validation-certification-13]` marker added |
+| `partners/behavioral-intent.md` BC-DRAFT-OAI-004 | Evidence: `functions L3953–4012` (for `_url_to_size`, `_resize`, `_count_image_tokens`) | `_resize` is at line 4033, outside the claimed range 3953–4012; `_url_to_size` at 3953, `_count_image_tokens` at 4012 are correct | Corrected to `L3953–4033`; `[validation-certification-13]` marker added |
+
+### Hallucinated Items (Removed)
+
+None.
+
+### Unverifiable Items
+
+None.
+
+---
+
+### Per-Area Verdicts
+
+| Area | Behavioral | Numeric | Citation | Corrections |
+|------|-----------|---------|----------|-------------|
+| core | PASS | PASS (stratum-3: ~60→~68, 2 files) | PASS | 2 LOW (stratum-3) |
+| graph | PASS | PASS (stratum-3: ~8.2k→8,944) | PASS | 1 LOW (stratum-3) |
+| langchain | PASS | PASS | PASS | 0 |
+| partners | PASS | PASS | FAIL — 1 LOW (L3953–4012 missing `_resize` at 4033) | 1 LOW |
+| splitters | PASS | PASS | PASS | 0 |
+| mcp | PASS | PASS | PASS | 0 |
+| platform | PASS | PASS | PASS | 0 |
+
+### Certification Pass 13 — CLEAN Status
+
+```
+CLEAN (strict): no — 4 corrections of severity LOW(4)
+  - LOW(2): core/behavioral-intent.md:448 + core/module-inventory.md:183 prose `~60→~68`
+            concrete methods (propagation miss; rust-translation-strategy.md [validation-exhaustive]
+            established exact count, but neither document was updated)
+  - LOW(1): graph/test-inventory.md:17 prebuilt test LOC `~8.2k→8,944`
+            (delta +744, ~9%; fresh recount)
+  - LOW(1): partners/behavioral-intent.md citation range `L3953–4012→L3953–4033`
+            (`_resize` function at 4033 was outside the claimed range)
+CLEAN (PR-merge): yes — zero CRIT/HIGH/MED findings; all 4 corrections are LOW severity
+Streak: 0/3 (not advanced; 4 LOW corrections found in this pass)
+```
+
+**Most consequential finding class (cert-13):** Tilde-estimate propagation miss. When the `[validation-exhaustive]` sweep corrected the Runnable method count in `rust-translation-strategy.md`, the correction was marked explicitly ("Pass 7 D-1 already says '~60' — both ~30 and ~60 are underestimates; corrected to '~68'"), yet neither `core/behavioral-intent.md` (the D-1 document referenced) nor `core/module-inventory.md` was updated at that time. Both survived cert passes 1–12 with the stale `~60` value. This is a structural limitation: exhaustive-sweep corrections are thorough within a single document but the correction markers do not automatically flag sibling documents carrying the same stale value.
+
+**False-positive note (langchain rotation):** Initial rotation incorrectly flagged `_make_model_to_tools_edge, factory.py:1846` as INACCURATE, assuming 1846 pointed to the outer function (actually at 1840). Deeper inspection showed `def model_to_tools(` IS at line 1846 — the convention is consistent with `tools_to_model (factory.py:1928)` (inner closure line, not outer wrapper). The erroneous correction was reverted before finalizing. This is a refinement-loop success case.
+
+**Housekeeping fix (not counted):** `splitters/behavioral-intent.md:151` `~120→123` — mandatory per pass-12 closing note; `def test_` count = 123 confirmed.
+
+**Pattern note:** The partners citation range error (`L3953–4012` missing `_resize` at 4033) represents a new residue class: citation RANGES where the stated end-bound is less than the last cited function's line. Prior cert passes checked exact line citations (point citations) but not range citations. Range citations now added to the rotation checklist for cert-14.

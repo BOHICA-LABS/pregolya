@@ -14,7 +14,7 @@ note: tests are FIRST-CLASS spec inputs. The Rust port should port the highest-v
 - Core runtime tests (`libs/langgraph/tests`): **49 test files, ~62–63k LOC** — larger
   than ALL deep-scope source combined. This is the real specification.
 - Checkpoint base tests: 6 files, ~3.8k LOC.
-- Prebuilt tests: 10 files, ~8.2k LOC.
+- Prebuilt tests: 10 files, 8,944 LOC <!-- [validation-certification-13]: ~8.2k corrected to exact 8,944; `find libs/prebuilt/tests -name "*.py" | xargs wc -l | tail -1 = 8944` -->.
 - **`libs/checkpoint-conformance`**: a dedicated, reusable conformance framework
   (`validate.py`, `capabilities.py`, `initializer.py`, `report.py`, `spec/test_*.py`)
   that ANY checkpoint saver must pass. Postgres/sqlite tests invoke it. THIS is the

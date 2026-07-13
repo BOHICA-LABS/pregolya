@@ -148,7 +148,7 @@ emits: (a) the same ordered list of chunk strings, and (b) the same
 
 Production code: **3,671 LOC** across 13 modules (largest: `html.py` 1,099,
 `character.py` 801, `base.py` 526, `markdown.py` 482). Tests: **4,880 LOC**
-(unit `test_text_splitters.py` alone is 4,375 LOC / ~120 tests). Single external
+(unit `test_text_splitters.py` alone is 4,375 LOC / 123 tests <!-- [validation-certification-13]: ~120 corrected to exact count 123; `grep -c "^def test_" test_text_splitters.py = 123` -->). Single external
 runtime dep in the base import path: `langchain-core` (for `Document` /
 `BaseDocumentTransformer`). All tokenizer/NLP/HTML deps are optional and
 lazy-imported.

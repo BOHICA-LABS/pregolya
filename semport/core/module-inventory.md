@@ -180,8 +180,7 @@ Pass 7 §D-3.
 
 ## `runnables/base.py` (6,713 LOC) — verified concrete-type fanout
 
-Full read confirms the file defines: `Runnable` (ABC, 1 abstractmethod `invoke` + ~60 concrete/
-overloaded methods), `RunnableSerializable`, `RunnableSequence`, `RunnableParallel`,
+Full read confirms the file defines: `Runnable` (ABC, 1 abstractmethod `invoke` + ~68 concrete/overloaded methods (50 unique names per AST count) <!-- [validation-certification-13]: ~60 corrected; AST count = 69 total (68 concrete + 1 abstract), 50 unique names; consistent with rust-translation-strategy.md [validation-exhaustive] -->), `RunnableSerializable`, `RunnableSequence`, `RunnableParallel`,
 `RunnableGenerator`, `RunnableLambda`, `RunnableEachBase`/`RunnableEach`,
 `RunnableBindingBase`/`RunnableBinding`, plus the `_RunnableCallable*` Protocols, the
 `RunnableLike` union, `coerce_to_runnable`, and the `@chain` decorator. `RunnableRetry`,

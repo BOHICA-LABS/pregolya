@@ -445,7 +445,7 @@ Deepens §1 (Runnables), §2 (Messages/blocks), §3 (language models), §10 (tra
 ## D-1. Runnables/base.py full internals (feeds RED-1 Runnable ADR)
 
 Full structural read of all 6,713 lines. `Runnable` ABC declares one `@abstractmethod`
-(`invoke`, base.py:874) and ~60 concrete/overloaded methods. Confirmed the concrete
+(`invoke`, base.py:874) and ~68 concrete/overloaded methods (50 unique names per AST count) <!-- [validation-certification-13]: ~60 corrected to ~68; AST parse confirms 69 total methods (68 concrete + 1 abstract), 50 unique names; see rust-translation-strategy.md [validation-exhaustive] marker -->. Confirmed the concrete
 subtype set and their exact composition seams:
 
 **Modifier constructors (all return a new Runnable) — exact targets [S]:**

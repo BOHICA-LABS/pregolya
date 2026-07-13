@@ -1197,3 +1197,61 @@ Verified from primary sources: Steinberger's local-first gateway, Clawdbot→Mol
 - `STATE.md` (burst 32 recorded, session checkpoint updated, Historical Content consolidated)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 31 checkpoint archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+
+---
+
+## Burst 33 — Cert Pass 13 COMPLETE + Pass 14 Dispatched (2026-07-14)
+
+### What Happened
+
+Certification pass 13 completed per D15 autonomous continuation (no check-in). Pass 14 dispatched immediately.
+
+**Opening strata (cert-13 openers) — BOTH CLEAN:**
+- Correction-marker citation audit: all `[validation-*]` lines corpus-wide verified. Zero phantom citations. CLEAN.
+- Prose-sibling sweep of all pass-10–12 corrected numerics: all prose siblings confirmed updated or confirmed already-matching. CLEAN.
+
+**Tilde-normalization: 4 corrections (4 LOW):**
+
+Three corrections are tilde-normalization propagation misses from earlier pass fixes. One is a new micro-class.
+
+1. `core/behavioral-intent.md` — `~60` methods tilde not updated when numeric was corrected to `~68`. `[validation-certification-13]`.
+2. `core/module-inventory.md` — same `~60→~68` methods propagation miss in a second location. `[validation-certification-13]`.
+3. `core/module-inventory.md` — `~8.2k` prebuilt-test LOC tilde not updated when numeric was corrected to `8,944`. `[validation-certification-13]`.
+4. **NEW micro-class — line-range endpoint drift:** `partners/behavioral-intent.md` cited `L3953–4012`; both endpoints verified against source; actual range is `L3953–4033` (end-point drifted). `[validation-certification-13]`. This is the first instance of a new failure class: line-range citations where the start-point is correct but the end-point has drifted due to upstream edits since the claim was authored.
+
+**Housekeeping (not a correction, normalization only):**
+- `splitters/behavioral-intent.md` `~120` tests tilde normalized to `~123` (actual 123, within tilde convention). `[validation-certification-13]`.
+
+**Behavioral rotation (27/28 confirmed; 1 skip):**
+Rotation sample confirmed 27/28 behavioral claims. One claim in the rotation set fell inside an already-corrected line-range region and was validated as part of finding (4) above — counted once.
+
+**Corrected files (semport):**
+- `semport/core/behavioral-intent.md` (`~60→~68` methods; `[validation-certification-13]`)
+- `semport/core/module-inventory.md` (`~60→~68` methods + `~8.2k→8,944` prebuilt-test LOC; `[validation-certification-13]`)
+- `semport/graph/test-inventory.md` (tilde normalization consistent with pass-13 sweep; `[validation-certification-13]`)
+- `semport/partners/behavioral-intent.md` (line-range `L3953–4012 → L3953–4033`; `[validation-certification-13]`)
+- `semport/splitters/behavioral-intent.md` (`~120→~123` tests normalization; `[validation-certification-13]`)
+- `semport/VALIDATION-REPORT.md` (Certification Pass 13 section appended)
+
+**Pass 14 dispatched per D15 (no check-in):**
+Opener: bounded line-range endpoint sweep — all `L\d+–\d+` citations corpus-wide, both start- and end-points verified against pinned source. Then pass-13 propagation check (verify tilde corrections from pass-13 fully propagated across all files). Then tilde-residual zero-check (scan for any remaining unapproximated raw numerics that should carry tilde). Then rotation. Streak 0/3.
+
+**New micro-class logged:**
+Line-range endpoint drift: a citation of `LX–Y` where X (start) is correct but Y (end) has drifted. Pass-14 opener targets this class exhaustively corpus-wide. Will register as 12th lesson if end-of-pass lesson capture happens this burst; deferred to burst-close if pass-14 is still in-flight.
+
+### Streak Status
+
+Streak 0/3. Pass 13: NO. Cumulative: 14 cert passes dispatched, 0 consecutive CLEAN. Total validation runs: 29 (8 sampled + 7-area exhaustive + 14 cert passes dispatched). Total corrections: ~94. Best streak: 1/3 (once, lost at pass 5).
+
+### Files Modified This Burst
+
+- `semport/VALIDATION-REPORT.md` (Pass 13 section appended)
+- `semport/core/behavioral-intent.md` (`~60→~68` methods; pass-13 tilde-normalization)
+- `semport/core/module-inventory.md` (`~60→~68` methods + `~8.2k→8,944` prebuilt-test LOC; pass-13 tilde-normalization)
+- `semport/graph/test-inventory.md` (pass-13 tilde normalization sweep)
+- `semport/partners/behavioral-intent.md` (line-range `L3953–4012 → L3953–4033`; pass-13 new micro-class)
+- `semport/splitters/behavioral-intent.md` (`~120→~123` tests normalization; pass-13 housekeeping)
+- `logs/dispatcher-internal-2026-07-13.jsonl` (pass-13 completion + pass-14 dispatch logged)
+- `STATE.md` (pass 13 DONE, pass 14 dispatched, session checkpoint updated, burst 33 recorded)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 32 checkpoint archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)

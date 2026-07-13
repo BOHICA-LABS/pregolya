@@ -65,7 +65,7 @@ parse tool call), `json_mode` (response_format json_object + parse text), and `j
 ### BC-DRAFT-OAI-004: image token accounting
 `get_num_tokens_from_messages` estimates image tokens by decoding image dimensions and
 applying OpenAI's tile formula (`_url_to_size`, `_resize`, `_count_image_tokens`).
-**Evidence:** functions L3953–4012. **Confidence: MEDIUM** (formula is an approximation of a
+**Evidence:** functions L3953–4033 <!-- [validation-certification-13]: L3953–4012 corrected to L3953–4033; `_url_to_size` at 3953, `_count_image_tokens` at 4012, `_resize` at 4033 — all three cited functions present but `_resize` is outside the original range -->. **Confidence: MEDIUM** (formula is an approximation of a
 provider-internal rule; golden-test against fixtures).
 
 ### BC-DRAFT-OAI-005: streaming per-chunk timeout
