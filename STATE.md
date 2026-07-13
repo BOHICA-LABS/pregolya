@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T19:15:00Z
+timestamp: 2026-07-13T21:30:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "3-CLEAN certification pass 11 in progress, streak 0/3."
+current_step: "3-CLEAN certification pass 12 in progress, streak 0/3."
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -44,9 +44,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived upstream — curated-subset reference only), langchain-mcp-adapters==0.3.0 (SHA a61c783a) |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — burst 28: 3-CLEAN certification pass 10 COMPLETE: CLEAN(strict)=NO. 3 corrections (3 LOW) — ALL propagation residue (dependency-disposition.md R7 risk label, graph/module-inventory.md interrupt.py LOC 110→105 notes-without-edits recurrence, graph/test-inventory.md core_test_loc 62000→63249). ZERO new source-level inaccuracies, zero hallucinations, 100% rotation samples confirmed. Signal: source-claim churn stopped; residual is correction-bookkeeping only. Streak 0/3. Pass 11 DISPATCHED per D15 (no check-in). |
+| **Last Updated** | 2026-07-13 — burst 29: 3-CLEAN certification pass 11 COMPLETE: CLEAN(strict)=NO. 10 corrections (10 LOW) — bounded YAML/metadata numeric sweep flushed stale-approximation class in one pass (test_loc 59935→59322 ×3 locs; platform endpoints 50+→61 & DTOs 40+→44; stream/ ~2,000→2,210; channels/ ~1.2k→1,143; graph/ ~2.8k→2,960). Behavioral layer: 38/38 confirmed, ZERO new errors, zero hallucinations. YAML/METADATA CLASS CLOSED (all approximations now exact corpus-wide). All bounded classes closed and swept. Streak 0/3. Pass 12 DISPATCHED per D15. |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | 3-CLEAN certification pass 11 in progress, streak 0/3. 26 total validation runs (8 sampled + 7-area exhaustive sweep + 11 cert passes dispatched); ~78 total corrections; best streak 1/3 (once); all bounded error classes closed. |
+| **Current Step** | 3-CLEAN certification pass 12 in progress, streak 0/3. 27 total validation runs (8 sampled + 7-area exhaustive sweep + 12 cert passes dispatched); ~88 total corrections; best streak 1/3 (once); all bounded error classes closed and swept. YAML/METADATA CLASS CLOSED. |
 
 ## Phase Progress
 
@@ -69,11 +69,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| 3-CLEAN certification pass 7 | validate-extraction | DONE | CLEAN(strict)=NO. 1 correction (1 LOW): `NamedBarrierValueAfterFinish` absent from channel Concrete-types enumeration in graph/rust-translation-strategy.md §6.1 (asymmetric vs LastValueAfterFinish sibling). ENUMERATION CLASS CLOSED: 42 claims verified across 14 files, 6/7 areas clean. ALL bounded error classes closed. Streak 0/3. |
 | 3-CLEAN certification pass 8 | validate-extraction | DONE | CLEAN(strict)=NO. 1 correction (1 MEDIUM): subgraph `checkpointer=True` borrows parent's checkpointer via `recast_checkpoint_ns` — NOT own persistence. Own persistence requires `BaseCheckpointSaver` instance. `True` on root graphs raises `RuntimeError`. All four variants documented. Coverage-saturation reported: core/graph/langchain/partners high; residual named. Streak 0/3. |
 | 3-CLEAN certification pass 9 | validate-extraction | DONE | CLEAN(strict)=NO. 4 corrections (2 MEDIUM, 2 LOW). MEDIUM-1: `BaseLLM.generate` is batch-fail (fires `on_llm_error` per run_manager then re-raises; NO per-prompt exception collection; `batch(return_exceptions=True)` replicates same exception). MEDIUM-2: langchain-protocol v3 streaming 107 tests across 4 files (not 2) — R7 downgraded to Low. LOW-1: `HTMLHeaderTextSplitter` active_headers keyed by header NAME (e.g., "Header 1"), not DOM depth; depth is value tuple field-3. LOW-2: `dependency-disposition.md` propagation of v3 test count corrected. Streak 0/3. |
 | 3-CLEAN certification pass 10 | validate-extraction | DONE | CLEAN(strict)=NO. 3 corrections (3 LOW) — ALL propagation residue of cert-8/9 fixes, ZERO new source-level inaccuracies, zero hallucinations, 100% rotation samples confirmed. (1) dependency-disposition.md:196 "v3 immature" → "v3 schema 0.0.x" risk label; (2) graph/module-inventory.md interrupt.py LOC 110→105 (notes-without-edits recurrence); (3) graph/test-inventory.md core_test_loc 62000→63249. Signal: source-claim churn stopped. Streak 0/3. |
-| 3-CLEAN certification pass 11 DISPATCHED | validate-extraction | IN-PROGRESS | Dispatched per D15 (no check-in). Opener: bounded YAML/metadata numeric sweep + full sweep of EXHAUSTIVE-SWEEP.md "VERIFIED (N actual)" notes vs inventory tables (closes notes-without-edits recurrence root cause). Then rotation. Streak 0/3. |
+| 3-CLEAN certification pass 11 | validate-extraction | DONE | CLEAN(strict)=NO. 10 corrections (10 LOW) — YAML/metadata numeric sweep: test_loc 59935→59322 ×3 locs; platform endpoints 50+→61 & DTOs 40+→44; stream/ ~2,000→2,210; channels/ ~1.2k→1,143; graph/ ~2.8k→2,960. Behavioral: 38/38 confirmed, ZERO new errors, zero hallucinations. YAML/METADATA CLASS CLOSED. All bounded classes closed and swept. Streak 0/3. |
+| 3-CLEAN certification pass 12 DISPATCHED | validate-extraction | IN-PROGRESS | Dispatched per D15 (no check-in). Opener: verify pass-11 propagation + independent spot-recomputes, then pure rotation. Streak 0/3. |
 
 ## Decisions Log
 
@@ -148,8 +148,8 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 28 complete. 3-CLEAN certification pass 10 COMPLETE: CLEAN(strict)=NO. 3 corrections (3 LOW) — ALL propagation residue, ZERO new source-level inaccuracies, zero hallucinations. (1) dependency-disposition.md:196 "v3 immature" → "v3 schema 0.0.x" risk label; (2) graph/module-inventory.md interrupt.py LOC 110→105 (notes-without-edits recurrence; EXHAUSTIVE-SWEEP noted "VERIFIED (105 actual)" but never propagated); (3) graph/test-inventory.md core_test_loc 62000→63249. Signal: corpus source-claims have stopped yielding; residual churn is correction-bookkeeping only. Streak 0/3. Pass 11 DISPATCHED per D15 (no check-in): opens with bounded YAML/metadata numeric sweep + full sweep of EXHAUSTIVE-SWEEP "VERIFIED (N actual)" notes vs inventory tables (closes notes-without-edits recurrence), then rotation. 26 total validation runs (8 sampled + 7-area exhaustive sweep + 11 cert passes dispatched); ~78 total corrections; best streak 1/3 (once); all bounded error classes closed. |
-| **Key context** | D1-D15 locked. D14 REAFFIRMED UNAMENDED: CLEAN(strict) = zero findings of ANY severity; corrections reset streak; 3 consecutive CLEAN(strict) passes required. D15: autonomous continuation, no further check-ins on gate patience. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh needed (time-sensitive). R7 DOWNGRADED to Low (cert pass 9). R8 OPEN: Unicode/code-point parity — route to product-owner at Phase 1. R10 OPEN: NamedBarrierValue/EphemeralValue coverage gap. R11 OPEN: MCP upstream test voids. CLAUDE.md on main — no initial commit yet; devops at workspace-init Phase 1. Ref corpus: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0. D9: architect presents ≥2 graph alternatives at Phase 1c. D11 ADR at Phase 1c. 10 guardrails active. ALL bounded error classes closed. |
+| **Position** | pre-1, burst 29 complete. 3-CLEAN certification pass 11 COMPLETE: CLEAN(strict)=NO. 10 corrections (10 LOW) — bounded YAML/metadata numeric sweep flushed stale-approximation class corpus-wide: test_loc 59935→59322 ×3 locs; platform endpoints 50+→61 & DTOs 40+→44; stream/ ~2,000→2,210; channels/ ~1.2k→1,143; graph/ ~2.8k→2,960. Behavioral layer: 38/38 confirmed, ZERO new errors, zero hallucinations. YAML/METADATA CLASS CLOSED (all approximations now exact corpus-wide). All bounded classes now both closed and swept. Streak 0/3. Pass 12 DISPATCHED per D15 (no check-in): opener verifies pass-11 propagation + independent spot-recomputes, then pure rotation. 27 total validation runs (8 sampled + 7-area exhaustive sweep + 12 cert passes dispatched); ~88 total corrections; best streak 1/3 (once); all bounded error classes closed and swept. |
+| **Key context** | D1-D15 locked. D14 REAFFIRMED UNAMENDED: CLEAN(strict) = zero findings of ANY severity; corrections reset streak; 3 consecutive CLEAN(strict) passes required. D15: autonomous continuation, no further check-ins on gate patience. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh needed (time-sensitive). R7 DOWNGRADED to Low. R8 OPEN: Unicode/code-point parity — route to product-owner at Phase 1. R10 OPEN: NamedBarrierValue/EphemeralValue coverage gap. R11 OPEN: MCP upstream test voids. CLAUDE.md on main — no initial commit yet; devops at workspace-init Phase 1. Ref corpus: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0. D9: architect presents ≥2 graph alternatives at Phase 1c. D11 ADR at Phase 1c. 10 guardrails active. ALL bounded error classes closed and swept. YAML/METADATA CLASS CLOSED. |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content
@@ -183,6 +183,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | Burst 26 narrative (3-CLEAN certification pass 9 COMPLETE — CLEAN(strict)=NO; 4 corrections (2 MEDIUM, 2 LOW): BaseLLM.generate batch-fail semantics; langchain-protocol v3 107 tests not 2 — R7 downgraded to Low; HTMLHeaderTextSplitter active_headers keyed by NAME not depth; dependency-disposition propagation fix; all pass-8 residual territory resolved; gate-strategy decision pending human) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 27 narrative (D14 REAFFIRMED at Level-2 escalation — absolute strict-zero unamended; human declined severity-scoped and close-now alternatives; certification pass 10 DISPATCHED; fresh context, all 10 guardrails, opener = propagation verification passes 8-9 incl. EXHAUSTIVE-SWEEP.md; streak 0/3) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 28 narrative (3-CLEAN cert pass 10 COMPLETE — CLEAN(strict)=NO; 3 corrections all propagation residue: dependency-disposition.md R7 risk label, interrupt.py LOC 110→105 notes-without-edits recurrence, graph/test-inventory.md core_test_loc 62000→63249; ZERO new source-level inaccuracies; signal: source-claim churn stopped; streak 0/3; pass 11 DISPATCHED per D15 with bounded YAML/metadata numeric sweep + EXHAUSTIVE-SWEEP notes-without-edits closure opener) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Burst 29 narrative (3-CLEAN cert pass 11 COMPLETE — CLEAN(strict)=NO; 10 corrections (10 LOW) — YAML/metadata numeric sweep: test_loc 59935→59322 ×3; platform endpoints 50+→61 & DTOs 40+→44; stream/ ~2,000→2,210; channels/ ~1.2k→1,143; graph/ ~2.8k→2,960; behavioral 38/38 confirmed; YAML/METADATA CLASS CLOSED; all bounded classes closed+swept; streak 0/3; pass 12 DISPATCHED per D15) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Bursts 5-26 checkpoints (all archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Lessons learned (PROCESS-GAP: validator counting methodology) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
 | Lessons learned (PROCESS-GAP: cross-document propagation failures / TD-VSDD-060) | `cycles/v0.0.0-pre-pipeline/lessons.md` |

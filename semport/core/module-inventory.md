@@ -29,7 +29,7 @@ Measured with `tokei` + `find | wc -l` against
 | Top-level single-file modules | 18 |
 | Unit test files | 135 <!-- [validation-exhaustive]: recount `find tests/unit_tests -name "*.py" ! -name "__init__.py" \| wc -l` = 135; original said 134 --> |
 | Unit test functions | **1,766** |
-| Unit test LOC | ~59,935 |
+| Unit test LOC | 59,322 <!-- [validation-certification-11]: corrected from ~59,935; find tests/unit_tests -name "test_*.py" | xargs wc -l = 59,322 (delta -613); same stale value as ANALYSIS-STATE.md test_loc, both from pass-1 recount, both not propagated until this pass --> |
 | Syrupy snapshot files (`.ambr`) | 5 (73 snapshots) |
 | Third-party runtime deps | 9 |
 

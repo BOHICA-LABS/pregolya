@@ -191,7 +191,7 @@ incrementally. `data` is orjson-parsed. Key behaviors:
   (semport/graph §7-invariant "7 stream modes" — the SDK exposes 9, incl. `messages-tuple`
   and split `messages`). Each v2 part is a typed dict discriminated on `type`.
 
-## 4. v3 thread-centric streaming protocol — `stream/` subsystem (~2,000 LOC)
+## 4. v3 thread-centric streaming protocol — `stream/` subsystem (2,210 LOC <!-- [validation-certification-11]: corrected from ~2,000; find stream/ -name "*.py" | xargs wc -l = 2,210 (delta +210) -->)
 
 This is a **newer, richer, bidirectional-ish** protocol distinct from the v1/v2 run SSE.
 It is the highest-complexity subsystem in the SDK and depends on the external
@@ -333,7 +333,7 @@ pass: 6
 artifact: behavioral-intent
 status: complete
 sdk_subclients_cataloged: 5
-rest_endpoints_cataloged: 50+ (see dependency-disposition §1 for full table)
+rest_endpoints_cataloged: 61 # [validation-certification-11]: corrected from 50+; exact count from EXHAUSTIVE-SWEEP §2.1(12)+§2.2(14)+§2.3(11)+§2.4(6)+§2.5(5)+§2.7(3)+§2.8(10)=61; sibling propagation from module-inventory.md correction
 cli_command_groups: 7
 remote_graph_is_drop_in: true (PregelProtocol)
 timestamp: 2026-07-12

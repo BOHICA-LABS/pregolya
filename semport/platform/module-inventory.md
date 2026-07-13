@@ -209,7 +209,7 @@ BaseModel-like | JSON map) — the polymorphic input surface. In Rust these beco
 holdout testing — with three named caveats.**
 
 - ✅ **Every REST endpoint** (paths, verbs, request bodies, query params, response types)
-  is fully recoverable from the SDK source (§2.1–2.6). The 50+ endpoints above are the
+  is fully recoverable from the SDK source (§2.1–2.6). The 61 endpoints <!-- [validation-certification-12]: corrected from "50+ endpoints"; consistent with rest_endpoints: 61 in YAML field corrected in cert-11 --> above are the
   complete client-visible surface at 1.2.9.
 - ✅ **Every wire DTO** is declared in `schema.py` as a TypedDict with field docs (§3). A
   DTU clone's serde structs can be generated 1:1.
@@ -238,8 +238,8 @@ local engine, not a pure request-echo, so run/thread/checkpoint lifecycles are r
 pass: 6
 artifact: module-inventory
 status: complete
-rest_endpoints: 50+
-wire_dtos: 40+
+rest_endpoints: 61 <!-- [validation-certification-11]: corrected from 50+ (approximation); EXHAUSTIVE-SWEEP exact recount §2.1(12)+§2.2(14)+§2.3(11)+§2.4(6)+§2.5(5)+§2.7(3)+§2.8(10)=61 -->
+wire_dtos: 44 <!-- [validation-certification-11]: corrected from 40+ (approximation); 48 class definitions in schema.py minus 4 Protocol stubs (_TypedDictLikeV1/_V2, _DataclassLike, _BaseModelLike) = 44 actual wire DTOs -->
 literals_enums: 19
 dtu_clone_sufficiency: sufficient-with-3-caveats
 timestamp: 2026-07-12

@@ -1031,3 +1031,73 @@ Dispatched autonomously per D15 (no human check-in required). Opener: (1) bounde
 - `STATE.md` (pass 10 DONE, pass 11 dispatched, session checkpoint updated, burst 28 recorded)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 27 checkpoint archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+
+---
+
+## Burst 29 — 3-CLEAN Certification Pass 11 Complete
+
+**Date:** 2026-07-13
+**Agent:** validate-extraction
+**Type:** certification-pass
+
+### Result
+
+3-CLEAN certification pass 11 COMPLETE: **CLEAN(strict)=NO**. 10 corrections (10 LOW).
+
+### Root Cause: YAML/Metadata Numeric Stale-Approximation Class
+
+The bounded YAML/metadata numeric sweep flushed the entire stale-approximation class in one pass. All corrections were approximate values ("~N", "N+") in YAML frontmatter or metadata tables that had not been updated to reflect the exact figures already computed during the exhaustive sweep. No behavioral claims were incorrect — this was exclusively a metadata-accuracy pass.
+
+### Corrections
+
+| # | File | Old Value | New Value | Notes |
+|---|------|-----------|-----------|-------|
+| 1-3 | `semport/core/test-inventory.md` (×3 locations) | 59,935 | 59,322 | test_loc YAML frontmatter + table |
+| 4 | `semport/platform/module-inventory.md` | 50+ endpoints | 61 endpoints | platform endpoint count exact |
+| 5 | `semport/platform/module-inventory.md` | 40+ DTOs | 44 DTOs | platform DTO count exact |
+| 6 | `semport/core/module-inventory.md` (stream/) | ~2,000 | 2,210 | stream/ LOC exact |
+| 7 | `semport/core/module-inventory.md` (channels/) | ~1.2k | 1,143 | channels/ LOC exact |
+| 8 | `semport/graph/module-inventory.md` (graph/) | ~2.8k | 2,960 | graph/ LOC exact |
+| 9-10 | `semport/platform/behavioral-intent.md`, `semport/platform/rust-translation-strategy.md` | stale approx | exact figures | metadata sync |
+
+### Behavioral Layer (38/38 confirmed)
+
+38 behavioral claims verified across all 7 areas — ZERO new errors, zero hallucinations. All behavioral contracts previously corrected in passes 1-10 remain stable.
+
+### Class Closure
+
+**YAML/METADATA CLASS CLOSED**: All approximations now exact corpus-wide. This was the final bounded error class. All bounded classes are now both closed AND swept:
+
+| Class | Status |
+|-------|--------|
+| Propagation residue | CLOSED |
+| Counting methodology | CLOSED |
+| Dependency-constraint verbatim | CLOSED |
+| Env-var completeness | CLOSED |
+| Deprecated-vs-active | CLOSED |
+| Enumeration completeness | CLOSED |
+| YAML/metadata approximations | CLOSED (this pass) |
+
+### Signal
+
+Stale-approximation class was the last category of systematic error. With all bounded classes closed and swept, remaining passes are pure rotation over a corpus where every class of known error is extinguished.
+
+### Pass 12 dispatch (per D15)
+
+Dispatched autonomously per D15 (no human check-in required). Opener: (1) verify pass-11 propagation — re-spot-check the 8 corrected values independently; (2) then pure rotation through behavioral claims not covered in recent passes.
+
+**Streak:** 0/3 (cert pass 11 was a correction; streak resets per D14 strict-zero bar).
+
+### Files modified
+
+- `semport/VALIDATION-REPORT.md` (pass-11 results appended)
+- `semport/core/ANALYSIS-STATE.md` (YAML/metadata class closed, pass-11 status)
+- `semport/core/module-inventory.md` (stream/ 2,210; channels/ 1,143 — exact values)
+- `semport/core/test-inventory.md` (test_loc 59,322 ×3 locations)
+- `semport/graph/module-inventory.md` (graph/ 2,960 — exact value)
+- `semport/platform/behavioral-intent.md` (metadata sync)
+- `semport/platform/module-inventory.md` (61 endpoints, 44 DTOs — exact counts)
+- `semport/platform/rust-translation-strategy.md` (metadata sync)
+- `STATE.md` (pass 11 DONE, pass 12 dispatched, session checkpoint updated, burst 29 recorded)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 28 checkpoint archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)

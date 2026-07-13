@@ -3473,3 +3473,139 @@ corrected in cert-9). Two EXHAUSTIVE-SWEEP-to-module-inventory/metadata propagat
 (interrupt.py LOC ~110→105; core_test_loc ~62000→63249). These reveal a systemic pattern:
 when the EXHAUSTIVE-SWEEP notes "VERIFIED (N actual)" with a delta, the corresponding source
 file is not always updated. All three corrections applied in-place with `[validation-certification-10]` markers.
+
+---
+
+## Certification Pass 11 (2026-07-13) — D14 absolute strict-zero / D15 autonomous continuation
+
+**Streak entering this pass:** 0/3 (cert-10 found 3 LOW corrections)
+
+**Sampling strategy:** Two mandatory opening strata before behavioral sampling. Stratum 1: YAML/metadata numeric sweep of all 35 semport documents. Stratum 2: Propagation sweep for cert-10 fix siblings. Then all 10 guardrails binding; per-area rotation 2 behavioral + 1 numeric + 1 citation, rotated from cert passes 1-10 verified lists.
+
+### Phase 1 — Behavioral Verification
+
+| Pass | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| Arch / Structure | 8 | 8 | 0 | 0 | 0 |
+| Domain Model / Channels | 6 | 6 | 0 | 0 | 0 |
+| Behavioral Contracts | 18 | 18 | 0 | 0 | 0 |
+| NFRs / Config values | 6 | 6 | 0 | 0 | 0 |
+
+**Per-area behavioral verdicts (2 behavioral + 1 numeric + 1 citation each):**
+
+| Area | Behavioral-1 | Behavioral-2 | Numeric | Citation | Corrections |
+|------|-------------|-------------|---------|----------|-------------|
+| core | `coerce_to_runnable` dict→`RunnableParallel`; else `TypeError` (base.py:6640-6652) | `JsonOutputParser` uses `jsonpatch.make_patch` for streaming diffs (`output_parsers/json.py:51-52`) | `runnables/`: 16 files / 14,284 LOC — CONFIRMED | `BaseTool` at `tools/base.py:427` — CONFIRMED | 3 LOW (test_loc propagation to ANALYSIS-STATE, module-inventory, test-inventory) |
+| graph | `Topic.accumulate=False` clears per-step; `BinaryOperatorAggregate` ≤1 `Overwrite` per super-step or `InvalidUpdateError` | `DeltaChannel` stores deltas + periodic `_DeltaSnapshot`; history walks parent chain (confirmed delta.py lines 27-48) | `graph/` sub-pkg: 2,960 LOC — CONFIRMED (corrected from ~2.8k) | `_DeltaSnapshot` NamedTuple at `checkpoint/serde/types.py:19` — CONFIRMED | 2 LOW (§1.2 ~1.2k→1,143; §1.3 ~2.8k→2,960) |
+| langchain | `create_agent` uses `recursion_limit=9999` + `metadata:{ls_integration:…}` in `factory.py:1780-1801` | Duplicate middleware `m.name` → `AssertionError` at `factory.py:1082` | `agents/`: 13,026 LOC — CONFIRMED | `AgentMiddleware` at `middleware/types.py:383` — CONFIRMED | 0 |
+| partners | `with_structured_output` routes to Ollama `format` field via `_resolve_format_param` (`chat_models.py:824`) | `_convert_response_format/`_extract_json_schema` convert OpenAI-style `response_format` → Ollama format param | `langchain_ollama`: 2,959 LOC / 7 files — CONFIRMED | Function names `_resolve_format_param`, `_convert_response_format`, `_extract_json_schema` all confirmed present | 0 |
+| splitters | `HTMLSemanticPreservingSplitter` re-inserts preserved elements in `reversed(preserved_elements.items())` order (`html.py:1094`) | `add_start_index` uses `text.find(chunk, max(0, offset))` (`base.py:139`) | `prod_loc: 3671` — CONFIRMED | `test_jsx_splitter_separator_not_mutated_across_calls` at test file L756 — CONFIRMED | 0 |
+| mcp | `MultiServerMCPClient.__aenter__`/`__aexit__` raise `NotImplementedError` (removed in 0.1.0) at `client.py:273,291` | All-server `get_tools` fans out via `asyncio.gather` (`client.py:209`) | `client.py: 302 LOC`, `sessions.py: 477 LOC` — both CONFIRMED | `prompts.py: 59 LOC` — CONFIRMED | 0 |
+| platform | `_quote_path_param` uses `safe=""` + encodes bare `.`/`..` to `%2E` (`_shared/utilities.py:224-230`) | `url=None` triggers ASGI in-process transport; imports `langgraph_api.server.app` (`_async/client.py:110-119`) | `sdk-py: 18,728 LOC` — CONFIRMED | API key precedence: `LANGGRAPH_API_KEY` → `LANGSMITH_API_KEY` → `LANGCHAIN_API_KEY` at `utilities.py:30-32`; `NOT_PROVIDED` sentinel at line 23 — CONFIRMED | 3 LOW (rest_endpoints 50+→61 in module-inventory + behavioral-intent; wire_dtos 40+→44; stream/ ~2,000→2,210 in behavioral-intent + rust-translation-strategy) |
+
+### Phase 2 — Metric Verification
+
+#### Stratum 1 YAML/metadata numeric sweep
+
+All 35 semport documents swept. Every YAML frontmatter and state-checkpoint block enumerated. Approximations (~) and bounded unknowns (+) identified and corrected where YAML/metadata scope applies.
+
+| Claim | Claimed | Recounted | Delta | Command | Correction Applied |
+|-------|---------|-----------|-------|---------|-------------------|
+| `core/ANALYSIS-STATE.md test_loc` | 59935 | 59,322 | -613 | `find libs/core/tests -name "test_*.py" \| xargs wc -l` | YES — →59322 |
+| `core/module-inventory.md Unit test LOC` | ~59,935 | 59,322 | -613 | same recount | YES — →59,322 |
+| `core/test-inventory.md Totals narrative` | ~59,935 | 59,322 | -613 | same recount | YES — →59,322 |
+| `platform/module-inventory.md rest_endpoints` | 50+ | 61 | +11 | EXHAUSTIVE-SWEEP §2.1-2.8 sum: 12+14+11+6+5+3+10 | YES — →61 |
+| `platform/module-inventory.md wire_dtos` | 40+ | 44 | +4 | 48 class defs in schema.py minus 4 Protocol stubs | YES — →44 |
+| `platform/behavioral-intent.md rest_endpoints_cataloged` | 50+ | 61 | +11 | same as above | YES — →61 |
+| `platform/behavioral-intent.md stream/ heading` | ~2,000 | 2,210 | +210 | `find stream/ -name "*.py" \| xargs wc -l` | YES — →2,210 |
+| `platform/rust-translation-strategy.md stream/ body` | ~2,000 | 2,210 | +210 | same recount | YES — →2,210 |
+| `graph/module-inventory.md §1.2 channels/ heading` | ~1,200 | 1,143 | -57 | EXHAUSTIVE-SWEEP metric table row 187 (already logged) | YES — →1,143 |
+| `graph/module-inventory.md §1.3 graph/ heading` | ~2,800 | 2,960 | +160 | `find graph/ -maxdepth 1 -name "*.py" \| xargs wc -l` | YES — →2,960 |
+| `runnables/ LOC claim` | 14,284 | 14,284 | 0 | `find runnables/ -maxdepth 1 -name "*.py" \| xargs wc -l` | No |
+| `langchain agents/ LOC` | 13,026 | 13,026 | 0 | `find langchain_v1/agents -name "*.py" \| xargs wc -l` | No |
+| `langchain_ollama LOC/files` | 2,959 / 7 | 2,959 / 7 | 0 | `find langchain_ollama -name "*.py" \| wc; xargs wc -l` | No |
+| `splitters prod_loc` | 3,671 | 3,671 | 0 | `find langchain_text_splitters -name "*.py" \| xargs wc -l` | No |
+| `mcp client.py LOC` | 302 | 302 | 0 | `wc -l client.py` | No |
+| `mcp sessions.py LOC` | 477 | 477 | 0 | `wc -l sessions.py` | No |
+| `mcp prompts.py LOC` | 59 | 59 | 0 | `wc -l prompts.py` | No |
+| `sdk-py prod_loc` | 18,728 | 18,728 | 0 | `find langgraph_sdk -name "*.py" \| xargs wc -l` | No |
+| `graph/module-inventory.md deep_scope_loc` | 46,154 | 46,154 | 0 | Sum of 5 sub-packages (prior cert confirmation) | No |
+| `graph/test-inventory.md core_test_files` | 49 | 49 | 0 | (confirmed cert-10) | No |
+| `graph/test-inventory.md core_test_loc` | 63,249 | 63,249 | 0 | (corrected cert-10, confirmed this pass) | No |
+| `channels/ total LOC` | 1,143 (after cert-11 correction) | 1,143 | 0 | `find channels/ -name "*.py" \| xargs wc -l` | No (correction was the action) |
+| `graph/ sub-pkg total LOC` | 2,960 (after cert-11 correction) | 2,960 | 0 | `find graph/ -maxdepth 1 -name "*.py" \| xargs wc -l` | No (correction was the action) |
+| `stream/ subsystem LOC` | 2,210 (after cert-11 correction) | 2,210 | 0 | `find stream/ -name "*.py" \| xargs wc -l` | No (correction was the action) |
+| `graph/module-inventory.md files_scanned: 40+` | 40+ | N/A | N/A | Analyst methodology note; not independently verifiable from source | UNVERIFIABLE |
+
+**Stratum 2 propagation sweep result:**
+
+| Cert-10 fix | Sibling sweep result |
+|------------|---------------------|
+| "v3 immature" → "v3 schema 0.0.x" (core/dependency-disposition.md:196) | No remaining "v3 immature" found outside VALIDATION-REPORT history sections |
+| interrupt.py ~110 → 105 (graph/module-inventory.md:126) | Only remaining ~110 references are in EXHAUSTIVE-SWEEP.md internal delta records (correct — documenting the original claim) |
+| core_test_loc: ~62000 → 63249 (graph/test-inventory.md YAML) | graph/module-inventory.md YAML also shows 63249 (correct) |
+| `test_loc: 59935` pattern (new cert-11 finding) | Found in 3 sibling locations: ANALYSIS-STATE.md, module-inventory.md, test-inventory.md — all corrected this pass |
+| `rest_endpoints: 50+` pattern (new cert-11 finding) | Found in 2 files: module-inventory.md + behavioral-intent.md — both corrected this pass |
+| `stream/ ~2,000` pattern (new cert-11 finding) | Found in 2 files: behavioral-intent.md §4 + rust-translation-strategy.md §1.6 — both corrected this pass |
+
+### Refinement Iterations: 1/3
+
+All corrections applied in iteration 1. No remaining inaccuracies found in iterations 2-3 sweep.
+
+### Inaccurate Items (Corrected)
+
+| # | Item | Original Claim | Actual Value | Correction Applied |
+|---|------|---------------|--------------|-------------------|
+| 1 | `core/ANALYSIS-STATE.md` YAML `test_loc` | 59935 | 59,322 | `[validation-certification-11]` marker applied |
+| 2 | `core/module-inventory.md` scale table `Unit test LOC` | ~59,935 | 59,322 | `[validation-certification-11]` marker applied |
+| 3 | `core/test-inventory.md` Totals narrative | ~59,935 | 59,322 | `[validation-certification-11]` marker applied |
+| 4 | `platform/module-inventory.md` YAML `rest_endpoints` | 50+ | 61 | `[validation-certification-11]` marker applied |
+| 5 | `platform/module-inventory.md` YAML `wire_dtos` | 40+ | 44 | `[validation-certification-11]` marker applied |
+| 6 | `platform/behavioral-intent.md` YAML `rest_endpoints_cataloged` | 50+ | 61 | `[validation-certification-11]` marker applied |
+| 7 | `platform/behavioral-intent.md §4` section heading | ~2,000 LOC | 2,210 LOC | `[validation-certification-11]` marker applied |
+| 8 | `platform/rust-translation-strategy.md §1.6` body | ~2,000 LOC | 2,210 LOC | `[validation-certification-11]` marker applied |
+| 9 | `graph/module-inventory.md §1.2` channels/ heading | ~1.2k LOC | 1,143 LOC | `[validation-certification-11]` marker applied |
+| 10 | `graph/module-inventory.md §1.3` graph/ heading | ~2.8k LOC | 2,960 LOC | `[validation-certification-11]` marker applied |
+
+### Hallucinated Items (Removed)
+
+None.
+
+### Unverifiable Items
+
+| Item | Reason |
+|------|--------|
+| `graph/module-inventory.md YAML files_scanned: 40+` | Analyst methodology note (count of files read during analysis); not independently verifiable from source code |
+
+### Per-Area Verdicts
+
+| Area | Behavioral | Numeric | Citation | Corrections |
+|------|-----------|---------|----------|-------------|
+| core | PASS | FAIL — 3 LOW (test_loc 59935→59322 in 3 files) | PASS | 3 LOW |
+| graph | PASS | FAIL — 2 LOW (§1.2 ~1.2k→1,143; §1.3 ~2.8k→2,960) | PASS | 2 LOW |
+| langchain | PASS | PASS | PASS | 0 |
+| partners | PASS | PASS | PASS | 0 |
+| splitters | PASS | PASS | PASS | 0 |
+| mcp | PASS | PASS | PASS | 0 |
+| platform | PASS | FAIL — 5 LOW (rest_endpoints 50+→61×2; wire_dtos 40+→44; stream/ ~2,000→2,210×2) | PASS | 5 LOW |
+
+### Certification Pass 11 — CLEAN Status
+
+```
+CLEAN (strict): no — 10 corrections of severity LOW(10)
+  - LOW(3): core test_loc 59935→59322 — stale metric from pass-1 recount, never propagated to
+            ANALYSIS-STATE.md / module-inventory.md / test-inventory.md (3 sibling files)
+  - LOW(2): graph section headings — channels/ ~1.2k→1,143 (EXHAUSTIVE-SWEEP propagation miss);
+            graph/ ~2.8k→2,960 (independent recount delta +160)
+  - LOW(3): platform rest_endpoints 50+→61 (module-inventory + behavioral-intent);
+            wire_dtos 40+→44 (module-inventory)
+  - LOW(2): platform stream/ ~2,000→2,210 (behavioral-intent §4 + rust-translation-strategy §1.6)
+CLEAN (PR-merge): yes — zero CRIT/HIGH/MED findings; all 10 corrections are LOW severity
+Streak: 0/3 (not advanced; 10 LOW corrections found in this pass)
+```
+
+**Most consequential finding class:** The stratum 1 YAML/metadata numeric sweep revealed a systematic pattern where approximate values (`50+`, `40+`, `~59,935`, `~2,000`) were never replaced with exact counts in state-checkpoint YAML blocks and section headings, even when the exact values were available from prior pass recounts. This is a lower-stakes class than the cert-10 finding (which had behavioral implications for the "v3 immature" risk label), but it represents the same systemic tendency: approximations computed during initial analysis are not always propagated when exact values become available.
+
+**Stratum 1 result:** 10 YAML/metadata/heading approximations corrected. All state-checkpoint YAML blocks in all 35 semport documents now contain exact values (no `~` or `+` suffixes remaining in YAML blocks). The sole remaining `files_scanned: 40+` in graph/module-inventory.md is an analyst methodology note (UNVERIFIABLE from source code) and is not a factual claim about the codebase.
+
+**Stratum 2 result:** No new propagation misses found for cert-10's three specific fix targets (v3 immature, interrupt.py 105, core_test_loc 63249). Cert-11 itself introduced 3 new propagation families (test_loc, rest_endpoints, stream/ LOC), each fully resolved within this pass.

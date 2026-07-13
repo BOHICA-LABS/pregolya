@@ -11,7 +11,7 @@ scale:
   source_loc: 60101
   source_files: 180
   test_count: 1766
-  test_loc: 59935
+  test_loc: 59322 <!-- [validation-certification-11]: corrected from 59935; find libs/core/tests -name "test_*.py" | xargs wc -l = 59322 (delta -613); stale value flagged in pass-1 metric table but never propagated to this YAML field -->
 top_risks:
   - id: RED-1
     area: "Runnables/LCEL (runnables/base.py 6,713 LOC)"

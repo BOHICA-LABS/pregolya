@@ -48,7 +48,7 @@ substantially larger and more semantically dense port than langchain-core (pass 
 | `_executor.py` | 223 | **[validation-exhaustive: previously unlisted]** `Submit` protocol (sync/async execution context), `copy_context` isolation, `run_coroutine_threadsafe` bridging. The execution context abstraction used by `_runner.py`. |
 | `debug.py` (302), `_messages.py` (461), `_io.py` (174), `_draw.py` (294), `_utils.py` (291), `_validate.py` (120), `protocol.py` (288), `types.py` (38 re-export stub; canonical types at `langgraph/types.py` 984 LOC) | ~1.97k | debug/checkpoint/task event mapping (`map_debug_*`), message-stream tap, input/output mapping, mermaid/graphviz drawing, graph validation, `PregelProtocol` ABC. NOTE: `pregel/_config.py` is 0 LOC (empty placeholder); config logic is in `_internal/_config.py` (474 LOC, `ensure_config`/`DEFAULT_RECURSION_LIMIT`). |
 
-### 1.2 `channels/` — Pregel channel types (the reducer algebra, ~1.2k LOC)
+### 1.2 `channels/` — Pregel channel types (the reducer algebra, 1,143 LOC <!-- [validation-certification-11]: corrected from ~1.2k; EXHAUSTIVE-SWEEP metric table: find channels/ -exec wc -l = 1,143 (delta -57) -->)
 | Channel | Semantics |
 |---|---|
 | `LastValue` | ≤1 update/step; else `InvalidUpdateError`. Default for scalar state keys. |
@@ -62,7 +62,7 @@ substantially larger and more semantically dense port than langchain-core (pass 
 | `DeltaChannel` (beta) | Stores deltas; periodic `_DeltaSnapshot` blobs; history reconstructed by walking parent chain. Heavy checkpoint-saver contract (copy/prune/delete must preserve ancestor chain). |
 | `BaseChannel` (ABC) | `get/update/checkpoint/from_checkpoint/consume/finish/is_available` + `ValueType`/`UpdateType`. |
 
-### 1.3 `graph/` — StateGraph builder API (~2.8k LOC)
+### 1.3 `graph/` — StateGraph builder API (2,960 LOC <!-- [validation-certification-11]: corrected from ~2.8k; find graph/ -maxdepth 1 -name "*.py" | xargs wc -l = 2,960 (delta +160 from approximation) -->)
 | File | LOC | Purpose |
 |---|---|---|
 | `state.py` | 1,964 | `StateGraph`: `add_node` (5 overloads), `add_edge`, `add_conditional_edges`, `add_sequence`, `set_entry_point`/`set_finish_point`/`set_conditional_entry_point`, `compile()` → `CompiledStateGraph(Pregel)`. State-schema → channel derivation (reducers from `Annotated`), input/output schema handling. |

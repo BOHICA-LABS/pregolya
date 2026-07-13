@@ -85,7 +85,7 @@ pop) → a pure fn. 9 `StreamMode`s as an enum aligned with the local engine's s
 (semport/graph §6.6).
 
 ### 1.6 v3 thread-centric streaming — 🔴 DEFER
-The `stream/` subsystem (controller/decoders/transport, ~2,000 LOC) + `langchain-protocol`
+The `stream/` subsystem (controller/decoders/transport, 2,210 LOC <!-- [validation-certification-11]: corrected from ~2,000; find stream/ -name "*.py" | xargs wc -l = 2,210 -->) + `langchain-protocol`
 event grammar + WebSocket transport. This parallels the local engine's v3 StreamTransformer
 which semport/graph §6.6 already marked 🔴 DEFER. **Inherit the DEFER.** If built later:
 `tokio-tungstenite` for WS, a `StreamController` actor (subscription registry, filter-union
