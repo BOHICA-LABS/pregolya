@@ -881,10 +881,10 @@ overlap (name +4.0, desc +2.5, tag +2.0, body +1.0, normalized by √body-tokens
 
 ### P-57 — adk-code declarative SandboxPolicy: strict-by-default with truthful capability flags
 `adk-code::SandboxPolicy::default() == strict_rust()` (no network, no filesystem, no env, 30s
-timeout, 1 MB limits); a separate `dev_local()` preset documents that host-local backends CANNOT
+timeout, 1 MB limits); a separate `host_local()` preset documents that host-local backends CANNOT
 enforce network/fs and executed code has host access. `BackendCapabilities.enforce_filesystem_policy`
-tells a caller whether the chosen backend honors the policy.
-- Evidence: `adk-code::types::{SandboxPolicy::strict_rust/dev_local/default, FilesystemPolicy::None,
+tells a caller whether the chosen backend honors the policy. <!-- [comparative-cert-14] CORRECTION: "dev_local()" → "host_local()"; grep confirms no fn dev_local in adk-code/src/types.rs; actual method is pub fn host_local() at types.rs:235 with NetworkPolicy::Enabled, FilesystemPolicy::None, matching the described behavior; behavioral description accurate, method name wrong -->
+- Evidence: `adk-code::types::{SandboxPolicy::strict_rust/host_local/default, FilesystemPolicy::None,
   BackendCapabilities}`.
 - Quality: **NEUTRAL** — the DEFAULT policy is correctly deny-all and the capability flag is
   honest; but the flagship backend does not enforce it (P-62), so a safe-looking `default()` +
@@ -972,7 +972,7 @@ host-local process (documented "phase 1"). It restricts the SOURCE model (single
 access — the `strict_rust()` policy's "no network / no filesystem" is declarative and NOT enforced
 by this backend. Only the container backend (bollard/Docker, opt-in) or the WASM guest isolate.
 - Evidence: `adk-code::rust_sandbox` module doc ("host-local process approach (phase 1)",
-  "the backend is honest about its capabilities"); `adk-code::types::SandboxPolicy::dev_local`
+  "the backend is honest about its capabilities"); `adk-code::types::SandboxPolicy::host_local` <!-- [comparative-cert-14] CORRECTION: "dev_local" → "host_local"; sibling of C14-01 (P-57); same method-name error; fn host_local() at types.rs:235 is the actual method referenced; behavioral description accurate -->
   ("host-local backends … cannot enforce network or filesystem restrictions").
 - Quality: **WEAK (policy/enforcement decoupling)** — a caller who builds `strict_rust()` and runs
   it on the default Rust executor gets a policy object that promises isolation the backend does not
