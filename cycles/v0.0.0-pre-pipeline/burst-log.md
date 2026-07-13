@@ -453,4 +453,28 @@ Now consistent across all 5 langchain-area docs: 27 chat / 10 embeddings.
 - cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 10 checkpoint archived)
 - cycles/v0.0.0-pre-pipeline/lessons.md (second PROCESS-GAP lesson added — propagation failures / TD-VSDD-060)
 
+---
+
+## Burst: pre-pipeline burst 12 — extraction-validation pass 4 COMPLETE, R10 registered, pass 5 dispatched (2026-07-13)
+
+**Summary:** Pass 4 returned CLEAN(strict)=NO — 9 corrections (5 MEDIUM, 4 LOW). Streak remains 0/3. Cascade correction trend: 11→5→7→9 — NOT count-decaying because each pass rotates into unexplored strata; pass 4's finds were genuinely new substance (graph-area had only 1 analysis pass vs core's 3 prior passes).
+
+**Headline finding (most consequential of whole cascade):** Checkpoint serialization ext-hook dispatch enumeration was INCOMPLETE across all 5 graph-area documents. The dispatch table documented only the happy-path types and omitted: Pydantic v2 (the PRIMARY path for user graph state), Pydantic v1/SecretStr, Enum, dataclasses, NamedTuples, and numpy arrays. Additionally, langgraph named types (Command/Interrupt/TimeoutPolicy) were incorrectly described as a special dispatch path — they are @dataclasses and hit the GENERIC dispatch path. A Rust implementer building from the uncorrected docs would have shipped a serializer unable to handle real graph state. All 5 graph-area documents corrected.
+
+**Other pass 4 corrections:**
+- Test-citation integrity failure: test_channels.py was cited as the source for NamedBarrierValue and EphemeralValue semantics, but test_channels.py does not test these types (barrier tested in test_state.py, 3 assert lines; NamedBarrierValue has NO dedicated test). Citations corrected.
+- Propagation residue: stale ANALYSIS-STATE footer (referenced now-superseded analysis state) and ~62→~48 tokio-test estimate in partners strategy document.
+
+**R10 registered:** Upstream coverage gap — NamedBarrierValue has NO dedicated unit test anywhere in the langgraph reference corpus. EphemeralValue only 3 assert lines in test_state.py. Like R8 (splitters code-point/byte parity): a contract upstream never wrote. Product-owner must author BCs + tests from behavior, not from ported tests. Severity: Medium. Route at Phase 1.
+
+**Pass 5 dispatched:** Fresh context; graph-area weighting (pregel loop, checkpoint SQL schemas, prebuilt agents, interrupts); light-coverage partners inventory; test-citation integrity checks across all documents. Streak 0/3. Phase 1 opens only after 3 consecutive CLEAN(strict) passes.
+
+**Phase step archival:** "semport-analyze pass 8 — narrow: RunnableSequence + ADR-3 + langchain-protocol-0.0.17" row rotated out of STATE.md Current Phase Steps (5-row limit); covered in burst 8 entry above.
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated/Current Step; Current Phase Steps — pass-8 archived, pass-4 updated to DONE, pass-5 IN_PROGRESS row added; R10 added to Risk Register; Session Resume Checkpoint replaced; Historical Content updated)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 11 checkpoint archived)
+
 **Next steps:** extraction-validation pass 4 in progress. Requires 3 CLEAN(strict) passes (streak still 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.
