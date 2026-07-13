@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T03:30:00Z
+timestamp: 2026-07-13T00:56:04Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "semport passes 6-7 in progress (platform SDK/CLI, core convergence deepening); passes 4-5 DONE; D12 file-size standard locked; R8 splitters parity risk added; remaining queue: extraction-validation gate → semport convergence → Phase 1"
+current_step: "semport passes 6-7 DONE; R9 platform API churn added; pass 8 IN_PROGRESS (narrow: RunnableSequence line-verify + SERIALIZABLE_MAPPING); parallel research: langchain-protocol 0.0.17 CDDL verification; remaining queue: extraction-validation gate (C-1..C-6) → semport convergence → Phase 1"
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -43,9 +43,9 @@ dtu_required: false
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived upstream — curated-subset reference only), langchain-mcp-adapters==0.3.0 (SHA a61c783a) |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — D12 file-size standard locked; semport passes 4-5 DONE; R8 splitters parity risk added; passes 6-7 dispatched |
+| **Last Updated** | 2026-07-13 — passes 6-7 DONE; R9 platform API churn added; pass 8 IN_PROGRESS; ADR-6/7/8 queued; C-1..C-6 contradictions logged |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | semport passes 6-7 in progress (platform SDK/CLI, core convergence deepening); remaining queue: extraction-validation gate → semport convergence → Phase 1 |
+| **Current Step** | pass 8 IN_PROGRESS (RunnableSequence line-verify + SERIALIZABLE_MAPPING); parallel: langchain-protocol 0.0.17 CDDL verification; then extraction-validation gate (C-1..C-6) → semport convergence → Phase 1 |
 
 ## Phase Progress
 
@@ -68,11 +68,11 @@ dtu_required: false
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| semport-analyze pass 4 — partners+standard-tests | codebase-analyzer | DONE | .factory/semport/partners/ (5 deliverables; ~52,193 src LOC: openai 13,597/16,658 test, anthropic 5,664/8,941, ollama 2,959/2,607, std-tests 9,820/12 conformance base classes; DIRECT-HTTP verdict for deep providers; genai+async-openai REJECTED; pass-1 §3 conflict → Phase 1 ADR) |
 | semport-analyze pass 5 — text-splitters+mcp-adapters | codebase-analyzer | DONE | .factory/semport/splitters/ + .factory/semport/mcp/ (10 deliverables; splitters 3,671 LOC — R8 code-point/byte parity CRITICAL; tiktoken→tiktoken-rs MAP HIGH; MCP 1,914 LOC — rmcp 2.2.0 OFFICIAL Rust SDK ADOPT; 3 pre-Phase-1 verification items; fresh-per-tool-call session model) |
 | D12 file-size standard locked (human-approved, research-validated) | human | DONE | Production 500 soft/750 hard LOC; tests 1,000/1,500; tokei Code metric; CI xtask check-file-size + clippy::too_many_lines=150; xtask/file-size-allowlist.toml for exceptions; cohesion clause (split-by-concern, no over-splitting); CLAUDE.md codified |
-| semport-analyze pass 6 — platform SDK/CLI | codebase-analyzer | IN_PROGRESS | .factory/semport/platform/ |
-| semport-analyze pass 7 — core convergence deepening | codebase-analyzer | IN_PROGRESS | .factory/semport/core/ |
+| semport-analyze pass 6 — platform SDK/CLI | codebase-analyzer | DONE | .factory/semport/platform/ (5 deliverables; SDK 18,728 LOC async-only; auth/runtime/encryption DROP from client crate; CLI 8,383 LOC — validate+schema ~2,500 LOC portable→ferrochain.toml; build/up/dev/deploy DROP/RE-SCOPE; DTU spec: 50+ endpoints, 40+ DTOs, 19 enums; R9 added) |
+| semport-analyze pass 7 — core convergence deepening | codebase-analyzer | DONE | .factory/semport/core/ (all 5 deliverables + ANALYSIS-STATE.md; 8 items; 1 HIGH/4 MED/3 LOW novelty; C-1..C-6 contradictions logged; ADR-6/7/8 queued; NOT fully converged → pass 8 dispatched) |
+| semport-analyze pass 8 — narrow: RunnableSequence + SERIALIZABLE_MAPPING | codebase-analyzer | IN_PROGRESS | .factory/semport/core/ (parallel: research-agent fetching langchain-protocol 0.0.17 CDDL → .factory/semport/core/langchain-protocol-0.0.17-verification.md) |
 
 ## Decisions Log
 
@@ -103,6 +103,7 @@ dtu_required: false
 | R6 | crates.io names verified available; GitHub=BOHICA-LABS/ferrochain registered; publish-all.sh prepped — human has NOT yet run publish-all.sh (cargo login required). Time-sensitive. | High | pre-1 | Pending human action: `cargo login` + run publish-all.sh to reserve all ferrochain-* crate names |
 | R7 | langchain-protocol v0.0.17 discovered as upstream dep of langchain-core (semport pass 1); immature package with no stable release. Port-as-provisional strategy. | Medium | Phase 1/3 | Identified in semport pass 1. Strategy: port as provisional, monitor for breaking changes. Full schema in .factory/semport/core/ANALYSIS-STATE.md |
 | R8 | Splitters code-point vs byte-length parity: upstream `len()` calls on text are code-point counts, not byte counts — produces different split boundaries on non-ASCII input. NOT covered by any upstream test (no non-ASCII test vector exists). Risk that ferrochain-splitters silently diverges on Unicode-heavy workloads with no behavioral signal. | High | Phase 1/3 | CRITICAL parity risk (semport pass 5). Must become explicit BC + holdout scenario candidate. Route to product-owner at Phase 1 gate. Also flagged: json.dumps separator fidelity + BeautifulSoup-vs-html5ever DOM parity (medium). |
+| R9 | Platform API churn: no public versioned spec for LangGraph Platform SaaS API; documented drift observed across SDK versions; license-gated endpoints require authenticated access to test. DTU clone spec anchored to SDK-1.2.9 contract — re-conformance required before each release cycle. | High | Phase 1/4 | Identified in semport pass 6. DTU clone (P1-06) must explicitly track against SDK-1.2.9; re-conformance procedure needed before each release. |
 
 ## Skip Log
 
@@ -141,8 +142,8 @@ dtu_required: false
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 6 complete. Passes 4-5 DONE: partners+standard-tests (~52,193 src LOC; 5 deliverables at .factory/semport/partners/), text-splitters+mcp-adapters (10 deliverables at .factory/semport/splitters/+mcp/). D12 file-size standard locked (500/750 production, 1000/1500 tests, tokei Code metric, CI xtask + clippy::too_many_lines). R8 CRITICAL: code-point/byte parity in splitters — route to product-owner at Phase 1. rmcp 2.2.0 ADOPT for MCP. Passes 6-7 IN_PROGRESS (platform SDK/CLI → .factory/semport/platform/, core deepening → .factory/semport/core/). Next gate: extraction-validation → semport convergence → Phase 1. Queued Phase 1 decisions: (a) subagent stream transformer v1 non-goal, (b) MAP-vs-HTTP conflict ADR (supersedes pass-1 §3), (c) final crate-name ADR, (d) license decision. |
-| **Key context** | D1-D12 locked. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario authoring. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + production trade-offs to human before ADR lock. D11 formal ADR ratification at Phase 1c. Deepseek+xai are BaseChatOpenAI subclasses; groq/fireworks/openrouter ride OpenAI wire → one openai-wire module serves ~6 crates. |
+| **Position** | pre-1, burst 7 complete. Passes 6-7 DONE: platform SDK/CLI (5 deliverables at .factory/semport/platform/; SDK async-only; CLI validate+schema portable; DTU spec complete: 50+ endpoints/40+ DTOs/19 enums), core convergence deepening (all 5 deliverables updated; C-1..C-6 contradictions logged; ADR-6/7/8 queued; NOT fully converged). Pass 8 IN_PROGRESS: narrow RunnableSequence line-verify + SERIALIZABLE_MAPPING; parallel research: langchain-protocol 0.0.17 CDDL → .factory/semport/core/langchain-protocol-0.0.17-verification.md. Next gate: extraction-validation (validate-extraction over all passes with C-1..C-6 as known-corrections) → semport convergence → Phase 1. Queued Phase 1 gate decisions: (a) subagent stream transformer v1 non-goal, (b) MAP-vs-HTTP ADR, (c) CLI re-scope, (d) platform-client depth (full PregelProtocol vs reduced subset), (e) final crate-name ADR, (f) license decision. |
+| **Key context** | D1-D12 locked. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R9 OPEN: platform API churn — DTU clone anchored to SDK-1.2.9. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + production trade-offs to human before ADR lock. D11 formal ADR ratification at Phase 1c. C-1 headline: langchain-protocol is full Agent Streaming Protocol; core consumes MessagesData subset only → ADR-6 scope split eliminates _compat_bridge. |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content
@@ -154,7 +155,9 @@ dtu_required: false
 | Burst 4 narrative (D9/D10, semport pass 1 close, passes 2-3 start) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 5 narrative (passes 2-3 DONE, D11 design steers, passes 4-5 dispatch) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 6 narrative (passes 4-5 DONE, D12 locked, R8 added, passes 6-7 dispatch) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Burst 7 narrative (passes 6-7 DONE, R9 added, C-1..C-6 logged, ADR-6/7/8 queued, pass 8 dispatch) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 5 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
+| Burst 6 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Naming decision study | `.factory/planning/naming-decision-study.md` |
 | File-size standard study | `.factory/planning/file-size-standard-study.md` |
 | Semport pass 1 analysis state (deepening items, risks) | `.factory/semport/core/ANALYSIS-STATE.md` |

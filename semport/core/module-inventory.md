@@ -162,3 +162,41 @@ translator inside the method body). This exists to break Python import cycles an
 keep import latency low (langsmith import is ~132ms, deferred). **In Rust this entire
 mechanism is ELIMINATE** — the module graph is resolved at compile time; cycles are
 handled by the crate/module system, and there is no import-time cost to amortize.
+
+---
+
+# Pass 7 deepening (2026-07-12) — inventory corrections
+
+## `messages/block_translators/` — 8 provider modules (not 7) + `__init__`
+
+The `messages/` row said "block_translators/ (7 files)". Actual source: **8 provider modules +
+`__init__.py`**: `anthropic.py`, `bedrock.py`, `bedrock_converse.py`, `google_genai.py`,
+**`google_vertexai.py`** (missed by Pass 1), `groq.py`, `langchain_v0.py`, `openai.py`. The
+`__init__.py` holds the **`PROVIDER_TRANSLATORS` registry** + `register_translator()` (a
+public extension seam integration packages call) + `_register_translators()`. There is no
+`registration.py` module (Pass 1 test-inventory listed one — it does not exist; registration
+is in `__init__.py`). Architecture is registry + fixed fallback pipeline — see behavioral-intent
+Pass 7 §D-3.
+
+## `runnables/base.py` (6,713 LOC) — verified concrete-type fanout
+
+Full read confirms the file defines: `Runnable` (ABC, 1 abstractmethod `invoke` + ~60 concrete/
+overloaded methods), `RunnableSerializable`, `RunnableSequence`, `RunnableParallel`,
+`RunnableGenerator`, `RunnableLambda`, `RunnableEachBase`/`RunnableEach`,
+`RunnableBindingBase`/`RunnableBinding`, plus the `_RunnableCallable*` Protocols, the
+`RunnableLike` union, `coerce_to_runnable`, and the `@chain` decorator. `RunnableRetry`,
+`RunnableWithFallbacks`, `RunnableConfigurableFields/Alternatives`, `RunnableBranch`,
+`RunnablePassthrough/Assign/Pick`, `RouterRunnable`, `RunnableWithMessageHistory` live in
+sibling files (`retry.py`, `fallbacks.py`, `configurable.py`, `branch.py`, `passthrough.py`,
+`router.py`, `history.py`) and are pulled in via local imports to break cycles. Rust fanout
+estimate (~10 modules) holds; note `RunnableBinding.__getattr__` transparent method delegation
+(base.py:6537) has no Rust analog and must be redesigned, not translated.
+
+## `langchain_protocol` external dep — recharacterized
+
+Module-inventory §External seams called it "the new `langchain_protocol` package (wire protocol
+for v3 content-block streaming)". It is actually the **full LangChain Agent Streaming Protocol**
+(JSON-RPC commands + 9-channel events + state/checkpoint/fork + reconnection), of which core
+uses only the `MessagesData` content-block subset at 6 import sites. Not vendored in the clone
+(pin `>=0.0.17`; only v0.0.15 present in an external docker site-packages). Full detail:
+dependency-disposition Pass 7 deepening.

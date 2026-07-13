@@ -426,3 +426,174 @@ candidate for serde-tagged-enum modelling in Rust.
 
 **Note:** a large fraction of `utils` exists to paper over Python dynamism (pydantic
 v1/v2 compat, runtime type hint extraction, import utils) and is **ELIMINATE** in Rust.
+
+---
+
+# Pass 7 deepening (2026-07-12) — line-level verification
+
+Deepens §1 (Runnables), §2 (Messages/blocks), §3 (language models), §10 (tracers),
+§11 (load). Evidence is now full-read source + specific tests, not sampling.
+
+## D-1. Runnables/base.py full internals (feeds RED-1 Runnable ADR)
+
+Full structural read of all 6,713 lines. `Runnable` ABC declares one `@abstractmethod`
+(`invoke`, base.py:874) and ~60 concrete/overloaded methods. Confirmed the concrete
+subtype set and their exact composition seams:
+
+**Modifier constructors (all return a new Runnable) — exact targets [S]:**
+- `.bind(**kwargs)` → `RunnableBinding(bound=self, kwargs=kwargs, config={})` (base.py:1871).
+- `.with_config(config, **kw)` → `RunnableBinding` with merged `{**config, **kw}` into `config`.
+- `.with_listeners(on_start/on_end/on_error)` → `RunnableBinding` with a **`config_factories`**
+  entry (a `list[Callable[[RunnableConfig], RunnableConfig]]`) that injects a
+  `RootListenersTracer` callback (base.py:1954). `.with_alisteners` uses `AsyncRootListenersTracer`.
+  **Pass 1 missed the `config_factories` vector entirely** — see contradiction C-6.
+- `.with_types(input_type, output_type)` → `RunnableBinding` with `custom_input_type`/
+  `custom_output_type`.
+- `.with_retry(...)` → `RunnableRetry` (runnables/retry.py). **Defaults:**
+  `retry_if_exception_type=(Exception,)`, `wait_exponential_jitter=True`,
+  `stop_after_attempt=3`, `exponential_jitter_params=None` (tenacity `initial/max/exp_base/jitter`).
+  Pass 1 did not record these defaults.
+- `.map()` → `RunnableEach(bound=self)`.
+- `.with_fallbacks(fallbacks, exceptions_to_handle=(Exception,), exception_key=None)` →
+  `RunnableWithFallbacks`. **`exception_key`**: when set, the handled exception is injected
+  into the fallback's *input dict* under that key (so fallbacks can see what failed); requires
+  dict input. Pass 1 omitted `exception_key`.
+- `.as_tool(args_schema=None, name, description, arg_types)` → `convert_runnable_to_tool`.
+  Schema inferred from `get_input_schema` unless `args_schema`/`arg_types` given.
+- `.configurable_fields(**kw)` → `RunnableConfigurableFields`; **raises `ValueError`** if a
+  key is not in `type(self).model_fields` (validated eagerly at construction, base.py:2891).
+- `.configurable_alternatives(which, default_key="default", prefix_keys=False, **alts)` →
+  `RunnableConfigurableAlternatives`; alternatives may be a `Runnable` or a
+  `Callable[[], Runnable]` (lazy).
+
+**`RunnableBinding` has FOUR override vectors** (base.py:5849-5880), not one: `kwargs`
+(call-time kwargs merged into every invoke/stream), `config` (bound config), `config_factories`
+(dynamic config derived from the merged config — the listeners seam), and
+`custom_input_type`/`custom_output_type`. `_merge_configs` (base.py:5991) applies `config`
+then folds each `config_factory(config)` on top. `RunnableBinding.__getattr__` (base.py:6537)
+**transparently delegates attribute access to `self.bound`**, and if the delegated attr is a
+callable with a `config` parameter, wraps it to merge the binding's config in — a pure Python
+dynamic-dispatch trick with **no Rust analog** (ELIMINATE/redesign; see rust-strategy D-1).
+
+**`RunnableGenerator`** (base.py:4387) wraps a generator function
+`Iterator[Input]->Iterator[Output]` (or async). Constructor **raises `TypeError`** if the arg
+is not a (sync or async) generator function (`inspect.isgeneratorfunction`/`is_async_generator`,
+base.py:4504-4515). It is the transform-native primitive: it streams as input arrives.
+Contrast `RunnableLambda`, which buffers the full input before emitting (used when a step needs
+the whole input, e.g. LLM prompts).
+
+**`coerce_to_runnable`** (base.py:6628) is the universal `|`/dict/callable coercion:
+`Runnable`→as-is; generator-fn→`RunnableGenerator`; other callable→`RunnableLambda`;
+`dict`→`RunnableParallel`; else `TypeError`. The `@chain` decorator (base.py:6679) is just
+`RunnableLambda(func)` with the function name as the runnable name.
+
+**Graph introspection**: `get_graph()` builds `Graph` nodes/edges; `RunnableBinding.get_graph`
+delegates to `bound.get_graph(self._merge_configs(config))` — bindings are transparent in the
+graph (they do not add a node). Snapshot-frozen (see test-inventory).
+
+## D-2. astream_events v2 ordering — line-level (feeds ORA-3)
+
+Verified against `test_runnable_events_v2.py` (36 tests, 2,918 LOC). **Default `version="v2"`**
+is asserted by `test_default_is_v2` (reads the signature default). Each event is a dict with a
+**fixed 7-key shape**: `{event, name, run_id, parent_ids, tags, metadata, data}`.
+
+**Event-name taxonomy by run type** (the `on_<type>_<phase>` scheme):
+- chain: `on_chain_start` / `on_chain_stream` / `on_chain_end`
+- chat model: `on_chat_model_start` / `on_chat_model_stream` / `on_chat_model_end`
+- LLM (string): `on_llm_start` / `on_llm_stream` / `on_llm_end`
+- tool: `on_tool_start` / `on_tool_end` (**no `on_tool_stream`**), plus `on_tool_error`
+- prompt: `on_prompt_start` / `on_prompt_end` (**no `on_prompt_stream`** — prompts don't stream)
+- retriever: `on_retriever_start` / `on_retriever_end`
+- `on_custom_event` (via `adispatch_custom_event`)
+
+**Ordering invariants [T]:**
+1. Parent `on_chain_start` (e.g. `RunnableSequence`) fires **before** the first child start;
+   parent `on_chain_end` fires **last**.
+2. In a streaming sequence, a downstream step's `on_*_start` fires **before** the upstream
+   step's `on_*_end` — because the upstream's streamed chunk is piped into the downstream step
+   which starts consuming while the upstream is still open (triple-lambda test lines 283-300:
+   step-2 `on_chain_start` precedes step-1 `on_chain_end`). This start-before-end interleave is
+   the core streaming-ordering contract the Rust port must reproduce.
+3. `seq:step:N` tags mark position within a `RunnableSequence` (1-indexed).
+4. **Tags accumulate down the tree** (`["my_chain","my_model","seq:step:2"]`); **metadata is
+   inherited and merged** (parent `{foo:bar}` + child `{a:b}`), plus LangSmith-derived scalars:
+   `ls_model_type="chat"` and `ls_stop="<stop_token>"` (the latter derived from a `.bind(stop=…)`
+   kwarg). test lines 949-960.
+5. `on_chat_model_start` `data.input` wraps messages as `{"messages": [[...]]}` (list-of-lists).
+6. `run_id` is a UUID (tests normalize to `""`); `parent_ids` is the ordered ancestry list.
+
+**`on_tool_error` carries `tool_call_id`** in `data` (new in 1.4): equals the invoking
+ToolCall's `id`, or `None` when invoked with a plain dict (tests 2850, 2890).
+
+**Cancellation semantics [T] (tests 2470 break, 2535 cancel):** breaking out of / cancelling
+the `astream_events` consumer must (a) cancel the currently-running node (it receives
+`CancelledError`), (b) propagate `CancelledError` into the outer chain generator for cleanup,
+and (c) **never start downstream nodes**. Concretely: node running at break-time is cancelled
+(`cancelled=True`), the node that already finished is not, and the next node's `started` stays
+`False`. Rust maps this to cancellation-on-drop of the stream future, but the **cleanup
+ordering** (outer generator observes cancellation and re-raises) is a hard requirement.
+
+## D-3. `.content_blocks` translator architecture — CORRECTED (feeds §2, ORA-1)
+
+Pass 1 described a single best-effort pipeline. The real architecture is a **registry +
+fixed-pipeline hybrid** (contradiction C-3):
+
+1. **`PROVIDER_TRANSLATORS` registry** (`block_translators/__init__.py:23`): a
+   `dict[str, {translate_content, translate_content_chunk}]` keyed by provider name. Populated
+   at import by `_register_translators()` (which calls `register_translator(provider, …)`), and
+   **external integration packages call `register_translator` to add their own** — a runtime
+   plugin extension seam (partner-crate relevant).
+2. **`AIMessage.content_blocks` / `AIMessageChunk.content_blocks` dispatch** (ai.py):
+   (a) if `response_metadata["output_version"]=="v1"` **and** `content` is a `list` → short-circuit,
+   return content cast as blocks (assumed already normalized); note the guard is list-only
+   because some v1 streams keep `content` as a string (OpenAI Chat Completions) and must fall
+   through to rebuild blocks from `tool_calls`/`tool_call_chunks` — else tool calls are silently
+   dropped. (b) else if `model_provider` is registered → use the provider translator. (c) else →
+   fall back to `BaseMessage.content_blocks`.
+3. **`BaseMessage.content_blocks` best-effort fallback** (base.py:200): first pass converts
+   `str`→`{type:text}`, unknown-`type` dicts or any dict with a `source_type` key →
+   `{type:non_standard}`, known v1 types passthrough; then runs a **fixed 5-stage pipeline** over
+   the whole block list, in this order: `langchain_v0` (v0 multimodal) → `openai` (chat
+   completions) → `anthropic` → `google_genai` → `bedrock_converse`. Each stage attempts to
+   unpack remaining `non_standard` blocks.
+
+`langchain_v0` is deliberately **not** in `PROVIDER_TRANSLATORS` (it is v0-input parsing only).
+`bedrock`, `groq`, `google_vertexai` translators exist and are registry-only (not in the base
+fallback pipeline). Rust port needs BOTH mechanisms: a provider registry (plugin seam) and the
+ordered fallback pipeline.
+
+## D-4. trim_messages — verified signature + scope correction (feeds §2)
+
+`trim_messages` (utils.py:1133) has **21 dedicated tests** (not 145 — that is the whole
+`test_utils.py` file: 21 trim, 33 convert, 6 merge, 3 filter, ~82 other). Full signature
+(all-keyword after `messages`):
+`max_tokens: int` (required), `token_counter` (callable-of-list | callable-of-one |
+`BaseLanguageModel` | **`Literal["approximate"]`** — a built-in char/4 approximate counter,
+`count_tokens_approximately`), `strategy: "first"|"last"="last"`, `allow_partial=False`,
+`end_on`/`start_on` (type/name boundary filters — a trimmed window must end/start on these
+message kinds), `include_system=False`, `text_splitter` (for splitting a partial message when
+`allow_partial`). Pass 1 omitted `token_counter="approximate"`, `start_on`/`end_on`, and
+`text_splitter`; these are behavior-bearing and must be ported.
+
+## D-5. _compat_bridge.py — coverage CORRECTED (feeds §3)
+
+There **is** a dedicated spec: `tests/unit_tests/language_models/test_compat_bridge.py`
+(**43 tests, 1,403 LOC**) — contradiction C-2. The bridge's public surface is 3 functions:
+`finalize_tool_call_chunk` (_compat_bridge.py:359), `chunks_to_events` (:590),
+`message_to_events` (:776) — i.e. it converts core `AIMessage`/`AIMessageChunk`
+streams ↔ `langchain_protocol` `MessagesData` wire events (message-start / content-block-
+start/delta/finish / message-finish). It exists **only** to launder between the two
+structurally-near-isomorphic but nominally-distinct `ContentBlock` unions
+(`langchain_core.messages.content` vs `langchain_protocol.protocol`); its own docstring says
+"when the Unions are unified, this helper can be deleted." **In Rust the two unions should be a
+single type, collapsing most of this module** (see rust-strategy D-5).
+
+## D-6. langchain_protocol scope — MASSIVELY understated by Pass 1 (feeds §3, R7)
+
+See dependency-disposition Pass 7 deepening for the full inventory. Bottom line for behavioral
+intent: **langchain-core imports only the `MessagesData` content-block subset** (`MessageStartData`,
+`ContentBlockStartData/DeltaData/FinishData`, `MessageFinishData`, `MessageErrorData`) plus the
+`ContentBlock`/`FinalizedContentBlock`/`UsageInfo`/`MessageMetadata` types, at exactly 6 import
+sites (`chat_models.py`, `_compat_bridge.py`, `chat_model_stream.py`, `callbacks/base.py`,
+`callbacks/manager.py`). The rest of the package (the full agent-server JSON-RPC protocol) is
+**not used by core**.

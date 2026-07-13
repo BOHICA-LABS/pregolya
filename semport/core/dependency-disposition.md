@@ -209,3 +209,66 @@ vectorstore crates. Recommend: keep a minimal `Vec<f32>` cosine/MMR in core, no
 `serde_yaml`, a retry crate, `json-patch`, `uuid`, `futures`, `tokio`, `async-trait`
 (at dyn seams), plus `minijinja` (feature). Everything pydantic/typing/packaging-shaped
 collapses into the type system.
+
+---
+
+# Pass 7 deepening (2026-07-12) — langchain-protocol full inventory (R7)
+
+**Not vendored in the langchain clone.** The pin is `langchain-protocol>=0.0.17` (a floor,
+not `==0.0.17`; Pass 1 recorded it as if exact). No copy exists under `.reference/`. The only
+local copy is **v0.0.15** in an OrbStack container site-packages
+(`.../open-webui/.../site-packages/langchain_protocol/`), read as an approximation — **the
+exact 0.0.17 schema must be fetched** from `github.com/langchain-ai/agent-protocol/tree/main/streaming`
+(project URL in the dist-info METADATA) before finalizing the port. The package is a single
+`protocol.py` (~578 LOC, machine-generated: header `# compiled with cddl2py` — it is compiled
+from a **CDDL** wire-schema, so the canonical source is the `.cddl`, not the Python).
+
+## CONTRADICTION C-1 (largest): scope was massively understated
+
+Pass 1 (dependency-disposition + module-inventory) called it "the wire protocol types for
+content-block streaming events … a set of TypedDict/dataclass event schemas + finalization
+helpers." **It is far larger** — the full **LangChain Agent Streaming Protocol**, a JSON-RPC-
+style *bidirectional* wire protocol for driving/observing a running agent (langgraph server):
+
+- **Commands** (client→server): `run.start`, `subscription.subscribe`/`unsubscribe`/`reconnect`,
+  `agent.getTree`, `input.respond`/`inject`, `state.get`/`listCheckpoints`/`fork`. Each is
+  tagged by a `method` literal and carries an integer `id` (`_CommandVariant0..9`).
+- **Responses**: `CommandResponse{type:"success", id, result}` / `ErrorResponse{type:"error",
+  id, error: ErrorCode, message, stacktrace?}` with a 10-value `ErrorCode` enum
+  (`invalid_argument`, `unknown_command`, `no_such_run`, `no_such_checkpoint`,
+  `permission_denied`, `not_supported`, …).
+- **Events** (server→client) across **9 channels**: `lifecycle`, `messages`, `tools`, `input`,
+  `values`, `updates`, `checkpoints`, `custom`, `tasks`. Each event has SSE-style
+  `event_id`/`seq` (monotonic) for **replay and reconnection** (`since`, `last_event_id`,
+  `replayed_events`, `missed_events`).
+- **State/time-travel**: `Checkpoint`, `CheckpointRef`, `CheckpointSource` (`input`/`loop`/
+  `update`/`fork`), `state.fork` (branch a run from a checkpoint), `UpdatesData` (per-node state
+  deltas), `AgentTreeNode`/`AgentStatus` (`started`/`running`/`completed`/`failed`/`interrupted`).
+- **Messages channel (`MessagesData`)** — the ONLY part core uses: `MessageStartData`
+  (`message-start`, role∈{ai,human,system}, id, metadata), `ContentBlockStartData`
+  (`content-block-start`, index, content: ContentBlock), `ContentBlockDeltaData`
+  (`content-block-delta`, index, delta: TextDelta|ReasoningDelta|DataDelta|BlockDelta),
+  `ContentBlockFinishData` (`content-block-finish`, FinalizedContentBlock), `MessageFinishData`
+  (`message-finish`, usage), `MessageErrorData` (`error`).
+- **Tools channel (`ToolsData`)**: `tool-started`/`tool-output-delta`/`tool-finished`/`tool-error`.
+- A **second, parallel `ContentBlock` union** (structurally near-isomorphic to
+  `langchain_core.messages.content.ContentBlock` but nominally distinct) — the reason
+  `_compat_bridge.py` exists.
+
+## Revised disposition — SPLIT the port
+
+| Scope | What | Disposition | Target crate |
+|---|---|---|---|
+| **Core needs** | `MessagesData` (6 event types) + `ContentBlock`/`FinalizedContentBlock` + `UsageInfo` + `MessageMetadata` + the `*Delta` types | **PORT** as serde-tagged enums | ferrochain-core (messages module) |
+| **Agent-server protocol** | Commands, subscriptions, state/fork/checkpoints, agent tree, 9-channel events, replay/reconnect | **DEFER / out of core** | a future ferrochain-graph / agent-server crate |
+
+Core's actual import surface is exactly 6 sites (all `MessagesData`-subset):
+`language_models/chat_models.py`, `language_models/_compat_bridge.py`,
+`language_models/chat_model_stream.py`, `callbacks/base.py`, `callbacks/manager.py`.
+So Pass 1's "PORT the whole package as tagged enums (own module), MED risk" over-scopes core:
+**core only needs the messages/content-block subset**; that subset should be **unified with the
+core `ContentBlock` enum** (a single Rust type), which eliminates the `_compat_bridge` laundering
+layer entirely. Revised R7 risk for core: **LOW-MED** (small, stable subset), with the
+provisional/churning surface (the command/state protocol) pushed out of core scope. The full
+protocol, if/when ferrochain builds a langgraph-style server, should be generated from the
+upstream CDDL schema rather than hand-transcribed.

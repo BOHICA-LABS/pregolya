@@ -118,3 +118,48 @@ is a coroutine test), `syrupy` (`.ambr` snapshots), `freezegun` (time),
   coverage before porting; it is subtle.
 - v3 protocol streaming (`chat_model_stream.py`, 1,441 LOC) has only 2 tests
   (`test_runnable_events_v3.py`) — **immature, expect churn**; treat as provisional.
+
+---
+
+# Pass 7 deepening (2026-07-12) — count corrections & verifications
+
+## C-2 CONTRADICTION — `_compat_bridge.py` DOES have a dedicated test file
+
+The "Coverage gaps" note above stated coverage "is spread across language_models +
+block_translator tests rather than a dedicated file." **This is wrong.** There is a dedicated
+spec: `tests/unit_tests/language_models/test_compat_bridge.py` — **43 tests, 1,403 LOC**. It
+directly exercises the 3 bridge functions (`finalize_tool_call_chunk`, `chunks_to_events`,
+`message_to_events`) that convert core message chunks ↔ `langchain_protocol` `MessagesData`
+events. The subsystem is **well-covered**, not a gap. This raises the language_models line in
+the count table: add `test_compat_bridge.py` (43 / 1,403) — the earlier `language_models`
+subtotal (~270 tests / ~8,017 LOC) already includes it in the directory glob, but it was not
+called out as a strong spec. **Promote it** into the strong-spec list for the v0↔v1 bridge port.
+
+## C-3 CORRECTION — block_translators file/test counts and architecture
+
+- **Source**: 8 provider translator modules + `__init__.py` (Pass 1 module-inventory said "7
+  files"; test-inventory said "8"): `anthropic`, `bedrock`, `bedrock_converse`, `google_genai`,
+  **`google_vertexai`** (new — not in Pass 1's list), `groq`, `langchain_v0`, `openai`. There is
+  **no `registration.py` source module** — registration lives in `__init__.py`
+  (`PROVIDER_TRANSLATORS` dict + `register_translator()` + `_register_translators()`).
+- **Tests** (`tests/unit_tests/messages/block_translators/`, 8 files): `test_anthropic` 3,
+  `test_bedrock` 3, `test_bedrock_converse` 3, `test_google_genai` 5, `test_groq` 7,
+  `test_langchain_v0` 2, `test_openai` 5, `test_registration` 1 = **29 tests**. `test_registration`
+  is a completeness guard: it walks the package with `pkgutil` and fails if any translator module
+  (except `_`-private and `langchain_v0`) is missing from `PROVIDER_TRANSLATORS`. `google_vertexai`
+  has a registered translator but **no dedicated test file** (coverage gap — flag for the port).
+
+## Scope note — "trim_messages 145 tests" was file-total, not trim-specific
+
+`messages/test_utils.py` (145 tests total) decomposes as: **trim_messages 21**, convert* 33,
+merge* 6, filter* 3, and ~82 other (`convert_to_openai_messages`, `get_buffer_string`,
+`count_tokens_approximately`, coercion). Still the single richest message spec, but the "145
+trim tests" framing in the deepening checklist over-counted trim's dedicated coverage (21).
+
+## Verified counts (unchanged — Pass 1 was correct)
+
+- **indexing**: 61 tests across 5 files (`test_indexing` 45, `test_in_memory_record_manager` 9,
+  `test_hashed_document` 4, `test_in_memory_indexer` 2, `test_public_api` 1), **3,373 test LOC** —
+  all confirmed. See rust-strategy Pass 7 deepening for the P1 scope ruling.
+- **event v2**: `test_runnable_events_v2.py` 36 tests / 2,918 LOC — confirmed; default version
+  `v2` is itself test-asserted (`test_default_is_v2`).

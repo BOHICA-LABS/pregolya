@@ -236,3 +236,52 @@ traces_to: STATE.md
 - cycles/v0.0.0-pre-pipeline/session-checkpoints.md (created — burst 5 checkpoint archived)
 
 **Next steps:** passes 6-7 in progress (platform SDK/CLI → .factory/semport/platform/, core convergence deepening → .factory/semport/core/). After completion: extraction-validation gate (validate-extraction agent) → semport convergence → Phase 1.
+
+---
+
+## Burst: pre-pipeline burst 7 — passes 6-7 DONE; R9 added; pass 8 dispatched (2026-07-13)
+
+**Semport pass 6 close — platform SDK/CLI:**
+
+| Metric | Value |
+|--------|-------|
+| SDK LOC | 18,728 |
+| CLI LOC | 8,383 |
+| Deliverables | 5 at .factory/semport/platform/ |
+| SDK key findings | Async tree + sync mirror → collapses to async-only in ferrochain port. auth/runtime/encryption modules are server-authoring frameworks → DROP from client crate; retained as reference for a future server product. |
+| CLI key findings | Only `validate` + langgraph.json schema (~2,500 LOC) is portable → becomes ferrochain.toml + config validation. build/up/dev/deploy are Docker/Python/SaaS-bound → DROP/RE-SCOPE. |
+| DTU spec produced | Endpoint catalog COMPLETE: 50+ REST endpoints, 40+ DTOs, 19 enums = DTU clone spec for P1-06. DTU approach: stateful fake seeded from local engine. Conformance defined as "matches SDK-1.2.9 contract" NOT live SaaS. |
+| Queued Phase 1 gate decisions | CLI re-scope + platform-client depth (RemoteGraph parity: full PregelProtocol vs reduced subset). |
+
+**Semport pass 7 close — core convergence deepening:**
+
+| Metric | Value |
+|--------|-------|
+| Deliverables updated | All 5 core deliverables + ANALYSIS-STATE.md |
+| Items worked | 8 |
+| Novelty | 1 HIGH, 4 MED, 3 LOW |
+| Contradictions logged | C-1..C-6 with pass-1 — routed to extraction-validation gate |
+| Headline contradiction | C-1: langchain-protocol is the full Agent Streaming Protocol; core consumes only the MessagesData subset → ADR-6 scope split (core subset unified with ContentBlock enum, eliminating _compat_bridge; full protocol deferred to graph/server layer) |
+| New ADRs queued | ADR-6 protocol scope split; ADR-7 block-translator plugin registry; ADR-8 astream_events cancellation/cleanup ordering |
+| Convergence verdict | NOT fully converged — narrow pass 8 dispatched |
+
+**Risks added:**
+
+| ID | Risk |
+|----|------|
+| R9 | NEW — Platform API churn HIGH: no public versioned spec, documented drift across SDK versions, license-gated endpoints. DTU clone must track against SDK-1.2.9 contract explicitly; churn will require re-conformance before each release. |
+
+**Pass 8 dispatch — narrow (IN_PROGRESS):**
+
+- Scope: RunnableSequence transform/stream line-verify + SERIALIZABLE_MAPPING partner-entry enumeration
+- Parallel: research-agent fetching langchain-protocol 0.0.17 CDDL for ADR-6 verification → output: .factory/semport/core/langchain-protocol-0.0.17-verification.md
+
+**Phase step archival:** "semport-analyze pass 4 — partners+standard-tests" row rotated out of STATE.md Current Phase Steps (5-row limit); covered in burst 6 entry above.
+
+**Files touched:**
+
+- STATE.md (current_step, timestamp, Last Updated, Current Step; Current Phase Steps replaced; R9 added to Risk Register; Session Resume Checkpoint updated; Historical Content updated)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 6 checkpoint archived)
+
+**Next steps:** pass 8 + langchain-protocol-0.0.17 verification in progress. After completion: extraction-validation gate (validate-extraction over all passes with C-1..C-6 as known-corrections) → semport convergence → Phase 1.

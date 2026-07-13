@@ -355,3 +355,129 @@ and retries match on error variants (LangChain matches on exception *types*).
 5. **ADR: streaming model** — is `transform(Stream)->Stream` the primitive with
    `stream` derived? How to duplicate/replay streams for `astream_events`/`astream_log`
    (broadcast buffer)? Depth of `tower::Service`/`Layer` adoption for middleware.
+
+---
+
+# Pass 7 deepening (2026-07-12) — refined strategy from full reads
+
+## D-1. Runnables (RED-1) — concrete design constraints now confirmed
+
+- **`RunnableBinding` needs 4 fields, not 1**: `kwargs`, `config`, `config_factories`
+  (`Vec<Box<dyn Fn(&RunnableConfig)->RunnableConfig>>` — the `with_listeners` seam), and
+  `custom_input_type`/`custom_output_type`. Merge order in `_merge_configs`: bound `config`
+  first, then fold each `config_factory(config)`.
+- **`RunnableBinding.__getattr__` transparent delegation is NOT portable.** Python delegates any
+  attribute to `self.bound` and auto-injects the bound config into any callable taking a `config`
+  param. Rust has no `__getattr__`. **Redesign**: expose an explicit `.inner()`/`Deref`-to-bound
+  is wrong (would bypass config merge); instead the wrapper only forwards the known Runnable
+  surface and injects config there. Document that arbitrary provider-method passthrough
+  (`binding.some_provider_method()`) is dropped — provider-specific methods must be reached
+  before binding, or via a typed extension trait.
+- **`with_retry` defaults are load-bearing**: `stop_after_attempt=3`, `wait_exponential_jitter=true`,
+  retry-on `(Exception,)` i.e. all errors by default. The Rust retry combinator must default to
+  3 attempts + exponential jitter and match tenacity's `wait_exponential_jitter` formula
+  (`initial`, `max`, `exp_base`, `jitter`) — golden-test the delays or accept documented drift.
+- **`with_fallbacks` `exception_key`**: when set, inject the caught error into the fallback's
+  input map under that key → Rust needs a fallback runner generic over an input that can carry
+  an injected `Error` (only valid when `Input: Map`-shaped). Model as
+  `Option<String> exception_key` + a `merge_exception_into_input` step.
+- **`RunnableGenerator` vs `RunnableLambda` split is semantic, not cosmetic**: Generator = stream-
+  native (`Stream<In> -> Stream<Out>`, emits as input arrives); Lambda = buffered (needs whole
+  input). `coerce_to_runnable` picks Generator for generator-fns, Lambda otherwise. In Rust:
+  `RunnableGenerator` wraps `FnMut(BoxStream<In>) -> BoxStream<Out>`; `RunnableLambda` wraps
+  `FnMut(In) -> Out` (with buffered stream fallback). The `.pipe()`/`seq!` builder's coercion
+  must mirror this fork. Constructor validation (Python raises `TypeError` for non-generators)
+  becomes a compile-time type distinction in Rust (free).
+- **`configurable_fields` eager validation**: raises if a key ∉ model fields. Rust: validate the
+  override-key set against the type's known configurable fields at builder time → `Result`.
+
+## D-2. astream_events v2 (ORA-3) — porting contract sharpened
+
+- Emit a fixed 7-field event struct `StreamEvent { event: EventKind, name, run_id: Uuid,
+  parent_ids: Vec<Uuid>, tags: Vec<String>, metadata: Map, data: EventData }`.
+- `EventKind` is `on_<runtype>_<phase>`: runtype ∈ {chain, chat_model, llm, tool, prompt,
+  retriever, custom}; phase ∈ {start, stream, end, error}. **Not all combos exist**: tool has no
+  `stream` (only start/end/error); prompt has no `stream` (start/end); retriever has start/end.
+- **Ordering invariant (the hard one)**: in a streaming sequence a downstream `*_start` fires
+  before the upstream `*_end`. Implementation: the streaming tracer must emit `start` when a node
+  begins consuming its input stream, not when its input fully arrives. Preserve start-before-end
+  interleave.
+- **Tag/metadata propagation**: tags accumulate down the tree; `seq:step:N` added per sequence
+  position; metadata inherited+merged; LangSmith scalars derived (`ls_model_type`, `ls_stop`
+  from bound `stop` kwarg). Port the `ls_*` derivation.
+- **Cancellation**: dropping the event stream must cancel the running node and skip downstream
+  nodes; the outer chain must observe cancellation for cleanup. Rust cancellation-on-drop covers
+  (a)+(c); use a scope-guard / `select!` with a cancellation token to guarantee the outer
+  generator's cleanup path runs (b). Golden-test with the break/cancel scenarios.
+- **`on_tool_error` includes `tool_call_id`** (from the invoking ToolCall id, else `None`).
+
+## D-3. Block translators — port BOTH mechanisms (ORA-1)
+
+Not just "a trait + registry". Port:
+1. A `PROVIDER_TRANSLATORS` registry: `HashMap<Provider, TranslatorPair>` where
+   `TranslatorPair { translate_content, translate_content_chunk }`. Populated by partner crates
+   via a `register_translator(provider, pair)` entry point — use `inventory`/`linkme`
+   auto-registration or an explicit `OnceLock` registry seeded by feature-gated partner crates.
+2. A fixed **ordered fallback pipeline** in `Message::content_blocks`: langchain_v0 → openai →
+   anthropic → google_genai → bedrock_converse, each unpacking remaining `NonStandard` blocks.
+3. Dispatch order in `AiMessage::content_blocks`: (a) short-circuit if `output_version=="v1"`
+   AND content is a `Blocks(Vec)` variant (string content must NOT short-circuit — rebuild from
+   tool_calls); (b) provider translator if `model_provider` registered; (c) fallback pipeline.
+`langchain_v0` stays out of the registry (input-parsing only, pipeline-only). Core ships the
+enum + fallback pipeline + registry mechanism; provider translators for anthropic/openai/etc.
+live with (or register from) partner crates.
+
+## D-5. `_compat_bridge` — mostly collapses under a unified ContentBlock
+
+The bridge (3 fns: `finalize_tool_call_chunk`, `chunks_to_events`, `message_to_events`; 43-test
+spec) exists **only** because Python has two distinct `ContentBlock` unions
+(`messages.content` vs `langchain_protocol.protocol`). **Rust decision: define ONE
+`ContentBlock` enum** shared by messages and the (ported) MessagesData protocol subset. Then the
+laundering casts (`_to_protocol_block`/`_to_finalized_block`) vanish, and only the genuine
+transform remains: `AiMessageChunk` stream → `MessagesData` event stream (`message-start` /
+`content-block-start/delta/finish` / `message-finish`). Port that transform (it is the v3-stream
+foundation) and keep the 43 tests as golden fixtures; ELIMINATE the dual-union laundering.
+
+## D-6. langchain_protocol — port only the MessagesData subset into core
+
+Confirmed core uses only: `MessageStartData`, `ContentBlockStartData/DeltaData/FinishData`,
+`MessageFinishData`, `MessageErrorData`, `ContentBlock`, `FinalizedContentBlock`, `UsageInfo`,
+`MessageMetadata`, and the `*Delta` types. Model these as serde-tagged enums UNIFIED with the
+core content-block types (D-5). The full agent-server protocol (commands, subscriptions,
+state/checkpoint/fork, 9-channel events, reconnection) is **out of core scope** → future
+ferrochain-graph/server crate, ideally generated from the upstream CDDL schema (the Python is
+itself `cddl2py`-generated). **Fetch the exact 0.0.17 schema** before finalizing (only 0.0.15
+was locally inspectable).
+
+## D-7. indexing/ — P1 ruling (self-contained, deferrable)
+
+`indexing/` (1,772 src LOC / 3,373 test LOC / 61 tests) has **no external deps** beyond core +
+stdlib hashing. Public API: `index()`/`aindex()` (dedup via content hash + `RecordManager`
+bookkeeping; `cleanup` ∈ {incremental, full, scoped_full}; `key_encoder` ∈
+{sha1, sha256, sha512, blake2b}; `cleanup_batch_size=1000`), `RecordManager`/
+`InMemoryRecordManager`, `DocumentIndex`, `UpsertResponse`/`DeleteResponse`, `IndexingResult`.
+It is a **RAG document-ingestion utility, not on the LLM/agent hot path** → **P1** (defer to a
+later wave, after core→graph→partners). Difficulty 🟢–🟡 (dedup bookkeeping + hashing; the SQL/
+persistent RecordManager backends are partner concerns; core ships the in-memory one). Port maps
+cleanly to `sha2`/`blake2` crates + a `RecordManager` trait.
+
+## Difficulty/risk table — additions
+
+| Subsystem | Difficulty | Primary risk (Pass 7) |
+|---|---|---|
+| langchain_protocol (core subset) | 🟡 | Small/stable; unify with core ContentBlock; fetch exact 0.0.17 |
+| _compat_bridge chunk→event transform | 🟡 | Collapses under unified enum; keep the stream transform + 43 golden tests |
+| block-translator registry+pipeline | 🟠 | Two mechanisms (registry plugin seam + ordered fallback); dispatch order + string-content guard |
+| indexing | 🟢–🟡 | P1; mechanical; hash-algo parity (4 algos) |
+
+## New candidate ADRs surfaced (Pass 7)
+
+6. **ADR: protocol scope split** — core defines only the MessagesData content-block subset,
+   unified with the core `ContentBlock` enum; the full agent-streaming protocol is deferred to a
+   graph/server crate and generated from CDDL. (Eliminates `_compat_bridge` laundering.)
+7. **ADR: block-translator plugin registry** — `register_translator` extension seam
+   (`inventory`/`linkme` vs explicit `OnceLock`) + the fixed core fallback pipeline; how partner
+   crates contribute provider translators.
+8. **ADR: astream_events cancellation & cleanup ordering** — guarantee the outer generator's
+   cleanup runs on stream-drop/cancel while skipping downstream nodes (cancellation token +
+   scope guard); golden-test against break/cancel scenarios.

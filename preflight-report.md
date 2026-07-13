@@ -88,7 +88,7 @@ Both tools are available for semport analysis of the reference LangChain Python 
 
 ## 5. direnv State
 
-**File:** `/Users/jmagady/Dev/langchain-rs/.envrc` — present
+**File:** `/Users/jmagady/Dev/ferrochain/.envrc` — present
 
 **Allowed state:** NOT ALLOWED (allowed = 0)
 
@@ -109,7 +109,7 @@ No key validation was performed because direnv has not been allowed yet and no
 
 ## 6. MCP Server Configuration
 
-**File:** `/Users/jmagady/Dev/langchain-rs/.mcp.json` — present (untracked, not yet committed)
+**File:** `/Users/jmagady/Dev/ferrochain/.mcp.json` — present (untracked, not yet committed)
 
 **Configured MCP servers:**
 
