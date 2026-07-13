@@ -1970,3 +1970,52 @@ dependency-disposition.md A7 native-tls first-party/transitive distinction verif
 - `STATE.md` (C16 COMPLETE, C17 IN-PROGRESS, convergence counter 1→0, streak 0/3, session checkpoint updated, burst-58 checkpoint archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-58 checkpoint archived)
+
+---
+
+## Burst 61 — C18 COMPLETE (CLEAN(strict)=YES, ZERO corrections); C19 ready to dispatch
+
+**Date:** 2026-07-13
+**Agent:** validate-extraction (comparative-certification)
+
+### Summary
+
+Certification pass C18 completed. CLEAN(strict)=YES — zero corrections, zero inaccuracies, zero hallucinated identifiers. Streak advances to 1/3.
+
+### C17 Sibling Check (opener)
+
+All three verbatim-expansion corrections from C17-01 confirmed landed:
+- `test_validate_state_key_null_byte` — confirmed at expected location
+- `test_non_retryable_categories_default_false` — confirmed at expected location
+- `message_send_creates_new_task_for_terminal_context` — confirmed at expected location
+
+Corpus-wide `_`-prefix sweep: CLEAN. 2 pre-existing exemptions only (`_reapply_writes_to_succeeded_nodes`: C15 LangGraph-negative-existence; `_dimensions`: verbatim Rust unused-parameter convention, confirmed C3 C-01).
+
+### Rotation (10/10 CONFIRMED)
+
+P-25, P-28, P-43, P-56, P-61, P-63, P-70, P-73, behavioral-intent.md A3 §17, P-79. Zero inaccurate. Zero hallucinated.
+
+### Metrics (8/8 Delta=0)
+
+All 8 standing metrics verified. Delta=0 across the board.
+
+### Novel Probe — Integration LOC class CLOSED
+
+test-inventory.md A1 integration LOC: 9 previously-unverified figures — adk-core 2,417; adk-model 4,780; adk-tool 2,288; adk-agent 5,644; adk-graph 3,185; adk-server 4,906; adk-sandbox 1,091; adk-memory 1,188; adk-retry-reflect 171. All 9/9 Delta=0. Integration LOC class now CLOSED: 14/14 verified across C5+C12+C18.
+
+### Streak / Convergence
+
+- Streak 0/3 → 1/3 (C18 CLEAN)
+- Convergence counter 0 → 1
+
+### Archived from STATE.md Current Phase Steps (C14 row retired)
+
+C14 step row retired from STATE.md Current Phase Steps (table capped at 5 rows):
+> adk-rust certification pass C14 (strict-zero, within-file summary-block audit opener) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 2 LOW corrections (new class: identifier-name exactness) — C14-01 P-57 + C14-02 P-62: cited `dev_local()` preset, actual is `host_local()` at adk-code/src/types.rs:235; behavioral descriptions accurate, identifier wrong. Within-file summary-block class CLOSED: 13 blocks / 55+ figures all CONSISTENT. A5 recount CONSISTENT. Streak 0/3. Burst 57.
+
+### Files touched in this burst
+
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (C18 pass appended by validator — opener checks, rotation table, metric verification, novel probe integration LOC, corrections table, confidence assessment, final verdict)
+- `logs/dispatcher-internal-2026-07-13.jsonl` (dispatcher log updated)
+- `STATE.md` (C18 COMPLETE, streak 1/3, convergence counter 0→1, frontmatter updated, Current Phase Steps C14 row archived, C18 row added, session checkpoint updated)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — C14 archive + burst 61 narrative)

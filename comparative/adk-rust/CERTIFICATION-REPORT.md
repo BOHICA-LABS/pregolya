@@ -3186,3 +3186,222 @@ Metric sweep:      7/7 non-approximation claims Delta=0; error.rs test count 34 
                    no saturation in never-verified pools
 Streak:            0/3 (reset — C17 corrected 1 LOW-severity item; incoming streak was 0/3)
 ```
+
+---
+
+# Certification Pass C18 — adk-rust Comparative Corpus
+
+```yaml
+pass: C18
+corpus: adk-rust v1.0.0 (SHA a6c79b6f)
+reference: .reference/adk-rust (read-only)
+protocol: BC-5.39.001 (3-CLEAN convergence); D14 (absolute strict-zero); D15; D16 (Rust-blindness)
+streak_in: 0/3
+date: 2026-07-13
+focus: C17 sibling check (three _-prefix shorthand test citations); all-twelve guardrails rotation
+       (never-verified pools: P-25, P-28, P-43, P-56, P-61, P-63, P-70, P-73, P-79,
+       behavioral-intent A3 §17); novel probe: test-inventory.md A1 integration LOC class closer
+```
+
+## CLEAN Status
+
+```
+CLEAN (strict):    YES — zero corrections of any severity
+CLEAN (PR-merge):  YES
+New corrections:   0
+Streak position:   1/3 (C18 CLEAN; incoming streak was 0/3)
+```
+
+---
+
+## Opener — C17 Sibling Check
+
+C17 corrected three `_`-prefix shorthand test citations in behavioral-intent.md to verbatim
+function names. Task required sweeping all artifacts for any remaining shorthand/abbreviated/
+editorially-compressed test or function citations.
+
+**C17 corrections verified as landed:**
+
+| Site | Backtick text after correction | Comment marker present |
+|------|-------------------------------|----------------------|
+| behavioral-intent.md line 53 | `test_validate_state_key_null_byte` | `[comparative-cert-17]` ✓ |
+| behavioral-intent.md line 72 | `test_non_retryable_categories_default_false` | `[comparative-cert-17]` ✓ |
+| behavioral-intent.md line 423 | `message_send_creates_new_task_for_terminal_context` | `[comparative-cert-17]` ✓ |
+
+**Sweep for remaining `_`-prefix backtick shorthands across all 6 active corpus files:**
+
+`grep -rn '\`_[a-z]'` across behavioral-intent.md, patterns-observed.md, module-inventory.md,
+test-inventory.md, dependency-disposition.md, ANALYSIS-STATE.md (excluding lines that contain
+the correction comment text) returned two hits:
+
+| Location | Content | Determination |
+|----------|---------|--------------|
+| behavioral-intent.md line 263 | `` `_reapply_writes_to_succeeded_nodes` `` | **EXEMPT** — C15 negative-existence exemption; this is a LangGraph implementation detail cited as "There is NO `_reapply_writes_to_succeeded_nodes`"; not an adk-rust test citation |
+| patterns-observed.md line 1509 | `` `_dimensions` `` | **EXEMPT** — verbatim Rust unused-parameter convention (`_` prefix suppresses unused-variable warning); C3 C-01 confirmed `async fn create_collection(&self, name: &str, _dimensions: usize)` is the actual signature; this is the identifier, not a shorthand |
+
+**Opener verdict: CLEAN — all three C17 corrections landed correctly; zero active shorthand test
+citations remain; both `_`-prefix hits are pre-existing exemptions per established precedents.**
+
+---
+
+## Phase 1 — Behavioral Verification (All-Twelve Guardrails Rotation)
+
+10 claims selected from never-verified pools (absent from all SWEEP and C1–C17 verified lists).
+
+| # | Source | Claim | Verified Against | Result |
+|---|--------|-------|-----------------|--------|
+| B-01 | patterns-observed.md P-25 | `impl Diff for HashMap<String,Value>` — whole-state map diff (contrast LangGraph per-channel DeltaChannel) | `.reference/adk-rust/adk-graph/src/delta.rs:309` | CONFIRMED — `impl Diff for HashMap<String, Value>` at line 309; also Vec (line 197), String (line 467) implementations present for the wired types |
+| B-02 | patterns-observed.md P-28 | `buffer_unordered` yields in COMPLETION order → `all_updates` folded in completion order → non-commutative reducers produce timing-dependent results | `.reference/adk-rust/adk-graph/src/executor.rs:597-645` | CONFIRMED — line 597: `stream::iter(futures).buffer_unordered(...).collect().await`; line 600: `let mut all_updates = Vec::new()`; line 633: `all_updates.push(output.updates)`; line 645: `for updates in all_updates` fold; no sort by node identity before fold |
+| B-03 | patterns-observed.md P-43 | `idempotency_map: RwLock<HashMap<String,String>>` in RequestHandler (hard-wired, no trait seam); `RateLimitInterceptor.buckets: Arc<Mutex<HashMap<String,TokenBucket>>>` (hard-wired, no trait seam) | `.reference/adk-rust/adk-server/src/a2a/v1/request_handler.rs:82`; `adk-server/src/a2a/rate_limit.rs:140` | CONFIRMED — request_handler.rs:82: `idempotency_map: RwLock<HashMap<String, String>>`; rate_limit.rs:140: `buckets: Arc<Mutex<HashMap<String, TokenBucket>>>` — both are concrete field types, no trait object seam for persistence injection |
+| B-04 | patterns-observed.md P-56 | Skill scoring weights: name +4.0, desc +2.5, tag +2.0, body +1.0, normalized by √body-tokens | `.reference/adk-rust/adk-skill/src/select.rs:60-84` | CONFIRMED — lines 69/72/75/78: `score += 4.0`/`2.5`/`2.0`/`1.0` per token presence in name/description/tags/body sets; line 83-84: `let norm = (body_tokens.len().max(1) as f32).sqrt(); score / norm.max(1.0)` |
+| B-05 | patterns-observed.md P-61 | "A bare `ProcessBackend::default()` has NO enforcer, so `EnforcedLimits` is `{ timeout:true, memory:false, network_isolation:false, filesystem_isolation:false, environment_isolation:true }` — only `env_clear()` + a tokio timeout" | `.reference/adk-rust/adk-sandbox/src/process.rs:207-212` | CONFIRMED — lines 207-212: `EnforcedLimits { timeout: true, memory: false, network_isolation: has_enforcer && denies_network, filesystem_isolation: has_enforcer, environment_isolation: true }`; when `has_enforcer = false` (default, no OS enforcer present) the conditional fields evaluate to `false`; matches claim's qualified statement "a bare `ProcessBackend::default()` has NO enforcer" |
+| B-06 | patterns-observed.md P-63 | retry-reflect counter key is `"{tool_name}:{hash(args)}"` → arg-changing agent produces new hash each attempt → per-tool bound resets; `global_limit: None` default; `global_tracking: false` default | `.reference/adk-rust/adk-retry-reflect/src/plugin.rs:147-154, 175-176` | CONFIRMED — lines 147-148: `let call_id = format!("{:x}", { ... hash ... })`; line 154: `let tracker_key = format!("{tool_name}:{call_id}")`; line 175: `if let Some(global_limit) = self.config.global_limit`; config defaults verified against RetryReflectConfig struct |
+| B-07 | patterns-observed.md P-70 | `AccumulatingStream { inner, message_tx: oneshot, message, content_blocks: Vec<ContentBlockBuilder> }` — simultaneously forwards events and assembles final Message via tokio::oneshot | `.reference/adk-rust/adk-anthropic/src/accumulating_stream.rs:19-24` | CONFIRMED — struct has exactly 4 fields: `inner: Pin<Box<dyn Stream<...>>>`, `message_tx: Option<tokio::sync::oneshot::Sender<...>>`, `message: Option<Message>`, `content_blocks: Vec<ContentBlockBuilder>` |
+| B-08 | patterns-observed.md P-73 | `Money` is `{ currency: String, amount_minor: i64, scale: u32 }` — integer minor-units to avoid float drift | `.reference/adk-rust/adk-payments/src/domain/money.rs:9-12` | CONFIRMED — `pub struct Money { pub currency: String, pub amount_minor: i64, pub scale: u32 }` exact match |
+| B-09 | behavioral-intent.md A3 §17 | "BC: run EXECUTION is a placeholder... `run_with_timeout`'s work future is commented 'actual workflow execution is a placeholder … For now, we simulate immediate completion'" | `.reference/adk-rust/adk-server/src/background/mod.rs:289-291` | CONFIRMED — lines 289-291: `// The actual workflow execution is a placeholder — in a real implementation` / `// ...` / `// For now, we simulate immediate completion.` exact match |
+| B-10 | patterns-observed.md P-79 | THREE native-tls ingress chains in Cargo.lock: (1) `livekit` → `async-native-tls` → `native-tls`; (2) `hf-hub 0.4.3` → `native-tls`; (3) `hf-hub 0.5` → `native-tls` | `.reference/adk-rust/Cargo.lock` | CONFIRMED — Cargo.lock shows `async-native-tls` (line 1834) with `native-tls` dep; `hf-hub` at version 0.4.3 (line 8892) and 0.5.0 (line 8916) both list `native-tls` in deps; three distinct ingress chains confirmed |
+
+**0 INACCURATE. 0 HALLUCINATED. 0 UNVERIFIABLE (beyond pre-existing runtime-only items).**
+
+| Pool | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| patterns-observed.md P-25, P-28, P-43, P-56, P-61, P-63, P-70, P-73, P-79 | 9 | 9 | 0 | 0 | 0 |
+| behavioral-intent.md A3 §17 (background run placeholder) | 1 | 1 | 0 | 0 | 0 |
+
+**Total: 10 claims checked, 10 confirmed, 0 inaccurate, 0 hallucinated, 0 unverifiable**
+
+---
+
+## Phase 2 — Metric Verification (Standing Metrics Delta Check)
+
+Independent recount of all standing metrics tracked in CERTIFICATION-REPORT.md:
+
+| Claim | Source | Claimed | Recounted | Delta | Command |
+|-------|--------|---------|-----------|-------|---------|
+| Workspace test attrs | ANALYSIS-STATE.md A6 census | 4,803 | 4,803 | 0 | `find adk-* -name "*.rs" \| xargs grep -E "^\s*#\[test\]$\|^\s*#\[tokio::test\]$" \| wc -l` |
+| `#[ignore]` attrs (all forms) | ANALYSIS-STATE.md A6 census | 126 | 126 | 0 | `find adk-* -name "*.rs" \| xargs grep -o "#\[ignore[^]]*\]" \| wc -l` |
+| `proptest!` invocations | ANALYSIS-STATE.md A6 census | 150 | 150 | 0 | `find adk-* -name "*.rs" \| xargs grep -c "proptest!" \| grep -v ":0" \| awk -F: '{sum+=$2} END{print sum}'` |
+| reqwest::Client::new() sites (adk-server+adk-auth src) | patterns-observed.md P-42/P-77 | 8 | 8 | 0 | `grep -rn "reqwest::Client::new()" adk-server/src/ adk-auth/src/ \| wc -l` |
+| .timeout() hits (adk-server+adk-auth src) | patterns-observed.md P-42/P-77 | 0 | 0 | 0 | `grep -rn "\.timeout(" adk-server/src/ adk-auth/src/ \| wc -l` |
+| adk-graph test attrs | test-inventory.md A2 / behavioral-intent.md A2 | 262 | 262 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-graph/ --include="*.rs" \| wc -l` |
+| adk-model test attrs | test-inventory.md A1 | 505 | 505 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-model/ --include="*.rs" \| wc -l` |
+| adk-core test attrs | test-inventory.md A1 | 339 | 339 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-core/ --include="*.rs" \| grep -v "//" \| wc -l` |
+
+**All 8 standing metrics: Delta = 0 (pass). No drift detected.**
+
+---
+
+## Novel Probe (C18 choice): test-inventory.md A1 Integration LOC Class Closer
+
+**Probe:** Independently recount every integration test LOC figure from the test-inventory.md A1
+table that had not been previously verified in any SWEEP or C1–C17 pass. This is a systematic
+batch-close of the integration LOC class — the LOC column counterpart to the file-count class
+that C7 fully closed for the module-inventory.md A1 table.
+
+**Previously verified integration LOC (C1–C17):**
+- adk-runner: 4,216 (C12) ✓
+- adk-session: 1,949 (C12) ✓
+- adk-eval: 234 (C5) ✓
+- adk-guardrail: 0 (C5) ✓
+- adk-payments: 3,669 (C5) ✓
+
+**Newly verified in C18 (9 figures, never independently confirmed):**
+
+| Crate | Claimed (test-inventory A1) | Recounted | Delta | Command |
+|-------|---------------------------|-----------|-------|---------|
+| adk-core | 2,417 | 2,417 | 0 | `find adk-core/tests -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-model | 4,780 | 4,780 | 0 | `find adk-model/tests -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-tool | 2,288 | 2,288 | 0 | `find adk-tool/tests -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-agent | 5,644 | 5,644 | 0 | `find adk-agent/tests -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-graph | 3,185 | 3,185 | 0 | `find adk-graph/tests -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-server | 4,906 | 4,906 | 0 | `find adk-server/tests -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-sandbox | 1,091 | 1,091 | 0 | `find adk-sandbox/tests -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-memory | 1,188 | 1,188 | 0 | `find adk-memory/tests -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-retry-reflect | 171 | 171 | 0 | `find adk-retry-reflect/tests -name "*.rs" \| xargs wc -l \| tail -1` |
+
+**Novel probe verdict: ALL 9 FIGURES EXACT MATCH — Delta = 0 across all 9 previously-unverified
+integration LOC entries. The test-inventory.md A1 integration LOC class is now fully closed:
+14 total entries, 14 independently recounted, 14 Delta = 0. The integration LOC column of
+test-inventory.md is a verified ground-truth table.**
+
+---
+
+## Refinement Iterations: 1/3
+
+Single pass sufficient — zero inaccurate or hallucinated items found. No corrections to apply.
+No items require re-verification.
+
+---
+
+## New Corrections Applied in This Pass
+
+None. Zero corrections of any severity.
+
+---
+
+## UNVERIFIABLE Items (4 a2a-v1 Phase-4 obligations, carried from C2–C17)
+
+Same four items — unchanged; no new UNVERIFIABLE items added.
+
+---
+
+## Hallucinated Items (Removed)
+
+None. Zero hallucinations detected across all passes C1–C18.
+
+---
+
+## Inaccurate Items (Corrected)
+
+None. Zero inaccuracies detected.
+
+---
+
+## Verified-Lists Additions (C18)
+
+The following items are added to the verified pool:
+
+**Behavioral:**
+- P-25: `impl Diff for HashMap<String,Value>` whole-state map (delta.rs:309)
+- P-28: `buffer_unordered` completion-order folding, `all_updates` not sorted before reducer application (executor.rs:597-645)
+- P-43: idempotency_map RwLock<HashMap<String,String>> (request_handler.rs:82); buckets Arc<Mutex<HashMap>> (rate_limit.rs:140); hard-wired concrete types, no trait seam
+- P-56: skill scoring weights 4.0/2.5/2.0/1.0 normalized by √body-tokens (select.rs:60-84)
+- P-61: ProcessBackend::default() EnforcedLimits conditional on has_enforcer; in bare (no-enforcer) default: timeout=true memory=false network_isolation=false filesystem_isolation=false environment_isolation=true (process.rs:207-212)
+- P-63: call_id = hash(args.to_string()), tracker_key = "{tool_name}:{call_id}", global_limit default None, global_tracking default false (plugin.rs:147-154)
+- P-70: AccumulatingStream four-field struct {inner, message_tx: oneshot, message: Option<Message>, content_blocks: Vec<ContentBlockBuilder>} (accumulating_stream.rs:19-24)
+- P-73: Money {currency: String, amount_minor: i64, scale: u32} (money.rs:9-12)
+- P-79: THREE native-tls chains in Cargo.lock (async-native-tls, hf-hub 0.4.3, hf-hub 0.5.0)
+- behavioral-intent.md A3 §17: background/mod.rs:289-291 exact placeholder comment confirmed
+
+**Metrics (integration LOC, 9 new):**
+- adk-core: 2,417; adk-model: 4,780; adk-tool: 2,288; adk-agent: 5,644; adk-graph: 3,185; adk-server: 4,906; adk-sandbox: 1,091; adk-memory: 1,188; adk-retry-reflect: 171
+
+---
+
+## Confidence Assessment
+
+- Overall extraction accuracy: **99%** (all 10 behavioral claims confirmed; 0 inaccurate; 0 hallucinated; zero MEDIUM-or-higher errors across any pass C1–C18)
+- Metric accuracy: **100%** on non-approximation claims (8/8 standing metrics Delta=0; 9/9 novel probe integration LOC Delta=0)
+- Hallucination rate: **0%** (maintained across all passes C1–C18)
+- Novel probe: test-inventory.md A1 integration LOC class — 9 previously-unverified figures all Delta=0; integration LOC class fully CLOSED (14/14 entries verified)
+- Recommendation: **TRUST WITH CAVEATS** — same caveat classes as C17: (1) scc Code vs wc-l methodology inconsistency (UNVERIFIABLE without scc tool); (2) four a2a-v1 runtime items Phase-4 validation obligations; (3) adk-anthropic/src/types ~60 vs 82 approximation gap pre-existing acknowledged.
+
+---
+
+## Certification Final Verdict
+
+```
+CLEAN (strict):    YES — zero corrections, zero inaccuracies, zero hallucinated identifiers
+CLEAN (PR-merge):  YES
+New corrections:   0
+Opener:            C17 sibling check CLEAN — all three verbatim test names confirmed landed at
+                   lines 53/72/423; two remaining _-prefix hits are pre-existing exemptions
+                   (_reapply_writes_to_succeeded_nodes: C15 LangGraph-negative-existence;
+                   _dimensions: verbatim Rust unused-parameter convention, confirmed C3 C-01)
+Metric sweep:      8/8 standing metrics Delta=0 (no drift in tracked figures)
+Novel probe:       test-inventory.md A1 integration LOC class closer: 9 previously-unverified
+                   figures all Delta=0; integration LOC class fully CLOSED (14/14 entries verified)
+Rotation:          10/10 behavioral claims CONFIRMED (P-25, P-28, P-43, P-56, P-61, P-63, P-70,
+                   P-73, P-79, behavioral-intent A3 §17); 0 inaccurate; 0 hallucinated
+Streak:            1/3 (C14 incoming 0/3; C15 CLEAN; reset C16; reset C17; C18 CLEAN → 1/3)
+```
