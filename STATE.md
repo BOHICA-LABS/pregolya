@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T06:30:00Z
+timestamp: 2026-07-13T08:00:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "adk-rust analysis pass A1 in progress (extraction gate CLOSED 3/3)"
+current_step: "adk-rust deep passes A2+A3 in progress (pass A1 COMPLETE — 19 patterns; A2/A3 dispatched parallel)"
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -44,9 +44,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — burst 37: cert pass 17 COMPLETE (CLEAN(strict)=YES; ZERO corrections; streak 3/3). EXTRACTION GATE CLOSED. D16 TRIGGERED: adk-rust analysis pass A1 dispatched. |
+| **Last Updated** | 2026-07-13 — burst 38: adk-rust pass A1 COMPLETE (19 patterns: 10 STRONG/4 NEUTRAL/5 WEAK; ANALYSIS-STATE.md written). Passes A2+A3 DISPATCHED in parallel. |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | adk-rust analysis pass A1 in progress (D16 triggered at extraction gate closure) |
+| **Current Step** | adk-rust deep passes A2 (state/persistence/orchestration) + A3 (server/platform/protocol) in progress |
 
 ## Phase Progress
 
@@ -68,7 +68,8 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | Cert passes 13–17 (extraction cascade) | validate-extraction | DONE — GATE CLOSED | 3-CLEAN achieved (CP15+16+17). 32 total validation runs, ~100 corrections, zero in final 3 passes. All 11 error classes closed. Full record: burst-log.md bursts 33–37. |
-| adk-rust analysis pass A1 | codebase-analyzer | IN-PROGRESS | D16 triggered at gate closure. Rust-blindness rule in force. .reference/adk-rust v1.0.0 (a6c79b6f). |
+| adk-rust pass A1 (broad sweep + 6 deep core crates) | codebase-analyzer | COMPLETE | 19 patterns (10 STRONG/4 NEUTRAL/5 WEAK). Compliance flags: native-tls conflict, reqwest root-store delta. ANALYSIS-STATE.md written. Burst 38. |
+| adk-rust passes A2+A3 (state+server clusters) | codebase-analyzer | IN-PROGRESS | A2: adk-graph/session/memory/artifact. A3: adk-server/runner/awp/acp/auth/telemetry/cli. Dispatched parallel. |
 
 ## Decisions Log
 
@@ -138,8 +139,8 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 37 complete. EXTRACTION GATE CLOSED (streak 3/3; CP15+16+17 consecutive CLEAN(strict)=YES). 32 total validation runs, ~100 corrections, zero in final 3 passes. D16 TRIGGERED: adk-rust analysis pass A1 dispatched (codebase-analyzer, .reference/adk-rust v1.0.0 a6c79b6f). Sequence: analysis passes → exhaustive sweep → strict-zero 3-CLEAN → comparative assessment → HUMAN DIRECTION GATE → Phase 1. |
-| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule in force (language = zero evidentiary weight; patterns on merit only). R6 OPEN: cargo login + publish-all.sh (time-sensitive). R8/R10/R11 OPEN: route to product-owner at Phase 1. 11 guardrails codified in lessons.md; fold-into-validate-extraction DEFERRED to session-review (DEFER-001 in lessons.md Drift/Deferral section). |
+| **Position** | pre-1, burst 38 complete. adk-rust pass A1 COMPLETE: 39 crates swept, 6 deep, 19 patterns (10/4/5). ANALYSIS-STATE.md written to .factory/comparative/adk-rust/. Passes A2 (adk-graph/session/memory/artifact) + A3 (adk-server/runner/awp/acp/auth/telemetry/cli) DISPATCHED in parallel. Pending: A4 (guardrail/sandbox/eval), A5 (realtime/providers/protocols/payments), A6 (retry/reflection deep). After all passes: exhaustive sweep → strict-zero 3-CLEAN → comparative assessment → HUMAN DIRECTION GATE → Phase 1. |
+| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule in force. Open items from A1: anyhow-in-public-signatures verify; adk-model vs standalone drift surface; reqwest timeout sites; ignored-vs-runnable test classification. Compliance flags: native-tls (adk-realtime/livekit, hard conflict), reqwest rustls-tls-native-roots (root store delta). R6 OPEN: cargo login + publish-all.sh (time-sensitive). R8/R10/R11 OPEN: route to product-owner at Phase 1. |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content
