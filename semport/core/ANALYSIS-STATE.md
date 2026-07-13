@@ -1,12 +1,12 @@
 ---
 artifact: semport/core/analysis-state
 project: ferrochain
-pass: 7
-status: pass-7-deepening-complete
+pass: 8
+status: pass-8-narrow-complete
 deepening_run: true
 date: 2026-07-12
 producer: codebase-analyzer
-note: Pass 7 convergence deepening; direct writes to the 5 deliverables + this file succeeded (not hook-blocked this pass)
+note: Pass 8 NARROW convergence (2 residual items → ADR-5 + ADR-3). Direct writes to rust-translation-strategy.md + this file succeeded. langchain-protocol 0.0.17 fetch handled by research-agent in parallel (not covered here).
 scale:
   source_loc: 60101
   source_files: 180
@@ -146,4 +146,70 @@ pass_7_deepening:
     (b) line-verify the RunnableSequence.transform/stream unification (streaming primitive ADR-5),
     and (c) enumerate the SERIALIZABLE_MAPPING entries that resolve to partner packages. All
     other items are LOW/nitpick. Recommend: NARROW pass-8, not a full re-sweep.
+pass_8_narrow:
+  date: 2026-07-12
+  scope: "2 residual items only (3rd, langchain-protocol 0.0.17 fetch, delegated to research-agent)"
+  target: rust-translation-strategy.md
+  items_completed:
+    - id: 1
+      item: "RunnableSequence.transform/stream unification (ADR-5), line-verified"
+      novelty: MED
+      note: >
+        RESOLVES the standing open question §1(c): transform is the PRIMITIVE for streaming nodes;
+        stream = transform(once(input)). Two-tier contract — base Runnable default REVERSES it
+        (stream=once(invoke); transform=buffer-via-+-then-stream). Verified across all 4 streaming
+        subclasses (Sequence 3801/3815, Parallel 4288/4299, Generator 4619/4637/4646 purest,
+        Lambda 5408/5435). Step-wise chaining = lazy iterator chaining (_transform 3752).
+        NEW constraint surfaced: _transform_stream_with_config (2490) tee(inputs,2) means stream
+        duplication is a BASE primitive (input tracing for on_chain_end inputs=), not
+        astream_events-only; eager next() first-pull is the SAME start-before-end mechanism as
+        ADR-8. Tests locking semantics: test_runnable_sequence_transform (3846),
+        test_default_transform_with_dicts (5580), test_default_atransform_with_dicts (5602),
+        test_transform_of_runnable_lambda_with_dicts (5539), test_passthrough_transform_with_dicts
+        (5634), test_runnable_gen_transform (5379).
+    - id: 2
+      item: "partner-resolving SERIALIZABLE_MAPPING entries (ADR-3), feature-gated registration list"
+      novelty: LOW-MED
+      note: >
+        Merged ALL_SERIALIZABLE_MAPPINGS = 176 unique keys (NOT 178; 178 = sum of 4 dicts, 2 JS
+        collisions override SERIALIZABLE). Buckets: 141 core-internal, 12 langchain-monolith
+        (NO ferrochain owner -> unregistered/structured-error), 23 partner keys / 12 packages.
+        Only ferrochain-openai (4) + ferrochain-anthropic (1) own dedicated crates today; other 18
+        -> ferrochain-community / future per-provider crates. Alias multiplicity: ChatBedrock(3),
+        BedrockLLM(2), ChatGroq(2), ChatGoogleGenerativeAI(2). Upstream allowlist drift found:
+        langchain_openrouter/baseten/vertexai are mapping VALUES not in DEFAULT_NAMESPACES (dead);
+        sambanova/perplexity allowlisted with no mapping. Design ruling: derive allowlist FROM the
+        registered set (registry = source of truth), do not port a parallel hand-maintained list.
+  contradictions_with_prior:
+    - id: C-7
+      severity: LOW
+      claim: "Pass 7: 178 SERIALIZABLE_MAPPING entries; values point to partner pkgs (langchain_aws/langchain)"
+      reality: "176 merged unique keys (178 = sum of dicts, 2 collisions); partner = 23 keys/12 pkgs; the 12 langchain-monolith entries are NOT partner crates and have no ferrochain owner"
+    - id: item1
+      severity: NONE
+      claim: "§1(c)/Pass7 D-1: 'is transform the primitive?' left OPEN"
+      reality: "RESOLVED (yes for streaming nodes; base reverses). Not a contradiction — a resolution + 1 new constraint (tee ⇒ stream-dup is a base primitive)"
+  novelty_assessment:
+    high: 0
+    med: 1    # item 1 (resolves standing ADR-5 open Q + new base-primitive constraint)
+    low: 1    # item 2 (enumeration/refinement + count correction + allowlist drift)
+    overall: MED-trending-LOW
+  converged: true
+  convergence_verdict: CONVERGED
+  convergence_rationale: >
+    CORE IS CONVERGED. All P0 reverse-engineering items from the Pass-7 residual are resolved:
+    item 1 answered ADR-5's standing open question (streaming primitive) with 7 test citations;
+    item 2 produced the concrete ADR-3 feature-gated registration list (23 partner entries / 12
+    packages + owner crates). No new subsystem, entity, or contract discovered — findings refine
+    the model, they do not change how core would be spec'd (NITPICK-adjacent; the one MED is a
+    resolution of a pre-existing open question, not a new expansion). The single remaining residual
+    (langchain-protocol 0.0.17 CDDL fetch) is (a) delegated to research-agent in parallel and
+    (b) scoped OUT of ferrochain-core by ADR-6 (protocol split -> graph/server crate). Core's port
+    surface is fully characterized for Phase-1 spec crystallization. Downstream ADR write-ups
+    (ADR-3..ADR-8) are architect work (Phase 1), not further analysis.
+overall_convergence:
+  core: CONVERGED
+  as_of_pass: 8
+  date: 2026-07-12
+  note: "langchain-core semport analysis converged. Open items are Phase-1 ADR authorship + the parallel langchain-protocol 0.0.17 fetch (research-agent), both outside further reverse-engineering."
 ---

@@ -481,3 +481,230 @@ cleanly to `sha2`/`blake2` crates + a `RecordManager` trait.
 8. **ADR: astream_events cancellation & cleanup ordering** — guarantee the outer generator's
    cleanup runs on stream-drop/cancel while skipping downstream nodes (cancellation token +
    scope guard); golden-test against break/cancel scenarios.
+
+---
+
+# Pass 8 (2026-07-12, NARROW) — final convergence pass
+
+Two residual items line-verified against the pinned corpus (langchain 1.3.13,
+`libs/core/langchain_core/`). Reference line numbers below are into the **pinned, read-only**
+corpus (stable; TD-VSDD-091 exception — pass-report test-anchor table), paired with function
+names for durability. Item 1 → ADR-5; item 2 → ADR-3. The third residual (langchain-protocol
+0.0.17 CDDL fetch, ADR-6/C-1) is handled by research-agent in parallel and is intentionally NOT
+covered here.
+
+## ADR-5 (Pass 8) — `stream`/`transform` unification: line-verified mechanics
+
+**The relationship is two-tier, and it INVERTS between the base default and streaming nodes.**
+This directly answers the standing open question §1(c) / ADR-5 candidate ("is `transform` the
+primitive with `stream` derived?").
+
+### Tier A — base `Runnable` default (non-streaming leaf): stream/transform derive from invoke
+- `Runnable.stream` (`base.py:1182`) default body is literally `yield self.invoke(input, config)`
+  — a one-shot generator. `astream` (`base.py:1203`) = `yield await self.ainvoke(...)`.
+- `Runnable.transform` (`base.py:1748`) / `atransform` (`base.py:1793`) default **buffers the
+  entire input stream** by folding it with `+` (`final = final + ichunk`; on `TypeError` →
+  `final = ichunk`, i.e. keep-last), then `yield from self.stream(final, config)`. Docstring
+  contract: *"Subclasses must override this method if they can start producing output while input
+  is still being generated."*
+- So for a plain leaf: `invoke` is the primitive; `stream` wraps it; `transform` buffers→streams.
+
+### Tier B — streaming-native nodes INVERT it: `transform` is the primitive, `stream = transform(once(input))`
+Verified in all four streaming Runnable subclasses; every one overrides `transform` and defines
+`stream` in terms of it:
+- **`RunnableSequence`**: `transform` (`base.py:3801`) → `_transform_stream_with_config(input,
+  self._transform, ...)`; `stream` (`base.py:3815`) = `yield from self.transform(iter([input]),
+  ...)`. (`astream`/`atransform` symmetric at 3839/3824.)
+- **`RunnableParallel`**: `transform` (`base.py:4288`); `stream` (`base.py:4299`) =
+  `transform(iter([input]))`.
+- **`RunnableGenerator`**: `transform` (`base.py:4619`) is the primitive (wraps the generator fn
+  `Iterator[In]->Iterator[Out]`, `defers_inputs=True`); `stream` (`base.py:4637`) =
+  `transform(iter([input]))`; and even `invoke` (`base.py:4646`) folds `stream` via `+`. **Purest
+  inversion — everything derives from `transform`.**
+- **`RunnableLambda`**: `transform` (`base.py:5408`); `stream` (`base.py:5435`) =
+  `transform(iter([input]))`. Its `_transform` (`base.py:5345`) buffers all input via `+`
+  ("RunnableLambdas consume all input before emitting output"), then: generator-fn → yield
+  incrementally; output-is-Runnable → recursive `output.stream(final, recursion_limit-1)`
+  (`RecursionError` at ≤0); else yield the single value.
+
+**Answer to ADR-5(c): YES — `transform(Stream)->Stream` is the primitive for streaming nodes;
+`stream` is the trivial single-element special case `transform(once(input))`. The base class
+provides the reverse fallback (`transform` = buffer-then-`stream`, `stream` = `once(invoke)`) so
+that a node implementing ONLY `invoke` still satisfies the full surface.** Rust design: two
+defaults on the trait — implement EITHER `invoke` (→ buffered `transform` + one-shot `stream`
+provided) OR `transform` (→ `stream(input) = transform(stream::once(input))` provided, and
+`invoke = fold(stream)`).
+
+### Step-wise transform chaining (`RunnableSequence._transform`, `base.py:3752`)
+```
+steps = [self.first, *self.middle, self.last]
+final_pipeline = inputs                       # the input Iterator
+for idx, step in enumerate(steps):
+    config = patch_config(config, callbacks=run_manager.get_child(f"seq:step:{idx+1}"))
+    final_pipeline = step.transform(final_pipeline, config[, **kwargs if idx==0])
+yield from final_pipeline
+```
+Composition is **lazy iterator chaining**: each step's `transform` consumes the previous step's
+output iterator; only step 0 receives `**kwargs`; each step gets a child callback manager tagged
+`seq:step:{N}` (the same `seq:step:N` tags Pass 7 D-2 flagged for astream_events).
+
+### Buffering behavior per step type (the load-bearing distinction)
+- **Streaming-native step** (Sequence / Parallel / Generator / `RunnablePassthrough` /
+  transform-capable output parsers) → passes chunks through **incrementally as they arrive**; no
+  full-input buffering. E.g. `StrOutputParser` in a sequence emits char-by-char.
+- **Buffering step** (`RunnableLambda` with a non-generator fn, and the Tier-A base default) →
+  folds the **entire** input via `+` (non-addable → keep-last) before emitting. This is a natural
+  stream barrier inside an otherwise-streaming pipeline.
+- The `+` fold reducer is the SAME operator used for message/AddableDict merge (§2). Rust needs
+  ONE `Add`/`merge`-with-keep-last-fallback contract on chunk types.
+
+### Shared wrapper `_transform_stream_with_config` (`base.py:2490`) — mechanics that MUST port
+Both `stream` and `transform` of streaming nodes route through this. Non-obvious, test-observable
+behavior:
+1. **`tee(inputs, 2)`** (`base.py:2515`) — the input iterator is **duplicated**: one copy drives
+   the transformer, the other is folded via `+` into `final_input` for the `on_chain_end` /
+   `on_chain_error(inputs=...)` callback payload. → **Stream duplication is required even for
+   plain `transform`, not only for `astream_events`/`astream_log`.** This raises the priority of
+   the broadcast/replay-buffer design (previously scoped only to §10) — it is a base primitive.
+2. **Eager first pull** — `next(input_for_tracing, None)` (`base.py:2517`) pulls the first input
+   **before** running the transformer, guaranteeing the upstream Runnable starts before this one.
+   **This is the same mechanism behind astream_events v2's start-before-end ordering (ADR-8 /
+   ORA-3) — unify them.**
+3. **ContextVar scoping** — `set_config_context(child_config)` + `context.run(next, iterator)`
+   (`base.py:2538-2555`): every output pull runs inside the captured config context (ties ADR-4
+   task-local propagation; each `next()` re-enters the scope).
+4. **Output aggregation** — `final_output` folded via `+` (TypeError → stop folding, keep-last;
+   `base.py:2557-2567`) for the `on_chain_end` aggregate.
+5. **`defers_inputs`** flag (RunnableGenerator passes `True`) → forwarded into `on_chain_start`.
+6. **`tap_output_iter`** — a `_StreamingCallbackHandler`, if present, taps the output iterator to
+   populate `astream_log` `streamed_output` (`base.py:2540-2552`).
+
+### What Pass 8 FIXES / CONSTRAINS for ADR-5
+- **Resolves the open primitive question** (was OPEN in §1(c) and Pass 7 D-1): `transform` is the
+  streaming primitive; `stream` = `transform(once)`; base fallback reverses it. The Rust trait is
+  a two-default design (see Tier B above), NOT a single `stream`-primitive.
+- **Elevates stream-duplication to a base requirement**: the input-`tee` for tracing means the
+  Rust `_transform_stream_with_config` analog needs a broadcast/tee combinator on EVERY streaming
+  node, feeding both the transformer and the on_chain_end `inputs=` aggregate. Not just §10.
+- **Unifies the eager-first-pull ordering** with ADR-8 (start-before-end). One mechanism.
+- **Single reducer contract**: the `+` fold appears at 4 sites (input tracing, output
+  aggregation, lambda buffering, base transform buffering) — all share "addable → concat,
+  non-addable → keep last".
+
+### Tests that lock the semantics (HIGH confidence — direct assertions, pinned corpus)
+| Test (file `tests/unit_tests/runnables/test_runnable.py`) | Locks |
+|---|---|
+| `test_runnable_sequence_transform` / `_atransform` (`:3846` / `:3859`) | `(llm \| StrOutputParser).transform(llm.stream(...))` yields **one chunk per character** (`len(chunks)==len("foo-lish")`) → token-by-token streaming preserved through a sequence when steps are transform-capable |
+| `test_default_transform_with_dicts` (`:5580`) | CustomRunnable implementing only `invoke`; `transform([{a},{n}]) == [{n}]` (plain dict non-addable → keep-last) and `stream({n})==[{n}]` → Tier-A base buffering + keep-last |
+| `test_default_atransform_with_dicts` (`:5602`) | `AddableDict` inputs fold via `+` → `[{"foo":"an"}]` → the addable branch of the reducer |
+| `test_transform_of_runnable_lambda_with_dicts` (`:5539`) | RunnableLambda buffers to last chunk; `seq.stream(x) == seq.transform(iter([x]))` → the `stream = transform(once)` identity |
+| `test_passthrough_transform_with_dicts` (`:5634`) | `RunnablePassthrough.transform([{a},{n}]) == [{a},{n}]` (NO buffering) → the contrast proving streaming-native vs buffering step distinction |
+| `test_runnable_gen_transform` (`:5379`) | `RunnableGenerator(gen) \| plus_one`; `chain.stream(3)==[1,2,3]` → generator-native streaming + coercion of a bare generator fn into a transform step |
+| `test_map_stream_iterator_input` (`:3262`), `test_deep_stream` (`:3561`) | Parallel/sequence streaming end-to-end |
+
+### Contradictions with prior passes (item 1)
+- **No contradiction; a RESOLUTION.** §1(c) and Pass 7 D-1 left "is transform the primitive?" OPEN
+  and described Generator-vs-Lambda semantics without the universal `stream = transform(once)`
+  identity or the tee-based input tracing. Pass 8 resolves the question and adds one NEW constraint
+  (input-`tee` ⇒ stream duplication is a base primitive, not astream_events-only).
+
+---
+
+## ADR-3 (Pass 8) — partner-resolving `SERIALIZABLE_MAPPING` entries: feature-gated registration list
+
+Line-verified against `load/mapping.py` (4 dicts) and `load/load.py` (`ALL_SERIALIZABLE_MAPPINGS`
+merge at `:157`; `DEFAULT_NAMESPACES` allowlist at `:134`; `DISALLOW_LOAD_FROM_PATH` at `:152`;
+core-mode filter `value[0] != "langchain_core"` at `:206`).
+
+### Counts (corrects Pass 7's "178")
+- Raw dicts: `SERIALIZABLE_MAPPING` 94 + `OLD_CORE_NAMESPACES_MAPPING` 58 +
+  `_JS_SERIALIZABLE_MAPPING` 19 + `_OG_SERIALIZABLE_MAPPING` 7 = **178 raw pairs**.
+- Merged `ALL_SERIALIZABLE_MAPPINGS` (dict-splat, later-wins) = **176 unique keys** — 2 collisions:
+  the JS keys `("langchain","chat_models","bedrock","ChatBedrock")` and `(...,"BedrockChat")`
+  override the `SERIALIZABLE_MAPPING` values (JS 3-tuple `langchain_aws.chat_models.ChatBedrock`
+  wins over the 4-tuple `...bedrock.ChatBedrock`). **178 = sum of dicts; 176 = the registry.**
+- Resolution buckets (by target `value[0]`): **langchain_core = 141** (own via ferrochain-core),
+  **`langchain` monolith = 12**, **partner packages = 23 unique keys / 12 packages**.
+
+### The 12 `langchain`-monolith entries — NO ferrochain owner
+`LLMChain`, `ToolAgentAction`, `OutputFixingParser`, `RegexParser`, `ChatGooglePalm`, `BaseOpenAI`,
+`GooglePalm`, `Replicate`, `CombiningOutputParser`, `HubRunnable`, `OpenAIFunctionsRouter`,
+`OpenAIToolAgentAction`. These resolve to the `langchain` aggregation package, which ferrochain
+does **not** port (ferrochain ports core/graph/mcp-adapters + provider partners). `langchain` is in
+`DISALLOW_LOAD_FROM_PATH` (`load.py:152`) → loadable only via the mapping, never by path. **In
+ferrochain these are UNREGISTERED**: a load of one of these lc-ids must return a structured
+"unsupported serializable (upstream-monolith)" error — NOT a silent `None`/`Vec::new()` (Code
+Conventions: no silent empty returns).
+
+### The 23 partner entries → ferrochain crate owner (feature-gated registration)
+Key = the **serialized lc-id** (the tuple KEY, i.e. what is on the wire); registration is keyed on
+this, so partner crates must register the canonical id **plus all legacy aliases** for their class.
+`ferrochain-core` initial crate family (per CLAUDE.md) has dedicated crates only for `openai` and
+`anthropic`; the rest land in `ferrochain-community` initially, or in a per-provider crate when one
+is added (final crate names are set at the Phase-1 architecture ADR).
+
+| lc-namespace key (on-the-wire id) | target class | upstream partner pkg | ferrochain crate owner (feature) |
+|---|---|---|---|
+| `langchain.llms.openai.OpenAI` | OpenAI | langchain_openai | **ferrochain-openai** |
+| `langchain.chat_models.openai.ChatOpenAI` | ChatOpenAI | langchain_openai | **ferrochain-openai** |
+| `langchain.chat_models.azure_openai.AzureChatOpenAI` | AzureChatOpenAI | langchain_openai | **ferrochain-openai** |
+| `langchain.llms.openai.AzureOpenAI` | AzureOpenAI | langchain_openai | **ferrochain-openai** |
+| `langchain.chat_models.anthropic.ChatAnthropic` | ChatAnthropic | langchain_anthropic | **ferrochain-anthropic** |
+| `langchain.chat_models.bedrock.ChatBedrock` | ChatBedrock | langchain_aws | ferrochain-community / future ferrochain-aws |
+| `langchain.chat_models.bedrock.BedrockChat` | ChatBedrock (alias) | langchain_aws | ferrochain-community / future ferrochain-aws |
+| `langchain.chat_models.anthropic_bedrock.ChatAnthropicBedrock` | ChatAnthropicBedrock | langchain_aws | ferrochain-community / future ferrochain-aws |
+| `langchain_aws.chat_models.ChatBedrockConverse` | ChatBedrockConverse | langchain_aws | ferrochain-community / future ferrochain-aws |
+| `langchain.llms.bedrock.Bedrock` | BedrockLLM (alias) | langchain_aws | ferrochain-community / future ferrochain-aws |
+| `langchain.llms.bedrock.BedrockLLM` | BedrockLLM | langchain_aws | ferrochain-community / future ferrochain-aws |
+| `langchain_groq.chat_models.ChatGroq` | ChatGroq | langchain_groq | ferrochain-community / future ferrochain-groq |
+| `langchain.chat_models.groq.ChatGroq` | ChatGroq (alias) | langchain_groq | ferrochain-community / future ferrochain-groq |
+| `langchain_google_genai.chat_models.ChatGoogleGenerativeAI` | ChatGoogleGenerativeAI | langchain_google_genai | ferrochain-community / future ferrochain-google |
+| `langchain.chat_models.google_genai.ChatGoogleGenerativeAI` | ChatGoogleGenerativeAI (alias) | langchain_google_genai | ferrochain-community / future ferrochain-google |
+| `langchain.chat_models.vertexai.ChatVertexAI` | ChatVertexAI | langchain_google_vertexai | ferrochain-community / future ferrochain-google |
+| `langchain.chat_models.mistralai.ChatMistralAI` | ChatMistralAI | langchain_mistralai | ferrochain-community / future ferrochain-mistral |
+| `langchain.chat_models.fireworks.ChatFireworks` | ChatFireworks | langchain_fireworks | ferrochain-community / future ferrochain-fireworks |
+| `langchain.llms.fireworks.Fireworks` | Fireworks | langchain_fireworks | ferrochain-community / future ferrochain-fireworks |
+| `langchain_xai.chat_models.ChatXAI` | ChatXAI | langchain_xai | ferrochain-community / future ferrochain-xai |
+| `langchain_openrouter.chat_models.ChatOpenRouter` | ChatOpenRouter | langchain_openrouter | ferrochain-community / future (⚠ namespace not in allowlist) |
+| `langchain_baseten.chat_models.ChatBaseten` | ChatBaseten | langchain_baseten | ferrochain-community / future (⚠ namespace not in allowlist) |
+| `langchain.llms.vertexai.VertexAI` | VertexAI | langchain_vertexai | ⚠ DEAD upstream — see below |
+
+Alias multiplicity to preserve on registration: **ChatBedrock** (3 keys), **BedrockLLM** (2),
+**ChatGroq** (2), **ChatGoogleGenerativeAI** (2) — partner registration must map every legacy key
+to the one class.
+
+### Upstream security-allowlist drift (constrains the ferrochain reviver design)
+`DEFAULT_NAMESPACES` (`load.py:134`) = {langchain, langchain_core, langchain_community,
+langchain_anthropic, langchain_groq, langchain_google_genai, langchain_aws, langchain_openai,
+langchain_google_vertexai, langchain_mistralai, langchain_fireworks, langchain_xai,
+langchain_sambanova, langchain_perplexity}. Drift found:
+- `langchain_openrouter`, `langchain_baseten`, `langchain_vertexai` appear as mapping **values** but
+  are **NOT** in the allowlist → the reviver rejects `value[0] ∉ valid_namespaces` (`load.py:544`),
+  so these 3 entries are **effectively unloadable upstream** today. `VertexAI`-LLM in particular is
+  a dead entry (its sibling `ChatVertexAI` correctly targets the allowlisted
+  `langchain_google_vertexai`; the LLM targets the non-allowlisted `langchain_vertexai`).
+- `langchain_sambanova`, `langchain_perplexity` are allowlisted but have **NO mapping entries**.
+- **Design implication for ADR-3**: ferrochain must NOT port a hand-maintained parallel allowlist
+  (it drifts, as shown). Derive the valid-namespace allowlist **from the registered set** — the
+  registry (core-internal registrations + feature-gated partner registrations) is the single source
+  of truth; a type is loadable iff it is registered. This eliminates the drift class entirely and
+  makes the security allowlist a consequence of Cargo feature selection.
+
+### Registration architecture (ADR-3 concrete shape confirmed)
+- **ferrochain-core** ships: the `Reviver` + the registry mechanism (`inventory`/`linkme`
+  auto-registration or explicit `OnceLock` seeded at init), the **141 core-internal registrations**,
+  and the **legacy-alias remap** (OLD_CORE / JS / OG keys all fold onto the same core targets).
+- **Partner crates** register their own serializable types via the plugin seam, **feature-gated**.
+  Today only `ferrochain-openai` (4 ids) and `ferrochain-anthropic` (1 id) exist → they own 5 of 23;
+  the other 18 belong to crates not yet in the workspace and initially land in `ferrochain-community`.
+- Registration is keyed on the **serialized id**, alias-aware (see multiplicity above).
+- `langchain`-monolith ids (12) and non-allowlisted/dead ids → deliberately unregistered; loads
+  return a structured `Serialization`/`unsupported-serializable` error variant.
+
+### Contradictions with prior passes (item 2)
+- **C-7 (LOW)** — Pass 7 item 3 / D-9 recorded "**178** entries … some values point to partner pkgs
+  (langchain_aws/langchain)". Pass 8 sharpens: 178 is the sum of the 4 source dicts; the **merged
+  registry is 176** (2 JS↔SERIALIZABLE collisions). Partner-resolving = **23 unique keys / 12
+  packages**; the 12 `langchain`-monolith entries are **not** partner crates and have **no**
+  ferrochain owner (Pass 7 conflated "langchain" with partner packages). Refinement + one small
+  count correction, not a semantic reversal.

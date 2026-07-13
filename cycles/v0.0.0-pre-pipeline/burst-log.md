@@ -285,3 +285,60 @@ traces_to: STATE.md
 - cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 6 checkpoint archived)
 
 **Next steps:** pass 8 + langchain-protocol-0.0.17 verification in progress. After completion: extraction-validation gate (validate-extraction over all passes with C-1..C-6 as known-corrections) → semport convergence → Phase 1.
+
+---
+
+## Burst: pre-pipeline burst 8 — pass 8 CONVERGED; D13 ferrochain-server first-party; R3/R9 downgraded; extraction-validation gate dispatched (2026-07-13)
+
+**Semport pass 8 close — narrow: RunnableSequence + ADR-3 + langchain-protocol-0.0.17:**
+
+| Metric | Value |
+|--------|-------|
+| Convergence verdict | CONVERGED — all semport passes complete |
+| ADR-5 resolved | transform is the streaming primitive (two-default trait design, 7 locking tests cited). NEW constraint: tee/stream-duplication is a base primitive — must unify with ADR-8 start-before-end mechanism |
+| ADR-3 enumerated | 176 unique keys: 141 core-internal, 12 langchain-monolith (→ structured "unsupported" error), 23 partner keys / 12 packages; alias multiplicity preserved |
+| Namespace allowlist ruling | DERIVED from registered set (registry = source of truth) — eliminates upstream's hand-maintained-list drift class (3 dead entries found upstream) |
+| C-7 added | LOW count correction — added to contradiction ledger with C-1..C-6 |
+| langchain-protocol 0.0.17 | VERIFIED at .factory/semport/core/langchain-protocol-0.0.17-verification.md — CHANGED but strictly additive; content blocks byte-identical to 0.0.15-documented subset; only UsageInfo gained two optional token-detail structs. Agent-protocol repo is MIT. Caveat: extraction-verified not byte-diffed; CI diff step needed at port time. |
+
+**Decisions recorded:**
+
+| ID | Action | Decision |
+|----|--------|----------|
+| D13 | NEW (human directive, confirmed via structured question) | ferrochain-server is a first-party target. (1) Building ferrochain-server in-workspace (durable runs, threads/assistants/crons/store, streaming); spec'd in Phase 1 alongside client; implemented after core → graph → first partners. (2) NO wire-compatibility with LangGraph Platform; SDK-1.2.9 endpoint catalog = design input, not conformance target. (3) DTU scope collapses: ferrochain-server gets real BCs/holdouts; DTU = genuine third parties (OpenAI, Anthropic, provider APIs, Ollama keyless CI). Pass-6 "stateful fake of LangChain's platform" RETIRED. (4) Pass-6 DROPped auth/runtime/encryption + CLI dev/deploy RE-CLASSIFIED as ferrochain-server design references. (5) D11.1 actor-style outer scheduler is ferrochain-server's core. |
+
+**Risks updated:**
+
+| ID | Update |
+|----|--------|
+| R3 | REVISED per D13 — ferrochain-server is first-party (full BCs/holdouts; no DTU clone needed). DTU scope = genuine third parties only. Pass-6 "stateful fake" requirement RETIRED. Severity: High → Low. |
+| R9 | DOWNGRADED per D13 — LangGraph Platform SaaS is design reference only, not conformance target. Risk = design-input staleness (check SDK-1.2.9 catalog at spec revision cycles). Severity: High → Low. DTU conformance obligation RETIRED. |
+
+**Phase step archival:** "semport-analyze pass 5 — text-splitters+mcp-adapters" row rotated out of STATE.md Current Phase Steps (5-row limit); covered in burst 6 entry above.
+
+**Extraction-validation gate dispatched:**
+
+- Agent: validate-extraction
+- Scope: all 8 semport passes, C-1..C-7 as known-corrections
+- Output: .factory/semport/VALIDATION-REPORT.md
+- Gate: on PASS → semport phase CLOSED → Phase 1 spec crystallization opens
+
+**Phase 1 gate agenda (human decisions required before spec work begins):**
+
+| Item | Description |
+|------|-------------|
+| (a) D13 server API shape | Define ferrochain-server API surface for Phase 1 spec |
+| (b) CLI re-scope | Narrow CLI to ferrochain.toml validate + schema only; defer dev/deploy |
+| (c) Subagent-transformer non-goal | Confirm private stream internals deferred to post-v1 (pass 3 recommendation) |
+| (d) RemoteGraph parity depth | Full PregelProtocol vs reduced subset |
+| (e) License/attribution | MIT-derivative with attribution |
+| (f) Crate-name ADR | Ratify ferrochain crate family names (D6 resolved; formal ADR at architecture phase) |
+| (g) Slimmed DTU assessment | Enumerate final third-party clone list (OpenAI/Anthropic/providers/Ollama) at P1-06 |
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated, Current Step; Current Phase Steps replaced — pass 5 archived, pass 8 updated to DONE, extraction-validation gate added; D13 added to Decisions Log; R3 updated; R9 downgraded; Session Resume Checkpoint replaced; Historical Content updated)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 7 checkpoint archived)
+
+**Next steps:** extraction-validation gate in progress. On PASS → semport phase CLOSED → Phase 1 spec crystallization opens (architect + product-owner, with consolidated ADR queue ADR-1..ADR-8+, D8 forcing functions, D13 server contract, R8 missing-contract flag, and the Phase-1 human gate agenda above).
