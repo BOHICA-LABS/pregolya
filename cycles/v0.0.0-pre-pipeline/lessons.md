@@ -384,3 +384,51 @@ For certification passes and all subsequent exhaustive sweeps:
 ### Follow-up
 
 Add enumeration-completeness guardrail to the validate-extraction agent prompt upstream as the 10th guardrail — co-batch with all prior guardrails in session-review prompt hardening. Pass 7 opens with an exhaustive enumeration-completeness sweep to close the class corpus-wide across all 7 areas.
+
+---
+
+## Lesson: PROCESS-GAP — Corrections Are Claims: Verify Every Path and Numeric a Correction Introduces (2026-07-13)
+
+**Source:** 3-CLEAN certification pass 12 (burst 30)
+**Category:** process-gap
+**Severity:** LOW (two LOW findings; but pattern enabled a structural citation error to survive 7 certification passes undetected)
+
+### What happened
+
+Certification pass 12 found two LOW-severity residuals, both introduced by prior correction passes rather than by the original extraction:
+
+**Finding 1 (prose-not-updated-with-YAML):** cert-11 corrected the YAML field `rest_endpoints: 50+` to `rest_endpoints: 61` in `platform/module-inventory.md`. The same document contained a companion prose sentence in §4: "The **50+** endpoints above are the complete client-visible surface at 1.2.9." This sentence was not swept. The cert-12 opening stratum found it still carrying the stale "50+" form.
+
+**Finding 2 (citation-path-introduced-by-correction-never-verified):** Certification pass 5 added the `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` constant claim to `graph/behavioral-intent.md` as part of a correction to the checkpoint constants section. The correction improved the content (constant name, default value) but introduced a citation path `pregel/_internal/_config.py:34` that was never independently verified. The actual file is `langgraph/_internal/_config.py` at line 33 (the `pregel/_internal/_config.py` path does not exist). This structural error in the citation survived cert-passes 6, 7, 8, 9, 10, 11, and 12 (the current pass) before being caught by the cert-12 behavioral rotation when a fresh verify of graph citation claims was performed.
+
+### Why it matters
+
+Corrections are trusted more than original claims. When a validator corrects a value, the correction is rarely re-verified in subsequent passes — reviewers read it as "already fixed." This creates a systematic blind spot: a correction that introduces a new inaccuracy (wrong path prefix, stale companion prose, wrong numeric in a sibling document) can persist far longer than an original inaccuracy would, because the correction carries implicit authority.
+
+The cert-5 citation path error is a compound case: the correction was locally correct (the constant name and value were right) but structurally wrong (the path was wrong). A reviewer confirming "does DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT equal 5000" would correctly answer yes. A reviewer confirming "does `pregel/_internal/_config.py` exist" would find the error — but this second check was not part of any rotation until cert-12 explicitly added citation-path verification to the behavioral rotation.
+
+### Codification applied — 11th Guardrail discipline: CORRECTION VERIFICATION
+
+For all certification passes from cert-13 forward, two mandatory sub-checks are added to the opening stratum:
+
+1. **Correction-marker citation audit:** Grep all semport documents for `[validation-*]` markers and extract the correction site. For every correction that introduced a citation (file path, line number, import path), independently verify that path exists and the line reference is accurate. A correction that adds `at foo/bar/baz.py:N` must be verified the same way a new original claim would be.
+
+2. **Corrected-numeric prose-sibling sweep:** For every numeric correction applied in the previous two passes, grep the same document (and sibling documents in the same semport area) for the pre-correction value appearing in prose sections. YAML/table fields and prose sentences in the same document are separately anchored in the reader's attention — a corrector who focuses on the structured data field can miss a companion prose sentence that restates the same value in different words.
+
+These two checks form the cert-13 mandatory opening stratum, alongside the propagation audit (guardrail 2) and notes-without-edits sweep (guardrail 5).
+
+### Updated opening stratum protocol (effective cert-13)
+
+1. Correction-marker citation audit (new — cert-13)
+2. Corrected-numeric prose-sibling sweep (new — cert-13)
+3. Cross-document propagation audit (existing — guardrail 2)
+4. Notes-without-edits sweep (existing — guardrail 5)
+5. Tilde-prose normalization (new — cert-13): verify all `~N` approximations in prose against current exact corpus counts; correct those that exceed reasonable rounding distance (>5%)
+
+### Full 10-guardrail set (unchanged) + correction verification discipline
+
+The 10 guardrails remain as documented after cert-6. The correction-verification and prose-sibling sweep obligations are added as OPENING STRATUM discipline (applied before the 10 guardrails' behavioral rotation scope), not as numbered guardrails — they govern the correction bookkeeping layer, not the behavioral claim verification layer.
+
+### Follow-up
+
+Add the correction-verification opening stratum to the validate-extraction agent prompt upstream — co-batch with all prior guardrails in session-review prompt hardening. The three new cert-13 openers (citation audit, prose-sibling sweep, tilde-normalization) should become standard first-stratum items for all certification passes going forward.

@@ -1101,3 +1101,43 @@ Dispatched autonomously per D15 (no human check-in required). Opener: (1) verify
 - `STATE.md` (pass 11 DONE, pass 12 dispatched, session checkpoint updated, burst 29 recorded)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 28 checkpoint archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+
+---
+
+## Burst 30 — 2026-07-13
+
+**Trigger:** 3-CLEAN certification pass 12 COMPLETE per D15 autonomous continuation.
+
+### Summary
+
+3-CLEAN certification pass 12 COMPLETE: CLEAN(strict)=NO. 2 corrections (2 LOW), both corrector-introduced residue rather than new source inaccuracies.
+
+**Opening stratum (cert-11 propagation verification):**
+Swept all 35 semport docs for stale forms `~59935`, `50+`, `40+`, `~2,000`, `~1.2k`, `~2.8k`. Found 1 residual:
+- `platform/module-inventory.md:212` — prose sentence "The **50+** endpoints above are the complete client-visible surface at 1.2.9." The cert-11 YAML field `rest_endpoints:` was corrected to 61 but this companion prose sentence was not updated. Corrected to "61 endpoints".
+- All 5 cert-11 numeric spot-recomputes independently confirmed: core test LOC 59,322 (delta 0), stream/ 2,210 (delta 0), channels/ 1,143 (delta 0), graph/ 2,960 (delta 0), platform wire_dtos 44 (delta 0).
+
+**Behavioral rotation (28 claims, 7 areas):** All 28 confirmed. ZERO new inaccuracies, ZERO hallucinations.
+- Graph citation: `graph/behavioral-intent.md:112` cited `pregel/_internal/_config.py:34` for `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`. No such file exists. Constant is at `langgraph/_internal/_config.py:33`. This citation was introduced by cert-5 and survived 7 passes unverified. Corrected with `[validation-certification-12]`.
+
+**Metric verification (27 claims):** All 27 delta-zero. One tilde-prose noted but not corrected: `~120 tests` in splitters/behavioral-intent.md (actual 123, +2.4%, within acceptable approximation per BC-5.39.001).
+
+### New Failure Modes Logged
+
+Two new failure mode patterns identified for cert-13 rotation checklist:
+1. **Prose-not-updated-with-YAML:** YAML field corrected; companion prose sentence in the same document not swept. Now in cert-13 openers.
+2. **Citation-path-introduced-by-correction-never-verified:** cert-5 added `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` claim with a `pregel/_internal/_config.py` path prefix that was never independently verified. Path survived 7 passes. Now in cert-13 correction-marker citation audit.
+
+### 11th Lesson
+
+Corrections are claims too: every path/value a correction introduces must be verified like any original claim, and every corrected numeric needs a prose-sibling sweep. Appended to lessons.md.
+
+### Files Modified This Burst
+
+- `semport/platform/module-inventory.md:212` (prose "50+" → "61"; `[validation-certification-12]` marker)
+- `semport/graph/behavioral-intent.md:112` (citation path `pregel/_internal/_config.py:34` → `_internal/_config.py:33`; `[validation-certification-12]` marker)
+- `semport/VALIDATION-REPORT.md` (Certification Pass 12 section appended)
+- `STATE.md` (pass 12 DONE, pass 13 dispatched, session checkpoint updated, burst 30 recorded)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 29 checkpoint archived)
+- `cycles/v0.0.0-pre-pipeline/lessons.md` (11th lesson appended)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)

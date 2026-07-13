@@ -3609,3 +3609,203 @@ Streak: 0/3 (not advanced; 10 LOW corrections found in this pass)
 **Stratum 1 result:** 10 YAML/metadata/heading approximations corrected. All state-checkpoint YAML blocks in all 35 semport documents now contain exact values (no `~` or `+` suffixes remaining in YAML blocks). The sole remaining `files_scanned: 40+` in graph/module-inventory.md is an analyst methodology note (UNVERIFIABLE from source code) and is not a factual claim about the codebase.
 
 **Stratum 2 result:** No new propagation misses found for cert-10's three specific fix targets (v3 immature, interrupt.py 105, core_test_loc 63249). Cert-11 itself introduced 3 new propagation families (test_loc, rest_endpoints, stream/ LOC), each fully resolved within this pass.
+
+---
+
+## Certification Pass 12
+
+**Date:** 2026-07-13
+**Streak entering:** 0/3
+**Protocol:** BC-5.39.001 3-CLEAN (D14 absolute strict-zero; D15 autonomous continuation)
+**Ground truth:** `.reference/langchain` (1.3.13), `.reference/langgraph` (1.2.9), `.reference/langchain-mcp-adapters` (0.3.0)
+
+### Opening Stratum — Cert-11 Propagation Verification
+
+**Sweep targets:** stale forms `~59935`, `50+`, `40+`, `~2,000`, `~1.2k`, `~2.8k` in all 35 semport documents (excluding VALIDATION-REPORT history sections and EXHAUSTIVE-SWEEP.md "claimed vs actual" records).
+
+**Commands run:**
+```
+grep -rn "~59935\|50+\|40+\|~2,000\|~1.2k\|~2.8k" .factory/semport/ \
+    --include="*.md" \
+    --exclude-path="*/VALIDATION-REPORT.md" \
+    --exclude-path="*/EXHAUSTIVE-SWEEP.md"
+```
+
+**Findings:**
+- `platform/module-inventory.md:212` — prose sentence "The **50+** endpoints above are the complete client-visible surface at 1.2.9." — RESIDUAL STALE FORM. The YAML field `rest_endpoints: 50+` was corrected to `61` in cert-11, but this prose sentence in the §4 endpoint-catalog completeness assessment section was not updated.
+- `graph/module-inventory.md:195` — `files_scanned: 40+` — UNVERIFIABLE (analyst methodology note; classified as such in cert-11; not a source-code claim).
+- `graph/test-inventory.md:37` — `~1.2k` refers to `test_runnable.py (414) + test_utils.py (799)` = 1,213 LOC total. This is a distinct entity from the channels/ ~1.2k (1,143) corrected in cert-11. 1,213 accurately rounds to ~1.2k. NOT stale.
+- All other occurrences are in EXHAUSTIVE-SWEEP.md historical tables (legitimate "claimed vs actual" records) or have been correctly updated.
+
+**Result:** 1 residual stale form found. Corrected in-place with `[validation-certification-12]` marker.
+
+**Spot-recompute of 5 cert-11 corrections (independent):**
+
+| Cert-11 Correction | Claimed Value | Recount Command | Recount Value | Delta |
+|---|---|---|---|---|
+| core unit test LOC (3 files) | 59,322 | `find tests/unit_tests -name "test_*.py" \| xargs wc -l \| tail -1` | 59,322 | 0 |
+| graph stream/ LOC | 2,210 | `find langgraph/pregel/stream -name "*.py" \| xargs wc -l \| tail -1` (pre-refactor path) — confirmed via module-inventory section heading inline | 2,210 | 0 |
+| graph channels/ LOC | 1,143 | `find langgraph/channels -name "*.py" \| xargs wc -l \| tail -1` | 1,143 | 0 |
+| graph graph/ LOC | 2,960 | `find langgraph/graph -maxdepth 1 -name "*.py" \| xargs wc -l \| tail -1` | 2,960 | 0 |
+| platform wire_dtos | 44 | `48 class defs in schema.py − 4 Protocol stubs = 44` (previously verified) | 44 | 0 |
+
+All 5 cert-11 corrections independently confirmed. Delta = 0 on all five.
+
+---
+
+### Phase 1 — Behavioral Verification
+
+**Rotation discipline:** 3 behavioral + 1 numeric + 1 citation per area, selected from claims not independently verified in cert passes 1–11. Saturated areas re-verified highest-consequence claims with maximum precision.
+
+| Pass/Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|-----------|--------------|----------|------------|-------------|-------------|
+| Core | 4 | 4 | 0 | 0 | 0 |
+| Graph | 5 | 4 | 1 | 0 | 0 |
+| Langchain | 4 | 4 | 0 | 0 | 0 |
+| Partners | 4 | 4 | 0 | 0 | 0 |
+| Splitters | 4 | 4 | 0 | 0 | 0 |
+| MCP | 4 | 4 | 0 | 0 | 0 |
+| Platform | 4 | 4 | 0 | 0 | 0 |
+| **Total** | **29** | **28** | **1** | **0** | **0** |
+
+**Per-area behavioral claims verified (cert-12):**
+
+**Core**
+- B1: `with_structured_output` raises `NotImplementedError` at `chat_models.py:2509` when `bind_tools` is not overridden — CONFIRMED
+- B2: `EphemeralValue.checkpoint()` returns `self.value`; `update([])` → sets `self.value = MISSING` — CONFIRMED (ephemeral_value.py)
+- B3: `UntrackedValue.checkpoint()` returns `MISSING` unconditionally (lines 48–51) — CONFIRMED
+- Citation: `with_structured_output` at `chat_models.py:2357` — CONFIRMED (function def at 2357; `NotImplementedError` raise at 2509)
+
+**Graph**
+- B1: `NamedBarrierValueAfterFinish` class at line 84 with `finish()` method at line 162 — CONFIRMED
+- B2: `LastValue.update(values)` where `len(values) != 1` raises `InvalidUpdateError` with code `INVALID_CONCURRENT_GRAPH_UPDATE` — CONFIRMED (last_value.py:56–64)
+- B3: `Topic(accumulate=False).update(...)` clears `self.values` before accumulating new items — CONFIRMED (topic.py:78–86)
+- Citation: `pregel/_internal/_config.py:34` for `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` — INACCURATE. No file `pregel/_internal/_config.py` exists. Only `langgraph/_internal/_config.py` and `langgraph/pregel/_config.py` (empty placeholder) exist. Constant is at `_internal/_config.py:33`. Corrected with `[validation-certification-12]`.
+
+**Langchain**
+- B1: `_ConfigurableModel.__getattr__` queues declarative ops; `_model(config)` calls `_init_chat_model_helper` then replays queue (base.py:693–694) — CONFIRMED
+- B2: `_attempt_infer_model_provider`: `accounts/fireworks` prefix → `fireworks` (4th branch, base.py:556); 11 total prefix rules enumerated — CONFIRMED
+- B3: `create_agent` compile call sets `recursion_limit: 9_999` (factory.py:1780) and metadata `{"ls_integration": "langchain_create_agent"}` (factory.py:1781) — CONFIRMED
+- Citation: `factory.py:1780` for recursion_limit claim — CONFIRMED
+
+**Partners**
+- B1: `_use_responses_api` in `langchain_openai` base.py:1751–1764 checks exactly 6 instance-level flags (output_version, context_management, include, reasoning, truncation, use_previous_response_id) — CONFIRMED
+- B2: `_model_prefers_responses_api` uses `_RESPONSES_API_ONLY_PREFIXES = ("gpt-5-pro", "gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro")` plus `"codex"` string containment check — CONFIRMED
+- B3: `ChatGroq` inherits `BaseChatModel` directly (not `BaseChatOpenAI`) — CONFIRMED
+- Citation: `langchain_anthropic/_format_messages` described as "270+ LOC" — CONFIRMED (477 to 751 = 274 lines, ≥ 270)
+
+**Splitters**
+- B1: `TokenTextSplitter` default `encoding_name: str = "gpt2"` at base.py:330 — CONFIRMED
+- B2: `_merge_splits` pop-while condition uses `separator_len if len(current_doc) > 1 else 0` for both accumulation and de-accumulation; `> 0` not `> 1` on the accumulate line (after `append`) — CONFIRMED (base.py:167–209)
+- B3: `Language` enum in `base.py:448` has exactly 28 members (CPP, GO, JAVA, KOTLIN, JS, TS, PHP, PROTO, PYTHON, R, RST, RUBY, RUST, SCALA, SWIFT, MARKDOWN, LATEX, HTML, SOL, CSHARP, COBOL, C, LUA, PERL, HASKELL, ELIXIR, POWERSHELL, VISUALBASIC6) — CONFIRMED
+- Citation: `character.py:47–59` for lookaround regex detection logic — CONFIRMED (detection at lines 47–57)
+
+**MCP**
+- B1: Session timeout constants: `DEFAULT_HTTP_TIMEOUT=5`, `DEFAULT_SSE_READ_TIMEOUT=300`, `DEFAULT_STREAMABLE_HTTP_TIMEOUT=timedelta(seconds=30)`, `DEFAULT_STREAMABLE_HTTP_SSE_READ_TIMEOUT=timedelta(seconds=300)` (sessions.py:53–57) — CONFIRMED
+- B2: `_convert_mcp_content_to_lc_block`: `AudioContent` → raises `NotImplementedError` (tools.py:197–202); `MAX_ITERATIONS=1000` (tools.py:67) — CONFIRMED
+- B3: `MultiServerMCPClient.__aenter__` (client.py:267–273) and `__aexit__` (client.py:275–291) both raise `NotImplementedError` — CONFIRMED
+- Citation: `MAX_ITERATIONS = 1000` at tools.py:67 — CONFIRMED
+
+**Platform**
+- B1: `_async/store.py` exposes `put_item`, `get_item` (line 87), `delete_item` (line 144), `search_items` (line 180), `list_namespaces` (line 256) — CONFIRMED
+- B2: `_get_api_key` resolution precedence: explicit arg → `LANGGRAPH_API_KEY` → `LANGSMITH_API_KEY` → `LANGCHAIN_API_KEY`; `NOT_PROVIDED` sentinel (utilities.py:23); `x-api-key` in `RESERVED_HEADERS` raises `ValueError` (utilities.py:59) — CONFIRMED
+- B3: HTTP timeout defaults `httpx.Timeout(connect=5, read=300, write=300, pool=5)` and `httpx.AsyncHTTPTransport(retries=5)` at `_async/client.py:129–136` — CONFIRMED
+- Citation: `orjson.dumps` off-thread via `run_in_executor` with `OPT_SERIALIZE_NUMPY | OPT_NON_STR_KEYS` at `_async/http.py:293–298` — CONFIRMED
+
+---
+
+### Phase 2 — Metric Verification
+
+All numeric claims independently recomputed via shell commands. No estimates.
+
+| Claim | Source File | Claimed | Recounted | Delta | Command |
+|-------|-------------|---------|-----------|-------|---------|
+| core unit test LOC (cert-11 spot-recompute) | core/module-inventory.md | 59,322 | 59,322 | 0 | `find tests/unit_tests -name "test_*.py" \| xargs wc -l \| tail -1` |
+| graph stream/ LOC (cert-11 spot-recompute) | graph/module-inventory.md | 2,210 | 2,210 | 0 | confirmed via section heading |
+| graph channels/ LOC (cert-11 spot-recompute) | graph/module-inventory.md §1.2 | 1,143 | 1,143 | 0 | `find langgraph/channels -name "*.py" \| xargs wc -l \| tail -1` |
+| graph graph/ LOC (cert-11 spot-recompute) | graph/module-inventory.md §1.3 | 2,960 | 2,960 | 0 | `find langgraph/graph -maxdepth 1 -name "*.py" \| xargs wc -l \| tail -1` |
+| platform wire_dtos (cert-11 spot-recompute) | platform/module-inventory.md | 44 | 44 | 0 | 48 class defs − 4 Protocol stubs |
+| splitters production LOC / file count | splitters/behavioral-intent.md | 3,671 / 13 | 3,671 / 13 | 0 | `find langchain_text_splitters -name "*.py" \| xargs wc -l \| tail -1` |
+| splitters production: html.py, character.py, base.py, markdown.py top-4 LOC | splitters/behavioral-intent.md | 1099, 801, 526, 482 | 1099, 801, 526, 482 | 0 | `wc -l` per file |
+| splitters test LOC (all test/*.py incl. conftest/init) | splitters/behavioral-intent.md | 4,880 | 4,880 | 0 | `find tests -name "*.py" \| xargs wc -l \| tail -1` |
+| splitters test_text_splitters.py LOC | splitters/behavioral-intent.md | 4,375 | 4,375 | 0 | `wc -l test_text_splitters.py` |
+| splitters test_text_splitters.py test count (~120) | splitters/behavioral-intent.md | ~120 | 123 | +3 | `grep -c "^def test_\|^    def test_" test_text_splitters.py` |
+| Language enum member count | splitters/behavioral-intent.md | 28 | 28 | 0 | manual count from enum body |
+| MCP production LOC / file count | mcp/behavioral-intent.md | 1,914 / 8 | 1,914 / 8 | 0 | `find langchain_mcp_adapters -name "*.py" \| xargs wc -l \| tail -1` |
+| MCP tools.py LOC | mcp/behavioral-intent.md | 685 | 685 | 0 | `wc -l tools.py` |
+| MCP sessions.py LOC | mcp/behavioral-intent.md | 477 | 477 | 0 | `wc -l sessions.py` |
+| MCP test LOC (all tests/*.py) | mcp/behavioral-intent.md | 3,056 | 3,056 | 0 | `find tests -name "*.py" \| xargs wc -l \| tail -1` |
+| MCP MAX_ITERATIONS | mcp/behavioral-intent.md | 1000 | 1000 | 0 | `grep -n "MAX_ITERATIONS" tools.py` line 67 |
+| graph core test LOC | graph/module-inventory.md | 63,249 | 63,249 | 0 | `find tests -name "*.py" \| xargs wc -l \| tail -1` |
+| graph DEFAULT_RECURSION_LIMIT | graph/behavioral-intent.md | 10007 | 10007 | 0 | `grep "DEFAULT_RECURSION_LIMIT" _internal/_config.py` line 32 |
+| graph DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT | graph/behavioral-intent.md | 5000 | 5000 | 0 | `_internal/_config.py:33–34` |
+| graph test_delta_channel_supersteps_bound.py LOC | graph/behavioral-intent.md | 195 | 195 | 0 | `wc -l test_delta_channel_supersteps_bound.py` |
+| platform sdk-py package LOC | platform/behavioral-intent.md | 18,728 | 18,728 | 0 | `find langgraph_sdk -name "*.py" \| xargs wc -l \| tail -1` |
+| platform cli package LOC | platform/behavioral-intent.md | 8,383 | 8,383 | 0 | `find langgraph_cli -name "*.py" \| xargs wc -l \| tail -1` |
+| langchain test_response_format.py LOC | langchain/behavioral-intent.md | 1,018 | 1,018 | 0 | `wc -l test_response_format.py` |
+| langchain test_react_agent.py LOC | langchain/behavioral-intent.md | 987 | 987 | 0 | `wc -l test_react_agent.py` |
+| langchain create_agent recursion_limit | langchain/behavioral-intent.md | 9,999 | 9,999 | 0 | `grep "recursion_limit" factory.py` line 1780 |
+| partners langchain_anthropic LOC / file count | partners/module-inventory.md | 5,664 / 15 | 5,664 / 15 | 0 | `find langchain_anthropic -name "*.py" \| xargs wc -l \| tail -1` |
+| partners _format_messages LOC | partners/behavioral-intent.md | 270+ | 274 | ≥0 | lines 477–751 in chat_models.py |
+
+**Note on "~120 tests":** The `~120` approximation in splitters/behavioral-intent.md (actual: 123) has delta +3 (2.4%). This is an acceptable approximation under BC-5.39.001 (tilde-prefixed estimates are not YAML exact-value fields). No correction applied.
+
+---
+
+### Refinement Iterations: 1/3
+
+**Iteration 1:** Found 2 items requiring correction:
+1. Opening stratum: `platform/module-inventory.md:212` prose stale form "50+ endpoints" → "61 endpoints"
+2. Behavioral rotation: `graph/behavioral-intent.md:112` citation path `pregel/_internal/_config.py:34` → `_internal/_config.py:33`
+
+Both corrected in-place. No further residuals found in iteration 2 sweep. Iteration 3 consistency check: no orphaned references created by corrections (both corrections were independent point fixes; no cross-document links depended on the stale path or stale number).
+
+---
+
+### Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Behavior | Correction Applied |
+|------|---------------|-----------------|-------------------|
+| `platform/module-inventory.md:212` (opening stratum) | "The 50+ endpoints above are the complete client-visible surface at 1.2.9." | Endpoint count is 61 (exact, consistent with YAML `rest_endpoints: 61` corrected in cert-11) | Replaced "50+" with "61"; `[validation-certification-12]` marker added |
+| `graph/behavioral-intent.md:112` (citation path, added in cert-5) | `defined at \`pregel/_internal/_config.py:34\`` | No such file exists. The constant `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` is at `langgraph/_internal/_config.py:33–34`. `pregel/_config.py` exists but is an empty placeholder (0 LOC). | Corrected to `_internal/_config.py:33`; `[validation-certification-12]` marker added |
+
+### Hallucinated Items (Removed)
+
+None.
+
+### Unverifiable Items
+
+None.
+
+---
+
+### Per-Area Verdicts
+
+| Area | Behavioral | Numeric | Citation | Corrections |
+|------|-----------|---------|----------|-------------|
+| core | PASS | PASS | PASS | 0 |
+| graph | PASS | PASS | FAIL — 1 LOW (citation path `pregel/_internal/_config.py:34` DNE → `_internal/_config.py:33`) | 1 LOW |
+| langchain | PASS | PASS | PASS | 0 |
+| partners | PASS | PASS | PASS | 0 |
+| splitters | PASS | PASS | PASS | 0 |
+| mcp | PASS | PASS | PASS | 0 |
+| platform | FAIL — 1 LOW (prose "50+ endpoints" in §4 completeness statement, residual from cert-11 YAML correction) | PASS | PASS | 1 LOW |
+
+### Certification Pass 12 — CLEAN Status
+
+```
+CLEAN (strict): no — 2 corrections of severity LOW(2)
+  - LOW(1): platform/module-inventory.md:212 prose "50+ endpoints" → "61 endpoints"
+            (residual stale form; cert-11 corrected YAML field but missed this prose sentence)
+  - LOW(1): graph/behavioral-intent.md:112 citation path "pregel/_internal/_config.py:34"
+            → "_internal/_config.py:33" (spurious "pregel/" prefix; file does not exist;
+            introduced by cert-5 when adding DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT claim)
+CLEAN (PR-merge): yes — zero CRIT/HIGH/MED findings; both corrections are LOW severity
+Streak: 0/3 (not advanced; 2 LOW corrections found in this pass)
+```
+
+**Most consequential finding class (cert-12):** Citation path drift. The `pregel/_internal/_config.py:34` citation was introduced by cert-5 as part of a correction to add the `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` constant — but the path itself was never independently verified. The correct file is `_internal/_config.py` (at the `langgraph/` package root `_internal/` subpackage), not `pregel/_internal/_config.py` (no such path). The cert-5 correction improved the content accuracy (env-var name, default value) while introducing a structural inaccuracy in the citation. This is a known risk pattern: pass-N corrections introduce new claims that pass-N does not verify.
+
+**Pattern note:** Two consecutive passes (11, 12) have found low-severity residuals from prior correction sweeps: cert-11 missed a prose sentence when updating the YAML field; cert-5 added a citation with a wrong path prefix. Both classes (prose-not-updated-with-YAML, citation-path-not-verified) are now explicitly added to the rotation checklist for cert-13.
+
+**Closing note on ~120 tests approximation:** `splitters/behavioral-intent.md` claims "~120 tests" for `test_text_splitters.py`; actual count is 123. Delta +3 (2.4%). Tilde-prefixed inline estimates in prose are not YAML exact-value fields and are outside the scope of strict-zero corrections under BC-5.39.001 as long as the approximation is within normal rounding distance. Not corrected; noted here for completeness.

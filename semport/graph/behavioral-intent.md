@@ -109,7 +109,7 @@ See module-inventory §1.2. Key behavioral contracts:
   Snapshot is force-triggered when accumulated updates reach `snapshot_frequency` OR
   when total supersteps since last snapshot reaches `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`
   (default **5000**, env-tunable via `LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`,
-  defined at `pregel/_internal/_config.py:34`). <!-- [validation-certification-5]: env-var and snapshot-boundary omission corrected; test file `test_delta_channel_supersteps_bound.py` (195 LOC) covers this boundary. -->
+  defined at `_internal/_config.py:33` <!-- [validation-certification-12]: corrected from "pregel/_internal/_config.py:34"; no such file exists; actual constant is at langgraph/_internal/_config.py lines 33–34; `pregel/_config.py` is a different file -->). <!-- [validation-certification-5]: env-var and snapshot-boundary omission corrected; test file `test_delta_channel_supersteps_bound.py` (195 LOC) covers this boundary. -->
 
 ---
 
