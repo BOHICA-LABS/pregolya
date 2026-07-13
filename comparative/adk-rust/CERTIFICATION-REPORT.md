@@ -1865,3 +1865,103 @@ Metric sweep:      5/5 non-approximation Delta=0; 1 approximation row (~800 line
 Rotation:          6/6 behavioral+citation claims CONFIRMED; 0 inaccurate in main rotation; 0 hallucinated
 Streak:            0/3 (reset — C10 corrected 1 LOW-severity item)
 ```
+
+---
+
+# Certification Pass C11
+
+**Date:** 2026-07-13
+**Corpus:** adk-rust v1.0.0 (SHA a6c79b6f), 39 crates, 97 patterns (P-01..P-97)
+**Constraints active:** D14 (absolute strict-zero), D15 (no softening), D16 (Rust-blindness)
+**Incoming streak:** 0/3
+
+---
+
+## Opener — Whole-Block Consistency Re-Read
+
+Task: for every pattern in patterns-observed.md carrying any `[comparative-*]` marker, and every corrected section in behavioral-intent.md / module-inventory.md / ANALYSIS-STATE.md, re-read the entire block as a unit and verify no sentence contradicts the corrected fact.
+
+Scope:
+- patterns-observed.md: 11 blocks (P-05, P-24, adk-server-LOC area, awp-types-LOC area, P-42, P-67, P-71, P-84, P-86, P-92, P-96)
+- behavioral-intent.md: 4 sections (RunConfig cert-9; openai sub-files cert-6; event model cert-5; provider coverage cert-1)
+- module-inventory.md: 1 section (openai/ cert-7)
+- ANALYSIS-STATE.md: 3 sections (native-tls cert-2; VectorStore cert-4; SSE-parser cert-4)
+
+Sweep-only inline annotations in module-inventory.md (methodology notes, in-place LOC corrections at the marker site) and ANALYSIS-STATE.md (scope LOC, is_final_response case count, cluster test markers) are metadata footnotes where the corrected value IS the text at the marker — no multi-sentence block stale-sibling risk. Excluded from opener count per class definition.
+
+**Blocks checked: 17**
+
+| Block | File | Marker(s) | Verdict |
+|-------|------|-----------|---------|
+| P-05 (lines 69-77): "9-case test truth table" + 9-test suite | patterns-observed.md | cert-5, sweep | CONSISTENT — body and evidence both say "9-case" / "9-test suite"; Quality unaffected |
+| P-24 (lines 312-323): "262 test fns crate-wide (attribute-only)" | patterns-observed.md | cert-1, sweep | CONSISTENT — cert-1 body overrides sweep evidence comment; dual-marker documented in evidence HTML comment as historical metadata; no active claim conflict |
+| adk-server LOC area (line 495): "22,373 LOC src/" | patterns-observed.md | sweep | CONSISTENT — corrected value already in text; no surrounding sentence repeats old 20,752 figure |
+| awp-types LOC area (line 581): "1,537 LOC" | patterns-observed.md | sweep | CONSISTENT — corrected value in text; no other sentence cites awp-types LOC |
+| P-42 (line 615): "8 sites" reqwest::Client::new() | patterns-observed.md | sweep | CONSISTENT — corrected value in text; zero-timeout result independently correct; no surrounding sentence contradicts |
+| P-67 (line 1090): adk-anthropic 19,658 LOC / adk-gemini 13,141 LOC | patterns-observed.md | sweep | CONSISTENT — corrected values in text; Quality tag and WEAK/ABSENT pattern assessment unaffected |
+| P-71 (lines 1193-1204): "9 of 12 providers; 3 documented exceptions" | patterns-observed.md | cert-1 | CONSISTENT — TAG-REVIEW ruling preserved; body correctly lists ollama/bedrock/openai-ws_transport as 3 gaps; "9 of 12" appears in both summary and Quality line |
+| P-84 (lines 1500-1523): "3 of 5 VectorStore backends untested" | patterns-observed.md | cert-4 (×2) | CONSISTENT — both instances in Observation and Quality say "3 of 5"; old "4 of 6" phrasing absent |
+| P-86 (lines 1544-1566): 2 SSE parse implementations | patterns-observed.md | cert-10, cert-3 | CONSISTENT — body now enumerates exactly 2 implementations with delegation note for legacy RemoteA2aAgent; Quality says "duplicated" (correct — 2 copies = duplication); Title says "Dual A2A client generations" (about client stack count, not SSE copies — not a conflict) |
+| P-92 (line 1741): "6 property tests" | patterns-observed.md | cert-2 | CONSISTENT — single mention in Quality; no other sentence in block cites property test count |
+| P-96 (line 1817): "once before the retry loop begins (not repeated per attempt)" | patterns-observed.md | cert-2 | CONSISTENT — checked against P-35 ("calls validate_webhook_url BEFORE every delivery"): "before every delivery" = once per delivery call = once before the retry loop; no contradiction |
+| RunConfig A1 §5 (line 92): "11-field run configuration" | behavioral-intent.md | cert-9 | CONSISTENT — "11-field" appears once; no other sentence in section cites field count |
+| openai sub-files A1 §2 (line 119): "13 sub-files" | behavioral-intent.md | cert-6 | CONSISTENT — "13 sub-files" and "13 sub-file" singleton; no sibling cites old "14" figure |
+| event model section (line 203): "9 dedicated tests cover the truth table" | behavioral-intent.md | cert-5 | CONSISTENT — corrected from "11" stale sibling; "9 dedicated tests" is the only count in this section |
+| provider coverage A5 (lines 684-687): "9 of 12 adk-model providers...3 non-wired" | behavioral-intent.md | cert-1 | CONSISTENT — "9 of 12" and 3-exception list (ollama/bedrock/openai-ws_transport) align with P-71 correction |
+| openai/ row (line 542): "13 files" | module-inventory.md | cert-7 | CONSISTENT — "13 files" in table cell; no other row or surrounding paragraph cites openai/ file count |
+| ANALYSIS-STATE.md cert sections (lines 44, 93, 95) | ANALYSIS-STATE.md | cert-2, cert-4 (×2) | CONSISTENT — native-tls conditional qualifier correctly scoped to livekit feature; "3/5 VectorStore backends untested" and "only TWO SSE parse implementations" match P-84/P-86 corrections |
+
+All 17 blocks: CONSISTENT. No stale siblings found. Opener CLEAN.
+
+---
+
+## Phase 1 — Behavioral Verification
+
+### Rotation (3 behavioral + 1 citation per 12-guardrail protocol)
+
+| ID | Pass | Claim Sampled | Source Verified | Verdict |
+|----|------|---------------|-----------------|---------|
+| B-01 | P-41 | `message_stream` is a genuine stub — creates Task, emits Working status, emits Completed status, never calls `run_agent` | `.reference/adk-rust/adk-server/src/a2a/v1/request_handler.rs` lines 375-450: explicit "This is a placeholder — actual Runner streaming integration comes later" (line 375) and "// Transition to COMPLETED (placeholder — Runner integration later)" (line 445); `run_agent` not called anywhere in the function body | CONFIRMED |
+| B-02 | P-07 | `SessionCleanup` with `impl Drop` guarantees session token removal even on panic | `.reference/adk-rust/adk-runner/src/runner.rs` lines 291-301: `struct SessionCleanup`, `impl Drop for SessionCleanup { fn drop(&mut self) { ... } }`, `let _cleanup = SessionCleanup { ... }` — RAII guard present | CONFIRMED |
+| B-03 | P-32 | `EncryptedSessionStore::append_event` and `list` do NOT encrypt event content — both delegate directly to `self.inner` | `.reference/adk-rust/adk-session/src/encrypted.rs` lines 219-229: `list` has comment "Delegate directly — list doesn't need decryption of state" and calls `self.inner.list(req).await`; `append_event` calls `self.inner.append_event(session_id, event).await` with no `encrypt_state` call | CONFIRMED |
+| C-01 | test-inventory.md A4 cluster | adk-sandbox has 5 proptest files (attribute-only; corrected from 6 per cert-1) | `find /Users/jmagady/Dev/ferrochain/.reference/adk-rust/adk-sandbox -name "*.rs" \| xargs grep -l "proptest!" \| wc -l` = **5** | CONFIRMED |
+
+### Summary
+
+| Pass | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| P-41 (A3 Architecture) | 1 | 1 | 0 | 0 | 0 |
+| P-07 (A1 Behavioral) | 1 | 1 | 0 | 0 | 0 |
+| P-32 (A2 Domain Model) | 1 | 1 | 0 | 0 | 0 |
+| test-inventory (Citation) | 1 | 1 | 0 | 0 | 0 |
+
+---
+
+## Phase 2 — Metric Verification
+
+| ID | Claim | Claimed | Recounted | Delta | Command |
+|----|-------|---------|-----------|-------|---------|
+| M-01 | P-01: AdkError test count in adk-core/src/error.rs | ~35 | 34 | -1 | `grep -c "#\[test\]\|#\[tokio::test\]" adk-core/src/error.rs` |
+| M-02 | P-50: retry-reflect plugin executes a "9-step flow" in `after_tool_call` | 9 | 9 | 0 | Steps 1-9 explicitly labeled as `// Step N:` comments in `.reference/adk-rust/adk-retry-reflect/src/plugin.rs` lines 122-227 |
+
+M-01 note: "~35" uses tilde-prefix approximation. Delta = -1. Per established precedent (C5 ruling ~800→822, C7 and C10 confirmations): tilde-approximation deltas are reported but do not require correction unless the primary conclusion is affected. P-01's primary conclusion (AdkError tests cover "every enum variant") is a qualitative claim unaffected by the delta. No correction applied.
+
+---
+
+## New Corrections
+
+None. Zero corrections of any severity.
+
+---
+
+## Certification Final Verdict
+
+```
+CLEAN (strict):    YES — zero corrections of any severity
+CLEAN (PR-merge):  YES
+New corrections:   0
+Opener:            17 blocks checked; ALL CONSISTENT — no stale siblings found in any corrected block
+Metric sweep:      M-01 (~35 → 34; delta -1; tilde-approx precedent; no correction); M-02 delta=0
+Rotation:          4/4 behavioral+citation claims CONFIRMED; 0 inaccurate; 0 hallucinated
+Streak:            1/3 (C8 CLEAN → reset C9; reset C10; C11 CLEAN → streak 1/3)
+```
