@@ -115,8 +115,8 @@ Behavioral contracts:
   `UsageMetadata` tracks cache-read/cache-creation/thinking/audio-in/audio-out tokens + cost
   + is_byok + provider_usage. Round-trip serde tests present for citations, provider_metadata,
   extensions.
-- 10 provider module families (openai has 14 sub-files incl. responses_client, background,
-  conversations, ws_transport, pricing). openrouter is a full sub-provider with discovery,
+- 10 provider module families (openai has 13 sub-files incl. responses_client, background,
+  conversations, ws_transport, pricing <!-- [comparative-cert-6] CORRECTION: "14 sub-files" → 13; find adk-model/src/openai -name "*.rs" | wc -l = 13 (background, client, compaction, config, conversations, convert, file_input, mod, pricing, responses_client, responses_convert, schema_adapter, ws_transport); off-by-one in original claim -->). openrouter is a full sub-provider with discovery,
   chat vs responses conversion, streaming. `mock.rs` provides a test double.
 
 ## 3. adk-tool — tool ecosystem (10.8k LOC, 197 unit tests)
