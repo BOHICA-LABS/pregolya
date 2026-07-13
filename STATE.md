@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T17:30:00Z
+timestamp: 2026-07-13T21:00:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "A7 convergence deepening in progress; C2 held (both-conditions rule); streak 0/3"
+current_step: "comparative certification pass C2 in progress (analysis CONVERGED), streak 0/3"
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -44,9 +44,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — burst 43: A6 COMPLETE. NOT-YET-CONVERGED (near). 8 new patterns P-80..P-87 (total 87: 1S/3N/4W). 2 HIGH-novelty areas + 1 systemic correction. A6-C1: reqwest timeout-less SYSTEMIC (~69/~79 sites, reframes P-42/P-77). A6-C2: adk-realtime rustls default feature-gated (prior "hard conflict" overstated). A6-C3: Docker SandboxPolicy ignored (capability-vs-behavior mismatch). A7 dispatched (4 realtime-internal threads). Streak 0/3. |
+| **Last Updated** | 2026-07-13 — burst 44: A7 COMPLETE. ANALYTICALLY CONVERGED. 10 new patterns P-88..P-97 (total 97). All 5 A6-named threads closed: gemini teardown MED, avatar/keepalive MED, livekit bridge LOW, a2a-v1 dynamic MED, openai webrtc LOW. Novelty decay textbook (A6 HIGH → A7 MED/LOW). C4 pre-reconciled (native-tls chain taxonomy). C5 fidelity note (a2a-v1 retry-policy client-vs-server). C2 dispatched on frozen deepened corpus. Streak 0/3. |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | A7 convergence deepening in progress; C2 held (both-conditions rule); streak 0/3. |
+| **Current Step** | comparative certification pass C2 in progress (analysis CONVERGED), streak 0/3 |
 
 ## Phase Progress
 
@@ -67,11 +67,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| adk-rust passes A4+A5 (safety+quality / provider+capability) | codebase-analyzer | COMPLETE | A4: 20P P-47..P-66. Domain A guardrail gap (P-59 UNMET), non-isolating default sandbox (P-60–P-62/P-65). A5: 13P P-67..P-79. P-16 REFUTED. Anyhow CLOSED. Bare-String API keys WORKSPACE-WIDE (P-76), 3 native-tls chains (P-79). Total: 79P (34S/15N/30W). Burst 40. |
 | adk-rust exhaustive sweep (3-group validator cascade, D16) | validate-extraction×3 | COMPLETE | ~563 claims, 38 corrections, ZERO hallucinations, 79/79 patterns. CRITICAL: ~2x double-count root cause found; adk-graph canonical 262 (attribute-only). 4 MEDIUM LOC fixes. All high-consequence claims CONFIRMED. Guardrail #12. Burst 41. |
 | adk-rust certification pass C1 (strict-zero, all 12 guardrails) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 1 MEDIUM correction: behavioral-intent A5 execute_with_retry exception list 1→3. Housekeeping: P-77 8-sites confirmed, 262 propagated (7 stale figs), P-71 STRONG STANDS ruling. Streak 0/3. Burst 42. |
 | adk-rust pass A6 (convergence deepening round 1: realtime FSM, sandbox backends, RAG depth, skill coordinator, A2A client, ignored-test census) | codebase-analyzer | COMPLETE | 8P P-80..P-87 (1S/3N/4W). NOT-YET-CONVERGED (near). Realtime 4-state FSM + Phantom-Reconnect (P-80 STRONG); Windows sandbox hard-fail stub (P-82 WEAK); Docker SandboxPolicy ignored (P-83 WEAK); RAG dim-mismatch silent garbage (P-84 WEAK). Ignore census: 126/4,803 (~2.6%). A6-C1 reqwest SYSTEMIC, A6-C2 rustls feature-gated, A6-C3 Docker cap-vs-behavior. Burst 43. |
-| adk-rust pass A7 (convergence deepening round 2: gemini session internals, avatar/keepalive, livekit bridge, a2a-v1 dynamic behavior) | codebase-analyzer | IN-PROGRESS | Dispatched on 4 realtime-internal threads named by A6. CONVERGED only if novelty decays to LOW; else name A8 targets. C2 held (both-conditions rule). |
+| adk-rust pass A7 (convergence deepening round 2: gemini session internals, avatar/keepalive, livekit bridge, a2a-v1 dynamic behavior) | codebase-analyzer | COMPLETE | 10P P-88..P-97 (total 97). CONVERGED. All 5 threads closed: gemini teardown MED, avatar/keepalive MED, livekit bridge LOW, a2a-v1 dynamic MED, openai webrtc LOW. Novelty decay textbook. C4 pre-reconciled (native-tls taxonomy). C5 fidelity (a2a-v1 retry-policy). 4 Phase-4 carry-forwards (runtime harness req). Burst 44. |
+| adk-rust certification pass C2 (strict-zero, deepened corpus) | validate-extraction | IN-PROGRESS | Dispatched on frozen deepened corpus (P-88..P-97 incorporated). C1 pre-deepening does NOT count toward streak (corpus changed). C2 = effective pass 1 on deepened corpus. Streak 0/3. |
 
 ## Decisions Log
 
@@ -141,8 +141,8 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 43 complete. A6 COMPLETE: NOT-YET-CONVERGED (near). 8 new patterns P-80..P-87 (total 87: 1S/3N/4W). Key: realtime 4-state FSM + Phantom-Reconnect (P-80 STRONG), Windows sandbox hard-fail stub (P-82 WEAK), Docker SandboxPolicy ignored (P-83 WEAK), RAG dim-mismatch silent garbage (P-84 WEAK). Ignore census: 126/4,803 (~2.6%), 19 live-API-gated files. Contradictions: A6-C1 reqwest SYSTEMIC (~69/~79 sites, reframes P-42/P-77), A6-C2 rustls default feature-gated (overstated conflict resolved), A6-C3 Docker cap-vs-behavior. A7 IN-PROGRESS (4 realtime-internal threads: gemini session internals, avatar/keepalive, livekit bridge, a2a-v1 dynamic). C2 (Certification Pass 2) HELD until CONVERGED (both-conditions rule). |
-| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (~69/~79 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12, 3 exceptions). R6 OPEN. R8/R10/R11 OPEN. After A7 + 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. |
+| **Position** | pre-1, burst 44 complete. A7 COMPLETE: ANALYTICALLY CONVERGED. 10 new patterns P-88..P-97 (total 97). All 5 A6-named threads closed: gemini session teardown MED, avatar/keepalive MED, livekit bridge LOW, a2a-v1 dynamic MED, openai webrtc LOW. Novelty decay textbook (A6 HIGH first-depth → A7 MED/LOW re-reads). New contradictions: C4 pre-reconciled (native-tls chain taxonomy not a conflict), C5 fidelity note (a2a-v1 retry-policy client-vs-server divergence). 4 Phase-4 carry-forwards (UNVERIFIABLE-without-runtime: backoff timing, 304 revalidation, -32009 shape-coupling, push SSRF+retry delivery). C2 dispatched on frozen deepened corpus (P-88..P-97 incorporated). C1 pre-deepening does NOT count toward streak. Streak 0/3. |
+| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). Condition 2 (3-CLEAN) resumes with C2 as effective pass 1. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (~69/~79 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content

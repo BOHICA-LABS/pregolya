@@ -3,9 +3,9 @@ document_type: analysis-state-checkpoint
 corpus: adk-rust
 version: v1.0.0
 sha: a6c79b6f
-pass: A6
+pass: A7
 status: complete
-timestamp: 2026-07-13T18:00:00Z
+timestamp: 2026-07-13T21:30:00Z
 ---
 
 # adk-rust Comparative Analysis State
@@ -154,3 +154,85 @@ if pursued):
 Recommendation: the corpus is analytically sufficient for spec crystallization on all Domain A/B/C surfaces
 covered; an A7 targeting the four realtime-internal threads above would be SUBSTANTIVE but is optional and
 lower-priority than proceeding, given P-80 already captures the governing realtime mechanism.
+
+## Pass A7 — Convergence Deepening round 2 (COMPLETE)
+
+Read the four A6-named residual threads at function-level depth + closed the one remaining A6-named
+unread path. Full detail in patterns-observed.md "Pass A7 deepening" (P-88..P-97). Rust-blindness held.
+
+### Per-item novelty verdicts
+
+| # | Thread (A6-named residual) | Verdict | New patterns | Finding summary |
+|---|----------------------------|---------|--------------|-----------------|
+| 1 | adk-realtime `gemini/session.rs` internals (RequiresResumption teardown/rebuild in depth) | **MED** | P-88, P-89 | Depth-confirms P-80: `mutate_context` always returns `RequiresResumption`; `execute_resumption` does deterministic teardown (Close frame routed through the single writer channel, awaits writer `JoinHandle`, never holds lock across `.await`) then rebuild via `model.connect`. Resumption token threaded end-to-end (server `resumptionToken` → `config.extra["resumeToken"]` → setup `SessionResumptionConfig.handle`; documented client-`handle`/server-`resumptionToken` asymmetry). NEW: audio_buffer is NOT flushed before close — teardown/interrupt/clear silently drop trailing <40ms PCM (P-88). Translation lossy on 3 axes: silent base64-decode `unwrap_or_default`, multi-call truncation (`calls.first()`), empty synthesized ids (P-89). Refines, does not overturn, the P-80 model. |
+| 2 | Avatar providers + keep-alive mechanics | **MED** | P-90, P-91 | `spawn_keep_alive` skips first tick, loops on interval, **fail-CLOSED** (stops on `is_active()==false` OR `keep_alive()` Err) — opposite of the fail-open event loop. The trait abstracts two opposite topologies: HeyGen = server-relay (LiveKit room + NativeAudioSource publish; `keep_alive` = POST /streaming.task), D-ID = client-direct (SDP/ICE returned to client; `send_audio` + `keep_alive` are no-ops) (P-90). Both providers: timeout-less `reqwest::Client::new()` + library-constructor `assert!` panic on non-HTTPS; good secret hygiene (SecretString/redacted/ExposeSecret) (P-91). New behavioral model for a previously code-path-only area. |
+| 3 | livekit bridge — sole native-tls ingress; feature isolation | **LOW** | P-92, P-93 | Thin (~600 LOC/6 files), `livekit`-feature-gated, re-exports livekit types; typestate builder (`Missing`/`Present`) enforces identity-before-connect; audio push is fail-open; delegation proptest-covered, live FFI + `Room::connect` `#[ignore]`-gated (P-92). native-tls reconciliation: **exactly one first-party explicit native-tls opt-in workspace-wide** = `livekit` in root Cargo.toml; A5's other two "chains" (mistralrs/hf-hub, audio/hf-hub) are TRANSITIVE via hf-hub defaults, not first-party declarations. Clarifies (does not contradict) A5. Corroborates C2. (P-93). Mostly confirms isolation. |
+| 4 | a2a-v1 retry/caching dynamic behavior (confirm-from-source; flag UNVERIFIABLE) | **MED** | P-94, P-95, P-96 | SOURCE-CONFIRMED + refined: retry is **JSON-RPC-unary-only** (`send_with_retry` invoked only by `jsonrpc_call`; the 8 REST + 2 streaming ops are single-shot); backoff `base·2^(n-1)`, no jitter/cap/Retry-After; **timeout-retry branch near-dormant** because no `.timeout()` is set (C1) → covers 429/5xx in practice (P-94). Card "caching" is conditional-**revalidation** only — the stored `cache.card` is write-only, never served back; 304→`Ok(None)` (P-95). Server emits real ETag (SipHash) + Last-Modified; matches_etag handles quoted/unquoted/wildcard; version negotiation `["0.3","1.0"]`, -32009/400. **Two divergent retry impls** (client 429/5xx/timeout vs server-push retries-all-failures + SSRF `validate_webhook_url`) (P-96). **UNVERIFIABLE-without-runtime (grep-confirmed: zero mock servers in adk-server):** backoff timing, 304 round-trip, -32009 round-trip shape-coupling, push SSRF+retry delivery — validation-phase, not closable statically. |
+| 5 | Any thread left below deep — enumerate & close | **LOW** | P-97 | The only remaining A6-named unread path was `openai/webrtc.rs`. Closed: a full alternate transport (OpusCodec via audiopus + `OpenAIWebRTCSession` via str0m Sans-IO WebRTC; rustls-compatible, no native-tls), `openai-webrtc`-feature-gated + cmake-dependent, implementing the same `RealtimeSession` contract ⇒ governed identically by the runner FSM (P-80). No new governing mechanism. No residual A6-named thread left unread at depth. |
+
+### Pattern count update
+
+| Pass | Patterns Added | Running Total | STRONG | NEUTRAL | WEAK | INFO |
+|------|---------------|---------------|--------|---------|------|------|
+| A7 | 10 (P-88..P-97) | 97 | 0 | 5 | 4 | 1 |
+
+(A7: P-88/P-89/P-90/P-96 NEUTRAL; P-91/P-93/P-94/P-95 WEAK; P-92 NEUTRAL; P-97 INFO. Running totals
+across A1–A7: 97 patterns.)
+
+### Contradictions vs prior passes (maintained list)
+
+- **C1 (CORRECTION, from A6) — reqwest timeout-less site count.** UNCHANGED and REINFORCED: A7 found
+  the same pattern in avatar providers (P-91) and both a2a-v1 clients (P-94), and observed a
+  downstream consequence — the a2a-v1 client's `is_timeout()` retry branch is structurally near-dormant
+  precisely because no `.timeout()` is set. Timeout-absence remains systemic (workspace-wide MAP).
+- **C2 (REFINEMENT, from A6) — adk-realtime native-tls "HARD CONFLICT."** UNCHANGED and REINFORCED by
+  P-93: the only first-party explicit `native-tls` opt-in workspace-wide is the `livekit` dep in root
+  Cargo.toml; native-tls rides only the optional `livekit` feature; adk-realtime defaults to rustls.
+  The flat A5 compliance flag should carry the "livekit-only, feature-gated, first-party-sole" qualifier.
+- **C3 (SOURCE-INTERNAL, from A6) — adk-code Docker capability claim vs behavior.** UNCHANGED (not
+  re-examined in A7; out of A7 thread scope).
+- **C4 (CLARIFICATION, surfaced A7) — "three native-tls chains" (A5 dependency-disposition) vs "sole
+  native-tls ingress" (A6/A7 realtime).** NOT a contradiction: A5's three-chain count includes
+  TRANSITIVE exposure via hf-hub defaults (mistralrs, audio); A6/A7's "sole ingress" refers to (a) the
+  sole native-tls ingress *within adk-realtime* and (b) the sole *first-party explicit* opt-in
+  workspace-wide. Both statements are true at their respective scopes. Recorded to prevent a
+  certification-cascade false-positive. (P-93)
+- **C5 (SOURCE-INTERNAL, surfaced A7) — a2a-v1 dual retry policy divergence.** Within the same protocol
+  family, the client retry (`A2aV1Client::send_with_retry`, retries 429/5xx/timeout, JSON-RPC-unary
+  only) and the server push retry (`HttpPushNotificationSender::send_with_retry`, retries ANY
+  non-success + any send error, all bindings, + SSRF guard) implement different policies. Internal
+  inconsistency, not a cross-pass conflict — flag to certification as a source-fidelity note. (P-96)
+
+### Open Items (post-A7 status)
+
+| Item | Status |
+|------|--------|
+| adk-realtime gemini/session.rs internals | **RESOLVED (A7)** — P-88/P-89 |
+| Avatar providers + keep-alive mechanics | **RESOLVED (A7)** — P-90/P-91 |
+| livekit bridge delegation/isolation | **RESOLVED (A7)** — P-92/P-93 |
+| a2a-v1 retry/caching dynamic behavior | **SOURCE-RESOLVED (A7)** — P-94/P-95/P-96; four dynamic behaviors flagged UNVERIFIABLE-without-runtime (carry to validation, NOT an analysis gap) |
+| openai/webrtc.rs SDP transport | **RESOLVED (A7)** — P-97 |
+| ADR: unify graph-checkpoint + session persistence | **OPEN — ferrochain Phase-1 design decision** (not an adk-rust novelty gap) |
+
+## Overall Analysis-Convergence Verdict (post-A7)
+
+**CONVERGED (analytically).** Every thread the A6 verdict named as "not yet read at function-level
+depth" is now read and closed to an explicit verdict (threads 1–5 above). A7's novelty is
+**MED-trending-LOW**: it produced genuine new behavioral detail (audio-loss-on-teardown, lossy Gemini
+translation, two-topology avatar abstraction, retry-scope asymmetry, write-only card cache,
+dual-retry+SSRF) but **every finding is a refinement WITHIN a subsystem A6 already surfaced — no new
+subsystem, no new governing mechanism, and no overturned model.** This is the expected novelty-decay
+signature (A1–A5 broad+deep → A6 HIGH on first-depth reads → A7 MED/LOW on re-reads).
+
+Honesty check (per task discipline — do not force convergence): the only unknowns that remain are the
+four a2a-v1 **UNVERIFIABLE-without-runtime** items (backoff timing, 304 round-trip, -32009 shape
+coupling, push SSRF/retry delivery). These are NOT unread code — the logic is fully read and
+internally consistent — they are *undynamicized* behaviors requiring a mock-server or live harness. No
+further STATIC analysis pass can close them; they belong to the validation phase (Phase 4 / DTU or
+holdout). Therefore they do not constitute an analysis gap and do not block a converged verdict.
+
+**A potential A8 would find only NITPICKS** (byte-level edge cases, further doc-comment precision).
+There is no named SUBSTANTIVE static thread remaining. The corpus is exhausted as an analytical corpus
+(D16). Recommendation: **stop analysis passes; proceed to spec crystallization**, carrying the four
+UNVERIFIABLE-without-runtime a2a-v1 items forward as validation-phase test obligations, and carrying
+C1–C5 into the certification cascade as known-corrections/source-fidelity notes.

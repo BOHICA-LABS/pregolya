@@ -1634,3 +1634,261 @@ items_worked: [realtime-bidi-FSM, sandbox-windows+docker, ignore-census, rag-vec
 status: complete
 timestamp: 2026-07-13
 ```
+
+## Pass A7 deepening (P-88..P-97)
+
+Function-level read of the four A6-named residual threads (gemini/session.rs internals; avatar
+providers + keep-alive; livekit bridge; a2a-v1 retry/caching dynamic behavior) plus closure of the
+one remaining A6-named unread path (openai/webrtc.rs). Rust-blindness held: observations only; no
+adoption conclusions. Patterns numbered P-88+.
+
+### Thread 1 — Gemini Live session internals (Phantom Reconnect teardown/rebuild, resumption)
+
+**P-88 — Gemini teardown/rebuild is deterministic and resumption-token-carried, but drops
+in-flight buffered audio.** *(NEUTRAL)*
+- **Where:** `adk-realtime` — `gemini/session.rs` (`GeminiRealtimeSession::connect`, `close`,
+  `send_setup`, `translate_gemini_event`, `mutate_context`) + `runner.rs`
+  (`execute_resumption`, `handle_event` `SessionUpdated` arm).
+- **Observation (depth-confirms P-80's Phantom Reconnect):** `mutate_context` unconditionally
+  returns `ContextMutationOutcome::RequiresResumption(config)` — Gemini has no native mid-flight
+  swap. The runner's `execute_resumption` takes the old session out under the write lock, then
+  `close()`s it *without holding the lock across `.await`*, then `model.connect(new_config)` builds
+  a fresh socket. `close()` is deterministic: it flips `connected=false`, routes a `Message::Close`
+  through the *same* single-writer mpsc channel as normal writes (ordering preserved), then `await`s
+  the writer `JoinHandle` so teardown does not return until the sink is released. The resumption
+  token is threaded end-to-end: server emits `sessionResumptionUpdate.resumptionToken` → translated
+  to `ServerEvent::SessionUpdated { session: {"resumeToken": …} }` → runner stores it into
+  `config.extra["resumeToken"]` → `send_setup` reads `extra["resumeToken"]` into
+  `SessionResumptionConfig.handle`. There is a **documented protocol asymmetry**: client sends the
+  field as `handle`, server returns it as `resumptionToken`. The merged config (P-80's
+  `merge_config`) means a rebuild inherits all prior hot-swaps (instruction/tools/voice/temp/extra).
+- **NEW subtlety:** the session's `audio_buffer` (a `BytesMut` accumulating sub-40ms chunks) is
+  **not flushed before `close()`** during a resumption — teardown drops any buffered-but-unsent PCM.
+  `interrupt()` and `clear_audio()` also *discard* the buffer rather than flush it. So a mid-flight
+  context swap or a manual interrupt can silently lose the trailing <40ms of captured audio. The
+  flush threshold is format-aware (`flush_threshold_bytes` = `bytes_per_second·40ms`, e.g. 1280 B
+  for PCM16/16 kHz), corrected from a hardcoded-16k assumption.
+- **Quality:** **NEUTRAL** — the teardown ordering + token threading is a genuinely careful mechanism
+  (deterministic close, lock-discipline around `.await`); the un-flushed-audio-on-teardown is a small
+  correctness edge a ferrochain realtime port should decide explicitly (flush-before-close vs
+  discard).
+
+**P-89 — Gemini event translation is best-effort and lossy on three axes.** *(NEUTRAL)*
+- **Where:** `gemini/session.rs::translate_gemini_event`.
+- **Observation:** (a) **Silent audio-decode failure** — base64 audio is decoded with
+  `.decode(data).unwrap_or_default()`; corrupt base64 yields an *empty* `AudioDelta` with no error
+  surfaced (divergence from the no-silent-empty-return posture). (b) **Multi-call truncation** —
+  `toolCall.functionCalls` reads only `calls.first()`; if the server batches ≥2 function calls in one
+  frame, calls `2..n` are dropped. (c) **Unknown-frame collapse** — any unrecognized frame maps to
+  `ServerEvent::Unknown` (fail-open, consistent with P-80's fail-open loop). Response IDs/item IDs are
+  synthesized as empty strings (`String::new()`), so downstream correlation by id is unavailable for
+  Gemini (unlike OpenAI which carries real ids).
+- **Quality:** **NEUTRAL** — pragmatic translation; the multi-call drop and silent-empty-audio are
+  the spec-relevant divergences.
+
+### Thread 2 — Avatar providers + keep-alive mechanics
+
+**P-90 — The `AvatarProvider` trait abstracts two fundamentally different topologies; keep-alive is
+fail-closed.** *(NEUTRAL)*
+- **Where:** `adk-realtime` — `avatar/mod.rs` (`AvatarProvider`, `spawn_keep_alive`),
+  `avatar/heygen/mod.rs`, `avatar/did/mod.rs`.
+- **Observation:** `spawn_keep_alive` spawns a `tokio::interval` loop that **skips the first
+  immediate tick**, then each period checks `is_active()` (break if false) and calls `keep_alive()`
+  (break on `Err`). It is **fail-CLOSED** (any keep-alive error stops the task) — the opposite of the
+  realtime event loop's fail-open posture (P-80). The two shipped providers realize opposite
+  transport topologies behind the same trait: **HeyGen = server-relay** — creates a session via
+  REST (`/v1/streaming.new`), connects a LiveKit `Room`, publishes agent audio through a
+  `NativeAudioSource`; `send_audio` pushes PCM16 frames (24 kHz mono) into the room; `keep_alive`
+  POSTs `/v1/streaming.task` with empty text. **D-ID = client-direct** — creates a chat session via
+  REST, returns the SDP offer + ICE servers so the *client* establishes WebRTC directly with D-ID;
+  `send_audio` is a **no-op** (D-ID renders from its own TTS) and `keep_alive` is a **no-op** (WebRTC
+  manages timeout). So `send_audio`/`keep_alive` semantics are provider-defined, not trait-guaranteed.
+- **Quality:** **NEUTRAL** — a clean pluggable abstraction, but the trait promises (`send_audio`,
+  `keep_alive`) are honored very differently per provider; a ferrochain avatar port must not assume
+  `send_audio` actually transports audio.
+
+**P-91 — Avatar provider HTTP clients are timeout-less and constructors panic on non-HTTPS.**
+*(WEAK)*
+- **Where:** `avatar/heygen/mod.rs` + `avatar/did/mod.rs` (`::new`, `secure_url`).
+- **Observation:** both providers build `reqwest::Client::new()` with **no `.timeout()`** (same
+  systemic pattern as C1). Both `::new` constructors `assert!(api_base_url.starts_with("https://"))`
+  — a **panic in a library constructor** (documented under `# Panics`), plus a redundant runtime
+  `secure_url` guard returning `Err`. Credential handling is otherwise strong: `secrecy::SecretString`
+  fields, redacted `Debug` (`"[REDACTED]"`/`<locked>`), `ExposeSecret` only at the header-set call
+  site. Auth-failure mapping is explicit (401/403 → `AuthError`).
+- **Quality:** **WEAK** — mixed posture: good secret hygiene, but library-constructor panics and
+  timeout-less clients both conflict with ferrochain rules (no-panic-in-lib, mandatory timeout).
+
+### Thread 3 — LiveKit bridge (sole native-tls ingress)
+
+**P-92 — The LiveKit bridge is a thin, well-isolated, feature-gated adapter with fail-open audio and
+a typestate builder.** *(NEUTRAL)*
+- **Where:** `adk-realtime/src/livekit/{mod,bridge,handler,builder,config,error}.rs` (~600 LOC, 6
+  files), gated behind the `livekit` Cargo feature.
+- **Observation:** the module re-exports the subset of `livekit`/`livekit-api` types a voice agent
+  needs (Room, tracks, `NativeAudioSource`, `AccessToken`, `VideoGrants`) so downstream crates depend
+  only on `adk-realtime`. `bridge_input`/`bridge_gemini_input` read a `RemoteAudioTrack` via
+  `NativeAudioStream`, buffer through `SmartAudioBuffer` (40 ms), and feed base64 PCM to the runner
+  (24 kHz default, 16 kHz Gemini variant — LiveKit does the resample). `LiveKitEventHandler` wraps any
+  inner `EventHandler`, delegates all non-audio callbacks verbatim, and on `on_audio` casts bytes→i16
+  (zero-copy `bytemuck` fast path + odd-alignment fallback) then `capture_frame`s into a
+  `NativeAudioSource` — **fail-open**: capture errors are `warn!`-logged, never propagated (matches
+  P-80). `LiveKitRoomBuilder<Missing|Present>` is a **typestate builder** enforcing "identity before
+  connect" at compile time; `connect` also runtime-guards empty identity/room and auto-generates a
+  UUID room name. `LiveKitConfig` uses `SecretString` + redacted Debug + URL validation.
+- **Isolation:** delegation is **proptest-covered** (`livekit_delegation_tests.rs`, 7 property tests
+  on the non-audio callbacks), but the actual WebRTC FFI audio path and `Room::connect` live in
+  `#[ignore]`-gated integration tests requiring `LIVEKIT_URL`/`LIVEKIT_API_KEY`/`LIVEKIT_API_SECRET`.
+- **Quality:** **NEUTRAL** — a clean, contained bridge; the only ferrochain-relevant friction is the
+  native-tls transport it pulls (see P-93) and the untested live FFI path.
+
+**P-93 — native-tls ingress reconciliation: livekit is the sole *first-party explicit* opt-in.**
+*(WEAK / MAP-note)*
+- **Where:** root `Cargo.toml` — `livekit = { version = "0.7.36", default-features = false,
+  features = ["tokio", "native-tls"] }`.
+- **Observation:** a workspace-wide scan of every first-party `Cargo.toml` for the literal
+  `native-tls` returns **exactly one hit** — the `livekit` dependency in the root manifest. The other
+  two "native-tls chains" recorded by A5 (mistralrs/hf-hub, audio/hf-hub) are **transitive** (pulled
+  via third-party crate default features — `mistralrs`/`hf-hub`/`candle` stack), not first-party
+  feature declarations: `adk-mistralrs` and `adk-audio` both consume the workspace `reqwest`
+  (`default-features = false, rustls-tls-native-roots`), so their native-tls exposure is upstream, not
+  declared. Crates that pull `livekit`: `adk-realtime` (feature `livekit`), `adk-audio`, and the
+  `adk-rust` aggregator. So: **within adk-realtime, livekit is the sole native-tls ingress**, and
+  **it is the sole first-party explicit native-tls opt-in in the whole workspace.** This *clarifies*
+  (does not contradict) A5's "three chains," which counts transitive exposure. Corroborates C2:
+  adk-realtime defaults to rustls (`rustls` w/ aws-lc-rs; `google-cloud-auth` default-rustls-provider;
+  WS transports over tokio-tungstenite+rustls); native-tls rides only the optional `livekit` feature.
+- **Quality:** **WEAK / informative** — the feature isolation is genuine and the ingress is a single,
+  optional, first-party toggle; a ferrochain realtime-analog can adopt the LiveKit topology while
+  substituting a rustls transport, since native-tls here is livekit-the-crate's own default, not an
+  adk design requirement.
+
+### Thread 4 — a2a-v1 retry / caching / version negotiation (dynamic behavior)
+
+Confirmations of P-86's static reads, with three NEW behavioral refinements and explicit
+UNVERIFIABLE-without-runtime flags. **Grep confirms zero `wiremock`/`mockito`/`httpmock`/`MockServer`
+usage anywhere in `adk-server`** — so every transport path below is exercised only by pure unit tests
+over helper functions; the wire round-trips are untested.
+
+**P-94 — a2a-v1 client retry is JSON-RPC-unary-only and its timeout-retry branch is near-dormant.**
+*(WEAK — refines P-86)*
+- **Where:** `adk-server/src/a2a/client.rs` → `v1_client::A2aV1Client::{send_with_retry,
+  jsonrpc_call, rest_post, rest_get, rest_delete, send_streaming_message, subscribe_to_task}`.
+- **Observation (SOURCE-CONFIRMED, structure):** `send_with_retry` is invoked **only** by
+  `jsonrpc_call`. The 8 REST-binding methods and the 2 streaming ops (`send_streaming_message`,
+  `subscribe_to_task`) call `http_client.<verb>(…).send()` **directly — single-shot, no retry**. So
+  "configurable retry" covers the 9 JSON-RPC unary operations but NOT the REST binding nor streaming.
+  Backoff = `base_delay · 2^(attempt-1)` (default 1 s → 1 s/2 s/4 s), **no jitter, no cap, no
+  `Retry-After` honoring**. Retry triggers: HTTP status `429` or `≥500` (while `attempt <
+  max_retries`), OR a transport `Err` where `e.is_timeout()`. **NEW:** because the client is
+  `reqwest::Client::new()` with **no `.timeout()`** (C1), no client-side read timeout fires, so
+  `is_timeout()` is essentially only reachable via connect-level timeouts — the timeout-retry branch
+  is structurally near-dormant; in practice retry covers 429/5xx only.
+- **Quality:** **WEAK** — the retry is real and unit-covered for config storage, but its scope
+  asymmetry (unary-only) and the dormant timeout branch are spec-relevant if a ferrochain a2a-analog
+  wants uniform retry across bindings.
+
+**P-95 — a2a-v1 "card caching" is conditional-revalidation, not a value cache; the stored card body
+is write-only.** *(WEAK — refines P-86)*
+- **Where:** client `resolve_agent_card_cached` + `CachedCard`; server
+  `adk-server/src/a2a/v1/card.rs::CachedAgentCard`.
+- **Observation (SOURCE-CONFIRMED):** client sends `If-None-Match` (etag) + `If-Modified-Since`
+  (last_modified) from `cached_card`; on `304 NOT_MODIFIED` returns `Ok(None)`; on success caches
+  `etag`+`last_modified`+`card`. **NEW:** the stored `cache.card` is **write-only** — it is set but
+  never read back (only `cache.etag`/`cache.last_modified` are consumed to build conditional headers;
+  `agent_card()` returns the *constructor* card, and 304→`None` hands the caller nothing). So the
+  mechanism is HTTP conditional *revalidation*, not a served value cache. Server side emits a real
+  ETag = `DefaultHasher` (SipHash, deterministic across processes — the doc-comment under-claims
+  "within a single process build") over serialized card JSON, plus `Last-Modified`; `matches_etag`
+  handles quoted/unquoted/`*` wildcard; `modified_since` is strict `>`. Both sides are unit-tested
+  (server: 13 tests; client: `cached_card_starts_empty` only).
+- **Quality:** **WEAK** — the conditional-request logic is correct and cross-consistent between
+  client and server, but "caching" oversells it; a ferrochain port wanting a true card cache must add
+  the cache-hit read path.
+
+**P-96 — Two divergent retry implementations coexist in a2a-v1; the server push path adds SSRF
+defense.** *(NEUTRAL — NEW)*
+- **Where:** client `send_with_retry` (client.rs) vs server
+  `adk-server/src/a2a/v1/push.rs::HttpPushNotificationSender::send_with_retry`.
+- **Observation (SOURCE-CONFIRMED):** the server push sender retries on **any** non-success status
+  **and** any send error (not just 429/5xx), with a fixed `RETRY_DELAYS = [1,2,4]` s table and
+  `MAX_RETRIES = 3`, and — critically — calls `validate_webhook_url(url)` **before every attempt** to
+  reject private IP ranges / localhost (SSRF prevention) for webhook delivery. On exhaustion it
+  surfaces `A2aError::PushDeliveryFailed`. This is the more defensive of the two retry paths; the
+  client path is narrower (429/5xx/timeout). So the corpus ships **two different retry policies** for
+  the same protocol family.
+- **Quality:** **NEUTRAL** — the SSRF guard on outbound push is a genuine security control worth
+  mirroring; the policy divergence between the two senders is an internal inconsistency a unified
+  ferrochain a2a-analog would want to reconcile.
+
+**Version negotiation (SOURCE-CONFIRMED, no new pattern):** server `v1/version.rs::negotiate_version`
+— `SUPPORTED_VERSIONS = ["0.3","1.0"]`; `None`/empty → default `"0.3"`; unsupported →
+`A2aError::VersionNotSupported` with `json_rpc_code = -32009`, `http_status = 400`; response header
+`a2a-version` echoes the negotiated version. Client always sends `a2a-version: 1.0`; on `400` with
+`error.code == -32009` it parses supported versions from `data[].metadata.supported` (comma-space
+split). Both directions are pure-unit-tested against **assumed** JSON shapes; the shapes are never
+wired together.
+
+**UNVERIFIABLE-without-runtime (explicit, per task item 4):** the following a2a-v1 dynamic behaviors
+CANNOT be confirmed from source alone — no mock server / integration harness exists anywhere in
+`adk-server` (grep-confirmed), and no wire round-trip test drives them. The LOGIC is present and
+internally consistent; the RUNTIME behavior is unproven:
+  1. Actual exponential-backoff sleep timing / total elapsed under repeated 429/5xx.
+  2. Actual `304 → Ok(None)` conditional-request round-trip (client `If-None-Match` vs server ETag
+     match).
+  3. Actual `-32009` version-negotiation round-trip — specifically whether the server's emitted
+     `data[].metadata.supported` shape matches the client's parser (each side unit-tests its own
+     assumed shape; the coupling is untested).
+  4. Actual push-notification SSRF-rejection + retry-then-`PushDeliveryFailed` delivery outcome.
+These are **validation-phase** (mock-server / live-integration) concerns, not closable by further
+static analysis.
+
+### Thread 5 — remaining A6-named unread path (closure)
+
+**P-97 — openai/webrtc.rs is a full alternate transport governed by the same runner FSM; no new
+mechanism.** *(INFO / LOW)*
+- **Where:** `adk-realtime/src/openai/webrtc.rs` (696 LOC), feature `openai-webrtc`.
+- **Observation:** ships `OpusCodec` (PCM16 ↔ Opus via `audiopus`, C-lib build → requires cmake) and
+  `OpenAIWebRTCSession` (Sans-IO WebRTC via `str0m`, `SdpAnswer`/offer handling), implementing the
+  same `RealtimeSession` trait as the WS and Gemini sessions. Because it satisfies the identical
+  contract, it is governed identically by the runner state machine (P-80) — mutation, resumption,
+  tool dispatch, and event routing are transport-agnostic. `str0m` is Sans-IO (no native-tls;
+  rustls-compatible). Feature-gated and cmake-dependent, so it is an opt-in low-latency alternative,
+  not a default path.
+- **Quality:** **INFO / LOW** — characterized and closed; introduces no governing mechanism beyond
+  the RealtimeSession contract already modeled. Thread 5 has no residual depth gap.
+
+### Pass A7 novelty trajectory (informative)
+
+A6 produced **HIGH** novelty on realtime FSM (P-80/P-81) and a2a client (P-85/P-86) because it was
+the *first* function-level read of those subsystems. A7's re-reads produced **MED** refinements on
+threads 1/2/4 and **LOW** on threads 3/5 — new behavioral detail (audio-loss-on-teardown P-88, lossy
+translation P-89, two-topology avatar abstraction P-90, retry-scope asymmetry P-94, write-only card
+cache P-95, dual-retry+SSRF P-96) but **no new subsystem, no new governing mechanism, and no
+overturned model.** Every A6-named residual thread is now read at depth and closed to an explicit
+verdict. The only remaining unknowns are the four UNVERIFIABLE-without-runtime a2a-v1 items, which no
+further static pass can close (they require a mock/live harness → validation phase). This is textbook
+novelty decay.
+
+## Pass A7 cross-cutting note (informative, not a conclusion)
+
+Two recurring postures crystallize across the realtime/avatar/livekit surface: (1) **fail-open on the
+audio hot path** (P-80 event loop, P-92 LiveKit capture, P-89 unknown-frame collapse) vs
+**fail-closed on the control/lifecycle path** (P-90 keep-alive stops on error, P-88 deterministic
+close-await); and (2) **strong secret hygiene** (SecretString + redacted Debug across livekit/avatar
+configs) sitting alongside **library-constructor panics** (P-91) and **systemic timeout-less clients**
+(P-91, P-94 — the same C1 pattern). Per D16 the adoption question is deferred; these are observations
+for the eventual comparative assessment.
+
+## State Checkpoint
+```yaml
+pass: A7
+scope: patterns-observed (convergence deepening round 2 — A6-named residual threads to depth)
+patterns_added: 10 (P-88..P-97 — 0 STRONG, 5 NEUTRAL, 4 WEAK, 1 INFO)
+patterns_total: 97
+threads_worked: [gemini-session-internals, avatar-providers+keepalive, livekit-bridge, a2a-v1-dynamic, openai-webrtc-closure]
+novelty: MED-trending-LOW (refinements within A6-surfaced subsystems; no new subsystem/mechanism)
+unverifiable_without_runtime: [a2a-backoff-timing, a2a-304-roundtrip, a2a-32009-roundtrip, push-ssrf-retry-outcome]
+status: complete
+timestamp: 2026-07-13
+```

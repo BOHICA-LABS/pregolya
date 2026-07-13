@@ -396,3 +396,36 @@ a1_open_items_resolved:
 native_tls_chains: [livekit, mistralrs/hf-hub, audio/hf-hub]
 timestamp: 2026-07-13
 ```
+
+## Pass A7 deepening — native-tls chain reconciliation (MAP-refinement, P-93)
+
+A7 scanned every first-party `Cargo.toml` for the literal `native-tls` feature string. Result:
+**exactly one first-party explicit opt-in workspace-wide** — `livekit = { …, default-features =
+false, features = ["tokio", "native-tls"] }` in the root `Cargo.toml`. The other two chains recorded
+in the A5 summary (`mistralrs/hf-hub`, `audio/hf-hub`) are **TRANSITIVE** — pulled via the
+`mistralrs`/`hf-hub`/`candle` stack's own default features, not declared in adk-* manifests
+(`adk-mistralrs` and `adk-audio` consume the workspace `reqwest`, which is
+`default-features = false, rustls-tls-native-roots` — no native-tls string). So the disposition
+sharpens:
+
+| native-tls exposure | Kind | Crates | Toggle |
+|---------------------|------|--------|--------|
+| `livekit` | **first-party explicit** | root Cargo.toml; used by adk-realtime (`livekit` feat), adk-audio, adk-rust aggregator | optional Cargo feature `livekit` |
+| `mistralrs`/`hf-hub` | transitive (upstream default) | adk-mistralrs | optional `mistralrs` feature (weight-download crate) |
+| `audio`/`hf-hub` | transitive (upstream default) | adk-audio | optional (candle/hf stack) |
+
+**MAP consequence:** the livekit native-tls ingress is the only one a ferrochain realtime-analog
+controls directly (it is livekit-the-crate's own default, not an adk design requirement) — a rustls
+transport substitution is a crate-feature decision, not a rewrite. The two transitive chains would be
+addressed at the upstream-dep-selection level (choosing rustls-configured forks/features of the
+hf-hub/candle stack), not in adk-* code. This *clarifies* — does not contradict — the A5
+`native_tls_chains: [livekit, mistralrs/hf-hub, audio/hf-hub]` entry (see ANALYSIS-STATE C4).
+
+## State Checkpoint
+```yaml
+pass: A7
+scope: dependency-disposition (native-tls chain reconciliation)
+status: complete
+finding: livekit is the sole first-party explicit native-tls opt-in; other two chains are transitive
+timestamp: 2026-07-13
+```

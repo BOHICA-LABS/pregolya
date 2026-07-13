@@ -1655,3 +1655,60 @@ the "all items LOW" bar for CONVERGED was not met. A7 dispatched on 4 realtime-i
 - `STATE.md` (A6 COMPLETE, A7 IN-PROGRESS, session checkpoint updated, A3 archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — A3 archived here from STATE.md)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-42 checkpoint archived)
+
+---
+
+## Burst 44 — A7 COMPLETE (CONVERGED); C2 dispatched
+
+**Date:** 2026-07-13
+**Agent:** codebase-analyzer (A7) + state-manager (burst close)
+**Trigger:** A7 convergence deepening round 2 complete; ANALYTICALLY CONVERGED verdict.
+
+### A7 Results
+
+- **Verdict:** ANALYTICALLY CONVERGED. Convergence Condition 1 (analysis novelty-LOW) MET.
+- **New patterns:** 10 — P-88..P-97 (total 97 across all passes).
+- **Threads closed (all 5):**
+  - gemini session teardown ordering + sessionResumptionUpdate wire handling: MED (novel but contained; Gemini-provider-specific teardown sequence)
+  - avatar/keepalive spawn lifecycle (heygen + d-id providers): MED (lifecycle gap in provider teardown; scoped to avatar crate)
+  - livekit bridge (sole native-tls ingress): LOW (confirms A6-C2 pre-reconciliation; no new mechanism)
+  - a2a-v1 dynamic behavior (backoff timing, 304 revalidation, -32009 shape-coupling, push retry delivery): MED (4 source-verified but untested behaviors; UNVERIFIABLE-without-runtime)
+  - openai webrtc (SDP session + audio path): LOW (implementation thin; no novel patterns beyond existing realtime patterns)
+- **Novelty decay:** Textbook confirmation. A6 produced HIGH first-depth findings; A7 produced MED/LOW re-reads of the same subsystems. Every A7 finding refined an A6-surfaced subsystem; no new subsystem or mechanism introduced.
+- **No A8 warranted.**
+
+### Contradictions (join C1–C3)
+
+- **C4 (pre-reconciled):** "three native-tls chains" (transitive via hf-hub) vs "sole native-tls ingress" (first-party explicit livekit) — NOT a conflict. Three chains = workspace-wide transitive count; sole ingress = first-party explicit. Different scopes; certification false-positive prevented.
+- **C5 (fidelity note):** a2a-v1 client retry policy vs server-push retry-policy divergence — source-internal asymmetry, documented for Phase 1 BC authoring.
+
+### Carry-Forward to Phase 4 (NOT analysis gaps)
+
+4 a2a-v1 dynamic behaviors UNVERIFIABLE-without-runtime:
+1. Exponential backoff timing (source-visible logic, no mock/live confirmation)
+2. HTTP 304 revalidation round-trip (conditional GET path unexercised)
+3. JSON-RPC -32009 shape-coupling (error shape assumed from schema, not exercised)
+4. Push SSRF + retry delivery (push endpoint SSRF guard + retry convergence unconfirmed)
+
+**Route:** Record in Drift/Deferral table and comparative assessment carry-forward note at HUMAN DIRECTION GATE.
+
+### C2 Dispatch
+
+- C2 (strict-zero certification, all 12 guardrails) dispatched on the **frozen deepened corpus** (P-88..P-97 incorporated).
+- C1 pre-deepening does NOT count toward streak — corpus changed under it (A7 added 10 patterns).
+- C2 = effective pass 1 on the deepened corpus. Streak 0/3.
+
+### Archived Step (pruned from STATE.md Current Phase Steps — oldest entry)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| adk-rust passes A4+A5 (safety+quality / provider+capability) | codebase-analyzer | COMPLETE | A4: 20P P-47..P-66. Domain A guardrail gap (P-59 UNMET), non-isolating default sandbox (P-60–P-62/P-65). A5: 13P P-67..P-79. P-16 REFUTED. Anyhow CLOSED. Bare-String API keys WORKSPACE-WIDE (P-76), 3 native-tls chains (P-79). Total: 79P (34S/15N/30W). Burst 40. |
+
+### Files touched in this burst
+
+- `comparative/adk-rust/patterns-observed.md` (P-88..P-97 appended by A7)
+- `comparative/adk-rust/ANALYSIS-STATE.md` (A7 pass + CONVERGED verdict recorded)
+- `comparative/adk-rust/dependency-disposition.md` (updated by A7)
+- `STATE.md` (A7 COMPLETE/CONVERGED, C2 IN-PROGRESS, session checkpoint updated, A4+A5 archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — A4+A5 archived here from STATE.md)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-43 checkpoint archived)
