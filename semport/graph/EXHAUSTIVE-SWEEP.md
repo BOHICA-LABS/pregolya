@@ -61,7 +61,7 @@ source. Channel-semantics and serialization claims treated as suspect until sour
 | NULL_TASK_ID writes accumulate | VERIFIED | _loop.py:422-431 |
 | NULL_TASK_ID = "00000000-0000-0000-0000-000000000000" | VERIFIED | _constants.py:93 |
 | TASKS = "__pregel_tasks" | VERIFIED | checkpoint/serde/types.py:16 |
-| On resume: _reapply_writes_to_succeeded_nodes skips ERROR/RESUME markers | VERIFIED | _loop.py:663 + inline docstring |
+| On resume: _reapply_writes_to_succeeded_nodes skips ERROR/RESUME markers | INCOMPLETE — actual code skips 4 signals: ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME (see `_loop.py:741-746`). Corrected in behavioral-intent.md and rust-translation-strategy.md with `[validation-certification-6]` markers. | _loop.py:663 + inline docstring |
 | NS_SEP="|", NS_END=":" | VERIFIED | _constants.py:87,89 |
 | checkpoint_ns: parent_ns + NS_SEP + node; task ns = checkpoint_ns + NS_END + task_id | VERIFIED | _algo.py:615,624 |
 | Durability "sync"/"async"/"exit" Literal | VERIFIED | types.py:87 |

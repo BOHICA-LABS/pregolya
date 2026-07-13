@@ -33,7 +33,7 @@ Derived from behavioral-intent.md; these constrain both alternatives below.
 3. **Deterministic, content-addressed task IDs** (`xxh3_128(ckpt_id ++ ns ++ step ++ name
    ++ PUSH/PULL ++ triggers)`) so replay/resume matches pending writes.
 4. **Replay-on-resume**: interrupted/crashed nodes RE-EXECUTE from the top; committed-task
-   writes are restored (skipping ERROR/RESUME markers) so only uncommitted tasks re-run.
+   writes are restored (skipping control signals: ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME) so only uncommitted tasks re-run. <!-- [validation-certification-6]: original said "skipping ERROR/RESUME markers"; actual code skips 4 signals (pregel/_loop.py:746); ERROR_SOURCE_NODE and INTERRUPT omitted from prior description -->
 5. **Three durability tiers** (sync / async / exit) at BOTH the per-task (`put_writes`) and
    step-boundary (`put`) persistence points.
 6. **Recursion limit** (default **10007** via `LANGGRAPH_DEFAULT_RECURSION_LIMIT` env or `_internal/_config.py:DEFAULT_RECURSION_LIMIT`; NOT 25 — that is langchain-core's `RunnableConfig` default which LangGraph overrides) and cooperative **drain** at step boundaries. <!-- [validation-exhaustive]: corrected default from 25 to 10007 -->

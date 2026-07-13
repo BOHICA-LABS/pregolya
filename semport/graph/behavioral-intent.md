@@ -178,8 +178,7 @@ counters_since_delta_snapshot}`.
   never collide with regular writes. Special-channel writes dedup last-write-wins.
 - `NULL_TASK_ID` writes (graph input, resume values) accumulate rather than replace.
 - On resume, `tick()` calls `_reapply_writes_to_succeeded_nodes` (restore successful task
-  writes from `checkpoint_pending_writes`, SKIPPING ERROR/RESUME markers so failed/
-  interrupted tasks re-execute) and `_resume_error_handlers_if_applicable` (re-route
+  writes from `checkpoint_pending_writes`, SKIPPING control signals — `ERROR`, `ERROR_SOURCE_NODE`, `INTERRUPT`, `RESUME` — so failed/interrupted tasks re-execute) <!-- [validation-certification-6]: original said "SKIPPING ERROR/RESUME markers"; actual code at `pregel/_loop.py:741-746` skips 4 signals: ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME. Omitting INTERRUPT and ERROR_SOURCE_NODE is load-bearing for the Rust port: a port that only skips ERROR/RESUME would incorrectly re-apply interrupt writes to tasks. --> and `_resume_error_handlers_if_applicable` (re-route
   previously-failed tasks to their error handlers instead of re-running the node).
 
 ### 2.5 Thread / checkpoint namespacing

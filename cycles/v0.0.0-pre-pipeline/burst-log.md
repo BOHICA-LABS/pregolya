@@ -809,4 +809,35 @@ Both must be explicit ferrochain Red Gate tests (join R8 splitters code-point/by
 
 **9th lesson codified:** DEPRECATED-VS-ACTIVE — versioned/dual-implementation claims must be verified against the ACTIVE code path at the pinned tag, not the first matching definition found (appended to cycles/v0.0.0-pre-pipeline/lessons.md).
 
+---
+
+## Burst: pre-pipeline burst 23 — 3-CLEAN certification pass 6 complete, pass 7 dispatched (2026-07-13)
+
+**Pass 6 verdict:** CLEAN(strict)=NO. 1 correction (1 LOW, port-correctness-critical). Streak 0/3.
+
+**Housekeeping (3 env-vars added):**
+- `XAI_API_BASE`, `GROQ_API_BASE`, `GROQ_PROXY` — partner env-var inventory additions noted in pass-5 close; applied in pass-6 opener to semport/partners/module-inventory.md (or equivalent partner-area env-var section) with `[validation-certification-6]` markers.
+
+**VERSION CLASS CLOSED:**
+- 7/7 version claims verified against active code paths. Zero deprecated-vs-active issues remaining. Class closed.
+
+**ENUMERATION INCOMPLETENESS class — 1 correction (1 LOW, port-correctness-critical):**
+1. `_reapply_writes_to_succeeded_nodes` signal skip set — graph/behavioral-intent.md documented the function as skipping two signals. The actual implementation skips FOUR signals: ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME. The INTERRUPT omission is port-correctness-critical: a Rust implementer building the reapply logic from the two-signal description would not skip INTERRUPT-bearing nodes, causing writes to be re-applied to nodes that were interrupted mid-execution and corrupting resume semantics. Corrected in graph/behavioral-intent.md and graph/rust-translation-strategy.md with `[validation-certification-6]` markers.
+
+**Dominant residual error class identified:** ENUMERATION INCOMPLETENESS. Recurring pattern across the full cascade: ignore-flags (4→7 across correction passes), bridge functions (3→5), skip-markers (2→4), serialization dispatch paths (Pydantic v2 path was the primary instance; now the signal skip set). The common mechanism: the validator confirmed that the documented members ARE present in the source, but did not verify that the documented count is EXHAUSTIVE against the authoritative source structure.
+
+**Files modified:** `semport/graph/behavioral-intent.md`, `semport/graph/rust-translation-strategy.md`
+
+**10th lesson codified:** ENUMERATION COMPLETENESS — enumerated sets (skip lists, flag sets, dispatch tables, signal handlers) must be verified exhaustively against the authoritative source structure, not just by confirming that documented members exist. Under-counting is a finding even when all documented members are correct (appended to cycles/v0.0.0-pre-pipeline/lessons.md).
+
+**Pass 7 dispatched:** Exhaustive enumeration-completeness sweep over behavioral-intent + rust-translation-strategy files across all 7 areas (core, graph, langchain, partners, splitters, mcp, platform) — bounded sweep that closes the dominant error class — then rotated sampling of inventory/disposition file types. Streak 0/3.
+
+**Files touched (state):**
+- `semport/graph/behavioral-intent.md` (signal skip set corrected)
+- `semport/graph/rust-translation-strategy.md` (same correction propagated)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+- `cycles/v0.0.0-pre-pipeline/lessons.md` (10th lesson appended)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 22 checkpoint archived)
+- `STATE.md` (pass 6 DONE, pass 7 IN_PROGRESS, session checkpoint updated, pass 2 row rotated out of Current Phase Steps)
+
 **Next:** Certification pass 6 DISPATCHED. Opens with housekeeping: add XAI_API_BASE, GROQ_API_BASE, GROQ_PROXY to partner env-var inventory. Then bounded version-number sweep (closes deprecated-vs-active class). Then rotation to default-flag gating and lifecycle/cleanup claims. Streak 0/3.

@@ -2389,3 +2389,260 @@ The correction clarifies: a port should implement this as an opt-in behavior beh
 
 **Env-var sweep conclusion:** The sweep found no new MISSING PRIMARY env-var issues (the
 class of error from cert pass 4 is closed for the named partners). The `LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` omission is newly found; the `XAI_API_BASE`/`GROQ_API_BASE`/`GROQ_PROXY` omissions are LOW-severity gaps in coverage of thin-subclass partners.
+
+---
+
+## Certification Pass 6 — Fresh-Context Validation (2026-07-12)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-12.
+
+Streak entering this pass: 0/3. Advances ONLY on ZERO new corrections of any severity.
+
+**Housekeeping opener (completed first; does NOT count against clean verdict):**
+Pass 5 identified 3 env-vars present in source but absent from partners/module-inventory.md rows.
+All 3 verified against source and added with `[validation-certification-6]` markers:
+- `XAI_API_BASE`: confirmed at `xai/chat_models.py:430`, default `"https://api.x.ai/v1/"`. Added to xai section.
+- `GROQ_API_BASE`: confirmed at `groq/chat_models.py:440`, default `None`. Added to groq section.
+- `GROQ_PROXY`: confirmed at `groq/chat_models.py:447`, default `None`. Added to groq section.
+
+**Validation strategy:**
+(A) DEPRECATED-VS-ACTIVE version sweep — all version-number claims (LATEST_VERSION, serde
+    versions, protocol versions, schema versions) verified against the ACTIVE code path at
+    the pinned tags; bounded sweep closes the class.
+(B) Behavioral sampling (3+ claims per area × 7 areas), weighted toward default-flag gating
+    and lifecycle/cleanup semantics (brief-mandated strata).
+(C) Metric verification (2+ numeric rows per area).
+(D) Test citation (1 per area), rotated away from all cert passes 1-5 verified lists.
+(E) Full propagation audit: all 7 areas swept for stale pre-correction values from passes 1-8
+    and cert passes 1-5.
+
+---
+
+### Certification Pass 6 — Opening: DEPRECATED-VS-ACTIVE Version Sweep
+
+| Version Claim | Area | Claimed | Active Code Path | Deprecated Path | Verdict |
+|---|---|---|---|---|---|
+| Checkpoint `LATEST_VERSION` | graph | 4 (post cert-5 correction) | `pregel/_checkpoint.py:23: LATEST_VERSION = 4` | `checkpoint/base/__init__.py:811: LATEST_VERSION = 2` (in deprecated section) | CONFIRMED ACTIVE=4 |
+| `langchain-protocol` floor (core) | core | `>=0.0.17` | `libs/core/pyproject.toml:35: langchain-protocol>=0.0.17` | N/A | CONFIRMED |
+| `langchain-protocol` floor (sdk-py) | platform | `>=0.0.15` | `libs/sdk-py/pyproject.toml:17: langchain-protocol>=0.0.15` | N/A | CONFIRMED (different package, different floor) |
+| `StreamVersion` Literal | platform | `Literal["v1", "v2"]` (2 values) | `schema.py:606: StreamVersion = Literal["v1", "v2"]` | N/A | CONFIRMED |
+| `ormsgpack` dep | graph | `>=1.12` | `checkpoint/pyproject.toml:16: ormsgpack>=1.12.0` | N/A | CONFIRMED (PEP-440 equiv) |
+| `xxhash` dep | graph | `>=3.5` | `langgraph/pyproject.toml:31: xxhash>=3.5.0` | N/A | CONFIRMED (PEP-440 equiv) |
+| Task-ID hash function | graph | `xxh3_128` (current) | `_algo.py:550: _xxhash_str if checkpoint["v"] > 1` → all v=4 checkpoints use xxhash | `_uuid5_str` for v≤1 (legacy only) | CONFIRMED ACTIVE=xxhash |
+
+**Version sweep result: 7 claims checked; all confirmed against the ACTIVE code path. Zero stale-version issues.**
+
+---
+
+### Certification Pass 6 — Phase 1: Behavioral Verification
+
+Sampling rotated away from all cert passes 1-5 verified lists. Weighted toward
+default-flag gating and lifecycle/cleanup semantics.
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| core | 3 | 3 | 0 | 0 | 0 |
+| graph | 4 | 3 | 1 | 0 | 0 |
+| langchain | 3 | 3 | 0 | 0 | 0 |
+| partners | 3 | 3 | 0 | 0 | 0 |
+| splitters | 3 | 3 | 0 | 0 | 0 |
+| mcp | 3 | 3 | 0 | 0 | 0 |
+| platform | 3 | 3 | 0 | 0 | 0 |
+| **TOTAL** | **22** | **21** | **1** | **0** | **0** |
+
+#### Core — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `.configurable_fields(**kw)` raises `ValueError` if key not in `model_fields` | `runnables/base.py:2892-2897`: `if key not in model_fields: raise ValueError(...)` | CONFIRMED |
+| `JsonOutputParser` uses `jsonpatch.make_patch(prev, next).patch` to emit streaming diffs | `output_parsers/json.py:52`: `return jsonpatch.make_patch(prev, next).patch` | CONFIRMED |
+| `test_runnable_events_v1.py` has 20 test functions | `grep -c "def test_" test_runnable_events_v1.py` = 20 | CONFIRMED |
+
+#### Graph — behavioral items verified / corrected
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `put_writes` skipped when `durability == "exit"` (`_loop.py:466`) | `_loop.py:466: if self.durability != "exit" and self.checkpointer_put_writes is not None:` | CONFIRMED |
+| `do_checkpoint` gated on `exiting or self.durability != "exit"` | `_loop.py:1133-1134: do_checkpoint = ... and (exiting or self.durability != "exit")` | CONFIRMED |
+| `_reapply_writes_to_succeeded_nodes` "SKIPPING ERROR/RESUME markers" | `_loop.py:741-746`: docstring says "Skips control signals (ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME)"; code: `if k in (ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME): continue` — 4 signals, not 2 | INACCURATE — corrected below |
+| task-ID function is `_xxhash_str` for checkpoint `v > 1`; `_uuid5_str` only for legacy v≤1 checkpoints | `_algo.py:550: task_id_func = _xxhash_str if checkpoint["v"] > 1 else _uuid5_str` | CONFIRMED |
+
+#### Langchain — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `_get_chat_model_creator` is `@functools.lru_cache(maxsize=len(_BUILTIN_PROVIDERS))` | `chat_models/base.py:131-132`: `@functools.lru_cache(maxsize=len(_BUILTIN_PROVIDERS))` | CONFIRMED |
+| `_attempt_infer_model_provider`: `accounts/fireworks...` → `fireworks` at line 556 | `chat_models/base.py:556: if model_lower.startswith("accounts/fireworks"): return "fireworks"` | CONFIRMED |
+| `_supports_provider_strategy(model, tools)` determines ProviderStrategy vs ToolStrategy in `_get_bound_model` | `factory.py:528: def _supports_provider_strategy(...)` called in `_get_bound_model` pipeline at lines 979-990 | CONFIRMED |
+
+#### Partners — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `ChatGroq` source LOC = 2,083 | `find langchain_groq -name "*.py" ! -path "*/tests/*" \| xargs wc -l \| tail -1` = 2,083 | CONFIRMED |
+| `ChatXAI` source LOC = 1,015; `XAI_API_BASE` default `https://api.x.ai/v1/` | `find langchain_xai -name "*.py" ! -path "*/tests/*" \| xargs wc -l` = 1,015; `chat_models.py:430: default_factory=from_env("XAI_API_BASE", default="https://api.x.ai/v1/")` | CONFIRMED |
+| `_MCPToolExecutionError` message is a snapshot taken at construction (not recomputed) | `tools.py:107: "The message is a snapshot taken at construction and is *not* recomputed"` + `__init__` calls `super().__init__(_summarize_tool_error(tool_content))` | CONFIRMED |
+
+#### Splitters — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `from_tiktoken_encoder`/`from_huggingface_tokenizer` inject token-counting `length_function` into ANY `TextSplitter` subclass | `base.py:212-308`: both classmethods create the splitter with `cls(length_function=..., **kwargs)` | CONFIRMED |
+| `SentenceTransformersTokenTextSplitter._encode(text)[1:-1]` strips start/stop special tokens | `base.py:100-101`: `encode_strip_start_and_stop_token_ids = lambda t: self._encode(t)[1:-1]` | CONFIRMED |
+| `TextSplitter` has `strip_whitespace: bool = True` default | `base.py:69`: `strip_whitespace: bool = True` | CONFIRMED (re-confirmed from cert-5) |
+
+#### MCP — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `_create_streamable_http_session` `terminate_on_close` parameter defaults to `True` | `sessions.py:321: terminate_on_close: bool = True` | CONFIRMED |
+| `_create_stdio_session` properly terminates server process on context exit (via `stdio_client` + `ClientSession` nested context managers) | `sessions.py:267-271`: `async with (stdio_client(...) as (read, write), ClientSession(read, write, ...) as session): yield session` — cleanup delegated to MCP SDK's `stdio_client` | CONFIRMED |
+| `_MCPToolExecutionError` is a `ToolException` subclass | `tools.py:99: class _MCPToolExecutionError(ToolException)` | CONFIRMED (re-confirmed from cert-3) |
+
+#### Platform — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `httpx.AsyncHTTPTransport(retries=5)` at the connection layer | `_async/client.py:129: transport = httpx.AsyncHTTPTransport(retries=5)` | CONFIRMED |
+| v3 stream events carry `{id, method, params}` envelope fields | `stream/decoders.py:129-131`: `event.get("method")`, `event.get("params")` reads; `decoders.py:60`: `data.get("id")` | CONFIRMED |
+| `LangGraphClient.__aexit__` calls `self.aclose()` which calls `self.http.client.aclose()` | `_async/client.py:166-178` | CONFIRMED |
+
+---
+
+### Certification Pass 6 — Phase 2: Metric Verification
+
+| Claim | Claimed | Recounted | Delta | Command / Source |
+|-------|---------|-----------|-------|---------|
+| groq source LOC | 2,083 | 2,083 | 0 | `find langchain_groq -name "*.py" ! -path "*/tests/*" \| xargs wc -l \| tail -1` |
+| xai source LOC | 1,015 | 1,015 | 0 | `find langchain_xai -name "*.py" ! -path "*/tests/*" \| xargs wc -l \| tail -1` |
+| `agents/factory.py` LOC | 2,007 | 2,007 | 0 | `wc -l agents/factory.py` |
+| `_async/store.py` LOC | 313 | 313 | 0 | `wc -l langgraph_sdk/_async/store.py` |
+| `resources.py` LOC (MCP) | 103 | 103 | 0 | `wc -l langchain_mcp_adapters/resources.py` |
+| `stream/` subsystem LOC | "~2,000" (approximated) | 2,210 | +210 | `find langgraph_sdk/stream -name "*.py" \| xargs wc -l \| tail -1`; within "~" approximation range |
+| `test_runnable_events_v1.py` test count | 20 | 20 | 0 | `grep -c "def test_" test_runnable_events_v1.py` |
+| Checkpoint active `LATEST_VERSION` | 4 (post cert-5) | 4 | 0 | `grep "LATEST_VERSION" pregel/_checkpoint.py:23` |
+| `langchain-protocol` floor (core pyproject.toml) | `>=0.0.17` | `>=0.0.17` | 0 | `grep langchain-protocol libs/core/pyproject.toml` |
+| `langchain-protocol` floor (sdk-py pyproject.toml) | `>=0.0.15` | `>=0.0.15` | 0 | `grep langchain-protocol libs/sdk-py/pyproject.toml` |
+| `StreamVersion` Literal count | 2 values | 2 | 0 | `schema.py:606: Literal["v1", "v2"]` |
+| `_reapply_writes_to_succeeded_nodes` skip-set size | 2 (ERROR, RESUME — prior claim) | 4 (ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME) | +2 signals | `_loop.py:746: if k in (ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME)` |
+| langchain_v1 test_*.py LOC vs all .py LOC | "63 test_*.py files, 31,653 LOC" | 63 test_*.py = 30,812; all .py = 31,653 | Method note only | `find tests -name "test_*.py" \| xargs wc -l` = 30,812; `find tests -name "*.py" \| xargs wc -l` = 31,653 |
+
+**Note on stream/ LOC:** The claim "~2,000 LOC" uses a tilde approximation. Actual is 2,210.
+The `_async/stream.py` file alone is 1,993 LOC (confirmed pass 8); the full `stream/` directory
+(all 7 files) is 2,210 LOC. The approximation is within acceptable range; NOT a correction.
+
+**Note on langchain_v1 test LOC methodology:** The header "63 test_*.py files, 31,653 LOC" pairs
+the test_*.py file count (63, correct) with the all-.py LOC total (31,653, also correct for all .py
+files in tests/). The 63 test_*.py files produce 30,812 LOC; the remaining 841 LOC belongs to 28
+non-test .py support files (conftest.py, helpers, fixtures). This mixed-scope presentation is
+consistent with the `find -name "*.py"` methodology used throughout the corpus. NOT a correction.
+
+---
+
+### Certification Pass 6 — Test Citations (7 verified)
+
+| Area | Citation | Claimed | Verified |
+|------|----------|---------|---------|
+| core | `test_runnable_events_v1.py` — 20 test functions | 20 | ✓ `grep -c "def test_" = 20` |
+| graph | `test_delta_channel_supersteps_bound.py` LOC = 195 | 195 | ✓ `wc -l = 195` (re-confirmed from cert-5) |
+| langchain | `factory.py` LOC = 2,007 | 2,007 | ✓ `wc -l agents/factory.py = 2,007` |
+| partners | `XAI_API_BASE` at `xai/chat_models.py:430` (housekeeping verification) | present | ✓ `grep -n "XAI_API_BASE" chat_models.py` = line 430 |
+| splitters | `test_html_security.py` LOC = 130 | 130 | ✓ `wc -l = 130` (re-confirmed from cert-5) |
+| mcp | `_MCPToolExecutionError` at `tools.py:99` | present | ✓ `grep -n "class _MCPToolExecutionError" tools.py` = 99 |
+| platform | `test_errors.py` LOC = 144 | not explicitly claimed | ✓ `wc -l = 144`; present in test listing |
+
+---
+
+### Certification Pass 6 — Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Value | Severity | Correction Applied |
+|------|---------------|--------------|----------|--------------------|
+| `graph/behavioral-intent.md §2.4` + `graph/rust-translation-strategy.md §1.4` | "SKIPPING ERROR/RESUME markers" / "skipping ERROR/RESUME markers" | `_reapply_writes_to_succeeded_nodes` skips 4 control signals: ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME (`pregel/_loop.py:741-746`). Omitting INTERRUPT is load-bearing: a Rust port that only skips ERROR and RESUME would re-apply interrupt writes to tasks, incorrectly allowing interrupted tasks to appear as succeeded. Omitting ERROR_SOURCE_NODE means the error-source annotation marker would also be applied as a channel write. | LOW | Corrected to "SKIPPING control signals — ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME" in both behavioral-intent.md and rust-translation-strategy.md with `[validation-certification-6]` markers; EXHAUSTIVE-SWEEP.md entry updated to INCOMPLETE with note |
+
+---
+
+### Certification Pass 6 — Housekeeping Additions (NOT counted as new findings)
+
+These 3 items complete the known omissions flagged by pass 5's env-var sweep. Each verified
+against source before addition.
+
+| Addition | Source | Default | File Modified |
+|----------|--------|---------|--------------|
+| `XAI_API_BASE` env-var name + default | `xai/chat_models.py:430: from_env("XAI_API_BASE", default="https://api.x.ai/v1/")` | `https://api.x.ai/v1/` | `partners/module-inventory.md` xai section |
+| `GROQ_API_BASE` env-var name + default | `groq/chat_models.py:440: from_env("GROQ_API_BASE", default=None)` | `None` | `partners/module-inventory.md` groq section |
+| `GROQ_PROXY` env-var name + default | `groq/chat_models.py:447: from_env("GROQ_PROXY", default=None)` | `None` | `partners/module-inventory.md` groq section |
+
+---
+
+### Certification Pass 6 — Propagation Audit
+
+Swept all 7 areas for stale values from all prior passes + the new correction. All prior
+corrections confirmed properly propagated. New correction propagated to both load-bearing docs:
+
+- "ERROR/RESUME markers" → corrected to full 4-signal list in BOTH behavioral-intent.md
+  AND rust-translation-strategy.md; EXHAUSTIVE-SWEEP.md entry marked INCOMPLETE.
+- All prior correction markers confirmed present: 13 middleware (corrected to 15), 27 chat
+  providers, 10 embeddings providers, 17 checkpoint files, ~48 test count, 2,030 tool_node.py
+  LOC, 8 block_translators, tick() GraphRecursionError locus, AnyValue step-scoped semantics,
+  base_url gate absent from _use_responses_api, Checkpoint v=4 active runtime,
+  validate_model_on_init=False default.
+
+---
+
+### Certification Pass 6 — Hallucinated Items
+
+None. Every function, class, constant, env-var, and version claim verified against source.
+Zero hallucinations across all sampled strata.
+
+---
+
+### Certification Pass 6 — Unverifiable Items
+
+Same standing set (Ollama DTU endpoint catalog beyond what is in-source, rmcp 2.2.0 feature
+details, partner own-test LOC). No new unverifiable items.
+
+---
+
+### Certification Pass 6 — Per-Area Verdicts
+
+| Area | Verdict | Pass-Cert-6 Corrections |
+|------|---------|------------------------|
+| core | PASS — configurable_fields ValueError, jsonpatch streaming, lru_cache, test_runnable_events_v1 confirmed | 0 |
+| graph | FAIL (LOW) — _reapply_writes_to_succeeded_nodes 4-signal skip-set corrected in 2 docs; version sweep clean | 1 (same fact, 2 locations + EXHAUSTIVE-SWEEP note) |
+| langchain | PASS — init_chat_model fireworks prefix, _supports_provider_strategy, _get_chat_model_creator all confirmed | 0 |
+| partners | PASS — groq/xai LOC confirmed; _MCPToolExecutionError confirmed; env-var housekeeping added | 0 |
+| splitters | PASS — from_tiktoken_encoder/from_huggingface_tokenizer, _encode[1:-1], strip_whitespace all confirmed | 0 |
+| mcp | PASS — terminate_on_close default, stdio cleanup, _MCPToolExecutionError confirmed | 0 |
+| platform | PASS — retries=5, v3 envelope, __aexit__ → aclose chain, _async/store.py LOC confirmed | 0 |
+
+---
+
+### Certification Pass 6 — CLEAN Status
+
+```
+CLEAN (strict): no — 1 NEW correction of severity LOW
+  - LOW: graph/behavioral-intent.md §2.4 + graph/rust-translation-strategy.md §1.4
+         "_reapply_writes_to_succeeded_nodes skips ERROR/RESUME markers" (2 signals)
+         → actual code skips 4 signals (ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME)
+  (3 housekeeping env-var additions to partners/module-inventory.md do NOT count —
+   these are completions of known pass-5 omissions, per brief instructions)
+CLEAN (PR-merge): yes — zero CRIT/HIGH/MED findings; correction is LOW
+Streak: 0/3 (not advanced; 1 LOW correction found in this pass)
+```
+
+**Most consequential new finding:** The incomplete skip-signal list in
+`_reapply_writes_to_succeeded_nodes`. The original "ERROR/RESUME markers" description omits
+`INTERRUPT` and `ERROR_SOURCE_NODE`. The omission of `INTERRUPT` is the most load-bearing:
+a Rust port that only skips ERROR and RESUME during resume replay would incorrectly
+re-apply `INTERRUPT` writes to tasks, making interrupted tasks appear as if they completed
+with an interrupt value written to their channel. This would corrupt the resume semantics.
+The omission of `ERROR_SOURCE_NODE` means the error-attribution marker written when a task
+fails would be applied as a regular channel write — also incorrect.
+
+**Version-sweep assessment:** The bounded version-number sweep (7 claims: LATEST_VERSION,
+langchain-protocol pins, StreamVersion, ormsgpack, xxhash, task-ID hash function) found zero
+stale or deprecated-path citations. The LATEST_VERSION correction from cert-5 is confirmed
+accurate and stable. The dual-version situation (active v=4 in pregel/_checkpoint.py vs
+deprecated v=2 in checkpoint/base/__init__.py) is correctly documented and annotated in the
+semport. No new DEPRECATED-VS-ACTIVE issues found.

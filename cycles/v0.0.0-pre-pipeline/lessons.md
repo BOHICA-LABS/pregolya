@@ -336,3 +336,51 @@ For certification passes and all subsequent exhaustive sweeps:
 ### Follow-up
 
 Add the deprecated-vs-active guardrail to the validate-extraction agent prompt upstream as the 9th guardrail — co-batch with all prior guardrails in session-review prompt hardening. Pass 6 opens with a bounded deprecated-vs-active version sweep to close the class corpus-wide.
+
+---
+
+## Lesson: PROCESS-GAP — Enumeration-Completeness — 10th Guardrail (2026-07-13)
+
+**Source:** 3-CLEAN certification pass 6 (burst 23)
+**Category:** process-gap
+**Severity:** LOW (single LOW finding, but port-correctness-critical — INTERRUPT omission would corrupt resume semantics)
+
+### What happened
+
+Certification pass 6 found that `graph/behavioral-intent.md` documented `_reapply_writes_to_succeeded_nodes` as skipping two signals — but the actual function skips FOUR signals: ERROR, ERROR_SOURCE_NODE, INTERRUPT, and RESUME. The INTERRUPT signal was the critical omission: a Rust implementer building the reapply logic from the two-signal description would not skip INTERRUPT-bearing nodes, causing writes to be re-applied to nodes that were interrupted mid-execution — corrupting resume semantics.
+
+The same pattern traces through the full cascade: ignore-flags were documented as 4, corrected to 7 (3 missing). Bridge functions were documented as 3, corrected to 5 (2 missing). Skip-markers were documented as 2, corrected to 4 (2 missing). Serialization dispatch paths showed the same shape (Pydantic v2 path was absent from initial enumeration; added in exhaustive sweep). In each case, a claim about "which items are in this enumerated set" was under-counting against the actual authoritative structure.
+
+The common failure mechanism: the validator found some members of the set, verified those members exist, and reported the count as complete. It did not verify that the count was exhaustive — that no additional members existed in the authoritative source.
+
+### Why it matters
+
+Enumeration incompleteness is harder to detect than factual errors because the documented members are all correct — only the TOTAL is wrong. A reviewer checking whether ERROR and ERROR_SOURCE_NODE are in the skip set will correctly confirm they are. Only a reviewer who additionally checks "are there any OTHER signals in the skip set?" will catch the omission. Existing guardrails catch wrong values; this guardrail catches missing values.
+
+The consequences are asymmetric: under-counting an ignore-flag means a Rust trait has too few optional methods (implementers cannot opt out of callbacks they do not care about — breaking API, but detectable at compile time). Under-counting a skip-signal means writes are applied to nodes that should be skipped — silent behavioral divergence that corrupts state under specific execution paths (INTERRUPT in this case).
+
+### Codification applied — 10th Guardrail: ENUMERATION COMPLETENESS
+
+For certification passes and all subsequent exhaustive sweeps:
+
+1. **Exhaustive enumeration required:** Any claim about "which items are in a set" (skip list, ignore flags, dispatch cases, signal handlers, exception types) MUST be verified by exhaustively enumerating the authoritative source — not by confirming that the documented members exist.
+2. **The completeness check:** For each documented set, run a targeted search for all members of that set in the authoritative source structure and compare against the documented list. Any item in the source but not in the documented list is a missing-member finding.
+3. **Authoritative-source discipline:** The authoritative source for an enumerated set is the definition site (the list/tuple/match arm/set literal in source), not usage examples, doc summaries, or prior corpus text.
+4. **Sweep scope for pass 7:** The opening stratum of pass 7 is an exhaustive enumeration-completeness sweep over all behavioral-intent and rust-translation-strategy files across all 7 areas — checking every enumerated claim (signal sets, flag sets, dispatch tables, exception lists) for completeness.
+
+### The full 10-guardrail set
+
+1. AST-based counting (never grep/eyeballing for code constructs)
+2. Cross-document propagation sweep (find all locations that must reflect the same fact)
+3. Behavioral-locus precision (describe behavior at the execution locus, not a secondary description)
+4. Semantic-precision summary-word verification (verify superlatives, totals, and summary claims against base data)
+5. Deepening-note sweep (verify items marked for deeper investigation were actually investigated)
+6. Package-attribution verification (any class attributed to a package must exist in that package at the pinned tag)
+7. Scope-label matching (every numeric row must be counted from exactly the scope its label denotes)
+7b. Dependency-constraint completeness (dependency rows must quote full constraint expressions verbatim; bounds are contract)
+8. Deprecated-vs-active (versioned/dual-implementation claims must be verified against the active code path)
+10. Enumeration completeness (enumerated sets must be verified exhaustively against authoritative source; under-counting is a finding even when all documented members are correct)
+
+### Follow-up
+
+Add enumeration-completeness guardrail to the validate-extraction agent prompt upstream as the 10th guardrail — co-batch with all prior guardrails in session-review prompt hardening. Pass 7 opens with an exhaustive enumeration-completeness sweep to close the class corpus-wide across all 7 areas.
