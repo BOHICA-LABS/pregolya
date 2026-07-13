@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T00:45:00Z
+timestamp: 2026-07-13T02:00:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "semport passes 2-3 in progress (langgraph runtime+checkpoint+prebuilt → .factory/semport/graph/, langchain_v1 → .factory/semport/langchain/)"
+current_step: "semport passes 4-5 in progress (partners+standard-tests → .factory/semport/partners/, text-splitters+mcp-adapters → .factory/semport/splitters/+mcp/); passes 2-3 DONE; D11 design steers recorded; remaining queue: langgraph-platform SDK/CLI deep pass, core deepening, semport convergence → Phase 1"
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -43,9 +43,9 @@ dtu_required: false
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived upstream — curated-subset reference only), langchain-mcp-adapters==0.3.0 (SHA a61c783a) |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-12 — D9/D10 recorded; semport pass 1 DONE; ANALYSIS-STATE.md persisted; passes 2-3 in progress |
+| **Last Updated** | 2026-07-13 — D11 design steers recorded; semport passes 2-3 DONE; passes 4-5 in progress |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | semport passes 2-3 in progress — langgraph runtime+checkpoint+prebuilt (graph), langchain_v1 (langchain) |
+| **Current Step** | semport passes 4-5 in progress (partners+standard-tests, text-splitters+mcp-adapters); remaining queue: langgraph-platform SDK/CLI deep, core deepening, convergence → Phase 1 |
 
 ## Phase Progress
 
@@ -68,11 +68,11 @@ dtu_required: false
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| repo-initialization (parts 1+2) | devops-engineer | DONE | GitHub=BOHICA-LABS/ferrochain; local=/Users/jmagady/Dev/ferrochain; placeholder crates prepped; publish-all.sh ready |
-| semport-analyze pass 1 — langchain-core | codebase-analyzer | DONE | .factory/semport/core/ (5 deliverables; ANALYSIS-STATE.md persisted; 60,101 LOC / 180 files / 1,766 tests) |
-| ANALYSIS-STATE.md persisted | state-manager | DONE | .factory/semport/core/ANALYSIS-STATE.md (hook-blocked direct write resolved) |
-| semport-analyze pass 2 — langgraph runtime+checkpoint+prebuilt | codebase-analyzer | IN_PROGRESS | .factory/semport/graph/ |
-| semport-analyze pass 3 — langchain_v1 | codebase-analyzer | IN_PROGRESS | .factory/semport/langchain/ |
+| semport-analyze pass 2 — langgraph runtime+checkpoint+prebuilt | codebase-analyzer | DONE | .factory/semport/graph/ (5 deliverables; ~46,150 deep-scope LOC; key risks: LANGGRAPH_STRICT_MSGPACK RCE-guard, dual storage shapes, replay-on-resume semantic, DeltaChannel beta prune; vsdd-factory idioms transferable but durable/replay core is greenfield) |
+| semport-analyze pass 3 — langchain_v1 | codebase-analyzer | DONE | .factory/semport/langchain/ (5 deliverables; 14,512 src LOC / 31,653 test LOC; ~87% weight in agents/; langgraph API surface = minimum ferrochain-graph public API frozen in behavioral-intent §5.1-5.4; SCOPE DECISION queued: subagent stream transformer v1 non-goal) |
+| D11 design steers recorded (ferrochain-graph; from D9 early conversation) | human | DONE | D11.1 HYBRID execution model; D11.2 RUST-NATIVE checkpoint wire format (not byte-compatible w/ Python); D11.3 sync-default durability (deliberate deviation from upstream) |
+| semport-analyze pass 4 — partners+standard-tests | codebase-analyzer | IN_PROGRESS | .factory/semport/partners/ |
+| semport-analyze pass 5 — text-splitters+mcp-adapters | codebase-analyzer | IN_PROGRESS | .factory/semport/splitters/ + .factory/semport/mcp/ |
 
 ## Decisions Log
 
@@ -88,6 +88,7 @@ dtu_required: false
 | D8 | Reference-application forcing functions + holdout scenario domains (human directive). Two archetypes serve dual purpose: (1) DESIGN FORCING FUNCTIONS for Phase 1 — PRD/architecture must demonstrate these workloads are supportable (capability checklist: durable multi-day graph runs, hierarchical sub-agent delegation/spawning, parallel fan-out, human-approval interrupts mid-run, quality-gate conditional routing, structured outputs, MCP tool integration, checkpoint/resume across process restarts). (2) HOLDOUT SCENARIO DOMAINS for Phase 2 — product-owner authors hidden acceptance scenarios in these domains; specific scenarios stay hidden from implementers per information-asymmetry rules; only the domains are public. Domain A: Virtual SOC analyst agent — long-running security investigations, SIEM/EDR tool calling via MCP, structured triage verdicts, human approval before containment actions, high-volume alert triage. Domain B: Dark factory (autonomous software development orchestrator) — VSDD-style multi-agent software factory built on ferrochain; behavioral references: /Users/jmagady/Dev/vsdd-factory (Rust cargo workspace — design reference for Rust multi-agent orchestration patterns) + https://factory.strongdm.ai/ (verified live HTTP 200). Downstream product concepts (out of this pipeline's scope, deferred to discovery mode post-convergence): SOC-analyst product + build-your-own-agents SaaS. | Concrete reference applications surface capability gaps before spec crystallization; information-asymmetric holdout domains enforce unbiased Phase 4 evaluation | pre-1 | 2026-07-12 | human |
 | D9 | ferrochain-graph design consultation gate (human directive). Before ANY ferrochain-graph execution-model ADR is finalized, the architect MUST present ≥2 alternatives with production trade-offs (scheduling model, checkpoint atomicity, backpressure, cancellation, multi-tenant fairness) to the human for a design conversation. The Rust workspace at /Users/jmagady/Dev/vsdd-factory is designated PRIOR ART / EVIDENCE, explicitly NOT a template — "most productionally best, not just prior art" (human's words). Gate applies at Phase 1c architecture. | Human mandate: design consultation before ADR lock prevents premature architecture commit on the highest-risk component | pre-1 | 2026-07-12 | human |
 | D10 | Production-grade constitution adopted (human directive). /Users/jmagady/Dev/ferrochain/CLAUDE.md (553 lines) authored by technical-writer from a full harvest of /Users/jmagady/Dev/prism/CLAUDE.md per direct human mandate ("EVERYTHING that applies to us"). Includes: Canonical Principle (Production-Grade Default, six rules + self-audit checklist), Correct Agent Routing companion, Source-of-Truth Precedence, TD-VSDD-053/059/060/091, BC-5.39.001 3-CLEAN w/ strict-vs-PR-merge + frozen-HEAD rules, SID-1, SAP-1 (adapted), day-1 Rust conventions (rustls-tls mandatory, credential newtypes w/ redacted Debug, no-unwrap, non_exhaustive discipline, tokio async-first), git non-negotiables. Binds ALL agents from now (including spec/analysis agents). NOTE: CLAUDE.md sits on main which has no initial commit yet — gets committed in workspace-init commit (devops, Phase 1); do NOT attempt to commit repo-root files outside .factory/. | Human mandate: production-grade agent constitution must be in place before Phase 1 begins | pre-1 | 2026-07-12 | human |
+| D11 | ferrochain-graph design steers (from D9 early conversation 2026-07-12; formal ADR ratification still at Phase 1c). D11.1 Execution model: HYBRID — orchestrator-loop engine per run (compile-time write-isolation, single-writer checkpoint atomicity) wrapped by actor-style outer scheduler (multi-tenant fairness/quotas); serves embedded-library AND hosted-SaaS stances. D11.2 Checkpoint wire format: RUST-NATIVE msgpack-based + security-allowlist RCE-guard concept retained + one-way Python-checkpoint import tool; NOT byte-compatible with Python ormsgpack ext-table format. D11.3 Durability: port all three tiers (sync/async/exit) for API parity; ferrochain DEFAULTS to sync (crash-safe) — deliberate documented deviation from upstream defaults per production-grade constitution. | Human design-conversation preceding D9 gate; formal ADR ratification at Phase 1c | pre-1 | 2026-07-12 | human |
 
 ## Risk Register
 
@@ -136,10 +137,10 @@ dtu_required: false
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-12 |
+| **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 4 complete. D9 NEW: ferrochain-graph design consultation gate — architect must present ≥2 alternatives before any graph execution-model ADR (Phase 1c); vsdd-factory workspace is PRIOR ART not a template. D10 NEW: CLAUDE.md (553 lines, production-grade constitution) authored and binds all agents; sits on main, committed at workspace-init (devops, Phase 1). semport pass 1 DONE: langchain-core (60,101 LOC / 180 files / 1,766 tests; 5 deliverables at .factory/semport/core/; ANALYSIS-STATE.md persisted; top risks: Runnables/LCEL RED, lc-JSON/pydantic/astream_events/streaming-parser ORANGE). R7 registered: langchain-protocol v0.0.17 (immature, port-as-provisional). Semport passes 2-3 IN_PROGRESS (langgraph→.factory/semport/graph/, langchain_v1→.factory/semport/langchain/). Next: complete passes 2-3, then remaining queue (partners deep, standard-tests, text-splitters, mcp-adapters, langgraph-platform SDK/CLI, core deepening), then Phase 1. |
-| **Key context** | D1-D10 locked. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1 (do NOT commit repo-root files from .factory/). Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + production trade-offs to human before ADR lock. Semport deepening items logged in ANALYSIS-STATE.md (8 items, not yet run). |
+| **Position** | pre-1, burst 5 complete. Passes 2-3 DONE: langgraph (~46,150 deep-scope LOC; 5 deliverables at .factory/semport/graph/), langchain_v1 (14,512 src / 31,653 test LOC; 5 deliverables at .factory/semport/langchain/). D11 design steers recorded (HYBRID execution model, RUST-NATIVE checkpoint, sync-default durability). Passes 4-5 IN_PROGRESS (partners+standard-tests → .factory/semport/partners/, text-splitters+mcp-adapters → .factory/semport/splitters/+mcp/). Remaining queue: langgraph-platform SDK/CLI deep pass, core deepening pass, then semport convergence → Phase 1. Queued Phase 1 gate decisions: (a) subagent stream transformer v1 non-goal, (b) final crate-name ADR, (c) license decision (MIT-derivative attribution). |
+| **Key context** | D1-D11 locked. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + production trade-offs to human before ADR lock. D11 formal ADR ratification at Phase 1c. Semport deepening items logged in ANALYSIS-STATE.md (8 items). |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content
@@ -149,5 +150,6 @@ dtu_required: false
 | Burst 1 narrative (pre-pipeline) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 3 narrative (market-intelligence gate close, repo-init, D1 amendment, semport dispatch) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 4 narrative (D9/D10, semport pass 1 close, passes 2-3 start) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Burst 5 narrative (passes 2-3 DONE, D11 design steers, passes 4-5 dispatch) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Naming decision study | `.factory/planning/naming-decision-study.md` |
 | Semport pass 1 analysis state (deepening items, risks) | `.factory/semport/core/ANALYSIS-STATE.md` |
