@@ -1593,3 +1593,65 @@ count). A6 findings become C2 known-corrections.
 - `comparative/adk-rust/test-inventory.md` (corrected: 7 stale test-count figures in A4 narrative; `[comparative-cert-1]` markers)
 - `STATE.md` (C1 COMPLETE, A6 IN-PROGRESS, session checkpoint updated, burst 42 recorded, A2 archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — A2 archived here from STATE.md)
+
+---
+
+## Burst 43 — adk-rust Pass A6 COMPLETE + A7 Dispatched
+
+**Date:** 2026-07-13
+**Agent:** state-manager (recording codebase-analyzer A6 results)
+**Phase:** pre-1 (comparative convergence deepening)
+
+### Summary
+
+Pass A6 (convergence deepening round 1) completed with verdict NOT-YET-CONVERGED (near-converged). All
+A4/A5-deferred residual items resolved, but 2 HIGH-novelty areas and 1 systemic correction surfaced —
+the "all items LOW" bar for CONVERGED was not met. A7 dispatched on 4 realtime-internal threads.
+
+**Pass A6 results:**
+- Patterns added: 8 (P-80..P-87), total now 87 patterns (1 STRONG / 3 NEUTRAL / 4 WEAK)
+- Verdict: NOT-YET-CONVERGED (near-converged)
+
+**Key findings:**
+- P-80 STRONG: Realtime 4-state bidi audio FSM + provider-agnostic Phantom-Reconnect mechanism
+- P-81 NEUTRAL: Barge-in delegated to server-side VAD; client-driven interrupt manual-only
+- P-82 WEAK: Windows AppContainer enforcer is a hard-fail stub — no working Windows sandbox path
+- P-83 WEAK: adk-code DockerExecutor ignores per-request SandboxPolicy it advertises (source-internal
+  capability-vs-behavior mismatch); CLI ContainerCommandExecutor does NOT have this gap
+- P-84 WEAK: InMemoryVectorStore ignores declared dimensions; silent-garbage-scores on dimension mismatch
+- P-85 NEUTRAL: RemoteA2aAgent surfaces all transport/RPC failures as error events, never stream Err
+- P-86 WEAK: Dual A2A client generations (legacy A2aClient + feature-gated A2aV1Client)
+- P-87 NEUTRAL: Skill ContextCoordinator — phantom-tool prevention real, but strict-mode errors swallowed
+- Ignore census: 126 #[ignore] of 4,803 test attributes (~2.6%), 19 live-API-gated files
+
+**Contradictions / known-corrections for certification cascade:**
+- A6-C1 (SYSTEMIC): reqwest timeout-less clients span ~69 of ~79 client sites workspace-wide — not 7/8
+  cluster-scoped as stated in P-42/P-77. Reframes both patterns from local to systemic.
+- A6-C2 (OVERSTATED): adk-realtime DEFAULTS to rustls; native-tls only via optional livekit feature.
+  Prior "hard conflict" was overstated — it is feature-gated.
+- A6-C3 (MISMATCH): adk-code Docker capability-vs-behavior (same as P-83 above; source-internal only).
+
+**Residual threads named for A7:**
+1. adk-realtime gemini/session.rs internals (writer-task teardown ordering, sessionResumptionUpdate wire
+   handling, audio flush buffer)
+2. adk-realtime avatar providers (avatar/heygen, avatar/did) + spawn_keep_alive lifecycle
+3. adk-realtime livekit/* bridge (sole native-tls ingress) — delegation unread at depth
+4. a2a-v1 retry/caching/transport behavior source-verified but untested (mock-server gap, no dynamic
+   backoff/304 confirmation)
+
+**A7 dispatched:** Instructed to declare CONVERGED only if novelty decays to LOW; else name A8 targets.
+**C2 (Certification Pass 2) remains HELD** until analysis reaches CONVERGED (both-conditions rule).
+
+### Archived Step (pruned from STATE.md Current Phase Steps — oldest entry)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| adk-rust pass A3 (server/platform/protocols) | codebase-analyzer | COMPLETE | 12P P-35..P-46 (4S/2N/6W). A2A stream+background = STUBS. SSRF webhooks (P-35), 7 reqwest zero-timeout (P-42), message_stream stub (P-41), budget-governance gap NET-NEW (P-46). Burst 39. |
+
+### Files touched in this burst
+
+- `comparative/adk-rust/patterns-observed.md` (P-80..P-87 appended — committed in burst 42 per-orchestrator)
+- `comparative/adk-rust/ANALYSIS-STATE.md` (A6 pass recorded — committed in burst 42)
+- `STATE.md` (A6 COMPLETE, A7 IN-PROGRESS, session checkpoint updated, A3 archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — A3 archived here from STATE.md)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-42 checkpoint archived)
