@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-12T23:35:00Z
+timestamp: 2026-07-12T23:55:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
@@ -43,7 +43,7 @@ dtu_required: false
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived upstream — curated-subset reference only), langchain-mcp-adapters==0.3.0 (SHA a61c783a) |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-12 — market-intelligence gate PASSED; semport-analyze dispatched |
+| **Last Updated** | 2026-07-12 — D8 recorded: reference-application forcing functions + holdout scenario domains |
 | **Current Phase** | pre-1 (pre-pipeline) |
 | **Current Step** | semport-analyze pass 1 — codebase-analyzer on langchain-core (libs/core) |
 
@@ -85,6 +85,7 @@ dtu_required: false
 | D5 | semport-analyze must emit dependency-disposition.md per package (map/port/eliminate); numpy→ndarray, pandas→polars default; pydantic→serde/schemars requires dedicated ADR before BCs | Prevents unreviewed dep choices propagating into BCs | pre-1 | 2026-07-12 | human |
 | D6 | RESOLVED — ferrochain (distinct brand; scored 23/25 vs 14/25 for langchain-* suffix; `langchain_rs` name blocked by crates.io name-normalization collision). Crate family: ferrochain, ferrochain-core, ferrochain-graph, ferrochain-checkpoint, ferrochain-openai, ferrochain-anthropic, ferrochain-ollama, ferrochain-community, ferrochain-splitters. Final crate names get ADR in architecture phase. Evidence: .factory/planning/naming-decision-study.md | Distinct brand maximizes positioning; suffix scheme is blocked | pre-1 | 2026-07-12 | human |
 | D7 | Wave priority: core → graph → partners. LangGraph runtime + durable checkpointing is the P0 lead differentiator and ships immediately after ferrochain-core | White space analysis confirms graph-runtime-with-checkpointing + conformance suite + formal verification is unoccupied; rig v0.40 competitor velocity HIGH — must lead with graph | pre-1 | 2026-07-12 | human |
+| D8 | Reference-application forcing functions + holdout scenario domains (human directive). Two archetypes serve dual purpose: (1) DESIGN FORCING FUNCTIONS for Phase 1 — PRD/architecture must demonstrate these workloads are supportable (capability checklist: durable multi-day graph runs, hierarchical sub-agent delegation/spawning, parallel fan-out, human-approval interrupts mid-run, quality-gate conditional routing, structured outputs, MCP tool integration, checkpoint/resume across process restarts). (2) HOLDOUT SCENARIO DOMAINS for Phase 2 — product-owner authors hidden acceptance scenarios in these domains; specific scenarios stay hidden from implementers per information-asymmetry rules; only the domains are public. Domain A: Virtual SOC analyst agent — long-running security investigations, SIEM/EDR tool calling via MCP, structured triage verdicts, human approval before containment actions, high-volume alert triage. Domain B: Dark factory (autonomous software development orchestrator) — VSDD-style multi-agent software factory built on ferrochain; behavioral references: /Users/jmagady/Dev/vsdd-factory (Rust cargo workspace — design reference for Rust multi-agent orchestration patterns) + https://factory.strongdm.ai/ (verified live HTTP 200). Downstream product concepts (out of this pipeline's scope, deferred to discovery mode post-convergence): SOC-analyst product + build-your-own-agents SaaS. | Concrete reference applications surface capability gaps before spec crystallization; information-asymmetric holdout domains enforce unbiased Phase 4 evaluation | pre-1 | 2026-07-12 | human |
 
 ## Risk Register
 
@@ -134,8 +135,8 @@ dtu_required: false
 |-------|-------|
 | **Date** | 2026-07-12 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 3 complete. market-intelligence gate PASSED (GO with conditions, human-approved). B2 RESOLVED: GitHub=BOHICA-LABS/ferrochain, local=/Users/jmagady/Dev/ferrochain, worktree repaired. D1 AMENDED: community full port removed, ferrochain-mcp added. D7 NEW: wave priority core→graph→partners. semport-analyze pass 1 dispatched on langchain-core (libs/core). Next: complete semport passes, then Phase 1 spec crystallization. |
-| **Key context** | ferrochain RESOLVED (D6). R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). D1-D7 locked. Ref corpus: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived; curated subset), langchain-mcp-adapters==0.3.0. .mcp.json gitignored. direnv unenabled (B1). R1 LOW: scheduler-kafka out of scope per D1 amendment. |
+| **Position** | pre-1, burst 3 complete. market-intelligence gate PASSED (GO with conditions, human-approved). B2 RESOLVED: GitHub=BOHICA-LABS/ferrochain, local=/Users/jmagady/Dev/ferrochain, worktree repaired. D1 AMENDED: community full port removed, ferrochain-mcp added. D7 NEW: wave priority core→graph→partners. D8 NEW: reference-application forcing functions (Domain A=Virtual SOC analyst, Domain B=Dark factory) + holdout scenario domains. semport-analyze pass 1 dispatched on langchain-core (libs/core). Next: complete semport passes, then Phase 1 spec crystallization. |
+| **Key context** | ferrochain RESOLVED (D6). R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). D1-D8 locked. Ref corpus: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived; curated subset), langchain-mcp-adapters==0.3.0. .mcp.json gitignored. direnv unenabled (B1). R1 LOW: scheduler-kafka out of scope per D1 amendment. D8: Phase 1 must demonstrate capability checklist (durable graph runs, sub-agent spawning, fan-out, human-approval interrupts, quality-gate routing, structured outputs, MCP integration, checkpoint/resume). |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content
