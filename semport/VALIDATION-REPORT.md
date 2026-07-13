@@ -1182,3 +1182,168 @@ treating AnyValue as a "set-once, always-available" channel would miss this step
 semantics, producing channels that hold stale values across steps instead of being cleared.
 The corrected description: AnyValue holds its value for the step in which it was last written;
 it is cleared back to MISSING (empty) at the next step if not re-written.
+
+---
+
+## Certification Pass 1 — Fresh-Context Validation (2026-07-12)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-12.
+
+**Context:** The exhaustive sweep (7 parallel area validators, D14.1 mandate) verified ~1,216
+claims across all 7 areas and applied ~45 corrections marked `[validation-exhaustive]`. This
+certification pass verifies that corpus: (a) re-derives the 4 highest-consequence exhaustive
+fixes against source; (b) re-verifies 16 exhaustive corrections against source; (c) audits
+propagation; (d) checks 10+ test citations; (e) checks cross-area consistency.
+
+**Streak advances to 1/3 ONLY on ZERO corrections of any severity.**
+
+---
+
+### Certification Pass 1 — Phase 1: Behavioral Verification
+
+#### High-Consequence Exhaustive Fixes — Source Verification
+
+| Fix | File | Exhaustive Claim | Source Evidence | Verdict |
+|-----|------|-----------------|-----------------|---------|
+| recursion_limit 10007 (C-01/C-02) | graph/behavioral-intent.md + rust-translation-strategy.md | LangGraph DEFAULT_RECURSION_LIMIT=10007, not 25 | `_internal/_config.py:32: DEFAULT_RECURSION_LIMIT = int(getenv("LANGGRAPH_DEFAULT_RECURSION_LIMIT", "10007"))` ✓ | CONFIRMED ACCURATE |
+| HookResult dict-only | langchain/behavioral-intent.md | Node hooks return `dict[str,Any]\|None`; no `Command` in return type | `types.py:419 before_agent → dict[str, Any] \| None`; types.py:431,443,454,467,478,638,649 all identical ✓ | CONFIRMED ACCURATE |
+| JSX cascade append | splitters/behavioral-intent.md | Component tags appended AFTER js_separators, not prepended | `jsx.py:103-108: separators = self._separators + js_separators + component_separators + [...]` ✓ | CONFIRMED ACCURATE |
+| Phantom /api/version removal | partners/dependency-disposition.md | `_set_ollama_version` makes NO HTTP call to /api/version | `chat_models.py:926: def _set_ollama_version(self): self._add_version("langchain-ollama", __version__)` — no HTTP ✓ | CONFIRMED ACCURATE |
+
+#### Extended Re-verification (16 exhaustive corrections vs source)
+
+| Correction | Claimed | Recounted | Verdict |
+|------------|---------|-----------|---------|
+| pregel/_executor.py LOC | 223 | 223 | CONFIRMED |
+| pregel/_config.py LOC | 0 (empty) | 0 | CONFIRMED |
+| checkpoint/base/__init__.py LOC | 860 | 860 | CONFIRMED |
+| stream/ file count | 7 | 7 | CONFIRMED |
+| _internal/ file count | 15 | 15 | CONFIRMED |
+| messages/__init__.py `__all__` count | 31 | 31 | CONFIRMED |
+| langchain integration_tests/ file count | 5 | 5 | CONFIRMED |
+| langchain optional extras count | 18 | 18 | CONFIRMED |
+| openai _client_utils.py LOC | 683 | 683 | CONFIRMED |
+| openai azure.py LOC | 1,174 | 1,174 | CONFIRMED |
+| ollama _utils.py LOC | 155 | 155 | CONFIRMED |
+| SandboxIntegrationTests test count | 86 | 86 | CONFIRMED |
+| ChatModelIntegrationTests def test_ count | 48 | 48 | CONFIRMED |
+| ChatModelUnitTests method count | 9 | 9 | CONFIRMED |
+| test_split_json test count | 8 | 8 | CONFIRMED |
+| test_channels.py function count | 34 | 34 | CONFIRMED |
+
+#### Test Citation Integrity (10+ citations verified)
+
+| Citation | Claimed Location | Verified |
+|----------|-----------------|---------|
+| `test_jsx_splitter_separator_not_mutated_across_calls` | test_text_splitters.py:756 | ✓ |
+| `test_split_json` (first) | test_text_splitters.py:3336 | ✓ |
+| `test_split_json_empty_dict_value_in_large_payload` (last) | test_text_splitters.py:3476 | ✓ |
+| `test_adapter_bug_still_raises` | test_tools.py:650 | ✓ |
+| `test_get_tools_with_name_conflict` | test_tools.py:1420 (NOT test_client.py) | ✓ |
+| `AgentMiddleware` class | types.py:383 | ✓ |
+| `test_no_overrides_DO_NOT_OVERRIDE` | base.py:7 | ✓ |
+| `NamedBarrierValue` — zero occurrences in test_channels.py | test_channels.py (0 hits) | ✓ |
+| `EphemeralValue` — zero occurrences in test_channels.py | test_channels.py (0 hits) | ✓ |
+| `MultiServerMCPClient.__aenter__` raises NotImplementedError | client.py:267-273 | ✓ (untested in Python) |
+| `ToolCallTransformer` in factory.py | factory.py:27,1796 | ✓ |
+| `SubagentTransformer` in factory.py | factory.py:33,1797 (from `_subagent_transformer.py`) | ✓ |
+
+#### Cross-Area Consistency
+
+| Check | Verdict |
+|-------|---------|
+| langchain §5 consumed-API (34 symbols) vs graph inventory | VERIFIED — all 34 symbols exist in langgraph at 1.2.9 |
+| partners conformance claims vs standard-tests section | VERIFIED — ChatModelIntegrationTests: 48, unit: 9, both confirmed |
+| graph recursion_limit vs langchain create_agent recursion_limit | CONSISTENT — graph default 10007 (env); create_agent hardcodes 9999 at factory.py:1780; no conflict |
+| platform sdk-py LOC vs graph §0 sdk-py count (post-cert correction) | CONSISTENT — both now reflect langgraph_sdk package scope: 45 files / 18,728 LOC |
+
+#### Propagation Audit (10+ corrections checked for sibling propagation)
+
+| Correction | Files Requiring Propagation | Propagated? |
+|------------|---------------------------|-------------|
+| recursion_limit 10007 | graph/behavioral-intent.md ✓; graph/rust-translation-strategy.md ✓ | YES |
+| HookResult dict-only | langchain/behavioral-intent.md ✓; langchain/rust-translation-strategy.md (uses Option<HookResult> = correct) ✓ | YES |
+| JSX cascade append | splitters/behavioral-intent.md ✓; splitters/rust-translation-strategy.md (JSON test count also fixed) ✓ | YES |
+| Phantom /api/version | partners/dependency-disposition.md ✓ | YES |
+| pregel/ LOC 14,873 | graph/module-inventory.md ✓ | YES |
+| sdk-py/cli scope (cert correction) | graph/module-inventory.md §0 rows ✓; narrative sections at §131/141 already used package-directory values (~18.7k/~8.4k) — consistent post-cert | YES |
+| optional extras 18 | langchain/dependency-disposition.md ✓ | YES |
+| messages/__init__.py 31 symbols | langchain/module-inventory.md ✓ | YES |
+| integration_tests/ 5 files | langchain/test-inventory.md ✓ | YES |
+| SandboxIntegrationTests 86 | partners/test-inventory.md ✓; partners/module-inventory.md ✓ | YES |
+| MCP test citation corrections (I-1, I-2) | mcp/test-inventory.md ✓ | YES |
+
+---
+
+### Certification Pass 1 — Phase 2: Metric Verification
+
+| Claim | Claimed (post-exhaustive) | Recounted | Delta | Command |
+|-------|--------------------------|-----------|-------|---------|
+| `langgraph_sdk` package files | 63 (exhaustive M-05) | **45** | **-18** | `find .reference/langgraph/libs/sdk-py/langgraph_sdk -name "*.py" \| wc -l` |
+| `langgraph_sdk` package LOC | 20,787 (exhaustive M-05) | **18,728** | **-2,059** | `find .reference/langgraph/libs/sdk-py/langgraph_sdk -name "*.py" -exec wc -l {} + \| tail -1` |
+| `langgraph_cli` package files | 46 (exhaustive M-06) | **19** | **-27** | `find .reference/langgraph/libs/cli/langgraph_cli -name "*.py" \| wc -l` |
+| `langgraph_cli` package LOC | 9,997 (exhaustive M-06) | **8,383** | **-1,614** | `find .reference/langgraph/libs/cli/langgraph_cli -name "*.py" -exec wc -l {} + \| tail -1` |
+| All other metrics re-confirmed from passes 1-8 and exhaustive sweep | various | identical | 0 | (sampled 16 above, all pass) |
+
+**Root cause of M-05/M-06 error:** The exhaustive sweep used `find .reference/langgraph/libs/sdk-py -name "*.py" -not -path "*/tests/*"` (all non-test files in the libs/sdk-py tree including setup.py, scripts, examples) instead of `find .reference/langgraph/libs/sdk-py/langgraph_sdk -name "*.py"` (the Python package directory only). All other rows in the §0 table count the package subdirectory; M-05/M-06 used a broader scope inconsistent with the table convention. The row labels say `langgraph_sdk` / `langgraph_cli` (package dirs) — the counts must match those paths.
+
+---
+
+### Certification Pass 1 — Inaccurate Items (Corrected)
+
+| Item | Original Exhaustive Claim | Actual | Severity | Correction Applied |
+|------|--------------------------|--------|----------|--------------------|
+| `graph/module-inventory.md §0` sdk-py row | 63 files / 20,787 LOC (M-05 exhaustive correction) | `langgraph_sdk` directory: 45 files / 18,728 LOC; M-05 used broader libs/sdk-py scope | MEDIUM | Reverted to 45/18,728; row label and counts now consistent; `[validation-certification-1]` markers added; note in annotation explains scope of full libs/sdk-py tree (63/20,787) for reference |
+| `graph/module-inventory.md §0` cli row | 46 files / 9,997 LOC (M-06 exhaustive correction) | `langgraph_cli` directory: 19 files / 8,383 LOC; M-06 used broader libs/cli scope | MEDIUM | Reverted to 19/8,383; `[validation-certification-1]` markers added; note in annotation explains scope of full libs/cli tree (46/9,997) for reference |
+
+**Note on operational impact:** The corrected `langgraph_cli` count (19 files / 8,383 LOC) is consistent with the platform area's verified values for `langgraph_cli` source-only. The scope mismatch had no behavioral impact on the analysis (sdk-py and cli are INVENTORY-ONLY packages not deep-analyzed) but did create a visible inconsistency between the §0 overview table and the narrative sections at §131/141 (which already stated ~18.7k/~8.4k).
+
+---
+
+### Certification Pass 1 — Hallucinated Items
+
+None. No new hallucinated items found in any area across any stratum verified.
+
+---
+
+### Certification Pass 1 — Unverifiable Items
+
+Same standing set from passes 1-8 (Ollama DTU endpoint catalog beyond what is implemented,
+rmcp 2.2.0 elicitation details, partner own-test LOC). No new unverifiable items.
+
+---
+
+### Certification Pass 1 — Per-Area Verdicts
+
+| Area | Verdict | Pass-Cert-1 Corrections |
+|------|---------|------------------------|
+| core | PASS — all exhaustive corrections verified; no new findings | 0 |
+| graph | PASS WITH CORRECTIONS — M-05/M-06 scope mismatch corrected; all behavioral corrections confirmed accurate | 2 (same fact, 2 table cells) |
+| langchain | PASS — all corrections confirmed; cross-area consumed-API confirmed | 0 |
+| partners | PASS — all corrections confirmed; phantom endpoint and test_image_urls removal confirmed accurate | 0 |
+| splitters | PASS — JSX cascade append confirmed accurate; JSON test count confirmed | 0 |
+| mcp | PASS — all corrections confirmed; __aenter__ NotImplementedError confirmed | 0 |
+| platform | PASS — all corrections confirmed; cross-area sdk-py/cli consistency restored post-cert correction | 0 |
+
+### Certification Pass 1 — CLEAN Status
+
+```
+CLEAN (strict): no — 2 corrections of severity MEDIUM (same root cause: M-05/M-06 scope mismatch)
+CLEAN (PR-merge): yes — zero CRIT/HIGH findings; both corrections are MEDIUM
+Streak: 0/3 (reset; Certification Pass 1 is not CLEAN strict)
+```
+
+**Most consequential finding:** The exhaustive sweep's M-05/M-06 "corrections" to the sdk-py and
+cli rows in graph/module-inventory.md §0 used the wrong path scope — `libs/sdk-py` (all non-test
+files) instead of `libs/sdk-py/langgraph_sdk` (the package directory). This changed accurate values
+(~50/18,728 for sdk-py was slightly off on file count but LOC was correct) to inaccurate ones
+(63/20,787 for the broader scope, mislabeled as the package directory). The correction restores
+consistency: row label = `langgraph_sdk` package dir = 45 files / 18,728 LOC, matching both the
+row label convention used by all other entries in the §0 table and the platform area's independently
+verified 18,728 LOC figure for the same package.
+
+**Corrector-can-be-wrong empirical confirmation:** This finding directly validates the certification
+brief's warning that "correctors can be wrong — proven in pass 2." The exhaustive sweep correctly
+identified that the original ~50 file count was approximate but overcorrected by switching to a
+broader path scope, introducing a label-count mismatch.

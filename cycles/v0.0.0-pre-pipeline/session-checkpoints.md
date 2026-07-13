@@ -184,3 +184,19 @@ traces_to: STATE.md
 | **Convergence counter** | 0 of 3 |
 
 ---
+
+---
+
+## Session Resume Checkpoint (2026-07-13) — burst 17 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 17 complete. D14.1 exhaustive sweep DONE — all 7 areas FULL coverage: ~1,216 claims verified; ~45 corrections (3 CRITICAL, ~9 HIGH, ~11 MEDIUM); ZERO hallucinated symbols; 2 phantom artifacts removed. CRITICAL: (1) graph recursion_limit default is 10,007 (LANGGRAPH_DEFAULT_RECURSION_LIMIT env-tunable, _internal/_config.py:32), NOT 25; corrected in behavioral-intent + rust-translation-strategy. (2) langchain node-hook return type is dict[str,Any]\|None NOT dict\|Command\|None; redefines Rust HookResult as state-update map. HIGH: JSX separator cascade order reversed; 2 phantom artifacts removed (partners phantom GET /api/version DTU endpoint + phantom test_image_urls conformance test). §5 consumed-API: 34/34 symbols verified. D13 server: 61 endpoints certified. R11 registered (MCP upstream test voids). 3-CLEAN certification pass 1 dispatched. Streak 0/3. |
+| **Key context** | D1-D14.1 locked. D14.1: exhaustive-sweep-then-3-CLEAN (human-approved 2026-07-13); strict-zero bar unchanged. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R10 OPEN: NamedBarrierValue + EphemeralValue coverage gap — route to product-owner at Phase 1. R11 OPEN (new): MCP upstream test voids — mcp bare-ToolException re-raise path + mcp __aenter__ NotImplementedError contract (both untested upstream; must be explicit ferrochain Red Gate tests). CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment. All 6 guardrails active for certification passes. |
+| **Convergence counter** | 0 of 3 |
+
+---

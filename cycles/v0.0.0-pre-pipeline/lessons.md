@@ -212,3 +212,43 @@ For pass 8 and subsequent passes, a package-attribution guardrail is active (6th
 ### Follow-up
 
 Add the package-attribution guardrail to the validate-extraction agent prompt upstream as the 6th guardrail — co-batch with all prior guardrails in session-review prompt hardening. The full 6-guardrail set is now: (1) AST-based counting, (2) cross-document propagation sweep, (3) behavioral-locus precision, (4) semantic-precision summary-word verification, (5) deepening-note sweep, (6) package-attribution verification.
+
+---
+
+## PROCESS-GAP: Scope-Label Matching — 7th Guardrail
+
+**Category:** Validator counting methodology
+**Discovered:** Certification pass 1 (burst 18, 2026-07-13)
+**Severity when violated:** MEDIUM
+
+### What happened
+
+Certification pass 1 found 2 MEDIUM corrections — both were the exhaustive sweep's own over-corrections. The exhaustive sweep's M-05 and M-06 re-counted `libs/sdk-py/langgraph_sdk` and `libs/cli/langgraph_cli` rows using the broader `libs/sdk-py` and `libs/cli` directory trees (63 files / 20,787 LOC and 46 files / 9,997 LOC respectively). The correct counts, measured from the labeled package directories, are 45 / 18,728 and 19 / 8,383. Every other row in module-inventory.md counts the package sub-directory; these two rows were recounted from the wrong scope.
+
+The exhaustive sweep intended to correct loose estimates (`~50/18,728` and `~25/8,383`) and the corrected totals were directionally correct for their broader scope, but inconsistent with the scope the row labels denote.
+
+### Why it matters
+
+A table row that says `libs/sdk-py/langgraph_sdk` implicitly defines scope as "the langgraph_sdk Python package." Counting files from the parent `libs/sdk-py/` directory includes setup.py, examples/, scripts/, and test fixtures — content that does not belong in the "package code" scope claimed by the label. This scope mismatch produces counts that are systematically inflated and inconsistent with companion rows, misleading implementers about actual package size.
+
+Conversely, a corrector who reads only the broader-tree number and trusts it without cross-checking the scope of the label will propagate an inaccurate figure with high confidence.
+
+### Codification — 7th Guardrail: SCOPE-LABEL MATCHING
+
+For every numeric row (LOC, file count, etc.) in a module inventory table:
+
+1. **Resolve the label's scope FIRST:** Before re-counting, determine exactly what filesystem path the row label denotes. A label like `libs/sdk-py/langgraph_sdk` means the package directory, not the libs/ parent.
+2. **Count from the labeled scope, not the nearest convenient path:** If the label says `langgraph_sdk`, run `find .reference/langgraph/libs/sdk-py/langgraph_sdk -name "*.py"` — not `find .reference/langgraph/libs/sdk-py -name "*.py"`.
+3. **Cross-check scope consistency:** After re-counting, verify the corrected value is consistent with what companion rows in the same table count (all package dirs, or all libs/ trees — must match across rows).
+4. **Document the scope in the correction comment:** Every `[validation-*]` comment must state both the measured path and the count, e.g.: `find .../langgraph_sdk -name "*.py" | wc -l = 45, xargs wc -l = 18,728`.
+5. **Certifier scope check:** In certification passes, when reverifying a row previously corrected, check whether the corrector used the right scope — not just whether the arithmetic is correct for the scope they used.
+
+### The full 7-guardrail set
+
+1. AST-based counting (never grep/eyeballing for code constructs)
+2. Cross-document propagation sweep (find all locations that must reflect the same fact)
+3. Behavioral-locus precision (describe behavior at the execution locus, not a secondary description)
+4. Semantic-precision summary-word verification (verify superlatives, totals, and summary claims against base data)
+5. Deepening-note sweep (verify items marked for deeper investigation were actually investigated)
+6. Package-attribution verification (any class attributed to a package must exist in that package at the pinned tag)
+7. Scope-label matching (every numeric row must be counted from exactly the scope its label denotes)

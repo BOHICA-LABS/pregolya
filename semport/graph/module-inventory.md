@@ -21,8 +21,8 @@ note: analysis only — NO Rust code written.
 | `libs/checkpoint-postgres/langgraph` | 9 | **4,891** | DEEP (schema) | P1 |
 | `libs/checkpoint-sqlite/langgraph` | 8 | **3,849** | DEEP (schema) | P1 |
 | `libs/prebuilt/langgraph` (react agent, ToolNode) | 7 | **3,676** | DEEP | P1 |
-| `libs/sdk-py/langgraph_sdk` (Platform client) | 63 | **20,787** | INVENTORY only | P2 | <!-- [validation-exhaustive]: ~50/18,728 was inaccurate; find+wc: 63 files, 20,787 LOC -->
-| `libs/cli/langgraph_cli` (deploy/build/dev) | 46 | **9,997** | INVENTORY only | P3 (mostly OUT) | <!-- [validation-exhaustive]: ~25/8,383 was inaccurate; find+wc: 46 files, 9,997 LOC -->
+| `libs/sdk-py/langgraph_sdk` (Platform client) | 45 | **18,728** | INVENTORY only | P2 | <!-- [validation-certification-1]: REVERTED exhaustive M-05 correction; find .reference/langgraph/libs/sdk-py/langgraph_sdk -name "*.py" | wc -l = 45, xargs wc -l = 18,728. M-05 used the broader libs/sdk-py path (63 files/20,787 LOC incl. setup.py, examples, scripts) rather than the labeled langgraph_sdk package directory. All other rows in this table count the package sub-directory; this row must match that scope. Total libs/sdk-py non-test files = 63/20,787 for reference only. -->
+| `libs/cli/langgraph_cli` (deploy/build/dev) | 19 | **8,383** | INVENTORY only | P3 (mostly OUT) | <!-- [validation-certification-1]: REVERTED exhaustive M-06 correction; find .reference/langgraph/libs/cli/langgraph_cli -name "*.py" | wc -l = 19, xargs wc -l = 8,383. M-06 used the broader libs/cli path (46 files/9,997 LOC) instead of the labeled langgraph_cli package directory. Total libs/cli non-test files = 46/9,997 for reference only. -->
 | **In-scope source subtotal (deep)** | — | **~46,154** | — | — |
 | Core test suite (`libs/langgraph/tests`) | 49 test files | **63,249** | spec input | — |
 
@@ -194,7 +194,7 @@ artifact: module-inventory
 status: complete
 files_scanned: 40+ (all deep-scope key files read; sdk/cli inventoried by grep)
 deep_scope_loc: 46154
-validation_note: "checkpoint file count corrected 18→17; sqlite-vec dep added; serde/types.py and RedisCache documented [validation-corrected]; [validation-exhaustive]: pregel/ LOC corrected ~11.5k→14,873 (24 files); _executor.py added; pregel/_config.py is 0 LOC (empty), pregel/types.py is 38 LOC stub (not 984); canonical 984 LOC types at langgraph/types.py; stream/ 8→7 files; _internal/ 16→15 files, ~3.2k→2,893 LOC; sdk-py ~50/18728→63/20787; cli ~25/8383→46/9997; checkpoint/base/__init__.py 861→860 LOC"
+validation_note: "checkpoint file count corrected 18→17; sqlite-vec dep added; serde/types.py and RedisCache documented [validation-corrected]; [validation-exhaustive]: pregel/ LOC corrected ~11.5k→14,873 (24 files); _executor.py added; pregel/_config.py is 0 LOC (empty), pregel/types.py is 38 LOC stub (not 984); canonical 984 LOC types at langgraph/types.py; stream/ 8→7 files; _internal/ 16→15 files, ~3.2k→2,893 LOC; checkpoint/base/__init__.py 861→860 LOC; [validation-certification-1]: sdk-py and cli reverted to package-directory scope (langgraph_sdk=45/18728, langgraph_cli=19/8383); exhaustive M-05/M-06 had used broader libs/sdk-py and libs/cli paths inconsistent with labeled directory scope"
 core_test_loc: 63249
 timestamp: 2026-07-12
 ```

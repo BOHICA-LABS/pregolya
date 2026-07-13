@@ -678,3 +678,44 @@ Both must be explicit ferrochain Red Gate tests (join R8 splitters code-point/by
 - semport/*/behavioral-intent.md, module-inventory.md, rust-translation-strategy.md, test-inventory.md, dependency-disposition.md (24 files — [validation-exhaustive] corrections applied in-place)
 
 **Next steps:** 3-CLEAN certification pass 1 in progress. Requires 3 consecutive CLEAN(strict) passes (streak 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.
+
+---
+
+## Burst 18 — 3-CLEAN Certification Pass 1 COMPLETE (2026-07-13)
+
+**Result:** CLEAN(strict)=NO, CLEAN(PR-merge)=YES. 2 corrections (2 MEDIUM), streak 0/3.
+
+**Corrections:**
+
+- **MEDIUM M-05 REVERTED (sdk-py scope):** `libs/sdk-py/langgraph_sdk` row corrected from exhaustive sweep's 63 files / 20,787 LOC back to 45 / 18,728. The exhaustive correction M-05 measured the broader `libs/sdk-py` tree (setup.py, examples, scripts) instead of the labeled `langgraph_sdk` package directory. All other rows in module-inventory.md count the package sub-directory; this row must match that scope. `find .reference/langgraph/libs/sdk-py/langgraph_sdk -name "*.py" | wc -l = 45; xargs wc -l = 18,728` confirms correct values.
+
+- **MEDIUM M-06 REVERTED (cli scope):** `libs/cli/langgraph_cli` row corrected from 46 files / 9,997 LOC back to 19 / 8,383. Same failure class: M-06 measured `libs/cli` (broader tree) vs the labeled `langgraph_cli` package directory. `find .reference/langgraph/libs/cli/langgraph_cli -name "*.py" | wc -l = 19; xargs wc -l = 8,383` confirms.
+
+**STRONG convergence signal:**
+
+- All 4 high-consequence exhaustive fixes RE-CONFIRMED against source: recursion_limit 10,007 (✓ `_config.py:32`), HookResult dict[str,Any]\|None (✓ `types.py:419`), JSX cascade append-after (✓ `jsx.py:103-108`), phantom /api/version removal (✓ `chat_models.py:926`).
+- 16 additional exhaustive corrections re-derived all-correct (LOC counts, file counts, test citation line numbers).
+- 12 test citations accurate.
+- Propagation audit: ZERO stale values corpus-wide.
+- 34-symbol API contract cross-area consistent.
+- Error surface reduced to a single class: scope-label precision on counts.
+
+**Guardrail #7 codified:** SCOPE-LABEL MATCHING — every numeric row must be counted from exactly the scope its label denotes (package directory vs libs tree, including vs excluding tests); correctors must resolve the label's scope BEFORE re-counting.
+
+**Certification pass 2 dispatched:**
+
+- Agent: validate-extraction (fresh context)
+- Scope: all 7 guardrails active; rotated sampling avoiding pass-1's verified list; re-verifies pass-1's own two fixes; platform↔graph number agreement check
+- Streak: 0/3
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated, Current Step; pass-1 row updated to DONE; pass-2 IN_PROGRESS row added; Session Resume Checkpoint replaced; Historical Content updated with burst 18, lesson, burst-17 checkpoint entry)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/lessons.md (Guardrail #7 SCOPE-LABEL MATCHING appended)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 17 checkpoint archived)
+- semport/VALIDATION-REPORT.md (Certification Pass 1 section appended — Phase 1 behavioral verification tables, extended re-verification, test citation integrity, cross-area consistency, finding summary)
+- semport/graph/module-inventory.md (sdk-py 63/20,787→45/18,728, cli 46/9,997→19/8,383; validation_note updated with [validation-certification-1] reverts)
+- logs/dispatcher-internal-2026-07-12.jsonl (dispatcher log updated)
+
+**Next steps:** 3-CLEAN certification pass 2 in progress. Requires 3 consecutive CLEAN(strict) passes (streak 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.
