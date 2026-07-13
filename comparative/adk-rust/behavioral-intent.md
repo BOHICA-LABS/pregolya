@@ -50,7 +50,7 @@ level. `ReadonlyContext` also provides typed-identity accessors (`try_app_name()
   `..`, or null bytes. Directly tested for path-traversal (`../etc/passwd`, `foo/bar`,
   `foo\bar`, `..`) and null-byte injection. This is a **security invariant** on the state
   keyspace — states are persisted to SQL/Redis/filesystem backends, so key sanitization
-  matters. Confidence HIGH (`test_validate_state_key_path_traversal`, `_null_byte`).
+  matters. Confidence HIGH (`test_validate_state_key_path_traversal`, `test_validate_state_key_null_byte`). <!-- [comparative-cert-17] C17-01: `_null_byte` is an editorial `_`-prefix shorthand, not a verbatim function name; actual test: `test_validate_state_key_null_byte` at adk-core/src/context.rs:980 -->
 - **State scope prefixes**: `user:` (persists across sessions), `app:` (application-wide),
   `temp:` (cleared each turn) — as public consts `KEY_PREFIX_USER/APP/TEMP`.
 
@@ -69,7 +69,7 @@ Behavioral contracts:
 - **BC: retryability derives from category by default.** `RetryHint::for_category` sets
   `should_retry = true` for RateLimited/Unavailable/Timeout, false otherwise; overridable via
   `with_retry`. Tested exhaustively across all 10 categories (`test_retryable_categories_default_true`,
-  `_non_retryable_categories_default_false`). Confidence HIGH.
+  `test_non_retryable_categories_default_false`). Confidence HIGH. <!-- [comparative-cert-17] C17-01: `_non_retryable_categories_default_false` is an editorial shorthand; actual test: `test_non_retryable_categories_default_false` at adk-core/src/error.rs:668 -->
 - **BC: category → HTTP status is a total mapping** (400/401/403/404/429/408/503/499/500/501).
   Tested for all 10 (`test_http_status_code_mapping`). Confidence HIGH.
 - **BC: `to_problem_json` emits RFC-7807-style Problem Details** with camelCase keys and null
@@ -420,7 +420,7 @@ MED = code-grounded, LOW = inferred. D16 Rust-blindness — observe only.
 - **BC: INPUT_REQUIRED multi-turn resume.** A follow-up whose `contextId` maps (via
   `find_task_by_context`, which excludes terminal states) to an `InputRequired` task RESUMES that
   task (Working→Completed) rather than forking a new one; terminal-context or no-context → new task.
-  Confidence HIGH (`message_send_resumes_input_required_task`, `_creates_new_task_for_terminal_context`).
+  Confidence HIGH (`message_send_resumes_input_required_task`, `message_send_creates_new_task_for_terminal_context`). <!-- [comparative-cert-17] C17-01: `_creates_new_task_for_terminal_context` is an editorial shorthand; actual test: `message_send_creates_new_task_for_terminal_context` at adk-server/src/a2a/v1/request_handler.rs:1176 -->
 - **BC: input validation.** ≥1 part; message/task id non-empty-after-trim and ≤256 chars; metadata
   ≤64 KB. Each individually tested (patterns P-37). Confidence HIGH.
 - **BC: tasks_cancel rejects terminal tasks** (`TaskNotCancelable`); transitions non-terminal →
