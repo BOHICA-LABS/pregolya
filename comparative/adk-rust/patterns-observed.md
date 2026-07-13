@@ -1558,7 +1558,7 @@ timestamp: 2026-07-13
   version-error parsing, interface selection, header construction, card storage) but the retry /
   caching / transport paths themselves are untested (would need a mock HTTP server; the live path is
   `a2a_live_integration_test.rs`).
-- **Quality:** **WEAK** — dual-maintenance + triplicated SSE parsing = drift surface; the v1 client
+- **Quality:** **WEAK** — dual-maintenance + duplicated SSE parsing = drift surface <!-- [comparative-cert-3] CORRECTION: "triplicated" → "duplicated": source confirms only TWO SSE parse implementations exist — (1) legacy A2aClient::send_streaming_message inline loop + parse_sse_data (client.rs:186); (2) v1_remote::run inline loop + parse_sse_data_line (remote_agent.rs:699). The legacy RemoteA2aAgent::run delegates entirely to A2aClient::send_streaming_message, receiving a typed event stream — it has NO separate SSE parse loop and is NOT a third copy. -->; the v1 client
   is clearly the production-grade one (retry, version negotiation, caching) while legacy lags. A
   ferrochain port would consolidate on one client with the v1 feature set.
 - **UPGRADES A3.**
