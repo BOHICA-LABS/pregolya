@@ -681,11 +681,10 @@ and the deep-scope capability crates, plus resolution of A1 open item P-16.
   `LlmRequest → provider wire → provider response → LlmResponse`, mapping the provider error taxonomy
   into `AdkError` (component=Model). The intent: provider-neutral agent code (`is_final_response`,
   tool loop) works regardless of backend.
-- **Resilience by default (mostly):** all `adk-model` providers route generation through the shared
+- **Resilience by default (mostly):** 9 of 12 `adk-model` providers route generation through the shared
   `execute_with_retry` combinator (P-71) with `is_retryable_model_error` classification — retry policy
-  is centralized, not per-provider. Server-provided `retry-after` is honored over local backoff (P-03/
-  P-04 carried through). Behavioral gap: ollama (external ollama-rs) does not participate in the shared
-  retry; and outbound timeouts are non-uniform (P-77).
+  is centralized for the dominant path. Server-provided `retry-after` is honored over local backoff (P-03/
+  P-04 carried through). Behavioral gaps: <!-- [comparative-cert-1] corrected from "all providers" + "only ollama" exception; certification verified 3 non-wired providers via grep --> ollama (external ollama-rs) does not participate; bedrock/client stores RetryConfig but delegates retry to `aws-sdk-bedrockruntime`; openai/ws_transport stores RetryConfig but implements a manual retry loop (lines 160-201). And outbound timeouts are non-uniform (P-77).
 - **Tool-call robustness across serving backends:** `tool_call_parser` (P-68) makes the tool loop work
   even when a backend emits tool calls as TEXT (Qwen/Llama/Mistral/DeepSeek/Gemma). The promise: an
   agent's tool contract is backend-encoding-agnostic — directly the property ferrochain-ollama needs.

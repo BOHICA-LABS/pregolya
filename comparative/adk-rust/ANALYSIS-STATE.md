@@ -3,9 +3,9 @@ document_type: analysis-state-checkpoint
 corpus: adk-rust
 version: v1.0.0
 sha: a6c79b6f
-pass: A5
+pass: A6
 status: complete
-timestamp: 2026-07-13T12:00:00Z
+timestamp: 2026-07-13T18:00:00Z
 ---
 
 # adk-rust Comparative Analysis State
@@ -76,3 +76,81 @@ See patterns-observed.md for full catalogue.
 | A3 | 12 (P-35..P-46) | 46 | 4 | 2 | 6 |
 | A4 | 20 (P-47..P-66) | 66 | 8 | 4 | 8 |
 | A5 | 13 (P-67..P-79) | 79 | 7 | 2 | 4 |
+| A6 | 8 (P-80..P-87) | 87 | 1 | 3 | 4 |
+
+## Pass A6 — Convergence Deepening (COMPLETE)
+
+Worked the residual open/deferred items to explicit novelty verdicts, highest spec-impact first.
+Full detail in patterns-observed.md "Pass A6 deepening" (P-80..P-87).
+
+### Per-item novelty verdicts
+
+| # | Item | Verdict | New patterns | Finding summary |
+|---|------|---------|--------------|-----------------|
+| 1 | adk-realtime bidi audio FSM (VAD/barge-in/turn-taking) | **HIGH** | P-80, P-81 | 4-state runner FSM + provider-agnostic "Phantom Reconnect" (native-mutate vs teardown/rebuild), last-write-wins single-slot queue, 3-attempt retry budget, fail-open event loop (P-80). Barge-in is server-VAD-delegated; client loop never auto-`interrupt()`s on SpeechStarted; `interrupt()` is manual; Gemini drops manual `ResponseCancel` (P-81). Domain C reference. |
+| 2 | Sandbox: Windows AppContainer + adk-code Docker isolation | **HIGH** | P-82, P-83 | Windows enforcer is a documented hard-fail stub — `configure_command` returns `EnforcerFailed`; no working Windows sandbox path (unsandboxed-or-error); Linux bwrap + macOS seatbelt are real (P-82). adk-code `DockerExecutor.execute()` IGNORES per-request `SandboxPolicy` (net/fs/env) despite `capabilities()` advertising enforcement — uses static `DockerConfig`; no `--user`/`--read-only`/`--memory`/`--cpus`/`--pids-limit`/`--cap-drop`; DoS bounded only by timeout (P-83). Domain A/C. |
+| 3 | Ignored-vs-runnable integration-test census (attr-only) | **MED** | — | 4,803 test attrs / 150 proptest / **126 `#[ignore]` (≈2.6%)** / 19 live-API-gated files. Ignores dominated by external deps (keys, HF weights, npx/Vertex), not broken tests; most carry reason strings. Reconciles with A4 (~617) + A5 (~1,849) cluster subsets. Closes the PARTIAL census item. |
+| 4 | adk-rag vector-store contracts + thin-test claim | **MED** | P-84 | Thin-test VERIFIED: qdrant/pgvector/lancedb have ZERO tests (4/6 backends untested); only chunking/inmemory/surrealdb tested. NEW: `InMemoryVectorStore` discards declared `dimensions` and never dim-checks; `cosine_similarity` truncate-zips → silent garbage scores on mismatch, diverging from DB backends that enforce dims engine-side. |
+| 5 | Skill ContextCoordinator negative path | **MED** | P-87 | Phantom-tool prevention is real + well-tested (instruction built only from resolved `active_tools`). Strict mode: validation error swallowed (`Err => continue`), caller can't distinguish no-match from tools-missing. Permissive: missing tools silently omitted (comment concedes embedder must monitor). Both modes HIGH-confidence tested. |
+| 6 | a2a client (RemoteA2aAgent / A2aClient) behavioral read | **HIGH** | P-85, P-86 | UPGRADES A3 signature-depth. All transport/RPC failures surfaced as error EVENTS (`turn_complete`, `error_message`), never stream `Err` — remote failure looks like a completed turn (P-85). Dual client generations: legacy `A2aClient` (no retry/version) + feature-gated `A2aV1Client` (11 ops, JSON-RPC+REST, exp-backoff retry on 429/5xx/timeout, version negotiation -32009, ETag card caching); SSE parser triplicated; transport paths untested (P-86). |
+| 7 | Residual open items (ADR unify graph-checkpoint+session) | **LOW** | — | The "unify graph-checkpoint + session persistence on one store" item is a **ferrochain Phase-1 design decision**, not an adk-rust analysis gap — remains OPEN as a ferrochain-side decision (see below). No other ANALYSIS-STATE item left open. |
+
+### Open Items (post-A6 status)
+
+| Item | Status |
+|------|--------|
+| Verify `anyhow`-in-public-signatures extent | RESOLVED (A5) |
+| adk-model vs standalone provider crate relationship | RESOLVED (A5, P-16/P-67) |
+| Locate all `reqwest` timeout construction sites | **CORRECTED (A6)** — see Contradiction C1: workspace-wide ~79 client-construction sites in production `src`, only ~10 carry `.timeout()` (~69 timeout-less). A3 P-42's "7 sites" was cluster-scoped (server/auth/awp/acp/managed/enterprise) and under-counted; timeout-absence is systemic (providers, rag, payments, a2a clients all affected). |
+| Classify ignored-vs-runnable integration tests | **RESOLVED (A6)** — census above (126 `#[ignore]`, ≈2.6%). |
+| Sandbox default posture (Domain C) | RESOLVED (A4 P-60/61/62) + EXTENDED (A6 P-82 Windows, P-83 Docker). |
+| ADR: unify graph-checkpoint + session persistence | **OPEN — ferrochain Phase-1 design decision** (not an adk-rust novelty gap; carry to architecture phase). |
+
+### Contradictions vs prior passes (for the certification cascade — known-corrections)
+
+- **C1 (CORRECTION) — reqwest timeout-less site count.** A3 P-42: "7 sites … ALL without `.timeout()`,
+  confined to server/auth/awp/acp/managed/enterprise." A6 workspace-wide: ~79 `reqwest::Client::new()`/
+  `builder()` sites in production `src`, only ~10 with `.timeout()` → ~69 timeout-less, spanning
+  providers (anthropic/gemini/model), rag, payments, and BOTH a2a clients. P-42's count is a subset,
+  not the total. Timeout-absence is a **systemic** counter-example to ferrochain's mandatory-30s rule,
+  not a 7-site cluster. (Spec impact: NFR/error-taxonomy should assume workspace-wide timeout MAP, not a
+  localized fix.)
+- **C2 (REFINEMENT) — adk-realtime native-tls "HARD CONFLICT".** The ANALYSIS-STATE A5 compliance flag
+  states adk-realtime "pulls `native-tls` via `livekit` — HARD CONFLICT" as a flat statement.
+  patterns-observed P-79 already refines this ("contained to optional features"). Correction: adk-realtime
+  DEFAULTS to rustls (declares `rustls` w/ aws-lc-rs; `google-cloud-auth` `default-rustls-provider`;
+  OpenAI/Gemini transports over tokio-tungstenite+rustls). native-tls rides ONLY the OPTIONAL `livekit`
+  feature. The conflict is feature-gated, not unconditional — the flat flag should carry the "livekit-only"
+  qualifier.
+- **C3 (SOURCE-INTERNAL contradiction, surfaced A6) — adk-code Docker capability claim vs behavior.**
+  `DockerExecutor::capabilities()` advertises `enforce_filesystem_policy/enforce_network_policy/
+  enforce_environment_policy = true`, but `execute()` ignores the per-request `SandboxPolicy` for those
+  three axes (honors only timeout + output caps); isolation comes from the construction-time `DockerConfig`.
+  This is a contradiction *within the source* (self-declared capability vs actual per-request behavior),
+  not between analysis passes — flag to certification as a source-fidelity note. The CLI
+  `ContainerCommandExecutor` does NOT have this gap (it maps the per-request policy).
+
+Note on candidate contradiction (RESOLVED, not a contradiction): the A6 workspace test-attribute total
+(4,803) vs A4 "~617" / A5 "~1,849" is a SCOPE difference (workspace vs safety cluster vs provider cluster),
+not a conflict — the cluster figures are subsets of the workspace total.
+
+## Overall Analysis-Convergence Verdict
+
+**NOT YET CONVERGED (near-converged).** A6 resolved all named residual items but produced two **HIGH**-novelty
+areas (realtime FSM P-80/P-81; a2a client behavior P-85/P-86) and one systemic correction (C1), so the
+"all items LOW" bar for CONVERGED is not met. The model materially changed for realtime, sandbox-Windows,
+and a2a. Remaining substantive threads NOT yet read at function-level depth (candidates for an optional A7,
+if pursued):
+
+- adk-realtime `gemini/session.rs` internals (writer-task teardown ordering, `sessionResumptionUpdate`
+  wire handling, audio flush buffer) and the `openai/webrtc.rs` SDP/offer path — only the OpenAI WS + runner
+  FSM were read at depth.
+- adk-realtime avatar providers (`avatar/heygen`, `avatar/did`) + `spawn_keep_alive` lifecycle — flagged in
+  P-80 code path but not behaviorally analyzed.
+- adk-realtime `livekit/*` bridge (the sole native-tls ingress) — delegation behavior unread at depth.
+- a2a v1 retry/caching/transport behavior is source-verified but UNTESTED (mock-server gap) — no dynamic
+  confirmation of backoff/304 semantics.
+
+Recommendation: the corpus is analytically sufficient for spec crystallization on all Domain A/B/C surfaces
+covered; an A7 targeting the four realtime-internal threads above would be SUBSTANTIVE but is optional and
+lower-priority than proceeding, given P-80 already captures the governing realtime mechanism.

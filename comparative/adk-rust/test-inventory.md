@@ -210,13 +210,13 @@ each overcounted by 1; the extra count came from incorrectly including a file th
   scoring-rigor bugs (P-64) are NOT covered — no test asserts the multi-turn merge is order-
   independent (it isn't), and no test distinguishes judge-infra-failure from quality-fail (both
   yield score 0.0). Judge parsing (`SAFE: YES`/`SCORE:`) has no adversarial malformed-response test.
-- **adk-guardrail (55 markers, unit-only):** content filter (harmful blocks, hackathon/`exploit a
+- **adk-guardrail (27 markers, unit-only) <!-- [comparative-cert-1] corrected from "55 markers" per SWEEP-test-deps attribute-only recount -->:** content filter (harmful blocks, hackathon/`exploit a
   bug` pass, strict-vs-default, on-topic, max-length, blocked-keywords), PII (email/phone/ssn/CC,
   multiple, none, transform), schema (valid/missing-required/wrong-type/markdown-fence/no-json),
   executor (empty/pass/low-severity-passes/high-fails/critical-early-exit). GAP: NO test that tool/
   RAG/memory content is guardrailed (because it isn't — P-59); NO prompt-injection test; NO test of
   the input-vs-output hook coverage in the agent loop (the enforcement is in adk-agent, untested here).
-- **adk-retry-reflect (32 markers, 1 proptest):** detection (error shapes), backoff (None/Fixed/
+- **adk-retry-reflect (16 markers, 0 proptest) <!-- [comparative-cert-1] corrected from "32 markers, 1 proptest" per SWEEP-test-deps attribute-only recount; proptest use = 0 (grep found none) -->:** detection (error shapes), backoff (None/Fixed/
   Exponential + ceiling, saturating), filter (allow/deny), template rendering. GAP: NO test that the
   args-hash keying defeats the per-tool limit under arg-changing retries (P-63) — the termination
   hole is untested-because-unnoticed.
@@ -226,8 +226,8 @@ each overcounted by 1; the extra count came from incorrectly including a file th
   prepend). Coordinator `allowed-tools`↔ToolRegistry validation (P-51) — the phantom-tool guard —
   is the load-bearing one; verify it has a negative test (skill requests unavailable tool → handled
   per ValidationMode) during any ferrochain port.
-- **adk-plugin (86 markers):** hook result semantics, priority ordering, both managers.
-- **adk-browser (64 markers, unit-only):** `escape_js_string` has a strong adversarial suite
+- **adk-plugin (43 markers) <!-- [comparative-cert-1] corrected from "86 markers" per SWEEP-test-deps attribute-only recount -->:** hook result semantics, priority ordering, both managers.
+- **adk-browser (32 markers, unit-only) <!-- [comparative-cert-1] corrected from "64 markers" per SWEEP-test-deps attribute-only recount -->:** `escape_js_string` has a strong adversarial suite
   (injection attempt, `</script>`, quotes/backtick/null/newlines) (P-54). Tool actions are
   WebDriver-backed → likely `#[ignore]`/mock at the driver boundary (no integ files present).
 

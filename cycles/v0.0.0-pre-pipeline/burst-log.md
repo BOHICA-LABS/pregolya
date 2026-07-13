@@ -1537,3 +1537,59 @@ Three validators swept all 6 comparative files atomically. Total scope: ~563 cla
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
 - `cycles/v0.0.0-pre-pipeline/lessons.md` (Guardrail #12 added)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-40 checkpoint archived)
+
+---
+
+## Burst 42 — adk-rust Certification Pass C1 Complete
+
+**Date:** 2026-07-13
+**Agent:** validate-extraction
+**Phase:** pre-1 (comparative certification cascade)
+
+### Summary
+
+Certification pass C1 completed with CLEAN(strict)=NO. One new MEDIUM correction found and applied.
+All housekeeping openers (P-77 site recount, test-count propagation, P-71 TAG-REVIEW ruling) applied
+before verdict.
+
+**CONVERGENCE DEFINITION CORRECTED:** Per human challenge ("did we actually run adk-rust to full
+convergence?"), convergence requires BOTH (a) analysis novelty-LOW with explicit CONVERGED verdict
+AND (b) 3-CLEAN 3/3 strict-zero. The orchestrator had allowed analysis to close with deferred depth
+items. Remediated: A6 deepening dispatched to close gaps (realtime state machine, Windows/Docker
+sandbox backends, RAG depth, skill negative path, A2A client, ignored-test census). C2 HELD until
+A6 completes (frozen-HEAD rule — A6 will modify corpus; streak progress before its edits would not
+count). A6 findings become C2 known-corrections.
+
+**Pass C1 result:**
+- CLEAN(strict): NO
+- CLEAN(PR-merge): YES
+- New corrections: 1 (MEDIUM) — behavioral-intent.md A5: execute_with_retry exception list stated
+  "only ollama"; corrected to name all 3 exceptions (ollama, bedrock/client, openai/ws_transport)
+  with mechanism explanation. `[comparative-cert-1]` marker.
+- Housekeeping (excluded from verdict):
+  - H1: P-77 "7→8 sites" — already applied in prior sweep; confirmed present
+  - H2: Canonical 262 propagated to patterns-observed.md P-24 + 7 stale test-count figures in
+    test-inventory.md A4 narrative (proptest files + markers; all corrected with `[comparative-cert-1]`)
+  - H3: P-71 TAG-REVIEW RULED STRONG STANDS (9/12 providers, 3 architecturally-grounded exceptions:
+    bedrock/AWS-SDK, ws_transport/manual-WS-loop, ollama/ollama-rs). Evidence: 9 caller files
+    confirmed by grep. Title corrected to "9 of 12 providers; 3 documented exceptions."
+- Metric verification: 7/7 Delta=0
+- Behavioral verification: 9/10 confirmed, 1 inaccurate (corrected), 0 hallucinated
+- Streak: 0/3
+
+**Sequencing:** C2 deliberately HELD. A6 in progress; C2 dispatches after A6 delivers.
+
+### Archived Step (pruned from STATE.md Current Phase Steps — oldest entry)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| adk-rust pass A2 (state/persistence/orchestration) | codebase-analyzer | COMPLETE | 15P P-20..P-34 (5S/3N/7W). Transactional writes (P-20), AEAD+rotation (P-21), DeltaCheckpointer (P-22), BSP isolation (P-23), buffer_unordered nondeterminism (P-28), step-boundary-only durability (P-29). Burst 39. |
+
+### Files touched in this burst
+
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (NEW — C1 pass report)
+- `comparative/adk-rust/behavioral-intent.md` (corrected: A5 execute_with_retry exception list 1→3; `[comparative-cert-1]` marker)
+- `comparative/adk-rust/patterns-observed.md` (corrected: P-24 262 propagation, P-71 TAG-REVIEW ruling, title updated; `[comparative-cert-1]` markers)
+- `comparative/adk-rust/test-inventory.md` (corrected: 7 stale test-count figures in A4 narrative; `[comparative-cert-1]` markers)
+- `STATE.md` (C1 COMPLETE, A6 IN-PROGRESS, session checkpoint updated, burst 42 recorded, A2 archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — A2 archived here from STATE.md)

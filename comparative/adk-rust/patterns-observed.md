@@ -1384,3 +1384,253 @@ a1_open_items_resolved:
 status: complete
 timestamp: 2026-07-13
 ```
+
+---
+
+# Pass A6 deepening — convergence exhaustion (P-80..P-87)
+
+> Scope: the residual open/deferred items named in ANALYSIS-STATE + A4/A5 returns, worked
+> highest-spec-impact first. Observe-only per D16; Rust-blindness applies. Append-only; pattern
+> numbers P-80+. Behavioral anchors cite function/type names, not line numbers (TD-VSDD-091).
+
+## P-80 — Realtime provider-agnostic context-mutation FSM ("Phantom Reconnect") — STRONG
+
+- **Where:** `adk-realtime` — `runner.rs` (`RunnerState`, `RealtimeRunner::update_session_with_bridge`,
+  `execute_resumption`, `check_resumption_queue`, `merge_config`); `session.rs`
+  (`ContextMutationOutcome`, `RealtimeSession::mutate_context`); `openai/protocol.rs` +
+  `gemini/session.rs` (per-provider `mutate_context`).
+- **Observation:** A 4-state runner FSM — `Idle` / `Generating` / `ExecutingTool` /
+  `PendingResumption{config, bridge_message, attempts}` — governs whether a mid-session config
+  swap (instruction/tools/voice/temperature/extra) can be applied. Providers answer
+  `mutate_context()` with one of two outcomes: `Applied` (OpenAI natively hot-swaps over the live
+  WebSocket) or `RequiresResumption(config)` (Gemini requires transport teardown + rebuild — the
+  "Phantom Reconnect"). The runner NEVER tears the socket down while `Generating` or
+  `ExecutingTool`; it queues the resumption and executes it on the next `ResponseDone`
+  (`check_resumption_queue`). Canonical config is accumulated in `self.config` via `merge_config`
+  so a later phantom reconnect inherits all prior hot-swaps plus immutable transport params.
+- **Reliability specifics:** (1) single-slot queue with explicit **last-write-wins** semantics
+  (a newer pending resumption overwrites an older one — "desired end state, not a command queue");
+  (2) **3-attempt retry budget** on reconnect failure, after which the queued mutation is
+  DROPPED (state forced to `Idle`) to prevent hot-looping; (3) reconnect errors are reported to
+  `event_handler.on_error` but deliberately NOT returned as `Err` from `run()`, so a transient
+  network failure never kills the event loop; (4) Gemini `sessionResumptionUpdate` tokens are
+  captured from `SessionUpdated` events into `config.extra["resumeToken"]` so a rebuild resumes
+  server-side state; (5) all lock guards are dropped before every `.await` network op (documented
+  deadlock-avoidance discipline).
+- **Quality:** **STRONG** — a genuinely production-grade abstraction over two structurally
+  different provider models (native mutability vs static-config-with-resumption), with explicit
+  teardown-safety gating, bounded retries, and fail-open event-loop survival. Domain C (voice)
+  directly relevant: this is the shape a ferrochain realtime layer would need if it targets both
+  an OpenAI-style and a Gemini-style live backend.
+- **NEW vs A5** (A5 was surface-only on adk-realtime).
+
+## P-81 — Barge-in / turn-taking delegated to server-side VAD; client-driven interrupt is manual-only — NEUTRAL
+
+- **Where:** `adk-realtime` — `agent.rs` `RealtimeAgent::run` event loop; `runner.rs`
+  `RealtimeRunner::handle_event`; `config.rs` (`VadConfig`, `InterruptionDetection`); provider
+  `interrupt()` (`openai/protocol.rs` → `response.cancel`; `gemini/session.rs` → `clear_audio` +
+  no-op "Gemini handles interruption via VAD").
+- **Observation:** Turn-taking is configured, not orchestrated client-side. `VadConfig` defaults to
+  `ServerVad` with `interrupt_response: Some(true)` and `silence_duration_ms: 500`; barge-in is
+  therefore enacted by the *provider* cancelling its own in-flight response when server VAD detects
+  user speech. The `RealtimeAgent::run` loop handles `ServerEvent::SpeechStarted` ONLY by invoking
+  the optional `on_speech_started` callback — it does **not** call `session.interrupt()`. Likewise
+  `RealtimeRunner::handle_event` forwards `SpeechStarted` to the handler and never auto-interrupts.
+  `session.interrupt()` exists and is exposed on the runner, but is a **manual** control the
+  embedder must call. `InterruptionDetection` defaults to `Manual`. Gemini explicitly DROPS a
+  manual `ResponseCancel` (logs a warning) because it manages interruption internally.
+- **Quality:** **NEUTRAL** — a reasonable delegation (server VAD is the low-latency path), but the
+  framework provides no built-in client-side barge-in state machine; an embedder wanting
+  deterministic local barge-in (e.g., push-to-talk cancel) must wire `interrupt()` themselves, and
+  the two providers disagree on whether manual cancel is even honored. Domain C observation: a
+  ferrochain voice layer must decide whether barge-in is a framework guarantee or an
+  embedder responsibility — adk-rust chose the latter.
+- **NEW.**
+
+## P-82 — Windows AppContainer enforcer is a hard-fail stub; no working Windows sandbox path — WEAK
+
+- **Where:** `adk-sandbox` — `sandbox/windows.rs` (`WindowsEnforcer::configure_command`),
+  `sandbox/mod.rs` (`get_enforcer`), `process.rs` (`run_command`).
+- **Observation:** On Windows, `WindowsEnforcer::wrap_command` returns the program unchanged and
+  `configure_command` returns `Err(SandboxError::EnforcerFailed { … "Windows AppContainer
+  configuration not yet implemented … deferred to a Windows-specific implementation pass" })` — a
+  documented TODO listing the intended CreateAppContainerProfile / SetNamedSecurityInfo /
+  UpdateProcThreadAttribute steps that are not written. `process.rs::run_command` calls
+  `configure_command` and propagates its error, so with an enforcer configured a sandboxed process
+  on Windows **cannot spawn** (fail-closed); with no enforcer configured, the process runs
+  **unsandboxed** (the `else` branch spawns the raw command — this confirms A4 P-61 default-no-isolation
+  workspace-wide). Net: there is **no functional Windows sandbox** — the only outcomes are
+  "unsandboxed" or "hard error." Contrast Linux (`linux.rs`: real `bwrap` with
+  `--die-with-parent`/`--unshare-pid`/`--unshare-net`/`--ro-bind`/`--bind`) and macOS
+  (seatbelt, real) enforcers, which are implemented.
+- **Quality:** **WEAK** — a production-grade sandbox story that silently excludes an entire OS.
+  Domain A/C: a ferrochain analyst/factory sandbox targeting Windows agents would inherit a
+  no-op-or-error posture. Note it is at least fail-closed (no false sense of enforcement) rather
+  than fail-open-silent.
+- **NEW** (A4 covered macOS/default posture; Windows was unverified at depth).
+
+## P-83 — adk-code Docker backend: per-request SandboxPolicy is ignored, and no resource/privilege hardening — WEAK
+
+- **Where:** `adk-code` — `container.rs` (`DockerExecutor` behind `docker` feature;
+  `ContainerCommandExecutor` CLI fallback).
+- **Observation (two distinct sub-findings):**
+  1. **Capability claim vs behavior mismatch.** `DockerExecutor::capabilities()` advertises
+     `enforce_network_policy / enforce_filesystem_policy / enforce_environment_policy = true`, but
+     `DockerExecutor::execute()` reads only `request.sandbox.timeout`, `.max_stdout_bytes`, and
+     `.max_stderr_bytes` from the per-request `SandboxPolicy`. Network/filesystem/env isolation come
+     from the `DockerConfig` fixed at construction (`network_disabled`, `bind_mounts`,
+     `environment`), NOT from the request. So the advertised "enforce_*_policy" is true only w.r.t.
+     the static config; a caller varying `request.sandbox.filesystem`/`.network`/`.environment`
+     per call has NO effect on the persistent-container backend. The CLI `ContainerCommandExecutor`,
+     by contrast, DOES translate the per-request `SandboxPolicy` (`build_run_args` maps
+     `NetworkPolicy`/`FilesystemPolicy`/`EnvironmentPolicy` to `--network=none`/`-v …:ro|rw`/`--env`).
+  2. **No hardening flags.** Neither backend sets `--user` (code runs as root inside the
+     container), `--read-only` rootfs, `--memory` / `--cpus` / `--pids-limit`, or
+     `--cap-drop`/seccomp/apparmor. Isolation rests on default Docker namespacing + `network=none`
+     (default) + bind-mount scoping + a wall-clock `tokio::time::timeout`. Resource-exhaustion DoS
+     (fork bomb, memory balloon, disk fill on a rw mount) is bounded only by the timeout.
+     `FilesystemPolicy::Paths` in the CLI backend binds host paths at the *same* container path,
+     which can surface host locations into the guest.
+- **Quality:** **WEAK** — the network-off-by-default + bind-mount + timeout baseline is sane, but
+  the capability-vs-behavior gap (sub-finding 1) is a correctness/observability hazard (a policy the
+  caller believes is enforced is silently ignored on the persistent backend), and the absence of
+  resource caps makes it unsuitable as a strong isolation boundary for untrusted Domain-A code.
+- **NEW** (A4 examined adk-code Rust exec / proptest rigor, not the Docker execute path).
+
+## P-84 — InMemoryVectorStore ignores declared dimensions; RAG backend contracts diverge; thin-test confirmed — WEAK
+
+- **Where:** `adk-rag` — `vectorstore.rs` (`VectorStore` trait), `inmemory.rs`
+  (`InMemoryVectorStore`, `cosine_similarity`), backend impls `surrealdb.rs` / `pgvector.rs` /
+  `qdrant.rs` / `lancedb.rs`, `pipeline.rs`.
+- **Observation:** The `VectorStore` trait's `create_collection(name, dimensions)` is honored
+  differently per backend. Real backends bind the dimension into their engine schema — surrealdb
+  `HNSW DIMENSION {n} DIST COSINE`, pgvector `vector({n})`, qdrant `VectorParamsBuilder::new(n, Cosine)`
+  — so a wrong-dimension upsert fails DB-side. But `InMemoryVectorStore::create_collection` takes
+  `_dimensions` and **discards it**; neither `upsert` nor `search` validates embedding length, and
+  `cosine_similarity` zips `a.iter().zip(b.iter())` (truncating to the shorter vector) — so a
+  mismatched-dimension query silently returns a garbage-but-plausible score instead of erroring.
+  Behavioral contract for dimension enforcement therefore **diverges across backends** (DB-enforced
+  vs silently-ignored). Search contract is otherwise uniform: collection-missing → `VectorStoreError`,
+  results sorted descending by score with `partial_cmp … Equal` NaN fallback, truncated to `top_k`.
+- **Thin-test claim (VERIFIED at depth):** dedicated tests exist only for `chunking.rs` (5),
+  `inmemory` (unit + `inmemory_tests.rs`), and `surrealdb_tests.rs` (6, live/integration-gated). The
+  `qdrant`, `pgvector`, and `lancedb` backends have **zero** unit or integration tests — 4 of 6
+  store backends ship untested. Confirms the A1 WEAK "thin-test" flag.
+- **Quality:** **WEAK** — the trait is clean and the pipeline wires `embedding_provider.dimensions()`
+  into `create_collection`, but the in-memory (default/dev) store's silent dimension-agnosticism is a
+  correctness trap that only manifests in production against a real backend, and 4/6 backends are
+  unverified.
+- **NEW detail** (A1/A2 flagged thin-test generically; the dimension-contract divergence is new).
+
+## P-85 — RemoteA2aAgent surfaces ALL transport/RPC failures as error *events*, never stream `Err` — NEUTRAL
+
+- **Where:** `adk-server` — `a2a/remote_agent.rs` (`RemoteA2aAgent::run`,
+  `create_error_event`; and the `a2a-v1` `v1_remote::RemoteA2aV1Agent::run`, `create_v1_error_event`).
+- **Observation:** Both remote-agent generations wrap every failure — card resolution, HTTP
+  transport, RPC error, response-parse error, streaming chunk error — as `yield Ok(create_error_event(…))`
+  where the event carries `llm_response.error_message = Some(...)` and `turn_complete = true`. The
+  `run()` `EventStream` therefore effectively never yields `Err`; a downstream consumer sees a
+  *completed turn that happens to carry an error string*, not a failed stream. Streaming success
+  path maps `TaskArtifactUpdate`→partial content events and final `TaskStatusUpdate`→turn-complete;
+  a completed task with no message and no artifacts produces **zero** events (tested).
+- **Quality:** **NEUTRAL** — consistent and stream-survivable (one flaky sub-agent won't
+  `Err`-abort a parent orchestration), but it collapses the error channel into the content channel:
+  callers cannot pattern-match on `Result::Err` and must inspect `error_message`, and a partial
+  remote failure looks identical to a normal terminal turn. Domain A/B multi-agent relevance: error
+  propagation semantics for remote sub-agents are a deliberate design choice a ferrochain port must
+  make explicitly.
+- **UPGRADES A3** (which read the a2a client at signature-depth only).
+
+## P-86 — Dual A2A client generations (legacy `A2aClient` + feature-gated `A2aV1Client`) — WEAK
+
+- **Where:** `adk-server` — `a2a/client.rs` (legacy `A2aClient`; `#[cfg(feature = "a2a-v1")]`
+  `v1_client::A2aV1Client`), `a2a/remote_agent.rs` (parallel `RemoteA2aAgent` / `v1_remote`).
+- **Observation:** Two full client stacks coexist. Legacy `A2aClient`: `/.well-known/agent.json`,
+  JSON-RPC `message/send` + SSE `message/stream`, no retry, no version header, hand-rolled SSE
+  buffer parser. v1 `A2aV1Client`: `/.well-known/agent-card.json`, sends `A2A-Version: 1.0` on every
+  request, all 11 v1 operations over JSON-RPC AND an optional REST binding, structured
+  `V1ClientError` (thiserror) with version-negotiation parsing (`-32009` → supported-version
+  extraction), agent-card caching with ETag/If-None-Match/Last-Modified/304, and exponential-backoff
+  retry (`RetryConfig` default 3 attempts / 1s base, retrying 429 + 5xx + timeouts). Interface
+  selection prefers `JSONRPC` then falls back to `HTTP+JSON`. The SSE parse loop is duplicated across
+  legacy client, legacy remote-agent, and v1 remote-agent.
+- **Test asymmetry:** v1 has HIGH-confidence unit tests for the *pure* functions (error parsing,
+  version-error parsing, interface selection, header construction, card storage) but the retry /
+  caching / transport paths themselves are untested (would need a mock HTTP server; the live path is
+  `a2a_live_integration_test.rs`).
+- **Quality:** **WEAK** — dual-maintenance + triplicated SSE parsing = drift surface; the v1 client
+  is clearly the production-grade one (retry, version negotiation, caching) while legacy lags. A
+  ferrochain port would consolidate on one client with the v1 feature set.
+- **UPGRADES A3.**
+
+## P-87 — Skill ContextCoordinator: phantom-tool prevention is real, but strict-mode errors are swallowed — NEUTRAL
+
+- **Where:** `adk-skill` — `coordinator.rs` (`ContextCoordinator::build_context`,
+  `try_resolve`, `resolve`; `ValidationMode` from `adk_core`).
+- **Observation:** The coordinator's stated purpose — never hand the LLM an instruction to use a
+  tool that isn't bound ("Phantom Tool") — is enforced by resolving `allowed_tools` against the
+  `ToolRegistry` and building `system_instruction` from only the *resolved* `active_tools`
+  (`engineer_instruction(max_chars, &active_tools)`), so neither mode leaks an unbound tool into the
+  prompt. Negative-path behavior by mode: **Strict** → `try_resolve` returns
+  `SkillError::Validation` listing missing tools, but `build_context` maps that to
+  `Err(_) => continue` and tries the next-ranked candidate, ultimately returning `None` — the
+  validation error is **swallowed**, so a caller cannot distinguish "no skill matched the query"
+  from "the best skill matched but its tools are unregistered." **Permissive** → missing tools are
+  **silently omitted** from `active_tools` (a code comment concedes consumers must monitor
+  `provenance.skill.allowed_tools` vs `active_tools` to detect the gap). Both modes are covered by
+  HIGH-confidence unit tests (`strict_mode_rejects_missing_tools`, `permissive_mode_binds_available_tools`,
+  `no_tools_skill_returns_empty_active_tools`, `resolve_cascades_through_strategies`).
+- **Quality:** **NEUTRAL** — the phantom-tool guarantee is genuine and well-tested (a STRONG core
+  idea), but the strict-mode error-swallowing costs diagnosability, and permissive-mode's silent
+  degradation shifts a safety obligation onto the embedder. Domain B/skill relevance: a ferrochain
+  skill layer should preserve the atomic instruction+tools unit while surfacing *why* a skill was
+  rejected.
+- **CLOSES the item as verified** (strict + permissive both source- and test-confirmed).
+
+## Ignored-vs-runnable integration-test census (attribute-only, per guardrail #12)
+
+Workspace-wide counts over `adk-*/**/*.rs` (attribute lines, not resolved test bodies):
+
+| Metric | Count |
+|--------|-------|
+| `#[test]` + `#[tokio::test]` (+ rstest/test_case) attributes | 4,803 |
+| `proptest!` macro invocations | 150 |
+| `#[ignore]` attributes | 126 |
+| Test files referencing live-API env vars (GOOGLE/GEMINI/OPENAI/ANTHROPIC/OPENROUTER keys) | 19 |
+
+- **Runnable-by-default ratio:** ~126 / 4,803 ≈ **2.6% of test attributes carry `#[ignore]`** — i.e.
+  ~97% of the suite runs without opt-in. This reconciles with (does not contradict) prior per-cluster
+  figures (A4 safety cluster ~617; A5 provider cluster ~1,849) — those are cluster subsets of the
+  workspace total.
+- **`#[ignore]` concentration:** adk-anthropic 38, adk-mistralrs 18, adk-model 16, adk-realtime 14,
+  adk-sandbox 11, adk-tool 8, adk-code 6, adk-agent 6, adk-server 5, adk-enterprise 4, adk-bench 3,
+  adk-session 1. The ignore reasons cluster into: **live-API credentials** (GOOGLE/GEMINI/OPENAI/
+  OpenRouter keys, Vertex ADC), **model downloads** (HuggingFace auth, ~3GB weights — adk-mistralrs),
+  and **external tooling** (npx/Node for MCP lifecycle — adk-tool; live Vertex session service).
+  Most ignored tests carry an explicit reason string or comment citing the blocking dependency —
+  consistent with (though not identical to) ferrochain SID-1's citation discipline.
+- **Interpretation:** the ignored set is dominated by genuinely-external dependencies (keys, weights,
+  daemons), not by disabled-because-broken tests. The high-rigor in-process suites (proptest across
+  sandbox/code/mistralrs/audio; SDK wire round-trips in anthropic) run in CI without opt-in.
+
+## Pass A6 cross-cutting note (informative, not a conclusion)
+
+The residual-item sweep surfaces one architecturally strong pattern (P-80, the realtime
+context-mutation FSM — arguably the most sophisticated single mechanism in the corpus and a direct
+Domain-C reference) and a cluster of **enforcement-vs-advertisement gaps** on the safety perimeter:
+Windows sandbox is non-functional (P-82), the adk-code Docker backend ignores the per-request policy
+it advertises and ships no resource caps (P-83), barge-in is an embedder responsibility rather than a
+framework guarantee (P-81), and the default in-memory vector store silently ignores dimensions
+(P-84). None of these is a conclusion about ferrochain; per D16 the adoption question is deferred to
+post-validation comparative assessment.
+
+## State Checkpoint
+```yaml
+pass: A6
+scope: patterns-observed (convergence deepening of residual open items)
+patterns_added: 8 (P-80..P-87 — 1 STRONG, 3 NEUTRAL, 4 WEAK)  # P-80 STRONG; P-81/P-85/P-87 NEUTRAL; P-82/P-83/P-84/P-86 WEAK
+patterns_total: 87
+items_worked: [realtime-bidi-FSM, sandbox-windows+docker, ignore-census, rag-vectorstore, skill-coordinator, a2a-client, residual-open]
+status: complete
+timestamp: 2026-07-13
+```
