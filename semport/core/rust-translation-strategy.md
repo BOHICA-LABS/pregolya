@@ -137,7 +137,7 @@ enum LanguageModelInput { Text(String), Messages(Vec<Message>), Prompt(PromptVal
   return an enum/struct `{ raw, parsed: Option<T>, parsing_error: Option<Error> }`. 🟠
   (depends on §schema-gen ADR).
 - **v3 protocol streaming** (`ChatModelStream`, replay-buffer, typed projections) → a
-  `Stream` + a projection API; **defer** (immature, 2 tests). Model v2 events first.
+  `Stream` + a projection API; **defer behind feature flag** (schema is `0.0.x` / evolving; 107 dedicated tests exist — NOT immature; deferral rationale is version-volatility only). `[validation-certification-9]` Model v2 events first.
 - `_compat_bridge` (v0↔v1 output_version) → mostly ELIMINATE if the Rust port is
   v1-content-block-native; keep only what partner outputs require.
 

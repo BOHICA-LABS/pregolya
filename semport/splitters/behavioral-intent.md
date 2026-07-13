@@ -101,7 +101,7 @@ sentences via the respective NLP lib, then `_merge_splits`. These are the
   reimplementation; also extracts code-block language into `Code` metadata and
   splits on horizontal rules.
 - **`HTMLHeaderTextSplitter`** — BeautifulSoup DFS over the DOM, associating
-  text with an active-header dict keyed by DOM depth; yields per-element or
+  text with an active-header dict **keyed by user-defined header name** (e.g., `"Header 1"`), value = `(text, numeric_level, dom_depth)`; depth lives in the value tuple and drives scope eviction (evict headers whose recorded `dom_depth > current`). `[validation-certification-9]` Yields per-element or
   aggregated `Document`s.
 - **`HTMLSectionSplitter`** — lxml XSLT transform (font-size→header) +
   BeautifulSoup section slicing, then RecursiveCharacterTextSplitter.

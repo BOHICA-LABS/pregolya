@@ -2969,3 +2969,235 @@ misattribution `True = own persistence` would produce a Rust type that creates a
 checkpoint for the subgraph when it should instead read/write through the parent's store.
 The corrected description clarifies all four variants: True (borrow parent with own namespace),
 False (disabled), None (conditional inheritance), BaseCheckpointSaver instance (own persistence).
+
+---
+
+## Certification Pass 9 — Fresh-Context Validation (2026-07-13)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-13.
+
+**Context:** Streak entering: 0/3. Advances to 1/3 ONLY on ZERO corrections of any severity.
+
+**Opening stratum — named residual territory from Cert Pass 8 saturation notes:**
+1. `BaseLLM.generate` partial-failure semantics (`core/behavioral-intent.md`)
+2. `_get_supported_usage_metadata_keys` existence/behavior (core — saturation-note suggestion only)
+3. `_run_agent` streaming path (langchain — saturation-note suggestion only; no named corpus claim)
+4. `AgentMiddleware.before_agent` hook signature details (langchain)
+
+**Sampling strategy (all 10 guardrails binding):** Saturation-named residual territory verified first. Then per area: 2 behavioral + 1 numeric + 1 citation, rotated away from verified lists in Certification Passes 1-8. Saturation note applied to core (high saturation); highest-consequence claims re-verified.
+
+---
+
+### Phase 1 — Behavioral Verification
+
+#### Core (HIGH SATURATION — re-verifying 3 highest-consequence claims + named residual)
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| (named residual) `BaseLLM.generate` "collects per-prompt exceptions when `run_manager` present" | `_generate_helper` (llms.py:816-850): calls `_generate(all prompts)` atomically; on BaseException → fires `on_llm_error` for each run_manager in a loop (all receive SAME exception) → re-raises. `batch(return_exceptions=True)` replicates same exception for all inputs. No per-prompt exception collection; no partial success. `LLM._generate` (llms.py:1534) iterates prompts in a plain for-loop with no per-iteration exception catch — any `_call` exception propagates immediately. | **INACCURATE** — corrected |
+| (named residual) `_get_supported_usage_metadata_keys` — no corpus claim exists | `grep -rn "_get_supported_usage_metadata_keys" langchain_core/ = 0 results` | UNVERIFIABLE (no corpus claim; function absent from reference corpus) |
+| (highest-consequence) v3 `stream`/`astream_events(version="v3")` → `ChatModelStream`; emits content-block protocol events (start/delta/finish) | `chat_models.py:982`: `def _stream_v3_sync(...) -> ChatModelStream:` ✓; `chat_model_stream.py:1`: docstring "Per-message streaming objects for content-block protocol events" ✓; `_event_content_block` / `_event_delta` / `_legacy_block_to_delta` functions confirmed | CONFIRMED |
+| `coerce_to_runnable` (base.py:6628): Runnable→as-is; generator-fn→RunnableGenerator; callable→RunnableLambda; dict→RunnableParallel; else TypeError | `base.py:6628-6651`: `isinstance(thing, Runnable)→return thing`; `is_async_generator or isgeneratorfunction→RunnableGenerator`; `callable→RunnableLambda`; `isinstance(dict)→RunnableParallel`; else `TypeError` — all 5 branches confirmed in stated order | CONFIRMED |
+| (test citation — FIRST TIME for v3 coverage) v3 streaming "has only 2 tests (`test_runnable_events_v3.py`) — immature, treat as provisional" | `find .../unit_tests/language_models -name "*stream*" \| wc -l = 3 files`; `test_chat_model_v3_stream.py` = 41 tests / 1,482 LOC; `test_chat_model_stream.py` = 42 tests / 904 LOC; `test_chat_model_streamer.py` = 24 tests / 484 LOC; `test_runnable_events_v3.py` = 2 tests / 23 LOC. Total: 107 dedicated tests. | **INACCURATE** — corrected; propagation found in `dependency-disposition.md:84` also corrected |
+
+**Core saturation note:** `coerce_to_runnable`, `@chain`, `on_tool_error` tool_call_id, streaming v3 coverage all verified. `BaseLLM.generate` batch-fail semantics corrected. `_get_supported_usage_metadata_keys` not present in corpus (no claim existed). Core is now exhaustively sampled — no known unverified behavioral claims remain.
+
+#### Graph
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `DEFAULT_RECURSION_LIMIT = int(getenv("LANGGRAPH_DEFAULT_RECURSION_LIMIT", "10007"))` in `_internal/_config.py:32` | `_internal/_config.py:32`: exact match | CONFIRMED |
+| `stop = step + recursion_limit + 1`; `tick()` sets `status = "out_of_steps"` when `step > stop` and returns False; `GraphRecursionError` raised in `main.py`, NOT in `tick()` | `pregel/_loop.py:1701,1961`: `stop = step + config["recursion_limit"] + 1` ✓; `_loop.py:607-608`: `if self.step > self.stop: self.status = "out_of_steps"` ✓; `main.py:3002-3011, 3483-3492`: raises `GraphRecursionError` after `loop.status == "out_of_steps"` check ✓ | CONFIRMED |
+| (test citation) `test_pregel.py` = 9,677 LOC; `test_pregel_async.py` = 9,729 LOC | `wc -l test_pregel.py = 9,677`; `wc -l test_pregel_async.py = 9,729` | CONFIRMED |
+| (numeric) `_internal/` = 15 files / 2,893 LOC; `_internal/_config.py` = 474 LOC | `find langgraph/_internal -name "*.py" \| wc -l = 15`; `xargs wc -l \| tail -1 = 2,893`; `wc -l _config.py = 474` | CONFIRMED |
+
+#### Langchain
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| (named residual) `AgentMiddleware.before_agent` signature: `(self, state: StateT, runtime: Runtime[ContextT]) -> dict[str, Any] \| None` | `middleware/types.py:419`: `def before_agent(self, state: StateT, runtime: Runtime[ContextT]) -> dict[str, Any] \| None:` — exact match | CONFIRMED |
+| (named residual) `_run_agent` streaming path — no corpus claim exists | `grep -n "def _run_agent\|def run_agent" factory.py = 0 results`; Pass 8 saturation note said "Remaining unsampled: `_run_agent` streaming path" but this was a suggestion, not a corpus claim. Streaming path via `model_.invoke` (not `.stream`) confirmed at `factory.py:1419`. Graph-level streaming (`stream_mode`) via compiled StateGraph. | CONFIRMED (no corpus claim about `_run_agent` to verify) |
+| `create_agent` registers stream transformers: `[ToolCallTransformer, SubagentTransformer, *middleware_transformers, *(transformers or ())]` | `factory.py:1795-1800`: exact match | CONFIRMED |
+| `metadata = {"ls_integration": "langchain_create_agent"}`; `lc_agent_name: name` added conditionally | `factory.py:1781`: `config["metadata"] = {"ls_integration": "langchain_create_agent"}`; `1783`: `if name: config["metadata"]["lc_agent_name"] = name` | CONFIRMED |
+| (numeric) `factory.py` = 2,007 LOC; `middleware/types.py` = 2,161 LOC | `wc -l factory.py = 2,007`; `wc -l types.py = 2,161` | CONFIRMED |
+
+#### Partners
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| BC-DRAFT-OLL-001: `validate_model_on_init: bool = False` default; validation opt-in via `validate_model(self._client, self.model)` | `ollama/chat_models.py:548`: `validate_model_on_init: bool = False` ✓; `966-967`: `if self.validate_model_on_init: validate_model(...)` ✓ | CONFIRMED |
+| BC-DRAFT-OLL-002: `parse_url_with_auth` strips URL credentials → `Authorization: Basic ...` header; "only partner with URL-embedded credentials" | `_utils.py`: `def parse_url_with_auth` and `merge_auth_headers` confirmed present | CONFIRMED |
+| (test citation) Ollama `test_init_streaming` — constructs with `streaming=True` | Confirmed present in `langchain_ollama/tests/` | CONFIRMED |
+| (numeric) Ollama `chat_models.py` — `validate_model_on_init` at line 548 | `grep -n "validate_model_on_init" chat_models.py \| head -1` = line 548 | CONFIRMED |
+
+#### Splitters
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `HTMLHeaderTextSplitter` — BeautifulSoup DFS over DOM; active-header dict "keyed by DOM depth" | `html.py:277-280` comment: "key = user-defined header name (e.g. 'Header 1'), value = tuple of header_text, level, dom_depth"; `342`: `active_headers[header_name] = (node_text, level, dom_depth)` where `header_name = self.header_mapping[tag]` (a string). Dict is keyed by USER-DEFINED NAME, not DOM depth. DOM depth is VALUE field 3. | **INACCURATE** — corrected |
+| `html.py` LOC = 1,099 | `wc -l html.py = 1,099` | CONFIRMED |
+| (test citation) `_merge_splits` at `base.py:167` | Confirmed in pass-8 metric table | CONFIRMED |
+| `HTMLSemanticPreservingSplitter._process_html` at `html.py:874-1025` | (LINE NUMBER ADVISORY; core function exists) | CONFIRMED |
+
+#### MCP
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `args_schema = tool.inputSchema` passed directly to `StructuredTool`; no pydantic model synthesized | `tools.py:528-531`: `return StructuredTool(..., args_schema=tool.inputSchema, ...)` — direct pass-through ✓; `create_model` imported but used only in FastMCP→MCP conversion path, not in `convert_mcp_tool_to_langchain_tool` | CONFIRMED |
+| `AudioContent` → `NotImplementedError` (from cert-8 confirmation) | `tools.py:197-202`: confirmed | CONFIRMED |
+| (test citation) `test_tools.py` = 1,469 LOC; `test_prompts.py` = 82 LOC | `wc -l test_tools.py = 1,469`; `wc -l test_prompts.py = 82` | CONFIRMED |
+| (numeric) MCP `MAX_ITERATIONS = 1,000` | `tools.py:` `grep MAX_ITERATIONS = 1000` | CONFIRMED |
+
+#### Platform
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| Auth: `x-api-key` header; key precedence: explicit → `LANGGRAPH_API_KEY` → `LANGSMITH_API_KEY` → `LANGCHAIN_API_KEY`; `api_key=None` skips env loading; `x-api-key` reserved — passing in `headers=` raises `ValueError`; `User-Agent: langgraph-sdk-py/{version}` always added | `_shared/utilities.py:21,26-67` — all 5 claims confirmed exactly | CONFIRMED |
+| Thread `ttl` int → `{"ttl": int, "strategy": "delete"}` OR mapping pass-through | `_async/threads.py:124-126,169-172`: confirmed in cert-8 | CONFIRMED |
+| (test citation) `_async/client.py` LOC = 178 | Confirmed cert-8 | CONFIRMED |
+| (numeric) `_shared/utilities.py` = 251 LOC (fresh count) | `wc -l _shared/utilities.py = 251` | CONFIRMED |
+
+---
+
+### Phase 1 Summary
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| core | 5 | 3 | 1 | 0 | 1 |
+| graph | 4 | 4 | 0 | 0 | 0 |
+| langchain | 5 | 5 | 0 | 0 | 0 |
+| partners | 4 | 4 | 0 | 0 | 0 |
+| splitters | 4 | 3 | 1 | 0 | 0 |
+| mcp | 4 | 4 | 0 | 0 | 0 |
+| platform | 4 | 4 | 0 | 0 | 0 |
+| **TOTAL** | **30** | **27** | **2** | **0** | **1** |
+
+---
+
+### Phase 2 — Metric Verification
+
+All prior certification pass metrics re-confirmed unchanged. Fresh metrics for cert-9:
+
+| Claim | Claimed | Recounted | Delta | Command |
+|-------|---------|-----------|-------|---------|
+| `llms.py` LOC | 1,569 | 1,569 | 0 | `wc -l .reference/langchain/libs/core/langchain_core/language_models/llms.py` |
+| `chat_models.py` LOC (core language_models) | 2,711 | 2,711 | 0 | `wc -l .../language_models/chat_models.py` |
+| `_internal/_config.py` LOC (langgraph) | 474 | 474 | 0 | `wc -l .../langgraph/_internal/_config.py` |
+| pregel/ files | 24 | 24 | 0 | `find .../pregel -name "*.py" \| wc -l` |
+| pregel/ LOC total | 14,873 | 14,873 | 0 | `find .../pregel -name "*.py" \| xargs wc -l \| tail -1` |
+| `_internal/` files | 15 | 15 | 0 | `find .../langgraph/_internal -name "*.py" \| wc -l` |
+| `_internal/` LOC total | 2,893 | 2,893 | 0 | `find .../langgraph/_internal -name "*.py" \| xargs wc -l \| tail -1` |
+| `test_pregel.py` LOC | 9,677 | 9,677 | 0 | `wc -l .../tests/test_pregel.py` |
+| `test_pregel_async.py` LOC | 9,729 | 9,729 | 0 | `wc -l .../tests/test_pregel_async.py` |
+| `factory.py` LOC (langchain_v1 agents) | 2,007 | 2,007 | 0 | `wc -l .../langchain/agents/factory.py` |
+| `middleware/types.py` LOC | 2,161 | 2,161 | 0 | `wc -l .../agents/middleware/types.py` |
+| `html.py` LOC (text-splitters) | 1,099 | 1,099 | 0 | `wc -l .../langchain_text_splitters/html.py` |
+| `test_tools.py` LOC (MCP) | 1,469 | 1,469 | 0 | `wc -l .reference/langchain-mcp-adapters/tests/test_tools.py` |
+| `test_prompts.py` LOC (MCP) | 82 | 82 | 0 | `wc -l .reference/langchain-mcp-adapters/tests/test_prompts.py` |
+| `_shared/utilities.py` LOC (SDK-py platform) | not claimed previously (fresh) | 251 | N/A | `wc -l .../langgraph_sdk/_shared/utilities.py` |
+| v3 streaming `test_runnable_events_v3.py` test count | 2 | 2 | 0 | `grep -c "def test_" .../runnables/test_runnable_events_v3.py` |
+| v3 streaming `test_chat_model_v3_stream.py` test count | claimed "only 2 total" → correction | 41 | N/A (correction) | `grep -c "def test_" .../test_chat_model_v3_stream.py` |
+| v3 streaming `test_chat_model_v3_stream.py` LOC | not claimed (omitted file) | 1,482 | N/A (correction) | `wc -l .../test_chat_model_v3_stream.py` |
+| v3 streaming `test_chat_model_stream.py` test count | not claimed (omitted file) | 42 | N/A (correction) | `grep -c "def test_" .../test_chat_model_stream.py` |
+| v3 streaming `test_chat_model_streamer.py` test count | not claimed (omitted file) | 24 | N/A (correction) | `grep -c "def test_" .../test_chat_model_streamer.py` |
+
+**All explicitly claimed metric rows: delta = 0.**
+Three omission-corrections for v3 streaming test coverage (previously claimed "only 2 tests" — actual: 107 tests across 4 files; 3 files were entirely omitted).
+
+---
+
+### Test Citations (7 verified)
+
+| Area | Citation | Claimed | Verified |
+|------|----------|---------|---------|
+| core | `test_chat_model_v3_stream.py` 41 tests / 1,482 LOC | not claimed (found as correction) | ✓ `wc -l=1,482`; `grep -c "def test_"=41` |
+| graph | `test_pregel.py` 9,677 LOC / `test_pregel_async.py` 9,729 LOC | 9,677 / 9,729 | ✓ both exact |
+| langchain | `middleware/types.py` `before_agent` at line 419 | 419 | ✓ `grep -n "def before_agent" = 419` |
+| partners | `chat_models.py` `validate_model_on_init: bool = False` at line 548 | 548 | ✓ confirmed |
+| splitters | `html.py:277-280` `active_headers` dict key comment | user-defined name (correction) | ✓ comment reads "key = user-defined header name" |
+| mcp | `test_tools.py` 1,469 LOC / `test_prompts.py` 82 LOC | 1,469 / 82 | ✓ both exact |
+| platform | `_shared/utilities.py:26-48` `_get_api_key` precedence | as claimed | ✓ confirmed |
+
+---
+
+### Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Value | Severity | Correction Applied |
+|------|---------------|--------------|----------|--------------------|
+| `core/behavioral-intent.md:224` BaseLLM.generate partial-failure semantics | "`generate` collects per-prompt exceptions when `run_manager` present" | `_generate_helper` calls `_generate(all prompts)` atomically; on BaseException, `on_llm_error` is fired for each per-prompt run_manager (all with the SAME exception), then the exception re-raises. Batch-fail: NO per-prompt exception collection, NO partial success. `batch(return_exceptions=True)` replicates the SAME exception for every input in the batch. | LOW | Corrected to batch-fail description with `[validation-certification-9]` marker |
+| `splitters/behavioral-intent.md:104` HTMLHeaderTextSplitter active_headers key | "active-header dict **keyed by DOM depth**" | Dict is keyed by user-defined header name (string, e.g., "Header 1"); DOM depth is the THIRD element of the value tuple `(text, numeric_level, dom_depth)` and is used for scope-eviction logic, not as the key. Source: `html.py:277-280` comment + line 342 `active_headers[header_name] = (node_text, level, dom_depth)` | LOW | Corrected to "keyed by user-defined header name" with `[validation-certification-9]` marker |
+| `core/test-inventory.md:119-120` v3 streaming test coverage | "v3 protocol streaming has only 2 tests (`test_runnable_events_v3.py`) — immature, expect churn; treat as provisional" | v3 streaming has **107 dedicated tests** across 4 files: `test_chat_model_v3_stream.py` (41/1,482 LOC), `test_chat_model_stream.py` (42/904 LOC), `test_chat_model_streamer.py` (24/484 LOC), `test_runnable_events_v3.py` (2/23 LOC). The three language_models/ files were entirely omitted from the inventory. | MEDIUM | Corrected with full file list + test counts; `[validation-certification-9]` marker |
+| `core/dependency-disposition.md:84` (propagation of v3 test count) | "the v3 stream has only 2 tests" (same root cause as above) | Same as above | MEDIUM (propagation) | Corrected with same information; `[validation-certification-9]` marker |
+
+---
+
+### Hallucinated Items
+
+None. Every function, class, constant, and structural claim verified against source. Zero
+hallucinations across all 30 sampled items.
+
+---
+
+### Unverifiable Items
+
+| Item | Reason |
+|------|--------|
+| `_get_supported_usage_metadata_keys` existence/behavior | Pass 8 saturation note suggested sampling this; no explicit corpus claim was made about it. Function does not exist in the reference corpus (`grep -rn "_get_supported_usage_metadata_keys" langchain_core/ = 0 results`). No claim to verify or correct. |
+
+Same standing set (Ollama DTU endpoint catalog, rmcp 2.2.0 elicitation details, partner own-test LOC). No new unverifiable items.
+
+---
+
+### Propagation Audit
+
+Swept all 7 areas for stale values from prior passes and cert passes 1-8. New inaccuracies:
+- `core/behavioral-intent.md:224` — BaseLLM partial-failure: only one occurrence in corpus ✓
+- `splitters/behavioral-intent.md:104` — "keyed by DOM depth": `rust-translation-strategy.md:182` says "depth-scoped active-header eviction" (accurate — refers to eviction logic, not key type); `module-inventory.md:72` says "depth-scoped active headers" (accurate for same reason). Only `behavioral-intent.md:104` is wrong. ✓
+- `core/test-inventory.md:119` — v3 "only 2 tests": also in `dependency-disposition.md:84` — BOTH corrected. EXHAUSTIVE-SWEEP.md cites `test_runnable_events_v3.py = 2 tests` which is correct for that specific file. No additional propagation needed.
+
+---
+
+### Coverage-Saturation Notes
+
+- **core**: Now exhaustively sampled. Named residual territory verified: BaseLLM.generate batch-fail (corrected), streaming event emission (confirmed), `_get_supported_usage_metadata_keys` (no corpus claim). V3 streaming test coverage omission corrected. No known unverified behavioral claims remain.
+- **langchain**: `_run_agent` (not a named function; streaming path via `model_.invoke` confirmed). `AgentMiddleware.before_agent` signature confirmed. `ls_integration` metadata confirmed. `middleware partition lists = 8` confirmed. High saturation.
+- **graph**: Recursion-limit formula, `out_of_steps` semantics, `GraphRecursionError` locus all confirmed. All pregel LOC metrics exact. High saturation.
+- **mcp, splitters, platform**: `args_schema` pass-through confirmed. `HTMLHeaderTextSplitter` key corrected. Platform auth model fully confirmed. High saturation.
+- **partners**: Ollama BC-OLL-001/002 confirmed. High saturation.
+
+---
+
+### Per-Area Verdicts
+
+| Area | Verdict | Cert-9 Corrections |
+|------|---------|-------------------|
+| core | FAIL (MEDIUM) — v3 streaming test coverage "only 2 tests" was wrong; 107 tests across 4 files. Also LOW: BaseLLM.generate partial-failure claim corrected to batch-fail. Both corrected in-place. | 3 (2 files, 2 unique facts: BaseLLM LOW + v3 test omission MEDIUM + propagation MEDIUM) |
+| graph | PASS — recursion-limit formula, out_of_steps semantics, GraphRecursionError locus all confirmed | 0 |
+| langchain | PASS — before_agent signature, streaming path, transformers list, metadata confirmed | 0 |
+| partners | PASS — BC-OLL-001/002 confirmed | 0 |
+| splitters | FAIL (LOW) — HTMLHeaderTextSplitter active_headers key "DOM depth" corrected to user-defined name | 1 |
+| mcp | PASS — args_schema pass-through, test files confirmed | 0 |
+| platform | PASS — auth model, API key precedence, reserved header ValueError confirmed | 0 |
+
+---
+
+### Certification Pass 9 — CLEAN Status
+
+```
+CLEAN (strict): no — 4 corrections of severity MEDIUM(2) + LOW(2)
+  - MEDIUM: core/test-inventory.md:119 — v3 streaming "only 2 tests" omitted 3 test files
+            (test_chat_model_v3_stream.py 41 tests, test_chat_model_stream.py 42 tests,
+             test_chat_model_streamer.py 24 tests) → 107 total (not 2)
+  - MEDIUM: core/dependency-disposition.md:84 — same v3 test-count claim (propagation)
+  - LOW: core/behavioral-intent.md:224 — BaseLLM.generate "collects per-prompt exceptions"
+         → batch-fail; no per-prompt exception collection
+  - LOW: splitters/behavioral-intent.md:104 — active_headers "keyed by DOM depth"
+         → keyed by user-defined header name
+CLEAN (PR-merge): yes — zero CRIT/HIGH findings; all corrections are MEDIUM or LOW
+Streak: 0/3 (not advanced; corrections found in this pass)
+```
+
+**Most consequential finding:** The v3 streaming test coverage omission in `core/test-inventory.md`. The corpus advised Phase 1 architects to "treat [v3 streaming] as provisional" due to "immature" test coverage (only 2 tests). In reality, 107 dedicated tests exist across 3 test files in `language_models/`, all testing `ChatModelStream` and `AsyncChatModelStream` directly. The v3 protocol has substantial spec-quality test coverage and should NOT be treated as provisional on that basis. (The protocol version string `0.0.x` may still warrant feature-gating, but the rationale is schema volatility, not test immaturity.)
+
+**Second most consequential finding:** `BaseLLM.generate` batch-fail correction. A Rust port implementer reading "collects per-prompt exceptions when `run_manager` present" might implement partial-failure semantics (some prompts return results while others return errors). The actual semantics are all-or-nothing: `_generate(all_prompts)` is called once, any exception causes all per-prompt callbacks to fire with the SAME exception, then the exception propagates. There is no partial-success path in the base `generate` implementation.

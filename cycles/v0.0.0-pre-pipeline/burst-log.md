@@ -921,3 +921,53 @@ Validator conclusion: "The last high-consequence unverified contract in subgraph
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 24 checkpoint archived)
 - `STATE.md` (pass 8 DONE, pass 9 IN_PROGRESS, session checkpoint updated)
+
+---
+
+## Burst 26 — 2026-07-13
+
+### Summary
+
+3-CLEAN certification pass 9 COMPLETE — CLEAN(strict)=NO. 4 corrections (2 MEDIUM, 2 LOW). Streak 0/3. Gate-strategy decision pending human.
+
+### Corrections
+
+**MEDIUM-1 — `BaseLLM.generate` batch-fail semantics (`semport/core/behavioral-intent.md`)**
+Corpus claimed: "`generate` collects per-prompt exceptions when `run_manager` present."
+Actual (`_generate_helper`, llms.py:816-850): calls `_generate(all prompts)` atomically; on exception fires `on_llm_error` for EACH run_manager in a loop (all receive SAME exception) then re-raises. No per-prompt exception collection; no partial success. `batch(return_exceptions=True)` replicates same exception for all inputs. `LLM._generate` iterates prompts in a plain for-loop with no per-iteration exception catch — any `_call` exception propagates immediately. Corrected with `[validation-certification-9]` marker.
+
+**MEDIUM-2 — langchain-protocol v3 streaming test count (`semport/core/test-inventory.md`, `semport/core/dependency-disposition.md`)**
+Corpus claimed: "the v3 stream has only 2 tests (`test_runnable_events_v3.py`) — immature, treat as provisional."
+Actual: 107 dedicated tests across 4 files — `test_chat_model_v3_stream.py` (41 tests / 1,482 LOC), `test_chat_model_stream.py` (42 tests / 904 LOC), `test_chat_model_streamer.py` (24 tests / 484 LOC), `test_runnable_events_v3.py` (2 tests / 23 LOC). Original pass-1 inventory omitted 3 test files. R7 downgraded from Medium to Low. Port-as-provisional stance can relax to normal port at Phase 1 discretion. Gating v3 behind a feature remains a valid architecture decision — rationale is now version-volatility, not immaturity.
+
+**LOW-1 — `HTMLHeaderTextSplitter` active_headers key type (`semport/splitters/behavioral-intent.md`)**
+Corpus claimed: active-header dict "keyed by DOM depth."
+Actual (`html.py:277-280, 342`): keyed by user-defined header NAME (e.g., "Header 1"); value = tuple `(header_text, level, dom_depth)`; DOM depth is field-3 of the value tuple and drives scope eviction (evict headers whose recorded `dom_depth > current`). Corrected with `[validation-certification-9]` marker.
+
+**LOW-2 — Propagation fix for v3 test count (`semport/core/dependency-disposition.md:84`)**
+Stale "the v3 stream has only 2 tests" string in dependency-disposition.md corrected; rationale updated to version-volatility.
+
+### Coverage saturation
+
+All pass-8 explicitly-named residual territory verified:
+- `BaseLLM.generate` partial-failure — corrected (MEDIUM)
+- `_get_supported_usage_metadata_keys` — no corpus claim (function absent from corpus)
+- `_run_agent` streaming path — no corpus claim (was a saturation suggestion, not a claimed fact)
+- `AgentMiddleware.before_agent` signature — CONFIRMED (factory.py / middleware/types.py exact match)
+
+Cumulative: 24 total validation runs (8 sampled + 7-area exhaustive sweep + 9 certification passes); ~75 total corrections; best streak 1/3 (once, pass 2); all bounded error classes closed.
+
+### Gate-strategy escalation
+
+Pass 9 is the 9th certification pass with no streak reaching 3. Human consulted on gate-closure strategy (orchestrator escalation, Level 2). Possible paths: (a) continue certification until 3 consecutive CLEAN passes; (b) declare semport sufficient at current precision depth and advance to Phase 1 with a formal cap on pass count; (c) other human-directed approach.
+
+### Files modified
+
+- `semport/core/behavioral-intent.md` (BaseLLM.generate batch-fail semantics corrected)
+- `semport/core/test-inventory.md` (v3 streaming 107 tests corrected)
+- `semport/core/dependency-disposition.md` (v3 test count + R7 rationale corrected)
+- `semport/splitters/behavioral-intent.md` (HTMLHeaderTextSplitter active_headers key corrected)
+- `semport/VALIDATION-REPORT.md` (pass 9 result appended)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 25 checkpoint archived)
+- `STATE.md` (pass 9 DONE, R7 downgraded, session checkpoint updated)

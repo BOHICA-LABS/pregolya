@@ -221,7 +221,7 @@ in/out, same caching+streaming machinery. Lower priority for v1 (chat-first).
 round-tripping provider outputs. A meaty, translation-heavy module.
 
 **Error behavior.** Model errors trigger `on_llm_error` callbacks and propagate;
-`generate` collects per-prompt exceptions when `run_manager` present. Rate limiting via
+`generate` fires `on_llm_error` once per per-prompt `run_manager` on exception (all receive the SAME exception), then re-raises — batch-fail; NO per-prompt exception collection and NO partial success. `batch(return_exceptions=True)` replicates the same exception for every input. `[validation-certification-9]` Rate limiting via
 optional `rate_limiter.acquire()` before the call (not surfaced in tracing).
 
 ---

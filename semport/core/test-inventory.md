@@ -116,8 +116,7 @@ is a coroutine test), `syrupy` (`.ambr` snapshots), `freezegun` (time),
 - `_compat_bridge.py` (844 LOC, v0/v1 output-version bridging) coverage is spread
   across language_models + block_translator tests rather than a dedicated file — verify
   coverage before porting; it is subtle.
-- v3 protocol streaming (`chat_model_stream.py`, 1,441 LOC) has only 2 tests
-  (`test_runnable_events_v3.py`) — **immature, expect churn**; treat as provisional.
+- v3 protocol streaming (`chat_model_stream.py`, 1,441 LOC) has **107 dedicated tests** across 3 files: `test_chat_model_v3_stream.py` (41 tests / 1,482 LOC — tests `stream_events(version="v3")` sync+async and `ChatModelStream`), `test_chat_model_stream.py` (42 tests / 904 LOC — tests `ChatModelStream`/`AsyncChatModelStream` projections), `test_chat_model_streamer.py` (24 tests / 484 LOC). `test_runnable_events_v3.py` (2 tests / 23 LOC in runnables/) tests v3 from the `Runnable.stream_events` perspective. **Substantial coverage — NOT immature.** The prior "only 2 tests — immature, treat as provisional" was wrong; `test_chat_model_v3_stream.py` was missed. `[validation-certification-9]`
 
 ---
 

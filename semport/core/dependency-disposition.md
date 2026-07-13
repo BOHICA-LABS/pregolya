@@ -81,8 +81,7 @@ events** (`MessageStartData`, `ContentBlockDeltaData`, `ContentBlockFinishData`,
 stream), `chat_models.py`, and `callbacks/`. Scope: a set of TypedDict/dataclass event
 schemas + finalization helpers. **PORT** as a set of serde-tagged enums in a small
 `ferrochain-protocol`-equivalent module (or fold into the messages crate). Risk: it is
-`0.0.x`, actively evolving; the v3 stream has only 2 tests. **Treat as provisional —
-model the stable v2 event path first, gate v3 behind a feature.**
+`0.0.x`, actively evolving; ~~the v3 stream has only 2 tests~~ — CORRECTED: v3 streaming has 107 dedicated tests across `test_chat_model_v3_stream.py` (41), `test_chat_model_stream.py` (42), `test_chat_model_streamer.py` (24), + `test_runnable_events_v3.py` (2). `[validation-certification-9]` The protocol version string is still `0.0.x` and the schema is evolving, but the test coverage is substantial. **Gating v3 behind a feature remains a reasonable architecture decision**, but the rationale is version volatility, not lack of tests.
 
 ---
 
