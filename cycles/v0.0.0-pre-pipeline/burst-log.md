@@ -1141,3 +1141,59 @@ Corrections are claims too: every path/value a correction introduces must be ver
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 29 checkpoint archived)
 - `cycles/v0.0.0-pre-pipeline/lessons.md` (11th lesson appended)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+
+---
+
+## Burst 31 — D16 Recorded + D8 Amended (Domain C) + Pass 13 Dispatched (2026-07-13)
+
+### What Happened
+
+Following cert pass 12 completion (burst 30), two new decisions were recorded and pass 13 was dispatched per D15 autonomous continuation.
+
+**D16 recorded:** adk-rust comparative corpus deferred until 3-CLEAN gate closes. Human directed post-closure ingestion of github.com/zavora-ai/adk-rust as Corpus 5 with identical rigor. RUST-BLINDNESS RULE: language carries zero evidentiary weight — patterns win on production-grade merit only. All outcomes on table (adopt patterns / adopt none / pivot wholesale / hybrid). Pre-staging permitted immediately: devops-engineer pins clone to `.reference/adk-rust` + manifest row + license capture. Analysis PARKED.
+
+**D8 amended:** Domain C added — OpenClaw-like personal AI assistant. Forces uniquely: 24/7 resumable sessions, multi-channel ingress/webhooks, proactive cron agency, long-horizon cross-session personal memory, local-first single-binary deployment, skill/plugin/MCP ecosystem. Host-first single-operator threat model to be inverted toward default-on isolation in any ferrochain clone.
+
+**Cert pass 13 dispatched:** D15 autonomous continuation, no check-in. Opener: correction-marker citation audit (all `[validation-*]` lines corpus-wide), prose-sibling sweep of all pass-10–12 corrected numerics, tilde-prose normalization (~120→123 etc.); then rotation. Streak 0/3.
+
+### Files Modified This Burst
+
+- `STATE.md` (D16 recorded, D8 amended, pass 13 dispatched, session checkpoint updated, burst 31 recorded)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+
+---
+
+## Burst 32 — Holdout Domain Research COMPLETE + adk-rust Corpus 5 Pinned (2026-07-13)
+
+### What Happened
+
+Human-directed follow-through on D8 ("fully understand all holdout scenarios"): all three domain briefs authored and verified at `.factory/planning/holdout-domains/`. adk-rust corpus pre-staging completed per D16.
+
+**Domain A — Virtual SOC Analyst** (`.factory/planning/holdout-domains/domain-a-soc-analyst.md`):
+Tiered SOC workflows documented. 2026 AI-SOC landscape verified. MCP-in-security confirmed real: official Splunk/Sentinel/Okta/ServiceNow MCP servers exist. NEW Phase-1 forcing surfaces identified: forensic-grade immutable audit/provenance, risk-tiered authorization gates (typed action-risk + approver roles), evidence-cited structured verdicts, untrusted-tool-content isolation. Phase-1 decision flags requiring stance before BCs: OCSF normalization approach; compliance-disclosure scope.
+
+**Domain B — Dark Factory** (`.factory/planning/holdout-domains/domain-b-dark-factory.md`):
+Distilled from vsdd-factory docs + factory.strongdm.ai + 2026 autonomous-SDLC landscape. NEW surfaces: agent-registry/routing abstraction layer; token/cost budget metering + quota governance (flagged for D9 design conversation). Killer eval shape: kill mid-fan-out, restart, verify no work lost and no double-run.
+
+**Domain C — OpenClaw** (`.factory/planning/holdout-domains/domain-c-openclaw.md`):
+Verified from primary sources: Steinberger's local-first gateway, Clawdbot→Moltbot→OpenClaw lineage, 29 channels, SKILL.md/ClawHub, two-tier memory, cron/webhooks, host-first single-operator threat model. NEW surfaces: channel ingress adapters, personal-memory model, skill registry beyond MCP, exec sandboxing, local-first single-binary packaging.
+
+**Cross-domain validation:** D7/D11/D13 spine (durable runs, HITL, fan-out, structured output, cron/threads) confirmed covered under all three domains. Consolidated NEW-surface matrix recorded in each brief's Phase-1 checklist section.
+
+**adk-rust corpus pinned (Corpus 5):** v1.0.0, SHA a6c79b6f, Apache-2.0, 39 crates / ~265k Rust LOC. Reference-manifest.md bumped to v1.4.0. Notable overlaps for future comparative assessment: adk-sandbox/adk-guardrail ↔ domain A/C isolation demands; adk-eval ↔ domain B; adk-realtime ↔ domain C. Analysis PARKED per D16 until 3-CLEAN gate closes.
+
+**Current step UNCHANGED:** Certification pass 13 in progress, streak 0/3 (D15 loop).
+
+### Files Created This Burst
+
+- `.factory/planning/holdout-domains/domain-a-soc-analyst.md`
+- `.factory/planning/holdout-domains/domain-b-dark-factory.md`
+- `.factory/planning/holdout-domains/domain-c-openclaw.md`
+- `.factory/semport/reference-manifest.md` bumped to v1.4.0 (adk-rust Corpus 5 row added)
+- `.reference/adk-rust/` (corpus clone, gitignored)
+
+### Files Modified This Burst
+
+- `STATE.md` (burst 32 recorded, session checkpoint updated, Historical Content consolidated)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 31 checkpoint archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)

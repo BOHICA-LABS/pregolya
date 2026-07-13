@@ -1,8 +1,8 @@
 ---
 artifact: semport/reference-manifest
-version: 1.3.0
+version: 1.4.0
 created: 2026-07-12
-updated: 2026-07-12
+updated: 2026-07-13
 purpose: >
   Pinned reference corpus for the ferrochain semport analysis.
   All repos are shallow-cloned at their latest stable release tags
@@ -19,6 +19,7 @@ purpose: >
 | langgraph                | https://github.com/langchain-ai/langgraph                 | 1.2.9                                | 95af6a00718588e7b7ce17310e8006d267896a77 | 2026-07-12 |
 | langchain-community      | https://github.com/langchain-ai/langchain-community       | libs/community/v0.4.2                | 7c10a5fa327f6aaaf7c932822a9e5d144891406e | 2026-07-12 |
 | langchain-mcp-adapters   | https://github.com/langchain-ai/langchain-mcp-adapters    | langchain-mcp-adapters==0.3.0        | a61c783a7949719a8c3fbe4aeba961f45f3b7849 | 2026-07-12 |
+| adk-rust                 | https://github.com/zavora-ai/adk-rust                     | v1.0.0                               | a6c79b6f97a338de58d2c0fbf33cac00eaae0f13 | 2026-07-13 |
 
 Local clone paths (relative to repo root, excluded from git via `.gitignore`):
 
@@ -26,6 +27,7 @@ Local clone paths (relative to repo root, excluded from git via `.gitignore`):
 - `.reference/langgraph/`
 - `.reference/langchain-community/`
 - `.reference/langchain-mcp-adapters/`
+- `.reference/adk-rust/`
 
 All clones are shallow (`--depth 1`).
 
@@ -242,3 +244,157 @@ excluded. Latest stable confirmed as `libs/community/v0.4.2`.
 7. **Partners directory is limited to 15 in-tree.** Many third-party integrations
    live in separate repos under `langchain-ai/` org (e.g., `langchain-aws`,
    `langchain-google-*`). Community repo covers the long tail (~1,051 modules).
+
+---
+
+## adk-rust — Package Layout
+
+Tag: `v1.0.0`
+SHA: `a6c79b6f97a338de58d2c0fbf33cac00eaae0f13` (lightweight tag, direct commit ref)
+Published: 2026-06-07
+License: Apache License Version 2.0, Copyright 2026 Zavora Technologies Ltd
+Workspace: Cargo workspace, resolver = "2", edition = "2024", rust-version = "1.94.0"
+
+**Corpus 5 — comparative analysis corpus per D16; analysis parked until extraction
+gate convergence; Rust-blindness rule applies.**
+
+### Scale
+
+| Metric                         | Count     |
+|--------------------------------|-----------|
+| Total files (all types)        | 2,092     |
+| Rust source files (.rs)        | 1,386     |
+| Rust lines (code)              | 265,316   |
+| Rust lines (comments)          | 11,338    |
+| Rust lines (blank)             | 41,723    |
+| Rust lines (total incl. docs)  | 370,217   |
+| Example crates in examples/    | 81        |
+
+### Workspace Members (39 crates)
+
+```
+# Core agent framework
+adk-core             # Base types, traits, and interfaces
+adk-rust-macros      # Procedural macros
+adk-rust             # Re-export facade crate
+
+# Agent lifecycle
+adk-agent            # Agent definition and execution
+adk-model            # Model provider abstraction
+adk-tool             # Tool definition and dispatch
+adk-runner           # Agent runner (single-agent, multi-agent)
+adk-session          # Session and conversation state
+adk-artifact         # Artifact storage and retrieval
+adk-memory           # Memory backends
+
+# Infrastructure
+adk-server           # HTTP server layer
+adk-cli              # CLI binary
+adk-telemetry        # OpenTelemetry tracing/metrics
+adk-guardrail        # Safety and content policy
+adk-auth             # Authentication helpers
+adk-plugin           # Plugin system
+adk-skill            # Skill registry and dispatch
+
+# Specialized capabilities
+adk-realtime         # Real-time voice agents (LiveKit)
+adk-graph            # Graph-based multi-agent orchestration
+adk-browser          # Browser automation integration
+adk-eval             # Agent evaluation framework
+adk-code             # Code execution capabilities
+adk-sandbox          # Sandboxed execution environment
+adk-rag              # Retrieval-augmented generation
+adk-audio            # Audio processing utilities
+adk-deploy           # Deployment helpers
+adk-payments         # Payment agent capabilities
+adk-action           # Action nodes
+adk-retry-reflect    # Retry-with-reflection loop pattern
+
+# Model provider integrations (first-party)
+adk-gemini           # Google Gemini integration
+adk-anthropic        # Anthropic Claude integration
+adk-mistralrs        # Local LLM inference via mistralrs
+
+# Protocols
+awp-types            # Agent Wire Protocol (AWP) type definitions
+adk-awp              # AWP transport implementation
+adk-acp              # Agent Communication Protocol (ACP) integration
+
+# Tooling
+cargo-adk            # Cargo subcommand (cargo adk)
+adk-managed          # Managed agent runtime
+adk-enterprise       # Enterprise client SDK
+adk-bench            # Benchmarking framework
+```
+
+### Top-Level Repository Layout
+
+```
+adk-<crate>/         # One directory per workspace member (39 crates)
+awp-types/
+cargo-adk/
+examples/            # 81 standalone example crates (each excluded from workspace)
+docs/
+assets/
+scripts/
+Cargo.toml           # Workspace root
+Cargo.lock
+Makefile
+publish.sh
+setup.sh
+devenv.nix           # Nix dev environment
+devenv.lock
+devenv.yaml
+rust-toolchain.toml
+rustfmt.toml
+CHANGELOG.md
+CONTRIBUTING.md
+README.md
+ROADMAP.md
+SECURITY.md
+STABILITY.md
+AGENTS.md
+LICENSE
+```
+
+Excluded from workspace (not present in shallow clone):
+- `reference/adk-go` — Go reference implementation (separate repo concern)
+- `reference/mcp-rust-sdk` — MCP Rust SDK reference
+- `reference/gemini-rust` — Gemini Rust SDK reference
+- `adk-studio` — extracted to https://github.com/zavora-ai/adk-studio
+
+### Non-Rust Components
+
+Predominantly Rust. Minor non-Rust content:
+- `.wav` files: 53 (audio test samples, in adk-audio or adk-realtime)
+- `.mp4` files: 3 (demo media)
+- `.png`/`.jpg`/`.webp`/`.svg`: ~27 image assets (docs/README)
+- `.sh` files: 12 (setup.sh, publish.sh, build scripts)
+- `.py` files: 3 (minor utility scripts)
+- `.js` files: 5 (minor scripts)
+- Nix files: devenv.nix (dev environment config)
+
+### Anomalies
+
+1. **edition = "2024", rust-version = "1.94.0".** Requires very recent Rust
+   toolchain. Not yet widely deployed as of July 2026. Note during analysis.
+
+2. **AWP protocol crates (awp-types, adk-awp).** "Agent Wire Protocol" — bespoke
+   inter-agent communication protocol not present in LangChain/LangGraph.
+   Relationship to A2A/MCP/ACP unclear until analysis gate opens.
+
+3. **ACP integration (adk-acp).** "Agent Communication Protocol" — distinct from
+   AWP. May be interop with external ACP standard.
+
+4. **adk-payments crate.** Payment capabilities built into the agent framework.
+   No Python LangChain analog. Scope anomaly to flag for D16 analysis.
+
+5. **adk-retry-reflect.** Name suggests a retry-with-self-reflection loop pattern.
+   No direct LangChain equivalent (closest: LangGraph's re-try edges). May be a
+   ferrochain-relevant pattern.
+
+6. **81 example crates.** Large example surface area; excluded from workspace to
+   avoid build-time cost. Rich pattern source if analysis gate opens.
+
+7. **Active and well-maintained.** 23 tags, v1.0.0 published 2026-06-07, active
+   changelog. Not archived.
