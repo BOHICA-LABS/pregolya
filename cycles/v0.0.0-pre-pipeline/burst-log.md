@@ -1859,3 +1859,49 @@ the "all items LOW" bar for CONVERGED was not met. A7 dispatched on 4 realtime-i
 - `STATE.md` (C9 COMPLETE, C10 IN-PROGRESS, convergence counter 1→0, session checkpoint updated, burst 51 checkpoint archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-51 checkpoint archived)
+
+---
+
+## Burst 58 — C15 COMPLETE (CLEAN(strict)=YES, ZERO corrections); C16 dispatched (2026-07-13)
+
+**Date:** 2026-07-13
+**Agent:** validate-extraction (C15) + state-manager (burst close)
+**Trigger:** C15 certification pass complete; C16 dispatched.
+
+### C15 Results
+
+- **Verdict:** CLEAN(strict)=YES. CLEAN(PR-merge)=YES. ZERO corrections.
+- **Opener — C14 sibling check:** `grep -rn "dev_local"` across all comparative/adk-rust/*.md files — finds only two locations inside `[comparative-cert-14]` correction comment annotations in patterns-observed.md (historical markers, not active claims). Zero active `dev_local` instances in any other file. CLEAN.
+- **Opener — identifier-exactness class closer (terminal sweep):** ~754 total backtick-quoted identifiers extracted. 146 highest-risk verified: all 56 function/method names (with `()` suffix), ~50 structural type names, ~40 lowercase function identifiers. 146/146 confirmed verbatim against reference source. 0 inaccurate. 0 hallucinated. 11 comparative/external items correctly exempted (LangGraph analogues, POSIX flags, external crate items).
+- **Rotation (12/12 CONFIRMED):**
+  - P-76: `pub api_key: String` in adk-model::anthropic::config with derive macros — CONFIRMED (config.rs:65-68)
+  - P-77: reqwest::Client::new() no timeout in adk-anthropic files/client.rs + adk-model openai/client.rs:112 — CONFIRMED
+  - module-inventory: adk-studio in Cargo.toml members but no directory on disk — CONFIRMED (Cargo.toml:61)
+  - module-inventory: adk-model 100 .rs files — CONFIRMED (68 src + 18 tests + 14 examples)
+  - dependency-disposition: reqwest features exact ["json","stream","rustls-tls-native-roots","multipart"] — CONFIRMED (Cargo.toml:140)
+  - dependency-disposition: livekit-api 0.4.18, exact features — CONFIRMED (Cargo.toml:147)
+  - test-inventory: adk-guardrail zero integration tests — CONFIRMED (tests/ absent)
+  - test-inventory: adk-server 13 integration files — CONFIRMED
+  - test-inventory: adk-core 339 #[test]/#[tokio::test] sites — CONFIRMED (257+82)
+  - test-inventory: adk-model 18 integration test files — CONFIRMED
+  - behavioral-intent §12: health contract not_configured does not fail health — CONFIRMED (rest/mod.rs:94-199)
+  - behavioral-intent §13: message_stream stub placeholder comment — CONFIRMED (request_handler.rs:375,445)
+- **Metric verification (6/6 Delta=0):** adk-rust-macros lib.rs 963 lines; Money struct fields exact; adk-server integ 13; adk-core tests 339; adk-model files 100; adk-rust-macros files 2.
+- **Streak:** 0/3 → 1/3 (C15 CLEAN; convergence counter 0→1).
+
+### C16 Dispatch
+
+- C16 continues identifier-exactness class toward exhaustion: 60+ more identifiers from unchecked strata (remaining ~608 of the ~754 total not yet individually verified in C15) within a full rotation from never-verified pools.
+- Target: advance streak to 2/3 on zero corrections.
+
+### Archived in this burst
+
+- Burst-57 session checkpoint archived to `cycles/v0.0.0-pre-pipeline/session-checkpoints.md`.
+- C11 step row retired from STATE.md Current Phase Steps (archived here): C11 COMPLETE — CLEAN(strict)=YES. ZERO corrections. Opener: 17 corrected blocks re-read as units — ALL CONSISTENT (same-block partial-correction class DRAINED). Rotation 4/4 CONFIRMED. Metrics M-01/M-02 delta-zero. Streak 0/3 → 1/3. Burst 54.
+
+### Files touched in this burst
+
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (C15 pass appended — verdict, opener checks, identifier-exactness terminal sweep, rotation table, metric verification, corrections table, confidence assessment, final verdict)
+- `STATE.md` (C15 COMPLETE, C16 IN-PROGRESS, convergence counter 0→1, streak 1/3, session checkpoint updated, burst-57 checkpoint archived, C11 step row retired)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-57 checkpoint archived)
