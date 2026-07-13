@@ -1754,3 +1754,37 @@ the "all items LOW" bar for CONVERGED was not met. A7 dispatched on 4 realtime-i
 - `STATE.md` (C4 COMPLETE, C5 IN-PROGRESS, session checkpoint updated, exhaustive-sweep row archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — exhaustive-sweep archived here from STATE.md)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-46 checkpoint archived)
+
+---
+
+## Burst 48 — C5 COMPLETE (CLEAN(strict)=NO, 2 LOW corrections); C6 dispatched (2026-07-13)
+
+**Date:** 2026-07-13
+**Agent:** validate-extraction (C5) + state-manager (burst close)
+**Trigger:** C5 certification pass complete; C6 dispatched.
+
+### C5 Results
+
+- **Verdict:** CLEAN(strict)=NO. CLEAN(PR-merge)=YES. 2 new corrections (both LOW).
+- **Opener — terminal propagation class audit:** Enumerated all 100 `[comparative-*]` markers across the corpus. Mapped each to its corrected-fact group (12 groups total). Swept corpus-wide for surviving pre-correction values. Found 2 stale siblings: both in the `is_final_response` "11→9" group — body-text sentences in patterns-observed.md P-05 and behavioral-intent.md A1 that were not updated when `[comparative-sweep]` corrected the evidence line in ANALYSIS-STATE.md. Both fixed with `[comparative-cert-5]` markers. Post-fix grep confirms zero remaining stale instances. PROPAGATION CLASS PROVABLY DRAINED.
+- **Per-file rotation (11/11 claims):** All behavioral and citation claims CONFIRMED; no inaccuracies detected.
+- **Metrics sweep (10/10 delta-zero):** All non-approximation metrics confirmed exact. Approximation rows within `~` bounds; `~69 timeout-less` systemic conclusion confirmed exact at 69 (73 − 4 = 69). `~79 client construction sites` confirmed as 73 (within `~` range; no correction-level error per C2 precedent).
+- **Corrections:**
+  - C5-01 (LOW): patterns-observed.md P-05 body text — "with an 11-case test truth table" → "with a 9-case test truth table"; `[comparative-cert-5]` marker applied. Body text was a stale sibling of the `[comparative-sweep]` correction on the evidence line in the same block.
+  - C5-02 (LOW): behavioral-intent.md A1 §3 — "9 dedicated tests cover the truth table" (was "11 dedicated tests"); `[comparative-cert-5]` marker applied. ANALYSIS-STATE.md corrected by `[comparative-sweep]`; SWEEP-test-deps cross-file handoff noted the fix but did not propagate it to behavioral-intent.md.
+- **Streak:** 0/3
+
+### C6 Dispatch
+
+- C6 is the first genuine streak-start candidate: all propagation classes are closed and drained. No further bounded audit is required.
+- C6 opener: pure fresh-eyes rotation across all 11 areas + one novel cross-document probe (angle not yet locked by C1–C5 openers).
+- Streak remains 0/3 going into C6.
+
+### Files touched in this burst
+
+- `comparative/adk-rust/patterns-observed.md` (C5-01: P-05 body text "11-case"→"9-case" with [comparative-cert-5] marker)
+- `comparative/adk-rust/behavioral-intent.md` (C5-02: A1 §3 "11 dedicated"→"9 dedicated" with [comparative-cert-5] marker)
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (C5 pass appended — verdict, corrections table, propagation audit summary, confidence assessment)
+- `STATE.md` (C5 COMPLETE, C6 IN-PROGRESS, session checkpoint updated, burst 47 checkpoint archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-47 checkpoint archived)

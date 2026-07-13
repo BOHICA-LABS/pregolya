@@ -479,3 +479,17 @@ traces_to: STATE.md
 | **Position** | pre-1, burst 46 complete. C3 COMPLETE: CLEAN(strict)=NO. 1 LOW correction: P-86 "triplicated SSE parsing" → "duplicated" ([comparative-cert-3]). Two SSE parse implementations only — (1) legacy A2aClient inline loop + parse_sse_data; (2) v1_remote::run + parse_sse_data_line. Legacy RemoteA2aAgent delegates to A2aClient; no third loop. Both openers CLEAN: (1) C2 propagation sweep — all 3 C2 fixes clean corpus-wide, no stale siblings; (2) A6/A7 notes-without-edits audit — all 7 corrective notes physically applied, class drained. Metrics 3/3 delta-zero (#[test] attrs 4803; #[ignore] 126; proptest! 150). Streak 0/3. C4 DISPATCHED: opener = C3-fix propagation (P-86 "duplicated" stale siblings), then semantic-precision word sweep + rotation with all 12 guardrails. |
 | **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 0/3 (C3 = effective pass 3 on deepened corpus; CLEAN(strict)=NO). KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (~69/~79 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. |
 | **Convergence counter** | 0 of 3 |
+
+---
+
+## Session Resume Checkpoint (2026-07-13) — burst 47 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 47 complete. C4 COMPLETE: CLEAN(strict)=NO. 2 LOW corrections: [C4-01] ANALYSIS-STATE.md A6 row 6 "SSE parser triplicated"→"duplicated" ([comparative-cert-4], C3 stale sibling); [C4-02] patterns-observed.md P-84 + ANALYSIS-STATE.md A6 row 4 "4 of 6"→"3 of 5" VectorStore backends ([comparative-cert-4]). Semantic-precision word sweep (15 claims): 14 CONFIRMED, 1 INACCURATE (C4-02). W-03 "TOOLS/RAG/MEMORY NEVER guardrailed" CONFIRMED exact; W-04 sole-anyhow-leak CONFIRMED exactly 1 (adk-mistralrs/error.rs:277). Streak 0/3. C5 DISPATCHED: opener = terminal cross-document correction-consistency audit (every [comparative-*] marker's pre-correction value swept corpus-wide for stale siblings — bounded, closes propagation class), then rotation. |
+| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 0/3. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (~69/~79 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. |
+| **Convergence counter** | 0 of 3 |

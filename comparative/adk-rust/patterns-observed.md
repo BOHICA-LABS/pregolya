@@ -69,7 +69,7 @@ errors fall back to message-substring scanning during migration only.
 ### P-05 — `is_final_response()` as an explicit, fully-tested turn-completion predicate
 Instead of scattering "is the agent done?" logic, one predicate combines skip_summarization,
 long-running-tool presence, function-call/response presence, partial flag, and trailing
-code-exec result — with an 11-case test truth table.
+code-exec result — with a 9-case test truth table. <!-- [comparative-cert-5] CORRECTION: body text stale sibling of [comparative-sweep] correction on evidence line below; "11-case" not updated when sweep fixed evidence to "9-test suite"; 9 fn test_is_final_response_* confirmed by grep in adk-core/src/event.rs -->
 - Evidence: `adk-core::event::Event::is_final_response` + 9-test suite. <!-- [comparative-sweep] CORRECTION: "11-case test truth table" → 9 distinct fn test_is_final_response_* functions (grep -c "fn test_is_final_response" adk-core/src/event.rs = 9). Quality tag unaffected. -->
 - Quality: **STRONG** — turn-boundary detection is the crux of any agent loop; centralizing and
   exhaustively testing it prevents subtle streaming/tool-loop bugs.

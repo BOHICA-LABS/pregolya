@@ -200,7 +200,7 @@ invocation_id/branch/author + `EventActions` (state_delta, artifact_delta, skip_
 transfer_to_agent, escalate, tool_confirmation(+decision), compaction, and a graph `route`
 field). `is_final_response()` is a genuine state predicate: final iff skip_summarization OR
 long_running_tool_ids present OR (no function calls AND no function responses AND not partial
-AND no trailing code-exec result). 11 dedicated tests cover the truth table including the
+AND no trailing code-exec result). 9 dedicated tests cover the truth table <!-- [comparative-cert-5] CORRECTION: stale sibling of [comparative-sweep] correction in ANALYSIS-STATE.md line 25; SWEEP-test-deps noted the ANALYSIS-STATE fix but did not propagate to behavioral-intent.md; 9 fn test_is_final_response_* confirmed by grep in adk-core/src/event.rs --> including the
 trailing-function-response edge and text-after-response edge. Confidence HIGH.
 
 ---
