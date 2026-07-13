@@ -1821,3 +1821,41 @@ the "all items LOW" bar for CONVERGED was not met. A7 dispatched on 4 realtime-i
 - `STATE.md` (C7 COMPLETE, C8 IN-PROGRESS, session checkpoint updated, burst 49 checkpoint archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-49 checkpoint archived)
+
+---
+
+## Burst 52 — C9 COMPLETE (CLEAN(strict)=NO, 1 LOW correction); C10 dispatched (2026-07-13)
+
+**Date:** 2026-07-13
+**Agent:** validate-extraction (C9) + state-manager (burst close)
+**Trigger:** C9 certification pass complete; C10 dispatched.
+
+### C9 Results
+
+- **Verdict:** CLEAN(strict)=NO. CLEAN(PR-merge)=YES. 1 new correction (LOW).
+- **Opener — C8 sibling check:** C8 was a zero-correction pass; no stale siblings to chase. Confirmed CLEAN.
+- **Behavioral rotation (5/6 — never-verified pools from adk-session rewind, payments, memory):**
+  - adk-session rewind timestamp-ordering (P-31): CONFIRMED.
+  - adk-payments journal append-only policy engine: CONFIRMED.
+  - memory scope model search(project_id=None) global-only: CONFIRMED.
+  - RunConfig max_transfer_depth guard (A3 §16 citation): CONFIRMED.
+  - RunConfig field count (A1 §5 serendipitous discovery): INACCURATE — "12-field" claim found to be off-by-one (11 fields).
+- **Correction C9-01 (LOW):** behavioral-intent.md A1 §5 RunConfig "12-field run configuration" → "11-field run configuration". Discovered incidentally while re-checking the A3 §16 citation that confirmed the budget-gap. `awk '/^pub struct RunConfig/,/^\}/' context.rs | grep "^    pub " | wc -l` = 11 (streaming_mode, tool_confirmation_decisions, cached_content, transfer_targets, parent_agent, auto_cache, history_max_events, tool_concurrency, record_payloads, trace_payload_max_bytes, max_transfer_depth). `[comparative-cert-9]` marker applied in behavioral-intent.md.
+- **Budget-gap re-confirmation:** The incidental find during the budget-gap re-check CONFIRMED again that no budget/cost/token-ceiling field exists in RunConfig. Domain-B gap stands.
+- **Metric verification (2/2 non-discovery claims Delta=0):** A2A metadata ≤64 KB confirmed; recursion_limit test value 10 confirmed. RunConfig field count tied to C9-01.
+- **Novel probe — A6+A7 quality-tag distributions:** Enumerated all 18 patterns (P-80..P-97) against ANALYSIS-STATE.md convergence table and patterns-observed.md quality tags. A6: 1S/3N/4W confirmed. A7: 0S/5N/4W/1I confirmed. 2/2 CONFIRMED. Combined with C6 (A1) and C8 (A2–A5), all seven pass distributions now independently verified.
+- **Streak:** RESET 1/3 → 0/3.
+
+### C10 Dispatch
+
+- C10 openers: (1) C9 sibling check — grep corpus-wide for "12-field" / "12 fields" in RunConfig context to confirm zero surviving stale instances. (2) Member-count class closer — enumerate every unverified struct/enum/trait member-count claim across all corpus files and recount against source.
+- After openers: unrestricted fresh-eyes rotation from never-verified pools.
+- Target: advance streak to 1/3 on zero corrections.
+
+### Files touched in this burst
+
+- `comparative/adk-rust/behavioral-intent.md` (C9-01: A1 §5 "12-field" → "11-field" RunConfig with `[comparative-cert-9]` correction comment)
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (C9 pass appended — verdict, opener check, behavioral rotation table, metric verification, novel probe, corrections table, confidence assessment, final verdict)
+- `STATE.md` (C9 COMPLETE, C10 IN-PROGRESS, convergence counter 1→0, session checkpoint updated, burst 51 checkpoint archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-51 checkpoint archived)

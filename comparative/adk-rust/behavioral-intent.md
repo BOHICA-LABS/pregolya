@@ -88,8 +88,8 @@ Behavioral contracts:
   `requires_confirmation(name)` + `with_tool()` builder. Emits `ToolConfirmationRequest` events.
 - **`ToolConcurrencyConfig`** — global `max_concurrency`, `per_tool` overrides, and a
   `BackpressurePolicy` (Queue default / Fail-fast). Enforced via `tool_concurrency` semaphore module.
-- **`RunConfig`** — 12-field run configuration with a fluent `RunConfigBuilder` and a
-  `max_transfer_depth` guard (default 10) preventing infinite agent-transfer loops.
+- **`RunConfig`** — 11-field run configuration with a fluent `RunConfigBuilder` and a
+  `max_transfer_depth` guard (default 10) preventing infinite agent-transfer loops. <!-- [comparative-cert-9] CORRECTION: "12-field" → 11; `awk '/^pub struct RunConfig/,/^\}/' context.rs | grep "^    pub " | wc -l` = 11 (streaming_mode, tool_confirmation_decisions, cached_content, transfer_targets, parent_agent, auto_cache, history_max_events, tool_concurrency, record_payloads, trace_payload_max_bytes, max_transfer_depth); off-by-one in original claim -->
 
 ## 2. adk-model — provider abstraction (27.9k LOC, 505 unit tests)
 

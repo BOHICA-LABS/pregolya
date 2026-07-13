@@ -507,3 +507,17 @@ traces_to: STATE.md
 | **Position** | pre-1, burst 49 complete. C6 COMPLETE: CLEAN(strict)=NO. 1 LOW correction: [C6-01] behavioral-intent.md A1 §2 openai sub-file count "14 sub-files"→"13 sub-files" (off-by-one; find adk-model/src/openai -name "*.rs" \| wc -l = 13 confirmed; all 5 named exemplars present). C5 sibling check CONCLUSIVE-CLEAN: zero active stale instances of "11-case" or "11 dedicated" across all 9 analysis files. 6/7 metrics delta-zero (same off-by-one as behavioral finding). Novel cross-document probe: ANALYSIS-STATE.md A1 breakdown (10S/4N/5W) matches patterns-observed.md A1 enumeration exactly — CONSISTENT. Streak 0/3. C7 DISPATCHED: openers = C6 sibling check (file-count class: grep "13 sub-files" corpus-wide) + file-count class closer (recount every not-yet-verified file-count claim), then rotation. |
 | **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 0/3. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (confirmed exact 69/73 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. |
 | **Convergence counter** | 0 of 3 |
+
+---
+
+## Checkpoint — Burst 51 (C8 COMPLETE, C9 DISPATCHED)
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 51 complete. C8 COMPLETE: CLEAN(strict)=YES. ZERO corrections. Streak advances 0/3 → 1/3 (first clean pass of the comparative cascade). 8/8 behavioral confirmed at max precision: error taxonomy (14 ErrorComponent + 10 ErrorCategory variants), state-key preconditions, WasmBackend all-5-true, A2/A3 STRONG/NEUTRAL/WEAK subtotals exact. 6/6 metrics delta-zero: openai/ 13 files, adk-server 72 files, LOC figures (adk-server 22,373, adk-anthropic 19,658, adk-gemini 13,141), total pattern count 97. Novel cross-doc probe: A2–A5 STRONG/NEUTRAL/WEAK subtotals cross-referenced ANALYSIS-STATE.md ↔ patterns-observed.md — 4/4 CONFIRMED. C9 DISPATCHED. |
+| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 1/3. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (confirmed exact 69/73 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. UNVERIFIABLE items unchanged (scc LOC, 4 a2a-v1 runtime items, adk-anthropic/src/types ~60 vs 82 approx.). |
+| **Convergence counter** | 1 of 3 |

@@ -11,7 +11,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "comparative certification pass C9 in progress, streak 1/3"
+current_step: "comparative certification pass C10 in progress, streak 0/3"
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -44,9 +44,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — burst 51: C8 COMPLETE. CLEAN(strict)=YES. ZERO corrections. Streak 0/3 → 1/3. 8/8 behavioral confirmed at max precision (error taxonomy exact: 14 ErrorComponent + 10 ErrorCategory variants; state-key preconditions exact; WasmBackend all-5-true). 6/6 metrics delta-zero (openai/ 13 files, adk-server 72, LOC figures exact, total-pattern-count 97). Novel cross-doc probe: all 4 A2–A5 STRONG/NEUTRAL/WEAK subtotals match ANALYSIS-STATE.md + patterns-observed.md exactly. C9 dispatched (fresh context, rotation from never-verified pools, judgment precedents in force). |
+| **Last Updated** | 2026-07-13 — burst 52: C9 COMPLETE. CLEAN(strict)=NO. 1 LOW correction (C9-01): behavioral-intent A1 §5 RunConfig "12-field"→"11-field" (off-by-one; incidental find during budget-gap re-check). Domain-B gap re-confirmed: no budget/cost/token-ceiling field in RunConfig. 5/6 behavioral+citation claims confirmed. Novel probe: A6+A7 quality-tag distributions 2/2 CONFIRMED — all 7 pass distributions independently verified. Streak RESET 1/3→0/3. C10 DISPATCHED. |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | comparative certification pass C9 in progress, streak 1/3 |
+| **Current Step** | comparative certification pass C10 in progress, streak 0/3 |
 
 ## Phase Progress
 
@@ -67,11 +67,10 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| adk-rust certification pass C4 (strict-zero, deepened corpus) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 2 corrections (2 LOW): [C4-01] ANALYSIS-STATE.md A6 row 6 "SSE parser triplicated"→"duplicated" (C3 stale sibling); [C4-02] P-84 + ANALYSIS-STATE.md A6 row 4 "4 of 6"→"3 of 5" VectorStore backends. Word sweep 14/15 CONFIRMED incl. W-03 TOOLS/RAG/MEMORY NEVER guardrailed + W-04 sole-anyhow-leak (exactly 1). Streak 0/3. Burst 47. |
-| adk-rust certification pass C6 (strict-zero, deepened corpus) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 1 LOW correction: [C6-01] behavioral-intent A1 §2 openai sub-files "14"→"13" (off-by-one). C5 sibling check CLEAN. 6/7 metrics delta-zero. Cross-doc probe CONSISTENT. Streak 0/3. Burst 49. |
 | adk-rust certification pass C7 (strict-zero, deepened corpus) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 1 LOW correction: [C7-01] module-inventory.md A5 openai/ file count "(14 files)"→"(13 files)" (stale sibling of C6-01). FILE-COUNT CLASS CLOSED: 49 claims checked (39 A1 table + 10 sub-dir), 48 delta-zero. Behavioral rotation 7/7 confirmed. Streak 0/3. Burst 50. |
 | adk-rust certification pass C8 (strict-zero, deepened corpus) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. 8/8 behavioral confirmed (error taxonomy 14+10 variants exact, state-key preconditions, WasmBackend all-5-true, A2/A3 subtotals exact). 6/6 metrics delta-zero. Novel probe: A2–A5 STRONG/NEUTRAL/WEAK subtotals cross-doc 4/4 CONFIRMED. Streak 1/3. Burst 51. |
-| adk-rust certification pass C9 (strict-zero, deepened corpus) | validate-extraction | IN-PROGRESS | Fresh context. Rotation from never-verified pools. Judgment precedents (P-71 STRONG, C5 approx. precedent) in force. Target: 2/3 on zero. |
+| adk-rust certification pass C9 (strict-zero, deepened corpus) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 1 LOW correction: [C9-01] behavioral-intent A1 §5 RunConfig "12-field"→"11-field" (off-by-one; incidental find during budget-gap re-check; Domain-B gap re-confirmed: no budget field). 5/6 behavioral+citation confirmed. Novel probe: A6+A7 distributions 2/2 CONFIRMED — all 7 pass distributions verified. Streak RESET 1/3→0/3. Burst 52. |
+| adk-rust certification pass C10 (strict-zero, deepened corpus) | validate-extraction | IN-PROGRESS | Fresh context. Openers: C9 sibling check + member-count class closer (all unverified struct/enum/trait member-count claims enumerated against source). Then rotation. Target: 1/3 on zero. |
 
 ## Decisions Log
 
@@ -130,8 +129,8 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 |--------|-------|
 | Adversary passes completed | 0 |
 | Fix bursts completed | 0 |
-| Convergence counter | 1 of 3 |
-| Finding trajectory | trajectory-tail →0→0→0→0 (C8: ZERO corrections) |
+| Convergence counter | 0 of 3 |
+| Finding trajectory | trajectory-tail →0→0→1 (C9: 1 LOW correction; streak reset) |
 
 ## Session Resume Checkpoint
 
@@ -141,9 +140,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 51 complete. C8 COMPLETE: CLEAN(strict)=YES. ZERO corrections. Streak advances 0/3 → 1/3 (first clean pass of the comparative cascade). 8/8 behavioral confirmed at max precision: error taxonomy (14 ErrorComponent + 10 ErrorCategory variants), state-key preconditions, WasmBackend all-5-true, A2/A3 STRONG/NEUTRAL/WEAK subtotals exact. 6/6 metrics delta-zero: openai/ 13 files, adk-server 72 files, LOC figures (adk-server 22,373, adk-anthropic 19,658, adk-gemini 13,141), total pattern count 97. Novel cross-doc probe: A2–A5 STRONG/NEUTRAL/WEAK subtotals cross-referenced ANALYSIS-STATE.md ↔ patterns-observed.md — 4/4 CONFIRMED. C9 DISPATCHED. |
-| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 1/3. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (confirmed exact 69/73 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. UNVERIFIABLE items unchanged (scc LOC, 4 a2a-v1 runtime items, adk-anthropic/src/types ~60 vs 82 approx.). |
-| **Convergence counter** | 1 of 3 |
+| **Position** | pre-1, burst 52 complete. C9 COMPLETE: CLEAN(strict)=NO. 1 LOW correction (C9-01): behavioral-intent A1 §5 RunConfig "12-field"→"11-field" (off-by-one; incidental find during budget-gap re-check; Domain-B gap re-confirmed: no budget/cost/token-ceiling field in RunConfig). 5/6 behavioral+citation claims confirmed. Novel probe: A6+A7 quality-tag distributions 2/2 CONFIRMED — combined with C6+C8, all seven pass distributions now independently verified. Streak RESET 1/3→0/3. C10 DISPATCHED (openers: C9 sibling check + member-count class closer). |
+| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 0/3. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (confirmed exact 69/73 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. UNVERIFIABLE items unchanged (scc LOC, 4 a2a-v1 runtime items, adk-anthropic/src/types ~60 vs 82 approx.). |
+| **Convergence counter** | 0 of 3 |
 
 ## Historical Content
 
