@@ -248,7 +248,7 @@ pass: A4
 scope: test-inventory (safety/quality cluster)
 status: complete
 cluster_test_markers: ~617 (8 crates) # [comparative-sweep] corrected from ~961; original used double-counting methodology (see table note above)
-strongest_suites: [adk-sandbox (6 proptest + truth-tables), adk-code (8 proptest + 10 integ), adk-eval scorers]
+strongest_suites: [adk-sandbox (5 proptest + truth-tables), adk-code (7 proptest + 10 integ), adk-eval scorers] # [comparative-cert-13] CORRECTION: "6 proptest" → 5 (adk-sandbox) and "8 proptest" → 7 (adk-code); these were pre-correction double-count values; cert-1 corrected the body text at lines 204-206 but this State Checkpoint YAML was not updated; verified proptest file counts: adk-sandbox=5, adk-code=7 per SWEEP-test-deps attribute-only recount
 untested_gaps: [untrusted-content-ingress (P-59), macos-read-confinement (P-60),
                 retry-reflect-termination-hole (P-63), eval-score-merge+judge-failure (P-64),
                 path-safety-symlink-escape (P-65)]

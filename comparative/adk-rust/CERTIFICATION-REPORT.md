@@ -2127,3 +2127,188 @@ Novel probe:       behavioral-intent.md per-crate summaries vs test-inventory.md
 Rotation:          5/5 behavioral+citation claims CONFIRMED; 0 inaccurate; 0 hallucinated
 Streak:            2/3 (C8 CLEAN → reset C9; reset C10; C11 CLEAN; C12 CLEAN → streak 2/3)
 ```
+
+---
+
+# Certification Pass C13 — adk-rust Comparative Corpus
+
+---
+artifact: comparative/adk-rust/CERTIFICATION-REPORT
+document_type: certification-pass
+pass: C13
+corpus: adk-rust v1.0.0 (SHA a6c79b6f)
+reference: .reference/adk-rust (read-only)
+guardrails: all-twelve (lessons.md eleven + guardrail-12 attribute-only test counting)
+streak_in: 2/3
+date: 2026-07-13
+focus: pure fresh-eyes rotation (never-verified pools: P-08, P-10, P-29, behavioral-intent A2 §7.4 FanInTracker, A4 §4 retry-reflect; numerics: all 8 A4 cluster crate LOC figures; citation: behavioral-intent A4 §2 ProcessBackend); novel cross-document probe: behavioral-intent.md A4 header LOC × test-inventory.md A4 table consistency (all 8 crates)
+---
+
+## CLEAN Status
+
+```
+CLEAN (strict):    NO  — 1 new correction (LOW severity)
+CLEAN (PR-merge):  YES — no CRIT/HIGH/MED findings remain uncorrected
+Streak position:   0/3 (reset from 2/3)
+```
+
+---
+
+## Opener — C12 Sibling Check
+
+C12 was a zero-correction CLEAN pass. No `[comparative-cert-12]` markers were applied; there are
+no corrected facts with potential stale siblings to chase.
+
+**Opener result: CLEAN — no sibling check required.**
+
+---
+
+## Phase 1 — Behavioral Verification (All-Twelve Guardrails Rotation)
+
+Claims selected from never-verified pools (absent from all SWEEP and C1-C12 verified lists).
+Pool saturation status per C12: remaining unseen pools include P-08, P-10–P-13, P-19, P-25,
+P-27–P-29, P-39–P-40, P-43, P-46, P-56–P-66, P-70–P-73, P-79, P-95; behavioral-intent.md
+A2 §7.x graph internals, A4 §2–§6.
+
+| # | Source | Claim | Verified Against | Result |
+|---|--------|-------|-----------------|--------|
+| B-01 | patterns-observed.md P-08 | "context-cache create/delete failures, intra-compaction failures, and proactive compaction failures all `tracing::warn!` with the error and proceed — never a silent Vec::new()/None. Persistence and agent-run errors are propagated via `yield Err(e)` through the Result-item stream." | `.reference/adk-rust/adk-runner/src/runner.rs` | CONFIRMED — line 509 comment: "Cache failures are non-fatal — log a warning and proceed without cache."; lines 535/543/613/640/666 all `tracing::warn!` for cache/compaction failures; lines 321/372/416/427/453/482/502/575 all `yield Err(e)` for persistence/agent-run failures. Both claimed behaviors confirmed. |
+| B-02 | patterns-observed.md P-10 | "each `Llm` exposes a `schema_adapter()` that normalizes at request time (default `GenericSchemaAdapter`; providers override). Tool-name truncation at a UTF-8 boundary for 64-byte limits is a default method." | `.reference/adk-rust/adk-core/src/schema_adapter.rs` | CONFIRMED — line 48 doc: "exceeding 64 bytes at a valid UTF-8 character boundary"; lines 73/82/83: "Default implementation truncates names exceeding 64 bytes at the nearest [UTF-8 boundary]"; lines 109-115: implementation walks backward from byte 64 to find valid UTF-8 boundary. `GenericSchemaAdapter` is the default (line 161). |
+| B-03 | behavioral-intent.md A2 §7.4 | "`filter_deferred_nodes`, `FanInTracker`: a deferred node waits until all upstream paths complete, with an optional `fan_in_timeout` that proceeds on partial results (with `tracing::warn!`) or errors `FanInTimedOut` if zero arrived" | `.reference/adk-rust/adk-graph/src/executor.rs` | CONFIRMED — lines 7/37-38: `FanInTracker` imported, field `pending_deferred: HashMap<String, FanInTracker>`; lines 371/380-384: `filter_deferred_nodes` and `FanInTracker::new`; lines 424-431: `if received > 0 { tracing::warn!(...) }` then proceeds; lines 441-449: `received == 0` → `return Err(GraphError::FanInTimedOut {...})`. Exact match. |
+| B-04 | patterns-observed.md P-29 | "There is no `put_writes`-equivalent per-task intermediate persist... no `put_writes` method on the `Checkpointer` trait" | `.reference/adk-rust/adk-graph/src/checkpoint.rs` | CONFIRMED — lines 14-22: `pub trait Checkpointer: Send + Sync` defines only `save`, `load`, `load_by_id`. No `put_writes`, no durability-mode methods. |
+| B-05 | behavioral-intent.md A4 §4 | "On a tool result detected as an error, it does NOT re-run the tool: it increments a per-`(tool, args-hash)` counter... and REPLACES the result with `{\"reflection\": \"<templated...>\"}`" | `.reference/adk-rust/adk-retry-reflect/src/plugin.rs` | CONFIRMED — lines 147/151/154: `call_id = hash(args.to_string())`, `tracker_key = format!("{tool_name}:{call_id}")`; lines 188-189: Step 5 "Increment failure counters"; lines 204-215: Step 7 "Render reflection prompt" via `render_reflection`; lines 227-232: Step 9 "Return modified result with reflection": `reflection_value = json!({"reflection": reflection})`, returns `Ok(AfterToolCallResult::Continue(reflection_value))`. No tool re-invocation anywhere in the function body. |
+
+Citation (from behavioral-intent.md A4 §2, never independently verified):
+
+| # | Source | Citation | Verified Against | Result |
+|---|--------|----------|-----------------|--------|
+| C-01 | behavioral-intent.md A4 §2 | "ProcessBackend (default feature `process`): `tokio::process` child; enforces `env_clear()` + wall-clock timeout ONLY. No memory/network/fs isolation. `Language::Command` = raw `sh -c \"<code>\"`" | `.reference/adk-rust/adk-sandbox/src/process.rs` | CONFIRMED — module doc line 4: "enforces timeout and environment isolation but does not enforce [memory/network/fs]"; line 15: `Command | Execute code as sh -c "<code>"`; lines 92-93: "Enforces timeout via `tokio::time::timeout` and environment isolation via `env_clear()`"; line 357: `cmd.env_clear()` in shared execution logic; lines 383-404: `tokio::time::timeout` wall-clock gate; line 238: `Language::Command => self.execute_command(...)`. All claims confirmed. |
+
+| Pool | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| patterns-observed.md P-08, P-10, P-29 (3 behavioral) | 3 | 3 | 0 | 0 | 0 |
+| behavioral-intent.md A2 §7.4, A4 §4 (2 behavioral) | 2 | 2 | 0 | 0 | 0 |
+| behavioral-intent.md A4 §2 (1 citation) | 1 | 1 | 0 | 0 | 0 |
+
+**Total behavioral+citation: 6 claims checked (5 behavioral + 1 citation), 6 confirmed, 0 inaccurate, 0 hallucinated, 0 unverifiable**
+
+---
+
+## Phase 2 — Metric Verification
+
+All 8 A4 cluster-size LOC figures from behavioral-intent.md A4 header (never previously verified
+as a complete batch):
+
+| Claim | Source | Claimed | Recounted | Delta | Command |
+|-------|--------|---------|-----------|-------|---------|
+| adk-eval LOC | behavioral-intent.md A4 header | 8,226 | 8,226 | 0 | `find .reference/adk-rust/adk-eval -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-code LOC | behavioral-intent.md A4 header | 9,081 | 9,081 | 0 | `find .reference/adk-rust/adk-code -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-sandbox LOC | behavioral-intent.md A4 header | 7,521 | 7,521 | 0 | `find .reference/adk-rust/adk-sandbox -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-browser LOC | behavioral-intent.md A4 header | 5,160 | 5,160 | 0 | `find .reference/adk-rust/adk-browser -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-plugin LOC | behavioral-intent.md A4 header | 3,653 | 3,653 | 0 | `find .reference/adk-rust/adk-plugin -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-skill LOC | behavioral-intent.md A4 header | 2,325 | 2,325 | 0 | `find .reference/adk-rust/adk-skill -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-retry-reflect LOC | behavioral-intent.md A4 header | 1,031 | 1,031 | 0 | `find .reference/adk-rust/adk-retry-reflect -name "*.rs" \| xargs wc -l \| tail -1` |
+| adk-guardrail LOC | behavioral-intent.md A4 header | 1,015 | 1,015 | 0 | `find .reference/adk-rust/adk-guardrail -name "*.rs" \| xargs wc -l \| tail -1` |
+
+**All 8 metric claims: Delta = 0 (pass). A4 cluster LOC class now fully closed.**
+
+---
+
+## Novel Cross-Document Probe (C13 choice)
+
+**Probe: behavioral-intent.md A4 cluster-size LOC figures × test-inventory.md A4 table × ANALYSIS-STATE.md A6 census — three-way arithmetic consistency.**
+
+No prior pass (C1–C12) verified all 8 A4 cluster crate LOC figures as a batch, and no pass cross-checked the A4 header LOC figures against the downstream test-inventory.md A4 State Checkpoint marker arithmetic.
+
+### Step 1: A4 header LOC (behavioral-intent.md) vs ground truth
+
+All 8 figures verified above (Phase 2): every Delta = 0.
+
+### Step 2: A4 test marker arithmetic (test-inventory.md)
+
+Per-crate test markers from A4 table:
+
+| Crate | Test markers |
+|-------|-------------|
+| adk-eval | 124 |
+| adk-sandbox | 154 |
+| adk-code | 175 |
+| adk-plugin | 43 |
+| adk-browser | 32 |
+| adk-guardrail | 27 |
+| adk-skill | 46 |
+| adk-retry-reflect | 16 |
+| **Sum** | **617** |
+
+test-inventory.md A4 State Checkpoint claims `cluster_test_markers: ~617 (8 crates)` (post-sweep corrected value). Arithmetic: 124+154+175+43+32+27+46+16 = **617** exactly. CONSISTENT.
+
+### Step 3: ANALYSIS-STATE.md A6 cross-reference
+
+ANALYSIS-STATE.md A6 census states: "4,803 test attrs / 150 proptest / 126 `#[ignore]` / 19 live-API-gated files. Reconciles with A4 (~617) + A5 (~1,849) cluster subsets."
+
+ANALYSIS-STATE.md's A4 cluster reference "~617" matches the test-inventory.md State Checkpoint "~617" and the per-crate arithmetic (617). CONSISTENT.
+
+**Novel probe verdict: ALL THREE DOCUMENTS CONSISTENT — behavioral-intent.md A4 LOC × test-inventory.md A4 marker table arithmetic × ANALYSIS-STATE.md A6 census reference form an internally consistent picture. No discrepancy found across any of the three documents or the 8 per-crate figures.**
+
+**Serendipitous finding during probe (C13-01):** While verifying the test-inventory.md A4 State Checkpoint, the `strongest_suites` line was found to retain pre-correction proptest file counts. See Inaccurate Items section.
+
+---
+
+## Refinement Iterations: 1/3
+
+All findings resolved in first pass. One correction applied. No items require re-verification.
+
+---
+
+## New Corrections Applied in This Pass
+
+| # | Severity | Item | Original Claim | Corrected Value | File | Marker |
+|---|----------|------|---------------|-----------------|------|--------|
+| C13-01 | LOW | test-inventory.md A4 State Checkpoint `strongest_suites` line | "adk-sandbox (6 proptest + truth-tables), adk-code (8 proptest + 10 integ)" | "adk-sandbox (5 proptest + truth-tables), adk-code (7 proptest + 10 integ)" — pre-correction double-count values; cert-1 corrected these proptest file counts (adk-sandbox 6→5, adk-code 8→7) in the body text (lines 204/206) but NOT in the State Checkpoint YAML; stale sibling missed by C5 terminal propagation sweep (which checked for cross-file siblings of "6 proptest" / "8 proptest" and found none, but did not examine the State Checkpoint within test-inventory.md itself) | test-inventory.md | `[comparative-cert-13]` |
+
+---
+
+## UNVERIFIABLE Items (4 a2a-v1 Phase-4 obligations, carried from C2–C12)
+
+Same four items — unchanged; no new UNVERIFIABLE items added.
+
+---
+
+## Hallucinated Items (Removed)
+
+None. Zero hallucinations detected across all passes C1–C13.
+
+---
+
+## Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Behavior | Correction Applied |
+|------|---------------|-----------------|-------------------|
+| test-inventory.md A4 State Checkpoint `strongest_suites` YAML line | "adk-sandbox (6 proptest + truth-tables)" and "adk-code (8 proptest + 10 integ)" | adk-sandbox has 5 proptest files (not 6); adk-code has 7 proptest files (not 8); both corrected by [comparative-cert-1] in body text but not propagated to State Checkpoint metadata; cert-1 body-text locations at lines 204-206 carry correct values and markers; qualitative strongest-suite conclusion unaffected | Changed "6 proptest" → "5 proptest" and "8 proptest" → "7 proptest" with `[comparative-cert-13]` correction comment |
+
+---
+
+## Confidence Assessment
+
+- Overall extraction accuracy: **99%** (6/6 behavioral+citation claims confirmed; 1 low-severity stale sibling corrected; 0 hallucinations; zero MEDIUM-or-higher errors across any pass C1–C13)
+- Metric accuracy: **100%** on all 8 A4 cluster LOC claims (all Delta = 0); A4 cluster LOC class now fully closed
+- Hallucination rate: **0%** (maintained across all passes C1–C13)
+- Novel probe: A4 cluster LOC × test-inventory.md A4 marker arithmetic × ANALYSIS-STATE.md A6 census — all three CONSISTENT; 617 cluster test marker total arithmetically verified
+- Recommendation: **TRUST WITH CAVEATS** — same caveat classes as C12: (1) scc Code vs wc-l methodology inconsistency (UNVERIFIABLE without scc tool); (2) four a2a-v1 runtime items Phase-4 validation obligations; (3) adk-anthropic/src/types ~60 vs 82 approximation gap pre-existing acknowledged.
+
+---
+
+## Certification Final Verdict
+
+```
+CLEAN (strict):    NO  — 1 new correction (LOW severity)
+CLEAN (PR-merge):  YES
+New corrections:   1 (LOW severity — test-inventory.md A4 State Checkpoint "6 proptest"/"8 proptest"
+                   stale sibling of cert-1 body-text corrections → "5 proptest"/"7 proptest" [C13-01])
+Opener check:      CLEAN — C12 was zero-correction pass; no stale siblings to chase
+Metric sweep:      8/8 A4 cluster LOC claims Delta=0 (A4 cluster LOC class fully closed)
+Novel probe:       behavioral-intent.md A4 header LOC × test-inventory.md A4 marker arithmetic ×
+                   ANALYSIS-STATE.md A6 census — all three CONSISTENT; 617 marker total verified
+Rotation:          6/6 behavioral+citation claims CONFIRMED; 0 inaccurate in rotation; 0 hallucinated
+Streak:            0/3 (reset from 2/3 — C13 corrected 1 LOW-severity item)
+```
