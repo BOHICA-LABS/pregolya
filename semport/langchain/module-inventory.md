@@ -195,7 +195,7 @@ dependency-disposition.md — this is the only non-declared runtime import).
 pass: 3
 artifact: module-inventory
 status: complete
-files_scanned: 33 source (full reads of factory, types, structured_output, chat_models/base, all __init__; surveyed 13 middleware)
+files_scanned: 33 source (full reads of factory, types, structured_output, chat_models/base, all __init__; surveyed 15 middleware <!-- [validation-corrected pass-4]: "13 middleware" was stale metadata from original analysis pass; actual count is 15 as corrected in passes 1-3 -->)
 timestamp: 2026-07-12
 ```
 </content>

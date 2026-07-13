@@ -113,3 +113,67 @@ For pass 6 and subsequent passes, a behavioral-locus precision guardrail is acti
 ### Follow-up
 
 Fold the behavioral-locus precision guardrail into the validate-extraction agent prompt upstream — add as a mandatory verification step for any claim about error-raising behavior in multi-layer graph internals. Session-review target: same batch as counting-methodology and propagation gaps.
+
+---
+
+## Lesson: PROCESS-GAP — Semantic-Precision Guardrail for Summary Words in Behavioral Docs (2026-07-13)
+
+**Source:** Extraction-validation pass 6 (burst 14)
+**Category:** process-gap
+**Severity:** LOW (single LOW finding; but pattern is load-bearing for Rust implementation invariants)
+
+### What happened
+
+Extraction-validation pass 6 found that `core/behavioral-intent.md` described `merge_dicts` identity-key semantics as "last-wins". The actual behavior is: keep-left-when-equal (left value wins when both channels carry identical keys) / concatenate-when-different (values appended when keys differ).
+
+"Last-wins" is a plausible shorthand that captures the general concept of merging overriding prior state — it reads naturally in the context of a dict merge operation. But it encodes the wrong invariant. A Rust implementer building `merge_dicts` from the "last-wins" description would implement an overwrite rule for all key collisions, when the actual behavior distinguishes equal-value collisions (keep-left) from different-value collisions (concatenate).
+
+This is the same failure class as the pass-5 behavioral-locus finding: locally plausible, globally wrong. The summary word "last-wins" is not a lie in isolation; it becomes a specification error when its specificity is insufficient to disambiguate behavior.
+
+### Why it matters
+
+Summary words (last-wins, always, never, all, any, overwrite) carry semantic load in behavioral specifications. When they diverge from the actual branch logic — even subtly — they propagate into Rust implementations as silent semantic divergence. Unlike factual errors (wrong count, wrong type name), semantic-precision errors do not fail tests unless there is a test vector that exercises the disambiguating case. A Rust `merge_dicts` that overwrites on equal values passes all tests derived from summary descriptions but fails on equal-value merge inputs.
+
+### Codification applied
+
+For pass 7 and subsequent passes, a semantic-precision guardrail is active:
+
+1. **Summary-word verification mandatory:** When a behavioral description uses summary words (last-wins, first-wins, always, never, overwrite, append, merge), verify the word against actual branch logic in the reference source — not against intuition about what the operation "should" do.
+2. **Disambiguation test:** For any summary that describes collision resolution or ordering behavior, ask: "Is there a case where this summary produces a different outcome than the actual code?" If yes, the summary requires a more specific description.
+3. **Rust-implication check:** For any behavioral claim about merge, update, or collision resolution, verify the Rust API implication — what invariant does the implementer derive from this description?
+
+### Follow-up
+
+Add semantic-precision guardrail to the validate-extraction agent prompt upstream — co-batch with behavioral-locus precision guardrail and propagation sweeps for session-review. All three share the common pattern: locally plausible, load-bearing for Rust API surface, resistant to casual review.
+
+---
+
+## Lesson: PROCESS-GAP — Notes-Without-Edits: Correction Notes Do Not Fix Sibling Table Cells (2026-07-13)
+
+**Source:** Extraction-validation pass 6 (burst 14)
+**Category:** process-gap
+**Severity:** LOW (single LOW finding; pattern extends the cross-document propagation discipline to intra-document cases)
+
+### What happened
+
+Extraction-validation pass 6 found that `core/module-inventory.md` main table still showed `block_translators: 7 files`. A correction NOTE had been added in a separate section of the same document (a deepening section or analysis note) identifying the correct count as 8. The NOTE was written as if the correction had been applied; the main table cell was never updated.
+
+The pass-7-deepening correction NOTE existed. The physical edit to the table never happened.
+
+### Why it matters
+
+This is a specific and recurring failure shape: an agent adds a correction note documenting what should be fixed, then does not apply the physical edit to the table or structured field that actually needs updating. The note creates false confidence that the correction is done. The corpus now contains a note that says the count is 8 and a table that says the count is 7. A reader who reaches the table first sees 7; only a reader who also finds the note sees the discrepancy. The canonical structured data (the table) is wrong; the discursive text (the note) is right. Downstream agents and implementers read tables, not correction notes.
+
+This failure shape is distinct from cross-document propagation (TD-VSDD-060), which concerns corrections applied to one file but not propagated to sibling files. Notes-without-edits concerns corrections noted but not applied within the same file, and specifically the pattern of notes in discursive sections while structured data (tables, code blocks) goes uncorrected.
+
+### Codification applied
+
+For pass 7 and subsequent passes, a notes-without-edits sweep is mandatory:
+
+1. **Deepening-note sweep as first stratum:** Before examining new behavioral strata, grep all documents for correction notes, "TODO:", "FIXME:", "NOTE:", "CORRECTION:", "should be", and similar markers that indicate a correction was recognized but may not have been applied to the surrounding structured data.
+2. **Intra-document table audit:** When a correction note refers to a count, type, or field value, confirm that all table cells and structured data fields in the same document reflect the corrected value, not just the prose.
+3. **Notes are not corrections:** A note that says "the correct value is X" is not a correction — it is evidence that a correction is needed. The correction is only complete when the structured data reflects X.
+
+### Follow-up
+
+Add deepening-note sweep as a mandatory first-stratum in the validate-extraction agent prompt. This sweep directly catches the pass-6 failure shape and the broader class of "correction recognized, physical edit skipped" failures. Co-batch with counting-methodology, propagation, behavioral-locus, and semantic-precision guardrails in session-review upstream agent prompt hardening.

@@ -254,7 +254,7 @@ langchain_tests/
 │   ├── embeddings.py      (137)   EmbeddingsTests + EmbeddingsUnitTests
 │   └── tools.py           (128)   ToolsTests + ToolsUnitTests
 ├── integration_tests/
-│   ├── chat_models.py    (3593)   ChatModelIntegrationTests — the big one (60+ tests)
+│   ├── chat_models.py    (3593)   ChatModelIntegrationTests — ~48 def test_ occurrences (~35-40 unique class-level methods) <!-- [validation-corrected pass-5]: "60+ tests" was stale; passes 1-4 corrected test-inventory.md and rust-translation-strategy.md to ~48 but missed these two lines in module-inventory.md; grep -c "def test_" = 48 confirmed -->
 │   ├── sandboxes.py      (1978)   SandboxIntegrationTests (deepagents-gated, 100+ tests)
 │   ├── vectorstores.py    (842)   VectorStoreIntegrationTests (sync+async)
 │   ├── indexer.py         (398)   Document{,Async}IndexerTestSuite
@@ -274,7 +274,7 @@ langchain_tests/
 BaseStandardTests                       # test_no_overrides_DO_NOT_OVERRIDE meta-guard
 ├── ChatModelTests (abstract)           # ~25 feature-flag @property toggles + fixtures
 │   ├── ChatModelUnitTests              # no-network: init, env, serdes, standard params, bench
-│   └── ChatModelIntegrationTests       # 60+ live/VCR behavior tests
+│   └── ChatModelIntegrationTests       # ~48 live/VCR behavior tests <!-- [validation-corrected pass-5]: "60+" stale; actual ~48 def test_ occurrences -->
 ├── EmbeddingsTests
 │   ├── EmbeddingsUnitTests
 │   └── EmbeddingsIntegrationTests

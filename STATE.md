@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T08:00:00Z
+timestamp: 2026-07-13T10:00:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "extraction-validation pass 6 in progress, streak 0/3. Phase 1 opens only on 3 consecutive CLEAN(strict) passes."
+current_step: "extraction-validation pass 7 in progress, streak 0/3. Phase 1 opens only on 3 consecutive CLEAN(strict) passes."
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -43,9 +43,9 @@ dtu_required: false
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived upstream — curated-subset reference only), langchain-mcp-adapters==0.3.0 (SHA a61c783a) |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — pass 5 COMPLETE (CLEAN(strict)=NO, CLEAN(PR-merge)=YES — first pass with zero CRIT/HIGH/MED; 2 corrections (2 LOW); behavioral-locus: tick() sets out_of_steps + returns False, NOT GraphRecursionError; stale "60+ tests"→48 in partners/module-inventory.md; cascade 11→5→7→9→2; severity collapsed to LOW-only; pass 6 DISPATCHED); streak 0/3 |
+| **Last Updated** | 2026-07-13 — pass 6 COMPLETE (CLEAN(strict)=NO, CLEAN(PR-merge)=YES; 2 corrections (2 LOW); merge_dicts identity-key semantics corrected (keep-left-when-equal/concatenate-when-different, not "last-wins"); block_translators 7→8 files (notes-without-edits fix); cascade 11→5→7→9→2→2; LOW-only second consecutive pass; pass 7 DISPATCHED); streak 0/3 |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | extraction-validation 3-CLEAN cascade — pass 6 in progress (strata: core messages/parsers/prompts claims, create_agent vs factory.py graph-construction, splitters boundary semantics, mcp behaviors; behavioral-locus precision guardrail active); streak 0/3; Phase 1 opens only on 3 consecutive CLEAN(strict) passes |
+| **Current Step** | extraction-validation 3-CLEAN cascade — pass 7 in progress (strata: tracers/callbacks, graph streaming modes, CLI claims, middleware composition order; corpus-wide propagation audit incl. deepening-note sweep); streak 0/3; Phase 1 opens only on 3 consecutive CLEAN(strict) passes |
 
 ## Phase Progress
 
@@ -68,11 +68,11 @@ dtu_required: false
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| extraction-validation pass 2 | validate-extraction | DONE | CLEAN(strict)=NO, CLEAN(PR-merge)=NO. 5 corrections (4 HIGH, 1 LOW), streak RESET 0/3. Pass-1 corrections were WRONG (regex counted tuple values as dict keys; actuals 27 chat/10 embeddings). 128 behavioral items re-verified ALL accurate. Process-gap codified in lessons.md. |
 | extraction-validation pass 3 | validate-extraction | DONE | CLEAN(strict)=NO. 7 corrections (2 MEDIUM, 5 LOW); ALL propagation residue (no new source-level inaccuracies). 65/65 fresh behavioral claims verified; 14 platform endpoints; 8 langgraph channel types; 17 Rust crates confirmed. Now consistent: 27 chat / 10 embeddings across all 5 langchain-area docs. Streak remains 0/3. |
 | extraction-validation pass 4 | validate-extraction | DONE | CLEAN(strict)=NO. 9 corrections (5 MEDIUM, 4 LOW), streak 0/3. Headline: checkpoint serialization ext-hook dispatch enumeration INCOMPLETE across all 5 graph-area docs (Pydantic v2/v1/SecretStr/Enum/dataclasses/NamedTuples/numpy omitted; Command/Interrupt/TimeoutPolicy are @dataclasses on GENERIC dispatch). All 5 graph docs corrected. Test-citation integrity failure (test_channels.py cited for barrier/ephemeral semantics it does not test). Propagation residue: stale ANALYSIS-STATE footer, ~62→~48 tokio-test estimate. R10 registered. |
-| extraction-validation pass 5 | validate-extraction | DONE | CLEAN(strict)=NO, CLEAN(PR-merge)=YES — first pass with zero CRIT/HIGH/MED. 2 corrections (2 LOW), streak 0/3. Behavioral-locus: tick() sets status out_of_steps + returns False (NOT GraphRecursionError — outer invoke loop converts status to error; load-bearing for Rust API: tick() -> bool). Stale "60+ tests"→48 in partners/module-inventory.md. Verified exact: postgres/sqlite schemas, all 15 partner LOC counts, pregel halt ordering, interrupt machinery (xxh3 IDs, Command fields). Zero hallucinations. Cascade: 11→5→7→9→2; severity collapsed to LOW-only. |
-| extraction-validation pass 6 | validate-extraction | IN_PROGRESS | Fresh context; strata: core messages/parsers/prompts claims, create_agent vs factory.py graph-construction, splitters boundary semantics, mcp behaviors; behavioral-locus precision guardrail active; streak 0/3. |
+| extraction-validation pass 5 | validate-extraction | DONE | CLEAN(strict)=NO, CLEAN(PR-merge)=YES — first pass with zero CRIT/HIGH/MED. 2 corrections (2 LOW), streak 0/3. Behavioral-locus: tick() sets status out_of_steps + returns False (NOT GraphRecursionError — outer invoke loop converts status to error; load-bearing for Rust API: tick() -> bool). Stale "60+ tests"→48 in partners/module-inventory.md. Cascade: 11→5→7→9→2; severity collapsed to LOW-only. |
+| extraction-validation pass 6 | validate-extraction | DONE | CLEAN(strict)=NO, CLEAN(PR-merge)=YES. 2 corrections (2 LOW), streak 0/3. (1) merge_dicts identity-key semantics: "last-wins" WRONG — actual: keep-left-when-equal/concatenate-when-different (semantic-precision; load-bearing for Rust merge_dicts). (2) block_translators 7→8 files: correction NOTE existed but table cell never edited (notes-without-edits failure shape). Cascade: 11→5→7→9→2→2; LOW-only two consecutive passes; approaching asymptote. |
+| extraction-validation pass 7 | validate-extraction | IN_PROGRESS | Fresh context; corpus-wide propagation audit incl. deepening-note sweep; strata: tracers/callbacks, graph streaming modes, CLI claims, middleware composition order; streak 0/3. |
 
 ## Decisions Log
 
@@ -145,8 +145,8 @@ dtu_required: false
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 13 complete. Pass 5 COMPLETE: CLEAN(strict)=NO, CLEAN(PR-merge)=YES — first pass with zero CRIT/HIGH/MED; 2 corrections (2 LOW). Behavioral-locus correction: tick() sets status out_of_steps and returns False — outer invoke loop converts status to error. Load-bearing for Rust API: tick() -> bool, not Result<bool, GraphRecursionError>. Stale "60+ tests" → 48 in partners/module-inventory.md. Verified exact: postgres/sqlite checkpoint schemas, all 15 partner LOC counts, pregel halt ordering, interrupt machinery (xxh3 IDs, interrupt_counter resume matching, Command fields). Zero hallucinations. Cascade trajectory: 11→5→7→9→2 corrections; severity collapsed to LOW-only; strata approaching exhaustion. Pass 6 DISPATCHED (fresh context; strata rotated to least-sampled: core messages/parsers/prompts claims, create_agent graph-construction vs factory.py, splitters boundary semantics, mcp behaviors; behavioral-locus precision guardrail added from pass-5 lesson). Streak: 0/3. |
-| **Key context** | D1-D14 locked. D14: 3-CLEAN applies to extraction-validation gate (human mandate). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R10 OPEN: NamedBarrierValue + EphemeralValue coverage gap — route to product-owner at Phase 1. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment (third-parties only). Pass-5 lesson: behavioral-locus precision guardrail — tick() returns False/bool (not error/exception). |
+| **Position** | pre-1, burst 14 complete. Pass 6 COMPLETE: CLEAN(strict)=NO, CLEAN(PR-merge)=YES; 2 corrections (2 LOW). (1) merge_dicts identity-key semantics: "last-wins" summary was WRONG — actual behavior is keep-left-when-equal/concatenate-when-different (semantic-precision class; load-bearing for Rust merge_dicts implementation). (2) block_translators 7→8 files in core/module-inventory.md main table — correction NOTE existed in another section but table cell was never edited (notes-without-edits failure shape). Two new lessons codified in lessons.md. Cascade: 11→5→7→9→2→2; LOW-only two consecutive passes; approaching asymptote. Orchestrator note: if LOW-only pattern persists through passes 8-9, present trajectory data to human for D14 bar review (human decision, not orchestrator's). Pass 7 DISPATCHED (fresh context; corpus-wide propagation audit incl. deepening-note sweep; strata: tracers/callbacks, graph streaming modes, CLI claims, middleware composition order). Streak: 0/3. |
+| **Key context** | D1-D14 locked. D14: 3-CLEAN applies to extraction-validation gate (human mandate). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R10 OPEN: NamedBarrierValue + EphemeralValue coverage gap — route to product-owner at Phase 1. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment (third-parties only). Pass-6 lesson: semantic-precision guardrail — summary words ("last-wins", "always", "never") must be verified against actual branch logic; notes-without-edits — a NOTE in one section does not fix sibling table cells. |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content
@@ -165,6 +165,8 @@ dtu_required: false
 | Burst 11 narrative (pass 3 COMPLETE/7 corrections all propagation residue, second process-gap codified, pass 4 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 12 narrative (pass 4 COMPLETE/9 corrections — 5 graph-area ext-hook dispatch + test-citation + propagation residue; R10 registered; pass 5 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 13 narrative (pass 5 COMPLETE/2 corrections — behavioral-locus tick() returns False not raises, stale "60+ tests"→48; severity collapsed LOW-only; pass 6 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Burst 14 narrative (pass 6 COMPLETE/2 corrections — merge_dicts identity-key semantics corrected, block_translators 7→8 notes-without-edits fix; CASCADE 11→5→7→9→2→2; two lessons; pass 7 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Burst 13 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Burst 12 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Burst 5 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Burst 6 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |

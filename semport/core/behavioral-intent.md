@@ -146,11 +146,20 @@ JSON args → progressively-materialized `tool_calls`. `add_ai_message_chunks`
 - **`merge_content` rules** (`base.py:366`): str+str concat; str+list prepends;
   list+list merges by `merge_lists` (index-aware, dedup by `index`).
 - **`merge_dicts` rules** (`utils/_merge.py:6`): None-left takes right; str values
-  **concatenate** except identity keys (`id`, `output_version`, `model_provider`,
-  `lc_`-prefixed `index` are last-wins/keep); int values **sum** except
-  `index`/`created`/`timestamp` (last-wins); dict recurses; list uses `merge_lists`;
-  **type mismatch on same key raises `TypeError`**. This is an exactly-specified,
-  test-locked reducer — a critical porting target.
+  **concatenate** except: `lc_`-prefixed `index` always **keeps-left** (never concatenates,
+  regardless of right value); `id`, `output_version`, `model_provider` **keep-left (skip)**
+  only when both sides have **equal values** — when values differ, these three keys fall
+  through to the default concatenate rule. <!-- [validation-corrected pass-6]: original said
+  "last-wins/keep" for all four identity-key cases. Actual code (_merge.py lines 59-64):
+  lc_-prefixed index always `continue` (keep left); id/output_version/model_provider
+  `continue` only when merged[k]==right_v (equal); when unequal, fall through to
+  `merged[k] += right_v` (concatenate, same as non-special keys). "Last-wins" is wrong
+  (it's left-wins/keep); and keep applies to id/output_version/model_provider only when
+  values are equal. Practically irrelevant for streaming (these fields are always equal
+  across chunks), but the behavioral contract description must be precise. -->
+  Int values **sum** except `index`/`created`/`timestamp` (last-wins); dict recurses;
+  list uses `merge_lists`; **type mismatch on same key raises `TypeError`**. This is an
+  exactly-specified, test-locked reducer — a critical porting target.
 
 **Message utilities [T] `messages/utils.py` (2,406 LOC, 145 tests).**
 `trim_messages` (token/message-count budgeting, first/last strategy, keep system,

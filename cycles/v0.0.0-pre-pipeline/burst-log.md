@@ -510,3 +510,39 @@ Now consistent across all 5 langchain-area docs: 27 chat / 10 embeddings.
 - cycles/v0.0.0-pre-pipeline/lessons.md (behavioral-locus precision guardrail lesson added)
 
 **Next steps:** extraction-validation pass 4 in progress. Requires 3 CLEAN(strict) passes (streak still 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.
+
+---
+
+## Burst: pre-pipeline burst 14 — extraction-validation pass 6 COMPLETE, two lessons codified, pass 7 dispatched (2026-07-13)
+
+**Summary:** Pass 6 returned CLEAN(strict)=NO, CLEAN(PR-merge)=YES — second consecutive pass with zero CRIT/HIGH/MED findings. 2 corrections (2 LOW). Streak remains 0/3. Cascade correction trajectory: 11→5→7→9→2→2. LOW-only two consecutive passes; approaching asymptote. Orchestrator note: if LOW-only pattern persists through passes 8-9, present trajectory data to human for D14 bar review (human decision, not orchestrator's).
+
+**Pass 6 findings:**
+
+1. **Semantic-precision correction (LOW — load-bearing for Rust merge_dicts):** `core/behavioral-intent.md` described `merge_dicts` identity-key semantics as "last-wins". The actual behavior is: keep-left-when-equal (left value wins when both channels carry identical keys) / concatenate-when-different (values appended when keys differ). "Last-wins" is a plausible but incorrect summary that would have induced a wrong overwrite rule in a Rust implementer's `merge_dicts` function. Corrected in behavioral-intent.md.
+
+2. **Notes-without-edits correction (LOW — documentation integrity):** `core/module-inventory.md` main table still showed `block_translators: 7 files`. A deepening-correction NOTE had been added in a separate section of the same document identifying the correct count as 8, but the main table cell was never updated to reflect it. The NOTE recorded the correction; the physical edit never happened. Table cell updated to 8.
+
+**Verified-accurate (no corrections needed):**
+- Tracer/callback registration machinery confirmed against reference source
+- 7 stream mode semantic descriptions verified
+- CLI claim set (graph compile output, studio endpoint, deploy verbs) all confirmed
+- Middleware composition order confirmed: input_schema, configurable_fields, output_schema, fallback chain
+- MCP session model, rmcp transport matrix all confirmed
+
+**Two new lessons codified (lessons.md):**
+1. Semantic-precision guardrail: summary words in behavioral docs ("last-wins", "always", "never") must be verified against actual branch logic; locally plausible summaries can encode the wrong invariant (same failure shape as pass-5 behavioral-locus; different manifestation).
+2. Notes-without-edits: a correction NOTE added in one section does not fix sibling table cells in the same or other documents — every correction requires the physical edit at every affected location, not just a note recording the intent.
+
+**Pass 7 dispatched:** Fresh context. Corpus-wide propagation audit including deepening-note sweep (catches the same failure shape as pass-6 finding #2 at scale). Strata rotated to: tracers/callbacks, graph streaming modes, CLI claims, middleware composition order. Streak 0/3.
+
+**Phase step archival:** "extraction-validation pass 2" row rotated out of STATE.md Current Phase Steps (5-row limit); covered in burst 10 entry above.
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated/Current Step; Current Phase Steps — pass-2 archived, pass-6 updated to DONE, pass-7 IN_PROGRESS row added; Session Resume Checkpoint replaced; Historical Content updated)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 13 checkpoint archived)
+- cycles/v0.0.0-pre-pipeline/lessons.md (two new lessons added: semantic-precision guardrail, notes-without-edits)
+
+**Next steps:** extraction-validation pass 7 in progress. Requires 3 CLEAN(strict) passes (streak still 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.

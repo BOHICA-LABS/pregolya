@@ -70,9 +70,14 @@ of discrete **super-steps**. Confidence HIGH (read `_loop.py:tick/after_tick`,
 ### 1.3 Halting conditions & recursion limit
 - **Natural halt:** a super-step produces no triggered tasks.
 - **Recursion limit:** `recursion_limit` (default **25**, from `RunnableConfig`). The loop
-  tracks `step`/`stop` (`stop = step + recursion_limit`-ish); `tick()` sets status
-  `out_of_steps` when `step > stop` and raises `GraphRecursionError`. This is the primary
-  infinite-loop guard.
+  tracks `step`/`stop` (`stop = step + recursion_limit + 1`); `tick()` sets status
+  `out_of_steps` when `step > stop` and returns `False`; the outer invoke loop in
+  `main.py` then raises `GraphRecursionError` after checking `loop.status == "out_of_steps"`.
+  `tick()` itself does NOT raise `GraphRecursionError`. This is the primary
+  infinite-loop guard. <!-- [validation-corrected pass-5]: original said tick() "raises
+  GraphRecursionError"; tick() only sets status and returns False; the error is raised in
+  main.py lines 3002-3011 / 3483-3492, not inside tick(). Also corrected "+1" elision (exact
+  formula is recursion_limit + 1, not approximately recursion_limit). -->
 - **Interrupt halt:** `interrupt_before`/`interrupt_after` (static, per-node or `"*"`) or
   dynamic `interrupt()` (see §3).
 - **Drain halt:** cooperative shutdown at a boundary (`GraphDrained`).
@@ -128,10 +133,22 @@ counters_since_delta_snapshot}`.
 
 ### 2.3 Serialization format
 - **Primary: `ormsgpack`** (msgpack) via `JsonPlusSerializer.dumps_typed` → `(type, bytes)`
-  where type is `"msgpack"` or `"json"`. Typed ext-hooks encode datetime/date/time/
-  timedelta/timezone, UUID, Decimal, set/frozenset/deque, IPv4/6 addr/iface/network,
-  pathlib.Path, ZoneInfo, compiled regex, langchain-core messages, and langgraph types
-  (Send/Command/Interrupt/TimeoutPolicy/StateSnapshot/PregelTask).
+  where type is `"msgpack"` or `"json"`. Typed ext-hooks encode (in dispatch order):
+  `_DeltaSnapshot`, Pydantic v2 models (any `model_dump`-bearing object → EXT_PYDANTIC_V2),
+  Pydantic SecretStr (via `get_secret_value`), Pydantic v1 models (any `dict`-bearing object
+  → EXT_PYDANTIC_V1), NamedTuples (via `_asdict`), pathlib.Path, compiled regex (re.Pattern),
+  UUID, Decimal, set/frozenset/deque, IPv4/6 addr/iface/network, datetime/date/time/
+  timedelta/timezone, ZoneInfo, Enum (any enum subclass → EXT_CONSTRUCTOR_SINGLE_ARG),
+  SendProtocol (Send), Python dataclasses, langgraph store `Item`, numpy ndarray (conditional),
+  and langgraph types (Command/Interrupt/TimeoutPolicy → @dataclass dispatch;
+  StateSnapshot/PregelTask → NamedTuple dispatch; Send → specific SendProtocol check).
+  <!-- [validation-corrected pass-4]: original list omitted the dispatch categories for Pydantic
+  models v1+v2 (the primary path for user-defined graph state), Enum, dataclasses, NamedTuples,
+  _DeltaSnapshot, and store Item. `_msgpack_default` in jsonplus.py dispatches in this order;
+  Pydantic v2 is the FIRST real dispatch (after _DeltaSnapshot), making it the primary path for
+  user-defined Pydantic graph state. The named langgraph types (Command/Interrupt/TimeoutPolicy)
+  are @dataclass and use the generic dataclass dispatch — NOT a special langgraph path.
+  A Rust port must replicate all dispatch branches generically. -->
 - **Fallback: jsonplus** ("json+" / lc-JSON) via `langchain_core.load.Reviver
   (allowed_objects="core")` — the LangChain serializable protocol (constructor/secret/
   not_implemented tagged objects). Old "json" checkpoints resume via `SAFE_MSGPACK_TYPES`.

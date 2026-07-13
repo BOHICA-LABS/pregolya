@@ -170,7 +170,7 @@ capability flag (skip = early-return, mirroring Python's gated skips):
 ```rust
 // illustrative sketch — subscriber side
 conformance_chat_model_integration!(TestChatOpenAI, ChatOpenAIConformance);
-// expands to ~62 #[tokio::test] fns: test_invoke, test_stream, test_stream_events_v3,
+// expands to ~48 #[tokio::test] fns: test_invoke, test_stream, test_stream_events_v3, <!-- [validation-corrected pass-4]: ~62 was derived from the original inflated Python integration test count (~62); pass-1 corrected that count to ~48 def test_ occurrences / ~35-40 unique class methods; the Rust macro mirrors the Python suite, so estimate is ~48 -->
 // test_tool_calling (if cfg.has_tool_calling() else return), test_image_inputs
 // (if cfg.supports_image_inputs() else return), ...
 ```

@@ -60,7 +60,7 @@ legend: PORT = reimplement in Rust; REPLACE = idiomatic Rust crate substitute;
 | `uuid6` (custom, clock_seq=step) | monotonic sortable checkpoint IDs | **PORT** — implement uuid6 with the clock_seq=step trick; sortability is load-bearing (checkpoints sort by id). `uuid` crate has no v6-with-clock_seq control → hand-roll. |
 | `xxh3_128_hexdigest` | task/interrupt IDs | **REPLACE** `xxhash-rust::xxh3`. Byte-faithful. |
 | `sha1` (uuid5 for v1 checkpoints) | legacy task IDs | **REPLACE** `sha1` crate — only needed for pre-v2 checkpoint compat (likely DROP if not supporting v1 resume). |
-| `ormsgpack` ext-hooks | typed object (de)serialization | **PORT** the ext-type table (datetime/uuid/decimal/set/deque/ip/path/tz/regex/messages/langgraph types) as serde `#[serde(tag)]` or rmp ext-types. Golden-tested by `test_jsonplus.py`. |
+| `ormsgpack` ext-hooks | typed object (de)serialization | **PORT** the ext-type dispatch (Pydantic v2 models, Pydantic v1 models, Enum, dataclasses, namedtuples, datetime/uuid/decimal/set/deque/ip/path/tz/regex/messages/langgraph types, numpy conditional) as rmp ext-types. <!-- [validation-corrected pass-4]: previous text omitted Pydantic (v1+v2), Enum, and dataclass dispatch — critical for graph state; Pydantic v2 is the FIRST real dispatch path in `_msgpack_default` --> Golden-tested by `test_jsonplus.py`. |
 
 ## 3. Sub-package disposition summary
 

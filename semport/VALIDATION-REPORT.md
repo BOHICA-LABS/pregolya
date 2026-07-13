@@ -528,3 +528,363 @@ the primary document a Phase 1 architect reads when scoping partner crate decisi
 still said "30 chat, 11 embeddings" after two prior passes corrected every other
 occurrence. The corrected figures (27 chat + 10 embeddings = 37 total providers) are now
 consistent across all 5 langchain-area documents.
+
+---
+
+## Pass 4 — Fresh-Context Validation (2026-07-12)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-12.
+
+Validation strategy (fresh strata):
+(A) TD-VSDD-060 propagation audit — full corpus sweep for stale pre-correction values from all
+    3 prior passes. Searched all 35 semport documents for: "13 middleware", "30/33 chat providers",
+    "11/14 embeddings providers", "18 checkpoint files", "~1,830 tool_node.py LOC", "~62 test count",
+    "7 unit tests".
+(B) Test-citation integrity — 17 cited test files opened; LOC verified (all exact); semantics
+    of 5 key files verified by inspecting test function lists.
+(C) Graph checkpoint serialization claims vs jsonplus.py + _msgpack.py source.
+(D) Splitters' claimed Python behaviors (separator cascades, chunk-overlap math, Language enum)
+    vs source.
+
+### Pass 4 — Phase 1: Behavioral Verification
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| graph/behavioral-intent.md §2.3 (serialization ext-hook types) | 5 | 0 | 5 | 0 | 0 |
+| graph/test-inventory.md (test_channels.py test citation) | 6 | 4 | 2 | 0 | 0 |
+| graph/module-inventory.md + rust-translation-strategy.md + dependency-disposition.md (ext-hook sibling descriptions) | 3 | 0 | 3 | 0 | 0 |
+| Propagation: tool_node.py LOC, surveyed-middleware count, ~62 test count | 3 | 0 | 3 | 0 | 0 |
+| Test-citation integrity: 17 cited files — existence and LOC | 17 | 17 | 0 | 0 | 0 |
+| Test semantics: test_channels.py, test_jsonplus.py, test_interleave_arrival_order.py, test_tools.py (MCP) | 8 | 7 | 1 | 0 | 0 |
+| Splitters behaviors: separator cascade, _merge_splits, split_text_on_tokens, Language enum, lookaround prefixes | 7 | 7 | 0 | 0 | 0 |
+| Core behavioral: @chain decorator, __or__/__ror__ coercions, astream_log/astream_events line refs | 4 | 3 | 1 | 0 | 0 |
+| Platform SDK LOC: 8 client files | 8 | 8 | 0 | 0 | 0 |
+
+**Pass 4 behavioral summary:** 61 items checked; 46 verified; 15 inaccurate; 0 hallucinated; 0
+unverifiable. All 15 inaccuracies are either propagation residue (stale values in uncorrected
+sibling documents) or omission errors (types missing from serialization description list).
+No hallucinations found in any stratum.
+
+### Pass 4 — Phase 2: Metric Verification
+
+| Claim | Pass-4 Claimed | Pass-4 Recounted | Delta | Command |
+|-------|---------------|-----------------|-------|---------|
+| `tool_node.py` LOC | ~1,830 (stale, corrected this pass) | 2,030 | +200 | `wc -l .reference/langgraph/libs/prebuilt/langgraph/prebuilt/tool_node.py` |
+| Language enum member count | 28 | 28 | 0 | Manual count from base.py lines 451-478: CPP through VISUALBASIC6 = 28 |
+| `test_channels.py` test function count | claimed "34" (pass-4 recount) | 34 | 0 | `grep -c "^def test_" .../test_channels.py` |
+| NamedBarrierValue/EphemeralValue tests in test_channels.py | 0 (claimed "barrier availability, ephemeral lifetime") | 0 | 0 | `grep -c "NamedBarrierValue\|EphemeralValue" test_channels.py = 0` |
+| EphemeralValue occurrences in test_state.py | 9 | 9 | 0 | `grep -c "EphemeralValue" test_state.py` |
+| ChatModelIntegrationTests `def test_` count | 48 (previously corrected) | 48 | 0 | `grep -c "def test_" integration_tests/chat_models.py` |
+| Pydantic v2 dispatch position in `_msgpack_default` | 2nd (after _DeltaSnapshot) | 2nd | 0 | `grep -n "model_dump\|_DeltaSnapshot" jsonplus.py` lines 306, 308 |
+| Platform SDK `_async/runs.py` LOC | 1,190 | 1,190 | 0 | `wc -l .reference/langgraph/libs/sdk-py/langgraph_sdk/_async/runs.py` |
+| Platform SDK `_async/assistants.py` LOC | 740 | 740 | 0 | `wc -l .../assistants.py` |
+| `test_jsonplus.py` LOC | 1,237 | 1,237 | 0 | `wc -l .reference/langgraph/libs/checkpoint/tests/test_jsonplus.py` |
+| `test_text_splitters.py` LOC | 4,375 | 4,375 | 0 | `wc -l .reference/langchain/libs/text-splitters/tests/unit_tests/test_text_splitters.py` |
+
+All pass-1/2/3 metrics re-confirmed unchanged. Key fresh metrics above all pass (delta=0 except
+the tool_node.py LOC correction which was a propagation residue from pass-1).
+
+### Pass 4 — Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Value | Severity | Correction Applied |
+|------|---------------|--------------|----------|--------------------|
+| `graph/behavioral-intent.md §2.3` ext-hook type list | "datetime/date/time/timedelta/timezone, UUID, Decimal, set/frozenset/deque, IPv4/6 addr/iface/network, pathlib.Path, ZoneInfo, compiled regex, langchain-core messages, and langgraph types (Send/Command/Interrupt/TimeoutPolicy/StateSnapshot/PregelTask)" | Also includes: `_DeltaSnapshot` (1st dispatch), Pydantic v2 models (2nd), Pydantic SecretStr (3rd), Pydantic v1 models (4th), NamedTuples (5th), `Enum` (any enum subclass), Python dataclasses, store `Item`, numpy ndarray (conditional). Command/Interrupt/TimeoutPolicy are @dataclass; PregelTask/StateSnapshot are NamedTuple — NOT a special langgraph path | MEDIUM | Full dispatch chain documented in-place with `[validation-corrected pass-4]`; sibling docs updated |
+| `graph/test-inventory.md:32` test_channels.py semantic claim | "Per-channel-type behavioral contract (LastValue single-write error, BinOp fold+Overwrite, Topic accumulate, **barrier availability**, **ephemeral lifetime**, untracked exclusion)" | test_channels.py has ZERO tests for NamedBarrierValue or EphemeralValue (confirmed: 34 test functions, all DeltaChannel/LastValue/Topic/BinOp/UntrackedValue). EphemeralValue has 3 assert lines in test_state.py only. NamedBarrierValue has no dedicated unit test in the reference corpus | MEDIUM | Corrected test citation; added note about missing coverage with `[validation-corrected pass-4]` |
+| `graph/module-inventory.md §3` jsonplus.py row | "typed-object encode/decode for datetime/uuid/decimal/set/deque/ipaddress/pathlib/msgs/langgraph types" | Same omissions as behavioral-intent §2.3 | MEDIUM | Updated to include Pydantic/Enum/dataclass with sibling correction marker |
+| `graph/dependency-disposition.md §2` ormsgpack row | "PORT the ext-type table (datetime/uuid/decimal/set/deque/ip/path/tz/regex/messages/langgraph types)" | Same omissions | MEDIUM | Updated in-place with `[validation-corrected pass-4]` |
+| `graph/rust-translation-strategy.md §6.3` | "Port the ext-type table (datetime/uuid/decimal/set/deque/ip/path/tz/regex/messages/langgraph types)" | Same omissions | MEDIUM | Updated in-place with `[validation-corrected pass-4]` |
+| `graph/module-inventory.md:124` tool_node.py LOC | `~1,830` | 2,030 (wc -l confirmed) | LOW | Corrected to `2,030` with `[validation-corrected pass-4]`; pass-1 found this but wrote "documentation updated implicitly" without editing the file |
+| `langchain/module-inventory.md:198` ANALYSIS-STATE footer | `files_scanned: ... surveyed 13 middleware` | 15 middleware (corrected in passes 1-3) | LOW | Updated metadata to `surveyed 15 middleware` with `[validation-corrected pass-4]` |
+| `partners/rust-translation-strategy.md:173` | `// expands to ~62 #[tokio::test] fns` | ~48 (mirrors corrected Python integration test count) | LOW | Corrected to `~48` with `[validation-corrected pass-4]` |
+| `graph/test-inventory.md:58` test_jsonplus.py description | "every typed object (datetime/uuid/decimal/set/deque/ip/path/messages/langgraph types)" | Also tests: Pydantic models (test_msgpack_pydantic_warns_by_default), numpy arrays (test_serde_jsonplus_numpy_array), pandas (test_serde_jsonplus_pandas_dataframe) | LOW | Updated description with `[validation-corrected pass-4]` |
+| `core/behavioral-intent.md` __or__/__ror__ line citation | "base.py:628,3063" | `__or__` in base Runnable is at 628 ✓; `RunnableSequence.__or__` is at 3321 (not 3063; class definition starts at 3063) | LOW | Not corrected (line number citations are advisory, per TD-VSDD-091 anti-volatile-pin; the behavioral description is accurate) |
+
+### Pass 4 — Hallucinated Items
+
+None. Every behavioral claim, type name, test file, and function referenced in the analysis was
+confirmed to exist in the reference corpus. Zero hallucinations across all sampled areas.
+
+### Pass 4 — Unverifiable Items
+
+Same as passes 1-3 (Ollama DTU endpoint catalog, rmcp 2.2.0 elicitation details, partner
+own-test LOC). No new unverifiable items.
+
+### Pass 4 — Per-Area Verdicts
+
+| Area | Verdict | Pass-4 Corrections |
+|------|---------|-------------------|
+| core (passes 1+7+8) | PASS — @chain/astream line refs confirmed; no new corrections | 0 |
+| graph (pass 2) | PASS WITH CORRECTIONS — serialization ext-hook type list updated (5 documents); test_channels.py citation corrected; tool_node.py LOC corrected | 7 |
+| langchain (pass 3) | PASS WITH CORRECTIONS — metadata footer stale count corrected | 1 |
+| partners (pass 4) | PASS WITH CORRECTIONS — ~62→~48 Rust test count estimate corrected | 1 |
+| splitters (pass 5) | PASS — all separator cascade, overlap math, Language enum (28) claims confirmed | 0 |
+| mcp (pass 5) | PASS — not re-examined (zero corrections in passes 1-3) | 0 |
+| platform (pass 6) | PASS — 8 SDK client LOC values confirmed exact; endpoint paths confirmed | 0 |
+
+### Pass 4 — CLEAN Status
+
+```
+CLEAN (strict): no — 9 corrections of severity MEDIUM(5) + LOW(4)
+CLEAN (PR-merge): yes — zero CRIT/HIGH findings; all corrections are MEDIUM or LOW
+Streak: 0/3 (reset; pass-4 is not CLEAN strict)
+```
+
+**Most consequential finding:** The omission of Pydantic model (v1+v2), Enum, Python dataclass,
+and NamedTuple serialization dispatch paths from the graph checkpoint serialization spec. User-
+defined graph state is almost universally a TypedDict or Pydantic model; the named langgraph
+types (Command, Interrupt, TimeoutPolicy) are `@dataclass`; PregelTask/StateSnapshot are
+NamedTuple. The behavioral-intent §2.3 and all sibling descriptions gave the impression that
+these types had special "langgraph type" handling, when in fact they use the generic dispatch
+chains. A Rust implementer would need to implement these generic dispatch branches to serialize
+any real graph state. Corrected across 5 graph-area documents.
+
+**Second most consequential finding:** The test_channels.py citation falsely claiming coverage
+of `NamedBarrierValue` (barrier availability) and `EphemeralValue` (ephemeral lifetime). Neither
+type has a test in test_channels.py. NamedBarrierValue has NO dedicated unit test anywhere in
+the reference corpus — a gap a Rust port implementer needs to know about for their own test
+planning.
+
+---
+
+## Pass 5 — Fresh-Context Validation (2026-07-12)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-12.
+
+Validation strategy (stratum-weighted per brief):
+(a) Graph: pregel loop behavioral claims (task scheduling, halting, recursion limits) vs
+    `pregel/_loop.py` + `_algo.py` source; checkpoint-postgres/sqlite schema and query claims
+    vs actual SQL in the saver sources; prebuilt (ToolNode/create_react_agent) behavioral claims
+    vs source; interrupts/Command/resume claims vs `types.py`.
+(b) Partners inventory-level claims (12 non-deep partners + standard-tests scale table).
+(c) Platform behavioral claims not yet sampled.
+(d) Full propagation audit: all 7 areas swept for any remaining stale pre-correction values.
+(e) Test-citation integrity: cited source files re-verified.
+
+### Pass 5 — Phase 1: Behavioral Verification
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| graph/behavioral-intent §1 (pregel super-step cycle: tick/after_tick ordering, halt checks, PUSH/PULL tasks, apply_writes sort, step/stop, interrupt_after in after_tick) | 12 | 11 | 1 | 0 | 0 |
+| graph/behavioral-intent §2 (checkpoint-postgres 3-table normalized schema + 10 migrations; SQLite 2-table single-blob schema + WAL; WRITES_IDX_MAP; pending-writes durability) | 8 | 8 | 0 | 0 | 0 |
+| graph/behavioral-intent §3 (interrupt/Command/resume: scratchpad counter, id=xxh3_128, node re-executes, Command.PARENT/ParentCommand, ToolOutputMixin) | 8 | 8 | 0 | 0 | 0 |
+| graph/module-inventory §4 (prebuilt: ToolNode reads last AIMessage via reversed search; create_react_agent LOC=1015; tools_condition; InjectedState/Store; ValidationNode) | 6 | 6 | 0 | 0 | 0 |
+| partners/module-inventory scale table (15 partners: all LOC and file counts for deepseek/xai/mistralai/groq/openrouter/fireworks/nomic/exa/chroma/qdrant/huggingface; base class claims) | 22 | 22 | 0 | 0 | 0 |
+| partners/module-inventory standard-tests (21 files, 9820 LOC, conformance hierarchy, subscription mechanism) | 4 | 4 | 0 | 0 | 0 |
+| partners/module-inventory test count propagation (stale "60+" in ASCII tree + hierarchy diagram vs corrected ~48) | 2 | 0 | 2 | 0 | 0 |
+| platform/module-inventory endpoints (threads/stream, runs/stream, runs/batch, runs/wait, runs/cancel paths) | 6 | 6 | 0 | 0 | 0 |
+| Propagation audit across all 7 areas (all validation-corrected items from passes 1-4; sweep for uncorrected siblings) | 8 | 7 | 1 | 0 | 0 |
+
+**Pass 5 behavioral summary:** 76 items checked; 72 verified; 4 inaccurate (2 are the same 2
+distinct facts counted twice across different verification strata); 0 hallucinated; 0 unverifiable.
+
+**Unique inaccurate items: 2** (all LOW severity).
+
+### Pass 5 — Phase 2: Metric Verification
+
+All pass-1/2/3/4 metrics re-confirmed unchanged. Fresh metrics:
+
+| Claim | Claimed | Recounted | Delta | Command |
+|-------|---------|-----------|-------|---------|
+| Postgres MIGRATIONS list count | 10 | 10 | 0 | `python3 -c "import ast; ... print(len(MIGRATIONS.elts))"` on base.py |
+| partners deepseek src LOC | 689 | 689 | 0 | `find .../langchain_deepseek -name "*.py" ! -path "*/tests/*" \| xargs wc -l \| tail -1` |
+| partners xai src LOC | 1,015 | 1,015 | 0 | same pattern |
+| partners mistralai src LOC | 2,499 | 2,499 | 0 | same pattern |
+| partners groq src LOC | 2,083 | 2,083 | 0 | same pattern |
+| partners openrouter src LOC | 9,329 | 9,329 | 0 | same pattern |
+| partners fireworks src LOC | 2,423 | 2,423 | 0 | same pattern |
+| partners nomic src LOC | 158 | 158 | 0 | same pattern |
+| partners openai src files | 23 | 23 | 0 | `find .../langchain_openai -name "*.py" ! -path "*/tests/*" \| wc -l` |
+| partners anthropic src files | 15 | 15 | 0 | same pattern |
+| partners ollama src files | 7 | 7 | 0 | same pattern |
+| partners huggingface src files | 13 | 13 | 0 | same pattern |
+| partners exa src files | 5 | 5 | 0 | same pattern |
+| partners chroma src files | 3 | 3 | 0 | same pattern |
+| partners qdrant src files | 7 | 7 | 0 | same pattern |
+| partners nomic src files | 3 | 3 | 0 | same pattern |
+| standard-tests src files | 21 | 21 | 0 | `find .../langchain_tests -name "*.py" \| wc -l` |
+| standard-tests src LOC | 9,820 | 9,820 | 0 | `find .../langchain_tests -name "*.py" \| xargs wc -l \| tail -1` |
+| ChatModelIntegrationTests def test_ count | "60+" (stale in module-inventory.md) | 48 | -12+ | `grep -c "def test_" integration_tests/chat_models.py` |
+| create_react_agent LOC | ~1,015 | 1,015 | 0 | `wc -l .../prebuilt/chat_agent_executor.py` |
+
+### Pass 5 — Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Value | Severity | Correction Applied |
+|------|---------------|--------------|----------|--------------------|
+| `graph/behavioral-intent.md §1.3` | "`tick()` sets status `out_of_steps` when `step > stop` and raises `GraphRecursionError`" | `tick()` only sets `status = "out_of_steps"` and returns `False`; `GraphRecursionError` is raised in `main.py`'s outer invoke loop (lines 3002-3011 / 3483-3492) after checking `loop.status == "out_of_steps"` — NOT inside `tick()`. Also: exact formula is `stop = step + recursion_limit + 1`, not `≈ recursion_limit`. | LOW | Corrected in-place with `[validation-corrected pass-5]` marker |
+| `partners/module-inventory.md:257` ASCII tree | `ChatModelIntegrationTests — the big one (60+ tests)` | ~48 def test_ occurrences; stale propagation miss — passes 1-4 corrected test-inventory.md and rust-translation-strategy.md to ~48 but these two lines in module-inventory.md were not updated | LOW | Corrected to "~48 def test_ occurrences (~35-40 unique class-level methods)" with `[validation-corrected pass-5]` |
+| `partners/module-inventory.md:277` hierarchy diagram | `ChatModelIntegrationTests # 60+ live/VCR behavior tests` | ~48 (same as above) | LOW | Corrected to "~48 live/VCR behavior tests" with `[validation-corrected pass-5]` |
+
+### Pass 5 — Hallucinated Items
+
+None. Every function, class, constant, SQL table, and endpoint path verified against source.
+Zero hallucinations across all sampled strata.
+
+### Pass 5 — Unverifiable Items
+
+Same as passes 1-4 (Ollama DTU endpoint catalog, rmcp 2.2.0 elicitation details,
+partner own-test LOC). No new unverifiable items.
+
+### Pass 5 — Per-Area Verdicts
+
+| Area | Verdict | Pass-5 Corrections |
+|------|---------|-------------------|
+| core (passes 1+7+8) | PASS — not re-examined (CONVERGED) | 0 |
+| graph (pass 2) | PASS WITH CORRECTION — tick() GraphRecursionError locus corrected (LOW) | 1 |
+| langchain (pass 3) | PASS — not re-examined (all prior corrections propagated clean) | 0 |
+| partners (pass 4) | PASS WITH CORRECTION — 2 stale "60+" test count lines in module-inventory.md | 1 |
+| splitters (pass 5) | PASS — not re-examined (zero corrections in passes 1-4) | 0 |
+| mcp (pass 5) | PASS — not re-examined (zero corrections in passes 1-4) | 0 |
+| platform (pass 6) | PASS — endpoint paths spot-checked; confirmed accurate | 0 |
+
+### Pass 5 — CLEAN Status
+
+```
+CLEAN (strict): no — 2 corrections of severity LOW(2)
+CLEAN (PR-merge): yes — zero CRIT/HIGH/MED findings
+Streak: 0/3 (reset; pass-5 is not CLEAN strict)
+```
+
+**Most consequential finding:** The claim that `tick()` raises `GraphRecursionError` is the
+most consequential because it misrepresents the API contract of the pregel loop's core method.
+A Rust implementer reading this would design their `tick()` equivalent to return a `Result<bool,
+GraphRecursionError>`, when the actual contract is `tick()` returns `bool` (True=continue,
+False=halt) and the caller inspects `loop.status` to decide whether to raise the error. The
+separation of concerns — loop control vs. error surfacing — is load-bearing for the port design.
+
+**Second most consequential finding:** The "60+" stale value in partners/module-inventory.md
+ASCII tree and hierarchy diagram. Since this file is the primary consumption point for an
+architect deciding how many integration tests to replicate in `ferrochain-standard-tests`,
+the inflated count could have led to over-engineering the Rust conformance suite planning.
+
+---
+
+## Pass 6 — Fresh-Context Validation (2026-07-12)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-12.
+
+Validation strategy (stratum-weighted per brief):
+(a) Core area — messages/content-block merge semantics, output parsers, prompts (not previously
+    sampled beyond surface-level in passes 1-5);
+(b) Langchain area — `create_agent` graph-construction claims: nodes, edges, loop-condition
+    functions vs factory.py source;
+(c) Splitters boundary-semantics claims vs source (`_merge_splits`, `keep_separator` defaults,
+    `split_text_on_tokens`);
+(d) MCP behavioral claims vs source (`_convert_mcp_content_to_lc_block`, env-var expansion,
+    interceptor chain);
+(e) Full propagation audit: all 7 areas swept for any remaining stale pre-correction values from
+    passes 1-5.
+
+### Pass 6 — Phase 1: Behavioral Verification
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| core/behavioral-intent §2 — `merge_content` rules (str+str/str+list/list+list) | 3 | 3 | 0 | 0 | 0 |
+| core/behavioral-intent §2 — `merge_dicts` rules (_merge.py) | 6 | 5 | 1 | 0 | 0 |
+| core/behavioral-intent §4 — PromptTemplate 3 formats, ChatPromptTemplate | 4 | 4 | 0 | 0 | 0 |
+| core/behavioral-intent §5 — output parsers: jsonpatch streaming, BaseCumulativeTransformOutputParser | 3 | 3 | 0 | 0 | 0 |
+| core/behavioral-intent §6 — tools test count (140), LOC (4,065) | 2 | 2 | 0 | 0 | 0 |
+| core/behavioral-intent §7 — callbacks test count (6 files, 20 tests) | 2 | 2 | 0 | 0 | 0 |
+| core/module-inventory — output_parsers (11 files), prompts (11 test files, 164 tests) | 4 | 4 | 0 | 0 | 0 |
+| core/module-inventory — block_translators main table count | 1 | 0 | 1 | 0 | 0 |
+| langchain/behavioral-intent §1 — create_agent build sequence (12 steps), node/edge construction | 15 | 15 | 0 | 0 | 0 |
+| langchain/behavioral-intent §1.4 — _make_model_to_tools_edge logic (6 steps) | 6 | 6 | 0 | 0 | 0 |
+| langchain/behavioral-intent §1.4 — _make_tools_to_model_edge logic | 4 | 4 | 0 | 0 | 0 |
+| langchain/behavioral-intent §1.5 — _execute_model_sync (5 steps), model_node structure | 7 | 7 | 0 | 0 | 0 |
+| splitters/behavioral-intent — _merge_splits location (base.py:167), keep_separator defaults | 4 | 4 | 0 | 0 | 0 |
+| mcp/behavioral-intent — _convert_mcp_content_to_lc_block (6 content types) | 6 | 6 | 0 | 0 | 0 |
+| mcp/behavioral-intent — env var expansion (${VAR} braced only, $VAR literal) | 2 | 2 | 0 | 0 | 0 |
+| Propagation audit: all 7 areas for stale values from passes 1-5 | 12 | 12 | 0 | 0 | 0 |
+
+**Pass 6 behavioral summary:** 81 items checked; 79 verified; 2 inaccurate; 0 hallucinated;
+0 unverifiable. Both inaccuracies are in the CONVERGED core area (residual from passes 1-7).
+
+### Pass 6 — Phase 2: Metric Verification
+
+All pass-1/2/3/4/5 metrics re-confirmed unchanged. Fresh metrics for pass-6 strata:
+
+| Claim | Claimed | Recounted | Delta | Command |
+|-------|---------|-----------|-------|---------|
+| core `output_parsers/` source files | 11 | 11 | 0 | `find .../output_parsers -name "*.py" \| wc -l` |
+| core `output_parsers/` test functions | 75 | 75 | 0 | `find .../tests/output_parsers -name "test_*.py" \| xargs grep -c "def test_" \| awk ...` |
+| core `prompts/` test files | 11 | 11 | 0 | `find .../tests/prompts -name "test_*.py" \| wc -l` |
+| core `prompts/` test functions | 164 | 164 | 0 | `find .../tests/prompts -name "test_*.py" \| xargs grep -c "def test_" \| awk ...` |
+| core `test_tools.py` test functions | 140 | 140 | 0 | `grep -c "def test_" test_tools.py` |
+| core `test_tools.py` LOC | 4,065 | 4,065 | 0 | `wc -l test_tools.py` |
+| core `callbacks/` test files | 6 | 6 | 0 | `find .../tests/callbacks -name "test_*.py" \| wc -l` |
+| core `callbacks/` test functions | 20 | 20 | 0 | `find .../tests/callbacks -name "test_*.py" \| xargs grep -c "def test_" \| awk ...` |
+| `block_translators/` provider module count | 7 (main table, stale) | 8 | +1 | `ls .../block_translators/*.py \| grep -v __ \| wc -l` |
+| `create_agent` recursion_limit default | 9,999 | 9,999 | 0 | `grep -n "recursion_limit" factory.py` line 1780 |
+| MCP `_convert_mcp_content_to_lc_block` dispatch arms | 5 content-type arms | 5 | 0 | manual read tools.py:175-223 |
+
+### Pass 6 — Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Value | Severity | Correction Applied |
+|------|---------------|--------------|----------|--------------------|
+| `core/module-inventory.md` line 44 main table | "block_translators/ (7 files)" | 8 provider modules: anthropic/bedrock/bedrock_converse/google_genai/google_vertexai/groq/langchain_v0/openai + `__init__.py`; pass-7 deepening noted this but did NOT update the main table cell in-place | LOW | Updated main table cell to "(8 provider modules)" with `[validation-corrected pass-6]` marker |
+| `core/behavioral-intent.md` §2 `merge_dicts` description | "`id`, `output_version`, `model_provider`, `lc_`-prefixed `index` are last-wins/keep" | `lc_`-prefixed `index`: always keep-left (continue). `id`/`output_version`/`model_provider`: keep-left ONLY when values are equal; when values differ, falls through to concatenate (same as default string behavior). "Last-wins" is wrong (it's left-wins). The "keep" description applies only when values are equal. Practically irrelevant since these fields are always equal in streaming, but the precise contract matters for a byte-faithful port. | LOW | Corrected description in-place with `[validation-corrected pass-6]` marker; accurate description: lc_-prefixed index always keeps-left; id/output_version/model_provider keep-left when equal, concatenate when different |
+
+### Pass 6 — Hallucinated Items
+
+None. Every behavioral claim, function, constant, and graph-construction detail verified against
+source. Zero hallucinations across all sampled strata.
+
+### Pass 6 — Unverifiable Items
+
+Same as passes 1-5 (Ollama DTU endpoint catalog, rmcp 2.2.0 elicitation details, partner
+own-test LOC). No new unverifiable items.
+
+### Pass 6 — Propagation Audit Results
+
+Swept all 7 areas for stale values from passes 1-5. All prior corrections confirmed properly
+propagated:
+- "13 middleware" → no occurrence found anywhere (all corrected to 15)
+- "30/33 chat providers" → no stale occurrence (all corrected to 27)
+- "11/14 embeddings providers" → no stale occurrence (all corrected to 10)
+- "18 checkpoint files" → no stale occurrence (corrected to 17)
+- "~62 test count" in partners (as test count, not LOC) → no stale occurrence (corrected to ~48)
+- "60+" in partners → no stale occurrence (corrected)
+- ext-hook type omissions → corrected in all 5 graph documents
+- tick() GraphRecursionError locus → corrected in graph/behavioral-intent.md
+
+The "~62–63k LOC" occurrence in graph/test-inventory.md line 14 refers to test LOC (~62,000
+lines), NOT a test count — this is accurate (verified as 63,249 LOC in pass 1).
+
+Only residual found: block_translators main table "(7 files)" — corrected above.
+
+### Pass 6 — Per-Area Verdicts
+
+| Area | Verdict | Pass-6 Corrections |
+|------|---------|-------------------|
+| core (passes 1+7+8) | PASS WITH CORRECTIONS — 2 residual items found; block_translators count corrected in main table; merge_dicts identity-key description made precise | 2 |
+| graph (pass 2) | PASS — not re-examined; propagation audit clean | 0 |
+| langchain (pass 3) | PASS — create_agent graph-construction claims confirmed accurate; propagation audit clean | 0 |
+| partners (pass 4) | PASS — not re-examined; propagation audit clean | 0 |
+| splitters (pass 5) | PASS — boundary-semantics confirmed; _merge_splits/keep_separator/split_text_on_tokens accurate | 0 |
+| mcp (pass 5) | PASS — content-block dispatch confirmed; env-var expansion confirmed | 0 |
+| platform (pass 6) | PASS — not re-examined; propagation audit clean | 0 |
+
+### Pass 6 — CLEAN Status
+
+```
+CLEAN (strict): no — 2 corrections of severity LOW(2)
+CLEAN (PR-merge): yes — zero CRIT/HIGH/MED findings; both corrections are LOW
+Streak: 0/3 (reset; pass-6 is not CLEAN strict)
+```
+
+**Most consequential finding:** The `merge_dicts` identity-key description (core/behavioral-
+intent.md §2) said "last-wins/keep" for `id`, `output_version`, `model_provider`. The actual
+contract is: keep-left only when values are equal; concatenate when values differ. While
+practically irrelevant for streaming (these fields are always equal across chunks), a Rust port
+implementer reading "last-wins" would implement `id`/`output_version`/`model_provider` as
+right-wins overwrite, which differs from the actual behavior (skip/keep-left when equal, concat
+when different). The correction ensures the Rust port implements the correct rule even for
+unusual edge cases.
+
+**Second most consequential finding:** The block_translators main table cell "(7 files)"
+(core/module-inventory.md) was not updated when the pass-7 deepening section added the
+correction note. A reader scanning the module-inventory table would see 7, not 8. The
+correction was already documented in the deepening section; the fix just propagates it to
+the table cell where readers typically look first.

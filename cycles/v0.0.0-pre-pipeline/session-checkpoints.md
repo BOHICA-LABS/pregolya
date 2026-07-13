@@ -17,6 +17,20 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-07-13) — burst 13 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 13 complete. Pass 5 COMPLETE: CLEAN(strict)=NO, CLEAN(PR-merge)=YES — first pass with zero CRIT/HIGH/MED; 2 corrections (2 LOW). Behavioral-locus correction: tick() sets status out_of_steps and returns False — outer invoke loop converts status to error. Load-bearing for Rust API: tick() -> bool, not Result<bool, GraphRecursionError>. Stale "60+ tests" → 48 in partners/module-inventory.md. Verified exact: postgres/sqlite checkpoint schemas, all 15 partner LOC counts, pregel halt ordering, interrupt machinery (xxh3 IDs, interrupt_counter resume matching, Command fields). Zero hallucinations. Cascade trajectory: 11→5→7→9→2 corrections; severity collapsed to LOW-only; strata approaching exhaustion. Pass 6 DISPATCHED (fresh context; strata rotated to least-sampled: core messages/parsers/prompts claims, create_agent graph-construction vs factory.py, splitters boundary semantics, mcp behaviors; behavioral-locus precision guardrail added from pass-5 lesson). Streak: 0/3. |
+| **Key context** | D1-D14 locked. D14: 3-CLEAN applies to extraction-validation gate (human mandate). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R10 OPEN: NamedBarrierValue + EphemeralValue coverage gap — route to product-owner at Phase 1. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment (third-parties only). Pass-5 lesson: behavioral-locus precision guardrail — tick() returns False/bool (not error/exception). |
+| **Convergence counter** | 0 of 3 |
+
+---
+
 ## Session Resume Checkpoint (2026-07-13) — burst 12 complete
 
 ### State

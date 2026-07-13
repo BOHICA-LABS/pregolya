@@ -185,9 +185,13 @@ storage-shape-agnostic (single-blob sqlite vs normalized-blob postgres). Port
 
 ### 6.3 Serialization — 🟠 (byte-faithful, golden-tested)
 `rmp-serde` primary + lc-JSON fallback (reuse ferrochain-core reviver). Port the ext-type
-table (datetime/uuid/decimal/set/deque/ip/path/tz/regex/messages/langgraph types) and the
+dispatch (Pydantic v2 models, Pydantic v1 models, Enum, dataclasses, namedtuples,
+datetime/uuid/decimal/set/deque/ip/path/tz/regex/messages/langgraph types, numpy) and the
 `SAFE_MSGPACK_TYPES` allowlist + `LANGGRAPH_STRICT_MSGPACK` security gate. `test_jsonplus.py`
 (1,237 LOC) is the golden spec. **Open Q (D9):** Python wire-compat vs Rust-native format.
+<!-- [validation-corrected pass-4]: previous text omitted Pydantic (v1+v2), Enum, and dataclass
+dispatch paths — these are the most important for graph state serialization; see behavioral-intent
+§2.3 for full dispatch order with EXT type codes -->
 
 ### 6.4 StateGraph builder — 🟠
 `StateGraph<S>` builder → `compile()` → `Pregel`. State-schema→channel derivation replaces
