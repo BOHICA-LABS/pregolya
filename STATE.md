@@ -4,14 +4,14 @@ level: ops
 version: "2.1"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T00:15:00Z
+timestamp: 2026-07-14T05:30:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "3-CLEAN gate CLOSED (C21-C22-C23) — comparative best-patterns assessment (D16) ready to dispatch"
+current_step: "D16 assessment COMPLETE — awaiting HUMAN DIRECTION GATE (Q1-Q9); Phase 1 blocked on human"
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -44,9 +44,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — burst 66: C23 COMPLETE. CLEAN(strict)=YES. ZERO corrections. C22 sibling check 3/3 CONFIRMED; dep-disp A1 version defect-class 8/8 zero discrepancies. Rotation 10/10 CONFIRMED. Novel probe: dep-disp A3 anyhow confinement CONFIRMED. Streak 2/3 → 3/3. **3-CLEAN GATE CLOSED** (C21-C22-C23). Cumulative C1-C23: 0 hallucinations. |
+| **Last Updated** | 2026-07-14 — burst 67: D16 comparative best-patterns assessment COMPLETE. COMPARATIVE-ASSESSMENT.md (522 lines) + 3 part-files written. Dispositions: 27 ADOPT / 16 ADAPT / 27 REJECT / 27 NOT-APPLICABLE. 10 cross-corpus conflicts (CRITICAL: adk-rust lacks BSP determinism, per-task durability, resume-value HITL — all D9/D11-required). RECOMMENDED: (b) HYBRID — LangChain API surface + 43 ADOPT/ADAPT patterns; 9 human-gate questions (Q1 blocks). Recovered via 4-part decomposition. HUMAN DIRECTION GATE open. |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | 3-CLEAN gate CLOSED (C21-C22-C23) — comparative best-patterns assessment (D16) ready to dispatch |
+| **Current Step** | D16 assessment COMPLETE — awaiting HUMAN DIRECTION GATE (Q1-Q9); Phase 1 blocked on human |
 
 ## Phase Progress
 
@@ -67,10 +67,10 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
+| D16 comparative best-patterns assessment (4-part decomposed synthesis) | architect | COMPLETE | COMPARATIVE-ASSESSMENT.md written (522 lines) + 3 part-files. Dispositions across all 97 patterns: 27 ADOPT / 16 ADAPT / 27 REJECT / 27 NOT-APPLICABLE. 10 cross-corpus design conflicts (CRITICAL: adk-rust graph engine lacks BSP determinism, per-task durability, resume-value HITL — all D9/D11-required). 17 negative-evidence must-not-inherit items. RECOMMENDED outcome: (b) HYBRID — LangChain API surface + 43 ADOPT/ADAPT adk-rust internal patterns; runner-up (a) pure LangChain port. 9 human-gate questions (Q1 outcome choice blocking). Note: monolithic dispatch failed 3x on API stream stalls; recovered via 4-part decomposition. Burst 67. |
 | adk-rust certification pass C23 (strict-zero, GATE-CLOSING pass) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C22 sibling check 3/3 CONFIRMED; dep-disp A1 version defect-class check 8/8 zero discrepancies. Rotation 10/10 CONFIRMED (graph §7.1/§7.2 negative-existence claims, §15 ScopeGuard/ScopedTool/AuditSink 4 impls, §17 cancel_token, dep-disp A3 a2a-protocol-types + thiserror error types, test-inventory A2 property-test file ratio, §15 RequestContextExtractor). Metrics 8/8 Delta=0. Novel probe: dep-disp A3 anyhow exposure-cluster confinement — grep 0 hits across all 8 library src dirs, CONFIRMED. Streak 2/3 → 3/3. **3-CLEAN GATE CLOSED** on adk-rust v1.0.0 (SHA a6c79b6f). Cumulative C1–C23: 0 hallucinations. Burst 66. |
 | adk-rust certification pass C22 (strict-zero, C21 sibling check + dep-disp continuation) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C21 sibling check 3/3 CONFIRMED (P-18, P-75, P-16 resolution); dep-disp A2 continuation 4/4 CONFIRMED. Rotation 10/10 CONFIRMED (sqlite rewind, has_intersection, RecursionLimitExceeded, rewind impl coverage, pending_nodes restore, SequentialAgent=LoopAgent(1), DEFAULT_LOOP_MAX_ITERATIONS=1000, /health route, memory search scoping, provider crate versions). Metrics 8/8 Delta=0. Novel probe: dep-disp A4 dependency versions vs Cargo.toml — 6/6 exact (wasmtime 45, wasmtime-wasi 44, bollard 0.18, serde_yaml 0.9, statrs 0.18, quick-xml 0.37). Streak 1/3 → 2/3. Burst 65. |
 | adk-rust certification pass C21 (strict-zero, C20 defect-class sweep opener) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C20-01 landing CONFIRMED; C20 defect-class sweep (count-methodology consistency, A1/A2/A4 tables) CLEAN. Rotation 10/10 CONFIRMED (P-02, P-18, P-53, P-64, P-74, P-75, P-82, P-97, P-16 resolution, dep-disp A4 windows-sys). Metrics 8/8 Delta=0. Novel probe: dependency-disposition A2 internal claims vs source — 3/3 CONFIRMED (checkpoint SQL schema, similar crate char-diff, Uuid::new_v4). Streak 0/3 → 1/3. Burst 64. |
-| adk-rust certification pass C19 (strict-zero, C18 sibling check + LOC cross-doc probe) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C18 sibling check: 3/3 spot-re-verifications CONFIRMED (P-56, P-73, A3 §17); LOC region probe 6/6 cross-doc consistent. Rotation 10/10 CONFIRMED (P-11, P-39, P-40, P-48, P-49, P-60, P-65, P-66, P-87, P-95). Metrics 8/8 Delta=0. Novel probe: test-inventory↔module-inventory scc Code LOC cross-document consistency — 6/6 identical. Streak 1/3 → 2/3. Burst 62. |
 | adk-rust certification pass C20 (strict-zero, gate-closing attempt, A5 per-crate recount probe) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 1 MEDIUM correction (C20-01): test-inventory A5 adk-mistralrs ~264→~282 — prior sweep correction had excluded proptest! for this crate only (methodology inconsistency; recount 245 #[test] + 19 #[tokio::test] + 18 proptest! = 282). C19 sibling check 4/4 CLEAN; cross-doc A5 probe CONSISTENT. Rotation 10/10 CONFIRMED. Metrics 8/8 Delta=0. Novel probe: A5 per-crate recount 10/11 exact. Streak RESET 2/3 → 0/3. Burst 63. |
 
 ## Decisions Log
@@ -139,28 +139,28 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ### RESUME IN ONE BREATH
 
-ferrochain pre-pipeline. Corpus 1 (LangChain semport, 7 areas) CONVERGED — extraction gate closed 3/3 strict-zero. Corpus 5 (adk-rust comparative, 97 patterns) analysis CONVERGED (A1-A7); strict-zero certification cascade COMPLETE — 3-CLEAN GATE CLOSED at pass C23 (C21+C22+C23 all CLEAN(strict)=YES, cumulative 0 hallucinations across C1-C23). NEXT ACTION: dispatch architect for D16 comparative best-patterns assessment: Corpus 1 (LangChain/LangGraph semport extraction) vs Corpus 5 (adk-rust v1.0.0, 97 certified patterns) under RUST-BLINDNESS RULE (language zero evidentiary weight; patterns win on production-grade merit). Anti-sunk-cost explicit, ALL outcomes on table (adopt patterns, hybrid, no-rewrite, re-baseline). Output → HUMAN DIRECTION GATE → Phase 1 spec crystallization.
+ferrochain pre-pipeline. ALL pre-pipeline work COMPLETE. Corpus 1 (LangChain semport, 7 areas) CONVERGED — extraction gate closed 3/3 strict-zero. Corpus 5 (adk-rust comparative, 97 patterns) analysis CONVERGED; 3-CLEAN GATE CLOSED C21-C23 (0 cumulative hallucinations). D16 comparative assessment COMPLETE: COMPARATIVE-ASSESSMENT.md (522 lines) + 3 part-files. 27 ADOPT / 16 ADAPT / 27 REJECT / 27 NOT-APPLICABLE; 10 cross-corpus conflicts (CRITICAL: adk-rust lacks BSP determinism, per-task durability, resume-value HITL). RECOMMENDED: (b) HYBRID — LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns. 9 human-gate Qs (Q1 = outcome choice, blocks Phase 1). NEXT ACTION: HUMAN DIRECTION GATE — present COMPARATIVE-ASSESSMENT.md §7 Q1-Q9; on answers record D17 and enter Phase 1.
 
 ### HEADS
 
 | Repo | Branch | SHA | Pushed | Notes |
 |------|--------|-----|--------|-------|
-| factory-artifacts | factory-artifacts | (burst 66 commit — run `git -C .factory log -1 --format='%h'`) | YES — BOHICA-LABS/ferrochain | Durable artifact backup |
+| factory-artifacts | factory-artifacts | (burst 67 commit — run `git -C .factory log -1 --format='%h'`) | YES — BOHICA-LABS/ferrochain | Durable artifact backup |
 | main | main | ZERO COMMITS | LOCAL-ONLY | Untracked on disk: CLAUDE.md (553-line constitution + D12 file-size rule), .gitignore, .envrc, .mcp.json — BACKUP BOUNDARY: these exist only on this machine; CLAUDE.md commit to main is scheduled at workspace-init per D10 |
 
 No worktrees. No PRs. Reference clones (.reference/: langchain@langchain==1.3.13, langgraph@1.2.9, langchain-community@libs/community/v0.4.2, langchain-mcp-adapters@0.3.0, adk-rust@v1.0.0) are gitignored local clones — reproducible from the pinned manifest, not backed up by design.
 
 ### WORKSTREAM
 
-**Certification cascade COMPLETE.** C1-C23 all done; 3-CLEAN gate (C21+C22+C23) closed on adk-rust v1.0.0 (SHA a6c79b6f). Streak history: C8✓/C11✓/C12✓/C15✓/C18✓/C19✓/C21✓/C22✓/C23✓. Final streak: C21+C22+C23 = 3/3. Cumulative hallucinations: 0.
+**D16 COMPLETE.** COMPARATIVE-ASSESSMENT.md (522 lines, 4-part decomposed synthesis). Monolithic dispatch failed 3× on API stream stalls; recovered via decomposition (part-1: P01-P50, part-2: P51-P97, part-3: conflicts + negative evidence). Corpus 1 (LangChain/LangGraph semport) vs Corpus 5 (adk-rust v1.0.0, 97 certified patterns) under RUST-BLINDNESS RULE. Outcome: 43 ADOPT/ADAPT, 10 critical conflicts, 17 must-not-inherit items.
 
-**RESUME NEXT-ACTION:** Dispatch architect: D16 COMPARATIVE BEST-PATTERNS ASSESSMENT. Context: Corpus 1 = LangChain/LangGraph semport extraction (7 areas, patterns in .factory/semport/); Corpus 5 = adk-rust v1.0.0 (SHA a6c79b6f, 97 certified patterns, .factory/comparative/adk-rust/CERTIFICATION-REPORT.md). RUST-BLINDNESS RULE: language carries zero evidentiary weight; patterns win on production-grade merit only. Anti-sunk-cost explicit. ALL outcomes on table: adopt adk-rust patterns, hybrid adoption, no-rewrite, re-baseline. Assessment output → HUMAN DIRECTION GATE → then Phase 1 spec crystallization.
+**RESUME NEXT-ACTION:** HUMAN DIRECTION GATE. Present COMPARATIVE-ASSESSMENT.md §7 questions Q1-Q9. Q1 = outcome choice (recommended: (b) HYBRID — LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns; runner-up: (a) pure LangChain port). On all answers, record as D17 and enter Phase 1 spec crystallization.
 
 ### PENDING HUMAN ACTIONS (open)
 
-1. `direnv allow .` (B1 — Low, blocks key loading)
-2. `cargo login` + `.factory/namespace-reservation/publish-all.sh` — R6 namespace race STILL OPEN, time-sensitive
-3. Optional: commit CLAUDE.md to main early if backup wanted before workspace-init
+1. **HUMAN DIRECTION GATE** — review COMPARATIVE-ASSESSMENT.md §7 Q1-Q9 and answer all 9 questions; Q1 = outcome choice (recommended: hybrid). Blocks Phase 1.
+2. `direnv allow .` (B1 — Low, blocks key loading)
+3. `cargo login` + `.factory/namespace-reservation/publish-all.sh` — R6 namespace race STILL OPEN, time-sensitive
 
 ### STANDING DIRECTIVES
 
@@ -168,7 +168,7 @@ No worktrees. No PRs. Reference clones (.reference/: langchain@langchain==1.3.13
 |----|-----------|
 | D15 | Autonomous loop, never ask to continue — "Keep going until you hit convergence protocol." |
 | D14 | Absolute strict-zero: CLEAN(strict) = zero findings; 3 consecutive required |
-| D16 | After 3-CLEAN gate: comparative assessment (Rust-blindness rule, anti-sunk-cost, all outcomes incl. no-rewrite) → human direction gate → Phase 1 |
+| D16 | COMPLETE — comparative assessment done; awaiting human direction gate. Phase 1 enters after D17 recorded. |
 
 Holdout domains A/B/C briefs at planning/holdout-domains/. Phase-4 carry-forward: 4 a2a-v1 runtime test obligations. D1-D16 all recorded in Decisions Log above.
 
@@ -176,9 +176,9 @@ Holdout domains A/B/C briefs at planning/holdout-domains/. Phase-4 carry-forward
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-13 |
+| **Date** | 2026-07-14 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Burst commit** | (burst 66 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Burst commit** | (burst 67 — run `git -C .factory log -1 --format='%h %s'`) |
 | **Convergence counter** | 3 of 3 — GATE CLOSED |
 
 ## Historical Content
@@ -196,3 +196,4 @@ Holdout domains A/B/C briefs at planning/holdout-domains/. Phase-4 carry-forward
 | Naming decision study | `.factory/planning/naming-decision-study.md` |
 | File-size standard study | `.factory/planning/file-size-standard-study.md` |
 | Semport pass 1 analysis state (deepening items, risks) | `.factory/semport/core/ANALYSIS-STATE.md` |
+| D16 comparative assessment + 3 part-files (COMPARATIVE-ASSESSMENT.md synthesis) | `.factory/comparative/COMPARATIVE-ASSESSMENT.md` (+ `assessment-parts/`) |

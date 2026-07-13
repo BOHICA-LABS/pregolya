@@ -563,3 +563,17 @@ traces_to: STATE.md
 | **Position** | pre-1, burst 59 complete. C16 COMPLETE: CLEAN(strict)=NO — 1 LOW correction (C16-01): P-03 `AdkError.retry_after` path shorthand → `AdkError.retry.retry_after()` (no direct `.retry_after` member on AdkError; AdkError has `pub retry: RetryHint`, RetryHint has `retry_after()` method at error.rs:153; the field `retry_after` belongs to `ServerRetryHint` at retry.rs:137, NOT AdkError; siblings P-04 + behavioral-intent.md A1 already had correct full path). Identifier sweep: 69 identifiers (40 enum variants + 8 field names + 8 consts/RetryConfig fields + 13 others) from unchecked strata — 69 CONFIRMED, 1 path shorthand inaccuracy → C16-01. Cumulative 215/~754 identifiers checked. Rotation 4/4 confirmed (P-13 Tool::execute, P-19 search_in_project, P-46 budget-gap). Metrics 2/2 Delta=0 (adk-agent tests=86; pool_idle_timeout=90s). Novel probe: native-tls first-party/transitive distinction, adk-mistralrs + adk-audio Cargo.toml verified CONFIRMED. Streak RESET 1/3 → 0/3. Convergence counter 1→0. C17 DISPATCHED: opener = COMPLETE the identifier sweep (~539 remaining, full dotted-path navigability checks, closes identifier class terminally); then light rotation. |
 | **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 0/3. Identifier-name exactness class: 3 corrected across C14 (×2) + C16 (×1); 215 identifiers checked, ~539 remaining. C17 opener terminally closes the identifier class. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (confirmed 69/73 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. UNVERIFIABLE items unchanged (scc LOC, 4 a2a-v1 runtime items, adk-anthropic/src/types ~60 vs 82 approx.). |
 | **Convergence counter** | 0 of 3 |
+
+---
+
+## Checkpoint — Burst 66 (3-CLEAN GATE CLOSED; D16 assessment dispatched) — SUPERSEDED by burst 67
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-14 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 66 complete. C23 COMPLETE: CLEAN(strict)=YES. ZERO corrections. C22 sibling check 3/3 CONFIRMED; dep-disp A1 version defect-class check 8/8 zero discrepancies. Rotation 10/10 CONFIRMED (graph §7.1/§7.2 negative-existence claims, §15 ScopeGuard/ScopedTool/AuditSink 4 impls, §17 cancel_token, dep-disp A3 a2a-protocol-types + thiserror error types, test-inventory A2 property-test file ratio, §15 RequestContextExtractor). Metrics 8/8 Delta=0. Novel probe: dep-disp A3 anyhow exposure-cluster confinement — grep 0 hits across all 8 library src dirs, CONFIRMED. Streak 2/3 → 3/3. **3-CLEAN GATE CLOSED** (C21-C22-C23). Cumulative C1-C23: 0 hallucinations. D16 comparative best-patterns assessment dispatched to architect. |
+| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule, anti-sunk-cost explicit, all outcomes on table. 3-CLEAN gate CLOSED on adk-rust v1.0.0 (SHA a6c79b6f). Corpus 1 (LangChain semport, 7 areas) extraction gate CLOSED 3/3 strict-zero. NEXT: architect dispatched for D16 comparative assessment → HUMAN DIRECTION GATE → Phase 1 spec crystallization. R6/R8/R10/R11 OPEN. |
+| **Convergence counter** | 3 of 3 — GATE CLOSED |

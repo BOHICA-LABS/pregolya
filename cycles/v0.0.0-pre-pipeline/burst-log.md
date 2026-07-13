@@ -2136,3 +2136,61 @@ C18 step row retired from STATE.md Current Phase Steps:
 - `logs/dispatcher-internal-2026-07-13.jsonl` (dispatcher log updated)
 - `STATE.md` (C23 COMPLETE, 3-CLEAN GATE CLOSED, convergence counter 2→3 of 3, frontmatter updated, C18 row archived, C23 row added, phase progress gate updated, session checkpoint replaced)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — C18 archive + burst 66 narrative)
+
+---
+
+## Burst: pre-pipeline burst 67 — D16 comparative best-patterns assessment COMPLETE; HUMAN DIRECTION GATE open (2026-07-14)
+
+**Summary:** D16 comparative best-patterns assessment COMPLETE. COMPARATIVE-ASSESSMENT.md (522 lines) + 3 part-files written. 4-part decomposition required: monolithic dispatch failed 3× on API stream stalls. Corpus 1 (LangChain/LangGraph semport, 7 areas) vs Corpus 5 (adk-rust v1.0.0, 97 certified patterns) evaluated under RUST-BLINDNESS RULE (language zero evidentiary weight; patterns win on production-grade merit only). Anti-sunk-cost explicit throughout.
+
+**Assessment results:**
+
+| Metric | Value |
+|--------|-------|
+| Patterns evaluated | 97 (all adk-rust certified patterns) |
+| ADOPT | 27 |
+| ADAPT | 16 |
+| REJECT | 27 |
+| NOT-APPLICABLE | 27 |
+| ADOPT + ADAPT total | 43 |
+| Cross-corpus design conflicts | 10 (3 CRITICAL) |
+| Negative-evidence must-not-inherit items | 17 |
+
+**CRITICAL conflicts (D9/D11-required capabilities adk-rust graph engine LACKS):**
+
+| Conflict | Severity | Notes |
+|----------|----------|-------|
+| BSP (Bulk Synchronous Processing) determinism | CRITICAL | D11.3 requires deterministic replay; adk-rust graph engine lacks BSP barrier model |
+| Per-task durability | CRITICAL | D11.3 requires per-step checkpoint; adk-rust graph engine does not provide per-task durability |
+| Resume-value HITL (human-in-the-loop) | CRITICAL | D9 gates require HITL resumption; adk-rust engine lacks resume-value injection |
+
+**Recommended outcome: (b) HYBRID** — LangChain API surface (semantic port) + 43 ADOPT/ADAPT adk-rust internal patterns. Runner-up: (a) pure LangChain port (safe, lower complexity). All 5 outcomes evaluated.
+
+**9 human-gate questions (Q1-Q9) — Q1 blocks all downstream decisions:**
+
+Q1 outcome choice (CRITICAL): choose (a) pure LangChain port, (b) hybrid LangChain+adk-rust patterns, (c) adk-rust-led, (d) novel design, or (e) pause and investigate further. Recommended: (b).
+
+Full questions in COMPARATIVE-ASSESSMENT.md Section 7.
+
+**Decomposition approach (monolithic dispatch failure recovery):**
+
+| Part | Scope | File |
+|------|-------|------|
+| part-1 | Dispositions P01-P50 | assessment-parts/part-1-dispositions-p01-p50.md |
+| part-2 | Dispositions P51-P97 | assessment-parts/part-2-dispositions-p51-p97.md |
+| part-3 | Conflicts + negative evidence | assessment-parts/part-3-conflicts-negative-evidence.md |
+| synthesis | Full COMPARATIVE-ASSESSMENT.md | comparative/COMPARATIVE-ASSESSMENT.md |
+
+**Phase step archival:** adk-rust certification pass C19 (strict-zero, C18 sibling check + LOC cross-doc probe) rotated out of STATE.md Current Phase Steps (5-row limit). Full row: CLEAN(strict)=YES. ZERO corrections. C18 sibling check: 3/3 spot-re-verifications CONFIRMED (P-56, P-73, A3 §17); LOC region probe 6/6 cross-doc consistent. Rotation 10/10 CONFIRMED (P-11, P-39, P-40, P-48, P-49, P-60, P-65, P-66, P-87, P-95). Metrics 8/8 Delta=0. Novel probe: test-inventory↔module-inventory scc Code LOC cross-document consistency — 6/6 identical. Streak 1/3 → 2/3. Burst 62.
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated, Current Step; Current Phase Steps — C19 archived, D16 row added at top; Session Resume Checkpoint replaced; Standing Directives D16 updated to COMPLETE; Pending Human Actions updated; Historical Content row added)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 66 checkpoint archived)
+- .factory/comparative/COMPARATIVE-ASSESSMENT.md (522 lines — final synthesis, new artifact)
+- .factory/comparative/assessment-parts/part-1-dispositions-p01-p50.md (new artifact)
+- .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md (new artifact)
+- .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md (new artifact)
+
+**Next steps:** HUMAN DIRECTION GATE. Present COMPARATIVE-ASSESSMENT.md Section 7 Q1-Q9 to human. On all answers, record as decision D17 and enter Phase 1 spec crystallization.
