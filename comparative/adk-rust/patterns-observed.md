@@ -1736,7 +1736,7 @@ a typestate builder.** *(NEUTRAL)*
   P-80). `LiveKitRoomBuilder<Missing|Present>` is a **typestate builder** enforcing "identity before
   connect" at compile time; `connect` also runtime-guards empty identity/room and auto-generates a
   UUID room name. `LiveKitConfig` uses `SecretString` + redacted Debug + URL validation.
-- **Isolation:** delegation is **proptest-covered** (`livekit_delegation_tests.rs`, 7 property tests
+- **Isolation:** delegation is **proptest-covered** (`livekit_delegation_tests.rs`, 6 property tests <!-- [comparative-cert-2] CORRECTION: "7 property tests" → grep confirms 6 fn prop_* functions in livekit_delegation_tests.rs (prop_on_text, prop_on_transcript, prop_on_speech_started, prop_on_speech_stopped, prop_on_response_done, prop_on_error); matches the 6 non-audio callbacks in the EventHandler trait; "7" was off-by-one -->
   on the non-audio callbacks), but the actual WebRTC FFI audio path and `Room::connect` live in
   `#[ignore]`-gated integration tests requiring `LIVEKIT_URL`/`LIVEKIT_API_KEY`/`LIVEKIT_API_SECRET`.
 - **Quality:** **NEUTRAL** — a clean, contained bridge; the only ferrochain-relevant friction is the
@@ -1812,7 +1812,7 @@ defense.** *(NEUTRAL — NEW)*
   `adk-server/src/a2a/v1/push.rs::HttpPushNotificationSender::send_with_retry`.
 - **Observation (SOURCE-CONFIRMED):** the server push sender retries on **any** non-success status
   **and** any send error (not just 429/5xx), with a fixed `RETRY_DELAYS = [1,2,4]` s table and
-  `MAX_RETRIES = 3`, and — critically — calls `validate_webhook_url(url)` **before every attempt** to
+  `MAX_RETRIES = 3`, and — critically — calls `validate_webhook_url(url)` **once before the retry loop begins** (not repeated per attempt; URL is fixed) <!-- [comparative-cert-2] CORRECTION: "before every attempt" → source shows validate_webhook_url called at line 100, before the `for attempt in 0..=MAX_RETRIES` loop at line 102; called once per delivery, not per retry iteration --> to
   reject private IP ranges / localhost (SSRF prevention) for webhook delivery. On exhaustion it
   surfaces `A2aError::PushDeliveryFailed`. This is the more defensive of the two retry paths; the
   client path is narrower (429/5xx/timeout). So the corpus ships **two different retry policies** for

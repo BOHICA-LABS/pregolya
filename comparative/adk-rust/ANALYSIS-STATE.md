@@ -41,7 +41,7 @@ See patterns-observed.md for full catalogue.
 
 ### Compliance Flags
 
-- `adk-realtime` pulls `native-tls` via `livekit` — HARD CONFLICT with ferrochain rustls-only rule (CLAUDE.md)
+- `adk-realtime` CAN pull `native-tls` via the OPTIONAL `livekit` feature (default builds use rustls; native-tls is feature-gated, not unconditional) — **conditional conflict** with ferrochain rustls-only rule if `livekit` feature is enabled; adk-realtime is otherwise rustls by default <!-- [comparative-cert-2] CORRECTION (C2 propagation): A6 C2 + A7 C2 both explicitly stated "the flat flag should carry the 'livekit-only, feature-gated, first-party-sole' qualifier"; correction was noted in A6/A7 but not applied; applied here; see P-93 and ANALYSIS-STATE C2/C4 -->
 - `reqwest` uses `rustls-tls-native-roots` (different root store from ferrochain default) — deliberate MAP consideration
 
 ## Open Items (queued for deep passes)
