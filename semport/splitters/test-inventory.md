@@ -13,7 +13,7 @@ purpose: identify tests that LOCK boundary / off-by-one behavior → become Red-
 
 | File | LOC | ~Tests | Role |
 |---|---|---|---|
-| `tests/unit_tests/test_text_splitters.py` | 4,375 | ~120 | Primary behavioral spec — **golden parity source** |
+| `tests/unit_tests/test_text_splitters.py` | 4,375 | 123 <!-- [validation-certification-14]: ~120 corrected to exact 123; propagation miss from cert-13 (behavioral-intent.md:151 was updated but this table row was not); `grep -c "^def test_" test_text_splitters.py = 123` --> | Primary behavioral spec — **golden parity source** |
 | `tests/unit_tests/test_html_security.py` | 130 | XXE / SSRF hardening | Security contract |
 | `tests/unit_tests/conftest.py` | 86 | fixtures | — |
 | `tests/integration_tests/test_text_splitter.py` | 160 | tiktoken/HF integration | Needs tokenizer |

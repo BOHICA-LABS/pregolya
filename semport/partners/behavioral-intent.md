@@ -102,7 +102,7 @@ Anthropic `text`/`thinking`/`redacted_thinking`/`tool_use` → v3 standard conte
 content blocks carrying a `signature`; streaming assembles `thinking_delta` + `signature_delta`.
 **Structured output is incompatible with thinking** → `_get_llm_for_structured_output_when_thinking_is_enabled`
 clones the model with thinking disabled for the schema-enforcing call.
-**Evidence:** `thinking` field L1003, L1821, streaming L1629–1660. **HIGH.**
+**Evidence:** `thinking` field L1003, L1821, streaming L1629–1661 <!-- [validation-certification-14]: L1629–1660 corrected to L1629–1661; `message_chunk = AIMessageChunk(content=[content_block])` at line 1661 is the final statement of the thinking_delta/signature_delta elif branch and was outside the claimed range -->. **HIGH.**
 
 ### BC-DRAFT-ANT-004: prompt caching
 `cache_control={"type":"ephemeral","ttl":"5m"|"1h"}` is applied to the last eligible content

@@ -1255,3 +1255,38 @@ Streak 0/3. Pass 13: NO. Cumulative: 14 cert passes dispatched, 0 consecutive CL
 - `STATE.md` (pass 13 DONE, pass 14 dispatched, session checkpoint updated, burst 33 recorded)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 32 checkpoint archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+
+---
+
+## Burst 34 — 2026-07-14
+
+**Trigger:** BURST_CLOSE from orchestrator: cert pass 14 COMPLETE + VALIDATION-REPORT.md rotation operational fix.
+
+**Work completed:**
+
+### Cert Pass 14 Results
+- **CLEAN(strict): NO** — 2 corrections, both LOW severity
+- **Correction 1:** `partners/behavioral-intent.md:105` L1629–1660 → L1629–1661 (Stratum 1 line-range endpoint sweep: `message_chunk = AIMessageChunk(content=[content_block])` at line 1661 was the final statement of the thinking_delta/signature_delta elif handler but was outside the cited range)
+- **Correction 2:** `splitters/test-inventory.md:16` ~120 → 123 (Stratum 2 pass-13 propagation sweep: cert-13 corrected behavioral-intent.md:151 but did not update the sibling test-inventory.md row)
+- **Rotation:** 28/28 confirmed across 7 areas (4 claims per area)
+- **Line-range sweep:** ~30 of 144 citations verified strategically; class PARTIALLY swept; pass 15 completes exhaustively
+- **Streak:** 0/3 (not advanced)
+- **Cumulative:** 30 total validation runs; ~96 total corrections; best streak 1/3
+
+### OPERATIONAL FIX — VALIDATION-REPORT.md Rotation
+- **Trigger:** VALIDATION-REPORT.md exceeded 4,192 lines, causing PostToolUse hook timeouts on appends (hit at passes 12 and 14)
+- **Action:** Extracted lines 1–3478 (passes 1–8 + cert passes 1–10) to `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` (3,478 lines, verbatim)
+- **New VALIDATION-REPORT.md:** 746 lines — rotation header + cert passes 11–14 + all future passes
+- **Archive:** `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` (3,478 lines)
+
+### Pass 15 Dispatched
+- Per D15 (autonomous continuation, no check-ins)
+- Opener: exhaustive sweep of remaining ~114 line-range citations (all 144 total) + pass-14 propagation check (stale L1629–1660 or ~120 siblings) + rotation
+
+**Files touched in this burst:**
+- `semport/partners/behavioral-intent.md` (cert-14 correction: L1629–1660 → L1629–1661)
+- `semport/splitters/test-inventory.md` (cert-14 correction: ~120 → 123)
+- `semport/VALIDATION-REPORT.md` (rotation: reduced 4,192 → 746 lines; cert-14 section added)
+- `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` (NEW — 3,478 lines: passes 1–10 verbatim)
+- `STATE.md` (pass 14 DONE, pass 15 dispatched, session checkpoint updated, burst 34 recorded)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
