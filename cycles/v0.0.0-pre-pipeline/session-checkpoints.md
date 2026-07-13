@@ -17,6 +17,20 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-07-13) — burst 9 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 9 complete. D14 locked: full 3-CLEAN applies to extraction-validation gate (human directive — zero findings ANY severity, corrections reset streak, fresh-context each pass). Extraction-validation pass 1 COMPLETE: PASS WITH CORRECTIONS — 11 corrections (3 MEDIUM, 8 LOW); ZERO hallucinations corpus-wide. Top corrections: sqlite-vec runtime dep fully missing from graph disposition (3 Rust options added for Phase 1); checkpoint serde/types.py pregel sentinel constants (TASKS/INTERRUPT/RESUME/ERROR/SCHEDULED) omitted; ChatModelIntegrationTests count inflated ~62→~48; _BUILTIN_PROVIDERS undercounts (chat 30→33, embeddings 11→14); RedisCache tier in langgraph-checkpoint unmentioned. Report: .factory/semport/VALIDATION-REPORT.md. Streak: 0/3 (reset by corrections). Pass 2 DISPATCHED (fresh context, rotated sampling strata, independently re-verifies pass-1 corrections). Phase 1 opens only after 3 consecutive CLEAN(strict) passes. |
+| **Key context** | D1-D14 locked. D14: 3-CLEAN applies to extraction-validation gate (human mandate). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment (third-parties only). |
+| **Convergence counter** | 0 of 3 |
+
+---
+
 ## Session Resume Checkpoint (2026-07-13) — burst 8 complete
 
 ### State

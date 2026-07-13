@@ -392,3 +392,26 @@ traces_to: STATE.md
 - cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 8 checkpoint archived)
 
 **Next steps:** extraction-validation pass 2 in progress. Requires 2 more CLEAN(strict) passes (streak 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.
+
+---
+
+## Burst: pre-pipeline burst 10 — extraction-validation pass 2 close, pass 3 dispatch (2026-07-13)
+
+**Pass 2 verdict:** CLEAN(strict)=NO, CLEAN(PR-merge)=NO. 5 corrections (4 HIGH, 1 LOW). Streak RESET to 0/3.
+
+**Key finding — pass-1 corrections were WRONG:** Pass-1's regex-based counting matched multi-line tuple value strings as dict keys, producing incorrect corrected counts. Actuals verified by pass-2: 27 chat / 10 embeddings (pass-1 had incorrectly "corrected" to 30→33 chat / 11→14 embeddings). Pass-1 also failed cross-document propagation — corrected module-inventory but left behavioral-intent stale. Pass 2 fixed all occurrences with [validation-corrected pass-2] markers.
+
+**Positive signal — semantic layer sound:** 128 behavioral items re-verified across all 7 areas, ALL accurate. Verified: deepseek/xai BaseChatOpenAI inheritance (line-verified), pregel WRITES_IDX_MAP sentinels, interrupt xxh3 ID derivation, 7 stream modes, SDK timeout defaults, all dependency tables re-verified. Churn confined to mechanical counts only.
+
+**Process-gap codified (lessons.md per S-7.02):** Validator counting methodology — regex/string-matching on dict-like structures produces wrong verified-labeled corrections. Codification applied: pass-3+ prompts now mandate AST-based counting + cross-document propagation sweeps. Hardening story for validate-extraction agent prompt noted for session-review (Drift/Deferral table).
+
+**Pass 3 dispatched:** Fresh context, AST-counting guardrail, cross-doc propagation checks, rotated strata including crates.io claims verification. Streak 0/3.
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated/Current Step; Current Phase Steps — pass-6 row archived, pass-2 updated to DONE, pass-3 DISPATCHED row added; Session Resume Checkpoint replaced; Historical Content updated)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 9 checkpoint archived)
+- cycles/v0.0.0-pre-pipeline/lessons.md (created; PROCESS-GAP lesson added)
+
+**Next steps:** extraction-validation pass 3 in progress. Requires 3 CLEAN(strict) passes (streak still 0/3 after pass-2 reset). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.

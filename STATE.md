@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T03:30:00Z
+timestamp: 2026-07-13T04:00:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "extraction-validation 3-CLEAN cascade: pass 1 COMPLETE (PASS WITH CORRECTIONS, streak 0/3), pass 2 in progress. D14 locked: full 3-CLEAN applies. Phase 1 opens only on 3 consecutive CLEAN(strict) passes."
+current_step: "extraction-validation pass 3 in progress, streak 0/3. Phase 1 opens only on 3 consecutive CLEAN(strict) passes."
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -43,9 +43,9 @@ dtu_required: false
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived upstream — curated-subset reference only), langchain-mcp-adapters==0.3.0 (SHA a61c783a) |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — D14 locked (3-CLEAN applies to extraction-validation gate, human directive); pass 1 COMPLETE (PASS WITH CORRECTIONS, 11 corrections, streak 0/3); pass 2 DISPATCHED |
+| **Last Updated** | 2026-07-13 — pass 2 COMPLETE (CLEAN=NO, 5 corrections 4 HIGH/1 LOW, streak RESET 0/3); pass-1 corrections were WRONG (regex counted tuple values as dict keys; actuals 27 chat/10 embeddings); 128 behavioral items re-verified ALL accurate; process-gap codified; pass 3 DISPATCHED |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | extraction-validation 3-CLEAN cascade — pass 2 in progress (fresh context, rotated strata); streak 0/3; Phase 1 opens only on 3 consecutive CLEAN(strict) passes |
+| **Current Step** | extraction-validation 3-CLEAN cascade — pass 3 in progress (AST-counting guardrail, cross-doc propagation checks, crates.io claims verification); streak 0/3; Phase 1 opens only on 3 consecutive CLEAN(strict) passes |
 
 ## Phase Progress
 
@@ -68,11 +68,11 @@ dtu_required: false
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| semport-analyze pass 6 — platform SDK/CLI | codebase-analyzer | DONE | .factory/semport/platform/ (5 deliverables; SDK 18,728 LOC async-only; auth/runtime/encryption DROP from client crate; CLI 8,383 LOC — validate+schema ~2,500 LOC portable→ferrochain.toml; build/up/dev/deploy DROP/RE-SCOPE; DTU spec: 50+ endpoints, 40+ DTOs, 19 enums; R9 added) |
 | semport-analyze pass 7 — core convergence deepening | codebase-analyzer | DONE | .factory/semport/core/ (all 5 deliverables + ANALYSIS-STATE.md; 8 items; 1 HIGH/4 MED/3 LOW novelty; C-1..C-6 contradictions logged; ADR-6/7/8 queued; NOT fully converged → pass 8 dispatched) |
 | semport-analyze pass 8 — narrow: RunnableSequence + ADR-3 + langchain-protocol-0.0.17 | codebase-analyzer | DONE | CONVERGED. ADR-5 resolved; ADR-3 enumerated (176 unique keys); C-7 added; langchain-protocol 0.0.17 VERIFIED strictly additive. |
 | D14 locked + extraction-validation pass 1 COMPLETE | human + validate-extraction | DONE | D14: full 3-CLEAN applies to extraction-validation gate (human directive). Pass 1: PASS WITH CORRECTIONS — 11 corrections (3 MEDIUM, 8 LOW); ZERO hallucinations corpus-wide; streak reset to 0/3. Report: .factory/semport/VALIDATION-REPORT.md. |
-| extraction-validation pass 2 | validate-extraction | IN_PROGRESS | Fresh context; rotated sampling strata; independently re-verifies pass-1 corrections; streak 0/3; 2 more CLEAN(strict) passes needed after this before Phase 1 opens. |
+| extraction-validation pass 2 | validate-extraction | DONE | CLEAN(strict)=NO, CLEAN(PR-merge)=NO. 5 corrections (4 HIGH, 1 LOW), streak RESET 0/3. Pass-1 corrections were WRONG (regex counted tuple values as dict keys; actuals 27 chat/10 embeddings). 128 behavioral items re-verified ALL accurate. Process-gap codified in lessons.md. |
+| extraction-validation pass 3 | validate-extraction | IN_PROGRESS | Fresh context; AST-counting guardrail; cross-doc propagation checks; rotated strata incl. crates.io claims verification; streak 0/3. |
 
 ## Decisions Log
 
@@ -144,7 +144,7 @@ dtu_required: false
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 9 complete. D14 locked: full 3-CLEAN applies to extraction-validation gate (human directive — zero findings ANY severity, corrections reset streak, fresh-context each pass). Extraction-validation pass 1 COMPLETE: PASS WITH CORRECTIONS — 11 corrections (3 MEDIUM, 8 LOW); ZERO hallucinations corpus-wide. Top corrections: sqlite-vec runtime dep fully missing from graph disposition (3 Rust options added for Phase 1); checkpoint serde/types.py pregel sentinel constants (TASKS/INTERRUPT/RESUME/ERROR/SCHEDULED) omitted; ChatModelIntegrationTests count inflated ~62→~48; _BUILTIN_PROVIDERS undercounts (chat 30→33, embeddings 11→14); RedisCache tier in langgraph-checkpoint unmentioned. Report: .factory/semport/VALIDATION-REPORT.md. Streak: 0/3 (reset by corrections). Pass 2 DISPATCHED (fresh context, rotated sampling strata, independently re-verifies pass-1 corrections). Phase 1 opens only after 3 consecutive CLEAN(strict) passes. |
+| **Position** | pre-1, burst 10 complete. D14 locked: full 3-CLEAN applies to extraction-validation gate (human directive — zero findings ANY severity, corrections reset streak, fresh-context each pass). Pass 1 COMPLETE: PASS WITH CORRECTIONS — 11 corrections; streak reset 0/3. Pass 2 COMPLETE: CLEAN(strict)=NO, CLEAN(PR-merge)=NO — 5 corrections (4 HIGH, 1 LOW); streak RESET. Key: pass-1's corrections were WRONG (regex counted multi-line tuple values as dict keys); actuals 27 chat / 10 embeddings. 128 behavioral items re-verified ALL accurate — semantic corpus is sound. Process-gap codified in lessons.md; hardening story noted for session-review. Pass 3 DISPATCHED (fresh context, AST-counting guardrail, cross-doc propagation checks, crates.io claims verification). Streak: 0/3. Phase 1 opens only after 3 consecutive CLEAN(strict) passes. |
 | **Key context** | D1-D14 locked. D14: 3-CLEAN applies to extraction-validation gate (human mandate). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment (third-parties only). |
 | **Convergence counter** | 0 of 3 |
 
@@ -160,10 +160,13 @@ dtu_required: false
 | Burst 7 narrative (passes 6-7 DONE, R9 added, C-1..C-6 logged, ADR-6/7/8 queued, pass 8 dispatch) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 8 narrative (pass 8 CONVERGED, D13 locked, R3/R9 downgraded, extraction-validation gate dispatch) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 9 narrative (D14 locked, extraction-validation pass 1 COMPLETE/corrections, pass 2 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Burst 10 narrative (pass 2 COMPLETE/corrections, pass-1 corrections WRONG, 128 items re-verified, process-gap codified, pass 3 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 5 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Burst 6 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Burst 7 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Burst 8 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
+| Burst 9 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
+| Lessons learned (PROCESS-GAP: validator counting methodology) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
 | Naming decision study | `.factory/planning/naming-decision-study.md` |
 | File-size standard study | `.factory/planning/file-size-standard-study.md` |
 | Semport pass 1 analysis state (deepening items, risks) | `.factory/semport/core/ANALYSIS-STATE.md` |
