@@ -252,3 +252,44 @@ For every numeric row (LOC, file count, etc.) in a module inventory table:
 5. Deepening-note sweep (verify items marked for deeper investigation were actually investigated)
 6. Package-attribution verification (any class attributed to a package must exist in that package at the pinned tag)
 7. Scope-label matching (every numeric row must be counted from exactly the scope its label denotes)
+
+---
+
+## Lesson: PROCESS-GAP — Dependency-Constraint Completeness — Guardrail 7b (2026-07-13)
+
+**Source:** 3-CLEAN certification pass 3 (burst 20)
+**Category:** process-gap
+**Severity:** LOW (single LOW finding; but pattern is load-bearing for provider-crate risk posture)
+
+### What happened
+
+Certification pass 3 found that `partners/dependency-disposition.md` §2 anthropic row quoted the constraint as `anthropic>=0.96`. The actual pyproject.toml specifies `anthropic>=0.96.0,<1.0.0`. The upper bound `<1.0.0` was omitted.
+
+The upper bound is not a formatting detail — it is a contract signal. A `<1.0.0` cap explicitly communicates that the upstream package is expected to ship a breaking-change v1.0 that is not yet compatible, and that the integrator has chosen to pin below it rather than track HEAD. Omitting this bound in a disposition row misrepresents the stability posture: a reader of the disposition table sees an open-ended ">=0.96" requirement where the actual source establishes a bounded window.
+
+### Why it matters
+
+Dependency rows in disposition documents feed directly into Cargo.toml planning and version-selection decisions. A disposition that omits an upper bound gives implementers false latitude — they may choose a version within the unconstrained range that violates the upstream maintainer's stated compatibility contract. For provider crates (openai, anthropic, ollama) where breaking changes are frequent in pre-1.0 packages, this constraint completeness is risk-relevant.
+
+### Codification applied — Guardrail 7b: DEPENDENCY-CONSTRAINT COMPLETENESS
+
+For certification passes and exhaustive sweeps, a dependency-constraint completeness guardrail is now active:
+
+1. **Full verbatim constraint required:** Every dependency row must quote the full constraint expression from the source pyproject.toml / requirements file, including both lower AND upper bounds, exclusion markers (`!=`), and environment markers. Omission of any bound is a finding.
+2. **Bounds are contract:** An upper bound (`<1.0.0`, `<=2.3`, `!=1.5`) is not optional metadata — it is the upstream project's statement about compatibility. Verify it is present in the disposition row.
+3. **Pass 4 opening sweep:** Certification pass 4 begins with an exhaustive verbatim sweep of every dependency row corpus-wide (all 7 semport areas). This bounded check permanently closes the dependency-constraint completeness class.
+
+### The full 8-guardrail set (after 7b)
+
+1. AST-based counting (never grep/eyeballing for code constructs)
+2. Cross-document propagation sweep (find all locations that must reflect the same fact)
+3. Behavioral-locus precision (describe behavior at the execution locus, not a secondary description)
+4. Semantic-precision summary-word verification (verify superlatives, totals, and summary claims against base data)
+5. Deepening-note sweep (verify items marked for deeper investigation were actually investigated)
+6. Package-attribution verification (any class attributed to a package must exist in that package at the pinned tag)
+7. Scope-label matching (every numeric row must be counted from exactly the scope its label denotes)
+7b. Dependency-constraint completeness (dependency rows must quote full constraint expressions verbatim; bounds are contract)
+
+### Follow-up
+
+Pass 4 opens with an exhaustive verbatim sweep of every dependency row across all 7 semport areas. This bounded check closes the entire dependency-constraint class permanently. After pass 4, fold guardrail 7b into the validate-extraction agent prompt upstream alongside the full 7-guardrail set.

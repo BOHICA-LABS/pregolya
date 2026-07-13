@@ -87,7 +87,7 @@ piece of partner infrastructure** and should be a Wave-early deliverable.
 
 | Python dep | Disposition | Notes |
 |---|---|---|
-| `anthropic>=0.96` (SDK) | **DIRECT-HTTP** | Messages API owned; `_client_utils.py` cached-client pattern → reqwest client cache. |
+| `anthropic>=0.96.0,<1.0.0` (SDK) <!-- [validation-certification-3]: added `<1.0.0` upper bound; pyproject.toml line 26: `anthropic>=0.96.0,<1.0.0` --> | **DIRECT-HTTP** | Messages API owned; `_client_utils.py` cached-client pattern → reqwest client cache. |
 | `pydantic>=2.7.4` | **PORT → serde + schemars** | Same disposition as core (see core dependency-disposition; tool-schema golden-tested). |
 | prompt-caching `cache_control` | **PORT** | Data-shape only (`{type:ephemeral,ttl}`); pure logic. |
 

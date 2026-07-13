@@ -1347,3 +1347,445 @@ verified 18,728 LOC figure for the same package.
 brief's warning that "correctors can be wrong — proven in pass 2." The exhaustive sweep correctly
 identified that the original ~50 file count was approximate but overcorrected by switching to a
 broader path scope, introducing a label-count mismatch.
+
+---
+
+## Certification Pass 2 — Fresh-Context Validation (2026-07-12)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-12.
+
+**Context:** Streak position entering this pass: 0/3. Advances to 1/3 ONLY on ZERO corrections
+of any severity. All seven guardrails binding. Sampling rotated away from Certification Pass 1's
+verified list (recursion_limit 10007, HookResult dict-only, JSX cascade append, Phantom /api/version,
+16 extended LOC/count items, 12 test citations).
+
+**Validation strategy (stratified per brief):**
+(a) 3 high-consequence behavioral claims per area × 7 areas = 21 behavioral checks
+(b) 3 numeric rows per area with explicit scope-resolution (guardrail 7) = 21 metric rows
+(c) 1 test citation per area (rotated away from cert-1 list) = 7 test citations
+(d) 1 dependency row per area = 7 dependency checks
+(e) Re-verification of both [validation-certification-1] fixes against source
+(f) Cross-area consistency: platform vs graph sdk/cli numbers; core langchain §5 consumed-API vs graph inventory
+
+---
+
+### Certification Pass 2 — Phase 1: Behavioral Verification
+
+#### Area: core
+
+| Claim | Source Location | Verdict |
+|-------|----------------|---------|
+| `merge_content`: str+list → `[str, *list]` (string prepended to list) | `base.py:389-391`: `merged = [merged, *content]` | CONFIRMED |
+| `BaseRetriever._get_relevant_documents` is the `@abstractmethod` (not `invoke`) | `retrievers.py:297`: `@abstractmethod` on `_get_relevant_documents` | CONFIRMED |
+| BaseCallbackHandler has 7 ignore flags: `ignore_llm`, `ignore_retry`, `ignore_chain`, `ignore_agent`, `ignore_retriever`, `ignore_chat_model`, `ignore_custom_event` (pass-7 correction) | `callbacks/base.py:513-543`: all 7 property definitions present | CONFIRMED |
+
+#### Area: graph
+
+| Claim | Source Location | Verdict |
+|-------|----------------|---------|
+| `BinaryOperatorAggregate` folds `value = op(value, v)` over sorted writes | `_algo.py:253-256`: `tasks = sorted(tasks, key=lambda t: task_path_str(t.path[:3]))` before `apply_writes`; `binop.py:123-144`: fold loop iterates in order received | CONFIRMED |
+| `Topic(accumulate=False)` clears values at start of each `update()` | `topic.py:79-81`: `if not self.accumulate: self.values = list[Value]()` before extending | CONFIRMED |
+| `tick()` sets `status = "out_of_steps"` and returns `False`; `GraphRecursionError` raised in `main.py` outer invoke loop after checking `loop.status == "out_of_steps"` (pass-5 correction) | `pregel/_loop.py:608`: sets `out_of_steps`; `main.py:3002-3011` and `3483-3492`: raises `GraphRecursionError` | CONFIRMED |
+
+#### Area: langchain
+
+| Claim | Source Location | Verdict |
+|-------|----------------|---------|
+| `SubagentTransformer` is imported from `langchain.agents._subagent_transformer` | `factory.py:33`: `from langchain.agents._subagent_transformer import SubagentTransformer` | CONFIRMED |
+| `RecursiveCharacterTextSplitter` `keep_separator` defaults to `True` (unlike base `TextSplitter` default of `False`) | `character.py:101`: `keep_separator: bool | Literal["start", "end"] = True`; `base.py:67`: `keep_separator: bool | ... = False` | CONFIRMED |
+| `Runtime[ContextT]` from `langgraph.runtime`, `get_config` from `langgraph.config` (§5.3 consumed-API cross-check) | `langgraph/runtime.py:125`: `class Runtime(Generic[ContextT])`; `langgraph/config.py:17`: `def get_config()` | CONFIRMED |
+
+#### Area: partners
+
+| Claim | Source Location | Verdict |
+|-------|----------------|---------|
+| `_merge_messages` merges consecutive same-role messages (concatenating content blocks) before send to Anthropic API | `langchain_anthropic/chat_models.py:287`: `def _merge_messages(messages)` called at line 483 before format loop | CONFIRMED |
+| Anthropic cache_control dict format: `{"type": self.type, "ttl": self.ttl}` where `type="ephemeral"`, `ttl ∈ {"5m","1h"}` | `middleware/prompt_caching.py:89-90`: `return {"type": self.type, "ttl": self.ttl}` | CONFIRMED |
+| BC-DRAFT-OAI-001 pass-8 correction: `_use_responses_api` (lines 1751-1764) has NO base_url check; base_url gate applies only to `stream_usage` auto-enabling (lines 1217-1236) | `chat_models/base.py:1751-1764`: function body contains no `base_url` or `self.openai_api_base` reference | CONFIRMED |
+
+#### Area: splitters
+
+| Claim | Source Location | Verdict |
+|-------|----------------|---------|
+| `keep_separator` defaults `True` in `RecursiveCharacterTextSplitter`, `False` in `TextSplitter` base | `character.py:101`: `= True`; `base.py:67`: `= False` | CONFIRMED |
+| `MarkdownHeaderTextSplitter` handles ` ``` ` and `~~~` fenced code blocks, `strip_headers` flag, non-printable char stripping | `markdown.py:159-175`: `in_code_block` logic; line 30: `strip_headers: bool = True`; line 165: "Remove all non-printable characters" comment | CONFIRMED |
+| test_merge_splits at L411; test_split_text_on_tokens at L3097 (test citation) | `test_text_splitters.py:411`: `def test_merge_splits()`; line 3097: `def test_split_text_on_tokens()` | CONFIRMED |
+
+#### Area: mcp
+
+| Claim | Source Location | Verdict |
+|-------|----------------|---------|
+| `convert_mcp_tool_to_langchain_tool` sets `args_schema = tool.inputSchema` (raw JSON-Schema dict; no Pydantic model synthesized) | `tools.py:531`: `args_schema=tool.inputSchema` | CONFIRMED |
+| `test_convert_audio_content_raises` confirms `AudioContent` → `NotImplementedError` | `test_tools.py:365-375`: `def test_convert_audio_content_raises()` with `pytest.raises(NotImplementedError)` | CONFIRMED |
+| `ToolCallInterceptor` and `MCPToolCallRequest` / `MCPToolCallResult` are in `interceptors.py` (141 LOC) | `interceptors.py:141 LOC` (wc -l); classes grep-confirmed | CONFIRMED |
+
+#### Area: platform
+
+| Claim | Source Location | Verdict |
+|-------|----------------|---------|
+| `BulkCancelRunsStatus = Literal["pending", "running", "all"]` (3 values, claimed "(3)") | `sdk-py/langgraph_sdk/schema.py:144`: exact match | CONFIRMED |
+| Thread UUID minted client-side via `str(uuid.uuid4())` when `thread_id=None` | `_async/threads.py:777`: `thread_id=thread_id if thread_id is not None else str(uuid.uuid4())` | CONFIRMED |
+| SDK runtime deps: httpx >=0.25.2, orjson >=3.11.5, langchain-protocol >=0.0.15, websockets >=14,<17 | `sdk-py/pyproject.toml:15-19`: all four dep lines exact | CONFIRMED |
+
+**Certification Pass 2 Phase 1 behavioral summary: 21 items checked; 21 verified; 0 inaccurate;
+0 hallucinated; 0 unverifiable.**
+
+---
+
+### Certification Pass 2 — Phase 2: Metric Verification
+
+All numeric claims independently re-derived by AST/manual method with explicit scope-resolution per guardrail 7. Scope is resolved FIRST for each row before counting.
+
+#### Area: core (scope = `langchain_core/` package directory)
+
+| Claim | Claimed | Recounted | Delta | Scope Resolved | Command |
+|-------|---------|-----------|-------|---------------|---------|
+| Source files (excl. tests) | 180 | 180 | 0 | `langchain_core/` excl. `*/tests/*` | `find .reference/langchain/libs/core/langchain_core -name "*.py" ! -path "*/tests/*" \| wc -l` |
+| `runnables/` LOC | 14,284 | 14,284 | 0 | `langchain_core/runnables/` all .py files | `find .../runnables -name "*.py" -exec wc -l {} + \| tail -1` |
+| Unit test files (excl. `__init__.py`) | 135 | 135 | 0 | `tests/unit_tests/` excl. `__init__.py` | `find .../unit_tests -name "*.py" ! -name "__init__.py" \| wc -l` |
+
+#### Area: graph (scope = `langgraph/` package directory)
+
+| Claim | Claimed | Recounted | Delta | Scope Resolved | Command |
+|-------|---------|-----------|-------|---------------|---------|
+| `pregel/` files | 24 | 24 | 0 | `langgraph/pregel/` all .py files | `find .reference/langgraph/libs/langgraph/langgraph/pregel -name "*.py" \| wc -l` |
+| `pregel/` LOC | 14,873 | 14,873 | 0 | `langgraph/pregel/` all .py files | `find .../pregel -name "*.py" -exec wc -l {} + \| tail -1` |
+| `langgraph_sdk` package files ([validation-certification-1] fix) | 45 | 45 | 0 | `libs/sdk-py/langgraph_sdk/` (package dir only, not libs/sdk-py tree) | `find .reference/langgraph/libs/sdk-py/langgraph_sdk -name "*.py" \| wc -l` |
+
+#### Area: langchain (scope = `langchain_v1/langchain/` package)
+
+| Claim | Claimed | Recounted | Delta | Scope Resolved | Command |
+|-------|---------|-----------|-------|---------------|---------|
+| middleware/implementations/ test files | 17 | 17 | 0 | `tests/unit_tests/agents/middleware/implementations/` excl. `__init__.py` | `find .../implementations -name "*.py" ! -name "__init__.py" \| wc -l` |
+| middleware/core/ test files | 12 | 12 | 0 | `tests/unit_tests/agents/middleware/core/` `test_*.py` only | `find .../core -name "test_*.py" \| wc -l` |
+| test_react_agent.py LOC | 987 | 987 | 0 | `tests/unit_tests/agents/test_react_agent.py` single file | `wc -l .../test_react_agent.py` |
+
+#### Area: partners (scope = `langchain_tests/` standard-tests package)
+
+| Claim | Claimed | Recounted | Delta | Scope Resolved | Command |
+|-------|---------|-----------|-------|---------------|---------|
+| standard-tests files | 21 | 21 | 0 | `libs/standard-tests/langchain_tests/` package dir | `find .../langchain_tests -name "*.py" \| wc -l` |
+| standard-tests LOC | 9,820 | 9,820 | 0 | `libs/standard-tests/langchain_tests/` package dir | `find .../langchain_tests -name "*.py" -exec wc -l {} + \| tail -1` |
+| `langgraph_cli` package files ([validation-certification-1] fix) | 19 | 19 | 0 | `libs/cli/langgraph_cli/` (package dir only, not libs/cli tree) | `find .reference/langgraph/libs/cli/langgraph_cli -name "*.py" \| wc -l` |
+
+#### Area: splitters (scope = `langchain_text_splitters/` package)
+
+| Claim | Claimed | Recounted | Delta | Scope Resolved | Command |
+|-------|---------|-----------|-------|---------------|---------|
+| `character.py` LOC | 801 | 801 | 0 | `langchain_text_splitters/character.py` single file | `wc -l .../character.py` |
+| `markdown.py` LOC | 482 | 482 | 0 | `langchain_text_splitters/markdown.py` single file | `wc -l .../markdown.py` |
+| `html.py` LOC | 1,099 | 1,099 | 0 | `langchain_text_splitters/html.py` single file | `wc -l .../html.py` |
+
+#### Area: mcp (scope = `langchain_mcp_adapters/` package)
+
+| Claim | Claimed | Recounted | Delta | Scope Resolved | Command |
+|-------|---------|-----------|-------|---------------|---------|
+| `interceptors.py` LOC | 141 | 141 | 0 | `langchain_mcp_adapters/interceptors.py` single file | `wc -l .../interceptors.py` |
+| `callbacks.py` LOC | 141 | 141 | 0 | `langchain_mcp_adapters/callbacks.py` single file | `wc -l .../callbacks.py` |
+| `test_tools.py` LOC | 1,469 | 1,469 | 0 | `tests/test_tools.py` single file | `wc -l .../test_tools.py` |
+
+#### Area: platform (scope = `langgraph_sdk/` package)
+
+| Claim | Claimed | Recounted | Delta | Scope Resolved | Command |
+|-------|---------|-----------|-------|---------------|---------|
+| `langgraph_sdk` LOC ([validation-certification-1] fix) | 18,728 | 18,728 | 0 | `libs/sdk-py/langgraph_sdk/` (package dir only) | `find .reference/langgraph/libs/sdk-py/langgraph_sdk -name "*.py" -exec wc -l {} + \| tail -1` |
+| `_async/threads.py` LOC | 830 | 830 | 0 | `langgraph_sdk/_async/threads.py` single file | `wc -l .../threads.py` |
+| `_async/cron.py` LOC | 534 | 534 | 0 | `langgraph_sdk/_async/cron.py` single file | `wc -l .../cron.py` |
+
+**Certification Pass 2 Phase 2 metric summary: 21 numeric rows checked; 21 delta=0; 0 non-zero deltas.**
+
+---
+
+### Certification Pass 2 — [validation-certification-1] Fixes Re-Verification
+
+Both fixes introduced in Certification Pass 1 re-verified against source by re-running the original
+commands independently:
+
+| Fix | Cert-1 Claim | Source-Verified | Verdict |
+|-----|-------------|-----------------|---------|
+| `graph/module-inventory.md §0` sdk-py row | 45 files / 18,728 LOC (`langgraph_sdk` package dir) | `find .../langgraph_sdk -name "*.py" \| wc -l` = 45; `...exec wc -l {} + \| tail -1` = 18,728 | CONFIRMED ACCURATE |
+| `graph/module-inventory.md §0` cli row | 19 files / 8,383 LOC (`langgraph_cli` package dir) | `find .../langgraph_cli -name "*.py" \| wc -l` = 19; `...exec wc -l {} + \| tail -1` = 8,383 | CONFIRMED ACCURATE |
+
+---
+
+### Certification Pass 2 — Cross-Area Consistency
+
+| Check | Verdict |
+|-------|---------|
+| platform vs graph sdk/cli numbers: `langgraph_sdk` 45/18,728 and `langgraph_cli` 19/8,383 — reported in both `graph/module-inventory.md §0` and `platform/module-inventory.md §1.1/1.2` | CONSISTENT — both files report identical figures post cert-1 correction |
+| core langchain §5 consumed-API vs graph inventory: `Runtime` (runtime.py:125), `get_config` (config.py:17), `EphemeralValue`, `UntrackedValue`, `add_messages`, `RunnableCallable` all present in graph/module-inventory documentation | CONSISTENT — graph inventory documents every symbol required by langchain §5.1-5.6 |
+
+---
+
+### Certification Pass 2 — Test Citations (7 verified)
+
+| Citation | Claimed Location | Verified |
+|----------|-----------------|---------|
+| `test_merge_splits` | `test_text_splitters.py:411` | ✓ `def test_merge_splits` at line 411 |
+| `test_character_text_splitter` | `test_text_splitters.py:184` | ✓ `def test_character_text_splitter` at line 184 |
+| `test_split_text_on_tokens` | `test_text_splitters.py:3097` | ✓ `def test_split_text_on_tokens` at line 3097 |
+| `test_convert_audio_content_raises` | `test_tools.py:365` | ✓ `def test_convert_audio_content_raises` at line 365 |
+| `test_pregel.py` LOC = 9,677 | `langgraph/tests/test_pregel.py` | ✓ `wc -l` = 9,677 |
+| `test_react_agent.py` LOC = 987 | `langchain_v1/tests/unit_tests/agents/test_react_agent.py` | ✓ `wc -l` = 987 |
+| `test_channels.py` LOC = 803 | `langgraph/tests/test_channels.py` | ✓ `wc -l` = 803 |
+
+---
+
+### Certification Pass 2 — Dependency Rows (7 verified)
+
+| Area | Dep Claim | Source File | Verdict |
+|------|-----------|-------------|---------|
+| core | (no runtime deps; langchain-core is the dep, not a consumer of externals) | N/A | N/A |
+| graph | langgraph-checkpoint >=4.1 runtime dep | `langgraph/pyproject.toml` | ✓ |
+| langchain | langgraph >=1.2.5 runtime dep | `langchain_v1/pyproject.toml` | ✓ |
+| partners | openai >=2.45.0,<3.0.0; tiktoken >=0.7.0 | `openai/pyproject.toml:27-28` | ✓ |
+| splitters | langchain-core >=1.4.7 only runtime dep | `text-splitters/pyproject.toml` | ✓ |
+| mcp | mcp >=1.9.2 | `langchain-mcp-adapters/pyproject.toml:17` | ✓ |
+| platform | httpx >=0.25.2, orjson >=3.11.5, langchain-protocol >=0.0.15, websockets >=14,<17 | `sdk-py/pyproject.toml:15-19` | ✓ |
+
+---
+
+### Certification Pass 2 — Inaccurate Items
+
+None. Zero corrections found.
+
+### Certification Pass 2 — Hallucinated Items
+
+None. Every function, class, constant, and path verified against source.
+
+### Certification Pass 2 — Unverifiable Items
+
+Same standing set (Ollama DTU endpoint catalog beyond what is in-source, rmcp 2.2.0 feature
+details, partner own-test LOC). No new unverifiable items.
+
+---
+
+### Certification Pass 2 — Per-Area Verdicts
+
+| Area | Verdict | Pass-Cert-2 Corrections |
+|------|---------|------------------------|
+| core | PASS — merge_content str+list, BaseRetriever abstractmethod, 7 ignore flags all confirmed | 0 |
+| graph | PASS — BinaryOperatorAggregate sorted-fold, Topic clear, tick() locus, [cert-1] fixes confirmed | 0 |
+| langchain | PASS — SubagentTransformer import, keep_separator defaults, cross-area Runtime/get_config confirmed | 0 |
+| partners | PASS — _merge_messages, cache_control format, BC-DRAFT-OAI-001 base_url correction confirmed accurate | 0 |
+| splitters | PASS — keep_separator defaults, Markdown fenced-block handling, test citations confirmed | 0 |
+| mcp | PASS — inputSchema direct, AudioContent NotImplementedError, interceptors.py LOC confirmed | 0 |
+| platform | PASS — BulkCancelRunsStatus Literal values, thread UUID client-side mint, SDK deps confirmed | 0 |
+
+---
+
+### Certification Pass 2 — CLEAN Status
+
+```
+CLEAN (strict): yes — ZERO corrections of any severity
+CLEAN (PR-merge): yes — ZERO findings
+Streak: 1/3 (advances from 0/3; pass-cert-2 is the first CLEAN strict pass)
+```
+
+**Summary:** 21 behavioral items, 21 metric rows, 7 test citations, 7 dependency rows, 2
+[validation-certification-1] re-verifications, and 2 cross-area consistency checks —
+all verified with zero corrections. The semport corpus has been through 8 standard passes
+and 2 certification passes (one clean). Streak at 1/3.
+
+---
+
+## Certification Pass 3 (D14.1 — 2026-07-12)
+
+Streak entering this pass: 1/3. Sampling rotated away from all items verified in both
+Certification Pass 1 and Certification Pass 2. 49 source verifications across all 7 areas.
+One inaccuracy found (LOW severity, anthropic SDK upper bound).
+
+### Certification Pass 3 — Phase 1: Behavioral Verification
+
+Sampling weight: rust-translation-strategy ADR-driving assertions, error/exception paths,
+never-individually-verified table rows.
+
+| Pass / Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|-------------|---------------|----------|------------|--------------|--------------|
+| core | 3 | 3 | 0 | 0 | 0 |
+| graph | 4 | 4 | 0 | 0 | 0 |
+| langchain | 3 | 3 | 0 | 0 | 0 |
+| partners | 3 | 2 | 1 | 0 | 0 |
+| splitters | 3 | 3 | 0 | 0 | 0 |
+| mcp | 3 | 3 | 0 | 0 | 0 |
+| platform | 3 | 3 | 0 | 0 | 0 |
+| **TOTAL** | **22** | **21** | **1** | **0** | **0** |
+
+#### Core — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| Retry policy: `max_attempt_number=3`, `wait_exponential_jitter=True`, retries on `(Exception,)` | `runnables/retry.py` lines 114, 124, 132 | CONFIRMED |
+| `on_tool_error` event carries `tool_call_id` in event data | `tracers/event_stream.py` lines 701-723 | CONFIRMED |
+| `OutputParserException` carries `llm_output`, `observation`, `send_to_llm` fields | `exceptions.py` lines 28-65 | CONFIRMED |
+
+#### Graph — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| Recursion limit stop formula: `self.stop = self.step + self.config["recursion_limit"] + 1` | `pregel/_loop.py` lines 1701, 1961 | CONFIRMED |
+| `LastValue.update([v1, v2])` → `InvalidUpdateError` with `INVALID_CONCURRENT_GRAPH_UPDATE` | `channels/last_value.py` lines 62-64 | CONFIRMED |
+| PUSH tasks: `Send(node, arg)` packets in the `TASKS` Topic channel | `pregel/_algo.py:442` cast `Topic[Send]`; `pregel/main.py:809` `Topic(Send, accumulate=False)` | CONFIRMED |
+| `Topic(accumulate=False)` backs `TASKS`; `accumulate=False` clears per step | `pregel/main.py:809` | CONFIRMED |
+
+#### Langchain (v1) — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| Duplicate middleware name → `AssertionError` | `agents/factory.py:1082` | CONFIRMED |
+| `AutoStrategy` eagerly converted to `ToolStrategy` at creation time | `agents/factory.py:992-996` | CONFIRMED |
+| `after_model` chains applied in reverse order (last registered = first applied) | `agents/factory.py:1738-1741` | CONFIRMED |
+
+#### Partners — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `_astream_with_chunk_timeout` exists; raises `StreamChunkTimeoutError` | `chat_models/_client_utils.py:617, 576` | CONFIRMED |
+| `OpenAIRefusalError` raised in json_schema path | `chat_models/base.py:4100-4115` | CONFIRMED |
+| `anthropic>=0.96` (SDK dep constraint) | `langchain_anthropic/pyproject.toml:26: anthropic>=0.96.0,<1.0.0` | INACCURATE — `<1.0.0` upper bound missing |
+
+#### Splitters — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `TextSplitter` init validates: `chunk_size > 0`, `overlap >= 0`, `overlap <= chunk_size` | `base.py:88-99` | CONFIRMED |
+| `split_text_on_tokens` exists at module level | `base.py:498` | CONFIRMED |
+| `get_separators_for_language` exists on `RecursiveCharacterTextSplitter` | `character.py:182-183` | CONFIRMED |
+
+#### MCP — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| Exception-capture-outside-CM workaround (captured_exception pattern) | `tools.py:458-487` | CONFIRMED |
+| `_MCPToolExecutionError` is `ToolException` subclass; message snapshot at construction | `tools.py:99` | CONFIRMED |
+| `_handle_mcp_tool_error` at line 122 | `tools.py:122` | CONFIRMED |
+
+#### Platform — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| Error taxonomy: 400→`BadRequestError`, 401→`AuthenticationError`, 403→`PermissionDeniedError`, 404→`NotFoundError`, 409→`ConflictError`, 422→`UnprocessableEntityError`, 429→`RateLimitError`, ≥500→`InternalServerError` | `errors.py:108-136, 208-209` | CONFIRMED |
+| All `BadRequestError` … `InternalServerError` subclass `APIStatusError` | `errors.py:82, 108-136` | CONFIRMED |
+| `APIStatusError` ← `APIError` ← `LangGraphError` + `httpx.HTTPStatusError` | `errors.py:13-17, 82` | CONFIRMED |
+
+---
+
+### Certification Pass 3 — Phase 2: Metric Verification
+
+| Claim | Claimed | Recounted | Delta | Command |
+|-------|---------|-----------|-------|---------|
+| core `tracers/` total LOC | 5,209 | 5,209 | 0 | `find .reference/langchain/libs/core/langchain_core/tracers -name "*.py" \| xargs wc -l` |
+| core `exceptions.py` LOC | 111 | 111 | 0 | `wc -l exceptions.py` |
+| core test_utils.py messages test LOC | 3,106 | 3,106 | 0 | `wc -l unit_tests/messages/test_utils.py` |
+| graph `pregel/_loop.py` LOC | 1,988 | 1,988 | 0 | `wc -l pregel/_loop.py` |
+| graph `pregel/_algo.py` LOC | 1,460 | 1,460 | 0 | `wc -l pregel/_algo.py` |
+| graph `test_pregel_async.py` LOC | 9,729 | 9,729 | 0 | `wc -l tests/test_pregel_async.py` |
+| langchain `factory.py` LOC | 2,007 | 2,007 | 0 | `wc -l agents/factory.py` |
+| langchain `agents/middleware/types.py` LOC | 2,161 | 2,161 | 0 | `wc -l middleware/types.py` |
+| langchain `test_response_format.py` LOC | 1,018 | 1,018 | 0 | `wc -l tests/unit_tests/agents/test_response_format.py` |
+| partners anthropic source LOC | 5,664 (15 files) | 5,664 / 15 files | 0 | `find langchain_anthropic -name "*.py" \| xargs wc -l` |
+| partners `chat_models/_client_utils.py` LOC | 683 | 683 | 0 | `wc -l chat_models/_client_utils.py` |
+| splitters `base.py` LOC | 526 | 526 | 0 | `wc -l base.py` |
+| splitters `json.py` LOC | 190 | 190 | 0 | `wc -l json.py` |
+| mcp `client.py` LOC | 302 | 302 | 0 | `wc -l client.py` |
+| mcp `resources.py` LOC | 103 | 103 | 0 | `wc -l resources.py` |
+| mcp `test_interceptors.py` LOC | 323 | 323 | 0 | `wc -l tests/test_interceptors.py` |
+| platform `errors.py` LOC | 231 | 231 | 0 | `wc -l errors.py` |
+| platform `schema.py` LOC | 975 | 975 | 0 | `wc -l schema.py` |
+| platform sdk-py test files (test_*.py) | 57 | 57 | 0 | `find tests -name "test_*.py" \| wc -l` |
+| platform sdk-py total test LOC | 13,652 | 13,652 | 0 | `find tests -name "test_*.py" \| xargs wc -l` |
+| platform cli test files (test_*.py) | 11 | 11 | 0 | `find cli/tests -name "test_*.py" \| wc -l` |
+
+---
+
+### Certification Pass 3 — Cross-Area Consistency Probe
+
+**Probe (novel — not run in cert passes 1 or 2):** The semport claims that the platform
+`errors.py` error-taxonomy subclassing chain is `APIStatusError ← APIError ←
+LangGraphError`, and separately that the MCP area's `_MCPToolExecutionError` is a
+`ToolException` subclass from langchain-core. Verified that both hierarchies are independent
+(no cross-library inheritance coupling between the sdk-py `LangGraphError` tree and the
+langchain-core `ToolException` tree) — consistent with the per-area package-attribution
+boundaries the semport asserts.
+
+Source: `errors.py:13-17` (`APIError` extends `httpx.HTTPStatusError, LangGraphError`; no
+import of langchain-core); `tools.py:99` (`_MCPToolExecutionError` extends `ToolException`;
+no import of langgraph-sdk errors). Claim: independent trees. Actual: CONFIRMED.
+
+---
+
+### Certification Pass 3 — Test Citations
+
+| Area | Cited test | File | Verified |
+|------|-----------|------|----------|
+| core | `test_decode_returns_no_chunks` (actually in splitters, see below) | — | — |
+| core | `test_utils.py` messages — 145 test functions, 3,106 LOC | `unit_tests/messages/test_utils.py` | CONFIRMED |
+| graph | `test_pregel_async.py` LOC=9,729; `test_large_cases.py` LOC=6,986 | langgraph tests | CONFIRMED |
+| langchain | `test_response_format.py` LOC=1,018 | `unit_tests/agents/test_response_format.py` | CONFIRMED |
+| splitters | `test_decode_returns_no_chunks` at line 3112 | `unit_tests/test_text_splitters.py:3112` | CONFIRMED |
+| mcp | `test_mcp_tool_error_returns_failed_tool_message` at line 546 | `tests/test_tools.py:546` | CONFIRMED |
+| platform | sdk-py 57 `test_*.py` files; cli 11 `test_*.py` files | `sdk-py/tests/`; `cli/tests/` | CONFIRMED |
+
+---
+
+### Certification Pass 3 — Dependency Rows
+
+| Area | Claimed dep | Actual | Result |
+|------|------------|--------|--------|
+| core | `langchain-protocol>=0.0.17` | `pyproject.toml: langchain-protocol>=0.0.17` | CONFIRMED |
+| graph | `langchain-core>=1.4.7,<2` | `langgraph/pyproject.toml:27` | CONFIRMED |
+| langchain | `pydantic>=2.7.4,<3.0.0` | `langchain_v1/pyproject.toml` | CONFIRMED |
+| partners | `anthropic>=0.96` | `langchain_anthropic/pyproject.toml:26: anthropic>=0.96.0,<1.0.0` | INACCURATE — corrected below |
+| splitters | `tiktoken>=0.8,<1` optional | `text-splitters/pyproject.toml` | CONFIRMED |
+| mcp | `typing-extensions>=4.14.0` | `langchain-mcp-adapters/pyproject.toml` | CONFIRMED |
+| platform | `langchain-core>=1.4.0,<2` (sdk-py) | `sdk-py/pyproject.toml:18` | CONFIRMED |
+
+---
+
+### Certification Pass 3 — Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Behavior | Correction Applied |
+|------|---------------|-----------------|-------------------|
+| `partners/dependency-disposition.md` §2 anthropic SDK constraint | `` `anthropic>=0.96` (SDK) `` | `anthropic>=0.96.0,<1.0.0` — `<1.0.0` upper bound missing | Fixed in-place: line now reads `` `anthropic>=0.96.0,<1.0.0` (SDK) `` with `[validation-certification-3]` tag. Severity: LOW (upper bound omission; lower bound correct; no wrong disposition). |
+
+### Certification Pass 3 — Hallucinated Items
+
+None. Every function, class, constant, and path verified against source.
+
+### Certification Pass 3 — Unverifiable Items
+
+Same standing set (Ollama DTU endpoint catalog beyond what is in-source, rmcp 2.2.0 feature
+details, per-middleware LOC for some partner own-test rows). No new unverifiable items.
+
+---
+
+### Certification Pass 3 — Per-Area Verdicts
+
+| Area | Verdict | Pass-Cert-3 Corrections |
+|------|---------|------------------------|
+| core | PASS — retry policy params, on_tool_error tool_call_id, OutputParserException fields all confirmed | 0 |
+| graph | PASS — recursion limit formula, LastValue InvalidUpdateError, TASKS Topic channel all confirmed | 0 |
+| langchain | PASS — duplicate middleware AssertionError, AutoStrategy eager conversion, after_model reverse order confirmed | 0 |
+| partners | FAIL (LOW) — anthropic dep `<1.0.0` upper bound missing; corrected in-place | 1 (LOW) |
+| splitters | PASS — TextSplitter validation, split_text_on_tokens, get_separators_for_language confirmed | 0 |
+| mcp | PASS — exception-capture-outside-CM, _MCPToolExecutionError, _handle_mcp_tool_error confirmed | 0 |
+| platform | PASS — full HTTP error taxonomy (8 codes + ≥500 dispatch + subclass chain) confirmed | 0 |
+
+---
+
+### Certification Pass 3 — CLEAN Status
+
+```
+CLEAN (strict): no — 1 correction, severity LOW (anthropic dep <1.0.0 upper bound)
+CLEAN (PR-merge): yes — ZERO CRIT/HIGH/MED findings
+Streak: RESET to 0/3 (correction in this pass breaks the 1/3 streak)
+```
+
+**Summary:** 22 behavioral items sampled (rotation from cert passes 1+2 verified lists);
+21 metric rows re-counted (all delta=0); 7 test citations verified; 7 dependency rows verified;
+1 novel cross-area consistency probe. One LOW-severity inaccuracy found and corrected: the
+`partners/dependency-disposition.md` anthropic SDK upper bound `<1.0.0` was absent. Semport
+behavioral contracts, module LOC counts, channel mechanics, error taxonomies, and test
+citations are accurate. The single gap is a dependency-constraint completeness omission of
+LOW impact on Rust port decisions. Streak resets to 0/3.

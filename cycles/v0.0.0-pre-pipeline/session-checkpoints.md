@@ -212,3 +212,15 @@ traces_to: STATE.md
 | **Convergence counter** | 0 of 3 |
 
 ---
+
+## Burst 19 Checkpoint (archived — superseded by burst 20)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 19 complete. 3-CLEAN certification pass 2 COMPLETE: CLEAN(strict)=YES — ZERO corrections. Streak 0/3→1/3. First CLEAN(strict) pass of the entire gate (after 8 sampled passes + 7-area exhaustive sweep + certification pass 1). 58 checks: 21 behavioral claims across all 7 areas ALL CONFIRMED; 21 numeric rows ALL delta=0 under guardrail 7 scope-label resolution; certification-pass-1 fixes re-verified exact; cross-area consistency (platform↔graph figures, core↔langchain §5 symbols) intact. Certification pass 3 DISPATCHED: fresh context; all 7 guardrails; sampling rotated away from both certification passes' verified lists; weighted toward ADR-driving assertions and error-path claims. Advances to 2/3 on zero corrections; any finding resets to 0/3. |
+| **Key context** | D1-D14.1 locked. D14.1: exhaustive-sweep-then-3-CLEAN (human-approved 2026-07-13); strict-zero bar unchanged. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R10 OPEN: NamedBarrierValue + EphemeralValue coverage gap — route to product-owner at Phase 1. R11 OPEN: MCP upstream test voids — mcp bare-ToolException re-raise path + mcp __aenter__ NotImplementedError contract (must be explicit ferrochain Red Gate tests). CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment. 7 guardrails active for certification passes (SCOPE-LABEL MATCHING = 7th). |
+| **Convergence counter** | 1 of 3 |
+
+---

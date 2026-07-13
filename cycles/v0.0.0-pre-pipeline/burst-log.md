@@ -735,3 +735,24 @@ Both must be explicit ferrochain Red Gate tests (join R8 splitters code-point/by
 - cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 18 checkpoint archived)
 
 **Next steps:** 3-CLEAN certification pass 3 in progress (streak 1/3). Requires 2 more consecutive CLEAN(strict) passes. On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.
+
+---
+
+## Burst 20 — 3-CLEAN certification pass 3 COMPLETE; pass 4 dispatched (2026-07-13)
+
+**Agent:** state-manager (state update) / validate-extraction (certification pass 3)
+
+**Result:** CLEAN(strict)=NO — 1 correction (1 LOW). Streak RESET 1/3→0/3.
+
+**Finding:**
+- `semport/partners/dependency-disposition.md` §2 anthropic row: constraint was `anthropic>=0.96` — the `<1.0.0` upper bound from the actual pyproject.toml (`anthropic>=0.96.0,<1.0.0`) was absent. The upper bound is material: it signals upstream breaking-change expectation and is relevant to provider-crate risk posture. Corrected in-place with `[validation-certification-3]` marker.
+
+**Stratum coverage:** Fresh error-path-weighted rotation away from both cert pass 1+2 verified lists. Sampled: retry policies (backon exponential config), exception taxonomies (GraphInterrupt, NodeInterrupt, InvalidUpdateError), platform 8-code HTTP error tree (400/401/402/403/404/409/422/500 + ≥500 dispatch), cross-library exception-tree independence. All confirmed correct.
+
+**VALIDATION-REPORT.md:** Updated with certification pass 3 per-area verdicts and CLEAN status block.
+
+**Files modified:** `semport/partners/dependency-disposition.md`, `semport/VALIDATION-REPORT.md`
+
+**Lesson codified:** 7b — DEPENDENCY-CONSTRAINT COMPLETENESS (see lessons.md).
+
+**Next:** Certification pass 4 dispatched. All 7 guardrails + 7b active. New stratum: config defaults, env-var names, serialization field names. Streak 0/3.
