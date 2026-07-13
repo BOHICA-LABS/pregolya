@@ -431,3 +431,177 @@ server_endpoints_catalogued: ~40 (native REST + A2A + background/cron feature ro
 protocols_mapped: 4 (MCP, A2A, ACP, AWP)
 timestamp: 2026-07-13
 ```
+
+---
+
+# Pass A4 — SAFETY / QUALITY cluster module inventory
+
+D16 Rust-blindness holds. Structural map of the eight cluster crates. Cross-refs P-47..P-66.
+
+## Crate sizes (in-workspace `.rs` LOC / file count)
+| Crate | LOC | Files | Role |
+|-------|-----|-------|------|
+| adk-code | 9,081 | 25 | Code-exec substrate: typed executor, own SandboxPolicy, rust/container/wasm/js backends |
+| adk-eval | 8,226 | 26 | Agent evaluation harness (datasets, scorers, LLM/structured judges, cost/trace) |
+| adk-sandbox | 7,521 | 27 | Isolated code exec: process/wasm backends + OS enforcers + workspace lifecycle |
+| adk-browser | 5,160 | 18 | WebDriver browser automation toolset (thirtyfour) |
+| adk-plugin | 3,653 | 9 | Plugin framework: closure `Plugin` + trait `EnhancedPlugin`, two managers |
+| adk-skill | 2,325 | 9 | AgentSkills parser/index/select/inject + ContextCoordinator |
+| adk-retry-reflect | 1,031 | 11 | Retry-&-reflect plugin (after_tool_call reflection injection) |
+| adk-guardrail | 1,015 | 7 | Input/output guardrails (content filter, PII, schema) |
+
+## Module maps
+- **adk-guardrail:** `traits` (Guardrail/GuardrailResult/Severity), `executor` (GuardrailSet/
+  GuardrailExecutor), `content` (ContentFilter), `pii` (PiiRedactor), `schema` (SchemaValidator,
+  feature `schema`), `error` (→ AdkError with `ErrorComponent::Guardrail`).
+- **adk-sandbox:** `backend` (SandboxBackend trait, BackendCapabilities/EnforcedLimits), `types`
+  (Language{Rust,Python,JS,TS,Wasm,Command}, ExecRequest/ExecResult), `process` (ProcessBackend),
+  `wasm` (WasmBackend, feature `wasm`), `sandbox/{mod,linux,macos,windows}` (SandboxPolicy +
+  enforcers, features `sandbox-*`), `tool` (SandboxTool → `adk_core::Tool`, scope `code:execute`),
+  `workspace/{client,docker,local_unix,manifest,path_safety,session,config,types}` (features
+  `workspace`/`workspace-docker`). Features: `process`(default), `wasm`, `workspace[-docker]`,
+  `sandbox-{macos,linux,windows,native}`.
+- **adk-eval:** `schema` (TestFile/EvalSet/EvalCase/Turn/ToolUse), `criteria` (EvaluationCriteria,
+  SimilarityAlgorithm), `scoring` (ToolTrajectoryScorer, ResponseScorer, unicode_tokenize),
+  `evaluator` (Evaluator, EvaluationConfig, ~1,005 LOC — largest), `llm_judge`, `structured_judge`,
+  `report`, `cost_tracker`/`pricing`, `trace_analyzer`, `annotation`, `baseline`,
+  `conversation_scorer`, `test_generator`, `optimizer`; feature-gated `personas`, `embedding_scorer`,
+  `junit_reporter`(ci-helpers), `ab_comparator`(statistics).
+- **adk-retry-reflect:** `config`(RetryReflectConfig, BackoffStrategy, ToolFilter), `detection`
+  (is_error_result), `plugin`(RetryReflectPlugin: EnhancedPlugin), `tracker`(Retry/GlobalRetryTracker),
+  `backoff`, `template`, `filter`, `builder`, `error`.
+- **adk-skill:** `model`(SkillFrontmatter/ParsedSkill/SkillDocument/SkillIndex/SelectionPolicy/
+  SkillMatch), `parser`, `discovery`, `index`, `select`, `injector`(SkillInjector→closure Plugin),
+  `coordinator`(ContextCoordinator/SkillContext/ValidationMode).
+- **adk-plugin:** `plugin`(Plugin/PluginBuilder/PluginConfig), `manager`(PluginManager),
+  `enhanced_plugin`(EnhancedPlugin), `enhanced_manager`(EnhancedPluginManager),
+  `hook_result`(Before/After{Tool,Model}CallResult), `callbacks`, `context`(PluginContext),
+  `adapted_plugin`(AdaptedPlugin bridge). TWO parallel models (P-58).
+- **adk-code:** `types`(ExecutionRequest/Result, SandboxPolicy(own), FilesystemPolicy,
+  BackendCapabilities), `executor`(CodeExecutor trait), `rust_sandbox`(phase-1 host-local, P-62),
+  `rust_executor`, `container`(bollard/Docker, feature `docker`, 1,202 LOC), `wasm_guest`,
+  `embedded_js`(boa, feature `embedded-js`), `harness`, `workspace`(1,416 LOC — largest),
+  `code_tool`, `diagnostics`, `a2a_compat`, `compat`. Features: `embedded-js`, `docker`.
+- **adk-browser:** `config`, `pool`, `session`, `escape`(escape_js_string, P-54), `toolset`,
+  `tools/{navigate,click,type_text,extract,evaluate,screenshot,cookies,frames,windows,wait,actions}`.
+
+## Cross-cluster structural notes
+1. **Duplication (P-58):** two SandboxPolicy types (adk-sandbox vs adk-code); two plugin models
+   (closure vs trait). Drift surface + "which do I use?" ambiguity.
+2. **Isolation is opt-in / feature-gated:** enforcing sandbox backends require `wasm`/`sandbox-*`/
+   `docker` features + (OS enforcers) external binaries; default = non-isolating process backend.
+3. **Guardrails are a tiny crate** (1,015 LOC, 6-word blocklist) relative to the code-exec surface
+   (adk-code 9,081 + adk-sandbox 7,521) — the untrusted-INPUT defense is far thinner than the
+   untrusted-EXECUTION surface it nominally protects.
+4. **Dependency shape:** adk-guardrail/skill/retry-reflect depend on adk-core (+ adk-plugin);
+   adk-eval depends on adk-{core,runner,session,model}; adk-code depends on adk-sandbox; adk-browser
+   depends only on adk-core + `thirtyfour`.
+
+## State Checkpoint
+```yaml
+pass: A4
+scope: module-inventory (safety/quality cluster)
+status: complete
+crates_deep: [adk-guardrail, adk-sandbox, adk-eval, adk-retry-reflect, adk-skill, adk-plugin]
+crates_inventory: [adk-code, adk-browser]
+cluster_loc: ~37974 (8 crates)
+duplication_flags: [SandboxPolicy x2, plugin-model x2]
+timestamp: 2026-07-13
+```
+
+---
+
+# Pass A5 — PROVIDER / CAPABILITY cluster module structure
+
+Deep structural read of the provider/capability cluster. D16 Rust-blindness — observe only.
+
+## The provider architecture is MIXED (resolves the P-16 "how many implementations?" question)
+
+adk-rust integrates ~13 model backends through **four distinct integration strategies**, not one:
+
+| Strategy | Providers | Where transport lives | ADK adapter location |
+|----------|-----------|-----------------------|----------------------|
+| First-party SDK + adapter | Anthropic, Gemini | `adk-anthropic` (17k LOC), `adk-gemini` (14k) — standalone, zero-adk-dep | `adk-model::{anthropic,gemini}` (feature-gated `dep:adk-*`) |
+| External SDK + adapter | OpenAI (+xai/fireworks/together/mistral/perplexity/cerebras/sambanova as openai-compatible), Bedrock, Ollama | `async-openai 0.33`, `aws-sdk-bedrockruntime`, `ollama-rs 0.3` | `adk-model::{openai,bedrock,ollama}` |
+| Direct reqwest in adapter | Groq, DeepSeek, Azure AI, OpenRouter, openai_compatible | inline `reqwest` in the module | `adk-model::{groq,deepseek,azure_ai,openrouter}`, `openai_compatible.rs` |
+| First-party native (in-process) | mistral.rs local inference | `mistralrs 0.8` (candle, in-process) | `adk-mistralrs` (own crate, own `Llm` impl) |
+
+**This is the definitive P-16 answer:** there are NOT "two Anthropic implementations." There is ONE
+Anthropic wire implementation (`adk-anthropic`) and ONE ADK adapter over it (`adk-model::anthropic`).
+The 27,913-LOC `adk-model` is mostly adapters + shared infra (retry, tool_call_parser, usage), not
+duplicated transports. See patterns-observed A5 headline for the full evidence.
+
+## adk-model (27,913 LOC, 100 files) — module roles
+| Module | Role | Notes for ferrochain |
+|--------|------|----------------------|
+| `retry.rs` (14 KB) | `RetryConfig`, `execute_with_retry`, `is_retryable_model_error`, `ServerRetryHint`, `is_retryable_status_code` | The P-03 combinator; wired into ALL providers (P-71). Layered delay precedence + HTTP 529. |
+| `tool_call_parser.rs` (29 KB) | Text-tag tool-call parsing for tool-callingless backends (Qwen/Llama/Mistral/DeepSeek/Gemma) | P-68 — Ollama-relevant; 22 tests. |
+| `openai_compatible.rs` (36 KB) | Generic OpenAI-compatible chat/completions client + retry | The base many providers alias to. `reqwest::Client::new()` (no timeout, P-77). |
+| `anthropic/` (9 files) | `Llm` adapter wrapping `adk_anthropic::Anthropic` (client/config/convert/error/models/rate_limit/schema_adapter/token_count) | Delegates transport to SDK; `fn inner()`. 64 KB `client.rs`. |
+| `gemini/` (5 files) | `Llm` adapter wrapping `adk_gemini::Gemini` + Interactions API convert | `client.rs` 94 KB, `interactions_convert.rs` 85 KB — huge adapters. |
+| `openai/` (14 files) | async-openai adapter + Responses API + conversations + ws_transport + webhooks + pricing + compaction | The broadest provider surface; Responses API + realtime WS + webhook receiver. |
+| `bedrock/`, `azure_ai/`, `deepseek/`, `groq/`, `openrouter/` | Per-provider adapters | Direct reqwest (except bedrock = aws-sdk). All wire retry. |
+| `ollama/` | ollama-rs adapter | Delegates to `ollama-rs` (client+timeout owned by that crate); does NOT wire the shared retry. |
+| `provider.rs`, `usage_tracking.rs`, `tool_result.rs`, `attachment.rs`, `mock.rs` | Provider enum, usage, tool-result, attachment, test mock | `mock.rs` is the test seam. |
+
+## Standalone SDK crates
+- **adk-anthropic** (17,263 LOC, 133 files) — full Anthropic SDK, ZERO adk deps. `client.rs` (65 KB,
+  timeout+pooling+keepalive), `sse.rs` (DoS-hardened decoder, P-69), `accumulating_stream.rs` (P-70),
+  `types/` (~60 wire-type files: message/content-block/citations/batch/files/model), `cache_control.rs`,
+  `tool_search.rs`, `pricing.rs`, `observability.rs`, `backoff.rs`, feature-gated `managed_agents/`
+  (client/dreams/events/memory/stream/vaults/webhooks) + `files/`. This is a product-grade vendor SDK.
+- **adk-gemini** (14,141 LOC, 96 files) — Gemini SDK: generateContent + Interactions API +
+  `schema_adapter` + backends (studio/vertex, `vertex` feature). Zero-adk-dep like anthropic.
+- **adk-mistralrs** (7,814 LOC, 32 files) — local inference over `mistralrs 0.8` (candle, in-process).
+  Modules: client, config, convert, adapter (LoRA/X-LoRA), embedding, vision, speech, diffusion,
+  multimodel, realtime, mcp, error (thiserror + the `Other(anyhow)` leak P-78), tracing_utils.
+  Accelerator features cuda/metal/mkl/accelerate/flash-attn/cudnn/nccl/ring. `publish = true`.
+
+## Capability crates
+- **adk-realtime** (7,737 LOC, 56 files) — bidi voice/video `RealtimeAgent`. `default = []`; providers
+  openai(-realtime)/gemini(-live)/vertex-live over `tokio-tungstenite` (rustls); OPTIONAL `livekit`
+  feature pulls the native-tls webrtc stack (P-79). heygen-avatar (video) also gated.
+- **adk-rag** (1,921 LOC, 17 files) — RAG pipeline: `chunking`, `document`, `embedding` (gemini/openai
+  feat), `reranker`, `vectorstore` trait + `{inmemory, lancedb, pgvector, qdrant, surrealdb}` (all
+  feature-gated), `pipeline`, `tool` (RAG-as-tool). Clean trait+feature-backend model (P-74).
+- **adk-audio** (8,029 LOC, 78 files) — large audio subsystem: codec, frame, mixer, fx (rubato/dasp),
+  vad (webrtc-vad), providers (TTS/STT/music), onnx/mlx local inference (kokoro/whisper — pull hf-hub,
+  P-79), desktop I/O (cpal), bridge, registry, pipeline, tools. Default `["tts","stt"]`.
+- **adk-payments** (14,485 LOC, 74 files) — agentic commerce. `domain/` (actor/cart/evidence/
+  intervention/money/order/transaction), `guardrail/` (amount/currency/merchant/intervention policies +
+  redaction + protocol_version + the allow/escalate/deny policy engine, P-73), `journal/` (evidence_store/
+  memory_index/session_state/store — append-only audit), `kernel/` (commands/correlator/service),
+  `auth/` (audit/binding/scopes), `protocol/{acp,ap2}` (feature-gated), `server/`, `tools/`. Depends on
+  adk-core/artifact/auth/guardrail/memory/session. No LangChain analog (scope anomaly).
+- **adk-action** (1,880 LOC, 6 files) — small: `types`, `interpolation` (template), `error`. Action node
+  type defs + template interpolation; distinct from adk-graph's `action/` node subtree (which likely
+  consumes these types).
+- **adk-bench** (4,828 LOC, 13 files) — benchmarking harness: `adapters/` (τ²-bench `tau2` + Berkeley
+  Function Calling `bfcl`, feature-gated), `instrumented_llm` (wraps an `Llm` to measure),
+  `metrics`, `runner`, `workload`, `external`, `formatter`, `memory`, `config`. Proper agent-eval harness.
+- **adk-rust-macros** (754/963 LOC, 1 file) — proc-macro crate: `#[tool]`, `#[entrypoint]`, `#[task]`
+  (P-72). `proc-macro = true`; deps proc-macro2/quote/syn; dev-dep schemars.
+
+## adk-managed / adk-enterprise remainder (from A3 inventory; provider-adjacent note)
+adk-managed's `usage.rs` (UsageReport/SessionUsageTracker) is the token-accounting substrate the
+payments guardrail (P-73) architecture could sit atop for a token/cost budget — but no such gate
+exists (P-46). adk-enterprise is a remote client SDK (vault/session/environment types) — not provider code.
+
+## Cross-cluster structural note (Pass A5)
+The cluster is dominated by two shapes: (1) vendor integration as standalone-SDK + adapter (anthropic/
+gemini) or external-SDK/direct-reqwest adapter (everyone else), unified by a shared retry combinator and
+text-tag tool parser in adk-model; and (2) heavyweight optional capabilities (realtime voice, local
+inference, audio ML, payments) whose feature flags are the ingress for native-tls (P-79) and the one
+anyhow leak (P-78). The provider substrate (retry, streaming decode, tool-call parse) is production-grade;
+the credential typing (bare Debug-derived String, P-76) and timeout discipline (P-77) are not uniform.
+
+## State Checkpoint
+```yaml
+pass: A5
+scope: module-inventory (provider/capability cluster)
+status: complete
+crates_deep: [adk-model, adk-anthropic, adk-gemini, adk-mistralrs, adk-rust-macros, adk-payments]
+crates_inventory: [adk-realtime, adk-rag, adk-audio, adk-action, adk-bench]
+p16_resolution: SDK+adapter layering (one wire impl per vendor + one adapter); MIXED 4-strategy provider architecture
+timestamp: 2026-07-13
+```

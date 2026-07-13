@@ -3,9 +3,9 @@ document_type: analysis-state-checkpoint
 corpus: adk-rust
 version: v1.0.0
 sha: a6c79b6f
-pass: A3
+pass: A5
 status: complete
-timestamp: 2026-07-13T08:00:00Z
+timestamp: 2026-07-13T12:00:00Z
 ---
 
 # adk-rust Comparative Analysis State
@@ -48,10 +48,13 @@ See patterns-observed.md for full catalogue.
 
 | Item | Target Pass | Status |
 |------|-------------|--------|
-| Verify `anyhow`-in-public-signatures extent | A2 or A3 | PARTIAL — A3 confirmed clean in library code, confined to CLI binaries; FINAL verdict deferred to A5 |
-| Clarify `adk-model` vs standalone provider crate relationship and drift surface | A2 | OPEN — P-16 (duplication observation) recorded; resolution deferred to A5 |
+| Verify `anyhow`-in-public-signatures extent | A2 or A3 | RESOLVED (A5) — FINAL verdict: NOT a systemic leak. One variant only (`adk-mistralrs::MistralRsError::Other(#[from] anyhow::Error)`, P-78) + one dead dep (adk-model declares, never uses); core + all other library crates clean; binaries permitted |
+| Clarify `adk-model` vs standalone provider crate relationship and drift surface | A2 | RESOLVED (A5) — P-16: NOT duplication. Standalone SDK (`adk-anthropic`/`adk-gemini`, zero-adk-dep) + thin `Llm`-trait adapter in `adk-model` that WRAPS it (`fn inner()`, compile-time type coupling). SDK canonical for wire, adapter for trait. Drift risk LOW (was A1-assumed HIGH). See patterns P-67 |
 | Locate all `reqwest` timeout construction sites | A3 | RESOLVED — P-42: 7 sites across server/auth/awp/acp/managed/enterprise, ALL without `.timeout()`; confirmed counter-example |
-| Classify ignored-vs-runnable integration tests | A2/A3 sweep | OPEN — carry to A4/A5 |
+| Classify ignored-vs-runnable integration tests | A2/A3 sweep | PARTIAL — A4 cluster: ~961 test markers; adk-sandbox (6 proptest) + adk-code (8 proptest/10 integ) high-rigor; browser tools likely driver-gated. Full ignored-test census carry to A5 |
+| `anyhow`/`reqwest` in safety-cluster | A4 | RESOLVED — anyhow = 1 doc-example (browser), no leak; reqwest absent in cluster (browser uses thirtyfour) |
+| Guardrail untrusted-content ingress (Domain A) | A4 | RESOLVED (as GAP) — P-59: guardrails see only initial input + final output, never tool/RAG/memory content |
+| Sandbox default posture (Domain C) | A4 | RESOLVED (as GAP) — default ProcessBackend no isolation (P-61); macOS reads unrestricted (P-60); adk-code Rust exec unenforced (P-62) |
 | ADR question: unify graph-checkpoint + session persistence on one store | NEW (raised A2) | OPEN — ferrochain design decision at Phase 1 |
 
 ## Deep Pass Status
@@ -61,8 +64,8 @@ See patterns-observed.md for full catalogue.
 | A1 | Broad sweep + 6 deep core crates | all 39 crates; deep: adk-core, adk-agent, adk-runner, adk-model, adk-graph (surface), adk-session (surface) | COMPLETE — 19P (10S/4N/5W) |
 | A2 | State / persistence / orchestration | adk-graph, adk-session, adk-memory, adk-artifact | COMPLETE — 15P P-20..P-34 (5S/3N/7W) |
 | A3 | Server / platform / protocol | adk-server, adk-runner, adk-awp, adk-acp, adk-auth, adk-telemetry, adk-cli | COMPLETE — 12P P-35..P-46 (4S/2N/6W) |
-| A4 | Safety / quality cluster | adk-guardrail, adk-sandbox, adk-eval, adk-retry-reflect, adk-skill, adk-plugin, adk-code, adk-browser | DISPATCHED — in progress |
-| A5 | Provider / capability cluster | adk-realtime, adk-providers, adk-protocols, adk-payments + P-16 duplication resolution + final anyhow verdict | DISPATCHED — in progress |
+| A4 | Safety / quality cluster | adk-guardrail, adk-sandbox, adk-eval, adk-retry-reflect, adk-skill, adk-plugin, adk-code, adk-browser | COMPLETE — 20P P-47..P-66 (8S/4N/8W) |
+| A5 | Provider / capability cluster | adk-model providers, adk-anthropic, adk-gemini, adk-mistralrs, adk-realtime, adk-rag, adk-audio, adk-payments, adk-action, adk-bench, adk-rust-macros + P-16 resolution + final anyhow verdict | COMPLETE — 13P P-67..P-79 (7S/2N/4W); P-16 RESOLVED (SDK+adapter, not duplication); anyhow FINAL (1 variant); 3 native-tls chains |
 
 ## Pattern Count Summary
 
@@ -71,3 +74,5 @@ See patterns-observed.md for full catalogue.
 | A1 | 19 (P-01..P-19) | 19 | 10 | 4 | 5 |
 | A2 | 15 (P-20..P-34) | 34 | 5 | 3 | 7 |
 | A3 | 12 (P-35..P-46) | 46 | 4 | 2 | 6 |
+| A4 | 20 (P-47..P-66) | 66 | 8 | 4 | 8 |
+| A5 | 13 (P-67..P-79) | 79 | 7 | 2 | 4 |

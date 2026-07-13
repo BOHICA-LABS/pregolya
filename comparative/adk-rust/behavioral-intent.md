@@ -538,3 +538,210 @@ files_read_deep: [adk-server/{lib,config,rest/mod,auth_bridge}, adk-server/a2a/v
 a1_scope: behavioral-intent (6 core crates); a2_scope: state/persistence/orchestration cluster
 timestamp: 2026-07-13
 ```
+
+---
+
+# Pass A4 — SAFETY / QUALITY cluster behavioral intent
+(adk-guardrail, adk-sandbox, adk-eval, adk-retry-reflect, adk-skill, adk-plugin, adk-code, adk-browser)
+
+D16 Rust-blindness holds. This section records the *intended behavior* of each subsystem and maps
+it to ferrochain's holdout domains. Cross-refs to patterns P-47..P-66.
+
+## 1. Guardrail subsystem — what is actually enforced, where it hooks (Q1)
+**Intent:** validate/transform agent input and output. **Reality:** four built-in checks —
+(a) `ContentFilter` keyword blocklist (word-boundary regex; `harmful_content` = 6 words) + required
+topics + length; (b) `PiiRedactor` regex redaction of email/phone/ssn/credit-card/ip (Transform);
+(c) `SchemaValidator` JSON-schema on output (extracts JSON from markdown fences); (d) severity ladder
+Low/Medium/High/Critical.
+
+**Hook points (in `adk-agent::llm_agent`):**
+- INPUT: `apply_input_guardrails` runs once on `ctx.user_content()` BEFORE the first model call
+  (`enforce_guardrails(..,"input")`). On `!passed` → `AdkError::agent("input guardrails blocked…")`.
+- OUTPUT: `apply_output_guardrails` runs on each generated `content` event (two call sites — main
+  and a streaming branch).
+- Execution: `GuardrailExecutor::run` runs parallel guardrails via `join_all`, then sequential
+  (transform-capable) ones in order; early hard-error ONLY on `Critical`+`fail_fast`; Medium/High
+  set `passed=false` (blocking) but Low passes. Feature-gated behind `guardrails`; disabled = no-op.
+
+**Bypass resistance / gaps (Domain A + C):**
+- NO prompt-injection detection, NO policy/rule engine, NO semantic classification.
+- Untrusted content entering context from TOOLS / RAG / MEMORY is NEVER guardrailed — only the
+  initial user message and the final model output. This is the exact indirect-prompt-injection
+  surface Domain A cares about, and it is unguarded (P-59).
+- Keyword blocklist is trivially bypassed (obfuscation/translation/encoding).
+- Enforcement depends on the `guardrails` feature being on AND on the agent loop checking `passed`
+  (which it does, but only at the two hook points).
+- **Domain A untrusted-content-isolation:** UNMET. **Domain C inverted-security-posture:** filters
+  present but not a posture — no provenance tagging, no ingress validation, no default-deny.
+
+## 2. Sandbox subsystem — isolation mechanism, escapes, default posture, limits (Q2)
+Three isolation tiers, ascending strength:
+- **ProcessBackend** (default feature `process`): `tokio::process` child; enforces `env_clear()` +
+  wall-clock timeout ONLY. No memory/network/fs isolation. `Language::Command` = raw `sh -c "<code>"`.
+  Output truncated to 1 MB (UTF-8-boundary-safe). DEFAULT and does not isolate (P-61).
+- **OS enforcers** (opt-in features + external binaries): Linux bubblewrap = deny-by-default
+  namespaces (pid/net unshare, bind-mount only allowed paths) — STRONG (P-48). macOS Seatbelt =
+  allow-by-default profile that denies write/network/fork but NOT reads — reads unrestricted (P-60).
+  Windows AppContainer (via `configure_command`, not read at depth). `get_enforcer()` probes at
+  startup; per-domain network allowlist only enforced on macOS (Linux/Windows ignore + warn).
+- **WasmBackend** (opt-in `wasm`): wasmtime, no WASI fs preopen, no net, memory via StoreLimits,
+  epoch-interruption timeout — full isolation, all `EnforcedLimits` true (P-47).
+
+**Escapes / caveats:** default process backend → everything (fs, net, spawn); macOS enforcer → all
+file reads (credential exfiltration); workspace `validate_relative_path` is string-only, so
+intra-workspace symlinks can escape (P-65). **Limits:** timeout everywhere; memory only on WASM; env
+isolation on process + enforcers. **Default-on vs opt-in:** isolation is opt-in; secure backends
+need feature flags (and OS enforcers need `bwrap`/`sandbox-exec` present). The truthful-capability
+principle (P-49) lets a caller detect non-enforcement but does not force it. **Domain C sandboxing:**
+primitives (WASM, bubblewrap) strong; DEFAULT posture not.
+
+**adk-code layer:** higher-level exec substrate on top of adk-sandbox with its OWN `SandboxPolicy`
+(strict-by-default) + backends: phase-1 `RustSandboxExecutor` (host-local `rustc`, policy UNENFORCED —
+full host access, P-62), container (Docker/bollard, opt-in, isolating), WASM guest, embedded JS (boa).
+Duplicate policy type vs adk-sandbox (P-58).
+
+## 3. Eval subsystem — harness design (Q3)
+**Datasets:** `.test.json` (`TestFile`→`EvalCase`→`Turn{user_content, final_response,
+intermediate_data.tool_uses}`) and `.evalset.json` (`EvalSet` referencing files/inline cases).
+**Criteria (all dispatched in `score_turn`/`evaluate_case`):** tool-trajectory (ordered/unordered ×
+strict/partial args), text similarity (Exact/Contains/Levenshtein/Jaccard/ROUGE-1/2/L, CJK-aware
+tokenizer), LLM-judge semantic match, rubric-weighted quality, safety, hallucination, typed
+`StructuredVerdict`, plus optional cost-tracker, trace-analyzer, embedding, conversation scorers.
+**LLM-judge:** free-text prompt → parsed (`SAFE: YES` / `SCORE: 0.8`) at temperature 0.0;
+`StructuredJudge` is the typed alternative. **CI:** JUnit XML (feature `ci-helpers`), A/B comparator
+with Wilcoxon (feature `statistics`), baseline/regression store.
+**Weaknesses (P-64):** order-dependent multi-turn score merge `(a+b)/2`; judge infra-failure → score
+0.0 (conflated with quality-fail); optional agent double-run when cost/trace configured.
+**Map:** DIRECT to ferrochain holdout-evaluation + Domain-B quality gates. Reusable core = declarative
+datasets + deterministic non-LLM scorers; LLM-judge aggregation/fallback needs hardening.
+
+## 4. retry-reflect — self-reflection loop semantics, termination, hook (Q4)
+Hooks at `EnhancedPlugin::after_tool_call`. On a tool result detected as an error, it does NOT re-run
+the tool: it increments a per-`(tool, args-hash)` counter, sleeps a saturating exponential/fixed
+backoff (ceiling), and REPLACES the result with `{"reflection": "<templated error+args+guidance>"}`
+so the agent self-corrects next turn (P-50). **Termination:** per-tool limit (default 3), invocation
+`global_limit` (default None=unlimited), cross-invocation circuit-breaker (default off); on exhaustion
+the real error is passed through (no swallow). **Termination hole (P-63):** the per-tool counter is
+keyed by args-hash, so an agent that changes args each attempt (as the reflection asks) resets the
+counter — the per-tool bound is effectively unbounded unless the opt-in global bound/circuit-breaker
+is on. **Map:** ferrochain must key the bound on tool identity, not argument content, and default to a
+finite global bound.
+
+## 5. Skills / plugins vs SKILL.md / MCP (Q5)
+**Skill model (adk-skill):** SKILL.md-like — YAML-frontmatter markdown in `.skills/` and
+`.claude/skills/` (+ optional global + convention files AGENTS.md/CLAUDE.md/SOUL.md). Frontmatter:
+`name, description, version, license, compatibility, tags, allowed-tools, references, trigger, triggers`.
+**Identity:** content-addressed `name + SHA256`. **Discovery/precedence:** project-local over global,
+sorted+deduped. **Selection:** weighted lexical overlap (name 4.0 / desc 2.5 / tag 2.0 / body 1.0,
+√body-token normalized), tag include/exclude, top-k (P-56). **Injection:** `[skill:name]…[/skill]`
+prompt block prepended to the user message (closure `Plugin::on_user_message`), truncated to
+`max_injected_chars` (default 2000). **Binding:** `ContextCoordinator` validates the skill's
+`allowed-tools` against a host `ToolRegistry` and delivers instruction+resolved-tools atomically —
+prevents the "phantom tool" hallucination (P-51). **Security scanning:** NONE — skill bodies are
+trusted markdown; `allowed-tools` is capability-wiring, not a body scan. **vs MCP:** skills are a
+static prompt-injection mechanism, orthogonal to MCP dynamic tool servers; the coordinator bridges
+them. **Plugin model:** two parallel systems — closure `Plugin`/`PluginManager` (adk-go parity; skill
+injector) and trait `EnhancedPlugin`/`EnhancedPluginManager` (retry-reflect); priority-ordered
+before/after hooks with Continue/ShortCircuit + documented priority bands (P-52); duplication is a
+drift surface (P-58). **vs OpenClaw SKILL.md:** the `.skills/` + `.claude/skills/` + convention-file
+scan closely parallels OpenClaw; ferrochain would need to add the body-content security scanning
+adk-rust omits.
+
+## 6. In-cluster open items resolved (Q6)
+- **anyhow:** grep across all eight cluster crates' `src/` = ONE hit, a doc-comment example in
+  `adk-browser/src/lib.rs`. NO public-signature leak in the cluster. RESOLVED (clean).
+- **reqwest:** ZERO in the cluster — adk-browser drives WebDriver via `thirtyfour`; sandbox/eval/
+  skill/plugin make no outbound HTTP. The A3 reqwest-timeout gap does not extend here.
+- **unwrap/expect (non-test):** notable production panic path = `WasmBackend::new()` `.expect()` on
+  engine init (P-66); most raw counts in adk-sandbox/adk-code are inside `#[cfg(test)]`.
+
+## State Checkpoint
+```yaml
+pass: A4
+scope: behavioral-intent (safety/quality cluster)
+status: complete
+subsystems: [guardrail, sandbox(process/os-enforcer/wasm), adk-code-exec, eval, retry-reflect,
+             skill, plugin, browser]
+holdout_map:
+  domainA: untrusted-content-isolation UNMET (P-59)
+  domainC: sandbox primitives strong but default posture weak (P-60,P-61,P-62,P-65)
+  domainB: eval harness broad but scoring-rigor gaps (P-64)
+timestamp: 2026-07-13
+```
+
+---
+
+# Pass A5 — PROVIDER / CAPABILITY cluster behavioral intent
+
+D16 Rust-blindness — observe, no adoption verdict. Behavioral-intent notes for the provider substrate
+and the deep-scope capability crates, plus resolution of A1 open item P-16.
+
+## Provider substrate — what the model layer PROMISES
+- **Uniform LLM contract:** every backend implements adk-core's `Llm` trait; the adapter's job is
+  `LlmRequest → provider wire → provider response → LlmResponse`, mapping the provider error taxonomy
+  into `AdkError` (component=Model). The intent: provider-neutral agent code (`is_final_response`,
+  tool loop) works regardless of backend.
+- **Resilience by default (mostly):** all `adk-model` providers route generation through the shared
+  `execute_with_retry` combinator (P-71) with `is_retryable_model_error` classification — retry policy
+  is centralized, not per-provider. Server-provided `retry-after` is honored over local backoff (P-03/
+  P-04 carried through). Behavioral gap: ollama (external ollama-rs) does not participate in the shared
+  retry; and outbound timeouts are non-uniform (P-77).
+- **Tool-call robustness across serving backends:** `tool_call_parser` (P-68) makes the tool loop work
+  even when a backend emits tool calls as TEXT (Qwen/Llama/Mistral/DeepSeek/Gemma). The promise: an
+  agent's tool contract is backend-encoding-agnostic — directly the property ferrochain-ollama needs.
+- **Streaming that also yields a final message:** the anthropic SDK's `AccumulatingStream` (P-70) +
+  DoS-hardened SSE decoder (P-69) deliver live deltas AND a fully-assembled `Message` (for the event
+  log / turn completion) without double-buffering, with idle-chunk timeout + TTFB metering.
+
+## P-16 resolution — behavioral relationship of the two Anthropic surfaces (A1 open item CLOSED)
+The behavioral relationship is **layered, not parallel**: `adk-anthropic` OWNS the Anthropic wire
+behavior (auth, headers, SSE decoding, batch/files/managed-agents, cache-control, tool-search, token
+counting, rate-limit tracking); `adk-model::anthropic` OWNS the ADK-trait behavior (request/response
+conversion, `Llm` impl, schema adaptation, ADK error mapping) and DELEGATES all transport to
+`adk_anthropic::Anthropic` via `fn inner()`. There is ONE Anthropic HTTP behavior in the workspace.
+The adapter cannot behaviorally diverge from the SDK because it is built from the SDK's types
+(compile-time coupling); the CHANGELOG shows new-model support landing in both in the same release.
+Canonical: SDK for wire behavior, adapter for trait behavior. Drift risk LOW (was A1-assumed HIGH).
+Full evidence: patterns-observed A5 headline. Same shape for gemini (adapter over `adk_gemini::Gemini`).
+
+## Local-LLM behavioral story (Q4)
+- **Ollama** (`ollama-rs` adapter): behaviorally an HTTP client to a local daemon; keyless; the daemon
+  owns inference. Text-tag tool-call parsing (P-68) covers Ollama models without native tool-calling.
+  Keyless-CI-friendly (mock the HTTP boundary). This is the ferrochain-ollama behavioral target.
+- **mistral.rs** (`adk-mistralrs`): behaviorally IN-PROCESS inference (text+vision+speech+diffusion+
+  embedding) over candle; keyless but weight-download-dependent (hf-hub → native-tls, P-79), heavy
+  build. `MistralRsError` gives actionable variants (ModelLoad/ModelNotFound with `suggestion`) —
+  good UX — but leaks an `Other(anyhow)` escape (P-78). Behaviorally an ALTERNATIVE to a daemon, not
+  a lightweight keyless-CI path.
+
+## Payments commerce behavioral model (deep-scope inventory)
+`adk-payments` implements agentic commerce as a **policy-gated, journaled transaction pipeline**:
+a `TransactionRecord` (cart + actors + protocol descriptor) flows through composable
+`PaymentPolicyGuardrail`s each returning `allow / escalate(human-review) / deny(hard-stop)` with
+`Severity`-tagged findings; `AmountThresholdGuardrail` enforces a soft `review_threshold_minor` and a
+hard `hard_limit_minor` on integer-minor-unit `Money`. Every step is written to an append-only
+`journal/` (evidence_store) for audit; `auth/` binds a mandate + scopes. Protocol-neutral over ACP +
+AP2 baselines (feature-gated). Behaviorally this is the closest thing in adk-rust to a
+budget-governance engine — but for COMMERCE dollars, not LLM token/cost. It CONFIRMS the Domain-B
+budget-governance gap (P-46) is real (no token/cost ceiling exists) while providing the exact policy
+SHAPE (allow/escalate/deny + severity + journal) a ferrochain token-budget primitive would want.
+
+## New open items (A5) / carried
+- The SDK+adapter split (P-16) is behaviorally sound but **undocumented at the workspace level** —
+  a consumer isn't told when to use the raw SDK vs the adapter. Doc gap, not behavior gap.
+- The realtime DEFAULT transports (OpenAI-Realtime/Gemini-Live over rustls WS) were read at
+  dependency depth; deep behavioral read of the bidi audio state machine (VAD, barge-in) deferred —
+  out of the core provider scope for this pass.
+
+## State Checkpoint
+```yaml
+pass: A5
+scope: behavioral-intent (provider/capability cluster)
+status: complete
+subsystems: [model-adapters, retry, tool-call-parser, streaming(sse/accumulate), anthropic-sdk,
+             gemini-sdk, mistralrs-local, payments-commerce, realtime(dep-depth)]
+a1_open_items_resolved:
+  - P-16 — SDK+adapter layering (one wire behavior per vendor; adapter delegates); drift LOW
+mappings: [ferrochain-ollama (P-68 tool-parse + keyless-CI), Domain-B budget (P-73 shape vs P-46 gap)]
+timestamp: 2026-07-13
+```

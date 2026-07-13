@@ -154,3 +154,139 @@ timestamp: 2026-07-13
 notes: adk-graph property-test-dominant (CONFIRMED strong); determinism + interrupt-replay
        are unspecified-because-unimplemented gaps
 ```
+
+---
+
+# Pass A4 — SAFETY / QUALITY cluster test inventory
+
+D16 Rust-blindness: test rigor judged on production-grade merit only. Cross-refs P-47..P-66.
+
+## Test volume by crate (test markers = `#[test]`/`#[tokio::test]`/`fn test_`; src+tests)
+| Crate | Integ files | Unit-test files (src) | Test markers | proptest files |
+|-------|-------------|----------------------|--------------|----------------|
+| adk-eval | 2 | 17 | 243 | 3 |
+| adk-sandbox | 7 | 11 | 242 | 6 |
+| adk-code | 10 | 9 | 193 | 8 |
+| adk-plugin | 0 | 4 | 86 | 0 |
+| adk-browser | 0 | 5 | 64 | 0 |
+| adk-guardrail | 0 | 4 | 55 | 0 |
+| adk-skill | 0 | 6 | 46 | 0 |
+| adk-retry-reflect | 1 | 0 | 32 | 1 |
+
+## What the tests actually assert (test-as-spec value)
+- **adk-sandbox (STRONG coverage of the primitives):** Linux `generate_args` truth tables (deny-all
+  → unshare-net + new-session; ro-bind/bind placement); macOS profile generation (deny network/
+  write/fork, domain allowlist, balanced-parens); WASM timeout (infinite loop → `Timeout`), memory
+  limit (`memory.grow` → `MemoryExceeded`), non-zero exit, stdin/stdout, invalid module; path_safety
+  traversal cases (absolute/`..`-escape/drive-letter rejected, in-bounds `..` allowed). 6 proptest
+  files. This is the highest-rigor sub-suite in the cluster.
+- **adk-code:** 8 proptest files + 10 integ files — property + integration heavy for the exec
+  substrate (rust harness contract, workspace ops, diagnostics).
+- **adk-eval:** 243 markers, 3 proptest — scorers well unit-tested (tool-trajectory exact/partial/
+  unordered, Levenshtein/Jaccard/ROUGE-L, ToolUse strict-vs-partial matching). BUT: the two
+  scoring-rigor bugs (P-64) are NOT covered — no test asserts the multi-turn merge is order-
+  independent (it isn't), and no test distinguishes judge-infra-failure from quality-fail (both
+  yield score 0.0). Judge parsing (`SAFE: YES`/`SCORE:`) has no adversarial malformed-response test.
+- **adk-guardrail (55 markers, unit-only):** content filter (harmful blocks, hackathon/`exploit a
+  bug` pass, strict-vs-default, on-topic, max-length, blocked-keywords), PII (email/phone/ssn/CC,
+  multiple, none, transform), schema (valid/missing-required/wrong-type/markdown-fence/no-json),
+  executor (empty/pass/low-severity-passes/high-fails/critical-early-exit). GAP: NO test that tool/
+  RAG/memory content is guardrailed (because it isn't — P-59); NO prompt-injection test; NO test of
+  the input-vs-output hook coverage in the agent loop (the enforcement is in adk-agent, untested here).
+- **adk-retry-reflect (32 markers, 1 proptest):** detection (error shapes), backoff (None/Fixed/
+  Exponential + ceiling, saturating), filter (allow/deny), template rendering. GAP: NO test that the
+  args-hash keying defeats the per-tool limit under arg-changing retries (P-63) — the termination
+  hole is untested-because-unnoticed.
+- **adk-skill (46 markers):** parser (valid/full-spec/missing-fields/AGENTS.md/SOUL.md/strict-
+  .skills), discovery (both dirs, dedup, non-dir skip), select (relevance, tag include/exclude, +
+  extensive CJK/Cyrillic/Japanese/Korean/accented-Latin tokenization tests), injector (top-skill
+  prepend). Coordinator `allowed-tools`↔ToolRegistry validation (P-51) — the phantom-tool guard —
+  is the load-bearing one; verify it has a negative test (skill requests unavailable tool → handled
+  per ValidationMode) during any ferrochain port.
+- **adk-plugin (86 markers):** hook result semantics, priority ordering, both managers.
+- **adk-browser (64 markers, unit-only):** `escape_js_string` has a strong adversarial suite
+  (injection attempt, `</script>`, quotes/backtick/null/newlines) (P-54). Tool actions are
+  WebDriver-backed → likely `#[ignore]`/mock at the driver boundary (no integ files present).
+
+## Verdict on cluster test rigor
+Mixed. The **sandbox/code primitives are genuinely well-tested** (property + truth-table + integ),
+and the **eval scorers and browser escaping** have solid unit coverage. But the tests are strongest
+exactly where the design is strongest (isolation primitives, deterministic scorers) and SILENT
+exactly where the design is weakest: no test covers the untrusted-content-ingress gap (P-59), the
+macOS read-confinement gap (P-60), the retry-reflect termination hole (P-63), the eval score-merge/
+judge-failure bugs (P-64), or symlink-escape in path_safety (P-65). High-rigor tests of the parts
+that were built correctly; no tests probing the parts that were not — a re-implementer lifting this
+suite would inherit the blind spots. (Consistent with A2's "high-fidelity tests of a lower-fidelity
+engine.")
+
+## State Checkpoint
+```yaml
+pass: A4
+scope: test-inventory (safety/quality cluster)
+status: complete
+cluster_test_markers: ~961 (8 crates)
+strongest_suites: [adk-sandbox (6 proptest + truth-tables), adk-code (8 proptest + 10 integ), adk-eval scorers]
+untested_gaps: [untrusted-content-ingress (P-59), macos-read-confinement (P-60),
+                retry-reflect-termination-hole (P-63), eval-score-merge+judge-failure (P-64),
+                path-safety-symlink-escape (P-65)]
+timestamp: 2026-07-13
+```
+
+---
+
+# Pass A5 — PROVIDER / CAPABILITY cluster test inventory
+
+D16 Rust-blindness — observe only. Test-as-spec read of the provider/capability cluster.
+
+## Test-marker counts (approx; `#[test]` + `#[tokio::test]` + `proptest!`)
+| Crate | ~markers | integ files | proptest files | Note |
+|-------|---------:|------------:|---------------:|------|
+| adk-model | ~513 | 18 | 7 | Heaviest. `openai_schema_property_tests` + interactions_runtime integ (`#[ignore]`, needs key). tool_call_parser 22 unit. |
+| adk-anthropic | ~445 | 7 | 0 | SDK deeply unit-tested (convert, sse, accumulating, types round-trips); example-based, no proptest. |
+| adk-mistralrs | ~282 | 17 | 14 | Surprisingly proptest-heavy (14 files) for a local-inference wrapper — convert/config/adapter laws. |
+| adk-gemini | ~215 | 7 | 5 | proptest on convert + schema_adapter. |
+| adk-bench | ~115 | 0 | 0 | In-src unit tests only (metrics/scoring). |
+| adk-audio | ~105 | 13 | 11 | proptest-dominant (codec/frame/resample laws). |
+| adk-realtime | ~100 | 12 | 6 | proptest on audio codec + protocol framing. |
+| adk-payments | ~65 | 9 | 0 | Example-based; policy decisions (allow/escalate/deny) + money arithmetic + protocol mappers. trybuild compile tests. |
+| adk-action | ~39 | 2 | 2 | interpolation proptest. |
+| adk-rag | ~13 | 2 | 1 | THIN — chunking + one property test; backends largely untested without live services. |
+| adk-rust-macros | ~12 | 1 | 0 | macro-expansion tests (dev-dep schemars/adk-core). |
+
+## Test-as-spec highlights (reusable conformance)
+- **tool_call_parser (P-68):** 22 unit tests, one per text-tag format (Qwen json/function-tag, Llama,
+  Mistral Nemo, DeepSeek, Gemma) + text-before + multiple-calls + no-match + streaming emit-immediately.
+  A direct behavioral conformance suite for a ferrochain-ollama text-tool-call parser.
+- **retry (P-71):** gemini has explicit retryable/non-retryable/disabled-config tests around
+  `execute_with_retry`; the combinator's timing test lives in `adk-model::retry` (P-03).
+- **anthropic SDK:** convert round-trips (thinking blocks, usage, cache), SSE decoding, accumulating
+  stream assembly — the wire behavior is well-pinned (445 markers), which is why the adapter can rely
+  on it (P-16/P-67).
+- **payments:** amount-threshold escalate/deny boundaries + integer-money arithmetic + ACP/AP2 mapper
+  round-trips; `trybuild` compile-fail tests guard the public API. The allow/escalate/deny decisions
+  are unit-tested (the P-73 governance shape is test-backed).
+- **mistralrs / audio:** proptest-dominant on conversion/codec laws.
+
+## Untested / weakly-tested gaps
+- **adk-rag** (~13 markers, 1 proptest) — the vector-store backends (qdrant/lancedb/pgvector/surrealdb)
+  are effectively untested without live services; only in-memory + chunking are covered. THIN suite for
+  a RAG crate.
+- **`#[ignore]` key-gated integration** — `adk-model` interactions_runtime tests require a live key
+  (per SID-1, ferrochain must add key-free unit tests at the boundary instead).
+- **Timeout behavior (P-77)** — no test asserts that provider clients set/enforce an outbound timeout
+  (because most don't).
+- **Credential redaction (P-76)** — no test asserts a key is NOT leaked in Debug (because none is
+  redacted). Ferrochain would add a redaction assertion test per key type.
+
+## State Checkpoint
+```yaml
+pass: A5
+scope: test-inventory (provider/capability cluster)
+status: complete
+cluster_test_markers: ~1500 (11 crates)
+strongest_suites: [adk-anthropic (SDK wire round-trips), adk-model tool_call_parser (22 format tests),
+                   adk-mistralrs+adk-audio (proptest-dominant), adk-payments (policy+money+trybuild)]
+untested_gaps: [adk-rag-backends (thin), provider-timeout (P-77), credential-redaction (P-76),
+                key-gated-integration (SID-1)]
+timestamp: 2026-07-13
+```
