@@ -781,3 +781,32 @@ Both must be explicit ferrochain Red Gate tests (join R8 splitters code-point/by
 **Files modified:** `semport/partners/dependency-disposition.md`, `semport/partners/behavioral-intent.md`, `semport/platform/test-inventory.md`, `semport/VALIDATION-REPORT.md`
 
 **Next:** Certification pass 5 DISPATCHED. Opens with exhaustive corpus-wide env-var sweep (closes env-var class), then rotates to streaming chunk shapes, serialization field names, constructor defaults. Streak 0/3.
+
+---
+
+## Burst: pre-pipeline burst 22 — 3-CLEAN certification pass 5 complete, pass 6 dispatch (2026-07-13)
+
+**Date:** 2026-07-13
+**Agent:** state-manager (burst-close)
+
+**Summary:** 3-CLEAN certification pass 5 COMPLETE — CLEAN(strict)=NO. 3 unique inaccuracies / 4 corrections (2 MEDIUM, 1 LOW). ENV-VAR CLASS CLOSED. DEPRECATED-VS-ACTIVE class opened. Streak 0/3.
+
+**Pass 5 corrections:**
+
+**ENV-VAR CLASS CLOSED (LOW — 1 correction):**
+1. `LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` (default 5000) absent from graph/behavioral-intent.md env-var inventory. Added at §2.1 snapshot-boundary description with `[validation-certification-5]` marker. Source: `pregel/_internal/_config.py:34`. Env-var class status: 18/18 env-vars verified exact, class permanently closed. Three partner inventory omissions (XAI_API_BASE, GROQ_API_BASE, GROQ_PROXY) noted for pass-6 housekeeping opener.
+
+**DEPRECATED-VS-ACTIVE class (MEDIUM — 1 correction, 1 file):**
+2. `Checkpoint LATEST_VERSION=4` — graph/behavioral-intent.md §2.2 cited `LATEST_VERSION=2` (v=2 current). The active pregel runtime at `pregel/_checkpoint.py:23` defines `LATEST_VERSION = 4`; all new checkpoints created by `pregel/_loop.py` use `empty_checkpoint()` from this file. The value `LATEST_VERSION=2` at `checkpoint/base/__init__.py:811` is in that file's DEPRECATED section ("deprecated utilities used by past versions of LangGraph") and does not govern new checkpoint creation. Exhaustive sweep had verified the deprecated file, not the active code path. Corrected to `v=4 current, LATEST_VERSION=4` with `[validation-certification-5]` marker. Directly relevant to D11.2 (Rust-native checkpoint format + Python import tool) — import tool must import v4 format, not v2.
+
+**DEFAULT-FLAG GATING class (MEDIUM — 2 corrections, 2 files):**
+3. `validate_model` gated by `validate_model_on_init: bool = False` (default off) — partners/behavioral-intent.md §Ollama implied always-on startup HTTP call ("On configuration, `validate_model` calls `client.list()`"). Actual: validation only runs when `validate_model_on_init=True`. Corrected with `[validation-certification-5]` marker. Source: `chat_models.py:548`, `chat_models.py:966-967`.
+4. partners/module-inventory.md §Ollama description — "Model presence validation" note also implied always-on. Updated to "Model presence validation (opt-in)" with gating clause and `[validation-certification-5]` marker.
+
+**Pass-5 confirming items:** Streaming chunk shapes, serialization field names, most constructor defaults confirmed. Default-flag gating and lifecycle/cleanup claims deferred to pass-6 rotation.
+
+**Files modified:** `semport/graph/behavioral-intent.md`, `semport/partners/behavioral-intent.md`, `semport/partners/module-inventory.md`, `semport/VALIDATION-REPORT.md`
+
+**9th lesson codified:** DEPRECATED-VS-ACTIVE — versioned/dual-implementation claims must be verified against the ACTIVE code path at the pinned tag, not the first matching definition found (appended to cycles/v0.0.0-pre-pipeline/lessons.md).
+
+**Next:** Certification pass 6 DISPATCHED. Opens with housekeeping: add XAI_API_BASE, GROQ_API_BASE, GROQ_PROXY to partner env-var inventory. Then bounded version-number sweep (closes deprecated-vs-active class). Then rotation to default-flag gating and lifecycle/cleanup claims. Streak 0/3.

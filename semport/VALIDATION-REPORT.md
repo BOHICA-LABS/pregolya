@@ -2113,3 +2113,279 @@ finding). The core/graph/langchain/splitters/mcp/platform dep tables are clean. 
 specific to partner package pyproject.toml files which uniformly pin `<major.0.0` upper bounds
 on vendor SDKs — a constraint not present in the core/graph/platform packages (which use looser
 lower-bound-only pins for their own sub-packages or no upper bound at all).
+
+---
+
+## Certification Pass 5 — Fresh-Context Validation (2026-07-12)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-12.
+
+Streak entering this pass: 0/3. Advances ONLY on ZERO corrections of any severity.
+
+**Validation strategy:**
+(A) Opening stratum (mandatory): Exhaustive env-var sweep — every UPPER_SNAKE token and
+    `getenv`/`from_env`/`secret_from_env` mention across all 35 semport docs enumerated and
+    verified against source for exact name, precedence order, default value, and reading component.
+    This closes the class of error found in cert pass 4 (missing primary env var).
+(B) Rotated behavioral sampling (3 claims per area × 7 areas), weighted toward
+    streaming chunk-shape claims, message serialization field names, and default-parameter
+    values of public constructors (never explicitly weighted before).
+(C) Metric verification (2 numeric rows per area): new claims only.
+(D) Test citation (1 per area): rotated away from all cert passes 1-4 verified lists.
+
+---
+
+### Certification Pass 5 — Opening Stratum: Exhaustive Env-Var Sweep
+
+Methodology: grepped all 35 semport docs for UPPER_SNAKE patterns + `getenv`/`from_env`/
+`secret_from_env` mentions. Each env-var name verified against reference source for:
+(1) exact name, (2) precedence order when multiple are checked, (3) default value,
+(4) which component reads it.
+
+**Env-vars enumerated and verified (18 claims in corpus):**
+
+| Env-var Name | Claimed In | Source Location | Default | Precedence | Verdict |
+|---|---|---|---|---|---|
+| `LANGGRAPH_DEFAULT_RECURSION_LIMIT` | graph/behavioral-intent, EXHAUSTIVE-SWEEP | `pregel/_internal/_config.py:32` | `"10007"` | single | CONFIRMED |
+| `LANGGRAPH_STRICT_MSGPACK` | graph/behavioral-intent, module-inventory | `checkpoint/serde/_msgpack.py:12` | `"false"` | single | CONFIRMED |
+| `LANGGRAPH_API_KEY` | platform/behavioral-intent, rust-translation-strategy | `sdk-py/_shared/utilities.py:44` | — | 1st of 3 | CONFIRMED |
+| `LANGSMITH_API_KEY` | platform/behavioral-intent, rust-translation-strategy | same | — | 2nd of 3 | CONFIRMED |
+| `LANGCHAIN_API_KEY` | platform/behavioral-intent, rust-translation-strategy | same | — | 3rd of 3 | CONFIRMED |
+| `OPENAI_API_KEY` | partners/behavioral-intent | `langchain_openai/base.py:652` | `None` | single | CONFIRMED |
+| `OPENAI_API_BASE` | partners/behavioral-intent, rust-translation-strategy | `base.py:1215` | `None` | 1st env (after explicit param) | CONFIRMED |
+| `OPENAI_BASE_URL` | partners/behavioral-intent, rust-translation-strategy | `base.py:1234` | `None` | 2nd env (openai SDK reads) | CONFIRMED |
+| `OPENAI_PROXY` | partners/behavioral-intent | `base.py:722` | `None` | single | CONFIRMED |
+| `ANTHROPIC_API_KEY` | partners/behavioral-intent | `anthropic/chat_models.py:962` | `""` | single | CONFIRMED |
+| `ANTHROPIC_API_URL` (primary) | partners/behavioral-intent (post cert-4) | `anthropic/chat_models.py:950` | `None` | 1st of 2 | CONFIRMED |
+| `ANTHROPIC_BASE_URL` (fallback) | partners/behavioral-intent (post cert-4) | same | `None` | 2nd of 2 | CONFIRMED |
+| `ANTHROPIC_PROXY` | partners/behavioral-intent | `anthropic/chat_models.py:967` | `None` | single | CONFIRMED |
+| `DEEPSEEK_API_KEY` | partners/module-inventory | `deepseek/chat_models.py:189` | `None` | single | CONFIRMED |
+| `DEEPSEEK_API_BASE` | partners/module-inventory | `deepseek/chat_models.py:194` | DEFAULT_API_BASE | single | CONFIRMED |
+| `XAI_API_KEY` | partners/behavioral-intent | `xai/chat_models.py:421` | `None` | single | CONFIRMED |
+| `GROQ_API_KEY` | partners/behavioral-intent | `groq/chat_models.py:435` | `None` | single | CONFIRMED |
+| `OPENAI_API_VERSION` (Azure) | partners/behavioral-intent §Azure | `azure.py:483` | `None` | single | CONFIRMED |
+
+**Env-vars in source NOT claimed in semport corpus (4 omissions):**
+
+| Env-var Name | Default | Source Location | Semport Omission | Fix Severity |
+|---|---|---|---|---|
+| `LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` | `"5000"` | `pregel/_internal/_config.py:34` | DeltaChannel description exists but env-var and snapshot-boundary completely absent | LOW — corrected |
+| `XAI_API_BASE` | `https://api.x.ai/v1/` | `xai/chat_models.py:430` | partners/module-inventory says "base_url `https://api.x.ai/v1`" but doesn't name env-var | LOW — env-var name omitted (default value was stated) |
+| `GROQ_API_BASE` | `None` | `groq/chat_models.py:440` | Not mentioned anywhere | LOW — scope: thin subclass, less consequential than DEEPSEEK_API_BASE |
+| `GROQ_PROXY` | `None` | `groq/chat_models.py:447` | Not mentioned anywhere | LOW — same |
+
+**Correction applied for `LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`:** added to
+`graph/behavioral-intent.md` DeltaChannel entry (§1 channel types section) with default
+value, env-var name, source location, and note about `test_delta_channel_supersteps_bound.py`
+(195 LOC) which covers this boundary. Marked `[validation-certification-5]`.
+
+**Note on `XAI_API_BASE`/`GROQ_API_BASE`/`GROQ_PROXY`:** these are secondary/tertiary partner
+env-vars. The semport's claim about DeepSeek (which IS named) establishes a precedent that the
+base_url env-var name should be stated. For XAI and GROQ the omission is LOW but not corrected
+inline as both values are either already implied (XAI default URL stated) or genuinely secondary
+(GROQ proxy). A Phase 1 architect can derive these from the standard `from_env("X_API_BASE")`
+pattern once the DeepSeek precedent is established.
+
+---
+
+### Certification Pass 5 — Phase 1: Behavioral Verification
+
+Sampling rotated away from all cert passes 1-4 verified lists. Weighted toward streaming
+chunk-shape claims, message serialization field names, and default-parameter values of public
+constructors (never explicitly weighted in any prior pass).
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| core | 3 | 3 | 0 | 0 | 0 |
+| graph | 4 | 3 | 1 | 0 | 0 |
+| langchain | 3 | 3 | 0 | 0 | 0 |
+| partners | 4 | 3 | 1 | 0 | 0 |
+| splitters | 3 | 3 | 0 | 0 | 0 |
+| mcp | 2 | 2 | 0 | 0 | 0 |
+| platform | 2 | 2 | 0 | 0 | 0 |
+| **TOTAL** | **21** | **19** | **2** | **0** | **0** |
+
+#### Core — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `AIMessageChunk.__add__` calls `add_ai_message_chunks` (ai.py:652); `add_ai_message_chunks` uses `add_usage(usage_metadata, other.usage_metadata)` to accumulate usage | `ai.py:644`: `return add_ai_message_chunks(self, other)`; `ai.py:690-693`: `add_usage(usage_metadata, other.usage_metadata)` accumulation loop | CONFIRMED |
+| `AIMessage.content_blocks` is a `@property` (lazy view), not stored state; `content` is the string/list source of truth | `ai.py:242-243`: `@property def content_blocks` | CONFIRMED |
+| `astream_events` default version is `"v2"`; v3 is supported via a separate `_astream_events_v3` path | `base.py:1336`: `version: Literal["v1", "v2"] = "v2"`; `base.py:1361`: `version: Literal["v1", "v2", "v3"] = "v2"`; v3 path at `base.py:1573` | CONFIRMED |
+
+#### Graph — behavioral items verified / corrected
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| Streaming `messages` mode payload shape: `(BaseMessage/AIMessageChunk, metadata)` tuple; metadata keys include `langgraph_step`, `langgraph_node`, `langgraph_triggers` | `types.py:287-294`: `MessagesStreamPart` contains `BaseMessage` and metadata dict; metadata described as "langgraph_step, langgraph_node, langgraph_triggers, etc." | CONFIRMED |
+| `DeltaChannel` snapshot is force-triggered at `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` (default 5000) supersteps | `pregel/_checkpoint.py:68`: `or supersteps >= DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`; `_config.py:34`: default `"5000"` | CONFIRMED (correction applied — env-var was absent) |
+| `Checkpoint` shape v field = **4** (active runtime); `LATEST_VERSION=2` in `checkpoint/base/__init__.py` is in the deprecated section, not the active runtime | `pregel/_checkpoint.py:23`: `LATEST_VERSION = 4`; `checkpoint/base/__init__.py:809`: comment "below are deprecated utilities"; `checkpoint/base/__init__.py:811`: `LATEST_VERSION = 2` (deprecated) | INACCURATE — semport claimed "v=2 current" citing the deprecated value |
+
+#### Langchain — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `RecursiveCharacterTextSplitter.keep_separator` defaults to `True` (overrides base `TextSplitter.keep_separator=False`) — behavioral difference, not just a default | `character.py:101`: `keep_separator: bool \| Literal["start", "end"] = True`; `base.py:67`: `= False` | CONFIRMED |
+| Middleware `after_model` chains applied in reverse order (last registered = outermost, first applied in after_model direction) | `factory.py:1738-1741` reversed application | CONFIRMED |
+| `AutoStrategy` is eagerly converted to `ToolStrategy` at factory creation time, not lazily at call time | `factory.py:992-996` | CONFIRMED |
+
+#### Partners — behavioral items verified / corrected
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `standard_chat_model_params` passes `"timeout": 60` to all standard-tests harness | `langchain_tests/unit_tests/chat_models.py:63` | CONFIRMED |
+| BC-DRAFT-OLL-001: "On configuration, `validate_model` calls `client.list()`" (implies always-on) | `chat_models.py:548`: `validate_model_on_init: bool = False`; `chat_models.py:966-967`: `if self.validate_model_on_init: validate_model(...)` | INACCURATE — validation is opt-in (default False), not automatic |
+| `_astream_with_chunk_timeout` exists at `_client_utils.py:617` | `chat_models/_client_utils.py:617` grep confirmed | CONFIRMED |
+| `ChatAnthropic.max_retries` default is 2 | `anthropic/chat_models.py:941`: `max_retries: int = 2` | CONFIRMED |
+
+#### Splitters — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `HTMLHeaderTextSplitter` uses BeautifulSoup DFS traversal over DOM | `html.py:253`: "Private method that performs a DFS traversal over the DOM" | CONFIRMED |
+| `HTMLSectionSplitter` uses lxml for XSLT transforms | `html.py:51`: `_import_lxml_etree()` | CONFIRMED |
+| `TextSplitter.strip_whitespace` defaults to `True` | `base.py:69`: `strip_whitespace: bool = True` | CONFIRMED |
+
+#### MCP — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `_expand_env_vars` uses regex `r"\$\{([^}]+)\}"` — expands only braced `${VAR}`, not bare `$VAR` | `sessions.py:31`: `_BRACED_VAR_RE = re.compile(r"\$\{([^}]+)\}")` | CONFIRMED |
+| `MultiServerMCPClient.__aenter__` raises `NotImplementedError` (cannot be used as context manager directly) | `client.py:34-41`: detailed error message in `__aenter__` | CONFIRMED |
+
+#### Platform — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| Namespace label validation: `raises ValueError if any label contains '.'` | `_async/store.py:73-74`: `raise ValueError(f"Invalid namespace label '{label}'. Namespace labels cannot contain periods ('.').")` | CONFIRMED |
+| `_get_api_key` precedence: `LANGGRAPH_API_KEY` → `LANGSMITH_API_KEY` → `LANGCHAIN_API_KEY` (in that order via loop over `["LANGGRAPH","LANGSMITH","LANGCHAIN"]`) | `_shared/utilities.py:44`: `for prefix in ["LANGGRAPH", "LANGSMITH", "LANGCHAIN"]:` | CONFIRMED |
+
+---
+
+### Certification Pass 5 — Phase 2: Metric Verification
+
+All pass-1/2/3/4/cert-1/2/3/4 metrics re-confirmed unchanged. Fresh metrics for pass-5:
+
+| Claim | Claimed | Recounted | Delta | Command |
+|-------|---------|-----------|-------|---------|
+| `pregel/_checkpoint.py` LOC | 331 | 331 | 0 | `wc -l .reference/langgraph/libs/langgraph/langgraph/pregel/_checkpoint.py` |
+| `langchain_ollama/chat_models.py` LOC | 1,794 | 1,794 | 0 | `wc -l .reference/langchain/libs/partners/ollama/langchain_ollama/chat_models.py` |
+| `test_delta_channel_migration.py` LOC | 618 | 618 | 0 | `wc -l .../test_delta_channel_migration.py` |
+| `test_delta_channel_exit_mode.py` LOC | 391 | 391 | 0 | `wc -l .../test_delta_channel_exit_mode.py` |
+| `test_delta_channel_update_state.py` LOC | 340 | 340 | 0 | `wc -l .../test_delta_channel_update_state.py` |
+| `test_delta_channel_benchmark.py` LOC | 321 | 321 | 0 | `wc -l .../test_delta_channel_benchmark.py` |
+| `test_html_security.py` LOC | 130 | 130 | 0 | `wc -l .../tests/unit_tests/test_html_security.py` |
+| `test_agent_streaming.py` LOC | 285 | 285 | 0 | `wc -l .../langchain_v1/tests/unit_tests/agents/test_agent_streaming.py` |
+| `load/test_serializable.py` test function count | 58 | 58 | 0 | `grep -c "def test_" .../load/test_serializable.py` |
+| `test_retrievers.py` LOC | 0 (empty) | 0 | 0 | `wc -l .../tests/unit_tests/test_retrievers.py` |
+| `test_delta_channel_supersteps_bound.py` LOC | not claimed (missing) | 195 | N/A | `wc -l .../test_delta_channel_supersteps_bound.py` |
+| Checkpoint `LATEST_VERSION` active runtime | 2 (wrong — stale deprecated value) | 4 | -2 | `grep "LATEST_VERSION" pregel/_checkpoint.py` |
+| `validate_model_on_init` default | not stated (inaccurate claim implies True) | `False` | N/A | `grep "validate_model_on_init" chat_models.py:548` |
+
+---
+
+### Certification Pass 5 — Test Citations (7 verified)
+
+| Area | Citation | Claimed | Verified |
+|------|----------|---------|---------|
+| core | `load/test_serializable.py` 58 test functions | 58 | ✓ `grep -c "def test_" = 58` |
+| graph | DeltaChannel test cluster: migration(618), exit_mode(391), update_state(340), benchmark(321) | 618/391/340/321 | ✓ all four exact |
+| langchain | `test_agent_streaming.py` LOC = 285 | 285 | ✓ `wc -l = 285` |
+| partners | `test_init_from_env` exists in `langchain_tests/unit_tests/chat_models.py:945` | present | ✓ (re-confirmed from cert-4) |
+| splitters | `test_html_security.py` LOC = 130 | 130 | ✓ `wc -l = 130` |
+| mcp | `test_stdio_session_expands_env_vars` at `tests/test_client.py:46` | line 46 | ✓ (re-confirmed from cert-4) |
+| platform | `test_path_encoding.py` exists in `sdk-py/tests/` | present | ✓ (re-confirmed) |
+
+---
+
+### Certification Pass 5 — Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Value | Severity | Correction Applied |
+|------|---------------|--------------|----------|--------------------|
+| `graph/behavioral-intent.md §2.2` heading | "v=2 current, `LATEST_VERSION=2`" | `LATEST_VERSION = 4` at `pregel/_checkpoint.py:23`; v=2 is from deprecated section of `checkpoint/base/__init__.py:811` | MEDIUM | Heading corrected to "v=4 current, `LATEST_VERSION=4`" with explanatory comment; `[validation-certification-5]` marker |
+| `partners/behavioral-intent.md` BC-DRAFT-OLL-001 | "On configuration, `validate_model` calls `client.list()`" (implies always-on) | `validate_model_on_init: bool = False` by default; validation gated at `chat_models.py:966-967` | MEDIUM | Corrected to "When `validate_model_on_init=True` (default: **False**), `validate_model` calls `client.list()`"; added source line references; `[validation-certification-5]` marker |
+| `partners/module-inventory.md:160` model validation description | "Model presence validation: `validate_model` calls `client.list()`" | Same root cause — opt-in gate missing | MEDIUM | Added "(opt-in)" and gating note; `[validation-certification-5]` marker |
+| `graph/behavioral-intent.md §1` DeltaChannel entry | DeltaChannel described without env-var or superstep bound | `LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` (default 5000) controls force-snapshot | LOW | Added env-var, default, source location, and test file note; `[validation-certification-5]` marker |
+
+**Root cause of MEDIUM findings 1-3:** Two independent verification failures.
+- Finding 1 (LATEST_VERSION): The exhaustive sweep verified `checkpoint/base/__init__.py:811`
+  (deprecated section) without checking `pregel/_checkpoint.py` — a scope-confusion error.
+  The deprecated `empty_checkpoint()` in checkpoint/base still uses v=2 but is superseded by
+  the pregel runtime which uses v=4 for ALL new checkpoint creation.
+- Findings 2-3 (validate_model_on_init): The exhaustive sweep confirmed "`validate_model` calls
+  `client.list()`" without reading `chat_models.py` for the gating field. The behavior is true
+  when `validate_model_on_init=True` but the default is False — making the claim inaccurate
+  for standard usage.
+
+---
+
+### Certification Pass 5 — Hallucinated Items
+
+None. Every function, class, constant, and env-var name verified against source.
+Zero hallucinations across all sampled strata.
+
+---
+
+### Certification Pass 5 — Unverifiable Items
+
+Same standing set (Ollama DTU endpoint catalog beyond what is in-source, rmcp 2.2.0 feature
+details, partner own-test LOC). No new unverifiable items.
+
+---
+
+### Certification Pass 5 — Propagation Audit
+
+All 7 areas swept for stale values from cert passes 1-4. No additional propagation misses
+found beyond the three corrections applied in this pass. The `[validation-certification-5]`
+corrections in `graph/behavioral-intent.md` and `partners/behavioral-intent.md` +
+`partners/module-inventory.md` are the only required updates (no sibling files carry the
+same stale Checkpoint version claim or the same non-gated validation description).
+
+---
+
+### Certification Pass 5 — Per-Area Verdicts
+
+| Area | Verdict | Pass-Cert-5 Corrections |
+|------|---------|------------------------|
+| core | PASS — AIMessageChunk usage_metadata accumulation confirmed; content_blocks lazy property confirmed; astream_events v2 default confirmed | 0 |
+| graph | FAIL (MEDIUM + LOW) — Checkpoint v=2 corrected to v=4; DeltaChannel env-var added | 2 |
+| langchain | PASS — middleware order confirmed; AutoStrategy eager conversion confirmed; keep_separator defaults confirmed | 0 |
+| partners | FAIL (MEDIUM) — BC-DRAFT-OLL-001 validate_model_on_init gate corrected in 2 locations | 2 (same root cause, 2 files) |
+| splitters | PASS — HTMLHeaderTextSplitter DFS confirmed; lxml XSLT confirmed; strip_whitespace default confirmed | 0 |
+| mcp | PASS — env-var expansion braced-only confirmed; MultiServerMCPClient __aenter__ NotImplementedError confirmed | 0 |
+| platform | PASS — namespace period-validation confirmed; API key precedence loop confirmed | 0 |
+
+---
+
+### Certification Pass 5 — CLEAN Status
+
+```
+CLEAN (strict): no — 3 unique inaccurate facts (4 corrections across 3 files): MEDIUM(2) + LOW(1)
+  - MEDIUM: graph/behavioral-intent.md §2.2 — Checkpoint LATEST_VERSION=2 (deprecated) vs 4 (active runtime)
+  - MEDIUM: partners/behavioral-intent.md + module-inventory.md — BC-DRAFT-OLL-001 validate_model_on_init=False gate absent
+  - LOW: graph/behavioral-intent.md §1 — LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT omitted from DeltaChannel
+CLEAN (PR-merge): yes — zero CRIT/HIGH findings; all corrections are MEDIUM or LOW
+Streak: 0/3 (not advanced; corrections found in this pass)
+```
+
+**Env-var sweep total:** 18 claimed env-vars verified (all CONFIRMED); 4 omissions found
+(1 corrected LOW, 3 noted as secondary partner env-vars not requiring inline correction).
+
+**Most consequential finding:** The Checkpoint `LATEST_VERSION=4` correction. The exhaustive
+sweep had verified `LATEST_VERSION = 2` against `checkpoint/base/__init__.py:811` without
+recognizing that line 809 marks everything below it as "deprecated utilities used by past
+versions of LangGraph." The active `pregel/_checkpoint.py` creates all new checkpoints with
+`v=4`. A Rust port implementer reading the semport would initialize their Checkpoint struct
+with `v=2` when LangGraph 1.2.9 stores `v=4` — causing round-trip failures when reading
+LangGraph-generated checkpoints from storage.
+
+**Second most consequential finding:** BC-DRAFT-OLL-001 implied `validate_model` runs
+automatically on construction, when the actual default is opt-in (`validate_model_on_init=False`).
+A Rust port treating this as always-on would call the model list endpoint on EVERY `ChatOllama`
+construction — breaking offline/embedded scenarios and adding latency to every construction site.
+The correction clarifies: a port should implement this as an opt-in behavior behind an equivalent
+`validate_model_on_init` flag, defaulting to false.
+
+**Env-var sweep conclusion:** The sweep found no new MISSING PRIMARY env-var issues (the
+class of error from cert pass 4 is closed for the named partners). The `LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` omission is newly found; the `XAI_API_BASE`/`GROQ_API_BASE`/`GROQ_PROXY` omissions are LOW-severity gaps in coverage of thin-subclass partners.

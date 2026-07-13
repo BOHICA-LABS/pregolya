@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T21:30:00Z
+timestamp: 2026-07-13T22:30:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "3-CLEAN certification pass 5 in progress, streak 0/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes."
+current_step: "3-CLEAN certification pass 6 in progress, streak 0/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes."
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -43,9 +43,9 @@ dtu_required: false
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived upstream — curated-subset reference only), langchain-mcp-adapters==0.3.0 (SHA a61c783a) |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — burst 21: 3-CLEAN certification pass 4 COMPLETE — CLEAN(strict)=NO. 6 corrections (6 LOW): 4 upper bounds missing in partners (openai <3.0.0, tiktoken <1.0.0, pydantic <3.0.0, ollama <1.0.0); ANTHROPIC_API_URL primary env var / BASE_URL fallback precedence absent; CLI test LOC 7,208→7,102. DEPENDENCY-CONSTRAINT class permanently closed. Streak 0/3. Pass 5 dispatched. |
+| **Last Updated** | 2026-07-13 — burst 22: 3-CLEAN certification pass 5 COMPLETE — CLEAN(strict)=NO. 3 unique inaccuracies / 4 corrections (2 MEDIUM, 1 LOW): ENV-VAR CLASS CLOSED (18/18 verified; LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT default 5000 added); DEPRECATED-VS-ACTIVE: LATEST_VERSION=4 in active pregel runtime (was v2 citing deprecated section); validate_model gated by validate_model_on_init default FALSE (2 files). Streak 0/3. Pass 6 dispatched (3 noted env-var housekeeping + deprecated-vs-active sweep + default-flag gating + lifecycle/cleanup claims). |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | 3-CLEAN certification pass 5 in progress (exhaustive env-var sweep then streaming chunk shapes + serialization field names + constructor defaults). Streak 0/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes. |
+| **Current Step** | 3-CLEAN certification pass 6 in progress (housekeeping opener: XAI_API_BASE, GROQ_API_BASE, GROQ_PROXY; then deprecated-vs-active version sweep; then default-flag gating and lifecycle/cleanup claims). Streak 0/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes. |
 
 ## Phase Progress
 
@@ -68,11 +68,11 @@ dtu_required: false
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| 3-CLEAN certification pass 1 | validate-extraction | DONE | CLEAN(strict)=NO, CLEAN(PR-merge)=YES. 2 corrections (2 MEDIUM), streak 0/3. STRONG convergence: all 4 high-consequence exhaustive fixes RE-CONFIRMED; 16 additional corrections all-correct; 12 test citations accurate; propagation clean. Error surface = scope-label precision on counts only. |
 | 3-CLEAN certification pass 2 | validate-extraction | DONE | CLEAN(strict)=YES — ZERO corrections. Streak 0/3→1/3. 58 checks: 21 behavioral claims ALL CONFIRMED; 21 numeric rows ALL delta=0 (guardrail 7 scope-label resolution); pass-1 fixes re-verified exact; cross-area consistent. |
-| 3-CLEAN certification pass 3 | validate-extraction | DONE | CLEAN(strict)=NO. 1 correction (1 LOW): anthropic dep `>=0.96.0,<1.0.0` upper bound omitted from partners/dependency-disposition.md. Streak RESET 1/3→0/3. All other 6 areas PASS (error-path-weighted stratum: retry policies, exception taxonomies, HTTP error trees all confirmed). Lesson 7b codified. |
-| 3-CLEAN certification pass 4 | validate-extraction | DONE | CLEAN(strict)=NO. 6 corrections (6 LOW): 4 upper bounds missing in partners (openai <3.0.0, tiktoken <1.0.0, pydantic <3.0.0, ollama <1.0.0); ANTHROPIC_API_URL primary/BASE_URL fallback precedence absent; CLI test LOC 7,208→7,102. DEPENDENCY-CONSTRAINT class permanently closed. 17/18 behavioral items confirmed. Streak 0/3. |
-| 3-CLEAN certification pass 5 | validate-extraction | IN_PROGRESS | Exhaustive env-var sweep (closes env-var class), then streaming chunk shapes, serialization field names, constructor defaults. Streak 0/3. |
+| 3-CLEAN certification pass 3 | validate-extraction | DONE | CLEAN(strict)=NO. 1 correction (1 LOW): anthropic dep `>=0.96.0,<1.0.0` upper bound omitted from partners/dependency-disposition.md. Streak RESET 1/3→0/3. All other 6 areas PASS. Lesson 7b codified. |
+| 3-CLEAN certification pass 4 | validate-extraction | DONE | CLEAN(strict)=NO. 6 corrections (6 LOW): 4 upper bounds missing in partners + ANTHROPIC_API_URL primary/BASE_URL fallback precedence + CLI test LOC 7,208→7,102. DEPENDENCY-CONSTRAINT class permanently closed. 17/18 behavioral items confirmed. Streak 0/3. |
+| 3-CLEAN certification pass 5 | validate-extraction | DONE | CLEAN(strict)=NO. 3 unique inaccuracies / 4 corrections (2 MEDIUM, 1 LOW): ENV-VAR CLASS CLOSED (LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT default 5000 added); DEPRECATED-VS-ACTIVE: LATEST_VERSION=4 active pregel runtime (was v2 from deprecated section — D11.2 relevant); validate_model gated by validate_model_on_init=False (2 files). 9th lesson codified. Streak 0/3. |
+| 3-CLEAN certification pass 6 | validate-extraction | IN_PROGRESS | Housekeeping opener: add XAI_API_BASE, GROQ_API_BASE, GROQ_PROXY; then deprecated-vs-active version-number sweep; then default-flag gating and lifecycle/cleanup claims. Streak 0/3. |
 
 ## Decisions Log
 
@@ -146,8 +146,8 @@ dtu_required: false
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 21 complete. 3-CLEAN certification pass 4 COMPLETE: CLEAN(strict)=NO — 6 corrections (6 LOW). 4 upper bounds absent in partners area (openai <3.0.0, tiktoken <1.0.0, pydantic <3.0.0 anthropic row, ollama <1.0.0); ANTHROPIC_API_URL primary env var / BASE_URL fallback precedence missing from behavioral-intent.md; CLI test LOC 7,208→7,102 in platform/test-inventory.md. DEPENDENCY-CONSTRAINT class permanently closed (all dep rows corpus-wide verbatim-verified). 17/18 behavioral items confirmed. Streak 0/3. Certification pass 5 DISPATCHED: opens with exhaustive corpus-wide env-var sweep (closes env-var class), then streaming chunk shapes, serialization field names, constructor defaults. |
-| **Key context** | D1-D14.1 locked. D14.1: exhaustive-sweep-then-3-CLEAN (human-approved); strict-zero bar unchanged. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh needed (time-sensitive). R8 OPEN: Unicode/code-point parity — route to product-owner at Phase 1. R10 OPEN: NamedBarrierValue/EphemeralValue coverage gap. R11 OPEN: MCP upstream test voids. CLAUDE.md on main — no initial commit yet; devops at workspace-init Phase 1. Ref corpus: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0. D9: architect presents ≥2 graph alternatives at Phase 1c. D11 ADR at Phase 1c. 8 guardrails active (7b: DEPENDENCY-CONSTRAINT COMPLETENESS). |
+| **Position** | pre-1, burst 22 complete. 3-CLEAN certification pass 5 COMPLETE: CLEAN(strict)=NO — 3 unique inaccuracies / 4 corrections (2 MEDIUM, 1 LOW). ENV-VAR CLASS CLOSED: 18/18 env-vars verified exact; LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT default 5000 added to graph/behavioral-intent.md; 3 pass-6 housekeeping items noted (XAI_API_BASE, GROQ_API_BASE, GROQ_PROXY). MEDIUM (1): LATEST_VERSION=4 in active pregel runtime (`pregel/_checkpoint.py:23`) — corpus had verified deprecated section (`base/__init__.py:811` claiming v2); directly relevant to D11.2 Rust-native checkpoint format + Python import tool. MEDIUM (2): validate_model gated by validate_model_on_init default FALSE — Ollama BC-DRAFT had implied always-on startup HTTP call; corrected in partners/behavioral-intent.md and partners/module-inventory.md. 9th lesson codified (DEPRECATED-VS-ACTIVE). Streak 0/3. Pass 6 DISPATCHED: housekeeping opener (3 env-vars), then deprecated-vs-active version sweep, then default-flag gating and lifecycle/cleanup claims. |
+| **Key context** | D1-D14.1 locked. D14.1: exhaustive-sweep-then-3-CLEAN (human-approved); strict-zero bar unchanged. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh needed (time-sensitive). R8 OPEN: Unicode/code-point parity — route to product-owner at Phase 1. R10 OPEN: NamedBarrierValue/EphemeralValue coverage gap. R11 OPEN: MCP upstream test voids. CLAUDE.md on main — no initial commit yet; devops at workspace-init Phase 1. Ref corpus: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0. D9: architect presents ≥2 graph alternatives at Phase 1c. D11 ADR at Phase 1c. 9 guardrails active (8th=7b DEPENDENCY-CONSTRAINT COMPLETENESS; 9th=DEPRECATED-VS-ACTIVE). |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content
@@ -174,7 +174,8 @@ dtu_required: false
 | Burst 19 narrative (3-CLEAN certification pass 2 COMPLETE — CLEAN(strict)=YES, ZERO corrections; streak 0/3→1/3; 58 checks all 7 areas; 21 behavioral claims confirmed; 21 numeric rows delta=0; pass-1 fixes re-verified; cross-area consistent; pass 3 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 20 narrative (3-CLEAN certification pass 3 COMPLETE — CLEAN(strict)=NO; 1 correction (LOW): anthropic dep `<1.0.0` upper bound absent; streak RESET 1/3→0/3; 6/7 areas PASS; lesson 7b DEPENDENCY-CONSTRAINT COMPLETENESS codified; pass 4 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 21 narrative (3-CLEAN certification pass 4 COMPLETE — CLEAN(strict)=NO; 6 corrections (6 LOW): 4 partner upper bounds missing + ANTHROPIC_API_URL primary env var precedence + CLI test LOC 7,208→7,102; DEPENDENCY-CONSTRAINT class permanently closed; streak 0/3; pass 5 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
-| Bursts 5-20 checkpoints (all archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
+| Burst 22 narrative (3-CLEAN certification pass 5 COMPLETE — CLEAN(strict)=NO; 3 unique inaccuracies / 4 corrections (2 MEDIUM, 1 LOW): ENV-VAR CLASS CLOSED; DEPRECATED-VS-ACTIVE LATEST_VERSION=4 active pregel; validate_model opt-in default FALSE; 9th lesson; pass 6 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Bursts 5-21 checkpoints (all archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Lessons learned (PROCESS-GAP: validator counting methodology) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
 | Lessons learned (PROCESS-GAP: cross-document propagation failures / TD-VSDD-060) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
 | Lessons learned (PROCESS-GAP: package-attribution guardrail — 6th guardrail) | `cycles/v0.0.0-pre-pipeline/lessons.md` |

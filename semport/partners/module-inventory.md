@@ -157,8 +157,7 @@ Total partner src ≈ **52,193 LOC** across 15 packages; standard-tests adds **9
 - **Local inference, no API key.** Talks to the `ollama` python client (which wraps the
   local HTTP server, default `http://localhost:11434`). This is ferrochain's **API-key-free
   CI/test path** — see dependency-disposition for the DTU-fake requirements.
-- **Model presence validation**: `validate_model` calls `client.list()` and errors if the
-  named model isn't pulled — a UX affordance absent from cloud providers.
+- **Model presence validation (opt-in)**: `validate_model` calls `client.list()` and errors if the named model isn't pulled — a UX affordance absent from cloud providers. **Gated by `validate_model_on_init: bool = False`** (default off); validation only runs when `validate_model_on_init=True`. <!-- [validation-certification-5]: added opt-in note; default is False per chat_models.py:548 -->
 - **URL auth extraction**: `parse_url_with_auth` supports `https://user:pass@host:port` and
   scheme-less `host:port` inputs, strips credentials from the URL and re-injects them as a
   `Authorization: Basic` header (this is the ONLY partner with embedded-URL-credential
@@ -188,6 +187,7 @@ the `openai` SDK via the parent. **Depends entirely on ferrochain-openai's base 
 ### xai (1,015 LOC) — `ChatXAI(BaseChatOpenAI)`
 Same pattern (Grok). `XAI_API_KEY`, base_url `https://api.x.ai/v1`. Adds `requests`/`aiohttp`
 for a live-search feature and search-parameters passthrough. Also `langchain-openai` dependent.
+Env-vars: `XAI_API_KEY` (key, secret), `XAI_API_BASE` (base_url override, default `https://api.x.ai/v1/`, `xai/chat_models.py:430`). <!-- [validation-certification-6]: added XAI_API_BASE env-var and default; pass-5 env-var sweep found omission -->
 
 ### fireworks (2,423 LOC) — `ChatFireworks(BaseChatModel)` + LLM + Embeddings
 Own `BaseChatModel` impl (NOT a BaseChatOpenAI subclass) but OpenAI-shaped wire via `openai`
@@ -197,6 +197,7 @@ SDK + `fireworks-ai`. Has its own retry classification (`_RetryableHTTPStatusErr
 ### groq (2,083 LOC) — `ChatGroq(BaseChatModel)`
 Wraps `groq` SDK. OpenAI-shaped chat completions + tool calling + json mode. Own context
 overflow error. No embeddings.
+Env-vars: `GROQ_API_KEY` (key, secret), `GROQ_API_BASE` (base_url override, default `None`, `groq/chat_models.py:440`), `GROQ_PROXY` (proxy URL, default `None`, `groq/chat_models.py:447`). <!-- [validation-certification-6]: added GROQ_API_BASE and GROQ_PROXY env-vars; pass-5 env-var sweep found both omissions -->
 
 ### openrouter (9,329 LOC — inflated by data tables) — `ChatOpenRouter(BaseChatModel)`
 Own base. Aggregator that fronts many models; large per-model routing/data tables inflate LOC.

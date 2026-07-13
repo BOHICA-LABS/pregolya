@@ -234,3 +234,17 @@ traces_to: STATE.md
 | **Position** | pre-1, burst 20 complete. 3-CLEAN certification pass 3 COMPLETE: CLEAN(strict)=NO — 1 correction (1 LOW). anthropic dep constraint `>=0.96.0,<1.0.0` upper bound absent from partners/dependency-disposition.md (was `>=0.96`); corrected in-place with `[validation-certification-3]` marker. Streak RESET 1/3→0/3. All other 6 areas PASS across fresh error-path-weighted stratum (retry policies, exception taxonomies, platform 8-code HTTP error tree, cross-library exception-tree independence all confirmed). Lesson 7b codified: DEPENDENCY-CONSTRAINT COMPLETENESS — dependency rows must quote full constraint expressions verbatim (bounds are contract). Certification pass 4 DISPATCHED: all 7 guardrails + 7b; new stratum weighting: config defaults, env-var names, serialization field names. |
 | **Key context** | D1-D14.1 locked. D14.1: exhaustive-sweep-then-3-CLEAN (human-approved 2026-07-13); strict-zero bar unchanged. D13: ferrochain-server first-party. R6 OPEN: cargo login + publish-all.sh needed. R8/R10/R11 OPEN: route to product-owner at Phase 1. CLAUDE.md on main — no initial commit yet. 8 guardrails active (7b: DEPENDENCY-CONSTRAINT COMPLETENESS added). |
 | **Convergence counter** | 0 of 3 |
+
+---
+
+## Session Resume Checkpoint (2026-07-13) — burst 21 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 21 complete. 3-CLEAN certification pass 4 COMPLETE: CLEAN(strict)=NO — 6 corrections (6 LOW). 4 upper bounds absent in partners area (openai <3.0.0, tiktoken <1.0.0, pydantic <3.0.0 anthropic row, ollama <1.0.0); ANTHROPIC_API_URL primary env var / BASE_URL fallback precedence missing from behavioral-intent.md; CLI test LOC 7,208→7,102 in platform/test-inventory.md. DEPENDENCY-CONSTRAINT class permanently closed (all dep rows corpus-wide verbatim-verified). 17/18 behavioral items confirmed. Streak 0/3. Certification pass 5 DISPATCHED: opens with exhaustive corpus-wide env-var sweep (closes env-var class), then streaming chunk shapes, serialization field names, constructor defaults. |
+| **Key context** | D1-D14.1 locked. D14.1: exhaustive-sweep-then-3-CLEAN (human-approved); strict-zero bar unchanged. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh needed (time-sensitive). R8 OPEN: Unicode/code-point parity — route to product-owner at Phase 1. R10 OPEN: NamedBarrierValue/EphemeralValue coverage gap. R11 OPEN: MCP upstream test voids. CLAUDE.md on main — no initial commit yet; devops at workspace-init Phase 1. Ref corpus: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0. D9: architect presents >=2 graph alternatives at Phase 1c. D11 ADR at Phase 1c. 8 guardrails active (7b: DEPENDENCY-CONSTRAINT COMPLETENESS). |
+| **Convergence counter** | 0 of 3 |

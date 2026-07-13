@@ -106,6 +106,10 @@ See module-inventory §1.2. Key behavioral contracts:
 - **`DeltaChannel`** (beta): stores incremental deltas with periodic snapshot blobs;
   history reconstructed by walking the checkpoint parent chain — imposes strong
   constraints on saver copy/prune/delete (must preserve ancestor chains).
+  Snapshot is force-triggered when accumulated updates reach `snapshot_frequency` OR
+  when total supersteps since last snapshot reaches `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`
+  (default **5000**, env-tunable via `LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`,
+  defined at `pregel/_internal/_config.py:34`). <!-- [validation-certification-5]: env-var and snapshot-boundary omission corrected; test file `test_delta_channel_supersteps_bound.py` (195 LOC) covers this boundary. -->
 
 ---
 
@@ -131,7 +135,7 @@ Sync + async twins for every method:
   str/int/float, must be monotonic).
 - `config_specs`, `with_allowlist(...)` (derive a msgpack-allowlisted clone).
 
-### 2.2 `Checkpoint` shape (v=2 current, `LATEST_VERSION=2`)
+### 2.2 `Checkpoint` shape (v=4 current, `LATEST_VERSION=4`) <!-- [validation-certification-5]: "v=2 current, LATEST_VERSION=2" was inaccurate. The active runtime in `pregel/_checkpoint.py:23` defines `LATEST_VERSION = 4`; all new checkpoints created by `pregel/_loop.py` use `empty_checkpoint()` from `pregel/_checkpoint.py` (v=4). The value `LATEST_VERSION=2` at `checkpoint/base/__init__.py:811` is in that file's deprecated section ("deprecated utilities used by past versions of LangGraph") and does NOT govern new checkpoint creation. Exhaustive sweep verified the deprecated file, not the active pregel runtime. -->
 `{v, id (uuid6, monotonic sortable), ts (ISO8601), channel_values: {chan: snapshot},
 channel_versions: {chan: version}, versions_seen: {node: {chan: version}},
 updated_channels: [chan] | None}`. `CheckpointMetadata` = `{source:

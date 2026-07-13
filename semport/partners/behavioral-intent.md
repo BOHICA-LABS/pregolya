@@ -120,9 +120,7 @@ result blocks tracked across the message list (`_collect_code_execution_tool_ids
 ## 3. ollama — behavioral intent (DEEP)
 
 ### BC-DRAFT-OLL-001: model-presence validation
-On configuration, `validate_model` calls `client.list()` and raises a friendly error if the
-named model isn't pulled locally (distinguishing connection failure vs missing model vs API
-error). **Evidence:** `_utils.validate_model`. **HIGH.**
+When `validate_model_on_init=True` (default: **False**), `validate_model` calls `client.list()` on construction and raises a friendly error if the named model isn't pulled locally (distinguishing connection failure vs missing model vs API error). **Evidence:** `chat_models.py:548` (`validate_model_on_init: bool = False`), `chat_models.py:966-967` (`if self.validate_model_on_init: validate_model(...)`), `_utils.validate_model`. **HIGH.** <!-- [validation-certification-5]: original said "On configuration, `validate_model` calls `client.list()`" implying always-on; actual default is `validate_model_on_init=False` — validation is opt-in. A port implementing always-on validation would break the default ChatOllama usage pattern. -->
 
 ### BC-DRAFT-OLL-002: embedded-URL credentials → Basic auth header
 `parse_url_with_auth` accepts `https://user:pass@host:port` and scheme-less `host:port`,

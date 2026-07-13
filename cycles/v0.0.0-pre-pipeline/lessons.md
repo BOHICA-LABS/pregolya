@@ -293,3 +293,46 @@ For certification passes and exhaustive sweeps, a dependency-constraint complete
 ### Follow-up
 
 Pass 4 opens with an exhaustive verbatim sweep of every dependency row across all 7 semport areas. This bounded check closes the entire dependency-constraint class permanently. After pass 4, fold guardrail 7b into the validate-extraction agent prompt upstream alongside the full 7-guardrail set.
+
+---
+
+## Lesson: DEPRECATED-VS-ACTIVE — Versioned/Dual-Implementation Claims Must Target the Active Code Path (2026-07-13)
+
+**Source:** 3-CLEAN certification pass 5 (burst 22)
+**Category:** process-gap
+**Severity:** MEDIUM (single MEDIUM finding; directly relevant to D11.2 checkpoint format spec)
+
+### What happened
+
+Certification pass 5 found that graph/behavioral-intent.md §2.2 cited `LATEST_VERSION=2` as the current checkpoint version. The validator had found `LATEST_VERSION = 2` at `checkpoint/base/__init__.py:811` and marked it correct. This location is inside a DEPRECATED section explicitly labeled "deprecated utilities used by past versions of LangGraph." The ACTIVE pregel runtime at `pregel/_checkpoint.py:23` defines `LATEST_VERSION = 4`; all new checkpoints created by the live execution loop (`pregel/_loop.py`) call `empty_checkpoint()` from the pregel module (v=4), not from the deprecated base.
+
+The corpus therefore stated v2 was current while the running system has been producing v4 checkpoints. This is directly relevant to D11.2 (Rust-native checkpoint format + Python import tool): the import tool must parse v4 format, not v2.
+
+### Why it matters
+
+The langchain/langgraph reference corpus contains multiple layers of implementation: (1) the active runtime, (2) deprecated legacy utilities retained for compatibility, (3) abstract base classes, and (4) re-exports. When a value (version constant, default, limit) appears in multiple locations, the FIRST match found by a grep or read is not necessarily the canonical value — it may be in a deprecated compatibility shim. The active code path at the pinned tag is the correct authority. A Rust port built from a deprecated section inherits the obsolete contract.
+
+### Codification applied — 9th Guardrail: DEPRECATED-VS-ACTIVE
+
+For certification passes and all subsequent exhaustive sweeps:
+
+1. **Active-path verification mandatory:** Any versioned constant, format version, or protocol version claim MUST be verified against the active runtime code path, not the first matching definition found. Presence of a value in a base class or compatibility shim does not constitute verification.
+2. **Deprecated-section scan:** When a symbol is found, check whether its enclosing file or section is labeled deprecated, legacy, or backward-compatibility. If so, search for the same symbol in the active runtime modules (e.g., `pregel/` for graph runtime claims, `core/` for core runtime claims).
+3. **Dual-implementation awareness:** Upstream projects often retain old implementations alongside new ones. For any claim about a versioned artifact (checkpoint format, wire protocol, schema version), verify the version constant that the ACTIVE write path uses — not the version that the read path accepts for compatibility.
+4. **D11.2 implication check:** For all checkpoint format claims in graph/behavioral-intent.md, verify against `pregel/_checkpoint.py` (active write path), not `checkpoint/base/__init__.py` (deprecated read-compatibility layer).
+
+### The full 9-guardrail set
+
+1. AST-based counting (never grep/eyeballing for code constructs)
+2. Cross-document propagation sweep (find all locations that must reflect the same fact)
+3. Behavioral-locus precision (describe behavior at the execution locus, not a secondary description)
+4. Semantic-precision summary-word verification (verify superlatives, totals, and summary claims against base data)
+5. Deepening-note sweep (verify items marked for deeper investigation were actually investigated)
+6. Package-attribution verification (any class attributed to a package must exist in that package at the pinned tag)
+7. Scope-label matching (every numeric row must be counted from exactly the scope its label denotes)
+7b. Dependency-constraint completeness (dependency rows must quote full constraint expressions verbatim; bounds are contract)
+8. Deprecated-vs-active (versioned/dual-implementation claims must be verified against the active code path, not the first definition found)
+
+### Follow-up
+
+Add the deprecated-vs-active guardrail to the validate-extraction agent prompt upstream as the 9th guardrail — co-batch with all prior guardrails in session-review prompt hardening. Pass 6 opens with a bounded deprecated-vs-active version sweep to close the class corpus-wide.
