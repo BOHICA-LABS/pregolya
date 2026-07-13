@@ -164,7 +164,7 @@ fn update(&mut self, Vec<Update>)->Result<bool>; fn checkpoint(&self)->Value;
 fn from_checkpoint(v)->Self; fn consume(&mut self)->bool; fn finish(&mut self)->bool;
 fn is_available(&self)->bool; }`. Concrete types = enum or generic structs: `LastValue`,
 `LastValueAfterFinish`, `BinaryOperatorAggregate<T, Reducer>`, `Topic<T>{accumulate}`,
-`EphemeralValue`, `AnyValue`, `NamedBarrierValue`, `UntrackedValue`, `DeltaChannel`. The
+`EphemeralValue`, `AnyValue`, `NamedBarrierValue`, `NamedBarrierValueAfterFinish`, `UntrackedValue`, `DeltaChannel`. <!-- [validation-certification-7]: added `NamedBarrierValueAfterFinish` (named_barrier_value.py:84); asymmetric with `LastValueAfterFinish` already listed; this is a real concrete channel type that waits until finish() is called before releasing the barrier value. --> The
 reducer for BinOp is a `Box<dyn Fn(T,T)->T>` or an enum of known reducers. `Overwrite`
 becomes an enum variant wrapping the value (must round-trip through serde: keep the
 `{type:"__overwrite__", value}` shape). Golden-tested by `test_channels.py`. Object-safety:

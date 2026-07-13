@@ -841,3 +841,39 @@ Both must be explicit ferrochain Red Gate tests (join R8 splitters code-point/by
 - `STATE.md` (pass 6 DONE, pass 7 IN_PROGRESS, session checkpoint updated, pass 2 row rotated out of Current Phase Steps)
 
 **Next:** Certification pass 6 DISPATCHED. Opens with housekeeping: add XAI_API_BASE, GROQ_API_BASE, GROQ_PROXY to partner env-var inventory. Then bounded version-number sweep (closes deprecated-vs-active class). Then rotation to default-flag gating and lifecycle/cleanup claims. Streak 0/3.
+
+---
+
+## Burst: pre-pipeline burst 24 — 3-CLEAN certification pass 7 complete, pass 8 dispatched (2026-07-13)
+
+**Pass 7 verdict:** CLEAN(strict)=NO. 1 correction (1 LOW). Streak 0/3.
+
+**ENUMERATION CLASS CLOSED:**
+- 42 enumeration claims exhaustively verified across all 14 spec-driving files (behavioral-intent.md + rust-translation-strategy.md for all 7 areas: core, graph, langchain, partners, splitters, mcp, platform).
+- 6 of 7 areas fully clean this pass.
+- 1 correction in graph area (see below). All other 6 areas: zero findings.
+- ENUMERATION INCOMPLETENESS error class permanently closed.
+
+**1 correction (1 LOW, channel Concrete-types enumeration):**
+1. `NamedBarrierValueAfterFinish` absent from channel Concrete-types enumeration in `graph/rust-translation-strategy.md §6.1`. Asymmetric omission: `LastValueAfterFinish` sibling was already present. Source: `named_barrier_value.py:84` — a real concrete channel type that withholds the barrier value until `finish()` is called. Added with `[validation-certification-7]` marker. Corrected in `semport/graph/rust-translation-strategy.md`.
+
+**ALL BOUNDED ERROR CLASSES NOW CLOSED:**
+- Propagation residue: CLOSED
+- Counting methodology: CLOSED
+- Dependency-verbatim: CLOSED
+- Env-vars: CLOSED
+- Deprecated-vs-active versions: CLOSED
+- Enumeration completeness: CLOSED (this pass)
+
+Per-pass yield has collapsed to 1 finding. Remaining residue is unstructured (no remaining pattern-bounded error class).
+
+**Files modified:** `semport/graph/rust-translation-strategy.md`, `semport/VALIDATION-REPORT.md`
+
+**Pass 8 dispatched:** Pure fresh-eyes rotation, all 10 guardrails active, instructed to select never-verified claims and to report coverage-saturation explicitly if none remain findable.
+
+**Files touched (state):**
+- `semport/graph/rust-translation-strategy.md` (NamedBarrierValueAfterFinish added to §6.1)
+- `semport/VALIDATION-REPORT.md` (pass 7 result recorded)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 23 checkpoint archived)
+- `STATE.md` (pass 7 DONE, pass 8 IN_PROGRESS, session checkpoint updated)

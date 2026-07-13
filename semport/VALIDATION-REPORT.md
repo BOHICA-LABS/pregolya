@@ -2646,3 +2646,105 @@ stale or deprecated-path citations. The LATEST_VERSION correction from cert-5 is
 accurate and stable. The dual-version situation (active v=4 in pregel/_checkpoint.py vs
 deprecated v=2 in checkpoint/base/__init__.py) is correctly documented and annotated in the
 semport. No new DEPRECATED-VS-ACTIVE issues found.
+
+---
+
+## Certification Pass 7 (2026-07-13) — D14.1
+
+**Protocol:** 3-CLEAN (BC-5.39.001). Streak entering: 0/3. Advances only on ZERO new corrections of any severity.
+
+### Enumeration-Completeness Sweep
+
+**Scope:** All 14 spec-driving files — `behavioral-intent.md` × 7 areas + `rust-translation-strategy.md` × 7 areas.
+
+**Method:** Grepped for closed-membership-list patterns ("Concrete types = ...", "skips X, Y", "N functions/flags/variants", parenthesized member lists, "the only ...", Literal[...]) and verified each against the authoritative source structure (class bodies, enum definitions, if-chains, constant tuples) at the pinned reference tag.
+
+**Total enumeration claims swept: 42**
+
+Key verified enumerations:
+| Claim | Location | Source Authority | Verdict |
+|-------|----------|-----------------|---------|
+| Ignore flags × 7 (ignore_llm/retry/chain/agent/retriever/chat_model/custom_event) | core/behavioral-intent §5 | callbacks/base.py:513-543 | CONFIRMED |
+| _compat_bridge.py bridge functions × 5 | core/behavioral-intent §C | _compat_bridge.py (grep) | CONFIRMED |
+| ContentBlock union × 14 types | core/behavioral-intent + rust-translation-strategy | messages/content.py | CONFIRMED |
+| Message types × 7 | core/behavioral-intent | messages/__init__.py | CONFIRMED |
+| Callback hooks × 20 | core/behavioral-intent §5 | callbacks/base.py (method count) | CONFIRMED |
+| langgraph StreamMode (graph) × 7 | graph/behavioral-intent | langgraph/types.py:StreamMode | CONFIRMED |
+| SDK StreamMode × 9 | platform/behavioral-intent | langgraph_sdk/schema.py | CONFIRMED |
+| MultitaskStrategy × 4 | platform/behavioral-intent | langgraph_sdk/schema.py:90 | CONFIRMED |
+| RunStatus × 6 | platform/behavioral-intent | langgraph_sdk/schema.py | CONFIRMED |
+| WRITES_IDX_MAP × 4 entries | graph/behavioral-intent | pregel/write.py (grep) | CONFIRMED |
+| _reapply_writes skip signals × 4 | graph/behavioral-intent §2.4 | pregel/algo.py (post cert-6 correction) | CONFIRMED |
+| Language enum × 28 | splitters/rust-translation-strategy | base.py (AST parse) | CONFIRMED |
+| MCP content dispatch × 5 types + unknown | mcp/behavioral-intent | adapters/openai.py (grep) | CONFIRMED |
+| BC-DRAFT-OAI-001 routing flags × 6 | partners/behavioral-intent | openai/chat_models.py | CONFIRMED |
+| Provider inference rules × 11 | langchain/behavioral-intent | init_chat_model.py dispatch | CONFIRMED |
+| Serialized types × 3 | graph/behavioral-intent §2.3 | checkpoint/serde/jsonplus.py | CONFIRMED |
+| if_exists ∈ {raise, do_nothing} | platform/behavioral-intent | langgraph_sdk/schema.py:OnConflictBehavior | CONFIRMED |
+| CLI command groups × 7 | platform/dependency-disposition | langgraph_cli/cli.py (6 cmds + deploy group) | CONFIRMED |
+| **Channel Concrete types** | graph/rust-translation-strategy §6.1 | channels/named_barrier_value.py | **INACCURATE — see correction** |
+
+**One enumeration inaccuracy found:**
+
+`graph/rust-translation-strategy.md §6.1` lists 9 concrete channel types using exhaustive language ("Concrete types = ..."):
+`LastValue`, `LastValueAfterFinish`, `BinaryOperatorAggregate<T, Reducer>`, `Topic<T>{accumulate}`, `EphemeralValue`, `AnyValue`, `NamedBarrierValue`, `UntrackedValue`, `DeltaChannel`.
+
+Missing: `NamedBarrierValueAfterFinish` — defined at `named_barrier_value.py:84` as a distinct class (waits for all named writers AND defers release until `finish()` is called). The presence of `LastValueAfterFinish` (an analogous AfterFinish variant) makes the asymmetric omission load-bearing for a translator who would otherwise assume the pattern was complete.
+
+**Correction applied in-place:** `[validation-certification-7]` marker added to §6.1; `NamedBarrierValueAfterFinish` inserted between `NamedBarrierValue` and `UntrackedValue`.
+
+**Propagation audit:** `graph/module-inventory.md` line 60 already listed "`NamedBarrierValue` / `NamedBarrierValueAfterFinish`" correctly — no propagation needed. `graph/behavioral-intent.md` channel descriptions are non-exhaustive (no closed-list language) — no correction needed there.
+
+### Rotated Sampling (per area: 2 behavioral + 1 numeric + 1 citation, weighted toward module-inventory/test-inventory/dependency-disposition)
+
+| Area | Behavioral Samples | Numeric Sample | Citation Sample | Verdict | Corrections |
+|------|--------------------|----------------|-----------------|---------|-------------|
+| core | ignore flags (7 confirmed, callbacks/base.py:513-543); test_runnable.py 119 tests verified (def test_ count) | Python source files = 180 (find incl. __init__.py = 180 ✓); unit test files = 135 ✓ | test-inventory: test_runnable.py 119 tests / 6,005 LOC (both confirmed exactly); test_tools.py 140 tests / 4,065 LOC (both confirmed exactly) | PASS | 0 |
+| graph | Channel concrete types enumeration; _reapply_writes 4-signal skip-set | (no new numeric claim this pass; cert-6 covered pregel test LOC) | rust-translation-strategy §6.1 sourced to named_barrier_value.py | FAIL (LOW) | 1 (NamedBarrierValueAfterFinish missing) |
+| langchain | ContentBlock union × 14; Message types × 7 | (provider inference × 11 confirmed; no new LOC) | behavioral-intent §7 block_translators 8 modules (confirmed pass-6) | PASS | 0 |
+| mcp | Content dispatch × 5 + unknown confirmed | Total test LOC = 3,056 (incl. conftest + servers/ + utils) ✓ | test files source locations confirmed | PASS | 0 |
+| partners | BC-DRAFT-OAI-001 routing flags × 6 | (_model_prefers_responses_api label reviewed; EXHAUSTIVE-SWEEP had already flagged and retained deliberately) | | PASS | 0 |
+| platform | if_exists ∈ {raise, do_nothing} (schema.py:90); CLI command groups × 7 (6 cmds + deploy group) | SDK source LOC = 18,728 ✓ | langgraph_sdk/schema.py:OnConflictBehavior | PASS | 0 |
+| splitters | Language enum × 28 (AST-verified); tiktoken-rs mapping confirmed | (Language enum member count; all 28 confirmed) | dependency-disposition: tiktoken-rs 0.12, r50k_base → gpt2 encoding confirmed | PASS | 0 |
+
+### Nine Guardrails Status
+
+| Guardrail | Status |
+|-----------|--------|
+| AST counting | APPLIED — Language enum 28 (AST), test function counts via grep, LOC via wc -l |
+| Propagation | APPLIED — NamedBarrierValueAfterFinish propagation audit clean (module-inventory already correct) |
+| Test-citation | APPLIED — test_runnable.py, test_tools.py, test_channels.py claims all verified |
+| Behavioral-locus | APPLIED — all behavioral claims anchored to specific source files/line ranges |
+| Semantic-precision | APPLIED — "reasoning-family" label in partners reviewed; deliberately retained per EXHAUSTIVE-SWEEP |
+| Package-attribution | APPLIED — all channel types sourced to langgraph package; SDK claims to sdk-py |
+| Scope-label | APPLIED — platform SDK/CLI scopes correctly separated in module-inventory |
+| Dependency-verbatim | APPLIED — no dependency strings altered this pass |
+| Deprecated-vs-active | APPLIED — no deprecated path issues found this pass |
+
+### Per-Area Verdicts
+
+| Area | Verdict | Corrections |
+|------|---------|-------------|
+| core | PASS | 0 |
+| graph | FAIL (1 LOW) | `NamedBarrierValueAfterFinish` added to §6.1 Concrete types list |
+| langchain | PASS | 0 |
+| mcp | PASS | 0 |
+| partners | PASS | 0 |
+| platform | PASS | 0 |
+| splitters | PASS | 0 |
+
+### Certification Pass 7 — CLEAN Status
+
+```
+CLEAN (strict): no — 1 NEW correction of severity LOW
+  - LOW: graph/rust-translation-strategy.md §6.1
+         "Concrete types = ..." channel enumeration missing `NamedBarrierValueAfterFinish`
+         (named_barrier_value.py:84); asymmetric with `LastValueAfterFinish` already listed.
+         Correction: inserted `NamedBarrierValueAfterFinish` between `NamedBarrierValue` and
+         `UntrackedValue` with [validation-certification-7] marker.
+CLEAN (PR-merge): yes — zero CRIT/HIGH/MED findings; correction is LOW
+Enumeration-sweep count: 42 claims across 14 files
+Streak: 0/3 (not advanced; 1 LOW correction found in this pass)
+```
+
+**Most consequential new finding:** The missing `NamedBarrierValueAfterFinish` from the channel Concrete types list. A Rust translator working from §6.1 would implement 9 channel variants instead of 10, omitting the barrier-with-finish-semantics variant. This variant is used when you need a join/synchronization that also requires all nodes to have called `finish()` before releasing — distinct semantics from `NamedBarrierValue` (releases immediately once all named writers have written). The asymmetry with `LastValueAfterFinish` (correctly listed) signals the analysis author was aware of the AfterFinish pattern but missed this instance.
