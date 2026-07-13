@@ -2109,3 +2109,30 @@ Session wrap (burst 60) step row retired from STATE.md Current Phase Steps (tabl
 - `comparative/adk-rust/CERTIFICATION-REPORT.md` (C22 pass appended by validator — C21 sibling check, dep-disp A2 continuation, rotation table, metric verification, novel probe dep-disp A4 dependency versions, confidence assessment, final verdict CLEAN)
 - `STATE.md` (C22 COMPLETE, streak 1/3→2/3, convergence counter 1→2 of 3, frontmatter updated, Current Phase Steps session-wrap row archived, C22 row added, session checkpoint updated)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — session-wrap archive + burst 65 narrative)
+
+---
+
+## Burst 66 — adk-rust certification pass C23 CLEAN — 3-CLEAN GATE CLOSED
+
+### Archived from STATE.md Current Phase Steps (C18 row retired, capped at 5 rows)
+
+C18 step row retired from STATE.md Current Phase Steps:
+> adk-rust certification pass C18 (strict-zero, C17 sibling check opener + rotation) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C17 sibling check: all 3 verbatim-expansion corrections confirmed landed; corpus-wide `_`-prefix sweep clean (2 pre-existing exemptions only). Rotation 10/10 CONFIRMED (P-25, P-28, P-43, P-56, P-61, P-63, P-70, P-73, A3 §17, P-79). Metrics 8/8 Delta=0. Novel probe: test-inventory A1 integration LOC — 9/9 Delta=0; integration LOC class CLOSED (14/14 across C5+C12+C18). Streak 0/3 → 1/3. Burst 61.
+
+### C23 Summary
+
+- CLEAN(strict)=YES. ZERO corrections.
+- C22 sibling check 3/3 CONFIRMED.
+- dep-disp A1 version defect-class check 8/8 zero discrepancies.
+- Rotation 10/10 CONFIRMED (graph §7.1/§7.2 negative-existence claims, §15 ScopeGuard/ScopedTool/AuditSink 4 impls, §17 cancel_token, dep-disp A3 a2a-protocol-types + thiserror error types, test-inventory A2 property-test file ratio, §15 RequestContextExtractor).
+- Metrics 8/8 Delta=0.
+- Novel probe: dep-disp A3 anyhow exposure-cluster confinement — grep 0 hits across all 8 library src dirs, CONFIRMED.
+- Streak: 2/3 → 3/3.
+- **3-CLEAN GATE CLOSED** on adk-rust v1.0.0 (SHA a6c79b6f). Cumulative C1-C23: 0 hallucinations.
+
+### Files touched in this burst
+
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (C23 pass appended by validator — C22 sibling check, dep-disp A1 version defect-class, rotation table, metric verification, novel probe dep-disp A3 anyhow confinement, final verdict CLEAN; 3-CLEAN gate closure recorded)
+- `logs/dispatcher-internal-2026-07-13.jsonl` (dispatcher log updated)
+- `STATE.md` (C23 COMPLETE, 3-CLEAN GATE CLOSED, convergence counter 2→3 of 3, frontmatter updated, C18 row archived, C23 row added, phase progress gate updated, session checkpoint replaced)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — C18 archive + burst 66 narrative)

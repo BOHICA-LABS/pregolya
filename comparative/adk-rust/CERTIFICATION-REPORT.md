@@ -4277,3 +4277,224 @@ Rotation:          10/10 behavioral claims CONFIRMED (sqlite rewind semantics, h
                    dep-disp A5 versions); 0 inaccurate; 0 hallucinated
 Streak:            2/3 (C21 CLEAN → 1/3; C22 CLEAN → 2/3)
 ```
+
+---
+
+# Pass C23
+
+```yaml
+pass: C23
+corpus: adk-rust v1.0.0 (SHA a6c79b6f)
+reference: .reference/adk-rust (read-only)
+protocol: BC-5.39.001 (3-CLEAN convergence); D14 (absolute strict-zero); D15; D16 (Rust-blindness)
+streak_in: 2/3
+date: 2026-07-13
+focus: C22 sibling check (3/3 re-verified: B-03 RecursionLimitExceeded, B-06 SequentialAgent,
+       B-07 DEFAULT_LOOP_MAX_ITERATIONS; dep-disp A1 defect-class check CLEAN — all version
+       strings exact against root Cargo.toml);
+       all-twelve guardrails rotation (never-verified pools: §7.1 get_next_nodes pure edge
+       following, §7.2 no content-addressed task IDs, §7.2 no concurrent-write detection,
+       §15 ScopeGuard/ScopedTool, §15 AuditSink 4-impl coverage, §17 DELETE/CancellationToken,
+       dep-disp A3 a2a-protocol-types version, dep-disp A3 thiserror-derived error types,
+       test-inventory 8-of-14 property tests, §15 RequestContextExtractor signature);
+       novel probe: dependency-disposition.md A3 behavioral claims — anyhow zero hits in
+       exposure-cluster src (never probed in C1-C22)
+```
+
+## CLEAN Status
+
+```
+CLEAN (strict):    YES — zero corrections applied
+CLEAN (PR-merge):  YES
+New corrections:   0
+Streak position:   3/3 — *** 3-CLEAN GATE CLOSES ***
+```
+
+---
+
+## Opener — C22 Sibling Check
+
+### C22 Rotation Re-Verification (3/3 sampled)
+
+| C22 Item | Claim | Re-Verify Result |
+|----------|-------|-----------------|
+| B-03 | `GraphError::RecursionLimitExceeded(self.step)` exact variant with step payload at executor.rs:124,203 | CONFIRMED — line 124: `return Err(GraphError::RecursionLimitExceeded(self.step))`; line 203: `yield Err(GraphError::RecursionLimitExceeded(self.step))` |
+| B-06 | `SequentialAgent` constructed as `LoopAgent::new(name, sub_agents).with_max_iterations(1)` at sequential_agent.rs:18 | CONFIRMED — line 18: `Self { loop_agent: LoopAgent::new(name, sub_agents).with_max_iterations(1) }` |
+| B-07 | `DEFAULT_LOOP_MAX_ITERATIONS: u32 = 1000` at loop_agent.rs:15 | CONFIRMED — line 15: `pub const DEFAULT_LOOP_MAX_ITERATIONS: u32 = 1000;` |
+
+### Defect-Class Check: dependency-disposition.md A1 Version Claims vs Root Cargo.toml
+
+C23 opener includes a defect-class sweep of never-verified version claims in dep-disp A1 against the root Cargo.toml.
+
+| Dep | A1 Claimed Version | Root Cargo.toml | Result |
+|-----|--------------------|-----------------|--------|
+| tokio | "1" | "1" | CONFIRMED |
+| serde | "1" | "1" | CONFIRMED |
+| anyhow | "1.0" | "1.0" | CONFIRMED |
+| thiserror | "2.0" | "2.0" | CONFIRMED |
+| tracing | "0.1" | "0.1" | CONFIRMED |
+| uuid | "1" | "1" | CONFIRMED |
+| reqwest | "0.12" | "0.12" | CONFIRMED |
+| rustls | "0.23" | "0.23" | CONFIRMED |
+
+**Defect-class check verdict: ALL CONFIRMED — zero version-string discrepancies in dep-disp A1.**
+
+---
+
+## Phase 1 — Behavioral Verification (All-Twelve Guardrails Rotation)
+
+10 claims selected from never-verified pools (absent from all SWEEP and C1–C22 verified lists).
+
+| # | Source | Claim | Verified Against | Result |
+|---|--------|-------|-----------------|--------|
+| B-01 | behavioral-intent.md §7.1 | `graph.get_next_nodes(executed_nodes, state)` — pure edge/conditional-edge following; NO `versions_seen`, NO `channel_versions` in adk-graph | `.reference/adk-rust/adk-graph/src/graph.rs:256`; `adk-graph/src/` (grep) | CONFIRMED — line 256: `pub fn get_next_nodes(&self, executed: &[String], state: &State) -> Vec<String>`; iterates `self.edges` matching `Edge::Direct`/`Edge::Conditional` only; zero hits for `versions_seen` or `channel_versions` anywhere in adk-graph/src |
+| B-02 | behavioral-intent.md §7.2 | "No content-addressed task IDs" — LangGraph's `xxh3_128(...)` has no analog; nodes keyed by name only | `.reference/adk-rust/adk-graph/src/` (grep) | CONFIRMED — zero hits for `xxh3` in adk-graph/src; no hash-based task identity anywhere in the graph crate |
+| B-03 | behavioral-intent.md §7.2 | "No concurrent-write detection" — `Reducer::Overwrite` silently takes last write; no `InvalidUpdateError` analog exists | `.reference/adk-rust/adk-graph/src/` (grep) | CONFIRMED — zero hits for `InvalidUpdateError` or `concurrent_write` in adk-graph/src; no >1-write-per-step guard exists |
+| B-04 | behavioral-intent.md §15 | `ScopeGuard` and `ScopedTool<T: Tool>` exist as declarative tool-authorization wrappers in adk-auth | `.reference/adk-rust/adk-auth/src/scope.rs:252,299` | CONFIRMED — `pub struct ScopeGuard` at line 252; `pub struct ScopedTool<T: Tool>` at line 299 |
+| B-05 | behavioral-intent.md §15 | `AuditSink` trait has 4 implementations: File / InMemory / OTLP / Postgres | `.reference/adk-rust/adk-auth/src/audit.rs:373,417,494`; `audit_otlp.rs:45`; `audit_postgres.rs:35` | CONFIRMED — `pub trait AuditSink` at audit.rs:373; `FileAuditSink` at audit.rs:417; `InMemoryAuditSink` at audit.rs:494; `OtlpAuditSink` at audit_otlp.rs:45; `PostgresAuditSink` at audit_postgres.rs:35 |
+| B-06 | behavioral-intent.md §17 | `DELETE /runs/{run_id}` cancels a background run via `CancellationToken` (tokio-util) | `.reference/adk-rust/adk-server/src/background/mod.rs:65,104` | CONFIRMED — `use tokio_util::sync::CancellationToken` at line 65; background run struct has `pub cancel_token: CancellationToken` field at line 104 |
+| B-07 | dependency-disposition.md A3 | `a2a-protocol-types = { version = "0.5", optional = true }` in adk-server | `.reference/adk-rust/adk-server/Cargo.toml:43` | CONFIRMED — line 43: `a2a-protocol-types = { version = "0.5", optional = true }` |
+| B-08 | dependency-disposition.md A3 | `A2aError`, `RequestContextError`, `AuthError`, `AccessDenied` are all `thiserror`-derived | `.reference/adk-rust/adk-server/src/a2a/v1/error.rs:12`; `adk-server/src/auth_bridge.rs:53`; `adk-auth/src/error.rs:6,23` | CONFIRMED — `A2aError`: `#[derive(Debug, thiserror::Error)]` at a2a/v1/error.rs:12; `RequestContextError`: `#[derive(Debug, thiserror::Error)]` at auth_bridge.rs:53; `AuthError`: `#[derive(Debug, Error)]` with `use thiserror::Error` at adk-auth/src/error.rs:23; `AccessDenied`: `#[derive(Debug, Clone, Error)]` at adk-auth/src/error.rs:6 |
+| B-09 | test-inventory.md A2 | "8 of 14 files are `*_property_tests.rs`" in adk-graph/tests — property testing is the dominant style | `.reference/adk-rust/adk-graph/tests/` (ls) | CONFIRMED — `ls adk-graph/tests/` returns 14 files; 8 are `*_property_tests.rs` (action_error_mode, action_switch, cache, deferred, delta, time_travel, timeout, workflow_schema) |
+| B-10 | behavioral-intent.md §15 | `RequestContextExtractor::extract(&Parts) -> Result<RequestContext, RequestContextError>` — single auth seam in adk-server | `.reference/adk-rust/adk-server/src/auth_bridge.rs:44-49` | CONFIRMED — `pub trait RequestContextExtractor: Send + Sync` at line 44; `async fn extract(&self, parts: &axum::http::request::Parts) -> Result<RequestContext, RequestContextError>` at lines 46-49 |
+
+**0 INACCURATE. 0 HALLUCINATED. 0 UNVERIFIABLE (beyond pre-existing runtime-only items).**
+
+| Pool | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| behavioral-intent.md §§7.1/7.2/15/17; dep-disp A3; test-inventory A2 | 10 | 10 | 0 | 0 | 0 |
+
+**Total: 10 claims checked, 10 confirmed, 0 inaccurate, 0 hallucinated, 0 unverifiable**
+
+---
+
+## Phase 2 — Metric Verification (Standing Metrics Delta Check)
+
+Independent recount of all 8 standing metrics. Exact canonical commands from prior passes used.
+
+| Claim | Source | Claimed | Recounted | Delta | Command |
+|-------|--------|---------|-----------|-------|---------|
+| Workspace test attrs | ANALYSIS-STATE.md A6 census | 4,803 | 4,803 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-*/src adk-*/tests --include="*.rs" \| wc -l` |
+| `#[ignore]` attrs (all forms) | ANALYSIS-STATE.md A6 census | 126 | 126 | 0 | `grep -rE '#\[ignore' --include="*.rs" . \| wc -l` |
+| `proptest!` invocations | ANALYSIS-STATE.md A6 census | 150 | 150 | 0 | `grep -rE 'proptest!' adk-*/src adk-*/tests --include="*.rs" \| wc -l` |
+| reqwest::Client::new() sites (adk-server+adk-auth src) | patterns-observed.md P-42/P-77 | 8 | 8 | 0 | `grep -rn "reqwest::Client::new()" adk-server/src/ adk-auth/src/ \| wc -l` |
+| .timeout() hits (adk-server+adk-auth src) | patterns-observed.md P-42/P-77 | 0 | 0 | 0 | `grep -rn "\.timeout(" adk-server/src/ adk-auth/src/ \| wc -l` |
+| adk-graph test attrs | test-inventory.md A2 / behavioral-intent.md A2 | 262 | 262 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-graph/ --include="*.rs" \| wc -l` |
+| adk-model test attrs | test-inventory.md A1 | 505 | 505 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-model/ --include="*.rs" \| wc -l` |
+| adk-core test attrs | test-inventory.md A1 | 339 | 339 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-core/ --include="*.rs" \| wc -l` |
+
+**All 8 standing metrics: Delta = 0 (pass). No drift detected.**
+
+---
+
+## Novel Probe (C23 choice): dependency-disposition.md A3 Behavioral Claims — Exposure-Cluster `anyhow` Confinement
+
+**Probe rationale:** No prior pass (C1–C22) chose dep-disp A3 as the primary novel probe target. C21 probed A2 (structural/behavioral), C22 probed A4 (version strings). A3 contains a specific behavioral assertion that `anyhow` is confined to binaries and has zero source hits in the exposure-cluster library crates. This is verifiable by grep and has never been independently confirmed as a novel probe.
+
+**Specific A3 claim verified:**
+
+dep-disp A3 states: "`anyhow` NOT in any exposure-cluster library src — grep: 0 hits in `adk-server`/`adk-auth`/`adk-awp`/`adk-acp`/`awp-types`/`adk-telemetry`/`adk-managed`/`adk-enterprise` `src/`; declared in `adk-server`/`adk-deploy` Cargo.toml but unused in src; USED only in `adk-cli` + `cargo-adk` (binaries)."
+
+**Verification command:** `grep -rn "anyhow" adk-server/src/ adk-auth/src/ adk-awp/src/ adk-acp/src/ awp-types/src/ adk-telemetry/src/ adk-managed/src/ adk-enterprise/src/ | grep -v "^Binary" | wc -l`
+
+**Result:** `0` — zero hits. CONFIRMED.
+
+**Novel probe verdict: CONFIRMED. `anyhow` is provably absent from all 8 exposure-cluster library src directories. dep-disp A3's confinement claim is accurate.**
+
+---
+
+## Refinement Iterations: 1/3
+
+Single iteration sufficient. Zero inaccuracies found; no corrections required. All 10 rotation claims confirmed on first pass. All 8 standing metrics Delta=0. Novel probe CONFIRMED.
+
+---
+
+## New Corrections Applied in This Pass
+
+None.
+
+---
+
+## UNVERIFIABLE Items (4 a2a-v1 Phase-4 obligations, carried from C2–C22)
+
+Same four items — unchanged; no new UNVERIFIABLE items added.
+
+1. Actual exponential-backoff sleep timing / total elapsed under repeated 429/5xx (a2a-v1 client retry)
+2. Actual `304 → Ok(None)` conditional-request round-trip (client `If-None-Match` vs server ETag match)
+3. Actual `-32009` version-negotiation round-trip — whether server's emitted `data[].metadata.supported` shape matches client's parser
+4. Actual push-notification SSRF-rejection + retry-then-`PushDeliveryFailed` delivery outcome
+
+---
+
+## Hallucinated Items (Removed)
+
+None. Zero hallucinations detected across all passes C1–C23.
+
+---
+
+## Inaccurate Items (Corrected)
+
+None in this pass.
+
+---
+
+## Verified-Lists Additions (C23)
+
+The following items are added to the verified pool:
+
+**Behavioral (rotation):**
+- B-01 (C23): §7.1 `graph.get_next_nodes(executed_nodes, state)` pure edge following — graph.rs:256 signature confirmed; zero `versions_seen`/`channel_versions` in adk-graph/src
+- B-02 (C23): §7.2 no content-addressed task IDs — zero `xxh3` hits in adk-graph/src
+- B-03 (C23): §7.2 no concurrent-write detection — zero `InvalidUpdateError`/`concurrent_write` in adk-graph/src
+- B-04 (C23): §15 `ScopeGuard` (scope.rs:252) + `ScopedTool<T: Tool>` (scope.rs:299) in adk-auth
+- B-05 (C23): §15 `AuditSink` 4 implementations: `FileAuditSink` (audit.rs:417), `InMemoryAuditSink` (audit.rs:494), `OtlpAuditSink` (audit_otlp.rs:45), `PostgresAuditSink` (audit_postgres.rs:35)
+- B-06 (C23): §17 background run `cancel_token: CancellationToken` at background/mod.rs:104 enabling `DELETE /runs/{run_id}` cancellation
+- B-07 (C23): dep-disp A3 `a2a-protocol-types = { version = "0.5", optional = true }` at adk-server/Cargo.toml:43
+- B-08 (C23): dep-disp A3 thiserror-derived: `A2aError` (a2a/v1/error.rs:12), `RequestContextError` (auth_bridge.rs:53), `AuthError` (adk-auth/src/error.rs:23), `AccessDenied` (adk-auth/src/error.rs:6)
+- B-09 (C23): test-inventory A2 "8 of 14 files are `*_property_tests.rs`" in adk-graph/tests — independently confirmed (ls: 14 files, 8 match `*_property_tests.rs`)
+- B-10 (C23): §15 `RequestContextExtractor` — `async fn extract(&self, parts: &axum::http::request::Parts) -> Result<RequestContext, RequestContextError>` at auth_bridge.rs:44-49
+
+**Opener (C22 sibling re-verification):**
+- B-03 (re-confirmed C23): `GraphError::RecursionLimitExceeded(self.step)` exact variant (executor.rs:124,203)
+- B-06 (re-confirmed C23): `SequentialAgent` = `LoopAgent::new(name, sub_agents).with_max_iterations(1)` (sequential_agent.rs:18)
+- B-07 (re-confirmed C23): `DEFAULT_LOOP_MAX_ITERATIONS: u32 = 1000` (loop_agent.rs:15)
+
+**Defect-class check (dep-disp A1 versions):**
+- tokio "1", serde "1", anyhow "1.0", thiserror "2.0", tracing "0.1", uuid "1", reqwest "0.12", rustls "0.23" — all confirmed exact against root Cargo.toml [workspace.dependencies]
+
+**Novel probe (dep-disp A3 exposure-cluster anyhow confinement):**
+- Zero `anyhow` hits in `adk-server/adk-auth/adk-awp/adk-acp/awp-types/adk-telemetry/adk-managed/adk-enterprise` src/ confirmed by grep
+
+---
+
+## Confidence Assessment
+
+- Overall extraction accuracy: **99%** (zero corrections in C23; 10/10 rotation claims confirmed; 1/1 novel probe confirmed; 8/8 metrics Delta=0; 0 hallucinated; 0 unverifiable new items)
+- Metric accuracy: **100%** on standing metrics (8/8 Delta=0; no drift across all 23 passes)
+- Hallucination rate: **0%** (maintained across all passes C1–C23)
+- Novel probe: dependency-disposition.md A3 anyhow-confinement claim — CONFIRMED (grep zero-hit result matches A3's assertion exactly)
+- Recommendation: **TRUST WITH CAVEATS** — same caveat classes as C22: (1) scc Code vs wc-l UNVERIFIABLE without scc tool; (2) four a2a-v1 runtime items Phase-4 obligations (carried from C2); (3) adk-anthropic/src/types ~60/82 approximation gap pre-existing acknowledged.
+
+---
+
+## Certification Final Verdict
+
+```
+CLEAN (strict):    YES — zero corrections applied
+CLEAN (PR-merge):  YES
+New corrections:   0
+Opener:            C22 sibling check CLEAN — B-03, B-06, B-07 re-confirmed;
+                   dep-disp A1 defect-class sweep CLEAN — all version strings exact
+                   (tokio/serde/anyhow/thiserror/tracing/uuid/reqwest/rustls)
+Metric sweep:      8/8 standing metrics Delta=0 (no drift across 23 passes)
+Novel probe:       dependency-disposition.md A3 exposure-cluster anyhow confinement —
+                   CONFIRMED: zero grep hits in all 8 library src dirs
+Rotation:          10/10 behavioral claims CONFIRMED (§7.1 get_next_nodes pure edge following,
+                   §7.2 no xxh3 task IDs, §7.2 no concurrent-write detection,
+                   §15 ScopeGuard/ScopedTool, §15 AuditSink 4-impl coverage,
+                   §17 CancellationToken DELETE, dep-disp A3 a2a-protocol-types version,
+                   dep-disp A3 thiserror-derived errors, test-inventory 8-of-14 property tests,
+                   §15 RequestContextExtractor signature); 0 inaccurate; 0 hallucinated
+Streak:            3/3 — *** 3-CLEAN GATE CLOSES ***
+                   (C21 CLEAN → 1/3; C22 CLEAN → 2/3; C23 CLEAN → 3/3)
+```
