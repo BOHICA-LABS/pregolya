@@ -346,8 +346,16 @@ Confidence HIGH (read `graph/state.py` signatures + `types.py`).
 ### 6.4 Subgraphs
 - A compiled graph can be `add_node`'d into a parent (it implements `PregelProtocol`).
   Subgraph gets its own `checkpoint_ns`; its checkpoints nest under the parent thread.
-  `Checkpointer` type per-subgraph: `True` (own persistence), `False` (disabled), `None`
-  (inherit parent). `Command(graph=Command.PARENT)` escapes a subgraph to the parent.
+  `Checkpointer` type per-subgraph: `True` (use parent's checkpointer with own namespace
+  — subgraph-only; raises `RuntimeError` for root graphs, see `main.py:2583-2584`),
+  `False` (disabled — no checkpointing), `None` (may inherit parent's checkpointer),
+  or a `BaseCheckpointSaver` instance (own persistence). <!-- [validation-certification-8]:
+  original said "True (own persistence)" — WRONG. `True` is a subgraph-only flag meaning
+  "use the parent's checkpointer injected via `CONFIG_KEY_CHECKPOINTER` with this
+  subgraph's own namespace (recast via `recast_checkpoint_ns`)." Own persistence requires
+  a `BaseCheckpointSaver` instance. Source: `state.py:1183-1189` compile() docstring;
+  `main.py:1419-1422, 2579-2586, 2807-2809`. --> `Command(graph=Command.PARENT)` escapes
+  a subgraph to the parent.
 
 ### 6.5 Functional API (`func/`)
 - `@task` (a unit of work, cached/retried) + `@entrypoint(checkpointer=...)` build a Pregel

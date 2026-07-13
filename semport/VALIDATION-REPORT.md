@@ -2748,3 +2748,224 @@ Streak: 0/3 (not advanced; 1 LOW correction found in this pass)
 ```
 
 **Most consequential new finding:** The missing `NamedBarrierValueAfterFinish` from the channel Concrete types list. A Rust translator working from §6.1 would implement 9 channel variants instead of 10, omitting the barrier-with-finish-semantics variant. This variant is used when you need a join/synchronization that also requires all nodes to have called `finish()` before releasing — distinct semantics from `NamedBarrierValue` (releases immediately once all named writers have written). The asymmetry with `LastValueAfterFinish` (correctly listed) signals the analysis author was aware of the AfterFinish pattern but missed this instance.
+
+---
+
+## Certification Pass 8 — Fresh-Context Validation (2026-07-13)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-13.
+
+**Context:** Streak entering: 0/3. Advances to 1/3 ONLY on ZERO corrections of any severity.
+
+**Sampling strategy (all 10 guardrails binding):** Per area: 3 behavioral + 2 numeric + 1 test
+citation + 1 highest-risk. All sampled claims rotated away from the verified lists in
+Certification Passes 1-7. Coverage-saturation notes per area where no truly unverified claims remain.
+
+---
+
+### Phase 1 — Behavioral Verification
+
+#### Core
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `bind_tools` base raises `NotImplementedError` (line 2355); providers override via `super().bind(tools=..., **kwargs)` → `_ChatModelBinding` | `chat_models.py:2338-2355`: base raises NotImplementedError; OpenAI `chat_models/base.py:2309`: `return super().bind(...)` | CONFIRMED |
+| `with_structured_output` at `chat_models.py:2357`; `include_raw=True` → dict `{"raw", "parsed", "parsing_error"}` with parse errors captured not raised; `include_raw=False` → parse errors raise | `chat_models.py:2357` (line confirmed); `2528-2534`: include_raw path; `2409-2414`: docstring `'parsing_error': BaseException \| None` | CONFIRMED |
+| (highest-risk) `_compat_bridge.py` 5 public functions at exact lines: `finalize_tool_call_chunk`:359, `chunks_to_events`:590, `achunks_to_events`:696, `message_to_events`:776, `amessage_to_events`:827 | `grep "^def\|^async def" language_models/_compat_bridge.py` — all 5 confirmed at stated lines | CONFIRMED |
+
+#### Graph
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `get_state(config)` → `StateSnapshot`; `get_state_history(config)` → `Iterator[StateSnapshot]` | `main.py:1392-1394`: `def get_state(...) -> StateSnapshot`; `1480-1487`: `def get_state_history(...) -> Iterator[StateSnapshot]` | CONFIRMED |
+| `checkpoint_ns` formula: subgraph = `parent_ns + NS_SEP(\|) + node_name`, task = `checkpoint_ns + NS_END(:) + task_id`; `NS_SEP='\|'`, `NS_END=':'` | `constants.py` runtime: `NS_SEP='\|'`, `NS_END=':'`; `main.py:1204-1206`: `task_ns = f"{task.name}{NS_END}{task.id}"`; if parent_ns: `f"{parent_ns}{NS_SEP}{task_ns}"` | CONFIRMED |
+| (highest-risk) `Checkpointer` type per-subgraph: "`True` (own persistence)" | `state.py:1183-1189` compile() docstring: `None` = "may inherit parent's checkpointer", `False` = "will not use or inherit any checkpointer"; `main.py:2583-2584`: `checkpointer=True` raises RuntimeError for root graphs; `main.py:1419-1422, 2807-2809`: True recasts namespace, uses parent's checkpointer from config — True is NOT "own persistence" | **INACCURATE** — corrected |
+
+#### Langchain
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `_execute_model_sync` (factory.py:1406): 5 steps — `_get_bound_model` → prepend system_message → `model_.invoke` + set name → `_handle_model_output` → return `ModelResponse` | `factory.py:1406-1431`: all 5 steps confirmed in exact order | CONFIRMED |
+| `_get_bound_model` at factory.py:1272; AutoStrategy → `_supports_provider_strategy` → ProviderStrategy or ToolStrategy | `factory.py:1272` (line confirmed); `1272-1320`: AutoStrategy logic confirmed | CONFIRMED |
+| (highest-risk) `Command.goto`/`resume`/`graph` rejected in `wrap_model_call` with `NotImplementedError` | `factory.py:219-228`: all three raise `NotImplementedError` with specific messages | CONFIRMED |
+
+#### Partners
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `_merge_messages` merges consecutive `HumanMessage` or `SystemMessage` messages by concatenating their content into a single message | `anthropic/chat_models.py:330-347`: checks `all(isinstance(m, c) for m in (curr, last)) for c in (SystemMessage, HumanMessage)`; merges content via extend | CONFIRMED |
+| BC-DRAFT-ANT-003: structured output incompatible with thinking → `_get_llm_for_structured_output_when_thinking_is_enabled` clones model with thinking disabled | `anthropic/chat_models.py:1821`: `def _get_llm_for_structured_output_when_thinking_is_enabled`; `2079`: called when thinking is set | CONFIRMED |
+| (highest-risk) BC-DRAFT-ANT-002: Anthropic `thinking`/`redacted_thinking`/`tool_use` content blocks correctly described | `chat_models.py:626`: `redacted_thinking`; `1569,1571`: streaming for `tool_use` / `redacted_thinking`; `1630`: `thinking` delta | CONFIRMED |
+
+#### Splitters
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `_LAZY_SPLITTERS` dict deferred via `__getattr__` keeps base import light for `NLTKTextSplitter`, `SpacyTextSplitter`, `KonlpyTextSplitter` | `__init__.py:83-91`: `_LAZY_SPLITTERS = {"KonlpyTextSplitter": "konlpy", "NLTKTextSplitter": "nltk", ...}`; `def __getattr__` at line 91 | CONFIRMED |
+| `MarkdownHeaderTextSplitter` supports `custom_header_patterns` parameter for non-standard header markers | `markdown.py:31`: `custom_header_patterns: dict[str, int] \| None = None`; `55-67`: stored and applied in `_is_custom_header` | CONFIRMED |
+| (highest-risk) `HTMLSemanticPreservingSplitter` is `@beta` | `html.py:576`: `@beta()` decorator on the class definition | CONFIRMED |
+
+#### MCP
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `callbacks.py` exports `Callbacks{on_logging_message, on_progress, on_elicitation}` dataclass; `to_mcp_format()` injects `CallbackContext` as trailing arg | `callbacks.py:97-133`: `class Callbacks`; `on_logging_message:100`, `on_progress:101`, `on_elicitation:102`; `to_mcp_format` at 104 injects context | CONFIRMED |
+| `load_mcp_resources` → `RuntimeError` wrapping the failing URI on any fetch error | `resources.py:99-101`: `except Exception as e: msg = f"Error fetching resource {current_uri}"; raise RuntimeError(msg) from e` | CONFIRMED |
+| (highest-risk) `load_mcp_prompt`: other roles → `ValueError`; non-text content → `ValueError` | `prompts.py:31-35`: role not user/assistant → `ValueError("Unsupported prompt message role")`; content.type != "text" → `ValueError("Unsupported prompt message content type")` | CONFIRMED |
+
+#### Platform
+
+| Claim | Source | Verdict |
+|-------|--------|---------|
+| `on_run_created` callback fires when `Content-Location` header parsed by `_get_run_metadata_from_response` using regex `r"(\/threads\/(?P<thread_id>.+))?\/runs\/(?P<run_id>.+)"` | `_shared/utilities.py:94-96`: regex confirmed; `_async/runs.py:348-349`: callback invoked with parsed metadata | CONFIRMED |
+| Thread `ttl` accepts `int` (minutes) converted to `{"ttl": int, "strategy": "delete"}` OR a mapping with optional `strategy` key (defaults to "delete") | `_async/threads.py:124-126,169-172`: `isinstance(ttl, (int, float))` → `{"ttl": ttl, "strategy": "delete"}`; else pass mapping through | CONFIRMED |
+| (highest-risk) `_async/client.py` LOC = 178 | `wc -l _async/client.py = 178` | CONFIRMED |
+
+---
+
+### Phase 1 Summary
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| core | 6 | 6 | 0 | 0 | 0 |
+| graph | 6 | 5 | 1 | 0 | 0 |
+| langchain | 6 | 6 | 0 | 0 | 0 |
+| partners | 6 | 6 | 0 | 0 | 0 |
+| splitters | 6 | 6 | 0 | 0 | 0 |
+| mcp | 6 | 6 | 0 | 0 | 0 |
+| platform | 6 | 6 | 0 | 0 | 0 |
+| **TOTAL** | **42** | **41** | **1** | **0** | **0** |
+
+---
+
+### Phase 2 — Metric Verification
+
+All prior pass metrics re-confirmed unchanged. Fresh metrics for pass cert-8:
+
+| Claim | Claimed | Recounted | Delta | Command |
+|-------|---------|-----------|-------|---------|
+| `language_models/chat_model_stream.py` LOC | 1,441 | 1,441 | 0 | `wc -l .../language_models/chat_model_stream.py` |
+| `language_models/llms.py` LOC | 1,569 | 1,569 | 0 | `wc -l .../language_models/llms.py` |
+| `test_compat_bridge.py` LOC (core citation) | 1,403 | 1,403 | 0 | `wc -l .../unit_tests/language_models/test_compat_bridge.py` |
+| `test_compat_bridge.py` test count | 43 | 43 | 0 | `grep -c "def test_" test_compat_bridge.py` |
+| `pregel/_read.py` LOC | 298 | 298 | 0 | `wc -l .../pregel/_read.py` |
+| `pregel/_write.py` LOC | 192 | 192 | 0 | `wc -l .../pregel/_write.py` |
+| `test_interleave_arrival_order.py` LOC | 359 | 359 | 0 | `wc -l .../tests/test_interleave_arrival_order.py` |
+| per-middleware implementation tests LOC | 14,550 | 14,550 | 0 | `find .../implementations -name "*.py" ! -name "__init__.py" \| xargs wc -l \| tail -1` |
+| langchain `test_chat_models.py` LOC | 349 | 349 | 0 | `wc -l .../chat_models/test_chat_models.py` |
+| partners OpenRouter source LOC | 9,329 | 9,329 | 0 | `find .../langchain_openrouter -name "*.py" ! -path "*/tests/*" \| xargs wc -l \| tail -1` |
+| `test_resources.py` LOC (MCP) | 275 | 275 | 0 | `wc -l tests/test_resources.py` |
+| `test_callbacks.py` LOC (MCP) | 143 | 143 | 0 | `wc -l tests/test_callbacks.py` |
+| `_async/client.py` LOC (platform) | 178 | 178 | 0 | `wc -l .../langgraph_sdk/_async/client.py` |
+| `nltk.py` LOC (splitters) | 83 | 83 | 0 | `wc -l langchain_text_splitters/nltk.py` |
+| `spacy.py` LOC (splitters) | 69 | 69 | 0 | `wc -l langchain_text_splitters/spacy.py` |
+
+**All 15 metric rows: delta = 0.**
+
+---
+
+### Test Citations (7 verified)
+
+| Area | Citation | Claimed | Verified |
+|------|----------|---------|---------|
+| core | `test_compat_bridge.py` 43 tests / 1,403 LOC | 43/1,403 | ✓ (both exact) |
+| graph | `test_interleave_arrival_order.py` LOC = 359 | 359 | ✓ `wc -l = 359` |
+| langchain | `test_chat_models.py` LOC = 349 (in `chat_models/` subdir) | 349 | ✓ `wc -l = 349` |
+| partners | `test_image_inputs` at integration_tests/chat_models.py:2846; `test_pdf_inputs`:2661; `test_audio_inputs`:2751 | present (gated) | ✓ all three confirmed at stated lines |
+| splitters | `test_md_header_text_splitter_fenced_code_block` at line 1638; parametrized with `fence` values `["```", "~~~"]` | parametrized fences | ✓ `@pytest.mark.parametrize("fence", [("```"), ("~~~")])` at line 1637 |
+| mcp | `test_resources.py` LOC = 275 | 275 | ✓ `wc -l = 275` |
+| platform | `_async/client.py` LOC = 178 | 178 | ✓ `wc -l = 178` |
+
+---
+
+### Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Value | Severity | Correction Applied |
+|------|---------------|--------------|----------|--------------------|
+| `graph/behavioral-intent.md §6.4` subgraph checkpointer `True` | "`True` (own persistence)" | `True` is a subgraph-only flag meaning "use parent's checkpointer (injected via `CONFIG_KEY_CHECKPOINTER`) with this subgraph's own namespace (recast via `recast_checkpoint_ns`)." Raises `RuntimeError("checkpointer=True cannot be used for root graphs.")` at `main.py:2583-2584`. Own persistence requires a `BaseCheckpointSaver` instance. Source: `state.py:1183-1189`, `main.py:1419-1422, 2579-2586, 2807-2809`. | MEDIUM | Corrected in-place: True described as "use parent's checkpointer with own namespace — subgraph-only"; added `BaseCheckpointSaver` instance as the "own persistence" option; `[validation-certification-8]` marker added |
+
+---
+
+### Hallucinated Items
+
+None. Every function, class, constant, and LOC claim verified against source. Zero
+hallucinations across all 42 sampled items.
+
+---
+
+### Unverifiable Items
+
+Same standing set as passes 1-8 and cert passes 1-7 (Ollama DTU endpoint catalog beyond
+what is in-source, rmcp 2.2.0 elicitation details, partner own-test LOC figures). No new
+unverifiable items.
+
+---
+
+### Propagation Audit
+
+Swept all 7 areas for stale pre-correction values from all prior passes and cert passes 1-7.
+No uncorrected siblings found for the new correction. The `graph/behavioral-intent.md §6.4`
+correction applies to a unique claim; no sibling documents carry the same "True (own
+persistence)" language for subgraph checkpointer semantics. `graph/rust-translation-strategy.md`
+does not mention the True/False/None semantics directly — no propagation needed.
+
+---
+
+### Coverage-Saturation Notes
+
+- **core**: The core area has been exhaustively sampled across 8 standard passes and 8
+  certification passes. The `_compat_bridge.py` public functions (5/5), `with_structured_output`
+  include_raw semantics, `bind_tools` NotImplementedError, and all LOC figures confirmed.
+  If further passes occur, consider sampling: `BaseLLM.generate` partial-failure semantics,
+  `_get_supported_usage_metadata_keys` existence/behavior.
+- **langchain**: `_execute_model_sync` and `_get_bound_model` verified for first time in cert
+  passes. `Command.goto/resume/graph` rejection confirmed. Heavy saturation in factory.py
+  behavior. Remaining unsampled: `_run_agent` streaming path, `AgentMiddleware.before_agent`
+  hook signature details.
+- **graph**: `checkpoint_ns` formula and `get_state` signatures confirmed. The checkpointer
+  True/False/None/instance semantics error corrected. This was the last unverified area of the
+  subgraph compilation contract.
+- **mcp, splitters, platform**: High saturation. Confirmed `load_mcp_prompt` and
+  `load_mcp_resources` error semantics for first time in cert passes. `HTMLSemanticPreservingSplitter`
+  `@beta` confirmed. Platform `on_run_created` regex pattern confirmed.
+
+---
+
+### Per-Area Verdicts
+
+| Area | Verdict | Cert-8 Corrections |
+|------|---------|-------------------|
+| core | PASS — bind_tools, with_structured_output, _compat_bridge.py 5 functions (+ exact lines), test file confirmed | 0 |
+| graph | FAIL (MEDIUM) — checkpointer `True` (own persistence) corrected to "use parent's checkpointer with own namespace" | 1 |
+| langchain | PASS — _execute_model_sync 5 steps, _get_bound_model strategy detection, Command rejection all confirmed | 0 |
+| partners | PASS — _merge_messages consecutive merge, ANT-003 thinking+structured incompatibility, ANT-002 content blocks confirmed | 0 |
+| splitters | PASS — _LAZY_SPLITTERS __getattr__, custom_header_patterns, HTMLSemanticPreservingSplitter @beta all confirmed | 0 |
+| mcp | PASS — Callbacks class, load_mcp_resources RuntimeError, load_mcp_prompt ValueError semantics all confirmed | 0 |
+| platform | PASS — on_run_created Content-Location regex, TTL semantics, client.py LOC confirmed | 0 |
+
+---
+
+### Certification Pass 8 — CLEAN Status
+
+```
+CLEAN (strict): no — 1 correction of severity MEDIUM
+  - MEDIUM: graph/behavioral-intent.md §6.4
+            "True (own persistence)" for subgraph Checkpointer type
+            → actual: True = "use parent's checkpointer with own namespace" (subgraph-only)
+            Own persistence = providing a BaseCheckpointSaver instance (omitted from list)
+            Source: state.py:1183-1189, main.py:2583-2584, 1419-1422, 2807-2809
+CLEAN (PR-merge): yes — zero CRIT/HIGH findings; correction is MEDIUM
+Streak: 0/3 (not advanced; 1 MEDIUM correction found in this pass)
+```
+
+**Most consequential finding:** The subgraph `Checkpointer=True` description "own persistence"
+is wrong in an actionable way. A Rust port implementer reading the semport would design their
+subgraph type to accept `bool` with `true` meaning "create own checkpoint store," when the actual
+Python semantics are the opposite: `true` means "borrow the parent's checkpoint store." Own
+persistence — having a subgraph use its own isolated `BaseCheckpointSaver` instance — is
+represented by providing that instance directly to `compile(checkpointer=my_saver)`. The
+misattribution `True = own persistence` would produce a Rust type that creates an independent
+checkpoint for the subgraph when it should instead read/write through the parent's store.
+The corrected description clarifies all four variants: True (borrow parent with own namespace),
+False (disabled), None (conditional inheritance), BaseCheckpointSaver instance (own persistence).

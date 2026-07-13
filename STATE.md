@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T23:45:00Z
+timestamp: 2026-07-14T00:05:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "3-CLEAN certification pass 8 in progress, streak 0/3. ALL bounded error classes closed. Phase 1 opens on 3 consecutive CLEAN(strict) passes."
+current_step: "3-CLEAN certification pass 9 in progress, streak 0/3. Return commit SHA."
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -43,9 +43,9 @@ dtu_required: false
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived upstream — curated-subset reference only), langchain-mcp-adapters==0.3.0 (SHA a61c783a) |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — burst 24: 3-CLEAN certification pass 7 COMPLETE — CLEAN(strict)=NO. 1 correction (1 LOW): `NamedBarrierValueAfterFinish` missing from channel Concrete-types enumeration in graph/rust-translation-strategy.md §6.1 (asymmetric omission — LastValueAfterFinish sibling was present). ENUMERATION CLASS CLOSED: 42 enumeration claims exhaustively verified across all 14 spec-driving files; 6 of 7 areas fully clean. ALL BOUNDED ERROR CLASSES CLOSED. Per-pass yield collapsed to 1 finding. Streak 0/3. Pass 8 dispatched (pure fresh-eyes rotation, coverage-saturation check). |
+| **Last Updated** | 2026-07-13 — burst 25: 3-CLEAN certification pass 8 COMPLETE — CLEAN(strict)=NO. 1 correction (1 MEDIUM): subgraph `checkpointer=True` borrows the parent's checkpointer under the subgraph's own namespace (`recast_checkpoint_ns`) — does NOT mean own persistence; own persistence requires a `BaseCheckpointSaver` instance; `True` on root graphs raises `RuntimeError`. All four variants (True/False/None/instance) now documented in graph/behavioral-intent.md. Coverage-saturation reported per area: core/graph/langchain/partners at high saturation; splitters/platform near-full; genuinely-unverified territory named (core `BaseLLM.generate` partial-failure semantics, streaming LLM event emission). Streak 0/3. Pass 9 dispatched. |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | 3-CLEAN certification pass 8 in progress (pure fresh-eyes rotation, all 10 guardrails, instructed to select never-verified claims and report coverage-saturation if none remain). ALL bounded error classes closed. Streak 0/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes. |
+| **Current Step** | 3-CLEAN certification pass 9 in progress. Opens by verifying ALL explicitly-named residual territory from pass-8 saturation report (core `BaseLLM.generate`, streaming LLM events), then rotation. Streak 0/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes. |
 
 ## Phase Progress
 
@@ -68,10 +68,10 @@ dtu_required: false
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| 3-CLEAN certification pass 5 | validate-extraction | DONE | CLEAN(strict)=NO. 3 unique inaccuracies / 4 corrections (2 MEDIUM, 1 LOW): ENV-VAR CLASS CLOSED (LANGGRAPH_DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT default 5000 added); DEPRECATED-VS-ACTIVE: LATEST_VERSION=4 active pregel runtime (was v2 from deprecated section — D11.2 relevant); validate_model gated by validate_model_on_init=False (2 files). 9th lesson codified. Streak 0/3. |
 | 3-CLEAN certification pass 6 | validate-extraction | DONE | CLEAN(strict)=NO. 1 correction (1 LOW, port-critical): `_reapply_writes_to_succeeded_nodes` skips FOUR signals (ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME) not two — INTERRUPT omission corrupts resume semantics. Housekeeping: XAI_API_BASE, GROQ_API_BASE, GROQ_PROXY added. VERSION CLASS CLOSED: 7/7 verified. Streak 0/3. |
 | 3-CLEAN certification pass 7 | validate-extraction | DONE | CLEAN(strict)=NO. 1 correction (1 LOW): `NamedBarrierValueAfterFinish` absent from channel Concrete-types enumeration in graph/rust-translation-strategy.md §6.1 (asymmetric vs LastValueAfterFinish sibling). ENUMERATION CLASS CLOSED: 42 claims verified across 14 files, 6/7 areas clean. ALL bounded error classes closed. Streak 0/3. |
-| 3-CLEAN certification pass 8 | validate-extraction | IN_PROGRESS | Pure fresh-eyes rotation, all 10 guardrails, coverage-saturation check (never-verified claims). ALL bounded error classes closed. Streak 0/3. |
+| 3-CLEAN certification pass 8 | validate-extraction | DONE | CLEAN(strict)=NO. 1 correction (1 MEDIUM): subgraph `checkpointer=True` borrows parent's checkpointer via `recast_checkpoint_ns` — NOT own persistence. Own persistence requires `BaseCheckpointSaver` instance. `True` on root graphs raises `RuntimeError`. All four variants documented. Coverage-saturation reported: core/graph/langchain/partners high; residual named. Streak 0/3. |
+| 3-CLEAN certification pass 9 | validate-extraction | IN_PROGRESS | Opens by verifying ALL explicitly-named residual territory from pass-8 saturation report (core `BaseLLM.generate` partial-failure, streaming LLM events), then rotation. Streak 0/3. |
 
 ## Decisions Log
 
@@ -145,7 +145,7 @@ dtu_required: false
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 24 complete. 3-CLEAN certification pass 7 COMPLETE: CLEAN(strict)=NO — 1 correction (1 LOW). `NamedBarrierValueAfterFinish` absent from channel Concrete-types enumeration in graph/rust-translation-strategy.md §6.1 (asymmetric omission — `LastValueAfterFinish` sibling was present). Source: named_barrier_value.py:84. ENUMERATION CLASS CLOSED: 42 enumeration claims exhaustively verified across all 14 spec-driving files; 6 of 7 areas fully clean. ALL BOUNDED ERROR CLASSES NOW CLOSED (propagation, counting methodology, dependency-verbatim, env-vars, deprecated-vs-active, enumeration completeness). Per-pass yield collapsed to 1 finding. Streak 0/3. Pass 8 DISPATCHED: pure fresh-eyes rotation, all 10 guardrails, instructed to select never-verified claims and report coverage-saturation explicitly if none remain. |
+| **Position** | pre-1, burst 25 complete. 3-CLEAN certification pass 8 COMPLETE: CLEAN(strict)=NO — 1 correction (1 MEDIUM). Subgraph `checkpointer=True` borrows the parent's checkpointer under the subgraph's own namespace (`recast_checkpoint_ns`), does NOT mean own persistence. Own persistence requires a `BaseCheckpointSaver` instance. `True` on root graphs raises `RuntimeError` (source: `main.py:2583-2584`). `None` = "may inherit parent's checkpointer". `False` = "will not use or inherit any checkpointer". All four variants now documented in graph/behavioral-intent.md §6.4 with `[validation-certification-8]` markers. Directly shapes ferrochain-graph subgraph API (D9/D11 design input). Coverage-saturation per area: core/graph/langchain/partners at high saturation; splitters/platform near-full; remaining genuinely-unverified territory explicitly named (core `BaseLLM.generate` partial-failure semantics, streaming LLM event emission). Streak 0/3. Pass 9 DISPATCHED: opens by verifying ALL explicitly-named residual territory from pass-8 saturation report. |
 | **Key context** | D1-D14.1 locked. D14.1: exhaustive-sweep-then-3-CLEAN (human-approved); strict-zero bar unchanged. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh needed (time-sensitive). R8 OPEN: Unicode/code-point parity — route to product-owner at Phase 1. R10 OPEN: NamedBarrierValue/EphemeralValue coverage gap. R11 OPEN: MCP upstream test voids. CLAUDE.md on main — no initial commit yet; devops at workspace-init Phase 1. Ref corpus: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0. D9: architect presents ≥2 graph alternatives at Phase 1c. D11 ADR at Phase 1c. 10 guardrails active (10th=ENUMERATION COMPLETENESS). ALL bounded error classes closed. |
 | **Convergence counter** | 0 of 3 |
 
@@ -176,6 +176,7 @@ dtu_required: false
 | Burst 22 narrative (3-CLEAN certification pass 5 COMPLETE — CLEAN(strict)=NO; 3 unique inaccuracies / 4 corrections (2 MEDIUM, 1 LOW): ENV-VAR CLASS CLOSED; DEPRECATED-VS-ACTIVE LATEST_VERSION=4 active pregel; validate_model opt-in default FALSE; 9th lesson; pass 6 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 23 narrative (3-CLEAN certification pass 6 COMPLETE — CLEAN(strict)=NO; 1 correction (1 LOW, port-critical): `_reapply_writes_to_succeeded_nodes` 2→4 signals, INTERRUPT omission; housekeeping 3 env-vars; VERSION CLASS CLOSED; ENUMERATION INCOMPLETENESS dominant class; 10th lesson; pass 7 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 24 narrative (3-CLEAN certification pass 7 COMPLETE — CLEAN(strict)=NO; 1 correction (1 LOW): NamedBarrierValueAfterFinish missing from graph/rust-translation-strategy.md §6.1 enumeration; ENUMERATION CLASS CLOSED: 42 claims / 14 files; ALL bounded error classes closed; pass 8 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Burst 25 narrative (3-CLEAN certification pass 8 COMPLETE — CLEAN(strict)=NO; 1 correction (1 MEDIUM): subgraph checkpointer=True borrows parent's checkpointer (recast_checkpoint_ns), NOT own persistence — own persistence requires BaseCheckpointSaver; True on root graphs raises RuntimeError; all four variants documented; coverage-saturation reported; pass 9 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Bursts 5-23 checkpoints (all archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Lessons learned (PROCESS-GAP: validator counting methodology) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
 | Lessons learned (PROCESS-GAP: cross-document propagation failures / TD-VSDD-060) | `cycles/v0.0.0-pre-pipeline/lessons.md` |

@@ -877,3 +877,47 @@ Per-pass yield has collapsed to 1 finding. Remaining residue is unstructured (no
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 23 checkpoint archived)
 - `STATE.md` (pass 7 DONE, pass 8 IN_PROGRESS, session checkpoint updated)
+
+---
+
+## Burst 25 — 3-CLEAN Certification Pass 8 COMPLETE + Pass 9 Dispatched (2026-07-13)
+
+**Pass 8 result:** CLEAN(strict)=NO. 1 correction (1 MEDIUM).
+
+**Correction — Subgraph Checkpointer Semantics (MEDIUM, port-critical):**
+
+`checkpointer=True` in a compiled subgraph does NOT mean "own persistence." It is a subgraph-only flag meaning: borrow the parent's checkpointer from `CONFIG_KEY_CHECKPOINTER` in the runtime config, but recast it under this subgraph's own namespace via `recast_checkpoint_ns`. The subgraph writes checkpoints under `parent_ns|subgraph_name:task_id` — it does NOT create an independent persistence layer.
+
+- `True` on a root graph raises `RuntimeError` (`main.py:2583-2584`): "Root graphs must have a checkpointer or None, not True."
+- `None` = "may inherit parent's checkpointer" (compile() docstring `state.py:1183-1189`)
+- `False` = "will not use or inherit any checkpointer"
+- `BaseCheckpointSaver` instance = own persistence (the only form that is truly independent)
+
+All four variants now documented in `semport/graph/behavioral-intent.md §6.4` with `[validation-certification-8]` correction markers. The corrected description: "True (use parent's checkpointer with own namespace — subgraph-only; raises RuntimeError for root graphs)".
+
+**Design implication:** ferrochain-graph's subgraph API must model this distinction clearly. `checkpointer=True` is a Rust-side configuration flag meaning "borrow from parent runtime context," not "create a new saver." This is a direct design input for D9/D11.
+
+**Coverage-saturation report (per-area):**
+
+| Area | Saturation | Genuinely-unverified residual |
+|------|------------|-------------------------------|
+| core | High | `BaseLLM.generate` partial-failure semantics (what happens when some outputs succeed, some fail); streaming LLM event emission order |
+| graph | High | None named |
+| langchain | High | None named |
+| partners | High | None named |
+| splitters | Near-full | None named |
+| mcp | High | None named |
+| platform | Near-full | None named |
+
+Validator conclusion: "The last high-consequence unverified contract in subgraph compilation has now been corrected. Remaining residual territory is structurally peripheral."
+
+**Streak:** 0/3 (correction resets). Pass 8 cascade: 11→5→7→9→2→2→2→7→1→1. Finding severity trending MEDIUM from LOW — this class of correction (semantics, not omissions) is harder to catch via enumeration guardrails.
+
+**Pass 9 dispatched:** Opens by verifying ALL explicitly-named residual territory from the pass-8 saturation report (core `BaseLLM.generate` partial-failure semantics, streaming LLM event emission). Then rotation across all 7 areas.
+
+**Files touched:**
+- `semport/graph/behavioral-intent.md` (checkpointer=True semantics corrected §6.4)
+- `semport/VALIDATION-REPORT.md` (pass 8 result appended)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 24 checkpoint archived)
+- `STATE.md` (pass 8 DONE, pass 9 IN_PROGRESS, session checkpoint updated)
