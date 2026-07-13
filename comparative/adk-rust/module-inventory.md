@@ -9,7 +9,7 @@ status: observe-only (no compare-and-conclude)
 
 # adk-rust — Module Inventory (Pass A1)
 
-39 workspace crates + 81 excluded example crates. `resolver = "2"`, `edition = "2024"`,
+39 workspace crates with implementation directories + 1 declared-only stub (`adk-studio` appears in Cargo.toml `members` list but has no directory on disk) = 40 Cargo.toml members total [comparative-sweep: `grep -E '^\s+"[a-z]' Cargo.toml | grep -v examples|reference|learning | wc -l` → 40; `adk-studio` dir absent]. 81 example crate directories in `examples/` (3 are workspace members; 78 are standalone with their own `[workspace]` key). `resolver = "2"`, `edition = "2024"`,
 `rust-version = "1.94.0"`. LOC below = scc `Code` metric (comments/blanks excluded),
 measured per-crate at the workspace tag; examples excluded. Whole-repo code total per
 the reference manifest is 265,316 (includes examples); the 39 in-workspace crates sum
@@ -238,7 +238,7 @@ behavioral role of each module.
 | `node.rs`, `edge.rs`, `graph.rs` | `Node`/`NodeOutput{updates,interrupt,events}`, `Edge`, `StateGraph`/`CompiledGraph` builder | `NodeOutput.interrupt` is how dynamic interrupts surface. |
 | `cache.rs`, `deferred.rs`, `timeout.rs`, `agent.rs`, `workflow.rs`, `stream.rs`, `error.rs` | node-cache (feature), `FanInTracker`, timeout+`ProgressHandle`, agent-as-node, workflow sugar, `StreamEvent`/`StreamMode`, `GraphError` | `FanInTracker` = the join/barrier primitive; timeout has idle-timeout via progress handle. |
 
-## adk-session (8,089 LOC, 17 files) — module roles
+## adk-session (8,089 LOC, 17 src files / 32 total) — module roles [comparative-sweep: A1 table correctly states 32 total; this section's "17 files" counts src/ only; actual total including 13 tests/ + 2 examples/ = 32]
 | Module | Role | Durability property |
 |--------|------|---------------------|
 | `service.rs` | `SessionService` trait + request DTOs (Create/Get/List/Delete/AppendEvent) with `try_identity()` typed accessors | Defaults: `rewind`/`rewind_steps`/`delete_all_sessions` → structured "not supported" error; `health_check` → Ok. `append_event_for_identity` default collapses triple → session_id (P-34). |
@@ -438,9 +438,9 @@ timestamp: 2026-07-13
 
 D16 Rust-blindness holds. Structural map of the eight cluster crates. Cross-refs P-47..P-66.
 
-## Crate sizes (in-workspace `.rs` LOC / file count)
-| Crate | LOC | Files | Role |
-|-------|-----|-------|------|
+## Crate sizes (in-workspace `.rs` LOC / file count) [comparative-sweep: LOC figures in this A4 table are raw `wc -l` totals across all .rs files, NOT the scc `Code` metric used in the A1 workspace scale table above. A1 figures are ~30-40% lower because scc excludes blanks and comments. Both sets of file counts were independently verified and are correct.]
+| Crate | LOC (wc -l) | Files | Role |
+|-------|-------------|-------|------|
 | adk-code | 9,081 | 25 | Code-exec substrate: typed executor, own SandboxPolicy, rust/container/wasm/js backends |
 | adk-eval | 8,226 | 26 | Agent evaluation harness (datasets, scorers, LLM/structured judges, cost/trace) |
 | adk-sandbox | 7,521 | 27 | Isolated code exec: process/wasm backends + OS enforcers + workspace lifecycle |
@@ -579,7 +579,7 @@ duplicated transports. See patterns-observed A5 headline for the full evidence.
 - **adk-bench** (4,828 LOC, 13 files) — benchmarking harness: `adapters/` (τ²-bench `tau2` + Berkeley
   Function Calling `bfcl`, feature-gated), `instrumented_llm` (wraps an `Llm` to measure),
   `metrics`, `runner`, `workload`, `external`, `formatter`, `memory`, `config`. Proper agent-eval harness.
-- **adk-rust-macros** (754/963 LOC, 1 file) — proc-macro crate: `#[tool]`, `#[entrypoint]`, `#[task]`
+- **adk-rust-macros** (754/963 LOC, 1 src file; 2 total including tests/) [comparative-sweep: A1 table correctly states 2 total .rs files; this section counted src/ only] — proc-macro crate: `#[tool]`, `#[entrypoint]`, `#[task]`
   (P-72). `proc-macro = true`; deps proc-macro2/quote/syn; dev-dep schemars.
 
 ## adk-managed / adk-enterprise remainder (from A3 inventory; provider-adjacent note)

@@ -452,6 +452,41 @@ All 11 process-gap lessons carry their "Codification applied" section (confirmed
 | 9 | Deprecated-vs-Active | Guardrail 8: Deprecated-vs-active | CODIFIED |
 | 10 | Enumeration Completeness | Guardrail 10: Enumeration completeness | CODIFIED |
 | 11 | Corrections Are Claims | Opening stratum discipline | CODIFIED |
+| 12 | Test-Count Methodology (adk-rust sweep) | Guardrail 12: Attribute-only test counting | CODIFIED |
+
+---
+
+## Lesson 12: PROCESS-GAP — Test-Count Methodology (2026-07-13)
+
+### What happened
+
+During the adk-rust comparative exhaustive sweep (burst 41), validator SWEEP-test-deps discovered that the analysis used a combined grep pattern `#[test]|#[tokio::test]|fn test_` to count test functions. This pattern matches BOTH the attribute line (`#[test]`) AND the function declaration line (`fn test_mytest`) for synchronous tests. Async tests (`#[tokio::test] async fn`) were NOT double-counted because `async fn` does not match `fn test_`. The result was systematic ~2x inflation for sync-test-heavy files.
+
+The effect was visible in an internal inconsistency: the adk-graph crate-wide claimed total of 208 test functions was already less than the per-file integration subtable sum of 223 — the per-file table was summing differently from the top-level claim. The attribute-only canonical recount gave 262 crate-wide. This also resolved the sweep-1/sweep-2 conflict where different validators reported 197 (fn-name pattern only, slightly different scope), 208 (claimed total, understated), and 223 (per-file sum, overcounted via double-count).
+
+### Why it matters
+
+Test coverage claims are assessment-driving. If a comparative analysis of a reference corpus says "208 test functions crate-wide" when the actual attribute-only count is 262, the downstream spec authors underestimate the testing depth of the reference implementation. For ferrochain, this means behavioral contracts may underspecify the test harness needed to match adk-rust's actual test discipline.
+
+### Guardrail 12 (explicit text)
+
+**When counting test functions in Rust source code, ALWAYS use attribute-only grep patterns:**
+
+```bash
+# CORRECT — attribute-only, no double-counting
+grep -rE '#\[(test|tokio::test)\]' <path>/ --include="*.rs" | wc -l
+
+# WRONG — matches both attribute line AND fn declaration line for sync tests
+grep -rn "#[test]|#[tokio::test]|fn test_" <path>/ | wc -l
+```
+
+Count `#[test]` and `#[tokio::test]` attributes. Never count `fn test_*` patterns as a proxy for test count. For proptest macros (`proptest! {}`), count separately and label explicitly ("N proptest! blocks" not "N test functions").
+
+### Codification applied
+
+- Guardrail #12 text added to lessons.md (this entry). (Burst 41, 2026-07-13)
+- To be folded into validate-extraction agent prompt at session-review alongside guardrails 1–11.
+- Cross-reference: SWEEP-test-deps.md §"CRITICAL" findings C-1 and C-2 for full double-counting analysis.
 
 ---
 

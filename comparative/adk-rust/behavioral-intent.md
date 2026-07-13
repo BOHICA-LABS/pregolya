@@ -334,7 +334,7 @@ HIGH (code).
 
 ## 10. Test-as-spec quality for the cluster (maps to test-inventory A2) — HIGH
 
-- **adk-graph:** 14 integration files, 208 test fns crate-wide, 8 `*_property_tests.rs`. Property
+- **adk-graph:** 14 integration files, 262 test fns crate-wide [comparative-sweep: recount from `#[test]`+`#[tokio::test]` annotations; claimed 208, verified 262], 8 `*_property_tests.rs`. Property
   coverage on switch routing, error modes, cache, deferred fan-in, delta round-trip, time-travel,
   timeout, workflow schema. `delta.rs` alone carries ~40 in-crate unit tests incl. the
   `apply(diff)==new` round-trip across append/modify/remove/unicode/multiline. This is genuine

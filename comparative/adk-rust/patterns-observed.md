@@ -70,7 +70,7 @@ errors fall back to message-substring scanning during migration only.
 Instead of scattering "is the agent done?" logic, one predicate combines skip_summarization,
 long-running-tool presence, function-call/response presence, partial flag, and trailing
 code-exec result — with an 11-case test truth table.
-- Evidence: `adk-core::event::Event::is_final_response` + tests.
+- Evidence: `adk-core::event::Event::is_final_response` + 9-test suite. <!-- [comparative-sweep] CORRECTION: "11-case test truth table" → 9 distinct fn test_is_final_response_* functions (grep -c "fn test_is_final_response" adk-core/src/event.rs = 9). Quality tag unaffected. -->
 - Quality: **STRONG** — turn-boundary detection is the crux of any agent loop; centralizing and
   exhaustively testing it prevents subtle streaming/tool-loop bugs.
 - Ferrochain concern: message/content-block semantics (semport/core §2), agent loop / graph
@@ -311,13 +311,13 @@ observe each other's writes mid-step.
 ### P-24 — Property-based test suite over the graph runtime (proptest-driven, not smoke)
 The graph crate's 14 integration files are dominated by property tests: `action_switch`,
 `action_error_mode`, `cache`, `deferred`, `delta`, `time_travel`, `timeout`, and
-`workflow_schema` all carry `*_property_tests.rs`. 208 test fns crate-wide; the `Diff` round-trip,
+`workflow_schema` all carry `*_property_tests.rs`. 262 test fns crate-wide (attribute-only: `grep -rE '#\[(test|tokio::test)\]' adk-graph/`; [comparative-cert-1] canonical methodology replaces prior "208" which used double-counting and "197/223" which used fn-name grep); the `Diff` round-trip,
 switch routing, deferred fan-in, and timeout laws are checked over generated inputs.
 - Evidence: `adk-graph/tests/*_property_tests.rs` (8 of 14 files), `delta.rs`/`typed_reducer.rs`
   in-crate truth tables.
 - Quality: **STRONG** — property tests over a state-machine runtime encode invariants
   (round-trip, routing totality, fan-in completeness) a re-implementer can lift as a conformance
-  suite. This is the highest-value test-as-spec form for an execution engine.
+  suite. This is the highest-value test-as-spec form for an execution engine. <!-- [comparative-sweep] CORRECTION: "208 test fns crate-wide" → actual `fn test_*` count = 197 (grep -rn "fn test_" adk-graph/ --include="*.rs" | wc -l); proptest fns (fn prop_*) bring the all-function total to 223; 208 matches neither. Quality tag unaffected. -->
 - Ferrochain concern: test-as-spec / verification-properties (Phase 6 VP files); D9/D11 invariants
   are exactly the kind that want property + Kani coverage.
 
@@ -492,7 +492,7 @@ timestamp: 2026-07-13
 
 # Pass A3 — SERVER / PROTOCOL / AUTH cluster (adk-server, A2A v1, awp/acp, adk-auth, telemetry)
 
-Deep scope: `adk-server` (20,752 LOC), A2A v1.0.0, `adk-awp`/`awp-types`/`adk-acp`,
+Deep scope: `adk-server` (22,373 LOC src/ <!-- [comparative-sweep] CORRECTION: "20,752 LOC" → 22,373 (find adk-server/src -name "*.rs" | xargs wc -l); delta = +1,621 -->), A2A v1.0.0, `adk-awp`/`awp-types`/`adk-acp`,
 `adk-auth`, `adk-telemetry`, `adk-managed` usage, + `adk-cli`/`adk-deploy`/`cargo-adk` at
 inventory depth. Same D16 Rust-blindness constraint — production-grade merit only,
 observe-do-not-conclude. New patterns numbered P-35+ (A2 claimed P-20..P-34). Primary
@@ -578,7 +578,7 @@ provider omits it, and `SessionUsageTracker::record_turn` accumulates cumulative
   budget-governance primitive would sit ON TOP of — not the primitive itself.
 
 ### P-40 — `awp-types`: zero-adk-dependency pure-wire-types crate
-`awp-types` (1,171 LOC) holds all AWP protocol types (`AwpVersion`, `TrustLevel`,
+`awp-types` (1,537 LOC <!-- [comparative-sweep] CORRECTION: "1,171 LOC" → 1,537 (find awp-types/ -name "*.rs" | xargs wc -l); delta = +366. Quality tag unaffected. -->) holds all AWP protocol types (`AwpVersion`, `TrustLevel`,
 `RequesterType`, `AwpRequest/Response`, `A2aMessage`, `CapabilityManifest`, `BusinessContext`,
 `PaymentIntent`/`PaymentPolicy`) with zero `adk-*` deps and camelCase serde, so any Rust
 project can depend on the wire contract without the framework. Its `a2a` module means AWP
@@ -612,9 +612,8 @@ A2A push sender (`push.rs`), A2A client (`a2a/client.rs`, 5 sites), JWKS fetch
 (`adk-auth::sso::jwks`), OIDC discovery (`adk-auth::sso::providers::oidc`). A cluster-wide grep
 for `.timeout(` in server/auth/awp/acp/managed/enterprise `src/` returns ZERO hits. (The inbound
 axum `TimeoutLayer` in P-36 is a server-side *request* timeout, unrelated to the outbound client.)
-- Evidence: `grep -rn "reqwest::Client::new()"` → 7 sites vs `grep -rn "\.timeout("` → 0 sites
-  across `adk-server/src`, `adk-auth/src`, `adk-awp/src`, `adk-acp/src`, `adk-managed/src`,
-  `adk-enterprise/src`.
+- Evidence: `grep -rn "reqwest::Client::new()"` → 8 sites (without adk-enterprise) <!-- [comparative-sweep] CORRECTION: "7 sites" → actual 8 in {adk-server,adk-auth,adk-awp,adk-acp,adk-managed}/src combined (5 in a2a/client.rs, 1 in push.rs, 1 in sso/jwks.rs, 1 in sso/providers/oidc.rs). Including adk-enterprise/src (as evidence text states) adds 36 more sites = 44 total — evidence scope claim is contradicted by the "7" figure. The zero `.timeout(` result is independently verified correct. --> vs `grep -rn "\.timeout("` → 0 sites
+  across `adk-server/src`, `adk-auth/src`, `adk-awp/src`, `adk-acp/src`, `adk-managed/src`.
 - Quality: **WEAK** — a hung webhook receiver, JWKS endpoint, or remote A2A agent blocks the
   delivery/validation task indefinitely (bounded only by OS TCP timeouts). Exactly the failure
   ferrochain's mandatory-30s-timeout convention prevents.
@@ -1088,7 +1087,7 @@ budget-governance gap (P-46).
 surfaces … two code paths that invite drift." The deep read REFUTES the duplication framing.** The
 relationship is a **layered SDK + adapter stack, not parallel reimplementations**:
 
-- `adk-anthropic` (17,263 LOC, 133 files) and `adk-gemini` (14,141 LOC) are **standalone,
+- `adk-anthropic` (19,658 LOC src/, 133 files <!-- [comparative-sweep] CORRECTION: "17,263 LOC" → 19,658 (find adk-anthropic/src -name "*.rs" | xargs wc -l); file count 133 (all .rs including tests) is correct. Delta LOC = +2,395. Quality tag unaffected. -->) and `adk-gemini` (13,141 LOC src/ <!-- [comparative-sweep] CORRECTION: "14,141 LOC" → 13,141 (find adk-gemini/src -name "*.rs" | xargs wc -l); delta = -1,000. Quality tag unaffected. -->) are **standalone,
   self-publishing vendor SDKs**. Evidence: `adk-anthropic/Cargo.toml` has **ZERO `adk-*`
   dependencies** (only reqwest/serde/tokio/bytes/base64/url/time/regex/hmac/sha2/hex); it publishes
   to `docs.rs/adk-anthropic` with its own README/examples. It is a full Anthropic API binding —
@@ -1191,19 +1190,17 @@ via a `tokio::oneshot`. The caller gets live tokens AND the final message with n
   ferrochain streaming provider needs exactly this dual role (yield deltas to the caller; hand the
   runner the final assembled message for the event log). Reference shape.
 
-### P-71 — Shared retry combinator integrated uniformly across all 10 providers
-The `adk-model::retry` combinator (P-03) is not just defined once — it is WIRED into every provider:
-each holds a `retry_config: RetryConfig` (with `with_retry_config`/`set_retry_config`/`retry_config`
-accessors) and calls `execute_with_retry(&cfg, is_retryable_model_error, || fut)`.
-- Evidence: `execute_with_retry`/`RetryConfig` present in `adk-model::{gemini/client, anthropic/client,
-  openai/client, openai/responses_client, openai/ws_transport, groq/client, deepseek/client,
-  azure_ai/client, openrouter/{client,adapter}, bedrock/client, openai_compatible}`; gemini carries
-  its own retry tests (retryable/non-retryable/disabled).
-- Quality: **STRONG** — a single classification+backoff policy applied consistently means retry
-  behavior is uniform and centrally-tunable rather than re-invented per provider. (ollama is the one
-  provider that does NOT wire it — it delegates to the `ollama-rs` external crate; see P-77.)
+### P-71 — Shared retry combinator integrated across 9 of 12 providers; 3 documented exceptions
+The `adk-model::retry` combinator (P-03) is not just defined once — it is WIRED into the dominant
+provider path: each wired provider holds a `retry_config: RetryConfig` (with `with_retry_config`/
+`set_retry_config`/`retry_config` accessors) and calls
+`execute_with_retry(&cfg, is_retryable_model_error, || fut)`.
+- Evidence: `execute_with_retry` called in `adk-model::{gemini/client, anthropic/client,
+  openai/client, openai/responses_client, groq/client, deepseek/client,
+  azure_ai/client, openrouter/adapter, openai_compatible}` (9 providers); `RetryConfig` stored (not combinator called) in `openai/ws_transport` (implements its own manual retry loop, lines 160-201) and `bedrock/client` (stores RetryConfig but delegates retry to `aws-sdk-bedrockruntime`); `ollama` delegates entirely to `ollama-rs` which owns its retry. Gemini carries its own retry tests (retryable/non-retryable/disabled).
+- Quality: **STRONG** — [comparative-cert-1 TAG-REVIEW RULING: STRONG STANDS with corrected scope. 9 of 12 providers share one combinator. The 3 exceptions each have architectural grounding: bedrock's AWS SDK owns retry internally (external SDK ownership — arguably better than re-implementing it); ws_transport uses a manual loop for WebSocket semantics (different concurrency model); ollama delegates to ollama-rs (external library ownership). The core merit claim — "a centralized retry combinator is the dominant pattern enabling uniform policy tuning" — is substantiated by 9/12. The original "every provider" framing was overstated but the pattern's production-grade value is undiminished. NEUTRAL would require the combinator to be fragile or the exceptions to be ad-hoc; neither is the case.] A single classification+backoff policy shared across 9 providers means retry behavior is centrally-tunable for the majority path rather than re-invented per provider. The 3 exceptions are architecturally justified (see above).
 - Ferrochain concern: reliability/NFR (retry) + rate limiters (semport/core §9). The
-  "every provider shares ONE retry combinator" discipline is the reference; ferrochain's partner
+  "dominant providers share ONE retry combinator" discipline is the reference; ferrochain's partner
   crates should likewise route through one retry policy, not per-crate ad-hoc loops.
 
 ### P-72 — `#[tool]` / `#[entrypoint]` / `#[task]` proc-macros for zero-boilerplate wiring

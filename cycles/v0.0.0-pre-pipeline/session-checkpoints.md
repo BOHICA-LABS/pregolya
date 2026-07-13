@@ -424,3 +424,17 @@ traces_to: STATE.md
 | **Position** | pre-1, burst 36 complete. Cert pass 16 DONE (CLEAN(strict)=YES; ZERO corrections; streak 2/3). Pass 17 DISPATCHED — THE POTENTIAL CLOSING PASS. 32 total validation runs; ~96 total corrections; streak now active at 2/3. Line-range endpoint micro-class EXHAUSTED (69/69 verified). ALL bounded error classes closed and swept. |
 | **Key context** | D1-D16 locked. D14: CLEAN(strict)=zero findings; 3 consecutive required. D15: autonomous continuation, no check-ins. D16: adk-rust PARKED (trigger = 3-CLEAN closes). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh. R8/R10/R11 OPEN. All bounded error classes CLOSED AND EXHAUSTED. Pass 17: MUST return zero findings to close gate — any finding resets streak to 0/3. Anti-corruption warnings in force (no softening to close; no manufacturing to posture). |
 | **Convergence counter** | 0 of 3 |
+
+---
+
+## Session Resume Checkpoint (2026-07-13) — burst 40 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 40 complete. adk-rust ALL PASSES COMPLETE: A1 19P + A2 15P + A3 12P + A4 20P + A5 13P = 79 patterns (34S/15N/30W). Analysis phase CLOSED per D16. Validation phase OPENED: 3 parallel validators dispatched for exhaustive sweep (group-1: patterns-observed.md; group-2: behavioral-intent.md + module-inventory.md; group-3: test-inventory.md + dependency-disposition.md + ANALYSIS-STATE.md). All 11 first-cascade guardrails pre-loaded. Strict-zero 3-CLEAN cascade is next. After convergence: comparative assessment → HUMAN DIRECTION GATE → Phase 1. |
+| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule in force. ALL A-PASS OPEN ITEMS RESOLVED: P-16 (SDK+adapter layering, low drift — self-correction credit to multi-pass protocol); anyhow FINAL (1 variant adk-mistralrs only, library-clean otherwise); reqwest-timeout CONFIRMED counter-example (P-42+P-77). KEY GAPS: Domain A untrusted-content-isolation UNMET (P-59 — guardrails never see tool/RAG/memory ingress); default sandbox non-isolating (P-60/P-61/P-62/P-65); bare-String API keys WORKSPACE-WIDE (P-76); 3 native-tls chains via optional features (P-79). KEY SHAPES: payments policy engine as budget-governance shape reference (P-73→P-46). ADR open: unify graph-checkpoint + session persistence (Phase 1). R6 OPEN: cargo login + publish-all.sh. R8/R10/R11 OPEN: route to product-owner at Phase 1. |
+| **Convergence counter** | 0 of 3 |

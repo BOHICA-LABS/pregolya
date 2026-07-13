@@ -10,8 +10,11 @@ status: observe-only
 
 Two test surfaces: in-crate `#[cfg(test)] mod tests` (unit, in-process) and top-level
 `tests/` integration dirs. Unit-test counts below are grep matches on `#[test]`/`#[tokio::test]`
-attribute lines (includes both surfaces within the crate tree). All 28 in-workspace crates
-have a `tests/` directory except where noted.
+attribute lines (includes both surfaces within the crate tree). All 27 in-workspace crates
+have a `tests/` directory except where noted. <!-- [comparative-sweep] corrected from 28:
+grep-verified — 12 workspace members lack a tests/ dir: adk-cli, adk-browser, adk-telemetry,
+adk-guardrail, adk-plugin, adk-skill, adk-rust, adk-deploy, awp-types, adk-acp, cargo-adk,
+adk-bench -->
 
 ## Core-crate test density
 
@@ -50,10 +53,13 @@ Judged on whether tests encode behavioral contracts a re-implementer could rely 
   classification, disabled-config single-attempt, server-hint delay override, 529 end-to-end,
   and a **timing-based exponential-backoff assertion** (gap2 ≥ ~2×gap1). The backoff test
   measures real elapsed time between attempts — behavioral, not structural.
-- **STRONG — Event.is_final_response (adk-core::event).** 11 tests walk the complete decision
+- **STRONG — Event.is_final_response (adk-core::event).** 9 tests walk the complete decision
   truth table: no-content, text-only, function-call, function-response, partial,
   skip_summarization override, long-running-tool override, trailing-function-response, and
   text-after-function-response. A re-implementer could derive the predicate from the tests alone.
+  <!-- [comparative-sweep] corrected from 11: grep -cE 'fn test_is_final_response'
+  adk-core/src/event.rs → 9 functions; the two listed cases each resolve to one named
+  function, not separate tests -->
 - **STRONG — state-key validation (adk-core::context).** Explicit adversarial cases:
   path traversal (`../etc/passwd`, `foo/bar`, `foo\bar`, `..`), null-byte injection, empty,
   over-length. Security invariant encoded as tests.
@@ -89,27 +95,37 @@ Judged on whether tests encode behavioral contracts a re-implementer could rely 
 
 Counts from `grep -c` on `#[test]`/`#[tokio::test]` across `adk-graph` src+tests.
 
-## adk-graph test file breakdown (14 integration files; 208 test fns crate-wide)
-| Integration file | test fns | Kind |
-|------------------|---------:|------|
-| action_switch_property_tests.rs | 43 | property (routing totality) |
-| workflow_schema_property_tests.rs | 23 | property (schema laws) |
-| action_error_mode_property_tests.rs | 18 | property (error modes) |
-| edge_tests.rs | 18 | example-based |
-| graph_tests.rs | 18 | example-based |
-| checkpoint_tests.rs | 16 | example-based (persist/load) |
-| execution_tests.rs | 16 | example-based (super-step behavior) |
-| node_tests.rs | 16 | example-based |
-| state_tests.rs | 20 | example-based (reducers) |
-| cache_property_tests.rs | 10 | property |
-| deferred_property_tests.rs | 10 | property (fan-in) |
-| delta_property_tests.rs | 6 | property (Diff round-trip) |
-| timeout_property_tests.rs | 6 | property |
-| time_travel_property_tests.rs | 3 | property |
+<!-- [comparative-sweep] METHODOLOGY NOTE: original counts used a combined pattern
+`#[test]|#[tokio::test]|fn test_` that double-counts synchronous tests (one `#[test]`
+attribute line + one `fn test_name()` declaration line = 2 matches per sync test).
+Corrected column uses attribute-only count `grep -cE '^\s*#\[(test|tokio::test)\]'`
+which equals actual test-function count. Crate-wide: original 208 (internally
+inconsistent — integration subtable summed to 223) → corrected 262 (149 src + 113
+tests/). -->
+
+## adk-graph test file breakdown (14 integration files; 262 test fns crate-wide) <!-- [comparative-sweep] corrected from 208 -->
+| Integration file | test fns (corrected) | test fns (original) | Kind |
+|------------------|---------:|---:|------|
+| action_switch_property_tests.rs | 22 | ~~43~~ | property (routing totality) |
+| workflow_schema_property_tests.rs | 12 | ~~23~~ | property (schema laws) |
+| action_error_mode_property_tests.rs | 9 | ~~18~~ | property (error modes) |
+| edge_tests.rs | 9 | ~~18~~ | example-based |
+| graph_tests.rs | 9 | ~~18~~ | example-based |
+| checkpoint_tests.rs | 8 | ~~16~~ | example-based (persist/load) |
+| execution_tests.rs | 8 | ~~16~~ | example-based (super-step behavior) |
+| node_tests.rs | 8 | ~~16~~ | example-based |
+| state_tests.rs | 10 | ~~20~~ | example-based (reducers) |
+| cache_property_tests.rs | 5 | ~~10~~ | property |
+| deferred_property_tests.rs | 5 | ~~10~~ | property (fan-in) |
+| delta_property_tests.rs | 3 | ~~6~~ | property (Diff round-trip) |
+| timeout_property_tests.rs | 3 | ~~6~~ | property |
+| time_travel_property_tests.rs | 2 | ~~3~~ | property |
 
 8 of 14 files are `*_property_tests.rs` — property testing is the dominant style for the graph
-runtime. Plus ~40 in-crate `delta.rs` unit tests (Diff round-trip across append/modify/remove/
-unicode/multiline) and ~18 `typed_reducer.rs` unit tests (Replace/Append/Merge truth tables).
+runtime. Plus 39 in-crate `delta.rs` unit tests (Diff round-trip across append/modify/remove/
+unicode/multiline) and 15 `typed_reducer.rs` unit tests (Replace/Append/Merge truth tables).
+<!-- [comparative-sweep] corrected: delta.rs attribute-only count 39 (not ~40),
+typed_reducer.rs attribute-only count 15 (not ~18) -->
 
 ## Test-as-specification assessment (the load-bearing question) — cluster
 - **STRONG — Diff round-trip (adk-graph::delta).** `apply(base, diff(base,new)) == new` verified
@@ -161,28 +177,35 @@ notes: adk-graph property-test-dominant (CONFIRMED strong); determinism + interr
 
 D16 Rust-blindness: test rigor judged on production-grade merit only. Cross-refs P-47..P-66.
 
-## Test volume by crate (test markers = `#[test]`/`#[tokio::test]`/`fn test_`; src+tests)
-| Crate | Integ files | Unit-test files (src) | Test markers | proptest files |
-|-------|-------------|----------------------|--------------|----------------|
-| adk-eval | 2 | 17 | 243 | 3 |
-| adk-sandbox | 7 | 11 | 242 | 6 |
-| adk-code | 10 | 9 | 193 | 8 |
-| adk-plugin | 0 | 4 | 86 | 0 |
-| adk-browser | 0 | 5 | 64 | 0 |
-| adk-guardrail | 0 | 4 | 55 | 0 |
-| adk-skill | 0 | 6 | 46 | 0 |
-| adk-retry-reflect | 1 | 0 | 32 | 1 |
+<!-- [comparative-sweep] METHODOLOGY NOTE: original "test markers" column used combined
+`#[test]|#[tokio::test]|fn test_` pattern which double-counts synchronous tests; sync tests
+generate 2 line-matches per function (attribute + fn declaration). Async tests (`#[tokio::test]
+async fn`) count once. Corrected column uses attribute-only grep. proptest file counts were
+each overcounted by 1; the extra count came from incorrectly including a file that uses
+`proptest` only in import syntax, not as a test invocation. -->
+
+## Test volume by crate (test markers = `#[test]`/`#[tokio::test]`; attribute-only; src+tests) <!-- [comparative-sweep] -->
+| Crate | Integ files | Unit-test files (src) | Test markers (corrected) | Test markers (original) | proptest files (corrected) | proptest (orig) |
+|-------|-------------|----------------------|------:|------:|------:|------:|
+| adk-eval | 2 | 17 | 124 | ~~243~~ | 2 | ~~3~~ |
+| adk-sandbox | 7 | 11 | 154 | ~~242~~ | 5 | ~~6~~ |
+| adk-code | 10 | 9 | 175 | ~~193~~ | 7 | ~~8~~ |
+| adk-plugin | 0 | 4 | 43 | ~~86~~ | 0 | 0 |
+| adk-browser | 0 | 5 | 32 | ~~64~~ | 0 | 0 |
+| adk-guardrail | 0 | 4 | 27 | ~~55~~ | 0 | 0 |
+| adk-skill | 0 | 6 | 46 | 46 | 0 | 0 |
+| adk-retry-reflect | 1 | 0 | 16 | ~~32~~ | 0 | ~~1~~ |
 
 ## What the tests actually assert (test-as-spec value)
 - **adk-sandbox (STRONG coverage of the primitives):** Linux `generate_args` truth tables (deny-all
   → unshare-net + new-session; ro-bind/bind placement); macOS profile generation (deny network/
   write/fork, domain allowlist, balanced-parens); WASM timeout (infinite loop → `Timeout`), memory
   limit (`memory.grow` → `MemoryExceeded`), non-zero exit, stdin/stdout, invalid module; path_safety
-  traversal cases (absolute/`..`-escape/drive-letter rejected, in-bounds `..` allowed). 6 proptest
-  files. This is the highest-rigor sub-suite in the cluster.
-- **adk-code:** 8 proptest files + 10 integ files — property + integration heavy for the exec
+  traversal cases (absolute/`..`-escape/drive-letter rejected, in-bounds `..` allowed). 5 proptest
+  files <!-- [comparative-cert-1] corrected from 6 per SWEEP-test-deps attribute-only recount -->. This is the highest-rigor sub-suite in the cluster.
+- **adk-code:** 7 proptest files <!-- [comparative-cert-1] corrected from 8 per SWEEP-test-deps --> + 10 integ files — property + integration heavy for the exec
   substrate (rust harness contract, workspace ops, diagnostics).
-- **adk-eval:** 243 markers, 3 proptest — scorers well unit-tested (tool-trajectory exact/partial/
+- **adk-eval:** 124 markers, 2 proptest <!-- [comparative-cert-1] corrected from "243 markers, 3 proptest"; original used double-counting methodology (combined fn-grep); attribute-only recount per SWEEP-test-deps: 124 markers, 2 proptest files --> — scorers well unit-tested (tool-trajectory exact/partial/
   unordered, Levenshtein/Jaccard/ROUGE-L, ToolUse strict-vs-partial matching). BUT: the two
   scoring-rigor bugs (P-64) are NOT covered — no test asserts the multi-turn merge is order-
   independent (it isn't), and no test distinguishes judge-infra-failure from quality-fail (both
@@ -224,7 +247,7 @@ engine.")
 pass: A4
 scope: test-inventory (safety/quality cluster)
 status: complete
-cluster_test_markers: ~961 (8 crates)
+cluster_test_markers: ~617 (8 crates) # [comparative-sweep] corrected from ~961; original used double-counting methodology (see table note above)
 strongest_suites: [adk-sandbox (6 proptest + truth-tables), adk-code (8 proptest + 10 integ), adk-eval scorers]
 untested_gaps: [untrusted-content-ingress (P-59), macos-read-confinement (P-60),
                 retry-reflect-termination-hole (P-63), eval-score-merge+judge-failure (P-64),
@@ -243,12 +266,12 @@ D16 Rust-blindness — observe only. Test-as-spec read of the provider/capabilit
 |-------|---------:|------------:|---------------:|------|
 | adk-model | ~513 | 18 | 7 | Heaviest. `openai_schema_property_tests` + interactions_runtime integ (`#[ignore]`, needs key). tool_call_parser 22 unit. |
 | adk-anthropic | ~445 | 7 | 0 | SDK deeply unit-tested (convert, sse, accumulating, types round-trips); example-based, no proptest. |
-| adk-mistralrs | ~282 | 17 | 14 | Surprisingly proptest-heavy (14 files) for a local-inference wrapper — convert/config/adapter laws. |
+| adk-mistralrs | ~264 | 17 | 14 | Surprisingly proptest-heavy (14 files) for a local-inference wrapper — convert/config/adapter laws. | <!-- [comparative-sweep] ~282→~264: attribute-only recount; the 18-unit delta reflects ~161 sync tests that inflated the original combined count -->
 | adk-gemini | ~215 | 7 | 5 | proptest on convert + schema_adapter. |
 | adk-bench | ~115 | 0 | 0 | In-src unit tests only (metrics/scoring). |
 | adk-audio | ~105 | 13 | 11 | proptest-dominant (codec/frame/resample laws). |
 | adk-realtime | ~100 | 12 | 6 | proptest on audio codec + protocol framing. |
-| adk-payments | ~65 | 9 | 0 | Example-based; policy decisions (allow/escalate/deny) + money arithmetic + protocol mappers. trybuild compile tests. |
+| adk-payments | ~65 | 12 | 0 | Example-based; policy decisions (allow/escalate/deny) + money arithmetic + protocol mappers. trybuild compile tests. | <!-- [comparative-sweep] integ files corrected from 9→12; find tests/ count = 12, consistent with A1 pass table which correctly recorded 12 -->
 | adk-action | ~39 | 2 | 2 | interpolation proptest. |
 | adk-rag | ~13 | 2 | 1 | THIN — chunking + one property test; backends largely untested without live services. |
 | adk-rust-macros | ~12 | 1 | 0 | macro-expansion tests (dev-dep schemars/adk-core). |
@@ -283,7 +306,7 @@ D16 Rust-blindness — observe only. Test-as-spec read of the provider/capabilit
 pass: A5
 scope: test-inventory (provider/capability cluster)
 status: complete
-cluster_test_markers: ~1500 (11 crates)
+cluster_test_markers: ~1849 (11 crates) # [comparative-sweep] corrected from ~1500; attr-only recount sum = 1849; original ~1500 is also inconsistent with the per-crate table which sums to ~1904
 strongest_suites: [adk-anthropic (SDK wire round-trips), adk-model tool_call_parser (22 format tests),
                    adk-mistralrs+adk-audio (proptest-dominant), adk-payments (policy+money+trybuild)]
 untested_gaps: [adk-rag-backends (thin), provider-timeout (P-77), credential-redaction (P-76),

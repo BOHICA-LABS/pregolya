@@ -14,7 +14,7 @@ timestamp: 2026-07-13T12:00:00Z
 
 ### Summary
 
-- **Scope:** All 39 crates (~242k in-workspace code LOC); deep analysis on 6 core crates
+- **Scope:** All 39 crates (~233k in-workspace code LOC by tokei workspace-src; ~242k original estimate); deep analysis on 6 core crates <!-- [comparative-sweep] tokei workspace member src dirs → 233,425 Rust code lines; original ~242k is at the high end; delta ~9k -->
 - **Patterns catalogued:** 19 total (10 STRONG / 4 NEUTRAL / 5 WEAK)
 - **Layering:** Clean 5-tier hub-and-spoke; adk-core is ZERO-intra-workspace-dependency trait hub + unified AdkError
 
@@ -22,7 +22,7 @@ timestamp: 2026-07-13T12:00:00Z
 
 1. Two-dimensional component×category error taxonomy with total tested retryability/HTTP mappings
 2. Retry-as-combinator with layered delay precedence
-3. `is_final_response` 11-case truth-table predicate
+3. `is_final_response` 9-case truth-table predicate <!-- [comparative-sweep] corrected from 11: grep shows 9 fn test_is_final_response_* in event.rs -->
 4. Supertrait least-privilege context ladder
 5. Drop-guaranteed cancellation cleanup
 6. (Remaining 5 catalogued in patterns-observed.md)
@@ -51,7 +51,7 @@ See patterns-observed.md for full catalogue.
 | Verify `anyhow`-in-public-signatures extent | A2 or A3 | RESOLVED (A5) — FINAL verdict: NOT a systemic leak. One variant only (`adk-mistralrs::MistralRsError::Other(#[from] anyhow::Error)`, P-78) + one dead dep (adk-model declares, never uses); core + all other library crates clean; binaries permitted |
 | Clarify `adk-model` vs standalone provider crate relationship and drift surface | A2 | RESOLVED (A5) — P-16: NOT duplication. Standalone SDK (`adk-anthropic`/`adk-gemini`, zero-adk-dep) + thin `Llm`-trait adapter in `adk-model` that WRAPS it (`fn inner()`, compile-time type coupling). SDK canonical for wire, adapter for trait. Drift risk LOW (was A1-assumed HIGH). See patterns P-67 |
 | Locate all `reqwest` timeout construction sites | A3 | RESOLVED — P-42: 7 sites across server/auth/awp/acp/managed/enterprise, ALL without `.timeout()`; confirmed counter-example |
-| Classify ignored-vs-runnable integration tests | A2/A3 sweep | PARTIAL — A4 cluster: ~961 test markers; adk-sandbox (6 proptest) + adk-code (8 proptest/10 integ) high-rigor; browser tools likely driver-gated. Full ignored-test census carry to A5 |
+| Classify ignored-vs-runnable integration tests | A2/A3 sweep | PARTIAL — A4 cluster: ~617 test markers (attribute-only; corrected from ~961 — see SWEEP-test-deps.md); adk-sandbox (5 proptest) + adk-code (7 proptest/10 integ) high-rigor; browser tools likely driver-gated. Full ignored-test census carry to A5 <!-- [comparative-sweep] proptest file counts corrected; original used double-counting methodology --> |
 | `anyhow`/`reqwest` in safety-cluster | A4 | RESOLVED — anyhow = 1 doc-example (browser), no leak; reqwest absent in cluster (browser uses thirtyfour) |
 | Guardrail untrusted-content ingress (Domain A) | A4 | RESOLVED (as GAP) — P-59: guardrails see only initial input + final output, never tool/RAG/memory content |
 | Sandbox default posture (Domain C) | A4 | RESOLVED (as GAP) — default ProcessBackend no isolation (P-61); macOS reads unrestricted (P-60); adk-code Rust exec unenforced (P-62) |

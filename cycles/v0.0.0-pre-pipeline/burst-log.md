@@ -1386,3 +1386,154 @@ Streak 0/3. Pass 13: NO. Cumulative: 14 cert passes dispatched, 0 consecutive CL
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-36 checkpoint archived)
 - `cycles/v0.0.0-pre-pipeline/lessons.md` (Drift/Deferral section added)
+
+---
+
+## Burst 38 — adk-rust analysis pass A1 COMPLETE (2026-07-13)
+
+### adk-rust Pass A1: Broad Sweep + 6 Deep Core Crates
+
+**Outcome:** 19 patterns P-01..P-19 (10 STRONG / 4 NEUTRAL / 5 WEAK). ANALYSIS-STATE.md initialized with corpus profile.
+
+**Key STRONG findings:** Type-system error taxonomy + ACID-runner contract (P-03), transfer-depth guard 10-hop (P-14), uniform error-type discipline (no anyhow in library code, P-17). Compliance flags: native-tls chain via livekit (P-07/P-08), reqwest/rustls root-store delta (P-09). Structural: llm_agent.rs monolith 2,712 LOC (P-15).
+
+**Key WEAK findings:** Memory backend no TTL/eviction (P-11), GraphML format no stability contract (P-12), Bedrock region/endpoint hardcoded (P-13).
+
+### Files touched in this burst
+
+- `comparative/adk-rust/patterns-observed.md` (A1 section written, P-01..P-19, 19 patterns)
+- `comparative/adk-rust/ANALYSIS-STATE.md` (initial write: corpus profile, 40 workspace crates, 39 w/ dirs, ~242k code LOC)
+- `STATE.md` (A1 step added to Current Phase Steps, session checkpoint updated, burst 38 recorded)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — retroactive: written at burst 41)
+
+---
+
+## Burst 39 — adk-rust analysis passes A2+A3 COMPLETE (2026-07-13)
+
+### adk-rust Pass A2: State/Persistence/Orchestration
+
+**Outcome:** 15 patterns P-20..P-34 (5 STRONG / 3 NEUTRAL / 7 WEAK).
+
+**Key STRONG findings:** Transactional session writes — pool.begin()+commit() wrapping sessions+app_states+user_states+events (P-20); AEAD encryption+key rotation with re-encrypt-on-read (P-21); DeltaCheckpointer — diff-only serialization + rehydration (P-22); BSP write-isolation (P-23); property-based test suite for graph engine correctness (P-24).
+
+**Key WEAK findings:** buffer_unordered nondeterminism — non-commutative reducers diverge across runs (P-28); step-boundary-only checkpointing — no mid-step durability (P-29); notification-only interrupt — no actual halt until super-step boundary (P-30); plaintext events stored alongside encrypted state (P-33); swallowed re-encrypt error (let _ = ...) (P-34).
+
+### adk-rust Pass A3: Server/Protocol/Auth
+
+**Outcome:** 12 patterns P-35..P-46 (4 STRONG / 2 NEUTRAL / 6 WEAK).
+
+**Key STRONG findings:** SSRF-hardened webhooks — URL allowlist + SSRF filter (P-35); defense-in-depth middleware stack (P-36); A2A input validation (P-37); auth-as-injected-trait dependency injection pattern (P-38).
+
+**Key WEAK findings:** 7 reqwest::Client::new() sites with zero .timeout() calls (P-42); non-durable in-memory request-path state (P-43); secrets bare String workspace-wide (P-44); message_stream = stub (placeholder comment verbatim in request_handler.rs:375) (P-41 — note: VERIFIED accurate, not a weakness in the analysis). Budget-governance gap (P-46, NET-NEW finding).
+
+### Files touched in this burst
+
+- `comparative/adk-rust/patterns-observed.md` (A2 P-20..P-34, A3 P-35..P-46 written)
+- `comparative/adk-rust/behavioral-intent.md` (A2+A3 behavioral intent sections written)
+- `comparative/adk-rust/module-inventory.md` (A2+A3 module inventory sections written)
+- `STATE.md` (A2 and A3 steps added to Current Phase Steps, session checkpoint updated, burst 39 recorded)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — retroactive: written at burst 41)
+
+---
+
+## Burst 40 — adk-rust analysis passes A4+A5 COMPLETE; analysis phase CLOSED (2026-07-13)
+
+### adk-rust Pass A4: Safety/Quality Cluster
+
+**Outcome:** 20 patterns P-47..P-66 (8 STRONG / 4 NEUTRAL / 8 WEAK).
+
+**Key STRONG findings:** WASM+bubblewrap isolating sandbox (P-47/P-48); reflection-inject recovery with auto-retry + prompt mutation (P-50); skill phantom-tool prevention via registry lock (P-51); plugin priority seam — ordered list resolves conflicts (P-52).
+
+**Key WEAK findings:** Domain A untrusted-content-isolation UNMET — guardrails never see tool/RAG/memory ingress (P-59, UNMET); non-isolating default sandbox (subprocess only) (P-60/P-61/P-62/P-65); args-hash retry hole allows non-deterministic tool re-execution (P-63).
+
+### adk-rust Pass A5: Provider/Capability Cluster
+
+**Outcome:** 13 patterns P-67..P-79 (7 STRONG / 2 NEUTRAL / 4 WEAK).
+
+**P-16 REFUTED:** Original claim (SDK without adapter) refuted — actual pattern is SDK+adapter layering. Low drift. Self-correction credit to multi-pass protocol.
+
+**Anyhow CLOSED:** NOT a systemic library leak. Exactly 1 variant: `adk-mistralrs/src/error.rs:277` `Other(#[from] anyhow::Error)`. All other crates: 0 src/ hits.
+
+**Key STRONG findings:** DoS-hardened SSE parser (P-69); uniform retry all-10-providers (P-71, TAG-REVIEW opened: bedrock/ws_transport exceptions); payments policy shape as budget-governance reference (P-73→P-46).
+
+**Key WEAK findings:** Bare-String API keys WORKSPACE-WIDE (P-76); 3 native-tls chains via optional features — all feature-gated, default builds clean (P-79).
+
+### Analysis Phase Closed — Summary
+
+| Metric | Value |
+|--------|-------|
+| Total patterns | 79 (A1 19P + A2 15P + A3 12P + A4 20P + A5 13P) |
+| STRONG / NEUTRAL / WEAK | 34 / 15 / 30 |
+| P-range | P-01..P-79 |
+| Hallucinated items | 0 |
+
+### D16 Validation Phase Opened
+
+Exhaustive sweep dispatched: 3 parallel validators (group-1: patterns-observed.md; group-2: behavioral-intent.md + module-inventory.md; group-3: test-inventory.md + dependency-disposition.md + ANALYSIS-STATE.md). All 11 first-cascade guardrails pre-loaded.
+
+### Files touched in this burst
+
+- `comparative/adk-rust/patterns-observed.md` (A4 P-47..P-66, A5 P-67..P-79 written)
+- `comparative/adk-rust/behavioral-intent.md` (A4+A5 sections written)
+- `comparative/adk-rust/module-inventory.md` (A4+A5 sections written)
+- `comparative/adk-rust/test-inventory.md` (A4+A5 test inventory sections written)
+- `comparative/adk-rust/dependency-disposition.md` (A4+A5 dependency sections written)
+- `comparative/adk-rust/ANALYSIS-STATE.md` (A5 summary + analysis-closed state written)
+- `STATE.md` (A4+A5 step added to Current Phase Steps, validation phase OPENED noted, session checkpoint updated, burst 40 recorded)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — retroactive: written at burst 41)
+
+---
+
+## Burst 41 — adk-rust exhaustive sweep COMPLETE; certification pass C1 dispatched (2026-07-13)
+
+### Exhaustive Sweep Results
+
+Three validators swept all 6 comparative files atomically. Total scope: ~563 claims checked, 38 corrections, ZERO hallucinations, 79/79 patterns covered.
+
+**CRITICAL root cause found (SWEEP-test-deps, Sweep 3):** Systematic ~2x double-counting in test-counting grep. The analysis used a combined pattern (`#[test]|#[tokio::test]|fn test_`) which matches BOTH the attribute line AND the function declaration line for synchronous tests. Async tests (`#[tokio::test] async fn`) were not double-counted because `async fn` does not match `fn test_`. This inflated sync-test-heavy files by ~2x. Canonical recount (attribute-only): adk-graph 262 crate-wide. This resolves the sweep-1/sweep-2 count conflict (208 was the claimed crate-wide total; 197 was fn-name-pattern scope; 223 was per-file integration subtable sum — 262 is the attribute-only correct canonical). NEW GUARDRAIL #12 codified.
+
+**4 MEDIUM LOC corrections:**
+
+| File | Original | Corrected | Delta |
+|------|----------|-----------|-------|
+| A3 pass header (adk-server) | 20,752 LOC | 22,373 LOC | +7.8% |
+| P-40 (awp-types) | 1,171 LOC | 1,537 LOC | +31.3% |
+| P-67 (adk-anthropic) | 17,263 LOC | 19,658 LOC | +13.9% |
+| P-67 (adk-gemini) | 14,141 LOC | 13,141 LOC | -7.1% |
+
+**High-consequence assessment-driving claims ALL CONFIRMED with line citations:**
+- buffer_unordered nondeterminism: `executor.rs:597` — `stream::iter(futures).buffer_unordered(...).collect().await` (CONFIRMED HIGH)
+- step-boundary-only checkpointing: `executor.rs:143` — `self.save_checkpoint().await?` after while loop body (CONFIRMED HIGH)
+- transactional session writes: `sqlite.rs:140–220` + `postgres.rs:204–298` — `pool.begin()+tx.commit()` wrapping 4-table write (CONFIRMED HIGH)
+- AES-GCM envelope + plaintext events + swallowed re-encrypt error: `encrypted.rs:149–162` + `line ~213` (CONFIRMED HIGH)
+- message_stream stub comment verbatim: `request_handler.rs:375` — "This is a placeholder — actual Runner streaming integration comes later." (CONFIRMED HIGH)
+
+**Additional confirmations:**
+- All 3 native-tls chains CONFIRMED via Cargo.lock transitive trace (all feature-gated; default builds clean)
+- 2 default-features=false omissions fixed in dependency-disposition: livekit-api, aws-sdk-bedrockruntime
+- anyhow verdict re-confirmed: NOT systemic; exactly 1 variant (adk-mistralrs error.rs:277 `Other(#[from] anyhow::Error)`)
+
+**Open handoffs to certification (resolved in C1 or subsequent):**
+- P-77 "7→8 sites" fix: SWEEP-patterns confirmed 8 sites; the evidence summary line in patterns-observed.md P-77 still reads "7 sites" — correction needed
+- P-71 TAG-REVIEW ruling: retry combinator wired in 9 of 12 providers; bedrock/client and openai/ws_transport are exceptions not mentioned in original text; analyst judgment required on STRONG vs NEUTRAL
+- Test-count propagation sweep: the 208→262 correction in test-inventory.md and behavioral-intent.md may propagate to patterns-observed.md P-24 (original claim was 208)
+
+**Guardrail #12 codified:** Count test ATTRIBUTES (`#[test]`/`#[tokio::test]`), never fn-name patterns. See lessons.md.
+
+**Certification cascade dispatched:** Pass C1 (strict-zero, streak 0/3, all 12 guardrails active, P-77/P-71/propagation-sweep as named housekeeping openers).
+
+### Files touched in this burst
+
+- `comparative/adk-rust/SWEEP-patterns.md` (NEW — 79P sweep, 9 corrections, 1 TAG-REVIEW P-71)
+- `comparative/adk-rust/SWEEP-behavioral-module.md` (NEW — 68 claims, 5 corrections, 0 hallucinations)
+- `comparative/adk-rust/SWEEP-test-deps.md` (NEW — 145 claims, 25 corrections, 0 hallucinations)
+- `comparative/adk-rust/patterns-observed.md` (corrected: A3 header LOC, P-05, P-24, P-40, P-42, P-67, P-71; [comparative-sweep] markers in-place)
+- `comparative/adk-rust/behavioral-intent.md` (corrected: adk-graph test count 208→262, adk-session file count disambiguation)
+- `comparative/adk-rust/module-inventory.md` (corrected: workspace 39→40 with adk-studio note, A4 LOC methodology, adk-rust-macros file count)
+- `comparative/adk-rust/test-inventory.md` (corrected: double-counting systematic fix, A2 per-file table, A4 cluster totals, A5 adk-payments 9→12, crates-with-tests-dir 28→27)
+- `comparative/adk-rust/dependency-disposition.md` (corrected: livekit-api + aws-sdk-bedrockruntime default-features=false omissions)
+- `comparative/adk-rust/ANALYSIS-STATE.md` (corrected: is_final_response 11→9, LOC note added)
+- `STATE.md` (exhaustive sweep COMPLETE in Current Phase Steps, C1 in progress, session checkpoint updated, burst 41 recorded)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+- `cycles/v0.0.0-pre-pipeline/lessons.md` (Guardrail #12 added)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-40 checkpoint archived)

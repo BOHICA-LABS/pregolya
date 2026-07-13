@@ -53,7 +53,7 @@ exactly the MAP decisions ferrochain must make deliberately — not inherit.
 | rustls | 0.23, features `["aws-lc-rs"]` | (crypto provider unspecified in conventions) | adk **unifies on the `aws-lc-rs` crypto provider** workspace-wide and installs it process-wide via `adk_core::ensure_crypto_provider()` (a `std::sync::Once` that calls `aws_lc_rs::default_provider().install_default()`, ignoring the result to respect a parent app's prior choice). Clean handling of the rustls "multiple providers" footgun. Ferrochain should decide ring vs aws-lc-rs explicitly. |
 | tokio-tungstenite | 0.28, `["rustls-tls-native-roots","connect"]` | — | WebSocket transport (OpenAI realtime ws_transport). rustls backend. |
 | **livekit** | 0.7.36, `default-features = false`, features `["tokio","native-tls"]` | native-tls + aliases **forbidden workspace-wide** | **CONFLICT.** adk-realtime's LiveKit dependency pulls `native-tls`. Under ferrochain's convention this is a hard violation (macOS Keychain init cost + MITM interception path). If ferrochain ever ports realtime/LiveKit, this dep must be re-evaluated — LiveKit's rustls support (if any) or exclusion of the feature. FLAG for MAP. |
-| livekit-api | 0.4.18, `["signal-client-tokio","services-tokio","access-token"]` | — | LiveKit control plane. |
+| livekit-api | 0.4.18, `default-features = false`, `["signal-client-tokio","services-tokio","access-token"]` | — | LiveKit control plane. | <!-- [comparative-sweep] workspace Cargo.toml has `default-features = false` for livekit-api; Cargo.lock resolves to 0.4.24 (semver minor bump from the 0.4.18 constraint) -->
 
 ## Observability
 | Dep | Pin | Notes |
@@ -323,7 +323,7 @@ otherwise adk-rust's structured-error discipline is a positive reference. (RESOL
 | `adk-gemini` (workspace, in-tree) | `adk-model` default `dep:adk-gemini` | Standalone Gemini SDK, zero-adk-dep; `vertex`/`interactions` features. |
 | `async-openai 0.33` | `adk-model` `openai` feature | External OpenAI SDK, `default-features = false, features = ["rustls","chat-completion","responses"]` — rustls, good. |
 | `ollama-rs 0.3.4` | `adk-model` `ollama` feature | `default-features = false, features = ["stream"]`. Owns its own client + timeout; does NOT wire the shared retry (P-71 exception). Our Ollama-analog reference. |
-| `aws-sdk-bedrockruntime 1.128` | `adk-model` `bedrock` feature | `default-https-client` + `rt-tokio`. AWS SDK owns transport. |
+| `aws-sdk-bedrockruntime 1.128` | `adk-model` `bedrock` feature | `default-features = false`, `default-https-client` + `rt-tokio`. AWS SDK owns transport. | <!-- [comparative-sweep] added missing default-features=false; verbatim adk-model/Cargo.toml: `{ version = "1.128", optional = true, default-features = false, features = ["default-https-client", "rt-tokio"] }` -->
 | `schemars 1.0` | `adk-model` OPTIONAL (`ollama` feature) + `adk-rust-macros` dev-dep | Used by the `#[tool]` macro + ollama structured output; providers hand-roll otherwise (P-75). D5 data point. |
 | `mistralrs 0.8` | `adk-mistralrs` | In-process native inference (candle). Pulls `hf-hub` → `native-tls` (P-79). Accelerator features cuda/metal/mkl/… Heavy build. |
 
