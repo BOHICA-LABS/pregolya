@@ -971,3 +971,27 @@ Pass 9 is the 9th certification pass with no streak reaching 3. Human consulted 
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 25 checkpoint archived)
 - `STATE.md` (pass 9 DONE, R7 downgraded, session checkpoint updated)
+
+## Burst: pre-pipeline burst 27 — D14 reaffirmed (Level-2 escalation) + certification pass 10 dispatched (2026-07-13)
+
+**Event type:** Human decision at orchestrator Level-2 escalation.
+
+**Context:** After certification pass 9 returned CLEAN(strict)=NO (4 corrections, 2 MEDIUM 2 LOW), the orchestrator escalated gate-closure strategy to the human. 24 total validation runs completed (~75 total corrections; best streak 1-of-3). Human was presented with three options:
+
+1. Severity-scoped 3-CLEAN: gate closes on 3 consecutive zero-MED+ passes (LOW findings tolerated)
+2. Absolute strict-zero (D14 as-is): gate closes only on 3 consecutive zero-finding passes of any severity
+3. Close-now with Phase-1 re-verify rule: declare semport sufficient, open Phase 1 with a formal re-verification obligation
+
+**Human decision:** ABSOLUTE STRICT-ZERO — D14 stands unamended. D14 was neither amended nor replaced; the original strict-zero bar is reaffirmed.
+
+**D14 status:** REAFFIRMED UNAMENDED. `CLEAN(strict)` = zero findings of ANY severity. Streak reset on any correction regardless of severity. 3 consecutive CLEAN(strict) passes required before Phase 1 opens.
+
+**Certification pass 10 DISPATCHED:** Fresh context; all 10 guardrails active. Opener task: propagation verification of all corrections made during passes 8 and 9, including verification that EXHAUSTIVE-SWEEP.md files are internally consistent with corrected content. Then standard rotation through remaining areas.
+
+**Streak:** 0/3 (current).
+
+### Files modified
+
+- `STATE.md` (D14 reaffirmed in Decisions Log, current_step updated, session checkpoint updated, burst 27 recorded in Historical Content)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst 26 checkpoint archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
