@@ -3850,3 +3850,204 @@ Rotation:          10/10 behavioral claims CONFIRMED (P-13, P-17, P-19, P-27, P-
                    P-59, P-62, P-72); 0 inaccurate; 0 hallucinated
 Streak:            0/3 (C18 CLEAN → 1/3; C19 CLEAN → 2/3; C20 correction → reset 0/3)
 ```
+
+---
+
+# Pass C21
+
+```yaml
+pass: C21
+corpus: adk-rust v1.0.0 (SHA a6c79b6f)
+reference: .reference/adk-rust (read-only)
+protocol: BC-5.39.001 (3-CLEAN convergence); D14 (absolute strict-zero); D15; D16 (Rust-blindness)
+streak_in: 0/3
+date: 2026-07-13
+focus: C20 sibling check (C20-01 ~264→~282 landing verified; C20 defect class sweep — all
+       count-bearing tables checked for methodology inconsistency); all-twelve guardrails rotation
+       (never-verified pools: P-02, P-18, P-53, P-64, P-74, P-75, P-82, P-97, P-16-resolution,
+       P-53-safety-hallucination); novel probe: dependency-disposition.md A2 internal claims
+       vs source (never probed in C1–C20)
+```
+
+## CLEAN Status
+
+```
+CLEAN (strict):    YES — zero corrections applied
+CLEAN (PR-merge):  YES
+New corrections:   0
+Streak position:   1/3 (streak resumed: C20 reset → 0/3; C21 CLEAN → 1/3)
+```
+
+---
+
+## Opener — C20 Sibling Check
+
+### C20-01 Landing Verification
+
+C20 applied correction C20-01: test-inventory.md A5 adk-mistralrs row `~264 → ~282`.
+
+**Verification:** test-inventory.md line 269 reads `~282` with `[comparative-cert-20]` annotation comment present. Annotation explains the reversion of the sweep correction (excluded proptest! for this crate only, inconsistent with all other per-crate figures) and confirms the independent recount: 245 `#[test]` + 19 `#[tokio::test]` + 18 `proptest!` = 282. **CONFIRMED LANDED.**
+
+### C20 Defect Class Sweep
+
+**C20 defect class definition:** Count-bearing tables with internal methodology inconsistency — figures computed under a different counting rule than the table/section header declares.
+
+**Scope:** All count-bearing tables in test-inventory.md with explicit methodology headers (A1, A2, A4). Checked for any additional instances of the C20-01 pattern.
+
+| Table | Header Methodology | Verification Result |
+|-------|--------------------|---------------------|
+| A1 core crate table (`#[test]`/`#[tokio::test]`; attribute-only) | attribute-only | All 6 rows confirmed exact against canonical grep: adk-core=339, adk-model=505, adk-tool=197, adk-runner=127, adk-agent=86, adk-session=50. Internal consistency CLEAN. |
+| A2 adk-graph breakdown (attribute-only) | attribute-only | delta.rs=39, typed_reducer.rs=15 confirmed. File-by-file integration table (14 files, corrected col sums to 113 integration attrs; + 149 src = 262 total) CONSISTENT. |
+| A4 safety/quality cluster table (`#[test]`/`#[tokio::test]`; attribute-only) | attribute-only | All 8 rows confirmed exact: adk-eval=124, adk-sandbox=154, adk-code=175, adk-plugin=43, adk-browser=32, adk-guardrail=27, adk-skill=46, adk-retry-reflect=16. Internal consistency CLEAN. |
+
+**C20 defect class sweep verdict: CLEAN — zero additional methodology inconsistencies found in any remaining count-bearing table. All figures computed under their stated header methodology.**
+
+---
+
+## Phase 1 — Behavioral Verification (All-Twelve Guardrails Rotation)
+
+10 claims selected from never-verified pools (absent from all SWEEP and C1–C20 verified lists).
+
+| # | Source | Claim | Verified Against | Result |
+|---|--------|-------|-----------------|--------|
+| B-01 | patterns-observed.md P-02 | Supertrait context ladder: `ReadonlyContext → CallbackContext → InvocationContext`; `ToolContext` branches off `CallbackContext`; typed-identity accessors `try_identity`/`try_execution_identity` live at ReadonlyContext base | `.reference/adk-rust/adk-core/src/context.rs:80,362,487`; `adk-core/src/tool.rs:125` | CONFIRMED — `pub trait ReadonlyContext: Send + Sync` (context.rs:80); `pub trait CallbackContext: ReadonlyContext` (context.rs:362); `pub trait InvocationContext: CallbackContext` (context.rs:487); `pub trait ToolContext: CallbackContext` (tool.rs:125); `try_identity` (context.rs:160), `try_execution_identity` (context.rs:176) on ReadonlyContext |
+| B-02 | patterns-observed.md P-18 | `anyhow = "1.0"` is in the workspace dependency table (root Cargo.toml `[workspace.dependencies]`) | `root Cargo.toml:130` | CONFIRMED — line 130: `anyhow = "1.0"` |
+| B-03 | patterns-observed.md P-53 | `safety_score` and `hallucination_score` criteria are BOTH dispatched in `score_turn`; judge failure inserts `StructuredVerdict { score: 0.0, verdict: Verdict::Fail }` as fallback; `collect_case_events` re-runs agent (gated on cost/trace configured) | `.reference/adk-rust/adk-eval/src/evaluator.rs:626,665,289-290,376` | CONFIRMED — `safety_score` dispatched at line 626; `hallucination_score` dispatched at line 665; structured judge fallback `StructuredVerdict { score: 0.0, verdict: Verdict::Fail }` at lines 322-325; `collect_case_events` re-run at lines 289-290 ("we re-run the agent to get the full event stream"); gated at line 376: "Only collect events if we have a cost tracker or trace analyzer configured" |
+| B-04 | patterns-observed.md P-64 | Multi-turn score merge uses running biased-mean formula `.and_modify(|s| *s = (*s + score) / 2.0)` — weights later turns exponentially more, NOT the arithmetic mean | `.reference/adk-rust/adk-eval/src/evaluator.rs:278` | CONFIRMED — line 278 exact match: `.and_modify(\|s\| *s = (*s + score) / 2.0)` |
+| B-05 | patterns-observed.md P-74 | adk-rag feature flags: `qdrant = ["dep:qdrant-client"]`, `lancedb = ["dep:lancedb", ...]`, `pgvector = ["dep:sqlx"]`, `surrealdb = ["dep:surrealdb", ...]`, `full = ["gemini", "openai", "qdrant", "lancedb", "pgvector", "surrealdb"]` | `.reference/adk-rust/adk-rag/Cargo.toml:44-48` | CONFIRMED — lines 44-48 contain all five feature declarations exactly as claimed |
+| B-06 | patterns-observed.md P-75 | `#[tool]` macro derives tool-arg schema via `schemars::schema_for!(#args_ty)` | `.reference/adk-rust/adk-rust-macros/src/lib.rs:143` | CONFIRMED — line 143: `schemars::schema_for!(#args_ty)` exact match |
+| B-07 | patterns-observed.md P-82 | `WindowsEnforcer::configure_command` returns `Err(SandboxError::EnforcerFailed { ... "Windows AppContainer configuration not yet implemented ... deferred ..." })` — hard-fail stub | `.reference/adk-rust/adk-sandbox/src/sandbox/windows.rs:129-131` | CONFIRMED — lines 129-131: `return Err(SandboxError::EnforcerFailed { message: "Windows AppContainer configuration not yet implemented. ..."` exact match |
+| B-08 | patterns-observed.md P-97 | `openai/webrtc.rs` uses `str0m` (Sans-IO WebRTC, no native-tls) via `use str0m::Rtc`; Cargo.toml: `str0m = { version = "0.17", optional = true }` (no native-tls feature); module doc: "Sans-IO WebRTC (`str0m`)" | `.reference/adk-rust/adk-realtime/src/openai/webrtc.rs:8,18`; `adk-realtime/Cargo.toml:68` | CONFIRMED — webrtc.rs line 8: module doc "Sans-IO WebRTC (`str0m`) for media transport"; line 18: `use str0m::Rtc`; Cargo.toml line 68: `str0m = { version = "0.17", optional = true }` (no native-tls feature listed) |
+| B-09 | patterns-observed.md P-16 resolution (A5 headline) | `adk-anthropic/Cargo.toml` has ZERO `adk-*` framework dependencies — it is a standalone vendor SDK | `.reference/adk-rust/adk-anthropic/Cargo.toml` | CONFIRMED — grep for `adk-` returns only `name = "adk-anthropic"` (line 2) and `docs.rs/adk-anthropic` (documentation URL, line 11); no `adk-*` crate listed as a dependency |
+| B-10 | patterns-observed.md P-82 / dependency-disposition.md A4 | `windows-sys 0.59` is in adk-sandbox `[dependencies]` behind `sandbox-windows` feature, listed as a dep for AppContainer Win32 APIs | `.reference/adk-rust/adk-sandbox/Cargo.toml` | CONFIRMED — `windows-sys` dep present; note: B-07 directly confirmed the stub behavior; this confirms the dependency claim is accurate |
+
+**0 INACCURATE. 0 HALLUCINATED. 0 UNVERIFIABLE (beyond pre-existing runtime-only items).**
+
+| Pool | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| patterns-observed.md P-02, P-18, P-53, P-64, P-74, P-75, P-82, P-97, P-16-resolution, dependency-disp A4 | 10 | 10 | 0 | 0 | 0 |
+
+**Total: 10 claims checked, 10 confirmed, 0 inaccurate, 0 hallucinated, 0 unverifiable**
+
+---
+
+## Phase 2 — Metric Verification (Standing Metrics Delta Check)
+
+Independent recount of all 8 standing metrics. Exact canonical commands from prior passes used.
+
+| Claim | Source | Claimed | Recounted | Delta | Command |
+|-------|--------|---------|-----------|-------|---------|
+| Workspace test attrs | ANALYSIS-STATE.md A6 census | 4,803 | 4,803 | 0 | `find adk-* -name "*.rs" \| xargs grep -E "^\s*#\[test\]$\|^\s*#\[tokio::test\]$" \| wc -l` |
+| `#[ignore]` attrs (all forms) | ANALYSIS-STATE.md A6 census | 126 | 126 | 0 | `find adk-* -name "*.rs" \| xargs grep -o "#\[ignore[^]]*\]" \| wc -l` |
+| `proptest!` invocations | ANALYSIS-STATE.md A6 census | 150 | 150 | 0 | `find adk-* -name "*.rs" \| xargs grep -c "proptest!" \| grep -v ":0" \| awk -F: '{sum+=$2} END{print sum}'` |
+| reqwest::Client::new() sites (adk-server+adk-auth src) | patterns-observed.md P-42/P-77 | 8 | 8 | 0 | `grep -rn "reqwest::Client::new()" adk-server/src/ adk-auth/src/ \| wc -l` |
+| .timeout() hits (adk-server+adk-auth src) | patterns-observed.md P-42/P-77 | 0 | 0 | 0 | `grep -rn "\.timeout(" adk-server/src/ adk-auth/src/ \| wc -l` |
+| adk-graph test attrs | test-inventory.md A2 / behavioral-intent.md A2 | 262 | 262 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-graph/ --include="*.rs" \| wc -l` |
+| adk-model test attrs | test-inventory.md A1 | 505 | 505 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-model/ --include="*.rs" \| wc -l` |
+| adk-core test attrs | test-inventory.md A1 | 339 | 339 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-core/ --include="*.rs" \| grep -v "//" \| wc -l` |
+
+**All 8 standing metrics: Delta = 0 (pass). No drift detected.**
+
+---
+
+## Novel Probe (C21 choice): dependency-disposition.md A2 Internal Claims vs Source
+
+**Probe rationale:** No prior pass (C1–C20) probed the internal dependency claims of dependency-disposition.md A2 (state/persistence/orchestration cluster). C14's novel probe covered A7 native-tls first-party/transitive distinction. A2's claims about the graph checkpoint SQL schema, the `similar` crate character-level diff usage, and checkpoint ID generation have never been verified against source.
+
+**Three A2 claims verified:**
+
+| Claim | Source | Verification | Result |
+|-------|--------|--------------|--------|
+| Graph checkpoint SQL: `CREATE TABLE graph_checkpoints (id, thread_id, state TEXT, step, pending_nodes TEXT, metadata, created_at TEXT)` + `idx_graph_checkpoints_thread ON graph_checkpoints(thread_id, created_at DESC)` | dependency-disposition.md A2 | `.reference/adk-rust/adk-graph/src/checkpoint.rs:102-120` | CONFIRMED EXACT — `CREATE TABLE IF NOT EXISTS graph_checkpoints (id TEXT NOT NULL, thread_id TEXT NOT NULL, state TEXT NOT NULL, step INTEGER NOT NULL, pending_nodes TEXT NOT NULL, metadata TEXT, created_at TEXT NOT NULL)` at lines 102-109; `CREATE INDEX IF NOT EXISTS idx_graph_checkpoints_thread ON graph_checkpoints(thread_id, created_at DESC)` at lines 119-120 |
+| `similar` crate used for character-level string diffs in `delta.rs` (behind `delta-checkpoint` feature): `similar::TextDiff::from_chars()` | dependency-disposition.md A2 | `.reference/adk-rust/adk-graph/Cargo.toml:37,53`; `adk-graph/src/delta.rs:488-490` | CONFIRMED — Cargo.toml line 37: `similar = { version = "3", optional = true }`; line 53: `delta-checkpoint = ["dep:similar"]`; delta.rs lines 488-490: `use similar::{ChangeTag, TextDiff}; ... TextDiff::from_chars(old.as_str(), new.as_str())` |
+| `Uuid::new_v4()` used for checkpoint IDs (random, not monotonic-sortable) | dependency-disposition.md A2 | `.reference/adk-rust/adk-graph/src/state.rs:231` | CONFIRMED — line 231: `checkpoint_id: uuid::Uuid::new_v4().to_string()` |
+
+**Novel probe verdict: ALL 3 CONFIRMED. Zero discrepancies. dependency-disposition.md A2's internal source claims are accurate.**
+
+---
+
+## Refinement Iterations: 1/3
+
+Single iteration sufficient. Zero inaccuracies found; no corrections required. All 10 rotation claims confirmed on first pass. All 8 standing metrics Delta=0. Novel probe 3/3 confirmed.
+
+---
+
+## New Corrections Applied in This Pass
+
+None.
+
+---
+
+## UNVERIFIABLE Items (4 a2a-v1 Phase-4 obligations, carried from C2–C20)
+
+Same four items — unchanged; no new UNVERIFIABLE items added.
+
+1. Actual exponential-backoff sleep timing / total elapsed under repeated 429/5xx (a2a-v1 client retry)
+2. Actual `304 → Ok(None)` conditional-request round-trip (client `If-None-Match` vs server ETag match)
+3. Actual `-32009` version-negotiation round-trip — whether server's emitted `data[].metadata.supported` shape matches client's parser
+4. Actual push-notification SSRF-rejection + retry-then-`PushDeliveryFailed` delivery outcome
+
+---
+
+## Hallucinated Items (Removed)
+
+None. Zero hallucinations detected across all passes C1–C21.
+
+---
+
+## Inaccurate Items (Corrected)
+
+None in this pass.
+
+---
+
+## Verified-Lists Additions (C21)
+
+The following items are added to the verified pool:
+
+**Behavioral (rotation):**
+- P-02: supertrait context ladder — ReadonlyContext (context.rs:80), CallbackContext:ReadonlyContext (context.rs:362), InvocationContext:CallbackContext (context.rs:487), ToolContext:CallbackContext (tool.rs:125); try_identity (context.rs:160), try_execution_identity (context.rs:176)
+- P-18: `anyhow = "1.0"` in root Cargo.toml [workspace.dependencies]:130
+- P-53 (safety/hallucination dispatch): safety_score at evaluator.rs:626; hallucination_score at evaluator.rs:665; both confirmed dispatched in score_turn; judge-fallback StructuredVerdict{score:0.0,Verdict::Fail} at lines 322-325; collect_case_events re-run gated on cost/trace at lines 289-290,376
+- P-64: score merge formula `.and_modify(|s| *s = (*s + score) / 2.0)` at evaluator.rs:278
+- P-74: adk-rag feature flags qdrant/lancedb/pgvector/surrealdb/full confirmed in Cargo.toml:44-48
+- P-75: `#[tool]` macro uses `schemars::schema_for!(#args_ty)` at adk-rust-macros/src/lib.rs:143
+- P-82: `configure_command` returns `Err(SandboxError::EnforcerFailed {..."Windows AppContainer configuration not yet implemented..."})` at windows.rs:129-131
+- P-97: `str0m` (Sans-IO, no native-tls) via `use str0m::Rtc` in webrtc.rs:18; Cargo.toml:68 `str0m = { version = "0.17", optional = true }`
+- P-16 resolution: adk-anthropic/Cargo.toml has zero adk-* framework dependencies (confirmed by grep)
+- dependency-disposition.md A4 / P-82: windows-sys dep present in adk-sandbox Cargo.toml behind sandbox-windows feature
+
+**Novel probe:**
+- dependency-disposition.md A2 graph checkpoint SQL schema: CREATE TABLE graph_checkpoints exact match at checkpoint.rs:102-120
+- dependency-disposition.md A2 `similar` crate: Cargo.toml:37,53 + delta.rs:488-490 (TextDiff::from_chars)
+- dependency-disposition.md A2 Uuid::new_v4() for checkpoint IDs: state.rs:231
+
+---
+
+## Confidence Assessment
+
+- Overall extraction accuracy: **99%** (zero corrections in C21; 10/10 rotation claims confirmed; 3/3 novel probe confirmed; 8/8 metrics Delta=0; 0 hallucinated; 0 unverifiable new items)
+- Metric accuracy: **100%** on standing metrics (8/8 Delta=0; no drift since C1)
+- Hallucination rate: **0%** (maintained across all passes C1–C21)
+- Novel probe: dependency-disposition.md A2 internal claims — 3/3 CONFIRMED (graph checkpoint SQL, similar crate usage, Uuid::new_v4 checkpoint IDs)
+- Recommendation: **TRUST WITH CAVEATS** — same caveat classes as C20: (1) scc Code vs wc-l UNVERIFIABLE without scc tool; (2) four a2a-v1 runtime items Phase-4 obligations (carried from C2); (3) adk-anthropic/src/types ~60/82 approximation gap pre-existing acknowledged.
+
+---
+
+## Certification Final Verdict
+
+```
+CLEAN (strict):    YES — zero corrections applied
+CLEAN (PR-merge):  YES
+New corrections:   0
+Opener:            C20-01 CONFIRMED LANDED (test-inventory.md A5 adk-mistralrs ~282 with
+                   [comparative-cert-20] annotation); C20 defect class sweep CLEAN —
+                   all count-bearing tables (A1/A2/A4) internally consistent with stated
+                   methodology; no additional methodology inconsistencies found
+Metric sweep:      8/8 standing metrics Delta=0 (no drift in tracked figures)
+Novel probe:       dependency-disposition.md A2 vs source — 3/3 CONFIRMED; graph checkpoint
+                   SQL schema exact; similar crate usage confirmed; Uuid::new_v4 confirmed
+Rotation:          10/10 behavioral claims CONFIRMED (P-02, P-18, P-53, P-64, P-74, P-75,
+                   P-82, P-97, P-16-resolution, dep-disp-A4); 0 inaccurate; 0 hallucinated
+Streak:            1/3 (C20 reset → 0/3; C21 CLEAN → 1/3)
+```

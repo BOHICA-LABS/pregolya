@@ -2063,3 +2063,26 @@ C16 step row retired from STATE.md Current Phase Steps (table capped at 5 rows):
 - `comparative/adk-rust/CERTIFICATION-REPORT.md` (C20 pass appended — C19 sibling check, cross-doc probe, rotation table, metric verification, novel probe A5 per-crate recount, C20-01 finding, confidence assessment, final verdict)
 - `STATE.md` (C20 COMPLETE, streak reset 2/3→0/3, convergence counter 2→0 of 3, frontmatter updated, Current Phase Steps C16 row archived, C20 row added, session checkpoint updated)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — C16 archive + burst 63 narrative)
+
+---
+
+## Burst 64 — adk-rust cert pass C21 CLEAN(strict)=YES (2026-07-13)
+
+### Archived from STATE.md Current Phase Steps (C17 row retired)
+
+C17 step row retired from STATE.md Current Phase Steps (table capped at 5 rows):
+> adk-rust certification pass C17 (strict-zero, identifier sweep terminal + 12-guardrail rotation) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 1 LOW correction (C17-01): three editorial `_`-prefix shorthand test citations in behavioral-intent.md expanded to verbatim function names (`test_validate_state_key_null_byte`, `test_non_retryable_categories_default_false`, `message_send_creates_new_task_for_terminal_context`). All three underlying tests exist; behavioral claims correct; notation was the inaccuracy. C16 sibling check CLEAN. Identifier class CLOSED (~365 identifiers verified C15-C17; 2 total inaccuracies corrected). 15/15 rotation claims CONFIRMED. Metrics 7/7 Delta=0. Streak 0/3. Burst 60 (wrap).
+
+### C21 Summary
+
+- CLEAN(strict)=YES. ZERO corrections. C20-01 landing CONFIRMED; C20 defect-class sweep (count-methodology consistency, A1/A2/A4 tables) CLEAN.
+- Rotation 10/10 CONFIRMED (P-02, P-18, P-53, P-64, P-74, P-75, P-82, P-97, P-16 resolution, dep-disp A4 windows-sys) — appended to verified-lists.
+- Metrics 8/8 Delta=0.
+- Novel probe: dependency-disposition A2 internal claims vs source — 3/3 CONFIRMED (checkpoint SQL schema, similar crate char-diff, Uuid::new_v4).
+- Streak: 0/3 → 1/3.
+
+### Files touched in this burst
+
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (C21 pass appended by validator — C20 sibling check, C20 defect-class sweep, rotation table, metric verification, novel probe dep-disp A2 internal claims, confidence assessment, final verdict CLEAN)
+- `STATE.md` (C21 COMPLETE, streak 0/3→1/3, convergence counter 0→1 of 3, frontmatter updated, Current Phase Steps C17 row archived, C21 row added, session checkpoint updated)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — C17 archive + burst 64 narrative)
