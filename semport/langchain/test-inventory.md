@@ -16,8 +16,8 @@ agent loop and middleware**; there is almost no integration/network testing in-t
 
 | Group | LOC | Files | What it locks down |
 |---|---:|---:|---|
-| `unit_tests/agents/middleware/implementations/` | 14,550 | 18 | Per-middleware behavior (the biggest bucket) |
-| `unit_tests/agents/middleware/core/` | 7,731 | 11 | Middleware framework: composition, decorators, wrap_model/tool_call, overrides, diagram |
+| `unit_tests/agents/middleware/implementations/` | 14,550 | 17 <!-- [validation-corrected pass-3]: claimed 18; actual file count = 17 (find .../implementations/ -name "*.py" ! -name "__init__.py" | wc -l) --> | Per-middleware behavior (the biggest bucket) |
+| `unit_tests/agents/middleware/core/` | 7,731 | 12 <!-- [validation-corrected pass-3]: claimed 11; actual file count = 12 (find .../core/ -name "test_*.py" | wc -l); the total implementations+core was correct at 29 but the two counts were individually swapped --> | Middleware framework: composition, decorators, wrap_model/tool_call, overrides, diagram |
 | `unit_tests/agents/` (top level) | 6,537 | 17 | create_agent, react loop, response_format, streaming, state schema, injection, subagents |
 | `unit_tests/agents/middleware_typing/` | 989 | 3 | Static typing / backwards-compat of middleware generics |
 | `unit_tests/chat_models` + `embeddings` + `tools` | 487 | 4 | init_chat_model/init_embeddings/imports |
@@ -56,7 +56,7 @@ agent loop and middleware**; there is almost no integration/network testing in-t
 | `test_composition.py` | 349 | Multi-middleware ordering (first=outermost) |
 | `test_transformers.py` / `test_diagram.py` | — | Stream transformer registration; graph diagram output |
 
-## 4. Per-middleware implementation tests (18 files, 14,550 LOC)
+## 4. Per-middleware implementation tests (17 files, 14,550 LOC) <!-- [validation-corrected pass-3]: heading said 18; actual = 17 -->
 
 Each built-in middleware has a dedicated test file; the largest are behavioral goldmines:
 

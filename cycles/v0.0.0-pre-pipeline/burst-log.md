@@ -415,3 +415,42 @@ traces_to: STATE.md
 - cycles/v0.0.0-pre-pipeline/lessons.md (created; PROCESS-GAP lesson added)
 
 **Next steps:** extraction-validation pass 3 in progress. Requires 3 CLEAN(strict) passes (streak still 0/3 after pass-2 reset). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.
+
+---
+
+## Burst: pre-pipeline burst 11 — extraction-validation pass 3 close, pass 4 dispatch (2026-07-13)
+
+**Pass 3 verdict:** CLEAN(strict)=NO. 7 corrections (2 MEDIUM, 5 LOW). Streak remains 0/3 (no improvement; cascade continues).
+
+**Root cause — all 7 corrections are cross-document propagation residue:**
+
+All 7 findings were propagation failures from prior-pass corrections, not new source-level inaccuracies:
+
+| Finding | Category | Severity |
+|---------|----------|----------|
+| langchain/dependency-disposition.md still carried pre-correction provider counts (30/11) after two passes | propagation residue | MEDIUM |
+| mermaid diagram in same file still showed old provider counts | propagation residue | MEDIUM |
+| middleware count (§2 table) showed 13→15 inconsistency | propagation residue | LOW |
+| middleware count in strategy table same discrepancy | propagation residue | LOW |
+| test-file count 18→17 in one document | propagation residue | LOW |
+| test-file count 11→12 in a sibling document | propagation residue | LOW |
+| one additional cross-area count residue | propagation residue | LOW |
+
+Now consistent across all 5 langchain-area docs: 27 chat / 10 embeddings.
+
+**Positive signal — full behavioral verification clean:** 65/65 fresh behavioral claims verified; 14 platform endpoints spot-confirmed; all 8 langgraph channel types confirmed; all 17 claimed Rust crates confirmed on crates.io. Finding-class decay: source gaps (pass 1) → validator errors (pass 2) → propagation residue only (pass 3).
+
+**Second process-gap codified (lessons.md per S-7.02):** Cross-document propagation failures recurred across all three passes. TD-VSDD-060 (sibling-site sweep) applies to documentation corrections, not just code. Codified as mandatory first-stratum whole-area propagation audit in pass-4+ prompts. Follow-up: fold document-sibling-sweep into the validate-extraction agent prompt upstream (same session-review target as counting-methodology gap).
+
+**Pass 4 dispatched:** Fresh context; propagation audit as first stratum; fresh behavioral strata outside prior verified-lists; test-citation integrity checks. Streak 0/3.
+
+**Phase step archival:** "semport-analyze pass 7 — core convergence deepening" row rotated out of STATE.md Current Phase Steps (5-row limit); covered in burst 7 entry above.
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated/Current Step; Current Phase Steps — pass-7 archived, pass-3 updated to DONE, pass-4 IN_PROGRESS row added; Session Resume Checkpoint replaced; Historical Content updated)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 10 checkpoint archived)
+- cycles/v0.0.0-pre-pipeline/lessons.md (second PROCESS-GAP lesson added — propagation failures / TD-VSDD-060)
+
+**Next steps:** extraction-validation pass 4 in progress. Requires 3 CLEAN(strict) passes (streak still 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.

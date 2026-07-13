@@ -320,7 +320,7 @@ picks the sync vs async slot.
 
 ## 4. `init_chat_model` / `_ConfigurableModel` (chat_models/base.py) — HIGH
 
-- **`_BUILTIN_PROVIDERS`**: 30 providers → `(module_path, class_name, creator_func)`.
+- **`_BUILTIN_PROVIDERS`**: 27 providers <!-- [validation-corrected pass-2]: original said 30; pass-1 corrected to 33; actual AST/regex parse of langchain_v1/langchain/chat_models/base.py lines 38-78 confirms 27 dict keys. Pass-1 overcounted because it matched continuation-line value strings (e.g. "langchain_google_vertexai.model_garden", "langchain_huggingface", "langchain_ibm") as if they were keys. --> → `(module_path, class_name, creator_func)`.
   `_get_chat_model_creator` lru-caches import + `functools.partial(creator, cls)`.
   Ollama has a `langchain_community` fallback.
 - **Provider inference** (`_attempt_infer_model_provider`): prefix rules (`gpt-/o1/o3/
@@ -334,7 +334,7 @@ picks the sync vs async slot.
   builds `_init_chat_model_helper(**{default, **config-derived params})` then replays queued
   ops. Config keys namespaced by `config_prefix`. Implements the full Runnable surface
   (invoke/ainvoke/stream/astream/batch*/transform/astream_log/astream_events) by delegating.
-- `init_embeddings` mirrors this with 11 providers (embeddings/base.py).
+- `init_embeddings` mirrors this with 10 providers <!-- [validation-corrected pass-2]: original said 11; pass-1 corrected to 14; actual parse of langchain_v1/langchain/embeddings/base.py lines 15-55 confirms 10 dict keys. Same over-count method as the chat provider error. --> (embeddings/base.py).
 
 **Port note:** `_ConfigurableModel` is a Runnable façade doing lazy model construction +
 declarative-op replay. In Rust this is a builder that captures a

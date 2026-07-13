@@ -17,6 +17,20 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-07-13) — burst 10 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 10 complete. D14 locked: full 3-CLEAN applies to extraction-validation gate (human directive — zero findings ANY severity, corrections reset streak, fresh-context each pass). Pass 1 COMPLETE: PASS WITH CORRECTIONS — 11 corrections; streak reset 0/3. Pass 2 COMPLETE: CLEAN(strict)=NO, CLEAN(PR-merge)=NO — 5 corrections (4 HIGH, 1 LOW); streak RESET. Key: pass-1's corrections were WRONG (regex counted multi-line tuple values as dict keys); actuals 27 chat / 10 embeddings. 128 behavioral items re-verified ALL accurate — semantic corpus is sound. Process-gap codified in lessons.md; hardening story noted for session-review. Pass 3 DISPATCHED (fresh context, AST-counting guardrail, cross-doc propagation checks, crates.io claims verification). Streak: 0/3. Phase 1 opens only after 3 consecutive CLEAN(strict) passes. |
+| **Key context** | D1-D14 locked. D14: 3-CLEAN applies to extraction-validation gate (human mandate). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment (third-parties only). |
+| **Convergence counter** | 0 of 3 |
+
+---
+
 ## Session Resume Checkpoint (2026-07-13) — burst 9 complete
 
 ### State

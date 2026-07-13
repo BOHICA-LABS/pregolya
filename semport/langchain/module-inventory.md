@@ -76,7 +76,7 @@ langchain/
 | Import path | Symbols | Origin |
 |---|---|---|
 | `langchain.agents` | `create_agent`, `AgentState` | **own** |
-| `langchain.agents.middleware` | `AgentMiddleware`, `AgentState`, `ModelRequest`, `ModelResponse`, `ModelCallResult`, `ExtendedModelResponse`, `InputAgentState`, `OutputAgentState`, `ToolCallRequest`; decorators `before_agent/after_agent/before_model/after_model/dynamic_prompt/wrap_model_call/wrap_tool_call/hook_config`; 13 built-in middleware classes + their config types | **own** |
+| `langchain.agents.middleware` | `AgentMiddleware`, `AgentState`, `ModelRequest`, `ModelResponse`, `ModelCallResult`, `ExtendedModelResponse`, `InputAgentState`, `OutputAgentState`, `ToolCallRequest`; decorators `before_agent/after_agent/before_model/after_model/dynamic_prompt/wrap_model_call/wrap_tool_call/hook_config`; 15 built-in middleware classes + their config types <!-- [validation-corrected pass-3]: §2 still said 13; §4 corrected to 15 in pass-1; propagation missed in passes 1 and 2 --> | **own** |
 | `langchain.chat_models` | `init_chat_model`, `BaseChatModel` (re-export) | **own** + core |
 | `langchain.embeddings` | `init_embeddings`, `Embeddings` (re-export) | **own** + core |
 | `langchain.messages` | 34 message / content-block / tool-call types + `trim_messages` | **pure re-export of `langchain_core.messages`** |
@@ -111,13 +111,13 @@ name+description+json_schema), `OutputToolBinding`, `ProviderStrategyBinding`, t
 types. Integrated **into the model node's main loop** (no extra LLM call).
 
 ### 3.4 `init_chat_model` (chat_models/base.py)
-Provider registry (`_BUILTIN_PROVIDERS`: 33 providers → import path + class + creator <!-- [validation-corrected: 33 not 30; python3 parse of pyproject confirmed] -->
+Provider registry (`_BUILTIN_PROVIDERS`: 27 providers <!-- [validation-corrected pass-2]: original said 30; pass-1 corrected to 33 but that was also wrong. Definitive count: regex on dict keys only (lines 38-78 of chat_models/base.py with pattern `^\s+"[a-z_A-Z]+":`) = 27. Pass-1 overcounted 3 multi-line tuple value strings as keys. --> → import path + class + creator
 lambda), provider inference from model-name prefix, and `_ConfigurableModel` — a
 `Runnable` wrapper that defers model construction and queues declarative ops
 (`bind_tools`, `with_structured_output`) until a config selects the concrete model.
 
 ### 3.5 `init_embeddings` (embeddings/base.py)
-Same pattern as `init_chat_model`, 14 providers, returns `Embeddings` or a configurable <!-- [validation-corrected: 14 not 11] -->
+Same pattern as `init_chat_model`, 10 providers <!-- [validation-corrected pass-2]: original said 11; pass-1 corrected to 14 but that was also wrong. Definitive count: regex on dict keys (lines 15-55 of embeddings/base.py) = 10. Same over-count error as §3.4. -->, returns `Embeddings` or a configurable
 wrapper. Much smaller (275 LOC).
 
 ### 3.6 `_subagent_transformer.py` / `SubagentTransformer`
@@ -163,13 +163,13 @@ graph TD
     factory --> subxf[_subagent_transformer.py]
     factory --> initcm[chat_models/base.py<br/>init_chat_model]
     mwinit[middleware/__init__.py] --> mwtypes
-    mwinit --> mw13[13 built-in middleware]
-    mw13 --> mwtypes
-    mw13 --> shared[_execution / _redaction / _retry]
+    mwinit --> mw15[15 built-in middleware] <!-- [validation-corrected pass-3]: node was mw13[13 built-in middleware]; corrected to 15 -->
+    mw15 --> mwtypes
+    mw15 --> shared[_execution / _redaction / _retry]
     factory --> LG[[langgraph]]
     mwtypes --> LG
     subxf --> LG
-    mw13 --> LG
+    mw15 --> LG
     factory --> LS[[langsmith.traceable]]
     factory --> CORE[[langchain-core]]
     mwtypes --> CORE

@@ -148,7 +148,7 @@ Provide constructor fns `before_model(f)`, `wrap_model_call(f)`, `dynamic_prompt
 mirroring the decorator ergonomics. `iscoroutinefunction` branching disappears (async-only).
 🟠 (mechanical but 8× repetition — a declarative macro can generate the wrappers).
 
-## 6. Built-in middleware (13) — 🟢–🟠 per-middleware, PORT on demand
+## 6. Built-in middleware (15) <!-- [validation-corrected pass-2]: heading said 13; module-inventory.md was corrected to 15 in pass-1 but this file was not updated. Body list below already covers all 15. --> — 🟢–🟠 per-middleware, PORT on demand
 
 Each is a self-contained `Middleware` impl. Port priority by value:
 - **P1:** SummarizationMiddleware, ModelFallback, ModelRetry, ToolRetry (common, pure logic).
@@ -183,7 +183,7 @@ graph analyzer as an explicit v1 non-goal.
 | _ConfigurableModel | 🟠 | Deferred declarative-op replay + full Runnable delegation surface |
 | Decorators (runtime class synth) | 🟠 | Redesign to closure-holding generics (macro-generate) |
 | init_chat_model registry + inference | 🟡 | Feature-gated provider registry; inference is pure logic |
-| Built-in middleware (13) | 🟢–🟠 | Per-feature; PII/Shell heaviest |
+| Built-in middleware (15) <!-- [validation-corrected pass-3]: summary table still said (13); §6 heading corrected to 15 in pass-2 but this row was not updated --> | 🟢–🟠 | Per-feature; PII/Shell heaviest |
 | Subagent transformer | 🔴 | Private langgraph stream internals — DEFER (v1 non-goal) |
 | Re-exports | 🟢 | Mechanical |
 

@@ -47,3 +47,37 @@ Going forward for pass 3 and subsequent passes:
 ### Follow-up
 
 A story for hardening the validate-extraction agent prompt upstream (enforce AST-counting methodology, mandate cross-doc propagation checks in the agent's operating instructions) should be noted in the Drift/Deferral table with target = session-review.
+
+---
+
+## Lesson: PROCESS-GAP — Cross-Document Propagation Failures Recurring Across Passes (2026-07-13)
+
+**Source:** Extraction-validation pass 3 (burst 11)
+**Category:** process-gap
+**Severity:** MEDIUM (no new source-level inaccuracies introduced, but propagation residue persisted through three passes)
+
+### What happened
+
+Cross-document propagation failures recurred across all three extraction-validation passes. Each time a correction was applied to one document, sibling documents in the same area were left carrying the pre-correction values. This pattern manifested in pass 3 as all 7 findings being propagation residue rather than new source-level inaccuracies:
+
+- langchain/dependency-disposition.md (and its mermaid diagram and strategy table) still showed pre-correction provider counts (30/11) after two passes had already corrected the source value to 27 chat / 10 embeddings.
+- Middleware count inconsistencies (13 vs 15) existed simultaneously across §2 table and strategy table in the same file.
+- Test-file count discrepancies (18 vs 17; 11 vs 12) existed across sibling documents.
+
+The root cause: each validator pass focused on new strata rather than first auditing whether prior-pass corrections fully propagated to all related documents.
+
+### Why it matters
+
+TD-VSDD-060 (sibling-site sweep) was understood to apply to code corrections, but was not consistently applied to documentation corrections. A correction that partially propagates is worse than no correction: it creates false confidence that the corpus is consistent while leaving silent inconsistencies that surface in later passes as new findings, artificially extending the streak cascade.
+
+### Codification applied
+
+For pass 4 and subsequent passes, the mandatory first stratum is a whole-area propagation audit:
+
+1. **Propagation audit as first stratum:** Before examining new behavioral strata, grep all prior-pass correction values corpus-wide and confirm they are present in ALL related documents. Any file still containing an old value is a propagation gap — sweep and fix before proceeding to new strata.
+2. **TD-VSDD-060 applies to documentation corrections:** The sibling-site sweep obligation is not limited to code changes. Documentation corrections must be propagated atomically across all files in the affected area.
+3. **Grep anchored context:** When sweeping, use anchored context regexes (e.g., "27 chat", "10 embeddings") rather than bare numbers to avoid false positives.
+
+### Follow-up
+
+Fold the document-sibling-sweep into the validate-extraction agent prompt upstream — same session-review target as the counting-methodology gap (first process-gap lesson). Both gaps compound: AST-counting produces correct values, but those values must then propagate fully across all related documents in a single pass.
