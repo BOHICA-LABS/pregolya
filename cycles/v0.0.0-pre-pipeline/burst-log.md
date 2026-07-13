@@ -1712,3 +1712,45 @@ the "all items LOW" bar for CONVERGED was not met. A7 dispatched on 4 realtime-i
 - `STATE.md` (A7 COMPLETE/CONVERGED, C2 IN-PROGRESS, session checkpoint updated, A4+A5 archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — A4+A5 archived here from STATE.md)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-43 checkpoint archived)
+
+---
+
+## Burst 47 — C4 COMPLETE (CLEAN(strict)=NO, 2 LOW corrections); C5 dispatched (2026-07-13)
+
+**Date:** 2026-07-13
+**Agent:** validate-extraction (C4) + state-manager (burst close)
+**Trigger:** C4 certification pass complete; C5 dispatched.
+
+### C4 Results
+
+- **Verdict:** CLEAN(strict)=NO. CLEAN(PR-merge)=YES. 2 new corrections (both LOW).
+- **Opener — C3 propagation sweep:** Found 1 stale sibling: ANALYSIS-STATE.md line 95 "SSE parser triplicated" (patterns-observed.md P-86 was corrected in C3; this parallel summary row was not). Corrected with `[comparative-cert-4]` marker.
+- **Semantic-precision word sweep (15 claims):** 14 CONFIRMED, 1 INACCURATE (W-12 — C4-02). Key confirmations:
+  - W-03: "TOOLS/RAG/MEMORY NEVER guardrailed" — CONFIRMED exact (llm_agent.rs:156/1642/1797 only; no other guardrail call sites)
+  - W-04: "sole genuine anyhow public-signature leak" — CONFIRMED exactly 1 (adk-mistralrs/src/error.rs:277)
+  - W-05–W-15: all CONFIRMED or CONFIRMED per prior pass
+- **Per-file rotation (Phase 1 behavioral + Phase 2 metrics):** 5 behavioral claims confirmed; 3 metric claims: 2 non-zero delta (P-84 root cause), 3 delta-zero.
+- **Corrections:**
+  - C4-01 (LOW): ANALYSIS-STATE.md A6 row 6 — "SSE parser triplicated" → "duplicated" (C3 stale sibling; `[comparative-cert-4]`)
+  - C4-02 (LOW): patterns-observed.md P-84 + ANALYSIS-STATE.md A6 row 4 — "4 of 6 VectorStore backends untested" → "3 of 5" (source has 5 `impl VectorStore for` types; chunking.rs is storage infrastructure, not a VectorStore; qdrant/pgvector/lancedb = 3/5 untested; `[comparative-cert-4]`)
+- **Streak:** 0/3
+
+### C5 Dispatch
+
+- C5 opener: terminal cross-document correction-consistency audit — for every `[comparative-cert-N]` marker across all corpus files, sweep corpus-wide for surviving pre-correction values. Bounded (finite marker set); closes the propagation class for this corpus. Then per-file rotation.
+- Streak remains 0/3 going into C5.
+
+### Archived Step (pruned from STATE.md Current Phase Steps — oldest entry)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| adk-rust exhaustive sweep (3-group validator cascade, D16) | validate-extraction×3 | COMPLETE | ~563 claims, 38 corrections, ZERO hallucinations, 79/79 patterns. CRITICAL: ~2x double-count root cause found; adk-graph canonical 262 (attribute-only). 4 MEDIUM LOC fixes. All high-consequence claims CONFIRMED. Guardrail #12. Burst 41. |
+
+### Files touched in this burst
+
+- `comparative/adk-rust/ANALYSIS-STATE.md` (C4-01 + C4-02 corrections applied: [comparative-cert-4] markers on rows 6 and 4 of A6 table)
+- `comparative/adk-rust/patterns-observed.md` (C4-02 correction applied: P-84 "4 of 6"→"3 of 5" with [comparative-cert-4] marker)
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (C4 pass appended)
+- `STATE.md` (C4 COMPLETE, C5 IN-PROGRESS, session checkpoint updated, exhaustive-sweep row archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — exhaustive-sweep archived here from STATE.md)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-46 checkpoint archived)

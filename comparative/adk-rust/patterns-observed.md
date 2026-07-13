@@ -1514,12 +1514,12 @@ timestamp: 2026-07-13
   results sorted descending by score with `partial_cmp … Equal` NaN fallback, truncated to `top_k`.
 - **Thin-test claim (VERIFIED at depth):** dedicated tests exist only for `chunking.rs` (5),
   `inmemory` (unit + `inmemory_tests.rs`), and `surrealdb_tests.rs` (6, live/integration-gated). The
-  `qdrant`, `pgvector`, and `lancedb` backends have **zero** unit or integration tests — 4 of 6
-  store backends ship untested. Confirms the A1 WEAK "thin-test" flag.
+  `qdrant`, `pgvector`, and `lancedb` backends have **zero** unit or integration tests — 3 of 5
+  VectorStore backends ship untested <!-- [comparative-cert-4] CORRECTION: source has exactly 5 VectorStore implementations (inmemory/lancedb/pgvector/qdrant/surrealdb); qdrant/pgvector/lancedb = 3 untested; chunking.rs is a storage-infrastructure module (not a VectorStore impl), so the correct count is 3 of 5 not "4 of 6" -->. Confirms the A1 WEAK "thin-test" flag.
 - **Quality:** **WEAK** — the trait is clean and the pipeline wires `embedding_provider.dimensions()`
   into `create_collection`, but the in-memory (default/dev) store's silent dimension-agnosticism is a
-  correctness trap that only manifests in production against a real backend, and 4/6 backends are
-  unverified.
+  correctness trap that only manifests in production against a real backend, and 3/5 VectorStore backends are
+  unverified <!-- [comparative-cert-4] count corrected from 4/6 to 3/5; see above -->.
 - **NEW detail** (A1/A2 flagged thin-test generically; the dimension-contract divergence is new).
 
 ## P-85 — RemoteA2aAgent surfaces ALL transport/RPC failures as error *events*, never stream `Err` — NEUTRAL

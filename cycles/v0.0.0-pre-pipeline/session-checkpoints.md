@@ -465,3 +465,17 @@ traces_to: STATE.md
 | **Position** | pre-1, burst 43 complete. A6 COMPLETE: NOT-YET-CONVERGED (near). 8 new patterns P-80..P-87 (total 87: 1S/3N/4W). Key: realtime 4-state FSM + Phantom-Reconnect (P-80 STRONG), Windows sandbox hard-fail stub (P-82 WEAK), Docker SandboxPolicy ignored (P-83 WEAK), RAG dim-mismatch silent garbage (P-84 WEAK). Ignore census: 126/4,803 (~2.6%), 19 live-API-gated files. Contradictions: A6-C1 reqwest SYSTEMIC (~69/~79 sites, reframes P-42/P-77), A6-C2 rustls default feature-gated (overstated conflict resolved), A6-C3 Docker cap-vs-behavior. A7 IN-PROGRESS (4 realtime-internal threads: gemini session internals, avatar/keepalive, livekit bridge, a2a-v1 dynamic). C2 (Certification Pass 2) HELD until CONVERGED (both-conditions rule). |
 | **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (~69/~79 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12, 3 exceptions). R6 OPEN. R8/R10/R11 OPEN. After A7 + 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. |
 | **Convergence counter** | 0 of 3 |
+
+---
+
+## Session Resume Checkpoint (2026-07-13) — burst 46 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 46 complete. C3 COMPLETE: CLEAN(strict)=NO. 1 LOW correction: P-86 "triplicated SSE parsing" → "duplicated" ([comparative-cert-3]). Two SSE parse implementations only — (1) legacy A2aClient inline loop + parse_sse_data; (2) v1_remote::run + parse_sse_data_line. Legacy RemoteA2aAgent delegates to A2aClient; no third loop. Both openers CLEAN: (1) C2 propagation sweep — all 3 C2 fixes clean corpus-wide, no stale siblings; (2) A6/A7 notes-without-edits audit — all 7 corrective notes physically applied, class drained. Metrics 3/3 delta-zero (#[test] attrs 4803; #[ignore] 126; proptest! 150). Streak 0/3. C4 DISPATCHED: opener = C3-fix propagation (P-86 "duplicated" stale siblings), then semantic-precision word sweep + rotation with all 12 guardrails. |
+| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 0/3 (C3 = effective pass 3 on deepened corpus; CLEAN(strict)=NO). KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (~69/~79 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. |
+| **Convergence counter** | 0 of 3 |
