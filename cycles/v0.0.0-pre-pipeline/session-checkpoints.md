@@ -493,3 +493,17 @@ traces_to: STATE.md
 | **Position** | pre-1, burst 47 complete. C4 COMPLETE: CLEAN(strict)=NO. 2 LOW corrections: [C4-01] ANALYSIS-STATE.md A6 row 6 "SSE parser triplicated"→"duplicated" ([comparative-cert-4], C3 stale sibling); [C4-02] patterns-observed.md P-84 + ANALYSIS-STATE.md A6 row 4 "4 of 6"→"3 of 5" VectorStore backends ([comparative-cert-4]). Semantic-precision word sweep (15 claims): 14 CONFIRMED, 1 INACCURATE (C4-02). W-03 "TOOLS/RAG/MEMORY NEVER guardrailed" CONFIRMED exact; W-04 sole-anyhow-leak CONFIRMED exactly 1 (adk-mistralrs/error.rs:277). Streak 0/3. C5 DISPATCHED: opener = terminal cross-document correction-consistency audit (every [comparative-*] marker's pre-correction value swept corpus-wide for stale siblings — bounded, closes propagation class), then rotation. |
 | **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 0/3. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (~69/~79 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. |
 | **Convergence counter** | 0 of 3 |
+
+---
+
+## Session Resume Checkpoint (2026-07-13) — burst 49 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 49 complete. C6 COMPLETE: CLEAN(strict)=NO. 1 LOW correction: [C6-01] behavioral-intent.md A1 §2 openai sub-file count "14 sub-files"→"13 sub-files" (off-by-one; find adk-model/src/openai -name "*.rs" \| wc -l = 13 confirmed; all 5 named exemplars present). C5 sibling check CONCLUSIVE-CLEAN: zero active stale instances of "11-case" or "11 dedicated" across all 9 analysis files. 6/7 metrics delta-zero (same off-by-one as behavioral finding). Novel cross-document probe: ANALYSIS-STATE.md A1 breakdown (10S/4N/5W) matches patterns-observed.md A1 enumeration exactly — CONSISTENT. Streak 0/3. C7 DISPATCHED: openers = C6 sibling check (file-count class: grep "13 sub-files" corpus-wide) + file-count class closer (recount every not-yet-verified file-count claim), then rotation. |
+| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 0/3. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (confirmed exact 69/73 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. |
+| **Convergence counter** | 0 of 3 |

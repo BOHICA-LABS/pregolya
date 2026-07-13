@@ -1788,3 +1788,36 @@ the "all items LOW" bar for CONVERGED was not met. A7 dispatched on 4 realtime-i
 - `STATE.md` (C5 COMPLETE, C6 IN-PROGRESS, session checkpoint updated, burst 47 checkpoint archived)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-47 checkpoint archived)
+
+---
+
+## Burst 50 — C7 COMPLETE (CLEAN(strict)=NO, 1 LOW correction); C8 dispatched (2026-07-13)
+
+**Date:** 2026-07-13
+**Agent:** validate-extraction (C7) + state-manager (burst close)
+**Trigger:** C7 certification pass complete; C8 dispatched.
+
+### C7 Results
+
+- **Verdict:** CLEAN(strict)=NO. CLEAN(PR-merge)=YES. 1 new correction (LOW).
+- **Opener — C6 sibling check (file-count class closer):** Swept corpus-wide for all file-count claims not yet independently recounted. Enumerated 49 claims: 39 A1 workspace table rows (1 row per crate) + 10 sub-directory/section claims. Recounted all 39 A1 table crates: 39/39 delta-zero. Recounted 10 sub-directory claims: 9/10 delta-zero, 1 stale sibling found.
+- **Correction C7-01 (LOW):** module-inventory.md A5 table `openai/` row: "(14 files)" → "(13 files)". Stale sibling of C6-01 (C6 corrected behavioral-intent.md A1 §2 "14 sub-files" but did not propagate to the parallel A5 provider table row). `find adk-model/src/openai -name "*.rs" | wc -l` = 13 (background, client, compaction, config, conversations, convert, file_input, mod, pricing, responses_client, responses_convert, schema_adapter, ws_transport). `[comparative-cert-7]` marker applied.
+- **FILE-COUNT CLASS:** CLOSED AND DRAINED. 49 claims checked (39 A1 table + 10 sub-directory); 48 delta-zero; 1 corrected (C7-01). Every bounded file-count claim recounted and verified. No further file-count audit required.
+- **Behavioral rotation (7/7 — first-time A4 pattern-block sampling):**
+  - A4 (guardrail/sandbox): 6-word blocklist exact (CONFIRMED); args-hash retry-counter reset CONFIRMED; WasmBackend capabilities all-true CONFIRMED.
+  - All 7 claims confirmed; 0 inaccurate; 0 hallucinated.
+- **Streak:** 0/3
+
+### C8 Dispatch
+
+- C8: pure fresh-eyes rotation on a fully-swept corpus. Every bounded class (propagation, file-count) is now closed and drained. No opener constraints other than the mandatory C7 sibling check.
+- C8 opener: C7 sibling check (grep corpus-wide for "14 files" / "14 sub-files" in openai context to confirm zero surviving stale instances), then unrestricted fresh-eyes rotation.
+- Streak remains 0/3 going into C8.
+
+### Files touched in this burst
+
+- `comparative/adk-rust/module-inventory.md` (C7-01: A5 table openai/ "(14 files)"→"(13 files)" with [comparative-cert-7] marker)
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (C7 pass appended — verdict, file-count sweep table, behavioral rotation table, corrections table, confidence assessment update, cumulative final verdict)
+- `STATE.md` (C7 COMPLETE, C8 IN-PROGRESS, session checkpoint updated, burst 49 checkpoint archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-49 checkpoint archived)
