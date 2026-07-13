@@ -170,3 +170,17 @@ traces_to: STATE.md
 | **Convergence counter** | 0 of 3 |
 
 ---
+
+## Session Resume Checkpoint (2026-07-13) — burst 16 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 16 complete. Pass 8 COMPLETE: CLEAN(strict)=NO; 7 corrections (5 MEDIUM, 2 LOW); streak 0/3 — never started across 8 passes. CASCADE: 11→5→7→9→2→2→2→7; 56 total corrections. HEADLINE: PHANTOM BEHAVIOR corrected — 4 partner-area docs claimed a base_url gate on OpenAI Responses-API routing that does NOT exist in source (routing is feature-flag + model-name only; the only base_url gate is stream_usage auto-enabling, a different feature). AnyValue channel semantics were documented as OPPOSITE of actual (cleared each unwritten step, not "never empty once written"). D14.1 APPROVED (human, 2026-07-13): exhaustive-sweep-then-3-CLEAN. Level-2 escalation: sampling provably does not converge. 7 parallel area validators dispatched (core, graph, langchain, partners, splitters, mcp, platform) — each exhaustively verifies every discrete claim against pinned source, fixes in-place with [validation-exhaustive] markers, writes EXHAUSTIVE-SWEEP.md. |
+| **Key context** | D1-D14.1 locked. D14.1: exhaustive-sweep-then-3-CLEAN (human-approved 2026-07-13); sampling does not converge; strict-zero bar unchanged. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R10 OPEN: NamedBarrierValue + EphemeralValue coverage gap — route to product-owner at Phase 1. R11 OPEN (new): MCP upstream test voids — mcp bare-ToolException re-raise path + mcp __aenter__ NotImplementedError contract (both untested upstream; must be explicit ferrochain Red Gate tests). CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. |
+| **Convergence counter** | 0 of 3 |
+
+---

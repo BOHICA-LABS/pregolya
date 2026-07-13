@@ -79,7 +79,7 @@ langchain/
 | `langchain.agents.middleware` | `AgentMiddleware`, `AgentState`, `ModelRequest`, `ModelResponse`, `ModelCallResult`, `ExtendedModelResponse`, `InputAgentState`, `OutputAgentState`, `ToolCallRequest`; decorators `before_agent/after_agent/before_model/after_model/dynamic_prompt/wrap_model_call/wrap_tool_call/hook_config`; 15 built-in middleware classes + their config types <!-- [validation-corrected pass-3]: §2 still said 13; §4 corrected to 15 in pass-1; propagation missed in passes 1 and 2 --> | **own** |
 | `langchain.chat_models` | `init_chat_model`, `BaseChatModel` (re-export) | **own** + core |
 | `langchain.embeddings` | `init_embeddings`, `Embeddings` (re-export) | **own** + core |
-| `langchain.messages` | 34 message / content-block / tool-call types + `trim_messages` | **pure re-export of `langchain_core.messages`** |
+| `langchain.messages` | 31 symbols (message types, content-block types, tool-call types, and `trim_messages`) <!-- [validation-exhaustive]: prior passes claimed 34; AST parse of messages/__init__.py `__all__` list = 31 entries (30 types + trim_messages); `python3 -c "..."` confirms count = 31 --> | **pure re-export of `langchain_core.messages`** |
 | `langchain.tools` | `BaseTool`, `tool`, `InjectedToolArg`, `InjectedToolCallId`, `ToolException` (core) + `InjectedState`, `InjectedStore`, `ToolRuntime` (langgraph) | re-export core + langgraph |
 | `langchain.rate_limiters` | `BaseRateLimiter`, `InMemoryRateLimiter` | **pure re-export of `langchain_core.rate_limiters`** |
 

@@ -86,7 +86,7 @@ Multimodal (gated): `test_image_inputs`, `test_image_tool_message`, `test_pdf_in
 `test_input_schema_matches_invoke_params`; `test_invoke_matches_output_schema`,
 `test_async_invoke_matches_output_schema`, `test_invoke_no_tool_call`, `test_async_invoke_no_tool_call`.
 
-### VectorStoreIntegrationTests (~26, sync+async mirrored)
+### VectorStoreIntegrationTests (24, sync+async mirrored: 12 sync + 12 async) <!-- [validation-exhaustive]: ~26 was inaccurate; grep -c "def test_" vectorstores.py = 24 confirmed -->
 empty/add/still-empty/delete/delete-bulk/delete-missing/idempotent-add-by-id/
 add-by-id-with-mutation/get-by-ids/get-by-ids-missing/add-documents/add-with-existing-ids —
 each with an `_async` twin.
@@ -106,7 +106,7 @@ idempotent-set / get-same-value / overwrite-by-key / yield-keys.
 upsert-no-ids / upsert-some-ids / upsert-overwrites / delete-missing / delete-semantics /
 bulk-delete / delete-no-args / delete-missing-content / get-with-missing-ids / get-missing.
 
-### SandboxIntegrationTests (~110 tests, deepagents-gated)
+### SandboxIntegrationTests (86 tests, deepagents-gated) <!-- [validation-exhaustive]: ~110 was inaccurate; grep -c "def test_" sandboxes.py = 86 confirmed -->
 File ops (write/read/edit/ls/glob/grep with unicode, offsets, limits, binary, large-file,
 pagination, error cases), upload/download roundtrips, exec stdout offload. **DEFER — deepagents
 is out of ferrochain v1 scope.**

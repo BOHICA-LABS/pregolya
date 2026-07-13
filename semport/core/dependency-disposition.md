@@ -262,9 +262,11 @@ style *bidirectional* wire protocol for driving/observing a running agent (langg
 | **Core needs** | `MessagesData` (6 event types) + `ContentBlock`/`FinalizedContentBlock` + `UsageInfo` + `MessageMetadata` + the `*Delta` types | **PORT** as serde-tagged enums | ferrochain-core (messages module) |
 | **Agent-server protocol** | Commands, subscriptions, state/fork/checkpoints, agent tree, 9-channel events, replay/reconnect | **DEFER / out of core** | a future ferrochain-graph / agent-server crate |
 
-Core's actual import surface is exactly 6 sites (all `MessagesData`-subset):
-`language_models/chat_models.py`, `language_models/_compat_bridge.py`,
+Core's actual import surface is 7 import statements across 5 files (all `MessagesData`-subset):
+`language_models/chat_models.py` (2 blocks: line 16 runtime + line 101 TYPE_CHECKING),
+`language_models/_compat_bridge.py` (2 blocks: line 39 runtime + line 65 TYPE_CHECKING),
 `language_models/chat_model_stream.py`, `callbacks/base.py`, `callbacks/manager.py`.
+<!-- [validation-exhaustive]: original said "exactly 6 sites"; grep finds 7 `from langchain_protocol` import statements. The 5 files are correct; two of them contain 2 import groups each (one runtime, one TYPE_CHECKING-gated). -->
 So Pass 1's "PORT the whole package as tagged enums (own module), MED risk" over-scopes core:
 **core only needs the messages/content-block subset**; that subset should be **unified with the
 core `ContentBlock` enum** (a single Rust type), which eliminates the `_compat_bridge` laundering

@@ -65,9 +65,13 @@ separator cascades for **28 languages** (`Language` enum). `PythonCodeTextSplitt
 `LatexTextSplitter`, `MarkdownTextSplitter` are trivial subclasses binding a
 language's separator list. `JSFrameworkTextSplitter` (`jsx.py`) is the one with
 runtime behavior: it regex-extracts opening component tags from the text and
-prepends them (plus a fixed JS-separator list) to the separator cascade — and
-famously must NOT persist that mutation across calls (locked by a regression
-test; see test-inventory).
+appends them AFTER a fixed JS-separator list to form a per-call cascade (order:
+user `_separators` → `js_separators` → `component_tags` → trailing
+`["<>", "\n\n", "&&\n", "||\n"]`). JS keywords therefore have HIGHER cascade
+priority than extracted component tags. The per-call list must NOT be persisted
+back to `self._separators` across calls (locked by a regression test; see
+test-inventory). [validation-exhaustive: corrected from "prepends"; jsx.py:103-108
+builds `self._separators + js_separators + component_separators + trailing`]
 
 ### Token-based (tokenizer-dependency splitters)
 

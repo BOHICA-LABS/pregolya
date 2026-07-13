@@ -34,10 +34,10 @@ langgraph, pydantic}`.
 
 ## 3. Optional dependencies (`[project.optional-dependencies]`) — provider packages
 
-All 19 optional extras are **provider integration packages** (`langchain-anthropic`,
+All 18 active optional extras are **provider integration packages** (`langchain-anthropic`, <!-- [validation-exhaustive]: prior passes claimed 19; pyproject.toml `[project.optional-dependencies]` has cohere commented out (`#cohere = ["langchain-cohere"]`), leaving 18 active extras; `langchain-cohere` is NOT an active dependency; confirmed by `python3 -c "import toml; print(len(toml.load('pyproject.toml')['project']['optional-dependencies']))"` → 18 -->
 `-openai`, `-google-vertexai`, `-google-genai`, `-fireworks`, `-ollama`, `-together`,
 `-mistralai`, `-huggingface`, `-groq`, `-aws`, `-baseten`, `-deepseek`, `-xai`,
-`-perplexity`, `-meta`, `-azure-ai`, `-community`, `-cohere`). They are imported lazily by
+`-perplexity`, `-meta`, `-azure-ai`, `-community`). They are imported lazily by
 `init_chat_model`/`init_embeddings` via `importlib.import_module` from the
 `_BUILTIN_PROVIDERS` registry (27 chat providers, 10 embeddings providers). <!-- [validation-corrected pass-3]: original said "30 chat, 11 embeddings"; pass-1/pass-2 corrected module-inventory.md and behavioral-intent.md but missed this sibling file; definitive manual count: chat_models/base.py lines 38-78 = 27 keys; embeddings/base.py lines 15-34 = 10 keys -->
 

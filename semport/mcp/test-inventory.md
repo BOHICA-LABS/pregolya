@@ -14,7 +14,7 @@ purpose: identify tests that LOCK the adapter's behavioral contracts → Red-Gat
 | File | LOC | Focus |
 |---|---|---|
 | `tests/test_tools.py` | 1,469 | Tool conversion, content translation, error policy, interceptors, transports — **primary contract** |
-| `tests/test_client.py` | 353 | MultiServerMCPClient (get_tools, session, name conflicts, parallel) |
+| `tests/test_client.py` | 353 | MultiServerMCPClient (get_tools, session, parallel) + stdio session env-var expansion (`test_stdio_session_*`) [validation-exhaustive] |
 | `tests/test_interceptors.py` | 323 | Interceptor onion, override, retry/short-circuit |
 | `tests/test_resources.py` | 275 | Resource → Blob (text/blob/errors) |
 | `tests/test_elicitation.py` | 164 | Elicitation callback round-trip |
@@ -54,7 +54,7 @@ servers over stdio/http → ferrochain should build equivalent rmcp test servers
   → ToolException raised (legacy).
 - `test_transport_failure_still_raises` — transport error ALWAYS propagates
   regardless of flag. **Locks the error-taxonomy split.**
-- `test_adapter_bug_still_raises` — bare ToolException (non-execution) re-raises.
+- `test_adapter_bug_still_raises` — AudioContent conversion (`NotImplementedError`) propagates even when `isError=True` and `handle_tool_errors=True`; content-conversion errors bypass `_handle_mcp_tool_error` entirely (they are not `ToolException` subclasses) and always propagate. The "bare ToolException re-raise" path in `_handle_mcp_tool_error` is described in the docstring but has no dedicated lock test in the suite. [validation-exhaustive]
 - `test_mcp_tool_error_empty_content_uses_fallback_message` — empty error
   content → single minimal text block (the ONE sanctioned fallback).
 - `test_mcp_tool_error_preserves_non_text_content` — image/file error blocks
@@ -91,8 +91,16 @@ servers over stdio/http → ferrochain should build equivalent rmcp test servers
   `_with_injection` (rejects injected args). Locks the deferred `to_fastmcp`.
 
 ### Client (test_client.py)
-- MultiServerMCPClient get_tools (one/all), session CM, name conflicts,
-  the `__aenter__` NotImplementedError block.
+- MultiServerMCPClient get_tools (one/all, `test_multi_server_mcp_client`),
+  session CM (`test_multi_server_connect_methods`), parallel fan-out.
+- Stdio session env-var expansion (`test_stdio_session_expands_env_vars`,
+  `test_stdio_session_bare_dollar_not_expanded`,
+  `test_stdio_session_warns_on_undefined_env_var`, etc.) — these tests live
+  in test_client.py, NOT in a dedicated sessions test file.
+- **`test_get_tools_with_name_conflict`** is in `test_tools.py`, not here.
+- **`MultiServerMCPClient.__aenter__` NotImplementedError has NO lock test
+  anywhere in the Python suite** (the behavior exists in client.py:267-291
+  but is untested). ferrochain-mcp must add this test. [validation-exhaustive]
 
 ### Prompts (test_prompts.py)
 - user→Human, assistant→AI, unsupported role/content → ValueError.

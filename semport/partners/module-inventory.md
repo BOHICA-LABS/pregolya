@@ -69,8 +69,8 @@ Total partner src ≈ **52,193 LOC** across 15 packages; standard-tests adds **9
 | Module | LOC-ish | Purpose |
 |---|---|---|
 | `chat_models/base.py` | 5,248 | `BaseChatOpenAI` + `ChatOpenAI`. Contains BOTH the **Chat Completions** path and the **Responses API** path. ~80 module-level free functions for message↔dict conversion, both API shapes. |
-| `chat_models/azure.py` | ~900 | `AzureChatOpenAI(BaseChatOpenAI)` — azure_endpoint / api_version / azure_ad_token(+provider, sync & async) / deployment routing. |
-| `chat_models/_client_utils.py` | ~400 | httpx client builders (cached via `lru_cache`), TCP keepalive + `TCP_USER_TIMEOUT` socket tuning (Linux + Darwin constants), SSRF-safe client, `_astream_with_chunk_timeout` per-chunk wall-clock bound, `StreamChunkTimeoutError`. |
+| `chat_models/azure.py` | ~1,174 | `AzureChatOpenAI(BaseChatOpenAI)` — azure_endpoint / api_version / azure_ad_token(+provider, sync & async) / deployment routing. <!-- [validation-exhaustive]: ~900 was inaccurate; wc -l = 1,174 --> |
+| `chat_models/_client_utils.py` | ~683 | httpx client builders (cached via `lru_cache`), TCP keepalive + `TCP_USER_TIMEOUT` socket tuning (Linux + Darwin constants), `_astream_with_chunk_timeout` per-chunk wall-clock bound, `StreamChunkTimeoutError`. NOTE: `_get_ssrf_safe_client` is in `chat_models/base.py` (L168), NOT in this file. <!-- [validation-exhaustive]: ~400 was inaccurate; wc -l = 683. SSRF guard location corrected; it was attributed to _client_utils.py but actually lives in base.py at line 168 --> |
 | `chat_models/_compat.py` | — | v0↔v1 `output_version` bridge for content blocks. |
 | `chat_models/codex.py` | — | Codex/ChatGPT-flavored variant. |
 | `chatgpt_oauth.py` | — | OAuth credential flow for ChatGPT backend. |
@@ -150,7 +150,7 @@ Total partner src ≈ **52,193 LOC** across 15 packages; standard-tests adds **9
 | `chat_models.py` | 1,794 | `ChatOllama`. |
 | `llms.py` | — | `OllamaLLM` (generate endpoint). |
 | `embeddings.py` | — | `OllamaEmbeddings` (`client.embed`). |
-| `_utils.py` | ~180 | `validate_model` (checks model is pulled via `client.list()`), `parse_url_with_auth` (extracts `user:pass@host` → Basic auth header), `merge_auth_headers`, `_build_cleaned_url` (IPv6-safe). |
+| `_utils.py` | ~155 | `validate_model` (checks model is pulled via `client.list()`), `parse_url_with_auth` (extracts `user:pass@host` → Basic auth header), `merge_auth_headers`, `_build_cleaned_url` (IPv6-safe). <!-- [validation-exhaustive]: ~180 was inaccurate; wc -l = 155 --> |
 | `_compat.py` | — | content-block bridge. |
 
 ### Notable behaviors (ollama)
@@ -180,9 +180,10 @@ Total partner src ≈ **52,193 LOC** across 15 packages; standard-tests adds **9
 
 ### deepseek (689 LOC) — `ChatDeepSeek(BaseChatOpenAI)`
 Thin subclass of `langchain-openai`'s `BaseChatOpenAI`. Overrides base_url (`DEEPSEEK_API_BASE`),
-API key env (`DEEPSEEK_API_KEY`), and a `_set_deepseek_chat_version` (renamed to avoid
+API key env (`DEEPSEEK_API_KEY`), and a `_set_deepseek_version` (renamed to avoid
 shadowing base). Handles the `reasoning_content` field DeepSeek adds. No vendor SDK — rides
 the `openai` SDK via the parent. **Depends entirely on ferrochain-openai's base existing.**
+<!-- [validation-exhaustive]: `_set_deepseek_chat_version` was inaccurate; actual function name is `_set_deepseek_version` (confirmed at L229 of langchain_deepseek/chat_models.py) -->
 
 ### xai (1,015 LOC) — `ChatXAI(BaseChatOpenAI)`
 Same pattern (Grok). `XAI_API_KEY`, base_url `https://api.x.ai/v1`. Adds `requests`/`aiohttp`
@@ -255,8 +256,8 @@ langchain_tests/
 │   ├── embeddings.py      (137)   EmbeddingsTests + EmbeddingsUnitTests
 │   └── tools.py           (128)   ToolsTests + ToolsUnitTests
 ├── integration_tests/
-│   ├── chat_models.py    (3593)   ChatModelIntegrationTests — ~48 def test_ occurrences (~35-40 unique class-level methods) <!-- [validation-corrected pass-5]: "60+ tests" was stale; passes 1-4 corrected test-inventory.md and rust-translation-strategy.md to ~48 but missed these two lines in module-inventory.md; grep -c "def test_" = 48 confirmed -->
-│   ├── sandboxes.py      (1978)   SandboxIntegrationTests (deepagents-gated, 100+ tests)
+│   ├── chat_models.py    (3593)   ChatModelIntegrationTests — 48 def test_ occurrences (~35-40 unique class-level methods; some are inner pydantic-compat overrides) <!-- [validation-corrected pass-5]: "60+ tests" was stale; grep -c "def test_" = 48 confirmed [validation-exhaustive]: reconfirmed 48 -->
+│   ├── sandboxes.py      (1978)   SandboxIntegrationTests (deepagents-gated, 86 tests) <!-- [validation-exhaustive]: "100+" was inaccurate; grep -c "def test_" = 86 confirmed -->
 │   ├── vectorstores.py    (842)   VectorStoreIntegrationTests (sync+async)
 │   ├── indexer.py         (398)   Document{,Async}IndexerTestSuite
 │   ├── base_store.py      (315)   BaseStore{Sync,Async}Tests (Generic[V])
@@ -287,7 +288,7 @@ BaseStandardTests                       # test_no_overrides_DO_NOT_OVERRIDE meta
 ├── BaseStoreSyncTests[V] / BaseStoreAsyncTests[V]
 ├── SyncCacheTestSuite / AsyncCacheTestSuite
 ├── Document IndexerTestSuite / AsyncDocumentIndexTestSuite
-└── SandboxIntegrationTests             # deepagents-gated (100+ file-op/exec tests)
+└── SandboxIntegrationTests             # deepagents-gated (86 file-op/exec tests) <!-- [validation-exhaustive]: "100+" was inaccurate; actual 86 -->
 ```
 
 ### The subscription mechanism (critical for the Rust mapping)

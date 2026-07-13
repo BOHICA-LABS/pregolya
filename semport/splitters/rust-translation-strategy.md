@@ -153,8 +153,13 @@ same-metadata runs with `"  \n"` — that exact double-space-newline is
 observable in output; preserve. `ExperimentalMarkdownSyntaxTextSplitter` uses
 `splitlines(keepends=True)` (keep line terminators) — Rust has no direct
 equivalent; implement a keepends line iterator. Metadata is `dict[str,str]` →
-insertion-ordered map (`IndexMap`) because header metadata order is observable
-in `Document` equality tests.
+insertion-ordered map (`IndexMap`) to faithfully preserve Python dict insertion
+order; note that Python `dict.__eq__` is order-independent so NO existing Python
+test locks key ordering in equality assertions — the IndexMap is warranted for
+serialization/debug-output parity and future-proofing, not because equality
+tests catch order differences. [validation-exhaustive: original justification
+"observable in Document equality tests" was inaccurate; Python dict equality is
+order-independent]
 
 ## 7. JSON splitter — 🟡 (serialization-shape parity)
 
@@ -165,8 +170,9 @@ non-ASCII to `\uXXXX`). `serde_json`'s compact form differs → boundaries drift
 Implement a small Python-compatible JSON serializer for the SIZE measurement
 (and for the emitted chunk strings, honoring the `ensure_ascii` flag).
 `min_chunk_size` default = `max(max_chunk_size-200, 50)`. Recursive dict walk
-preserves nested structure; `_set_nested_dict` builds paths. Locked by 9
-`test_split_json*` tests incl. empty-dict edge cases.
+preserves nested structure; `_set_nested_dict` builds paths. Locked by 8
+`test_split_json*` tests incl. 5 empty-dict edge cases (L3404-L3476).
+[validation-exhaustive: corrected from "9 tests"; grep confirms 8 total]
 
 ## 8. HTML splitters — 🟠/🔴 (parser-dependent; second wave)
 

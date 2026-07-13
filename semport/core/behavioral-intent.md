@@ -41,7 +41,7 @@ Runnable is unusual). **Every method threads an optional `RunnableConfig`.** [S]
 
 **Composition semantics [T].**
 - `a | b` builds `RunnableSequence`; `__or__`/`__ror__` coerce dicts→`RunnableParallel`
-  and callables→`RunnableLambda` (`base.py:628,3063`). Sequences flatten (a|b|c is one
+  and callables→`RunnableLambda` (`base.py:628` for `Runnable.__or__`, `670` for `Runnable.__ror__`; `RunnableSequence` overrides at `3321`). <!-- [validation-exhaustive]: original cited `3063` for `__ror__` but that line is `class RunnableSequence`'s class definition, not a method. `__ror__` in `Runnable` is at 670; `RunnableSequence.__or__` is at 3321. --> Sequences flatten (a|b|c is one
   RunnableSequence with `first`, `middle[]`, `last`).
 - `RunnableParallel` runs branches **concurrently** on the same input and returns a
   dict keyed by branch name; streaming interleaves branch outputs into an `AddableDict`.
@@ -586,9 +586,11 @@ message kinds), `include_system=False`, `text_splitter` (for splitting a partial
 ## D-5. _compat_bridge.py — coverage CORRECTED (feeds §3)
 
 There **is** a dedicated spec: `tests/unit_tests/language_models/test_compat_bridge.py`
-(**43 tests, 1,403 LOC**) — contradiction C-2. The bridge's public surface is 3 functions:
+(**43 tests, 1,403 LOC**) — contradiction C-2. The bridge's public surface is 5 functions:
 `finalize_tool_call_chunk` (_compat_bridge.py:359), `chunks_to_events` (:590),
-`message_to_events` (:776) — i.e. it converts core `AIMessage`/`AIMessageChunk`
+`achunks_to_events` (:696, async), `message_to_events` (:776), `amessage_to_events` (:827,
+async). <!-- [validation-exhaustive]: original said "3 functions"; verified against source — there are 5 public (no-underscore-prefix) functions: the 3 sync ones plus achunks_to_events (696) and amessage_to_events (827). The 3-function count omitted both async variants. -->
+The sync functions convert core `AIMessage`/`AIMessageChunk`
 streams ↔ `langchain_protocol` `MessagesData` wire events (message-start / content-block-
 start/delta/finish / message-finish). It exists **only** to launder between the two
 structurally-near-isomorphic but nominally-distinct `ContentBlock` unions
@@ -601,7 +603,8 @@ single type, collapsing most of this module** (see rust-strategy D-5).
 See dependency-disposition Pass 7 deepening for the full inventory. Bottom line for behavioral
 intent: **langchain-core imports only the `MessagesData` content-block subset** (`MessageStartData`,
 `ContentBlockStartData/DeltaData/FinishData`, `MessageFinishData`, `MessageErrorData`) plus the
-`ContentBlock`/`FinalizedContentBlock`/`UsageInfo`/`MessageMetadata` types, at exactly 6 import
-sites (`chat_models.py`, `_compat_bridge.py`, `chat_model_stream.py`, `callbacks/base.py`,
-`callbacks/manager.py`). The rest of the package (the full agent-server JSON-RPC protocol) is
+`ContentBlock`/`FinalizedContentBlock`/`UsageInfo`/`MessageMetadata` types, at 7 import
+statements across 5 files (`chat_models.py`, `_compat_bridge.py`, `chat_model_stream.py`,
+`callbacks/base.py`, `callbacks/manager.py`); 2 of those files contain 2 import blocks each
+(1 runtime + 1 TYPE_CHECKING-gated). <!-- [validation-exhaustive]: original said "exactly 6 import sites"; grep confirms 7 `from langchain_protocol` statements. Two files have 2 import blocks: chat_models.py (lines 16 runtime + 101 TYPE_CHECKING) and _compat_bridge.py (lines 39 runtime + 65 TYPE_CHECKING). The 5 files are correctly identified. --> The rest of the package (the full agent-server JSON-RPC protocol) is
 **not used by core**.

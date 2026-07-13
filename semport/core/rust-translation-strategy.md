@@ -21,7 +21,7 @@ Difficulty scale: 🟢 easy · 🟡 moderate · 🟠 hard · 🔴 very hard / re
 ## 1. Runnables (LCEL) — 🔴 very hard
 
 The keystone. `runnables/base.py` is 6,713 LOC; `Runnable` has one abstract method
-(`invoke`) and ~30 derived methods. In Rust the sync/async duality collapses to
+(`invoke`) and ~68 concrete/overloaded methods (50 unique names per AST count). <!-- [validation-exhaustive]: original said "~30 derived methods"; AST count (python3 ast.parse) confirms 69 total methods in the Runnable class, 1 abstract, 68 concrete/overloaded, 50 unique names. Pass 7 D-1 already says "~60" — both ~30 and ~60 are underestimates; corrected to "~68 concrete/overloaded (50 unique names)". --> In Rust the sync/async duality collapses to
 **async-first**: there is one async core; blocking wrappers are a thin `block_on`
 module, not a mirrored surface.
 
@@ -429,8 +429,8 @@ live with (or register from) partner crates.
 
 ## D-5. `_compat_bridge` — mostly collapses under a unified ContentBlock
 
-The bridge (3 fns: `finalize_tool_call_chunk`, `chunks_to_events`, `message_to_events`; 43-test
-spec) exists **only** because Python has two distinct `ContentBlock` unions
+The bridge (5 public fns: `finalize_tool_call_chunk`, `chunks_to_events`, `achunks_to_events`,
+`message_to_events`, `amessage_to_events`; 43-test spec) <!-- [validation-exhaustive]: original said "3 fns"; verified source has 5 public functions (no underscore prefix): the 3 sync ones at lines 359/590/776 plus async variants achunks_to_events (696) and amessage_to_events (827). --> exists **only** because Python has two distinct `ContentBlock` unions
 (`messages.content` vs `langchain_protocol.protocol`). **Rust decision: define ONE
 `ContentBlock` enum** shared by messages and the (ported) MessagesData protocol subset. Then the
 laundering casts (`_to_protocol_block`/`_to_finalized_block`) vanish, and only the genuine

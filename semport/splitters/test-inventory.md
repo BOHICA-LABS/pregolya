@@ -95,8 +95,10 @@ test vector with the SAME input and SAME expected output.
 
 ### JSON splitter
 - `test_split_json` (L3336), `_with_lists` (L3359), `_many_calls` (L3383),
-  and 6 empty-dict edge cases (L3404-3507). Lock size-based packing and the
-  `json.dumps` shape dependency.
+  and 5 empty-dict edge cases (L3404-L3476). Lock size-based packing and the
+  `json.dumps` shape dependency. [validation-exhaustive: corrected from "6
+  empty-dict / L3404-3507"; grep confirms 8 total test_split_json* functions;
+  L3507 is test_powershell_code_splitter_short_code, not a JSON test]
 
 ### HTML (require bs4/lxml)
 - `test_html_header_text_splitter` (L2825, parametrized), `_additional_*`,

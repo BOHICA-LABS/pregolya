@@ -21,7 +21,7 @@ agent loop and middleware**; there is almost no integration/network testing in-t
 | `unit_tests/agents/` (top level) | 6,537 | 17 | create_agent, react loop, response_format, streaming, state schema, injection, subagents |
 | `unit_tests/agents/middleware_typing/` | 989 | 3 | Static typing / backwards-compat of middleware generics |
 | `unit_tests/chat_models` + `embeddings` + `tools` | 487 | 4 | init_chat_model/init_embeddings/imports |
-| `integration_tests/` | 343 | 6 | HITL + shell (require real infra), chat_models/embeddings base, compile smoke |
+| `integration_tests/` | 343 | 5 <!-- [validation-exhaustive]: prior claimed 6; `find integration_tests -name "test_*.py" | wc -l` = 5 (test_human_in_the_loop_integration, test_shell_tool_integration, test_base×2, test_compile); 343 LOC is correct for test_*.py only; the 7 total .py files include conftest.py + fake_embeddings.py which are non-test support files --> | HITL + shell (require real infra), chat_models/embeddings base, compile smoke |
 | `benchmarks/` | 44 | 1 | `test_create_agent` perf benchmark |
 
 ## 2. Highest-value contract sources (SCoT: assertions → postconditions)

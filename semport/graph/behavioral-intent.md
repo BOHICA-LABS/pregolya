@@ -69,15 +69,22 @@ of discrete **super-steps**. Confidence HIGH (read `_loop.py:tick/after_tick`,
 
 ### 1.3 Halting conditions & recursion limit
 - **Natural halt:** a super-step produces no triggered tasks.
-- **Recursion limit:** `recursion_limit` (default **25**, from `RunnableConfig`). The loop
-  tracks `step`/`stop` (`stop = step + recursion_limit + 1`); `tick()` sets status
-  `out_of_steps` when `step > stop` and returns `False`; the outer invoke loop in
-  `main.py` then raises `GraphRecursionError` after checking `loop.status == "out_of_steps"`.
-  `tick()` itself does NOT raise `GraphRecursionError`. This is the primary
-  infinite-loop guard. <!-- [validation-corrected pass-5]: original said tick() "raises
-  GraphRecursionError"; tick() only sets status and returns False; the error is raised in
-  main.py lines 3002-3011 / 3483-3492, not inside tick(). Also corrected "+1" elision (exact
-  formula is recursion_limit + 1, not approximately recursion_limit). -->
+- **Recursion limit:** `recursion_limit` (default **10007**, from LangGraph's own
+  `DEFAULT_RECURSION_LIMIT = int(getenv("LANGGRAPH_DEFAULT_RECURSION_LIMIT", "10007"))` in
+  `_internal/_config.py`; LangGraph's `ensure_config()` injects this default, overriding
+  langchain-core's `RunnableConfig` default of 25). The loop tracks `step`/`stop`
+  (`stop = step + recursion_limit + 1`); `tick()` sets status `out_of_steps` when `step > stop`
+  and returns `False`; the outer invoke loop in `main.py` then raises `GraphRecursionError`
+  after checking `loop.status == "out_of_steps"`. `tick()` itself does NOT raise
+  `GraphRecursionError`. This is the primary infinite-loop guard.
+  <!-- [validation-corrected pass-5]: original said tick() "raises GraphRecursionError"; tick()
+  only sets status and returns False; the error is raised in main.py lines 3002-3011 /
+  3483-3492, not inside tick(). Also corrected "+1" elision (exact formula is
+  recursion_limit + 1, not approximately recursion_limit). -->
+  <!-- [validation-exhaustive]: corrected default from 25 to 10007; the 25 is langchain-core's
+  RunnableConfig default but LangGraph overrides it at _internal/_config.py:32 with
+  DEFAULT_RECURSION_LIMIT = int(getenv("LANGGRAPH_DEFAULT_RECURSION_LIMIT", "10007")), injected
+  via ensure_config() at _internal/_config.py:335. -->
 - **Interrupt halt:** `interrupt_before`/`interrupt_after` (static, per-node or `"*"`) or
   dynamic `interrupt()` (see §3).
 - **Drain halt:** cooperative shutdown at a boundary (`GraphDrained`).

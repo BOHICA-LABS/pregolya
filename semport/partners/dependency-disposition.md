@@ -103,7 +103,7 @@ Ollama is the API-key-free test path; a **DTU fake** (deterministic local server
 the local Ollama HTTP surface that `ChatOllama`/`OllamaLLM`/`OllamaEmbeddings` call:
 - `GET /api/tags` — returns `{"models":[{"model":"...","name":"..."}]}` (drives `validate_model`
   via `client.list()`; the fake must list whatever model name the test uses).
-- `GET /api/version` — `{"version":"x.y.z"}` (drives `_set_ollama_version`).
+<!-- [validation-exhaustive]: `GET /api/version` entry REMOVED — the langchain-ollama package does NOT call this endpoint. `_set_ollama_version` (chat_models.py L926) only sets the Python package's own `__version__` metadata; it never makes an HTTP call to `/api/version`. No call to the Ollama version endpoint exists anywhere in langchain_ollama/ -->
 - `POST /api/chat` — non-streaming returns `{"message":{"role":"assistant","content":"...",
   "tool_calls":[...]}, "done":true, "done_reason":"stop", "prompt_eval_count":N, "eval_count":M}`;
   streaming returns **newline-delimited JSON** (NDJSON, not SSE) — a sequence of partial

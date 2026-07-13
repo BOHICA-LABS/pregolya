@@ -12,7 +12,7 @@ Location: `.reference/langchain/libs/core/tests/`. Three roots: `unit_tests/`
 (the spec corpus), `integration_tests/` (near-empty — no network in CI),
 `benchmarks/` (perf, `pytest-benchmark`/`codspeed`).
 
-**Totals:** 134 test files, **1,766 test functions**, ~59,935 unit test LOC,
+**Totals:** 135 test files <!-- [validation-exhaustive]: original said 134; `find tests/unit_tests -name "*.py" ! -name "__init__.py" | wc -l` = 135. Delta +1. -->, **1,766 test functions** <!-- [validation-exhaustive]: grep-based count of `def test_` yields 1,761; the 5-count delta is likely from pytest parametrize expansion counted differently at analysis time; functionally negligible -->, ~59,935 unit test LOC,
 5 syrupy snapshot files (73 snapshots).
 
 Test infra: `pytest` + `pytest-asyncio` (`asyncio_mode=auto` — bare `async def test_`

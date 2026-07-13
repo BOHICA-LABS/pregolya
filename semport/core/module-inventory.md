@@ -27,7 +27,7 @@ Measured with `tokei` + `find | wc -l` against
 | Total physical lines | ~69,174 |
 | Top-level sub-packages | 19 |
 | Top-level single-file modules | 18 |
-| Unit test files | 134 |
+| Unit test files | 135 <!-- [validation-exhaustive]: recount `find tests/unit_tests -name "*.py" ! -name "__init__.py" \| wc -l` = 135; original said 134 --> |
 | Unit test functions | **1,766** |
 | Unit test LOC | ~59,935 |
 | Syrupy snapshot files (`.ambr`) | 5 (73 snapshots) |
@@ -197,6 +197,6 @@ estimate (~10 modules) holds; note `RunnableBinding.__getattr__` transparent met
 Module-inventory §External seams called it "the new `langchain_protocol` package (wire protocol
 for v3 content-block streaming)". It is actually the **full LangChain Agent Streaming Protocol**
 (JSON-RPC commands + 9-channel events + state/checkpoint/fork + reconnection), of which core
-uses only the `MessagesData` content-block subset at 6 import sites. Not vendored in the clone
+uses only the `MessagesData` content-block subset at 7 import statements across 5 files <!-- [validation-exhaustive]: original said "6 import sites"; grep confirms 7 `from langchain_protocol` lines in 5 source files (see dependency-disposition correction) -->. Not vendored in the clone
 (pin `>=0.0.17`; only v0.0.15 present in an external docker site-packages). Full detail:
 dependency-disposition Pass 7 deepening.

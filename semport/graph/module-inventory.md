@@ -21,8 +21,8 @@ note: analysis only — NO Rust code written.
 | `libs/checkpoint-postgres/langgraph` | 9 | **4,891** | DEEP (schema) | P1 |
 | `libs/checkpoint-sqlite/langgraph` | 8 | **3,849** | DEEP (schema) | P1 |
 | `libs/prebuilt/langgraph` (react agent, ToolNode) | 7 | **3,676** | DEEP | P1 |
-| `libs/sdk-py/langgraph_sdk` (Platform client) | ~50 | **18,728** | INVENTORY only | P2 |
-| `libs/cli/langgraph_cli` (deploy/build/dev) | ~25 | **8,383** | INVENTORY only | P3 (mostly OUT) |
+| `libs/sdk-py/langgraph_sdk` (Platform client) | 63 | **20,787** | INVENTORY only | P2 | <!-- [validation-exhaustive]: ~50/18,728 was inaccurate; find+wc: 63 files, 20,787 LOC -->
+| `libs/cli/langgraph_cli` (deploy/build/dev) | 46 | **9,997** | INVENTORY only | P3 (mostly OUT) | <!-- [validation-exhaustive]: ~25/8,383 was inaccurate; find+wc: 46 files, 9,997 LOC -->
 | **In-scope source subtotal (deep)** | — | **~46,154** | — | — |
 | Core test suite (`libs/langgraph/tests`) | 49 test files | **63,249** | spec input | — |
 
@@ -33,7 +33,7 @@ substantially larger and more semantically dense port than langchain-core (pass 
 
 ## 1. Core runtime module map (`libs/langgraph/langgraph`)
 
-### 1.1 `pregel/` — the execution engine (the crux, ~11.5k LOC)
+### 1.1 `pregel/` — the execution engine (the crux, **14,873 LOC** total, 24 files) <!-- [validation-exhaustive]: previous "~11.5k LOC" was inaccurate; wc -l of all 24 .py files in pregel/ = 14,873. Two additional unlisted files found: _executor.py (223 LOC, Submit protocol + async/sync execution context) and _log.py (3 LOC, stub). Also: pregel/_config.py is 0 LOC (an empty placeholder); the 474 LOC config logic lives at _internal/_config.py (ensure_config/DEFAULT_RECURSION_LIMIT). pregel/types.py is 38 LOC (a thin re-export stub); the 984 LOC canonical types live at langgraph/types.py (package root). These attribution errors partially explain the undercount. -->
 | File | LOC | Purpose |
 |---|---|---|
 | `main.py` | 4,364 | `Pregel` class: the compiled graph. `invoke/ainvoke/stream/astream/stream_events`, `get_state/get_state_history`, `update_state/bulk_update_state`, `with_config`, `get_graph`. The public runtime surface. |
@@ -45,7 +45,8 @@ substantially larger and more semantically dense port than langchain-core (pass 
 | `_read.py` (298) / `_write.py` (192) | 490 | `PregelNode` (the compiled node: channels/triggers/writers/mapper), `ChannelWrite`/`PregelWrite` write-spec objects. |
 | `_checkpoint.py` | 331 | `channels_from_checkpoint`, `create_checkpoint` glue, delta-snapshot selection. |
 | `_call.py` (298) / `_tools.py` (268) | 566 | `get_runnable_for_task`, functional-API `Call`, tool-call plumbing. |
-| `debug.py` (302), `_messages.py` (461), `_io.py` (174), `_draw.py` (294), `_config.py` (474), `_utils.py`, `_validate.py`, `protocol.py`, `types.py` | ~2.6k | debug/checkpoint/task event mapping (`map_debug_*`), message-stream tap, input/output mapping, mermaid/graphviz drawing, config plumbing, graph validation, `PregelProtocol` ABC. |
+| `_executor.py` | 223 | **[validation-exhaustive: previously unlisted]** `Submit` protocol (sync/async execution context), `copy_context` isolation, `run_coroutine_threadsafe` bridging. The execution context abstraction used by `_runner.py`. |
+| `debug.py` (302), `_messages.py` (461), `_io.py` (174), `_draw.py` (294), `_utils.py` (291), `_validate.py` (120), `protocol.py` (288), `types.py` (38 re-export stub; canonical types at `langgraph/types.py` 984 LOC) | ~1.97k | debug/checkpoint/task event mapping (`map_debug_*`), message-stream tap, input/output mapping, mermaid/graphviz drawing, graph validation, `PregelProtocol` ABC. NOTE: `pregel/_config.py` is 0 LOC (empty placeholder); config logic is in `_internal/_config.py` (474 LOC, `ensure_config`/`DEFAULT_RECURSION_LIMIT`). |
 
 ### 1.2 `channels/` — Pregel channel types (the reducer algebra, ~1.2k LOC)
 | Channel | Semantics |
@@ -71,10 +72,10 @@ substantially larger and more semantically dense port than langchain-core (pass 
 ### 1.4 supporting subsystems
 | Subsystem | Files | Notes |
 |---|---|---|
-| `stream/` | 8 files, ~2.9k LOC | `StreamMux` multiplexer, `StreamChannel`, `StreamTransformer` (v3 projection extension point), converters, run_stream. Backs the 7 stream modes + v3 `stream_events`. |
+| `stream/` | **7 files**, 2,973 LOC <!-- [validation-exhaustive]: 8 was inaccurate; wc -l + ls confirm 7 files: __init__.py(45), _convert.py(32), _mux.py(523), _types.py(330), run_stream.py(663), stream_channel.py(341), transformers.py(1039). LOC total 2,973 matches prior ~2.9k claim. --> | `StreamMux` multiplexer, `StreamChannel`, `StreamTransformer` (v3 projection extension point), converters, run_stream. Backs the 7 stream modes + v3 `stream_events`. |
 | `func/` | `__init__.py` 620 LOC | Functional API: `@task` / `@entrypoint` decorators building a Pregel graph implicitly. |
 | `managed/` | `is_last_step`, `base` | `ManagedValue` (runtime-injected pseudo-channels like `RemainingSteps`). |
-| `_internal/` | 16 files, ~3.2k | `_scratchpad` (interrupt/resume/call counters), `_retry`, `_runnable` (RunnableCallable/RunnableSeq — a private LCEL subset), `_serde`, `_config`, `_queue`, `_future`, `_replay`, `_pydantic`, `_fields`, `_typing`, `_constants` (all the `CONFIG_KEY_*`, `PUSH`/`PULL`, channel sentinels), `_cache`, `_timeout`. |
+| `_internal/` | **15 files**, 2,893 LOC <!-- [validation-exhaustive]: 16 files/~3.2k LOC was inaccurate; ls + wc -l confirm 15 files (2,893 LOC): __init__, _cache, _config(474), _constants, _fields, _future, _pydantic, _queue, _replay, _retry, _runnable(942), _scratchpad, _serde, _timeout, _typing. No 16th file present. --> | `_scratchpad` (interrupt/resume/call counters), `_retry`, `_runnable` (RunnableCallable/RunnableSeq — a private LCEL subset), `_serde`, `_config` (474 LOC: `ensure_config`, `DEFAULT_RECURSION_LIMIT=10007`), `_queue`, `_future`, `_replay`, `_pydantic`, `_fields`, `_typing`, `_constants` (all the `CONFIG_KEY_*`, `PUSH`/`PULL`, channel sentinels), `_cache`, `_timeout`. |
 | `runtime.py` | 310 | `Runtime` (per-task injected context: `store`, `previous`, `stream_writer`, `ExecutionInfo`, `context`), `get_runtime`. |
 | `types.py` | 984 | Public types: `Command`, `Send`, `Interrupt`, `interrupt()`, `Overwrite`, `RetryPolicy`, `TimeoutPolicy`, `CachePolicy`, `StreamMode`, all `*StreamPart` TypedDicts, `StateSnapshot`, `PregelTask`, `Durability`. |
 | `pregel/protocol.py` | 288 | `PregelProtocol` ABC — the interface both local `Pregel` and `RemotePregel` implement (enables remote/subgraph substitution). |
@@ -83,7 +84,7 @@ substantially larger and more semantically dense port than langchain-core (pass 
 
 | Module | Purpose |
 |---|---|
-| `checkpoint/base/__init__.py` (861 LOC) | `BaseCheckpointSaver[V]` interface (get/list/put/put_writes + async twins + delete_thread/copy_thread/prune/delete_for_runs + delta history), `Checkpoint` TypedDict (v/id/ts/channel_values/channel_versions/versions_seen/updated_channels), `CheckpointMetadata`, `CheckpointTuple`, `WRITES_IDX_MAP`, `EXCLUDED_METADATA_KEYS`, `create_checkpoint`/`empty_checkpoint`. |
+| `checkpoint/base/__init__.py` (860 LOC) <!-- [validation-exhaustive]: 861 was off by 1; wc -l = 860 --> | `BaseCheckpointSaver[V]` interface (get/list/put/put_writes + async twins + delete_thread/copy_thread/prune/delete_for_runs + delta history), `Checkpoint` TypedDict (v/id/ts/channel_values/channel_versions/versions_seen/updated_channels), `CheckpointMetadata`, `CheckpointTuple`, `WRITES_IDX_MAP`, `EXCLUDED_METADATA_KEYS`, `create_checkpoint`/`empty_checkpoint`. |
 | `checkpoint/base/id.py` | `uuid6` monotonic checkpoint IDs (sortable, clock_seq=step). |
 | `checkpoint/memory/__init__.py` | `InMemorySaver` reference implementation (the conformance baseline). |
 | `checkpoint/serde/jsonplus.py` | `JsonPlusSerializer`: ormsgpack primary, jsonplus (lc-JSON) fallback; typed-object encode/decode for Pydantic v2 models, Pydantic v1 models, Enum, dataclasses, namedtuples, datetime/uuid/decimal/set/deque/ipaddress/pathlib/msgs/langgraph types, and numpy arrays (conditional); `LANGGRAPH_STRICT_MSGPACK` allowlist gate. <!-- [validation-corrected pass-4]: previous summary omitted Pydantic (v1+v2), Enum, and dataclass dispatch paths from `_msgpack_default`; see behavioral-intent §2.3 for full dispatch order --> |
@@ -193,7 +194,7 @@ artifact: module-inventory
 status: complete
 files_scanned: 40+ (all deep-scope key files read; sdk/cli inventoried by grep)
 deep_scope_loc: 46154
-validation_note: "checkpoint file count corrected 18→17; sqlite-vec dep added; serde/types.py and RedisCache documented [validation-corrected]"
+validation_note: "checkpoint file count corrected 18→17; sqlite-vec dep added; serde/types.py and RedisCache documented [validation-corrected]; [validation-exhaustive]: pregel/ LOC corrected ~11.5k→14,873 (24 files); _executor.py added; pregel/_config.py is 0 LOC (empty), pregel/types.py is 38 LOC stub (not 984); canonical 984 LOC types at langgraph/types.py; stream/ 8→7 files; _internal/ 16→15 files, ~3.2k→2,893 LOC; sdk-py ~50/18728→63/20787; cli ~25/8383→46/9997; checkpoint/base/__init__.py 861→860 LOC"
 core_test_loc: 63249
 timestamp: 2026-07-12
 ```

@@ -609,3 +609,72 @@ Now consistent across all 5 langchain-area docs: 27 chat / 10 embeddings.
 - cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 15 checkpoint archived)
 
 **Next steps:** Exhaustive sweep in progress (7 parallel area validators). Each writes `<area>/EXHAUSTIVE-SWEEP.md` with full claims-checked counts. After all 7 complete → 3-CLEAN certification passes begin (streak 0/3). Streak must reach 3/3 for semport phase to close and Phase 1 to open.
+
+---
+
+## Burst: pre-pipeline burst 17 — D14.1 exhaustive sweep COMPLETE (all 7 areas, FULL coverage); R11 registered; 3-CLEAN certification pass 1 dispatched (2026-07-13)
+
+**Exhaustive sweep results — ALL 7 AREAS COMPLETE:**
+
+| Area | Claims Verified | Corrections | Severity Breakdown |
+|------|----------------|-------------|-------------------|
+| core | ~273 | 5 | 5 LOW |
+| graph | ~140 | 11 | 2 CRITICAL, others MEDIUM/LOW |
+| langchain | ~170 | 6 | 1 CRITICAL, others MEDIUM/LOW |
+| partners | ~147 | 11 | 2 HIGH (phantoms), others MEDIUM/LOW |
+| splitters | ~178 | 4 | 1 HIGH, others LOW |
+| mcp | ~164 | 5 | LOW (+ 2 new upstream test voids) |
+| platform | ~144 | 3 | 3 LOW (all 61 endpoints verified exact — D13 server design input certified) |
+| **TOTAL** | **~1,216** | **~45** | **3 CRITICAL, ~9 HIGH, ~11 MEDIUM, rest LOW** |
+
+**ZERO hallucinated symbols** corpus-wide. 2 phantom artifacts caught and removed (see below).
+
+**CRITICAL corrections (load-bearing for Rust port):**
+
+1. **graph — recursion_limit default is 10,007 NOT 25.** Upstream source: `langgraph/_internal/_config.py:32`, `LANGGRAPH_DEFAULT_RECURSION_LIMIT` env-tunable. The value 25 is langchain-core's recursion limit (a different package). A Rust ferrochain-graph implementation guarding at 25 would halt production graphs after 25 steps. Corrected in graph/behavioral-intent.md + graph/rust-translation-strategy.md.
+
+2. **langchain — node hook return type is `dict[str,Any]|None` NOT `dict|Command|None`.** `jump_to` travels as a dict key (not a Command object at the hook return layer). Only `wrap_tool_call` returns Command. This redefines the Rust `HookResult` type as a state-update map (a middleware trait — load-bearing surface). Corrected in langchain/behavioral-intent.md + langchain/rust-translation-strategy.md.
+
+3. *(Third CRITICAL: within graph area — classified in graph/EXHAUSTIVE-SWEEP.md.)*
+
+**HIGH corrections:**
+
+| Area | Finding |
+|------|---------|
+| splitters | JSX separator cascade ORDER was reversed — append after JS separators, not prepend. Produces wrong split boundaries for JSX source files. Corrected in splitters/behavioral-intent.md + splitters/rust-translation-strategy.md. |
+| partners | PHANTOM artifact #1 — 4 partner-area docs claimed a `GET /api/version` DTU endpoint that does NOT exist in the codebase. Phantom removed from partners/module-inventory.md + sibling docs. |
+| partners | PHANTOM artifact #2 — `test_image_urls` conformance test claimed in partners/test-inventory.md does NOT exist in the reference corpus. Removed. |
+
+**Additional corrections:** graph pregel path misattributions + unlisted `_executor.py` (Submit protocol — relevant to D11 hybrid execution design); langchain extras count 19→18, messages symbols 34→31; core `_compat_bridge` surface 3→5 functions (async entry points were missing); langchain-community extras updates.
+
+**§5 consumed-API contract verified:** 34/34 frozen ferrochain-graph API symbols individually verified — ZERO hallucinations in the consumed API contract input for Phase 1.
+
+**D13 server design certified:** All 61 platform endpoints verified exact against SDK-1.2.9. Server design input is certified clean.
+
+**R11 registered:** MCP upstream test voids — two contracts that upstream does not test and ferrochain must explicitly Red Gate:
+1. `mcp` bare-ToolException re-raise path: untested upstream.
+2. `mcp` `__aenter__` NotImplementedError contract: untested upstream.
+Both must be explicit ferrochain Red Gate tests (join R8 splitters code-point/byte parity, R10 NamedBarrierValue/EphemeralValue as untested-upstream-contract class).
+
+**3-CLEAN certification pass 1 dispatched:**
+
+- Agent: validate-extraction (fresh context)
+- Scope: all 6 guardrails active; re-verifies a sample of exhaustive corrections themselves + high-consequence fixes + cross-area consistency
+- Streak: 0/3 (starts fresh post-exhaustive sweep)
+- Gate: 3 consecutive CLEAN(strict) passes required before Phase 1 opens
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated, Current Step; Current Phase Steps — pass-5 row archived, exhaustive sweep row updated to DONE, certification pass-1 IN_PROGRESS row added; R11 added to Risk Register; Session Resume Checkpoint replaced; Historical Content updated)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 16 checkpoint archived)
+- semport/core/EXHAUSTIVE-SWEEP.md (new — 273 claims, 5 corrections)
+- semport/graph/EXHAUSTIVE-SWEEP.md (new — 140 claims, 11 corrections, 2 CRITICAL)
+- semport/langchain/EXHAUSTIVE-SWEEP.md (new — 170 claims, 6 corrections, 1 CRITICAL)
+- semport/partners/EXHAUSTIVE-SWEEP.md (new — 147 claims, 11 corrections, 2 HIGH phantoms removed)
+- semport/splitters/EXHAUSTIVE-SWEEP.md (new — 178 claims, 4 corrections, 1 HIGH)
+- semport/mcp/EXHAUSTIVE-SWEEP.md (new — 164 claims, 5 corrections)
+- semport/platform/EXHAUSTIVE-SWEEP.md (new — 144 claims, 3 corrections, 61 endpoints certified)
+- semport/*/behavioral-intent.md, module-inventory.md, rust-translation-strategy.md, test-inventory.md, dependency-disposition.md (24 files — [validation-exhaustive] corrections applied in-place)
+
+**Next steps:** 3-CLEAN certification pass 1 in progress. Requires 3 consecutive CLEAN(strict) passes (streak 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.

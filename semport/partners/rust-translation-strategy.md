@@ -147,6 +147,7 @@ pub trait ChatModelConformance: Send + Sync {
     fn supports_image_urls(&self) -> bool { false }
     fn supports_pdf_inputs(&self) -> bool { false }
     fn supports_audio_inputs(&self) -> bool { false }
+    fn supports_video_inputs(&self) -> bool { false }  // flag exists; no tests written for it yet <!-- [validation-exhaustive]: flag omitted from original sketch; present in ChatModelTests (unit_tests/chat_models.py L180) -->
     fn returns_usage_metadata(&self) -> bool { true }
     fn supports_anthropic_inputs(&self) -> bool { false }
     fn supports_image_tool_message(&self) -> bool { false }

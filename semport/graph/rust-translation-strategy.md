@@ -36,7 +36,7 @@ Derived from behavioral-intent.md; these constrain both alternatives below.
    writes are restored (skipping ERROR/RESUME markers) so only uncommitted tasks re-run.
 5. **Three durability tiers** (sync / async / exit) at BOTH the per-task (`put_writes`) and
    step-boundary (`put`) persistence points.
-6. **Recursion limit** (default 25) and cooperative **drain** at step boundaries.
+6. **Recursion limit** (default **10007** via `LANGGRAPH_DEFAULT_RECURSION_LIMIT` env or `_internal/_config.py:DEFAULT_RECURSION_LIMIT`; NOT 25 — that is langchain-core's `RunnableConfig` default which LangGraph overrides) and cooperative **drain** at step boundaries. <!-- [validation-exhaustive]: corrected default from 25 to 10007 -->
 7. **7 stream modes** emitted at the correct lifecycle points with a monotonic `seq`.
 
 ---

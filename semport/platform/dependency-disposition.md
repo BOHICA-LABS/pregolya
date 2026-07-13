@@ -19,7 +19,7 @@ note: per D5 — MAP (use a Rust crate) / PORT (reimplement in ferrochain) / DRO
 | `orjson` | >=3.11.5 | fast JSON encode/decode (off-thread) | **MAP** | `serde_json` (+ `simd-json` if bench-justified) |
 | `websockets` | >=14,<17 | v3 WS transport | **MAP / DEFER** | `tokio-tungstenite` — DEFER with v3 |
 | `langchain-protocol` | >=0.0.15 | v3 `Event`/`SubscribeParams` types | **PORT / DEFER** | ferrochain protocol types — DEFER with v3 |
-| `langchain-core` | >=1.4.0,<2 | shared base (messages, runnables) — mostly for RemoteGraph glue | **PORT** (already in scope) | `ferrochain-core` |
+| `langchain-core` | >=1.4.0,<2 | v3 message projections (`AsyncChatModelStream`/`ChatModelStream` in `_async/stream.py` and `_sync/stream.py`) — RemoteGraph is NOT in sdk-py <!-- [validation-exhaustive: prior "mostly for RemoteGraph glue" was inaccurate; RemoteGraph lives in langgraph core, not sdk-py; sdk-py imports langchain-core for chat model stream types used in v3 message projection] --> | **PORT** (already in scope) | `ferrochain-core` |
 
 Notable ABSENCES vs the partner crates: there is **no vendor SDK, no retry library, no auth
 library** in the SDK's deps. Retry is httpx transport-level (`retries=5`) + the SSE reconnect

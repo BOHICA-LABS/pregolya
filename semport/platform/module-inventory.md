@@ -59,7 +59,7 @@ note: module + endpoint inventory. The §2 endpoint catalog is the DTU-clone spe
 External dependency-injected type source: `langchain-protocol>=0.0.15` provides v3
 `Event`/`SubscribeParams`. `langchain-core>=1.4.0` + `langgraph` (dev) for RemoteGraph glue.
 
-### 1.2 CLI (langgraph_cli, 8,383 LOC total incl. tests)
+### 1.2 CLI (langgraph_cli, 8,383 LOC source-only) <!-- [validation-exhaustive: "total incl. tests" label was wrong; 8,383 is langgraph_cli/ source only; tests add 7,208 LOC (tests/) + 1,614 LOC (examples/generate_schema.py) for a full package total of 17,205 LOC] -->
 
 | Module | LOC | Priority | Purpose |
 |---|---|---|---|
@@ -194,9 +194,10 @@ debug payloads (`TaskPayload, TaskResultPayload, CheckpointTaskPayload, Checkpoi
 
 Literals (enums): `RunStatus`(6), `ThreadStatus`(4), `ThreadStreamMode`(3), `StreamMode`(9),
 `DisconnectMode`(2), `MultitaskStrategy`(4), `OnConflictBehavior`(2), `OnCompletionBehavior`(2),
-`Durability`(3), `IfNotExists`(2), `PruneStrategy`(2), `CancelAction`(2),
+`Durability`(3), `All`(1, `Literal["*"]`), `IfNotExists`(2), `PruneStrategy`(2), `CancelAction`(2),
 `BulkCancelRunsStatus`(3), `AssistantSortBy`(5), `ThreadSortBy`(5), `CronSortBy`(7),
 `SortOrder`(2), `StreamVersion`(2), plus `*SelectField` field-allowlists per resource.
+<!-- [validation-exhaustive: prose enumeration previously listed 18 named Literals and omitted `All = Literal["*"]`; correct count of 19 now reflected in enumeration] -->
 
 `Input`/`Context` are structural `TypeAlias`es (TypedDict-like | dataclass-like |
 BaseModel-like | JSON map) — the polymorphic input surface. In Rust these become

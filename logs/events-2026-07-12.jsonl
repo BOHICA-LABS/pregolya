@@ -1,0 +1,3 @@
+{"type":"hook.block","hook":"protect-secrets","reason":"env_file_read_direct","ts":"2026-07-12T17:38:49-0500","ts_epoch":1783895929,"schema_version":1}
+{"type":"hook.block","hook":"validate-template-compliance","reason":"template_drift","ts":"2026-07-12T18:14:50-0500","ts_epoch":1783898090,"schema_version":1}
+{"type":"hook.block","hook":"validate-input-hash","reason":"input_hash_missing","ts":"2026-07-12T18:27:45-0500","ts_epoch":1783898865,"schema_version":1}

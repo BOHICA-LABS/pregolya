@@ -211,8 +211,9 @@ provider MUST pass (unit + always-on integration, no capability flag gating them
 - Structured output: `test_structured_output{,_async}`, `test_structured_output_pydantic_2_v1`,
   `test_structured_output_optional_param`, `test_structured_few_shot_examples`, `test_json_mode`
   (gated by `has_structured_output`/`supports_json_mode`).
-- Multimodal: `test_image_inputs`, `test_image_urls`, `test_pdf_inputs`, `test_audio_inputs`,
+- Multimodal: `test_image_inputs` (which also tests URL-based images when `supports_image_urls=True`), `test_pdf_inputs`, `test_audio_inputs`,
   `test_image_tool_message`, `test_pdf_tool_message` (gated by respective `supports_*`).
+  <!-- [validation-exhaustive]: `test_image_urls` was listed as a standalone test but does NOT exist; `supports_image_urls` is a sub-flag checked within `test_image_inputs` (integration_tests/chat_models.py L2944), not a separate test method -->
 - Provider-specific: `test_anthropic_inputs` (gated by `supports_anthropic_inputs`).
 - Model override: `test_{,a}invoke_with_model_override`, `test_{,a}stream_with_model_override`
   (gated by `supports_model_override`, default True).

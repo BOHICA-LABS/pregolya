@@ -19,7 +19,7 @@ date: 2026-07-12
 | `callbacks.py` | 141 | `Callbacks`, `CallbackContext`, `_MCPCallbacks`, `*Callback` protocols | mcp callback types | PORT | P1 |
 | `resources.py` | 103 | `load_mcp_resources`, `get_mcp_resource`, `convert_mcp_resource_to_langchain_blob` | mcp.types, langchain_core Blob | PORT | P1 |
 | `prompts.py` | 59 | `load_mcp_prompt`, `convert_mcp_prompt_message_to_langchain_message` | mcp.types, langchain_core messages | PORT | P1 |
-| `__init__.py` | 6 | version marker | — | — | P3 |
+| `__init__.py` | 6 | package docstring only (no `__version__` variable) [validation-exhaustive] | — | — | P3 |
 
 ## Component / dependency graph
 
@@ -57,7 +57,7 @@ The `mcp` Python SDK is the **load-bearing external dependency** (transports,
 | `_build_interceptor_chain` | tools.py:286-317 | Onion composition (note default-arg closure capture to avoid late-binding) |
 | `_list_all_tools` | tools.py:320-354 | Cursor pagination, MAX_ITERATIONS=1000 |
 | `load_mcp_tools` | tools.py:539-610 | List + convert all tools |
-| `to_fastmcp` | tools.py:638-686 | LC tool → FastMCP server tool (server-side) |
+| `to_fastmcp` | tools.py:638-685 | LC tool → FastMCP server tool (server-side) [validation-exhaustive: file is 685 lines; 686 does not exist] |
 | `create_session` | sessions.py:405-477 | Transport dispatch + param validation + callback injection |
 | `_expand_env_vars` | sessions.py:35-45 | `${VAR}` braced-only expansion |
 | `MultiServerMCPClient.get_tools` | client.py:162-212 | Per-server or fan-out (asyncio.gather) |

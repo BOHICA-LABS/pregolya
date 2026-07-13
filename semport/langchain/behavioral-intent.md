@@ -66,8 +66,10 @@ raw dict → `dict[str,Any]`; schema/`ResponseFormat` → inferred `ResponseT`).
    client-side tools OR a wrap_tool_call wrapper exists.
 8. **Validate middleware uniqueness** — duplicate `m.name` → `AssertionError`.
 9. **Partition middleware by which hooks they override** (compares
-   `m.__class__.hook is not AgentMiddleware.hook`) into 6 lists: before_agent,
-   before_model, after_model, after_agent, wrap_model_call, wrap_tool_call.
+   `m.__class__.hook is not AgentMiddleware.hook`) into 8 lists: before_agent,
+   before_model, after_model, after_agent (built after uniqueness check), plus
+   wrap_model_call sync, awrap_model_call async, wrap_tool_call sync, awrap_tool_call async
+   (built before the ToolNode, as they feed into it). <!-- [validation-exhaustive]: prior said "6 lists"; actual factory.py creates 8 distinct partition lists — the 4 node-hook lists plus 4 for the 2 sync/async pairs of wrap_model_call and wrap_tool_call (middleware_w_wrap_tool_call at ~1010, middleware_w_awrap_tool_call at ~1031, middleware_w_wrap_model_call at ~1110, middleware_w_awrap_model_call at ~1119) -->
 10. **Resolve state schema** — merge every `m.state_schema` (registration order) + the
     base (`state_schema` or `AgentState`, last so it wins conflicts) via `_resolve_schemas`,
     producing `(resolved_state_schema, input_schema, output_schema)` as dynamic `TypedDict`s.
@@ -203,12 +205,12 @@ Evidence: `_handle_model_output` runs inline in the model node; `test_response_f
 
 | Hook (sync / async) | Signature | Return | Where it runs | Can jump? |
 |---|---|---|---|---|
-| `before_agent` / `abefore_agent` | `(state, runtime)` | `dict\|Command\|None` | node, once at start | yes (`can_jump_to`) |
-| `before_model` / `abefore_model` | `(state, runtime)` | `dict\|Command\|None` | node, each loop head | yes |
+| `before_agent` / `abefore_agent` | `(state, runtime)` | `dict[str,Any]\|None` <!-- [validation-exhaustive]: original said `dict\|Command\|None`; actual type annotation in types.py:419,431 is `dict[str, Any] | None`; `Command` is NOT in the declared return type of any node hook; control flow is communicated via `{"jump_to": "model"|"tools"|"end"}` dict key, not by returning a Command object --> | node, once at start | yes (`can_jump_to`) |
+| `before_model` / `abefore_model` | `(state, runtime)` | `dict[str,Any]\|None` <!-- [validation-exhaustive]: same fix; see types.py:443,454 --> | node, each loop head | yes |
 | `wrap_model_call` / `awrap_model_call` | `(request, handler)` | `ModelResponse\|AIMessage\|ExtendedModelResponse` | **closure inside model node** | no (via Command rejected) |
-| `after_model` / `aafter_model` | `(state, runtime)` | `dict\|Command\|None` | node, each loop tail | yes |
+| `after_model` / `aafter_model` | `(state, runtime)` | `dict[str,Any]\|None` <!-- [validation-exhaustive]: same fix; see types.py:467,478 --> | node, each loop tail | yes |
 | `wrap_tool_call` / `awrap_tool_call` | `(request, handler)` | `ToolMessage\|Command` | **closure inside ToolNode** | n/a |
-| `after_agent` / `aafter_agent` | `(state, runtime)` | `dict\|Command\|None` | node, once at end | yes |
+| `after_agent` / `aafter_agent` | `(state, runtime)` | `dict[str,Any]\|None` <!-- [validation-exhaustive]: same fix; see types.py:638,649 --> | node, once at end | yes |
 
 Plus class attributes: `state_schema: type[StateT]` (default `_DefaultAgentState`),
 `tools: Sequence[BaseTool]`, `transformers: Sequence[TransformerFactory]`,
@@ -324,7 +326,7 @@ picks the sync vs async slot.
   `_get_chat_model_creator` lru-caches import + `functools.partial(creator, cls)`.
   Ollama has a `langchain_community` fallback.
 - **Provider inference** (`_attempt_infer_model_provider`): prefix rules (`gpt-/o1/o3/
-  chatgpt/text-davinci`→openai, `claude`→anthropic, `gemini`→google_vertexai w/ deprecation
+  chatgpt/text-davinci`→openai, `claude`→anthropic, `accounts/fireworks`→fireworks <!-- [validation-exhaustive]: prior passes omitted this rule; actual code base.py:556 has `if model_lower.startswith("accounts/fireworks"): return "fireworks"` as the 4th branch -->, `gemini`→google_vertexai w/ deprecation
   warning, `command`→cohere, `mistral/mixtral`→mistralai, `deepseek`, `grok`→xai,
   `sonar`→perplexity, `solar`→upstage, `amazon./anthropic./meta.`→bedrock). `provider:model`
   syntax parsed by `_parse_model`.
