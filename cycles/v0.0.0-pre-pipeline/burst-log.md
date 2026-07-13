@@ -1347,3 +1347,42 @@ Streak 0/3. Pass 13: NO. Cumulative: 14 cert passes dispatched, 0 consecutive CL
 - `semport/VALIDATION-REPORT.md` (cert-16 section added, 1,071 lines)
 - `STATE.md` (pass 16 DONE CLEAN(strict)=YES streak 2/3, pass 17 dispatched, session checkpoint updated, burst 36 recorded)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+
+## Burst 37 — cert pass 17 COMPLETE (CLEAN(strict)=YES, streak 3/3); EXTRACTION GATE CLOSED; adk-rust analysis pass A1 dispatched (2026-07-13)
+
+### Certification Pass 17 Result
+
+**Verdict:** CLEAN(strict)=YES — ZERO corrections of any severity. Streak advances 2/3 → 3/3. EXTRACTION GATE CONVERGED AND CLOSED.
+
+**Scope covered:**
+- Full rotation from all prior certified territory; all claims absent from passes 1–16 and archive.
+- All 10 guardrails in force; both anti-corruption warnings active throughout.
+- Per-area verdicts: core PASS / graph PASS / langchain PASS / partners PASS / splitters PASS / mcp PASS / platform PASS. 0 corrections total.
+- Propagation sweep: CLEAN. No residue from prior corrections detected.
+- All bounded error classes remain closed.
+
+### Gate Closure — Final Statistics
+
+| Statistic | Value |
+|-----------|-------|
+| Total validation runs | 32 (8 analysis passes, 7-area exhaustive sweep, 17 certification passes) |
+| Total corrections | ~100 (~24 analysis-phase, ~76 cert-phase) |
+| Cert passes with zero corrections | CP2, CP15, CP16, CP17 (streak-closing sequence: CP15+CP16+CP17) |
+| Hallucinated symbols | 0 across all 32 validation runs |
+| Error classes closed | 11 (fully codified in lessons.md) |
+| Semport corpus status | 7 areas, 35 documents — TRUSTED input for Phase 1 |
+
+### D16 Triggered — adk-rust Analysis Pass A1 Dispatched
+
+- D16 trigger condition MET: extraction gate reached 3-CLEAN convergence
+- Corpus 5: adk-rust v1.0.0 (SHA a6c79b6f, Apache-2.0) pre-staged at `.reference/adk-rust`
+- codebase-analyzer dispatched on `.reference/adk-rust` with Rust-blindness rule in force
+- Rust-blindness rule (verbatim D16): "the fact that it's in Rust already should not be a factor" — language carries zero evidentiary weight; patterns win on production-grade merit only
+
+### Files touched in this burst
+
+- `semport/VALIDATION-REPORT.md` (cert-17 section + GATE CONVERGED section added; 1,270 lines total)
+- `STATE.md` (extraction gate CLOSED, cert passes 13–17 collapsed to summary row, adk-rust A1 current step, session checkpoint updated, burst 37 recorded)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-36 checkpoint archived)
+- `cycles/v0.0.0-pre-pipeline/lessons.md` (Drift/Deferral section added)

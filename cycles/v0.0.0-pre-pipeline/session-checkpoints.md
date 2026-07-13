@@ -410,3 +410,17 @@ traces_to: STATE.md
 | **Position** | pre-1, burst 34 complete. Cert pass 14 DONE (CLEAN(strict)=NO; 2 LOW; streak 0/3). Pass 15 DISPATCHED. VALIDATION-REPORT.md rotated: passes 1–10 archived to cycles/v0.0.0-pre-pipeline/validation-report-archive.md (3,478 lines). 30 total validation runs; ~96 total corrections; best streak 1/3. Line-range endpoint micro-class active. |
 | **Key context** | D1-D16 locked. D14: CLEAN(strict)=zero findings; 3 consecutive required. D15: autonomous continuation, no check-ins. D16: adk-rust PARKED. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh. R8/R10/R11 OPEN. YAML/METADATA CLASS CLOSED. Line-range endpoint micro-class (cert-13/14): both endpoints must be verified. Pass 15 opener: exhaustive sweep remaining ~114 line-range citations + pass-14 propagation + rotation. |
 | **Convergence counter** | 0 of 3 |
+
+---
+
+## Session Resume Checkpoint (2026-07-13) — burst 36 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 36 complete. Cert pass 16 DONE (CLEAN(strict)=YES; ZERO corrections; streak 2/3). Pass 17 DISPATCHED — THE POTENTIAL CLOSING PASS. 32 total validation runs; ~96 total corrections; streak now active at 2/3. Line-range endpoint micro-class EXHAUSTED (69/69 verified). ALL bounded error classes closed and swept. |
+| **Key context** | D1-D16 locked. D14: CLEAN(strict)=zero findings; 3 consecutive required. D15: autonomous continuation, no check-ins. D16: adk-rust PARKED (trigger = 3-CLEAN closes). D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh. R8/R10/R11 OPEN. All bounded error classes CLOSED AND EXHAUSTED. Pass 17: MUST return zero findings to close gate — any finding resets streak to 0/3. Anti-corruption warnings in force (no softening to close; no manufacturing to posture). |
+| **Convergence counter** | 0 of 3 |

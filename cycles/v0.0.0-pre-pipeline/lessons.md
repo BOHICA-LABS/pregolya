@@ -432,3 +432,39 @@ The 10 guardrails remain as documented after cert-6. The correction-verification
 ### Follow-up
 
 Add the correction-verification opening stratum to the validate-extraction agent prompt upstream — co-batch with all prior guardrails in session-review prompt hardening. The three new cert-13 openers (citation audit, prose-sibling sweep, tilde-normalization) should become standard first-stratum items for all certification passes going forward.
+
+---
+
+## Codification Status — All 11 Lessons
+
+All 11 process-gap lessons carry their "Codification applied" section (confirmed at extraction gate closure, burst 37). Each lesson includes: what happened, why it matters, explicit guardrail text, and a follow-up target.
+
+| # | Lesson | Guardrail | Codification Status |
+|---|--------|-----------|---------------------|
+| 1 | Validator Counting Methodology | Guardrail 1: AST-based counting | CODIFIED |
+| 2 | Cross-Document Propagation Failures | Guardrail 2: Cross-doc propagation sweep | CODIFIED |
+| 3 | Behavioral-Locus Precision | Guardrail 3: Behavioral-locus precision | CODIFIED |
+| 4 | Semantic-Precision Summary Words | Guardrail 4: Semantic-precision verification | CODIFIED |
+| 5 | Notes-Without-Edits | Guardrail 5: Deepening-note sweep | CODIFIED |
+| 6 | Package-Attribution | Guardrail 6: Package-attribution verification | CODIFIED |
+| 7 | Scope-Label Matching | Guardrail 7: Scope-label matching | CODIFIED |
+| 8 | Dependency-Constraint Completeness | Guardrail 7b: Constraint completeness | CODIFIED |
+| 9 | Deprecated-vs-Active | Guardrail 8: Deprecated-vs-active | CODIFIED |
+| 10 | Enumeration Completeness | Guardrail 10: Enumeration completeness | CODIFIED |
+| 11 | Corrections Are Claims | Opening stratum discipline | CODIFIED |
+
+---
+
+## Drift/Deferral Register
+
+<!-- Items recognized during the extraction cascade and deliberately deferred to a later session or phase. -->
+
+| ID | Item | Deferred To | Registered |
+|----|------|-------------|-----------|
+| DEFER-001 | Fold all 11 guardrails into the upstream validate-extraction agent prompt | session-review | 2026-07-13 |
+
+### DEFER-001 Detail
+
+**Standing follow-up:** All 11 process-gap guardrails identified during the ferrochain semport extraction cascade should be codified into the validate-extraction agent's operating instructions (prompt hardening). Each lesson's Follow-up section explicitly targets this; the full set covers guardrails 1–10 plus the opening-stratum correction-verification discipline.
+
+**Deferral rationale:** This work requires access to the validate-extraction agent definition file in the factory engine. Deferred to session-review with explicit target: update the validate-extraction agent prompt to include all 11 guardrails as mandatory operating instructions.

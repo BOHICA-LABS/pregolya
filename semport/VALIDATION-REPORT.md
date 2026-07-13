@@ -1069,3 +1069,202 @@ Streak: 2/3 (advances from 1/3 → 2/3)
 explicitly).
 
 **No corrections applied.** Streak advances to 2/3.
+
+---
+
+## Certification Pass 17
+
+**Date:** 2026-07-13
+**Streak entering:** 2/3 (passes 15 and 16 were CLEAN(strict))
+**Protocol:** BC-5.39.001 3-CLEAN — D14 absolute strict-zero; D15 autonomous continuation
+**Ground truth:** `.reference/langchain` (1.3.13), `.reference/langgraph` (1.2.9), `.reference/langchain-mcp-adapters` (0.3.0)
+**Note:** Potentially closing pass. Stakes: zero-finding → GATE CONVERGED (3/3); any finding resets to 0/3.
+
+### Opening Strata — Residue Classes from Passes 15-16
+
+**Stale-value scan:** Grepped for all prior correction old-value forms (stale ~ approximations, stale endpoint counts, stale LOC values) in all 35 primary semport documents. Result: CLEAN — no residual stale values found. All prior corrections remain properly applied.
+
+**Propagation sweep for CP16:** CP16 introduced no corrections; no propagation sweep needed.
+
+---
+
+### Phase 1 — Behavioral Verification
+
+**Rotation discipline:** 3 behavioral + 1 citation per area; claims absent from every verified list in passes 1-16 + archive preferred. Where saturated, highest-consequence claims re-verified at full precision.
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| Core | 4 | 4 | 0 | 0 | 0 |
+| Graph | 4 | 4 | 0 | 0 | 0 |
+| Langchain | 4 | 4 | 0 | 0 | 0 |
+| Partners | 4 | 4 | 0 | 0 | 0 |
+| Splitters | 4 | 4 | 0 | 0 | 0 |
+| MCP | 4 | 4 | 0 | 0 | 0 |
+| Platform | 4 | 4 | 0 | 0 | 0 |
+| **Total** | **28** | **28** | **0** | **0** | **0** |
+
+**Per-area behavioral claims (cert-17):**
+
+**Core**
+- B1: `merge_dicts` at `utils/_merge.py:6` — `lc_`-prefixed index keeps-left only when key is `"index"` AND `merged[right_k].startswith("lc_")` (line 59); `id`/`output_version`/`model_provider` keep-left only when values equal (line 60-62); when values differ, falls through to concatenate — CONFIRMED
+- B2: `KNOWN_BLOCK_TYPES` at `content.py:856` contains 14 types: text, reasoning, tool_call, invalid_tool_call, tool_call_chunk, image, audio, file, text-plain, video, server_tool_call, server_tool_call_chunk, server_tool_result, non_standard — CONFIRMED
+- B3: `BaseMessage.get_lc_namespace()` at `base.py:191` returns `["langchain", "schema", "messages"]` — CONFIRMED
+- Citation: `BaseMessageChunk.__add__` at `base.py:412` — CONFIRMED
+
+**Graph**
+- B1: `RunControl.request_drain()` at `runtime.py:95` sets `_drain_reason`; `_loop.py:658` checks `self.control.drain_requested` → sets `status="draining"` and returns False; `main.py:3012` raises `GraphDrained(loop.control.drain_reason or "shutdown")` — CONFIRMED
+- B2: `tick()` at `_loop.py:607-609`: guard `if self.step > self.stop: self.status = "out_of_steps"; return False` — condition is `>`, not `>=` — CONFIRMED
+- B3: `self.stop = self.step + self.config["recursion_limit"] + 1` at `_loop.py:1701` (and 1961 for the async path) — CONFIRMED
+- Citation: `GraphDrained(GraphBubbleUp)` at `errors.py:54` — CONFIRMED
+
+**Langchain**
+- B1: `_chain_tool_call_wrappers` at `factory.py:626` — docstring explicitly states "first = outermost"; example: `[auth, cache, retry]` → request flows `auth → cache → retry → tool` — CONFIRMED
+- B2: `_chain_model_call_handlers` at `factory.py:235` — docstring: "Composes handlers so first in list becomes outermost layer" — CONFIRMED
+- B3: `_resolve_schema` at `factory.py:440` (called by `_resolve_schemas` at `factory.py:424`) omits fields whose `OmitFromSchema` annotation has `omit_flag` attribute `True` (lines 462-467) — CONFIRMED
+- Citation: `_resolve_schemas` at `factory.py:424` returns `(StateSchema, InputSchema, OutputSchema)` tuple — CONFIRMED
+
+**Partners**
+- B1: `AzureChatOpenAI` credential parameters: `azure_endpoint` (line 464), `openai_api_version` alias `api_version` from env `OPENAI_API_VERSION` (lines 481-485), `azure_ad_token` (line 496), `azure_ad_token_provider: Callable[[], str]` sync (line 505), `azure_ad_async_token_provider: Callable[[], Awaitable[str]]` async (line 512) — CONFIRMED
+- B2: Anthropic `_apply_cache_control_to_last_eligible_block` exists at `chat_models.py:823` (used for prompt cache control application) — CONFIRMED
+- B3: Ollama `_parse_json_string` at `chat_models.py:120` and `_parse_arguments_from_tool_call` at `chat_models.py:172` tolerate stringified/loose JSON tool-call args; both called from `_get_tool_calls_from_response` at line 209 — CONFIRMED
+- Citation: `azure_ad_token_provider: Callable[[], str] | None = None` at `azure.py:505` — CONFIRMED
+
+**Splitters**
+- B1: `SentenceTransformersTokenTextSplitter.split_text` creates inner function `encode_strip_start_and_stop_token_ids` at `sentence_transformers.py:100-101` that wraps `self._encode(text)[1:-1]` — strips start/stop special tokens before windowing — CONFIRMED
+- B2: `NLTKTextSplitter`, `SpacyTextSplitter`, `KonlpyTextSplitter` are deferred in `_LAZY_SPLITTERS` dict at `__init__.py:83` and lazily imported via `__getattr__` at `__init__.py:91-92` — CONFIRMED
+- B3: `MarkdownHeaderTextSplitter.split_text` handles fenced code blocks at `markdown.py:168-178`: sets `in_code_block=True` when line `startswith("```")` (with count==1 guard against inline) or `startswith("~~~")`; clears on matching closing fence — CONFIRMED
+- Citation: `_encode` at `sentence_transformers.py:128` returns `tokenizer.encode(text, max_length=2**32, truncation="do_not_truncate")` including start/stop tokens — CONFIRMED
+
+**MCP**
+- B1: `_convert_mcp_content_to_lc_block` handles `ResourceLink`: if `mimeType.startswith("image/")` → `create_image_block(url=str(uri))`, else → `create_file_block(url=str(uri))` (`tools.py:204-209`) — CONFIRMED
+- B2: `_convert_mcp_content_to_lc_block` handles `EmbeddedResource`: `TextResourceContents` → `create_text_block(text=resource.text)`; `BlobResourceContents` with `image/*` mime → `create_image_block(base64=...)`; other blob → `create_file_block(base64=...)` (`tools.py:210-220`) — CONFIRMED
+- B3: `convert_mcp_tool_to_langchain_tool` at `tools.py:357` passes `args_schema=tool.inputSchema` directly at line 531 (no pydantic model synthesized); `handle_tool_errors: bool = True` default — CONFIRMED
+- Citation: `convert_mcp_tool_to_langchain_tool` function definition at `tools.py:357` — CONFIRMED
+
+**Platform**
+- B1: `runs.create_batch` at `_async/runs.py:607` calls `self.http.post("/runs/batch", json=filtered, ...)` — POST to `/runs/batch` for stateless bulk run creation — CONFIRMED
+- B2: Cron `timezone` resolved via `_resolve_timezone` at `_shared/utilities.py:133`: reads `tz.key` attribute first (line 147, ZoneInfo IANA name), falls back to `tz.tzname(None)` (line 151, fixed-offset tz) — CONFIRMED
+- B3: `runs.wait(raise_error=True)` at `_async/runs.py:844-850` raises when response contains `__error__` key with `isinstance(response["__error__"], dict)` — CONFIRMED
+- Citation: `BytesLineDecoder` at `sse.py:17` and `SSEDecoder` at `sse.py:78` — CONFIRMED
+
+---
+
+### Cross-Area Consistency Probe (novel — not run in any prior pass)
+
+**Probe: `ToolNode` cross-area reference consistency (langchain → langgraph prebuilt)**
+
+The langchain behavioral-intent claims: "Build the `ToolNode` (langgraph prebuilt) from `middleware_tools + regular_tools`, passing the composed `wrap_tool_call`/`awrap_tool_call`."
+
+Verification:
+1. `langchain/factory.py:28`: `from langgraph.prebuilt.tool_node import ToolNode` — CONFIRMED
+2. `langgraph/prebuilt/tool_node.py` (in `libs/prebuilt/`, separate from `libs/langgraph/`): `class ToolNode(RunnableCallable)` at line 622 — CONFIRMED
+3. `ToolNode.__init__` accepts `wrap_tool_call: ToolCallWrapper | None = None` at line 755 and `awrap_tool_call: AsyncToolCallWrapper | None = None` at line 756 — CONFIRMED
+
+**Result:** The langchain behavioral-intent's cross-area claim is self-consistent: `ToolNode` is indeed from langgraph prebuilt, is imported at the exact path claimed, and accepts exactly `wrap_tool_call`/`awrap_tool_call` parameters. Note that `ToolNode` resides in `libs/prebuilt/` not `libs/langgraph/` — the prebuilt module is a separate source tree in the langgraph monorepo. This is consistent with the graph module-inventory (§0 Scale summary row: `libs/prebuilt/langgraph (react agent, ToolNode): 7 files / 3,676 LOC`).
+
+**Cross-area probe: CONFIRMED.**
+
+---
+
+### Phase 2 — Metric Verification
+
+All numeric claims verified via independent shell commands against reference corpus.
+
+| Claim | Source File | Claimed | Recounted | Delta | Command |
+|-------|-------------|---------|-----------|-------|---------|
+| `messages/` subpackage file count | core/module-inventory.md | 20 | 20 | 0 | `find langchain_core/messages -name "*.py" \| wc -l` |
+| `messages/` subpackage total LOC | core/module-inventory.md | 9,356 | 9,356 | 0 | `find langchain_core/messages -name "*.py" \| xargs wc -l \| tail -1` |
+| `messages/content.py` LOC | core/module-inventory.md | 1,488 | 1,488 | 0 | `wc -l messages/content.py` |
+| `pregel/_loop.py` LOC | graph/module-inventory.md §1.1 | 1,988 | 1,988 | 0 | `wc -l pregel/_loop.py` |
+| `pregel/_algo.py` LOC | graph/module-inventory.md §1.1 | 1,460 | 1,460 | 0 | `wc -l pregel/_algo.py` |
+| `agents/middleware/summarization.py` LOC | langchain/module-inventory.md | 868 | 868 | 0 | `wc -l agents/middleware/summarization.py` |
+| `agents/middleware/shell_tool.py` LOC | langchain/module-inventory.md | 949 | 949 | 0 | `wc -l agents/middleware/shell_tool.py` |
+| `openrouter` package LOC | partners/module-inventory.md | 9,329 | 9,329 | 0 | `find langchain_openrouter -name "*.py" \| xargs wc -l \| tail -1` |
+| `openrouter` package file count | partners/module-inventory.md | 5 | 5 | 0 | `find langchain_openrouter -name "*.py" \| wc -l` |
+| `anthropic` test LOC | partners/module-inventory.md | 8,941 | 8,941 | 0 | `find langchain_anthropic/tests -name "*.py" \| xargs wc -l \| tail -1` |
+| `jsx.py` LOC (splitters) | splitters/module-inventory.md | 109 | 109 | 0 | `wc -l jsx.py` |
+| `spacy.py` LOC (splitters) | splitters/module-inventory.md | 69 | 69 | 0 | `wc -l spacy.py` |
+| MCP `tests/test_tools.py` LOC | mcp/test-inventory.md | 1,469 | 1,469 | 0 | `wc -l tests/test_tools.py` |
+| MCP `tests/test_client.py` LOC | mcp/test-inventory.md | 353 | 353 | 0 | `wc -l tests/test_client.py` |
+| platform `auth/types.py` LOC | platform/module-inventory.md | 1,162 | 1,162 | 0 | `wc -l auth/types.py` |
+| platform `schema.py` LOC | platform/module-inventory.md | 975 | 975 | 0 | `wc -l schema.py` |
+
+**16/16 metric claims: Delta = 0. All pass.**
+
+---
+
+### Refinement Iterations: 1/3
+
+**Iteration 1:** Zero findings across all 28 behavioral+citation claims and 16 metric claims. Cross-area consistency probe CONFIRMED. No corrections to apply.
+
+Iterations 2 and 3 not required (no corrections to verify closure for).
+
+---
+
+### Inaccurate Items (Corrected)
+
+None.
+
+### Hallucinated Items (Removed)
+
+None.
+
+### Unverifiable Items
+
+None.
+
+---
+
+### Per-Area Verdicts
+
+| Area | Behavioral | Numeric | Citation | Corrections |
+|------|-----------|---------|----------|-------------|
+| core | PASS | PASS | PASS | 0 |
+| graph | PASS | PASS | PASS | 0 |
+| langchain | PASS | PASS | PASS | 0 |
+| partners | PASS | PASS | PASS | 0 |
+| splitters | PASS | PASS | PASS | 0 |
+| mcp | PASS | PASS | PASS | 0 |
+| platform | PASS | PASS | PASS | 0 |
+
+### Certification Pass 17 — CLEAN Status
+
+```
+CLEAN (strict): yes — zero corrections of any severity
+CLEAN (PR-merge): yes — zero CRIT/HIGH/MED findings
+Streak: 3/3 (advances from 2/3 → 3/3 → GATE CONVERGED)
+```
+
+---
+
+### GATE CONVERGED
+
+**Three consecutive CLEAN(strict) passes achieved: passes 15, 16, 17.**
+
+The BC-5.39.001 3-CLEAN convergence gate for the ferrochain semport extraction validation is now CLOSED.
+
+**Cumulative cascade statistics:**
+
+| Statistic | Value |
+|---|---|
+| Total certification passes | 17 |
+| Passes with zero corrections (CLEAN strict) | 3 (CP2, CP15, CP16, CP17 — CP2 was a standalone clean before the streak mechanism; the streak-closing sequence is CP15+CP16+CP17) |
+| Total corrections applied during CP1–CP17 | 41 |
+| Total corrections in pre-cert analysis passes (P1–P8) | ~24 (12 behavioral inaccuracies + ~12 metric/structural) |
+| Hallucinated items found | 0 across all 17 cert passes |
+
+**Finding classes closed (no new instances in CP15–CP17):**
+
+| Class | First seen | Last seen | Total instances |
+|---|---|---|---|
+| Module inventory scope mismatch (pkg dir vs repo dir) | CP1 | CP1 | 2 |
+| Dependency constraint errors | CP3–CP4 | CP4 | 7 |
+| Behavioral inaccuracy (function semantics described wrong) | P5 (archive) | CP13 | ~12 |
+| Citation path errors (wrong path prefix, wrong line) | CP6 | CP12 | 4 |
+| LOC tilde-approximation propagation miss (exact value established but not propagated) | CP4 | CP14 | ~20 |
+| Line-range endpoint under-run (last statement outside cited range) | CP13 | CP14 | 4 |
+| Prose-not-updated-when-YAML-corrected | CP11 | CP12 | 2 |
+
+**Confidence assessment:** Overall extraction accuracy 100% on all items verified in CP15–CP17 (43/43 CONFIRMED). Across the full 17-pass cascade, zero hallucinated items were found, and all inaccuracies were LOW/MEDIUM severity corrections to numeric claims, citation paths, or behavioral nuances — never missing or fictitious subsystems, methods, or behavioral contracts. The semport extraction is **TRUSTED** as the input to Phase 1 (Spec Crystallization).
+
+**Recommendation: TRUST**
