@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T14:00:00Z
+timestamp: 2026-07-13T20:30:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "comparative certification pass C16 in progress, streak 1/3"
+current_step: "comparative certification pass C17 in progress, streak 0/3"
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -44,9 +44,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — burst 58: C15 COMPLETE. CLEAN(strict)=YES — ZERO corrections. Identifier-exactness sweep: 146 highest-risk identifiers verified verbatim, 0 misses; C14 fix stable. Rotation 12/12 confirmed + metrics 6/6 Delta=0. Streak 0/3 → 1/3. C16 DISPATCHED (60+ more from unchecked strata; identifier class toward exhaustion; full rotation; advances to 2/3 on zero). |
+| **Last Updated** | 2026-07-13 — burst 59: C16 COMPLETE. CLEAN(strict)=NO — 1 LOW correction (C16-01): P-03 `AdkError.retry_after` path shorthand → `AdkError.retry.retry_after()` (skipped intermediate RetryHint struct; siblings P-04 + behavioral-intent.md A1 already had correct full path). Identifier sweep: 69 identifiers (enum variants/fields/consts) all 69 existence-confirmed; cumulative 215/~754. Rotation 4/4 confirmed. Metrics 2/2 Delta=0. Novel probe: native-tls first-party/transitive distinction, adk-mistralrs + adk-audio Cargo.toml-confirmed. Streak RESET 1/3 → 0/3. Convergence counter 1→0. C17 DISPATCHED (complete identifier sweep ~539 remaining + dotted-path navigability checks + light rotation). |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | comparative certification pass C15 in progress, streak 0/3 |
+| **Current Step** | comparative certification pass C17 in progress, streak 0/3 |
 
 ## Phase Progress
 
@@ -71,7 +71,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | adk-rust certification pass C13 (strict-zero, potential closing pass) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 1 LOW correction (C13-01): test-inventory.md A4 State Checkpoint strongest_suites YAML stale proptest counts (6→5 sandbox, 8→7 code); cert-1 fixed body text but not within-file YAML block; C5 cross-file sweep missed within-file summary blocks. 6/6 behavioral+citation CONFIRMED; 8/8 A4 LOC Delta=0 (A4 LOC class closed); three-way probe CONSISTENT. Streak RESET 2/3 → 0/3. Burst 56. |
 | adk-rust certification pass C14 (strict-zero, within-file summary-block audit opener) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 2 LOW corrections (new class: identifier-name exactness) — C14-01 P-57 + C14-02 P-62: cited `dev_local()` preset, actual is `host_local()` at adk-code/src/types.rs:235; behavioral descriptions accurate, identifier wrong. Within-file summary-block class CLOSED: 13 blocks / 55+ figures all CONSISTENT. A5 recount CONSISTENT. C8 history-table A5 mis-statement: report history record error, not corpus, no correction per protocol. Streak 0/3. Burst 57. |
 | adk-rust certification pass C15 (strict-zero, terminal identifier-exactness sweep) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. Identifier sweep: 146 identifiers (all 56 fn names + ~50 struct types + ~40 lowercase) 146/146 confirmed, 0 inaccurate. C14 sibling check CLEAN. Rotation 12/12 CONFIRMED. Metrics 6/6 Delta=0. Streak 0/3 → 1/3. Burst 58. |
-| adk-rust certification pass C16 (strict-zero, identifier class exhaustion + rotation) | validate-extraction | IN-PROGRESS | Streak 1/3. Continues identifier-exactness class toward exhaustion (60+ more from unchecked strata) within a full rotation. Advances to 2/3 on zero. |
+| adk-rust certification pass C16 (strict-zero, identifier class exhaustion + rotation) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 1 LOW correction (C16-01): P-03 `AdkError.retry_after` → `AdkError.retry.retry_after()` — no direct `.retry_after` member on AdkError; AdkError has `pub retry: RetryHint`, RetryHint has `retry_after()` method (error.rs:153); P-04 and behavioral-intent.md A1 already correct. 69 identifiers verified (enum variants/fields/consts); 69 CONFIRMED, cumulative 215/~754. Rotation 4/4 confirmed; metrics 2/2 Delta=0; novel probe native-tls Cargo.toml CONFIRMED. Streak RESET 1/3 → 0/3. Burst 59. |
 
 ## Decisions Log
 
@@ -130,8 +130,8 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 |--------|-------|
 | Adversary passes completed | 0 |
 | Fix bursts completed | 0 |
-| Convergence counter | 1 of 3 |
-| Finding trajectory | trajectory-tail →0→1→1→0→0→1→2→0 (C15: CLEAN; streak 1/3) |
+| Convergence counter | 0 of 3 |
+| Finding trajectory | trajectory-tail →1→1→0→0→1→2→0→1 (C16: 1 correction; streak RESET 0/3) |
 
 ## Session Resume Checkpoint
 
@@ -141,9 +141,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 58 complete. C15 COMPLETE: CLEAN(strict)=YES — ZERO corrections. Identifier-exactness sweep: 146 highest-risk identifiers (all 56 fn names + ~50 struct types + ~40 lowercase) verified verbatim, 0 inaccurate, 0 hallucinated; C14 `dev_local` sibling check CLEAN. Rotation 12/12 CONFIRMED (P-76 bare-String api_key; P-77 reqwest no timeout; adk-studio no dir; adk-model 100 files; reqwest features exact; livekit features exact; adk-guardrail zero integ; adk-server 13 integ; adk-core 339 tests; adk-model 18 integ; §12 health contract; §13 message_stream placeholder). Metrics 6/6 Delta=0. Streak 0/3 → 1/3. C16 DISPATCHED (60+ more identifiers from unchecked strata; identifier class toward exhaustion; full rotation; advances to 2/3 on zero). |
-| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 1/3. Identifier-name exactness class: 2 corrected (C14), terminal sweep 146/146 clean (C15) — class approaching exhaustion. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (confirmed 69/73 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. UNVERIFIABLE items unchanged (scc LOC, 4 a2a-v1 runtime items, adk-anthropic/src/types ~60 vs 82 approx.). |
-| **Convergence counter** | 1 of 3 |
+| **Position** | pre-1, burst 59 complete. C16 COMPLETE: CLEAN(strict)=NO — 1 LOW correction (C16-01): P-03 `AdkError.retry_after` path shorthand → `AdkError.retry.retry_after()` (no direct `.retry_after` member on AdkError; AdkError has `pub retry: RetryHint`, RetryHint has `retry_after()` method at error.rs:153; the field `retry_after` belongs to `ServerRetryHint` at retry.rs:137, NOT AdkError; siblings P-04 + behavioral-intent.md A1 already had correct full path). Identifier sweep: 69 identifiers (40 enum variants + 8 field names + 8 consts/RetryConfig fields + 13 others) from unchecked strata — 69 CONFIRMED, 1 path shorthand inaccuracy → C16-01. Cumulative 215/~754 identifiers checked. Rotation 4/4 confirmed (P-13 Tool::execute, P-19 search_in_project, P-46 budget-gap). Metrics 2/2 Delta=0 (adk-agent tests=86; pool_idle_timeout=90s). Novel probe: native-tls first-party/transitive distinction, adk-mistralrs + adk-audio Cargo.toml verified CONFIRMED. Streak RESET 1/3 → 0/3. Convergence counter 1→0. C17 DISPATCHED: opener = COMPLETE the identifier sweep (~539 remaining, full dotted-path navigability checks, closes identifier class terminally); then light rotation. |
+| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 0/3. Identifier-name exactness class: 3 corrected across C14 (×2) + C16 (×1); 215 identifiers checked, ~539 remaining. C17 opener terminally closes the identifier class. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (confirmed 69/73 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. UNVERIFIABLE items unchanged (scc LOC, 4 a2a-v1 runtime items, adk-anthropic/src/types ~60 vs 82 approx.). |
+| **Convergence counter** | 0 of 3 |
 
 ## Historical Content
 
@@ -151,7 +151,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 |---------|----------|
 | All burst narratives (bursts 1–41, pre-pipeline semport+cert passes, adk-rust A1–A5, exhaustive sweep) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
-| Session checkpoints bursts 5–36 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
+| Session checkpoints bursts 5–58 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Lessons learned (12 lessons, 12 codified guardrails incl. Guardrail #12 test-count methodology, Drift/Deferral DEFER-001) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
 | Domain A brief (SOC analyst — Phase-1 forcing surfaces) | `.factory/planning/holdout-domains/domain-a-soc-analyst.md` |
 | Domain B brief (dark factory — agent-registry, token/cost metering) | `.factory/planning/holdout-domains/domain-b-dark-factory.md` |

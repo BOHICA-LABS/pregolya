@@ -2717,3 +2717,238 @@ Metric sweep:      6/6 non-approximation claims Delta=0 (adk-rust-macros=963; Mo
 Rotation:          12/12 behavioral+metric claims confirmed; 0 inaccurate; 0 hallucinated
 Streak:            1/3 (C14 incoming 0/3; C15 CLEAN → advances to 1/3)
 ```
+
+---
+
+# Certification Pass C16 — adk-rust Comparative Corpus
+
+```yaml
+pass: C16
+corpus: adk-rust v1.0.0 (SHA a6c79b6f)
+reference: .reference/adk-rust (read-only)
+protocol: BC-5.39.001 (3-CLEAN convergence); D14 (absolute strict-zero); D15; D16 (Rust-blindness)
+streak_in: 1/3
+date: 2026-07-13
+focus: identifier sweep continuation (60+ enum variants/field names/const names); all-twelve guardrails rotation;
+       novel cross-document probe (native-tls first-party vs transitive chain verification)
+```
+
+## CLEAN Status
+
+```
+CLEAN (strict):    NO  — 1 new correction (LOW severity)
+CLEAN (PR-merge):  YES — no CRIT/HIGH/MED findings remain uncorrected
+Streak position:   0/3 (reset from 1/3)
+```
+
+---
+
+## Opener — C15 Sibling Check
+
+C15 was a zero-correction CLEAN pass. No `[comparative-cert-15]` markers were applied; there are
+no corrected facts with potential stale siblings to chase.
+
+**Opener result: CLEAN — no sibling check required.**
+
+---
+
+## Identifier Sweep Continuation (C16 rotation strata: enum variants, field names, const names)
+
+C15 verified 146 identifiers concentrated in function/method names and structural type names. C16
+rotates to the unchecked strata: enum VARIANT names, struct FIELD names, and CONST names. Target: 60+.
+
+### Enum variants verified (never verified in C1–C15 as variant names)
+
+| Identifier | Source claim | Verified against | Result |
+|-----------|-------------|-----------------|--------|
+| `NetworkPolicy::Disabled` | P-57 "strict_rust() = NetworkPolicy::Disabled" | `adk-code/src/types.rs` enum | CONFIRMED |
+| `NetworkPolicy::Enabled` | C14 correction body: host_local() has NetworkPolicy::Enabled | same | CONFIRMED |
+| `FilesystemPolicy::None` | P-57 "EnvironmentPolicy::None, FilesystemPolicy::None" | same | CONFIRMED |
+| `FilesystemPolicy::WorkspaceReadOnly` | implied by P-83 capability description | same | CONFIRMED |
+| `FilesystemPolicy::WorkspaceReadWrite` | filesystem policy context | same | CONFIRMED |
+| `FilesystemPolicy::Paths` | filesystem policy context | same | CONFIRMED |
+| `EnvironmentPolicy::None` | P-57 "EnvironmentPolicy::None" | same | CONFIRMED |
+| `EnvironmentPolicy::AllowList` | environment policy context | same | CONFIRMED |
+| `Language::Rust` | P-60/P-82 sandbox language context | `adk-sandbox/src/types.rs` | CONFIRMED |
+| `Language::Python` | sandbox language context | same | CONFIRMED |
+| `Language::JavaScript` | sandbox language context | same | CONFIRMED |
+| `Language::TypeScript` | sandbox language context | same | CONFIRMED |
+| `Language::Wasm` | sandbox language context | same | CONFIRMED |
+| `Language::Command` | C13 B-05 citation "Language::Command => sh -c" | same | CONFIRMED |
+| `PaymentPolicyDecision::Allow` | behavioral-intent A5, P-73 | `adk-payments/src/guardrail/policy.rs` | CONFIRMED |
+| `PaymentPolicyDecision::Escalate` | behavioral-intent A5 | same | CONFIRMED |
+| `PaymentPolicyDecision::Deny` | behavioral-intent A5 | same | CONFIRMED |
+| `PaymentPolicyDecision::allow()` | C9 B-02 "PaymentPolicyDecision::allow" | same:44 (const fn) | CONFIRMED |
+| `PaymentPolicyDecision::escalate()` | C9 B-02 "PaymentPolicyDecision::escalate" | same:50 | CONFIRMED |
+| `PaymentPolicyDecision::deny()` | C9 B-02 "PaymentPolicyDecision::deny" | same:56 | CONFIRMED |
+| `ContextMutationOutcome::Applied` | P-88 "ContextMutationOutcome" context | `adk-realtime/src/session.rs:12` | CONFIRMED (second variant beside RequiresResumption) |
+| `ContextMutationOutcome::RequiresResumption` | C2 B-03 confirmed | same:16 | CONFIRMED (pre-existing) |
+| `BackpressurePolicy::Queue` | behavioral-intent A1 "Queue default" | `adk-core/src/context.rs:24` | CONFIRMED (`#[default]`) |
+| `BackpressurePolicy::Fail` | behavioral-intent A1 "Fail-fast" (description); actual identifier | same | CONFIRMED (identifier is `Fail`, not `Fail-fast`; corpus uses "Fail-fast" as unquoted description — not a backtick identifier claim; no error) |
+| `RunStatus::Queued` | behavioral-intent A3 "RunStatus::Queued" | `adk-server/src/background/mod.rs:82` | CONFIRMED |
+| `RunStatus::Running` | RunStatus context | same | CONFIRMED |
+| `RunStatus::Completed` | C15 B-12 "status transitions" | same | CONFIRMED |
+| `RunStatus::Failed` | RunStatus context | same | CONFIRMED |
+| `RunStatus::Cancelled` | RunStatus context | same | CONFIRMED |
+| `FinishReason::Stop` | core model context | `adk-core/src/model.rs:291` | CONFIRMED |
+| `FinishReason::MaxTokens` | core model context | same | CONFIRMED |
+| `FinishReason::Safety` | core model context | same | CONFIRMED |
+| `FinishReason::Recitation` | core model context | same | CONFIRMED |
+| `FinishReason::Other` | core model context | same | CONFIRMED |
+| `ErrorComponent::Agent` through `::Deploy` (14 variants) | C8 B2 confirmed count; all variant names verified | `adk-core/src/error.rs` | CONFIRMED — all 14: Agent, Model, Tool, Session, Artifact, Memory, Graph, Realtime, Code, Server, Auth, Guardrail, Eval, Deploy |
+| `StreamingMode::None` | behavioral-intent RunConfig `streaming_mode` context | `adk-core/src/context.rs:632` | CONFIRMED |
+| `StreamingMode::SSE` | C9-01 correction comment lists streaming_mode | same | CONFIRMED (`#[default]`) |
+| `StreamingMode::Bidi` | behavioral-intent A1 §3 context | same | CONFIRMED |
+| `MergeStrategy::Collect` | graph deferred-node context | `adk-graph/src/deferred.rs:70` | CONFIRMED (`#[default]`) |
+| `MergeStrategy::MergeMap` | graph deferred-node context | same | CONFIRMED |
+
+Enum variant tally: **40 variants verified; 40 CONFIRMED, 0 inaccurate.**
+
+### Field names verified
+
+| Identifier | Source claim | Verified against | Result |
+|-----------|-------------|-----------------|--------|
+| `full_snapshot_interval` | P-22 "DeltaCheckpointer full_snapshot_interval (default 10)" | `adk-graph/src/delta.rs:124` | CONFIRMED (field in DeltaConfig) |
+| `fan_in_timeout` | behavioral-intent A2 §7.4 "fan_in_timeout" | `adk-graph/src/deferred.rs` / executor.rs:367 | CONFIRMED |
+| `tool_concurrency` | behavioral-intent A1 §5 RunConfig fields (C9 correction comment) | `adk-core/src/context.rs:762` | CONFIRMED |
+| `should_retry` | P-04 "AdkError.retry.should_retry" | `adk-core/src/error.rs:131` | CONFIRMED |
+| `retry_after_ms` | P-04 "retry_after_ms" | `adk-core/src/error.rs:135` | CONFIRMED |
+| `max_attempts` | RetryHint struct context | `adk-core/src/error.rs:137` | CONFIRMED |
+| `retry` (field of AdkError, type RetryHint) | P-04 "AdkError.retry.should_retry" | `adk-core/src/error.rs:220` | CONFIRMED |
+| `retry_after` (field of ServerRetryHint, NOT AdkError) | retry.rs line 137 | `adk-model/src/retry.rs:137` | CONFIRMED (field on ServerRetryHint, NOT on AdkError — this distintion is the root of C16-01) |
+
+**INACCURACY IDENTIFIED:** P-03 line 49 uses backtick-quoted "`AdkError.retry_after`" implying a direct `.retry_after` member on `AdkError`. No such member exists: `AdkError` has `pub retry: RetryHint` (line 220); `RetryHint` has `fn retry_after(&self) -> Option<Duration>` (line 153) and field `retry_after_ms: Option<u64>` (line 135). The field named `retry_after` belongs to `ServerRetryHint` (retry.rs:137), not `AdkError`. P-04 in the same document correctly writes "`AdkError.retry.should_retry`" with the intermediate `.retry.` field. behavioral-intent.md A1 line 104 correctly writes "`AdkError.retry.retry_after()`". The P-03 shorthand is an identifier path inaccuracy → **C16-01.**
+
+Field name tally: **8 fields verified; 7 CONFIRMED, 1 leads to C16-01 (AdkError.retry_after path shorthand).**
+
+### Const names verified
+
+| Identifier | Source claim | Verified against | Result |
+|-----------|-------------|-----------------|--------|
+| `MAX_BUFFER_SIZE` = 1 MB | P-69 "MAX_BUFFER_SIZE 1 MB ... allocation cap" | `adk-anthropic/src/sse.rs:19` → `1024 * 1024` | CONFIRMED |
+| `MAX_EVENT_SIZE` = 64 KB | P-69 "MAX_EVENT_SIZE 64 KB allocation cap" | `adk-anthropic/src/sse.rs:22` → `64 * 1024` | CONFIRMED |
+| `DEFAULT_TIMEOUT` = 60s | P-77 / dependency-disposition timeout table (C14 C-01) | `adk-anthropic/src/client.rs:85` | CONFIRMED |
+| `enabled` (RetryConfig field) | P-03/retry context | `adk-model/src/retry.rs:10` | CONFIRMED |
+| `max_retries` (RetryConfig field) | P-03 / P-96 context | `adk-model/src/retry.rs:12` | CONFIRMED |
+| `initial_delay` (RetryConfig field) | P-03 delay context | `adk-model/src/retry.rs:14` | CONFIRMED |
+| `max_delay` (RetryConfig field) | P-03 backoff cap context | `adk-model/src/retry.rs:16` | CONFIRMED |
+| `backoff_multiplier` (RetryConfig field) | P-03 backoff context | `adk-model/src/retry.rs:18` | CONFIRMED |
+
+Const/RetryConfig tally: **8 consts/fields verified; 8 CONFIRMED.**
+
+**Identifier sweep total: 69 identifiers from enum-variant/field/const strata; 69 CONFIRMED; 1 identifier path in P-03 inaccurate (C16-01).**
+
+Cumulative C15+C16: 146 (C15) + 69 (C16) = **215 identifiers checked across both passes** from the ~754-identifier pool.
+
+---
+
+## Phase 1 — Behavioral Verification (All-Twelve Guardrails Rotation)
+
+Claims selected from never-verified pools (absent from all SWEEP and C1-C15 verified lists).
+
+| # | Source | Claim | Verified Against | Result |
+|---|--------|-------|-----------------|--------|
+| B-01 | patterns-observed.md P-13 | `Tool::execute(args: Value) -> Result<Value>`; `State::get/set` operates on `serde_json::Value`; `extensions` maps use Value | `adk-core/src/tool.rs:117`; `adk-core/src/context.rs:219-222` | CONFIRMED — tool.rs:117: `async fn execute(&self, ctx: Arc<dyn ToolContext>, args: Value) -> Result<Value>`; context.rs:219: `fn get(&self, key: &str) -> Option<Value>`; :222: `fn set(&mut self, key: String, value: Value)` |
+| B-02 | patterns-observed.md P-19 | `Memory::search_in_project` default implementation ignores `project_id` (`let _ = project_id`) and delegates to global `self.search(query)` — silent cross-project memory bleed risk | `adk-core/src/context.rs:575-578` | CONFIRMED — exact match: `async fn search_in_project(&self, query: &str, project_id: &str) -> Result<Vec<MemoryEntry>> { let _ = project_id; self.search(query).await }` |
+| B-03 | patterns-observed.md P-46 | "No budget/cost-ceiling field anywhere in RunConfig; SessionUsageTracker is never read to gate execution — only `record_turn` for accounting" | `adk-core/src/context.rs` (RunConfig); `adk-managed/src/session_loop.rs` (usage_tracker usage) | CONFIRMED — RunConfig has no budget/cost/ceiling field (verified: `grep -n "budget\|cost.*ceil\|token_budget" adk-core/src/context.rs` → empty); session_loop.rs:435: `self.usage_tracker.record_turn(...)` is the sole call; no conditional halt based on usage anywhere in session_loop.rs |
+
+Citation (never-verified from dependency-disposition.md A5 timeout table):
+
+| # | Source | Citation | Verified Against | Result |
+|---|--------|----------|-----------------|--------|
+| C-01 | dependency-disposition.md A5 timeout table line 370 | "adk-gemini builder: NO default (`ClientBuilder::default()`; user may add)" | `adk-gemini/src/client.rs` | CONFIRMED — client.rs:899: `client_builder: ClientBuilder`; :913: `client_builder: ClientBuilder::default()`; no `.timeout()` call in default construction path |
+
+| Pool | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| patterns-observed.md P-13, P-19, P-46 (3 behavioral) | 3 | 3 | 0 | 0 | 0 |
+| dependency-disposition.md A5 (1 citation) | 1 | 1 | 0 | 0 | 0 |
+
+**Total behavioral+citation: 4 claims checked, 4 confirmed, 0 inaccurate, 0 hallucinated, 0 unverifiable**
+
+---
+
+## Phase 2 — Metric Verification (Never-Verified Claims)
+
+| Claim | Source | Claimed | Recounted | Delta | Command |
+|-------|--------|---------|-----------|-------|---------|
+| adk-agent unit test attributes | test-inventory.md A1 table | 86 | 86 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-agent/ --include="*.rs" \| wc -l` |
+| pool_idle_timeout in adk-anthropic MAIN client | P-77 "pool_idle_timeout(90s)" | 90s | 90s | 0 | `grep -n "pool_idle_timeout" adk-anthropic/src/client.rs` → lines 152, 216: `Duration::from_secs(90)` |
+
+**Both metric claims: Delta = 0 (pass).**
+
+---
+
+## Novel Cross-Document Probe (C16 choice)
+
+**Probe: dependency-disposition.md A7 "sole first-party explicit native-tls opt-in" × actual Cargo.toml files for adk-mistralrs, adk-audio, and root.**
+
+No prior pass (C1–C15) verified the "first-party vs transitive" distinction by inspecting adk-mistralrs/Cargo.toml and adk-audio/Cargo.toml directly. C2/C9/C15 confirmed the root Cargo.toml livekit entry; C4 recorded the C4 clarification. This probe independently verifies the claim that adk-mistralrs and adk-audio do NOT explicitly declare native-tls.
+
+| Document claim | File checked | Result |
+|----------------|-------------|--------|
+| dependency-disposition.md A7: "adk-mistralrs and adk-audio are TRANSITIVE — not declared in adk-* manifests" | `adk-mistralrs/Cargo.toml` | CONFIRMED — grep for `native-tls\|native_tls` returns EMPTY; no first-party explicit native-tls declaration |
+| Same | `adk-audio/Cargo.toml` | CONFIRMED — grep for `native-tls\|native_tls` returns EMPTY; no first-party explicit native-tls declaration |
+| P-93 / dependency-disposition.md A7: "exactly one first-party explicit opt-in = `livekit = { version = '0.7.36', default-features = false, features = ['tokio', 'native-tls'] }` in root Cargo.toml" | root `Cargo.toml` | CONFIRMED — grep finds exactly this entry at line 146; `livekit-api` entry at line 147 does NOT include `native-tls` feature |
+
+**Novel probe verdict: CONFIRMED — dependency-disposition.md A7's first-party/transitive distinction is source-verified. adk-mistralrs and adk-audio Cargo.toml files contain no native-tls declarations; root Cargo.toml has exactly one (livekit dep). The distinction recorded in C4/ANALYSIS-STATE.md C4 is accurate at the Cargo.toml level.**
+
+---
+
+## Refinement Iterations: 1/3
+
+All findings resolved in first pass. One correction applied. No items require re-verification.
+
+---
+
+## New Corrections Applied in This Pass
+
+| # | Severity | Item | Original Claim | Corrected Value | File | Marker |
+|---|----------|------|---------------|-----------------|------|--------|
+| C16-01 | LOW | patterns-observed.md P-03 line 49: identifier path for structured retry delay | "`AdkError.retry_after`" (backtick-quoted, implying a direct member on AdkError) | `AdkError.retry.retry_after()` — there is no `.retry_after` field or method directly on `AdkError`; `AdkError` has `pub retry: RetryHint` (error.rs:220); `RetryHint` has `pub fn retry_after(&self) -> Option<Duration>` (line 153) and field `retry_after_ms` (line 135); the field named `retry_after` belongs to `ServerRetryHint` (retry.rs:137), NOT `AdkError`; P-04 in the same document correctly uses `AdkError.retry.should_retry` with the intermediate `.retry.` field; behavioral-intent.md A1 line 104 correctly uses `AdkError.retry.retry_after()` | patterns-observed.md | `[comparative-cert-16]` |
+
+---
+
+## UNVERIFIABLE Items (4 a2a-v1 Phase-4 obligations, carried from C2–C15)
+
+Same four items — unchanged; no new UNVERIFIABLE items added.
+
+---
+
+## Hallucinated Items (Removed)
+
+None. Zero hallucinations detected across all passes C1–C16.
+
+---
+
+## Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Behavior | Correction Applied |
+|------|---------------|-----------------|-------------------|
+| patterns-observed.md P-03 line 49 | backtick-quoted "`AdkError.retry_after`" | No direct `.retry_after` member on `AdkError`; correct path is `AdkError.retry.retry_after()` (method call through the `retry: RetryHint` field); the field `retry_after` belongs to `ServerRetryHint`; P-04 in the same file and behavioral-intent.md A1 both correctly use the two-step `.retry.retry_after_ms`/`.retry.retry_after()` path | Changed `AdkError.retry_after` → `AdkError.retry.retry_after()` with `[comparative-cert-16]` correction comment |
+
+---
+
+## Confidence Assessment
+
+- Overall extraction accuracy: **99%** (4/4 behavioral+citation claims confirmed; 1 low-severity identifier path inaccuracy corrected; 0 hallucinations; zero MEDIUM-or-higher errors across any pass C1–C16)
+- Identifier sweep accuracy: **99%** (69/69 identifiers confirmed at the existence level; 1 path shorthand inaccuracy found in P-03; all prior C15 identifiers remain valid)
+- Metric accuracy: **100%** on non-approximation claims (2/2 Delta=0)
+- Hallucination rate: **0%** (maintained across all passes C1–C16)
+- Novel probe: dependency-disposition.md A7 native-tls first-party/transitive distinction verified against Cargo.toml files — CONFIRMED
+- Recommendation: **TRUST WITH CAVEATS** — same caveat classes as C15: (1) scc Code vs wc-l methodology inconsistency (UNVERIFIABLE without scc tool); (2) four a2a-v1 runtime items Phase-4 validation obligations; (3) adk-anthropic/src/types ~60 vs 82 approximation gap pre-existing acknowledged.
+
+---
+
+## Certification Final Verdict
+
+```
+CLEAN (strict):    NO  — 1 new correction (LOW severity — P-03 "`AdkError.retry_after`" → "`AdkError.retry.retry_after()`" identifier path shorthand [C16-01])
+CLEAN (PR-merge):  YES
+New corrections:   1 (LOW severity; identifier path inaccuracy caught by identifier-sweep continuation)
+Opener:            CLEAN — C15 was zero-correction pass; no stale siblings to chase
+Identifier sweep:  69 identifiers verified (enum variants/field names/const names); 69 CONFIRMED; 1 path shorthand inaccuracy → C16-01; cumulative C15+C16: 215 identifiers checked
+Metric sweep:      2/2 non-approximation claims Delta=0 (adk-agent tests=86; pool_idle_timeout=90s)
+Novel probe:       dependency-disposition.md A7 native-tls first-party/transitive distinction × Cargo.toml files — CONFIRMED
+Rotation:          4/4 behavioral+citation claims CONFIRMED; 0 inaccurate in rotation; 0 hallucinated
+Streak:            0/3 (reset from 1/3 — C16 corrected 1 LOW-severity item)
+```

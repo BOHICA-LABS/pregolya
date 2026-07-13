@@ -535,3 +535,17 @@ traces_to: STATE.md
 | **Position** | pre-1, burst 57 complete. C14 COMPLETE: CLEAN(strict)=NO. 2 LOW corrections (C14-01/C14-02) — P-57+P-62 identifier: `dev_local()` → `host_local()` (adk-code/src/types.rs:235); behavioral descriptions accurate throughout. Within-file summary-block class CLOSED: 13 blocks / 55+ figures all CONSISTENT. C8 history-table A5 mis-statement (5S/3N/5W): report history record error, not corpus, no correction per protocol. Streak 0/3. C15 DISPATCHED (opener: terminal identifier-exactness sweep — every backtick-quoted code identifier in active claims grep-verified verbatim against source, then rotation). |
 | **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 0/3. Within-file summary-block residue geometry CLOSED (C14). New open class: identifier-name exactness (2 instances corrected; full terminal sweep = C15 opener). KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (confirmed 69/73 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. UNVERIFIABLE items unchanged (scc LOC, 4 a2a-v1 runtime items, adk-anthropic/src/types ~60 vs 82 approx.). |
 | **Convergence counter** | 0 of 3 |
+
+---
+
+## Checkpoint — Burst 58 (C15 COMPLETE, C16 DISPATCHED)
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 58 complete. C15 COMPLETE: CLEAN(strict)=YES — ZERO corrections. Identifier-exactness sweep: 146 highest-risk identifiers (all 56 fn names + ~50 struct types + ~40 lowercase) verified verbatim, 0 inaccurate, 0 hallucinated; C14 `dev_local` sibling check CLEAN. Rotation 12/12 CONFIRMED (P-76 bare-String api_key; P-77 reqwest no timeout; adk-studio no dir; adk-model 100 files; reqwest features exact; livekit features exact; adk-guardrail zero integ; adk-server 13 integ; adk-core 339 tests; adk-model 18 integ; §12 health contract; §13 message_stream placeholder). Metrics 6/6 Delta=0. Streak 0/3 → 1/3. C16 DISPATCHED (60+ more identifiers from unchecked strata; identifier class toward exhaustion; full rotation; advances to 2/3 on zero). |
+| **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule. Analysis CONVERGED (Condition 1 MET). 3-CLEAN streak at 1/3. Identifier-name exactness class: 2 corrected (C14), terminal sweep 146/146 clean (C15) — class approaching exhaustion. KEY GAPS (CONFIRMED): Domain A guardrail gap (P-59 UNMET), bare-String API keys (P-76), non-isolating default sandbox, reqwest timeout-less SYSTEMIC (confirmed 69/73 sites, A6-C1). P-71 RULED: STRONG STANDS (9/12). After 3-CLEAN: comparative assessment → HUMAN DIRECTION GATE → Phase 1. R6/R8/R10/R11 OPEN. UNVERIFIABLE items unchanged (scc LOC, 4 a2a-v1 runtime items, adk-anthropic/src/types ~60 vs 82 approx.). |
+| **Convergence counter** | 1 of 3 |

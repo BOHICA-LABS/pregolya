@@ -46,8 +46,8 @@ accessors (`try_identity`, `try_execution_identity`) live at the readonly base.
 
 ### P-03 — Retry as a generic combinator with layered delay precedence
 `execute_with_retry_hint` is generic over any `FnMut() -> Future<Result<T>>` + injected
-`classify_error` predicate; delay precedence is (1) structured `AdkError.retry_after`, then
-(2) server `retry-after` header hint (first attempt), then (3) exponential backoff with a cap.
+`classify_error` predicate; delay precedence is (1) structured `AdkError.retry.retry_after()`, then
+(2) server `retry-after` header hint (first attempt), then (3) exponential backoff with a cap. <!-- [comparative-cert-16] CORRECTION: `AdkError.retry_after` → `AdkError.retry.retry_after()` — no direct `.retry_after` member on AdkError; AdkError has `pub retry: RetryHint`, RetryHint has `pub fn retry_after(&self) -> Option<Duration>` (adk-core/src/error.rs:153) and field `retry_after_ms: Option<u64>` (line 135); behavioral-intent.md A1 line 104 correctly uses `AdkError.retry.retry_after()` with the intermediate `.retry.` field access; P-04 also correctly uses `AdkError.retry.should_retry` showing the same path; identifier-sweep C16 identified this as an inaccurate shorthand. -->
 Includes HTTP 529 (overloaded) and a timing-verified backoff test.
 - Evidence: `adk-model::retry` — `RetryConfig`, `execute_with_retry`, `is_retryable_status_code`,
   `exponential_backoff_without_retry_after` (measures inter-attempt gaps).

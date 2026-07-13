@@ -1905,3 +1905,68 @@ the "all items LOW" bar for CONVERGED was not met. A7 dispatched on 4 realtime-i
 - `STATE.md` (C15 COMPLETE, C16 IN-PROGRESS, convergence counter 0→1, streak 1/3, session checkpoint updated, burst-57 checkpoint archived, C11 step row retired)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
 - `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-57 checkpoint archived)
+
+---
+
+## Burst 59 — C16 COMPLETE, C17 DISPATCHED
+
+**Date:** 2026-07-13
+**Agent:** validate-extraction (comparative-certification)
+
+### Summary
+
+Certification pass C16 completed. CLEAN(strict)=NO — 1 LOW severity correction.
+
+### Correction Applied
+
+**C16-01** (LOW): `patterns-observed.md` P-03 line 49 — identifier path inaccuracy for structured retry delay.
+- Original: backtick-quoted `` `AdkError.retry_after` `` (implying direct `.retry_after` member on AdkError)
+- Corrected: `` `AdkError.retry.retry_after()` ``
+- Root cause: `AdkError` has `pub retry: RetryHint` (error.rs:220); `RetryHint` has `fn retry_after(&self) -> Option<Duration>` (line 153); the field `retry_after` belongs to `ServerRetryHint` (retry.rs:137), NOT `AdkError`
+- Siblings already correct: P-04 uses `AdkError.retry.should_retry` (correct two-step path); behavioral-intent.md A1 line 104 uses `AdkError.retry.retry_after()` (correct)
+- Marker: `[comparative-cert-16]`
+
+### Identifier Sweep (C16 strata: enum variants, field names, const names)
+
+- 40 enum variants verified (NetworkPolicy, FilesystemPolicy, EnvironmentPolicy, Language, PaymentPolicyDecision, ContextMutationOutcome, BackpressurePolicy, RunStatus, FinishReason, ErrorComponent 14 variants, StreamingMode, MergeStrategy) — 40 CONFIRMED
+- 8 field names verified (full_snapshot_interval, fan_in_timeout, tool_concurrency, should_retry, retry_after_ms, max_attempts, retry, retry_after-on-ServerRetryHint) — 7 CONFIRMED, 1 leads to C16-01
+- 8 consts/RetryConfig fields verified (MAX_BUFFER_SIZE, MAX_EVENT_SIZE, DEFAULT_TIMEOUT, enabled, max_retries, initial_delay, max_delay, backoff_multiplier) — 8 CONFIRMED
+- Total: 69 identifiers, 69 existence-confirmed, 1 path shorthand inaccuracy (C16-01)
+- Cumulative C15+C16: 215/~754 identifiers checked
+
+### Rotation / Behavioral (4/4 confirmed)
+
+- B-01: P-13 `Tool::execute(args: Value) -> Result<Value>` + State::get/set — CONFIRMED (tool.rs:117; context.rs:219-222)
+- B-02: P-19 `Memory::search_in_project` default ignores project_id, delegates to global search — CONFIRMED (context.rs:575-578 exact match)
+- B-03: P-46 budget-gap re-confirmation — RunConfig no budget/cost-ceiling field; SessionUsageTracker `record_turn` only — CONFIRMED (grep empty for budget/cost-ceil; session_loop.rs:435 only call)
+- C-01: dependency-disposition.md A5 adk-gemini builder NO default timeout — CONFIRMED (client.rs:899,913; no .timeout() in default construction)
+
+### Metrics (2/2 Delta=0)
+
+- adk-agent unit test attributes: claimed 86, recounted 86 — Delta=0
+- pool_idle_timeout in adk-anthropic MAIN client: claimed 90s, verified Duration::from_secs(90) at client.rs:152,216 — Delta=0
+
+### Novel Cross-Document Probe
+
+dependency-disposition.md A7 native-tls first-party/transitive distinction verified against Cargo.toml files:
+- adk-mistralrs/Cargo.toml: no native-tls declaration — CONFIRMED (transitive only)
+- adk-audio/Cargo.toml: no native-tls declaration — CONFIRMED (transitive only)
+- root Cargo.toml: exactly one first-party explicit opt-in (livekit dep at line 146) — CONFIRMED
+
+### Streak / Convergence
+
+- Streak RESET 1/3 → 0/3 (C16-01 correction)
+- Convergence counter 1 → 0
+- C17 DISPATCHED: opener = COMPLETE the identifier sweep (~539 remaining with full dotted-path navigability checks — closes identifier class terminally); then light rotation
+
+### Archived in this burst
+
+- Burst-58 session checkpoint archived to `cycles/v0.0.0-pre-pipeline/session-checkpoints.md`
+
+### Files touched in this burst
+
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (C16 pass appended — opener, identifier sweep tables, behavioral rotation, metrics, novel probe, corrections table, confidence assessment, final verdict)
+- `comparative/adk-rust/patterns-observed.md` (C16-01 correction: P-03 line 49 `AdkError.retry_after` → `AdkError.retry.retry_after()` with `[comparative-cert-16]` correction comment)
+- `STATE.md` (C16 COMPLETE, C17 IN-PROGRESS, convergence counter 1→0, streak 0/3, session checkpoint updated, burst-58 checkpoint archived)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+- `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` (burst-58 checkpoint archived)
