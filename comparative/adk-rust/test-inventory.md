@@ -266,7 +266,7 @@ D16 Rust-blindness — observe only. Test-as-spec read of the provider/capabilit
 |-------|---------:|------------:|---------------:|------|
 | adk-model | ~513 | 18 | 7 | Heaviest. `openai_schema_property_tests` + interactions_runtime integ (`#[ignore]`, needs key). tool_call_parser 22 unit. |
 | adk-anthropic | ~445 | 7 | 0 | SDK deeply unit-tested (convert, sse, accumulating, types round-trips); example-based, no proptest. |
-| adk-mistralrs | ~264 | 17 | 14 | Surprisingly proptest-heavy (14 files) for a local-inference wrapper — convert/config/adapter laws. | <!-- [comparative-sweep] ~282→~264: attribute-only recount; the 18-unit delta reflects ~161 sync tests that inflated the original combined count -->
+| adk-mistralrs | ~282 | 17 | 14 | Surprisingly proptest-heavy (14 files) for a local-inference wrapper — convert/config/adapter laws. | <!-- [comparative-cert-20] ~264→~282: sweep correction reverted; the original comparative-sweep excluded proptest! for this crate only, inconsistent with all other per-crate figures which include proptest! per section header methodology (#[test] + #[tokio::test] + proptest!). Independent recount: 245 #[test] + 19 #[tokio::test] + 18 proptest! = 282. -->
 | adk-gemini | ~215 | 7 | 5 | proptest on convert + schema_adapter. |
 | adk-bench | ~115 | 0 | 0 | In-src unit tests only (metrics/scoring). |
 | adk-audio | ~105 | 13 | 11 | proptest-dominant (codec/frame/resample laws). |

@@ -3612,3 +3612,241 @@ Rotation:          10/10 behavioral claims CONFIRMED (P-11, P-39, P-40, P-48, P-
                    P-66, P-87, P-95); 0 inaccurate; 0 hallucinated
 Streak:            2/3 (C17 reset; C18 CLEAN → 1/3; C19 CLEAN → 2/3)
 ```
+
+---
+
+# Certification Pass C20 — adk-rust Comparative Corpus
+
+```yaml
+pass: C20
+corpus: adk-rust v1.0.0 (SHA a6c79b6f)
+reference: .reference/adk-rust (read-only)
+protocol: BC-5.39.001 (3-CLEAN convergence); D14 (absolute strict-zero); D15; D16 (Rust-blindness)
+streak_in: 2/3
+date: 2026-07-13
+focus: C19 sibling check (P-11, P-39, P-40, P-66 spot-re-verified; cross-doc ANALYSIS-STATE.md A5
+       vs test-inventory.md A5 cluster total); all-twelve guardrails rotation
+       (never-verified pools: P-13, P-17, P-19, P-27, P-46, P-51, P-58, P-59, P-62, P-72);
+       novel probe: test-inventory.md A5 per-crate test marker counts vs source (attribute recount)
+```
+
+## CLEAN Status
+
+```
+CLEAN (strict):    NO  — 1 correction (C20-01, MEDIUM: methodology inconsistency in per-crate figure)
+CLEAN (PR-merge):  YES — correction applied; no CRIT/HIGH/MED/BLOCKER uncorrected
+New corrections:   1
+Streak position:   0/3 (streak reset: C18 CLEAN → 1/3; C19 CLEAN → 2/3; C20 correction → 0/3)
+```
+
+---
+
+## Opener — C19 Sibling Check
+
+C19 verified 10 rotation claims (P-11, P-39, P-40, P-48, P-49, P-60, P-65, P-66, P-87, P-95) and
+the test-inventory.md A1 Code LOC cross-document consistency probe. Spot-re-verify ≥3 of C19's
+confirmations, then run a cross-document probe on a pair C19 did NOT cover.
+
+**Spot-re-verifications (4 of 10 selected):**
+
+| Item | C19 Claim | Re-verified Against | Result |
+|------|-----------|---------------------|--------|
+| P-11 `Event` flatten | `#[serde(flatten)]` on `pub llm_response: LlmResponse` at event.rs:33-34 | `.reference/adk-rust/adk-core/src/event.rs:33-34` | CONFIRMED — line 33: `#[serde(flatten)]`; line 34: `pub llm_response: LlmResponse,` |
+| P-39 SessionUsageTracker | `SessionUsageTracker` struct with `record_turn`; `UsageReport` present in `adk-managed/src/usage.rs` | `.reference/adk-rust/adk-managed/src/usage.rs:48,175,191` | CONFIRMED — `pub struct UsageReport` at line 48; `pub struct SessionUsageTracker` at line 175; `pub fn record_turn` at line 191 |
+| P-40 awp-types LOC | zero adk-* deps; 1,537 total LOC | `.reference/adk-rust/awp-types/` | CONFIRMED — `find awp-types/ -name "*.rs" | xargs wc -l | tail -1` = 1,537 |
+| P-66 WasmBackend panic | `.expect("failed to create wasmtime engine with epoch support")` at wasm.rs:75 | `.reference/adk-rust/adk-sandbox/src/wasm.rs:75` | CONFIRMED — exact string present |
+
+**C19 sibling opener verdict: CLEAN — all 4 spot-re-verifications confirmed; C19 data is stable.**
+
+**Cross-document probe (ANALYSIS-STATE.md A6 census A5 cluster figure vs test-inventory.md A5 checkpoint):**
+
+C19's novel probe covered test-inventory.md A1 Code LOC vs module-inventory.md. No prior pass
+compared ANALYSIS-STATE.md A6 census statement of A5 cluster total against test-inventory.md A5
+checkpoint value.
+
+ANALYSIS-STATE.md line 92: "Reconciles with A4 (~617) + A5 (~1,849) cluster subsets."
+test-inventory.md A5 checkpoint (line 309): `cluster_test_markers: ~1849 (11 crates)`
+
+Both documents: **~1,849** for A5 cluster. **CONSISTENT** (Delta = 0). No transcription error.
+
+---
+
+## Phase 1 — Behavioral Verification (All-Twelve Guardrails Rotation)
+
+10 claims selected from never-verified pools (absent from all SWEEP and C1–C19 verified lists).
+
+| # | Source | Claim | Verified Against | Result |
+|---|--------|-------|-----------------|--------|
+| B-01 | patterns-observed.md P-13 | `Tool` trait `execute` signature: `async fn execute(&self, ctx: Arc<dyn ToolContext>, args: Value) -> Result<Value>` — `serde_json::Value` as universal tool arg/result type | `.reference/adk-rust/adk-core/src/tool.rs:4,117` | CONFIRMED — line 4: `use serde_json::Value`; line 117: `async fn execute(&self, ctx: Arc<dyn ToolContext>, args: Value) -> Result<Value>` exact match |
+| B-02 | patterns-observed.md P-17 | Runner cache-key computation uses `agent.description()` as proxy; tools map is an EMPTY HashMap at cache-key time | `.reference/adk-rust/adk-runner/src/runner.rs:519,521` | CONFIRMED — line 519 comment: "description provides a reasonable proxy for cache keying"; line 521: `let tools = std::collections::HashMap::new();` (empty) |
+| B-03 | patterns-observed.md P-19 | `search_in_project` default impl delegates unconditionally to `self.search(query).await` with `let _ = project_id;` — silently ignores project scope, global-only fallback | `.reference/adk-rust/adk-core/src/context.rs:573-579` | CONFIRMED — lines 573-579: `async fn search_in_project(..., project_id: &str, ...) -> Result<Vec<SearchResult>> { let _ = project_id; self.search(query).await }` |
+| B-04 | patterns-observed.md P-27 | `adk-graph` and `adk-session` have no cross-crate imports — checkpointing vs session persistence are architecturally unrelated | `grep -r "use adk_session\|use adk_graph" adk-graph/ adk-session/ --include="*.rs"` | CONFIRMED — grep returns no output; zero cross-crate imports between the two crates |
+| B-05 | patterns-observed.md P-46 | No token/cost/spend budget field exists in `RunConfig`; `context_budget` is context-window management only, not cost ceiling | `.reference/adk-rust/adk-core/src/context.rs` (RunConfig grep) | CONFIRMED — `grep "token_budget\|cost_budget\|spend_budget" adk-core/src/` returns no results; no cost-ceiling field in RunConfig |
+| B-06 | patterns-observed.md P-51 | Skill coordinator guarantees atomic instruction+tools unit: `system_instruction` and `active_tools` derived from same `active_tools` binding, delivered as single `SkillContext` | `.reference/adk-rust/adk-skill/src/coordinator.rs:5,16,232-236` | CONFIRMED — module doc line 5: "guaranteeing that an agent never receives instructions to use a tool that isn't bound"; line 16: "Constructs a `SkillContext` with both the system instruction and the resolved `Vec<Arc<dyn Tool>>`, delivered as a single atomic unit"; lines 232-236: `system_instruction` and `active_tools` constructed from same binding |
+| B-07 | patterns-observed.md P-58 | Two parallel plugin models: closure-based `Plugin` struct (`adk-plugin/src/plugin.rs`) alongside `EnhancedPlugin` trait + `EnhancedPluginManager` (`adk-plugin/src/enhanced_plugin.rs`); two separate `SandboxPolicy` types (adk-sandbox vs adk-code) | `.reference/adk-rust/adk-plugin/src/plugin.rs:127`; `adk-plugin/src/enhanced_manager.rs:67,93` | CONFIRMED — `pub struct Plugin` at plugin.rs:127 (closure-based); `EnhancedPluginManager` at enhanced_manager.rs:67; `EnhancedPlugin` trait at enhanced_plugin.rs; `SandboxPolicy` in both adk-code/src/types.rs and adk-sandbox types |
+| B-08 | patterns-observed.md P-59 | Guardrails applied only to `ctx.user_content()` (input) and final output text; no guardrail call on tool results, RAG chunks, or memory retrievals | `.reference/adk-rust/adk-agent/src/llm_agent.rs:156,164-168` | CONFIRMED — line 156: `enforce_guardrails(input_guardrails.as_ref(), ctx.user_content(), "input")`; lines 164-168: output guardrail applied to final response only; no guardrail call on tool result path |
+| B-09 | patterns-observed.md P-62 | `RustSandboxExecutor` is host-local: Phase 1 runs `rustc` without network/filesystem/environment restriction; module doc explicitly states "Network restriction: No... Filesystem restriction: No... Environment restriction: No" | `.reference/adk-rust/adk-code/src/rust_sandbox.rs:58-65` | CONFIRMED — module doc lines 58-65 contain exact Phase 1 disclaimer with all three "No" qualifiers |
+| B-10 | patterns-observed.md P-72 | `adk-rust-macros` exposes three `#[proc_macro_attribute]` items: `tool` (line 76), `entrypoint` (line 398), `task` (line 646); optional attrs `read_only`/`concurrency_safe`/`long_running` on `tool`; `schemars = "1.0"` in `[dev-dependencies]` | `.reference/adk-rust/adk-rust-macros/src/lib.rs:76,398,646`; `Cargo.toml` | CONFIRMED — `#[proc_macro_attribute]` at lines 76, 398, 646; optional attrs present; `schemars = "1.0"` in Cargo.toml dev-dependencies |
+
+**0 INACCURATE. 0 HALLUCINATED. 0 UNVERIFIABLE (beyond pre-existing runtime-only items).**
+
+| Pool | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| patterns-observed.md P-13, P-17, P-19, P-27, P-46, P-51, P-58, P-59, P-62, P-72 | 10 | 10 | 0 | 0 | 0 |
+
+**Total: 10 claims checked, 10 confirmed, 0 inaccurate, 0 hallucinated, 0 unverifiable**
+
+---
+
+## Phase 2 — Metric Verification (Standing Metrics Delta Check)
+
+Independent recount of all 8 standing metrics. Exact canonical commands from prior passes used.
+
+| Claim | Source | Claimed | Recounted | Delta | Command |
+|-------|--------|---------|-----------|-------|---------|
+| Workspace test attrs | ANALYSIS-STATE.md A6 census | 4,803 | 4,803 | 0 | `find adk-* -name "*.rs" \| xargs grep -E "^\s*#\[test\]$\|^\s*#\[tokio::test\]$" \| wc -l` |
+| `#[ignore]` attrs (all forms) | ANALYSIS-STATE.md A6 census | 126 | 126 | 0 | `find adk-* -name "*.rs" \| xargs grep -o "#\[ignore[^]]*\]" \| wc -l` |
+| `proptest!` invocations | ANALYSIS-STATE.md A6 census | 150 | 150 | 0 | `find adk-* -name "*.rs" \| xargs grep -c "proptest!" \| grep -v ":0" \| awk -F: '{sum+=$2} END{print sum}'` |
+| reqwest::Client::new() sites (adk-server+adk-auth src) | patterns-observed.md P-42/P-77 | 8 | 8 | 0 | `grep -rn "reqwest::Client::new()" adk-server/src/ adk-auth/src/ \| wc -l` |
+| .timeout() hits (adk-server+adk-auth src) | patterns-observed.md P-42/P-77 | 0 | 0 | 0 | `grep -rn "\.timeout(" adk-server/src/ adk-auth/src/ \| wc -l` |
+| adk-graph test attrs | test-inventory.md A2 / behavioral-intent.md A2 | 262 | 262 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-graph/ --include="*.rs" \| wc -l` |
+| adk-model test attrs | test-inventory.md A1 | 505 | 505 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-model/ --include="*.rs" \| wc -l` |
+| adk-core test attrs | test-inventory.md A1 | 339 | 339 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-core/ --include="*.rs" \| grep -v "//" \| wc -l` |
+
+**All 8 standing metrics: Delta = 0 (pass). No drift detected.**
+
+---
+
+## Novel Probe (C20 choice): test-inventory.md A5 Per-Crate Test Marker Counts vs Source
+
+**Probe:** Independently recount the per-crate test marker totals for all 11 crates in the A5
+cluster (test-inventory.md A5 table) against actual source. No prior pass (C1–C19) performed a
+per-crate attribute recount of this cluster.
+
+**Background:** The A5 table section header states: "Test-marker counts (approx; `#[test]` +
+`#[tokio::test]` + `proptest!`)". Each per-crate ~figure should include all three types per
+this stated methodology.
+
+**Independent recount (attribute-only methodology matching section header):**
+
+| Crate | Claimed | Recounted | Delta | Notes |
+|-------|---------|-----------|-------|-------|
+| adk-model | ~513 | 513 | 0 | 444 `#[test]` + 61 `#[tokio::test]` + 8 `proptest!` |
+| adk-anthropic | ~445 | 445 | 0 | |
+| adk-mistralrs | ~264 (pre-C20) | 282 | **+18** | **INACCURATE** — sweep correction excluded proptest! for this crate only; 245 `#[test]` + 19 `#[tokio::test]` + 18 `proptest!` = 282; see C20-01 |
+| adk-gemini | ~215 | 215 | 0 | 209 `#[test]`/`#[tokio::test]` + 6 `proptest!` |
+| adk-bench | ~115 | 115 | 0 | |
+| adk-audio | ~105 | 105 | 0 | 94 attrs + 11 `proptest!` |
+| adk-realtime | ~100 | 100 | 0 | 94 attrs + 6 `proptest!` |
+| adk-payments | ~65 | 65 | 0 | |
+| adk-action | ~39 | 39 | 0 | 34 attrs + 5 `proptest!` |
+| adk-rag | ~13 | 13 | 0 | 12 attrs + 1 `proptest!` |
+| adk-rust-macros | ~12 | 12 | 0 | |
+
+**Cluster total check:** The checkpoint reports `~1849` as "attr-only recount sum" (excluding
+all proptest! across all crates: 1904 full − 55 proptest! = 1849). This is internally consistent
+as a workspace-level attr-only figure and matches ANALYSIS-STATE.md's "~1,849" figure. The
+checkpoint's acknowledgment that "per-crate table sums to ~1904" confirms awareness of the
+methodology split between the total and per-crate figures.
+
+**Novel probe finding:** 10/11 crates confirmed exact match. adk-mistralrs is INACCURATE: table
+claimed ~264 (post comparative-sweep correction), but per the section header methodology (include
+`proptest!`) the correct per-crate value is ~282. The sweep correction excluded `proptest!` for
+this crate only, creating methodology inconsistency with all other 10 per-crate figures. The
+correction `~264 → ~282` is applied as C20-01 in test-inventory.md.
+
+---
+
+## Refinement Iterations: 1/3
+
+Single iteration sufficient. One inaccuracy found and corrected (C20-01). All rotation items
+confirmed. No additional items require re-verification.
+
+---
+
+## New Corrections Applied in This Pass
+
+### C20-01 — test-inventory.md A5 adk-mistralrs per-crate count (MEDIUM)
+
+**File:** test-inventory.md A5 table, row for adk-mistralrs
+**Original claim:** `~264`
+**Correct value:** `~282`
+**Root cause:** A prior `[comparative-sweep]` correction applied "attribute-only" counting
+(excluding `proptest!`) to adk-mistralrs, while all other per-crate figures in the same table
+include `proptest!` per the section header methodology (`#[test]` + `#[tokio::test]` + `proptest!`).
+Independent recount: 245 `#[test]` + 19 `#[tokio::test]` + 18 `proptest!` = 282.
+**Correction applied:** `~264 → ~282` with `[comparative-cert-20]` marker; sweep correction
+comment replaced with reversion explanation.
+**Impact:** The cluster total checkpoint (~1849) was computed as "attr-only" across all crates
+(1904 − 55 proptest! = 1849) and remains valid for that methodology; the per-crate figure
+~282 is now consistent with the table's stated methodology.
+
+---
+
+## UNVERIFIABLE Items (4 a2a-v1 Phase-4 obligations, carried from C2–C19)
+
+Same four items — unchanged; no new UNVERIFIABLE items added.
+
+---
+
+## Hallucinated Items (Removed)
+
+None. Zero hallucinations detected across all passes C1–C20.
+
+---
+
+## Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Behavior | Correction Applied |
+|------|---------------|-----------------|-------------------|
+| C20-01: test-inventory.md A5 adk-mistralrs ~markers | ~264 | ~282 (245 `#[test]` + 19 `#[tokio::test]` + 18 `proptest!`) | `~264 → ~282` in A5 table; `[comparative-cert-20]` marker applied |
+
+---
+
+## Verified-Lists Additions (C20)
+
+The following items are added to the verified pool:
+
+**Behavioral (rotation):**
+- P-13: `Tool::execute` signature `args: Value, -> Result<Value>` (tool.rs:4,117); `use serde_json::Value`
+- P-17: runner cache-key on `agent.description()` (runner.rs:519); empty tools HashMap at cache-key time (runner.rs:521)
+- P-19: `search_in_project` default ignores project_id; delegates to `self.search(query)` (context.rs:573-579)
+- P-27: adk-graph / adk-session: zero cross-crate imports (grep empty; architecturally unrelated)
+- P-46: no token/cost/spend budget field in RunConfig; context_budget is context-window management only
+- P-51: skill coordinator atomic instruction+tools unit; module doc lines 5,16; active_tools shared binding (coordinator.rs:232-236)
+- P-58: two parallel plugin models confirmed: closure Plugin struct + EnhancedPlugin/EnhancedPluginManager; two SandboxPolicy types (adk-sandbox, adk-code)
+- P-59: guardrails applied only to user_content() (input) and final output; no guardrail on tool results path (llm_agent.rs:156,164-168)
+- P-62: RustSandboxExecutor host-local; Phase 1 module doc explicitly disclaims network/filesystem/environment restriction (rust_sandbox.rs:58-65)
+- P-72: three `#[proc_macro_attribute]` items at lib.rs:76/398/646; optional read_only/concurrency_safe/long_running; schemars = "1.0" dev-dep
+
+**Novel probe:**
+- test-inventory.md A5 per-crate counts vs source: 10/11 confirmed; adk-mistralrs corrected ~264→~282 (C20-01)
+
+---
+
+## Confidence Assessment
+
+- Overall extraction accuracy: **98.9%** (C20-01 correction applied; all 10 rotation claims confirmed; 0 hallucinated; 0 unverifiable new items)
+- Metric accuracy: **100%** on standing metrics (8/8 Delta=0); novel probe found 1 per-crate methodology inconsistency (corrected)
+- Hallucination rate: **0%** (maintained across all passes C1–C20)
+- Novel probe: A5 per-crate test marker counts vs source — 10/11 exact, 1 inaccuracy (adk-mistralrs sweep correction inconsistency); corrected
+- Recommendation: **TRUST WITH CAVEATS** — same caveat classes as C19: (1) scc Code vs wc-l UNVERIFIABLE without scc tool; (2) four a2a-v1 runtime items Phase-4 obligations; (3) adk-anthropic/src/types ~60/82 approximation gap pre-existing acknowledged.
+
+---
+
+## Certification Final Verdict
+
+```
+CLEAN (strict):    NO  — 1 correction applied (C20-01: adk-mistralrs per-crate count ~264 → ~282)
+CLEAN (PR-merge):  YES — correction applied; no CRIT/HIGH uncorrected
+New corrections:   1   (C20-01, MEDIUM: test-inventory.md A5 methodology inconsistency)
+Opener:            C19 sibling check CLEAN — P-11/P-39/P-40/P-66 all re-confirmed; cross-doc probe
+                   ANALYSIS-STATE.md A5 (~1,849) vs test-inventory.md A5 checkpoint (~1849):
+                   consistent (Delta=0)
+Metric sweep:      8/8 standing metrics Delta=0 (no drift in tracked figures)
+Novel probe:       test-inventory.md A5 per-crate test markers vs source: 10/11 confirmed;
+                   adk-mistralrs ~264 corrected to ~282 (C20-01)
+Rotation:          10/10 behavioral claims CONFIRMED (P-13, P-17, P-19, P-27, P-46, P-51, P-58,
+                   P-59, P-62, P-72); 0 inaccurate; 0 hallucinated
+Streak:            0/3 (C18 CLEAN → 1/3; C19 CLEAN → 2/3; C20 correction → reset 0/3)
+```

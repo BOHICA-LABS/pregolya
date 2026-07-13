@@ -2038,3 +2038,28 @@ C15 step row retired from STATE.md Current Phase Steps (table capped at 5 rows):
 - `comparative/adk-rust/CERTIFICATION-REPORT.md` (C19 pass appended by validator — C18 sibling check, LOC region probe, rotation table, metric verification, novel probe scc Code LOC cross-doc, confidence assessment, final verdict)
 - `STATE.md` (C19 COMPLETE, streak 2/3, convergence counter 1→2 of 3, frontmatter updated, Current Phase Steps C15 row archived, C19 row added, session checkpoint updated)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — C15 archive + burst 62 narrative)
+
+---
+
+## Burst 63 — adk-rust cert pass C20 CLEAN(strict)=NO (2026-07-13)
+
+### Archived from STATE.md Current Phase Steps (C16 row retired)
+
+C16 step row retired from STATE.md Current Phase Steps (table capped at 5 rows):
+> adk-rust certification pass C16 (strict-zero, identifier class exhaustion + rotation) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 1 LOW correction (C16-01): P-03 `AdkError.retry_after` → `AdkError.retry.retry_after()` — no direct `.retry_after` member on AdkError; AdkError has `pub retry: RetryHint`, RetryHint has `retry_after()` method (error.rs:153); P-04 and behavioral-intent.md A1 already correct. 69 identifiers verified (enum variants/fields/consts); 69 CONFIRMED, cumulative 215/~754. Rotation 4/4 confirmed; metrics 2/2 Delta=0; novel probe native-tls Cargo.toml CONFIRMED. Streak RESET 1/3 → 0/3. Burst 59.
+
+### C20 Summary
+
+- CLEAN(strict)=NO. 1 MEDIUM correction (C20-01): test-inventory A5 adk-mistralrs ~264→~282 — prior comparative-sweep correction had excluded proptest! for this crate only (methodology inconsistency vs section header "#[test] + #[tokio::test] + proptest!"); independent recount: 245 #[test] + 19 #[tokio::test] + 18 proptest! = 282.
+- Opener C19 sibling check: 4/4 re-verified CONFIRMED (P-11, P-39, P-40, P-66); cross-doc probe ANALYSIS-STATE.md↔test-inventory.md A5 ~1849 CONSISTENT.
+- Rotation 10/10 CONFIRMED (P-13, P-17, P-19, P-27, P-46, P-51, P-58, P-59, P-62, P-72) — appended to verified-lists.
+- Metrics 8/8 Delta=0.
+- Novel probe: A5 per-crate test marker recount, 11 crates — 10/11 exact, 1 inaccuracy (C20-01).
+- Streak: RESET 2/3 → 0/3. Gate NOT closed.
+
+### Files touched in this burst
+
+- `comparative/adk-rust/test-inventory.md` (A5 adk-mistralrs ~264→~282 with [comparative-cert-20] annotation — C20-01 correction applied)
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (C20 pass appended — C19 sibling check, cross-doc probe, rotation table, metric verification, novel probe A5 per-crate recount, C20-01 finding, confidence assessment, final verdict)
+- `STATE.md` (C20 COMPLETE, streak reset 2/3→0/3, convergence counter 2→0 of 3, frontmatter updated, Current Phase Steps C16 row archived, C20 row added, session checkpoint updated)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — C16 archive + burst 63 narrative)
