@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T19:30:00Z
+timestamp: 2026-07-13T21:30:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "3-CLEAN certification pass 4 in progress, streak 0/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes."
+current_step: "3-CLEAN certification pass 5 in progress, streak 0/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes."
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -43,9 +43,9 @@ dtu_required: false
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived upstream — curated-subset reference only), langchain-mcp-adapters==0.3.0 (SHA a61c783a) |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — burst 20: 3-CLEAN certification pass 3 COMPLETE — CLEAN(strict)=NO. 1 correction (1 LOW): anthropic dep constraint `>=0.96.0,<1.0.0` upper bound absent in partners/dependency-disposition.md (was `>=0.96`). Streak RESET 1/3→0/3. All other 6 areas PASS. Lesson 7b (DEPENDENCY-CONSTRAINT COMPLETENESS) codified. Certification pass 4 dispatched. |
+| **Last Updated** | 2026-07-13 — burst 21: 3-CLEAN certification pass 4 COMPLETE — CLEAN(strict)=NO. 6 corrections (6 LOW): 4 upper bounds missing in partners (openai <3.0.0, tiktoken <1.0.0, pydantic <3.0.0, ollama <1.0.0); ANTHROPIC_API_URL primary env var / BASE_URL fallback precedence absent; CLI test LOC 7,208→7,102. DEPENDENCY-CONSTRAINT class permanently closed. Streak 0/3. Pass 5 dispatched. |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | 3-CLEAN certification pass 4 in progress (fresh context; all 7 guardrails + 7b; stratum: config defaults, env-var names, serialization field names). Streak 0/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes. |
+| **Current Step** | 3-CLEAN certification pass 5 in progress (exhaustive env-var sweep then streaming chunk shapes + serialization field names + constructor defaults). Streak 0/3. Phase 1 opens on 3 consecutive CLEAN(strict) passes. |
 
 ## Phase Progress
 
@@ -68,12 +68,11 @@ dtu_required: false
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| extraction-validation pass 8 | validate-extraction | DONE | CLEAN(strict)=NO. 7 corrections (5 MEDIUM, 2 LOW), streak 0/3 — streak has never started. PHANTOM BEHAVIOR: 4 partner-area docs claimed base_url gate on OpenAI Responses-API routing that does NOT exist in source (routing = feature-flag + model-name; base_url only gates stream_usage auto-enabling). AnyValue channel semantics documented as OPPOSITE of actual (docs: "never empty once written"; actual: cleared each unwritten step). langchain agents/ LOC corrected. Cascade: 11→5→7→9→2→2→2→7; 56 total corrections. Level-2 escalation to human; D14.1 approved. |
-| exhaustive verification sweep | validate-extraction (x7) | DONE | D14.1 protocol COMPLETE — all 7 areas full coverage. ~1,216 claims verified; ~45 corrections (3 CRITICAL, ~9 HIGH, ~11 MEDIUM). ZERO hallucinated symbols. 2 phantom artifacts removed. CRITICAL: graph recursion_limit 10,007 not 25; langchain hook return type dict[str,Any]\|None not dict\|Command\|None. R11 registered. 7 EXHAUSTIVE-SWEEP.md files written. |
-| 3-CLEAN certification pass 1 | validate-extraction | DONE | CLEAN(strict)=NO, CLEAN(PR-merge)=YES. 2 corrections (2 MEDIUM), streak 0/3. STRONG convergence: all 4 high-consequence exhaustive fixes RE-CONFIRMED; 16 additional corrections all-correct; 12 test citations accurate; propagation clean; cross-area consistent. Error surface = scope-label precision on counts only. |
+| 3-CLEAN certification pass 1 | validate-extraction | DONE | CLEAN(strict)=NO, CLEAN(PR-merge)=YES. 2 corrections (2 MEDIUM), streak 0/3. STRONG convergence: all 4 high-consequence exhaustive fixes RE-CONFIRMED; 16 additional corrections all-correct; 12 test citations accurate; propagation clean. Error surface = scope-label precision on counts only. |
 | 3-CLEAN certification pass 2 | validate-extraction | DONE | CLEAN(strict)=YES — ZERO corrections. Streak 0/3→1/3. 58 checks: 21 behavioral claims ALL CONFIRMED; 21 numeric rows ALL delta=0 (guardrail 7 scope-label resolution); pass-1 fixes re-verified exact; cross-area consistent. |
 | 3-CLEAN certification pass 3 | validate-extraction | DONE | CLEAN(strict)=NO. 1 correction (1 LOW): anthropic dep `>=0.96.0,<1.0.0` upper bound omitted from partners/dependency-disposition.md. Streak RESET 1/3→0/3. All other 6 areas PASS (error-path-weighted stratum: retry policies, exception taxonomies, HTTP error trees all confirmed). Lesson 7b codified. |
-| 3-CLEAN certification pass 4 | validate-extraction | IN_PROGRESS | Fresh context; all 7 guardrails + 7b (DEPENDENCY-CONSTRAINT COMPLETENESS); stratum: config defaults, env-var names, serialization field names. Streak 0/3. |
+| 3-CLEAN certification pass 4 | validate-extraction | DONE | CLEAN(strict)=NO. 6 corrections (6 LOW): 4 upper bounds missing in partners (openai <3.0.0, tiktoken <1.0.0, pydantic <3.0.0, ollama <1.0.0); ANTHROPIC_API_URL primary/BASE_URL fallback precedence absent; CLI test LOC 7,208→7,102. DEPENDENCY-CONSTRAINT class permanently closed. 17/18 behavioral items confirmed. Streak 0/3. |
+| 3-CLEAN certification pass 5 | validate-extraction | IN_PROGRESS | Exhaustive env-var sweep (closes env-var class), then streaming chunk shapes, serialization field names, constructor defaults. Streak 0/3. |
 
 ## Decisions Log
 
@@ -147,8 +146,8 @@ dtu_required: false
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Position** | pre-1, burst 20 complete. 3-CLEAN certification pass 3 COMPLETE: CLEAN(strict)=NO — 1 correction (1 LOW). anthropic dep constraint `>=0.96.0,<1.0.0` upper bound absent from partners/dependency-disposition.md (was `>=0.96`); corrected in-place with `[validation-certification-3]` marker. Streak RESET 1/3→0/3. All other 6 areas PASS across fresh error-path-weighted stratum (retry policies, exception taxonomies, platform 8-code HTTP error tree, cross-library exception-tree independence all confirmed). Lesson 7b codified: DEPENDENCY-CONSTRAINT COMPLETENESS — dependency rows must quote full constraint expressions verbatim (bounds are contract). Certification pass 4 DISPATCHED: all 7 guardrails + 7b; new stratum weighting: config defaults, env-var names, serialization field names. STATE.md at ~200 lines — schedule /compact-state after gate closes. |
-| **Key context** | D1-D14.1 locked. D14.1: exhaustive-sweep-then-3-CLEAN (human-approved 2026-07-13); strict-zero bar unchanged. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. R10 OPEN: NamedBarrierValue + EphemeralValue coverage gap — route to product-owner at Phase 1. R11 OPEN: MCP upstream test voids — mcp bare-ToolException re-raise path + mcp __aenter__ NotImplementedError contract. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. 8 guardrails now active (7b: DEPENDENCY-CONSTRAINT COMPLETENESS added). |
+| **Position** | pre-1, burst 21 complete. 3-CLEAN certification pass 4 COMPLETE: CLEAN(strict)=NO — 6 corrections (6 LOW). 4 upper bounds absent in partners area (openai <3.0.0, tiktoken <1.0.0, pydantic <3.0.0 anthropic row, ollama <1.0.0); ANTHROPIC_API_URL primary env var / BASE_URL fallback precedence missing from behavioral-intent.md; CLI test LOC 7,208→7,102 in platform/test-inventory.md. DEPENDENCY-CONSTRAINT class permanently closed (all dep rows corpus-wide verbatim-verified). 17/18 behavioral items confirmed. Streak 0/3. Certification pass 5 DISPATCHED: opens with exhaustive corpus-wide env-var sweep (closes env-var class), then streaming chunk shapes, serialization field names, constructor defaults. |
+| **Key context** | D1-D14.1 locked. D14.1: exhaustive-sweep-then-3-CLEAN (human-approved); strict-zero bar unchanged. D13: ferrochain-server first-party; DTU = OpenAI/Anthropic/providers/Ollama only. R6 OPEN: cargo login + publish-all.sh needed (time-sensitive). R8 OPEN: Unicode/code-point parity — route to product-owner at Phase 1. R10 OPEN: NamedBarrierValue/EphemeralValue coverage gap. R11 OPEN: MCP upstream test voids. CLAUDE.md on main — no initial commit yet; devops at workspace-init Phase 1. Ref corpus: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0. D9: architect presents ≥2 graph alternatives at Phase 1c. D11 ADR at Phase 1c. 8 guardrails active (7b: DEPENDENCY-CONSTRAINT COMPLETENESS). |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content
@@ -174,21 +173,8 @@ dtu_required: false
 | Burst 18 narrative (3-CLEAN certification pass 1 COMPLETE — CLEAN(strict)=NO, CLEAN(PR-merge)=YES; 2 MEDIUM corrections: sdk-py 63/20,787→45/18,728 + cli 46/9,997→19/8,383 reverted to package-dir scope; STRONG convergence: 4 high-consequence fixes RE-CONFIRMED; guardrail #7 SCOPE-LABEL MATCHING codified; pass 2 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 19 narrative (3-CLEAN certification pass 2 COMPLETE — CLEAN(strict)=YES, ZERO corrections; streak 0/3→1/3; 58 checks all 7 areas; 21 behavioral claims confirmed; 21 numeric rows delta=0; pass-1 fixes re-verified; cross-area consistent; pass 3 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
 | Burst 20 narrative (3-CLEAN certification pass 3 COMPLETE — CLEAN(strict)=NO; 1 correction (LOW): anthropic dep `<1.0.0` upper bound absent; streak RESET 1/3→0/3; 6/7 areas PASS; lesson 7b DEPENDENCY-CONSTRAINT COMPLETENESS codified; pass 4 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
-| Burst 18 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 19 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 14 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 15 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 16 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 17 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 13 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 12 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 5 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 6 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 7 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 8 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 9 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 10 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
-| Burst 11 checkpoint (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
+| Burst 21 narrative (3-CLEAN certification pass 4 COMPLETE — CLEAN(strict)=NO; 6 corrections (6 LOW): 4 partner upper bounds missing + ANTHROPIC_API_URL primary env var precedence + CLI test LOC 7,208→7,102; DEPENDENCY-CONSTRAINT class permanently closed; streak 0/3; pass 5 dispatched) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Bursts 5-20 checkpoints (all archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Lessons learned (PROCESS-GAP: validator counting methodology) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
 | Lessons learned (PROCESS-GAP: cross-document propagation failures / TD-VSDD-060) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
 | Lessons learned (PROCESS-GAP: package-attribution guardrail — 6th guardrail) | `cycles/v0.0.0-pre-pipeline/lessons.md` |

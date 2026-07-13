@@ -756,3 +756,28 @@ Both must be explicit ferrochain Red Gate tests (join R8 splitters code-point/by
 **Lesson codified:** 7b — DEPENDENCY-CONSTRAINT COMPLETENESS (see lessons.md).
 
 **Next:** Certification pass 4 dispatched. All 7 guardrails + 7b active. New stratum: config defaults, env-var names, serialization field names. Streak 0/3.
+
+---
+
+## Burst 21 — 3-CLEAN Certification Pass 4 COMPLETE + Pass 5 Dispatch
+
+**Date:** 2026-07-13
+**Agent:** state-manager (burst-close)
+
+**Summary:** 3-CLEAN certification pass 4 COMPLETE — CLEAN(strict)=NO. 6 corrections (6 LOW). Streak 0/3.
+
+**Pass 4 corrections (6 LOW — all partners area + platform):**
+1. `openai>=2.45.0,<3.0.0` — `<3.0.0` upper bound absent from partners/dependency-disposition.md; added `[validation-certification-4]` marker. Source: `langchain_openai/pyproject.toml`.
+2. `tiktoken>=0.7.0,<1.0.0` — `<1.0.0` upper bound absent; same file/marker. Source: `langchain_openai/pyproject.toml`.
+3. `pydantic>=2.7.4,<3.0.0` (anthropic row) — `<3.0.0` upper bound absent; same file/marker. Source: `langchain_anthropic/pyproject.toml`.
+4. `ollama>=0.6.1,<1.0.0` — `<1.0.0` upper bound absent; same file/marker. Source: `langchain_ollama/pyproject.toml`.
+5. `ANTHROPIC_API_URL` is the PRIMARY env var for base_url override; `ANTHROPIC_BASE_URL` is the fallback — precedence was undocumented. Added to partners/behavioral-intent.md `[validation-certification-4]` marker. Source: `langchain_anthropic/chat_models.py:950` `from_env(["ANTHROPIC_API_URL","ANTHROPIC_BASE_URL"])`.
+6. CLI test LOC 7,208→7,102 — stale count; corrected in platform/test-inventory.md with `[validation-certification-4]` marker.
+
+**DEPENDENCY-CONSTRAINT class closed:** All dependency rows across entire corpus now verbatim-verified (both lower and upper bounds). Root cause: partner pyprojects uniformly cap vendor SDKs at next major; prior passes in the analysis phase dropped the caps. Class permanently closed — guardrail 7b covers all future rows.
+
+**Behavioral items confirmed:** 17/18 behavioral items sampled confirmed correct. Exhaustive env-var sweep (closes env-var class) deferred to pass 5 by protocol rotation.
+
+**Files modified:** `semport/partners/dependency-disposition.md`, `semport/partners/behavioral-intent.md`, `semport/platform/test-inventory.md`, `semport/VALIDATION-REPORT.md`
+
+**Next:** Certification pass 5 DISPATCHED. Opens with exhaustive corpus-wide env-var sweep (closes env-var class), then rotates to streaming chunk shapes, serialization field names, constructor defaults. Streak 0/3.

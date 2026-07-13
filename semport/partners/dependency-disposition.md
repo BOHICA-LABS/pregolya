@@ -78,8 +78,8 @@ piece of partner infrastructure** and should be a Wave-early deliverable.
 
 | Python dep | Disposition | Notes |
 |---|---|---|
-| `openai>=2.45` (SDK) | **DIRECT-HTTP** (see above) | transport + DTOs owned; async-openai as reference only |
-| `tiktoken>=0.7` | **MAP → `tiktoken-rs`** | BPE tokenizer for token counting + len-safe embedding batching. Verify vocab/merge parity via golden tests. |
+| `openai>=2.45.0,<3.0.0` (SDK) <!-- [validation-certification-4]: added `<3.0.0` upper bound; langchain_openai/pyproject.toml: `openai>=2.45.0,<3.0.0` --> | **DIRECT-HTTP** (see above) | transport + DTOs owned; async-openai as reference only |
+| `tiktoken>=0.7.0,<1.0.0` <!-- [validation-certification-4]: added `<1.0.0` upper bound; langchain_openai/pyproject.toml: `tiktoken>=0.7.0,<1.0.0` --> | **MAP → `tiktoken-rs`** | BPE tokenizer for token counting + len-safe embedding batching. Verify vocab/merge parity via golden tests. |
 | httpx client tuning / SSRF / socket opts | **PORT** onto reqwest | `_client_utils.py`: TCP keepalive + `TCP_USER_TIMEOUT` → socket2 options; SSRF guard → validate resolved IP; per-chunk stream timeout → `tokio::time::timeout` around the SSE stream item future. |
 | Azure AD auth | **PORT** | `azure_ad_token_provider` (sync) + async provider → a `TokenProvider` trait returning a future; credential newtype. |
 
@@ -88,14 +88,14 @@ piece of partner infrastructure** and should be a Wave-early deliverable.
 | Python dep | Disposition | Notes |
 |---|---|---|
 | `anthropic>=0.96.0,<1.0.0` (SDK) <!-- [validation-certification-3]: added `<1.0.0` upper bound; pyproject.toml line 26: `anthropic>=0.96.0,<1.0.0` --> | **DIRECT-HTTP** | Messages API owned; `_client_utils.py` cached-client pattern → reqwest client cache. |
-| `pydantic>=2.7.4` | **PORT → serde + schemars** | Same disposition as core (see core dependency-disposition; tool-schema golden-tested). |
+| `pydantic>=2.7.4,<3.0.0` <!-- [validation-certification-4]: added `<3.0.0` upper bound; langchain_anthropic/pyproject.toml: `pydantic>=2.7.4,<3.0.0` --> | **PORT → serde + schemars** | Same disposition as core (see core dependency-disposition; tool-schema golden-tested). |
 | prompt-caching `cache_control` | **PORT** | Data-shape only (`{type:ephemeral,ttl}`); pure logic. |
 
 ## 3. ollama — dependency disposition
 
 | Python dep | Disposition | Notes |
 |---|---|---|
-| `ollama>=0.6.1` (SDK) | **DIRECT-HTTP** | trivial local API. |
+| `ollama>=0.6.1,<1.0.0` (SDK) <!-- [validation-certification-4]: added `<1.0.0` upper bound; langchain_ollama/pyproject.toml: `ollama>=0.6.1,<1.0.0` --> | **DIRECT-HTTP** | trivial local API. |
 | `httpx` (transitive) | **MAP → reqwest (rustls-tls)** | + `parse_url_with_auth` Basic-auth header injection PORTED. |
 
 ### DTU fake for ollama (what the DTU-validator clone must serve)

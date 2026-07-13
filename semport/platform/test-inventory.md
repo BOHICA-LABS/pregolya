@@ -15,7 +15,7 @@ note: tests are first-class behavioral spec inputs. The SDK streaming fake serve
 | Package | Test files | Test LOC | Src LOC | Test:src |
 |---|---|---|---|---|
 | sdk-py | 57 | 13,652 | 18,728 | 0.73 |
-| cli | 11 | 7,208 | 8,383 | 0.86 |
+| cli | 11 | 7,102 <!-- [validation-certification-4]: corrected from 7,208; `find tests -name "test_*.py" | xargs wc -l` = 7,102 total --> | 8,383 | 0.85 |
 
 High test density in both — the SDK is well-specified by tests, which is fortunate given
 the proprietary-server opacity (dependency-disposition §6). Tests are the second-best

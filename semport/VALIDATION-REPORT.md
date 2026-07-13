@@ -1789,3 +1789,327 @@ Streak: RESET to 0/3 (correction in this pass breaks the 1/3 streak)
 behavioral contracts, module LOC counts, channel mechanics, error taxonomies, and test
 citations are accurate. The single gap is a dependency-constraint completeness omission of
 LOW impact on Rust port decisions. Streak resets to 0/3.
+
+---
+
+## Certification Pass 4 — Fresh-Context Validation (2026-07-12)
+
+Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
+`.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-12.
+
+Streak entering this pass: 0/3. Sampling rotated away from all items verified in Certification
+Passes 1, 2, and 3.
+
+**Validation strategy (stratified per brief):**
+(A) Stratum 1 (mandatory first): Exhaustive dep-constraint sweep — EVERY dependency row in
+    all 7 areas' dependency-disposition.md files verified verbatim against pyproject.toml
+    (lower AND upper bounds, extras, markers). This closes the class of error found in
+    cert pass 3 (anthropic `<1.0.0` missing).
+(B) Stratum 2 — behavioral sampling (3 per area × 7 areas): weighted toward
+    configuration/serialization/env-var claims — default values, env-var names, config-key
+    spellings, serialization field names. Never-previously-weighted stratum.
+(C) Stratum 3 — metric verification (2 numeric rows per area): new claims only.
+(D) Stratum 4 — test citations (1 per area × 7): rotated from cert passes 1-3 verified lists.
+
+---
+
+### Certification Pass 4 — Stratum 1: Dependency Constraint Exhaustive Sweep
+
+Methodology: read every dep row in all 7 dependency-disposition.md files; compare each
+version claim verbatim against the corresponding pyproject.toml file using `grep -A N
+'^dependencies'`. A missing upper bound (entire `<X.Y.Z` absent) is a finding. Abbreviated
+`.0` micro versions (e.g. `>=4.1` vs `>=4.1.0`) are equivalent under PEP 440 and are NOT
+findings. Pure-disposition rows with no version claim (e.g., `langchain-core` in the mcp
+table which has no "Version" column) are not findable as constraint errors.
+
+#### core/dependency-disposition.md
+
+Verbatim block at top (lines 13-23) verified against `libs/core/pyproject.toml`:
+
+| Dep | Claimed | Actual | Match |
+|-----|---------|--------|-------|
+| langsmith | `>=0.3.45,<1.0.0` | `>=0.3.45,<1.0.0` | ✓ |
+| tenacity | `!=8.4.0,>=8.1.0,<10.0.0` | `!=8.4.0,>=8.1.0,<10.0.0` | ✓ |
+| jsonpatch | `>=1.33.0,<2.0.0` | `>=1.33.0,<2.0.0` | ✓ |
+| PyYAML | `>=5.3.0,<7.0.0` | `>=5.3.0,<7.0.0` | ✓ |
+| typing-extensions | `>=4.7.0,<5.0.0` | `>=4.7.0,<5.0.0` | ✓ |
+| packaging | `>=23.2.0` | `>=23.2.0` (no upper bound) | ✓ |
+| pydantic | `>=2.7.4,<3.0.0` | `>=2.7.4,<3.0.0` | ✓ |
+| uuid-utils | `>=0.12.0,<1.0` | `>=0.12.0,<1.0` | ✓ |
+| langchain-protocol | `>=0.0.17` | `>=0.0.17` (no upper bound) | ✓ |
+
+**core: CLEAN — 0 dep constraint findings.**
+
+#### graph/dependency-disposition.md
+
+Tables in §1.1–§1.5 verified against `langgraph/pyproject.toml`, `checkpoint/pyproject.toml`,
+`checkpoint-postgres/pyproject.toml`, `checkpoint-sqlite/pyproject.toml`:
+
+| Dep (table claim) | Actual pyproject.toml | Match |
+|-------------------|-----------------------|-------|
+| `langchain-core>=1.4.7,<2` (§1.1) | `>=1.4.7,<2` | ✓ exact |
+| `langgraph-checkpoint>=4.1,<5` (§1.1) | `>=4.1.0,<5.0.0` | ✓ (PEP-440 equiv) |
+| `langgraph-sdk>=0.4.2,<0.5` (§1.1) | `>=0.4.2,<0.5.0` | ✓ (PEP-440 equiv) |
+| `langgraph-prebuilt>=1.1,<1.2` (§1.1) | `>=1.1.0,<1.2.0` | ✓ (PEP-440 equiv) |
+| `xxhash>=3.5` (§1.1) | `>=3.5.0` | ✓ (PEP-440 equiv) |
+| `pydantic>=2.7.4` (§1.1) | `>=2.7.4` (no upper bound) | ✓ |
+| `langchain-core>=0.2.38` (§1.2) | `>=0.2.38` (no upper bound) | ✓ |
+| `ormsgpack>=1.12` (§1.2) | `>=1.12.0` | ✓ (PEP-440 equiv) |
+| §1.3 (postgres): no version columns in table — rows list dep name + role only | N/A | ✓ |
+| `aiosqlite>=0.20` (§1.4) | `>=0.20` (exact) | ✓ |
+| `sqlite-vec>=0.1.6` (§1.4) | `>=0.1.6` (exact) | ✓ |
+
+**graph: CLEAN — 0 dep constraint findings.**
+
+#### langchain/dependency-disposition.md
+
+§1 table verified against `langchain_v1/pyproject.toml`:
+
+| Dep | Claimed | Actual | Match |
+|-----|---------|--------|-------|
+| langchain-core | `>=1.4.9,<2` | `>=1.4.9,<2.0.0` | ✓ (PEP-440 equiv) |
+| langgraph | `>=1.2.5,<1.3` | `>=1.2.5,<1.3.0` | ✓ (PEP-440 equiv) |
+| pydantic | `>=2.7.4,<3` | `>=2.7.4,<3.0.0` | ✓ (PEP-440 equiv) |
+
+**langchain: CLEAN — 0 dep constraint findings.**
+
+#### partners/dependency-disposition.md
+
+Tables in §1 (openai), §2 (anthropic), §3 (ollama) verified against their pyproject.toml files:
+
+| Dep (table claim) | Actual pyproject.toml | Match |
+|-------------------|-----------------------|-------|
+| `openai>=2.45` (§1) | `openai>=2.45.0,<3.0.0` | **FAIL — `<3.0.0` upper bound absent** |
+| `tiktoken>=0.7` (§1) | `tiktoken>=0.7.0,<1.0.0` | **FAIL — `<1.0.0` upper bound absent** |
+| `anthropic>=0.96.0,<1.0.0` (§2) | `anthropic>=0.96.0,<1.0.0` | ✓ (corrected in cert-3) |
+| `pydantic>=2.7.4` (§2) | `pydantic>=2.7.4,<3.0.0` | **FAIL — `<3.0.0` upper bound absent** |
+| `ollama>=0.6.1` (§3) | `ollama>=0.6.1,<1.0.0` | **FAIL — `<1.0.0` upper bound absent** |
+
+**partners: 4 dep constraint findings. All corrected in-place with `[validation-certification-4]`.**
+
+Pattern: the same upper-bound omission error as cert pass 3's anthropic finding. All four
+affected entries are vendor SDK or language-model deps where a `<X.0.0` major-version upper
+bound was present in pyproject.toml but was not captured in the analysis table (only the
+lower bound was stated).
+
+#### splitters/dependency-disposition.md
+
+| Dep | Claimed | Actual | Match |
+|-----|---------|--------|-------|
+| `langchain-core>=1.4.7,<2` (runtime) | `>=1.4.7,<2.0.0` | ✓ (PEP-440 equiv) |
+| `tiktoken (>=0.8,<1)` (optional) | `tiktoken>=0.8.0,<1.0.0` | ✓ (verified cert-3) |
+
+Other optional dep rows (transformers, nltk, spacy) do not claim version constraints in
+their table cells — the versions appear only in the section description text and are not
+verbatim dep rows in the sense of the guardrail.
+
+**splitters: CLEAN — 0 dep constraint findings.**
+
+#### mcp/dependency-disposition.md
+
+| Dep | Claimed | Actual | Match |
+|-----|---------|--------|-------|
+| `mcp (>=1.9.2)` | `>=1.9.2` (no upper bound) | `mcp>=1.9.2` | ✓ |
+| `langchain-core` | no version column in table | `>=1.0.0,<2.0.0` | N/A (no claim made) |
+| `typing-extensions` | no version column in table | `>=4.14.0` | N/A (no claim made) |
+
+**mcp: CLEAN — 0 dep constraint findings.**
+
+#### platform/dependency-disposition.md
+
+§1 SDK runtime deps table verified against `sdk-py/pyproject.toml`:
+
+| Dep | Claimed | Actual | Match |
+|-----|---------|--------|-------|
+| `httpx>=0.25.2` | `>=0.25.2` | `>=0.25.2` | ✓ exact |
+| `orjson>=3.11.5` | `>=3.11.5` | `>=3.11.5` | ✓ exact |
+| `websockets>=14,<17` | `>=14,<17` | `>=14,<17` | ✓ exact |
+| `langchain-protocol>=0.0.15` | `>=0.0.15` | `>=0.0.15` | ✓ exact |
+| `langchain-core>=1.4.0,<2` | `>=1.4.0,<2` | `>=1.4.0,<2` | ✓ exact |
+
+**platform: CLEAN — 0 dep constraint findings.**
+
+---
+
+### Certification Pass 4 — Phase 1: Behavioral Verification
+
+Sampling weighted toward configuration/serialization/env-var claims (a stratum not previously
+weighted in cert passes 1-3). Rotated away from all cert-1/2/3 verified items.
+
+| Area | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| core | 3 | 3 | 0 | 0 | 0 |
+| graph | 3 | 3 | 0 | 0 | 0 |
+| langchain | 2 | 2 | 0 | 0 | 0 |
+| partners | 3 | 2 | 1 | 0 | 0 |
+| splitters | 2 | 2 | 0 | 0 | 0 |
+| mcp | 2 | 2 | 0 | 0 | 0 |
+| platform | 3 | 3 | 0 | 0 | 0 |
+| **TOTAL** | **18** | **17** | **1** | **0** | **0** |
+
+#### Core — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| lc-JSON format: `{"lc":1,"type":"constructor","id":[namespace...,ClassName],"kwargs":{...}}` | `load/serializable.py:279-281`: exact field names `"lc":1,"type":"constructor","id":self.lc_id()` | CONFIRMED |
+| Secret sentinel: `{"lc":1,"type":"secret","id":[secret_id]}` | `load/serializable.py:355-357` | CONFIRMED |
+| Not-implemented sentinel: `{"lc":1,"type":"not_implemented","id":id_}` | `load/serializable.py:381-383` | CONFIRMED |
+
+#### Graph — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `CONFIG_KEY_THREAD_ID = 'thread_id'`, `CONF = 'configurable'` | `langgraph.constants` runtime import | CONFIRMED (`CONF='configurable'`, `CONFIG_KEY_THREAD_ID='thread_id'`) |
+| `NS_SEP = '|'`, `NS_END = ':'` for checkpoint namespace string construction | `langgraph.constants` runtime import | CONFIRMED (`NS_SEP='|'`, `NS_END=':'`) |
+| `CONFIG_KEY_CHECKPOINT_NS = 'checkpoint_ns'`, `CONFIG_KEY_CHECKPOINT_ID = 'checkpoint_id'` | `langgraph.constants` runtime import | CONFIRMED |
+
+#### Langchain — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `OPENAI_API_KEY` env var for OpenAI partner API key | `langchain_openai/chat_models/base.py:652-662`: `secret_from_env("OPENAI_API_KEY")` | CONFIRMED |
+| `ANTHROPIC_API_KEY` env var, `max_retries=2` default for Anthropic partner | `langchain_anthropic/chat_models.py:941`: `max_retries: int = 2`; line 962: `secret_from_env("ANTHROPIC_API_KEY")` | CONFIRMED |
+
+#### Partners — behavioral items verified / corrected
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `standard params timeout=60` — standard test harness passes `timeout=60` in `standard_chat_model_params` | `langchain_tests/unit_tests/chat_models.py:63`: `"timeout": 60` | CONFIRMED |
+| `anthropic (ANTHROPIC_BASE_URL)` as the base_url env var | `langchain_anthropic/chat_models.py:950`: `from_env(["ANTHROPIC_API_URL", "ANTHROPIC_BASE_URL"])` — `ANTHROPIC_API_URL` is the PRIMARY var; `ANTHROPIC_BASE_URL` is the fallback | INACCURATE — corrected below |
+| `OPENAI_API_BASE` and `OPENAI_BASE_URL` both checked for OpenAI base_url override | `langchain_openai/chat_models/base.py:709-710`: confirmed both env vars in docstring; line 1215: runtime `os.getenv("OPENAI_API_BASE")` | CONFIRMED |
+
+#### Splitters — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `strip_whitespace: bool = True` default | `base.py:69`: `strip_whitespace: bool = True` | CONFIRMED |
+| `chunk_size: int = 4000` default | `base.py:64`: `chunk_size: int = 4000` | CONFIRMED |
+
+#### MCP — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| `ToolCallInterceptor` Protocol `(request, handler) -> result`; onion composition (first=outermost) | `interceptors.py:112-117,127-128`: Protocol signature confirmed; "first is outermost" confirmed | CONFIRMED |
+| `MCPToolCallRequest` is a dataclass | `interceptors.py:52`: `class MCPToolCallRequest:` (dataclass via attrs/dataclass) | CONFIRMED |
+
+#### Platform — behavioral items verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| API key resolution precedence: `LANGGRAPH_API_KEY` → `LANGSMITH_API_KEY` → `LANGCHAIN_API_KEY` | `_async/client.py:52-54`: exact order confirmed in docstring | CONFIRMED |
+| `_quote_path_param` defends against dot-segment path traversal (`.` and `..`) | `_shared/utilities.py:201-225`: "Standalone dot-segments (`.` and `..`) are also" escaped | CONFIRMED |
+| `test_init_from_env` cited in partners behavioral-intent exists in standard-tests unit tests | `langchain_tests/unit_tests/chat_models.py:945`, `tools.py:85`, `embeddings.py:116` | CONFIRMED |
+
+---
+
+### Certification Pass 4 — Phase 2: Metric Verification
+
+| Claim | Claimed | Recounted | Delta | Command |
+|-------|---------|-----------|-------|---------|
+| graph `test_large_cases.py` LOC | 6,986 | 6,986 | 0 | `wc -l test_large_cases.py` |
+| graph `test_time_travel.py` LOC | 3,966 | 3,966 | 0 | `wc -l test_time_travel.py` |
+| graph `test_retry.py` LOC | 2,943 | 2,943 | 0 | `wc -l test_retry.py` |
+| graph `test_runtime.py` LOC | 1,220 | 1,220 | 0 | `wc -l test_runtime.py` |
+| core `runnables/base.py` LOC | 6,713 | 6,713 | 0 | `wc -l runnables/base.py` |
+| partners openai `_client_utils.py` LOC | 683 | 683 | 0 | `wc -l chat_models/_client_utils.py` |
+| mcp `test_client.py` LOC | 353 | 353 | 0 | `wc -l tests/test_client.py` |
+| platform sdk-py test files | 57 | 57 | 0 | (re-confirmed) |
+| platform CLI test files | 11 | 11 | 0 | `find tests -name "test_*.py" \| wc -l` |
+| **platform CLI test LOC** | **7,208** | **7,102** | **-106** | `find tests -name "test_*.py" \| xargs wc -l \| tail -1` |
+| langchain `agents/` file count | 24 | 24 | 0 | `find langchain/agents -name "*.py" \| wc -l` |
+
+---
+
+### Certification Pass 4 — Test Citations (7 verified)
+
+| Area | Citation | Verified |
+|------|----------|---------|
+| core | lc-JSON serializable format key names (`"lc"`, `"type"`, `"id"`, `"kwargs"`) — load/serializable.py:279-383 | ✓ |
+| graph | `test_large_cases.py` LOC=6,986 | ✓ |
+| langchain | `OPENAI_API_KEY` env var from `secret_from_env` at `chat_models/base.py:652` | ✓ |
+| partners | `test_init_from_env` exists in `langchain_tests/unit_tests/chat_models.py:945` | ✓ |
+| splitters | `test_character_text_splitter_long` at `test_text_splitters.py:211` | ✓ |
+| mcp | `test_stdio_session_expands_env_vars` at `tests/test_client.py:46` | ✓ |
+| platform | `test_path_encoding.py` exists in `sdk-py/tests/` (448 LOC) | ✓ |
+
+---
+
+### Certification Pass 4 — Inaccurate Items (Corrected)
+
+| Item | Original Claim | Actual Value | Severity | Correction Applied |
+|------|---------------|--------------|----------|--------------------|
+| `partners/dependency-disposition.md §1` openai SDK dep | `` `openai>=2.45` (SDK) `` | `openai>=2.45.0,<3.0.0` — `<3.0.0` upper bound missing | LOW | Updated to `` `openai>=2.45.0,<3.0.0` (SDK) `` with `[validation-certification-4]` marker |
+| `partners/dependency-disposition.md §1` tiktoken dep | `` `tiktoken>=0.7` `` | `tiktoken>=0.7.0,<1.0.0` — `<1.0.0` upper bound missing | LOW | Updated to `` `tiktoken>=0.7.0,<1.0.0` `` with `[validation-certification-4]` marker |
+| `partners/dependency-disposition.md §2` anthropic/pydantic dep | `` `pydantic>=2.7.4` `` | `pydantic>=2.7.4,<3.0.0` — `<3.0.0` upper bound missing | LOW | Updated to `` `pydantic>=2.7.4,<3.0.0` `` with `[validation-certification-4]` marker |
+| `partners/dependency-disposition.md §3` ollama SDK dep | `` `ollama>=0.6.1` (SDK) `` | `ollama>=0.6.1,<1.0.0` — `<1.0.0` upper bound missing | LOW | Updated to `` `ollama>=0.6.1,<1.0.0` (SDK) `` with `[validation-certification-4]` marker |
+| `partners/behavioral-intent.md` §4 shared behaviors table | `anthropic (ANTHROPIC_BASE_URL)` | `ANTHROPIC_API_URL` is the primary env var (tried first); `ANTHROPIC_BASE_URL` is the fallback. Source: `langchain_anthropic/chat_models.py:950: from_env(["ANTHROPIC_API_URL","ANTHROPIC_BASE_URL"])` | LOW | Updated to `anthropic (ANTHROPIC_API_URL primary, ANTHROPIC_BASE_URL fallback)` with `[validation-certification-4]` marker |
+| `platform/test-inventory.md §1` scale table | CLI test LOC `7,208` | 7,102 — `find tests -name "test_*.py" \| xargs wc -l \| tail -1 = 7,102` | LOW | Updated to `7,102` with `[validation-certification-4]` marker |
+
+**Root cause of dep-constraint findings 1-4:** The same pattern as cert pass 3's anthropic finding.
+The partners dep table entries for openai/tiktoken/pydantic/ollama deps captured only the lower
+bound, omitting the `<X.0.0` upper bounds present in each partner's `pyproject.toml`. The
+anthropic SDK dep (corrected in cert pass 3) was not the only instance — it was the first found.
+
+---
+
+### Certification Pass 4 — Hallucinated Items
+
+None. Every env var name, config key, test function, file LOC, and version constraint verified
+against source. Zero hallucinations across all sampled strata.
+
+---
+
+### Certification Pass 4 — Unverifiable Items
+
+Same standing set (Ollama DTU endpoint catalog beyond what is in-source, rmcp 2.2.0 feature
+details, partner own-test LOC). No new unverifiable items.
+
+---
+
+### Certification Pass 4 — Per-Area Verdicts
+
+| Area | Verdict | Pass-Cert-4 Corrections |
+|------|---------|------------------------|
+| core | PASS — lc-JSON field names confirmed; no dep constraint issues | 0 |
+| graph | PASS — config key strings confirmed; dep constraints all have both bounds | 0 |
+| langchain | PASS — env vars confirmed; dep bounds all present (abbreviated forms only) | 0 |
+| partners | FAIL (LOW ×5) — 4 missing dep upper bounds + 1 missing primary env var; all corrected | 5 |
+| splitters | PASS — chunk_size/strip_whitespace defaults confirmed; dep constraint clean | 0 |
+| mcp | PASS — ToolCallInterceptor Protocol confirmed; dep constraints clean | 0 |
+| platform | FAIL (LOW ×1) — CLI test LOC 7,208→7,102 corrected | 1 |
+
+---
+
+### Certification Pass 4 — CLEAN Status
+
+```
+CLEAN (strict): no — 6 corrections, all LOW severity
+  - LOW ×4: partners/dependency-disposition.md — openai, tiktoken, pydantic (anthropic), ollama
+             upper bounds absent (same root cause: partner dep table captured only lower bounds)
+  - LOW ×1: partners/behavioral-intent.md — ANTHROPIC_API_URL primary env var omitted from
+             base_url override table entry
+  - LOW ×1: platform/test-inventory.md — CLI test LOC 7,208 vs actual 7,102 (delta -106)
+CLEAN (PR-merge): yes — zero CRIT/HIGH/MED findings
+Streak: 0/3 (not advanced; 6 LOW corrections found in this pass)
+```
+
+**Most consequential finding:** The four missing upper bounds in `partners/dependency-disposition.md`
+complete the sweep started by cert pass 3. The anthropic SDK `<1.0.0` bound was the first found;
+this pass finds the remaining four: openai `<3.0.0`, tiktoken `<1.0.0`, anthropic pydantic
+`<3.0.0`, ollama `<1.0.0`. A Phase 1 architect reading the dep table without these bounds would
+not know that the reference corpus pins to `<major`, which matters for semver-stability assessment
+of the port's dependency graph. All five partner SDK deps (openai, tiktoken, anthropic SDK,
+pydantic, ollama) now show their complete constraint expression.
+
+**Second most consequential finding:** The `ANTHROPIC_API_URL` omission in the base_url override
+table. `ANTHROPIC_API_URL` is documented as the primary env var in the langchain-anthropic
+docstring (`ANTHROPIC_API_URL and if that is not set, ANTHROPIC_BASE_URL`). A Rust port
+implementer reading only `ANTHROPIC_BASE_URL` in the analysis would not implement the primary
+env var check, silently ignoring the documented primary mechanism.
+
+**Note on dep-constraint sweep completeness:** The exhaustive sweep of all 7 dep-disposition
+files found the issue class confined to the partners area (all 4 new findings + 1 prior cert-3
+finding). The core/graph/langchain/splitters/mcp/platform dep tables are clean. The pattern is
+specific to partner package pyproject.toml files which uniformly pin `<major.0.0` upper bounds
+on vendor SDKs — a constraint not present in the core/graph/platform packages (which use looser
+lower-bound-only pins for their own sub-packages or no upper bound at all).
