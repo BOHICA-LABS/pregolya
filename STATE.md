@@ -4,14 +4,14 @@ level: ops
 version: "2.1"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-13T23:30:00Z
+timestamp: 2026-07-13T23:45:00Z
 phase: pre-1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "comparative certification cascade — C21 CLEAN, streak 1/3; C22 ready to dispatch"
+current_step: "comparative certification cascade — C22 CLEAN, streak 2/3; C23 ready to dispatch (gate-closing attempt)"
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -44,9 +44,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-13 — burst 64: C21 COMPLETE. CLEAN(strict)=YES. ZERO corrections. C20-01 landing CONFIRMED; C20 defect-class sweep (count-methodology consistency, A1/A2/A4 tables) CLEAN. Rotation 10/10 CONFIRMED. Metrics 8/8 Delta=0. Novel probe: dep-disp A2 internal claims 3/3 CONFIRMED. Streak 0/3 → 1/3. |
+| **Last Updated** | 2026-07-13 — burst 65: C22 COMPLETE. CLEAN(strict)=YES. ZERO corrections. C21 sibling check 3/3 CONFIRMED (P-18, P-75, P-16 resolution); dep-disp A2 continuation 4/4 CONFIRMED. Rotation 10/10 CONFIRMED. Metrics 8/8 Delta=0. Novel probe: dep-disp A4 dependency versions 6/6 exact. Streak 1/3 → 2/3. |
 | **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | comparative certification cascade — C21 CLEAN, streak 1/3; C22 ready to dispatch |
+| **Current Step** | comparative certification cascade — C22 CLEAN, streak 2/3; C23 ready to dispatch (gate-closing attempt) |
 
 ## Phase Progress
 
@@ -67,8 +67,8 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
+| adk-rust certification pass C22 (strict-zero, C21 sibling check + dep-disp continuation) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C21 sibling check 3/3 CONFIRMED (P-18, P-75, P-16 resolution); dep-disp A2 continuation 4/4 CONFIRMED. Rotation 10/10 CONFIRMED (sqlite rewind, has_intersection, RecursionLimitExceeded, rewind impl coverage, pending_nodes restore, SequentialAgent=LoopAgent(1), DEFAULT_LOOP_MAX_ITERATIONS=1000, /health route, memory search scoping, provider crate versions). Metrics 8/8 Delta=0. Novel probe: dep-disp A4 dependency versions vs Cargo.toml — 6/6 exact (wasmtime 45, wasmtime-wasi 44, bollard 0.18, serde_yaml 0.9, statrs 0.18, quick-xml 0.37). Streak 1/3 → 2/3. Burst 65. |
 | adk-rust certification pass C21 (strict-zero, C20 defect-class sweep opener) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C20-01 landing CONFIRMED; C20 defect-class sweep (count-methodology consistency, A1/A2/A4 tables) CLEAN. Rotation 10/10 CONFIRMED (P-02, P-18, P-53, P-64, P-74, P-75, P-82, P-97, P-16 resolution, dep-disp A4 windows-sys). Metrics 8/8 Delta=0. Novel probe: dependency-disposition A2 internal claims vs source — 3/3 CONFIRMED (checkpoint SQL schema, similar crate char-diff, Uuid::new_v4). Streak 0/3 → 1/3. Burst 64. |
-| Session wrap (burst 60) | state-manager | COMPLETE | Durability snapshot written. C17 artifacts committed. verify-sha-currency.sh created. RESUME snapshot in STATE.md. factory-artifacts pushed. |
 | adk-rust certification pass C18 (strict-zero, C17 sibling check opener + rotation) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C17 sibling check: all 3 verbatim-expansion corrections confirmed landed; corpus-wide `_`-prefix sweep clean (2 pre-existing exemptions only). Rotation 10/10 CONFIRMED (P-25, P-28, P-43, P-56, P-61, P-63, P-70, P-73, A3 §17, P-79). Metrics 8/8 Delta=0. Novel probe: test-inventory A1 integration LOC — 9/9 Delta=0; integration LOC class CLOSED (14/14 across C5+C12+C18). Streak 0/3 → 1/3. Burst 61. |
 | adk-rust certification pass C19 (strict-zero, C18 sibling check + LOC cross-doc probe) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C18 sibling check: 3/3 spot-re-verifications CONFIRMED (P-56, P-73, A3 §17); LOC region probe 6/6 cross-doc consistent. Rotation 10/10 CONFIRMED (P-11, P-39, P-40, P-48, P-49, P-60, P-65, P-66, P-87, P-95). Metrics 8/8 Delta=0. Novel probe: test-inventory↔module-inventory scc Code LOC cross-document consistency — 6/6 identical (scc figures remain UNVERIFIABLE-without-tool per C1 precedent). Streak 1/3 → 2/3. Burst 62. |
 | adk-rust certification pass C20 (strict-zero, gate-closing attempt, A5 per-crate recount probe) | validate-extraction | COMPLETE | CLEAN(strict)=NO. 1 MEDIUM correction (C20-01): test-inventory A5 adk-mistralrs ~264→~282 — prior sweep correction had excluded proptest! for this crate only (methodology inconsistency; recount 245 #[test] + 19 #[tokio::test] + 18 proptest! = 282). C19 sibling check 4/4 CLEAN; cross-doc A5 probe CONSISTENT. Rotation 10/10 CONFIRMED. Metrics 8/8 Delta=0. Novel probe: A5 per-crate recount 10/11 exact. Streak RESET 2/3 → 0/3. Burst 63. |
@@ -130,8 +130,8 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 |--------|-------|
 | Adversary passes completed | 0 |
 | Fix bursts completed | 0 |
-| Convergence counter | 1 of 3 |
-| Finding trajectory | trajectory-tail →1→1→0→0→1→2→0→1→1→0→0→1→0 (C21: CLEAN; streak 1/3) |
+| Convergence counter | 2 of 3 |
+| Finding trajectory | trajectory-tail →1→1→0→0→1→2→0→1→1→0→0→1→0→0 (C22: CLEAN; streak 2/3) |
 
 ## Session Resume Checkpoint
 
@@ -139,22 +139,22 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ### RESUME IN ONE BREATH
 
-ferrochain pre-pipeline. Corpus 1 (LangChain semport, 7 areas) CONVERGED — extraction gate closed 3/3 strict-zero. Corpus 5 (adk-rust comparative, 97 patterns) analysis CONVERGED (A1-A7); strict-zero certification cascade in progress, streak 1/3 after pass C21 (C21 CLEAN(strict)=YES: C20-01 landing CONFIRMED; C20 defect-class sweep CLEAN; rotation 10/10; novel probe dep-disp A2 3/3 CONFIRMED). NEXT ACTION: dispatch comparative certification pass C22 — fresh-context validate-extraction, all 12 guardrails + judgment precedents, per D15 autonomous loop — opener = C21 sibling check (spot-re-verify ≥3 of C21 rotation set + same-class probe on dependency-disposition internal claims), rotation from never-verified pools.
+ferrochain pre-pipeline. Corpus 1 (LangChain semport, 7 areas) CONVERGED — extraction gate closed 3/3 strict-zero. Corpus 5 (adk-rust comparative, 97 patterns) analysis CONVERGED (A1-A7); strict-zero certification cascade in progress, streak 2/3 after pass C22 (C22 CLEAN(strict)=YES: C21 sibling check 3/3 CONFIRMED (P-18, P-75, P-16 resolution); dep-disp A2 continuation 4/4 CONFIRMED; rotation 10/10; novel probe dep-disp A4 dependency versions 6/6 exact). NEXT ACTION: dispatch comparative certification pass C23 (GATE-CLOSING ATTEMPT) — fresh-context validate-extraction, all 12 guardrails + judgment precedents, per D15 autonomous loop — opener = C22 sibling check (spot-re-verify ≥3 of C22 rotation set + same-class probe on dep-disp A4), rotation from never-verified pools.
 
 ### HEADS
 
 | Repo | Branch | SHA | Pushed | Notes |
 |------|--------|-----|--------|-------|
-| factory-artifacts | factory-artifacts | (burst 64 commit — run `git -C .factory log -1 --format='%h'`) | YES — BOHICA-LABS/ferrochain | Durable artifact backup |
+| factory-artifacts | factory-artifacts | (burst 65 commit — run `git -C .factory log -1 --format='%h'`) | YES — BOHICA-LABS/ferrochain | Durable artifact backup |
 | main | main | ZERO COMMITS | LOCAL-ONLY | Untracked on disk: CLAUDE.md (553-line constitution + D12 file-size rule), .gitignore, .envrc, .mcp.json — BACKUP BOUNDARY: these exist only on this machine; CLAUDE.md commit to main is scheduled at workspace-init per D10 |
 
 No worktrees. No PRs. Reference clones (.reference/: langchain@langchain==1.3.13, langgraph@1.2.9, langchain-community@libs/community/v0.4.2, langchain-mcp-adapters@0.3.0, adk-rust@v1.0.0) are gitignored local clones — reproducible from the pinned manifest, not backed up by design.
 
 ### WORKSTREAM
 
-**Single workstream: comparative certification cascade.** Frozen state: C1-C21 complete, ~365-identifier class closed + integration LOC class closed (14/14) + scc Code LOC cross-doc started (6/6 C19; A5 cross-doc probe CONSISTENT C20; dep-disp A2 3/3 C21), streak history C8✓/C11✓/C12✓/C15✓/C18✓/C19✓/C21✓, current streak 1/3 (C20 reset, C21 clean), named residue classes: dep-disp A2 internal-claims class open for C22 probing.
+**Single workstream: comparative certification cascade.** Frozen state: C1-C22 complete, ~365-identifier class closed + integration LOC class closed (14/14) + scc Code LOC cross-doc started (6/6 C19; A5 cross-doc probe CONSISTENT C20; dep-disp A2 3/3 C21 + 4/4 C22 continuation) + dep-disp A4 dependency versions class open (6/6 C22 novel probe), streak history C8✓/C11✓/C12✓/C15✓/C18✓/C19✓/C21✓/C22✓, current streak 2/3 (C20 reset, C21+C22 clean), gate-closing attempt C23 ready.
 
-**RESUME NEXT-ACTION (verbatim):** Dispatch validate-extraction: COMPARATIVE-CORPUS 3-CLEAN CERTIFICATION — PASS C22, fresh context, streak 1/3, all 12 guardrails, judgment precedents (docstring ±1-2, standing tilde rulings ~35/34 ~800/822 ~60/82, 4 a2a-v1 UNVERIFIABLE-without-runtime, scc-vs-wc UNVERIFIABLE, identifier exemptions), rotation from never-verified pools per CERTIFICATION-REPORT.md verified lists, opener = C21 sibling check (spot-re-verify ≥3 of C21 rotation set: P-02, P-18, P-53, P-64, P-74, P-75, P-82, P-97; same-class probe on dependency-disposition internal claims — dep-disp A2 internal claims vs source for ≥3 additional crates).
+**RESUME NEXT-ACTION (verbatim):** Dispatch validate-extraction: COMPARATIVE-CORPUS 3-CLEAN CERTIFICATION — PASS C23 (GATE-CLOSING ATTEMPT), fresh context, streak 2/3, all 12 guardrails, judgment precedents (docstring ±1-2, standing tilde rulings ~35/34 ~800/822 ~60/82, 4 a2a-v1 UNVERIFIABLE-without-runtime, scc-vs-wc UNVERIFIABLE, identifier exemptions), rotation from never-verified pools per CERTIFICATION-REPORT.md verified lists, opener = C22 sibling check (spot-re-verify ≥3 of C22 rotation set: sqlite rewind, has_intersection, RecursionLimitExceeded, rewind impl coverage, pending_nodes restore, SequentialAgent=LoopAgent(1), DEFAULT_LOOP_MAX_ITERATIONS=1000, /health route, memory search scoping, provider crate versions; same-class probe on dep-disp A4 — probe different crates or different deps in same crates beyond C22 six).
 
 ### PENDING HUMAN ACTIONS (open)
 
@@ -178,8 +178,8 @@ Holdout domains A/B/C briefs at planning/holdout-domains/. Phase-4 carry-forward
 |-------|-------|
 | **Date** | 2026-07-13 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Burst commit** | (burst 64 — run `git -C .factory log -1 --format='%h %s'`) |
-| **Convergence counter** | 1 of 3 |
+| **Burst commit** | (burst 65 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Convergence counter** | 2 of 3 |
 
 ## Historical Content
 

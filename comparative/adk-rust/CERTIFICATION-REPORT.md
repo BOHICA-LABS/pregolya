@@ -4051,3 +4051,229 @@ Rotation:          10/10 behavioral claims CONFIRMED (P-02, P-18, P-53, P-64, P-
                    P-82, P-97, P-16-resolution, dep-disp-A4); 0 inaccurate; 0 hallucinated
 Streak:            1/3 (C20 reset → 0/3; C21 CLEAN → 1/3)
 ```
+
+---
+
+# Pass C22
+
+```yaml
+pass: C22
+corpus: adk-rust v1.0.0 (SHA a6c79b6f)
+reference: .reference/adk-rust (read-only)
+protocol: BC-5.39.001 (3-CLEAN convergence); D14 (absolute strict-zero); D15; D16 (Rust-blindness)
+streak_in: 1/3
+date: 2026-07-13
+focus: C21 sibling check (3/3 re-verified: P-18, P-75, P-16-resolution; dep-disp A2 additional
+       probe: rand::rng().fill_bytes, base64 encoding, Utc::now, serde_json::to_string);
+       all-twelve guardrails rotation (never-verified pools: sqlite rewind semantics, keyword
+       intersection memory, GraphError::RecursionLimitExceeded, rewind-backend coverage,
+       search project_id routing, try_resume_from_checkpoint, SequentialAgent delegation,
+       DEFAULT_LOOP_MAX_ITERATIONS, /health endpoint, dep-disp A5 versions);
+       novel probe: dependency-disposition.md A4 exact dep versions vs Cargo.toml files
+       (never probed in C1-C21)
+```
+
+## CLEAN Status
+
+```
+CLEAN (strict):    YES — zero corrections applied
+CLEAN (PR-merge):  YES
+New corrections:   0
+Streak position:   2/3 (C21 CLEAN → 1/3; C22 CLEAN → 2/3)
+```
+
+---
+
+## Opener — C21 Sibling Check
+
+### C21 Rotation Re-Verification (3/3 sampled)
+
+| C21 Item | Claim | Re-Verify Result |
+|----------|-------|-----------------|
+| P-18 | `anyhow = "1.0"` at root Cargo.toml `[workspace.dependencies]`:130 | CONFIRMED — `anyhow = "1.0"` at line 130 |
+| P-75 | `#[tool]` macro uses `schemars::schema_for!(#args_ty)` at adk-rust-macros/src/lib.rs:143 | CONFIRMED — line 143: `schemars::schema_for!(#args_ty)` exact match |
+| P-16 resolution | adk-anthropic/Cargo.toml has zero adk-* framework dependencies | CONFIRMED — grep for `adk-` returns only name and docs URL; zero dependency entries |
+
+### C21 Novel Probe Continuation — dep-disp A2 Additional Claims
+
+C21's novel probe confirmed 3 A2 internal claims (graph checkpoint SQL schema, `similar` crate, Uuid::new_v4). This pass probes 4 additional never-verified A2 internal claims:
+
+| Claim | Source | Verification | Result |
+|-------|--------|--------------|--------|
+| `rand::rng().fill_bytes(&mut nonce_bytes)` for 96-bit (12-byte) nonce generation in AES-256-GCM encryption | dependency-disposition.md A2 (encrypted.rs) | `.reference/adk-rust/adk-session/src/encrypted.rs:148,150` | CONFIRMED — line 148: `let mut nonce_bytes = [0u8; 12]`; line 150: `rand::rng().fill_bytes(&mut nonce_bytes)` in `encrypt_bytes` function |
+| `base64` STANDARD engine encodes `[nonce ‖ ciphertext]` as envelope string for state storage | dependency-disposition.md A2 (encrypted.rs) | `.reference/adk-rust/adk-session/src/encrypted.rs:11-13,74` | CONFIRMED — module doc line 11: "random 96-bit nonce, and stored as a base64 string"; line 13: `[12-byte nonce][ciphertext]`; line 74: `base64::engine::general_purpose::STANDARD.encode(&encrypted)` |
+| `chrono::Utc::now()` drives `created_at` field when constructing a new graph checkpoint | dependency-disposition.md A2 (state.rs) | `.reference/adk-rust/adk-graph/src/state.rs:236` | CONFIRMED — line 236: `created_at: chrono::Utc::now()` in checkpoint constructor |
+| `serde_json::to_string` serializes the whole state map, pending_nodes, and metadata for checkpoint storage | dependency-disposition.md A2 (checkpoint.rs) | `.reference/adk-rust/adk-graph/src/checkpoint.rs:140-142` | CONFIRMED — lines 140-142: `let state_json = serde_json::to_string(&checkpoint.state)?; let pending_json = serde_json::to_string(&checkpoint.pending_nodes)?; let metadata_json = serde_json::to_string(&checkpoint.metadata)?;` |
+
+**dep-disp A2 continuation verdict: 4/4 CONFIRMED. A2 internal claims remain accurate.**
+
+---
+
+## Phase 1 — Behavioral Verification (All-Twelve Guardrails Rotation)
+
+10 claims selected from never-verified pools (absent from all SWEEP and C1–C21 verified lists).
+
+| # | Source | Claim | Verified Against | Result |
+|---|--------|-------|-----------------|--------|
+| B-01 | behavioral-intent.md §8.2 (sqlite rewind) | sqlite `rewind` time-travel: deletes events with `timestamp > target_timestamp`, THEN deletes same-timestamp events with `id != target_event_id`, then rebuilds state from remaining events `ORDER BY timestamp` | `.reference/adk-rust/adk-session/src/sqlite.rs:805-870` | CONFIRMED — `DELETE FROM events ... AND timestamp > ?` followed by `DELETE FROM events ... AND timestamp = ? AND id != ?`; then `SELECT * FROM events ... ORDER BY timestamp` for state rebuild |
+| B-02 | behavioral-intent.md §9 (Memory model) | Default in-memory memory search uses `has_intersection(words, query_words)` — shared-word keyword test; any overlap passes | `.reference/adk-rust/adk-memory/src/inmemory.rs:31,159,193,244` | CONFIRMED — `fn has_intersection(set1: &HashSet<String>, set2: &HashSet<String>) -> bool { ... set1.iter().any(\|word\| set2.contains(word)) }` at line 31; used as primary relevance filter at lines 159, 193, 244 |
+| B-03 | behavioral-intent.md §7.4 (halting) | Exact error variant: `GraphError::RecursionLimitExceeded(self.step)` — step count payload included | `.reference/adk-rust/adk-graph/src/executor.rs:124,203` | CONFIRMED — line 124: `return Err(GraphError::RecursionLimitExceeded(self.step))` (non-streaming path); line 203: `yield Err(GraphError::RecursionLimitExceeded(self.step))` (streaming path) |
+| B-04 | behavioral-intent.md §8.2 (rewind backend coverage) | Only `inmemory` + `sqlite` implement `rewind`; postgres, redis, mongodb, neo4j, firestore, vertex, and encrypted fall to the default `AdkError::session("rewind not supported by this backend")` | `.reference/adk-rust/adk-session/src/service.rs:303-320`; `inmemory.rs:363`; `sqlite.rs:805`; postgres/redis/mongodb/neo4j/firestore/vertex/encrypted.rs | CONFIRMED — service.rs default at lines 303-320 returns error; inmemory.rs and sqlite.rs each override; all 7 others confirmed to have no `async fn rewind` override |
+| B-05 | behavioral-intent.md §7.5 (replay-on-resume) | `try_resume_from_checkpoint` (executor.rs:77) loads latest checkpoint and restores `self.pending_nodes` + `self.step` | `.reference/adk-rust/adk-graph/src/executor.rs:77,95` | CONFIRMED — `async fn try_resume_from_checkpoint(&mut self, input: &State) -> Result<bool>` at line 77; `self.pending_nodes = checkpoint.pending_nodes` at line 95 |
+| B-06 | behavioral-intent.md §4 (workflow agents) | `SequentialAgent` is implemented as `LoopAgent::new(name, sub_agents).with_max_iterations(1)` — a loop with max_iterations forced to 1 | `.reference/adk-rust/adk-agent/src/workflow/sequential_agent.rs:18` | CONFIRMED — line 18: `Self { loop_agent: LoopAgent::new(name, sub_agents).with_max_iterations(1) }` |
+| B-07 | behavioral-intent.md §4 (workflow agents) | `DEFAULT_LOOP_MAX_ITERATIONS = 1000` — LoopAgent default iteration ceiling | `.reference/adk-rust/adk-agent/src/workflow/loop_agent.rs:15` | CONFIRMED — line 15: `pub const DEFAULT_LOOP_MAX_ITERATIONS: u32 = 1000;` |
+| B-08 | behavioral-intent.md A3 (server) | adk-server exposes `GET /health` endpoint at `rest/mod.rs:343,655` backed by `health_check` async fn | `.reference/adk-rust/adk-server/src/rest/mod.rs:188,343,655` | CONFIRMED — `async fn health_check` at line 188; `Router::new().route("/health", get(health_check))` at lines 343 and 655 |
+| B-09 | behavioral-intent.md §9 (Memory search routing) | `search(project_id=None)` → global entries only (`stored.project_id.is_none()`); `search(project_id=Some(pid))` → global union matching project (`stored.project_id.is_none() \|\| stored.project_id.as_deref() == Some(pid)`) | `.reference/adk-rust/adk-memory/src/inmemory.rs:247-263` | CONFIRMED — `None =>` branch checks `stored.project_id.is_none()`; `Some(pid) =>` branch checks `stored.project_id.is_none() \|\| stored.project_id.as_deref() == Some(pid.as_str())` |
+| B-10 | dependency-disposition.md A5 | `ollama-rs = "0.3.4"` in adk-model; `async-openai = "0.33"` in adk-model; `mistralrs = "0.8"` in adk-mistralrs | `.reference/adk-rust/adk-model/Cargo.toml:25,34`; `adk-mistralrs/Cargo.toml:44` | CONFIRMED — adk-model line 25: `async-openai = { version = "0.33", ... }`; line 34: `ollama-rs = { version = "0.3.4", ... }`; adk-mistralrs line 44: `mistralrs = "0.8"` |
+
+**0 INACCURATE. 0 HALLUCINATED. 0 UNVERIFIABLE (beyond pre-existing runtime-only items).**
+
+| Pool | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| behavioral-intent.md §§7.4/7.5/8.2/9/4; dependency-disp A5 | 10 | 10 | 0 | 0 | 0 |
+
+**Total: 10 claims checked, 10 confirmed, 0 inaccurate, 0 hallucinated, 0 unverifiable**
+
+---
+
+## Phase 2 — Metric Verification (Standing Metrics Delta Check)
+
+Independent recount of all 8 standing metrics. Exact canonical commands from prior passes used.
+
+| Claim | Source | Claimed | Recounted | Delta | Command |
+|-------|--------|---------|-----------|-------|---------|
+| Workspace test attrs | ANALYSIS-STATE.md A6 census | 4,803 | 4,803 | 0 | `find adk-* -name "*.rs" \| xargs grep -cE '#\[(test\|tokio::test)\]' \| grep -v ':0' \| awk -F: '{sum+=$NF} END{print sum}'` |
+| `#[ignore]` attrs (all forms) | ANALYSIS-STATE.md A6 census | 126 | 126 | 0 | `grep -rE '#\[ignore' --include="*.rs" . \| wc -l` |
+| `proptest!` invocations | ANALYSIS-STATE.md A6 census | 150 | 150 | 0 | `find adk-* -name "*.rs" \| xargs grep -cE 'proptest!' \| grep -v ':0' \| awk -F: '{sum+=$NF} END{print sum}'` |
+| reqwest::Client::new() sites (adk-server+adk-auth src) | patterns-observed.md P-42/P-77 | 8 | 8 | 0 | `grep -rn "reqwest::Client::new()" adk-server/src/ adk-auth/src/ \| wc -l` |
+| .timeout() hits (adk-server+adk-auth src) | patterns-observed.md P-42/P-77 | 0 | 0 | 0 | `grep -rn "\.timeout(" adk-server/src/ adk-auth/src/ \| wc -l` |
+| adk-graph test attrs | test-inventory.md A2 / behavioral-intent.md A2 | 262 | 262 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-graph/ --include="*.rs" \| wc -l` |
+| adk-model test attrs | test-inventory.md A1 | 505 | 505 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-model/ --include="*.rs" \| wc -l` |
+| adk-core test attrs | test-inventory.md A1 | 339 | 339 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-core/ --include="*.rs" \| wc -l` |
+
+**All 8 standing metrics: Delta = 0 (pass). No drift detected.**
+
+---
+
+## Novel Probe (C22 choice): dependency-disposition.md A4 Exact Dep Versions vs Cargo.toml Files
+
+**Probe rationale:** No prior pass (C1–C21) verified the dependency-disposition.md A4 claimed version strings (wasmtime, bollard, serde_yaml, statrs, quick-xml) against actual Cargo.toml files. C21's novel probe covered A2 structural/behavioral claims. A4's version strings have never been independently confirmed against source.
+
+**Six A4 version claims verified:**
+
+| Claim | Source | Verification | Result |
+|-------|--------|--------------|--------|
+| `wasmtime = { version = "45", optional = true }` in adk-sandbox | dependency-disposition.md A4 | `.reference/adk-rust/adk-sandbox/Cargo.toml:27` | CONFIRMED — line 27: `wasmtime = { version = "45", optional = true }` |
+| `wasmtime-wasi = { version = "44", optional = true }` in adk-sandbox | dependency-disposition.md A4 | `.reference/adk-rust/adk-sandbox/Cargo.toml:28` | CONFIRMED — line 28: `wasmtime-wasi = { version = "44", optional = true }` |
+| `bollard = { version = "0.18", optional = true }` in adk-sandbox | dependency-disposition.md A4 | `.reference/adk-rust/adk-sandbox/Cargo.toml:32` | CONFIRMED — line 32: `bollard = { version = "0.18", optional = true }` |
+| `serde_yaml = "0.9"` in adk-skill | dependency-disposition.md A4 | `.reference/adk-rust/adk-skill/Cargo.toml:21` | CONFIRMED — line 21: `serde_yaml = "0.9"` |
+| `statrs = { version = "0.18", optional = true }` in adk-eval | dependency-disposition.md A4 | `.reference/adk-rust/adk-eval/Cargo.toml:31` | CONFIRMED — line 31: `statrs = { version = "0.18", optional = true }` |
+| `quick-xml = { version = "0.37", optional = true }` in adk-eval | dependency-disposition.md A4 | `.reference/adk-rust/adk-eval/Cargo.toml:30` | CONFIRMED — line 30: `quick-xml = { version = "0.37", optional = true }` |
+
+**Novel probe verdict: ALL 6 CONFIRMED. Zero discrepancies. dependency-disposition.md A4 version strings are accurate.**
+
+---
+
+## Refinement Iterations: 1/3
+
+Single iteration sufficient. Zero inaccuracies found; no corrections required. All 10 rotation claims confirmed on first pass. All 8 standing metrics Delta=0. Novel probe 6/6 confirmed.
+
+---
+
+## New Corrections Applied in This Pass
+
+None.
+
+---
+
+## UNVERIFIABLE Items (4 a2a-v1 Phase-4 obligations, carried from C2–C21)
+
+Same four items — unchanged; no new UNVERIFIABLE items added.
+
+1. Actual exponential-backoff sleep timing / total elapsed under repeated 429/5xx (a2a-v1 client retry)
+2. Actual `304 → Ok(None)` conditional-request round-trip (client `If-None-Match` vs server ETag match)
+3. Actual `-32009` version-negotiation round-trip — whether server's emitted `data[].metadata.supported` shape matches client's parser
+4. Actual push-notification SSRF-rejection + retry-then-`PushDeliveryFailed` delivery outcome
+
+---
+
+## Hallucinated Items (Removed)
+
+None. Zero hallucinations detected across all passes C1–C22.
+
+---
+
+## Inaccurate Items (Corrected)
+
+None in this pass.
+
+---
+
+## Verified-Lists Additions (C22)
+
+The following items are added to the verified pool:
+
+**Behavioral (rotation):**
+- B-01 (C22): sqlite `rewind` time-travel: `DELETE ... AND timestamp > ?` + `DELETE ... AND timestamp = ? AND id != ?` + `SELECT ... ORDER BY timestamp` rebuild at sqlite.rs:805-870
+- B-02 (C22): `has_intersection(set1, set2)` keyword-intersection filter in InMemoryMemoryService at inmemory.rs:31; used at lines 159, 193, 244
+- B-03 (C22): `GraphError::RecursionLimitExceeded(self.step)` exact error variant with step payload at executor.rs:124 (non-streaming) and 203 (streaming)
+- B-04 (C22): Only inmemory.rs (line 363) + sqlite.rs (line 805) override `rewind`; all 7 others (postgres, redis, mongodb, neo4j, firestore, vertex, encrypted) fall to default `AdkError::session("rewind not supported by this backend")` at service.rs:303-304
+- B-05 (C22): `try_resume_from_checkpoint` at executor.rs:77 restores `self.pending_nodes = checkpoint.pending_nodes` at line 95
+- B-06 (C22): `SequentialAgent` constructed as `LoopAgent::new(name, sub_agents).with_max_iterations(1)` at sequential_agent.rs:18
+- B-07 (C22): `DEFAULT_LOOP_MAX_ITERATIONS: u32 = 1000` at loop_agent.rs:15
+- B-08 (C22): adk-server `GET /health` route at rest/mod.rs:343,655 backed by `async fn health_check` at line 188
+- B-09 (C22): `search(project_id=None)` global entries only; `search(project_id=Some(pid))` global union project at inmemory.rs:247-263
+- B-10 (C22): dep-disp A5 versions: `ollama-rs = "0.3.4"` (adk-model Cargo.toml:34); `async-openai = "0.33"` (adk-model Cargo.toml:25); `mistralrs = "0.8"` (adk-mistralrs Cargo.toml:44)
+
+**Opener (C21 sibling re-verification):**
+- P-18 (re-confirmed C22): `anyhow = "1.0"` at root Cargo.toml:130
+- P-75 (re-confirmed C22): `schemars::schema_for!(#args_ty)` at adk-rust-macros/src/lib.rs:143
+- P-16-resolution (re-confirmed C22): adk-anthropic/Cargo.toml zero adk-* framework deps
+
+**Novel probe (dep-disp A4 versions):**
+- wasmtime = "45" (adk-sandbox Cargo.toml:27)
+- wasmtime-wasi = "44" (adk-sandbox Cargo.toml:28)
+- bollard = "0.18" (adk-sandbox Cargo.toml:32)
+- serde_yaml = "0.9" (adk-skill Cargo.toml:21)
+- statrs = "0.18" (adk-eval Cargo.toml:31)
+- quick-xml = "0.37" (adk-eval Cargo.toml:30)
+
+**dep-disp A2 continuation (opener):**
+- rand::rng().fill_bytes in encrypted.rs:150
+- base64 STANDARD engine encodes [nonce||ciphertext] at encrypted.rs:74
+- chrono::Utc::now() for created_at at state.rs:236
+- serde_json::to_string for state/pending/metadata at checkpoint.rs:140-142
+
+---
+
+## Confidence Assessment
+
+- Overall extraction accuracy: **99%** (zero corrections in C22; 10/10 rotation claims confirmed; 6/6 novel probe confirmed; 8/8 metrics Delta=0; 0 hallucinated; 0 unverifiable new items)
+- Metric accuracy: **100%** on standing metrics (8/8 Delta=0; no drift since C1)
+- Hallucination rate: **0%** (maintained across all passes C1–C22)
+- Novel probe: dependency-disposition.md A4 version strings — 6/6 CONFIRMED (wasmtime, wasmtime-wasi, bollard, serde_yaml, statrs, quick-xml all exact match against Cargo.toml files)
+- Recommendation: **TRUST WITH CAVEATS** — same caveat classes as C21: (1) scc Code vs wc-l UNVERIFIABLE without scc tool; (2) four a2a-v1 runtime items Phase-4 obligations (carried from C2); (3) adk-anthropic/src/types ~60/82 approximation gap pre-existing acknowledged.
+
+---
+
+## Certification Final Verdict
+
+```
+CLEAN (strict):    YES — zero corrections applied
+CLEAN (PR-merge):  YES
+New corrections:   0
+Opener:            C21 sibling check CLEAN — P-18, P-75, P-16-resolution re-confirmed;
+                   dep-disp A2 continuation 4/4 confirmed: rand::rng().fill_bytes
+                   (encrypted.rs:150), base64 encode [nonce||ciphertext] (encrypted.rs:74),
+                   Utc::now() for created_at (state.rs:236), serde_json::to_string
+                   for checkpoint fields (checkpoint.rs:140-142)
+Metric sweep:      8/8 standing metrics Delta=0 (no drift in tracked figures)
+Novel probe:       dependency-disposition.md A4 vs source — 6/6 CONFIRMED; wasmtime 45,
+                   wasmtime-wasi 44, bollard 0.18, serde_yaml 0.9, statrs 0.18, quick-xml 0.37
+Rotation:          10/10 behavioral claims CONFIRMED (sqlite rewind semantics, has_intersection,
+                   GraphError::RecursionLimitExceeded, rewind backend coverage,
+                   try_resume_from_checkpoint, SequentialAgent delegation,
+                   DEFAULT_LOOP_MAX_ITERATIONS, /health endpoint, search project_id routing,
+                   dep-disp A5 versions); 0 inaccurate; 0 hallucinated
+Streak:            2/3 (C21 CLEAN → 1/3; C22 CLEAN → 2/3)
+```

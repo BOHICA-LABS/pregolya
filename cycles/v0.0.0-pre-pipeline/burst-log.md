@@ -2086,3 +2086,26 @@ C17 step row retired from STATE.md Current Phase Steps (table capped at 5 rows):
 - `comparative/adk-rust/CERTIFICATION-REPORT.md` (C21 pass appended by validator — C20 sibling check, C20 defect-class sweep, rotation table, metric verification, novel probe dep-disp A2 internal claims, confidence assessment, final verdict CLEAN)
 - `STATE.md` (C21 COMPLETE, streak 0/3→1/3, convergence counter 0→1 of 3, frontmatter updated, Current Phase Steps C17 row archived, C21 row added, session checkpoint updated)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — C17 archive + burst 64 narrative)
+
+## Burst 65 — adk-rust cert pass C22 CLEAN(strict)=YES (2026-07-13)
+
+### Archived from STATE.md Current Phase Steps (Session wrap burst 60 row retired)
+
+Session wrap (burst 60) step row retired from STATE.md Current Phase Steps (table capped at 5 rows):
+> Session wrap (burst 60) | state-manager | COMPLETE | Durability snapshot written. C17 artifacts committed. verify-sha-currency.sh created. RESUME snapshot in STATE.md. factory-artifacts pushed.
+
+### C22 Summary
+
+- CLEAN(strict)=YES. ZERO corrections.
+- C21 sibling check 3/3 CONFIRMED (P-18, P-75, P-16 resolution).
+- dep-disp A2 continuation 4/4 CONFIRMED.
+- Rotation 10/10 CONFIRMED (sqlite rewind, has_intersection, RecursionLimitExceeded, rewind impl coverage, pending_nodes restore, SequentialAgent=LoopAgent(1), DEFAULT_LOOP_MAX_ITERATIONS=1000, /health route, memory search scoping, provider crate versions) — appended to verified-lists.
+- Metrics 8/8 Delta=0.
+- Novel probe: dep-disp A4 dependency versions vs Cargo.toml — 6/6 exact (wasmtime 45, wasmtime-wasi 44, bollard 0.18, serde_yaml 0.9, statrs 0.18, quick-xml 0.37).
+- Streak: 1/3 → 2/3.
+
+### Files touched in this burst
+
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (C22 pass appended by validator — C21 sibling check, dep-disp A2 continuation, rotation table, metric verification, novel probe dep-disp A4 dependency versions, confidence assessment, final verdict CLEAN)
+- `STATE.md` (C22 COMPLETE, streak 1/3→2/3, convergence counter 1→2 of 3, frontmatter updated, Current Phase Steps session-wrap row archived, C22 row added, session checkpoint updated)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — session-wrap archive + burst 65 narrative)
