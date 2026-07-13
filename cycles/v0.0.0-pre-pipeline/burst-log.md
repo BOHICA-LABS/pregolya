@@ -2019,3 +2019,22 @@ C14 step row retired from STATE.md Current Phase Steps (table capped at 5 rows):
 - `logs/dispatcher-internal-2026-07-13.jsonl` (dispatcher log updated)
 - `STATE.md` (C18 COMPLETE, streak 1/3, convergence counter 0→1, frontmatter updated, Current Phase Steps C14 row archived, C18 row added, session checkpoint updated)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — C14 archive + burst 61 narrative)
+
+---
+
+## Burst 62 — adk-rust cert pass C19 CLEAN(strict)=YES (2026-07-13)
+
+### Archived from STATE.md Current Phase Steps (C15 row retired)
+
+C15 step row retired from STATE.md Current Phase Steps (table capped at 5 rows):
+> adk-rust certification pass C15 (strict-zero, terminal identifier-exactness sweep) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. Identifier sweep: 146 identifiers (all 56 fn names + ~50 struct types + ~40 lowercase) 146/146 confirmed, 0 inaccurate. C14 sibling check CLEAN. Rotation 12/12 CONFIRMED. Metrics 6/6 Delta=0. Streak 0/3 → 1/3. Burst 58.
+
+### C19 Summary
+
+- CLEAN(strict)=YES. ZERO corrections. C18 sibling check: 3/3 spot-re-verifications CONFIRMED (P-56, P-73, A3 §17); LOC region probe 6/6 cross-doc consistent. Rotation 10/10 CONFIRMED (P-11, P-39, P-40, P-48, P-49, P-60, P-65, P-66, P-87, P-95). Metrics 8/8 Delta=0. Novel probe: test-inventory↔module-inventory scc Code LOC cross-document consistency — 6/6 identical (scc figures remain UNVERIFIABLE-without-tool per C1 precedent). Streak 1/3 → 2/3.
+
+### Files touched in this burst
+
+- `comparative/adk-rust/CERTIFICATION-REPORT.md` (C19 pass appended by validator — C18 sibling check, LOC region probe, rotation table, metric verification, novel probe scc Code LOC cross-doc, confidence assessment, final verdict)
+- `STATE.md` (C19 COMPLETE, streak 2/3, convergence counter 1→2 of 3, frontmatter updated, Current Phase Steps C15 row archived, C19 row added, session checkpoint updated)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry — C15 archive + burst 62 narrative)

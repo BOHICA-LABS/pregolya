@@ -3405,3 +3405,210 @@ Rotation:          10/10 behavioral claims CONFIRMED (P-25, P-28, P-43, P-56, P-
                    P-73, P-79, behavioral-intent A3 §17); 0 inaccurate; 0 hallucinated
 Streak:            1/3 (C14 incoming 0/3; C15 CLEAN; reset C16; reset C17; C18 CLEAN → 1/3)
 ```
+
+---
+
+# Certification Pass C19 — adk-rust Comparative Corpus
+
+```yaml
+pass: C19
+corpus: adk-rust v1.0.0 (SHA a6c79b6f)
+reference: .reference/adk-rust (read-only)
+protocol: BC-5.39.001 (3-CLEAN convergence); D14 (absolute strict-zero); D15; D16 (Rust-blindness)
+streak_in: 1/3
+date: 2026-07-13
+focus: C18 sibling check (P-56, P-73, behavioral-intent A3 §17); all-twelve guardrails rotation
+       (never-verified pools: P-11, P-39, P-40, P-48, P-49, P-60, P-65, P-66, P-87, P-95);
+       novel probe: test-inventory.md A1 Code LOC cross-document consistency with module-inventory.md
+```
+
+## CLEAN Status
+
+```
+CLEAN (strict):    YES — zero corrections of any severity
+CLEAN (PR-merge):  YES
+New corrections:   0
+Streak position:   2/3 (C18 CLEAN → 1/3; C19 CLEAN → 2/3)
+```
+
+---
+
+## Opener — C18 Sibling Check
+
+C18 verified 10 rotation claims (P-25, P-28, P-43, P-56, P-61, P-63, P-70, P-73, P-79, behavioral-intent
+A3 §17) and the integration LOC class. Spot-re-verify ≥3 of C18's confirmations:
+
+**Spot-re-verifications (3 of 10 selected):**
+
+| Item | C18 Claim | Re-verified Against | Result |
+|------|-----------|---------------------|--------|
+| P-56 skill scoring weights | name +4.0, desc +2.5, tag +2.0, body +1.0, normalized by √body-tokens | `.reference/adk-rust/adk-skill/src/select.rs:60-84` | CONFIRMED — lines 69/72/75/78: `score += 4.0`/`2.5`/`2.0`/`1.0`; lines 83-84: `let norm = (body_tokens.len().max(1) as f32).sqrt(); score / norm.max(1.0)` |
+| P-73 Money struct | `{ currency: String, amount_minor: i64, scale: u32 }` | `.reference/adk-rust/adk-payments/src/domain/money.rs:9-12` | CONFIRMED — exact struct definition present |
+| behavioral-intent A3 §17 | background run EXECUTION is a placeholder; `run_with_timeout` work future comment "For now, we simulate immediate completion" | `.reference/adk-rust/adk-server/src/background/mod.rs:289-291` | CONFIRMED — lines 289-291: exact placeholder comment |
+
+**C18 sibling opener verdict: CLEAN — all 3 spot-re-verifications confirmed; C18 data is stable.**
+
+**LOC region probe (C18 did not cover Code LOC cross-document consistency):**
+
+C18's novel probe closed the integration LOC class (14/14 entries, all Delta=0). C18 did NOT verify
+whether test-inventory.md A1 Code LOC figures match module-inventory.md workspace scale table figures
+(both claim scc Code metric values for the same 6 core crates). This probe is deferred to the
+C19 Novel Probe section below.
+
+---
+
+## Phase 1 — Behavioral Verification (All-Twelve Guardrails Rotation)
+
+10 claims selected from never-verified pools (absent from all SWEEP and C1–C18 verified lists).
+
+| # | Source | Claim | Verified Against | Result |
+|---|--------|-------|-----------------|--------|
+| B-01 | patterns-observed.md P-11 | `Event` embeds `LlmResponse` via `#[serde(flatten)]` — the entire LlmResponse surface is promoted into Event's JSON envelope | `.reference/adk-rust/adk-core/src/event.rs:20,33-34` | CONFIRMED — line 20: `pub struct Event {`; line 33: `#[serde(flatten)]`; line 34: `pub llm_response: LlmResponse,` — flatten applied to llm_response field, promoting LlmResponse fields into Event's JSON |
+| B-02 | patterns-observed.md P-39 | `UsageReport` token counts are `.max(0)` clamped (clamps negative Gemini metadata); `SessionUsageTracker` accumulates `cumulative: UsageReport` and `last_turn: Option<UsageReport>` via `record_turn` | `.reference/adk-rust/adk-managed/src/usage.rs:109-111,177,181,191-194` | CONFIRMED — lines 109-111: `.max(0)` applied to input_tokens, output_tokens, total_tokens from Gemini metadata; line 177: `cumulative: UsageReport`; line 181: `last_turn: Option<UsageReport>`; line 191-194: `record_turn(&mut self, turn_usage: UsageReport)` |
+| B-03 | patterns-observed.md P-40 | `awp-types` is a zero-adk-dep crate (no `adk-*` dependencies in Cargo.toml); 1,537 total LOC (wc -l) | `.reference/adk-rust/awp-types/Cargo.toml`; `find awp-types -name "*.rs"` | CONFIRMED — `grep "adk-" awp-types/Cargo.toml` returns no output; `find awp-types -name "*.rs" \| xargs wc -l \| tail -1` = 1,537 |
+| B-04 | patterns-observed.md P-48 | Linux bubblewrap enforcer passes `--die-with-parent`, `--unshare-pid`, `--unshare-net`, `--ro-bind`, `--new-session` | `.reference/adk-rust/adk-sandbox/src/sandbox/linux.rs:14-19` | CONFIRMED — lines 14-19 doc comments enumerate all five flags |
+| B-05 | patterns-observed.md P-49 | `ProcessBackend` truthfully advertises: "enforces timeout and environment isolation but does NOT enforce memory limits, network isolation, or filesystem isolation" | `.reference/adk-rust/adk-sandbox/src/process.rs:4-5, 230` | CONFIRMED — module doc lines 4-5 contain the exact disclaimer; line 230: "memory limit not enforced by process backend" |
+| B-06 | patterns-observed.md P-60 | macOS Seatbelt profile is allow-by-default for reads: emits `(deny default)` then immediately `(allow default)` → net effect is allow-all; only `(deny file-write*)` is added; `(deny file-read*)` is never added | `.reference/adk-rust/adk-sandbox/src/sandbox/macos.rs:117-119,160` | CONFIRMED — lines 117-119: `profile.push_str("(version 1)\n"); profile.push_str("(deny default)\n"); profile.push_str("(allow default)\n");`; line 160: `profile.push_str("(deny file-write*)\n");`; grep for `(deny file-read*)` returns no results |
+| B-07 | patterns-observed.md P-65 | Workspace path safety is string-only; uses depth counter `depth: i32` tracking via `path.split(['/', '\\'])` and `".." => { depth -= 1; }`; no `canonicalize` or `symlink_metadata` calls | `.reference/adk-rust/adk-sandbox/src/workspace/path_safety.rs:61,63-73` | CONFIRMED — line 61: "We simulate path resolution by tracking depth relative to root"; lines 63-73: `depth: i32` with `".." => { depth -= 1; }`; no canonicalize/symlink_metadata calls anywhere in the file |
+| B-08 | patterns-observed.md P-66 | `WasmBackend::new()` panics on engine init failure — uses `.expect("failed to create wasmtime engine with epoch support")` | `.reference/adk-rust/adk-sandbox/src/wasm.rs:75` | CONFIRMED — line 75: `Engine::new(&config).expect("failed to create wasmtime engine with epoch support");` exact match |
+| B-09 | patterns-observed.md P-87 | Skill coordinator strict-mode validation errors are silently swallowed: `Err(_) => continue` with comment "In strict mode, try next candidate" | `.reference/adk-rust/adk-skill/src/coordinator.rs:131` | CONFIRMED — line 131: `Err(_) => continue, // In strict mode, try next candidate` exact match |
+| B-10 | patterns-observed.md P-95 | Client `cache.card` (inside `CachedCard`) is write-only: set at line 420 but never read back; `agent_card()` returns `&self.agent_card` (constructor field); on 304 returns `Ok(None)` (caller gets nothing from cache) | `.reference/adk-rust/adk-server/src/a2a/client.rs:280-284,321-323,397-425` | CONFIRMED — `cache.card = Some(card.clone())` at line 420; `grep "cache\.card" client.rs` shows only write (line 420) and one test assertion `cache.card.is_none()` (line 1100); `agent_card()` at lines 321-323 returns `&self.agent_card` (not from cached_card); write-only characterization accurate |
+
+**0 INACCURATE. 0 HALLUCINATED. 0 UNVERIFIABLE (beyond pre-existing runtime-only items).**
+
+| Pool | Items Checked | Verified | Inaccurate | Hallucinated | Unverifiable |
+|------|--------------|----------|------------|-------------|-------------|
+| patterns-observed.md P-11, P-39, P-40, P-48, P-49, P-60, P-65, P-66, P-87, P-95 | 10 | 10 | 0 | 0 | 0 |
+
+**Total: 10 claims checked, 10 confirmed, 0 inaccurate, 0 hallucinated, 0 unverifiable**
+
+---
+
+## Phase 2 — Metric Verification (Standing Metrics Delta Check)
+
+Independent recount of all standing metrics tracked in CERTIFICATION-REPORT.md:
+
+| Claim | Source | Claimed | Recounted | Delta | Command |
+|-------|--------|---------|-----------|-------|---------|
+| Workspace test attrs | ANALYSIS-STATE.md A6 census | 4,803 | 4,803 | 0 | `find adk-* -name "*.rs" \| xargs grep -E "^\s*#\[test\]$\|^\s*#\[tokio::test\]$" \| wc -l` |
+| `#[ignore]` attrs (all forms) | ANALYSIS-STATE.md A6 census | 126 | 126 | 0 | `find adk-* -name "*.rs" \| xargs grep -o "#\[ignore[^]]*\]" \| wc -l` |
+| `proptest!` invocations | ANALYSIS-STATE.md A6 census | 150 | 150 | 0 | `find adk-* -name "*.rs" \| xargs grep -c "proptest!" \| grep -v ":0" \| awk -F: '{sum+=$2} END{print sum}'` |
+| reqwest::Client::new() sites (adk-server+adk-auth src) | patterns-observed.md P-42/P-77 | 8 | 8 | 0 | `grep -rn "reqwest::Client::new()" adk-server/src/ adk-auth/src/ \| wc -l` |
+| .timeout() hits (adk-server+adk-auth src) | patterns-observed.md P-42/P-77 | 0 | 0 | 0 | `grep -rn "\.timeout(" adk-server/src/ adk-auth/src/ \| wc -l` |
+| adk-graph test attrs | test-inventory.md A2 / behavioral-intent.md A2 | 262 | 262 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-graph/ --include="*.rs" \| wc -l` |
+| adk-model test attrs | test-inventory.md A1 | 505 | 505 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-model/ --include="*.rs" \| wc -l` |
+| adk-core test attrs | test-inventory.md A1 | 339 | 339 | 0 | `grep -rE '#\[(test\|tokio::test)\]' adk-core/ --include="*.rs" \| grep -v "//" \| wc -l` |
+
+**All 8 standing metrics: Delta = 0 (pass). No drift detected.**
+
+---
+
+## Novel Probe (C19 choice): test-inventory.md A1 Code LOC Cross-Document Consistency
+
+**Probe:** Verify that the Code LOC figures in test-inventory.md A1 table and module-inventory.md
+workspace scale table are internally consistent (both claim to use the scc Code metric for the
+same 6 core crates). No prior pass (C1–C18) performed this cross-document comparison.
+
+**Background:** module-inventory.md states: "LOC methodology: scc `Code` metric (comments/blanks
+excluded)". test-inventory.md A1 table column header: "Code LOC". Both documents were produced from
+the same analysis pass (A1). The figures themselves are UNVERIFIABLE without the scc tool (pre-
+existing status from C1); this probe checks consistency between the two documents, not against
+the source directly.
+
+**Cross-document comparison (6 core crate Code LOC figures):**
+
+| Crate | test-inventory.md A1 | module-inventory.md | Match? |
+|-------|----------------------|---------------------|--------|
+| adk-core | 7,420 | 7,420 | YES |
+| adk-model | 27,913 | 27,913 | YES |
+| adk-tool | 10,846 | 10,846 | YES |
+| adk-runner | 6,208 | 6,208 | YES |
+| adk-agent | 9,398 | 9,398 | YES |
+| adk-session | 8,089 | 8,089 | YES |
+
+**Novel probe verdict: ALL 6 FIGURES EXACTLY CONSISTENT — Delta = 0 across all 6 cross-document
+comparisons. The two documents are internally coherent; no transcription error introduced between
+analysis passes. The scc Code LOC figures themselves remain UNVERIFIABLE without the scc tool
+(pre-existing status from C1 — not a new finding).**
+
+---
+
+## Refinement Iterations: 1/3
+
+Single pass sufficient — zero inaccurate or hallucinated items found. No corrections to apply.
+No items require re-verification.
+
+---
+
+## New Corrections Applied in This Pass
+
+None. Zero corrections of any severity.
+
+---
+
+## UNVERIFIABLE Items (4 a2a-v1 Phase-4 obligations, carried from C2–C18)
+
+Same four items — unchanged; no new UNVERIFIABLE items added.
+
+---
+
+## Hallucinated Items (Removed)
+
+None. Zero hallucinations detected across all passes C1–C19.
+
+---
+
+## Inaccurate Items (Corrected)
+
+None. Zero inaccuracies detected.
+
+---
+
+## Verified-Lists Additions (C19)
+
+The following items are added to the verified pool:
+
+**Behavioral:**
+- P-11: `Event` `#[serde(flatten)]` on `llm_response: LlmResponse` (event.rs:33-34)
+- P-39: `.max(0)` clamping on Gemini token counts (usage.rs:109-111); `cumulative: UsageReport`, `last_turn: Option<UsageReport>`, `record_turn` accumulation (usage.rs:177,181,191-194)
+- P-40: awp-types zero adk-* deps (Cargo.toml); total LOC = 1,537 (wc -l)
+- P-48: Linux bubblewrap flags: --die-with-parent, --unshare-pid, --unshare-net, --new-session, --ro-bind (linux.rs:14-19 doc)
+- P-49: ProcessBackend truthful disclaimer: timeout+env enforced; memory/network/filesystem NOT enforced (process.rs:4-5, 230)
+- P-60: macOS Seatbelt: (allow default) immediately after (deny default); only (deny file-write*) added; no (deny file-read*) (macos.rs:117-119, 160)
+- P-65: workspace path safety: pure depth counter string tracking, no canonicalize/symlink_metadata (path_safety.rs:61,63-73)
+- P-66: WasmBackend::new() .expect() on engine init (wasm.rs:75)
+- P-87: skill coordinator strict-mode: `Err(_) => continue` (coordinator.rs:131)
+- P-95: client cache.card write-only (client.rs:420); agent_card() returns &self.agent_card not cached (client.rs:321-323)
+
+**Novel probe:**
+- test-inventory.md A1 Code LOC vs module-inventory.md: 6/6 core crates consistent (scc figures UNVERIFIABLE pre-existing)
+
+---
+
+## Confidence Assessment
+
+- Overall extraction accuracy: **99%** (all 10 behavioral claims confirmed; 0 inaccurate; 0 hallucinated; zero MEDIUM-or-higher errors across any pass C1–C19)
+- Metric accuracy: **100%** on non-approximation claims (8/8 standing metrics Delta=0; 6/6 novel probe cross-document figures consistent)
+- Hallucination rate: **0%** (maintained across all passes C1–C19)
+- Novel probe: test-inventory.md A1 Code LOC vs module-inventory.md — 6/6 core crate scc figures cross-document consistent; scc figures themselves remain UNVERIFIABLE (pre-existing C1 status)
+- Recommendation: **TRUST WITH CAVEATS** — same caveat classes as C18: (1) scc Code vs wc-l methodology inconsistency (UNVERIFIABLE without scc tool); (2) four a2a-v1 runtime items Phase-4 validation obligations; (3) adk-anthropic/src/types ~60 vs 82 approximation gap pre-existing acknowledged.
+
+---
+
+## Certification Final Verdict
+
+```
+CLEAN (strict):    YES — zero corrections, zero inaccuracies, zero hallucinated identifiers
+CLEAN (PR-merge):  YES
+New corrections:   0
+Opener:            C18 sibling check CLEAN — P-56 scoring weights confirmed (select.rs:60-84);
+                   P-73 Money struct confirmed (money.rs:9-12); behavioral-intent A3 §17
+                   placeholder comment confirmed (background/mod.rs:289-291)
+Metric sweep:      8/8 standing metrics Delta=0 (no drift in tracked figures)
+Novel probe:       test-inventory.md A1 Code LOC cross-document consistency with module-inventory.md:
+                   6/6 core crate scc Code LOC figures consistent between documents; scc figures
+                   remain UNVERIFIABLE without scc tool (pre-existing status, not a new finding)
+Rotation:          10/10 behavioral claims CONFIRMED (P-11, P-39, P-40, P-48, P-49, P-60, P-65,
+                   P-66, P-87, P-95); 0 inaccurate; 0 hallucinated
+Streak:            2/3 (C17 reset; C18 CLEAN → 1/3; C19 CLEAN → 2/3)
+```
