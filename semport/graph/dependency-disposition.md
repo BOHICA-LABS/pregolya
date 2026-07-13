@@ -39,6 +39,7 @@ legend: PORT = reimplement in Rust; REPLACE = idiomatic Rust crate substitute;
 | Python dep | Role | Disposition |
 |---|---|---|
 | `sqlite3` (stdlib) / `aiosqlite` | sync/async sqlite | **REPLACE** with `rusqlite` (sync) or `sqlx` (sqlite, async). Async-first port favors `sqlx`; but `rusqlite` + `spawn_blocking` matches Python's lock-based sync saver more directly. D9 sub-decision. |
+| `sqlite-vec>=0.1.6` | vector search extension — `sqlite_vec.loadable_path()` + `sqlite_vec.serialize_float32()` used in `store/sqlite/aio.py` + `base.py` for the `store_vectors` table | **REPLACE** — options: (a) `rusqlite-vtab` extension loading + a vec ext, (b) pure-Rust cosine-similarity over BLOB columns (drop the extension dep), or (c) defer the vector-store path to a later wave. The raw saver (checkpoints table) does NOT require sqlite-vec; only the store/vector search path does. **[validation-corrected]** |
 
 ### 1.5 `langgraph-prebuilt` deps
 | Python dep | Role | Disposition |

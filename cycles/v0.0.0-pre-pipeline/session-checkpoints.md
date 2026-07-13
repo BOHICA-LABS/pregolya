@@ -17,6 +17,20 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-07-13) — burst 8 complete
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Position** | pre-1, burst 8 complete. ALL 8 semport passes DONE. Pass 8 CONVERGED: ADR-5 resolved (transform = streaming primitive; tee/stream-duplication = base primitive, unify with ADR-8 start-before-end; 7 locking tests); ADR-3 enumerated (176 unique keys: 141 core-internal, 12 unsupported, 23 partner; namespace allowlist DERIVED from registry); C-7 added; langchain-protocol 0.0.17 VERIFIED (strictly additive). D13 locked: ferrochain-server is first-party (built in-workspace, spec'd Phase 1, implemented after core→graph→first-partners; NO wire-compat with LangGraph Platform). R3 and R9 downgraded to Low. Extraction-validation gate IN_PROGRESS (validate-extraction agent; output .factory/semport/VALIDATION-REPORT.md). On PASS → semport phase CLOSED → Phase 1 spec crystallization opens. |
+| **Key context** | D1-D13 locked. D13: ferrochain-server first-party; DTU scope = OpenAI/Anthropic/providers/Ollama only; stateful-platform-fake RETIRED. R6 OPEN: cargo login + publish-all.sh still needed (time-sensitive). R8 OPEN: route to product-owner at Phase 1 for BC + holdout scenario. CLAUDE.md on main — NO initial commit yet; devops commits at workspace-init Phase 1. Ref corpus pinned: langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (archived), langchain-mcp-adapters==0.3.0. D9 gate: Phase 1c architect MUST show ≥2 graph alternatives + trade-offs to human before ADR lock. D11 formal ADR at Phase 1c. ADR queue: ADR-1..ADR-8+ all pending architecture phase. Phase 1 gate agenda: D13 server API shape, CLI re-scope, subagent-transformer non-goal, RemoteGraph parity depth, license/attribution, crate-name ADR, slimmed DTU assessment (third-parties only). |
+| **Convergence counter** | 0 of 3 |
+
+---
+
 ## Session Resume Checkpoint (2026-07-13) — burst 7 complete
 
 ### State

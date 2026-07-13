@@ -17,7 +17,7 @@ note: analysis only — NO Rust code written.
 | Package (src only, excl. tests) | Py files | LOC | Depth pass | Port priority |
 |---|---|---|---|---|
 | `libs/langgraph/langgraph` (core runtime) | 78 | **27,846** | DEEP | P0 |
-| `libs/checkpoint/langgraph` (base saver + serde + store + cache) | 18 | **5,892** | DEEP | P0 |
+| `libs/checkpoint/langgraph` (base saver + serde + store + cache) | 17 | **5,892** | DEEP | P0 | <!-- [validation-corrected: 17 not 18; wc -l verified] -->
 | `libs/checkpoint-postgres/langgraph` | 9 | **4,891** | DEEP (schema) | P1 |
 | `libs/checkpoint-sqlite/langgraph` | 8 | **3,849** | DEEP (schema) | P1 |
 | `libs/prebuilt/langgraph` (react agent, ToolNode) | 7 | **3,676** | DEEP | P1 |
@@ -87,12 +87,13 @@ substantially larger and more semantically dense port than langchain-core (pass 
 | `checkpoint/base/id.py` | `uuid6` monotonic checkpoint IDs (sortable, clock_seq=step). |
 | `checkpoint/memory/__init__.py` | `InMemorySaver` reference implementation (the conformance baseline). |
 | `checkpoint/serde/jsonplus.py` | `JsonPlusSerializer`: ormsgpack primary, jsonplus (lc-JSON) fallback; typed-object encode/decode for datetime/uuid/decimal/set/deque/ipaddress/pathlib/msgs/langgraph types; `LANGGRAPH_STRICT_MSGPACK` allowlist gate. |
+| `checkpoint/serde/types.py` (68 LOC) | **[validation-corrected: previously omitted]** Critical sentinel constants: `TASKS = "__pregel_tasks"` (the Send/PUSH task queue channel), `INTERRUPT = "__interrupt__"`, `RESUME = "__resume__"`, `ERROR = "__error__"`, `SCHEDULED = "__scheduled__"`. Also `_DeltaSnapshot` NamedTuple (snapshot blob for DeltaChannel). `TASKS` is imported by `pregel/_algo.py` and is the canonical name for the Tasks Topic channel. |
 | `serde/_msgpack.py` | `SAFE_MSGPACK_TYPES` allowlist; ext-hook encode/decode; strict-mode security control. |
 | `serde/base.py` | `SerializerProtocol` (`dumps`/`loads`/`dumps_typed`/`loads_typed`), `maybe_add_typed_methods`. |
 | `serde/encrypted.py` | `EncryptedSerializer` wrapping an inner serde with a cipher. |
 | `serde/event_hooks.py` | `emit_serde_event` observability hook. |
-| `store/base/*` | `BaseStore` (long-term memory KV+vector), `Item`, batched ops, `embed`. |
-| `cache/{base,memory}` | `BaseCache` (node-level result cache keyed by `CacheKey`). |
+| `store/base/*` | `BaseStore` (long-term memory KV+vector), `Item`, batched ops, `embed`. `store/base/embed.py` provides the embedding helper. |
+| `cache/{base,memory,redis}` | `BaseCache` (node-level result cache keyed by `CacheKey`). `cache/redis/__init__.py` (144 LOC) provides `RedisCache` — a Redis-backed distributed cache with TTL support; requires an injected `redis` client (test dep only, NOT a declared runtime dep of langgraph-checkpoint). **[validation-corrected: redis cache module previously unmentioned]** |
 
 ## 3. Backend saver schemas (persistence contract)
 
@@ -192,6 +193,7 @@ artifact: module-inventory
 status: complete
 files_scanned: 40+ (all deep-scope key files read; sdk/cli inventoried by grep)
 deep_scope_loc: 46154
+validation_note: "checkpoint file count corrected 18→17; sqlite-vec dep added; serde/types.py and RedisCache documented [validation-corrected]"
 core_test_loc: 63249
 timestamp: 2026-07-12
 ```

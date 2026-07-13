@@ -342,3 +342,53 @@ traces_to: STATE.md
 - cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 7 checkpoint archived)
 
 **Next steps:** extraction-validation gate in progress. On PASS → semport phase CLOSED → Phase 1 spec crystallization opens (architect + product-owner, with consolidated ADR queue ADR-1..ADR-8+, D8 forcing functions, D13 server contract, R8 missing-contract flag, and the Phase-1 human gate agenda above).
+
+---
+
+## Burst: pre-pipeline burst 9 — D14 locked; extraction-validation pass 1 COMPLETE (PASS WITH CORRECTIONS); pass 2 dispatched (2026-07-13)
+
+**Decision recorded:**
+
+| ID | Action | Decision |
+|----|--------|----------|
+| D14 | NEW (human directive via structured question) | Extraction-validation gate runs FULL 3-CLEAN protocol (BC-5.39.001 strict criterion: zero findings of ANY severity; corrections reset streak to 0/3; each pass fresh-context). Applies to the semport corpus extraction-validation gate — not just spec/implementation cascades. Rationale: human chose maximum assurance on the analysis corpus that drives all Phase 1 spec work. Current streak: 0/3. |
+
+**Extraction-validation pass 1 close:**
+
+| Metric | Value |
+|--------|-------|
+| Result | PASS WITH CORRECTIONS |
+| Corrections applied | 11 (3 MEDIUM, 8 LOW) |
+| Hallucinations found | ZERO corpus-wide |
+| Streak after pass 1 | 0/3 (corrections reset streak) |
+| Per-area verdict | core PASS clean; splitters PASS clean; mcp PASS clean; graph/langchain/partners/platform PASS-WITH-CORRECTIONS |
+
+**Top corrections from pass 1 (all applied in-place with [validation-corrected] markers):**
+
+| Severity | Correction |
+|----------|-----------|
+| MEDIUM | sqlite-vec runtime dependency fully missing from graph disposition — 3 Rust options added for Phase 1 (sqlx+sqlite-vec extension, sqlite-vss crate, tantivy HNSW alternative) |
+| MEDIUM | checkpoint serde/types.py pregel sentinel constants (TASKS/INTERRUPT/RESUME/ERROR/SCHEDULED) omitted from core inventory |
+| MEDIUM | ChatModelIntegrationTests count inflated ~62→~48; affects conformance suite sizing in Phase 1 |
+| LOW | _BUILTIN_PROVIDERS undercount: chat 30→33 (adds watsonx/ibm/litellm/upstage/nvidia); embeddings 11→14; Phase 1 partner-coverage question broadened |
+| LOW | RedisCache tier in langgraph-checkpoint unmentioned; Phase 1 decision: expose Redis cache tier? |
+| LOW (×6) | Various count/name corrections across graph, langchain, partners, platform passes |
+
+**Full report:** .factory/semport/VALIDATION-REPORT.md
+
+**Extraction-validation pass 2 dispatched:**
+
+- Agent: validate-extraction (fresh context, no pass-1 history)
+- Sampling: rotated strata (different files sampled than pass 1)
+- Scope: independently re-verifies pass-1 corrections + full corpus sweep
+- Streak needed: 2 more CLEAN(strict) passes (including this one) after streak reset
+
+**Phase step archival:** "D12 file-size standard locked" row rotated out of STATE.md Current Phase Steps (5-row limit); covered in burst 6 entry above.
+
+**Files touched:**
+
+- STATE.md (timestamp, current_step, Last Updated/Current Step; Current Phase Steps — D12 row archived, extraction-validation gate split into pass-1-COMPLETE + pass-2-IN_PROGRESS; D14 added to Decisions Log; Session Resume Checkpoint replaced; Historical Content updated)
+- cycles/v0.0.0-pre-pipeline/burst-log.md (this entry)
+- cycles/v0.0.0-pre-pipeline/session-checkpoints.md (burst 8 checkpoint archived)
+
+**Next steps:** extraction-validation pass 2 in progress. Requires 2 more CLEAN(strict) passes (streak 0/3). On streak reaching 3/3 → semport phase CLOSED → Phase 1 spec crystallization opens.

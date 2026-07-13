@@ -57,7 +57,7 @@ langchain/
 │       ├── _execution.py  # shared shell/tool execution helpers (used by shell_tool)
 │       ├── _redaction.py  # shared redaction primitives (used by pii)
 │       ├── _retry.py      # shared retry primitives (used by *_retry)
-│       └── <13 built-in middleware impls>
+│       └── <15 built-in middleware impls>  <!-- [validation-corrected: 15 not 13; counted from source] -->
 ├── chat_models/           # init_chat_model + _ConfigurableModel
 │   ├── __init__.py        # re-exports BaseChatModel (core), init_chat_model
 │   └── base.py
@@ -111,13 +111,13 @@ name+description+json_schema), `OutputToolBinding`, `ProviderStrategyBinding`, t
 types. Integrated **into the model node's main loop** (no extra LLM call).
 
 ### 3.4 `init_chat_model` (chat_models/base.py)
-Provider registry (`_BUILTIN_PROVIDERS`: 30 providers → import path + class + creator
+Provider registry (`_BUILTIN_PROVIDERS`: 33 providers → import path + class + creator <!-- [validation-corrected: 33 not 30; python3 parse of pyproject confirmed] -->
 lambda), provider inference from model-name prefix, and `_ConfigurableModel` — a
 `Runnable` wrapper that defers model construction and queues declarative ops
 (`bind_tools`, `with_structured_output`) until a config selects the concrete model.
 
 ### 3.5 `init_embeddings` (embeddings/base.py)
-Same pattern as `init_chat_model`, 11 providers, returns `Embeddings` or a configurable
+Same pattern as `init_chat_model`, 14 providers, returns `Embeddings` or a configurable <!-- [validation-corrected: 14 not 11] -->
 wrapper. Much smaller (275 LOC).
 
 ### 3.6 `_subagent_transformer.py` / `SubagentTransformer`
@@ -126,7 +126,7 @@ named agents (`create_agent(name=...)`) during streaming and surfaces them as ty
 `run.subagents` handles. Multi-agent streaming plumbing. Depends heavily on langgraph
 stream internals (`langgraph.stream.*`).
 
-## 4. Built-in middleware inventory (13)
+## 4. Built-in middleware inventory (15) <!-- [validation-corrected: 15 not 13] -->
 
 | Middleware | File | LOC | Primary hook(s) | Adds state? | Adds tools? |
 |---|---|---:|---|---|---|

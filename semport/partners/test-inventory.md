@@ -53,13 +53,13 @@ the conformance suite run in CI without provider secrets — **it is a prerequis
 
 This is the crown jewel. Full enumerated test set (mandatory unless flagged gated):
 
-### ChatModelUnitTests (7 tests, no network)
+### ChatModelUnitTests (9 class methods + 1 inherited = 10, no network) <!-- [validation-corrected: 9 not 7; grep -c "def test_" unit_tests/chat_models.py = 9] -->
 `test_init`, `test_init_from_env`, `test_init_streaming`, `test_bind_tool_pydantic`,
 `test_with_structured_output`, `test_standard_params`, `test_standard_params_model_override`,
 `test_serdes` (syrupy snapshot), `test_init_time` (benchmark), plus inherited
 `test_no_overrides_DO_NOT_OVERRIDE`.
 
-### ChatModelIntegrationTests (~62 tests)
+### ChatModelIntegrationTests (~48 def test_ occurrences; ~35-40 unique class-level methods) <!-- [validation-corrected: ~62 was inflated; grep -c "def test_" integration_tests/chat_models.py = 48; some are inner-function pydantic-compat overrides not distinct test cases] -->
 Core (ungated): `test_invoke`, `test_ainvoke`, `test_stream`, `test_astream`,
 `test_stream_events_v3`, `test_astream_events_v3`, `test_batch`, `test_abatch`,
 `test_conversation`, `test_double_messages_conversation`, `test_usage_metadata`,

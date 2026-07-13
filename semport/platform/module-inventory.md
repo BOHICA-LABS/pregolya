@@ -12,7 +12,7 @@ note: module + endpoint inventory. The §2 endpoint catalog is the DTU-clone spe
 
 ## 1. Module manifest
 
-### 1.1 SDK (langgraph_sdk, 18,728 LOC total incl. tests/integration)
+### 1.1 SDK (langgraph_sdk, 18,728 LOC source-only) <!-- [validation-corrected: "total incl. tests/integration" label was wrong; 18,728 is source-only; tests add ~15,711 LOC for a true total of ~34,439] -->
 
 | Module | LOC | Priority | Purpose |
 |---|---|---|---|
