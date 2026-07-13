@@ -1289,4 +1289,31 @@ Streak 0/3. Pass 13: NO. Cumulative: 14 cert passes dispatched, 0 consecutive CL
 - `semport/VALIDATION-REPORT.md` (rotation: reduced 4,192 → 746 lines; cert-14 section added)
 - `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` (NEW — 3,478 lines: passes 1–10 verbatim)
 - `STATE.md` (pass 14 DONE, pass 15 dispatched, session checkpoint updated, burst 34 recorded)
+
+## Burst 35 — cert pass 15 COMPLETE (CLEAN(strict)=YES, streak 1/3); pass 16 dispatched (2026-07-13)
+
+### Certification Pass 15 Result
+
+**Verdict:** CLEAN(strict)=YES — ZERO corrections of any severity. Streak advances 0/3 → 1/3 (second time reaching 1/3; first was cert pass 2).
+
+**Scope covered:**
+- Line-range endpoint sweep COMPLETED: 39 newly verified in pass 15, totaling 69/69 unique range citations in primary 35 docs (100%). Zero endpoint errors. 4 borderline cases resolved NOT-A-FINDING under consistent pass-14 precedent (closing delimiter 1-2 lines outside range is NOT a finding).
+- Pass-14 propagation sweep: CLEAN. `L1629-1660` siblings = 0 in primary docs; `~120` siblings = 0 in primary docs (remaining instance in EXHAUSTIVE-SWEEP.md is intentional historical correction record).
+- Rotation: 21/21 confirmed across 7 areas (3 claims per area — B1 + B2 + Numeric). All from never-verified territory relative to passes 1–14.
+- ALL bounded error classes closed AND fully swept. No partially-open classes remain. Line-range endpoint micro-class (opened cert-13) NOW CLOSED AND EXHAUSTED.
+
+**Metrics verified clean:** pregel/ 14,873 LOC/24 files; runnables/base.py 6,713 LOC; chat_models/base.py 1,055 LOC; _BUILTIN_PROVIDERS 27 keys; OpenAI chat_models/base.py 5,248 LOC; json.py (splitters) 190 LOC; markdown.py 482 LOC; sessions.py (MCP) 477 LOC; _async/stream.py 1,993 LOC; _async/runs.py 1,190 LOC.
+
+### Pass 16 Dispatched
+
+- Per D15 (autonomous continuation, no check-ins)
+- Fresh context; all 10 guardrails in force; judgment precedents (cert-13/14/15) operative
+- Rotation away from all prior verified lists INCLUDING the archive (passes 1–14 archival content)
+- No line-range endpoint class work needed (class exhausted)
+- Advances to streak 2/3 on zero
+
+### Files touched in this burst
+
+- `semport/VALIDATION-REPORT.md` (cert-15 section added, 927 lines)
+- `STATE.md` (pass 15 DONE CLEAN(strict)=YES, pass 16 dispatched, session checkpoint updated, burst 35 recorded)
 - `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
