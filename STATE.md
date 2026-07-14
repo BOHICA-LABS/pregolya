@@ -4,32 +4,23 @@ level: ops
 version: "2.1"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T00:29:00Z
+timestamp: 2026-07-14T01:00:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "Phase 1 Step B — L2 domain spec (business-analyst) ready to dispatch"
-current_cycle: v0.0.0-pre-pipeline
+current_step: "Phase 1 Step C — PRD + behavioral contracts (product-owner) ready to dispatch"
+current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: false
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!--
-  STATE.md SIZE BUDGET: 199 lines (wc-l) | margin from soft-target (200): +1 | margin from hard-limit (500): +301
-
-  Historical content belongs in cycle files, NOT here:
-  - Burst narratives → cycles/<cycle>/burst-log.md
-  - Adversary pass details → cycles/<cycle>/convergence-trajectory.md
-  - Old session checkpoints → cycles/<cycle>/session-checkpoints.md
-  - Lessons learned → cycles/<cycle>/lessons.md
-  - Resolved blockers → cycles/<cycle>/blocking-issues-resolved.md
-
-  Run /vsdd-factory:compact-state if this file grows past 200 lines.
--->
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit.
+  Historical content → cycle files (burst-log, convergence-trajectory, session-checkpoints, lessons, blocking-issues-resolved).
+  Run /vsdd-factory:compact-state if this file grows past 200 lines. -->
 
 # Pipeline State: ferrochain
 
@@ -44,9 +35,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-14 — burst 69: Phase 1 Step A complete — product-brief.md v1.1 authored, reviewed (spec-reviewer PASS-WITH-FIXES), revised (SR-01–SR-04 resolved); Phase 1 in-progress. |
+| **Last Updated** | 2026-07-14 — burst 70: Phase 1 Step B complete — L2 domain spec (15-shard, 1,889 lines) authored; CYCLE_INIT v1.0.0-greenfield. |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Phase 1 Step B — L2 domain spec (business-analyst) ready to dispatch |
+| **Current Step** | Phase 1 Step C — PRD + behavioral contracts (product-owner) ready to dispatch |
 
 ## Phase Progress
 
@@ -63,15 +54,15 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ## Current Phase Steps
 
-<!-- Keep last 5 rows only. Archive older rows to cycles/v0.0.0-pre-pipeline/burst-log.md. -->
+<!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. -->
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
+| Phase 1 Step B: L2 domain specification (create + shard-split) | business-analyst | COMPLETE | domain-spec/ 15 files, 1,889 lines: 19 CAPs (8 P0/8 P1/3 P2), 14 DIs, ~27 entities, 8 bounded contexts, 12 failure modes, 15 events, 13 edge cases, ~35 UL terms w/ LangChain→ferrochain reconciliation. 3 over-budget shards split (capabilities, entities, ubiquitous-language). No stubs, no dangling refs. 5 open questions routed to PRD step (HITL risk tiers, agent registry, CAP-019 vs D17-Q7 VP phase anchoring, D5 proc-macro BC dependency, DI-012 default hook behavior). Burst 70. |
 | Phase 1 Step A: product brief (create + review + revise) | product-owner + spec-reviewer | COMPLETE | product-brief.md v1.1 (288 lines; core ~1,440 tokens, under budget). Authored from D1–D17 + market-intel + COMPARATIVE-ASSESSMENT + holdout domains; 4 ambiguities resolved with documented basis. spec-reviewer PASS-WITH-FIXES: 2 mechanical fixes applied (decisions array D2/D5/D9; crate attribution D6+D1+D13); SR-01 bloat, SR-02 security-defaults leakage, SR-03 tech-name leakage, SR-04 criterion measurability all resolved in v1.1 revision (security defaults → Overflow PRD-carry-forward table; locked tech tagged [locked: D11.x/D17-Qn]; criterion #2 binary event + R4 watchlist measurement rule). Burst 69. |
 | D16 comparative best-patterns assessment (4-part decomposed synthesis) | architect | COMPLETE | COMPARATIVE-ASSESSMENT.md written (522 lines) + 3 part-files. Dispositions across all 97 patterns: 27 ADOPT / 16 ADAPT / 27 REJECT / 27 NOT-APPLICABLE. 10 cross-corpus design conflicts (CRITICAL: adk-rust graph engine lacks BSP determinism, per-task durability, resume-value HITL — all D9/D11-required). 17 negative-evidence must-not-inherit items. RECOMMENDED outcome: (b) HYBRID — LangChain API surface + 43 ADOPT/ADAPT adk-rust internal patterns; runner-up (a) pure LangChain port. 9 human-gate questions (Q1 outcome choice blocking). Note: monolithic dispatch failed 3x on API stream stalls; recovered via 4-part decomposition. Burst 67. |
 | adk-rust certification pass C23 (strict-zero, GATE-CLOSING pass) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C22 sibling check 3/3 CONFIRMED; dep-disp A1 version defect-class check 8/8 zero discrepancies. Rotation 10/10 CONFIRMED (graph §7.1/§7.2 negative-existence claims, §15 ScopeGuard/ScopedTool/AuditSink 4 impls, §17 cancel_token, dep-disp A3 a2a-protocol-types + thiserror error types, test-inventory A2 property-test file ratio, §15 RequestContextExtractor). Metrics 8/8 Delta=0. Novel probe: dep-disp A3 anyhow exposure-cluster confinement — grep 0 hits across all 8 library src dirs, CONFIRMED. Streak 2/3 → 3/3. **3-CLEAN GATE CLOSED** on adk-rust v1.0.0 (SHA a6c79b6f). Cumulative C1–C23: 0 hallucinations. Burst 66. |
 | adk-rust certification pass C22 (strict-zero, C21 sibling check + dep-disp continuation) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C21 sibling check 3/3 CONFIRMED (P-18, P-75, P-16 resolution); dep-disp A2 continuation 4/4 CONFIRMED. Rotation 10/10 CONFIRMED (sqlite rewind, has_intersection, RecursionLimitExceeded, rewind impl coverage, pending_nodes restore, SequentialAgent=LoopAgent(1), DEFAULT_LOOP_MAX_ITERATIONS=1000, /health route, memory search scoping, provider crate versions). Metrics 8/8 Delta=0. Novel probe: dep-disp A4 dependency versions vs Cargo.toml — 6/6 exact (wasmtime 45, wasmtime-wasi 44, bollard 0.18, serde_yaml 0.9, statrs 0.18, quick-xml 0.37). Streak 1/3 → 2/3. Burst 65. |
-| adk-rust certification pass C21 (strict-zero, C20 defect-class sweep opener) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C20-01 landing CONFIRMED; C20 defect-class sweep (count-methodology consistency, A1/A2/A4 tables) CLEAN. Rotation 10/10 CONFIRMED (P-02, P-18, P-53, P-64, P-74, P-75, P-82, P-97, P-16 resolution, dep-disp A4 windows-sys). Metrics 8/8 Delta=0. Novel probe: dependency-disposition A2 internal claims vs source — 3/3 CONFIRMED (checkpoint SQL schema, similar crate char-diff, Uuid::new_v4). Streak 0/3 → 1/3. Burst 64. |
 
 ## Decisions Log
 
@@ -136,26 +127,33 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ## Session Resume Checkpoint
 
-<!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v0.0.0-pre-pipeline/session-checkpoints.md. -->
+<!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 
 ### RESUME IN ONE BREATH
 
-ferrochain pre-pipeline COMPLETE (D1-D17). Phase 1 spec crystallization IN PROGRESS. Step A complete: product-brief.md v1.1 (288 lines; SR-01–SR-04 resolved; 4 ambiguities documented). Step B ready: dispatch business-analyst for L2 domain spec (create-domain-spec from product-brief.md v1.1).
+ferrochain Phase 1 Spec Crystallization IN PROGRESS. Steps A+B complete. Step A: product-brief.md v1.1. Step B: L2 domain-spec/ (15-shard, 1,889 lines; 5 open questions for PRD step). Current cycle: v1.0.0-greenfield. NEXT: dispatch product-owner for create-prd (L3 PRD + BC-S.SS.NNN behavioral contracts) from domain-spec/ + product-brief.md.
 
 ### HEADS
 
 | Repo | Branch | SHA | Pushed | Notes |
 |------|--------|-----|--------|-------|
-| factory-artifacts | factory-artifacts | (burst 69 commit — run `git -C .factory log -1 --format='%h'`) | YES — BOHICA-LABS/ferrochain | Durable artifact backup |
+| factory-artifacts | factory-artifacts | (burst 70 commit — run `git -C .factory log -1 --format='%h'`) | YES — BOHICA-LABS/ferrochain | Durable artifact backup |
 | main | main | ZERO COMMITS | LOCAL-ONLY | Untracked: CLAUDE.md (553-line constitution + D12 file-size rule), .gitignore, .envrc, .mcp.json — commit to main at workspace-init per D10 |
 
-No worktrees. No PRs. Reference clones (.reference/: langchain@1.3.13, langgraph@1.2.9, langchain-community@0.4.2, langchain-mcp-adapters@0.3.0, adk-rust@v1.0.0) gitignored — reproducible from pinned manifest, not backed up by design.
+No worktrees. No PRs. Reference clones (.reference/) gitignored — reproducible from pinned manifest.
 
 ### WORKSTREAM
 
-**Phase 1 Step A COMPLETE.** product-brief.md v1.1 authored (product-owner), reviewed (spec-reviewer PASS-WITH-FIXES), revised. SR-01 bloat; SR-02 security-defaults → Overflow PRD-carry-forward; SR-03 locked-tech tagged; SR-04 criterion measurability fixed. Pre-pipeline COMPLETE (D1-D17) is the foundation.
+**Phase 1 Steps A+B COMPLETE.** Step B: L2 domain-spec/ (15 shards, 1,889 lines) authored by business-analyst. 19 CAPs (8 P0/8 P1/3 P2), 14 DIs, ~27 entities, 8 bounded contexts, 12 failure modes, 15 events, 13 edge cases, ~35 UL terms. 3 over-budget shards split per DF-021. No stubs, no dangling refs.
 
-**RESUME NEXT-ACTION:** dispatch business-analyst for create-domain-spec (sharded L2 under .factory/specs/domain-spec/) from product-brief.md v1.1. Sequence continues: L2 → L3 PRD + BCs (product-owner) → architecture + ADRs (architect, D9 graph gate + D17 BC scope) → DTU P1-06 → CI/CD → adversarial spec convergence 1d.
+**5 open questions for product-owner to resolve in PRD step:**
+1. HITL risk tiers (Domain A SOC — authorize vs audit-only)
+2. Agent registry (CAP-015) — static compile-time vs dynamic runtime
+3. CAP-019 vs D17-Q7 VP phase anchoring (P2 capability → VP obligation timing)
+4. D5 proc-macro BC dependency (D5 ADR must precede #[tool]/#[task] BCs)
+5. DI-012 default hook behavior (default-permit vs default-deny on missing hook)
+
+**RESUME NEXT-ACTION:** dispatch product-owner for create-prd (L3 PRD + BC-S.SS.NNN behavioral contracts) from domain-spec/ + product-brief.md; must resolve the 5 open questions from Step B; >8 artifacts → split create/integrate sub-bursts. Sequence continues: PRD+BCs → architecture + ADRs (architect, D9 graph gate + D17 BC scope) → DTU P1-06 → CI/CD → adversarial spec convergence 1d.
 
 ### PENDING HUMAN ACTIONS (open)
 
@@ -177,15 +175,17 @@ Holdout domains A/B/C briefs at planning/holdout-domains/. Phase-4 carry-forward
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-07-14 |
-| **Cycle** | v0.0.0-pre-pipeline |
-| **Burst commit** | (burst 69 — run `git -C .factory log -1 --format='%h %s'`) |
-| **Convergence counter** | 3 of 3 — GATE CLOSED |
+| **Cycle** | v1.0.0-greenfield |
+| **Burst commit** | (burst 70 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Convergence counter** | 3 of 3 — GATE CLOSED (adk-rust C23; pre-pipeline) |
 
 ## Historical Content
 
 | Content | Location |
 |---------|----------|
 | All burst narratives (bursts 1–41, pre-pipeline semport+cert passes, adk-rust A1–A5, exhaustive sweep) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
+| Burst 70 narrative (Phase 1 Step B + CYCLE_INIT v1.0.0-greenfield) | `cycles/v1.0.0-greenfield/burst-log.md` |
+| L2 domain spec (15-shard, 1,889 lines) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
 | Session checkpoints bursts 5–58 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Lessons learned (12 lessons, 12 codified guardrails incl. Guardrail #12 test-count methodology, Drift/Deferral DEFER-001) | `cycles/v0.0.0-pre-pipeline/lessons.md` |

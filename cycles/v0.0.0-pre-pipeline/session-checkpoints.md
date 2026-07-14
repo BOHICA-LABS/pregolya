@@ -577,3 +577,49 @@ traces_to: STATE.md
 | **Position** | pre-1, burst 66 complete. C23 COMPLETE: CLEAN(strict)=YES. ZERO corrections. C22 sibling check 3/3 CONFIRMED; dep-disp A1 version defect-class check 8/8 zero discrepancies. Rotation 10/10 CONFIRMED (graph §7.1/§7.2 negative-existence claims, §15 ScopeGuard/ScopedTool/AuditSink 4 impls, §17 cancel_token, dep-disp A3 a2a-protocol-types + thiserror error types, test-inventory A2 property-test file ratio, §15 RequestContextExtractor). Metrics 8/8 Delta=0. Novel probe: dep-disp A3 anyhow exposure-cluster confinement — grep 0 hits across all 8 library src dirs, CONFIRMED. Streak 2/3 → 3/3. **3-CLEAN GATE CLOSED** (C21-C22-C23). Cumulative C1-C23: 0 hallucinations. D16 comparative best-patterns assessment dispatched to architect. |
 | **Key context** | D1-D16 locked. D16 ACTIVE: Rust-blindness rule, anti-sunk-cost explicit, all outcomes on table. 3-CLEAN gate CLOSED on adk-rust v1.0.0 (SHA a6c79b6f). Corpus 1 (LangChain semport, 7 areas) extraction gate CLOSED 3/3 strict-zero. NEXT: architect dispatched for D16 comparative assessment → HUMAN DIRECTION GATE → Phase 1 spec crystallization. R6/R8/R10/R11 OPEN. |
 | **Convergence counter** | 3 of 3 — GATE CLOSED |
+
+---
+
+## Session Resume Checkpoint (2026-07-14) — burst 69 complete (Phase 1 Step A done; Step B ready)
+
+### RESUME IN ONE BREATH
+
+ferrochain pre-pipeline COMPLETE (D1-D17). Phase 1 spec crystallization IN PROGRESS. Step A complete: product-brief.md v1.1 (288 lines; SR-01–SR-04 resolved; 4 ambiguities documented). Step B ready: dispatch business-analyst for L2 domain spec (create-domain-spec from product-brief.md v1.1).
+
+### HEADS
+
+| Repo | Branch | SHA | Pushed | Notes |
+|------|--------|-----|--------|-------|
+| factory-artifacts | factory-artifacts | (burst 69 commit — run `git -C .factory log -1 --format='%h'`) | YES — BOHICA-LABS/ferrochain | Durable artifact backup |
+| main | main | ZERO COMMITS | LOCAL-ONLY | Untracked: CLAUDE.md (553-line constitution + D12 file-size rule), .gitignore, .envrc, .mcp.json — commit to main at workspace-init per D10 |
+
+No worktrees. No PRs. Reference clones (.reference/: langchain@1.3.13, langgraph@1.2.9, langchain-community@0.4.2, langchain-mcp-adapters@0.3.0, adk-rust@v1.0.0) gitignored — reproducible from pinned manifest, not backed up by design.
+
+### WORKSTREAM
+
+**Phase 1 Step A COMPLETE.** product-brief.md v1.1 authored (product-owner), reviewed (spec-reviewer PASS-WITH-FIXES), revised. SR-01 bloat; SR-02 security-defaults → Overflow PRD-carry-forward; SR-03 locked-tech tagged; SR-04 criterion measurability fixed. Pre-pipeline COMPLETE (D1-D17) is the foundation.
+
+**RESUME NEXT-ACTION:** dispatch business-analyst for create-domain-spec (sharded L2 under .factory/specs/domain-spec/) from product-brief.md v1.1. Sequence continues: L2 → L3 PRD + BCs (product-owner) → architecture + ADRs (architect, D9 graph gate + D17 BC scope) → DTU P1-06 → CI/CD → adversarial spec convergence 1d.
+
+### PENDING HUMAN ACTIONS (open)
+
+1. `direnv allow .` (B1 — Low, blocks key loading)
+2. `cargo login` + `.factory/namespace-reservation/publish-all.sh` — R6 namespace race STILL OPEN, time-sensitive
+
+### STANDING DIRECTIVES
+
+| ID | Directive |
+|----|-----------|
+| D15 | Autonomous loop, never ask to continue — "Keep going until you hit convergence protocol." |
+| D14 | Absolute strict-zero: CLEAN(strict) = zero findings; 3 consecutive required |
+| D17 | HYBRID outcome adopted — LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns; Phase-1 BC scope per Q2-Q9 |
+
+### WRAP METADATA
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-14 |
+| **Cycle** | v0.0.0-pre-pipeline |
+| **Burst commit** | (burst 69 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Convergence counter** | 3 of 3 — GATE CLOSED |
+
