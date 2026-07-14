@@ -70,13 +70,13 @@ A new Checkpoint stored to the CheckpointStore at a super-step boundary.
 Graph execution suspended at a node boundary awaiting a ResumeValue.
 - **Trigger:** Node calls `interrupt()` or graph meets an interrupt edge condition
 - **Preconditions:** Run in `in_progress`
-- **Outcome:** Run transitions to `requires_action`; InterruptRecord stored durably; scratchpad saved
+- **Outcome:** Run transitions to `interrupted`; InterruptRecord stored durably; scratchpad saved
 - **Stream event:** `interrupt_raised {run_id, node_name, scratchpad?}`
 
 ### ResumeValueReceived
 An external actor delivers a ResumeValue for a pending Interrupt.
 - **Trigger:** `POST /threads/{thread_id}/runs/{run_id}/resume`
-- **Preconditions:** Run in `requires_action`; matching interrupt exists
+- **Preconditions:** Run in `interrupted`; matching interrupt exists
 - **Outcome:** ResumeValue enqueued FIFO (DI-003); Run transitions back to `in_progress`
 
 ### RunCompleted

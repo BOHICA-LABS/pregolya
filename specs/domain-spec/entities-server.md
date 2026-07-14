@@ -100,7 +100,7 @@ A connection to a model provider implementing the ChatModel Runnable interface.
 
 ### FerrochainError
 The 2D error type for all ferrochain crates.
-- **Fields:** component: FerrochainComponent (enum covering all ferrochain crate names), category: ErrorCategory (Auth | Validation | Timeout | Provider | Sandbox | Budget | Internal | …), retry_hint: RetryHint (Retry | NoRetry | RetryAfter(Duration)), code: u32, message: String, source: Option<Box<dyn StdError>>
+- **Fields:** component: FerrochainComponent (enum covering all ferrochain crate names), category: ErrorCategory (Authentication | Validation | RateLimit | Timeout | Transport | Internal | Durability | Policy | Tool | Concurrency | Security | Tenancy), retry_hint: RetryHint (Never | Maybe | Later(Duration)), code: u32, message: String, source: Option<Box<dyn StdError>>
 - **Source:** CONFLICT-6 — adk-rust P-01/P-04 adopted; Python exception hierarchy does not translate to Rust.
 - **RFC-7807:** FerrochainError supports serialization to RFC-7807 Problem Details JSON for HTTP error responses.
 

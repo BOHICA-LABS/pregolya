@@ -77,7 +77,7 @@ primary_consumers: [implementer, test-writer]
 | E-GRAPH-002 | POLICY | broken | BC-2.05.005 | `NoActiveInterrupt: no interrupt is pending for run '<run_id>'` |
 | E-GRAPH-003 | VAL | broken | BC-2.02.005 | `UnknownRoutingTarget: node '<node_id>' is not registered in the compiled graph` |
 | E-GRAPH-004 | VAL | broken | BC-2.02.003 | `DuplicateBarrierWrite: NamedBarrierValue channel '<channel>' received more than one write from writer '<writer>' in super-step <n>` |
-| E-GRAPH-005 | POLICY | broken | BC-2.10.003 | `BudgetCeiling: run '<run_id>' halted; token budget of <limit> exceeded at <actual> tokens` |
+| ~~E-GRAPH-005~~ | ~~POLICY~~ | ~~broken~~ | ~~BC-2.10.003~~ | ~~`BudgetCeiling: ...`~~ — **RETIRED** (ADV-P1D-PASS-2 fix, 2026-07-14): budget errors belong in the BUDGET component namespace. E-GRAPH-005 is superseded by E-BUDGET-001. Code never shipped; tombstone per append-only numbering policy. |
 | E-GRAPH-006 | INTERNAL | broken | BC-2.03.001 | `BspDeterminismViolation: reducer order constraint violated — contact maintainers with run_id '<run_id>'` |
 | E-GRAPH-007 | VAL | broken | BC-2.02.001 | `UnknownChannelKey: node '<node_id>' returned write for key '<key>' which is not registered in the state schema` |
 | E-GRAPH-008 | VAL | broken | BC-2.02.001 | `UnreachableGraph: <reason> (e.g., "no entry edge from START")` |
@@ -186,6 +186,22 @@ primary_consumers: [implementer, test-writer]
 | E-MEMORY-004 | VAL | broken | BC-2.15.002 | Never | `NoScopeContext: memory scope resolution requires an active RunConfig session context; none is available` |
 | E-MEMORY-005 | DURABILITY | broken | BC-2.15.003 | Never | `ErasurePartialFailure: GDPR erasure for user '<user_id>' partially completed; rolled back — <reason>` |
 | E-MEMORY-006 | POLICY | broken | BC-2.15.003 | Never | `InsufficientPrivilege: operation '<operation>' requires AdminContext; caller has <caller_privilege>` |
+
+### Component: BUDGET (ferrochain-graph budget governance subsystem)
+
+> **Budget namespace reconciliation note (ADV-P1D-PASS-2 fix, 2026-07-14):** BCs BC-2.10.001–004
+> were authored before a BUDGET component section existed, using `E-BUDGET-NNN` codes that had no
+> taxonomy home. E-GRAPH-005 (BudgetCeiling) was the taxonomy's previous attempt to cover budget
+> errors within the GRAPH component; it is now retired above. Budget governance errors use the
+> BUDGET component (a subsystem of ferrochain-graph, following the RETRY/CRON pattern for
+> intra-crate subsystems). Category decision: BudgetCeilingReached is POLICY (budget ceiling is a
+> policy constraint that rejects the operation — matches POLICY definition verbatim); JournalWriteFailed
+> is DURABILITY (storage I/O failure on the evidence journal write path).
+
+| Error Code | Category | Severity | BC Anchor | RetryHint | Message Format |
+|-----------|----------|----------|-----------|-----------|---------------|
+| E-BUDGET-001 | POLICY | broken | BC-2.10.003 | Never | `BudgetCeilingReached: run '<run_id>' halted; token budget of <limit> exceeded at <actual> tokens` |
+| E-BUDGET-002 | DURABILITY | broken | BC-2.10.002 | Never | `JournalWriteFailed: budget evidence journal write failed for run '<run_id>': <backend_error>` |
 
 ## RFC-7807 Problem Emission
 

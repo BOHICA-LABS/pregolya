@@ -76,12 +76,16 @@ Wave 1 — Graph runtime + server (P0 lead differentiator, D7)
   Postgres stretch target
 - `ferrochain-server`: first-party durable-run HTTP server (D13); threads, assistants, cron
   scheduler, streaming and unary run equivalence (NE-13/D17); no LangGraph Platform wire-compat
+- `ferrochain-sandbox`: sandboxed tool execution (SS-13/ARCH-INDEX); WASM/container enforcing
+  backend default, workspace path confinement, process backend as loud opt-in (NE-01/NE-02/D17)
 
 Wave 2 — Partners + conformance + MCP (P1, D7 roadmap)
 - `ferrochain-openai`, `ferrochain-anthropic`, `ferrochain-ollama`: first-party provider
   crates (D3 early-integration priority); standalone SDK crate split architecture (HS-6/D17-Q5)
 - `ferrochain-mcp`: port of langchain-mcp-adapters==0.3.0 (D1 amendment); MCP client adapter
   for security, productivity, and custom server integration (server list in Overflow §MCP-Surface)
+- `ferrochain-memory`: long-horizon cross-session memory (SS-15/ARCH-INDEX); vector search,
+  scoped memory isolation, GDPR erasure (D17-Q4 memory holdout; domain-c cross-session requirement)
 - `ferrochain-standard-tests`: port of LangChain's langchain-tests conformance suite; all
   Wave 2 provider crates must pass before v1 release
 
@@ -139,7 +143,8 @@ Cross-cutting (all waves)
 - Single Cargo workspace per D4; crates publish individually
 - ferrochain brand namespace: ferrochain, ferrochain-core, ferrochain-graph, ferrochain-checkpoint,
   ferrochain-openai, ferrochain-anthropic, ferrochain-ollama, ferrochain-mcp, ferrochain-community,
-  ferrochain-splitters, ferrochain-standard-tests, ferrochain-server (D6 + D1 + D13)
+  ferrochain-splitters, ferrochain-standard-tests, ferrochain-server, ferrochain-sandbox,
+  ferrochain-memory (D6 + D1 + D13; sandbox and memory added per SS-13/SS-15 ARCH-INDEX wave mapping — ADV-P1D-PASS-2)
 - Partner crate architecture: standalone SDK crate split (HS-6/D17-Q5); final names in
   architecture-phase ADR
 
@@ -209,7 +214,7 @@ Source: STATE.md Risk Register (binding)
 | Risk ID | Summary | Severity | Mitigation |
 |---------|---------|---------|------------|
 | R4 | Competing langgraph crate (Onelevenvy) velocity — may capture LangGraph identity in Rust | Medium | Lead with ferrochain-graph quality + checkpointing before rig/Onelevenvy match it |
-| R6 | Namespace reservation race — cargo login + publish-all.sh not yet run (PENDING HUMAN ACTION) | High | Human must run `cargo login` + .factory/namespace-reservation/publish-all.sh immediately |
+| R6 | Namespace reservation race — cargo login + publish-all.sh not yet run (PENDING HUMAN ACTION) | High | Human must run `cargo login` + .factory/namespace-reservation/publish-all.sh immediately. Reservation must cover all 14 crates including ferrochain-sandbox (Wave 1) and ferrochain-memory (Wave 2) — both added to namespace enumeration in ADV-P1D-PASS-2 fix. |
 | R7 | langchain-protocol version volatility (v0.0.17 no stable) | Low | Port rationale is version-volatility; not a conformance target |
 | R8 | Splitters code-point vs byte-length parity on non-ASCII — no upstream test coverage | High | Phase-1 BC + Red Gate test authored from behavior (D17-Q9) |
 | R10 | NamedBarrierValue/EphemeralValue have no upstream unit tests | Medium | Phase-1 BC backlog — product-owner authors BCs + Red Gate tests (D17-Q9) |

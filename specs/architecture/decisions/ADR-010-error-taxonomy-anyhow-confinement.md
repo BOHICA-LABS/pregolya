@@ -35,9 +35,9 @@ crate. All public functions return `Result<T, FerrochainError>`.
 ```rust
 #[derive(Debug, Clone)]
 pub struct FerrochainError {
-    pub component: Component,     // CORE, GRAPH, CHKPT, SERVER, PROV, MCP, SPLIT, SBXD
-    pub category: Category,       // Network, Storage, Validation, Internal, Timeout, ...
-    pub retry_hint: RetryHint,    // Retryable(delay), NonRetryable, Unknown
+    pub component: Component,     // authoritative list lives in error-taxonomy.md §Components; enum reproduced here for the FerrochainError type definition: CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET
+    pub category: Category,       // canonical Category Codes: VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY
+    pub retry_hint: RetryHint,    // canonical: Never | Maybe | Later(Duration)
     pub code: &'static str,       // "E-GRAPH-001", "E-CHKPT-002", etc.
     pub message: String,          // Human-readable; MUST NOT contain credentials
     pub source: Option<Box<dyn std::error::Error + Send + Sync>>,

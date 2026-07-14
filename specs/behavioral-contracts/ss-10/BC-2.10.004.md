@@ -36,7 +36,7 @@ When a `BudgetPolicy::evaluate` call returns `PolicyDecision::Escalate` and the 
 `on_ceiling` mode is `escalate`, the execution engine suspends the run via the same
 `interrupt()` mechanism used by standard HITL interrupts (BC-2.05.001). The interrupt payload
 carries a typed `BudgetEscalation` context (current usage, ceiling, policy name, reason).
-The run parks in `requires_action` status, durably checkpointed, until a human or orchestrator
+The run parks in `interrupted` status, durably checkpointed, until a human or orchestrator
 resumes it via `Command(resume = BudgetResume::Extend { new_ceiling } | BudgetResume::Halt)`.
 The `EvidenceJournal` records both the escalation and the resume decision. DI-003 applies:
 the resume value is consumed FIFO and the interrupted node re-executes from its super-step start.
@@ -57,7 +57,7 @@ the resume value is consumed FIFO and the interrupted node re-executes from its 
 3. A checkpoint is written with the INTERRUPT marker and the `BudgetEscalation` payload before
    the run suspends (sync durability tier, DI-002). The checkpoint write completes before the
    caller receives the interrupt notification.
-4. The run transitions to `requires_action` status; the caller receives:
+4. The run transitions to `interrupted` status; the caller receives:
    `{"__interrupt__": [InterruptPayload { value: BudgetEscalation { ... }, interrupt_id }]}`.
 5. A `JournalEntry` with `decision: Escalate` and the `BudgetEscalation` context is appended
    to the `EvidenceJournal` before the interrupt is raised (BC-2.10.002).
@@ -119,7 +119,7 @@ is not re-executed from scratch; it is resumable via `Command(resume = BudgetRes
 { ... } | BudgetResume::Halt)`.
 
 ### EC-005: Sub-agent escalation propagates to parent
-**Scenario:** A sub-agent run escalates (requires_action). The parent run is waiting for the
+**Scenario:** A sub-agent run escalates (interrupted). The parent run is waiting for the
 sub-agent's result.
 **Expected behavior:** The sub-agent's interrupt is visible to the parent graph via the
 sub-agent node returning an `interrupt` outcome. The parent can route via a conditional edge
@@ -130,10 +130,10 @@ block the parent — it surfaces as an explicit result.
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | BudgetPolicy `on_ceiling = escalate, soft_limit = 10k`; run accumulates 12k tokens on 3rd LLM call | Run transitions to `requires_action`; caller receives `{"__interrupt__": [BudgetEscalation { ... }]}`; checkpoint with INTERRUPT marker written | Happy path — escalation triggered |
+| TV-001 | BudgetPolicy `on_ceiling = escalate, soft_limit = 10k`; run accumulates 12k tokens on 3rd LLM call | Run transitions to `interrupted`; caller receives `{"__interrupt__": [BudgetEscalation { ... }]}`; checkpoint with INTERRUPT marker written | Happy path — escalation triggered |
 | TV-002 | Resume with `BudgetResume::Extend { new_ceiling: 50k }` after TV-001 | Interrupted node re-executes from super-step start; new ceiling 50k is active; execution continues; journal records Extend decision | Resume with extended ceiling |
 | TV-003 | Resume with `BudgetResume::Halt` after TV-001 | Run halts gracefully; same behavior as BC-2.10.003; journal records Halt decision | Resume with halt decision |
-| TV-004 | Process crash after INTERRUPT-marker checkpoint; restart; resume with Extend | On restart, run is in `requires_action`; `Command(resume = Extend { ... })` resumes from correct checkpoint | Durable escalation across restart — DI-003 |
+| TV-004 | Process crash after INTERRUPT-marker checkpoint; restart; resume with Extend | On restart, run is in `interrupted`; `Command(resume = Extend { ... })` resumes from correct checkpoint | Durable escalation across restart — DI-003 |
 | TV-005 | Budget escalation while a prior `interrupt("review")` is in FIFO slot 0 | Resume 1: `interrupt("review")` consumed; Resume 2: `BudgetEscalation` consumed (FIFO per DI-003) | FIFO ordering across interrupt sources |
 
 ## Verification Properties

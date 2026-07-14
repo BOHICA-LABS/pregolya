@@ -32,7 +32,8 @@ with LangGraph Platform (D13).
 
 **Run**
 A single execution of an Assistant with a Thread. Status lifecycle:
-`queued → in_progress → requires_action → completed | failed | cancelled | expired`.
+`queued → in_progress → completed | failed | interrupted | cancelled`.
+(`requires_action` renamed to `interrupted` for HITL-parked runs; `expired` deferred — v1.0.0 maps timeout-expired interrupts to `failed` via E-GRAPH-014 InterruptApprovalTimeout.)
 Streaming and unary Run endpoints drive the same execution engine (DI-011).
 
 **CronSchedule**
@@ -95,8 +96,8 @@ class of error it is). Not derived from a Python exception hierarchy. Adopted fr
 P-01/P-04 (CONFLICT-6). Every public ferrochain API returns `Result<T, FerrochainError>`.
 
 **RetryHint**
-A field on FerrochainError indicating whether the caller should retry: `Retry`,
-`NoRetry`, or `RetryAfter(Duration)`. Allows callers to implement backoff without inspecting
+A field on FerrochainError indicating whether the caller should retry: `Never`,
+`Maybe`, or `Later(Duration)`. Allows callers to implement backoff without inspecting
 internal error details.
 
 **InvalidUpdateError**

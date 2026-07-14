@@ -101,8 +101,8 @@ final `status` and `output`.
 **Scenario:** A node calls `interrupt(value)` mid-execution (see BC-2.05.001).
 **Expected behavior:**
 - Streaming: emits `{"__interrupt__": [InterruptPayload]}` as an SSE event; stream
-  ends with `status: requires_action`.
-- Unary: response body is `{"__interrupt__": [InterruptPayload], "status": "requires_action"}`.
+  ends with `status: interrupted`.
+- Unary: response body is `{"__interrupt__": [InterruptPayload], "status": "interrupted"}`.
 Both surfaces carry the same interrupt payload.
 
 ### EC-004: Very large output (>1 MB)
@@ -126,7 +126,7 @@ normally.
 | TV-002 | Streaming run on 3-node graph | SSE stream contains: `run_start`, `node_start`×3, `node_end`×3, `run_end` (in topological order) | Event taxonomy: DI-011 streaming surface |
 | TV-003 | Graph with error in node 2; streaming | SSE: `run_start`, `node_start` (node1), `node_end` (node1), `node_start` (node2), then `error` event with `FerrochainError`; stream closes | Error propagation via streaming |
 | TV-004 | Graph with error in node 2; unary | `4xx/5xx` response with same `FerrochainError` as TV-003 | Error equivalence: streaming = unary |
-| TV-005 | Graph with `interrupt()` call; streaming | SSE emits `{"__interrupt__": [...]}` event; `run_end.status = requires_action` | Interrupt via streaming surface |
+| TV-005 | Graph with `interrupt()` call; streaming | SSE emits `{"__interrupt__": [...]}` event; `run_end.status = interrupted` | Interrupt via streaming surface |
 | TV-006 | Concurrent `POST /runs/r1` (unary) and `POST /runs/r1/stream`; second arrives 10ms later | Second returns `409 Conflict`, `E-SERVER-015 RunAlreadyExecuting` | Concurrent execution guard |
 
 ## Verification Properties

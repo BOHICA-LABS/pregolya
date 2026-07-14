@@ -151,3 +151,38 @@ No worktrees. No PRs. Reference clones (.reference/) gitignored.
 | **Cycle** | v1.0.0-greenfield |
 | **Burst commit** | (burst 76 — run `git -C .factory log -1 --format='%h %s'`) |
 | **Convergence counter** | 3 of 3 — GATE CLOSED (adk-rust C23; pre-pipeline) |
+
+---
+
+## Burst 77 Checkpoint (archived at burst 78)
+
+### RESUME IN ONE BREATH
+
+ferrochain Phase 1d adversarial spec convergence: Pass 1 COMPLETE — NOT CLEAN. 14 findings (2 CRIT: E-GRAPH code collisions globally reconciled [15 canonical E-GRAPH-xxx codes, E-GRAPH-013 SECURITY for approver-role]; DELETE-vs-cancel contradiction [POST /cancel endpoint added]); 5 HIGH incl. SCHEDULED-channel semport fix, canonical run state machine (queued→in_progress→completed|failed|interrupted|cancelled). 14/14 FIXED across 36 files. Convergence 0/3. Pass-2 scope: verify pass-1 fixes, deferred coverage (brief, domain-spec shards, ADR/VP bodies, architecture sections, holdout briefs), E-GRAPH-005/E-BUDGET-001 anchor observation.
+
+### HEADS
+
+| Repo | Branch | SHA | Pushed | Notes |
+|------|--------|-----|--------|-------|
+| factory-artifacts | factory-artifacts | (burst 77 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
+| main | main | d018d3f | YES | CLAUDE.md + .gitignore committed (D10); develop initialized |
+
+### WORKSTREAM
+
+**Burst 77 COMPLETE.** Phase 1d pass 1: 14 findings fixed across 36 spec files (E-GRAPH global reconciliation, canonical run states, POST /cancel endpoint).
+
+**RESUME NEXT-ACTION (at time of archival):** dispatch adversary pass 2 (fresh context): verify pass-1 fixes landed (sibling check), attack deferred coverage set (brief, domain-spec shards, ADR/VP bodies, architecture sections, holdout briefs), chase E-GRAPH-005/E-BUDGET-001 anchor observation.
+
+### PENDING HUMAN ACTIONS (at time of archival)
+
+1. `direnv allow .` (B1 — Low, blocks key loading)
+2. `cargo login` + `.factory/namespace-reservation/publish-all.sh` — R6 namespace race STILL OPEN
+
+### WRAP METADATA
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-14 |
+| **Cycle** | v1.0.0-greenfield |
+| **Burst commit** | burst 77 |
+| **Convergence counter** | 0 of 3 (Phase 1d) |

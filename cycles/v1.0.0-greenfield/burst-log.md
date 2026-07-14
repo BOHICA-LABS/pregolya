@@ -401,3 +401,69 @@ NOT CLEAN — 14 findings:
 - Fix bursts: 1
 - Counter: 0 of 3
 - Deferred coverage (pass 2 scope): brief, domain-spec shards, ADR bodies, VP bodies, architecture sections, holdout briefs; verify pass-1 fixes; E-GRAPH-005 anchor vs BC-2.10.003 / E-BUDGET-001 orphan observation.
+
+---
+
+## Archived Step Rows (evicted from STATE.md at burst 78 — keep-last-5 compaction)
+
+### Phase 1 Step C — Burst 72 (archived)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1 Step C: 82 BCs authored (12 batches, parallel) + integrated | product-owner ×10 + integrate | COMPLETE | 82/82 BCs in specs/behavioral-contracts/ss-TBD/ (~12,600 lines). Coverage: 17/17 NE, 14/14 DI, R8/R10/R11 Red Gates (BC-2.07.002, BC-2.02.003/004, BC-2.09.004/005), D17-Q2/Q3/Q4/Q7/Q8 mandates, Kani VP seeds (BC-2.03.001, BC-2.04.006, BC-2.13.004). BC-INDEX built (82 entries, 5 RG, 3 VP). Burst 72. |
+
+### Phase 1 Step D.1 — Burst 73 (archived)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1 Step D.1: architecture core + ADR stubs + VP seeds; CI/CD setup | architect + devops-engineer | COMPLETE | architecture/ 9 section files + ARCH-INDEX (~1,000 lines): SS-01..SS-17 registry w/ crate+wave mapping, purity-boundary-map, verification-architecture + tooling-selection + coverage-matrix. 10 ADRs: ADR-001 graph engine DRAFT BLOCKED-ON-HUMAN (D9 gate — Alt A LangGraph-faithful BSP vs Alt B hybrid orchestrator+actor per D11.1; architect recommends B), ADR-002..010 proposed. VP-INDEX + VP-001/002/003 (D17-Q7 top-3 BSP invariants). module-criticality.md 33 modules. CI/CD: main+develop initialized (d018d3f), 5-job SHA-pinned ci.yml green, branch protection both branches, .envrc withheld. input-hashes filled (10 files). Burst 73. |
+
+---
+
+## Burst 78 — Phase 1d Pass 2 + Fix Burst
+
+**Date:** 2026-07-14
+**Agents:** adversary (pass 2) + product-owner (PO) + business-analyst (BA) + architect
+
+### Summary
+
+Phase 1d adversarial pass 2: NOT CLEAN — 5 findings. All 5 fixed in same burst.
+
+### Findings and Fixes
+
+| ID | Severity | Finding | Fix | Agent |
+|----|----------|---------|-----|-------|
+| ADV-P1D-P2-001 | CRIT | Budget-namespace regression-escape — E-BUDGET-xxx codes referenced in error taxonomy but `Component: BUDGET` section missing; E-GRAPH-005 had no tombstone after pass-1 deprecation | Added Component: BUDGET section to error-taxonomy (E-BUDGET-001 POLICY + E-BUDGET-002 DURABILITY); E-GRAPH-005 tombstoned with replacement pointer | PO |
+| ADV-P1D-P2-002 | HIGH | RetryHint triple-vocabulary — Never/Maybe/Later used in BC-2.08.004, Async/Defer/Never in domain-spec, third variant in ADR-010 | BC-2.08.004 updated to canonical Never/Maybe/Later; ADR-010 + domain-spec ubiquitous-language vocabularies aligned | PO + architect |
+| ADV-P1D-P2-003 | HIGH | Run-state propagation incomplete — sibling check revealed BC-2.10.001/004 + BC-2.12.007 still used old run state terms from pass-1 | BC-2.10.001, BC-2.10.004, BC-2.12.007 updated; grep-zero confirmed | PO |
+| ADV-P1D-P2-004 | HIGH | Brief missing ferrochain-sandbox and ferrochain-memory — product-brief only listed 12 crates; R6 note outdated | product-brief.md updated to 14 crates; R6 updated in STATE.md to note publish-all.sh must cover all 14 | PO |
+| ADV-P1D-P2-005 | MED | 12-component enum not reflected in api-surface.md or ADR-010 — architecture enumerated 11 components | api-surface.md updated with 12-component enum; ADR-010 canonical Component comments aligned | architect |
+
+### Sibling Check (pass-2 fixes verification)
+
+- Pass-1 run-state fixes: 6/7 complete at burst 77; BC-2.10.001/004 + BC-2.12.007 were partial → completed in burst 78. Final: 7/7.
+- VP axis: CLEAN (no findings).
+
+### Files Touched
+
+- specs/architecture/api-surface.md
+- specs/architecture/decisions/ADR-010-error-taxonomy-anyhow-confinement.md
+- specs/behavioral-contracts/ss-08/BC-2.08.004.md
+- specs/behavioral-contracts/ss-10/BC-2.10.001.md
+- specs/behavioral-contracts/ss-10/BC-2.10.003.md
+- specs/behavioral-contracts/ss-10/BC-2.10.004.md
+- specs/behavioral-contracts/ss-12/BC-2.12.007.md
+- specs/domain-spec/entities-server.md
+- specs/domain-spec/events.md
+- specs/domain-spec/ubiquitous-language-core.md
+- specs/domain-spec/ubiquitous-language-server.md
+- specs/prd-supplements/error-taxonomy.md
+- specs/product-brief.md
+- cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-2.md (NEW)
+
+### Convergence Status After Burst 78
+
+- Phase 1d passes: 2 (NOT CLEAN)
+- Fix bursts: 2
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2)

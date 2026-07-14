@@ -58,7 +58,7 @@ confirms adk-rust has no native token/cost ceiling primitive.
 3. Each returned `PolicyDecision` is one of the three variants:
    - `PolicyDecision::Allow` — execution continues uninterrupted.
    - `PolicyDecision::Escalate { reason: String, current_usage: TokenUsage }` — execution
-     suspends; the run transitions to `requires_action` via the HITL interrupt mechanism
+     suspends; the run transitions to `interrupted` via the HITL interrupt mechanism
      (BC-2.10.004).
    - `PolicyDecision::Deny { reason: String, current_usage: TokenUsage }` — execution halts
      at the next safe super-step boundary (BC-2.10.003).

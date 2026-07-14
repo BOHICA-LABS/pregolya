@@ -59,7 +59,7 @@ support.
    `ContextOverflow`, not the generic `Provider` category, so callers can distinguish
    this specific failure and apply summarization/trim middleware.
 3. A provider 429 (rate limit) response maps to
-   `Err(FerrochainError { category: RateLimit, retry_hint: RetryAfter(Duration) })`.
+   `Err(FerrochainError { category: RateLimit, retry_hint: Later(Duration) })`.
    The `retry_hint` field carries the `Retry-After` header value when present.
 4. A provider 5xx response maps to `Err(FerrochainError { category: Provider, … })`.
 5. A provider-side validation error (e.g., invalid model name, unsupported parameter)
@@ -76,8 +76,8 @@ support.
   a fallback used ONLY when no more specific category applies.
 - The `ContextOverflow` category is reserved exclusively for the "too many tokens"
   semantic — providers must not map other 400 errors to `ContextOverflow`.
-- `retry_hint: RetryHint::RetryAfter(Duration)` is only set when the provider response
-  actually specifies a retry delay; otherwise `RetryHint::Retry` or `RetryHint::NoRetry`.
+- `retry_hint: RetryHint::Later(Duration)` is only set when the provider response
+  actually specifies a retry delay; otherwise `RetryHint::Maybe` or `RetryHint::Never`.
 
 ## Edge Cases
 
@@ -96,7 +96,7 @@ The `{:?}` format of the associated credential shows `"<redacted>"`.
 ### EC-003: Rate limit with Retry-After header
 **Scenario:** The provider returns HTTP 429 with `Retry-After: 60` header.
 **Expected behavior:** `Err(FerrochainError { category: RateLimit, retry_hint:
-RetryHint::RetryAfter(Duration::from_secs(60)) })`.
+RetryHint::Later(Duration::from_secs(60)) })`.
 
 ### EC-004: Provider 500 internal error
 **Scenario:** The provider returns HTTP 500 with an HTML error page.
@@ -116,7 +116,7 @@ format: <first 256 chars>" })`. No panic. The partial body is included for diagn
 |---|-------|-----------------|-------|
 | TV-001 | Cassette: HTTP 401 | `Err(FerrochainError { category: Auth })` — key not in message | Auth error |
 | TV-002 | Cassette: HTTP 400 "context length exceeded" | `Err(FerrochainError { category: ContextOverflow })` | Context overflow |
-| TV-003 | Cassette: HTTP 429 with `Retry-After: 30` | `Err(FerrochainError { category: RateLimit, retry_hint: RetryAfter(30s) })` | Rate limit |
+| TV-003 | Cassette: HTTP 429 with `Retry-After: 30` | `Err(FerrochainError { category: RateLimit, retry_hint: Later(30s) })` | Rate limit |
 | TV-004 | Cassette: HTTP 500 | `Err(FerrochainError { category: Provider })` | Provider 5xx |
 | TV-005 | Cassette: HTTP 400 unknown JSON body | `Err(FerrochainError { category: Provider })` — no panic | Unknown format |
 

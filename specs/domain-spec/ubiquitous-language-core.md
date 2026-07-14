@@ -136,7 +136,7 @@ distinct monotonically increasing checkpoint_id; both reference the shared paren
 **Interrupt**
 A programmatic suspension of graph execution at a node boundary, waiting for an external
 actor to provide a ResumeValue. Raised by a node calling `interrupt()`. The Run transitions
-to `requires_action` and is durably persisted.
+to `interrupted` and is durably persisted.
 
 **ResumeValue**
 The external value injected to resume an Interrupt. Takes the form `Command::Resume(value)`.

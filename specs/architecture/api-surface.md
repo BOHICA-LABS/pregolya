@@ -98,6 +98,7 @@ Base URL: configurable; no default port mandated.
 
 `FerrochainError { component: Component, category: Category, retry_hint: RetryHint, code: &'static str }`
 
-Error code prefix by crate: CORE, GRAPH, CHKPT, SERVER, PROV, MCP, SPLIT, SBXD.
+Authoritative list lives in `error-taxonomy.md` §Components; enum reproduced here for the FerrochainError type definition:
+`Component` = CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET (12 components).
 Full catalog: `prd-supplements/error-taxonomy.md`.
 RFC-7807 serialization: `FerrochainError::to_problem_detail()` (BC-2.14.002).
