@@ -24,13 +24,13 @@ inputs:
 input-hash: "a9db9a9a95fccf425b41da89e2fafd1502358a8b4e921ffa158e8b147236315b"
 ---
 
-# BC-2.12.003: Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/interrupted/cancelled)
+# BC-2.12.003: Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/cancelled; interrupted is pausable/resumable)
 
 ## Description
 
 A Run is a single execution of a ferrochain graph against a Thread, dispatched by
 ferrochain-server. This BC specifies the Run creation endpoint, its lifecycle state
-machine (`queued → in_progress → completed | failed | interrupted | cancelled`), and the
+machine (`queued → in_progress → completed | failed | cancelled`, with `interrupted` as a pausable/resumable state), and the
 failure modes including the `E-SERVER-002 RunNotFound` error. Runs are created synchronously
 via `POST /threads/{thread_id}/runs`; execution begins asynchronously. Status can be
 polled via `GET /threads/{thread_id}/runs/{run_id}`. No wire-compatibility with
@@ -74,14 +74,16 @@ LangGraph Platform (D13).
    queued      → in_progress  (executor picks up the run)
    in_progress → completed    (graph reaches END)
    in_progress → failed       (unhandled error in graph or executor)
-   in_progress → interrupted  (HITL interrupt raised; graph paused)
+   in_progress → interrupted  (HITL interrupt raised; graph paused, awaiting resume)
    in_progress → cancelled    (POST .../cancel called while run is active)
    queued      → cancelled    (POST .../cancel called before executor picks up the run)
+   interrupted → in_progress  (caller posts resume value via POST .../runs/{run_id}/resume)
    ```
-8. No backward transitions: `completed`, `failed`, `interrupted`, and `cancelled` are terminal states.
+8. Terminal states (no further transitions possible): `completed`, `failed`, and `cancelled`.
+   `interrupted` is **not** terminal — it is a pausable/resumable state.
 9. A Run that is `interrupted` can be resumed via
    `POST /threads/{thread_id}/runs/{run_id}/resume { resume_value }` (see BC-2.05.002
-   for HITL contract).
+   for HITL contract); this transitions the Run back to `in_progress`.
 
 ### Cancel Run (`POST /threads/{thread_id}/runs/{run_id}/cancel`)
 
@@ -107,9 +109,10 @@ LangGraph Platform (D13).
 
 ### Delete Run (`DELETE /threads/{thread_id}/runs/{run_id}`)
 
-19. Deletes a Run record that is in a terminal state (`completed`, `failed`, `interrupted`,
-    or `cancelled`). Cannot delete a `queued` or `in_progress` Run — HTTP 409 is returned
-    (use `POST .../cancel` first, then delete once terminal).
+19. Deletes a Run record that is in a terminal state (`completed`, `failed`, or `cancelled`).
+    Cannot delete a `queued`, `in_progress`, or `interrupted` Run — HTTP 409 is returned.
+    For `interrupted` Runs: either resume (POST .../resume) to complete/fail/cancel, or
+    cancel first (POST .../cancel → `cancelled`), then delete once terminal.
     **Decision basis (F-02):** DELETE = record deletion only. Separation from cancellation
     follows langgraph-sdk semantics (`runs.cancel()` ≠ delete). Prevents accidental data
     loss on active runs.
@@ -174,7 +177,7 @@ ferrochain-graph engine are sufficient._
 
 - BC-2.12.001 — depends on: Runs are executed against Threads; thread must exist before run creation
 - BC-2.12.002 — depends on: Runs reference an Assistant config at creation time
-- BC-2.05.002 — sibling: HITL interrupt resume contract covers the `interrupted` terminal state resume path
+- BC-2.05.002 — sibling: HITL interrupt resume contract covers the `interrupted` pausable state resume path (interrupted → in_progress transition)
 
 ## Architecture Anchors
 

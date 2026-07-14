@@ -70,7 +70,7 @@ support.
 
 ## Invariants
 
-- **DI-014 (Error Propagation — No Silent Swallowing):** All provider error responses
+- **DI-014 (Error Propagation (No Silent Swallowing)):** All provider error responses
   propagate as `Err(FerrochainError)`. A provider HTTP 4xx/5xx never produces `Ok(msg)`
   with a truncated or empty content.
 - `FerrochainError::category` is always populated; `TRANSPORT` is the fallback for
@@ -156,7 +156,7 @@ _[to be filled after story decomposition]_
 |-------|-------|
 | Source L2 Capability | CAP-009, CAP-011 |
 | Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies the typed error mapping requirement for every provider implementation; CAP-011 ("Provider Conformance Suite (Standard Tests)") per capabilities-p1-p2.md §CAP-011 — this BC expresses the error-fidelity subset of ferrochain-standard-tests |
-| L2 Domain Invariants | DI-014 (Error Propagation — No Silent Swallowing) |
+| L2 Domain Invariants | DI-014 (Error Propagation (No Silent Swallowing)) |
 | NE References | NE-03 (no silent None for validation failure — co-enforced with BC-2.14.006) |
 | Priority | P1 |
 | Wave | Wave 2 |

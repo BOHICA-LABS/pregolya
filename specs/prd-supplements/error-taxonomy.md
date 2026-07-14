@@ -160,6 +160,8 @@ primary_consumers: [implementer, test-writer]
 | E-SBXD-001 | SECURITY | broken | BC-2.13.005 (also BC-2.13.004/VP-003 — shared canonicalize_beneath_root code path; VP-003 verifies the guard, BC-2.13.005 specifies the error surface) | `WorkspaceEscape: resolved path '<resolved>' escapes workspace root '<root>'` |
 | E-SBXD-002 | POLICY | broken | BC-2.13.003 | `PolicyNotEnforceable: execution policy requires enforcing sandbox; non-enforcing backend is configured` |
 | E-SBXD-003 | INTERNAL | broken | BC-2.13.001 | `SandboxInitFailed: cannot initialize WASM/container sandbox backend: <reason>` |
+| E-SBXD-004 | POLICY | broken | BC-2.13.006 | `PlatformNoEnforcement: macOS Seatbelt allow-list cannot be enumerated for this tool — <reason>; use SandboxPolicy::allow_no_sandbox() to opt in to unsandboxed execution` |
+| E-SBXD-005 | INTERNAL | broken | BC-2.13.006 | `BackendUnavailable: Seatbelt sandbox API is not supported on this macOS version — <reason>; does not silently fall back to process execution` |
 
 ### Component: RETRY (ferrochain-core retry combinator)
 

@@ -66,8 +66,8 @@ than silently running unsandboxed.
    case an explicit `(allow network*)` rule is added
 6. If a deny-by-default allow-list is impractical (e.g., the tool requires too many system
    paths to enumerate), `SandboxBackend::new_macos_seatbelt()` returns
-   `Err(SandboxError::PlatformNoEnforcement { reason: "macOS Seatbelt allow-list too broad to enumerate" })`;
-   execution proceeds only if the caller passes `SandboxPolicy::allow_no_sandbox()`
+   `Err(SandboxError::PlatformNoEnforcement { reason: "macOS Seatbelt allow-list too broad to enumerate" })`
+   (`E-SBXD-004`); execution proceeds only if the caller passes `SandboxPolicy::allow_no_sandbox()`
 
 ## Invariants
 
@@ -88,10 +88,10 @@ than silently running unsandboxed.
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | Tool policy sets `allow_network: true` | `(allow network*)` rule is added to the profile; `(deny default)` base remains; no `(allow default)` |
-| EC-002 | macOS kernel version does not support the required Seatbelt operations | `Err(SandboxError::BackendUnavailable { reason: "Seatbelt unsupported on this macOS version" })`; does NOT silently run unsandboxed |
+| EC-002 | macOS kernel version does not support the required Seatbelt operations | `Err(SandboxError::BackendUnavailable { reason: "Seatbelt unsupported on this macOS version" })` (`E-SBXD-005`); does NOT silently run unsandboxed |
 | EC-003 | Running under `unsafe_process_no_isolation()` on macOS (explicitly opted in) | No Seatbelt profile is generated; standard process-backend WARN log (BC-2.13.002) is emitted |
 | EC-004 | Profile generation produces a profile with `(deny default)` but the tool's required allow-list is feasible | Profile generated; returned to caller; execution proceeds with Seatbelt enforcement |
-| EC-005 | Tool requires reading from a path outside the workspace and system libraries (e.g., user home dir beyond scope) | The specific path is evaluated: if it can be added to the allow-list without making the list impractical, it is added; otherwise `PlatformNoEnforcement` is returned |
+| EC-005 | Tool requires reading from a path outside the workspace and system libraries (e.g., user home dir beyond scope) | The specific path is evaluated: if it can be added to the allow-list without making the list impractical, it is added; otherwise `E-SBXD-004 PlatformNoEnforcement` is returned |
 
 ## Canonical Test Vectors
 

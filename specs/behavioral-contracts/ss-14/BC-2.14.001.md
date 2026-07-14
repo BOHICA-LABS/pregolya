@@ -165,7 +165,7 @@ _[to be filled after story decomposition]_
 |-------|-------|
 | Source L2 Capability | CAP-016 |
 | Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p1-p2.md §CAP-016 — this BC directly implements the 2D component × category struct with RetryHint and machine code that CAP-016 defines as its primary deliverable |
-| L2 Domain Invariants | DI-008 (Library Constructor Result Contract), DI-014 (Error Propagation — No Silent Swallowing) |
+| L2 Domain Invariants | DI-008 (Library Constructor Result Contract), DI-014 (Error Propagation (No Silent Swallowing)) |
 | NE References | — |
 | Priority | P0 |
 | Wave | Wave 0 |

@@ -153,7 +153,7 @@ _[to be filled after story decomposition]_
 |-------|-------|
 | Source L2 Capability | CAP-010 |
 | Capability Anchor Justification | CAP-010 ("MCP Tool Adapter") per capabilities-p1-p2.md §CAP-010 — this BC specifies error type identity preservation for the bare ToolException path, which is part of the adapter's tool-result routing behavior and is called out explicitly as an untested upstream void (R11) requiring a Red Gate test |
-| L2 Domain Invariants | DI-014 (Error Propagation — no silent swallowing; validation failures propagate as `Err(FerrochainError)`) |
+| L2 Domain Invariants | DI-014 (Error Propagation (No Silent Swallowing)) |
 | DEC Reference | DEC-012 (MCP Bare ToolException Re-Raise — R11 upstream MCP test void) |
 | Risk Source | R11 (upstream MCP test voids: bare ToolException re-raise path untested; `__aenter__` NotImplementedError contract untested) |
 | D17 Commitment | D17-Q9 — R11 Red Gate test required (bare ToolException re-raise has no upstream lock test) |

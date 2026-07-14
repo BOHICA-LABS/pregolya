@@ -70,10 +70,10 @@ results.
 
 ## Invariants
 
-- **DI-014 (Error Propagation — No Silent Swallowing):** A transport error during
+- **DI-014 (Error Propagation (No Silent Swallowing)):** A transport error during
   streaming NEVER produces `Ok(partial_message)`. The `Ok` variant signifies a
   complete, non-truncated response.
-- **DI-009 (Outbound Connection Timeout — Mandatory):** The streaming client builder
+- **DI-009 (Outbound Connection Timeout (Mandatory)):** The streaming client builder
   MUST set a connection timeout. Zero-argument `Client::new()` is prohibited in
   non-test code.
 - Per-chunk timeout and total request timeout are both set. Per-chunk timeout is the
@@ -156,7 +156,7 @@ _[to be filled after story decomposition]_
 |-------|-------|
 | Source L2 Capability | CAP-009 |
 | Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies the streaming timeout and transport error propagation requirement for every provider implementation, closing the adk-rust P-77 must-not-inherit pattern |
-| L2 Domain Invariants | DI-009 (Outbound Connection Timeout — Mandatory), DI-014 (Error Propagation — No Silent Swallowing) |
+| L2 Domain Invariants | DI-009 (Outbound Connection Timeout (Mandatory)), DI-014 (Error Propagation (No Silent Swallowing)) |
 | NE References | NE-04 (mandatory HTTP timeout; P-77 counter-example — streaming clients without per-chunk timeout; primary BC anchor is BC-2.14.004; this BC adds the streaming-specific per-chunk dimension) |
 | Priority | P1 |
 | Wave | Wave 2 |

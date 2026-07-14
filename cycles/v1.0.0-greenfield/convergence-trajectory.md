@@ -144,3 +144,16 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **New standing gates:** ARCH-INDEX SS range gate (trigger: new BC file); PRD §5 component gate (trigger: new component in error-taxonomy.md)
 **Trajectory after:** 14→5→7→13→3→3→3→5→2→4
 **Counter:** 0/3
+
+---
+
+### Pass P1D-11 Details
+
+**Date:** 2026-07-14
+**Verdict:** NOT CLEAN — 4 findings (0 CRIT, 1 HIGH, 3 MED)
+**Findings delta:** +0 vs pass 10 (4→4)
+**Axes rotated:** cross-BC state-machine consistency (NEW CLASS); DI verbatim rule codification; RTM completeness (CAP-016); E-SBXD error-code completeness
+**Fix summary:** BC-2.12.003 interrupted→pausable (HITL P0 fix); terminal-set={completed,failed,cancelled} censused; DI verbatim rule codified + 7 interface-definitions cells normalized, 86/86 census; RTM CAP-016 ×2 rows added; E-SBXD-004/005 added to error-taxonomy + BC-2.13.006 citations; Wave 0 registered in system-overview wave table with crate-wave vs story-wave distinction.
+**New standing gates:** cross-BC state-machine sweep (trigger: new stateful subsystem); DI verbatim census (trigger: interface-definitions edit)
+**Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4
+**Counter:** 0/3

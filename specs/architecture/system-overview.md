@@ -75,6 +75,7 @@ xtask                     — Cargo workspace tooling: file-size gate, timeout l
 
 | Wave | Crates | Phase |
 |------|--------|-------|
+| Wave 0 | (no new crates) — cross-cutting foundational types and CI-lint gates in ferrochain-core that all Wave 1 crates depend on: FerrochainError struct (BC-2.14.001–003), HTTP timeout lint (BC-2.14.004), credential opacity newtype (BC-2.14.005), validation propagation (BC-2.14.006); also Core Primitives (BC-2.01.001–004) and Text Splitting API shape (BC-2.07.001–003) which are authored before the Wave 1 CI run | Phase 2 (spec/CI setup) |
 | Wave 1 | ferrochain-core, ferrochain-macros, ferrochain-graph, ferrochain-checkpoint, ferrochain-server, ferrochain-splitters, ferrochain-sandbox | Phase 3 |
 | Wave 2 | ferrochain-openai-sdk, ferrochain-openai, ferrochain-anthropic-sdk, ferrochain-anthropic, ferrochain-ollama-sdk, ferrochain-ollama, ferrochain-standard-tests, ferrochain-mcp, ferrochain-memory | Phase 3 (after Wave 1) |
 | Post-v1 | ferrochain-community, additional providers | Post Phase 7 |

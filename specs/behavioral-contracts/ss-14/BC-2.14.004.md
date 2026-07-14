@@ -64,7 +64,7 @@ Connection Timeout) uniformly.
 
 ## Invariants
 
-- **DI-009 (Outbound Connection Timeout):** No outbound call may hang indefinitely. Any code
+- **DI-009 (Outbound Connection Timeout (Mandatory)):** No outbound call may hang indefinitely. Any code
   path that produces an outbound HTTP call must have a timeout enforced at the client level.
 - **NE-04 enforcement:** The specific counter-example (adk-rust 8+ `Client::new()` sites) is
   the prototype for this CI gate.
@@ -155,7 +155,7 @@ _[to be filled after story decomposition]_
 |-------|-------|
 | Source L2 Capability | CAP-016 |
 | Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p1-p2.md §CAP-016 — timeout enforcement is a mandatory component of the error taxonomy surface: a `FerrochainError { category: TIMEOUT }` can only be reliably raised if all HTTP clients have non-zero timeouts; the capability's "Overflow §Security-PRD-Carry-Forward" covers NE-04 as a named Wave 0 enforcement item |
-| L2 Domain Invariants | DI-009 (Outbound Connection Timeout — Mandatory) |
+| L2 Domain Invariants | DI-009 (Outbound Connection Timeout (Mandatory)) |
 | NE References | NE-04 (adk-rust 8+ sites with no `.timeout()` are the counter-example) |
 | Priority | P0 |
 | Wave | Wave 0 |

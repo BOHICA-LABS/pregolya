@@ -271,3 +271,13 @@ ferrochain Phase 1d adversarial spec convergence: Pass 9 COMPLETE — NOT CLEAN.
 **WORKSTREAM (at time of archival):** Burst 85 COMPLETE. Phase 1d pass 9: 2 findings fixed (BC-INDEX DI-Anchors 14/14 DIs exact 3-way census [12 rows populated, 6 additional drifts caught vs adversary's 3]; BC-2.08.009 input-hash populated). ADV-P1D-PASS-9.md committed. Input-hashes refreshed on 4 artifacts. Trajectory 14→5→7→13→3→3→3→5→2.
 
 **WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 85 | Counter: 0/3
+
+---
+
+### Archived Checkpoint — Burst 86 (Pass 10)
+
+ferrochain Phase 1d adversarial spec convergence: Pass 10 COMPLETE — NOT CLEAN. 4 findings: F-P10-01 HIGH BC-2.08.010 DI-008 description mis-anchored to DI-010 (Credential Opacity) language — NEW CLASS: DI-description fidelity; full census run, 3 exceptions fixed (BC-2.08.010 DI-008, BC-2.09.005 DI-014, BC-2.12.007 DI-011 spacing), 86/86 canonical post-fix. F-P10-02/03 ARCH-INDEX growth non-propagation: SS-08 range updated 001–008→001–012; preamble 82→86 BC files; 17-row SS complement census ALL PASS. F-P10-04 PRD §5 8→12 components — set assertion PASS (12=12 vs error-taxonomy). Bonus: BC-2.12.003 ordinals 1–20 sequential. Trajectory 14→5→7→13→3→3→3→5→2→4. Convergence 0/3. Two new standing census gates: ARCH-INDEX SS ranges + PRD§5 components. Burst 86.
+
+**WORKSTREAM (at time of archival):** Burst 86 COMPLETE. Phase 1d pass 10: 4 findings fixed (DI-description fidelity census 86/86 canonical — 3 exceptions fixed [BC-2.08.010/BC-2.09.005/BC-2.12.007]; ARCH-INDEX SS-08 range 001–012 + preamble 86 BC files; PRD §5 8→12 components; BC-2.12.003 ordinals 1–20). ADV-P1D-PASS-10.md committed. Input-hashes refreshed on 6 artifacts. Trajectory 14→5→7→13→3→3→3→5→2→4.
+
+**WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 86 | Counter: 0/3

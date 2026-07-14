@@ -53,7 +53,7 @@ coordinator returns `None` on validation failure rather than propagating the err
 
 ## Invariants
 
-- **DI-014 (Error Propagation — No Silent Swallowing):** Validation errors propagate as `Err`; no code path returns `None` or empty to indicate failure.
+- **DI-014 (Error Propagation (No Silent Swallowing)):** Validation errors propagate as `Err`; no code path returns `None` or empty to indicate failure.
 - Downstream consumers of a `Result<T, FerrochainError>` must not silently `.ok()` a validation error in library code — only application/binary code may choose to ignore errors after explicit handling.
 - The `VAL` category always implies `retry_hint: Never` (the input must change; retrying the same input will not succeed).
 
@@ -122,7 +122,7 @@ _[to be filled after story decomposition]_
 |-------|-------|
 | Source L2 Capability | CAP-016 |
 | Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p1-p2.md §CAP-016 — validation failure propagation is a first-class requirement of the error taxonomy contract; NE-03 (adk-rust silent None on validation) is named under CAP-016's grounding |
-| L2 Domain Invariants | DI-014 (Error Propagation — No Silent Swallowing) |
+| L2 Domain Invariants | DI-014 (Error Propagation (No Silent Swallowing)) |
 | NE References | NE-03 |
 | Priority | P0 |
 | Wave | Wave 0 |

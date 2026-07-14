@@ -542,8 +542,8 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.14.001 | CAP-016, DI-008, DI-014 | ferrochain-core | P0 | U |
 | BC-2.14.002 | CAP-016 | ferrochain-core | P0 | U |
 | BC-2.14.003 | CAP-016, DI-008, NE-07 | ferrochain-core | P0 | U (CI lint) |
-| BC-2.14.004 | DI-009, NE-04 | ferrochain-core | P0 | U (CI lint) |
-| BC-2.14.005 | DI-010, NE-10 | ferrochain-core | P0 | U (CI lint) |
+| BC-2.14.004 | CAP-016, DI-009, NE-04 | ferrochain-core | P0 | U (CI lint) |
+| BC-2.14.005 | CAP-016, DI-010, NE-10 | ferrochain-core | P0 | U (CI lint) |
 | BC-2.14.006 | CAP-016, DI-014, NE-03 | ferrochain-core | P0 | U |
 | BC-2.15.001 | CAP-017 | ferrochain-memory | P2 | I |
 | BC-2.15.002 | CAP-017 | ferrochain-memory | P2 | I, P |

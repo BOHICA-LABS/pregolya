@@ -162,7 +162,7 @@ Default port: `7437` (configurable via `server.port` in `ferrochain-server.toml`
 | GET | `/threads/{thread_id}/runs/{run_id}/stream` | Get run result as server-sent events | BC-2.12.007 |
 | POST | `/threads/{thread_id}/runs/{run_id}/resume` | Deliver resume value to interrupted run | BC-2.05.004 |
 | POST | `/threads/{thread_id}/runs/{run_id}/cancel` | Cancel a queued or in_progress run (transitions to cancelled) | BC-2.12.003 |
-| DELETE | `/threads/{thread_id}/runs/{run_id}` | Delete a terminal run record (completed/failed/interrupted/cancelled; HTTP 409 if active — use POST .../cancel first) | BC-2.12.003 |
+| DELETE | `/threads/{thread_id}/runs/{run_id}` | Delete a terminal run record (completed/failed/cancelled only; HTTP 409 if queued, in_progress, or interrupted — cancel or resume-to-complete first) | BC-2.12.003 |
 
 ### Cron Schedules
 
