@@ -22,6 +22,13 @@ decisions: [D17]
 FM-NNN are runtime failure modes grouped by subsystem. Each cites the adk-rust
 counter-example or domain source where applicable.
 
+> **Detection-field convention:** The `Detection:` field names the *verification vehicle* —
+> the mechanism that catches the failure (Kani VP harness, integration test, domain holdout,
+> CI lint, DEC unit test, etc.). Explicit `DI-NNN` citation in the Detection field is required
+> only when the verification vehicle IS that DI's VP proof harness. FMs whose detection
+> vehicle is an integration test, holdout scenario, or CI lint do not require a DI-NNN cite;
+> this is correct by design (e.g., FM-006, FM-012 have no governing DI-NNN).
+
 ---
 
 ## Graph Execution Subsystem

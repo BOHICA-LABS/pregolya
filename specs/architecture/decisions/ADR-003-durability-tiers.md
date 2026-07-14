@@ -35,7 +35,7 @@ D11.3 adopted all three tiers, with ferrochain defaulting to sync.
 
 **Rationale for sync default:**
 - Domain B (dark factory multi-day runs) depends on crash recovery (BC-2.04.005).
-- NE-11/adk-rust step-boundary-only checkpoint is a documented failure mode: completed tasks are re-executed after crash. Sync default eliminates this class of bugs by construction.
+- CONFLICT-2 (P-29)/adk-rust step-boundary-only checkpoint is a documented failure mode: completed tasks are re-executed after crash. Sync default eliminates this class of bugs by construction.
 - Performance overhead of sync writes is acceptable: SQLite WAL mode provides < 1ms typical write latency; graph nodes are async and the overhead is masked by node execution time.
 - Teams that explicitly need throughput over durability can opt into `Async`.
 

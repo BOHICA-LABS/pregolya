@@ -691,3 +691,30 @@ Phase 1d pass 7 + fix burst (whitelist-complement purge) | adversary + PO | COMP
 - Fix bursts: 12
 - Counter: 0 of 3
 - Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12)
+
+---
+
+**Archived step row (pass 10, dropped from Current Phase Steps to maintain last-5 window):**
+Phase 1d pass 10 + fix burst (semantic + growth-propagation censuses) | adversary + PO | COMPLETE | Pass 10: NOT CLEAN — 4 findings (F-P10-01 HIGH DI-008 semantic mis-anchor in BC-2.08.010 [NEW CLASS: DI-description fidelity — census now 86/86 canonical]; F-P10-02/03 ARCH-INDEX growth non-propagation [SS-08 range + 82→86; 17-row complement ALL PASS]; F-P10-04 PRD §5 8→12 components [set assertion PASS]). 14-DI four-way census EXACT (adversary-verified). Trajectory 14→5→7→13→3→3→3→5→2→4. Convergence 0/3. Two new census gates standing: ARCH-INDEX SS ranges, PRD§5 components. Burst 86.
+
+### Burst 91 — Phase 1d Pass 15 Fix (ADR anchor axis)
+
+**Date:** 2026-07-14
+**Agents:** adversary + architect
+**Pass result:** NOT CLEAN — 1 HIGH (F-P15-01 ADR-010 NE-16 mis-anchor; true referent P-78; NEW CLASS: ADR-anchor axis)
+
+**Pre-emptive 11-ADR sweep:** 9 PASS / 2 FIXED (ADR-003 NE-11→CONFLICT-2 also caught). FM-Detection adjudicated ACCEPTABLE-CONVENTION + note codified. NFR-006 trace tightened. Sibling 4/4 + 3 censuses PASS on first run.
+
+**Files touched:**
+- specs/architecture/decisions/ADR-010-error-taxonomy-anyhow-confinement.md (NE-16→P-78 anchor fix)
+- specs/architecture/decisions/ADR-003-durability-tiers.md (NE-11→CONFLICT-2 anchor fix)
+- specs/domain-spec/failure-modes.md (FM-Detection convention note codified)
+- specs/prd-supplements/nfr-catalog.md (NFR-006 trace tightened)
+- cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-15.md (NEW)
+
+### Convergence Status After Burst 91
+
+- Phase 1d passes: 15 (NOT CLEAN)
+- Fix bursts: 15
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15)

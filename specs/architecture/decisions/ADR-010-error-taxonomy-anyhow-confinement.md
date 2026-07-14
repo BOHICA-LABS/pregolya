@@ -3,7 +3,7 @@ document_type: adr
 level: L3
 adr_id: "010"
 slug: error-taxonomy-anyhow-confinement
-title: "Error Taxonomy and anyhow Confinement (NE-16 / NE-03 / DI-014)"
+title: "Error Taxonomy and anyhow Confinement (P-78 / NE-03 / DI-014)"
 status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
@@ -19,7 +19,7 @@ decisions: [D17]
 ## Context
 
 adk-rust uses `anyhow::Error` at the library boundary in several places, losing structured
-error information for callers (NE-16 pattern to avoid). DI-014 mandates structured error
+error information for callers (P-78 pattern to avoid). DI-014 mandates structured error
 propagation with no silent None returns. BC-2.14.001–006 specify the FerrochainError model.
 
 This ADR specifies: when is `anyhow` permitted, where is it banned, and how are crate
@@ -57,9 +57,11 @@ pub struct FerrochainError {
 that convert to `FerrochainError` at the crate boundary. `thiserror` is permitted in
 library crates; `anyhow` is not.
 
-**NE-16 note:** The NE-16 entry in the PRD refers to macOS Seatbelt (BC-2.13.006),
-not anyhow. This ADR addresses anyhow confinement as a cross-cutting architecture concern
-referenced from the error taxonomy domain (DI-014) and the BC-2.14.003 CI lint gate.
+**Scope note:** NE-16 in the PRD refers to macOS Seatbelt (BC-2.13.006); it does NOT
+govern anyhow confinement. This ADR's authority derives from P-78 (adk-rust
+`MistralRsError::Other(#[from] anyhow::Error)` must-not-inherit pattern — the sole
+genuine anyhow public-signature leak per CERTIFICATION-REPORT W-04), DI-014 (no silent
+error swallowing), and the BC-2.14.003 CI lint gate.
 
 ## Consequences
 
