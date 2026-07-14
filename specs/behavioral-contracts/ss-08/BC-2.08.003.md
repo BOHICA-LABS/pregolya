@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.003
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-14T00:00:00Z
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-28): OBS-P28-3 — minted E-PROV-007 (StructuredOutputRefused, POLICY) for the OpenAI structured-output refusal path; added code literal to 4 construction sites (PC5, Invariant, EC-001, TV-004). Every FerrochainError now carries a machine-readable code per BC-2.14.001 posture."
+  - "1.2 (ADV-P1D-PASS-29): F-P29-01 — EC-002 codeless FerrochainError fixed: added code: \"E-PROV-005\" to the deserialization-failure construction. Per BC-2.14.001 every-error-has-a-code invariant."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -95,7 +96,7 @@ The caller can distinguish this from a deserialization failure (E-PROV-005) by c
 ### EC-002: Schema has required field the model omits
 **Scenario:** The schema requires `{ "answer": string }` but the model returns `{}`.
 **Expected behavior:** Deserialization fails cleanly with `Err(FerrochainError
-{ category: VAL, message: "missing required field 'answer'" })`. No panic.
+{ category: VAL, code: "E-PROV-005", message: "missing required field 'answer'" })`. No panic.
 
 ### EC-003: Ollama `format` with full JSON schema vs `"json"` string
 **Scenario:** `with_structured_output` is called on `ChatOllama` with a complex nested

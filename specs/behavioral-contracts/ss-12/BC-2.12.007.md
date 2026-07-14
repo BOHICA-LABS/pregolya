@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.007
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,9 @@ inputs:
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
 input-hash: "2bb68ed87dd30c866ac6d88eb723cce3c2d0b8ce8ca0e22697b97d5a887452f6"
+changelog:
+  - "1.0 (initial): base BC authored."
+  - "1.1 (ADV-P1D-PASS-29): F-P29-03 — replace non-canonical `node_delta` with canonical `node_stream` at PC2, EC-004, and TV-002. BC-2.06.001 is the streaming taxonomy authority; `node_delta` was never a valid variant. Added to retired-identifier registry (bc-authoring-plan.md gate #19)."
 ---
 
 # BC-2.12.007: Streaming Endpoint and Unary Endpoint Drive Same Graph Engine, Same Final Answer
@@ -58,8 +61,8 @@ graph engine, producing output that could diverge from the unary path.
    a single JSON response after the Run completes.
 2. The streaming endpoint emits a sequence of server-sent events (SSE) including:
    - One `run_start` event
-   - One or more `node_start`, `node_delta`, `node_end` events (per graph node
-     executed)
+   - One or more `node_start`, `node_stream`, `node_end` events (per graph node
+     executed; `node_stream` appears once per token/chunk for streaming nodes, zero times for synchronous nodes)
    - One `run_end` event with `output: <final_answer>`
 3. The `output` value in the streaming `run_end` event is byte-for-byte identical to
    the `output` value in the unary endpoint response, given the same graph and same
@@ -108,7 +111,7 @@ Both surfaces carry the same interrupt payload.
 
 ### EC-004: Very large output (>1 MB)
 **Scenario:** A graph produces a final answer exceeding 1 MB (e.g., large RAG synthesis).
-**Expected behavior:** The streaming endpoint emits the output in `node_delta` chunks,
+**Expected behavior:** The streaming endpoint emits the output in `node_stream` chunks,
 with no truncation. The unary endpoint returns the full output in a single response.
 Both outputs are identical in content; no data loss occurs in either path.
 
@@ -124,7 +127,7 @@ normally.
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | Same graph + same fresh thread; execute via streaming; collect `run_end.output`; execute via unary on identical fresh thread; compare `output` | `run_end.output == unary.output` (byte-for-byte JSON equality) | Core DI-011 verification |
-| TV-002 | Streaming run on 3-node graph | SSE stream contains: `run_start`, `node_start`×3, `node_end`×3, `run_end` (in topological order) | Event taxonomy: DI-011 streaming surface |
+| TV-002 | Streaming run on 3-node graph (streaming LLM nodes) | SSE stream contains: `run_start`, (`node_start` → `node_stream`×N → `node_end`)×3, `run_end`; `node_stream` events present for each streaming token per node | Event taxonomy: DI-011 streaming surface; canonical streaming-node token is `node_stream` per BC-2.06.001 |
 | TV-003 | Graph with error in node 2; streaming | SSE: `run_start`, `node_start` (node1), `node_end` (node1), `node_start` (node2), then `error` event with `FerrochainError`; stream closes | Error propagation via streaming |
 | TV-004 | Graph with error in node 2; unary | `4xx/5xx` response with same `FerrochainError` as TV-003 | Error equivalence: streaming = unary |
 | TV-005 | Graph with `interrupt()` call; streaming | SSE emits `{"__interrupt__": [...]}` event; `run_end.status = interrupted` | Interrupt via streaming surface |

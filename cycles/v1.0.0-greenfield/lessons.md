@@ -53,6 +53,14 @@ traces_to: STATE.md
 
 <!-- No lessons yet. -->
 
+### L-004 [process-gap, codified]: Wire-Visible Taxonomy With No Standing Gate Drifts Undetected
+
+**Discovered:** Pass 29 (burst 105)
+**Symptom:** The streaming-event surface (SSE chunk type, domain events, envelope keys) had drifted across 5 artifacts — BC-2.12.007, interface-definitions.md, ADR-006, events.md, module-decomposition.md — using inconsistent names (node_delta vs node_stream; past-tense variant names vs imperative canon; astream_events wire-compat claim vs D13 native-wire). None of this was caught through 28 adversarial passes because no standing gate covered streaming-event name coherence. F-P29-03/04/05 (3 HIGH findings) all stem from this single root cause.
+**Root cause:** Every wire-visible taxonomy (errors, events, objects) needs its own coherence census from the moment it first appears in specs. The streaming-event surface was introduced in early Phase 1 BCs and ADRs but was never given a corresponding coherence gate — unlike error taxonomy (gated via §17-C census) or wire objects (gated via §18-C sub-field census).
+**Codified fix:** Gate #23 STREAMING-EVENT-NAME COHERENCE added to bc-authoring-plan.md: every wire-visible event name (SSE chunk type, domain event, envelope key) must appear consistently in events.md, the StreamEvent enum in ADR-006 (11 imperative variants), and any BC that references it; census must be re-run after any streaming-surface change.
+**Applicable to:** Any new wire-visible taxonomy introduced during spec authoring — the moment a named set of events, codes, or objects appears across more than one artifact, a coherence census gate must be added for it. Do not wait for an adversarial pass to discover the gap.
+
 ## Policy Candidates
 
 | Lesson | Proposed Policy | Scope | Status |
@@ -60,3 +68,4 @@ traces_to: STATE.md
 | L-001 | Positive-coverage assertions required for census gates | All census gates | Codified |
 | L-002 | Absolute invariants must carry precedence carve-outs | BC authoring | Codified |
 | L-003 | Census re-run trigger required after artifact changes | All census gates | Codified (gate #21) |
+| L-004 | Wire-visible taxonomy requires coherence gate from first appearance | BC authoring + gate management | Codified (gate #23) |

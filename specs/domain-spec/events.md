@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: events
-version: "1.0"
+version: "1.1"
 status: active
 producer: business-analyst
 timestamp: 2026-07-14T00:00:00Z
@@ -13,6 +13,9 @@ inputs:
 input-hash: "96a97c892cfd894c1e3b2d9df10121c70d1b282157e5d6d8dcb5a139c887f694"
 traces_to: L2-INDEX.md
 decisions: [D11, D13, D17]
+changelog:
+  - "1.0 (initial): base events authored."
+  - "1.1 (ADV-P1D-PASS-29): F-P29-06 — relabel InterruptRaised Stream event field: `interrupt_raised` is an internal domain event; its SSE wire surface is the {\"__interrupt__\": [...]} JSON envelope (BC-2.12.007 EC-003, BC-2.05.001), NOT a StreamEvent variant. Decision: do not add interrupt variant to StreamEvent enum — no L2/BC evidence one was intended."
 ---
 
 # Domain Events (Processing Stages)
@@ -71,7 +74,7 @@ Graph execution suspended at a node boundary awaiting a ResumeValue.
 - **Trigger:** Node calls `interrupt()` or graph meets an interrupt edge condition
 - **Preconditions:** Run in `in_progress`
 - **Outcome:** Run transitions to `interrupted`; InterruptRecord stored durably; scratchpad saved
-- **Stream event:** `interrupt_raised {run_id, node_name, scratchpad?}`
+- **Wire surface (domain event — NOT a StreamEvent variant; F-P29-06, ADV-P1D-PASS-29):** When a node calls `interrupt()`, the SSE wire representation is the `{"__interrupt__": [InterruptPayload]}` JSON envelope (BC-2.12.007 EC-003, BC-2.05.001) — not a typed `StreamEvent` variant. `interrupt_raised` was previously listed here as a stream event label; that was incorrect. The interrupt payload is surfaced via the `__interrupt__` envelope and is structurally distinct from the `StreamEvent` enum variants (RunStart/Stream/End, NodeStart/Stream/End, etc.).
 
 ### ResumeValueReceived
 An external actor delivers a ResumeValue for a pending Interrupt.

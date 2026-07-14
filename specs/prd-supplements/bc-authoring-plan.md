@@ -540,9 +540,13 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | `X-Debug-Key` header | `Authorization: Bearer <key>` | F-P26-04 |
     | `/debug/*` path | `/_debug` | F-P26-04 |
     | `risk_tier.rs` (source file path) | `action_risk.rs` | F-P27-06 (BC-2.05.006 Architecture Anchor) |
+    | `node_delta` (SSE event token / description) | `node_stream` | F-P29-03 (BC-2.12.007, interface-definitions.md); BC-2.06.001 is the streaming taxonomy authority |
+    | `RunStarted`, `NodeStarted`, `ToolStarted`, `StepStarted`, `RunEnded`, `NodeEnded`, `ToolEnded`, `StepEnded` (Rust enum variant names in L3 architecture artifacts) | `RunStart`, `NodeStart`, `ToolStart`, `StepStart`, `RunEnd`, `NodeEnd`, `ToolEnd`, `StepEnd` (imperative) | F-P29-04 (ADR-006, module-decomposition.md); BC-2.06.001 is the authority; **NOTE: events.md (L2 domain spec) uses past-tense PascalCase (RunStarted, InterruptRaised, etc.) as DDD domain event names — this is correct and NOT retired; the census below excludes domain-spec/** |
+    | `run_started`, `node_started` (snake_case SSE wire tokens) | `run_start`, `node_start` (imperative) | F-P29-04 (ADR-006); wire tokens follow variant names |
 
-    Census command: `grep -rn "to_problem_detail\|risk_tier\|X-Debug-Key" .factory/specs/ | grep -v "~~\|changelog\|Census command\|retired.*list\|Retired Identifier\|action_risk.rs"` — output must be ZERO live occurrences (note: `risk_tier` in the retired-identifier table row itself and in the census-rule comment are excluded; `risk_tier.rs` in the description column of this table row is also excluded by the `Retired Identifier` filter).
-    Source: ADV-P1D-PASS-26 §F-P26-02, §F-P26-03, §F-P26-04; ADV-P1D-PASS-27 §F-P27-06.
+    Census command: `grep -rn "to_problem_detail\|risk_tier\|X-Debug-Key\|node_delta" .factory/specs/ | grep -v "bc-authoring-plan\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier\|action_risk.rs"` — output must be ZERO live occurrences (bc-authoring-plan.md excluded as registry document).
+    Census command (past-tense StreamEvent variants — L3 architecture and BC artifacts only): `grep -rn "RunStarted\|NodeStarted\|ToolStarted\|StepStarted\|run_started\|node_started" .factory/specs/ | grep -v "bc-authoring-plan\|domain-spec/\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier"` — output must be ZERO live occurrences.
+    Source: ADV-P1D-PASS-26 §F-P26-02, §F-P26-03, §F-P26-04; ADV-P1D-PASS-27 §F-P27-06; ADV-P1D-PASS-29 §F-P29-03, §F-P29-04.
 
 20. **AUTH/POLICY category re-sweep (added P26 — standing gate):**
     Any edit to a 401/403/409 table row in interface-definitions.md §HTTP Status Codes,
@@ -623,3 +627,36 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     is authoritative. The fix (F-P28-01) relabeled the column to "Default RetryHint" and
     added a precedence rule; this gate ensures future divergences are explicitly justified.
     Source: ADV-P1D-PASS-28 §F-P28-01 [process-gap].
+
+    **ADV-P1D-PASS-29 update (F-P29-02):** E-CRON-003 (ScheduleQueueFull) was present in
+    the known-intentional-divergences table above but was NOT cited in the blockquote at
+    error-taxonomy.md §RetryHint precedence rule. Fixed: blockquote now explicitly cites all
+    5 divergent codes. The blockquote divergence list and this table must remain in sync.
+
+23. **Streaming-event-name coherence gate — STREAMING-EVENT-NAME COHERENCE (added P29 — standing gate):**
+    [process-gap] Any burst that creates or edits streaming event names in ANY of the following
+    artifacts: `domain-spec/events.md`, `domain-spec/capabilities-p0.md`, `BC-2.06.001.md` (the
+    StreamEvent enum authority), `architecture/decisions/ADR-006-streaming-event-taxonomy.md`,
+    `prd-supplements/interface-definitions.md`, `BC-2.12.007.md`, `architecture/module-decomposition.md`
+    MUST perform a three-way coherence check before the burst closes:
+
+    1. **L2 source (events.md, capabilities-p0.md):** Note the domain event names and any
+       stream-event labels. Domain event section headers (RunStarted, InterruptRaised, etc.)
+       use DDD past-tense PascalCase — this is intentional and NOT a violation.
+    2. **BC-2.06.001 StreamEvent enum (authoritative):** Variant names must be imperative
+       (RunStart, NodeStream, ToolEnd, etc.); wire tokens must be snake_case imperative
+       (run_start, node_stream, tool_end, etc.).
+    3. **Downstream consumers** (ADR-006, interface-definitions.md, BC-2.12.007,
+       module-decomposition.md): Must use the exact variant names and wire tokens from
+       BC-2.06.001. Any description field listing event tokens must use node_stream not
+       node_delta; RunStart not RunStarted.
+    4. **D13 wire posture:** ADR-006 and any wire-format description must state
+       ferrochain-native wire format. LangChain Python `.astream_events()` v2 compat
+       claims are a gate failure (they contradict D13).
+    5. **Census commands:**
+       - `grep -rn "node_delta" .factory/specs/ | grep -v "bc-authoring-plan\|~~\|changelog\|retired.*list\|Census"` → zero live hits
+       - `grep -rn "RunStarted\|NodeStarted\|run_started" .factory/specs/ | grep -v "bc-authoring-plan\|domain-spec/\|~~\|changelog\|retired.*list\|Census"` → zero live hits
+       - `grep -n "NodeStream\|ToolStream" .factory/specs/architecture/decisions/ADR-006-streaming-event-taxonomy.md` → present
+       - `grep -rn "astream_events" .factory/specs/architecture/ | grep -v "native\|D13\|NOT\|no.*compat"` → zero live compat claims
+
+    Source: ADV-P1D-PASS-29 §F-P29-03, §F-P29-04, §F-P29-05, §OBS-P29-2 [process-gap].

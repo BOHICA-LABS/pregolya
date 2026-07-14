@@ -952,3 +952,45 @@ Pass 28 NOT CLEAN — 1 MED finding + 3 observations applied. ALL FIXED same bur
 - Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28)
 
 **State changes:** convergence passes 27→28, fix bursts 27→28, trajectory →1 (P1D-28), session checkpoint replaced (burst 103 archived), step row pass 23 archived to burst-log. Gates 30→31.
+
+---
+
+## Burst 105 — Phase 1d Pass 29 + Fix Burst (streaming-event taxonomy)
+
+**Date:** 2026-07-14
+**Agents:** adversary (pass 29) + product-owner (fix) + state-manager (STATE update)
+**Files touched:** specs/architecture/decisions/ADR-006-streaming-event-taxonomy.md, specs/architecture/module-decomposition.md, specs/behavioral-contracts/ss-08/BC-2.08.003.md, specs/behavioral-contracts/ss-12/BC-2.12.007.md, specs/domain-spec/events.md, specs/prd-supplements/bc-authoring-plan.md, specs/prd-supplements/error-taxonomy.md, specs/prd-supplements/interface-definitions.md, cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-29.md (NEW), STATE.md, cycles/v1.0.0-greenfield/burst-log.md, cycles/v1.0.0-greenfield/lessons.md, cycles/v1.0.0-greenfield/session-checkpoints.md
+
+### Summary
+
+Pass 29 NOT CLEAN — 6 findings (3 HIGH + 3 MED) + 2 observations. ALL FIXED same burst. Pass-28 fixes held in full. NEW CLASS: streaming-event taxonomy. Novelty HIGH — never-probed axis (streaming events crossed 5 artifacts with no standing gate for 28 passes). NEW GATE #23: streaming-event-name coherence. Gates total now 32. Counter remains 0/3.
+
+### Findings Summary
+
+| ID | Severity | Finding | Fix |
+|----|----------|---------|-----|
+| F-P29-01 | MED | BC-2.08.003 EC-002 carried no FerrochainError code — codeless error path violating every-FerrochainError-has-a-code posture | E-PROV-005 added as the canonical code for EC-002 + full zero-codeless census across all BCs |
+| F-P29-02 | MED | E-CRON-003 had only 4 documented RetryHint divergences in the 5-divergence table — 5th entry (E-CRON-003 Later) was undocumented | E-CRON-003 Later divergence added; table now 5/5 complete |
+| F-P29-03 | HIGH | BC-2.12.007 and interface /stream row used node_delta as the streaming chunk event name — node_delta is non-canonical; canon is node_stream | node_delta → node_stream in BC-2.12.007 (3 sites) and interface-definitions.md /stream row |
+| F-P29-04 | HIGH | ADR-006 StreamEvent enum used past-tense variant names (NodeStarted, NodeCompleted, etc.) and was missing NodeStream and ToolStream variants | ADR-006 rewritten to 11 imperative variants (RunStart/RunStream/RunEnd/StepStart/StepEnd/NodeStart/NodeStream/NodeEnd/ToolStart/ToolStream/ToolEnd) per BC-2.06.001; module-decomposition.md updated |
+| F-P29-05 | HIGH | ADR-006 claimed LangGraph astream_events wire-compatibility — contradicted D13 (ferrochain-server is first-party, no wire-compat target) | astream_events compat claim removed; native-wire stated |
+| F-P29-06 | MED | interrupt_raised was labelled as an SSE wire event — it is an internal domain event; wire surface is the __interrupt__ envelope | interrupt_raised relabeled as internal domain event; __interrupt__ envelope canon documented in events.md |
+| OBS-1 | OBS | Blanket library-code omission note — no fix needed; acceptable |  |
+| OBS-2 | OBS | Streaming event surface had NO standing gate through 28 passes [process-gap] → codified as gate #23 | Gate #23 STREAMING-EVENT-NAME COHERENCE added to bc-authoring-plan.md |
+
+### New Standing Gates (post-burst 105)
+
+- Gate #23: Streaming-event-name coherence — every wire-visible event name (SSE chunk type, domain event, envelope key) must appear in events.md, in the StreamEvent enum in ADR-006 (11 imperative variants), and in any BC that references it; census must be re-run after any streaming-surface change
+
+### Convergence Status After Burst 105
+
+- Phase 1d passes: 29 (NOT CLEAN)
+- Fix bursts: 29
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29)
+
+**State changes:** convergence passes 28→29, fix bursts 28→29, trajectory →6 (P1D-29), session checkpoint replaced (burst 104 archived), step row pass 24 archived to burst-log. Gates 31→32.
+
+### Archived Current Phase Steps Row (displaced from STATE.md — oldest row)
+
+| Phase 1d pass 24 + fix burst + SESSION WRAP | adversary + PO + state-manager | COMPLETE | Pass 24: NOT CLEAN — 2 findings + 3 obs (wire-object field-set class: Run completed_at/updated_at three-way; status-code table E-SERVER exclusions; Thread.status/Assistant fields undefined in entity). ALL FIXED + full wire-object census 21 rows PASS (completed_at kept w/ terminal-only semantics; ThreadStatus enum defined). Open probe for pass 25: E-SERVER-016 missing HTTP status row. Trajectory 14→5→7→13→3→3→3→5→2→4→4→1→1→2→1→1→1→4→2→3→1→1→1→2. Convergence 0/3. Gates 25. Burst 100 (wrap). |

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.0"
+version: "1.1"
 status: active
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
@@ -14,6 +14,9 @@ inputs:
 input-hash: "1268b7a2425859ea"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17]
+changelog:
+  - "1.0 (initial): base module decomposition authored."
+  - "1.1 (ADV-P1D-PASS-29): F-P29-04 correct core::events description from past-tense (RunStarted/Ended, NodeStarted/Ended) to imperative canon (RunStart/Stream/End, NodeStart/Stream/End) per BC-2.06.001 authority."
 ---
 
 # Module Decomposition: ferrochain
@@ -32,7 +35,7 @@ credential security primitives, streaming event types.
 | `core::message` | `Message` enum (AiMessage/HumanMessage/SystemMessage/ToolMessage), ContentBlock | CRITICAL | SS-01 |
 | `core::error` | `FerrochainError` 2D struct (Component × Category), RFC-7807 emission | CRITICAL | SS-14 |
 | `core::credentials` | API key newtypes with redacted Debug; no Serialize; no Deref<Target=str> | CRITICAL | SS-14 |
-| `core::events` | Streaming event taxonomy types (RunStarted/Ended, NodeStarted/Ended, etc.) | HIGH | SS-06 |
+| `core::events` | Streaming event taxonomy types (RunStart/Stream/End, NodeStart/Stream/End, etc.) | HIGH | SS-06 |
 | `core::config` | `RunnableConfig`, `ChatConfig` structs | MEDIUM | SS-01 |
 | `core::retry` | `ToolRetryPolicy` (keyed by tool_name; P-71 ADOPT), `CircuitBreaker` state machine, `RetryPolicy` with finite `global_limit: Option<NonZeroU32>`; shared combinator — provider crates and graph both route through this | MEDIUM | SS-16 |
 

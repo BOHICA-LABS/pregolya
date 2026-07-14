@@ -343,3 +343,13 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **WORKSTREAM (at time of archival):** Burst 103 COMPLETE. Phase 1d pass 27: 6 findings fixed (3 HIGH + 2 MED + 1 LOW; NEW CLASS: BC↔taxonomy category-authority). CANON: E-GRAPH-002 stays 422 (POLICY→422 9th PC3 override); E-CHKPT-004 INTERNAL (BC authoritative over taxonomy); E-CHKPT-005 embedded-in-Run.error omission note; E-GRAPH-013 SECURITY→403; hitl module path action_risk.rs; gate #21 census re-run trigger. Trajectory ...→7→5→6.
 
 **WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 103 | Counter: 0/3
+
+---
+
+### Archived Checkpoint — Burst 104 (Pass 28)
+
+"ferrochain Phase 1 spec crystallization, step 1d adversarial convergence IN PROGRESS: 28 passes / 28 fix bursts, trajectory 14→...→5→6→1 (pass 28 found only 1 MED on a never-swept axis [RetryHint]; full 60-code category census clean; adversary assesses deep convergence). Counter 0/3 (strict-zero D14). NEXT ACTION: dispatch adversary pass 29 — fresh context, sibling-check pass-28 (RetryHint precedence + gate #22; E-PROV-007 mint coherence; BC-2.04.006 EC-005), rotate 4 censuses, free-choice orthogonal probe; CLEAN advances counter 1/3; loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+
+**WORKSTREAM (at time of archival):** Burst 104 COMPLETE. Phase 1d pass 28: 1 MED finding + 3 obs fixed (NEW CLASS: RetryHint coherence). CANON: RetryHint per-code authoritative over category default (5 codes); E-PROV-007 StructuredOutputRefused MINTED; E-CHKPT-005 raise-condition = composite-PK tenancy collision; gate #22. Trajectory ...→6→1.
+
+**WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 104 | Counter: 0/3

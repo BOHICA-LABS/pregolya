@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-error-taxonomy
 level: L3
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
 timestamp: 2026-07-14T00:00:00Z
@@ -9,6 +9,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-02 recategorize E-SERVER-004 AUTH→POLICY; correction note added inline."
   - "1.2 (ADV-P1D-PASS-27): F-P27-02 recategorize E-CHKPT-004 SECURITY→INTERNAL (BC-2.04.007 authoritative; key rotation is an internal invariant failure, not a security policy rejection)."
   - "1.3 (ADV-P1D-PASS-28): F-P28-01 relabel category-table RetryHint column to 'Default RetryHint'; add per-code-authoritative precedence rule. OBS-P28-3 mint E-PROV-007 (StructuredOutputRefused, POLICY, Never) anchored to BC-2.08.003 — OpenAI structured-output refusal path now carries a machine-readable code."
+  - "1.4 (ADV-P1D-PASS-29): F-P29-02 — add E-CRON-003 (ScheduleQueueFull) to the divergences blockquote as the 5th documented divergence. Decision: option (a) — add to blockquote with BC-2.12.004-anchored rationale (queue-full is transient capacity condition, backoff-recoverable → Later overrides POLICY Never). No category churn."
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -43,7 +44,7 @@ primary_consumers: [implementer, test-writer]
 | SECURITY | Security | Workspace escape, sandbox policy enforcement | Never |
 | TENANCY | Tenancy | Session address collision, cross-tenant access attempt | Never |
 
-> **RetryHint precedence rule (F-P28-01, ADV-P1D-PASS-28):** The "Default RetryHint" column above applies only to codes whose per-code catalog row omits a RetryHint. Where a per-code catalog row specifies a RetryHint, the per-code value is authoritative — it overrides the category default. Intentional divergences must carry a BC-anchored rationale in the per-code row or a correction note. Examples: E-RETRY-003 (CircuitBreakerOpen, POLICY) carries `Later(<reset_timeout>)` because the circuit-breaker cool-down semantics of BC-2.16.003 override the POLICY `Never` default — the breaker trip is a temporary state with a known reset horizon; E-MEMORY-002/005 and E-BUDGET-002 (DURABILITY codes) carry `Never` because their specific failure modes (storage-full, partial-erasure, journal-write) are non-recoverable by retry without operator intervention. Divergences are intentional; the per-code value is the implementation contract.
+> **RetryHint precedence rule (F-P28-01, ADV-P1D-PASS-28):** The "Default RetryHint" column above applies only to codes whose per-code catalog row omits a RetryHint. Where a per-code catalog row specifies a RetryHint, the per-code value is authoritative — it overrides the category default. Intentional divergences must carry a BC-anchored rationale in the per-code row or a correction note. Examples: E-RETRY-003 (CircuitBreakerOpen, POLICY) carries `Later(<reset_timeout>)` because the circuit-breaker cool-down semantics of BC-2.16.003 override the POLICY `Never` default — the breaker trip is a temporary state with a known reset horizon; E-CRON-003 (ScheduleQueueFull, POLICY) carries `Later` because schedule queue overflow is a transient capacity condition — the next firing cycle will likely have capacity, making `Later` the correct semantics and a justified override of the POLICY `Never` default per BC-2.12.004 (F-P29-02, ADV-P1D-PASS-29); E-MEMORY-002/005 and E-BUDGET-002 (DURABILITY codes) carry `Never` because their specific failure modes (storage-full, partial-erasure, journal-write) are non-recoverable by retry without operator intervention. Divergences are intentional; the per-code value is the implementation contract.
 
 ## Severity Definitions
 
