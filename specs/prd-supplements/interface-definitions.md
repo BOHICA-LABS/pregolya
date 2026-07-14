@@ -54,10 +54,10 @@ pub trait Runnable<Input, Output>: Send + Sync {
 ### BaseChatModel
 
 ```rust
-pub trait BaseChatModel: Runnable<Vec<Message>, AIMessage> + Send + Sync {
+pub trait BaseChatModel: Runnable<Vec<Message>, AiMessage> + Send + Sync {
     fn model_name(&self) -> &str;
     async fn stream_chat(&self, messages: Vec<Message>, config: Option<ChatConfig>)
-        -> Result<impl Stream<Item = Result<AIMessageChunk, FerrochainError>>, FerrochainError>;
+        -> Result<impl Stream<Item = Result<AiMessageChunk, FerrochainError>>, FerrochainError>;
     async fn bind_tools(&self, tools: Vec<ToolDefinition>) -> impl BaseChatModel;
     fn with_structured_output<T: DeserializeOwned>(&self) -> impl Runnable<Vec<Message>, T>;
 }

@@ -133,7 +133,7 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | BC ID | Title | Priority | CAP | DI | Wave |
 |-------|-------|----------|-----|----|------|
 | BC-2.01.001 | Typed ContentBlock sequence construction (no raw content where typed expected) | P0 | CAP-001 | DI-008 | Wave 0 |
-| BC-2.01.002 | Message type-safety (AIMessage/HumanMessage/SystemMessage/ToolMessage) | P0 | CAP-001 | DI-008 | Wave 0 |
+| BC-2.01.002 | Message type-safety (AiMessage/HumanMessage/SystemMessage/ToolMessage) | P0 | CAP-001 | DI-008 | Wave 0 |
 | BC-2.01.003 | Runnable trait invocation — invoke, stream, batch | P0 | CAP-002 | — | Wave 0 |
 | BC-2.01.004 | Runnable pipe composition (A \| B = AB chain) | P0 | CAP-002 | — | Wave 0 |
 | BC-2.14.001 | FerrochainError 2D component × category struct with RetryHint and machine code | P0 | CAP-016 | DI-008, DI-014 | Wave 0 |
@@ -349,3 +349,18 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     executable-string census: `grep -rn "cargo kani --harness" .factory/specs/` and verify
     every cited harness name matches a `harness_fn` value in VP-INDEX.md (or is a placeholder
     `<harness_name>`). Source of truth: ADV-P1D-PASS-17.md §F-P17-01 + executable-string census.
+15. **Shared-type identifier census gate (added P18 — standing gate):**
+    After any BC authoring or fix burst, run the shared-type identifier census across all BC code
+    snippets and prd-supplements (excluding interface-definitions.md, which is architect scope).
+    For every ferrochain type in the ubiquitous-language reconciliation table plus the core
+    shared types (Message, ContentBlock, AiMessage, AiMessageChunk, FerrochainError, Component,
+    Category, RetryHint, CheckpointSaver, RunnableConfig, CheckpointTuple, RunStatus, MemoryStore,
+    BudgetPolicy, GuardrailHook, ProvenanceTag): assert single spelling per type across all BC
+    code snippets and prd-supplements. Canonical spellings are the ferrochain names per
+    ubiquitous-language-server.md reconciliation table (D17 fidelity: CheckpointSaver not
+    CheckpointStore; RunnableConfig not RunConfig; AiMessage not AIMessage). Retired spellings
+    (CheckpointStore, RunConfig, BaseCheckpointSaver, AIMessage in Rust contexts) must have 0
+    occurrences. Census command:
+    `grep -rn "CheckpointStore\|RunConfig\b\|BaseCheckpointSaver\|AIMessage" .factory/specs/behavioral-contracts/ .factory/specs/prd-supplements/`
+    (AIMessage occurrences in Python semport cross-references are exempt — cite semport source).
+    Source of truth: ADV-P1D-PASS-18.md §F-P18-01 + shared-type identifier census.

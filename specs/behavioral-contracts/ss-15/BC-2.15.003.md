@@ -44,7 +44,7 @@ policy).
 1. A valid `user_id` is provided in the erasure request.
 2. The `MemoryStore` has at least the user-scoped and app-scoped tiers enabled.
 3. The caller has operator-level privilege (same `AdminContext` as admin operations
-   in BC-2.15.002); erasure cannot be initiated from a standard `RunConfig` context.
+   in BC-2.15.002); erasure cannot be initiated from a standard `RunnableConfig` context.
 
 ## Postconditions
 
@@ -115,7 +115,7 @@ user_id=<id> due to missing session-user mapping; these entries are NOT deleted.
 receipt includes `unattributed_session_count: N`. This is a documented limitation.
 
 ### EC-005: Caller without admin privilege attempts erasure
-**Scenario:** A standard `RunConfig` context (graph node) calls the erasure API.
+**Scenario:** A standard `RunnableConfig` context (graph node) calls the erasure API.
 **Expected behavior:** `Err(E-MEMORY-006 InsufficientPrivilege { operation: "gdpr_erasure",
 required: "AdminContext" })` before any deletion occurs.
 

@@ -43,7 +43,7 @@ the resume value is consumed FIFO and the interrupted node re-executes from its 
 
 ## Preconditions
 
-1. A `BudgetPolicy` with `on_ceiling = escalate` is configured in the `RunConfig`.
+1. A `BudgetPolicy` with `on_ceiling = escalate` is configured in the `RunnableConfig`.
 2. A `BudgetPolicy::evaluate` call has returned `PolicyDecision::Escalate` after an LLM call
    or tool invocation.
 3. A `CheckpointSaver` is attached to the graph (an interrupt without a checkpointer is a
@@ -62,7 +62,7 @@ the resume value is consumed FIFO and the interrupted node re-executes from its 
 5. A `JournalEntry` with `decision: Escalate` and the `BudgetEscalation` context is appended
    to the `EvidenceJournal` before the interrupt is raised (BC-2.10.002).
 6. On resume via `Command(resume = BudgetResume::Extend { new_ceiling })`:
-   - The `new_ceiling` replaces the policy's current ceiling in the `RunConfig` for the
+   - The `new_ceiling` replaces the policy's current ceiling in the `RunnableConfig` for the
      resumed execution.
    - The interrupted node re-executes from the start of its super-step (DI-003).
    - A `JournalEntry` recording the resume decision and new ceiling is appended.

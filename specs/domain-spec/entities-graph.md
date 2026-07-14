@@ -74,7 +74,7 @@ Snapshot of all channel values at a point in execution.
 A named Runnable registered in a StateGraph.
 - **Fields:** name: NodeName (unique within the graph), runnable: Runnable
 - **Behavior:** Reads a subset of GraphState as its typed input; returns a partial state update (Map<ChannelName, Value>) or a Command
-- **Invariant (DI-002):** Node output written to CheckpointStore via put_writes before the next super-step.
+- **Invariant (DI-002):** Node output written to CheckpointSaver via put_writes before the next super-step.
 
 ### Edge
 A directed transition between two Nodes.
@@ -111,10 +111,10 @@ A task output recorded but not yet reduced into GraphState.
 - **Relationships:** Checkpoint 0→N PendingWrite.
 
 ### CheckpointTuple
-The full unit returned by CheckpointStore.get_tuple: checkpoint + metadata + pending writes.
-- **Fields:** config: RunConfig, checkpoint: Checkpoint, metadata: CheckpointMetadata, parent_config: Option<RunConfig>, pending_writes: Vec<PendingWrite>
+The full unit returned by CheckpointSaver.get_tuple: checkpoint + metadata + pending writes.
+- **Fields:** config: RunnableConfig, checkpoint: Checkpoint, metadata: CheckpointMetadata, parent_config: Option<RunnableConfig>, pending_writes: Vec<PendingWrite>
 
-### CheckpointStore
+### CheckpointSaver
 Repository interface for checkpoint persistence.
 - **Operations:** `get_tuple(config) → Option<CheckpointTuple>`, `put_writes(config, writes)`, `put(config, checkpoint, metadata)`, `list(config, filter) → Iterator<CheckpointTuple>`
 - **Backends:** InMemory (default in tests), SQLite (default in production), Postgres (stretch)
@@ -134,7 +134,7 @@ PregelTask belongs-to Node (via node_name)
 Checkpoint wraps GraphState
 Checkpoint 0——N PendingWrite
 Checkpoint 0——1 parent Checkpoint
-CheckpointStore owns N Checkpoint
+CheckpointSaver owns N Checkpoint
 Thread 1——N Checkpoint (via thread_id)
 Message 1——N ContentBlock
 Tool returns ToolResult (ContentBlock subtype)

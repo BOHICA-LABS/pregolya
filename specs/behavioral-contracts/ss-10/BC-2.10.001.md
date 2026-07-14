@@ -41,7 +41,7 @@ confirms adk-rust has no native token/cost ceiling primitive.
 
 ## Preconditions
 
-1. A `RunConfig` for the run includes a `BudgetPolicy` (may be a composed chain of multiple
+1. A `RunnableConfig` for the run includes a `BudgetPolicy` (may be a composed chain of multiple
    policies; absence of a policy means the default Allow-all policy is applied silently — see
    BC-2.10.002 for the journal record in this case).
 2. A `TokenUsage` struct is updated after every LLM call and tool invocation with cumulative
@@ -67,7 +67,7 @@ confirms adk-rust has no native token/cost ceiling primitive.
 5. When multiple policies are composed (policy chain), the most restrictive outcome wins:
    Deny > Escalate > Allow. The first Deny short-circuits the remaining chain.
 6. Sub-agent runs (subgraph invocations) are evaluated against the sub-agent's own policy
-   (from its `RunConfig`) independently of the parent run's policy.
+   (from its `RunnableConfig`) independently of the parent run's policy.
 
 ## Invariants
 
@@ -78,13 +78,13 @@ confirms adk-rust has no native token/cost ceiling primitive.
   directly. Its only output is a `PolicyDecision`.
 - Policy composition must be associative and deterministic: composing policy A then policy B
   with the same inputs produces the same result regardless of call-site ordering.
-- The absence of a `BudgetPolicy` in `RunConfig` is equivalent to an always-`Allow` policy.
-  This must be explicit in the `RunConfig` defaults documentation.
+- The absence of a `BudgetPolicy` in `RunnableConfig` is equivalent to an always-`Allow` policy.
+  This must be explicit in the `RunnableConfig` defaults documentation.
 
 ## Edge Cases
 
 ### EC-001: No BudgetPolicy configured (permissive default)
-**Scenario:** A `RunConfig` is created without specifying a `BudgetPolicy`.
+**Scenario:** A `RunnableConfig` is created without specifying a `BudgetPolicy`.
 **Expected behavior:** The execution engine applies an implicit always-`Allow` policy.
 An `EvidenceJournal` entry is still written for each evaluation point (with `policy: "default-allow"`
 and `decision: Allow`) so that budget usage is observable even without a ceiling policy.

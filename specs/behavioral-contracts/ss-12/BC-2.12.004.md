@@ -34,7 +34,7 @@ input-hash: "2fa3aaf38e5dd19ee39c3df5596438a531328d2cdf99120e4914b0e4275419f1"
 proactive run trigger on a named Assistant. On each schedule firing, the server
 creates a new Run with a **fresh, isolated session** — no prior thread context is
 shared across firings unless the operator explicitly wires a persistent thread via
-`RunConfig`. This contract specifies the full lifecycle: create, enable, fire, disable,
+`RunnableConfig`. This contract specifies the full lifecycle: create, enable, fire, disable,
 and delete, plus the isolation guarantee that distinguishes proactive runs from
 interactive runs.
 
@@ -45,7 +45,7 @@ interactive runs.
 2. The `schedule` field is a syntactically valid cron expression (five or six fields,
    standard quartz-compatible or POSIX cron syntax).
 3. The ferrochain-server scheduler subsystem is running (not shut down).
-4. `RunConfig` supplied in the schedule creation request is valid per `Assistant`
+4. `RunnableConfig` supplied in the schedule creation request is valid per `Assistant`
    configuration (no unknown fields, no contradicting overrides).
 
 ## Postconditions
@@ -71,14 +71,14 @@ interactive runs.
 
 - **Session isolation:** Each cron-fired Run receives a newly allocated `thread_id`;
   it does not inherit state from any previous cron Run on the same schedule unless
-  `RunConfig.thread_id` is explicitly set by the operator.
+  `RunnableConfig.thread_id` is explicitly set by the operator.
 - **Idempotent scheduling:** Creating two schedules with identical
   (`assistant_id`, `schedule`, `config`) is allowed; they are distinct records with
   distinct `cron_id` values — there is no deduplication.
 - **No missed-fire accumulation:** If a schedule fires while the server was down, the
   server does **not** attempt to catch up with the missed firings. Exactly one Run
   is created for each elapsed scheduled time (miss-on-restart, fire-on-resume, or
-  skip-on-restart — behavior is configurable per `RunConfig.missed_fire_policy`; the
+  skip-on-restart — behavior is configurable per `RunnableConfig.missed_fire_policy`; the
   default is `skip`).
 
 ## Edge Cases

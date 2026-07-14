@@ -61,9 +61,9 @@ All channel reducers applied to the accumulated PendingWrites of the super-step.
 - **Invariant check:** Concurrent LastValue writes → InvalidUpdateError before this stage
 
 ### CheckpointWritten
-A new Checkpoint stored to the CheckpointStore at a super-step boundary.
+A new Checkpoint stored to the CheckpointSaver at a super-step boundary.
 - **Trigger:** ReducersApplied completes; sync-default durability tier
-- **Preconditions:** GraphState valid; CheckpointStore writable
+- **Preconditions:** GraphState valid; CheckpointSaver writable
 - **Outcome:** Checkpoint persisted with monotonic ID (DI-004); parent pointer set
 
 ### InterruptRaised
@@ -106,7 +106,7 @@ A GuardrailHook evaluated content at an ingress boundary.
 ### BudgetEvaluated
 A BudgetPolicy evaluated a token/cost tally for the current Run.
 - **Trigger:** After each model call; after each tool invocation
-- **Preconditions:** BudgetPolicy configured in RunConfig
+- **Preconditions:** BudgetPolicy configured in RunnableConfig
 - **Outcome:** Allow (continue), Escalate (raise HITL interrupt), or Deny (halt run)
 - **EvidenceJournal:** Entry appended with outcome (BC-2.10.002: append-only journal)
 

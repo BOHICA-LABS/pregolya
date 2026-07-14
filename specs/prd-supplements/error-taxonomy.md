@@ -186,7 +186,7 @@ primary_consumers: [implementer, test-writer]
 | E-MEMORY-001 | VAL | broken | BC-2.15.001 | Never | `EmbeddingBackendNotConfigured: vector_search requires an embedding backend; none is configured` |
 | E-MEMORY-002 | DURABILITY | broken | BC-2.15.001 | Never | `StorageFull: memory backend '<backend>' at '<path>' has no remaining capacity` |
 | E-MEMORY-003 | POLICY | broken | BC-2.15.002 | Never | `ScopeAccessDenied: caller identity '<caller_identity>' cannot write to <requested_scope> — cross-owner lateral access denied` |
-| E-MEMORY-004 | VAL | broken | BC-2.15.002 | Never | `NoScopeContext: memory scope resolution requires an active RunConfig session context; none is available` |
+| E-MEMORY-004 | VAL | broken | BC-2.15.002 | Never | `NoScopeContext: memory scope resolution requires an active RunnableConfig session context; none is available` |
 | E-MEMORY-005 | DURABILITY | broken | BC-2.15.003 | Never | `ErasurePartialFailure: GDPR erasure for user '<user_id>' partially completed; rolled back — <reason>` |
 | E-MEMORY-006 | POLICY | broken | BC-2.15.003 | Never | `InsufficientPrivilege: operation '<operation>' requires AdminContext; caller has <caller_privilege>` |
 

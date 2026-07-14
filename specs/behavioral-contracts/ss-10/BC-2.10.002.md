@@ -38,7 +38,7 @@ payment-guardrail pattern where every transaction step is written to an append-o
 
 ## Preconditions
 
-1. A `Run` is executing with a `BudgetPolicy` configured in its `RunConfig` (or the implicit
+1. A `Run` is executing with a `BudgetPolicy` configured in its `RunnableConfig` (or the implicit
    default-allow policy — see BC-2.10.001 EC-001).
 2. An `EvidenceJournal` store is accessible from the execution context (backed by the same
    SQLite or in-memory backend used for checkpointing).
@@ -97,7 +97,7 @@ impose an arbitrary entry count limit. Performance is bounded (O(1) per append; 
 journal scan).
 
 ### EC-004: Default-allow policy (no explicit BudgetPolicy configured)
-**Scenario:** A run has no `BudgetPolicy` in its `RunConfig`. The implicit default-allow
+**Scenario:** A run has no `BudgetPolicy` in its `RunnableConfig`. The implicit default-allow
 policy is applied.
 **Expected behavior:** Journal entries are still written for every evaluation point, with
 `policy_name: "default-allow"` and `decision: Allow`. The journal is never empty for a run

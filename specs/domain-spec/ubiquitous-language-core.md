@@ -113,13 +113,13 @@ A serialized snapshot of GraphState + pending writes + metadata at a super-step 
 Stored in msgpack format [D11.2 locked]. Identified by a monotonic logical-clock ID — not
 wall-clock. Has a parent_checkpoint_id pointer for fork lineage tracking (DI-004).
 
-**CheckpointStore**
+**CheckpointSaver**
 The repository that persists and retrieves Checkpoints. Operations: `get_tuple`, `put_writes`,
 `put`, `list`. Backends: InMemory, SQLite, Postgres (stretch). Every operation is triple-
 addressed by (thread_id, checkpoint_ns, checkpoint_id) — no bare thread_id path (DI-005).
 
 **put_writes**
-The CheckpointStore operation that durably records a PregelTask's output before the next
+The CheckpointSaver operation that durably records a PregelTask's output before the next
 super-step begins. Central to DI-002 (per-task durability, sync-default). Corresponds to
 LangGraph's `put_writes`.
 

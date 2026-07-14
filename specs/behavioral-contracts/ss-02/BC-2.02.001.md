@@ -106,7 +106,7 @@ transitions to `failed`.
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `StateGraph` with schema `{ messages: Append<AIMessage> }`, one node `"agent"` that returns `{ "messages": [AIMessage("hello")] }`, edge `START → agent → END`; `compile()` called | `Ok(CompiledStateGraph)`; `invoke({"messages": []})` returns `{"messages": [AIMessage("hello")]}` | Happy path — schema inference, single node, linear graph |
+| TV-001 | `StateGraph` with schema `{ messages: Append<AiMessage> }`, one node `"agent"` that returns `{ "messages": [AiMessage("hello")] }`, edge `START → agent → END`; `compile()` called | `Ok(CompiledStateGraph)`; `invoke({"messages": []})` returns `{"messages": [AiMessage("hello")]}` | Happy path — schema inference, single node, linear graph |
 | TV-002 | Same graph; node returns `None` | `invoke({"messages": []})` returns `{"messages": []}` (no mutation) | Node returns None — no channel mutation |
 | TV-003 | Builder with no `START` edge; `compile()` | `Err(E-GRAPH-008 UnreachableGraph)` | No entry edge — compile-time validation |
 | TV-004 | `add_node("agent", fn)` called twice on same builder | Second call returns `Err(E-GRAPH-009 DuplicateNodeName)` | Duplicate node name |

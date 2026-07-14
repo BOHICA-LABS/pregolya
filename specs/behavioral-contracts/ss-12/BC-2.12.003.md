@@ -38,7 +38,7 @@ LangGraph Platform (D13).
 
 ## Preconditions
 
-1. `ferrochain-server` is running with configured `RunStore`, `CheckpointStore`, and
+1. `ferrochain-server` is running with configured `RunStore`, `CheckpointSaver`, and
    an executor connected to the `ferrochain-graph` engine.
 2. A Thread identified by `thread_id` exists (see BC-2.12.001).
 3. The caller holds a valid authentication credential (or server is in dev mode).
@@ -52,7 +52,7 @@ LangGraph Platform (D13).
    {
      assistant_id: Uuid,
      input?: GraphInput,
-     config?: RunConfig,
+     config?: RunnableConfig,
      metadata?: Map<String, Value>,
      multitask_strategy?: "reject" | "interrupt" | "rollback" | "enqueue"
    }

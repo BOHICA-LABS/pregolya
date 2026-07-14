@@ -44,7 +44,7 @@ any existing version. No wire-compatibility with LangGraph Platform (D13).
 
 ### Create Assistant (`POST /assistants`)
 
-1. Accepts body `{ graph_id: String, config?: RunConfig, context?: Value, metadata?: Map<String,Value>, assistant_id?: Uuid, if_exists?: "raise"|"do_nothing", name?: String, description?: String }`.
+1. Accepts body `{ graph_id: String, config?: RunnableConfig, context?: Value, metadata?: Map<String,Value>, assistant_id?: Uuid, if_exists?: "raise"|"do_nothing", name?: String, description?: String }`.
 2. `assistant_id` is caller-supplied or server-generated (UUID v4 if absent).
 3. The server stores an immutable Version 1 snapshot of `(graph_id, config, context, metadata)`.
 4. Returns HTTP 201 with the `Assistant { assistant_id, graph_id, config, context, metadata, name, description, version: 1, created_at }`.

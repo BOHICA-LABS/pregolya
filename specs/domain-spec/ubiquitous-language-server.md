@@ -52,7 +52,7 @@ execution engine and emits typed StreamEvents as the graph progresses (DI-011, N
 
 **BudgetPolicy**
 A composable allow/escalate/deny policy evaluated against token and cost tallies for a Run.
-Configured per Run via RunConfig. Multiple policies chain; first Deny wins.
+Configured per Run via RunnableConfig. Multiple policies chain; first Deny wins.
 
 **EvidenceJournal**
 Append-only record of BudgetPolicy evaluations and usage events for one Run. Never modified;
@@ -121,11 +121,11 @@ not retriable.
 | `StateGraph` | StateGraph | Identical; BSP execution model from LangGraph |
 | `interrupt()` | `interrupt()` | HITL semantics preserved; FIFO resume is ferrochain-native (CONFLICT-3) |
 | `put_writes` | `put_writes` | Per-task durability; sync-default is ferrochain-native (CONFLICT-2) |
-| `BaseCheckpointSaver` | CheckpointStore | Renamed; same interface |
-| `RunnableConfig` | RunConfig | May rename in ADR; semantics preserved |
+| `BaseCheckpointSaver` | CheckpointSaver | name preserved from LangGraph BaseCheckpointSaver; same interface |
+| `RunnableConfig` | RunnableConfig | name preserved; no rename |
 | `BaseMessage` | Message | Renamed; ContentBlock replaces raw string content |
 | `HumanMessage`, `AIMessage`, `SystemMessage`, `ToolMessage` | Message { role: Human | AI | System | Tool } | Variant instead of subclass |
-| `ToolCall` / `ToolMessage` | ContentBlock::ToolUse / ContentBlock::ToolResult | Typed ContentBlock variants |
+| `ToolCall` / `ToolMessage` | ContentBlock::ToolCall / ToolMessage | Typed ContentBlock variants; tool-result: ToolMessage per BC-2.09.002 |
 | `BaseException` hierarchy | FerrochainError 2D struct | Different structure; adk-rust P-01/P-04 adopted (CONFLICT-6) |
 | Thread (LangGraph Platform) | Thread | Same concept; no wire compat with Platform |
 | Assistant (LangGraph Platform) | Assistant | Same concept; no wire compat with Platform |

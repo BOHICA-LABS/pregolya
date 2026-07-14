@@ -47,7 +47,7 @@ graph engine, producing output that could diverge from the unary path.
 3. Both the streaming endpoint (`GET /runs/{run_id}/stream` or
    `POST /runs/{run_id}/stream`) and the unary endpoint (`POST /runs` with
    `stream: false`) are available.
-4. The same input, same `thread_id`, and same `RunConfig` are used for both execution
+4. The same input, same `thread_id`, and same `RunnableConfig` are used for both execution
    paths (tested with two fresh threads of identical initial state, or via a
    deterministic graph with no side effects).
 

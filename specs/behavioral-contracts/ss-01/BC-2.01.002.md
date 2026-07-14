@@ -26,7 +26,7 @@ inputs:
 input-hash: "19a5567c0bc106d5cf83270335021aea43256ce374f0df4652894fc0deda7e67"
 ---
 
-# BC-2.01.002: Message Type-Safety (AIMessage / HumanMessage / SystemMessage / ToolMessage)
+# BC-2.01.002: Message Type-Safety (AiMessage / HumanMessage / SystemMessage / ToolMessage)
 
 ## Description
 
@@ -144,7 +144,7 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-001 |
-| Capability Anchor Justification | CAP-001 ("Type-Safe Message and Content Primitive Construction") per capabilities-p0.md §CAP-001 — this BC directly implements the typed-message hierarchy (AIMessage/HumanMessage/SystemMessage/ToolMessage) which is the primary API-surface root primitive identified in CAP-001 |
+| Capability Anchor Justification | CAP-001 ("Type-Safe Message and Content Primitive Construction") per capabilities-p0.md §CAP-001 — this BC directly implements the typed-message hierarchy (AiMessage/HumanMessage/SystemMessage/ToolMessage) which is the primary API-surface root primitive identified in CAP-001 |
 | L2 Domain Invariants | DI-008 (Library Constructor Result Contract) |
 | NE References | — |
 | Priority | P0 |

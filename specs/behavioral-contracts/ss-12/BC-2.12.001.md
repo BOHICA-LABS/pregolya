@@ -37,7 +37,7 @@ ferrochain-checkpoint subsystem. Thread-not-found returns `E-SERVER-003`.
 
 ## Preconditions
 
-1. `ferrochain-server` is running with a configured `RunStore` and `CheckpointStore` backend.
+1. `ferrochain-server` is running with a configured `RunStore` and `CheckpointSaver` backend.
 2. The caller holds a valid authentication credential (or the server is in unauthenticated
    dev mode).
 

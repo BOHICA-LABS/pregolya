@@ -37,7 +37,7 @@ dark-factory holdout evaluation shape 6 ("budget-bounded run") directly exercise
 
 ## Preconditions
 
-1. A `BudgetPolicy` with `on_ceiling = halt` is configured in the `RunConfig`.
+1. A `BudgetPolicy` with `on_ceiling = halt` is configured in the `RunnableConfig`.
 2. A `BudgetPolicy::evaluate` call has returned `PolicyDecision::Deny` after an LLM call
    or tool invocation.
 3. The execution engine is currently at an evaluation point (post-LLM-call or
@@ -61,7 +61,7 @@ dark-factory holdout evaluation shape 6 ("budget-bounded run") directly exercise
    the `current_usage: TokenUsage` and `policy_name` fields in the error context.
 7. The checkpoint at the last fully-completed super-step is preserved with `status = failed`.
    It is resumable in principle (same `thread_id`, different `run_id`) if the operator
-   supplies a new `RunConfig` with a higher ceiling.
+   supplies a new `RunnableConfig` with a higher ceiling.
 
 ## Invariants
 
@@ -114,7 +114,7 @@ the sub-agent's halt.
 | TV-001 | Graph with 3 LLM nodes; BudgetPolicy halt at 10k tokens; tokens accumulate to 12k on 3rd call | Run fails after 3rd node; caller receives `Err(E-BUDGET-001)`; checkpoint preserved after step 2 | Happy path — ceiling hit on 3rd call |
 | TV-002 | Same graph; budget ceiling hit on 1st LLM call (oversize prompt) | Run fails after step 1; caller receives `Err(E-BUDGET-001)`; journal has 1 entry `decision: Deny` | Ceiling on first call |
 | TV-003 | 3 concurrent tasks in step 2; 1st task triggers Deny | All 3 tasks complete their in-flight work; `put_writes` for all 3; run fails; no step 3 scheduled | Mid-super-step Deny — all in-flight tasks finish |
-| TV-004 | Operator re-runs halted thread with new RunConfig (higher ceiling) | New run starts from the preserved checkpoint; runs to completion | Halted checkpoint is resumable |
+| TV-004 | Operator re-runs halted thread with new RunnableConfig (higher ceiling) | New run starts from the preserved checkpoint; runs to completion | Halted checkpoint is resumable |
 | TV-005 | Sub-agent hits ceiling; parent node receives `Err(E-BUDGET-001)` from sub-agent | Parent node handles error and logs it; parent run continues with remaining budget | Sub-agent halt does not auto-halt parent |
 
 ## Verification Properties

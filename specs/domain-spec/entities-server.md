@@ -28,25 +28,25 @@ decisions: [D11, D13, D17]
 ### Thread
 A named, durable sequence of checkpoints representing one conversation or pipeline run lineage.
 - **Fields:** thread_id: Uuid, metadata: Map<String, Value>, created_at: Timestamp, updated_at: Timestamp
-- **Relationships:** Thread 1→N Run. Thread 1→N Checkpoint (via thread_id in CheckpointStore).
+- **Relationships:** Thread 1→N Run. Thread 1→N Checkpoint (via thread_id in CheckpointSaver).
 - **Note:** Corresponds to LangGraph Platform "thread." All Runs sharing a Thread share a checkpoint history.
 
 ### Assistant
 A named agent configuration hosted by ferrochain-server.
-- **Fields:** assistant_id: Uuid, graph_id: GraphId (references a registered CompiledGraph), config: RunConfig, metadata: Map<String, Value>
+- **Fields:** assistant_id: Uuid, graph_id: GraphId (references a registered CompiledGraph), config: RunnableConfig, metadata: Map<String, Value>
 - **Relationships:** Assistant 1→N Run.
 - **Note:** No wire compatibility with LangGraph Platform (D13). ferrochain-server is first-party.
 
 ### Run
 A single execution of an Assistant with a Thread.
-- **Fields:** run_id: Uuid, thread_id: Uuid, assistant_id: Uuid, status: RunStatus, config: RunConfig, created_at, updated_at, output: Option<Value>
+- **Fields:** run_id: Uuid, thread_id: Uuid, assistant_id: Uuid, status: RunStatus, config: RunnableConfig, created_at, updated_at, output: Option<Value>
 - **RunStatus lifecycle:** queued → in_progress → completed | failed | cancelled; in_progress ⇄ interrupted (resume via POST .../resume)
   (F-03 alignment: `requires_action` renamed to `interrupted` for HITL-parked runs; `expired` deferred — v1.0.0 uses `failed` with E-GRAPH-014 InterruptApprovalTimeout for timeout-expired runs; a dedicated `expired` state may be added in a future version)
 - **Relationships:** Run belongs-to Thread and Assistant. Run 1→N StreamEvent emitted. Run 0→N Interrupt.
 
 ### CronSchedule
 A recurring proactive run trigger registered on an Assistant.
-- **Fields:** cron_id: Uuid, assistant_id: Uuid, schedule: CronExpression, config: RunConfig, enabled: bool
+- **Fields:** cron_id: Uuid, assistant_id: Uuid, schedule: CronExpression, config: RunnableConfig, enabled: bool
 - **Behavior:** Each firing creates a new Run with a fresh session (no prior thread context unless explicitly configured). Corresponds to LangGraph Platform "crons."
 
 ### Interrupt
@@ -124,7 +124,7 @@ Interrupt 0——1 pending ResumeValue
 Assistant 1——N Run
 CronSchedule belongs-to Assistant
 EvidenceJournal belongs-to Run (1——1)
-BudgetPolicy is injected into RunConfig (0——1)
+BudgetPolicy is injected into RunnableConfig (0——1)
 GuardrailHook 0——N registered on IngressBoundary
 ProviderClient implements ChatModel (Runnable)
 MCPTool implements Tool (Runnable)
@@ -134,5 +134,5 @@ FerrochainError emitted by all ferrochain crates
 ## Cross-Section Relationships
 
 - `Node` (entities-graph.md) invokes `Tool` (entities-graph.md) → produces `ToolResult` → `GuardrailHook` fires → content enters `Message` (entities-graph.md)
-- `Run` (this section) uses `CheckpointStore` (entities-graph.md) via `thread_id`
+- `Run` (this section) uses `CheckpointSaver` (entities-graph.md) via `thread_id`
 - `ProviderClient` (this section) produces `Message` (entities-graph.md) containing `ContentBlock`

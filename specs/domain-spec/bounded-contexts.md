@@ -46,7 +46,7 @@ graph compilation and validation.
 server HTTP layer; provider transport.
 **Translation seam with Core:** StateGraph nodes are Runnables from ferrochain-core.
 **Translation seam with Checkpoint:** Graph execution calls `put_writes` on the
-CheckpointStore trait; the concrete implementation is injected (dependency inversion).
+CheckpointSaver trait; the concrete implementation is injected (dependency inversion).
 **Key invariants:** DI-001 (BSP determinism), DI-002 (per-task durability), DI-003
 (HITL FIFO), DI-004 (monotonic clock), DI-012 (guardrail ingress coverage).
 
@@ -54,15 +54,15 @@ CheckpointStore trait; the concrete implementation is injected (dependency inver
 
 ## Context 3: Checkpoint / Durability (ferrochain-checkpoint)
 
-**Model:** Checkpoint, PendingWrite, CheckpointStore trait, CheckpointTuple, delta
+**Model:** Checkpoint, PendingWrite, CheckpointSaver trait, CheckpointTuple, delta
 serialization, logical clock.
 **What it owns:** The durability model; checkpoint ID generation; delta encoding;
 msgpack serialization; SQLite and in-memory backends.
 **What it does NOT own:** Graph execution logic; when to checkpoint (that is Context 2's
 policy); network transport.
-**Translation seam with Graph:** Exposes `CheckpointStore` trait; graph execution holds
-an Arc<dyn CheckpointStore>.
-**Translation seam with Server:** Server's Thread model is backed by CheckpointStore
+**Translation seam with Graph:** Exposes `CheckpointSaver` trait; graph execution holds
+an Arc<dyn CheckpointSaver>.
+**Translation seam with Server:** Server's Thread model is backed by CheckpointSaver
 thread_id partitioning.
 **Key invariants:** DI-002, DI-004, DI-005 (session triple-address).
 
@@ -77,7 +77,7 @@ streaming protocol; authentication; per-tenant isolation.
 persistence (delegates to Context 3).
 **Translation seam with Graph:** Server creates a CompiledGraph from an Assistant's
 graph_id and invokes it for each Run.
-**Translation seam with Checkpoint:** Server uses CheckpointStore to persist/resume Run
+**Translation seam with Checkpoint:** Server uses CheckpointSaver to persist/resume Run
 state.
 **Key invariants:** DI-005 (tenancy), DI-011 (streaming/unary equiv.), DI-013 (secure defaults).
 **Excluded failure mode (FM-007):** streaming stub must not exist.

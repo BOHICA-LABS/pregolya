@@ -95,7 +95,7 @@ predicate without collapsing.
 **Scenario:** A caller invokes `memory_get(key)` without specifying a `MemoryScope`.
 **Expected behavior:** The default scope is `MemoryScope::Session(current_session_id)`.
 The current session ID must be derivable from the call context (e.g., injected from
-`RunConfig`). If no session context is available, `Err(E-MEMORY-004 NoScopeContext)`
+`RunnableConfig`). If no session context is available, `Err(E-MEMORY-004 NoScopeContext)`
 is returned.
 
 ### EC-002: User-scoped entry readable across the same user's sessions
@@ -121,7 +121,7 @@ MemoryScope::Session("s2"), key)` called.
 compliance audit, across all scopes for user "alice".
 **Expected behavior:** The `MemoryStore` trait exposes an `admin_list_all(user_id)` fn
 (or equivalent privileged API) that requires an explicit `AdminContext` parameter. This
-function is not callable from a standard `RunConfig` context; it requires the server
+function is not callable from a standard `RunnableConfig` context; it requires the server
 operator's explicit privilege level.
 
 ## Canonical Test Vectors
