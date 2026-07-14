@@ -442,18 +442,37 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
     Source of truth: ADV-P1D-PASS-23.md §F-P23-01; ADV-P1D-PASS-25 §F-P25-07; interface-definitions.md §HTTP Status Codes.
 
-16. **E-code↔variant-name consistency census gate (added P20 — standing gate):**
+16. **E-code↔variant-name consistency census gate (added P20 — standing gate; widened P34 — F-P34-03):**
     After any BC authoring or fix burst that introduces, renames, or retires an error code,
-    run the variant-name consistency census. For every `E-<COMP>-NNN <VariantName>` pairing
-    found in any BC body, assert that `<VariantName>` is the canonical variant name for
-    `E-<COMP>-NNN` in error-taxonomy.md. A code referenced with the wrong variant name is a
-    high-severity drift that misleads implementers. Census command:
+    run the variant-name consistency census. For every `E-<COMP>-NNN <VariantName>` or
+    `E-<COMP>-NNN: <VariantName>` pairing found in any BC body, assert that `<VariantName>`
+    is the canonical variant name for `E-<COMP>-NNN` in error-taxonomy.md. A code referenced
+    with the wrong variant name is a high-severity drift that misleads implementers.
+
+    **Census commands (BOTH forms required — F-P34-03):**
+
+    Form 1 (space-delimited: `E-XXX-NNN VariantName`):
     `grep -hrn "E-[A-Z]*-[0-9]\{3\} [A-Z][A-Za-z]*" .factory/specs/behavioral-contracts/ | grep -v "~~" | grep -oE "E-[A-Z]+-[0-9]{3} [A-Z][A-Za-z]+" | sort -u`
-    For each pairing, cross-check the variant name against the error-taxonomy.md table row for
-    that code. Mismatches are failures. Codes used without a variant name (e.g., bare
-    `E-CHKPT-001`) are permitted — only named pairings are checked. Retired codes (~~strikethrough~~
-    in taxonomy) must not appear in non-~~strikethrough~~ BC text.
-    Source of truth: ADV-P1D-PASS-20.md §F-P20-03.
+
+    Form 2 (colon-delimited: `E-XXX-NNN: VariantName`):
+    `grep -hrn "E-[A-Z]*-[0-9]\{3\}: [A-Z][A-Za-z]*" .factory/specs/behavioral-contracts/ | grep -v "~~" | grep -oE "E-[A-Z]+-[0-9]{3}: [A-Z][A-Za-z]+" | sort -u`
+
+    **Cross-check requirement (collision detection):** For each extracted pairing (either form),
+    look up the code in error-taxonomy.md and verify (a) the variant name matches the taxonomy
+    row exactly, AND (b) the code is not already assigned a DIFFERENT variant name elsewhere in
+    the taxonomy (collision detection, not just name drift). A code appearing in a BC with a
+    variant name that differs from the taxonomy's canonical variant is a HIGH-severity finding.
+    Category names (POLICY, VAL, TIMEOUT, DURABILITY, TOOL, etc.) appearing after a code in a
+    markdown table row are false positives — filter these out by confirming the word is not a
+    known category code from the Error Category Codes table.
+
+    Codes used without a variant name (e.g., bare `E-CHKPT-001`) are permitted — only named
+    pairings are checked. Retired codes (~~strikethrough~~ in taxonomy) must not appear in
+    non-~~strikethrough~~ BC text.
+
+    Source of truth: ADV-P1D-PASS-20.md §F-P20-03. Widening rationale: ADV-P1D-PASS-34
+    §F-P34-03 — the original space-only regex missed `E-RETRY-003: InvalidRetryLimit` in
+    BC-2.16.001.md for 33 passes, allowing a live collision to persist undetected.
 
 18. **Wire-object field-set coherence census gate (added P24 — standing gate):**
     After any BC authoring or fix burst that introduces, modifies, or removes a field on a
@@ -696,8 +715,8 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
        - `grep -n "limit\|offset" .factory/specs/behavioral-contracts/ss-12/BC-2.12.003.md` →
          PC18 includes limit/offset/clamped/created_at DESC.
        - `grep -n "limit\|offset" .factory/specs/behavioral-contracts/ss-12/BC-2.12.001.md` →
-         PC8 includes default 10 / max 100 / offset; PC17 includes default 10 / max 100 /
-         clamped / offset.
+         PC8 includes default 10 / max 100 / values > 100 clamped / offset default 0
+         (F-P34-01, ADV-P1D-PASS-34); PC17 includes default 10 / max 100 / clamped / offset.
        - `grep -n "limit\|offset" .factory/specs/behavioral-contracts/ss-12/BC-2.12.002.md` →
          PC21 includes limit (default 10 / max 100 / clamped); PC22 returns
          { assistants: [Assistant], total_count: u64 }; PC23 declares created_at DESC

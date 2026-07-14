@@ -61,6 +61,14 @@ traces_to: STATE.md
 **Codified fix:** Gate #23 STREAMING-EVENT-NAME COHERENCE added to bc-authoring-plan.md: every wire-visible event name (SSE chunk type, domain event, envelope key) must appear consistently in events.md, the StreamEvent enum in ADR-006 (11 imperative variants), and any BC that references it; census must be re-run after any streaming-surface change.
 **Applicable to:** Any new wire-visible taxonomy introduced during spec authoring — the moment a named set of events, codes, or objects appears across more than one artifact, a coherence census gate must be added for it. Do not wait for an adversarial pass to discover the gap.
 
+### L-005 [process-gap, codified]: Census Regexes Must Enumerate All Punctuation Forms; Censuses Must Detect Collisions, Not Just Drift
+
+**Discovered:** Pass 34 (burst 110)
+**Symptom:** Gate #16 (E-code/variant coherence census) policed space-delimited pairings only (e.g., `E-RETRY-003 CircuitBreakerOpen`). It did not grep colon-delimited forms (e.g., `E-RETRY-003: CircuitBreakerOpen`) nor cross-check each pairing against the error-taxonomy authoritative binding to detect collisions. As a result, E-RETRY-003 carried two contradictory meanings across the BC boundary — error-taxonomy defined it as CircuitBreakerOpen (POLICY/Later) while BC-2.16.001 EC-003 used the same code for InvalidRetryLimit — and this collision survived all 33 prior adversarial passes undetected.
+**Root cause:** (1) Census regex matched only one punctuation form; spec authors use both forms interchangeably. (2) Census checked for name-drift (does the code name match across files?) but not for collision (does one code name map to two different concepts?). Both checks are required.
+**Codified fix:** Gate #16 widened to two grep forms (space-delimited AND colon-delimited E-code↔variant pairings) + cross-check every pairing against the error-taxonomy authoritative binding (collision detection, not just name drift). Codified in bc-authoring-plan.md gate #16 (D18-P34-C). Full-corpus sweep of 44 pairings confirmed ZERO additional collisions post-fix.
+**Applicable to:** Every census gate that polices named identifiers across multiple artifacts. The census must: (a) enumerate ALL punctuation/formatting forms the pattern can appear in; (b) perform both drift-check (name matches across files) AND collision-check (one identifier maps to one concept only). These are two orthogonal failure modes requiring two orthogonal assertions.
+
 ## Policy Candidates
 
 | Lesson | Proposed Policy | Scope | Status |
@@ -69,3 +77,4 @@ traces_to: STATE.md
 | L-002 | Absolute invariants must carry precedence carve-outs | BC authoring | Codified |
 | L-003 | Census re-run trigger required after artifact changes | All census gates | Codified (gate #21) |
 | L-004 | Wire-visible taxonomy requires coherence gate from first appearance | BC authoring + gate management | Codified (gate #23) |
+| L-005 | Census regexes must enumerate all punctuation forms; census must detect collisions AND drift | All census gates | Codified (gate #16) |

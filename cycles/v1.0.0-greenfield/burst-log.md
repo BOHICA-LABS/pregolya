@@ -13,6 +13,57 @@ traces_to: STATE.md
 
 # Burst Log — v1.0.0-greenfield
 
+## Burst 110 — Phase 1d Pass 34 + Fix Burst (E-RETRY-004 collision + PC8 pagination + gate #16 two-form census)
+
+**Date:** 2026-07-15
+**Agents:** adversary (pass 34) + product-owner (fix) + state-manager (STATE update)
+**Files touched:** specs/prd-supplements/error-taxonomy.md (PO fix — E-RETRY-004 minted, v1.5); specs/behavioral-contracts/ss-16/BC-2.16.001.md (PO fix — EC-003 InvalidRetryLimit E-RETRY-004, v1.1); specs/behavioral-contracts/ss-12/BC-2.12.001.md (PO fix — PC8 clamp+offset-0 + PC9 created_at DESC, v1.2); specs/prd-supplements/bc-authoring-plan.md (PO fix — gate #16 two-form census + collision cross-check); STATE.md, burst-log.md (state-manager); cycles/v1.0.0-greenfield/adversarial-reviews/pass-34.md (adversary)
+**Versions bumped:** STATE.md v3.0→v3.1; error-taxonomy.md v1.4→v1.5; BC-2.16.001.md v1.0→v1.1; BC-2.12.001.md v1.1→v1.2
+
+### Summary
+
+Phase 1d pass 34 adversarial review completed: NOT CLEAN — 3 findings (1 HIGH, 2 MED) + 3 observations. Counter stays 0/3. NEW CLASS: live error-code collision (E-RETRY-003 carried two contradictory meanings across BC boundary; colon-form census blind spot let it survive 33 passes). Novelty HIGH.
+
+**1 HIGH finding:**
+- F-P34-02: E-RETRY-003 code collision — error-taxonomy defined it as CircuitBreakerOpen (POLICY/Later) but BC-2.16.001 EC-003 used the same code for InvalidRetryLimit. Fix: E-RETRY-004 minted as the new code for InvalidRetryLimit (VAL, Never, anchor BC-2.16.001); E-RETRY-003 remains CircuitBreakerOpen sole owner (BC-2.16.003).
+
+**2 MED findings:**
+- F-P34-01: BC-2.12.001 PC8 (GET /threads) missing CLAMP and ordering — partial propagation from F-P31-01 fixed PC17 but not PC8 (the sibling thread-list endpoint). Fix: PC8 updated with full pagination convention (limit default 10 / max 100 / silent CLAMP / offset default 0) + PC9 created_at DESC ordering added. Gate #24 six-surface census now 6/6 PASS.
+- F-P34-03 [process-gap]: Gate #16 census regex was blind to colon-delimited E-code↔variant pairings (only matched space-delimited form). This is the root cause of the E-RETRY-003 collision surviving 33 passes. Fix: gate #16 widened to two grep forms (space-delimited + colon-delimited) + collision cross-check against error-taxonomy authoritative binding. Full-corpus sweep of 44 pairings found ZERO additional collisions.
+
+**3 Observations:**
+- OBS-P34-1: Endpoint-count invariant location corrected — invariant lives in bc-authoring-plan.md lines 407-411, not in interface-definitions.md §17-B (where it was cited in the pass-33 resume checkpoint).
+- OBS-P34-2: BC-2.12.002 PC label order confirmed — PC21=pagination, PC22=shape, PC23=ordering (inverse of some prior references).
+- OBS-P34-3: Domain-A audit-trail self-flagged as a design forcing function; no spec defect.
+
+### New Standing Gates (post-burst 110)
+
+- Gate #16 widened: two-form census (space-delimited + colon-delimited E-code↔variant pairings) + cross-check every pairing against error-taxonomy authoritative binding (collision detection, not just name drift).
+
+### Convergence Status After Burst 110
+
+- Phase 1d passes: 34 (NOT CLEAN)
+- Fix bursts: 34
+- Counter: 0 of 3
+- Trajectory: ...→1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34)
+
+**State changes:** convergence passes 33→34, fix bursts 33→34, trajectory →3 (P1D-34), session checkpoint replaced (burst 109 checkpoint archived), step row pass 29 archived to burst-log. PASS-29/PASS-30 CANON blocks dropped from STATE.md (retention: PASS-31..34). STATE.md v3.0→v3.1.
+
+### Archived Current Phase Steps Row (displaced from STATE.md — oldest row)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1d pass 29 + fix burst (streaming-event taxonomy) | adversary + PO | COMPLETE | Pass 29: NOT CLEAN — 6 findings (3 HIGH: F-P29-03 node_delta non-canonical → node_stream canon [BC-2.12.007 ×3 + interface /stream row]; F-P29-04 ADR-006 enum past-tense + missing NodeStream/ToolStream → rewritten to 11 imperative variants per BC-2.06.001 + module-decomposition fixed; F-P29-05 ADR-006 LangGraph astream_events wire-compat claim contradicted D13 → removed, native-wire stated; 3 MED: F-P29-01 codeless FerrochainError BC-2.08.003 EC-002 → E-PROV-005 added + full zero-codeless census; F-P29-02 E-CRON-003 5th RetryHint divergence documented; F-P29-06 interrupt_raised relabeled domain event w/ __interrupt__ wire surface) + 2 obs (blanket library-code omission note; streaming axis had NO gate through 28 passes [process-gap] → NEW GATE #23 streaming-event-name coherence). NEW CLASS: streaming-event taxonomy. Novelty HIGH — never-probed axis. Trajectory ...→6→1→6. Convergence 0/3. Gates 32. Burst 105. |
+
+---
+
+## Burst 109 — Phase 1d Pass 33 + Fix Burst + SESSION WRAP (list-assistants PCs + config-merge precedence)
+
+**Date:** 2026-07-15
+**State changes:** convergence passes 32→33, fix bursts 32→33, trajectory →2 (P1D-33), session checkpoint replaced (burst 108 checkpoint archived), step row pass 28 archived to burst-log. Gates 34. STATE.md v2.9→v3.0 (wrap).
+
+---
+
 ## Burst 108 — Phase 1d Pass 32 + Fix Burst (criticality-doc arithmetic + /versions pagination)
 
 **Date:** 2026-07-15

@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-error-taxonomy
 level: L3
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
 timestamp: 2026-07-14T00:00:00Z
@@ -10,6 +10,7 @@ changelog:
   - "1.2 (ADV-P1D-PASS-27): F-P27-02 recategorize E-CHKPT-004 SECURITY→INTERNAL (BC-2.04.007 authoritative; key rotation is an internal invariant failure, not a security policy rejection)."
   - "1.3 (ADV-P1D-PASS-28): F-P28-01 relabel category-table RetryHint column to 'Default RetryHint'; add per-code-authoritative precedence rule. OBS-P28-3 mint E-PROV-007 (StructuredOutputRefused, POLICY, Never) anchored to BC-2.08.003 — OpenAI structured-output refusal path now carries a machine-readable code."
   - "1.4 (ADV-P1D-PASS-29): F-P29-02 — add E-CRON-003 (ScheduleQueueFull) to the divergences blockquote as the 5th documented divergence. Decision: option (a) — add to blockquote with BC-2.12.004-anchored rationale (queue-full is transient capacity condition, backoff-recoverable → Later overrides POLICY Never). No category churn."
+  - "1.5 (ADV-P1D-PASS-34): F-P34-02 — mint E-RETRY-004 (InvalidRetryLimit, VAL, broken, BC-2.16.001, Never). BC-2.16.001 EC-003/TV-004 had incorrectly reused E-RETRY-003 (CircuitBreakerOpen, POLICY, Later) for a construction-time misconfiguration. E-RETRY-004 is the correct code: VAL category, RetryHint Never (matches VAL default — not a divergence). No change to E-RETRY-003 (CircuitBreakerOpen remains sole owner in BC-2.16.003)."
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -187,6 +188,7 @@ primary_consumers: [implementer, test-writer]
 | E-RETRY-001 | POLICY | broken | BC-2.16.001 | Never | `RetryExhausted: per-tool retry limit for tool '<tool_name>' exhausted after <attempt_limit> attempts` |
 | E-RETRY-002 | POLICY | broken | BC-2.16.002 | Never | `GlobalLimitExhausted: global retry budget of <global_limit> exhausted across all tools in this run` |
 | E-RETRY-003 | POLICY | broken | BC-2.16.003 | `Later(<reset_timeout>)` | `CircuitBreakerOpen: tool '<tool_name>' circuit tripped after <failure_threshold> consecutive failures` |
+| E-RETRY-004 | VAL | broken | BC-2.16.001 | Never | `InvalidRetryLimit: attempt_limit must be > 0; got <attempt_limit>` — **(F-P34-02, ADV-P1D-PASS-34):** BC-2.16.001 EC-003/TV-004 incorrectly referenced E-RETRY-003 (CircuitBreakerOpen, POLICY/Later) for construction-time zero-limit rejection. Minted as new code: VAL (misconfigured input, not a policy or circuit event), RetryHint Never (matches VAL default — not a divergence). |
 
 ### Component: CRON (ferrochain-server scheduler)
 

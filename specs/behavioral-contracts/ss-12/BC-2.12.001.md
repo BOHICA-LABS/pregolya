@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.001
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ inputs:
 input-hash: "992d1136d6ecd5fd6aa833f0ece030db3e548c8fdd727917f8474f6c21522745"
 changelog:
   - "1.1 (ADV-P1D-PASS-31): F-P31-01 PC17 history endpoint — declare limit default 10, max 100, values > 100 clamped to 100, offset default 0 (pagination coherence canon; clamp out-of-range semantics)."
+  - "1.2 (ADV-P1D-PASS-34): F-P34-01 PC8 — add clamp semantics (values > 100 silently clamped to 100) and offset default 0 (partial-fix propagation gap from pass-31). PC9 — declare created_at DESC ordering (canonical; F-P31-01). interface-definitions.md §Canonical Pagination Convention cites BC-2.12.001 PC8 as threads-list clamp+ordering anchor; PC8 now matches."
 ---
 
 # BC-2.12.001: Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History)
@@ -62,8 +63,8 @@ ferrochain-checkpoint subsystem. Thread-not-found returns `E-SERVER-003`.
 
 ### List/Search Threads (`GET /threads`)
 
-8. Accepts query params `metadata` (filter), `limit` (default 10, max 100), `offset`.
-9. Returns `{ threads: [Thread], total_count: u64 }`.
+8. Accepts query params `metadata` (filter), `limit` (default 10, max 100; values > 100 silently clamped to 100), `offset` (default 0).
+9. Returns `{ threads: [Thread], total_count: u64 }`; results ordered `created_at` descending (canonical; F-P31-01, ADV-P1D-PASS-34).
 10. Metadata filter uses exact-match on top-level keys; partial matches are not supported.
 
 ### Delete Thread (`DELETE /threads/{thread_id}`)
