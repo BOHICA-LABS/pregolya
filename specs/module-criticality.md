@@ -1,7 +1,7 @@
 ---
 document_type: module-criticality
 level: L3
-version: "1.0"
+version: "1.1"
 status: active
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
@@ -14,6 +14,8 @@ input-hash: "db400a11e5a3a521"
 traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
+changelog:
+  - "1.1 (ADV-P1D-PASS-32): F-P32-04 (LOW, adjudicated) add ferrochain-macros HIGH-tier row to Module Inventory (consistent with OBS-P31-1 prd-supplements decision; orchestrator adjudication — #[tool]/#[entrypoint] affect P0 paths per ADR-008); add facade/SDK exclusion note mirroring prd-supplements/module-criticality.md. F-P32-01 (HIGH) recount all rows and rewrite Summary to match exactly (pre-fix summary was wrong: said HIGH 10 / MEDIUM 12, actual HIGH 11 / MEDIUM 10; +macros → CRITICAL 9 / HIGH 12 / MEDIUM 10 / LOW 2 = 33 total)."
 ---
 
 # Module Criticality Classification: ferrochain (Architecture View)
@@ -51,6 +53,7 @@ note: "This is the architecture-view criticality. The prd-supplements/module-cri
 | anthropic (BaseChatModel impl) | ferrochain-anthropic | SS-08 | HIGH | — | ≥ 90% | P5 |
 | ollama (BaseChatModel impl) | ferrochain-ollama | SS-08 | HIGH | — | ≥ 90% | P5 |
 | lineage | ferrochain-checkpoint | SS-04 | HIGH | — | ≥ 90% | P5 |
+| ferrochain-macros (#[tool], #[entrypoint]) | ferrochain-macros | — | HIGH | — | ≥ 90% | P5 |
 | sqlite backend | ferrochain-checkpoint | SS-04 | MEDIUM | — | ≥ 80% | P5 |
 | recursive splitter | ferrochain-splitters | SS-07 | MEDIUM | — | ≥ 80% | P5 |
 | mcp client | ferrochain-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
@@ -64,13 +67,27 @@ note: "This is the architecture-view criticality. The prd-supplements/module-cri
 | xtask | xtask | SS-17 | LOW | — | ≥ 70% | advisory |
 | ferrochain-community | ferrochain-community | — | LOW | — | ≥ 70% | advisory |
 
+> **Exclusion criteria (F-P32-04, ADV-P1D-PASS-32):** Facade/re-export and codegen-thin
+> crates (`ferrochain` #1, `ferrochain-openai-sdk` #16, `ferrochain-anthropic-sdk` #17,
+> `ferrochain-ollama-sdk` #18) carry no criticality-bearing modules of their own and are
+> intentionally excluded from this inventory — they re-export from the implementation crates
+> listed above and contain no independent logic paths. `xtask` is classified because its
+> file-size-check and CI-lint logic gates all merges (SS-17). `ferrochain-macros` is NOT
+> excluded: `#[tool]` generates ToolDefinition plumbing for all P0 tool-calling paths
+> (BC-2.09.001, BC-2.09.002) and `#[entrypoint]` gates graph composition entry points;
+> incorrect macro expansion silently corrupts P0 execution without a clear runtime error.
+> DECISION: `ferrochain-macros` receives a HIGH-tier row. Consistent with OBS-P31-1
+> (prd-supplements/module-criticality.md) and orchestrator adjudication in ADV-P1D-PASS-32.
+> `ferrochain-community` retains a LOW row as a placeholder for post-v1 third-party
+> contributions; it is not in-tree at v1.
+
 ## Summary
 
 | Tier | Module Count |
 |------|-------------|
 | CRITICAL | 9 |
-| HIGH | 10 |
-| MEDIUM | 12 |
+| HIGH | 12 |
+| MEDIUM | 10 |
 | LOW | 2 |
 | **Total** | **33** |
 

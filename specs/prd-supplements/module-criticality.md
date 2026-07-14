@@ -1,13 +1,14 @@
 ---
 document_type: prd-supplement-module-criticality
 level: L3
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-07-14T00:00:00Z
 phase: 1a
 changelog:
   - "1.1 (ADV-P1D-PASS-31): OBS-P31-1 add exclusion-criteria note (facade/re-export crates #1/#16/#17/#18 excluded; xtask classified as dev-tooling for CI gate); ferrochain-macros (#15) DECISION — receives HIGH-tier row (not excluded) because #[tool]/#[entrypoint] proc-macros affect P0 tool-calling and graph-composition paths per ADR-008; add ferrochain-macros to Module Inventory + HIGH row to classification table; update Classification Summary counts (HIGH 7→8, Total 19→20)."
+  - "1.2 (ADV-P1D-PASS-32): F-P32-02 fix Classification Summary MEDIUM cell: was 5 (wrong), actual MEDIUM rows = 4; corrected to 4, percentage updated 25%→20%; self-sum now 6+8+4+2=20 reconciles with stated total."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
@@ -113,7 +114,7 @@ architect_note: "Architect must confirm crate-to-subsystem mapping and fill Arch
 |------|-------------|------------|
 | CRITICAL | 6 | 30% |
 | HIGH | 8 | 40% |
-| MEDIUM | 5 | 25% |
+| MEDIUM | 4 | 20% |
 | LOW | 2 | 10% |
 | **Total** | **20** | ~100% |
 

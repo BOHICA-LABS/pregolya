@@ -13,6 +13,53 @@ traces_to: STATE.md
 
 # Burst Log — v1.0.0-greenfield
 
+## Burst 108 — Phase 1d Pass 32 + Fix Burst (criticality-doc arithmetic + /versions pagination)
+
+**Date:** 2026-07-15
+**Agents:** adversary (pass 32) + product-owner (fix) + state-manager (STATE update)
+**Files touched:** specs/module-criticality.md [arch-view] (PO fix — macros HIGH row + Summary recount 33); specs/prd-supplements/module-criticality.md (PO fix — MEDIUM cell 5→4, Summary 21→20); specs/prd-supplements/interface-definitions.md (PO fix — /versions pagination + version ASC exemption + no-list-schedules note); specs/behavioral-contracts/ss-12/BC-2.12.002.md (PO fix — PC20 /versions pagination); specs/prd-supplements/bc-authoring-plan.md (PO fix — gate #25 note); STATE.md, burst-log.md (state-manager); ADV-P1D-PASS-32.md (adversary)
+**Versions bumped:** STATE.md v2.9→v3.0
+
+### Summary
+
+Phase 1d pass 32 adversarial review completed: NOT CLEAN — 4 findings (1 HIGH, 2 MED, 1 LOW) + 3 observations applied. Counter stays 0/3. All 4 rotated censuses PASS. NEW CLASS: summary-vs-table arithmetic (never-probed axis — adversary opened arithmetic audit of Summary cells vs actual table row counts). Novelty HIGH. Gates total: 34.
+
+**1 HIGH finding:**
+- F-P32-01: arch-view module-criticality Summary cell claimed 9/10/12/2=33 modules but actual table had 9/11/10/2=32 rows (macros HIGH row absent). Fix: Summary recounted to 9/12/10/2=33 after F-P32-04 adjudication added the macros HIGH row to arch-view consistent with pass-31 decision.
+
+**2 MED findings:**
+- F-P32-02: PO-draft module-criticality MEDIUM cell showed 5 but table had 4 rows → self-sum was 21≠20. Fix: MEDIUM cell corrected 5→4; Summary 21→20.
+- F-P32-03: GET /assistants/{id}/versions was the 6th unbounded list surface — missed by pass-31 pagination canon. Fix: /versions endpoint gets pagination parameters + version ASC ordering exemption documented (ascending version order is canonical for version history lists) + BC-2.12.002 PC20 added.
+
+**1 LOW finding:**
+- F-P32-04: ferrochain-macros HIGH row absent from arch-view module-criticality (arch-view and PO-draft were out of sync). ADJUDICATED: add HIGH row to arch-view consistent with pass-31 PO-draft decision + ADR-008. Gate #25 SUMMARY-ARITHMETIC + CRITICALITY-SIBLING COHERENCE added.
+
+**3 Observations:**
+- OBS-P32-1: No list-all-schedules endpoint in v1 — interface-definitions.md lacked an explicit note. Fix: note added ("No GET /schedules list endpoint in v1 — schedules are fetched by ID only").
+- OBS-P32-2: VP-INDEX arithmetic PASS — all VP counts reconcile with actual VP files.
+- OBS-P32-3: Criticality-sibling docs (arch-view and PO-draft) were never cross-checked against each other — PROCESS GAP. Gate #25 created to enforce future cross-checking.
+
+### New Standing Gates (post-burst 108)
+
+- Gate #25: Summary-arithmetic + criticality-sibling coherence — every table with a Summary row must have Summary cells == actual table row counts; arch-view and PO-draft module-criticality docs must reconcile (both must list ferrochain-macros HIGH; total module counts must agree).
+
+### Convergence Status After Burst 108
+
+- Phase 1d passes: 32 (NOT CLEAN)
+- Fix bursts: 32
+- Counter: 0 of 3
+- Trajectory: ...→1 (P1D-30) →1 (P1D-31) →4 (P1D-32)
+
+**State changes:** convergence passes 31→32, fix bursts 31→32, trajectory →4 (P1D-32), session checkpoint replaced (burst 107 checkpoint archived), step row pass 27 archived to burst-log. Gates 33→34. STATE.md v2.9→v3.0.
+
+### Archived Current Phase Steps Row (displaced from STATE.md — oldest row)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1d pass 27 + fix burst (wildcard propagation + category authority) | adversary + PO | COMPLETE | Pass 27: NOT CLEAN — 6 findings (3 HIGH: F-P27-01 E-GRAPH-002 three-way status contradiction → canon KEEP 422 via 9th PC3 override POLICY→422; F-P27-02 E-CHKPT-004 taxonomy SECURITY vs BC INTERNAL ×6 → taxonomy fixed INTERNAL + code name added to BC-2.04.007; F-P27-03 'all E-CHKPT-*' over-broad → enumerated 001/002/003/004/006 at 500, E-CHKPT-005 TENANCY embedded omission note; 2 MED: F-P27-04 E-GRAPH-013→403 row + E-GRAPH-001/014/016 omission notes; F-P27-05 stale configurable-debug-path parenthetical deleted; 1 LOW: F-P27-06 risk_tier.rs → action_risk.rs) + 2 obs (AIMessage Python-context citation acceptable; census-not-re-run [process-gap] → NEW GATE #21 census re-run trigger). NEW CLASS: BC↔taxonomy category-authority. Trajectory ...→7→5→6. Convergence 0/3. Gates 30. Burst 103. |
+
+---
+
 ## Burst 107 — Phase 1d Pass 31 + Fix Burst (pagination coherence canon + macros criticality)
 
 **Date:** 2026-07-15

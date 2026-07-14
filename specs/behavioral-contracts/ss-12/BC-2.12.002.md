@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.002
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,8 @@ phase: 1a
 red_gate: false
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
+changelog:
+  - "1.1 (ADV-P1D-PASS-32): F-P32-03 add PC20 — GET /assistants/{id}/versions pagination (limit default 10 max 100 clamped / offset 0 / ordering exemption: version ASC) matching interface-definitions.md §Assistants /versions row."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -77,6 +79,13 @@ any existing version. No wire-compatibility with LangGraph Platform (D13).
 18. `POST /assistants/{assistant_id}/set_latest { version: N }` — updates the "latest" pointer
     to version N. Returns HTTP 200 with the Assistant record at version N.
 19. Setting `version = N` where N does not exist returns HTTP 404.
+20. `GET /assistants/{assistant_id}/versions` supports canonical pagination: `limit` (default 10,
+    max 100; values > 100 silently clamped to 100), `offset` (default 0). **Ordering exemption:**
+    results are ordered `version` **ascending** (lowest version first) — version ASC is
+    intentional for historical replay and differs from the canonical `created_at` DESC default
+    declared in the §Canonical Pagination Convention. BC-2.12.001 PC8 clamp canon applies;
+    out-of-range canon: clamp (F-P31-01). Exemption documented in interface-definitions.md
+    §Assistants /versions row (F-P32-03).
 
 ## Invariants
 

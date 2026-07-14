@@ -698,3 +698,42 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     with rationale. Endpoints that *do* return arrays but omit pagination are a gate failure.
 
     Source: ADV-P1D-PASS-31 §F-P31-01 (pagination/query-param coherence — new class).
+
+25. **Summary-arithmetic + criticality-sibling coherence census gate — SUMMARY-ARITHMETIC
+    + CRITICALITY-SIBLING COHERENCE (added P32 — standing gate [process-gap]):**
+
+    Any burst that edits a table containing a summary/count section OR edits any
+    module-criticality document MUST perform this two-part census before closing:
+
+    **Part A — Summary arithmetic:**
+    Any edit to a table that has an associated Summary or Classification Summary section
+    (containing module counts, row counts, percentages, or self-summing totals) MUST:
+    1. Recount the table rows in the SAME burst — do not trust existing Summary cells.
+    2. Reconcile EVERY summary cell (each tier count AND the total) against the row recount.
+    3. Update ALL mismatched cells in the same burst. Deferring reconciliation is a gate
+       failure.
+
+    Trigger: any row add, row remove, row re-tier, count edit, or percentage edit in a
+    table that has a downstream Summary section.
+
+    **Part B — Criticality-sibling coherence:**
+    Any burst that adds, removes, or re-tiers a module in EITHER criticality document MUST:
+    1. Update BOTH `.factory/specs/module-criticality.md` (arch-view, authoritative post-1b)
+       AND `.factory/specs/prd-supplements/module-criticality.md` (PO-draft) in the same
+       burst — never update one without verifying the other.
+    2. After editing, verify that each document's Summary/Classification Summary reconciles
+       against its own table (Part A applies to both documents independently).
+    3. Verify that both documents agree on the tier classification of every shared module
+       row. Tier drift between the two files (e.g., one says HIGH, the other says MEDIUM
+       for the same module) is a HIGH-severity finding.
+
+    **Census commands:**
+    - Arch-view: count rows per tier in Module Inventory table → must equal Summary cells.
+    - PO-draft: count rows per tier in Module Classification table → must equal
+      Classification Summary cells; cell self-sum must equal stated Total.
+    - Tier agreement: for every module present in both files, verify tier matches.
+
+    Source: ADV-P1D-PASS-32 §OBS-P32-3 [process-gap] — root cause: pass-31 OBS-P31-1
+    updated prd-supplements but not the arch-view; pass-32 F-P32-01 found the arch-view
+    summary had diverged from its own table (HIGH said 10, actual 11; MEDIUM said 12,
+    actual 10) — a pre-existing arithmetic error compounded by the sibling-skip.
