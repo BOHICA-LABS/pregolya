@@ -659,4 +659,6 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
        - `grep -n "NodeStream\|ToolStream" .factory/specs/architecture/decisions/ADR-006-streaming-event-taxonomy.md` → present
        - `grep -rn "astream_events" .factory/specs/architecture/ | grep -v "native\|D13\|NOT\|no.*compat"` → zero live compat claims
 
-    Source: ADV-P1D-PASS-29 §F-P29-03, §F-P29-04, §F-P29-05, §OBS-P29-2 [process-gap].
+    **Anti-fix note (OBS-P30-2, ADV-P1D-PASS-30 — DURABLE):** `domain-spec/events.md` legitimately omits `run_stream`, `step_start`, `step_end`, and similar wire-taxonomy labels. `events.md` documents domain processing-stages by DDD convention, not the exhaustive wire-event taxonomy; gate #23 step 1 explicitly permits representative subsets in L2. Future passes MUST NOT "fix" `events.md` into duplicating BC-2.06.001's `StreamEvent` authority — BC-2.06.001 is the single wire-taxonomy source of truth. Any attempt to add `run_stream`, `step_start`, or `step_end` labels to `events.md` on the grounds that they are "missing from L2" is incorrect; the omission is intentional.
+
+    Source: ADV-P1D-PASS-29 §F-P29-03, §F-P29-04, §F-P29-05, §OBS-P29-2 [process-gap]; ADV-P1D-PASS-30 §OBS-P30-2.

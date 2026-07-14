@@ -2,12 +2,13 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.1"
+version: "1.2"
 status: active
 producer: business-analyst
 timestamp: 2026-07-14T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-03 FerrochainError.code changed from u32 to String."
+  - "1.2 (ADV-P1D-PASS-30): OBS-P30-1 add Timestamp UTC canon under Server Domain — all Timestamp values RFC 3339 UTC at construction; wire serialization preserves UTC form."
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -26,6 +27,8 @@ decisions: [D11, D13, D17]
 ---
 
 ## Server Domain
+
+> **Canonical Timestamp semantics (OBS-P30-1):** All Timestamp values are RFC 3339 date-time normalized to UTC (offset +00:00 / Z) at construction; wire serialization preserves UTC form. Applies to all `created_at`, `updated_at`, `completed_at`, `last_fired_at`, and `timestamp` fields throughout this section.
 
 ### Thread
 A named, durable sequence of checkpoints representing one conversation or pipeline run lineage.

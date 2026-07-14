@@ -13,6 +13,33 @@ traces_to: STATE.md
 
 # Burst Log — v1.0.0-greenfield
 
+## Burst 106 (2026-07-14)
+
+**Agents dispatched:** adversary (Phase 1d pass 30), product-owner (fix burst), state-manager (burst 106 state update)
+**Files touched:** interface-definitions.md, entities-server.md, bc-authoring-plan.md (PO fixes); STATE.md, burst-log.md (state-manager); ADV-P1D-PASS-30.md (adversary)
+**Versions bumped:** STATE.md v2.7→v2.8
+
+### Summary
+
+Phase 1d pass 30 adversarial review completed: NOT CLEAN — 1 finding (0 HIGH, 1 MED, 0 LOW) + 2 observations. Counter reset: 0/3 consecutive clean.
+
+**1 MED finding:**
+- F-P30-01: `TOOL→N/A` in blanket omission note (interface-definitions.md) contradicted `Category::Tool → 422` in BC-2.14.002 PC3 authoritative categorical map. This was a pass-29 edit regression (the OBS-P29-1 blanket note was added without checking PC3). Fix: corrected TOOL→422 and applied full 12-category token diff — VAL→400 corrected, TRANSPORT→502 added, INTERNAL→500 added to the note.
+
+**2 Observations:**
+- OBS-P30-01: Timestamp field in entities-server.md entity definition lacked RFC 3339 UTC canon. Fix: added UTC normalization note.
+- OBS-P30-02: Gate #23 streaming-event-name coherence lacked anti-fix note — events.md uses a representative subset of events (not all 11), which is legitimate design. Fix: anti-fix note added to bc-authoring-plan.md gate #23 entry.
+
+**Gate #23 status:** FIRST FULL RUN COMPLETED — PASS 11/11 streaming event names. All censuses checked; 3 of 4 rotated censuses PASS; sibling-checks (a)-(d) all PASS.
+
+NEW CLASS: HTTP dual-authority categorical-map token divergence (TOOL token). Novelty MEDIUM — single propagation regression from pass-29 edit; adversary assesses near-convergence. Gates total: 32. Convergence counter: 0/3.
+
+### Archived Current Phase Steps Row (displaced from STATE.md — oldest row)
+
+| Phase 1d pass 25 + fix burst (HTTP-status dual-authority) | adversary + PO | COMPLETE | Pass 25: NOT CLEAN — 7 findings (3 HIGH: F-P25-01 E-SERVER-016 503/504/absent three-way contradiction → canon 503; F-P25-02 E-SERVER-004 dual 401+403 → recategorized POLICY/403, 401 reserved; F-P25-03 FerrochainError code u32→String; 4 MED: to_problem() name drift, InterruptPayload interrupt_id canon, Run.interrupt sub-field reconciliation, status table 201/204/E-CRON-002 + §17-C census inert [process-gap]) + 3 obs (BC-2.14.002 per-endpoint-override precedence carve-out [process-gap]; 502/504 categorical-fallback rows added; VP-INDEX PASS). ALL FIXED. NEW CLASS: HTTP-status dual-authority incoherence. New gates: guideline #18 sub-field extension + §17-C positive-coverage assertion. Pass-24 fixes all HOLD. Trajectory ...→1→1→2→7. Convergence 0/3. Gates 27. Burst 101. |
+
+---
+
 ## Burst 103 (2026-07-14)
 
 **Agents dispatched:** adversary (Phase 1d pass 27), product-owner (fix burst), state-manager (burst 103 state update)
