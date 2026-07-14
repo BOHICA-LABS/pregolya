@@ -2,10 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.0"
+version: "1.1"
 status: active
 producer: architect
-timestamp: 2026-07-14T12:00:00Z
+timestamp: 2026-07-14T00:00:00Z
+changelog:
+  - "1.1 (ADV-P1D-PASS-25): F-P25-04 to_problem_detail()→to_problem() method name correction."
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -121,4 +123,4 @@ cross-thread aggregate query for schedule-fired runs only.
 Authoritative list lives in `error-taxonomy.md` §Components; enum reproduced here for the FerrochainError type definition:
 `Component` = CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET (12 components).
 Full catalog: `prd-supplements/error-taxonomy.md`.
-RFC-7807 serialization: `FerrochainError::to_problem_detail()` (BC-2.14.002).
+RFC-7807 serialization: `FerrochainError::to_problem()` (BC-2.14.002). Note: corrected from `to_problem_detail()` (F-P25-04; BC-2.14.002 is authoritative for method name).

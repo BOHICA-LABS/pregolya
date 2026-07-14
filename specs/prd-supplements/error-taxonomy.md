@@ -1,10 +1,12 @@
 ---
 document_type: prd-supplement-error-taxonomy
 level: L3
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-14T00:00:00Z
+changelog:
+  - "1.1 (ADV-P1D-PASS-25): F-P25-02 recategorize E-SERVER-004 AUTH→POLICY; correction note added inline."
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -114,7 +116,7 @@ primary_consumers: [implementer, test-writer]
 | ~~E-SERVER-001~~ | ~~POLICY~~ | ~~broken~~ | ~~BC-2.13.003~~ | ~~Never~~ | ~~`PolicyNotEnforceable: ...`~~ — **RETIRED** (ADV-P1D-PASS-4 fix, 2026-07-14): duplicate of E-SBXD-002; mis-anchored to SERVER component when the error is emitted by ferrochain-sandbox. BC-2.13.003 emits E-SBXD-002; E-SERVER-001 was never used. Tombstone per append-only numbering policy. |
 | E-SERVER-002 | VAL | broken | BC-2.12.003 | Never | `RunNotFound: run '<run_id>' does not exist in thread '<thread_id>'` |
 | E-SERVER-003 | VAL | broken | BC-2.12.001 | Never | `ThreadNotFound: thread '<thread_id>' does not exist` |
-| E-SERVER-004 | AUTH | broken | BC-2.12.005 | Never | `DebugRouteUnauthorized: debug/introspection route requires explicit opt-in configuration` |
+| E-SERVER-004 | POLICY | broken | BC-2.12.005 | Never | `DebugRouteUnauthorized: debug/introspection route requires explicit opt-in configuration` — **Category correction (F-P25-02, ADV-P1D-PASS-25):** was AUTH → POLICY. See note below table. |
 | E-SERVER-005 | POLICY | broken | BC-2.12.005 | Never | `CorsRejected: CORS origin '<origin>' is not in the allow-list; default denies all cross-origin requests` |
 | E-SERVER-006 | VAL | broken | BC-2.12.004 | Never | `ScheduleNotFound: cron schedule '<cron_id>' does not exist` |
 | E-SERVER-007 | CONCURRENCY | broken | BC-2.12.001 | Never | `ThreadAlreadyExists: thread '<thread_id>' already exists` |
@@ -127,6 +129,13 @@ primary_consumers: [implementer, test-writer]
 | E-SERVER-014 | DURABILITY | broken | BC-2.12.006 | Maybe | `RunStoreFailed: RunStore write failed for run '<run_id>' during transition '<transition>': <backend_error>` |
 | E-SERVER-015 | CONCURRENCY | broken | BC-2.12.007 | Never | `RunAlreadyExecuting: run '<run_id>' is already being executed; concurrent execution rejected` |
 | E-SERVER-016 | TIMEOUT | broken | BC-2.12.006 | Later | `IdempotencyLockTimeout: in-flight deduplication lock for key '<key>' held for ><timeout>s; lock_timeout is configurable via IdempotencyStore` |
+
+> **E-SERVER-004 category correction (F-P25-02, ADV-P1D-PASS-25):** E-SERVER-004 was incorrectly
+> categorized as AUTH (Category::Auth → HTTP 401). BC-2.12.005 PC4 + EC-002 mandate HTTP 403 and
+> describe this as a policy gate (route inaccessible without explicit operator opt-in config), not a
+> credential-based authentication failure. Recategorized AUTH → POLICY (Category::Policy → HTTP 403).
+> The debug route is a capability gate, not an identity gate. The 401 row in interface-definitions.md
+> §HTTP Status Codes is now marked reserved (no E-code maps there in v1).
 
 ### Component: PROV (ferrochain-\<provider\>)
 

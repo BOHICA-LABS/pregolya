@@ -2,13 +2,15 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.004
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 origin: greenfield
 priority: P0
 subsystem: SS-05
+changelog:
+  - "1.1 (ADV-P1D-PASS-25): F-P25-05 PC4 'id field'→'interrupt_id field' with authority citations."
 capability: CAP-006
 wave: 1
 phase: 1a
@@ -46,8 +48,10 @@ mixin). This BC specifies the full `Command` shape and the contract each field s
 3. Either `Command(resume=value)` is submitted via `graph.invoke(Command(resume=v),
    config)` or `graph.stream(Command(resume=v), config)`.
 4. If `Command(resume={interrupt_id: value})` form is used, the `interrupt_id` must match
-   the `id` field of one of the surfaced `InterruptPayload`s (hash of the checkpoint
-   namespace at interrupt time).
+   the `interrupt_id` field of one of the surfaced `InterruptPayload`s (hash of the checkpoint
+   namespace at interrupt time). Authority: BC-2.05.001 TV-001 (`interrupt_id` is the canonical
+   field name in `InterruptPayload`); entities-server.md §Interrupt (`interrupt_id: Uuid`). Fixed
+   F-P25-05: prior wording incorrectly said "the `id` field".
 
 ## Postconditions
 

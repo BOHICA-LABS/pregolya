@@ -2,10 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.0"
+version: "1.1"
 status: active
 producer: business-analyst
 timestamp: 2026-07-14T00:00:00Z
+changelog:
+  - "1.1 (ADV-P1D-PASS-25): F-P25-03 FerrochainError.code changed from u32 to String."
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -105,7 +107,7 @@ A connection to a model provider implementing the ChatModel Runnable interface.
 
 ### FerrochainError
 The 2D error type for all ferrochain crates.
-- **Fields:** component: FerrochainComponent (enum covering all ferrochain crate names), category: ErrorCategory (Authentication | Validation | RateLimit | Timeout | Transport | Internal | Durability | Policy | Tool | Concurrency | Security | Tenancy), retry_hint: RetryHint (Never | Maybe | Later(Duration)), code: u32, message: String, source: Option<Box<dyn StdError>>
+- **Fields:** component: FerrochainComponent (enum covering all ferrochain crate names), category: ErrorCategory (Authentication | Validation | RateLimit | Timeout | Transport | Internal | Durability | Policy | Tool | Concurrency | Security | Tenancy), retry_hint: RetryHint (Never | Maybe | Later(Duration)), code: String (wire representation; Rust: `&'static str` per api-surface.md — e.g. `"E-CORE-001"`; fixed F-P25-03 from incorrect `u32`), message: String, source: Option<Box<dyn StdError>>
 - **Source:** CONFLICT-6 — adk-rust P-01/P-04 adopted; Python exception hierarchy does not translate to Rust.
 - **RFC-7807:** FerrochainError supports serialization to RFC-7807 Problem Details JSON for HTTP error responses.
 

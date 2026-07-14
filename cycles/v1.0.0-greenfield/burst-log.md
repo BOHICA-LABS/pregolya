@@ -778,3 +778,52 @@ Phase 1d pass 15 + fix burst (ADR anchor sweep) | adversary + architect | COMPLE
 **Summary:** Pass 24 NOT CLEAN — 2 findings + 3 observations (wire-object field-set class: Run completed_at/updated_at terminal-only semantics three-way inconsistency; status-code table E-SERVER exclusions missing; Thread.status/ThreadStatus enum undefined in entities-server; Assistant fields undefined). ALL FIXED: (1) interface-definitions Run schema updated_at + completed_at semantics annotated (terminal-only); (2) entities-server Thread.status + ThreadStatus enum added + Assistant fields defined + Run completed_at + CronSchedule last_fired_at added; (3) BC-2.12.003 PC13 wire-object completeness obligation added; (4) api-surface {cron_id} ×3 path params added; (5) bc-authoring-plan 17C fix + gate #18 wire-object census. Full 21-row wire-object census: PASS. Open probe for pass 25: E-SERVER-016 missing HTTP status row. New census gates: 25 total. Trajectory ...→1→1→1→2. Convergence 0/3. Burst 100 (SESSION WRAP).
 
 **State changes:** convergence passes 23→24, fix bursts 23→24, trajectory →2 (P1D-24), session checkpoint replaced (burst 99 archived), step row pass 19 archived.
+
+---
+
+### Archived Step Row — Pass 20 (rotated out of STATE.md at burst 101)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1d pass 20 + fix burst (E-code variant census) | adversary + PO | COMPLETE | Pass 20: NOT CLEAN — 3 findings (F-P20-01 CRIT E-GRAPH-003/E-CHKPT-003 collision residue on P0 HITL path [burst-77 sweep missed ss-05/ss-10] → E-GRAPH-016/E-CHKPT-006 minted; F-P20-02 MED Checkpointer straggler; F-P20-03 gate widenings §15/§16). Full 86-BC code↔variant census: 40 pairings, zero residue beyond the 6. Trajectory ...→2→3. Convergence 0/3. Gates 21. Burst 96. |
+
+---
+
+## Burst 101 — Phase 1d Pass 25 + Fix Burst (HTTP-status dual-authority + wire-object sub-fields)
+
+**Date:** 2026-07-14
+**Agents:** adversary (pass 25) + product-owner (fix) + state-manager (STATE update)
+**Files touched:** specs/architecture/api-surface.md, specs/behavioral-contracts/ss-05/BC-2.05.004.md, specs/behavioral-contracts/ss-14/BC-2.14.002.md, specs/domain-spec/entities-server.md, specs/prd-supplements/bc-authoring-plan.md, specs/prd-supplements/error-taxonomy.md, specs/prd-supplements/interface-definitions.md, cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-25.md (NEW), STATE.md, cycles/v1.0.0-greenfield/burst-log.md, cycles/v1.0.0-greenfield/lessons.md
+
+### Summary
+
+Pass 25 NOT CLEAN — 7 findings (3 HIGH + 4 MED) + 3 observations. ALL FIXED same burst. NEW CLASS: HTTP-status dual-authority incoherence (categorical global table in BC-2.14.002 vs per-endpoint overrides in BC-2.05.004 and api-surface.md). Two new standing gates added (guideline #18 sub-field extension + §17-C positive-coverage assertion). Gates total now 27. Counter remains 0/3.
+
+### Findings Summary
+
+| ID | Severity | Finding | Fix |
+|----|----------|---------|-----|
+| F-P25-01 | HIGH | E-SERVER-016 HTTP status: 503 (bc-authoring-plan §17-C), 504 (api-surface), absent (interface-definitions) three-way contradiction | Canon 503; api-surface + interface-definitions updated; §17-C positive-coverage assertion codified |
+| F-P25-02 | HIGH | E-SERVER-004 dual 401+403 authority — categorical table assigned both, per-endpoint BCs used 403 for unauthorized | Recategorized POLICY/403 (authorization); 401 reserved for future OAuth/authentication; BC-2.14.002 precedence carve-out added |
+| F-P25-03 | HIGH | FerrochainError.code field type u32 in interface-definitions vs String in error-taxonomy definitions | Canonical type is String; interface-definitions updated |
+| F-P25-04 | MED | to_problem() method name drift (to_http_response, to_response, to_problem scattered across docs) | to_problem() canonicalized across all sites |
+| F-P25-05 | MED | InterruptPayload.interrupt_id sub-field absent from interrupt wire-object schema | Canonical sub-field added to interface-definitions schema |
+| F-P25-06 | MED | Run.interrupt sub-field set underdefined — canonical set from entities-server not aligned with bc-authoring-plan §18 | Canonical sub-fields {node_name, action_risk, interrupt_id, value, action, context, super_step, scratchpad} codified; guideline #18 extended |
+| F-P25-07 | MED | Status table 201/204/E-CRON-002 gaps + §17-C census was inert (PASS rows never grep-verified) [process-gap] | 201/204/502/503/504 rows added; §17-C positive-coverage assertion gate added |
+| OBS-P25-01 | OBS | BC-2.14.002 "must not diverge" absolute invariant lacked per-endpoint precedence carve-out [process-gap, codified] | Carve-out added to BC-2.14.002; categorical table is default-floor, per-endpoint rule wins |
+| OBS-P25-02 | OBS | 502/504 categorical-fallback rows absent from status table | Both rows added |
+| OBS-P25-03 | OBS | VP-INDEX PASS (no finding) | — |
+
+### New Standing Gates (post-burst 101)
+
+- Gate #18 (extended): guideline #18 sub-field completeness — each wire-object schema must enumerate all sub-fields from entities-server as authoritative
+- §17-C positive-coverage assertion: census must grep-verify PASS rows against status table (not just absence-check)
+
+### Convergence Status After Burst 101
+
+- Phase 1d passes: 25 (NOT CLEAN)
+- Fix bursts: 25
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25)
+
+**State changes:** convergence passes 24→25, fix bursts 24→25, trajectory →7 (P1D-25), session checkpoint replaced (burst 100 archived), step row pass 20 archived to burst-log. Gates 25→27.

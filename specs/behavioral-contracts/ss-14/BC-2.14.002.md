@@ -2,13 +2,15 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 origin: greenfield
 priority: P0
 subsystem: SS-14
+changelog:
+  - "1.1 (ADV-P1D-PASS-25): F-P25-01 PC3 add per-endpoint override block (E-SERVER-016→503); OBS-1 invariant precedence carve-out added."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -52,19 +54,29 @@ requiring the HTTP layer to reach into the error's internal fields directly.
    - `extensions.retry_hint: "never" | "maybe" | "later:<seconds>"` — derived from `RetryHint`
    - `extensions.component: <lowercase component code>` (e.g. `"graph"`)
 2. The `ProblemDetail` serializes to valid JSON conforming to RFC-7807 §3.
-3. HTTP status code mapping:
+3. HTTP status code mapping (categorical defaults; see per-endpoint overrides below):
    - `Category::Val` → 400
    - `Category::Auth` → 401
    - `Category::Policy` → 403
    - `Category::Rate` → 429
-   - `Category::Timeout` → 504
-   - `Category::Transport` → 502
+   - `Category::Timeout` → 504 *(categorical default)*
+   - `Category::Transport` → 502 *(categorical default)*
    - `Category::Concurrency` → 409
    - `Category::Security` → 403
    - `Category::Tenancy` → 409
    - `Category::Durability` → 500
    - `Category::Internal` → 500
    - `Category::Tool` → 422
+
+   **Per-endpoint status overrides (F-P25-01 — OBS-1 carve-out):** A resource BC may specify
+   a status code that differs from the categorical default above. The per-endpoint status takes
+   precedence; the categorical map is the fallback for errors with no per-endpoint specification.
+   Known overrides as of v1.0.0:
+   - `E-SERVER-016 (IdempotencyLockTimeout)` → **503** despite `Category::Timeout` → 504.
+     Rationale: the lock timeout is a transient server-side serialization delay, not a
+     provider/upstream timeout — 503 is the correct retryable-service-unavailable code.
+     `RetryHint::Later` + `Retry-After` header are emitted. Source: BC-2.12.006 EC-002;
+     interface-definitions.md §HTTP Status Codes 503 row; F-P25-01.
 4. The `Content-Type` header of the response is `application/problem+json` (not
    `application/json`) when a `ProblemDetail` is emitted.
 5. A `FerrochainError` without an HTTP context (e.g. raised in a CLI tool) can still call
@@ -79,8 +91,13 @@ requiring the HTTP layer to reach into the error's internal fields directly.
   (it is always the static code like `E-CORE-001`).
 - `retry_hint` in the extensions block uses the canonical string representation
   (`"never"`, `"maybe"`, `"later:<seconds>"`) for client machine readability.
-- The HTTP status code mapping is defined once in ferrochain-server and must not diverge from
-  the table above.
+- The HTTP status code mapping is defined once in ferrochain-server. A per-endpoint status
+  specified in a resource BC overrides the categorical default; the categorical map is the
+  fallback for errors with no per-endpoint specification. Legitimate per-endpoint divergences
+  (e.g., E-SERVER-016 TIMEOUT→503, E-SERVER-009 VAL→404 for direct lookup, E-SERVER-004
+  POLICY→403 debug route) must be documented in PC3 and interface-definitions.md §HTTP Status
+  Codes. The categorical map itself must not diverge; per-endpoint overrides must be explicit.
+  Source: F-P25-01, OBS-1, ADV-P1D-PASS-25.
 
 ## Edge Cases
 

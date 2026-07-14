@@ -1,11 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "1.0"
+version: "1.6"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
-phase: 1a
+timestamp: 2026-07-14T00:00:00Z
+phase: 1d
+changelog:
+  - "1.6 (ADV-P1D-PASS-25): F-P25-01 add 503 row (E-SERVER-016 IdempotencyLockTimeout per-endpoint override); F-P25-02 recategorize 401→reserved, 403 now E-SERVER-004 POLICY + E-SERVER-005; F-P25-06 reconcile Run.interrupt sub-fields (interrupt_id, node_name, value, action_risk, action, context added; node_id→node_name, risk_tier→action_risk renamed); F-P25-07 add 201 and 204 rows, add E-CRON-002 to 400 row; OBS-2 add 502 and 504 categorical fallback rows."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -199,15 +201,20 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 | Code | Meaning | Error Source |
 |------|---------|-------------|
 | 200 | Success with response body | — |
+| 201 | Created (new resource; body contains created object) | — |
 | 202 | Accepted (async run created; polling required) | — |
-| 400 | Validation error | E-CORE-001 through E-CORE-005 |
-| 401 | Authentication required | E-SERVER-004 |
-| 403 | Policy enforcement (CORS, debug route) | E-SERVER-004, E-SERVER-005 |
+| 204 | No Content (delete success; no response body) | — |
+| 400 | Validation error | E-CORE-001 through E-CORE-005, E-CRON-002 (InvalidCronExpression) |
+| 401 | Authentication required | reserved — no current E-code maps here; authentication middleware is out of v1 scope (F-P25-02: E-SERVER-004 recategorized AUTH→POLICY → 403) |
+| 403 | Policy enforcement (CORS, debug route) | E-SERVER-004 (DebugRouteUnauthorized), E-SERVER-005 (CorsRejected) |
 | 404 | Resource not found | E-SERVER-002 (RunNotFound), E-SERVER-003 (ThreadNotFound), E-SERVER-006 (ScheduleNotFound), E-SERVER-009 (AssistantNotFound — direct resource lookup), E-SERVER-010 (AssistantVersionNotFound) |
 | 409 | Conflict (duplicate resource or state conflict) | E-SERVER-007 (ThreadAlreadyExists), E-SERVER-008 (ThreadStateConflict), E-SERVER-012 (ConcurrentRun), E-SERVER-015 (RunAlreadyExecuting) |
 | 422 | Semantic validation failure (VAL-category on body content) | E-GRAPH-*, E-CHKPT-*, E-SERVER-009 (AssistantNotFound in run body — invalid assistant_id reference at run creation; context-dependent: same code, 404 at direct lookup), E-SERVER-011 (GraphNotFound — graph_id in assistant body not registered) |
 | 429 | Rate limited | E-PROV-001 |
 | 500 | Internal error | E-GRAPH-006, E-CHKPT-*, E-SERVER-014 (RunStoreFailed) |
+| 502 | Bad Gateway (provider transport failure) | E-PROV-003 (StreamInterrupted) — categorical fallback only; no v1 endpoint emits 502 as a direct terminal HTTP status; surfaced embedded in Run.error |
+| 503 | Service temporarily unavailable (retryable store/lock timeout) | E-SERVER-016 (IdempotencyLockTimeout); Retry-After header present; per-endpoint override over categorical Timeout→504 (F-P25-01; BC-2.12.006 EC-002; BC-2.14.002 PC3 carve-out) |
+| 504 | Gateway Timeout (provider response timeout) | E-PROV-002 (ProviderTimeout) — categorical fallback only; no v1 endpoint emits 504 as a direct terminal HTTP status; surfaced embedded in Run.error |
 
 **BC anchor:** BC-2.12.001 through BC-2.12.007
 
@@ -243,15 +250,33 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
     },
     "interrupt": {
       "type": ["object", "null"],
-      "description": "Present only when status=interrupted",
+      "description": "Present only when status=interrupted. Reconciled F-P25-06 to match BCs (authoritative): BC-2.05.001 (InterruptPayload { value, interrupt_id }), BC-2.05.006 (HitlInterruptPayload { action_risk, action, context }), entities-server.md §Interrupt (interrupt_id, node_name, scratchpad).",
       "properties": {
-        "node_id": { "type": "string" },
-        "super_step": { "type": "integer" },
-        "risk_tier": {
-          "type": ["string", "null"],
-          "description": "Typed action-risk level for Domain A (BC-2.05.006)"
+        "interrupt_id": {
+          "type": "string",
+          "description": "Stable identifier for this interrupt (hash of checkpoint namespace at interrupt time). Used in Command(resume={interrupt_id: value}) targeted delivery. Authority: BC-2.05.001 TV-001, entities-server.md §Interrupt."
         },
-        "scratchpad": { "description": "Per-task scratchpad for HITL context" }
+        "node_name": {
+          "type": "string",
+          "description": "Name of the node that raised this interrupt. Canonical field name: node_name (per entities-server.md §Interrupt). Was incorrectly 'node_id' — fixed F-P25-06."
+        },
+        "super_step": { "type": "integer", "description": "Super-step index at the time the interrupt was raised." },
+        "value": {
+          "description": "The interrupt value surfaced to the caller (any serializable type; msgpack round-trip required per BC-2.05.001 PC4 TV-001). Authority: BC-2.05.001 PC4."
+        },
+        "action_risk": {
+          "type": ["string", "null"],
+          "enum": ["ReadOnly", "Low", "Medium", "High", null],
+          "description": "Typed action-risk tier for Domain A HITL interrupts (BC-2.05.006 HitlInterruptPayload). Null for non-risk-tiered interrupts. Canonical field name: action_risk. Was incorrectly 'risk_tier' — fixed F-P25-06."
+        },
+        "action": {
+          "type": ["string", "null"],
+          "description": "Human-readable description of the action awaiting authorization (Domain A HITL; HitlInterruptPayload.action). Null for non-HITL-tier interrupts."
+        },
+        "context": {
+          "description": "Optional structured context for the approver (Domain A HITL; HitlInterruptPayload.context). Null for non-HITL-tier interrupts."
+        },
+        "scratchpad": { "description": "Per-task scratchpad state at interrupt time. Authority: entities-server.md §Interrupt." }
       }
     }
   }

@@ -406,11 +406,19 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
     **C. HTTP status-code↔E-code census (schema discipline):** For each BC that states
     an HTTP status code for a specific E-xxx-NNN error, assert the code maps correctly
-    to the interface-definitions.md §HTTP Status Codes table:
+    to the interface-definitions.md §HTTP Status Codes table.
 
-    | HTTP Code | E-code range | Citing BCs (sample) | Verdict |
-    |-----------|-------------|---------------------|---------|
-    | 400 | E-CRON-002 InvalidCronExpression | BC-2.12.004 EC-002 | PASS |
+    **Positive-coverage assertion (added P25 — [process-gap] fix):** Every PASS row in
+    this census table MUST be grep-verifiable in interface-definitions.md §HTTP Status Codes.
+    A census row marked PASS against a status code or E-code not present in the interface
+    table is a false PASS — the census is inert. Census command:
+    `grep -n "^| 201\|^| 202\|^| 204\|^| 400\|^| 401\|^| 403\|^| 404\|^| 409\|^| 422\|^| 429\|^| 500\|^| 502\|^| 503\|^| 504" .factory/specs/prd-supplements/interface-definitions.md`
+    Every status code appearing in the census table below must appear as a row in that grep output.
+    Source: ADV-P1D-PASS-25 F-P25-07 [process-gap].
+
+    | HTTP Code | E-code + Variant | Citing BCs (sample) | Verdict |
+    |-----------|-----------------|---------------------|---------|
+    | 400 | E-CRON-002 InvalidCronExpression | BC-2.12.004 EC-002 | PASS (added 400 row in iface-def P25) |
     | 404 | E-SERVER-002 RunNotFound | BC-2.12.003 EC-001, TV-003, TV-004 | PASS |
     | 404 | E-SERVER-003 ThreadNotFound | BC-2.12.003 PC2, EC-001 | PASS |
     | 404 | E-SERVER-006 ScheduleNotFound | BC-2.12.004 EC-005 | PASS |
@@ -421,11 +429,12 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | 422 | E-SERVER-011 (GraphNotFound in assistant body) | BC-2.12.002 EC-005 | PASS |
     | 429 | E-PROV-001 | interface-definitions.md | PASS |
     | 500 | E-SERVER-014 RunStoreFailed | BC-2.12.006 EC-004 | PASS |
-    | 204 | DELETE success (no body) | BC-2.12.004 PC5, EC-005 | PASS |
-    | 201 | POST /schedules | BC-2.12.004 TV-001 | PASS |
+    | 204 | DELETE success (no body) | BC-2.12.004 PC5, EC-005 | PASS (204 row added to iface-def P25) |
+    | 201 | POST /schedules | BC-2.12.004 TV-001 | PASS (201 row added to iface-def P25) |
     | 202 | POST /threads/{id}/runs | BC-2.12.003 PC5 | PASS |
+    | 503 | E-SERVER-016 IdempotencyLockTimeout | BC-2.12.006 EC-002 | PASS (503 row added to iface-def P25; per-endpoint override over Timeout→504) |
 
-    Source of truth: ADV-P1D-PASS-23.md §F-P23-01; interface-definitions.md §HTTP Status Codes.
+    Source of truth: ADV-P1D-PASS-23.md §F-P23-01; ADV-P1D-PASS-25 §F-P25-07; interface-definitions.md §HTTP Status Codes.
 
 16. **E-code↔variant-name consistency census gate (added P20 — standing gate):**
     After any BC authoring or fix burst that introduces, renames, or retires an error code,
@@ -489,6 +498,18 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     JSON schema for that object (if one exists), (b) the `entities-server.md` entity field list,
     and (c) all other BCs that return or consume that same object. Three-way consistency is
     required before the fix burst closes.
+
+    **Sub-field coherence extension (added P25 — F-P25-06):** The three-way census applies to
+    EMBEDDED sub-objects (e.g., Run.interrupt, Run.error) with the same discipline as top-level
+    objects. For each embedded object with a `properties` block in the interface-definitions.md
+    JSON schema, every named sub-field must be coherent across (a) the schema `properties`, (b)
+    the entity or BC type that defines the sub-object shape, and (c) all BCs that emit or consume
+    the parent object in the interrupted/error state. Known embedded sub-objects subject to this rule:
+    Run.interrupt (fields: interrupt_id, node_name, super_step, value, action_risk, action, context,
+    scratchpad — authority: BC-2.05.001, BC-2.05.006, entities-server.md §Interrupt);
+    Run.error (fields: type, title, detail, extensions — authority: BC-2.14.002, RFC-7807).
+    Sub-field drift between the schema and the authoritative BC is a wire-breaking defect.
+    Source: ADV-P1D-PASS-25 §F-P25-06.
 
     **Quick check command (Run object schema):**
     `grep -n "updated_at\|completed_at" .factory/specs/prd-supplements/interface-definitions.md .factory/specs/domain-spec/entities-server.md .factory/specs/behavioral-contracts/ss-12/BC-2.12.003.md`
