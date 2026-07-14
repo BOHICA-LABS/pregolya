@@ -1,0 +1,70 @@
+# Artifact Path Registry
+# Registers artifact types and their canonical path patterns within .factory/.
+# Used by state-manager and orchestrator for path validation and routing.
+# Format: artifact_type → path_pattern (glob-compatible)
+
+artifact_types:
+  - artifact_type: prd
+    description: "L3 Product Requirements Document (index + BC summary tables)"
+    pattern: ".factory/specs/prd.md"
+    singleton: true
+
+  - artifact_type: prd-supplement
+    description: "PRD supplement files (BC authoring plan, error taxonomy, NFR catalog, module criticality, interface definitions)"
+    pattern: ".factory/specs/prd-supplements/{filename}.md"
+    singleton: false
+
+  - artifact_type: domain-spec
+    description: "L2 Domain Specification shards"
+    pattern: ".factory/specs/domain-spec/{shard}.md"
+    singleton: false
+
+  - artifact_type: product-brief
+    description: "Product brief (L1 statement of intent)"
+    pattern: ".factory/specs/product-brief.md"
+    singleton: true
+
+  - artifact_type: behavioral-contract
+    description: "Individual BC files (BC-S.SS.NNN)"
+    pattern: ".factory/specs/behavioral-contracts/ss-{NN}/{bc-id}.md"
+    singleton: false
+
+  - artifact_type: bc-index
+    description: "BC index per subsystem"
+    pattern: ".factory/specs/behavioral-contracts/BC-INDEX.md"
+    singleton: true
+
+  - artifact_type: verification-property
+    description: "Formal verification property files (VP-NNN)"
+    pattern: ".factory/specs/verification-properties/{vp-id}.md"
+    singleton: false
+
+  - artifact_type: architecture-doc
+    description: "Architecture decision records and subsystem specs"
+    pattern: ".factory/specs/architecture/{doc}.md"
+    singleton: false
+
+  - artifact_type: story
+    description: "Per-story implementation spec files"
+    pattern: ".factory/stories/{story-id}.md"
+    singleton: false
+
+  - artifact_type: holdout-scenario
+    description: "Holdout evaluation scenario files (HS-NNN)"
+    pattern: ".factory/holdout-scenarios/{hs-id}.md"
+    singleton: false
+
+  - artifact_type: cycle-manifest
+    description: "Per-cycle delivery manifest"
+    pattern: ".factory/cycles/{cycle}/cycle-manifest.md"
+    singleton: false
+
+  - artifact_type: burst-log
+    description: "Per-cycle burst narrative log"
+    pattern: ".factory/cycles/{cycle}/burst-log.md"
+    singleton: false
+
+  - artifact_type: convergence-trajectory
+    description: "Finding counts per adversary pass"
+    pattern: ".factory/cycles/{cycle}/convergence-trajectory.md"
+    singleton: false

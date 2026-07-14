@@ -1,0 +1,155 @@
+---
+document_type: prd-supplement-module-criticality
+level: L3
+version: "1.0"
+status: draft
+producer: product-owner
+timestamp: 2026-07-13T00:00:00Z
+phase: 1a
+inputs:
+  - .factory/specs/prd.md
+  - .factory/specs/domain-spec/invariants.md
+  - .factory/STATE.md
+input-hash: "5ad2071b56c8cfe9f9e484a3b5f9c173eefd5081bfeccc0f3e6b75db816867f7"
+traces_to: prd.md
+primary_consumers: [architect, test-writer, formal-verifier]
+architect_note: "Architect must confirm crate-to-subsystem mapping and fill Architecture Module column after producing ARCH-INDEX.md"
+---
+
+# Module Criticality Classification: ferrochain
+
+## Tier Definitions
+
+| Tier | Mutation Kill Rate Target | Description | Examples |
+|------|--------------------------|-------------|----------|
+| **CRITICAL** | ≥ 95% | Security boundaries, formal verification targets, durability invariants | BSP engine, checkpoint store, credential newtypes |
+| **HIGH** | ≥ 90% | Core business logic, conformance contracts, server resource management | Provider trait impls, HITL engine, server handlers |
+| **MEDIUM** | ≥ 80% | Supporting functionality with correctness requirements | Splitters, MCP adapter, sandbox utilities |
+| **LOW** | ≥ 70% | Infrastructure, configuration, boilerplate | Build scripts, allowlist tooling, doc generation |
+
+## Module Inventory
+
+- **ferrochain-core** — typed message/content primitives (Runnable, Message, ContentBlock), FerrochainError 2D struct, credential newtypes, CI lint targets
+- **ferrochain-graph** — StateGraph BSP execution engine, HITL interrupt/resume, channel reducers, budget governance, content provenance/guardrail seams
+- **ferrochain-checkpoint** — three-tier durable checkpointing, per-task put_writes, monotonic clock, checkpoint fork lineage, encryption at rest
+- **ferrochain-server** — HTTP server for threads/assistants/runs/crons, SecurityConfig, IdempotencyStore/RateLimitStore/RunStore traits
+- **ferrochain-mcp** — MCP tool adapter, tool discovery, ToolException fidelity, untrusted-ingress routing
+- **ferrochain-openai** — OpenAI chat model implementation, streaming, tool-call, structured output
+- **ferrochain-anthropic** — Anthropic chat model implementation, streaming, tool-call
+- **ferrochain-ollama** — Ollama chat model implementation
+- **ferrochain-standard-tests** — conformance test suite crate (consumers: all provider crates)
+- **ferrochain-splitters** — text splitting with code-point boundary correctness
+- **ferrochain-sandbox** — WASM/container tool execution backend, workspace path confinement, macOS Seatbelt
+- **ferrochain-community** — demand-ranked integration crates (post-v1; third-party)
+- **xtask** — cargo xtask workspace tooling (file-size gate, client-timeout lint, namespace reservation)
+
+## Module Classification
+
+| Module | Crate | Tier | Rationale | Kill Rate Target | VP Count |
+|--------|-------|------|-----------|-----------------|---------|
+| BSP execution engine | ferrochain-graph | CRITICAL | DI-001 formal verification target; nondeterminism is a silent defect; CONFLICT-1 critical finding | ≥ 95% | 1 (BSP-determinism-VP) |
+| HITL interrupt/resume | ferrochain-graph | CRITICAL | D17-Q2 Phase-1 BC; cannot be retrofitted; Domain A+B holdout depends on correctness | ≥ 95% | 0 |
+| Per-task checkpoint store | ferrochain-checkpoint | CRITICAL | DI-002 durability invariant; Domain B multi-day run depends on crash recovery; VP seed | ≥ 95% | 1 (delta-round-trip-VP) |
+| Session tenancy layer | ferrochain-checkpoint | CRITICAL | DI-005 Kani VP target; NE-12 cross-tenant isolation | ≥ 95% | 1 (session-tenancy-VP) |
+| FerrochainError + credential newtypes | ferrochain-core | CRITICAL | NE-10 security boundary; DI-008 API contract; DI-010 credential opacity | ≥ 95% | 0 |
+| Workspace path confinement | ferrochain-sandbox | CRITICAL | DI-007 Kani VP target; NE-02 symlink escape; Domain C forcing function | ≥ 95% | 1 (workspace-confinement-VP) |
+| Budget governance | ferrochain-graph | HIGH | D17-Q4 Phase-1 BC; Domain B holdout; append-only journal integrity | ≥ 90% | 0 |
+| Content provenance/guardrail | ferrochain-graph | HIGH | D17-Q8 Phase-1 BC; Domain A holdout; DI-012 ingress coverage | ≥ 90% | 0 |
+| Runnable trait dispatch | ferrochain-core | HIGH | Universal composition primitive; type boundary enforcement | ≥ 90% | 0 |
+| ferrochain-server HTTP handlers | ferrochain-server | HIGH | CRUD lifecycle correctness; SecurityConfig defaults (DI-013); streaming/unary equivalence | ≥ 90% | 0 |
+| ferrochain-openai | ferrochain-openai | HIGH | Conformance contract; error-type fidelity; token-usage accounting | ≥ 90% | 0 |
+| ferrochain-anthropic | ferrochain-anthropic | HIGH | Conformance contract; streaming correctness | ≥ 90% | 0 |
+| ferrochain-ollama | ferrochain-ollama | HIGH | Conformance contract; local-first deployment | ≥ 90% | 0 |
+| MCP tool adapter | ferrochain-mcp | MEDIUM | ToolException fidelity (R11); untrusted ingress; correctness but not formal target | ≥ 80% | 0 |
+| ferrochain-splitters | ferrochain-splitters | MEDIUM | Code-point parity correctness (R8); isolated from graph runtime | ≥ 80% | 0 |
+| Sandbox WASM/container backend | ferrochain-sandbox | MEDIUM | Execution isolation important but DI-006 behavioral test covers the main case | ≥ 80% | 0 |
+| ferrochain-standard-tests | ferrochain-standard-tests | MEDIUM | Test infrastructure; quality signal not production runtime | ≥ 80% | 0 |
+| xtask tooling | xtask | LOW | Build tooling; correctness checked by CI itself | ≥ 70% | 0 |
+| ferrochain-community | ferrochain-community | LOW | Third-party contributed post-v1; not in-tree at v1 | ≥ 70% | 0 |
+
+## Per-Module Risk Assessment
+
+| Module | Tier | Blast Radius | Security Sensitivity | Implementation Complexity | Test Priority |
+|--------|------|-------------|---------------------|--------------------------|--------------|
+| BSP execution engine | CRITICAL | high — all graph runs | low (correctness not security) | high | P0 |
+| HITL interrupt/resume | CRITICAL | high — all HITL scenarios | medium (authorization gates in Domain A) | high | P0 |
+| Per-task checkpoint store | CRITICAL | high — all durable runs | medium (encryption at rest) | high | P0 |
+| Session tenancy layer | CRITICAL | high — multi-tenant isolation | high (cross-tenant data leak) | medium | P0 |
+| FerrochainError + credentials | CRITICAL | medium — error observability | high (credential leak) | low | P0 |
+| Workspace path confinement | CRITICAL | medium — tool execution | high (path traversal) | medium | P0 |
+| Budget governance | HIGH | medium — Domain B runs | low | medium | P0 |
+| Content provenance/guardrail | HIGH | high — Domain A safety | high (prompt injection) | medium | P0 |
+| Runnable trait dispatch | HIGH | high — all crates depend on it | low | medium | P0 |
+| Server HTTP handlers | HIGH | high — all server consumers | high (CORS, auth, debug routes) | medium | P1 |
+| Provider crates (3) | HIGH | medium — each crate isolated | medium (credential handling) | low | P1 |
+| MCP adapter | MEDIUM | medium | medium (untrusted ingress) | medium | P1 |
+| Splitters | MEDIUM | low (isolated) | none | low | P0 (R8 correctness) |
+| Sandbox backends | MEDIUM | medium | high (execution isolation) | high | P1 |
+| Standard tests | MEDIUM | low | none | low | P1 |
+
+## Classification Summary
+
+| Tier | Module Count | Percentage |
+|------|-------------|------------|
+| CRITICAL | 6 | 32% |
+| HIGH | 7 | 37% |
+| MEDIUM | 5 | 26% |
+| LOW | 2 | 11% |
+| **Total** | **19** | ~100% |
+
+*Note: Community crate and xtask excluded from active-development count; counted here for completeness.*
+
+## Dependency Graph — Build Order
+
+```
+ferrochain-core (foundation — no internal deps)
+  └── ferrochain-graph (depends on core)
+  │   └── ferrochain-checkpoint (depends on core; graph checkpoints)
+  │       └── ferrochain-server (depends on graph, checkpoint)
+  └── ferrochain-splitters (depends on core; isolated)
+  └── ferrochain-sandbox (depends on core)
+  │   └── (ferrochain-graph uses sandbox for tool execution)
+  └── ferrochain-<provider> (depends on core; standalone)
+  │   └── ferrochain-standard-tests (tests providers; depends on core + each provider)
+  └── ferrochain-mcp (depends on core; optional dep on providers)
+```
+
+## Implementation Priority Order
+
+1. **ferrochain-core** — all primitives (Runnable, Message, ContentBlock, FerrochainError); prerequisite for everything
+2. **ferrochain-splitters** — isolated; provides early Red Gate test coverage for R8
+3. **ferrochain-checkpoint** — per-task durability; prerequisite for ferrochain-graph HITL
+4. **ferrochain-graph** — BSP engine, HITL, budget governance, content provenance
+5. **ferrochain-server** — HTTP layer; depends on graph + checkpoint
+6. **ferrochain-sandbox** — WASM/container backends; ferrochain-graph depends on this for tool execution
+7. **ferrochain-openai** — first provider crate (D3 early integration priority)
+8. **ferrochain-anthropic** — second provider crate
+9. **ferrochain-ollama** — third provider crate
+10. **ferrochain-standard-tests** — conformance suite; requires provider crates
+11. **ferrochain-mcp** — MCP adapter; Wave 2; depends on core + providers
+
+## Cross-Cutting Concerns by Tier
+
+| Concern | CRITICAL modules | HIGH modules | MEDIUM/LOW modules |
+|---------|-----------------|-------------|-------------------|
+| Error handling | `FerrochainError` only; no `.unwrap()`/`.expect()` in lib code; all paths return `Result` | `FerrochainError` propagation; no silent errors | `FerrochainError` propagation acceptable |
+| Credential handling | Newtype wrapper mandatory; `Debug → "<redacted>"`; no `Serialize`; no `Deref<Target=str>` | Newtype wrapper mandatory | Newtype if API key present |
+| HTTP timeouts | Mandatory `.timeout(30s)` on all `ClientBuilder` | Mandatory `.timeout(30s)` | Strongly recommended |
+| Test coverage | Kani proofs where VP seed; proptest for invariants; ≥ 95% mutation kill rate | Property tests for invariants; ≥ 90% mutation kill rate | Unit tests sufficient |
+| File size | ≤ 500 lines soft / ≤ 750 hard | ≤ 500 lines soft / ≤ 750 hard | ≤ 500 lines soft / ≤ 750 hard |
+
+## Anti-Patterns Explicitly Not to Port
+
+> Greenfield project. These patterns come from the adk-rust negative evidence catalog (NE-01–NE-17).
+
+- `Default::default()` delegating to a fallible constructor — **NE-07 REJECT**
+- Bare `String` API keys with `#[derive(Debug)]` — **NE-10 REJECT**
+- `reqwest::Client::new()` without `.timeout()` — **NE-04 REJECT**
+- Default sandbox backend = no isolation (process execution) — **NE-01 REJECT**
+- String-only workspace path safety without symlink resolution — **NE-02 REJECT**
+- Streaming endpoint that emits task-state stubs without invoking engine — **NE-13 REJECT**
+- `SecurityConfig::default()` with CORS wildcard and open debug route — **NE-14 REJECT**
+- Encryption covering only state payloads but not event payloads — **NE-11 REJECT**
+- Identity triple collapsing to bare `session_id` — **NE-12 REJECT**
+- Per-tool retry keyed on args hash (non-terminating) — **NE-09 REJECT**
+- Non-deterministic reducer fold via `buffer_unordered` — **NE-17 REJECT**
