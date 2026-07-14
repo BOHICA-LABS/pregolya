@@ -4,14 +4,14 @@ level: ops
 version: "2.1"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T05:30:00Z
-phase: pre-1
+timestamp: 2026-07-14T06:00:00Z
+phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "D16 assessment COMPLETE — awaiting HUMAN DIRECTION GATE (Q1-Q9); Phase 1 blocked on human"
+current_step: "Phase 1 spec crystallization — ready to dispatch (D17 recorded; hybrid outcome)"
 current_cycle: v0.0.0-pre-pipeline
 pipeline: IN_PROGRESS
 dtu_required: false
@@ -19,7 +19,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 ---
 
 <!--
-  STATE.md SIZE BUDGET: 198 lines (wc-l) | margin from soft-target (200): +2 | margin from hard-limit (500): +302
+  STATE.md SIZE BUDGET: 199 lines (wc-l) | margin from soft-target (200): +1 | margin from hard-limit (500): +301
 
   Historical content belongs in cycle files, NOT here:
   - Burst narratives → cycles/<cycle>/burst-log.md
@@ -44,16 +44,16 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-14 — burst 67: D16 comparative best-patterns assessment COMPLETE. COMPARATIVE-ASSESSMENT.md (522 lines) + 3 part-files written. Dispositions: 27 ADOPT / 16 ADAPT / 27 REJECT / 27 NOT-APPLICABLE. 10 cross-corpus conflicts (CRITICAL: adk-rust lacks BSP determinism, per-task durability, resume-value HITL — all D9/D11-required). RECOMMENDED: (b) HYBRID — LangChain API surface + 43 ADOPT/ADAPT patterns; 9 human-gate questions (Q1 blocks). Recovered via 4-part decomposition. HUMAN DIRECTION GATE open. |
-| **Current Phase** | pre-1 (pre-pipeline) |
-| **Current Step** | D16 assessment COMPLETE — awaiting HUMAN DIRECTION GATE (Q1-Q9); Phase 1 blocked on human |
+| **Last Updated** | 2026-07-14 — burst 68: HUMAN DIRECTION GATE PASSED; D17 hybrid outcome recorded (LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns; Q2-Q9 accepted); Phase 1 opened. |
+| **Current Phase** | 1 (Spec Crystallization) |
+| **Current Step** | Phase 1 spec crystallization — ready to dispatch (D17 recorded; hybrid outcome) |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
-| pre-1: Pre-Pipeline | in-progress | 2026-07-12 | — | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23) | — |
-| 1: Spec Crystallization | not-started | | | | |
+| pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
+| 1: Spec Crystallization | ready-to-start | 2026-07-14 | | | |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -93,6 +93,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | D14 | REAFFIRMED UNAMENDED (human, Level-2 escalation). AMENDED D14.1 (human-approved): exhaustive-sweep-then-3-CLEAN protocol. 7 parallel area validators; exhaustive coverage precedes certification. D14 strict-zero bar UNCHANGED: CLEAN(strict) = zero findings; 3 consecutive required. | Sampling does not converge; coverage precedes certification; strict-zero preserved | pre-1 | 2026-07-13 | human |
 | D15 | PERSISTENT HUMAN DIRECTIVE: "Keep going until you hit convergence protocol." Autonomous continuation; no check-ins on gate patience. COMPLETED — extraction gate closed at burst 37. | Human mandate: no orchestrator check-in overhead during convergence loop | pre-1 | 2026-07-13 | human |
 | D16 | ACTIVE DIRECTIVE (human, 2026-07-13): adk-rust comparative corpus. TRIGGERED at extraction gate closure. adk-rust v1.0.0 (SHA a6c79b6f) as Corpus 5; identical rigor (analysis → exhaustive sweep → 3-CLEAN). RUST-BLINDNESS RULE: language carries zero evidentiary weight; patterns win on production-grade merit only. Full comparative assessment → all outcomes on table → HUMAN DIRECTION GATE → Phase 1. | Human mandate to evaluate adk-rust with zero language bias; anti-sunk-cost explicit; goal = best product | pre-1 | 2026-07-13 | human |
+| D17 | HUMAN DIRECTION GATE (D16) PASSED 2026-07-14: outcome (b) HYBRID adopted — LangChain API surface + 43 ADOPT/ADAPT adk-rust internal patterns per COMPARATIVE-ASSESSMENT.md. All eight scoped recommendations accepted verbatim: (Q2) LangGraph HITL contract (scratchpad/FIFO-resume/node-re-executes) = Phase-1 BC; (Q3) per-task put_writes sync-tier durability = Phase-1 BC; (Q4) budget governance allow/escalate/deny primitive = Phase-1 BC; (Q5) standalone SDK crate split for partners; (Q6) proc-macros (#[tool]/#[entrypoint]/#[task]) in Phase 1/2 gated on D5 ADR; (Q7) top-3 BSP invariants committed as VP obligations before architecture lock; (Q8) content provenance-tag + guardrail-on-ingress = Phase-1 BC; (Q9) R8/R10/R11 into Phase-1 BC backlog. | Human selection at direction gate; assessment recommendation followed | pre-1 | 2026-07-14 | human |
 
 ## Risk Register
 
@@ -139,28 +140,27 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ### RESUME IN ONE BREATH
 
-ferrochain pre-pipeline. ALL pre-pipeline work COMPLETE. Corpus 1 (LangChain semport, 7 areas) CONVERGED — extraction gate closed 3/3 strict-zero. Corpus 5 (adk-rust comparative, 97 patterns) analysis CONVERGED; 3-CLEAN GATE CLOSED C21-C23 (0 cumulative hallucinations). D16 comparative assessment COMPLETE: COMPARATIVE-ASSESSMENT.md (522 lines) + 3 part-files. 27 ADOPT / 16 ADAPT / 27 REJECT / 27 NOT-APPLICABLE; 10 cross-corpus conflicts (CRITICAL: adk-rust lacks BSP determinism, per-task durability, resume-value HITL). RECOMMENDED: (b) HYBRID — LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns. 9 human-gate Qs (Q1 = outcome choice, blocks Phase 1). NEXT ACTION: HUMAN DIRECTION GATE — present COMPARATIVE-ASSESSMENT.md §7 Q1-Q9; on answers record D17 and enter Phase 1.
+ferrochain pre-pipeline COMPLETE (D1-D17). Corpus 1 (LangChain semport) CONVERGED — extraction gate closed 3/3 strict-zero. Corpus 5 (adk-rust comparative, 97 patterns) 3-CLEAN GATE CLOSED C21-C23 (0 cumulative hallucinations). D17 HUMAN DIRECTION GATE PASSED: outcome (b) HYBRID — LangChain API surface + 43 ADOPT/ADAPT adk-rust internal patterns. All Q2-Q9 scoped recommendations accepted. Phase 1 spec crystallization READY.
 
 ### HEADS
 
 | Repo | Branch | SHA | Pushed | Notes |
 |------|--------|-----|--------|-------|
-| factory-artifacts | factory-artifacts | (burst 67 commit — run `git -C .factory log -1 --format='%h'`) | YES — BOHICA-LABS/ferrochain | Durable artifact backup |
-| main | main | ZERO COMMITS | LOCAL-ONLY | Untracked on disk: CLAUDE.md (553-line constitution + D12 file-size rule), .gitignore, .envrc, .mcp.json — BACKUP BOUNDARY: these exist only on this machine; CLAUDE.md commit to main is scheduled at workspace-init per D10 |
+| factory-artifacts | factory-artifacts | (burst 68 commit — run `git -C .factory log -1 --format='%h'`) | YES — BOHICA-LABS/ferrochain | Durable artifact backup |
+| main | main | ZERO COMMITS | LOCAL-ONLY | Untracked: CLAUDE.md (553-line constitution + D12 file-size rule), .gitignore, .envrc, .mcp.json — commit to main at workspace-init per D10 |
 
-No worktrees. No PRs. Reference clones (.reference/: langchain@langchain==1.3.13, langgraph@1.2.9, langchain-community@libs/community/v0.4.2, langchain-mcp-adapters@0.3.0, adk-rust@v1.0.0) are gitignored local clones — reproducible from the pinned manifest, not backed up by design.
+No worktrees. No PRs. Reference clones (.reference/: langchain@1.3.13, langgraph@1.2.9, langchain-community@0.4.2, langchain-mcp-adapters@0.3.0, adk-rust@v1.0.0) gitignored — reproducible from pinned manifest, not backed up by design.
 
 ### WORKSTREAM
 
-**D16 COMPLETE.** COMPARATIVE-ASSESSMENT.md (522 lines, 4-part decomposed synthesis). Monolithic dispatch failed 3× on API stream stalls; recovered via decomposition (part-1: P01-P50, part-2: P51-P97, part-3: conflicts + negative evidence). Corpus 1 (LangChain/LangGraph semport) vs Corpus 5 (adk-rust v1.0.0, 97 certified patterns) under RUST-BLINDNESS RULE. Outcome: 43 ADOPT/ADAPT, 10 critical conflicts, 17 must-not-inherit items.
+**Pre-pipeline COMPLETE (D1-D17).** COMPARATIVE-ASSESSMENT.md (522 lines, 4-part). HUMAN DIRECTION GATE PASSED: (b) HYBRID adopted — LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns. 10 critical conflicts resolved by scope decision. 17 must-not-inherit items documented.
 
-**RESUME NEXT-ACTION:** HUMAN DIRECTION GATE. Present COMPARATIVE-ASSESSMENT.md §7 questions Q1-Q9. Q1 = outcome choice (recommended: (b) HYBRID — LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns; runner-up: (a) pure LangChain port). On all answers, record as D17 and enter Phase 1 spec crystallization.
+**RESUME NEXT-ACTION:** Phase 1 spec crystallization. Sequence: L2 domain spec (business-analyst) → L3 PRD + BCs (product-owner) → architecture + ADRs (architect, incl. D9 graph gate at 1c + D17 Phase-1 BC scope) → DTU assessment P1-06 (MANDATORY) → CI/CD setup (MANDATORY) → UX n/a (library product — confirm) → adversarial spec convergence 1d (3 clean passes min). Inputs: product brief + COMPARATIVE-ASSESSMENT.md + semport corpus + holdout domain briefs A/B/C (design forcing functions per D8).
 
 ### PENDING HUMAN ACTIONS (open)
 
-1. **HUMAN DIRECTION GATE** — review COMPARATIVE-ASSESSMENT.md §7 Q1-Q9 and answer all 9 questions; Q1 = outcome choice (recommended: hybrid). Blocks Phase 1.
-2. `direnv allow .` (B1 — Low, blocks key loading)
-3. `cargo login` + `.factory/namespace-reservation/publish-all.sh` — R6 namespace race STILL OPEN, time-sensitive
+1. `direnv allow .` (B1 — Low, blocks key loading)
+2. `cargo login` + `.factory/namespace-reservation/publish-all.sh` — R6 namespace race STILL OPEN, time-sensitive
 
 ### STANDING DIRECTIVES
 
@@ -168,9 +168,9 @@ No worktrees. No PRs. Reference clones (.reference/: langchain@langchain==1.3.13
 |----|-----------|
 | D15 | Autonomous loop, never ask to continue — "Keep going until you hit convergence protocol." |
 | D14 | Absolute strict-zero: CLEAN(strict) = zero findings; 3 consecutive required |
-| D16 | COMPLETE — comparative assessment done; awaiting human direction gate. Phase 1 enters after D17 recorded. |
+| D17 | HYBRID outcome adopted — LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns; Phase-1 BC scope per Q2-Q9 |
 
-Holdout domains A/B/C briefs at planning/holdout-domains/. Phase-4 carry-forward: 4 a2a-v1 runtime test obligations. D1-D16 all recorded in Decisions Log above.
+Holdout domains A/B/C briefs at planning/holdout-domains/. Phase-4 carry-forward: 4 a2a-v1 runtime test obligations. D1-D17 all in Decisions Log above.
 
 ### WRAP METADATA
 
@@ -178,7 +178,7 @@ Holdout domains A/B/C briefs at planning/holdout-domains/. Phase-4 carry-forward
 |-------|-------|
 | **Date** | 2026-07-14 |
 | **Cycle** | v0.0.0-pre-pipeline |
-| **Burst commit** | (burst 67 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Burst commit** | (burst 68 — run `git -C .factory log -1 --format='%h %s'`) |
 | **Convergence counter** | 3 of 3 — GATE CLOSED |
 
 ## Historical Content
