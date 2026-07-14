@@ -26,8 +26,8 @@ traces_to: ARCH-INDEX.md
 | VP-001 | BSP Super-Step Determinism | bsp-engine (reducer stage) | ferrochain-graph | Kani | BC-2.03.001 | 6 | draft |
 | VP-002 | Session Triple-Address Uniqueness | session-index | ferrochain-checkpoint | Kani | BC-2.04.006 | 6 | draft |
 | VP-003 | Workspace Path Confinement | path-guard | ferrochain-sandbox | Kani | BC-2.13.004 | 6 | draft |
-| VP-004 | MCP ToolException Type-Identity | mcp-adapter | ferrochain-mcp | integration | BC-2.09.004 | 3 | draft |
-| VP-005 | MultiServerMcpClient No Live Connections | mcp-client | ferrochain-mcp | integration | BC-2.09.005 | 3 | draft |
+| VP-004 | MCP ToolException Type-Identity Preservation | mcp-adapter | ferrochain-mcp | integration | BC-2.09.004 | 3 | draft |
+| VP-005 | MultiServerMcpClient Holds No Live Connections | mcp-client | ferrochain-mcp | integration | BC-2.09.005 | 3 | draft |
 
 **Totals: 5 VPs | Kani: 3 | proptest: 0 | fuzz: 0 | integration: 2**
 

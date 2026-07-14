@@ -61,7 +61,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Edge Cases | edge-cases.md | ~133 | story-writer, test-writer | DEC-NNN domain-level edge cases (13 cases) |
 | Assumptions | assumptions.md | ~48 | product-owner, test-writer | ASM-NNN with validation methods (9 assumptions) |
 | Risks | risks.md | ~51 | product-owner, architect | R-NNN risk register (8 risks) |
-| Failure Modes | failure-modes.md | ~140 | architect, test-writer | FM-NNN runtime failure catalog (12 modes) |
+| Failure Modes | failure-modes.md | ~140 | architect, test-writer | FM-NNN runtime failure catalog (14 modes) |
 | Differentiators | differentiators.md | ~62 | product-owner | Competitive differentiator → CAP-NNN traceability |
 | Ubiquitous Language — Core/Graph | ubiquitous-language-core.md | ~105 | all agents | Core and graph term definitions |
 | Ubiquitous Language — Server/Policy | ubiquitous-language-server.md | ~100 | all agents | Server, policy/safety, error terms + reconciliation table |
@@ -88,7 +88,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | DEC-NNN | 13 | edge-cases.md |
 | ASM-NNN | 9 | assumptions.md |
 | R-NNN | 8 | risks.md |
-| FM-NNN | 12 | failure-modes.md |
+| FM-NNN | 14 | failure-modes.md |
 
 > **Risk ID scheme note (F-10):** The R-NNN scheme in domain-spec/risks.md is canonical for all spec artifacts (PRD RTM, BC Traced-To, NFR catalog). STATE.md uses a separate R-N numeric alias (R8, R10, R11 map to R-004, R-005, R-006 respectively) retained for decision-log continuity only — see risks.md §Dual Risk ID Reconciliation for the full cross-walk table.
 
@@ -119,11 +119,11 @@ Three holdout domains constrain the domain model as Phase-1 forcing functions:
 | CONFLICT-3 | HITL FIFO resume → DI-003; FM-003 |
 | CONFLICT-4 | Monotonic checkpoint clock → DI-004 |
 | CONFLICT-6 | FerrochainError 2D struct → entities-server.md, CAP-016 |
-| NE-01 | Enforcing sandbox default → DI-006; FM-007 |
-| NE-02 | Workspace confinement → DI-007; DEC-012 |
+| NE-01 | Enforcing sandbox default → DI-006; FM-013 |
+| NE-02 | Workspace confinement → DI-007; DEC-011 |
 | NE-04 | Outbound timeout → DI-009; FM-011 |
 | NE-06, HS-8 | Guardrail ingress coverage → DI-012; CAP-013 |
-| NE-07 | Constructor Result → DI-008; FM-010 |
+| NE-07 | Constructor Result → DI-008; FM-014 |
 | NE-10 | Credential opacity → DI-010; FM-010 |
 | NE-12 | Session triple-address → DI-005; FM-005 |
 | NE-13 | Streaming/unary equiv. → DI-011; FM-007 |

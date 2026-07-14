@@ -14,6 +14,7 @@ wave: 2
 phase: 1a
 red_gate: true
 red_gate_source: R11
+vp_id: VP-004
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 traces_to:
@@ -127,7 +128,7 @@ the isError path.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-MCP-04 | Bare ToolException propagates as E-MCP-001 TOOL category — flag does not suppress | Red Gate test (compile+fail), then unit test post-implementation | Phase 1 |
+| VP-004 | Bare ToolException propagates as E-MCP-001 TOOL category — flag does not suppress | Red Gate test (compile+fail), then unit test post-implementation | Phase 3 (integration) (Red Gate authored Phase 1 per D17-Q9) |
 
 ## Related BCs
 
@@ -145,7 +146,7 @@ _[to be filled after story decomposition]_
 
 ## VP Anchors
 
-- VP-MCP-04
+- VP-004
 
 ## Traceability
 

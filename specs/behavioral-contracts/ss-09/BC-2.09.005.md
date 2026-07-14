@@ -14,6 +14,7 @@ wave: 2
 phase: 1a
 red_gate: true
 red_gate_source: R11
+vp_id: VP-005
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 traces_to:
@@ -128,7 +129,7 @@ Note: callers are better served by cloning (which is cheap) than by Arc-wrapping
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-005 | `MultiServerMcpClient` construction and drop cause no network I/O | Red Gate test (compile+pass but network assertion fails), then unit test post-implementation | Phase 1 |
+| VP-005 | `MultiServerMcpClient` construction and drop cause no network I/O | Red Gate test (compile+pass but network assertion fails), then unit test post-implementation | Phase 3 (integration) (Red Gate authored Phase 1 per D17-Q9) |
 
 ## Related BCs
 

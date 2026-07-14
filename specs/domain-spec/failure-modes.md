@@ -130,6 +130,37 @@ breaker trips.
 
 ---
 
+## Core / Sandbox Subsystem
+
+### FM-013: Sandbox Executes Without Enforcement
+**What goes wrong:** A tool is dispatched through the sandbox with a strict policy, but the
+configured backend is a non-enforcing process executor. The call does not return
+`Err(PolicyNotEnforceable)` — it silently falls back to process execution. The policy's
+intent (WASM or container isolation) is never enforced; the tool runs with the host
+process's full filesystem, network, and environment access.
+**Trigger:** Process backend used as default; `Sandbox::execute` does not check backend
+enforcement capability against policy strictness before dispatch.
+**Counter-example source:** NE-01 / P-61 — adk-rust process backend default with no
+enforcement binding; capability honesty does not force enforcement.
+**Detection:** DI-006 enforcement contract test — `Sandbox::execute` with strict policy
+against a non-enforcing backend must return `Err(PolicyNotEnforceable)`, not `Ok`.
+Process backend is only reachable via explicit opt-in with loud runtime warning.
+
+### FM-014: Library Constructor Panics Instead of Returning Result
+**What goes wrong:** A library constructor calls `.expect()` or `.unwrap()` on a fallible
+internal operation (e.g., WASM engine initialization). When initialization fails, the host
+process panics and terminates. The caller has no opportunity to observe, log, or recover
+from the failure. Dependent services crash without a structured error.
+**Trigger:** `.expect()` / `.unwrap()` in a public constructor body; or `Default::default()`
+delegates to a fallible constructor path.
+**Counter-example source:** NE-07 / P-66 — adk-rust WASM engine init calls `.expect()`;
+the constructor signature returns the initialized type directly, not `Result<T, _>`.
+**Detection:** DI-008 CI lint gate — deny `.expect()` / `.unwrap()` / `assert!` in non-test
+library code; proptest boundary: constructor called with adversarial inputs must yield
+`Err(FerrochainError)`, never panic.
+
+---
+
 ## Subsystem Summary
 
 | Subsystem | FM Count | Highest Severity |
@@ -138,3 +169,4 @@ breaker trips.
 | Checkpoint / State | FM-005, FM-006 | High (FM-005 is a security failure) |
 | Server | FM-007, FM-008, FM-009 | High (FM-007 breaks behavioral contract; FM-008 is security) |
 | Providers and Tools | FM-010, FM-011, FM-012 | High (FM-010 is security; FM-011 is DoS-class) |
+| Core / Sandbox | FM-013, FM-014 | High (FM-013 is security/policy; FM-014 is reliability/availability) |

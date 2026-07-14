@@ -27,10 +27,11 @@ traces_to: STATE.md
 | P1D-11 | 2026-07-14 | 4 | 0 | 1 | 3 | 0 | LOW | 0/3 | FINDINGS_REMAIN |
 | P1D-12 | 2026-07-14 | 1 | 0 | 1 | 0 | 0 | LOW | 0/3 | FINDINGS_REMAIN (single root cause, decayed) |
 | P1D-13 | 2026-07-14 | 1 | 0 | 1 | 0 | 2 | LOW | 0/3 | FINDINGS_REMAIN (topology census — all fixed this pass) |
+| P1D-14 | 2026-07-14 | 2 | 0 | 1 | 1 | 0 | LOW | 0/3 | FINDINGS_REMAIN (bidirectional anchor audit; VP-label bridge) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14)`
 
 ## Per-Pass Details
 
@@ -186,4 +187,19 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Fix summary:** F-P13-01 HIGH — bounded-contexts.md dependency diagram inverted SDK-split topology (3 errors: false sdk→core edge; missing adapter→core edge; false graph→checkpoint edge). Topology census: 14 assertions, 2 FAIL + 1 MISSING — all fixed, 11 PASS. LOW-1: events.md:111 BC-2.10.002 citation (dangling "DI per append-only" resolved). LOW-2: FM-007 label separated from DI invariants in bounded-contexts.md:82 (type-system split). All 4/4 sibling checks PASS; lifecycle-arrow census CONVERGED (guideline #12 re-run PASS).
 **New standing gates:** domain-spec↔dependency-graph topology census (trigger: any domain-spec shard or dependency-graph.md edit); command: `grep -rn "← ferro\|depends on ferro\|standalone.*dep\|zero.*dep" .factory/specs/domain-spec/` vs dependency-graph.md §Edge Table.
 **Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1→1
+**Counter:** 0/3
+
+---
+
+### Pass P1D-14 Details
+
+**Date:** 2026-07-14
+**Verdict:** NOT CLEAN — 2 findings (0 CRIT, 1 HIGH, 1 MED, 0 LOW)
+**Findings delta:** +1 vs pass 13 (1→2); two independent root causes
+**Axes rotated:** L2-INDEX Key-Anchors bidirectional audit (NEW CLASS: cross-ref index columns); VP-label orphan census; FM count propagation; VP-label collision census (86 BCs)
+**Fix summary:**
+- F-P14-01 HIGH — L2-INDEX Key-Anchors column: FM-007 and FM-010 anchors both pointed at failure-modes.md row 7 (double-use tell). 3 mis-anchors corrected. FM-013 (Sandbox-Without-Enforcement) and FM-014 (Constructor-Panics) authored to fill gaps. Full 14-row four-column bidirectional audit (L2-INDEX Key-Anchors ↔ failure-modes.md anchors ↔ DEC section ↔ FM label) = PASS. FM count propagated 12→14 across all index files.
+- F-P14-02 MED — VP-MCP-04 orphan label in BC-2.09.004 and BC-2.09.005: vp_id field pointed at non-canonical label. VP-004 canonical label confirmed (VP-INDEX). vp_id bridges added to both BC-2.09.004 and BC-2.09.005. VP-label collision census: 86 BCs scanned, 1 collision found and resolved. Phase-3-integration column added to verification-coverage-matrix.md; full titles populated across coverage matrix.
+**New standing gates:** L2-INDEX FM/DEC bidirectional audit (trigger: any failure-modes.md or L2-INDEX edit; command: verify Key-Anchors cross-refs are unique per row); VP-label collision census (trigger: any BC vp_id or VP-INDEX label change)
+**Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1→1→2
 **Counter:** 0/3
