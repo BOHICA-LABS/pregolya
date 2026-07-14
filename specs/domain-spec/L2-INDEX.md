@@ -52,8 +52,8 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 
 | Section | File | Lines | Primary Consumer | Purpose |
 |---------|------|-------|-----------------|---------|
-| Capabilities — P0 | capabilities-p0.md | ~95 | product-owner, architect, story-writer | CAP-001 to CAP-008 (must-have for release) |
-| Capabilities — P1/P2 | capabilities-p1-p2.md | ~115 | product-owner, architect, story-writer | CAP-009 to CAP-019 (Wave 2 + extended) |
+| Capabilities — P0 | capabilities-p0.md | ~125 | product-owner, architect, story-writer | CAP-001–008 (Wave 0/1) + CAP-012, CAP-013, CAP-016 (D17-elevated to P0; cross-cutting Wave 0/1) |
+| Capabilities — P1/P2 | capabilities-p1-p2.md | ~90 | product-owner, architect, story-writer | P1: CAP-009, CAP-010, CAP-011, CAP-014, CAP-015 (Wave 2 + Wave 0/1); P2: CAP-017, CAP-018, CAP-019 |
 | Entities — Core/Graph/Checkpoint | entities-graph.md | ~100 | architect, product-owner | Core primitives, graph, and checkpoint entities |
 | Entities — Server/Policy/Provider | entities-server.md | ~95 | architect, product-owner | Server, governance, and provider entities |
 | Domain Invariants | invariants.md | ~156 | product-owner, architect | DI-NNN business rules (14 invariants) |
@@ -83,7 +83,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 
 | ID Format | Count | Section |
 |-----------|-------|---------|
-| CAP-NNN | 19 | capabilities-p0.md (CAP-001–008) + capabilities-p1-p2.md (CAP-009–019) |
+| CAP-NNN | 19 | capabilities-p0.md (CAP-001–008, CAP-012, CAP-013, CAP-016) + capabilities-p1-p2.md (CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-017, CAP-018, CAP-019) |
 | DI-NNN | 14 | invariants.md |
 | DEC-NNN | 13 | edge-cases.md |
 | ASM-NNN | 9 | assumptions.md |
@@ -96,9 +96,14 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 
 | Priority | Count | Capabilities |
 |----------|-------|-------------|
-| P0 (must-have) | 8 | CAP-001, CAP-002, CAP-003, CAP-004, CAP-005, CAP-006, CAP-007, CAP-008 |
-| P1 (should-have) | 8 | CAP-009, CAP-010, CAP-011, CAP-012, CAP-013, CAP-014, CAP-015, CAP-016 |
+| P0 (must-have) | 11 | CAP-001, CAP-002, CAP-003, CAP-004, CAP-005, CAP-006, CAP-007, CAP-008, CAP-012, CAP-013, CAP-016 |
+| P1 (should-have) | 5 | CAP-009, CAP-010, CAP-011, CAP-014, CAP-015 |
 | P2 (nice-to-have) | 3 | CAP-017, CAP-018, CAP-019 |
+
+> **Priority note (ADV-P1D-PASS-21):** CAP-012, CAP-013, and CAP-016 were elevated from P1 to P0
+> to align with D17-Q4 (budget governance), D17-Q8 (guardrail-on-ingress), and D17 CONFLICT-6
+> (error taxonomy) mandates. All constituent BCs are P0 in the PRD RTM (§2.10, §2.11, §2.14).
+> Detail relocated from capabilities-p1-p2.md to capabilities-p0.md.
 
 ## Design-Forcing-Function Summary (D8)
 

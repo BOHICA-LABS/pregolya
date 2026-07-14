@@ -203,3 +203,16 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **New standing gates:** L2-INDEX FM/DEC bidirectional audit (trigger: any failure-modes.md or L2-INDEX edit; command: verify Key-Anchors cross-refs are unique per row); VP-label collision census (trigger: any BC vp_id or VP-INDEX label change)
 **Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1→1→2
 **Counter:** 0/3
+
+---
+
+### Pass P1D-21 Details
+
+**Date:** 2026-07-14
+**Verdict:** NOT CLEAN — 1 finding (0 CRIT, 1 HIGH, 0 MED, 0 LOW)
+**Findings delta:** -2 vs pass 20 (3→1); new class resolved
+**Axes rotated:** capability-tier ↔ BC-priority census (NEW CLASS); inputs-arrays frontmatter; holdout-vs-CAP coverage; prd §1-4 + brief prose fresh reads
+**Fix summary:** F-P21-01 HIGH — CAP-012 (Observability & Monitoring), CAP-013 (Content Provenance & Safety Guardrails), CAP-016 (Structured Output & Streaming Compliance) stuck at P1/Wave-2 in L2-INDEX while D17 elevation made all constituent BCs P0. NEW CLASS: capability-tier ↔ BC-priority. CAPs elevated to P0 in L2-INDEX [P0 11 / P1 5 / P2 3]; relocated to capabilities-p0.md with D17-elevation notes; capabilities-p1-p2.md restructured. 19-row capability-tier census: 16 MATCH / 3 FIXED / 0 mismatch — class drained. All other censuses + 3 novel probes PASS (inputs-arrays, holdout-vs-CAP, prose reads converged). Orchestrator verified BC wave frontmatter unaffected [report artifact only].
+**New standing gates:** capability-tier census (trigger: any L2-INDEX CAP priority or wave change; command: cross-check CAP priority/wave tier vs BC P-levels for all constituent BCs)
+**Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1→1→2→1→1→1→4→2→3→1
+**Counter:** 0/3

@@ -19,10 +19,12 @@ decisions: [D1, D3, D7, D8, D13, D17]
 
 > **Sharded L2 section (DF-021).** Navigate via `L2-INDEX.md`.
 > P0 capabilities are in `capabilities-p0.md`.
+> **Pass-21 update:** CAP-012, CAP-013, CAP-016 relocated to `capabilities-p0.md` (elevated
+> to P0 per ADV-P1D-PASS-21 F-P21-01). This file now holds P1/P2 only: 5 P1 + 3 P2.
 
 ---
 
-## P1 — Partners, Conformance, MCP, and Governance (Wave 2)
+## P1 — Partners, Conformance, MCP, and Server (Wave 2 + Wave 0/1)
 
 ### CAP-009: Provider-Conformant Chat Model Interface
 
@@ -65,34 +67,6 @@ v1 release."
 **Anchor justification:** CAP-011 covers the conformance suite because it is an explicit Wave 2
 deliverable named in the brief and market differentiator #2.
 
-### CAP-012: Budget Governance (Allow / Escalate / Deny; Cost Metering)
-
-Evaluate token and cost consumption per run and per sub-agent against a composable
-BudgetPolicy (allow / escalate / deny). Record every evaluation in an append-only
-EvidenceJournal. When the ceiling is reached, degrade gracefully: halt the run, or escalate
-to a HITL interrupt, according to the policy's `on_ceiling` setting.
-
-**Grounding:** product-brief.md §Scope cross-cutting — Phase-1 BC backlog D17-Q4: "budget
-governance allow/escalate/deny policy trait, composable, append-only evidence journal —
-Domain B dark-factory holdout requires it."
-**Anchor justification:** CAP-012 covers budget governance because D17-Q4 explicitly mandates
-it as a Phase-1 BC, and the domain-b-dark-factory holdout cannot evaluate without it.
-
-### CAP-013: Content Provenance Tagging and Guardrail-on-Ingress
-
-Attach a ProvenanceTag to content at every ingress boundary (tool-result, RAG, memory).
-Fire a registered GuardrailHook before content enters the model context. The hook can accept,
-reject (replace with an error block), or redact. The guardrail seam is in the
-InvocationContext; it fires unconditionally — there is no opt-out code path for tool-result
-ingress.
-
-**Grounding:** product-brief.md §Scope cross-cutting — Phase-1 BC backlog D17-Q8:
-"content provenance-tag seam + guardrail hook at tool-result, RAG, and memory ingress —
-Domain A SOC analyst holdout."
-**Anchor justification:** CAP-013 covers guardrail-on-ingress because D17-Q8 makes it a
-Phase-1 BC and domain-a-soc-analyst.md §5 marks prompt-injection isolation as NEW forcing
-function.
-
 ### CAP-014: Durable-Run HTTP Server (Threads, Assistants, Runs, Crons)
 
 Provide a first-party HTTP server that manages: Thread (durable conversation history),
@@ -117,19 +91,6 @@ workspace file operations call `canonicalize_beneath_root(base, path)` at access
 sandbox backend (WASM/container) must be the default; process backend is loud opt-in."
 **Anchor justification:** CAP-015 covers sandbox enforcement because NE-01 and NE-02 are both
 named as first-class BC candidates in the brief's Overflow §Security-PRD-Carry-Forward.
-
-### CAP-016: Typed Error Taxonomy (FerrochainError 2D Struct)
-
-Surface errors as a 2D struct with Component dimension (which ferrochain crate) and Category
-dimension (auth, validation, timeout, provider, internal, etc.), carrying a RetryHint,
-machine code, and RFC-7807-compatible emission. No `.unwrap()` or `.expect()` in non-test
-code; CI lint gate enforces this. All library constructors return `Result`.
-
-**Grounding:** product-brief.md §Scope Wave 0 — FerrochainError 2D component×category error
-taxonomy (CONFLICT-6/D17); Overflow §Security-PRD-Carry-Forward NE-07.
-**Anchor justification:** CAP-016 covers the error taxonomy because CONFLICT-6 (adopted from
-adk-rust P-01/P-04) is named in the brief's Wave 0 scope and NE-07 is in the security
-carry-forward table.
 
 ---
 

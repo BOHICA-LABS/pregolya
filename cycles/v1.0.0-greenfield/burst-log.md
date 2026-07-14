@@ -750,3 +750,9 @@ Phase 1d pass 10 + fix burst (semantic + growth-propagation censuses) | adversar
 
 **Archived step row (pass 15, dropped from Current Phase Steps to maintain last-5 window):**
 Phase 1d pass 15 + fix burst (ADR anchor sweep) | adversary + architect | COMPLETE | Pass 15: NOT CLEAN — 1 HIGH (F-P15-01 ADR-010 NE-16 mis-anchor [true referent P-78]; NEW CLASS: ADR-anchor axis). Pre-emptive 11-ADR sweep: 9 PASS / 2 FIXED (also ADR-003 NE-11→CONFLICT-2). FM-Detection adjudicated ACCEPTABLE-CONVENTION + note codified. Sibling 4/4 + 3 censuses PASS on first run. Trajectory ...→1→1→2→1. Convergence 0/3. Burst 91.
+
+### Archived Step Row — Burst 92 (Pass 16)
+
+**Archived from Current Phase Steps (burst 97 rotation — last-5 window):**
+
+| Phase 1d pass 16 + fix burst (complete anchor-matrix census) | adversary + PO | COMPLETE | Pass 16: NOT CLEAN — 1 HIGH (F-P16-01 NE-anchor four-way drift incl. BC-INDEX internal contradiction; 23 mismatches). Fix closed the ENTIRE anchor-axis class: complete 86-BC × 6-axis matrix census (CAP/DI/NE/R/ADR/VP) — all axes exact post-fix; adversary-telegraphed CAP axis pre-verified clean. ne_anchor policy codified. Trajectory ...→1→1→2→1→1. Convergence 0/3. Standing gate #17: anchor-matrix census (subsumes DI/NE/CAP/R/ADR/VP). Burst 92. |

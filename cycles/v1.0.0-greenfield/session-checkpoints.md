@@ -301,3 +301,13 @@ ferrochain Phase 1d adversarial spec convergence: Pass 12 COMPLETE — NOT CLEAN
 **WORKSTREAM (at time of archival):** Burst 88 COMPLETE. Phase 1d pass 12: 1 finding fixed (lifecycle-arrow propagation 8 sites/9 occurrences; de-"Canonical"-ing; BC-2.12.003 Traceability authority pointer; arrow-census gate as guideline #12; 16-hit census PASS; title 3-way verbatim). ADV-P1D-PASS-12.md committed. Input-hashes refreshed. Trajectory ...→4→4→1.
 
 **WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 88 | Counter: 0/3
+
+---
+
+### Archived Checkpoint — Burst 96 (Pass 20)
+
+ferrochain Phase 1d adversarial spec convergence: Pass 20 REMEDIATED — NOT CLEAN. 3 findings: F-P20-01 CRIT E-GRAPH-003/E-CHKPT-003 collision residue on P0 HITL/Budget path (burst-77 sweep missed ss-05/ss-10) — E-GRAPH-016 (POLICY: InterruptWithoutCheckpointer) + E-CHKPT-006 (INTERNAL: SerializationFailed) minted; 6 sites fixed. F-P20-02 MED Checkpointer straggler in BC-2.04.001:47 → CheckpointSaver. F-P20-03 gate widenings §15 (add \bCheckpointer\b) + §16 NEW (E-code↔variant-name census). Full 86-BC code↔variant census: 40 pairings, zero residue beyond the 6. Trajectory ...→2→3. Convergence 0/3. Gates 21. Burst 96.
+
+**WORKSTREAM (at time of archival):** Burst 96 COMPLETE. Phase 1d pass 20: 3 findings fixed (F-P20-01 CRIT 6 collision sites E-GRAPH-003→E-GRAPH-016 / E-CHKPT-003→E-CHKPT-006; F-P20-02 MED BC-2.04.001:47 Checkpointer→CheckpointSaver; F-P20-03 gate §15 widened + §16 added). ADV-P1D-PASS-20.md committed. Full 40-pairing census zero residue. Trajectory ...→2→3.
+
+**WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 96 | Counter: 0/3
