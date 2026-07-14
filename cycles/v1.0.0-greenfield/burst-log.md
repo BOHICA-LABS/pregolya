@@ -93,11 +93,56 @@ input-hash placeholders computed and filled in prd.md + all 5 supplements.
 
 ---
 
+## Burst 72 (2026-07-14)
+
+**Agents dispatched:** product-owner ×10 (BC batches 1–12 parallel), state-manager (BC-INDEX + input-hash fill + STATE update)
+**Files touched:** .factory/specs/behavioral-contracts/ss-TBD/ (82 BC files created/updated), .factory/specs/behavioral-contracts/BC-INDEX.md (new), .factory/STATE.md, .factory/cycles/v1.0.0-greenfield/burst-log.md
+**Versions bumped:** All 82 BC files v1.0 (initial); BC-INDEX.md v1.0 (initial)
+
+### Summary
+
+Phase 1 Step C (BC authoring + integration) complete. 82 behavioral contracts authored across
+12 batches (parallel dispatch groups), then reconciled in an integrate pass:
+
+- **Coverage:** 17/17 NE anchors, 14/14 DI anchors, D17-Q2/Q3/Q4/Q7/Q8 mandates
+- **Red Gate BCs (5):** BC-2.07.002 (R8), BC-2.02.003/004 (R10), BC-2.09.004/005 (R11)
+- **Kani VP Seeds (3):** BC-2.03.001 (BSP determinism/NE-17), BC-2.04.006 (session triple-address),
+  BC-2.13.004 (workspace-escape canonicalize/NE-02)
+- **Integrate pass fixes:** E-SERVER ferrochain-server BC code collision resolved (canonical
+  001-015; batch-11 007/008/009 renumbered to 013/014/015), error-taxonomy extended
+  (RETRY/CRON/MEMORY error sections), PRD OQR-5 INFO→WARN propagated, 9 unqualified
+  behavioral-intent citations path-qualified, bc-authoring-plan CAP columns aligned
+
+state-manager:
+- Built BC-INDEX.md (82 entries, full catalog with Cap/NE/DI anchors, RG/VP flags, file paths)
+- Filled all 82 input-hash placeholders (SHA-256 of actual input files)
+- Updated STATE.md: current_step → Step D, timestamp, Current Phase Steps (C23 archived below),
+  Session Resume Checkpoint, Historical Content table
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| product-owner ×10 | BC batches 1–12 (12 parallel groups) | specs/behavioral-contracts/ss-TBD/ (82 files, ~12,600 lines) |
+| state-manager | BC-INDEX build | specs/behavioral-contracts/BC-INDEX.md (new, 82 entries) |
+| state-manager | input-hash fill | All 82 BC "[state-manager to compute]" placeholders resolved |
+| state-manager | STATE.md update | current_step, timestamp, Current Phase Steps, Session Resume Checkpoint, Historical Content |
+
+---
+
 <!-- NOTE: The following row was archived from STATE.md Current Phase Steps
-     on 2026-07-14 (burst 71) to make room for the new Phase 1 Step C row
+     on 2026-07-14 (burst 72) to make room for the new Phase 1 Step C completion row
      (6 rows → keep last 5). -->
 
-## Archived Step Row (from STATE.md — overflow at burst 71)
+## Archived Step Rows (from STATE.md)
+
+### Archived at burst 72
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| adk-rust certification pass C23 (strict-zero, GATE-CLOSING pass) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. 3-CLEAN GATE CLOSED on adk-rust v1.0.0 (SHA a6c79b6f). Cumulative C1–C23: 0 hallucinations. Burst 66. |
+
+### Archived at burst 71
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|

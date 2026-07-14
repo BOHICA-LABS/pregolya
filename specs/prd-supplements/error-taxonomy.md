@@ -82,13 +82,29 @@ primary_consumers: [implementer, test-writer]
 
 ### Component: SERVER (ferrochain-server)
 
-| Error Code | Category | Severity | BC Anchor | Message Format |
-|-----------|----------|----------|-----------|---------------|
-| E-SERVER-001 | POLICY | broken | BC-2.13.003 | `PolicyNotEnforceable: strict sandbox policy requires enforcing backend; process backend is not permitted` |
-| E-SERVER-002 | VAL | broken | BC-2.12.003 | `RunNotFound: run '<run_id>' does not exist in thread '<thread_id>'` |
-| E-SERVER-003 | VAL | broken | BC-2.12.001 | `ThreadNotFound: thread '<thread_id>' does not exist` |
-| E-SERVER-004 | AUTH | broken | BC-2.12.005 | `DebugRouteUnauthorized: debug/introspection route requires explicit opt-in configuration` |
-| E-SERVER-005 | POLICY | broken | BC-2.12.005 | `CorsRejected: CORS origin '<origin>' is not in the allow-list; default denies all cross-origin requests` |
+> **Collision resolution note (sub-burst reconciliation 2026-07-13):** Batch 10 BCs
+> authored codes 007–012 (Thread/Assistant/Run lifecycle errors). Batch 11 BCs independently
+> numbered from 006. Resolution: Batch 10 codes 007–012 are authoritative; Batch 11 codes
+> that collided (was 007/008/009) are renumbered to 013/014/015. Code 006 (ScheduleNotFound)
+> had no collision and is preserved as-is.
+
+| Error Code | Category | Severity | BC Anchor | RetryHint | Message Format |
+|-----------|----------|----------|-----------|-----------|---------------|
+| E-SERVER-001 | POLICY | broken | BC-2.13.003 | Never | `PolicyNotEnforceable: strict sandbox policy requires enforcing backend; process backend is not permitted` |
+| E-SERVER-002 | VAL | broken | BC-2.12.003 | Never | `RunNotFound: run '<run_id>' does not exist in thread '<thread_id>'` |
+| E-SERVER-003 | VAL | broken | BC-2.12.001 | Never | `ThreadNotFound: thread '<thread_id>' does not exist` |
+| E-SERVER-004 | AUTH | broken | BC-2.12.005 | Never | `DebugRouteUnauthorized: debug/introspection route requires explicit opt-in configuration` |
+| E-SERVER-005 | POLICY | broken | BC-2.12.005 | Never | `CorsRejected: CORS origin '<origin>' is not in the allow-list; default denies all cross-origin requests` |
+| E-SERVER-006 | VAL | broken | BC-2.12.004 | Never | `ScheduleNotFound: cron schedule '<cron_id>' does not exist` |
+| E-SERVER-007 | CONCURRENCY | broken | BC-2.12.001 | Never | `ThreadAlreadyExists: thread '<thread_id>' already exists` |
+| E-SERVER-008 | POLICY | broken | BC-2.12.001 | Never | `ThreadStateConflict: thread '<thread_id>' has an active run '<run_id>'; state updates during active runs are disallowed` |
+| E-SERVER-009 | VAL | broken | BC-2.12.002 | Never | `AssistantNotFound: assistant '<assistant_id>' does not exist` |
+| E-SERVER-010 | VAL | broken | BC-2.12.002 | Never | `AssistantVersionNotFound: assistant '<assistant_id>' has no version <version>` |
+| E-SERVER-011 | VAL | broken | BC-2.12.002 | Never | `GraphNotFound: graph '<graph_id>' is not registered with this server instance` |
+| E-SERVER-012 | CONCURRENCY | broken | BC-2.12.003 | Never | `ConcurrentRun: thread '<thread_id>' already has an active run; use multitask_strategy to override` |
+| E-SERVER-013 | VAL | broken | BC-2.12.005 | Never | `InvalidDebugRouteKey: debug_route_key must be non-empty` |
+| E-SERVER-014 | DURABILITY | broken | BC-2.12.006 | Maybe | `RunStoreFailed: RunStore write failed for run '<run_id>' during transition '<transition>': <backend_error>` |
+| E-SERVER-015 | CONCURRENCY | broken | BC-2.12.007 | Never | `RunAlreadyExecuting: run '<run_id>' is already being executed; concurrent execution rejected` |
 
 ### Component: PROV (ferrochain-\<provider\>)
 
@@ -123,6 +139,33 @@ primary_consumers: [implementer, test-writer]
 | E-SBXD-001 | SECURITY | broken | BC-2.13.005 | `WorkspaceEscape: resolved path '<resolved>' escapes workspace root '<root>'` |
 | E-SBXD-002 | POLICY | broken | BC-2.13.003 | `PolicyNotEnforceable: execution policy requires enforcing sandbox; non-enforcing backend is configured` |
 | E-SBXD-003 | INTERNAL | broken | BC-2.13.001 | `SandboxInitFailed: cannot initialize WASM/container sandbox backend: <reason>` |
+
+### Component: RETRY (ferrochain-core retry combinator)
+
+| Error Code | Category | Severity | BC Anchor | RetryHint | Message Format |
+|-----------|----------|----------|-----------|-----------|---------------|
+| E-RETRY-001 | POLICY | broken | BC-2.16.001 | Never | `RetryExhausted: per-tool retry limit for tool '<tool_name>' exhausted after <attempt_limit> attempts` |
+| E-RETRY-002 | POLICY | broken | BC-2.16.002 | Never | `GlobalLimitExhausted: global retry budget of <global_limit> exhausted across all tools in this run` |
+| E-RETRY-003 | POLICY | broken | BC-2.16.003 | `Later(<reset_timeout>)` | `CircuitBreakerOpen: tool '<tool_name>' circuit tripped after <failure_threshold> consecutive failures` |
+
+### Component: CRON (ferrochain-server scheduler)
+
+| Error Code | Category | Severity | BC Anchor | RetryHint | Message Format |
+|-----------|----------|----------|-----------|-----------|---------------|
+| E-CRON-001 | VAL | broken | BC-2.12.004 | Never | `AssistantNotFoundAtFiring: cron schedule '<cron_id>' fired but assistant '<assistant_id>' no longer exists` |
+| E-CRON-002 | VAL | broken | BC-2.12.004 | Never | `InvalidCronExpression: field '<field>' value '<value>' is out of range — <reason>` |
+| E-CRON-003 | POLICY | degraded | BC-2.12.004 | Later | `ScheduleQueueFull: cron schedule '<cron_id>' firing skipped; queue depth <queue_depth> exceeds max_queue_depth` |
+
+### Component: MEMORY (ferrochain-memory)
+
+| Error Code | Category | Severity | BC Anchor | RetryHint | Message Format |
+|-----------|----------|----------|-----------|-----------|---------------|
+| E-MEMORY-001 | VAL | broken | BC-2.15.001 | Never | `EmbeddingBackendNotConfigured: vector_search requires an embedding backend; none is configured` |
+| E-MEMORY-002 | DURABILITY | broken | BC-2.15.001 | Never | `StorageFull: memory backend '<backend>' at '<path>' has no remaining capacity` |
+| E-MEMORY-003 | POLICY | broken | BC-2.15.002 | Never | `ScopeAccessDenied: requested scope <requested_scope> requires higher privilege than caller scope <caller_scope>` |
+| E-MEMORY-004 | VAL | broken | BC-2.15.002 | Never | `NoScopeContext: memory scope resolution requires an active RunConfig session context; none is available` |
+| E-MEMORY-005 | DURABILITY | broken | BC-2.15.003 | Never | `ErasurePartialFailure: GDPR erasure for user '<user_id>' partially completed; rolled back — <reason>` |
+| E-MEMORY-006 | POLICY | broken | BC-2.15.003 | Never | `InsufficientPrivilege: operation '<operation>' requires AdminContext; caller has <caller_privilege>` |
 
 ## RFC-7807 Problem Emission
 

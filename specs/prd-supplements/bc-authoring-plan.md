@@ -73,6 +73,13 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | Q9: R10 (NamedBarrierValue/EphemeralValue) | BC-2.02.003, BC-2.02.004 |
 | Q9: R11 (MCP test voids) | BC-2.09.004, BC-2.09.005 |
 
+> **Risk ID reconciliation:** `R11` used throughout this plan matches `R-006` in
+> `domain-spec/risks.md` (both describe "MCP test voids: bare ToolException re-raise path
+> untested upstream; `__aenter__` NotImplementedError contract untested"). STATE.md uses `R11`
+> as a shorthand inherited from the D17 gate decisions; risks.md uses the canonical `R-006`
+> identifier. They are the same risk. BCs continue to reference `R11` for consistency with
+> STATE.md; the canonical ID for future artifacts is `R-006`.
+
 ## NE Requirement Coverage Summary
 
 | NE | BC Anchors |
@@ -132,14 +139,14 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | BC-2.14.001 | FerrochainError 2D component × category struct with RetryHint and machine code | P0 | CAP-016 | DI-008, DI-014 | Wave 0 |
 | BC-2.14.002 | RFC-7807 compatible problem emission from FerrochainError | P0 | CAP-016 | — | Wave 0 |
 | BC-2.14.003 | All library constructors return Result; no .unwrap()/.expect()/assert! in non-test (NE-07) | P0 | CAP-016 | DI-008 | Wave 0 |
-| BC-2.14.004 | Every outbound HTTP ClientBuilder must set .timeout(30s); zero Client::new() outside tests (NE-04) | P0 | — | DI-009 | Wave 0 |
+| BC-2.14.004 | Every outbound HTTP ClientBuilder must set .timeout(30s); zero Client::new() outside tests (NE-04) | P0 | CAP-016 | DI-009 | Wave 0 |
 
 ### Batch 2 — Error Taxonomy Cont. + BSP Execution + Text Splitting (P0 correctness contracts)
 *8 BCs — SS.14 cont. + SS.03 + SS.07*
 
 | BC ID | Title | Priority | CAP | DI | Wave |
 |-------|-------|----------|-----|----|------|
-| BC-2.14.005 | API key newtype + Debug→"<redacted>"; no Serialize; no Deref<Target=str> (NE-10) | P0 | — | DI-010 | Wave 0 |
+| BC-2.14.005 | API key newtype + Debug→"<redacted>"; no Serialize; no Deref<Target=str> (NE-10) | P0 | CAP-016 | DI-010 | Wave 0 |
 | BC-2.14.006 | Validation failures propagate Err(FerrochainError); no silent None (NE-03) | P0 | CAP-016 | DI-014 | Wave 0 |
 | BC-2.03.001 | BSP super-step execution determinism — Kani VP seed (NE-17) | P0 | CAP-004 | DI-001 | Wave 1 |
 | BC-2.03.002 | Concurrent LastValue write rejection raises InvalidUpdateError | P0 | CAP-004 | DI-001 | Wave 1 |
