@@ -22,7 +22,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: ""
+input-hash: "9d30ffb534046864"
 ---
 
 # BC-2.08.012: `#[task]` Attribute Macro — Task Registration Boilerplate Generation
@@ -104,7 +104,7 @@ user-defined node names (they collide with the graph's internal routing symbols)
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-MACRO-012 | Graph built via `#[task]` registration is semantically equivalent to graph built via manual `add_node` | Equivalence test: identical execution traces for same input | Phase 3 |
+| VP-BC208012-01 | Graph built via `#[task]` registration is semantically equivalent to graph built via manual `add_node` | Equivalence test: identical execution traces for same input | Phase 3 |
 
 ## Related BCs
 
@@ -125,7 +125,7 @@ _[to be filled after story decomposition]_
 
 ## VP Anchors
 
-- VP-MACRO-012
+- VP-BC208012-01
 
 ## Traceability
 

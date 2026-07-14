@@ -142,7 +142,7 @@ traces_to: .factory/specs/prd.md
 
 ## Carry-Forward Notes (RESOLVED at Phase 1 Step D, 2026-07-14)
 
-1. **SS-TBD backfill** — RESOLVED. All 83 BCs now have `subsystem: SS-NN`. BC files moved to `ss-NN/` dirs per artifact-path-registry. ARCH-INDEX Subsystem Registry is authoritative.
+1. **SS-TBD backfill** — RESOLVED. All 86 BCs now have `subsystem: SS-NN`. BC files moved to `ss-NN/` dirs per artifact-path-registry. ARCH-INDEX Subsystem Registry is authoritative.
 2. **VP-INDEX registration** — RESOLVED. VP-001..VP-003 (Kani) + VP-004..VP-005 (integration, from BC-2.09.004/005) registered in VP-INDEX.md.
 3. **vp_seed frontmatter inconsistency** — RESOLVED. BC-2.03.001: `vp_seed: true, vp_id: VP-001`. BC-2.04.006: normalized `kani_vp_seed` → `vp_seed: true, vp_id: VP-002`. BC-2.13.004: `vp_seed: true, vp_id: VP-003`.
 4. **red_gate_required vs red_gate** — RESOLVED. BC-2.07.002: `red_gate_required: true` → `red_gate: true, red_gate_source: R8`.

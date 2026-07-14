@@ -47,12 +47,12 @@ architect_note: "Architect must confirm crate-to-subsystem mapping and fill Arch
 
 | Module | Crate | Tier | Rationale | Kill Rate Target | VP Count |
 |--------|-------|------|-----------|-----------------|---------|
-| BSP execution engine | ferrochain-graph | CRITICAL | DI-001 formal verification target; nondeterminism is a silent defect; CONFLICT-1 critical finding | ≥ 95% | 1 (BSP-determinism-VP) |
+| BSP execution engine | ferrochain-graph | CRITICAL | DI-001 formal verification target; nondeterminism is a silent defect; CONFLICT-1 critical finding | ≥ 95% | 1 (VP-001) |
 | HITL interrupt/resume | ferrochain-graph | CRITICAL | D17-Q2 Phase-1 BC; cannot be retrofitted; Domain A+B holdout depends on correctness | ≥ 95% | 0 |
 | Per-task checkpoint store | ferrochain-checkpoint | CRITICAL | DI-002 durability invariant; Domain B multi-day run depends on crash recovery | ≥ 95% | 0 |
-| Session tenancy layer | ferrochain-checkpoint | CRITICAL | DI-005 Kani VP target; NE-12 cross-tenant isolation | ≥ 95% | 1 (session-tenancy-VP) |
+| Session tenancy layer | ferrochain-checkpoint | CRITICAL | DI-005 Kani VP target; NE-12 cross-tenant isolation | ≥ 95% | 1 (VP-002) |
 | FerrochainError + credential newtypes | ferrochain-core | CRITICAL | NE-10 security boundary; DI-008 API contract; DI-010 credential opacity | ≥ 95% | 0 |
-| Workspace path confinement | ferrochain-sandbox | CRITICAL | DI-007 Kani VP target; NE-02 symlink escape; Domain C forcing function | ≥ 95% | 1 (workspace-confinement-VP) |
+| Workspace path confinement | ferrochain-sandbox | CRITICAL | DI-007 Kani VP target; NE-02 symlink escape; Domain C forcing function | ≥ 95% | 1 (VP-003) |
 | Budget governance | ferrochain-graph | HIGH | D17-Q4 Phase-1 BC; Domain B holdout; append-only journal integrity | ≥ 90% | 0 |
 | Content provenance/guardrail | ferrochain-graph | HIGH | D17-Q8 Phase-1 BC; Domain A holdout; DI-012 ingress coverage | ≥ 90% | 0 |
 | Runnable trait dispatch | ferrochain-core | HIGH | Universal composition primitive; type boundary enforcement | ≥ 90% | 0 |

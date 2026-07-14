@@ -22,7 +22,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: ""
+input-hash: "9d30ffb534046864"
 ---
 
 # BC-2.08.011: `#[entrypoint]` Attribute Macro — START Edge Auto-Wiring for StateGraph
@@ -97,7 +97,7 @@ references an unregistered node. Error message: `GraphBuildError::UnknownNode("n
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-MACRO-011 | Graph built with `#[entrypoint]` is semantically equivalent to graph with manual `add_edge(START, ...)` | Equivalence test: both graphs produce identical execution traces for the same input | Phase 3 |
+| VP-BC208011-01 | Graph built with `#[entrypoint]` is semantically equivalent to graph with manual `add_edge(START, ...)` | Equivalence test: both graphs produce identical execution traces for the same input | Phase 3 |
 
 ## Related BCs
 
@@ -118,7 +118,7 @@ _[to be filled after story decomposition]_
 
 ## VP Anchors
 
-- VP-MACRO-011
+- VP-BC208011-01
 
 ## Traceability
 

@@ -76,9 +76,9 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.08.007 | SS-08 | 5 | — | `TV-NNN` | | Transport error → Err(Timeout) |
 | BC-2.08.008 | SS-08 | 5 | — | `TV-NNN` | | Eval arithmetic mean + InfraError |
 | BC-2.08.009 | SS-08 | 5 | — | `TV-NNN` | | Schema naming stability snapshot |
-| BC-2.08.010 | SS-08 | TBD | — | TBD | | `#[tool]` proc-macro (Phase-1b, Batch 13) |
-| BC-2.08.011 | SS-08 | TBD | — | TBD | | `#[entrypoint]` proc-macro (Phase-1b) |
-| BC-2.08.012 | SS-08 | TBD | — | TBD | | `#[task]` proc-macro (Phase-1b) |
+| BC-2.08.010 | SS-08 | 5 | — | `TV-NNN` | | `#[tool]` proc-macro |
+| BC-2.08.011 | SS-08 | 5 | — | `TV-NNN` | | `#[entrypoint]` proc-macro |
+| BC-2.08.012 | SS-08 | 5 | — | `TV-NNN` | | `#[task]` proc-macro |
 | BC-2.09.001 | SS-09 | 7 | — | `TV-NNN` | | MCP tool discovery |
 | BC-2.09.002 | SS-09 | 7 | — | `TV-NNN` | | ToolInvocation routing |
 | BC-2.09.003 | SS-09 | 5 | — | `TV-NNN` | | Tool-result as untrusted ingress |
@@ -122,8 +122,7 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.17.001 | SS-17 | 5 | — | `TV-NNN` | | Kani harness scope (all 3 VPs) |
 | BC-2.17.002 | SS-17 | 5 | — | `TV-NNN` | | cargo-fuzz targets |
 
-**Total vectors (83 authored BCs):** approximately 460 canonical test vectors across 83 BC files.
-3 proc-macro BCs (BC-2.08.010-012, Batch 13) are Phase-1b additions; test vectors TBD when BCs are authored.
+**Total vectors (86 authored BCs):** approximately 475 canonical test vectors across 86 BC files.
 
 **Red Gate BCs (5):** BC-2.02.003, BC-2.02.004, BC-2.07.002, BC-2.09.004, BC-2.09.005
 

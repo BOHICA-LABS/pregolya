@@ -350,3 +350,12 @@ Spec-gate fresh-context consistency audit returned FAIL: 9 blocking findings, 6 
 **Spec gate re-audit required.** Dispatch consistency-validator (fresh context, second pass) to verify all 21 findings resolved and no new inconsistencies introduced. On PASS → Phase 1d adversarial-spec-review (adversary, different model family, 3 clean passes min, policy rubric auto-load if .factory/policies.yaml exists).
 
 ---
+
+## Burst 71 (archived from STATE.md step row)
+
+**Step:** Phase 1 Step C sub-burst 1: PRD core + BC plan
+**Agent:** product-owner
+**Status:** COMPLETE
+**Output:** prd.md 607 lines + 5 supplements (1,599 total). 82 BCs planned (48 P0/26 P1/8 P2). OQR-1..5 resolved. Burst 71.
+
+---

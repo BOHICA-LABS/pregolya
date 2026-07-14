@@ -4,14 +4,14 @@ level: ops
 version: "2.1"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T13:00:00Z
+timestamp: 2026-07-14T15:00:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "spec-gate re-audit (fresh context) then Phase 1d adversarial convergence"
+current_step: "Phase 1d adversarial spec convergence — pass 1 ready (3 clean passes min per D14)"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -38,9 +38,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-14 — burst 75: spec-gate remediation — 21 findings resolved; 86 BCs; ADR-011; test-vectors catalog. |
+| **Last Updated** | 2026-07-14 — burst 76: spec-gate re-audit PASS (0 blocking); all 6 NFs resolved; Phase 1d ready. |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | spec-gate re-audit (fresh context) then Phase 1d adversarial convergence |
+| **Current Step** | Phase 1d adversarial spec convergence — pass 1 ready (3 clean passes min per D14) |
 
 ## Phase Progress
 
@@ -61,11 +61,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
+| Spec-gate re-audit PASS + NF cleanup | consistency-validator + product-owner | COMPLETE | Pass 2: PASS, 0 blocking residuals — all 21 pass-1 findings verified RESOLVED. 6 minor NFs (stale counts, TBD TV counts, VP naming on proc-macro BCs, empty input-hashes, implicit ADR-011 link, informal VP names) all fixed. Spec package: 86 BCs / 11 ADRs / 5 VPs / test-vectors catalog — SPEC-GATE PASSED. Burst 76. |
 | Spec-gate consistency audit + remediation (21 findings → 0) | consistency-validator + PO/BA/architect | COMPLETE | Fresh-context audit: FAIL — 9 blocking, 6 minor, 3 perimeter gaps (D17-Q7 VP-substitution unpropagated; RTM module unfilled; proc-macro BCs unauthored). ALL remediated: 86 BCs (+BC-2.08.010/011/012), test-vectors.md (PG-01), ADR-011 (PG-02), canonical risk cross-walk (F-10). Re-audit next. Burst 75. |
 | Phase 1 Steps D+E: ADRs finalized (D9 gate: Alt B), SS backfill, DTU assessment, research validation, BC-2.08.009 | architect + product-owner + research-agent | COMPLETE | 10/10 ADRs accepted. 83 BCs in ss-01..ss-17. VP-INDEX 5 entries (VP-001..005). DTU_REQUIRED: true (3 cassette clone sets; pre-Phase-3 gate: ≥8/7/3 recordings). Research: all ADR tech picks VALID w/ 3 corrections (schemars 1.x path fix + snapshot obligation → BC-2.08.009; bincode 2.x alt noted; Kani no-async → sync-core mandate). R4 REFRAMED: langgraph 0.2.5 pre-1.0 checkpointing — competitor velocity HIGH; moat = GA-maturity + conformance + formal verification. prd-revision (Step E): narrow — 1 new BC only. Burst 74. |
 | Phase 1 Step D.1: architecture core + ADR stubs + VP seeds; CI/CD setup | architect + devops-engineer | COMPLETE | architecture/ 9 section files + ARCH-INDEX (~1,000 lines): SS-01..SS-17 registry w/ crate+wave mapping, purity-boundary-map, verification-architecture + tooling-selection + coverage-matrix. 10 ADRs: ADR-001 graph engine DRAFT BLOCKED-ON-HUMAN (D9 gate — Alt A LangGraph-faithful BSP vs Alt B hybrid orchestrator+actor per D11.1; architect recommends B), ADR-002..010 proposed. VP-INDEX + VP-001/002/003 (D17-Q7 top-3 BSP invariants). module-criticality.md 33 modules. CI/CD: main+develop initialized (d018d3f), 5-job SHA-pinned ci.yml green, branch protection both branches, .envrc withheld. input-hashes filled (10 files). Burst 73. |
 | Phase 1 Step C: 82 BCs authored (12 batches, parallel) + integrated | product-owner ×10 + integrate | COMPLETE | 82/82 BCs in specs/behavioral-contracts/ss-TBD/ (~12,600 lines). Coverage: 17/17 NE, 14/14 DI, R8/R10/R11 Red Gates (BC-2.07.002, BC-2.02.003/004, BC-2.09.004/005), D17-Q2/Q3/Q4/Q7/Q8 mandates, Kani VP seeds (BC-2.03.001, BC-2.04.006, BC-2.13.004). BC-INDEX built (82 entries, 5 RG, 3 VP). Burst 72. |
-| Phase 1 Step C sub-burst 1: PRD core + BC plan | product-owner | COMPLETE | prd.md 607 lines + 5 supplements (1,599 total). 82 BCs planned (48 P0/26 P1/8 P2). OQR-1..5 resolved. Burst 71. |
 
 ## Decisions Log
 
@@ -134,22 +134,22 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ### RESUME IN ONE BREATH
 
-ferrochain Phase 1 Spec Crystallization: Steps A+B+C+D+E + spec-gate remediation complete. 21 spec-gate findings (9 blocking, 6 minor, 3 perimeter gaps) ALL resolved. 86 BCs (BC-INDEX: 48 P0/30 P1/8 P2; +BC-2.08.010/011/012 proc-macros). test-vectors.md authored (PG-01, 198 lines). ADR-011 cache-key content-hash (PG-02, 141 lines, 11 ADRs total). Canonical risk cross-walk in risks.md+L2-INDEX (F-10). ADR-008 body aligned (F-16). Input-hash placeholders filled on all changed/new artifacts. Housekeeping: .factory/.gitignore added (logs/*.jsonl, namespace-reservation/*/target/); dispatcher log (52MB) untracked.
+ferrochain Phase 1 Spec Crystallization: Steps A+B+C+D+E + spec-gate PASSED (pass 2: 0 blocking). 86 BCs (BC-INDEX: 48 P0/30 P1/8 P2), 11 ADRs, 5 VPs, test-vectors catalog. All 6 NF minor findings from pass-2 audit resolved: NF-01 BC count note, NF-02 TBD TV rows, NF-03 VP naming on proc-macro BCs, NF-04 input-hashes filled (BC-2.08.010/011/012), NF-05 ADR-011 forward link in PRD §9, NF-06 informal VP names in module-criticality. Spec package locked for Phase 1d adversarial review.
 
 ### HEADS
 
 | Repo | Branch | SHA | Pushed | Notes |
 |------|--------|-----|--------|-------|
-| factory-artifacts | factory-artifacts | (burst 75 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
+| factory-artifacts | factory-artifacts | (burst 76 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
 | main | main | d018d3f | YES | CLAUDE.md + .gitignore committed (D10); develop initialized |
 
 No worktrees. No PRs. Reference clones (.reference/) gitignored.
 
 ### WORKSTREAM
 
-**Burst 75 COMPLETE.** 21 spec-gate findings remediated. 86 BCs. ADR-011. test-vectors.md. Dispatcher log untracked (.gitignore).
+**Burst 76 COMPLETE.** Spec-gate pass 2: PASS (0 blocking). All 6 NF minor findings resolved. Input-hashes filled on BC-2.08.010/011/012. Spec package: 86 BCs / 11 ADRs / 5 VPs / test-vectors — SPEC-GATE PASSED.
 
-**RESUME NEXT-ACTION:** dispatch consistency-validator (FRESH context, second pass) to verify all 21 findings resolved and no new inconsistencies introduced; on PASS → Phase 1d adversarial-spec-review (adversary, different model family, 3 clean passes min, policy rubric auto-load if .factory/policies.yaml exists).
+**RESUME NEXT-ACTION:** dispatch adversary (fresh context, different model family) for Phase 1d pass 1 over the full spec package (.factory/specs/); findings route per VSDD feedback table; 3 consecutive clean passes required (D14 strict-zero); check .factory/policies.yaml for policy rubric injection (if absent, adversary baseline policies apply).
 
 ### PENDING HUMAN ACTIONS (open)
 
@@ -172,7 +172,7 @@ Holdout domains A/B/C at planning/holdout-domains/. D1-D17 all in Decisions Log 
 |-------|-------|
 | **Date** | 2026-07-14 |
 | **Cycle** | v1.0.0-greenfield |
-| **Burst commit** | (burst 75 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Burst commit** | (burst 76 — run `git -C .factory log -1 --format='%h %s'`) |
 | **Convergence counter** | 3 of 3 — GATE CLOSED (adk-rust C23; pre-pipeline) |
 
 ## Historical Content

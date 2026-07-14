@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: ""
+input-hash: "78af0d3ef7ed33b2"
 ---
 
 # BC-2.08.010: `#[tool]` Attribute Macro — async fn to Tool Implementor via schemars::JsonSchema
@@ -110,7 +110,7 @@ MUST NOT fall back to using the function name as the tool name silently (explici
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-MACRO-010 | `#[tool]`-generated struct passes snapshot test for its JSON Schema output | Snapshot test (insta); BC-2.08.009 obligation | Phase 3 |
+| VP-BC208010-01 | `#[tool]`-generated struct passes snapshot test for its JSON Schema output | Snapshot test (insta); BC-2.08.009 obligation | Phase 3 |
 
 ## Related BCs
 
@@ -132,7 +132,7 @@ _[to be filled after story decomposition]_
 
 ## VP Anchors
 
-- VP-MACRO-010
+- VP-BC208010-01
 
 ## Traceability
 

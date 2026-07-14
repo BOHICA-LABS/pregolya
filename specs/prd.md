@@ -580,7 +580,7 @@ to BCs, CI lint gates, or ADRs.
 | NE-02 | BC + VP seed | BC-2.13.004, BC-2.13.005 (workspace confinement) |
 | NE-03 | BC | BC-2.14.006 (no silent None for validation failures) |
 | NE-04 | BC + CI lint gate | BC-2.14.004 (mandatory 30s timeout; cargo xtask deny-client-new) |
-| NE-05 | CI lint gate (ADR) | Architecture-phase ADR: cache keys must be content hash of (resolved instruction bytes + sorted tool declarations) |
+| NE-05 | CI lint gate (ADR) | ADR-011 (cache-key-content-hash): cache keys must be content hash of (resolved instruction bytes + sorted tool declarations) |
 | NE-06 | BC | BC-2.11.002 (tool-result ingress), BC-2.11.003 (RAG), BC-2.11.004 (memory) |
 | NE-07 | BC + CI lint gate | BC-2.14.003 (constructor Result; deny-expect-in-lib lint) |
 | NE-08 | BC | BC-2.12.006 (IdempotencyStore/RateLimitStore/RunStore trait seams) |
