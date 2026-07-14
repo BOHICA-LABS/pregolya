@@ -467,3 +467,54 @@ Phase 1d adversarial pass 2: NOT CLEAN — 5 findings. All 5 fixed in same burst
 - Fix bursts: 2
 - Counter: 0 of 3
 - Trajectory: →14 (P1D-1) →5 (P1D-2)
+
+---
+
+## Burst 79 — Archived Step Row
+
+> Archived from STATE.md Current Phase Steps per content-routing rules (keep last 5).
+
+| Spec-gate consistency audit + remediation (21 findings → 0) | consistency-validator + PO/BA/architect | COMPLETE | Fresh-context audit: FAIL — 9 blocking, 6 minor, 3 perimeter gaps (D17-Q7 VP-substitution unpropagated; RTM module unfilled; proc-macro BCs unauthored). ALL remediated: 86 BCs (+BC-2.08.010/011/012), test-vectors.md (PG-01), ADR-011 (PG-02), canonical risk cross-walk (F-10). Re-audit next. Burst 75. |
+
+---
+
+## Burst 80 — Phase 1d Pass 4 + Fix Burst (Evidence Discipline)
+
+**Date:** 2026-07-14
+**Agents:** adversary + architect + PO (state-manager)
+**Cycle:** v1.0.0-greenfield
+
+### Pass 4 Findings Summary
+
+NOT CLEAN — 13 findings.
+
+- 1 CRIT: burst-79 claimed fix (SS-16 RTM wave assignment in prd.md) never landed — grep showed old text still present.
+- New axis A — sibling-subsystem sweep: SS-16 retry module same defect class as SS-15 memory (both needed canonical crate-home from DAG merit). SS-16 → ferrochain-core (DAG rationale: core is the dependency-free foundation; retry belongs there per DAG, not ferrochain-graph).
+- New axis B — category-enum lint: 13 non-canonical BC categories found across BCs (categories not in the 12-value canonical enum). All 13 canonicalized.
+- META process change: fix claims now require inline grep evidence before being recorded as FIXED.
+- 17-subsystem coherence table constructed and verified: 0 mismatches across all 17 subsystems.
+- 5 ADR status-line fixes applied.
+- BaseMemory residue cleared, WorkspaceEscape references cleared, stale counts cleared.
+- E-SERVER-001 tombstoned; E-PROV-006 added.
+- Stale TODOs cleared from prd supplements.
+- ADV-P1D-PASS-4.md persisted to adversarial-reviews/.
+
+### All 13 Findings: FIXED (with grep proof)
+
+All 13 findings fixed with inline grep evidence. 2 race residuals also closed (SS-16 RTM, E-PROV-006).
+
+### Files Touched (representative)
+
+- specs/prd.md (RTM memory+retry modules corrected, SS-16 wave 2)
+- specs/architecture/ARCH-INDEX.md (SS-16 coherence table, canonical crate-home)
+- specs/architecture/decisions/ADR-*.md (5 ADR status-line fixes)
+- specs/behavioral-contracts/ss-*/BC-*.md (13 category-enum fixes across multiple BCs)
+- specs/prd-supplements/error-taxonomy.md (E-SERVER-001 tombstone, E-PROV-006 add)
+- cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-4.md (NEW)
+
+### Convergence Status After Burst 80
+
+- Phase 1d passes: 4 (NOT CLEAN)
+- Fix bursts: 4
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline)

@@ -14,7 +14,7 @@ decisions: [D11]
 
 # ADR-005: Logical Clock and Checkpoint Ordering
 
-**Status:** Proposed (CONFLICT-4 resolution; finalizable)
+**Status:** Accepted
 
 ## Context
 

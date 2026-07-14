@@ -116,13 +116,13 @@ function over its fields. No I/O in the harness.
 **VP-003 — Workspace Path Confinement** (ferrochain-sandbox / path-guard)
 
 Property: For any symbolic path under a workspace root, `canonicalize_beneath_root`
-either returns a path within the root or returns `Err(WorkspaceEscape)`. It never
-returns a path outside the root.
+either returns a path within the root or returns `Err(FerrochainError { code: "E-SBXD-001", .. })`.
+It never returns a path outside the root.
 
 Formal statement: `∀ base: Path, path: Path,
   match canonicalize_beneath_root(base, path) {
     Ok(p) => p.starts_with(base),
-    Err(WorkspaceEscape) => true,
+    Err(FerrochainError { code: "E-SBXD-001", .. }) => true,  // WorkspaceEscape — E-SBXD-001
     _ => false
   }`
 

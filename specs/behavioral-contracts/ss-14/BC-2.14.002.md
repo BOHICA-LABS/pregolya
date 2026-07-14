@@ -120,11 +120,11 @@ from the code string. The HTTP status code falls back to 500 for unknown categor
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `FerrochainError { component: Core, category: Val, code: "E-CORE-001", retry_hint: Never, message: "Invalid ContentBlock type 'x'" }.to_problem()` | `{ "type": "urn:ferrochain:error:E-CORE-001", "title": "Validation", "detail": "Invalid ContentBlock type 'x'", "extensions": { "retry_hint": "never", "component": "core" } }` | Happy path — VAL error |
-| TV-002 | `FerrochainError { component: Prov, category: Rate, code: "E-PROV-001", retry_hint: Later(30s), message: "RateLimited" }.to_problem()` | HTTP status 429; `extensions.retry_hint: "later:30"` | Rate-limit with backoff |
+| TV-001 | `FerrochainError { component: Core, category: VAL, code: "E-CORE-001", retry_hint: Never, message: "Invalid ContentBlock type 'x'" }.to_problem()` | `{ "type": "urn:ferrochain:error:E-CORE-001", "title": "Validation", "detail": "Invalid ContentBlock type 'x'", "extensions": { "retry_hint": "never", "component": "core" } }` | Happy path — VAL error |
+| TV-002 | `FerrochainError { component: Prov, category: RATE, code: "E-PROV-001", retry_hint: Later(30s), message: "RateLimited" }.to_problem()` | HTTP status 429; `extensions.retry_hint: "later:30"` | Rate-limit with backoff |
 | TV-003 | `ProblemDetail` serialized via `serde_json::to_string` | Valid JSON, no `null` fields except optional ones | RFC-7807 conformance |
 | TV-004 | Response `Content-Type` header | `"application/problem+json"` | Correct MIME type |
-| TV-005 | `FerrochainError { category: Internal, ... }.to_problem()` HTTP status | 500 | Internal error → 500 |
+| TV-005 | `FerrochainError { category: INTERNAL, ... }.to_problem()` HTTP status | 500 | Internal error → 500 |
 
 ## Verification Properties
 

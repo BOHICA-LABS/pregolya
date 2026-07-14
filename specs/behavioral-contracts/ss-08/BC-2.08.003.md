@@ -66,7 +66,7 @@ correctly (not forced to present or silently dropped).
    fences, no explanatory prose outside the JSON object).
 5. Provider-specific method routing:
    - OpenAI: `json_schema` method sets `response_format: { type: "json_schema", strict: true }`;
-     refusal returns `Err(FerrochainError { category: Refusal })`.
+     refusal returns `Err(FerrochainError { category: POLICY })`.
    - Anthropic: `function_calling` method forces a single tool binding; `thinking` mode
      must be disabled for structured output requests (incompatibility documented).
    - Ollama: `format` field set to the resolved JSON schema.
@@ -78,7 +78,7 @@ correctly (not forced to present or silently dropped).
 - Optional fields (`Option<T>`) in the schema must not be forced present by the adapter;
   if the model omits them, the value is `None`.
 - The refusal case (OpenAI Responses API with strict JSON schema) propagates as a typed
-  `FerrochainError { category: Refusal }` — not a deserialization error.
+  `FerrochainError { category: POLICY }` — not a deserialization error.
 - `json_mode` output is a valid JSON object: no markdown code fences (```` ```json ````),
   no preamble text, no trailing prose.
 
@@ -86,13 +86,13 @@ correctly (not forced to present or silently dropped).
 
 ### EC-001: Refusal in OpenAI native structured output
 **Scenario:** The model refuses to answer (safety filter) when `method = "json_schema"`.
-**Expected behavior:** `Err(FerrochainError { category: Refusal, message: "<refusal text>" })`.
+**Expected behavior:** `Err(FerrochainError { category: POLICY, message: "<refusal text>" })`.
 The caller can distinguish this from a deserialization failure by checking `category`.
 
 ### EC-002: Schema has required field the model omits
 **Scenario:** The schema requires `{ "answer": string }` but the model returns `{}`.
 **Expected behavior:** Deserialization fails cleanly with `Err(FerrochainError
-{ category: Validation, message: "missing required field 'answer'" })`. No panic.
+{ category: VAL, message: "missing required field 'answer'" })`. No panic.
 
 ### EC-003: Ollama `format` with full JSON schema vs `"json"` string
 **Scenario:** `with_structured_output` is called on `ChatOllama` with a complex nested
@@ -120,7 +120,7 @@ premature parsing.
 | TV-001 | `model.with_structured_output::<Joke>` + "Tell me a joke" | `Joke { setup: <non-empty>, punchline: <non-empty> }` | Happy path |
 | TV-002 | Same, `Optional<extra>` field not set by model | `Joke { setup: ..., extra: None }` | Optional field |
 | TV-003 | OpenAI `json_mode`, prompt asking for `{"name": "Alice"}` | `serde_json::Value::Object({ "name": "Alice" })` — no markdown fences | json_mode |
-| TV-004 | OpenAI refusal with `json_schema` method | `Err(FerrochainError { category: Refusal })` | Refusal case |
+| TV-004 | OpenAI refusal with `json_schema` method | `Err(FerrochainError { category: POLICY })` | Refusal case |
 | TV-005 | Ollama with complex nested schema | Deserialized `T` matching schema | Ollama format |
 
 ## Verification Properties

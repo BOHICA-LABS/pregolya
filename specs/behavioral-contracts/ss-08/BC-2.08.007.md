@@ -33,7 +33,7 @@ input-hash: "4bf3ed649311bea0978286c57d4e17f5332f8cb1edde7b67f13e73578e597e52"
 
 When an SSE stream from a provider is interrupted mid-response — by a per-chunk stall
 timeout, a TCP reset, or any other transport-layer error — the streaming call must
-return `Err(FerrochainError { category: Timeout | Transport })`. It must never return
+return `Err(FerrochainError { category: TIMEOUT | TRANSPORT })`. It must never return
 `Ok(AiMessage)` with a partial or truncated content as if the response were complete.
 This contract closes the adk-rust P-77 pattern (NE-04) where streaming clients had no
 per-chunk timeout, allowing indefinitely hung streams to silently produce incomplete
@@ -53,11 +53,11 @@ results.
 
 1. **Per-chunk stall → `Err(Timeout)`:** When an SSE stream stalls (no bytes received)
    for longer than the configured per-chunk timeout, the streaming call terminates and
-   returns `Err(FerrochainError { category: Timeout, message: "stream chunk timeout
+   returns `Err(FerrochainError { category: TIMEOUT, message: "stream chunk timeout
    after <duration>", … })`. No partial `AiMessage` is returned as `Ok`.
 2. **TCP reset / connection drop → `Err(Transport)`:** When the underlying TCP
    connection is reset mid-stream, the streaming call returns `Err(FerrochainError
-   { category: Transport, … })`. No partial content is surfaced as success.
+   { category: TRANSPORT, … })`. No partial content is surfaced as success.
 3. **Chunks received before interrupt are NOT returned as `Ok`:** There is no API shape
    that returns both accumulated partial content AND an error. The caller receives
    either a complete `Ok(AiMessage)` or a typed `Err`.
@@ -85,7 +85,7 @@ results.
 ### EC-001: Stream stalls after first chunk
 **Scenario:** The fixture delivers `message-start` + one `text` delta, then goes silent
 for 31 seconds.
-**Expected behavior:** `Err(FerrochainError { category: Timeout })`. The partial text
+**Expected behavior:** `Err(FerrochainError { category: TIMEOUT })`. The partial text
 delta is discarded. The error message includes the duration waited and the number of
 chunks received before stall.
 
@@ -99,13 +99,13 @@ total response took 28 seconds.
 ### EC-003: Stream stalls before message-start
 **Scenario:** The HTTP connection is established but no SSE bytes arrive within the
 chunk timeout.
-**Expected behavior:** `Err(FerrochainError { category: Timeout })`. The error fires
+**Expected behavior:** `Err(FerrochainError { category: TIMEOUT })`. The error fires
 on the first chunk wait, not only after partial content is received.
 
 ### EC-004: TCP RST during deltaable block accumulation
 **Scenario:** The stream has delivered `message-start`, `content-block-start{text,0}`,
 and 5 text delta events. The TCP connection is then reset.
-**Expected behavior:** `Err(FerrochainError { category: Transport })`. The 5
+**Expected behavior:** `Err(FerrochainError { category: TRANSPORT })`. The 5
 accumulated text deltas are not returned to the caller.
 
 ### EC-005: Client constructed without timeout (non-test code)
@@ -117,11 +117,11 @@ and fails the build. No runtime behavior change — this is a static enforcement
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | Stream fixture stalls after chunk 1, per-chunk timeout = 100ms | `Err(FerrochainError { category: Timeout })` — no partial Ok | Per-chunk timeout |
+| TV-001 | Stream fixture stalls after chunk 1, per-chunk timeout = 100ms | `Err(FerrochainError { category: TIMEOUT })` — no partial Ok | Per-chunk timeout |
 | TV-002 | Stream fixture delivers all chunks within 29s, timeout = 30s | `Ok(AiMessage)` — complete response | Normal slow stream |
-| TV-003 | Stream fixture delivers 0 chunks then TCP RST | `Err(FerrochainError { category: Transport })` | Connection drop |
+| TV-003 | Stream fixture delivers 0 chunks then TCP RST | `Err(FerrochainError { category: TRANSPORT })` | Connection drop |
 | TV-004 | `reqwest::Client::new()` in production src/ | CI lint reports violation; build fails | EC-005 |
-| TV-005 | Stream stalls before message-start event | `Err(FerrochainError { category: Timeout })` | EC-003 — early stall |
+| TV-005 | Stream stalls before message-start event | `Err(FerrochainError { category: TIMEOUT })` | EC-003 — early stall |
 
 ## Verification Properties
 

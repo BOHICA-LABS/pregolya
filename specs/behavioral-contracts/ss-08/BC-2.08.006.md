@@ -116,7 +116,7 @@ only that dependency compiles. No graph-runtime types leak into the SDK public A
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | `cargo check -p ferrochain-openai-sdk` | Exits 0; `ferrochain-core` NOT in Cargo.lock for this package | Dependency separation |
-| TV-002 | `ferrochain-openai-sdk::OpenAiClient::builder().build()` (no timeout) | `Err(FerrochainError { category: Validation })` | EC-002 timeout guard |
+| TV-002 | `ferrochain-openai-sdk::OpenAiClient::builder().build()` (no timeout) | `Err(FerrochainError { category: VAL })` | EC-002 timeout guard |
 | TV-003 | `ferrochain-openai-sdk::OpenAiClient::builder().timeout(30s).api_key(key).build()` | `Ok(OpenAiClient { … })` | Happy path SDK construction |
 | TV-004 | `ferrochain-openai::ChatOpenAI::new(config)` (adapter) | `Ok(ChatOpenAI { … })` — implements `ChatModel` trait | Adapter construction |
 

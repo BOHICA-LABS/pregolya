@@ -38,7 +38,7 @@ When an `EncryptedSerializer` (or equivalent encryption layer) is configured on 
 `CheckpointSaver`, both full checkpoint state blobs (written via `put`) and per-task
 intermediate write payloads (written via `put_writes`) are encrypted before reaching
 persistent storage. There is no code path where `put` encrypts but `put_writes` does not.
-Key rotation failures surface as `Err(FerrochainError { category: EncryptionError })` and
+Key rotation failures surface as `Err(FerrochainError { category: INTERNAL })` and
 are never silently swallowed or logged-only. This satisfies NE-11.
 
 ## Preconditions
@@ -58,10 +58,10 @@ are never silently swallowed or logged-only. This satisfies NE-11.
 3. Decryption on read (`get_tuple`, `list`) produces bytes identical to the original
    unencrypted serialization
 4. If key rotation fails (new key is invalid, or old key is invalidated before rotation
-   completes), `Err(FerrochainError { category: EncryptionError, source: <reason> })` is
+   completes), `Err(FerrochainError { category: INTERNAL, source: <reason> })` is
    returned from the failing `put` or `put_writes` call; the write is NOT committed
 5. Decrypting with a key that is no longer in the active keyring returns
-   `Err(FerrochainError { category: EncryptionError, message: "key not found: <key_id>" })`
+   `Err(FerrochainError { category: INTERNAL, message: "key not found: <key_id>" })`
 
 ## Invariants
 
@@ -78,10 +78,10 @@ are never silently swallowed or logged-only. This satisfies NE-11.
 
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
-| EC-001 | Key rotation mid-run: old key invalidated before new key is propagated to all active write paths | `put_writes` calls that acquire the old key after invalidation return `Err(EncryptionError)`; the graph surfaces this to the caller; no partial plaintext write occurs |
-| EC-002 | Read of a blob encrypted with a retired key that is no longer in the keyring | `Err(FerrochainError { category: EncryptionError, message: "key not found: <key_id>" })` returned from `get_tuple`; no partial decryption |
-| EC-003 | `EncryptedSerializer` constructed with null or zero-length key material | `Err(FerrochainError { category: ConfigError, message: "EncryptedSerializer: key material must be non-empty" })` at construction time; no writes proceed |
-| EC-004 | Backend storage contains a mix of encrypted and unencrypted blobs (migration scenario) | Unencrypted blobs that lack the cipher header return `Err(EncryptionError { message: "missing cipher header: blob may be unencrypted" })`; reads of unencrypted legacy data do not silently succeed |
+| EC-001 | Key rotation mid-run: old key invalidated before new key is propagated to all active write paths | `put_writes` calls that acquire the old key after invalidation return `Err(FerrochainError { category: INTERNAL })`; the graph surfaces this to the caller; no partial plaintext write occurs |
+| EC-002 | Read of a blob encrypted with a retired key that is no longer in the keyring | `Err(FerrochainError { category: INTERNAL, message: "key not found: <key_id>" })` returned from `get_tuple`; no partial decryption |
+| EC-003 | `EncryptedSerializer` constructed with null or zero-length key material | `Err(FerrochainError { category: VAL, message: "EncryptedSerializer: key material must be non-empty" })` at construction time; no writes proceed |
+| EC-004 | Backend storage contains a mix of encrypted and unencrypted blobs (migration scenario) | Unencrypted blobs that lack the cipher header return `Err(FerrochainError { category: INTERNAL, message: "missing cipher header: blob may be unencrypted" })`; reads of unencrypted legacy data do not silently succeed |
 
 ## Canonical Test Vectors
 
@@ -89,8 +89,8 @@ are never silently swallowed or logged-only. This satisfies NE-11.
 |-------|----------------|----------|
 | Write a checkpoint via `put` with `EncryptedSerializer`; read raw bytes from storage backend | Raw bytes are NOT valid msgpack plaintext; after decryption with the active key, bytes are valid msgpack and deserialize to the original state | happy-path |
 | Write per-task writes via `put_writes` with `EncryptedSerializer`; read raw bytes from storage | Raw bytes are ciphertext; after decryption, writes match the original task write payloads exactly | happy-path |
-| Key rotation: active key set to `key-v2`; `put_writes` called; then `key-v2` is invalidated and `get_tuple` called | `get_tuple` returns `Err(FerrochainError { category: EncryptionError, message: "key not found: key-v2" })`; no partial data returned | error |
-| `EncryptedSerializer::new(key: &[])` with empty key | `Err(FerrochainError { category: ConfigError })` at construction time; no serializer created | error |
+| Key rotation: active key set to `key-v2`; `put_writes` called; then `key-v2` is invalidated and `get_tuple` called | `get_tuple` returns `Err(FerrochainError { category: INTERNAL, message: "key not found: key-v2" })`; no partial data returned | error |
+| `EncryptedSerializer::new(key: &[])` with empty key | `Err(FerrochainError { category: VAL })` at construction time; no serializer created | error |
 
 ## Verification Properties
 

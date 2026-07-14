@@ -34,13 +34,14 @@ credential security primitives, streaming event types.
 | `core::credentials` | API key newtypes with redacted Debug; no Serialize; no Deref<Target=str> | CRITICAL | SS-14 |
 | `core::events` | Streaming event taxonomy types (RunStarted/Ended, NodeStarted/Ended, etc.) | HIGH | SS-06 |
 | `core::config` | `RunnableConfig`, `ChatConfig` structs | MEDIUM | SS-01 |
+| `core::retry` | `ToolRetryPolicy` (keyed by tool_name; P-71 ADOPT), `CircuitBreaker` state machine, `RetryPolicy` with finite `global_limit: Option<NonZeroU32>`; shared combinator — provider crates and graph both route through this | MEDIUM | SS-16 |
 
 **NE anchors enforced:** NE-07 (constructor Result), NE-10 (credential opacity), NE-03 (no silent None)
 
-## ferrochain-graph (SS-02, SS-03, SS-05, SS-10, SS-11, SS-15, SS-16) — CRITICAL
+## ferrochain-graph (SS-02, SS-03, SS-05, SS-10, SS-11) — CRITICAL
 
 Responsibilities: StateGraph definition, BSP execution, HITL, budget governance,
-content provenance, memory seams, tool retry.
+content provenance.
 
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
@@ -52,7 +53,6 @@ content provenance, memory seams, tool retry.
 | `graph::budget` | `BudgetPolicy` eval (allow/escalate/deny), EvidenceJournal, ceiling halt/escalate | HIGH | SS-10 |
 | `graph::provenance` | `ProvenanceTag` attachment at ingress boundaries, `GuardrailHook` dispatch | HIGH | SS-11 |
 | `graph::event_emitter` | Streaming event emission; run_id + parent_ids correlation | HIGH | SS-06 |
-| `graph::retry` | Per-tool retry policy (keyed by tool_name), circuit breaker, finite global_limit | MEDIUM | SS-16 |
 
 **VP anchor:** `graph::bsp_engine` is VP-001 target (BSP determinism Kani harness).
 
@@ -89,7 +89,7 @@ Responsibilities: Axum HTTP server, resource CRUD, cron scheduler, security defa
 
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
-| `sandbox::path_guard` | `canonicalize_beneath_root(base, path)`; Err(WorkspaceEscape) on escape | CRITICAL | SS-13 |
+| `sandbox::path_guard` | `canonicalize_beneath_root(base, path)`; `Err(FerrochainError { code: "E-SBXD-001" })` on workspace escape | CRITICAL | SS-13 |
 | `sandbox::wasm` | WASM execution backend (default `sandbox-wasm` feature) | MEDIUM | SS-13 |
 | `sandbox::container` | Container execution backend (`sandbox-container` feature) | MEDIUM | SS-13 |
 | `sandbox::seatbelt` | macOS Seatbelt deny-by-default profile (NE-16) | MEDIUM | SS-13 |
@@ -142,9 +142,7 @@ search (keyword / vector / hybrid). Canonical trait: `MemoryStore`.
 | `memory::in_memory` | Ephemeral in-memory backend (test/dev) | MEDIUM | SS-15 |
 | `memory::search` | Keyword, vector, and hybrid search implementations | MEDIUM | SS-15 |
 
-**BC anchors:** BC-2.15.001–003. Canonical trait name: `MemoryStore` (not `BaseMemory`).
-`BaseMemory` is the legacy alias retained in api-surface for BC reference only; `MemoryStore`
-is the implementation contract per BC-2.15.001 Architecture Anchors.
+**BC anchors:** BC-2.15.001–003. Canonical trait name: `MemoryStore` per BC-2.15.001 Architecture Anchors.
 
 ## ferrochain-macros (ADR-008) — MEDIUM
 

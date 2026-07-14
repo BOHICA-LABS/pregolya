@@ -74,7 +74,7 @@ developer ceremony — the unsafe faster modes require a deliberate choice.
 |----|-------------|-------------------|
 | EC-001 | Caller passes `DurabilityTier::Async` explicitly | Accepted; `put_writes` submitted as futures; loop does not block on each task's write; futures joined on run exit |
 | EC-002 | Caller passes `DurabilityTier::Exit` explicitly | Accepted; zero `put_writes` mid-run; single `put` on graph exit; fastest, no crash recovery within a run |
-| EC-003 | `durability` field present in config but set to an unrecognized string | `Err(FerrochainError { category: ConfigError, message: "unknown durability tier: \"<value>\"" })` at run start |
+| EC-003 | `durability` field present in config but set to an unrecognized string | `Err(FerrochainError { category: VAL, message: "unknown durability tier: \"<value>\"" })` at run start |
 | EC-004 | Subgraph nested inside a root graph; no explicit durability on subgraph | Subgraph inherits parent's effective durability tier via `RunnableConfig` propagation |
 
 ## Canonical Test Vectors
@@ -84,7 +84,7 @@ developer ceremony — the unsafe faster modes require a deliberate choice.
 | `graph.invoke(input, RunnableConfig::default())` | Effective tier = `Sync`; each task's `put_writes` awaited to storage before next super-step; verified by timing storage queries | happy-path |
 | `graph.invoke(input, config.with_durability(DurabilityTier::Async))` | Effective tier = `Async`; background futures dispatched; throughput higher than Sync; all futures confirmed on run exit | edge-case |
 | `graph.invoke(input, config.with_durability(DurabilityTier::Exit))` | Effective tier = `Exit`; no `put_writes` during run; storage shows zero pending-writes records mid-run; one `put` record on exit | edge-case |
-| `graph.invoke(input, config.with_durability_str("turbo"))` | `Err(FerrochainError { category: ConfigError })` at run start; no execution | error |
+| `graph.invoke(input, config.with_durability_str("turbo"))` | `Err(FerrochainError { category: VAL })` at run start; no execution | error |
 
 ## Verification Properties
 

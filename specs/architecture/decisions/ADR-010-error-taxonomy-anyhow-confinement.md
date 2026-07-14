@@ -14,7 +14,7 @@ decisions: [D17]
 
 # ADR-010: Error Taxonomy and anyhow Confinement
 
-**Status:** Proposed (NE-16 / NE-03 / DI-014 resolution; finalizable)
+**Status:** Accepted
 
 ## Context
 

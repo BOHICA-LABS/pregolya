@@ -91,7 +91,7 @@ dispatch is integration-tested.
 | Module | Crate | Pure Part | Effectful Part |
 |--------|-------|-----------|---------------|
 | `graph::provenance` | ferrochain-graph | ProvenanceTag construction; route decision | GuardrailHook dispatch (user-injected) |
-| `graph::retry` | ferrochain-graph | Policy evaluation (allow/deny/reset) | Retry execution via scheduler |
+| `core::retry` | ferrochain-core | Policy evaluation: `ToolRetryPolicy`, `CircuitBreaker` state transitions (allow/deny/open/half-open), `global_limit` counter | Retry execution (actual re-invoke) is effectful; the pure policy layer returns `BreakerDecision` to the caller |
 | `checkpoint::saver` (trait impl) | ferrochain-checkpoint | put_writes validation | Backend I/O (sqlite/postgres/memory) |
 | `mcp::ingress` | ferrochain-mcp | Untrusted-ingress routing decision | GuardrailHook dispatch |
 

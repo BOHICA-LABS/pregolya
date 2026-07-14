@@ -15,7 +15,7 @@ supersedes: []
 
 # ADR-003: Checkpoint Durability Tiers
 
-**Status:** Proposed (D11.3 human steering; finalizable)
+**Status:** Accepted
 
 ## Context
 

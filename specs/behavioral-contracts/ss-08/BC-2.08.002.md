@@ -114,7 +114,7 @@ unhandled deserialization error.
 
 ### EC-005: bind_tools on model that does not support tool calling
 **Scenario:** `.bind_tools([tool])` is called on a model with `has_tool_calling = false`.
-**Expected behavior:** `bind_tools` returns `Err(FerrochainError { category: Validation,
+**Expected behavior:** `bind_tools` returns `Err(FerrochainError { category: VAL,
 message: "model <name> does not support tool calling" })` — it does not silently return
 a model that ignores the tools at inference time.
 
@@ -126,7 +126,7 @@ a model that ignores the tools at inference time.
 | TV-002 | agent loop: tool returns "22°C"; model follow-up | Final `AiMessage` text mentions "22" or "Paris"; loop terminates | test_agent_loop |
 | TV-003 | Zero-argument tool called with `tool_choice = ToolName` | `ToolCall { args: {} }` (empty object, not None) | No-argument tool |
 | TV-004 | `ToolMessage { status: Error, content: "timeout" }` fed back | Non-error `AiMessage` acknowledging failure | Error status ToolMessage |
-| TV-005 | `bind_tools([tool])` on model with `has_tool_calling = false` | `Err(FerrochainError { category: Validation })` | EC-005 guard |
+| TV-005 | `bind_tools([tool])` on model with `has_tool_calling = false` | `Err(FerrochainError { category: VAL })` | EC-005 guard |
 
 ## Verification Properties
 

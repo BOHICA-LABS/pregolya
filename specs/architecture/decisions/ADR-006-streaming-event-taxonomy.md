@@ -14,7 +14,7 @@ decisions: [D17]
 
 # ADR-006: Streaming Event Taxonomy
 
-**Status:** Proposed (CONFLICT-5 resolution; finalizable)
+**Status:** Accepted
 
 ## Context
 

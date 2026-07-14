@@ -336,7 +336,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 ferrochain is a Rust library framework, not a CLI tool. The public interface surface is:
 
 - **Public Rust traits:** `Runnable<Input, Output>`, `CheckpointSaver`, `GuardrailHook`,
-  `BudgetPolicy`, `BaseChatModel`, `Tool`, `BaseMemory`
+  `BudgetPolicy`, `BaseChatModel`, `Tool`, `MemoryStore`
 - **Error type:** `FerrochainError { component: Component, category: Category, retry_hint, code }`
 - **ferrochain-server:** First-party HTTP server with `/threads`, `/assistants`, `/runs`,
   `/runs/{id}/stream`, `/runs/{id}/resume`, `/schedules` endpoints
@@ -389,7 +389,7 @@ Summary:
 | E-CORE-001–099 | ferrochain-core | E-CORE-001 InvalidContentBlock, E-CORE-002 RunnableCompositionError |
 | E-GRAPH-001–099 | ferrochain-graph | E-GRAPH-001 InvalidUpdateError, E-GRAPH-002 NoActiveInterrupt |
 | E-CHKPT-001–099 | ferrochain-checkpoint | E-CHKPT-001 CheckpointWriteFailed, E-CHKPT-002 MonotonicClockRegression |
-| E-SERVER-001–099 | ferrochain-server | E-SERVER-001 PolicyNotEnforceable, E-SERVER-002 RunNotFound |
+| E-SERVER-001–099 | ferrochain-server | ~~E-SERVER-001 PolicyNotEnforceable~~ (retired — duplicate of E-SBXD-002; see error-taxonomy.md tombstone), E-SERVER-002 RunNotFound |
 | E-PROV-001–099 | ferrochain-\<provider\> | E-PROV-001 RateLimited, E-PROV-002 Timeout |
 | E-MCP-001–099 | ferrochain-mcp | E-MCP-001 ToolException, E-MCP-002 TransportError |
 | E-SPLIT-001–099 | ferrochain-splitters | E-SPLIT-001 ZeroChunkSize |
@@ -538,12 +538,12 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.14.004 | DI-009, NE-04 | ferrochain-core | P0 | U (CI lint) |
 | BC-2.14.005 | DI-010, NE-10 | ferrochain-core | P0 | U (CI lint) |
 | BC-2.14.006 | CAP-016, DI-014, NE-03 | ferrochain-core | P0 | U |
-| BC-2.15.001 | CAP-017 | ferrochain-graph | P2 | I |
-| BC-2.15.002 | CAP-017 | ferrochain-graph | P2 | I, P |
-| BC-2.15.003 | CAP-017 | ferrochain-graph | P2 | I |
-| BC-2.16.001 | CAP-018, NE-09 | ferrochain-graph | P2 | U, I |
-| BC-2.16.002 | CAP-018, NE-09 | ferrochain-graph | P2 | U |
-| BC-2.16.003 | CAP-018, NE-09 | ferrochain-graph | P2 | U, I |
+| BC-2.15.001 | CAP-017 | ferrochain-memory | P2 | I |
+| BC-2.15.002 | CAP-017 | ferrochain-memory | P2 | I, P |
+| BC-2.15.003 | CAP-017 | ferrochain-memory | P2 | I |
+| BC-2.16.001 | CAP-018, NE-09 | ferrochain-core | P2 | U, I |
+| BC-2.16.002 | CAP-018, NE-09 | ferrochain-core | P2 | U |
+| BC-2.16.003 | CAP-018, NE-09 | ferrochain-core | P2 | U, I |
 | BC-2.17.001 | CAP-019, DI-001, DI-005, DI-007 | ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox | P2 | K |
 | BC-2.17.002 | CAP-019 | ferrochain-graph, ferrochain-checkpoint | P2 | F |
 | BC-2.08.010 | CAP-002, ADR-004, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |

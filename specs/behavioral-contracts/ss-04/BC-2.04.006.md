@@ -83,7 +83,7 @@ the adk-rust identity-triple collapse is the explicit counter-example.
 |----|-------------|-------------------|
 | EC-001 | Two threads `A` and `B` share the same `checkpoint_ns` and `checkpoint_id` | `get_tuple({A, ns, id})` and `get_tuple({B, ns, id})` return independent results; no cross-contamination |
 | EC-002 | Root namespace `checkpoint_ns = ""` and subgraph namespace `checkpoint_ns = "sub"` on the same thread | They are independent namespaces; writes to one never appear in the other; both present in `list` scoped to `thread_id` |
-| EC-003 | `get_tuple` called with `RunnableConfig` missing `checkpoint_ns` field | `checkpoint_ns` defaults to `""`; the root namespace is queried; no error if the root namespace exists; `Err(FerrochainError { category: ConfigError })` if `thread_id` is also missing |
+| EC-003 | `get_tuple` called with `RunnableConfig` missing `checkpoint_ns` field | `checkpoint_ns` defaults to `""`; the root namespace is queried; no error if the root namespace exists; `Err(FerrochainError { category: VAL })` if `thread_id` is also missing |
 | EC-004 | Concurrent writes from the same `thread_id` to different `checkpoint_ns` values | Each namespace is independent; no locking across namespaces required; both writes succeed |
 
 ## Canonical Test Vectors

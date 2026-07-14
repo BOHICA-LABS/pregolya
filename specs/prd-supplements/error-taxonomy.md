@@ -109,7 +109,7 @@ primary_consumers: [implementer, test-writer]
 
 | Error Code | Category | Severity | BC Anchor | RetryHint | Message Format |
 |-----------|----------|----------|-----------|-----------|---------------|
-| E-SERVER-001 | POLICY | broken | BC-2.13.003 | Never | `PolicyNotEnforceable: strict sandbox policy requires enforcing backend; process backend is not permitted` |
+| ~~E-SERVER-001~~ | ~~POLICY~~ | ~~broken~~ | ~~BC-2.13.003~~ | ~~Never~~ | ~~`PolicyNotEnforceable: ...`~~ — **RETIRED** (ADV-P1D-PASS-4 fix, 2026-07-14): duplicate of E-SBXD-002; mis-anchored to SERVER component when the error is emitted by ferrochain-sandbox. BC-2.13.003 emits E-SBXD-002; E-SERVER-001 was never used. Tombstone per append-only numbering policy. |
 | E-SERVER-002 | VAL | broken | BC-2.12.003 | Never | `RunNotFound: run '<run_id>' does not exist in thread '<thread_id>'` |
 | E-SERVER-003 | VAL | broken | BC-2.12.001 | Never | `ThreadNotFound: thread '<thread_id>' does not exist` |
 | E-SERVER-004 | AUTH | broken | BC-2.12.005 | Never | `DebugRouteUnauthorized: debug/introspection route requires explicit opt-in configuration` |
@@ -135,6 +135,7 @@ primary_consumers: [implementer, test-writer]
 | E-PROV-003 | TRANSPORT | broken | BC-2.08.007 | `StreamInterrupted: TCP connection to '<provider>' reset mid-stream after <tokens> tokens` |
 | E-PROV-004 | AUTH | broken | BC-2.08.004 | `ProviderAuthFailed: '<provider>' rejected API key — check credentials` |
 | E-PROV-005 | VAL | broken | BC-2.08.003 | `StructuredOutputParseError: provider response did not match expected JSON schema: <path> — <reason>` |
+| E-PROV-006 | VAL | broken | BC-2.08.004 | `ContextLengthExceeded: provider '<provider>' rejected request — context length <actual> exceeds maximum <limit> tokens` |
 
 ### Component: MCP (ferrochain-mcp)
 
@@ -156,7 +157,7 @@ primary_consumers: [implementer, test-writer]
 
 | Error Code | Category | Severity | BC Anchor | Message Format |
 |-----------|----------|----------|-----------|---------------|
-| E-SBXD-001 | SECURITY | broken | BC-2.13.005 | `WorkspaceEscape: resolved path '<resolved>' escapes workspace root '<root>'` |
+| E-SBXD-001 | SECURITY | broken | BC-2.13.005 (also BC-2.13.004/VP-003 — shared canonicalize_beneath_root code path; VP-003 verifies the guard, BC-2.13.005 specifies the error surface) | `WorkspaceEscape: resolved path '<resolved>' escapes workspace root '<root>'` |
 | E-SBXD-002 | POLICY | broken | BC-2.13.003 | `PolicyNotEnforceable: execution policy requires enforcing sandbox; non-enforcing backend is configured` |
 | E-SBXD-003 | INTERNAL | broken | BC-2.13.001 | `SandboxInitFailed: cannot initialize WASM/container sandbox backend: <reason>` |
 

@@ -47,23 +47,24 @@ support.
    implements the error-fidelity conformance fixture.
 3. A record/replay HTTP fixture layer can inject pre-recorded error responses (HTTP 400,
    401, 429, 503) for the provider's error JSON envelope format.
-4. `FerrochainError` is defined with at minimum the following `category` variants:
-   Auth, Validation, ContextOverflow, RateLimit, Provider, Timeout, Refusal, Internal.
+4. `FerrochainError` is defined with at minimum the following `category` variants
+   (using canonical taxonomy codes from error-taxonomy.md):
+   AUTH, VAL (including E-PROV-006 ContextLengthExceeded subtype), RATE, TRANSPORT (provider 5xx), TIMEOUT, POLICY (refusal), INTERNAL.
 
 ## Postconditions
 
-1. A provider 401/403 response maps to `Err(FerrochainError { category: Auth, … })`.
+1. A provider 401/403 response maps to `Err(FerrochainError { category: AUTH, … })`.
    The error message does NOT contain the raw API key value (DI-010 / NFR-005).
 2. A provider "context length exceeded" / "too many tokens" 400 response maps to
-   `Err(FerrochainError { category: ContextOverflow, … })`. The category is
-   `ContextOverflow`, not the generic `Provider` category, so callers can distinguish
-   this specific failure and apply summarization/trim middleware.
+   `Err(FerrochainError { category: VAL, … })`. The `code` field must be set to a
+   context-overflow-specific error code so callers can distinguish this VAL subtype
+   from other validation errors and apply summarization/trim middleware.
 3. A provider 429 (rate limit) response maps to
-   `Err(FerrochainError { category: RateLimit, retry_hint: Later(Duration) })`.
+   `Err(FerrochainError { category: RATE, retry_hint: Later(Duration) })`.
    The `retry_hint` field carries the `Retry-After` header value when present.
-4. A provider 5xx response maps to `Err(FerrochainError { category: Provider, … })`.
+4. A provider 5xx response maps to `Err(FerrochainError { category: TRANSPORT, … })`.
 5. A provider-side validation error (e.g., invalid model name, unsupported parameter)
-   maps to `Err(FerrochainError { category: Validation, … })` — not silently returning
+   maps to `Err(FerrochainError { category: VAL, … })` — not silently returning
    an empty or stub `AiMessage`.
 6. No error variant causes a panic in non-test code.
 
@@ -72,10 +73,11 @@ support.
 - **DI-014 (Error Propagation — No Silent Swallowing):** All provider error responses
   propagate as `Err(FerrochainError)`. A provider HTTP 4xx/5xx never produces `Ok(msg)`
   with a truncated or empty content.
-- `FerrochainError::category` is always populated; the generic `Provider` category is
-  a fallback used ONLY when no more specific category applies.
-- The `ContextOverflow` category is reserved exclusively for the "too many tokens"
-  semantic — providers must not map other 400 errors to `ContextOverflow`.
+- `FerrochainError::category` is always populated; `TRANSPORT` is the fallback for
+  generic provider 5xx responses when no more specific category applies.
+- Context-overflow (too many tokens) errors use `category: VAL` with `code: E-PROV-006`
+  (ContextLengthExceeded); this distinguishes the subtype from other VAL errors —
+  providers must not map other 400 errors to E-PROV-006.
 - `retry_hint: RetryHint::Later(Duration)` is only set when the provider response
   actually specifies a retry delay; otherwise `RetryHint::Maybe` or `RetryHint::Never`.
 
@@ -83,49 +85,49 @@ support.
 
 ### EC-001: Auth error must not reveal API key
 **Scenario:** A 401 error response is returned while the `ApiKey` newtype is in scope.
-**Expected behavior:** `FerrochainError { category: Auth, message: "authentication failed" }`.
+**Expected behavior:** `FerrochainError { category: AUTH, message: "authentication failed" }`.
 The message and `Debug` representation do NOT include the raw key string.
 The `{:?}` format of the associated credential shows `"<redacted>"`.
 
 ### EC-002: Context overflow vs generic validation error
 **Scenario:** The provider returns HTTP 400 with body `{"error": {"type": "invalid_request_error",
 "message": "This model's maximum context length is 128000 tokens."}}`.
-**Expected behavior:** `Err(FerrochainError { category: ContextOverflow, … })` — not
-`Err(FerrochainError { category: Validation, … })`.
+**Expected behavior:** `Err(FerrochainError { category: VAL, code: E-PROV-006, … })` — not
+a generic VAL error; E-PROV-006 (ContextLengthExceeded) distinguishes context overflow from other VAL subtypes so callers can apply summarization/trim middleware.
 
 ### EC-003: Rate limit with Retry-After header
 **Scenario:** The provider returns HTTP 429 with `Retry-After: 60` header.
-**Expected behavior:** `Err(FerrochainError { category: RateLimit, retry_hint:
+**Expected behavior:** `Err(FerrochainError { category: RATE, retry_hint:
 RetryHint::Later(Duration::from_secs(60)) })`.
 
 ### EC-004: Provider 500 internal error
 **Scenario:** The provider returns HTTP 500 with an HTML error page.
-**Expected behavior:** `Err(FerrochainError { category: Provider, message: "provider
+**Expected behavior:** `Err(FerrochainError { category: TRANSPORT, message: "provider
 returned HTTP 500", source: Some(…) })`. The raw HTML is captured as `source`, not
 as the `message` (avoid multi-KB error messages in the primary field).
 
 ### EC-005: Unknown error format (JSON but unexpected schema)
 **Scenario:** The provider returns HTTP 400 with a JSON body that does not match the
 known provider error schema.
-**Expected behavior:** `Err(FerrochainError { category: Provider, message: "unknown error
+**Expected behavior:** `Err(FerrochainError { category: TRANSPORT, message: "unknown error
 format: <first 256 chars>" })`. No panic. The partial body is included for diagnostics.
 
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | Cassette: HTTP 401 | `Err(FerrochainError { category: Auth })` — key not in message | Auth error |
-| TV-002 | Cassette: HTTP 400 "context length exceeded" | `Err(FerrochainError { category: ContextOverflow })` | Context overflow |
-| TV-003 | Cassette: HTTP 429 with `Retry-After: 30` | `Err(FerrochainError { category: RateLimit, retry_hint: Later(30s) })` | Rate limit |
-| TV-004 | Cassette: HTTP 500 | `Err(FerrochainError { category: Provider })` | Provider 5xx |
-| TV-005 | Cassette: HTTP 400 unknown JSON body | `Err(FerrochainError { category: Provider })` — no panic | Unknown format |
+| TV-001 | Cassette: HTTP 401 | `Err(FerrochainError { category: AUTH })` — key not in message | Auth error |
+| TV-002 | Cassette: HTTP 400 "context length exceeded" | `Err(FerrochainError { category: VAL, code: E-PROV-006 })` | Context overflow (E-PROV-006 ContextLengthExceeded) |
+| TV-003 | Cassette: HTTP 429 with `Retry-After: 30` | `Err(FerrochainError { category: RATE, retry_hint: Later(30s) })` | Rate limit |
+| TV-004 | Cassette: HTTP 500 | `Err(FerrochainError { category: TRANSPORT })` | Provider 5xx |
+| TV-005 | Cassette: HTTP 400 unknown JSON body | `Err(FerrochainError { category: TRANSPORT })` — no panic | Unknown format |
 
 ## Verification Properties
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
 | VP-BC208004-01 | Auth error does not contain API key in message or Debug output | Unit test (credential redaction audit) | Wave 2 |
-| VP-BC208004-02 | ContextOverflow is distinguishable from generic Validation category | Integration test (cassette: 400 context length) | Wave 2 |
+| VP-BC208004-02 | Context overflow (VAL + specific code) is distinguishable from generic VAL errors at runtime | Integration test (cassette: 400 context length) | Wave 2 |
 | VP-BC208004-03 | All provider HTTP 4xx/5xx produce Err, never Ok | Property test (fuzz error body shapes) | Wave 2 |
 
 ## Related BCs

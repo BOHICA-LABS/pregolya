@@ -14,7 +14,7 @@ decisions: [D17]
 
 # ADR-009: Budget Governance Engine Placement
 
-**Status:** Proposed (D17-Q4; finalizable)
+**Status:** Accepted
 
 ## Context
 

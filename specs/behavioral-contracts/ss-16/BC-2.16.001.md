@@ -10,7 +10,7 @@ origin: greenfield
 priority: P2
 subsystem: SS-16
 capability: CAP-018
-wave: Post-v1
+wave: 2
 phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -147,7 +147,6 @@ _[to be filled after story decomposition]_
 | NE References | NE-09 (P-63 REJECT), P-71 (ADOPT — shared retry combinator) |
 | FM References | FM-012 (Tool-Retry Loops Forever) |
 | Priority | P2 |
-| Wave | Post-v1 |
+| Wave | Wave 2 |
 | Test Types | U (unit), P (property) |
 | Module | [architect to assign — ferrochain-core] |
-| Note | Error code E-RETRY-001 requires addition to error-taxonomy.md Component: RETRY |

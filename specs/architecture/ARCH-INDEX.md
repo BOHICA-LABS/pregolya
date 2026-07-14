@@ -28,7 +28,7 @@ decisions: [D4, D6, D9, D11, D13, D17]
 | Section | File | Primary Consumer | Purpose |
 |---------|------|-----------------|---------|
 | System Overview | system-overview.md | orchestrator, all agents | Vision, principles, crate topology, constraints |
-| Module Decomposition | module-decomposition.md | story-writer, implementer | 12-crate catalog, responsibilities, wave alignment |
+| Module Decomposition | module-decomposition.md | story-writer, implementer | 18-crate catalog, responsibilities, wave alignment |
 | Dependency Graph | dependency-graph.md | story-writer, consistency-validator | Crate DAG, topological build order |
 | API Surface | api-surface.md | test-writer, implementer | Public Rust traits, ferrochain-server endpoints, Cargo features |
 | Verification Architecture | verification-architecture.md | formal-verifier, architect | Provable Properties Catalog, P0/P1 VP list, proof strategy |
@@ -72,7 +72,7 @@ decisions: [D4, D6, D9, D11, D13, D17]
 | SS-13 | Sandboxed Tool Execution | 2.13 | ferrochain-sandbox | BC-2.13.001–006 | 1 |
 | SS-14 | Typed Error Taxonomy | 2.14 | ferrochain-core | BC-2.14.001–006 | 1 |
 | SS-15 | Long-Horizon Memory | 2.15 | ferrochain-memory | BC-2.15.001–003 | 2 |
-| SS-16 | Tool Retry + Circuit Breaker | 2.16 | ferrochain-graph | BC-2.16.001–003 | 2 |
+| SS-16 | Tool Retry + Circuit Breaker | 2.16 | ferrochain-core | BC-2.16.001–003 | 2 |
 | SS-17 | Formal Verification Pipeline | 2.17 | xtask, ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox | BC-2.17.001–002 | 6 |
 
 ## Canonical Crate Roster (Source of Truth)

@@ -58,7 +58,7 @@ note: "This is the architecture-view criticality. The prd-supplements/module-cri
 | sandbox-wasm | ferrochain-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
 | sandbox-policy | ferrochain-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
 | ferrochain-standard-tests | ferrochain-standard-tests | SS-08 | MEDIUM | — | ≥ 80% | P5 |
-| retry | ferrochain-graph | SS-16 | MEDIUM | — | ≥ 80% | P5 |
+| retry | ferrochain-core | SS-16 | MEDIUM | — | ≥ 80% | P5 |
 | memory-store (MemoryStore) | ferrochain-memory | SS-15 | MEDIUM | — | ≥ 80% | P5 |
 | event_emitter | ferrochain-graph | SS-06 | MEDIUM | — | ≥ 80% | P5 |
 | xtask | xtask | SS-17 | LOW | — | ≥ 70% | advisory |
