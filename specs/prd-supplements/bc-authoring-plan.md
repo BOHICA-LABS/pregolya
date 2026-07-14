@@ -516,3 +516,44 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     Both `updated_at` and `completed_at` must appear in all three files.
 
     Source of truth: ADV-P1D-PASS-24.md §WIRE-OBJECT class.
+
+19. **Retired-identifier residue grep (added P26 — standing gate):**
+    Whenever a rename canon is set (method name, field name, type identifier, route path),
+    the fix burst MUST grep the ENTIRE `.factory/specs/` tree — including
+    `architecture/decisions/` ADRs AND all BC test vectors — for the retired identifier
+    and drain every hit before the burst closes. A changelog or census-rule mention is
+    not a hit; only live (non-~~strikethrough~~, non-changelog, non-census-rule) occurrences
+    are violations.
+
+    **Current retired-identifier list** (add to this list whenever a new rename is canonized):
+    | Retired Identifier | Canonical Replacement | Canon Set In |
+    |--------------------|----------------------|-------------|
+    | `to_problem_detail` | `to_problem` | F-P25-04 (api-surface.md); F-P26-02 (ADR-010) |
+    | `risk_tier` | `action_risk` | F-P25-06 (Run.interrupt sub-field); F-P26-03 (BC-2.05.001 TV-005) |
+    | `node_id` (in interrupt context) | `node_name` | F-P25-06 (Run.interrupt sub-field) |
+    | `{schedule_id}` (flat run path param) | thread-nested `runs/` paths | F-P23-01 |
+    | `CheckpointStore` | `CheckpointSaver` | P18 shared-type census |
+    | `RunConfig` | `RunnableConfig` | P18 shared-type census |
+    | `BaseCheckpointSaver` | `CheckpointSaver` | P18 shared-type census |
+    | `AIMessage` (Rust context) | `AiMessage` | P18 shared-type census |
+    | bare `\bCheckpointer\b` | `CheckpointSaver` | P20 shared-type census |
+    | `X-Debug-Key` header | `Authorization: Bearer <key>` | F-P26-04 |
+    | `/debug/*` path | `/_debug` | F-P26-04 |
+
+    Census command: `grep -rn "to_problem_detail\|risk_tier\|X-Debug-Key" .factory/specs/ | grep -v "~~\|changelog\|Census command\|retired.*list\|Retired Identifier"` — output must be ZERO live occurrences.
+    Source: ADV-P1D-PASS-26 §F-P26-02, §F-P26-03, §F-P26-04.
+
+20. **AUTH/POLICY category re-sweep (added P26 — standing gate):**
+    Any edit to a 401/403/409 table row in interface-definitions.md §HTTP Status Codes,
+    OR any change to an E-code's `category` field in error-taxonomy.md, MUST trigger a
+    full category→status census for ALL error codes in the affected categories across ALL
+    namespaces (E-CORE, E-GRAPH, E-CHKPT, E-SERVER, E-PROV, E-MCP, E-SPLIT, E-SBXD,
+    E-RETRY, E-CRON, E-MEMORY, E-BUDGET — not just the namespace being edited).
+
+    The census must verify:
+    1. Every AUTH-category code: maps to 401 (categorical) or has a documented per-endpoint override in BC-2.14.002 PC3.
+    2. Every POLICY-category code: maps to 403 (categorical) or has a documented per-endpoint override.
+    3. Every CONCURRENCY-category code: maps to 409 (categorical) or has a documented per-endpoint override.
+    4. No code appears in two conflicting rows of the HTTP status table without an explicit disambiguation note.
+
+    Source: ADV-P1D-PASS-26 §F-P26-05 (E-PROV-004 orphan discovery triggered this gate).

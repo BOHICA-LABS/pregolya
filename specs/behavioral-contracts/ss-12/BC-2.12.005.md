@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.005
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,8 @@ inputs:
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
 input-hash: "b506940d5471ef7d546044ca7eaa600c281dac7c933cddffe52f1914f4be2ae7"
+changelog:
+  - "1.1 (ADV-P1D-PASS-26): F-P26-04 removed debug_route_path reference from invariant — debug route is fixed at /_debug (minimal config surface decision; TVs do not depend on a configurable path)."
 ---
 
 # BC-2.12.005: SecurityConfig::default() Denies CORS; Debug Route Gated on Explicit Opt-In Key (NE-14)
@@ -75,8 +77,10 @@ Separately, for the opt-in path:
 - **DI-013 (Secure Server Defaults):** `SecurityConfig::default()` sets `allowed_origins`
   to an empty list (CORS denied); `debug_route_key` is `None` (debug route inaccessible);
   unauthenticated access to the debug route returns `403`, never `200` or `404`.
-- The debug route path is fixed at `/_debug` (or configured via `debug_route_path`) and
-  cannot be served without the key regardless of middleware ordering.
+- The debug route path is fixed at `/_debug` and cannot be served without the key
+  regardless of middleware ordering. `debug_route_path` is NOT a config option — the
+  path is a fixed constant. (F-P26-04: removed configurable-path reference; decision:
+  minimal config surface + secure-default simplicity; TVs all use `/_debug` hardcoded.)
 - Constructing `SecurityConfig` with an explicit `allowed_origins: [AllowOrigin::Any]`
   (CORS wildcard) is permitted for local-dev use cases, but the server emits a `WARN`
   log on startup: `"SecurityConfig: CORS wildcard configured — do not use in production"`.

@@ -322,4 +322,14 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 
 **RESUME NEXT-ACTION (at time of archival):** adversary pass 24 (fresh context): sibling-check pass-23 (endpoint census re-run + status-code census re-run), rotate 4 standing censuses, probe: request/response JSON schema coherence vs BC postconditions.
 
+---
+
+### Archived Checkpoint — Burst 101 (Pass 25)
+
+"ferrochain Phase 1 spec crystallization, step 1d adversarial convergence IN PROGRESS: 25 passes / 25 fix bursts, trajectory 14→...→1→1→2→7 (pass 25 opened two new orthogonal axes — categorical-vs-per-endpoint HTTP status authority and embedded wire-object sub-fields — both drained + gated same pass). Counter 0/3 (strict-zero D14). NEXT ACTION: dispatch adversary pass 26 — fresh context, sibling-check pass-25 (HTTP-status dual-authority census re-run incl. BC-2.14.002 precedence rule; Run.interrupt/InterruptPayload sub-field census re-run), rotate 4 censuses, free-choice orthogonal probe; CLEAN advances counter 1/3; loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+
+**WORKSTREAM (at time of archival):** Burst 101 COMPLETE. Phase 1d pass 25: 7 findings fixed (3 HIGH + 4 MED; NEW CLASS: HTTP-status dual-authority incoherence). CANON: E-SERVER-016→503; E-SERVER-004 POLICY/403 (401 reserved future OAuth); FerrochainError.code String; to_problem() canonical; InterruptPayload.interrupt_id + Run.interrupt 8 sub-fields; 201/204/502/503/504 status rows added. Gates 25→27 (guideline #18 sub-field extension + §17-C positive-coverage assertion). Trajectory ...→2→7.
+
+**WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 101 | Counter: 0/3
+
 **WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 99 | Counter: 0/3

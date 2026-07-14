@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -11,6 +11,7 @@ priority: P0
 subsystem: SS-14
 changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-01 PC3 add per-endpoint override block (E-SERVER-016→503); OBS-1 invariant precedence carve-out added."
+  - "1.2 (ADV-P1D-PASS-26): F-P26-01 PC3 Known-overrides enumeration expanded to all 8 per-endpoint override classes; E-SERVER-004 removed from invariant divergence-example list (POLICY→403 is the categorical default, not a divergence)."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -71,7 +72,28 @@ requiring the HTTP layer to reach into the error's internal fields directly.
    **Per-endpoint status overrides (F-P25-01 — OBS-1 carve-out):** A resource BC may specify
    a status code that differs from the categorical default above. The per-endpoint status takes
    precedence; the categorical map is the fallback for errors with no per-endpoint specification.
-   Known overrides as of v1.0.0:
+   Known overrides as of v1.0.0 (complete enumeration — F-P26-01):
+   - `E-SERVER-002 (RunNotFound)` → **404** despite `Category::Val` → 400.
+     Rationale: "not found" responses use 404 per REST convention; 400 is for input-shape errors.
+     Source: BC-2.12.003; interface-definitions.md §HTTP Status Codes 404 row.
+   - `E-SERVER-003 (ThreadNotFound)` → **404** despite `Category::Val` → 400.
+     Source: BC-2.12.001; interface-definitions.md §HTTP Status Codes 404 row.
+   - `E-SERVER-006 (ScheduleNotFound)` → **404** despite `Category::Val` → 400.
+     Source: BC-2.12.004; interface-definitions.md §HTTP Status Codes 404 row.
+   - `E-SERVER-008 (ThreadStateConflict)` → **409** despite `Category::Policy` → 403.
+     Rationale: the conflict is a state-machine constraint (active run present), not a
+     security or permission gate — 409 Conflict is semantically correct.
+     Source: BC-2.12.001; interface-definitions.md §HTTP Status Codes 409 row.
+   - `E-SERVER-009 (AssistantNotFound)` — context-dependent dual override:
+     - Direct lookup (`GET /assistants/{id}`) → **404** despite `Category::Val` → 400.
+     - Run creation body (invalid `assistant_id` in POST body) → **422** despite `Category::Val` → 400.
+     Source: BC-2.12.002, BC-2.12.003 PC3; interface-definitions.md §HTTP Status Codes 404 + 422 rows.
+   - `E-SERVER-010 (AssistantVersionNotFound)` → **404** despite `Category::Val` → 400.
+     Source: BC-2.12.002; interface-definitions.md §HTTP Status Codes 404 row.
+   - `E-SERVER-011 (GraphNotFound)` → **422** despite `Category::Val` → 400.
+     Rationale: graph_id in assistant creation body is a semantic (not structural) validation
+     failure — the body is well-formed but references an unregistered resource.
+     Source: BC-2.12.002 EC-005; interface-definitions.md §HTTP Status Codes 422 row.
    - `E-SERVER-016 (IdempotencyLockTimeout)` → **503** despite `Category::Timeout` → 504.
      Rationale: the lock timeout is a transient server-side serialization delay, not a
      provider/upstream timeout — 503 is the correct retryable-service-unavailable code.
@@ -94,10 +116,12 @@ requiring the HTTP layer to reach into the error's internal fields directly.
 - The HTTP status code mapping is defined once in ferrochain-server. A per-endpoint status
   specified in a resource BC overrides the categorical default; the categorical map is the
   fallback for errors with no per-endpoint specification. Legitimate per-endpoint divergences
-  (e.g., E-SERVER-016 TIMEOUT→503, E-SERVER-009 VAL→404 for direct lookup, E-SERVER-004
-  POLICY→403 debug route) must be documented in PC3 and interface-definitions.md §HTTP Status
-  Codes. The categorical map itself must not diverge; per-endpoint overrides must be explicit.
-  Source: F-P25-01, OBS-1, ADV-P1D-PASS-25.
+  (e.g., E-SERVER-016 TIMEOUT→503, E-SERVER-009 VAL→404 for direct lookup,
+  E-SERVER-008 POLICY→409 for thread state conflict) must be documented in PC3 and
+  interface-definitions.md §HTTP Status Codes. Note: E-SERVER-004 POLICY→403 is NOT a
+  divergence — POLICY→403 is the categorical default and requires no carve-out.
+  The categorical map itself must not diverge; per-endpoint overrides must be explicit.
+  Source: F-P25-01, OBS-1, ADV-P1D-PASS-25; F-P26-01, ADV-P1D-PASS-26.
 
 ## Edge Cases
 

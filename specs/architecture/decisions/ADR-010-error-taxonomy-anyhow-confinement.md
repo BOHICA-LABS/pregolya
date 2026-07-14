@@ -69,7 +69,10 @@ error swallowing), and the BC-2.14.003 CI lint gate.
 - Internal module errors use `thiserror`-derived enums.
 - The `From<SomeInternalError> for FerrochainError` impl provides the conversion boundary.
 - `anyhow` appears ONLY in `xtask/Cargo.toml` and integration test harness crates.
-- RFC-7807 emission (BC-2.14.002): `FerrochainError::to_problem_detail()` serializes to
+- RFC-7807 emission (BC-2.14.002): `FerrochainError::to_problem()` serializes to
   `application/problem+json` for ferrochain-server error responses.
+  **Correction (F-P26-02, ADV-P1D-PASS-26, propagating F-P25-04 canon):** `to_problem_detail()`
+  was the retired method name; `to_problem()` is authoritative per BC-2.14.002 PC1 and
+  api-surface.md §Error Type.
 - `FerrochainError::source()` returns the original cause (for logging); MUST NOT be
   exposed in HTTP responses (credential leak risk per DI-010).

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.001
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,8 @@ inputs:
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
 input-hash: "d64cbc51646a106ef27ed17c9453ef6cba2ef83e297e56ecdb50f2e5dd50a39a"
+changelog:
+  - "1.1 (ADV-P1D-PASS-26): F-P26-03 TV-005 field name risk_tier→action_risk (propagation of F-P25-06 action_risk canon; retired field name drained per RETIRED-IDENTIFIER RESIDUE GREP gate)."
 ---
 
 # BC-2.05.001: Interrupt Suspension with Durable State Persistence
@@ -114,7 +116,7 @@ is returned. The graph does not proceed and does not leave a partial checkpoint.
 | TV-002 | Same thread_id resumed after process kill+restart; call `Command(resume="yes")` | Node re-executes from its start; `interrupt()` call inside returns `"yes"` without raising | Durable persistence across restart — DI-003 + §3.5 |
 | TV-003 | `interrupt()` called inside a graph compiled without `CheckpointSaver` | `Err(E-GRAPH-016 InterruptWithoutCheckpointer)` returned before node executes | Precondition violation |
 | TV-004 | Two nodes in a super-step — only node B calls `interrupt()`; node A has completed | Checkpoint reflects node A's writes via `put_writes` (durable); run halts at node B interrupt | Partial-step durability — completed tasks' writes are not lost |
-| TV-005 | `interrupt()` called with a structured payload `{ "risk_tier": "High", "action": "isolate_host" }` | Interrupt payload is serialized to msgpack; checkpoint stores typed struct | Structured interrupt value round-trip |
+| TV-005 | `interrupt()` called with a structured payload `{ "action_risk": "High", "action": "isolate_host" }` | Interrupt payload is serialized to msgpack; checkpoint stores typed struct | Structured interrupt value round-trip (F-P26-03: field name corrected from `risk_tier` to `action_risk` per F-P25-06 canon) |
 
 ## Verification Properties
 

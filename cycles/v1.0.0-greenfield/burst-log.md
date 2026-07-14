@@ -827,3 +827,50 @@ Pass 25 NOT CLEAN — 7 findings (3 HIGH + 4 MED) + 3 observations. ALL FIXED sa
 - Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25)
 
 **State changes:** convergence passes 24→25, fix bursts 24→25, trajectory →7 (P1D-25), session checkpoint replaced (burst 100 archived), step row pass 20 archived to burst-log. Gates 25→27.
+
+---
+
+### Archived Step Row — Pass 21 (rotated out of STATE.md at burst 102)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1d pass 21 + fix burst (capability-tier census) | adversary + BA | COMPLETE | Pass 21: NOT CLEAN — 1 HIGH (F-P21-01 CAP-012/013/016 stuck P1/Wave-2 in L2 while D17 elevation made all constituent BCs P0; NEW CLASS: capability-tier ↔ BC-priority). Fixed + relocated + 19-CAP census drained (16/3/0). All other censuses + 3 novel probes PASS (inputs-arrays, holdout-vs-CAP, prose reads converged). Trajectory ...→3→1. Convergence 0/3. Gates 22. Burst 97. |
+
+---
+
+## Burst 102 — Phase 1d Pass 26 + Fix Burst (AUTH-category orphan + debug-route auth-mechanism)
+
+**Date:** 2026-07-14
+**Agents:** adversary (pass 26) + product-owner (fix) + state-manager (STATE update)
+**Files touched:** specs/behavioral-contracts/ss-14/BC-2.14.002.md, specs/architecture/decisions/ADR-010-error-taxonomy-anyhow-confinement.md, specs/behavioral-contracts/ss-05/BC-2.05.001.md, specs/prd-supplements/interface-definitions.md, specs/behavioral-contracts/ss-12/BC-2.12.005.md, specs/prd-supplements/bc-authoring-plan.md, cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-26.md (NEW), STATE.md, cycles/v1.0.0-greenfield/burst-log.md
+
+### Summary
+
+Pass 26 NOT CLEAN — 5 MED findings + 3 observations applied. ALL FIXED same burst. Pass-25 fixes held except 3 propagation residues (to_problem_detail in ADR-010, risk_tier in BC-2.05.001 TV-005). NEW CLASS: AUTH-category orphan (BC-2.14.002 PC3 enumerated only 1-of-8 per-endpoint overrides despite the BC's own invariant requiring all). Two new standing gates added (gate #19 retired-identifier residue grep + gate #20 AUTH/POLICY category re-sweep). Gates total now 29. Counter remains 0/3.
+
+### Findings Summary
+
+| ID | Severity | Finding | Fix |
+|----|----------|---------|-----|
+| F-P26-01 | MED | BC-2.14.002 PC3 override list enumerated only 1 endpoint despite BC's own invariant requiring all 8 per-endpoint overrides to be listed | All 8 override endpoints explicitly enumerated in PC3 |
+| F-P26-02 | MED | to_problem_detail identifier residue in ADR-010 — retired name from pass-25 rename sweep | Replaced with to_problem() canonical name throughout ADR-010 |
+| F-P26-03 | MED | risk_tier field residue in BC-2.05.001 TV-005 — retired field name from prior sweep | Replaced with canonical field name throughout TV-005 |
+| F-P26-04 | MED | debug-route three-axis contradiction: auth mechanism (Bearer vs API-key vs none), path (/_debug vs configurable debug_route_path), and scope all inconsistent across BC-2.12.005 + interface-definitions | Canon: Authorization: Bearer <token>; path fixed at /_debug (debug_route_path config key removed); scope = local-only |
+| F-P26-05 | MED | 401 row in categorical status table falsely denied E-PROV-004 AUTH — table said 401 was reserved for future OAuth only, but E-PROV-004 is a real authentication error needing 401 categorical-fallback | 401 row updated to categorical-fallback form: "authentication required — no credential provided or credential malformed" covering E-PROV-004 |
+| OBS-P26-01 | OBS | 422 row wildcard could overlap 500-class — VAL E-GRAPH codes narrowed to explicit list of 8 | 422 row enumerated to 8 specific VAL E-GRAPH codes |
+| OBS-P26-02 | OBS | E-CRON-001/003 omission note: cron codes not represented in status table | Omission noted; routed to bc-authoring-plan |
+| OBS-P26-03 | OBS | E-PROV-005/006 absent from 400 row | Added to 400 row |
+
+### New Standing Gates (post-burst 102)
+
+- Gate #19: Retired-identifier residue grep — full-tree grep for known-retired identifiers (to_problem_detail, risk_tier, and any future retired names) before every adversary pass
+- Gate #20: AUTH/POLICY category re-sweep — verify AUTH + POLICY error-code categorization is consistent with 401/403 canonical split across all BCs
+
+### Convergence Status After Burst 102
+
+- Phase 1d passes: 26 (NOT CLEAN)
+- Fix bursts: 26
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26)
+
+**State changes:** convergence passes 25→26, fix bursts 25→26, trajectory →5 (P1D-26), session checkpoint replaced (burst 101 archived), step row pass 21 archived to burst-log. Gates 27→29.
