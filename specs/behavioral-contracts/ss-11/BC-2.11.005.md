@@ -8,12 +8,12 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 phase: 1a
 inputs:
-  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "440509de68af4b43d3e5bcd17796af81a6fa292b302fd9b23c07afe546aae32c"
+input-hash: "e03b672"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11
@@ -109,7 +109,7 @@ single synchronous operation in the current super-step.
 | Field | Value |
 |-------|-------|
 | L2 Capability | CAP-013 |
-| Capability Anchor Justification | CAP-013 ("Content Provenance Tagging and Guardrail-on-Ingress") per capabilities-p1-p2.md §CAP-013 |
+| Capability Anchor Justification | CAP-013 ("Content Provenance Tagging and Guardrail-on-Ingress") per capabilities-p0.md §CAP-013 |
 | L2 Domain Invariants | DI-012 (Guardrail Coverage at Ingress Boundaries — "Content that fails a guardrail does not enter the model context under any code path") |
 | Source Analysis | P-59 REJECT (the entire attack surface is adk-rust's unguarded tool/RAG/memory ingress); P-55 ADAPT (trait shape provides Fail variant with reason + severity); assessment-parts/part-2-dispositions-p51-p97.md §H4 |
 | Reference Evidence | Greenfield. DI-012 contains the verbatim requirement text "does not enter the model context under any code path" — this BC specifies the enforcement mechanism. No upstream reference implementation. The atomicity guarantee (no race between rejection and forwarding) is ferrochain-original design. |

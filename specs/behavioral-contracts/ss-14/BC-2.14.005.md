@@ -15,15 +15,15 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 traces_to:
-  - domain-spec/capabilities-p1-p2.md#CAP-016
+  - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-010
   - NE-10
 inputs:
   - .factory/specs/prd.md
-  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "a0db33c04bca3d71c6be90eabf099b8fe4da035d99509b06a237b0a9280c4082"
+input-hash: "24d438f"
 ---
 
 # BC-2.14.005: API Key Newtype with Redacted Debug; No Serialize; No Deref<Target=str>
@@ -122,7 +122,7 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-016 |
-| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p1-p2.md §CAP-016 — credential opacity is a direct sub-requirement of the error taxonomy surface; specifically the NE-10 counter-example (adk-rust bare-String API keys) is explicitly listed under CAP-016's grounding |
+| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p0.md §CAP-016 — credential opacity is a direct sub-requirement of the error taxonomy surface; specifically the NE-10 counter-example (adk-rust bare-String API keys) is explicitly listed under CAP-016's grounding |
 | L2 Domain Invariants | DI-010 (Credential Opacity) |
 | NE References | NE-10 |
 | Priority | P0 |

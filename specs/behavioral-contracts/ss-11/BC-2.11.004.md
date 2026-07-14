@@ -8,12 +8,12 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 phase: 1a
 inputs:
-  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "249a123dbe2ce41331f84ebf9c13b605ba572265bffa55cde179cd4d23a0fe14"
+input-hash: "a7b3552"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11
@@ -107,7 +107,7 @@ model context injection.
 | Field | Value |
 |-------|-------|
 | L2 Capability | CAP-013 |
-| Capability Anchor Justification | CAP-013 ("Content Provenance Tagging and Guardrail-on-Ingress") per capabilities-p1-p2.md §CAP-013 |
+| Capability Anchor Justification | CAP-013 ("Content Provenance Tagging and Guardrail-on-Ingress") per capabilities-p0.md §CAP-013 |
 | L2 Domain Invariants | DI-012 (Guardrail Coverage at Ingress Boundaries) |
 | NE Coverage | NE-06 (guardrails must fire at memory ingress) |
 | Source Analysis | P-59 REJECT (must-not-inherit: memory content unguarded in adk-rust); P-55 ADAPT (trait shape); assessment-parts/part-2-dispositions-p51-p97.md §H4 |

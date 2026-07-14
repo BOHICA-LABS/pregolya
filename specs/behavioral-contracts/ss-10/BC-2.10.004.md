@@ -15,17 +15,17 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 traces_to:
-  - domain-spec/capabilities-p1-p2.md#CAP-012
+  - domain-spec/capabilities-p0.md#CAP-012
   - domain-spec/capabilities-p0.md#CAP-006
   - domain-spec/invariants.md#DI-003
 inputs:
   - .factory/specs/prd.md
-  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "14c68c6f1c33066d381b16f4473f2933ac265809d8384102e8faaaf420785671"
+input-hash: "ab16ea2"
 ---
 
 # BC-2.10.004: Budget Escalation to HITL Interrupt When on_ceiling = escalate
@@ -168,7 +168,7 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-012 |
-| Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p1-p2.md §CAP-012 — this BC specifies the "escalate to a HITL interrupt" behavior named in the "when the ceiling is reached, degrade gracefully: halt the run, or escalate to a HITL interrupt, according to the policy's `on_ceiling` setting" clause of CAP-012 |
+| Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p0.md §CAP-012 — this BC specifies the "escalate to a HITL interrupt" behavior named in the "when the ceiling is reached, degrade gracefully: halt the run, or escalate to a HITL interrupt, according to the policy's `on_ceiling` setting" clause of CAP-012 |
 | Secondary Capability | CAP-006 ("HITL Interrupt / Resume with FIFO Resume-Value Delivery") per capabilities-p0.md §CAP-006 — this BC reuses the interrupt/resume mechanism of CAP-006 for budget escalation |
 | L2 Domain Invariants | DI-003 (HITL FIFO Resume-Value Delivery) — budget escalation participates in the same FIFO resume-value queue as all other interrupts |
 | D17 Commitment | D17-Q4 — budget governance escalate mode; D17-Q2 — HITL interrupt reuse |

@@ -8,11 +8,11 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 phase: 1a
 inputs:
-  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
-input-hash: "e36ccc71b4e9c530d37e4bbe6d0a1d3ed34afe3985c63546fc5759cf38a50048"
+input-hash: "c181f0d"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11
@@ -107,7 +107,7 @@ users who require guardrails must explicitly register a `GuardrailHook`.
 | Field | Value |
 |-------|-------|
 | L2 Capability | CAP-013 |
-| Capability Anchor Justification | CAP-013 ("Content Provenance Tagging and Guardrail-on-Ingress") per capabilities-p1-p2.md §CAP-013 |
+| Capability Anchor Justification | CAP-013 ("Content Provenance Tagging and Guardrail-on-Ingress") per capabilities-p0.md §CAP-013 |
 | L2 Domain Invariants | DI-012 (Guardrail Coverage at Ingress Boundaries — this BC defines the no-hook code path) |
 | OQR Resolution | OQR-5: "Default-permit with WARNING LOG at WARN level when no GuardrailHook is registered. Graph does not fail. Operator sees a warning." (Resolution adopted; log level is WARN per convention for an operator-actionable alert) |
 | Source Analysis | OQR-5 prd.md §OQR table; DI-012 invariant (the default-permit path is within DI-012's scope — DI-012 does not mandate a specific default, only that hooks fire when registered and that rejections block context entry) |

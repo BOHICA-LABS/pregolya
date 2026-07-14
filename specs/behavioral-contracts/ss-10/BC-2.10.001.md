@@ -15,15 +15,15 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 traces_to:
-  - domain-spec/capabilities-p1-p2.md#CAP-012
+  - domain-spec/capabilities-p0.md#CAP-012
 inputs:
   - .factory/specs/prd.md
-  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "85dc0cbae82776183cc8b09c4cbcf4d35a87585e75dc435fcfefe894e7ce7e9e"
+input-hash: "e56360b"
 ---
 
 # BC-2.10.001: BudgetPolicy allow/escalate/deny Evaluation per Run and per Sub-Agent
@@ -153,7 +153,7 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-012 |
-| Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p1-p2.md §CAP-012 — this BC specifies the `BudgetPolicy` trait's `evaluate` contract (the allow/escalate/deny decision), which is the primary governance primitive named in CAP-012 |
+| Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p0.md §CAP-012 — this BC specifies the `BudgetPolicy` trait's `evaluate` contract (the allow/escalate/deny decision), which is the primary governance primitive named in CAP-012 |
 | L2 Domain Invariants | — |
 | D17 Commitment | D17-Q4 — budget governance allow/escalate/deny policy trait, composable, append-only evidence journal; Domain B dark-factory holdout requires it |
 | ADAPT Reference | adk-rust P-73 (adk-payments PaymentPolicyGuardrail: allow/escalate/deny, composable, append-only journal) provides the correct policy SHAPE; P-46 confirms adk-rust has no native token/cost ceiling primitive (gap that ferrochain must close) |

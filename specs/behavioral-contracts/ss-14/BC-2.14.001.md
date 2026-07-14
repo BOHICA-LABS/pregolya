@@ -15,16 +15,16 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 traces_to:
-  - domain-spec/capabilities-p1-p2.md#CAP-016
+  - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
   - domain-spec/invariants.md#DI-014
 inputs:
   - .factory/specs/prd.md
-  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "6d5bd7a3f1412d4adef708bdd467bda1f6db6e05b19cf66168e832c3b89847ed"
+input-hash: "e87a499"
 ---
 
 # BC-2.14.001: FerrochainError 2D Component × Category Struct with RetryHint and Machine Code
@@ -164,7 +164,7 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-016 |
-| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p1-p2.md §CAP-016 — this BC directly implements the 2D component × category struct with RetryHint and machine code that CAP-016 defines as its primary deliverable |
+| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p0.md §CAP-016 — this BC directly implements the 2D component × category struct with RetryHint and machine code that CAP-016 defines as its primary deliverable |
 | L2 Domain Invariants | DI-008 (Library Constructor Result Contract), DI-014 (Error Propagation (No Silent Swallowing)) |
 | NE References | — |
 | Priority | P0 |

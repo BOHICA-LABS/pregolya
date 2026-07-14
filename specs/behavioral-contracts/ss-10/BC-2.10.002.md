@@ -15,13 +15,13 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 traces_to:
-  - domain-spec/capabilities-p1-p2.md#CAP-012
+  - domain-spec/capabilities-p0.md#CAP-012
 inputs:
   - .factory/specs/prd.md
-  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "ae45b7342b7598ae4399661744a20724845198492a1630b32b03f5bb50a3ba1b"
+input-hash: "6428c3a"
 ---
 
 # BC-2.10.002: Append-Only EvidenceJournal Records Every Budget Evaluation
@@ -145,7 +145,7 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-012 |
-| Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p1-p2.md §CAP-012 — this BC specifies the "append-only EvidenceJournal" explicitly named in CAP-012, which records every evaluation for audit and cost attribution |
+| Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p0.md §CAP-012 — this BC specifies the "append-only EvidenceJournal" explicitly named in CAP-012, which records every evaluation for audit and cost attribution |
 | L2 Domain Invariants | — |
 | D17 Commitment | D17-Q4 — "append-only evidence journal" is a named requirement of the budget governance mandate |
 | ADAPT Reference | adk-rust P-73 (adk-payments `journal/` evidence_store: every step written for audit; append-only pattern) |

@@ -15,15 +15,15 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 traces_to:
-  - domain-spec/capabilities-p1-p2.md#CAP-016
+  - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-014
   - NE-03
 inputs:
   - .factory/specs/prd.md
-  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
-input-hash: "b7a4beb35a2a55469cd3d55f4d774efbf28dd9e4330574fafdf8ff75ff92214d"
+input-hash: "71ab27b"
 ---
 
 # BC-2.14.006: Validation Failures Propagate Err(FerrochainError); No Silent None
@@ -121,7 +121,7 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-016 |
-| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p1-p2.md §CAP-016 — validation failure propagation is a first-class requirement of the error taxonomy contract; NE-03 (adk-rust silent None on validation) is named under CAP-016's grounding |
+| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p0.md §CAP-016 — validation failure propagation is a first-class requirement of the error taxonomy contract; NE-03 (adk-rust silent None on validation) is named under CAP-016's grounding |
 | L2 Domain Invariants | DI-014 (Error Propagation (No Silent Swallowing)) |
 | NE References | NE-03 |
 | Priority | P0 |

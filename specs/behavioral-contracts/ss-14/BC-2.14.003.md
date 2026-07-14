@@ -15,15 +15,15 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 traces_to:
-  - domain-spec/capabilities-p1-p2.md#CAP-016
+  - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
   - NE-07
 inputs:
   - .factory/specs/prd.md
-  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "a0db33c04bca3d71c6be90eabf099b8fe4da035d99509b06a237b0a9280c4082"
+input-hash: "24d438f"
 ---
 
 # BC-2.14.003: All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code
@@ -152,7 +152,7 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-016 |
-| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p1-p2.md §CAP-016 — CAP-016 explicitly states "No `.unwrap()` or `.expect()` in non-test code; CI lint gate enforces this. All library constructors return `Result`." This BC is the direct enforcement mechanism for that statement |
+| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p0.md §CAP-016 — CAP-016 explicitly states "No `.unwrap()` or `.expect()` in non-test code; CI lint gate enforces this. All library constructors return `Result`." This BC is the direct enforcement mechanism for that statement |
 | L2 Domain Invariants | DI-008 (Library Constructor Result Contract) |
 | NE References | NE-07 (adk-rust `.expect()` panic in WASM engine init is the counter-example) |
 | Priority | P0 |

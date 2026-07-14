@@ -31,7 +31,7 @@ traces_to: STATE.md
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22)`
 
 ## Per-Pass Details
 
@@ -215,4 +215,17 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Fix summary:** F-P21-01 HIGH — CAP-012 (Observability & Monitoring), CAP-013 (Content Provenance & Safety Guardrails), CAP-016 (Structured Output & Streaming Compliance) stuck at P1/Wave-2 in L2-INDEX while D17 elevation made all constituent BCs P0. NEW CLASS: capability-tier ↔ BC-priority. CAPs elevated to P0 in L2-INDEX [P0 11 / P1 5 / P2 3]; relocated to capabilities-p0.md with D17-elevation notes; capabilities-p1-p2.md restructured. 19-row capability-tier census: 16 MATCH / 3 FIXED / 0 mismatch — class drained. All other censuses + 3 novel probes PASS (inputs-arrays, holdout-vs-CAP, prose reads converged). Orchestrator verified BC wave frontmatter unaffected [report artifact only].
 **New standing gates:** capability-tier census (trigger: any L2-INDEX CAP priority or wave change; command: cross-check CAP priority/wave tier vs BC P-levels for all constituent BCs)
 **Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1→1→2→1→1→1→4→2→3→1
+**Counter:** 0/3
+
+---
+
+### Pass P1D-22 Details
+
+**Date:** 2026-07-14
+**Verdict:** NOT CLEAN — 1 finding (0 CRIT, 1 HIGH, 0 MED, 0 LOW)
+**Findings delta:** 0 vs pass 21 (1→1); new dimension of pass-21 relocation
+**Axes rotated:** reverse-anchor sweep (NEW CLASS: relocation must be followed by grep in both directions); sibling-check pass-21 (capability-tier census re-run); 4 standing census rotations
+**Fix summary:** F-P22-01 HIGH — pass-21 relocation of CAP-012/013/016 to capabilities-p0.md covered the forward dimension (L2-INDEX CAP tier) but the 16 constituent P0 BCs across ss-10 (×4), ss-11 (×6), ss-14 (×6) still held traces_to/inputs/justification anchors pointing at capabilities-p1-p2.md. Reverse-anchor grep confirmed all 16 sites; each BC re-anchored to capabilities-p0.md; input-hashes refreshed (all 16 STALE→UPDATED, 0 FAILED). Zero residue confirmed: `grep -r "capabilities-p1-p2" .factory/specs/behavioral-contracts/ss-10 ss-11 ss-14` = empty.
+**New standing gates:** reverse-anchor sweep (trigger: any CAP relocation between capabilities-p0/p1-p2/p2 files; command: grep all BC files for the old anchor path in both traces_to and inputs fields)
+**Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1→1→2→1→1→1→4→2→3→1→1
 **Counter:** 0/3

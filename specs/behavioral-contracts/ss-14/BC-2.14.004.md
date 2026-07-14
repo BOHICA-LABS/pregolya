@@ -15,15 +15,15 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 traces_to:
-  - domain-spec/capabilities-p1-p2.md#CAP-016
+  - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
   - NE-04
 inputs:
   - .factory/specs/prd.md
-  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "a0db33c04bca3d71c6be90eabf099b8fe4da035d99509b06a237b0a9280c4082"
+input-hash: "24d438f"
 ---
 
 # BC-2.14.004: Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests
@@ -154,7 +154,7 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-016 |
-| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p1-p2.md §CAP-016 — timeout enforcement is a mandatory component of the error taxonomy surface: a `FerrochainError { category: TIMEOUT }` can only be reliably raised if all HTTP clients have non-zero timeouts; the capability's "Overflow §Security-PRD-Carry-Forward" covers NE-04 as a named Wave 0 enforcement item |
+| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p0.md §CAP-016 — timeout enforcement is a mandatory component of the error taxonomy surface: a `FerrochainError { category: TIMEOUT }` can only be reliably raised if all HTTP clients have non-zero timeouts; the capability's "Overflow §Security-PRD-Carry-Forward" covers NE-04 as a named Wave 0 enforcement item |
 | L2 Domain Invariants | DI-009 (Outbound Connection Timeout (Mandatory)) |
 | NE References | NE-04 (adk-rust 8+ sites with no `.timeout()` are the counter-example) |
 | Priority | P0 |

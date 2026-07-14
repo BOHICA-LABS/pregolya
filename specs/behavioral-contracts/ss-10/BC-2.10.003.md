@@ -15,12 +15,12 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 traces_to:
-  - domain-spec/capabilities-p1-p2.md#CAP-012
+  - domain-spec/capabilities-p0.md#CAP-012
 inputs:
   - .factory/specs/prd.md
-  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "e4e989dd90846726d103e98fe154892ab82df5be62f1b85dfb75a2ee565cba9c"
+input-hash: "659edac"
 ---
 
 # BC-2.10.003: Graceful Halt When Budget Ceiling Reached (on_ceiling = halt)
@@ -149,7 +149,7 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-012 |
-| Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p1-p2.md §CAP-012 — this BC specifies the "degrade gracefully: halt the run" behavior named in the "when the ceiling is reached, degrade gracefully" clause of CAP-012 |
+| Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p0.md §CAP-012 — this BC specifies the "degrade gracefully: halt the run" behavior named in the "when the ceiling is reached, degrade gracefully" clause of CAP-012 |
 | L2 Domain Invariants | — |
 | D17 Commitment | D17-Q4 — Domain B dark-factory holdout evaluation shape 6 ("give a run a token/cost ceiling; verify it meters spend across sub-agents and halts-or-degrades gracefully at the ceiling") directly exercises this BC |
 | ADAPT Reference | adk-rust P-73 `deny(hard-stop)` variant of `PaymentPolicyGuardrail` as structural analog |
