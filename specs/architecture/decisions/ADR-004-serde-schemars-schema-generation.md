@@ -4,7 +4,7 @@ level: L3
 adr_id: "004"
 slug: serde-schemars-schema-generation
 title: "Schema Generation: serde + schemars (pydantic→serde/schemars port decision)"
-status: proposed
+status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
 phase: 1b
@@ -17,7 +17,7 @@ supersedes: []
 
 # ADR-004: Schema Generation (serde + schemars)
 
-**Status:** Proposed — REQUIRED before proc-macro BCs (ADR-008) can proceed (D5 gate)
+**Status:** Accepted — D5 gate resolved; ADR-008 and proc-macro BCs unblocked
 
 ## Context
 
@@ -49,14 +49,25 @@ This is required for:
 
 **Recommendation: ADOPT schemars.**
 
+**Version pin:** schemars 1.x (verified 1.2.1, 2026-02). Breaking change from 0.8:
+`schemars::schema::RootSchema` (0.8-era path) is replaced by `schemars::Schema`
+(idiomatic 1.x type). All code and BCs must use the 1.x path.
+
 ## Consequences
 
 - All tool definition types and structured output types derive `schemars::JsonSchema`.
-- `ToolDefinition` in ferrochain-core contains a `schema: schemars::schema::RootSchema` field.
+- `ToolDefinition` in ferrochain-core contains a `schema: schemars::Schema` field
+  (NOT `schemars::schema::RootSchema` — that is the deprecated 0.8 path).
 - The `BaseChatModel::with_structured_output<T>()` bound requires `T: schemars::JsonSchema + serde::DeserializeOwned`.
 - schemars becomes a direct dependency of ferrochain-core (not just a dev-dep).
 - BC-2.08.003 (structured output conformance) can now be authored: it is gated on this ADR.
 - ADR-008 (proc-macros) can proceed: `#[tool]` derives `schemars::JsonSchema` on the annotated struct.
+- **Schema naming stability (snapshot test obligation):** Tool schemas are public API —
+  a schema rename is a breaking change for downstream users. Each public tool type
+  that derives `schemars::JsonSchema` MUST have a snapshot test (insta or similar)
+  asserting the generated JSON Schema output. These snapshot tests are a Phase 3 BC
+  anchor obligation and must be referenced in the story that implements the `#[tool]`
+  proc-macro.
 
 ## D5 Gate Resolution
 

@@ -13,11 +13,11 @@ traces_to: .factory/specs/prd.md
 
 # BC-INDEX: ferrochain Behavioral Contracts
 
-> **82 BCs total — 48 P0 / 26 P1 / 8 P2 | 5 Red Gate | 3 VP Seed (Kani)**
+> **83 BCs total — 48 P0 / 27 P1 / 8 P2 | 5 Red Gate | 3 VP Seed (Kani) | 5 VPs registered**
 >
-> Subsystem IDs: SS-TBD pending ARCH-INDEX backfill at Phase 1 Step D.
-> All BCs reside under `specs/behavioral-contracts/ss-TBD/` until the architect assigns SS-NN numbers.
-> VP-INDEX registration (VP-MCP-04/05 etc.) is a Step D carry-forward.
+> Subsystem IDs: SS-01 through SS-17 assigned by architect at Phase 1 Step D (2026-07-14).
+> All BCs reside under `specs/behavioral-contracts/ss-NN/` per ARCH-INDEX Subsystem Registry.
+> VP-INDEX: 5 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1).
 
 ## Summary
 
@@ -53,92 +53,93 @@ traces_to: .factory/specs/prd.md
 
 | BC ID | Title | Cap | NE Anchors | DI Anchors | Pri | RG | VP | File |
 |-------|-------|-----|-----------|-----------|-----|----|----|------|
-| BC-2.01.001 | Typed ContentBlock Sequence Construction (No Raw Content Where Typed Expected) | CAP-001 | | DI-008 | P0 | | | ss-TBD/BC-2.01.001.md |
-| BC-2.01.002 | Message Type-Safety (AIMessage / HumanMessage / SystemMessage / ToolMessage) | CAP-001 | | DI-008 | P0 | | | ss-TBD/BC-2.01.002.md |
-| BC-2.01.003 | Runnable Trait Invocation — invoke, stream, batch | CAP-002 | | | P0 | | | ss-TBD/BC-2.01.003.md |
-| BC-2.01.004 | Runnable Pipe Composition (A.pipe(B) = AB Chain) | CAP-002 | | | P0 | | | ss-TBD/BC-2.01.004.md |
-| BC-2.02.001 | StateGraph Node Definition with Typed Channel Assignment | CAP-003 | | | P0 | | | ss-TBD/BC-2.02.001.md |
-| BC-2.02.002 | LastValue / Append / BarrierValue Channel Semantics and Reducer Wiring | CAP-003 | | DI-001 | P0 | | | ss-TBD/BC-2.02.002.md |
-| BC-2.02.003 | NamedBarrierValue Missing-Writer Boundary Behavior (Red Gate — R10) | CAP-003 | | | P0 | **RG** | | ss-TBD/BC-2.02.003.md |
-| BC-2.02.004 | EphemeralValue Cleared-After-Super-Step Semantics (Red Gate — R10) | CAP-003 | | | P0 | **RG** | | ss-TBD/BC-2.02.004.md |
-| BC-2.02.005 | Conditional Edge Routing Function | CAP-003 | | | P0 | | | ss-TBD/BC-2.02.005.md |
-| BC-2.02.006 | Send API Dynamic Fan-Out | CAP-003 | | | P0 | | | ss-TBD/BC-2.02.006.md |
-| BC-2.03.001 | BSP Super-Step Execution Determinism — Kani VP Seed (NE-17) | CAP-004 | NE-17 | DI-001 | P0 | | **VP** | ss-TBD/BC-2.03.001.md |
-| BC-2.03.002 | Concurrent LastValue Write Rejection Raises InvalidUpdateError | CAP-004 | | DI-001 | P0 | | | ss-TBD/BC-2.03.002.md |
-| BC-2.03.003 | Deterministic Reducer Application Order (Task-Identity Sort) | CAP-004 | NE-17 | DI-001 | P0 | | | ss-TBD/BC-2.03.003.md |
-| BC-2.04.001 | Per-Task put_writes Completes Before Next Super-Step Begins | CAP-005 | | | P0 | | | ss-TBD/BC-2.04.001.md |
-| BC-2.04.002 | Sync Durability Tier Is Default; Async and Exit Are Explicit Opt-In | CAP-005 | | | P0 | | | ss-TBD/BC-2.04.002.md |
-| BC-2.04.003 | Monotonic Logical-Clock Checkpoint IDs — Wall-Clock UUIDs Rejected | CAP-005 | | | P0 | | | ss-TBD/BC-2.04.003.md |
-| BC-2.04.004 | Fork Lineage via parent_checkpoint_id Pointers; No State Copy on Fork | CAP-005 | | | P0 | | | ss-TBD/BC-2.04.004.md |
-| BC-2.04.005 | Crash Recovery — Completed Tasks Not Re-Executed After Process Restart | CAP-005 | | | P0 | | | ss-TBD/BC-2.04.005.md |
-| BC-2.04.006 | Session Triple-Address Uniqueness (thread_id, checkpoint_ns, checkpoint_id) — Kani VP Seed | CAP-005 | | | P0 | | **VP** | ss-TBD/BC-2.04.006.md |
-| BC-2.04.007 | Encryption at Rest Covers Both State AND Event Payloads; Rotation Errors Propagate | CAP-005 | | | P0 | | | ss-TBD/BC-2.04.007.md |
-| BC-2.05.001 | Interrupt Suspension with Durable State Persistence | CAP-006 | | DI-003 | P0 | | | ss-TBD/BC-2.05.001.md |
-| BC-2.05.002 | FIFO Resume-Value Delivery Order | CAP-006 | | DI-003 | P0 | | | ss-TBD/BC-2.05.002.md |
-| BC-2.05.003 | Interrupted Node Re-Executes from Start of Super-Step on Resume | CAP-006 | | DI-003 | P0 | | | ss-TBD/BC-2.05.003.md |
-| BC-2.05.004 | Command(resume=value) API Contract for Programmatic Resume | CAP-006 | | DI-003 | P0 | | | ss-TBD/BC-2.05.004.md |
-| BC-2.05.005 | Resume on Empty Interrupt Queue Returns Err(NoActiveInterrupt) | CAP-006 | | | P0 | | | ss-TBD/BC-2.05.005.md |
-| BC-2.05.006 | Risk-Tiered Interrupt Classification (Typed Action-Risk Levels for Domain A SOC) | CAP-006 | | DI-003 | P0 | | | ss-TBD/BC-2.05.006.md |
-| BC-2.06.001 | Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end) | CAP-007 | | DI-011 | P0 | | | ss-TBD/BC-2.06.001.md |
-| BC-2.06.002 | run_id + parent_ids Correlation Across All Streaming Events | CAP-007 | | | P0 | | | ss-TBD/BC-2.06.002.md |
-| BC-2.06.003 | Streaming and Unary Run Produce Identical Final Answer (NE-13) | CAP-007 | NE-13 | DI-011 | P0 | | | ss-TBD/BC-2.06.003.md |
-| BC-2.07.001 | Chunk Boundaries Are Unicode Code-Point Counts (Not Bytes) | CAP-008 | | | P0 | | | ss-TBD/BC-2.07.001.md |
-| BC-2.07.002 | Non-ASCII Boundary Parity with Python Reference Implementation (Emoji, CJK) — R8 Red Gate | CAP-008 | | | P0 | **RG** | | ss-TBD/BC-2.07.002.md |
-| BC-2.07.003 | Short Document (length < chunk_size) — Single Chunk, No Overlap, No Panic | CAP-008 | | | P0 | | | ss-TBD/BC-2.07.003.md |
-| BC-2.08.001 | Chat Model Streaming Completions Conformance | CAP-009 | | DI-011 | P1 | | | ss-TBD/BC-2.08.001.md |
-| BC-2.08.002 | Chat Model Tool-Call Round-Trip Conformance | CAP-009 | | | P1 | | | ss-TBD/BC-2.08.002.md |
-| BC-2.08.003 | Chat Model Structured Output Conformance | CAP-009 | | | P1 | | | ss-TBD/BC-2.08.003.md |
-| BC-2.08.004 | Chat Model Error-Type Fidelity Conformance | CAP-009 | | DI-014 | P1 | | | ss-TBD/BC-2.08.004.md |
-| BC-2.08.005 | Chat Model Token-Usage Accounting Conformance | CAP-009 | | | P1 | | | ss-TBD/BC-2.08.005.md |
-| BC-2.08.006 | Standalone SDK Crate Split Architecture (ferrochain-\<provider\>-sdk + Adapter) | CAP-009 | | DI-008 | P1 | | | ss-TBD/BC-2.08.006.md |
-| BC-2.08.007 | Provider Streaming Interrupted by Transport Error Surfaces Err(Timeout), Not Truncated Success | CAP-009 | | DI-009,DI-014 | P1 | | | ss-TBD/BC-2.08.007.md |
-| BC-2.08.008 | Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15) | CAP-011 | NE-15 | | P1 | | | ss-TBD/BC-2.08.008.md |
-| BC-2.09.001 | MCP Server Tool Discovery and Registration at Runtime | CAP-010 | | | P1 | | | ss-TBD/BC-2.09.001.md |
-| BC-2.09.002 | ToolInvocation Routing to Correct MCP Server Transport | CAP-010 | | | P1 | | | ss-TBD/BC-2.09.002.md |
-| BC-2.09.003 | Tool-Result Content Treated as Untrusted Ingress (DI-012 Applies) | CAP-010 | | DI-012 | P1 | | | ss-TBD/BC-2.09.003.md |
-| BC-2.09.004 | MCP Bare ToolException Re-Raise Preserving Type Identity (Red Gate — R11) | CAP-010 | | | P1 | **RG** | | ss-TBD/BC-2.09.004.md |
-| BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | CAP-010 | | | P1 | **RG** | | ss-TBD/BC-2.09.005.md |
-| BC-2.10.001 | BudgetPolicy allow/escalate/deny Evaluation per Run and per Sub-Agent | CAP-012 | | | P0 | | | ss-TBD/BC-2.10.001.md |
-| BC-2.10.002 | Append-Only EvidenceJournal Records Every Budget Evaluation | CAP-012 | | | P0 | | | ss-TBD/BC-2.10.002.md |
-| BC-2.10.003 | Graceful Halt When Budget Ceiling Reached (on_ceiling = halt) | CAP-012 | | | P0 | | | ss-TBD/BC-2.10.003.md |
-| BC-2.10.004 | Budget Escalation to HITL Interrupt When on_ceiling = escalate | CAP-012 | | DI-003 | P0 | | | ss-TBD/BC-2.10.004.md |
-| BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary (Tool-Result, RAG, Memory) | CAP-013 | | | P0 | | | ss-TBD/BC-2.11.001.md |
-| BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | CAP-013 | | | P0 | | | ss-TBD/BC-2.11.002.md |
-| BC-2.11.003 | GuardrailHook Fires at RAG Ingress | CAP-013 | | | P0 | | | ss-TBD/BC-2.11.003.md |
-| BC-2.11.004 | GuardrailHook Fires at Memory Ingress | CAP-013 | | | P0 | | | ss-TBD/BC-2.11.004.md |
-| BC-2.11.005 | Rejected Content Does Not Enter Model Context Under Any Code Path | CAP-013 | | | P0 | | | ss-TBD/BC-2.11.005.md |
-| BC-2.11.006 | No-Hook Default — Content Passes Through with WARNING LOG (Default-Permit) | CAP-013 | | | P0 | | | ss-TBD/BC-2.11.006.md |
-| BC-2.12.001 | Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History) | CAP-014 | | | P1 | | | ss-TBD/BC-2.12.001.md |
-| BC-2.12.002 | Assistant Resource CRUD (Named Agent Config with Graph Reference) | CAP-014 | | | P1 | | | ss-TBD/BC-2.12.002.md |
-| BC-2.12.003 | Run Creation and Execution Lifecycle (create → running → completed/failed) | CAP-014 | | | P1 | | | ss-TBD/BC-2.12.003.md |
-| BC-2.12.004 | CronSchedule Creation and Proactive Run Execution | CAP-014 | | | P1 | | | ss-TBD/BC-2.12.004.md |
-| BC-2.12.005 | SecurityConfig::default() Denies CORS; Debug Route Gated on Explicit Opt-In Key (NE-14) | CAP-014 | NE-14 | DI-013 | P1 | | | ss-TBD/BC-2.12.005.md |
-| BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore Trait Seams with Durable Backends (NE-08) | CAP-014 | NE-08 | | P1 | | | ss-TBD/BC-2.12.006.md |
-| BC-2.12.007 | Streaming Endpoint and Unary Endpoint Drive Same Graph Engine, Same Final Answer | CAP-014 | | DI-011 | P1 | | | ss-TBD/BC-2.12.007.md |
-| BC-2.13.001 | Enforcing Sandbox Backend (WASM or Container) Is Default (NE-01) | CAP-015 | NE-01 | | P1 | | | ss-TBD/BC-2.13.001.md |
-| BC-2.13.002 | Process Backend Requires Explicit Opt-In and Emits Loud Runtime Warning | CAP-015 | | | P1 | | | ss-TBD/BC-2.13.002.md |
-| BC-2.13.003 | Strict Policy + Non-Enforcing Backend Returns Err(PolicyNotEnforceable) | CAP-015 | | | P1 | | | ss-TBD/BC-2.13.003.md |
-| BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root at Access Time (NE-02) — Kani VP Seed | CAP-015 | NE-02 | | P1 | | **VP** | ss-TBD/BC-2.13.004.md |
-| BC-2.13.005 | Symlink That Escapes Workspace Root Returns Err(WorkspaceEscape) | CAP-015 | | | P1 | | | ss-TBD/BC-2.13.005.md |
-| BC-2.13.006 | macOS Seatbelt Profile: Deny-by-Default with Explicit Allow Rules (NE-16) | CAP-015 | NE-16 | | P1 | | | ss-TBD/BC-2.13.006.md |
-| BC-2.14.001 | FerrochainError 2D Component × Category Struct with RetryHint and Machine Code | CAP-016 | | DI-008,DI-014 | P0 | | | ss-TBD/BC-2.14.001.md |
-| BC-2.14.002 | RFC-7807 Compatible Problem Emission from FerrochainError | CAP-016 | | | P0 | | | ss-TBD/BC-2.14.002.md |
-| BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | CAP-016 | NE-07 | DI-008 | P0 | | | ss-TBD/BC-2.14.003.md |
-| BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | CAP-016 | NE-04 | DI-009 | P0 | | | ss-TBD/BC-2.14.004.md |
-| BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref\<Target=str\> | CAP-016 | NE-10 | DI-010 | P0 | | | ss-TBD/BC-2.14.005.md |
-| BC-2.14.006 | Validation Failures Propagate Err(FerrochainError); No Silent None | CAP-016 | NE-03 | DI-014 | P0 | | | ss-TBD/BC-2.14.006.md |
-| BC-2.15.001 | KV and Vector Memory Persistence Across Threads (Not Per-Checkpoint) | CAP-017 | | | P2 | | | ss-TBD/BC-2.15.001.md |
-| BC-2.15.002 | User/App/Session Tier Isolation — User-Private Does Not Bleed Across Sessions | CAP-017 | | | P2 | | | ss-TBD/BC-2.15.002.md |
-| BC-2.15.003 | GDPR Erasure Removes All Traces from All Memory Tiers | CAP-017 | | | P2 | | | ss-TBD/BC-2.15.003.md |
-| BC-2.16.001 | Per-Tool Retry Policy Keyed by tool_name (Not Args Hash) | CAP-018 | | | P2 | | | ss-TBD/BC-2.16.001.md |
-| BC-2.16.002 | Finite global_limit Non-None Default for All Retry Policies | CAP-018 | | | P2 | | | ss-TBD/BC-2.16.002.md |
-| BC-2.16.003 | Circuit Breaker Trips After Repeated Failure; Prevents Infinite Retry | CAP-018 | | | P2 | | | ss-TBD/BC-2.16.003.md |
-| BC-2.17.001 | Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace-Escape VP | CAP-019 | | DI-001,DI-005,DI-007 | P2 | | | ss-TBD/BC-2.17.001.md |
-| BC-2.17.002 | cargo-fuzz Targets — Serialization Round-Trip (Checkpoint) and Graph-Engine Boundary | CAP-019 | | | P2 | | | ss-TBD/BC-2.17.002.md |
+| BC-2.01.001 | Typed ContentBlock Sequence Construction (No Raw Content Where Typed Expected) | CAP-001 | | DI-008 | P0 | | | ss-01/BC-2.01.001.md |
+| BC-2.01.002 | Message Type-Safety (AIMessage / HumanMessage / SystemMessage / ToolMessage) | CAP-001 | | DI-008 | P0 | | | ss-01/BC-2.01.002.md |
+| BC-2.01.003 | Runnable Trait Invocation — invoke, stream, batch | CAP-002 | | | P0 | | | ss-01/BC-2.01.003.md |
+| BC-2.01.004 | Runnable Pipe Composition (A.pipe(B) = AB Chain) | CAP-002 | | | P0 | | | ss-01/BC-2.01.004.md |
+| BC-2.02.001 | StateGraph Node Definition with Typed Channel Assignment | CAP-003 | | | P0 | | | ss-02/BC-2.02.001.md |
+| BC-2.02.002 | LastValue / Append / BarrierValue Channel Semantics and Reducer Wiring | CAP-003 | | DI-001 | P0 | | | ss-02/BC-2.02.002.md |
+| BC-2.02.003 | NamedBarrierValue Missing-Writer Boundary Behavior (Red Gate — R10) | CAP-003 | | | P0 | **RG** | | ss-02/BC-2.02.003.md |
+| BC-2.02.004 | EphemeralValue Cleared-After-Super-Step Semantics (Red Gate — R10) | CAP-003 | | | P0 | **RG** | | ss-02/BC-2.02.004.md |
+| BC-2.02.005 | Conditional Edge Routing Function | CAP-003 | | | P0 | | | ss-02/BC-2.02.005.md |
+| BC-2.02.006 | Send API Dynamic Fan-Out | CAP-003 | | | P0 | | | ss-02/BC-2.02.006.md |
+| BC-2.03.001 | BSP Super-Step Execution Determinism — Kani VP Seed (NE-17) | CAP-004 | NE-17 | DI-001 | P0 | | **VP** | ss-03/BC-2.03.001.md |
+| BC-2.03.002 | Concurrent LastValue Write Rejection Raises InvalidUpdateError | CAP-004 | | DI-001 | P0 | | | ss-03/BC-2.03.002.md |
+| BC-2.03.003 | Deterministic Reducer Application Order (Task-Identity Sort) | CAP-004 | NE-17 | DI-001 | P0 | | | ss-03/BC-2.03.003.md |
+| BC-2.04.001 | Per-Task put_writes Completes Before Next Super-Step Begins | CAP-005 | | | P0 | | | ss-04/BC-2.04.001.md |
+| BC-2.04.002 | Sync Durability Tier Is Default; Async and Exit Are Explicit Opt-In | CAP-005 | | | P0 | | | ss-04/BC-2.04.002.md |
+| BC-2.04.003 | Monotonic Logical-Clock Checkpoint IDs — Wall-Clock UUIDs Rejected | CAP-005 | | | P0 | | | ss-04/BC-2.04.003.md |
+| BC-2.04.004 | Fork Lineage via parent_checkpoint_id Pointers; No State Copy on Fork | CAP-005 | | | P0 | | | ss-04/BC-2.04.004.md |
+| BC-2.04.005 | Crash Recovery — Completed Tasks Not Re-Executed After Process Restart | CAP-005 | | | P0 | | | ss-04/BC-2.04.005.md |
+| BC-2.04.006 | Session Triple-Address Uniqueness (thread_id, checkpoint_ns, checkpoint_id) — Kani VP Seed | CAP-005 | | | P0 | | **VP** | ss-04/BC-2.04.006.md |
+| BC-2.04.007 | Encryption at Rest Covers Both State AND Event Payloads; Rotation Errors Propagate | CAP-005 | | | P0 | | | ss-04/BC-2.04.007.md |
+| BC-2.05.001 | Interrupt Suspension with Durable State Persistence | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.001.md |
+| BC-2.05.002 | FIFO Resume-Value Delivery Order | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.002.md |
+| BC-2.05.003 | Interrupted Node Re-Executes from Start of Super-Step on Resume | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.003.md |
+| BC-2.05.004 | Command(resume=value) API Contract for Programmatic Resume | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.004.md |
+| BC-2.05.005 | Resume on Empty Interrupt Queue Returns Err(NoActiveInterrupt) | CAP-006 | | | P0 | | | ss-05/BC-2.05.005.md |
+| BC-2.05.006 | Risk-Tiered Interrupt Classification (Typed Action-Risk Levels for Domain A SOC) | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.006.md |
+| BC-2.06.001 | Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end) | CAP-007 | | DI-011 | P0 | | | ss-06/BC-2.06.001.md |
+| BC-2.06.002 | run_id + parent_ids Correlation Across All Streaming Events | CAP-007 | | | P0 | | | ss-06/BC-2.06.002.md |
+| BC-2.06.003 | Streaming and Unary Run Produce Identical Final Answer (NE-13) | CAP-007 | NE-13 | DI-011 | P0 | | | ss-06/BC-2.06.003.md |
+| BC-2.07.001 | Chunk Boundaries Are Unicode Code-Point Counts (Not Bytes) | CAP-008 | | | P0 | | | ss-07/BC-2.07.001.md |
+| BC-2.07.002 | Non-ASCII Boundary Parity with Python Reference Implementation (Emoji, CJK) — R8 Red Gate | CAP-008 | | | P0 | **RG** | | ss-07/BC-2.07.002.md |
+| BC-2.07.003 | Short Document (length < chunk_size) — Single Chunk, No Overlap, No Panic | CAP-008 | | | P0 | | | ss-07/BC-2.07.003.md |
+| BC-2.08.001 | Chat Model Streaming Completions Conformance | CAP-009 | | DI-011 | P1 | | | ss-08/BC-2.08.001.md |
+| BC-2.08.002 | Chat Model Tool-Call Round-Trip Conformance | CAP-009 | | | P1 | | | ss-08/BC-2.08.002.md |
+| BC-2.08.003 | Chat Model Structured Output Conformance | CAP-009 | | | P1 | | | ss-08/BC-2.08.003.md |
+| BC-2.08.004 | Chat Model Error-Type Fidelity Conformance | CAP-009 | | DI-014 | P1 | | | ss-08/BC-2.08.004.md |
+| BC-2.08.005 | Chat Model Token-Usage Accounting Conformance | CAP-009 | | | P1 | | | ss-08/BC-2.08.005.md |
+| BC-2.08.006 | Standalone SDK Crate Split Architecture (ferrochain-\<provider\>-sdk + Adapter) | CAP-009 | | DI-008 | P1 | | | ss-08/BC-2.08.006.md |
+| BC-2.08.007 | Provider Streaming Interrupted by Transport Error Surfaces Err(Timeout), Not Truncated Success | CAP-009 | | DI-009,DI-014 | P1 | | | ss-08/BC-2.08.007.md |
+| BC-2.08.008 | Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15) | CAP-011 | NE-15 | | P1 | | | ss-08/BC-2.08.008.md |
+| BC-2.08.009 | Tool Schema Naming Stability (Snapshot Test Anchor) | CAP-009 | | | P1 | | | ss-08/BC-2.08.009.md |
+| BC-2.09.001 | MCP Server Tool Discovery and Registration at Runtime | CAP-010 | | | P1 | | | ss-09/BC-2.09.001.md |
+| BC-2.09.002 | ToolInvocation Routing to Correct MCP Server Transport | CAP-010 | | | P1 | | | ss-09/BC-2.09.002.md |
+| BC-2.09.003 | Tool-Result Content Treated as Untrusted Ingress (DI-012 Applies) | CAP-010 | | DI-012 | P1 | | | ss-09/BC-2.09.003.md |
+| BC-2.09.004 | MCP Bare ToolException Re-Raise Preserving Type Identity (Red Gate — R11) | CAP-010 | | | P1 | **RG** | | ss-09/BC-2.09.004.md |
+| BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | CAP-010 | | | P1 | **RG** | | ss-09/BC-2.09.005.md |
+| BC-2.10.001 | BudgetPolicy allow/escalate/deny Evaluation per Run and per Sub-Agent | CAP-012 | | | P0 | | | ss-10/BC-2.10.001.md |
+| BC-2.10.002 | Append-Only EvidenceJournal Records Every Budget Evaluation | CAP-012 | | | P0 | | | ss-10/BC-2.10.002.md |
+| BC-2.10.003 | Graceful Halt When Budget Ceiling Reached (on_ceiling = halt) | CAP-012 | | | P0 | | | ss-10/BC-2.10.003.md |
+| BC-2.10.004 | Budget Escalation to HITL Interrupt When on_ceiling = escalate | CAP-012 | | DI-003 | P0 | | | ss-10/BC-2.10.004.md |
+| BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary (Tool-Result, RAG, Memory) | CAP-013 | | | P0 | | | ss-11/BC-2.11.001.md |
+| BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | CAP-013 | | | P0 | | | ss-11/BC-2.11.002.md |
+| BC-2.11.003 | GuardrailHook Fires at RAG Ingress | CAP-013 | | | P0 | | | ss-11/BC-2.11.003.md |
+| BC-2.11.004 | GuardrailHook Fires at Memory Ingress | CAP-013 | | | P0 | | | ss-11/BC-2.11.004.md |
+| BC-2.11.005 | Rejected Content Does Not Enter Model Context Under Any Code Path | CAP-013 | | | P0 | | | ss-11/BC-2.11.005.md |
+| BC-2.11.006 | No-Hook Default — Content Passes Through with WARNING LOG (Default-Permit) | CAP-013 | | | P0 | | | ss-11/BC-2.11.006.md |
+| BC-2.12.001 | Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History) | CAP-014 | | | P1 | | | ss-12/BC-2.12.001.md |
+| BC-2.12.002 | Assistant Resource CRUD (Named Agent Config with Graph Reference) | CAP-014 | | | P1 | | | ss-12/BC-2.12.002.md |
+| BC-2.12.003 | Run Creation and Execution Lifecycle (create → running → completed/failed) | CAP-014 | | | P1 | | | ss-12/BC-2.12.003.md |
+| BC-2.12.004 | CronSchedule Creation and Proactive Run Execution | CAP-014 | | | P1 | | | ss-12/BC-2.12.004.md |
+| BC-2.12.005 | SecurityConfig::default() Denies CORS; Debug Route Gated on Explicit Opt-In Key (NE-14) | CAP-014 | NE-14 | DI-013 | P1 | | | ss-12/BC-2.12.005.md |
+| BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore Trait Seams with Durable Backends (NE-08) | CAP-014 | NE-08 | | P1 | | | ss-12/BC-2.12.006.md |
+| BC-2.12.007 | Streaming Endpoint and Unary Endpoint Drive Same Graph Engine, Same Final Answer | CAP-014 | | DI-011 | P1 | | | ss-12/BC-2.12.007.md |
+| BC-2.13.001 | Enforcing Sandbox Backend (WASM or Container) Is Default (NE-01) | CAP-015 | NE-01 | | P1 | | | ss-13/BC-2.13.001.md |
+| BC-2.13.002 | Process Backend Requires Explicit Opt-In and Emits Loud Runtime Warning | CAP-015 | | | P1 | | | ss-13/BC-2.13.002.md |
+| BC-2.13.003 | Strict Policy + Non-Enforcing Backend Returns Err(PolicyNotEnforceable) | CAP-015 | | | P1 | | | ss-13/BC-2.13.003.md |
+| BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root at Access Time (NE-02) — Kani VP Seed | CAP-015 | NE-02 | | P1 | | **VP** | ss-13/BC-2.13.004.md |
+| BC-2.13.005 | Symlink That Escapes Workspace Root Returns Err(WorkspaceEscape) | CAP-015 | | | P1 | | | ss-13/BC-2.13.005.md |
+| BC-2.13.006 | macOS Seatbelt Profile: Deny-by-Default with Explicit Allow Rules (NE-16) | CAP-015 | NE-16 | | P1 | | | ss-13/BC-2.13.006.md |
+| BC-2.14.001 | FerrochainError 2D Component × Category Struct with RetryHint and Machine Code | CAP-016 | | DI-008,DI-014 | P0 | | | ss-14/BC-2.14.001.md |
+| BC-2.14.002 | RFC-7807 Compatible Problem Emission from FerrochainError | CAP-016 | | | P0 | | | ss-14/BC-2.14.002.md |
+| BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | CAP-016 | NE-07 | DI-008 | P0 | | | ss-14/BC-2.14.003.md |
+| BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | CAP-016 | NE-04 | DI-009 | P0 | | | ss-14/BC-2.14.004.md |
+| BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref\<Target=str\> | CAP-016 | NE-10 | DI-010 | P0 | | | ss-14/BC-2.14.005.md |
+| BC-2.14.006 | Validation Failures Propagate Err(FerrochainError); No Silent None | CAP-016 | NE-03 | DI-014 | P0 | | | ss-14/BC-2.14.006.md |
+| BC-2.15.001 | KV and Vector Memory Persistence Across Threads (Not Per-Checkpoint) | CAP-017 | | | P2 | | | ss-15/BC-2.15.001.md |
+| BC-2.15.002 | User/App/Session Tier Isolation — User-Private Does Not Bleed Across Sessions | CAP-017 | | | P2 | | | ss-15/BC-2.15.002.md |
+| BC-2.15.003 | GDPR Erasure Removes All Traces from All Memory Tiers | CAP-017 | | | P2 | | | ss-15/BC-2.15.003.md |
+| BC-2.16.001 | Per-Tool Retry Policy Keyed by tool_name (Not Args Hash) | CAP-018 | | | P2 | | | ss-16/BC-2.16.001.md |
+| BC-2.16.002 | Finite global_limit Non-None Default for All Retry Policies | CAP-018 | | | P2 | | | ss-16/BC-2.16.002.md |
+| BC-2.16.003 | Circuit Breaker Trips After Repeated Failure; Prevents Infinite Retry | CAP-018 | | | P2 | | | ss-16/BC-2.16.003.md |
+| BC-2.17.001 | Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace-Escape VP | CAP-019 | | DI-001,DI-005,DI-007 | P2 | | | ss-17/BC-2.17.001.md |
+| BC-2.17.002 | cargo-fuzz Targets — Serialization Round-Trip (Checkpoint) and Graph-Engine Boundary | CAP-019 | | | P2 | | | ss-17/BC-2.17.002.md |
 
-## Carry-Forward Notes
+## Carry-Forward Notes (RESOLVED at Phase 1 Step D, 2026-07-14)
 
-1. **SS-TBD backfill** — All BCs use subsystem `SS-TBD`. Architect assigns SS-NN numbers at Step D (ARCH-INDEX). State-manager backfills BC frontmatter subsystem fields after ARCH-INDEX is delivered.
-2. **VP-INDEX registration** — VP-MCP-04/05 and other VP seeds need VP-INDEX entries. Carry-forward to architect Step D.
-3. **vp_seed frontmatter inconsistency** — BC-2.03.001 and BC-2.04.006 signal VP seed intent in title only (no `vp_seed: true` in frontmatter). Architect to normalize at Step D.
-4. **red_gate_required vs red_gate** — BC-2.07.002 uses `red_gate_required: true` (non-standard key). Architect to normalize to `red_gate: true` at Step D.
+1. **SS-TBD backfill** — RESOLVED. All 82 BCs now have `subsystem: SS-NN`. BC files moved to `ss-NN/` dirs per artifact-path-registry. ARCH-INDEX Subsystem Registry is authoritative.
+2. **VP-INDEX registration** — RESOLVED. VP-001..VP-003 (Kani) + VP-004..VP-005 (integration, from BC-2.09.004/005) registered in VP-INDEX.md.
+3. **vp_seed frontmatter inconsistency** — RESOLVED. BC-2.03.001: `vp_seed: true, vp_id: VP-001`. BC-2.04.006: normalized `kani_vp_seed` → `vp_seed: true, vp_id: VP-002`. BC-2.13.004: `vp_seed: true, vp_id: VP-003`.
+4. **red_gate_required vs red_gate** — RESOLVED. BC-2.07.002: `red_gate_required: true` → `red_gate: true, red_gate_source: R8`.

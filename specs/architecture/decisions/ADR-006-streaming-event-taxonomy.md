@@ -4,7 +4,7 @@ level: L3
 adr_id: "006"
 slug: streaming-event-taxonomy
 title: "Streaming Event Taxonomy (CONFLICT-5: typed enum vs stringly-typed)"
-status: proposed
+status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
 phase: 1b

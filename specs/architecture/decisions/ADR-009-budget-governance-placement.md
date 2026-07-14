@@ -4,7 +4,7 @@ level: L3
 adr_id: "009"
 slug: budget-governance-placement
 title: "Budget Governance Engine Placement (D17-Q4): ferrochain-graph vs ferrochain-core"
-status: proposed
+status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
 phase: 1b

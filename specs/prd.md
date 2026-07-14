@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/bc-authoring-plan.md
 changelog:
   - "v1.0: Initial PRD core. BC files authored in sub-bursts 2–N per bc-authoring-plan.md."
+  - "v1.0 Step-E: BC-2.08.009 added to SS.08 — Tool Schema Naming Stability (Snapshot Test Anchor). Authored from ADR-004 acceptance (architect feedback): snapshot test obligation for public tool types deriving schemars::JsonSchema. Batch 9 count: 8 → 9. Total BC count: 82 → 83."
 open_question_resolutions:
   - OQR-1: HITL risk tiers — extension of CAP-006
   - OQR-2: Agent registry — application-layer concern
@@ -221,6 +222,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.08.006 | Standalone SDK crate split architecture (ferrochain-\<provider\>-sdk + adapter) | P1 | DI-008 | ss-TBD/BC-2.08.006.md |
 | BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout), not truncated success | P1 | DI-014 | ss-TBD/BC-2.08.007.md |
 | BC-2.08.008 | Eval score aggregation: arithmetic mean + JudgeResult::InfraError third outcome (NE-15) | P1 | — | ss-TBD/BC-2.08.008.md |
+| BC-2.08.009 | Tool schema naming stability (snapshot test anchor) — semver-major required on any schema change to a public tool type | P1 | — | ss-08/BC-2.08.009.md |
 
 ### 2.09 MCP Tool Adapter (CAP-010) — P1
 

@@ -4,12 +4,12 @@ level: L3
 adr_id: "001"
 slug: graph-execution-model
 title: "Graph Execution Model: BSP Channel Versioning vs Hybrid Orchestrator-Actor"
-status: draft
+status: accepted
+gate: D9-PASSED
+gate_note: "D9 human gate passed 2026-07-14. Alternative B (Hybrid orchestrator-loop + actor-scheduler) selected per D11.1 steering."
 producer: architect
-timestamp: 2026-07-14T12:00:00Z
+timestamp: 2026-07-14T14:00:00Z
 phase: 1b
-gate: BLOCKED-ON-HUMAN
-gate_note: "D9 human directive: architect MUST present ≥2 alternatives with production trade-offs before this ADR is finalized. The human selects the execution model."
 traces_to: ARCH-INDEX.md
 decisions: [D9, D11, D17]
 supersedes: []
@@ -17,13 +17,16 @@ supersedes: []
 
 # ADR-001: Graph Execution Model
 
-**Status:** DRAFT — BLOCKED-ON-HUMAN (D9 gate)
+**Status:** ACCEPTED — D9 gate passed 2026-07-14. **Decision: Alternative B (Hybrid orchestrator-loop + actor-scheduler).**
 
 **Context:** ferrochain-graph is the highest-complexity, highest-risk crate in the workspace.
-D9 mandates that the architect present ≥2 concrete execution-model alternatives with
-production trade-offs before any ADR is finalized. The human reviews and selects.
-D11.1 steered toward a HYBRID approach but did not lock details. This ADR presents both
-alternatives with full implementation consequences.
+D9 mandated ≥2 alternatives presented to human before ADR lock. Human selected Alternative B
+per D11.1 steering (orchestrator-loop + actor-scheduler synthesis). Alternative A is retained
+below as the rejected alternative with rationale.
+
+**Human Decision Record:** Alternative B selected 2026-07-14. Rationale accepted verbatim:
+budget governance (D17-Q4) integrates as an orchestrator transition concern; crash isolation
+is cleaner in the HYBRID model; type-state machine pattern bounds the complexity.
 
 ---
 
@@ -134,28 +137,28 @@ machine over random task-completion sequences.
 
 ---
 
-## Decision: [BLOCKED — HUMAN SELECTS]
+## Decision: ACCEPTED — Alternative B (Hybrid Orchestrator-Loop + Actor-Scheduler)
 
-The architect presents these two alternatives for human review per D9. The recommendation
-(pending human confirmation) is **Alternative B (HYBRID)** based on:
+**D9 gate passed 2026-07-14.** Human selected Alternative B per D11.1 steering.
+Alternative A (LangGraph-faithful BSP) is REJECTED. Rationale:
 
 1. D11.1 explicitly steered toward HYBRID (orchestrator-loop + actor-scheduler).
-2. Budget governance (D17-Q4) integrates more cleanly as an orchestrator concern.
-3. Crash isolation is architecturally cleaner in the HYBRID model.
-4. The additional complexity is manageable with a type-state machine pattern.
-5. The Kani VP-001 proof applies equally to both alternatives.
+2. Budget governance (D17-Q4) integrates cleanly as an orchestrator transition concern (not woven into a JoinSet collection loop).
+3. Crash isolation is architecturally cleaner: scheduler crash is isolated from orchestrator state.
+4. Type-state machine pattern bounds complexity and prevents illegal state transitions.
+5. VP-001 Kani proof applies equally to both alternatives (pure reducer function is identical).
 
-**This ADR MUST NOT be finalized without explicit human confirmation of the chosen alternative.**
+**Alternative A REJECTED because:** `versions_seen` memory growth for Domain B long-running
+graphs; JoinSet cancellation complexity under partial super-step failure; budget governance
+integration is awkward in the collection loop; Python event-loop idiom doesn't map cleanly
+to Rust JoinSet semantics.
 
-## Consequences (conditional on human selection)
+## Consequences
 
-If Alternative A is chosen:
-- Implement `versions_seen` map in `graph::scheduler`.
-- No separate actor scheduler component.
-- Budget governance woven into collection loop.
-
-If Alternative B is chosen:
-- Implement orchestrator state machine enum + actor scheduler actor.
-- Budget governance as orchestrator transition hook.
-- `graph::scheduler` module contains both components.
-- `graph::bsp_engine` module provides the pure reducer function (VP-001 target).
+- `graph::scheduler` contains both the orchestrator state machine and the actor scheduler.
+- Orchestrator state machine: `Idle → Dispatching → Collecting → Reducing → Checkpointing → Idle` (enum-based type-state).
+- Actor scheduler: Tokio MPSC select loop; receives `Dispatch(task_id, future)`, sends `Completed(task_id, output)`.
+- Budget governance as orchestrator transition hook between Reducing and Checkpointing states.
+- `graph::bsp_engine` contains the pure reducer function (VP-001 Kani target).
+- HITL interrupt: orchestrator checks interrupt queue in the Collecting→Reducing transition.
+- `put_writes` called per completed task in the Collecting phase (DI-002 sync durability default).

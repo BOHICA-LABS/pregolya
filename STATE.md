@@ -4,17 +4,20 @@ level: ops
 version: "2.1"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T08:00:00Z
+timestamp: 2026-07-14T12:00:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "Phase 1 Step D — D9 human gate on ADR-001 pending; then Part 2 (ADR finalization + SS backfill + DTU assessment P1-06)"
+current_step: "Phase 1 spec-gate — fresh-context consistency audit + Phase 1d adversarial review ready"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
-dtu_required: false
+dtu_required: true
+dtu_assessment: 2026-07-14
+dtu_clones_built: pending
+dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
@@ -35,9 +38,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-14 — burst 73: Phase 1 Step D.1 complete — architecture core (9 section files + ARCH-INDEX), 10 ADRs, VP seeds, CI/CD bootstrap. D9 gate open. |
+| **Last Updated** | 2026-07-14 — burst 74: Phase 1 Steps D+E complete — 10 ADRs accepted (D9: Alt B), SS backfill, DTU assessment, tech validation, BC-2.08.009. Spec gate open. |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Phase 1 Step D — D9 human gate on ADR-001 pending; then Part 2 (ADR finalization + SS backfill + DTU assessment P1-06) |
+| **Current Step** | Phase 1 spec-gate — fresh-context consistency audit + Phase 1d adversarial review ready |
 
 ## Phase Progress
 
@@ -58,11 +61,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
+| Phase 1 Steps D+E: ADRs finalized (D9 gate: Alt B), SS backfill, DTU assessment, research validation, BC-2.08.009 | architect + product-owner + research-agent | COMPLETE | 10/10 ADRs accepted. 83 BCs in ss-01..ss-17. VP-INDEX 5 entries (VP-001..005). DTU_REQUIRED: true (3 cassette clone sets; pre-Phase-3 gate: ≥8/7/3 recordings). Research: all ADR tech picks VALID w/ 3 corrections (schemars 1.x path fix + snapshot obligation → BC-2.08.009; bincode 2.x alt noted; Kani no-async → sync-core mandate). R4 REFRAMED: langgraph 0.2.5 pre-1.0 checkpointing — competitor velocity HIGH; moat = GA-maturity + conformance + formal verification. prd-revision (Step E): narrow — 1 new BC only. Burst 74. |
 | Phase 1 Step D.1: architecture core + ADR stubs + VP seeds; CI/CD setup | architect + devops-engineer | COMPLETE | architecture/ 9 section files + ARCH-INDEX (~1,000 lines): SS-01..SS-17 registry w/ crate+wave mapping, purity-boundary-map, verification-architecture + tooling-selection + coverage-matrix. 10 ADRs: ADR-001 graph engine DRAFT BLOCKED-ON-HUMAN (D9 gate — Alt A LangGraph-faithful BSP vs Alt B hybrid orchestrator+actor per D11.1; architect recommends B), ADR-002..010 proposed. VP-INDEX + VP-001/002/003 (D17-Q7 top-3 BSP invariants). module-criticality.md 33 modules. CI/CD: main+develop initialized (d018d3f), 5-job SHA-pinned ci.yml green, branch protection both branches, .envrc withheld. input-hashes filled (10 files). Burst 73. |
 | Phase 1 Step C: 82 BCs authored (12 batches, parallel) + integrated | product-owner ×10 + integrate | COMPLETE | 82/82 BCs in specs/behavioral-contracts/ss-TBD/ (~12,600 lines). Coverage: 17/17 NE, 14/14 DI, R8/R10/R11 Red Gates (BC-2.07.002, BC-2.02.003/004, BC-2.09.004/005), D17-Q2/Q3/Q4/Q7/Q8 mandates, Kani VP seeds (BC-2.03.001, BC-2.04.006, BC-2.13.004). BC-INDEX built (82 entries, 5 RG, 3 VP). Burst 72. |
 | Phase 1 Step C sub-burst 1: PRD core + BC plan | product-owner | COMPLETE | prd.md 607 lines + 5 supplements (1,599 total). 82 BCs planned (48 P0/26 P1/8 P2). OQR-1..5 resolved. Burst 71. |
 | Phase 1 Step B: L2 domain specification (create + shard-split) | business-analyst | COMPLETE | domain-spec/ 15 files, 1,889 lines: 19 CAPs, 14 DIs, ~27 entities, 8 bounded contexts. Burst 70. |
-| Phase 1 Step A: product brief (create + review + revise) | product-owner + spec-reviewer | COMPLETE | product-brief.md v1.1 (288 lines). spec-reviewer PASS-WITH-FIXES: SR-01–SR-04 resolved. Burst 69. |
 
 ## Decisions Log
 
@@ -93,7 +96,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | R1 | langgraph `scheduler-kafka` confirmed removed from langgraph 1.2.9. With D1 amended, treat as out-of-scope unless architecture finds a dependency | Low | Phase 1/3 | Effectively resolved by D1 amendment |
 | R2 | langchain-community stable is 0.4.x; v1.0.0a1 tagged — API churn risk for community wave | Medium | Phase 3 | Phase community work last per D1 roadmap |
 | R3 | DTU scope revised per D13 — ferrochain-server is first-party. DTU = OpenAI, Anthropic, provider APIs, Ollama keyless CI. Pass-6 "stateful fake" RETIRED. | Low | Phase 1 | Direction resolved by D13 |
-| R4 | Competing active `langgraph` crate on crates.io (updated 2026-07-01) — positioning risk | Medium | Phase 1 | Feeds market-intelligence-assessment gate |
+| R4 | langgraph crate 0.2.5 (2026-07-01, pre-1.0) ships Postgres/Sqlite checkpointing. Competitor velocity HIGH confirmed. ferrochain differentiator = GA maturity + conformance suite + formal verification. Watch for their 1.0 release. | Medium | Phase 1/3 | R4 REFRAMED per burst-74 research. Monitor langgraph 1.0 release date. |
 | R5 | Three incompatible tag conventions across reference repos — tag-sort bug already triggered (langgraph mis-pinned at 0.3.34, corrected) | Low | Tooling | Semport tooling must handle all three |
 | R6 | crates.io names verified available; GitHub=BOHICA-LABS/ferrochain registered; publish-all.sh prepped — human has NOT yet run publish-all.sh (cargo login required). Time-sensitive. | High | pre-1 | Pending human action: `cargo login` + run publish-all.sh to reserve all ferrochain-* crate names |
 | R7 | langchain-protocol v0.0.17 — no stable release; schema evolving. Port rationale is version-volatility, not immaturity (v3 streaming has 107 dedicated tests — corrected cert pass 9). | Low | Phase 1/3 | DOWNGRADED from Medium; full schema in .factory/semport/core/ANALYSIS-STATE.md |
@@ -131,27 +134,27 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ### RESUME IN ONE BREATH
 
-ferrochain Phase 1 Spec Crystallization IN PROGRESS. Steps A+B+C+D.1 complete. D.1: specs/architecture/ (ARCH-INDEX.md + 9 section files, ~1,000 lines; SS-01..SS-17 registry + purity-boundary-map + verification-architecture + tooling-selection + coverage-matrix); decisions/ (10 ADRs — ADR-001 DRAFT BLOCKED-ON-HUMAN, ADR-002..010 proposed); specs/verification-properties/ (VP-INDEX.md + VP-001/002/003, D17-Q7 top-3 BSP invariants); specs/module-criticality.md (33 modules). CI/CD: main+develop bootstrapped (d018d3f), 5-job SHA-pinned ci.yml green, branch protection both branches. BC subsystem IDs = SS-TBD pending Part 2 backfill. BLOCKED: D9 gate — ADR-001 Alt A (LangGraph-faithful BSP channels) vs Alt B (hybrid orchestrator+actor; architect recommends B). Present to human for decision. NEXT on decision: finalize ADR-001 → Part 2: SS-NN backfill into 82 BC frontmatter + ADR-004 finalization (D5) + DTU assessment P1-06 (MANDATORY, dtu-assessment.md even though dtu_required=false) + PRD revision step.
+ferrochain Phase 1 Spec Crystallization: Steps A+B+C+D+E complete. Spec gate ready: dispatch consistency-validator (fresh context, full cross-doc audit) → Phase 1d adversarial (3 clean passes min, different model). 83 BCs in ss-01..ss-17 + BC-INDEX. VP-INDEX 5 entries (VP-001..005). 10 ADRs accepted (ADR-001 = Alt B HYBRID, D9 gate passed 2026-07-14). DTU_REQUIRED: true — cassette clones for OpenAI/Anthropic/Ollama; pre-Phase-3 gate ≥8/7/3 recordings; OpenAI Responses-migration re-record trigger flagged. Tech validation: schemars 1.x path fix, bincode 2.x alt noted, Kani no-async → sync-core mandate. BC-2.08.009 added (schema naming stability; BC-INDEX 83). R4 reframed: langgraph 0.2.5 pre-1.0 checkpointing — HIGH velocity; moat = GA maturity + conformance + formal verif. ANOMALY: 3 spec propagation gaps flagged in burst-log (prd.md + BC-INDEX.md — orchestrator must dispatch product-owner/spec-steward before spec-gate sign-off).
 
 ### HEADS
 
 | Repo | Branch | SHA | Pushed | Notes |
 |------|--------|-----|--------|-------|
-| factory-artifacts | factory-artifacts | (burst 73 commit — run `git -C .factory log -1 --format='%h'`) | YES — BOHICA-LABS/ferrochain | Durable artifact backup |
-| main | main | d018d3f | YES — BOHICA-LABS/ferrochain | CLAUDE.md constitution committed (D10) + .gitignore; develop branch initialized |
+| factory-artifacts | factory-artifacts | (burst 74 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
+| main | main | d018d3f | YES | CLAUDE.md + .gitignore committed (D10); develop initialized |
 
 No worktrees. No PRs. Reference clones (.reference/) gitignored.
 
 ### WORKSTREAM
 
-**Phase 1 Step D.1 COMPLETE.** architecture/ (9 section files + ARCH-INDEX), 10 ADRs (ADR-001 BLOCKED-ON-HUMAN D9 gate), VP-INDEX + VP-001/002/003. CI/CD bootstrapped (d018d3f, ci.yml green). Input-hashes filled (10 files).
+**Phase 1 Steps D+E COMPLETE.** 10 ADRs finalized (D9: Alt B). 82→83 BCs in ss-01..ss-17. VP-INDEX 5 entries. DTU assessment done (3 clone sets). Tech validation: 3 corrections applied.
 
-**RESUME NEXT-ACTION:** Present D9 gate to human (ADR-001 Alt A vs Alt B). On human decision: finalize ADR-001 → Part 2: SS-NN backfill into 82 BC frontmatter + ADR-004 finalization (D5) + DTU assessment P1-06 + PRD revision.
+**RESUME NEXT-ACTION:** consistency-validator (fresh context, full spec cross-doc audit) → Phase 1d adversarial review (adversary, different model family, 3 clean passes min).
 
 ### PENDING HUMAN ACTIONS (open)
 
 1. `direnv allow .` (B1 — Low, blocks key loading)
-2. `cargo login` + `.factory/namespace-reservation/publish-all.sh` — R6 namespace race STILL OPEN, time-sensitive
+2. `cargo login` + `.factory/namespace-reservation/publish-all.sh` — R6 namespace race STILL OPEN
 
 ### STANDING DIRECTIVES
 
@@ -159,7 +162,7 @@ No worktrees. No PRs. Reference clones (.reference/) gitignored.
 |----|-----------|
 | D15 | Autonomous loop, never ask to continue — "Keep going until you hit convergence protocol." |
 | D14 | Absolute strict-zero: CLEAN(strict) = zero findings; 3 consecutive required |
-| D17 | HYBRID outcome adopted — LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns; Phase-1 BC scope per Q2-Q9 |
+| D17 | HYBRID outcome adopted — LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns |
 
 Holdout domains A/B/C at planning/holdout-domains/. D1-D17 all in Decisions Log above.
 
@@ -169,31 +172,29 @@ Holdout domains A/B/C at planning/holdout-domains/. D1-D17 all in Decisions Log 
 |-------|-------|
 | **Date** | 2026-07-14 |
 | **Cycle** | v1.0.0-greenfield |
-| **Burst commit** | (burst 73 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Burst commit** | (burst 74 — run `git -C .factory log -1 --format='%h %s'`) |
 | **Convergence counter** | 3 of 3 — GATE CLOSED (adk-rust C23; pre-pipeline) |
 
 ## Historical Content
 
 | Content | Location |
 |---------|----------|
-| All burst narratives (bursts 1–41, pre-pipeline semport+cert passes, adk-rust A1–A5, exhaustive sweep) | `cycles/v0.0.0-pre-pipeline/burst-log.md` |
-| Burst 70–73 narratives (Phase 1 Steps B, C.1, C, D.1) | `cycles/v1.0.0-greenfield/burst-log.md` |
-| 82 Behavioral Contracts (ss-TBD/, ~12,600 lines) + BC-INDEX.md | `.factory/specs/behavioral-contracts/ss-TBD/` + `BC-INDEX.md` |
-| L3 PRD (index + BC summary tables, 607 lines) | `.factory/specs/prd.md` |
+| Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–D+E) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
+| 83 Behavioral Contracts (ss-01..ss-17/, ~12,600+ lines) + BC-INDEX.md | `.factory/specs/behavioral-contracts/ss-NN/` + `BC-INDEX.md` |
+| L3 PRD (index + BC summary tables, 607 lines) + v1.0 Step-E annotation (BC-2.08.009) | `.factory/specs/prd.md` |
 | PRD supplements: bc-authoring-plan (308), error-taxonomy (146), nfr-catalog (80), module-criticality (155), interface-definitions (303) | `.factory/specs/prd-supplements/` |
 | L2 domain spec (15-shard, 1,889 lines) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
 | Session checkpoints bursts 5–58 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` |
 | Lessons learned (12 lessons, 12 codified guardrails incl. Guardrail #12 test-count methodology, Drift/Deferral DEFER-001) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
-| Domain A brief (SOC analyst — Phase-1 forcing surfaces) | `.factory/planning/holdout-domains/domain-a-soc-analyst.md` |
-| Domain B brief (dark factory — agent-registry, token/cost metering) | `.factory/planning/holdout-domains/domain-b-dark-factory.md` |
-| Domain C brief (OpenClaw — channel ingress, personal-memory, local-first) | `.factory/planning/holdout-domains/domain-c-openclaw.md` |
+| Holdout domain briefs A/B/C (SOC analyst, dark factory, OpenClaw) | `.factory/planning/holdout-domains/domain-{a,b,c}-*.md` |
 | Reference corpus manifest (v1.4.0 — adk-rust Corpus 5 added) | `.factory/semport/reference-manifest.md` |
-| Naming decision study | `.factory/planning/naming-decision-study.md` |
-| File-size standard study | `.factory/planning/file-size-standard-study.md` |
+| Planning studies (naming decision, file-size standard) | `.factory/planning/naming-decision-study.md` + `file-size-standard-study.md` |
 | Semport pass 1 analysis state (deepening items, risks) | `.factory/semport/core/ANALYSIS-STATE.md` |
 | D16 comparative assessment + 3 part-files (COMPARATIVE-ASSESSMENT.md synthesis) | `.factory/comparative/COMPARATIVE-ASSESSMENT.md` (+ `assessment-parts/`) |
 | Architecture core: ARCH-INDEX + 9 section files (~1,000 lines), 10 ADRs | `.factory/specs/architecture/` + `decisions/` |
-| VP-INDEX + VP-001/002/003 (D17-Q7 top-3 BSP invariants) | `.factory/specs/verification-properties/` |
+| VP-INDEX + VP-001..005 (D17-Q7 top-3 BSP invariants + MCP integration VPs) | `.factory/specs/verification-properties/` |
+| DTU assessment (DTU_REQUIRED: true; 3 cassette clone sets; pre-Phase-3 gate ≥8/7/3) | `.factory/planning/dtu-assessment.md` |
+| ADR tech validation (schemars 1.2.1, rmp-serde 1.3.1, Kani 0.67.0 no-async) | `.factory/planning/adr-tech-validation.md` |
 | Module criticality assessment (33 modules, architect version) | `.factory/specs/module-criticality.md` |
 | CI/CD setup log (workspace-init; d018d3f; ci.yml; branch protection) | `.factory/planning/cicd-setup.md` |

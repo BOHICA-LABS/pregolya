@@ -4,7 +4,7 @@ level: L3
 adr_id: "010"
 slug: error-taxonomy-anyhow-confinement
 title: "Error Taxonomy and anyhow Confinement (NE-16 / NE-03 / DI-014)"
-status: proposed
+status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
 phase: 1b

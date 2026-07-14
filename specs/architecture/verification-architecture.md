@@ -21,6 +21,32 @@ decisions: [D17]
 > **VP-INDEX is the source of truth.** Any count or module assignment here must
 > match VP-INDEX.md exactly. Arithmetic: VP total = P0 count + P1 count.
 
+## Kani Async Constraint (Verified Kani 0.67.0)
+
+**Kani 0.67.0 has NO native async/.await support.** Harnesses that call `.await`
+on a `Future` will fail at verification time. Consequences:
+
+1. **Harnesses must call `block_on` manually** (or restructure to avoid async entirely):
+   the pure sync core is extracted and the async wrapper is excluded from the harness.
+2. **Sync-core mandate:** The following modules MUST expose a sync (non-async) pure
+   core function that is the Kani verification target:
+   - `checkpoint::session_index` (VP-002 target) — sync key derivation logic
+   - `checkpoint::clock` (monotonic AtomicU64 read) — sync increment and compare
+   - `graph::bsp_engine` (VP-001 target) — sync reducer; async orchestration wraps it
+3. **ADR-001 Alt-B constraint:** The HYBRID orchestrator-loop is `async` (Tokio runtime).
+   This is intentional and correct. The Kani-verifiable invariants live inside the
+   synchronous `reduce_super_step()` core that the orchestrator calls. Async orchestration
+   wraps sync verifiable cores — the boundary between them is the purity-boundary-map.
+4. **Harness pattern for wrapped sync cores:**
+   ```rust
+   #[kani::proof]
+   fn bsp_determinism() {
+       // Call the sync reducer directly — no .await, no Tokio, no block_on needed
+       let outputs: Vec<(TaskId, ChannelUpdate)> = kani::vec(kani::any::<usize>().min(4));
+       assert_eq!(reduce_super_step(&outputs), reduce_super_step(&permute(&outputs)));
+   }
+   ```
+
 ## Committed VP Obligations (D17-Q7)
 
 Three VPs committed before v1.0 release (NFR-003):
@@ -30,8 +56,10 @@ Three VPs committed before v1.0 release (NFR-003):
 | VP-001 | BC-2.03.001 | DI-001 | ferrochain-graph / bsp-engine | Kani | 6 | P0 |
 | VP-002 | BC-2.04.006 | DI-005 | ferrochain-checkpoint / session-index | Kani | 6 | P0 |
 | VP-003 | BC-2.13.004 | DI-007 | ferrochain-sandbox / path-guard | Kani | 6 | P0 |
+| VP-004 | BC-2.09.004 | DI-014 | ferrochain-mcp / mcp-adapter | integration | 3 | P1 |
+| VP-005 | BC-2.09.005 | DI-014 | ferrochain-mcp / mcp-client | integration | 3 | P1 |
 
-**Total: 3 VPs — 3 P0 / 0 P1 | Tool breakdown: Kani ×3**
+**Total: 5 VPs — 3 P0 / 2 P1 | Tool breakdown: Kani ×3, integration ×2**
 
 ## Provable Properties Catalog
 

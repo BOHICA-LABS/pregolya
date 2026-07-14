@@ -230,7 +230,7 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | BC-2.13.006 | macOS Seatbelt profile: deny-by-default with explicit allow rules (NE-16) | P1 | CAP-015 | DI-006 | Wave 1 |
 
 ### Batch 9 — Provider Conformance + Standard Tests (P1)
-*8 BCs — SS.08 complete*
+*9 BCs — SS.08 complete (Step-E addition: BC-2.08.009 authored from ADR-004 acceptance, architect feedback)*
 
 | BC ID | Title | Priority | CAP | DI | Wave |
 |-------|-------|----------|-----|----|------|
@@ -242,6 +242,7 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | BC-2.08.006 | Standalone SDK crate split architecture (ferrochain-\<provider\>-sdk + adapter) | P1 | CAP-009 | DI-008 | Wave 2 |
 | BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout), not truncated success | P1 | CAP-009 | DI-014 | Wave 2 |
 | BC-2.08.008 | Eval score: arithmetic mean aggregation + JudgeResult::InfraError third outcome (NE-15) | P1 | CAP-011 | — | Wave 2 |
+| BC-2.08.009 | Tool schema naming stability (snapshot test anchor) — **Step E** (ADR-004 snapshot obligation) | P1 | CAP-009 | — | Wave 2 |
 
 ### Batch 10 — MCP Adapter + Server Partial (P1)
 *8 BCs — SS.09 + SS.12 partial*

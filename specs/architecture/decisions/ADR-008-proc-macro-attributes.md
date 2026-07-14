@@ -4,7 +4,7 @@ level: L3
 adr_id: "008"
 slug: proc-macro-attributes
 title: "Proc-Macro Attributes: #[tool], #[entrypoint], #[task] (D17-Q6)"
-status: proposed
+status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
 phase: 1b

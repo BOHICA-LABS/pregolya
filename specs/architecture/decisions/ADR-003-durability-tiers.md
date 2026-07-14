@@ -4,7 +4,7 @@ level: L3
 adr_id: "003"
 slug: durability-tiers
 title: "Checkpoint Durability Tiers: Sync Default, Async and Exit-Only Opt-In"
-status: proposed
+status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
 phase: 1b

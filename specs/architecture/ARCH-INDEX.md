@@ -79,23 +79,25 @@ decisions: [D4, D6, D9, D11, D13, D17]
 
 | ADR | Title | Status | Gate |
 |-----|-------|--------|------|
-| ADR-001 | Graph Execution Model | draft — BLOCKED-ON-HUMAN (D9) | D9 human gate |
-| ADR-002 | Checkpoint Wire Format (msgpack) | proposed | — |
-| ADR-003 | Durability Tiers | proposed | — |
-| ADR-004 | Schema Generation: serde / schemars | proposed | D5 |
-| ADR-005 | Logical Clock and Checkpoint Ordering | proposed | — |
-| ADR-006 | Streaming Event Taxonomy | proposed | — |
-| ADR-007 | Crate Topology and SDK Split | proposed | — |
-| ADR-008 | Proc-Macro Attributes | proposed | D5 ADR-004 |
-| ADR-009 | Budget Governance Engine Placement | proposed | — |
-| ADR-010 | Error Taxonomy and anyhow Confinement | proposed | — |
+| ADR-001 | Graph Execution Model (Alt B: HYBRID) | accepted — D9 gate passed 2026-07-14 | — |
+| ADR-002 | Checkpoint Wire Format (msgpack) | accepted | — |
+| ADR-003 | Durability Tiers | accepted | — |
+| ADR-004 | Schema Generation: serde / schemars | accepted | D5 ✓ |
+| ADR-005 | Logical Clock and Checkpoint Ordering | accepted | — |
+| ADR-006 | Streaming Event Taxonomy | accepted | — |
+| ADR-007 | Crate Topology and SDK Split | accepted | — |
+| ADR-008 | Proc-Macro Attributes | accepted | ADR-004 ✓ |
+| ADR-009 | Budget Governance Engine Placement | accepted | — |
+| ADR-010 | Error Taxonomy and anyhow Confinement | accepted | — |
 
 ## Verification Properties (VP-INDEX)
 
-3 committed Kani VPs (D17-Q7):
+5 VPs total (3 Kani P0 + 2 integration P1):
 
-| VP | BC Anchor | Module | Status |
-|----|-----------|--------|--------|
-| VP-001 | BC-2.03.001 (BSP determinism) | ferrochain-graph / bsp-engine | draft |
-| VP-002 | BC-2.04.006 (session tenancy) | ferrochain-checkpoint / session-index | draft |
-| VP-003 | BC-2.13.004 (workspace confinement) | ferrochain-sandbox / path-guard | draft |
+| VP | BC Anchor | Module | Tool | Status |
+|----|-----------|--------|------|--------|
+| VP-001 | BC-2.03.001 (BSP determinism) | ferrochain-graph / bsp-engine | Kani | draft |
+| VP-002 | BC-2.04.006 (session tenancy) | ferrochain-checkpoint / session-index | Kani | draft |
+| VP-003 | BC-2.13.004 (workspace confinement) | ferrochain-sandbox / path-guard | Kani | draft |
+| VP-004 | BC-2.09.004 (MCP ToolException) | ferrochain-mcp / mcp-adapter | integration | draft |
+| VP-005 | BC-2.09.005 (MCP no live connections) | ferrochain-mcp / mcp-client | integration | draft |

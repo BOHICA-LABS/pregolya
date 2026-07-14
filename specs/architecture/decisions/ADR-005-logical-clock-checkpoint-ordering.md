@@ -4,7 +4,7 @@ level: L3
 adr_id: "005"
 slug: logical-clock-checkpoint-ordering
 title: "Logical Clock and Checkpoint Ordering (CONFLICT-4: monotonic vs wall-clock)"
-status: proposed
+status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
 phase: 1b

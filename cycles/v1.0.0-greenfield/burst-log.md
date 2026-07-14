@@ -254,3 +254,50 @@ Part 2 of Step D can proceed. The architect's recommendation is Alt B (hybrid
 orchestrator+actor). Present both alternatives with trade-offs.
 
 ---
+
+## Archived from STATE.md — Phase 1 Step A (burst 69; rotated out at burst 74)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1 Step A: product brief (create + review + revise) | product-owner + spec-reviewer | COMPLETE | product-brief.md v1.1 (288 lines). spec-reviewer PASS-WITH-FIXES: SR-01–SR-04 resolved. Burst 69. |
+
+---
+
+## Burst 74 (2026-07-14)
+
+**Agents dispatched:** architect (ADR finalization + SS-NN backfill + DTU assessment + verification-architecture sync), product-owner (BC-2.08.009; PRD revision Step E), research-agent (ADR tech validation), state-manager (STATE.md update, session-checkpoint archive)
+
+### Summary
+
+Phase 1 Steps D (complete) + E (narrow prd-revision):
+- 10/10 ADRs accepted. ADR-001 = Alt B HYBRID (D9 human gate 2026-07-14).
+- 82 BC files moved from ss-TBD/ → ss-01..ss-17/ with frontmatter backfill + anomaly normalization.
+- NEW BC-2.08.009 (Tool Schema Naming Stability — Snapshot Test Anchor; SS.08). Total: 82 → 83 BCs.
+- VP-INDEX: 3 entries → 5 entries (VP-001..005).
+- DTU assessment (planning/dtu-assessment.md): DTU_REQUIRED: true — 3 cassette clone sets (OpenAI, Anthropic, Ollama); OpenAI Responses-migration re-record trigger flagged; pre-Phase-3 gate ≥8/7/3 recordings.
+- ADR tech validation (planning/adr-tech-validation.md): schemars 1.2.1 path fix, bincode 2.x alt noted, Kani 0.67.0 no-async → sync-core mandate in verification-architecture.md.
+- R4 REFRAMED: langgraph crate 0.2.5 (2026-07-01, pre-1.0) ships Postgres/Sqlite checkpointing. Competitor velocity HIGH confirmed; ferrochain moat = GA-maturity + conformance + formal verification.
+- Input-hash placeholders filled on all new/changed artifacts.
+
+### Propagation gaps flagged (spec docs — outside state-manager write scope)
+
+- BC-INDEX.md line 26: `Total BCs | 82` (frontmatter already shows 83; metrics table stale).
+- prd.md line 545: `Totals: 82 BCs` (revision log line 32 records 82→83; body table stale).
+- prd.md BC table (~lines 146+): paths still show `ss-TBD/` (BC-INDEX.md already updated to ss-NN/).
+Orchestrator must dispatch product-owner or spec-steward to remediate these before spec-gate.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| architect | ADR finalization (all 10); SS-NN backfill; verification-architecture.md Kani sync | All ADRs accepted; 82 BCs in ss-01..ss-17; sync-core mandate codified |
+| product-owner | BC-2.08.009 authoring; PRD revision (Step E narrow) | ss-08/BC-2.08.009.md; prd.md v1.0 Step-E annotation |
+| research-agent | ADR tech validation: schemars 1.2.1, rmp-serde 1.3.1, Kani 0.67.0 | planning/adr-tech-validation.md; 3 corrections applied |
+| architect | DTU assessment P1-06 | planning/dtu-assessment.md; DTU_REQUIRED: true; 3 clone sets |
+| state-manager | STATE.md update; burst-log + session-checkpoints archive | Burst 74 single-commit push to factory-artifacts |
+
+### Gate Status
+
+**Spec gate OPEN.** Dispatch consistency-validator (fresh context, full spec cross-doc audit) → Phase 1d adversarial review (adversary, different model family, 3 clean passes min).
+
+---

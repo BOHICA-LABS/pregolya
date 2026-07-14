@@ -28,16 +28,22 @@ decisions: [D17]
 | Property | Value |
 |----------|-------|
 | Crate | `kani` (Kani Rust Verifier) |
-| Version target | ≥ 0.50.0 (latest stable at Phase 6) |
+| Version target | 0.67.0 (verified 2026-07, latest stable) |
 | Cargo integration | `[dev-dependencies]` in ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox |
 | Invocation | `cargo kani --harness <harness_name>` |
 | CI gate | Phase 6 only; Kani is NOT a per-PR gate (too slow); run in dedicated Phase 6 job |
 | Bounded loops | All harnesses must assert `kani::assume(n <= 4)` or equivalent bound |
 | OS syscall policy | Harnesses must not call `std::fs::*`; pure path models used for VP-003 |
 
-**Constraint:** Kani operates on pure functions. Any harness that reaches I/O code will
-produce a verification failure. The purity-boundary-map.md classifications are the
-prerequisite for Kani scope.
+**Constraint — no async support:** Kani 0.67.0 has NO native async/.await support.
+Harnesses must target the synchronous pure core of each module. The async orchestration
+layer (ADR-001 Alt-B Tokio runtime) is not Kani-verifiable; the sync reducer cores it
+calls ARE. This drives the sync-core mandate: `graph::bsp_engine::reduce_super_step`,
+`checkpoint::session_index::derive_key`, and `checkpoint::clock::next_id` MUST be
+extractable as sync functions. See verification-architecture.md § Kani Async Constraint.
+
+**Constraint — purity:** Any harness that reaches I/O code will produce a verification
+failure. The purity-boundary-map.md classifications are the prerequisite for Kani scope.
 
 ## Property-Based Testing: proptest
 
@@ -61,7 +67,7 @@ Use `proptest!` macro for invariant-style tests (e.g., `reduce(permute(v)) == re
 | Property | Value |
 |----------|-------|
 | Crate | `cargo-fuzz` (libFuzzer) |
-| Version target | ≥ 0.12.0 |
+| Version target | 0.13.2 (verified 2026-07) |
 | Fuzz targets | `fuzz/fuzz_targets/checkpoint_roundtrip.rs`, `fuzz/fuzz_targets/graph_engine_boundary.rs` |
 | Invocation | `cargo fuzz run <target> -- -max_total_time=300` |
 | CI gate | Phase 6; fuzz corpus committed in `fuzz/corpus/` |
@@ -74,7 +80,7 @@ Use `proptest!` macro for invariant-style tests (e.g., `reduce(permute(v)) == re
 | Property | Value |
 |----------|-------|
 | Crate | `cargo-mutants` |
-| Version target | ≥ 0.16.0 |
+| Version target | 27.1.0 (verified 2026-07) |
 | Invocation | `cargo mutants --workspace` |
 | CI gate | Phase 5 adversarial; also Phase 3 per-story gate for CRITICAL modules |
 | Kill rate thresholds | CRITICAL ≥ 95%; HIGH ≥ 90%; MEDIUM ≥ 80%; LOW ≥ 70% |

@@ -4,7 +4,7 @@ level: L3
 adr_id: "007"
 slug: crate-topology-sdk-split
 title: "Crate Topology and SDK Split for Provider Crates (D17-Q5)"
-status: proposed
+status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
 phase: 1b

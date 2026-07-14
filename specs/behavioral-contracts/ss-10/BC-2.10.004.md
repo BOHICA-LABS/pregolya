@@ -1,0 +1,179 @@
+---
+document_type: behavioral-contract
+level: L3
+bc_id: BC-2.10.004
+version: "1.0"
+status: active
+lifecycle_status: active
+introduced: v1.0.0-greenfield
+origin: greenfield
+priority: P0
+subsystem: SS-10
+capability: CAP-012
+wave: 1
+phase: 1a
+producer: product-owner
+timestamp: 2026-07-13T00:00:00Z
+traces_to:
+  - domain-spec/capabilities-p1-p2.md#CAP-012
+  - domain-spec/capabilities-p0.md#CAP-006
+  - domain-spec/invariants.md#DI-003
+inputs:
+  - .factory/specs/prd.md
+  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/domain-spec/capabilities-p0.md
+  - .factory/specs/domain-spec/invariants.md
+  - .factory/comparative/adk-rust/behavioral-intent.md
+  - .factory/planning/holdout-domains/domain-b-dark-factory.md
+input-hash: "14c68c6f1c33066d381b16f4473f2933ac265809d8384102e8faaaf420785671"
+---
+
+# BC-2.10.004: Budget Escalation to HITL Interrupt When on_ceiling = escalate
+
+## Description
+
+When a `BudgetPolicy::evaluate` call returns `PolicyDecision::Escalate` and the policy's
+`on_ceiling` mode is `escalate`, the execution engine suspends the run via the same
+`interrupt()` mechanism used by standard HITL interrupts (BC-2.05.001). The interrupt payload
+carries a typed `BudgetEscalation` context (current usage, ceiling, policy name, reason).
+The run parks in `requires_action` status, durably checkpointed, until a human or orchestrator
+resumes it via `Command(resume = BudgetResume::Extend { new_ceiling } | BudgetResume::Halt)`.
+The `EvidenceJournal` records both the escalation and the resume decision. DI-003 applies:
+the resume value is consumed FIFO and the interrupted node re-executes from its super-step start.
+
+## Preconditions
+
+1. A `BudgetPolicy` with `on_ceiling = escalate` is configured in the `RunConfig`.
+2. A `BudgetPolicy::evaluate` call has returned `PolicyDecision::Escalate` after an LLM call
+   or tool invocation.
+3. A `CheckpointSaver` is attached to the graph (an interrupt without a checkpointer is a
+   precondition violation — same as BC-2.05.001 EC-001).
+4. The execution engine is currently at an evaluation point within a super-step.
+
+## Postconditions
+
+1. The execution engine triggers `interrupt(BudgetEscalation { current_usage, ceiling, policy_name, reason })` via the standard interrupt mechanism.
+2. The interrupt payload is pushed to the per-task scratchpad (FIFO slot) as per DI-003 and BC-2.05.001 postcondition 2.
+3. A checkpoint is written with the INTERRUPT marker and the `BudgetEscalation` payload before
+   the run suspends (sync durability tier, DI-002). The checkpoint write completes before the
+   caller receives the interrupt notification.
+4. The run transitions to `requires_action` status; the caller receives:
+   `{"__interrupt__": [InterruptPayload { value: BudgetEscalation { ... }, interrupt_id }]}`.
+5. A `JournalEntry` with `decision: Escalate` and the `BudgetEscalation` context is appended
+   to the `EvidenceJournal` before the interrupt is raised (BC-2.10.002).
+6. On resume via `Command(resume = BudgetResume::Extend { new_ceiling })`:
+   - The `new_ceiling` replaces the policy's current ceiling in the `RunConfig` for the
+     resumed execution.
+   - The interrupted node re-executes from the start of its super-step (DI-003).
+   - A `JournalEntry` recording the resume decision and new ceiling is appended.
+   - Execution continues under the extended ceiling.
+7. On resume via `Command(resume = BudgetResume::Halt)`:
+   - The run halts gracefully (same behavior as BC-2.10.003 postconditions 3–7).
+   - A `JournalEntry` recording the halt decision is appended.
+
+## Invariants
+
+- **DI-003 (HITL FIFO Resume-Value Delivery):** The budget escalation interrupt participates
+  in the FIFO resume-value queue alongside any other concurrent interrupts. If multiple
+  interrupts are pending, resume values are consumed in strict FIFO order.
+- The `BudgetEscalation` interrupt uses the same `put_writes` / INTERRUPT-marker checkpoint
+  mechanism as all other interrupts (BC-2.05.001). No special-case checkpoint path exists.
+- A budget escalation without a `CheckpointSaver` is a hard precondition violation, identical
+  to BC-2.05.001 EC-001. The error returned is `Err(E-GRAPH-003 InterruptWithoutCheckpointer)`.
+- After resume with `Extend`, the resumed execution is subject to the same budget policy
+  evaluation — the extended ceiling takes effect immediately for the next evaluation call.
+  If the extended ceiling is still lower than current usage, the next evaluation immediately
+  escalates again (the run does not get unlimited budget by virtue of resuming).
+
+## Edge Cases
+
+### EC-001: Budget escalation without a CheckpointSaver
+**Scenario:** A graph with `on_ceiling = escalate` runs without a `CheckpointSaver`.
+**Expected behavior:** On the first `PolicyDecision::Escalate`, the engine returns
+`Err(E-GRAPH-003 InterruptWithoutCheckpointer)` rather than raising an interrupt without
+durable state. The run transitions to `failed`.
+
+### EC-002: Escalation and an existing `interrupt()` call are both pending
+**Scenario:** Node B called `interrupt("review_this")` in slot 0. Node C triggered a budget
+escalation in slot 1. Both are in the FIFO queue.
+**Expected behavior:** Slot 0 (`interrupt("review_this")`) is consumed first on resume.
+Slot 1 (BudgetEscalation) is consumed second in the next resume round. FIFO order is strict
+per DI-003 regardless of interrupt source.
+
+### EC-003: Human resumes with a new_ceiling still below current usage
+**Scenario:** Run has accumulated 120k tokens. Policy ceiling is 100k (escalated). Human
+resumes with `BudgetResume::Extend { new_ceiling: 110k }`. New ceiling (110k) < current
+usage (120k).
+**Expected behavior:** The resumed execution evaluates the budget policy immediately after
+the resumed node's first LLM call. If usage is still 120k > 110k, the policy returns
+`PolicyDecision::Escalate` again immediately. The run re-escalates on the next evaluation.
+The journal records the re-escalation. No infinite-escalation loop occurs between evaluation
+calls (each escalation requires a new resume action from the human).
+
+### EC-004: Process restart after budget escalation interrupt is durably parked
+**Scenario:** A budget escalation interrupt is durably checkpointed (INTERRUPT marker written).
+The process crashes. On restart, the operator reloads the `CheckpointSaver`.
+**Expected behavior:** The checkpointer surfaces the INTERRUPT-marker checkpoint with the
+`BudgetEscalation` payload. The engine recognizes the thread as requiring action. The run
+is not re-executed from scratch; it is resumable via `Command(resume = BudgetResume::Extend
+{ ... } | BudgetResume::Halt)`.
+
+### EC-005: Sub-agent escalation propagates to parent
+**Scenario:** A sub-agent run escalates (requires_action). The parent run is waiting for the
+sub-agent's result.
+**Expected behavior:** The sub-agent's interrupt is visible to the parent graph via the
+sub-agent node returning an `interrupt` outcome. The parent can route via a conditional edge
+to a HITL approval node or propagate the interrupt. Sub-agent escalation does not silently
+block the parent — it surfaces as an explicit result.
+
+## Canonical Test Vectors
+
+| # | Input | Expected Output | Notes |
+|---|-------|-----------------|-------|
+| TV-001 | BudgetPolicy `on_ceiling = escalate, soft_limit = 10k`; run accumulates 12k tokens on 3rd LLM call | Run transitions to `requires_action`; caller receives `{"__interrupt__": [BudgetEscalation { ... }]}`; checkpoint with INTERRUPT marker written | Happy path — escalation triggered |
+| TV-002 | Resume with `BudgetResume::Extend { new_ceiling: 50k }` after TV-001 | Interrupted node re-executes from super-step start; new ceiling 50k is active; execution continues; journal records Extend decision | Resume with extended ceiling |
+| TV-003 | Resume with `BudgetResume::Halt` after TV-001 | Run halts gracefully; same behavior as BC-2.10.003; journal records Halt decision | Resume with halt decision |
+| TV-004 | Process crash after INTERRUPT-marker checkpoint; restart; resume with Extend | On restart, run is in `requires_action`; `Command(resume = Extend { ... })` resumes from correct checkpoint | Durable escalation across restart — DI-003 |
+| TV-005 | Budget escalation while a prior `interrupt("review")` is in FIFO slot 0 | Resume 1: `interrupt("review")` consumed; Resume 2: `BudgetEscalation` consumed (FIFO per DI-003) | FIFO ordering across interrupt sources |
+
+## Verification Properties
+
+| VP ID | Description | Method | Phase |
+|-------|-------------|--------|-------|
+| VP-BUDGET-05 | Budget escalation uses identical interrupt mechanism to BC-2.05.001; checkpoint with INTERRUPT marker is written before caller receives interrupt notification; resume with Extend continues from correct super-step | Integration test — escalate, checkpoint-assert, process-restart, resume-with-extend, assert-continuation | Phase 1 |
+
+## Related BCs
+
+- BC-2.10.001 — depends on: `PolicyDecision::Escalate` returned by `BudgetPolicy::evaluate` triggers this BC
+- BC-2.10.002 — composes with: `JournalEntry` with `decision: Escalate` and resume-decision entries are written
+- BC-2.10.003 — related to: `on_ceiling = halt` is the alternative (specified there); on `BudgetResume::Halt`, this BC delegates to BC-2.10.003 postconditions
+- BC-2.05.001 — depends on: the interrupt and durable-state-persistence mechanism used here is exactly the mechanism defined in BC-2.05.001; BC-2.10.004 is a consumer of that mechanism, not a reimplementation
+
+## Architecture Anchors
+
+- `ferrochain-graph/src/pregel/loop.rs` — Escalate path: call `interrupt(BudgetEscalation {...})` using the same interrupt entry point as standard HITL interrupts
+- `ferrochain-graph/src/budget/types.rs` — `BudgetEscalation` struct (interrupt payload), `BudgetResume` enum (resume value variants)
+- `ferrochain-graph/src/budget/journal.rs` — journal entry for Escalate and for resume decisions (Extend / Halt)
+
+## Story Anchor
+
+_[to be filled after story decomposition]_
+
+## VP Anchors
+
+- VP-BUDGET-05
+
+## Traceability
+
+| Field | Value |
+|-------|-------|
+| Source L2 Capability | CAP-012 |
+| Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p1-p2.md §CAP-012 — this BC specifies the "escalate to a HITL interrupt" behavior named in the "when the ceiling is reached, degrade gracefully: halt the run, or escalate to a HITL interrupt, according to the policy's `on_ceiling` setting" clause of CAP-012 |
+| Secondary Capability | CAP-006 ("HITL Interrupt / Resume with FIFO Resume-Value Delivery") per capabilities-p0.md §CAP-006 — this BC reuses the interrupt/resume mechanism of CAP-006 for budget escalation |
+| L2 Domain Invariants | DI-003 (HITL FIFO Resume-Value Delivery) — budget escalation participates in the same FIFO resume-value queue as all other interrupts |
+| D17 Commitment | D17-Q4 — budget governance escalate mode; D17-Q2 — HITL interrupt reuse |
+| ADAPT Reference | adk-rust P-73 `escalate(human-review)` variant of `PaymentPolicyGuardrail` as structural analog; ferrochain adapts this to HITL interrupt mechanism |
+| Priority | P0 |
+| Wave | Wave 1 |
+| Test Types | I (integration) |
+| Module | [architect to assign — ferrochain-graph] |
