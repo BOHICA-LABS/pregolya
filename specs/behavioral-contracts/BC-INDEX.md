@@ -71,8 +71,8 @@ traces_to: .factory/specs/prd.md
 | BC-2.04.003 | Monotonic Logical-Clock Checkpoint IDs — Wall-Clock UUIDs Rejected | CAP-005 | | DI-004 | P0 | | | ss-04/BC-2.04.003.md |
 | BC-2.04.004 | Fork Lineage via parent_checkpoint_id Pointers; No State Copy on Fork | CAP-005 | | DI-004 | P0 | | | ss-04/BC-2.04.004.md |
 | BC-2.04.005 | Crash Recovery — Completed Tasks Not Re-Executed After Process Restart | CAP-005 | | DI-002 | P0 | | | ss-04/BC-2.04.005.md |
-| BC-2.04.006 | Session Triple-Address Uniqueness (thread_id, checkpoint_ns, checkpoint_id) — Kani VP Seed | CAP-005 | | DI-005 | P0 | | **VP** | ss-04/BC-2.04.006.md |
-| BC-2.04.007 | Encryption at Rest Covers Both State AND Event Payloads; Rotation Errors Propagate | CAP-005 | | | P0 | | | ss-04/BC-2.04.007.md |
+| BC-2.04.006 | Session Triple-Address Uniqueness (thread_id, checkpoint_ns, checkpoint_id) — Kani VP Seed | CAP-005 | NE-12 | DI-005 | P0 | | **VP** | ss-04/BC-2.04.006.md |
+| BC-2.04.007 | Encryption at Rest Covers Both State AND Event Payloads; Rotation Errors Propagate | CAP-005 | NE-11 | | P0 | | | ss-04/BC-2.04.007.md |
 | BC-2.05.001 | Interrupt Suspension with Durable State Persistence | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.001.md |
 | BC-2.05.002 | FIFO Resume-Value Delivery Order | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.002.md |
 | BC-2.05.003 | Interrupted Node Re-Executes from Start of Super-Step on Resume | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.003.md |
@@ -107,9 +107,9 @@ traces_to: .factory/specs/prd.md
 | BC-2.10.003 | Graceful Halt When Budget Ceiling Reached (on_ceiling = halt) | CAP-012 | | | P0 | | | ss-10/BC-2.10.003.md |
 | BC-2.10.004 | Budget Escalation to HITL Interrupt When on_ceiling = escalate | CAP-012 | | DI-003 | P0 | | | ss-10/BC-2.10.004.md |
 | BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary (Tool-Result, RAG, Memory) | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.001.md |
-| BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.002.md |
-| BC-2.11.003 | GuardrailHook Fires at RAG Ingress | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.003.md |
-| BC-2.11.004 | GuardrailHook Fires at Memory Ingress | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.004.md |
+| BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | CAP-013 | NE-06 | DI-012 | P0 | | | ss-11/BC-2.11.002.md |
+| BC-2.11.003 | GuardrailHook Fires at RAG Ingress | CAP-013 | NE-06 | DI-012 | P0 | | | ss-11/BC-2.11.003.md |
+| BC-2.11.004 | GuardrailHook Fires at Memory Ingress | CAP-013 | NE-06 | DI-012 | P0 | | | ss-11/BC-2.11.004.md |
 | BC-2.11.005 | Rejected Content Does Not Enter Model Context Under Any Code Path | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.005.md |
 | BC-2.11.006 | No-Hook Default — Content Passes Through with WARNING LOG (Default-Permit) | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.006.md |
 | BC-2.12.001 | Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History) | CAP-014 | | | P1 | | | ss-12/BC-2.12.001.md |
@@ -118,12 +118,12 @@ traces_to: .factory/specs/prd.md
 | BC-2.12.004 | CronSchedule Creation and Proactive Run Execution | CAP-014 | | | P1 | | | ss-12/BC-2.12.004.md |
 | BC-2.12.005 | SecurityConfig::default() Denies CORS; Debug Route Gated on Explicit Opt-In Key (NE-14) | CAP-014 | NE-14 | DI-013 | P1 | | | ss-12/BC-2.12.005.md |
 | BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore Trait Seams with Durable Backends (NE-08) | CAP-014 | NE-08 | | P1 | | | ss-12/BC-2.12.006.md |
-| BC-2.12.007 | Streaming Endpoint and Unary Endpoint Drive Same Graph Engine, Same Final Answer | CAP-014 | | DI-011 | P1 | | | ss-12/BC-2.12.007.md |
+| BC-2.12.007 | Streaming Endpoint and Unary Endpoint Drive Same Graph Engine, Same Final Answer | CAP-014 | NE-13 | DI-011 | P1 | | | ss-12/BC-2.12.007.md |
 | BC-2.13.001 | Enforcing Sandbox Backend (WASM or Container) Is Default (NE-01) | CAP-015 | NE-01 | DI-006 | P1 | | | ss-13/BC-2.13.001.md |
 | BC-2.13.002 | Process Backend Requires Explicit Opt-In and Emits Loud Runtime Warning | CAP-015 | | DI-006 | P1 | | | ss-13/BC-2.13.002.md |
 | BC-2.13.003 | Strict Policy + Non-Enforcing Backend Returns Err(PolicyNotEnforceable) | CAP-015 | | DI-006 | P1 | | | ss-13/BC-2.13.003.md |
 | BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root at Access Time (NE-02) — Kani VP Seed | CAP-015 | NE-02 | DI-007 | P1 | | **VP** | ss-13/BC-2.13.004.md |
-| BC-2.13.005 | Symlink That Escapes Workspace Root Returns Err(WorkspaceEscape) | CAP-015 | | DI-007 | P1 | | | ss-13/BC-2.13.005.md |
+| BC-2.13.005 | Symlink That Escapes Workspace Root Returns Err(WorkspaceEscape) | CAP-015 | NE-02 | DI-007 | P1 | | | ss-13/BC-2.13.005.md |
 | BC-2.13.006 | macOS Seatbelt Profile: Deny-by-Default with Explicit Allow Rules (NE-16) | CAP-015 | NE-16 | DI-006 | P1 | | | ss-13/BC-2.13.006.md |
 | BC-2.14.001 | FerrochainError 2D Component × Category Struct with RetryHint and Machine Code | CAP-016 | | DI-008,DI-014 | P0 | | | ss-14/BC-2.14.001.md |
 | BC-2.14.002 | RFC-7807 Compatible Problem Emission from FerrochainError | CAP-016 | | | P0 | | | ss-14/BC-2.14.002.md |
@@ -134,9 +134,9 @@ traces_to: .factory/specs/prd.md
 | BC-2.15.001 | KV and Vector Memory Persistence Across Threads (Not Per-Checkpoint) | CAP-017 | | | P2 | | | ss-15/BC-2.15.001.md |
 | BC-2.15.002 | User/App/Session Tier Isolation — User-Private Does Not Bleed Across Scopes | CAP-017 | | | P2 | | | ss-15/BC-2.15.002.md |
 | BC-2.15.003 | GDPR Erasure Removes All Traces from All Memory Tiers | CAP-017 | | | P2 | | | ss-15/BC-2.15.003.md |
-| BC-2.16.001 | Per-Tool Retry Policy Keyed by tool_name (Not Args Hash) | CAP-018 | | | P2 | | | ss-16/BC-2.16.001.md |
-| BC-2.16.002 | Finite global_limit Non-None Default for All Retry Policies | CAP-018 | | | P2 | | | ss-16/BC-2.16.002.md |
-| BC-2.16.003 | Circuit Breaker Trips After Repeated Failure; Prevents Infinite Retry | CAP-018 | | | P2 | | | ss-16/BC-2.16.003.md |
+| BC-2.16.001 | Per-Tool Retry Policy Keyed by tool_name (Not Args Hash) | CAP-018 | NE-09 | | P2 | | | ss-16/BC-2.16.001.md |
+| BC-2.16.002 | Finite global_limit Non-None Default for All Retry Policies | CAP-018 | NE-09 | | P2 | | | ss-16/BC-2.16.002.md |
+| BC-2.16.003 | Circuit Breaker Trips After Repeated Failure; Prevents Infinite Retry | CAP-018 | NE-09 | | P2 | | | ss-16/BC-2.16.003.md |
 | BC-2.17.001 | Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace Confinement VP | CAP-019 | | DI-001,DI-005,DI-007 | P2 | | | ss-17/BC-2.17.001.md |
 | BC-2.17.002 | cargo-fuzz Targets — Serialization Round-Trip (Checkpoint) and Graph-Execution Paths | CAP-019 | | | P2 | | | ss-17/BC-2.17.002.md |
 

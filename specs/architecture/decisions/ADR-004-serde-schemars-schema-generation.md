@@ -67,7 +67,7 @@ This is required for:
   that derives `schemars::JsonSchema` MUST have a snapshot test (insta or similar)
   asserting the generated JSON Schema output. These snapshot tests are a Phase 3 BC
   anchor obligation and must be referenced in the story that implements the `#[tool]`
-  proc-macro.
+  proc-macro. (See BC-2.08.009: Tool Schema Naming Stability — OBS-P16-02.)
 
 ## D5 Gate Resolution
 

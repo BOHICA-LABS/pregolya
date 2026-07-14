@@ -166,7 +166,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 |-------|-------|----------|----|------|
 | BC-2.03.001 | BSP super-step execution determinism and Kani VP seed | P0 | DI-001, NE-17 | ss-03/BC-2.03.001.md |
 | BC-2.03.002 | Concurrent LastValue write rejection (InvalidUpdateError) | P0 | DI-001 | ss-03/BC-2.03.002.md |
-| BC-2.03.003 | Deterministic reducer application order (task-identity sort) | P0 | DI-001 | ss-03/BC-2.03.003.md |
+| BC-2.03.003 | Deterministic reducer application order (task-identity sort) | P0 | DI-001, NE-17 | ss-03/BC-2.03.003.md |
 
 ### 2.04 Durable Three-Tier Checkpointing (CAP-005) — P0
 
@@ -258,9 +258,9 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
 | BC-2.11.001 | ProvenanceTag attached at every ingress boundary (tool-result, RAG, memory) | P0 | DI-012 | ss-11/BC-2.11.001.md |
-| BC-2.11.002 | GuardrailHook fires unconditionally at tool-result ingress | P0 | DI-012 | ss-11/BC-2.11.002.md |
-| BC-2.11.003 | GuardrailHook fires at RAG ingress | P0 | DI-012 | ss-11/BC-2.11.003.md |
-| BC-2.11.004 | GuardrailHook fires at memory ingress | P0 | DI-012 | ss-11/BC-2.11.004.md |
+| BC-2.11.002 | GuardrailHook fires unconditionally at tool-result ingress | P0 | DI-012, NE-06 | ss-11/BC-2.11.002.md |
+| BC-2.11.003 | GuardrailHook fires at RAG ingress | P0 | DI-012, NE-06 | ss-11/BC-2.11.003.md |
+| BC-2.11.004 | GuardrailHook fires at memory ingress | P0 | DI-012, NE-06 | ss-11/BC-2.11.004.md |
 | BC-2.11.005 | Rejected content does not enter model context under any code path | P0 | DI-012 | ss-11/BC-2.11.005.md |
 | BC-2.11.006 | No-hook default: content passes through with WARNING LOG (default-permit) | P0 | DI-012 | ss-11/BC-2.11.006.md |
 
@@ -274,7 +274,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.12.004 | CronSchedule creation and proactive run execution | P1 | — | ss-12/BC-2.12.004.md |
 | BC-2.12.005 | SecurityConfig::default() denies CORS, gates debug route on explicit opt-in key (NE-14) | P1 | DI-013 | ss-12/BC-2.12.005.md |
 | BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore trait seams with durable backends (NE-08) | P1 | — | ss-12/BC-2.12.006.md |
-| BC-2.12.007 | Streaming endpoint and unary endpoint drive same graph engine, same final answer | P1 | DI-011 | ss-12/BC-2.12.007.md |
+| BC-2.12.007 | Streaming endpoint and unary endpoint drive same graph engine, same final answer | P1 | DI-011, NE-13 | ss-12/BC-2.12.007.md |
 
 ### 2.13 Sandboxed Tool Execution — Enforcing Backend Default (CAP-015) — P1
 
@@ -283,8 +283,8 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.13.001 | Enforcing sandbox backend (WASM or container) is default | P1 | DI-006 | ss-13/BC-2.13.001.md |
 | BC-2.13.002 | Process backend requires explicit opt-in and emits loud runtime warning | P1 | DI-006 | ss-13/BC-2.13.002.md |
 | BC-2.13.003 | Strict policy + non-enforcing backend returns Err(PolicyNotEnforceable) | P1 | DI-006 | ss-13/BC-2.13.003.md |
-| BC-2.13.004 | All workspace file ops call canonicalize_beneath_root at access time | P1 | DI-007 | ss-13/BC-2.13.004.md |
-| BC-2.13.005 | Symlink that escapes workspace root returns Err(WorkspaceEscape) | P1 | DI-007 | ss-13/BC-2.13.005.md |
+| BC-2.13.004 | All workspace file ops call canonicalize_beneath_root at access time | P1 | DI-007, NE-02 | ss-13/BC-2.13.004.md |
+| BC-2.13.005 | Symlink that escapes workspace root returns Err(WorkspaceEscape) | P1 | DI-007, NE-02 | ss-13/BC-2.13.005.md |
 | BC-2.13.006 | macOS Seatbelt profile is deny-by-default with explicit allow rules | P1 | DI-006 | ss-13/BC-2.13.006.md |
 
 ### 2.14 Typed Error Taxonomy — FerrochainError (CAP-016) — P0
@@ -482,7 +482,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.02.006 | CAP-003 | ferrochain-graph | P0 | I |
 | BC-2.03.001 | CAP-004, NE-17 | ferrochain-graph | P0 | P, K |
 | BC-2.03.002 | CAP-004, DI-001 | ferrochain-graph | P0 | U, P |
-| BC-2.03.003 | CAP-004, DI-001 | ferrochain-graph | P0 | P, K |
+| BC-2.03.003 | CAP-004, DI-001, NE-17 | ferrochain-graph | P0 | P, K |
 | BC-2.04.001 | CAP-005, DI-002 | ferrochain-checkpoint | P0 | U, I, S |
 | BC-2.04.002 | CAP-005, DI-002 | ferrochain-checkpoint | P0 | U, I |
 | BC-2.04.003 | CAP-005, DI-004 | ferrochain-checkpoint | P0 | U, P |
@@ -521,9 +521,9 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.10.003 | CAP-012, D17-Q4 | ferrochain-graph | P0 | U, I |
 | BC-2.10.004 | CAP-012, CAP-006, DI-003 | ferrochain-graph | P0 | I |
 | BC-2.11.001 | CAP-013, DI-012 | ferrochain-graph | P0 | U, I |
-| BC-2.11.002 | CAP-013, DI-012 | ferrochain-graph | P0 | U, I |
-| BC-2.11.003 | CAP-013, DI-012 | ferrochain-graph | P0 | I |
-| BC-2.11.004 | CAP-013, DI-012 | ferrochain-graph | P0 | I |
+| BC-2.11.002 | CAP-013, DI-012, NE-06 | ferrochain-graph | P0 | U, I |
+| BC-2.11.003 | CAP-013, DI-012, NE-06 | ferrochain-graph | P0 | I |
+| BC-2.11.004 | CAP-013, DI-012, NE-06 | ferrochain-graph | P0 | I |
 | BC-2.11.005 | CAP-013, DI-012 | ferrochain-graph | P0 | U, I |
 | BC-2.11.006 | CAP-013, DI-012 | ferrochain-graph | P0 | U |
 | BC-2.12.001 | CAP-014 | ferrochain-server | P1 | I |
@@ -532,12 +532,12 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.12.004 | CAP-014 | ferrochain-server | P1 | I |
 | BC-2.12.005 | CAP-014, DI-013, NE-14 | ferrochain-server | P1 | U, I |
 | BC-2.12.006 | CAP-014, NE-08 | ferrochain-server | P1 | U, I |
-| BC-2.12.007 | CAP-014, DI-011 | ferrochain-server | P1 | I, S |
+| BC-2.12.007 | CAP-014, DI-011, NE-13 | ferrochain-server | P1 | I, S |
 | BC-2.13.001 | CAP-015, DI-006, NE-01 | ferrochain-sandbox | P1 | U, I |
 | BC-2.13.002 | CAP-015, DI-006 | ferrochain-sandbox | P1 | U |
 | BC-2.13.003 | CAP-015, DI-006 | ferrochain-sandbox | P1 | U |
 | BC-2.13.004 | CAP-015, DI-007, NE-02 | ferrochain-sandbox | P1 | U, P, K |
-| BC-2.13.005 | CAP-015, DI-007 | ferrochain-sandbox | P1 | U |
+| BC-2.13.005 | CAP-015, DI-007, NE-02 | ferrochain-sandbox | P1 | U |
 | BC-2.13.006 | CAP-015, DI-006, NE-16 | ferrochain-sandbox | P1 | U |
 | BC-2.14.001 | CAP-016, DI-008, DI-014 | ferrochain-core | P0 | U |
 | BC-2.14.002 | CAP-016 | ferrochain-core | P0 | U |

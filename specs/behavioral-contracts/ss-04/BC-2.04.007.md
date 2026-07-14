@@ -27,7 +27,6 @@ removed: null
 removal_reason: null
 priority: P0
 wave: 1
-ne_anchor: NE-11
 ---
 
 # BC-2.04.007: Encryption at Rest Covers Both State AND Event Payloads; Rotation Errors Propagate

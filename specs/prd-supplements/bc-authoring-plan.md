@@ -329,3 +329,14 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     BC-2.12.003 PC7-PC9. Run `grep -rn "in_progress →\|in_progress→\|→ interrupted\|⇄" .factory/specs/`
     and verify every hit: (a) shows `interrupted` as pausable/resumable, and (b) lists only
     `completed | failed | cancelled` as terminal. Source of truth: ADV-P1D-PASS-12.md §F-P12-01.
+13. **Anchor-matrix census gate (added P16 — standing gate, subsumes all prior per-axis checks):**
+    After any BC authoring burst, run the full anchor-matrix census across all 86 BCs × 6 axes
+    {CAP, DI, NE, R (R-NNN/R8-10-11 aliases), ADR, registered-VP}. For each axis, perform a
+    four-way consistency check: BC body Traceability tables ↔ BC-INDEX columns (NE Anchors, DI
+    Anchors, Cap, VP, RG) ↔ PRD §2 tables + §7 RTM Source column + §9 NE Disposition Table ↔
+    authoritative registry (capabilities shards / invariants.md / PRD §9 / risks.md /
+    ARCH-INDEX ADR registry / VP-INDEX). Body wins unless provably wrong; fix index/RTM to
+    match body. The ne_anchor and ne_coverage frontmatter fields are OPTIONAL-LEGACY — BC body
+    Traceability (NE anchor row) + BC-INDEX NE Anchors column are the canonical carriers; do
+    NOT add ne_anchor/ne_coverage frontmatter to new BCs. Source of truth: ADV-P1D-PASS-16.md
+    §F-P16-01 + anchor-matrix reconciliation.

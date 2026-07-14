@@ -30,7 +30,6 @@ priority: P0
 wave: 1
 vp_seed: true
 vp_id: VP-002
-ne_anchor: NE-12
 ---
 
 # BC-2.04.006: Session Triple-Address Uniqueness (thread_id, checkpoint_ns, checkpoint_id) — Kani VP Seed
