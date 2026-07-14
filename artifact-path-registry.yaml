@@ -68,3 +68,28 @@ artifact_types:
     description: "Finding counts per adversary pass"
     pattern: ".factory/cycles/{cycle}/convergence-trajectory.md"
     singleton: false
+
+  - artifact_type: adr
+    description: "Architecture Decision Records (ADR-NNN)"
+    pattern: ".factory/specs/architecture/decisions/ADR-{NNN}-{name}.md"
+    singleton: false
+
+  - artifact_type: architecture-index
+    description: "Architecture index and subsystem registry (ARCH-INDEX.md)"
+    pattern: ".factory/specs/architecture/ARCH-INDEX.md"
+    singleton: true
+
+  - artifact_type: architecture-section
+    description: "Architecture section docs (system-overview, api-surface, module-decomposition, etc.)"
+    pattern: ".factory/specs/architecture/{section}.md"
+    singleton: false
+
+  - artifact_type: vp-index
+    description: "Verification Property index (VP-INDEX.md)"
+    pattern: ".factory/specs/verification-properties/VP-INDEX.md"
+    singleton: true
+
+  - artifact_type: module-criticality
+    description: "Module criticality assessment (standalone architect artifact)"
+    pattern: ".factory/specs/module-criticality.md"
+    singleton: true

@@ -162,3 +162,95 @@ state-manager:
 | adk-rust certification pass C21 (strict-zero, C20 defect-class sweep opener) | validate-extraction | COMPLETE | CLEAN(strict)=YES. ZERO corrections. C20-01 landing CONFIRMED; C20 defect-class sweep (count-methodology consistency, A1/A2/A4 tables) CLEAN. Rotation 10/10 CONFIRMED (P-02, P-18, P-53, P-64, P-74, P-75, P-82, P-97, P-16 resolution, dep-disp A4 windows-sys). Metrics 8/8 Delta=0. Novel probe: dependency-disposition A2 internal claims vs source — 3/3 CONFIRMED (checkpoint SQL schema, similar crate char-diff, Uuid::new_v4). Streak 0/3 → 1/3. Burst 64. |
 
 ---
+
+## Archived Step Rows — Burst 73
+
+<!-- Archived from STATE.md Current Phase Steps on 2026-07-14 (burst 73) to make room for Step D.1 (6 rows → keep last 5). -->
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| D16 comparative best-patterns assessment (4-part decomposed synthesis) | architect | COMPLETE | COMPARATIVE-ASSESSMENT.md (522 lines + 3 part-files). 97 patterns: 27 ADOPT / 16 ADAPT / 27 REJECT / 27 N/A. HYBRID outcome recommended. Burst 67. |
+
+---
+
+## Burst 73 (2026-07-14)
+
+**Agents dispatched:** architect (Phase 1 Step D.1 — create-architecture core + ADR stubs + VP seeds), devops-engineer (mandatory CI/CD setup — workspace-init), state-manager (input-hash fill + artifact-registry update + STATE update)
+**Files touched:** .factory/specs/architecture/ (ARCH-INDEX.md + 9 section files — new), .factory/specs/architecture/decisions/ (ADR-001..010 — new), .factory/specs/verification-properties/ (VP-INDEX.md + VP-001.md + VP-002.md + VP-003.md — new), .factory/specs/module-criticality.md (new), .factory/planning/cicd-setup.md (new), .factory/artifact-path-registry.yaml (5 new types), .factory/STATE.md, .factory/cycles/v1.0.0-greenfield/burst-log.md
+**Versions bumped:** ARCH-INDEX.md v1.0 (initial); 9 architecture section files v1.0 (initial); ADR-001..010 v0.1 draft (initial); VP-INDEX.md v1.0 (initial); VP-001/002/003 v1.0 (initial); module-criticality.md v1.0 (initial)
+
+### Summary
+
+Phase 1 Step D.1 (architecture core) complete. Deliverables in two parallel tracks:
+
+**Track A — Architecture Core (architect):**
+- ARCH-INDEX.md: subsystem registry for SS-01..SS-17 (17 subsystems) with crate mapping,
+  wave assignment, and traceability to domain capabilities and BCs. Navigation hub for all
+  architecture section files.
+- 9 architecture section files (~1,000 lines combined):
+  - system-overview.md — crate topology, workspace layout, language targets
+  - api-surface.md — public API contracts per crate, trait surfaces
+  - module-decomposition.md — module hierarchy per crate, file-size constraints (D12)
+  - dependency-graph.md — crate dependency graph, no-cycles constraint
+  - purity-boundary-map.md — pure-core / effectful-I/O separation by module
+  - verification-architecture.md — Kani / cargo-fuzz / mutation coverage plan
+  - tooling-selection.md — pinned tool versions, CI checks, test harness
+  - verification-coverage-matrix.md — VP-to-module traceability matrix
+
+**Track A — ADRs (10):**
+- ADR-001 (graph-execution-model): DRAFT — BLOCKED-ON-HUMAN (D9 gate). Presents
+  Alt A (LangGraph-faithful BSP channel-versioning model) vs Alt B (hybrid
+  orchestrator+actor model per D11.1). Architect recommends Alt B. Human decision required
+  before ADR is finalized.
+- ADR-002 (checkpoint-format): proposed — Rust-native msgpack format, one-way Python import
+- ADR-003 (durability-tiers): proposed — 3-tier sync/async/ephemeral per D11.3
+- ADR-004 (serde-schemars-schema-generation): proposed — D5 pydantic→serde/schemars ADR
+- ADR-005 (logical-clock-checkpoint-ordering): proposed
+- ADR-006 (streaming-event-taxonomy): proposed
+- ADR-007 (crate-topology-sdk-split): proposed — D17-Q5 standalone SDK crate
+- ADR-008 (proc-macro-attributes): proposed — D17-Q6 #[tool]/#[entrypoint]/#[task]
+- ADR-009 (budget-governance-placement): proposed — D17-Q4 allow/escalate/deny
+- ADR-010 (error-taxonomy-anyhow-confinement): proposed — D12 error boundary design
+
+**Track A — Verification Properties (architect):**
+- VP-INDEX.md: index for all VPs, totals (3 P0 / 0 P1 = 3 Kani), cross-ref to
+  verification-architecture.md and verification-coverage-matrix.md
+- VP-001.md: BSP graph determinism (NE-17; traces BC-2.03.001)
+- VP-002.md: session triple-address uniqueness (traces BC-2.04.006)
+- VP-003.md: workspace-path-escape prevention (NE-02; traces BC-2.13.004)
+
+**Track A — Module Criticality (architect):**
+- module-criticality.md (33 modules): architect-authored criticality assessment, Tier-1/2/3
+  per testing obligation. Supplements the earlier PRD-supplements version with
+  post-architecture refinement.
+
+**Track B — CI/CD Bootstrap (devops-engineer):**
+- main + develop branches initialized. CLAUDE.md constitution committed (SHA d018d3f per D10).
+- .envrc withheld from git (live API key found; gitignored — B1 persists).
+- 5-job SHA-pinned ci.yml: check, test, fmt, clippy, audit. All jobs green on first run.
+- Branch protection on both main and develop.
+
+**state-manager:**
+- Input-hash placeholders filled: 10 files (ARCH-INDEX + 9 section files + module-criticality.md)
+- artifact-path-registry.yaml: 5 new types registered (adr, architecture-index,
+  architecture-section, vp-index, module-criticality)
+- STATE.md updated: current_step, timestamp, Current Phase Steps (D16 row archived above),
+  Session Resume Checkpoint, HEADS (main SHA), Historical Content table
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| architect | create-architecture (Phase 1 Step D.1) | specs/architecture/ (ARCH-INDEX + 9 section files), decisions/ (10 ADRs), verification-properties/ (VP-INDEX + VP-001/002/003), specs/module-criticality.md |
+| devops-engineer | workspace-init CI/CD (mandatory Phase 1 gate) | main+develop branches, d018d3f CLAUDE.md commit, ci.yml (5 jobs, SHA-pinned), branch protection |
+| state-manager | input-hash fill | 10 files — all "[state-manager to compute]" placeholders resolved |
+| state-manager | artifact-path-registry update | 5 new types: adr, architecture-index, architecture-section, vp-index, module-criticality |
+| state-manager | STATE.md update | current_step, timestamp, Current Phase Steps, Session Resume Checkpoint, HEADS, Historical Content |
+
+### Gate Status
+
+**D9 human gate OPEN.** ADR-001 Alt A vs Alt B decision is required from human before
+Part 2 of Step D can proceed. The architect's recommendation is Alt B (hybrid
+orchestrator+actor). Present both alternatives with trade-offs.
+
+---
