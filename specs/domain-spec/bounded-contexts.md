@@ -79,8 +79,8 @@ persistence (delegates to Context 3).
 graph_id and invokes it for each Run.
 **Translation seam with Checkpoint:** Server uses CheckpointStore to persist/resume Run
 state.
-**Key invariants:** DI-005 (tenancy), DI-011 (streaming/unary equiv.), DI-013 (secure
-defaults), FM-007 (streaming stub must not exist).
+**Key invariants:** DI-005 (tenancy), DI-011 (streaming/unary equiv.), DI-013 (secure defaults).
+**Excluded failure mode (FM-007):** streaming stub must not exist.
 **Out-of-scope note:** No wire compatibility with LangGraph Platform (D13).
 
 ---
@@ -144,12 +144,14 @@ use in their test suites.
 ferrochain-core
   ← ferrochain-splitters
   ← ferrochain-checkpoint
-      ← ferrochain-graph
-          ← ferrochain-server
-  ← ferrochain-<provider>-sdk
-      ← ferrochain-<provider>
+  ← ferrochain-graph
+  ← ferrochain-server         (direct deps: ferrochain-graph + ferrochain-checkpoint)
+  ← ferrochain-<provider>     (direct deps: ferrochain-core + ferrochain-<provider>-sdk)
   ← ferrochain-mcp
   ← ferrochain-standard-tests (dev-dep)
+
+ferrochain-<provider>-sdk (standalone root; NO ferrochain-core dep [D17-Q5])
+  ← ferrochain-<provider>
 ```
 
 No circular dependencies; ferrochain-core has zero intra-workspace dependencies.

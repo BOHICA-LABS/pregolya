@@ -108,7 +108,7 @@ A BudgetPolicy evaluated a token/cost tally for the current Run.
 - **Trigger:** After each model call; after each tool invocation
 - **Preconditions:** BudgetPolicy configured in RunConfig
 - **Outcome:** Allow (continue), Escalate (raise HITL interrupt), or Deny (halt run)
-- **EvidenceJournal:** Entry appended with outcome (DI per append-only)
+- **EvidenceJournal:** Entry appended with outcome (BC-2.10.002: append-only journal)
 
 ### StreamEventEmitted
 A typed streaming event was emitted by the execution engine.

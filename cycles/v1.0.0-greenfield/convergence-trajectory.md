@@ -26,10 +26,11 @@ traces_to: STATE.md
 | P1D-10 | 2026-07-14 | 4 | 0 | 2 | 2 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN |
 | P1D-11 | 2026-07-14 | 4 | 0 | 1 | 3 | 0 | LOW | 0/3 | FINDINGS_REMAIN |
 | P1D-12 | 2026-07-14 | 1 | 0 | 1 | 0 | 0 | LOW | 0/3 | FINDINGS_REMAIN (single root cause, decayed) |
+| P1D-13 | 2026-07-14 | 1 | 0 | 1 | 0 | 2 | LOW | 0/3 | FINDINGS_REMAIN (topology census — all fixed this pass) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13)`
 
 ## Per-Pass Details
 
@@ -172,4 +173,17 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Fix summary:** F-P12-01 HIGH — pass-11 fix keyed on 'terminal' keyword; 8 lifecycle-arrow sites stale across 6 files incl. entities-server (source-of-truth domain entity) and 2 "Canonical"-labeled sites in interface-definitions.md. Full state-machine sweep all other subsystems (checkpoint lifecycle, budget escalation, circuit-breaker, graph) CONSISTENT. Fixed 9 occurrences across 8 sites; BC-2.12.003 title 3-way verbatim (BC-INDEX + prd.md + bc-authoring-plan) PASS. Arrow-census gate added to bc-authoring-plan.md §Authoring Guidelines as guideline #12 (16 hits PASS post-fix).
 **New standing gates:** Arrow-representation census gate (guideline #12); trigger: any lifecycle or state-machine spec edit. Command: `grep -rn "in_progress →\|in_progress→\|→ interrupted\|⇄" .factory/specs/` — every hit must show interrupted as pausable, terminal={completed,failed,cancelled}.
 **Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1
+**Counter:** 0/3
+
+---
+
+### Pass P1D-13 Details
+
+**Date:** 2026-07-14
+**Verdict:** NOT CLEAN — 1 HIGH + 2 LOW (all fixed this pass)
+**Findings delta:** 0 open vs pass 12 (1→1 open; 3 total items fixed in pass)
+**Axes rotated:** domain-spec↔dependency-graph topology census (NEW CLASS); arrow-census re-run (guideline #12); BC-INDEX title 3-way; de-Canonical audit; E-code crate-roster collision scan; VP-seed cross-ref abbreviation
+**Fix summary:** F-P13-01 HIGH — bounded-contexts.md dependency diagram inverted SDK-split topology (3 errors: false sdk→core edge; missing adapter→core edge; false graph→checkpoint edge). Topology census: 14 assertions, 2 FAIL + 1 MISSING — all fixed, 11 PASS. LOW-1: events.md:111 BC-2.10.002 citation (dangling "DI per append-only" resolved). LOW-2: FM-007 label separated from DI invariants in bounded-contexts.md:82 (type-system split). All 4/4 sibling checks PASS; lifecycle-arrow census CONVERGED (guideline #12 re-run PASS).
+**New standing gates:** domain-spec↔dependency-graph topology census (trigger: any domain-spec shard or dependency-graph.md edit); command: `grep -rn "← ferro\|depends on ferro\|standalone.*dep\|zero.*dep" .factory/specs/domain-spec/` vs dependency-graph.md §Edge Table.
+**Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1→1
 **Counter:** 0/3

@@ -291,3 +291,13 @@ ferrochain Phase 1d adversarial spec convergence: Pass 11 COMPLETE — NOT CLEAN
 **WORKSTREAM (at time of archival):** Burst 87 COMPLETE. Phase 1d pass 11: 4 findings fixed (BC-2.12.003 interrupted→pausable, terminal-set census; DI verbatim rule codified + 7 cells normalized; RTM CAP-016 ×2; E-SBXD-004/005 + BC-2.13.006 citations). Wave 0 registered in system-overview. ADV-P1D-PASS-11.md committed. Input-hashes refreshed. Trajectory 14→5→7→13→3→3→3→5→2→4→4.
 
 **WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 87 | Counter: 0/3
+
+---
+
+### Archived Checkpoint — Burst 88 (Pass 12)
+
+ferrochain Phase 1d adversarial spec convergence: Pass 12 COMPLETE — NOT CLEAN. 1 HIGH finding (F-P12-01): pass-11 fix keyed on 'terminal' keyword — 8 lifecycle-arrow sites stale incl. entities-server source-of-truth + 2 'Canonical'-labeled. Full state-machine sweep CONSISTENT (checkpoint/budget/circuit-breaker/graph). Fixed 9 occurrences; arrow-census gate added as guideline #12 (16 hits PASS); BC-2.12.003 title 3-way verbatim PASS. Trajectory 14→5→7→13→3→3→3→5→2→4→4→1 — single root cause, decayed. Convergence 0/3. Burst 88.
+
+**WORKSTREAM (at time of archival):** Burst 88 COMPLETE. Phase 1d pass 12: 1 finding fixed (lifecycle-arrow propagation 8 sites/9 occurrences; de-"Canonical"-ing; BC-2.12.003 Traceability authority pointer; arrow-census gate as guideline #12; 16-hit census PASS; title 3-way verbatim). ADV-P1D-PASS-12.md committed. Input-hashes refreshed. Trajectory ...→4→4→1.
+
+**WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 88 | Counter: 0/3
