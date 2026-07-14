@@ -13,6 +13,46 @@ traces_to: STATE.md
 
 # Burst Log — v1.0.0-greenfield
 
+## Burst 107 — Phase 1d Pass 31 + Fix Burst (pagination coherence canon + macros criticality)
+
+**Date:** 2026-07-15
+**Agents:** adversary (pass 31) + product-owner (fix) + state-manager (STATE update)
+**Files touched:** specs/prd-supplements/interface-definitions.md, specs/behavioral-contracts/ss-12/BC-2.12.001.md, specs/behavioral-contracts/ss-12/BC-2.12.003.md, specs/behavioral-contracts/ss-12/BC-2.12.004.md, specs/prd-supplements/module-criticality.md, specs/prd-supplements/bc-authoring-plan.md (PO fixes); STATE.md, burst-log.md (state-manager); ADV-P1D-PASS-31.md (adversary)
+**Versions bumped:** STATE.md v2.8→v2.9
+
+### Summary
+
+Phase 1d pass 31 adversarial review completed: NOT CLEAN — 1 finding (0 HIGH, 0 MED, 1 LOW) + 3 observations applied. Counter reset: 0/3 consecutive clean. All pass-30 fixes held. All sibling-checks (pagination canon sibling-check + 4 rotated censuses) PASS. Adversary assesses spec core CONVERGED — edge axes remain. NEW CLASS: pagination coherence. Novelty MEDIUM. Gates total: 33.
+
+**1 LOW finding:**
+- F-P31-01: Pagination non-uniform — /runs?schedule_id aggregate list endpoint was UNBOUNDED (no pagination parameters); 4 other list endpoints lacked documented convention (limit/offset/ordering). Fix: canonical pagination convention section added to interface-definitions.md (limit default 10, max 100, out-of-range CLAMP, offset, created_at DESC for schedule-runs); propagated to 5 interface rows + BC-2.12.001 PC17 + BC-2.12.003 PC18 + BC-2.12.004 PC7. Gate #24 PAGINATION COHERENCE added.
+
+**3 Observations:**
+- OBS-P31-1: module-criticality.md lacked explicit exclusion-criteria documentation — facade/SDK crates (ferrochain, ferrochain-sdk, ferrochain-openai, etc.) excluded from inventory without rationale note. Fix: exclusion-criteria note added to module-criticality.md preamble.
+- OBS-P31-2: ferrochain-macros absent from module-criticality inventory — proc-macros affect P0 execution paths (span wrapping, tool registration per ADR-008); HIGH criticality warranted. Fix: ferrochain-macros HIGH-tier row added; count 19→20.
+- OBS-P31-3: AIMessage allowed-zone confirmed per RUST-BLINDNESS RULE — no fix needed.
+
+### New Standing Gates (post-burst 107)
+
+- Gate #24: Pagination coherence — all list endpoints must declare limit (default 10, max 100, CLAMP out-of-range), offset, and ordering (created_at DESC for runs); no list endpoint may be UNBOUNDED; BCs covering list endpoints must carry a pagination PC
+
+### Convergence Status After Burst 107
+
+- Phase 1d passes: 31 (NOT CLEAN)
+- Fix bursts: 31
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31)
+
+**State changes:** convergence passes 30→31, fix bursts 30→31, trajectory →1 (P1D-31), session checkpoint replaced (burst 106 archived), step row pass 26 archived to burst-log. Gates 32→33.
+
+### Archived Current Phase Steps Row (displaced from STATE.md — oldest row)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1d pass 26 + fix burst (AUTH-orphan + debug-route) | adversary + PO | COMPLETE | Pass 26: NOT CLEAN — 5 MED (F-P26-01 BC-2.14.002 PC3 override list 1-of-8 vs own invariant → all 8 enumerated; F-P26-02 to_problem_detail residue ADR-010; F-P26-03 risk_tier residue BC-2.05.001 TV-005; F-P26-04 debug-route three-axis contradiction → canon Authorization: Bearer + /_debug fixed path, debug_route_path REMOVED; F-P26-05 401 row falsely denied E-PROV-004 AUTH → categorical-fallback form) + 3 obs applied (422 wildcard narrowed to 8 VAL E-GRAPH codes, E-CRON-001/003 omission note, E-PROV-005/006 added to 400 row). Pass-25 fixes hold except 3 propagation residues. NEW GATES #19 retired-identifier residue grep + #20 AUTH/POLICY category re-sweep. Trajectory ...→1→2→7→5. Convergence 0/3. Gates 29. Burst 102. |
+
+---
+
 ## Burst 106 (2026-07-14)
 
 **Agents dispatched:** adversary (Phase 1d pass 30), product-owner (fix burst), state-manager (burst 106 state update)

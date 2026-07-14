@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.004
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-014
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-14T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -24,6 +24,8 @@ inputs:
   - .factory/semport/platform/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
 input-hash: "2fa3aaf38e5dd19ee39c3df5596438a531328d2cdf99120e4914b0e4275419f1"
+changelog:
+  - "1.1 (ADV-P1D-PASS-31): F-P31-01 add PC7 for GET /runs?schedule_id aggregate query endpoint — limit default 10, max 100 (clamped), offset default 0, created_at DESC ordering declared as canon; update TV-002 notes to cite F-P31-01 pagination."
 ---
 
 # BC-2.12.004: CronSchedule Creation and Proactive Run Execution
@@ -66,6 +68,17 @@ interactive runs.
 6. If the referenced `Assistant` no longer exists at firing time, the scheduled Run is
    created with `status = RunStatus::Failed` and error `E-CRON-001
    AssistantNotFoundAtFiring`.
+
+### Cross-Thread Aggregate Query (`GET /runs?schedule_id={cron_id}`)
+
+7. `GET /runs?schedule_id={cron_id}` returns `{ runs: [Run], total_count: u64 }` listing
+   all Runs fired by the given schedule across all threads. Results are ordered
+   `created_at` **descending** (most-recent firing first). This ordering is the
+   authoritative canon for this endpoint (F-P31-01, ADV-P1D-PASS-31).
+   Pagination: `limit` (default 10, max 100; values > 100 silently clamped to 100) and
+   `offset` (default 0) query params apply. This is the only flat `/runs` endpoint;
+   all other Run CRUD paths are thread-scoped (see interface-definitions.md §Cron Schedules
+   for the cross-thread aggregate rationale and BC-2.12.003 for thread-scoped list).
 
 ## Invariants
 
@@ -122,7 +135,7 @@ queue_depth }`.
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | `POST /schedules` with valid `assistant_id`, `schedule: "0 9 * * *"`, valid `config` | `201 Created`; response body includes `cron_id: <uuid>`, `enabled: true`; no Run created yet | Happy path — schedule creation |
-| TV-002 | Advance mock clock to fire time; poll `GET /runs?schedule_id=<cron_id>` | One Run returned with `status: queued` or `in_progress`; `thread_id` is freshly allocated (not reused) | Firing creates isolated fresh session. `GET /runs?schedule_id=` is the explicitly documented flat cross-thread aggregate query endpoint — see interface-definitions.md §Cron Schedules |
+| TV-002 | Advance mock clock to fire time; poll `GET /runs?schedule_id=<cron_id>` (canonical defaults: `limit=10&offset=0`) | One Run returned with `status: queued` or `in_progress`; `thread_id` is freshly allocated (not reused); `total_count: 1`; result ordered `created_at` DESC | Firing creates isolated fresh session. Pagination: F-P31-01 canonical convention applies — default `limit=10`, `offset=0`, `created_at` DESC. See PC7 and interface-definitions.md §Cron Schedules |
 | TV-003 | Fire schedule twice (two ticks apart); list Runs for schedule | Two distinct Runs with distinct `run_id` and `thread_id` values | Each firing produces independent Run |
 | TV-004 | `PATCH /schedules/{cron_id}` `{ "enabled": false }`; advance clock past next fire time | No new Run created | Disabling prevents future firings |
 | TV-005 | Delete assistant; advance clock to fire time | Run created with `status: failed`, error `E-CRON-001 AssistantNotFoundAtFiring` | Missing-assistant error path |

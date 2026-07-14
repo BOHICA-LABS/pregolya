@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ wave: 1
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-14T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -22,6 +22,8 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
 input-hash: "a9db9a9a95fccf425b41da89e2fafd1502358a8b4e921ffa158e8b147236315b"
+changelog:
+  - "1.1 (ADV-P1D-PASS-31): F-P31-01 PC18 list-runs endpoint — add limit (default 10, max 100; values > 100 clamped) and offset pagination params + declare created_at DESC ordering (pagination coherence canon)."
 ---
 
 # BC-2.12.003: Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/cancelled; interrupted is pausable/resumable)
@@ -108,7 +110,7 @@ LangGraph Platform (D13).
 ### List Runs (`GET /threads/{thread_id}/runs`)
 
 17. Returns `{ runs: [Run], total_count: u64 }` for all runs on the thread.
-18. Accepts `status` filter query param (`"queued"`, `"in_progress"`, `"completed"`, `"failed"`, `"interrupted"`, `"cancelled"`).
+18. Accepts `status` filter query param (`"queued"`, `"in_progress"`, `"completed"`, `"failed"`, `"interrupted"`, `"cancelled"`) and canonical pagination params: `limit` (default 10, max 100; values > 100 clamped to 100) and `offset` (default 0); results ordered `created_at` descending (F-P31-01, ADV-P1D-PASS-31).
 
 ### Delete Run (`DELETE /threads/{thread_id}/runs/{run_id}`)
 

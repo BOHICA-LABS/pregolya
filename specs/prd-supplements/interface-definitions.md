@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.1"
+version: "2.2"
 status: active
 producer: product-owner
 timestamp: 2026-07-14T00:00:00Z
@@ -13,6 +13,7 @@ changelog:
   - "1.9 (ADV-P1D-PASS-28): OBS-P28-3 add E-PROV-007 (StructuredOutputRefused, POLICY) omission note — categorical POLICY→403 fallback only; surfaced embedded in Run.error, not as a direct terminal HTTP status."
   - "2.0 (ADV-P1D-PASS-29): F-P29-03 fix SSE description on /stream row: node_start/delta/end → node_start/stream/end (node_delta was never canonical; BC-2.06.001 is the streaming taxonomy authority). OBS-P29-1 add blanket omission note for library/execution-layer codes (E-MCP-*, E-SBXD-*, E-RETRY-*, E-BUDGET-*, E-MEMORY-*, E-SPLIT-*) confirming none has a direct HTTP row."
   - "2.1 (ADV-P1D-PASS-30): F-P30-01 blanket omission note: TOOL→N/A corrected to TOOL→422 (BC-2.14.002 PC3 categorical authority); full 12-category token diff applied — added TRANSPORT→502 and INTERNAL→500 (both present in family labels but absent from summary); corrected VAL→400/422 to VAL→400 (categorical default; 422 requires per-endpoint override decision, not applicable to library-layer fallback)."
+  - "2.2 (ADV-P1D-PASS-31): F-P31-01 add §Canonical Pagination Convention section; propagate limit (default 10, max 100, silently clamped if > 100) + offset (default 0) + created_at DESC ordering to GET /threads (explicit defaults), GET /threads/{id}/history (declare default 10/max 100 on existing limit), GET /assistants (add limit/offset), GET /threads/{id}/runs (add limit/offset alongside status filter), GET /runs?schedule_id={cron_id} (add limit/offset, declare created_at DESC). Out-of-range canon: clamp (not reject). BC anchors: BC-2.12.001 PC8/PC17, BC-2.12.003 PC18, BC-2.12.004 PC7."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -141,17 +142,34 @@ pub enum BudgetDecision {
 All endpoints are relative to the server's configured base URL.
 Default port: `7437` (configurable via `server.port` in `ferrochain-server.toml`).
 
+### Canonical Pagination Convention (F-P31-01, ADV-P1D-PASS-31)
+
+All list and aggregate GET endpoints accept uniform pagination query parameters:
+
+| Parameter | Type | Default | Max | Out-of-range |
+|-----------|------|---------|-----|--------------|
+| `limit` | integer | 10 | 100 | Values > 100 are **silently clamped** to 100 — no validation error (E-CORE) is returned. Decision: clamp (not reject). |
+| `offset` | integer | 0 | — | No upper bound. |
+
+Results are ordered by `created_at` **descending** (most-recently created first) unless a
+specific endpoint declares a different ordering (e.g., `/history` is ordered newest
+checkpoint first, which is also descending by creation sequence). Each list-endpoint
+row below cites F-P31-01 where pagination applies. Any endpoint that deviates carries
+an explicit documented exemption.
+
+**BC anchors:** BC-2.12.001 PC8 (threads list), BC-2.12.001 PC17 (history), BC-2.12.003 PC18 (runs list), BC-2.12.004 PC7 (schedule-runs aggregate).
+
 ### Threads
 
 | Method | Path | Description | BC Anchor |
 |--------|------|-------------|-----------|
 | POST | `/threads` | Create a new thread | BC-2.12.001 |
 | GET | `/threads/{thread_id}` | Get thread metadata | BC-2.12.001 |
-| GET | `/threads` | List threads (paginated, `?limit=&offset=`) | BC-2.12.001 |
+| GET | `/threads` | List threads; canonical pagination (`?limit=N` default 10 max 100, `?offset=N`; `created_at` DESC) — F-P31-01 | BC-2.12.001 |
 | DELETE | `/threads/{thread_id}` | Delete thread and all associated checkpoints | BC-2.12.001 |
 | GET | `/threads/{thread_id}/state` | Latest checkpoint state: `{ values: GraphState, checkpoint: CheckpointId, next: [NodeId] }` | BC-2.12.001 |
 | POST | `/threads/{thread_id}/state` | Apply state delta `{ values: Map<String,Value>, as_node?: NodeId }` → returns `{ checkpoint: CheckpointId }` | BC-2.12.001 |
-| GET | `/threads/{thread_id}/history` | Checkpoint history list, newest-first (`?limit=N`) | BC-2.12.001 |
+| GET | `/threads/{thread_id}/history` | Checkpoint history list, newest-first; canonical pagination (`?limit=N` default 10 max 100, `?offset=N`; values > 100 clamped) — F-P31-01 | BC-2.12.001 |
 
 ### Assistants
 
@@ -159,7 +177,7 @@ Default port: `7437` (configurable via `server.port` in `ferrochain-server.toml`
 |--------|------|-------------|-----------|
 | POST | `/assistants` | Create an assistant (named agent config + graph reference) | BC-2.12.002 |
 | GET | `/assistants/{assistant_id}` | Get assistant config (resolves via latest-version pointer) | BC-2.12.002 |
-| GET | `/assistants` | List assistants | BC-2.12.002 |
+| GET | `/assistants` | List assistants; canonical pagination (`?limit=N` default 10 max 100, `?offset=N`; `created_at` DESC) — F-P31-01 | BC-2.12.002 |
 | PATCH | `/assistants/{assistant_id}` | Sparse update (new immutable version created; previous accessible via /versions) | BC-2.12.002 |
 | DELETE | `/assistants/{assistant_id}` | Delete assistant | BC-2.12.002 |
 | GET | `/assistants/{assistant_id}/versions` | List all immutable version snapshots, ordered by version ascending | BC-2.12.002 |
@@ -170,7 +188,7 @@ Default port: `7437` (configurable via `server.port` in `ferrochain-server.toml`
 | Method | Path | Description | BC Anchor |
 |--------|------|-------------|-----------|
 | POST | `/threads/{thread_id}/runs` | Create and start a run (async; returns 202 with `run_id`) | BC-2.12.003 |
-| GET | `/threads/{thread_id}/runs` | List runs for a thread (`?status=queued\|in_progress\|completed\|failed\|interrupted\|cancelled`) | BC-2.12.003 |
+| GET | `/threads/{thread_id}/runs` | List runs for a thread; `?status=queued\|in_progress\|completed\|failed\|interrupted\|cancelled` filter + canonical pagination (`?limit=N` default 10 max 100, `?offset=N`; `created_at` DESC) — F-P31-01 | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}` | Get run status and result | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}/stream` | Stream run output as server-sent events (SSE; emits run_start, node_start/stream/end, run_end) | BC-2.12.007 |
 | POST | `/threads/{thread_id}/runs/{run_id}/resume` | Deliver resume value to interrupted run | BC-2.05.004 |
@@ -194,7 +212,7 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 
 | Method | Path | Description | BC Anchor |
 |--------|------|-------------|-----------|
-| GET | `/runs?schedule_id={cron_id}` | List all Runs fired by a given schedule across all threads (read-only aggregate; not scoped to a single thread) | BC-2.12.004 |
+| GET | `/runs?schedule_id={cron_id}` | List all Runs fired by a given schedule across all threads (read-only aggregate; canonical pagination: `?limit=N` default 10 max 100, `?offset=N`; `created_at` DESC — ordering canon declared in BC-2.12.004 PC7; F-P31-01) | BC-2.12.004 |
 
 > **Note:** This is the only flat `/runs` endpoint. All other Run CRUD paths are
 > thread-scoped (`/threads/{thread_id}/runs/...`). This endpoint exists because

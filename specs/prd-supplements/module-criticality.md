@@ -1,11 +1,13 @@
 ---
 document_type: prd-supplement-module-criticality
 level: L3
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-14T00:00:00Z
 phase: 1a
+changelog:
+  - "1.1 (ADV-P1D-PASS-31): OBS-P31-1 add exclusion-criteria note (facade/re-export crates #1/#16/#17/#18 excluded; xtask classified as dev-tooling for CI gate); ferrochain-macros (#15) DECISION — receives HIGH-tier row (not excluded) because #[tool]/#[entrypoint] proc-macros affect P0 tool-calling and graph-composition paths per ADR-008; add ferrochain-macros to Module Inventory + HIGH row to classification table; update Classification Summary counts (HIGH 7→8, Total 19→20)."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
@@ -37,11 +39,28 @@ architect_note: "Architect must confirm crate-to-subsystem mapping and fill Arch
 - **ferrochain-openai** — OpenAI chat model implementation, streaming, tool-call, structured output
 - **ferrochain-anthropic** — Anthropic chat model implementation, streaming, tool-call
 - **ferrochain-ollama** — Ollama chat model implementation
+- **ferrochain-macros** — proc-macro crate providing `#[tool]` and `#[entrypoint]` procedural macros for tool registration and graph entry-point declaration (ADR-008)
 - **ferrochain-standard-tests** — conformance test suite crate (consumers: all provider crates)
 - **ferrochain-splitters** — text splitting with code-point boundary correctness
 - **ferrochain-sandbox** — WASM/container tool execution backend, workspace path confinement, macOS Seatbelt
 - **ferrochain-community** — demand-ranked integration crates (post-v1; third-party)
 - **xtask** — cargo xtask workspace tooling (file-size gate, client-timeout lint, namespace reservation)
+
+> **Exclusion criteria (OBS-P31-1, ADV-P1D-PASS-31):** Facade/re-export and codegen-thin
+> crates (`ferrochain` #1, `ferrochain-openai-sdk` #16, `ferrochain-anthropic-sdk` #17,
+> `ferrochain-ollama-sdk` #18) carry no criticality-bearing modules of their own and are
+> intentionally excluded from the Module Classification table — they re-export from the
+> implementation crates listed above and contain no independent logic paths. `xtask` is
+> dev-tooling (not a published library crate) but is classified because its file-size-check
+> logic gates CI — a failing xtask gate blocks all merges.
+>
+> **ferrochain-macros (#15) — row vs. exclusion DECISION (OBS-P31-1):** Although
+> `ferrochain-macros` is codegen infrastructure, it carries real proc-macro logic
+> (`#[tool]`, `#[entrypoint]`) per ADR-008. Because `#[tool]` generates the ToolDefinition
+> plumbing consumed by all P0 tool-calling paths (BC-2.09.001, BC-2.09.002) and
+> `#[entrypoint]` gates graph composition entry points, incorrect macro expansion silently
+> corrupts P0 execution without a clear runtime error. DECISION: `ferrochain-macros`
+> receives a **HIGH**-tier criticality row; it is NOT excluded as a facade crate.
 
 ## Module Classification
 
@@ -60,6 +79,7 @@ architect_note: "Architect must confirm crate-to-subsystem mapping and fill Arch
 | ferrochain-openai | ferrochain-openai | HIGH | Conformance contract; error-type fidelity; token-usage accounting | ≥ 90% | 0 |
 | ferrochain-anthropic | ferrochain-anthropic | HIGH | Conformance contract; streaming correctness | ≥ 90% | 0 |
 | ferrochain-ollama | ferrochain-ollama | HIGH | Conformance contract; local-first deployment | ≥ 90% | 0 |
+| Proc-macro suite (#[tool], #[entrypoint]) | ferrochain-macros | HIGH | ADR-008; `#[tool]` generates ToolDefinition plumbing for P0 tool-calling paths (BC-2.09.001, BC-2.09.002); `#[entrypoint]` gates graph composition; incorrect macro expansion silently corrupts P0 execution (OBS-P31-1) | ≥ 90% | 0 |
 | MCP tool adapter | ferrochain-mcp | MEDIUM | ToolException fidelity (R11); untrusted ingress; correctness but not formal target | ≥ 80% | 0 |
 | ferrochain-splitters | ferrochain-splitters | MEDIUM | Code-point parity correctness (R8); isolated from graph runtime | ≥ 80% | 0 |
 | Sandbox WASM/container backend | ferrochain-sandbox | MEDIUM | Execution isolation important but DI-006 behavioral test covers the main case | ≥ 80% | 0 |
@@ -91,13 +111,13 @@ architect_note: "Architect must confirm crate-to-subsystem mapping and fill Arch
 
 | Tier | Module Count | Percentage |
 |------|-------------|------------|
-| CRITICAL | 6 | 32% |
-| HIGH | 7 | 37% |
-| MEDIUM | 5 | 26% |
-| LOW | 2 | 11% |
-| **Total** | **19** | ~100% |
+| CRITICAL | 6 | 30% |
+| HIGH | 8 | 40% |
+| MEDIUM | 5 | 25% |
+| LOW | 2 | 10% |
+| **Total** | **20** | ~100% |
 
-*Note: Community crate and xtask excluded from active-development count; counted here for completeness.*
+*Note: Community crate and xtask excluded from active-development count; counted here for completeness. ferrochain-macros added as HIGH row (OBS-P31-1). Facade/re-export crates (#1/#16/#17/#18) excluded per exclusion-criteria note above.*
 
 ## Dependency Graph — Build Order
 

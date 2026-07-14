@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.001
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ wave: 1
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-14T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -22,6 +22,8 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
 input-hash: "992d1136d6ecd5fd6aa833f0ece030db3e548c8fdd727917f8474f6c21522745"
+changelog:
+  - "1.1 (ADV-P1D-PASS-31): F-P31-01 PC17 history endpoint — declare limit default 10, max 100, values > 100 clamped to 100, offset default 0 (pagination coherence canon; clamp out-of-range semantics)."
 ---
 
 # BC-2.12.001: Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History)
@@ -78,7 +80,8 @@ ferrochain-checkpoint subsystem. Thread-not-found returns `E-SERVER-003`.
 16. `POST /threads/{thread_id}/state` — updates checkpoint state by applying a delta:
     `{ values: Map<String, Value>, as_node?: NodeId }`. Returns `{ checkpoint: CheckpointId }`.
 17. `GET /threads/{thread_id}/history?limit=N` — returns the checkpoint history list
-    for the thread, ordered newest-first.
+    for the thread, ordered newest-first; `limit` default 10, max 100; values > 100
+    clamped to 100; `offset` default 0 (F-P31-01, ADV-P1D-PASS-31).
 
 ## Invariants
 
