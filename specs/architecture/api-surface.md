@@ -30,7 +30,12 @@ decisions: [D13, D17]
 | `GuardrailHook` | ferrochain-core | SS-11 | BC-2.11.002–004 |
 | `BudgetPolicy` | ferrochain-core | SS-10 | BC-2.10.001 |
 | `Tool` | ferrochain-core | SS-09 | BC-2.09.002 |
-| `BaseMemory` | ferrochain-core | SS-15 | BC-2.15.001 |
+
+## Public Traits (ferrochain-memory)
+
+| Trait | Crate | SS | BC Anchors |
+|-------|-------|----|-----------|
+| `MemoryStore` | ferrochain-memory | SS-15 | BC-2.15.001–003 |
 
 ## Public Traits (ferrochain-checkpoint)
 

@@ -10,7 +10,7 @@ origin: greenfield
 priority: P2
 subsystem: SS-15
 capability: CAP-017
-wave: post-v1
+wave: 2
 phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -170,6 +170,6 @@ _[to be filled after story decomposition]_
 | L2 Domain Invariants | — (no DI directly applies; CONFLICT-7 memory scope model is the primary reference) |
 | Domain C Forcing Function | domain-c-openclaw.md §2.6 — "SQLite with optional vector embeddings" + hybrid retrieval; §7 memory checklist item "[PARTIAL] Long-horizon cross-session store (KV + vector) decoupled from checkpoints" |
 | Priority | P2 |
-| Wave | Post-v1 |
+| Wave | Wave 2 |
 | Test Types | I (integration) |
 | Module | [architect to assign — ferrochain-memory] |

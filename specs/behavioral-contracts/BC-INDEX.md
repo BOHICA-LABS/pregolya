@@ -147,3 +147,4 @@ traces_to: .factory/specs/prd.md
 3. **vp_seed frontmatter inconsistency** — RESOLVED. BC-2.03.001: `vp_seed: true, vp_id: VP-001`. BC-2.04.006: normalized `kani_vp_seed` → `vp_seed: true, vp_id: VP-002`. BC-2.13.004: `vp_seed: true, vp_id: VP-003`.
 4. **red_gate_required vs red_gate** — RESOLVED. BC-2.07.002: `red_gate_required: true` → `red_gate: true, red_gate_source: R8`.
 5. **Proc-macro BCs (Phase-1b)** — ADDED. BC-2.08.010/011/012 authored from ADR-004 + ADR-008 acceptance (D5 gate resolved). Batch 13 in bc-authoring-plan.md. Total: 83 → 86 BCs; P1 count: 27 → 30.
+6. **SS-15 wave drift (ADV-P1D-PASS-3 F-P3-06)** — RESOLVED. BC-2.15.001/002/003 frontmatter `wave: post-v1` → `wave: 2`; Traceability rows updated to `Wave 2`. Aligns with ARCH-INDEX §Canonical Crate Roster (ferrochain-memory assigned wave 2).

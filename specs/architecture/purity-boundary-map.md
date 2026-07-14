@@ -45,6 +45,7 @@ side effects. Kani proofs operate here.
 | `checkpoint::lineage` | ferrochain-checkpoint | Fork-pointer construction is pure (no I/O to the DB) | — |
 | `sandbox::path_guard` | ferrochain-sandbox | `canonicalize_beneath_root` is pure path arithmetic after OS resolution | VP-003 |
 | `splitters::recursive` | ferrochain-splitters | Chunk boundary computation is pure string iteration | — |
+| `memory::store` (validation) | ferrochain-memory | `MemoryStore` key/query validation logic; no I/O | — |
 
 **Kani constraint:** Kani model checking operates on finite, bounded loops. `graph::channels`
 reducer loop must be bounded by the number of tasks per super-step. `sandbox::path_guard`
@@ -77,6 +78,9 @@ Kani is not applicable here.
 | `ferrochain-ollama` (invoke) | ferrochain-ollama | reqwest HTTP call to localhost:11434 | Integration |
 | `mcp::client` | ferrochain-mcp | MCP transport (stdio / HTTP SSE) | Integration |
 | `mcp::adapter` (invoke) | ferrochain-mcp | Tool call over transport | Integration |
+| `memory::sqlite` | ferrochain-memory | SQLite I/O for long-horizon memory | Integration |
+| `memory::in_memory` | ferrochain-memory | In-memory HashMap store (deterministic for tests) | Unit |
+| `memory::search` | ferrochain-memory | Search execution (may invoke embedding/vector backend) | Integration |
 
 ### Boundary Modules (Pure Logic + Effectful Dispatch)
 

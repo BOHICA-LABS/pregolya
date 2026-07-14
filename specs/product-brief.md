@@ -141,12 +141,16 @@ Cross-cutting (all waves)
 
 **Workspace topology**
 - Single Cargo workspace per D4; crates publish individually
-- ferrochain brand namespace: ferrochain, ferrochain-core, ferrochain-graph, ferrochain-checkpoint,
+- ferrochain brand namespace (18 publishable crates — authoritative source: ARCH-INDEX §Canonical Crate Roster):
+  ferrochain (facade), ferrochain-core, ferrochain-graph, ferrochain-checkpoint,
   ferrochain-openai, ferrochain-anthropic, ferrochain-ollama, ferrochain-mcp, ferrochain-community,
   ferrochain-splitters, ferrochain-standard-tests, ferrochain-server, ferrochain-sandbox,
-  ferrochain-memory (D6 + D1 + D13; sandbox and memory added per SS-13/SS-15 ARCH-INDEX wave mapping — ADV-P1D-PASS-2)
-- Partner crate architecture: standalone SDK crate split (HS-6/D17-Q5); final names in
-  architecture-phase ADR
+  ferrochain-memory, ferrochain-macros,
+  ferrochain-openai-sdk, ferrochain-anthropic-sdk, ferrochain-ollama-sdk
+  (D6 base 9 + D1 mcp/standard-tests + D13 server + P2-05 sandbox/memory + ADR-008 macros + D17-Q5 3×-sdk;
+  updated ADV-P1D-PASS-3 F-P3-04)
+- Partner crate architecture: standalone SDK crate split (HS-6/D17-Q5); ferrochain-openai-sdk,
+  ferrochain-anthropic-sdk, ferrochain-ollama-sdk do NOT depend on ferrochain-core (per ADR-007)
 
 **API surface and semantic fidelity**
 - External API surface: LangChain v1 semantic fidelity per D17 HYBRID outcome; internal
@@ -214,7 +218,7 @@ Source: STATE.md Risk Register (binding)
 | Risk ID | Summary | Severity | Mitigation |
 |---------|---------|---------|------------|
 | R4 | Competing langgraph crate (Onelevenvy) velocity — may capture LangGraph identity in Rust | Medium | Lead with ferrochain-graph quality + checkpointing before rig/Onelevenvy match it |
-| R6 | Namespace reservation race — cargo login + publish-all.sh not yet run (PENDING HUMAN ACTION) | High | Human must run `cargo login` + .factory/namespace-reservation/publish-all.sh immediately. Reservation must cover all 14 crates including ferrochain-sandbox (Wave 1) and ferrochain-memory (Wave 2) — both added to namespace enumeration in ADV-P1D-PASS-2 fix. |
+| R6 | Namespace reservation race — cargo login + publish-all.sh not yet run (PENDING HUMAN ACTION) | High | Human must run `cargo login` + .factory/namespace-reservation/publish-all.sh immediately. Reservation must cover all 18 publishable crates (see ARCH-INDEX §Canonical Crate Roster) including ferrochain-sandbox (Wave 1), ferrochain-memory (Wave 2), ferrochain-macros (Wave 1), and ferrochain-openai-sdk / ferrochain-anthropic-sdk / ferrochain-ollama-sdk (Wave 2) — updated ADV-P1D-PASS-3 F-P3-04. |
 | R7 | langchain-protocol version volatility (v0.0.17 no stable) | Low | Port rationale is version-volatility; not a conformance target |
 | R8 | Splitters code-point vs byte-length parity on non-ASCII — no upstream test coverage | High | Phase-1 BC + Red Gate test authored from behavior (D17-Q9) |
 | R10 | NamedBarrierValue/EphemeralValue have no upstream unit tests | Medium | Phase-1 BC backlog — product-owner authors BCs + Red Gate tests (D17-Q9) |

@@ -186,3 +186,31 @@ ferrochain Phase 1d adversarial spec convergence: Pass 1 COMPLETE — NOT CLEAN.
 | **Cycle** | v1.0.0-greenfield |
 | **Burst commit** | burst 77 |
 | **Convergence counter** | 0 of 3 (Phase 1d) |
+
+---
+
+## Checkpoint archived from burst 78
+
+### RESUME IN ONE BREATH
+
+ferrochain Phase 1d adversarial spec convergence: Pass 2 COMPLETE — NOT CLEAN. 5 findings: 1 CRIT (budget-namespace regression-escape → Component: BUDGET added to error taxonomy, E-GRAPH-005 tombstoned); 3 HIGH (RetryHint triple-vocabulary canonicalized to Never/Maybe/Later; run-state propagation completed [grep-zero]; brief +sandbox/memory crates [R6 now 14 crates]); 1 MED (12-component enum in api-surface + ADR-010). Sibling check 6/7 (run-state was partial → completed). VP axis CLEAN. 5/5 FIXED. Convergence 0/3.
+
+### WORKSTREAM (at time of archival)
+
+**Burst 78 COMPLETE.** Phase 1d pass 2: 5 findings fixed (BUDGET namespace/E-GRAPH-005 tombstone, canonical RetryHint Never/Maybe/Later, run-state propagation grep-zero, brief 14-crate update, 12-component enum).
+
+**RESUME NEXT-ACTION (at time of archival):** dispatch adversary pass 3 (fresh context): sibling-check pass-2 fixes; primary coverage = still-unattacked set (ADR-002..008/011 bodies, VP-001..003 bodies, domain shards assumptions/bounded-contexts/differentiators/failure-modes/entities-graph/capabilities-p0, module-criticality, architecture system-overview/module-decomposition/dependency-graph/purity-boundary-map/tooling-selection, holdout briefs implementability).
+
+### PENDING HUMAN ACTIONS (at time of archival)
+
+1. `direnv allow .` (B1 — Low, blocks key loading)
+2. `cargo login` + `.factory/namespace-reservation/publish-all.sh` — R6 namespace race STILL OPEN. NOTE: publish-all.sh must cover ALL 14 crates incl. ferrochain-sandbox + ferrochain-memory. Verify script lists all 14 before running.
+
+### WRAP METADATA
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-14 |
+| **Cycle** | v1.0.0-greenfield |
+| **Burst commit** | burst 78 |
+| **Convergence counter** | 0 of 3 (Phase 1d) |

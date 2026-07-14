@@ -71,9 +71,39 @@ decisions: [D4, D6, D9, D11, D13, D17]
 | SS-12 | Durable-Run HTTP Server | 2.12 | ferrochain-server | BC-2.12.001–007 | 1 |
 | SS-13 | Sandboxed Tool Execution | 2.13 | ferrochain-sandbox | BC-2.13.001–006 | 1 |
 | SS-14 | Typed Error Taxonomy | 2.14 | ferrochain-core | BC-2.14.001–006 | 1 |
-| SS-15 | Long-Horizon Memory | 2.15 | ferrochain-graph | BC-2.15.001–003 | 2 |
+| SS-15 | Long-Horizon Memory | 2.15 | ferrochain-memory | BC-2.15.001–003 | 2 |
 | SS-16 | Tool Retry + Circuit Breaker | 2.16 | ferrochain-graph | BC-2.16.001–003 | 2 |
 | SS-17 | Formal Verification Pipeline | 2.17 | xtask, ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox | BC-2.17.001–002 | 6 |
+
+## Canonical Crate Roster (Source of Truth)
+
+> **Authoritative.** All other documents (ADR-007, system-overview, dependency-graph) derive
+> from this table. Derivation: D6 base (9) + D1 (mcp, standard-tests) + D13 (server)
+> + P2-05 (sandbox, memory) + ADR-008 (macros) + D17-Q5 (3 × -sdk) = **18 published crates**.
+
+| # | Crate | Origin | Wave | Published |
+|---|-------|--------|------|-----------|
+| 1 | ferrochain | D6 | facade | YES |
+| 2 | ferrochain-core | D6 | 1 | YES |
+| 3 | ferrochain-graph | D6 | 1 | YES |
+| 4 | ferrochain-checkpoint | D6 | 1 | YES |
+| 5 | ferrochain-openai | D6+D17-Q5 | 2 | YES |
+| 6 | ferrochain-anthropic | D6+D17-Q5 | 2 | YES |
+| 7 | ferrochain-ollama | D6+D17-Q5 | 2 | YES |
+| 8 | ferrochain-community | D6 | post-v1 | YES (post-v1) |
+| 9 | ferrochain-splitters | D6 | 1 | YES |
+| 10 | ferrochain-mcp | D1 | 2 | YES |
+| 11 | ferrochain-standard-tests | D1 | 2 | YES |
+| 12 | ferrochain-server | D13 | 1 | YES |
+| 13 | ferrochain-sandbox | P2-05 | 1 | YES |
+| 14 | ferrochain-memory | P2-05 | 2 | YES |
+| 15 | ferrochain-macros | ADR-008 | 1 | YES |
+| 16 | ferrochain-openai-sdk | D17-Q5 | 2 | YES |
+| 17 | ferrochain-anthropic-sdk | D17-Q5 | 2 | YES |
+| 18 | ferrochain-ollama-sdk | D17-Q5 | 2 | YES |
+| — | xtask | D12 | — | NO (workspace binary) |
+
+R6 namespace reservation: publish-all.sh must cover all 18 published crates before public announcement.
 
 ## ADR Registry
 

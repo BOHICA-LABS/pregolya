@@ -52,7 +52,6 @@ content provenance, memory seams, tool retry.
 | `graph::budget` | `BudgetPolicy` eval (allow/escalate/deny), EvidenceJournal, ceiling halt/escalate | HIGH | SS-10 |
 | `graph::provenance` | `ProvenanceTag` attachment at ingress boundaries, `GuardrailHook` dispatch | HIGH | SS-11 |
 | `graph::event_emitter` | Streaming event emission; run_id + parent_ids correlation | HIGH | SS-06 |
-| `graph::memory_seam` | `BaseMemory` trait seam (KV + vector); GDPR erasure protocol | MEDIUM | SS-15 |
 | `graph::retry` | Per-tool retry policy (keyed by tool_name), circuit breaker, finite global_limit | MEDIUM | SS-16 |
 
 **VP anchor:** `graph::bsp_engine` is VP-001 target (BSP determinism Kani harness).
@@ -107,13 +106,20 @@ Responsibilities: Axum HTTP server, resource CRUD, cron scheduler, security defa
 
 ## Provider Crates and Standard Tests (SS-08) — HIGH
 
-- **ferrochain-openai:** `OpenAI: BaseChatModel`; streaming, tool-call, structured output, error fidelity
-- **ferrochain-anthropic:** `Anthropic: BaseChatModel`; streaming, tool-call
-- **ferrochain-ollama:** `Ollama: BaseChatModel`; local-first, no API key newtype needed
-- **ferrochain-standard-tests:** shared conformance test suite; all providers dev-dep
+Each provider is split into **two separate Cargo crates** per D17-Q5 / ADR-007 / BC-2.08.006:
 
-Each provider crate has one `sdk` module (the generated/standalone SDK type layer) and
-one `adapter` module (the ferrochain-core `BaseChatModel` impl) per D17-Q5 / ADR-007.
+| Crate | Role | ferrochain-core dep |
+|-------|------|---------------------|
+| `ferrochain-openai-sdk` | OpenAI wire client (HTTP, SSE, types) | NO |
+| `ferrochain-openai` | `impl BaseChatModel` for ChatOpenAI; translation | YES |
+| `ferrochain-anthropic-sdk` | Anthropic wire client | NO |
+| `ferrochain-anthropic` | `impl BaseChatModel` for ChatAnthropic | YES |
+| `ferrochain-ollama-sdk` | Ollama wire client | NO |
+| `ferrochain-ollama` | `impl BaseChatModel` for ChatOllama (no API key newtype) | YES |
+| `ferrochain-standard-tests` | Shared conformance test suite; all adapter crates as dev-dep | YES |
+
+The SDK crates have no ferrochain-core dep and are publishable standalone. Enforced by CI:
+`cargo check -p ferrochain-<provider>-sdk` must succeed without ferrochain-core in Cargo.lock.
 
 ## ferrochain-mcp (SS-09) — MEDIUM
 
@@ -123,6 +129,35 @@ one `adapter` module (the ferrochain-core `BaseChatModel` impl) per D17-Q5 / ADR
 | `mcp::discovery` | Tool discovery and registration from MCP server at runtime | MEDIUM |
 | `mcp::adapter` | `ToolInvocation` routing; ToolException re-raise with type identity (R11) | MEDIUM |
 | `mcp::ingress` | Untrusted-ingress routing; DI-012 guardrail seam | MEDIUM |
+
+## ferrochain-memory (SS-15) — MEDIUM
+
+Responsibilities: long-horizon memory persistence (KV + vector), GDPR erasure protocol,
+search (keyword / vector / hybrid). Canonical trait: `MemoryStore`.
+
+| Module | Responsibility | Criticality | SS |
+|--------|---------------|-------------|-----|
+| `memory::store` | `MemoryStore` trait (KV + vector ops, GDPR erasure) | MEDIUM | SS-15 |
+| `memory::sqlite` | SQLite durable backend implementation | MEDIUM | SS-15 |
+| `memory::in_memory` | Ephemeral in-memory backend (test/dev) | MEDIUM | SS-15 |
+| `memory::search` | Keyword, vector, and hybrid search implementations | MEDIUM | SS-15 |
+
+**BC anchors:** BC-2.15.001–003. Canonical trait name: `MemoryStore` (not `BaseMemory`).
+`BaseMemory` is the legacy alias retained in api-surface for BC reference only; `MemoryStore`
+is the implementation contract per BC-2.15.001 Architecture Anchors.
+
+## ferrochain-macros (ADR-008) — MEDIUM
+
+Responsibilities: proc-macro crate for `#[tool]`, `#[entrypoint]`, `#[task]`.
+Re-exported from ferrochain-core.
+
+| Module | Responsibility | Criticality | SS |
+|--------|---------------|-------------|-----|
+| `macros::tool` | `#[tool]` proc-macro: `Tool` implementor with JSON Schema derivation | MEDIUM | SS-08 |
+| `macros::entrypoint` | `#[entrypoint]` proc-macro: START edge wiring for StateGraph nodes | MEDIUM | SS-08 |
+| `macros::task` | `#[task]` proc-macro: task registration boilerplate | MEDIUM | SS-08 |
+
+**BC anchors:** BC-2.08.010, BC-2.08.011, BC-2.08.012 (all active, authored Phase 1b).
 
 ## xtask (SS-17 support) — LOW
 

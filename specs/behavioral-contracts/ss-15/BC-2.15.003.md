@@ -10,7 +10,7 @@ origin: greenfield
 priority: P2
 subsystem: SS-15
 capability: CAP-017
-wave: post-v1
+wave: 2
 phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -167,6 +167,6 @@ _[to be filled after story decomposition]_
 | CONFLICT Reference | CONFLICT-7 — memory scope: user/app/session partitioning + GDPR erasure; erasure must cover all three tiers |
 | Domain C Forcing Function | domain-c-openclaw.md §2.6 — memory is per-agent; domain-c §4 — credential / data handling as operator responsibility; the absence of GDPR tooling in OpenClaw is a gap ferrochain addresses |
 | Priority | P2 |
-| Wave | Post-v1 |
+| Wave | Wave 2 |
 | Test Types | I (integration) |
 | Module | [architect to assign — ferrochain-memory] |

@@ -25,9 +25,11 @@ D17-Q6: proc-macro attributes (#[tool], #[entrypoint], #[task]) are Phase 1/2 wo
 gated on D5 ADR resolution. ADR-004 (schemars) is the D5 gate; ADR-004 is accepted,
 resolving that gate. This ADR specifies the proc-macro design now that the gate is cleared.
 
-No proc-macro BCs are in the current BC authoring plan. The product-owner must explicitly
-author or formally defer proc-macro BCs (#[tool], #[entrypoint], #[task]) before
-Phase-2 story decomposition begins (see PRD OQR-4).
+~~No proc-macro BCs are in the current BC authoring plan.~~ **Stale — superseded by
+Phase 1b authoring.** BC-2.08.010 (#[tool] schema generation), BC-2.08.011 (#[entrypoint]
+start-node wiring), and BC-2.08.012 (#[task] boilerplate) are authored and **active** as of
+Phase 1b. The product-owner has fulfilled the formal-defer obligation noted in PRD OQR-4.
+Phase-2 story decomposition may reference BC-2.08.010–012 without a gate. (ADV-P1D-PASS-3 F-P3-05)
 
 ## Scope
 

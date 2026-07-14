@@ -47,19 +47,25 @@ built in-workspace. No wire-compatibility with LangGraph Platform.
 | P-06 | Dependency direction is acyclic | ferrochain-core ← ferrochain-graph ← ferrochain-checkpoint ← ferrochain-server; no cycles |
 | P-07 | File size gate | ≤500 lines soft / ≤750 hard per production file; CI-enforced via `cargo xtask check-file-size` (D12) |
 
-## Crate Topology (D6)
+## Crate Topology (18 published crates; see ARCH-INDEX.md §Canonical Crate Roster)
 
 ```
+ferrochain                — Re-export facade (optional convenience re-export)
 ferrochain-core           — Runnable/Message/ContentBlock, FerrochainError, credential newtypes
+ferrochain-macros         — Proc-macros: #[tool], #[entrypoint], #[task]; re-exported from core
 ferrochain-graph          — StateGraph BSP engine, HITL, budget governance, provenance/guardrail
 ferrochain-checkpoint     — per-task put_writes, SQLite/memory backends, monotonic clock
 ferrochain-server         — Axum HTTP: threads/assistants/runs/schedules, SecurityConfig
 ferrochain-splitters      — Unicode code-point text splitting (isolated; no graph dep)
 ferrochain-sandbox        — WASM/container tool execution, workspace path confinement
-ferrochain-openai         — OpenAI chat model (ferrochain-core dep only)
-ferrochain-anthropic      — Anthropic chat model (ferrochain-core dep only)
-ferrochain-ollama         — Ollama chat model (ferrochain-core dep only)
-ferrochain-standard-tests — Conformance test suite (each provider as dev-dep)
+ferrochain-memory         — Long-horizon memory: MemoryStore trait, SQLite/in-memory backends
+ferrochain-openai-sdk     — OpenAI standalone wire client (no ferrochain-core dep) [D17-Q5]
+ferrochain-openai         — OpenAI adapter: impl BaseChatModel (depends on core + openai-sdk)
+ferrochain-anthropic-sdk  — Anthropic standalone wire client [D17-Q5]
+ferrochain-anthropic      — Anthropic adapter: impl BaseChatModel
+ferrochain-ollama-sdk     — Ollama standalone wire client [D17-Q5]
+ferrochain-ollama         — Ollama adapter: impl BaseChatModel (local-first, no API key newtype)
+ferrochain-standard-tests — Conformance test suite (each adapter crate as dev-dep)
 ferrochain-mcp            — MCP tool adapter (langchain-mcp-adapters semantic port)
 ferrochain-community      — [post-v1; third-party contributed; not in-tree at v1]
 xtask                     — Cargo workspace tooling: file-size gate, timeout lint, namespace check
@@ -69,8 +75,8 @@ xtask                     — Cargo workspace tooling: file-size gate, timeout l
 
 | Wave | Crates | Phase |
 |------|--------|-------|
-| Wave 1 | ferrochain-core, ferrochain-graph, ferrochain-checkpoint, ferrochain-server, ferrochain-splitters, ferrochain-sandbox | Phase 3 |
-| Wave 2 | ferrochain-openai, ferrochain-anthropic, ferrochain-ollama, ferrochain-standard-tests, ferrochain-mcp | Phase 3 (after Wave 1) |
+| Wave 1 | ferrochain-core, ferrochain-macros, ferrochain-graph, ferrochain-checkpoint, ferrochain-server, ferrochain-splitters, ferrochain-sandbox | Phase 3 |
+| Wave 2 | ferrochain-openai-sdk, ferrochain-openai, ferrochain-anthropic-sdk, ferrochain-anthropic, ferrochain-ollama-sdk, ferrochain-ollama, ferrochain-standard-tests, ferrochain-mcp, ferrochain-memory | Phase 3 (after Wave 1) |
 | Post-v1 | ferrochain-community, additional providers | Post Phase 7 |
 
 ## Design-Forcing Holdout Domains (D8)

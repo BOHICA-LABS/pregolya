@@ -24,6 +24,8 @@ decisions: [D4, D6, D7]
 
 ```
 ferrochain-core
+  ├── ferrochain-macros         (proc-macro crate; re-exported from core)
+  │
   ├── ferrochain-graph          (uses core: Runnable, Message, FerrochainError)
   │   └── ferrochain-checkpoint (uses core: CheckpointSaver, FerrochainError)
   │       └── ferrochain-server (uses graph + checkpoint: runs + threads + cron)
@@ -33,11 +35,16 @@ ferrochain-core
   ├── ferrochain-sandbox        (uses core: FerrochainError; ferrochain-graph uses sandbox)
   │   [ferrochain-graph → ferrochain-sandbox for tool dispatch]
   │
-  ├── ferrochain-openai         (uses core: BaseChatModel, Runnable, FerrochainError)
-  ├── ferrochain-anthropic      (uses core: same surface as openai)
-  ├── ferrochain-ollama         (uses core: same surface as openai)
+  ├── ferrochain-memory         (uses core: FerrochainError; MemoryStore trait)
   │
-  ├── ferrochain-standard-tests (dev-deps on each provider crate + core)
+  ├── ferrochain-openai-sdk     (NO ferrochain-core dep; reqwest + serde only) [D17-Q5]
+  │   └── ferrochain-openai     (uses core: BaseChatModel + openai-sdk)
+  ├── ferrochain-anthropic-sdk  (NO ferrochain-core dep) [D17-Q5]
+  │   └── ferrochain-anthropic  (uses core: BaseChatModel + anthropic-sdk)
+  ├── ferrochain-ollama-sdk     (NO ferrochain-core dep) [D17-Q5]
+  │   └── ferrochain-ollama     (uses core: BaseChatModel + ollama-sdk)
+  │
+  ├── ferrochain-standard-tests (dev-deps on each adapter crate + core)
   │
   └── ferrochain-mcp            (uses core: Tool, Runnable; optional dep on providers)
 ```
@@ -51,15 +58,23 @@ ferrochain-core
 | ferrochain-checkpoint | ferrochain-core | runtime | CheckpointSaver, FerrochainError |
 | ferrochain-server | ferrochain-graph | runtime | Runs invoke the graph engine |
 | ferrochain-server | ferrochain-checkpoint | runtime | Threads/runs read/write checkpoints |
+| ferrochain-memory | ferrochain-core | runtime | FerrochainError; MemoryStore trait definition |
+| ferrochain-openai-sdk | (none) | — | Standalone: reqwest + serde only; no ferrochain-core [D17-Q5] |
 | ferrochain-openai | ferrochain-core | runtime | BaseChatModel + FerrochainError |
-| ferrochain-anthropic | ferrochain-core | runtime | Same as openai |
-| ferrochain-ollama | ferrochain-core | runtime | Same as openai |
+| ferrochain-openai | ferrochain-openai-sdk | runtime | Wire client for SDK adapter pattern |
+| ferrochain-anthropic-sdk | (none) | — | Standalone; no ferrochain-core dep |
+| ferrochain-anthropic | ferrochain-core | runtime | BaseChatModel + FerrochainError |
+| ferrochain-anthropic | ferrochain-anthropic-sdk | runtime | Wire client |
+| ferrochain-ollama-sdk | (none) | — | Standalone; no ferrochain-core dep |
+| ferrochain-ollama | ferrochain-core | runtime | BaseChatModel + FerrochainError |
+| ferrochain-ollama | ferrochain-ollama-sdk | runtime | Wire client |
 | ferrochain-standard-tests | ferrochain-openai | dev | Conformance test harness |
 | ferrochain-standard-tests | ferrochain-anthropic | dev | Conformance test harness |
 | ferrochain-standard-tests | ferrochain-ollama | dev | Conformance test harness |
 | ferrochain-standard-tests | ferrochain-core | dev | Test trait surface |
 | ferrochain-mcp | ferrochain-core | runtime | Tool, Runnable, FerrochainError |
 | ferrochain-splitters | ferrochain-core | runtime | FerrochainError for Result |
+| ferrochain-macros | (none) | — | Proc-macro crate; no ferrochain-core dep at compile time |
 
 ## Cross-Cutting Dependencies (Shared by All Crates)
 
@@ -78,19 +93,24 @@ ferrochain-core
 
 ```
 Wave 1:
-  1. ferrochain-core             (foundation; no internal deps)
-  2. ferrochain-splitters        (parallel; depends only on core)
-  3. ferrochain-sandbox          (parallel; depends only on core)
-  4. ferrochain-checkpoint       (depends on core)
-  5. ferrochain-graph            (depends on core + sandbox)
-  6. ferrochain-server           (depends on graph + checkpoint)
+  1. ferrochain-macros           (proc-macro crate; no internal deps)
+  2. ferrochain-core             (foundation; depends on macros for re-export)
+  3. ferrochain-splitters        (parallel; depends only on core)
+  4. ferrochain-sandbox          (parallel; depends only on core)
+  5. ferrochain-checkpoint       (depends on core)
+  6. ferrochain-graph            (depends on core + sandbox)
+  7. ferrochain-server           (depends on graph + checkpoint)
 
 Wave 2:
-  7. ferrochain-openai           (depends only on core)
-  8. ferrochain-anthropic        (depends only on core)
-  9. ferrochain-ollama           (depends only on core)
-  10. ferrochain-standard-tests  (depends on core + all providers)
-  11. ferrochain-mcp             (depends on core + optional providers)
+  8.  ferrochain-openai-sdk      (standalone; no ferrochain-core dep) [D17-Q5]
+  9.  ferrochain-anthropic-sdk   (standalone) [D17-Q5]
+  10. ferrochain-ollama-sdk      (standalone) [D17-Q5]
+  11. ferrochain-openai          (depends on core + openai-sdk)
+  12. ferrochain-anthropic       (depends on core + anthropic-sdk)
+  13. ferrochain-ollama          (depends on core + ollama-sdk)
+  14. ferrochain-memory          (depends on core; MemoryStore trait)
+  15. ferrochain-standard-tests  (depends on core + all adapter crates)
+  16. ferrochain-mcp             (depends on core + optional providers)
 ```
 
 **Note:** ferrochain-graph depends on ferrochain-sandbox for tool dispatch. However,

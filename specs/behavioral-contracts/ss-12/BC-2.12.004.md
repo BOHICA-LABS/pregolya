@@ -56,7 +56,7 @@ interactive runs.
    a. Creates a new `Run` with a freshly allocated `run_id` and `thread_id` (no
       checkpoint history — isolated fresh session).
    b. Sets `Run.status = RunStatus::Queued`; the Run progresses through the standard
-      `queued → in_progress → completed | failed | expired` lifecycle.
+      `queued → in_progress → completed | failed | interrupted | cancelled` lifecycle.
 3. The `cron_id` is returned in the creation response; subsequent `GET /schedules/{cron_id}`
    reflects current `enabled` state and `last_fired_at` timestamp.
 4. Setting `enabled: false` via `PATCH /schedules/{cron_id}` prevents all future firings
@@ -138,7 +138,7 @@ queue_depth }`.
 
 ## Related BCs
 
-- BC-2.12.003 — depends on: Run lifecycle (queued→completed/failed) is the standard lifecycle each cron-fired Run follows
+- BC-2.12.003 — depends on: Run lifecycle (queued → in_progress → completed | failed | interrupted | cancelled) is the standard lifecycle each cron-fired Run follows
 - BC-2.12.001 — depends on: thread creation semantics apply to cron-fired fresh sessions
 - BC-2.05.001 — related to: domain-c requires isolated sessions per cron run (same isolation guarantee as HITL session isolation)
 

@@ -10,7 +10,7 @@ origin: greenfield
 priority: P2
 subsystem: SS-15
 capability: CAP-017
-wave: post-v1
+wave: 2
 phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -173,6 +173,6 @@ _[to be filled after story decomposition]_
 | CONFLICT Reference | CONFLICT-7 — memory scope model: user/app/session partitioning + GDPR erasure (shapes the tier definitions in this contract) |
 | Domain C Forcing Function | domain-c-openclaw.md §4 — "Session identity as an authorization boundary (not merely routing) for multi-user gateways" aligns with the scope-as-isolation-boundary principle |
 | Priority | P2 |
-| Wave | Post-v1 |
+| Wave | Wave 2 |
 | Test Types | I (integration), U (unit/SQL assertion) |
 | Module | [architect to assign — ferrochain-memory] |
