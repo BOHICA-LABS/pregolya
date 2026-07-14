@@ -1,0 +1,214 @@
+# ferrochain CI pipeline
+#
+# Tolerant of pre-workspace state: every Rust job is guarded by
+#   `if: hashFiles('Cargo.toml') != ''`
+# so the workflow goes green on the bootstrap commit (no Cargo sources yet)
+# and automatically becomes enforcing once the Phase 3 workspace lands.
+#
+# File-size gate (D12) is additionally guarded on xtask existence:
+#   `if: hashFiles('Cargo.toml') != '' && hashFiles('xtask/Cargo.toml') != ''`
+#
+# Action SHA pins (update when bumping versions):
+#   actions/checkout           v4.2.2  → 11bd71901bbe5b1630ceea73d27597364c9af683
+#   dtolnay/rust-toolchain     master  → fa04a1451ff1842e2626ccb99004d0195b455a88
+#   Swatinem/rust-cache        v2.7.5  → 82a92a6e8fbeee089604da2575dc567ae9ddeaab
+
+name: CI
+
+on:
+  push:
+    branches-ignore:
+      - factory-artifacts
+  pull_request:
+    branches:
+      - main
+      - develop
+
+# Least-privilege default; individual jobs can elevate where needed.
+permissions:
+  contents: read
+
+# Cancel in-flight runs for the same ref on new pushes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # fmt — cargo fmt --check
+  # ─────────────────────────────────────────────────────────────────────────────
+  fmt:
+    name: CI / fmt
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        # v4.2.2
+
+      - name: Install Rust toolchain
+        if: hashFiles('Cargo.toml') != ''
+        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88
+        # master
+        with:
+          toolchain: stable
+          components: rustfmt
+
+      - name: cargo fmt --check
+        if: hashFiles('Cargo.toml') != ''
+        run: |
+          set -euo pipefail
+          cargo fmt --all -- --check
+
+      - name: Skip (no workspace yet)
+        if: hashFiles('Cargo.toml') == ''
+        run: echo "No Cargo.toml — workspace not yet initialised; fmt check skipped."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # clippy — deny warnings
+  # ─────────────────────────────────────────────────────────────────────────────
+  clippy:
+    name: CI / clippy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        # v4.2.2
+
+      - name: Install Rust toolchain
+        if: hashFiles('Cargo.toml') != ''
+        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88
+        # master
+        with:
+          toolchain: stable
+          components: clippy
+
+      - name: Cache Cargo registry and build artefacts
+        if: hashFiles('Cargo.toml') != ''
+        uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+        # v2.7.5
+
+      - name: cargo clippy (deny warnings)
+        if: hashFiles('Cargo.toml') != ''
+        run: |
+          set -euo pipefail
+          cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Skip (no workspace yet)
+        if: hashFiles('Cargo.toml') == ''
+        run: echo "No Cargo.toml — workspace not yet initialised; clippy skipped."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # test — cargo test (all crates, all features)
+  # ─────────────────────────────────────────────────────────────────────────────
+  test:
+    name: CI / test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        # v4.2.2
+
+      - name: Install Rust toolchain
+        if: hashFiles('Cargo.toml') != ''
+        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88
+        # master
+        with:
+          toolchain: stable
+
+      - name: Cache Cargo registry and build artefacts
+        if: hashFiles('Cargo.toml') != ''
+        uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+        # v2.7.5
+
+      - name: cargo test
+        if: hashFiles('Cargo.toml') != ''
+        run: |
+          set -euo pipefail
+          cargo test --workspace --all-features
+
+      - name: Skip (no workspace yet)
+        if: hashFiles('Cargo.toml') == ''
+        run: echo "No Cargo.toml — workspace not yet initialised; tests skipped."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # build — cargo build --release (smoke-check linkage)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build:
+    name: CI / build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        # v4.2.2
+
+      - name: Install Rust toolchain
+        if: hashFiles('Cargo.toml') != ''
+        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88
+        # master
+        with:
+          toolchain: stable
+
+      - name: Cache Cargo registry and build artefacts
+        if: hashFiles('Cargo.toml') != ''
+        uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+        # v2.7.5
+
+      - name: cargo build --release
+        if: hashFiles('Cargo.toml') != ''
+        run: |
+          set -euo pipefail
+          cargo build --workspace --all-features --release
+
+      - name: Skip (no workspace yet)
+        if: hashFiles('Cargo.toml') == ''
+        run: echo "No Cargo.toml — workspace not yet initialised; build skipped."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # file-size-gate — D12: cargo xtask check-file-size
+  # Guarded on BOTH Cargo.toml (workspace) AND xtask/Cargo.toml (xtask crate).
+  # Becomes active automatically in Phase 3 once the xtask crate is present.
+  # ─────────────────────────────────────────────────────────────────────────────
+  file-size-gate:
+    name: CI / file-size-gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        # v4.2.2
+
+      - name: Install Rust toolchain
+        if: hashFiles('Cargo.toml') != '' && hashFiles('xtask/Cargo.toml') != ''
+        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88
+        # master
+        with:
+          toolchain: stable
+
+      - name: Cache Cargo registry and build artefacts
+        if: hashFiles('Cargo.toml') != '' && hashFiles('xtask/Cargo.toml') != ''
+        uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+        # v2.7.5
+
+      - name: Install tokei
+        if: hashFiles('Cargo.toml') != '' && hashFiles('xtask/Cargo.toml') != ''
+        run: |
+          set -euo pipefail
+          cargo install tokei --locked
+
+      - name: cargo xtask check-file-size (D12)
+        if: hashFiles('Cargo.toml') != '' && hashFiles('xtask/Cargo.toml') != ''
+        run: |
+          set -euo pipefail
+          cargo xtask check-file-size
+
+      - name: Skip (workspace or xtask not yet initialised)
+        if: hashFiles('Cargo.toml') == '' || hashFiles('xtask/Cargo.toml') == ''
+        run: echo "Workspace or xtask crate not present — file-size gate deferred to Phase 3."

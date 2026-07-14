@@ -1,0 +1,16 @@
+# Factory and local tooling (worktree on factory-artifacts branch — not tracked on main/develop)
+.factory/
+.worktrees/
+.reference/
+.mcp.json
+
+# Environment secrets (direnv — never commit; contains real credentials)
+.envrc
+.env
+*.env.*
+
+# Rust build artifacts
+target/
+
+# Misc
+*.bak
