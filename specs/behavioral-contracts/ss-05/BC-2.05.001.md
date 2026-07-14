@@ -70,7 +70,7 @@ violation, and an interrupt whose state write fails propagates a storage error.
   the per-task scratchpad at a stable positional index; the FIFO order of future
   resume-value consumption is established at the moment `interrupt()` is called.
 - An interrupt without a checkpointer is a hard precondition violation (returns
-  `Err(E-GRAPH-003 InterruptWithoutCheckpointer)` or equivalent before the node runs).
+  `Err(E-GRAPH-016 InterruptWithoutCheckpointer)` before the node runs).
 - The checkpoint written at interrupt time must include the INTERRUPT marker so that
   on process restart the engine recognizes the thread as interrupted (not failed).
 - The interrupt does NOT advance to the next super-step; `versions_seen` and
@@ -81,7 +81,7 @@ violation, and an interrupt whose state write fails propagates a storage error.
 ### EC-001: Interrupt called without a checkpointer attached
 **Scenario:** A node calls `interrupt()` but the `StateGraph` was compiled without a
 `CheckpointSaver`.
-**Expected behavior:** `Err(E-GRAPH-003 InterruptWithoutCheckpointer)` is returned to
+**Expected behavior:** `Err(E-GRAPH-016 InterruptWithoutCheckpointer)` is returned to
 the caller before the interrupt halts. The node cannot be interrupted without a
 checkpointer because there is no durable state to resume from.
 
@@ -103,7 +103,7 @@ interrupted), since the state was not durably saved.
 ### EC-004: interrupt() called with a non-serializable value
 **Scenario:** A node calls `interrupt(value)` where `value` contains a type that cannot
 be serialized by the configured checkpoint serializer (msgpack).
-**Expected behavior:** `Err(E-CHKPT-003 SerializationFailed { field: "interrupt_value" })`
+**Expected behavior:** `Err(E-CHKPT-006 SerializationFailed { field: "interrupt_value" })`
 is returned. The graph does not proceed and does not leave a partial checkpoint.
 
 ## Canonical Test Vectors
@@ -112,7 +112,7 @@ is returned. The graph does not proceed and does not leave a partial checkpoint.
 |---|-------|-----------------|-------|
 | TV-001 | Node calls `interrupt("approve_this_plan?")` with SQLite checkpointer attached | Run returns `{"__interrupt__": [{ "value": "approve_this_plan?", "interrupt_id": <hash> }]}`; checkpoint written with INTERRUPT marker | Happy path — standard interrupt with string payload |
 | TV-002 | Same thread_id resumed after process kill+restart; call `Command(resume="yes")` | Node re-executes from its start; `interrupt()` call inside returns `"yes"` without raising | Durable persistence across restart — DI-003 + §3.5 |
-| TV-003 | `interrupt()` called inside a graph compiled without `CheckpointSaver` | `Err(E-GRAPH-003 InterruptWithoutCheckpointer)` returned before node executes | Precondition violation |
+| TV-003 | `interrupt()` called inside a graph compiled without `CheckpointSaver` | `Err(E-GRAPH-016 InterruptWithoutCheckpointer)` returned before node executes | Precondition violation |
 | TV-004 | Two nodes in a super-step — only node B calls `interrupt()`; node A has completed | Checkpoint reflects node A's writes via `put_writes` (durable); run halts at node B interrupt | Partial-step durability — completed tasks' writes are not lost |
 | TV-005 | `interrupt()` called with a structured payload `{ "risk_tier": "High", "action": "isolate_host" }` | Interrupt payload is serialized to msgpack; checkpoint stores typed struct | Structured interrupt value round-trip |
 

@@ -360,10 +360,27 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     ubiquitous-language-server.md reconciliation table (D17 fidelity: CheckpointSaver not
     CheckpointStore; RunnableConfig not RunConfig; AiMessage not AIMessage). Retired spellings
     (CheckpointStore, RunConfig, BaseCheckpointSaver, AIMessage in Rust contexts) must have 0
-    occurrences. Census command:
-    `grep -rn "CheckpointStore\|RunConfig\b\|BaseCheckpointSaver\|AIMessage" .factory/specs/`
+    occurrences. Census command (updated P20):
+    `grep -rn "CheckpointStore\|RunConfig\b\|BaseCheckpointSaver\|AIMessage\|\bCheckpointer\b" .factory/specs/`
+    Added retired spelling: bare `\bCheckpointer\b` (canonical name is `CheckpointSaver`).
+    Note: compound identifiers where `Checkpointer` has no left `\b` (e.g.,
+    `InterruptWithoutCheckpointer`) are self-excluded by the regex — no explicit exemption needed.
     Exemptions (do NOT count as violations): (a) Python semport cross-references (cite semport
     source file); (b) census-rule text itself in bc-authoring-plan.md; (c) reconciliation table
     LEFT column in ubiquitous-language-server.md (intentionally documents LangChain Python names).
     Source of truth: ADV-P1D-PASS-19.md §F-P19-02 (scope widened from BC+prd-supplements to full
     .factory/specs/); ADV-P1D-PASS-18.md §F-P18-01 + shared-type identifier census.
+    `\bCheckpointer\b` widened: ADV-P1D-PASS-20.md §F-P20-03.
+
+16. **E-code↔variant-name consistency census gate (added P20 — standing gate):**
+    After any BC authoring or fix burst that introduces, renames, or retires an error code,
+    run the variant-name consistency census. For every `E-<COMP>-NNN <VariantName>` pairing
+    found in any BC body, assert that `<VariantName>` is the canonical variant name for
+    `E-<COMP>-NNN` in error-taxonomy.md. A code referenced with the wrong variant name is a
+    high-severity drift that misleads implementers. Census command:
+    `grep -hrn "E-[A-Z]*-[0-9]\{3\} [A-Z][A-Za-z]*" .factory/specs/behavioral-contracts/ | grep -v "~~" | grep -oE "E-[A-Z]+-[0-9]{3} [A-Z][A-Za-z]+" | sort -u`
+    For each pairing, cross-check the variant name against the error-taxonomy.md table row for
+    that code. Mismatches are failures. Codes used without a variant name (e.g., bare
+    `E-CHKPT-001`) are permitted — only named pairings are checked. Retired codes (~~strikethrough~~
+    in taxonomy) must not appear in non-~~strikethrough~~ BC text.
+    Source of truth: ADV-P1D-PASS-20.md §F-P20-03.

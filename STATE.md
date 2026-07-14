@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "2.3"
+version: "2.4"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T14:30:00Z
+timestamp: 2026-07-14T12:40:22Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "Phase 1d pass 20 ready"
+current_step: "Phase 1d pass 21 ready"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -38,16 +38,16 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-14 — burst 95: Phase 1d pass 19 — casing residue + census scope widened. |
+| **Last Updated** | 2026-07-14 — burst 96: Phase 1d pass 20 — E-code variant canon (E-GRAPH-016/E-CHKPT-006). |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Phase 1d adversarial spec convergence — pass 19 complete; pass 20 ready (0/3 passes clean; 19 standing gates; census scope widened to all specs/) |
+| **Current Step** | Phase 1d adversarial spec convergence — pass 20 complete; pass 21 ready (0/3 passes clean; 21 standing gates; full 40-pairing E-code×variant census zero residue) |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -61,11 +61,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
+| Phase 1d pass 20 + fix burst (E-code variant census) | adversary + PO | COMPLETE | Pass 20: NOT CLEAN — 3 findings (F-P20-01 CRIT E-GRAPH-003/E-CHKPT-003 collision residue on P0 HITL path [burst-77 sweep missed ss-05/ss-10] → E-GRAPH-016/E-CHKPT-006 minted; F-P20-02 MED Checkpointer straggler; F-P20-03 gate widenings §15/§16). Full 86-BC code↔variant census: 40 pairings, zero residue beyond the 6. Trajectory ...→2→3. Convergence 0/3. Gates 21. Burst 96. |
 | Phase 1d pass 19 + fix burst (census scope widened) | adversary + PO | COMPLETE | Pass 19: NOT CLEAN — 2 findings, both pass-18-remedy residue (F-P19-01 HIGH 3 AiMessage sites outside census scope; F-P19-02 MED gate-#19 scope hole → widened to all specs/, 6 hits all exempt). Shared-type canon otherwise fully CLEAN in-scope. Trajectory ...→1→4→2. Convergence 0/3. Burst 95. |
 | Phase 1d pass 18 + fix burst (shared-type canon) | adversary + BA + PO + architect | COMPLETE | Pass 18: NOT CLEAN — 4 findings (F-P18-01 HIGH layer-correlated type-name splits CheckpointSaver/Store + RunnableConfig/RunConfig — would fail Phase-3 integration; NEW CLASS: shared Rust type identifiers; F-P18-02/03 MED casing + nonexistent variants). CANON: CheckpointSaver + RunnableConfig (upstream LangChain names, D17 fidelity). 3-layer parallel propagation; 26-type census ALL OK; retired spellings 0. Trajectory ...→1→1→1→4. Convergence 0/3. Gates now 19. Burst 94. |
 | Phase 1d pass 17 + fix burst (verification-command chain) | adversary + architect | COMPLETE | Pass 17: NOT CLEAN — 1 MEDIUM (F-P17-01 Kani harness named 5 ways; NFR gate command cited nonexistent name). Fix: harness_fn registry in VP-INDEX + 10 sites reconciled (bsp_determinism_harness / session_tenancy_harness / workspace_confinement_harness per BC-2.17.001 canon) + full 22-command executable-string census (last un-gated surface closed). NE-axis full rebuild + CAP/VP + 3 censuses ALL PASS on first run — anchor/index classes fully converged. Trajectory ...→2→1→1→1. Convergence 0/3. Standing gates now 18. Burst 93. |
 | Phase 1d pass 16 + fix burst (complete anchor-matrix census) | adversary + PO | COMPLETE | Pass 16: NOT CLEAN — 1 HIGH (F-P16-01 NE-anchor four-way drift incl. BC-INDEX internal contradiction; 23 mismatches). Fix closed the ENTIRE anchor-axis class: complete 86-BC × 6-axis matrix census (CAP/DI/NE/R/ADR/VP) — all axes exact post-fix; adversary-telegraphed CAP axis pre-verified clean. ne_anchor policy codified. Trajectory ...→1→1→2→1→1. Convergence 0/3. Standing gate #17: anchor-matrix census (subsumes DI/NE/CAP/R/ADR/VP). Burst 92. |
-| Phase 1d pass 15 + fix burst (ADR anchor sweep) | adversary + architect | COMPLETE | Pass 15: NOT CLEAN — 1 HIGH (F-P15-01 ADR-010 NE-16 mis-anchor [true referent P-78]; NEW CLASS: ADR-anchor axis). Pre-emptive 11-ADR sweep: 9 PASS / 2 FIXED (also ADR-003 NE-11→CONFLICT-2). FM-Detection adjudicated ACCEPTABLE-CONVENTION + note codified. Sibling 4/4 + 3 censuses PASS on first run. Trajectory ...→1→1→2→1. Convergence 0/3. Burst 91. |
 
 ## Decisions Log
 
@@ -123,10 +123,10 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 19 (Phase 1d) |
-| Fix bursts completed | 19 (Phase 1d) |
+| Adversary passes completed | 20 (Phase 1d) |
+| Fix bursts completed | 20 (Phase 1d) |
 | Convergence counter | 0 of 3 (Phase 1d; pre-pipeline 3/3 CLOSED) |
-| Finding trajectory | (pre-pipeline) →1→1→0→0→1→2→0→1→1→0→0→1→0→0→0 (C23: CLEAN) ‖ (Phase 1d) →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) |
+| Finding trajectory | (pre-pipeline) →1→1→0→0→1→2→0→1→1→0→0→1→0→0→0 (C23: CLEAN) ‖ (Phase 1d) →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) |
 
 ## Session Resume Checkpoint
 
@@ -134,22 +134,22 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ### RESUME IN ONE BREATH
 
-ferrochain Phase 1d adversarial spec convergence: Pass 19 REMEDIATED — NOT CLEAN. 2 findings, both pass-18-remedy residue: F-P19-01 HIGH 3 AiMessage sites outside gate-#19 shared-type census scope (module-decomposition.md, bc-authoring-plan.md, prd.md); F-P19-02 MED gate-#19 scope hole → census widened to all specs/, 6 hits all confirmed exempt (ubiquitous-language enum notation). Shared-type canon (CheckpointSaver/RunnableConfig) fully CLEAN in-scope. Trajectory ...→1→4→2. Convergence 0/3. Burst 95.
+ferrochain Phase 1d adversarial spec convergence: Pass 20 REMEDIATED — NOT CLEAN. 3 findings: F-P20-01 CRIT E-GRAPH-003/E-CHKPT-003 collision residue on P0 HITL/Budget path (burst-77 sweep missed ss-05/ss-10) — E-GRAPH-016 (POLICY: InterruptWithoutCheckpointer) + E-CHKPT-006 (INTERNAL: SerializationFailed) minted; 6 sites fixed. F-P20-02 MED Checkpointer straggler in BC-2.04.001:47 → CheckpointSaver. F-P20-03 gate widenings §15 (add \bCheckpointer\b) + §16 NEW (E-code↔variant-name census). Full 86-BC code↔variant census: 40 pairings, zero residue beyond the 6. Trajectory ...→2→3. Convergence 0/3. Gates 21. Burst 96.
 
 ### HEADS
 
 | Repo | Branch | SHA | Pushed | Notes |
 |------|--------|-----|--------|-------|
-| factory-artifacts | factory-artifacts | (burst 95 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
+| factory-artifacts | factory-artifacts | (burst 96 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
 | main | main | d018d3f | YES | CLAUDE.md + .gitignore committed (D10); develop initialized |
 
 No worktrees. No PRs. Reference clones (.reference/) gitignored.
 
 ### WORKSTREAM
 
-**Burst 95 COMPLETE.** Phase 1d pass 19: 2 findings fixed (F-P19-01 HIGH 3 AiMessage sites in module-decomposition/bc-authoring-plan/prd; F-P19-02 MED census widened to all specs/ — 6 hits all exempt). ADV-P1D-PASS-19.md committed. Trajectory ...→1→4→2.
+**Burst 96 COMPLETE.** Phase 1d pass 20: 3 findings fixed (F-P20-01 CRIT 6 collision sites E-GRAPH-003→E-GRAPH-016 / E-CHKPT-003→E-CHKPT-006; F-P20-02 MED BC-2.04.001:47 Checkpointer→CheckpointSaver; F-P20-03 gate §15 widened + §16 added). ADV-P1D-PASS-20.md committed. Full 40-pairing census zero residue. Trajectory ...→2→3.
 
-**RESUME NEXT-ACTION:** adversary pass 20 (fresh context): sibling-check pass-19 (widened shared-type census: all specs/ with documented exemptions), rotate 4 censuses, novel probe from shrinking unprobed list (EC-NNN integrity; inputs: arrays cite existing files; holdout-vs-CAP coverage; prd §1-4 prose; brief fresh read); 19 gates standing — CLEAN advances 1/3.
+**RESUME NEXT-ACTION:** adversary pass 21 (fresh context): sibling-check pass-20 (E-code×variant-name census re-run via new §16 gate, rotate 4 censuses), remaining novel probes (inputs: frontmatter arrays cite existing files; holdout-vs-CAP coverage; prd §1-4 + brief prose fresh reads); 21 gates standing — CLEAN advances 1/3.
 
 ### PENDING HUMAN ACTIONS (open)
 
@@ -170,7 +170,7 @@ No worktrees. No PRs. Reference clones (.reference/) gitignored.
 |-------|-------|
 | **Date** | 2026-07-14 |
 | **Cycle** | v1.0.0-greenfield |
-| **Burst commit** | (burst 95 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Burst commit** | (burst 96 — run `git -C .factory log -1 --format='%h %s'`) |
 | **Convergence counter** | 0 of 3 (Phase 1d) |
 
 ## Historical Content

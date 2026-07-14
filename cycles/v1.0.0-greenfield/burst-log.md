@@ -718,3 +718,35 @@ Phase 1d pass 10 + fix burst (semantic + growth-propagation censuses) | adversar
 - Fix bursts: 15
 - Counter: 0 of 3
 - Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15)
+
+### Burst 96 — Phase 1d Pass 20 Fix (E-code variant canon)
+
+**Date:** 2026-07-14
+**Agents:** adversary + PO
+**Pass result:** NOT CLEAN — 3 findings (1 CRIT, 1 MED, 1 process-gap)
+
+**F-P20-01 CRIT:** E-GRAPH-003/E-CHKPT-003 collision residue — burst-77 GRAPH reconciliation missed ss-05/ss-10 (BC-2.05.001 × 4 sites, BC-2.10.004 × 2 sites). E-GRAPH-016 (POLICY: InterruptWithoutCheckpointer, RetryHint=Never) + E-CHKPT-006 (INTERNAL: SerializationFailed, RetryHint=Never) minted. All 6 sites updated.
+
+**F-P20-02 MED:** BC-2.04.001:47 `Checkpointer` → `CheckpointSaver` (canonical per P18 shared-type census).
+
+**F-P20-03 PROCESS-GAP:** (a) No gate asserted E-code↔variant-name pairing consistency — bc-authoring-plan §16 added as new standing gate. (b) Gate §15 widened to include `\bCheckpointer\b` in retired-spelling list.
+
+**Full 86-BC code×variant census (40 pairings):** Zero mismatches beyond the 6 known collision sites. E-MCP-001 regex false positive documented (category keyword `TOOL` captured, not a variant name).
+
+**Files touched:**
+- specs/behavioral-contracts/ss-05/BC-2.05.001.md (4 sites: E-GRAPH-003→E-GRAPH-016)
+- specs/behavioral-contracts/ss-10/BC-2.10.004.md (2 sites: E-GRAPH-003→E-GRAPH-016)
+- specs/behavioral-contracts/ss-04/BC-2.04.001.md (line 47: Checkpointer→CheckpointSaver)
+- specs/prd-supplements/error-taxonomy.md (E-GRAPH-016 + E-CHKPT-006 added)
+- specs/prd-supplements/bc-authoring-plan.md (§15 widened + §16 added)
+- cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-20.md (NEW)
+
+### Convergence Status After Burst 96
+
+- Phase 1d passes: 20 (NOT CLEAN)
+- Fix bursts: 20
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20)
+
+**Archived step row (pass 15, dropped from Current Phase Steps to maintain last-5 window):**
+Phase 1d pass 15 + fix burst (ADR anchor sweep) | adversary + architect | COMPLETE | Pass 15: NOT CLEAN — 1 HIGH (F-P15-01 ADR-010 NE-16 mis-anchor [true referent P-78]; NEW CLASS: ADR-anchor axis). Pre-emptive 11-ADR sweep: 9 PASS / 2 FIXED (also ADR-003 NE-11→CONFLICT-2). FM-Detection adjudicated ACCEPTABLE-CONVENTION + note codified. Sibling 4/4 + 3 censuses PASS on first run. Trajectory ...→1→1→2→1. Convergence 0/3. Burst 91.

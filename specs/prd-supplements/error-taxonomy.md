@@ -88,6 +88,7 @@ primary_consumers: [implementer, test-writer]
 | E-GRAPH-013 | SECURITY | broken | BC-2.05.006 | `InsufficientApproverRole: action requires role '<required>'; caller presented role '<provided>'` |
 | E-GRAPH-014 | POLICY | broken | BC-2.05.006 | `InterruptApprovalTimeout: interrupt for run '<run_id>' (tier '<tier>') expired at deadline '<deadline_utc>' without receiving required approval` |
 | E-GRAPH-015 | VAL | broken | BC-2.05.004 | `NoParentGraph: Command.PARENT is only valid inside a subgraph execution context; no parent graph is active` |
+| E-GRAPH-016 | POLICY | broken | BC-2.05.001 (secondary: BC-2.10.004) | `InterruptWithoutCheckpointer: interrupt() requires a CheckpointSaver attached to the graph; no durable state is available to park the interrupted run` |
 
 ### Component: CHKPT (ferrochain-checkpoint)
 
@@ -98,6 +99,7 @@ primary_consumers: [implementer, test-writer]
 | E-CHKPT-003 | DURABILITY | broken | BC-2.04.005 | `CheckpointReadFailed: cannot restore state for thread '<thread_id>' checkpoint '<checkpoint_id>': <reason>` |
 | E-CHKPT-004 | SECURITY | broken | BC-2.04.007 | `EncryptionKeyRotationFailed: checkpoint state encryption key rotation error: <reason>` |
 | E-CHKPT-005 | TENANCY | broken | BC-2.04.006 | `SessionAddressCollision: operation with (thread_id='<t>', ns='<ns>') conflicts with existing session — triple must be unique` |
+| E-CHKPT-006 | INTERNAL | broken | BC-2.05.001 | `SerializationFailed: interrupt_value cannot be serialized by the configured checkpoint serializer — type contract violation (programming error)` |
 
 ### Component: SERVER (ferrochain-server)
 

@@ -44,7 +44,7 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
 
 ## Preconditions
 
-1. A `StateGraph` is compiled with a `Checkpointer` that implements the `put_writes` method
+1. A `StateGraph` is compiled with a `CheckpointSaver` that implements the `put_writes` method
 2. The durability tier is `DurabilityTier::Sync` or `DurabilityTier::Async` (not `Exit`)
 3. At least one PregelTask has completed execution within the current super-step
 4. The task's writes are non-null (even empty lists are valid — the task completed)

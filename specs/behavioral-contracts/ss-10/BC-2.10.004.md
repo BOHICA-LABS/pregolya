@@ -79,7 +79,7 @@ the resume value is consumed FIFO and the interrupted node re-executes from its 
 - The `BudgetEscalation` interrupt uses the same `put_writes` / INTERRUPT-marker checkpoint
   mechanism as all other interrupts (BC-2.05.001). No special-case checkpoint path exists.
 - A budget escalation without a `CheckpointSaver` is a hard precondition violation, identical
-  to BC-2.05.001 EC-001. The error returned is `Err(E-GRAPH-003 InterruptWithoutCheckpointer)`.
+  to BC-2.05.001 EC-001. The error returned is `Err(E-GRAPH-016 InterruptWithoutCheckpointer)`.
 - After resume with `Extend`, the resumed execution is subject to the same budget policy
   evaluation — the extended ceiling takes effect immediately for the next evaluation call.
   If the extended ceiling is still lower than current usage, the next evaluation immediately
@@ -90,7 +90,7 @@ the resume value is consumed FIFO and the interrupted node re-executes from its 
 ### EC-001: Budget escalation without a CheckpointSaver
 **Scenario:** A graph with `on_ceiling = escalate` runs without a `CheckpointSaver`.
 **Expected behavior:** On the first `PolicyDecision::Escalate`, the engine returns
-`Err(E-GRAPH-003 InterruptWithoutCheckpointer)` rather than raising an interrupt without
+`Err(E-GRAPH-016 InterruptWithoutCheckpointer)` rather than raising an interrupt without
 durable state. The run transitions to `failed`.
 
 ### EC-002: Escalation and an existing `interrupt()` call are both pending
