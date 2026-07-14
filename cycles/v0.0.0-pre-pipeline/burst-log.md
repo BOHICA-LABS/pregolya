@@ -2194,3 +2194,19 @@ Full questions in COMPARATIVE-ASSESSMENT.md Section 7.
 - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md (new artifact)
 
 **Next steps:** HUMAN DIRECTION GATE. Present COMPARATIVE-ASSESSMENT.md Section 7 Q1-Q9 to human. On all answers, record as decision D17 and enter Phase 1 spec crystallization.
+
+## Burst: burst 69 — Phase 1 Step A complete — product-brief.md v1.1 (2026-07-14)
+
+**Phase step archival:** adk-rust certification pass C20 (strict-zero, gate-closing attempt, A5 per-crate recount probe) rotated out of STATE.md Current Phase Steps (5-row limit). Full row: CLEAN(strict)=NO. 1 MEDIUM correction (C20-01): test-inventory A5 adk-mistralrs ~264→~282 — prior sweep correction had excluded proptest! for this crate only (methodology inconsistency; recount 245 #[test] + 19 #[tokio::test] + 18 proptest! = 282). C19 sibling check 4/4 CLEAN; cross-doc A5 probe CONSISTENT. Rotation 10/10 CONFIRMED. Metrics 8/8 Delta=0. Novel probe: A5 per-crate recount 10/11 exact. Streak RESET 2/3 → 0/3. Burst 63.
+
+**Summary:** Phase 1 Step A complete. product-brief.md v1.1 authored by product-owner (288 lines; D1–D17 + market-intel + COMPARATIVE-ASSESSMENT + holdout domains A/B/C; 4 ambiguities resolved with documented basis), reviewed by spec-reviewer (PASS-WITH-FIXES: 2 mechanical fixes applied — decisions array D2/D5/D9; crate attribution D6+D1+D13), revised to v1.1 (SR-01 bloat resolved; SR-02 security-defaults relocated to Overflow PRD-carry-forward table; SR-03 locked-tech tagged [locked: D11.x/D17-Qn]; SR-04 criterion measurability fixed — criterion #2 binary event + R4 watchlist measurement rule). input-hash 67fa2efbe06fdea2450aa43fde2ba87dfd2d6ff3b0460fd86427809581dcb347 computed and written to frontmatter.
+
+**Files touched:**
+
+- `.factory/specs/product-brief.md` (v1.1 — new artifact, 288 lines; input-hash computed and filled)
+- `.factory/STATE.md` (timestamp, current_step, Last Updated, Current Step; Phase 1 row → in-progress; Current Phase Steps — C20 archived here, Phase 1 Step A added at top; Session Resume Checkpoint replaced: RESUME IN ONE BREATH, WORKSTREAM, RESUME NEXT-ACTION, HEADS burst ref, WRAP METADATA burst ref)
+- `cycles/v0.0.0-pre-pipeline/burst-log.md` (this entry)
+
+**Cycle routing note:** C20 (pre-pipeline certification row) correctly archived to v0.0.0-pre-pipeline/burst-log.md. Future Phase 1 step archives will route to a Phase 1 cycle dir once orchestrator issues CYCLE_INIT for Phase 1 (e.g., v1.0.0-greenfield). No CYCLE_INIT received in this burst; v0.0.0-pre-pipeline remains current_cycle.
+
+**Next steps:** Dispatch business-analyst for create-domain-spec (sharded L2 domain spec under .factory/specs/domain-spec/) from product-brief.md v1.1.
