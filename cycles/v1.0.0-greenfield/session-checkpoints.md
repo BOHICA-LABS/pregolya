@@ -353,3 +353,13 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **WORKSTREAM (at time of archival):** Burst 104 COMPLETE. Phase 1d pass 28: 1 MED finding + 3 obs fixed (NEW CLASS: RetryHint coherence). CANON: RetryHint per-code authoritative over category default (5 codes); E-PROV-007 StructuredOutputRefused MINTED; E-CHKPT-005 raise-condition = composite-PK tenancy collision; gate #22. Trajectory ...→6→1.
 
 **WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 104 | Counter: 0/3
+
+---
+
+### Archived Checkpoint — Burst 108 (Pass 32)
+
+"ferrochain Phase 1 spec crystallization, step 1d adversarial convergence IN PROGRESS: 32 passes / 32 fix bursts, trajectory 14→...→1→1→4 (pass 32 opened the arithmetic-audit axis — summary cells vs actual table rows in both module-criticality docs — plus caught the 6th list surface; all drained + gated #25). Counter 0/3 (strict-zero D14). NEXT ACTION: dispatch adversary pass 33 — fresh context, sibling-check pass-32 (recount both criticality summaries against their tables; /versions pagination + PC20; macros HIGH in BOTH docs; run gate #25 arithmetic census over ALL summary-bearing tables in the spec package [BC-INDEX 48/30/8, CAP 11/5/3, VP 3/2, error-taxonomy counts, endpoint censuses]), rotate 4 censuses, free-choice orthogonal probe (still unprobed: config/context/metadata merge precedence, idempotency-key semantics, test-vectors.md supplement vs BC TVs, NFR measurability, holdout-domain coverage, ADR pairwise sweep); CLEAN advances counter 1/3; loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+
+**WORKSTREAM (at time of archival):** Burst 108 COMPLETE. Phase 1d pass 32: 4 findings (1 HIGH + 2 MED + 1 LOW); arch-view criticality = 33 modules (9/12/10/2); /versions pagination + version ASC exemption (BC-2.12.002 PC20); no list-all-schedules endpoint in v1; gate #25 summary-arithmetic + criticality-sibling coherence. Trajectory ...→6→1→1→4.
+
+**WRAP METADATA:** Date: 2026-07-15 | Cycle: v1.0.0-greenfield | Burst: 108 | Counter: 0/3

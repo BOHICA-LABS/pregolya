@@ -404,6 +404,12 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | `DELETE /schedules/{cron_id}` | interface-definitions.md, api-surface.md, BC-2.12.004 | PASS |
     | `GET /runs?schedule_id={cron_id}` | interface-definitions.md, api-surface.md, BC-2.12.004 | PASS (flat; cross-thread aggregate only) |
 
+    **Endpoint-count invariant (OBS-P33-2, ADV-P1D-PASS-33 [process-gap]):** Total
+    ferrochain-server HTTP endpoints = **26** (Threads 7 + Assistants 7 + Runs 7 +
+    Cron 4 + aggregate 1). Recount confirmed from interface-definitions.md §Threads /
+    §Assistants / §Runs / §Cron Schedules tables. Any burst that adds or removes an
+    endpoint MUST update this count in the same burst.
+
     **C. HTTP status-code↔E-code census (schema discipline):** For each BC that states
     an HTTP status code for a specific E-xxx-NNN error, assert the code maps correctly
     to the interface-definitions.md §HTTP Status Codes table.
@@ -692,6 +698,11 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
        - `grep -n "limit\|offset" .factory/specs/behavioral-contracts/ss-12/BC-2.12.001.md` →
          PC8 includes default 10 / max 100 / offset; PC17 includes default 10 / max 100 /
          clamped / offset.
+       - `grep -n "limit\|offset" .factory/specs/behavioral-contracts/ss-12/BC-2.12.002.md` →
+         PC21 includes limit (default 10 / max 100 / clamped); PC22 returns
+         { assistants: [Assistant], total_count: u64 }; PC23 declares created_at DESC
+         (list-assistants anchor, F-P33-01); PC20 present with /versions pagination
+         (limit 10/100/clamped/offset 0/version ASC exemption, F-P32-03).
 
     **Exemption pattern:** If an endpoint legitimately cannot support pagination (e.g., it
     returns a single resource, not a list), document the exemption in the row's description

@@ -1108,3 +1108,37 @@ Pass 29 NOT CLEAN — 6 findings (3 HIGH + 3 MED) + 2 observations. ALL FIXED sa
 ### Archived Current Phase Steps Row (displaced from STATE.md — oldest row)
 
 | Phase 1d pass 24 + fix burst + SESSION WRAP | adversary + PO + state-manager | COMPLETE | Pass 24: NOT CLEAN — 2 findings + 3 obs (wire-object field-set class: Run completed_at/updated_at three-way; status-code table E-SERVER exclusions; Thread.status/Assistant fields undefined in entity). ALL FIXED + full wire-object census 21 rows PASS (completed_at kept w/ terminal-only semantics; ThreadStatus enum defined). Open probe for pass 25: E-SERVER-016 missing HTTP status row. Trajectory 14→5→7→13→3→3→3→5→2→4→4→1→1→2→1→1→1→4→2→3→1→1→1→2. Convergence 0/3. Gates 25. Burst 100 (wrap). |
+
+---
+
+## Burst 109 — Phase 1d Pass 33 + Fix Burst + SESSION WRAP (list-assistants PCs + config-merge canon)
+
+**Date:** 2026-07-15
+**Agents:** adversary (pass 33) + product-owner (fix) + state-manager (STATE update + SESSION WRAP)
+**Files touched:** specs/behavioral-contracts/ss-12/BC-2.12.002.md (PC21-23 + anchor list), specs/behavioral-contracts/ss-12/BC-2.12.003.md (leaf-level deep-merge invariant), specs/prd-supplements/interface-definitions.md (endpoint-count 26 pinned §17-B), specs/prd-supplements/bc-authoring-plan.md (gate #24 grep update), cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-33.md (NEW), STATE.md, cycles/v1.0.0-greenfield/burst-log.md, cycles/v1.0.0-greenfield/session-checkpoints.md
+
+### Summary
+
+Pass 33 NOT CLEAN — 2 MED findings + 2 observations. ALL FIXED same burst. No new finding class. Novelty MEDIUM-LOW — spec highly converged; findings are edge-content gaps rather than contradictions. Gates total now 34 (gate #24 census updated to grep BC-2.12.002). Counter remains 0/3. SESSION WRAP: session exhausted, pass 34 ready to dispatch.
+
+### Findings Summary
+
+| ID | Severity | Finding | Fix |
+|----|----------|---------|-----|
+| F-P33-01 | MED | GET /assistants list endpoint had NO governing PC in BC-2.12.002 — interface-definitions.md declared pagination anchored to BC-2.12.002, but BC-2.12.002 never specified the list surface (shape, pagination, ordering) | PC21-23 added to BC-2.12.002: PC21 = shape {assistants: Vec<Assistant>, total_count: u64}; PC22 = pagination (limit/offset/CLAMP per D18-P31-A); PC23 = created_at DESC ordering; anchor list in bc-authoring-plan.md updated; gate #24 census now greps BC-2.12.002 (closes OBS-P33-1 process-gap) |
+| F-P33-02 | MED | Run-vs-assistant config/metadata/context merge precedence unspecified — BC-2.12.002 and BC-2.12.003 both reference override/merge behavior but neither stated the precedence rule or merge algorithm | CANON: leaf-level deep-merge; run wins at leaf; applies independently to config, metadata, and context; upstream-checked, no contradictions found; BC-2.12.003 run-config invariant updated |
+| OBS-P33-1 | OBS | Gate #24 census scope did not include BC-2.12.002 [process-gap] — list surface was enumerated without checking BC-2.12.002 itself | Gate #24 census description updated to grep BC-2.12.002 alongside the 5 previously enumerated list endpoints |
+| OBS-P33-2 | OBS | Endpoint count was informal — gate #25 arithmetic census first full run, all counts reconcile [86 BCs index+files+registry, 19 CAPs, 5 VPs, 18 crates, 13 batches] | Endpoint count 26 pinned in §17-B of interface-definitions.md as invariant |
+
+### Convergence Status After Burst 109
+
+- Phase 1d passes: 33 (NOT CLEAN)
+- Fix bursts: 33
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33)
+
+**State changes:** convergence passes 32→33, fix bursts 32→33, trajectory →2 (P1D-33), session checkpoint replaced (burst 108 archived to session-checkpoints.md), step row pass 28 archived to burst-log. Gates 33→34.
+
+### Archived Current Phase Steps Row (displaced from STATE.md — oldest row)
+
+| Phase 1d pass 28 + fix burst (RetryHint precedence) | adversary + PO | COMPLETE | Pass 28: NOT CLEAN — 1 MED (F-P28-01 RetryHint category-default vs per-code contradiction across 5 codes → 'Default RetryHint' relabel + per-code-authoritative precedence rule + gate #22) + 3 obs applied (PC4 inline annotation removed; BC-2.04.006 EC-005 E-CHKPT-005 TENANCY raise-condition added; E-PROV-007 StructuredOutputRefused MINTED — refusal path was codeless, violating every-error-has-a-code posture). FULL 60-code BC↔taxonomy category census PASS (zero mismatches). All pass-27 fixes HOLD; 4 rotated censuses PASS. Novelty LOW-MED — deep convergence. NEW CLASS: RetryHint coherence. Trajectory ...→5→6→1. Convergence 0/3. Gates 31. Burst 104. |

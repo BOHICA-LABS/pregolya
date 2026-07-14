@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ inputs:
   - .factory/semport/platform/behavioral-intent.md
 input-hash: "a9db9a9a95fccf425b41da89e2fafd1502358a8b4e921ffa158e8b147236315b"
 changelog:
+  - "1.2 (ADV-P1D-PASS-33): F-P33-02 add Run-Config Merge Precedence invariant — run-supplied config/metadata/context deep-merge over Assistant's stored values, run wins at leaf key. Upstream-check result: no contradicting semantics in BC-2.01.003 or semport behavioral-intent §2.3; leaf-level deep-merge adopted as spec canon."
   - "1.1 (ADV-P1D-PASS-31): F-P31-01 PC18 list-runs endpoint — add limit (default 10, max 100; values > 100 clamped) and offset pagination params + declare created_at DESC ordering (pagination coherence canon)."
 ---
 
@@ -133,6 +134,16 @@ LangGraph Platform (D13).
   all other states.
 - Run error (`error`) is populated ONLY when `status = "failed"`. It is `null` in all other states.
 - A Run cannot be in `in_progress` state if no executor task is active for it (no orphan runs).
+- **Run-Config Merge Precedence (F-P33-02):** When a Create-Run request body supplies `config`,
+  `metadata`, or `context`, these values are **deep-merged** over the Assistant's stored values
+  at the leaf-key level, with run-supplied keys winning over Assistant-stored keys on any
+  collision. Fields absent from the run request body retain the Assistant's stored values
+  unchanged. This applies to each of the three fields independently. Merge is applied at run
+  creation time before the run is dispatched to the executor; the merged effective config is
+  what the graph receives. **Upstream-check result:** BC-2.01.003 PC6 specifies that metadata
+  "accumulates" down the run tree (consistent with merge; run wins), and semport behavioral-intent
+  §2.3 declares no explicit merge rule for run-over-assistant config — no contradiction found.
+  Leaf-level deep-merge is adopted as spec canon. Cross-ref: BC-2.12.002 §Description.
 
 ## Edge Cases
 

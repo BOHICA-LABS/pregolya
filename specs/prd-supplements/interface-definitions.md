@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.3"
+version: "2.4"
 status: active
 producer: product-owner
 timestamp: 2026-07-14T00:00:00Z
@@ -14,6 +14,7 @@ changelog:
   - "2.0 (ADV-P1D-PASS-29): F-P29-03 fix SSE description on /stream row: node_start/delta/end → node_start/stream/end (node_delta was never canonical; BC-2.06.001 is the streaming taxonomy authority). OBS-P29-1 add blanket omission note for library/execution-layer codes (E-MCP-*, E-SBXD-*, E-RETRY-*, E-BUDGET-*, E-MEMORY-*, E-SPLIT-*) confirming none has a direct HTTP row."
   - "2.1 (ADV-P1D-PASS-30): F-P30-01 blanket omission note: TOOL→N/A corrected to TOOL→422 (BC-2.14.002 PC3 categorical authority); full 12-category token diff applied — added TRANSPORT→502 and INTERNAL→500 (both present in family labels but absent from summary); corrected VAL→400/422 to VAL→400 (categorical default; 422 requires per-endpoint override decision, not applicable to library-layer fallback)."
   - "2.2 (ADV-P1D-PASS-31): F-P31-01 add §Canonical Pagination Convention section; propagate limit (default 10, max 100, silently clamped if > 100) + offset (default 0) + created_at DESC ordering to GET /threads (explicit defaults), GET /threads/{id}/history (declare default 10/max 100 on existing limit), GET /assistants (add limit/offset), GET /threads/{id}/runs (add limit/offset alongside status filter), GET /runs?schedule_id={cron_id} (add limit/offset, declare created_at DESC). Out-of-range canon: clamp (not reject). BC anchors: BC-2.12.001 PC8/PC17, BC-2.12.003 PC18, BC-2.12.004 PC7."
+  - "2.4 (ADV-P1D-PASS-33): F-P33-01 add BC-2.12.002 PC21-PC23 to §Canonical Pagination Convention BC anchors list (list-assistants anchor). F-P33-02 add run-config merge precedence note to POST /threads/{thread_id}/runs row description (deep-merge over Assistant config, run wins at leaf key; BC-2.12.003 §Run-Config Merge Precedence Invariant)."
   - "2.3 (ADV-P1D-PASS-32): F-P32-03 add canonical pagination to GET /assistants/{id}/versions row (limit default 10 max 100 clamped / offset / ordering exemption: version ASC — deviates from created_at DESC default); BC-2.12.002 PC20 added as anchor. OBS-P32-1 add no-list-schedules note in §Cron Schedules."
 inputs:
   - .factory/specs/prd.md
@@ -158,7 +159,7 @@ checkpoint first, which is also descending by creation sequence). Each list-endp
 row below cites F-P31-01 where pagination applies. Any endpoint that deviates carries
 an explicit documented exemption.
 
-**BC anchors:** BC-2.12.001 PC8 (threads list), BC-2.12.001 PC17 (history), BC-2.12.003 PC18 (runs list), BC-2.12.004 PC7 (schedule-runs aggregate).
+**BC anchors:** BC-2.12.001 PC8 (threads list), BC-2.12.001 PC17 (history), BC-2.12.002 PC21-PC23 (assistants list), BC-2.12.003 PC18 (runs list), BC-2.12.004 PC7 (schedule-runs aggregate).
 
 ### Threads
 
@@ -188,7 +189,7 @@ an explicit documented exemption.
 
 | Method | Path | Description | BC Anchor |
 |--------|------|-------------|-----------|
-| POST | `/threads/{thread_id}/runs` | Create and start a run (async; returns 202 with `run_id`) | BC-2.12.003 |
+| POST | `/threads/{thread_id}/runs` | Create and start a run (async; returns 202 with `run_id`); run-supplied `config`/`metadata`/`context` deep-merge over the Assistant's stored values, run wins at leaf key (BC-2.12.003 §Run-Config Merge Precedence Invariant, F-P33-02) | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs` | List runs for a thread; `?status=queued\|in_progress\|completed\|failed\|interrupted\|cancelled` filter + canonical pagination (`?limit=N` default 10 max 100, `?offset=N`; `created_at` DESC) — F-P31-01 | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}` | Get run status and result | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}/stream` | Stream run output as server-sent events (SSE; emits run_start, node_start/stream/end, run_end) | BC-2.12.007 |

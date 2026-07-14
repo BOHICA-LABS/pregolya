@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.002
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ red_gate: false
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
+  - "1.2 (ADV-P1D-PASS-33): F-P33-01 add PC21-PC23 — GET /assistants list-collection postcondition block (response shape { assistants: [Assistant], total_count: u64 }, limit default 10 max 100 clamped / offset 0 / created_at DESC); interface-definitions.md §Canonical Pagination Convention BC anchors updated. F-P33-02 add cross-reference to run-config merge precedence canon in Description."
   - "1.1 (ADV-P1D-PASS-32): F-P32-03 add PC20 — GET /assistants/{id}/versions pagination (limit default 10 max 100 clamped / offset 0 / ordering exemption: version ASC) matching interface-definitions.md §Assistants /versions row."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
@@ -33,7 +34,10 @@ input-hash: "992d1136d6ecd5fd6aa833f0ece030db3e548c8fdd727917f8474f6c21522745"
 An Assistant is a named, versioned configuration record that binds a `graph_id` to
 a specific runtime config (model, tools, system prompt overrides, checkpointer config)
 and optional context. It serves as a reusable "agent persona": callers create a Run
-by referencing an Assistant, and the Run inherits the Assistant's config. Versions
+by referencing an Assistant, and the Run inherits the Assistant's config; run-supplied
+`config`, `metadata`, and `context` are deep-merged over the Assistant's stored values
+with run-level keys winning at the leaf level (merge precedence canon — see BC-2.12.003
+§Run-Config Merge Precedence Invariant, F-P33-02). Versions
 are immutable snapshots; `set_latest` updates the "current" pointer without mutating
 any existing version. No wire-compatibility with LangGraph Platform (D13).
 
@@ -86,6 +90,15 @@ any existing version. No wire-compatibility with LangGraph Platform (D13).
     declared in the §Canonical Pagination Convention. BC-2.12.001 PC8 clamp canon applies;
     out-of-range canon: clamp (F-P31-01). Exemption documented in interface-definitions.md
     §Assistants /versions row (F-P32-03).
+
+### List Assistants (`GET /assistants`)
+
+21. Accepts query params `limit` (default 10, max 100; values > 100 silently clamped to 100),
+    `offset` (default 0).
+22. Returns `{ assistants: [Assistant], total_count: u64 }` for all stored Assistants.
+23. Results ordered `created_at` **descending** (canonical; F-P31-01). Out-of-range clamp
+    canon per BC-2.12.001 PC8 (F-P31-01, ADV-P1D-PASS-31). Interface anchor:
+    interface-definitions.md §Assistants `GET /assistants` row (F-P33-01).
 
 ## Invariants
 
