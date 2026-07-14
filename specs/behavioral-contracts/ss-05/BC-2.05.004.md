@@ -131,7 +131,7 @@ modified (see BC-2.05.005).
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-HITL-07 | Command(resume=v) transitions run from interrupted → running → completed/interrupted | Integration test (assert status sequence) | Phase 1 |
+| VP-HITL-07 | Command(resume=v) transitions run from interrupted → in_progress → completed/interrupted | Integration test (assert status sequence) | Phase 1 |
 | VP-HITL-08 | Command.PARENT at root level returns Err(NoParentGraph), not panic | Unit test | Phase 1 |
 
 ## Related BCs

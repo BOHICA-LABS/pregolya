@@ -3,7 +3,7 @@ document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.001
 version: "1.1"
-status: draft
+status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 phase: 1a
@@ -77,7 +77,7 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | Task produces no writes (zero-output node) | `put_writes(config, [], task_id)` is called; task is recorded as committed; super-step boundary proceeds normally |
-| EC-002 | `put_writes` storage backend returns an error | Error surfaces as `Err(FerrochainError { category: CheckpointError })`; super-step does NOT advance; the run transitions to `failed` |
+| EC-002 | `put_writes` storage backend returns an error | Error surfaces as `Err(FerrochainError { category: DURABILITY, code: E-CHKPT-001 })`; super-step does NOT advance; the run transitions to `failed` |
 | EC-003 | Durability tier is `Exit` | `put_writes` is NOT called mid-run; writes accumulate in memory; only the full checkpoint is written on graph exit |
 | EC-004 | Task writes to ERROR special channel | Written with negative index (-1); does not collide with regular writes; recorded separately for error-handler re-routing on crash-resume |
 
@@ -87,7 +87,7 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
 |-------|----------------|----------|
 | 3-task super-step with `sync` durability; all 3 tasks complete | All 3 `put_writes` calls confirmed in storage BEFORE `apply_writes` executes for super-step N+1; verified by querying `pending_writes` table before advancing | happy-path |
 | 3-task super-step; task 2 produces an empty write list | `put_writes(config, [], task2_id)` called successfully; no error; super-step boundary proceeds; task 2 is committed | edge-case |
-| `put_writes` storage call fails with I/O error on task 1 completion | `Err(FerrochainError { category: CheckpointError })` returned to caller; `apply_writes` not executed; graph halts without advancing to super-step N+1 | error |
+| `put_writes` storage call fails with I/O error on task 1 completion | `Err(FerrochainError { category: DURABILITY, code: E-CHKPT-001 })` returned to caller; `apply_writes` not executed; graph halts without advancing to super-step N+1 | error |
 | 3-task super-step with `exit` durability | Zero `put_writes` calls mid-run; only one full `put` call on graph exit; crash mid-run loses all task writes from the current run | edge-case |
 
 ## Verification Properties

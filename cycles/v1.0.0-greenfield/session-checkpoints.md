@@ -214,3 +214,24 @@ ferrochain Phase 1d adversarial spec convergence: Pass 2 COMPLETE — NOT CLEAN.
 | **Cycle** | v1.0.0-greenfield |
 | **Burst commit** | burst 78 |
 | **Convergence counter** | 0 of 3 (Phase 1d) |
+
+---
+
+## Checkpoint archived from burst 81 (2026-07-14T08:10:00Z)
+
+### RESUME IN ONE BREATH
+
+ferrochain Phase 1d adversarial spec convergence: Pass 5 COMPLETE — NOT CLEAN. 3 findings, single axis (category/component representation): F-P5-01 HIGH fictitious error categories (CheckpointError/StateUpdateError/ToolError) → canonical with disambiguating codes (BC-2.04.001 DURABILITY/E-CHKPT-001, BC-2.04.003 INTERNAL/E-CHKPT-002, BC-2.04.004 VAL/E-GRAPH-007); F-P5-02 MED PascalCase drift + BC-2.14.001 dual-rendering convention now explicit; F-P5-03 process-gap: pass-4 grep evidence false-negative → COMPLEMENT-ASSERTION mandate adopted (full distinct-value tables, 4 justified exceptions). Sibling checks 6/7 PASS (structural axes stable). Trajectory 14→5→7→13→3 DECAYING. Convergence 0/3. Burst 81.
+
+### RESUME NEXT-ACTION
+
+Dispatch adversary pass 6 (fresh context): sibling-check pass-5 fixes (complement tables re-run on canonical enum values); finish deferred reads (bc-authoring-plan.md full body, invariants.md full body, 15-BC random body sample from ss-06/ss-07/ss-13/ss-17); full-perimeter spot rotation. If CLEAN → convergence counter 1/3.
+
+### WRAP METADATA
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-14 |
+| **Cycle** | v1.0.0-greenfield |
+| **Burst commit** | burst 81 |
+| **Convergence counter** | 0 of 3 (Phase 1d) |

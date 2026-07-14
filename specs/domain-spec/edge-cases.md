@@ -121,17 +121,17 @@ points outside the declared workspace root.
 **Scenario:** An MCP server raises a bare ToolException (not wrapped in a higher-level
 exception type). The MCP adapter re-raises it.
 **Expected behavior:** The error type identity is preserved; the caller receives a
-`FerrochainError { category: ToolError, source: ToolException }`, not a generic opaque error.
+`FerrochainError { category: TOOL, source: ToolException }`, not a generic opaque error.
 **Source:** R11; upstream MCP test void.
 
 ### DEC-013: Provider Streaming Interrupted by Transport Error
 **Scenario:** A streaming completion from an OpenAI-compatible provider is cut off
 mid-stream by a TCP reset or a per-chunk stall timeout.
 **Expected behavior (TCP reset / connection drop):** The stream yields
-`Err(FerrochainError { category: Transport })`; accumulated partial tokens are discarded;
+`Err(FerrochainError { category: TRANSPORT })`; accumulated partial tokens are discarded;
 the error propagates to the caller.
 **Expected behavior (per-chunk stall timeout):** The stream yields
-`Err(FerrochainError { category: Timeout })`; accumulated partial tokens are discarded;
+`Err(FerrochainError { category: TIMEOUT })`; accumulated partial tokens are discarded;
 the error propagates to the caller.
 In both cases the caller never receives a truncated `Ok(AiMessage)` as if the response
 were complete. (BC-2.08.007 PC1/PC2; F-05 alignment.)

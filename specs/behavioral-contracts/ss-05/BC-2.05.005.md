@@ -97,9 +97,9 @@ Caller submits `Command(resume="unexpected")`.
 The run has no INTERRUPT marker in its checkpoint.
 
 ### EC-004: Resume on a run that is still actively running (no interrupt yet)
-**Scenario:** A run is in-flight (status `running`); caller preemptively submits
+**Scenario:** A run is in-flight (status `in_progress`); caller preemptively submits
 `Command(resume="preemptive")`.
-**Expected behavior:** `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "running" })`.
+**Expected behavior:** `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "in_progress" })`.
 The engine does not buffer the preemptive resume value for a future interrupt.
 
 ## Canonical Test Vectors
@@ -109,7 +109,7 @@ The engine does not buffer the preemptive resume value for a future interrupt.
 | TV-001 | `graph.invoke(Command(resume="oops"), config_for_completed_thread)` | `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "completed" })` | Happy-path error — DEC-006 |
 | TV-002 | Node called `interrupt()` once; first resume consumed; second `Command(resume="extra")` submitted | `Err(E-GRAPH-002 NoActiveInterrupt)` after node completes | Slot-exhausted guard |
 | TV-003 | `POST /runs/{run_id}/resume` on thread with no interrupt history | HTTP 409; `E-GRAPH-002 NoActiveInterrupt { run_status: "completed" }` in body | Server-side endpoint guard |
-| TV-004 | `Command(resume="x")` while run is in `running` state (concurrent access) | `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "running" })` | Race-condition guard |
+| TV-004 | `Command(resume="x")` while run is in `in_progress` state (concurrent access) | `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "in_progress" })` | Race-condition guard |
 | TV-005 | `Command(resume="x")` on `failed` run | `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "failed" })` | Failed run guard |
 
 ## Verification Properties

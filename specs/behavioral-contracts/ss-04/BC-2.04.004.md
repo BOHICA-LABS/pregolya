@@ -3,7 +3,7 @@ document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.004
 version: "1.1"
-status: draft
+status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 phase: 1a
@@ -77,7 +77,7 @@ branch lineage entirely and requires full state duplication.
 |----|-------------|-------------------|
 | EC-001 | Two concurrent forks from the same parent `P` (DEC-008) | Both `C_fork1` and `C_fork2` have `parent = P`; their own IDs are distinct monotonic values both > P; no shared-state corruption; each fork is independently resumable |
 | EC-002 | Fork chain depth N = 200 (deep branch history) | Parent chain walk succeeds iteratively (no stack overflow); all 200 ancestors retrievable via `get_state_history` following parent pointers |
-| EC-003 | Fork with `values` update containing an unknown channel key | `Err(FerrochainError { category: StateUpdateError, message: "unknown channel: \"<key>\"" })`; no partial checkpoint is written; `C_parent` unchanged |
+| EC-003 | Fork with `values` update containing an unknown channel key | `Err(FerrochainError { category: VAL, code: E-GRAPH-007 })`; no partial checkpoint is written; `C_parent` unchanged |
 | EC-004 | Fork from a checkpoint that is itself a fork (chained forks) | Works correctly; grandchild fork's parent chain walks through the intermediate fork to the root |
 
 ## Canonical Test Vectors
@@ -86,7 +86,7 @@ branch lineage entirely and requires full state duplication.
 |-------|----------------|----------|
 | `update_state(config.with_checkpoint_id("cp-5"), {k: v})` on thread `"t1"` | New checkpoint with `parent = "cp-5"`, new `checkpoint_id > "cp-5"`, `source = "update"`; original `"cp-5"` unchanged in storage | happy-path |
 | Two parallel fork calls from `"cp-5"`: `fork_a` and `fork_b` | Both have `parent = "cp-5"`; fork_a.id != fork_b.id; walking from either arrives at `"cp-5"`; no shared mutable state | edge-case |
-| Fork with `values = {nonexistent_channel: 42}` | `Err(FerrochainError { category: StateUpdateError })`; storage unchanged | error |
+| Fork with `values = {nonexistent_channel: 42}` | `Err(FerrochainError { category: VAL, code: E-GRAPH-007 })`; storage unchanged | error |
 | Fork from fork: create `cp-5` → fork to `cp-6` → fork again to `cp-7` | `cp-7.parent = "cp-6"`, `cp-6.parent = "cp-5"`; parent walk from `cp-7` reaches both ancestors | edge-case |
 
 ## Verification Properties

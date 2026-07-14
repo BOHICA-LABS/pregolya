@@ -33,11 +33,19 @@ input-hash: "6d5bd7a3f1412d4adef708bdd467bda1f6db6e05b19cf66168e832c3b89847ed"
 
 Every error emitted by the ferrochain library crate family is an instance of `FerrochainError`,
 a struct with two orthogonal dimensions: `component` (which crate emitted the error: CORE, GRAPH,
-CHKPT, SERVER, PROV, MCP, SPLIT, SBXD) and `category` (the error class: VAL, AUTH, RATE, TIMEOUT,
-TRANSPORT, INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY, SECURITY, TENANCY). Each error also
-carries a `retry_hint` (Never / Maybe / Later(Duration)), a machine-readable `code` string
-(e.g. `E-CORE-001`), and a human-readable `message`. This contract adopts the adk-rust P-01/P-04
-pattern (CONFLICT-6) and applies it uniformly across all ferrochain crates.
+CHKPT, SERVER, PROV, MCP, SPLIT, SBXD, RETRY, CRON, MEMORY, BUDGET) and `category` (the error
+class: VAL, AUTH, RATE, TIMEOUT, TRANSPORT, INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY,
+SECURITY, TENANCY). Each error also carries a `retry_hint` (Never / Maybe / Later(Duration)),
+a machine-readable `code` string (e.g. `E-CORE-001`), and a human-readable `message`. This
+contract adopts the adk-rust P-01/P-04 pattern (CONFLICT-6) and applies it uniformly across
+all ferrochain crates.
+
+**Rendering convention (canonical):** In BC/spec prose and inline code slots, `component` and
+`category` values are written as ALL-CAPS taxonomy codes (e.g. `category: DURABILITY`,
+`component: CHKPT`). In formal Rust postconditions and code blocks that specify the exact API,
+the full enum path is used (`Category::Durability`, `Component::Chkpt`). The mapping is
+one-to-one; `DURABILITY` in prose ↔ `Category::Durability` in Rust, `CHKPT` ↔
+`Component::Chkpt`, etc.
 
 ## Preconditions
 
@@ -83,7 +91,7 @@ pattern (CONFLICT-6) and applies it uniformly across all ferrochain crates.
 ## Edge Cases
 
 ### EC-001: Error from crate A wraps error from crate B
-**Scenario:** `ferrochain-graph` catches a `FerrochainError { component: Chkpt, category: Durability }`
+**Scenario:** `ferrochain-graph` catches a `FerrochainError { component: CHKPT, category: DURABILITY }`
 from `ferrochain-checkpoint` and re-emits it. Should the outer error be Graph or Chkpt?
 **Expected behavior:** The originating component (Chkpt) is preserved in the re-emitted error via
 a `source: Option<Box<dyn Error + Send + Sync>>` chain field. The outer error's `component` field

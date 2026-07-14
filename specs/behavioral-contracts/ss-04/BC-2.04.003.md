@@ -3,7 +3,7 @@ document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.003
 version: "1.1"
-status: draft
+status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 phase: 1a
@@ -76,7 +76,7 @@ NTP adjustment, or under clock skew in distributed deployments must have unambig
 |----|-------------|-------------------|
 | EC-001 | Two concurrent forks from the same parent checkpoint `P` | Both new checkpoints receive IDs > P; sibling ordering between the two forks is deterministic (e.g., first-writer wins the next counter value); both are valid branch heads |
 | EC-002 | System wall clock rolls backward (NTP adjustment) during an active run | Logical counter is unaffected; next checkpoint_id is still monotonically greater than the previous one; no ordering anomaly |
-| EC-003 | A caller attempts to construct a checkpoint with a random UUID (`Uuid::new_v4()`) as the ID | Compile-time type mismatch or runtime `Err(FerrochainError { category: CheckpointError, message: "checkpoint_id must be monotonic: random UUID rejected" })` |
+| EC-003 | A caller attempts to construct a checkpoint with a random UUID (`Uuid::new_v4()`) as the ID | Compile-time type mismatch or runtime `Err(FerrochainError { category: INTERNAL, code: E-CHKPT-002, message: "checkpoint_id must be monotonic: random UUID rejected" })` |
 | EC-004 | Checkpoint storage is queried with `ORDER BY created_at DESC` | This is a lint-detected anti-pattern; the canonical query MUST use `ORDER BY checkpoint_id DESC`; any storage backend that only exposes wall-clock ordering is non-conformant |
 
 ## Canonical Test Vectors
@@ -85,7 +85,7 @@ NTP adjustment, or under clock skew in distributed deployments must have unambig
 |-------|----------------|----------|
 | Create 5 sequential checkpoints on thread `"t1"`, namespace `"root"` | `id_1 < id_2 < id_3 < id_4 < id_5`; `ORDER BY checkpoint_id DESC` returns C5, C4, C3, C2, C1; `get_latest` returns C5 | happy-path |
 | Simulate wall-clock rollback: create C1 at t=100, then force clock to t=50, create C2 | `C2.checkpoint_id > C1.checkpoint_id` (logical counter unaffected); `C2.metadata.ts` may appear earlier than C1 but ordering is correct | edge-case |
-| Attempt `CheckpointSaver::put` with checkpoint whose ID is `Uuid::new_v4().to_string()` | `Err(FerrochainError { category: CheckpointError })` — non-monotonic ID rejected | error |
+| Attempt `CheckpointSaver::put` with checkpoint whose ID is `Uuid::new_v4().to_string()` | `Err(FerrochainError { category: INTERNAL, code: E-CHKPT-002 })` — non-monotonic ID rejected | error |
 | Two concurrent writers race to create the next checkpoint on thread `"t1"` | One writer wins the counter; the other retries with a higher ID; final storage contains two distinct monotonic IDs with no ordering tie | edge-case |
 
 ## Verification Properties

@@ -108,7 +108,7 @@ The 2D error type for all ferrochain crates.
 A Tool whose schema and invocation semantics are discovered from an external MCP server.
 - **Fields:** server_id: String, tool_name: String, description: String, input_schema: JsonSchema, transport: MCPTransport (Stdio | HTTP | WebSocket)
 - **Behavior:** MCPTool implements the Tool Runnable interface. ToolResult produced by MCPTool is always tagged as untrusted ingress.
-- **Error:** Bare ToolException from MCP server must be preserved and wrapped as `FerrochainError { category: ToolError, … }` (DEC-012).
+- **Error:** Bare ToolException from MCP server must be preserved and wrapped as `FerrochainError { category: TOOL, … }` (DEC-012).
 
 ---
 

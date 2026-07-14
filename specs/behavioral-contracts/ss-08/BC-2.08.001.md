@@ -100,7 +100,7 @@ contains `[ContentBlock::Text(...), ContentBlock::ToolCall(...)]` in index order
 
 ### EC-003: Stream terminated mid-block (transport error)
 **Scenario:** The SSE stream is closed by the provider mid-delta for block index 0.
-**Expected behavior:** The stream yields `Err(FerrochainError { category: Transport, … })`.
+**Expected behavior:** The stream yields `Err(FerrochainError { category: TRANSPORT, … })`.
 No partial `AiMessage` is returned as a success value. (Full detail in BC-2.08.007.)
 
 ### EC-004: Fixture cassette replay in CI

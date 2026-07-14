@@ -117,7 +117,7 @@ the isError path.
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | rmcp raises `ToolException("auth failure")`, handle_tool_errors=true | `Err(FerrochainError { code: "E-MCP-001", category: Tool })` | **Red Gate vector — must FAIL before implementation** |
+| TV-001 | rmcp raises `ToolException("auth failure")`, handle_tool_errors=true | `Err(FerrochainError { code: "E-MCP-001", category: TOOL })` | **Red Gate vector — must FAIL before implementation** |
 | TV-002 | Same, handle_tool_errors=false | Identical `Err(FerrochainError { code: "E-MCP-001", ... })` — flag ignored | Flag irrelevance |
 | TV-003 | `ToolException("")` | `Err(...)` with message `"...: (no message)"` | Empty message sentinel |
 | TV-004 | `isError=true` (not bare ToolException) | `Ok(ToolMessage{status:Error,...})` or `Err(McpError::ToolExecution)` per BC-2.09.002 | Distinct path — not this BC |

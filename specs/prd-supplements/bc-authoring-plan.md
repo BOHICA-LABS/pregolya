@@ -253,10 +253,10 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | BC-2.09.002 | ToolInvocation routing to correct MCP server transport | P1 | CAP-010 | — | Wave 2 |
 | BC-2.09.003 | Tool-result content treated as untrusted ingress (DI-012 applies) | P1 | CAP-010 | DI-012 | Wave 2 |
 | BC-2.09.004 | MCP bare ToolException re-raise preserving type identity — R11 Red Gate | P1 | CAP-010 | DI-014 | Wave 2 |
-| BC-2.09.005 | MCP __aenter__ NotImplementedError contract — R11 Red Gate | P1 | CAP-010 | DI-014 | Wave 2 |
+| BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | P1 | CAP-010 | DI-014 | Wave 2 |
 | BC-2.12.001 | Thread resource CRUD (create, read, list, delete durable conversation history) | P1 | CAP-014 | — | Wave 1 |
 | BC-2.12.002 | Assistant resource CRUD (named agent config with graph reference) | P1 | CAP-014 | — | Wave 1 |
-| BC-2.12.003 | Run creation and execution lifecycle (create → running → completed/failed) | P1 | CAP-014 | — | Wave 1 |
+| BC-2.12.003 | Run creation and execution lifecycle (create → in_progress → completed/failed) | P1 | CAP-014 | — | Wave 1 |
 
 ### Batch 11 — Server Cont. + Long-Horizon Memory (P1/P2)
 *7 BCs — SS.12 cont. + SS.15*
@@ -311,8 +311,8 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 5. **Edge cases:** Minimum 1 per BC (EC-001); use domain-spec edge-cases.md for DEC-NNN anchors.
 6. **VP seeds:** BCs that are Kani VP seeds (BC-2.03.001, BC-2.04.006, BC-2.13.004) must include
    a Verification Properties table with the VP description and method (Kani).
-7. **Red Gate tests:** BCs for R8/R10/R11 (BC-2.07.001-002, BC-2.02.003-004, BC-2.09.004-005)
+7. **Red Gate tests:** BCs for R8/R10/R11 (BC-2.07.002, BC-2.02.003-004, BC-2.09.004-005)
    must note "Red Gate test required — must compile and FAIL before implementation begins."
-8. **Origin:** `origin: greenfield` for all 83 BCs (no brownfield extraction).
-9. **Lifecycle:** `lifecycle_status: active`, `introduced: v1.0.0-greenfield`.
+8. **Origin:** `origin: greenfield` for all 86 BCs (no brownfield extraction).
+9. **Lifecycle:** `lifecycle_status: active`, `introduced: v1.0.0-greenfield`. **Status:** `status: active` — a BC is `active` once integrated into BC-INDEX; version bumps do NOT reset this field to `draft`.
 10. **File path:** `.factory/specs/behavioral-contracts/ss-NN/BC-S.SS.NNN.md` (SS-NN from ARCH-INDEX Subsystem Registry)

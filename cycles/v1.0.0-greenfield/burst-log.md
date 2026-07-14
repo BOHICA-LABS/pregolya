@@ -518,3 +518,60 @@ All 13 findings fixed with inline grep evidence. 2 race residuals also closed (S
 - Fix bursts: 4
 - Counter: 0 of 3
 - Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline)
+
+---
+
+## Burst 81 — Phase 1d pass 5 + fix burst (complement evidence)
+
+**Date:** 2026-07-14
+**Agents:** adversary + PO
+**Trigger:** Pass 5 adversarial review dispatched after burst 80
+
+### Narrative
+
+Pass 5 returned NOT CLEAN — 3 findings on single axis (category/component representation). F-P5-01 HIGH: fictitious error categories (CheckpointError/StateUpdateError/ToolError) found in BCs → replaced with canonical categories + disambiguating codes (BC-2.04.001 DURABILITY/E-CHKPT-001, BC-2.04.003 INTERNAL/E-CHKPT-002, BC-2.04.004 VAL/E-GRAPH-007). F-P5-02 MED: PascalCase drift in component names → ALL-CAPS normalized; BC-2.14.001 dual-rendering convention (HTML rendering of Markdown tables) now explicitly defined. F-P5-03 process-gap: pass-4 complement-assertion failure (grep returned false-negative) → COMPLEMENT-ASSERTION mandate adopted: full distinct-value tables required as grep evidence in all fix attestations, with 4 documented justified exceptions.
+
+Sibling checks 6/7 PASS (structural axes stable). Trajectory DECAYING: 14→5→7→13→3.
+
+### Files Touched
+
+- specs/behavioral-contracts/ss-04/ (BC-2.04.001, BC-2.04.003, BC-2.04.004 — canonical error category codes)
+- specs/behavioral-contracts/ss-14/BC-2.14.001.md (dual-rendering convention explicit)
+- specs/prd-supplements/error-taxonomy.md (E-CHKPT-001, E-CHKPT-002, category alignment)
+- Multiple BCs with PascalCase drift → ALL-CAPS normalization
+- cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-5.md (NEW)
+
+### Convergence Status After Burst 81
+
+- Phase 1d passes: 5 (NOT CLEAN)
+- Fix bursts: 5
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying)
+
+---
+
+## Burst 82 — Phase 1d pass 6 + fix burst (running-vocab purge, status canon)
+
+**Date:** 2026-07-14
+**Agents:** adversary + PO
+**Trigger:** Pass 6 adversarial review dispatched after burst 81
+
+### Narrative
+
+Pass 6 returned NOT CLEAN — 3 findings. F-P6-01 HIGH running-vocab regression escape: adversary flagged 2 instances of "running" (deprecated state name) in BC-2.05.004; complement sweep caught 3 additional escapes in BC-2.05.005 — total 5 tokens purged, all replaced with in_progress. F-P6-02 MED bc-authoring-plan.md staleness: plan did not reflect canonical BC lifecycle, current title conventions, actual BC count, or Red-Gate discipline — full sync applied. F-P6-03 MED status-field split rule: BCs used "draft" or "active" inconsistently across file body vs BC-INDEX — rule defined (status field in BC body = operational state; BC-INDEX Status column = lifecycle gate; active is the canonical post-authoring value). 86× status fields normalized to active across all ss-* directories.
+
+Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED with complement evidence (0 running-tokens post-fix, 86× status active confirmed). ADV-P1D-PASS-6.md committed. Input-hashes refreshed.
+
+### Files Touched
+
+- specs/behavioral-contracts/ss-05/BC-2.05.004.md, BC-2.05.005.md (running→in_progress, 5 tokens purged)
+- specs/behavioral-contracts/ss-*/BC-*.md (86× status draft→active normalization)
+- specs/prd-supplements/bc-authoring-plan.md (canonical lifecycle + title/count/Red-Gate sync)
+- cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-6.md (NEW)
+
+### Convergence Status After Burst 82
+
+- Phase 1d passes: 6 (NOT CLEAN)
+- Fix bursts: 6
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6)

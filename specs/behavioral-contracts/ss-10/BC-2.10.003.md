@@ -31,7 +31,7 @@ When a `BudgetPolicy::evaluate` call returns `PolicyDecision::Deny` and the poli
 `on_ceiling` mode is `halt`, the execution engine completes all in-flight tasks for the
 current super-step, writes their outputs to the checkpoint via `put_writes`, then stops
 the run — making no further LLM calls or tool invocations. The run transitions to `failed`
-with a structured `FerrochainError { component: Budget, category: Policy, code: "E-BUDGET-001" }`.
+with a structured `FerrochainError { component: BUDGET, category: POLICY, code: "E-BUDGET-001" }`.
 The checkpoint at the last completed super-step is preserved and retrievable. The Domain B
 dark-factory holdout evaluation shape 6 ("budget-bounded run") directly exercises this BC.
 
@@ -55,7 +55,7 @@ dark-factory holdout evaluation shape 6 ("budget-bounded run") directly exercise
 4. A `JournalEntry` with `decision: Deny` is written to the `EvidenceJournal` before the
    run transitions to `failed` (BC-2.10.002).
 5. The run transitions to status `failed` with error:
-   `FerrochainError { component: Budget, category: Policy, code: "E-BUDGET-001",
+   `FerrochainError { component: BUDGET, category: POLICY, code: "E-BUDGET-001",
    message: "run halted: budget ceiling reached", retry_hint: Never }`.
 6. The caller (`invoke` or `stream`) receives `Err(E-BUDGET-001 BudgetCeilingReached)` with
    the `current_usage: TokenUsage` and `policy_name` fields in the error context.
