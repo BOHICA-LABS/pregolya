@@ -91,7 +91,7 @@ traces_to: .factory/specs/prd.md
 | BC-2.08.004 | Chat Model Error-Type Fidelity Conformance | CAP-009 | | DI-014 | P1 | | | ss-08/BC-2.08.004.md |
 | BC-2.08.005 | Chat Model Token-Usage Accounting Conformance | CAP-009 | | | P1 | | | ss-08/BC-2.08.005.md |
 | BC-2.08.006 | Standalone SDK Crate Split Architecture (ferrochain-\<provider\>-sdk + Adapter) | CAP-009 | | DI-008 | P1 | | | ss-08/BC-2.08.006.md |
-| BC-2.08.007 | Provider Streaming Interrupted by Transport Error Surfaces Err(Timeout), Not Truncated Success | CAP-009 | | DI-009,DI-014 | P1 | | | ss-08/BC-2.08.007.md |
+| BC-2.08.007 | Provider Streaming Interrupted by Transport Error Surfaces Err(Timeout) or Err(Transport), Not Truncated Success | CAP-009 | | DI-009,DI-014 | P1 | | | ss-08/BC-2.08.007.md |
 | BC-2.08.008 | Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15) | CAP-011 | NE-15 | | P1 | | | ss-08/BC-2.08.008.md |
 | BC-2.08.009 | Tool Schema Naming Stability (Snapshot Test Anchor) | CAP-009 | | | P1 | | | ss-08/BC-2.08.009.md |
 | BC-2.08.010 | `#[tool]` Attribute Macro — async fn to Tool Implementor via schemars::JsonSchema | CAP-002 | | DI-008 | P1 | | | ss-08/BC-2.08.010.md |
@@ -132,13 +132,13 @@ traces_to: .factory/specs/prd.md
 | BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref\<Target=str\> | CAP-016 | NE-10 | DI-010 | P0 | | | ss-14/BC-2.14.005.md |
 | BC-2.14.006 | Validation Failures Propagate Err(FerrochainError); No Silent None | CAP-016 | NE-03 | DI-014 | P0 | | | ss-14/BC-2.14.006.md |
 | BC-2.15.001 | KV and Vector Memory Persistence Across Threads (Not Per-Checkpoint) | CAP-017 | | | P2 | | | ss-15/BC-2.15.001.md |
-| BC-2.15.002 | User/App/Session Tier Isolation — User-Private Does Not Bleed Across Sessions | CAP-017 | | | P2 | | | ss-15/BC-2.15.002.md |
+| BC-2.15.002 | User/App/Session Tier Isolation — User-Private Does Not Bleed Across Scopes | CAP-017 | | | P2 | | | ss-15/BC-2.15.002.md |
 | BC-2.15.003 | GDPR Erasure Removes All Traces from All Memory Tiers | CAP-017 | | | P2 | | | ss-15/BC-2.15.003.md |
 | BC-2.16.001 | Per-Tool Retry Policy Keyed by tool_name (Not Args Hash) | CAP-018 | | | P2 | | | ss-16/BC-2.16.001.md |
 | BC-2.16.002 | Finite global_limit Non-None Default for All Retry Policies | CAP-018 | | | P2 | | | ss-16/BC-2.16.002.md |
 | BC-2.16.003 | Circuit Breaker Trips After Repeated Failure; Prevents Infinite Retry | CAP-018 | | | P2 | | | ss-16/BC-2.16.003.md |
-| BC-2.17.001 | Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace-Escape VP | CAP-019 | | DI-001,DI-005,DI-007 | P2 | | | ss-17/BC-2.17.001.md |
-| BC-2.17.002 | cargo-fuzz Targets — Serialization Round-Trip (Checkpoint) and Graph-Engine Boundary | CAP-019 | | | P2 | | | ss-17/BC-2.17.002.md |
+| BC-2.17.001 | Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace Confinement VP | CAP-019 | | DI-001,DI-005,DI-007 | P2 | | | ss-17/BC-2.17.001.md |
+| BC-2.17.002 | cargo-fuzz Targets — Serialization Round-Trip (Checkpoint) and Graph-Execution Paths | CAP-019 | | | P2 | | | ss-17/BC-2.17.002.md |
 
 ## Carry-Forward Notes (RESOLVED at Phase 1 Step D, 2026-07-14)
 

@@ -2,7 +2,7 @@
 document_type: prd
 level: L3
 version: "1.0"
-status: draft
+status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 phase: 1a
@@ -221,7 +221,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.08.004 | Chat model error-type fidelity conformance | P1 | DI-014 | ss-08/BC-2.08.004.md |
 | BC-2.08.005 | Chat model token-usage accounting conformance | P1 | — | ss-08/BC-2.08.005.md |
 | BC-2.08.006 | Standalone SDK crate split architecture (ferrochain-\<provider\>-sdk + adapter) | P1 | DI-008 | ss-08/BC-2.08.006.md |
-| BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout), not truncated success | P1 | DI-014 | ss-08/BC-2.08.007.md |
+| BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout) or Err(Transport), not truncated success | P1 | DI-014 | ss-08/BC-2.08.007.md |
 | BC-2.08.008 | Eval score aggregation: arithmetic mean + JudgeResult::InfraError third outcome (NE-15) | P1 | — | ss-08/BC-2.08.008.md |
 | BC-2.08.009 | Tool schema naming stability (snapshot test anchor) — semver-major required on any schema change to a public tool type | P1 | — | ss-08/BC-2.08.009.md |
 | BC-2.08.010 | `#[tool]` attribute macro: async fn → Tool implementor via schemars::JsonSchema | P1 | DI-008 | ss-08/BC-2.08.010.md |

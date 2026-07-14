@@ -240,7 +240,7 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | BC-2.08.004 | Chat model error-type fidelity conformance | P1 | CAP-009, CAP-011 | DI-014 | Wave 2 |
 | BC-2.08.005 | Chat model token-usage accounting conformance | P1 | CAP-009, CAP-011 | — | Wave 2 |
 | BC-2.08.006 | Standalone SDK crate split architecture (ferrochain-\<provider\>-sdk + adapter) | P1 | CAP-009 | DI-008 | Wave 2 |
-| BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout), not truncated success | P1 | CAP-009 | DI-014 | Wave 2 |
+| BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout) or Err(Transport), not truncated success | P1 | CAP-009 | DI-014 | Wave 2 |
 | BC-2.08.008 | Eval score: arithmetic mean aggregation + JudgeResult::InfraError third outcome (NE-15) | P1 | CAP-011 | — | Wave 2 |
 | BC-2.08.009 | Tool schema naming stability (snapshot test anchor) — **Step E** (ADR-004 snapshot obligation) | P1 | CAP-009 | — | Wave 2 |
 
@@ -316,3 +316,7 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 8. **Origin:** `origin: greenfield` for all 86 BCs (no brownfield extraction).
 9. **Lifecycle:** `lifecycle_status: active`, `introduced: v1.0.0-greenfield`. **Status:** `status: active` — a BC is `active` once integrated into BC-INDEX; version bumps do NOT reset this field to `draft`.
 10. **File path:** `.factory/specs/behavioral-contracts/ss-NN/BC-S.SS.NNN.md` (SS-NN from ARCH-INDEX Subsystem Registry)
+11. **Governance: integrated-into-index ⇒ `status: active` (all spec artifacts).**
+    - A spec artifact is integrated once its authoritative index accepts it: BC files → BC-INDEX, domain-spec shards → L2-INDEX, architecture sections → ARCH-INDEX, prd.md and prd-supplements → prd.md supplements list, ADRs → ARCH-INDEX ADR log (stay `accepted`), product-brief → product review (stays `approved`).
+    - VP files are the **only** exception: they may remain `status: draft` while Kani/integration harnesses are pre-implementation, provided VP-INDEX.md is `status: active` and lists the VP.
+    - This rule is generalized from F-P6-03 (ADV-P1D-PASS-6 fix). Source of truth: ADV-P1D-PASS-8.md §F-P8-04.

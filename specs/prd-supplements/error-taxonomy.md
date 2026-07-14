@@ -2,7 +2,7 @@
 document_type: prd-supplement-error-taxonomy
 level: L3
 version: "1.0"
-status: draft
+status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 phase: 1a
@@ -53,7 +53,7 @@ primary_consumers: [implementer, test-writer]
 
 | Error Code | Category | Severity | BC Anchor | Message Format |
 |-----------|----------|----------|-----------|---------------|
-| E-CORE-001 | VAL | broken | BC-2.01.001 | `Invalid ContentBlock type '<type>' in position <n> of message; expected one of: text, image_url, tool_use, tool_result, document` |
+| E-CORE-001 | VAL | broken | BC-2.01.001 | `StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough` |
 | E-CORE-002 | VAL | broken | BC-2.01.002 | `Message role '<role>' is not a recognized message type` |
 | E-CORE-003 | VAL | broken | BC-2.01.003 | `Runnable input type mismatch: expected '<expected>', got '<actual>'` |
 | E-CORE-004 | INTERNAL | broken | BC-2.01.004 | `Pipe composition failed: type boundary mismatch between stage <n> output and stage <n+1> input` |
@@ -183,7 +183,7 @@ primary_consumers: [implementer, test-writer]
 |-----------|----------|----------|-----------|-----------|---------------|
 | E-MEMORY-001 | VAL | broken | BC-2.15.001 | Never | `EmbeddingBackendNotConfigured: vector_search requires an embedding backend; none is configured` |
 | E-MEMORY-002 | DURABILITY | broken | BC-2.15.001 | Never | `StorageFull: memory backend '<backend>' at '<path>' has no remaining capacity` |
-| E-MEMORY-003 | POLICY | broken | BC-2.15.002 | Never | `ScopeAccessDenied: requested scope <requested_scope> requires higher privilege than caller scope <caller_scope>` |
+| E-MEMORY-003 | POLICY | broken | BC-2.15.002 | Never | `ScopeAccessDenied: caller identity '<caller_identity>' cannot write to <requested_scope> — cross-owner lateral access denied` |
 | E-MEMORY-004 | VAL | broken | BC-2.15.002 | Never | `NoScopeContext: memory scope resolution requires an active RunConfig session context; none is available` |
 | E-MEMORY-005 | DURABILITY | broken | BC-2.15.003 | Never | `ErasurePartialFailure: GDPR erasure for user '<user_id>' partially completed; rolled back — <reason>` |
 | E-MEMORY-006 | POLICY | broken | BC-2.15.003 | Never | `InsufficientPrivilege: operation '<operation>' requires AdminContext; caller has <caller_privilege>` |

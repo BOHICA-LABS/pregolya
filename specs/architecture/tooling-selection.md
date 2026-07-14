@@ -3,7 +3,7 @@ document_type: architecture-section
 level: L3
 section: tooling-selection
 version: "1.0"
-status: draft
+status: active
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
 phase: 1b

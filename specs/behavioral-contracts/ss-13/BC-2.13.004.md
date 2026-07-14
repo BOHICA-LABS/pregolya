@@ -35,7 +35,7 @@ vp_id: VP-003
 kani_target: workspace-confinement
 ---
 
-# BC-2.13.004: All Workspace File Ops Call canonicalize_beneath_root at Access Time (NE-02)
+# BC-2.13.004: All Workspace File Ops Call canonicalize_beneath_root at Access Time (NE-02) — Kani VP Seed
 
 ## Description
 

@@ -2,7 +2,7 @@
 document_type: architecture-index
 level: L3
 version: "1.0"
-status: draft
+status: active
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
 phase: 1b

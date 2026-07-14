@@ -2,7 +2,7 @@
 document_type: prd-supplement-interface-definitions
 level: L3
 version: "1.0"
-status: draft
+status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 phase: 1a

@@ -2,7 +2,7 @@
 document_type: domain-spec-index
 level: L2
 version: "1.1"
-status: draft
+status: active
 producer: business-analyst
 timestamp: 2026-07-14T00:00:00Z
 phase: 1a

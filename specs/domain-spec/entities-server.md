@@ -3,7 +3,7 @@ document_type: domain-spec-section
 level: L2
 section: entities-server
 version: "1.0"
-status: draft
+status: active
 producer: business-analyst
 timestamp: 2026-07-14T00:00:00Z
 phase: 1a

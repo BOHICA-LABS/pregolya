@@ -235,3 +235,29 @@ Dispatch adversary pass 6 (fresh context): sibling-check pass-5 fixes (complemen
 | **Cycle** | v1.0.0-greenfield |
 | **Burst commit** | burst 81 |
 | **Convergence counter** | 0 of 3 (Phase 1d) |
+
+---
+
+## Checkpoint archived from burst 83 (2026-07-14T16:00:00Z)
+
+### RESUME IN ONE BREATH
+
+ferrochain Phase 1d adversarial spec convergence: Pass 7 COMPLETE — NOT CLEAN. 3 findings: F-P7-01 HIGH running-vocab THIRD recurrence (6 tokens in prose bodies; per-incident grep structural flaw → WHITELIST-COMPLEMENT mandate now generalized to ALL controlled vocabularies; 215-hit classification table, zero unclassified); F-P7-02 MED verification-architecture P1 self-contradiction (Kani async, line 149; P1 qualification language added); F-P7-03 LOW bc-authoring-plan create-state canonical lifecycle. Self-discovered: `done` tokens (5) in BC-2.02.002/005, BC-2.05.004, BC-2.12.001 → `completed`. 3/3 + 1 self-discovered FIXED. Trajectory 14→5→7→13→3→3→3. Convergence 0/3. Burst 83.
+
+### WORKSTREAM (at time of archival)
+
+**Burst 83 COMPLETE.** Phase 1d pass 7: 3 findings + 1 self-discovered class fixed (running-vocab THIRD recurrence — 215-hit classification table, zero unclassified; verification-architecture P1 Kani qualification; bc-authoring-plan canonical create-state lifecycle; `done`→`completed` vocabulary purge ×5). WHITELIST-COMPLEMENT mandate generalized to all controlled vocabularies. ADV-P1D-PASS-7.md committed. Input-hashes refreshed. Trajectory 14→5→7→13→3→3→3.
+
+### PENDING HUMAN ACTIONS (at time of archival)
+
+1. `direnv allow .` (B1 — Low, blocks key loading)
+2. `cargo login` + regenerate + run `.factory/namespace-reservation/publish-all.sh` — R6 STILL OPEN. MUST BE REGENERATED for all 18 crates before running.
+
+### WRAP METADATA
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-14 |
+| **Cycle** | v1.0.0-greenfield |
+| **Burst commit** | burst 83 |
+| **Convergence counter** | 0 of 3 (Phase 1d) |

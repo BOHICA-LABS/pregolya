@@ -63,8 +63,8 @@ concurrency from making scores order-dependent.
    execution from producing order-dependent score merges (P-64 counter-example).
 5. **Score invariant:** If all N judged cases return `Pass`, the aggregate score is
    exactly `1.0`. If all return `Fail`, the aggregate score is exactly `0.0`.
-   If all return `InfraError`, the aggregate score is `NaN` or the runner returns
-   `Err(EvalError::AllCasesInfraError)` — it does not return `1.0` or `0.0`.
+   If all return `InfraError`, the runner returns `Err(EvalError::AllCasesInfraError)` —
+   it does not return `1.0` or `0.0`.
 
 ## Invariants
 
