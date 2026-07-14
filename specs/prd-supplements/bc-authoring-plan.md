@@ -372,6 +372,60 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     .factory/specs/); ADV-P1D-PASS-18.md §F-P18-01 + shared-type identifier census.
     `\bCheckpointer\b` widened: ADV-P1D-PASS-20.md §F-P20-03.
 
+17. **HTTP endpoint census gate (added P23 — standing gate):**
+    After any BC authoring or fix burst that adds, moves, or renames an HTTP endpoint path,
+    run the full endpoint census. Two sub-checks:
+
+    **A. URL-scheme consistency (RUNS = thread-nested; SCHEDULES = flat):**
+    Canon: ALL run CRUD paths are `/threads/{thread_id}/runs/...`. The ONLY flat run path
+    is the cross-thread aggregate `GET /runs?schedule_id={cron_id}` (BC-2.12.004). All
+    schedule CRUD paths are `/schedules/{cron_id}` (flat). Source of truth: F-P23-01;
+    interface-definitions.md §Runs and §Cron Schedules; api-surface.md §ferrochain-server HTTP Endpoints.
+
+    Census command:
+    `grep -rn "POST /runs\b\|GET /runs/\|DELETE /runs/\|PATCH /runs/" .factory/specs/ | grep -v "schedule_id" | grep -v "threads/"` — output must be EMPTY (zero hits).
+    Any non-empty output means a flat run path escaped the fix.
+
+    **B. Path × citing-docs × scheme-verdict table:** After any endpoint change, verify
+    the following canonical table still holds (all rows PASS):
+
+    | Path (canonical) | Citing Docs | Scheme Verdict |
+    |-----------------|-------------|---------------|
+    | `POST /threads/{thread_id}/runs` | interface-definitions.md, api-surface.md, prd.md §3, BC-2.12.003 | PASS (thread-nested) |
+    | `GET /threads/{thread_id}/runs` | interface-definitions.md, api-surface.md, BC-2.12.003 | PASS |
+    | `GET /threads/{thread_id}/runs/{run_id}` | interface-definitions.md, api-surface.md, BC-2.12.003, BC-2.12.007, BC-2.05.006 | PASS |
+    | `GET /threads/{thread_id}/runs/{run_id}/stream` | interface-definitions.md, api-surface.md, BC-2.12.007 | PASS |
+    | `POST /threads/{thread_id}/runs/{run_id}/resume` | interface-definitions.md, api-surface.md, BC-2.05.004, BC-2.05.005, BC-2.05.006, edge-cases.md | PASS |
+    | `POST /threads/{thread_id}/runs/{run_id}/cancel` | interface-definitions.md, api-surface.md, BC-2.12.003 | PASS |
+    | `DELETE /threads/{thread_id}/runs/{run_id}` | interface-definitions.md, api-surface.md, BC-2.12.003 | PASS |
+    | `POST /schedules` | interface-definitions.md, api-surface.md, BC-2.12.004 | PASS (flat) |
+    | `GET /schedules/{cron_id}` | interface-definitions.md, api-surface.md, BC-2.12.004 | PASS |
+    | `PATCH /schedules/{cron_id}` | interface-definitions.md, api-surface.md, BC-2.12.004 | PASS |
+    | `DELETE /schedules/{cron_id}` | interface-definitions.md, api-surface.md, BC-2.12.004 | PASS |
+    | `GET /runs?schedule_id={cron_id}` | interface-definitions.md, api-surface.md, BC-2.12.004 | PASS (flat; cross-thread aggregate only) |
+
+    **C. HTTP status-code↔E-code census (schema discipline):** For each BC that states
+    an HTTP status code for a specific E-xxx-NNN error, assert the code maps correctly
+    to the interface-definitions.md §HTTP Status Codes table:
+
+    | HTTP Code | E-code range | Citing BCs (sample) | Verdict |
+    |-----------|-------------|---------------------|---------|
+    | 400 | E-CRON-002 InvalidCronExpression | BC-2.12.004 EC-002 | PASS |
+    | 404 | E-SERVER-002 RunNotFound | BC-2.12.003 EC-001, TV-003, TV-004 | PASS |
+    | 404 | E-SERVER-003 ThreadNotFound | BC-2.12.003 PC2, EC-001 | PASS |
+    | 404 | E-SERVER-006 ScheduleNotFound | BC-2.12.004 EC-005 | PASS |
+    | 409 | E-SERVER-012 ConcurrentRun | BC-2.12.003 EC-002 | PASS |
+    | 409 | E-SERVER-015 RunAlreadyExecuting | BC-2.12.007 TV-006 | PASS |
+    | 409 | E-GRAPH-002 NoActiveInterrupt (state conflict) | BC-2.05.005 TV-003 | PASS (409 = state conflict; consistent with REST semantics) |
+    | 422 | E-SERVER-* (semantic validation) | BC-2.12.003 PC3 | PASS |
+    | 429 | E-PROV-001 | interface-definitions.md | PASS |
+    | 500 | E-SERVER-014 RunStoreFailed | BC-2.12.006 EC-004 | PASS |
+    | 204 | DELETE success (no body) | BC-2.12.004 PC5, EC-005 | PASS |
+    | 201 | POST /schedules | BC-2.12.004 TV-001 | PASS |
+    | 202 | POST /threads/{id}/runs | BC-2.12.003 PC5 | PASS |
+
+    Source of truth: ADV-P1D-PASS-23.md §F-P23-01; interface-definitions.md §HTTP Status Codes.
+
 16. **E-code↔variant-name consistency census gate (added P20 — standing gate):**
     After any BC authoring or fix burst that introduces, renames, or retires an error code,
     run the variant-name consistency census. For every `E-<COMP>-NNN <VariantName>` pairing

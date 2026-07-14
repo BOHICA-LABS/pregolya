@@ -122,7 +122,7 @@ queue_depth }`.
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | `POST /schedules` with valid `assistant_id`, `schedule: "0 9 * * *"`, valid `config` | `201 Created`; response body includes `cron_id: <uuid>`, `enabled: true`; no Run created yet | Happy path — schedule creation |
-| TV-002 | Advance mock clock to fire time; poll `/runs?schedule_id=<cron_id>` | One Run returned with `status: queued` or `in_progress`; `thread_id` is freshly allocated (not reused) | Firing creates isolated fresh session |
+| TV-002 | Advance mock clock to fire time; poll `GET /runs?schedule_id=<cron_id>` | One Run returned with `status: queued` or `in_progress`; `thread_id` is freshly allocated (not reused) | Firing creates isolated fresh session. `GET /runs?schedule_id=` is the explicitly documented flat cross-thread aggregate query endpoint — see interface-definitions.md §Cron Schedules |
 | TV-003 | Fire schedule twice (two ticks apart); list Runs for schedule | Two distinct Runs with distinct `run_id` and `thread_id` values | Each firing produces independent Run |
 | TV-004 | `PATCH /schedules/{cron_id}` `{ "enabled": false }`; advance clock past next fire time | No new Run created | Disabling prevents future firings |
 | TV-005 | Delete assistant; advance clock to fire time | Run created with `status: failed`, error `E-CRON-001 AssistantNotFoundAtFiring` | Missing-assistant error path |

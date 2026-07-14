@@ -41,8 +41,7 @@ This contract directly implements DEC-006.
 
 ## Preconditions
 
-1. A caller submits `Command(resume=value)` or `POST /runs/{run_id}/resume` targeting a
-   `thread_id`.
+1. A caller submits `Command(resume=value)` or `POST /threads/{thread_id}/runs/{run_id}/resume`.
 2. The run referenced by `thread_id` is in one of these states:
    a. `completed` — the run finished normally.
    b. `failed` — the run ended in error.
@@ -76,11 +75,10 @@ This contract directly implements DEC-006.
 ## Edge Cases
 
 ### EC-001: Resume on a completed run (DEC-006)
-**Scenario:** `POST /runs/{run_id}/resume` called but the run completed normally several
+**Scenario:** `POST /threads/{thread_id}/runs/{run_id}/resume` called but the run completed normally several
 seconds ago. No interrupt was ever pending.
 **Expected behavior:** `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "completed" })`.
-HTTP endpoint returns 409 Conflict (or 422 Unprocessable Entity — see interface-definitions.md
-for the exact status code). Run state unchanged.
+HTTP endpoint returns `422 Unprocessable Entity` (E-GRAPH-* → 422 per interface-definitions.md §HTTP Status Codes). Run state unchanged.
 **Reference:** DEC-006.
 
 ### EC-002: Resume after all interrupt slots consumed
@@ -108,7 +106,7 @@ The engine does not buffer the preemptive resume value for a future interrupt.
 |---|-------|-----------------|-------|
 | TV-001 | `graph.invoke(Command(resume="oops"), config_for_completed_thread)` | `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "completed" })` | Happy-path error — DEC-006 |
 | TV-002 | Node called `interrupt()` once; first resume consumed; second `Command(resume="extra")` submitted | `Err(E-GRAPH-002 NoActiveInterrupt)` after node completes | Slot-exhausted guard |
-| TV-003 | `POST /runs/{run_id}/resume` on thread with no interrupt history | HTTP 409; `E-GRAPH-002 NoActiveInterrupt { run_status: "completed" }` in body | Server-side endpoint guard |
+| TV-003 | `POST /threads/{thread_id}/runs/{run_id}/resume` on thread with no interrupt history | HTTP 422; `E-GRAPH-002 NoActiveInterrupt { run_status: "completed" }` in body | Server-side endpoint guard (E-GRAPH-* → 422 per interface-definitions.md) |
 | TV-004 | `Command(resume="x")` while run is in `in_progress` state (concurrent access) | `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "in_progress" })` | Race-condition guard |
 | TV-005 | `Command(resume="x")` on `failed` run | `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "failed" })` | Failed run guard |
 
@@ -130,7 +128,7 @@ The engine does not buffer the preemptive resume value for a future interrupt.
 
 - `ferrochain-graph/src/pregel/loop.rs` — resume path: check INTERRUPT marker before applying Command
 - `ferrochain-graph/src/error.rs` — `E-GRAPH-002 NoActiveInterrupt` error variant definition
-- `ferrochain-server/src/routes/runs.rs` — `POST /runs/{run_id}/resume` endpoint guard
+- `ferrochain-server/src/routes/runs.rs` — `POST /threads/{thread_id}/runs/{run_id}/resume` endpoint guard
 
 ## Story Anchor
 

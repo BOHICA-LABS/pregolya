@@ -28,10 +28,11 @@ traces_to: STATE.md
 | P1D-12 | 2026-07-14 | 1 | 0 | 1 | 0 | 0 | LOW | 0/3 | FINDINGS_REMAIN (single root cause, decayed) |
 | P1D-13 | 2026-07-14 | 1 | 0 | 1 | 0 | 2 | LOW | 0/3 | FINDINGS_REMAIN (topology census — all fixed this pass) |
 | P1D-14 | 2026-07-14 | 2 | 0 | 1 | 1 | 0 | LOW | 0/3 | FINDINGS_REMAIN (bidirectional anchor audit; VP-label bridge) |
+| P1D-23 | 2026-07-14 | 1 | 0 | 1 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (HTTP endpoint coherence; NEW CLASS) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23)`
 
 ## Per-Pass Details
 
@@ -215,6 +216,19 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Fix summary:** F-P21-01 HIGH — CAP-012 (Observability & Monitoring), CAP-013 (Content Provenance & Safety Guardrails), CAP-016 (Structured Output & Streaming Compliance) stuck at P1/Wave-2 in L2-INDEX while D17 elevation made all constituent BCs P0. NEW CLASS: capability-tier ↔ BC-priority. CAPs elevated to P0 in L2-INDEX [P0 11 / P1 5 / P2 3]; relocated to capabilities-p0.md with D17-elevation notes; capabilities-p1-p2.md restructured. 19-row capability-tier census: 16 MATCH / 3 FIXED / 0 mismatch — class drained. All other censuses + 3 novel probes PASS (inputs-arrays, holdout-vs-CAP, prose reads converged). Orchestrator verified BC wave frontmatter unaffected [report artifact only].
 **New standing gates:** capability-tier census (trigger: any L2-INDEX CAP priority or wave change; command: cross-check CAP priority/wave tier vs BC P-levels for all constituent BCs)
 **Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1→1→2→1→1→1→4→2→3→1
+**Counter:** 0/3
+
+---
+
+### Pass P1D-23 Details
+
+**Date:** 2026-07-14
+**Verdict:** NOT CLEAN — 1 finding (0 CRIT, 1 HIGH, 0 MED, 0 LOW)
+**Findings delta:** 0 vs pass 22 (1→1); NEW CLASS: HTTP endpoint coherence
+**Axes rotated:** HTTP endpoint URL-scheme sweep (NEW CLASS); status-code↔E-code census (NEW CLASS); api-surface completeness probe
+**Fix summary:** F-P23-01 HIGH — 8 files with flat `/runs/...` paths resolved to thread-nested. Adopted canon: RUNS = `/threads/{thread_id}/runs/...`; SCHEDULES = `/schedules/{cron_id}` (flat); `GET /runs?schedule_id=` = only intentional flat run path (cross-thread aggregate). interface-definitions §Cron Schedules fixed (nested→flat, PATCH added, cross-thread query row added). api-surface.md rebuilt (7 run rows + list + cancel + DELETE + PATCH schedules + GET /assistants list). prd.md §3 path summary updated. BC-2.05.005 HTTP 409→422 for E-GRAPH-002 (status-code census fix). Guideline #17 added to bc-authoring-plan.md.
+**New standing gates:** HTTP endpoint census gate (guideline #17); trigger: any endpoint path change; command: grep for flat `/runs/` with no `threads/` prefix.
+**Trajectory after:** ...→3→1→1→2→1→1→1→4→2→3→1→1→1
 **Counter:** 0/3
 
 ---

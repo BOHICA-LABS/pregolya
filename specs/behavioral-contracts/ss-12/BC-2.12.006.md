@@ -71,7 +71,7 @@ eviction.
 7. Every `Run` state transition (queued, in_progress, interrupted, completed,
    failed, cancelled) is written to the `RunStore` before the HTTP response
    is returned to the caller.
-8. `GET /runs/{run_id}` reads directly from the `RunStore`; no in-memory copy is
+8. `GET /threads/{thread_id}/runs/{run_id}` reads directly from the `RunStore`; no in-memory copy is
    consulted separately.
 9. Swapping the `RunStore` backend from in-memory to SQLite (via config) requires
    no code change to the server's route handlers or business logic.
@@ -145,10 +145,10 @@ A `WARN` log is emitted at startup if no distributed `RateLimitStore` is configu
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `POST /runs` with `Idempotency-Key: "key1"`; Run completes; `POST /runs` again with same key and body | Second request returns `200 OK` with identical response body; no new Run created; `run_id` is the same | Idempotency happy path |
-| TV-002 | `POST /runs` 101 times from `caller_id: "alice"` within 1 second (limit: 100/s) | 101st request returns `429 Too Many Requests` with `Retry-After: 1` header | Rate limit enforcement |
-| TV-003 | Configure in-memory `RunStore`; create 3 Runs; restart server; `GET /runs/{run_id}` | `404 Not Found` (in-memory not durable) | In-memory RunStore is non-persistent |
-| TV-004 | Configure SQLite `RunStore`; create 3 Runs; restart server; `GET /runs/{run_id}` | `200 OK` with Run details (durable across restart) | SQLite RunStore is durable |
+| TV-001 | `POST /threads/t1/runs` with `Idempotency-Key: "key1"`; Run completes; `POST /threads/t1/runs` again with same key and body | Second request returns `200 OK` with identical response body; no new Run created; `run_id` is the same | Idempotency happy path |
+| TV-002 | `POST /threads/t1/runs` 101 times from `caller_id: "alice"` within 1 second (limit: 100/s) | 101st request returns `429 Too Many Requests` with `Retry-After: 1` header | Rate limit enforcement |
+| TV-003 | Configure in-memory `RunStore`; create 3 Runs; restart server; `GET /threads/t1/runs/{run_id}` | `404 Not Found` (in-memory not durable) | In-memory RunStore is non-persistent |
+| TV-004 | Configure SQLite `RunStore`; create 3 Runs; restart server; `GET /threads/t1/runs/{run_id}` | `200 OK` with Run details (durable across restart) | SQLite RunStore is durable |
 | TV-005 | Swap `RunStore` backend from in-memory to SQLite via config only; verify all route handler tests pass | All tests pass with no code change to handlers | Trait seam: backend swap is config-only |
 | TV-006 | `RunStore` write fails (injected fault); Run transitions to `completed` | `500 Internal Server Error`, `E-SERVER-014 RunStoreFailed` propagated | Storage error surfaces correctly |
 

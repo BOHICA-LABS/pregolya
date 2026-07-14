@@ -69,7 +69,7 @@ conflicting writes are recorded in the error context.
 ## HITL / Interrupt Edge Cases
 
 ### DEC-006: Resume Value Injection with Empty Interrupt Queue
-**Scenario:** `POST /runs/{run_id}/resume` called but no interrupt is pending for the Run.
+**Scenario:** `POST /threads/{thread_id}/runs/{run_id}/resume` called but no interrupt is pending for the Run.
 **Expected behavior:** `Err(NoActiveInterrupt)` returned; Run state unchanged.
 
 ### DEC-007: Multiple Stacked Interrupts (FIFO Order)

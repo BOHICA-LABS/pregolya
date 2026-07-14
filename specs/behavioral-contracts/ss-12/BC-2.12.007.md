@@ -31,9 +31,10 @@ input-hash: "2bb68ed87dd30c866ac6d88eb723cce3c2d0b8ce8ca0e22697b97d5a887452f6"
 
 ## Description
 
-`ferrochain-server` exposes two run execution surfaces: `POST /runs/{id}/stream`
-(server-sent events) and `POST /runs/{id}` (unary response). Both endpoints must
-invoke the **same `CompiledGraph` execution engine** for the same inputs and produce
+`ferrochain-server` exposes two run execution surfaces: `GET /threads/{thread_id}/runs/{run_id}/stream`
+(server-sent events) and `GET /threads/{thread_id}/runs/{run_id}` (unary polling response
+after a Run reaches `completed` status). Both surfaces must be driven by the
+**same `CompiledGraph` execution engine** for the same inputs and produce
 an **identical final answer**. There is no stub path, no cached task-state replay, and
 no code divergence between the two handlers beyond how output is surfaced to the HTTP
 client. This contract is the direct correction of the adk-rust counter-example
@@ -44,9 +45,9 @@ graph engine, producing output that could diverge from the unary path.
 
 1. A `CompiledGraph` is registered with an `Assistant` (`assistant_id`).
 2. A `Run` is created for that `Assistant` on a given `thread_id` with a given input.
-3. Both the streaming endpoint (`GET /runs/{run_id}/stream` or
-   `POST /runs/{run_id}/stream`) and the unary endpoint (`POST /runs` with
-   `stream: false`) are available.
+3. Both the streaming endpoint (`GET /threads/{thread_id}/runs/{run_id}/stream`)
+   and the unary polling endpoint (`GET /threads/{thread_id}/runs/{run_id}`,
+   polled after `POST /threads/{thread_id}/runs` creates the Run) are available.
 4. The same input, same `thread_id`, and same `RunnableConfig` are used for both execution
    paths (tested with two fresh threads of identical initial state, or via a
    deterministic graph with no side effects).
@@ -94,7 +95,7 @@ graph engine, producing output that could diverge from the unary path.
 **Scenario:** An HTTP client opens the SSE stream but closes the connection mid-execution.
 **Expected behavior:** The graph execution continues to completion in the background.
 The `Run` record transitions to `completed` or `failed` normally. The partial stream is
-lost (not buffered for reconnect in v1). A future `GET /runs/{run_id}` reflects the
+lost (not buffered for reconnect in v1). A future `GET /threads/{thread_id}/runs/{run_id}` reflects the
 final `status` and `output`.
 
 ### EC-003: Graph with interrupt inside node
@@ -127,7 +128,7 @@ normally.
 | TV-003 | Graph with error in node 2; streaming | SSE: `run_start`, `node_start` (node1), `node_end` (node1), `node_start` (node2), then `error` event with `FerrochainError`; stream closes | Error propagation via streaming |
 | TV-004 | Graph with error in node 2; unary | `4xx/5xx` response with same `FerrochainError` as TV-003 | Error equivalence: streaming = unary |
 | TV-005 | Graph with `interrupt()` call; streaming | SSE emits `{"__interrupt__": [...]}` event; `run_end.status = interrupted` | Interrupt via streaming surface |
-| TV-006 | Concurrent `POST /runs/r1` (unary) and `POST /runs/r1/stream`; second arrives 10ms later | Second returns `409 Conflict`, `E-SERVER-015 RunAlreadyExecuting` | Concurrent execution guard |
+| TV-006 | Concurrent `GET /threads/t1/runs/r1/stream` (streaming) and a second `GET /threads/t1/runs/r1/stream`; second arrives 10ms later | Second returns `409 Conflict`, `E-SERVER-015 RunAlreadyExecuting` | Concurrent execution guard |
 
 ## Verification Properties
 

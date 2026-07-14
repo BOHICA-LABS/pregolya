@@ -142,35 +142,57 @@ Default port: `7437` (configurable via `server.port` in `ferrochain-server.toml`
 | GET | `/threads/{thread_id}` | Get thread metadata | BC-2.12.001 |
 | GET | `/threads` | List threads (paginated, `?limit=&offset=`) | BC-2.12.001 |
 | DELETE | `/threads/{thread_id}` | Delete thread and all associated checkpoints | BC-2.12.001 |
+| GET | `/threads/{thread_id}/state` | Latest checkpoint state: `{ values: GraphState, checkpoint: CheckpointId, next: [NodeId] }` | BC-2.12.001 |
+| POST | `/threads/{thread_id}/state` | Apply state delta `{ values: Map<String,Value>, as_node?: NodeId }` → returns `{ checkpoint: CheckpointId }` | BC-2.12.001 |
+| GET | `/threads/{thread_id}/history` | Checkpoint history list, newest-first (`?limit=N`) | BC-2.12.001 |
 
 ### Assistants
 
 | Method | Path | Description | BC Anchor |
 |--------|------|-------------|-----------|
 | POST | `/assistants` | Create an assistant (named agent config + graph reference) | BC-2.12.002 |
-| GET | `/assistants/{assistant_id}` | Get assistant config | BC-2.12.002 |
+| GET | `/assistants/{assistant_id}` | Get assistant config (resolves via latest-version pointer) | BC-2.12.002 |
 | GET | `/assistants` | List assistants | BC-2.12.002 |
-| PUT | `/assistants/{assistant_id}` | Update assistant config | BC-2.12.002 |
+| PATCH | `/assistants/{assistant_id}` | Sparse update (new immutable version created; previous accessible via /versions) | BC-2.12.002 |
 | DELETE | `/assistants/{assistant_id}` | Delete assistant | BC-2.12.002 |
+| GET | `/assistants/{assistant_id}/versions` | List all immutable version snapshots, ordered by version ascending | BC-2.12.002 |
+| POST | `/assistants/{assistant_id}/set_latest` | Update latest-version pointer to `{ version: N }` → HTTP 200 with Assistant at version N; 404 if N not found | BC-2.12.002 |
 
 ### Runs
 
 | Method | Path | Description | BC Anchor |
 |--------|------|-------------|-----------|
-| POST | `/threads/{thread_id}/runs` | Create and start a run (async) | BC-2.12.003 |
+| POST | `/threads/{thread_id}/runs` | Create and start a run (async; returns 202 with `run_id`) | BC-2.12.003 |
+| GET | `/threads/{thread_id}/runs` | List runs for a thread (`?status=queued\|in_progress\|completed\|failed\|interrupted\|cancelled`) | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}` | Get run status and result | BC-2.12.003 |
-| GET | `/threads/{thread_id}/runs/{run_id}/stream` | Get run result as server-sent events | BC-2.12.007 |
+| GET | `/threads/{thread_id}/runs/{run_id}/stream` | Stream run output as server-sent events (SSE; emits run_start, node_start/delta/end, run_end) | BC-2.12.007 |
 | POST | `/threads/{thread_id}/runs/{run_id}/resume` | Deliver resume value to interrupted run | BC-2.05.004 |
 | POST | `/threads/{thread_id}/runs/{run_id}/cancel` | Cancel a queued or in_progress run (transitions to cancelled) | BC-2.12.003 |
 | DELETE | `/threads/{thread_id}/runs/{run_id}` | Delete a terminal run record (completed/failed/cancelled only; HTTP 409 if queued, in_progress, or interrupted — cancel or resume-to-complete first) | BC-2.12.003 |
 
 ### Cron Schedules
 
+Schedules are **assistant-owned** (not thread-owned). Each firing creates a **fresh
+`thread_id`** — no prior thread context is shared unless `RunnableConfig.thread_id`
+is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nested).
+
 | Method | Path | Description | BC Anchor |
 |--------|------|-------------|-----------|
-| POST | `/threads/{thread_id}/schedules` | Create a cron schedule for proactive runs | BC-2.12.004 |
-| GET | `/threads/{thread_id}/schedules/{schedule_id}` | Get schedule | BC-2.12.004 |
-| DELETE | `/threads/{thread_id}/schedules/{schedule_id}` | Delete schedule | BC-2.12.004 |
+| POST | `/schedules` | Create a cron schedule (assistant_id + cron expression + config) | BC-2.12.004 |
+| GET | `/schedules/{cron_id}` | Get schedule (current `enabled` state, `last_fired_at`) | BC-2.12.004 |
+| PATCH | `/schedules/{cron_id}` | Enable/disable schedule (`{ "enabled": false }`; in-flight Run continues) | BC-2.12.004 |
+| DELETE | `/schedules/{cron_id}` | Delete schedule; halts all future firings (`204 No Content`) | BC-2.12.004 |
+
+**Cross-thread aggregate query (flat, read-only):**
+
+| Method | Path | Description | BC Anchor |
+|--------|------|-------------|-----------|
+| GET | `/runs?schedule_id={cron_id}` | List all Runs fired by a given schedule across all threads (read-only aggregate; not scoped to a single thread) | BC-2.12.004 |
+
+> **Note:** This is the only flat `/runs` endpoint. All other Run CRUD paths are
+> thread-scoped (`/threads/{thread_id}/runs/...`). This endpoint exists because
+> cron-fired Runs each have distinct `thread_id` values — a thread-scoped query
+> cannot enumerate all Runs for a schedule. Decision source: F-P23-01.
 
 ### HTTP Status Codes
 

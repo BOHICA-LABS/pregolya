@@ -139,8 +139,8 @@ auto-approved; it fails closed. Operators must restart the run manually or apply
 **Deadline persistence:** The deadline is computed at `interrupt()` time as
 `created_at + policy.timeout` and stored as an absolute UTC timestamp in the parked interrupt
 record (written to the checkpoint alongside the interrupt payload). Deadline evaluation is
-**lazy**: it is checked on resume attempt (`POST /runs/{id}/resume`) and on status poll
-(`GET /runs/{id}`), not via a background timer. This design ensures the timeout survives
+**lazy**: it is checked on resume attempt (`POST /threads/{thread_id}/runs/{run_id}/resume`) and on status poll
+(`GET /threads/{thread_id}/runs/{run_id}`), not via a background timer. This design ensures the timeout survives
 process restarts without requiring external schedulers.
 
 **Clock-skew posture:** The deadline is set by the process clock of the ferrochain-server
@@ -180,7 +180,7 @@ distributed clock source or accept ±process-clock-drift tolerances in the timeo
 
 - `ferrochain-graph/src/hitl/risk_tier.rs` — `ActionRisk` enum, `HitlInterruptPayload`, `RiskGatePolicy`
 - `ferrochain-graph/src/hitl/policy.rs` — `ApproverRole`, role-check logic, auto-approve evaluation
-- `ferrochain-server/src/routes/runs.rs` — `POST /runs/{run_id}/resume` with role-credential validation
+- `ferrochain-server/src/routes/runs.rs` — `POST /threads/{thread_id}/runs/{run_id}/resume` with role-credential validation
 
 ## Story Anchor
 

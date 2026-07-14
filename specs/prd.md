@@ -338,8 +338,10 @@ ferrochain is a Rust library framework, not a CLI tool. The public interface sur
 - **Public Rust traits:** `Runnable<Input, Output>`, `CheckpointSaver`, `GuardrailHook`,
   `BudgetPolicy`, `BaseChatModel`, `Tool`, `MemoryStore`
 - **Error type:** `FerrochainError { component: Component, category: Category, retry_hint, code }`
-- **ferrochain-server:** First-party HTTP server with `/threads`, `/assistants`, `/runs`,
-  `/runs/{id}/stream`, `/runs/{id}/resume`, `/schedules` endpoints
+- **ferrochain-server:** First-party HTTP server with `/threads`, `/assistants`,
+  `/threads/{id}/runs` (thread-nested; includes `…/stream`, `…/resume`, `…/cancel`),
+  `/schedules` (flat; cron schedule CRUD + `PATCH` enable/disable) endpoints;
+  `GET /runs?schedule_id=` cross-thread aggregate query (F-P23-01)
 - **Cargo features:** `checkpoint-sqlite` (default), `checkpoint-memory`, `checkpoint-postgres`
   (stretch), `sandbox-wasm` (default), `sandbox-container`, `server`
 - **Wire format:** msgpack for checkpoint state (D11.2); JSON for HTTP responses

@@ -72,17 +72,32 @@ Base URL: configurable; no default port mandated.
 | GET | `/threads/{thread_id}` | Read thread | BC-2.12.001 |
 | GET | `/threads` | List threads | BC-2.12.001 |
 | DELETE | `/threads/{thread_id}` | Delete thread | BC-2.12.001 |
+| GET | `/threads/{thread_id}/state` | Latest checkpoint state (`{ values, checkpoint, next }`) | BC-2.12.001 |
+| POST | `/threads/{thread_id}/state` | Apply state delta (`{ values, as_node? }` → `{ checkpoint }`) | BC-2.12.001 |
+| GET | `/threads/{thread_id}/history` | Checkpoint history, newest-first (`?limit=N`) | BC-2.12.001 |
 | POST | `/assistants` | Create assistant (named agent config) | BC-2.12.002 |
-| GET | `/assistants/{assistant_id}` | Read assistant | BC-2.12.002 |
-| PUT | `/assistants/{assistant_id}` | Update assistant | BC-2.12.002 |
+| GET | `/assistants` | List assistants | BC-2.12.002 |
+| GET | `/assistants/{assistant_id}` | Read assistant (resolves via latest-version pointer) | BC-2.12.002 |
+| PATCH | `/assistants/{assistant_id}` | Sparse update; creates immutable new version | BC-2.12.002 |
 | DELETE | `/assistants/{assistant_id}` | Delete assistant | BC-2.12.002 |
-| POST | `/runs` | Create and start run | BC-2.12.003 |
-| GET | `/runs/{run_id}` | Read run status | BC-2.12.003 |
-| GET | `/runs/{run_id}/stream` | SSE streaming run output | BC-2.12.007 |
-| POST | `/runs/{run_id}/resume` | Deliver HITL resume value | BC-2.05.004 |
-| POST | `/schedules` | Create cron schedule | BC-2.12.004 |
-| GET | `/schedules/{schedule_id}` | Read schedule | BC-2.12.004 |
-| DELETE | `/schedules/{schedule_id}` | Delete schedule | BC-2.12.004 |
+| GET | `/assistants/{assistant_id}/versions` | List immutable version snapshots (ascending) | BC-2.12.002 |
+| POST | `/assistants/{assistant_id}/set_latest` | Set latest-version pointer (`{ version: N }`) | BC-2.12.002 |
+| POST | `/threads/{thread_id}/runs` | Create and start run (async; 202 Accepted) | BC-2.12.003 |
+| GET | `/threads/{thread_id}/runs` | List runs for thread (`?status=`) | BC-2.12.003 |
+| GET | `/threads/{thread_id}/runs/{run_id}` | Read run status and result | BC-2.12.003 |
+| GET | `/threads/{thread_id}/runs/{run_id}/stream` | SSE streaming run output | BC-2.12.007 |
+| POST | `/threads/{thread_id}/runs/{run_id}/resume` | Deliver HITL resume value | BC-2.05.004 |
+| POST | `/threads/{thread_id}/runs/{run_id}/cancel` | Cancel queued/in_progress run (→ cancelled) | BC-2.12.003 |
+| DELETE | `/threads/{thread_id}/runs/{run_id}` | Delete terminal run record (409 if non-terminal) | BC-2.12.003 |
+| POST | `/schedules` | Create cron schedule (assistant-owned; flat path) | BC-2.12.004 |
+| GET | `/schedules/{schedule_id}` | Read schedule (enabled state, last_fired_at) | BC-2.12.004 |
+| PATCH | `/schedules/{schedule_id}` | Enable/disable schedule (`{ "enabled": false }`) | BC-2.12.004 |
+| DELETE | `/schedules/{schedule_id}` | Delete schedule; halts future firings | BC-2.12.004 |
+| GET | `/runs?schedule_id={cron_id}` | Cross-thread aggregate: list all Runs for a schedule (read-only; flat) | BC-2.12.004 |
+
+**URL scheme (F-P23-01):** Runs are thread-nested (`/threads/{thread_id}/runs/...`). Schedules are
+flat (`/schedules/{cron_id}`). The one flat `/runs?schedule_id=` endpoint is a read-only
+cross-thread aggregate query for schedule-fired runs only.
 
 **Wire format:** JSON for HTTP responses. msgpack for checkpoint state (ADR-002).
 
