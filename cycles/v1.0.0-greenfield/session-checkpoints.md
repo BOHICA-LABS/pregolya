@@ -333,3 +333,13 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 101 | Counter: 0/3
 
 **WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 99 | Counter: 0/3
+
+---
+
+### Archived Checkpoint — Burst 103 (Pass 27)
+
+"ferrochain Phase 1 spec crystallization, step 1d adversarial convergence IN PROGRESS: 27 passes / 27 fix bursts, trajectory 14→...→7→5→6 (passes 25-27 opened + drained HTTP-status dual-authority, embedded sub-fields, AUTH-orphan, debug-route, category-authority, wildcard-propagation axes; 30 standing gates incl. #19 retired-identifier grep, #20 AUTH/POLICY re-sweep, #21 census re-run trigger). Counter 0/3 (strict-zero D14). NEXT ACTION: dispatch adversary pass 28 — fresh context, sibling-check pass-27 (E-GRAPH-002 422-override coherence; E-CHKPT-004 INTERNAL everywhere; full BC↔taxonomy category census — every E-code's taxonomy category vs the category literal constructed in its anchor BC; retired-identifier greps), rotate 4 censuses, free-choice orthogonal probe; CLEAN advances counter 1/3; loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+
+**WORKSTREAM (at time of archival):** Burst 103 COMPLETE. Phase 1d pass 27: 6 findings fixed (3 HIGH + 2 MED + 1 LOW; NEW CLASS: BC↔taxonomy category-authority). CANON: E-GRAPH-002 stays 422 (POLICY→422 9th PC3 override); E-CHKPT-004 INTERNAL (BC authoritative over taxonomy); E-CHKPT-005 embedded-in-Run.error omission note; E-GRAPH-013 SECURITY→403; hitl module path action_risk.rs; gate #21 census re-run trigger. Trajectory ...→7→5→6.
+
+**WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 103 | Counter: 0/3

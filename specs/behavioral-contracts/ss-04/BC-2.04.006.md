@@ -2,11 +2,14 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.006
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-14T00:00:00Z
 phase: 1a
+changelog:
+  - "1.1 (initial): base BC authored."
+  - "1.2 (ADV-P1D-PASS-28): OBS-P28-2 added EC-005 (SessionAddressCollision raise-condition) — E-CHKPT-005 had no behavioral home specifying when it is raised; EC-005 derives the raise-condition from Invariant 1 (composite-PK uniqueness guard at the tenancy boundary)."
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -84,6 +87,7 @@ the adk-rust identity-triple collapse is the explicit counter-example.
 | EC-002 | Root namespace `checkpoint_ns = ""` and subgraph namespace `checkpoint_ns = "sub"` on the same thread | They are independent namespaces; writes to one never appear in the other; both present in `list` scoped to `thread_id` |
 | EC-003 | `get_tuple` called with `RunnableConfig` missing `checkpoint_ns` field | `checkpoint_ns` defaults to `""`; the root namespace is queried; no error if the root namespace exists; `Err(FerrochainError { category: VAL })` if `thread_id` is also missing |
 | EC-004 | Concurrent writes from the same `thread_id` to different `checkpoint_ns` values | Each namespace is independent; no locking across namespaces required; both writes succeed |
+| EC-005 | A `put(config, checkpoint, ...)` or `put_writes(config, writes, task_id)` call where the composite triple `(config.thread_id, config.checkpoint_ns, config.checkpoint_id)` already exists in storage under a session belonging to a different tenant context — i.e., the composite-PK uniqueness constraint (Invariant 1) is violated at the tenancy boundary | `Err(FerrochainError { category: TENANCY, code: "E-CHKPT-005" })` with variant `SessionAddressCollision`; write rejected atomically, no partial mutation. This is the raise-condition for E-CHKPT-005: the composite primary key collision surfaces as a tenancy boundary violation when two distinct tenant contexts attempt to own the same session address triple. In v1 this error surfaces embedded in Run.error. (OBS-P28-2, ADV-P1D-PASS-28.) |
 
 ## Canonical Test Vectors
 

@@ -585,3 +585,41 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     Log at cycle close for v1.1 planning.
 
     Source: ADV-P1D-PASS-27 §OBS-P27-2 [process-gap].
+
+22. **RetryHint coherence gate — RETRYHINT COHERENCE (added P28 — standing gate):**
+    Any burst that creates or edits a per-code catalog row in error-taxonomy.md OR edits
+    the Error Category Codes table (adding/removing a category or changing a Default RetryHint)
+    MUST verify RetryHint coherence before the burst closes:
+
+    1. **Per-code row check:** For every new or edited E-code row that has an explicit
+       `RetryHint` column value, confirm whether that value matches or diverges from the
+       category's "Default RetryHint" in the category table.
+    2. **Divergence requires BC-anchored rationale:** If the per-code RetryHint diverges
+       from the category default, the per-code row (or an inline correction note) MUST
+       include a rationale citing the specific BC (e.g., "BC-2.16.003 circuit-breaker
+       cool-down semantics override POLICY Never default"). A bare divergence with no
+       rationale is a gate failure.
+    3. **Category-table edit propagation:** If the Default RetryHint for a category is
+       changed, re-audit ALL per-code rows in that category to confirm that:
+       (a) any previously-compliant rows are still compliant under the new default, and
+       (b) any new divergences are documented with rationale.
+    4. **No silent convergence:** Do NOT silently change a per-code RetryHint to match
+       the default without confirming the semantics. The per-code value may be intentionally
+       different (e.g., a DURABILITY code that is non-recoverable by retry should keep
+       `Never` even if the category default is `Maybe`).
+
+    **Known intentional divergences (as of ADV-P1D-PASS-28):**
+
+    | Error Code | Category | Default RetryHint | Per-Code RetryHint | Rationale |
+    |-----------|----------|-------------------|--------------------|-----------|
+    | E-RETRY-003 | POLICY | Never | `Later(<reset_timeout>)` | BC-2.16.003: circuit breaker has a defined reset horizon; the cool-down period makes Later semantics correct (retrying after reset_timeout will likely succeed) |
+    | E-CRON-003 | POLICY | Never | `Later` | BC-2.12.004: schedule queue transiently full; next firing cycle will likely have capacity |
+    | E-MEMORY-002 | DURABILITY | Maybe | `Never` | BC-2.15.001: storage-full is non-recoverable by retry without operator intervention (capacity must be freed or expanded) |
+    | E-MEMORY-005 | DURABILITY | Maybe | `Never` | BC-2.15.003: GDPR erasure partial failure rolled back; retry without fixing the underlying cause will produce the same partial failure |
+    | E-BUDGET-002 | DURABILITY | Maybe | `Never` | BC-2.10.002: budget journal write failure is non-recoverable by retry if the storage backend has failed; journaling must be restored by operator |
+
+    **Rationale:** ADV-P1D-PASS-28 §F-P28-01 found that 5 codes have per-code RetryHints
+    diverging from their category defaults with no precedence rule documenting which value
+    is authoritative. The fix (F-P28-01) relabeled the column to "Default RetryHint" and
+    added a precedence rule; this gate ensures future divergences are explicitly justified.
+    Source: ADV-P1D-PASS-28 §F-P28-01 [process-gap].

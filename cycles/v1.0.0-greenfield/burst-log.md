@@ -910,3 +910,45 @@ Pass 26 NOT CLEAN — 5 MED findings + 3 observations applied. ALL FIXED same bu
 - Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26)
 
 **State changes:** convergence passes 25→26, fix bursts 25→26, trajectory →5 (P1D-26), session checkpoint replaced (burst 101 archived), step row pass 21 archived to burst-log. Gates 27→29.
+
+---
+
+### Archived Step Row — Pass 23 (rotated out of STATE.md at burst 104)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1d pass 23 + fix burst (HTTP endpoint canon) | adversary + PO | COMPLETE | Pass 23: NOT CLEAN — 1 HIGH (F-P23-01 server URL-scheme incoherence: thread-nested vs flat split through BC layer + both interface docs; NEW CLASS: HTTP endpoint coherence). CANON: runs thread-nested / schedules flat / one documented flat aggregate query. 10 files reconciled; 26-endpoint census all-indexed; status-code census PASS. Trajectory ...→1→1→1→1. Convergence 0/3. Burst 99. |
+
+---
+
+## Burst 104 — Phase 1d Pass 28 + Fix Burst (RetryHint precedence + E-PROV-007 mint)
+
+**Date:** 2026-07-14
+**Agents:** adversary (pass 28) + product-owner (fix) + state-manager (STATE update)
+**Files touched:** specs/behavioral-contracts/ss-12/BC-2.12.005.md, specs/behavioral-contracts/ss-04/BC-2.04.006.md, specs/behavioral-contracts/ss-08/BC-2.08.003.md, specs/prd-supplements/error-taxonomy.md, specs/prd-supplements/interface-definitions.md, specs/prd-supplements/bc-authoring-plan.md, cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-28.md (NEW), STATE.md, cycles/v1.0.0-greenfield/burst-log.md
+
+### Summary
+
+Pass 28 NOT CLEAN — 1 MED finding + 3 observations applied. ALL FIXED same burst. Pass-27 fixes held in full. FULL 60-code BC↔taxonomy category census PASS (zero mismatches). 4 rotated censuses PASS. Novelty assessed as LOW-MED — deep convergence. NEW CLASS: RetryHint coherence. Gates total now 31 (gate #22 added). Counter remains 0/3.
+
+### Findings Summary
+
+| ID | Severity | Finding | Fix |
+|----|----------|---------|-----|
+| F-P28-01 | MED | BC-2.12.005 'category RetryHint' vs per-code RetryHint inconsistency across 5 error codes — category said one value but per-code entries diverged without precedence rule | 'Default RetryHint' relabeling in BC-2.12.005 + per-code-authoritative precedence rule added; 5 documented diverging codes listed explicitly; gate #22 RetryHint coherence added to bc-authoring-plan.md |
+| OBS-P28-01 | OBS | BC-2.12.005 PC4 carried redundant inline annotation that duplicated per-code table semantics | Inline annotation removed from PC4 |
+| OBS-P28-02 | OBS | BC-2.04.006 EC-005 (E-CHKPT-005 TENANCY) lacked an authoritative raise-condition — composite-PK tenancy collision was only referenced via omission note in Run.error | EC-005 raise-condition (composite-PK tenancy collision) added to BC-2.04.006 |
+| OBS-P28-03 | OBS | E-PROV-007 StructuredOutputRefused was a codeless refusal path — provider structured-output refusal had no FerrochainError code, violating every-error-has-a-code posture | E-PROV-007 StructuredOutputRefused MINTED (POLICY, Never) in error-taxonomy.md + anchored to BC-2.08.003 at 4 sites + interface-definitions.md omission note |
+
+### New Standing Gates (post-burst 104)
+
+- Gate #22: RetryHint coherence — per-code RetryHint must explicitly diverge from category default; category-default label must say 'Default RetryHint' (not 'RetryHint') to signal that per-code values are authoritative
+
+### Convergence Status After Burst 104
+
+- Phase 1d passes: 28 (NOT CLEAN)
+- Fix bursts: 28
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28)
+
+**State changes:** convergence passes 27→28, fix bursts 27→28, trajectory →1 (P1D-28), session checkpoint replaced (burst 103 archived), step row pass 23 archived to burst-log. Gates 30→31.

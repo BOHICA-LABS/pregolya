@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.005
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ input-hash: "b506940d5471ef7d546044ca7eaa600c281dac7c933cddffe52f1914f4be2ae7"
 changelog:
   - "1.1 (ADV-P1D-PASS-26): F-P26-04 removed debug_route_path reference from invariant — debug route is fixed at /_debug (minimal config surface decision; TVs do not depend on a configurable path)."
   - "1.2 (ADV-P1D-PASS-27): F-P27-05 removed stale '(or the configured debug route path)' parenthetical from PC4 — residue of the pre-P26-04 configurable-path design; path is fixed at /_debug."
+  - "1.3 (ADV-P1D-PASS-28): OBS-P28-1 removed inline fix-annotation residue from PC4 body — the F-P27-05 inline parenthetical '(F-P27-05: removed ...) was annotation residue in the postcondition text; correction is preserved only in the changelog."
 ---
 
 # BC-2.12.005: SecurityConfig::default() Denies CORS; Debug Route Gated on Explicit Opt-In Key (NE-14)
@@ -66,9 +67,7 @@ Separately, for the opt-in path:
 
 **Debug route default:**
 4. `GET /_debug` with no `Authorization` header returns `403 Forbidden` with body
-   `E-SERVER-004 DebugRouteUnauthorized`. (F-P27-05: removed "(or the configured debug
-   route path)" — the path is fixed at `/_debug`; `debug_route_path` is NOT a config
-   option per the invariant below.)
+   `E-SERVER-004 DebugRouteUnauthorized`.
 5. `GET /_debug` with a `Authorization: Bearer <wrong-key>` also returns `403`.
 6. `GET /_debug` with a `Authorization: Bearer <correct-key>` (matching
    `debug_route_key` in config) returns `200 OK` with the introspection payload.

@@ -1,13 +1,14 @@
 ---
 document_type: prd-supplement-error-taxonomy
 level: L3
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-14T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-02 recategorize E-SERVER-004 AUTH→POLICY; correction note added inline."
   - "1.2 (ADV-P1D-PASS-27): F-P27-02 recategorize E-CHKPT-004 SECURITY→INTERNAL (BC-2.04.007 authoritative; key rotation is an internal invariant failure, not a security policy rejection)."
+  - "1.3 (ADV-P1D-PASS-28): F-P28-01 relabel category-table RetryHint column to 'Default RetryHint'; add per-code-authoritative precedence rule. OBS-P28-3 mint E-PROV-007 (StructuredOutputRefused, POLICY, Never) anchored to BC-2.08.003 — OpenAI structured-output refusal path now carries a machine-readable code."
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -27,8 +28,8 @@ primary_consumers: [implementer, test-writer]
 
 ## Error Category Codes
 
-| Category Code | Category | Description | RetryHint |
-|--------------|----------|-------------|-----------|
+| Category Code | Category | Description | Default RetryHint |
+|--------------|----------|-------------|-------------------|
 | VAL | Validation | Input shape, type, range constraint violations | Never |
 | AUTH | Authentication | Credentials absent, expired, or invalid | Maybe (refresh token) |
 | RATE | Rate Limit | Provider or server rate limit exceeded | Later (backoff required) |
@@ -41,6 +42,8 @@ primary_consumers: [implementer, test-writer]
 | CONCURRENCY | Concurrency | Conflicting concurrent writes to same channel | Never |
 | SECURITY | Security | Workspace escape, sandbox policy enforcement | Never |
 | TENANCY | Tenancy | Session address collision, cross-tenant access attempt | Never |
+
+> **RetryHint precedence rule (F-P28-01, ADV-P1D-PASS-28):** The "Default RetryHint" column above applies only to codes whose per-code catalog row omits a RetryHint. Where a per-code catalog row specifies a RetryHint, the per-code value is authoritative — it overrides the category default. Intentional divergences must carry a BC-anchored rationale in the per-code row or a correction note. Examples: E-RETRY-003 (CircuitBreakerOpen, POLICY) carries `Later(<reset_timeout>)` because the circuit-breaker cool-down semantics of BC-2.16.003 override the POLICY `Never` default — the breaker trip is a temporary state with a known reset horizon; E-MEMORY-002/005 and E-BUDGET-002 (DURABILITY codes) carry `Never` because their specific failure modes (storage-full, partial-erasure, journal-write) are non-recoverable by retry without operator intervention. Divergences are intentional; the per-code value is the implementation contract.
 
 ## Severity Definitions
 
@@ -148,6 +151,7 @@ primary_consumers: [implementer, test-writer]
 | E-PROV-004 | AUTH | broken | BC-2.08.004 | `ProviderAuthFailed: '<provider>' rejected API key — check credentials` |
 | E-PROV-005 | VAL | broken | BC-2.08.003 | `StructuredOutputParseError: provider response did not match expected JSON schema: <path> — <reason>` |
 | E-PROV-006 | VAL | broken | BC-2.08.004 | `ContextLengthExceeded: provider '<provider>' rejected request — context length <actual> exceeds maximum <limit> tokens` |
+| E-PROV-007 | POLICY | broken | BC-2.08.003 | `StructuredOutputRefused: model refused to generate structured output — refusal_message: '<message>'` — **(OBS-P28-3, ADV-P1D-PASS-28):** OpenAI Responses API `json_schema` safety-filter refusal path; POLICY because the model policy rejected the request, not a deserialization failure. RetryHint: Never (POLICY category default; refusal repeats for the same prompt). Surfaced embedded in Run.error in v1; categorical POLICY→403 fallback applies only if directly surfaced via HTTP. |
 
 ### Component: MCP (ferrochain-mcp)
 
