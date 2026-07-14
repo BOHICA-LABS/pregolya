@@ -1,6 +1,7 @@
 ---
 document_type: behavioral-contract
 level: L3
+bc_id: BC-2.04.005
 version: "1.1"
 status: draft
 producer: product-owner
@@ -70,9 +71,16 @@ them freshly rather than replaying stale control state.
    current `checkpoint_id` with non-empty writes (or explicit empty-write record)
 2. Task IDs are deterministic content-addressed hashes — the same graph state and step produce
    the same task_id on restart, enabling correct pending-write matching
-3. The four control-signal channel indices (`ERROR=-1`, `SCHEDULED=-2`, `INTERRUPT=-3`,
-   `RESUME=-4`) are NEVER re-applied from pending_writes; they are filtered out during
-   `_reapply_writes_to_succeeded_nodes`
+3. **Control-signal write routing vs. re-apply skip set (two distinct concepts):**
+   - *Write-routing index map* (`WRITES_IDX_MAP`): four channels use negative indices for
+     internal routing: `ERROR=-1`, `SCHEDULED=-2`, `INTERRUPT=-3`, `RESUME=-4`. `SCHEDULED`
+     carries the -2 index and is routed normally — it is NOT excluded from re-apply.
+   - *Skip-on-reapply set*: four signals are filtered out during
+     `_reapply_writes_to_succeeded_nodes` so that failed/interrupted nodes re-execute
+     and encounter them freshly: `ERROR`, `ERROR_SOURCE_NODE`, `INTERRUPT`, `RESUME`.
+     Note: `ERROR_SOURCE_NODE` does not have a dedicated negative index but IS skipped.
+     Note: `SCHEDULED` has index -2 but is NOT skipped (its write is re-applied normally).
+   - Source: semport/graph/behavioral-intent.md:176-181 + validation-certification-6
 4. No committed task's node body is called more than once across a crash-and-resume cycle
 
 ## Edge Cases

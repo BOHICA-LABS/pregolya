@@ -106,3 +106,48 @@ Holdout domains A/B/C at planning/holdout-domains/. D1-D17 all in Decisions Log 
 | **Cycle** | v1.0.0-greenfield |
 | **Burst commit** | ef41eda (burst 73) |
 | **Convergence counter** | 3 of 3 — GATE CLOSED (adk-rust C23; pre-pipeline) |
+
+---
+
+## Checkpoint archived from burst 76 (2026-07-14T15:00:00Z)
+
+### RESUME IN ONE BREATH
+
+ferrochain Phase 1 Spec Crystallization: Steps A+B+C+D+E + spec-gate PASSED (pass 2: 0 blocking). 86 BCs (BC-INDEX: 48 P0/30 P1/8 P2), 11 ADRs, 5 VPs, test-vectors catalog. All 6 NF minor findings from pass-2 audit resolved: NF-01 BC count note, NF-02 TBD TV rows, NF-03 VP naming on proc-macro BCs, NF-04 input-hashes filled (BC-2.08.010/011/012), NF-05 ADR-011 forward link in PRD §9, NF-06 informal VP names in module-criticality. Spec package locked for Phase 1d adversarial review.
+
+### HEADS
+
+| Repo | Branch | SHA | Pushed | Notes |
+|------|--------|-----|--------|-------|
+| factory-artifacts | factory-artifacts | (burst 76 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
+| main | main | d018d3f | YES | CLAUDE.md + .gitignore committed (D10); develop initialized |
+
+No worktrees. No PRs. Reference clones (.reference/) gitignored.
+
+### WORKSTREAM
+
+**Burst 76 COMPLETE.** Spec-gate pass 2: PASS (0 blocking). All 6 NF minor findings resolved. Input-hashes filled on BC-2.08.010/011/012. Spec package: 86 BCs / 11 ADRs / 5 VPs / test-vectors — SPEC-GATE PASSED.
+
+**RESUME NEXT-ACTION:** dispatch adversary (fresh context, different model family) for Phase 1d pass 1 over the full spec package (.factory/specs/); findings route per VSDD feedback table; 3 consecutive clean passes required (D14 strict-zero); check .factory/policies.yaml for policy rubric injection (if absent, adversary baseline policies apply).
+
+### PENDING HUMAN ACTIONS (open)
+
+1. `direnv allow .` (B1 — Low, blocks key loading)
+2. `cargo login` + `.factory/namespace-reservation/publish-all.sh` — R6 namespace race STILL OPEN
+
+### STANDING DIRECTIVES
+
+| ID | Directive |
+|----|-----------|
+| D15 | Autonomous loop, never ask to continue — "Keep going until you hit convergence protocol." |
+| D14 | Absolute strict-zero: CLEAN(strict) = zero findings; 3 consecutive required |
+| D17 | HYBRID outcome adopted — LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns |
+
+### WRAP METADATA (burst 76)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-14 |
+| **Cycle** | v1.0.0-greenfield |
+| **Burst commit** | (burst 76 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Convergence counter** | 3 of 3 — GATE CLOSED (adk-rust C23; pre-pipeline) |

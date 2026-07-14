@@ -54,7 +54,7 @@ completion order.
 2. A `LastValue` channel that receives zero writes in a super-step is unchanged
    (`update([])` is a no-op).
 3. A `LastValue` channel that receives two or more writes from different tasks in the same
-   super-step raises `Err(E-GRAPH-006 InvalidUpdateError { channel: name,
+   super-step raises `Err(E-GRAPH-001 InvalidUpdateError { channel: name,
    reason: "LastValue received multiple concurrent writes" })`; the run transitions to
    `failed`.
 
@@ -64,7 +64,7 @@ completion order.
    task-identity-sorted order: `value = op(op(…op(seed, w_0), w_1), …, w_n)`.
 5. An `Overwrite(v)` written to an Append channel replaces the accumulated value entirely
    (`value = v`) rather than folding; at most one `Overwrite` per step is allowed; two
-   `Overwrite`s in the same step raise `Err(E-GRAPH-006 InvalidUpdateError)`.
+   `Overwrite`s in the same step raise `Err(E-GRAPH-001 InvalidUpdateError)`.
 6. The reduction order is the same regardless of which node finished first; concurrent node
    completion order does not affect the final channel value.
 
@@ -90,7 +90,7 @@ completion order.
 ### EC-001: Concurrent LastValue writes from two tasks in same super-step
 **Scenario:** Node A and Node B both return `{ "result": value }` targeting the same
 `LastValue` channel `"result"` in the same super-step.
-**Expected behavior:** `Err(E-GRAPH-006 InvalidUpdateError { channel: "result" })` is
+**Expected behavior:** `Err(E-GRAPH-001 InvalidUpdateError { channel: "result" })` is
 returned from `invoke`/`stream`; the run transitions to `failed`. No value is written to
 the channel.
 **Reference:** DEC-005 (Concurrent LastValue Writes in Same Super-Step).
@@ -98,7 +98,7 @@ the channel.
 ### EC-002: Append channel with Overwrite — two Overwrites in same step
 **Scenario:** Two tasks both return `Overwrite(v)` for the same `Append` channel in the
 same super-step.
-**Expected behavior:** `Err(E-GRAPH-006 InvalidUpdateError { channel: name, reason:
+**Expected behavior:** `Err(E-GRAPH-001 InvalidUpdateError { channel: name, reason:
 "multiple Overwrite values in same step" })` is raised at `apply_writes`; the run fails.
 
 ### EC-003: BarrierValue channel — one writer has not delivered by step end
@@ -121,7 +121,7 @@ differ from task completion order at runtime).
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | Node returns `{ "value": 42 }` to `LastValue<i64>` channel; no other writer | Channel stores `42` after step | Happy path — single write |
-| TV-002 | Two nodes both return `{ "value": X }` to same `LastValue<i64>` channel | `Err(E-GRAPH-006 InvalidUpdateError)` | Concurrent LastValue writes |
+| TV-002 | Two nodes both return `{ "value": X }` to same `LastValue<i64>` channel | `Err(E-GRAPH-001 InvalidUpdateError)` | Concurrent LastValue writes |
 | TV-003 | Three nodes return `[3, 1, 2]` (in task-identity-sort order P, Q, R) to `Append<Vec<i64>>` channel | Channel value is `[3, 1, 2]` (sorted write order) | Deterministic fold order — DI-001 |
 | TV-004 | Node returns `Overwrite([99])` to `Append<Vec<i64>>` channel | Channel value is `[99]` (bypass fold) | Overwrite replaces accumulated value |
 | TV-005 | `LastValue` channel receives zero writes in a step | Channel unchanged (no-op) | update([]) → no-op |

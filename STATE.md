@@ -4,14 +4,14 @@ level: ops
 version: "2.1"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T15:00:00Z
+timestamp: 2026-07-14T15:30:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "Phase 1d adversarial spec convergence — pass 1 ready (3 clean passes min per D14)"
+current_step: "Phase 1d pass 2 ready"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -38,16 +38,16 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-14 — burst 76: spec-gate re-audit PASS (0 blocking); all 6 NFs resolved; Phase 1d ready. |
+| **Last Updated** | 2026-07-14 — burst 77: Phase 1d pass 1 — 14 findings fixed (E-GRAPH global reconciliation, canonical run states). |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Phase 1d adversarial spec convergence — pass 1 ready (3 clean passes min per D14) |
+| **Current Step** | Phase 1d adversarial spec convergence — pass 2 ready (0/3 passes clean) |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -61,6 +61,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
+| Phase 1d adversarial pass 1 + fix burst | adversary + product-owner | COMPLETE | Pass 1: NOT CLEAN — 14 findings (2 CRIT: E-GRAPH code collisions globally reconciled → 15 canonical codes incl. E-GRAPH-013 SECURITY for approver-role; DELETE-vs-cancel contradiction → POST /cancel endpoint added); 5 HIGH incl. SCHEDULED-channel semport fix, canonical run state machine (queued→in_progress→completed|failed|interrupted|cancelled). 14/14 FIXED across 36 files. Convergence 0/3. Pass-2 scope: verify fixes, deferred coverage (brief, domain-spec shards, ADR/VP bodies, architecture sections, holdout briefs), E-GRAPH-005/E-BUDGET-001 anchor observation. Burst 77. |
 | Spec-gate re-audit PASS + NF cleanup | consistency-validator + product-owner | COMPLETE | Pass 2: PASS, 0 blocking residuals — all 21 pass-1 findings verified RESOLVED. 6 minor NFs (stale counts, TBD TV counts, VP naming on proc-macro BCs, empty input-hashes, implicit ADR-011 link, informal VP names) all fixed. Spec package: 86 BCs / 11 ADRs / 5 VPs / test-vectors catalog — SPEC-GATE PASSED. Burst 76. |
 | Spec-gate consistency audit + remediation (21 findings → 0) | consistency-validator + PO/BA/architect | COMPLETE | Fresh-context audit: FAIL — 9 blocking, 6 minor, 3 perimeter gaps (D17-Q7 VP-substitution unpropagated; RTM module unfilled; proc-macro BCs unauthored). ALL remediated: 86 BCs (+BC-2.08.010/011/012), test-vectors.md (PG-01), ADR-011 (PG-02), canonical risk cross-walk (F-10). Re-audit next. Burst 75. |
 | Phase 1 Steps D+E: ADRs finalized (D9 gate: Alt B), SS backfill, DTU assessment, research validation, BC-2.08.009 | architect + product-owner + research-agent | COMPLETE | 10/10 ADRs accepted. 83 BCs in ss-01..ss-17. VP-INDEX 5 entries (VP-001..005). DTU_REQUIRED: true (3 cassette clone sets; pre-Phase-3 gate: ≥8/7/3 recordings). Research: all ADR tech picks VALID w/ 3 corrections (schemars 1.x path fix + snapshot obligation → BC-2.08.009; bincode 2.x alt noted; Kani no-async → sync-core mandate). R4 REFRAMED: langgraph 0.2.5 pre-1.0 checkpointing — competitor velocity HIGH; moat = GA-maturity + conformance + formal verification. prd-revision (Step E): narrow — 1 new BC only. Burst 74. |
@@ -123,10 +124,10 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 0 |
-| Fix bursts completed | 0 |
-| Convergence counter | 3 of 3 — GATE CLOSED |
-| Finding trajectory | trajectory-tail →1→1→0→0→1→2→0→1→1→0→0→1→0→0→0 (C23: CLEAN; 3/3 GATE CLOSED) |
+| Adversary passes completed | 1 (Phase 1d) |
+| Fix bursts completed | 1 (Phase 1d) |
+| Convergence counter | 0 of 3 (Phase 1d; pre-pipeline 3/3 CLOSED) |
+| Finding trajectory | (pre-pipeline) →1→1→0→0→1→2→0→1→1→0→0→1→0→0→0 (C23: CLEAN) ‖ (Phase 1d) →14 (P1D-1) |
 
 ## Session Resume Checkpoint
 
@@ -134,22 +135,22 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ### RESUME IN ONE BREATH
 
-ferrochain Phase 1 Spec Crystallization: Steps A+B+C+D+E + spec-gate PASSED (pass 2: 0 blocking). 86 BCs (BC-INDEX: 48 P0/30 P1/8 P2), 11 ADRs, 5 VPs, test-vectors catalog. All 6 NF minor findings from pass-2 audit resolved: NF-01 BC count note, NF-02 TBD TV rows, NF-03 VP naming on proc-macro BCs, NF-04 input-hashes filled (BC-2.08.010/011/012), NF-05 ADR-011 forward link in PRD §9, NF-06 informal VP names in module-criticality. Spec package locked for Phase 1d adversarial review.
+ferrochain Phase 1d adversarial spec convergence: Pass 1 COMPLETE — NOT CLEAN. 14 findings (2 CRIT: E-GRAPH code collisions globally reconciled [15 canonical E-GRAPH-xxx codes, E-GRAPH-013 SECURITY for approver-role]; DELETE-vs-cancel contradiction [POST /cancel endpoint added]); 5 HIGH incl. SCHEDULED-channel semport fix, canonical run state machine (queued→in_progress→completed|failed|interrupted|cancelled). 14/14 FIXED across 36 files. Convergence 0/3. Pass-2 scope: verify pass-1 fixes, deferred coverage (brief, domain-spec shards, ADR/VP bodies, architecture sections, holdout briefs), E-GRAPH-005/E-BUDGET-001 anchor observation.
 
 ### HEADS
 
 | Repo | Branch | SHA | Pushed | Notes |
 |------|--------|-----|--------|-------|
-| factory-artifacts | factory-artifacts | (burst 76 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
+| factory-artifacts | factory-artifacts | (burst 77 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
 | main | main | d018d3f | YES | CLAUDE.md + .gitignore committed (D10); develop initialized |
 
 No worktrees. No PRs. Reference clones (.reference/) gitignored.
 
 ### WORKSTREAM
 
-**Burst 76 COMPLETE.** Spec-gate pass 2: PASS (0 blocking). All 6 NF minor findings resolved. Input-hashes filled on BC-2.08.010/011/012. Spec package: 86 BCs / 11 ADRs / 5 VPs / test-vectors — SPEC-GATE PASSED.
+**Burst 77 COMPLETE.** Phase 1d pass 1: 14 findings fixed across 36 spec files (E-GRAPH global reconciliation, canonical run states, POST /cancel endpoint).
 
-**RESUME NEXT-ACTION:** dispatch adversary (fresh context, different model family) for Phase 1d pass 1 over the full spec package (.factory/specs/); findings route per VSDD feedback table; 3 consecutive clean passes required (D14 strict-zero); check .factory/policies.yaml for policy rubric injection (if absent, adversary baseline policies apply).
+**RESUME NEXT-ACTION:** dispatch adversary pass 2 (fresh context): verify pass-1 fixes landed (sibling check), attack deferred coverage set (brief, domain-spec shards, ADR/VP bodies, architecture sections, holdout briefs), chase E-GRAPH-005/E-BUDGET-001 anchor observation.
 
 ### PENDING HUMAN ACTIONS (open)
 
@@ -172,8 +173,8 @@ Holdout domains A/B/C at planning/holdout-domains/. D1-D17 all in Decisions Log 
 |-------|-------|
 | **Date** | 2026-07-14 |
 | **Cycle** | v1.0.0-greenfield |
-| **Burst commit** | (burst 76 — run `git -C .factory log -1 --format='%h %s'`) |
-| **Convergence counter** | 3 of 3 — GATE CLOSED (adk-rust C23; pre-pipeline) |
+| **Burst commit** | (burst 77 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Convergence counter** | 0 of 3 (Phase 1d) |
 
 ## Historical Content
 

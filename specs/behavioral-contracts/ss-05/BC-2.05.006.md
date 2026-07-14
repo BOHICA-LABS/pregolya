@@ -68,7 +68,7 @@ SOC analyst forcing function: tiered autonomy with human approval before contain
    approver role). The interrupt payload carries `action_risk: Medium`. Only a `Command`
    submitted with a token that satisfies the `Analyst` role constraint is accepted; a
    `Command` from an unauthenticated or lower-privilege caller returns
-   `Err(E-GRAPH-005 InsufficientApproverRole)`.
+   `Err(E-GRAPH-013 InsufficientApproverRole)`.
 4. **High tier:** `RiskGatePolicy` defaults to `RequireApprover(SeniorAnalyst)`. Only a
    `Command` satisfying `SeniorAnalyst` role is accepted. The run durably parks until
    such approval is received; there is no timeout-based auto-expiry unless the policy
@@ -89,7 +89,7 @@ SOC analyst forcing function: tiered autonomy with human approval before contain
 - A `High`-tier interrupt MUST NOT be auto-approved by any `RiskGatePolicy` unless a
   `SeniorAnalyst`-or-higher role supplies the `Command(resume=...)`. Automated approval
   of `High`-tier actions is a hard policy violation (returns
-  `Err(E-GRAPH-005 InsufficientApproverRole)` even if the policy mistakenly attempts it).
+  `Err(E-GRAPH-013 InsufficientApproverRole)` even if the policy mistakenly attempts it).
 - The risk tier classification does not affect the core HITL mechanics (scratchpad, FIFO,
   re-execute from start). It adds a role-authorization layer on top of the existing
   interrupt mechanism.
@@ -103,7 +103,7 @@ SOC analyst forcing function: tiered autonomy with human approval before contain
 ### EC-001: High-tier interrupt without a SeniorAnalyst approver submitting Command
 **Scenario:** Node interrupts with `action_risk: High, action: "isolate_host_prod_db"`.
 An `Analyst`-role caller submits `Command(resume="approved")`.
-**Expected behavior:** `Err(E-GRAPH-005 InsufficientApproverRole { required: SeniorAnalyst,
+**Expected behavior:** `Err(E-GRAPH-013 InsufficientApproverRole { required: SeniorAnalyst,
 provided: Analyst })`. Run remains parked; the High-tier interrupt is not consumed. The
 SOC manager must submit `Command(resume="approved")` with a `SeniorAnalyst` credential.
 
@@ -132,20 +132,32 @@ set the tier; absence is not equivalent to `ReadOnly` or `Low`.
 ### EC-005: RiskGatePolicy timeout on High-tier interrupt
 **Scenario:** `RiskGatePolicy { High: RequireApprover(SeniorAnalyst), timeout: 4h }`.
 No approval arrives within 4 hours.
-**Expected behavior:** The graph transitions to `failed` with `E-GRAPH-006
-InterruptApprovalTimeout { tier: High, elapsed: 4h }`. The run is NOT auto-approved; it
-fails closed. Operators must restart the run manually or apply a time-extension Command.
+**Expected behavior:** The graph transitions to `failed` with `E-GRAPH-014
+InterruptApprovalTimeout { tier: High, deadline_utc: "<ISO-8601 timestamp>" }`. The run is NOT
+auto-approved; it fails closed. Operators must restart the run manually or apply a time-extension Command.
+
+**Deadline persistence:** The deadline is computed at `interrupt()` time as
+`created_at + policy.timeout` and stored as an absolute UTC timestamp in the parked interrupt
+record (written to the checkpoint alongside the interrupt payload). Deadline evaluation is
+**lazy**: it is checked on resume attempt (`POST /runs/{id}/resume`) and on status poll
+(`GET /runs/{id}`), not via a background timer. This design ensures the timeout survives
+process restarts without requiring external schedulers.
+
+**Clock-skew posture:** The deadline is set by the process clock of the ferrochain-server
+instance that created the interrupt. ferrochain makes no NTP/cluster-clock guarantees.
+Operators requiring strict SLA enforcement (e.g., ±1s across nodes) must configure a
+distributed clock source or accept ±process-clock-drift tolerances in the timeout window.
 
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | `interrupt({ action_risk: High, action: "isolate_host" })`; `Command(resume="approved")` from SeniorAnalyst | Node re-executes; `interrupt()` returns `"approved"`; isolation action proceeds | Happy path — High-tier SOC containment approval |
-| TV-002 | Same interrupt; `Command(resume="approved")` from Analyst-role caller | `Err(E-GRAPH-005 InsufficientApproverRole { required: SeniorAnalyst, provided: Analyst })` | Role gate enforcement |
+| TV-002 | Same interrupt; `Command(resume="approved")` from Analyst-role caller | `Err(E-GRAPH-013 InsufficientApproverRole { required: SeniorAnalyst, provided: Analyst })` | Role gate enforcement |
 | TV-003 | `interrupt({ action_risk: ReadOnly, action: "query_logs" })` with AutoApprove policy | `interrupt()` returns `ReadOnlyAutoApproved` immediately; no human gate triggered | Auto-approve for read-only enrichment |
 | TV-004 | `interrupt({ action_risk: Medium, action: "suspend_credential" })`; valid Analyst approval | `interrupt()` returns resume value; node proceeds to execute credential suspension | Medium-tier analyst approval |
 | TV-005 | Payload with no `action_risk` field deserialized | Defaults to `ActionRisk::High`; requires SeniorAnalyst approval | Fail-closed default for unknown tier |
-| TV-006 | High-tier interrupt with 4h timeout; no approval within window | `Err(E-GRAPH-006 InterruptApprovalTimeout)`; run fails | Timeout fail-closed behavior |
+| TV-006 | High-tier interrupt with 4h timeout; no approval within window | `Err(E-GRAPH-014 InterruptApprovalTimeout)`; run fails; deadline_utc persisted in checkpoint | Timeout fail-closed behavior (lazy eval on poll/resume) |
 
 ## Verification Properties
 

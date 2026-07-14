@@ -80,25 +80,25 @@ inference step that makes those keys typed and reducer-governed.
 ### EC-001: Node writes to an unregistered channel key
 **Scenario:** A node function returns `{ "unknown_key": value }` where `unknown_key` is
 not in the state schema.
-**Expected behavior:** `Err(E-GRAPH-001 UnknownChannelKey { key: "unknown_key" })` is
+**Expected behavior:** `Err(E-GRAPH-007 UnknownChannelKey { key: "unknown_key" })` is
 returned from `invoke`/`stream` at the `apply_writes` stage; the run transitions to
 `failed`. The error is not silently ignored.
 
 ### EC-002: compile() called with no entry edge from START
 **Scenario:** Nodes and edges among nodes are added, but no edge from `START` to any node
 is added before `compile()` is called.
-**Expected behavior:** `compile()` returns `Err(E-GRAPH-002 UnreachableGraph { reason:
+**Expected behavior:** `compile()` returns `Err(E-GRAPH-008 UnreachableGraph { reason:
 "no entry edge from START" })`. No compiled graph is produced.
 
 ### EC-003: Duplicate node name registration
 **Scenario:** `add_node("agent", fn_a)` is called, then `add_node("agent", fn_b)` on
 the same builder.
-**Expected behavior:** The second `add_node` returns `Err(E-GRAPH-004 DuplicateNodeName
+**Expected behavior:** The second `add_node` returns `Err(E-GRAPH-009 DuplicateNodeName
 { name: "agent" })`; the builder state is unchanged; `fn_a` remains registered.
 
 ### EC-004: Node function returns Command with goto targeting unknown node
 **Scenario:** A node function returns `Command { goto: "nonexistent_node" }` at runtime.
-**Expected behavior:** The graph returns `Err(E-GRAPH-005 UnknownRoutingTarget { node:
+**Expected behavior:** The graph returns `Err(E-GRAPH-003 UnknownRoutingTarget { node:
 "nonexistent_node" })` when the `Command` is processed after `apply_writes`; the run
 transitions to `failed`.
 
@@ -108,9 +108,9 @@ transitions to `failed`.
 |---|-------|-----------------|-------|
 | TV-001 | `StateGraph` with schema `{ messages: Append<AIMessage> }`, one node `"agent"` that returns `{ "messages": [AIMessage("hello")] }`, edge `START → agent → END`; `compile()` called | `Ok(CompiledStateGraph)`; `invoke({"messages": []})` returns `{"messages": [AIMessage("hello")]}` | Happy path — schema inference, single node, linear graph |
 | TV-002 | Same graph; node returns `None` | `invoke({"messages": []})` returns `{"messages": []}` (no mutation) | Node returns None — no channel mutation |
-| TV-003 | Builder with no `START` edge; `compile()` | `Err(E-GRAPH-002 UnreachableGraph)` | No entry edge — compile-time validation |
-| TV-004 | `add_node("agent", fn)` called twice on same builder | Second call returns `Err(E-GRAPH-004 DuplicateNodeName)` | Duplicate node name |
-| TV-005 | Node returns `{ "bad_key": 1 }` on invoke | `Err(E-GRAPH-001 UnknownChannelKey { key: "bad_key" })` from invoke | Unregistered channel key at runtime |
+| TV-003 | Builder with no `START` edge; `compile()` | `Err(E-GRAPH-008 UnreachableGraph)` | No entry edge — compile-time validation |
+| TV-004 | `add_node("agent", fn)` called twice on same builder | Second call returns `Err(E-GRAPH-009 DuplicateNodeName)` | Duplicate node name |
+| TV-005 | Node returns `{ "bad_key": 1 }` on invoke | `Err(E-GRAPH-007 UnknownChannelKey { key: "bad_key" })` from invoke | Unregistered channel key at runtime |
 
 ## Verification Properties
 

@@ -61,14 +61,33 @@ primary_consumers: [implementer, test-writer]
 
 ### Component: GRAPH (ferrochain-graph)
 
+> **GRAPH reconciliation note (ADV-P1D-FIX-1 burst, 2026-07-14):** BC authors (ss-02/ss-05)
+> independently assigned E-GRAPH-NNN codes without consulting this taxonomy, producing 6+
+> collisions where the same code had different meanings in BCs vs taxonomy. Resolution:
+> E-GRAPH-001..006 taxonomy meanings are kept stable (source of truth). All colliding BC
+> usages are renumbered to E-GRAPH-007..014 below. E-GRAPH-003 renamed from "Node not
+> found" to "UnknownRoutingTarget" (functionally identical; anchor corrected to BC-2.02.005
+> which is the primary routing BC). E-GRAPH-004 renamed from "NamedBarrierValue unexpected
+> keys" to "DuplicateBarrierWrite" (BC-2.02.003 EC-003 updated to use this code).
+> Process-gap follow-up: Phase 2 backlog story for a global cross-component collision lint.
+
 | Error Code | Category | Severity | BC Anchor | Message Format |
 |-----------|----------|----------|-----------|---------------|
 | E-GRAPH-001 | CONCURRENCY | broken | BC-2.03.002 | `InvalidUpdateError: concurrent writes to LastValue channel '<channel>' from tasks [<task_ids>] in super-step <n>` |
 | E-GRAPH-002 | POLICY | broken | BC-2.05.005 | `NoActiveInterrupt: no interrupt is pending for run '<run_id>'` |
-| E-GRAPH-003 | VAL | broken | BC-2.02.001 | `Node '<node_id>' not found in graph definition` |
-| E-GRAPH-004 | VAL | broken | BC-2.02.003 | `NamedBarrierValue channel '<channel>' received writes from unexpected keys: got [<keys>], expected [<expected_keys>]` |
+| E-GRAPH-003 | VAL | broken | BC-2.02.005 | `UnknownRoutingTarget: node '<node_id>' is not registered in the compiled graph` |
+| E-GRAPH-004 | VAL | broken | BC-2.02.003 | `DuplicateBarrierWrite: NamedBarrierValue channel '<channel>' received more than one write from writer '<writer>' in super-step <n>` |
 | E-GRAPH-005 | POLICY | broken | BC-2.10.003 | `BudgetCeiling: run '<run_id>' halted; token budget of <limit> exceeded at <actual> tokens` |
 | E-GRAPH-006 | INTERNAL | broken | BC-2.03.001 | `BspDeterminismViolation: reducer order constraint violated — contact maintainers with run_id '<run_id>'` |
+| E-GRAPH-007 | VAL | broken | BC-2.02.001 | `UnknownChannelKey: node '<node_id>' returned write for key '<key>' which is not registered in the state schema` |
+| E-GRAPH-008 | VAL | broken | BC-2.02.001 | `UnreachableGraph: <reason> (e.g., "no entry edge from START")` |
+| E-GRAPH-009 | VAL | broken | BC-2.02.001 | `DuplicateNodeName: node '<name>' is already registered in this graph` |
+| E-GRAPH-010 | VAL | broken | BC-2.02.003 | `UnknownBarrierWriter: NamedBarrierValue channel '<channel>' declares writer '<writer>' which is not a registered node` |
+| E-GRAPH-011 | INTERNAL | broken | BC-2.02.005 | `ConditionalEdgePanic: routing function for edge from '<source_node>' panicked: <message>` |
+| E-GRAPH-012 | VAL | broken | BC-2.02.005 | `UnmappedRouteKey: path_fn returned symbolic key '<key>' not found in path_map` |
+| E-GRAPH-013 | SECURITY | broken | BC-2.05.006 | `InsufficientApproverRole: action requires role '<required>'; caller presented role '<provided>'` |
+| E-GRAPH-014 | POLICY | broken | BC-2.05.006 | `InterruptApprovalTimeout: interrupt for run '<run_id>' (tier '<tier>') expired at deadline '<deadline_utc>' without receiving required approval` |
+| E-GRAPH-015 | VAL | broken | BC-2.05.004 | `NoParentGraph: Command.PARENT is only valid inside a subgraph execution context; no parent graph is active` |
 
 ### Component: CHKPT (ferrochain-checkpoint)
 
@@ -105,6 +124,7 @@ primary_consumers: [implementer, test-writer]
 | E-SERVER-013 | VAL | broken | BC-2.12.005 | Never | `InvalidDebugRouteKey: debug_route_key must be non-empty` |
 | E-SERVER-014 | DURABILITY | broken | BC-2.12.006 | Maybe | `RunStoreFailed: RunStore write failed for run '<run_id>' during transition '<transition>': <backend_error>` |
 | E-SERVER-015 | CONCURRENCY | broken | BC-2.12.007 | Never | `RunAlreadyExecuting: run '<run_id>' is already being executed; concurrent execution rejected` |
+| E-SERVER-016 | TIMEOUT | broken | BC-2.12.006 | Later | `IdempotencyLockTimeout: in-flight deduplication lock for key '<key>' held for ><timeout>s; lock_timeout is configurable via IdempotencyStore` |
 
 ### Component: PROV (ferrochain-\<provider\>)
 

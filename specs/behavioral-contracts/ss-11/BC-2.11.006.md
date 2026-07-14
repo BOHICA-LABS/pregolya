@@ -1,6 +1,7 @@
 ---
 document_type: behavioral-contract
 level: L3
+bc_id: BC-2.11.006
 version: "1.1"
 status: draft
 producer: product-owner
@@ -108,7 +109,7 @@ users who require guardrails must explicitly register a `GuardrailHook`.
 | L2 Capability | CAP-013 |
 | Capability Anchor Justification | CAP-013 ("Content Provenance Tagging and Guardrail-on-Ingress") per capabilities-p1-p2.md §CAP-013 |
 | L2 Domain Invariants | DI-012 (Guardrail Coverage at Ingress Boundaries — this BC defines the no-hook code path) |
-| OQR Resolution | OQR-5: "Default-permit with WARNING LOG at INFO level when no GuardrailHook is registered. Graph does not fail. Operator sees a warning." (Resolution adopted; log level corrected to WARN per convention for an operator-actionable alert) |
+| OQR Resolution | OQR-5: "Default-permit with WARNING LOG at WARN level when no GuardrailHook is registered. Graph does not fail. Operator sees a warning." (Resolution adopted; log level is WARN per convention for an operator-actionable alert) |
 | Source Analysis | OQR-5 prd.md §OQR table; DI-012 invariant (the default-permit path is within DI-012's scope — DI-012 does not mandate a specific default, only that hooks fire when registered and that rejections block context entry) |
 | Reference Evidence | Greenfield. No upstream reference. OQR-5 rationale: "A missing guardrail is valid for most non-SOC use cases. Domain A users must explicitly register a GuardrailHook. default-deny would break every RAG and MCP use case that doesn't need content filtering." |
 | Binding Decisions | D17-Q8 (defines the subsystem); OQR-5 (resolves default posture) |

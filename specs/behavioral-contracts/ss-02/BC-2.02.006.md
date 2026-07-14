@@ -112,7 +112,7 @@ field. No error; sanitization is transparent.
 ### EC-005: Worker node not registered — Send targets unknown node
 **Scenario:** `path_fn` returns `Send("phantom_worker", arg)` but no node named
 `"phantom_worker"` exists in the compiled graph.
-**Expected behavior:** `Err(E-GRAPH-005 UnknownRoutingTarget { node: "phantom_worker" })`
+**Expected behavior:** `Err(E-GRAPH-003 UnknownRoutingTarget { node: "phantom_worker" })`
 is returned from the run when the PUSH task is scheduled in the next step. The run fails.
 
 ## Canonical Test Vectors
@@ -123,7 +123,7 @@ is returned from the run when the PUSH task is scheduled in the next step. The r
 | TV-002 | `path_fn` returns `[]` | No PUSH tasks; graph halts (if no other triggers) | Zero fan-out |
 | TV-003 | N=3 fan-out; crash after 2 tasks complete; resume | K=2 tasks not re-run; only third task re-runs; same final result | Crash recovery — DEC-009 |
 | TV-004 | `Send.arg` contains an `UntrackedValue` field | Field stripped from checkpointed arg; worker receives arg without untracked field | UntrackedValue sanitization |
-| TV-005 | `Send("ghost", arg)` where `"ghost"` not in graph | `Err(E-GRAPH-005 UnknownRoutingTarget)` at PUSH-task scheduling time | Unknown worker target |
+| TV-005 | `Send("ghost", arg)` where `"ghost"` not in graph | `Err(E-GRAPH-003 UnknownRoutingTarget)` at PUSH-task scheduling time | Unknown worker target |
 | TV-006 | N=100 concurrent worker tasks; each appends one item to `results: Append<Vec<i64>>` | `results` has 100 items in deterministic task-identity-sorted order | Large fan-out determinism |
 
 ## Verification Properties

@@ -96,14 +96,14 @@ active. No error.
 ### EC-003: One writer delivers twice in same step
 **Scenario:** Writer `"a"` produces two writes to the `NamedBarrierValue` channel in the
 same super-step (e.g., via two separate `Send` tasks both named `"a"`).
-**Expected behavior:** `Err(E-GRAPH-007 DuplicateBarrierWrite { channel: name, writer:
+**Expected behavior:** `Err(E-GRAPH-004 DuplicateBarrierWrite { channel: name, writer:
 "a" })` is returned; the run transitions to `failed`. A named writer must write exactly
 once per step to avoid ambiguity.
 
 ### EC-004: NamedBarrierValue with unknown writer name registered at compile time
 **Scenario:** `NamedBarrierValue` declares writer `"ghost"`, but no node named `"ghost"`
 is registered in the graph.
-**Expected behavior:** `compile()` returns `Err(E-GRAPH-002 UnknownBarrierWriter { channel:
+**Expected behavior:** `compile()` returns `Err(E-GRAPH-010 UnknownBarrierWriter { channel:
 name, writer: "ghost" })`; no compiled graph is produced.
 
 ## Canonical Test Vectors
@@ -113,7 +113,7 @@ name, writer: "ghost" })`; no compiled graph is produced.
 | TV-001 | `NamedBarrierValue(writers=["a","b","c"])`; step delivers from `"a"` and `"b"` only | Channel unavailable; downstream not triggered; run continues | **Red Gate vector** — must fail before implementation |
 | TV-002 | Same channel; step delivers from all three `"a"`, `"b"`, `"c"` | Channel available; downstream triggered | Happy-path barrier satisfaction |
 | TV-003 | Same channel; zero writers deliver | Channel unavailable; downstream not triggered; no error | Zero-delivery step |
-| TV-004 | Writer `"a"` delivers twice in same step | `Err(E-GRAPH-007 DuplicateBarrierWrite)` | Duplicate write from same named writer |
+| TV-004 | Writer `"a"` delivers twice in same step | `Err(E-GRAPH-004 DuplicateBarrierWrite)` | Duplicate write from same named writer |
 | TV-005 | Step N: `"a"`, `"b"` deliver (barrier unsatisfied). Step N+1: `"a"`, `"b"`, `"c"` all deliver | Step N: not triggered. Step N+1: triggered. | Per-step independent evaluation |
 
 ## Verification Properties

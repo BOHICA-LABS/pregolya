@@ -161,7 +161,8 @@ Default port: `7437` (configurable via `server.port` in `ferrochain-server.toml`
 | GET | `/threads/{thread_id}/runs/{run_id}` | Get run status and result | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}/stream` | Get run result as server-sent events | BC-2.12.007 |
 | POST | `/threads/{thread_id}/runs/{run_id}/resume` | Deliver resume value to interrupted run | BC-2.05.004 |
-| DELETE | `/threads/{thread_id}/runs/{run_id}` | Cancel an in-progress run | BC-2.12.003 |
+| POST | `/threads/{thread_id}/runs/{run_id}/cancel` | Cancel a queued or in_progress run (transitions to cancelled) | BC-2.12.003 |
+| DELETE | `/threads/{thread_id}/runs/{run_id}` | Delete a terminal run record (completed/failed/interrupted/cancelled; HTTP 409 if active — use POST .../cancel first) | BC-2.12.003 |
 
 ### Cron Schedules
 
@@ -201,7 +202,8 @@ Default port: `7437` (configurable via `server.port` in `ferrochain-server.toml`
     "assistant_id": { "type": "string" },
     "status": {
       "type": "string",
-      "enum": ["queued", "in_progress", "interrupted", "completed", "failed", "cancelled"]
+      "enum": ["queued", "in_progress", "interrupted", "completed", "failed", "cancelled"],
+      "description": "Canonical run state machine: queued→in_progress→completed|failed|interrupted|cancelled. multitask_strategy='enqueue' creates the new run in 'queued' state; it transitions to 'in_progress' after the current run finishes. Use POST .../cancel to transition queued/in_progress→cancelled."
     },
     "created_at": { "type": "string", "format": "date-time" },
     "completed_at": { "type": ["string", "null"], "format": "date-time" },

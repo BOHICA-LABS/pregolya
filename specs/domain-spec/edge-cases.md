@@ -126,8 +126,12 @@ exception type). The MCP adapter re-raises it.
 
 ### DEC-013: Provider Streaming Interrupted by Transport Error
 **Scenario:** A streaming completion from an OpenAI-compatible provider is cut off
-mid-stream by a TCP reset or timeout.
-**Expected behavior:** The stream yields `Err(FerrochainError { category: Timeout })`;
-partial tokens accumulated before the cut are surfaced as a partial result or discarded
-(behavior specified in the BC); the error propagates to the caller rather than silently
-producing a truncated complete-looking response.
+mid-stream by a TCP reset or a per-chunk stall timeout.
+**Expected behavior (TCP reset / connection drop):** The stream yields
+`Err(FerrochainError { category: Transport })`; accumulated partial tokens are discarded;
+the error propagates to the caller.
+**Expected behavior (per-chunk stall timeout):** The stream yields
+`Err(FerrochainError { category: Timeout })`; accumulated partial tokens are discarded;
+the error propagates to the caller.
+In both cases the caller never receives a truncated `Ok(AiMessage)` as if the response
+were complete. (BC-2.08.007 PC1/PC2; F-05 alignment.)

@@ -82,7 +82,7 @@ mixin). This BC specifies the full `Command` shape and the contract each field s
 - A `Command` with no `resume`, no `update`, and no `goto` is valid (a no-op resume signal
   that merely unblocks the super-step); it is NOT an error condition.
 - `Command.PARENT` is only valid inside a subgraph execution context; submitting it at the
-  root graph level returns `Err(E-GRAPH-004 NoParentGraph)`.
+  root graph level returns `Err(E-GRAPH-015 NoParentGraph)`.
 - A `Command` submitted to a non-interrupted run (status `running`, `completed`, or
   `failed`) returns `Err(E-GRAPH-002 NoActiveInterrupt)` (see BC-2.05.005).
 
@@ -114,7 +114,7 @@ modified (see BC-2.05.005).
 
 ### EC-005: Command.PARENT submitted at root graph
 **Scenario:** No subgraph context; `Command(graph=Command.PARENT, resume="x")` submitted.
-**Expected behavior:** `Err(E-GRAPH-004 NoParentGraph)` — there is no parent to escape to.
+**Expected behavior:** `Err(E-GRAPH-015 NoParentGraph)` — there is no parent to escape to.
 
 ## Canonical Test Vectors
 

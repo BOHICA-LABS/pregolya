@@ -66,11 +66,11 @@ traces_to: .factory/specs/prd.md
 | BC-2.03.001 | BSP Super-Step Execution Determinism — Kani VP Seed (NE-17) | CAP-004 | NE-17 | DI-001 | P0 | | **VP** | ss-03/BC-2.03.001.md |
 | BC-2.03.002 | Concurrent LastValue Write Rejection Raises InvalidUpdateError | CAP-004 | | DI-001 | P0 | | | ss-03/BC-2.03.002.md |
 | BC-2.03.003 | Deterministic Reducer Application Order (Task-Identity Sort) | CAP-004 | NE-17 | DI-001 | P0 | | | ss-03/BC-2.03.003.md |
-| BC-2.04.001 | Per-Task put_writes Completes Before Next Super-Step Begins | CAP-005 | | | P0 | | | ss-04/BC-2.04.001.md |
-| BC-2.04.002 | Sync Durability Tier Is Default; Async and Exit Are Explicit Opt-In | CAP-005 | | | P0 | | | ss-04/BC-2.04.002.md |
-| BC-2.04.003 | Monotonic Logical-Clock Checkpoint IDs — Wall-Clock UUIDs Rejected | CAP-005 | | | P0 | | | ss-04/BC-2.04.003.md |
-| BC-2.04.004 | Fork Lineage via parent_checkpoint_id Pointers; No State Copy on Fork | CAP-005 | | | P0 | | | ss-04/BC-2.04.004.md |
-| BC-2.04.005 | Crash Recovery — Completed Tasks Not Re-Executed After Process Restart | CAP-005 | | | P0 | | | ss-04/BC-2.04.005.md |
+| BC-2.04.001 | Per-Task put_writes Completes Before Next Super-Step Begins | CAP-005 | | DI-002 | P0 | | | ss-04/BC-2.04.001.md |
+| BC-2.04.002 | Sync Durability Tier Is Default; Async and Exit Are Explicit Opt-In | CAP-005 | | DI-002 | P0 | | | ss-04/BC-2.04.002.md |
+| BC-2.04.003 | Monotonic Logical-Clock Checkpoint IDs — Wall-Clock UUIDs Rejected | CAP-005 | | DI-004 | P0 | | | ss-04/BC-2.04.003.md |
+| BC-2.04.004 | Fork Lineage via parent_checkpoint_id Pointers; No State Copy on Fork | CAP-005 | | DI-004 | P0 | | | ss-04/BC-2.04.004.md |
+| BC-2.04.005 | Crash Recovery — Completed Tasks Not Re-Executed After Process Restart | CAP-005 | | DI-002 | P0 | | | ss-04/BC-2.04.005.md |
 | BC-2.04.006 | Session Triple-Address Uniqueness (thread_id, checkpoint_ns, checkpoint_id) — Kani VP Seed | CAP-005 | | DI-005 | P0 | | **VP** | ss-04/BC-2.04.006.md |
 | BC-2.04.007 | Encryption at Rest Covers Both State AND Event Payloads; Rotation Errors Propagate | CAP-005 | | | P0 | | | ss-04/BC-2.04.007.md |
 | BC-2.05.001 | Interrupt Suspension with Durable State Persistence | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.001.md |
@@ -114,7 +114,7 @@ traces_to: .factory/specs/prd.md
 | BC-2.11.006 | No-Hook Default — Content Passes Through with WARNING LOG (Default-Permit) | CAP-013 | | | P0 | | | ss-11/BC-2.11.006.md |
 | BC-2.12.001 | Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History) | CAP-014 | | | P1 | | | ss-12/BC-2.12.001.md |
 | BC-2.12.002 | Assistant Resource CRUD (Named Agent Config with Graph Reference) | CAP-014 | | | P1 | | | ss-12/BC-2.12.002.md |
-| BC-2.12.003 | Run Creation and Execution Lifecycle (create → running → completed/failed) | CAP-014 | | | P1 | | | ss-12/BC-2.12.003.md |
+| BC-2.12.003 | Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/interrupted/cancelled) | CAP-014 | | | P1 | | | ss-12/BC-2.12.003.md |
 | BC-2.12.004 | CronSchedule Creation and Proactive Run Execution | CAP-014 | | | P1 | | | ss-12/BC-2.12.004.md |
 | BC-2.12.005 | SecurityConfig::default() Denies CORS; Debug Route Gated on Explicit Opt-In Key (NE-14) | CAP-014 | NE-14 | DI-013 | P1 | | | ss-12/BC-2.12.005.md |
 | BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore Trait Seams with Durable Backends (NE-08) | CAP-014 | NE-08 | | P1 | | | ss-12/BC-2.12.006.md |

@@ -27,7 +27,7 @@ inputs:
 input-hash: "4bf3ed649311bea0978286c57d4e17f5332f8cb1edde7b67f13e73578e597e52"
 ---
 
-# BC-2.08.007: Provider Streaming Interrupted by Transport Error Surfaces Err(Timeout), Not Truncated Success
+# BC-2.08.007: Provider Streaming Interrupted by Transport Error Surfaces Err(Timeout) or Err(Transport), Not Truncated Success
 
 ## Description
 

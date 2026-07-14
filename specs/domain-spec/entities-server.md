@@ -40,7 +40,8 @@ A named agent configuration hosted by ferrochain-server.
 ### Run
 A single execution of an Assistant with a Thread.
 - **Fields:** run_id: Uuid, thread_id: Uuid, assistant_id: Uuid, status: RunStatus, config: RunConfig, created_at, updated_at, output: Option<Value>
-- **RunStatus lifecycle:** queued → in_progress → requires_action (if interrupted) → completed | failed | cancelled | expired
+- **RunStatus lifecycle:** queued → in_progress → completed | failed | interrupted | cancelled
+  (F-03 alignment: `requires_action` renamed to `interrupted` for HITL-parked runs; `expired` deferred — v1.0.0 uses `failed` with E-GRAPH-014 InterruptApprovalTimeout for timeout-expired runs; a dedicated `expired` state may be added in a future version)
 - **Relationships:** Run belongs-to Thread and Assistant. Run 1→N StreamEvent emitted. Run 0→N Interrupt.
 
 ### CronSchedule

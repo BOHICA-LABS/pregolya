@@ -68,8 +68,8 @@ eviction.
    to be enforced consistently across multiple server instances.
 
 **RunStore:**
-7. Every `Run` state transition (queued, in_progress, requires_action, completed,
-   failed, cancelled, expired) is written to the `RunStore` before the HTTP response
+7. Every `Run` state transition (queued, in_progress, interrupted, completed,
+   failed, cancelled) is written to the `RunStore` before the HTTP response
    is returned to the caller.
 8. `GET /runs/{run_id}` reads directly from the `RunStore`; no in-memory copy is
    consulted separately.
@@ -109,9 +109,13 @@ document which is used.
 ### EC-002: Concurrent duplicate requests with the same idempotency key (race)
 **Scenario:** Two identical requests with `Idempotency-Key: "k2"` arrive simultaneously
 before either has been processed.
-**Expected behavior:** One request proceeds to Run execution; the other blocks until
-the first completes, then receives the cached response. The `IdempotencyStore` must
-provide a per-key lock or serialization mechanism for in-flight deduplication.
+**Expected behavior:** One request proceeds to Run execution; the other acquires a
+per-key lock and waits for at most `IdempotencyStore::lock_timeout` (default: 30 seconds,
+matching the DI-009/NFR-009 connection timeout value, configurable). Within the timeout
+window it receives the cached response. If the lock_timeout expires before the first
+request completes, the waiting request returns HTTP 503 with
+`E-SERVER-016 IdempotencyLockTimeout`. The `IdempotencyStore` must provide a per-key
+lock or serialization mechanism for in-flight deduplication; the lock must be bounded.
 
 ### EC-003: RateLimitStore LRU eviction of active callers
 **Scenario:** The in-memory `RateLimitStore` is at capacity (10,000 callers); a new

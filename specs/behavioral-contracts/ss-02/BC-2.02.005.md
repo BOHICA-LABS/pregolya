@@ -58,7 +58,7 @@ edge routing function. Static edges and `Send` fan-out (BC-2.02.006) are distinc
 4. If `path_map` is provided, symbolic return values from `path_fn` are translated via the
    map before scheduling; the raw string must appear as a key in the map.
 5. If `path_fn` raises a Rust panic or returns an `Err`, the graph transitions to `failed`
-   with `Err(E-GRAPH-008 ConditionalEdgePanic { source: "source_node" })`.
+   with `Err(E-GRAPH-011 ConditionalEdgePanic { source: "source_node" })`.
 
 ## Invariants
 
@@ -67,7 +67,7 @@ edge routing function. Static edges and `Send` fan-out (BC-2.02.006) are distinc
 - `path_fn` must be a pure function; it reads state but must not produce side effects
   (state writes from inside `path_fn` are not defined behavior).
 - A routing decision that targets an unknown node name (not registered in the compiled
-  graph) returns `Err(E-GRAPH-005 UnknownRoutingTarget)` and fails the run.
+  graph) returns `Err(E-GRAPH-003 UnknownRoutingTarget)` and fails the run.
 - Multiple `add_conditional_edges` calls from the same source node are allowed; each
   `path_fn` is evaluated; the union of their return values determines next-step scheduling.
 
@@ -82,7 +82,7 @@ graph state as output; status transitions to `done`.
 ### EC-002: path_fn returns unknown node name
 **Scenario:** `path_fn` returns `NodeName("mystery")` but `"mystery"` was never registered
 via `add_node`.
-**Expected behavior:** `Err(E-GRAPH-005 UnknownRoutingTarget { node: "mystery" })` is
+**Expected behavior:** `Err(E-GRAPH-003 UnknownRoutingTarget { node: "mystery" })` is
 returned from the current `invoke`/`stream`; the run fails. The graph does not silently
 drop the routing result.
 
@@ -90,7 +90,7 @@ drop the routing result.
 **Scenario:** `path_fn` panics due to a programming error (index out of bounds, unwrap on
 None, etc.).
 **Expected behavior:** The panic is caught by the Pregel executor; the run transitions
-to `failed` with `Err(E-GRAPH-008 ConditionalEdgePanic { source: "source_node" })`
+to `failed` with `Err(E-GRAPH-011 ConditionalEdgePanic { source: "source_node" })`
 preserving the panic message as the error source.
 
 ### EC-004: path_fn returns empty list
@@ -102,7 +102,7 @@ equivalent to routing to END only for this edge's contribution.
 ### EC-005: path_map does not contain the returned symbolic key
 **Scenario:** `path_fn` returns `"continue"` and a `path_map = { "stop": "END" }` is
 provided, but `"continue"` is not in the map.
-**Expected behavior:** `Err(E-GRAPH-009 UnmappedRouteKey { key: "continue" })` is returned
+**Expected behavior:** `Err(E-GRAPH-012 UnmappedRouteKey { key: "continue" })` is returned
 from the run; the graph fails. Missing path_map entries are not silently ignored.
 
 ## Canonical Test Vectors
@@ -112,8 +112,8 @@ from the run; the graph fails. Missing path_map entries are not silently ignored
 | TV-001 | `path_fn` returns `NodeName("next_node")`; `"next_node"` is registered | `"next_node"` is triggered in the next step | Happy path — single target |
 | TV-002 | `path_fn` returns `End` | Run completes; status `done` | END routing — graph terminates |
 | TV-003 | `path_fn` returns `NodeNames(["branch_a", "branch_b"])` | Both nodes triggered in next step | Multi-target routing |
-| TV-004 | `path_fn` returns `NodeName("ghost")` where `"ghost"` is not a registered node | `Err(E-GRAPH-005 UnknownRoutingTarget { node: "ghost" })` | Unknown target |
-| TV-005 | `path_fn` panics | `Err(E-GRAPH-008 ConditionalEdgePanic)` | Panic catch |
+| TV-004 | `path_fn` returns `NodeName("ghost")` where `"ghost"` is not a registered node | `Err(E-GRAPH-003 UnknownRoutingTarget { node: "ghost" })` | Unknown target |
+| TV-005 | `path_fn` panics | `Err(E-GRAPH-011 ConditionalEdgePanic)` | Panic catch |
 | TV-006 | `path_fn` returns `NodeNames([])` | No nodes scheduled from this edge; graph may halt | Empty routing result |
 
 ## Verification Properties

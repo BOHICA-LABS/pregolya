@@ -359,3 +359,45 @@ Spec-gate fresh-context consistency audit returned FAIL: 9 blocking findings, 6 
 **Output:** prd.md 607 lines + 5 supplements (1,599 total). 82 BCs planned (48 P0/26 P1/8 P2). OQR-1..5 resolved. Burst 71.
 
 ---
+
+---
+
+## Burst 77 — Phase 1d adversarial pass 1 + fix burst
+
+**Date:** 2026-07-14
+**Agents:** adversary, product-owner
+**Status:** COMPLETE
+
+### Adversary Pass 1 Summary
+
+NOT CLEAN — 14 findings:
+- **2 CRIT:** (1) E-GRAPH error code collisions — same structural class as E-SERVER collisions; globally reconciled across all BCs and error-taxonomy to 15 canonical E-GRAPH-xxx codes including E-GRAPH-013 SECURITY for approver-role authorization failure. (2) DELETE-vs-cancel contradiction — REST DELETE /runs/{id} semantics conflicted with server-side cancellation behavior; resolved by adding POST /runs/{id}/cancel endpoint with explicit semantics.
+- **5 HIGH:** Canonical run state machine (queued→in_progress→completed|failed|interrupted|cancelled) propagated across all affected BCs; SCHEDULED channel semport fix verified against Python reference; 3 additional HIGH findings fixed.
+- **7 MED/LOW:** Fixed across BC and spec files.
+
+**Total fixed: 14/14 across 36 files.**
+
+### Files Touched
+
+36 spec files modified:
+- specs/behavioral-contracts/BC-INDEX.md
+- specs/behavioral-contracts/ss-02/BC-2.02.001-006.md (6 files)
+- specs/behavioral-contracts/ss-04/BC-2.04.001-007.md (7 files)
+- specs/behavioral-contracts/ss-05/BC-2.05.004, 006.md (2 files)
+- specs/behavioral-contracts/ss-08/BC-2.08.007.md
+- specs/behavioral-contracts/ss-11/BC-2.11.001-006.md (6 files)
+- specs/behavioral-contracts/ss-12/BC-2.12.003, 006.md (2 files)
+- specs/behavioral-contracts/ss-13/BC-2.13.001-006.md (6 files)
+- specs/domain-spec/edge-cases.md
+- specs/domain-spec/entities-server.md
+- specs/prd-supplements/error-taxonomy.md
+- specs/prd-supplements/interface-definitions.md
+- specs/prd.md
+- cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-1.md (NEW)
+
+### Convergence Status After Burst 77
+
+- Phase 1d passes: 1 (NOT CLEAN)
+- Fix bursts: 1
+- Counter: 0 of 3
+- Deferred coverage (pass 2 scope): brief, domain-spec shards, ADR bodies, VP bodies, architecture sections, holdout briefs; verify pass-1 fixes; E-GRAPH-005 anchor vs BC-2.10.003 / E-BUDGET-001 orphan observation.
