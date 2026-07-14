@@ -35,10 +35,10 @@ traces_to: ARCH-INDEX.md
 
 ## VP Catalog
 
-| VP | Title | BC Anchor | DI | Module | Crate | Tool | Phase | Priority | Status | File |
-|----|-------|-----------|-----|--------|-------|------|-------|----------|--------|------|
-| VP-001 | BSP Super-Step Determinism | BC-2.03.001 | DI-001 | bsp-engine | ferrochain-graph | Kani | 6 | P0 | draft | VP-001.md |
-| VP-002 | Session Triple-Address Uniqueness | BC-2.04.006 | DI-005 | session-index | ferrochain-checkpoint | Kani | 6 | P0 | draft | VP-002.md |
-| VP-003 | Workspace Path Confinement | BC-2.13.004 | DI-007 | path-guard | ferrochain-sandbox | Kani | 6 | P0 | draft | VP-003.md |
-| VP-004 | MCP ToolException Type-Identity Preservation | BC-2.09.004 | DI-014 | mcp-adapter | ferrochain-mcp | integration | 3 | P1 | draft | VP-004.md |
-| VP-005 | MultiServerMcpClient Holds No Live Connections | BC-2.09.005 | DI-014 | mcp-client | ferrochain-mcp | integration | 3 | P1 | draft | VP-005.md |
+| VP | Title | BC Anchor | DI | Module | Crate | Tool | Phase | Priority | Status | harness_fn | File |
+|----|-------|-----------|-----|--------|-------|------|-------|----------|--------|------------|------|
+| VP-001 | BSP Super-Step Determinism | BC-2.03.001 | DI-001 | bsp-engine | ferrochain-graph | Kani | 6 | P0 | draft | `bsp_determinism_harness` | VP-001.md |
+| VP-002 | Session Triple-Address Uniqueness | BC-2.04.006 | DI-005 | session-index | ferrochain-checkpoint | Kani | 6 | P0 | draft | `session_tenancy_harness` | VP-002.md |
+| VP-003 | Workspace Path Confinement | BC-2.13.004 | DI-007 | path-guard | ferrochain-sandbox | Kani | 6 | P0 | draft | `workspace_confinement_harness` | VP-003.md |
+| VP-004 | MCP ToolException Type-Identity Preservation | BC-2.09.004 | DI-014 | mcp-adapter | ferrochain-mcp | integration | 3 | P1 | draft | n/a (integration test) | VP-004.md |
+| VP-005 | MultiServerMcpClient Holds No Live Connections | BC-2.09.005 | DI-014 | mcp-client | ferrochain-mcp | integration | 3 | P1 | draft | n/a (integration test) | VP-005.md |

@@ -4,14 +4,14 @@ level: ops
 version: "2.2"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T11:34:34Z
+timestamp: 2026-07-14T13:05:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "Phase 1d pass 17 ready"
+current_step: "Phase 1d pass 18 ready"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -38,16 +38,16 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-14 — burst 92: Phase 1d pass 16 — complete anchor-matrix census (6 axes exact). |
+| **Last Updated** | 2026-07-14 — burst 93: Phase 1d pass 17 — harness_fn registry, executable-string census. |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Phase 1d adversarial spec convergence — pass 16 complete; pass 17 ready (0/3 passes clean; anchor-axis class CLOSED; 16 standing gates) |
+| **Current Step** | Phase 1d adversarial spec convergence — pass 17 complete; pass 18 ready (0/3 passes clean; harness_fn registry + string census closed; 18 standing gates) |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -61,11 +61,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
+| Phase 1d pass 17 + fix burst (verification-command chain) | adversary + architect | COMPLETE | Pass 17: NOT CLEAN — 1 MEDIUM (F-P17-01 Kani harness named 5 ways; NFR gate command cited nonexistent name). Fix: harness_fn registry in VP-INDEX + 10 sites reconciled (bsp_determinism_harness / session_tenancy_harness / workspace_confinement_harness per BC-2.17.001 canon) + full 22-command executable-string census (last un-gated surface closed). NE-axis full rebuild + CAP/VP + 3 censuses ALL PASS on first run — anchor/index classes fully converged. Trajectory ...→2→1→1→1. Convergence 0/3. Standing gates now 18. Burst 93. |
 | Phase 1d pass 16 + fix burst (complete anchor-matrix census) | adversary + PO | COMPLETE | Pass 16: NOT CLEAN — 1 HIGH (F-P16-01 NE-anchor four-way drift incl. BC-INDEX internal contradiction; 23 mismatches). Fix closed the ENTIRE anchor-axis class: complete 86-BC × 6-axis matrix census (CAP/DI/NE/R/ADR/VP) — all axes exact post-fix; adversary-telegraphed CAP axis pre-verified clean. ne_anchor policy codified. Trajectory ...→1→1→2→1→1. Convergence 0/3. Standing gate #17: anchor-matrix census (subsumes DI/NE/CAP/R/ADR/VP). Burst 92. |
 | Phase 1d pass 15 + fix burst (ADR anchor sweep) | adversary + architect | COMPLETE | Pass 15: NOT CLEAN — 1 HIGH (F-P15-01 ADR-010 NE-16 mis-anchor [true referent P-78]; NEW CLASS: ADR-anchor axis). Pre-emptive 11-ADR sweep: 9 PASS / 2 FIXED (also ADR-003 NE-11→CONFLICT-2). FM-Detection adjudicated ACCEPTABLE-CONVENTION + note codified. Sibling 4/4 + 3 censuses PASS on first run. Trajectory ...→1→1→2→1. Convergence 0/3. Burst 91. |
 | Phase 1d pass 14 + fix burst (bidirectional anchor audit) | adversary + BA + PO | COMPLETE | Pass 14: NOT CLEAN — 2 findings (F-P14-01 HIGH L2-INDEX FM/DEC mis-anchors ×3 [NEW CLASS: cross-ref index columns; FM-007/010 double-use tell] → 3 corrected + FM-013/014 authored, 14-row bidirectional audit PASS; F-P14-02 MED VP-MCP-04 orphan → VP-004 canonical + vp_id bridges both R11 BCs; collision census 86 BCs = 1). Topology sibling 11/11 + 3 rotated censuses PASS. Trajectory ...→1→1→2. Convergence 0/3. Burst 90. |
 | Phase 1d pass 13 + fix burst (topology census) | adversary + BA | COMPLETE | Pass 13: NOT CLEAN — 1 HIGH (F-P13-01 bounded-contexts.md dependency diagram inverted SDK-split topology; self-contradicted own prose; NEW CLASS: L2-shard structural claims vs dependency-graph edge table). Topology census: 14 assertions, 2 FAIL + 1 MISSING (incl. false graph→checkpoint edge) — all fixed, 11 PASS. Sibling 4/4 + 3 rotated censuses PASS (lifecycle-arrow cluster CONVERGED). 2 LOW observations fixed. Trajectory ...→4→4→1→1. Convergence 0/3. New standing gate: domain-spec topology census. Burst 89. |
-| Phase 1d pass 12 + fix burst (arrow census) | adversary + PO | COMPLETE | Pass 12: NOT CLEAN — 1 HIGH multi-site cluster (F-P12-01: pass-11 fix keyed on 'terminal' keyword; 8 lifecycle-ARROW sites stale incl. entities-server source-of-truth + 2 'Canonical'-labeled). Full state-machine sweep: checkpoint/budget/circuit-breaker/graph all CONSISTENT (budget corroborates interrupted-pausable). Fixed 9 occurrences; arrow-census gate standing (16 hits PASS); title 3-way verbatim. Trajectory ...→4→4→1 — single root cause, decayed. Convergence 0/3. Burst 88. |
 
 ## Decisions Log
 
@@ -123,10 +123,10 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 16 (Phase 1d) |
-| Fix bursts completed | 16 (Phase 1d) |
+| Adversary passes completed | 17 (Phase 1d) |
+| Fix bursts completed | 17 (Phase 1d) |
 | Convergence counter | 0 of 3 (Phase 1d; pre-pipeline 3/3 CLOSED) |
-| Finding trajectory | (pre-pipeline) →1→1→0→0→1→2→0→1→1→0→0→1→0→0→0 (C23: CLEAN) ‖ (Phase 1d) →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) |
+| Finding trajectory | (pre-pipeline) →1→1→0→0→1→2→0→1→1→0→0→1→0→0→0 (C23: CLEAN) ‖ (Phase 1d) →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) |
 
 ## Session Resume Checkpoint
 
@@ -134,22 +134,22 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ### RESUME IN ONE BREATH
 
-ferrochain Phase 1d adversarial spec convergence: Pass 16 REMEDIATED — NOT CLEAN. 1 HIGH finding fixed (F-P16-01: NE-anchor four-way drift incl. BC-INDEX internal contradiction; 23 mismatches total). Fix closed the ENTIRE anchor-axis class: complete 86-BC × 6-axis matrix census (CAP/DI/NE/R/ADR/VP) — all axes exact post-fix. ne_anchor OPTIONAL-LEGACY policy codified (guideline #13). ADR-004 BC-2.08.009 forward-link added. ADV-P1D-PASS-16.md committed. Trajectory ...→1→1→2→1→1. Convergence 0/3. Burst 92.
+ferrochain Phase 1d adversarial spec convergence: Pass 17 REMEDIATED — NOT CLEAN. 1 MEDIUM finding fixed (F-P17-01: Kani harness named 5 ways across VP-INDEX / verification-architecture / BC-2.03.001 / nfr-catalog / bc-authoring-plan; NFR gate command cited nonexistent harness name). Fix: harness_fn registry column added to VP-INDEX; 10 sites reconciled to canon names (bsp_determinism_harness / session_tenancy_harness / workspace_confinement_harness per BC-2.17.001). Full 22-command executable-string census gated as standing gate #18 — last un-gated surface closed. NE-axis full rebuild + CAP/VP + 3 censuses ALL PASS on first run. Trajectory ...→2→1→1→1. Convergence 0/3. Burst 93.
 
 ### HEADS
 
 | Repo | Branch | SHA | Pushed | Notes |
 |------|--------|-----|--------|-------|
-| factory-artifacts | factory-artifacts | (burst 92 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
+| factory-artifacts | factory-artifacts | (burst 93 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
 | main | main | d018d3f | YES | CLAUDE.md + .gitignore committed (D10); develop initialized |
 
 No worktrees. No PRs. Reference clones (.reference/) gitignored.
 
 ### WORKSTREAM
 
-**Burst 92 COMPLETE.** Phase 1d pass 16: 1 HIGH fixed (F-P16-01: NE-anchor 23-mismatch four-way drift). Complete 86-BC × 6-axis anchor-matrix census (CAP/DI/NE/R/ADR/VP) — all axes exact. ne_anchor OPTIONAL-LEGACY policy codified. ADR-004 forward-link added. ADV-P1D-PASS-16.md committed. Trajectory ...→1→1→2→1→1.
+**Burst 93 COMPLETE.** Phase 1d pass 17: 1 MEDIUM fixed (F-P17-01: Kani harness 5-name inconsistency). harness_fn registry in VP-INDEX + 10 sites reconciled + 22-command executable-string census (standing gate #18). ADV-P1D-PASS-17.md committed. Trajectory ...→2→1→1→1.
 
-**RESUME NEXT-ACTION:** adversary pass 17 (fresh context): sibling-check pass-16 (anchor-matrix re-run on sampled axes), rotate 3 censuses, fresh-eyes + novel probe; anchor-axis class CLOSED — CLEAN advances 1/3.
+**RESUME NEXT-ACTION:** adversary pass 18 (fresh context): sibling-check pass-17 (harness_fn registry + string census re-run), rotate 3 censuses, fresh-eyes + novel probe of its choosing; ALL known surfaces gated (18) — CLEAN advances 1/3.
 
 ### PENDING HUMAN ACTIONS (open)
 
@@ -170,7 +170,7 @@ No worktrees. No PRs. Reference clones (.reference/) gitignored.
 |-------|-------|
 | **Date** | 2026-07-14 |
 | **Cycle** | v1.0.0-greenfield |
-| **Burst commit** | (burst 92 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Burst commit** | (burst 93 — run `git -C .factory log -1 --format='%h %s'`) |
 | **Convergence counter** | 0 of 3 (Phase 1d) |
 
 ## Historical Content

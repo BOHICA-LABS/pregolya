@@ -119,7 +119,7 @@ counter-example that this contract explicitly rejects.
 
 > **Kani VP Seed:** This BC is a Phase-6 Kani harness seed. The behavioral invariant
 > (identical inputs → identical state) must be encoded as the postcondition of the Kani
-> harness `verify_bsp_determinism`. The harness uses Kani's non-determinism (`kani::any()`)
+> harness `bsp_determinism_harness`. The harness uses Kani's non-determinism (`kani::any()`)
 > to model all possible task completion orderings. See BC-2.17.001 for harness scope.
 
 ## Related BCs

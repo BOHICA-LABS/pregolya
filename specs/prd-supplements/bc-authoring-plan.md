@@ -340,3 +340,12 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     Traceability (NE anchor row) + BC-INDEX NE Anchors column are the canonical carriers; do
     NOT add ne_anchor/ne_coverage frontmatter to new BCs. Source of truth: ADV-P1D-PASS-16.md
     §F-P16-01 + anchor-matrix reconciliation.
+14. **Harness-fn registry + executable-string census gate (added P17 — standing gate):**
+    VP-INDEX.md `harness_fn` column is the authoritative registry for Phase-6 `cargo kani --harness`
+    invocation identifiers. Any change to a VP harness function name MUST update VP-INDEX.md
+    `harness_fn` first, then propagate to: VP-NNN.md harness skeleton fn name, nfr-catalog.md
+    any `cargo kani --harness` command string, BC body Kani VP Seed notes, and
+    verification-architecture.md harness sketches. After any such change, run the full
+    executable-string census: `grep -rn "cargo kani --harness" .factory/specs/` and verify
+    every cited harness name matches a `harness_fn` value in VP-INDEX.md (or is a placeholder
+    `<harness_name>`). Source of truth: ADV-P1D-PASS-17.md §F-P17-01 + executable-string census.

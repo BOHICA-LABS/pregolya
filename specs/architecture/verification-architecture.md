@@ -40,7 +40,7 @@ on a `Future` will fail at verification time. Consequences:
 4. **Harness pattern for wrapped sync cores:**
    ```rust
    #[kani::proof]
-   fn bsp_determinism() {
+   fn bsp_determinism_harness() {
        // Call the sync reducer directly — no .await, no Tokio, no block_on needed
        let outputs: Vec<(TaskId, ChannelUpdate)> = kani::vec(kani::any::<usize>().min(4));
        assert_eq!(reduce_super_step(&outputs), reduce_super_step(&permute(&outputs)));
@@ -76,7 +76,7 @@ Formal statement: `∀ task_outputs: Vec<(TaskId, ChannelUpdate)>,
 Kani harness sketch:
 ```rust
 #[kani::proof]
-fn bsp_determinism() {
+fn bsp_determinism_harness() {
     let n: usize = kani::any();
     kani::assume(n <= 4); // bounded for model checking
     let outputs: Vec<(TaskId, ChannelUpdate)> = kani::vec(n);
@@ -100,7 +100,7 @@ Formal statement: `∀ s1 s2: SessionKey, s1 ≠ s2 → storage_address(s1) ≠ 
 Kani harness sketch:
 ```rust
 #[kani::proof]
-fn session_tenancy_partition() {
+fn session_tenancy_harness() {
     let s1: SessionKey = kani::any();
     let s2: SessionKey = kani::any();
     kani::assume(s1 != s2);
@@ -129,7 +129,7 @@ Formal statement: `∀ base: Path, path: Path,
 Kani harness sketch:
 ```rust
 #[kani::proof]
-fn workspace_confinement() {
+fn workspace_confinement_harness() {
     let base: PathBuf = kani::any_symbolic_path();
     let path: PathBuf = kani::any_symbolic_path();
     match canonicalize_beneath_root(&base, &path) {
