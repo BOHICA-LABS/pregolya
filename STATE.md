@@ -4,14 +4,14 @@ level: ops
 version: "2.5"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T17:00:00Z
+timestamp: 2026-07-14T18:00:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "Phase 1d pass 24 ready"
+current_step: "SESSION WRAP complete — Phase 1d pass 25 ready to dispatch"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -38,16 +38,16 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-14 — burst 99: Phase 1d pass 23 — HTTP endpoint canon (thread-nested runs, flat schedules). |
+| **Last Updated** | 2026-07-14 — burst 100: Phase 1d pass 24 — wire-object field-set census + SESSION WRAP. |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Phase 1d adversarial spec convergence — pass 23 remediated; pass 24 ready (0/3 passes clean; 23 standing gates; HTTP endpoint canon: runs thread-nested, schedules flat; 26-endpoint census all-indexed; status-code↔E-code census PASS) |
+| **Current Step** | Phase 1d adversarial spec convergence — pass 24 remediated + SESSION WRAP; pass 25 ready (0/3 passes clean; 25 standing gates; wire-object 21-row census PASS; E-SERVER-016 HTTP status row open probe for pass 25) |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -61,11 +61,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
+| Phase 1d pass 24 + fix burst + SESSION WRAP | adversary + PO + state-manager | COMPLETE | Pass 24: NOT CLEAN — 2 findings + 3 obs (wire-object field-set class: Run completed_at/updated_at three-way; status-code table E-SERVER exclusions; Thread.status/Assistant fields undefined in entity). ALL FIXED + full wire-object census 21 rows PASS (completed_at kept w/ terminal-only semantics; ThreadStatus enum defined). Open probe for pass 25: E-SERVER-016 missing HTTP status row. Trajectory 14→5→7→13→3→3→3→5→2→4→4→1→1→2→1→1→1→4→2→3→1→1→1→2. Convergence 0/3. Gates 25. Burst 100 (wrap). |
 | Phase 1d pass 23 + fix burst (HTTP endpoint canon) | adversary + PO | COMPLETE | Pass 23: NOT CLEAN — 1 HIGH (F-P23-01 server URL-scheme incoherence: thread-nested vs flat split through BC layer + both interface docs; NEW CLASS: HTTP endpoint coherence). CANON: runs thread-nested / schedules flat / one documented flat aggregate query. 10 files reconciled; 26-endpoint census all-indexed; status-code census PASS. Trajectory ...→1→1→1→1. Convergence 0/3. Burst 99. |
 | Phase 1d pass 22 + fix burst (reverse-anchor sweep) | adversary + PO | COMPLETE | Pass 22: NOT CLEAN — 1 HIGH (F-P22-01 pass-21 relocation left 16 P0 BCs with dangling capabilities-p1-p2 anchors — reverse-anchor dimension of the relocation; forward tier census was already converged 19/19). 16 files re-anchored (ss-10: 4, ss-11: 6, ss-14: 6), zero residue. Input-hashes refreshed. Trajectory ...→1→1→1. Convergence 0/3. Burst 98. |
 | Phase 1d pass 21 + fix burst (capability-tier census) | adversary + BA | COMPLETE | Pass 21: NOT CLEAN — 1 HIGH (F-P21-01 CAP-012/013/016 stuck P1/Wave-2 in L2 while D17 elevation made all constituent BCs P0; NEW CLASS: capability-tier ↔ BC-priority). Fixed + relocated + 19-CAP census drained (16/3/0). All other censuses + 3 novel probes PASS (inputs-arrays, holdout-vs-CAP, prose reads converged). Trajectory ...→3→1. Convergence 0/3. Gates 22. Burst 97. |
 | Phase 1d pass 20 + fix burst (E-code variant census) | adversary + PO | COMPLETE | Pass 20: NOT CLEAN — 3 findings (F-P20-01 CRIT E-GRAPH-003/E-CHKPT-003 collision residue on P0 HITL path [burst-77 sweep missed ss-05/ss-10] → E-GRAPH-016/E-CHKPT-006 minted; F-P20-02 MED Checkpointer straggler; F-P20-03 gate widenings §15/§16). Full 86-BC code↔variant census: 40 pairings, zero residue beyond the 6. Trajectory ...→2→3. Convergence 0/3. Gates 21. Burst 96. |
-| Phase 1d pass 19 + fix burst (census scope widened) | adversary + PO | COMPLETE | Pass 19: NOT CLEAN — 2 findings, both pass-18-remedy residue (F-P19-01 HIGH 3 AiMessage sites outside census scope; F-P19-02 MED gate-#19 scope hole → widened to all specs/, 6 hits all exempt). Shared-type canon otherwise fully CLEAN in-scope. Trajectory ...→1→4→2. Convergence 0/3. Burst 95. |
 
 ## Decisions Log
 
@@ -123,10 +123,10 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 23 (Phase 1d) |
-| Fix bursts completed | 23 (Phase 1d) |
+| Adversary passes completed | 24 (Phase 1d) |
+| Fix bursts completed | 24 (Phase 1d) |
 | Convergence counter | 0 of 3 (Phase 1d; pre-pipeline 3/3 CLOSED) |
-| Finding trajectory | (pre-pipeline) →1→1→0→0→1→2→0→1→1→0→0→1→0→0→0 (C23: CLEAN) ‖ (Phase 1d) →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) |
+| Finding trajectory | (pre-pipeline) →1→1→0→0→1→2→0→1→1→0→0→1→0→0→0 (C23: CLEAN) ‖ (Phase 1d) →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) |
 
 ## Session Resume Checkpoint
 
@@ -134,35 +134,22 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ### RESUME IN ONE BREATH
 
-ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLEAN. 1 finding: F-P23-01 HIGH HTTP endpoint URL-scheme incoherence (8 files used flat /runs/... paths; CANON = runs thread-nested /threads/{thread_id}/runs/...; schedules flat /schedules/{cron_id}; GET /runs?schedule_id= only intentional flat run path [cross-thread aggregate]; NEW CLASS: HTTP endpoint coherence). 10 files fixed (BC-2.12.004/006/007, BC-2.05.005/006, edge-cases, interface-definitions, api-surface, prd §3, bc-authoring-plan); 26-endpoint census all-indexed; status-code↔E-code census PASS w/ 1 fix (409→422 for E-GRAPH-002). Guideline #17 added. Trajectory ...→1→1→1→1. Convergence 0/3. Gates 23. Burst 99.
+"ferrochain Phase 1 spec crystallization, step 1d adversarial convergence IN PROGRESS: 24 passes / 24 fix bursts, finding trajectory decayed 14→...→1→1→1→2 (every pass now finds only the prior fix's residue or one new axis, immediately gated — 25 standing census gates). Counter 0/3 (strict-zero D14). NEXT ACTION: dispatch adversary pass 25 — fresh context, sibling-check pass-24 (wire-object census re-run + E-SERVER-016 missing HTTP status row open probe), rotate 4 censuses, free-choice probe; CLEAN advances counter 1/3; loop per D15 until 3/3, then input-hash drift check (/vsdd-factory:check-input-drift) then Phase 1 human approval gate."
 
 ### HEADS
 
-| Repo | Branch | SHA | Pushed | Notes |
-|------|--------|-----|--------|-------|
-| factory-artifacts | factory-artifacts | (burst 99 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
-| main | main | d018d3f | YES | CLAUDE.md + .gitignore committed (D10); develop initialized |
+- factory-artifacts: `4ec8131` (burst 99 pre-wrap HEAD; burst 100 becomes HEAD after this commit)
+- main: `d018d3f` (=develop, pushed BOHICA-LABS/ferrochain; CI green; branch protection on)
 
-No worktrees. No PRs. Reference clones (.reference/) gitignored.
+No worktrees. No PRs. verify-sha-currency PASS.
 
-### WORKSTREAM
+### WORKSTREAM: single — Phase 1d convergence loop. Frozen: spec package = brief v1.1 + domain-spec 15 shards (14 FMs, 11 P0 CAPs) + prd + 6 supplements + 86 BCs (ss-01..17) + ARCH-INDEX + 8 sections + 11 ADRs + VP-INDEX (5 VPs, harness_fn registry) + module-criticality. All 24 pass reports in cycles/v1.0.0-greenfield/adversarial-reviews/. Adversary dispatch template: see RESUME NEXT-ACTION in any recent pass (fresh context, strict-zero, sibling-check + rotate censuses + novel probe, findings INLINE [adversary is read-only — fixer persists report]).
 
-**Burst 99 COMPLETE.** Phase 1d pass 23: 1 finding fixed (F-P23-01 HIGH HTTP endpoint URL-scheme incoherence; NEW CLASS: HTTP endpoint coherence). CANON: runs thread-nested /threads/{thread_id}/runs/...; schedules flat; GET /runs?schedule_id= only intentional flat run path. 10 files reconciled; 26-endpoint census all-indexed; status-code census PASS. Trajectory ...→1→1→1→1.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) REGENERATE + run .factory/namespace-reservation/publish-all.sh for ALL 18 crates (script predates sandbox/memory/macros/-sdk) — R6 time-sensitive; (3) langgraph crate 0.2.5 competitor watch (R4 reframed).
 
-**RESUME NEXT-ACTION:** adversary pass 24 (fresh context): sibling-check pass-23 (endpoint census re-run + status-code census re-run), rotate 4 standing censuses, probe: request/response JSON schema coherence vs BC postconditions (telegraphed sub-axis from pass 23) or free choice.
+### DECISION DELTA (this session, all recorded): D17 hybrid outcome + Q2-Q9 (Decisions Log); D9 gate Alt B (ADR-001); phase-1d spec canons: E-code namespaces + tombstones, run state machine (queued→in_progress→completed|failed|cancelled, interrupted pausable), type names CheckpointSaver/RunnableConfig/AiMessage, URL scheme (thread-nested runs/flat schedules), completed_at terminal-only semantics, capability tiers 11/5/3 — all in ADRs/taxonomy/pass reports.
 
-### PENDING HUMAN ACTIONS (open)
-
-1. `direnv allow .` (B1 — Low, blocks key loading)
-2. `cargo login` + regenerate + run `.factory/namespace-reservation/publish-all.sh` — R6 STILL OPEN. IMPORTANT: publish-all.sh predates sandbox/memory/macros/-sdk additions — MUST BE REGENERATED for all 18 crates before running.
-
-### STANDING DIRECTIVES
-
-| ID | Directive |
-|----|-----------|
-| D15 | Autonomous loop, never ask to continue — "Keep going until you hit convergence protocol." |
-| D14 | Absolute strict-zero: CLEAN(strict) = zero findings; 3 consecutive required |
-| D17 | HYBRID outcome adopted — LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns |
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
 
 ### WRAP METADATA
 
@@ -170,7 +157,7 @@ No worktrees. No PRs. Reference clones (.reference/) gitignored.
 |-------|-------|
 | **Date** | 2026-07-14 |
 | **Cycle** | v1.0.0-greenfield |
-| **Burst commit** | (burst 99 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Burst commit** | burst 100 (run `git -C .factory log -1 --format='%h %s'`) |
 | **Convergence counter** | 0 of 3 (Phase 1d) |
 
 ## Historical Content

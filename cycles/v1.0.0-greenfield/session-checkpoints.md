@@ -311,3 +311,15 @@ ferrochain Phase 1d adversarial spec convergence: Pass 20 REMEDIATED — NOT CLE
 **WORKSTREAM (at time of archival):** Burst 96 COMPLETE. Phase 1d pass 20: 3 findings fixed (F-P20-01 CRIT 6 collision sites E-GRAPH-003→E-GRAPH-016 / E-CHKPT-003→E-CHKPT-006; F-P20-02 MED BC-2.04.001:47 Checkpointer→CheckpointSaver; F-P20-03 gate §15 widened + §16 added). ADV-P1D-PASS-20.md committed. Full 40-pairing census zero residue. Trajectory ...→2→3.
 
 **WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 96 | Counter: 0/3
+
+---
+
+### Archived Checkpoint — Burst 99 (Pass 23)
+
+ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLEAN. 1 finding: F-P23-01 HIGH HTTP endpoint URL-scheme incoherence (8 files used flat /runs/... paths; CANON = runs thread-nested /threads/{thread_id}/runs/...; schedules flat /schedules/{cron_id}; GET /runs?schedule_id= only intentional flat run path [cross-thread aggregate]; NEW CLASS: HTTP endpoint coherence). 10 files fixed (BC-2.12.004/006/007, BC-2.05.005/006, edge-cases, interface-definitions, api-surface, prd §3, bc-authoring-plan); 26-endpoint census all-indexed; status-code↔E-code census PASS w/ 1 fix (409→422 for E-GRAPH-002). Guideline #17 added. Trajectory ...→1→1→1→1. Convergence 0/3. Gates 23. Burst 99.
+
+**WORKSTREAM (at time of archival):** Burst 99 COMPLETE. Phase 1d pass 23: 1 finding fixed (F-P23-01 HIGH HTTP endpoint URL-scheme incoherence; NEW CLASS: HTTP endpoint coherence). CANON: runs thread-nested /threads/{thread_id}/runs/...; schedules flat; GET /runs?schedule_id= only intentional flat run path. 10 files reconciled; 26-endpoint census all-indexed; status-code census PASS. Trajectory ...→1→1→1→1.
+
+**RESUME NEXT-ACTION (at time of archival):** adversary pass 24 (fresh context): sibling-check pass-23 (endpoint census re-run + status-code census re-run), rotate 4 standing censuses, probe: request/response JSON schema coherence vs BC postconditions.
+
+**WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 99 | Counter: 0/3

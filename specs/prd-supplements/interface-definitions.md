@@ -203,11 +203,11 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 | 400 | Validation error | E-CORE-001 through E-CORE-005 |
 | 401 | Authentication required | E-SERVER-004 |
 | 403 | Policy enforcement (CORS, debug route) | E-SERVER-004, E-SERVER-005 |
-| 404 | Resource not found | E-SERVER-002, E-SERVER-003 |
-| 409 | Conflict (duplicate resource) | E-SERVER-* |
-| 422 | Semantic validation failure | E-GRAPH-*, E-CHKPT-* |
+| 404 | Resource not found | E-SERVER-002 (RunNotFound), E-SERVER-003 (ThreadNotFound), E-SERVER-006 (ScheduleNotFound), E-SERVER-009 (AssistantNotFound — direct resource lookup), E-SERVER-010 (AssistantVersionNotFound) |
+| 409 | Conflict (duplicate resource or state conflict) | E-SERVER-007 (ThreadAlreadyExists), E-SERVER-008 (ThreadStateConflict), E-SERVER-012 (ConcurrentRun), E-SERVER-015 (RunAlreadyExecuting) |
+| 422 | Semantic validation failure (VAL-category on body content) | E-GRAPH-*, E-CHKPT-*, E-SERVER-009 (AssistantNotFound in run body — invalid assistant_id reference at run creation; context-dependent: same code, 404 at direct lookup), E-SERVER-011 (GraphNotFound — graph_id in assistant body not registered) |
 | 429 | Rate limited | E-PROV-001 |
-| 500 | Internal error | E-GRAPH-006, E-CHKPT-* |
+| 500 | Internal error | E-GRAPH-006, E-CHKPT-*, E-SERVER-014 (RunStoreFailed) |
 
 **BC anchor:** BC-2.12.001 through BC-2.12.007
 
@@ -217,7 +217,7 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["run_id", "thread_id", "assistant_id", "status", "created_at"],
+  "required": ["run_id", "thread_id", "assistant_id", "status", "created_at", "updated_at"],
   "properties": {
     "run_id": { "type": "string", "description": "Monotonic logical run identifier" },
     "thread_id": { "type": "string" },
@@ -228,7 +228,8 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
       "description": "Run state machine: queued → in_progress → completed | failed | cancelled; in_progress ⇄ interrupted (resume via POST .../resume). Authority: BC-2.12.003 PC7-PC9. multitask_strategy='enqueue' creates the new run in 'queued' state; it transitions to 'in_progress' after the current run finishes. Use POST .../cancel to transition queued/in_progress→cancelled."
     },
     "created_at": { "type": "string", "format": "date-time" },
-    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time", "description": "Set on every Run state mutation (status transition, output/error write). Always present. Authority: BC-2.12.003 PC13." },
+    "completed_at": { "type": ["string", "null"], "format": "date-time", "description": "Set only on terminal transition (status → completed | failed | cancelled). Null in all non-terminal states (queued, in_progress, interrupted). Distinct from updated_at — terminal-timestamp semantics. Authority: F-P24-01." },
     "output": { "description": "Final graph state; present only when status=completed" },
     "error": {
       "type": ["object", "null"],

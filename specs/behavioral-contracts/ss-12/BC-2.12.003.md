@@ -96,7 +96,10 @@ LangGraph Platform (D13).
 
 ### Read Run (`GET /threads/{thread_id}/runs/{run_id}`)
 
-13. Returns `Run { run_id, thread_id, assistant_id, status, output?, error?, created_at, updated_at }`.
+13. Returns `Run { run_id, thread_id, assistant_id, status, output?, error?, created_at, updated_at, completed_at? }`.
+    `updated_at` is set on every state mutation. `completed_at` is set only on terminal
+    transition (status → `completed` | `failed` | `cancelled`); it is `null` in all
+    non-terminal states (`queued`, `in_progress`, `interrupted`). Authority: F-P24-01.
 14. Returns HTTP 404 with `{ code: "E-SERVER-002", message: "RunNotFound: run '<run_id>' does not exist in thread '<thread_id>'" }` if not found.
 15. A completed Run carries `output: GraphOutput` (the final state values).
 16. A failed Run carries `error: { code, message, component, category }` from the

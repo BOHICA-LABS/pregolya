@@ -762,3 +762,19 @@ Phase 1d pass 15 + fix burst (ADR anchor sweep) | adversary + architect | COMPLE
 **Archived from Current Phase Steps (burst 99 rotation — last-5 window):**
 
 | Phase 1d pass 18 + fix burst (shared-type canon) | adversary + BA + PO + architect | COMPLETE | Pass 18: NOT CLEAN — 4 findings (F-P18-01 HIGH layer-correlated type-name splits CheckpointSaver/Store + RunnableConfig/RunConfig — would fail Phase-3 integration; NEW CLASS: shared Rust type identifiers; F-P18-02/03 MED casing + nonexistent variants). CANON: CheckpointSaver + RunnableConfig (upstream LangChain names, D17 fidelity). 3-layer parallel propagation; 26-type census ALL OK; retired spellings 0. Trajectory ...→1→1→1→4. Convergence 0/3. Gates now 19. Burst 94. |
+
+### Archived Step Row — Burst 95 (Pass 19)
+
+**Archived from Current Phase Steps (burst 100 rotation — last-5 window):**
+
+| Phase 1d pass 19 + fix burst (census scope widened) | adversary + PO | COMPLETE | Pass 19: NOT CLEAN — 2 findings, both pass-18-remedy residue (F-P19-01 HIGH 3 AiMessage sites outside census scope; F-P19-02 MED gate-#19 scope hole → widened to all specs/, 6 hits all exempt). Shared-type canon otherwise fully CLEAN in-scope. Trajectory ...→1→4→2. Convergence 0/3. Burst 95. |
+
+### Burst 100 Narrative — Pass 24 + Fix Burst + SESSION WRAP
+
+**Date:** 2026-07-14
+**Agents:** adversary + PO + state-manager
+**Files touched:** specs/architecture/api-surface.md, specs/behavioral-contracts/ss-12/BC-2.12.003.md, specs/domain-spec/entities-server.md, specs/prd-supplements/bc-authoring-plan.md, specs/prd-supplements/interface-definitions.md, cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-24.md, STATE.md
+
+**Summary:** Pass 24 NOT CLEAN — 2 findings + 3 observations (wire-object field-set class: Run completed_at/updated_at terminal-only semantics three-way inconsistency; status-code table E-SERVER exclusions missing; Thread.status/ThreadStatus enum undefined in entities-server; Assistant fields undefined). ALL FIXED: (1) interface-definitions Run schema updated_at + completed_at semantics annotated (terminal-only); (2) entities-server Thread.status + ThreadStatus enum added + Assistant fields defined + Run completed_at + CronSchedule last_fired_at added; (3) BC-2.12.003 PC13 wire-object completeness obligation added; (4) api-surface {cron_id} ×3 path params added; (5) bc-authoring-plan 17C fix + gate #18 wire-object census. Full 21-row wire-object census: PASS. Open probe for pass 25: E-SERVER-016 missing HTTP status row. New census gates: 25 total. Trajectory ...→1→1→1→2. Convergence 0/3. Burst 100 (SESSION WRAP).
+
+**State changes:** convergence passes 23→24, fix bursts 23→24, trajectory →2 (P1D-24), session checkpoint replaced (burst 99 archived), step row pass 19 archived.

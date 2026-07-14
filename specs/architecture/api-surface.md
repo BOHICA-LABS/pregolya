@@ -90,9 +90,9 @@ Base URL: configurable; no default port mandated.
 | POST | `/threads/{thread_id}/runs/{run_id}/cancel` | Cancel queued/in_progress run (→ cancelled) | BC-2.12.003 |
 | DELETE | `/threads/{thread_id}/runs/{run_id}` | Delete terminal run record (409 if non-terminal) | BC-2.12.003 |
 | POST | `/schedules` | Create cron schedule (assistant-owned; flat path) | BC-2.12.004 |
-| GET | `/schedules/{schedule_id}` | Read schedule (enabled state, last_fired_at) | BC-2.12.004 |
-| PATCH | `/schedules/{schedule_id}` | Enable/disable schedule (`{ "enabled": false }`) | BC-2.12.004 |
-| DELETE | `/schedules/{schedule_id}` | Delete schedule; halts future firings | BC-2.12.004 |
+| GET | `/schedules/{cron_id}` | Read schedule (enabled state, last_fired_at) | BC-2.12.004 |
+| PATCH | `/schedules/{cron_id}` | Enable/disable schedule (`{ "enabled": false }`) | BC-2.12.004 |
+| DELETE | `/schedules/{cron_id}` | Delete schedule; halts future firings | BC-2.12.004 |
 | GET | `/runs?schedule_id={cron_id}` | Cross-thread aggregate: list all Runs for a schedule (read-only; flat) | BC-2.12.004 |
 
 **URL scheme (F-P23-01):** Runs are thread-nested (`/threads/{thread_id}/runs/...`). Schedules are

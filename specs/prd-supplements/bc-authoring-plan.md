@@ -416,8 +416,9 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | 404 | E-SERVER-006 ScheduleNotFound | BC-2.12.004 EC-005 | PASS |
     | 409 | E-SERVER-012 ConcurrentRun | BC-2.12.003 EC-002 | PASS |
     | 409 | E-SERVER-015 RunAlreadyExecuting | BC-2.12.007 TV-006 | PASS |
-    | 409 | E-GRAPH-002 NoActiveInterrupt (state conflict) | BC-2.05.005 TV-003 | PASS (409 = state conflict; consistent with REST semantics) |
-    | 422 | E-SERVER-* (semantic validation) | BC-2.12.003 PC3 | PASS |
+    | 422 | E-GRAPH-002 NoActiveInterrupt | BC-2.05.005 TV-003 | PASS (fixed P23: E-GRAPH-* → 422 per interface-definitions.md; prior 409 entry retired) |
+    | 422 | E-SERVER-009 (AssistantNotFound in run body) | BC-2.12.003 PC3 | PASS (context-dependent: 422 in run creation body; 404 at direct assistant lookup) |
+    | 422 | E-SERVER-011 (GraphNotFound in assistant body) | BC-2.12.002 EC-005 | PASS |
     | 429 | E-PROV-001 | interface-definitions.md | PASS |
     | 500 | E-SERVER-014 RunStoreFailed | BC-2.12.006 EC-004 | PASS |
     | 204 | DELETE success (no body) | BC-2.12.004 PC5, EC-005 | PASS |
@@ -438,3 +439,59 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     `E-CHKPT-001`) are permitted — only named pairings are checked. Retired codes (~~strikethrough~~
     in taxonomy) must not appear in non-~~strikethrough~~ BC text.
     Source of truth: ADV-P1D-PASS-20.md §F-P20-03.
+
+18. **Wire-object field-set coherence census gate (added P24 — standing gate):**
+    After any BC authoring or fix burst that introduces, modifies, or removes a field on a
+    wire-visible object (Run, Thread, Assistant, CronSchedule, Resume request, or any new
+    server resource), run the three-way field-set census: `interface-definitions.md` JSON schema
+    ↔ `entities-server.md` entity fields ↔ every BC postcondition / test vector that returns or
+    consumes the object. All three must agree; the BCs are authoritative.
+
+    **Canonical field-set table (as of F-P24-01):**
+
+    | Object | Field | schema (iface-def) | entity (entities-server) | BC PC/TV | Verdict |
+    |--------|-------|-------------------|--------------------------|----------|---------|
+    | Run | run_id | required | YES | PC5, PC13 | PASS |
+    | Run | thread_id | required | YES | PC5, PC13 | PASS |
+    | Run | assistant_id | required | YES | PC5, PC13 | PASS |
+    | Run | status | required | YES (RunStatus) | PC5, PC13 | PASS |
+    | Run | created_at | required | YES | PC5, PC13 | PASS |
+    | Run | updated_at | required (added F-P24-01) | YES | PC13 | PASS |
+    | Run | completed_at | nullable (added F-P24-01) | YES (Option<Timestamp>) | PC13 | PASS |
+    | Run | output | conditional (status=completed) | YES (Option<Value>) | PC15 | PASS |
+    | Run | error | conditional (status=failed) | implicit via FerrochainError | PC16 | PASS |
+    | Run | interrupt | conditional (status=interrupted) | Interrupt entity (separate) | PC9 | PASS (flattened) |
+    | Thread | thread_id | no JSON schema | YES | PC5 | NOTE: no explicit JSON schema; entity + BC suffice |
+    | Thread | metadata | — | YES | PC1 | PASS |
+    | Thread | created_at | — | YES | PC5 | PASS |
+    | Thread | updated_at | — | YES | PC5 | PASS |
+    | Thread | status | — | YES (ThreadStatus; added F-P24-01) | PC5 | PASS |
+    | Assistant | assistant_id | no JSON schema | YES | PC4 | PASS |
+    | Assistant | graph_id | — | YES | PC4 | PASS |
+    | Assistant | config | — | YES | PC4 | PASS |
+    | Assistant | context | — | YES (Option<Value>; added F-P24-01) | PC4 | PASS |
+    | Assistant | metadata | — | YES | PC4 | PASS |
+    | Assistant | name | — | YES (Option<String>; added F-P24-01) | PC4 | PASS |
+    | Assistant | description | — | YES (Option<String>; added F-P24-01) | PC4 | PASS |
+    | Assistant | version | — | YES (u32; added F-P24-01) | PC4 | PASS |
+    | Assistant | created_at | — | YES (added F-P24-01) | PC4 | PASS |
+    | CronSchedule | cron_id | path param `{cron_id}` | YES | PC1, PC3 | PASS |
+    | CronSchedule | assistant_id | — | YES | PC1 | PASS |
+    | CronSchedule | schedule | — | YES (CronExpression) | PC1 | PASS |
+    | CronSchedule | config | — | YES | PC4 (input) | PASS |
+    | CronSchedule | enabled | GET response | YES | PC4 | PASS |
+    | CronSchedule | last_fired_at | GET response | YES (Option<Timestamp>; added F-P24-01) | PC3 | PASS |
+    | ResumeRequest | resume_value | required | N/A (request body) | BC-2.05.004 | PASS |
+    | ResumeRequest | approver_id | optional | N/A | BC-2.05.004 | PASS |
+
+    **Census trigger:** any change to a BC postcondition or test vector that adds, renames, or
+    removes a field on a wire-visible object MUST propagate to (a) the `interface-definitions.md`
+    JSON schema for that object (if one exists), (b) the `entities-server.md` entity field list,
+    and (c) all other BCs that return or consume that same object. Three-way consistency is
+    required before the fix burst closes.
+
+    **Quick check command (Run object schema):**
+    `grep -n "updated_at\|completed_at" .factory/specs/prd-supplements/interface-definitions.md .factory/specs/domain-spec/entities-server.md .factory/specs/behavioral-contracts/ss-12/BC-2.12.003.md`
+    Both `updated_at` and `completed_at` must appear in all three files.
+
+    Source of truth: ADV-P1D-PASS-24.md §WIRE-OBJECT class.

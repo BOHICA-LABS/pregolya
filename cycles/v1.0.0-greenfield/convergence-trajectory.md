@@ -29,10 +29,11 @@ traces_to: STATE.md
 | P1D-13 | 2026-07-14 | 1 | 0 | 1 | 0 | 2 | LOW | 0/3 | FINDINGS_REMAIN (topology census — all fixed this pass) |
 | P1D-14 | 2026-07-14 | 2 | 0 | 1 | 1 | 0 | LOW | 0/3 | FINDINGS_REMAIN (bidirectional anchor audit; VP-label bridge) |
 | P1D-23 | 2026-07-14 | 1 | 0 | 1 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (HTTP endpoint coherence; NEW CLASS) |
+| P1D-24 | 2026-07-14 | 2 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (wire-object field-set: Run completed_at/updated_at semantics; ThreadStatus enum; NEW CLASS: wire-object completeness) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24)`
 
 ## Per-Pass Details
 
@@ -242,4 +243,19 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Fix summary:** F-P22-01 HIGH — pass-21 relocation of CAP-012/013/016 to capabilities-p0.md covered the forward dimension (L2-INDEX CAP tier) but the 16 constituent P0 BCs across ss-10 (×4), ss-11 (×6), ss-14 (×6) still held traces_to/inputs/justification anchors pointing at capabilities-p1-p2.md. Reverse-anchor grep confirmed all 16 sites; each BC re-anchored to capabilities-p0.md; input-hashes refreshed (all 16 STALE→UPDATED, 0 FAILED). Zero residue confirmed: `grep -r "capabilities-p1-p2" .factory/specs/behavioral-contracts/ss-10 ss-11 ss-14` = empty.
 **New standing gates:** reverse-anchor sweep (trigger: any CAP relocation between capabilities-p0/p1-p2/p2 files; command: grep all BC files for the old anchor path in both traces_to and inputs fields)
 **Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1→1→2→1→1→1→4→2→3→1→1
+**Counter:** 0/3
+
+---
+
+### Pass P1D-24 Details
+
+**Date:** 2026-07-14
+**Verdict:** NOT CLEAN — 2 findings + 3 observations (0 CRIT, 1 HIGH, 1 MED, 0 LOW)
+**Findings delta:** +1 vs pass 23 (1→2); NEW CLASS: wire-object completeness
+**Axes rotated:** wire-object field-set census (NEW CLASS: interface-definitions ↔ entities-server ↔ BCs three-way); status-code table E-SERVER exclusions; Thread.status/ThreadStatus enum presence; api-surface {cron_id} path params; bc-authoring-plan gate #18 wire-object
+**Fix summary:** (1) F-P24-01 HIGH — Run completed_at/updated_at semantics three-way inconsistency: interface-definitions had `updated_at` as "last state transition timestamp" (wrong — that is completed_at's role); `completed_at` terminal-only semantics not annotated. Fixed: interface-definitions Run schema annotated (`updated_at` = last activity; `completed_at` = terminal states only, null while in-progress); entities-server Run struct completed_at field added with terminal-only semantics note. (2) F-P24-02 MED — Thread.status/ThreadStatus enum undefined in entities-server; Assistant fields not present; CronSchedule last_fired_at missing. Fixed: entities-server Thread.status: ThreadStatus added; ThreadStatus enum defined (idle/busy/interrupted); Assistant struct fields defined; CronSchedule last_fired_at added. (3) OBS-01 — BC-2.12.003 lacked wire-object completeness postcondition → PC13 added. (4) OBS-02 — api-surface {cron_id} path params missing in 3 endpoint rows → added. (5) OBS-03 — bc-authoring-plan gate 17C fix + gate #18 wire-object census added.
+**Full wire-object census (21 rows):** PASS. Run/Thread/Assistant/CronSchedule/Message/ToolCall/ToolResult/Checkpoint all covered.
+**Open probe for pass 25:** E-SERVER-016 HTTP status row missing from status-code table (observed but not gated yet).
+**New standing gates:** wire-object census gate (gate #18; trigger: any new entity field addition; command: three-way cross-check interface-definitions ↔ entities-server ↔ BC wire-object postconditions).
+**Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1→1→2→1→1→1→4→2→3→1→1→1→2
 **Counter:** 0/3

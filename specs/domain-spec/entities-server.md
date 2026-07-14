@@ -27,26 +27,31 @@ decisions: [D11, D13, D17]
 
 ### Thread
 A named, durable sequence of checkpoints representing one conversation or pipeline run lineage.
-- **Fields:** thread_id: Uuid, metadata: Map<String, Value>, created_at: Timestamp, updated_at: Timestamp
+- **Fields:** thread_id: Uuid, metadata: Map<String, Value>, created_at: Timestamp, updated_at: Timestamp, status: ThreadStatus
+- **ThreadStatus:** `idle` (no active run on this thread), `busy` (a run is queued or in_progress on this thread), `interrupted` (the most recent active run is interrupted; awaiting HITL resume), `error` (the most recent run failed and no other run is active). Derived from the state of the most recent active Run on the thread. Source: BC-2.12.001 PC5.
 - **Relationships:** Thread 1→N Run. Thread 1→N Checkpoint (via thread_id in CheckpointSaver).
 - **Note:** Corresponds to LangGraph Platform "thread." All Runs sharing a Thread share a checkpoint history.
 
 ### Assistant
 A named agent configuration hosted by ferrochain-server.
-- **Fields:** assistant_id: Uuid, graph_id: GraphId (references a registered CompiledGraph), config: RunnableConfig, metadata: Map<String, Value>
+- **Fields:** assistant_id: Uuid, graph_id: GraphId (references a registered CompiledGraph), config: RunnableConfig, context: Option<Value>, metadata: Map<String, Value>, name: Option<String>, description: Option<String>, version: u32, created_at: Timestamp
+- **version semantics:** Starts at 1. Each `PATCH` creates a new immutable version snapshot (N+1); the `latest` pointer is mutable. Source: BC-2.12.002 PC3/PC10.
 - **Relationships:** Assistant 1→N Run.
 - **Note:** No wire compatibility with LangGraph Platform (D13). ferrochain-server is first-party.
 
 ### Run
 A single execution of an Assistant with a Thread.
-- **Fields:** run_id: Uuid, thread_id: Uuid, assistant_id: Uuid, status: RunStatus, config: RunnableConfig, created_at, updated_at, output: Option<Value>
+- **Fields:** run_id: Uuid, thread_id: Uuid, assistant_id: Uuid, status: RunStatus, config: RunnableConfig, created_at: Timestamp, updated_at: Timestamp, completed_at: Option<Timestamp>, output: Option<Value>
+- **updated_at semantics:** Set on every state mutation (status transition, output/error write). Always present. Source: BC-2.12.003 PC13.
+- **completed_at semantics:** Set only on terminal transition (to `completed`, `failed`, or `cancelled`); `None` in non-terminal states (`queued`, `in_progress`, `interrupted`). Operationally distinct from updated_at — provides a clean terminal-timestamp without noise from intermediate mutations. Source: F-P24-01.
 - **RunStatus lifecycle:** queued → in_progress → completed | failed | cancelled; in_progress ⇄ interrupted (resume via POST .../resume)
   (F-03 alignment: `requires_action` renamed to `interrupted` for HITL-parked runs; `expired` deferred — v1.0.0 uses `failed` with E-GRAPH-014 InterruptApprovalTimeout for timeout-expired runs; a dedicated `expired` state may be added in a future version)
 - **Relationships:** Run belongs-to Thread and Assistant. Run 1→N StreamEvent emitted. Run 0→N Interrupt.
 
 ### CronSchedule
 A recurring proactive run trigger registered on an Assistant.
-- **Fields:** cron_id: Uuid, assistant_id: Uuid, schedule: CronExpression, config: RunnableConfig, enabled: bool
+- **Fields:** cron_id: Uuid, assistant_id: Uuid, schedule: CronExpression, config: RunnableConfig, enabled: bool, last_fired_at: Option<Timestamp>
+- **last_fired_at semantics:** Set when the most recent schedule firing completes Run creation; `None` until the first firing. Exposed in `GET /schedules/{cron_id}` response per BC-2.12.004 PC3.
 - **Behavior:** Each firing creates a new Run with a fresh session (no prior thread context unless explicitly configured). Corresponds to LangGraph Platform "crons."
 
 ### Interrupt
