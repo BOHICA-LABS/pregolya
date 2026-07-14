@@ -145,7 +145,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
 | BC-2.01.001 | Typed ContentBlock sequence construction (no raw content where typed expected) | P0 | DI-008 | ss-01/BC-2.01.001.md |
-| BC-2.01.002 | Message type-safety (AIMessage/HumanMessage/SystemMessage/ToolMessage) | P0 | DI-008 | ss-01/BC-2.01.002.md |
+| BC-2.01.002 | Message type-safety (AiMessage/HumanMessage/SystemMessage/ToolMessage) | P0 | DI-008 | ss-01/BC-2.01.002.md |
 | BC-2.01.003 | Runnable trait invocation — invoke, stream, batch | P0 | — | ss-01/BC-2.01.003.md |
 | BC-2.01.004 | Runnable pipe composition (A \| B = AB chain) | P0 | — | ss-01/BC-2.01.004.md |
 

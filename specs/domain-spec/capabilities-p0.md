@@ -28,7 +28,7 @@ Each capability is grounded in the product brief. IDs are stable from this spec 
 
 ### CAP-001: Type-Safe Message and Content Primitive Construction
 
-Construct typed messages (AIMessage, HumanMessage, SystemMessage, ToolMessage) whose content
+Construct typed messages (AiMessage, HumanMessage, SystemMessage, ToolMessage) whose content
 is a sequence of typed ContentBlocks (text, image_url, tool_use, tool_result, document).
 Guarantee that no caller can observe raw untyped content where a typed variant is expected.
 

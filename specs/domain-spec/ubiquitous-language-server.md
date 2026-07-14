@@ -124,7 +124,7 @@ not retriable.
 | `BaseCheckpointSaver` | CheckpointSaver | name preserved from LangGraph BaseCheckpointSaver; same interface |
 | `RunnableConfig` | RunnableConfig | name preserved; no rename |
 | `BaseMessage` | Message | Renamed; ContentBlock replaces raw string content |
-| `HumanMessage`, `AIMessage`, `SystemMessage`, `ToolMessage` | Message { role: Human | AI | System | Tool } | Variant instead of subclass |
+| `HumanMessage`, `AIMessage`, `SystemMessage`, `ToolMessage` | Message enum: Ai(AiMessage) | Human(HumanMessage) | System(SystemMessage) | Tool(ToolMessage) | Variant instead of subclass |
 | `ToolCall` / `ToolMessage` | ContentBlock::ToolCall / ToolMessage | Typed ContentBlock variants; tool-result: ToolMessage per BC-2.09.002 |
 | `BaseException` hierarchy | FerrochainError 2D struct | Different structure; adk-rust P-01/P-04 adopted (CONFLICT-6) |
 | Thread (LangGraph Platform) | Thread | Same concept; no wire compat with Platform |

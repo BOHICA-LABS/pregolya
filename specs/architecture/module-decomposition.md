@@ -29,7 +29,7 @@ credential security primitives, streaming event types.
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
 | `core::runnable` | `Runnable<I,O>` trait + `RunnableSequence` pipe combinator | HIGH | SS-01 |
-| `core::message` | `Message` enum (AIMessage/HumanMessage/SystemMessage/ToolMessage), ContentBlock | CRITICAL | SS-01 |
+| `core::message` | `Message` enum (AiMessage/HumanMessage/SystemMessage/ToolMessage), ContentBlock | CRITICAL | SS-01 |
 | `core::error` | `FerrochainError` 2D struct (Component × Category), RFC-7807 emission | CRITICAL | SS-14 |
 | `core::credentials` | API key newtypes with redacted Debug; no Serialize; no Deref<Target=str> | CRITICAL | SS-14 |
 | `core::events` | Streaming event taxonomy types (RunStarted/Ended, NodeStarted/Ended, etc.) | HIGH | SS-06 |

@@ -361,6 +361,9 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     CheckpointStore; RunnableConfig not RunConfig; AiMessage not AIMessage). Retired spellings
     (CheckpointStore, RunConfig, BaseCheckpointSaver, AIMessage in Rust contexts) must have 0
     occurrences. Census command:
-    `grep -rn "CheckpointStore\|RunConfig\b\|BaseCheckpointSaver\|AIMessage" .factory/specs/behavioral-contracts/ .factory/specs/prd-supplements/`
-    (AIMessage occurrences in Python semport cross-references are exempt — cite semport source).
-    Source of truth: ADV-P1D-PASS-18.md §F-P18-01 + shared-type identifier census.
+    `grep -rn "CheckpointStore\|RunConfig\b\|BaseCheckpointSaver\|AIMessage" .factory/specs/`
+    Exemptions (do NOT count as violations): (a) Python semport cross-references (cite semport
+    source file); (b) census-rule text itself in bc-authoring-plan.md; (c) reconciliation table
+    LEFT column in ubiquitous-language-server.md (intentionally documents LangChain Python names).
+    Source of truth: ADV-P1D-PASS-19.md §F-P19-02 (scope widened from BC+prd-supplements to full
+    .factory/specs/); ADV-P1D-PASS-18.md §F-P18-01 + shared-type identifier census.
