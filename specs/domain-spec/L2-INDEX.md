@@ -90,6 +90,8 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | R-NNN | 8 | risks.md |
 | FM-NNN | 12 | failure-modes.md |
 
+> **Risk ID scheme note (F-10):** The R-NNN scheme in domain-spec/risks.md is canonical for all spec artifacts (PRD RTM, BC Traced-To, NFR catalog). STATE.md uses a separate R-N numeric alias (R8, R10, R11 map to R-004, R-005, R-006 respectively) retained for decision-log continuity only — see risks.md §Dual Risk ID Reconciliation for the full cross-walk table.
+
 ## Priority Distribution
 
 | Priority | Count | Capabilities |

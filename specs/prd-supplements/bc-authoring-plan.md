@@ -12,10 +12,10 @@ inputs:
   - .factory/STATE.md
 input-hash: "6fed331325c7bdfc4085b45c54e92aabc9255643d861ef286bdd1eed30c89055"
 traces_to: prd.md
-total_bcs: 82
-total_batches: 12
+total_bcs: 86
+total_batches: 13
 p0_count: 48
-p1_count: 26
+p1_count: 30
 p2_count: 8
 subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-INDEX SS-NN IDs in Phase 1b"
 ---
@@ -24,18 +24,18 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 
 > This plan enumerates every BC-S.SS.NNN to be authored, organized into
 > batches of ≤8 BCs each for sequential sub-bursts. Each batch is one sub-burst.
-> BC files go to `.factory/specs/behavioral-contracts/ss-TBD/BC-S.SS.NNN.md`
-> until architect assigns SS-NN IDs in Phase 1b.
+> BC files go to `.factory/specs/behavioral-contracts/ss-NN/BC-S.SS.NNN.md`
+> using the SS-NN ID from ARCH-INDEX Subsystem Registry (assigned Phase 1 Step D, 2026-07-14).
 
 ## Summary
 
 | Metric | Value |
 |--------|-------|
-| Total BCs | 82 |
+| Total BCs | 86 |
 | P0 (must-have) | 48 |
-| P1 (should-have) | 26 |
+| P1 (should-have) | 30 |
 | P2 (nice-to-have) | 8 |
-| Batches | 12 |
+| Batches | 13 |
 | BCs per batch (max) | 8 |
 | Subsystems covered | 17 (SS.01–SS.17, mapping CAP-001–CAP-019) |
 
@@ -284,17 +284,19 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 
 ---
 
-## Proc-Macro BCs (GATED on D5 ADR)
+## Proc-Macro BCs (UNBLOCKED — ADR-004 + ADR-008 accepted)
 
-The following BCs cannot be authored until the D5 ADR (schemars/proc-macro decision) is
-finalized. They are NOT included in the 82-BC plan above. If D5 ADR adopts proc-macros,
-they become a Phase-1b addition.
+ADR-004 (D5 gate) and ADR-008 are both accepted. The following BCs have been authored
+as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
-| Placeholder ID | Provisional Title | Gate |
-|---------------|-----------------|------|
-| BC-GATED-PM-001 | #[tool] attribute macro schema generation | D5 ADR approval |
-| BC-GATED-PM-002 | #[entrypoint] attribute macro graph wiring | D5 ADR approval |
-| BC-GATED-PM-003 | #[task] attribute macro task declaration | D5 ADR approval |
+### Batch 13 — Proc-Macro Developer Ergonomics (P1, Phase-1b, ADR-004/ADR-008)
+*3 BCs — SS.08 extension (ferrochain-macros re-exported from ferrochain-core)*
+
+| BC ID | Title | Priority | CAP | DI | Wave |
+|-------|-------|----------|-----|----|------|
+| BC-2.08.010 | `#[tool]` Attribute Macro: async fn → Tool implementor via schemars::JsonSchema | P1 | CAP-002 | DI-008 | Wave 1 |
+| BC-2.08.011 | `#[entrypoint]` Attribute Macro: START edge auto-wiring for StateGraph | P1 | CAP-003 | — | Wave 1 |
+| BC-2.08.012 | `#[task]` Attribute Macro: task registration boilerplate generation | P1 | CAP-003 | — | Wave 1 |
 
 ---
 
@@ -311,6 +313,6 @@ they become a Phase-1b addition.
    a Verification Properties table with the VP description and method (Kani).
 7. **Red Gate tests:** BCs for R8/R10/R11 (BC-2.07.001-002, BC-2.02.003-004, BC-2.09.004-005)
    must note "Red Gate test required — must compile and FAIL before implementation begins."
-8. **Origin:** `origin: greenfield` for all 82 BCs (no brownfield extraction).
+8. **Origin:** `origin: greenfield` for all 83 BCs (no brownfield extraction).
 9. **Lifecycle:** `lifecycle_status: active`, `introduced: v1.0.0-greenfield`.
-10. **File path:** `.factory/specs/behavioral-contracts/ss-TBD/BC-S.SS.NNN.md`
+10. **File path:** `.factory/specs/behavioral-contracts/ss-NN/BC-S.SS.NNN.md` (SS-NN from ARCH-INDEX Subsystem Registry)

@@ -301,3 +301,52 @@ Orchestrator must dispatch product-owner or spec-steward to remediate these befo
 **Spec gate OPEN.** Dispatch consistency-validator (fresh context, full spec cross-doc audit) → Phase 1d adversarial review (adversary, different model family, 3 clean passes min).
 
 ---
+
+## Step Row Archived from STATE.md (evicted at burst 75 — oldest row)
+
+| Phase 1 Step B: L2 domain specification (create + shard-split) | business-analyst | COMPLETE | domain-spec/ 15 files, 1,889 lines: 19 CAPs, 14 DIs, ~27 entities, 8 bounded contexts. Burst 70. |
+
+---
+
+## Burst 75 (2026-07-14)
+
+**Agents dispatched:** consistency-validator (spec-gate audit, fresh context), product-owner (F-01/03/04/05/06/07/08/09/11–15/17/18 + new test-vectors.md + BC-2.08.010/011/012), business-analyst (F-02 VP-substitution + F-10 canonical risk cross-walk), architect (F-16 ADR-008 body alignment + new ADR-011 cache-key content-hash + ARCH-INDEX 11 ADRs), state-manager (housekeeping + STATE update)
+**Files touched:** specs/prd.md, specs/product-brief.md, specs/prd-supplements/{bc-authoring-plan,module-criticality,nfr-catalog}.md, specs/prd-supplements/test-vectors.md (NEW), specs/behavioral-contracts/BC-INDEX.md, specs/behavioral-contracts/ss-08/{BC-2.08.010,BC-2.08.011,BC-2.08.012}.md (NEW), specs/behavioral-contracts/ss-09/BC-2.09.005.md, specs/architecture/ARCH-INDEX.md, specs/architecture/decisions/ADR-008-proc-macro-attributes.md, specs/architecture/decisions/ADR-011-cache-key-content-hash.md (NEW), specs/domain-spec/{L2-INDEX,capabilities-p1-p2,differentiators,risks}.md, cycles/v1.0.0-greenfield/spec-gate-consistency-audit.md, .factory/.gitignore (NEW), .factory/logs/dispatcher-internal-2026-07-13.jsonl (git rm --cached), STATE.md, cycles/v1.0.0-greenfield/{burst-log,session-checkpoints}.md
+**Versions bumped:** BC-INDEX.md → 86 BCs (48 P0/30 P1/8 P2); ARCH-INDEX.md → 11 ADRs; ADR-008 body aligned; ADR-011 v1.0 (initial); test-vectors.md v1.0 (initial); BC-2.08.010/011/012 v1.0 (initial)
+
+### Summary
+
+Spec-gate fresh-context consistency audit returned FAIL: 9 blocking findings, 6 minor, 3 perimeter gaps (21 total). ALL 21 remediated in a parallel burst across three specialist agents.
+
+**Blocking findings resolved:**
+- F-01/03/04/05/06/07/08/09/17/18: D17-Q7 VP-substitution unpropagated in product-brief.md, CAP-019, module-criticality.md, and nfr-catalog.md. Product-owner applied corrections across all affected files.
+- F-02: VP-substitution language still present in L2 domain spec shards (capabilities-p1-p2, differentiators). Business-analyst fixed.
+- F-10: Canonical risk cross-walk (R-004=R8, R-005=R10, R-006=R11) missing from risks.md and L2-INDEX. Business-analyst added cross-walk.
+- F-11–F-15: RTM module column unfilled in prd.md + proc-macro BCs unauthored despite ADR-004/008 acceptance. Product-owner authored BC-2.08.010 (#[tool] macro contract), BC-2.08.011 (#[entrypoint] macro contract), BC-2.08.012 (#[task] macro contract). BC-INDEX updated to 86 BCs (48 P0/30 P1/8 P2).
+- F-16: ADR-008 body alignment mismatch vs ARCH-INDEX. Architect corrected.
+
+**Perimeter gaps resolved:**
+- PG-01: test-vectors catalog absent. Product-owner authored test-vectors.md (198 lines) in specs/prd-supplements/.
+- PG-02: Cache-key content-hash contract undocumented. Architect authored ADR-011 (141 lines) + ARCH-INDEX updated to 11 ADRs.
+- F-10 (cross-walk, classified as blocking per audit): risks.md + L2-INDEX canonical risk ID mapping added.
+
+**Housekeeping:**
+- .factory/.gitignore created: excludes logs/*.jsonl and namespace-reservation/*/target/.
+- logs/dispatcher-internal-2026-07-13.jsonl (52MB) untracked via git rm --cached. File retained on disk; excluded by .gitignore going forward.
+- Input-hash placeholders filled on all new/changed artifacts.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| consistency-validator | Spec-gate fresh-context audit (pass 1) | cycles/v1.0.0-greenfield/spec-gate-consistency-audit.md — 21 findings (9 blocking, 6 minor, 3 PG) |
+| product-owner | F-01/03/04/05/06/07/08/09/11–15/17/18 + PG-01 | prd.md, product-brief.md, prd-supplements/* patched; test-vectors.md (198 lines) authored; BC-2.08.010/011/012 authored; BC-INDEX updated to 86 BCs |
+| business-analyst | F-02 VP-substitution + F-10 canonical risk cross-walk | domain-spec/capabilities-p1-p2.md, differentiators.md, L2-INDEX.md, risks.md patched |
+| architect | F-16 ADR-008 body + PG-02 ADR-011 + ARCH-INDEX | ADR-008 aligned; ADR-011 (141 lines, cache-key content-hash); ARCH-INDEX → 11 ADRs |
+| state-manager | Housekeeping + STATE update | .factory/.gitignore; git rm --cached dispatcher log; STATE.md burst 75 |
+
+### Gate Status
+
+**Spec gate re-audit required.** Dispatch consistency-validator (fresh context, second pass) to verify all 21 findings resolved and no new inconsistencies introduced. On PASS → Phase 1d adversarial-spec-review (adversary, different model family, 3 clean passes min, policy rubric auto-load if .factory/policies.yaml exists).
+
+---

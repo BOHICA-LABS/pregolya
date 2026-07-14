@@ -36,7 +36,7 @@ decisions: [D4, D6, D9, D11, D13, D17]
 | Tooling Selection | tooling-selection.md | formal-verifier | Kani, cargo-fuzz, cargo-mutants, proptest versions + config |
 | Verification Coverage Matrix | verification-coverage-matrix.md | consistency-validator | VP-to-module coverage status |
 
-**ADRs:** `.factory/specs/architecture/decisions/` — 10 stubs (ADR-001 to ADR-010)
+**ADRs:** `.factory/specs/architecture/decisions/` — 11 files (ADR-001 to ADR-011)
 
 **Module Criticality:** `.factory/specs/module-criticality.md`
 
@@ -89,6 +89,7 @@ decisions: [D4, D6, D9, D11, D13, D17]
 | ADR-008 | Proc-Macro Attributes | accepted | ADR-004 ✓ |
 | ADR-009 | Budget Governance Engine Placement | accepted | — |
 | ADR-010 | Error Taxonomy and anyhow Confinement | accepted | — |
+| ADR-011 | Cache-Key Content-Hash Contract (NE-05) | accepted — constrained by D17 NE adoption | — |
 
 ## Verification Properties (VP-INDEX)
 

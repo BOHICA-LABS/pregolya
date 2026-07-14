@@ -91,8 +91,9 @@ Post-v1 community ecosystem
 
 Cross-cutting (all waves)
 - Formal verification pipeline: Kani proofs + cargo-fuzz [both locked: D17-Q7] for
-  ferrochain-core + ferrochain-graph invariants (BSP determinism VP, delta round-trip VP,
-  session tenancy VP — top-3 obligations per D17-Q7)
+  ferrochain-core + ferrochain-graph invariants (BSP determinism VP (NE-17),
+  session triple-address VP (DI-005/NE-12), workspace path confinement VP (DI-007/NE-02)
+  — top-3 obligations per D17-Q7)
 - Phase-1 BC backlog (D17-Q2/Q3/Q4/Q8/Q9): HITL contract, per-task durability, budget
   governance, content provenance/guardrail-on-ingress, R8/R10/R11 upstream test-void BCs —
   all authored from behavior, not deferred to Phase 3 (detail in Overflow §D17-BC-Backlog)
@@ -125,7 +126,7 @@ Cross-cutting (all waves)
 | Competitive time-to-market | ferrochain-graph durable-checkpointing GA release date vs. R4 watchlist competitor announcements | Binary: ferrochain-graph durable-checkpointing GA ships before any competing Rust framework announces equivalent GA; measured at release date against R4 watchlist. **Human may substitute a calendar target at Phase-1 approval gate.** | market-intel.md §1 (R4 watchlist), D7 rationale |
 | Provider conformance | ferrochain-standard-tests pass rate for ferrochain-openai, -anthropic, -ollama | 100% conformance (streaming, tool-calling, structured output, error propagation, token accounting) before v1 release | market-intel.md §4 differentiator #2 |
 | Holdout evaluation fidelity | VSDD wave-gate: mean holdout score and per-critical-scenario floor | Mean ≥ 0.85; each critical holdout ≥ 0.60; no rounding; all three domains pass Phase 4 gate | VSDD wave-gate protocol; domain-a §6, domain-b §6, domain-c §7 |
-| Formal verification coverage | VP coverage: BSP determinism (NE-17), delta round-trip checkpoint (CONFLICT-9), session tenancy partition (NE-12) | All 3 committed VP obligations (D17-Q7) pass Kani harness before v1 convergence | D17-Q7; COMPARATIVE-ASSESSMENT §6 |
+| Formal verification coverage | VP coverage: BSP determinism (NE-17), session triple-address partition (DI-005/NE-12), workspace path confinement (DI-007/NE-02) | All 3 committed VP obligations (D17-Q7) pass Kani harness before v1 convergence | D17-Q7; COMPARATIVE-ASSESSMENT §6 |
 
 ## Constraints & Integration Points
 
@@ -251,7 +252,7 @@ Source: market-intel.md §4, COMPARATIVE-ASSESSMENT.md §5 (seeded from L2 → P
 |---------------|--------|---------------------|
 | LangGraph runtime + durable checkpointing in Rust — no competitor has this | market-intel §4 #1, CONFLICT-1/2/3/4 | Graph BSP determinism + HITL + per-task durability BCs (D17-Q2/Q3) |
 | Standard-tests conformance suite — no competitor has this | market-intel §4 #2 | ferrochain-standard-tests conformance BC |
-| Formally-verified core (Kani + cargo-fuzz) — no competitor has this | market-intel §4 #3, D17-Q7 | BSP determinism VP, delta round-trip VP, session tenancy VP |
+| Formally-verified core (Kani + cargo-fuzz) — no competitor has this | market-intel §4 #3, D17-Q7 | BSP determinism VP (NE-17), session triple-address VP (DI-005), workspace path confinement VP (DI-007) |
 | Idiomatic async-first trait design with typed ContentBlock | market-intel §4 #4, CONFLICT-6 | FerrochainError 2D struct BC, typed ContentBlock BC |
 | Provider conformance + migration story from LangChain Python v1 | market-intel §4 #5 | ferrochain-standard-tests + "Coming from LangChain?" docs |
 

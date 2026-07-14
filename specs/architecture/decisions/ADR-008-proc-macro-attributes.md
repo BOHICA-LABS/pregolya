@@ -17,16 +17,17 @@ supersedes: []
 
 # ADR-008: Proc-Macro Attributes
 
-**Status:** Proposed — GATED ON ADR-004 (D5, D17-Q6)
+**Status:** Accepted — ADR-004 gate satisfied (D5 ✓); proc-macro BCs unblocked
 
 ## Context
 
 D17-Q6: proc-macro attributes (#[tool], #[entrypoint], #[task]) are Phase 1/2 work
-gated on D5 ADR resolution. ADR-004 (schemars) is the D5 gate. This ADR specifies the
-proc-macro design once that gate is resolved.
+gated on D5 ADR resolution. ADR-004 (schemars) is the D5 gate; ADR-004 is accepted,
+resolving that gate. This ADR specifies the proc-macro design now that the gate is cleared.
 
-No proc-macro BCs are in the current 82-BC plan. If ADR-004 ADOPT disposition confirms,
-proc-macro BCs become a Phase-1b addition via the BC authoring plan.
+No proc-macro BCs are in the current BC authoring plan. The product-owner must explicitly
+author or formally defer proc-macro BCs (#[tool], #[entrypoint], #[task]) before
+Phase-2 story decomposition begins (see PRD OQR-4).
 
 ## Scope
 
@@ -51,14 +52,14 @@ async fn search_web(query: String, max_results: u32) -> Result<String, Ferrochai
 
 Requires: `schemars::JsonSchema` bound on all parameter types (ADR-004).
 
-## Decision: [DEFERRED — AWAITING ADR-004 ACCEPTANCE]
+## Decision: Adopt proc-macro crate (ADR-004 accepted — gate satisfied)
 
-If ADR-004 is accepted (ADOPT schemars), proceed with proc-macro crate:
+ADR-004 accepted schemars (D5 gate resolved). Proceed with proc-macro crate:
 - New crate: `ferrochain-macros` (proc-macro crate; not user-facing; re-exported from ferrochain-core)
 - Phase: late Phase 1 or Phase 2 depending on BC authoring plan backlog
 
-If ADR-004 is rejected (no schemars), proc-macros are DEFERRED indefinitely; manual
-`impl Tool` pattern remains the primary API.
+Manual `impl Tool` pattern remains valid for users who do not want the proc-macro
+convenience layer. The macro is additive.
 
 ## Consequences
 

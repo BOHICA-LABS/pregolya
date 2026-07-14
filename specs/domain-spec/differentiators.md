@@ -30,7 +30,7 @@ market-intel.md §4. Each differentiator maps to the domain capabilities that im
 |---|---------------|--------------|---------------------|-------------------|-------------------|
 | D-01 | LangGraph runtime + durable checkpointing in Rust — no competitor has this | market-intel §4 #1; CONFLICT-1/2/3/4 | CAP-003, CAP-004, CAP-005, CAP-006 | DI-001, DI-002, DI-003, DI-004 | Graph BSP determinism + HITL + per-task durability BCs (D17-Q2/Q3) |
 | D-02 | Standard-tests conformance suite — no competitor has this | market-intel §4 #2 | CAP-011 | (none; process-level differentiator) | ferrochain-standard-tests conformance BC |
-| D-03 | Formally-verified core (Kani + cargo-fuzz) — no competitor has this | market-intel §4 #3; D17-Q7 | CAP-019 | DI-001 (BSP VP), DI-005 (tenancy VP), DI-007 (workspace VP) | BSP determinism VP, delta round-trip VP, session tenancy VP (D17-Q7) |
+| D-03 | Formally-verified core (Kani + cargo-fuzz) — no competitor has this | market-intel §4 #3; D17-Q7 | CAP-019 | DI-001 (BSP VP), DI-005 (tenancy VP), DI-007 (workspace VP) | BSP determinism VP (VP-001), session triple-address VP (VP-002), workspace path confinement VP (VP-003/DI-007/NE-02) (D17-Q7) |
 | D-04 | Idiomatic async-first trait design with typed ContentBlock and 2D error taxonomy | market-intel §4 #4; CONFLICT-6 | CAP-001, CAP-002, CAP-016 | DI-008 (constructor Result), DI-014 (no silent errors) | FerrochainError 2D struct BC; typed ContentBlock BC |
 | D-05 | Provider conformance + LangChain Python v1 migration story | market-intel §4 #5 | CAP-009, CAP-010, CAP-011 | (process-level; no runtime invariant) | ferrochain-standard-tests + "Coming from LangChain?" docs |
 

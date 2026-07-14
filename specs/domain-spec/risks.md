@@ -37,6 +37,26 @@ R-NNN entries map from STATE.md Risk Register + product-brief. Each R-NNN has
 
 ---
 
+## Dual Risk ID Reconciliation (F-10)
+
+Two risk ID schemes coexist across the spec package. The **domain-spec R-NNN scheme is
+canonical within all spec artifacts** (domain-spec/, prd.md, PRD RTM Source column, BC
+Traced-To columns). STATE.md R-N numeric aliases are retained for decision-log continuity
+only; do not use them in new spec or BC authoring.
+
+| Domain-Spec ID (canonical) | STATE.md Alias | Risk Description |
+|---------------------------|----------------|-----------------|
+| R-004 | R8 | Splitters code-point vs byte-length parity on non-ASCII input |
+| R-005 | R10 | NamedBarrierValue / EphemeralValue — no upstream unit tests for boundary behavior |
+| R-006 | R11 | MCP test voids: bare ToolException re-raise path + `__aenter__` NotImplementedError contract untested |
+
+All other domain-spec risks (R-001–R-003, R-007–R-008) have no direct STATE.md alias; they
+were introduced during Phase-1 domain modeling. BC frontmatter `red_gate_source` fields in
+BC-INDEX Red Gate table cite STATE.md R-N form (R8/R10/R11) because the BCs were authored
+before the domain-spec mapping was established. Use this table to cross-walk the two schemes.
+
+---
+
 ## Risk-to-Capability Traceability
 
 - R-001 affects CAP-004 and CAP-005 because the competitor's gap is precisely the BSP

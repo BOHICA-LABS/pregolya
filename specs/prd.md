@@ -27,6 +27,7 @@ supplements:
   - prd-supplements/nfr-catalog.md
   - prd-supplements/module-criticality.md
   - prd-supplements/bc-authoring-plan.md
+  - prd-supplements/test-vectors.md
 changelog:
   - "v1.0: Initial PRD core. BC files authored in sub-bursts 2–N per bc-authoring-plan.md."
   - "v1.0 Step-E: BC-2.08.009 added to SS.08 — Tool Schema Naming Stability (Snapshot Test Anchor). Authored from ADR-004 acceptance (architect feedback): snapshot test obligation for public tool types deriving schemars::JsonSchema. Batch 9 count: 8 → 9. Total BC count: 82 → 83."
@@ -47,8 +48,8 @@ open_question_resolutions:
 > **Supplement Model:** Sections 3–5 reference extracted supplement files under
 > `prd-supplements/`. Each supplement targets a different downstream agent.
 >
-> **Subsystem IDs:** All BCs carry `subsystem: SS-TBD` until the architect produces
-> `architecture/ARCH-INDEX.md` (Phase 1b). The architect must back-fill SS-NN IDs.
+> **Subsystem IDs:** All BCs carry `subsystem: SS-NN` per ARCH-INDEX.md Subsystem Registry
+> (backfilled Phase 1b, 2026-07-14). ARCH-INDEX.md is the source of truth for SS-NN IDs.
 
 ---
 
@@ -136,48 +137,48 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 > BCs are sharded into `behavioral-contracts/ss-NN/` directories. The shard `ss-NN`
 > identifier maps to the architect's ARCH-INDEX Subsystem Registry (assigned Phase 1b).
-> Until then all BCs carry `subsystem: SS-TBD`.
+> All BCs carry `subsystem: SS-NN` per ARCH-INDEX.md (backfilled Phase 1b, 2026-07-14).
 > Full authoring plan: `prd-supplements/bc-authoring-plan.md`.
 
 ### 2.01 Core Primitives (CAP-001, CAP-002) — P0
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.01.001 | Typed ContentBlock sequence construction (no raw content where typed expected) | P0 | DI-008 | ss-TBD/BC-2.01.001.md |
-| BC-2.01.002 | Message type-safety (AIMessage/HumanMessage/SystemMessage/ToolMessage) | P0 | DI-008 | ss-TBD/BC-2.01.002.md |
-| BC-2.01.003 | Runnable trait invocation — invoke, stream, batch | P0 | — | ss-TBD/BC-2.01.003.md |
-| BC-2.01.004 | Runnable pipe composition (A \| B = AB chain) | P0 | — | ss-TBD/BC-2.01.004.md |
+| BC-2.01.001 | Typed ContentBlock sequence construction (no raw content where typed expected) | P0 | DI-008 | ss-01/BC-2.01.001.md |
+| BC-2.01.002 | Message type-safety (AIMessage/HumanMessage/SystemMessage/ToolMessage) | P0 | DI-008 | ss-01/BC-2.01.002.md |
+| BC-2.01.003 | Runnable trait invocation — invoke, stream, batch | P0 | — | ss-01/BC-2.01.003.md |
+| BC-2.01.004 | Runnable pipe composition (A \| B = AB chain) | P0 | — | ss-01/BC-2.01.004.md |
 
 ### 2.02 StateGraph Definition (CAP-003) — P0
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.02.001 | StateGraph node definition and typed channel assignment | P0 | — | ss-TBD/BC-2.02.001.md |
-| BC-2.02.002 | LastValue / Append / BarrierValue channel semantics and reducer wiring | P0 | DI-001 | ss-TBD/BC-2.02.002.md |
-| BC-2.02.003 | NamedBarrierValue missing-writer boundary behavior (R10) | P0 | — | ss-TBD/BC-2.02.003.md |
-| BC-2.02.004 | EphemeralValue cleared-after-super-step semantics (R10) | P0 | — | ss-TBD/BC-2.02.004.md |
-| BC-2.02.005 | Conditional edge routing function | P0 | — | ss-TBD/BC-2.02.005.md |
-| BC-2.02.006 | Send API dynamic fan-out | P0 | — | ss-TBD/BC-2.02.006.md |
+| BC-2.02.001 | StateGraph node definition and typed channel assignment | P0 | — | ss-02/BC-2.02.001.md |
+| BC-2.02.002 | LastValue / Append / BarrierValue channel semantics and reducer wiring | P0 | DI-001 | ss-02/BC-2.02.002.md |
+| BC-2.02.003 | NamedBarrierValue missing-writer boundary behavior (R10) | P0 | — | ss-02/BC-2.02.003.md |
+| BC-2.02.004 | EphemeralValue cleared-after-super-step semantics (R10) | P0 | — | ss-02/BC-2.02.004.md |
+| BC-2.02.005 | Conditional edge routing function | P0 | — | ss-02/BC-2.02.005.md |
+| BC-2.02.006 | Send API dynamic fan-out | P0 | — | ss-02/BC-2.02.006.md |
 
 ### 2.03 BSP Graph Execution (CAP-004) — P0
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.03.001 | BSP super-step execution determinism and Kani VP seed | P0 | DI-001, NE-17 | ss-TBD/BC-2.03.001.md |
-| BC-2.03.002 | Concurrent LastValue write rejection (InvalidUpdateError) | P0 | DI-001 | ss-TBD/BC-2.03.002.md |
-| BC-2.03.003 | Deterministic reducer application order (task-identity sort) | P0 | DI-001 | ss-TBD/BC-2.03.003.md |
+| BC-2.03.001 | BSP super-step execution determinism and Kani VP seed | P0 | DI-001, NE-17 | ss-03/BC-2.03.001.md |
+| BC-2.03.002 | Concurrent LastValue write rejection (InvalidUpdateError) | P0 | DI-001 | ss-03/BC-2.03.002.md |
+| BC-2.03.003 | Deterministic reducer application order (task-identity sort) | P0 | DI-001 | ss-03/BC-2.03.003.md |
 
 ### 2.04 Durable Three-Tier Checkpointing (CAP-005) — P0
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.04.001 | Per-task put_writes before next super-step begins | P0 | DI-002 | ss-TBD/BC-2.04.001.md |
-| BC-2.04.002 | Sync durability tier as default; async and exit-only are explicit opt-in | P0 | DI-002 | ss-TBD/BC-2.04.002.md |
-| BC-2.04.003 | Monotonic logical-clock checkpoint IDs (not wall-clock) | P0 | DI-004 | ss-TBD/BC-2.04.003.md |
-| BC-2.04.004 | Fork lineage via parent_checkpoint_id pointers (not state copy) | P0 | DI-004 | ss-TBD/BC-2.04.004.md |
-| BC-2.04.005 | Crash recovery: completed tasks not re-executed after process restart | P0 | DI-002 | ss-TBD/BC-2.04.005.md |
-| BC-2.04.006 | Session triple-address uniqueness (thread_id, checkpoint_ns, checkpoint_id) — VP seed | P0 | DI-005, NE-12 | ss-TBD/BC-2.04.006.md |
-| BC-2.04.007 | Encryption at rest for both state payloads AND event payloads; rotation errors propagate | P0 | NE-11 | ss-TBD/BC-2.04.007.md |
+| BC-2.04.001 | Per-task put_writes before next super-step begins | P0 | DI-002 | ss-04/BC-2.04.001.md |
+| BC-2.04.002 | Sync durability tier as default; async and exit-only are explicit opt-in | P0 | DI-002 | ss-04/BC-2.04.002.md |
+| BC-2.04.003 | Monotonic logical-clock checkpoint IDs (not wall-clock) | P0 | DI-004 | ss-04/BC-2.04.003.md |
+| BC-2.04.004 | Fork lineage via parent_checkpoint_id pointers (not state copy) | P0 | DI-004 | ss-04/BC-2.04.004.md |
+| BC-2.04.005 | Crash recovery: completed tasks not re-executed after process restart | P0 | DI-002 | ss-04/BC-2.04.005.md |
+| BC-2.04.006 | Session triple-address uniqueness (thread_id, checkpoint_ns, checkpoint_id) — VP seed | P0 | DI-005, NE-12 | ss-04/BC-2.04.006.md |
+| BC-2.04.007 | Encryption at rest for both state payloads AND event payloads; rotation errors propagate | P0 | — (NE-11) | ss-04/BC-2.04.007.md |
 
 ### 2.05 HITL Interrupt / Resume (CAP-006) — P0
 
@@ -185,20 +186,20 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.05.001 | Interrupt suspension with durable state persistence | P0 | DI-003 | ss-TBD/BC-2.05.001.md |
-| BC-2.05.002 | FIFO resume-value delivery order | P0 | DI-003 | ss-TBD/BC-2.05.002.md |
-| BC-2.05.003 | Interrupted node re-executes from start of super-step on resume | P0 | DI-003 | ss-TBD/BC-2.05.003.md |
-| BC-2.05.004 | Command(resume=value) API contract | P0 | DI-003 | ss-TBD/BC-2.05.004.md |
-| BC-2.05.005 | Resume on empty interrupt queue returns Err(NoActiveInterrupt) | P0 | DI-003 | ss-TBD/BC-2.05.005.md |
-| BC-2.05.006 | Risk-tiered interrupt classification (typed action-risk levels for Domain A) | P0 | DI-003, ASM-008 | ss-TBD/BC-2.05.006.md |
+| BC-2.05.001 | Interrupt suspension with durable state persistence | P0 | DI-003 | ss-05/BC-2.05.001.md |
+| BC-2.05.002 | FIFO resume-value delivery order | P0 | DI-003 | ss-05/BC-2.05.002.md |
+| BC-2.05.003 | Interrupted node re-executes from start of super-step on resume | P0 | DI-003 | ss-05/BC-2.05.003.md |
+| BC-2.05.004 | Command(resume=value) API contract | P0 | DI-003 | ss-05/BC-2.05.004.md |
+| BC-2.05.005 | Resume on empty interrupt queue returns Err(NoActiveInterrupt) | P0 | DI-003 | ss-05/BC-2.05.005.md |
+| BC-2.05.006 | Risk-tiered interrupt classification (typed action-risk levels for Domain A) | P0 | DI-003, ASM-008 | ss-05/BC-2.05.006.md |
 
 ### 2.06 Structured Streaming Event Taxonomy (CAP-007) — P0
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.06.001 | Typed per-phase event taxonomy (run/step/node/tool start-stream-end) | P0 | DI-011 | ss-TBD/BC-2.06.001.md |
-| BC-2.06.002 | run_id + parent_ids correlation across all events in a run | P0 | — | ss-TBD/BC-2.06.002.md |
-| BC-2.06.003 | Streaming and unary run produce identical final answer (NE-13) | P0 | DI-011 | ss-TBD/BC-2.06.003.md |
+| BC-2.06.001 | Typed per-phase event taxonomy (run/step/node/tool start-stream-end) | P0 | DI-011 | ss-06/BC-2.06.001.md |
+| BC-2.06.002 | run_id + parent_ids correlation across all events in a run | P0 | — | ss-06/BC-2.06.002.md |
+| BC-2.06.003 | Streaming and unary run produce identical final answer (NE-13) | P0 | DI-011 | ss-06/BC-2.06.003.md |
 
 ### 2.07 Text Splitting with Code-Point Boundary Correctness (CAP-008) — P0
 
@@ -206,33 +207,36 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.07.001 | Chunk boundaries are Unicode code-point counts (not bytes) | P0 | — | ss-TBD/BC-2.07.001.md |
-| BC-2.07.002 | Non-ASCII boundary parity with Python reference implementation (emoji, CJK) | P0 | — | ss-TBD/BC-2.07.002.md |
-| BC-2.07.003 | Short document (length < chunk_size) — single chunk returned, no overlap applied, no panic | P0 | — | ss-TBD/BC-2.07.003.md |
+| BC-2.07.001 | Chunk boundaries are Unicode code-point counts (not bytes) | P0 | — | ss-07/BC-2.07.001.md |
+| BC-2.07.002 | Non-ASCII boundary parity with Python reference implementation (emoji, CJK) | P0 | — | ss-07/BC-2.07.002.md |
+| BC-2.07.003 | Short document (length < chunk_size) — single chunk returned, no overlap applied, no panic | P0 | — | ss-07/BC-2.07.003.md |
 
 ### 2.08 Provider-Conformant Chat Model Interface + Standard Tests (CAP-009, CAP-011) — P1
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.08.001 | Chat model streaming completions conformance | P1 | DI-011 | ss-TBD/BC-2.08.001.md |
-| BC-2.08.002 | Chat model tool-call round-trip conformance | P1 | — | ss-TBD/BC-2.08.002.md |
-| BC-2.08.003 | Chat model structured output conformance | P1 | — | ss-TBD/BC-2.08.003.md |
-| BC-2.08.004 | Chat model error-type fidelity conformance | P1 | DI-014 | ss-TBD/BC-2.08.004.md |
-| BC-2.08.005 | Chat model token-usage accounting conformance | P1 | — | ss-TBD/BC-2.08.005.md |
-| BC-2.08.006 | Standalone SDK crate split architecture (ferrochain-\<provider\>-sdk + adapter) | P1 | DI-008 | ss-TBD/BC-2.08.006.md |
-| BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout), not truncated success | P1 | DI-014 | ss-TBD/BC-2.08.007.md |
-| BC-2.08.008 | Eval score aggregation: arithmetic mean + JudgeResult::InfraError third outcome (NE-15) | P1 | — | ss-TBD/BC-2.08.008.md |
+| BC-2.08.001 | Chat model streaming completions conformance | P1 | DI-011 | ss-08/BC-2.08.001.md |
+| BC-2.08.002 | Chat model tool-call round-trip conformance | P1 | — | ss-08/BC-2.08.002.md |
+| BC-2.08.003 | Chat model structured output conformance | P1 | — | ss-08/BC-2.08.003.md |
+| BC-2.08.004 | Chat model error-type fidelity conformance | P1 | DI-014 | ss-08/BC-2.08.004.md |
+| BC-2.08.005 | Chat model token-usage accounting conformance | P1 | — | ss-08/BC-2.08.005.md |
+| BC-2.08.006 | Standalone SDK crate split architecture (ferrochain-\<provider\>-sdk + adapter) | P1 | DI-008 | ss-08/BC-2.08.006.md |
+| BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout), not truncated success | P1 | DI-014 | ss-08/BC-2.08.007.md |
+| BC-2.08.008 | Eval score aggregation: arithmetic mean + JudgeResult::InfraError third outcome (NE-15) | P1 | — | ss-08/BC-2.08.008.md |
 | BC-2.08.009 | Tool schema naming stability (snapshot test anchor) — semver-major required on any schema change to a public tool type | P1 | — | ss-08/BC-2.08.009.md |
+| BC-2.08.010 | `#[tool]` attribute macro: async fn → Tool implementor via schemars::JsonSchema | P1 | DI-008 | ss-08/BC-2.08.010.md |
+| BC-2.08.011 | `#[entrypoint]` attribute macro: START edge auto-wiring for StateGraph | P1 | — | ss-08/BC-2.08.011.md |
+| BC-2.08.012 | `#[task]` attribute macro: task registration boilerplate generation | P1 | — | ss-08/BC-2.08.012.md |
 
 ### 2.09 MCP Tool Adapter (CAP-010) — P1
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.09.001 | MCP server tool discovery and registration at runtime | P1 | — | ss-TBD/BC-2.09.001.md |
-| BC-2.09.002 | ToolInvocation routing to correct MCP server transport | P1 | — | ss-TBD/BC-2.09.002.md |
-| BC-2.09.003 | Tool-result content treated as untrusted ingress (DI-012 applies) | P1 | DI-012 | ss-TBD/BC-2.09.003.md |
-| BC-2.09.004 | MCP bare ToolException re-raise preserving type identity (R11) | P1 | DI-014 | ss-TBD/BC-2.09.004.md |
-| BC-2.09.005 | MCP __aenter__ NotImplementedError contract (R11) | P1 | DI-014 | ss-TBD/BC-2.09.005.md |
+| BC-2.09.001 | MCP server tool discovery and registration at runtime | P1 | — | ss-09/BC-2.09.001.md |
+| BC-2.09.002 | ToolInvocation routing to correct MCP server transport | P1 | — | ss-09/BC-2.09.002.md |
+| BC-2.09.003 | Tool-result content treated as untrusted ingress (DI-012 applies) | P1 | DI-012 | ss-09/BC-2.09.003.md |
+| BC-2.09.004 | MCP bare ToolException re-raise preserving type identity (R11) | P1 | DI-014 | ss-09/BC-2.09.004.md |
+| BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | P1 | DI-014 | ss-09/BC-2.09.005.md |
 
 ### 2.10 Budget Governance (CAP-012) — P0
 
@@ -240,10 +244,10 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.10.001 | BudgetPolicy allow/escalate/deny evaluation per run and per sub-agent | P0 | — | ss-TBD/BC-2.10.001.md |
-| BC-2.10.002 | Append-only EvidenceJournal recording of every budget evaluation | P0 | — | ss-TBD/BC-2.10.002.md |
-| BC-2.10.003 | Graceful halt when budget ceiling reached (on_ceiling = halt) | P0 | — | ss-TBD/BC-2.10.003.md |
-| BC-2.10.004 | Budget escalation to HITL interrupt when on_ceiling = escalate | P0 | DI-003 | ss-TBD/BC-2.10.004.md |
+| BC-2.10.001 | BudgetPolicy allow/escalate/deny evaluation per run and per sub-agent | P0 | — | ss-10/BC-2.10.001.md |
+| BC-2.10.002 | Append-only EvidenceJournal recording of every budget evaluation | P0 | — | ss-10/BC-2.10.002.md |
+| BC-2.10.003 | Graceful halt when budget ceiling reached (on_ceiling = halt) | P0 | — | ss-10/BC-2.10.003.md |
+| BC-2.10.004 | Budget escalation to HITL interrupt when on_ceiling = escalate | P0 | DI-003 | ss-10/BC-2.10.004.md |
 
 ### 2.11 Content Provenance Tagging and Guardrail-on-Ingress (CAP-013) — P0
 
@@ -253,62 +257,62 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.11.001 | ProvenanceTag attached at every ingress boundary (tool-result, RAG, memory) | P0 | DI-012 | ss-TBD/BC-2.11.001.md |
-| BC-2.11.002 | GuardrailHook fires unconditionally at tool-result ingress | P0 | DI-012 | ss-TBD/BC-2.11.002.md |
-| BC-2.11.003 | GuardrailHook fires at RAG ingress | P0 | DI-012 | ss-TBD/BC-2.11.003.md |
-| BC-2.11.004 | GuardrailHook fires at memory ingress | P0 | DI-012 | ss-TBD/BC-2.11.004.md |
-| BC-2.11.005 | Rejected content does not enter model context under any code path | P0 | DI-012 | ss-TBD/BC-2.11.005.md |
-| BC-2.11.006 | No-hook default: content passes through with WARNING LOG (default-permit) | P0 | DI-012 | ss-TBD/BC-2.11.006.md |
+| BC-2.11.001 | ProvenanceTag attached at every ingress boundary (tool-result, RAG, memory) | P0 | DI-012 | ss-11/BC-2.11.001.md |
+| BC-2.11.002 | GuardrailHook fires unconditionally at tool-result ingress | P0 | DI-012 | ss-11/BC-2.11.002.md |
+| BC-2.11.003 | GuardrailHook fires at RAG ingress | P0 | DI-012 | ss-11/BC-2.11.003.md |
+| BC-2.11.004 | GuardrailHook fires at memory ingress | P0 | DI-012 | ss-11/BC-2.11.004.md |
+| BC-2.11.005 | Rejected content does not enter model context under any code path | P0 | DI-012 | ss-11/BC-2.11.005.md |
+| BC-2.11.006 | No-hook default: content passes through with WARNING LOG (default-permit) | P0 | DI-012 | ss-11/BC-2.11.006.md |
 
 ### 2.12 Durable-Run HTTP Server (CAP-014) — P1
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.12.001 | Thread resource CRUD (create, read, list, delete durable conversation history) | P1 | — | ss-TBD/BC-2.12.001.md |
-| BC-2.12.002 | Assistant resource CRUD (named agent config) | P1 | — | ss-TBD/BC-2.12.002.md |
-| BC-2.12.003 | Run creation and execution lifecycle (create → running → completed/failed) | P1 | — | ss-TBD/BC-2.12.003.md |
-| BC-2.12.004 | CronSchedule creation and proactive run execution | P1 | — | ss-TBD/BC-2.12.004.md |
-| BC-2.12.005 | SecurityConfig::default() denies CORS, gates debug route on explicit opt-in key (NE-14) | P1 | DI-013 | ss-TBD/BC-2.12.005.md |
-| BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore trait seams with durable backends (NE-08) | P1 | — | ss-TBD/BC-2.12.006.md |
-| BC-2.12.007 | Streaming endpoint and unary endpoint drive same graph engine, same final answer | P1 | DI-011 | ss-TBD/BC-2.12.007.md |
+| BC-2.12.001 | Thread resource CRUD (create, read, list, delete durable conversation history) | P1 | — | ss-12/BC-2.12.001.md |
+| BC-2.12.002 | Assistant resource CRUD (named agent config) | P1 | — | ss-12/BC-2.12.002.md |
+| BC-2.12.003 | Run creation and execution lifecycle (create → running → completed/failed) | P1 | — | ss-12/BC-2.12.003.md |
+| BC-2.12.004 | CronSchedule creation and proactive run execution | P1 | — | ss-12/BC-2.12.004.md |
+| BC-2.12.005 | SecurityConfig::default() denies CORS, gates debug route on explicit opt-in key (NE-14) | P1 | DI-013 | ss-12/BC-2.12.005.md |
+| BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore trait seams with durable backends (NE-08) | P1 | — | ss-12/BC-2.12.006.md |
+| BC-2.12.007 | Streaming endpoint and unary endpoint drive same graph engine, same final answer | P1 | DI-011 | ss-12/BC-2.12.007.md |
 
 ### 2.13 Sandboxed Tool Execution — Enforcing Backend Default (CAP-015) — P1
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.13.001 | Enforcing sandbox backend (WASM or container) is default | P1 | DI-006 | ss-TBD/BC-2.13.001.md |
-| BC-2.13.002 | Process backend requires explicit opt-in and emits loud runtime warning | P1 | DI-006 | ss-TBD/BC-2.13.002.md |
-| BC-2.13.003 | Strict policy + non-enforcing backend returns Err(PolicyNotEnforceable) | P1 | DI-006 | ss-TBD/BC-2.13.003.md |
-| BC-2.13.004 | All workspace file ops call canonicalize_beneath_root at access time | P1 | DI-007 | ss-TBD/BC-2.13.004.md |
-| BC-2.13.005 | Symlink that escapes workspace root returns Err(WorkspaceEscape) | P1 | DI-007 | ss-TBD/BC-2.13.005.md |
-| BC-2.13.006 | macOS Seatbelt profile is deny-by-default with explicit allow rules | P1 | DI-006 | ss-TBD/BC-2.13.006.md |
+| BC-2.13.001 | Enforcing sandbox backend (WASM or container) is default | P1 | DI-006 | ss-13/BC-2.13.001.md |
+| BC-2.13.002 | Process backend requires explicit opt-in and emits loud runtime warning | P1 | DI-006 | ss-13/BC-2.13.002.md |
+| BC-2.13.003 | Strict policy + non-enforcing backend returns Err(PolicyNotEnforceable) | P1 | DI-006 | ss-13/BC-2.13.003.md |
+| BC-2.13.004 | All workspace file ops call canonicalize_beneath_root at access time | P1 | DI-007 | ss-13/BC-2.13.004.md |
+| BC-2.13.005 | Symlink that escapes workspace root returns Err(WorkspaceEscape) | P1 | DI-007 | ss-13/BC-2.13.005.md |
+| BC-2.13.006 | macOS Seatbelt profile is deny-by-default with explicit allow rules | P1 | DI-006 | ss-13/BC-2.13.006.md |
 
 ### 2.14 Typed Error Taxonomy — FerrochainError (CAP-016) — P0
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.14.001 | FerrochainError 2D component × category struct with RetryHint and machine code | P0 | DI-008, DI-014 | ss-TBD/BC-2.14.001.md |
-| BC-2.14.002 | RFC-7807 compatible problem emission from FerrochainError | P0 | — | ss-TBD/BC-2.14.002.md |
-| BC-2.14.003 | All library constructors return Result; no .unwrap()/.expect()/assert! in non-test code (NE-07) | P0 | DI-008 | ss-TBD/BC-2.14.003.md |
-| BC-2.14.004 | Every outbound HTTP ClientBuilder must set .timeout(30s); zero Client::new() outside tests (NE-04) | P0 | DI-009 | ss-TBD/BC-2.14.004.md |
-| BC-2.14.005 | Every API key type: newtype + Debug→"<redacted>"; no #[derive(Serialize)]; no Deref<Target=str> (NE-10) | P0 | DI-010 | ss-TBD/BC-2.14.005.md |
-| BC-2.14.006 | Validation failures propagate Err(FerrochainError); no public API returns None for validation failure (NE-03) | P0 | DI-014 | ss-TBD/BC-2.14.006.md |
+| BC-2.14.001 | FerrochainError 2D component × category struct with RetryHint and machine code | P0 | DI-008, DI-014 | ss-14/BC-2.14.001.md |
+| BC-2.14.002 | RFC-7807 compatible problem emission from FerrochainError | P0 | — | ss-14/BC-2.14.002.md |
+| BC-2.14.003 | All library constructors return Result; no .unwrap()/.expect()/assert! in non-test code (NE-07) | P0 | DI-008 | ss-14/BC-2.14.003.md |
+| BC-2.14.004 | Every outbound HTTP ClientBuilder must set .timeout(30s); zero Client::new() outside tests (NE-04) | P0 | DI-009 | ss-14/BC-2.14.004.md |
+| BC-2.14.005 | Every API key type: newtype + Debug→"<redacted>"; no #[derive(Serialize)]; no Deref<Target=str> (NE-10) | P0 | DI-010 | ss-14/BC-2.14.005.md |
+| BC-2.14.006 | Validation failures propagate Err(FerrochainError); no public API returns None for validation failure (NE-03) | P0 | DI-014 | ss-14/BC-2.14.006.md |
 
 ### 2.15 Long-Horizon Cross-Session Memory Store (CAP-017) — P2
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.15.001 | KV and vector memory persistence across threads (not per-checkpoint) | P2 | — | ss-TBD/BC-2.15.001.md |
-| BC-2.15.002 | User/app/session tier isolation — user-private does not bleed across scopes | P2 | — | ss-TBD/BC-2.15.002.md |
-| BC-2.15.003 | GDPR erasure removes all traces from all memory tiers | P2 | — | ss-TBD/BC-2.15.003.md |
+| BC-2.15.001 | KV and vector memory persistence across threads (not per-checkpoint) | P2 | — | ss-15/BC-2.15.001.md |
+| BC-2.15.002 | User/app/session tier isolation — user-private does not bleed across scopes | P2 | — | ss-15/BC-2.15.002.md |
+| BC-2.15.003 | GDPR erasure removes all traces from all memory tiers | P2 | — | ss-15/BC-2.15.003.md |
 
 ### 2.16 Tool Retry with Circuit Breaker (CAP-018) — P2
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.16.001 | Per-tool retry policy keyed by tool_name (not args hash) (NE-09) | P2 | — | ss-TBD/BC-2.16.001.md |
-| BC-2.16.002 | Finite global_limit non-None default (NE-09) | P2 | — | ss-TBD/BC-2.16.002.md |
-| BC-2.16.003 | Circuit breaker trips after repeated failure; prevents infinite retry (NE-09) | P2 | — | ss-TBD/BC-2.16.003.md |
+| BC-2.16.001 | Per-tool retry policy keyed by tool_name (not args hash) (NE-09) | P2 | — | ss-16/BC-2.16.001.md |
+| BC-2.16.002 | Finite global_limit non-None default (NE-09) | P2 | — | ss-16/BC-2.16.002.md |
+| BC-2.16.003 | Circuit breaker trips after repeated failure; prevents infinite retry (NE-09) | P2 | — | ss-16/BC-2.16.003.md |
 
 ### 2.17 Formal Verification Pipeline (CAP-019) — P2
 
@@ -319,8 +323,8 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.17.001 | Kani harness scope: BSP determinism VP + session tenancy VP + workspace confinement VP | P2 | DI-001, DI-005, DI-007 | ss-TBD/BC-2.17.001.md |
-| BC-2.17.002 | cargo-fuzz targets: serialization round-trip and graph-execution paths | P2 | — | ss-TBD/BC-2.17.002.md |
+| BC-2.17.001 | Kani harness scope: BSP determinism VP + session tenancy VP + workspace confinement VP | P2 | DI-001, DI-005, DI-007 | ss-17/BC-2.17.001.md |
+| BC-2.17.002 | cargo-fuzz targets: serialization round-trip and graph-execution paths | P2 | — | ss-17/BC-2.17.002.md |
 
 ---
 
@@ -397,9 +401,9 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 
 ## 5b. Test Vectors
 
-> **Supplement:** Canonical test vectors will be in `prd-supplements/test-vectors.md`.
-> Produced in BC authoring sub-bursts (embedded in individual BC files).
-> A consolidated test-vectors.md will be produced after all BC files are authored.
+> **Supplement:** `prd-supplements/test-vectors.md` — consolidated test-vector catalog
+> indexing the canonical test vectors embedded in all 86 BC files.
+> Primary consumers: test-writer, holdout-evaluator.
 
 ---
 
@@ -454,95 +458,99 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 
 ## 7. Requirements Traceability Matrix
 
-> Module column is `[architect]` — to be filled by architect in Phase 1b.
+> Module column filled from ARCH-INDEX Subsystem Registry + module-decomposition.md (Phase 1b, 2026-07-14).
 > Test type abbreviations: unit=U, integration=I, property=P, fuzz=F, Kani=K, soak=S.
 
 | BC ID | Source (L2) | Module | Priority | Test Types |
 |-------|-------------|--------|----------|-----------|
-| BC-2.01.001 | CAP-001 | [architect] | P0 | U, P |
-| BC-2.01.002 | CAP-001 | [architect] | P0 | U |
-| BC-2.01.003 | CAP-002 | [architect] | P0 | U, I |
-| BC-2.01.004 | CAP-002 | [architect] | P0 | U |
-| BC-2.02.001 | CAP-003 | [architect] | P0 | U |
-| BC-2.02.002 | CAP-003 | [architect] | P0 | U, P |
-| BC-2.02.003 | CAP-003, R-005 | [architect] | P0 | U, P |
-| BC-2.02.004 | CAP-003, R-005 | [architect] | P0 | U |
-| BC-2.02.005 | CAP-003 | [architect] | P0 | U, I |
-| BC-2.02.006 | CAP-003 | [architect] | P0 | I |
-| BC-2.03.001 | CAP-004, NE-17 | [architect] | P0 | P, K |
-| BC-2.03.002 | CAP-004, DI-001 | [architect] | P0 | U, P |
-| BC-2.03.003 | CAP-004, DI-001 | [architect] | P0 | P, K |
-| BC-2.04.001 | CAP-005, DI-002 | [architect] | P0 | U, I, S |
-| BC-2.04.002 | CAP-005, DI-002 | [architect] | P0 | U, I |
-| BC-2.04.003 | CAP-005, DI-004 | [architect] | P0 | U, P |
-| BC-2.04.004 | CAP-005, DI-004 | [architect] | P0 | U, I |
-| BC-2.04.005 | CAP-005, DI-002 | [architect] | P0 | I, S |
-| BC-2.04.006 | CAP-005, DI-005, NE-12 | [architect] | P0 | P, K |
-| BC-2.04.007 | CAP-005, NE-11 | [architect] | P0 | U, I |
-| BC-2.05.001 | CAP-006, DI-003 | [architect] | P0 | I |
-| BC-2.05.002 | CAP-006, DI-003 | [architect] | P0 | U, I |
-| BC-2.05.003 | CAP-006, DI-003 | [architect] | P0 | I |
-| BC-2.05.004 | CAP-006, DI-003 | [architect] | P0 | U, I |
-| BC-2.05.005 | CAP-006 | [architect] | P0 | U |
-| BC-2.05.006 | CAP-006, ASM-008 | [architect] | P0 | U, I |
-| BC-2.06.001 | CAP-007, DI-011 | [architect] | P0 | U, I |
-| BC-2.06.002 | CAP-007 | [architect] | P0 | U, I |
-| BC-2.06.003 | CAP-007, NE-13 | [architect] | P0 | I, S |
-| BC-2.07.001 | CAP-008, R-004 | [architect] | P0 | U |
-| BC-2.07.002 | CAP-008, R-004 | [architect] | P0 | U (golden vectors) |
-| BC-2.07.003 | CAP-008 | [architect] | P0 | U |
-| BC-2.08.001 | CAP-009, CAP-011 | [architect] | P1 | I |
-| BC-2.08.002 | CAP-009, CAP-011 | [architect] | P1 | I |
-| BC-2.08.003 | CAP-009, CAP-011 | [architect] | P1 | I |
-| BC-2.08.004 | CAP-009, CAP-011 | [architect] | P1 | I |
-| BC-2.08.005 | CAP-009, CAP-011 | [architect] | P1 | I |
-| BC-2.08.006 | CAP-009, DI-008 | [architect] | P1 | U |
-| BC-2.08.007 | CAP-009 | [architect] | P1 | I |
-| BC-2.08.008 | CAP-011, NE-15 | [architect] | P1 | U, I |
-| BC-2.09.001 | CAP-010 | [architect] | P1 | I |
-| BC-2.09.002 | CAP-010 | [architect] | P1 | I |
-| BC-2.09.003 | CAP-010, DI-012 | [architect] | P1 | I |
-| BC-2.09.004 | CAP-010, R-006 | [architect] | P1 | U |
-| BC-2.09.005 | CAP-010, R-006 | [architect] | P1 | U |
-| BC-2.10.001 | CAP-012, D17-Q4 | [architect] | P0 | U, I |
-| BC-2.10.002 | CAP-012, D17-Q4 | [architect] | P0 | U, P |
-| BC-2.10.003 | CAP-012, D17-Q4 | [architect] | P0 | U, I |
-| BC-2.10.004 | CAP-012, CAP-006 | [architect] | P0 | I |
-| BC-2.11.001 | CAP-013, DI-012 | [architect] | P0 | U, I |
-| BC-2.11.002 | CAP-013, DI-012 | [architect] | P0 | U, I |
-| BC-2.11.003 | CAP-013, DI-012 | [architect] | P0 | I |
-| BC-2.11.004 | CAP-013, DI-012 | [architect] | P0 | I |
-| BC-2.11.005 | CAP-013, DI-012 | [architect] | P0 | U, I |
-| BC-2.11.006 | CAP-013, DI-012 | [architect] | P0 | U |
-| BC-2.12.001 | CAP-014 | [architect] | P1 | I |
-| BC-2.12.002 | CAP-014 | [architect] | P1 | I |
-| BC-2.12.003 | CAP-014 | [architect] | P1 | I |
-| BC-2.12.004 | CAP-014 | [architect] | P1 | I |
-| BC-2.12.005 | CAP-014, DI-013, NE-14 | [architect] | P1 | U, I |
-| BC-2.12.006 | CAP-014, NE-08 | [architect] | P1 | U, I |
-| BC-2.12.007 | CAP-014, DI-011 | [architect] | P1 | I, S |
-| BC-2.13.001 | CAP-015, DI-006, NE-01 | [architect] | P1 | U, I |
-| BC-2.13.002 | CAP-015, DI-006 | [architect] | P1 | U |
-| BC-2.13.003 | CAP-015, DI-006 | [architect] | P1 | U |
-| BC-2.13.004 | CAP-015, DI-007, NE-02 | [architect] | P1 | U, P, K |
-| BC-2.13.005 | CAP-015, DI-007 | [architect] | P1 | U |
-| BC-2.13.006 | CAP-015, NE-16 | [architect] | P1 | U |
-| BC-2.14.001 | CAP-016, DI-008, DI-014 | [architect] | P0 | U |
-| BC-2.14.002 | CAP-016 | [architect] | P0 | U |
-| BC-2.14.003 | CAP-016, DI-008, NE-07 | [architect] | P0 | U (CI lint) |
-| BC-2.14.004 | DI-009, NE-04 | [architect] | P0 | U (CI lint) |
-| BC-2.14.005 | DI-010, NE-10 | [architect] | P0 | U (CI lint) |
-| BC-2.14.006 | CAP-016, DI-014, NE-03 | [architect] | P0 | U |
-| BC-2.15.001 | CAP-017 | [architect] | P2 | I |
-| BC-2.15.002 | CAP-017 | [architect] | P2 | I, P |
-| BC-2.15.003 | CAP-017 | [architect] | P2 | I |
-| BC-2.16.001 | CAP-018, NE-09 | [architect] | P2 | U, I |
-| BC-2.16.002 | CAP-018, NE-09 | [architect] | P2 | U |
-| BC-2.16.003 | CAP-018, NE-09 | [architect] | P2 | U, I |
-| BC-2.17.001 | CAP-019, DI-001, DI-005, DI-007 | [architect] | P2 | K |
-| BC-2.17.002 | CAP-019 | [architect] | P2 | F |
+| BC-2.01.001 | CAP-001 | ferrochain-core | P0 | U, P |
+| BC-2.01.002 | CAP-001 | ferrochain-core | P0 | U |
+| BC-2.01.003 | CAP-002 | ferrochain-core | P0 | U, I |
+| BC-2.01.004 | CAP-002 | ferrochain-core | P0 | U |
+| BC-2.02.001 | CAP-003 | ferrochain-graph | P0 | U |
+| BC-2.02.002 | CAP-003 | ferrochain-graph | P0 | U, P |
+| BC-2.02.003 | CAP-003, R-005 | ferrochain-graph | P0 | U, P |
+| BC-2.02.004 | CAP-003, R-005 | ferrochain-graph | P0 | U |
+| BC-2.02.005 | CAP-003 | ferrochain-graph | P0 | U, I |
+| BC-2.02.006 | CAP-003 | ferrochain-graph | P0 | I |
+| BC-2.03.001 | CAP-004, NE-17 | ferrochain-graph | P0 | P, K |
+| BC-2.03.002 | CAP-004, DI-001 | ferrochain-graph | P0 | U, P |
+| BC-2.03.003 | CAP-004, DI-001 | ferrochain-graph | P0 | P, K |
+| BC-2.04.001 | CAP-005, DI-002 | ferrochain-checkpoint | P0 | U, I, S |
+| BC-2.04.002 | CAP-005, DI-002 | ferrochain-checkpoint | P0 | U, I |
+| BC-2.04.003 | CAP-005, DI-004 | ferrochain-checkpoint | P0 | U, P |
+| BC-2.04.004 | CAP-005, DI-004 | ferrochain-checkpoint | P0 | U, I |
+| BC-2.04.005 | CAP-005, DI-002 | ferrochain-checkpoint | P0 | I, S |
+| BC-2.04.006 | CAP-005, DI-005, NE-12 | ferrochain-checkpoint | P0 | P, K |
+| BC-2.04.007 | CAP-005, NE-11 | ferrochain-checkpoint | P0 | U, I |
+| BC-2.05.001 | CAP-006, DI-003 | ferrochain-graph | P0 | I |
+| BC-2.05.002 | CAP-006, DI-003 | ferrochain-graph | P0 | U, I |
+| BC-2.05.003 | CAP-006, DI-003 | ferrochain-graph | P0 | I |
+| BC-2.05.004 | CAP-006, DI-003 | ferrochain-graph | P0 | U, I |
+| BC-2.05.005 | CAP-006 | ferrochain-graph | P0 | U |
+| BC-2.05.006 | CAP-006, ASM-008 | ferrochain-graph | P0 | U, I |
+| BC-2.06.001 | CAP-007, DI-011 | ferrochain-graph | P0 | U, I |
+| BC-2.06.002 | CAP-007 | ferrochain-graph | P0 | U, I |
+| BC-2.06.003 | CAP-007, NE-13 | ferrochain-graph | P0 | I, S |
+| BC-2.07.001 | CAP-008, R-004 | ferrochain-splitters | P0 | U |
+| BC-2.07.002 | CAP-008, R-004 | ferrochain-splitters | P0 | U (golden vectors) |
+| BC-2.07.003 | CAP-008 | ferrochain-splitters | P0 | U |
+| BC-2.08.001 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
+| BC-2.08.002 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
+| BC-2.08.003 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
+| BC-2.08.004 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
+| BC-2.08.005 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
+| BC-2.08.006 | CAP-009, DI-008 | ferrochain-openai, ferrochain-anthropic, ferrochain-ollama | P1 | U |
+| BC-2.08.007 | CAP-009 | ferrochain-standard-tests | P1 | I |
+| BC-2.08.008 | CAP-011, NE-15 | ferrochain-standard-tests | P1 | U, I |
+| BC-2.08.009 | CAP-009, ADR-004 | ferrochain-standard-tests | P1 | U (snapshot) |
+| BC-2.09.001 | CAP-010 | ferrochain-mcp | P1 | I |
+| BC-2.09.002 | CAP-010 | ferrochain-mcp | P1 | I |
+| BC-2.09.003 | CAP-010, DI-012 | ferrochain-mcp | P1 | I |
+| BC-2.09.004 | CAP-010, R-006 | ferrochain-mcp | P1 | U |
+| BC-2.09.005 | CAP-010, R-006 | ferrochain-mcp | P1 | U |
+| BC-2.10.001 | CAP-012, D17-Q4 | ferrochain-graph | P0 | U, I |
+| BC-2.10.002 | CAP-012, D17-Q4 | ferrochain-graph | P0 | U, P |
+| BC-2.10.003 | CAP-012, D17-Q4 | ferrochain-graph | P0 | U, I |
+| BC-2.10.004 | CAP-012, CAP-006 | ferrochain-graph | P0 | I |
+| BC-2.11.001 | CAP-013, DI-012 | ferrochain-graph | P0 | U, I |
+| BC-2.11.002 | CAP-013, DI-012 | ferrochain-graph | P0 | U, I |
+| BC-2.11.003 | CAP-013, DI-012 | ferrochain-graph | P0 | I |
+| BC-2.11.004 | CAP-013, DI-012 | ferrochain-graph | P0 | I |
+| BC-2.11.005 | CAP-013, DI-012 | ferrochain-graph | P0 | U, I |
+| BC-2.11.006 | CAP-013, DI-012 | ferrochain-graph | P0 | U |
+| BC-2.12.001 | CAP-014 | ferrochain-server | P1 | I |
+| BC-2.12.002 | CAP-014 | ferrochain-server | P1 | I |
+| BC-2.12.003 | CAP-014 | ferrochain-server | P1 | I |
+| BC-2.12.004 | CAP-014 | ferrochain-server | P1 | I |
+| BC-2.12.005 | CAP-014, DI-013, NE-14 | ferrochain-server | P1 | U, I |
+| BC-2.12.006 | CAP-014, NE-08 | ferrochain-server | P1 | U, I |
+| BC-2.12.007 | CAP-014, DI-011 | ferrochain-server | P1 | I, S |
+| BC-2.13.001 | CAP-015, DI-006, NE-01 | ferrochain-sandbox | P1 | U, I |
+| BC-2.13.002 | CAP-015, DI-006 | ferrochain-sandbox | P1 | U |
+| BC-2.13.003 | CAP-015, DI-006 | ferrochain-sandbox | P1 | U |
+| BC-2.13.004 | CAP-015, DI-007, NE-02 | ferrochain-sandbox | P1 | U, P, K |
+| BC-2.13.005 | CAP-015, DI-007 | ferrochain-sandbox | P1 | U |
+| BC-2.13.006 | CAP-015, NE-16 | ferrochain-sandbox | P1 | U |
+| BC-2.14.001 | CAP-016, DI-008, DI-014 | ferrochain-core | P0 | U |
+| BC-2.14.002 | CAP-016 | ferrochain-core | P0 | U |
+| BC-2.14.003 | CAP-016, DI-008, NE-07 | ferrochain-core | P0 | U (CI lint) |
+| BC-2.14.004 | DI-009, NE-04 | ferrochain-core | P0 | U (CI lint) |
+| BC-2.14.005 | DI-010, NE-10 | ferrochain-core | P0 | U (CI lint) |
+| BC-2.14.006 | CAP-016, DI-014, NE-03 | ferrochain-core | P0 | U |
+| BC-2.15.001 | CAP-017 | ferrochain-graph | P2 | I |
+| BC-2.15.002 | CAP-017 | ferrochain-graph | P2 | I, P |
+| BC-2.15.003 | CAP-017 | ferrochain-graph | P2 | I |
+| BC-2.16.001 | CAP-018, NE-09 | ferrochain-graph | P2 | U, I |
+| BC-2.16.002 | CAP-018, NE-09 | ferrochain-graph | P2 | U |
+| BC-2.16.003 | CAP-018, NE-09 | ferrochain-graph | P2 | U, I |
+| BC-2.17.001 | CAP-019, DI-001, DI-005, DI-007 | ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox | P2 | K |
+| BC-2.17.002 | CAP-019 | ferrochain-graph, ferrochain-checkpoint | P2 | F |
+| BC-2.08.010 | CAP-002, ADR-004, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
+| BC-2.08.011 | CAP-003, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
+| BC-2.08.012 | CAP-003, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
 
-**Totals:** 82 BCs — 48 P0 / 26 P1 / 8 P2
+**Totals:** 86 BCs — 48 P0 / 30 P1 / 8 P2
 
 ---
 
@@ -556,7 +564,7 @@ All are resolved here. Flagged-for-human column indicates whether human gate rev
 | OQR-1 | HITL risk tiers — extend CAP-006 or new capability? | Extension of CAP-006. BC-2.05.006 adds typed action-risk levels within the HITL interrupt model. No new CAP. | The interrupt mechanism is unchanged; risk tiers are a BC-level typing of interrupt types within the same subsystem. ASM-008 confirms the capability is HITL, just richer. | No |
 | OQR-2 | Agent registry — first-class vs application-layer vs deferred? | Application-layer concern. CAP-014 Assistant concept (named agent config) in ferrochain-server covers named agent registration at the server level. No separate "agent registry" primitive is in scope for v1. | LangChain v1 has no first-class agent registry; adk-rust's agent registry is REJECT (P-17). The Assistant concept in LangGraph Platform (the server's domain) is the right analog. | No |
 | OQR-3 | CAP-019 phase anchoring — behavioral invariants Phase-1 vs proof deliverables Phase-6? | Behavioral invariants (DI-001, DI-005, DI-007) get Phase-1 BCs. Kani proof deliverables belong to Phase 6. BC-2.17.001 specifies the VP scope; the harness that proves them is Phase-6 work. | This is already stated explicitly in CAP-019's domain-spec entry. No ambiguity — confirmed as documented. | No |
-| OQR-4 | D5 proc-macro BC dependency — note gating ADR? | BCs for #[tool], #[entrypoint], #[task] proc-macro attributes are GATED on D5 ADR. They are not in the 82-BC plan. A placeholder note is in each affected subsection's BC index. D17-Q6 accepted D5 gate. | D5 ADR (schemars/proc-macro decision) must precede proc-macro BCs per D17-Q6. The 82-BC plan contains no proc-macro BCs. If D5 ADR produces an ADOPT disposition, proc-macro BCs become a Phase-1b addition via the BC authoring plan. | No (D5 ADR is the gate, not human) |
+| OQR-4 | D5 proc-macro BC dependency — note gating ADR? | BCs for #[tool], #[entrypoint], #[task] proc-macro attributes are GATED on D5 ADR. They are not in the 83-BC plan. A placeholder note is in each affected subsection's BC index. D17-Q6 accepted D5 gate. | D5 ADR (schemars/proc-macro decision) must precede proc-macro BCs per D17-Q6. The 83-BC base plan contained no proc-macro BCs; 3 were added as Phase-1b amendments (BC-2.08.010–012, Batch 13) after ADR-004 and ADR-008 acceptance (total: 86 BCs). If D5 ADR produces an ADOPT disposition, proc-macro BCs become a Phase-1b addition via the BC authoring plan. | No (D5 ADR is the gate, not human) |
 | OQR-5 | DI-012 default hook behavior — default-permit or default-deny? | Default-permit with WARNING LOG at WARN level when no GuardrailHook is registered. Graph does not fail. Operator sees a warning. _(Changelog: updated INFO→WARN 2026-07-13 to match BC-2.11.006 and BC-2.09.003 which both emit `WARN`-level; INFO is insufficient for an operator-actionable security alert.)_ | Security posture (NE-01, NE-14) is about enforcing defaults for sandbox and server config — not about blocking all content when no guardrail is configured. A missing guardrail is valid for most non-SOC use cases. Domain A users must explicitly register a GuardrailHook. default-deny would break every RAG and MCP use case that doesn't need content filtering. BC-2.11.006 specifies this contract. | No |
 
 ---
@@ -586,7 +594,7 @@ to BCs, CI lint gates, or ADRs.
 | NE-16 | BC | BC-2.13.006 (macOS Seatbelt deny-by-default) |
 | NE-17 | BC + VP seed | BC-2.03.001, BC-2.03.003 (BSP determinism) |
 
-**Coverage: 17/17 NEs anchored. 15 → BC; 2 → CI lint gate only (NE-04, NE-05). Zero unanchored.**
+**Coverage: 17/17 NEs anchored. 15 → BC; 1 → BC + CI lint gate (NE-04); 1 → CI lint gate only (NE-05). Zero unanchored.**
 
 ---
 

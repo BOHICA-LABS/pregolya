@@ -1,0 +1,5 @@
+# Large generated files — do not track in factory-artifacts
+logs/*.jsonl
+
+# Rust build artifacts from namespace-reservation crates
+namespace-reservation/*/target/

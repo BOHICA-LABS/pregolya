@@ -13,7 +13,7 @@ traces_to: .factory/specs/prd.md
 
 # BC-INDEX: ferrochain Behavioral Contracts
 
-> **83 BCs total — 48 P0 / 27 P1 / 8 P2 | 5 Red Gate | 3 VP Seed (Kani) | 5 VPs registered**
+> **86 BCs total — 48 P0 / 30 P1 / 8 P2 | 5 Red Gate | 3 VP Seed (Kani) | 5 VPs registered**
 >
 > Subsystem IDs: SS-01 through SS-17 assigned by architect at Phase 1 Step D (2026-07-14).
 > All BCs reside under `specs/behavioral-contracts/ss-NN/` per ARCH-INDEX Subsystem Registry.
@@ -23,9 +23,9 @@ traces_to: .factory/specs/prd.md
 
 | Metric | Count |
 |--------|-------|
-| Total BCs | 82 |
+| Total BCs | 86 |
 | Priority P0 | 48 |
-| Priority P1 | 26 |
+| Priority P1 | 30 |
 | Priority P2 | 8 |
 | Red Gate BCs | 5 |
 | VP Seed (Kani) BCs | 3 |
@@ -46,7 +46,7 @@ traces_to: .factory/specs/prd.md
 | BC ID | Title | NE Anchor |
 |-------|-------|-----------|
 | BC-2.03.001 | BSP Super-Step Execution Determinism | NE-17 |
-| BC-2.04.006 | Session Triple-Address Uniqueness | NE-05 |
+| BC-2.04.006 | Session Triple-Address Uniqueness | NE-12 |
 | BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root | NE-02 |
 
 ## Full BC Catalog
@@ -71,7 +71,7 @@ traces_to: .factory/specs/prd.md
 | BC-2.04.003 | Monotonic Logical-Clock Checkpoint IDs — Wall-Clock UUIDs Rejected | CAP-005 | | | P0 | | | ss-04/BC-2.04.003.md |
 | BC-2.04.004 | Fork Lineage via parent_checkpoint_id Pointers; No State Copy on Fork | CAP-005 | | | P0 | | | ss-04/BC-2.04.004.md |
 | BC-2.04.005 | Crash Recovery — Completed Tasks Not Re-Executed After Process Restart | CAP-005 | | | P0 | | | ss-04/BC-2.04.005.md |
-| BC-2.04.006 | Session Triple-Address Uniqueness (thread_id, checkpoint_ns, checkpoint_id) — Kani VP Seed | CAP-005 | | | P0 | | **VP** | ss-04/BC-2.04.006.md |
+| BC-2.04.006 | Session Triple-Address Uniqueness (thread_id, checkpoint_ns, checkpoint_id) — Kani VP Seed | CAP-005 | | DI-005 | P0 | | **VP** | ss-04/BC-2.04.006.md |
 | BC-2.04.007 | Encryption at Rest Covers Both State AND Event Payloads; Rotation Errors Propagate | CAP-005 | | | P0 | | | ss-04/BC-2.04.007.md |
 | BC-2.05.001 | Interrupt Suspension with Durable State Persistence | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.001.md |
 | BC-2.05.002 | FIFO Resume-Value Delivery Order | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.002.md |
@@ -94,6 +94,9 @@ traces_to: .factory/specs/prd.md
 | BC-2.08.007 | Provider Streaming Interrupted by Transport Error Surfaces Err(Timeout), Not Truncated Success | CAP-009 | | DI-009,DI-014 | P1 | | | ss-08/BC-2.08.007.md |
 | BC-2.08.008 | Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15) | CAP-011 | NE-15 | | P1 | | | ss-08/BC-2.08.008.md |
 | BC-2.08.009 | Tool Schema Naming Stability (Snapshot Test Anchor) | CAP-009 | | | P1 | | | ss-08/BC-2.08.009.md |
+| BC-2.08.010 | `#[tool]` Attribute Macro — async fn to Tool Implementor via schemars::JsonSchema | CAP-002 | | DI-008 | P1 | | | ss-08/BC-2.08.010.md |
+| BC-2.08.011 | `#[entrypoint]` Attribute Macro — START Edge Auto-Wiring for StateGraph | CAP-003 | | | P1 | | | ss-08/BC-2.08.011.md |
+| BC-2.08.012 | `#[task]` Attribute Macro — Task Registration Boilerplate Generation | CAP-003 | | | P1 | | | ss-08/BC-2.08.012.md |
 | BC-2.09.001 | MCP Server Tool Discovery and Registration at Runtime | CAP-010 | | | P1 | | | ss-09/BC-2.09.001.md |
 | BC-2.09.002 | ToolInvocation Routing to Correct MCP Server Transport | CAP-010 | | | P1 | | | ss-09/BC-2.09.002.md |
 | BC-2.09.003 | Tool-Result Content Treated as Untrusted Ingress (DI-012 Applies) | CAP-010 | | DI-012 | P1 | | | ss-09/BC-2.09.003.md |
@@ -139,7 +142,8 @@ traces_to: .factory/specs/prd.md
 
 ## Carry-Forward Notes (RESOLVED at Phase 1 Step D, 2026-07-14)
 
-1. **SS-TBD backfill** — RESOLVED. All 82 BCs now have `subsystem: SS-NN`. BC files moved to `ss-NN/` dirs per artifact-path-registry. ARCH-INDEX Subsystem Registry is authoritative.
+1. **SS-TBD backfill** — RESOLVED. All 83 BCs now have `subsystem: SS-NN`. BC files moved to `ss-NN/` dirs per artifact-path-registry. ARCH-INDEX Subsystem Registry is authoritative.
 2. **VP-INDEX registration** — RESOLVED. VP-001..VP-003 (Kani) + VP-004..VP-005 (integration, from BC-2.09.004/005) registered in VP-INDEX.md.
 3. **vp_seed frontmatter inconsistency** — RESOLVED. BC-2.03.001: `vp_seed: true, vp_id: VP-001`. BC-2.04.006: normalized `kani_vp_seed` → `vp_seed: true, vp_id: VP-002`. BC-2.13.004: `vp_seed: true, vp_id: VP-003`.
 4. **red_gate_required vs red_gate** — RESOLVED. BC-2.07.002: `red_gate_required: true` → `red_gate: true, red_gate_source: R8`.
+5. **Proc-macro BCs (Phase-1b)** — ADDED. BC-2.08.010/011/012 authored from ADR-004 + ADR-008 acceptance (D5 gate resolved). Batch 13 in bc-authoring-plan.md. Total: 83 → 86 BCs; P1 count: 27 → 30.

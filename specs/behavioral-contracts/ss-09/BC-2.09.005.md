@@ -128,7 +128,7 @@ Note: callers are better served by cloning (which is cheap) than by Arc-wrapping
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-MCP-05 | `MultiServerMcpClient` construction and drop cause no network I/O | Red Gate test (compile+pass but network assertion fails), then unit test post-implementation | Phase 1 |
+| VP-005 | `MultiServerMcpClient` construction and drop cause no network I/O | Red Gate test (compile+pass but network assertion fails), then unit test post-implementation | Phase 1 |
 
 ## Related BCs
 
@@ -146,7 +146,7 @@ _[to be filled after story decomposition]_
 
 ## VP Anchors
 
-- VP-MCP-05
+- VP-005
 
 ## Traceability
 

@@ -17,6 +17,51 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Checkpoint archived from burst 74 (2026-07-14T12:00:00Z)
+
+### RESUME IN ONE BREATH
+
+ferrochain Phase 1 Spec Crystallization: Steps A+B+C+D+E complete. Spec gate ready: dispatch consistency-validator (fresh context, full cross-doc audit) → Phase 1d adversarial (3 clean passes min, different model). 83 BCs in ss-01..ss-17 + BC-INDEX. VP-INDEX 5 entries (VP-001..005). 10 ADRs accepted (ADR-001 = Alt B HYBRID, D9 gate passed 2026-07-14). DTU_REQUIRED: true — cassette clones for OpenAI/Anthropic/Ollama; pre-Phase-3 gate ≥8/7/3 recordings; OpenAI Responses-migration re-record trigger flagged. Tech validation: schemars 1.x path fix, bincode 2.x alt noted, Kani no-async → sync-core mandate. BC-2.08.009 added (schema naming stability; BC-INDEX 83). R4 reframed: langgraph 0.2.5 pre-1.0 checkpointing — HIGH velocity; moat = GA maturity + conformance + formal verif. ANOMALY: 3 spec propagation gaps flagged in burst-log (prd.md + BC-INDEX.md — orchestrator must dispatch product-owner/spec-steward before spec-gate sign-off).
+
+### HEADS
+
+| Repo | Branch | SHA | Pushed | Notes |
+|------|--------|-----|--------|-------|
+| factory-artifacts | factory-artifacts | (burst 74 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
+| main | main | d018d3f | YES | CLAUDE.md + .gitignore committed (D10); develop initialized |
+
+No worktrees. No PRs. Reference clones (.reference/) gitignored.
+
+### WORKSTREAM
+
+**Phase 1 Steps D+E COMPLETE.** 10 ADRs finalized (D9: Alt B). 82→83 BCs. VP-INDEX 5 entries. DTU assessment done (3 clone sets). Tech validation: 3 corrections applied.
+
+**RESUME NEXT-ACTION:** consistency-validator (fresh context, full spec cross-doc audit) → Phase 1d adversarial review.
+
+### PENDING HUMAN ACTIONS (open)
+
+1. `direnv allow .` (B1 — Low, blocks key loading)
+2. `cargo login` + `.factory/namespace-reservation/publish-all.sh` — R6 namespace race STILL OPEN
+
+### STANDING DIRECTIVES
+
+| ID | Directive |
+|----|-----------|
+| D15 | Autonomous loop, never ask to continue — "Keep going until you hit convergence protocol." |
+| D14 | Absolute strict-zero: CLEAN(strict) = zero findings; 3 consecutive required |
+| D17 | HYBRID outcome adopted — LangChain API surface + 43 ADOPT/ADAPT adk-rust patterns |
+
+### WRAP METADATA (burst 74)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-14 |
+| **Cycle** | v1.0.0-greenfield |
+| **Burst commit** | (burst 74 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Convergence counter** | 3 of 3 — GATE CLOSED (adk-rust C23; pre-pipeline) |
+
+---
+
 ## Checkpoint archived from burst 73 (2026-07-14T08:00:00Z)
 
 ### RESUME IN ONE BREATH

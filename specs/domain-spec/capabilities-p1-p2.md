@@ -165,9 +165,9 @@ NE items must be anchored before Phase-2 story decomp.
 ### CAP-019: Formal Verification Pipeline (Kani + cargo-fuzz)
 
 Run Kani harness proofs for the three committed VP obligations (D17-Q7): BSP determinism VP
-(NE-17), delta round-trip checkpoint VP (CONFLICT-9), and session tenancy partition VP
-(NE-12). Run cargo-fuzz on the core serialization and graph-execution paths. Both tools
-locked by D17-Q7.
+(VP-001, DI-001/NE-17), session triple-address uniqueness VP (VP-002, DI-005/NE-12), and
+workspace path confinement VP (VP-003, DI-007/NE-02). Run cargo-fuzz on the core
+serialization and graph-execution paths. Both tools locked by D17-Q7.
 
 **Grounding:** product-brief.md §Success Criteria — "All 3 committed VP obligations pass Kani
 harness before v1 convergence (D17-Q7)"; §Scope cross-cutting — "Formal verification

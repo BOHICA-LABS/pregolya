@@ -49,7 +49,7 @@ architect_note: "Architect must confirm crate-to-subsystem mapping and fill Arch
 |--------|-------|------|-----------|-----------------|---------|
 | BSP execution engine | ferrochain-graph | CRITICAL | DI-001 formal verification target; nondeterminism is a silent defect; CONFLICT-1 critical finding | ≥ 95% | 1 (BSP-determinism-VP) |
 | HITL interrupt/resume | ferrochain-graph | CRITICAL | D17-Q2 Phase-1 BC; cannot be retrofitted; Domain A+B holdout depends on correctness | ≥ 95% | 0 |
-| Per-task checkpoint store | ferrochain-checkpoint | CRITICAL | DI-002 durability invariant; Domain B multi-day run depends on crash recovery; VP seed | ≥ 95% | 1 (delta-round-trip-VP) |
+| Per-task checkpoint store | ferrochain-checkpoint | CRITICAL | DI-002 durability invariant; Domain B multi-day run depends on crash recovery | ≥ 95% | 0 |
 | Session tenancy layer | ferrochain-checkpoint | CRITICAL | DI-005 Kani VP target; NE-12 cross-tenant isolation | ≥ 95% | 1 (session-tenancy-VP) |
 | FerrochainError + credential newtypes | ferrochain-core | CRITICAL | NE-10 security boundary; DI-008 API contract; DI-010 credential opacity | ≥ 95% | 0 |
 | Workspace path confinement | ferrochain-sandbox | CRITICAL | DI-007 Kani VP target; NE-02 symlink escape; Domain C forcing function | ≥ 95% | 1 (workspace-confinement-VP) |
