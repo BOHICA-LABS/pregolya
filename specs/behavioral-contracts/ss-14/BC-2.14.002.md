@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -12,6 +12,7 @@ subsystem: SS-14
 changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-01 PC3 add per-endpoint override block (E-SERVER-016→503); OBS-1 invariant precedence carve-out added."
   - "1.2 (ADV-P1D-PASS-26): F-P26-01 PC3 Known-overrides enumeration expanded to all 8 per-endpoint override classes; E-SERVER-004 removed from invariant divergence-example list (POLICY→403 is the categorical default, not a divergence)."
+  - "1.3 (ADV-P1D-PASS-27): F-P27-01 add 9th Known-override: E-GRAPH-002 POLICY→422 on resume endpoint; canon: pass-23 deliberately set 422 (semantic state validation failure — no active interrupt slot); POLICY→403 categorical default does not apply because 'no active interrupt' is an unprocessable-entity condition, not a policy rejection."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -99,6 +100,15 @@ requiring the HTTP layer to reach into the error's internal fields directly.
      provider/upstream timeout — 503 is the correct retryable-service-unavailable code.
      `RetryHint::Later` + `Retry-After` header are emitted. Source: BC-2.12.006 EC-002;
      interface-definitions.md §HTTP Status Codes 503 row; F-P25-01.
+   - `E-GRAPH-002 (NoActiveInterrupt)` → **422** despite `Category::Policy` → 403.
+     Rationale: the resume endpoint (`POST /threads/{thread_id}/runs/{run_id}/resume`)
+     receives a well-formed request for a run with no active interrupt slot — this is a
+     semantic state validation failure (422 Unprocessable Entity: the request cannot be
+     processed because the entity's current state makes it impossible), not a policy
+     rejection (403 would mean "you are not permitted to perform this action"). 422
+     conveys "the run exists and you are authorized, but there is nothing to resume."
+     Canon established pass-23; prior 409 entry retired. Source: BC-2.05.005 TV-003;
+     interface-definitions.md §HTTP Status Codes 422 row; F-P27-01.
 4. The `Content-Type` header of the response is `application/problem+json` (not
    `application/json`) when a `ProblemDetail` is emitted.
 5. A `FerrochainError` without an HTTP context (e.g. raised in a CLI tool) can still call
@@ -117,11 +127,12 @@ requiring the HTTP layer to reach into the error's internal fields directly.
   specified in a resource BC overrides the categorical default; the categorical map is the
   fallback for errors with no per-endpoint specification. Legitimate per-endpoint divergences
   (e.g., E-SERVER-016 TIMEOUT→503, E-SERVER-009 VAL→404 for direct lookup,
-  E-SERVER-008 POLICY→409 for thread state conflict) must be documented in PC3 and
-  interface-definitions.md §HTTP Status Codes. Note: E-SERVER-004 POLICY→403 is NOT a
-  divergence — POLICY→403 is the categorical default and requires no carve-out.
+  E-SERVER-008 POLICY→409 for thread state conflict, E-GRAPH-002 POLICY→422 on resume
+  endpoint) must be documented in PC3 and interface-definitions.md §HTTP Status Codes.
+  Note: E-SERVER-004 POLICY→403 is NOT a divergence — POLICY→403 is the categorical
+  default and requires no carve-out.
   The categorical map itself must not diverge; per-endpoint overrides must be explicit.
-  Source: F-P25-01, OBS-1, ADV-P1D-PASS-25; F-P26-01, ADV-P1D-PASS-26.
+  Source: F-P25-01, OBS-1, ADV-P1D-PASS-25; F-P26-01, ADV-P1D-PASS-26; F-P27-01, ADV-P1D-PASS-27.
 
 ## Edge Cases
 

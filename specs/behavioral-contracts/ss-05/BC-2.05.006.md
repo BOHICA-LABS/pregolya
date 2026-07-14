@@ -2,10 +2,12 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.006
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.1 (ADV-P1D-PASS-27): F-P27-06 Architecture Anchor renamed risk_tier.rs → action_risk.rs for consistency with the action_risk wire-field canon (retired-identifier gate #19)."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -178,7 +180,7 @@ distributed clock source or accept ±process-clock-drift tolerances in the timeo
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/hitl/risk_tier.rs` — `ActionRisk` enum, `HitlInterruptPayload`, `RiskGatePolicy`
+- `ferrochain-graph/src/hitl/action_risk.rs` — `ActionRisk` enum, `HitlInterruptPayload`, `RiskGatePolicy` (F-P27-06: renamed from `risk_tier.rs` for consistency with the `action_risk` wire-field canon; `risk_tier.rs` is a retired source path)
 - `ferrochain-graph/src/hitl/policy.rs` — `ApproverRole`, role-check logic, auto-approve evaluation
 - `ferrochain-server/src/routes/runs.rs` — `POST /threads/{thread_id}/runs/{run_id}/resume` with role-credential validation
 

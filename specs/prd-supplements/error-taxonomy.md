@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-error-taxonomy
 level: L3
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-07-14T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-02 recategorize E-SERVER-004 AUTH→POLICY; correction note added inline."
+  - "1.2 (ADV-P1D-PASS-27): F-P27-02 recategorize E-CHKPT-004 SECURITY→INTERNAL (BC-2.04.007 authoritative; key rotation is an internal invariant failure, not a security policy rejection)."
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -99,7 +100,7 @@ primary_consumers: [implementer, test-writer]
 | E-CHKPT-001 | DURABILITY | broken | BC-2.04.001 | `CheckpointWriteFailed: put_writes for task '<task_id>' failed — backend error: <backend_error>` |
 | E-CHKPT-002 | INTERNAL | broken | BC-2.04.003 | `MonotonicClockRegression: checkpoint ID <new_id> is not strictly greater than current <current_id>` |
 | E-CHKPT-003 | DURABILITY | broken | BC-2.04.005 | `CheckpointReadFailed: cannot restore state for thread '<thread_id>' checkpoint '<checkpoint_id>': <reason>` |
-| E-CHKPT-004 | SECURITY | broken | BC-2.04.007 | `EncryptionKeyRotationFailed: checkpoint state encryption key rotation error: <reason>` |
+| E-CHKPT-004 | INTERNAL | broken | BC-2.04.007 | `EncryptionKeyRotationFailed: checkpoint state encryption key rotation error: <reason>` — **Category correction (F-P27-02, ADV-P1D-PASS-27):** was SECURITY → INTERNAL. BC-2.04.007 constructs this error with `category: INTERNAL` throughout (PC4, PC5, EC-001, EC-002); key rotation failure is an internal invariant violation (programming/config error), not a security policy rejection. BC is authoritative. |
 | E-CHKPT-005 | TENANCY | broken | BC-2.04.006 | `SessionAddressCollision: operation with (thread_id='<t>', ns='<ns>') conflicts with existing session — triple must be unique` |
 | E-CHKPT-006 | INTERNAL | broken | BC-2.05.001 | `SerializationFailed: interrupt_value cannot be serialized by the configured checkpoint serializer — type contract violation (programming error)` |
 

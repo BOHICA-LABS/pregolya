@@ -40,6 +40,15 @@ traces_to: STATE.md
 **Codified fix:** BC-2.14.002 now states that the categorical table is the default floor; per-endpoint status rules documented in the endpoint's own BC take precedence and are not divergence — they are intentional extensions. The invariant now reads as "per-endpoint rules must be explicitly documented and must not contradict the categorical table without a stated rationale."
 **Applicable to:** Any BC invariant using absolute prohibition language ("must not", "never", "always") — these should be audited for whether a legitimate override pathway exists and documented if so.
 
+### L-003 [process-gap, codified]: Manual Positive-Coverage Census Not Re-Run After Wildcard Narrowing
+
+**Discovered:** Pass 27 (burst 103)
+**Symptom:** The §17-C positive-coverage census (codified in L-001, burst 101) was not re-run after pass-26 narrowed the 422-row wildcard to 8 enumerated VAL E-GRAPH codes. The census row for E-GRAPH-002 remained green (from a pre-narrowing run) despite E-GRAPH-002 now being in a three-way contradiction: it appeared in taxonomy as POLICY (returning 422), the status table showed a wildcard-narrowed 422 row covering VAL codes only, and BC-2.14.002 PC3 had no entry for it. F-P27-01 (HIGH) found the gap.
+**Root cause:** The census is a manual step. No gate enforced re-running it when a prerequisite artifact (the status table) changed. The census result was treated as a cached pass.
+**Codified fix:** Gate #21 CENSUS RE-RUN TRIGGER added to bc-authoring-plan.md: whenever any status-table wildcard is narrowed or any E-code taxonomy category is changed, §17-C census MUST be re-run before the fix burst is closed. This gate is checked as a sibling-check in the next adversarial pass.
+**Deferred improvement (NOT yet codified):** Machine-enforce the census grep via CI/hook — orchestrator to open a follow-up story or deferral entry at cycle close per S-7.02.
+**Applicable to:** Any multi-step authoring plan where a downstream census depends on upstream artifact state. Cache invalidation must be explicit: record WHICH artifacts the census depends on and trigger re-run when any of them change.
+
 ## Infrastructure-Level
 
 <!-- No lessons yet. -->
@@ -48,4 +57,6 @@ traces_to: STATE.md
 
 | Lesson | Proposed Policy | Scope | Status |
 |--------|----------------|-------|--------|
-| — | — | — | — |
+| L-001 | Positive-coverage assertions required for census gates | All census gates | Codified |
+| L-002 | Absolute invariants must carry precedence carve-outs | BC authoring | Codified |
+| L-003 | Census re-run trigger required after artifact changes | All census gates | Codified (gate #21) |

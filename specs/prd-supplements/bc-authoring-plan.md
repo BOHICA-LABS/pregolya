@@ -424,7 +424,7 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | 404 | E-SERVER-006 ScheduleNotFound | BC-2.12.004 EC-005 | PASS |
     | 409 | E-SERVER-012 ConcurrentRun | BC-2.12.003 EC-002 | PASS |
     | 409 | E-SERVER-015 RunAlreadyExecuting | BC-2.12.007 TV-006 | PASS |
-    | 422 | E-GRAPH-002 NoActiveInterrupt | BC-2.05.005 TV-003 | PASS (fixed P23: E-GRAPH-* → 422 per interface-definitions.md; prior 409 entry retired) |
+    | 422 | E-GRAPH-002 NoActiveInterrupt | BC-2.05.005 TV-003 | PASS (F-P27-01: E-GRAPH-002 now enumerated in 422 row explicitly as POLICY→422 per-endpoint override; BC-2.14.002 PC3 9th override; wildcard citation in EC-001 and TV-003 replaced with concrete override citation; prior wildcard "E-GRAPH-* → 422" retired by P26 OBS-1 narrowing) |
     | 422 | E-SERVER-009 (AssistantNotFound in run body) | BC-2.12.003 PC3 | PASS (context-dependent: 422 in run creation body; 404 at direct assistant lookup) |
     | 422 | E-SERVER-011 (GraphNotFound in assistant body) | BC-2.12.002 EC-005 | PASS |
     | 429 | E-PROV-001 | interface-definitions.md | PASS |
@@ -539,9 +539,10 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | bare `\bCheckpointer\b` | `CheckpointSaver` | P20 shared-type census |
     | `X-Debug-Key` header | `Authorization: Bearer <key>` | F-P26-04 |
     | `/debug/*` path | `/_debug` | F-P26-04 |
+    | `risk_tier.rs` (source file path) | `action_risk.rs` | F-P27-06 (BC-2.05.006 Architecture Anchor) |
 
-    Census command: `grep -rn "to_problem_detail\|risk_tier\|X-Debug-Key" .factory/specs/ | grep -v "~~\|changelog\|Census command\|retired.*list\|Retired Identifier"` — output must be ZERO live occurrences.
-    Source: ADV-P1D-PASS-26 §F-P26-02, §F-P26-03, §F-P26-04.
+    Census command: `grep -rn "to_problem_detail\|risk_tier\|X-Debug-Key" .factory/specs/ | grep -v "~~\|changelog\|Census command\|retired.*list\|Retired Identifier\|action_risk.rs"` — output must be ZERO live occurrences (note: `risk_tier` in the retired-identifier table row itself and in the census-rule comment are excluded; `risk_tier.rs` in the description column of this table row is also excluded by the `Retired Identifier` filter).
+    Source: ADV-P1D-PASS-26 §F-P26-02, §F-P26-03, §F-P26-04; ADV-P1D-PASS-27 §F-P27-06.
 
 20. **AUTH/POLICY category re-sweep (added P26 — standing gate):**
     Any edit to a 401/403/409 table row in interface-definitions.md §HTTP Status Codes,
@@ -557,3 +558,30 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     4. No code appears in two conflicting rows of the HTTP status table without an explicit disambiguation note.
 
     Source: ADV-P1D-PASS-26 §F-P26-05 (E-PROV-004 orphan discovery triggered this gate).
+
+21. **HTTP status-code table edit → census re-run trigger (added P27 — standing gate):** [process-gap]
+    Any burst that edits the interface-definitions.md §HTTP Status Codes table (row add,
+    row remove, row narrowing, or row widening) MUST re-run the full §17-C census
+    (guideline #17 above) IN THE SAME BURST and update every affected census row before
+    the burst closes.
+
+    **Trigger conditions:**
+    - Adding a new E-code to any row → add a census row for that code
+    - Removing an E-code from a row → retire the census row (mark RETIRED with reason)
+    - Narrowing a wildcard to an enumerated list → update every census row that cited the wildcard
+    - Widening an enumerated list → add census rows for newly included codes
+    - Changing a row's description without changing codes → no census update needed (description-only)
+
+    **Rationale:** ADV-P1D-PASS-27 §OBS-P27-2 found that the P26 OBS-1 narrowing of the 422
+    wildcard (E-GRAPH-* → enumerated list) left the §17-C census row for E-GRAPH-002 citing
+    the retired wildcard as its PASS evidence — making the census row a false PASS. The census
+    must be re-run whenever the table it verifies against changes.
+
+    **Deferred process improvement (machine-enforcement recommendation, OBS-P27-2):** The
+    orchestrator should consider a CI/hook implementation: a grep script that re-runs the
+    §17-C census after any commit touching interface-definitions.md §HTTP Status Codes and
+    fails if any census row cites a wildcard pattern that no longer exists in the table row.
+    This would make the census machine-enforceable rather than relying on burst discipline.
+    Log at cycle close for v1.1 planning.
+
+    Source: ADV-P1D-PASS-27 §OBS-P27-2 [process-gap].

@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
 timestamp: 2026-07-14T00:00:00Z
@@ -9,6 +9,7 @@ phase: 1d
 changelog:
   - "1.6 (ADV-P1D-PASS-25): F-P25-01 add 503 row (E-SERVER-016 IdempotencyLockTimeout per-endpoint override); F-P25-02 recategorize 401→reserved, 403 now E-SERVER-004 POLICY + E-SERVER-005; F-P25-06 reconcile Run.interrupt sub-fields (interrupt_id, node_name, value, action_risk, action, context added; node_id→node_name, risk_tier→action_risk renamed); F-P25-07 add 201 and 204 rows, add E-CRON-002 to 400 row; OBS-2 add 502 and 504 categorical fallback rows."
   - "1.7 (ADV-P1D-PASS-26): F-P26-04 config comment X-Debug-Key+/debug/*→Authorization:Bearer+/_debug; F-P26-05 rewrite 401 row with E-PROV-004 categorical-fallback; OBS-1 narrow 422 wildcard to enumerated VAL E-GRAPH codes; OBS-2 add E-CRON-001/003 intentional-omission note; OBS-3 add E-PROV-005/006 to 400 row with embedded-in-Run.error annotation."
+  - "1.8 (ADV-P1D-PASS-27): F-P27-01 add E-GRAPH-002 (POLICY→422 per-endpoint override) to 422 row; F-P27-02/03 replace 'all E-CHKPT-*' over-broad text with specific enumeration, add E-CHKPT-004 (INTERNAL) to 500 row, add E-CHKPT-005 omission note; F-P27-04 add E-GRAPH-013 (SECURITY) to 403 row, add E-GRAPH-001/014/016 embedded omission notes; 422 row description updated to note POLICY→422 overrides."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -207,12 +208,12 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 | 204 | No Content (delete success; no response body) | — |
 | 400 | Validation error | E-CORE-001 through E-CORE-005, E-CRON-002 (InvalidCronExpression); E-PROV-005 (StructuredOutputParseError, VAL) and E-PROV-006 (ContextLengthExceeded, VAL) — categorical VAL→400; surfaced embedded in Run.error, not as direct HTTP response codes (OBS-3; BC-2.08.003, BC-2.08.004) |
 | 401 | Authentication failure (categorical fallback) | E-PROV-004 (ProviderAuthFailed, AUTH) — categorical fallback only; no v1 server endpoint emits 401 as a direct terminal HTTP status; surfaced embedded in Run.error. Server-side authentication middleware is out of v1 scope (F-P26-05; F-P25-02: E-SERVER-004 recategorized AUTH→POLICY → 403) |
-| 403 | Policy enforcement (CORS, debug route) | E-SERVER-004 (DebugRouteUnauthorized), E-SERVER-005 (CorsRejected) |
+| 403 | Policy enforcement (CORS, debug route, role gate) | E-SERVER-004 (DebugRouteUnauthorized), E-SERVER-005 (CorsRejected), E-GRAPH-013 (InsufficientApproverRole — SECURITY; direct HTTP 403 on `POST /threads/{thread_id}/runs/{run_id}/resume` when caller role is insufficient for the interrupt's risk tier; BC-2.05.006 PC3-PC4, EC-001; F-P27-04) |
 | 404 | Resource not found | E-SERVER-002 (RunNotFound), E-SERVER-003 (ThreadNotFound), E-SERVER-006 (ScheduleNotFound), E-SERVER-009 (AssistantNotFound — direct resource lookup), E-SERVER-010 (AssistantVersionNotFound) |
 | 409 | Conflict (duplicate resource or state conflict) | E-SERVER-007 (ThreadAlreadyExists), E-SERVER-008 (ThreadStateConflict — POLICY→409 per-endpoint override; BC-2.14.002 PC3; F-P26-01), E-SERVER-012 (ConcurrentRun), E-SERVER-015 (RunAlreadyExecuting) |
-| 422 | Semantic validation failure (VAL-category on body content) | E-GRAPH-003 (UnknownRoutingTarget), E-GRAPH-004 (DuplicateBarrierWrite), E-GRAPH-007 (UnknownChannelKey), E-GRAPH-008 (UnreachableGraph), E-GRAPH-009 (DuplicateNodeName), E-GRAPH-010 (UnknownBarrierWriter), E-GRAPH-012 (UnmappedRouteKey), E-GRAPH-015 (NoParentGraph); E-SERVER-009 (AssistantNotFound in run body — invalid assistant_id reference at run creation; context-dependent: same code, 404 at direct lookup), E-SERVER-011 (GraphNotFound — graph_id in assistant body not registered). INTERNAL/DURABILITY E-GRAPH codes (E-GRAPH-006, E-GRAPH-011) and all E-CHKPT-* codes go to the 500 row. (OBS-1; narrowed from E-GRAPH-*/E-CHKPT-* wildcards — F-P26-01) |
+| 422 | Semantic validation failure (VAL-category on body content) and per-endpoint POLICY→422 overrides (request valid but current state makes processing impossible) | E-GRAPH-003 (UnknownRoutingTarget), E-GRAPH-004 (DuplicateBarrierWrite), E-GRAPH-007 (UnknownChannelKey), E-GRAPH-008 (UnreachableGraph), E-GRAPH-009 (DuplicateNodeName), E-GRAPH-010 (UnknownBarrierWriter), E-GRAPH-012 (UnmappedRouteKey), E-GRAPH-015 (NoParentGraph); E-SERVER-009 (AssistantNotFound in run body — invalid assistant_id reference at run creation; context-dependent: same code, 404 at direct lookup), E-SERVER-011 (GraphNotFound — graph_id in assistant body not registered); E-GRAPH-002 (NoActiveInterrupt — POLICY→422 per-endpoint override on resume endpoint: run exists and caller is authorized, but no interrupt slot is active; BC-2.14.002 PC3 9th override; F-P27-01). INTERNAL/DURABILITY E-GRAPH codes (E-GRAPH-006, E-GRAPH-011) and DURABILITY/INTERNAL E-CHKPT codes (E-CHKPT-001, -002, -003, -004, -006) go to the 500 row; E-CHKPT-005 (TENANCY) is library-level embedded — see omission note below. (OBS-1; narrowed from E-GRAPH-*/E-CHKPT-* wildcards — F-P26-01; F-P27-01 adds E-GRAPH-002; F-P27-03 corrects E-CHKPT-* over-broad text) |
 | 429 | Rate limited | E-PROV-001 |
-| 500 | Internal error | E-GRAPH-006 (BspDeterminismViolation, INTERNAL), E-GRAPH-011 (ConditionalEdgePanic, INTERNAL); E-CHKPT-001 (CheckpointWriteFailed, DURABILITY), E-CHKPT-002 (MonotonicClockRegression, INTERNAL), E-CHKPT-003 (CheckpointReadFailed, DURABILITY), E-CHKPT-006 (SerializationFailed, INTERNAL); E-SERVER-014 (RunStoreFailed) |
+| 500 | Internal error | E-GRAPH-006 (BspDeterminismViolation, INTERNAL), E-GRAPH-011 (ConditionalEdgePanic, INTERNAL); E-CHKPT-001 (CheckpointWriteFailed, DURABILITY), E-CHKPT-002 (MonotonicClockRegression, INTERNAL), E-CHKPT-003 (CheckpointReadFailed, DURABILITY), E-CHKPT-004 (EncryptionKeyRotationFailed, INTERNAL — F-P27-02/03: category corrected SECURITY→INTERNAL; added to 500 row), E-CHKPT-006 (SerializationFailed, INTERNAL); E-SERVER-014 (RunStoreFailed) |
 | 502 | Bad Gateway (provider transport failure) | E-PROV-003 (StreamInterrupted) — categorical fallback only; no v1 endpoint emits 502 as a direct terminal HTTP status; surfaced embedded in Run.error |
 | 503 | Service temporarily unavailable (retryable store/lock timeout) | E-SERVER-016 (IdempotencyLockTimeout); Retry-After header present; per-endpoint override over categorical Timeout→504 (F-P25-01; BC-2.12.006 EC-002; BC-2.14.002 PC3 carve-out) |
 | 504 | Gateway Timeout (provider response timeout) | E-PROV-002 (ProviderTimeout) — categorical fallback only; no v1 endpoint emits 504 as a direct terminal HTTP status; surfaced embedded in Run.error |
@@ -220,6 +221,10 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 **BC anchor:** BC-2.12.001 through BC-2.12.007
 
 > **Async error intentional omissions (OBS-2, ADV-P1D-PASS-26):** E-CRON-001 (AssistantNotFoundAtFiring) and E-CRON-003 (ScheduleQueueFull) are async firing-time errors surfaced in schedule/run state, never as a direct HTTP response — intentionally omitted from this table.
+
+> **Graph execution errors embedded in Run.error (F-P27-04, ADV-P1D-PASS-27):** E-GRAPH-001 (InvalidUpdateError, CONCURRENCY — BC-2.03.002; concurrent BSP write failure surfaces as a run failure, embedded in Run.error.type), E-GRAPH-014 (InterruptApprovalTimeout, POLICY — BC-2.05.006 EC-005; timeout causes run transition to `failed`, embedded in Run.error), and E-GRAPH-016 (InterruptWithoutCheckpointer, POLICY — BC-2.05.001 EC-001, BC-2.10.004; raised when interrupt() is called without a CheckpointSaver, surfaces as a run failure) are graph execution errors that appear embedded in Run.error, never as direct terminal HTTP status codes. Categorical mappings: CONCURRENCY→409, POLICY→403 (apply only if ever surfaced directly — not in v1).
+
+> **E-CHKPT-005 library-level omission (F-P27-03, ADV-P1D-PASS-27):** E-CHKPT-005 (SessionAddressCollision, TENANCY — BC-2.04.006) is a checkpoint library-level error enforcing the session triple-address uniqueness invariant (NE-12). TENANCY→409 is the categorical mapping. In v1 this error is raised within the checkpoint layer before any HTTP response is sent, surfacing as a run failure embedded in Run.error, not as a direct terminal HTTP 409 response. Intentionally omitted from the 409 row for the same reason as the E-PROV categorical-fallback codes.
 
 ## Run Object Schema
 

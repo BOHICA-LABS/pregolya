@@ -2,10 +2,12 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.005
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.1 (ADV-P1D-PASS-27): F-P27-01 replace retired E-GRAPH-* wildcard citation in EC-001 and TV-003 with concrete E-GRAPH-002 POLICY→422 per-endpoint override citation (BC-2.14.002 PC3 9th override); wildcard was retired by OBS-1 narrowing in P26."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -78,7 +80,7 @@ This contract directly implements DEC-006.
 **Scenario:** `POST /threads/{thread_id}/runs/{run_id}/resume` called but the run completed normally several
 seconds ago. No interrupt was ever pending.
 **Expected behavior:** `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "completed" })`.
-HTTP endpoint returns `422 Unprocessable Entity` (E-GRAPH-* → 422 per interface-definitions.md §HTTP Status Codes). Run state unchanged.
+HTTP endpoint returns `422 Unprocessable Entity` (E-GRAPH-002 POLICY→422 per-endpoint override; BC-2.14.002 PC3 9th override; interface-definitions.md §HTTP Status Codes 422 row). Run state unchanged.
 **Reference:** DEC-006.
 
 ### EC-002: Resume after all interrupt slots consumed
@@ -106,7 +108,7 @@ The engine does not buffer the preemptive resume value for a future interrupt.
 |---|-------|-----------------|-------|
 | TV-001 | `graph.invoke(Command(resume="oops"), config_for_completed_thread)` | `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "completed" })` | Happy-path error — DEC-006 |
 | TV-002 | Node called `interrupt()` once; first resume consumed; second `Command(resume="extra")` submitted | `Err(E-GRAPH-002 NoActiveInterrupt)` after node completes | Slot-exhausted guard |
-| TV-003 | `POST /threads/{thread_id}/runs/{run_id}/resume` on thread with no interrupt history | HTTP 422; `E-GRAPH-002 NoActiveInterrupt { run_status: "completed" }` in body | Server-side endpoint guard (E-GRAPH-* → 422 per interface-definitions.md) |
+| TV-003 | `POST /threads/{thread_id}/runs/{run_id}/resume` on thread with no interrupt history | HTTP 422; `E-GRAPH-002 NoActiveInterrupt { run_status: "completed" }` in body | Server-side endpoint guard (E-GRAPH-002 POLICY→422 per-endpoint override; BC-2.14.002 PC3; interface-definitions.md §HTTP Status Codes 422 row) |
 | TV-004 | `Command(resume="x")` while run is in `in_progress` state (concurrent access) | `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "in_progress" })` | Race-condition guard |
 | TV-005 | `Command(resume="x")` on `failed` run | `Err(E-GRAPH-002 NoActiveInterrupt { run_status: "failed" })` | Failed run guard |
 

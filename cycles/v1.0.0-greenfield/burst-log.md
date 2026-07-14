@@ -13,6 +13,42 @@ traces_to: STATE.md
 
 # Burst Log — v1.0.0-greenfield
 
+## Burst 103 (2026-07-14)
+
+**Agents dispatched:** adversary (Phase 1d pass 27), product-owner (fix burst), state-manager (burst 103 state update)
+**Files touched:** error-taxonomy.md, interface-definitions.md, BC-2.14.002.md, BC-2.05.005.md, BC-2.04.007.md, BC-2.12.005.md, BC-2.05.006.md, bc-authoring-plan.md (PO fixes); STATE.md, burst-log.md, lessons.md (state-manager); ADV-P1D-PASS-27.md (adversary)
+**Versions bumped:** STATE.md v2.5→v2.6
+
+### Summary
+
+Phase 1d pass 27 adversarial review completed: NOT CLEAN — 6 findings (3 HIGH, 2 MED, 1 LOW) + 2 observations.
+
+**3 HIGH findings:**
+- F-P27-01: E-GRAPH-002 three-way status contradiction (422 wildcard narrowing from pass 26 left E-GRAPH-002 with conflicting signals across taxonomy, status table, and BC). Canon: KEEP 422 via 9th PC3 override entry (POLICY→422 per-endpoint override; pass-23 canon preserved).
+- F-P27-02: E-CHKPT-004 taxonomy category SECURITY vs BC category INTERNAL mismatch (×6 occurrences in taxonomy). Canon: taxonomy fixed to INTERNAL; BC-2.04.007 code name added.
+- F-P27-03: 'all E-CHKPT-*' wildcard in 500-row over-broad (would capture E-CHKPT-005 which is embedded-in-Run.error, not a direct HTTP error). Canon: enumerated 001/002/003/004/006 explicitly at 500; E-CHKPT-005 gets TENANCY embedded omission note.
+
+**2 MED findings:**
+- F-P27-04: E-GRAPH-013→403 row missing from status table + E-GRAPH-001/014/016 omission notes needed.
+- F-P27-05: Stale configurable-debug-path parenthetical deleted (residue of debug_route_path REMOVED in pass 26).
+
+**1 LOW finding:**
+- F-P27-06: Module path risk_tier.rs → action_risk.rs (hitl module path correction).
+
+**2 Observations:**
+- AIMessage Python-context citation acceptable (no fix needed).
+- Census-not-re-run [process-gap]: §17-C census was not re-run after pass-26 status-table wildcard narrowing → codified as gate #21 CENSUS RE-RUN TRIGGER in bc-authoring-plan.md.
+
+NEW CLASS: BC↔taxonomy category-authority (BC is authoritative over taxonomy for error category).
+NEW GATE #21: Census re-run trigger — §17-C census must be re-run after any status-table wildcard narrowing.
+Gates total: 30. Convergence counter: 0/3.
+
+### Archived Current Phase Steps Row (displaced from STATE.md — oldest row)
+
+| Phase 1d pass 22 + fix burst (reverse-anchor sweep) | adversary + PO | COMPLETE | Pass 22: NOT CLEAN — 1 HIGH (F-P22-01 pass-21 relocation left 16 P0 BCs with dangling capabilities-p1-p2 anchors — reverse-anchor dimension of the relocation; forward tier census was already converged 19/19). 16 files re-anchored (ss-10: 4, ss-11: 6, ss-14: 6), zero residue. Input-hashes refreshed. Trajectory ...→1→1→1. Convergence 0/3. Burst 98. |
+
+---
+
 <!-- Phase-1-owned archives route here. Pre-pipeline content stays in v0.0.0-pre-pipeline/burst-log.md. -->
 
 ## Burst 70 (2026-07-14)
