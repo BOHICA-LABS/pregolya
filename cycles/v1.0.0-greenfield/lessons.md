@@ -69,6 +69,14 @@ traces_to: STATE.md
 **Codified fix:** Gate #16 widened to two grep forms (space-delimited AND colon-delimited E-code↔variant pairings) + cross-check every pairing against the error-taxonomy authoritative binding (collision detection, not just name drift). Codified in bc-authoring-plan.md gate #16 (D18-P34-C). Full-corpus sweep of 44 pairings confirmed ZERO additional collisions post-fix.
 **Applicable to:** Every census gate that polices named identifiers across multiple artifacts. The census must: (a) enumerate ALL punctuation/formatting forms the pattern can appear in; (b) perform both drift-check (name matches across files) AND collision-check (one identifier maps to one concept only). These are two orthogonal failure modes requiring two orthogonal assertions.
 
+### L-006 [process-gap, codified]: Canon-Retirement Fixes Must Sweep Structurally-Privileged Lines
+
+**Discovered:** Pass 36 (burst 112); second instance of class first seen at Pass 27 (F-P27-02)
+**Symptom:** Canon-retirement/amendment fixes that update body prose can leave the retired claim alive in structurally-privileged lines — H1/H2/H3 headings (especially "## Decision:" blocks in ADRs), Summary cells/blocks, and index/registry rows. These lines are read with higher cognitive weight by skimming reviewers and by specs that anchor on them. F-P36-01 found ADR-006's "## Decision:" heading still claiming "JSON-serialized to LangGraph format" even though pass-29's fix had correctly updated the body prose. The heading survived 7 adversarial passes because reviewers read the corrected body and accepted it. Two class instances total: F-P27-02 (ARCH-INDEX summary cell) and F-P36-01 (ADR-006 Decision heading).
+**Root cause:** Body-prose-only fixes leave first-class misleading artifacts that skimming reviewers absorb. No prior gate required greping privileged-line locations separately from body prose after a canon-retirement fix.
+**Codified fix:** Gate #26 STRUCTURALLY-PRIVILEGED-LINE CANON CHECK added to bc-authoring-plan.md v1.1: every canon-retirement or canon-amendment fix must grep H1/H2/H3 headings (especially "## Decision:"), Summary cells/blocks, and index/registry rows across the affected document AND all documents that cite it, verifying the retired claim is absent from those locations. Also: total_standing_gates frontmatter field added to bc-authoring-plan.md. Codified as D18-P36-D.
+**Applicable to:** Any fix that retires or amends a claim embedded in multiple artifact tiers (body prose + privileged structural lines). Both tiers require independent sweep coverage. The privileged-line sweep is an additional check on top of the body-prose fix — not a replacement.
+
 ## Policy Candidates
 
 | Lesson | Proposed Policy | Scope | Status |
@@ -78,3 +86,4 @@ traces_to: STATE.md
 | L-003 | Census re-run trigger required after artifact changes | All census gates | Codified (gate #21) |
 | L-004 | Wire-visible taxonomy requires coherence gate from first appearance | BC authoring + gate management | Codified (gate #23) |
 | L-005 | Census regexes must enumerate all punctuation forms; census must detect collisions AND drift | All census gates | Codified (gate #16) |
+| L-006 | Canon-retirement fixes must sweep structurally-privileged lines in affected + citing docs | BC authoring + canon management | Codified (gate #26) |

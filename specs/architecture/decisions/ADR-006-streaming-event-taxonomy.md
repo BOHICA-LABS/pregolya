@@ -12,6 +12,7 @@ traces_to: ARCH-INDEX.md
 decisions: [D17]
 changelog:
   - "rev-1 (ADV-P1D-PASS-29): F-P29-04 rewrite StreamEvent enum to 11 imperative variants (RunStart/Stream/End, StepStart/End, NodeStart/Stream/End, ToolStart/Stream/End) matching BC-2.06.001 lines ~55-65; add NodeStream and ToolStream variants that were missing from rev-0. Wire tokens corrected to snake_case imperative (run_start not run_started). F-P29-05 remove LangChain astream_events v2 wire-compat claim — wire format is ferrochain-native per D13 (consistent with BC-2.06.001 line ~39 and BC-2.12.003 line ~37). Past-tense variant names (RunStarted, NodeStarted, etc.) added to retired-identifier registry."
+  - "rev-2 (ADV-P1D-PASS-36): F-P36-01 fix Decision heading — retired residual 'LangGraph format' claim. Heading now reads 'ferrochain-native wire format over HTTP', consistent with body (lines 59, 67-71), changelog rev-1 (F-P29-05), and D13 canon. No other live LangGraph-format wire claims found in architecture/ tree."
 ---
 
 # ADR-006: Streaming Event Taxonomy
@@ -27,7 +28,7 @@ category. D17 HYBRID mandate: LangGraph API surface + adk-rust internal quality 
 The question is how to represent streaming events in ferrochain's public API:
 typed Rust enum (adk-rust pattern) or stringly-typed map (LangGraph Python pattern).
 
-## Decision: Typed Enum in Rust API; JSON-serialized to LangGraph format over HTTP
+## Decision: Typed Enum in Rust API; JSON-serialized to ferrochain-native wire format over HTTP
 
 **Internal representation (ferrochain-core):**
 

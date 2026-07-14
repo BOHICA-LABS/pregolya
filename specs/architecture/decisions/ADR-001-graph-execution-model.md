@@ -13,6 +13,8 @@ phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D9, D11, D17]
 supersedes: []
+changelog:
+  - "rev-1 (ADV-P1D-PASS-36): F-P36-02 adjudicate interrupt-queue check timing. Line ~101 'after reduction' retired — corrected to 'at the Collecting→Reducing transition' to match line 163 and LangGraph HITL semantics. Consequences section expanded with precise nuanced rule: completed-sibling writes are reduced and checkpointed; interrupted node's in-progress writes are discarded; only the INTERRUPT marker is written for the interrupted task. Both references now agree on Collecting→Reducing as the detection point."
 ---
 
 # ADR-001: Graph Execution Model
@@ -98,7 +100,7 @@ The orchestrator loop is responsible for:
 3. Collecting outputs from the scheduler.
 4. Applying reducers in task-identity-sorted order (DI-001).
 5. Calling `put_writes` for each completed task before declaring the super-step done (DI-002).
-6. Checking the interrupt queue after reduction (DI-003).
+6. Checking the interrupt queue at the Collecting→Reducing transition (DI-003).
 7. Evaluating budget policy (SS-10) between super-steps.
 
 The actor scheduler is a Tokio task that owns a `HashMap<TaskId, JoinHandle<Output>>`.
@@ -160,5 +162,5 @@ to Rust JoinSet semantics.
 - Actor scheduler: Tokio MPSC select loop; receives `Dispatch(task_id, future)`, sends `Completed(task_id, output)`.
 - Budget governance as orchestrator transition hook between Reducing and Checkpointing states.
 - `graph::bsp_engine` contains the pure reducer function (VP-001 Kani target).
-- HITL interrupt: orchestrator checks interrupt queue in the Collecting→Reducing transition.
+- HITL interrupt: orchestrator checks interrupt queue at the Collecting→Reducing transition (DI-003). Precise rule: when the orchestrator detects an INTERRUPT marker among the collected task outputs, it (1) runs reducers on outputs from COMPLETED sibling tasks only — the interrupted node contributes no state delta; (2) writes the INTERRUPT marker as the interrupted task's sole output; (3) proceeds through Checkpointing so the reduced sibling state and the INTERRUPT marker are durably persisted together; (4) suspends after Checkpointing rather than initiating the next Idle→Dispatching cycle. The interrupted node's in-progress writes from the halted execution attempt are NOT included in the reduction or checkpoint state. On resume (BC-2.05.003), the interrupted node re-executes from its function entry — sibling writes from the interrupted super-step are already checkpointed and those nodes do not re-run.
 - `put_writes` called per completed task in the Collecting phase (DI-002 sync durability default).

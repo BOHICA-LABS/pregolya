@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -161,12 +161,17 @@ primary_consumers: [test-writer, holdout-evaluator]
 
 | GTV ID | Input | chunk_size | overlap | Expected Chunks |
 |--------|-------|------------|---------|-----------------|
-| GTV-008 | `"abc" + "🎉" * 5 + "xyz"` (11 code pts) | 5 | 0 | Verify against Python reference before writing test |
+| GTV-008 | `"abc" + "🎉" * 5 + "xyz"` (11 code pts) | 5 | 0 | `["abc🎉🎉", "🎉🎉🎉x", "yz"]` **(PROVISIONAL — must be Python-verified before Red Gate test is written)** |
 | GTV-009 | `"ñoño"` (4 code pts; ñ = U+00F1, 2 bytes) | 2 | 0 | `["ño", "ño"]` |
 
 > **Note on GTV-003 and GTV-008:** Exact expected chunks depend on separator logic.
-> Test-writer MUST run the reference Python implementation to compute actuals before
-> committing the Red Gate test. Do not hard-code these without verification.
+> GTV-008 carries a concrete value copied from BC-2.07.002 (the authoritative source); it is
+> marked **PROVISIONAL** pending verification against the Python reference implementation.
+> Values marked PROVISIONAL must be Python-verified before the Red Gate test is written —
+> do not commit a Red Gate test that hard-codes a PROVISIONAL expected value.
+> GTV-003 has no concrete value and must be computed from the reference before any test is authored.
+> The test-writer MUST run `langchain_text_splitters.RecursiveCharacterTextSplitter` with the
+> specified parameters and replace the PROVISIONAL marker with a VERIFIED confirmation once validated.
 
 ---
 
@@ -195,3 +200,12 @@ primary_consumers: [test-writer, holdout-evaluator]
    running ferrochain instance or mock. Structure these under `tests/integration/`.
 5. **Soak tests:** BCs marked `S` (BC-2.04.001, BC-2.04.005, BC-2.06.003, BC-2.12.007)
    require sustained execution; put them under a `#[ignore]` soak feature flag.
+
+---
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.1 | 2026-07-16 | GTV-008 row synced to concrete value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` with PROVISIONAL marker (was: placeholder); GTV-003/GTV-008 note updated to clarify PROVISIONAL semantics; removed contradictory "Do not hard-code these without verification" language (F-P36-03 fix, ADV-P1D-PASS-36) | F-P36-03 |
+| 1.0 | 2026-07-13 | Initial authoring | Greenfield Phase 1a |

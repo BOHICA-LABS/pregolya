@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.002
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -108,12 +108,16 @@ normative. The Rust implementation must produce byte-identical chunk strings.
 
 | Vector ID | Input | chunk_size | overlap | Expected Chunks |
 |-----------|-------|-----------|---------|-----------------|
-| GTV-008 | `"abc" + "🎉" * 5 + "xyz"` (3+5+3=11 code pts) | 5 | 0 | `["abc🎉🎉", "🎉🎉🎉x", "yz"]` |
+| GTV-008 | `"abc" + "🎉" * 5 + "xyz"` (3+5+3=11 code pts) | 5 | 0 | `["abc🎉🎉", "🎉🎉🎉x", "yz"]` **(PROVISIONAL — must be Python-verified before Red Gate test is written)** |
 | GTV-009 | `"ñoño"` (4 code pts: ñ=U+00F1, o, ñ, o — 2 bytes each for ñ) | 2 | 0 | `["ño", "ño"]` |
 
-> **Note:** Exact expected chunks for GTV-003, GTV-008 depend on separator logic. These
-> must be verified against the reference Python implementation before the Red Gate test is
-> written. The test-writer MUST run the reference implementation to compute actuals.
+> **Note:** GTV-008 is marked **PROVISIONAL** — the concrete value `["abc🎉🎉", "🎉🎉🎉x", "yz"]`
+> was derived from code-point analysis but has not yet been confirmed by running the reference
+> Python implementation. Values marked PROVISIONAL must be Python-verified before the Red Gate
+> test is written; do not commit a Red Gate test that hard-codes a PROVISIONAL expected value.
+> GTV-003 similarly depends on separator logic and requires Python-reference verification before
+> any test is authored. The test-writer MUST run the reference implementation to compute actuals
+> and replace the PROVISIONAL marker with a VERIFIED confirmation once validated.
 
 ## Edge Cases
 
@@ -188,3 +192,10 @@ _[to be filled after story decomposition]_
 | Wave | Wave 0 |
 | Test Types | U (unit, golden vectors) |
 | Module | [architect to assign — ferrochain-splitters] |
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.1 | 2026-07-16 | GTV-008 expected value explicitly marked PROVISIONAL; note updated to state values marked PROVISIONAL must be Python-verified before Red Gate test is written (F-P36-03 fix, ADV-P1D-PASS-36) | F-P36-03 |
+| 1.0 | 2026-07-13 | Initial authoring | Greenfield batch 2 |

@@ -1,9 +1,10 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
+total_standing_gates: 26
 timestamp: 2026-07-13T00:00:00Z
 phase: 1a
 inputs:
@@ -767,3 +768,59 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     updated prd-supplements but not the arch-view; pass-32 F-P32-01 found the arch-view
     summary had diverged from its own table (HIGH said 10, actual 11; MEDIUM said 12,
     actual 10) — a pre-existing arithmetic error compounded by the sibling-skip.
+
+26. **Structurally-Privileged-Line Canon Check — STRUCTURALLY-PRIVILEGED-LINE CANON CHECK
+    (added P36 — standing gate [process-gap]):**
+
+    Whenever a fix retires or amends a canon claim, the fixer MUST grep structurally-privileged
+    lines — markdown H1/H2/H3 headings (especially `## Decision:` in ADRs), Summary cells/blocks,
+    and index/registry rows — across the affected document AND its citing documents for the retired
+    claim, not just body prose. A fix that updates body paragraphs but leaves the same stale claim
+    in a structurally-privileged heading creates first-class misleading artifacts: headings appear
+    in file diffs, navigation, and summaries first and are typically the only content reviewers
+    absorb when skimming.
+
+    **Trigger:** Every canon-retirement or canon-amendment fix burst.
+
+    **Scope — what counts as a structurally-privileged line:**
+    1. H1/H2/H3 headings in the affected document (especially `## Decision:` and `## Summary:` in ADRs)
+    2. Summary / Abstract / Synopsis paragraph blocks (first prose paragraph after the title)
+    3. Index rows and registry rows that reference the affected artifact:
+       BC-INDEX Title column, ARCH-INDEX ADR log Decision-summary column,
+       BC-authoring-plan batch-table Title column, VP-INDEX Description column
+
+    **Census commands (run after every canon-retirement fix):**
+
+    Check H1/H2/H3 headings in the affected document for the retired claim:
+    ```
+    grep -n "^#" <affected-file> | grep "<retired-claim-keywords>"
+    ```
+
+    Check ALL spec documents for structurally-privileged lines containing the retired claim:
+    ```
+    grep -rn "^#.*<retired-claim-keywords>" .factory/specs/
+    grep -rn "^| .*<retired-claim-keywords>" .factory/specs/   # index/registry rows
+    ```
+
+    **Motivating instances (two occurrences before this gate was added):**
+    - **F-P27-02 (ADV-P1D-PASS-27):** A fix updated body prose but left a stale canon claim in a
+      structurally-privileged summary or heading line. First observed instance.
+    - **F-P36-01 (ADV-P1D-PASS-36):** `ADR-006-streaming-event-taxonomy.md` `## Decision:` heading
+      retained "JSON-serialized to LangGraph format over HTTP" after F-P29-05 corrected the body
+      to ferrochain-native wire format (D13). The heading was not re-read by any prior fix pass
+      across 7 subsequent adversarial reviews.
+
+    **Anti-pattern to prevent:** Fix the body paragraphs, close the burst, leave the heading unchanged.
+    The heading is the privileged summary of the decision — it propagates through git diffs, PR
+    descriptions, and table-of-contents navigation. Stale headings outlive stale prose.
+
+    Source: ADV-P1D-PASS-27 §OBS-P27-2 (motivating predecessor); ADV-P1D-PASS-36 §OBS-P36-2 [process-gap].
+
+---
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.1 | 2026-07-16 | Added standing gate #26 "Structurally-Privileged-Line Canon Check"; added `total_standing_gates: 26` to frontmatter (F-P36-03/OBS-P36-2 codification, ADV-P1D-PASS-36) | OBS-P36-2 |
+| 1.0 | 2026-07-13 | Initial authoring | Greenfield Phase 1a |
