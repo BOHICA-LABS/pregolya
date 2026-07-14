@@ -281,3 +281,13 @@ ferrochain Phase 1d adversarial spec convergence: Pass 10 COMPLETE — NOT CLEAN
 **WORKSTREAM (at time of archival):** Burst 86 COMPLETE. Phase 1d pass 10: 4 findings fixed (DI-description fidelity census 86/86 canonical — 3 exceptions fixed [BC-2.08.010/BC-2.09.005/BC-2.12.007]; ARCH-INDEX SS-08 range 001–012 + preamble 86 BC files; PRD §5 8→12 components; BC-2.12.003 ordinals 1–20). ADV-P1D-PASS-10.md committed. Input-hashes refreshed on 6 artifacts. Trajectory 14→5→7→13→3→3→3→5→2→4.
 
 **WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 86 | Counter: 0/3
+
+---
+
+### Archived Checkpoint — Burst 87 (Pass 11)
+
+ferrochain Phase 1d adversarial spec convergence: Pass 11 COMPLETE — NOT CLEAN. 4 findings: F-P11-01 HIGH BC-2.12.003 interrupted-terminal-vs-resumable contradiction [NEW CLASS: cross-BC state-machine consistency; would have broken HITL P0] — interrupted now pausable, terminal={completed,failed,cancelled} censused. F-P11-02 MED DI verbatim rule codified, 7 cells normalized, 86/86 verbatim census. F-P11-03 MED RTM CAP-016 ×2 entries. F-P11-04 MED E-SBXD-004/005 added + BC-2.13.006 citations. Wave 0 registered in system-overview wave table w/ crate-vs-story-wave distinction. Trajectory 14→5→7→13→3→3→3→5→2→4→4. Convergence 0/3. Burst 87.
+
+**WORKSTREAM (at time of archival):** Burst 87 COMPLETE. Phase 1d pass 11: 4 findings fixed (BC-2.12.003 interrupted→pausable, terminal-set census; DI verbatim rule codified + 7 cells normalized; RTM CAP-016 ×2; E-SBXD-004/005 + BC-2.13.006 citations). Wave 0 registered in system-overview. ADV-P1D-PASS-11.md committed. Input-hashes refreshed. Trajectory 14→5→7→13→3→3→3→5→2→4→4.
+
+**WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 87 | Counter: 0/3

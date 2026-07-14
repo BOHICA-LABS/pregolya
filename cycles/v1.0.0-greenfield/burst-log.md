@@ -640,3 +640,54 @@ Pass 10 returned NOT CLEAN — 4 findings (2 HIGH, 2 MED), all fixed. F-P10-01 H
 - Fix bursts: 10
 - Counter: 0 of 3
 - Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10)
+
+---
+
+## Burst 87 — Phase 1d pass 11 + fix burst (cross-BC state-machine, DI verbatim canon, E-SBXD, Wave 0)
+
+**Agents dispatched:** adversary (Pass 11), product-owner (Fix), state-manager (STATE update)
+**Verdict:** NOT CLEAN — 4 findings
+
+**Files touched:**
+- specs/behavioral-contracts/ss-12/BC-2.12.003.md (interrupted→pausable; terminal-set censused; PC7/PC8/PC9 updated)
+- specs/prd-supplements/interface-definitions.md (7 DI cells verbatim-normalized; DI verbatim rule header)
+- specs/prd-supplements/error-taxonomy.md (E-SBXD-004/005 added)
+- specs/behavioral-contracts/BC-INDEX.md (DI-Anchors verbatim normalized; CAP-016 ×2 RTM rows)
+- specs/behavioral-contracts/ss-13/BC-2.13.006.md (E-SBXD-004/005 citations)
+- specs/architecture/ARCH-INDEX.md (system-overview wave table — Wave 0 registered; crate-wave vs story-wave)
+- cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-11.md (NEW)
+
+### Convergence Status After Burst 87
+
+- Phase 1d passes: 11 (NOT CLEAN)
+- Fix bursts: 11
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11)
+
+---
+
+## Burst 88 — Phase 1d pass 12 + fix burst (lifecycle-arrow propagation, arrow-census gate #12, title 3-way verbatim)
+
+**Agents dispatched:** adversary (Pass 12), product-owner (Fix), state-manager (STATE update)
+**Verdict:** NOT CLEAN — 1 HIGH finding (F-P12-01) — single root cause, decayed from 4
+
+**Archived step row (pass 7, dropped from Current Phase Steps to maintain last-5 window):**
+Phase 1d pass 7 + fix burst (whitelist-complement purge) | adversary + PO | COMPLETE | Pass 7: NOT CLEAN — 3 findings (F-P7-01 HIGH running-vocab THIRD recurrence: 6 tokens in prose bodies missed by pass-6 per-incident grep; F-P7-02 MED verification-architecture P1 self-contradiction; F-P7-03 LOW plan create-state). Root cause codified: per-incident greps → WHITELIST-COMPLEMENT mandate generalized to all controlled vocabularies. Fix: 215-hit classification table, zero unclassified; `done` tokens (5) purged incl. self-discovered BC-2.02.005 class. Trajectory 14→5→7→13→3→3→3. Convergence 0/3. Burst 83.
+
+**Files touched:**
+- specs/behavioral-contracts/BC-INDEX.md (BC-2.12.003 title verbatim; arrow form propagation)
+- specs/behavioral-contracts/ss-12/BC-2.12.003.md (Traceability stale quote → PC7-PC9 authority)
+- specs/behavioral-contracts/ss-12/BC-2.12.004.md (arrow form propagation ×2 sites)
+- specs/domain-spec/entities-server.md (arrow form + ⇄ bidirectional arc)
+- specs/domain-spec/ubiquitous-language-server.md (arrow form)
+- specs/prd-supplements/bc-authoring-plan.md (title verbatim; arrow-census gate added as guideline #12)
+- specs/prd-supplements/interface-definitions.md ("Canonical" label removed; arrow form; Authority pointer)
+- specs/prd.md (title sentence-case verbatim match)
+- cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-12.md (NEW)
+
+### Convergence Status After Burst 88
+
+- Phase 1d passes: 12 (NOT CLEAN)
+- Fix bursts: 12
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12)

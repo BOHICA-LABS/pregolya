@@ -256,7 +256,7 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | P1 | CAP-010 | DI-014 | Wave 2 |
 | BC-2.12.001 | Thread resource CRUD (create, read, list, delete durable conversation history) | P1 | CAP-014 | — | Wave 1 |
 | BC-2.12.002 | Assistant resource CRUD (named agent config with graph reference) | P1 | CAP-014 | — | Wave 1 |
-| BC-2.12.003 | Run creation and execution lifecycle (queued → in_progress → completed | failed | interrupted | cancelled) | P1 | CAP-014 | — | Wave 1 |
+| BC-2.12.003 | Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/cancelled; interrupted is pausable/resumable) | P1 | CAP-014 | — | Wave 1 |
 
 ### Batch 11 — Server Cont. + Long-Horizon Memory (P1/P2)
 *7 BCs — SS.12 cont. + SS.15*
@@ -320,3 +320,12 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     - A spec artifact is integrated once its authoritative index accepts it: BC files → BC-INDEX, domain-spec shards → L2-INDEX, architecture sections → ARCH-INDEX, prd.md and prd-supplements → prd.md supplements list, ADRs → ARCH-INDEX ADR log (stay `accepted`), product-brief → product review (stays `approved`).
     - VP files are the **only** exception: they may remain `status: draft` while Kani/integration harnesses are pre-implementation, provided VP-INDEX.md is `status: active` and lists the VP.
     - This rule is generalized from F-P6-03 (ADV-P1D-PASS-6 fix). Source of truth: ADV-P1D-PASS-8.md §F-P8-04.
+12. **Lifecycle-arrow census gate (added P12):** Any BC or supplement that contains a Run
+    state-machine lifecycle arrow MUST use one of the two canonical forms:
+    - *Title/prose* form: `queued → in_progress → completed/failed/cancelled; interrupted is pausable/resumable`
+    - *Diagram/arrow* form: `queued → in_progress → completed | failed | cancelled; in_progress ⇄ interrupted (resume via POST .../resume)`
+    Terminal set = {completed, failed, cancelled} only. `interrupted` MUST NOT appear as a
+    terminal state in any lifecycle arrow. The single authority for the state machine is
+    BC-2.12.003 PC7-PC9. Run `grep -rn "in_progress →\|in_progress→\|→ interrupted\|⇄" .factory/specs/`
+    and verify every hit: (a) shows `interrupted` as pausable/resumable, and (b) lists only
+    `completed | failed | cancelled` as terminal. Source of truth: ADV-P1D-PASS-12.md §F-P12-01.

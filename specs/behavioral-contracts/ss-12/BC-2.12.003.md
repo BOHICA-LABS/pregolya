@@ -198,7 +198,7 @@ _[to be filled after verification-architecture phase]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-014 |
-| Capability Anchor Justification | CAP-014 ("Durable-Run HTTP Server (Threads, Assistants, Runs, Crons)") per capabilities-p1-p2.md §CAP-014 — this BC implements the Run resource lifecycle, which is explicitly listed as the third of the four managed resources: "Run (single execution)" and specifies the "queued → in_progress → completed/failed/interrupted/cancelled" lifecycle (F-03 canonical state machine) |
+| Capability Anchor Justification | CAP-014 ("Durable-Run HTTP Server (Threads, Assistants, Runs, Crons)") per capabilities-p1-p2.md §CAP-014 — this BC implements the Run resource lifecycle, which is explicitly listed as the third of the four managed resources: "Run (single execution)". Canonical state machine: queued → in_progress → completed/failed/cancelled; interrupted is pausable/resumable (PC7-PC9 are the authoritative source; see PC7 for transition arcs, PC8 for terminal-set definition, PC9 for interrupted→in_progress resume arc) |
 | L2 Domain Invariants | — |
 | DEC Reference | DEC-006 (Resume Value Injection with Empty Interrupt Queue — applies to the `interrupted` state resume path) |
 | Risk Source | — |

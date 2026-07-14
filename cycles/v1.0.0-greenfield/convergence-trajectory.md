@@ -23,10 +23,13 @@ traces_to: STATE.md
 | P1D-4 | 2026-07-14 | 13 | 1 | 7 | 3 | 2 | HIGH | 0/3 | FINDINGS_REMAIN (re-baseline) |
 | P1D-5 | 2026-07-14 | 3 | 0 | 1 | 1 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN (decaying) |
 | P1D-6 | 2026-07-14 | 3 | 0 | 1 | 2 | 0 | LOW | 0/3 | FINDINGS_REMAIN |
+| P1D-10 | 2026-07-14 | 4 | 0 | 2 | 2 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN |
+| P1D-11 | 2026-07-14 | 4 | 0 | 1 | 3 | 0 | LOW | 0/3 | FINDINGS_REMAIN |
+| P1D-12 | 2026-07-14 | 1 | 0 | 1 | 0 | 0 | LOW | 0/3 | FINDINGS_REMAIN (single root cause, decayed) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12)`
 
 ## Per-Pass Details
 
@@ -156,4 +159,17 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Fix summary:** BC-2.12.003 interrupted→pausable (HITL P0 fix); terminal-set={completed,failed,cancelled} censused; DI verbatim rule codified + 7 interface-definitions cells normalized, 86/86 census; RTM CAP-016 ×2 rows added; E-SBXD-004/005 added to error-taxonomy + BC-2.13.006 citations; Wave 0 registered in system-overview wave table with crate-wave vs story-wave distinction.
 **New standing gates:** cross-BC state-machine sweep (trigger: new stateful subsystem); DI verbatim census (trigger: interface-definitions edit)
 **Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4
+**Counter:** 0/3
+
+---
+
+### Pass P1D-12 Details
+
+**Date:** 2026-07-14
+**Verdict:** NOT CLEAN — 1 finding (0 CRIT, 1 HIGH, 0 MED, 0 LOW)
+**Findings delta:** -3 vs pass 11 (4→1); single root-cause cluster
+**Axes rotated:** lifecycle-arrow representation census (NEW); sibling-checks pass-11 (terminal-set, DI verbatim, RTM, E-SBXD); BC-2.05.002 HITL coherence with updated BC-2.12.003
+**Fix summary:** F-P12-01 HIGH — pass-11 fix keyed on 'terminal' keyword; 8 lifecycle-arrow sites stale across 6 files incl. entities-server (source-of-truth domain entity) and 2 "Canonical"-labeled sites in interface-definitions.md. Full state-machine sweep all other subsystems (checkpoint lifecycle, budget escalation, circuit-breaker, graph) CONSISTENT. Fixed 9 occurrences across 8 sites; BC-2.12.003 title 3-way verbatim (BC-INDEX + prd.md + bc-authoring-plan) PASS. Arrow-census gate added to bc-authoring-plan.md §Authoring Guidelines as guideline #12 (16 hits PASS post-fix).
+**New standing gates:** Arrow-representation census gate (guideline #12); trigger: any lifecycle or state-machine spec edit. Command: `grep -rn "in_progress →\|in_progress→\|→ interrupted\|⇄" .factory/specs/` — every hit must show interrupted as pausable, terminal={completed,failed,cancelled}.
+**Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1
 **Counter:** 0/3

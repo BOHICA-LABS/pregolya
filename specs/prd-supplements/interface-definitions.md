@@ -203,7 +203,7 @@ Default port: `7437` (configurable via `server.port` in `ferrochain-server.toml`
     "status": {
       "type": "string",
       "enum": ["queued", "in_progress", "interrupted", "completed", "failed", "cancelled"],
-      "description": "Canonical run state machine: queued→in_progress→completed|failed|interrupted|cancelled. multitask_strategy='enqueue' creates the new run in 'queued' state; it transitions to 'in_progress' after the current run finishes. Use POST .../cancel to transition queued/in_progress→cancelled."
+      "description": "Run state machine: queued → in_progress → completed | failed | cancelled; in_progress ⇄ interrupted (resume via POST .../resume). Authority: BC-2.12.003 PC7-PC9. multitask_strategy='enqueue' creates the new run in 'queued' state; it transitions to 'in_progress' after the current run finishes. Use POST .../cancel to transition queued/in_progress→cancelled."
     },
     "created_at": { "type": "string", "format": "date-time" },
     "completed_at": { "type": ["string", "null"], "format": "date-time" },

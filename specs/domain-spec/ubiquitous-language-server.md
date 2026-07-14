@@ -32,7 +32,7 @@ with LangGraph Platform (D13).
 
 **Run**
 A single execution of an Assistant with a Thread. Status lifecycle:
-`queued → in_progress → completed | failed | interrupted | cancelled`.
+`queued → in_progress → completed | failed | cancelled; in_progress ⇄ interrupted (resume via POST .../resume)`.
 (`requires_action` renamed to `interrupted` for HITL-parked runs; `expired` deferred — v1.0.0 maps timeout-expired interrupts to `failed` via E-GRAPH-014 InterruptApprovalTimeout.)
 Streaming and unary Run endpoints drive the same execution engine (DI-011).
 

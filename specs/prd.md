@@ -270,7 +270,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 |-------|-------|----------|----|------|
 | BC-2.12.001 | Thread resource CRUD (create, read, list, delete durable conversation history) | P1 | — | ss-12/BC-2.12.001.md |
 | BC-2.12.002 | Assistant resource CRUD (named agent config) | P1 | — | ss-12/BC-2.12.002.md |
-| BC-2.12.003 | Run creation and execution lifecycle (queued → in_progress → completed/failed/interrupted/cancelled) | P1 | — | ss-12/BC-2.12.003.md |
+| BC-2.12.003 | Run creation and execution lifecycle (queued → in_progress → completed/failed/cancelled; interrupted is pausable/resumable) | P1 | — | ss-12/BC-2.12.003.md |
 | BC-2.12.004 | CronSchedule creation and proactive run execution | P1 | — | ss-12/BC-2.12.004.md |
 | BC-2.12.005 | SecurityConfig::default() denies CORS, gates debug route on explicit opt-in key (NE-14) | P1 | DI-013 | ss-12/BC-2.12.005.md |
 | BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore trait seams with durable backends (NE-08) | P1 | — | ss-12/BC-2.12.006.md |
