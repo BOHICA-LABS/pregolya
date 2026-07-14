@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "992d1136d6ecd5fd6aa833f0ece030db3e548c8fdd727917f8474f6c21522745"
+input-hash: "a9db9a9a95fccf425b41da89e2fafd1502358a8b4e921ffa158e8b147236315b"
 ---
 
 # BC-2.12.003: Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/interrupted/cancelled)
@@ -94,26 +94,26 @@ LangGraph Platform (D13).
 
 ### Read Run (`GET /threads/{thread_id}/runs/{run_id}`)
 
-10. Returns `Run { run_id, thread_id, assistant_id, status, output?, error?, created_at, updated_at }`.
-11. Returns HTTP 404 with `{ code: "E-SERVER-002", message: "RunNotFound: run '<run_id>' does not exist in thread '<thread_id>'" }` if not found.
-12. A completed Run carries `output: GraphOutput` (the final state values).
-13. A failed Run carries `error: { code, message, component, category }` from the
+13. Returns `Run { run_id, thread_id, assistant_id, status, output?, error?, created_at, updated_at }`.
+14. Returns HTTP 404 with `{ code: "E-SERVER-002", message: "RunNotFound: run '<run_id>' does not exist in thread '<thread_id>'" }` if not found.
+15. A completed Run carries `output: GraphOutput` (the final state values).
+16. A failed Run carries `error: { code, message, component, category }` from the
     propagated `FerrochainError`.
 
 ### List Runs (`GET /threads/{thread_id}/runs`)
 
-14. Returns `{ runs: [Run], total_count: u64 }` for all runs on the thread.
-15. Accepts `status` filter query param (`"queued"`, `"in_progress"`, `"completed"`, `"failed"`, `"interrupted"`, `"cancelled"`).
+17. Returns `{ runs: [Run], total_count: u64 }` for all runs on the thread.
+18. Accepts `status` filter query param (`"queued"`, `"in_progress"`, `"completed"`, `"failed"`, `"interrupted"`, `"cancelled"`).
 
 ### Delete Run (`DELETE /threads/{thread_id}/runs/{run_id}`)
 
-16. Deletes a Run record that is in a terminal state (`completed`, `failed`, `interrupted`,
+19. Deletes a Run record that is in a terminal state (`completed`, `failed`, `interrupted`,
     or `cancelled`). Cannot delete a `queued` or `in_progress` Run — HTTP 409 is returned
     (use `POST .../cancel` first, then delete once terminal).
     **Decision basis (F-02):** DELETE = record deletion only. Separation from cancellation
     follows langgraph-sdk semantics (`runs.cancel()` ≠ delete). Prevents accidental data
     loss on active runs.
-17. Returns HTTP 204 on success; HTTP 404 if run not found.
+20. Returns HTTP 204 on success; HTTP 404 if run not found.
 
 ## Invariants
 

@@ -18,7 +18,7 @@ inputs:
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/STATE.md
-input-hash: "ac1b86d3bbc78f2493a722d4e2d794d06344073a9c249dee9224cb0f028e4263"
+input-hash: "93f7becc64542763c6704947b12de75fd539e3ebaf63d86e10a6749de363d1a7"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17]
 supplements:
@@ -379,21 +379,28 @@ See `prd-supplements/nfr-catalog.md` for full NFR table with validation methods 
 > **Supplement:** Full error taxonomy is in `prd-supplements/error-taxonomy.md`.
 > Primary consumers: implementer, test-writer.
 
-Error codes follow the convention `E-<component>-<NNN>` where component is the ferrochain
-crate abbreviation (CORE, GRAPH, CHKPT, SERVER, PROV, MCP, SPLIT, SBXD).
+Error codes follow the convention `E-<component>-<NNN>` where component is the crate
+abbreviation for crate-level components (CORE, GRAPH, CHKPT, SERVER, PROV, MCP, SPLIT, SBXD,
+MEMORY) or the intra-crate subsystem abbreviation for RETRY, CRON, BUDGET (which are
+subsystems within ferrochain-core, ferrochain-server, and ferrochain-graph respectively —
+following the same pattern as the error-taxonomy.md RETRY/CRON/BUDGET component sections).
 
 Summary:
 
-| Range | Component | Examples |
-|-------|-----------|---------|
-| E-CORE-001–099 | ferrochain-core | E-CORE-001 InvalidContentBlock, E-CORE-002 RunnableCompositionError |
-| E-GRAPH-001–099 | ferrochain-graph | E-GRAPH-001 InvalidUpdateError, E-GRAPH-002 NoActiveInterrupt |
-| E-CHKPT-001–099 | ferrochain-checkpoint | E-CHKPT-001 CheckpointWriteFailed, E-CHKPT-002 MonotonicClockRegression |
-| E-SERVER-001–099 | ferrochain-server | ~~E-SERVER-001 PolicyNotEnforceable~~ (retired — duplicate of E-SBXD-002; see error-taxonomy.md tombstone), E-SERVER-002 RunNotFound |
-| E-PROV-001–099 | ferrochain-\<provider\> | E-PROV-001 RateLimited, E-PROV-002 Timeout |
-| E-MCP-001–099 | ferrochain-mcp | E-MCP-001 ToolException, E-MCP-002 TransportError |
-| E-SPLIT-001–099 | ferrochain-splitters | E-SPLIT-001 ZeroChunkSize |
-| E-SBXD-001–099 | ferrochain-sandbox | E-SBXD-001 WorkspaceEscape, E-SBXD-002 PolicyNotEnforceable |
+| Range | Component | Level | Examples |
+|-------|-----------|-------|---------|
+| E-CORE-001–099 | ferrochain-core | crate | E-CORE-001 InvalidContentBlock, E-CORE-002 RunnableCompositionError |
+| E-GRAPH-001–099 | ferrochain-graph | crate | E-GRAPH-001 InvalidUpdateError, E-GRAPH-002 NoActiveInterrupt |
+| E-CHKPT-001–099 | ferrochain-checkpoint | crate | E-CHKPT-001 CheckpointWriteFailed, E-CHKPT-002 MonotonicClockRegression |
+| E-SERVER-001–099 | ferrochain-server | crate | ~~E-SERVER-001 PolicyNotEnforceable~~ (retired — duplicate of E-SBXD-002; see error-taxonomy.md tombstone), E-SERVER-002 RunNotFound |
+| E-PROV-001–099 | ferrochain-\<provider\> | crate | E-PROV-001 RateLimited, E-PROV-002 Timeout |
+| E-MCP-001–099 | ferrochain-mcp | crate | E-MCP-001 ToolException, E-MCP-002 TransportError |
+| E-SPLIT-001–099 | ferrochain-splitters | crate | E-SPLIT-001 ZeroChunkSize |
+| E-SBXD-001–099 | ferrochain-sandbox | crate | E-SBXD-001 WorkspaceEscape, E-SBXD-002 PolicyNotEnforceable |
+| E-MEMORY-001–099 | ferrochain-memory | crate | E-MEMORY-001 EmbeddingBackendNotConfigured, E-MEMORY-003 ScopeAccessDenied |
+| E-RETRY-001–099 | ferrochain-core retry combinator | intra-crate | E-RETRY-001 RetryExhausted, E-RETRY-003 CircuitBreakerOpen |
+| E-CRON-001–099 | ferrochain-server scheduler | intra-crate | E-CRON-001 AssistantNotFoundAtFiring, E-CRON-002 InvalidCronExpression |
+| E-BUDGET-001–099 | ferrochain-graph budget subsystem | intra-crate | E-BUDGET-001 BudgetCeilingReached, E-BUDGET-002 JournalWriteFailed |
 
 See `prd-supplements/error-taxonomy.md` for the complete catalog.
 

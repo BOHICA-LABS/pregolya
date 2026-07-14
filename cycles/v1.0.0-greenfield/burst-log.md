@@ -613,3 +613,30 @@ Pass 7 returned NOT CLEAN — 3 findings. F-P7-01 HIGH running-vocab THIRD recur
 - Fix bursts: 7
 - Counter: 0 of 3
 - Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7)
+
+## Burst 86 — Phase 1d pass 10 + fix burst (DI-description fidelity census, growth propagation, PRD §5 component set)
+
+**Date:** 2026-07-14
+**Agents:** adversary + PO
+**Trigger:** Pass 10 adversarial review dispatched after burst 85
+
+### Narrative
+
+Pass 10 returned NOT CLEAN — 4 findings (2 HIGH, 2 MED), all fixed. F-P10-01 HIGH NEW FINDING CLASS: DI-description fidelity. Pass-9 census confirmed DI citation *presence* (3-way bodies↔index↔plan); this pass rotated to whether description *text* in each `L2 Domain Invariants` cell matches the canonical invariant title from invariants.md. BC-2.08.010 line 143 described DI-010 (Credential Opacity) language under DI-008 attribution ("Type-Safe API Contract" / no `#[derive(Debug)]` on API key types). Canonical DI-008 is "Library Constructor Result Contract" (Result<T, FerrochainError> at compile time; EC-003). Postcondition 4 and Invariants bullet fixed to DI-008-correct language; DI-010 added as cross-reference note citing BC-2.14.005 as enforcer. Full DI-description census run: 3 exceptions found and fixed (BC-2.08.010 DI-008, BC-2.09.005 DI-014 description tightened, BC-2.12.007 DI-011 missing spaces around /). Post-fix: 86/86 canonical. F-P10-02 HIGH ARCH-INDEX SS-08 BC range stale: `BC-2.08.001–008` → `BC-2.08.001–012` (batch 13 added BC-2.08.009–012 and range was never updated). F-P10-03 MED ARCH-INDEX preamble count: "82 BC files" → "86 BC files". F-P10-04 MED PRD §5 component count: 8 → 12 components (CORE/GRAPH/CHKPT/SERVER/PROV/MCP/SPLIT/SBXD/MEMORY/RETRY/CRON/BUDGET). ARCH-INDEX SS complement census (17 rows): ALL PASS post-fix. PRD §5 vs error-taxonomy set assertion: PASS (12=12). Two new standing census gates established: ARCH-INDEX SS range gate (trigger: new BC file) and PRD §5 component gate (trigger: new `### Component:` heading in error-taxonomy.md). Bonus: BC-2.12.003 ordinals corrected to sequential 1–20. ADV-P1D-PASS-10.md committed. Input-hashes refreshed on 6 artifacts.
+
+### Files Touched
+
+- specs/behavioral-contracts/ss-08/BC-2.08.010.md (DI-008 canonical description + DI-010 cross-ref)
+- specs/behavioral-contracts/ss-09/BC-2.09.005.md (DI-014 description canonical)
+- specs/behavioral-contracts/ss-12/BC-2.12.003.md (ordinals 1–20 sequential; DI cross-ref)
+- specs/behavioral-contracts/ss-12/BC-2.12.007.md (DI-011 spaces around /)
+- specs/architecture/ARCH-INDEX.md (SS-08 range 001–012; preamble 82→86 BC files)
+- specs/prd.md (§5 8→12 components)
+- cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-10.md (NEW — 17-row SS complement census, PRD§5 set assertion, DI-description census 86/86)
+
+### Convergence Status After Burst 86
+
+- Phase 1d passes: 10 (NOT CLEAN)
+- Fix bursts: 10
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10)

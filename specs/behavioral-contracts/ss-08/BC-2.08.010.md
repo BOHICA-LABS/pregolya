@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "78af0d3ef7ed33b2"
+input-hash: "fb878c3d65bb7061"
 ---
 
 # BC-2.08.010: `#[tool]` Attribute Macro — async fn to Tool Implementor via schemars::JsonSchema
@@ -58,16 +58,22 @@ type MUST have a committed snapshot test per BC-2.08.009 (schema naming stabilit
 2. A private `<PascalCaseName>Args` struct is generated with one field per function parameter;
    the struct derives `serde::Deserialize + schemars::JsonSchema`.
 3. The generated `<PascalCaseName>Tool` struct is `Send + Sync` (Rust async tool requirement).
-4. A `cargo expand` of the annotated function shows no direct `#[derive(Debug)]` on API key
-   types — DI-008 structural type safety is preserved.
+4. The macro enforces DI-008 at the call site: the annotated function must return
+   `Result<T, FerrochainError>` (see EC-003 for compile-time rejection). No generated code
+   uses `.unwrap()` or `.expect()` in non-test contexts.
 5. The expansion compiles without any `#[allow(unused)]` suppressions in non-test code.
 
 ## Invariants
 
-- DI-008: The generated struct preserves the type-safety contract — the argument struct derives
-  only `serde::Deserialize` and `schemars::JsonSchema`, never `serde::Serialize` or
-  `std::fmt::Debug` with potential secret exposure.
+- DI-008 (Library Constructor Result Contract): The generated `invoke` delegates to the
+  annotated function, which must return `Result<T, FerrochainError>`. Macro expansion does
+  not use `.expect()` or `.unwrap()` in generated non-test code. EC-003 enforces this at
+  compile time.
 - The macro is additive; it does not modify the annotated function's signature or behavior.
+- **Related invariant — DI-010 (Credential Opacity):** API key types used as tool parameters
+  must follow the DI-010 newtype pattern (no `#[derive(Debug)]` or `Serialize` on secret
+  types). This constraint is enforced by BC-2.14.005, not by this BC. Callers are responsible
+  for using opaque newtypes as parameter types rather than raw `String` for secrets.
 - Schema naming stability: the generated `<PascalCaseName>Args` struct name is stable and
   constitutes a public API surface per BC-2.08.009 snapshot obligation.
 
@@ -140,7 +146,7 @@ _[to be filled after story decomposition]_
 |-------|-------|
 | Source L2 Capability | CAP-002 |
 | Capability Anchor Justification | CAP-002 ("Runnable Trait Abstraction (Compose, Pipe, Chain)") per capabilities-p0.md §CAP-002 — the `#[tool]` macro creates a `Runnable`-compatible `Tool` implementor, directly realizing the universal composition protocol that CAP-002 defines; this is the macro ergonomics layer on top of the `Runnable` trait |
-| L2 Domain Invariants | DI-008 (Type-Safe API Contract — generated argument struct preserves structural type safety; no raw String for parameter passing) |
+| L2 Domain Invariants | DI-008 (Library Constructor Result Contract — macro-generated `invoke` wraps the annotated function, which must return `Result<T, FerrochainError>`; EC-003 enforces this at compile time) |
 | DEC Reference | — |
 | Risk Source | ADR-004 acceptance (D5 gate resolved); ADR-008 proc-macro design |
 | D17 Commitment | D17-Q6 — proc-macro BCs gated on D5 ADR; ADR-004 accepted unblocks this BC |

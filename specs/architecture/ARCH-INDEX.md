@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/STATE.md
-input-hash: "202f525322e71692"
+input-hash: "df4e938670d28633"
 traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17]
@@ -53,7 +53,7 @@ decisions: [D4, D6, D9, D11, D13, D17]
 
 > **Source of truth** for subsystem names and SS-NN IDs. BC frontmatter `subsystem:`,
 > BC-INDEX subsystem column, story `subsystems:`, and PRD references MUST use exact Name.
-> State-manager backfills all 82 BC files with SS-NN after this index is committed.
+> State-manager backfills all 86 BC files with SS-NN after this index is committed.
 
 | SS ID | Name | PRD Section | Primary Crate(s) | BCs | Wave |
 |-------|------|-------------|------------------|-----|------|
@@ -64,7 +64,7 @@ decisions: [D4, D6, D9, D11, D13, D17]
 | SS-05 | HITL Interrupt / Resume | 2.05 | ferrochain-graph | BC-2.05.001–006 | 1 |
 | SS-06 | Streaming Event Taxonomy | 2.06 | ferrochain-graph, ferrochain-core | BC-2.06.001–003 | 1 |
 | SS-07 | Text Splitting | 2.07 | ferrochain-splitters | BC-2.07.001–003 | 1 |
-| SS-08 | Provider Conformance + Standard Tests | 2.08 | ferrochain-openai, ferrochain-anthropic, ferrochain-ollama, ferrochain-standard-tests | BC-2.08.001–008 | 2 |
+| SS-08 | Provider Conformance + Standard Tests | 2.08 | ferrochain-openai, ferrochain-anthropic, ferrochain-ollama, ferrochain-standard-tests | BC-2.08.001–012 | 2 |
 | SS-09 | MCP Tool Adapter | 2.09 | ferrochain-mcp | BC-2.09.001–005 | 2 |
 | SS-10 | Budget Governance | 2.10 | ferrochain-graph | BC-2.10.001–004 | 1 |
 | SS-11 | Content Provenance / Guardrail | 2.11 | ferrochain-graph | BC-2.11.001–006 | 1 |

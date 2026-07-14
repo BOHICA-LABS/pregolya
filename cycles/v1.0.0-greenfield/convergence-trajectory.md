@@ -133,3 +133,14 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 ---
 
 <!-- Append pass rows chronologically. Each pass gets a Per-Pass Details subsection. -->
+
+### Pass P1D-10 Details
+
+**Date:** 2026-07-14
+**Verdict:** NOT CLEAN — 4 findings (2 HIGH, 2 MED)
+**Findings delta:** +2 vs pass 9 (2→4)
+**Axes rotated:** DI-description fidelity (NEW CLASS); ARCH-INDEX SS range growth propagation; PRD §5 component set assertion
+**Fix summary:** DI-description census 86/86 canonical (3 exceptions fixed: BC-2.08.010 DI-008, BC-2.09.005 DI-014, BC-2.12.007 DI-011); ARCH-INDEX SS-08 range + preamble count; PRD §5 8→12 components; BC-2.12.003 ordinals sequential. Bonus: BC-2.09.005, BC-2.12.007 DI description canonicalized.
+**New standing gates:** ARCH-INDEX SS range gate (trigger: new BC file); PRD §5 component gate (trigger: new component in error-taxonomy.md)
+**Trajectory after:** 14→5→7→13→3→3→3→5→2→4
+**Counter:** 0/3

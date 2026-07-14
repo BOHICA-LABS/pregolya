@@ -25,7 +25,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "91a7abcae667e20f52b72c431ea646ce5818644c0b0e26cfb8d36160f93918d1"
+input-hash: "35288e587773df873fde5dc1b952d35dd075a99140fba82c703587e4b87713da"
 ---
 
 # BC-2.09.005: MultiServerMcpClient Holds No Live Connections (Red Gate — R11)
@@ -154,7 +154,7 @@ _[to be filled after story decomposition]_
 |-------|-------|
 | Source L2 Capability | CAP-010 |
 | Capability Anchor Justification | CAP-010 ("MCP Tool Adapter") per capabilities-p1-p2.md §CAP-010 — this BC specifies the session lifecycle ownership model of the multi-server client, which is the core design fact of the adapter (connection-on-demand, not connection-at-construction) and is an R11 Red Gate test void per semport/mcp/test-inventory.md |
-| L2 Domain Invariants | DI-014 (Error Propagation / No Silent Behavior — the struct's lifecycle must not have hidden network side effects) |
+| L2 Domain Invariants | DI-014 (Error Propagation (No Silent Swallowing) — the struct's lifecycle must not have hidden network side effects; no connection is opened or closed silently) |
 | DEC Reference | — |
 | Risk Source | R11 (upstream MCP test voids: `MultiServerMCPClient.__aenter__` NotImplementedError contract untested) |
 | D17 Commitment | D17-Q9 — R11 Red Gate test required (`MultiServerMCPClient.__aenter__` NotImplementedError has no lock test in the upstream test suite) |

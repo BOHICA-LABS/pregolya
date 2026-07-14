@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "36380e5449ee7f2e14d04b727a5c3c6d66881f2ce4d460037d3d7a5821de470b"
+input-hash: "2bb68ed87dd30c866ac6d88eb723cce3c2d0b8ce8ca0e22697b97d5a887452f6"
 ---
 
 # BC-2.12.007: Streaming Endpoint and Unary Endpoint Drive Same Graph Engine, Same Final Answer
@@ -70,7 +70,7 @@ graph engine, producing output that could diverge from the unary path.
 
 ## Invariants
 
-- **DI-011 (Streaming/Unary Run Equivalence):** The same `CompiledGraph` instance is
+- **DI-011 (Streaming / Unary Run Equivalence):** The same `CompiledGraph` instance is
   invoked by both handlers; the only difference is the output adapter (stream vs. collect).
 - A `Run` cannot be simultaneously executed via both the streaming and unary endpoints
   for the same `run_id`; the first request claims execution and the second receives
@@ -162,7 +162,7 @@ _[to be filled after story decomposition]_
 |-------|-------|
 | Source L2 Capability | CAP-014 |
 | Capability Anchor Justification | CAP-014 ("Durable-Run HTTP Server (Threads, Assistants, Runs, Crons)") per capabilities-p1-p2.md §CAP-014 — "Streaming and unary run endpoints drive the same graph execution engine" is verbatim text in the CAP-014 description |
-| L2 Domain Invariants | DI-011 (Streaming/Unary Run Equivalence) |
+| L2 Domain Invariants | DI-011 (Streaming / Unary Run Equivalence) |
 | NE Reference | NE-13 — streaming/unary equivalence mandate (adk-rust streaming stub that never invokes engine is the counter-example) |
 | CONFLICT Reference | CONFLICT-10 — adk-rust streaming stub emitting task-state events without invoking graph engine is the direct counter-example |
 | Priority | P1 |

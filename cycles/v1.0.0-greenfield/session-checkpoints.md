@@ -261,3 +261,13 @@ ferrochain Phase 1d adversarial spec convergence: Pass 7 COMPLETE — NOT CLEAN.
 | **Cycle** | v1.0.0-greenfield |
 | **Burst commit** | burst 83 |
 | **Convergence counter** | 0 of 3 (Phase 1d) |
+
+---
+
+### Archived Checkpoint — Burst 85 (Pass 9)
+
+ferrochain Phase 1d adversarial spec convergence: Pass 9 COMPLETE — NOT CLEAN. 2 findings: F-P9-01 HIGH BC-INDEX DI-Anchors column omitted DI-006/007/012 enforcers [12 rows] — census fix reconciled 14/14 DIs exact 3-way (bodies↔index↔plan↔RTM), catching 6 additional DI drifts beyond the adversary's 3; F-P9-02 LOW BC-2.08.009 empty input-hash → populated (hash: 96fc00a51eb0520c…). Sibling checks 5/5 PASS. BC-body coverage 86/86 (100%). E-code + VP axes re-verified CLEAN. Trajectory 14→5→7→13→3→3→3→5→2 (decaying). Convergence 0/3. Burst 85.
+
+**WORKSTREAM (at time of archival):** Burst 85 COMPLETE. Phase 1d pass 9: 2 findings fixed (BC-INDEX DI-Anchors 14/14 DIs exact 3-way census [12 rows populated, 6 additional drifts caught vs adversary's 3]; BC-2.08.009 input-hash populated). ADV-P1D-PASS-9.md committed. Input-hashes refreshed on 4 artifacts. Trajectory 14→5→7→13→3→3→3→5→2.
+
+**WRAP METADATA:** Date: 2026-07-14 | Cycle: v1.0.0-greenfield | Burst: 85 | Counter: 0/3
