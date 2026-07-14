@@ -54,7 +54,7 @@ edge routing function. Static edges and `Send` fan-out (BC-2.02.006) are distinc
 2. If `path_fn(state)` returns `NodeNames(["a", "b"])`, both nodes `"a"` and `"b"` are
    scheduled in the next super-step.
 3. If `path_fn(state)` returns `End`, no further nodes are scheduled; the graph run
-   transitions to `done` after flushing the current step.
+   transitions to `completed` after flushing the current step.
 4. If `path_map` is provided, symbolic return values from `path_fn` are translated via the
    map before scheduling; the raw string must appear as a key in the map.
 5. If `path_fn` raises a Rust panic or returns an `Err`, the graph transitions to `failed`
@@ -77,7 +77,7 @@ edge routing function. Static edges and `Send` fan-out (BC-2.02.006) are distinc
 **Scenario:** `path_fn` evaluates the state and returns `End` (e.g., a convergence
 condition is met).
 **Expected behavior:** No further nodes are scheduled; the run completes with the current
-graph state as output; status transitions to `done`.
+graph state as output; status transitions to `completed`.
 
 ### EC-002: path_fn returns unknown node name
 **Scenario:** `path_fn` returns `NodeName("mystery")` but `"mystery"` was never registered
@@ -96,7 +96,7 @@ preserving the panic message as the error source.
 ### EC-004: path_fn returns empty list
 **Scenario:** `path_fn` returns `NodeNames([])` (empty routing result, not `End`).
 **Expected behavior:** No nodes are scheduled from this edge; if no other edges trigger
-any nodes, the graph halts naturally (`done`). Returning an empty list is semantically
+any nodes, the graph halts naturally (run transitions to `completed`). Returning an empty list is semantically
 equivalent to routing to END only for this edge's contribution.
 
 ### EC-005: path_map does not contain the returned symbolic key
@@ -110,7 +110,7 @@ from the run; the graph fails. Missing path_map entries are not silently ignored
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | `path_fn` returns `NodeName("next_node")`; `"next_node"` is registered | `"next_node"` is triggered in the next step | Happy path — single target |
-| TV-002 | `path_fn` returns `End` | Run completes; status `done` | END routing — graph terminates |
+| TV-002 | `path_fn` returns `End` | Run completes; status `completed` | END routing — graph terminates |
 | TV-003 | `path_fn` returns `NodeNames(["branch_a", "branch_b"])` | Both nodes triggered in next step | Multi-target routing |
 | TV-004 | `path_fn` returns `NodeName("ghost")` where `"ghost"` is not a registered node | `Err(E-GRAPH-003 UnknownRoutingTarget { node: "ghost" })` | Unknown target |
 | TV-005 | `path_fn` panics | `Err(E-GRAPH-011 ConditionalEdgePanic)` | Panic catch |

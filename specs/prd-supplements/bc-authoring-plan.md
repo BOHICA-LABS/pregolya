@@ -256,7 +256,7 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | P1 | CAP-010 | DI-014 | Wave 2 |
 | BC-2.12.001 | Thread resource CRUD (create, read, list, delete durable conversation history) | P1 | CAP-014 | — | Wave 1 |
 | BC-2.12.002 | Assistant resource CRUD (named agent config with graph reference) | P1 | CAP-014 | — | Wave 1 |
-| BC-2.12.003 | Run creation and execution lifecycle (create → in_progress → completed/failed) | P1 | CAP-014 | — | Wave 1 |
+| BC-2.12.003 | Run creation and execution lifecycle (queued → in_progress → completed | failed | interrupted | cancelled) | P1 | CAP-014 | — | Wave 1 |
 
 ### Batch 11 — Server Cont. + Long-Horizon Memory (P1/P2)
 *7 BCs — SS.12 cont. + SS.15*

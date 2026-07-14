@@ -146,7 +146,7 @@ Pure path arithmetic (prefix checks, symlink detection) is tractable for Kani; O
 
 ## Should Prove (P1 — Core Algorithms, Conformance Contracts)
 
-No P1 VPs committed at Phase 1. Additional Kani candidates for Phase 6 consideration:
+No P1 Kani VPs committed at Phase 1 (the 2 committed P1 VPs — VP-004/VP-005 — are integration-tier, Phase 3). Additional Kani candidates for Phase 6 consideration:
 - Monotonic clock: `∀ t1 < t2: Clock, clock_id(t1) < clock_id(t2)` (DI-004)
 - Fork lineage: no state copy on fork; pointer only (DI-004)
 - BarrierValue: all expected writers present before barrier releases (DI-001)

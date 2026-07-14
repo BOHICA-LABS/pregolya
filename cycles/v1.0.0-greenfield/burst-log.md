@@ -575,3 +575,41 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 - Fix bursts: 6
 - Counter: 0 of 3
 - Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6)
+
+---
+
+## Archived Current Phase Step — Pass 2 (rotated out of STATE.md at burst 83)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1d pass 2 + fix burst | adversary + PO/BA/architect | COMPLETE | Pass 2: NOT CLEAN — 5 findings (1 CRIT: budget-namespace regression-escape → Component: BUDGET added to error taxonomy, E-GRAPH-005 tombstoned; 3 HIGH: RetryHint triple-vocabulary canonicalized to Never/Maybe/Later, run-state propagation completed [grep-zero], brief +sandbox/memory crates [R6 now 14 crates]; 1 MED: 12-component enum in api-surface+ADR-010). Sibling check 6/7 (run-state was partial → completed). VP axis CLEAN. 5/5 FIXED. Trajectory 14→5. Convergence 0/3. Burst 78. |
+
+---
+
+## Burst 83 — Phase 1d pass 7 + fix burst (whitelist-complement purge, 215-hit classification)
+
+**Date:** 2026-07-14
+**Agents:** adversary + PO
+**Trigger:** Pass 7 adversarial review dispatched after burst 82
+
+### Narrative
+
+Pass 7 returned NOT CLEAN — 3 findings. F-P7-01 HIGH running-vocab THIRD recurrence: adversary found 6 `running` tokens remaining in prose bodies of BCs — missed by pass-6 per-incident grep which checked only the two flagged files rather than the full corpus. Root cause codified as structural: per-incident targeted grep is insufficient for controlled vocabularies. Resolution: WHITELIST-COMPLEMENT MANDATE generalized to all controlled vocabularies — any fix must produce a 215-hit classification table with zero unclassified hits, demonstrating every occurrence of the controlled term in the corpus is accounted for. F-P7-02 MED verification-architecture P1 self-contradiction: line 149 referenced Kani for async contexts but Kani toolchain qualification at Phase 1 level was missing — P1 qualification language added. F-P7-03 LOW bc-authoring-plan line 259: `create-state` lifecycle step not aligned with canonical lifecycle — updated to canonical. Additional self-discovered class: `done` tokens in BC-2.02.002, BC-2.02.005, BC-2.05.004 (non-interrupted terminal state) and BC-2.12.001 — 5 instances purged, vocabulary narrowed to `completed`. 3/3 fixed + 1 self-discovered class fixed. ADV-P1D-PASS-7.md committed. Input-hashes refreshed.
+
+### Files Touched
+
+- specs/architecture/verification-architecture.md (line 149 Kani P1 qualification added)
+- specs/behavioral-contracts/ss-02/BC-2.02.002.md (non-interrupted set canonical; `done`→`completed`)
+- specs/behavioral-contracts/ss-02/BC-2.02.005.md (`done`→`completed`)
+- specs/behavioral-contracts/ss-05/BC-2.05.004.md (non-interrupted set; `done`→`completed`)
+- specs/behavioral-contracts/ss-05/BC-2.05.005.md (`running` purge — 6 tokens cleared)
+- specs/behavioral-contracts/ss-12/BC-2.12.001.md (`done`→`completed`)
+- specs/prd-supplements/bc-authoring-plan.md (line 259 canonical lifecycle)
+- cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-7.md (NEW — 215-hit classification table)
+
+### Convergence Status After Burst 83
+
+- Phase 1d passes: 7 (NOT CLEAN)
+- Fix bursts: 7
+- Counter: 0 of 3
+- Trajectory: →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7)

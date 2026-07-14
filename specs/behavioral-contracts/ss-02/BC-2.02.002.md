@@ -106,7 +106,7 @@ same super-step.
 delivers before the step closes (the other has no outgoing channel update).
 **Expected behavior:** The channel is not available; the downstream node is not triggered;
 execution halts at that step boundary. If no other nodes are triggered the graph halts
-with status `done` (natural completion) without ever activating the downstream node.
+naturally (run transitions to `completed`) without ever activating the downstream node.
 **Note:** See BC-2.02.003 for `NamedBarrierValue` missing-writer boundary semantics.
 
 ### EC-004: Append fold order with three concurrent writers

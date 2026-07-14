@@ -46,7 +46,7 @@ This contract directly implements DEC-006.
 2. The run referenced by `thread_id` is in one of these states:
    a. `completed` — the run finished normally.
    b. `failed` — the run ended in error.
-   c. `running` — the run is still executing (not yet interrupted).
+   c. `in_progress` — the run is still executing (not yet interrupted).
    d. `interrupted` but all FIFO slots have already been consumed (no un-resolved
       interrupt positions remain in the per-task scratchpad).
 
@@ -117,14 +117,14 @@ The engine does not buffer the preemptive resume value for a future interrupt.
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
 | VP-HITL-09 | Spurious Command(resume=) never mutates checkpoint or run state | Unit test (assert checkpoint unchanged after Err) | Phase 1 |
-| VP-HITL-10 | Error carries run_status field for all four non-interrupted states | Unit test (parameterized over completed/failed/running/slot-exhausted) | Phase 1 |
+| VP-HITL-10 | Error carries run_status field for all four non-interrupted states | Unit test (parameterized over completed/failed/in_progress/slot-exhausted) | Phase 1 |
 
 ## Related BCs
 
 - BC-2.05.001 — composes with: the dual of this BC — interrupt() establishes the slot this BC guards against
 - BC-2.05.002 — composes with: FIFO slot exhaustion detected here after BC-2.05.002's delivery
 - BC-2.05.004 — composes with: Command(resume=) submitted here is the same Command type BC-2.05.004 defines
-- BC-2.12.003 — related to: run lifecycle states (completed/failed/running) are defined in the server's run contract
+- BC-2.12.003 — related to: run lifecycle states (queued/in_progress/completed/failed/interrupted/cancelled) are defined in the server's run contract; BC-2.12.003 defines `in_progress`
 
 ## Architecture Anchors
 

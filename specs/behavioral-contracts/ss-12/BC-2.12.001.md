@@ -113,7 +113,7 @@ the same ID also returns 404 — idempotent in error semantics.
 The thread exists but has no checkpoint state. This is valid.
 
 ### EC-005: POST /state concurrent with running Run
-**Scenario:** A Run is active on the thread (state: `running`); caller simultaneously
+**Scenario:** A Run is active on the thread (state: `in_progress`); caller simultaneously
 calls `POST /threads/{thread_id}/state`.
 **Expected behavior:** HTTP 409 `{ code: "E-SERVER-008", message: "ThreadStateConflict: thread '<id>' has an active run '<run_id>'; state updates during active runs are disallowed" }`.
 

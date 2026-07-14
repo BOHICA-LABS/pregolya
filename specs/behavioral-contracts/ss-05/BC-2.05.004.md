@@ -70,7 +70,7 @@ mixin). This BC specifies the full `Command` shape and the contract each field s
 6. A `Command` returned by a tool function (tool output mixin) is treated identically to
    a `Command` submitted via `graph.invoke`. The graph recognizes it as a routing/resume
    directive.
-7. The run status transitions from `interrupted` → `running` upon `Command` application,
+7. The run status transitions from `interrupted` → `in_progress` upon `Command` application,
    then to `completed` / `interrupted` / `failed` as the re-execution resolves.
 
 ## Invariants
@@ -83,8 +83,8 @@ mixin). This BC specifies the full `Command` shape and the contract each field s
   that merely unblocks the super-step); it is NOT an error condition.
 - `Command.PARENT` is only valid inside a subgraph execution context; submitting it at the
   root graph level returns `Err(E-GRAPH-015 NoParentGraph)`.
-- A `Command` submitted to a non-interrupted run (status `running`, `completed`, or
-  `failed`) returns `Err(E-GRAPH-002 NoActiveInterrupt)` (see BC-2.05.005).
+- A `Command` submitted to a non-interrupted run (status `queued`, `in_progress`, `completed`,
+  `failed`, or `cancelled`) returns `Err(E-GRAPH-002 NoActiveInterrupt)` (see BC-2.05.005).
 
 ## Edge Cases
 
