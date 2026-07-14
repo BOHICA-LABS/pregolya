@@ -57,6 +57,49 @@ Phase 1d pass 34 adversarial review completed: NOT CLEAN — 3 findings (1 HIGH,
 
 ---
 
+## Burst 111 — Phase 1d Pass 35 CLEAN (convergence 1/3)
+
+**Date:** 2026-07-15
+**Agents:** adversary (pass 35) + state-manager (STATE update)
+**Files touched:** cycles/v1.0.0-greenfield/adversarial-reviews/pass-35.md (adversary); STATE.md, burst-log.md (state-manager)
+**Versions bumped:** STATE.md v3.1→v3.2 (convergence counter 0→1)
+
+### Summary
+
+Phase 1d pass 35 adversarial review completed: CLEAN — ZERO findings (first clean pass of Phase 1d). Convergence counter advances to 1/3. No spec fixes required. 2 non-blocking observations recorded in pass-35.md. Novelty LOW.
+
+**Sibling checks (pass-34 fix verification): ALL PASS**
+- E-RETRY-004/E-RETRY-003 separation: error-taxonomy v1.5 + BC-2.16.001 v1.1 EC-003/TV-004 confirmed; E-RETRY-003 sole owner BC-2.16.003; divergence registry unpolluted (exactly E-RETRY-003, E-CRON-003, E-MEMORY-002/005, E-BUDGET-002). PASS.
+- BC-2.12.001 PC8 / PC9: full canonical pagination (limit 10/max 100/silent CLAMP/offset 0) + created_at DESC hold. PASS.
+- Gate #16 two-form census: ~45 unique pairings both forms, zero collisions, zero drift, false positives correctly filtered. PASS.
+
+**Censuses: ALL PASS**
+- Status-token (#19/#20): 12 categorical defaults + 9 overrides verified; E-GRAPH-013 SECURITY→403 correctly categorical. PASS.
+- Gate #24 six-surface pagination: 6/6 PASS (version ASC exemption documented). PASS.
+- Gate #25 arithmetic: all counts reconcile (86 BCs [grep 94 = 86 catalog + 5 Red Gate + 3 VP Seed]; both criticality docs agree ferrochain-macros HIGH; 5 VPs; 18 crates; 26 endpoints). PASS.
+
+**Novel probe (axis c): PASS**
+- L2 DI cross-shard coherence + L2→BC anchor integrity: all 14 DIs (DI-001..DI-014) enforced by ≥1 BC with bidirectional anchor agreement across invariants.md, BC-INDEX DI-Anchors column, and bc-authoring-plan DI Enforcement Coverage table. Zero orphans. Zero scope mismatches.
+
+**2 non-blocking observations:**
+- OBS-P35-1: interface-definitions.md 422 VAL-category E-GRAPH codes vs BC-2.14.002 PC3 400 default — documented two-layer design (to_problem() categorical 400 vs HTTP-layer semantic-body-VAL 422 refinement); coherent, no defect. Optional: add PC3 cross-reference note in future.
+- OBS-P35-2: prd.md ~line 403 RETRY example list omits E-RETRY-004 — illustrative list, not a registry; no defect.
+
+### Convergence Status After Burst 111
+
+- Phase 1d passes: 35 (first CLEAN)
+- Fix bursts: 34 (no fix this pass)
+- Counter: 1 of 3
+- Trajectory: ...→2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN)
+
+### Archived Current Phase Steps Row (displaced from STATE.md — oldest row)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1d pass 30 + fix burst (TOOL categorical token) | adversary + PO | COMPLETE | Pass 30: NOT CLEAN — 1 MED (F-P30-01 blanket-note TOOL→N/A contradicted Category::Tool→422 [pass-29 edit regression] → fixed + full 12-category token diff applied: VAL→400 corrected, TRANSPORT→502 + INTERNAL→500 added) + 2 obs (Timestamp RFC 3339 UTC canon added to entities-server; gate #23 anti-fix note durable in bc-authoring-plan — events.md representative subset is legitimate). Gate #23 streaming census FIRST FULL RUN: PASS 11/11. Sibling-checks (a)-(d) all PASS; 3 of 4 rotated censuses PASS. Novelty MEDIUM — single propagation regression; adversary expects CLEAN w/ LOW novelty next. Trajectory ...→1→6→1. Convergence 0/3. Gates 32. Burst 106. |
+
+---
+
 ## Burst 109 — Phase 1d Pass 33 + Fix Burst + SESSION WRAP (list-assistants PCs + config-merge precedence)
 
 **Date:** 2026-07-15
