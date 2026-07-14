@@ -77,7 +77,7 @@ traces_to: .factory/specs/prd.md
 | BC-2.05.002 | FIFO Resume-Value Delivery Order | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.002.md |
 | BC-2.05.003 | Interrupted Node Re-Executes from Start of Super-Step on Resume | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.003.md |
 | BC-2.05.004 | Command(resume=value) API Contract for Programmatic Resume | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.004.md |
-| BC-2.05.005 | Resume on Empty Interrupt Queue Returns Err(NoActiveInterrupt) | CAP-006 | | | P0 | | | ss-05/BC-2.05.005.md |
+| BC-2.05.005 | Resume on Empty Interrupt Queue Returns Err(NoActiveInterrupt) | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.005.md |
 | BC-2.05.006 | Risk-Tiered Interrupt Classification (Typed Action-Risk Levels for Domain A SOC) | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.006.md |
 | BC-2.06.001 | Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end) | CAP-007 | | DI-011 | P0 | | | ss-06/BC-2.06.001.md |
 | BC-2.06.002 | run_id + parent_ids Correlation Across All Streaming Events | CAP-007 | | | P0 | | | ss-06/BC-2.06.002.md |
@@ -100,18 +100,18 @@ traces_to: .factory/specs/prd.md
 | BC-2.09.001 | MCP Server Tool Discovery and Registration at Runtime | CAP-010 | | | P1 | | | ss-09/BC-2.09.001.md |
 | BC-2.09.002 | ToolInvocation Routing to Correct MCP Server Transport | CAP-010 | | | P1 | | | ss-09/BC-2.09.002.md |
 | BC-2.09.003 | Tool-Result Content Treated as Untrusted Ingress (DI-012 Applies) | CAP-010 | | DI-012 | P1 | | | ss-09/BC-2.09.003.md |
-| BC-2.09.004 | MCP Bare ToolException Re-Raise Preserving Type Identity (Red Gate — R11) | CAP-010 | | | P1 | **RG** | | ss-09/BC-2.09.004.md |
-| BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | CAP-010 | | | P1 | **RG** | | ss-09/BC-2.09.005.md |
+| BC-2.09.004 | MCP Bare ToolException Re-Raise Preserving Type Identity (Red Gate — R11) | CAP-010 | | DI-014 | P1 | **RG** | | ss-09/BC-2.09.004.md |
+| BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | CAP-010 | | DI-014 | P1 | **RG** | | ss-09/BC-2.09.005.md |
 | BC-2.10.001 | BudgetPolicy allow/escalate/deny Evaluation per Run and per Sub-Agent | CAP-012 | | | P0 | | | ss-10/BC-2.10.001.md |
 | BC-2.10.002 | Append-Only EvidenceJournal Records Every Budget Evaluation | CAP-012 | | | P0 | | | ss-10/BC-2.10.002.md |
 | BC-2.10.003 | Graceful Halt When Budget Ceiling Reached (on_ceiling = halt) | CAP-012 | | | P0 | | | ss-10/BC-2.10.003.md |
 | BC-2.10.004 | Budget Escalation to HITL Interrupt When on_ceiling = escalate | CAP-012 | | DI-003 | P0 | | | ss-10/BC-2.10.004.md |
-| BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary (Tool-Result, RAG, Memory) | CAP-013 | | | P0 | | | ss-11/BC-2.11.001.md |
-| BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | CAP-013 | | | P0 | | | ss-11/BC-2.11.002.md |
-| BC-2.11.003 | GuardrailHook Fires at RAG Ingress | CAP-013 | | | P0 | | | ss-11/BC-2.11.003.md |
-| BC-2.11.004 | GuardrailHook Fires at Memory Ingress | CAP-013 | | | P0 | | | ss-11/BC-2.11.004.md |
-| BC-2.11.005 | Rejected Content Does Not Enter Model Context Under Any Code Path | CAP-013 | | | P0 | | | ss-11/BC-2.11.005.md |
-| BC-2.11.006 | No-Hook Default — Content Passes Through with WARNING LOG (Default-Permit) | CAP-013 | | | P0 | | | ss-11/BC-2.11.006.md |
+| BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary (Tool-Result, RAG, Memory) | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.001.md |
+| BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.002.md |
+| BC-2.11.003 | GuardrailHook Fires at RAG Ingress | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.003.md |
+| BC-2.11.004 | GuardrailHook Fires at Memory Ingress | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.004.md |
+| BC-2.11.005 | Rejected Content Does Not Enter Model Context Under Any Code Path | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.005.md |
+| BC-2.11.006 | No-Hook Default — Content Passes Through with WARNING LOG (Default-Permit) | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.006.md |
 | BC-2.12.001 | Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History) | CAP-014 | | | P1 | | | ss-12/BC-2.12.001.md |
 | BC-2.12.002 | Assistant Resource CRUD (Named Agent Config with Graph Reference) | CAP-014 | | | P1 | | | ss-12/BC-2.12.002.md |
 | BC-2.12.003 | Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/interrupted/cancelled) | CAP-014 | | | P1 | | | ss-12/BC-2.12.003.md |
@@ -119,12 +119,12 @@ traces_to: .factory/specs/prd.md
 | BC-2.12.005 | SecurityConfig::default() Denies CORS; Debug Route Gated on Explicit Opt-In Key (NE-14) | CAP-014 | NE-14 | DI-013 | P1 | | | ss-12/BC-2.12.005.md |
 | BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore Trait Seams with Durable Backends (NE-08) | CAP-014 | NE-08 | | P1 | | | ss-12/BC-2.12.006.md |
 | BC-2.12.007 | Streaming Endpoint and Unary Endpoint Drive Same Graph Engine, Same Final Answer | CAP-014 | | DI-011 | P1 | | | ss-12/BC-2.12.007.md |
-| BC-2.13.001 | Enforcing Sandbox Backend (WASM or Container) Is Default (NE-01) | CAP-015 | NE-01 | | P1 | | | ss-13/BC-2.13.001.md |
-| BC-2.13.002 | Process Backend Requires Explicit Opt-In and Emits Loud Runtime Warning | CAP-015 | | | P1 | | | ss-13/BC-2.13.002.md |
-| BC-2.13.003 | Strict Policy + Non-Enforcing Backend Returns Err(PolicyNotEnforceable) | CAP-015 | | | P1 | | | ss-13/BC-2.13.003.md |
-| BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root at Access Time (NE-02) — Kani VP Seed | CAP-015 | NE-02 | | P1 | | **VP** | ss-13/BC-2.13.004.md |
-| BC-2.13.005 | Symlink That Escapes Workspace Root Returns Err(WorkspaceEscape) | CAP-015 | | | P1 | | | ss-13/BC-2.13.005.md |
-| BC-2.13.006 | macOS Seatbelt Profile: Deny-by-Default with Explicit Allow Rules (NE-16) | CAP-015 | NE-16 | | P1 | | | ss-13/BC-2.13.006.md |
+| BC-2.13.001 | Enforcing Sandbox Backend (WASM or Container) Is Default (NE-01) | CAP-015 | NE-01 | DI-006 | P1 | | | ss-13/BC-2.13.001.md |
+| BC-2.13.002 | Process Backend Requires Explicit Opt-In and Emits Loud Runtime Warning | CAP-015 | | DI-006 | P1 | | | ss-13/BC-2.13.002.md |
+| BC-2.13.003 | Strict Policy + Non-Enforcing Backend Returns Err(PolicyNotEnforceable) | CAP-015 | | DI-006 | P1 | | | ss-13/BC-2.13.003.md |
+| BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root at Access Time (NE-02) — Kani VP Seed | CAP-015 | NE-02 | DI-007 | P1 | | **VP** | ss-13/BC-2.13.004.md |
+| BC-2.13.005 | Symlink That Escapes Workspace Root Returns Err(WorkspaceEscape) | CAP-015 | | DI-007 | P1 | | | ss-13/BC-2.13.005.md |
+| BC-2.13.006 | macOS Seatbelt Profile: Deny-by-Default with Explicit Allow Rules (NE-16) | CAP-015 | NE-16 | DI-006 | P1 | | | ss-13/BC-2.13.006.md |
 | BC-2.14.001 | FerrochainError 2D Component × Category Struct with RetryHint and Machine Code | CAP-016 | | DI-008,DI-014 | P0 | | | ss-14/BC-2.14.001.md |
 | BC-2.14.002 | RFC-7807 Compatible Problem Emission from FerrochainError | CAP-016 | | | P0 | | | ss-14/BC-2.14.002.md |
 | BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | CAP-016 | NE-07 | DI-008 | P0 | | | ss-14/BC-2.14.003.md |

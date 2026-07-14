@@ -4,14 +4,14 @@ level: ops
 version: "2.1"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T17:30:00Z
+timestamp: 2026-07-14T08:54:58Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "Phase 1d pass 9 ready"
+current_step: "Phase 1d pass 10 ready"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -38,16 +38,16 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-14 — burst 84: Phase 1d pass 8 — title census 86/86, status governance, taxonomy semantics. |
+| **Last Updated** | 2026-07-14 — burst 85: Phase 1d pass 9 — DI-anchor census 14/14 exact; hash completeness. |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Phase 1d adversarial spec convergence — pass 9 ready (0/3 passes clean) |
+| **Current Step** | Phase 1d adversarial spec convergence — pass 10 ready (0/3 passes clean) |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -61,11 +61,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
+| Phase 1d pass 9 + fix burst (DI census) | adversary + PO | COMPLETE | Pass 9: NOT CLEAN — 2 findings (F-P9-01 HIGH BC-INDEX DI-Anchors column omitted DI-006/007/012 enforcers [12 rows] — census fix reconciled 14/14 DIs exact 3-way [bodies↔index↔plan↔RTM], catching 6 additional DI drifts; F-P9-02 LOW BC-2.08.009 empty input-hash → populated). Sibling checks 5/5 PASS; E-code + VP axes re-verified CLEAN; BC-body coverage 86/86 (100%). Trajectory 14→5→7→13→3→3→3→5→2 (decaying). Convergence 0/3. Burst 85. |
 | Phase 1d pass 8 + fix burst (full-census method) | adversary + PO | COMPLETE | Pass 8: NOT CLEAN — 5 findings (F-P8-01 HIGH BC-INDEX title drift ×4 [+1 census catch = 5 fixed; 86/86 exact post-fix; process-gap: title axis was sampled not censused]; F-P8-02 MED NaN-or-Err contradiction; F-P8-03 MED E-CORE-001 wire-type set; F-P8-04 LOW status governance → generalized rule, 29 normalized; F-P8-05 LOW E-MEMORY-003 semantics). Run-status class CONFIRMED CONVERGED (sibling whitelist-complement PASS). 2 prior axes re-verified CLEAN. Cumulative BC-body coverage ~90%. Trajectory 14→5→7→13→3→3→3→5. Convergence 0/3. Burst 84. |
 | Phase 1d pass 7 + fix burst (whitelist-complement purge) | adversary + PO | COMPLETE | Pass 7: NOT CLEAN — 3 findings (F-P7-01 HIGH running-vocab THIRD recurrence: 6 tokens in prose bodies missed by pass-6 per-incident grep; F-P7-02 MED verification-architecture P1 self-contradiction; F-P7-03 LOW plan create-state). Root cause codified: per-incident greps → WHITELIST-COMPLEMENT mandate generalized to all controlled vocabularies. Fix: 215-hit classification table, zero unclassified; `done` tokens (5) purged incl. self-discovered BC-2.02.005 class. Trajectory 14→5→7→13→3→3→3. Convergence 0/3. Burst 83. |
 | Phase 1d pass 6 + fix burst | adversary + PO | COMPLETE | Pass 6: NOT CLEAN — 3 findings (F-P6-01 HIGH running-vocab regression escape [2 flagged + 3 more caught by complement sweep in BC-2.05.005]; F-P6-02 MED plan staleness; F-P6-03 MED status-field split → rule defined: active once in BC-INDEX, 86× active normalized). Sibling checks ALL PASS; 5/5 spot rotation GREEN; 14/14 DIs anchored. 3/3 FIXED w/ complement evidence (0 running-tokens, 86× status active). Trajectory 14→5→7→13→3→3. Convergence 0/3. Burst 82. |
 | Phase 1d pass 5 + fix burst (complement evidence) | adversary + PO | COMPLETE | Pass 5: NOT CLEAN — 3 findings, single axis (category/component representation): F-P5-01 HIGH fictitious categories (CheckpointError/StateUpdateError/ToolError) → canonical + codes (BC-2.04.001 DURABILITY/E-CHKPT-001, BC-2.04.003 INTERNAL/E-CHKPT-002, BC-2.04.004 VAL/E-GRAPH-007); F-P5-02 MED PascalCase drift + BC-2.14.001 dual-rendering now explicit; F-P5-03 process-gap: pass-4 grep evidence false-negative → COMPLEMENT-ASSERTION mandate adopted (full distinct-value tables, 4 justified exceptions). Sibling checks 6/7 PASS (structural axes stable). Trajectory 14→5→7→13→3 (DECAYING). Convergence 0/3. Burst 81. |
-| Phase 1d pass 4 + fix burst (evidence discipline) | adversary + architect + PO | COMPLETE | Pass 4: NOT CLEAN — 13 findings (1 CRIT: burst-79 claimed fix never landed in prd RTM; new axes: sibling-subsystem sweep [SS-16 retry = same defect class as SS-15 memory → canonical home ferrochain-core per DAG merit] + category-enum lint [13 non-canonical categories canonicalized]). META: fix claims now require inline grep evidence; 17-subsystem coherence table verified 0 mismatches. 13/13 FIXED w/ grep proof + 2 race residuals closed (SS-16 RTM, E-PROV-006). Trajectory 14→5→7→13 (re-baseline: new lint axes). Convergence 0/3. Process-gap: xtask check-subsystem-coherence + category-enum lint → Phase 2 backlog (S-7.02). Burst 80. |
 
 ## Decisions Log
 
@@ -123,10 +123,10 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 8 (Phase 1d) |
-| Fix bursts completed | 8 (Phase 1d) |
+| Adversary passes completed | 9 (Phase 1d) |
+| Fix bursts completed | 9 (Phase 1d) |
 | Convergence counter | 0 of 3 (Phase 1d; pre-pipeline 3/3 CLOSED) |
-| Finding trajectory | (pre-pipeline) →1→1→0→0→1→2→0→1→1→0→0→1→0→0→0 (C23: CLEAN) ‖ (Phase 1d) →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) |
+| Finding trajectory | (pre-pipeline) →1→1→0→0→1→2→0→1→1→0→0→1→0→0→0 (C23: CLEAN) ‖ (Phase 1d) →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) |
 
 ## Session Resume Checkpoint
 
@@ -134,22 +134,22 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ### RESUME IN ONE BREATH
 
-ferrochain Phase 1d adversarial spec convergence: Pass 8 COMPLETE — NOT CLEAN. 5 findings: F-P8-01 HIGH BC-INDEX title drift ×4 (+1 census catch = 5 fixed; 86/86 exact-match post-fix; process-gap: title axis was sampled not censused — full census method now mandatory); F-P8-02 MED NaN-or-Err contradiction in BC-2.08.008 PC5 (Err-only, no NaN); F-P8-03 MED E-CORE-001 wire-type set + message → actual strict-validation trigger; F-P8-04 LOW status governance generalized rule → 29 files draft→active (120 active/11 accepted/5 VP-draft-tracked/1 approved principled 4-value table); F-P8-05 LOW E-MEMORY-003 lateral-denial semantics + caller_identity. Run-status class CONFIRMED CONVERGED (sibling whitelist-complement PASS). 2 prior axes re-verified CLEAN. Cumulative BC-body coverage ~90%. 5/5 FIXED. Trajectory 14→5→7→13→3→3→3→5. Convergence 0/3. Burst 84.
+ferrochain Phase 1d adversarial spec convergence: Pass 9 COMPLETE — NOT CLEAN. 2 findings: F-P9-01 HIGH BC-INDEX DI-Anchors column omitted DI-006/007/012 enforcers [12 rows] — census fix reconciled 14/14 DIs exact 3-way (bodies↔index↔plan↔RTM), catching 6 additional DI drifts beyond the adversary's 3; F-P9-02 LOW BC-2.08.009 empty input-hash → populated (hash: 96fc00a51eb0520c…). Sibling checks 5/5 PASS. BC-body coverage 86/86 (100%). E-code + VP axes re-verified CLEAN. Trajectory 14→5→7→13→3→3→3→5→2 (decaying). Convergence 0/3. Burst 85.
 
 ### HEADS
 
 | Repo | Branch | SHA | Pushed | Notes |
 |------|--------|-----|--------|-------|
-| factory-artifacts | factory-artifacts | (burst 84 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
+| factory-artifacts | factory-artifacts | (burst 85 — run `git -C .factory log -1 --format='%h'`) | YES | Durable artifact backup |
 | main | main | d018d3f | YES | CLAUDE.md + .gitignore committed (D10); develop initialized |
 
 No worktrees. No PRs. Reference clones (.reference/) gitignored.
 
 ### WORKSTREAM
 
-**Burst 84 COMPLETE.** Phase 1d pass 8: 5 findings fixed (BC-INDEX title census 86/86 exact-match [5 titles reconciled, full-census method adopted]; BC-2.08.008 PC5 Err-only; E-CORE-001 message→actual strict-validation trigger; status governance rule [29 files normalized, 4-value table]; E-MEMORY-003 lateral-denial semantics + caller_identity). Run-status class CONFIRMED CONVERGED. ADV-P1D-PASS-8.md committed. Input-hashes refreshed. Trajectory 14→5→7→13→3→3→3→5.
+**Burst 85 COMPLETE.** Phase 1d pass 9: 2 findings fixed (BC-INDEX DI-Anchors 14/14 DIs exact 3-way census [12 rows populated, 6 additional drifts caught vs adversary's 3]; BC-2.08.009 input-hash populated). ADV-P1D-PASS-9.md committed. Input-hashes refreshed on 4 artifacts. Trajectory 14→5→7→13→3→3→3→5→2.
 
-**RESUME NEXT-ACTION:** adversary pass 9 (fresh context): sibling-check pass-8 (86-row census re-run, status 4-value table, E-CORE-001/E-MEMORY-003 bodies), open final never-opened BC bodies (ss-08 conformance BC-2.08.002/003/005/009 + remaining ss-13), re-verify 2 random prior axes; coverage will be ~100% — expect decay to CLEAN → first 1/3.
+**RESUME NEXT-ACTION:** adversary pass 10 (fresh context): sibling-check pass-9 (re-run the 14-DI three-way census + input-hash completeness), rotate 2 random prior axes, full standard attack; 100% BC-body coverage reached — findings should reach zero (first 1/3).
 
 ### PENDING HUMAN ACTIONS (open)
 
@@ -170,7 +170,7 @@ No worktrees. No PRs. Reference clones (.reference/) gitignored.
 |-------|-------|
 | **Date** | 2026-07-14 |
 | **Cycle** | v1.0.0-greenfield |
-| **Burst commit** | (burst 84 — run `git -C .factory log -1 --format='%h %s'`) |
+| **Burst commit** | (burst 85 — run `git -C .factory log -1 --format='%h %s'`) |
 | **Convergence counter** | 0 of 3 (Phase 1d) |
 
 ## Historical Content

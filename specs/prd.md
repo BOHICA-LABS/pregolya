@@ -221,7 +221,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.08.004 | Chat model error-type fidelity conformance | P1 | DI-014 | ss-08/BC-2.08.004.md |
 | BC-2.08.005 | Chat model token-usage accounting conformance | P1 | — | ss-08/BC-2.08.005.md |
 | BC-2.08.006 | Standalone SDK crate split architecture (ferrochain-\<provider\>-sdk + adapter) | P1 | DI-008 | ss-08/BC-2.08.006.md |
-| BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout) or Err(Transport), not truncated success | P1 | DI-014 | ss-08/BC-2.08.007.md |
+| BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout) or Err(Transport), not truncated success | P1 | DI-009, DI-014 | ss-08/BC-2.08.007.md |
 | BC-2.08.008 | Eval score aggregation: arithmetic mean + JudgeResult::InfraError third outcome (NE-15) | P1 | — | ss-08/BC-2.08.008.md |
 | BC-2.08.009 | Tool schema naming stability (snapshot test anchor) — semver-major required on any schema change to a public tool type | P1 | — | ss-08/BC-2.08.009.md |
 | BC-2.08.010 | `#[tool]` attribute macro: async fn → Tool implementor via schemars::JsonSchema | P1 | DI-008 | ss-08/BC-2.08.010.md |
@@ -487,32 +487,32 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.05.002 | CAP-006, DI-003 | ferrochain-graph | P0 | U, I |
 | BC-2.05.003 | CAP-006, DI-003 | ferrochain-graph | P0 | I |
 | BC-2.05.004 | CAP-006, DI-003 | ferrochain-graph | P0 | U, I |
-| BC-2.05.005 | CAP-006 | ferrochain-graph | P0 | U |
-| BC-2.05.006 | CAP-006, ASM-008 | ferrochain-graph | P0 | U, I |
+| BC-2.05.005 | CAP-006, DI-003 | ferrochain-graph | P0 | U |
+| BC-2.05.006 | CAP-006, DI-003, ASM-008 | ferrochain-graph | P0 | U, I |
 | BC-2.06.001 | CAP-007, DI-011 | ferrochain-graph | P0 | U, I |
 | BC-2.06.002 | CAP-007 | ferrochain-graph | P0 | U, I |
-| BC-2.06.003 | CAP-007, NE-13 | ferrochain-graph | P0 | I, S |
+| BC-2.06.003 | CAP-007, DI-011, NE-13 | ferrochain-graph | P0 | I, S |
 | BC-2.07.001 | CAP-008, R-004 | ferrochain-splitters | P0 | U |
 | BC-2.07.002 | CAP-008, R-004 | ferrochain-splitters | P0 | U (golden vectors) |
 | BC-2.07.003 | CAP-008 | ferrochain-splitters | P0 | U |
-| BC-2.08.001 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
+| BC-2.08.001 | CAP-009, CAP-011, DI-011 | ferrochain-standard-tests | P1 | I |
 | BC-2.08.002 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
 | BC-2.08.003 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
-| BC-2.08.004 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
+| BC-2.08.004 | CAP-009, CAP-011, DI-014 | ferrochain-standard-tests | P1 | I |
 | BC-2.08.005 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
 | BC-2.08.006 | CAP-009, DI-008 | ferrochain-openai, ferrochain-anthropic, ferrochain-ollama | P1 | U |
-| BC-2.08.007 | CAP-009 | ferrochain-standard-tests | P1 | I |
+| BC-2.08.007 | CAP-009, DI-009, DI-014 | ferrochain-standard-tests | P1 | I |
 | BC-2.08.008 | CAP-011, NE-15 | ferrochain-standard-tests | P1 | U, I |
 | BC-2.08.009 | CAP-009, ADR-004 | ferrochain-standard-tests | P1 | U (snapshot) |
 | BC-2.09.001 | CAP-010 | ferrochain-mcp | P1 | I |
 | BC-2.09.002 | CAP-010 | ferrochain-mcp | P1 | I |
 | BC-2.09.003 | CAP-010, DI-012 | ferrochain-mcp | P1 | I |
-| BC-2.09.004 | CAP-010, R-006 | ferrochain-mcp | P1 | U |
-| BC-2.09.005 | CAP-010, R-006 | ferrochain-mcp | P1 | U |
+| BC-2.09.004 | CAP-010, DI-014, R-006 | ferrochain-mcp | P1 | U |
+| BC-2.09.005 | CAP-010, DI-014, R-006 | ferrochain-mcp | P1 | U |
 | BC-2.10.001 | CAP-012, D17-Q4 | ferrochain-graph | P0 | U, I |
 | BC-2.10.002 | CAP-012, D17-Q4 | ferrochain-graph | P0 | U, P |
 | BC-2.10.003 | CAP-012, D17-Q4 | ferrochain-graph | P0 | U, I |
-| BC-2.10.004 | CAP-012, CAP-006 | ferrochain-graph | P0 | I |
+| BC-2.10.004 | CAP-012, CAP-006, DI-003 | ferrochain-graph | P0 | I |
 | BC-2.11.001 | CAP-013, DI-012 | ferrochain-graph | P0 | U, I |
 | BC-2.11.002 | CAP-013, DI-012 | ferrochain-graph | P0 | U, I |
 | BC-2.11.003 | CAP-013, DI-012 | ferrochain-graph | P0 | I |
@@ -531,7 +531,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.13.003 | CAP-015, DI-006 | ferrochain-sandbox | P1 | U |
 | BC-2.13.004 | CAP-015, DI-007, NE-02 | ferrochain-sandbox | P1 | U, P, K |
 | BC-2.13.005 | CAP-015, DI-007 | ferrochain-sandbox | P1 | U |
-| BC-2.13.006 | CAP-015, NE-16 | ferrochain-sandbox | P1 | U |
+| BC-2.13.006 | CAP-015, DI-006, NE-16 | ferrochain-sandbox | P1 | U |
 | BC-2.14.001 | CAP-016, DI-008, DI-014 | ferrochain-core | P0 | U |
 | BC-2.14.002 | CAP-016 | ferrochain-core | P0 | U |
 | BC-2.14.003 | CAP-016, DI-008, NE-07 | ferrochain-core | P0 | U (CI lint) |
@@ -546,7 +546,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.16.003 | CAP-018, NE-09 | ferrochain-core | P2 | U, I |
 | BC-2.17.001 | CAP-019, DI-001, DI-005, DI-007 | ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox | P2 | K |
 | BC-2.17.002 | CAP-019 | ferrochain-graph, ferrochain-checkpoint | P2 | F |
-| BC-2.08.010 | CAP-002, ADR-004, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
+| BC-2.08.010 | CAP-002, DI-008, ADR-004, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
 | BC-2.08.011 | CAP-003, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
 | BC-2.08.012 | CAP-003, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
 

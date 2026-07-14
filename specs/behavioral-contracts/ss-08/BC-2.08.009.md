@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: ""
+input-hash: "96fc00a51eb0520c18f63f083f70e76801db9a793eb520b79a51a688b1c3d608"
 ---
 
 # BC-2.08.009: Tool Schema Naming Stability (Snapshot Test Anchor)
