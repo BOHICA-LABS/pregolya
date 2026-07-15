@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.11"
+version: "2.12"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -23,6 +23,7 @@ changelog:
   - "2.9 (ADV-P1D-PASS-55): F-P55-01 — add E-SERVER-013 (InvalidDebugRouteKey, VAL — BC-2.12.005 EC-005/TV-007) startup-only omission note; raised at boot before any HTTP listener is bound, never surfaced as a terminal HTTP response (same treatment as E-CHKPT-005). Full disposition census: 75 live codes — 43 HTTP table rows, 9 explicit individual omission notes, 23 blanket library-layer coverage, 0 uncovered."
   - "2.10 (ADV-P1D-PASS-56): F-P56-01 — add E-CORE-006 (RecursionLimitExceeded, INTERNAL — BC-2.01.003 PC5) to dual-layer table Runnable-layer row; add E-CORE-006 individual omission note (INTERNAL, library-layer Err return, never direct HTTP response in v1; INTERNAL→500 categorical fallback). OBS-P56-1 resolved: tighten 10007 text in dual-layer note to cite `DEFAULT_RECURSION_LIMIT` constant in `langgraph._internal._config` (reads from `LANGGRAPH_DEFAULT_RECURSION_LIMIT` env var) and distinguish from langchain-core `DEFAULT_RECURSION_LIMIT = 25`. Disposition census 75→76: 43 HTTP table rows, 10 individual omission notes (+E-CORE-006), 23 blanket library-layer coverage, 0 uncovered."
   - "2.11 (ADV-P1D-PASS-56-COMPLETION): Gate #30 drain — three new codes from error-taxonomy.md v1.8. (1) E-PROV-008 (ProviderHttpError, TRANSPORT) added to 502 row alongside E-PROV-003 — categorical fallback, surfaced embedded in Run.error. (2) E-CHKPT-007 (CipherHeaderMissing, INTERNAL) added to 500 row alongside other CHKPT INTERNAL codes. (3) E-CORE-007 (GuardrailHookPanic, INTERNAL) individual omission note added — library-layer INTERNAL error, never direct HTTP terminal in v1; INTERNAL→500 categorical fallback. Disposition census 76→79: 45 HTTP table rows (+E-PROV-008 +E-CHKPT-007), 11 individual omission notes (+E-CORE-007), 23 blanket library-layer coverage, 0 uncovered."
+  - "2.12 (ADV-P1D-PASS-57): F-P57-01 (HIGH) — fix GuardrailHook trait signature trilateral contradiction (authority-deference D18-P47-A: BCs win). (1) Method name on_ingress → evaluate (all 6 ss-11 BC postconditions + E-CORE-007 taxonomy message are uniform). (2) Return type Result<IngressContent, GuardrailError> → GuardrailResult enum with Pass / Fail{reason,severity} / Transform{new_content} variants (BC-2.11.002 PC2-PC4). (3) Second parameter renamed provenance → provenance_tag per BC-2.11.002 INV-4. (4) GuardrailResult enum definition added to §GuardrailHook block with Fail/Transform variant bodies. (5) Panic path moved to doc-comment citing E-CORE-007 and BC-2.11.002 EC-001 (panic is a non-return code path; the trait method return type is GuardrailResult not Result). (6) GuardrailError type removed — not defined in spec corpus; was incorrect. BC anchor enumeration expanded to cite all 6 BCs by role."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -131,17 +132,54 @@ pub trait CheckpointSaver: Send + Sync {
 
 ```rust
 pub trait GuardrailHook: Send + Sync {
-    /// Called at ingress boundary before content enters model context.
-    /// Returns Ok(content) to pass, Ok(replacement) to redact, Err to reject.
-    async fn on_ingress(
+    /// Evaluate a single content unit arriving at a tool-result, RAG retrieval, or
+    /// memory ingress boundary before it enters the model context (BC-2.11.001 PC5).
+    ///
+    /// # Return values
+    /// - `GuardrailResult::Pass`                       → content forwarded unchanged
+    ///   (BC-2.11.002 PC2)
+    /// - `GuardrailResult::Fail { reason, severity }`  → content blocked; error block injected
+    ///   at content's position; run continues unless `severity == Critical`
+    ///   (BC-2.11.002 PC3, BC-2.11.005 PC4)
+    /// - `GuardrailResult::Transform { new_content }`  → replacement forwarded; original
+    ///   discarded (BC-2.11.002 PC4)
+    ///
+    /// # Panic safety
+    /// A panic in this method is caught at the ingress boundary and treated as fail-closed:
+    /// the pipeline propagates `Err(FerrochainError { category: INTERNAL, code: E-CORE-007 })`
+    /// to the caller; content does not enter model context (BC-2.11.002 EC-001, E-CORE-007).
+    async fn evaluate(
         &self,
         content: IngressContent,
-        provenance: ProvenanceTag,
-    ) -> Result<IngressContent, GuardrailError>;
+        provenance_tag: ProvenanceTag,
+    ) -> GuardrailResult;
+}
+
+pub enum GuardrailResult {
+    /// Content passes through to model context unchanged.
+    Pass,
+    /// Content is blocked; an error block is injected at the content's position.
+    /// `severity == Critical` transitions the run to `failed` and halts inference;
+    /// lower severities (High, Medium, Low) allow the run to continue with the error
+    /// block substituted (BC-2.11.002 PC3, BC-2.11.005 PC4).
+    Fail {
+        reason: String,
+        severity: GuardrailSeverity,
+    },
+    /// Content is replaced; `new_content` enters model context; original is discarded.
+    /// The replacement may be any `IngressContent` variant, including a different
+    /// variant from the original (BC-2.11.002 EC-003).
+    Transform {
+        new_content: IngressContent,
+    },
 }
 ```
 
-**BC anchor:** BC-2.11.001 through BC-2.11.006
+**BC anchor:** BC-2.11.001 (ProvenanceTag precondition for evaluate call),
+BC-2.11.002 (tool-result boundary — primary trait-shape authority),
+BC-2.11.003 (RAG retrieval boundary), BC-2.11.004 (memory ingress boundary),
+BC-2.11.005 (fail-closed rejection guarantee — GuardrailResult::Fail closure contract),
+BC-2.11.006 (no-hook default — GuardrailHook not registered)
 
 ### BudgetPolicy
 

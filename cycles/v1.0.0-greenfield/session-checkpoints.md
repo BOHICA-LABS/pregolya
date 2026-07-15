@@ -389,3 +389,11 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### PASS-48 CANONS (burst 124): blanket-note namespace annotations = authoritative category sets (update on every code mint); REST resume FIFO-only v1 (targeted delivery library-only).
 
 ### PASS-47 CANONS (burst 123): supplement rows derived, BCs authority (gate #29); sandbox default NEVER process — both-off ⇒ E-SBXD-003, unsafe_process_no_isolation() only; process warning per-execute().
+
+---
+
+## Archived Checkpoint — Burst 132 (Pass 56, replacing burst 131 checkpoint)
+
+**RESUME IN ONE BREATH (burst 132):** "ferrochain Phase 1 spec crystallization, step 1d adversarial convergence IN PROGRESS: 56 passes / 51 fix bursts, trajectory ...→1→1 (pass 56 opened + FULLY drained the codeless-error class: 4 codes minted, 19 sites wired, gate #30, census 79 zero-uncovered; 38 standing gates). Counter 0/3 (strict-zero D14). NEXT ACTION: dispatch adversary pass 57 — fresh context, sibling-check pass-56 (taxonomy v1.8 four codes; census 79 = 45+11+23; gate #30 zero genuine hits; zero TBD; 10007 precision text; 12 BC bumps changelogged per gate #28 two-form), rotate censuses (#13/#24/#25/#27/#28/#29), free probes; CLEAN advances 1/3; ANY finding resets; loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+
+**WRAP METADATA:** Date: 2026-07-17 | Cycle: v1.0.0-greenfield | Burst: 132 | Counter: 0/3
