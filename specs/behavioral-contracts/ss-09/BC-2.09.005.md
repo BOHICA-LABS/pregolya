@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.005
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,9 @@ inputs:
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
 input-hash: "35288e587773df873fde5dc1b952d35dd075a99140fba82c703587e4b87713da"
+changelog:
+  - "1.0 (initial): base BC authored."
+  - "1.1 (ADV-P1D-PASS-46): OBS-P46-1 — align VP-005 phrasing to sibling BC-2.09.004 VP-004 convention. 'compile+pass but network assertion fails' → 'compile+fail — test compiles and runs but the network-I/O assertion inside it fails'. Same semantic; consistent phrasing across both R11 Red Gate BCs."
 ---
 
 # BC-2.09.005: MultiServerMcpClient Holds No Live Connections (Red Gate — R11)
@@ -129,7 +132,7 @@ Note: callers are better served by cloning (which is cheap) than by Arc-wrapping
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-005 | `MultiServerMcpClient` construction and drop cause no network I/O | Red Gate test (compile+pass but network assertion fails), then unit test post-implementation | Phase 3 (integration) (Red Gate authored Phase 1 per D17-Q9) |
+| VP-005 | `MultiServerMcpClient` construction and drop cause no network I/O | Red Gate test (compile+fail — test compiles and runs but the network-I/O assertion inside it fails), then unit test post-implementation | Phase 3 (integration) (Red Gate authored Phase 1 per D17-Q9) |
 
 ## Related BCs
 

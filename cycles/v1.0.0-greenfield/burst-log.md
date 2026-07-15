@@ -1326,3 +1326,30 @@ The following D18-Pxx decisions (passes 28–42) are captured in DECISION DELTA 
 | D18-P40-B | Batch-table/BC-INDEX Cap column = PRIMARY capability: frontmatter only; secondary traced capabilities live in body traces_to only. Confirmed: BC-2.10.004 (CAP-006 secondary), BC-2.08.001..005 (CAP-011 non-primary). | Sweep adjudication | phase-1d | 2026-07-16 | adversary+PO |
 | D18-P42-A | GATE #27 minted: architecture-anchor crate-resolution census — every ferrochain-<crate>/src/... path in BC Architecture Anchors must name an ADR-007 roster crate AND assign the module to its owning crate per module-decomposition. Trigger: every anchor-editing burst + every adversary rotation. Full census: 187 paths, 2 fixed, zero remain. | F-P42-01 [process-gap]: gate #13 covers anchor columns, not free-text anchor bullets; survived 41 passes | phase-1d | 2026-07-16 | adversary+PO |
 | D18-P42-B | Canonical anchor for StateGraph builder API (add_node/add_edge/compile) = ferrochain-graph/src/graph/state.rs (authority: BC-2.02.001, module-decomposition graph::definition, ADR-007). BCs calling the builder anchor to ferrochain-graph, never ferrochain-core. | F-P42-01 remediation | phase-1d | 2026-07-16 | adversary+PO |
+
+## Burst 122 — Phase 1d Pass 46 + Fix Burst (streaming×interrupt seam — RunEnd completion-only canon)
+
+**Date:** 2026-07-16
+**Agents:** adversary (pass 46) + product-owner (fix) + state-manager (STATE update)
+**Files touched:** specs/behavioral-contracts/ss-06/BC-2.06.001.md (PO fix — EC-005 added [failed run: error SSE then close, NO RunEnd], v1.1); specs/behavioral-contracts/ss-12/BC-2.12.007.md (PO fix — TV-005/EC-003/EC-001 fixed [interrupt envelope terminal, no run_end; error-close on failure; REST-queryable status], v1.2); specs/behavioral-contracts/ss-09/BC-2.09.005.md (PO fix — Red-Gate phrasing aligned to sibling, v1.1); specs/prd-supplements/interface-definitions.md (PO fix — /stream row completion-only clarified, v2.5); STATE.md, burst-log.md (state-manager); cycles/v1.0.0-greenfield/adversarial-reviews/pass-46.md (adversary)
+**Versions bumped:** STATE.md v3.1→v3.2; BC-2.06.001.md v1.0→v1.1; BC-2.12.007.md v1.1→v1.2; BC-2.09.005.md v1.0→v1.1; interface-definitions.md v2.4→v2.5
+
+### Summary
+
+Phase 1d pass 46 adversarial review completed: NOT CLEAN — 1 MED finding + 1 obs. Counter stays 0/3. NEW CANON: RunEnd = completion-only SSE event; authority-deference rule established. Novelty MEDIUM.
+
+**1 MED finding:**
+- F-P46-01: streaming×interrupt seam — BC-2.12.007 TV-005 asserted run_end.status=interrupted for interrupted runs, contradicting BC-2.06.001 TV-004 ('RunEnd not emitted for interrupted run') + events.md ordering rules. Fix: RunEnd = COMPLETION-ONLY canon established. Non-completion terminal states: failed → error SSE then close; interrupted → __interrupt__ envelope then close; no run_end either way; status via GET /threads/{id}/runs/{id}. BC-2.06.001 EC-005 added (v1.1, authority made explicit); BC-2.12.007 TV-005/EC-003/EC-001 fixed (v1.2); interface-definitions /stream row clarified (v2.5); EC-001 hedge '(or run_end with status failed)' eliminated.
+
+**1 obs (OBS-P46-1):** BC-2.09.005 Red-Gate phrasing aligned to sibling (v1.1).
+
+Sibling-checks pass-45 PASS (gate #25 Part C first full run: 33/33 rows crate-clean; BC-2.05.006 v1.2; Wave-0 partial). Censuses: #22/#23 PASS; #21/#26/#27/#28 PARTIAL → pass 47 must run fully. Seam probes: retry×breaker×tool PASS; checkpoint×tenancy PASS; streaming×interrupt FAIL→fixed. Novelty MEDIUM. Convergence 0/3. Gates 36. Burst 122.
+
+### Archived Current Phase Steps Row (displaced from STATE.md at burst 122 — oldest row)
+
+| Phase 1d pass 41 (CLEAN 1/3) | adversary + state-manager | COMPLETE | Pass 41: CLEAN — ZERO findings. All sibling-checks PASS (batch-table five-way 25+ rows, gate #13 five-way text, Cap-primary convention). Censuses #16/#24/#25/arithmetic ALL PASS. Novel probes ALL CLEAN: SSE wire examples; Red-Gate/VP-Seed cross-integrity (VP↔DI matches 5/5); L2-INDEX shard bijection 14/14; BC frontmatter uniformity 86/86 (11 core fields). 3 obs non-blocking (secondary-cap style; VP-column Kani-highlight convention; pre-impl anchor paths). Novelty LOW — 'spec package has converged'. Trajectory ...→1→0. Convergence 1/3. Gates 35. Burst 117. |
+
+## Archived Decisions (burst 122 — displaced from STATE.md)
+
+| D18-P46-A | RunEnd = COMPLETION-ONLY SSE event. Non-completion terminal states: failed → error SSE then close; interrupted → __interrupt__ envelope then close; NO run_end either way; status via GET /threads/{id}/runs/{id}. Authority BC-2.06.001 PC2 + EC-005. | F-P46-01 seam contradiction | phase-1d | 2026-07-16 | adversary+PO |
+| D18-P46-B | Authority-deference rule: when a BC declares another BC as taxonomy authority, contradictions in the citing BC are defects in the citing BC (auto-adjudicated); the authority BC may only be EXTENDED (new ECs) via PO adjudication with changelog. | F-P46-01 adjudication pattern | phase-1d | 2026-07-16 | adversary+PO |

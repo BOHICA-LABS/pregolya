@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.001
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,9 @@ inputs:
   - .factory/semport/core/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
 input-hash: "0b37ef224e269f5892cf96212776e3ee068fcd93bf62f8e8590ca89d05dec40d"
+changelog:
+  - "1.0 (initial): base BC authored."
+  - "1.1 (ADV-P1D-PASS-46): F-P46-01 adjudication — add EC-005 (failed-run stream termination). BC-2.06.001 PC2 states RunEnd emits 'once at run completion' (completion-only contract) but had no explicit edge case for failed runs. EC-005 makes the authority explicit: stream closes after error SSE event; no RunEnd emitted on failure. This resolves EC-001 hedge in BC-2.12.007 and establishes the source-of-truth for failure-termination across the streaming surface."
 ---
 
 # BC-2.06.001: Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end)
@@ -104,6 +107,19 @@ consumer; the run's final state is preserved in the checkpoint.
 **Expected behavior:** Subgraph events carry a distinct `run_id` with the parent run's `run_id`
 in `parent_ids`. No subgraph event is swallowed; consumers reconstruct the nested call tree
 by traversing `parent_ids` (see BC-2.06.002).
+
+### EC-005: Node raises error mid-run (failed-run stream termination — adjudicated from PC2)
+**Scenario:** A node function returns `Err(FerrochainError)` during execution.
+**Expected behavior:** The execution engine emits an `error` SSE event carrying the
+`FerrochainError` payload; the event stream then closes. `RunEnd` is NOT emitted for
+a failed run — `RunEnd` is reserved for the completion path (PC2: "once at run completion").
+The run record transitions to `failed` status, queryable via `GET /threads/{thread_id}/runs/{run_id}`.
+No partial or ghost `RunEnd` event with `status: "failed"` is emitted.
+**Adjudication note (F-P46-01, ADV-P1D-PASS-46):** PC2's completion-only `RunEnd` contract
+did not previously have an explicit failed-run EC. This EC makes the rule unambiguous and is
+the authority cited by BC-2.12.007 EC-001 (failure path) and BC-2.12.007 EC-003 (interrupt path).
+The minimal coherent rule consistent with PC2: `RunEnd` fires on and only on the happy-path
+completion; all non-completion terminal states (failed, interrupted) end the stream without `RunEnd`.
 
 ## Canonical Test Vectors
 

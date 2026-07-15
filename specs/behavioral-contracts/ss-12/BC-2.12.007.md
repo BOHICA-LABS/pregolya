@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.007
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ input-hash: "2bb68ed87dd30c866ac6d88eb723cce3c2d0b8ce8ca0e22697b97d5a887452f6"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-29): F-P29-03 — replace non-canonical `node_delta` with canonical `node_stream` at PC2, EC-004, and TV-002. BC-2.06.001 is the streaming taxonomy authority; `node_delta` was never a valid variant. Added to retired-identifier registry (bc-authoring-plan.md gate #19)."
+  - "1.2 (ADV-P1D-PASS-46): F-P46-01 — fix streaming × interrupt seam contradiction with BC-2.06.001 (the declared streaming taxonomy authority). TV-005: remove `run_end.status = interrupted`; interrupt envelope is the terminal SSE frame, no run_end emitted. EC-003: fix 'stream ends with status: interrupted' → stream truncates after interrupt envelope; run status queryable via REST only. EC-001: resolve hedge '(or a run_end with status: failed)' — definitive: stream closes with no run_end on failure; authority is BC-2.06.001 EC-005 (completion-only RunEnd contract)."
 ---
 
 # BC-2.12.007: Streaming Endpoint and Unary Endpoint Drive Same Graph Engine, Same Final Answer
@@ -89,8 +90,10 @@ graph engine, producing output that could diverge from the unary path.
 **Scenario:** A node raises `Err(FerrochainError)` in the first executed node.
 **Expected behavior:**
 - Streaming: `run_start` emitted; `node_start` for the failing node emitted; then an
-  `error` SSE event with the error payload; the stream closes with no `run_end` event
-  (or a `run_end` with `status: "failed"`).
+  `error` SSE event with the error payload; the stream closes with **no `run_end` event**.
+  `RunEnd` is reserved for the completion path only (BC-2.06.001 PC2 + EC-005 authority:
+  completion-only `RunEnd` contract). Run status queryable via
+  `GET /threads/{thread_id}/runs/{run_id}` = `failed`.
 - Unary: `422 Unprocessable Entity` (or `500`, depending on error category) with the
   same `FerrochainError` payload.
 
@@ -104,8 +107,12 @@ final `status` and `output`.
 ### EC-003: Graph with interrupt inside node
 **Scenario:** A node calls `interrupt(value)` mid-execution (see BC-2.05.001).
 **Expected behavior:**
-- Streaming: emits `{"__interrupt__": [InterruptPayload]}` as an SSE event; stream
-  ends with `status: interrupted`.
+- Streaming: emits `{"__interrupt__": [InterruptPayload]}` as the **terminal SSE frame**;
+  stream truncates after the interrupt envelope. **No `run_end` SSE event is emitted.**
+  (BC-2.06.001 TV-004 authority: "RunEnd not emitted for interrupted run | Interrupt
+  truncates event stream at boundary.") Run status queryable via
+  `GET /threads/{thread_id}/runs/{run_id}` = `interrupted`. Resume produces a new
+  `RunStart` sequence (BC-2.06.001 Related BCs, BC-2.05.004).
 - Unary: response body is `{"__interrupt__": [InterruptPayload], "status": "interrupted"}`.
 Both surfaces carry the same interrupt payload.
 
@@ -130,7 +137,7 @@ normally.
 | TV-002 | Streaming run on 3-node graph (streaming LLM nodes) | SSE stream contains: `run_start`, (`node_start` → `node_stream`×N → `node_end`)×3, `run_end`; `node_stream` events present for each streaming token per node | Event taxonomy: DI-011 streaming surface; canonical streaming-node token is `node_stream` per BC-2.06.001 |
 | TV-003 | Graph with error in node 2; streaming | SSE: `run_start`, `node_start` (node1), `node_end` (node1), `node_start` (node2), then `error` event with `FerrochainError`; stream closes | Error propagation via streaming |
 | TV-004 | Graph with error in node 2; unary | `4xx/5xx` response with same `FerrochainError` as TV-003 | Error equivalence: streaming = unary |
-| TV-005 | Graph with `interrupt()` call; streaming | SSE emits `{"__interrupt__": [...]}` event; `run_end.status = interrupted` | Interrupt via streaming surface |
+| TV-005 | Graph with `interrupt()` call; streaming | SSE emits `{"__interrupt__": [...]}` as the terminal frame; stream truncates; **no `run_end` event emitted**; run status = `interrupted` queryable via `GET /threads/{thread_id}/runs/{run_id}` | Interrupt via streaming surface; BC-2.06.001 TV-004 authority — completion-only RunEnd |
 | TV-006 | Concurrent `GET /threads/t1/runs/r1/stream` (streaming) and a second `GET /threads/t1/runs/r1/stream`; second arrives 10ms later | Second returns `409 Conflict`, `E-SERVER-015 RunAlreadyExecuting` | Concurrent execution guard |
 
 ## Verification Properties
