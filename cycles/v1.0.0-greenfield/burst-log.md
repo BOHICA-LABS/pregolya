@@ -1406,3 +1406,22 @@ Sibling-checks pass-45 PASS (gate #25 Part C first full run: 33/33 rows crate-cl
 ## Archived PASS CANON (burst 138 — PASS-60 dropped from STATE.md to respect 200-line soft limit)
 
 ### PASS-60 CANONS (burst 136): PolicyDecision canonical (BudgetDecision retired); evaluate sync/pure (usage, &BudgetContext), journal = caller; gate #31 step-4 name-equality; BudgetContext implementer-scope.
+
+## Archived Step (burst 139 — pass 58 displaced from STATE.md Current Phase Steps)
+
+| Phase 1d pass 58 + fix burst | adversary + PO | COMPLETE | Pass 58: NOT CLEAN — 3 findings, all in pass-56/57-edited surface (1 HIGH: F-P58-02 IngressContent used 3× in v2.12 trait block but defined NOWHERE + 3-way naming drift [content_block/Content] → enum DEFINED [ToolResult(ContentBlock)/RagChunk(Value)/MemoryItem(Value); variant = E-CORE-007 content_type; D18-P58-A]; 2 MED: F-P58-01 GuardrailSeverity undefined → enum DEFINED [4-level ladder, Critical-only halts; D18-P58-B]; F-P58-03 entities-server ss-11 contradicted BCs [IngressSource incl. User|Model vs EC-004; GuardrailAction no-severity] → rewritten to BC shapes + retired identifiers registered [v1.3; D18-P58-C]) + [process-gap] GATE #31 minted (trait-signature type-resolution census; first run: 22 types → 20 resolved + 1 external + 2 documented implementer-scope [ChatConfig/CheckpointConfig — flagged for architect]; bc-authoring-plan v2.2) + BC-2.11.002/003/004 v1.3 type linkages + ubiquitous-language-server v1.2. Sibling-checks: semantics coherent, types were the gap; zero live retired identifiers. Censuses #13/#21/#23/#26/#27/#30 PASS; #29 FAIL→fixed. Novelty HIGH (partial-fix regression on pass-57's own rationale). Trajectory ...→1→3. Convergence 0/3. Gates 39. Burst 134. |
+
+## Archived PASS CANON (burst 139 — PASS-61 dropped from STATE.md to respect 200-line soft limit)
+
+### PASS-61 CANONS (burst 137): core/src/budget.rs = definitions (BudgetPolicy trait + PolicyDecision/TokenUsage/RunContext), graph::budget = dispatch; RunContext canonical (BudgetContext retired); gate #32 ADR-propagation census; gate #31 near-name check; module universe stays 33.
+
+## Burst 139 — Phase 1d Pass 63 + Fix Burst (fuzz-target canon — two targets)
+
+**Date:** 2026-07-18
+**Agents:** adversary (pass 63) + architect (verification-architecture v1.2) + product-owner (pass-63.md) + state-manager (STATE update)
+**Files touched:** specs/architecture/verification-architecture.md (architect fix — §Fuzzing Targets two-row canon + non-normative splitter note, v1.2); cycles/v1.0.0-greenfield/adversarial-reviews/pass-63.md (PO wrote); STATE.md, burst-log.md, planning/decisions-archive-pre-p1d.md (state-manager)
+**Decisions recorded:** D18-P63-A (fuzz-target canon)
+
+### Summary
+
+Phase 1d pass 63 adversarial review completed: NOT CLEAN — 1 MED (F-P63-01: verification-architecture §Fuzzing Targets listed a THIRD 'Splitter inputs' target absent from authoritative BC-2.17.002 [exactly two: fuzz_checkpoint_serde + fuzz_graph_execution per CAP-019] and contradicted by coverage-matrix [splitter fuzz = —] → outlier row REMOVED [v1.2], named harness IDs added to remaining rows, non-normative splitter note added [proptest + GTV Red Gate v1; post-v1 addition requires BC+matrix same burst]). Full doc sweep: zero other fuzz/tool contradictions. Counter stays 0/3. Trajectory ...→1→1.

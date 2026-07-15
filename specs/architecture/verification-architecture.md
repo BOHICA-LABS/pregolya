@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "1.1"
+version: "1.2"
 status: active
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
@@ -171,9 +171,10 @@ Modules where behavioral testing is the primary verification method:
 
 | Target | Crate | What is fuzzed | Priority |
 |--------|-------|----------------|---------|
-| Checkpoint serialization round-trip | ferrochain-checkpoint | msgpack ↔ GraphState round-trip; no data loss | P0 |
-| Graph-engine boundary inputs | ferrochain-graph | Malformed GraphConfig; out-of-range node indices | P0 |
-| Splitter inputs | ferrochain-splitters | Unicode edge cases; very long strings; null bytes | P1 |
+| Checkpoint serialization round-trip (`fuzz_checkpoint_serde`) | ferrochain-checkpoint | msgpack ↔ GraphState round-trip; no data loss | P0 |
+| Graph-engine boundary inputs (`fuzz_graph_execution`) | ferrochain-graph | Malformed GraphConfig; out-of-range node indices | P0 |
+
+> Non-normative: Splitter robustness (R8 Unicode parity) is covered by proptest + the GTV Red Gate suite (BC-2.07.002), not cargo-fuzz, in v1; a splitter fuzz target is a candidate post-v1 addition requiring BC-2.17.002 + coverage-matrix updates in the same burst (gate #25/#32 discipline).
 
 ## Risk Mitigations
 
@@ -190,5 +191,6 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 1.2 | 2026-07-15 | architect | D18-P63-A | Removed outlier "Splitter inputs" row from §Fuzzing Targets per BC-2.17.002 authority (two targets only: fuzz_checkpoint_serde + fuzz_graph_execution); added named harness IDs to remaining rows; added non-normative note directing splitter robustness to proptest + BC-2.07.002 Red Gate suite with post-v1 fuzz candidacy. Coverage-matrix already shows splitter fuzz = — (no matrix edit required). |
 | 1.1 | 2026-07-14 | architect | D18-P38-A | Fixed stale VP count in §"Committed VP Obligations": intro line changed from "Three VPs" to correctly enumerate five total (three Kani D17-Q7/NFR-003 + two integration R11); heading updated from (D17-Q7) to (D17-Q7 + R11) for mutual coherence with table and total line |
 | 1.0 | 2026-07-14 | architect | D17 | Initial verification architecture with Kani async constraint, VP catalog, purity boundaries, and risk mitigations |
