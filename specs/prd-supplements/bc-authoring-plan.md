@@ -1,11 +1,11 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
-total_standing_gates: 28
-timestamp: 2026-07-13T00:00:00Z
+total_standing_gates: 29
+timestamp: 2026-07-15T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -998,12 +998,87 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
     Source: ADV-P1D-PASS-43 §F-P43-01 [process-gap].
 
+29. **Supplement-vs-BC seam census gate — SUPPLEMENT-VS-BC SEAM CENSUS
+    (added P47 — standing gate [process-gap]):**
+
+    Any edit to a prd-supplement table row that describes behavior governed by a BC (feature
+    flags table, flag interaction rules table, config schema comments, endpoint row descriptions)
+    MUST verify the row's claim matches the cited BC's postconditions and edge cases before the
+    burst closes. The supplement row is the DERIVED artifact; the BC postconditions and edge
+    cases are the AUTHORITY. On any conflict between a supplement row and a BC, the BC wins.
+
+    **Trigger:** Every supplement edit (interface-definitions.md or any prd-supplement table
+    containing BC citations) + every adversary rotation.
+
+    **Scope — what rows are subject to this census:**
+    1. Cargo Feature Flags table rows with a non-empty BC Anchor column
+    2. Flag Interaction Rules table rows (any row describing behavior controlled by a BC)
+    3. Config schema inline comments citing a BC (e.g., `# ...  (BC-S.SS.NNN)`)
+    4. HTTP endpoint rows with behavioral BC citations where the row makes a semantic claim
+       beyond "endpoint exists" (e.g., describing state transitions, error return values,
+       timing of side effects such as warnings)
+
+    **Census procedure:**
+    For each row in scope, extract the cited BC(s), open the cited BC file, and diff the
+    row's claim against the BC's Postconditions and Edge Cases tables:
+    - Feature flag "Default" column must match whether the feature is active in
+      `SandboxBackend::default()` / `SandboxExecutor::new_default()` semantics per BC PCs.
+    - Feature flag description must not claim a fallback or default behavior the BC prohibits
+      (e.g., "defaults to process backend" contradicts BC-2.13.001 PC4).
+    - Flag interaction description for an "off+off" combination must match the BC's
+      postcondition for that state (no enforcing backend → Err, not silent process fallback).
+    - Config comment describing timing of warnings must match BC PC2/EC-002 (per-execute,
+      not construction or startup).
+
+    **SS-13 sandbox rows (full census — run at every adversary rotation):**
+
+    | Row | Cited BC | PC/EC Check | Verdict |
+    |-----|----------|-------------|---------|
+    | `sandbox-wasm` feature (Default: on) | BC-2.13.001 | Default=on (enforcing); no fallback claim | PASS |
+    | `sandbox-container` feature (Default: off) | BC-2.13.001 | Default=off; supplementary enforcing backend | PASS |
+    | `sandbox-process` feature (Default: off) | BC-2.13.001, BC-2.13.002 | Default=off; NOT enforcing; explicit-constructor-only via `unsafe_process_no_isolation()` | PASS (added OBS-P47-1) |
+    | `[sandbox] backend = "process"` config comment | BC-2.13.002 PC2/EC-002 | Warning timing = per-execute() invocation, NOT startup or construction | PASS (fixed F-P47-02) |
+    | Flag interaction: `sandbox-wasm + sandbox-container` both off | BC-2.13.001 PC4/EC-002 | Returns `Err(E-SBXD-003 SandboxInitFailed)`; NO silent process fallback | PASS (fixed F-P47-01) |
+    | Flag interaction: `sandbox-wasm + sandbox-container` both on | BC-2.13.001 PC1 | WASM takes precedence; ContainerBackend is fallback when WASM unavailable | PASS |
+
+    **Census command (after any supplement edit):**
+    ```
+    grep -n "BC-2\.13\." .factory/specs/prd-supplements/interface-definitions.md
+    ```
+    For each hit, open the cited BC file and diff the supplement text against the BC's
+    Postconditions and Edge Cases. Any supplement claim that contradicts a BC PC or EC
+    is a gate failure requiring immediate correction.
+
+    **Broader census command (all BC-cited supplement rows):**
+    ```
+    grep -n "BC-[0-9]\." .factory/specs/prd-supplements/interface-definitions.md \
+      | grep -v "changelog\|BC anchor\|authority\|Authority\|F-P\|OBS-P\|Fix\|ADV-P1D"
+    ```
+    For each extracted BC citation in a feature-flag, flag-interaction, or config-comment
+    context, diff the surrounding text against the cited BC's PCs/ECs.
+
+    **Motivating instance (F-P47-01, CRITICAL, survived 46 adversarial passes):**
+    Flag Interaction Rules row for `sandbox-wasm + sandbox-container both off` stated
+    "`ferrochain-sandbox` defaults to process backend; emits WARNING" — directly inverting
+    BC-2.13.001 PC4 and EC-002 (the correct behavior is `Err(E-SBXD-003 SandboxInitFailed)`,
+    no silent fallback). This is the adk-rust P-61 security hole that BC-2.13.001 was
+    explicitly designed to prevent. An implementer following the supplement row would have
+    built the no-isolation security hole. The row survived 46 passes because no prior census
+    explicitly cross-referenced supplement rows against their cited BC's postconditions.
+
+    F-P47-02 (MED): `[sandbox]` config comment said "on startup" — contradicting BC-2.13.002
+    PC2 ("once per execute() invocation, not only at construction time") and EC-002 (no
+    warning if execute() never called).
+
+    Source: ADV-P1D-PASS-47 §F-P47-01 (CRITICAL); §F-P47-02 (MED); §OBS-P47-1 [process-gap].
+
 ---
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.8 | 2026-07-15 | Gate #29 "supplement-vs-BC seam census" added; `total_standing_gates` 28→29. Gate census run at addition: 6 SS-13 sandbox rows checked across interface-definitions.md feature-flags + flag-interactions + config-comment — zero additional mismatches beyond F-P47-01 and F-P47-02 (both fixed in interface-definitions.md v2.6 in same burst). Motivating instance F-P47-01 (CRITICAL, survived 46 passes): Flag Interaction Rules row for `sandbox-wasm+container-both-off` stated silent process-backend fallback, inverting BC-2.13.001 PC4/EC-002/DI-006/NE-01. F-P47-02 (MED): config comment "on startup" contradicts BC-2.13.002 PC2/EC-002. OBS-P47-1 [process-gap]: `sandbox-process` feature row added to Cargo Feature Flags table. (ADV-P1D-PASS-47 §F-P47-01 CRITICAL, §F-P47-02 MED, §OBS-P47-1 [process-gap]) | F-P47-01, F-P47-02, OBS-P47-1 |
 | 1.7 | 2026-07-14 | (1) Gate #25 Part C added: per-row crate ownership diff across all four criticality-bearing docs required in addition to tier diff; motivating instance F-P45-01 (retry module crate-divergent row survived all tier-only checks). (2) Wave-0 convention note added to Batch Assignments section: Wave 0 ⊂ Wave 1 in the ARCH-INDEX two-wave scheme; 13 BCs across SS-01/07/14 are the foundational sub-wave; reconciles OBS-P45-1 (ADV-P1D-PASS-45). `total_standing_gates` unchanged at 28 (Part C extends gate #25; no new gate). | F-P45-01, OBS-P45-1 |
 | 1.6 | 2026-07-14 | Gate #28 "version-changelog integrity" added; `total_standing_gates` 27→28. Git-history adjudication of F-P43-01: 17 BCs (ss-04 ×5, ss-11 ×6, ss-13 ×6) carried version "1.1" with no changelog. Outcome: 4 genuinely unmodified BCs reverted to version "1.0" (BC-2.13.001/002/003/005); 13 substantively modified BCs kept at version "1.1" with `changelog:` frontmatter entries added recording specific pass and change per file. (F-P43-01 [process-gap], ADV-P1D-PASS-43) | F-P43-01 |
 | 1.5 | 2026-07-14 | Gate #27 "architecture-anchor crate-resolution census" added; `total_standing_gates` 26→27. Full gate-#27 census run across all 86 BCs × 187 Architecture Anchor crate paths: 16 distinct crate names found (all valid per ADR-007 roster); exactly 2 wrong-crate anchors found and fixed (BC-2.08.011 line 112 and BC-2.08.012 line 119: `ferrochain-core/src/graph/builder.rs` → `ferrochain-graph/src/graph/state.rs`). Zero remaining wrong-crate anchors after fixes. (F-P42-01 [process-gap], ADV-P1D-PASS-42) | F-P42-01 |

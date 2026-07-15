@@ -373,3 +373,11 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **WORKSTREAM (at time of archival):** Burst 112 COMPLETE. Phase 1d pass 36: 3 findings (1 HIGH + 2 MED; RESET 1/3→0/3; NEW CLASS: structurally-privileged-line residue). CANON: ADR-006 Decision heading = ferrochain-native wire format over HTTP; ADR-001 interrupt check = Collecting→Reducing with precise rule; GTV-008 PROVISIONAL byte-identical in BC-2.07.002 v1.1 + test-vectors.md v1.1; gate #26 structurally-privileged-line canon check (headings/Summary/index greps on every canon-retirement fix). Trajectory ...→3→0→3 (RESET).
 
 **WRAP METADATA:** Date: 2026-07-15 | Cycle: v1.0.0-greenfield | Burst: 112 | Counter: 0/3
+
+---
+
+## Checkpoint archived from burst 123 (replacing burst 122 checkpoint)
+
+**RESUME IN ONE BREATH (burst 122):** "ferrochain Phase 1 spec crystallization, step 1d adversarial convergence IN PROGRESS: 46 passes / 43 fix bursts, trajectory ...→2→1 (seam-analysis class productive: budget×HITL then streaming×interrupt each fixed + canonized; remaining seam surface: cron×runs, memory×tenancy, sandbox×tool probed-or-pending). Counter 0/3 (strict-zero D14; 36 standing gates). NEXT ACTION: dispatch adversary pass 47 — fresh context, sibling-check pass-46 (BC-2.06.001 v1.1 EC-005; BC-2.12.007 v1.2 three fixes; BC-2.09.005 v1.1; interface-definitions v2.5), MANDATORY FULL runs of gates #21, #26, #27, #28 [all PARTIAL in pass 46], rotate #16/#24/#25, seam probes (cron×runs, memory×tenancy, sandbox×tool) + free choice."
+
+**WRAP METADATA:** Date: 2026-07-16 | Cycle: v1.0.0-greenfield | Burst: 122 | Counter: 0/3
