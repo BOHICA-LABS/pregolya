@@ -31,6 +31,7 @@ supplements:
 changelog:
   - "v1.0: Initial PRD core. BC files authored in sub-bursts 2–N per bc-authoring-plan.md."
   - "v1.0 Step-E: BC-2.08.009 added to SS.08 — Tool Schema Naming Stability (Snapshot Test Anchor). Authored from ADR-004 acceptance (architect feedback): snapshot test obligation for public tool types deriving schemars::JsonSchema. Batch 9 count: 8 → 9. Total BC count: 82 → 83."
+  - "v1.0 P53-A: §9 NE summary corrected (F-P53-01). Previous rollup was 15→BC/1→BC+CI lint gate/1→CI-only, which undercounted CI-gate NEs by 2. Re-derived from table: 13→BC (incl. 3 VP-seed: NE-02/12/17); 3→BC+CI lint gate (NE-04, NE-07, NE-10); 1→CI lint gate only (NE-05). Partial-fix signature: rows NE-07/NE-10 had been upgraded to BC+CI lint gate in the table but rollup was never re-derived."
 open_question_resolutions:
   - OQR-1: HITL risk tiers — extension of CAP-006
   - OQR-2: Agent registry — application-layer concern
@@ -603,7 +604,7 @@ to BCs, CI lint gates, or ADRs.
 | NE-16 | BC | BC-2.13.006 (macOS Seatbelt deny-by-default) |
 | NE-17 | BC + VP seed | BC-2.03.001, BC-2.03.003 (BSP determinism) |
 
-**Coverage: 17/17 NEs anchored. 15 → BC; 1 → BC + CI lint gate (NE-04); 1 → CI lint gate only (NE-05). Zero unanchored.**
+**Coverage: 17/17 NEs anchored. 13 → BC (incl. 3 VP-seed: NE-02/12/17); 3 → BC + CI lint gate (NE-04, NE-07, NE-10); 1 → CI lint gate only (NE-05). Zero unanchored.**
 
 ---
 
