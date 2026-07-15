@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 total_standing_gates: 26
@@ -747,27 +747,48 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     Trigger: any row add, row remove, row re-tier, count edit, or percentage edit in a
     table that has a downstream Summary section.
 
-    **Part B — Criticality-sibling coherence:**
-    Any burst that adds, removes, or re-tiers a module in EITHER criticality document MUST:
-    1. Update BOTH `.factory/specs/module-criticality.md` (arch-view, authoritative post-1b)
-       AND `.factory/specs/prd-supplements/module-criticality.md` (PO-draft) in the same
-       burst — never update one without verifying the other.
-    2. After editing, verify that each document's Summary/Classification Summary reconciles
-       against its own table (Part A applies to both documents independently).
-    3. Verify that both documents agree on the tier classification of every shared module
-       row. Tier drift between the two files (e.g., one says HIGH, the other says MEDIUM
-       for the same module) is a HIGH-severity finding.
+    **Part B — Criticality-sibling coherence (widened P37 — OBS-P37-1 [process-gap]):**
+    Any burst that adds, removes, or re-tiers a module in ANY criticality-bearing document MUST
+    propagate the change to ALL FOUR sibling documents in the same burst:
+    1. `.factory/specs/module-criticality.md` (arch registry — authoritative source of truth post-1b)
+    2. `.factory/specs/prd-supplements/module-criticality.md` (PO registry)
+    3. `.factory/specs/architecture/module-decomposition.md` (derived — per-module Criticality column
+       AND structurally-privileged module-tier headings, e.g., `## <module-name> — <TIER>`)
+    4. `.factory/specs/architecture/verification-coverage-matrix.md` (derived — per-tier summary row
+       AND per-module table Criticality column)
+
+    Never update any one of these four without verifying all four in the same burst.
+
+    After editing:
+    - Apply **Part A** (table/summary reconciliation) to every document you touch.
+    - Apply **Gate #26** (Structurally-Privileged-Line Canon Check) to catch stale tier claims
+      in H1/H2/H3 headings (e.g., `## ferrochain-macros — MEDIUM` heading in
+      module-decomposition.md — the heading is structurally privileged and must match the registry).
+    - Run the **Tier agreement census** below across all four documents.
 
     **Census commands:**
-    - Arch-view: count rows per tier in Module Inventory table → must equal Summary cells.
-    - PO-draft: count rows per tier in Module Classification table → must equal
+    - Registry rows: count rows per tier in Module Inventory table (arch) → must equal arch
+      Summary cells. Count rows per tier in Module Classification table (PO) → must equal PO
       Classification Summary cells; cell self-sum must equal stated Total.
-    - Tier agreement: for every module present in both files, verify tier matches.
+    - Derived-doc module check: for each module in the Criticality column of
+      module-decomposition.md and verification-coverage-matrix.md per-module table, verify the
+      tier matches module-criticality.md (arch registry). Any mismatch is a HIGH-severity finding.
+    - Tier-summary row check: recount rows per tier in verification-coverage-matrix.md per-module
+      table → must equal the §Coverage by Criticality Tier summary row (CRITICAL/HIGH/MEDIUM/LOW
+      counts and total). Example correct value: 9/12/10/2=33.
+    - Structurally-privileged heading check: grep `^##` in module-decomposition.md for
+      tier-bearing headings; verify each named module's tier matches module-criticality.md.
+      Command: `grep -n "^## " module-decomposition.md | grep -E "CRITICAL|HIGH|MEDIUM|LOW"`
 
-    Source: ADV-P1D-PASS-32 §OBS-P32-3 [process-gap] — root cause: pass-31 OBS-P31-1
-    updated prd-supplements but not the arch-view; pass-32 F-P32-01 found the arch-view
-    summary had diverged from its own table (HIGH said 10, actual 11; MEDIUM said 12,
-    actual 10) — a pre-existing arithmetic error compounded by the sibling-skip.
+    **Motivating instance (OBS-P37-1):** F-P37-01 and F-P37-02 survived passes 31–36 because
+    the original Part B named only the two registry docs — leaving module-decomposition.md and
+    verification-coverage-matrix.md unchecked. Specific drift: graph::channels showed CRITICAL in
+    module-decomposition.md vs HIGH in module-criticality.md; verification-coverage-matrix.md
+    §Coverage by Criticality Tier showed 6/7/5/2=20 while the authoritative count is 9/12/10/2=33
+    and the doc's own per-module table enumerated 9 CRITICAL / 11 HIGH rows.
+
+    Source: ADV-P1D-PASS-32 §OBS-P32-3 [process-gap] (original gate — two-registry sibling set);
+    ADV-P1D-PASS-37 §OBS-P37-1 [process-gap] (widening — all four criticality-bearing docs added).
 
 26. **Structurally-Privileged-Line Canon Check — STRUCTURALLY-PRIVILEGED-LINE CANON CHECK
     (added P36 — standing gate [process-gap]):**
@@ -822,5 +843,6 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.2 | 2026-07-14 | Gate #25 Part B widened from 2-registry to 4-document sibling set: added module-decomposition.md (derived Criticality column + tier headings) and verification-coverage-matrix.md (derived tier summary + per-module table) as required census targets; extended census commands accordingly (OBS-P37-1 [process-gap], ADV-P1D-PASS-37) | OBS-P37-1 |
 | 1.1 | 2026-07-16 | Added standing gate #26 "Structurally-Privileged-Line Canon Check"; added `total_standing_gates: 26` to frontmatter (F-P36-03/OBS-P36-2 codification, ADV-P1D-PASS-36) | OBS-P36-2 |
 | 1.0 | 2026-07-13 | Initial authoring | Greenfield Phase 1a |

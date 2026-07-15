@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.1"
+version: "1.2"
 status: active
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
@@ -17,6 +17,7 @@ decisions: [D4, D6, D7, D12, D13, D17]
 changelog:
   - "1.0 (initial): base module decomposition authored."
   - "1.1 (ADV-P1D-PASS-29): F-P29-04 correct core::events description from past-tense (RunStarted/Ended, NodeStarted/Ended) to imperative canon (RunStart/Stream/End, NodeStart/Stream/End) per BC-2.06.001 authority."
+  - "1.2 (ADV-P1D-PASS-37): F-P37-01 reconcile criticality column drift against authoritative module-criticality.md — core::message CRITICAL→HIGH; graph::channels CRITICAL→HIGH; graph::event_emitter HIGH→MEDIUM; ferrochain-macros section heading MEDIUM→HIGH; macros::tool/entrypoint/task all MEDIUM→HIGH."
 ---
 
 # Module Decomposition: ferrochain
@@ -32,7 +33,7 @@ credential security primitives, streaming event types.
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
 | `core::runnable` | `Runnable<I,O>` trait + `RunnableSequence` pipe combinator | HIGH | SS-01 |
-| `core::message` | `Message` enum (AiMessage/HumanMessage/SystemMessage/ToolMessage), ContentBlock | CRITICAL | SS-01 |
+| `core::message` | `Message` enum (AiMessage/HumanMessage/SystemMessage/ToolMessage), ContentBlock | HIGH | SS-01 |
 | `core::error` | `FerrochainError` 2D struct (Component × Category), RFC-7807 emission | CRITICAL | SS-14 |
 | `core::credentials` | API key newtypes with redacted Debug; no Serialize; no Deref<Target=str> | CRITICAL | SS-14 |
 | `core::events` | Streaming event taxonomy types (RunStart/Stream/End, NodeStart/Stream/End, etc.) | HIGH | SS-06 |
@@ -49,13 +50,13 @@ content provenance.
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
 | `graph::definition` | `StateGraph` builder, node/edge registration, conditional routing | HIGH | SS-02 |
-| `graph::channels` | LastValue / Append / BarrierValue / NamedBarrierValue / EphemeralValue reducers | CRITICAL | SS-02 |
+| `graph::channels` | LastValue / Append / BarrierValue / NamedBarrierValue / EphemeralValue reducers | HIGH | SS-02 |
 | `graph::bsp_engine` | Super-step executor: task dispatch, versions_seen / task-identity sort, InvalidUpdateError | CRITICAL | SS-03 |
 | `graph::hitl` | Interrupt queue (FIFO), suspend/resume protocol, risk-tiered classification | CRITICAL | SS-05 |
 | `graph::scheduler` | Orchestrator loop and/or actor-scheduler (decision pending ADR-001 D9 gate) | CRITICAL | SS-03 |
 | `graph::budget` | `BudgetPolicy` eval (allow/escalate/deny), EvidenceJournal, ceiling halt/escalate | HIGH | SS-10 |
 | `graph::provenance` | `ProvenanceTag` attachment at ingress boundaries, `GuardrailHook` dispatch | HIGH | SS-11 |
-| `graph::event_emitter` | Streaming event emission; run_id + parent_ids correlation | HIGH | SS-06 |
+| `graph::event_emitter` | Streaming event emission; run_id + parent_ids correlation | MEDIUM | SS-06 |
 
 **VP anchor:** `graph::bsp_engine` is VP-001 target (BSP determinism Kani harness).
 
@@ -147,16 +148,16 @@ search (keyword / vector / hybrid). Canonical trait: `MemoryStore`.
 
 **BC anchors:** BC-2.15.001–003. Canonical trait name: `MemoryStore` per BC-2.15.001 Architecture Anchors.
 
-## ferrochain-macros (ADR-008) — MEDIUM
+## ferrochain-macros (ADR-008) — HIGH
 
 Responsibilities: proc-macro crate for `#[tool]`, `#[entrypoint]`, `#[task]`.
 Re-exported from ferrochain-core.
 
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
-| `macros::tool` | `#[tool]` proc-macro: `Tool` implementor with JSON Schema derivation | MEDIUM | SS-08 |
-| `macros::entrypoint` | `#[entrypoint]` proc-macro: START edge wiring for StateGraph nodes | MEDIUM | SS-08 |
-| `macros::task` | `#[task]` proc-macro: task registration boilerplate | MEDIUM | SS-08 |
+| `macros::tool` | `#[tool]` proc-macro: `Tool` implementor with JSON Schema derivation | HIGH | SS-08 |
+| `macros::entrypoint` | `#[entrypoint]` proc-macro: START edge wiring for StateGraph nodes | HIGH | SS-08 |
+| `macros::task` | `#[task]` proc-macro: task registration boilerplate | HIGH | SS-08 |
 
 **BC anchors:** BC-2.08.010, BC-2.08.011, BC-2.08.012 (all active, authored Phase 1b).
 

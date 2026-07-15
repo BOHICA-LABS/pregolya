@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -146,7 +146,7 @@ primary_consumers: [test-writer, holdout-evaluator]
 |--------|-------|------------|---------|-----------------|
 | GTV-001 | `"😀😃😄😁😆"` (5 emoji = 5 code pts, 20 bytes) | 3 | 0 | `["😀😃😄", "😁😆"]` |
 | GTV-002 | `"😀😃😄😁😆"` (5 emoji) | 3 | 1 | `["😀😃😄", "😄😁😆"]` |
-| GTV-003 | `"hello 😀 world"` (13 code pts) | 7 | 0 | `["hello", "😀 world"]` (separator split on space) |
+| GTV-003 | `"hello 😀 world"` (13 code pts) | 7 | 0 | `["hello", "😀 world"]` (after separator split on space) |
 | GTV-004 | `"😀" * 100` (100 emoji, 400 bytes) | 10 | 0 | 10 chunks of 10 emoji each |
 
 ### Group 2: CJK Unified Ideographs (U+4E00–U+9FFF, 3 bytes each in UTF-8)
@@ -161,8 +161,8 @@ primary_consumers: [test-writer, holdout-evaluator]
 
 | GTV ID | Input | chunk_size | overlap | Expected Chunks |
 |--------|-------|------------|---------|-----------------|
-| GTV-008 | `"abc" + "🎉" * 5 + "xyz"` (11 code pts) | 5 | 0 | `["abc🎉🎉", "🎉🎉🎉x", "yz"]` **(PROVISIONAL — must be Python-verified before Red Gate test is written)** |
-| GTV-009 | `"ñoño"` (4 code pts; ñ = U+00F1, 2 bytes) | 2 | 0 | `["ño", "ño"]` |
+| GTV-008 | `"abc" + "🎉" * 5 + "xyz"` (3+5+3=11 code pts) | 5 | 0 | `["abc🎉🎉", "🎉🎉🎉x", "yz"]` **(PROVISIONAL — must be Python-verified before Red Gate test is written)** |
+| GTV-009 | `"ñoño"` (4 code pts: ñ=U+00F1, o, ñ, o — 2 bytes each for ñ) | 2 | 0 | `["ño", "ño"]` |
 
 > **Note on GTV-003 and GTV-008:** Exact expected chunks depend on separator logic.
 > GTV-008 carries a concrete value copied from BC-2.07.002 (the authoritative source); it is
@@ -207,5 +207,6 @@ primary_consumers: [test-writer, holdout-evaluator]
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.2 | 2026-07-14 | GTV annotation sync (OBS-P37-2): GTV-003 Expected-cell parenthetical corrected to match BC-2.07.002.md authoritative text ("after separator split on space"); GTV-008 Input-cell code-point note corrected ("3+5+3=11 code pts"); GTV-009 Input-cell annotation corrected ("4 code pts: ñ=U+00F1, o, ñ, o — 2 bytes each for ñ"). All 9 GTV rows now byte-identical to BC-2.07.002.md including non-normative annotations (ADV-P1D-PASS-37) | OBS-P37-2 |
 | 1.1 | 2026-07-16 | GTV-008 row synced to concrete value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` with PROVISIONAL marker (was: placeholder); GTV-003/GTV-008 note updated to clarify PROVISIONAL semantics; removed contradictory "Do not hard-code these without verification" language (F-P36-03 fix, ADV-P1D-PASS-36) | F-P36-03 |
 | 1.0 | 2026-07-13 | Initial authoring | Greenfield Phase 1a |

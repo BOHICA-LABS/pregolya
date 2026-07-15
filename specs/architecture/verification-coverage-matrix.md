@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "1.0"
+version: "1.1"
 status: active
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
@@ -10,8 +10,12 @@ phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
+  - .factory/specs/module-criticality.md
 input-hash: "23a4f9b5afbbeaf7"
 traces_to: ARCH-INDEX.md
+changelog:
+  - "1.0 (initial): base verification coverage matrix authored."
+  - "1.1 (ADV-P1D-PASS-37): F-P37-02 correct Coverage by Criticality Tier summary to CRITICAL 9 / HIGH 12 / MEDIUM 10 / LOW 2 = 33 (was stale 6/7/5/2=20); complete Per-Module Coverage Status table to all 33 architecture modules (was 27); added rows for ferrochain-macros (HIGH), sandbox-wasm (MEDIUM), ferrochain-standard-tests (MEDIUM), memory-store (MEDIUM), xtask (LOW), ferrochain-community (LOW)."
 ---
 
 # Verification Coverage Matrix: ferrochain
@@ -32,6 +36,9 @@ traces_to: ARCH-INDEX.md
 **Totals: 5 VPs | Kani: 3 | proptest: 0 | fuzz: 0 | integration: 2**
 
 ## Per-Module Coverage Status
+
+> This table covers all 33 architecture modules from `.factory/specs/module-criticality.md`.
+> Tier groupings follow the authoritative inventory (CRITICAL 9 / HIGH 12 / MEDIUM 10 / LOW 2).
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
@@ -62,14 +69,20 @@ traces_to: ARCH-INDEX.md
 | ollama | ferrochain-ollama | — | — | — | yes | Conformance suite |
 | mcp client | ferrochain-mcp | — | — | — | yes | Red Gate BCs |
 | mcp adapter | ferrochain-mcp | — | — | — | yes | ToolException fidelity |
+| ferrochain-macros | ferrochain-macros | — | — | — | yes | `#[tool]`/`#[entrypoint]`/`#[task]` expansion correctness |
+| sandbox-wasm | ferrochain-sandbox | — | — | — | yes | WASM execution backend |
+| ferrochain-standard-tests | ferrochain-standard-tests | — | — | — | yes | Shared conformance harness; exercised via provider integrations |
+| memory-store | ferrochain-memory | — | yes | — | yes | KV + vector ops; GDPR erasure protocol |
+| xtask | xtask | — | — | — | — | CI lint gates only; advisory ≥70% |
+| ferrochain-community | ferrochain-community | — | — | — | — | Post-v1 placeholder; not in-tree at v1 |
 
 ## Coverage by Criticality Tier
 
 | Tier | Modules | Kani VPs | proptest | fuzz | Kill Rate Target |
 |------|---------|---------|---------|------|-----------------|
-| CRITICAL | 6 | 3 (VP-001, VP-002, VP-003) | all | subset | ≥ 95% |
-| HIGH | 7 | 0 | most | subset | ≥ 90% |
-| MEDIUM | 5 | 0 | some | — | ≥ 80% |
+| CRITICAL | 9 | 3 (VP-001, VP-002, VP-003) | all | subset | ≥ 95% |
+| HIGH | 12 | 0 | most | subset | ≥ 90% |
+| MEDIUM | 10 | 0 | some | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | ≥ 70% |
 
 ## Mutation Kill Rate Gates (cargo-mutants)

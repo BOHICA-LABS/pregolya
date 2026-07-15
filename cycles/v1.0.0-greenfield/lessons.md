@@ -77,6 +77,14 @@ traces_to: STATE.md
 **Codified fix:** Gate #26 STRUCTURALLY-PRIVILEGED-LINE CANON CHECK added to bc-authoring-plan.md v1.1: every canon-retirement or canon-amendment fix must grep H1/H2/H3 headings (especially "## Decision:"), Summary cells/blocks, and index/registry rows across the affected document AND all documents that cite it, verifying the retired claim is absent from those locations. Also: total_standing_gates frontmatter field added to bc-authoring-plan.md. Codified as D18-P36-D.
 **Applicable to:** Any fix that retires or amends a claim embedded in multiple artifact tiers (body prose + privileged structural lines). Both tiers require independent sweep coverage. The privileged-line sweep is an additional check on top of the body-prose fix — not a replacement.
 
+### L-007 [process-gap, codified]: Sibling-Coherence Gates Must Enumerate Derived Documents, Not Just Registries
+
+**Discovered:** Pass 37 (burst 113)
+**Symptom:** Gate #25 Part B named only 2 documents for criticality-sibling coherence (arch registry + PO registry). It omitted module-decomposition.md and verification-coverage-matrix.md, both of which derive their criticality column from the authoritative module-criticality.md. F-P37-01 found that the pass-31/32 criticality reconciliation updated the two registries but left 4 incorrect cells + 1 heading in module-decomposition.md unchanged. F-P37-02 found verification-coverage-matrix.md's tier summary still showed 6/7/5/2=20 (stale) instead of 9/12/10/2=33. Both findings survived 5+ adversarial passes because the sibling-set gate did not name the derived documents as required participants.
+**Root cause:** Sibling-coherence gates were written to cover authoritative source documents only. Derived documents — those that echo or summarize information from an authority — were assumed to be self-correcting or were forgotten entirely when the gate was initially authored.
+**Codified fix:** Gate #25 Part B WIDENED to a 4-doc sibling set: arch registry [authoritative], PO registry, module-decomposition.md, verification-coverage-matrix.md. Any module tier change must propagate to all four in the same burst; census greps each module's tier across all four; gate #26 cross-referenced for privileged tier headings. Codified as D18-P37-C.
+**Applicable to:** Any coherence gate that polices a named attribute (criticality tier, pagination convention, error code binding, etc.) that appears in BOTH an authoritative source AND one or more derived/summary documents. The gate must name every document that echoes the attribute — not just the authority. When a new derived document is created, the corresponding coherence gate must be updated before the burst closes.
+
 ## Policy Candidates
 
 | Lesson | Proposed Policy | Scope | Status |
@@ -87,3 +95,4 @@ traces_to: STATE.md
 | L-004 | Wire-visible taxonomy requires coherence gate from first appearance | BC authoring + gate management | Codified (gate #23) |
 | L-005 | Census regexes must enumerate all punctuation forms; census must detect collisions AND drift | All census gates | Codified (gate #16) |
 | L-006 | Canon-retirement fixes must sweep structurally-privileged lines in affected + citing docs | BC authoring + canon management | Codified (gate #26) |
+| L-007 | Sibling-coherence gates must enumerate derived documents, not just authoritative registries | Gate management + BC authoring | Codified (gate #25 Part-B, D18-P37-C) |

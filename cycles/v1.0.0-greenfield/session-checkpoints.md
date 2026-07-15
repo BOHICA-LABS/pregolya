@@ -363,3 +363,13 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **WORKSTREAM (at time of archival):** Burst 108 COMPLETE. Phase 1d pass 32: 4 findings (1 HIGH + 2 MED + 1 LOW); arch-view criticality = 33 modules (9/12/10/2); /versions pagination + version ASC exemption (BC-2.12.002 PC20); no list-all-schedules endpoint in v1; gate #25 summary-arithmetic + criticality-sibling coherence. Trajectory ...→6→1→1→4.
 
 **WRAP METADATA:** Date: 2026-07-15 | Cycle: v1.0.0-greenfield | Burst: 108 | Counter: 0/3
+
+---
+
+### Archived Checkpoint — Burst 112 (Pass 36)
+
+"ferrochain Phase 1 spec crystallization, step 1d adversarial convergence IN PROGRESS: 36 passes / 35 fix bursts, trajectory ...→3→0→3 — pass 35 was CLEAN (1/3) but pass 36 found 3 substantive cross-artifact contradictions (ADR heading residue, ADR-001 interrupt-timing self-contradiction, GTV-008 copy drift) → counter RESET 0/3 (strict-zero D14; 35 standing gates incl. new #26 privileged-line check). NEXT ACTION: dispatch adversary pass 37 — fresh context, sibling-check pass-36 fixes (ADR-006 heading + zero live LangGraph-format claims; ADR-001 both interrupt refs agree w/ nuanced rule + BC-2.05.003 coherence; GTV-008 byte-identical PROVISIONAL both files; gate #26 first census run), rotate 4 censuses, novel probe (all previously-listed axes now probed: L2 DI coherence CLEAN, NFR CLEAN, holdout-A CLEAN, test-vectors 1 finding fixed, ADR pairwise 2 findings fixed — adversary free-choice on any genuinely novel axis, e.g. product-brief↔PRD claims coherence, BC cross-reference (traces_to/anchors) integrity sweep, capability-tier vs BC-priority coherence); CLEAN advances 1/3; ANY finding resets; loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+
+**WORKSTREAM (at time of archival):** Burst 112 COMPLETE. Phase 1d pass 36: 3 findings (1 HIGH + 2 MED; RESET 1/3→0/3; NEW CLASS: structurally-privileged-line residue). CANON: ADR-006 Decision heading = ferrochain-native wire format over HTTP; ADR-001 interrupt check = Collecting→Reducing with precise rule; GTV-008 PROVISIONAL byte-identical in BC-2.07.002 v1.1 + test-vectors.md v1.1; gate #26 structurally-privileged-line canon check (headings/Summary/index greps on every canon-retirement fix). Trajectory ...→3→0→3 (RESET).
+
+**WRAP METADATA:** Date: 2026-07-15 | Cycle: v1.0.0-greenfield | Burst: 112 | Counter: 0/3
