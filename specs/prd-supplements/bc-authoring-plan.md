@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.2"
+version: "2.3"
 status: active
 producer: product-owner
 total_standing_gates: 31
@@ -592,8 +592,9 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | `tool_name`, `invocation_id`, `timestamp` fields on ProvenanceTag | removed — ProvenanceTag fields are now `boundary_type`, `ingress_id`, `sequence_position` | F-P58-03 |
     | `GuardrailAction` (enum type name) | `GuardrailResult` | F-P57-01 (iface-def) + F-P58-03 (entities fully retired) |
     | `Accept`, `Reject(reason)`, `Redact(sanitized)` (GuardrailAction variants as guardrail API) | `Pass`, `Fail{reason,severity}`, `Transform{new_content}` (GuardrailResult variants) | F-P57-01 + F-P58-03 |
+    | `BudgetDecision` (enum type name) | `PolicyDecision` | F-P60-01 (interface-definitions.md §BudgetPolicy + bc-authoring-plan gate #31 registry; ADR-009 v1.1 confirms same rename) |
 
-    Census command: `grep -rn "to_problem_detail\|risk_tier\|X-Debug-Key\|node_delta\|IngressSource\|GuardrailAction\b" .factory/specs/ | grep -v "bc-authoring-plan\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier\|action_risk.rs"` — output must be ZERO live occurrences (bc-authoring-plan.md excluded as registry document).
+    Census command: `grep -rn "to_problem_detail\|risk_tier\|X-Debug-Key\|node_delta\|IngressSource\|GuardrailAction\b\|BudgetDecision" .factory/specs/ | grep -v "bc-authoring-plan\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier\|action_risk.rs\|architecture/\|ADV-P1D-PASS"` — output must be ZERO live occurrences. Exclusions: bc-authoring-plan.md (registry document); architecture/ (architect scope — ADR-009 manages BudgetDecision rename in that domain); `ADV-P1D-PASS` (YAML frontmatter changelog list items — always reference ADV-P1D-PASS-NN; these are audit trail, not live uses; exempted per gate #19 "A changelog or census-rule mention is not a hit" rule).
     Census command (past-tense StreamEvent variants — L3 architecture and BC artifacts only): `grep -rn "RunStarted\|NodeStarted\|ToolStarted\|StepStarted\|run_started\|node_started" .factory/specs/ | grep -v "bc-authoring-plan\|domain-spec/\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier"` — output must be ZERO live occurrences.
     Source: ADV-P1D-PASS-26 §F-P26-02, §F-P26-03, §F-P26-04; ADV-P1D-PASS-27 §F-P27-06; ADV-P1D-PASS-29 §F-P29-03, §F-P29-04.
 
@@ -1215,8 +1216,17 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     3. For each corpus type, locate its definition site. If none found: flag as UNRESOLVED and either
        (a) add a minimal inline definition or type note in the same burst, or
        (b) document as implementer-scope with a gate #31 note and flag for architect.
+    4. **Name-equality check (added P60 — OBS-P60-1 widening):** For each corpus type that is
+       RESOLVED via a BC citation, assert that the identifier name used in the interface block
+       exactly equals the identifier name in the cited authority BC. A definition that exists in the
+       corpus under a different name (i.e., interface block uses `BudgetDecision`, BC uses
+       `PolicyDecision`) is NOT a valid resolution — it is a HIGH-severity name-drift finding.
+       Definition-existence alone is insufficient; name equality is required.
+       Motivating instance: F-P60-01 — `BudgetDecision` was marked RESOLVED because an inline
+       definition existed in the interface block, while all four ss-10 BCs used `PolicyDecision`.
+       The drift survived pass-58 and pass-59 undetected because step 3 checked only existence.
 
-    **Current pass-58 census results (`interface-definitions.md` v2.13):**
+    **Current pass-60 census results (`interface-definitions.md` v2.15):**
 
     | Type | Trait | Definition Site | Status |
     |------|-------|----------------|--------|
@@ -1238,25 +1248,33 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | `ProvenanceTag` | GuardrailHook | entities-server.md §ProvenanceTag (v1.3) | RESOLVED |
     | `GuardrailResult` | GuardrailHook | inline §GuardrailHook (interface-definitions.md — defined P57) | RESOLVED |
     | `GuardrailSeverity` | GuardrailHook | inline §GuardrailHook (interface-definitions.md v2.13 — DEFINED P58) | RESOLVED |
-    | `RunId` | BudgetPolicy | entities-server.md §Run (`run_id: Uuid` — RunId is Uuid newtype or alias) | RESOLVED |
     | `TokenUsage` | BudgetPolicy | BC-2.10.001 PC2/PC3 (struct shape: prompt_tokens, completion_tokens, total_tokens, estimated_cost) | RESOLVED |
-    | `EvidenceJournal` | BudgetPolicy | entities-server.md §EvidenceJournal | RESOLVED |
-    | `BudgetDecision` | BudgetPolicy | inline §BudgetPolicy block (interface-definitions.md) | RESOLVED |
+    | `PolicyDecision` | BudgetPolicy | BC-2.10.001 PC3 (three-variant contract: Allow / Escalate{reason,current_usage} / Deny{reason,current_usage}); inline §BudgetPolicy (interface-definitions.md v2.15 — DEFINED P60) — name-equality verified: BC uses PolicyDecision, interface uses PolicyDecision | RESOLVED |
+    | `BudgetContext` | BudgetPolicy | NOT IN CORPUS — implementer-scope (execution identity context: thread_id, run_id, sub-agent identity per BC-2.10.001 PC3/INV); flagged for architect. Same treatment as ChatConfig. | UNRESOLVED |
 
-    **Census verdict:** 20/22 types resolved; 2 unresolved (ChatConfig, CheckpointConfig) — flagged for
-    architect (implementer-scope structs with no spec-level shape requirement); do NOT block spec publication.
+    > **Retired from BudgetPolicy rows (P60):** `RunId` (no longer in trait — removed from 3-param to 2-param sig), `EvidenceJournal` (no longer in trait — journal writes are caller responsibility per BC-2.10.001 INV + ADR-009), `BudgetDecision` (renamed to PolicyDecision — see gate #19 retired-identifier table).
+
+    **Census verdict:** 18/21 types resolved; 3 unresolved (ChatConfig, CheckpointConfig, BudgetContext) — all flagged
+    implementer-scope for architect; do NOT block spec publication.
 
     **Census trigger:** Any burst that edits `interface-definitions.md` §Public Rust Trait Signatures
     (new method, type rename, inline enum addition or removal) + every adversary rotation.
 
-    **Motivating instance (OBS-P58-1, ADV-P1D-PASS-58):** F-P57-01 (pass-57) removed `GuardrailError`
-    (correct — not in corpus) but introduced `IngressContent` and retained `GuardrailSeverity` as
-    referenced-but-undefined types. Both survived one full pass (pass-57 → pass-58) because no census
-    extracted and resolved every type in the trait block. Gates #15 (harness-fn) and #30 (codeless-error)
-    cover named identifiers in BC bodies; this gate closes the parallel gap for trait-signature identifiers
-    in prd-supplements.
+    **Motivating instances:**
 
-    Source: ADV-P1D-PASS-58 §OBS-P58-1 [process-gap].
+    - **(OBS-P58-1, ADV-P1D-PASS-58):** F-P57-01 (pass-57) removed `GuardrailError`
+      (correct — not in corpus) but introduced `IngressContent` and retained `GuardrailSeverity` as
+      referenced-but-undefined types. Both survived one full pass (pass-57 → pass-58) because no census
+      extracted and resolved every type in the trait block. Gates #15 (harness-fn) and #30 (codeless-error)
+      cover named identifiers in BC bodies; this gate closes the parallel gap for trait-signature identifiers
+      in prd-supplements.
+
+    - **(OBS-P60-1, ADV-P1D-PASS-60):** `BudgetDecision` was marked RESOLVED in the census table because
+      an inline definition existed in the interface block. However, the cited authority (BC-2.10.001–004) used
+      `PolicyDecision` throughout. The old step 3 (definition-existence) passed; the new step 4 (name-equality)
+      would have caught this. This is the motivating instance for the step 4 widening.
+
+    Source: ADV-P1D-PASS-58 §OBS-P58-1 [process-gap]; ADV-P1D-PASS-60 §OBS-P60-1 [process-gap].
 
 ---
 
@@ -1264,6 +1282,7 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.3 | 2026-07-15 | Gate #31 widened: step 4 "name-equality check" added (OBS-P60-1 [process-gap] — BudgetDecision/PolicyDecision drift survived 2 passes because definition-existence alone was checked). Census updated P58→P60: 22→21 types (removed RunId, EvidenceJournal, BudgetDecision from BudgetPolicy rows; added PolicyDecision, BudgetContext); 20 resolved → 18 resolved, 2 unresolved → 3 unresolved (ChatConfig, CheckpointConfig, BudgetContext). Gate #19 retired-identifier list extended: BudgetDecision → PolicyDecision (F-P60-01). Gate #19 census command updated: BudgetDecision added to grep pattern; architecture/ added to exclusion (architect scope). `total_standing_gates` unchanged at 31 (widening, not new gate). (ADV-P1D-PASS-60 §OBS-P60-1 [process-gap]) | OBS-P60-1 |
 | 2.2 | 2026-07-15 | Gate #31 "trait-signature type-resolution census" added; `total_standing_gates` 30→31. Census run P58: 22 types across 5 traits; 20 resolved, 2 unresolved (ChatConfig, CheckpointConfig — flagged implementer-scope for architect). Retired-identifier list extended: IngressSource, source_type, tool_name/invocation_id/timestamp (ProvenanceTag old fields), GuardrailAction, Accept/Reject/Redact. Census command updated. Motivating instance: OBS-P58-1 — F-P57-01 introduced IngressContent+GuardrailSeverity as undefined types surviving one full pass. (ADV-P1D-PASS-58 §OBS-P58-1 [process-gap]) | OBS-P58-1 |
 | 2.1 | 2026-07-15 | Gate #30 second-pass drain (ADV-P1D-PASS-56-COMPLETION): resolved deferred TBD-E-PROV-HTTP and all second-pass codeless candidates. Minted 3 new codes (E-PROV-008, E-CORE-007, E-CHKPT-007). Fixed 13 constructions across BC-2.08.004 (×4), BC-2.08.001 (×1), BC-2.08.002 (×2), BC-2.08.006 (×2), BC-2.11.002/003/004 (×6), BC-2.04.002 (×2), BC-2.04.006 (×1), BC-2.04.007 (×3). Census: 24 constructions examined; 13 fixed; 3 already-coded; 8 exempt. Zero genuine codeless constructions remain. Gate #30 census command returns zero genuine hits. Disposition census 76→79: 45 HTTP table rows, 11 individual omission notes, 23 blanket library-layer coverage. | OBS-P56-2 drain |
 | 2.0 | 2026-07-15 | Gate #30 "codeless-error census" added; `total_standing_gates` 29→30. First-pass census run: identified 19 concrete codeless FerrochainError constructions across BC-2.01.003 (×4), BC-2.14.006 (×5), BC-2.08.007 (×6), BC-2.08.004 (×4). Fixed 15 with clear taxonomy mappings (E-CORE-006, E-CORE-005, E-PROV-002, E-PROV-003, E-PROV-004, E-PROV-001). Deferred 4 (BC-2.08.004 EC-004/EC-005/TV-004/TV-005: TRANSPORT non-stream HTTP responses) pending E-PROV-008 mint decision. Motivating instance: F-P56-01 — BC-2.01.003 recursion limit error codeless while graph-engine counterpart (E-GRAPH-017) had a code since pass 49. (ADV-P1D-PASS-56 §F-P56-01, §OBS-P56-2 [process-gap]) | F-P56-01, OBS-P56-2 |

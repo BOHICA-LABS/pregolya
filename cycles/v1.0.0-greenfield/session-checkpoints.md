@@ -397,3 +397,15 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **RESUME IN ONE BREATH (burst 132):** "ferrochain Phase 1 spec crystallization, step 1d adversarial convergence IN PROGRESS: 56 passes / 51 fix bursts, trajectory ...→1→1 (pass 56 opened + FULLY drained the codeless-error class: 4 codes minted, 19 sites wired, gate #30, census 79 zero-uncovered; 38 standing gates). Counter 0/3 (strict-zero D14). NEXT ACTION: dispatch adversary pass 57 — fresh context, sibling-check pass-56 (taxonomy v1.8 four codes; census 79 = 45+11+23; gate #30 zero genuine hits; zero TBD; 10007 precision text; 12 BC bumps changelogged per gate #28 two-form), rotate censuses (#13/#24/#25/#27/#28/#29), free probes; CLEAN advances 1/3; ANY finding resets; loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
 
 **WRAP METADATA:** Date: 2026-07-17 | Cycle: v1.0.0-greenfield | Burst: 132 | Counter: 0/3
+
+---
+
+## Archived Checkpoint — Burst 135 (Pass 59, replacing burst 134 checkpoint)
+
+**RESUME IN ONE BREATH (burst 135):** "ferrochain Phase 1 spec crystallization, step 1d adversarial convergence IN PROGRESS: 59 passes / 54 fix bursts, trajectory ...→1→3→2 (pass 56-59 arc drained the guardrail/type surface layer-by-layer: codes → trait shape → type definitions → citations; each layer now audited + gated; 39 standing gates). Counter 0/3 (strict-zero D14). NEXT ACTION: dispatch adversary pass 60 — fresh context, sibling-check pass-59 (v2.14 citation table; wrapped Transform vectors typecheck; same-boundary rule 3-doc coherent), rotate censuses (#13/#21/#23/#26/#27/#29/#30/#31), free probes (the guardrail surface has been scrutinized 4 passes running — encourage probing OTHER surfaces with the same citation-audit lens: budget block citations, checkpoint trait citations, streaming BC citations); CLEAN advances 1/3; ANY finding resets; loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+
+**Archived PASS CANONS (burst 135):**
+- PASS-58 CANONS (burst 134): IngressContent = {ToolResult(ContentBlock), RagChunk(Value), MemoryItem(Value)}; GuardrailSeverity = {Critical→failed, High/Medium/Low→continue}; BoundaryType exactly 3 (no User/Model tags); gate #31 type-resolution census; ChatConfig/CheckpointConfig = documented implementer-scope.
+- PASS-59 CANONS (burst 135): Transform same-boundary (inner payload free, cross-boundary prohibited); Critical citations = INV-3/PC3/PC3/PC4; citation-audit discipline (cited item must state what it's cited for).
+
+**WRAP METADATA:** Date: 2026-07-17 | Cycle: v1.0.0-greenfield | Burst: 135 | Counter: 0/3

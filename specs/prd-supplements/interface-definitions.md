@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.14"
+version: "2.15"
 status: active
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-07-15T01:00:00Z
 phase: 1d
 changelog:
   - "1.6 (ADV-P1D-PASS-25): F-P25-01 add 503 row (E-SERVER-016 IdempotencyLockTimeout per-endpoint override); F-P25-02 recategorize 401→reserved, 403 now E-SERVER-004 POLICY + E-SERVER-005; F-P25-06 reconcile Run.interrupt sub-fields (interrupt_id, node_name, value, action_risk, action, context added; node_id→node_name, risk_tier→action_risk renamed); F-P25-07 add 201 and 204 rows, add E-CRON-002 to 400 row; OBS-2 add 502 and 504 categorical fallback rows."
@@ -26,6 +26,7 @@ changelog:
   - "2.12 (ADV-P1D-PASS-57): F-P57-01 (HIGH) — fix GuardrailHook trait signature trilateral contradiction (authority-deference D18-P47-A: BCs win). (1) Method name on_ingress → evaluate (all 6 ss-11 BC postconditions + E-CORE-007 taxonomy message are uniform). (2) Return type Result<IngressContent, GuardrailError> → GuardrailResult enum with Pass / Fail{reason,severity} / Transform{new_content} variants (BC-2.11.002 PC2-PC4). (3) Second parameter renamed provenance → provenance_tag per BC-2.11.002 INV-4. (4) GuardrailResult enum definition added to §GuardrailHook block with Fail/Transform variant bodies. (5) Panic path moved to doc-comment citing E-CORE-007 and BC-2.11.002 EC-001 (panic is a non-return code path; the trait method return type is GuardrailResult not Result). (6) GuardrailError type removed — not defined in spec corpus; was incorrect. BC anchor enumeration expanded to cite all 6 BCs by role."
   - "2.13 (ADV-P1D-PASS-58): F-P58-02 (HIGH) + F-P58-01 (MED) — define IngressContent and GuardrailSeverity inline in §GuardrailHook block. (1) IngressContent enum: ToolResult(ContentBlock) / RagChunk(Value) / MemoryItem(Value) — BC-2.11.002 PC1 / BC-2.11.003 PC1,PC5 / BC-2.11.004 PC1,PC5; E-CORE-007 content_type placeholder resolved to IngressContent variant name. (2) GuardrailSeverity enum: Critical/High/Medium/Low — authority BC-2.11.002 INV-3, BC-2.11.005 PC4/PC5. (3) Minimal type notes added for ChatConfig (BaseChatModel) and CheckpointConfig (CheckpointSaver) per gate #31 census — both flagged corpus-unresolved for architect. Gate #31 census: 20/22 types resolved; ChatConfig and CheckpointConfig flagged."
   - "2.14 (ADV-P1D-PASS-59): F-P59-01 (HIGH) — fix GuardrailSeverity::Critical authority mis-citations. BC-2.11.003 INV-2 (ordering invariant) → BC-2.11.003 PC3 (Critical severity rule); BC-2.11.004 INV-4 (ordering invariant) → BC-2.11.004 PC3 (Critical severity rule). Correct authority: BC-2.11.002 INV-3, BC-2.11.003 PC3, BC-2.11.004 PC3, BC-2.11.005 PC4. F-P59-02 (HIGH) — fix Transform doc-comment cross-boundary claim: replace 'any IngressContent variant, including a different variant from the original' with same-boundary rule (new_content must be same IngressContent variant; inner payload may change freely — e.g. different ContentBlock variant within ToolResult per BC-2.11.002 EC-003). No BC authorizes cross-boundary transforms (e.g. ToolResult→RagChunk)."
+  - "2.15 (ADV-P1D-PASS-60): F-P60-01 (HIGH) + F-P60-02 (MED) + F-P60-03 (HIGH) — rewrite §BudgetPolicy block per orchestrator adjudication D18-P60-A (authority-deference: BC-2.10.001–004 are behavioral authority). (1) Rename BudgetDecision → PolicyDecision (BC-2.10.001 PC3 — three-variant contract is the canonical name); BudgetDecision retired per gate #19. (2) Add current_usage: TokenUsage payload to Escalate and Deny variants (BC-2.10.001 PC3, TV-002, TV-003 — F-P60-02). (3) Rewrite evaluate signature: remove async (pure/sync per BC-2.10.001 INV + ADR-009); remove run_id param; remove journal param (journal writes are caller responsibility per BC-2.10.001 INV + ADR-009); add context: &BudgetContext second param (BC-2.10.001 PC1/PC2 two-param canon) — F-P60-03. (4) BudgetContext flagged implementer-scope (shape not enumerated in spec corpus; BC-2.10.001 PC3/INV provides contextual description — same treatment as ChatConfig). (5) BC anchors corrected: BC-2.10.001 PC3 + TV-001–TV-003 + BC-2.10.002 INV."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -230,23 +231,37 @@ BC-2.11.006 (no-hook default — GuardrailHook not registered)
 
 ```rust
 pub trait BudgetPolicy: Send + Sync {
-    /// Evaluate whether this invocation is within budget.
-    async fn evaluate(
-        &self,
-        run_id: RunId,
-        usage: TokenUsage,
-        journal: &dyn EvidenceJournal,
-    ) -> BudgetDecision; // allow | escalate | deny
+    /// Evaluate the current token/cost usage against this policy's configured thresholds.
+    ///
+    /// **Pure, synchronous, and side-effect-free.** This function returns a decision only;
+    /// it must not write to any journal, mutate state, or perform I/O.
+    /// All side effects (EvidenceJournal append, interrupt trigger, halt sequencing)
+    /// are the responsibility of the caller (BudgetEngine / execution engine) after
+    /// receiving the decision.
+    ///
+    /// Authority: BC-2.10.001 INV (purity invariant) + ADR-009.
+    fn evaluate(&self, usage: TokenUsage, context: &BudgetContext) -> PolicyDecision;
 }
 
-pub enum BudgetDecision {
+/// Decision returned by `BudgetPolicy::evaluate`.
+///
+/// Authority: BC-2.10.001 PC3 (three-variant contract),
+/// BC-2.10.001 TV-001 (Allow), TV-002 (Escalate with payload), TV-003 (Deny with payload).
+pub enum PolicyDecision {
     Allow,
-    Escalate { reason: String },
-    Deny { reason: String },
+    Escalate { reason: String, current_usage: TokenUsage },
+    Deny { reason: String, current_usage: TokenUsage },
 }
 ```
 
-**BC anchor:** BC-2.10.001, BC-2.10.002
+> **`BudgetContext`** — implementer-scope struct (shape not enumerated in spec corpus; logically
+> contains execution identity passed to the policy for contextual decisions: thread_id, run_id,
+> sub-agent identity per BC-2.10.001 PC3/INV). Architect assigns the concrete definition.
+> Same treatment as `ChatConfig` (gate #31 UNRESOLVED/implementer-scope).
+
+**BC anchor:** BC-2.10.001 PC3 (PolicyDecision variants + purity invariant),
+BC-2.10.001 TV-001–TV-003 (variant payloads verified),
+BC-2.10.002 INV (journal writes are caller responsibility)
 
 ## ferrochain-server HTTP API
 
