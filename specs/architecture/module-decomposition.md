@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.3"
+version: "1.4"
 status: active
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
@@ -19,6 +19,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-29): F-P29-04 correct core::events description from past-tense (RunStarted/Ended, NodeStarted/Ended) to imperative canon (RunStart/Stream/End, NodeStart/Stream/End) per BC-2.06.001 authority."
   - "1.2 (ADV-P1D-PASS-37): F-P37-01 reconcile criticality column drift against authoritative module-criticality.md — core::message CRITICAL→HIGH; graph::channels CRITICAL→HIGH; graph::event_emitter HIGH→MEDIUM; ferrochain-macros section heading MEDIUM→HIGH; macros::tool/entrypoint/task all MEDIUM→HIGH."
   - "1.3 (ADV-P1D-PASS-61): F-P61-01 add ferrochain-core budget definitions note per ADR-009 Option 3; qualify graph::budget row to clarify trait lives in core; rename BudgetContext → RunContext per pass-61 adjudication."
+  - "1.4 (ADV-P1D-PASS-62): F-P62-01 add deny-anyhow-in-lib (ADR-010/NE-03/DI-014) and deny-description-cache-key (ADR-011/NE-05) to xtask inventory; add non-exhaustive qualifier citing behavioral-contracts/ as authoritative subcommand registry."
 ---
 
 # Module Decomposition: ferrochain
@@ -172,6 +173,16 @@ Re-exported from ferrochain-core.
 
 ## xtask (SS-17 support) — LOW
 
+> **Inventory scope (non-exhaustive):** This list covers subcommands explicitly cited in
+> architecture/ ADRs and the NE Disposition Table (PRD §9) as sole enforcement mechanisms.
+> The authoritative registry for all CI lint gate contracts — including exact subcommand
+> names and their acceptance criteria — is the behavioral-contracts/ directory
+> (BC-2.14.003–006, BC-2.08.007) and individual ADRs. Naming variants across sources
+> (e.g. `deny-expect-in-lib` / `lint-no-panic` for the same NE-07 gate) are resolved at
+> implementation time against the governing BC or ADR, not this inventory.
+
 - `check-file-size`: file line-count gate (D12); reads allowlist.toml
 - `deny-client-new`: CI lint gate; rejects `Client::new()` outside tests (NE-04)
 - `deny-expect-in-lib`: CI lint gate; rejects `.expect()` and `.unwrap()` in library code (NE-07)
+- `deny-anyhow-in-lib`: CI lint gate; scans library crate `src/` for `anyhow` imports; sole enforcement of NE-03 / DI-014 anyhow confinement — `anyhow` is banned from all `ferrochain-*` library crates (ADR-010)
+- `deny-description-cache-key`: CI lint gate; scans `cache_key` / `CacheKey` / `cache_key_for` call sites in `ferrochain-*` library crates for description-proxy usage; sole enforcement of NE-05 content-hash cache-key contract (ADR-011)
