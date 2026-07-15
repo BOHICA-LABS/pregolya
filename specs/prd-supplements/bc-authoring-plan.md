@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.7"
+version: "2.8"
 status: active
 producer: product-owner
 total_standing_gates: 33
@@ -639,7 +639,36 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     This would make the census machine-enforceable rather than relying on burst discipline.
     Log at cycle close for v1.1 planning.
 
-    Source: ADV-P1D-PASS-27 §OBS-P27-2 [process-gap].
+    **Sub-check: Cross-row routing-enumeration completeness (added P67 — OBS-P67-1):**
+    The §HTTP Status Codes table contains rows whose descriptions explicitly enumerate codes
+    that "go to the X row" or "see the Y row." These inter-row routing enumerations must
+    be kept in sync with the target row's actual contents. Whenever any code is added to
+    or removed from a row, every OTHER row's explanatory enumeration that references that
+    row must be updated to reflect the change.
+
+    **Trigger:** Any code added to or removed from a status row → scan all other rows for
+    "go to the X row" / "see the Y row" language that names the modified row; diff the
+    inline enumeration against the target row's current code list; fix any discrepancy in
+    the same burst.
+
+    **Census procedure:**
+    1. Extract all inter-row routing enumerations: text of the form "(E-XXX-NNN, ...)" that
+       appears in one row's description with an explicit "go to the Y row" or "see the Y row"
+       annotation.
+    2. For each such enumeration, extract the target row's live code list.
+    3. Diff: codes in target row but absent from the enumeration → add. Codes in the
+       enumeration but absent from the target row → remove.
+    4. If the enumeration uses "..." or a wildcard, ensure the wildcard is still accurate
+       (a wildcard that was narrowed to an enumerated list per OBS-1 must remain enumerated).
+
+    **Motivating instance (F-P67-01, ADV-P1D-PASS-67):** The 422 row enumeration
+    "(E-CHKPT-001, -002, -003, -004, -006) go to the 500 row" omitted E-CHKPT-007, which
+    IS in the 500 row. E-CHKPT-007 was added to the 500 row at v2.11 (pass-56-completion)
+    without updating the 422 row's sibling enumeration. The gap survived 10 passes because
+    gate #21 checked code→row membership (§17-C census) but not inter-row routing
+    enumeration completeness.
+
+    Source: ADV-P1D-PASS-27 §OBS-P27-2 [process-gap]; ADV-P1D-PASS-67 §OBS-P67-1 [process-gap].
 
 22. **RetryHint coherence gate — RETRYHINT COHERENCE (added P28 — standing gate):**
     Any burst that creates or edits a per-code catalog row in error-taxonomy.md OR edits

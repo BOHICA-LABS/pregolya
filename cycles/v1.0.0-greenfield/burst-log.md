@@ -1454,3 +1454,26 @@ Phase 1d pass 66 adversarial review completed: NOT CLEAN — 3 findings via new 
 
 **1 Observation (process-gap):**
 - OBS-P66-1: Neither gate #30 (forward: every constructor carries a code) nor gate #13 covered the E-code BACK-reference axis (reverse: every catalogued code has a behavioral home in its anchor BC). The OBS-P28-2 class survived 65 passes. → GATE #33 minted (taxonomy anchor reverse-verification; post-fix census 78/78 anchored; bc-authoring-plan v2.7). Codified as L-018.
+
+---
+
+## Burst 143 — Phase 1d pass 67 + fix burst (2026-07-18)
+
+**Archived from STATE.md Current Phase Steps (pass-59 row displaced by pass-67):**
+
+Phase 1d pass 59 + fix burst | adversary + PO | COMPLETE | Pass 59: NOT CLEAN — 2 HIGH, both citation-layer defects in pass-57/58 additions (F-P59-01: GuardrailSeverity::Critical cited BC-2.11.003 INV-2 + BC-2.11.004 INV-4 [ORDERING invariants] instead of their PC3 severity rules → corrected [v2.14] + FULL §GuardrailHook citation audit: 10 citations verified-true, only the one mis-cite; F-P59-02: Transform { new_content: IngressContent } vs BC EC/TVs still writing bare ContentBlock [non-typechecking vectors] + doc-comment mis-cited EC-003 as authorizing cross-IngressContent-variant transforms → SAME-BOUNDARY CANON adopted [new_content = same IngressContent variant, inner payload free; cross-boundary prohibited; BC-2.11.002 v1.4 + BC-2.11.005 v1.2 vectors wrapped; entities-server v1.4 note]). Sibling-checks 2-4 PASS (entities v1.3 shapes; PC1 linkages; gate #31 22-type re-run). Censuses #16/#22/#24/#25/#28 ALL PASS (79 closes; distributions confirm bumps). Probes: type bodies coherent vs corner cases; ContentBlock linkage resolves; citation audit → both findings. Novelty HIGH (citations one layer above the defined types). Trajectory ...→3→2. Convergence 0/3. Gates 39. Burst 135.
+
+---
+
+Phase 1d pass 67 adversarial review completed: NOT CLEAN — 1 MED finding (F-P67-01: 422-row enumeration omitted E-CHKPT-007). Counter stays 0/3. Trajectory ...→3→1. Gates 41.
+
+**1 MED finding:**
+- F-P67-01: The 422-row prose "these CHKPT codes go to the 500 row" enumeration listed 5 CHKPT codes but omitted E-CHKPT-007 (CipherHeaderMissing), which had been added to the 500-row in interface-definitions v2.11 without a sibling update to the 422-row cross-reference. The code survived 10 passes because membership-census checks cannot see inter-row enumerations. Fixed: enumeration corrected to 6 codes (v2.18). Full inter-row enumeration sweep: 3 found, other 2 already-correct. Gate #21 cross-row routing-enumeration completeness sub-check added (bc-authoring-plan v2.8).
+
+**Sibling-checks ALL PASS (1-4):** tombstone/re-anchor correct; disposition census EXACT 78 = 44+11+23 independently recomputed; new ECs coherent with anchor BCs; gate #33 re-run 78/78 zero orphans.
+
+**Censuses (7 full) ALL PASS:** #33/#23-A/#12/#18/#19/#16/#30.
+
+**Probes:** cross-row enumeration (new lens) → F-P67-01; vacated-anchor orphan check CLEAN; mint RetryHint coherence CLEAN.
+
+**Fix burst:** PO fixed interface-definitions v2.18 (422-row enumeration corrected to 6 CHKPT codes incl. -007; all 3 inter-row enumerations verified) + bc-authoring-plan v2.8 (gate #21 cross-row sub-check added). Pass-67 report written.
