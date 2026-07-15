@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.005
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -23,6 +23,7 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
+  - "1.2 (ADV-P1D-PASS-59): F-P59-02 — EC-002 description and TV fixed to typecheck against Transform { new_content: IngressContent }. Bare ContentBlock::text('[REDACTED]') → IngressContent::ToolResult(ContentBlock::text('[REDACTED]')); EC-002 description updated to reflect IngressContent wrapper (same-boundary rule). ToolResult used as the concrete example boundary per BC-2.11.002 EC-003 authority."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -87,7 +88,7 @@ single synchronous operation in the current super-step.
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | Two `GuardrailHook` instances composed in parallel: hook-A returns `Pass`, hook-B returns `Fail` | Fail-closed: content does NOT enter model context; `Fail` wins; error block injected |
-| EC-002 | `GuardrailResult::Transform` returns empty `ContentBlock` | Empty `ContentBlock` enters model context (not the original); the no-bypass guarantee applies to the original rejected content only — Transform is not Fail |
+| EC-002 | `GuardrailResult::Transform` returns `IngressContent::ToolResult(ContentBlock::text(""))` — an empty text replacement (same-boundary rule: ToolResult in, ToolResult out) | `IngressContent::ToolResult(ContentBlock::text(""))` enters model context (not the original); no-bypass guarantee applies to the original only — Transform is not Fail |
 | EC-003 | `GuardrailResult::Fail` is followed by a tool-call retry that produces new content | New content unit goes through `GuardrailHook` evaluation independently; the first rejected content never enters model context regardless of the retry outcome |
 | EC-004 | Concurrent ingress events (parallel fan-out): event-A content passes, event-B content fails | Each event's rejection/forwarding decision is independent and atomic; event-A content is in the model context; event-B's original content is absent; both audit log entries are written |
 
@@ -97,7 +98,7 @@ single synchronous operation in the current super-step.
 |-------|----------------|----------|
 | GuardrailHook returns `Fail` for tool-result content; model inference is called | Model input buffer inspected immediately before inference call: zero bytes of rejected content present; error block with `reason` present at same position; audit log contains rejection record | happy-path (the core guarantee) |
 | Two composed GuardrailHooks: hook-A returns `Pass`, hook-B returns `Fail` | Content does not enter model context; `Fail` wins fail-closed; error block injected | fail-closed parallel composition edge-case |
-| `GuardrailResult::Transform { new_content: ContentBlock::text("[REDACTED]") }` followed by inference | Model input buffer contains `"[REDACTED]"` only; original content absent | transform-not-fail edge-case |
+| `GuardrailResult::Transform { new_content: IngressContent::ToolResult(ContentBlock::text("[REDACTED]")) }` followed by inference | Model input buffer contains `"[REDACTED]"` only (via `IngressContent::ToolResult` wrapper); original content absent; same-boundary rule satisfied | transform-not-fail edge-case |
 | `GuardrailResult::Fail { severity: Critical }` | Run transitions to `failed` state; `ModelInference` not called; no further nodes execute; audit log records rejection | critical-severity error case |
 
 ## Verification Properties

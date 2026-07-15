@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.13"
+version: "2.14"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -25,6 +25,7 @@ changelog:
   - "2.11 (ADV-P1D-PASS-56-COMPLETION): Gate #30 drain — three new codes from error-taxonomy.md v1.8. (1) E-PROV-008 (ProviderHttpError, TRANSPORT) added to 502 row alongside E-PROV-003 — categorical fallback, surfaced embedded in Run.error. (2) E-CHKPT-007 (CipherHeaderMissing, INTERNAL) added to 500 row alongside other CHKPT INTERNAL codes. (3) E-CORE-007 (GuardrailHookPanic, INTERNAL) individual omission note added — library-layer INTERNAL error, never direct HTTP terminal in v1; INTERNAL→500 categorical fallback. Disposition census 76→79: 45 HTTP table rows (+E-PROV-008 +E-CHKPT-007), 11 individual omission notes (+E-CORE-007), 23 blanket library-layer coverage, 0 uncovered."
   - "2.12 (ADV-P1D-PASS-57): F-P57-01 (HIGH) — fix GuardrailHook trait signature trilateral contradiction (authority-deference D18-P47-A: BCs win). (1) Method name on_ingress → evaluate (all 6 ss-11 BC postconditions + E-CORE-007 taxonomy message are uniform). (2) Return type Result<IngressContent, GuardrailError> → GuardrailResult enum with Pass / Fail{reason,severity} / Transform{new_content} variants (BC-2.11.002 PC2-PC4). (3) Second parameter renamed provenance → provenance_tag per BC-2.11.002 INV-4. (4) GuardrailResult enum definition added to §GuardrailHook block with Fail/Transform variant bodies. (5) Panic path moved to doc-comment citing E-CORE-007 and BC-2.11.002 EC-001 (panic is a non-return code path; the trait method return type is GuardrailResult not Result). (6) GuardrailError type removed — not defined in spec corpus; was incorrect. BC anchor enumeration expanded to cite all 6 BCs by role."
   - "2.13 (ADV-P1D-PASS-58): F-P58-02 (HIGH) + F-P58-01 (MED) — define IngressContent and GuardrailSeverity inline in §GuardrailHook block. (1) IngressContent enum: ToolResult(ContentBlock) / RagChunk(Value) / MemoryItem(Value) — BC-2.11.002 PC1 / BC-2.11.003 PC1,PC5 / BC-2.11.004 PC1,PC5; E-CORE-007 content_type placeholder resolved to IngressContent variant name. (2) GuardrailSeverity enum: Critical/High/Medium/Low — authority BC-2.11.002 INV-3, BC-2.11.005 PC4/PC5. (3) Minimal type notes added for ChatConfig (BaseChatModel) and CheckpointConfig (CheckpointSaver) per gate #31 census — both flagged corpus-unresolved for architect. Gate #31 census: 20/22 types resolved; ChatConfig and CheckpointConfig flagged."
+  - "2.14 (ADV-P1D-PASS-59): F-P59-01 (HIGH) — fix GuardrailSeverity::Critical authority mis-citations. BC-2.11.003 INV-2 (ordering invariant) → BC-2.11.003 PC3 (Critical severity rule); BC-2.11.004 INV-4 (ordering invariant) → BC-2.11.004 PC3 (Critical severity rule). Correct authority: BC-2.11.002 INV-3, BC-2.11.003 PC3, BC-2.11.004 PC3, BC-2.11.005 PC4. F-P59-02 (HIGH) — fix Transform doc-comment cross-boundary claim: replace 'any IngressContent variant, including a different variant from the original' with same-boundary rule (new_content must be same IngressContent variant; inner payload may change freely — e.g. different ContentBlock variant within ToolResult per BC-2.11.002 EC-003). No BC authorizes cross-boundary transforms (e.g. ToolResult→RagChunk)."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -172,8 +173,12 @@ pub enum GuardrailResult {
         severity: GuardrailSeverity,
     },
     /// Content is replaced; `new_content` enters model context; original is discarded.
-    /// The replacement may be any `IngressContent` variant, including a different
-    /// variant from the original (BC-2.11.002 EC-003).
+    /// `new_content` MUST be the same `IngressContent` variant as the input content
+    /// (same ingress boundary — e.g. a ToolResult evaluator must return ToolResult).
+    /// The inner payload may change freely — for example, a different `ContentBlock`
+    /// variant within `IngressContent::ToolResult` is permitted (BC-2.11.002 EC-003).
+    /// Cross-boundary transforms (e.g. ToolResult → RagChunk) are not authorized
+    /// by any contract and are semantically nonsensical at a fixed ingress boundary.
     Transform {
         new_content: IngressContent,
     },
@@ -204,7 +209,7 @@ pub enum IngressContent {
 /// Determines whether the run continues (High/Medium/Low) or transitions to `failed` (Critical).
 pub enum GuardrailSeverity {
     /// Run transitions to `failed`; inference halted; no further nodes execute.
-    /// Authority: BC-2.11.002 INV-3, BC-2.11.003 INV-2, BC-2.11.004 INV-4, BC-2.11.005 PC4.
+    /// Authority: BC-2.11.002 INV-3, BC-2.11.003 PC3, BC-2.11.004 PC3, BC-2.11.005 PC4.
     Critical,
     /// Error block substituted at content position; run continues (BC-2.11.005 PC5).
     High,

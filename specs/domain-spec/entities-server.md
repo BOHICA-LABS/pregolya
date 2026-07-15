@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.3"
+version: "1.4"
 status: active
 producer: business-analyst
 timestamp: 2026-07-14T00:00:00Z
@@ -10,6 +10,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-03 FerrochainError.code changed from u32 to String."
   - "1.2 (ADV-P1D-PASS-30): OBS-P30-1 add Timestamp UTC canon under Server Domain — all Timestamp values RFC 3339 UTC at construction; wire serialization preserves UTC form."
   - "1.3 (ADV-P1D-PASS-58): F-P58-03 — rewrite §ProvenanceTag and §GuardrailHook to BC-authoritative shapes. ProvenanceTag: source_type/IngressSource/tool_name/invocation_id/timestamp retired → boundary_type: BoundaryType (ToolResult|RAGRetrieval|MemoryIngress), ingress_id: Uuid, sequence_position: usize (BC-2.11.001 PC1–PC3); User/Model variants removed per BC-2.11.001 EC-004. GuardrailHook: action_fn/GuardrailAction/Accept/Reject/Redact retired → evaluate(content: IngressContent, provenance_tag: ProvenanceTag) → GuardrailResult (Pass/Fail{reason,severity: GuardrailSeverity}/Transform{new_content}); authority interface-definitions.md v2.13 §GuardrailHook, BC-2.11.002 PC1–PC4."
+  - "1.4 (ADV-P1D-PASS-59): F-P59-02 — add Transform same-boundary rule to §GuardrailHook: new_content must be the same IngressContent variant as the evaluated content (ToolResult stays ToolResult, RagChunk stays RagChunk, MemoryItem stays MemoryItem); inner payload may change freely per BC-2.11.002 EC-003."
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -98,6 +99,7 @@ Metadata attached to content at an ingress boundary, recording its origin.
 A registered callable that validates content at an ingress boundary before model context entry.
 - **Callable:** `evaluate(content: IngressContent, provenance_tag: ProvenanceTag) → GuardrailResult` — authority: interface-definitions.md §GuardrailHook, BC-2.11.002 PC1.
 - **GuardrailResult variants:** `Pass`, `Fail { reason: String, severity: GuardrailSeverity }`, `Transform { new_content: IngressContent }` — authority: BC-2.11.002 PC2–PC4.
+- **Transform same-boundary rule:** `new_content` must be the same `IngressContent` variant as the evaluated content (ToolResult stays ToolResult, RagChunk stays RagChunk, MemoryItem stays MemoryItem); the inner payload may change freely — e.g. a different `ContentBlock` variant within `ToolResult` is permitted (BC-2.11.002 EC-003). Cross-boundary transforms are not authorized.
 - **GuardrailSeverity values:** Critical (run transitions to `failed`; inference halted) | High | Medium | Low (error block substituted; run continues) — BC-2.11.002 INV-3, BC-2.11.005 PC4/PC5.
 - **Invariant (DI-012):** There is no code path through which ToolResult, RAG, or memory content bypasses a registered GuardrailHook before entering the model context.
 
