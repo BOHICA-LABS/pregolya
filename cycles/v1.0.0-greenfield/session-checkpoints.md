@@ -431,3 +431,21 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **Archived DECISION DELTA (burst 148):** D17 hybrid outcome + Q2-Q9; D9 gate Alt B (ADR-001); phase-1d spec canons: pass-25 through pass-71 accumulation (see burst-log.md for per-pass details). D19: Domain D human directive (hermes-style agents, amends D8 to 4 domains). D20: self-improvement = framework-scope (D20 human decision 2026-07-19).
 
 **WRAP METADATA:** Date: 2026-07-19 | Cycle: v1.0.0-greenfield | Burst: 148 | Counter: 0/3
+
+---
+
+## Archived Checkpoint — Burst 150 (Pass 72 complete, displaced by burst 151 SESSION WRAP)
+
+**RESUME IN ONE BREATH (burst 150):** "ferrochain Phase 1 spec crystallization, step 1d IN PROGRESS post-D20: 72 passes / 74 fix bursts, counter 0/3 (strict-zero D14; 41 standing gates; baseline 95 BCs 48/39/8, 21 CAPs 11/7/3, universe 35 = 9/13/11/2 [arch] + 22 = 6/9/5/2 [PO registry], census 85 = 43+16+26, 13 ADRs, 6 RetryHint divergences, gate #31 24/28). Pass 72 drained 8 fresh-content findings; domain-D probe 12/12 resolves. NEXT ACTION: dispatch adversary pass 73 — fresh context, sibling-check pass-72 fixes (interface v2.22 SkillStore/Replace; ADR-012 v1.1 + ADR-013 + ARCH-INDEX v1.3 + decomposition v1.7 coherence; BC-2.10.003 v1.3; taxonomy v1.13; PO registry v1.3 22 = 6/9/5/2 w/ arch-view tier agreement; BC-2.09.006 v1.1) + MANDATORY items not reached in pass 72 (ARCH-INDEX/L2-INDEX title-and-count sync, full prd.md read, 43/16 HTTP-vs-omission split independent recount) + census rotation ≥6 gates + free probes; CLEAN advances 1/3; ANY finding resets; loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate (human verifies: Domain-D scope, D20 integration, 3 v2 deferrals [RPC gateway, multi-process WAL, mid-execution cancellation], ADR-013)."
+
+**Archived HEADS (burst 150):** factory-artifacts: 287717e (burst 150); main: d018d3f (=develop, pushed BOHICA-LABS/ferrochain; CI green). No worktrees. No PRs. verify-sha-currency PASS.
+
+**Archived WORKSTREAM (burst 150):** Single — Phase 1d convergence loop. Baseline: 95 BCs (48/39/8), 21 CAPs (11/7/3), universe 35 (9/13/11/2), census 85 = 43+16+26; 13 ADRs (ADR-013 mcp::server placement). bc-authoring-plan v2.13 (41 gates, Wave-0). 72 pass reports in cycles/v1.0.0-greenfield/adversarial-reviews/.
+
+**Archived DECISION DELTA (burst 150):** D18-P72-A (SkillStore name-keyed public API; namespace/key impl-internal); D18-P72-B (Replace.old_value = Option<Value>, None = unconditional, Some = match-based); D18-P72-C (memory::skills no criticality row either registry); D18-P72-D (ADR-013 mcp::server authority, universe 35 final).
+
+**POST-P72 CANONS (burst 150):** SkillStore name-keyed (D18-P72-A); Replace old_value Option<Value> (D18-P72-B); memory::skills no criticality row (D18-P72-C); ADR-013 mcp::server authority, universe 35 final (D18-P72-D); PO registry 22 = 6/9/5/2; gate #32 5 carriers; 13 ADRs.
+
+**PENDING HUMAN ACTIONS (burst 150):** (1) direnv allow . [B1]; (2) REGENERATE + run publish-all.sh for ALL 18 crates — R6 time-sensitive; (3) langgraph crate 0.2.5 competitor watch (R4 reframed).
+
+**WRAP METADATA:** Date: 2026-07-19 | Cycle: v1.0.0-greenfield | Burst: 150 | Counter: 0/3 (Phase 1d; RESET by D20 spec expansion — new baseline 95 BCs)
