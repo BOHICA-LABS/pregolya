@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-server
-version: "1.1"
+version: "1.2"
 status: active
 producer: business-analyst
 timestamp: 2026-07-14T00:00:00Z
@@ -14,6 +14,9 @@ inputs:
 input-hash: "6eefd6b5bd66c3fb8c21fa84b6ed2eba48b8ad3170b91d9665881479a0ae898f"
 traces_to: L2-INDEX.md
 decisions: [D2, D13, D17]
+changelog:
+  - "1.1 (initial active version)."
+  - "1.2 (ADV-P1D-PASS-58): F-P58-03 — update §ProvenanceTag and §GuardrailHook to BC-authoritative terminology. ProvenanceTag: source_type/tool_name?/invocation_id?/timestamp → boundary_type (ToolResult|RAGRetrieval|MemoryIngress), ingress_id, sequence_position; removed User/Model per BC-2.11.001 EC-004. GuardrailHook: Accept/Reject/Redact retired → Pass/Fail{reason,severity}/Transform{new_content}; callable signature updated to match interface-definitions.md v2.13."
 ---
 
 # Ubiquitous Language — Server, Policy/Safety, Error Terms, and Reconciliation
@@ -59,15 +62,20 @@ Append-only record of BudgetPolicy evaluations and usage events for one Run. Nev
 only appended. Provides an audit trail for cost governance decisions.
 
 **ProvenanceTag**
-Metadata attached to content at ingress, recording `source_type` (Tool | RAG | Memory |
-User | Model), `tool_name?`, `invocation_id?`, and `timestamp`. Used for forensic audit
-trails (Domain A SOC) and guardrail routing decisions.
+Metadata attached to content at ingress, recording `boundary_type` (ToolResult | RAGRetrieval | MemoryIngress),
+`ingress_id` (unique per ingress event), and `sequence_position` (zero-indexed position within the event).
+Used for forensic audit trails (Domain A SOC) and guardrail call context.
+User messages and model scratch-pad are not tagged — they do not traverse the guardrail path (BC-2.11.001 EC-004).
+Authority: entities-server.md §ProvenanceTag.
 
 **GuardrailHook**
 A registered callable that validates content at an ingress boundary (ToolResult, RAG chunk,
-memory) before it enters the model context. Outcome: Accept, Reject (content replaced by
-error block), or Redact (sanitized version passed through). There is no bypass code path
-(DI-012).
+memory item) before it enters the model context. Outcome: `GuardrailResult::Pass` (forward
+unchanged), `Fail { reason, severity: GuardrailSeverity }` (content blocked; error block
+injected at content position; run continues unless severity == Critical), or
+`Transform { new_content }` (sanitized replacement forwarded; original discarded).
+There is no bypass code path (DI-012).
+Authority: interface-definitions.md §GuardrailHook, BC-2.11.002–BC-2.11.005.
 
 **Untrusted ingress**
 Content that crosses an external trust boundary before entering the model context. Categories:
@@ -138,4 +146,5 @@ not retriable.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.2 | 2026-07-15 | F-P58-03 — §ProvenanceTag and §GuardrailHook updated to BC-authoritative terminology. ProvenanceTag: `source_type`/`tool_name?`/`invocation_id?`/`timestamp` → `boundary_type` (ToolResult|RAGRetrieval|MemoryIngress), `ingress_id`, `sequence_position`; User/Model removed per BC-2.11.001 EC-004. GuardrailHook: Accept/Reject/Redact retired → `Pass`/`Fail{reason,severity}`/`Transform{new_content}` with `GuardrailResult`; callable signature updated to match interface-definitions.md v2.13. | F-P58-03 |
 | 1.1 | 2026-07-14 | Reconciliation table line 132: changed ferrochain identifier from `Store` to `MemoryStore` to match canonical Rust trait name per BC-2.15.001 Architecture Anchors and module-decomposition.md:149 (F-P39-01, ADV-P1D-PASS-39) | F-P39-01 |

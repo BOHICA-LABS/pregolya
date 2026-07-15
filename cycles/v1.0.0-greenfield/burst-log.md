@@ -1386,3 +1386,7 @@ Sibling-checks pass-45 PASS (gate #25 Part C first full run: 33/33 rows crate-cl
 ## Archived PASS CANON (burst 133 — PASS-55 dropped from STATE.md to respect 200-line soft limit)
 
 ### PASS-55 CANONS (burst 131): disposition census 75 = 43 HTTP + 9 omission + 23 blanket, zero uncovered; E-SERVER-013 startup-only (halts boot before HTTP listener binds; same bucket as E-CHKPT-005); every code mint lands in one of three buckets.
+
+## Archived Step (burst 134 — pass 53 displaced from STATE.md Current Phase Steps)
+
+| Phase 1d pass 53 + fix burst | adversary + PO | COMPLETE | Pass 53: NOT CLEAN, counter RESET 2/3→0/3 — 1 MED (F-P53-01 prd.md §9 rollup partitioned 17 NEs as 15/1/1 vs own table 13/3/1 [NE-07 lint-no-panic + NE-10 debug-redaction were also BC+CI-gate rows] → summary re-derived + corrected [13 BC incl. 3 VP-seed / 3 BC+CI / 1 CI-only]; PO independently re-derived partition from all 17 rows before writing; 4 other prd rollups spot-verified PASS [§7 totals 86=48/30/8, §2.03/2.05/2.11 subsection counts]). Censuses: #13 FAIL on §9 surface→fixed, other anchors consistent; #25/#27/#29 PASS; #24/#28 partial-PASS. Free probes: /stream authn posture, POST idempotency, write-race concurrency — ALL covered, no defect. Residue class (rollup-vs-table partition). Novelty LOW-MEDIUM. Trajectory ...→0→0→1. Convergence 0/3 (reset). Gates 37. Burst 129. |

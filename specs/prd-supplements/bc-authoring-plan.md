@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.1"
+version: "2.2"
 status: active
 producer: product-owner
-total_standing_gates: 30
+total_standing_gates: 31
 timestamp: 2026-07-15T00:00:00Z
 phase: 1a
 inputs:
@@ -587,8 +587,13 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | `node_delta` (SSE event token / description) | `node_stream` | F-P29-03 (BC-2.12.007, interface-definitions.md); BC-2.06.001 is the streaming taxonomy authority |
     | `RunStarted`, `NodeStarted`, `ToolStarted`, `StepStarted`, `RunEnded`, `NodeEnded`, `ToolEnded`, `StepEnded` (Rust enum variant names in L3 architecture artifacts) | `RunStart`, `NodeStart`, `ToolStart`, `StepStart`, `RunEnd`, `NodeEnd`, `ToolEnd`, `StepEnd` (imperative) | F-P29-04 (ADR-006, module-decomposition.md); BC-2.06.001 is the authority; **NOTE: events.md (L2 domain spec) uses past-tense PascalCase (RunStarted, InterruptRaised, etc.) as DDD domain event names — this is correct and NOT retired; the census below excludes domain-spec/** |
     | `run_started`, `node_started` (snake_case SSE wire tokens) | `run_start`, `node_start` (imperative) | F-P29-04 (ADR-006); wire tokens follow variant names |
+    | `IngressSource` (ProvenanceTag field type) | `BoundaryType` (ToolResult \| RAGRetrieval \| MemoryIngress) | F-P58-03 (entities-server.md + ubiquitous-language-server.md ss-11 fix) |
+    | `source_type` field on ProvenanceTag | `boundary_type` | F-P58-03 |
+    | `tool_name`, `invocation_id`, `timestamp` fields on ProvenanceTag | removed — ProvenanceTag fields are now `boundary_type`, `ingress_id`, `sequence_position` | F-P58-03 |
+    | `GuardrailAction` (enum type name) | `GuardrailResult` | F-P57-01 (iface-def) + F-P58-03 (entities fully retired) |
+    | `Accept`, `Reject(reason)`, `Redact(sanitized)` (GuardrailAction variants as guardrail API) | `Pass`, `Fail{reason,severity}`, `Transform{new_content}` (GuardrailResult variants) | F-P57-01 + F-P58-03 |
 
-    Census command: `grep -rn "to_problem_detail\|risk_tier\|X-Debug-Key\|node_delta" .factory/specs/ | grep -v "bc-authoring-plan\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier\|action_risk.rs"` — output must be ZERO live occurrences (bc-authoring-plan.md excluded as registry document).
+    Census command: `grep -rn "to_problem_detail\|risk_tier\|X-Debug-Key\|node_delta\|IngressSource\|GuardrailAction\b" .factory/specs/ | grep -v "bc-authoring-plan\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier\|action_risk.rs"` — output must be ZERO live occurrences (bc-authoring-plan.md excluded as registry document).
     Census command (past-tense StreamEvent variants — L3 architecture and BC artifacts only): `grep -rn "RunStarted\|NodeStarted\|ToolStarted\|StepStarted\|run_started\|node_started" .factory/specs/ | grep -v "bc-authoring-plan\|domain-spec/\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier"` — output must be ZERO live occurrences.
     Source: ADV-P1D-PASS-26 §F-P26-02, §F-P26-03, §F-P26-04; ADV-P1D-PASS-27 §F-P27-06; ADV-P1D-PASS-29 §F-P29-03, §F-P29-04.
 
@@ -1190,12 +1195,76 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
     Source: ADV-P1D-PASS-56 §F-P56-01 (motivating instance); §OBS-P56-2 [process-gap]; ADV-P1D-PASS-56-COMPLETION (drain burst).
 
+31. **Trait-signature type-resolution census gate — TRAIT-SIGNATURE TYPE-RESOLUTION CENSUS
+    (added P58 — standing gate [process-gap]):**
+
+    Any burst that edits the `§Public Rust Trait Signatures` block of `interface-definitions.md`
+    (adding or removing a method, changing a param/return type, adding an inline enum definition)
+    MUST run the trait-signature type-resolution census before the burst closes.
+
+    **Definition:** Every concrete type identifier named in any Public Rust Trait Signatures block
+    (params, returns, enum variants and their inner types) that is NOT:
+    (a) a Rust-standard/external crate type (`Stream`, `DeserializeOwned`, `serde_json::Value`, etc.), OR
+    (b) a trait-level generic parameter (`Input`, `Output`, `T`, `NextOutput`, etc.)
+    MUST have a definition site in the spec corpus: inline in the §GuardrailHook (or relevant) section,
+    an entities shard (`entities-graph.md`, `entities-server.md`), or a BC body.
+
+    **Census procedure:**
+    1. Extract every type name from the 5 trait blocks and their inline enum definitions.
+    2. Classify each as: (a) generic param → exempt; (b) external Rust type → external; (c) corpus type → check.
+    3. For each corpus type, locate its definition site. If none found: flag as UNRESOLVED and either
+       (a) add a minimal inline definition or type note in the same burst, or
+       (b) document as implementer-scope with a gate #31 note and flag for architect.
+
+    **Current pass-58 census results (`interface-definitions.md` v2.13):**
+
+    | Type | Trait | Definition Site | Status |
+    |------|-------|----------------|--------|
+    | `RunnableConfig` | Runnable | entities-graph.md §CheckpointTuple (`config: RunnableConfig`) | RESOLVED |
+    | `FerrochainError` | Runnable, CheckpointSaver | entities-server.md §FerrochainError | RESOLVED |
+    | `Message` | BaseChatModel | entities-graph.md §Message | RESOLVED |
+    | `AiMessage` | BaseChatModel | BC-2.01.002 (full field spec: content, tool_calls, usage_metadata, id, name) | RESOLVED |
+    | `ChatConfig` | BaseChatModel | NOT IN CORPUS — implementer-scope (provider-specific overrides: temperature, max_tokens, …); flagged for architect | UNRESOLVED |
+    | `AiMessageChunk` | BaseChatModel | BC-2.08.001 PC1 + BC-2.08.005 TV (streaming completions) | RESOLVED |
+    | `ToolDefinition` | BaseChatModel | BC-2.08.009 (tool schema naming stability BC; entire BC governs ToolDefinition) | RESOLVED |
+    | `CheckpointConfig` | CheckpointSaver | NOT IN CORPUS — logically derived: `{ thread_id, checkpoint_ns, checkpoint_id }` per BC-2.04.006 triple-address; flagged for architect | UNRESOLVED |
+    | `ChannelName` | CheckpointSaver | entities-graph.md §GraphState (`Map<ChannelName, ChannelValue>`) | RESOLVED |
+    | `ChannelValue` | CheckpointSaver | entities-graph.md §GraphState | RESOLVED |
+    | `TaskId` | CheckpointSaver | VP-001.md Kani harness sketch (`TaskId(i as u64)` — newtype around u64) | RESOLVED |
+    | `CheckpointTuple` | CheckpointSaver | entities-graph.md §CheckpointTuple | RESOLVED |
+    | `IngressContent` | GuardrailHook | inline §GuardrailHook (interface-definitions.md v2.13 — DEFINED P58) | RESOLVED |
+    | `ContentBlock` | GuardrailHook (IngressContent::ToolResult inner) | entities-graph.md §ContentBlock | RESOLVED |
+    | `Value` | GuardrailHook (IngressContent::RagChunk / ::MemoryItem inner) | serde_json::Value — external | EXTERNAL |
+    | `ProvenanceTag` | GuardrailHook | entities-server.md §ProvenanceTag (v1.3) | RESOLVED |
+    | `GuardrailResult` | GuardrailHook | inline §GuardrailHook (interface-definitions.md — defined P57) | RESOLVED |
+    | `GuardrailSeverity` | GuardrailHook | inline §GuardrailHook (interface-definitions.md v2.13 — DEFINED P58) | RESOLVED |
+    | `RunId` | BudgetPolicy | entities-server.md §Run (`run_id: Uuid` — RunId is Uuid newtype or alias) | RESOLVED |
+    | `TokenUsage` | BudgetPolicy | BC-2.10.001 PC2/PC3 (struct shape: prompt_tokens, completion_tokens, total_tokens, estimated_cost) | RESOLVED |
+    | `EvidenceJournal` | BudgetPolicy | entities-server.md §EvidenceJournal | RESOLVED |
+    | `BudgetDecision` | BudgetPolicy | inline §BudgetPolicy block (interface-definitions.md) | RESOLVED |
+
+    **Census verdict:** 20/22 types resolved; 2 unresolved (ChatConfig, CheckpointConfig) — flagged for
+    architect (implementer-scope structs with no spec-level shape requirement); do NOT block spec publication.
+
+    **Census trigger:** Any burst that edits `interface-definitions.md` §Public Rust Trait Signatures
+    (new method, type rename, inline enum addition or removal) + every adversary rotation.
+
+    **Motivating instance (OBS-P58-1, ADV-P1D-PASS-58):** F-P57-01 (pass-57) removed `GuardrailError`
+    (correct — not in corpus) but introduced `IngressContent` and retained `GuardrailSeverity` as
+    referenced-but-undefined types. Both survived one full pass (pass-57 → pass-58) because no census
+    extracted and resolved every type in the trait block. Gates #15 (harness-fn) and #30 (codeless-error)
+    cover named identifiers in BC bodies; this gate closes the parallel gap for trait-signature identifiers
+    in prd-supplements.
+
+    Source: ADV-P1D-PASS-58 §OBS-P58-1 [process-gap].
+
 ---
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.2 | 2026-07-15 | Gate #31 "trait-signature type-resolution census" added; `total_standing_gates` 30→31. Census run P58: 22 types across 5 traits; 20 resolved, 2 unresolved (ChatConfig, CheckpointConfig — flagged implementer-scope for architect). Retired-identifier list extended: IngressSource, source_type, tool_name/invocation_id/timestamp (ProvenanceTag old fields), GuardrailAction, Accept/Reject/Redact. Census command updated. Motivating instance: OBS-P58-1 — F-P57-01 introduced IngressContent+GuardrailSeverity as undefined types surviving one full pass. (ADV-P1D-PASS-58 §OBS-P58-1 [process-gap]) | OBS-P58-1 |
 | 2.1 | 2026-07-15 | Gate #30 second-pass drain (ADV-P1D-PASS-56-COMPLETION): resolved deferred TBD-E-PROV-HTTP and all second-pass codeless candidates. Minted 3 new codes (E-PROV-008, E-CORE-007, E-CHKPT-007). Fixed 13 constructions across BC-2.08.004 (×4), BC-2.08.001 (×1), BC-2.08.002 (×2), BC-2.08.006 (×2), BC-2.11.002/003/004 (×6), BC-2.04.002 (×2), BC-2.04.006 (×1), BC-2.04.007 (×3). Census: 24 constructions examined; 13 fixed; 3 already-coded; 8 exempt. Zero genuine codeless constructions remain. Gate #30 census command returns zero genuine hits. Disposition census 76→79: 45 HTTP table rows, 11 individual omission notes, 23 blanket library-layer coverage. | OBS-P56-2 drain |
 | 2.0 | 2026-07-15 | Gate #30 "codeless-error census" added; `total_standing_gates` 29→30. First-pass census run: identified 19 concrete codeless FerrochainError constructions across BC-2.01.003 (×4), BC-2.14.006 (×5), BC-2.08.007 (×6), BC-2.08.004 (×4). Fixed 15 with clear taxonomy mappings (E-CORE-006, E-CORE-005, E-PROV-002, E-PROV-003, E-PROV-004, E-PROV-001). Deferred 4 (BC-2.08.004 EC-004/EC-005/TV-004/TV-005: TRANSPORT non-stream HTTP responses) pending E-PROV-008 mint decision. Motivating instance: F-P56-01 — BC-2.01.003 recursion limit error codeless while graph-engine counterpart (E-GRAPH-017) had a code since pass 49. (ADV-P1D-PASS-56 §F-P56-01, §OBS-P56-2 [process-gap]) | F-P56-01, OBS-P56-2 |
 | 1.9 | 2026-07-15 | Gate #28 census command updated to explicit two-form (Form A: frontmatter `changelog:` key; Form B: body `^## Changelog` table; union required). `total_standing_gates` unchanged at 29 (no new gate — clarification only). Motivating instance: F-P49-01 false positive (ADV-P1D-PASS-49) — adversary ran only Form A, missed three BCs (BC-2.08.011/012, BC-2.07.002) carrying Form B changelogs. (ADV-P1D-PASS-49 §F-P49-01 [false positive rejected by orchestrator]) | F-P49-01 |

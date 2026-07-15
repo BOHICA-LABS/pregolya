@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.003
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -25,6 +25,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-4): category canon — EC-004 and test vector error category corrected from `GuardrailError` to `INTERNAL` (13-category canon sweep)."
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-004 and the TV panic row had `Err(FerrochainError { category: INTERNAL })` with no code. Added code: E-CORE-007 (GuardrailHookPanic) — same code as BC-2.11.002 (RAG chunk ingress boundary shares identical panic-and-fail-closed pattern with tool-result ingress)."
+  - "1.3 (ADV-P1D-PASS-58): F-P58-02 type-name linkage — `chunk` in PC1 is typed as `IngressContent::RagChunk(Value)` in the GuardrailHook trait signature (interface-definitions.md v2.13 §IngressContent). Payload type `Value` = serde_json::Value; internal structure is retrieval-backend-specific."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -62,7 +63,9 @@ user-sourced content).
 ## Postconditions
 
 1. `GuardrailHook::evaluate(chunk, provenance_tag)` is called for every document chunk from a
-   RAG retrieval before it enters the model context
+   RAG retrieval before it enters the model context; `chunk` is typed as
+   `IngressContent::RagChunk(Value)` in the GuardrailHook trait (interface-definitions.md
+   v2.13 §GuardrailHook §IngressContent)
 2. `GuardrailResult::Pass` → chunk forwarded unchanged
 3. `GuardrailResult::Fail { reason, severity }` → chunk not forwarded; error block injected at
    the chunk's position in the retrieval result list; run continues unless `Critical`

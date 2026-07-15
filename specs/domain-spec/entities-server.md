@@ -2,13 +2,14 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.2"
+version: "1.3"
 status: active
 producer: business-analyst
 timestamp: 2026-07-14T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-03 FerrochainError.code changed from u32 to String."
   - "1.2 (ADV-P1D-PASS-30): OBS-P30-1 add Timestamp UTC canon under Server Domain — all Timestamp values RFC 3339 UTC at construction; wire serialization preserves UTC form."
+  - "1.3 (ADV-P1D-PASS-58): F-P58-03 — rewrite §ProvenanceTag and §GuardrailHook to BC-authoritative shapes. ProvenanceTag: source_type/IngressSource/tool_name/invocation_id/timestamp retired → boundary_type: BoundaryType (ToolResult|RAGRetrieval|MemoryIngress), ingress_id: Uuid, sequence_position: usize (BC-2.11.001 PC1–PC3); User/Model variants removed per BC-2.11.001 EC-004. GuardrailHook: action_fn/GuardrailAction/Accept/Reject/Redact retired → evaluate(content: IngressContent, provenance_tag: ProvenanceTag) → GuardrailResult (Pass/Fail{reason,severity: GuardrailSeverity}/Transform{new_content}); authority interface-definitions.md v2.13 §GuardrailHook, BC-2.11.002 PC1–PC4."
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -89,14 +90,16 @@ Append-only log of BudgetPolicy evaluations and usage events for a single Run.
 
 ### ProvenanceTag
 Metadata attached to content at an ingress boundary, recording its origin.
-- **Fields:** source_type: IngressSource (Tool | RAG | Memory | User | Model), tool_name: Option<String>, invocation_id: Option<Uuid>, timestamp: Timestamp
-- **Relationships:** ProvenanceTag attached to ToolResult ContentBlock or RAG chunk before GuardrailHook fires.
+- **Fields:** boundary_type: BoundaryType (ToolResult | RAGRetrieval | MemoryIngress), ingress_id: Uuid, sequence_position: usize
+- **Note (BC-2.11.001 EC-004):** BoundaryType covers exactly ToolResult, RAGRetrieval, and MemoryIngress. User messages and model scratch-pad do not receive a ProvenanceTag and do not traverse the guardrail path.
+- **Relationships:** ProvenanceTag attached to every content unit at an ingress boundary before GuardrailHook fires or the content is forwarded to model context (BC-2.11.001 PC1–PC3).
 
 ### GuardrailHook
 A registered callable that validates content at an ingress boundary before model context entry.
-- **Fields:** name: String, fires_on: Vec<IngressBoundary> (ToolResult | RAGChunk | MemoryEntry), action_fn: Fn(Content, ProvenanceTag) → GuardrailAction
-- **GuardrailAction variants:** Accept, Reject(reason: String), Redact(sanitized: Content)
-- **Invariant (DI-012):** There is no code path through which ToolResult content bypasses a registered GuardrailHook.
+- **Callable:** `evaluate(content: IngressContent, provenance_tag: ProvenanceTag) → GuardrailResult` — authority: interface-definitions.md §GuardrailHook, BC-2.11.002 PC1.
+- **GuardrailResult variants:** `Pass`, `Fail { reason: String, severity: GuardrailSeverity }`, `Transform { new_content: IngressContent }` — authority: BC-2.11.002 PC2–PC4.
+- **GuardrailSeverity values:** Critical (run transitions to `failed`; inference halted) | High | Medium | Low (error block substituted; run continues) — BC-2.11.002 INV-3, BC-2.11.005 PC4/PC5.
+- **Invariant (DI-012):** There is no code path through which ToolResult, RAG, or memory content bypasses a registered GuardrailHook before entering the model context.
 
 ---
 

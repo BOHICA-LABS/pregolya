@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.002
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -25,6 +25,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-4): category canon — EC-001 and test vector error category corrected from `GuardrailError` to `INTERNAL` (13-category canon sweep)."
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-001 and the TV panic row had `Err(FerrochainError { category: INTERNAL })` with no code. Added code: E-CORE-007 (GuardrailHookPanic) — minted this burst as the canonical code for GuardrailHook::evaluate panics at content-ingress boundaries."
+  - "1.3 (ADV-P1D-PASS-58): F-P58-02 type-name linkage — `content_block` in PC1 is typed as `IngressContent::ToolResult(ContentBlock)` in the GuardrailHook trait signature (interface-definitions.md v2.13 §GuardrailHook §IngressContent). ContentBlock is the inner payload per entities-graph.md §ContentBlock."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -59,7 +60,9 @@ substitute error block), or Transform (forward replacement content). This contra
 ## Postconditions
 
 1. `GuardrailHook::evaluate(content_block, provenance_tag)` is called for every `ToolMessage`
-   `ContentBlock` before it enters the model input buffer
+   `ContentBlock` before it enters the model input buffer; `content_block` is typed as
+   `IngressContent::ToolResult(ContentBlock)` in the GuardrailHook trait (interface-definitions.md
+   v2.13 §GuardrailHook §IngressContent)
 2. `GuardrailResult::Pass` → the `ContentBlock` is forwarded unchanged to the model input buffer
 3. `GuardrailResult::Fail { reason, severity }` → the `ContentBlock` is NOT forwarded; an error
    block is injected at the same position carrying `reason`; the original content is discarded;

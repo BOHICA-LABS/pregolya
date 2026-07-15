@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.12"
+version: "2.13"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -24,6 +24,7 @@ changelog:
   - "2.10 (ADV-P1D-PASS-56): F-P56-01 — add E-CORE-006 (RecursionLimitExceeded, INTERNAL — BC-2.01.003 PC5) to dual-layer table Runnable-layer row; add E-CORE-006 individual omission note (INTERNAL, library-layer Err return, never direct HTTP response in v1; INTERNAL→500 categorical fallback). OBS-P56-1 resolved: tighten 10007 text in dual-layer note to cite `DEFAULT_RECURSION_LIMIT` constant in `langgraph._internal._config` (reads from `LANGGRAPH_DEFAULT_RECURSION_LIMIT` env var) and distinguish from langchain-core `DEFAULT_RECURSION_LIMIT = 25`. Disposition census 75→76: 43 HTTP table rows, 10 individual omission notes (+E-CORE-006), 23 blanket library-layer coverage, 0 uncovered."
   - "2.11 (ADV-P1D-PASS-56-COMPLETION): Gate #30 drain — three new codes from error-taxonomy.md v1.8. (1) E-PROV-008 (ProviderHttpError, TRANSPORT) added to 502 row alongside E-PROV-003 — categorical fallback, surfaced embedded in Run.error. (2) E-CHKPT-007 (CipherHeaderMissing, INTERNAL) added to 500 row alongside other CHKPT INTERNAL codes. (3) E-CORE-007 (GuardrailHookPanic, INTERNAL) individual omission note added — library-layer INTERNAL error, never direct HTTP terminal in v1; INTERNAL→500 categorical fallback. Disposition census 76→79: 45 HTTP table rows (+E-PROV-008 +E-CHKPT-007), 11 individual omission notes (+E-CORE-007), 23 blanket library-layer coverage, 0 uncovered."
   - "2.12 (ADV-P1D-PASS-57): F-P57-01 (HIGH) — fix GuardrailHook trait signature trilateral contradiction (authority-deference D18-P47-A: BCs win). (1) Method name on_ingress → evaluate (all 6 ss-11 BC postconditions + E-CORE-007 taxonomy message are uniform). (2) Return type Result<IngressContent, GuardrailError> → GuardrailResult enum with Pass / Fail{reason,severity} / Transform{new_content} variants (BC-2.11.002 PC2-PC4). (3) Second parameter renamed provenance → provenance_tag per BC-2.11.002 INV-4. (4) GuardrailResult enum definition added to §GuardrailHook block with Fail/Transform variant bodies. (5) Panic path moved to doc-comment citing E-CORE-007 and BC-2.11.002 EC-001 (panic is a non-return code path; the trait method return type is GuardrailResult not Result). (6) GuardrailError type removed — not defined in spec corpus; was incorrect. BC anchor enumeration expanded to cite all 6 BCs by role."
+  - "2.13 (ADV-P1D-PASS-58): F-P58-02 (HIGH) + F-P58-01 (MED) — define IngressContent and GuardrailSeverity inline in §GuardrailHook block. (1) IngressContent enum: ToolResult(ContentBlock) / RagChunk(Value) / MemoryItem(Value) — BC-2.11.002 PC1 / BC-2.11.003 PC1,PC5 / BC-2.11.004 PC1,PC5; E-CORE-007 content_type placeholder resolved to IngressContent variant name. (2) GuardrailSeverity enum: Critical/High/Medium/Low — authority BC-2.11.002 INV-3, BC-2.11.005 PC4/PC5. (3) Minimal type notes added for ChatConfig (BaseChatModel) and CheckpointConfig (CheckpointSaver) per gate #31 census — both flagged corpus-unresolved for architect. Gate #31 census: 20/22 types resolved; ChatConfig and CheckpointConfig flagged."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -104,6 +105,8 @@ pub trait BaseChatModel: Runnable<Vec<Message>, AiMessage> + Send + Sync {
 
 **BC anchor:** BC-2.08.001 through BC-2.08.005
 
+> **Gate #31 type note — `ChatConfig`, `AiMessageChunk`, `ToolDefinition`:** `ChatConfig` is a provider-specific streaming-configuration struct (temperature, max_tokens, etc.); not formally enumerated in the spec corpus — implementer defines as a provider-specific struct; flagged corpus-unresolved. `AiMessageChunk` is the per-token streaming output type; defined via BC-2.08.001 PC1 + BC-2.08.005 TV (streaming completions BC). `ToolDefinition` is the public tool-schema type; defined via BC-2.08.009 (tool schema naming stability BC).
+
 ### CheckpointSaver
 
 ```rust
@@ -127,6 +130,8 @@ pub trait CheckpointSaver: Send + Sync {
 ```
 
 **BC anchor:** BC-2.04.001 through BC-2.04.006
+
+> **Gate #31 type note — `CheckpointConfig`, `ChannelName`, `ChannelValue`, `TaskId`, `CheckpointTuple`:** `CheckpointConfig` is the checkpoint-addressing config; not formally enumerated as a spec-level struct — logically derived from BC-2.04.006 triple-address invariant (`thread_id: Uuid`, `checkpoint_ns: NamespaceId`, `checkpoint_id: Option<LogicalClockId>`); flagged corpus-unresolved for architect. `ChannelName` and `ChannelValue` are defined in entities-graph.md §GraphState (`Map<ChannelName, ChannelValue>`). `TaskId` is defined in VP-001.md (Kani harness: `TaskId(i as u64)` newtype around u64). `CheckpointTuple` is defined in entities-graph.md §CheckpointTuple.
 
 ### GuardrailHook
 
@@ -172,6 +177,41 @@ pub enum GuardrailResult {
     Transform {
         new_content: IngressContent,
     },
+}
+
+/// Content unit passed to `GuardrailHook::evaluate`.
+/// Each variant corresponds to one ingress boundary type.
+///
+/// The `<content_type>` placeholder in E-CORE-007's message format
+/// (`GuardrailHook::evaluate panicked at <boundary> for content type '<content_type>'`)
+/// is the variant name: `"ToolResult"`, `"RagChunk"`, or `"MemoryItem"`.
+///
+/// BC authorities: BC-2.11.002 PC1 (ToolResult boundary),
+/// BC-2.11.003 PC1/PC5 (RAG boundary), BC-2.11.004 PC1/PC5 (memory boundary).
+pub enum IngressContent {
+    /// ContentBlock from a tool-result ingress boundary (BC-2.11.002 PC1).
+    /// Inner type: `ContentBlock` per entities-graph.md §ContentBlock.
+    ToolResult(ContentBlock),
+    /// Document chunk from a RAG retrieval ingress boundary (BC-2.11.003 PC1, PC5).
+    /// Payload type `Value` = `serde_json::Value`; internal structure is backend-specific.
+    RagChunk(Value),
+    /// Memory item from a memory ingress boundary (BC-2.11.004 PC1, PC5).
+    /// Payload type `Value` = `serde_json::Value`; internal structure is store-specific.
+    MemoryItem(Value),
+}
+
+/// Severity of a `GuardrailResult::Fail` outcome.
+/// Determines whether the run continues (High/Medium/Low) or transitions to `failed` (Critical).
+pub enum GuardrailSeverity {
+    /// Run transitions to `failed`; inference halted; no further nodes execute.
+    /// Authority: BC-2.11.002 INV-3, BC-2.11.003 INV-2, BC-2.11.004 INV-4, BC-2.11.005 PC4.
+    Critical,
+    /// Error block substituted at content position; run continues (BC-2.11.005 PC5).
+    High,
+    /// Error block substituted at content position; run continues (BC-2.11.005 PC5).
+    Medium,
+    /// Error block substituted at content position; run continues (BC-2.11.005 PC5).
+    Low,
 }
 ```
 
