@@ -409,3 +409,15 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 - PASS-59 CANONS (burst 135): Transform same-boundary (inner payload free, cross-boundary prohibited); Critical citations = INV-3/PC3/PC3/PC4; citation-audit discipline (cited item must state what it's cited for).
 
 **WRAP METADATA:** Date: 2026-07-17 | Cycle: v1.0.0-greenfield | Burst: 135 | Counter: 0/3
+
+---
+
+## Archived Checkpoint — Burst 136 (Pass 60, replacing burst 135 checkpoint)
+
+**RESUME IN ONE BREATH (burst 136):** "ferrochain Phase 1 spec crystallization, step 1d adversarial convergence IN PROGRESS: 60 passes / 56 fix bursts, trajectory ...→2→3 (citation-audit lens is draining the interface-block layer surface-by-surface: guardrail [P57-59] then budget [P60]; remaining blocks Runnable/BaseChatModel/CheckpointSaver audited PASS; 39 standing gates incl. #31 name-equality). Counter 0/3 (strict-zero D14). NEXT ACTION: dispatch adversary pass 61 — fresh context, sibling-check pass-60 (v2.15 BudgetPolicy block + ADR-009 v1.1 + zero BudgetDecision + gate #31 step-4 + BudgetContext implementer-scope note), MANDATORY FULL runs of gates #13/#21/#26/#27/#29 (PARTIAL in pass 60), rotate #16/#22/#24/#25/#28, free probes; CLEAN advances 1/3; ANY finding resets; loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+
+**Archived PASS CANONS (burst 136):**
+- PASS-59 CANONS (burst 135): Transform same-boundary (inner payload free, cross-boundary prohibited); Critical citations = INV-3/PC3/PC3/PC4; citation-audit discipline (cited item must state what it's cited for).
+- PASS-60 CANONS (burst 136): PolicyDecision canonical (BudgetDecision retired); evaluate sync/pure (usage, &BudgetContext), journal = caller; gate #31 step-4 name-equality; BudgetContext implementer-scope.
+
+**WRAP METADATA:** Date: 2026-07-18 | Cycle: v1.0.0-greenfield | Burst: 136 | Counter: 0/3

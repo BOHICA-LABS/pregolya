@@ -7,7 +7,7 @@ title: "Budget Governance Engine Placement (D17-Q4): ferrochain-graph vs ferroch
 status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
-version: "1.1"
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17]
@@ -35,7 +35,7 @@ Three options:
 `BudgetPolicy` is a public trait in `ferrochain-core`:
 ```rust
 pub trait BudgetPolicy: Send + Sync {
-    fn evaluate(&self, usage: TokenUsage, context: &BudgetContext) -> PolicyDecision; // pure; no async
+    fn evaluate(&self, usage: TokenUsage, context: &RunContext) -> PolicyDecision; // pure; no async
 }
 pub enum PolicyDecision {
     Allow,
@@ -57,7 +57,7 @@ pub enum PolicyDecision {
 
 ## Consequences
 
-- `ferrochain-core` adds: `BudgetPolicy` trait, `BudgetContext`, `TokenUsage`, `PolicyDecision` types.
+- `ferrochain-core` adds: `BudgetPolicy` trait, `RunContext`, `TokenUsage`, `PolicyDecision` types.
 - `ferrochain-graph` adds: `BudgetEngine`, `EvidenceJournal`.
 - `GraphConfig` gains a `budget_config: Option<BudgetConfig>` field.
 - The orchestrator loop (ADR-001) calls `BudgetEngine::evaluate()` between super-steps.
@@ -72,3 +72,4 @@ pub enum PolicyDecision {
 |---------|------|--------|------------|---------|
 | 1.0 | 2026-07-14 | architect | D17-Q4 | Initial decision: Option 3 (trait in core, engine in graph). |
 | 1.1 | 2026-07-15 | architect | F-P60-01, F-P60-03, Pass-60 adjudication | Rename `BudgetDecision` → `PolicyDecision` per BC-2.10.001–004 behavioral authority. Align evaluate signature to canon: `fn evaluate(&self, usage: TokenUsage, context: &BudgetContext) -> PolicyDecision`. Add `Escalate { reason: String, current_usage: TokenUsage }` and `Deny { reason: String, current_usage: TokenUsage }` payload fields. Add `TokenUsage` to ferrochain-core exported types. Name `BudgetDecision` is retired. |
+| 1.2 | 2026-07-15 | architect | F-P61-02, Pass-61 adjudication | Rename `BudgetContext` → `RunContext` per BC-2.10.001 precondition 3 (fields: thread_id, run_id, sub-agent identity). Evaluate signature is now canon: `fn evaluate(&self, usage: TokenUsage, context: &RunContext) -> PolicyDecision`. Core-exports line updated: `RunContext` replaces `BudgetContext`. Name `BudgetContext` is retired. |

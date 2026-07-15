@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.3"
+version: "2.4"
 status: active
 producer: product-owner
-total_standing_gates: 31
+total_standing_gates: 32
 timestamp: 2026-07-15T00:00:00Z
 phase: 1a
 inputs:
@@ -593,8 +593,9 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | `GuardrailAction` (enum type name) | `GuardrailResult` | F-P57-01 (iface-def) + F-P58-03 (entities fully retired) |
     | `Accept`, `Reject(reason)`, `Redact(sanitized)` (GuardrailAction variants as guardrail API) | `Pass`, `Fail{reason,severity}`, `Transform{new_content}` (GuardrailResult variants) | F-P57-01 + F-P58-03 |
     | `BudgetDecision` (enum type name) | `PolicyDecision` | F-P60-01 (interface-definitions.md §BudgetPolicy + bc-authoring-plan gate #31 registry; ADR-009 v1.1 confirms same rename) |
+    | `BudgetContext` (context param type name) | `RunContext` | F-P61-02 (interface-definitions.md §BudgetPolicy context param; gate #31 census table — near-name blindspot: corpus already named RunContext in BC-2.10.001 precondition 3 with identical contents) |
 
-    Census command: `grep -rn "to_problem_detail\|risk_tier\|X-Debug-Key\|node_delta\|IngressSource\|GuardrailAction\b\|BudgetDecision" .factory/specs/ | grep -v "bc-authoring-plan\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier\|action_risk.rs\|architecture/\|ADV-P1D-PASS"` — output must be ZERO live occurrences. Exclusions: bc-authoring-plan.md (registry document); architecture/ (architect scope — ADR-009 manages BudgetDecision rename in that domain); `ADV-P1D-PASS` (YAML frontmatter changelog list items — always reference ADV-P1D-PASS-NN; these are audit trail, not live uses; exempted per gate #19 "A changelog or census-rule mention is not a hit" rule).
+    Census command: `grep -rn "to_problem_detail\|risk_tier\|X-Debug-Key\|node_delta\|IngressSource\|GuardrailAction\b\|BudgetDecision\|BudgetContext" .factory/specs/ | grep -v "bc-authoring-plan\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier\|action_risk.rs\|architecture/\|ADV-P1D-PASS"` — output must be ZERO live occurrences. Exclusions: bc-authoring-plan.md (registry document); architecture/ (architect scope — ADR-009 manages BudgetDecision rename in that domain); `ADV-P1D-PASS` (YAML frontmatter changelog list items — always reference ADV-P1D-PASS-NN; these are audit trail, not live uses; exempted per gate #19 "A changelog or census-rule mention is not a hit" rule).
     Census command (past-tense StreamEvent variants — L3 architecture and BC artifacts only): `grep -rn "RunStarted\|NodeStarted\|ToolStarted\|StepStarted\|run_started\|node_started" .factory/specs/ | grep -v "bc-authoring-plan\|domain-spec/\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier"` — output must be ZERO live occurrences.
     Source: ADV-P1D-PASS-26 §F-P26-02, §F-P26-03, §F-P26-04; ADV-P1D-PASS-27 §F-P27-06; ADV-P1D-PASS-29 §F-P29-03, §F-P29-04.
 
@@ -1216,15 +1217,30 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     3. For each corpus type, locate its definition site. If none found: flag as UNRESOLVED and either
        (a) add a minimal inline definition or type note in the same burst, or
        (b) document as implementer-scope with a gate #31 note and flag for architect.
-    4. **Name-equality check (added P60 — OBS-P60-1 widening):** For each corpus type that is
-       RESOLVED via a BC citation, assert that the identifier name used in the interface block
-       exactly equals the identifier name in the cited authority BC. A definition that exists in the
-       corpus under a different name (i.e., interface block uses `BudgetDecision`, BC uses
-       `PolicyDecision`) is NOT a valid resolution — it is a HIGH-severity name-drift finding.
+    4. **Name-equality check (added P60 — OBS-P60-1 widening; extended P61 — D18-P61-B):** For each
+       corpus type that is RESOLVED via a BC citation, assert that the identifier name used in the
+       interface block exactly equals the identifier name in the cited authority BC. A definition that
+       exists in the corpus under a different name (i.e., interface block uses `BudgetDecision`, BC
+       uses `PolicyDecision`) is NOT a valid resolution — it is a HIGH-severity name-drift finding.
        Definition-existence alone is insufficient; name equality is required.
        Motivating instance: F-P60-01 — `BudgetDecision` was marked RESOLVED because an inline
        definition existed in the interface block, while all four ss-10 BCs used `PolicyDecision`.
        The drift survived pass-58 and pass-59 undetected because step 3 checked only existence.
+
+       **Extended step 4 (near-name corpus check — added P61 — D18-P61-B):** For each type
+       classified as UNRESOLVED after step 3, the census MUST also check whether the corpus
+       contains a near-name concept that plays the same structural role before finalizing the
+       UNRESOLVED classification. A near-name concept is: an identifier in a BC body or entity
+       definition that has semantically equivalent contents and the same functional role, even if
+       the name differs (e.g., `BudgetContext` vs `RunContext` — same fields, same role, different
+       name minted without corpus search). If a near-name concept exists: (a) the interface block
+       identifier is a name-drift finding (HIGH severity), (b) the near-name identifier is the
+       RESOLVED canonical, and (c) the interface block identifier is retired via gate #19.
+       Motivating instance: F-P61-02 — `BudgetContext` was classified UNRESOLVED because that
+       exact string was not in the corpus; step 3 did not ask "Is there a corpus type with these
+       same contents under a different name?" BC-2.10.001 precondition 3 named `RunContext` with
+       identical fields (thread_id, run_id, sub-agent identity) — the near-name check would have
+       caught this immediately.
 
     **Current pass-60 census results (`interface-definitions.md` v2.15):**
 
@@ -1250,11 +1266,12 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | `GuardrailSeverity` | GuardrailHook | inline §GuardrailHook (interface-definitions.md v2.13 — DEFINED P58) | RESOLVED |
     | `TokenUsage` | BudgetPolicy | BC-2.10.001 PC2/PC3 (struct shape: prompt_tokens, completion_tokens, total_tokens, estimated_cost) | RESOLVED |
     | `PolicyDecision` | BudgetPolicy | BC-2.10.001 PC3 (three-variant contract: Allow / Escalate{reason,current_usage} / Deny{reason,current_usage}); inline §BudgetPolicy (interface-definitions.md v2.15 — DEFINED P60) — name-equality verified: BC uses PolicyDecision, interface uses PolicyDecision | RESOLVED |
-    | `BudgetContext` | BudgetPolicy | NOT IN CORPUS — implementer-scope (execution identity context: thread_id, run_id, sub-agent identity per BC-2.10.001 PC3/INV); flagged for architect. Same treatment as ChatConfig. | UNRESOLVED |
+    | `RunContext` | BudgetPolicy | BC-2.10.001 precondition 3 ("The execution engine has access to the `RunContext` (thread_id, run_id, sub-agent identity if applicable)"); inline §BudgetPolicy (interface-definitions.md v2.16 — DEFINED P61); name-equality verified: BC uses RunContext, interface uses RunContext; fields fully enumerated in pre-3 (thread_id, run_id, sub_agent_id: Option) | RESOLVED |
 
     > **Retired from BudgetPolicy rows (P60):** `RunId` (no longer in trait — removed from 3-param to 2-param sig), `EvidenceJournal` (no longer in trait — journal writes are caller responsibility per BC-2.10.001 INV + ADR-009), `BudgetDecision` (renamed to PolicyDecision — see gate #19 retired-identifier table).
+    > **Retired from BudgetPolicy rows (P61):** `BudgetContext` (renamed to RunContext per BC-2.10.001 pre-3 canon — see gate #19 retired-identifier table; near-name blindspot F-P61-02).
 
-    **Census verdict:** 18/21 types resolved; 3 unresolved (ChatConfig, CheckpointConfig, BudgetContext) — all flagged
+    **Census verdict:** 19/21 types resolved; 2 unresolved (ChatConfig, CheckpointConfig) — flagged
     implementer-scope for architect; do NOT block spec publication.
 
     **Census trigger:** Any burst that edits `interface-definitions.md` §Public Rust Trait Signatures
@@ -1272,9 +1289,62 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     - **(OBS-P60-1, ADV-P1D-PASS-60):** `BudgetDecision` was marked RESOLVED in the census table because
       an inline definition existed in the interface block. However, the cited authority (BC-2.10.001–004) used
       `PolicyDecision` throughout. The old step 3 (definition-existence) passed; the new step 4 (name-equality)
-      would have caught this. This is the motivating instance for the step 4 widening.
+      would have caught this. This is the motivating instance for the original step 4 addition.
 
-    Source: ADV-P1D-PASS-58 §OBS-P58-1 [process-gap]; ADV-P1D-PASS-60 §OBS-P60-1 [process-gap].
+    - **(F-P61-02, ADV-P1D-PASS-61):** `BudgetContext` was classified UNRESOLVED because that exact
+      string was not in the corpus. However, BC-2.10.001 precondition 3 named `RunContext` with
+      identical contents (thread_id, run_id, sub-agent identity) — the near-name concept was already
+      present. The pass-60 fix burst minted `BudgetContext` without running a near-name corpus search.
+      The old step 4 covered name-equality for RESOLVED types; it did not cover near-name checks for
+      UNRESOLVED types. This is the motivating instance for the step 4 near-name extension (D18-P61-B).
+
+    Source: ADV-P1D-PASS-58 §OBS-P58-1 [process-gap]; ADV-P1D-PASS-60 §OBS-P60-1 [process-gap]; ADV-P1D-PASS-61 §F-P61-02.
+
+32. **ADR-propagation census gate — ADR-PROPAGATION CENSUS
+    (added P61 — standing gate [process-gap, OBS-P61-1]):**
+
+    Any burst that accepts or amends an ADR that makes a **crate-placement or type-home decision**
+    (i.e., declares which workspace crate owns a trait, type, module, or file) MUST reconcile
+    that placement decision against the three BC-layer carriers IN THE SAME BURST:
+
+    **Three required carriers:**
+
+    1. **module-decomposition.md** — scope lines for the affected subsystem(s); module rows/notes;
+       crate ownership columns. A crate assignment in the ADR must appear in the corresponding
+       module-decomposition row.
+
+    2. **Every affected BC's Architecture Anchors section** — each BC that names a type or file
+       owned by the decided crate must have its Architecture Anchors updated to cite the correct
+       crate path per the ADR. "Affected BC" = any BC whose Architecture Anchors currently cite
+       the old crate OR any BC whose domain directly concerns the decided type/trait.
+
+    3. **interface-definitions.md §Public Rust Trait Signatures section headers** — any section
+       that names a trait or type whose home crate was decided by the ADR must have its
+       implementation note, crate reference, or doc-comment updated to reflect the ADR placement.
+
+    **Census procedure:**
+    1. Read the ADR's placement statement(s) (e.g., "X lives in ferrochain-core/src/budget.rs").
+    2. Run: `grep -rn "<type_name>\|<trait_name>" .factory/specs/behavioral-contracts/` to find
+       every BC Architecture Anchor that references the type.
+    3. For each hit: verify the crate path matches the ADR placement. A mismatch is a HIGH-severity
+       anchor-drift finding.
+    4. Check module-decomposition.md rows for the affected subsystem — verify crate assignment
+       matches the ADR decision.
+    5. Check interface-definitions.md §Public Rust Trait Signatures for any section header or
+       doc-comment citing the old crate — update to the new placement.
+
+    **Trigger:** ADR acceptance or amendment that contains a crate-placement statement.
+    **Scope:** All BCs under the affected subsystem (SS-NN) plus any BCs that explicitly anchor
+    to the affected crate path.
+
+    **Motivating instance:** ADR-009 Option-3 placed `BudgetPolicy` trait + `PolicyDecision` +
+    `TokenUsage` + `RunContext` in `ferrochain-core/src/budget.rs`. This decision was not
+    reconciled against BC-2.10.001/003 Architecture Anchors, which continued to cite
+    `ferrochain-graph/src/budget/policy.rs`. The mismatch survived pass-60 undetected because
+    no census compared ADR placement statements against BC Architecture Anchors. Caught by
+    pass-61 adversary F-P61-01.
+
+    Source: ADV-P1D-PASS-61 §OBS-P61-1 [process-gap].
 
 ---
 
@@ -1282,6 +1352,7 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.4 | 2026-07-15 | Gate #32 "ADR-propagation census" added; `total_standing_gates` 31→32. Gate #31 step 4 extended with near-name corpus check (D18-P61-B): UNRESOLVED types must also be checked against near-name corpus concepts before classification. Census updated P60→P61: 21→21 types, BudgetContext UNRESOLVED retired → RunContext RESOLVED (BC-2.10.001 pre-3); 18/21 → 19/21 resolved; 3 unresolved → 2 unresolved (ChatConfig, CheckpointConfig). Gate #19 retired-identifier list extended: BudgetContext → RunContext (F-P61-02). Gate #19 census command updated: BudgetContext added to grep pattern. Motivating instances: F-P61-01 (ADR-009 trait anchors in wrong crate), F-P61-02 (BudgetContext minted without near-name corpus search — RunContext already in BC-2.10.001 pre-3), OBS-P61-1 [process-gap]. (ADV-P1D-PASS-61) | F-P61-01, F-P61-02, OBS-P61-1 |
 | 2.3 | 2026-07-15 | Gate #31 widened: step 4 "name-equality check" added (OBS-P60-1 [process-gap] — BudgetDecision/PolicyDecision drift survived 2 passes because definition-existence alone was checked). Census updated P58→P60: 22→21 types (removed RunId, EvidenceJournal, BudgetDecision from BudgetPolicy rows; added PolicyDecision, BudgetContext); 20 resolved → 18 resolved, 2 unresolved → 3 unresolved (ChatConfig, CheckpointConfig, BudgetContext). Gate #19 retired-identifier list extended: BudgetDecision → PolicyDecision (F-P60-01). Gate #19 census command updated: BudgetDecision added to grep pattern; architecture/ added to exclusion (architect scope). `total_standing_gates` unchanged at 31 (widening, not new gate). (ADV-P1D-PASS-60 §OBS-P60-1 [process-gap]) | OBS-P60-1 |
 | 2.2 | 2026-07-15 | Gate #31 "trait-signature type-resolution census" added; `total_standing_gates` 30→31. Census run P58: 22 types across 5 traits; 20 resolved, 2 unresolved (ChatConfig, CheckpointConfig — flagged implementer-scope for architect). Retired-identifier list extended: IngressSource, source_type, tool_name/invocation_id/timestamp (ProvenanceTag old fields), GuardrailAction, Accept/Reject/Redact. Census command updated. Motivating instance: OBS-P58-1 — F-P57-01 introduced IngressContent+GuardrailSeverity as undefined types surviving one full pass. (ADV-P1D-PASS-58 §OBS-P58-1 [process-gap]) | OBS-P58-1 |
 | 2.1 | 2026-07-15 | Gate #30 second-pass drain (ADV-P1D-PASS-56-COMPLETION): resolved deferred TBD-E-PROV-HTTP and all second-pass codeless candidates. Minted 3 new codes (E-PROV-008, E-CORE-007, E-CHKPT-007). Fixed 13 constructions across BC-2.08.004 (×4), BC-2.08.001 (×1), BC-2.08.002 (×2), BC-2.08.006 (×2), BC-2.11.002/003/004 (×6), BC-2.04.002 (×2), BC-2.04.006 (×1), BC-2.04.007 (×3). Census: 24 constructions examined; 13 fixed; 3 already-coded; 8 exempt. Zero genuine codeless constructions remain. Gate #30 census command returns zero genuine hits. Disposition census 76→79: 45 HTTP table rows, 11 individual omission notes, 23 blanket library-layer coverage. | OBS-P56-2 drain |

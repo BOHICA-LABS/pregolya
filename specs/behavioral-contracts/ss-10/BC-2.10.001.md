@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.001
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,9 @@ capability: CAP-012
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: trait/PolicyDecision/TokenUsage/RunContext anchor moved from ferrochain-graph/src/budget/policy.rs to ferrochain-core/src/budget.rs (definitions, per ADR-009 Option 3). Module field resolved from stale placeholder to ferrochain-core (trait + types) / ferrochain-graph (engine). BudgetEngine/EvidenceJournal anchors unchanged (ferrochain-graph)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -136,7 +138,7 @@ is evaluated independently and may choose to continue, escalate, or deny the par
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/budget/policy.rs` — `BudgetPolicy` trait, `PolicyDecision` enum, `TokenUsage` struct
+- `ferrochain-core/src/budget.rs` — `BudgetPolicy` trait, `PolicyDecision` enum, `TokenUsage` struct, `RunContext` struct (definitions, per ADR-009 Option 3)
 - `ferrochain-graph/src/budget/composed.rs` — `ComposedBudgetPolicy` with Deny > Escalate > Allow precedence
 - `ferrochain-graph/src/pregel/loop.rs` — evaluation call sites after each LLM call and tool invocation within `tick()`
 
@@ -160,4 +162,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | [architect to assign — ferrochain-graph] |
+| Module | ferrochain-core (trait + types) / ferrochain-graph (engine) |

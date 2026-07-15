@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.2"
+version: "1.3"
 status: active
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
@@ -18,6 +18,7 @@ changelog:
   - "1.0 (initial): base module decomposition authored."
   - "1.1 (ADV-P1D-PASS-29): F-P29-04 correct core::events description from past-tense (RunStarted/Ended, NodeStarted/Ended) to imperative canon (RunStart/Stream/End, NodeStart/Stream/End) per BC-2.06.001 authority."
   - "1.2 (ADV-P1D-PASS-37): F-P37-01 reconcile criticality column drift against authoritative module-criticality.md — core::message CRITICAL→HIGH; graph::channels CRITICAL→HIGH; graph::event_emitter HIGH→MEDIUM; ferrochain-macros section heading MEDIUM→HIGH; macros::tool/entrypoint/task all MEDIUM→HIGH."
+  - "1.3 (ADV-P1D-PASS-61): F-P61-01 add ferrochain-core budget definitions note per ADR-009 Option 3; qualify graph::budget row to clarify trait lives in core; rename BudgetContext → RunContext per pass-61 adjudication."
 ---
 
 # Module Decomposition: ferrochain
@@ -40,6 +41,14 @@ credential security primitives, streaming event types.
 | `core::config` | `RunnableConfig`, `ChatConfig` structs | MEDIUM | SS-01 |
 | `core::retry` | `ToolRetryPolicy` (keyed by tool_name; P-71 ADOPT), `CircuitBreaker` state machine, `RetryPolicy` with finite `global_limit: Option<NonZeroU32>`; shared combinator — provider crates and graph both route through this | MEDIUM | SS-16 |
 
+> **Budget definitions (SS-10, trait-definitions-only — ADR-009 Option 3):** ferrochain-core hosts
+> the DEFINITIONS for budget governance: `BudgetPolicy` trait, `PolicyDecision` enum, `TokenUsage`
+> struct, and `RunContext` struct (fields: thread_id, run_id, sub-agent identity per BC-2.10.001
+> precondition 3). These are pure types with no execution logic — no criticality-counted module row
+> is added (module universe remains 33; tier counts unchanged). The DISPATCH engine (`BudgetEngine`,
+> `EvidenceJournal`) lives in ferrochain-graph::budget per the guardrail core-definitions/graph-dispatch
+> split precedent. Module path: `ferrochain-core/src/budget.rs` (module `core::budget`).
+
 **NE anchors enforced:** NE-07 (constructor Result), NE-10 (credential opacity), NE-03 (no silent None)
 
 ## ferrochain-graph (SS-02, SS-03, SS-05, SS-10, SS-11) — CRITICAL
@@ -54,7 +63,7 @@ content provenance.
 | `graph::bsp_engine` | Super-step executor: task dispatch, versions_seen / task-identity sort, InvalidUpdateError | CRITICAL | SS-03 |
 | `graph::hitl` | Interrupt queue (FIFO), suspend/resume protocol, risk-tiered classification | CRITICAL | SS-05 |
 | `graph::scheduler` | Orchestrator loop and/or actor-scheduler (decision pending ADR-001 D9 gate) | CRITICAL | SS-03 |
-| `graph::budget` | `BudgetPolicy` eval (allow/escalate/deny), EvidenceJournal, ceiling halt/escalate | HIGH | SS-10 |
+| `graph::budget` | `BudgetEngine` dispatch (allow/escalate/deny via `BudgetPolicy` trait from ferrochain-core), `EvidenceJournal`, ceiling halt/escalate — trait definitions live in `core::budget` per ADR-009 Option 3 | HIGH | SS-10 |
 | `graph::provenance` | `ProvenanceTag` attachment at ingress boundaries, `GuardrailHook` dispatch | HIGH | SS-11 |
 | `graph::event_emitter` | Streaming event emission; run_id + parent_ids correlation | MEDIUM | SS-06 |
 

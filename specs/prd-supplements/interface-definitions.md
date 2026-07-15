@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.15"
+version: "2.16"
 status: active
 producer: product-owner
-timestamp: 2026-07-15T01:00:00Z
+timestamp: 2026-07-15T02:00:00Z
 phase: 1d
 changelog:
   - "1.6 (ADV-P1D-PASS-25): F-P25-01 add 503 row (E-SERVER-016 IdempotencyLockTimeout per-endpoint override); F-P25-02 recategorize 401→reserved, 403 now E-SERVER-004 POLICY + E-SERVER-005; F-P25-06 reconcile Run.interrupt sub-fields (interrupt_id, node_name, value, action_risk, action, context added; node_id→node_name, risk_tier→action_risk renamed); F-P25-07 add 201 and 204 rows, add E-CRON-002 to 400 row; OBS-2 add 502 and 504 categorical fallback rows."
@@ -27,6 +27,7 @@ changelog:
   - "2.13 (ADV-P1D-PASS-58): F-P58-02 (HIGH) + F-P58-01 (MED) — define IngressContent and GuardrailSeverity inline in §GuardrailHook block. (1) IngressContent enum: ToolResult(ContentBlock) / RagChunk(Value) / MemoryItem(Value) — BC-2.11.002 PC1 / BC-2.11.003 PC1,PC5 / BC-2.11.004 PC1,PC5; E-CORE-007 content_type placeholder resolved to IngressContent variant name. (2) GuardrailSeverity enum: Critical/High/Medium/Low — authority BC-2.11.002 INV-3, BC-2.11.005 PC4/PC5. (3) Minimal type notes added for ChatConfig (BaseChatModel) and CheckpointConfig (CheckpointSaver) per gate #31 census — both flagged corpus-unresolved for architect. Gate #31 census: 20/22 types resolved; ChatConfig and CheckpointConfig flagged."
   - "2.14 (ADV-P1D-PASS-59): F-P59-01 (HIGH) — fix GuardrailSeverity::Critical authority mis-citations. BC-2.11.003 INV-2 (ordering invariant) → BC-2.11.003 PC3 (Critical severity rule); BC-2.11.004 INV-4 (ordering invariant) → BC-2.11.004 PC3 (Critical severity rule). Correct authority: BC-2.11.002 INV-3, BC-2.11.003 PC3, BC-2.11.004 PC3, BC-2.11.005 PC4. F-P59-02 (HIGH) — fix Transform doc-comment cross-boundary claim: replace 'any IngressContent variant, including a different variant from the original' with same-boundary rule (new_content must be same IngressContent variant; inner payload may change freely — e.g. different ContentBlock variant within ToolResult per BC-2.11.002 EC-003). No BC authorizes cross-boundary transforms (e.g. ToolResult→RagChunk)."
   - "2.15 (ADV-P1D-PASS-60): F-P60-01 (HIGH) + F-P60-02 (MED) + F-P60-03 (HIGH) — rewrite §BudgetPolicy block per orchestrator adjudication D18-P60-A (authority-deference: BC-2.10.001–004 are behavioral authority). (1) Rename BudgetDecision → PolicyDecision (BC-2.10.001 PC3 — three-variant contract is the canonical name); BudgetDecision retired per gate #19. (2) Add current_usage: TokenUsage payload to Escalate and Deny variants (BC-2.10.001 PC3, TV-002, TV-003 — F-P60-02). (3) Rewrite evaluate signature: remove async (pure/sync per BC-2.10.001 INV + ADR-009); remove run_id param; remove journal param (journal writes are caller responsibility per BC-2.10.001 INV + ADR-009); add context: &BudgetContext second param (BC-2.10.001 PC1/PC2 two-param canon) — F-P60-03. (4) BudgetContext flagged implementer-scope (shape not enumerated in spec corpus; BC-2.10.001 PC3/INV provides contextual description — same treatment as ChatConfig). (5) BC anchors corrected: BC-2.10.001 PC3 + TV-001–TV-003 + BC-2.10.002 INV."
+  - "2.16 (ADV-P1D-PASS-61): F-P61-02 (MED) + F-P61-01 (HIGH, partial) — §BudgetPolicy context param corrected per orchestrator canon D18-P61-A. (1) Rename context param &BudgetContext → &RunContext: BC-2.10.001 precondition 3 names RunContext (thread_id, run_id, sub-agent identity) as the context type; BudgetContext was minted without corpus search (gate #31 near-name blindspot); BudgetContext RETIRED per gate #19. (2) RunContext implementer-scope note replaced with RESOLVED note: precondition 3 fully enumerates fields (thread_id, run_id, sub-agent identity) → RunContext is RESOLVED, not implementer-scope. Citation corrected: BC-2.10.001 precondition 3 (NOT PC3/INV — those sections describe PolicyDecision and purity, not context contents). (3) BC anchor note updated: precondition 3 authority added."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -240,7 +241,7 @@ pub trait BudgetPolicy: Send + Sync {
     /// receiving the decision.
     ///
     /// Authority: BC-2.10.001 INV (purity invariant) + ADR-009.
-    fn evaluate(&self, usage: TokenUsage, context: &BudgetContext) -> PolicyDecision;
+    fn evaluate(&self, usage: TokenUsage, context: &RunContext) -> PolicyDecision;
 }
 
 /// Decision returned by `BudgetPolicy::evaluate`.
@@ -254,12 +255,14 @@ pub enum PolicyDecision {
 }
 ```
 
-> **`BudgetContext`** — implementer-scope struct (shape not enumerated in spec corpus; logically
-> contains execution identity passed to the policy for contextual decisions: thread_id, run_id,
-> sub-agent identity per BC-2.10.001 PC3/INV). Architect assigns the concrete definition.
-> Same treatment as `ChatConfig` (gate #31 UNRESOLVED/implementer-scope).
+> **`RunContext`** — RESOLVED. Defined by BC-2.10.001 precondition 3: "The execution engine
+> has access to the `RunContext` (thread_id, run_id, sub-agent identity if applicable) for
+> policy evaluation calls." Fields: `thread_id`, `run_id`, `sub_agent_id: Option<SubAgentId>`.
+> Concrete struct definition lives in `ferrochain-core/src/budget.rs` per ADR-009 Option 3.
+> (gate #31 RESOLVED via BC-2.10.001 precondition 3 — name-equality verified)
 
-**BC anchor:** BC-2.10.001 PC3 (PolicyDecision variants + purity invariant),
+**BC anchor:** BC-2.10.001 precondition 3 (RunContext fields: thread_id, run_id, sub-agent identity),
+BC-2.10.001 PC3 (PolicyDecision variants + purity invariant),
 BC-2.10.001 TV-001–TV-003 (variant payloads verified),
 BC-2.10.002 INV (journal writes are caller responsibility)
 

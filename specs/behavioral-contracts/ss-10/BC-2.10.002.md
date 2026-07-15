@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.002
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,9 @@ capability: CAP-012
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 propagation. Module field resolved from stale placeholder: EvidenceJournal and append API remain in ferrochain-graph; SQLite backend in ferrochain-checkpoint. No Architecture Anchor crate changes (all existing anchors already correct per ADR-009 split)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -152,4 +154,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | [architect to assign — ferrochain-graph, ferrochain-checkpoint] |
+| Module | ferrochain-graph (EvidenceJournal + append API) / ferrochain-checkpoint (SQLite backend) |
