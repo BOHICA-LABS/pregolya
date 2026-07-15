@@ -180,6 +180,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.04.005 | Crash recovery: completed tasks not re-executed after process restart | P0 | DI-002 | ss-04/BC-2.04.005.md |
 | BC-2.04.006 | Session triple-address uniqueness (thread_id, checkpoint_ns, checkpoint_id) — VP seed | P0 | DI-005, NE-12 | ss-04/BC-2.04.006.md |
 | BC-2.04.007 | Encryption at rest for both state payloads AND event payloads; rotation errors propagate | P0 | — (NE-11) | ss-04/BC-2.04.007.md |
+| BC-2.04.008 | FTS conversation search over checkpoint history (single-process; SQLite FTS5) | P1 | DI-002, DI-008, DI-014 | ss-04/BC-2.04.008.md |
 
 ### 2.05 HITL Interrupt / Resume (CAP-006) — P0
 
@@ -212,7 +213,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.07.002 | Non-ASCII boundary parity with Python reference implementation (emoji, CJK) | P0 | — | ss-07/BC-2.07.002.md |
 | BC-2.07.003 | Short document (length < chunk_size) — single chunk returned, no overlap applied, no panic | P0 | — | ss-07/BC-2.07.003.md |
 
-### 2.08 Provider-Conformant Chat Model Interface + Standard Tests (CAP-009, CAP-011) — P1
+### 2.08 Provider-Conformant Chat Model Interface + Standard Tests + Dialect/Failover Extensions (CAP-009, CAP-011) — P1
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
@@ -228,8 +229,10 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.08.010 | `#[tool]` attribute macro: async fn → Tool implementor via schemars::JsonSchema | P1 | DI-008 | ss-08/BC-2.08.010.md |
 | BC-2.08.011 | `#[entrypoint]` attribute macro: START edge auto-wiring for StateGraph | P1 | — | ss-08/BC-2.08.011.md |
 | BC-2.08.012 | `#[task]` attribute macro: task registration boilerplate generation | P1 | — | ss-08/BC-2.08.012.md |
+| BC-2.08.013 | Pluggable tool-call dialect seam (ToolCallDialect; Hermes ChatML XML) | P1 | DI-008, DI-014 | ss-08/BC-2.08.013.md |
+| BC-2.08.014 | Provider failover chain (ProviderFallbackPolicy; ordered fallback on 429/5xx/Auth) | P1 | DI-008, DI-009, DI-010, DI-014 | ss-08/BC-2.08.014.md |
 
-### 2.09 MCP Tool Adapter (CAP-010) — P1
+### 2.09 MCP Tool Adapter + MCP Server Role (CAP-010, CAP-021) — P1
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
@@ -238,6 +241,8 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.09.003 | Tool-result content treated as untrusted ingress (DI-012 applies) | P1 | DI-012 | ss-09/BC-2.09.003.md |
 | BC-2.09.004 | MCP bare ToolException re-raise preserving type identity (R11) | P1 | DI-014 | ss-09/BC-2.09.004.md |
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | P1 | DI-014 | ss-09/BC-2.09.005.md |
+| BC-2.09.006 | MCP server tool advertisement (tools/list; mcp::server) | P1 | DI-008, DI-014 | ss-09/BC-2.09.006.md |
+| BC-2.09.007 | MCP server tool invocation (tools/call; external client executes registered tool) | P1 | DI-008, DI-010, DI-014 | ss-09/BC-2.09.007.md |
 
 ### 2.10 Budget Governance (CAP-012) — P0
 
@@ -247,7 +252,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 |-------|-------|----------|----|------|
 | BC-2.10.001 | BudgetPolicy allow/escalate/deny evaluation per run and per sub-agent | P0 | — | ss-10/BC-2.10.001.md |
 | BC-2.10.002 | Append-only EvidenceJournal recording of every budget evaluation | P0 | — | ss-10/BC-2.10.002.md |
-| BC-2.10.003 | Graceful halt when budget ceiling reached (on_ceiling = halt) | P0 | — | ss-10/BC-2.10.003.md |
+| BC-2.10.003 | Graceful halt when budget ceiling reached (on_ceiling = halt) _(v1.2: OnCeiling::Summarize + RunContext.budget\_info / BudgetInfo)_ | P0 | — | ss-10/BC-2.10.003.md |
 | BC-2.10.004 | Budget escalation to HITL interrupt when on_ceiling = escalate | P0 | DI-003 | ss-10/BC-2.10.004.md |
 
 ### 2.11 Content Provenance Tagging and Guardrail-on-Ingress (CAP-013) — P0
@@ -287,6 +292,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.13.004 | All workspace file ops call canonicalize_beneath_root at access time | P1 | DI-007, NE-02 | ss-13/BC-2.13.004.md |
 | BC-2.13.005 | Symlink that escapes workspace root returns Err(WorkspaceEscape) | P1 | DI-007, NE-02 | ss-13/BC-2.13.005.md |
 | BC-2.13.006 | macOS Seatbelt profile is deny-by-default with explicit allow rules | P1 | DI-006 | ss-13/BC-2.13.006.md |
+| BC-2.13.007 | Environment variable sanitization at sandbox execution boundary | P1 | DI-006, DI-008, DI-010 | ss-13/BC-2.13.007.md |
 
 ### 2.14 Typed Error Taxonomy — FerrochainError (CAP-016) — P0
 
@@ -299,13 +305,16 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.14.005 | Every API key type: newtype + Debug→"<redacted>"; no #[derive(Serialize)]; no Deref<Target=str> (NE-10) | P0 | DI-010 | ss-14/BC-2.14.005.md |
 | BC-2.14.006 | Validation failures propagate Err(FerrochainError); no public API returns None for validation failure (NE-03) | P0 | DI-014 | ss-14/BC-2.14.006.md |
 
-### 2.15 Long-Horizon Cross-Session Memory Store (CAP-017) — P2
+### 2.15 Long-Horizon Cross-Session Memory Store + Self-Improvement Primitives (CAP-017, CAP-020) — P1/P2
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
 | BC-2.15.001 | KV and vector memory persistence across threads (not per-checkpoint) | P2 | — | ss-15/BC-2.15.001.md |
 | BC-2.15.002 | User/app/session tier isolation — user-private does not bleed across scopes | P2 | — | ss-15/BC-2.15.002.md |
 | BC-2.15.003 | GDPR erasure removes all traces from all memory tiers | P2 | — | ss-15/BC-2.15.003.md |
+| BC-2.15.004 | SkillStore registry — load-on-demand skill documents | P1 | DI-008, DI-014 | ss-15/BC-2.15.004.md |
+| BC-2.15.005 | Guarded memory and skill writes (MemoryWriteGuard; E-MEMORY-007) | P1 | DI-008, DI-012, DI-014 | ss-15/BC-2.15.005.md |
+| BC-2.15.006 | Frozen-snapshot context mutation — memory-sourced system-prompt content | P1 | DI-002, DI-008, DI-014 | ss-15/BC-2.15.006.md |
 
 ### 2.16 Tool Retry with Circuit Breaker (CAP-018) — P2
 
@@ -559,8 +568,17 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.08.010 | CAP-002, DI-008, ADR-004, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
 | BC-2.08.011 | CAP-003, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
 | BC-2.08.012 | CAP-003, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
+| BC-2.04.008 | CAP-005, DI-002, DI-008, DI-014 | ferrochain-checkpoint | P1 | I |
+| BC-2.08.013 | CAP-009, DI-008, DI-014 | ferrochain-core (trait), ferrochain-\<provider\> (dispatch) | P1 | U, I |
+| BC-2.08.014 | CAP-009, DI-008, DI-009, DI-010, DI-014 | ferrochain-core (types), ferrochain-\<provider\> (dispatch) | P1 | U, I |
+| BC-2.09.006 | CAP-021, DI-008, DI-014 | ferrochain-mcp | P1 | I |
+| BC-2.09.007 | CAP-021, DI-008, DI-010, DI-014 | ferrochain-mcp | P1 | I |
+| BC-2.13.007 | CAP-015, DI-006, DI-008, DI-010 | ferrochain-sandbox | P1 | U, I |
+| BC-2.15.004 | CAP-020, DI-008, DI-014 | ferrochain-memory (memory::skills) | P1 | U, I |
+| BC-2.15.005 | CAP-020, DI-008, DI-012, DI-014 | ferrochain-core (core::write\_guard), ferrochain-memory | P1 | U, I |
+| BC-2.15.006 | CAP-020, DI-002, DI-008, DI-014 | ferrochain-core (core::context\_mutation), ferrochain-graph | P1 | I |
 
-**Totals:** 86 BCs — 48 P0 / 30 P1 / 8 P2
+**Totals:** 95 BCs — 48 P0 / 39 P1 / 8 P2
 
 ---
 

@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.0"
+version: "1.2"
 status: active
 producer: architect
-timestamp: 2026-07-14T12:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -15,7 +15,9 @@ inputs:
 input-hash: "df4e938670d28633"
 traces_to: prd.md
 deployment_topology: single-service
-decisions: [D4, D6, D9, D11, D13, D17]
+decisions: [D4, D6, D9, D11, D13, D17, D20]
+changelog:
+  - "1.2 (D20/CAP-021+CAP-020): SS-09 BC range 001–005→001–007 (CAP-021 MCP server role); SS-15 BC range 001–003→001–006 (CAP-020 self-improvement primitives); SS-04 001–007→001–008; SS-08 001–012→001–014; SS-13 001–006→001–007; BC total 86→95."
 ---
 
 # Architecture Index: ferrochain
@@ -36,7 +38,7 @@ decisions: [D4, D6, D9, D11, D13, D17]
 | Tooling Selection | tooling-selection.md | formal-verifier | Kani, cargo-fuzz, cargo-mutants, proptest versions + config |
 | Verification Coverage Matrix | verification-coverage-matrix.md | consistency-validator | VP-to-module coverage status |
 
-**ADRs:** `.factory/specs/architecture/decisions/` — 11 files (ADR-001 to ADR-011)
+**ADRs:** `.factory/specs/architecture/decisions/` — 12 files (ADR-001 to ADR-012)
 
 **Module Criticality:** `.factory/specs/module-criticality.md`
 
@@ -53,27 +55,29 @@ decisions: [D4, D6, D9, D11, D13, D17]
 
 > **Source of truth** for subsystem names and SS-NN IDs. BC frontmatter `subsystem:`,
 > BC-INDEX subsystem column, story `subsystems:`, and PRD references MUST use exact Name.
-> State-manager backfills all 86 BC files with SS-NN after this index is committed.
+> State-manager backfills all 95 BC files with SS-NN after this index is committed.
 
 | SS ID | Name | PRD Section | Primary Crate(s) | BCs | Wave |
 |-------|------|-------------|------------------|-----|------|
 | SS-01 | Core Primitives | 2.01 | ferrochain-core | BC-2.01.001–004 | 1 |
 | SS-02 | StateGraph Definition | 2.02 | ferrochain-graph | BC-2.02.001–006 | 1 |
 | SS-03 | BSP Execution Engine | 2.03 | ferrochain-graph | BC-2.03.001–003 | 1 |
-| SS-04 | Durable Checkpointing | 2.04 | ferrochain-checkpoint | BC-2.04.001–007 | 1 |
+| SS-04 | Durable Checkpointing | 2.04 | ferrochain-checkpoint | BC-2.04.001–008 | 1 |
 | SS-05 | HITL Interrupt / Resume | 2.05 | ferrochain-graph | BC-2.05.001–006 | 1 |
 | SS-06 | Streaming Event Taxonomy | 2.06 | ferrochain-graph, ferrochain-core | BC-2.06.001–003 | 1 |
 | SS-07 | Text Splitting | 2.07 | ferrochain-splitters | BC-2.07.001–003 | 1 |
-| SS-08 | Provider Conformance + Standard Tests | 2.08 | ferrochain-openai, ferrochain-anthropic, ferrochain-ollama, ferrochain-standard-tests | BC-2.08.001–012 | 2 |
-| SS-09 | MCP Tool Adapter | 2.09 | ferrochain-mcp | BC-2.09.001–005 | 2 |
+| SS-08 | Provider Conformance + Standard Tests | 2.08 | ferrochain-openai, ferrochain-anthropic, ferrochain-ollama, ferrochain-standard-tests | BC-2.08.001–014 | 2 |
+| SS-09 | MCP Tool Adapter | 2.09 | ferrochain-mcp | BC-2.09.001–007 | 2 |
 | SS-10 | Budget Governance | 2.10 | ferrochain-graph | BC-2.10.001–004 | 1 |
 | SS-11 | Content Provenance / Guardrail | 2.11 | ferrochain-graph | BC-2.11.001–006 | 1 |
 | SS-12 | Durable-Run HTTP Server | 2.12 | ferrochain-server | BC-2.12.001–007 | 1 |
-| SS-13 | Sandboxed Tool Execution | 2.13 | ferrochain-sandbox | BC-2.13.001–006 | 1 |
+| SS-13 | Sandboxed Tool Execution | 2.13 | ferrochain-sandbox | BC-2.13.001–007 | 1 |
 | SS-14 | Typed Error Taxonomy | 2.14 | ferrochain-core | BC-2.14.001–006 | 1 |
-| SS-15 | Long-Horizon Memory | 2.15 | ferrochain-memory | BC-2.15.001–003 | 2 |
+| SS-15 | Long-Horizon Memory | 2.15 | ferrochain-memory | BC-2.15.001–006 | 2 |
 | SS-16 | Tool Retry + Circuit Breaker | 2.16 | ferrochain-core | BC-2.16.001–003 | 2 |
 | SS-17 | Formal Verification Pipeline | 2.17 | xtask, ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox | BC-2.17.001–002 | 6 |
+
+> **D20 Capability Additions (v1.2):** SS-09 adds CAP-021 (MCP server role) per ADR-012 — introduces `mcp::server` execution module in ferrochain-mcp; BC range extended from 001–005 to 001–007. SS-15 adds CAP-020 (self-improvement primitives) per ADR-012 — includes `SkillStore`, `MemoryWriteGuard` execution modules and `ContextMutationConfig` definitions; BC range extended from 001–003 to 001–006.
 
 ## Canonical Crate Roster (Source of Truth)
 
@@ -120,6 +124,7 @@ R6 namespace reservation: publish-all.sh must cover all 18 published crates befo
 | ADR-009 | Budget Governance Engine Placement | accepted | — |
 | ADR-010 | Error Taxonomy and anyhow Confinement | accepted | — |
 | ADR-011 | Cache-Key Content-Hash Contract (NE-05) | accepted — constrained by D17 NE adoption | — |
+| ADR-012 | Self-Improvement Primitives: Skill Registry, Context Mutation, Guarded Writes (D20) | accepted — D20 authority | — |
 
 ## Verification Properties (VP-INDEX)
 

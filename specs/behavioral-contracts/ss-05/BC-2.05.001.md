@@ -133,6 +133,7 @@ is returned. The graph does not proceed and does not leave a partial checkpoint.
 - BC-2.05.005 — composes with: empty-queue guard is the dual of this (what happens when no interrupt exists)
 - BC-2.04.001 — depends on: per-task put_writes durability is the storage primitive this uses
 - BC-2.04.005 — related to: crash-recovery for interrupted runs uses the INTERRUPT marker
+- _(v2-deferred: in-flight cancellation — cancelling a run that is currently mid-super-step and propagating a CancelledError through the active node tasks is deferred to v2; v1 interrupt-and-resume covers only voluntary pause-and-wait, not async abort of executing nodes)_
 
 ## Architecture Anchors
 

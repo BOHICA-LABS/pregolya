@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.10"
+version: "2.12"
 status: active
 producer: product-owner
 total_standing_gates: 33
@@ -13,10 +13,10 @@ inputs:
   - .factory/STATE.md
 input-hash: "6fed331325c7bdfc4085b45c54e92aabc9255643d861ef286bdd1eed30c89055"
 traces_to: prd.md
-total_bcs: 86
-total_batches: 13
+total_bcs: 95
+total_batches: 15
 p0_count: 48
-p1_count: 30
+p1_count: 39
 p2_count: 8
 subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-INDEX SS-NN IDs in Phase 1b"
 ---
@@ -32,13 +32,13 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 
 | Metric | Value |
 |--------|-------|
-| Total BCs | 86 |
+| Total BCs | 95 |
 | P0 (must-have) | 48 |
-| P1 (should-have) | 30 |
+| P1 (should-have) | 39 |
 | P2 (nice-to-have) | 8 |
-| Batches | 13 |
+| Batches | 15 |
 | BCs per batch (max) | 9 (Batch 9 only — Step-E exception; planning cap remains 8) |
-| Subsystems covered | 17 (SS.01–SS.17, mapping CAP-001–CAP-019) |
+| Subsystems covered | 17 (SS.01–SS.17, mapping CAP-001–CAP-021) |
 
 ## Subsystem → CAP Mapping
 
@@ -52,13 +52,13 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | SS.06 | CAP-007 | ferrochain-graph | P0 |
 | SS.07 | CAP-008 | ferrochain-splitters | P0 |
 | SS.08 | CAP-009, CAP-011 | ferrochain-\<provider\>, ferrochain-standard-tests | P1 |
-| SS.09 | CAP-010 | ferrochain-mcp | P1 |
+| SS.09 | CAP-010, CAP-021 | ferrochain-mcp | P1 |
 | SS.10 | CAP-012 | ferrochain-graph | P0 |
 | SS.11 | CAP-013 | ferrochain-core/graph | P0 |
 | SS.12 | CAP-014 | ferrochain-server | P1 |
 | SS.13 | CAP-015 | ferrochain-graph/sandbox | P1 |
 | SS.14 | CAP-016 | ferrochain-core | P0 |
-| SS.15 | CAP-017 | ferrochain-memory (P2) | P2 |
+| SS.15 | CAP-017 (P2), CAP-020 (P1) | ferrochain-memory | P1/P2 |
 | SS.16 | CAP-018 | ferrochain-core | P2 |
 | SS.17 | CAP-019 | all (formal verification) | P2 |
 
@@ -108,19 +108,19 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | DI | Enforcing BCs |
 |----|--------------|
 | DI-001 | BC-2.02.002, BC-2.03.001, BC-2.03.002, BC-2.03.003, BC-2.17.001 |
-| DI-002 | BC-2.04.001, BC-2.04.002, BC-2.04.005 |
+| DI-002 | BC-2.04.001, BC-2.04.002, BC-2.04.005, BC-2.04.008, BC-2.15.006 |
 | DI-003 | BC-2.05.001, BC-2.05.002, BC-2.05.003, BC-2.05.004, BC-2.05.005, BC-2.05.006, BC-2.10.004 |
 | DI-004 | BC-2.04.003, BC-2.04.004 |
 | DI-005 | BC-2.04.006, BC-2.17.001 |
-| DI-006 | BC-2.13.001, BC-2.13.002, BC-2.13.003, BC-2.13.006 |
+| DI-006 | BC-2.13.001, BC-2.13.002, BC-2.13.003, BC-2.13.006, BC-2.13.007 |
 | DI-007 | BC-2.13.004, BC-2.13.005, BC-2.17.001 |
-| DI-008 | BC-2.01.001, BC-2.01.002, BC-2.08.006, BC-2.08.010, BC-2.14.001, BC-2.14.003 |
-| DI-009 | BC-2.08.007, BC-2.14.004 |
-| DI-010 | BC-2.14.005 |
+| DI-008 | BC-2.01.001, BC-2.01.002, BC-2.04.008, BC-2.08.006, BC-2.08.010, BC-2.08.013, BC-2.08.014, BC-2.09.006, BC-2.09.007, BC-2.13.007, BC-2.14.001, BC-2.14.003, BC-2.15.004, BC-2.15.005, BC-2.15.006 |
+| DI-009 | BC-2.08.007, BC-2.08.014, BC-2.14.004 |
+| DI-010 | BC-2.08.014, BC-2.09.007, BC-2.13.007, BC-2.14.005 |
 | DI-011 | BC-2.06.001, BC-2.06.003, BC-2.08.001, BC-2.12.007 |
-| DI-012 | BC-2.09.003, BC-2.11.001, BC-2.11.002, BC-2.11.003, BC-2.11.004, BC-2.11.005, BC-2.11.006 |
+| DI-012 | BC-2.09.003, BC-2.11.001, BC-2.11.002, BC-2.11.003, BC-2.11.004, BC-2.11.005, BC-2.11.006, BC-2.15.005 |
 | DI-013 | BC-2.12.005 |
-| DI-014 | BC-2.08.004, BC-2.08.007, BC-2.09.004, BC-2.09.005, BC-2.14.001, BC-2.14.006 |
+| DI-014 | BC-2.04.008, BC-2.08.004, BC-2.08.007, BC-2.08.013, BC-2.08.014, BC-2.09.004, BC-2.09.005, BC-2.09.006, BC-2.09.007, BC-2.14.001, BC-2.14.006, BC-2.15.004, BC-2.15.005, BC-2.15.006 |
 
 **Coverage: 14/14 DIs enforced. Zero orphan invariants.**
 
@@ -309,6 +309,36 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 | BC-2.08.010 | `#[tool]` Attribute Macro: async fn → Tool implementor via schemars::JsonSchema | P1 | CAP-002 | DI-008 | Wave 1 |
 | BC-2.08.011 | `#[entrypoint]` Attribute Macro: START edge auto-wiring for StateGraph | P1 | CAP-003 | — | Wave 1 |
 | BC-2.08.012 | `#[task]` Attribute Macro: task registration boilerplate generation | P1 | CAP-003 | — | Wave 1 |
+
+---
+
+## D20 Integration BCs (UNBLOCKED — ADR-012 + domain-d-hermes-agent.md analysis)
+
+D20 gap analysis on domain-d-hermes-agent.md produced 9 new BCs across SS.04, SS.08, SS.09,
+SS.13, and SS.15. Split into two batches: Batch 14 (8 BCs, Wave 2) and Batch 15 (1 BC, Wave 1)
+to respect the planning cap of 8 BCs per batch (cap exception would require Step-E doc, not done;
+split by wave avoids exception).
+
+### Batch 14 — D20 Integration: Provider Dialect + Failover + MCP Server + Self-Improvement Primitives (P1, Phase-1b, D20)
+*8 BCs — SS.04/SS.08/SS.09/SS.15 extensions (Wave 2)*
+
+| BC ID | Title | Priority | CAP | DI | Wave |
+|-------|-------|----------|-----|----|------|
+| BC-2.04.008 | FTS conversation search over checkpoint history (single-process; SQLite FTS5) | P1 | CAP-005 | DI-002, DI-008, DI-014 | Wave 2 |
+| BC-2.08.013 | Pluggable tool-call dialect seam (ToolCallDialect; Hermes ChatML XML) | P1 | CAP-009 | DI-008, DI-014 | Wave 2 |
+| BC-2.08.014 | Provider failover chain (ProviderFallbackPolicy; ordered fallback on 429/5xx/Auth) | P1 | CAP-009 | DI-008, DI-009, DI-010, DI-014 | Wave 2 |
+| BC-2.09.006 | MCP server tool advertisement (tools/list; mcp::server) | P1 | CAP-021 | DI-008, DI-014 | Wave 2 |
+| BC-2.09.007 | MCP server tool invocation (tools/call; external client executes registered tool) | P1 | CAP-021 | DI-008, DI-010, DI-014 | Wave 2 |
+| BC-2.15.004 | SkillStore registry — load-on-demand skill documents | P1 | CAP-020 | DI-008, DI-014 | Wave 2 |
+| BC-2.15.005 | Guarded memory and skill writes (MemoryWriteGuard; E-MEMORY-007) | P1 | CAP-020 | DI-008, DI-012, DI-014 | Wave 2 |
+| BC-2.15.006 | Frozen-snapshot context mutation — memory-sourced system-prompt content | P1 | CAP-020 | DI-002, DI-008, DI-014 | Wave 2 |
+
+### Batch 15 — D20 Integration: Env-Sanitization Sandbox Boundary (P1, Phase-1b, D20; Wave 1)
+*1 BC — SS.13 addendum (Wave 1 — unblocked by existing BC-2.13.001–006 Wave-1 foundation)*
+
+| BC ID | Title | Priority | CAP | DI | Wave |
+|-------|-------|----------|-----|----|------|
+| BC-2.13.007 | Environment variable sanitization at sandbox execution boundary | P1 | CAP-015 | DI-006, DI-008, DI-010 | Wave 1 |
 
 ---
 
@@ -731,10 +761,11 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | E-MEMORY-002 | DURABILITY | Maybe | `Never` | BC-2.15.001: storage-full is non-recoverable by retry without operator intervention (capacity must be freed or expanded) |
     | E-MEMORY-005 | DURABILITY | Maybe | `Never` | BC-2.15.003: GDPR erasure partial failure rolled back; retry without fixing the underlying cause will produce the same partial failure |
     | E-BUDGET-002 | DURABILITY | Maybe | `Never` | BC-2.10.002: budget journal write failure is non-recoverable by retry if the storage backend has failed; journaling must be restored by operator |
+    | E-MCP-005 | TRANSPORT | Later | `Never` | BC-2.09.006: socket bind failure (EADDRINUSE, EACCES) requires operator configuration change — the same bind address/port will fail immediately on retry; `Later` would be misleading (D20 sub-burst 2) |
 
     **Rationale:** ADV-P1D-PASS-28 §F-P28-01 found that 5 codes have per-code RetryHints
     diverging from their category defaults with no precedence rule documenting which value
-    is authoritative. The fix (F-P28-01) relabeled the column to "Default RetryHint" and
+    is authoritative. E-MCP-005 added as 6th divergence in D20 sub-burst 2. The fix (F-P28-01) relabeled the column to "Default RetryHint" and
     added a precedence rule; this gate ensures future divergences are explicitly justified.
     Source: ADV-P1D-PASS-28 §F-P28-01 [process-gap].
 
@@ -1391,12 +1422,19 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     | `TokenUsage` | BudgetPolicy | BC-2.10.001 PC2/PC3 (struct shape: prompt_tokens, completion_tokens, total_tokens, estimated_cost) | RESOLVED |
     | `PolicyDecision` | BudgetPolicy | BC-2.10.001 PC3 (three-variant contract: Allow / Escalate{reason,current_usage} / Deny{reason,current_usage}); inline §BudgetPolicy (interface-definitions.md v2.15 — DEFINED P60) — name-equality verified: BC uses PolicyDecision, interface uses PolicyDecision | RESOLVED |
     | `RunContext` | BudgetPolicy | BC-2.10.001 precondition 3 ("The execution engine has access to the `RunContext` (thread_id, run_id, sub-agent identity if applicable)"); inline §BudgetPolicy (interface-definitions.md v2.16 — DEFINED P61); name-equality verified: BC uses RunContext, interface uses RunContext; fields fully enumerated in pre-3 (thread_id, run_id, sub_agent_id: Option) | RESOLVED |
+    | `ToolCall` | ToolCallDialect | BC-2.08.002 (tool-call round-trip conformance — entire BC governs the ToolCall structure: name, arguments, id); name-equality verified: BC-2.08.002 governs ToolCall throughout; interface block uses ToolCall | RESOLVED |
+    | `SkillDescriptor` | SkillStore | inline §SkillStore (interface-definitions.md v2.20 — DEFINED D20 sub-burst 2); fields: name: String, namespace: String, key: String, tags: Vec\<String\> | RESOLVED |
+    | `MemoryWriteRequest` | MemoryWriteGuard | inline §MemoryWriteGuard (interface-definitions.md v2.20 — DEFINED D20 sub-burst 2); variants: Add\{namespace, key, value\}, Replace\{namespace, key, old\_value, new\_value\}, Remove\{namespace, key\} | RESOLVED |
+    | `WriteGuardDecision` | MemoryWriteGuard | inline §MemoryWriteGuard (interface-definitions.md v2.20 — DEFINED D20 sub-burst 2); variants: Allow, Deny\{reason: String\}, Transform\{sanitized: Value\} | RESOLVED |
+    | `BudgetInfo` | BudgetPolicy (via RunContext.budget\_info) | inline §BudgetPolicy (interface-definitions.md v2.21 — DEFINED D20 TOUCH-UP); fields: tokens\_remaining: Option\<i64\>, steps\_remaining: Option\<u32\>; authority BC-2.10.003 v1.2 PC5/INV/TV-007; name-equality verified | RESOLVED |
+    | `ProviderCredential` | ProviderFallbackPolicy | NOT IN CORPUS — implementer-scope (provider-specific credential shape differs per provider: API key, OAuth token, etc.); flagged for architect | UNRESOLVED |
+    | `CredentialRefreshConfig` | ProviderFallbackPolicy | NOT IN CORPUS — implementer-scope (callback/config for automatic credential refresh on auth failure); flagged for architect | UNRESOLVED |
 
     > **Retired from BudgetPolicy rows (P60):** `RunId` (no longer in trait — removed from 3-param to 2-param sig), `EvidenceJournal` (no longer in trait — journal writes are caller responsibility per BC-2.10.001 INV + ADR-009), `BudgetDecision` (renamed to PolicyDecision — see gate #19 retired-identifier table).
     > **Retired from BudgetPolicy rows (P61):** `BudgetContext` (renamed to RunContext per BC-2.10.001 pre-3 canon — see gate #19 retired-identifier table; near-name blindspot F-P61-02).
 
-    **Census verdict:** 19/21 types resolved; 2 unresolved (ChatConfig, CheckpointConfig) — flagged
-    implementer-scope for architect; do NOT block spec publication.
+    **Census verdict:** 24/28 types resolved; 4 unresolved (ChatConfig, CheckpointConfig, ProviderCredential, CredentialRefreshConfig) — flagged
+    implementer-scope for architect; do NOT block spec publication. (28 rows: 23 RESOLVED + 1 EXTERNAL [Value, exempt] + 4 UNRESOLVED = 28 ✓; prior verdict "25/28" was wrong on both counts — table had 27 rows before BudgetInfo addition, and numerator 25 was incorrect arithmetic; corrected in D20 TOUCH-UP burst.)
 
     **Census trigger:** Any burst that edits `interface-definitions.md` §Public Rust Trait Signatures
     (new method, type rename, inline enum addition or removal) + every adversary rotation.
@@ -1538,6 +1576,8 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.12 | 2026-07-15 | D20 TOUCH-UP burst — Residue 1: BudgetInfo row added to gate #31 census table (RESOLVED — defined inline in interface-definitions.md v2.21 §BudgetPolicy, BC-2.10.003 v1.2). Census verdict corrected: prior "25/28" had two errors — (a) table had 27 rows (BudgetInfo was the missing 28th row) and (b) numerator 25 was wrong arithmetic. True N/M after recount = 24/28 (23 RESOLVED + 1 EXTERNAL [Value, exempt] = 24 effectively resolved; 4 UNRESOLVED unchanged; total = 28). | D20 TOUCH-UP |
+| 2.11 | 2026-07-15 | D20 INTEGRATE sub-burst 2: 9 new BCs registered (86→95; P1 30→39; batches 13→15). Batch 14 (8 BCs, Wave 2): BC-2.04.008 (CAP-005), BC-2.08.013/014 (CAP-009), BC-2.09.006/007 (CAP-021), BC-2.15.004/005/006 (CAP-020). Batch 15 (1 BC, Wave 1): BC-2.13.007 (CAP-015). Subsystem→CAP mapping: SS.09 gains CAP-021; SS.15 gains CAP-020. DI coverage table: DI-002/006/008/009/010/012/014 all gain new enforcing BCs; zero orphan invariants (14/14 DIs covered). Gate #22: E-MCP-005 added as 6th intentional RetryHint divergence (TRANSPORT/Later→Never; BC-2.09.006 anchored). Gate #31 census: +7 types (ToolCall, SkillDescriptor, MemoryWriteRequest, WriteGuardDecision, ProviderCredential, CredentialRefreshConfig); census 19/21 → 25/28 resolved (4 UNRESOLVED: ChatConfig, CheckpointConfig, ProviderCredential, CredentialRefreshConfig). | D20 sub-burst 2 |
 | 2.10 | 2026-07-15 | F-P70-01: Gate #27 budget ownership corrected per ADR-009 v1.2 Option 3 split — "budget" removed from ferrochain-graph group; new rules added: budget ENGINE (BudgetEngine, EvidenceJournal → ferrochain-graph) and budget TRAIT/types (BudgetPolicy, PolicyDecision, TokenUsage, RunContext → ferrochain-core/src/budget.rs). Quick-check forbidden set: `ferrochain-core/src/budget` removed (BC-2.10.001:141 + BC-2.10.003:139 are correct anchors, not wrong-crate hits); positive assertion added (BudgetEngine/EvidenceJournal must never anchor to ferrochain-core). Guardrail canon rule added (GuardrailHook trait → ferrochain-core; invocation pipeline → ferrochain-graph) — adjudicated placement missing from ownership rules since pass-61. Motivating instance block expanded with F-P70-01. | F-P70-01 |
 | 2.7 | 2026-07-15 | Gate #33 "taxonomy anchor reverse-verification census" added; `total_standing_gates` 32→33. Reverse axis of gate #30: every live (non-tombstone) taxonomy code's declared BC Anchor body must contain the code string or variant name with a specified raise condition; census = per-code grep; orphans/mis-anchors = findings. Trigger: every taxonomy edit + adversary rotation. Pass threshold: 100%. Post-fix census (ADV-P1D-PASS-66): 78/78 live codes anchored (100% PASS). Motivating instances: F-P66-03 (E-SERVER-005 retired — CORS denial is silent header-omission; code was unraised), F-P66-02 (E-CHKPT-003 — BC-2.04.005 lacked EC/TV for read-failure raise; added this burst), F-P66-01 (E-MCP-003 — re-anchored from BC-2.09.005 to BC-2.09.001; EC-006 + TV-008 added this burst). (ADV-P1D-PASS-66 §OBS-P66-1 [process-gap]) | OBS-P66-1 |
 | 2.6 | 2026-07-15 | Gate #28 widened with date-validity sub-check (OBS-P65-1 [process-gap]): all changelog entries in any BC file (Form A and Form B) must satisfy (a) date ≤ frontmatter timestamp, (b) date ≤ current burst date, and (c) monotonic per file ordering convention. Form-B set (BC-2.07.002/BC-2.08.011/BC-2.08.012) explicitly listed as required enumeration targets alongside prd-supplements in every date sweep. Census command added. `total_standing_gates` unchanged at 32 (widening, not new gate). Motivating instances: F-P64-02 (supplement body changelog dates, pass-64) + F-P65-01 (BC-2.07.002 Form-B changelog v1.1 row dated 2026-07-16, pass-65). (pass-65, OBS-P65-1) | F-P65-01, OBS-P65-1 |

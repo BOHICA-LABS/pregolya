@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.19"
+version: "2.21"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -30,6 +30,8 @@ changelog:
   - "2.16 (ADV-P1D-PASS-61): F-P61-02 (MED) + F-P61-01 (HIGH, partial) — §BudgetPolicy context param corrected per orchestrator canon D18-P61-A. (1) Rename context param &BudgetContext → &RunContext: BC-2.10.001 precondition 3 names RunContext (thread_id, run_id, sub-agent identity) as the context type; BudgetContext was minted without corpus search (gate #31 near-name blindspot); BudgetContext RETIRED per gate #19. (2) RunContext implementer-scope note replaced with RESOLVED note: precondition 3 fully enumerates fields (thread_id, run_id, sub-agent identity) → RunContext is RESOLVED, not implementer-scope. Citation corrected: BC-2.10.001 precondition 3 (NOT PC3/INV — those sections describe PolicyDecision and purity, not context contents). (3) BC anchor note updated: precondition 3 authority added."
   - "2.17 (ADV-P1D-PASS-66): F-P66-03 — remove E-SERVER-005 (CorsRejected, POLICY) from 403 row; code RETIRED (tombstone in error-taxonomy.md v1.9). BC-2.12.005 PC2/TV-001 specifies CORS denial as silent header-omission — no error body is ever emitted; listing E-SERVER-005 in the 403 row misled implementers toward building explicit CORS error bodies. 403 row description updated to remove 'CORS'. E-PROV-007 omission note updated to remove E-SERVER-005 from the list of direct-403 codes. Disposition census 79→78: 44 HTTP table rows (−E-SERVER-005), 11 individual omission notes, 23 blanket library-layer coverage, 0 uncovered. Gates #20 POLICY census + gate #21 §17-C re-run: all remaining POLICY codes correctly mapped (E-SERVER-004 → 403 direct; E-GRAPH-013 → 403 direct; others library-layer or per-endpoint overrides). PASS."
   - "2.18 (ADV-P1D-PASS-67): F-P67-01 — fix 422 row cross-reference enumeration: DURABILITY/INTERNAL E-CHKPT codes listed as routed to the 500 row omitted E-CHKPT-007 (CipherHeaderMissing, INTERNAL), which IS in the 500 row. Enumeration corrected from (E-CHKPT-001, -002, -003, -004, -006) to (E-CHKPT-001, -002, -003, -004, -006, -007). Gate #21 cross-row routing-enumeration completeness sub-check applied — all inter-row enumerations verified. Disposition census unchanged: 44 HTTP table rows, 11 individual omission notes, 23 blanket library-layer coverage, 0 uncovered."
+  - "2.21 (D20 TOUCH-UP burst): Residue 1 — §BudgetPolicy RunContext inline note updated: added field `budget_info: Option<BudgetInfo>` (BC-2.10.003 v1.2 PC5/INV); `BudgetInfo` struct defined inline with fields `tokens_remaining: Option<i64>` and `steps_remaining: Option<u32>` (gate #31 RESOLVED). BC anchor updated to cite BC-2.10.003. Disposition census unchanged: 43 HTTP table rows, 16 individual omission notes, 26 blanket library-layer coverage entries = 85. CORRIGENDUM (Residue 2): This document's split (43 HTTP + 16 individual + 26 blanket = 85) is the verified correct partition; error-taxonomy.md v1.11 erroneously stated 44 HTTP + 15 individual + 26 blanket = 85 — the split error arose because the E-CORE-004 move (HTTP table → individual omission note, interface-definitions.md v2.19) was not reflected in error-taxonomy.md v1.10 census; corrected in error-taxonomy.md v1.12."
+  - "2.20 (D20 INTEGRATE sub-burst 2): Four new §Public Rust Trait Signatures added: §ToolCallDialect (BC-2.08.013 — object-safe dialect seam for tool-call serialization; built-ins NativeOpenAiJson/NativeAnthropic/HermesChatMlXml), §ProviderFallbackPolicy (BC-2.08.014 — ordered fallback chain struct; ProviderCredential/CredentialRefreshConfig flagged UNRESOLVED implementer-scope for architect), §SkillStore (BC-2.15.004 — async trait with SkillDescriptor inline struct), §MemoryWriteGuard (BC-2.15.005 — pure sync guard with MemoryWriteRequest + WriteGuardDecision inline enums). Blanket omission MEMORY annotation: VAL/POLICY/DURABILITY → VAL/POLICY/DURABILITY/SECURITY (+E-MEMORY-007 SECURITY). Four individual omission notes added: E-CHKPT-008 (VAL), E-CHKPT-009 (INTERNAL), E-PROV-009 (VAL), E-PROV-010 (POLICY) — all library-layer Err, never direct HTTP terminal. Gate #31 census: 19/21 → 25/28 resolved (+ToolCall, SkillDescriptor, MemoryWriteRequest, WriteGuardDecision all RESOLVED; ProviderCredential, CredentialRefreshConfig UNRESOLVED). Disposition census 78→85: 43 HTTP table rows, 16 individual omission notes (+4), 26 blanket library-layer coverage entries (+3: E-MCP-005 in MCP blanket, E-SBXD-006 in SBXD blanket, E-MEMORY-007 in MEMORY blanket)."
   - "2.19 (ADV-P1D-PASS-69): F-P69-01 — fix 400 row range-shorthand category mismatch: 'E-CORE-001 through E-CORE-005' silently included E-CORE-004 (INTERNAL, not VAL). (1) 400 row: range replaced with explicit VAL enumeration 'E-CORE-001, E-CORE-002, E-CORE-003, E-CORE-005' — each verified VAL in error-taxonomy.md (lines 68-70, 72). (2) E-CORE-004 (INTERNAL — BC-2.01.004 PC5, pipe-composition type-boundary mismatch) given individual omission note mirroring E-CORE-006/E-CORE-007 (library-layer Err return, never direct HTTP terminal; INTERNAL→500 categorical fallback). (3) Range sweep: 'E-CORE-001 through E-CORE-005' was the only range expression in the status table rows — no other ranges found. Disposition census 78→78: 43 HTTP table rows (−E-CORE-004 from 400 row), 12 individual omission notes (+E-CORE-004 library-layer note), 23 blanket library-layer coverage, 0 uncovered."
 inputs:
   - .factory/specs/prd.md
@@ -260,14 +262,158 @@ pub enum PolicyDecision {
 
 > **`RunContext`** — RESOLVED. Defined by BC-2.10.001 precondition 3: "The execution engine
 > has access to the `RunContext` (thread_id, run_id, sub-agent identity if applicable) for
-> policy evaluation calls." Fields: `thread_id`, `run_id`, `sub_agent_id: Option<SubAgentId>`.
+> policy evaluation calls." Fields: `thread_id`, `run_id`, `sub_agent_id: Option<SubAgentId>`,
+> `budget_info: Option<BudgetInfo>` (v1.2 addition — BC-2.10.003 PC5/INV; populated by
+> `graph::budget_engine` at each super-step boundary before task dispatch; `None` when no
+> `BudgetPolicy` is active).
 > Concrete struct definition lives in `ferrochain-core/src/budget.rs` per ADR-009 Option 3.
 > (gate #31 RESOLVED via BC-2.10.001 precondition 3 — name-equality verified)
+
+> **`BudgetInfo`** — RESOLVED (defined inline). Struct carried in `RunContext.budget_info:
+> Option<BudgetInfo>` at each super-step boundary. Fields:
+> `tokens_remaining: Option<i64>` — `ceiling - accumulated_tokens` (signed; may be negative
+> when a Deny has just been triggered because `accumulated > ceiling`; `None` if no token
+> ceiling is configured), `steps_remaining: Option<u32>` — `recursion_limit - current_step`
+> (`None` if no step limit is configured).
+> Authority: BC-2.10.003 v1.2 PC5 (remaining-budget exposure postcondition),
+> BC-2.10.003 INV (signed arithmetic rationale for `Option<i64>`),
+> BC-2.10.003 TV-007 (canonical test vector: ceiling=10000, accumulated=3000,
+> recursion_limit=25, step=1 → tokens_remaining=Some(7000), steps_remaining=Some(24)).
+> Module: `ferrochain-core/src/budget.rs` (alongside `RunContext`).
+> (gate #31 RESOLVED — defined inline; added v2.21)
 
 **BC anchor:** BC-2.10.001 precondition 3 (RunContext fields: thread_id, run_id, sub-agent identity),
 BC-2.10.001 PC3 (PolicyDecision variants + purity invariant),
 BC-2.10.001 TV-001–TV-003 (variant payloads verified),
-BC-2.10.002 INV (journal writes are caller responsibility)
+BC-2.10.002 INV (journal writes are caller responsibility),
+BC-2.10.003 v1.2 PC5 + INV + TV-007 (BudgetInfo shape and arithmetic)
+
+### ToolCallDialect
+
+```rust
+/// Pluggable, object-safe seam for serializing and deserializing tool calls.
+/// Implementations: NativeOpenAiJson (default), NativeAnthropic, HermesChatMlXml.
+///
+/// Authority: BC-2.08.013 (Pluggable Tool-Call Dialect Seam).
+/// Module: ferrochain-core (trait definition); ferrochain-<provider> (dispatch).
+pub trait ToolCallDialect: Send + Sync {
+    /// Serialize a single ToolCall to the dialect's wire format.
+    fn serialize_tool_call(&self, call: &ToolCall) -> Result<String, FerrochainError>;
+    /// Deserialize zero or more tool calls from model output content.
+    fn deserialize_tool_calls(&self, content: &str) -> Result<Vec<ToolCall>, FerrochainError>;
+    /// Machine-readable dialect identifier (e.g., "openai_json", "anthropic", "hermes_chatml_xml").
+    fn dialect_name(&self) -> &str;
+}
+```
+
+**BC anchor:** BC-2.08.013 PC1–PC4 (object-safe trait contract, built-in impls, E-PROV-009 on parse failure)
+
+### ProviderFallbackPolicy
+
+```rust
+/// Ordered fallback chain for provider-level resilience.
+/// Tries each provider in `chain` in order; falls over on 429, 5xx, or auth failure.
+///
+/// Authority: BC-2.08.014 (Provider Failover Chain).
+/// Module: ferrochain-core (struct definition); ferrochain-<provider> (dispatch).
+pub struct ProviderFallbackPolicy {
+    /// Ordered list of provider credentials to try; first entry is primary.
+    pub chain: Vec<ProviderCredential>,
+    /// Optional configuration for automatic credential refresh on auth failure.
+    pub credential_refresh: Option<CredentialRefreshConfig>,
+}
+```
+
+> **`ProviderCredential`** — UNRESOLVED (implementer-scope). Provider-specific credential shape differs per provider (API key, OAuth token, custom header). Not formally enumerated in spec corpus; flagged for architect. (gate #31 UNRESOLVED)
+>
+> **`CredentialRefreshConfig`** — UNRESOLVED (implementer-scope). Configuration for automatic credential refresh callback on auth failure. Not formally enumerated in spec corpus; flagged for architect. (gate #31 UNRESOLVED)
+
+**BC anchor:** BC-2.08.014 PC1–PC4 (ordered fallback semantics, E-PROV-010 on chain exhaustion)
+
+### SkillStore
+
+```rust
+/// Pluggable skill document registry for load-on-demand skill retrieval.
+///
+/// Authority: BC-2.15.004 (SkillStore Registry — Load-on-Demand Skill Documents).
+/// Module: ferrochain-memory (memory::skills).
+pub trait SkillStore: Send + Sync {
+    /// Load a skill document by namespace + key. Returns None if not found.
+    async fn load_skill(
+        &self,
+        namespace: &str,
+        key: &str,
+    ) -> Result<Option<String>, FerrochainError>;
+
+    /// List all skill descriptors, optionally filtered by namespace.
+    async fn list_skills(
+        &self,
+        namespace: Option<&str>,
+    ) -> Result<Vec<SkillDescriptor>, FerrochainError>;
+
+    /// Check existence without loading the full document.
+    async fn skill_exists(
+        &self,
+        namespace: &str,
+        key: &str,
+    ) -> Result<bool, FerrochainError>;
+}
+
+/// Metadata descriptor for a registered skill document.
+///
+/// Authority: BC-2.15.004 (SkillStore Registry) — defined inline.
+pub struct SkillDescriptor {
+    pub name: String,
+    pub namespace: String,
+    pub key: String,
+    pub tags: Vec<String>,
+}
+```
+
+> **`SkillDescriptor`** — RESOLVED. Defined inline above; fields match BC-2.15.004 postconditions (name, namespace, key, tags). (gate #31 RESOLVED)
+
+**BC anchor:** BC-2.15.004 PC1–PC4 (load-on-demand, list, exists; None on missing is Ok not Err)
+
+### MemoryWriteGuard
+
+```rust
+/// Pure, synchronous guard that validates memory and skill write operations
+/// before they are committed to the backing store.
+/// Fail-closed: Deny and Transform decisions block writes; Allow proceeds.
+///
+/// Authority: BC-2.15.005 (Guarded Memory and Skill Writes).
+/// Module: ferrochain-core (core::write_guard); ferrochain-memory (write_guard dispatch).
+pub trait MemoryWriteGuard: Send + Sync {
+    /// Validate a proposed write operation. Pure — no I/O, no state mutation.
+    fn validate(&self, req: &MemoryWriteRequest) -> WriteGuardDecision;
+}
+
+/// Describes a proposed write to the memory or skill store.
+///
+/// Authority: BC-2.15.005 — defined inline.
+pub enum MemoryWriteRequest {
+    Add { namespace: String, key: String, value: Value },
+    Replace { namespace: String, key: String, old_value: Value, new_value: Value },
+    Remove { namespace: String, key: String },
+}
+
+/// Decision returned by `MemoryWriteGuard::validate`.
+///
+/// Authority: BC-2.15.005 — defined inline.
+pub enum WriteGuardDecision {
+    Allow,
+    Deny { reason: String },
+    Transform { sanitized: Value },
+}
+```
+
+> **`MemoryWriteRequest`** — RESOLVED. Defined inline above; variants match BC-2.15.005 PC1 (Add/Replace/Remove). (gate #31 RESOLVED)
+>
+> **`WriteGuardDecision`** — RESOLVED. Defined inline above; variants match BC-2.15.005 PC2–PC4 (Allow/Deny/Transform). (gate #31 RESOLVED)
+>
+> **`Value`** — EXTERNAL. `serde_json::Value` — Rust standard JSON value type. (gate #31 EXTERNAL)
+
+**BC anchor:** BC-2.15.005 PC1–PC5 (guard validation contract, E-MEMORY-007 on Deny, Transform semantics)
 
 ## ferrochain-server HTTP API
 
@@ -396,7 +542,15 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 
 > **E-CORE-007 library-layer omission (ADV-P1D-PASS-56-COMPLETION):** E-CORE-007 (GuardrailHookPanic, INTERNAL — BC-2.11.002 / BC-2.11.003 / BC-2.11.004) is raised when a `GuardrailHook::evaluate` call panics at any content-ingress boundary (tool-result, RAG chunk, or memory item). INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from the guardrail ingress pipeline in library code; it is never emitted as a terminal HTTP response by ferrochain-server (if ever propagated to a server-side run, it would surface embedded in Run.error). Fail-closed semantics: content that triggered the panic is treated as rejected and does not enter the model context. Intentionally omitted from the HTTP status table; same treatment as E-CORE-006.
 
-> **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY), E-SPLIT-* (BC-2.07.x, VAL) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only.
+> **E-CHKPT-008 library-layer omission (D20 sub-burst 2):** E-CHKPT-008 (FtsLimitZero, VAL — BC-2.04.008 PC6/EC-004/EC-002) is raised at construction time when `FtsSearchConfig.limit = 0` or when the FTS5 query string is syntactically malformed. VAL→400 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from `CheckpointStore::fts_search` in library code; it is never emitted as a terminal HTTP response by ferrochain-server (no FTS search endpoint in v1; if ever surfaced via server, it would appear embedded in Run.error). Intentionally omitted from the HTTP status table.
+
+> **E-CHKPT-009 library-layer omission (D20 sub-burst 2):** E-CHKPT-009 (Fts5Unavailable, INTERNAL — BC-2.04.008 EC-006) is raised at `CheckpointSaver::new()` construction time when FTS is requested but the SQLite build does not include the FTS5 extension. INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from `CheckpointSaver::new()` in library code; it is never emitted as a terminal HTTP response by ferrochain-server (server startup with a bad FTS5 config fails before any listener is bound). Intentionally omitted from the HTTP status table; same treatment as E-CHKPT-005 and E-SERVER-013 (startup-time library errors).
+
+> **E-PROV-009 library-layer omission (D20 sub-burst 2):** E-PROV-009 (ToolCallDialectParseError, VAL — BC-2.08.013 PC4/EC-002) is raised when `ToolCallDialect::deserialize_tool_calls` fails to parse model-output content. VAL→400 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from the dialect dispatch layer in library code; it propagates as Run.error on the server side (same treatment as E-PROV-005, E-PROV-006). Never a direct HTTP terminal response. Intentionally omitted from the HTTP status table.
+
+> **E-PROV-010 library-layer omission (D20 sub-burst 2):** E-PROV-010 (ProviderChainExhausted, POLICY — BC-2.08.014 PC4/EC-002) is raised when all providers in the `ProviderFallbackPolicy` chain have been tried and all failed. POLICY→403 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from the provider dispatch layer in library code; it propagates as Run.error on the server side (same treatment as E-PROV-007 StructuredOutputRefused). Never a direct HTTP terminal response. Intentionally omitted from the HTTP status table.
+
+> **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY/SECURITY), E-SPLIT-* (BC-2.07.x, VAL) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only.
 
 ## Run Object Schema
 

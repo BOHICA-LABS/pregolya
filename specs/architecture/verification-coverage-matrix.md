@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "1.2"
+version: "1.3"
 status: active
 producer: architect
-timestamp: 2026-07-14T12:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
@@ -17,6 +17,7 @@ changelog:
   - "1.0 (initial): base verification coverage matrix authored."
   - "1.1 (ADV-P1D-PASS-37): F-P37-02 correct Coverage by Criticality Tier summary to CRITICAL 9 / HIGH 12 / MEDIUM 10 / LOW 2 = 33 (was stale 6/7/5/2=20); complete Per-Module Coverage Status table to all 33 architecture modules (was 27); added rows for ferrochain-macros (HIGH), sandbox-wasm (MEDIUM), ferrochain-standard-tests (MEDIUM), memory-store (MEDIUM), xtask (LOW), ferrochain-community (LOW)."
   - "1.2 (ADV-P1D-PASS-45): F-P45-01 correct retry crate from ferrochain-graph to ferrochain-core per module-criticality.md line 64 (SS-16); relocate row from ferrochain-graph cluster into ferrochain-core cluster. Full 33-row crate-ownership diff against module-criticality.md — no other mismatches found."
+  - "1.3 (gate #25 backfill + D20/CAP-021): F-backfill add write-guard enforcement HIGH row missing since ADR-012 D20 burst (matrix header was 33, module-criticality was 34 — drift corrected); add mcp-server MEDIUM row (CAP-021); header 33→35 (CRITICAL 9 / HIGH 13 / MEDIUM 11 / LOW 2); Coverage-by-Tier HIGH 12→13, MEDIUM 10→11."
 ---
 
 # Verification Coverage Matrix: ferrochain
@@ -38,8 +39,8 @@ changelog:
 
 ## Per-Module Coverage Status
 
-> This table covers all 33 architecture modules from `.factory/specs/module-criticality.md`.
-> Tier groupings follow the authoritative inventory (CRITICAL 9 / HIGH 12 / MEDIUM 10 / LOW 2).
+> This table covers all 35 architecture modules from `.factory/specs/module-criticality.md`.
+> Tier groupings follow the authoritative inventory (CRITICAL 9 / HIGH 13 / MEDIUM 11 / LOW 2).
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
@@ -70,10 +71,12 @@ changelog:
 | ollama | ferrochain-ollama | — | — | — | yes | Conformance suite |
 | mcp client | ferrochain-mcp | — | — | — | yes | Red Gate BCs |
 | mcp adapter | ferrochain-mcp | — | — | — | yes | ToolException fidelity |
+| mcp server | ferrochain-mcp | — | — | — | yes | Server-side tool exposure + inbound dispatch (CAP-021) |
 | ferrochain-macros | ferrochain-macros | — | — | — | yes | `#[tool]`/`#[entrypoint]`/`#[task]` expansion correctness |
 | sandbox-wasm | ferrochain-sandbox | — | — | — | yes | WASM execution backend |
 | ferrochain-standard-tests | ferrochain-standard-tests | — | — | — | yes | Shared conformance harness; exercised via provider integrations |
 | memory-store | ferrochain-memory | — | yes | — | yes | KV + vector ops; GDPR erasure protocol |
+| write-guard enforcement | ferrochain-memory | — | — | — | yes | `WriteGuardDecision` enforcement; injection scanning dispatch (D20/ADR-012) |
 | xtask | xtask | — | — | — | — | CI lint gates only; advisory ≥70% |
 | ferrochain-community | ferrochain-community | — | — | — | — | Post-v1 placeholder; not in-tree at v1 |
 
@@ -82,8 +85,8 @@ changelog:
 | Tier | Modules | Kani VPs | proptest | fuzz | Kill Rate Target |
 |------|---------|---------|---------|------|-----------------|
 | CRITICAL | 9 | 3 (VP-001, VP-002, VP-003) | all | subset | ≥ 95% |
-| HIGH | 12 | 0 | most | subset | ≥ 90% |
-| MEDIUM | 10 | 0 | some | — | ≥ 80% |
+| HIGH | 13 | 0 | most | subset | ≥ 90% |
+| MEDIUM | 11 | 0 | some | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | ≥ 70% |
 
 ## Mutation Kill Rate Gates (cargo-mutants)

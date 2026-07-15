@@ -11,7 +11,11 @@ project: ferrochain
 purpose: Phase-1 forcing function + Phase-2 holdout authoring input (product-owner authors hidden scenarios; only this domain is public)
 assessor: product-owner (disposition analysis against BC-INDEX + capability shards; research summary from research-agent 2026-07-14)
 confidence: medium-high (architecture documented at docs/API level; numeric thresholds unverified — see §Research Caveats)
+version: "1.1"
 input-hash: "[pending state-manager]"
+changelog:
+  - "v1.0: Initial domain analysis (D19 burst). Research-agent summary ingested; all 12 requirements dispositioned against BC-INDEX v1.0 + capabilities-p0/p1-p2."
+  - "v1.1 (D20 sub-burst 2): Applied 9 new BCs + CAP-020 + CAP-021. Dispositions updated: req 1 COVERED (BC-2.08.013 ToolCallDialect), req 2 COVERED (BC-2.10.003 v1.2 OnCeiling::Summarize + BudgetInfo), req 3 unchanged + CAP-020 note, req 4 unchanged + CAP-020 note, req 5 v2-DEFERRED (execute_code RPC callback), req 6 COVERED (BC-2.13.007 env-var allowlist), req 8 COVERED (BC-2.04.008 FTS single-process v1), req 9 v2-DEFERRED (in-flight cancellation), req 10 COVERED (BC-2.08.014 ProviderFallbackPolicy), req 11 COVERED (CAP-021/BC-2.09.006-007 MCP server role)."
 ---
 
 # Holdout Domain D — Hermes-style Agentic Assistant
@@ -172,23 +176,24 @@ These three surfaces are not forced by any other domain.
 ## 3. Framework Demands — Mapping to ferrochain's Planned Surface
 
 Legend: **[COVERED]** = in-scope BC verified as semantically matching.
-**[PARTIAL]** = foundation exists, gap identified.
+**[PARTIAL]** = foundation exists, gap identified (historic; all PARTIALs resolved or deferred in v1.1).
 **[NEW framework-scope]** = not in any BC or capability; requires framework work.
 **[NEW application-layer]** = intentionally above the framework; no BC needed.
+**[v2-DEFERRED]** = gap acknowledged; framework work scoped to v2, not v1.
 
 | # | Hermes requirement | ferrochain primitive | Disposition | Gap statement (if PARTIAL/NEW) |
 |---|-------------------|---------------------|------------|-------------------------------|
-| 1 | Multi-provider tool-calling with **pluggable parsers** — Hermes ChatML XML dialect selectable per model alongside native OpenAI JSON + Anthropic | SS-08 / CAP-009 / BC-2.08.002 (provider conformant tool-call round-trip) | **[PARTIAL CAP-009/BC-2.08.002]** | Native OpenAI JSON + Anthropic tool_use covered; no parser seam for non-native dialects (Hermes `<tool_call>{json}</tool_call>` XML). Framework needs a pluggable per-model tool-call serialization/deserialization seam in provider crates. |
-| 2 | **ReAct loop** with bounded iteration budget + **graceful stop-and-summarize** on exhaustion; budget exposed to model mid-run | BSP engine CAP-003/SS-02 + CAP-004/SS-03; `recursion_limit` / E-GRAPH-017 (BC-2.08.002); budget governance CAP-012/SS-10 (BC-2.10.003 halt on ceiling) | **[PARTIAL CAP-003/CAP-004/CAP-012/BC-2.08.002/BC-2.10.003]** | Iteration ceiling (recursion_limit / E-GRAPH-017) and token/cost halt (BC-2.10.003) covered; two gaps: (a) no BC specifies injecting a stop-and-summarize prompt to the model when ceiling is hit — ferrochain halts with error, Hermes prompts the model to summarize; (b) no mechanism to inject remaining-budget into model context during run. |
-| 3 | **Layered/cached system-prompt composition** (SOUL.md identity → MEMORY.md → volatile overlays; ephemeral per-turn overlays that do not invalidate cached prefix; frozen-snapshot semantics) | CAP-001/SS-01 (typed messages); CAP-017/SS-15 (memory store P2); CAP-005/SS-04 (checkpoint per super-step) | **[NEW application-layer]** | ferrochain provides the building blocks (message types, memory store, runnable config) but no framework primitive governs tiered system-prompt construction or frozen-snapshot semantics. This is a concern for the Hermes-layer application built on top. |
-| 4 | **Runtime-mutable procedural skills** (agent loads SKILL.md on demand AND writes/updates at runtime — self-improvement loop) | None | **[NEW application-layer]** | ferrochain provides no skill-loading, skill-routing, or skill-write-back primitives. CAP-017 memory store can persist arbitrary documents, but "skill" as a routing concept is not modeled. This is fully above the framework. |
-| 5 | **Programmatic tool execution** ("tools-callable-from-code"): generated code invokes registered tools via IPC/RPC socket during execution; only final output returns to context; per-script call limits, timeout, interrupt | SS-13 / CAP-015 / BC-2.13.001–006 (sandboxed execution, enforcing backend default, workspace confinement) | **[PARTIAL SS-13/CAP-015/BC-2.13.001–BC-2.13.006]** | Sandboxed execution with pluggable backends, confinement, and seatbelt covered. Gap: the "execute_code RPC gateway" — generated code calling *back into* the registered tool registry via an IPC socket during execution — is not modeled. The sandbox currently runs code in isolation; the reverse-callback pattern (code→ferrochain-tools) requires a new IPC/RPC seam in the sandbox backend. |
-| 6 | **Sandboxed execution** across pluggable backends (local + container min.) with **env-secret stripping** | SS-13 / CAP-015 / BC-2.13.001–006 | **[PARTIAL SS-13/CAP-015/BC-2.13.001–BC-2.13.006]** | Pluggable backends with enforcing default (WASM/container) fully covered. Gap: env-secret stripping at the sandbox execution boundary — no BC specifies filtering environment variables (including provider API keys) before passing the execution environment to the sandbox backend. |
+| 1 | Multi-provider tool-calling with **pluggable parsers** — Hermes ChatML XML dialect selectable per model alongside native OpenAI JSON + Anthropic | SS-08 / CAP-009 / BC-2.08.002 (provider conformant tool-call round-trip); **BC-2.08.013 (ToolCallDialect — pluggable per-model serialize/deserialize seam)** D20 sub-burst 1 | **[COVERED CAP-009/BC-2.08.013]** | Gap closed D20 sub-burst 1: BC-2.08.013 (ToolCallDialect) provides the pluggable seam; Hermes ChatML XML is the `HermesChatMlXml` built-in dialect. E-PROV-009 covers dialect parse failures. |
+| 2 | **ReAct loop** with bounded iteration budget + **graceful stop-and-summarize** on exhaustion; budget exposed to model mid-run | BSP engine CAP-003/SS-02 + CAP-004/SS-03; `recursion_limit` / E-GRAPH-017 (BC-2.08.002); budget governance CAP-012/SS-10 (**BC-2.10.003 v1.2: OnCeiling::Summarize + RunContext.budget\_info / BudgetInfo**) D20 sub-burst 1 | **[COVERED CAP-003/CAP-004/CAP-012/BC-2.10.003 v1.2]** | Both gaps closed by BC-2.10.003 v1.2 (D20 sub-burst 1): (a) OnCeiling::Summarize variant injects a stop-and-summarize prompt to the model on ceiling; (b) RunContext.budget\_info / BudgetInfo struct exposes remaining token/cost budget to the model mid-run. |
+| 3 | **Layered/cached system-prompt composition** (SOUL.md identity → MEMORY.md → volatile overlays; ephemeral per-turn overlays that do not invalidate cached prefix; frozen-snapshot semantics) | CAP-001/SS-01 (typed messages); CAP-017/SS-15 (memory store P2); CAP-005/SS-04 (checkpoint per super-step); CAP-020/SS-15 (BC-2.15.006 frozen-snapshot context mutation) D20 sub-burst 1 | **[NEW application-layer]** | ferrochain provides the building blocks (message types, memory store, runnable config) but no framework primitive governs tiered system-prompt construction or volatile overlay sequencing. This is a concern for the Hermes-layer application built on top. _(D20 note: BC-2.15.006 adds frozen-snapshot context mutation as a framework primitive — CAP-020; the composition orchestration policy (SOUL.md → MEMORY.md → per-turn overlay) remains application-layer.)_ |
+| 4 | **Runtime-mutable procedural skills** (agent loads SKILL.md on demand AND writes/updates at runtime — self-improvement loop) | CAP-020/SS-15 / BC-2.15.004 (SkillStore — load-on-demand skill documents); BC-2.15.005 (MemoryWriteGuard — guarded skill writes) D20 sub-burst 1 | **[NEW application-layer]** | "Skill" as a routing concept (which skill to load and when) is not modeled at the framework level. _(D20 note: CAP-020/BC-2.15.004 adds SkillStore for load-on-demand skill documents; BC-2.15.005 adds MemoryWriteGuard for guarded skill writes — these are framework primitives. The routing and self-improvement loop orchestration remains application-layer.)_ |
+| 5 | **Programmatic tool execution** ("tools-callable-from-code"): generated code invokes registered tools via IPC/RPC socket during execution; only final output returns to context; per-script call limits, timeout, interrupt | SS-13 / CAP-015 / BC-2.13.001–007 (sandboxed execution, enforcing backend default, workspace confinement, env-var allowlist) | **[v2-DEFERRED CAP-015/SS-13]** | Sandboxed execution with pluggable backends, confinement, env-var allowlist, and seatbelt covered (BC-2.13.001–007). The "execute_code RPC gateway" — generated code calling back into the registered tool registry via an IPC socket during execution — is not in v1 scope. Deferred to v2: the reverse-callback pattern (code→ferrochain-tools) requires a new IPC/RPC seam in the sandbox backend. D20 sub-burst 2 explicit deferral. |
+| 6 | **Sandboxed execution** across pluggable backends (local + container min.) with **env-secret stripping** | SS-13 / CAP-015 / BC-2.13.001–006; **BC-2.13.007 (SandboxConfig.env\_allowlist — env-var allowlist pattern filter, fail-closed)** D20 sub-burst 1 | **[COVERED CAP-015/BC-2.13.007]** | Gap closed D20 sub-burst 1: BC-2.13.007 specifies SandboxConfig.env\_allowlist regex pattern filter; E-SBXD-006 for invalid allowlist patterns. Fail-closed: no env-var inherits unless explicitly allowed; DI-006 enforced. |
 | 7 | **Sub-agent spawning** — isolated child loops, own conversation/tools/budget/identity, parent/child lineage | Subgraphs CAP-003/SS-02; per-sub-agent budget CAP-012/BC-2.10.001 EC-004; streaming parent_ids correlation CAP-007/BC-2.06.002; thread isolation CAP-014/SS-12/BC-2.12.003 | **[COVERED CAP-003/CAP-012/CAP-007/CAP-014]** | Isolated subgraph contexts, independent budget policies, parent_ids lineage in events, and thread isolation all covered. "Own identity" (each sub-agent gets its own SOUL.md) is an application-layer concern — the framework provides no concept of agent identity, by design. |
-| 8 | **Durable searchable concurrent conversation store** (full history incl. tool calls + reasoning traces; multi-process safe; **FTS exposed as a tool**) | SS-04 / CAP-005 / BC-2.04.001–BC-2.04.007 (checkpoint history); SS-15 / CAP-017 / BC-2.15.001 (hybrid KV+vector memory P2) | **[PARTIAL CAP-005/SS-04 + CAP-017/SS-15]** | Durable checkpoint history (conversation + tool calls per super-step, SS-04) covered; hybrid vector+keyword memory retrieval (SS-15, P2) covered. Gap: FTS over the full checkpoint/conversation history (tool calls + reasoning traces) exposed as a first-class callable agent tool is absent — the checkpoint store is write-once-per-super-step and not queryable via a text search tool. SQLite WAL multi-process write safety is also not specified (BC-2.04.006 covers session uniqueness, not write concurrency). |
-| 9 | **Interrupt/HITL cancellation mid-run** — in-flight model call or in-flight tool/code execution cancellable by incoming message; structured interruption | SS-05 / CAP-006 / BC-2.05.001–BC-2.05.006 (node-boundary interrupt + risk-tiered classification) | **[PARTIAL CAP-006/SS-05/BC-2.05.001–BC-2.05.006]** | Node-boundary HITL interrupt/resume with risk tiers fully specified. Gap: in-flight cancellation — ferrochain's `interrupt()` fires at node boundaries (between super-steps), not within a running model inference call or a running tool execution. Hermes-style mid-call cancellation by an external message is not modeled; Domain A brief also flagged this (D11 design considerations, PARTIAL). |
-| 10 | **Provider failover + retry policy** — ordered fallback chain on 429/5xx/auth; credential-refresh-then-failover | SS-16 / CAP-018 / BC-2.16.001–BC-2.16.003 (per-tool retry, circuit breaker); SS-08 / CAP-009 (provider abstraction) | **[PARTIAL CAP-018/SS-16 + CAP-009/SS-08]** | Per-tool retry with circuit breaker covered (CAP-018). Gap: provider-level ordered fallback chain — retrying a DIFFERENT provider on 429/5xx/auth, with optional credential-refresh before failover — is not specified in any BC. CAP-009 mentions failover as "a thin layer to add" but no BC defines the failover chain semantics. |
-| 11 | **MCP as BOTH client AND server** — ferrochain connects to MCP servers (client) AND exposes its own tools/resources as an MCP server for other LLM apps | SS-09 / CAP-010 / BC-2.09.001–BC-2.09.005 (MCP client: discovery, routing, untrusted ingress) | **[NEW framework-scope]** | MCP client fully specified (SS-09). MCP server role — ferrochain exposing its tools and resources via the MCP protocol so that other LLM applications can connect as clients — is entirely absent from all BCs and capabilities. This requires a new capability (server endpoint in ferrochain-mcp and/or ferrochain-server) and is not an application-layer concern. |
+| 8 | **Durable searchable concurrent conversation store** (full history incl. tool calls + reasoning traces; multi-process safe; **FTS exposed as a tool**) | SS-04 / CAP-005 / BC-2.04.001–BC-2.04.007 (checkpoint history); **BC-2.04.008 (FTS over checkpoint history — search\_history callable tool, SQLite FTS5)** D20 sub-burst 1; SS-15 / CAP-017 / BC-2.15.001 (hybrid KV+vector memory P2) | **[COVERED CAP-005/BC-2.04.008 — single-process v1]** | Gap closed D20 sub-burst 1: BC-2.04.008 adds search\_history(FtsSearchConfig) backed by SQLite FTS5, co-transactional with checkpoint writes (DI-002); E-CHKPT-008/009. Single-process SQLite WAL semantics; multi-process WAL-safe write concurrency deferred to v2. |
+| 9 | **Interrupt/HITL cancellation mid-run** — in-flight model call or in-flight tool/code execution cancellable by incoming message; structured interruption | SS-05 / CAP-006 / BC-2.05.001–BC-2.05.006 (node-boundary interrupt + risk-tiered classification) | **[v2-DEFERRED CAP-006/SS-05]** | Node-boundary HITL interrupt/resume with risk tiers fully specified (BC-2.05.001–006). In-flight cancellation — ferrochain's `interrupt()` fires at node boundaries (between super-steps), not within a running model inference call or a running tool execution — is not in v1 scope; deferred to v2. See BC-2.05.001 Related BCs v2-deferral note (D20 sub-burst 2). Domain A brief also flagged this. |
+| 10 | **Provider failover + retry policy** — ordered fallback chain on 429/5xx/auth; credential-refresh-then-failover | SS-16 / CAP-018 / BC-2.16.001–BC-2.16.003 (per-tool retry, circuit breaker); SS-08 / CAP-009 (provider abstraction); **BC-2.08.014 (ProviderFallbackPolicy — ordered chain on 429/5xx/auth + credential-refresh-before-failover)** D20 sub-burst 1 | **[COVERED CAP-009/BC-2.08.014]** | Gap closed D20 sub-burst 1: BC-2.08.014 (ProviderFallbackPolicy) specifies ordered fallback chain on 429/5xx/auth with optional credential-refresh-before-failover. E-PROV-010 covers chain exhaustion. |
+| 11 | **MCP as BOTH client AND server** — ferrochain connects to MCP servers (client) AND exposes its own tools/resources as an MCP server for other LLM apps | SS-09 / CAP-010 / BC-2.09.001–BC-2.09.005 (MCP client: discovery, routing, untrusted ingress); **CAP-021/BC-2.09.006-007 (MCP server role: tools/list advertisement + tools/call invocation; stdio + SSE transports)** D20 sub-burst 1 | **[COVERED CAP-021/BC-2.09.006-007]** | Gap closed D20 sub-burst 1: CAP-021 (MCP Server Role) added. BC-2.09.006 specifies MCP server tool advertisement (tools/list); BC-2.09.007 specifies MCP server tool invocation (tools/call). Both stdio and SSE transports. E-MCP-005 covers bind failure. |
 | 12 | **Scheduled autonomous runs** — cron-style, **natural-language definitions**, unattended normal loop, output to external channel | SS-12 / CAP-014 / BC-2.12.004 (CronSchedule with standard cron expressions, isolated session per firing) | **[COVERED SS-12/CAP-014/BC-2.12.004]** + **[NEW application-layer]** for NL definitions | Standard cron expression scheduling with fresh isolated session per firing fully covered. NL → cron synthesis (e.g., "every Monday at 9am" → `0 9 * * 1`) is application-layer; ferrochain accepts the resulting expression, not the NL input. Output to external channel (Slack/WhatsApp routing) is application-layer routing. |
 
 ---
@@ -245,44 +250,46 @@ require a positive adoption/defer/out-of-scope decision in an ADR.
 - [ ] Sub-agent spawning with isolated contexts and independent budget policies
       (CAP-003/CAP-012/BC-2.10.001 EC-004).
 - [ ] Parent/child run lineage via `run_id + parent_ids` in streaming events (CAP-007/BC-2.06.002).
-- [ ] Sandboxed execution with enforcing backend default (CAP-015/BC-2.13.001–BC-2.13.006).
+- [ ] Sandboxed execution with enforcing backend default + env-var allowlist (CAP-015/BC-2.13.001–BC-2.13.007 incl. env-secret stripping, D20).
 - [ ] Cron-style scheduled runs with fresh isolated session per firing (CAP-014/BC-2.12.004).
 - [ ] MCP client: runtime tool discovery + routing + untrusted-ingress guardrail
       (CAP-010/BC-2.09.001–BC-2.09.005; CAP-013/BC-2.11.001–BC-2.11.006).
+- [ ] MCP server role: tool advertisement (tools/list) + invocation (tools/call); stdio + SSE transports
+      (CAP-021/BC-2.09.006–BC-2.09.007, D20).
+- [ ] Per-model pluggable tool-call parser seam: ToolCallDialect trait; built-in HermesChatMlXml + OpenAI JSON + Anthropic
+      (CAP-009/BC-2.08.013, D20).
+- [ ] Stop-and-summarize graceful degradation on ceiling: OnCeiling::Summarize + RunContext.budget\_info / BudgetInfo
+      (CAP-012/BC-2.10.003 v1.2, D20).
+- [ ] Provider-level ordered failover chain on 429/5xx/auth with credential-refresh-before-failover
+      (CAP-009/BC-2.08.014, D20).
+- [ ] FTS over checkpoint history as callable tool: search\_history(FtsSearchConfig) / SQLite FTS5 — single-process v1
+      (CAP-005/BC-2.04.008, D20).
 
-**Gaps in existing planned surface (PARTIAL — see §3 for gap detail):**
-- [ ] **[extends checklist]** Per-model pluggable tool-call parser seam — Hermes XML dialect
-      registerable alongside native OpenAI JSON + Anthropic formats, selectable at
-      `RunnableConfig` / provider construction time. Decide: thin adapter in each provider crate
-      vs a framework-level parser trait.
-- [ ] **[extends checklist]** Stop-and-summarize graceful degradation mode on budget/iteration
-      ceiling — a `on_ceiling = summarize` policy variant that injects a final summarize prompt
-      before halting, instead of returning `E-GRAPH-017` / `E-BUDGET-001`. Decide: new
-      `on_ceiling` variant in `BudgetPolicy` + recursion_limit handler.
-- [ ] **[extends checklist]** In-flight cancellation of model calls and tool executions — cancel
-      signal arrives mid-inference or mid-tool, not just at node boundaries. Decide: async
-      cancellation token plumbed through to provider HTTP call and sandbox executor.
-- [ ] **[extends checklist]** Execute_code → tool-registry IPC/RPC callback gateway — running
-      sandbox code can invoke registered ferrochain tools via a local socket during execution.
-      Decide: optional RPC sidecar in SS-13 sandbox backend vs out-of-scope.
-- [ ] **[extends checklist]** Env-secret stripping at sandbox execution boundary — filter
-      environment variables (provider API keys, credentials) before passing the execution
-      environment to the sandbox backend. Decide: explicit allowlist in `SandboxConfig` vs
-      full env replacement.
-- [ ] **[extends checklist]** Provider-level ordered failover chain on 429/5xx/auth —
-      distinct from per-tool retry (SS-16). Decide: new `ProviderFallbackPolicy` in SS-08
-      vs application-layer concern.
-- [ ] **[extends checklist]** FTS over conversation/checkpoint history as a callable tool —
-      expose `search_history(query)` backed by FTS over the checkpoint store. Decide:
-      new `HistoryStore::fts_search` capability in SS-04 or application-layer. Multi-process
-      WAL-safe write semantics should be explicitly stanced.
+**Gaps in existing planned surface (all resolved or deferred in D20 — see §3 for detail):**
+- [ ] **[COVERED D20 — BC-2.08.013]** Per-model pluggable tool-call parser seam — ToolCallDialect trait
+      with built-in HermesChatMlXml, OpenAI JSON, and Anthropic dialects. E-PROV-009 covers parse failures.
+      (Moved to "Covered by planned surface" checklist above.)
+- [ ] **[COVERED D20 — BC-2.10.003 v1.2]** Stop-and-summarize graceful degradation mode on budget/iteration
+      ceiling — OnCeiling::Summarize variant + RunContext.budget\_info / BudgetInfo for mid-run budget
+      injection. (Moved to "Covered by planned surface" checklist above.)
+- [ ] **[v2-DEFERRED]** In-flight cancellation of model calls and tool executions — cancel signal arrives
+      mid-inference or mid-tool, not just at node boundaries. See BC-2.05.001 Related BCs v2-deferral note.
+- [ ] **[v2-DEFERRED]** Execute_code → tool-registry IPC/RPC callback gateway — running sandbox code can
+      invoke registered ferrochain tools via a local socket during execution. Not in v1 scope.
+- [ ] **[COVERED D20 — BC-2.13.007]** Env-secret stripping at sandbox execution boundary — SandboxConfig.env\_allowlist
+      regex pattern filter; E-SBXD-006 for invalid patterns; fail-closed. (Moved to "Covered" above.)
+- [ ] **[COVERED D20 — BC-2.08.014]** Provider-level ordered failover chain on 429/5xx/auth — ProviderFallbackPolicy
+      with optional credential-refresh-before-failover; E-PROV-010 for chain exhaustion. (Moved above.)
+- [ ] **[COVERED D20 — BC-2.04.008 single-process v1]** FTS over conversation/checkpoint history as a callable tool —
+      search\_history(FtsSearchConfig) / SQLite FTS5; co-transactional with checkpoint writes (DI-002). Multi-process
+      WAL-safe write concurrency deferred to v2. (Moved above.)
 
-**[NEW — framework-scope] requiring a positive ADR decision:**
-- [ ] **[NEW — framework-scope]** MCP server role — `ferrochain-server` or `ferrochain-mcp`
+**[NEW — framework-scope] resolved in D20:**
+- [ ] **[COVERED D20 — CAP-021/BC-2.09.006-007]** MCP server role — `ferrochain-server` or `ferrochain-mcp`
       exposes registered tools and resources via the MCP protocol so external LLM applications
-      can connect as MCP clients. This is the single net-new framework surface Domain D forces.
-      No existing BC touches it. Decide: adopt in Wave 1/2, defer to post-v1, or out-of-scope
-      with explicit rationale.
+      can connect as MCP clients. Adopted in Wave 2: CAP-021 added; BC-2.09.006 (tools/list) and
+      BC-2.09.007 (tools/call) specify behavior for stdio and SSE transports. E-MCP-005 covers
+      bind failure. (Moved to "Covered by planned surface" checklist above.)
 
 **Application-layer (intentionally above the framework — no BC needed):**
 - [ ] Layered/cached system-prompt composition (SOUL.md → MEMORY.md → per-turn overlay).

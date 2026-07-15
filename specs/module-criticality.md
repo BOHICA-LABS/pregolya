@@ -1,10 +1,10 @@
 ---
 document_type: module-criticality
 level: L3
-version: "1.1"
+version: "1.3"
 status: active
 producer: architect
-timestamp: 2026-07-14T12:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
@@ -16,6 +16,8 @@ lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
   - "1.1 (ADV-P1D-PASS-32): F-P32-04 (LOW, adjudicated) add ferrochain-macros HIGH-tier row to Module Inventory (consistent with OBS-P31-1 prd-supplements decision; orchestrator adjudication — #[tool]/#[entrypoint] affect P0 paths per ADR-008); add facade/SDK exclusion note mirroring prd-supplements/module-criticality.md. F-P32-01 (HIGH) recount all rows and rewrite Summary to match exactly (pre-fix summary was wrong: said HIGH 10 / MEDIUM 12, actual HIGH 11 / MEDIUM 10; +macros → CRITICAL 9 / HIGH 12 / MEDIUM 10 / LOW 2 = 33 total)."
+  - "1.2 (D20/ADR-012): add memory::write_guard HIGH row (+1 execution module per ADR-012 Decision 4 gate #25 ruling; write-path injection scanning enforcement, security-significant). Summary 33→34: HIGH 12→13 total. Definitions-only D20 artifacts (core::context_mutation, core::write_guard, memory::skills) excluded per no-row precedent (ADR-009 Option 3 / D18-P61-C)."
+  - "1.3 (D20/CAP-021): add mcp-server MEDIUM row (+1 execution module; CAP-021 MCP server role, inbound tool-call dispatch). Summary 34→35: MEDIUM 10→11 total."
 ---
 
 # Module Criticality Classification: ferrochain (Architecture View)
@@ -54,10 +56,12 @@ changelog:
 | ollama (BaseChatModel impl) | ferrochain-ollama | SS-08 | HIGH | — | ≥ 90% | P5 |
 | lineage | ferrochain-checkpoint | SS-04 | HIGH | — | ≥ 90% | P5 |
 | ferrochain-macros (#[tool], #[entrypoint]) | ferrochain-macros | — | HIGH | — | ≥ 90% | P5 |
+| write-guard enforcement | ferrochain-memory | SS-15 | HIGH | — | ≥ 90% | P5 |
 | sqlite backend | ferrochain-checkpoint | SS-04 | MEDIUM | — | ≥ 80% | P5 |
 | recursive splitter | ferrochain-splitters | SS-07 | MEDIUM | — | ≥ 80% | P5 |
 | mcp client | ferrochain-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | mcp adapter | ferrochain-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
+| mcp server | ferrochain-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | sandbox-wasm | ferrochain-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
 | sandbox-policy | ferrochain-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
 | ferrochain-standard-tests | ferrochain-standard-tests | SS-08 | MEDIUM | — | ≥ 80% | P5 |
@@ -86,10 +90,10 @@ changelog:
 | Tier | Module Count |
 |------|-------------|
 | CRITICAL | 9 |
-| HIGH | 12 |
-| MEDIUM | 10 |
+| HIGH | 13 |
+| MEDIUM | 11 |
 | LOW | 2 |
-| **Total** | **33** |
+| **Total** | **35** |
 
 ## CRITICAL Module — Security Profile
 

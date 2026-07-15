@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.4"
+version: "1.6"
 status: active
 producer: architect
-timestamp: 2026-07-14T12:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -13,13 +13,15 @@ inputs:
   - .factory/STATE.md
 input-hash: "1268b7a2425859ea"
 traces_to: ARCH-INDEX.md
-decisions: [D4, D6, D7, D12, D13, D17]
+decisions: [D4, D6, D7, D12, D13, D17, D20]
 changelog:
   - "1.0 (initial): base module decomposition authored."
   - "1.1 (ADV-P1D-PASS-29): F-P29-04 correct core::events description from past-tense (RunStarted/Ended, NodeStarted/Ended) to imperative canon (RunStart/Stream/End, NodeStart/Stream/End) per BC-2.06.001 authority."
   - "1.2 (ADV-P1D-PASS-37): F-P37-01 reconcile criticality column drift against authoritative module-criticality.md — core::message CRITICAL→HIGH; graph::channels CRITICAL→HIGH; graph::event_emitter HIGH→MEDIUM; ferrochain-macros section heading MEDIUM→HIGH; macros::tool/entrypoint/task all MEDIUM→HIGH."
   - "1.3 (ADV-P1D-PASS-61): F-P61-01 add ferrochain-core budget definitions note per ADR-009 Option 3; qualify graph::budget row to clarify trait lives in core; rename BudgetContext → RunContext per pass-61 adjudication."
   - "1.4 (ADV-P1D-PASS-62): F-P62-01 add deny-anyhow-in-lib (ADR-010/NE-03/DI-014) and deny-description-cache-key (ADR-011/NE-05) to xtask inventory; add non-exhaustive qualifier citing behavioral-contracts/ as authoritative subcommand registry."
+  - "1.5 (D20/ADR-012): add ferrochain-core self-improvement definitions note (core::context_mutation + core::write_guard, definitions-only, no new rows per ADR-009 precedent); add memory::skills (MEDIUM) and memory::write_guard (HIGH) module rows to ferrochain-memory per ADR-012 placements. Universe 33→34 (+memory::write_guard HIGH execution row, gate #25)."
+  - "1.6 (D20/CAP-021+CAP-020): add mcp::server (MEDIUM) to ferrochain-mcp for CAP-021 MCP server role; add BC anchors note to ferrochain-mcp section; update ferrochain-memory BC anchors to BC-2.15.001–006 for CAP-020. Universe 34→35 (+mcp::server MEDIUM execution row, gate #25)."
 ---
 
 # Module Decomposition: ferrochain
@@ -49,6 +51,26 @@ credential security primitives, streaming event types.
 > is added (module universe remains 33; tier counts unchanged). The DISPATCH engine (`BudgetEngine`,
 > `EvidenceJournal`) lives in ferrochain-graph::budget per the guardrail core-definitions/graph-dispatch
 > split precedent. Module path: `ferrochain-core/src/budget.rs` (module `core::budget`).
+
+> **Self-improvement definitions (SS-01/SS-15, trait-definitions-only — ADR-012 D20):** ferrochain-core
+> hosts DEFINITIONS for the three D20 self-improvement primitives. These are pure types and traits with
+> no execution logic — no criticality-counted module rows are added for these definitions. Execution
+> modules (`memory::skills`, `memory::write_guard`) live in ferrochain-memory per the
+> definitions-in-core / enforcement-in-storage precedent.
+>
+> - `core::context_mutation` (`ferrochain-core/src/context_mutation.rs`): `ContextSourceSpec`
+>   (namespace + key), `ContextMutationConfig` (Vec<ContextSourceSpec>). `RunnableConfig` (SS-01)
+>   gains `context_mutations: Option<ContextMutationConfig>`. Loaded by `graph::scheduler` at run
+>   start (frozen-snapshot semantics — context assembled once before first super-step; writes during
+>   the run are visible at next run start only; preserves prompt-prefix caching per ADR-011/ADR-012
+>   Decision 3).
+>
+> - `core::write_guard` (`ferrochain-core/src/write_guard.rs`): `MemoryWriteRequest` enum
+>   (Add/Replace/Remove), `MemoryWriteGuard` trait (pure synchronous validation:
+>   `fn validate(&self, req: &MemoryWriteRequest) -> WriteGuardDecision`), `WriteGuardDecision`
+>   (Allow / Deny{reason} / Transform{sanitized}). This is the write-path analog to `GuardrailHook`
+>   (ingress path). `BoundaryType` is NOT extended — write-path safety is a separate seam
+>   (PASS-58 canon unchanged; BoundaryType = ToolResult|RAGRetrieval|MemoryIngress, 3 variants).
 
 **NE anchors enforced:** NE-07 (constructor Result), NE-10 (credential opacity), NE-03 (no silent None)
 
@@ -143,6 +165,11 @@ The SDK crates have no ferrochain-core dep and are publishable standalone. Enfor
 | `mcp::discovery` | Tool discovery and registration from MCP server at runtime | MEDIUM |
 | `mcp::adapter` | `ToolInvocation` routing; ToolException re-raise with type identity (R11) | MEDIUM |
 | `mcp::ingress` | Untrusted-ingress routing; DI-012 guardrail seam | MEDIUM |
+| `mcp::server` | MCP server endpoint: exposes registered tools to external MCP clients; accepts inbound tool-call requests, dispatches to registered tools, and returns serialized responses (CAP-021/D20/ADR-012) | MEDIUM |
+
+**BC anchors:** BC-2.09.001–007 (CAP-021: BCs 006–007 cover server-side tool exposure and response serialization contracts).
+
+**VP anchors:** `mcp::adapter` is VP-004 target; `mcp::client` is VP-005 target (both integration-tier, Phase 3).
 
 ## ferrochain-memory (SS-15) — MEDIUM
 
@@ -155,8 +182,21 @@ search (keyword / vector / hybrid). Canonical trait: `MemoryStore`.
 | `memory::sqlite` | SQLite durable backend implementation | MEDIUM | SS-15 |
 | `memory::in_memory` | Ephemeral in-memory backend (test/dev) | MEDIUM | SS-15 |
 | `memory::search` | Keyword, vector, and hybrid search implementations | MEDIUM | SS-15 |
+| `memory::skills` | `SkillStore` trait + `SkillDescriptor`; routing/discovery overlay over `MemoryStore` KV; load-on-demand skill documents by name/tags (D20/ADR-012) | MEDIUM | SS-15 |
+| `memory::write_guard` | Guarded write enforcement engine: calls `MemoryWriteGuard::validate()` (from `core::write_guard`) before committing writes; injection scanning dispatch; blocks or sanitizes writes per `WriteGuardDecision`; security-significant write-path seam (D20/ADR-012) | HIGH | SS-15 |
 
-**BC anchors:** BC-2.15.001–003. Canonical trait name: `MemoryStore` per BC-2.15.001 Architecture Anchors.
+**BC anchors:** BC-2.15.001–006 (CAP-020: BCs 004–006 cover self-improvement primitives — `SkillStore` routing overlay, `MemoryWriteGuard` execution enforcement, and `ContextMutationConfig` assembly). Canonical trait name: `MemoryStore` per BC-2.15.001 Architecture Anchors.
+
+> **Self-improvement execution note (D20/ADR-012):** `memory::skills` provides `SkillStore`
+> trait + `SkillDescriptor` types as a routing overlay over `MemoryStore`. Skill documents are
+> ordinary KV entries under a skills namespace; `SkillStore` adds naming, tagging, and
+> load-on-demand semantics. Write path for skill documents passes through `memory::write_guard`
+> (guarded write enforcement). `memory::write_guard` is the execution counterpart of
+> `core::write_guard` (definitions-only, ferrochain-core) — same split as ADR-009 Option 3
+> (BudgetPolicy trait in core / BudgetEngine dispatch in graph). Universe updated to 34 (gate #25):
+> +1 HIGH execution row (`memory::write_guard`); definitions-only entries (`core::context_mutation`,
+> `core::write_guard`, `memory::skills`) follow the no-row precedent. Universe further updated to 35
+> in v1.6 (gate #25): +1 MEDIUM execution row (`mcp::server`, CAP-021/D20).
 
 ## ferrochain-macros (ADR-008) — HIGH
 

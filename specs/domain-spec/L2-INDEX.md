@@ -1,7 +1,7 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.1"
+version: "1.2"
 status: active
 producer: business-analyst
 timestamp: 2026-07-14T00:00:00Z
@@ -30,9 +30,10 @@ sections:
   - ubiquitous-language-core.md
   - ubiquitous-language-server.md
   - bounded-contexts.md
-decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17]
+decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D20]
 changelog:
   - "v1.1: Split capabilities.md → capabilities-p0.md + capabilities-p1-p2.md; entities.md → entities-graph.md + entities-server.md; ubiquitous-language.md → ubiquitous-language-core.md + ubiquitous-language-server.md (all three were over 1,500-token threshold per DF-021)"
+  - "v1.2 (D20 sub-burst 2): CAP-020 (Self-Improvement Primitives: SkillStore + MemoryWriteGuard + Frozen-Snapshot Context Mutation, P1) and CAP-021 (MCP Server Role: Expose Registered Tools as MCP Server Endpoint, P1) added to capabilities-p1-p2.md (v1.1). CAP count 19→21; P1 count 5→7; total 19→21. D20 added to decisions list."
 ---
 
 # L2 Domain Specification: ferrochain
@@ -53,7 +54,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Section | File | Lines | Primary Consumer | Purpose |
 |---------|------|-------|-----------------|---------|
 | Capabilities — P0 | capabilities-p0.md | ~125 | product-owner, architect, story-writer | CAP-001–008 (Wave 0/1) + CAP-012, CAP-013, CAP-016 (D17-elevated to P0; cross-cutting Wave 0/1) |
-| Capabilities — P1/P2 | capabilities-p1-p2.md | ~90 | product-owner, architect, story-writer | P1: CAP-009, CAP-010, CAP-011, CAP-014, CAP-015 (Wave 2 + Wave 0/1); P2: CAP-017, CAP-018, CAP-019 |
+| Capabilities — P1/P2 | capabilities-p1-p2.md | ~115 | product-owner, architect, story-writer | P1: CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-020, CAP-021 (Wave 2 + Wave 0/1); P2: CAP-017, CAP-018, CAP-019 |
 | Entities — Core/Graph/Checkpoint | entities-graph.md | ~100 | architect, product-owner | Core primitives, graph, and checkpoint entities |
 | Entities — Server/Policy/Provider | entities-server.md | ~95 | architect, product-owner | Server, governance, and provider entities |
 | Domain Invariants | invariants.md | ~156 | product-owner, architect | DI-NNN business rules (14 invariants) |
@@ -83,7 +84,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 
 | ID Format | Count | Section |
 |-----------|-------|---------|
-| CAP-NNN | 19 | capabilities-p0.md (CAP-001–008, CAP-012, CAP-013, CAP-016) + capabilities-p1-p2.md (CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-017, CAP-018, CAP-019) |
+| CAP-NNN | 21 | capabilities-p0.md (CAP-001–008, CAP-012, CAP-013, CAP-016) + capabilities-p1-p2.md (CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-017, CAP-018, CAP-019, CAP-020, CAP-021) |
 | DI-NNN | 14 | invariants.md |
 | DEC-NNN | 13 | edge-cases.md |
 | ASM-NNN | 9 | assumptions.md |
@@ -97,7 +98,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Priority | Count | Capabilities |
 |----------|-------|-------------|
 | P0 (must-have) | 11 | CAP-001, CAP-002, CAP-003, CAP-004, CAP-005, CAP-006, CAP-007, CAP-008, CAP-012, CAP-013, CAP-016 |
-| P1 (should-have) | 5 | CAP-009, CAP-010, CAP-011, CAP-014, CAP-015 |
+| P1 (should-have) | 7 | CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-020, CAP-021 |
 | P2 (nice-to-have) | 3 | CAP-017, CAP-018, CAP-019 |
 
 > **Priority note (ADV-P1D-PASS-21):** CAP-012, CAP-013, and CAP-016 were elevated from P1 to P0

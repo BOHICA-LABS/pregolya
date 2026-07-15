@@ -2,17 +2,19 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.0"
+version: "1.1"
 status: active
 producer: business-analyst
-timestamp: 2026-07-14T00:00:00Z
-phase: 1a
+timestamp: 2026-07-15T00:00:00Z
+phase: 1b
 inputs:
   - .factory/specs/product-brief.md
   - .factory/STATE.md
 input-hash: "f6a9de5f38547412b42b12dbd19c3733ab48c3741c91c3cacad08519057dee21"
 traces_to: L2-INDEX.md
-decisions: [D1, D3, D7, D8, D13, D17]
+decisions: [D1, D3, D7, D8, D13, D17, D19, D20]
+changelog:
+  - "1.1 (D20 sub-burst 1, 2026-07-15): CAP-020 (Self-Improvement Primitives, P1) and CAP-021 (MCP Server Role, P1) added per D20 human authority + D19 forcing function (domain-d-hermes-agent.md). P1 count 5→7. ADR-012 is the architecture authority for both new CAPs."
 ---
 
 # Domain Capabilities — P1 and P2
@@ -20,7 +22,8 @@ decisions: [D1, D3, D7, D8, D13, D17]
 > **Sharded L2 section (DF-021).** Navigate via `L2-INDEX.md`.
 > P0 capabilities are in `capabilities-p0.md`.
 > **Pass-21 update:** CAP-012, CAP-013, CAP-016 relocated to `capabilities-p0.md` (elevated
-> to P0 per ADV-P1D-PASS-21 F-P21-01). This file now holds P1/P2 only: 5 P1 + 3 P2.
+> to P0 per ADV-P1D-PASS-21 F-P21-01). This file now holds P1/P2 only: 7 P1 + 3 P2.
+> **D20 update (2026-07-15):** CAP-020 and CAP-021 added (P1). See changelog.
 
 ---
 
@@ -91,6 +94,50 @@ workspace file operations call `canonicalize_beneath_root(base, path)` at access
 sandbox backend (WASM/container) must be the default; process backend is loud opt-in."
 **Anchor justification:** CAP-015 covers sandbox enforcement because NE-01 and NE-02 are both
 named as first-class BC candidates in the brief's Overflow §Security-PRD-Carry-Forward.
+
+### CAP-020: Self-Improvement Primitives (Skill Registry, Guarded Memory Writes, Frozen-Snapshot Context Mutation)
+
+Provide three framework-scope primitives that enable a self-improving agent loop:
+(a) **Skill registry** (`memory::skills`): load skill documents (agentskills.io SKILL.md pattern)
+into agent context on demand; list skills by tag; check existence without loading. Skill
+documents stored as ordinary KV entries in `MemoryStore` with routing semantics added by
+`SkillStore`. (b) **Guarded memory/skill writes** (`core::write_guard` + `memory::write_guard`):
+every write to a guarded memory namespace goes through `MemoryWriteGuard::validate(req)`
+before commit; validator returns Allow / Deny(reason) / Transform(sanitized); built-in scanner
+checks for prompt-injection patterns and invisible-Unicode; Deny raises `E-MEMORY-007
+MemoryWriteGuardDenied`. (c) **Frozen-snapshot context mutation** (`core::context_mutation` +
+`graph::scheduler`): `RunnableConfig.context_mutations` declares which memory keys are loaded
+into the system-prompt context; loaded once at run start before the first super-step; writes
+during the run take effect on the NEXT run (cache-coherence invariant, per ADR-012 DI-001).
+
+**Grounding:** D20 human authority — self-improvement loop promoted from application-layer to
+framework-scope. domain-d-hermes-agent.md req 4 (runtime-mutable procedural skills) and req 3
+(frozen-snapshot system-prompt semantics) are the forcing functions.
+**Anchor justification:** CAP-020 is a net-new capability with no prior CAP ID. It covers the
+three primitives ADR-012 Decision 1 adopts: skill registry in `ferrochain-memory`, write guard
+split between `ferrochain-core` (types/trait) and `ferrochain-memory` (enforcement), and
+context mutation config in `ferrochain-core` loaded by `ferrochain-graph`.
+**Architecture authority:** ADR-012 (`decisions/ADR-012-self-improvement-primitives.md`).
+
+### CAP-021: MCP Server Role (Expose Registered Tools as MCP Server Endpoint)
+
+Expose ferrochain's registered tools and resources as an MCP server so that external LLM
+applications can connect as MCP clients and invoke ferrochain tools via the MCP protocol.
+`mcp::server` module in `ferrochain-mcp` provides: server startup with a configured transport
+(stdio or SSE), `tools/list` advertisement of all tools registered in the tool registry,
+`tools/call` dispatch to the underlying ferrochain `Tool` implementation and return of the
+result via MCP response format. This is the **server** role complementing the existing MCP
+**client** role (CAP-010 / SS-09 / BC-2.09.001–005).
+
+**Grounding:** D19 forcing function — domain-d-hermes-agent.md req 11 ([NEW framework-scope]):
+"ferrochain exposes its own tools and resources via the MCP protocol so that other LLM
+applications can connect as clients — entirely absent from all BCs and capabilities." D20
+adoption decision includes MCP server role in Phase-1 scope.
+**Anchor justification:** CAP-021 is a net-new capability. MCP client role (CAP-010) covers the
+client direction; CAP-021 covers the server direction. These are architecturally independent
+surfaces in `ferrochain-mcp`: client code (`mcp::client`) and server code (`mcp::server`) are
+separate modules. CAP-010 cannot cover server-role behavior without creating a
+client-vs-server semantic collision.
 
 ---
 

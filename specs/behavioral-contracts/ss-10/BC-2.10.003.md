@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.003
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -11,11 +11,12 @@ priority: P0
 subsystem: SS-10
 capability: CAP-012
 wave: 1
-phase: 1a
+phase: 1b
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: BudgetPolicy::on_ceiling anchor moved from ferrochain-graph/src/budget/policy.rs to ferrochain-core/src/budget.rs (OnCeiling type is a policy definition, per ADR-009 Option 3). Module field resolved: ferrochain-core (BudgetPolicy + OnCeiling types) / ferrochain-graph (halt path in pregel loop)."
+  - "1.2 (D20 sub-burst 1, 2026-07-15): Add OnCeiling::Summarize variant behavior (PCs 4+8, EC-005, TV-006) and remaining-budget exposure via RunContext.budget_info (PC5, TV-007) per D20 orchestrator adjudication items (2) stop-and-summarize and (2) remaining-budget exposure."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -25,7 +26,7 @@ inputs:
 input-hash: "659edac"
 ---
 
-# BC-2.10.003: Graceful Halt When Budget Ceiling Reached (on_ceiling = halt)
+# BC-2.10.003: Graceful Halt When Budget Ceiling Reached (on_ceiling = halt | summarize); Remaining-Budget Exposure
 
 ## Description
 
@@ -37,6 +38,12 @@ with a structured `FerrochainError { component: BUDGET, category: POLICY, code: 
 The checkpoint at the last completed super-step is preserved and retrievable. The Domain B
 dark-factory holdout evaluation shape 6 ("budget-bounded run") directly exercises this BC.
 
+**v1.2 additions:** (a) `OnCeiling::Summarize { summarize_prompt: String }` variant — on
+`Deny`, the engine injects one final LLM call using `summarize_prompt` as a `HumanMessage`
+and returns the model's response as the run output with status `summary_halt`. (b)
+`RunContext.budget_info: BudgetInfo` carries `tokens_remaining` and `steps_remaining` at
+each super-step boundary, allowing model nodes to adapt their strategy as budget runs low.
+
 ## Preconditions
 
 1. A `BudgetPolicy` with `on_ceiling = halt` is configured in the `RunnableConfig`.
@@ -44,6 +51,8 @@ dark-factory holdout evaluation shape 6 ("budget-bounded run") directly exercise
    or tool invocation.
 3. The execution engine is currently at an evaluation point (post-LLM-call or
    post-tool-invocation) within a super-step.
+4. *(Summarize variant)* `BudgetPolicy` with `on_ceiling = OnCeiling::Summarize { summarize_prompt: String }` is configured in `RunnableConfig`. The `summarize_prompt` is a non-empty string injected as a `HumanMessage` before the final LLM call.
+5. *(Remaining-budget exposure)* A `BudgetPolicy` is active (any `on_ceiling` variant). `graph::budget_engine` populates `RunContext.budget_info: BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<u32> }` at each super-step boundary before dispatching tasks.
 
 ## Postconditions
 
@@ -64,6 +73,21 @@ dark-factory holdout evaluation shape 6 ("budget-bounded run") directly exercise
 7. The checkpoint at the last fully-completed super-step is preserved with `status = failed`.
    It is resumable in principle (same `thread_id`, different `run_id`) if the operator
    supplies a new `RunnableConfig` with a higher ceiling.
+8. *(Summarize variant — `on_ceiling = OnCeiling::Summarize`)* When `PolicyDecision::Deny`
+   is received: (a) In-flight tasks for the current super-step are allowed to settle (same
+   as halt). (b) One final LLM call is issued with `summarize_prompt` appended as a
+   `HumanMessage` to the current conversation context. (c) The model's response is returned
+   as the run's final output. (d) The run transitions to status `summary_halt` (not
+   `failed`). (e) A `JournalEntry { decision: Deny, mode: Summarize }` is written to the
+   `EvidenceJournal` (BC-2.10.002) before the summarize LLM call is issued. (f) If the
+   summarize LLM call itself triggers a new `PolicyDecision::Deny`, the run falls back to
+   halt semantics (EC-005): `Err(E-BUDGET-001 BudgetCeilingReached)` with `status = failed`.
+9. *(Remaining-budget exposure)* `RunContext.budget_info` is populated by `graph::budget_engine`
+   at each super-step boundary: `tokens_remaining: Some(ceiling - accumulated_tokens)` (may
+   be negative if Deny was just triggered); `steps_remaining: Some(recursion_limit - current_step)`.
+   Values are `None` when the corresponding budget dimension is not configured. Graph nodes
+   may read `budget_info` from `RunContext` and inject it into model prompts to allow the
+   model to adapt its strategy as budget decreases.
 
 ## Invariants
 
@@ -75,6 +99,13 @@ dark-factory holdout evaluation shape 6 ("budget-bounded run") directly exercise
   at the last fully-applied super-step boundary, not a partial mid-step state.
 - The `E-BUDGET-001` error carries a `retry_hint: Never` because retrying the same run
   without changing the budget ceiling would immediately re-hit the ceiling.
+- The Summarize path invokes exactly **1** additional LLM call. If that call also returns
+  a `Deny`, the run falls back to halt semantics (E-BUDGET-001, `status = failed`). No
+  recursive summarize attempt is made.
+- `budget_info.tokens_remaining` is of type `Option<i64>` (signed) because it may be
+  negative at the moment a Deny is triggered (the ceiling was exceeded on the current call).
+  Arithmetic: for a ceiling `C` (in tokens, `C > 0`) and accumulated usage `U` (in tokens,
+  `U >= 0`), `tokens_remaining = C - U as i64`. When `U > C`, `tokens_remaining < 0`.
 
 ## Edge Cases
 
@@ -101,6 +132,14 @@ precedence over the budget error). The run state is `failed` for both reasons. T
 `EvidenceJournal` entry for the `Deny` decision was already written (journal write precedes
 `put_writes` in the halt sequence); the journal entry survives even if checkpoint write fails.
 
+### EC-005: Summarize prompt itself triggers Deny (recursive budget exhaustion)
+**Scenario:** `on_ceiling = Summarize`; budget `Deny` received on step 3; summarize LLM
+call is issued; that call's token usage also triggers `PolicyDecision::Deny` from
+`BudgetPolicy::evaluate`.
+**Expected behavior:** The summarize LLM call result is discarded. The run transitions to
+`failed` with `Err(E-BUDGET-001 BudgetCeilingReached)` (halt semantics). No recursive
+summarize attempt. The `JournalEntry` for the original `Deny` is preserved.
+
 ### EC-004: Sub-agent run hits its ceiling; parent run continues
 **Scenario:** A nested sub-agent run has `on_ceiling = halt` and hits its Deny at 10k tokens.
 The parent run has a separate policy with a 200k ceiling (not yet reached).
@@ -118,12 +157,16 @@ the sub-agent's halt.
 | TV-003 | 3 concurrent tasks in step 2; 1st task triggers Deny | All 3 tasks complete their in-flight work; `put_writes` for all 3; run fails; no step 3 scheduled | Mid-super-step Deny — all in-flight tasks finish |
 | TV-004 | Operator re-runs halted thread with new RunnableConfig (higher ceiling) | New run starts from the preserved checkpoint; runs to completion | Halted checkpoint is resumable |
 | TV-005 | Sub-agent hits ceiling; parent node receives `Err(E-BUDGET-001)` from sub-agent | Parent node handles error and logs it; parent run continues with remaining budget | Sub-agent halt does not auto-halt parent |
+| TV-006 | `on_ceiling = Summarize { summarize_prompt: "Summarize your findings." }`; budget ceiling hit on step 3; model responds to summarize prompt with "I found X." | Run output = "I found X."; run `status = summary_halt`; `JournalEntry { decision: Deny, mode: Summarize }` written | Summarize variant happy path |
+| TV-007 | `BudgetPolicy` with token ceiling = 10000; after step 1 accumulated = 3000 tokens; `recursion_limit = 25`; node reads `RunContext.budget_info` | `budget_info.tokens_remaining = Some(7000)`; `budget_info.steps_remaining = Some(24)` | Remaining-budget exposure; arithmetic: `10000 - 3000 = 7000`; `25 - 1 = 24` |
 
 ## Verification Properties
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
 | VP-BUDGET-04 | Halt path: no new LLM calls after Deny; `put_writes` called for all in-flight tasks; run transitions to `failed` with `E-BUDGET-001` | Integration test — mock LLM call counter; assert count does not increase after Deny; assert checkpoint state | Phase 1 |
+| VP-BUDGET-05 | Summarize path: exactly 1 additional LLM call issued after Deny; model response returned as `summary_halt` output; recursive Deny falls back to halt | Integration test — mock LLM call counter; assert 1 summarize call; assert run status | Wave 1 |
+| VP-BUDGET-06 | `RunContext.budget_info.tokens_remaining` decreases monotonically across super-steps; `steps_remaining` decreases by 1 per super-step | Unit test — assert budget_info values at steps 1, 2, 3 | Wave 1 |
 
 ## Related BCs
 
@@ -134,9 +177,9 @@ the sub-agent's halt.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/pregel/loop.rs` — halt path in `tick()`: after `Deny` decision, no new task scheduling; allow in-flight tasks to settle; call `put_writes`; transition run to `failed`
+- `ferrochain-graph/src/pregel/loop.rs` — halt path in `tick()`: after `Deny` decision, no new task scheduling; allow in-flight tasks to settle; call `put_writes`; transition run to `failed`; Summarize path: inject `HumanMessage(summarize_prompt)`, issue one final LLM call, return `summary_halt` result; budget_info population at each super-step boundary
 - `ferrochain-graph/src/pregel/errors.rs` — `FerrochainError` variant for `E-BUDGET-001 BudgetCeilingReached`
-- `ferrochain-core/src/budget.rs` — `BudgetPolicy::on_ceiling` field: `OnCeiling::Halt | OnCeiling::Escalate` (definitions, per ADR-009 Option 3)
+- `ferrochain-core/src/budget.rs` — `BudgetPolicy::on_ceiling` field: `OnCeiling::Halt | OnCeiling::Escalate | OnCeiling::Summarize { summarize_prompt: String }` (definitions, per ADR-009 Option 3); `BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<u32> }` struct; `RunContext.budget_info: BudgetInfo` field (v1.2 addition)
 
 ## Story Anchor
 
@@ -154,6 +197,7 @@ _[to be filled after story decomposition]_
 | Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p0.md §CAP-012 — this BC specifies the "degrade gracefully: halt the run" behavior named in the "when the ceiling is reached, degrade gracefully" clause of CAP-012 |
 | L2 Domain Invariants | — |
 | D17 Commitment | D17-Q4 — Domain B dark-factory holdout evaluation shape 6 ("give a run a token/cost ceiling; verify it meters spend across sub-agents and halts-or-degrades gracefully at the ceiling") directly exercises this BC |
+| D20 Addition | v1.2: `OnCeiling::Summarize` + `RunContext.budget_info` per D20 orchestrator adjudication (stop-and-summarize on budget exhaustion + remaining-budget exposure); domain-d-hermes-agent.md req 2 — "stop-and-summarize graceful degradation mode" and "budget exposed to model mid-run" |
 | ADAPT Reference | adk-rust P-73 `deny(hard-stop)` variant of `PaymentPolicyGuardrail` as structural analog |
 | Priority | P0 |
 | Wave | Wave 1 |
