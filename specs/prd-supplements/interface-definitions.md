@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.6"
+version: "2.7"
 status: active
 producer: product-owner
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 phase: 1d
 changelog:
   - "1.6 (ADV-P1D-PASS-25): F-P25-01 add 503 row (E-SERVER-016 IdempotencyLockTimeout per-endpoint override); F-P25-02 recategorize 401→reserved, 403 now E-SERVER-004 POLICY + E-SERVER-005; F-P25-06 reconcile Run.interrupt sub-fields (interrupt_id, node_name, value, action_risk, action, context added; node_id→node_name, risk_tier→action_risk renamed); F-P25-07 add 201 and 204 rows, add E-CRON-002 to 400 row; OBS-2 add 502 and 504 categorical fallback rows."
@@ -16,6 +16,7 @@ changelog:
   - "2.2 (ADV-P1D-PASS-31): F-P31-01 add §Canonical Pagination Convention section; propagate limit (default 10, max 100, silently clamped if > 100) + offset (default 0) + created_at DESC ordering to GET /threads (explicit defaults), GET /threads/{id}/history (declare default 10/max 100 on existing limit), GET /assistants (add limit/offset), GET /threads/{id}/runs (add limit/offset alongside status filter), GET /runs?schedule_id={cron_id} (add limit/offset, declare created_at DESC). Out-of-range canon: clamp (not reject). BC anchors: BC-2.12.001 PC8/PC17, BC-2.12.003 PC18, BC-2.12.004 PC7."
   - "2.4 (ADV-P1D-PASS-33): F-P33-01 add BC-2.12.002 PC21-PC23 to §Canonical Pagination Convention BC anchors list (list-assistants anchor). F-P33-02 add run-config merge precedence note to POST /threads/{thread_id}/runs row description (deep-merge over Assistant config, run wins at leaf key; BC-2.12.003 §Run-Config Merge Precedence Invariant)."
   - "2.5 (ADV-P1D-PASS-46): F-P46-01 — clarify /stream row description: run_end is emitted on completion only; interrupt and failure paths truncate stream without run_end (BC-2.06.001 PC2 + EC-005 authority; BC-2.12.007 v1.2)."
+  - "2.7 (ADV-P1D-PASS-48): F-P48-01 fix E-RETRY-* blanket omission annotation — E-RETRY-004 (VAL, minted P34) expands namespace to POLICY/VAL; annotation corrected from POLICY to POLICY/VAL. OBS-P48-1 (adjudicated D17-Q2 FIFO-resume contract) add FIFO-only documentation line to Resume Request Schema: REST resume delivers to single active interrupt slot FIFO; targeted delivery by interrupt_id is library-API only (Command(resume={interrupt_id: value}), BC-2.05.004 EC-002)."
   - "2.6 (ADV-P1D-PASS-47): F-P47-01 (CRITICAL) fix Flag Interaction Rules row for sandbox-wasm+container-both-off — remove silent-process-fallback claim, replace with SandboxBackend::default()→Err(E-SBXD-003 SandboxInitFailed) per BC-2.13.001 PC4/EC-002/DI-006/NE-01; F-P47-02 fix [sandbox] config comment 'process emits WARNING on startup'→'once per execute() invocation — NOT construction/startup' per BC-2.13.002 PC2/EC-002; OBS-P47-1 add sandbox-process row to Cargo Feature Flags table with NOT-enforcing/explicit-constructor-only semantics per BC-2.13.001 PC3/PC4."
   - "2.3 (ADV-P1D-PASS-32): F-P32-03 add canonical pagination to GET /assistants/{id}/versions row (limit default 10 max 100 clamped / offset / ordering exemption: version ASC — deviates from created_at DESC default); BC-2.12.002 PC20 added as anchor. OBS-P32-1 add no-list-schedules note in §Cron Schedules."
 inputs:
@@ -258,7 +259,7 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 
 > **E-PROV-007 embedded omission (OBS-P28-3, ADV-P1D-PASS-28):** E-PROV-007 (StructuredOutputRefused, POLICY — BC-2.08.003) is emitted when the OpenAI Responses API rejects a `json_schema` structured output request via a safety-filter refusal. POLICY→403 is the categorical mapping. In v1 this error surfaces as a run failure embedded in Run.error — the server cannot distinguish a refusal from a valid LLM response until the response body is deserialized post-stream. No v1 server endpoint emits HTTP 403 directly for this code. Intentionally omitted from the 403 row; the 403 row lists only codes that produce a direct terminal HTTP 403 response (E-SERVER-004, E-SERVER-005, E-GRAPH-013).
 
-> **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY), E-SPLIT-* (BC-2.07.x, VAL) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only.
+> **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY), E-SPLIT-* (BC-2.07.x, VAL) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only.
 
 ## Run Object Schema
 
@@ -337,6 +338,8 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
   }
 }
 ```
+
+> **REST resume is FIFO-only (OBS-P48-1, ADV-P1D-PASS-48 — adjudicated D17-Q2 HITL contract):** REST resume delivers to the single active interrupt slot in FIFO order; it does not accept an `interrupt_id` field and cannot target a specific concurrent interrupt. Targeted delivery to a specific `interrupt_id` is library-API only: `Command(resume={interrupt_id: value})` submitted via `graph.invoke` / `graph.stream` (BC-2.05.004 EC-002). This is an intentional v1 limitation consistent with the D17-Q2 committed FIFO-resume HITL contract.
 
 **BC anchor:** BC-2.05.004
 
