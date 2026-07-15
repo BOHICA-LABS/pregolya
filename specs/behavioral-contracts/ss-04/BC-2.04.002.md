@@ -20,6 +20,9 @@ subsystem: SS-04
 capability: CAP-005
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.0 (initial): base BC authored (greenfield burst 72)."
+  - "1.1 (ADV-P1D-PASS-4): category canon sweep — EC-003 and test vector error category corrected from `ConfigError` to `VAL` (13-category sweep, F-P4-xx)."
 modified: []
 deprecated: null
 deprecated_by: null

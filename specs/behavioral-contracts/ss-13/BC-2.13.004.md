@@ -21,6 +21,9 @@ subsystem: SS-13
 capability: CAP-015
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.0 (initial): base BC authored (greenfield burst 72)."
+  - "1.1 (ADV-P1D-PASS-8): F-P8-01 title census — H1 updated to add '— Kani VP Seed' suffix (vp_seed designation codified in heading per title-authority convention)."
 modified: []
 deprecated: null
 deprecated_by: null

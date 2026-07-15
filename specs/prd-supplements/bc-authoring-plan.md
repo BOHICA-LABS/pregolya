@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
-total_standing_gates: 27
+total_standing_gates: 28
 timestamp: 2026-07-13T00:00:00Z
 phase: 1a
 inputs:
@@ -906,12 +906,65 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
     Source: ADV-P1D-PASS-42 §F-P42-01 [process-gap].
 
+28. **Version-changelog integrity gate — VERSION-CHANGELOG INTEGRITY
+    (added P43 — standing gate [process-gap]):**
+
+    Any BC file with `version` > `"1.0"` MUST carry a `changelog:` frontmatter key (or a
+    `## Changelog` body table) with at least one entry per version bump. A file that asserts
+    `version: "1.1"` (or higher) while carrying no changelog entry is a **self-contradiction**:
+    the version field asserts a revision history that no record corroborates.
+
+    **Rule:**
+    - `version: "1.0"`: no changelog required (initial authoring; no prior version exists).
+    - `version: "1.1"` or higher: MUST have at least one changelog entry for EACH version
+      level above 1.0, recording: what changed, which adversary pass or burst authorised it,
+      and a one-line description of the change. An entry may combine multiple co-committed
+      changes (e.g., `"1.1 (ADV-P1D-PASS-4): category canon + input re-anchor."`).
+
+    **Format (preferred — frontmatter YAML list):**
+    ```yaml
+    changelog:
+      - "1.0 (initial): base BC authored."
+      - "1.1 (ADV-P1D-PASS-N): <one-line description of the 1.0→1.1 change>."
+    ```
+    The `## Changelog` body-table format (as in BC-2.08.011/012, BC-2.07.002) is also
+    acceptable when the BC template already contains a body changelog section. Do not mix
+    both formats in the same file.
+
+    **`modified: []` note:** The `modified:` frontmatter field is vestigial and is always
+    left as `[]` regardless of changelog presence. It does NOT substitute for the
+    `changelog:` key.
+
+    **Census command:**
+    ```
+    grep -rh "^version:" .factory/specs/behavioral-contracts/ \
+      | grep -v '"1\.0"' \
+      | wc -l
+    ```
+    Then for each hit, verify a `changelog:` frontmatter key or `## Changelog` body section
+    exists in the same file. Any version > 1.0 without a changelog entry is a gate failure.
+
+    **Revert rule:** If git history shows a BC was never substantively modified (only metadata
+    touches such as `bc_id` addition and `status: draft → active`), the version MUST be
+    reverted to `"1.0"` — a spurious batch-wide bump does not create a changelog obligation.
+
+    **Trigger:** Every burst that creates new BCs or bumps a BC version field + every
+    adversary rotation.
+
+    **Motivating instance:** F-P43-01 (ADV-P1D-PASS-43) — 17 BCs in ss-04, ss-11, ss-13
+    carried `version: "1.1"` with `modified: []` and no changelog key. Git-history
+    adjudication found 4 files were genuinely unmodified (reverted to 1.0) and 13 were
+    substantively modified (changelog entries added recording the specific pass and change).
+
+    Source: ADV-P1D-PASS-43 §F-P43-01 [process-gap].
+
 ---
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.6 | 2026-07-14 | Gate #28 "version-changelog integrity" added; `total_standing_gates` 27→28. Git-history adjudication of F-P43-01: 17 BCs (ss-04 ×5, ss-11 ×6, ss-13 ×6) carried version "1.1" with no changelog. Outcome: 4 genuinely unmodified BCs reverted to version "1.0" (BC-2.13.001/002/003/005); 13 substantively modified BCs kept at version "1.1" with `changelog:` frontmatter entries added recording specific pass and change per file. (F-P43-01 [process-gap], ADV-P1D-PASS-43) | F-P43-01 |
 | 1.5 | 2026-07-14 | Gate #27 "architecture-anchor crate-resolution census" added; `total_standing_gates` 26→27. Full gate-#27 census run across all 86 BCs × 187 Architecture Anchor crate paths: 16 distinct crate names found (all valid per ADR-007 roster); exactly 2 wrong-crate anchors found and fixed (BC-2.08.011 line 112 and BC-2.08.012 line 119: `ferrochain-core/src/graph/builder.rs` → `ferrochain-graph/src/graph/state.rs`). Zero remaining wrong-crate anchors after fixes. (F-P42-01 [process-gap], ADV-P1D-PASS-42) | F-P42-01 |
 | 1.4 | 2026-07-14 | (1) F-P40-01: Batch 9 BC-2.08.007 DI cell corrected `DI-014` → `DI-009, DI-014` (body + BC-INDEX + DI-coverage table all show DI-009; batch-table was the sole outlier). (2) Full batch-table anchor sweep (86 rows vs BC-INDEX): 8 corrections — BC-2.08.001–005 CAP `CAP-009, CAP-011` → `CAP-009` (body capability: CAP-009; CAP-011 spurious); BC-2.10.004 CAP `CAP-012, CAP-006` → `CAP-012` (body primary capability: CAP-012); BC-2.05.006 DI `DI-003, ASM-008` → `DI-003` (ASM-008 is an assumption reference, not a domain invariant). Zero remaining anchor drifts vs BC-INDEX after fixes. (3) Gate #13 widened from four-way to five-way consistency check: bc-authoring-plan batch-table CAP/DI columns added as fifth verified carrier; motivating instance F-P40-01 cited (OBS-P40-1, ADV-P1D-PASS-40) | F-P40-01, OBS-P40-1 |
 | 1.3 | 2026-07-14 | Reconciled batch-size constraint with Batch 9 Step-E exception: amended line-27 prose to document BC-2.08.009 exception per ADR-004 acceptance; updated Summary metric "BCs per batch (max)" from `8` to `9 (Batch 9 only — Step-E exception; planning cap remains 8)`; three statements (prose, metric, Batch 9 header) now mutually coherent (F-P39-02, ADV-P1D-PASS-39) | F-P39-02 |

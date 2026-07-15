@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.005
-version: "1.1"
+version: "1.0"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z

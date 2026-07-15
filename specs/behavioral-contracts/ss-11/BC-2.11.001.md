@@ -21,6 +21,9 @@ subsystem: SS-11
 capability: CAP-013
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.0 (initial): base BC authored (greenfield burst 72)."
+  - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated to match (16-BC re-anchor sweep)."
 modified: []
 deprecated: null
 deprecated_by: null

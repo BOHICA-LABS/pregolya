@@ -20,6 +20,10 @@ subsystem: SS-04
 capability: CAP-005
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.0 (initial): base BC authored (greenfield burst 72)."
+  - "1.1 (ADV-P1D-PASS-6): E-category canon — EC-002 and test vector error category corrected from `CheckpointError` to `DURABILITY, code: E-CHKPT-001` (F-P6-03, status/category canon sweep)."
+  - "1.1 (ADV-P1D-PASS-20): F-P20-02 — `Checkpointer` → `CheckpointSaver` in PC-1 (canonical trait name correction)."
 modified: []
 deprecated: null
 deprecated_by: null

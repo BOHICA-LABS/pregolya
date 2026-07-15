@@ -21,6 +21,9 @@ subsystem: SS-04
 capability: CAP-005
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.0 (initial): base BC authored (greenfield burst 72)."
+  - "1.1 (ADV-P1D-PASS-1): Invariant 3 rewritten — SCHEDULED channel routing vs. skip-on-reapply distinction clarified; `ERROR_SOURCE_NODE` no-negative-index note added; `SCHEDULED` NOT-skipped note added (F-P1-HIGH, semport/graph/behavioral-intent.md validation)."
 modified: []
 deprecated: null
 deprecated_by: null

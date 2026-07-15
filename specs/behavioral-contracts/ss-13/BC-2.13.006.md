@@ -21,6 +21,9 @@ subsystem: SS-13
 capability: CAP-015
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.0 (initial): base BC authored (greenfield burst 72)."
+  - "1.1 (ADV-P1D-PASS-11): F-P11-04 — E-SBXD-004 and E-SBXD-005 error codes added to PC6, EC-002, and EC-005 (error-taxonomy.md expansion; bc-authoring-plan.md E-code×variant gate)."
 modified: []
 deprecated: null
 deprecated_by: null

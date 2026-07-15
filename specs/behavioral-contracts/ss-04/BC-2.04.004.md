@@ -21,6 +21,9 @@ subsystem: SS-04
 capability: CAP-005
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.0 (initial): base BC authored (greenfield burst 72)."
+  - "1.1 (ADV-P1D-PASS-6): E-category canon — EC-003 and test vector error category corrected from `StateUpdateError` to `VAL, code: E-GRAPH-007` (F-P6-03, status/category canon sweep)."
 modified: []
 deprecated: null
 deprecated_by: null
