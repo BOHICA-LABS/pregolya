@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.8"
+version: "2.9"
 status: active
 producer: product-owner
 total_standing_gates: 33
@@ -599,20 +599,50 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     Census command (past-tense StreamEvent variants — L3 architecture and BC artifacts only): `grep -rn "RunStarted\|NodeStarted\|ToolStarted\|StepStarted\|run_started\|node_started" .factory/specs/ | grep -v "bc-authoring-plan\|domain-spec/\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier"` — output must be ZERO live occurrences.
     Source: ADV-P1D-PASS-26 §F-P26-02, §F-P26-03, §F-P26-04; ADV-P1D-PASS-27 §F-P27-06; ADV-P1D-PASS-29 §F-P29-03, §F-P29-04.
 
-20. **AUTH/POLICY category re-sweep (added P26 — standing gate):**
-    Any edit to a 401/403/409 table row in interface-definitions.md §HTTP Status Codes,
-    OR any change to an E-code's `category` field in error-taxonomy.md, MUST trigger a
-    full category→status census for ALL error codes in the affected categories across ALL
-    namespaces (E-CORE, E-GRAPH, E-CHKPT, E-SERVER, E-PROV, E-MCP, E-SPLIT, E-SBXD,
-    E-RETRY, E-CRON, E-MEMORY, E-BUDGET — not just the namespace being edited).
+20. **AUTH/POLICY/INTERNAL category re-sweep (added P26 — standing gate; widened P69 — F-P69-01/OBS-P69-1):**
+    Any edit to a 401/403/409/500 table row in interface-definitions.md §HTTP Status Codes,
+    OR any change to an E-code's `category` field in error-taxonomy.md,
+    OR any table edit involving a range expression or INTERNAL-category code placement,
+    MUST trigger a full category→status census for ALL error codes in the affected categories
+    across ALL namespaces (E-CORE, E-GRAPH, E-CHKPT, E-SERVER, E-PROV, E-MCP, E-SPLIT,
+    E-SBXD, E-RETRY, E-CRON, E-MEMORY, E-BUDGET — not just the namespace being edited).
 
     The census must verify:
     1. Every AUTH-category code: maps to 401 (categorical) or has a documented per-endpoint override in BC-2.14.002 PC3.
     2. Every POLICY-category code: maps to 403 (categorical) or has a documented per-endpoint override.
     3. Every CONCURRENCY-category code: maps to 409 (categorical) or has a documented per-endpoint override.
     4. No code appears in two conflicting rows of the HTTP status table without an explicit disambiguation note.
+    5. **(Added P69 — INTERNAL axis)** Every INTERNAL-category code: maps to the 500 row OR
+       carries a documented individual omission note OR is covered by a named blanket omission
+       group (e.g., E-SBXD-*, E-RETRY-*, etc.). No INTERNAL-category code may appear in a
+       VAL-labeled row or in any row whose description asserts "categorical VAL→400" without
+       an explicit INTERNAL override/omission note. INTERNAL→500 is the categorical fallback;
+       library-layer INTERNAL codes that never surface as direct HTTP responses use individual
+       omission notes following the pattern of E-CORE-004, E-CORE-006, and E-CORE-007.
 
-    Source: ADV-P1D-PASS-26 §F-P26-05 (E-PROV-004 orphan discovery triggered this gate).
+    **Range-expansion rule (added P69 — F-P69-01):** Any range expression in the HTTP Status
+    Codes table rows — written as "X through Y", "X..Y", or similar contiguous shorthand
+    (e.g., "E-CORE-001 through E-CORE-005") — MUST be mentally expanded to its full member
+    set and each member's category verified against error-taxonomy.md on every table edit.
+    A range that sweeps in a code whose category does not match the row's label (e.g., an
+    INTERNAL code swept into a VAL→400 row) is a silent category mismatch undetectable by
+    membership-only census checks. Prefer explicit code enumerations over ranges in all status
+    table rows. Where shorthand notation is used (e.g., "E-CHKPT-001, -002, -003"), the
+    expansion must be verified but need not be rewritten if all members share the row's
+    category label; any skip in the sequence (e.g., -001, -002, -004 skipping -003) must be
+    verified to confirm the skipped code is intentionally absent (retired, different category,
+    or omission-noted).
+
+    **Motivating instance (F-P69-01, ADV-P1D-PASS-69):** The 400 row's "E-CORE-001 through
+    E-CORE-005" range silently included E-CORE-004 (INTERNAL, not VAL). E-CORE-004 is a
+    library-layer pipe-composition failure (BC-2.01.004 PC5) that never surfaces as a direct
+    HTTP 400 response. The range was corrected to explicit enumeration "E-CORE-001, E-CORE-002,
+    E-CORE-003, E-CORE-005" and E-CORE-004 was given an individual omission note mirroring
+    E-CORE-007. This class of bug is undetectable by a categorical census that checks only
+    "is code X in the table?" without checking "does code X's category match the row label?".
+
+    Source: ADV-P1D-PASS-26 §F-P26-05 (original gate trigger — E-PROV-004 orphan discovery);
+    ADV-P1D-PASS-69 §OBS-P69-1 (INTERNAL axis + range-expansion rule widening).
 
 21. **HTTP status-code table edit → census re-run trigger (added P27 — standing gate):** [process-gap]
     Any burst that edits the interface-definitions.md §HTTP Status Codes table (row add,

@@ -1506,3 +1506,9 @@ Phase 1d pass 68 adversarial review completed: CLEAN — 0 findings. Counter adv
 - OBS-P68-1: bc-authoring-plan gates #16/#17 physical ordering cosmetic (each number once; total 33 = highest). No action.
 
 **Adversary summary:** "The spec package has converged — remaining review value is confirmatory, not gap-finding."
+
+---
+
+## Archived from STATE.md Current Phase Steps (burst 145 rotation)
+
+| Phase 1d pass 64 + fix burst | adversary + architect + PO | COMPLETE | Pass 64: NOT CLEAN — 2 findings (1 MED: F-P64-01 api-surface 'no default port mandated' vs interface-definitions 'Default port: 7437' ×2 [architecture↔supplement pairing uncensused] → ADJUDICATED 7437 IS the default; api-surface v1.2 fixed + cites supplement; architecture sweep zero other port claims; 1 LOW: F-P64-02 bc-authoring-plan changelog v1.1 future-dated 2026-07-16 [> superseding v1.2 + > frontmatter] → re-dated 07-14; sweep found same defect in test-vectors → fixed [v1.3]; date-monotonicity = standing check on supplement body changelogs [D18-P64-B]). Sibling-check verification-architecture v1.2 PASS. Censuses 8+ ALL PASS (#12 15-hit lifecycle; #18/#20; #19; #27; #28 45=42A+3B union; #29 sandbox rows; #31 name-equality; #32 ADR-009; VP 3-doc; new-mint spot). Probes: CAP-011 semantic-fit PASS; default-config coherence (new) → F-P64-01; changelog temporal (new) → F-P64-02. Novelty MEDIUM-HIGH. Trajectory ...→1→2. Convergence 0/3. Gates 40. Burst 140. |
