@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 total_standing_gates: 26
@@ -24,7 +24,7 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 # BC Authoring Plan: ferrochain
 
 > This plan enumerates every BC-S.SS.NNN to be authored, organized into
-> batches of ≤8 BCs each for sequential sub-bursts. Each batch is one sub-burst.
+> batches of ≤8 BCs each at initial planning (Batch 9 carries a documented 9th BC — BC-2.08.009, Step-E addition per ADR-004 acceptance) for sequential sub-bursts. Each batch is one sub-burst.
 > BC files go to `.factory/specs/behavioral-contracts/ss-NN/BC-S.SS.NNN.md`
 > using the SS-NN ID from ARCH-INDEX Subsystem Registry (assigned Phase 1 Step D, 2026-07-14).
 
@@ -37,7 +37,7 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | P1 (should-have) | 30 |
 | P2 (nice-to-have) | 8 |
 | Batches | 13 |
-| BCs per batch (max) | 8 |
+| BCs per batch (max) | 9 (Batch 9 only — Step-E exception; planning cap remains 8) |
 | Subsystems covered | 17 (SS.01–SS.17, mapping CAP-001–CAP-019) |
 
 ## Subsystem → CAP Mapping
@@ -843,6 +843,7 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.3 | 2026-07-14 | Reconciled batch-size constraint with Batch 9 Step-E exception: amended line-27 prose to document BC-2.08.009 exception per ADR-004 acceptance; updated Summary metric "BCs per batch (max)" from `8` to `9 (Batch 9 only — Step-E exception; planning cap remains 8)`; three statements (prose, metric, Batch 9 header) now mutually coherent (F-P39-02, ADV-P1D-PASS-39) | F-P39-02 |
 | 1.2 | 2026-07-14 | Gate #25 Part B widened from 2-registry to 4-document sibling set: added module-decomposition.md (derived Criticality column + tier headings) and verification-coverage-matrix.md (derived tier summary + per-module table) as required census targets; extended census commands accordingly (OBS-P37-1 [process-gap], ADV-P1D-PASS-37) | OBS-P37-1 |
 | 1.1 | 2026-07-16 | Added standing gate #26 "Structurally-Privileged-Line Canon Check"; added `total_standing_gates: 26` to frontmatter (F-P36-03/OBS-P36-2 codification, ADV-P1D-PASS-36) | OBS-P36-2 |
 | 1.0 | 2026-07-13 | Initial authoring | Greenfield Phase 1a |

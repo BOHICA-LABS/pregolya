@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-server
-version: "1.0"
+version: "1.1"
 status: active
 producer: business-analyst
 timestamp: 2026-07-14T00:00:00Z
@@ -129,5 +129,13 @@ not retriable.
 | `BaseException` hierarchy | FerrochainError 2D struct | Different structure; adk-rust P-01/P-04 adopted (CONFLICT-6) |
 | Thread (LangGraph Platform) | Thread | Same concept; no wire compat with Platform |
 | Assistant (LangGraph Platform) | Assistant | Same concept; no wire compat with Platform |
-| `BaseStore` (LangGraph) | Store (long-horizon KV+vector) | Same concept; CAP-017 |
+| `BaseStore` (LangGraph) | MemoryStore (long-horizon KV+vector) | Same concept; CAP-017 |
 | `Send` (LangGraph) | `Send(node, state)` in SendEdge | Identical fan-out semantics |
+
+---
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.1 | 2026-07-14 | Reconciliation table line 132: changed ferrochain identifier from `Store` to `MemoryStore` to match canonical Rust trait name per BC-2.15.001 Architecture Anchors and module-decomposition.md:149 (F-P39-01, ADV-P1D-PASS-39) | F-P39-01 |
