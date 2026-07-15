@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -207,6 +207,7 @@ primary_consumers: [test-writer, holdout-evaluator]
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.3 | 2026-07-15 | F-P64-02 sweep fix: corrected v1.1 changelog row date `2026-07-16` → `2026-07-14` (same root cause as bc-authoring-plan.md v1.1; PASS-36 = 2026-07-14). No content change; metadata-only. (F-P64-02, ADV-P1D-PASS-64) | F-P64-02 |
 | 1.2 | 2026-07-14 | GTV annotation sync (OBS-P37-2): GTV-003 Expected-cell parenthetical corrected to match BC-2.07.002.md authoritative text ("after separator split on space"); GTV-008 Input-cell code-point note corrected ("3+5+3=11 code pts"); GTV-009 Input-cell annotation corrected ("4 code pts: ñ=U+00F1, o, ñ, o — 2 bytes each for ñ"). All 9 GTV rows now byte-identical to BC-2.07.002.md including non-normative annotations (ADV-P1D-PASS-37) | OBS-P37-2 |
-| 1.1 | 2026-07-16 | GTV-008 row synced to concrete value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` with PROVISIONAL marker (was: placeholder); GTV-003/GTV-008 note updated to clarify PROVISIONAL semantics; removed contradictory "Do not hard-code these without verification" language (F-P36-03 fix, ADV-P1D-PASS-36) | F-P36-03 |
+| 1.1 | 2026-07-14 | GTV-008 row synced to concrete value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` with PROVISIONAL marker (was: placeholder); GTV-003/GTV-008 note updated to clarify PROVISIONAL semantics; removed contradictory "Do not hard-code these without verification" language (F-P36-03 fix, ADV-P1D-PASS-36) | F-P36-03 |
 | 1.0 | 2026-07-13 | Initial authoring | Greenfield Phase 1a |

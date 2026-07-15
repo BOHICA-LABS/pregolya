@@ -2,12 +2,13 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.1"
+version: "1.2"
 status: active
 producer: architect
 timestamp: 2026-07-14T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-04 to_problem_detail()→to_problem() method name correction."
+  - "1.2 (ADV-P1D-PASS-64): F-P64-01 adjudication — default port 7437 is mandated; replaced 'no default port mandated' with authoritative default per interface-definitions.md §Base URL."
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -66,7 +67,7 @@ decisions: [D13, D17]
 
 ## ferrochain-server HTTP Endpoints
 
-Base URL: configurable; no default port mandated.
+Base URL: configurable; default port 7437 (server.port in ferrochain-server.toml — see interface-definitions.md §Base URL).
 
 | Method | Path | Description | BC Anchor |
 |--------|------|-------------|-----------|
