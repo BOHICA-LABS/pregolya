@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.007
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -20,6 +20,7 @@ lifecycle_status: active
 introduced: v1.0.0-greenfield
 changelog:
   - "1.2 (ADV-P1D-PASS-27): F-P27-02 add E-CHKPT-004 EncryptionKeyRotationFailed code name throughout BC body (description, PC4, PC5, EC-001, EC-002, test vector 3) — reverse-anchor fix; error-taxonomy.md corrected SECURITY→INTERNAL per this BC's authoritative category."
+  - "1.3 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 (empty key material), EC-004 (missing cipher header in legacy blob), and the empty-key TV row all had FerrochainError constructions without code fields. Added: code: E-CORE-005 (ValidationFailed) to EC-003 and TV empty-key row; code: E-CHKPT-007 (CipherHeaderMissing) minted this burst for EC-004 — unencrypted legacy blob in encrypted store is a distinct INTERNAL invariant violation from E-CHKPT-004 (key rotation failure)."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -84,8 +85,8 @@ swallowed or logged-only. This satisfies NE-11.
 |----|-------------|-------------------|
 | EC-001 | Key rotation mid-run: old key invalidated before new key is propagated to all active write paths | `put_writes` calls that acquire the old key after invalidation return `Err(E-CHKPT-004 EncryptionKeyRotationFailed)` (`FerrochainError { category: INTERNAL }`); the graph surfaces this to the caller; no partial plaintext write occurs |
 | EC-002 | Read of a blob encrypted with a retired key that is no longer in the keyring | `Err(E-CHKPT-004 EncryptionKeyRotationFailed { message: "key not found: <key_id>" })` (`FerrochainError { category: INTERNAL }`) returned from `get_tuple`; no partial decryption |
-| EC-003 | `EncryptedSerializer` constructed with null or zero-length key material | `Err(FerrochainError { category: VAL, message: "EncryptedSerializer: key material must be non-empty" })` at construction time; no writes proceed |
-| EC-004 | Backend storage contains a mix of encrypted and unencrypted blobs (migration scenario) | Unencrypted blobs that lack the cipher header return `Err(FerrochainError { category: INTERNAL, message: "missing cipher header: blob may be unencrypted" })`; reads of unencrypted legacy data do not silently succeed |
+| EC-003 | `EncryptedSerializer` constructed with null or zero-length key material | `Err(FerrochainError { category: VAL, code: E-CORE-005, message: "EncryptedSerializer: key material must be non-empty" })` at construction time; no writes proceed |
+| EC-004 | Backend storage contains a mix of encrypted and unencrypted blobs (migration scenario) | Unencrypted blobs that lack the cipher header return `Err(FerrochainError { category: INTERNAL, code: E-CHKPT-007, message: "missing cipher header: blob may be unencrypted" })`; reads of unencrypted legacy data do not silently succeed |
 
 ## Canonical Test Vectors
 
@@ -94,7 +95,7 @@ swallowed or logged-only. This satisfies NE-11.
 | Write a checkpoint via `put` with `EncryptedSerializer`; read raw bytes from storage backend | Raw bytes are NOT valid msgpack plaintext; after decryption with the active key, bytes are valid msgpack and deserialize to the original state | happy-path |
 | Write per-task writes via `put_writes` with `EncryptedSerializer`; read raw bytes from storage | Raw bytes are ciphertext; after decryption, writes match the original task write payloads exactly | happy-path |
 | Key rotation: active key set to `key-v2`; `put_writes` called; then `key-v2` is invalidated and `get_tuple` called | `get_tuple` returns `Err(E-CHKPT-004 EncryptionKeyRotationFailed { message: "key not found: key-v2" })`; no partial data returned | error |
-| `EncryptedSerializer::new(key: &[])` with empty key | `Err(FerrochainError { category: VAL })` at construction time; no serializer created | error |
+| `EncryptedSerializer::new(key: &[])` with empty key | `Err(FerrochainError { category: VAL, code: E-CORE-005 })` at construction time; no serializer created | error |
 
 ## Verification Properties
 

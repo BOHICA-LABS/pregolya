@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.007
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,9 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-003, EC-004, TV-001, TV-003, TV-005 each had category-only FerrochainError constructions with no code field. Added code: E-PROV-002 (ProviderTimeout) to TIMEOUT constructions and code: E-PROV-003 (StreamInterrupted) to TRANSPORT constructions per error-taxonomy.md BC anchors."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-014
@@ -85,7 +87,7 @@ results.
 ### EC-001: Stream stalls after first chunk
 **Scenario:** The fixture delivers `message-start` + one `text` delta, then goes silent
 for 31 seconds.
-**Expected behavior:** `Err(FerrochainError { category: TIMEOUT })`. The partial text
+**Expected behavior:** `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002 })`. The partial text
 delta is discarded. The error message includes the duration waited and the number of
 chunks received before stall.
 
@@ -99,13 +101,13 @@ total response took 28 seconds.
 ### EC-003: Stream stalls before message-start
 **Scenario:** The HTTP connection is established but no SSE bytes arrive within the
 chunk timeout.
-**Expected behavior:** `Err(FerrochainError { category: TIMEOUT })`. The error fires
+**Expected behavior:** `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002 })`. The error fires
 on the first chunk wait, not only after partial content is received.
 
 ### EC-004: TCP RST during deltaable block accumulation
 **Scenario:** The stream has delivered `message-start`, `content-block-start{text,0}`,
 and 5 text delta events. The TCP connection is then reset.
-**Expected behavior:** `Err(FerrochainError { category: TRANSPORT })`. The 5
+**Expected behavior:** `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003 })`. The 5
 accumulated text deltas are not returned to the caller.
 
 ### EC-005: Client constructed without timeout (non-test code)
@@ -117,11 +119,11 @@ and fails the build. No runtime behavior change — this is a static enforcement
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | Stream fixture stalls after chunk 1, per-chunk timeout = 100ms | `Err(FerrochainError { category: TIMEOUT })` — no partial Ok | Per-chunk timeout |
+| TV-001 | Stream fixture stalls after chunk 1, per-chunk timeout = 100ms | `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002 })` — no partial Ok | Per-chunk timeout |
 | TV-002 | Stream fixture delivers all chunks within 29s, timeout = 30s | `Ok(AiMessage)` — complete response | Normal slow stream |
-| TV-003 | Stream fixture delivers 0 chunks then TCP RST | `Err(FerrochainError { category: TRANSPORT })` | Connection drop |
+| TV-003 | Stream fixture delivers 0 chunks then TCP RST | `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003 })` | Connection drop |
 | TV-004 | `reqwest::Client::new()` in production src/ | CI lint reports violation; build fails | EC-005 |
-| TV-005 | Stream stalls before message-start event | `Err(FerrochainError { category: TIMEOUT })` | EC-003 — early stall |
+| TV-005 | Stream stalls before message-start event | `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002 })` | EC-003 — early stall |
 
 ## Verification Properties
 

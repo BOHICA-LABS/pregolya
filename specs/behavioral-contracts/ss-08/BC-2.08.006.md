@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.006
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,9 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.1 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-002 had `Err(FerrochainError { category: Validation, ... })` (incorrect full-word capitalization; should be VAL per taxonomy code) and no code field; TV-002 had `Err(FerrochainError { category: VAL })` with no code. Fixed: (a) EC-002 'category: Validation' corrected to 'category: VAL'; (b) code: E-CORE-005 (ValidationFailed) added to EC-002 description and TV-002 — SDK builder constructed without calling .timeout() is a VAL construction-time validation failure."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-008
@@ -95,8 +97,8 @@ that inspects `Cargo.lock` for the SDK package's transitive deps).
 ### EC-002: SDK client builder with no timeout call
 **Scenario:** `<Provider>Client::new()` or `<Provider>ClientBuilder::build()` is called
 without `.timeout(Duration)`.
-**Expected behavior:** The build method returns `Err(FerrochainError { category:
-Validation, message: "timeout must be set; use .timeout(Duration::from_secs(30))" })`.
+**Expected behavior:** The build method returns `Err(FerrochainError { category: VAL, code: E-CORE-005,
+message: "timeout must be set; use .timeout(Duration::from_secs(30))" })`.
 No default zero-timeout client is constructed. (Enforced via DI-009 / BC-2.14.004.)
 
 ### EC-003: Translation function in SDK crate (misplaced responsibility)
@@ -116,7 +118,7 @@ only that dependency compiles. No graph-runtime types leak into the SDK public A
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | `cargo check -p ferrochain-openai-sdk` | Exits 0; `ferrochain-core` NOT in Cargo.lock for this package | Dependency separation |
-| TV-002 | `ferrochain-openai-sdk::OpenAiClient::builder().build()` (no timeout) | `Err(FerrochainError { category: VAL })` | EC-002 timeout guard |
+| TV-002 | `ferrochain-openai-sdk::OpenAiClient::builder().build()` (no timeout) | `Err(FerrochainError { category: VAL, code: E-CORE-005 })` | EC-002 timeout guard |
 | TV-003 | `ferrochain-openai-sdk::OpenAiClient::builder().timeout(30s).api_key(key).build()` | `Ok(OpenAiClient { … })` | Happy path SDK construction |
 | TV-004 | `ferrochain-openai::ChatOpenAI::new(config)` (adapter) | `Ok(ChatOpenAI { … })` — implements `ChatModel` trait | Adapter construction |
 

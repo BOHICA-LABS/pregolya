@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.002
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — wired 'configurable step limit' invariant to explicit contract: config.recursion_limit (default 25, RunnableConfig) + BC-2.03.001 PC5 + E-GRAPH-017 GraphRecursionLimitExceeded. VP-BC208002-01 description updated to cite E-GRAPH-017 and BC-2.03.001 PC5."
+  - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-005 had `Err(FerrochainError { category: VAL, message: ... })` and TV-005 had `Err(FerrochainError { category: VAL })` with no code. Added code: E-CORE-005 (ValidationFailed) to EC-005 description and TV-005 — VAL construction-time validation for `bind_tools` called on a model with `has_tool_calling = false`."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -120,7 +121,7 @@ unhandled deserialization error.
 
 ### EC-005: bind_tools on model that does not support tool calling
 **Scenario:** `.bind_tools([tool])` is called on a model with `has_tool_calling = false`.
-**Expected behavior:** `bind_tools` returns `Err(FerrochainError { category: VAL,
+**Expected behavior:** `bind_tools` returns `Err(FerrochainError { category: VAL, code: E-CORE-005,
 message: "model <name> does not support tool calling" })` — it does not silently return
 a model that ignores the tools at inference time.
 
@@ -132,7 +133,7 @@ a model that ignores the tools at inference time.
 | TV-002 | agent loop: tool returns "22°C"; model follow-up | Final `AiMessage` text mentions "22" or "Paris"; loop terminates | test_agent_loop |
 | TV-003 | Zero-argument tool called with `tool_choice = ToolName` | `ToolCall { args: {} }` (empty object, not None) | No-argument tool |
 | TV-004 | `ToolMessage { status: Error, content: "timeout" }` fed back | Non-error `AiMessage` acknowledging failure | Error status ToolMessage |
-| TV-005 | `bind_tools([tool])` on model with `has_tool_calling = false` | `Err(FerrochainError { category: VAL })` | EC-005 guard |
+| TV-005 | `bind_tools([tool])` on model with `has_tool_calling = false` | `Err(FerrochainError { category: VAL, code: E-CORE-005 })` | EC-005 guard |
 
 ## Verification Properties
 

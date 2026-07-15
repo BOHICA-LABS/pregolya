@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.001
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — port graph super-step ceiling. Added PC5 (super-step ceiling halt via E-GRAPH-017), PC6 (per-invocation-segment semantics for interrupted/resumed runs), EC-006 (ceiling exceeded edge case), TV-006 (cyclic graph test vector). Reference Evidence section updated with upstream LangGraph evidence. This is the primary enforcing BC for E-GRAPH-017."
   - "1.2 (ADV-P1D-PASS-50): F-P50-01 — fix arithmetic in EC-006 Scenario (false claim 6 > 6 corrected to 7 > stop = 6; unified to 1-indexed super-step labels per TV-006 convention, resolving OBS-P50-1 mixed-indexing observation). Correct PC6 resume bound from N × recursion_limit to N × (recursion_limit + 1) — each invocation segment allows recursion_limit + 1 super-steps before halt (TV-006 arithmetic: recursion_limit=3 → 4 steps execute; recursion_limit=5 → 6 steps execute)."
+  - "1.3 (ADV-P1D-PASS-56): OBS-P56-1 resolved — tighten 10007 claim in Reference Evidence. The `DEFAULT_RECURSION_LIMIT` constant in `langgraph._internal._config` (verified against `.reference/langgraph` pinned source) reads from the `LANGGRAPH_DEFAULT_RECURSION_LIMIT` environment variable with a hardcoded default of 10007. This is a code constant, not itself an env var. Distinct from langchain-core's `DEFAULT_RECURSION_LIMIT = 25` in `langchain_core.runnables.config` (Runnable-layer). The 10007 claim was always accurate; this edit adds the precise constant name and source module."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -93,9 +94,14 @@ ferrochain's port of LangGraph's primary infinite-loop guard (`GraphRecursionErr
   invoke loop in `main.py` then raises `GraphRecursionError` after checking loop status.
   This is the PRIMARY infinite-loop guard for cyclic graphs.
 - `recursion_limit` is drawn from `RunnableConfig` (langchain-core's key; default 25 in
-  ferrochain). LangGraph upstream uses 10007 as its graph-layer default via
-  `DEFAULT_RECURSION_LIMIT` env var, but ferrochain aligns BOTH layers (Runnable-depth and
-  graph-super-step) at 25 per `RunnableConfig` convention.
+  ferrochain). LangGraph upstream uses 10007 as its graph-layer default: the
+  `DEFAULT_RECURSION_LIMIT` constant in the `langgraph._internal._config` module reads from
+  the `LANGGRAPH_DEFAULT_RECURSION_LIMIT` environment variable with a hardcoded default of
+  10007 (verified: `.reference/langgraph/langgraph/_internal/_config.py` symbol
+  `DEFAULT_RECURSION_LIMIT`). This is distinct from langchain-core's
+  `DEFAULT_RECURSION_LIMIT = 25` in `langchain_core.runnables.config` (the Runnable-layer
+  default). Ferrochain aligns BOTH layers (Runnable-depth and graph-super-step) at 25 per
+  `RunnableConfig` convention.
 - ferrochain error code: E-GRAPH-017 `GraphRecursionLimitExceeded` (error-taxonomy.md §GRAPH).
 
 ## Edge Cases

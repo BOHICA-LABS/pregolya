@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "1.9"
+version: "2.1"
 status: active
 producer: product-owner
-total_standing_gates: 29
+total_standing_gates: 30
 timestamp: 2026-07-15T00:00:00Z
 phase: 1a
 inputs:
@@ -1104,12 +1104,100 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
     Source: ADV-P1D-PASS-47 §F-P47-01 (CRITICAL); §F-P47-02 (MED); §OBS-P47-1 [process-gap].
 
+30. **Codeless-error census gate — CODELESS-ERROR CENSUS (added P56 — standing gate [process-gap]):**
+
+    Any burst that creates or edits a BC file, OR adds an error code to error-taxonomy.md, MUST
+    verify that every concrete `Err(FerrochainError { ... })` construction in the affected BC
+    bodies carries a `code:` field referencing a catalogued taxonomy code before the burst closes.
+
+    **Definition — what counts as a concrete (non-exempt) construction:**
+
+    A construction is concrete (subject to this gate) if it:
+    1. Appears in a BC table (test vectors, edge cases) or named postcondition;
+    2. Does NOT use `...` or `…` ellipsis notation as a field placeholder (ellipsis forms are
+       "pattern description" abstractions and are exempt); AND
+    3. Identifies a specific error instance (not a category family).
+
+    **Rule:** Every concrete construction must carry `code: E-<COMP>-NNN` where `E-<COMP>-NNN`
+    is a live (non-retired) code in error-taxonomy.md. A construction that matches the message
+    format or category of a known taxonomy code must use that code. If no existing code fits,
+    mint a new one in the same burst.
+
+    **RetryHint coherence:** When a `code:` field is added, verify per gate #22 that the
+    code's RetryHint matches the category default or is documented as a divergence.
+
+    **Census command (first-pass scan for codeless constructions):**
+    ```
+    grep -rn "Err(FerrochainError {" .factory/specs/behavioral-contracts/ \
+      | grep -v "code:" | grep -v "\.\.\." | grep -v "~~"
+    ```
+    Output should be empty or consist solely of pattern-description / ellipsis exemptions.
+    For each hit, determine whether the construction is concrete (subject to gate) or exempt.
+
+    **Trigger:** Every burst that authors new BCs or edits existing BC tables/postconditions
+    containing `Err(FerrochainError { ... })` constructions + every adversary rotation.
+
+    **Motivating instance (F-P56-01, ADV-P1D-PASS-56 [process-gap]):** BC-2.01.003 PC5,
+    invariant §layer-disambiguation, EC-004, and TV-004 all returned `Err(FerrochainError
+    { category: INTERNAL, message: "recursion limit exceeded..." })` with no `code:` field,
+    while the graph-engine counterpart (E-GRAPH-017) had been coded since pass 49. The
+    codeless construction was invisible to the 75-code disposition census (census counts
+    catalogued codes only). E-CORE-006 minted this burst; all four sites updated.
+
+    **First-pass census results (ADV-P1D-PASS-56):**
+
+    | BC | Construction | Verdict | Action |
+    |----|-------------|---------|--------|
+    | BC-2.01.003 PC5/inv/EC-004/TV-004 | `{ category: INTERNAL, message: "recursion limit exceeded..." }` | Concrete — missing code | Fixed: E-CORE-006 |
+    | BC-2.14.006 EC-001/EC-004/TV-001/TV-004/TV-005 | `{ category: VAL, message: "Validation failed for..." }` | Concrete — missing code | Fixed: E-CORE-005 |
+    | BC-2.08.007 EC-001/EC-003/EC-004/TV-001/TV-003/TV-005 | `{ category: TIMEOUT/TRANSPORT }` (no message, no ellipsis) | Concrete — missing code | Fixed: E-PROV-002/E-PROV-003 |
+    | BC-2.08.004 EC-001/EC-003/TV-001/TV-003 | `{ category: AUTH/RATE }` | Concrete — missing code | Fixed: E-PROV-004/E-PROV-001 |
+    | BC-2.08.004 EC-004/EC-005/TV-004/TV-005 | `{ category: TRANSPORT, message: "provider HTTP 500 / unknown format" }` | Concrete but no exact PROV TRANSPORT code for non-stream HTTP errors | Deferred: mint E-PROV-008 (ProviderHttpError) or broaden E-PROV-003 scope in next burst |
+    | BC-2.14.006 line 34, BC-2.14.002, BC-2.14.003 etc. | `{ category: X, ... }` with explicit `...` | Exempt: ellipsis pattern description | No action needed |
+    | BC-2.08.007 PC1/PC2 | `{ category: TIMEOUT/TRANSPORT, … }` with `…` | Exempt: ellipsis pattern description | No action needed |
+
+    **Deferred (now RESOLVED, ADV-P1D-PASS-56-COMPLETION):** BC-2.08.004 EC-004/EC-005/TV-004/TV-005 — TBD-E-PROV-HTTP replaced with E-PROV-008 (ProviderHttpError, TRANSPORT, minted error-taxonomy.md v1.8). Both sites share TRANSPORT category; one code is correct. BC-2.08.004 v1.2.
+
+    **Second-pass census results (ADV-P1D-PASS-56-COMPLETION):**
+
+    | BC | Construction | Verdict | Action |
+    |----|-------------|---------|--------|
+    | BC-2.08.004 EC-004/EC-005/TV-004/TV-005 | `{ category: TRANSPORT, code: TBD-E-PROV-HTTP }` | Concrete — placeholder code | Fixed: E-PROV-008 (minted) |
+    | BC-2.09.004 line 70 | `{ component: MCP, category: TOOL, code: E-MCP-001, ... }` | Multi-line — code on next line | Already coded — PASS |
+    | BC-2.09.004 line 86 | `{ category: TOOL }` | Pattern contrast in invariants; code specified in PC1/EC-001 as E-MCP-001 | Exempt: pattern description with code elsewhere in same BC |
+    | BC-2.01.003 line 106 | `{ category: INTERNAL, code: E-CORE-006, ... }` | Multi-line — code present | Already coded (pass 56 fix) — PASS |
+    | BC-2.01.004 line 79 | `{ category: INTERNAL, code: E-CORE-004, ... }` | Multi-line — code on following lines | Already coded — PASS |
+    | BC-2.08.006 EC-002 | `{ category: Validation, message: "timeout must be set..." }` | Concrete — wrong category name + no code | Fixed: category corrected to VAL; code: E-CORE-005 added |
+    | BC-2.08.006 TV-002 | `{ category: VAL }` | Concrete — no code | Fixed: code: E-CORE-005 added |
+    | BC-2.08.002 EC-005 | `{ category: VAL, message: "model <name> does not support tool calling" }` | Concrete — no code | Fixed: code: E-CORE-005 added |
+    | BC-2.08.002 TV-005 | `{ category: VAL }` | Concrete — no code | Fixed: code: E-CORE-005 added |
+    | BC-2.08.007 line 38 | `{ category: TIMEOUT | TRANSPORT }` | Pattern description in Description section | Exempt: class-level description |
+    | BC-2.08.007 line 58 | `{ category: TIMEOUT, message: "...", … }` | PC1 with Unicode `…`; E-PROV-002 specified in EC/TV | Exempt: ellipsis form; code specified elsewhere in same BC |
+    | BC-2.08.001 EC-003 | `{ category: TRANSPORT, … }` | Unicode `…` but code not in this BC (cross-ref to BC-2.08.007) | Fixed: code: E-PROV-003 added explicitly to satisfy gate rule |
+    | BC-2.08.004 PC1-PC5 | `{ category: AUTH/VAL/RATE/TRANSPORT/VAL, … }` | Postcondition descriptions with Unicode `…`; codes in EC/TV | Exempt: ellipsis forms; codes specified in EC/TV |
+    | BC-2.11.002 EC-001/TV | `{ category: INTERNAL }` | Concrete — no code | Fixed: code: E-CORE-007 (minted) |
+    | BC-2.11.003 EC-004/TV | `{ category: INTERNAL }` | Concrete — no code | Fixed: code: E-CORE-007 |
+    | BC-2.11.004 EC-004/TV | `{ category: INTERNAL }` | Concrete — no code | Fixed: code: E-CORE-007 |
+    | BC-2.16.002 line 57 | `{ component: RETRY, category: POLICY, code: E-RETRY-002, ... }` | Code present | Already coded — PASS |
+    | BC-2.04.002 EC-003/TV | `{ category: VAL, message: "unknown durability tier..." }` | Concrete — no code | Fixed: code: E-CORE-005 added |
+    | BC-2.04.006 EC-003 | `{ category: VAL }` | Concrete — no code | Fixed: code: E-CORE-005 added |
+    | BC-2.04.007 EC-003/TV | `{ category: VAL, message: "EncryptedSerializer: key..." }` | Concrete — no code | Fixed: code: E-CORE-005 added |
+    | BC-2.04.007 EC-004 | `{ category: INTERNAL, message: "missing cipher header..." }` | Concrete — no code | Fixed: code: E-CHKPT-007 (minted) |
+
+    **Census summary (ADV-P1D-PASS-56-COMPLETION):** 24 constructions examined; 13 fixed (codes added); 3 already-coded multi-line constructions (PASS); 8 exempt (pattern descriptions or ellipsis forms with code specified elsewhere in same BC). Zero genuine codeless constructions remaining. Gate #30 census command `grep -rn "Err(FerrochainError {" .factory/specs/behavioral-contracts/ | grep -v "code:" | grep -v "\.\.\." | grep -v "~~"` now returns zero genuine hits (residual grep hits are ellipsis `…` forms or already-coded multi-line constructions where `code:` is on the following line).
+
+    New codes minted this burst: E-PROV-008, E-CORE-007, E-CHKPT-007 (see error-taxonomy.md v1.8).
+
+    Source: ADV-P1D-PASS-56 §F-P56-01 (motivating instance); §OBS-P56-2 [process-gap]; ADV-P1D-PASS-56-COMPLETION (drain burst).
+
 ---
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.1 | 2026-07-15 | Gate #30 second-pass drain (ADV-P1D-PASS-56-COMPLETION): resolved deferred TBD-E-PROV-HTTP and all second-pass codeless candidates. Minted 3 new codes (E-PROV-008, E-CORE-007, E-CHKPT-007). Fixed 13 constructions across BC-2.08.004 (×4), BC-2.08.001 (×1), BC-2.08.002 (×2), BC-2.08.006 (×2), BC-2.11.002/003/004 (×6), BC-2.04.002 (×2), BC-2.04.006 (×1), BC-2.04.007 (×3). Census: 24 constructions examined; 13 fixed; 3 already-coded; 8 exempt. Zero genuine codeless constructions remain. Gate #30 census command returns zero genuine hits. Disposition census 76→79: 45 HTTP table rows, 11 individual omission notes, 23 blanket library-layer coverage. | OBS-P56-2 drain |
+| 2.0 | 2026-07-15 | Gate #30 "codeless-error census" added; `total_standing_gates` 29→30. First-pass census run: identified 19 concrete codeless FerrochainError constructions across BC-2.01.003 (×4), BC-2.14.006 (×5), BC-2.08.007 (×6), BC-2.08.004 (×4). Fixed 15 with clear taxonomy mappings (E-CORE-006, E-CORE-005, E-PROV-002, E-PROV-003, E-PROV-004, E-PROV-001). Deferred 4 (BC-2.08.004 EC-004/EC-005/TV-004/TV-005: TRANSPORT non-stream HTTP responses) pending E-PROV-008 mint decision. Motivating instance: F-P56-01 — BC-2.01.003 recursion limit error codeless while graph-engine counterpart (E-GRAPH-017) had a code since pass 49. (ADV-P1D-PASS-56 §F-P56-01, §OBS-P56-2 [process-gap]) | F-P56-01, OBS-P56-2 |
 | 1.9 | 2026-07-15 | Gate #28 census command updated to explicit two-form (Form A: frontmatter `changelog:` key; Form B: body `^## Changelog` table; union required). `total_standing_gates` unchanged at 29 (no new gate — clarification only). Motivating instance: F-P49-01 false positive (ADV-P1D-PASS-49) — adversary ran only Form A, missed three BCs (BC-2.08.011/012, BC-2.07.002) carrying Form B changelogs. (ADV-P1D-PASS-49 §F-P49-01 [false positive rejected by orchestrator]) | F-P49-01 |
 | 1.8 | 2026-07-15 | Gate #29 "supplement-vs-BC seam census" added; `total_standing_gates` 28→29. Gate census run at addition: 6 SS-13 sandbox rows checked across interface-definitions.md feature-flags + flag-interactions + config-comment — zero additional mismatches beyond F-P47-01 and F-P47-02 (both fixed in interface-definitions.md v2.6 in same burst). Motivating instance F-P47-01 (CRITICAL, survived 46 passes): Flag Interaction Rules row for `sandbox-wasm+container-both-off` stated silent process-backend fallback, inverting BC-2.13.001 PC4/EC-002/DI-006/NE-01. F-P47-02 (MED): config comment "on startup" contradicts BC-2.13.002 PC2/EC-002. OBS-P47-1 [process-gap]: `sandbox-process` feature row added to Cargo Feature Flags table. (ADV-P1D-PASS-47 §F-P47-01 CRITICAL, §F-P47-02 MED, §OBS-P47-1 [process-gap]) | F-P47-01, F-P47-02, OBS-P47-1 |
 | 1.7 | 2026-07-14 | (1) Gate #25 Part C added: per-row crate ownership diff across all four criticality-bearing docs required in addition to tier diff; motivating instance F-P45-01 (retry module crate-divergent row survived all tier-only checks). (2) Wave-0 convention note added to Batch Assignments section: Wave 0 ⊂ Wave 1 in the ARCH-INDEX two-wave scheme; 13 BCs across SS-01/07/14 are the foundational sub-wave; reconciles OBS-P45-1 (ADV-P1D-PASS-45). `total_standing_gates` unchanged at 28 (Part C extends gate #25; no new gate). | F-P45-01, OBS-P45-1 |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.006
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,9 @@ capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-004, TV-001, TV-004, TV-005 each had a specific 'Validation failed for...' message matching E-CORE-005 but no code field. Added code: E-CORE-005 to all five sites."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-014
@@ -61,7 +63,7 @@ coordinator returns `None` on validation failure rather than propagating the err
 
 ### EC-001: Required field is missing in builder
 **Scenario:** A builder pattern is used to construct a ferrochain type; a required field is not set; `.build()` is called.
-**Expected behavior:** `.build()` returns `Err(FerrochainError { category: VAL, message: "Validation failed for 'field_name': field is required" })`. Returns `Ok(T)` only when all required fields are present.
+**Expected behavior:** `.build()` returns `Err(FerrochainError { category: VAL, code: E-CORE-005, message: "Validation failed for 'field_name': field is required" })`. Returns `Ok(T)` only when all required fields are present.
 **Reference:** DI-014; NE-03.
 
 ### EC-002: Config struct parsed from TOML with invalid enum value
@@ -74,7 +76,7 @@ coordinator returns `None` on validation failure rather than propagating the err
 
 ### EC-004: Empty string for a required non-empty field
 **Scenario:** An API key field is set to `""` (empty string).
-**Expected behavior:** Constructor or setter returns `Err(FerrochainError { category: VAL, message: "Validation failed for 'api_key': value must not be empty" })`.
+**Expected behavior:** Constructor or setter returns `Err(FerrochainError { category: VAL, code: E-CORE-005, message: "Validation failed for 'api_key': value must not be empty" })`.
 
 ### EC-005: Validation inside a `From` impl
 **Scenario:** A `TryFrom` impl (the correct pattern) vs a `From` impl (which cannot fail).
@@ -84,11 +86,11 @@ coordinator returns `None` on validation failure rather than propagating the err
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `GraphBuilder::new().build()` with no nodes set | `Err(FerrochainError { category: VAL, message: "Validation failed for 'nodes': at least one node is required" })` | Missing required field |
+| TV-001 | `GraphBuilder::new().build()` with no nodes set | `Err(FerrochainError { category: VAL, code: E-CORE-005, message: "Validation failed for 'nodes': at least one node is required" })` | Missing required field |
 | TV-002 | `ChunkSize::new(0)` (chunk_size = 0) | `Err(FerrochainError { code: E-SPLIT-001, message: "ZeroChunkSize: chunk_size must be > 0 code points; got 0" })` | Zero-value constraint |
 | TV-003 | `ChunkSize::new(100)` | `Ok(ChunkSize(100))` | Happy path — valid input |
-| TV-004 | `DurabilityTier::from_str("turbo")` | `Err(FerrochainError { category: VAL, message: "Validation failed for 'durability_tier': 'turbo' is not a recognized tier" })` | Enum parse failure |
-| TV-005 | `ApiKey::new("")` | `Err(FerrochainError { category: VAL, message: "Validation failed for 'api_key': value must not be empty" })` | Empty-string constraint |
+| TV-004 | `DurabilityTier::from_str("turbo")` | `Err(FerrochainError { category: VAL, code: E-CORE-005, message: "Validation failed for 'durability_tier': 'turbo' is not a recognized tier" })` | Enum parse failure |
+| TV-005 | `ApiKey::new("")` | `Err(FerrochainError { category: VAL, code: E-CORE-005, message: "Validation failed for 'api_key': value must not be empty" })` | Empty-string constraint |
 
 ## Verification Properties
 
