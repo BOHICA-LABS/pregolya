@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "1.8"
+version: "1.9"
 status: active
 producer: product-owner
 total_standing_gates: 29
@@ -975,14 +975,46 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     left as `[]` regardless of changelog presence. It does NOT substitute for the
     `changelog:` key.
 
-    **Census command:**
+    **Census command (two-form check required — F-P49-01 false-positive fix):**
+
+    Step 1 — Identify all BCs with version > "1.0":
     ```
     grep -rh "^version:" .factory/specs/behavioral-contracts/ \
       | grep -v '"1\.0"' \
       | wc -l
     ```
-    Then for each hit, verify a `changelog:` frontmatter key or `## Changelog` body section
-    exists in the same file. Any version > 1.0 without a changelog entry is a gate failure.
+
+    Step 2 — For each BC identified in Step 1, check BOTH forms of changelog:
+
+    Form A (frontmatter `changelog:` key):
+    ```
+    grep -rl "^changelog:" .factory/specs/behavioral-contracts/
+    ```
+
+    Form B (`## Changelog` body table):
+    ```
+    grep -rl "^## Changelog" .factory/specs/behavioral-contracts/
+    ```
+
+    **Union coverage rule:** A BC with `version` > `"1.0"` satisfies this gate if it appears
+    in Form A's grep output (frontmatter `changelog:` key present) OR Form B's grep output
+    (`## Changelog` body section present). A BC NOT appearing in either output while carrying
+    `version` > `"1.0"` is a gate failure.
+
+    **CRITICAL:** The adversary MUST run BOTH Step 2 form checks and union the results.
+    Checking only Form A (frontmatter) is INSUFFICIENT — it misses BCs that carry their
+    changelog exclusively as a body `## Changelog` table. Checking only Form B is also
+    insufficient for BCs using frontmatter-only changelogs.
+
+    **Motivating instance (F-P49-01 false positive, ADV-P1D-PASS-49):** The adversary claimed
+    BC-2.08.011, BC-2.08.012, and BC-2.07.002 at v1.1 lacked changelogs. The adversary ran
+    only Form A (frontmatter `changelog:` grep). All three BCs carry `## Changelog` BODY
+    TABLES — the alternate permitted form. The Form-A-only check produced a false positive.
+    Root cause: the prior census command text listed "verify a `changelog:` frontmatter key
+    or `## Changelog` body section" in PROSE but provided only a Form-A grep COMMAND, giving
+    no machine guidance to run Form B. This two-step explicit census closes that gap.
+
+    Any version > 1.0 without a changelog in either form is a gate failure.
 
     **Revert rule:** If git history shows a BC was never substantively modified (only metadata
     touches such as `bc_id` addition and `status: draft → active`), the version MUST be
@@ -1078,6 +1110,7 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.9 | 2026-07-15 | Gate #28 census command updated to explicit two-form (Form A: frontmatter `changelog:` key; Form B: body `^## Changelog` table; union required). `total_standing_gates` unchanged at 29 (no new gate — clarification only). Motivating instance: F-P49-01 false positive (ADV-P1D-PASS-49) — adversary ran only Form A, missed three BCs (BC-2.08.011/012, BC-2.07.002) carrying Form B changelogs. (ADV-P1D-PASS-49 §F-P49-01 [false positive rejected by orchestrator]) | F-P49-01 |
 | 1.8 | 2026-07-15 | Gate #29 "supplement-vs-BC seam census" added; `total_standing_gates` 28→29. Gate census run at addition: 6 SS-13 sandbox rows checked across interface-definitions.md feature-flags + flag-interactions + config-comment — zero additional mismatches beyond F-P47-01 and F-P47-02 (both fixed in interface-definitions.md v2.6 in same burst). Motivating instance F-P47-01 (CRITICAL, survived 46 passes): Flag Interaction Rules row for `sandbox-wasm+container-both-off` stated silent process-backend fallback, inverting BC-2.13.001 PC4/EC-002/DI-006/NE-01. F-P47-02 (MED): config comment "on startup" contradicts BC-2.13.002 PC2/EC-002. OBS-P47-1 [process-gap]: `sandbox-process` feature row added to Cargo Feature Flags table. (ADV-P1D-PASS-47 §F-P47-01 CRITICAL, §F-P47-02 MED, §OBS-P47-1 [process-gap]) | F-P47-01, F-P47-02, OBS-P47-1 |
 | 1.7 | 2026-07-14 | (1) Gate #25 Part C added: per-row crate ownership diff across all four criticality-bearing docs required in addition to tier diff; motivating instance F-P45-01 (retry module crate-divergent row survived all tier-only checks). (2) Wave-0 convention note added to Batch Assignments section: Wave 0 ⊂ Wave 1 in the ARCH-INDEX two-wave scheme; 13 BCs across SS-01/07/14 are the foundational sub-wave; reconciles OBS-P45-1 (ADV-P1D-PASS-45). `total_standing_gates` unchanged at 28 (Part C extends gate #25; no new gate). | F-P45-01, OBS-P45-1 |
 | 1.6 | 2026-07-14 | Gate #28 "version-changelog integrity" added; `total_standing_gates` 27→28. Git-history adjudication of F-P43-01: 17 BCs (ss-04 ×5, ss-11 ×6, ss-13 ×6) carried version "1.1" with no changelog. Outcome: 4 genuinely unmodified BCs reverted to version "1.0" (BC-2.13.001/002/003/005); 13 substantively modified BCs kept at version "1.1" with `changelog:` frontmatter entries added recording specific pass and change per file. (F-P43-01 [process-gap], ADV-P1D-PASS-43) | F-P43-01 |

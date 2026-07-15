@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.002
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,9 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.1 (ADV-P1D-PASS-49): F-P49-02 — wired 'configurable step limit' invariant to explicit contract: config.recursion_limit (default 25, RunnableConfig) + BC-2.03.001 PC5 + E-GRAPH-017 GraphRecursionLimitExceeded. VP-BC208002-01 description updated to cite E-GRAPH-017 and BC-2.03.001 PC5."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -86,7 +88,11 @@ capability flag. Gated tool-call tests require the `has_tool_calling` capability
 - **Tool name fidelity:** the tool name in the `ToolCall` content block matches the
   bound tool name exactly (case-sensitive, Unicode-safe).
 - **No truncated loops:** an agent loop consuming tool results must not silently drop
-  the `ToolMessage` or loop forever — it must terminate within a configurable step limit.
+  the `ToolMessage` or loop forever — it terminates when `config.recursion_limit` (default 25,
+  from `RunnableConfig`) super-steps are exhausted in the current invocation segment, halting
+  with `Err(E-GRAPH-017 GraphRecursionLimitExceeded)` per BC-2.03.001 PC5. The step limit is
+  the graph-engine super-step ceiling; a tool-calling loop that never routes to END will exhaust
+  it and fail with E-GRAPH-017 rather than running forever.
 
 ## Edge Cases
 
@@ -132,7 +138,7 @@ a model that ignores the tools at inference time.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-BC208002-01 | agent_loop terminates without exceeding step limit | Integration test (standard-tests battery) | Wave 2 |
+| VP-BC208002-01 | agent_loop terminates without exceeding `config.recursion_limit` (default 25) super-steps; if the loop does not route to END within the ceiling, the run fails with `Err(E-GRAPH-017 GraphRecursionLimitExceeded)` per BC-2.03.001 PC5 | Integration test (standard-tests battery) | Wave 2 |
 | VP-BC208002-02 | Tool argument zero-argument case produces `{}` not None | Unit test (argument normalisation) | Wave 2 |
 | VP-BC208002-03 | Unicode arguments survive round-trip without corruption | Integration test (unicode_tool_call) | Wave 2 |
 

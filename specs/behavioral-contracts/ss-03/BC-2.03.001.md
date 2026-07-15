@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.001
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,7 +15,9 @@ capability: CAP-004
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.1 (ADV-P1D-PASS-49): F-P49-02 — port graph super-step ceiling. Added PC5 (super-step ceiling halt via E-GRAPH-017), PC6 (per-invocation-segment semantics for interrupted/resumed runs), EC-006 (ceiling exceeded edge case), TV-006 (cyclic graph test vector). Reference Evidence section updated with upstream LangGraph evidence. This is the primary enforcing BC for E-GRAPH-017."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -41,6 +43,13 @@ by a Kani harness (VP seed — the harness itself is a Phase-6 deliverable; this
 the behavioral invariant to be proved). NE-17 names adk-rust's `buffer_unordered` as the
 counter-example that this contract explicitly rejects.
 
+This BC also specifies the **graph-engine super-step ceiling**: the BSP loop must halt with
+`E-GRAPH-017 GraphRecursionLimitExceeded` when the super-step count for the current
+invocation segment exceeds `config.recursion_limit` (default 25, from `RunnableConfig` —
+the same key that BC-2.01.003 uses for the Runnable-layer nested-call-depth guard). This is
+ferrochain's port of LangGraph's primary infinite-loop guard (`GraphRecursionError`,
+`graph/behavioral-intent.md §1.3`: `stop = step + recursion_limit + 1`).
+
 ## Preconditions
 
 1. A `StateGraph` is compiled with one or more nodes that write to shared channels.
@@ -55,6 +64,8 @@ counter-example that this contract explicitly rejects.
 2. Channel reducer application order is determined by a deterministic sort of `(task_id, channel_name)` — not by task completion arrival order.
 3. Identical `(graph_definition, initial_state, inputs)` always produces identical `final_state` regardless of OS scheduler, thread pool, or tokio runtime interleaving.
 4. If any determinism violation is detected at runtime (reducer order constraint broken by a bug), the run transitions to `failed` with `E-GRAPH-006: BspDeterminismViolation`.
+5. **Super-step ceiling:** The BSP loop tracks a super-step counter per invocation segment. Before dispatching the next super-step, the engine checks whether the current step count would exceed `step_at_invoke_start + config.recursion_limit + 1`. If exceeded, the run transitions to `failed` with `Err(FerrochainError { category: POLICY, code: E-GRAPH-017, message: "GraphRecursionLimitExceeded: ..." })`. `config.recursion_limit` defaults to 25 (from `RunnableConfig` — same key as BC-2.01.003; graph-engine interpretation = super-step ceiling). Upstream parity: LangGraph computes `stop = step + recursion_limit + 1` in `PregelLoop.__init__` / `PregelLoop.astart`, sets status `out_of_steps` in `tick()`, and raises `GraphRecursionError` in the outer invoke loop (`graph/behavioral-intent.md §1.3`).
+6. **Resume semantics for interrupted runs:** Upon resume from an interrupt checkpoint, `step_at_invoke_start` is set to the step index of the resume point (the checkpoint's current `step`). Each invocation segment (fresh invoke or resume) independently receives `recursion_limit` additional super-steps from its start point. A run that is interrupted and resumed N times can execute at most N × `recursion_limit` total post-resume super-steps without triggering E-GRAPH-017 per segment. The count does NOT reset to zero on resume — it continues from the checkpoint step and the ceiling window shifts accordingly. Adjudicated rule: ceiling is per-invocation-segment (upstream parity: LangGraph recomputes `stop` at each `invoke`/`ainvoke` entry point).
 
 ## Invariants
 
@@ -64,7 +75,7 @@ counter-example that this contract explicitly rejects.
 
 ## Reference Evidence
 
-**Source:** LangGraph Python reference (`pregel/algo.py`, `pregel/__init__.py`).
+**Source:** LangGraph Python reference (`pregel/algo.py`, `pregel/__init__.py`, `pregel/_loop.py`, `pregel/main.py`).
 - LangGraph's `PregelRunner` applies channel reducers after all tasks in a step complete;
   task outputs are collected into a list and sorted by `(task_id, channel_name)` before
   the reducer map is applied.
@@ -74,6 +85,17 @@ counter-example that this contract explicitly rejects.
 - The determinism invariant is not explicitly unit-tested in langchain-core (it is tested
   in the LangGraph graph engine tests), but the behavioral contract is stated in the
   LangGraph design docs as a core invariant.
+
+**Super-step ceiling evidence** (F-P49-02, `semport/graph/behavioral-intent.md §1.3`):
+- LangGraph's `PregelLoop` tracks `step`/`stop` where `stop = step + recursion_limit + 1`.
+  The `tick()` method sets `loop.status = "out_of_steps"` when `step > stop`; the outer
+  invoke loop in `main.py` then raises `GraphRecursionError` after checking loop status.
+  This is the PRIMARY infinite-loop guard for cyclic graphs.
+- `recursion_limit` is drawn from `RunnableConfig` (langchain-core's key; default 25 in
+  ferrochain). LangGraph upstream uses 10007 as its graph-layer default via
+  `DEFAULT_RECURSION_LIMIT` env var, but ferrochain aligns BOTH layers (Runnable-depth and
+  graph-super-step) at 25 per `RunnableConfig` convention.
+- ferrochain error code: E-GRAPH-017 `GraphRecursionLimitExceeded` (error-taxonomy.md §GRAPH).
 
 ## Edge Cases
 
@@ -99,6 +121,11 @@ counter-example that this contract explicitly rejects.
 **Scenario:** A bug in the scheduler (e.g., a hash map iteration that leaks non-determinism) causes a reducer to be applied out of order.
 **Expected behavior:** The runtime guard (enabled in debug builds, optional in release) detects the ordering violation and returns `Err(FerrochainError { code: E-GRAPH-006, ... })`.
 
+### EC-006: Super-step ceiling exceeded — cyclic graph without termination
+**Scenario:** A conditional-edge graph (e.g., a model→tools→model loop) has no termination condition and `config.recursion_limit = 5`. The graph loops indefinitely: step 0→step 1→step 2→step 3→step 4→step 5 (step = 5+1 = 6 > stop = 0+5+1 = 6 — on the seventh super-step, `step > stop`).
+**Expected behavior:** Before dispatching super-step 7, the engine detects `current_step > step_at_invoke_start + recursion_limit + 1` and transitions the run to `failed` with `Err(FerrochainError { category: POLICY, code: E-GRAPH-017 })`. The run does not hang indefinitely. The run's `error` field is populated with the RFC-7807 representation of E-GRAPH-017.
+**Reference:** E-GRAPH-017; upstream LangGraph `GraphRecursionError` (`graph/behavioral-intent.md §1.3`). Also see BC-2.02.005 (conditional edges), BC-2.08.002 PC/invariant (agent loop step limit).
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -108,6 +135,7 @@ counter-example that this contract explicitly rejects.
 | TV-003 | Fan-out of 10 tasks, each appending to same `Append` channel | Append channel final value has items in sorted task_id order across all runs | Reducer sort order |
 | TV-004 | Identical graph + inputs executed by two separate tokio runtimes with different thread counts | Both produce identical final `GraphState` | Thread-count independence |
 | TV-005 | Kani harness: 2 tasks, 2 channels, non-det completion order | Kani verifies `state1 == state2` for all orderings (Phase 6 VP) | Formal verification seed |
+| TV-006 | Cyclic graph (A→B→A→...) with no termination condition; `config.recursion_limit = 3`; fresh invocation (`step_at_invoke_start = 0`) | Run fails with `Err(FerrochainError { category: POLICY, code: E-GRAPH-017 })` before dispatching super-step 5 (`stop = 0 + 3 + 1 = 4`; halt when `step > 4`) | Super-step ceiling (EC-006) |
 
 ## Verification Properties
 

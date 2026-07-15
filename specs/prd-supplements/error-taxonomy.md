@@ -1,16 +1,17 @@
 ---
 document_type: prd-supplement-error-taxonomy
 level: L3
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-02 recategorize E-SERVER-004 AUTH→POLICY; correction note added inline."
   - "1.2 (ADV-P1D-PASS-27): F-P27-02 recategorize E-CHKPT-004 SECURITY→INTERNAL (BC-2.04.007 authoritative; key rotation is an internal invariant failure, not a security policy rejection)."
   - "1.3 (ADV-P1D-PASS-28): F-P28-01 relabel category-table RetryHint column to 'Default RetryHint'; add per-code-authoritative precedence rule. OBS-P28-3 mint E-PROV-007 (StructuredOutputRefused, POLICY, Never) anchored to BC-2.08.003 — OpenAI structured-output refusal path now carries a machine-readable code."
   - "1.4 (ADV-P1D-PASS-29): F-P29-02 — add E-CRON-003 (ScheduleQueueFull) to the divergences blockquote as the 5th documented divergence. Decision: option (a) — add to blockquote with BC-2.12.004-anchored rationale (queue-full is transient capacity condition, backoff-recoverable → Later overrides POLICY Never). No category churn."
   - "1.5 (ADV-P1D-PASS-34): F-P34-02 — mint E-RETRY-004 (InvalidRetryLimit, VAL, broken, BC-2.16.001, Never). BC-2.16.001 EC-003/TV-004 had incorrectly reused E-RETRY-003 (CircuitBreakerOpen, POLICY, Later) for a construction-time misconfiguration. E-RETRY-004 is the correct code: VAL category, RetryHint Never (matches VAL default — not a divergence). No change to E-RETRY-003 (CircuitBreakerOpen remains sole owner in BC-2.16.003)."
+  - "1.6 (ADV-P1D-PASS-49): F-P49-02 — mint E-GRAPH-017 (GraphRecursionLimitExceeded, POLICY, broken, BC-2.03.001, Never). Graph super-step ceiling was unported: BC-2.03.001 and BC-2.08.002 both referenced a 'configurable step limit' with no defined error code. E-GRAPH-017 is the halt signal when config.recursion_limit (default 25) super-steps are exhausted in one invocation segment. POLICY/Never — same pattern as E-RETRY-001/002 (limit-exhaustion halt; retrying without changing the config/graph will produce the same result). No RetryHint divergence (POLICY default Never is correct). No GRAPH-namespace POLICY annotation change needed (POLICY already present: E-GRAPH-002, E-GRAPH-014, E-GRAPH-016)."
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -97,6 +98,7 @@ primary_consumers: [implementer, test-writer]
 | E-GRAPH-014 | POLICY | broken | BC-2.05.006 | `InterruptApprovalTimeout: interrupt for run '<run_id>' (tier '<tier>') expired at deadline '<deadline_utc>' without receiving required approval` |
 | E-GRAPH-015 | VAL | broken | BC-2.05.004 | `NoParentGraph: Command.PARENT is only valid inside a subgraph execution context; no parent graph is active` |
 | E-GRAPH-016 | POLICY | broken | BC-2.05.001 (secondary: BC-2.10.004) | `InterruptWithoutCheckpointer: interrupt() requires a CheckpointSaver attached to the graph; no durable state is available to park the interrupted run` |
+| E-GRAPH-017 | POLICY | broken | BC-2.03.001 | `GraphRecursionLimitExceeded: run '<run_id>' halted after super-step <step>; step count exceeded recursion_limit <limit> — check graph for unintended cycles` |
 
 ### Component: CHKPT (ferrochain-checkpoint)
 

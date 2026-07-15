@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.7"
+version: "2.8"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -19,6 +19,7 @@ changelog:
   - "2.7 (ADV-P1D-PASS-48): F-P48-01 fix E-RETRY-* blanket omission annotation — E-RETRY-004 (VAL, minted P34) expands namespace to POLICY/VAL; annotation corrected from POLICY to POLICY/VAL. OBS-P48-1 (adjudicated D17-Q2 FIFO-resume contract) add FIFO-only documentation line to Resume Request Schema: REST resume delivers to single active interrupt slot FIFO; targeted delivery by interrupt_id is library-API only (Command(resume={interrupt_id: value}), BC-2.05.004 EC-002)."
   - "2.6 (ADV-P1D-PASS-47): F-P47-01 (CRITICAL) fix Flag Interaction Rules row for sandbox-wasm+container-both-off — remove silent-process-fallback claim, replace with SandboxBackend::default()→Err(E-SBXD-003 SandboxInitFailed) per BC-2.13.001 PC4/EC-002/DI-006/NE-01; F-P47-02 fix [sandbox] config comment 'process emits WARNING on startup'→'once per execute() invocation — NOT construction/startup' per BC-2.13.002 PC2/EC-002; OBS-P47-1 add sandbox-process row to Cargo Feature Flags table with NOT-enforcing/explicit-constructor-only semantics per BC-2.13.001 PC3/PC4."
   - "2.3 (ADV-P1D-PASS-32): F-P32-03 add canonical pagination to GET /assistants/{id}/versions row (limit default 10 max 100 clamped / offset / ordering exemption: version ASC — deviates from created_at DESC default); BC-2.12.002 PC20 added as anchor. OBS-P32-1 add no-list-schedules note in §Cron Schedules."
+  - "2.8 (ADV-P1D-PASS-49): F-P49-02 — add RunnableConfig recursion_limit dual-interpretation note (§Runnable trait); add E-GRAPH-017 (GraphRecursionLimitExceeded, POLICY — BC-2.03.001 PC5) to the graph execution errors embedded-in-Run.error blockquote. No HTTP status table row change (E-GRAPH-017 surfaces embedded in Run.error, never as a direct terminal HTTP status; POLICY→403 categorical fallback applies only if ever surfaced directly — not in v1)."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -63,6 +64,22 @@ pub trait Runnable<Input, Output>: Send + Sync {
 ```
 
 **BC anchor:** BC-2.01.003, BC-2.01.004
+
+#### RunnableConfig Key Reference — `recursion_limit` Dual-Layer Interpretation (F-P49-02, ADV-P1D-PASS-49)
+
+`recursion_limit: usize` (default **25**) in `RunnableConfig` serves two distinct enforcement
+purposes at two independent layers. Both read the same key; enforcement, error code, and
+failure scope differ:
+
+| Layer | What is counted | Halt condition | Error | BC authority |
+|-------|----------------|---------------|-------|-------------|
+| **Runnable-layer** (ferrochain-core) | Nested `invoke`/`stream` call depth across chained Runnables (e.g., A pipes into B pipes into C…) | Depth exceeds `recursion_limit` | `Err(FerrochainError { category: INTERNAL, message: "recursion limit exceeded at depth N" })` | BC-2.01.003 PC5 |
+| **Graph-engine-layer** (ferrochain-graph BSP loop) | Super-steps per invocation segment; `stop = step_at_invoke_start + recursion_limit + 1` | `current_step > stop` before dispatching next super-step | `Err(E-GRAPH-017 GraphRecursionLimitExceeded)` — run transitions to `failed` | BC-2.03.001 PC5-PC6 |
+
+Upstream parity: LangGraph reuses the same `RunnableConfig.recursion_limit` key for both layers.
+LangGraph's graph-layer default is 10007 (via `DEFAULT_RECURSION_LIMIT` env var); ferrochain
+aligns both layers at 25 (langchain-core `RunnableConfig` convention). The graph-engine-layer
+halt produces a run-level failure embedded in `Run.error` (see embedded omission note below).
 
 ### BaseChatModel
 
@@ -253,7 +270,7 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 
 > **Async error intentional omissions (OBS-2, ADV-P1D-PASS-26):** E-CRON-001 (AssistantNotFoundAtFiring) and E-CRON-003 (ScheduleQueueFull) are async firing-time errors surfaced in schedule/run state, never as a direct HTTP response — intentionally omitted from this table.
 
-> **Graph execution errors embedded in Run.error (F-P27-04, ADV-P1D-PASS-27):** E-GRAPH-001 (InvalidUpdateError, CONCURRENCY — BC-2.03.002; concurrent BSP write failure surfaces as a run failure, embedded in Run.error.type), E-GRAPH-014 (InterruptApprovalTimeout, POLICY — BC-2.05.006 EC-005; timeout causes run transition to `failed`, embedded in Run.error), and E-GRAPH-016 (InterruptWithoutCheckpointer, POLICY — BC-2.05.001 EC-001, BC-2.10.004; raised when interrupt() is called without a CheckpointSaver, surfaces as a run failure) are graph execution errors that appear embedded in Run.error, never as direct terminal HTTP status codes. Categorical mappings: CONCURRENCY→409, POLICY→403 (apply only if ever surfaced directly — not in v1).
+> **Graph execution errors embedded in Run.error (F-P27-04, ADV-P1D-PASS-27; F-P49-02, ADV-P1D-PASS-49):** E-GRAPH-001 (InvalidUpdateError, CONCURRENCY — BC-2.03.002; concurrent BSP write failure surfaces as a run failure, embedded in Run.error.type), E-GRAPH-014 (InterruptApprovalTimeout, POLICY — BC-2.05.006 EC-005; timeout causes run transition to `failed`, embedded in Run.error), E-GRAPH-016 (InterruptWithoutCheckpointer, POLICY — BC-2.05.001 EC-001, BC-2.10.004; raised when interrupt() is called without a CheckpointSaver, surfaces as a run failure), and E-GRAPH-017 (GraphRecursionLimitExceeded, POLICY — BC-2.03.001 PC5; raised when the BSP super-step count for the current invocation segment exceeds `config.recursion_limit` (default 25); the run transitions to `failed`; primary infinite-loop guard for cyclic graphs) are graph execution errors that appear embedded in Run.error, never as direct terminal HTTP status codes. Categorical mappings: CONCURRENCY→409, POLICY→403 (apply only if ever surfaced directly — not in v1).
 
 > **E-CHKPT-005 library-level omission (F-P27-03, ADV-P1D-PASS-27):** E-CHKPT-005 (SessionAddressCollision, TENANCY — BC-2.04.006) is a checkpoint library-level error enforcing the session triple-address uniqueness invariant (NE-12). TENANCY→409 is the categorical mapping. In v1 this error is raised within the checkpoint layer before any HTTP response is sent, surfacing as a run failure embedded in Run.error, not as a direct terminal HTTP 409 response. Intentionally omitted from the 409 row for the same reason as the E-PROV categorical-fallback codes.
 

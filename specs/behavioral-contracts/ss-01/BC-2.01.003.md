@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,9 @@ capability: CAP-002
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.1 (ADV-P1D-PASS-49): F-P49-02 — added `recursion_limit` layer disambiguation invariant. Same config key serves two distinct enforcement layers: this BC (nested Runnable call depth, INTERNAL error) vs BC-2.03.001 (BSP super-step ceiling, E-GRAPH-017 POLICY). Cross-reference added to prevent implementer confusion about which halt applies at each layer."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -68,6 +70,15 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
   are consumed once and not passed to child runs.
 - `recursion_limit` is honored across all nested `invoke` / `stream` calls via the task-local
   config mechanism.
+- **`recursion_limit` layer disambiguation (F-P49-02):** `config.recursion_limit` (default 25)
+  is read by TWO independent enforcement layers that share the same `RunnableConfig` key:
+  (1) **This BC (Runnable-layer):** counts nested `invoke`/`stream` call depth across chained
+  Runnables; exceeding it returns `Err(FerrochainError { category: INTERNAL, message:
+  "recursion limit exceeded at depth N" })` — no run-level halt, just a Runnable call error.
+  (2) **BC-2.03.001 PC5 (graph-engine-layer):** counts BSP super-steps per invocation segment;
+  exceeding it transitions the entire run to `failed` with `Err(E-GRAPH-017
+  GraphRecursionLimitExceeded)`. Both layers enforce `recursion_limit = 25` by default; the
+  enforcement mechanism and error code differ by layer. Implementers must not conflate the two.
 
 ## Edge Cases
 
