@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.9"
+version: "2.10"
 status: active
 producer: product-owner
 total_standing_gates: 33
@@ -971,7 +971,9 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
     **Key ownership rules (from module-decomposition.md):**
     - StateGraph builder (`add_node`, `add_edge`, `compile`, `graph::definition`) → **ferrochain-graph**
-    - BSP engine, HITL, channels, scheduler, budget, provenance → **ferrochain-graph**
+    - BSP engine, HITL, channels, scheduler, provenance → **ferrochain-graph**
+    - budget ENGINE (`BudgetEngine`, `EvidenceJournal`) → **ferrochain-graph**; budget TRAIT/types (`BudgetPolicy`, `PolicyDecision`, `TokenUsage`, `RunContext`) → **ferrochain-core/src/budget.rs** per ADR-009 Option 3
+    - guardrail hook trait (`GuardrailHook`) → **ferrochain-core**; guardrail invocation pipeline (ingress call site, `InvocationContext` registration) → **ferrochain-graph**
     - Runnable trait, Message types, error taxonomy, credentials, events, config, retry → **ferrochain-core**
     - Proc-macro implementations (`#[tool]`, `#[entrypoint]`, `#[task]`) → **ferrochain-macros**
     - Re-exported macro trait hooks (e.g., `Tool` re-export) → **ferrochain-core** (defensible re-export)
@@ -988,11 +990,23 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     **Quick wrong-crate check (run after any BC anchor edit):**
     ```
     grep -rn "ferrochain-core/src/graph\|ferrochain-core/src/channels\|ferrochain-core/src/pregel\
-    \|ferrochain-core/src/hitl\|ferrochain-core/src/bsp\|ferrochain-core/src/budget\
+    \|ferrochain-core/src/hitl\|ferrochain-core/src/bsp\
     \|ferrochain-core/src/provenance\|ferrochain-core/src/scheduler" \
     .factory/specs/behavioral-contracts/
     ```
     Output must be EMPTY (zero hits). These are graph-owned modules incorrectly placed in core.
+    Note: `ferrochain-core/src/budget` is EXCLUDED from this forbidden set — `BudgetPolicy` and
+    related types (`PolicyDecision`, `TokenUsage`, `RunContext`) correctly reside in
+    `ferrochain-core/src/budget.rs` per ADR-009 Option 3. BC-2.10.001:141 and BC-2.10.003:139
+    are canonical anchors, not wrong-crate hits.
+
+    **Positive assertion — budget ENGINE must not anchor to ferrochain-core (run after any BC anchor edit):**
+    ```
+    grep -rn "ferrochain-core.*BudgetEngine\|ferrochain-core.*EvidenceJournal" \
+    .factory/specs/behavioral-contracts/
+    ```
+    Output must be EMPTY (zero hits). `BudgetEngine` and `EvidenceJournal` are graph-owned;
+    any `ferrochain-core` anchor for these types is a wrong-crate assignment.
 
     **Trigger:** Every burst that adds or edits BC Architecture Anchors + every adversary rotation.
     Running the full census on every adversary rotation prevents wrong-crate anchors from surviving
@@ -1003,14 +1017,23 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     Paths marked `(to be created)` with wrong-crate assignment are NOT exempt — the wrong-crate
     error is independent of whether the file exists.
 
-    **Motivating instance:** F-P42-01 (ADV-P1D-PASS-42) — BC-2.08.011 line 112 and BC-2.08.012
-    line 119 cited `ferrochain-core/src/graph/builder.rs` for the StateGraph builder (`add_edge`,
-    `add_node`). The StateGraph builder is owned by `ferrochain-graph` per ADR-007, module-decomp
-    `graph::definition`, and BC-2.02.001 Architecture Anchors. This wrong-crate anchor survived
-    41 passes because gate #13 (anchor-matrix census) covers Traceability column cells, not the
-    free-text `## Architecture Anchors` bullet section. Gate #27 closes this blind spot.
+    **Motivating instances:**
+    - F-P42-01 (ADV-P1D-PASS-42) — BC-2.08.011 line 112 and BC-2.08.012 line 119 cited
+      `ferrochain-core/src/graph/builder.rs` for the StateGraph builder (`add_edge`, `add_node`).
+      The StateGraph builder is owned by `ferrochain-graph` per ADR-007, module-decomp
+      `graph::definition`, and BC-2.02.001 Architecture Anchors. This wrong-crate anchor survived
+      41 passes because gate #13 (anchor-matrix census) covers Traceability column cells, not the
+      free-text `## Architecture Anchors` bullet section. Gate #27 closes this blind spot.
+    - F-P70-01 (ADV-P1D-PASS-70) — Gate #27 ownership rule listed "budget" in the
+      ferrochain-graph group, and the quick-check pattern included `ferrochain-core/src/budget`
+      in the forbidden set. ADR-009 v1.2 Option 3 places budget TRAIT/types (`BudgetPolicy`,
+      `PolicyDecision`, `TokenUsage`, `RunContext`) in `ferrochain-core/src/budget.rs` —
+      BC-2.10.001:141 and BC-2.10.003:139 are correct anchors to that path. Running the gate as
+      written yields 2 false HIGH hits, risking backward "correction." Fixed: ownership rule
+      split ENGINE (graph) / TRAIT/types (core); `ferrochain-core/src/budget` removed from the
+      forbidden set; positive assertion added for BudgetEngine/EvidenceJournal.
 
-    Source: ADV-P1D-PASS-42 §F-P42-01 [process-gap].
+    Source: ADV-P1D-PASS-42 §F-P42-01 [process-gap]; ADV-P1D-PASS-70 §F-P70-01 [process-gap].
 
 28. **Version-changelog integrity gate — VERSION-CHANGELOG INTEGRITY
     (added P43 — standing gate [process-gap]):**
@@ -1515,6 +1538,7 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.10 | 2026-07-15 | F-P70-01: Gate #27 budget ownership corrected per ADR-009 v1.2 Option 3 split — "budget" removed from ferrochain-graph group; new rules added: budget ENGINE (BudgetEngine, EvidenceJournal → ferrochain-graph) and budget TRAIT/types (BudgetPolicy, PolicyDecision, TokenUsage, RunContext → ferrochain-core/src/budget.rs). Quick-check forbidden set: `ferrochain-core/src/budget` removed (BC-2.10.001:141 + BC-2.10.003:139 are correct anchors, not wrong-crate hits); positive assertion added (BudgetEngine/EvidenceJournal must never anchor to ferrochain-core). Guardrail canon rule added (GuardrailHook trait → ferrochain-core; invocation pipeline → ferrochain-graph) — adjudicated placement missing from ownership rules since pass-61. Motivating instance block expanded with F-P70-01. | F-P70-01 |
 | 2.7 | 2026-07-15 | Gate #33 "taxonomy anchor reverse-verification census" added; `total_standing_gates` 32→33. Reverse axis of gate #30: every live (non-tombstone) taxonomy code's declared BC Anchor body must contain the code string or variant name with a specified raise condition; census = per-code grep; orphans/mis-anchors = findings. Trigger: every taxonomy edit + adversary rotation. Pass threshold: 100%. Post-fix census (ADV-P1D-PASS-66): 78/78 live codes anchored (100% PASS). Motivating instances: F-P66-03 (E-SERVER-005 retired — CORS denial is silent header-omission; code was unraised), F-P66-02 (E-CHKPT-003 — BC-2.04.005 lacked EC/TV for read-failure raise; added this burst), F-P66-01 (E-MCP-003 — re-anchored from BC-2.09.005 to BC-2.09.001; EC-006 + TV-008 added this burst). (ADV-P1D-PASS-66 §OBS-P66-1 [process-gap]) | OBS-P66-1 |
 | 2.6 | 2026-07-15 | Gate #28 widened with date-validity sub-check (OBS-P65-1 [process-gap]): all changelog entries in any BC file (Form A and Form B) must satisfy (a) date ≤ frontmatter timestamp, (b) date ≤ current burst date, and (c) monotonic per file ordering convention. Form-B set (BC-2.07.002/BC-2.08.011/BC-2.08.012) explicitly listed as required enumeration targets alongside prd-supplements in every date sweep. Census command added. `total_standing_gates` unchanged at 32 (widening, not new gate). Motivating instances: F-P64-02 (supplement body changelog dates, pass-64) + F-P65-01 (BC-2.07.002 Form-B changelog v1.1 row dated 2026-07-16, pass-65). (pass-65, OBS-P65-1) | F-P65-01, OBS-P65-1 |
 | 2.5 | 2026-07-15 | F-P64-02 fix: corrected v1.1 changelog row date `2026-07-16` → `2026-07-14` (PASS-36 = 2026-07-14, consistent with v1.2 same-day PASS-37 authoring; prior date was a future-date typo). Supplement date sweep: test-vectors.md v1.1 same defect corrected (v1.2→v1.3); error-taxonomy, interface-definitions, module-criticality carry frontmatter-only changelogs (no explicit date fields in entries — temporal-order check not applicable); nfr-catalog v1.0 no changelog (correct). (F-P64-02, ADV-P1D-PASS-64) | F-P64-02 |

@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-error-taxonomy
 level: L3
-version: "1.9"
+version: "1.10"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -14,6 +14,7 @@ changelog:
   - "1.6 (ADV-P1D-PASS-49): F-P49-02 — mint E-GRAPH-017 (GraphRecursionLimitExceeded, POLICY, broken, BC-2.03.001, Never). Graph super-step ceiling was unported: BC-2.03.001 and BC-2.08.002 both referenced a 'configurable step limit' with no defined error code. E-GRAPH-017 is the halt signal when config.recursion_limit (default 25) super-steps are exhausted in one invocation segment. POLICY/Never — same pattern as E-RETRY-001/002 (limit-exhaustion halt; retrying without changing the config/graph will produce the same result). No RetryHint divergence (POLICY default Never is correct). No GRAPH-namespace POLICY annotation change needed (POLICY already present: E-GRAPH-002, E-GRAPH-014, E-GRAPH-016)."
   - "1.7 (ADV-P1D-PASS-56): F-P56-01 — mint E-CORE-006 (RecursionLimitExceeded, INTERNAL, broken, BC-2.01.003). The Runnable-layer nested-call-depth guard returned a codeless FerrochainError while its graph-engine counterpart E-GRAPH-017 (minted pass 49) carried a code. E-CORE-006 fills this gap. INTERNAL/Never — matches INTERNAL category default (no divergence, no per-code RetryHint column needed). BC-2.01.003 PC5, invariant §layer-disambiguation, EC-004, TV-004 all updated to carry code: E-CORE-006. CORE namespace now has 6 live codes. Disposition census 75→76 (10 individual omission notes: +E-CORE-006 library-layer note)."
   - "1.8 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass drain — three new codes minted to resolve all remaining TBD-* placeholders and codeless constructions. (1) E-PROV-008 (ProviderHttpError, TRANSPORT, broken, BC-2.08.004) — resolves TBD-E-PROV-HTTP placeholder in BC-2.08.004 EC-004/EC-005/TV-004/TV-005; covers generic provider HTTP 5xx and unparseable error-body responses; both sites share TRANSPORT category so one code is correct (task-1 discipline: split only on genuine category divergence). Disposition census: +1 HTTP table row (502 row). (2) E-CORE-007 (GuardrailHookPanic, INTERNAL, broken, BC-2.11.002 / BC-2.11.003 / BC-2.11.004) — panic in GuardrailHook::evaluate is an invariant violation (programming error) caught at the ingress boundary; fail-closed semantics. CORE namespace now 7 live codes. Disposition census: +1 individual omission note. (3) E-CHKPT-007 (CipherHeaderMissing, INTERNAL, broken, BC-2.04.007) — read of an unencrypted legacy blob in an encrypted store is an INTERNAL invariant violation (expected cipher header absent). CHKPT namespace now 7 live codes. Disposition census: +1 HTTP table row (500 row). Total disposition census 76→79: 45 HTTP table rows, 11 individual omission notes, 23 blanket library-layer coverage."
+  - "1.10 (ADV-P1D-PASS-70): F-P70-02 — correct stale 401 note in E-SERVER-004 blockquote: 'now marked reserved (no E-code maps there in v1)' → 'carries no directly-emitted E-code in v1 (E-PROV-004 AUTH→401 is a categorical fallback surfaced embedded in Run.error, never a direct terminal response)'. Cross-doc sweep (5 other taxonomy-to-interface-definitions notes): E-PROV-007 POLICY→403 fallback note vs 403 row — PASS (interface-definitions omission note for E-PROV-007 consistent with taxonomy note); E-PROV-008 TRANSPORT→502 fallback note vs 502 row — PASS (502 row correctly lists E-PROV-008 as categorical fallback only; aligned). No other stale cross-doc notes found. Disposition census unchanged at 78."
   - "1.9 (ADV-P1D-PASS-66): F-P66-03 — RETIRE E-SERVER-005 (CorsRejected, POLICY): tombstone row added; BC-2.12.005 PC2/TV-001 specifies CORS denial as silent header-omission — no error body is ever emitted; code was never raised. SERVER namespace: 14 live codes (was 15). Disposition census 79→78: 44 HTTP table rows, 11 individual omission notes, 23 blanket library-layer coverage. F-P66-01 — re-anchor E-MCP-003 (McpNotImplemented, VAL) from BC-2.09.005 (connection-lifecycle scope; method-invocation surface absent) to BC-2.09.001 (list_tools discovery path — server returns JSON-RPC -32601 MethodNotFound when tools/list is not implemented); EC-006/TV-008 added to BC-2.09.001 in the same burst."
 phase: 1a
 inputs:
@@ -149,7 +150,9 @@ primary_consumers: [implementer, test-writer]
 > describe this as a policy gate (route inaccessible without explicit operator opt-in config), not a
 > credential-based authentication failure. Recategorized AUTH → POLICY (Category::Policy → HTTP 403).
 > The debug route is a capability gate, not an identity gate. The 401 row in interface-definitions.md
-> §HTTP Status Codes is now marked reserved (no E-code maps there in v1).
+> §HTTP Status Codes carries no directly-emitted E-code in v1 (E-PROV-004 AUTH→401 is a categorical
+> fallback surfaced embedded in Run.error, never a direct terminal response — see
+> interface-definitions §HTTP Status Codes).
 
 ### Component: PROV (ferrochain-\<provider\>)
 
