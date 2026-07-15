@@ -381,3 +381,11 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **RESUME IN ONE BREATH (burst 122):** "ferrochain Phase 1 spec crystallization, step 1d adversarial convergence IN PROGRESS: 46 passes / 43 fix bursts, trajectory ...→2→1 (seam-analysis class productive: budget×HITL then streaming×interrupt each fixed + canonized; remaining seam surface: cron×runs, memory×tenancy, sandbox×tool probed-or-pending). Counter 0/3 (strict-zero D14; 36 standing gates). NEXT ACTION: dispatch adversary pass 47 — fresh context, sibling-check pass-46 (BC-2.06.001 v1.1 EC-005; BC-2.12.007 v1.2 three fixes; BC-2.09.005 v1.1; interface-definitions v2.5), MANDATORY FULL runs of gates #21, #26, #27, #28 [all PARTIAL in pass 46], rotate #16/#24/#25, seam probes (cron×runs, memory×tenancy, sandbox×tool) + free choice."
 
 **WRAP METADATA:** Date: 2026-07-16 | Cycle: v1.0.0-greenfield | Burst: 122 | Counter: 0/3
+
+---
+
+## Archived PASS CANONS from STATE.md (burst 127 — trimmed to respect 200-line soft limit)
+
+### PASS-48 CANONS (burst 124): blanket-note namespace annotations = authoritative category sets (update on every code mint); REST resume FIFO-only v1 (targeted delivery library-only).
+
+### PASS-47 CANONS (burst 123): supplement rows derived, BCs authority (gate #29); sandbox default NEVER process — both-off ⇒ E-SBXD-003, unsafe_process_no_isolation() only; process warning per-execute().
