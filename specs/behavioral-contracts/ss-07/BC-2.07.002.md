@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.002
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -197,5 +197,6 @@ _[to be filled after story decomposition]_
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
-| 1.1 | 2026-07-16 | GTV-008 expected value explicitly marked PROVISIONAL; note updated to state values marked PROVISIONAL must be Python-verified before Red Gate test is written (F-P36-03 fix, ADV-P1D-PASS-36) | F-P36-03 |
+| 1.2 | 2026-07-15 | Changelog date metadata correction: v1.1 row date corrected from 2026-07-16 → 2026-07-14 (PASS-36 occurred on 2026-07-14; prior date was a future-date typo sharing the same root cause as F-P64-02 in bc-authoring-plan.md and test-vectors.md). (F-P65-01, pass-65) | F-P65-01 |
+| 1.1 | 2026-07-14 | GTV-008 expected value explicitly marked PROVISIONAL; note updated to state values marked PROVISIONAL must be Python-verified before Red Gate test is written (F-P36-03 fix, ADV-P1D-PASS-36) | F-P36-03 |
 | 1.0 | 2026-07-13 | Initial authoring | Greenfield batch 2 |

@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.5"
+version: "2.6"
 status: active
 producer: product-owner
 total_standing_gates: 32
@@ -1023,6 +1023,48 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
     Any version > 1.0 without a changelog in either form is a gate failure.
 
+    **Date-validity sub-check (added P65 — OBS-P65-1 widening):**
+    For every changelog entry in any BC file (Form A frontmatter list entries AND Form B body
+    table rows), the date value MUST satisfy three conditions:
+    1. `date ≤ frontmatter timestamp` — a changelog entry for a prior version cannot be dated
+       after the document's own `timestamp:` field without self-contradiction.
+    2. `date ≤ current burst date` — no future-dated changelog entries; the date must not
+       exceed the date on which the burst is executed.
+    3. Monotonic per file ordering convention — Form B tables (newest-at-top) must have
+       dates non-increasing reading top-to-bottom; Form A lists must have dates non-decreasing
+       reading bottom-to-top. A v1.1 row dated AFTER the superseding v1.2 row is a violation.
+
+    **Form-B set (must be enumerated alongside prd-supplements in every date sweep):**
+    Three BCs carry Form-B (`## Changelog`) body tables:
+    `BC-2.07.002`, `BC-2.08.011`, `BC-2.08.012`.
+    A date sweep that checks prd-supplement body changelogs (bc-authoring-plan, test-vectors)
+    but skips these Form-B BCs is INCOMPLETE and will miss the class of defect described in
+    F-P65-01.
+
+    **Census command (date-validity sub-check — run on every adversary rotation):**
+    ```
+    grep -n "| [0-9]\+\.[0-9]\+ | 20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]" \
+      .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md \
+      .factory/specs/behavioral-contracts/ss-08/BC-2.08.011.md \
+      .factory/specs/behavioral-contracts/ss-08/BC-2.08.012.md \
+      .factory/specs/prd-supplements/bc-authoring-plan.md \
+      .factory/specs/prd-supplements/test-vectors.md
+    ```
+    For each extracted date, assert: (a) `date ≤` current burst date, and (b) dates within each
+    file decrease monotonically reading top-to-bottom (newest-at-top convention). Any date
+    later than the burst date or violating monotonicity is a gate failure.
+
+    **Motivating instances:**
+    - F-P64-02 (ADV-P1D-PASS-64): bc-authoring-plan.md v1.1 and test-vectors.md v1.1 rows
+      dated 2026-07-16 — two days future relative to their superseding v1.2 rows dated
+      2026-07-14 (same F-P36-03 root cause). Gate #28 scope at that time was changelog-presence
+      only; date-validity was outside all standing gates.
+    - F-P65-01 (pass-65): BC-2.07.002 body `## Changelog` v1.1 row dated 2026-07-16 —
+      same PASS-36 root cause as F-P64-02. The P64 fix burst covered the two prd-supplements
+      but never enumerated the Form-B BC set. OBS-P65-1 identifies the Form-B enumeration gap
+      as a process deficiency at the same layer.
+    Source: OBS-P65-1 [process-gap].
+
     **Revert rule:** If git history shows a BC was never substantively modified (only metadata
     touches such as `bc_id` addition and `status: draft → active`), the version MUST be
     reverted to `"1.0"` — a spurious batch-wide bump does not create a changelog obligation.
@@ -1352,6 +1394,7 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.6 | 2026-07-15 | Gate #28 widened with date-validity sub-check (OBS-P65-1 [process-gap]): all changelog entries in any BC file (Form A and Form B) must satisfy (a) date ≤ frontmatter timestamp, (b) date ≤ current burst date, and (c) monotonic per file ordering convention. Form-B set (BC-2.07.002/BC-2.08.011/BC-2.08.012) explicitly listed as required enumeration targets alongside prd-supplements in every date sweep. Census command added. `total_standing_gates` unchanged at 32 (widening, not new gate). Motivating instances: F-P64-02 (supplement body changelog dates, pass-64) + F-P65-01 (BC-2.07.002 Form-B changelog v1.1 row dated 2026-07-16, pass-65). (pass-65, OBS-P65-1) | F-P65-01, OBS-P65-1 |
 | 2.5 | 2026-07-15 | F-P64-02 fix: corrected v1.1 changelog row date `2026-07-16` → `2026-07-14` (PASS-36 = 2026-07-14, consistent with v1.2 same-day PASS-37 authoring; prior date was a future-date typo). Supplement date sweep: test-vectors.md v1.1 same defect corrected (v1.2→v1.3); error-taxonomy, interface-definitions, module-criticality carry frontmatter-only changelogs (no explicit date fields in entries — temporal-order check not applicable); nfr-catalog v1.0 no changelog (correct). (F-P64-02, ADV-P1D-PASS-64) | F-P64-02 |
 | 2.4 | 2026-07-15 | Gate #32 "ADR-propagation census" added; `total_standing_gates` 31→32. Gate #31 step 4 extended with near-name corpus check (D18-P61-B): UNRESOLVED types must also be checked against near-name corpus concepts before classification. Census updated P60→P61: 21→21 types, BudgetContext UNRESOLVED retired → RunContext RESOLVED (BC-2.10.001 pre-3); 18/21 → 19/21 resolved; 3 unresolved → 2 unresolved (ChatConfig, CheckpointConfig). Gate #19 retired-identifier list extended: BudgetContext → RunContext (F-P61-02). Gate #19 census command updated: BudgetContext added to grep pattern. Motivating instances: F-P61-01 (ADR-009 trait anchors in wrong crate), F-P61-02 (BudgetContext minted without near-name corpus search — RunContext already in BC-2.10.001 pre-3), OBS-P61-1 [process-gap]. (ADV-P1D-PASS-61) | F-P61-01, F-P61-02, OBS-P61-1 |
 | 2.3 | 2026-07-15 | Gate #31 widened: step 4 "name-equality check" added (OBS-P60-1 [process-gap] — BudgetDecision/PolicyDecision drift survived 2 passes because definition-existence alone was checked). Census updated P58→P60: 22→21 types (removed RunId, EvidenceJournal, BudgetDecision from BudgetPolicy rows; added PolicyDecision, BudgetContext); 20 resolved → 18 resolved, 2 unresolved → 3 unresolved (ChatConfig, CheckpointConfig, BudgetContext). Gate #19 retired-identifier list extended: BudgetDecision → PolicyDecision (F-P60-01). Gate #19 census command updated: BudgetDecision added to grep pattern; architecture/ added to exclusion (architect scope). `total_standing_gates` unchanged at 31 (widening, not new gate). (ADV-P1D-PASS-60 §OBS-P60-1 [process-gap]) | OBS-P60-1 |
