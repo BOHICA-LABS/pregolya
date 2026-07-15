@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
 total_standing_gates: 26
@@ -179,7 +179,7 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | BC-2.05.003 | Interrupted node re-executes from start of its super-step on resume | P0 | CAP-006 | DI-003 | Wave 1 |
 | BC-2.05.004 | Command(resume=value) API contract for programmatic resume | P0 | CAP-006 | DI-003 | Wave 1 |
 | BC-2.05.005 | Resume on empty interrupt queue returns Err(NoActiveInterrupt) | P0 | CAP-006 | DI-003 | Wave 1 |
-| BC-2.05.006 | Risk-tiered interrupt classification (typed action-risk levels for Domain A SOC) | P0 | CAP-006 | DI-003, ASM-008 | Wave 1 |
+| BC-2.05.006 | Risk-tiered interrupt classification (typed action-risk levels for Domain A SOC) | P0 | CAP-006 | DI-003 | Wave 1 |
 
 ### Batch 5 — StateGraph Definition Full Subsystem (P0)
 *6 BCs — SS.02 complete*
@@ -204,7 +204,7 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | BC-2.10.001 | BudgetPolicy allow/escalate/deny evaluation per run and per sub-agent | P0 | CAP-012 | — | Wave 1 |
 | BC-2.10.002 | Append-only EvidenceJournal records every budget evaluation | P0 | CAP-012 | — | Wave 1 |
 | BC-2.10.003 | Graceful halt when budget ceiling reached (on_ceiling = halt) | P0 | CAP-012 | — | Wave 1 |
-| BC-2.10.004 | Budget escalation to HITL interrupt when on_ceiling = escalate | P0 | CAP-012, CAP-006 | DI-003 | Wave 1 |
+| BC-2.10.004 | Budget escalation to HITL interrupt when on_ceiling = escalate | P0 | CAP-012 | DI-003 | Wave 1 |
 
 ### Batch 7 — Content Provenance + Guardrail-on-Ingress Full Subsystem (P0 D17-Q8 mandate)
 *6 BCs — SS.11 complete*
@@ -235,13 +235,13 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 
 | BC ID | Title | Priority | CAP | DI | Wave |
 |-------|-------|----------|-----|----|------|
-| BC-2.08.001 | Chat model streaming completions conformance | P1 | CAP-009, CAP-011 | DI-011 | Wave 2 |
-| BC-2.08.002 | Chat model tool-call round-trip conformance | P1 | CAP-009, CAP-011 | — | Wave 2 |
-| BC-2.08.003 | Chat model structured output conformance | P1 | CAP-009, CAP-011 | — | Wave 2 |
-| BC-2.08.004 | Chat model error-type fidelity conformance | P1 | CAP-009, CAP-011 | DI-014 | Wave 2 |
-| BC-2.08.005 | Chat model token-usage accounting conformance | P1 | CAP-009, CAP-011 | — | Wave 2 |
+| BC-2.08.001 | Chat model streaming completions conformance | P1 | CAP-009 | DI-011 | Wave 2 |
+| BC-2.08.002 | Chat model tool-call round-trip conformance | P1 | CAP-009 | — | Wave 2 |
+| BC-2.08.003 | Chat model structured output conformance | P1 | CAP-009 | — | Wave 2 |
+| BC-2.08.004 | Chat model error-type fidelity conformance | P1 | CAP-009 | DI-014 | Wave 2 |
+| BC-2.08.005 | Chat model token-usage accounting conformance | P1 | CAP-009 | — | Wave 2 |
 | BC-2.08.006 | Standalone SDK crate split architecture (ferrochain-\<provider\>-sdk + adapter) | P1 | CAP-009 | DI-008 | Wave 2 |
-| BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout) or Err(Transport), not truncated success | P1 | CAP-009 | DI-014 | Wave 2 |
+| BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout) or Err(Transport), not truncated success | P1 | CAP-009 | DI-009, DI-014 | Wave 2 |
 | BC-2.08.008 | Eval score: arithmetic mean aggregation + JudgeResult::InfraError third outcome (NE-15) | P1 | CAP-011 | — | Wave 2 |
 | BC-2.08.009 | Tool schema naming stability (snapshot test anchor) — **Step E** (ADR-004 snapshot obligation) | P1 | CAP-009 | — | Wave 2 |
 
@@ -330,17 +330,24 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     BC-2.12.003 PC7-PC9. Run `grep -rn "in_progress →\|in_progress→\|→ interrupted\|⇄" .factory/specs/`
     and verify every hit: (a) shows `interrupted` as pausable/resumable, and (b) lists only
     `completed | failed | cancelled` as terminal. Source of truth: ADV-P1D-PASS-12.md §F-P12-01.
-13. **Anchor-matrix census gate (added P16 — standing gate, subsumes all prior per-axis checks):**
+13. **Anchor-matrix census gate (added P16 — standing gate, subsumes all prior per-axis checks; widened P40 — five-way):**
     After any BC authoring burst, run the full anchor-matrix census across all 86 BCs × 6 axes
     {CAP, DI, NE, R (R-NNN/R8-10-11 aliases), ADR, registered-VP}. For each axis, perform a
-    four-way consistency check: BC body Traceability tables ↔ BC-INDEX columns (NE Anchors, DI
-    Anchors, Cap, VP, RG) ↔ PRD §2 tables + §7 RTM Source column + §9 NE Disposition Table ↔
+    **five-way consistency check**: BC body Traceability tables ↔ BC-INDEX columns (NE Anchors,
+    DI Anchors, Cap, VP, RG) ↔ PRD §2 tables + §7 RTM Source column + §9 NE Disposition Table ↔
     authoritative registry (capabilities shards / invariants.md / PRD §9 / risks.md /
-    ARCH-INDEX ADR registry / VP-INDEX). Body wins unless provably wrong; fix index/RTM to
-    match body. The ne_anchor and ne_coverage frontmatter fields are OPTIONAL-LEGACY — BC body
+    ARCH-INDEX ADR registry / VP-INDEX) ↔ **bc-authoring-plan batch-table anchor columns
+    (CAP, DI)**. Body wins unless provably wrong; fix index/RTM/batch-table to match body.
+    The ne_anchor and ne_coverage frontmatter fields are OPTIONAL-LEGACY — BC body
     Traceability (NE anchor row) + BC-INDEX NE Anchors column are the canonical carriers; do
-    NOT add ne_anchor/ne_coverage frontmatter to new BCs. Source of truth: ADV-P1D-PASS-16.md
-    §F-P16-01 + anchor-matrix reconciliation.
+    NOT add ne_anchor/ne_coverage frontmatter to new BCs.
+    **Widening rationale (OBS-P40-1, ADV-P1D-PASS-40):** The bc-authoring-plan batch-table
+    CAP/DI columns were absent from the carrier set through Pass 39. This allowed the batch-table
+    DI cell for BC-2.08.007 to show `DI-014` while all other four carriers showed `DI-009, DI-014`
+    (motivating instance: F-P40-01). The batch-table is consumed by sub-burst authoring agents and
+    must match BC-INDEX on every anchor-affecting burst to prevent forward propagation of drift.
+    Source of truth: ADV-P1D-PASS-16.md §F-P16-01 + anchor-matrix reconciliation;
+    ADV-P1D-PASS-40 §OBS-P40-1 (widening).
 14. **Harness-fn registry + executable-string census gate (added P17 — standing gate):**
     VP-INDEX.md `harness_fn` column is the authoritative registry for Phase-6 `cargo kani --harness`
     invocation identifiers. Any change to a VP harness function name MUST update VP-INDEX.md
@@ -843,6 +850,7 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.4 | 2026-07-14 | (1) F-P40-01: Batch 9 BC-2.08.007 DI cell corrected `DI-014` → `DI-009, DI-014` (body + BC-INDEX + DI-coverage table all show DI-009; batch-table was the sole outlier). (2) Full batch-table anchor sweep (86 rows vs BC-INDEX): 8 corrections — BC-2.08.001–005 CAP `CAP-009, CAP-011` → `CAP-009` (body capability: CAP-009; CAP-011 spurious); BC-2.10.004 CAP `CAP-012, CAP-006` → `CAP-012` (body primary capability: CAP-012); BC-2.05.006 DI `DI-003, ASM-008` → `DI-003` (ASM-008 is an assumption reference, not a domain invariant). Zero remaining anchor drifts vs BC-INDEX after fixes. (3) Gate #13 widened from four-way to five-way consistency check: bc-authoring-plan batch-table CAP/DI columns added as fifth verified carrier; motivating instance F-P40-01 cited (OBS-P40-1, ADV-P1D-PASS-40) | F-P40-01, OBS-P40-1 |
 | 1.3 | 2026-07-14 | Reconciled batch-size constraint with Batch 9 Step-E exception: amended line-27 prose to document BC-2.08.009 exception per ADR-004 acceptance; updated Summary metric "BCs per batch (max)" from `8` to `9 (Batch 9 only — Step-E exception; planning cap remains 8)`; three statements (prose, metric, Batch 9 header) now mutually coherent (F-P39-02, ADV-P1D-PASS-39) | F-P39-02 |
 | 1.2 | 2026-07-14 | Gate #25 Part B widened from 2-registry to 4-document sibling set: added module-decomposition.md (derived Criticality column + tier headings) and verification-coverage-matrix.md (derived tier summary + per-module table) as required census targets; extended census commands accordingly (OBS-P37-1 [process-gap], ADV-P1D-PASS-37) | OBS-P37-1 |
 | 1.1 | 2026-07-16 | Added standing gate #26 "Structurally-Privileged-Line Canon Check"; added `total_standing_gates: 26` to frontmatter (F-P36-03/OBS-P36-2 codification, ADV-P1D-PASS-36) | OBS-P36-2 |

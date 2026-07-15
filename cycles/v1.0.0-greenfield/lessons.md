@@ -85,6 +85,14 @@ traces_to: STATE.md
 **Codified fix:** Gate #25 Part B WIDENED to a 4-doc sibling set: arch registry [authoritative], PO registry, module-decomposition.md, verification-coverage-matrix.md. Any module tier change must propagate to all four in the same burst; census greps each module's tier across all four; gate #26 cross-referenced for privileged tier headings. Codified as D18-P37-C.
 **Applicable to:** Any coherence gate that polices a named attribute (criticality tier, pagination convention, error code binding, etc.) that appears in BOTH an authoritative source AND one or more derived/summary documents. The gate must name every document that echoes the attribute — not just the authority. When a new derived document is created, the corresponding coherence gate must be updated before the burst closes.
 
+### L-008 [process-gap, codified]: Consumable Derived Tables Must Be Verified Carriers in Anchor Censuses
+
+**Discovered:** Pass 40 (burst 116)
+**Symptom:** bc-authoring-plan.md batch tables (the per-batch BC/CAP/DI/NE authoring work-order tables) were not included in gate #13's four-way anchor census. Sub-burst agents consume these batch tables directly when authoring BCs, so any drift in the tables propagates into the work products even when all authoritative carriers (BC body, BC-INDEX, PRD, RTM) are correct. F-P40-01 found BC-2.08.007's DI cell said "DI-014" only, omitting DI-009. The mandatory full 86-row sweep triggered by the fix burst found 7 MORE drifted cells: BC-2.08.001..005 carried spurious CAP-011, BC-2.10.004 carried spurious CAP-006, BC-2.05.006 carried spurious ASM-008. All 8 cells survived 39 adversarial passes because the batch-table column was not a census carrier.
+**Root cause:** Gate #13 anchor matrix was written to cover authoritative source documents (BC body, BC-INDEX, PRD, RTM). It did not include the authoring-plan batch tables, which function as a derived work-order surface that agents consume at authoring time. Any consumable derived table must be a verified carrier or it becomes a silent vector for drift.
+**Codified fix:** Gate #13 WIDENED to five-way: body ↔ BC-INDEX ↔ PRD §2/§7/§9 ↔ authoritative registry ↔ bc-authoring-plan batch-table CAP/DI columns. Batch-table corrections must occur in the same burst as BC changes. Full sweep: 8 cells fixed, zero remain. Codified as D18-P40-A. NEW CONVENTION: batch-table/INDEX Cap column = primary capability (frontmatter only); secondary traced capabilities live in body traces_to only (D18-P40-B).
+**Applicable to:** Any derived table or work-order artifact that agents consume directly at authoring time. The moment a table is established as a work-order input for downstream agents, it must be added as a verified carrier to the relevant anchor census. "Read-only" or "summary" status does not exempt a table from being a census carrier if agents read it to produce output.
+
 ## Policy Candidates
 
 | Lesson | Proposed Policy | Scope | Status |
@@ -96,3 +104,4 @@ traces_to: STATE.md
 | L-005 | Census regexes must enumerate all punctuation forms; census must detect collisions AND drift | All census gates | Codified (gate #16) |
 | L-006 | Canon-retirement fixes must sweep structurally-privileged lines in affected + citing docs | BC authoring + canon management | Codified (gate #26) |
 | L-007 | Sibling-coherence gates must enumerate derived documents, not just authoritative registries | Gate management + BC authoring | Codified (gate #25 Part-B, D18-P37-C) |
+| L-008 | Consumable derived tables (batch tables, sub-burst work orders) must be verified carriers in anchor censuses | Gate management + BC authoring | Codified (gate #13 five-way, D18-P40-A) |
