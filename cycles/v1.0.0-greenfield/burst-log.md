@@ -1477,3 +1477,32 @@ Phase 1d pass 67 adversarial review completed: NOT CLEAN — 1 MED finding (F-P6
 **Probes:** cross-row enumeration (new lens) → F-P67-01; vacated-anchor orphan check CLEAN; mint RetryHint coherence CLEAN.
 
 **Fix burst:** PO fixed interface-definitions v2.18 (422-row enumeration corrected to 6 CHKPT codes incl. -007; all 3 inter-row enumerations verified) + bc-authoring-plan v2.8 (gate #21 cross-row sub-check added). Pass-67 report written.
+
+---
+
+## Burst 144 — Phase 1d pass 68 (CLEAN 1/3) (2026-07-18)
+
+**Archived from STATE.md Current Phase Steps (pass-63 row displaced by pass-68):**
+
+Phase 1d pass 63 + fix burst | adversary + architect + PO | COMPLETE | Pass 63: NOT CLEAN — 1 MED (F-P63-01: verification-architecture §Fuzzing Targets listed a THIRD 'Splitter inputs' target absent from authoritative BC-2.17.002 [exactly two: fuzz_checkpoint_serde + fuzz_graph_execution per CAP-019] and contradicted by coverage-matrix [splitter fuzz = —] → outlier row REMOVED [v1.2], named harness IDs added to remaining rows, non-normative splitter note added [proptest + GTV Red Gate v1; post-v1 addition requires BC+matrix same burst]; full doc sweep: zero other fuzz/tool contradictions). Sibling-check module-decomposition v1.4 PASS. Censuses: 7 gates full PASS (#12/#14/#17-A/#19/#25-A/#27/#30); gate #28 EXACT distribution 41/26/11/7/1=86, changelog set (45) ≡ >1.0 set (45); gate #32 spot ADR-009/010/011 PASS; extras: DI 14/14, VP 3-doc, H1↔INDEX↔subsystem ALL 86 PASS. Probes: fuzz-target coherence (new lens) → F-P63-01; VP-ID collision none. Novelty LOW-MEDIUM — 'absent F-P63-01 the package would be CLEAN'. Trajectory ...→1→1. Convergence 0/3. Gates 40. Burst 139.
+
+---
+
+Phase 1d pass 68 adversarial review completed: CLEAN — 0 findings. Counter advances to 1/3. Trajectory ...→1→0. Gates 41.
+
+**Verdict: CLEAN.** Zero findings. Novelty LOW.
+
+**Sibling-checks (2, ALL PASS):**
+- SC-1: 422-row 6-code CHKPT enumeration matches 500 row; all 3 inter-row enumerations consistent (pass-67 fix holds). PASS.
+- SC-2: gate #21 cross-row routing-enumeration completeness sub-check present in bc-authoring-plan v2.8 with motivating instance F-P67-01. PASS.
+
+**Censuses (7 full, ALL PASS):** #16 (~45 pairings, zero collisions); #33 (pass-66 fixes bidirectional; pass-56 mints verified; 78/78); #25 (33 = 9/12/10/2; retry=core holds); #27 (zero live wrong-crate; budget.rs anchors correct per ADR-009); #28 (zero live future dates); #13 (NE 17/17, DI 14/14, 48/30/8=86, RG 5, VP-seed 3); #21 (cross-row). Extra axes: H1↔INDEX 12 sampled exact PASS; VP 3-doc coherent PASS; DI orphans zero PASS.
+
+**Free probes (2 new, BOTH PASS):**
+- VP reverse-anchoring: all 5 vp_id bindings bidirectional, no orphans. PASS.
+- Independent live-code arithmetic: 78 = per-namespace sum = 44+11+23 census. PASS.
+
+**1 observation (non-defect):**
+- OBS-P68-1: bc-authoring-plan gates #16/#17 physical ordering cosmetic (each number once; total 33 = highest). No action.
+
+**Adversary summary:** "The spec package has converged — remaining review value is confirmatory, not gap-finding."
