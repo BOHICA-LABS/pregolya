@@ -2,12 +2,13 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.006
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 changelog:
   - "1.1 (ADV-P1D-PASS-27): F-P27-06 Architecture Anchor renamed risk_tier.rs → action_risk.rs for consistency with the action_risk wire-field canon (retired-identifier gate #19)."
+  - "1.2 (pass-45): F-P45-02 — corrected BC-2.10.004 relationship in Related BCs: budget escalation reuses base interrupt mechanism (BC-2.05.001) with BudgetEscalation payload and BudgetResume::Extend|Halt resume; it is NOT a risk-tiered High interrupt and is NOT subject to RiskGatePolicy or High-tier approver gating."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -175,7 +176,7 @@ distributed clock source or accept ±process-clock-drift tolerances in the timeo
 - BC-2.05.002 — depends on: FIFO delivery applies per-slot; role-check is per-slot on top of FIFO
 - BC-2.05.003 — depends on: node re-executes from start after approved High-tier interrupt
 - BC-2.05.004 — depends on: Command(resume=value) with role credential is the programmatic approval API
-- BC-2.10.004 — composes with: budget escalation to HITL uses a High-tier interrupt internally
+- BC-2.10.004 — composes with: budget escalation reuses the BASE interrupt mechanism (BC-2.05.001) with a distinct `BudgetEscalation { current_usage, ceiling, policy_name, reason }` payload and `BudgetResume::Extend|Halt` resume variants; it is NOT risk-tiered and NOT subject to `RiskGatePolicy` or High-tier approver gating — orchestrator-initiated resume is explicitly permitted in BC-2.10.004
 - BC-2.11.001 — related to: provenance tagging of tool results feeds Domain A context for risk tier determination
 
 ## Architecture Anchors

@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "1.6"
+version: "1.7"
 status: active
 producer: product-owner
 total_standing_gates: 28
@@ -127,6 +127,17 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 ---
 
 ## Batch Assignments
+
+> **Wave-0 convention (OBS-P45-1 reconciliation):** Thirteen BCs across SS-01, SS-07, and SS-14
+> carry `wave: Wave 0` in their frontmatter and in the batch tables below. ARCH-INDEX Subsystem
+> Registry and `dependency-graph.md` use a coarser two-wave crate-build scheme (Wave 1 / Wave 2)
+> with no "Wave 0." Both conventions are canonical at their own granularity:
+> **Wave 0 ⊂ Wave 1** — Wave 0 is a foundational sub-wave of Wave 1 covering BCs with no
+> intra-workspace crate dependencies (ferrochain-core message primitives, ferrochain-splitters
+> text utilities, and ferrochain-core error taxonomy). All Wave 0 BCs participate in Wave 1 of
+> the ARCH-INDEX two-wave build scheme. Wave 2 BCs (SS-02, SS-03, SS-04, SS-05, etc.) depend on
+> one or more Wave 0/1 crates. This sub-wave distinction is a BC-planning granularity choice only;
+> it does not create a third build wave. Source: OBS-P45-1 (ADV-P1D-PASS-45).
 
 ### Batch 1 — Core Primitives + Error Taxonomy Foundation (P0 first principles)
 *8 BCs — SS.01 + SS.14 partial*
@@ -797,6 +808,35 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
     Source: ADV-P1D-PASS-32 §OBS-P32-3 [process-gap] (original gate — two-registry sibling set);
     ADV-P1D-PASS-37 §OBS-P37-1 [process-gap] (widening — all four criticality-bearing docs added).
 
+    **Part C — Per-row crate ownership diff (added pass-45 — F-P45-01):**
+    In addition to comparing tier values across the four docs, each burst that runs the Part B
+    census MUST also diff each module's **owning crate** per-row across the four docs, using
+    `module-criticality.md` (arch registry) as the authoritative crate-ownership source.
+
+    **Rule:** A module row that is tier-identical across all four docs but crate-divergent is a
+    HIGH-severity finding — it will pass every tier-diff check while silently routing
+    implementation and verification work to the wrong crate.
+
+    **Census command (run after every Part B census):**
+    ```
+    # For each module in module-criticality.md, extract (module, owning_crate) and diff against
+    # the owning-crate column in module-decomposition.md, verification-coverage-matrix.md,
+    # and the PO module-criticality.md registry.
+    grep -n "| " .factory/specs/module-criticality.md | grep -v "^| Module\|^|---" \
+      | awk -F'|' '{print $2, $4}' | sort
+    # Compare each module's crate column against module-decomposition.md Crate column and
+    # verification-coverage-matrix.md Crate/Owner column. Any mismatch is a HIGH-severity finding.
+    ```
+    All four docs must agree on crate ownership for every module row. Tier agreement alone is
+    insufficient — crate-divergent rows survive all tier-only diff checks.
+
+    **Motivating instance (F-P45-01):** The `retry` module row in verification-coverage-matrix.md
+    (line 51) listed `ferrochain-graph` as owning crate while six independent authorities
+    (module-criticality.md, ARCH-INDEX.md, purity-boundary-map, prd.md, error-taxonomy.md,
+    bc-authoring-plan.md) all assign retry to `ferrochain-core`. The tier was HIGH in both docs
+    (tier-identical), so Part B passed. No crate-ownership diff existed to catch the divergence.
+    Source: ADV-P1D-PASS-45 §F-P45-01.
+
 26. **Structurally-Privileged-Line Canon Check — STRUCTURALLY-PRIVILEGED-LINE CANON CHECK
     (added P36 — standing gate [process-gap]):**
 
@@ -964,6 +1004,7 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.7 | 2026-07-14 | (1) Gate #25 Part C added: per-row crate ownership diff across all four criticality-bearing docs required in addition to tier diff; motivating instance F-P45-01 (retry module crate-divergent row survived all tier-only checks). (2) Wave-0 convention note added to Batch Assignments section: Wave 0 ⊂ Wave 1 in the ARCH-INDEX two-wave scheme; 13 BCs across SS-01/07/14 are the foundational sub-wave; reconciles OBS-P45-1 (ADV-P1D-PASS-45). `total_standing_gates` unchanged at 28 (Part C extends gate #25; no new gate). | F-P45-01, OBS-P45-1 |
 | 1.6 | 2026-07-14 | Gate #28 "version-changelog integrity" added; `total_standing_gates` 27→28. Git-history adjudication of F-P43-01: 17 BCs (ss-04 ×5, ss-11 ×6, ss-13 ×6) carried version "1.1" with no changelog. Outcome: 4 genuinely unmodified BCs reverted to version "1.0" (BC-2.13.001/002/003/005); 13 substantively modified BCs kept at version "1.1" with `changelog:` frontmatter entries added recording specific pass and change per file. (F-P43-01 [process-gap], ADV-P1D-PASS-43) | F-P43-01 |
 | 1.5 | 2026-07-14 | Gate #27 "architecture-anchor crate-resolution census" added; `total_standing_gates` 26→27. Full gate-#27 census run across all 86 BCs × 187 Architecture Anchor crate paths: 16 distinct crate names found (all valid per ADR-007 roster); exactly 2 wrong-crate anchors found and fixed (BC-2.08.011 line 112 and BC-2.08.012 line 119: `ferrochain-core/src/graph/builder.rs` → `ferrochain-graph/src/graph/state.rs`). Zero remaining wrong-crate anchors after fixes. (F-P42-01 [process-gap], ADV-P1D-PASS-42) | F-P42-01 |
 | 1.4 | 2026-07-14 | (1) F-P40-01: Batch 9 BC-2.08.007 DI cell corrected `DI-014` → `DI-009, DI-014` (body + BC-INDEX + DI-coverage table all show DI-009; batch-table was the sole outlier). (2) Full batch-table anchor sweep (86 rows vs BC-INDEX): 8 corrections — BC-2.08.001–005 CAP `CAP-009, CAP-011` → `CAP-009` (body capability: CAP-009; CAP-011 spurious); BC-2.10.004 CAP `CAP-012, CAP-006` → `CAP-012` (body primary capability: CAP-012); BC-2.05.006 DI `DI-003, ASM-008` → `DI-003` (ASM-008 is an assumption reference, not a domain invariant). Zero remaining anchor drifts vs BC-INDEX after fixes. (3) Gate #13 widened from four-way to five-way consistency check: bc-authoring-plan batch-table CAP/DI columns added as fifth verified carrier; motivating instance F-P40-01 cited (OBS-P40-1, ADV-P1D-PASS-40) | F-P40-01, OBS-P40-1 |

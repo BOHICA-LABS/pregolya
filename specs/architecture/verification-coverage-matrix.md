@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "1.1"
+version: "1.2"
 status: active
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
@@ -16,6 +16,7 @@ traces_to: ARCH-INDEX.md
 changelog:
   - "1.0 (initial): base verification coverage matrix authored."
   - "1.1 (ADV-P1D-PASS-37): F-P37-02 correct Coverage by Criticality Tier summary to CRITICAL 9 / HIGH 12 / MEDIUM 10 / LOW 2 = 33 (was stale 6/7/5/2=20); complete Per-Module Coverage Status table to all 33 architecture modules (was 27); added rows for ferrochain-macros (HIGH), sandbox-wasm (MEDIUM), ferrochain-standard-tests (MEDIUM), memory-store (MEDIUM), xtask (LOW), ferrochain-community (LOW)."
+  - "1.2 (ADV-P1D-PASS-45): F-P45-01 correct retry crate from ferrochain-graph to ferrochain-core per module-criticality.md line 64 (SS-16); relocate row from ferrochain-graph cluster into ferrochain-core cluster. Full 33-row crate-ownership diff against module-criticality.md — no other mismatches found."
 ---
 
 # Verification Coverage Matrix: ferrochain
@@ -48,7 +49,6 @@ changelog:
 | scheduler | ferrochain-graph | — | — | — | yes | Pending ADR-001 |
 | budget | ferrochain-graph | — | yes | — | yes | EvidenceJournal ordering |
 | provenance | ferrochain-graph | — | — | — | yes | Hook dispatch |
-| retry | ferrochain-graph | — | yes | — | yes | Policy termination |
 | event_emitter | ferrochain-graph | — | — | — | yes | Streaming/unary equivalence |
 | session-index | ferrochain-checkpoint | VP-002 | yes | — | yes | Core VP target |
 | clock | ferrochain-checkpoint | — | yes | — | yes | Monotonic property |
@@ -61,6 +61,7 @@ changelog:
 | error | ferrochain-core | — | — | — | yes | RFC-7807 emission |
 | credentials | ferrochain-core | — | — | — | yes | Redacted Debug |
 | runnable | ferrochain-core | — | yes | — | yes | Pipe associativity |
+| retry | ferrochain-core | — | yes | — | yes | Policy termination |
 | server handlers | ferrochain-server | — | — | — | yes | CRUD lifecycle |
 | server security | ferrochain-server | — | — | — | yes | SecurityConfig defaults |
 | recursive splitter | ferrochain-splitters | — | yes | — | yes | Code-point boundaries |
