@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "1.0"
+version: "1.1"
 status: active
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
@@ -47,9 +47,9 @@ on a `Future` will fail at verification time. Consequences:
    }
    ```
 
-## Committed VP Obligations (D17-Q7)
+## Committed VP Obligations (D17-Q7 + R11)
 
-Three VPs committed before v1.0 release (NFR-003):
+Five VPs committed before v1.0 release — three Kani (D17-Q7 / NFR-003 formal-proof obligations: VP-001/002/003) plus two integration (R11 Red Gate: VP-004/005):
 
 | VP | BC Anchor | DI | Module | Tool | Phase | Priority |
 |----|-----------|-----|--------|------|-------|---------|
@@ -185,3 +185,10 @@ Modules where behavioral testing is the primary verification method:
 | NE-17 nondeterminism | HIGH | VP-001 Kani proof eliminates the class of bugs |
 | NE-12 session collapse | HIGH | VP-002 Kani proof makes cross-tenant isolation machine-checked |
 | NE-02 path traversal | HIGH | VP-003 Kani proof covers all symbolic path inputs |
+
+## Changelog
+
+| Version | Date | Author | Decision | Change |
+|---------|------|--------|----------|--------|
+| 1.1 | 2026-07-14 | architect | D18-P38-A | Fixed stale VP count in §"Committed VP Obligations": intro line changed from "Three VPs" to correctly enumerate five total (three Kani D17-Q7/NFR-003 + two integration R11); heading updated from (D17-Q7) to (D17-Q7 + R11) for mutual coherence with table and total line |
+| 1.0 | 2026-07-14 | architect | D17 | Initial verification architecture with Kani async constraint, VP catalog, purity boundaries, and risk mitigations |
