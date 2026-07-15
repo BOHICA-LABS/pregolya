@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.6"
+version: "1.7"
 status: active
 producer: architect
 timestamp: 2026-07-15T00:00:00Z
@@ -22,6 +22,7 @@ changelog:
   - "1.4 (ADV-P1D-PASS-62): F-P62-01 add deny-anyhow-in-lib (ADR-010/NE-03/DI-014) and deny-description-cache-key (ADR-011/NE-05) to xtask inventory; add non-exhaustive qualifier citing behavioral-contracts/ as authoritative subcommand registry."
   - "1.5 (D20/ADR-012): add ferrochain-core self-improvement definitions note (core::context_mutation + core::write_guard, definitions-only, no new rows per ADR-009 precedent); add memory::skills (MEDIUM) and memory::write_guard (HIGH) module rows to ferrochain-memory per ADR-012 placements. Universe 33→34 (+memory::write_guard HIGH execution row, gate #25)."
   - "1.6 (D20/CAP-021+CAP-020): add mcp::server (MEDIUM) to ferrochain-mcp for CAP-021 MCP server role; add BC anchors note to ferrochain-mcp section; update ferrochain-memory BC anchors to BC-2.15.001–006 for CAP-020. Universe 34→35 (+mcp::server MEDIUM execution row, gate #25)."
+  - "1.7 (F-P72-04/ADR-013): correct mcp::server attribution from ADR-012 to ADR-013; ADR-012 contains no MCP server content."
 ---
 
 # Module Decomposition: ferrochain
@@ -165,7 +166,7 @@ The SDK crates have no ferrochain-core dep and are publishable standalone. Enfor
 | `mcp::discovery` | Tool discovery and registration from MCP server at runtime | MEDIUM |
 | `mcp::adapter` | `ToolInvocation` routing; ToolException re-raise with type identity (R11) | MEDIUM |
 | `mcp::ingress` | Untrusted-ingress routing; DI-012 guardrail seam | MEDIUM |
-| `mcp::server` | MCP server endpoint: exposes registered tools to external MCP clients; accepts inbound tool-call requests, dispatches to registered tools, and returns serialized responses (CAP-021/D20/ADR-012) | MEDIUM |
+| `mcp::server` | MCP server endpoint: exposes registered tools to external MCP clients; accepts inbound tool-call requests, dispatches to registered tools, and returns serialized responses (CAP-021/D20/ADR-013) | MEDIUM |
 
 **BC anchors:** BC-2.09.001–007 (CAP-021: BCs 006–007 cover server-side tool exposure and response serialization contracts).
 
@@ -195,8 +196,10 @@ search (keyword / vector / hybrid). Canonical trait: `MemoryStore`.
 > `core::write_guard` (definitions-only, ferrochain-core) — same split as ADR-009 Option 3
 > (BudgetPolicy trait in core / BudgetEngine dispatch in graph). Universe updated to 34 (gate #25):
 > +1 HIGH execution row (`memory::write_guard`); definitions-only entries (`core::context_mutation`,
-> `core::write_guard`, `memory::skills`) follow the no-row precedent. Universe further updated to 35
-> in v1.6 (gate #25): +1 MEDIUM execution row (`mcp::server`, CAP-021/D20).
+> `core::write_guard`) and routing-overlay entry (`memory::skills`) follow the no-criticality-row
+> precedent — `memory::skills` has a structural decomposition row here but no criticality-counted
+> row (ADR-012 Decision 4). Universe further updated to 35 in v1.6 (gate #25): +1 MEDIUM execution
+> row (`mcp::server`, CAP-021/D20/ADR-013).
 
 ## ferrochain-macros (ADR-008) — HIGH
 

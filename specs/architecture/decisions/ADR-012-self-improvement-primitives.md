@@ -7,7 +7,7 @@ title: "Self-Improvement Primitives: Skill Registry, Runtime Context Mutation, G
 status: accepted
 producer: architect
 timestamp: 2026-07-15T00:00:00Z
-version: "1.0"
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D20]
@@ -235,8 +235,9 @@ memory write performed during the run does not affect the context of that run.
 
 ## Decision 4 — Module-Criticality Universe (Gate #25)
 
-**Chosen:** Universe 33 → **34**. One new execution module row added. All other
-D20 artifacts are definitions-only.
+**Chosen:** Universe 33 → **34** (ADR-012 scope). One new execution module row added. All other
+D20 artifacts are definitions-only. **Final downstream universe: 35** — subsequent ADR-013
+adds `mcp::server` MEDIUM (+1 execution row); see ADR-013-mcp-server-module-placement.md.
 
 **Classification per primitive:**
 
@@ -244,12 +245,14 @@ D20 artifacts are definitions-only.
 |----------|------|-------------|-----------|
 | `core::context_mutation` | Pure types (definitions-only) | **No new row** | ContextSourceSpec + ContextMutationConfig are pure structs. Precedent: `core::budget` (BudgetPolicy/TokenUsage/RunContext) is definitions-only with no row (ADR-009 Option 3, D18-P61-C). |
 | `core::write_guard` | Pure types + pure trait (definitions-only) | **No new row** | MemoryWriteGuard/MemoryWriteRequest/WriteGuardDecision are pure types/trait. Same precedent as `core::budget`. |
-| `memory::skills` | SkillStore trait + routing (storage trait) | **No new row** | Thin routing overlay over MemoryStore reads. Subsumed into `memory::store` note (analogous to `core::budget` definitions note in ferrochain-core). No independent execution logic beyond storage delegation. |
+| `memory::skills` | SkillStore trait + routing (storage trait) | **No new criticality row** (structural module-decomposition row added; see Consequences) | Thin routing overlay over MemoryStore reads. Subsumed into `memory::store` note (analogous to `core::budget` definitions note in ferrochain-core). No independent execution logic beyond storage delegation. |
 | `memory::write_guard` | Execution enforcement (effectful dispatch) | **NEW HIGH row** | Calls `MemoryWriteGuard::validate()` on every write, applies injection scanning, conditionally aborts or sanitizes writes. Security-sensitive write-path enforcement — analogous to `graph::provenance` (HIGH tier, guardrail dispatch) and `sandbox::policy` (MEDIUM tier, sandbox policy enforcement). Security significance of write-path injection prevention warrants HIGH tier. |
 | Context loading in `graph::scheduler` | New behavior of existing module | **No new row** | Added behavior to existing `graph::scheduler` module (run-start hook). No new module created. |
 
-**Gate #25 declaration:** Module universe after D20 = **34**
-(9 CRITICAL + 13 HIGH + 10 MEDIUM + 2 LOW).
+**Gate #25 declaration (ADR-012 scope):** Module universe after ADR-012 = **34**
+(9 CRITICAL + 13 HIGH + 10 MEDIUM + 2 LOW). **Post-ADR-013 final universe: 35**
+(9 CRITICAL + 13 HIGH + 11 MEDIUM + 2 LOW) — `mcp::server` MEDIUM (+1 execution row)
+attributed to ADR-013-mcp-server-module-placement.md.
 
 **Crate roster:** 18 published crates — **unchanged confirmed**. All D20 primitives
 reside in existing crates (ferrochain-core, ferrochain-memory). No new crate.
@@ -271,9 +274,11 @@ reside in existing crates (ferrochain-core, ferrochain-memory). No new crate.
 1. ferrochain-core gains a **self-improvement definitions note** (no new table rows):
    - `core::context_mutation` (`ferrochain-core/src/context_mutation.rs`): ContextSourceSpec, ContextMutationConfig
    - `core::write_guard` (`ferrochain-core/src/write_guard.rs`): MemoryWriteRequest, MemoryWriteGuard trait, WriteGuardDecision
-2. ferrochain-memory gains two new module rows:
-   - `memory::skills` (MEDIUM, SS-15): SkillStore trait + SkillDescriptor, skill load-on-demand routing
-   - `memory::write_guard` (HIGH, SS-15): guarded write enforcement engine, injection scanning dispatch
+2. ferrochain-memory gains two new **structural** module rows in module-decomposition.md
+   (`memory::skills` does NOT earn a criticality-counted row per Decision 4 table above;
+   only `memory::write_guard` earns a criticality row):
+   - `memory::skills` (structural decomposition row, MEDIUM tier classification, SS-15): SkillStore trait + SkillDescriptor, skill load-on-demand routing
+   - `memory::write_guard` (HIGH, SS-15, **criticality-counted**): guarded write enforcement engine, injection scanning dispatch
 
 ### PO Anchors (Exact Paths for CAP/BC Authoring)
 
@@ -290,6 +295,11 @@ Guarded write failures require a new error code in the MEMORY namespace. PO must
 `E-MEM-NNN` (category: SECURITY, retry_hint: Never) for `MemoryWriteGuard::Deny`.
 Naming suggestion: `E-MEM-004 MemoryWriteGuardDenied` — PO has final authority per
 bc-authoring-plan.md error-taxonomy ownership.
+
+> **Advisory correction (v1.1, F-P72-02 OBS):** PO minted `E-MEMORY-007
+> MemoryWriteGuardDenied`. The namespace prefix is `MEMORY` (not `MEM`) and the
+> assigned number is `007` (not `004`). The authoritative minted code is `E-MEMORY-007`.
+> The suggestion above was advisory only; PO authority prevails per bc-authoring-plan.md.
 
 ### Cache-Key Obligation (ADR-011)
 
@@ -311,4 +321,5 @@ seam that does not interact with `ProvenanceTag`, `GuardrailHook`, or `BoundaryT
 
 | Version | Date | Author | References | Summary |
 |---------|------|--------|------------|---------|
+| 1.1 | 2026-07-15 | architect | F-P72-02, ADR-013 | Reconcile Decision 4 to actual downstream state: headline clarified as ADR-012 scope (33→34); gate #25 updated to note final universe = 35 post-ADR-013 (mcp::server MEDIUM); memory::skills cell corrected from "No new row" to "No new criticality row" distinguishing structural decomposition row from criticality-counted row; Consequences item 2 clarified "structural module rows" to distinguish from criticality rows; Error Codes advisory annotated with actually-minted E-MEMORY-007 (namespace MEMORY, number 007). |
 | 1.0 | 2026-07-15 | architect | D20 | Initial decision: placement of three self-improvement primitives; injection-scanning seam (new MemoryWriteGuard, no BoundaryType amendment); frozen-snapshot semantics; universe 33→34 (+memory::write_guard HIGH row). |

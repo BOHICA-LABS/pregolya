@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.12"
+version: "2.13"
 status: active
 producer: product-owner
 total_standing_gates: 33
@@ -214,7 +214,7 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 | BC-2.06.003 | Streaming and unary run produce identical final answer (NE-13) | P0 | CAP-007 | DI-011 | Wave 1 |
 | BC-2.10.001 | BudgetPolicy allow/escalate/deny evaluation per run and per sub-agent | P0 | CAP-012 | — | Wave 1 |
 | BC-2.10.002 | Append-only EvidenceJournal records every budget evaluation | P0 | CAP-012 | — | Wave 1 |
-| BC-2.10.003 | Graceful halt when budget ceiling reached (on_ceiling = halt) | P0 | CAP-012 | — | Wave 1 |
+| BC-2.10.003 | Graceful halt when budget ceiling reached (on_ceiling = halt | summarize) | P0 | CAP-012 | — | Wave 1 |
 | BC-2.10.004 | Budget escalation to HITL interrupt when on_ceiling = escalate | P0 | CAP-012 | DI-003 | Wave 1 |
 
 ### Batch 7 — Content Provenance + Guardrail-on-Ingress Full Subsystem (P0 D17-Q8 mandate)
@@ -299,7 +299,7 @@ subsystem_note: "All BCs carry subsystem: SS-TBD until architect assigns ARCH-IN
 ## Proc-Macro BCs (UNBLOCKED — ADR-004 + ADR-008 accepted)
 
 ADR-004 (D5 gate) and ADR-008 are both accepted. The following BCs have been authored
-as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
+as Phase-1b additions (Batch 13). They are included in the 95-BC plan total.
 
 ### Batch 13 — Proc-Macro Developer Ergonomics (P1, Phase-1b, ADR-004/ADR-008)
 *3 BCs — SS.08 extension (ferrochain-macros re-exported from ferrochain-core)*
@@ -355,7 +355,7 @@ split by wave avoids exception).
    a Verification Properties table with the VP description and method (Kani).
 7. **Red Gate tests:** BCs for R8/R10/R11 (BC-2.07.002, BC-2.02.003-004, BC-2.09.004-005)
    must note "Red Gate test required — must compile and FAIL before implementation begins."
-8. **Origin:** `origin: greenfield` for all 86 BCs (no brownfield extraction).
+8. **Origin:** `origin: greenfield` for all 95 BCs (no brownfield extraction).
 9. **Lifecycle:** `lifecycle_status: active`, `introduced: v1.0.0-greenfield`. **Status:** `status: active` — a BC is `active` once integrated into BC-INDEX; version bumps do NOT reset this field to `draft`.
 10. **File path:** `.factory/specs/behavioral-contracts/ss-NN/BC-S.SS.NNN.md` (SS-NN from ARCH-INDEX Subsystem Registry)
 11. **Governance: integrated-into-index ⇒ `status: active` (all spec artifacts).**
@@ -372,7 +372,7 @@ split by wave avoids exception).
     and verify every hit: (a) shows `interrupted` as pausable/resumable, and (b) lists only
     `completed | failed | cancelled` as terminal. Source of truth: ADV-P1D-PASS-12.md §F-P12-01.
 13. **Anchor-matrix census gate (added P16 — standing gate, subsumes all prior per-axis checks; widened P40 — five-way):**
-    After any BC authoring burst, run the full anchor-matrix census across all 86 BCs × 6 axes
+    After any BC authoring burst, run the full anchor-matrix census across all 95 BCs × 6 axes
     {CAP, DI, NE, R (R-NNN/R8-10-11 aliases), ADR, registered-VP}. For each axis, perform a
     **five-way consistency check**: BC body Traceability tables ↔ BC-INDEX columns (NE Anchors,
     DI Anchors, Cap, VP, RG) ↔ PRD §2 tables + §7 RTM Source column + §9 NE Disposition Table ↔
@@ -1469,7 +1469,7 @@ split by wave avoids exception).
     (i.e., declares which workspace crate owns a trait, type, module, or file) MUST reconcile
     that placement decision against the three BC-layer carriers IN THE SAME BURST:
 
-    **Three required carriers:**
+    **Five required carriers:**
 
     1. **module-decomposition.md** — scope lines for the affected subsystem(s); module rows/notes;
        crate ownership columns. A crate assignment in the ADR must appear in the corresponding
@@ -1483,6 +1483,18 @@ split by wave avoids exception).
     3. **interface-definitions.md §Public Rust Trait Signatures section headers** — any section
        that names a trait or type whose home crate was decided by the ADR must have its
        implementation note, crate reference, or doc-comment updated to reflect the ADR placement.
+
+    4. **`.factory/specs/architecture/module-criticality.md` (arch registry)** — if the ADR
+       introduces a new module or changes crate placement for a module, the arch-registry
+       criticality table must reflect the module with its correct crate and tier. A module added
+       by an ADR that does not appear in the arch registry is a gate #32 + gate #25 violation.
+
+    5. **`.factory/specs/prd-supplements/module-criticality.md` (PO registry)** — the PO-scope
+       criticality registry (20-module subset; behavioral-contract-relevant modules only) must
+       also reflect any new module that meets the PO inclusion criteria (see scope note in that
+       file). Both criticality views must agree on tier and crate for modules that appear in both.
+       (OBS-P72 process-gap addition; motivating instance: D20 ADR-012/ADR-013 modules not
+       reconciled against PO registry in same burst.)
 
     **Census procedure:**
     1. Read the ADR's placement statement(s) (e.g., "X lives in ferrochain-core/src/budget.rs").
@@ -1576,6 +1588,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.13 | 2026-07-15 | pass-72 fix burst — OBS fixes: (1) stale "86" swept → 95 in three locations (guideline #8, Batch-13 scope note, gate #13 census prose); (2) BC-2.10.003 Batch-6 table title aligned with H1/BC-INDEX: "(on_ceiling = halt)" → "(on_ceiling = halt \| summarize)"; (3) gate #32 expanded from three to five required carriers (+module-criticality arch registry +module-criticality PO registry; OBS-P72 process-gap addition — D20 ADR-012/ADR-013 modules not reconciled against PO registry in same burst). | OBS-P72, F-P72-08 |
 | 2.12 | 2026-07-15 | D20 TOUCH-UP burst — Residue 1: BudgetInfo row added to gate #31 census table (RESOLVED — defined inline in interface-definitions.md v2.21 §BudgetPolicy, BC-2.10.003 v1.2). Census verdict corrected: prior "25/28" had two errors — (a) table had 27 rows (BudgetInfo was the missing 28th row) and (b) numerator 25 was wrong arithmetic. True N/M after recount = 24/28 (23 RESOLVED + 1 EXTERNAL [Value, exempt] = 24 effectively resolved; 4 UNRESOLVED unchanged; total = 28). | D20 TOUCH-UP |
 | 2.11 | 2026-07-15 | D20 INTEGRATE sub-burst 2: 9 new BCs registered (86→95; P1 30→39; batches 13→15). Batch 14 (8 BCs, Wave 2): BC-2.04.008 (CAP-005), BC-2.08.013/014 (CAP-009), BC-2.09.006/007 (CAP-021), BC-2.15.004/005/006 (CAP-020). Batch 15 (1 BC, Wave 1): BC-2.13.007 (CAP-015). Subsystem→CAP mapping: SS.09 gains CAP-021; SS.15 gains CAP-020. DI coverage table: DI-002/006/008/009/010/012/014 all gain new enforcing BCs; zero orphan invariants (14/14 DIs covered). Gate #22: E-MCP-005 added as 6th intentional RetryHint divergence (TRANSPORT/Later→Never; BC-2.09.006 anchored). Gate #31 census: +7 types (ToolCall, SkillDescriptor, MemoryWriteRequest, WriteGuardDecision, ProviderCredential, CredentialRefreshConfig); census 19/21 → 25/28 resolved (4 UNRESOLVED: ChatConfig, CheckpointConfig, ProviderCredential, CredentialRefreshConfig). | D20 sub-burst 2 |
 | 2.10 | 2026-07-15 | F-P70-01: Gate #27 budget ownership corrected per ADR-009 v1.2 Option 3 split — "budget" removed from ferrochain-graph group; new rules added: budget ENGINE (BudgetEngine, EvidenceJournal → ferrochain-graph) and budget TRAIT/types (BudgetPolicy, PolicyDecision, TokenUsage, RunContext → ferrochain-core/src/budget.rs). Quick-check forbidden set: `ferrochain-core/src/budget` removed (BC-2.10.001:141 + BC-2.10.003:139 are correct anchors, not wrong-crate hits); positive assertion added (BudgetEngine/EvidenceJournal must never anchor to ferrochain-core). Guardrail canon rule added (GuardrailHook trait → ferrochain-core; invocation pipeline → ferrochain-graph) — adjudicated placement missing from ownership rules since pass-61. Motivating instance block expanded with F-P70-01. | F-P70-01 |

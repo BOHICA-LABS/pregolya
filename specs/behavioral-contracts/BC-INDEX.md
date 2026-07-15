@@ -1,10 +1,10 @@
 ---
 document_type: bc-index
 level: L3
-version: "1.1"
+version: "1.2"
 status: active
 producer: state-manager
-timestamp: 2026-07-14T04:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
@@ -109,7 +109,7 @@ traces_to: .factory/specs/prd.md
 | BC-2.09.007 | MCP Server Tool Invocation (tools/call; External Client Executes Registered Tool) | CAP-021 | | DI-008,DI-010,DI-014 | P1 | | | ss-09/BC-2.09.007.md |
 | BC-2.10.001 | BudgetPolicy allow/escalate/deny Evaluation per Run and per Sub-Agent | CAP-012 | | | P0 | | | ss-10/BC-2.10.001.md |
 | BC-2.10.002 | Append-Only EvidenceJournal Records Every Budget Evaluation | CAP-012 | | | P0 | | | ss-10/BC-2.10.002.md |
-| BC-2.10.003 | Graceful Halt When Budget Ceiling Reached (on_ceiling = halt) _(v1.2: adds OnCeiling::Summarize + RunContext.budget\_info / BudgetInfo)_ | CAP-012 | | | P0 | | | ss-10/BC-2.10.003.md |
+| BC-2.10.003 | Graceful Halt When Budget Ceiling Reached (on_ceiling = halt \| summarize); Remaining-Budget Exposure _(v1.2: adds OnCeiling::Summarize + RunContext.budget\_info / BudgetInfo)_ | CAP-012 | | | P0 | | | ss-10/BC-2.10.003.md |
 | BC-2.10.004 | Budget Escalation to HITL Interrupt When on_ceiling = escalate | CAP-012 | | DI-003 | P0 | | | ss-10/BC-2.10.004.md |
 | BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary (Tool-Result, RAG, Memory) | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.001.md |
 | BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | CAP-013 | NE-06 | DI-012 | P0 | | | ss-11/BC-2.11.002.md |

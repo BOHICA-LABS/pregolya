@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.2"
+version: "1.3"
 status: active
 producer: architect
 timestamp: 2026-07-15T00:00:00Z
@@ -18,6 +18,7 @@ deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20]
 changelog:
   - "1.2 (D20/CAP-021+CAP-020): SS-09 BC range 001–005→001–007 (CAP-021 MCP server role); SS-15 BC range 001–003→001–006 (CAP-020 self-improvement primitives); SS-04 001–007→001–008; SS-08 001–012→001–014; SS-13 001–006→001–007; BC total 86→95."
+  - "1.3 (F-P72-04/ADR-013): add ADR-013 (mcp::server module placement) to ADR registry; update SS-09 D20 capability note to attribute mcp::server to ADR-013 (not ADR-012); ADR count 12→13."
 ---
 
 # Architecture Index: ferrochain
@@ -38,7 +39,7 @@ changelog:
 | Tooling Selection | tooling-selection.md | formal-verifier | Kani, cargo-fuzz, cargo-mutants, proptest versions + config |
 | Verification Coverage Matrix | verification-coverage-matrix.md | consistency-validator | VP-to-module coverage status |
 
-**ADRs:** `.factory/specs/architecture/decisions/` — 12 files (ADR-001 to ADR-012)
+**ADRs:** `.factory/specs/architecture/decisions/` — 13 files (ADR-001 to ADR-013)
 
 **Module Criticality:** `.factory/specs/module-criticality.md`
 
@@ -77,7 +78,7 @@ changelog:
 | SS-16 | Tool Retry + Circuit Breaker | 2.16 | ferrochain-core | BC-2.16.001–003 | 2 |
 | SS-17 | Formal Verification Pipeline | 2.17 | xtask, ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox | BC-2.17.001–002 | 6 |
 
-> **D20 Capability Additions (v1.2):** SS-09 adds CAP-021 (MCP server role) per ADR-012 — introduces `mcp::server` execution module in ferrochain-mcp; BC range extended from 001–005 to 001–007. SS-15 adds CAP-020 (self-improvement primitives) per ADR-012 — includes `SkillStore`, `MemoryWriteGuard` execution modules and `ContextMutationConfig` definitions; BC range extended from 001–003 to 001–006.
+> **D20 Capability Additions (v1.2):** SS-09 adds CAP-021 (MCP server role) per ADR-013 — introduces `mcp::server` execution module in ferrochain-mcp; BC range extended from 001–005 to 001–007. SS-15 adds CAP-020 (self-improvement primitives) per ADR-012 — includes `SkillStore`, `MemoryWriteGuard` execution modules and `ContextMutationConfig` definitions; BC range extended from 001–003 to 001–006.
 
 ## Canonical Crate Roster (Source of Truth)
 
@@ -125,6 +126,7 @@ R6 namespace reservation: publish-all.sh must cover all 18 published crates befo
 | ADR-010 | Error Taxonomy and anyhow Confinement | accepted | — |
 | ADR-011 | Cache-Key Content-Hash Contract (NE-05) | accepted — constrained by D17 NE adoption | — |
 | ADR-012 | Self-Improvement Primitives: Skill Registry, Context Mutation, Guarded Writes (D20) | accepted — D20 authority | — |
+| ADR-013 | MCP Server Module Placement in ferrochain-mcp (CAP-021) | accepted — D19/D20 authority | — |
 
 ## Verification Properties (VP-INDEX)
 

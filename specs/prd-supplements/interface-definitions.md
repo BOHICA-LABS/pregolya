@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.21"
+version: "2.22"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -31,6 +31,7 @@ changelog:
   - "2.17 (ADV-P1D-PASS-66): F-P66-03 — remove E-SERVER-005 (CorsRejected, POLICY) from 403 row; code RETIRED (tombstone in error-taxonomy.md v1.9). BC-2.12.005 PC2/TV-001 specifies CORS denial as silent header-omission — no error body is ever emitted; listing E-SERVER-005 in the 403 row misled implementers toward building explicit CORS error bodies. 403 row description updated to remove 'CORS'. E-PROV-007 omission note updated to remove E-SERVER-005 from the list of direct-403 codes. Disposition census 79→78: 44 HTTP table rows (−E-SERVER-005), 11 individual omission notes, 23 blanket library-layer coverage, 0 uncovered. Gates #20 POLICY census + gate #21 §17-C re-run: all remaining POLICY codes correctly mapped (E-SERVER-004 → 403 direct; E-GRAPH-013 → 403 direct; others library-layer or per-endpoint overrides). PASS."
   - "2.18 (ADV-P1D-PASS-67): F-P67-01 — fix 422 row cross-reference enumeration: DURABILITY/INTERNAL E-CHKPT codes listed as routed to the 500 row omitted E-CHKPT-007 (CipherHeaderMissing, INTERNAL), which IS in the 500 row. Enumeration corrected from (E-CHKPT-001, -002, -003, -004, -006) to (E-CHKPT-001, -002, -003, -004, -006, -007). Gate #21 cross-row routing-enumeration completeness sub-check applied — all inter-row enumerations verified. Disposition census unchanged: 44 HTTP table rows, 11 individual omission notes, 23 blanket library-layer coverage, 0 uncovered."
   - "2.21 (D20 TOUCH-UP burst): Residue 1 — §BudgetPolicy RunContext inline note updated: added field `budget_info: Option<BudgetInfo>` (BC-2.10.003 v1.2 PC5/INV); `BudgetInfo` struct defined inline with fields `tokens_remaining: Option<i64>` and `steps_remaining: Option<u32>` (gate #31 RESOLVED). BC anchor updated to cite BC-2.10.003. Disposition census unchanged: 43 HTTP table rows, 16 individual omission notes, 26 blanket library-layer coverage entries = 85. CORRIGENDUM (Residue 2): This document's split (43 HTTP + 16 individual + 26 blanket = 85) is the verified correct partition; error-taxonomy.md v1.11 erroneously stated 44 HTTP + 15 individual + 26 blanket = 85 — the split error arose because the E-CORE-004 move (HTTP table → individual omission note, interface-definitions.md v2.19) was not reflected in error-taxonomy.md v1.10 census; corrected in error-taxonomy.md v1.12."
+  - "2.22 (pass-72 fix, 2026-07-15): F-P72-01 + F-P72-06 — fix SkillStore trait signatures to BC/ADR-authoritative name-keyed + tag-filtered forms (load_skill/skill_exists take name: &str; list_skills takes tags: &[String]) per BC-2.15.004 PC1-PC3 + ADR-012 Decision 1 Primitive A; name→(namespace,key) storage mapping is impl-internal (BC-2.15.004 Invariant). Fix Replace.old_value from Value to Option<Value> per ADR-012 Decision 1 Primitive C (None=unconditional replace; Some(v)=match-based replace) + BC-2.15.005 PC2. Gate #31 SkillStore row stays RESOLVED with corrected shapes; MemoryWriteRequest RESOLVED note unchanged (variant structure correct, type corrected). D18-P72-A + D18-P72-B adjudicated."
   - "2.20 (D20 INTEGRATE sub-burst 2): Four new §Public Rust Trait Signatures added: §ToolCallDialect (BC-2.08.013 — object-safe dialect seam for tool-call serialization; built-ins NativeOpenAiJson/NativeAnthropic/HermesChatMlXml), §ProviderFallbackPolicy (BC-2.08.014 — ordered fallback chain struct; ProviderCredential/CredentialRefreshConfig flagged UNRESOLVED implementer-scope for architect), §SkillStore (BC-2.15.004 — async trait with SkillDescriptor inline struct), §MemoryWriteGuard (BC-2.15.005 — pure sync guard with MemoryWriteRequest + WriteGuardDecision inline enums). Blanket omission MEMORY annotation: VAL/POLICY/DURABILITY → VAL/POLICY/DURABILITY/SECURITY (+E-MEMORY-007 SECURITY). Four individual omission notes added: E-CHKPT-008 (VAL), E-CHKPT-009 (INTERNAL), E-PROV-009 (VAL), E-PROV-010 (POLICY) — all library-layer Err, never direct HTTP terminal. Gate #31 census: 19/21 → 25/28 resolved (+ToolCall, SkillDescriptor, MemoryWriteRequest, WriteGuardDecision all RESOLVED; ProviderCredential, CredentialRefreshConfig UNRESOLVED). Disposition census 78→85: 43 HTTP table rows, 16 individual omission notes (+4), 26 blanket library-layer coverage entries (+3: E-MCP-005 in MCP blanket, E-SBXD-006 in SBXD blanket, E-MEMORY-007 in MEMORY blanket)."
   - "2.19 (ADV-P1D-PASS-69): F-P69-01 — fix 400 row range-shorthand category mismatch: 'E-CORE-001 through E-CORE-005' silently included E-CORE-004 (INTERNAL, not VAL). (1) 400 row: range replaced with explicit VAL enumeration 'E-CORE-001, E-CORE-002, E-CORE-003, E-CORE-005' — each verified VAL in error-taxonomy.md (lines 68-70, 72). (2) E-CORE-004 (INTERNAL — BC-2.01.004 PC5, pipe-composition type-boundary mismatch) given individual omission note mirroring E-CORE-006/E-CORE-007 (library-layer Err return, never direct HTTP terminal; INTERNAL→500 categorical fallback). (3) Range sweep: 'E-CORE-001 through E-CORE-005' was the only range expression in the status table rows — no other ranges found. Disposition census 78→78: 43 HTTP table rows (−E-CORE-004 from 400 row), 12 individual omission notes (+E-CORE-004 library-layer note), 23 blanket library-layer coverage, 0 uncovered."
 inputs:
@@ -338,25 +339,18 @@ pub struct ProviderFallbackPolicy {
 /// Authority: BC-2.15.004 (SkillStore Registry — Load-on-Demand Skill Documents).
 /// Module: ferrochain-memory (memory::skills).
 pub trait SkillStore: Send + Sync {
-    /// Load a skill document by namespace + key. Returns None if not found.
-    async fn load_skill(
-        &self,
-        namespace: &str,
-        key: &str,
-    ) -> Result<Option<String>, FerrochainError>;
+    /// Load a skill document by its registered name.
+    /// Returns `Ok(Some(content))` if found; `Ok(None)` if no skill with that name exists.
+    /// The name→(namespace, key) storage mapping is impl-internal (BC-2.15.004 Invariant).
+    async fn load_skill(&self, name: &str) -> Result<Option<String>, FerrochainError>;
 
-    /// List all skill descriptors, optionally filtered by namespace.
-    async fn list_skills(
-        &self,
-        namespace: Option<&str>,
-    ) -> Result<Vec<SkillDescriptor>, FerrochainError>;
+    /// List all registered skill descriptors, optionally filtered by tags.
+    /// Passing an empty slice returns ALL registered descriptors (BC-2.15.004 PC2).
+    async fn list_skills(&self, tags: &[String]) -> Result<Vec<SkillDescriptor>, FerrochainError>;
 
-    /// Check existence without loading the full document.
-    async fn skill_exists(
-        &self,
-        namespace: &str,
-        key: &str,
-    ) -> Result<bool, FerrochainError>;
+    /// Check whether a skill with the given name is registered, without loading its document.
+    /// A cheap existence check — does NOT load content (BC-2.15.004 PC3).
+    async fn skill_exists(&self, name: &str) -> Result<bool, FerrochainError>;
 }
 
 /// Metadata descriptor for a registered skill document.
@@ -393,7 +387,10 @@ pub trait MemoryWriteGuard: Send + Sync {
 /// Authority: BC-2.15.005 — defined inline.
 pub enum MemoryWriteRequest {
     Add { namespace: String, key: String, value: Value },
-    Replace { namespace: String, key: String, old_value: Value, new_value: Value },
+    /// `old_value: None` — unconditional replace (replace regardless of current value).
+    /// `old_value: Some(v)` — match-based replace (only if current value equals `v`).
+    /// Authority: ADR-012 Decision 1 / Primitive C; BC-2.15.005 PC2.
+    Replace { namespace: String, key: String, old_value: Option<Value>, new_value: Value },
     Remove { namespace: String, key: String },
 }
 

@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-module-criticality
 level: L3
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-14T00:00:00Z
@@ -9,6 +9,7 @@ phase: 1a
 changelog:
   - "1.1 (ADV-P1D-PASS-31): OBS-P31-1 add exclusion-criteria note (facade/re-export crates #1/#16/#17/#18 excluded; xtask classified as dev-tooling for CI gate); ferrochain-macros (#15) DECISION — receives HIGH-tier row (not excluded) because #[tool]/#[entrypoint] proc-macros affect P0 tool-calling and graph-composition paths per ADR-008; add ferrochain-macros to Module Inventory + HIGH row to classification table; update Classification Summary counts (HIGH 7→8, Total 19→20)."
   - "1.2 (ADV-P1D-PASS-32): F-P32-02 fix Classification Summary MEDIUM cell: was 5 (wrong), actual MEDIUM rows = 4; corrected to 4, percentage updated 25%→20%; self-sum now 6+8+4+2=20 reconciles with stated total."
+  - "1.3 (pass-72 fix, 2026-07-15): F-P72-03 — add D20 modules per gate #32 PO-registry carrier obligation. (1) memory::write_guard (ferrochain-memory, HIGH) — ADR-012 Decision 4: calls validate() on every write; injection scanning dispatch; security-sensitive execution path. ADR-012 Decision 4 explicitly excludes memory::skills ('no independent execution logic beyond storage delegation') — no new row for skills module. (2) mcp::server (ferrochain-mcp, MEDIUM) — pending ADR-013: MCP server tool advertisement and invocation; external client interface. ferrochain-memory crate added to Module Inventory. Classification Summary updated: HIGH 8→9, MEDIUM 4→5, Total 20→22. Gate #25 Part B/C: tier and crate must agree with arch-registry module-criticality.md when that view is updated by architect this burst."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
@@ -36,7 +37,8 @@ architect_note: "Architect must confirm crate-to-subsystem mapping and fill Arch
 - **ferrochain-graph** — StateGraph BSP execution engine, HITL interrupt/resume, channel reducers, budget governance, content provenance/guardrail seams
 - **ferrochain-checkpoint** — three-tier durable checkpointing, per-task put_writes, monotonic clock, checkpoint fork lineage, encryption at rest
 - **ferrochain-server** — HTTP server for threads/assistants/runs/crons, SecurityConfig, IdempotencyStore/RateLimitStore/RunStore traits
-- **ferrochain-mcp** — MCP tool adapter, tool discovery, ToolException fidelity, untrusted-ingress routing
+- **ferrochain-mcp** — MCP tool adapter, tool discovery, ToolException fidelity, untrusted-ingress routing; MCP server role (`mcp::server` — tool advertisement via `tools/list`, invocation via `tools/call`; ADR-013)
+- **ferrochain-memory** — skill document registry (`memory::skills`), guarded memory/skill writes (`memory::write_guard`; injection scanning dispatch per ADR-012 Decision 4)
 - **ferrochain-openai** — OpenAI chat model implementation, streaming, tool-call, structured output
 - **ferrochain-anthropic** — Anthropic chat model implementation, streaming, tool-call
 - **ferrochain-ollama** — Ollama chat model implementation
@@ -81,7 +83,9 @@ architect_note: "Architect must confirm crate-to-subsystem mapping and fill Arch
 | ferrochain-anthropic | ferrochain-anthropic | HIGH | Conformance contract; streaming correctness | ≥ 90% | 0 |
 | ferrochain-ollama | ferrochain-ollama | HIGH | Conformance contract; local-first deployment | ≥ 90% | 0 |
 | Proc-macro suite (#[tool], #[entrypoint]) | ferrochain-macros | HIGH | ADR-008; `#[tool]` generates ToolDefinition plumbing for P0 tool-calling paths (BC-2.09.001, BC-2.09.002); `#[entrypoint]` gates graph composition; incorrect macro expansion silently corrupts P0 execution (OBS-P31-1) | ≥ 90% | 0 |
-| MCP tool adapter | ferrochain-mcp | MEDIUM | ToolException fidelity (R11); untrusted ingress; correctness but not formal target | ≥ 80% | 0 |
+| MCP tool adapter (`mcp::client`) | ferrochain-mcp | MEDIUM | ToolException fidelity (R11); untrusted ingress; correctness but not formal target | ≥ 80% | 0 |
+| MCP server (`mcp::server`) | ferrochain-mcp | MEDIUM | ADR-013 — tool advertisement (tools/list) + invocation (tools/call); external client interface; correctness but not formal target (BC-2.09.006, BC-2.09.007) | ≥ 80% | 0 |
+| Write guard (`memory::write_guard`) | ferrochain-memory | HIGH | ADR-012 Decision 4 — calls `validate()` on every memory/skill write; prompt-injection and invisible-Unicode scanning dispatch; security-sensitive execution path (BC-2.15.005) | ≥ 90% | 0 |
 | ferrochain-splitters | ferrochain-splitters | MEDIUM | Code-point parity correctness (R8); isolated from graph runtime | ≥ 80% | 0 |
 | Sandbox WASM/container backend | ferrochain-sandbox | MEDIUM | Execution isolation important but DI-006 behavioral test covers the main case | ≥ 80% | 0 |
 | ferrochain-standard-tests | ferrochain-standard-tests | MEDIUM | Test infrastructure; quality signal not production runtime | ≥ 80% | 0 |
@@ -112,13 +116,13 @@ architect_note: "Architect must confirm crate-to-subsystem mapping and fill Arch
 
 | Tier | Module Count | Percentage |
 |------|-------------|------------|
-| CRITICAL | 6 | 30% |
-| HIGH | 8 | 40% |
-| MEDIUM | 4 | 20% |
-| LOW | 2 | 10% |
-| **Total** | **20** | ~100% |
+| CRITICAL | 6 | 27% |
+| HIGH | 9 | 41% |
+| MEDIUM | 5 | 23% |
+| LOW | 2 | 9% |
+| **Total** | **22** | ~100% |
 
-*Note: Community crate and xtask excluded from active-development count; counted here for completeness. ferrochain-macros added as HIGH row (OBS-P31-1). Facade/re-export crates (#1/#16/#17/#18) excluded per exclusion-criteria note above.*
+*Note: Community crate and xtask excluded from active-development count; counted here for completeness. ferrochain-macros added as HIGH row (OBS-P31-1). Facade/re-export crates (#1/#16/#17/#18) excluded per exclusion-criteria note above. v1.3 addition: memory::write_guard (HIGH, ferrochain-memory) + mcp::server (MEDIUM, ferrochain-mcp) per ADR-012/ADR-013 gate #32 PO-registry obligation.*
 
 ## Dependency Graph — Build Order
 

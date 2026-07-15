@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.006
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,8 @@ wave: 2
 phase: 1b
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.1 (pass-72 fix, 2026-07-15): OBS-P72 fix — Architecture Anchors: ADR-012 citation replaced with ADR-013. ADR-012 governs self-improvement primitives (SkillStore, write_guard, context_mutation); it has no MCP content. CAP-021 / BC-2.09.006 (MCP server role) is governed by ADR-013 minted by architect in this burst."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -142,7 +144,7 @@ in-flight; no new requests are accepted after shutdown begins.
 
 ## Architecture Anchors
 
-- `ferrochain-mcp/src/server.rs` (`mcp::server`) — `McpServer`, `McpServerConfig`, `McpServerHandle`, `McpServerTransport` definitions; `tools/list` handler; transport binding (per ADR-012 §Consequences — "PO Anchors" recommendation: mcp::server module in ferrochain-mcp)
+- `ferrochain-mcp/src/server.rs` (`mcp::server`) — `McpServer`, `McpServerConfig`, `McpServerHandle`, `McpServerTransport` definitions; `tools/list` handler; transport binding (per ADR-013 §Consequences — MCP server role placement in ferrochain-mcp, mcp::server module; ADR-012 has no MCP content and is not the governing ADR for CAP-021)
 - `ferrochain-mcp/src/registry.rs` (or shared with client) — `ToolRegistry` read by `tools/list` handler
 
 ## Story Anchor

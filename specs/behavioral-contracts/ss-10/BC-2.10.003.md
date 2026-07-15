@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.003
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: BudgetPolicy::on_ceiling anchor moved from ferrochain-graph/src/budget/policy.rs to ferrochain-core/src/budget.rs (OnCeiling type is a policy definition, per ADR-009 Option 3). Module field resolved: ferrochain-core (BudgetPolicy + OnCeiling types) / ferrochain-graph (halt path in pregel loop)."
   - "1.2 (D20 sub-burst 1, 2026-07-15): Add OnCeiling::Summarize variant behavior (PCs 4+8, EC-005, TV-006) and remaining-budget exposure via RunContext.budget_info (PC5, TV-007) per D20 orchestrator adjudication items (2) stop-and-summarize and (2) remaining-budget exposure."
+  - "1.3 (pass-72 fix, 2026-07-15): F-P72-05 — VP Anchors section missing VP-BUDGET-05 and VP-BUDGET-06 (both added in v1.2 Verification Properties table but not propagated to VP Anchors). Added VP-BUDGET-05 and VP-BUDGET-06 to VP Anchors section."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -187,7 +188,7 @@ _[to be filled after story decomposition]_
 
 ## VP Anchors
 
-- VP-BUDGET-04
+- VP-BUDGET-04, VP-BUDGET-05, VP-BUDGET-06
 
 ## Traceability
 
