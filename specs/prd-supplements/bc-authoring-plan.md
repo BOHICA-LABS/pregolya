@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.6"
+version: "2.7"
 status: active
 producer: product-owner
-total_standing_gates: 32
+total_standing_gates: 33
 timestamp: 2026-07-15T00:00:00Z
 phase: 1a
 inputs:
@@ -1388,12 +1388,75 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
     Source: ADV-P1D-PASS-61 §OBS-P61-1 [process-gap].
 
+33. **Taxonomy anchor reverse-verification census gate — TAXONOMY ANCHOR REVERSE-VERIFICATION CENSUS
+    (added P66 — standing gate [process-gap, OBS-P66-1]):**
+
+    Every live (non-tombstone) error code row in `error-taxonomy.md` carries a **BC Anchor** column
+    that declares which behavioral contract is the home for that code's raise condition.
+    Gate #30 (codeless-error census) is the *forward* axis — BC bodies must cite catalogued codes.
+    Gate #33 is the **reverse** axis — for every live taxonomy code, the declared BC Anchor body
+    must contain the error code string (e.g., `E-CHKPT-003`) or variant name
+    (e.g., `CheckpointReadFailed`) with a **specified raise condition** (an EC-NNN, TV row, or
+    postcondition that describes when the code is raised).
+
+    A code that passes gate #30 (every BC construction has a code) can still fail gate #33 if the
+    declared anchor BC never constructs that specific code. These two gates are logically independent.
+
+    **Census procedure:**
+
+    1. Open `error-taxonomy.md` and enumerate every live (non-tombstone) row with a BC Anchor cell.
+    2. For each row, extract the BC Anchor ID (e.g., `BC-2.09.005`).
+    3. Run: `grep -l "E-<COMP>-NNN\|<VariantName>" .factory/specs/behavioral-contracts/<anchor-path>/` to
+       confirm the code string or variant name appears in the BC body.
+    4. Verify the hit is not merely a changelog/retired-identifier mention — it must appear in an
+       EC-NNN, TV table row, postcondition, or invariant body as a raise condition.
+    5. If no raise condition is found: the code is an **OBS-P28-2 class orphan** (anchor declared but
+       BC body never constructs the error) — HIGH-severity finding.
+    6. If the declared BC Anchor is wrong scope for the code's raise path (e.g., wrong subsystem
+       lifecycle phase): **re-anchor** the taxonomy row to the correct BC and add EC/TV to that BC.
+
+    **Census command (automated pre-check):**
+    ```
+    # For each live taxonomy row, check that the BC Anchor body contains the code or variant name.
+    # Run from repo root. Outputs: code, anchor BC, grep result (non-empty = PASS).
+    grep -h "^| E-" .factory/specs/prd-supplements/error-taxonomy.md | grep -v "~~" | \
+      awk -F'|' '{code=$2; anchor=$4; gsub(/ /,"",code); gsub(/ /,"",anchor); print code, anchor}'
+    # Then for each (code, anchor) pair: grep -l "$code" .factory/specs/behavioral-contracts/**/$anchor.md
+    ```
+
+    **Scope:** All live taxonomy codes (non-tombstone rows). Tombstone rows (~~strikethrough~~) are
+    excluded — a retired code has no behavioral home obligation.
+
+    **Trigger:** Every taxonomy edit (add, modify, re-anchor, or tombstone any row) AND every
+    adversary rotation where the new adversary uses the BC-Anchor reverse-verification lens.
+
+    **Pass threshold:** 100% of live codes must have at least one raise condition in their declared
+    BC Anchor body. Zero orphans permitted.
+
+    **Motivating instances:**
+    - **F-P66-03 (HIGH):** E-SERVER-005 `CorsRejected` — taxonomy declared `BC-2.12.005` as anchor
+      and listed it in the interface-definitions 403 row, but BC-2.12.005 PC2/TV-001 specifies CORS
+      denial as silent header-omission (no error body ever emitted). The code was never raised
+      anywhere. Resolution: RETIRE E-SERVER-005; tombstone row; 403 row updated; census 79→78.
+    - **F-P66-02 (MED):** E-CHKPT-003 `CheckpointReadFailed` — taxonomy declared `BC-2.04.005`
+      as anchor, but BC-2.04.005 PC1 only reads checkpoints without specifying the read-failure raise.
+      Resolution: Added EC-006 + TV to BC-2.04.005 (this burst).
+    - **F-P66-01 (MED):** E-MCP-003 `McpNotImplemented` — taxonomy declared `BC-2.09.005`
+      (lifecycle / no-live-connections scope), which has no tools/list invocation surface. Zero
+      corpus hits. Resolution: Re-anchored to BC-2.09.001 (tool discovery path — first MCP method
+      invoked); added EC-006 + TV-008 to BC-2.09.001 (this burst).
+
+    **Post-fix gate #33 census (ADV-P1D-PASS-66):** 78/78 live codes anchored. 100% PASS.
+
+    Source: ADV-P1D-PASS-66 §OBS-P66-1 [process-gap].
+
 ---
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.7 | 2026-07-15 | Gate #33 "taxonomy anchor reverse-verification census" added; `total_standing_gates` 32→33. Reverse axis of gate #30: every live (non-tombstone) taxonomy code's declared BC Anchor body must contain the code string or variant name with a specified raise condition; census = per-code grep; orphans/mis-anchors = findings. Trigger: every taxonomy edit + adversary rotation. Pass threshold: 100%. Post-fix census (ADV-P1D-PASS-66): 78/78 live codes anchored (100% PASS). Motivating instances: F-P66-03 (E-SERVER-005 retired — CORS denial is silent header-omission; code was unraised), F-P66-02 (E-CHKPT-003 — BC-2.04.005 lacked EC/TV for read-failure raise; added this burst), F-P66-01 (E-MCP-003 — re-anchored from BC-2.09.005 to BC-2.09.001; EC-006 + TV-008 added this burst). (ADV-P1D-PASS-66 §OBS-P66-1 [process-gap]) | OBS-P66-1 |
 | 2.6 | 2026-07-15 | Gate #28 widened with date-validity sub-check (OBS-P65-1 [process-gap]): all changelog entries in any BC file (Form A and Form B) must satisfy (a) date ≤ frontmatter timestamp, (b) date ≤ current burst date, and (c) monotonic per file ordering convention. Form-B set (BC-2.07.002/BC-2.08.011/BC-2.08.012) explicitly listed as required enumeration targets alongside prd-supplements in every date sweep. Census command added. `total_standing_gates` unchanged at 32 (widening, not new gate). Motivating instances: F-P64-02 (supplement body changelog dates, pass-64) + F-P65-01 (BC-2.07.002 Form-B changelog v1.1 row dated 2026-07-16, pass-65). (pass-65, OBS-P65-1) | F-P65-01, OBS-P65-1 |
 | 2.5 | 2026-07-15 | F-P64-02 fix: corrected v1.1 changelog row date `2026-07-16` → `2026-07-14` (PASS-36 = 2026-07-14, consistent with v1.2 same-day PASS-37 authoring; prior date was a future-date typo). Supplement date sweep: test-vectors.md v1.1 same defect corrected (v1.2→v1.3); error-taxonomy, interface-definitions, module-criticality carry frontmatter-only changelogs (no explicit date fields in entries — temporal-order check not applicable); nfr-catalog v1.0 no changelog (correct). (F-P64-02, ADV-P1D-PASS-64) | F-P64-02 |
 | 2.4 | 2026-07-15 | Gate #32 "ADR-propagation census" added; `total_standing_gates` 31→32. Gate #31 step 4 extended with near-name corpus check (D18-P61-B): UNRESOLVED types must also be checked against near-name corpus concepts before classification. Census updated P60→P61: 21→21 types, BudgetContext UNRESOLVED retired → RunContext RESOLVED (BC-2.10.001 pre-3); 18/21 → 19/21 resolved; 3 unresolved → 2 unresolved (ChatConfig, CheckpointConfig). Gate #19 retired-identifier list extended: BudgetContext → RunContext (F-P61-02). Gate #19 census command updated: BudgetContext added to grep pattern. Motivating instances: F-P61-01 (ADR-009 trait anchors in wrong crate), F-P61-02 (BudgetContext minted without near-name corpus search — RunContext already in BC-2.10.001 pre-3), OBS-P61-1 [process-gap]. (ADV-P1D-PASS-61) | F-P61-01, F-P61-02, OBS-P61-1 |

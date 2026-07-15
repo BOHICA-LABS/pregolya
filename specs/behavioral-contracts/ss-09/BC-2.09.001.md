@@ -2,10 +2,13 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.001
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.0 (initial): base BC authored (greenfield burst 72)."
+  - "1.1 (ADV-P1D-PASS-66): F-P66-01 — EC-006 and TV-008 added: JSON-RPC -32601 MethodNotFound when server does not implement tools/list → Err(E-MCP-003 McpNotImplemented). Re-anchor for E-MCP-003 from BC-2.09.005 (lifecycle scope) to this BC (discovery path — first MCP method invoked). (OBS-P28-2 class; gate #33 reverse-verification finding.)"
 origin: greenfield
 priority: P1
 subsystem: SS-09
@@ -103,6 +106,18 @@ refused.
 **Expected behavior:** The alias resolves to `StreamableHttpConnection`; the tool
 discovery proceeds normally with the 30 s timeout default.
 
+### EC-006: Server returns JSON-RPC -32601 MethodNotFound for tools/list (E-MCP-003)
+**Scenario:** A reachable MCP server responds to the `tools/list` JSON-RPC call with
+error code `-32601 MethodNotFound` — the server does not implement the `tools/list`
+method (e.g., a legacy MCP server exposing only resources, or a JSON-RPC endpoint that
+is not an MCP tools server at all).
+**Expected behavior:** Returns `Err(FerrochainError { component: MCP, category: VAL,
+code: E-MCP-003, message: "McpNotImplemented: MCP server '<server>' does not implement
+'tools/list'" })`. The server contributes no tools to the registry. Treated as a fatal
+failure for that server — same propagation pattern as EC-004 transport failure
+(`JoinSet` aborts on first error in multi-server fan-out). The caller must reconfigure
+or remove the non-implementing server.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -114,6 +129,7 @@ discovery proceeds normally with the 30 s timeout default.
 | TV-005 | `tool_name_prefix = true`, server "fs", tool "read_file" | tool name = `"fs_read_file"` | Prefix application |
 | TV-006 | Server with 250 tools across 3 pages | `Ok(vec![250 tools])` | Cursor pagination |
 | TV-007 | Server returns empty `tools: []` | `Ok(vec![])` | Empty server |
+| TV-008 | 1 server; `list_tools` call returns JSON-RPC -32601 MethodNotFound | `Err(E-MCP-003 McpNotImplemented { server: "math", method: "tools/list" })` | EC-006: server does not implement MCP tools protocol |
 
 ## Verification Properties
 

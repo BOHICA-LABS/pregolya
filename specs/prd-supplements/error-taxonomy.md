@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-error-taxonomy
 level: L3
-version: "1.8"
+version: "1.9"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -14,6 +14,7 @@ changelog:
   - "1.6 (ADV-P1D-PASS-49): F-P49-02 — mint E-GRAPH-017 (GraphRecursionLimitExceeded, POLICY, broken, BC-2.03.001, Never). Graph super-step ceiling was unported: BC-2.03.001 and BC-2.08.002 both referenced a 'configurable step limit' with no defined error code. E-GRAPH-017 is the halt signal when config.recursion_limit (default 25) super-steps are exhausted in one invocation segment. POLICY/Never — same pattern as E-RETRY-001/002 (limit-exhaustion halt; retrying without changing the config/graph will produce the same result). No RetryHint divergence (POLICY default Never is correct). No GRAPH-namespace POLICY annotation change needed (POLICY already present: E-GRAPH-002, E-GRAPH-014, E-GRAPH-016)."
   - "1.7 (ADV-P1D-PASS-56): F-P56-01 — mint E-CORE-006 (RecursionLimitExceeded, INTERNAL, broken, BC-2.01.003). The Runnable-layer nested-call-depth guard returned a codeless FerrochainError while its graph-engine counterpart E-GRAPH-017 (minted pass 49) carried a code. E-CORE-006 fills this gap. INTERNAL/Never — matches INTERNAL category default (no divergence, no per-code RetryHint column needed). BC-2.01.003 PC5, invariant §layer-disambiguation, EC-004, TV-004 all updated to carry code: E-CORE-006. CORE namespace now has 6 live codes. Disposition census 75→76 (10 individual omission notes: +E-CORE-006 library-layer note)."
   - "1.8 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass drain — three new codes minted to resolve all remaining TBD-* placeholders and codeless constructions. (1) E-PROV-008 (ProviderHttpError, TRANSPORT, broken, BC-2.08.004) — resolves TBD-E-PROV-HTTP placeholder in BC-2.08.004 EC-004/EC-005/TV-004/TV-005; covers generic provider HTTP 5xx and unparseable error-body responses; both sites share TRANSPORT category so one code is correct (task-1 discipline: split only on genuine category divergence). Disposition census: +1 HTTP table row (502 row). (2) E-CORE-007 (GuardrailHookPanic, INTERNAL, broken, BC-2.11.002 / BC-2.11.003 / BC-2.11.004) — panic in GuardrailHook::evaluate is an invariant violation (programming error) caught at the ingress boundary; fail-closed semantics. CORE namespace now 7 live codes. Disposition census: +1 individual omission note. (3) E-CHKPT-007 (CipherHeaderMissing, INTERNAL, broken, BC-2.04.007) — read of an unencrypted legacy blob in an encrypted store is an INTERNAL invariant violation (expected cipher header absent). CHKPT namespace now 7 live codes. Disposition census: +1 HTTP table row (500 row). Total disposition census 76→79: 45 HTTP table rows, 11 individual omission notes, 23 blanket library-layer coverage."
+  - "1.9 (ADV-P1D-PASS-66): F-P66-03 — RETIRE E-SERVER-005 (CorsRejected, POLICY): tombstone row added; BC-2.12.005 PC2/TV-001 specifies CORS denial as silent header-omission — no error body is ever emitted; code was never raised. SERVER namespace: 14 live codes (was 15). Disposition census 79→78: 44 HTTP table rows, 11 individual omission notes, 23 blanket library-layer coverage. F-P66-01 — re-anchor E-MCP-003 (McpNotImplemented, VAL) from BC-2.09.005 (connection-lifecycle scope; method-invocation surface absent) to BC-2.09.001 (list_tools discovery path — server returns JSON-RPC -32601 MethodNotFound when tools/list is not implemented); EC-006/TV-008 added to BC-2.09.001 in the same burst."
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -130,7 +131,7 @@ primary_consumers: [implementer, test-writer]
 | E-SERVER-002 | VAL | broken | BC-2.12.003 | Never | `RunNotFound: run '<run_id>' does not exist in thread '<thread_id>'` |
 | E-SERVER-003 | VAL | broken | BC-2.12.001 | Never | `ThreadNotFound: thread '<thread_id>' does not exist` |
 | E-SERVER-004 | POLICY | broken | BC-2.12.005 | Never | `DebugRouteUnauthorized: debug/introspection route requires explicit opt-in configuration` — **Category correction (F-P25-02, ADV-P1D-PASS-25):** was AUTH → POLICY. See note below table. |
-| E-SERVER-005 | POLICY | broken | BC-2.12.005 | Never | `CorsRejected: CORS origin '<origin>' is not in the allow-list; default denies all cross-origin requests` |
+| ~~E-SERVER-005~~ | ~~POLICY~~ | ~~broken~~ | ~~BC-2.12.005~~ | ~~Never~~ | ~~`CorsRejected: CORS origin '<origin>' is not in the allow-list; default denies all cross-origin requests`~~ — **RETIRED** (ADV-P1D-PASS-66 fix, 2026-07-15): CORS denial is silent header-omission per BC-2.12.005 PC2/TV-001 — no error body is ever emitted; code retired unraised. Tombstone per append-only numbering policy. |
 | E-SERVER-006 | VAL | broken | BC-2.12.004 | Never | `ScheduleNotFound: cron schedule '<cron_id>' does not exist` |
 | E-SERVER-007 | CONCURRENCY | broken | BC-2.12.001 | Never | `ThreadAlreadyExists: thread '<thread_id>' already exists` |
 | E-SERVER-008 | POLICY | broken | BC-2.12.001 | Never | `ThreadStateConflict: thread '<thread_id>' has an active run '<run_id>'; state updates during active runs are disallowed` |
@@ -169,7 +170,7 @@ primary_consumers: [implementer, test-writer]
 |-----------|----------|----------|-----------|---------------|
 | E-MCP-001 | TOOL | broken | BC-2.09.004 | `ToolException: MCP server '<server>' raised ToolException for tool '<tool>': <message>` |
 | E-MCP-002 | TRANSPORT | broken | BC-2.09.001 | `McpTransportError: cannot connect to MCP server '<server>': <transport_error>` |
-| E-MCP-003 | VAL | broken | BC-2.09.005 | `McpNotImplemented: MCP server '<server>' does not implement '<method>'` |
+| E-MCP-003 | VAL | broken | BC-2.09.001 | `McpNotImplemented: MCP server '<server>' does not implement '<method>'` — **(F-P66-01, ADV-P1D-PASS-66):** anchor corrected from BC-2.09.005 (connection-lifecycle; zero method-invocation surface) to BC-2.09.001 (list_tools discovery path — JSON-RPC -32601 MethodNotFound when server does not implement `tools/list`); EC-006/TV-008 added to BC-2.09.001. |
 | E-MCP-004 | VAL | broken | BC-2.09.002 | `ToolNotFound: tool '<tool_name>' is not registered with any MCP server` |
 
 ### Component: SPLIT (ferrochain-splitters)

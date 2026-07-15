@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.005
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -24,6 +24,7 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-1): Invariant 3 rewritten — SCHEDULED channel routing vs. skip-on-reapply distinction clarified; `ERROR_SOURCE_NODE` no-negative-index note added; `SCHEDULED` NOT-skipped note added (F-P1-HIGH, semport/graph/behavioral-intent.md validation)."
+  - "1.2 (ADV-P1D-PASS-66): F-P66-02 — EC-006 and TV added: checkpoint read failure during crash recovery (`get_tuple()` returns `Err(E-CHKPT-003 CheckpointReadFailed)`) → recovery halts, error propagated to caller. Confirms E-CHKPT-003 anchor to this BC. (OBS-P28-2 class; gate #33 reverse-verification finding.)"
 modified: []
 deprecated: null
 deprecated_by: null
@@ -95,6 +96,7 @@ them freshly rather than replaying stale control state.
 | EC-003 | A task has an `INTERRUPT` control marker in pending_writes (DEC-009 variant) | `INTERRUPT` skipped during re-apply; node re-executes and re-encounters the interrupt; original interrupt value recovered via scratchpad |
 | EC-004 | Send API fan-out: 5 tasks; 3 completed before crash; 2 incomplete (Domain B) (DEC-009) | On resume: 3 completed tasks not re-executed; 2 incomplete tasks re-run; result identical to no-crash run |
 | EC-005 | A failed task has `ERROR` + `ERROR_SOURCE_NODE` markers | Both markers skipped; node re-executes; if it fails again, the error handler is invoked freshly |
+| EC-006 | `get_tuple()` returns `Err(E-CHKPT-003 CheckpointReadFailed)` during crash-recovery checkpoint load | Recovery halts immediately with `Err(FerrochainError { component: CHKPT, category: DURABILITY, code: E-CHKPT-003, message: "CheckpointReadFailed: cannot restore state for thread '<thread_id>' checkpoint '<checkpoint_id>': <reason>" })`; no task writes from `pending_writes` are re-applied; no node bodies execute; caller decides whether to retry or abandon the thread |
 
 ## Canonical Test Vectors
 
@@ -104,6 +106,7 @@ them freshly rather than replaying stale control state.
 | 5-task super-step; 0 tasks persisted before crash | All 5 tasks re-execute on resume; final state correct | edge-case |
 | Task with `ERROR` marker persisted; crash before `apply_writes`; restart | `ERROR` not re-applied; node re-executes; error handler invoked; final error state recorded correctly | error |
 | Send fan-out: 10 tasks; 7 completed; crash; restart | 7 not re-executed; 3 re-run; all 10 results present in final state | edge-case |
+| `get_tuple()` returns `Err(E-CHKPT-003 CheckpointReadFailed { thread_id: "t1", checkpoint_id: "c1", reason: "storage unavailable" })` during crash-recovery checkpoint load | `invoke`/`stream` returns `Err(FerrochainError { code: E-CHKPT-003, ... })`; recovery halts immediately; no task writes are re-applied; no node bodies execute | error |
 
 ## Verification Properties
 

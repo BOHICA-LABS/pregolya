@@ -1425,3 +1425,32 @@ Sibling-checks pass-45 PASS (gate #25 Part C first full run: 33/33 rows crate-cl
 ### Summary
 
 Phase 1d pass 63 adversarial review completed: NOT CLEAN — 1 MED (F-P63-01: verification-architecture §Fuzzing Targets listed a THIRD 'Splitter inputs' target absent from authoritative BC-2.17.002 [exactly two: fuzz_checkpoint_serde + fuzz_graph_execution per CAP-019] and contradicted by coverage-matrix [splitter fuzz = —] → outlier row REMOVED [v1.2], named harness IDs added to remaining rows, non-normative splitter note added [proptest + GTV Red Gate v1; post-v1 addition requires BC+matrix same burst]). Full doc sweep: zero other fuzz/tool contradictions. Counter stays 0/3. Trajectory ...→1→1.
+
+## Archived Step (burst 142 — pass 60 displaced from STATE.md Current Phase Steps)
+
+| Phase 1d pass 60 + fix burst | adversary + PO + architect | COMPLETE | Pass 60: NOT CLEAN — 3 findings via citation-audit lens on BudgetPolicy (2 HIGH: F-P60-01 BudgetDecision [interface+ADR-009+registry] vs PolicyDecision [ALL FOUR ss-10 BCs] name split; F-P60-03 signature 3-way contradiction [interface async 3-param w/ journal vs BC pure sync (usage, context) vs ADR-009 (&BudgetContext)] incl. purity violation; 1 MED: F-P60-02 Escalate/Deny missing current_usage payload) → ORCHESTRATOR ADJUDICATION: BCs authoritative — canon = PolicyDecision {Allow, Escalate{reason, current_usage}, Deny{reason, current_usage}}, fn evaluate(&self, usage, context: &BudgetContext) -> PolicyDecision sync/pure, journal = caller (BudgetEngine); interface v2.15 rewritten, ADR-009 v1.1 reconciled (4 hits fixed, arch tree clean), BudgetDecision RETIRED + registered gate #19, gate #31 WIDENED step-4 name-equality (interface identifier must EQUAL cited-BC identifier) [bc-authoring-plan v2.3]; BudgetContext = documented implementer-scope. Sibling-checks pass-59 PASS (Critical citations 4/4; Transform vectors typecheck). Censuses #23/#30/#31[fixed] PASS; #13/#21/#26/#27/#29 PARTIAL → pass 61 MANDATORY. Probes: BudgetPolicy FAIL→fixed; CheckpointSaver/Runnable/BaseChatModel citation audits PASS. Novelty HIGH. Trajectory ...→2→3. Convergence 0/3. Gates 39. Burst 136. |
+
+## Archived PASS CANON (burst 142 — PASS-63 dropped from STATE.md to respect 200-line soft limit)
+
+### PASS-63 CANONS (burst 139): fuzz targets = exactly 2 (fuzz_checkpoint_serde, fuzz_graph_execution); splitter = proptest + GTV Red Gate v1; post-v1 fuzz addition requires BC+coverage-matrix same burst (BC-2.17.002 + CAP-019).
+
+## Burst 142 — Phase 1d Pass 66 + Fix Burst (taxonomy reverse-anchor drain — tombstone + 2 homes + gate #33)
+
+**Date:** 2026-07-18
+**Agents:** adversary (pass 66) + product-owner (fixes + pass-66.md) + state-manager (STATE update)
+**Files touched:** specs/prd-supplements/error-taxonomy.md (PO — E-SERVER-005 tombstoned, v1.9); specs/prd-supplements/interface-definitions.md (PO — 403 row cleaned, disposition census 78, v2.17); specs/behavioral-contracts/ss-04/BC-2.04.005.md (PO — EC-006+TV-008 E-CHKPT-003 read-failure home, v1.2); specs/behavioral-contracts/ss-09/BC-2.09.001.md (PO — EC-006/TV-008 E-MCP-003 JSON-RPC -32601 home, v1.1); specs/prd-supplements/bc-authoring-plan.md (PO — gate #33 reverse-verification, v2.7); cycles/v1.0.0-greenfield/adversarial-reviews/pass-66.md (PO wrote); STATE.md, burst-log.md, cycles/v1.0.0-greenfield/lessons.md (state-manager)
+**Decisions recorded:** D18-P66-A (E-SERVER-005 tombstoned); D18-P66-B (E-CHKPT-003 + E-MCP-003 homes); D18-P66-C (gate #33)
+
+### Summary
+
+Phase 1d pass 66 adversarial review completed: NOT CLEAN — 3 findings via new taxonomy anchor reverse-verification lens. Counter stays 0/3 (reset). Trajectory ...→1→3. Gates now 41.
+
+**1 HIGH finding:**
+- F-P66-03: E-SERVER-005 CorsRejected claimed anchor BC-2.12.005 but that BC specifies silent header-omission denial (no 403, no error body) — the code contradicted its own anchor BC's canon → TOMBSTONED (taxonomy v1.9); removed from 403 row; disposition census 79→78 = 44+11+23 (interface v2.17).
+
+**2 MED findings:**
+- F-P66-02: E-CHKPT-003 had no behavioral home in its declared anchor BC-2.04.005 — given EC-006+TV-008 home (read/deserialize failure in crash recovery; BC-2.04.005 v1.2).
+- F-P66-01: E-MCP-003 was anchored to BC-2.09.001 but that BC had no EC/TV for it — re-anchored + EC-006/TV-008 home added (JSON-RPC -32601 method-not-found; BC-2.09.001 v1.1).
+
+**1 Observation (process-gap):**
+- OBS-P66-1: Neither gate #30 (forward: every constructor carries a code) nor gate #13 covered the E-code BACK-reference axis (reverse: every catalogued code has a behavioral home in its anchor BC). The OBS-P28-2 class survived 65 passes. → GATE #33 minted (taxonomy anchor reverse-verification; post-fix census 78/78 anchored; bc-authoring-plan v2.7). Codified as L-018.
