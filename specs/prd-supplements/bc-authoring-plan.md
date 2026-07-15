@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
-total_standing_gates: 26
+total_standing_gates: 27
 timestamp: 2026-07-13T00:00:00Z
 phase: 1a
 inputs:
@@ -844,12 +844,75 @@ as Phase-1b additions (Batch 13). They are included in the 86-BC plan total.
 
     Source: ADV-P1D-PASS-27 §OBS-P27-2 (motivating predecessor); ADV-P1D-PASS-36 §OBS-P36-2 [process-gap].
 
+27. **Architecture-anchor crate-resolution census gate — ARCH-ANCHOR CRATE-RESOLUTION CENSUS
+    (added P42 — standing gate [process-gap]):**
+
+    Every `ferrochain-<crate>/src/...` path (and `xtask/` path) appearing in any BC's
+    `## Architecture Anchors` section must satisfy two conditions:
+
+    1. **Roster membership:** The crate name must exist in the ADR-007 18-crate roster (+xtask).
+       Crate names not in the roster are invalid regardless of whether the file exists.
+    2. **Ownership correctness:** The module cited must be owned by the named crate per
+       `module-decomposition.md` responsibilities and ADR-007 crate responsibility descriptions.
+       A path that uses a VALID crate name but assigns a module owned by a DIFFERENT crate is a
+       wrong-crate assignment and is a HIGH-severity error.
+
+    **ADR-007 18-crate roster (authoritative):** ferrochain, ferrochain-core, ferrochain-graph,
+    ferrochain-checkpoint, ferrochain-openai, ferrochain-anthropic, ferrochain-ollama,
+    ferrochain-community, ferrochain-splitters, ferrochain-mcp, ferrochain-standard-tests,
+    ferrochain-server, ferrochain-sandbox, ferrochain-memory, ferrochain-macros,
+    ferrochain-openai-sdk, ferrochain-anthropic-sdk, ferrochain-ollama-sdk. Plus: xtask.
+
+    **Key ownership rules (from module-decomposition.md):**
+    - StateGraph builder (`add_node`, `add_edge`, `compile`, `graph::definition`) → **ferrochain-graph**
+    - BSP engine, HITL, channels, scheduler, budget, provenance → **ferrochain-graph**
+    - Runnable trait, Message types, error taxonomy, credentials, events, config, retry → **ferrochain-core**
+    - Proc-macro implementations (`#[tool]`, `#[entrypoint]`, `#[task]`) → **ferrochain-macros**
+    - Re-exported macro trait hooks (e.g., `Tool` re-export) → **ferrochain-core** (defensible re-export)
+    - CheckpointSaver, session index, logical clock, lineage, encryption → **ferrochain-checkpoint**
+
+    **Census command:**
+    ```
+    grep -rh "## Architecture Anchors" --include="*.md" -A 10 .factory/specs/behavioral-contracts/ \
+      | grep "ferrochain-" | grep -oE "ferrochain-[a-z-]+" | sort -u
+    ```
+    Verify each extracted crate name against the 18-crate roster. Then for any path containing
+    `/src/`, verify module ownership against module-decomposition.md.
+
+    **Quick wrong-crate check (run after any BC anchor edit):**
+    ```
+    grep -rn "ferrochain-core/src/graph\|ferrochain-core/src/channels\|ferrochain-core/src/pregel\
+    \|ferrochain-core/src/hitl\|ferrochain-core/src/bsp\|ferrochain-core/src/budget\
+    \|ferrochain-core/src/provenance\|ferrochain-core/src/scheduler" \
+    .factory/specs/behavioral-contracts/
+    ```
+    Output must be EMPTY (zero hits). These are graph-owned modules incorrectly placed in core.
+
+    **Trigger:** Every burst that adds or edits BC Architecture Anchors + every adversary rotation.
+    Running the full census on every adversary rotation prevents wrong-crate anchors from surviving
+    multiple passes.
+
+    **Exemptions:** Paths marked `(to be created)` or `[architect to assign]` with a plausible
+    crate ownership (i.e., the module name is consistent with the crate's scope) are accepted.
+    Paths marked `(to be created)` with wrong-crate assignment are NOT exempt — the wrong-crate
+    error is independent of whether the file exists.
+
+    **Motivating instance:** F-P42-01 (ADV-P1D-PASS-42) — BC-2.08.011 line 112 and BC-2.08.012
+    line 119 cited `ferrochain-core/src/graph/builder.rs` for the StateGraph builder (`add_edge`,
+    `add_node`). The StateGraph builder is owned by `ferrochain-graph` per ADR-007, module-decomp
+    `graph::definition`, and BC-2.02.001 Architecture Anchors. This wrong-crate anchor survived
+    41 passes because gate #13 (anchor-matrix census) covers Traceability column cells, not the
+    free-text `## Architecture Anchors` bullet section. Gate #27 closes this blind spot.
+
+    Source: ADV-P1D-PASS-42 §F-P42-01 [process-gap].
+
 ---
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.5 | 2026-07-14 | Gate #27 "architecture-anchor crate-resolution census" added; `total_standing_gates` 26→27. Full gate-#27 census run across all 86 BCs × 187 Architecture Anchor crate paths: 16 distinct crate names found (all valid per ADR-007 roster); exactly 2 wrong-crate anchors found and fixed (BC-2.08.011 line 112 and BC-2.08.012 line 119: `ferrochain-core/src/graph/builder.rs` → `ferrochain-graph/src/graph/state.rs`). Zero remaining wrong-crate anchors after fixes. (F-P42-01 [process-gap], ADV-P1D-PASS-42) | F-P42-01 |
 | 1.4 | 2026-07-14 | (1) F-P40-01: Batch 9 BC-2.08.007 DI cell corrected `DI-014` → `DI-009, DI-014` (body + BC-INDEX + DI-coverage table all show DI-009; batch-table was the sole outlier). (2) Full batch-table anchor sweep (86 rows vs BC-INDEX): 8 corrections — BC-2.08.001–005 CAP `CAP-009, CAP-011` → `CAP-009` (body capability: CAP-009; CAP-011 spurious); BC-2.10.004 CAP `CAP-012, CAP-006` → `CAP-012` (body primary capability: CAP-012); BC-2.05.006 DI `DI-003, ASM-008` → `DI-003` (ASM-008 is an assumption reference, not a domain invariant). Zero remaining anchor drifts vs BC-INDEX after fixes. (3) Gate #13 widened from four-way to five-way consistency check: bc-authoring-plan batch-table CAP/DI columns added as fifth verified carrier; motivating instance F-P40-01 cited (OBS-P40-1, ADV-P1D-PASS-40) | F-P40-01, OBS-P40-1 |
 | 1.3 | 2026-07-14 | Reconciled batch-size constraint with Batch 9 Step-E exception: amended line-27 prose to document BC-2.08.009 exception per ADR-004 acceptance; updated Summary metric "BCs per batch (max)" from `8` to `9 (Batch 9 only — Step-E exception; planning cap remains 8)`; three statements (prose, metric, Batch 9 header) now mutually coherent (F-P39-02, ADV-P1D-PASS-39) | F-P39-02 |
 | 1.2 | 2026-07-14 | Gate #25 Part B widened from 2-registry to 4-document sibling set: added module-decomposition.md (derived Criticality column + tier headings) and verification-coverage-matrix.md (derived tier summary + per-module table) as required census targets; extended census commands accordingly (OBS-P37-1 [process-gap], ADV-P1D-PASS-37) | OBS-P37-1 |

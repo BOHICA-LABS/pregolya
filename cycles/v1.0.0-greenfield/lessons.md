@@ -93,6 +93,14 @@ traces_to: STATE.md
 **Codified fix:** Gate #13 WIDENED to five-way: body ↔ BC-INDEX ↔ PRD §2/§7/§9 ↔ authoritative registry ↔ bc-authoring-plan batch-table CAP/DI columns. Batch-table corrections must occur in the same burst as BC changes. Full sweep: 8 cells fixed, zero remain. Codified as D18-P40-A. NEW CONVENTION: batch-table/INDEX Cap column = primary capability (frontmatter only); secondary traced capabilities live in body traces_to only (D18-P40-B).
 **Applicable to:** Any derived table or work-order artifact that agents consume directly at authoring time. The moment a table is established as a work-order input for downstream agents, it must be added as a verified carrier to the relevant anchor census. "Read-only" or "summary" status does not exempt a table from being a census carrier if agents read it to produce output.
 
+### L-009 [process-gap, codified]: Free-Text Prose Carriers Need Their Own Census
+
+**Discovered:** Pass 42 (burst 118)
+**Symptom:** BC Architecture Anchor bullets (free-text prose, e.g., "Architecture Anchor: ferrochain-core/src/graph/builder.rs") were not covered by any standing census. BC-2.08.011 and BC-2.08.012 both cited ferrochain-core/src/graph/builder.rs as the anchor for the StateGraph builder API, when the correct owning crate per ADR-007/module-decomposition/BC-2.02.001 is ferrochain-graph/src/graph/state.rs. F-P42-01 (HIGH) found this wrong-crate anchor in both BCs simultaneously (blast-radius-2). The error survived 41 adversarial passes because gate #13 censuses the anchor column in batch tables and BC-INDEX but not the free-text "Architecture Anchor:" bullets inside BC bodies.
+**Root cause:** Column-based anchor censuses (gate #13) are blind to free-text prose fields. Architecture Anchor bullets are written in prose, not tabular cells, so no regex over a column header could find them. A distinct carrier class — free-text anchor prose — existed with zero census coverage.
+**Codified fix:** Gate #27 CRATE-RESOLUTION CENSUS added to bc-authoring-plan v1.5: every ferrochain-<crate>/src/... path appearing in any BC Architecture Anchor bullet must (a) name an ADR-007 roster crate and (b) assign the module to its owning crate per module-decomposition. Trigger: every anchor-editing burst + every adversary rotation. Full census at gate #27 mint: 187 paths, 86 BCs, 16 distinct crates, all roster-valid; only the 2 known wrong-crate anchors found, zero remain post-fix. Codified as D18-P42-A.
+**Applicable to:** Any free-text prose field that encodes a structural claim (file paths, crate names, module ownership). Column-based censuses cover tabular carriers. Free-text prose carriers require their own dedicated census with a grep pattern targeting the prose syntax. When a new free-text structural field is introduced in spec authoring, the corresponding census gate must be added at the same time — not discovered by the next adversarial pass.
+
 ## Policy Candidates
 
 | Lesson | Proposed Policy | Scope | Status |
@@ -105,3 +113,4 @@ traces_to: STATE.md
 | L-006 | Canon-retirement fixes must sweep structurally-privileged lines in affected + citing docs | BC authoring + canon management | Codified (gate #26) |
 | L-007 | Sibling-coherence gates must enumerate derived documents, not just authoritative registries | Gate management + BC authoring | Codified (gate #25 Part-B, D18-P37-C) |
 | L-008 | Consumable derived tables (batch tables, sub-burst work orders) must be verified carriers in anchor censuses | Gate management + BC authoring | Codified (gate #13 five-way, D18-P40-A) |
+| L-009 | Free-text prose carriers (Architecture Anchor bullets, inline crate paths) need their own census — column-based anchor censuses don't see them | Gate management + BC authoring | Codified (gate #27, D18-P42-A) |

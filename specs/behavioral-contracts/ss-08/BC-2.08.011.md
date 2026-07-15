@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.011
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -109,7 +109,7 @@ references an unregistered node. Error message: `GraphBuildError::UnknownNode("n
 ## Architecture Anchors
 
 - `ferrochain-macros/src/entrypoint.rs` — `#[entrypoint]` proc-macro implementation
-- `ferrochain-core/src/graph/builder.rs` — StateGraph builder START edge wiring
+- `ferrochain-graph/src/graph/state.rs` — StateGraph builder START edge wiring (add_edge API the macro calls)
 - `architecture/decisions/ADR-008-proc-macro-attributes.md` — proc-macro design rationale
 
 ## Story Anchor
@@ -134,3 +134,10 @@ _[to be filled after story decomposition]_
 | Wave | Wave 1 |
 | Test Types | U (unit) |
 | Module | ferrochain-macros (re-exported ferrochain-core) |
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.1 | 2026-07-14 | Architecture Anchor `ferrochain-core/src/graph/builder.rs` corrected to `ferrochain-graph/src/graph/state.rs` — StateGraph builder is owned by ferrochain-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42) | F-P42-01 |
+| 1.0 | 2026-07-13 | Initial authoring | Greenfield batch 13 |
