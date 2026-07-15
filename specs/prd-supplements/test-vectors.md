@@ -1,16 +1,16 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "[live-index — aggregated from 86 BC files]"
+input-hash: "[live-index — aggregated from 95 BC files]"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 ---
@@ -55,6 +55,7 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.04.005 | SS-04 | 5 | — | narrative | | Crash recovery; completed not re-run |
 | BC-2.04.006 | SS-04 | 5 | — | narrative | | Triple-address uniqueness; VP seed |
 | BC-2.04.007 | SS-04 | 5 | — | narrative | | Encryption covers state AND events |
+| BC-2.04.008 | SS-04 | 6 | — | `TV-NNN` | | FTS conversation search (SQLite FTS5; single-process) |
 | BC-2.05.001 | SS-05 | 5 | — | `TV-NNN` | | Interrupt + durable suspend |
 | BC-2.05.002 | SS-05 | 5 | — | `TV-NNN` | | FIFO resume order |
 | BC-2.05.003 | SS-05 | 5 | — | `TV-NNN` | | Node re-executes from start on resume |
@@ -79,14 +80,18 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.08.010 | SS-08 | 5 | — | `TV-NNN` | | `#[tool]` proc-macro |
 | BC-2.08.011 | SS-08 | 5 | — | `TV-NNN` | | `#[entrypoint]` proc-macro |
 | BC-2.08.012 | SS-08 | 5 | — | `TV-NNN` | | `#[task]` proc-macro |
+| BC-2.08.013 | SS-08 | 6 | — | `TV-NNN` | | Pluggable tool-call dialect (ToolCallDialect; Hermes ChatML XML) |
+| BC-2.08.014 | SS-08 | 7 | — | `TV-NNN` | | Provider failover chain (ProviderFallbackPolicy; 429/5xx/auth) |
 | BC-2.09.001 | SS-09 | 7 | — | `TV-NNN` | | MCP tool discovery |
 | BC-2.09.002 | SS-09 | 7 | — | `TV-NNN` | | ToolInvocation routing |
 | BC-2.09.003 | SS-09 | 5 | — | `TV-NNN` | | Tool-result as untrusted ingress |
 | BC-2.09.004 | SS-09 | 5 | — | `TV-NNN` | **RG** | Bare ToolException re-raise |
 | BC-2.09.005 | SS-09 | 5 | — | `TV-NNN` | **RG** | MultiServerMcpClient no live connections |
+| BC-2.09.006 | SS-09 | 6 | — | `TV-NNN` | | MCP server tool advertisement (tools/list; mcp::server) |
+| BC-2.09.007 | SS-09 | 6 | — | `TV-NNN` | | MCP server tool invocation (tools/call; external client) |
 | BC-2.10.001 | SS-10 | 5 | — | `TV-NNN` | | Budget allow/escalate/deny evaluation |
 | BC-2.10.002 | SS-10 | 5 | — | `TV-NNN` | | EvidenceJournal append-only |
-| BC-2.10.003 | SS-10 | 5 | — | `TV-NNN` | | Graceful halt on ceiling |
+| BC-2.10.003 | SS-10 | 7 | — | `TV-NNN` | | Graceful halt \| summarize on ceiling (v1.2 adds TV-006/007) |
 | BC-2.10.004 | SS-10 | 5 | — | `TV-NNN` | | Budget escalation → HITL |
 | BC-2.11.001 | SS-11 | 5 | — | narrative | | ProvenanceTag at all ingress boundaries |
 | BC-2.11.002 | SS-11 | 6 | — | narrative | | GuardrailHook at tool-result ingress |
@@ -107,6 +112,7 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.13.004 | SS-13 | 6 | — | narrative | | canonicalize_beneath_root; VP seed |
 | BC-2.13.005 | SS-13 | 6 | — | narrative | | Symlink escape → Err(WorkspaceEscape) |
 | BC-2.13.006 | SS-13 | 6 | — | narrative | | macOS Seatbelt deny-by-default |
+| BC-2.13.007 | SS-13 | 6 | — | `TV-NNN` | | Env var sanitization at sandbox execution boundary |
 | BC-2.14.001 | SS-14 | 5 | — | `TV-NNN` | | FerrochainError 2D struct |
 | BC-2.14.002 | SS-14 | 5 | — | `TV-NNN` | | RFC-7807 emission |
 | BC-2.14.003 | SS-14 | 5 | — | `TV-NNN` | | Constructor Result; no unwrap |
@@ -116,13 +122,16 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.15.001 | SS-15 | 7 | — | `TV-NNN` | | KV/vector memory across threads |
 | BC-2.15.002 | SS-15 | 7 | — | `TV-NNN` | | User/app/session tier isolation |
 | BC-2.15.003 | SS-15 | 7 | — | `TV-NNN` | | GDPR erasure all tiers |
+| BC-2.15.004 | SS-15 | 7 | — | `TV-NNN` | | SkillStore registry — load-on-demand skill documents |
+| BC-2.15.005 | SS-15 | 7 | — | `TV-NNN` | | Guarded memory and skill writes (MemoryWriteGuard) |
+| BC-2.15.006 | SS-15 | 6 | — | `TV-NNN` | | Frozen-snapshot context mutation (memory-sourced sys prompt) |
 | BC-2.16.001 | SS-16 | 5 | — | `TV-NNN` | | Retry keyed by tool_name not args |
 | BC-2.16.002 | SS-16 | 5 | — | `TV-NNN` | | Finite global_limit non-None |
 | BC-2.16.003 | SS-16 | 5 | — | `TV-NNN` | | Circuit breaker after repeated failure |
 | BC-2.17.001 | SS-17 | 5 | — | `TV-NNN` | | Kani harness scope (all 3 VPs) |
 | BC-2.17.002 | SS-17 | 5 | — | `TV-NNN` | | cargo-fuzz targets |
 
-**Total vectors (86 authored BCs):** approximately 475 canonical test vectors across 86 BC files.
+**Total vectors (95 authored BCs):** approximately 534 canonical test vectors across 95 BC files.
 
 **Red Gate BCs (5):** BC-2.02.003, BC-2.02.004, BC-2.07.002, BC-2.09.004, BC-2.09.005
 
@@ -207,6 +216,7 @@ primary_consumers: [test-writer, holdout-evaluator]
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.4 | 2026-07-19 | F-P73-01: added 9 D20 BC inventory rows (BC-2.04.008, BC-2.08.013, BC-2.08.014, BC-2.09.006, BC-2.09.007, BC-2.13.007, BC-2.15.004, BC-2.15.005, BC-2.15.006) with live-derived vector counts; BC-2.10.003 TV count corrected 5→7 (v1.2 added TV-006/007 for OnCeiling::Summarize + RunContext.budget_info); total updated 86→95 BCs, ~475→~534 vectors; frontmatter input-hash annotation updated 86→95. | F-P73-01 |
 | 1.3 | 2026-07-15 | F-P64-02 sweep fix: corrected v1.1 changelog row date `2026-07-16` → `2026-07-14` (same root cause as bc-authoring-plan.md v1.1; PASS-36 = 2026-07-14). No content change; metadata-only. (F-P64-02, ADV-P1D-PASS-64) | F-P64-02 |
 | 1.2 | 2026-07-14 | GTV annotation sync (OBS-P37-2): GTV-003 Expected-cell parenthetical corrected to match BC-2.07.002.md authoritative text ("after separator split on space"); GTV-008 Input-cell code-point note corrected ("3+5+3=11 code pts"); GTV-009 Input-cell annotation corrected ("4 code pts: ñ=U+00F1, o, ñ, o — 2 bytes each for ñ"). All 9 GTV rows now byte-identical to BC-2.07.002.md including non-normative annotations (ADV-P1D-PASS-37) | OBS-P37-2 |
 | 1.1 | 2026-07-14 | GTV-008 row synced to concrete value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` with PROVISIONAL marker (was: placeholder); GTV-003/GTV-008 note updated to clarify PROVISIONAL semantics; removed contradictory "Do not hard-code these without verification" language (F-P36-03 fix, ADV-P1D-PASS-36) | F-P36-03 |

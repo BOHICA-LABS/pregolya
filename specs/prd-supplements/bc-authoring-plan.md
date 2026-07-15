@@ -1,11 +1,11 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.13"
+version: "2.14"
 status: active
 producer: product-owner
 total_standing_gates: 33
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -1490,7 +1490,7 @@ split by wave avoids exception).
        by an ADR that does not appear in the arch registry is a gate #32 + gate #25 violation.
 
     5. **`.factory/specs/prd-supplements/module-criticality.md` (PO registry)** — the PO-scope
-       criticality registry (20-module subset; behavioral-contract-relevant modules only) must
+       criticality registry (22-module subset; behavioral-contract-relevant modules only) must
        also reflect any new module that meets the PO inclusion criteria (see scope note in that
        file). Both criticality views must agree on tier and crate for modules that appear in both.
        (OBS-P72 process-gap addition; motivating instance: D20 ADR-012/ADR-013 modules not
@@ -1588,6 +1588,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.14 | 2026-07-19 | OBS-P73-B: gate #32 carrier #5 module count corrected "(20-module subset;" → "(22-module subset;" (D20 added ToolCallDialect + ProviderFallbackPolicy modules to the PO criticality registry, bringing the total from 20 to 22; the prose was not updated in the D20 burst). | OBS-P73-B |
 | 2.13 | 2026-07-15 | pass-72 fix burst — OBS fixes: (1) stale "86" swept → 95 in three locations (guideline #8, Batch-13 scope note, gate #13 census prose); (2) BC-2.10.003 Batch-6 table title aligned with H1/BC-INDEX: "(on_ceiling = halt)" → "(on_ceiling = halt \| summarize)"; (3) gate #32 expanded from three to five required carriers (+module-criticality arch registry +module-criticality PO registry; OBS-P72 process-gap addition — D20 ADR-012/ADR-013 modules not reconciled against PO registry in same burst). | OBS-P72, F-P72-08 |
 | 2.12 | 2026-07-15 | D20 TOUCH-UP burst — Residue 1: BudgetInfo row added to gate #31 census table (RESOLVED — defined inline in interface-definitions.md v2.21 §BudgetPolicy, BC-2.10.003 v1.2). Census verdict corrected: prior "25/28" had two errors — (a) table had 27 rows (BudgetInfo was the missing 28th row) and (b) numerator 25 was wrong arithmetic. True N/M after recount = 24/28 (23 RESOLVED + 1 EXTERNAL [Value, exempt] = 24 effectively resolved; 4 UNRESOLVED unchanged; total = 28). | D20 TOUCH-UP |
 | 2.11 | 2026-07-15 | D20 INTEGRATE sub-burst 2: 9 new BCs registered (86→95; P1 30→39; batches 13→15). Batch 14 (8 BCs, Wave 2): BC-2.04.008 (CAP-005), BC-2.08.013/014 (CAP-009), BC-2.09.006/007 (CAP-021), BC-2.15.004/005/006 (CAP-020). Batch 15 (1 BC, Wave 1): BC-2.13.007 (CAP-015). Subsystem→CAP mapping: SS.09 gains CAP-021; SS.15 gains CAP-020. DI coverage table: DI-002/006/008/009/010/012/014 all gain new enforcing BCs; zero orphan invariants (14/14 DIs covered). Gate #22: E-MCP-005 added as 6th intentional RetryHint divergence (TRANSPORT/Later→Never; BC-2.09.006 anchored). Gate #31 census: +7 types (ToolCall, SkillDescriptor, MemoryWriteRequest, WriteGuardDecision, ProviderCredential, CredentialRefreshConfig); census 19/21 → 25/28 resolved (4 UNRESOLVED: ChatConfig, CheckpointConfig, ProviderCredential, CredentialRefreshConfig). | D20 sub-burst 2 |

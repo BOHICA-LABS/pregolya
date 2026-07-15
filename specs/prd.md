@@ -1,10 +1,10 @@
 ---
 document_type: prd
 level: L3
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/bc-authoring-plan.md
   - prd-supplements/test-vectors.md
 changelog:
+  - "v1.1 F-P73 (2026-07-19): F-P73-02: stale '86' references updated to 95 (§5b test-vector note, OQR-4 historical annotation); OBS-P73-A: §2.10 BC-2.10.003 summary corrected '(on_ceiling = halt)' → '(on_ceiling = halt | summarize)' for 3-way H1/PRD/BC-INDEX sync; OBS-P73-C: §3 public-trait list extended with 4 D20 first-class traits (SkillStore, MemoryWriteGuard, ToolCallDialect, ProviderFallbackPolicy)."
   - "v1.0: Initial PRD core. BC files authored in sub-bursts 2–N per bc-authoring-plan.md."
   - "v1.0 Step-E: BC-2.08.009 added to SS.08 — Tool Schema Naming Stability (Snapshot Test Anchor). Authored from ADR-004 acceptance (architect feedback): snapshot test obligation for public tool types deriving schemars::JsonSchema. Batch 9 count: 8 → 9. Total BC count: 82 → 83."
   - "v1.0 P53-A: §9 NE summary corrected (F-P53-01). Previous rollup was 15→BC/1→BC+CI lint gate/1→CI-only, which undercounted CI-gate NEs by 2. Re-derived from table: 13→BC (incl. 3 VP-seed: NE-02/12/17); 3→BC+CI lint gate (NE-04, NE-07, NE-10); 1→CI lint gate only (NE-05). Partial-fix signature: rows NE-07/NE-10 had been upgraded to BC+CI lint gate in the table but rollup was never re-derived."
@@ -252,7 +253,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 |-------|-------|----------|----|------|
 | BC-2.10.001 | BudgetPolicy allow/escalate/deny evaluation per run and per sub-agent | P0 | — | ss-10/BC-2.10.001.md |
 | BC-2.10.002 | Append-only EvidenceJournal recording of every budget evaluation | P0 | — | ss-10/BC-2.10.002.md |
-| BC-2.10.003 | Graceful halt when budget ceiling reached (on_ceiling = halt) _(v1.2: OnCeiling::Summarize + RunContext.budget\_info / BudgetInfo)_ | P0 | — | ss-10/BC-2.10.003.md |
+| BC-2.10.003 | Graceful halt when budget ceiling reached (on_ceiling = halt \| summarize); remaining-budget exposure (RunContext.budget\_info) | P0 | — | ss-10/BC-2.10.003.md |
 | BC-2.10.004 | Budget escalation to HITL interrupt when on_ceiling = escalate | P0 | DI-003 | ss-10/BC-2.10.004.md |
 
 ### 2.11 Content Provenance Tagging and Guardrail-on-Ingress (CAP-013) — P0
@@ -346,7 +347,8 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 ferrochain is a Rust library framework, not a CLI tool. The public interface surface is:
 
 - **Public Rust traits:** `Runnable<Input, Output>`, `CheckpointSaver`, `GuardrailHook`,
-  `BudgetPolicy`, `BaseChatModel`, `Tool`, `MemoryStore`
+  `BudgetPolicy`, `BaseChatModel`, `Tool`, `MemoryStore`, `SkillStore`, `MemoryWriteGuard`,
+  `ToolCallDialect`, `ProviderFallbackPolicy` _(last 4 added D20)_
 - **Error type:** `FerrochainError { component: Component, category: Category, retry_hint, code }`
 - **ferrochain-server:** First-party HTTP server with `/threads`, `/assistants`,
   `/threads/{id}/runs` (thread-nested; includes `…/stream`, `…/resume`, `…/cancel`),
@@ -421,7 +423,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 ## 5b. Test Vectors
 
 > **Supplement:** `prd-supplements/test-vectors.md` — consolidated test-vector catalog
-> indexing the canonical test vectors embedded in all 86 BC files.
+> indexing the canonical test vectors embedded in all 95 BC files.
 > Primary consumers: test-writer, holdout-evaluator.
 
 ---
@@ -592,7 +594,7 @@ All are resolved here. Flagged-for-human column indicates whether human gate rev
 | OQR-1 | HITL risk tiers — extend CAP-006 or new capability? | Extension of CAP-006. BC-2.05.006 adds typed action-risk levels within the HITL interrupt model. No new CAP. | The interrupt mechanism is unchanged; risk tiers are a BC-level typing of interrupt types within the same subsystem. ASM-008 confirms the capability is HITL, just richer. | No |
 | OQR-2 | Agent registry — first-class vs application-layer vs deferred? | Application-layer concern. CAP-014 Assistant concept (named agent config) in ferrochain-server covers named agent registration at the server level. No separate "agent registry" primitive is in scope for v1. | LangChain v1 has no first-class agent registry; adk-rust's agent registry is REJECT (P-17). The Assistant concept in LangGraph Platform (the server's domain) is the right analog. | No |
 | OQR-3 | CAP-019 phase anchoring — behavioral invariants Phase-1 vs proof deliverables Phase-6? | Behavioral invariants (DI-001, DI-005, DI-007) get Phase-1 BCs. Kani proof deliverables belong to Phase 6. BC-2.17.001 specifies the VP scope; the harness that proves them is Phase-6 work. | This is already stated explicitly in CAP-019's domain-spec entry. No ambiguity — confirmed as documented. | No |
-| OQR-4 | D5 proc-macro BC dependency — note gating ADR? | BCs for #[tool], #[entrypoint], #[task] proc-macro attributes are GATED on D5 ADR. They are not in the 83-BC plan. A placeholder note is in each affected subsection's BC index. D17-Q6 accepted D5 gate. | D5 ADR (schemars/proc-macro decision) must precede proc-macro BCs per D17-Q6. The 83-BC base plan contained no proc-macro BCs; 3 were added as Phase-1b amendments (BC-2.08.010–012, Batch 13) after ADR-004 and ADR-008 acceptance (total: 86 BCs). If D5 ADR produces an ADOPT disposition, proc-macro BCs become a Phase-1b addition via the BC authoring plan. | No (D5 ADR is the gate, not human) |
+| OQR-4 | D5 proc-macro BC dependency — note gating ADR? | BCs for #[tool], #[entrypoint], #[task] proc-macro attributes are GATED on D5 ADR. They are not in the 83-BC plan. A placeholder note is in each affected subsection's BC index. D17-Q6 accepted D5 gate. | D5 ADR (schemars/proc-macro decision) must precede proc-macro BCs per D17-Q6. The 83-BC base plan contained no proc-macro BCs; 3 were added as Phase-1b amendments (BC-2.08.010–012, Batch 13) after ADR-004 and ADR-008 acceptance (total at Batch 13: 86 BCs; later grown to 95 via D20). If D5 ADR produces an ADOPT disposition, proc-macro BCs become a Phase-1b addition via the BC authoring plan. | No (D5 ADR is the gate, not human) |
 | OQR-5 | DI-012 default hook behavior — default-permit or default-deny? | Default-permit with WARNING LOG at WARN level when no GuardrailHook is registered. Graph does not fail. Operator sees a warning. _(Changelog: updated INFO→WARN 2026-07-13 to match BC-2.11.006 and BC-2.09.003 which both emit `WARN`-level; INFO is insufficient for an operator-actionable security alert.)_ | Security posture (NE-01, NE-14) is about enforcing defaults for sandbox and server config — not about blocking all content when no guardrail is configured. A missing guardrail is valid for most non-SOC use cases. Domain A users must explicitly register a GuardrailHook. default-deny would break every RAG and MCP use case that doesn't need content filtering. BC-2.11.006 specifies this contract. | No |
 
 ---
