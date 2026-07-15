@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.8"
+version: "2.9"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -20,6 +20,7 @@ changelog:
   - "2.6 (ADV-P1D-PASS-47): F-P47-01 (CRITICAL) fix Flag Interaction Rules row for sandbox-wasm+container-both-off — remove silent-process-fallback claim, replace with SandboxBackend::default()→Err(E-SBXD-003 SandboxInitFailed) per BC-2.13.001 PC4/EC-002/DI-006/NE-01; F-P47-02 fix [sandbox] config comment 'process emits WARNING on startup'→'once per execute() invocation — NOT construction/startup' per BC-2.13.002 PC2/EC-002; OBS-P47-1 add sandbox-process row to Cargo Feature Flags table with NOT-enforcing/explicit-constructor-only semantics per BC-2.13.001 PC3/PC4."
   - "2.3 (ADV-P1D-PASS-32): F-P32-03 add canonical pagination to GET /assistants/{id}/versions row (limit default 10 max 100 clamped / offset / ordering exemption: version ASC — deviates from created_at DESC default); BC-2.12.002 PC20 added as anchor. OBS-P32-1 add no-list-schedules note in §Cron Schedules."
   - "2.8 (ADV-P1D-PASS-49): F-P49-02 — add RunnableConfig recursion_limit dual-interpretation note (§Runnable trait); add E-GRAPH-017 (GraphRecursionLimitExceeded, POLICY — BC-2.03.001 PC5) to the graph execution errors embedded-in-Run.error blockquote. No HTTP status table row change (E-GRAPH-017 surfaces embedded in Run.error, never as a direct terminal HTTP status; POLICY→403 categorical fallback applies only if ever surfaced directly — not in v1)."
+  - "2.9 (ADV-P1D-PASS-55): F-P55-01 — add E-SERVER-013 (InvalidDebugRouteKey, VAL — BC-2.12.005 EC-005/TV-007) startup-only omission note; raised at boot before any HTTP listener is bound, never surfaced as a terminal HTTP response (same treatment as E-CHKPT-005). Full disposition census: 75 live codes — 43 HTTP table rows, 9 explicit individual omission notes, 23 blanket library-layer coverage, 0 uncovered."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -275,6 +276,8 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 > **E-CHKPT-005 library-level omission (F-P27-03, ADV-P1D-PASS-27):** E-CHKPT-005 (SessionAddressCollision, TENANCY — BC-2.04.006) is a checkpoint library-level error enforcing the session triple-address uniqueness invariant (NE-12). TENANCY→409 is the categorical mapping. In v1 this error is raised within the checkpoint layer before any HTTP response is sent, surfacing as a run failure embedded in Run.error, not as a direct terminal HTTP 409 response. Intentionally omitted from the 409 row for the same reason as the E-PROV categorical-fallback codes.
 
 > **E-PROV-007 embedded omission (OBS-P28-3, ADV-P1D-PASS-28):** E-PROV-007 (StructuredOutputRefused, POLICY — BC-2.08.003) is emitted when the OpenAI Responses API rejects a `json_schema` structured output request via a safety-filter refusal. POLICY→403 is the categorical mapping. In v1 this error surfaces as a run failure embedded in Run.error — the server cannot distinguish a refusal from a valid LLM response until the response body is deserialized post-stream. No v1 server endpoint emits HTTP 403 directly for this code. Intentionally omitted from the 403 row; the 403 row lists only codes that produce a direct terminal HTTP 403 response (E-SERVER-004, E-SERVER-005, E-GRAPH-013).
+
+> **E-SERVER-013 startup-only omission (F-P55-01, ADV-P1D-PASS-55):** E-SERVER-013 (InvalidDebugRouteKey, VAL — BC-2.12.005 EC-005/TV-007) is raised during server configuration validation at startup (debug_route_key must be non-empty when debug routes are enabled). VAL→400 is the categorical mapping. In v1 this error halts startup before any HTTP listener is bound; it is never surfaced as a terminal HTTP response. Intentionally omitted from the 400 row; same treatment as E-CHKPT-005.
 
 > **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY), E-SPLIT-* (BC-2.07.x, VAL) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only.
 
