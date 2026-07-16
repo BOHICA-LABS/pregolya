@@ -7,7 +7,7 @@ title: "MCP Server Module Placement in ferrochain-mcp (CAP-021)"
 status: accepted
 producer: architect
 timestamp: 2026-07-15T00:00:00Z
-version: "1.0"
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D19, D20]
@@ -81,6 +81,11 @@ within the existing `ferrochain-mcp` crate; no new crate is introduced.
 
 ### Module Interface
 
+> **Behavioral authority note:** BC-2.09.006 is the authoritative signature carrier for
+> `McpServer`. Interface definitions in BCs and `interface-definitions.md` take precedence
+> over ADR sketches per the behavioral authority rule. The sketch below is reconciled to
+> BC-2.09.006's canonical shapes and is kept for architectural context only.
+
 ```rust
 // ferrochain-mcp/src/server.rs
 pub struct McpServer { /* ... */ }
@@ -88,21 +93,24 @@ pub struct McpServer { /* ... */ }
 impl McpServer {
     /// Exposes the registered tool set to external MCP clients.
     /// Accepts inbound tool-call requests via stdio or SSE transport.
-    pub async fn serve(
-        &self,
-        transport: McpTransport,
-        registry: Arc<dyn ToolRegistry>,
-    ) -> Result<(), FerrochainError>;
+    /// Configuration (transport selection, bind address, etc.) is supplied via
+    /// McpServerConfig; returns a McpServerHandle for lifecycle management.
+    /// Canonical signature per BC-2.09.006.
+    pub async fn start(
+        config: McpServerConfig,
+    ) -> Result<McpServerHandle, FerrochainError>;
 }
 
-pub enum McpTransport {
+pub enum McpServerTransport {
     Stdio,
-    Sse { port: u16, path: String },
+    Sse { bind_addr: SocketAddr },
 }
 ```
 
 The `ToolRegistry` is the same registry used by `mcp::adapter` for outbound dispatch,
 ensuring the exposed tool set is always consistent with the registered tool set.
+`McpServerConfig` wraps `McpServerTransport` alongside any additional server-lifecycle
+options; `McpServerHandle` provides a handle for graceful shutdown and health querying.
 
 ---
 
@@ -150,4 +158,5 @@ in v1.7. BC-2.09.006 attribution correction is deferred to PO (spec-owner of BC 
 
 | Version | Date | Author | References | Summary |
 |---------|------|--------|------------|---------|
+| 1.1 | 2026-07-15 | architect | OBS-P77-A, BC-2.09.006 | Reconcile Module Interface sketch to BC-2.09.006 canonical shapes: rename McpTransport→McpServerTransport; serve(&self, transport, registry)→start(config: McpServerConfig); return type ()→McpServerHandle; Sse { port, path }→Sse { bind_addr: SocketAddr }. Add behavioral authority note (BC wins over ADR sketch). |
 | 1.0 | 2026-07-15 | architect | D19, D20, CAP-021, F-P72-04 | Initial decision: mcp::server module in ferrochain-mcp (not a new crate); MEDIUM tier; stdio+SSE transports; universe 34→35; corrects false ADR-012 attribution in module-decomposition.md. |

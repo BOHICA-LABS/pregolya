@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.013
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -10,6 +10,8 @@ origin: greenfield
 priority: P1
 subsystem: SS-08
 capability: CAP-009
+changelog:
+  - "1.1 (OBS-P77-B, 2026-07-15): Architecture Anchor corrected — 'built-in enum variants' → 'built-in trait implementations'. ToolCallDialect is an object-safe pluggable trait (per BC body Description and interface-definitions v2.23); NativeOpenAiJson, NativeAnthropic, HermesChatMlXml are concrete struct implementations of that trait, not enum variants."
 wave: 2
 phase: 1b
 producer: product-owner
@@ -155,7 +157,7 @@ with the implementor's error message embedded. (DI-014: error not swallowed.)
 
 ## Architecture Anchors
 
-- `ferrochain-core/src/runnable.rs` (or `ferrochain-core/src/tool_dialect.rs`) — `ToolCallDialect` trait definition; `NativeOpenAiJson`, `NativeAnthropic`, `HermesChatMlXml` built-in enum variants; `ChatConfig.tool_call_dialect: ToolCallDialect` field
+- `ferrochain-core/src/runnable.rs` (or `ferrochain-core/src/tool_dialect.rs`) — `ToolCallDialect` trait definition; `NativeOpenAiJson`, `NativeAnthropic`, `HermesChatMlXml` built-in trait implementations; `ChatConfig.tool_call_dialect: ToolCallDialect` field
 - `ferrochain-<provider>/src/tool_translation.rs` — per-dialect `serialize_tools(tools: &[Tool]) -> ProviderRequest` and `parse_response(raw: ResponseBody) -> Result<AiMessage, FerrochainError>` implementations
 - `ferrochain-openai/src/chat_model.rs`, `ferrochain-anthropic/src/chat_model.rs` — dialect selection at construction time
 

@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.16"
+version: "2.17"
 status: active
 producer: product-owner
 total_standing_gates: 33
@@ -1589,7 +1589,38 @@ split by wave avoids exception).
 
     **Post-fix gate #33 census (ADV-P1D-PASS-66):** 78/78 live codes anchored. 100% PASS.
 
-    Source: ADV-P1D-PASS-66 §OBS-P66-1 [process-gap].
+    **SEMANTIC-AGREEMENT sub-check (D18-P77-B, F-P77-01):**
+    Presence-verification (steps 1–6 above) is necessary but not sufficient. A code whose string
+    appears in its anchor BC can still contradict that BC if the taxonomy row's Message Format
+    template or raise-condition annotation diverges semantically from the BC's authoritative
+    `message:` string and EC/TV trigger conditions.
+
+    Extended procedure (performed on every taxonomy edit, in addition to steps 1–6):
+
+    7. For each live row, open the declared BC Anchor and locate: (a) the authoritative `message:`
+       string for the code (in a postcondition, EC-NNN, or TV table row that first defines the
+       message text), and (b) the EC/TV trigger conditions (the scenario under which the code is
+       raised).
+    8. Compare the taxonomy row's **Message Format** column against the BC's authoritative message
+       text. The taxonomy row must reproduce the exact template (or a faithful parameterized form
+       using `<placeholder>` syntax); it must not substitute a different description.
+    9. Compare the taxonomy row's raise-condition annotation (inline text after the message
+       template) against the BC's EC-NNN and TV trigger conditions. The annotation must name the
+       same triggering predicate (e.g., "contains `*` or `?`") as the BC's EC/TV body.
+    10. On any semantic divergence: **the BC wins** — the taxonomy row is corrected to match the BC.
+        The BC body is never modified to match a stale taxonomy row.
+
+    **Motivating instance (F-P77-01, ADV-P1D-PASS-77):** E-SBXD-006 taxonomy row described a
+    REGEX model ("is not a valid regex pattern — <reason>"; "fails regex compilation") while
+    BC-2.13.007 PC5/EC-003/EC-005/TV-005/TV-006 mandates the EXACT-NAME/WILDCARD model
+    ("contains wildcard characters — only exact variable names are supported in v1"; triggered on
+    `*` or `?` characters). The divergence violated the DI-010 credential-security boundary
+    semantics. Gate #20 (variant name presence) PASSed because the variant name `InvalidEnvAllowlistPattern` is present. Gate #33 steps 1–6 (raise-condition presence) PASSed because
+    a raise condition mentioning the code exists. Neither gate verified that the raise-condition
+    annotation's predicate agreed with the BC's EC/TV trigger predicate — that semantic gap is
+    what steps 7–10 close.
+
+    Source: ADV-P1D-PASS-66 §OBS-P66-1 [process-gap]; extended D18-P77-B (ADV-P1D-PASS-77).
 
 ---
 
@@ -1597,6 +1628,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.17 | 2026-07-15 | D18-P77-B (F-P77-01 process-gap): gate #33 extended with SEMANTIC-AGREEMENT sub-check (steps 7–10). For every live taxonomy code, the row's Message Format template and raise-condition annotation must semantically agree with the anchor BC's authoritative `message:` text and EC/TV trigger conditions; on divergence the BC wins (taxonomy is corrected). Motivating instance: E-SBXD-006 regex-vs-wildcard divergence on DI-010 credential boundary survived both gates #20 and #33 (both are name/presence-only; neither verified predicate agreement). `total_standing_gates` unchanged at 33 (sub-check extension of gate #33, not a new gate). | D18-P77-B, F-P77-01 |
 | 2.16 | 2026-07-15 | F-P75-01/D18-P75-A: gate #28 date-validity sub-check extended with two new rules — (4) TEMPORAL-NEIGHBOR SWEEP: all neighboring changelog rows in any edited file must be date-audited in the same burst, not just the new row; pass N dates may not exceed pass N+1 artifact dates; (5) FRONTMATTER-CURRENCY: frontmatter `timestamp:` must equal the date of the file's newest changelog entry. Trigger: 3rd recurrence of future-dated-changelog class (F-P75-01/OBS-P75-A; prior: F-P64-02, F-P65-01). Machine enforcement (pre-commit hook / CI lint) DEFERRED to Phase 3 CI hardening — deferral logged by state-manager. `total_standing_gates` unchanged at 33 (widening of gate #28, not a new gate). Plan version 2.15 → 2.16. | F-P75-01, D18-P75-A |
 | 2.15 | 2026-07-15 | OBS-P74-A: gate #19 census command extended with five shared-type retired names (`CheckpointStore`, `RunConfig`, `BaseCheckpointSaver`, `AIMessage`-Rust-context, `Checkpointer`); `domain-spec/` added to exclusion list (Python→Rust mapping tables); AIMessage operator note added; coverage-closure note added recording that gate #15 previously left interface-definitions.md uncovered on this axis. Adjudication D18-P74-A. | OBS-P74-A |
 | 2.14 | 2026-07-15 | OBS-P73-B: gate #32 carrier #5 module count corrected "(20-module subset;" → "(22-module subset;" (D20 added ToolCallDialect + ProviderFallbackPolicy modules to the PO criticality registry, bringing the total from 20 to 22; the prose was not updated in the D20 burst). | OBS-P73-B |

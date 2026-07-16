@@ -7,7 +7,7 @@ title: "Self-Improvement Primitives: Skill Registry, Runtime Context Mutation, G
 status: accepted
 producer: architect
 timestamp: 2026-07-15T00:00:00Z
-version: "1.1"
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D20]
@@ -219,7 +219,7 @@ run when a fresh `ContextMutationConfig` load occurs.
 - Live mutation would require re-assembling the system prompt at arbitrary super-steps,
   invalidating provider caches and making the run non-reproducible from a caching standpoint.
 
-**Cache coherence invariant (ADR-012 DI-001):** Within a single run (invoke/ainvoke
+**Cache coherence invariant (ADR-012 INV-1):** Within a single run (invoke/ainvoke
 call), the context assembled from `ContextMutationConfig` sources is immutable. Any
 memory write performed during the run does not affect the context of that run.
 
@@ -321,5 +321,6 @@ seam that does not interact with `ProvenanceTag`, `GuardrailHook`, or `BoundaryT
 
 | Version | Date | Author | References | Summary |
 |---------|------|--------|------------|---------|
+| 1.2 | 2026-07-15 | architect | OBS-P77-C, D18-P77-A | Rename ADR-012 DI-001 → ADR-012 INV-1 (Decision 3 body). DI-NNN is the reserved domain-invariant namespace (DI-001..DI-014); local ADR invariants must use non-DI identifiers. Adjudication D18-P77-A recorded. PO to propagate rename to BC-2.15.006 (lines ~69, ~150) and capabilities-p1-p2.md (~line 111). |
 | 1.1 | 2026-07-15 | architect | F-P72-02, ADR-013 | Reconcile Decision 4 to actual downstream state: headline clarified as ADR-012 scope (33→34); gate #25 updated to note final universe = 35 post-ADR-013 (mcp::server MEDIUM); memory::skills cell corrected from "No new row" to "No new criticality row" distinguishing structural decomposition row from criticality-counted row; Consequences item 2 clarified "structural module rows" to distinguish from criticality rows; Error Codes advisory annotated with actually-minted E-MEMORY-007 (namespace MEMORY, number 007). |
 | 1.0 | 2026-07-15 | architect | D20 | Initial decision: placement of three self-improvement primitives; injection-scanning seam (new MemoryWriteGuard, no BoundaryType amendment); frozen-snapshot semantics; universe 33→34 (+memory::write_guard HIGH row). |

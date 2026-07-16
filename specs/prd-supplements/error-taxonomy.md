@@ -1,11 +1,12 @@
 ---
 document_type: prd-supplement-error-taxonomy
 level: L3
-version: "1.13"
+version: "1.14"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.14 (F-P77-01, 2026-07-15): E-SBXD-006 semantic correction — rewritten from regex model to wildcard/exact-name model per BC-2.13.007 PC5/EC-003/EC-005/TV-005/TV-006. Message Format updated from 'is not a valid regex pattern — <reason>' to 'contains wildcard characters — only exact variable names are supported in v1'. Raise-condition annotation updated: triggered by `*` or `?` in any allowlist entry at construction time (not by regex compilation failure). All regex language removed. VAL category and RetryHint Never unchanged. D18-P77-B: gate #33 SEMANTIC-AGREEMENT sub-check extended in bc-authoring-plan.md v2.17."
   - "1.1 (ADV-P1D-PASS-25): F-P25-02 recategorize E-SERVER-004 AUTH→POLICY; correction note added inline."
   - "1.2 (ADV-P1D-PASS-27): F-P27-02 recategorize E-CHKPT-004 SECURITY→INTERNAL (BC-2.04.007 authoritative; key rotation is an internal invariant failure, not a security policy rejection)."
   - "1.3 (ADV-P1D-PASS-28): F-P28-01 relabel category-table RetryHint column to 'Default RetryHint'; add per-code-authoritative precedence rule. OBS-P28-3 mint E-PROV-007 (StructuredOutputRefused, POLICY, Never) anchored to BC-2.08.003 — OpenAI structured-output refusal path now carries a machine-readable code."
@@ -200,7 +201,7 @@ primary_consumers: [implementer, test-writer]
 | E-SBXD-003 | INTERNAL | broken | BC-2.13.001 | `SandboxInitFailed: cannot initialize WASM/container sandbox backend: <reason>` |
 | E-SBXD-004 | POLICY | broken | BC-2.13.006 | `PlatformNoEnforcement: macOS Seatbelt allow-list cannot be enumerated for this tool — <reason>; use SandboxPolicy::allow_no_sandbox() to opt in to unsandboxed execution` |
 | E-SBXD-005 | INTERNAL | broken | BC-2.13.006 | `BackendUnavailable: Seatbelt sandbox API is not supported on this macOS version — <reason>; does not silently fall back to process execution` |
-| E-SBXD-006 | VAL | broken | BC-2.13.007 | `InvalidEnvAllowlistPattern: env-var allowlist entry '<pattern>' is not a valid regex pattern — <reason>` — **(D20 sub-burst 2):** Raised at `SandboxConfig` construction time when any element of `env_allowlist` fails regex compilation. VAL — the caller provided a syntactically invalid pattern string. RetryHint: Never (VAL default — fix the pattern). Fail-closed: if any pattern is invalid, no env-var inherits; construction returns `Err`. |
+| E-SBXD-006 | VAL | broken | BC-2.13.007 | `InvalidEnvAllowlistPattern: entry '<pattern>' contains wildcard characters — only exact variable names are supported in v1` — **(D20 sub-burst 2; F-P77-01 semantic correction):** Raised at `SandboxConfig` construction time when any entry in `env_allowlist` contains `*` or `?` (wildcard characters). VAL — `env_allowlist` accepts only exact variable names (case-sensitive, no wildcards); glob and regex patterns are not supported in v1. RetryHint: Never (VAL default — fix the entry to an exact name). Fail-closed: if any entry contains a wildcard, the entire allowlist is rejected and construction returns `Err`; no env-var is forwarded. |
 
 ### Component: RETRY (ferrochain-core retry combinator)
 

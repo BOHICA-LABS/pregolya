@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.006
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -10,6 +10,8 @@ origin: greenfield
 priority: P1
 subsystem: SS-15
 capability: CAP-020
+changelog:
+  - "1.1 (OBS-P77-C, 2026-07-15): ADR-012 DI-001 renamed to ADR-012 INV-1 per architect adjudication D18-P77-A (ADR-012 v1.2 local-invariant rename). Updated in Invariants (cache-coherence invariant label) and Architecture Anchors (§Decision 3 reference)."
 wave: 2
 phase: 1b
 producer: product-owner
@@ -66,7 +68,7 @@ frozen-tier semantics of Hermes SOUL.md / MEMORY.md.
 
 ## Invariants
 
-- **Cache-coherence invariant (ADR-012 DI-001):** Within a single run, the context assembled
+- **Cache-coherence invariant (ADR-012 INV-1):** Within a single run, the context assembled
   from `ContextMutationConfig` sources is immutable. A memory write performed during the run
   does not affect the context seen by subsequent super-steps in that run. Violation of this
   invariant is a programming error (INTERNAL).
@@ -147,7 +149,7 @@ context.
 
 - `ferrochain-core/src/context_mutation.rs` (`core::context_mutation`) — `ContextSourceSpec` struct `{ namespace: String, key: String }`; `ContextMutationConfig` struct `{ sources: Vec<ContextSourceSpec> }`; `RunnableConfig.context_mutations: Option<ContextMutationConfig>` (per ADR-012 Decision 1, Primitive B)
 - `ferrochain-graph/src/pregel/scheduler.rs` (`graph::scheduler`) — pre-first-super-step load: iterates `ContextMutationConfig.sources`, calls `MemoryStore::get` per source, prepends loaded content to initial context; no new module row (added behavior of existing scheduler module per ADR-012 Decision 4)
-- ADR-012 §Decision 3 — frozen-snapshot semantics adopted; live mutation rejected; ADR-012 DI-001 (cache-coherence invariant)
+- ADR-012 §Decision 3 — frozen-snapshot semantics adopted; live mutation rejected; ADR-012 INV-1 (cache-coherence invariant)
 - ADR-011 — cache-key obligation: loaded context bytes must be included in system-instruction hash input
 
 ## Story Anchor
