@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.22"
+version: "2.23"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 phase: 1d
 changelog:
+  - "2.23 (F-P74-01, 2026-07-15): Fix retired spelling CheckpointStore::fts_search → CheckpointSaver::fts_search in E-CHKPT-008 library-layer omission note (~line 542). CheckpointSaver is the canonical trait name; CheckpointStore was retired. Full-file scan for other retired spellings (RunConfig, BaseCheckpointSaver, AIMessage-in-Rust-context, Checkpointer-as-type): none found."
   - "1.6 (ADV-P1D-PASS-25): F-P25-01 add 503 row (E-SERVER-016 IdempotencyLockTimeout per-endpoint override); F-P25-02 recategorize 401→reserved, 403 now E-SERVER-004 POLICY + E-SERVER-005; F-P25-06 reconcile Run.interrupt sub-fields (interrupt_id, node_name, value, action_risk, action, context added; node_id→node_name, risk_tier→action_risk renamed); F-P25-07 add 201 and 204 rows, add E-CRON-002 to 400 row; OBS-2 add 502 and 504 categorical fallback rows."
   - "1.7 (ADV-P1D-PASS-26): F-P26-04 config comment X-Debug-Key+/debug/*→Authorization:Bearer+/_debug; F-P26-05 rewrite 401 row with E-PROV-004 categorical-fallback; OBS-1 narrow 422 wildcard to enumerated VAL E-GRAPH codes; OBS-2 add E-CRON-001/003 intentional-omission note; OBS-3 add E-PROV-005/006 to 400 row with embedded-in-Run.error annotation."
   - "1.8 (ADV-P1D-PASS-27): F-P27-01 add E-GRAPH-002 (POLICY→422 per-endpoint override) to 422 row; F-P27-02/03 replace 'all E-CHKPT-*' over-broad text with specific enumeration, add E-CHKPT-004 (INTERNAL) to 500 row, add E-CHKPT-005 omission note; F-P27-04 add E-GRAPH-013 (SECURITY) to 403 row, add E-GRAPH-001/014/016 embedded omission notes; 422 row description updated to note POLICY→422 overrides."
@@ -539,7 +540,7 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 
 > **E-CORE-007 library-layer omission (ADV-P1D-PASS-56-COMPLETION):** E-CORE-007 (GuardrailHookPanic, INTERNAL — BC-2.11.002 / BC-2.11.003 / BC-2.11.004) is raised when a `GuardrailHook::evaluate` call panics at any content-ingress boundary (tool-result, RAG chunk, or memory item). INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from the guardrail ingress pipeline in library code; it is never emitted as a terminal HTTP response by ferrochain-server (if ever propagated to a server-side run, it would surface embedded in Run.error). Fail-closed semantics: content that triggered the panic is treated as rejected and does not enter the model context. Intentionally omitted from the HTTP status table; same treatment as E-CORE-006.
 
-> **E-CHKPT-008 library-layer omission (D20 sub-burst 2):** E-CHKPT-008 (FtsLimitZero, VAL — BC-2.04.008 PC6/EC-004/EC-002) is raised at construction time when `FtsSearchConfig.limit = 0` or when the FTS5 query string is syntactically malformed. VAL→400 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from `CheckpointStore::fts_search` in library code; it is never emitted as a terminal HTTP response by ferrochain-server (no FTS search endpoint in v1; if ever surfaced via server, it would appear embedded in Run.error). Intentionally omitted from the HTTP status table.
+> **E-CHKPT-008 library-layer omission (D20 sub-burst 2):** E-CHKPT-008 (FtsLimitZero, VAL — BC-2.04.008 PC6/EC-004/EC-002) is raised at construction time when `FtsSearchConfig.limit = 0` or when the FTS5 query string is syntactically malformed. VAL→400 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from `CheckpointSaver::fts_search` in library code; it is never emitted as a terminal HTTP response by ferrochain-server (no FTS search endpoint in v1; if ever surfaced via server, it would appear embedded in Run.error). Intentionally omitted from the HTTP status table.
 
 > **E-CHKPT-009 library-layer omission (D20 sub-burst 2):** E-CHKPT-009 (Fts5Unavailable, INTERNAL — BC-2.04.008 EC-006) is raised at `CheckpointSaver::new()` construction time when FTS is requested but the SQLite build does not include the FTS5 extension. INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from `CheckpointSaver::new()` in library code; it is never emitted as a terminal HTTP response by ferrochain-server (server startup with a bad FTS5 config fails before any listener is bound). Intentionally omitted from the HTTP status table; same treatment as E-CHKPT-005 and E-SERVER-013 (startup-time library errors).
 
