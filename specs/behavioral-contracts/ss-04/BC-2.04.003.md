@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.003
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -21,7 +21,8 @@ capability: CAP-005
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 changelog:
-  - "1.2 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-CHKPT-002 message-prefix correction. EC-003: added 'MonotonicClockRegression:' prefix to message string (was 'checkpoint_id must be monotonic: random UUID rejected'; now 'MonotonicClockRegression: checkpoint_id must be monotonic: random UUID rejected'). This is a D18-P78-A BC correction (BC lacked universal <ErrorName>: prefix). Taxonomy message kept as-is (already 'MonotonicClockRegression: <reason>' general-case format; BC EC-003 is a specific instantiation)."
+  - "1.3 (2026-07-15, F-P79-02 CORRIGENDUM): Audit-trail correction for v1.2 claim. The v1.2 entry stated: 'Taxonomy message kept as-is (already MonotonicClockRegression: <reason> general-case format; BC EC-003 is a specific instantiation).' That claim is FALSE per git ground truth. Pre-sweep error-taxonomy.md (HEAD~1 of .factory, burst-156 state) line 118 read verbatim: 'MonotonicClockRegression: checkpoint ID <new_id> is not strictly greater than current <current_id>' — a regression-comparison semantic, not a general-case <reason> placeholder, and not the UUID-rejection message in BC EC-003. The burst-157 sweep DID change the taxonomy body from 'checkpoint ID <new_id> is not strictly greater than current <current_id>' to 'checkpoint_id must be monotonic: random UUID rejected' to align with the UUID-rejection semantic of BC EC-003. The v1.2 'kept as-is' claim is therefore incorrect. No live BC body or taxonomy content changed by this corrigendum; the live row in error-taxonomy.md (MonotonicClockRegression: checkpoint_id must be monotonic: random UUID rejected) and BC EC-003 (MonotonicClockRegression: checkpoint_id must be monotonic: random UUID rejected) are both correct."
+  - "1.2 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-CHKPT-002 message-prefix correction. EC-003: added 'MonotonicClockRegression:' prefix to message string (was 'checkpoint_id must be monotonic: random UUID rejected'; now 'MonotonicClockRegression: checkpoint_id must be monotonic: random UUID rejected'). This is a D18-P78-A BC correction (BC lacked universal <ErrorName>: prefix). Taxonomy message kept as-is (already 'MonotonicClockRegression: <reason>' general-case format; BC EC-003 is a specific instantiation). [NOTE: the 'Taxonomy message kept as-is' sub-claim is incorrect — see v1.3 corrigendum above.]"
   - "1.1 (ADV-P1D-PASS-6): E-category canon — EC-003 and test vector error category corrected from `CheckpointError` to `INTERNAL, code: E-CHKPT-002` (F-P6-03, status/category canon sweep)."
   - "1.0 (initial): base BC authored (greenfield burst 72)."
 modified: []

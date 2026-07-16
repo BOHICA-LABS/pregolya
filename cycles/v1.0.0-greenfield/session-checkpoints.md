@@ -478,3 +478,16 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **DECISION DELTA (burst 156):** D18-P77-A (ADR-012 INV-1 rename, propagated BC-2.15.006 + capabilities-p1-p2) + D18-P77-B (gate #33 semantic-agreement sub-check steps 7–10).
 
 **WRAP METADATA:** Date: 2026-07-15 | Cycle: v1.0.0-greenfield | Burst: 156 | Counter: 0/3 (Phase 1d; RESET by F-P77-01)
+
+---
+
+## Archived Checkpoint — Burst 157 (2026-07-15)
+
+### RESUME IN ONE BREATH (archived from STATE.md burst 157)
+"ferrochain Phase 1 spec crystallization, step 1d IN PROGRESS post-D20: 78 passes / 79 fix bursts, counter 0/3 (reset by pass 78 findings; strict-zero D14; 33 standing gates [bc-authoring-plan v2.18 frontmatter authoritative]; baseline 95 BCs 48/39/8, 21 CAPs 11/7/3, universe 35 = 9/13/11/2 [arch] + 22 = 6/9/5/2 [PO registry], census 85 = 43+16+26, 13 ADRs, 6 RetryHint divergences, gate #31 24/28). Pass 78 NOT CLEAN (4 findings MED/MED/LOW-MED/MED; ALL fixed + full gate #33 sweep 85/85; 17 fixes). NEXT ACTION: dispatch adversary pass 79 — fresh context; sibling-checks: (1) taxonomy v1.16 E-MEMORY-007 = BC-2.15.005 PC2 verbatim; (2) interface v2.25 E-PROV-009/010 citations correct; (3) plan v2.18 gate #33 step 11; (4) spot ≥4 prefix-fixed BCs (E-CORE-006 PC5, E-PROV-002 PC1 code: field, E-BUDGET-001 PC5, E-SERVER-007 PC3/EC-001); (5) BC-2.04.008 v1.3 FtsLimitZero: prefix; (6) gate #28 on all 12 touched files; RECOMMENDED: independent gate #33 steps 7–11 spot-verify random ≥15-code sample + test-vectors rows for 8 prefix-fixed BCs; census rotation ≥6 gates; free probes; standing adjudications carry (OBS-P75-B, OBS-P76-1, OBS-P76-2, D18-P72-C, DEFER-002); CLEAN advances 1/3; ANY finding resets 0/3; loop per D15 until 3/3."
+
+**POST-P78 CANONS (burst 157):** taxonomy v1.16 (E-MEMORY-007 = BC-2.15.005 PC2 verbatim; 13 Message Format corrections); interface-definitions v2.25 (E-PROV-009/010 citations); plan v2.18 gate #33 step 11; D18-P78-A prefix canon (12 BC-side corrections); D18-P78-B omission-note citation check; 8 BCs with prefix additions (BC-2.01.003/2.04.003/2.04.007/2.04.008/2.08.003/2.08.004/2.08.007/2.10.003/2.12.001). Prior canons: prd v1.1; test-vectors v1.4; BC-INDEX v1.4; E-SBXD-006 wildcard; ADR-012 INV-1; ADR-013 v1.1.
+
+**DECISION DELTA (burst 157):** D18-P78-A (universal prefix canon; 12 BC-side corrections) + D18-P78-B (gate #33 step 11: omission-note citations must resolve to raising PC/EC).
+
+**WRAP METADATA:** Date: 2026-07-15 | Cycle: v1.0.0-greenfield | Burst: 157 | Counter: 0/3 (Phase 1d; reset by pass 78 findings)
