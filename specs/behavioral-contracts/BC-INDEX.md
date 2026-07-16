@@ -4,7 +4,7 @@ level: L3
 version: "1.4"
 status: active
 producer: state-manager
-timestamp: 2026-07-19T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
@@ -164,7 +164,7 @@ traces_to: .factory/specs/prd.md
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
 | 1.4 | 2026-07-15 | OBS-P74-B: Carry-Forward Note #5 appended "(later grown to 95 via D20)" for parallelism with prd OQR-4 clarifier convention. | OBS-P74-B |
-| 1.3 | 2026-07-19 | F-P73-02: Carry-Forward Note #1 updated "All 86 BCs" → "All 95 BCs" (9 D20 BCs verified to carry `subsystem: SS-NN` frontmatter); version and timestamp bumped. | F-P73-02 |
+| 1.3 | 2026-07-15 | F-P73-02: Carry-Forward Note #1 updated "All 86 BCs" → "All 95 BCs" (9 D20 BCs verified to carry `subsystem: SS-NN` frontmatter); version and timestamp bumped. | F-P73-02 |
 | 1.2 | 2026-07-15 | D20 INTEGRATE sub-burst 2: 9 D20 BCs registered (86→95 total); header, Summary table, and section tables updated. | D20 sub-burst 2 |
 | 1.1 | 2026-07-14 | Phase 1 Step D SS-NN backfill: all BCs moved to `ss-NN/` subdirectories; subsystem IDs assigned from ARCH-INDEX; carry-forward notes updated. | Phase 1 Step D |
 | 1.0 | 2026-07-13 | Initial authoring. | Greenfield Phase 1a |

@@ -4,7 +4,7 @@ level: L3
 version: "1.1"
 status: active
 producer: product-owner
-timestamp: 2026-07-19T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -29,7 +29,7 @@ supplements:
   - prd-supplements/bc-authoring-plan.md
   - prd-supplements/test-vectors.md
 changelog:
-  - "v1.1 F-P73 (2026-07-19): F-P73-02: stale '86' references updated to 95 (§5b test-vector note, OQR-4 historical annotation); OBS-P73-A: §2.10 BC-2.10.003 summary corrected '(on_ceiling = halt)' → '(on_ceiling = halt | summarize)' for 3-way H1/PRD/BC-INDEX sync; OBS-P73-C: §3 public-trait list extended with 4 D20 first-class traits (SkillStore, MemoryWriteGuard, ToolCallDialect, ProviderFallbackPolicy)."
+  - "v1.1 F-P73 (2026-07-15): F-P73-02: stale '86' references updated to 95 (§5b test-vector note, OQR-4 historical annotation); OBS-P73-A: §2.10 BC-2.10.003 summary corrected '(on_ceiling = halt)' → '(on_ceiling = halt | summarize)' for 3-way H1/PRD/BC-INDEX sync; OBS-P73-C: §3 public-trait list extended with 4 D20 first-class traits (SkillStore, MemoryWriteGuard, ToolCallDialect, ProviderFallbackPolicy)."
   - "v1.0: Initial PRD core. BC files authored in sub-bursts 2–N per bc-authoring-plan.md."
   - "v1.0 Step-E: BC-2.08.009 added to SS.08 — Tool Schema Naming Stability (Snapshot Test Anchor). Authored from ADR-004 acceptance (architect feedback): snapshot test obligation for public tool types deriving schemars::JsonSchema. Batch 9 count: 8 → 9. Total BC count: 82 → 83."
   - "v1.0 P53-A: §9 NE summary corrected (F-P53-01). Previous rollup was 15→BC/1→BC+CI lint gate/1→CI-only, which undercounted CI-gate NEs by 2. Re-derived from table: 13→BC (incl. 3 VP-seed: NE-02/12/17); 3→BC+CI lint gate (NE-04, NE-07, NE-10); 1→CI lint gate only (NE-05). Partial-fix signature: rows NE-07/NE-10 had been upgraded to BC+CI lint gate in the table but rollup was never re-derived."

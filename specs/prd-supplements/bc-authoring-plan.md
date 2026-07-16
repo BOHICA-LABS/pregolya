@@ -1,11 +1,11 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.15"
+version: "2.16"
 status: active
 producer: product-owner
 total_standing_gates: 33
-timestamp: 2026-07-19T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -1179,6 +1179,14 @@ split by wave avoids exception).
       as a process deficiency at the same layer.
     Source: OBS-P65-1 [process-gap].
 
+    **Extended rules (added P75 — F-P75-01/OBS-P75-A, 3rd recurrence of future-dated-changelog class; prior: F-P64-02, F-P65-01):**
+
+    4. **TEMPORAL-NEIGHBOR SWEEP:** When any file is edited in a fix burst, ALL neighboring changelog rows in that file — not only the newly added row — must be date-audited in the same burst. Pass N's changelog dates may not exceed pass N+1's artifact dates, nor precede pass N-1's beyond same-day. A row whose date exceeds an adjacent pass's canonical date is a gate failure even if the row was authored in an earlier burst.
+
+    5. **FRONTMATTER-CURRENCY:** Each document's frontmatter `timestamp:` field must equal the date of the file's newest changelog entry. A frontmatter timestamp that exceeds the current burst date, or that does not match the newest changelog entry's date, is a self-contradiction.
+
+    **Machine enforcement deferral (OBS-P75-A):** Pre-commit hook and CI lint enforcement of rules 4 and 5 is DEFERRED to Phase 3 CI hardening. Deferral logged by state-manager as a STATE.md drift/deferral entry. Until machine enforcement, burst discipline governs — every PO burst that touches a changelog file must manually run the date-validity sub-check.
+
     **Revert rule:** If git history shows a BC was never substantively modified (only metadata
     touches such as `bc_id` addition and `status: draft → active`), the version MUST be
     reverted to `"1.0"` — a spurious batch-wide bump does not create a changelog obligation.
@@ -1589,8 +1597,9 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.16 | 2026-07-15 | F-P75-01/D18-P75-A: gate #28 date-validity sub-check extended with two new rules — (4) TEMPORAL-NEIGHBOR SWEEP: all neighboring changelog rows in any edited file must be date-audited in the same burst, not just the new row; pass N dates may not exceed pass N+1 artifact dates; (5) FRONTMATTER-CURRENCY: frontmatter `timestamp:` must equal the date of the file's newest changelog entry. Trigger: 3rd recurrence of future-dated-changelog class (F-P75-01/OBS-P75-A; prior: F-P64-02, F-P65-01). Machine enforcement (pre-commit hook / CI lint) DEFERRED to Phase 3 CI hardening — deferral logged by state-manager. `total_standing_gates` unchanged at 33 (widening of gate #28, not a new gate). Plan version 2.15 → 2.16. | F-P75-01, D18-P75-A |
 | 2.15 | 2026-07-15 | OBS-P74-A: gate #19 census command extended with five shared-type retired names (`CheckpointStore`, `RunConfig`, `BaseCheckpointSaver`, `AIMessage`-Rust-context, `Checkpointer`); `domain-spec/` added to exclusion list (Python→Rust mapping tables); AIMessage operator note added; coverage-closure note added recording that gate #15 previously left interface-definitions.md uncovered on this axis. Adjudication D18-P74-A. | OBS-P74-A |
-| 2.14 | 2026-07-19 | OBS-P73-B: gate #32 carrier #5 module count corrected "(20-module subset;" → "(22-module subset;" (D20 added ToolCallDialect + ProviderFallbackPolicy modules to the PO criticality registry, bringing the total from 20 to 22; the prose was not updated in the D20 burst). | OBS-P73-B |
+| 2.14 | 2026-07-15 | OBS-P73-B: gate #32 carrier #5 module count corrected "(20-module subset;" → "(22-module subset;" (D20 added ToolCallDialect + ProviderFallbackPolicy modules to the PO criticality registry, bringing the total from 20 to 22; the prose was not updated in the D20 burst). | OBS-P73-B |
 | 2.13 | 2026-07-15 | pass-72 fix burst — OBS fixes: (1) stale "86" swept → 95 in three locations (guideline #8, Batch-13 scope note, gate #13 census prose); (2) BC-2.10.003 Batch-6 table title aligned with H1/BC-INDEX: "(on_ceiling = halt)" → "(on_ceiling = halt \| summarize)"; (3) gate #32 expanded from three to five required carriers (+module-criticality arch registry +module-criticality PO registry; OBS-P72 process-gap addition — D20 ADR-012/ADR-013 modules not reconciled against PO registry in same burst). | OBS-P72, F-P72-08 |
 | 2.12 | 2026-07-15 | D20 TOUCH-UP burst — Residue 1: BudgetInfo row added to gate #31 census table (RESOLVED — defined inline in interface-definitions.md v2.21 §BudgetPolicy, BC-2.10.003 v1.2). Census verdict corrected: prior "25/28" had two errors — (a) table had 27 rows (BudgetInfo was the missing 28th row) and (b) numerator 25 was wrong arithmetic. True N/M after recount = 24/28 (23 RESOLVED + 1 EXTERNAL [Value, exempt] = 24 effectively resolved; 4 UNRESOLVED unchanged; total = 28). | D20 TOUCH-UP |
 | 2.11 | 2026-07-15 | D20 INTEGRATE sub-burst 2: 9 new BCs registered (86→95; P1 30→39; batches 13→15). Batch 14 (8 BCs, Wave 2): BC-2.04.008 (CAP-005), BC-2.08.013/014 (CAP-009), BC-2.09.006/007 (CAP-021), BC-2.15.004/005/006 (CAP-020). Batch 15 (1 BC, Wave 1): BC-2.13.007 (CAP-015). Subsystem→CAP mapping: SS.09 gains CAP-021; SS.15 gains CAP-020. DI coverage table: DI-002/006/008/009/010/012/014 all gain new enforcing BCs; zero orphan invariants (14/14 DIs covered). Gate #22: E-MCP-005 added as 6th intentional RetryHint divergence (TRANSPORT/Later→Never; BC-2.09.006 anchored). Gate #31 census: +7 types (ToolCall, SkillDescriptor, MemoryWriteRequest, WriteGuardDecision, ProviderCredential, CredentialRefreshConfig); census 19/21 → 25/28 resolved (4 UNRESOLVED: ChatConfig, CheckpointConfig, ProviderCredential, CredentialRefreshConfig). | D20 sub-burst 2 |

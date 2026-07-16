@@ -449,3 +449,19 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **PENDING HUMAN ACTIONS (burst 150):** (1) direnv allow . [B1]; (2) REGENERATE + run publish-all.sh for ALL 18 crates — R6 time-sensitive; (3) langgraph crate 0.2.5 competitor watch (R4 reframed).
 
 **WRAP METADATA:** Date: 2026-07-19 | Cycle: v1.0.0-greenfield | Burst: 150 | Counter: 0/3 (Phase 1d; RESET by D20 spec expansion — new baseline 95 BCs)
+
+---
+
+## Archived Checkpoint — Burst 153 (Pass 74 complete, displaced by burst 154)
+
+**RESUME IN ONE BREATH (burst 153):** "ferrochain Phase 1 spec crystallization, step 1d IN PROGRESS post-D20: 74 passes / 76 fix bursts, counter 0/3 (strict-zero D14; 41 standing gates [NOTE: stale — authoritative count is 33 per bc-authoring-plan frontmatter]; baseline 95 BCs 48/39/8, 21 CAPs 11/7/3, universe 35 = 9/13/11/2 [arch] + 22 = 6/9/5/2 [PO registry], census 85 = 43+16+26, 13 ADRs, 6 RetryHint divergences, gate #31 24/28). Pass 74 drained 1 HIGH (D20 retired-spelling CheckpointStore→CheckpointSaver ×2 files + gate #19 pattern extended D18-P74-A). NEXT ACTION: dispatch adversary pass 75 — fresh context, sibling-check pass-74 fixes (BC-2.04.008 v1.2 [CheckpointSaver::fts_search; changelog newest-at-top]; interface-definitions v2.23 [line ~542 CheckpointSaver::fts_search; E-CHKPT-009 note unchanged]; bc-authoring-plan v2.15 [gate #19 pattern includes 5 retired shared-type names + domain-spec/ exclusion + AIMessage context note + coverage-closure note; still 41-gate registry]; BC-INDEX v1.4 [note #5 forward pointer '(later grown to 95 via D20)']; run new gate #19 census independently expecting zero live hits) + census rotation ≥6 gates + free probes; CLEAN advances 1/3; ANY finding resets; loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+
+**Archived HEADS (burst 153):** factory-artifacts: burst 153 (run `git -C .factory log -1 --format='%h %s'`); main: d018d3f (=develop, pushed BOHICA-LABS/ferrochain; CI green; branch protection on). No worktrees. No PRs.
+
+**Archived WORKSTREAM (burst 153):** Single — Phase 1d convergence loop. Baseline: 95 BCs (48/39/8), 21 CAPs (11/7/3), universe 35 (9/13/11/2), census 85 = 43+16+26; 13 ADRs (ADR-013 mcp::server placement). bc-authoring-plan v2.15 (41 gates [stale], Wave-0). 74 pass reports in cycles/v1.0.0-greenfield/adversarial-reviews/.
+
+**Archived DECISION DELTA (burst 153):** D18-P74-A — gate #19 census command extended with retired shared-type names (CheckpointStore, RunConfig, BaseCheckpointSaver, AIMessage [Rust contexts], Checkpointer); gate #19 whole-tree traversal now covers interface-definitions.md on the retired-spelling axis. Prior: D18-P72-A/B/C/D (burst 150).
+
+**POST-P74 CANONS (burst 153):** BC-2.04.008 v1.2 (CheckpointSaver::fts_search); interface-definitions v2.23 (line ~542 CheckpointSaver); bc-authoring-plan v2.15 (gate #19 extended pattern: 5 retired shared-type names); BC-INDEX v1.4 (note #5 forward pointer). All prior canons (test-vectors v1.4, prd v1.1, D18-P72-A/B/C/D) PRESERVED.
+
+**WRAP METADATA:** Date: 2026-07-15 | Cycle: v1.0.0-greenfield | Burst: 153 | Counter: 0/3 (Phase 1d; post-D20 expansion — new baseline 95 BCs)
