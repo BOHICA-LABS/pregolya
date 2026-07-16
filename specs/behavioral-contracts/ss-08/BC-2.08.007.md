@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.007
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.2 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-PROV-002 message-prefix correction. PC1: added 'ProviderTimeout:' prefix per universal <ErrorName>: <detail> convention (D18-P78-A adjudication; BC lacked prefix). Message was 'stream chunk timeout after <duration>'; corrected to 'ProviderTimeout: stream chunk timeout after <duration>'. Taxonomy E-PROV-002 corrected simultaneously: dropped '<provider>' parameter and changed '<ms>ms' to '<duration>' (BC wins on content — no provider name in BC message; duration placeholder more precise than ms-specific)."
   - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-003, EC-004, TV-001, TV-003, TV-005 each had category-only FerrochainError constructions with no code field. Added code: E-PROV-002 (ProviderTimeout) to TIMEOUT constructions and code: E-PROV-003 (StreamInterrupted) to TRANSPORT constructions per error-taxonomy.md BC anchors."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
@@ -55,7 +56,7 @@ results.
 
 1. **Per-chunk stall → `Err(Timeout)`:** When an SSE stream stalls (no bytes received)
    for longer than the configured per-chunk timeout, the streaming call terminates and
-   returns `Err(FerrochainError { category: TIMEOUT, message: "stream chunk timeout
+   returns `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002, message: "ProviderTimeout: stream chunk timeout
    after <duration>", … })`. No partial `AiMessage` is returned as `Ok`.
 2. **TCP reset / connection drop → `Err(Transport)`:** When the underlying TCP
    connection is reset mid-stream, the streaming call returns `Err(FerrochainError

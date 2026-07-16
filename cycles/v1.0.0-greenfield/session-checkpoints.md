@@ -465,3 +465,16 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **POST-P74 CANONS (burst 153):** BC-2.04.008 v1.2 (CheckpointSaver::fts_search); interface-definitions v2.23 (line ~542 CheckpointSaver); bc-authoring-plan v2.15 (gate #19 extended pattern: 5 retired shared-type names); BC-INDEX v1.4 (note #5 forward pointer). All prior canons (test-vectors v1.4, prd v1.1, D18-P72-A/B/C/D) PRESERVED.
 
 **WRAP METADATA:** Date: 2026-07-15 | Cycle: v1.0.0-greenfield | Burst: 153 | Counter: 0/3 (Phase 1d; post-D20 expansion — new baseline 95 BCs)
+
+---
+
+## Archived Checkpoint — Burst 156 (2026-07-15)
+
+### RESUME IN ONE BREATH (archived from STATE.md burst 156)
+"ferrochain Phase 1 spec crystallization, step 1d IN PROGRESS post-D20: 77 passes / 78 fix bursts, counter 0/3 (RESET by F-P77-01 taxonomy-vs-BC semantic divergence; strict-zero D14; 33 standing gates [bc-authoring-plan v2.17 frontmatter authoritative]; baseline 95 BCs 48/39/8, 21 CAPs 11/7/3, universe 35 = 9/13/11/2 [arch] + 22 = 6/9/5/2 [PO registry], census 85 = 43+16+26, 13 ADRs, 6 RetryHint divergences, gate #31 24/28). Pass 77 NOT CLEAN (F-P77-01 HIGH: E-SBXD-006 regex-vs-wildcard; all 4 OBS fixed or declined). NEXT ACTION: dispatch adversary pass 78."
+
+**POST-P77 CANONS (burst 156):** taxonomy v1.14 E-SBXD-006 wildcard model; ADR-012 v1.2 INV-1; ADR-013 v1.1 BC-shapes authoritative; BC-2.08.013 v1.1 trait implementations; BC-2.15.006 v1.1; gate #33 semantic-agreement axis (D18-P77-B). bc-authoring-plan v2.17.
+
+**DECISION DELTA (burst 156):** D18-P77-A (ADR-012 INV-1 rename, propagated BC-2.15.006 + capabilities-p1-p2) + D18-P77-B (gate #33 semantic-agreement sub-check steps 7–10).
+
+**WRAP METADATA:** Date: 2026-07-15 | Cycle: v1.0.0-greenfield | Burst: 156 | Counter: 0/3 (Phase 1d; RESET by F-P77-01)

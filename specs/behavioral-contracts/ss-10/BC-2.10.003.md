@@ -15,9 +15,10 @@ phase: 1b
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
-  - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: BudgetPolicy::on_ceiling anchor moved from ferrochain-graph/src/budget/policy.rs to ferrochain-core/src/budget.rs (OnCeiling type is a policy definition, per ADR-009 Option 3). Module field resolved: ferrochain-core (BudgetPolicy + OnCeiling types) / ferrochain-graph (halt path in pregel loop)."
-  - "1.2 (D20 sub-burst 1, 2026-07-15): Add OnCeiling::Summarize variant behavior (PCs 4+8, EC-005, TV-006) and remaining-budget exposure via RunContext.budget_info (PC5, TV-007) per D20 orchestrator adjudication items (2) stop-and-summarize and (2) remaining-budget exposure."
+  - "1.4 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-BUDGET-001 message-prefix correction. PC5: added 'BudgetCeilingReached:' prefix to message string (was 'run halted: budget ceiling reached'; now 'BudgetCeilingReached: run halted: budget ceiling reached'). Taxonomy E-BUDGET-001 corrected from elaborate 'run <run_id> halted; token budget of <limit> exceeded at <actual> tokens' to 'BudgetCeilingReached: run halted: budget ceiling reached' (BC wins on content)."
   - "1.3 (pass-72 fix, 2026-07-15): F-P72-05 — VP Anchors section missing VP-BUDGET-05 and VP-BUDGET-06 (both added in v1.2 Verification Properties table but not propagated to VP Anchors). Added VP-BUDGET-05 and VP-BUDGET-06 to VP Anchors section."
+  - "1.2 (D20 sub-burst 1, 2026-07-15): Add OnCeiling::Summarize variant behavior (PCs 4+8, EC-005, TV-006) and remaining-budget exposure via RunContext.budget_info (PC5, TV-007) per D20 orchestrator adjudication items (2) stop-and-summarize and (2) remaining-budget exposure."
+  - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: BudgetPolicy::on_ceiling anchor moved from ferrochain-graph/src/budget/policy.rs to ferrochain-core/src/budget.rs (OnCeiling type is a policy definition, per ADR-009 Option 3). Module field resolved: ferrochain-core (BudgetPolicy + OnCeiling types) / ferrochain-graph (halt path in pregel loop)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -68,7 +69,7 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
    run transitions to `failed` (BC-2.10.002).
 5. The run transitions to status `failed` with error:
    `FerrochainError { component: BUDGET, category: POLICY, code: "E-BUDGET-001",
-   message: "run halted: budget ceiling reached", retry_hint: Never }`.
+   message: "BudgetCeilingReached: run halted: budget ceiling reached", retry_hint: Never }`.
 6. The caller (`invoke` or `stream`) receives `Err(E-BUDGET-001 BudgetCeilingReached)` with
    the `current_usage: TokenUsage` and `policy_name` fields in the error context.
 7. The checkpoint at the last fully-completed super-step is preserved with `status = failed`.

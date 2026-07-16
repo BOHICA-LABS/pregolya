@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.003
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,11 +13,12 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 changelog:
-  - "1.0 (initial): base BC authored."
-  - "1.1 (ADV-P1D-PASS-28): OBS-P28-3 — minted E-PROV-007 (StructuredOutputRefused, POLICY) for the OpenAI structured-output refusal path; added code literal to 4 construction sites (PC5, Invariant, EC-001, TV-004). Every FerrochainError now carries a machine-readable code per BC-2.14.001 posture."
+  - "1.3 (2026-07-15, F-P78-SWEEP/D18-P78-A): Two message-prefix corrections. (1) E-PROV-007 EC-001: added 'StructuredOutputRefused:' prefix; renamed placeholder '<refusal text>' to '<refusal_message>' for consistency with updated taxonomy. Taxonomy E-PROV-007 detail corrected from 'model refused to generate structured output — refusal_message: <message>' to '<refusal_message>' (BC wins on content). (2) E-PROV-005 EC-002: added 'StructuredOutputParseError:' prefix. Taxonomy E-PROV-005 detail corrected from 'provider response did not match expected JSON schema: <path> — <reason>' to '<reason>' (BC wins; elaborate schema-path wrapper was not in BC message)."
   - "1.2 (ADV-P1D-PASS-29): F-P29-01 — EC-002 codeless FerrochainError fixed: added code: \"E-PROV-005\" to the deserialization-failure construction. Per BC-2.14.001 every-error-has-a-code invariant."
+  - "1.1 (ADV-P1D-PASS-28): OBS-P28-3 — minted E-PROV-007 (StructuredOutputRefused, POLICY) for the OpenAI structured-output refusal path; added code literal to 4 construction sites (PC5, Invariant, EC-001, TV-004). Every FerrochainError now carries a machine-readable code per BC-2.14.001 posture."
+  - "1.0 (initial): base BC authored."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -90,13 +91,13 @@ correctly (not forced to present or silently dropped).
 
 ### EC-001: Refusal in OpenAI native structured output
 **Scenario:** The model refuses to answer (safety filter) when `method = "json_schema"`.
-**Expected behavior:** `Err(FerrochainError { category: POLICY, code: "E-PROV-007", message: "<refusal text>" })`.
+**Expected behavior:** `Err(FerrochainError { category: POLICY, code: "E-PROV-007", message: "StructuredOutputRefused: <refusal_message>" })`.
 The caller can distinguish this from a deserialization failure (E-PROV-005) by checking `code`.
 
 ### EC-002: Schema has required field the model omits
 **Scenario:** The schema requires `{ "answer": string }` but the model returns `{}`.
 **Expected behavior:** Deserialization fails cleanly with `Err(FerrochainError
-{ category: VAL, code: "E-PROV-005", message: "missing required field 'answer'" })`. No panic.
+{ category: VAL, code: "E-PROV-005", message: "StructuredOutputParseError: missing required field 'answer'" })`. No panic.
 
 ### EC-003: Ollama `format` with full JSON schema vs `"json"` string
 **Scenario:** `with_structured_output` is called on `ChatOllama` with a complex nested

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,8 +15,9 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
-  - "1.1 (ADV-P1D-PASS-49): F-P49-02 — added `recursion_limit` layer disambiguation invariant. Same config key serves two distinct enforcement layers: this BC (nested Runnable call depth, INTERNAL error) vs BC-2.03.001 (BSP super-step ceiling, E-GRAPH-017 POLICY). Cross-reference added to prevent implementer confusion about which halt applies at each layer."
+  - "1.3 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-CORE-006 message-prefix correction at all three BC sites. (1) PC5: was 'recursion limit exceeded' (no prefix, no depth); corrected to 'RecursionLimitExceeded: recursion limit exceeded at depth <depth>' (adds universal <ErrorName>: prefix and harmonizes with EC-004/invariant which already specified depth). (2) Invariant §layer-disambiguation: added 'RecursionLimitExceeded:' prefix to message string. (3) EC-004: added 'RecursionLimitExceeded:' prefix. All three sites now produce the canonical template 'RecursionLimitExceeded: recursion limit exceeded at depth <depth>'. Corresponding taxonomy E-CORE-006 detail corrected from 'nested invoke/stream call depth <depth> exceeded recursion_limit <limit>' to 'recursion limit exceeded at depth <depth>' (BC wins on content). interface-definitions.md dual-layer table row for Runnable-layer also updated to add prefix."
   - "1.2 (ADV-P1D-PASS-56): F-P56-01 — added code: E-CORE-006 to PC5, invariant §layer-disambiguation, EC-004, and TV-004. The Runnable-layer recursion halt was codeless while its graph-engine counterpart (E-GRAPH-017) carried a code. E-CORE-006 (RecursionLimitExceeded, INTERNAL, broken) minted in error-taxonomy.md v1.7."
+  - "1.1 (ADV-P1D-PASS-49): F-P49-02 — added `recursion_limit` layer disambiguation invariant. Same config key serves two distinct enforcement layers: this BC (nested Runnable call depth, INTERNAL error) vs BC-2.03.001 (BSP super-step ceiling, E-GRAPH-017 POLICY). Cross-reference added to prevent implementer confusion about which halt applies at each layer."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -59,7 +60,7 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
 4. `runnable.batch_as_completed(inputs, &config)` yields `(usize, Result<Output, _>)` tuples
    out of insertion order but with the index from the original input slice.
 5. `recursion_limit` in `RunnableConfig` defaults to 25. Exceeding it in nested Runnable calls
-   returns `Err(FerrochainError { category: INTERNAL, code: E-CORE-006, message: "recursion limit exceeded" })`.
+   returns `Err(FerrochainError { category: INTERNAL, code: E-CORE-006, message: "RecursionLimitExceeded: recursion limit exceeded at depth <depth>" })`.
 6. A child run inherits `tags` and `metadata` (accumulated) and `callbacks` from the parent
    `RunnableConfig`; `run_name` and `run_id` are consumed by the immediate run and not inherited.
 
@@ -75,7 +76,7 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
   is read by TWO independent enforcement layers that share the same `RunnableConfig` key:
   (1) **This BC (Runnable-layer):** counts nested `invoke`/`stream` call depth across chained
   Runnables; exceeding it returns `Err(FerrochainError { category: INTERNAL, code: E-CORE-006,
-  message: "recursion limit exceeded at depth N" })` — no run-level halt, just a Runnable call error.
+  message: "RecursionLimitExceeded: recursion limit exceeded at depth N" })` — no run-level halt, just a Runnable call error.
   (2) **BC-2.03.001 PC5 (graph-engine-layer):** counts BSP super-steps per invocation segment;
   exceeding it transitions the entire run to `failed` with `Err(E-GRAPH-017
   GraphRecursionLimitExceeded)`. Both layers enforce `recursion_limit = 25` by default; the
@@ -104,7 +105,7 @@ then terminates. No buffering delay beyond the `invoke` call itself.
 **Scenario:** A `RunnableLambda` wraps another `RunnableLambda` which wraps another, reaching
 depth 26 (recursion_limit=25).
 **Expected behavior:** The 26th nesting depth returns `Err(FerrochainError { category: INTERNAL,
-code: E-CORE-006, message: "recursion limit exceeded at depth 26" })`. No stack overflow occurs.
+code: E-CORE-006, message: "RecursionLimitExceeded: recursion limit exceeded at depth 26" })`. No stack overflow occurs.
 
 ### EC-005: batch with empty input slice
 **Scenario:** `runnable.batch(vec![], &config).await`

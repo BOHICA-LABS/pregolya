@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.003
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
@@ -21,8 +21,9 @@ capability: CAP-005
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 changelog:
-  - "1.0 (initial): base BC authored (greenfield burst 72)."
+  - "1.2 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-CHKPT-002 message-prefix correction. EC-003: added 'MonotonicClockRegression:' prefix to message string (was 'checkpoint_id must be monotonic: random UUID rejected'; now 'MonotonicClockRegression: checkpoint_id must be monotonic: random UUID rejected'). This is a D18-P78-A BC correction (BC lacked universal <ErrorName>: prefix). Taxonomy message kept as-is (already 'MonotonicClockRegression: <reason>' general-case format; BC EC-003 is a specific instantiation)."
   - "1.1 (ADV-P1D-PASS-6): E-category canon — EC-003 and test vector error category corrected from `CheckpointError` to `INTERNAL, code: E-CHKPT-002` (F-P6-03, status/category canon sweep)."
+  - "1.0 (initial): base BC authored (greenfield burst 72)."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -79,7 +80,7 @@ NTP adjustment, or under clock skew in distributed deployments must have unambig
 |----|-------------|-------------------|
 | EC-001 | Two concurrent forks from the same parent checkpoint `P` | Both new checkpoints receive IDs > P; sibling ordering between the two forks is deterministic (e.g., first-writer wins the next counter value); both are valid branch heads |
 | EC-002 | System wall clock rolls backward (NTP adjustment) during an active run | Logical counter is unaffected; next checkpoint_id is still monotonically greater than the previous one; no ordering anomaly |
-| EC-003 | A caller attempts to construct a checkpoint with a random UUID (`Uuid::new_v4()`) as the ID | Compile-time type mismatch or runtime `Err(FerrochainError { category: INTERNAL, code: E-CHKPT-002, message: "checkpoint_id must be monotonic: random UUID rejected" })` |
+| EC-003 | A caller attempts to construct a checkpoint with a random UUID (`Uuid::new_v4()`) as the ID | Compile-time type mismatch or runtime `Err(FerrochainError { category: INTERNAL, code: E-CHKPT-002, message: "MonotonicClockRegression: checkpoint_id must be monotonic: random UUID rejected" })` |
 | EC-004 | Checkpoint storage is queried with `ORDER BY created_at DESC` | This is a lint-detected anti-pattern; the canonical query MUST use `ORDER BY checkpoint_id DESC`; any storage backend that only exposes wall-clock ordering is non-conformant |
 
 ## Canonical Test Vectors

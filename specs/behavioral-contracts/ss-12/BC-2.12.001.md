@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.001
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ wave: 1
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -23,8 +23,9 @@ inputs:
   - .factory/semport/platform/behavioral-intent.md
 input-hash: "992d1136d6ecd5fd6aa833f0ece030db3e548c8fdd727917f8474f6c21522745"
 changelog:
-  - "1.1 (ADV-P1D-PASS-31): F-P31-01 PC17 history endpoint — declare limit default 10, max 100, values > 100 clamped to 100, offset default 0 (pagination coherence canon; clamp out-of-range semantics)."
+  - "1.3 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-SERVER-007 message-prefix correction at two BC sites. (1) PC3 (Create Thread): added 'ThreadAlreadyExists:' prefix and lowercased 'Thread' to 'thread' in message string (was 'Thread'; now 'thread'). (2) EC-001: same corrections applied. Taxonomy already carried the prefix and lowercase; BC was the lagging artifact. Both sites now produce the canonical form 'ThreadAlreadyExists: thread <id> already exists'."
   - "1.2 (ADV-P1D-PASS-34): F-P34-01 PC8 — add clamp semantics (values > 100 silently clamped to 100) and offset default 0 (partial-fix propagation gap from pass-31). PC9 — declare created_at DESC ordering (canonical; F-P31-01). interface-definitions.md §Canonical Pagination Convention cites BC-2.12.001 PC8 as threads-list clamp+ordering anchor; PC8 now matches."
+  - "1.1 (ADV-P1D-PASS-31): F-P31-01 PC17 history endpoint — declare limit default 10, max 100, values > 100 clamped to 100, offset default 0 (pagination coherence canon; clamp out-of-range semantics)."
 ---
 
 # BC-2.12.001: Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History)
@@ -51,7 +52,7 @@ ferrochain-checkpoint subsystem. Thread-not-found returns `E-SERVER-003`.
 1. Accepts body `{ thread_id?: Uuid, metadata?: Map<String, Value> }`.
 2. `thread_id` is caller-supplied or server-generated (UUID v4 if absent).
 3. If `thread_id` already exists and `if_exists = "raise"` (default): returns HTTP 409
-   with `{ code: "E-SERVER-007", message: "Thread '<id>' already exists" }`.
+   with `{ code: "E-SERVER-007", message: "ThreadAlreadyExists: thread '<id>' already exists" }`.
 4. If `thread_id` already exists and `if_exists = "do_nothing"`: returns the existing
    Thread record (HTTP 200), no modification.
 5. Returns HTTP 201 with the created `Thread { thread_id, metadata, created_at, updated_at, status }`.
@@ -99,7 +100,7 @@ ferrochain-checkpoint subsystem. Thread-not-found returns `E-SERVER-003`.
 ### EC-001: Caller-supplied thread_id conflicts with existing (if_exists=raise)
 **Scenario:** `POST /threads` with `{ thread_id: "abc", if_exists: "raise" }`;
 thread "abc" already exists.
-**Expected behavior:** HTTP 409 `{ code: "E-SERVER-007", message: "Thread 'abc' already exists" }`.
+**Expected behavior:** HTTP 409 `{ code: "E-SERVER-007", message: "ThreadAlreadyExists: thread 'abc' already exists" }`.
 No data modified.
 
 ### EC-002: Metadata filter with no matches

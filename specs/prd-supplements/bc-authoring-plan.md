@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.17"
+version: "2.18"
 status: active
 producer: product-owner
 total_standing_gates: 33
@@ -1609,6 +1609,17 @@ split by wave avoids exception).
        same triggering predicate (e.g., "contains `*` or `?`") as the BC's EC/TV body.
     10. On any semantic divergence: **the BC wins** — the taxonomy row is corrected to match the BC.
         The BC body is never modified to match a stale taxonomy row.
+    11. **Omission-note citation verification (D18-P78-B, F-P78-02/03):** For every named
+        individual omission note in `interface-definitions.md` that cites a BC with a specific
+        PC-N or EC-N pointer (e.g., "BC-2.08.013 PC4/EC-002"), verify that each cited PC/EC is
+        a **raising path** for the code — i.e., the postcondition or edge case actually
+        constructs `Err(E-xxx-NNN)`. Citing a success-path PC (one that returns `Ok(...)` or
+        proceeds without error) is a violation. Census command: for each omission-note anchor
+        "BC-S.SS.NNN PCn/ECn", open the BC and confirm that every cited PC and EC explicitly
+        raises the code in its Expected Behavior. Success-path citations must be replaced with
+        the correct raising PC/EC. Motivating instances: F-P78-02 (E-PROV-010 cited PC4 = ordered
+        chain semantics / EC-002 = credential-refresh success; correct = PC5 / EC-004) and
+        F-P78-03 (E-PROV-009 cited PC4 = NativeAnthropic success-parse; correct = PC8/PC9/EC-002).
 
     **Motivating instance (F-P77-01, ADV-P1D-PASS-77):** E-SBXD-006 taxonomy row described a
     REGEX model ("is not a valid regex pattern — <reason>"; "fails regex compilation") while
@@ -1628,6 +1639,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.18 | 2026-07-15 | D18-P78-B (F-P78-02/03 process-gap): gate #33 step 11 added — every omission-note BC-anchor citation in interface-definitions.md must resolve to a raising PC/EC (success-path citations = violation). Motivating instances: F-P78-02 (E-PROV-010 cited PC4/EC-002 which are success paths; correct = PC5/EC-004) and F-P78-03 (E-PROV-009 cited PC4 which is a success parse; correct = PC8/PC9/EC-002). `total_standing_gates` unchanged at 33 (step-11 extension of gate #33, not a new gate). | D18-P78-B, F-P78-02, F-P78-03 |
 | 2.17 | 2026-07-15 | D18-P77-B (F-P77-01 process-gap): gate #33 extended with SEMANTIC-AGREEMENT sub-check (steps 7–10). For every live taxonomy code, the row's Message Format template and raise-condition annotation must semantically agree with the anchor BC's authoritative `message:` text and EC/TV trigger conditions; on divergence the BC wins (taxonomy is corrected). Motivating instance: E-SBXD-006 regex-vs-wildcard divergence on DI-010 credential boundary survived both gates #20 and #33 (both are name/presence-only; neither verified predicate agreement). `total_standing_gates` unchanged at 33 (sub-check extension of gate #33, not a new gate). | D18-P77-B, F-P77-01 |
 | 2.16 | 2026-07-15 | F-P75-01/D18-P75-A: gate #28 date-validity sub-check extended with two new rules — (4) TEMPORAL-NEIGHBOR SWEEP: all neighboring changelog rows in any edited file must be date-audited in the same burst, not just the new row; pass N dates may not exceed pass N+1 artifact dates; (5) FRONTMATTER-CURRENCY: frontmatter `timestamp:` must equal the date of the file's newest changelog entry. Trigger: 3rd recurrence of future-dated-changelog class (F-P75-01/OBS-P75-A; prior: F-P64-02, F-P65-01). Machine enforcement (pre-commit hook / CI lint) DEFERRED to Phase 3 CI hardening — deferral logged by state-manager. `total_standing_gates` unchanged at 33 (widening of gate #28, not a new gate). Plan version 2.15 → 2.16. | F-P75-01, D18-P75-A |
 | 2.15 | 2026-07-15 | OBS-P74-A: gate #19 census command extended with five shared-type retired names (`CheckpointStore`, `RunConfig`, `BaseCheckpointSaver`, `AIMessage`-Rust-context, `Checkpointer`); `domain-spec/` added to exclusion list (Python→Rust mapping tables); AIMessage operator note added; coverage-closure note added recording that gate #15 previously left interface-definitions.md uncovered on this axis. Adjudication D18-P74-A. | OBS-P74-A |
