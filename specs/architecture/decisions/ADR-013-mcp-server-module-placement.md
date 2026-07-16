@@ -7,7 +7,7 @@ title: "MCP Server Module Placement in ferrochain-mcp (CAP-021)"
 status: accepted
 producer: architect
 timestamp: 2026-07-15T00:00:00Z
-version: "1.1"
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D19, D20]
@@ -32,10 +32,10 @@ Two options exist:
 2. A new module in the existing `ferrochain-mcp` crate (`mcp::server`)
 
 Behavioral contracts BC-2.09.006 and BC-2.09.007 define the server-side contracts:
-- BC-2.09.006: server-side tool exposure — accepting inbound tool-call requests and
-  dispatching to registered ferrochain tools
-- BC-2.09.007: response serialization — MCP-compliant serialization of tool results
-  returned to external clients
+- BC-2.09.006: tools/list advertisement and discovery — exposing registered tool
+  definitions to external MCP clients (discovery only; does not dispatch requests)
+- BC-2.09.007: tools/call invocation — accepting inbound tool-call requests,
+  dispatching to registered ferrochain tools, and MCP-compliant serialization of results
 
 Supported transports (from BC-2.09.006/007): stdio (standard MCP transport) and SSE
 (Server-Sent Events, consistent with ferrochain-server's streaming model).
@@ -81,7 +81,7 @@ within the existing `ferrochain-mcp` crate; no new crate is introduced.
 
 ### Module Interface
 
-> **Behavioral authority note:** BC-2.09.006 is the authoritative signature carrier for
+> **Behavioral authority note:** BC-2.09.006 and BC-2.09.007 are the authoritative signature carriers for
 > `McpServer`. Interface definitions in BCs and `interface-definitions.md` take precedence
 > over ADR sketches per the behavioral authority rule. The sketch below is reconciled to
 > BC-2.09.006's canonical shapes and is kept for architectural context only.
@@ -95,7 +95,7 @@ impl McpServer {
     /// Accepts inbound tool-call requests via stdio or SSE transport.
     /// Configuration (transport selection, bind address, etc.) is supplied via
     /// McpServerConfig; returns a McpServerHandle for lifecycle management.
-    /// Canonical signature per BC-2.09.006.
+    /// Canonical signature per BC-2.09.006/007.
     pub async fn start(
         config: McpServerConfig,
     ) -> Result<McpServerHandle, FerrochainError>;
@@ -142,15 +142,15 @@ Module universe 34 → **35**:
 
 | BC | Contract |
 |----|---------|
-| BC-2.09.006 | Server-side tool exposure: accept and dispatch inbound tool-call requests |
-| BC-2.09.007 | Response serialization: MCP-compliant serialization of tool results |
+| BC-2.09.006 | Tool advertisement (tools/list): expose registered tool definitions to external MCP clients |
+| BC-2.09.007 | Tool invocation (tools/call): accept and dispatch inbound tool-call requests; MCP-compliant serialization of results |
 
 ### Attribution Note (F-P72-04)
 
 Prior attribution of `mcp::server` to ADR-012 in module-decomposition.md (v1.6) and
 BC-2.09.006 was incorrect — ADR-012 contains no MCP server content. The correct
 authority is this ADR (ADR-013). Attribution in module-decomposition.md is corrected
-in v1.7. BC-2.09.006 attribution correction is deferred to PO (spec-owner of BC files).
+in v1.7. BC-2.09.006 attribution correction is deferred to PO (spec-owner of BC files). [completed — BC-2.09.006 v1.1]
 
 ---
 
@@ -158,5 +158,6 @@ in v1.7. BC-2.09.006 attribution correction is deferred to PO (spec-owner of BC 
 
 | Version | Date | Author | References | Summary |
 |---------|------|--------|------------|---------|
+| 1.2 | 2026-07-15 | architect | F-P83-03, OBS-P83-B | Correct BC-2.09.006/007 responsibility swap: BC-2.09.006 = tools/list advertisement (discovery only, exposes tool definitions); BC-2.09.007 = tools/call invocation (accept + dispatch + serialize). Fix Context description and BC Anchors table. Annotate Attribution Note: BC-2.09.006 v1.1 completed. Widen behavioral authority note to name both BC-2.09.006 and BC-2.09.007 as authoritative signature carriers; update inline comment to BC-2.09.006/007. |
 | 1.1 | 2026-07-15 | architect | OBS-P77-A, BC-2.09.006 | Reconcile Module Interface sketch to BC-2.09.006 canonical shapes: rename McpTransport→McpServerTransport; serve(&self, transport, registry)→start(config: McpServerConfig); return type ()→McpServerHandle; Sse { port, path }→Sse { bind_addr: SocketAddr }. Add behavioral authority note (BC wins over ADR sketch). |
 | 1.0 | 2026-07-15 | architect | D19, D20, CAP-021, F-P72-04 | Initial decision: mcp::server module in ferrochain-mcp (not a new crate); MEDIUM tier; stdio+SSE transports; universe 34→35; corrects false ADR-012 attribution in module-decomposition.md. |

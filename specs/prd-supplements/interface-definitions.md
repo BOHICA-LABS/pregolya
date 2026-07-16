@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.26"
+version: "2.27"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 phase: 1d
 changelog:
+  - "2.27 (2026-07-15, F-P83-01/F-P83-02): Mandatory sibling sweep of all BC anchor lines — two mis-citations corrected. F-P83-01 (ToolCallDialect §ProviderFallbackPolicy, line ~314): old citation 'BC-2.08.013 PC1–PC4 (object-safe trait contract, built-in impls, E-PROV-009 on parse failure)' was wrong on two counts — PC1–PC4 cover only the NativeOpenAiJson and NativeAnthropic dialect round-trips; object-safety lives at PC10; E-PROV-009 is raised at PC8 (HermesChatMlXml malformed JSON) and PC9 (any dialect serialize/deserialize error). Fixed to 'BC-2.08.013 PC1–PC9 (built-in dialect round-trips; PC8/PC9 = E-PROV-009 on parse failure) + PC10 (object-safe trait contract)'. F-P83-02 (ProviderFallbackPolicy, line ~336): old citation 'BC-2.08.014 PC1–PC4 (ordered fallback semantics, E-PROV-010 on chain exhaustion)' incorrectly attributed E-PROV-010 to the PC1–PC4 block; PC4 = ordered chain semantics (no error raised); E-PROV-010 is raised at PC5 (chain exhausted postcondition). Fixed to 'BC-2.08.014 PC1–PC4 (ordered fallback semantics) + PC5 (E-PROV-010 on chain exhaustion)'. Sweep covered all 13 BC anchor locations in the file; no other mis-citations found. Disposition census unchanged: 43 HTTP + 16 individual + 26 blanket = 85."
   - "2.26 (2026-07-15, F-P82-02): E-CHKPT-008 omission note raise-timing corrected. Previous wording stated both sub-cases were raised 'at construction time', which was wrong for the malformed-FTS5-query case. Fixed: (1) `FtsSearchConfig.limit = 0` raised at FtsSearchConfig construction time (BC-2.04.008 PC6/EC-004); (2) malformed FTS5 query string raised at fts_search call time via SQLite FTS5 parse error propagation (BC-2.04.008 EC-002). Clarified that `query` is a standalone first parameter to fts_search, NOT a field of FtsSearchConfig. BC citations split to match each sub-case. Disposition census unchanged: 43 HTTP + 16 individual + 26 blanket = 85."
   - "2.25 (F-P78-SWEEP, 2026-07-15): Gate #33 step-11 follow-through — E-CORE-006 dual-layer table Runnable-layer row corrected. Message was 'recursion limit exceeded at depth N'; corrected to 'RecursionLimitExceeded: recursion limit exceeded at depth <depth>'. (1) Added 'RecursionLimitExceeded:' prefix per D18-P78-A universal <ErrorName>: convention. (2) Changed placeholder N → <depth> for consistency with BC-2.01.003 PC5 authoritative template (updated in same burst). This is the only message string in the dual-layer table; no other content changed. Disposition census unchanged: 43 HTTP + 16 individual + 26 blanket = 85."
   - "2.24 (F-P78-02/F-P78-03, 2026-07-15): Fix two omission-note BC-anchor citations that pointed at success-path PCs/ECs (OBS-P78-E gate #33 step-11 violation class). F-P78-02 — E-PROV-010 note corrected: 'BC-2.08.014 PC4/EC-002' → 'BC-2.08.014 PC5/EC-004'. BC-2.08.014 PC4 = ordered-chain semantics (no error raised); EC-002 = primary auth-refresh success path. Correct raising points: PC5 (chain exhausted postcondition explicitly returns E-PROV-010) and EC-004 (all-providers-exhausted scenario). F-P78-03 — E-PROV-009 note corrected: 'BC-2.08.013 PC4/EC-002' → 'BC-2.08.013 PC8/PC9/EC-002'. BC-2.08.013 PC4 = NativeAnthropic success-parse of tool_use blocks. Correct raising points: PC8 (Hermes <tool_call> payload not valid JSON → E-PROV-009) and PC9 (any dialect serialize/deserialize error → E-PROV-009); EC-002 correctly cites malformed JSON case."
@@ -311,7 +312,7 @@ pub trait ToolCallDialect: Send + Sync {
 }
 ```
 
-**BC anchor:** BC-2.08.013 PC1–PC4 (object-safe trait contract, built-in impls, E-PROV-009 on parse failure)
+**BC anchor:** BC-2.08.013 PC1–PC9 (built-in dialect round-trips; PC8/PC9 = E-PROV-009 on parse failure) + PC10 (object-safe trait contract)
 
 ### ProviderFallbackPolicy
 
@@ -333,7 +334,7 @@ pub struct ProviderFallbackPolicy {
 >
 > **`CredentialRefreshConfig`** — UNRESOLVED (implementer-scope). Configuration for automatic credential refresh callback on auth failure. Not formally enumerated in spec corpus; flagged for architect. (gate #31 UNRESOLVED)
 
-**BC anchor:** BC-2.08.014 PC1–PC4 (ordered fallback semantics, E-PROV-010 on chain exhaustion)
+**BC anchor:** BC-2.08.014 PC1–PC4 (ordered fallback semantics) + PC5 (E-PROV-010 on chain exhaustion)
 
 ### SkillStore
 
