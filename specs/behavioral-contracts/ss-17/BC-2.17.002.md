@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.17.002
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,9 @@ capability: CAP-019
 wave: Phase-6
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.1 (F-P80-01, 2026-07-15): EC-002 error code corrected E-GRAPH-007→E-GRAPH-008. E-GRAPH-007 is UnknownChannelKey (runtime unregistered-write-key error); the correct code for a zero-node degenerate topology is E-GRAPH-008 UnreachableGraph (no path from START). Message aligned to taxonomy form: UnreachableGraph: <reason>. 'or similar' hedge removed from code assertion — exact E-GRAPH-008 is now required; message-detail flexibility preserved per fuzz-oracle semantics (oracle tests code discriminant, not message text)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-019
 inputs:
@@ -102,9 +104,11 @@ The error propagates to the caller. The fuzz target counts this as a non-crash h
 
 ### EC-002: Graph with Zero Nodes
 **Scenario:** The graph execution fuzzer generates a `GraphDefinition` with no nodes.
-**Expected behavior:** Execution returns `Err(FerrochainError { code: E-GRAPH-007,
-message: "empty graph definition" })` or similar. No panic. The graph executor must handle
-degenerate topologies gracefully.
+**Expected behavior:** Execution returns `Err(FerrochainError { code: E-GRAPH-008 })` with
+message matching the taxonomy form `UnreachableGraph: <reason>`, e.g.,
+`UnreachableGraph: empty graph — no entry edge from START`. No panic. The graph executor
+must handle degenerate topologies gracefully. The fuzz oracle asserts exact code E-GRAPH-008;
+message-detail text may vary by implementation.
 
 ### EC-003: Circular Edge in Graph Topology
 **Scenario:** The fuzzer generates a graph with a cycle (`A → B → A`).
