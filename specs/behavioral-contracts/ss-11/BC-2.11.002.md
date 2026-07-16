@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.002
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -27,6 +27,7 @@ changelog:
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-001 and the TV panic row had `Err(FerrochainError { category: INTERNAL })` with no code. Added code: E-CORE-007 (GuardrailHookPanic) — minted this burst as the canonical code for GuardrailHook::evaluate panics at content-ingress boundaries."
   - "1.3 (ADV-P1D-PASS-58): F-P58-02 type-name linkage — `content_block` in PC1 is typed as `IngressContent::ToolResult(ContentBlock)` in the GuardrailHook trait signature (interface-definitions.md v2.13 §GuardrailHook §IngressContent). ContentBlock is the inner payload per entities-graph.md §ContentBlock."
   - "1.4 (ADV-P1D-PASS-59): F-P59-02 — (1) EC-003 description clarified: the different-variant claim is about the inner ContentBlock variant within IngressContent::ToolResult, not a cross-IngressContent-boundary swap (same-boundary rule established by interface-definitions.md v2.14). (2) EC-003 TV fixed: bare ContentBlock::text('[REDACTED: PII]') → IngressContent::ToolResult(ContentBlock::text('[REDACTED: PII]')) to typecheck against Transform { new_content: IngressContent }."
+  - "1.5 (F-P84-OBS-B/D18-P84-A): body version pin removed from PC1 — `interface-definitions.md v2.13 §GuardrailHook §IngressContent` → `interface-definitions.md §GuardrailHook §IngressContent` (section anchors retained; version pins on living supplements dropped per D18-P84-A adjudication; changelog entries are exempt audit trail)."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -62,8 +63,7 @@ substitute error block), or Transform (forward replacement content). This contra
 
 1. `GuardrailHook::evaluate(content_block, provenance_tag)` is called for every `ToolMessage`
    `ContentBlock` before it enters the model input buffer; `content_block` is typed as
-   `IngressContent::ToolResult(ContentBlock)` in the GuardrailHook trait (interface-definitions.md
-   v2.13 §GuardrailHook §IngressContent)
+   `IngressContent::ToolResult(ContentBlock)` in the GuardrailHook trait (interface-definitions.md §GuardrailHook §IngressContent)
 2. `GuardrailResult::Pass` → the `ContentBlock` is forwarded unchanged to the model input buffer
 3. `GuardrailResult::Fail { reason, severity }` → the `ContentBlock` is NOT forwarded; an error
    block is injected at the same position carrying `reason`; the original content is discarded;

@@ -4,14 +4,14 @@ level: ops
 version: "3.2"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-07-16T00:00:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "Phase 1d — pass 83 remediated; pass 84 ready (0/3)"
+current_step: "SESSION WRAP burst 163 — pass 84 PO-half remediated; OBS-P84-C architect fix + pass 85 ready on resume"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -38,16 +38,16 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-15 — burst 162: pass 83 (NOT CLEAN, 1 HIGH ADR-013 tools/list-vs-call swap + 2 MED anchor mis-citations) + fixes (ADR-013 v1.2, interface-definitions v2.27). |
+| **Last Updated** | 2026-07-16 — burst 163: SESSION WRAP (session covered passes 73–84, bursts 152–163; D18-P74-A/P75-A/P77-A/P77-B/P78-A/P78-B/P84-A canons; DEFER-002). |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Phase 1d — pass 83 COMPLETE (NOT CLEAN, 3 findings [1 HIGH + 2 MED], FIXED; counter 0/3). Pass 84 ready. Sibling-checks: ADR-013 v1.2 (tools/list vs tools/call correctly assigned in Context + BC Anchors + authority note/inline comment = BC-2.09.006/007; Attribution Note annotated); interface-definitions v2.27 (~line 315 ToolCallDialect anchor PC1–PC9+PC10; ~line 337 ProviderFallbackPolicy PC1–PC4+PC5); gate #28 currency both files. All 16 interface BC-anchors audited clean this burst; D20 trait seams fully cross-read (FTS pass 82, other traits + MCP pass 83). Pass 84 angles: architecture SECTION files (9 sections) prose vs BCs/ADRs — least-cross-read layer remaining; ss-05/ss-06/ss-11 deep read (still unvisited); test-vectors inventory row spot-audit (unaudited rows). Standing: OBS-P75-B; OBS-P76-1; OBS-P76-2; OBS-P80-CONCURRENCY; D18-P72-C; DEFER-002. CLEAN advances 1/3; ANY finding resets 0/3. |
+| **Current Step** | SESSION WRAP burst 163 — pass 84 PO-half COMPLETE (test-vectors v1.5 534→516, BC-2.11.002 v1.5/.003 v1.4/.004 v1.4, D18-P84-A); OBS-P84-C architect fix = FIRST ACTION on resume; pass 85 after. |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -65,7 +65,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | Phase 1d pass 82 + fix burst | adversary + PO + state-manager | COMPLETE | Pass 82: NOT CLEAN — 2 MED (F-P82-01: BC-2.04.008 PC3 listed query as FtsSearchConfig field — contradicts signature/PC1/ECs/TVs; FIXED: PC3 → query standalone, config = {thread_id, limit}; BC-2.04.008 v1.4. F-P82-02: interface-definitions E-CHKPT-008 blanket "raised at construction" for both limit=0 AND malformed-FTS5-query; per BC, EC-002 = SEARCH-TIME; FIXED: note split construction/call-time; interface-definitions v2.26). PO seam audit 10/10 PASS. Gates #21/#23/#24/#29/#30 rotated CLEAN. Sibling-check BC-2.08.014 v1.1 PASS. Novelty MEDIUM (FTS seam). Trajectory →2 (P1D-82). Counter 0/3. Burst 161. |
 | Phase 1d pass 81 + fix burst | adversary + PO + state-manager | COMPLETE | Pass 81: NOT CLEAN — 1 MED (F-P81-01: BC-2.08.014 TV-007 asserted `Err(E-CORE-005 ValidationFailed)`; "ValidationFailed" fabricated — no PascalCase variant in E-CORE-005; 11 sibling usages all bare-code form. FIXED: TV-007 → `Err(FerrochainError { category: VAL, code: E-CORE-005 })`; BC-2.08.014 → v1.1). MANDATORY hedge sweep CLEAN. Sibling-check 1/1 PASS. Novelty LOW-MEDIUM. Trajectory →1 (P1D-81). Counter 0/3. Burst 160. |
 | Phase 1d pass 80 + fix burst | adversary + PO + state-manager | COMPLETE | Pass 80: NOT CLEAN — 1 MED (F-P80-01: BC-2.17.002 EC-002 cited E-GRAPH-007 vs correct E-GRAPH-008; "or similar" hedge shielded wrong code; FIXED: EC-002 → E-GRAPH-008, message aligned, hedge tightened; BC-2.17.002 → v1.1). Gates #12-#18 rotated CLEAN. OBS-P80-CONCURRENCY (non-resetting). Novelty MEDIUM. Trajectory →1 (P1D-80). Counter 0/3. Burst 159. |
-| Phase 1d pass 79 + fix burst | adversary + PO + state-manager | COMPLETE | Pass 79: NOT CLEAN — 2 findings ALL FIXED: F-P79-01 (HIGH) BC-2.10.003 frontmatter version "1.3" stale vs changelog v1.4; FIXED: frontmatter → "1.4"; 12-file audit: only BC-2.10.003 defective. F-P79-02 (MED) BC-2.04.003 v1.2 changelog erroneous claim "E-CHKPT-002 kept as-is"; FIXED: v1.3 CORRIGENDUM entry. Novelty MEDIUM. Trajectory →2 (P1D-79). Counter 0/3. Burst 158. |
+| Phase 1d pass 84 + fix burst (PO-half) | adversary + PO + state-manager | COMPLETE-PO-HALF | Pass 84: NOT CLEAN — F-P84-01 (MED) FIXED: test-vectors header-row overcount; class wider: 18 rows corrected SS-04/SS-11/SS-13; total 534→516; test-vectors v1.5. OBS-P84-A FIXED: 19 "table (unlabelled)" relabels + Usage Note 3 rewritten. OBS-P84-B FIXED (D18-P84-A): stale version pins in SS-11 BC bodies; BC-2.11.002 v1.5 / .003 v1.4 / .004 v1.4 (section-anchor-only citations). OBS-P84-C [process-gap] OPEN (architect dispatch pending): purity-boundary-map.md v1.0 Iron Law vs unclassified modules (mcp::server, memory::write_guard, memory::skills, server::stores, sandbox::policy, mcp::discovery). Sibling-checks 3/3 PASS. Trajectory →1 (P1D-84). Counter 0/3. Burst 163. |
 
 ## Decisions Log
 
@@ -103,6 +103,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | D18-P77-B | Gate #33 SEMANTIC-AGREEMENT sub-check steps 7–10: taxonomy Message Format template + raise-condition annotation must agree with anchor BC message text + EC/TV predicates; BC wins on any divergence; total standing gates unchanged 33; bc-authoring-plan → v2.17. | F-P77-01 survived name/presence-only gates #20+#33 — semantic axis was ungated | phase-1d | 2026-07-15 | adversary+PO |
 | D18-P78-A | Universal `<ErrorName>: <detail>` message-prefix convention wins over BC message bodies lacking it; 12 BC-side prefix corrections applied (11 sweep + BC-2.04.008 F-P78-04); the ONLY sanctioned direction of BC-message edits under gate #33 is BC-side addition of the prefix when missing. | F-P78-04 + gate #33 first full sweep — previously implicit convention; 12 BCs lacked prefix | phase-1d | 2026-07-15 | adversary+PO |
 | D18-P78-B | Gate #33 step 11 added: omission-note anchor citations in interface-definitions must point at a raising PC/EC; success-path citations (PC/EC that never raises the code) are violations; plan v2.18. Gates stay 33 (step added to existing gate). | F-P78-02/03 copy-paste success-path citations survived all prior passes; no gate checked citation semantics | phase-1d | 2026-07-15 | adversary+PO |
+| D18-P84-A | Body citations to living supplements use section anchors only — no version pins; changelog pins exempt. Stale "interface-definitions.md v2.13" pins removed from BC-2.11.002/003/004 bodies; full behavioral-contracts/ grep confirmed zero remaining body-level version pins. | OBS-P84-B: stale version pins in SS-11 BC bodies survived all prior passes | phase-1d | 2026-07-15 | adversary+PO |
 
 ## Risk Register
 
@@ -143,37 +144,24 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 83 (Phase 1d) |
-| Fix bursts completed | 84 (Phase 1d: 72 fix + 5 D19/D20 expansion + 1 pass-77 fix + 1 pass-78 fix + full gate #33 sweep + 1 pass-79 fix + 1 pass-80 fix + 1 pass-81 fix + 1 pass-82 fix + 1 pass-83 fix) |
-| Convergence counter | 0 of 3 (Phase 1d; reset by pass 83 findings; pre-pipeline 3/3 CLOSED) |
-| Finding trajectory | (pre-pipeline) →1→1→0→0→1→2→0→1→1→0→0→1→0→0→0 (C23: CLEAN) ‖ (Phase 1d) →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20: +9 BCs, new baseline] →8 (P1D-72) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) |
+| Adversary passes completed | 84 (Phase 1d) |
+| Fix bursts completed | 85 (Phase 1d: 72 fix + 5 D19/D20 expansion + 1 pass-77 fix + 1 pass-78 fix + full gate #33 sweep + 1 pass-79 fix + 1 pass-80 fix + 1 pass-81 fix + 1 pass-82 fix + 1 pass-83 fix + 1 pass-84 PO-half fix) |
+| Convergence counter | 0 of 3 (Phase 1d; reset by pass 84 findings; pre-pipeline 3/3 CLOSED) |
+| Finding trajectory | (pre-pipeline) →1→1→0→0→1→2→0→1→1→0→0→1→0→0→0 (C23: CLEAN) ‖ (Phase 1d) →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20: +9 BCs, new baseline] →8 (P1D-72) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) |
+
 
 ## Session Resume Checkpoint
 
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 
 ### RESUME IN ONE BREATH
-"ferrochain Phase 1 spec crystallization, step 1d IN PROGRESS post-D20: 83 passes / 84 fix bursts, counter 0/3 (reset by pass 83 findings; strict-zero D14; 33 standing gates [bc-authoring-plan v2.18 frontmatter authoritative]; baseline 95 BCs 48/39/8, 21 CAPs 11/7/3, universe 35 = 9/13/11/2 [arch] + 22 = 6/9/5/2 [PO registry], census 85 = 43+16+26, 13 ADRs, 6 RetryHint divergences, gate #31 24/28). Pass 83 NOT CLEAN (3 findings FIXED: F-P83-03 HIGH ADR-013 tools/list vs tools/call swapped BC-2.09.006/007 in Context + BC Anchors; ADR-013 v1.2 [method-name discriminators, authority note + inline comment widened, Attribution Note annotated]. F-P83-01 MED ToolCallDialect anchor PC1–PC4 wrong PCs → PC1–PC9+PC10. F-P83-02 MED ProviderFallbackPolicy anchor PC1–PC4 for E-PROV-010 → PC1–PC4+PC5; interface-definitions v2.27. Full 16-anchor audit 14 PASS. D20 trait seams fully cross-read). NEXT ACTION: dispatch adversary pass 84 — fresh context; sibling-checks: ADR-013 v1.2 (tools/list vs tools/call correctly assigned in Context + BC Anchors + authority note/inline comment = BC-2.09.006/007; Attribution Note annotated); interface-definitions v2.27 (~line 315 ToolCallDialect PC1–PC9+PC10; ~line 337 ProviderFallbackPolicy PC1–PC4+PC5); gate #28 currency both files. Pass 84 angles: architecture SECTION files (9 sections) prose vs BCs/ADRs; ss-05/ss-06/ss-11 deep read (still unvisited); test-vectors inventory row spot-audit. Standing: OBS-P75-B; OBS-P76-1; OBS-P76-2; OBS-P80-CONCURRENCY; D18-P72-C; DEFER-002. CLEAN advances 1/3; ANY finding resets 0/3; loop per D15 until 3/3."
-
-BURST 162: pass-83.md written; ADR-013 v1.2 (tools/list-vs-call BC swap fixed) + interface-definitions v2.27 (ToolCallDialect PC1–PC9+PC10; ProviderFallbackPolicy PC1–PC4+PC5) committed. STATE.md updated.
-### HEADS
-- factory-artifacts: burst 162 (run `git -C .factory log -1 --format='%h %s'`)
-- main: `d018d3f` (=develop, pushed BOHICA-LABS/ferrochain; CI green; branch protection on)
-- No worktrees. No PRs.
-
-### WORKSTREAM: single — Phase 1d convergence loop. Baseline: 95 BCs (48/39/8), 21 CAPs (11/7/3), universe 35 (9/13/11/2), census 85 = 43+16+26; 13 ADRs. bc-authoring-plan v2.18 (33 gates, Wave-0). 83 pass reports in cycles/v1.0.0-greenfield/adversarial-reviews/. POST-P83 canons: ADR-013 v1.2 (BC-2.09.006 = tools/list advertisement/discovery; BC-2.09.007 = tools/call invocation/dispatch); interface-definitions v2.27 (ToolCallDialect anchor: PC1–PC9 [built-in round-trips; PC8/PC9 = E-PROV-009 on parse failure] + PC10 [object-safe]; ProviderFallbackPolicy anchor: PC1–PC4 [ordered fallback] + PC5 [E-PROV-010 on chain exhaustion]). All prior canons preserved (BC-2.04.008 v1.4, interface-definitions v2.26 E-CHKPT-008, BC-2.08.014 v1.1, BC-2.17.002 v1.1, BC-2.10.003 v1.4, BC-2.04.003 v1.3, taxonomy v1.16, D18-P78-A/B, E-SBXD-006 wildcard, ADR-012 INV-1, prd v1.1, test-vectors v1.4, BC-INDEX v1.4).
-### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) REGENERATE + run .factory/namespace-reservation/publish-all.sh for ALL 18 crates — R6 time-sensitive; (3) langgraph crate 0.2.5 competitor watch (R4 reframed); (4) Phase 1 human approval gate (awaiting 3/3): verify Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013 authority.
-### DECISION DELTA (burst 162): none — ADR-013 tools/list-vs-call swap correction + interface anchor fixes only (no new adjudications).
+"ferrochain Phase 1d convergence loop, 84 passes / 85 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 85 = 43+16+26, 13 ADRs, 33 gates, test-vectors 516). NEXT ACTION: (1) dispatch architect — OBS-P84-C purity-boundary-map.md v1.0→v1.1: classify ALL unclassified modules per Iron Law against 35-module universe (mcp::server, memory::write_guard, memory::skills, server::stores, sandbox::policy, mcp::discovery + any others found), per-column semantics with BC/ADR citations, deferred-rows explicit; (2) state-manager records; (3) dispatch adversary pass 85. Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 163 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-85 SIBLING-CHECKS: test-vectors v1.5 (18 corrected counts, total 516, 19 "table (unlabelled)" labels, Usage Note 3); BC-2.11.002 v1.5 / .003 v1.4 / .004 v1.4 (section-anchor-only citations); purity-boundary-map v1.1 (Iron-Law-complete vs 35-module universe); gate #28 currency on all touched files.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (bursts 152–163): D18-P74-A (gate #19 retired-name); D18-P75-A (gate #28 Rules 4/5) + DEFER-002; D18-P77-A (ADR-012 INV-1); D18-P77-B (gate #33 steps 7–10); D18-P78-A (universal error prefix); D18-P78-B (gate #33 step 11 omission-note); D18-P84-A (no version pins in body citations). 33 gates.
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
-
-### WRAP METADATA
-
-| Field | Value |
-|-------|-------|
-| **Date** | 2026-07-15 |
-| **Cycle** | v1.0.0-greenfield |
-| **Burst commit** | burst 162 (run `git -C .factory log -1 --format='%h %s'`) |
-| **Convergence counter** | 0 of 3 (Phase 1d; reset by pass 83 findings) |
+### WRAP METADATA: Date 2026-07-16 | Cycle v1.0.0-greenfield | Burst 163 | Counter 0/3 (Phase 1d)
 
 ## Historical Content
 

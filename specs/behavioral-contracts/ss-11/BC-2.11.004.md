@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.004
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -26,6 +26,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-004 and the TV panic row had `Err(FerrochainError { category: INTERNAL })` with no code. Added code: E-CORE-007 (GuardrailHookPanic) — same code as BC-2.11.002/003 (memory item ingress boundary shares identical panic-and-fail-closed pattern)."
   - "1.3 (ADV-P1D-PASS-58): F-P58-02 type-name linkage — `memory_item` in PC1 is typed as `IngressContent::MemoryItem(Value)` in the GuardrailHook trait signature (interface-definitions.md v2.13 §IngressContent). Payload type `Value` = serde_json::Value; internal structure is memory-store-specific."
+  - "1.4 (F-P84-OBS-B/D18-P84-A): body version pin removed from PC1 — `interface-definitions.md v2.13 §GuardrailHook §IngressContent` → `interface-definitions.md §GuardrailHook §IngressContent` (section anchors retained; version pins on living supplements dropped per D18-P84-A adjudication; changelog entries are exempt audit trail)."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -63,8 +64,7 @@ model context injection.
 
 1. `GuardrailHook::evaluate(memory_item, provenance_tag)` is called for every memory item from a
    memory read before it enters the model context; `memory_item` is typed as
-   `IngressContent::MemoryItem(Value)` in the GuardrailHook trait (interface-definitions.md
-   v2.13 §GuardrailHook §IngressContent)
+   `IngressContent::MemoryItem(Value)` in the GuardrailHook trait (interface-definitions.md §GuardrailHook §IngressContent)
 2. `GuardrailResult::Pass` → item forwarded unchanged
 3. `GuardrailResult::Fail { reason, severity }` → item not forwarded; error block injected at
    the item's position; run continues unless `Critical`

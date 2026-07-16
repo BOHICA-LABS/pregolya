@@ -491,3 +491,16 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **DECISION DELTA (burst 157):** D18-P78-A (universal prefix canon; 12 BC-side corrections) + D18-P78-B (gate #33 step 11: omission-note citations must resolve to raising PC/EC).
 
 **WRAP METADATA:** Date: 2026-07-15 | Cycle: v1.0.0-greenfield | Burst: 157 | Counter: 0/3 (Phase 1d; reset by pass 78 findings)
+
+---
+
+## Archived Checkpoint — Burst 162 (2026-07-15)
+
+### RESUME IN ONE BREATH (archived from STATE.md burst 162)
+"ferrochain Phase 1 spec crystallization, step 1d IN PROGRESS post-D20: 83 passes / 84 fix bursts, counter 0/3 (reset by pass 83 findings; strict-zero D14; 33 standing gates [bc-authoring-plan v2.18 frontmatter authoritative]; baseline 95 BCs 48/39/8, 21 CAPs 11/7/3, universe 35 = 9/13/11/2 [arch] + 22 = 6/9/5/2 [PO registry], census 85 = 43+16+26, 13 ADRs, 6 RetryHint divergences, gate #31 24/28). Pass 83 NOT CLEAN (3 findings FIXED: F-P83-03 HIGH ADR-013 tools/list vs tools/call swapped BC-2.09.006/007 in Context + BC Anchors; ADR-013 v1.2; F-P83-01 MED ToolCallDialect anchor PC1–PC9+PC10; F-P83-02 MED ProviderFallbackPolicy PC1–PC4+PC5; interface-definitions v2.27. 16-anchor audit 14 PASS). NEXT ACTION: dispatch adversary pass 84."
+
+**POST-P83 CANONS (burst 162):** ADR-013 v1.2 (BC-2.09.006 = tools/list advertisement/discovery; BC-2.09.007 = tools/call invocation/dispatch); interface-definitions v2.27 (ToolCallDialect anchor: PC1–PC9 [built-in round-trips; PC8/PC9 = E-PROV-009 on parse failure] + PC10 [object-safe]; ProviderFallbackPolicy anchor: PC1–PC4 [ordered fallback] + PC5 [E-PROV-010 on chain exhaustion]).
+
+**DECISION DELTA (burst 162):** None — ADR-013 tools/list-vs-call swap correction + interface anchor fixes only (no new adjudications).
+
+**WRAP METADATA:** Date: 2026-07-15 | Cycle: v1.0.0-greenfield | Burst: 162 | Counter: 0/3 (Phase 1d; reset by pass 83 findings)

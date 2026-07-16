@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -48,13 +48,13 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.03.001 | SS-03 | 5 | — | `TV-NNN` | | BSP determinism; VP seed |
 | BC-2.03.002 | SS-03 | 5 | — | `TV-NNN` | | Concurrent LastValue → InvalidUpdateError |
 | BC-2.03.003 | SS-03 | 5 | — | `TV-NNN` | | Task-identity sort order |
-| BC-2.04.001 | SS-04 | 5 | — | narrative | | put_writes before next super-step |
-| BC-2.04.002 | SS-04 | 5 | — | narrative | | Sync tier is default |
-| BC-2.04.003 | SS-04 | 5 | — | narrative | | Monotonic clock rejects wall-clock |
-| BC-2.04.004 | SS-04 | 5 | — | narrative | | Fork via parent_checkpoint_id |
-| BC-2.04.005 | SS-04 | 5 | — | narrative | | Crash recovery; completed not re-run |
-| BC-2.04.006 | SS-04 | 5 | — | narrative | | Triple-address uniqueness; VP seed |
-| BC-2.04.007 | SS-04 | 5 | — | narrative | | Encryption covers state AND events |
+| BC-2.04.001 | SS-04 | 4 | — | table (unlabelled) | | put_writes before next super-step |
+| BC-2.04.002 | SS-04 | 4 | — | table (unlabelled) | | Sync tier is default |
+| BC-2.04.003 | SS-04 | 4 | — | table (unlabelled) | | Monotonic clock rejects wall-clock |
+| BC-2.04.004 | SS-04 | 4 | — | table (unlabelled) | | Fork via parent_checkpoint_id |
+| BC-2.04.005 | SS-04 | 5 | — | table (unlabelled) | | Crash recovery; completed not re-run |
+| BC-2.04.006 | SS-04 | 4 | — | table (unlabelled) | | Triple-address uniqueness; VP seed |
+| BC-2.04.007 | SS-04 | 4 | — | table (unlabelled) | | Encryption covers state AND events |
 | BC-2.04.008 | SS-04 | 6 | — | `TV-NNN` | | FTS conversation search (SQLite FTS5; single-process) |
 | BC-2.05.001 | SS-05 | 5 | — | `TV-NNN` | | Interrupt + durable suspend |
 | BC-2.05.002 | SS-05 | 5 | — | `TV-NNN` | | FIFO resume order |
@@ -93,12 +93,12 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.10.002 | SS-10 | 5 | — | `TV-NNN` | | EvidenceJournal append-only |
 | BC-2.10.003 | SS-10 | 7 | — | `TV-NNN` | | Graceful halt \| summarize on ceiling (v1.2 adds TV-006/007) |
 | BC-2.10.004 | SS-10 | 5 | — | `TV-NNN` | | Budget escalation → HITL |
-| BC-2.11.001 | SS-11 | 5 | — | narrative | | ProvenanceTag at all ingress boundaries |
-| BC-2.11.002 | SS-11 | 6 | — | narrative | | GuardrailHook at tool-result ingress |
-| BC-2.11.003 | SS-11 | 5 | — | narrative | | GuardrailHook at RAG ingress |
-| BC-2.11.004 | SS-11 | 5 | — | narrative | | GuardrailHook at memory ingress |
-| BC-2.11.005 | SS-11 | 5 | — | narrative | | Rejected content never in model context |
-| BC-2.11.006 | SS-11 | 5 | — | narrative | | No-hook default: WARNING LOG |
+| BC-2.11.001 | SS-11 | 4 | — | table (unlabelled) | | ProvenanceTag at all ingress boundaries |
+| BC-2.11.002 | SS-11 | 5 | — | table (unlabelled) | | GuardrailHook at tool-result ingress |
+| BC-2.11.003 | SS-11 | 4 | — | table (unlabelled) | | GuardrailHook at RAG ingress |
+| BC-2.11.004 | SS-11 | 4 | — | table (unlabelled) | | GuardrailHook at memory ingress |
+| BC-2.11.005 | SS-11 | 4 | — | table (unlabelled) | | Rejected content never in model context |
+| BC-2.11.006 | SS-11 | 4 | — | table (unlabelled) | | No-hook default: WARNING LOG |
 | BC-2.12.001 | SS-12 | 7 | — | `TV-NNN` | | Thread CRUD |
 | BC-2.12.002 | SS-12 | 7 | — | `TV-NNN` | | Assistant CRUD |
 | BC-2.12.003 | SS-12 | 7 | — | `TV-NNN` | | Run lifecycle |
@@ -106,12 +106,12 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.12.005 | SS-12 | 7 | — | `TV-NNN` | | SecurityConfig::default() deny-CORS |
 | BC-2.12.006 | SS-12 | 6 | — | `TV-NNN` | | Trait seams (IdempotencyStore etc.) |
 | BC-2.12.007 | SS-12 | 6 | — | `TV-NNN` | | Streaming/unary same graph engine |
-| BC-2.13.001 | SS-13 | 5 | — | narrative | | Enforcing sandbox is default |
-| BC-2.13.002 | SS-13 | 5 | — | narrative | | Process backend requires explicit opt-in |
-| BC-2.13.003 | SS-13 | 6 | — | narrative | | Strict policy + non-enforcing → Err |
-| BC-2.13.004 | SS-13 | 6 | — | narrative | | canonicalize_beneath_root; VP seed |
-| BC-2.13.005 | SS-13 | 6 | — | narrative | | Symlink escape → Err(WorkspaceEscape) |
-| BC-2.13.006 | SS-13 | 6 | — | narrative | | macOS Seatbelt deny-by-default |
+| BC-2.13.001 | SS-13 | 4 | — | table (unlabelled) | | Enforcing sandbox is default |
+| BC-2.13.002 | SS-13 | 4 | — | table (unlabelled) | | Process backend requires explicit opt-in |
+| BC-2.13.003 | SS-13 | 5 | — | table (unlabelled) | | Strict policy + non-enforcing → Err |
+| BC-2.13.004 | SS-13 | 5 | — | table (unlabelled) | | canonicalize_beneath_root; VP seed |
+| BC-2.13.005 | SS-13 | 5 | — | table (unlabelled) | | Symlink escape → Err(WorkspaceEscape) |
+| BC-2.13.006 | SS-13 | 5 | — | table (unlabelled) | | macOS Seatbelt deny-by-default |
 | BC-2.13.007 | SS-13 | 6 | — | `TV-NNN` | | Env var sanitization at sandbox execution boundary |
 | BC-2.14.001 | SS-14 | 5 | — | `TV-NNN` | | FerrochainError 2D struct |
 | BC-2.14.002 | SS-14 | 5 | — | `TV-NNN` | | RFC-7807 emission |
@@ -131,7 +131,7 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.17.001 | SS-17 | 5 | — | `TV-NNN` | | Kani harness scope (all 3 VPs) |
 | BC-2.17.002 | SS-17 | 5 | — | `TV-NNN` | | cargo-fuzz targets |
 
-**Total vectors (95 authored BCs):** approximately 534 canonical test vectors across 95 BC files.
+**Total vectors (95 authored BCs):** approximately 516 canonical test vectors across 95 BC files.
 
 **Red Gate BCs (5):** BC-2.02.003, BC-2.02.004, BC-2.07.002, BC-2.09.004, BC-2.09.005
 
@@ -202,9 +202,12 @@ primary_consumers: [test-writer, holdout-evaluator]
 2. **GTV discipline (BC-2.07.002):** Do not author the GTV-based tests until you have
    run the reference Python implementation to verify GTV-003 and GTV-008. Use
    `langchain_text_splitters==0.3.8` (or the version in L2-INDEX.md).
-3. **Narrative format (SS-04, SS-11, SS-13):** Test vectors in these BCs use prose
-   descriptions rather than `TV-NNN` tables. Translate each row into a test scenario
-   following the same naming convention: `test_BC_S_SS_NNN_<short_description>`.
+3. **Table (unlabelled) format (SS-04, SS-11, SS-13):** Test vectors in these BCs use
+   markdown tables with `| Input | Expected Output | Category |` columns but without
+   `TV-NNN` row identifiers (contrast with `TV-NNN` tables in SS-01–SS-03, SS-05–SS-10,
+   SS-12, SS-14–SS-17). The header row is NOT a test vector — TV Count in the inventory
+   above counts data rows only. Translate each data row into a test scenario following
+   the naming convention: `test_BC_S_SS_NNN_<short_description>`.
 4. **Integration tests:** BCs marked `I` in the PRD RTM Test Types column require a
    running ferrochain instance or mock. Structure these under `tests/integration/`.
 5. **Soak tests:** BCs marked `S` (BC-2.04.001, BC-2.04.005, BC-2.06.003, BC-2.12.007)
@@ -216,6 +219,7 @@ primary_consumers: [test-writer, holdout-evaluator]
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.5 | 2026-07-15 | F-P84-01 + OBS-P84-A + OBS-P84-B (D18-P84-A): SS-11 counts corrected (header-row over-count): BC-2.11.001 5→4, BC-2.11.002 6→5, BC-2.11.003 5→4, BC-2.11.004 5→4, BC-2.11.005 5→4, BC-2.11.006 5→4. SS-04 same defect audited and corrected: BC-2.04.001/002/003/004/006/007 5→4 each (BC-2.04.005 was already correct at 5). SS-13 same defect audited and corrected: BC-2.13.001/002 5→4, BC-2.13.003/004/005/006 6→5. Format label "narrative" → "table (unlabelled)" for all 19 affected rows (SS-04 001–007, SS-11 001–006, SS-13 001–006) — these BCs use `\| Input \| Expected Output \| Category \|` tables without TV-NNN IDs, not prose narrative. Usage note 3 rewritten accordingly. Total updated 534→516 (−18). | F-P84-01, OBS-P84-A, OBS-P84-B |
 | 1.4 | 2026-07-15 | F-P73-01: added 9 D20 BC inventory rows (BC-2.04.008, BC-2.08.013, BC-2.08.014, BC-2.09.006, BC-2.09.007, BC-2.13.007, BC-2.15.004, BC-2.15.005, BC-2.15.006) with live-derived vector counts; BC-2.10.003 TV count corrected 5→7 (v1.2 added TV-006/007 for OnCeiling::Summarize + RunContext.budget_info); total updated 86→95 BCs, ~475→~534 vectors; frontmatter input-hash annotation updated 86→95. | F-P73-01 |
 | 1.3 | 2026-07-15 | F-P64-02 sweep fix: corrected v1.1 changelog row date `2026-07-16` → `2026-07-14` (same root cause as bc-authoring-plan.md v1.1; PASS-36 = 2026-07-14). No content change; metadata-only. (F-P64-02, ADV-P1D-PASS-64) | F-P64-02 |
 | 1.2 | 2026-07-14 | GTV annotation sync (OBS-P37-2): GTV-003 Expected-cell parenthetical corrected to match BC-2.07.002.md authoritative text ("after separator split on space"); GTV-008 Input-cell code-point note corrected ("3+5+3=11 code pts"); GTV-009 Input-cell annotation corrected ("4 code pts: ñ=U+00F1, o, ñ, o — 2 bytes each for ñ"). All 9 GTV rows now byte-identical to BC-2.07.002.md including non-normative annotations (ADV-P1D-PASS-37) | OBS-P37-2 |

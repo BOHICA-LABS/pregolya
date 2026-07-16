@@ -1562,3 +1562,7 @@ Phase 1d pass 68 adversarial review completed: CLEAN — 0 findings. Counter adv
 ## Archived from STATE.md Current Phase Steps (burst 161 rotation)
 
 | Phase 1d pass 77 + fix burst | adversary + architect + PO | COMPLETE | Pass 77: NOT CLEAN — 1 HIGH (F-P77-01: E-SBXD-006 taxonomy described REGEX validation model; BC-2.13.007 mandates EXACT-NAME/wildcard; OPENAI_* compiles as valid regex but MUST fire per TV-005 — DI-010 boundary breach) + OBS-P77-A MED FIXED (ADR-013 v1.1 McpServerTransport/start/McpServerHandle/Sse{bind_addr} + authority note) + OBS-P77-B MED FIXED (BC-2.08.013 v1.1 "trait implementations") + OBS-P77-C MED FIXED (ADR-012 v1.2 INV-1; BC-2.15.006 v1.1; capabilities-p1-p2 v1.2) + OBS-P77-D LOW DECLINED (read I/O EC-004 hedge; minting deferred Phase 2+). Process-gap D18-P77-B: gate #33 steps 7–10 semantic-agreement. Novelty HIGH (new class). Trajectory →1 (P1D-77, reset). Counter 0/3. Burst 156. |
+
+## Archived from STATE.md Current Phase Steps (burst 163 rotation)
+
+| Phase 1d pass 79 + fix burst | adversary + PO + state-manager | COMPLETE | Pass 79: NOT CLEAN — 2 findings ALL FIXED: F-P79-01 (HIGH) BC-2.10.003 frontmatter version "1.3" stale vs changelog v1.4; FIXED: frontmatter → "1.4"; 12-file audit: only BC-2.10.003 defective. F-P79-02 (MED) BC-2.04.003 v1.2 changelog erroneous claim "E-CHKPT-002 kept as-is"; FIXED: v1.3 CORRIGENDUM entry. Novelty MEDIUM. Trajectory →2 (P1D-79). Counter 0/3. Burst 158. |
