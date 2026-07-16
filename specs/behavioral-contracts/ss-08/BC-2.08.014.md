@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.014
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,8 @@ wave: 2
 phase: 1b
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.1 (ADV-P81-01): F-P81-01 — TV-007 had fabricated PascalCase variant name `E-CORE-005 ValidationFailed`; no such variant exists in error-taxonomy.md (E-CORE-005 message is plain prose). Fixed to canonical bare-code form matching sibling BC-2.08.002 TV-005: `Err(FerrochainError { category: VAL, code: E-CORE-005 })`."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
 inputs:
@@ -148,7 +150,7 @@ No runtime failover attempt occurs. (DI-008.)
 | TV-004 | Primary 5xx; fallback-A 5xx; fallback-B 200 | Graph receives fallback-B 200 | Chain depth 2 |
 | TV-005 | Primary 5xx; fallback-A 5xx; fallback-B 5xx | `Err(E-PROV-010 ProviderChainExhausted)` with `providers_attempted: 3` | All exhausted |
 | TV-006 | Primary TIMEOUT; failover configured | `Err(E-PROV-002 ProviderTimeout)` — no failover | TIMEOUT is not a trigger |
-| TV-007 | `ProviderFallbackPolicy { chain: [] }` | `Err(E-CORE-005 ValidationFailed)` at construction | Empty chain is VAL error |
+| TV-007 | `ProviderFallbackPolicy { chain: [] }` | `Err(FerrochainError { category: VAL, code: E-CORE-005 })` at construction | Empty chain is VAL error |
 
 ## Verification Properties
 
