@@ -567,3 +567,17 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (bursts 152–169): D18-P74-A (gate #19 retired-name); D18-P75-A (gate #28 Rules 4/5) + DEFER-002; D18-P77-A (ADR-012 INV-1); D18-P77-B (gate #33 steps 7–10); D18-P78-A (universal error prefix); D18-P78-B (gate #33 step 11 omission-note); D18-P84-A (no version pins in body citations); D18-P86-A (gate #28 Rule 5 scoped by doc type); D18-P87-A (gate #28 Rule 1 scoped supplements-only); D18-P87-B (gate #34 input-hash canon; 34 gates); D18-P88-A (live-file exclusion from inputs: lists; corpus-wide 29-file sweep).
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 169 | Counter 0/3 (Phase 1d)
+
+
+---
+
+## Checkpoint archived from STATE.md burst 171 (superseded by burst 171 checkpoint)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 88 passes / 92 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 85 = 43+16+26, 13 ADRs, 34 gates, test-vectors 512). trajectory-tail →4→2→2→4. NEXT ACTION: dispatch adversary pass 89. Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 170 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-89 SIBLING-CHECKS: (A) burst-168 items: error-taxonomy v1.17 + interface-definitions v2.28 (changelog/currency), bc-authoring-plan v2.24 (reconstructed v2.8/v2.9 rows, rename-residue-free, SS-TBD historical form), architecture-tree hash census; nfr-catalog/module-criticality hash currency; gate #28 scoped on all 07-17 files. (B) burst-169/170 items: inputs: lists contain zero live files corpus-wide (30 files, bursts 169–170); hash censuses supplements 6/6 + domain-spec 14/14 + architecture 9/9 + BCs 95/95 MATCH; VP-INDEX v1.1 hook-format; verification-architecture v1.3 (changelog entry + 8091abc + six-BC inputs: BC-2.03.001/BC-2.04.006/BC-2.13.004/BC-2.09.004/BC-2.09.005/BC-2.17.002); D18-P88-A interpretation: versioned indexes legitimate, rolling authority files forbidden.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (bursts 152–170): D18-P74-A (gate #19 retired-name); D18-P75-A (gate #28 Rules 4/5) + DEFER-002; D18-P77-A (ADR-012 INV-1); D18-P77-B (gate #33 steps 7–10); D18-P78-A (universal error prefix); D18-P78-B (gate #33 step 11 omission-note); D18-P84-A (no version pins in body citations); D18-P86-A (gate #28 Rule 5 scoped by doc type); D18-P87-A (gate #28 Rule 1 scoped supplements-only); D18-P87-B (gate #34 input-hash canon; 34 gates); D18-P88-A (live-file exclusion from inputs: lists; 30-file closure bursts 169–170; interpretation: versioned indexes legitimate, rolling authority files forbidden).
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 170 | Counter 0/3 (Phase 1d)

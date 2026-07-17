@@ -22,7 +22,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/failure-modes.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "447fd45"
+input-hash: "c9e8596"
 extracted_from: null
 modified: []
 deprecated: null

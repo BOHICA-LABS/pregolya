@@ -303,6 +303,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-89 — Pass 89 (2026-07-17, burst 171)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|---------|
+| P1D-89 | 2026-07-17 | 4 | 0 | 1 | 2 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN |
+
+**Axes rotated:** gate #34 census block audit (F-P89-01 structural no-values rule); bc-authoring-plan frontmatter hash chain verification (F-P89-02); nfr-catalog deferral language + hash currency (F-P89-03); BC-2.08.006 SS-TBD class sweep (F-P89-04); D18-P88-A full-tree inputs: sweep (PASS); error-code census 85 (PASS); retired-name sweeps (PASS); VP-INDEX arithmetic (PASS); verification-architecture v1.3 (PASS); hedge sweep (PASS); gate #28 scoped all 07-17 files (PASS).
+**Fix summary:** F-P89-01 HIGH [process-gap] (PO) — gate #34 census block embedded stale per-file hash values asserting false PASS; STRUCTURAL FIX: per-file hash values NEVER in gate text; frontmatter = single source of truth; bc-authoring-plan → v2.25. F-P89-02 MED (PO) — bc-authoring-plan frontmatter hash e786fea contradicted v2.24 changelog (e238778); full chain documented (90d28fa→e238778→e786fea→41c29d9); frontmatter = 41c29d9. F-P89-03 MED (PO) — nfr-catalog "pending recomputation" deferral language + stale pre-removal hash; FIXED: v1.2, hash 2153125→0f05a12, deferral language closed. F-P89-04 LOW (PO) — BC-2.08.006 PC-3 stale "(or SS-TBD is used as a placeholder)" clause dropped; v1.2; hash 8095694→412902d.
+**Corpus hash-currency sweep (D18-P89-A first execution):** 4/6 supplements DRIFT (error-taxonomy f766c52/c987193; interface-definitions cdce094/841e167; module-criticality 2ed30d9/68e4fbf; test-vectors 5c68c70/2154b7b) + 94/95 BCs STALE; ALL refreshed to TOTAL MATCH (coherence verified passes 88-89). D18-P89-A standing step codified.
+**Trajectory after:** →4 (P1D-89); cumulative tail →2→2→4→4
+**Counter:** 0/3
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.24"
+version: "2.25"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -10,7 +10,7 @@ phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "e786fea"
+input-hash: "cf14c8f"
 traces_to: prd.md
 total_bcs: 95
 total_batches: 15
@@ -1717,13 +1717,19 @@ split by wave avoids exception).
     **Trigger:** Every burst that creates or modifies a spec artifact with `inputs:` frontmatter
     + every adversary rotation.
 
-    **Census at pass-87 completion (2026-07-17) — FINAL after full 61-file normalization:**
-    - prd-supplements (6 files): **PASS** — all correct 7-char MD5:
-      bc-authoring-plan "ddae3ae" | test-vectors "5c68c70" | error-taxonomy "f766c52" |
-      nfr-catalog "465a82f" | interface-definitions "cdce094" | module-criticality "b8ac573"
-    - BC files: **95/95 MATCH, STALE=0** (compute-input-hash --scan confirms clean)
-    - BC-INDEX.md: `"[live-index]"` — sanctioned exception, state-manager authority (see above)
-    - No `[pending state-manager]` placeholders remain (all 8 resolved to canonical 7-char MD5)
+    **Rule (F-P89-01):** Per-file hash values are NEVER recorded in gate text.
+    The frontmatter `input-hash:` field is the single source of truth for each file's
+    hash value. Gate snapshots record date and PASS/FAIL counts only — never per-file
+    hash values. Embedding hash values in gate text produces the same churn class as
+    STATE.md-in-inputs: stale on every recompute.
+
+    **Last-run snapshot (non-authoritative — run census commands above for current state):**
+    2026-07-17 (pass-89 fix burst): prd-supplements 2/6 MATCH (bc-authoring-plan, nfr-catalog);
+    4/6 DRIFT (error-taxonomy, interface-definitions, module-criticality, test-vectors —
+    pre-existing from bursts 168-170, requires dedicated hash-sweep burst).
+    BC files: 1/95 MATCH (BC-2.08.006 fixed this burst); 94/95 STALE pre-existing.
+    BC-INDEX.md: `"[live-index]"` — sanctioned exception, state-manager authority.
+    No `[pending state-manager]` placeholders remain.
 
     **Motivating instance (F-P87-02, ADV-P1D-PASS-87):** Adversary claimed 64-char SHA-256
     was canonical for ALL files. `validate-input-hash` hook blocked the attempted 64-char write
@@ -1740,6 +1746,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.25 | 2026-07-17 | F-P89-01/02 + class-sweep (pass-89 fix burst). (1) F-P89-01 — Gate #34 structural fix: removed stale per-file hash values from census block (class: hash-values-in-gate-text, same churn as STATE.md-in-inputs). Replaced with: (a) existing census commands [already authoritative], (b) explicitly-NON-AUTHORITATIVE last-run snapshot (2026-07-17: supplements 2/6 MATCH, 4/6 DRIFT; BCs 1/95 MATCH [BC-2.08.006], 94/95 STALE pre-existing), (c) rule sentence: "per-file hash values are NEVER recorded in gate text; frontmatter input-hash is the single source of truth." (2) F-P89-02 — Frontmatter input-hash reconciled: v2.24 wrote e238778 (burst-168); bursts 169-170 bumped inputs (prd.md→v1.2, L2-INDEX→v1.3), producing e786fea without a changelog entry; current recompute yields 41c29d9. Full chain: 90d28fa → e238778 (burst-168) → e786fea (bursts 169-170, previously undocumented) → 41c29d9 (this burst). (3) Class sweep — no other gate-text 7-char hash literals found in .factory/specs/; no other "pending recomput" live-prose instances; no other SS-TBD live BC body residue beyond BC-2.08.006 precondition (fixed separately this burst). | F-P89-01, F-P89-02, pass-89 |
 | 2.24 | 2026-07-17 | Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file; input-hash drifts on every state write with zero spec-content signal for this supplement. All genuine derivation sources (prd.md, domain-spec/L2-INDEX.md) were already listed and are unchanged. Input-hash recomputed (90d28fa → e238778). | burst-168-provenance-fix |
 | 2.23 | 2026-07-17 | F-P88-02/03/04 — (1) Gate #16/gate #22 live gate prose: "Error Category Codes table" → "Error Categories table" (2 sites; section was renamed in pass-87 burst); gate #29 live scope item: "Flag Interaction Rules table rows" → "Flag Interactions table rows" (1 site; section renamed in pass-87 burst). Line-1297 "Flag Interaction Rules row for sandbox-wasm" in Motivating Instance block verified historical audit-trail — left as-is. Full .factory/specs/ grep for both old names: all remaining occurrences are changelog/audit-trail rows, all exempt. (2) Changelog gap adjudication: versions 2.8 and 2.9 EXISTED in committed git history (4ed9ed1 and 96f6317 respectively) but their changelog TABLE ROWS were omitted when version numbers were incremented. Reconstructed entries added to close the gap (git dates and commit descriptions used as evidence; see rows below). (3) Frontmatter `subsystem_note` and guideline #1 rewritten to past-tense/historical form: SS-TBD status was RESOLVED at Phase 1b (2026-07-14); all 95 BCs carry real SS-NN IDs. (4) error-taxonomy.md bumped v1.16→v1.17 and interface-definitions.md bumped v2.27→v2.28 with timestamps → 2026-07-17, recording the pass-87 body changes that lacked version propagation (F-P88-01). input-hash updated after all edits. | F-P88-01, F-P88-02, F-P88-03, F-P88-04 |
 | 2.22 | 2026-07-17 | Pass-87 burst completion — all 61 remaining stale BC hashes normalized (53 legacy 64-char SHA-256 + 8 `[pending state-manager]` placeholders → correct 7-char MD5 via compute-input-hash for each). Full lifecycle frontmatter (extracted_from, modified, deprecated, deprecated_by, replacement, retired, removed, removal_reason) added to all files that lacked it. test-vectors.md cascade: hash updated "334c597" → "5c68c70" (BC-2.01.001 and BC-2.07.002 in its inputs both changed). Gate #34 updated: Placeholder row rewritten to document only the `[live-index]` sanctioned exception class with explicit rationale; `[pending state-manager]` class removed (all resolved). Census line updated to 95/95 MATCH, STALE=0. Final gate #34 state: zero-exception compliance. | F-P87-02, D18-P87-B |

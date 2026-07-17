@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "90aeaec"
+input-hash: "d23f70e"
 extracted_from: null
 modified: []
 deprecated: null

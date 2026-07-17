@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.006
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-002 had `Err(FerrochainError { category: Validation, ... })` (incorrect full-word capitalization; should be VAL per taxonomy code) and no code field; TV-002 had `Err(FerrochainError { category: VAL })` with no code. Fixed: (a) EC-002 'category: Validation' corrected to 'category: VAL'; (b) code: E-CORE-005 (ValidationFailed) added to EC-002 description and TV-002 — SDK builder constructed without calling .timeout() is a VAL construction-time validation failure."
+  - "1.2 (2026-07-17, F-P89-04): Precondition 3 — removed stale live-prose clause '(or SS-TBD is used as a placeholder)'. SS-TBD is corpus-wide resolved as of Phase 1b (2026-07-14); all 95 BCs carry real SS-NN IDs. No behavioral change. Input-hash corrected from legacy 8095694 (computed against prior input state) to 412902d (current). BC changelog timestamp stays at v1.0 authoring date per Rule 5 BC branch."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-008
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/entities-server.md
   - .factory/semport/partners/behavioral-intent.md
-input-hash: "8095694"
+input-hash: "8bc7a1b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -54,7 +55,7 @@ allows the SDK crate to be published and used independently of the ferrochain gr
 2. The provider being implemented is one of the three first-party targets: OpenAI,
    Anthropic, or Ollama.
 3. The architect has produced the `architecture/ARCH-INDEX.md` with subsystem
-   assignments for these crates (or SS-TBD is used as a placeholder).
+   assignments for these crates.
 
 ## Postconditions
 
