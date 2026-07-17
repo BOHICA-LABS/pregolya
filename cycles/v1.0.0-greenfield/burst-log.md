@@ -1573,3 +1573,7 @@ Phase 1d pass 68 adversarial review completed: CLEAN — 0 findings. Counter adv
 
 
 | Phase 1d pass 79 + fix burst | adversary + PO + state-manager | COMPLETE | Pass 79: NOT CLEAN — 2 findings ALL FIXED: F-P79-01 (HIGH) BC-2.10.003 frontmatter version "1.3" stale vs changelog v1.4; FIXED: frontmatter → "1.4"; 12-file audit: only BC-2.10.003 defective. F-P79-02 (MED) BC-2.04.003 v1.2 changelog erroneous claim "E-CHKPT-002 kept as-is"; FIXED: v1.3 CORRIGENDUM entry. Novelty MEDIUM. Trajectory →2 (P1D-79). Counter 0/3. Burst 158. |
+
+## Archived from STATE.md Current Phase Steps (burst 165 rotation)
+
+| Phase 1d pass 83 + fix burst | adversary + architect + PO + state-manager | COMPLETE | Pass 83: NOT CLEAN — 3 findings ALL FIXED: F-P83-03 (HIGH) ADR-013 tools/list vs tools/call swapped between BC-2.09.006/007 in Context + BC Anchors; FIXED: ADR-013 v1.2 (method-name discriminators added; authority note + inline comment widened; Attribution Note annotated "[completed — BC-2.09.006 v1.1]"). F-P83-01 (MED) ToolCallDialect anchor PC1–PC4 cited wrong PCs for object-safety (PC10) + E-PROV-009 (PC8/PC9); FIXED → PC1–PC9+PC10. F-P83-02 (MED) ProviderFallbackPolicy anchor PC1–PC4 for E-PROV-010 (actually PC5); FIXED → PC1–PC4+PC5. interface-definitions → v2.27. Full 16-anchor audit: 14 PASS. Sibling-checks 2/2 PASS. D20 trait seams fully cross-read. Novelty MEDIUM. Trajectory →3 (P1D-83). Counter 0/3. Burst 162. |

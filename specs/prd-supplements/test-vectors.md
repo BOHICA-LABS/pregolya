@@ -1,16 +1,16 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-07-16T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "[live-index — aggregated from 95 BC files]"
+input-hash: "334c597"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 ---
@@ -131,9 +131,46 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.17.001 | SS-17 | 5 | — | `TV-NNN` | | Kani harness scope (all 3 VPs) |
 | BC-2.17.002 | SS-17 | 5 | — | `TV-NNN` | | cargo-fuzz targets |
 
-**Total vectors (95 authored BCs):** approximately 516 canonical test vectors across 95 BC files.
+**Total vectors (95 authored BCs):** 503 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **512 total vectors** across 95 BC files.
+
+> **GTV convention:** The TV Count column counts standard canonical vectors; the GTV Count column counts golden test vectors (Red Gate acceptance data reproduced in §GTV). Grand totals are expressed as `<TV Count> + <GTV Count> = <total>` to prevent ambiguity.
 
 **Red Gate BCs (5):** BC-2.02.003, BC-2.02.004, BC-2.07.002, BC-2.09.004, BC-2.09.005
+
+---
+
+## Per-Subsystem Test Vectors
+
+> **Index model:** Canonical per-BC vectors reside in individual BC files under
+> `behavioral-contracts/ss-NN/BC-S.SS.NNN.md`. The inventory table above is the
+> authoritative index. Per-subsystem inline vector tables are not duplicated here —
+> see each BC file's `## Test Vectors` section for the full `TV-NNN` rows.
+
+[TODO: If inline per-subsystem tables are required in this supplement, populate
+from the BC files following the template format.]
+
+---
+
+## Cross-Subsystem Integration Vectors
+
+> Integration scenarios that span multiple subsystems. These are not covered by
+> individual BC files and require end-to-end test composition.
+
+| Scenario | Input | Step 1 Output | Step 2 Input | Final Output |
+|----------|-------|--------------|-------------|-------------|
+| [TODO: add cross-subsystem integration scenarios] | | | | |
+
+---
+
+## Golden File References
+
+> Pointers to golden test data files on disk. BC-2.07.002 GTVs are reproduced
+> inline in §Golden Test Vectors below; this table references persistent fixture
+> files when they exist.
+
+| Vector Set | File | Format | BC Coverage |
+|-----------|------|--------|------------|
+| Non-ASCII splitter parity | `tests/fixtures/splitter_golden.toml` (created at Phase 3) | TOML | BC-2.07.002 |
 
 ---
 
@@ -219,6 +256,7 @@ primary_consumers: [test-writer, holdout-evaluator]
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.6 | 2026-07-16 | F-P85-04 (MED): Grand-total reconciliation. Independent recount of TV Count column (95 rows, header excluded) yields 503 canonical test vectors (per-SS: SS-01=20, SS-02=33, SS-03=15, SS-04=35, SS-05=32, SS-06=15, SS-07=17, SS-08=71, SS-09=41, SS-10=22, SS-11=25, SS-12=47, SS-13=34, SS-14=30, SS-15=41, SS-16=15, SS-17=10). BC-2.07.002 GTV Count column = 9 golden test vectors (separate classification from canonical TVs). Convention established: 503 canonical TVs + 9 GTVs = 512 total vectors. Old total "approximately 516" replaced with exact reconciled figures. "approximately" hedge removed. v1.5 figure of 516 was carried forward from the v1.5 "534→516 (−18)" arithmetic without a fresh row-sum. Sibling-sweep: no other .factory/specs/ or .factory/planning/ documents cite 516 as a test-vector total. Stale "516" appears only in this file's grand-total line (fixed here) and in v1.5 changelog history (preserved). | F-P85-04 |
 | 1.5 | 2026-07-15 | F-P84-01 + OBS-P84-A + OBS-P84-B (D18-P84-A): SS-11 counts corrected (header-row over-count): BC-2.11.001 5→4, BC-2.11.002 6→5, BC-2.11.003 5→4, BC-2.11.004 5→4, BC-2.11.005 5→4, BC-2.11.006 5→4. SS-04 same defect audited and corrected: BC-2.04.001/002/003/004/006/007 5→4 each (BC-2.04.005 was already correct at 5). SS-13 same defect audited and corrected: BC-2.13.001/002 5→4, BC-2.13.003/004/005/006 6→5. Format label "narrative" → "table (unlabelled)" for all 19 affected rows (SS-04 001–007, SS-11 001–006, SS-13 001–006) — these BCs use `\| Input \| Expected Output \| Category \|` tables without TV-NNN IDs, not prose narrative. Usage note 3 rewritten accordingly. Total updated 534→516 (−18). | F-P84-01, OBS-P84-A, OBS-P84-B |
 | 1.4 | 2026-07-15 | F-P73-01: added 9 D20 BC inventory rows (BC-2.04.008, BC-2.08.013, BC-2.08.014, BC-2.09.006, BC-2.09.007, BC-2.13.007, BC-2.15.004, BC-2.15.005, BC-2.15.006) with live-derived vector counts; BC-2.10.003 TV count corrected 5→7 (v1.2 added TV-006/007 for OnCeiling::Summarize + RunContext.budget_info); total updated 86→95 BCs, ~475→~534 vectors; frontmatter input-hash annotation updated 86→95. | F-P73-01 |
 | 1.3 | 2026-07-15 | F-P64-02 sweep fix: corrected v1.1 changelog row date `2026-07-16` → `2026-07-14` (same root cause as bc-authoring-plan.md v1.1; PASS-36 = 2026-07-14). No content change; metadata-only. (F-P64-02, ADV-P1D-PASS-64) | F-P64-02 |

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.1"
+version: "1.2"
 status: active
 producer: architect
 timestamp: 2026-07-16T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "3bcecc0"
 traces_to: ARCH-INDEX.md
 decisions: [D17]
 changelog:
+  - "1.2 (F-P85-01/F-P85-02/F-P85-03 / 2026-07-16): F-P85-01 (HIGH): correct splitters::parity citation R8/BC-2.07.003 → R8/BC-2.07.002 (BC-2.07.003 is Short-Document single-chunk, not the R8 Red Gate; the non-ASCII parity Red Gate BC is BC-2.07.002). F-P85-02 (HIGH): correct memory::write_guard Boundary citation ADR-012/BC-2.15.006 → ADR-012/BC-2.15.005 (BC-2.15.006 is Frozen-Snapshot Context Mutation governing graph::scheduler + core::context_mutation; the MemoryWriteGuard enforcement BC is BC-2.15.005 per its Architecture Anchors). F-P85-03 (MED): add missing Pure Core row for core::budget (BudgetPolicy trait, PolicyDecision, TokenUsage, RunContext — definitions-only, no execution logic per ADR-009 Option 3 / BC-2.10.001); closes Iron Law completeness gap. Pure Core 21→22, total 57→58 (28 effectful / 8 boundary unchanged). Re-verification of all 16 v1.1 rows: remaining 14 rows PASS citation correctness audit."
   - "1.1 (OBS-P84-C / 2026-07-16): classify 16 previously-unclassified modules — adds server::security, macros::tool/entrypoint/task, splitters::parity, core::context_mutation, core::write_guard to Pure Core; mcp::discovery, mcp::server, memory::skills, ferrochain-standard-tests, xtask, ferrochain-community to Effectful Shell; server::stores, sandbox::policy, memory::write_guard to Boundary Modules. Closes Iron Law gap (adversarial pass 84 finding OBS-P84-C). Also reclassify memory::store from Pure Core → Boundary (defect: '(validation)' qualifier left async dispatch surface unclassified, violating Iron Law; parallel to checkpoint::saver storage-trait Boundary pattern; BC-2.15.001 / SS-15). Module count: 41 rows before (15 pure / 22 effectful / 4 boundary) → 57 rows after (21 pure / 28 effectful / 8 boundary)."
   - "1.0 (2026-07-14): initial purity boundary map authored."
 ---
@@ -61,9 +62,10 @@ side effects. Kani proofs operate here.
 | `macros::tool` | ferrochain-macros | compile-time `TokenStream → TokenStream`; expands `#[tool]` to `ToolDefinition` plumbing; no runtime I/O (ADR-008 / BC-2.08.010) | — |
 | `macros::entrypoint` | ferrochain-macros | compile-time `TokenStream → TokenStream`; expands `#[entrypoint]` to START-edge wiring; no runtime I/O (ADR-008 / BC-2.08.011) | — |
 | `macros::task` | ferrochain-macros | compile-time `TokenStream → TokenStream`; expands `#[task]` to task-registration boilerplate; no runtime I/O (ADR-008 / BC-2.08.012) | — |
-| `splitters::parity` | ferrochain-splitters | deterministic equality check against golden reference vectors; no I/O (R8 / BC-2.07.003) | — |
+| `splitters::parity` | ferrochain-splitters | deterministic equality check against golden reference vectors; no I/O (R8 / BC-2.07.002) | — |
 | `core::context_mutation` | ferrochain-core | definitions-only: `ContextSourceSpec`, `ContextMutationConfig` pure structs; no execution logic (ADR-012 Decision 1) | — |
 | `core::write_guard` | ferrochain-core | definitions-only: `MemoryWriteRequest`, `MemoryWriteGuard` trait (`validate()` synchronous, no I/O per ADR-012 Decision 1), `WriteGuardDecision` | — |
+| `core::budget` | ferrochain-core | definitions-only: `BudgetPolicy` trait (`evaluate()` pure, no async, no I/O per ADR-009 Option 3), `PolicyDecision` enum (Allow/Escalate/Deny), `TokenUsage` struct, `RunContext` struct; no execution logic (dispatch engine lives in `graph::budget`) (ADR-009 Option 3 / BC-2.10.001) | — |
 
 **Kani constraint:** Kani model checking operates on finite, bounded loops. `graph::channels`
 reducer loop must be bounded by the number of tasks per super-step. `sandbox::path_guard`
@@ -120,7 +122,7 @@ dispatch is integration-tested.
 | `mcp::ingress` | ferrochain-mcp | Untrusted-ingress routing decision | GuardrailHook dispatch |
 | `server::stores` | ferrochain-server | `IdempotencyStore`/`RateLimitStore`/`RunStore` trait interface definitions (pure seams per NE-08) | Backend I/O when trait impl is dispatched (store reads/writes) |
 | `sandbox::policy` | ferrochain-sandbox | `SandboxPolicy` evaluation: pure compatibility check of policy requirements against backend capabilities; `Err(PolicyNotEnforceable)` on mismatch (NE-01 / SS-13) | Effectful backend enforcement when policy is applied (calls sandbox backend) |
-| `memory::write_guard` | ferrochain-memory | pure `MemoryWriteGuard::validate()` call (synchronous, no I/O per ADR-012 Decision 1); returns `WriteGuardDecision` (Allow/Deny/Transform) | effectful `MemoryStore` write commit/abort; injection-scanner guard enforcement (ADR-012 / BC-2.15.006) |
+| `memory::write_guard` | ferrochain-memory | pure `MemoryWriteGuard::validate()` call (synchronous, no I/O per ADR-012 Decision 1); returns `WriteGuardDecision` (Allow/Deny/Transform) | effectful `MemoryStore` write commit/abort; injection-scanner guard enforcement (ADR-012 / BC-2.15.005) |
 | `memory::store` | ferrochain-memory | `MemoryStore` key/query validation logic; no I/O | async KV/vector/erasure ops dispatched to backend implementations (sqlite/in_memory/search/skills); parallel structure to `checkpoint::saver` storage-trait Boundary pattern (BC-2.15.001 / SS-15) |
 
 > **Storage-trait Boundary pattern:** `checkpoint::saver` (SS-04) and `memory::store` (SS-15)

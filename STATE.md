@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.3"
+version: "3.4"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-16T12:11:00Z
+timestamp: 2026-07-16T12:35:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "Phase 1d burst 164 COMPLETE — D-84 cite; trajectory-tail →1→2→3→1; OBS-P84-C closed (purity-boundary-map v1.1, 57 rows, 21/28/8); adversary pass 85 next"
+current_step: "Phase 1d burst 165 COMPLETE — D-85 cite; trajectory-tail →2→3→1→4; purity-boundary-map v1.2 (58 rows, 22/28/8), test-vectors v1.6 (512); adversary pass 86 next"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -38,24 +38,24 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-16 — burst 164: OBS-P84-C closed (purity-boundary-map v1.1, 57 rows, 21/28/8); trajectory-tail →1→2→3→1 |
+| **Last Updated** | 2026-07-16 — burst 165: pass 85 (4 findings) fixed; purity-boundary-map v1.2 (58 rows, 22/28/8); test-vectors v1.6 (512); trajectory-tail →2→3→1→4 |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Burst 164 COMPLETE — OBS-P84-C closed; NEXT: dispatch adversary pass 85. |
+| **Current Step** | Burst 165 COMPLETE — pass 85 fixes applied; NEXT: dispatch adversary pass 86. |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80); trajectory-tail →1→2→3→1 |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85); trajectory-tail →2→3→1→4 |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
 | 7: Convergence | not-started | | | | |
-| Adversary pass-84 complete; pass-85 next | in-progress | 2026-07-14 | — | counter 0/3 | trajectory-tail →1→2→3→1 |
-| Fix burst 164 complete (86 total) | complete | 2026-07-16 | 2026-07-16 | OBS-P84-C CLOSED | fix burst architect-half |
+| Adversary pass-85 complete; pass-86 next | in-progress | 2026-07-14 | — | counter 0/3 (reset by P85 4 findings) | trajectory-tail →2→3→1→4 |
+| Fix burst 165 complete (87 total) | complete | 2026-07-16 | 2026-07-16 | 4 findings fixed (2 HIGH cite-corrections, 2 MED) | fix burst architect+PO |
 
 ## Current Phase Steps
 
@@ -63,11 +63,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1d pass 83 + fix burst | adversary + architect + PO + state-manager | COMPLETE | Pass 83: NOT CLEAN — 3 findings ALL FIXED: F-P83-03 (HIGH) ADR-013 tools/list vs tools/call swapped between BC-2.09.006/007 in Context + BC Anchors; FIXED: ADR-013 v1.2 (method-name discriminators added; authority note + inline comment widened; Attribution Note annotated "[completed — BC-2.09.006 v1.1]"). F-P83-01 (MED) ToolCallDialect anchor PC1–PC4 cited wrong PCs for object-safety (PC10) + E-PROV-009 (PC8/PC9); FIXED → PC1–PC9+PC10. F-P83-02 (MED) ProviderFallbackPolicy anchor PC1–PC4 for E-PROV-010 (actually PC5); FIXED → PC1–PC4+PC5. interface-definitions → v2.27. Full 16-anchor audit: 14 PASS. Sibling-checks 2/2 PASS. D20 trait seams fully cross-read. Novelty MEDIUM. Trajectory →3 (P1D-83). Counter 0/3. Burst 162. |
 | Phase 1d pass 82 + fix burst | adversary + PO + state-manager | COMPLETE | Pass 82: NOT CLEAN — 2 MED (F-P82-01: BC-2.04.008 PC3 listed query as FtsSearchConfig field — contradicts signature/PC1/ECs/TVs; FIXED: PC3 → query standalone, config = {thread_id, limit}; BC-2.04.008 v1.4. F-P82-02: interface-definitions E-CHKPT-008 blanket "raised at construction" for both limit=0 AND malformed-FTS5-query; per BC, EC-002 = SEARCH-TIME; FIXED: note split construction/call-time; interface-definitions v2.26). PO seam audit 10/10 PASS. Gates #21/#23/#24/#29/#30 rotated CLEAN. Sibling-check BC-2.08.014 v1.1 PASS. Novelty MEDIUM (FTS seam). Trajectory →2 (P1D-82). Counter 0/3. Burst 161. |
 | Phase 1d pass 81 + fix burst | adversary + PO + state-manager | COMPLETE | Pass 81: NOT CLEAN — 1 MED (F-P81-01: BC-2.08.014 TV-007 asserted `Err(E-CORE-005 ValidationFailed)`; "ValidationFailed" fabricated — no PascalCase variant in E-CORE-005; 11 sibling usages all bare-code form. FIXED: TV-007 → `Err(FerrochainError { category: VAL, code: E-CORE-005 })`; BC-2.08.014 → v1.1). MANDATORY hedge sweep CLEAN. Sibling-check 1/1 PASS. Novelty LOW-MEDIUM. Trajectory →1 (P1D-81). Counter 0/3. Burst 160. |
 | Phase 1d pass 84 + fix burst (PO-half) | adversary + PO + state-manager | COMPLETE-PO-HALF | Pass 84: NOT CLEAN — F-P84-01 (MED) FIXED: test-vectors header-row overcount; class wider: 18 rows corrected SS-04/SS-11/SS-13; total 534→516; test-vectors v1.5. OBS-P84-A FIXED: 19 "table (unlabelled)" relabels + Usage Note 3 rewritten. OBS-P84-B FIXED (D18-P84-A): stale version pins in SS-11 BC bodies; BC-2.11.002 v1.5 / .003 v1.4 / .004 v1.4 (section-anchor-only citations). OBS-P84-C [process-gap] OPEN (architect dispatch pending): purity-boundary-map.md v1.0 Iron Law vs unclassified modules (mcp::server, memory::write_guard, memory::skills, server::stores, sandbox::policy, mcp::discovery). Sibling-checks 3/3 PASS. Trajectory →1 (P1D-84). Counter 0/3. Burst 163. |
 | Phase 1d pass 84 + fix burst (architect-half) | architect + state-manager | COMPLETE | Burst 164: OBS-P84-C CLOSED — purity-boundary-map.md v1.0→v1.1; full 35-module-universe Iron Law audit: 57 rows (21 pure / 28 effectful / 8 boundary); +7 Pure Core (server::security, macros::tool/entrypoint/task, splitters::parity, core::context_mutation, core::write_guard); +6 Effectful Shell (mcp::discovery, mcp::server, memory::skills, ferrochain-standard-tests, xtask, ferrochain-community); +3 Boundary (server::stores, sandbox::policy, memory::write_guard); memory::store reclassified Pure Core→Boundary (defect-close: async dispatch surface unclassified). Sibling-sweep 4 files CLEAN. Counter 0/3. |
+| Phase 1d pass 85 + fix burst | adversary + architect + PO + state-manager | COMPLETE | Pass 85: NOT CLEAN — 4 findings ALL FIXED. F-P85-01 (HIGH): purity-boundary-map splitters::parity cited BC-2.07.003 (short-doc single-chunk) vs correct R8 Red Gate BC; FIXED → BC-2.07.002. F-P85-02 (HIGH): memory::write_guard Boundary cited ADR-012/BC-2.15.006 (frozen-snapshot context mutation) vs correct enforcement BC; FIXED → ADR-012/BC-2.15.005 (MemoryWriteGuard). F-P85-03 (MED): core::budget missing from purity-boundary-map; FIXED: Pure Core row added (BudgetPolicy/PolicyDecision/TokenUsage/RunContext per ADR-009/BC-2.10.001); 21→22 pure, 57→58 rows; purity-boundary-map v1.2; 14/14 v1.1 rows re-verified PASS. F-P85-04 (MED): test-vectors hedge "approximately 516" uncounted; FIXED: exact 512 = 503 TV + 9 GTV; GTV convention blockquote note added; test-vectors v1.6. Sibling-checks: 1 PASS + 3 FAIL→fixed. Gates: hedge sweep, #28, #33 spot (CAP-013/CAP-020), #12/#16/#18, version-pin residue, BC-2.11.00x sibling — all PASS. Novelty MEDIUM. Trajectory →4 (P1D-85). Counter 0/3. Burst 165. |
 
 ## Decisions Log
 
@@ -144,16 +144,16 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ## Concurrent Cycles
 
-None currently active. Counter 0/3; trajectory-tail →1→2→3→1.
+None currently active. Counter 0/3; trajectory-tail →2→3→1→4.
 
 ## Convergence Status
 
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 84 (Phase 1d) |
-| Fix bursts completed | 86 (Phase 1d: 72 fix + 5 D19/D20 expansion + 1 pass-77 fix + 1 pass-78 fix + full gate #33 sweep + 1 pass-79 fix + 1 pass-80 fix + 1 pass-81 fix + 1 pass-82 fix + 1 pass-83 fix + 1 pass-84 PO-half fix + 1 pass-84 architect-half fix) |
-| Convergence counter | 0 of 3 (Phase 1d; reset by pass 84 findings; pre-pipeline 3/3 CLOSED) |
-| Finding trajectory | →1→2→3→1 |
+| Adversary passes completed | 85 (Phase 1d) |
+| Fix bursts completed | 87 (Phase 1d: 72 fix + 5 D19/D20 expansion + 1 pass-77 fix + 1 pass-78 fix + full gate #33 sweep + 1 pass-79 fix + 1 pass-80 fix + 1 pass-81 fix + 1 pass-82 fix + 1 pass-83 fix + 1 pass-84 PO-half fix + 1 pass-84 architect-half fix + 1 pass-85 fix) |
+| Convergence counter | 0 of 3 (Phase 1d; reset by pass 85 findings; pre-pipeline 3/3 CLOSED) |
+| Finding trajectory | →2→3→1→4 |
 
 
 ## Session Resume Checkpoint
@@ -161,13 +161,13 @@ None currently active. Counter 0/3; trajectory-tail →1→2→3→1.
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 
 ### RESUME IN ONE BREATH
-"ferrochain Phase 1d convergence loop, 84 passes / 86 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 85 = 43+16+26, 13 ADRs, 33 gates, test-vectors 516). trajectory-tail →1→2→3→1. NEXT ACTION: dispatch adversary pass 85. Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
-### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 164 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
-### PASS-85 SIBLING-CHECKS: test-vectors v1.5 (18 corrected counts, total 516, 19 "table (unlabelled)" labels, Usage Note 3); BC-2.11.002 v1.5 / .003 v1.4 / .004 v1.4 (section-anchor-only citations); purity-boundary-map v1.1 (57 rows, 21/28/8, memory::store→Boundary; Iron-Law-complete vs 35-module universe); gate #28 currency on all touched files.
+"ferrochain Phase 1d convergence loop, 85 passes / 87 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 85 = 43+16+26, 13 ADRs, 33 gates, test-vectors 512). trajectory-tail →2→3→1→4. NEXT ACTION: dispatch adversary pass 86. Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 165 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-86 SIBLING-CHECKS: test-vectors v1.6 (512 = 503 TV + 9 GTV; GTV convention note explicit in blockquote); purity-boundary-map v1.2 (58 rows, 22/28/8; core::budget Pure Core row added; splitters::parity→BC-2.07.002; memory::write_guard→BC-2.15.005); gate #28 currency on both touched files.
 ### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
-### DECISION DELTA (bursts 152–164): D18-P74-A (gate #19 retired-name); D18-P75-A (gate #28 Rules 4/5) + DEFER-002; D18-P77-A (ADR-012 INV-1); D18-P77-B (gate #33 steps 7–10); D18-P78-A (universal error prefix); D18-P78-B (gate #33 step 11 omission-note); D18-P84-A (no version pins in body citations). 33 gates.
+### DECISION DELTA (bursts 152–165): D18-P74-A (gate #19 retired-name); D18-P75-A (gate #28 Rules 4/5) + DEFER-002; D18-P77-A (ADR-012 INV-1); D18-P77-B (gate #33 steps 7–10); D18-P78-A (universal error prefix); D18-P78-B (gate #33 step 11 omission-note); D18-P84-A (no version pins in body citations). 33 gates.
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
-### WRAP METADATA: Date 2026-07-16 | Cycle v1.0.0-greenfield | Burst 164 | Counter 0/3 (Phase 1d)
+### WRAP METADATA: Date 2026-07-16 | Cycle v1.0.0-greenfield | Burst 165 | Counter 0/3 (Phase 1d)
 
 ## Historical Content
 
