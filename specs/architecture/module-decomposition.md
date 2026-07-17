@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.9"
+version: "1.10"
 status: active
 producer: architect
 timestamp: 2026-07-17T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "dab6368"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20]
 changelog:
+  - "1.10 (F-P92-02, 2026-07-17): budget definitions note extended — RunnableConfig (core::config, SS-01) gains budget_config: Option<BudgetConfig> per OPTION A adjudication (BC-2.10.004 PC6 / BC-2.10.003 PC7/TV-004). Parallel to the context_mutations addition in the self-improvement definitions note. No new module rows — BudgetConfig is already a pure-core type in core::budget; the field addition does not change core::config's module boundary or criticality tier."
   - "1.9 (F-P91-02 sibling sweep, 2026-07-17): update budget definitions note to include OnCeiling enum and BudgetConfig struct (both newly defined in interface-definitions.md v2.29); note now lists all six core::budget types: BudgetPolicy, PolicyDecision, OnCeiling, BudgetConfig, TokenUsage, RunContext."
   - "1.0 (initial): base module decomposition authored."
   - "1.1 (ADV-P1D-PASS-29): F-P29-04 correct core::events description from past-tense (RunStarted/Ended, NodeStarted/Ended) to imperative canon (RunStart/Stream/End, NodeStart/Stream/End) per BC-2.06.001 authority."
@@ -57,6 +58,10 @@ credential security primitives, streaming event types.
 > is added (module universe remains 33; tier counts unchanged). The DISPATCH engine (`BudgetEngine`,
 > `EvidenceJournal`) lives in ferrochain-graph::budget per the guardrail core-definitions/graph-dispatch
 > split precedent. Module path: `ferrochain-core/src/budget.rs` (module `core::budget`).
+> `RunnableConfig` (SS-01, `core::config`) gains `budget_config: Option<BudgetConfig>` — per-run
+> budget override field (F-P92-02, OPTION A); `None` inherits `GraphConfig::budget_config`; `Some(bc)`
+> overrides for that single run/resume. Used by `BudgetResume::Extend { new_ceiling }` to apply the
+> extended ceiling without mutating the graph-level config (BC-2.10.004 PC6, BC-2.10.003 PC7/TV-004).
 
 > **Self-improvement definitions (SS-01/SS-15, trait-definitions-only — ADR-012 D20):** ferrochain-core
 > hosts DEFINITIONS for the three D20 self-improvement primitives. These are pure types and traits with

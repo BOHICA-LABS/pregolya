@@ -605,3 +605,14 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 172): D18-P90-A (hash-refresh cascade scope extended; state-manager-executable corpus-wide; root cause: D18-P89-A authority-split blind spot for ARCH-INDEX).
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 172 | Counter 0/3 (Phase 1d)
+
+## Checkpoint archived from burst 173 (2026-07-17)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 91 passes / 95 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 512). trajectory-tail →4→4→1→4. NEXT ACTION: dispatch adversary pass 92 (counter 0/3; D18-P91-A on_ceiling canon [BudgetConfig]; D18-P91-B E-MEMORY-008 minted). Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 173 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-91 FIX SUMMARY: D18-P91-A: on_ceiling canon = BudgetConfig::on_ceiling (not BudgetPolicy trait); BCs 2.10.001/003/004 v1.2/1.5/1.2 fixed; BC-2.06.003 v1.1 corpus residual; capabilities-p0 v1.2 CAP-012; interface-definitions v2.29 adds OnCeiling+BudgetConfig defs; module-decomposition v1.9 + purity-boundary-map v1.4 type inventories. D18-P91-B: E-MEMORY-008 MemoryStoreReadFailed (DURABILITY/broken/Maybe); BC-2.15.004 v1.1; error-taxonomy v1.18; interface-definitions v2.30; census 86 = 43+16+27.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (burst 173): D18-P91-A (on_ceiling canon: BudgetConfig struct owns on_ceiling; BudgetPolicy trait stays pure); D18-P91-B (E-MEMORY-008 MemoryStoreReadFailed minted; census 85→86 = 43+16+27).
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 173 | Counter 0/3 (Phase 1d)

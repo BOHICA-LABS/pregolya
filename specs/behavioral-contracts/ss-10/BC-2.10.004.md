@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.004
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.3 (F-P92-01, 2026-07-17): PC6 BudgetResume::Extend ceiling-application mechanism corrected per interface-definitions v2.31 §RunnableConfig struct definition and architect adjudication D18-P92-A. Old: 'The new_ceiling replaces the policy\\'s current ceiling in the RunnableConfig for the resumed execution.' New: 'The new_ceiling is applied by patching RunnableConfig::budget_config with BudgetConfig { hard_limit: Some(new_ceiling), ..original } for the resumed execution.' Ceiling is applied via the budget_config field on RunnableConfig — not by mutating BudgetPolicy. GraphConfig::budget_config is shared across concurrent runs and must not be mutated per-resume."
   - "1.2 (F-P91-01, 2026-07-17): Attribute on_ceiling to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. Description: 'policy\\'s on_ceiling mode is escalate' → 'BudgetConfig::on_ceiling is OnCeiling::Escalate'. PC1: 'BudgetPolicy with on_ceiling = escalate ... in RunnableConfig' → 'BudgetConfig with on_ceiling = OnCeiling::Escalate ... in GraphConfig.budget_config'. TV-001: same BudgetConfig attribution + OnCeiling::Escalate enum form. EC-001: 'on_ceiling = escalate' → 'BudgetConfig::on_ceiling = OnCeiling::Escalate'. on_ceiling is a data field on BudgetConfig; BudgetPolicy::evaluate is pure and data-free (interface-definitions v2.29 §Engine branching note + ADR-009 Option 3)."
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 propagation. Module field resolved from stale placeholder. All Architecture Anchor crate references already correct per ADR-009 split (BudgetEscalation/BudgetResume types + journal stay in ferrochain-graph as dispatch/escalation artifacts, not policy definitions)."
 traces_to:
@@ -73,8 +74,8 @@ the resume value is consumed FIFO and the interrupted node re-executes from its 
 5. A `JournalEntry` with `decision: Escalate` and the `BudgetEscalation` context is appended
    to the `EvidenceJournal` before the interrupt is raised (BC-2.10.002).
 6. On resume via `Command(resume = BudgetResume::Extend { new_ceiling })`:
-   - The `new_ceiling` replaces the policy's current ceiling in the `RunnableConfig` for the
-     resumed execution.
+   - The `new_ceiling` is applied by patching `RunnableConfig::budget_config` with
+     `BudgetConfig { hard_limit: Some(new_ceiling), ..original }` for the resumed execution.
    - The interrupted node re-executes from the start of its super-step (DI-003).
    - A `JournalEntry` recording the resume decision and new ceiling is appended.
    - Execution continues under the extended ceiling.

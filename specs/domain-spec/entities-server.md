@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.5"
+version: "1.6"
 status: active
 producer: business-analyst
 timestamp: 2026-07-17T00:00:00Z
 changelog:
+  - "1.6 (2026-07-17): D18-P92-A budget canon — BudgetPolicy rewritten as pure data-free trait; BudgetConfig added as the configuration data struct carrying token_ceiling/cost_ceiling_usd/on_ceiling; ER relationship updated from stale BudgetPolicy-injection phrasing to BudgetConfig per-run override model."
   - "1.5 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D11/D13/D17 decisions and CONFLICT-6 grounding baked at authoring time from COMPARATIVE-ASSESSMENT.md, not live state); input-hash recomputed."
   - "1.4 (ADV-P1D-PASS-59): F-P59-02 — add Transform same-boundary rule to §GuardrailHook: new_content must be the same IngressContent variant as the evaluated content (ToolResult stays ToolResult, RagChunk stays RagChunk, MemoryItem stays MemoryItem); inner payload may change freely per BC-2.11.002 EC-003."
   - "1.3 (ADV-P1D-PASS-58): F-P58-03 — rewrite §ProvenanceTag and §GuardrailHook to BC-authoritative shapes. ProvenanceTag: source_type/IngressSource/tool_name/invocation_id/timestamp retired → boundary_type: BoundaryType (ToolResult|RAGRetrieval|MemoryIngress), ingress_id: Uuid, sequence_position: usize (BC-2.11.001 PC1–PC3); User/Model variants removed per BC-2.11.001 EC-004. GuardrailHook: action_fn/GuardrailAction/Accept/Reject/Redact retired → evaluate(content: IngressContent, provenance_tag: ProvenanceTag) → GuardrailResult (Pass/Fail{reason,severity: GuardrailSeverity}/Transform{new_content}); authority interface-definitions.md v2.13 §GuardrailHook, BC-2.11.002 PC1–PC4."
@@ -77,11 +78,17 @@ The external value injected to resume a pending Interrupt.
 
 ## Policy / Governance Domain
 
-### BudgetPolicy
-A composable allow/escalate/deny policy evaluated against token and cost tallies for a Run.
+### BudgetConfig
+Configuration data for token and cost limits on a Run.
 - **Fields:** token_ceiling: Option<u64>, cost_ceiling_usd: Option<Decimal>, on_ceiling: PolicyOutcome (Allow | Escalate | Deny)
-- **Composition:** Policies form a chain; first Deny outcome wins. Composable via the `BudgetPolicy` trait.
+- **Relationships:** Optionally set in RunnableConfig::budget_config (per-run override, 0——1); graph-level default lives in GraphConfig::budget_config. The engine constructs the effective BudgetPolicy from the resolved BudgetConfig at run time.
 - **Source:** D17-Q4, HS-4/HS-9, domain-b dark-factory.
+
+### BudgetPolicy (trait)
+A composable allow/escalate/deny policy evaluated against token and cost tallies for a Run.
+- **Nature:** Pure trait — data-free. The engine constructs a BudgetPolicy implementation from the effective BudgetConfig (RunnableConfig::budget_config if set, otherwise GraphConfig::budget_config).
+- **Composition:** Policies form a chain; first Deny outcome wins.
+- **Source:** D17-Q4, D18-P92-A.
 
 ### EvidenceJournal
 Append-only log of BudgetPolicy evaluations and usage events for a single Run.
@@ -139,7 +146,7 @@ Interrupt 0——1 pending ResumeValue
 Assistant 1——N Run
 CronSchedule belongs-to Assistant
 EvidenceJournal belongs-to Run (1——1)
-BudgetPolicy is injected into RunnableConfig (0——1)
+BudgetConfig optionally set in RunnableConfig::budget_config (0——1, per-run override; graph-level default in GraphConfig::budget_config)
 GuardrailHook 0——N registered on IngressBoundary
 ProviderClient implements ChatModel (Runnable)
 MCPTool implements Tool (Runnable)

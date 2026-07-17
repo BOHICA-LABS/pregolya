@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.003
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1b
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.6 (F-P92-01/F-P92-02, 2026-07-17): F-P92-01 — two residual BudgetPolicy-owns-data attributions corrected in canonical test vectors. TV-001 Input: 'BudgetPolicy halt at 10k tokens' → 'BudgetConfig { on_ceiling: OnCeiling::Halt, hard_limit: Some(10_000) }'. TV-007 Input: 'BudgetPolicy with token ceiling = 10000' → 'BudgetConfig with hard_limit = Some(10_000)'. F-P92-02 — precision updates per architect D18-P92-A: PC7 ceiling reference expanded to full field path ('supplies a new RunnableConfig with budget_config: Some(BudgetConfig { hard_limit: Some(higher_ceiling), .. })'); TV-004 Notes column expanded to name the field path ('new RunnableConfig carries budget_config: Some(BudgetConfig { hard_limit: Some(N) })') per interface-definitions v2.31 §RunnableConfig."
   - "1.5 (F-P91-01, 2026-07-17): Attribute on_ceiling to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. Description: 'policy\\'s on_ceiling mode is halt' → 'BudgetConfig::on_ceiling is OnCeiling::Halt'. PC1: 'BudgetPolicy with on_ceiling = halt ... in RunnableConfig' → 'BudgetConfig with on_ceiling = OnCeiling::Halt ... in GraphConfig.budget_config'. PC4 (Summarize variant): same correction (BudgetPolicy → BudgetConfig; RunnableConfig → GraphConfig.budget_config). PC5 (remaining-budget): 'BudgetPolicy is active' → 'BudgetConfig is active'. Architecture Anchor: 'BudgetPolicy::on_ceiling field' → 'BudgetConfig::on_ceiling field'. on_ceiling is a data field on BudgetConfig; BudgetPolicy::evaluate is pure and data-free (interface-definitions v2.29 §Engine branching note + ADR-009 Option 3)."
   - "1.4 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-BUDGET-001 message-prefix correction. PC5: added 'BudgetCeilingReached:' prefix to message string (was 'run halted: budget ceiling reached'; now 'BudgetCeilingReached: run halted: budget ceiling reached'). Taxonomy E-BUDGET-001 corrected from elaborate 'run <run_id> halted; token budget of <limit> exceeded at <actual> tokens' to 'BudgetCeilingReached: run halted: budget ceiling reached' (BC wins on content)."
   - "1.3 (pass-72 fix, 2026-07-15): F-P72-05 — VP Anchors section missing VP-BUDGET-05 and VP-BUDGET-06 (both added in v1.2 Verification Properties table but not propagated to VP Anchors). Added VP-BUDGET-05 and VP-BUDGET-06 to VP Anchors section."
@@ -83,7 +84,7 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
    the `current_usage: TokenUsage` and `policy_name` fields in the error context.
 7. The checkpoint at the last fully-completed super-step is preserved with `status = failed`.
    It is resumable in principle (same `thread_id`, different `run_id`) if the operator
-   supplies a new `RunnableConfig` with a higher ceiling.
+   supplies a new `RunnableConfig` with `budget_config: Some(BudgetConfig { hard_limit: Some(higher_ceiling), .. })`.
 8. *(Summarize variant — `on_ceiling = OnCeiling::Summarize`)* When `PolicyDecision::Deny`
    is received: (a) In-flight tasks for the current super-step are allowed to settle (same
    as halt). (b) One final LLM call is issued with `summarize_prompt` appended as a
@@ -163,13 +164,13 @@ the sub-agent's halt.
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | Graph with 3 LLM nodes; BudgetPolicy halt at 10k tokens; tokens accumulate to 12k on 3rd call | Run fails after 3rd node; caller receives `Err(E-BUDGET-001)`; checkpoint preserved after step 2 | Happy path — ceiling hit on 3rd call |
+| TV-001 | Graph with 3 LLM nodes; `BudgetConfig { on_ceiling: OnCeiling::Halt, hard_limit: Some(10_000) }`; tokens accumulate to 12k on 3rd call | Run fails after 3rd node; caller receives `Err(E-BUDGET-001)`; checkpoint preserved after step 2 | Happy path — ceiling hit on 3rd call |
 | TV-002 | Same graph; budget ceiling hit on 1st LLM call (oversize prompt) | Run fails after step 1; caller receives `Err(E-BUDGET-001)`; journal has 1 entry `decision: Deny` | Ceiling on first call |
 | TV-003 | 3 concurrent tasks in step 2; 1st task triggers Deny | All 3 tasks complete their in-flight work; `put_writes` for all 3; run fails; no step 3 scheduled | Mid-super-step Deny — all in-flight tasks finish |
-| TV-004 | Operator re-runs halted thread with new RunnableConfig (higher ceiling) | New run starts from the preserved checkpoint; runs to completion | Halted checkpoint is resumable |
+| TV-004 | Operator re-runs halted thread with new RunnableConfig (higher ceiling) | New run starts from the preserved checkpoint; runs to completion | Halted checkpoint is resumable; new `RunnableConfig` carries `budget_config: Some(BudgetConfig { hard_limit: Some(N) })` (interface-definitions v2.31 §RunnableConfig) |
 | TV-005 | Sub-agent hits ceiling; parent node receives `Err(E-BUDGET-001)` from sub-agent | Parent node handles error and logs it; parent run continues with remaining budget | Sub-agent halt does not auto-halt parent |
 | TV-006 | `on_ceiling = Summarize { summarize_prompt: "Summarize your findings." }`; budget ceiling hit on step 3; model responds to summarize prompt with "I found X." | Run output = "I found X."; run `status = summary_halt`; `JournalEntry { decision: Deny, mode: Summarize }` written | Summarize variant happy path |
-| TV-007 | `BudgetPolicy` with token ceiling = 10000; after step 1 accumulated = 3000 tokens; `recursion_limit = 25`; node reads `RunContext.budget_info` | `budget_info.tokens_remaining = Some(7000)`; `budget_info.steps_remaining = Some(24)` | Remaining-budget exposure; arithmetic: `10000 - 3000 = 7000`; `25 - 1 = 24` |
+| TV-007 | `BudgetConfig` with `hard_limit = Some(10_000)`; after step 1 accumulated = 3000 tokens; `recursion_limit = 25`; node reads `RunContext.budget_info` | `budget_info.tokens_remaining = Some(7000)`; `budget_info.steps_remaining = Some(24)` | Remaining-budget exposure; arithmetic: `10000 - 3000 = 7000`; `25 - 1 = 24` |
 
 ## Verification Properties
 

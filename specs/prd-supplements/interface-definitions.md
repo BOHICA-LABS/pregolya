@@ -1,12 +1,14 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.30"
+version: "2.32"
 status: active
 producer: product-owner
 timestamp: 2026-07-17T00:00:00Z
 phase: 1d
 changelog:
+  - "2.32 (F-P92-01-sweep, 2026-07-17): §RunnableConfig doc comment — stale verbatim citations to old BC-2.10.003 PC7 and BC-2.10.004 PC6 text updated to match new wording from same burst (F-P92-01/F-P92-02). Old PC7 quote: 'operator supplies a new RunnableConfig with a higher ceiling'. New: 'operator supplies a new RunnableConfig with budget_config: Some(BudgetConfig { hard_limit: Some(higher_ceiling), .. })'. Old PC6 quote: 'new_ceiling replaces the policy\\'s current ceiling in the RunnableConfig for the resumed execution'. New: 'The new_ceiling is applied by patching RunnableConfig::budget_config with BudgetConfig { hard_limit: Some(new_ceiling), ..original } for the resumed execution'. The struct definition itself (pub budget_config: Option<BudgetConfig>) was already correct from v2.31; this entry corrects only the inline authority citations in the doc comment. Exhaust-sweep finding: pattern 'policy\\'s.{0,20}ceiling' matched interface-definitions.md line 155 (prd-supplement, in-scope for fixes per task)."
+  - "2.31 (F-P92-02, 2026-07-17): OPTION A adjudication — add `budget_config: Option<BudgetConfig>` to §RunnableConfig. Authority: BC-2.10.004 PC6 explicitly places new_ceiling 'in the RunnableConfig for the resumed execution'; BC-2.10.003 PC7/TV-004 say 'operator supplies a new RunnableConfig with a higher ceiling'. BudgetResume::Extend { new_ceiling } is processed by the engine, which patches RunnableConfig::budget_config with a cloned BudgetConfig{ hard_limit: Some(new_ceiling), ..original } before resuming — this applies the extended ceiling to only that resumed execution without mutating GraphConfig (which is shared across concurrent runs on the same graph). Formal §RunnableConfig struct block added with all four known fields (recursion_limit, thread_id, budget_config, context_mutations) and per-field BC citations. TOML [budget] comment updated: 'overridable per run' expanded with explicit reference to RunnableConfig::budget_config and BudgetResume::Extend mechanism. Sibling sweep: api-surface.md v1.3→v1.4 (new §ferrochain-core Public Types row for RunnableConfig), module-decomposition.md v1.9→v1.10 (budget definitions note extended). purity-boundary-map unchanged — BudgetConfig already a pure core type; adding Option<BudgetConfig> to RunnableConfig does not change core::config purity classification."
   - "2.30 (F-P91-04, 2026-07-17): Census update 85→86 — E-MEMORY-008 (MemoryStoreReadFailed, DURABILITY) minted in error-taxonomy.md v1.18 (BC-2.15.004 EC-004/TV-008 anchor). E-MEMORY-008 is covered by the existing E-MEMORY-* blanket annotation (§Library/execution-layer codes blanket omission); category DURABILITY is already in the blanket annotation category list (VAL/POLICY/DURABILITY/SECURITY); no HTTP routing row or blanket annotation body change needed. Updated census: 43 HTTP + 16 individual + 27 blanket = 86 (E-MEMORY-* 7→8 in blanket group; E-MCP-* 5 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 = 27)."
   - "2.29 (F-P91-02/F-P91-03, 2026-07-17): F-P91-02 (MED) — add OnCeiling enum and BudgetConfig struct to §BudgetPolicy; both are SS-10 public API surface items absent from the interface spec, leaving implementers unable to build the halt-vs-summarize branch without them. OnCeiling variants: Halt | Escalate | Summarize { summarize_prompt: String } per BC-2.10.003 v1.2 Architecture Anchors + BC-2.10.004. BudgetConfig fields: soft_limit: Option<u64> (Escalate threshold — BC-2.10.001 TV-002), hard_limit: Option<u64> (Deny threshold — BC-2.10.001 TV-003), on_ceiling: OnCeiling (BC-2.10.003 + BC-2.10.004). Prose paragraph added: engine branches on BudgetConfig::on_ceiling after Deny; BudgetPolicy::evaluate stays pure; ADR-009 Option 3 section anchor. BC anchor updated: BC-2.10.003 + BC-2.10.004 + ADR-009 added; TV citation text updated. F-P91-03 (OBS) — fix TOML default_on_ceiling comment: state that 'summarize' is config-API-only (requires summarize_prompt payload; not expressible as a bare-string default; table form documented). Sibling sweep: module-decomposition.md budget note + purity-boundary-map.md core::budget row updated with OnCeiling and BudgetConfig."
   - "2.28 (F-P88-01, 2026-07-17): Version/changelog/timestamp propagation for pass-87 burst body changes. Pass-87 (bc-authoring-plan v2.21) added §CLI Interface, §Exit Code Semantics, and §JSON Output Schema stubs; renamed §'Flag Interaction Rules' → §'Flag Interactions'; and normalized input-hash from legacy 64-char SHA-256 to 7-char MD5 ('cdce094'). Those body modifications landed without a corresponding version/timestamp bump, leaving the file at v2.27/2026-07-15. Correction applied: version 2.27 → 2.28, timestamp → 2026-07-17. No semantic content changes in this entry."
@@ -111,6 +113,61 @@ symbol; distinct from langchain-core's `DEFAULT_RECURSION_LIMIT = 25` in
 `langchain_core.runnables.config` which is the Runnable-layer default); ferrochain
 aligns both layers at 25 per langchain-core `RunnableConfig` convention. The graph-engine-layer
 halt produces a run-level failure embedded in `Run.error` (see embedded omission note below).
+
+#### RunnableConfig — Struct Definition (F-P92-02)
+
+```rust
+/// Per-invocation execution config passed to every `Runnable` method.
+/// Carries per-run overrides for runtime parameters; absent/`None` fields inherit
+/// the graph-level or system defaults.
+///
+/// Module: `ferrochain-core/src/config.rs` (`core::config`), re-exported at crate root.
+/// All fields are optional at construction except `recursion_limit` (has a default).
+pub struct RunnableConfig {
+    /// Maximum Runnable call depth (Runnable-layer) and graph super-step count
+    /// (graph-engine-layer). Default: 25. Dual-layer semantics documented above in
+    /// §RunnableConfig Key Reference.
+    /// Authority: BC-2.01.003 PC5 (Runnable-layer halt), BC-2.03.001 PC5 (graph-layer halt).
+    pub recursion_limit: usize,
+
+    /// Thread identity for checkpoint addressing. `None` = stateless run (no prior
+    /// thread context shared; each invocation is isolated — BC-2.12.004 PC1/EC-001).
+    /// Authority: BC-2.12.004 (schedule thread assignment), entities-server.md §Run.
+    pub thread_id: Option<Uuid>,
+
+    /// Per-run budget policy override.
+    ///
+    /// - `None` → inherit `GraphConfig::budget_config` for this run (graph-level default).
+    /// - `Some(bc)` → use `bc` for this run or resumed execution; `GraphConfig::budget_config`
+    ///   is ignored for the duration of this invocation.
+    ///
+    /// **Precedence rule:** `RunnableConfig::budget_config = Some(_)` takes priority over
+    /// `GraphConfig::budget_config` for the single run or resumed execution. The graph-level
+    /// config is NOT mutated — concurrent runs on the same graph are unaffected.
+    ///
+    /// **BudgetResume::Extend mechanism:** When the execution engine processes a
+    /// `Command(resume = BudgetResume::Extend { new_ceiling })`, it constructs a patched
+    /// `BudgetConfig { hard_limit: Some(new_ceiling), ..original }` and places it in
+    /// `RunnableConfig::budget_config` for the resumed execution. This is the canonical
+    /// mechanism by which the extended ceiling is applied to only that resume.
+    ///
+    /// Authority: BC-2.10.003 PC7 ("operator supplies a new `RunnableConfig` with
+    /// `budget_config: Some(BudgetConfig { hard_limit: Some(higher_ceiling), .. })`"),
+    /// BC-2.10.003 TV-004 (halted checkpoint resumable via new RunnableConfig with budget_config),
+    /// BC-2.10.004 PC6 ("The `new_ceiling` is applied by patching `RunnableConfig::budget_config`
+    /// with `BudgetConfig { hard_limit: Some(new_ceiling), ..original }` for the resumed execution").
+    pub budget_config: Option<BudgetConfig>,
+
+    /// Per-run memory context mutation spec. Declares which memory keys are loaded as a
+    /// frozen-snapshot prompt prefix at run start (`graph::scheduler`). `None` = no memory
+    /// context loaded for this run. Writes during the run are visible at next run start only.
+    /// Authority: BC-2.15.006 PC1 (frozen-snapshot context mutation at run start),
+    /// ADR-012 Decision 1 Primitive B.
+    pub context_mutations: Option<ContextMutationConfig>,
+}
+```
+
+**BC anchor:** BC-2.01.003 PC5 (`recursion_limit` Runnable-layer), BC-2.03.001 PC5 (`recursion_limit` graph-layer), BC-2.12.004 PC1 (`thread_id`), BC-2.10.003 PC7/TV-004 (`budget_config` resume path), BC-2.10.004 PC6 (`budget_config` BudgetResume::Extend), BC-2.15.006 PC1 (`context_mutations`)
 
 ### BaseChatModel
 
@@ -728,7 +785,11 @@ backend = "wasm"               # "wasm" (default, enforcing) | "container" | "pr
                                # 'process' backend emits loud WARNING once per execute() invocation — NOT construction/startup (BC-2.13.002 PC2/EC-002)
 
 [budget]
-# Global budget policy — overridable per run
+# Global budget policy (GraphConfig::budget_config default for all runs on this server).
+# Per-run override: pass RunnableConfig { budget_config: Some(BudgetConfig { ... }), .. }
+# to Runnable::invoke/stream. This is also the mechanism used by BudgetResume::Extend:
+# the engine patches RunnableConfig::budget_config with the extended ceiling for only
+# that resumed execution — GraphConfig is NOT mutated (BC-2.10.004 PC6, F-P92-02).
 default_token_limit = null     # null = unlimited (operator must set a limit)
 default_on_ceiling = "halt"    # "halt" | "escalate"
                                # "summarize" is config-API-only; requires a summarize_prompt

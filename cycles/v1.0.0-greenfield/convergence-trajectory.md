@@ -33,10 +33,11 @@ traces_to: STATE.md
 | P1D-83 | 2026-07-15 | 3 | 0 | 1 | 2 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (semantic-mis-anchor-and-partial-fix-residue: ADR-013 tools/list-vs-call BC swap + ToolCallDialect/ProviderFallbackPolicy anchor PC mis-citations) |
 | P1D-86 | 2026-07-16 | 2 | 0 | 0 | 0 | 0 | LOW | 0/3 | FINDINGS_REMAIN (2 OBS: template-stub TODO markers + gate #28 Rule 5 document-type scope; both fixed same burst; D18-P86-A) |
 | P1D-91 | 2026-07-17 | 4 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (budget-cluster content-layer: on_ceiling mis-anchor to BudgetPolicy TRAIT + BudgetConfig/OnCeiling undefined in interface-definitions + E-MEMORY-008 minted; D18-P91-A/B) |
+| P1D-92 | 2026-07-17 | 2 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (budget-cluster echo: BudgetPolicy-owns-data TV/PC residue + RunnableConfig::budget_config field gap; D18-P92-A) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92)`
 
 ## Per-Pass Details
 
@@ -331,6 +332,34 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Effective verdict:** NOT CLEAN (1 census-closure finding). Adversary spec-content verdict: CLEAN(strict).
 **Trajectory after:** →1 (P1D-90, census-closure); cumulative tail →2→4→4→1
 **Counter:** 0/3 (census-closure finding prevents streak advancement; effective NOT CLEAN per D14 strict-zero)
+
+---
+
+### P1D-91 — Pass 91 (2026-07-17, burst 173)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|---------|
+| P1D-91 | 2026-07-17 | 4 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (budget-cluster content-layer) |
+
+**Axes rotated:** SS-10 BC trio + CAP-012 on_ceiling attribution audit (F-P91-01); interface-definitions completeness for budget types (F-P91-02); TOML default_on_ceiling Summarize exclusion (F-P91-03); BC-2.15.004 EC-004 error-code semantic (F-P91-04); retired-name sweeps (PASS); gate #33 9-code census (PASS); error-code census 85 (PASS); hedge sweep (PASS).
+**Fix summary:** F-P91-01 HIGH (PO+BA) — SS-10 BC trio + CAP-012 attributed on_ceiling to BudgetPolicy TRAIT (impossible — pure trait carries no data field); canon = BudgetConfig STRUCT; FIXED: BC-2.10.001 v1.2, BC-2.10.003 v1.5, BC-2.10.004 v1.2, BC-2.06.003 v1.1, capabilities-p0 v1.2; post-fix corpus grep zero residual (TVs/PCs not swept — residue carried to P92). F-P91-02 MED (architect) — OnCeiling + BudgetConfig undefined in interface-definitions; FIXED: v2.29 adds full defs + engine-branches-on-config prose; siblings module-decomposition v1.9 + purity-boundary-map v1.4. F-P91-03 OBS (architect) — TOML Summarize omitted; ADJUDICATED: bare-string default intentionally excludes Summarize. F-P91-04 OBS (PO) — E-MEMORY-008 MemoryStoreReadFailed MINTED (DURABILITY/broken/Maybe); BC-2.15.004 v1.1; error-taxonomy v1.18; interface-definitions v2.30; census 85→86 = 43+16+27.
+**D18-P91-A:** on_ceiling canon = BudgetConfig STRUCT. **D18-P91-B:** E-MEMORY-008 minted; census 86 = 43+16+27.
+**Trajectory after:** →4 (P1D-91); cumulative tail →4→4→1→4
+**Counter:** 0/3
+
+---
+
+### P1D-92 — Pass 92 (2026-07-17, burst 174)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|---------|
+| P1D-92 | 2026-07-17 | 2 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (budget-cluster echo) |
+
+**Axes rotated:** SS-10 BC TV/PC residue audit (F-P92-01 partial-fix echo); RunnableConfig::budget_config field existence (F-P92-02 interface-gap); error-code census 86 = 43+16+27 recount (PASS); E-MEMORY-008 anchor (PASS); interface-definitions OnCeiling/BudgetConfig defs (PASS); module-decomposition/purity-map inventories (PASS); CAP-012 (PASS); NE-01/02/11/12/13/14 tracing (PASS); gate #33 9-code sample (PASS); no duplicate changelog rows.
+**Fix summary:** F-P92-01 HIGH (PO) — BC-2.10.003 TV-001/007 + BC-2.10.004 PC6 still said "BudgetPolicy" in data-bearing forms; FIXED: TV-001 → "BudgetConfig halt", TV-007 → "BudgetConfig with token ceiling", PC6 → "patch RunnableConfig::budget_config"; exhaustive multi-pattern sweep terminal; BC-2.10.003 v1.6, BC-2.10.004 v1.3. F-P92-02 MED (architect+PO+BA — D18-P92-A) — RunnableConfig had no budget_config field despite BC-2.10.003 PC7 + BC-2.10.004 PC6 naming it as resume patch target; ADJUDICATED OPTION A: RunnableConfig gains `budget_config: Option<BudgetConfig>` (per-run override; None = inherit GraphConfig::budget_config); GraphConfig mutation rejected (concurrent-run race defect); FIXED: interface-definitions v2.32 (§RunnableConfig 4-field struct + BudgetResume::Extend prose), api-surface v1.4 (RunnableConfig row), module-decomposition v1.10 (budget note), entities-server v1.6 (BudgetConfig entity + trait split + ER line corrected); entities-graph swept clean.
+**D18-P92-A:** RunnableConfig::budget_config: Option<BudgetConfig> — per-run override, None = inherit GraphConfig::budget_config; GraphConfig mutation rejected.
+**Trajectory after:** →2 (P1D-92); cumulative tail →4→1→4→2
+**Counter:** 0/3
 
 ---
 
