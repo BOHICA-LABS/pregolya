@@ -2,18 +2,21 @@
 document_type: domain-spec-section
 level: L2
 section: assumptions
-version: "1.0"
+version: "1.1"
 status: active
 producer: business-analyst
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
-  - .factory/planning/market-intel.md (via product-brief overflow)
-  - .factory/STATE.md
-input-hash: "50fddf374941f8f6aad1627e2d957bd40a6106f2af2a580cd170f76e3a6fd203"
+  - .factory/planning/market-intel.md
+  - .factory/comparative/COMPARATIVE-ASSESSMENT.md
+  - .factory/planning/holdout-domains/domain-a-soc-analyst.md
+input-hash: "ef376b0"
 traces_to: L2-INDEX.md
 decisions: [D1, D2, D7, D17]
+changelog:
+  - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D-NNN decisions baked at authoring time); broken path comment removed from market-intel.md entry (awk path-parser strips whitespace; parenthetical comment made the path unresolvable); COMPARATIVE-ASSESSMENT.md added (ASM-001 D17 HYBRID, ASM-009 HS-4/HS-9 grounding); domain-a-soc-analyst.md added (ASM-008 risk-tiered HITL source); input-hash recomputed."
 ---
 
 # Assumptions

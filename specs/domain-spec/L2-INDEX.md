@@ -1,10 +1,10 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.2"
+version: "1.3"
 status: active
 producer: business-analyst
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -12,8 +12,8 @@ inputs:
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-  - .factory/STATE.md
-input-hash: "06d989076ed5db7de243da4eaa4d5f44071df64cf4b451fb4c85faa4d695aa1a"
+  - .factory/planning/holdout-domains/domain-d-hermes-agent.md
+input-hash: "5da00db"
 traces_to: .factory/specs/product-brief.md
 sections:
   - capabilities-p0.md
@@ -32,8 +32,9 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D20]
 changelog:
-  - "v1.1: Split capabilities.md → capabilities-p0.md + capabilities-p1-p2.md; entities.md → entities-graph.md + entities-server.md; ubiquitous-language.md → ubiquitous-language-core.md + ubiquitous-language-server.md (all three were over 1,500-token threshold per DF-021)"
+  - "v1.3 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D-NNN decisions baked at authoring time, not live state); domain-d-hermes-agent.md added (D19/D20 forcing function for CAP-020/CAP-021 added in v1.2); input-hash recomputed. All section files updated in same burst."
   - "v1.2 (D20 sub-burst 2): CAP-020 (Self-Improvement Primitives: SkillStore + MemoryWriteGuard + Frozen-Snapshot Context Mutation, P1) and CAP-021 (MCP Server Role: Expose Registered Tools as MCP Server Endpoint, P1) added to capabilities-p1-p2.md (v1.1). CAP count 19→21; P1 count 5→7; total 19→21. D20 added to decisions list."
+  - "v1.1: Split capabilities.md → capabilities-p0.md + capabilities-p1-p2.md; entities.md → entities-graph.md + entities-server.md; ubiquitous-language.md → ubiquitous-language-core.md + ubiquitous-language-server.md (all three were over 1,500-token threshold per DF-021)"
 ---
 
 # L2 Domain Specification: ferrochain

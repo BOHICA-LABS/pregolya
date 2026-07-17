@@ -2,21 +2,30 @@
 document_type: architecture-section
 level: L3
 section: system-overview
-version: "1.0"
+version: "1.1"
 status: active
 producer: architect
-timestamp: 2026-07-14T12:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-  - .factory/STATE.md
-input-hash: "90d28fa"
+  - .factory/specs/domain-spec/invariants.md
+input-hash: "2789cba"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D9, D11, D13, D17]
+changelog:
+  - "1.0 (initial): system overview authored."
+  - "1.1 (provenance-fix-169/2026-07-17): remove .factory/STATE.md from inputs (not a genuine spec-content input; D-NNN decisions are baked-in stable facts); add domain-spec/invariants.md (genuine: DI-001, DI-008, DI-010 cited in Principles table)."
 ---
 
 # System Overview: ferrochain
+
+## [Section Content]
+
+This section documents ferrochain's system-level architecture: its vision and deployment
+topology, architecture principles, 18-crate topology, wave delivery plan, design-forcing
+holdout domains, and key implementation constraints.
 
 ## Vision
 

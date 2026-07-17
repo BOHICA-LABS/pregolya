@@ -2,17 +2,21 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p0
-version: "1.0"
+version: "1.1"
 status: active
 producer: business-analyst
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
-  - .factory/STATE.md
-input-hash: "f6a9de5f38547412b42b12dbd19c3733ab48c3741c91c3cacad08519057dee21"
+  - .factory/comparative/COMPARATIVE-ASSESSMENT.md
+  - .factory/planning/holdout-domains/domain-a-soc-analyst.md
+  - .factory/planning/holdout-domains/domain-b-dark-factory.md
+input-hash: "8da8b31"
 traces_to: L2-INDEX.md
 decisions: [D1, D7, D8, D11, D13, D17]
+changelog:
+  - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D-NNN decisions baked at authoring time); COMPARATIVE-ASSESSMENT.md added (D17/CONFLICT-*/NE-* grounding for CAP-004, CAP-005, CAP-007, CAP-008, CAP-012, CAP-013, CAP-016); domain-a-soc-analyst.md added (CAP-013 guardrail-on-ingress forcing function); domain-b-dark-factory.md added (CAP-005 multi-day durability, CAP-012 budget governance forcing function); input-hash recomputed."
 ---
 
 # Domain Capabilities — P0 (Must-Have for Release)

@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.2"
+version: "1.3"
 status: active
 producer: architect
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-04 to_problem_detail()→to_problem() method name correction."
   - "1.2 (ADV-P1D-PASS-64): F-P64-01 adjudication — default port 7437 is mandated; replaced 'no default port mandated' with authoritative default per interface-definitions.md §Base URL."
+  - "1.3 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst; add [Section Content] template compliance fix. No spec content changes."
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "e595e17"
+input-hash: "44cd647"
 traces_to: ARCH-INDEX.md
 decisions: [D13, D17]
 ---
@@ -23,6 +24,10 @@ decisions: [D13, D17]
 > Full signatures in `prd-supplements/interface-definitions.md`. This file is the
 > architecture-level summary: which traits belong to which crate/subsystem, and
 > the HTTP endpoint catalog for ferrochain-server.
+
+## [Section Content]
+
+This file documents ferrochain's public API surface: the public Rust traits by crate/subsystem, and the HTTP endpoint catalog for ferrochain-server. It is the architecture-level summary; full signatures live in `prd-supplements/interface-definitions.md`.
 
 ## Public Rust Traits (ferrochain-core)
 

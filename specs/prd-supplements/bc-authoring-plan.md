@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.23"
+version: "2.24"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -10,8 +10,7 @@ phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-  - .factory/STATE.md
-input-hash: "90d28fa"
+input-hash: "e786fea"
 traces_to: prd.md
 total_bcs: 95
 total_batches: 15
@@ -1741,6 +1740,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.24 | 2026-07-17 | Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file; input-hash drifts on every state write with zero spec-content signal for this supplement. All genuine derivation sources (prd.md, domain-spec/L2-INDEX.md) were already listed and are unchanged. Input-hash recomputed (90d28fa → e238778). | burst-168-provenance-fix |
 | 2.23 | 2026-07-17 | F-P88-02/03/04 — (1) Gate #16/gate #22 live gate prose: "Error Category Codes table" → "Error Categories table" (2 sites; section was renamed in pass-87 burst); gate #29 live scope item: "Flag Interaction Rules table rows" → "Flag Interactions table rows" (1 site; section renamed in pass-87 burst). Line-1297 "Flag Interaction Rules row for sandbox-wasm" in Motivating Instance block verified historical audit-trail — left as-is. Full .factory/specs/ grep for both old names: all remaining occurrences are changelog/audit-trail rows, all exempt. (2) Changelog gap adjudication: versions 2.8 and 2.9 EXISTED in committed git history (4ed9ed1 and 96f6317 respectively) but their changelog TABLE ROWS were omitted when version numbers were incremented. Reconstructed entries added to close the gap (git dates and commit descriptions used as evidence; see rows below). (3) Frontmatter `subsystem_note` and guideline #1 rewritten to past-tense/historical form: SS-TBD status was RESOLVED at Phase 1b (2026-07-14); all 95 BCs carry real SS-NN IDs. (4) error-taxonomy.md bumped v1.16→v1.17 and interface-definitions.md bumped v2.27→v2.28 with timestamps → 2026-07-17, recording the pass-87 body changes that lacked version propagation (F-P88-01). input-hash updated after all edits. | F-P88-01, F-P88-02, F-P88-03, F-P88-04 |
 | 2.22 | 2026-07-17 | Pass-87 burst completion — all 61 remaining stale BC hashes normalized (53 legacy 64-char SHA-256 + 8 `[pending state-manager]` placeholders → correct 7-char MD5 via compute-input-hash for each). Full lifecycle frontmatter (extracted_from, modified, deprecated, deprecated_by, replacement, retired, removed, removal_reason) added to all files that lacked it. test-vectors.md cascade: hash updated "334c597" → "5c68c70" (BC-2.01.001 and BC-2.07.002 in its inputs both changed). Gate #34 updated: Placeholder row rewritten to document only the `[live-index]` sanctioned exception class with explicit rationale; `[pending state-manager]` class removed (all resolved). Census line updated to 95/95 MATCH, STALE=0. Final gate #34 state: zero-exception compliance. | F-P87-02, D18-P87-B |
 | 2.21 | 2026-07-17 | Pass-87 fix burst — D18-P87-B RESOLVED: single-format canonical (7-char truncated MD5 for all spec artifacts). `compute-input-hash` returns 7-char for BC files too; the two-format convention documented in v2.20 was incorrect. Gate #34 rewritten to remove two-format language and document the corrected single-format convention with zero-exception census commands. Input-hash cleanup completed: (1) 3 prd-supplements normalized from legacy 64-char SHA-256 to correct 7-char (error-taxonomy "f766c52", nfr-catalog "465a82f", interface-definitions "cdce094"); (2) 19 BC files in ss-08/ss-10/ss-11/ss-14 updated from stale abbreviated hashes to correct 7-char; (3) 15 additional BC files (ss-01/03/04/05/07/08/12/13/16) updated after cascade drift triggered by error-taxonomy.md section rename (prerequisite for template compliance); (4) module-criticality.md stale hash corrected ("fed74e2" → "b8ac573", STATE.md drift). Supplement template compliance: error-taxonomy "Error Category Codes" renamed → "Error Categories"; interface-definitions: added §CLI Interface, §Exit Code Semantics, §JSON Output Schema stubs and renamed §Flag Interaction Rules → §Flag Interactions. BC template compliance: lifecycle frontmatter keys added to 37 BC files missing extracted_from/modified/deprecated/etc. Pre-existing residual: 53 BC files with legacy 64-char SHA-256 hashes (not caused by this burst; route to dedicated cleanup burst). prd-supplements census: 6/6 PASS. BC 7-char census: 34/34 CLEAN. | F-P87-01, F-P87-02, D18-P87-B |

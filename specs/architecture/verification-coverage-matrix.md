@@ -2,25 +2,29 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "1.3"
+version: "1.5"
 status: active
 producer: architect
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "bdd28b4"
+input-hash: "1241069"
 traces_to: ARCH-INDEX.md
 changelog:
   - "1.0 (initial): base verification coverage matrix authored."
   - "1.1 (ADV-P1D-PASS-37): F-P37-02 correct Coverage by Criticality Tier summary to CRITICAL 9 / HIGH 12 / MEDIUM 10 / LOW 2 = 33 (was stale 6/7/5/2=20); complete Per-Module Coverage Status table to all 33 architecture modules (was 27); added rows for ferrochain-macros (HIGH), sandbox-wasm (MEDIUM), ferrochain-standard-tests (MEDIUM), memory-store (MEDIUM), xtask (LOW), ferrochain-community (LOW)."
   - "1.2 (ADV-P1D-PASS-45): F-P45-01 correct retry crate from ferrochain-graph to ferrochain-core per module-criticality.md line 64 (SS-16); relocate row from ferrochain-graph cluster into ferrochain-core cluster. Full 33-row crate-ownership diff against module-criticality.md — no other mismatches found."
   - "1.3 (gate #25 backfill + D20/CAP-021): F-backfill add write-guard enforcement HIGH row missing since ADR-012 D20 burst (matrix header was 33, module-criticality was 34 — drift corrected); add mcp-server MEDIUM row (CAP-021); header 33→35 (CRITICAL 9 / HIGH 13 / MEDIUM 11 / LOW 2); Coverage-by-Tier HIGH 12→13, MEDIUM 10→11."
+  - "1.4 (provenance-fix-169/2026-07-17): cascade input-hash recompute (module-decomposition.md v1.8 content change); add [Section Content] template compliance fix."
+  - "1.5 (provenance-fix-169/2026-07-17): cascade input-hash recompute (VP-INDEX.md v1.1 content change — column reorder for hook compatibility)."
 ---
 
 # Verification Coverage Matrix: ferrochain
+
+## [Section Content]
 
 > **VP-INDEX.md is the authoritative VP catalog.** This matrix derives from it.
 > Arithmetic invariant: VP total (5) = Kani (3) + integration (2). Status is updated per gate.

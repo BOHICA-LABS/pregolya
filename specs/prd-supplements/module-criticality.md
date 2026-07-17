@@ -1,20 +1,23 @@
 ---
 document_type: prd-supplement-module-criticality
 level: L3
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1a
 changelog:
-  - "1.1 (ADV-P1D-PASS-31): OBS-P31-1 add exclusion-criteria note (facade/re-export crates #1/#16/#17/#18 excluded; xtask classified as dev-tooling for CI gate); ferrochain-macros (#15) DECISION — receives HIGH-tier row (not excluded) because #[tool]/#[entrypoint] proc-macros affect P0 tool-calling and graph-composition paths per ADR-008; add ferrochain-macros to Module Inventory + HIGH row to classification table; update Classification Summary counts (HIGH 7→8, Total 19→20)."
-  - "1.2 (ADV-P1D-PASS-32): F-P32-02 fix Classification Summary MEDIUM cell: was 5 (wrong), actual MEDIUM rows = 4; corrected to 4, percentage updated 25%→20%; self-sum now 6+8+4+2=20 reconciles with stated total."
+  - "1.4 (2026-07-17): Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file; input-hash drifts on every state write with zero spec-content signal for this supplement. Added three ADR files as genuine derivation inputs: ADR-008 (proc-macro #[tool]/#[entrypoint] tier-HIGH justification), ADR-012 (memory::write_guard tier-HIGH decision), ADR-013 (mcp::server tier-MEDIUM decision). D20/D17 decision references cited inline are stable baked-in facts, not live dependencies. Input-hash recomputed."
   - "1.3 (pass-72 fix, 2026-07-15): F-P72-03 — add D20 modules per gate #32 PO-registry carrier obligation. (1) memory::write_guard (ferrochain-memory, HIGH) — ADR-012 Decision 4: calls validate() on every write; injection scanning dispatch; security-sensitive execution path. ADR-012 Decision 4 explicitly excludes memory::skills ('no independent execution logic beyond storage delegation') — no new row for skills module. (2) mcp::server (ferrochain-mcp, MEDIUM) — pending ADR-013: MCP server tool advertisement and invocation; external client interface. ferrochain-memory crate added to Module Inventory. Classification Summary updated: HIGH 8→9, MEDIUM 4→5, Total 20→22. Gate #25 Part B/C: tier and crate must agree with arch-registry module-criticality.md when that view is updated by architect this burst."
+  - "1.2 (ADV-P1D-PASS-32): F-P32-02 fix Classification Summary MEDIUM cell: was 5 (wrong), actual MEDIUM rows = 4; corrected to 4, percentage updated 25%→20%; self-sum now 6+8+4+2=20 reconciles with stated total."
+  - "1.1 (ADV-P1D-PASS-31): OBS-P31-1 add exclusion-criteria note (facade/re-export crates #1/#16/#17/#18 excluded; xtask classified as dev-tooling for CI gate); ferrochain-macros (#15) DECISION — receives HIGH-tier row (not excluded) because #[tool]/#[entrypoint] proc-macros affect P0 tool-calling and graph-composition paths per ADR-008; add ferrochain-macros to Module Inventory + HIGH row to classification table; update Classification Summary counts (HIGH 7→8, Total 19→20)."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
-  - .factory/STATE.md
-input-hash: "54ec07f"
+  - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
+  - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
+  - .factory/specs/architecture/decisions/ADR-013-mcp-server-module-placement.md
+input-hash: "2ed30d9"
 traces_to: prd.md
 primary_consumers: [architect, test-writer, formal-verifier]
 architect_note: "Architect must confirm crate-to-subsystem mapping and fill Architecture Module column after producing ARCH-INDEX.md"

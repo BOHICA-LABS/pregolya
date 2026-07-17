@@ -2,25 +2,28 @@
 document_type: domain-spec-section
 level: L2
 section: risks
-version: "1.0"
+version: "1.1"
 status: active
 producer: business-analyst
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
-  - .factory/STATE.md
-input-hash: "f6a9de5f38547412b42b12dbd19c3733ab48c3741c91c3cacad08519057dee21"
+  - .factory/comparative/COMPARATIVE-ASSESSMENT.md
+  - .factory/planning/market-intel.md
+input-hash: "1f70914"
 traces_to: L2-INDEX.md
 decisions: [D1, D2, D7, D17]
+changelog:
+  - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (content was stable D-NNN/R-NNN facts baked at authoring time, not live state); COMPARATIVE-ASSESSMENT.md added (R-004/R-005/R-006 sourced from D17-Q9 analysis); market-intel.md added (R-001 competitor intelligence source); input-hash recomputed."
 ---
 
 # Risk Register
 
 > **Sharded L2 section (DF-021).** Navigate via `L2-INDEX.md`.
 
-R-NNN entries map from STATE.md Risk Register + product-brief. Each R-NNN has
-`Status: open` and a `Category` tag. NFR and security candidates are flagged.
+R-NNN entries map from product brief and COMPARATIVE-ASSESSMENT.md domain analysis.
+Each R-NNN has `Status: open` and a `Category` tag. NFR and security candidates are flagged.
 
 ---
 

@@ -2,23 +2,30 @@
 document_type: architecture-section
 level: L3
 section: dependency-graph
-version: "1.0"
+version: "1.1"
 status: active
 producer: architect
-timestamp: 2026-07-14T12:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/prd.md
-input-hash: "8a78228"
+input-hash: "de50ab6"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7]
+changelog:
+  - "1.0 (initial): crate dependency DAG authored."
+  - "1.1 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst; add [Section Content] template compliance fix. No spec content changes."
 ---
 
 # Dependency Graph: ferrochain
 
 > All edges are uni-directional. No cycles are permitted (P-06).
 > External crates (tokio, axum, reqwest, serde, etc.) omitted for clarity.
+
+## [Section Content]
+
+This file documents ferrochain's crate dependency DAG, external integration surfaces, and the acyclicity constraint (DI-012 / P-06). External crates (tokio, axum, reqwest, serde, etc.) are omitted for clarity; only workspace-internal dependency edges are shown.
 
 ## Crate DAG
 

@@ -2,18 +2,21 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.2"
+version: "1.3"
 status: active
 producer: business-analyst
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/product-brief.md
-  - .factory/STATE.md
-input-hash: "f6a9de5f38547412b42b12dbd19c3733ab48c3741c91c3cacad08519057dee21"
+  - .factory/comparative/COMPARATIVE-ASSESSMENT.md
+  - .factory/planning/holdout-domains/domain-c-openclaw.md
+  - .factory/planning/holdout-domains/domain-d-hermes-agent.md
+input-hash: "e8ec6fd"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20]
 changelog:
+  - "1.3 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D-NNN decisions baked at authoring time); COMPARATIVE-ASSESSMENT.md added (HS-6/D17-Q5 grounding for CAP-009, CONFLICT-7 for CAP-017, NE-09 for CAP-018, D17-Q7 for CAP-019); domain-c-openclaw.md added (CAP-017 long-horizon memory forcing function); domain-d-hermes-agent.md added (CAP-020/CAP-021 D19/D20 forcing functions); input-hash recomputed."
   - "1.2 (OBS-P77-C, 2026-07-15): ADR-012 DI-001 renamed to ADR-012 INV-1 per architect adjudication D18-P77-A (propagation from BC-2.15.006 v1.1 and ADR-012 v1.2 local-invariant rename)."
   - "1.1 (D20 sub-burst 1, 2026-07-15): CAP-020 (Self-Improvement Primitives, P1) and CAP-021 (MCP Server Role, P1) added per D20 human authority + D19 forcing function (domain-d-hermes-agent.md). P1 count 5→7. ADR-012 is the architecture authority for both new CAPs."
 ---

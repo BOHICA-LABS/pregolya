@@ -5,13 +5,13 @@ section: verification-architecture
 version: "1.2"
 status: active
 producer: architect
-timestamp: 2026-07-14T12:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/BC-INDEX.md
-input-hash: "243128a"
+input-hash: "270a1de"
 traces_to: ARCH-INDEX.md
 decisions: [D17]
 ---
@@ -20,6 +20,10 @@ decisions: [D17]
 
 > **VP-INDEX is the source of truth.** Any count or module assignment here must
 > match VP-INDEX.md exactly. Arithmetic: VP total = P0 count + P1 count.
+
+## [Section Content]
+
+This file documents ferrochain's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the five committed VP obligations (VP-001–VP-005, three Kani P0 + two integration P1), and the P0/P1 property catalog with proof harness skeleton patterns.
 
 ## Kani Async Constraint (Verified Kani 0.67.0)
 

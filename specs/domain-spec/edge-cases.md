@@ -2,18 +2,22 @@
 document_type: domain-spec-section
 level: L2
 section: edge-cases
-version: "1.0"
+version: "1.1"
 status: active
 producer: business-analyst
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-  - .factory/STATE.md
-input-hash: "3f4fe9a8c015bc918f167f893ba8e1b2392e6b5cd44460b7bd780c5c5fd72500"
+  - .factory/planning/holdout-domains/domain-a-soc-analyst.md
+  - .factory/planning/holdout-domains/domain-b-dark-factory.md
+  - .factory/planning/holdout-domains/domain-c-openclaw.md
+input-hash: "8fe3ef7"
 traces_to: L2-INDEX.md
 decisions: [D17]
+changelog:
+  - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D17/NE-* sources baked at authoring time from COMPARATIVE-ASSESSMENT.md); domain-a-soc-analyst.md added (DEC-010 prompt-injection edge case); domain-b-dark-factory.md added (DEC-009 crash-recovery fan-out edge case); domain-c-openclaw.md added (DEC-011 workspace symlink escape, NE-02/DI-007); input-hash recomputed."
 ---
 
 # Domain Edge Cases

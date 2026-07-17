@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/semport/reference-manifest.md
-input-hash: "6eefd6b5bd66c3fb8c21fa84b6ed2eba48b8ad3170b91d9665881479a0ae898f"
+input-hash: "1f29344"
 traces_to: L2-INDEX.md
 decisions: [D2, D13, D17]
 changelog:

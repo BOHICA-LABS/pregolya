@@ -530,3 +530,29 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (bursts 152–166): D18-P74-A (gate #19 retired-name); D18-P75-A (gate #28 Rules 4/5) + DEFER-002; D18-P77-A (ADR-012 INV-1); D18-P77-B (gate #33 steps 7–10); D18-P78-A (universal error prefix); D18-P78-B (gate #33 step 11 omission-note); D18-P84-A (no version pins in body citations); D18-P86-A (gate #28 Rule 5 scoped by doc type). 33 gates.
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-16 | Cycle v1.0.0-greenfield | Burst 166 | Counter 0/3 (Phase 1d)
+
+---
+
+## Session Resume Checkpoint (2026-07-17) — burst 167 checkpoint (archived at burst 168)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 87 passes / 89 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 85 = 43+16+26, 13 ADRs, 34 gates, test-vectors 512). trajectory-tail →1→4→2→2. NEXT ACTION: dispatch adversary pass 88. Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 167 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-88 SIBLING-CHECKS: bc-authoring-plan v2.22 (gate #34 INPUT-HASH FORMAT CONSISTENCY minted; 34 gates; BC-INDEX `[live-index]` sole exception; gate #28 Rules 1+5 scoped self-compliance PASS); input-hash corpus 95/95 BCs + 6/6 supplements normalized to 7-char MD5; incidental template-compliance: ~98 BC lifecycle frontmatter blocks added, error-taxonomy section "Error Categories", interface-definitions sections (CLI Interface/Exit Code Semantics/JSON Output Schema/Flag Interactions); gate #28 scoped on all 07-17 files.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (bursts 152–167): D18-P74-A (gate #19 retired-name); D18-P75-A (gate #28 Rules 4/5) + DEFER-002; D18-P77-A (ADR-012 INV-1); D18-P77-B (gate #33 steps 7–10); D18-P78-A (universal error prefix); D18-P78-B (gate #33 step 11 omission-note); D18-P84-A (no version pins in body citations); D18-P86-A (gate #28 Rule 5 scoped by doc type); D18-P87-A (gate #28 Rule 1 scoped supplements-only); D18-P87-B (gate #34 input-hash canon; 34 gates).
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 167 | Counter 0/3 (Phase 1d)
+
+---
+
+## Session Resume Checkpoint (2026-07-17) — burst 168 checkpoint (archived at burst 169)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 88 passes / 90 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 85 = 43+16+26, 13 ADRs, 34 gates, test-vectors 512). trajectory-tail →4→2→2→4. NEXT ACTION: dispatch adversary pass 89. Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 168 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-89 SIBLING-CHECKS: (A) burst-168 items: error-taxonomy v1.17 + interface-definitions v2.28 (changelog/currency), bc-authoring-plan v2.23 (reconstructed v2.8/v2.9 rows, rename-residue-free, SS-TBD historical form), architecture-tree hash census (8-file 7-char MD5 census), nfr-catalog/module-criticality hash currency (STATE.md hash 71b8229); gate #28 scoped on all 07-17 files.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (bursts 152–168): D18-P74-A (gate #19 retired-name); D18-P75-A (gate #28 Rules 4/5) + DEFER-002; D18-P77-A (ADR-012 INV-1); D18-P77-B (gate #33 steps 7–10); D18-P78-A (universal error prefix); D18-P78-B (gate #33 step 11 omission-note); D18-P84-A (no version pins in body citations); D18-P86-A (gate #28 Rule 5 scoped by doc type); D18-P87-A (gate #28 Rule 1 scoped supplements-only); D18-P87-B (gate #34 input-hash canon; 34 gates). [Burst 168: no new decisions — all P88 findings were template-compliance fallout.]
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 168 | Counter 0/3 (Phase 1d)

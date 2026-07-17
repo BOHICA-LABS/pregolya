@@ -2,17 +2,20 @@
 document_type: architecture-section
 level: L3
 section: tooling-selection
-version: "1.0"
+version: "1.1"
 status: active
 producer: architect
-timestamp: 2026-07-14T12:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "aae3d13"
+input-hash: "b7e49ed"
 traces_to: ARCH-INDEX.md
 decisions: [D17]
+changelog:
+  - "1.0 (initial): tooling selection authored."
+  - "1.1 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst; add [Section Content] template compliance fix. No spec content changes."
 ---
 
 # Tooling Selection: ferrochain
@@ -20,6 +23,10 @@ decisions: [D17]
 > Per D17-Q7 and CAP-019. All version pins are Point-in-Time estimates; implementer
 > must verify against crates.io before Phase 3 begins. Pins are not checked into Cargo.toml
 > until workspace init.
+
+## [Section Content]
+
+This file documents ferrochain's formal verification and testing tooling selection: Kani model checker (VP-001/002/003), cargo-fuzz, cargo-mutants, and proptest. All selections are driven by D17-Q7 (NFR-003 formal-proof obligations) and CAP-019.
 
 ## Formal Verification: Kani
 

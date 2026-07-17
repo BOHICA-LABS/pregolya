@@ -1,17 +1,18 @@
 ---
 document_type: prd-supplement-nfr-catalog
 level: L3
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/risks.md
   - .factory/specs/domain-spec/invariants.md
-  - .factory/STATE.md
-input-hash: "0dfb733"
+input-hash: "2153125"
+changelog:
+  - "1.1 (2026-07-17): Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file; input-hash drifts on every state write with zero spec-content signal for this supplement. All genuine derivation sources (prd.md, risks.md, invariants.md) are already listed and unchanged. D-NNN decision references cited inline (D17-Q7, D12, D17-Q2, D17-Q4, D17-Q8) are stable baked-in facts, not live STATE.md dependencies. Input-hash marked pending recomputation."
 traces_to: prd.md
 primary_consumers: [architect, performance-engineer, formal-verifier]
 ---

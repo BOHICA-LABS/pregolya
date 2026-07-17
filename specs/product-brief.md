@@ -1,13 +1,12 @@
 ---
 document_type: product-brief
 level: L1
-version: "1.1"
+version: "1.2"
 status: approved
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1a
 inputs:
-  - .factory/STATE.md
   - .factory/planning/market-intel.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
@@ -15,10 +14,11 @@ inputs:
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/naming-decision-study.md
   - .factory/semport/reference-manifest.md
-input-hash: "67fa2efbe06fdea2450aa43fde2ba87dfd2d6ff3b0460fd86427809581dcb347"
+input-hash: "9d9847b"
 traces_to: ""
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17]
 changelog:
+  - "v1.2 (2026-07-17): Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file with no spec-content signal for this brief. All genuine derivation sources (market-intel, COMPARATIVE-ASSESSMENT, holdout domain files, naming study, semport reference manifest) are already listed. Input-hash recomputed."
   - "v1.1: SR-01 compress core sections; SR-02 relocate security defaults to Overflow; SR-03 mark locked tech; SR-04 reformulate time-to-market criterion"
 ---
 
