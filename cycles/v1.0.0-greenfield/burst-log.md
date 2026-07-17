@@ -1565,4 +1565,11 @@ Phase 1d pass 68 adversarial review completed: CLEAN — 0 findings. Counter adv
 
 ## Archived from STATE.md Current Phase Steps (burst 163 rotation)
 
+| Phase 1d pass 79 + fix burst | adversary + PO + state-manager | COMPLETE | Pass 79: NOT CLEAN — 2 MED (F-P79-01: BC-2.09.001 EC-004 cited E-MCP-001 vs correct E-MCP-003 — wrong code on JSON-parse-error path; FIXED: EC-004 → E-MCP-003; BC-2.09.001 → v1.2. F-P79-02: interface-definitions omission note for E-MCP-003 cited BC-2.09.001 EC-005 instead of EC-004; FIXED: note corrected; interface-definitions → v2.24). Sibling-checks 2/2 PASS. Novelty MEDIUM. Trajectory →2 (P1D-79). Counter 0/3. Burst 158. |
+
+## Archived from STATE.md Current Phase Steps (burst 164 rotation)
+
+| Phase 1d pass 80 + fix burst | adversary + PO + state-manager | COMPLETE | Pass 80: NOT CLEAN — 1 MED (F-P80-01: BC-2.17.002 EC-002 cited E-GRAPH-007 vs correct E-GRAPH-008; "or similar" hedge shielded wrong code; FIXED: EC-002 → E-GRAPH-008, message aligned, hedge tightened; BC-2.17.002 → v1.1). Gates #12-#18 rotated CLEAN. OBS-P80-CONCURRENCY (non-resetting). Novelty MEDIUM. Trajectory →1 (P1D-80). Counter 0/3. Burst 159. |
+
+
 | Phase 1d pass 79 + fix burst | adversary + PO + state-manager | COMPLETE | Pass 79: NOT CLEAN — 2 findings ALL FIXED: F-P79-01 (HIGH) BC-2.10.003 frontmatter version "1.3" stale vs changelog v1.4; FIXED: frontmatter → "1.4"; 12-file audit: only BC-2.10.003 defective. F-P79-02 (MED) BC-2.04.003 v1.2 changelog erroneous claim "E-CHKPT-002 kept as-is"; FIXED: v1.3 CORRIGENDUM entry. Novelty MEDIUM. Trajectory →2 (P1D-79). Counter 0/3. Burst 158. |

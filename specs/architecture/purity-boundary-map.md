@@ -2,17 +2,20 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.0"
+version: "1.1"
 status: active
 producer: architect
-timestamp: 2026-07-14T12:00:00Z
+timestamp: 2026-07-16T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
-input-hash: "04e632a218b2bbab"
+input-hash: "3bcecc0"
 traces_to: ARCH-INDEX.md
 decisions: [D17]
+changelog:
+  - "1.1 (OBS-P84-C / 2026-07-16): classify 16 previously-unclassified modules — adds server::security, macros::tool/entrypoint/task, splitters::parity, core::context_mutation, core::write_guard to Pure Core; mcp::discovery, mcp::server, memory::skills, ferrochain-standard-tests, xtask, ferrochain-community to Effectful Shell; server::stores, sandbox::policy, memory::write_guard to Boundary Modules. Closes Iron Law gap (adversarial pass 84 finding OBS-P84-C). Also reclassify memory::store from Pure Core → Boundary (defect: '(validation)' qualifier left async dispatch surface unclassified, violating Iron Law; parallel to checkpoint::saver storage-trait Boundary pattern; BC-2.15.001 / SS-15). Module count: 41 rows before (15 pure / 22 effectful / 4 boundary) → 57 rows after (21 pure / 28 effectful / 8 boundary)."
+  - "1.0 (2026-07-14): initial purity boundary map authored."
 ---
 
 # Purity Boundary Map: ferrochain
@@ -21,6 +24,15 @@ decisions: [D17]
 > modules are integration-tested and fuzz-tested but not Kani-provable. Every module
 > must appear in exactly one column. Modules that cross the boundary must be redesigned
 > to split their pure and effectful parts.
+
+## [Section Content]
+
+Every ferrochain module appears in exactly one of three columns: **Pure Core** (deterministic,
+no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not Kani-provable),
+or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
+effectful dependency). All 35 criticality-universe modules plus structural and definitions-only
+modules are enumerated in `## Purity Classification` below. Enforcement invariants follow
+in `## Purity Enforcement Rules`.
 
 ## Purity Classification
 
@@ -45,7 +57,13 @@ side effects. Kani proofs operate here.
 | `checkpoint::lineage` | ferrochain-checkpoint | Fork-pointer construction is pure (no I/O to the DB) | — |
 | `sandbox::path_guard` | ferrochain-sandbox | `canonicalize_beneath_root` is pure path arithmetic after OS resolution | VP-003 |
 | `splitters::recursive` | ferrochain-splitters | Chunk boundary computation is pure string iteration | — |
-| `memory::store` (validation) | ferrochain-memory | `MemoryStore` key/query validation logic; no I/O | — |
+| `server::security` | ferrochain-server | `SecurityConfig::default()` is pure static config construction; router hardening applies `tower::Layer` composition — no I/O (NE-14 / DI-013) | — |
+| `macros::tool` | ferrochain-macros | compile-time `TokenStream → TokenStream`; expands `#[tool]` to `ToolDefinition` plumbing; no runtime I/O (ADR-008 / BC-2.08.010) | — |
+| `macros::entrypoint` | ferrochain-macros | compile-time `TokenStream → TokenStream`; expands `#[entrypoint]` to START-edge wiring; no runtime I/O (ADR-008 / BC-2.08.011) | — |
+| `macros::task` | ferrochain-macros | compile-time `TokenStream → TokenStream`; expands `#[task]` to task-registration boilerplate; no runtime I/O (ADR-008 / BC-2.08.012) | — |
+| `splitters::parity` | ferrochain-splitters | deterministic equality check against golden reference vectors; no I/O (R8 / BC-2.07.003) | — |
+| `core::context_mutation` | ferrochain-core | definitions-only: `ContextSourceSpec`, `ContextMutationConfig` pure structs; no execution logic (ADR-012 Decision 1) | — |
+| `core::write_guard` | ferrochain-core | definitions-only: `MemoryWriteRequest`, `MemoryWriteGuard` trait (`validate()` synchronous, no I/O per ADR-012 Decision 1), `WriteGuardDecision` | — |
 
 **Kani constraint:** Kani model checking operates on finite, bounded loops. `graph::channels`
 reducer loop must be bounded by the number of tasks per super-step. `sandbox::path_guard`
@@ -81,6 +99,12 @@ Kani is not applicable here.
 | `memory::sqlite` | ferrochain-memory | SQLite I/O for long-horizon memory | Integration |
 | `memory::in_memory` | ferrochain-memory | In-memory HashMap store (deterministic for tests) | Unit |
 | `memory::search` | ferrochain-memory | Search execution (may invoke embedding/vector backend) | Integration |
+| `mcp::discovery` | ferrochain-mcp | MCP transport I/O: enumerates tool set from external MCP server at runtime (BC-2.09.001) | Integration |
+| `mcp::server` | ferrochain-mcp | binds stdio/SSE transport; accepts inbound MCP connections; dispatches tool calls and serializes responses (ADR-013 / BC-2.09.006/007) | Integration |
+| `memory::skills` | ferrochain-memory | async `SkillStore` I/O: reads skill KV entries via `MemoryStore` backend; `load_skill`, `list_skills`, `skill_exists` I/O-bound (ADR-012 / BC-2.15.004) | Integration |
+| `ferrochain-standard-tests` | ferrochain-standard-tests | shared conformance suite; invokes provider HTTP stacks via DTU doubles (BC-2.08.013–014) | Integration (DTU) |
+| `xtask` | xtask | filesystem reads (file-size gate) + subprocess spawning (lint CI gates); CI enforcement binary (SS-17) | CI/Unit |
+| `ferrochain-community` | ferrochain-community | post-v1 placeholder; expected effectful shell when populated (LOW-tier, community contributions) | advisory (post-v1) |
 
 ### Boundary Modules (Pure Logic + Effectful Dispatch)
 
@@ -94,6 +118,16 @@ dispatch is integration-tested.
 | `core::retry` | ferrochain-core | Policy evaluation: `ToolRetryPolicy`, `CircuitBreaker` state transitions (allow/deny/open/half-open), `global_limit` counter | Retry execution (actual re-invoke) is effectful; the pure policy layer returns `BreakerDecision` to the caller |
 | `checkpoint::saver` (trait impl) | ferrochain-checkpoint | put_writes validation | Backend I/O (sqlite/postgres/memory) |
 | `mcp::ingress` | ferrochain-mcp | Untrusted-ingress routing decision | GuardrailHook dispatch |
+| `server::stores` | ferrochain-server | `IdempotencyStore`/`RateLimitStore`/`RunStore` trait interface definitions (pure seams per NE-08) | Backend I/O when trait impl is dispatched (store reads/writes) |
+| `sandbox::policy` | ferrochain-sandbox | `SandboxPolicy` evaluation: pure compatibility check of policy requirements against backend capabilities; `Err(PolicyNotEnforceable)` on mismatch (NE-01 / SS-13) | Effectful backend enforcement when policy is applied (calls sandbox backend) |
+| `memory::write_guard` | ferrochain-memory | pure `MemoryWriteGuard::validate()` call (synchronous, no I/O per ADR-012 Decision 1); returns `WriteGuardDecision` (Allow/Deny/Transform) | effectful `MemoryStore` write commit/abort; injection-scanner guard enforcement (ADR-012 / BC-2.15.006) |
+| `memory::store` | ferrochain-memory | `MemoryStore` key/query validation logic; no I/O | async KV/vector/erasure ops dispatched to backend implementations (sqlite/in_memory/search/skills); parallel structure to `checkpoint::saver` storage-trait Boundary pattern (BC-2.15.001 / SS-15) |
+
+> **Storage-trait Boundary pattern:** `checkpoint::saver` (SS-04) and `memory::store` (SS-15)
+> both follow the same canonical pattern: the trait module defines pure validation logic + an
+> async dispatch contract, while effectful I/O is implemented by separate Effectful Shell modules
+> (checkpoint::sqlite/postgres/memory and memory::sqlite/in_memory/search/skills respectively).
+> Both are correctly classified Boundary. The parallel is intentional.
 
 ## Purity Enforcement Rules
 
