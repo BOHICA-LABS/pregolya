@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.009
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,8 @@ wave: 2
 phase: 1b
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
+changelog:
+  - "1.1 (F-P97-01, 2026-07-17): Module field resolved from variant-phrasing placeholder 'ferrochain-macros, ferrochain-core [architect to confirm crate→subsystem in Phase 1b]' to sibling-canonical 'ferrochain-macros (re-exported ferrochain-core)' per BC-2.08.010/011/012 and module-decomposition.md v1.10 §ferrochain-macros. Phase 1b closed 2026-07-14; placeholder class no longer accepted (F-P96-01)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - architecture/decisions/ADR-004-serde-schemars-schema-generation.md
@@ -24,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "f184d27"
+input-hash: "2ce2d87"
 extracted_from: null
 modified: []
 deprecated: null
@@ -196,4 +198,4 @@ _[to be filled after story decomposition — anchored to the `#[tool]` proc-macr
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | U (unit — snapshot diff detection, canonicalized comparison, missing-snapshot CI failure) |
-| Module | ferrochain-macros, ferrochain-core [architect to confirm crate→subsystem in Phase 1b] |
+| Module | ferrochain-macros (re-exported ferrochain-core) |

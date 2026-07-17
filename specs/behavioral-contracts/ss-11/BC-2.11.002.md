@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "12d4f64"
+input-hash: "3dea2b9"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11

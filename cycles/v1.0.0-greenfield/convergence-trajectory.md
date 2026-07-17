@@ -37,7 +37,7 @@ traces_to: STATE.md
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97)`
 
 ## Per-Pass Details
 
@@ -354,6 +354,7 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 | Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
 |------|------|-------|------|------|-----|-----|---------|---------|---------|
 | P1D-92 | 2026-07-17 | 2 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (budget-cluster echo) |
+| P1D-97 | 2026-07-17 | 5 | 0 | 1 | 1 | 3 | HIGH | 0/3 | FINDINGS_REMAIN (semantic residue-class: variant deferral-actor phrasing survived literal sweep) |
 
 **Axes rotated:** SS-10 BC TV/PC residue audit (F-P92-01 partial-fix echo); RunnableConfig::budget_config field existence (F-P92-02 interface-gap); error-code census 86 = 43+16+27 recount (PASS); E-MEMORY-008 anchor (PASS); interface-definitions OnCeiling/BudgetConfig defs (PASS); module-decomposition/purity-map inventories (PASS); CAP-012 (PASS); NE-01/02/11/12/13/14 tracing (PASS); gate #33 9-code sample (PASS); no duplicate changelog rows.
 **Fix summary:** F-P92-01 HIGH (PO) — BC-2.10.003 TV-001/007 + BC-2.10.004 PC6 still said "BudgetPolicy" in data-bearing forms; FIXED: TV-001 → "BudgetConfig halt", TV-007 → "BudgetConfig with token ceiling", PC6 → "patch RunnableConfig::budget_config"; exhaustive multi-pattern sweep terminal; BC-2.10.003 v1.6, BC-2.10.004 v1.3. F-P92-02 MED (architect+PO+BA — D18-P92-A) — RunnableConfig had no budget_config field despite BC-2.10.003 PC7 + BC-2.10.004 PC6 naming it as resume patch target; ADJUDICATED OPTION A: RunnableConfig gains `budget_config: Option<BudgetConfig>` (per-run override; None = inherit GraphConfig::budget_config); GraphConfig mutation rejected (concurrent-run race defect); FIXED: interface-definitions v2.32 (§RunnableConfig 4-field struct + BudgetResume::Extend prose), api-surface v1.4 (RunnableConfig row), module-decomposition v1.10 (budget note), entities-server v1.6 (BudgetConfig entity + trait split + ER line corrected); entities-graph swept clean.
@@ -417,6 +418,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Fix summary:** F-P96-01 OBS [process-gap] (PO) — all 59 BCs resolved declaratively from module-decomposition v1.10; dual-crate forms where BCs span trait/engine or lib/server splits; SS-17 → kani_proofs/ + fuzz/; zero ambiguous leftovers; each BC patch-bumped with changelog row; post-sweep grep = zero live placeholder hits; all 95 BC hashes MATCH (D18-P89-A sweep); bc-authoring-plan v2.27 → v2.28: gate #27 exemption for `[architect to assign]` class REMOVED — resolved crate assignment mandatory from authoring.
 **D18-P89-A sweep:** bc-authoring-plan edit cascade; 36 additional BCs received input-hash-only refresh (transitive: bc-authoring-plan is in their inputs list); **all 95 BC hashes MATCH**.
 **Trajectory after:** →1 (P1D-96); cumulative tail →5→3→4→1
+**Counter:** 0/3
+
+---
+
+### P1D-97 — Pass 97 (2026-07-17, burst 179)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-97 | 2026-07-17 | 5 | 0 | 1 | 1 | 3 | 0 | HIGH | 0/3 | FINDINGS_REMAIN (semantic residue-class: burst-178 literal sweep missed semantic variant phrasing) |
+
+**Axes rotated:** BC-2.08.009 semantic Module placeholder variant (F-P97-01 HIGH); prd.md §10 deferred-actor parenthetical same class (F-P97-02 MED); BC-2.08.006 changelog monotonicity (F-P97-03 LOW); gate #27 literal-only scope [process-gap] (F-P97-04 LOW); BC-2.10.003 VP-table Phase column anomaly (F-P97-05 LOW); 95/95 SS-NN Module resolution re-verified; VP collision fixes propagated (PASS); VP-INDEX arithmetic (PASS); burst-178 YAML changelog insertions (PASS).
+**Fix summary:** F-P97-01 HIGH (PO) — BC-2.08.009 v1.0→v1.1: Module field "ferrochain-macros [architect to confirm crate→subsystem in Phase 1b]" → "ferrochain-macros (re-exported ferrochain-core)" per module-decomposition v1.10 §ferrochain-macros; changelog section added (Group-A form); bc-authoring-plan v2.29 count row updated (60th placeholder incl. variant; v2.28 historical row preserved). F-P97-02 MED (PO) — prd.md v1.2→v1.3: §10 stale "(architect to confirm crate→subsystem mapping in Phase 1b)" parenthetical deleted. F-P97-03 LOW (PO) — BC-2.08.006 changelog rows reordered 1.3/1.2/1.1 (metadata-only; no version bump). F-P97-04 LOW [process-gap] (PO) — bc-authoring-plan v2.28→v2.29: gate #27 residue-class widened literal→semantic `architect to (assign|confirm|determine|resolve)`, scope ALL .factory/specs/; sweep command added; widened sweep run corpus-wide: 7 hits total, 2 fixed (F-P97-01/02), 5 changelog/gate-rule exempt; zero live after fixes; bonus sweeps ("PO to confirm/assign", "to be confirmed", "TBD by") all zero. F-P97-05 LOW (PO) — BC-2.10.003 v1.7→v1.8: VP-BUDGET-06/07 Phase column "Wave 1"→"Phase 1".
+**D18-P89-A sweep (4-pass convergence):** prd.md v1.3 + BC-2.08.009 v1.1 + BC-2.10.003 v1.8 + bc-authoring-plan v2.29 triggered cascade; pass 1 = 95 updated; pass 2 = 111 updated; pass 3 = 3 updated; pass 4 = 0 stale; **126/126 TOTAL MATCH**.
+**Trajectory after:** →5 (P1D-97); cumulative tail →3→4→1→5
 **Counter:** 0/3
 
 ---

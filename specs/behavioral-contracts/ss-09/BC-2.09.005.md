@@ -26,7 +26,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "94b5afe"
+input-hash: "5945597"
 changelog:
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
   - "1.0 (initial): base BC authored."

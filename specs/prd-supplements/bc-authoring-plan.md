@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.28"
+version: "2.29"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -10,7 +10,7 @@ phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "707098e"
+input-hash: "2a4d9da"
 traces_to: prd.md
 total_bcs: 95
 total_batches: 15
@@ -1063,9 +1063,26 @@ split by wave avoids exception).
     **Exemptions:** Paths marked `(to be created)` with a plausible crate ownership (i.e., the
     module name is consistent with the crate's scope) are accepted. Paths marked `(to be created)`
     with wrong-crate assignment are NOT exempt — the wrong-crate error is independent of whether
-    the file exists. The `[architect to assign]` placeholder class is no longer an accepted
-    exemption — all Module fields must carry resolved crate assignments from the time of authoring
+    the file exists. The deferral-actor placeholder class is no longer an accepted exemption —
+    all Module fields must carry resolved crate assignments from the time of authoring
     (F-P96-01, 2026-07-17; all 59 legacy placeholders resolved).
+
+    **Banned placeholder class (widened F-P97-04, 2026-07-17):** Any phrase matching
+    `architect to (assign|confirm|determine|resolve)` — bracketed or unbracketed — in live spec
+    content (BC body, traceability table, PRD/supplement section body). Changelog rows,
+    gate-rule definitions, and historical audit-trail entries are EXEMPT.
+    Prior narrow literal: `[architect to assign]` only. Now covers all semantic variants of the
+    same pattern (e.g., "architect to confirm crate→subsystem", "architect to determine placement").
+
+    **Corpus-wide sweep command — run after every burst touching Module fields AND every adversary rotation:**
+    ```
+    grep -rn --include="*.md" -iE "architect to (assign|confirm|determine|resolve)" \
+      .factory/specs/
+    ```
+    Scope: ALL of `.factory/specs/` (not just `behavioral-contracts/`). Expected live-content hits:
+    zero. Exempt hits (changelog rows, gate-rule text, historical audit-trail entries) do not
+    constitute gate failures. A hit in live spec content outside those exempt categories is a
+    HIGH-severity gate failure.
 
     **Motivating instances:**
     - F-P42-01 (ADV-P1D-PASS-42) — BC-2.08.011 line 112 and BC-2.08.012 line 119 cited
@@ -1765,6 +1782,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.29 | 2026-07-17 | F-P97-04 (process-gap): Gate #27 residue class widened from literal `[architect to assign]` to semantic class `architect to (assign\|confirm\|determine\|resolve)` (bracketed or unbracketed); scope extended from `behavioral-contracts/` only to ALL of `.factory/specs/`; corpus-wide sweep command added. Sweep run: 2 live hits found and fixed in same burst (BC-2.08.009:199 per F-P97-01; prd.md:635 per F-P97-02); 2 exempt (bc-authoring-plan gate-rule text + changelog row). Additional sweeps — "PO to (confirm\|assign)": 0 hits; "to be confirmed": 0 hits; "TBD by": 0 hits. `total_standing_gates` unchanged at 34 (census widening of gate #27, not a new gate). | F-P97-04 |
 | 2.28 | 2026-07-17 | F-P96-01: Gate #27 exemption updated — `[architect to assign]` placeholder class removed from accepted exemptions. All 59 vestigial Module-field placeholders across `.factory/specs/behavioral-contracts/` resolved to authoritative crate assignments per module-decomposition.md v1.10. New BCs must carry resolved Module fields from authoring. | F-P96-01 |
 | 2.27 | 2026-07-17 | F-P95-02 (process-gap) — gate #13 VP-census regex widened: old `VP-[A-Z]+-[0-9]+` silently missed multi-segment domain IDs (VP-BSP-DET-01, VP-DI001-01) and digit-bearing domains — SS-03's entire VP set was invisible. New regex: `VP-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]+`. Verified: VP-BSP-DET-01, VP-DI001-01, VP-BUDGET-05, VP-SPLIT-001 all extracted correctly; old regex missed VP-BSP-DET-01 and VP-DI001-01 (confirmed by running both patterns). Post-fix corpus census (new regex): 141 unique VP IDs extracted — zero duplicates. Old regex captured only 71 IDs (50 invisible). `total_standing_gates` unchanged at 34 (sub-check widening, not a new gate). | F-P95-02 |
 | 2.26 | 2026-07-17 | OBS-P93-01 (process-gap) — gate #13 VP uniqueness sub-check added. Prior anchor-matrix census detected BC VP Anchors ↔ VP-INDEX drift but did NOT detect same VP-<DOMAIN>-NNN ID defined in two BC bodies with different semantics (cross-BC collision). New sub-check: `grep -rh "^| VP-" .factory/specs/behavioral-contracts/ --include="*.md" | grep -oE "VP-[A-Z]+-[0-9]+" \| sort \| uniq -d` — expected empty output. Motivating instance: F-P93-04 — BC-2.10.003 VP-BUDGET-05 (Summarize path) collided with BC-2.10.004 VP-BUDGET-05 (HITL interrupt path). Resolved by renumbering BC-2.10.003's to VP-BUDGET-07. Census run immediately after fix: zero duplicate VP IDs found (PASS). `total_standing_gates` unchanged at 34 (sub-check extension of gate #13, not a new gate). | OBS-P93-01, F-P93-04 |

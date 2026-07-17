@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "f30a461"
+input-hash: "8f48181"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04

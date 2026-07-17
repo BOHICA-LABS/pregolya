@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-17T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "43cb386"
+input-hash: "a410407"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17]
 supplements:
@@ -28,6 +28,7 @@ supplements:
   - prd-supplements/bc-authoring-plan.md
   - prd-supplements/test-vectors.md
 changelog:
+  - "v1.3 (F-P97-02, 2026-07-17): §10 Module Criticality — deleted stale deferral parenthetical '(architect to confirm crate→subsystem mapping in Phase 1b)'. Mapping fully resolved at Phase 1b (2026-07-14); parenthetical survived sweep. Input-hash updated."
   - "v1.2 (2026-07-17): Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file with no spec-content signal for the PRD. All genuine derivation sources (product-brief, domain-spec files, COMPARATIVE-ASSESSMENT) are already listed. D-NNN decision references in the PRD body are stable baked-in facts. Input-hash recomputed."
   - "v1.1 F-P73 (2026-07-15): F-P73-02: stale '86' references updated to 95 (§5b test-vector note, OQR-4 historical annotation); OBS-P73-A: §2.10 BC-2.10.003 summary corrected '(on_ceiling = halt)' → '(on_ceiling = halt | summarize)' for 3-way H1/PRD/BC-INDEX sync; OBS-P73-C: §3 public-trait list extended with 4 D20 first-class traits (SkillStore, MemoryWriteGuard, ToolCallDialect, ProviderFallbackPolicy)."
   - "v1.0: Initial PRD core. BC files authored in sub-bursts 2–N per bc-authoring-plan.md."
@@ -632,7 +633,7 @@ to BCs, CI lint gates, or ADRs.
 
 > **Supplement:** Full classification is in `prd-supplements/module-criticality.md`.
 
-Summary (architect to confirm crate→subsystem mapping in Phase 1b):
+Summary:
 
 | Crate | Criticality | Rationale |
 |-------|-------------|-----------|

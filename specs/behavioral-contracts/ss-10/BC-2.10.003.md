@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.003
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1b
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.8 (F-P97-05, 2026-07-17): VP table Phase-column axis normalized. VP-BUDGET-06 and VP-BUDGET-07 'Wave 1' corrected to 'Phase 1' to match the SS-10 convention established by VP-BUDGET-01/02/04/05 (all Phase 1). The v1.2 additions used the wave axis; the column carries the VSDD pipeline phase, not the wave. No behavioral change."
   - "1.7 (F-P93-04, 2026-07-17): VP ID collision resolved. BC-2.10.003 and BC-2.10.004 both defined VP-BUDGET-05 with different semantics. Resolution per append-only-numbering policy: BC-2.10.004's VP-BUDGET-05 (Phase 1, older) is canonical; BC-2.10.003's Summarize-path VP-BUDGET-05 renumbered → VP-BUDGET-07 (next free after VP-BUDGET-06). VP Anchors updated: VP-BUDGET-04, VP-BUDGET-05, VP-BUDGET-06 → VP-BUDGET-04, VP-BUDGET-06, VP-BUDGET-07. Zero VP-BUDGET-NN collisions across SS-10 after this change."
   - "1.6 (F-P92-01/F-P92-02, 2026-07-17): F-P92-01 — two residual BudgetPolicy-owns-data attributions corrected in canonical test vectors. TV-001 Input: 'BudgetPolicy halt at 10k tokens' → 'BudgetConfig { on_ceiling: OnCeiling::Halt, hard_limit: Some(10_000) }'. TV-007 Input: 'BudgetPolicy with token ceiling = 10000' → 'BudgetConfig with hard_limit = Some(10_000)'. F-P92-02 — precision updates per architect D18-P92-A: PC7 ceiling reference expanded to full field path ('supplies a new RunnableConfig with budget_config: Some(BudgetConfig { hard_limit: Some(higher_ceiling), .. })'); TV-004 Notes column expanded to name the field path ('new RunnableConfig carries budget_config: Some(BudgetConfig { hard_limit: Some(N) })') per interface-definitions v2.31 §RunnableConfig."
   - "1.5 (F-P91-01, 2026-07-17): Attribute on_ceiling to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. Description: 'policy\\'s on_ceiling mode is halt' → 'BudgetConfig::on_ceiling is OnCeiling::Halt'. PC1: 'BudgetPolicy with on_ceiling = halt ... in RunnableConfig' → 'BudgetConfig with on_ceiling = OnCeiling::Halt ... in GraphConfig.budget_config'. PC4 (Summarize variant): same correction (BudgetPolicy → BudgetConfig; RunnableConfig → GraphConfig.budget_config). PC5 (remaining-budget): 'BudgetPolicy is active' → 'BudgetConfig is active'. Architecture Anchor: 'BudgetPolicy::on_ceiling field' → 'BudgetConfig::on_ceiling field'. on_ceiling is a data field on BudgetConfig; BudgetPolicy::evaluate is pure and data-free (interface-definitions v2.29 §Engine branching note + ADR-009 Option 3)."
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "4ff0032"
+input-hash: "f18d928"
 extracted_from: null
 modified: []
 deprecated: null
@@ -178,8 +179,8 @@ the sub-agent's halt.
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
 | VP-BUDGET-04 | Halt path: no new LLM calls after Deny; `put_writes` called for all in-flight tasks; run transitions to `failed` with `E-BUDGET-001` | Integration test — mock LLM call counter; assert count does not increase after Deny; assert checkpoint state | Phase 1 |
-| VP-BUDGET-07 | Summarize path: exactly 1 additional LLM call issued after Deny; model response returned as `summary_halt` output; recursive Deny falls back to halt | Integration test — mock LLM call counter; assert 1 summarize call; assert run status | Wave 1 |
-| VP-BUDGET-06 | `RunContext.budget_info.tokens_remaining` decreases monotonically across super-steps; `steps_remaining` decreases by 1 per super-step | Unit test — assert budget_info values at steps 1, 2, 3 | Wave 1 |
+| VP-BUDGET-07 | Summarize path: exactly 1 additional LLM call issued after Deny; model response returned as `summary_halt` output; recursive Deny falls back to halt | Integration test — mock LLM call counter; assert 1 summarize call; assert run status | Phase 1 |
+| VP-BUDGET-06 | `RunContext.budget_info.tokens_remaining` decreases monotonically across super-steps; `steps_remaining` decreases by 1 per super-step | Unit test — assert budget_info values at steps 1, 2, 3 | Phase 1 |
 
 ## Related BCs
 
