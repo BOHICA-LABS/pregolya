@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.001
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — port graph super-step ceiling. Added PC5 (super-step ceiling halt via E-GRAPH-017), PC6 (per-invocation-segment semantics for interrupted/resumed runs), EC-006 (ceiling exceeded edge case), TV-006 (cyclic graph test vector). Reference Evidence section updated with upstream LangGraph evidence. This is the primary enforcing BC for E-GRAPH-017."
   - "1.2 (ADV-P1D-PASS-50): F-P50-01 — fix arithmetic in EC-006 Scenario (false claim 6 > 6 corrected to 7 > stop = 6; unified to 1-indexed super-step labels per TV-006 convention, resolving OBS-P50-1 mixed-indexing observation). Correct PC6 resume bound from N × recursion_limit to N × (recursion_limit + 1) — each invocation segment allows recursion_limit + 1 super-steps before halt (TV-006 arithmetic: recursion_limit=3 → 4 steps execute; recursion_limit=5 → 6 steps execute)."
   - "1.3 (ADV-P1D-PASS-56): OBS-P56-1 resolved — tighten 10007 claim in Reference Evidence. The `DEFAULT_RECURSION_LIMIT` constant in `langgraph._internal._config` (verified against `.reference/langgraph` pinned source) reads from the `LANGGRAPH_DEFAULT_RECURSION_LIMIT` environment variable with a hardcoded default of 10007. This is a code constant, not itself an env var. Distinct from langchain-core's `DEFAULT_RECURSION_LIMIT = 25` in `langchain_core.runnables.config` (Runnable-layer). The 10007 claim was always accurate; this edit adds the precise constant name and source module."
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "fb035dd"
+input-hash: "f05069f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -196,4 +197,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | P (property), K (Kani — Phase 6) |
-| Module | [architect to assign — ferrochain-graph] |
+| Module | ferrochain-graph |

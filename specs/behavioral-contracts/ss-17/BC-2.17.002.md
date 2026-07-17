@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.17.002
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to fuzz/ per module-decomposition.md v1.10."
   - "1.1 (F-P80-01, 2026-07-15): EC-002 error code corrected E-GRAPH-007→E-GRAPH-008. E-GRAPH-007 is UnknownChannelKey (runtime unregistered-write-key error); the correct code for a zero-node degenerate topology is E-GRAPH-008 UnreachableGraph (no path from START). Message aligned to taxonomy form: UnreachableGraph: <reason>. 'or similar' hedge removed from code assertion — exact E-GRAPH-008 is now required; message-detail flexibility preserved per fuzz-oracle semantics (oracle tests code discriminant, not message text)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-019
@@ -22,7 +23,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "ad85cb5"
+input-hash: "f06b1c3"
 extracted_from: null
 modified: []
 deprecated: null
@@ -184,4 +185,4 @@ _[to be filled after story decomposition — Phase-6 story]_
 | Priority | P2 |
 | Wave | Phase-6 |
 | Test Types | F (fuzz) |
-| Module | [architect to assign — fuzz/] |
+| Module | fuzz/ |

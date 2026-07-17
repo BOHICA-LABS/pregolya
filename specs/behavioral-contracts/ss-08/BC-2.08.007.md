@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.007
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-<provider>-sdk per module-decomposition.md v1.10."
   - "1.2 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-PROV-002 message-prefix correction. PC1: added 'ProviderTimeout:' prefix per universal <ErrorName>: <detail> convention (D18-P78-A adjudication; BC lacked prefix). Message was 'stream chunk timeout after <duration>'; corrected to 'ProviderTimeout: stream chunk timeout after <duration>'. Taxonomy E-PROV-002 corrected simultaneously: dropped '<provider>' parameter and changed '<ms>ms' to '<duration>' (BC wins on content — no provider name in BC message; duration placeholder more precise than ms-specific)."
   - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-003, EC-004, TV-001, TV-003, TV-005 each had category-only FerrochainError constructions with no code field. Added code: E-PROV-002 (ProviderTimeout) to TIMEOUT constructions and code: E-PROV-003 (StreamInterrupted) to TRANSPORT constructions per error-taxonomy.md BC anchors."
 traces_to:
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "7d1ab9c"
+input-hash: "55cc5b3"
 extracted_from: null
 modified: []
 deprecated: null
@@ -172,4 +173,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | I (integration — stalled/dropped stream fixtures), CI (lint — deny-client-new) |
-| Module | [architect to assign — ferrochain-<provider>, ferrochain-<provider>-sdk] |
+| Module | ferrochain-<provider> / ferrochain-<provider>-sdk |

@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.27"
+version: "2.28"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -10,7 +10,7 @@ phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "6d54dea"
+input-hash: "707098e"
 traces_to: prd.md
 total_bcs: 95
 total_batches: 15
@@ -1060,10 +1060,12 @@ split by wave avoids exception).
     Running the full census on every adversary rotation prevents wrong-crate anchors from surviving
     multiple passes.
 
-    **Exemptions:** Paths marked `(to be created)` or `[architect to assign]` with a plausible
-    crate ownership (i.e., the module name is consistent with the crate's scope) are accepted.
-    Paths marked `(to be created)` with wrong-crate assignment are NOT exempt — the wrong-crate
-    error is independent of whether the file exists.
+    **Exemptions:** Paths marked `(to be created)` with a plausible crate ownership (i.e., the
+    module name is consistent with the crate's scope) are accepted. Paths marked `(to be created)`
+    with wrong-crate assignment are NOT exempt — the wrong-crate error is independent of whether
+    the file exists. The `[architect to assign]` placeholder class is no longer an accepted
+    exemption — all Module fields must carry resolved crate assignments from the time of authoring
+    (F-P96-01, 2026-07-17; all 59 legacy placeholders resolved).
 
     **Motivating instances:**
     - F-P42-01 (ADV-P1D-PASS-42) — BC-2.08.011 line 112 and BC-2.08.012 line 119 cited
@@ -1763,6 +1765,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.28 | 2026-07-17 | F-P96-01: Gate #27 exemption updated — `[architect to assign]` placeholder class removed from accepted exemptions. All 59 vestigial Module-field placeholders across `.factory/specs/behavioral-contracts/` resolved to authoritative crate assignments per module-decomposition.md v1.10. New BCs must carry resolved Module fields from authoring. | F-P96-01 |
 | 2.27 | 2026-07-17 | F-P95-02 (process-gap) — gate #13 VP-census regex widened: old `VP-[A-Z]+-[0-9]+` silently missed multi-segment domain IDs (VP-BSP-DET-01, VP-DI001-01) and digit-bearing domains — SS-03's entire VP set was invisible. New regex: `VP-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]+`. Verified: VP-BSP-DET-01, VP-DI001-01, VP-BUDGET-05, VP-SPLIT-001 all extracted correctly; old regex missed VP-BSP-DET-01 and VP-DI001-01 (confirmed by running both patterns). Post-fix corpus census (new regex): 141 unique VP IDs extracted — zero duplicates. Old regex captured only 71 IDs (50 invisible). `total_standing_gates` unchanged at 34 (sub-check widening, not a new gate). | F-P95-02 |
 | 2.26 | 2026-07-17 | OBS-P93-01 (process-gap) — gate #13 VP uniqueness sub-check added. Prior anchor-matrix census detected BC VP Anchors ↔ VP-INDEX drift but did NOT detect same VP-<DOMAIN>-NNN ID defined in two BC bodies with different semantics (cross-BC collision). New sub-check: `grep -rh "^| VP-" .factory/specs/behavioral-contracts/ --include="*.md" | grep -oE "VP-[A-Z]+-[0-9]+" \| sort \| uniq -d` — expected empty output. Motivating instance: F-P93-04 — BC-2.10.003 VP-BUDGET-05 (Summarize path) collided with BC-2.10.004 VP-BUDGET-05 (HITL interrupt path). Resolved by renumbering BC-2.10.003's to VP-BUDGET-07. Census run immediately after fix: zero duplicate VP IDs found (PASS). `total_standing_gates` unchanged at 34 (sub-check extension of gate #13, not a new gate). | OBS-P93-01, F-P93-04 |
 | 2.25 | 2026-07-17 | F-P89-01/02 + class-sweep (pass-89 fix burst). (1) F-P89-01 — Gate #34 structural fix: removed stale per-file hash values from census block (class: hash-values-in-gate-text, same churn as STATE.md-in-inputs). Replaced with: (a) existing census commands [already authoritative], (b) explicitly-NON-AUTHORITATIVE last-run snapshot (2026-07-17: supplements 2/6 MATCH, 4/6 DRIFT; BCs 1/95 MATCH [BC-2.08.006], 94/95 STALE pre-existing), (c) rule sentence: "per-file hash values are NEVER recorded in gate text; frontmatter input-hash is the single source of truth." (2) F-P89-02 — Frontmatter input-hash reconciled: v2.24 wrote e238778 (burst-168); bursts 169-170 bumped inputs (prd.md→v1.2, L2-INDEX→v1.3), producing e786fea without a changelog entry; current recompute yields 41c29d9. Full chain: 90d28fa → e238778 (burst-168) → e786fea (bursts 169-170, previously undocumented) → 41c29d9 (this burst). (3) Class sweep — no other gate-text 7-char hash literals found in .factory/specs/; no other "pending recomput" live-prose instances; no other SS-TBD live BC body residue beyond BC-2.08.006 precondition (fixed separately this burst). | F-P89-01, F-P89-02, pass-89 |

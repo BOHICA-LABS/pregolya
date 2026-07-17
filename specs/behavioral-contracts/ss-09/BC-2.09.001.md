@@ -2,11 +2,12 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.001
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 changelog:
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-66): F-P66-01 — EC-006 and TV-008 added: JSON-RPC -32601 MethodNotFound when server does not implement tools/list → Err(E-MCP-003 McpNotImplemented). Re-anchor for E-MCP-003 from BC-2.09.005 (lifecycle scope) to this BC (discovery path — first MCP method invoked). (OBS-P28-2 class; gate #33 reverse-verification finding.)"
 origin: greenfield
@@ -26,7 +27,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "3c89281"
+input-hash: "9ec6fcc"
 extracted_from: null
 modified: []
 deprecated: null
@@ -175,4 +176,4 @@ _[to be filled after verification-architecture phase]_
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | U (unit), I (integration, using in-process rmcp test servers) |
-| Module | [architect to assign — ferrochain-mcp] |
+| Module | ferrochain-mcp |

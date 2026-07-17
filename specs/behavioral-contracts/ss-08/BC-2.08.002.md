@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.002
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-standard-tests per module-decomposition.md v1.10."
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — wired 'configurable step limit' invariant to explicit contract: config.recursion_limit (default 25, RunnableConfig) + BC-2.03.001 PC5 + E-GRAPH-017 GraphRecursionLimitExceeded. VP-BC208002-01 description updated to cite E-GRAPH-017 and BC-2.03.001 PC5."
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-005 had `Err(FerrochainError { category: VAL, message: ... })` and TV-005 had `Err(FerrochainError { category: VAL })` with no code. Added code: E-CORE-005 (ValidationFailed) to EC-005 description and TV-005 — VAL construction-time validation for `bind_tools` called on a model with `has_tool_calling = false`."
 traces_to:
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "0f8e9dc"
+input-hash: "68c2cfd"
 extracted_from: null
 modified: []
 deprecated: null
@@ -183,4 +184,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | I (integration, standard-tests tool-calling battery), U (unit — argument normalisation) |
-| Module | [architect to assign — ferrochain-standard-tests, ferrochain-<provider>] |
+| Module | ferrochain-<provider> / ferrochain-standard-tests |

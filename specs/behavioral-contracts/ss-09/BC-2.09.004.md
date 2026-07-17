@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.004
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,8 @@ red_gate_source: R11
 vp_id: VP-004
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
+changelog:
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -27,7 +29,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "c076581"
+input-hash: "aa64b84"
 extracted_from: null
 modified: []
 deprecated: null
@@ -169,4 +171,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | U (unit), Red Gate |
-| Module | [architect to assign — ferrochain-mcp] |
+| Module | ferrochain-mcp |

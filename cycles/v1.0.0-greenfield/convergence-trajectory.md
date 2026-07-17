@@ -407,6 +407,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-96 — Pass 96 (2026-07-17, burst 178)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-96 | 2026-07-17 | 1 | 0 | 0 | 0 | 0 | 1 | LOW | 0/3 | FINDINGS_REMAIN strict; CLEAN PR-merge (placeholder hygiene only) |
+
+**Axes rotated:** 59 BC Traceability Module fields carrying vestigial `[architect to assign — <crate>]` placeholders (S-7.01 partial-fix: SS-10 resolved at pass 61; siblings in SS-01..SS-09/SS-11..SS-17 never propagated).
+**Fix summary:** F-P96-01 OBS [process-gap] (PO) — all 59 BCs resolved declaratively from module-decomposition v1.10; dual-crate forms where BCs span trait/engine or lib/server splits; SS-17 → kani_proofs/ + fuzz/; zero ambiguous leftovers; each BC patch-bumped with changelog row; post-sweep grep = zero live placeholder hits; all 95 BC hashes MATCH (D18-P89-A sweep); bc-authoring-plan v2.27 → v2.28: gate #27 exemption for `[architect to assign]` class REMOVED — resolved crate assignment mandatory from authoring.
+**D18-P89-A sweep:** bc-authoring-plan edit cascade; 36 additional BCs received input-hash-only refresh (transitive: bc-authoring-plan is in their inputs list); **all 95 BC hashes MATCH**.
+**Trajectory after:** →1 (P1D-96); cumulative tail →5→3→4→1
+**Counter:** 0/3
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

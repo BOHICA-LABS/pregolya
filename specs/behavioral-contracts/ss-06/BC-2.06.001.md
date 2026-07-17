@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.001
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,8 +24,9 @@ inputs:
   - .factory/specs/domain-spec/events.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "2334d67"
+input-hash: "e8a242f"
 changelog:
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-46): F-P46-01 adjudication — add EC-005 (failed-run stream termination). BC-2.06.001 PC2 states RunEnd emits 'once at run completion' (completion-only contract) but had no explicit edge case for failed runs. EC-005 makes the authority explicit: stream closes after error SSE event; no RunEnd emitted on failure. This resolves EC-001 hedge in BC-2.12.007 and establishes the source-of-truth for failure-termination across the streaming surface."
 extracted_from: null
@@ -180,4 +181,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit / property), I (integration) |
-| Module | [architect to assign — ferrochain-graph, ferrochain-server] |
+| Module | ferrochain-graph / ferrochain-server |

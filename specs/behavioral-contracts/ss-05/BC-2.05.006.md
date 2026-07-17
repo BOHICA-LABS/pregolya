@@ -2,11 +2,12 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.006
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 changelog:
+  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
   - "1.1 (ADV-P1D-PASS-27): F-P27-06 Architecture Anchor renamed risk_tier.rs → action_risk.rs for consistency with the action_risk wire-field canon (retired-identifier gate #19)."
   - "1.2 (pass-45): F-P45-02 — corrected BC-2.10.004 relationship in Related BCs: budget escalation reuses base interrupt mechanism (BC-2.05.001) with BudgetEscalation payload and BudgetResume::Extend|Halt resume; it is NOT a risk-tiered High interrupt and is NOT subject to RiskGatePolicy or High-tier approver gating."
 origin: greenfield
@@ -29,7 +30,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "fe634cf"
+input-hash: "aa9a3cd"
 extracted_from: null
 modified: []
 deprecated: null
@@ -216,4 +217,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | [architect to assign — ferrochain-graph, ferrochain-server] |
+| Module | ferrochain-graph / ferrochain-server |

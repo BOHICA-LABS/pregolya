@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.002
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,8 @@ wave: 1
 phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
+changelog:
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - domain-spec/invariants.md#DI-001
@@ -23,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "b3acabc"
+input-hash: "d6fc2fd"
 extracted_from: null
 modified: []
 deprecated: null
@@ -176,4 +178,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), P (property) |
-| Module | [architect to assign — ferrochain-graph] |
+| Module | ferrochain-graph |

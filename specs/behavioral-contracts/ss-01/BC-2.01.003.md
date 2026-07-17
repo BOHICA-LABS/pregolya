@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
   - "1.3 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-CORE-006 message-prefix correction at all three BC sites. (1) PC5: was 'recursion limit exceeded' (no prefix, no depth); corrected to 'RecursionLimitExceeded: recursion limit exceeded at depth <depth>' (adds universal <ErrorName>: prefix and harmonizes with EC-004/invariant which already specified depth). (2) Invariant §layer-disambiguation: added 'RecursionLimitExceeded:' prefix to message string. (3) EC-004: added 'RecursionLimitExceeded:' prefix. All three sites now produce the canonical template 'RecursionLimitExceeded: recursion limit exceeded at depth <depth>'. Corresponding taxonomy E-CORE-006 detail corrected from 'nested invoke/stream call depth <depth> exceeded recursion_limit <limit>' to 'recursion limit exceeded at depth <depth>' (BC wins on content). interface-definitions.md dual-layer table row for Runnable-layer also updated to add prefix."
   - "1.2 (ADV-P1D-PASS-56): F-P56-01 — added code: E-CORE-006 to PC5, invariant §layer-disambiguation, EC-004, and TV-004. The Runnable-layer recursion halt was codeless while its graph-engine counterpart (E-GRAPH-017) carried a code. E-CORE-006 (RecursionLimitExceeded, INTERNAL, broken) minted in error-taxonomy.md v1.7."
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — added `recursion_limit` layer disambiguation invariant. Same config key serves two distinct enforcement layers: this BC (nested Runnable call depth, INTERNAL error) vs BC-2.03.001 (BSP super-step ceiling, E-GRAPH-017 POLICY). Cross-reference added to prevent implementer confusion about which halt applies at each layer."
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "fb035dd"
+input-hash: "f05069f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -167,4 +168,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 0 |
 | Test Types | U (unit), P (property) |
-| Module | [architect to assign — ferrochain-core] |
+| Module | ferrochain-core |

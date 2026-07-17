@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.003
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-standard-tests per module-decomposition.md v1.10."
   - "1.3 (2026-07-15, F-P78-SWEEP/D18-P78-A): Two message-prefix corrections. (1) E-PROV-007 EC-001: added 'StructuredOutputRefused:' prefix; renamed placeholder '<refusal text>' to '<refusal_message>' for consistency with updated taxonomy. Taxonomy E-PROV-007 detail corrected from 'model refused to generate structured output — refusal_message: <message>' to '<refusal_message>' (BC wins on content). (2) E-PROV-005 EC-002: added 'StructuredOutputParseError:' prefix. Taxonomy E-PROV-005 detail corrected from 'provider response did not match expected JSON schema: <path> — <reason>' to '<reason>' (BC wins; elaborate schema-path wrapper was not in BC message)."
   - "1.2 (ADV-P1D-PASS-29): F-P29-01 — EC-002 codeless FerrochainError fixed: added code: \"E-PROV-005\" to the deserialization-failure construction. Per BC-2.14.001 every-error-has-a-code invariant."
   - "1.1 (ADV-P1D-PASS-28): OBS-P28-3 — minted E-PROV-007 (StructuredOutputRefused, POLICY) for the OpenAI structured-output refusal path; added code literal to 4 construction sites (PC5, Invariant, EC-001, TV-004). Every FerrochainError now carries a machine-readable code per BC-2.14.001 posture."
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "0f8e9dc"
+input-hash: "68c2cfd"
 extracted_from: null
 modified: []
 deprecated: null
@@ -174,4 +175,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | I (integration, standard-tests structured output battery), U (unit — json_mode format, optional field) |
-| Module | [architect to assign — ferrochain-standard-tests, ferrochain-<provider>] |
+| Module | ferrochain-<provider> / ferrochain-standard-tests |

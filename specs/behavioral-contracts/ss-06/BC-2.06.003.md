@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.003
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server / ferrochain-graph per module-decomposition.md v1.10."
   - "1.1 (F-P91-01, 2026-07-17): EC-005 sweep fix — 'BudgetPolicy with on_ceiling = halt' → 'BudgetConfig with on_ceiling = OnCeiling::Halt'. on_ceiling is a field of BudgetConfig (interface-definitions v2.29 §BudgetConfig); BudgetPolicy::evaluate is pure and data-free. Part of the full SS-10 + corpus sweep for BudgetPolicy::on_ceiling mis-attributions."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
@@ -24,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "822ba31"
+input-hash: "d755f9a"
 extracted_from: null
 modified: []
 deprecated: null
@@ -165,4 +166,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | I (integration) |
-| Module | [architect to assign — ferrochain-server, ferrochain-graph] |
+| Module | ferrochain-server / ferrochain-graph |

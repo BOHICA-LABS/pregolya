@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.005
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,8 @@ wave: 0
 phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
+changelog:
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-010
@@ -23,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "c2f08d7"
+input-hash: "2e94cf4"
 extracted_from: null
 modified: []
 deprecated: null
@@ -136,4 +138,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 0 |
 | Test Types | U (unit), CI lint |
-| Module | [architect to assign — ferrochain-core] |
+| Module | ferrochain-core |

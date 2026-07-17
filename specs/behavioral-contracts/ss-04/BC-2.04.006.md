@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "d3c2b32"
+input-hash: "d2b4b61"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04

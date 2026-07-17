@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.006
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider>-sdk / ferrochain-<provider> per module-decomposition.md v1.10."
   - "1.1 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-002 had `Err(FerrochainError { category: Validation, ... })` (incorrect full-word capitalization; should be VAL per taxonomy code) and no code field; TV-002 had `Err(FerrochainError { category: VAL })` with no code. Fixed: (a) EC-002 'category: Validation' corrected to 'category: VAL'; (b) code: E-CORE-005 (ValidationFailed) added to EC-002 description and TV-002 — SDK builder constructed without calling .timeout() is a VAL construction-time validation failure."
   - "1.2 (2026-07-17, F-P89-04): Precondition 3 — removed stale live-prose clause '(or SS-TBD is used as a placeholder)'. SS-TBD is corpus-wide resolved as of Phase 1b (2026-07-14); all 95 BCs carry real SS-NN IDs. No behavioral change. Input-hash corrected from legacy 8095694 (computed against prior input state) to 412902d (current). BC changelog timestamp stays at v1.0 authoring date per Rule 5 BC branch."
 traces_to:
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/entities-server.md
   - .factory/semport/partners/behavioral-intent.md
-input-hash: "62da442"
+input-hash: "b310f01"
 extracted_from: null
 modified: []
 deprecated: null
@@ -172,4 +173,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | U (unit — constructor Result), CI (cargo dependency graph check) |
-| Module | [architect to assign — ferrochain-<provider>-sdk, ferrochain-<provider>] |
+| Module | ferrochain-<provider>-sdk / ferrochain-<provider> |

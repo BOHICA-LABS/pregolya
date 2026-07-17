@@ -2,8 +2,9 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.001
-version: "1.1"
+version: "1.2"
 changelog:
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-splitters per module-decomposition.md v1.10."
   - "1.1 (OBS-P95-A, 2026-07-17): VP-SPLIT-01..003 renumbered to VP-SPLIT-01..03 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — below >5 threshold — so renumber is the production-grade correct call over documenting the convention). No VP-INDEX registration affected (SPLIT VPs are BC-local)."
 status: active
 lifecycle_status: active
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/specs/prd-supplements/error-taxonomy.md
-input-hash: "2cfe7c6"
+input-hash: "eb5ea78"
 extracted_from: null
 modified: []
 deprecated: null
@@ -161,4 +162,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 0 |
 | Test Types | U (unit) |
-| Module | [architect to assign — ferrochain-splitters] |
+| Module | ferrochain-splitters |

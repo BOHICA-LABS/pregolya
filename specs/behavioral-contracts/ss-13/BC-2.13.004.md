@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "a0a231d"
+input-hash: "69f49cb"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13

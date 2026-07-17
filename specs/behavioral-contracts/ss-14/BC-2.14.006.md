@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.006
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
   - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-004, TV-001, TV-004, TV-005 each had a specific 'Validation failed for...' message matching E-CORE-005 but no code field. Added code: E-CORE-005 to all five sites."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
-input-hash: "7548c1b"
+input-hash: "f3cf05c"
 extracted_from: null
 modified: []
 deprecated: null
@@ -137,4 +138,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 0 |
 | Test Types | U (unit), CI lint |
-| Module | [architect to assign — ferrochain-core] |
+| Module | ferrochain-core |
