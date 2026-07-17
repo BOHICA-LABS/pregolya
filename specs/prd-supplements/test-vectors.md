@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
-timestamp: 2026-07-16T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -92,7 +92,7 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.10.001 | SS-10 | 5 | — | `TV-NNN` | | Budget allow/escalate/deny evaluation |
 | BC-2.10.002 | SS-10 | 5 | — | `TV-NNN` | | EvidenceJournal append-only |
 | BC-2.10.003 | SS-10 | 7 | — | `TV-NNN` | | Graceful halt \| summarize on ceiling (v1.2 adds TV-006/007) |
-| BC-2.10.004 | SS-10 | 5 | — | `TV-NNN` | | Budget escalation → HITL |
+| BC-2.10.004 | SS-10 | 6 | — | `TV-NNN` | | Budget escalation → HITL (v1.5 adds TV-006) |
 | BC-2.11.001 | SS-11 | 4 | — | table (unlabelled) | | ProvenanceTag at all ingress boundaries |
 | BC-2.11.002 | SS-11 | 5 | — | table (unlabelled) | | GuardrailHook at tool-result ingress |
 | BC-2.11.003 | SS-11 | 4 | — | table (unlabelled) | | GuardrailHook at RAG ingress |
@@ -131,7 +131,7 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.17.001 | SS-17 | 5 | — | `TV-NNN` | | Kani harness scope (all 3 VPs) |
 | BC-2.17.002 | SS-17 | 5 | — | `TV-NNN` | | cargo-fuzz targets |
 
-**Total vectors (95 authored BCs):** 503 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **512 total vectors** across 95 BC files.
+**Total vectors (95 authored BCs):** 504 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **513 total vectors** across 95 BC files.
 
 > **GTV convention:** The TV Count column counts standard canonical vectors; the GTV Count column counts golden test vectors (Red Gate acceptance data reproduced in §GTV). Grand totals are expressed as `<TV Count> + <GTV Count> = <total>` to prevent ambiguity.
 
@@ -258,6 +258,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.8 | 2026-07-17 | F-P94-02: Convention verdict — renumber (option ii): TV-001b in BC-2.10.004 renamed TV-006, eliminating the corpus's only lettered sub-vector. BC-2.10.004 row: TV Count 5→6, Notes updated to "(v1.5 adds TV-006)". Recount from ground truth: SS-10 subtotal 22→23 (BC-2.10.001=5, BC-2.10.002=5, BC-2.10.003=7, BC-2.10.004=6). Grand total: 503→504 canonical TVs; 504+9 GTVs = 513 total vectors. BC-2.10.004 v1.4→v1.5. | F-P94-02 |
 | 1.7 | 2026-07-16 | F-P86-01: replaced TODO markers with authoritative forward-reference text in two sections. Per-Subsystem Test Vectors: removed conditional TODO, replaced with authoritative statement that canonical per-BC vectors reside in individual BC files (`behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Test Vectors`); no inline duplication by design. Cross-Subsystem Integration Vectors: removed empty placeholder table row, replaced with forward-reference statement that integration scenarios are authored by test-writer at Phase 3 from the wave schedule (`stories/STORY-INDEX.md`). Retroactive changelog note: v1.6 added three template-conformance sections (Per-Subsystem Test Vectors, Cross-Subsystem Integration Vectors, Golden File References) as structural stubs per template compliance; this was not recorded in the v1.6 changelog entry. | F-P86-01 |
 | 1.6 | 2026-07-16 | F-P85-04 (MED): Grand-total reconciliation. Independent recount of TV Count column (95 rows, header excluded) yields 503 canonical test vectors (per-SS: SS-01=20, SS-02=33, SS-03=15, SS-04=35, SS-05=32, SS-06=15, SS-07=17, SS-08=71, SS-09=41, SS-10=22, SS-11=25, SS-12=47, SS-13=34, SS-14=30, SS-15=41, SS-16=15, SS-17=10). BC-2.07.002 GTV Count column = 9 golden test vectors (separate classification from canonical TVs). Convention established: 503 canonical TVs + 9 GTVs = 512 total vectors. Old total "approximately 516" replaced with exact reconciled figures. "approximately" hedge removed. v1.5 figure of 516 was carried forward from the v1.5 "534→516 (−18)" arithmetic without a fresh row-sum. Sibling-sweep: no other .factory/specs/ or .factory/planning/ documents cite 516 as a test-vector total. Stale "516" appears only in this file's grand-total line (fixed here) and in v1.5 changelog history (preserved). | F-P85-04 |
 | 1.5 | 2026-07-15 | F-P84-01 + OBS-P84-A + OBS-P84-B (D18-P84-A): SS-11 counts corrected (header-row over-count): BC-2.11.001 5→4, BC-2.11.002 6→5, BC-2.11.003 5→4, BC-2.11.004 5→4, BC-2.11.005 5→4, BC-2.11.006 5→4. SS-04 same defect audited and corrected: BC-2.04.001/002/003/004/006/007 5→4 each (BC-2.04.005 was already correct at 5). SS-13 same defect audited and corrected: BC-2.13.001/002 5→4, BC-2.13.003/004/005/006 6→5. Format label "narrative" → "table (unlabelled)" for all 19 affected rows (SS-04 001–007, SS-11 001–006, SS-13 001–006) — these BCs use `\| Input \| Expected Output \| Category \|` tables without TV-NNN IDs, not prose narrative. Usage note 3 rewritten accordingly. Total updated 534→516 (−18). | F-P84-01, OBS-P84-A, OBS-P84-B |

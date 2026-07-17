@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.002
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.2 (F-P94-03 sweep, 2026-07-17): Fix two Deny-halt characterizations that omit the three-way on_ceiling dispatch. TV-002 Note: 'Deny recorded before halt' → 'Deny recorded before engine dispatch (on_ceiling=Halt scenario)' — TV-002 tests a specific Halt scenario so the note is now explicit. Related BCs BC-2.10.003 line: 'Deny entries are written before the halt is executed' → 'Deny entries are written before engine dispatch (halt / HITL interrupt / summarize call); see BC-2.10.003 for halt and summarize paths'."
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 propagation. Module field resolved from stale placeholder: EvidenceJournal and append API remain in ferrochain-graph; SQLite backend in ferrochain-checkpoint. No Architecture Anchor crate changes (all existing anchors already correct per ADR-009 split)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
@@ -118,7 +119,7 @@ that completed any LLM call or tool invocation.
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | Run with 1 LLM call and 1 tool call; policy returns Allow for both | Journal has exactly 2 entries in append order: first `evaluation_point: AfterLlmCall`, second `AfterToolInvocation`; both `decision: Allow` | Happy path — journal completeness |
-| TV-002 | Run where 3rd LLM call triggers Deny | Journal has ≥ 3 entries; 3rd entry: `decision: Deny, reason: "hard limit exceeded"` | Deny recorded before halt |
+| TV-002 | Run where 3rd LLM call triggers Deny (on_ceiling=Halt scenario) | Journal has ≥ 3 entries; 3rd entry: `decision: Deny, reason: "hard limit exceeded"` | Deny recorded before engine dispatch |
 | TV-003 | Sub-agent run within parent run; sub-agent makes 2 LLM calls | Journal has 2 entries with non-null `sub_agent_id`; parent journal and sub-agent journal are queryable independently | Sub-agent attribution |
 | TV-004 | Process restart mid-run; run resumes | On resume, journal from before the restart is preserved and readable; new entries appended after restart are in correct sequence order | Durable persistence across restart |
 | TV-005 | Journal write fails on entry 5 | `Err(E-BUDGET-002 JournalWriteFailed)` returned; run transitions to `failed`; entries 1–4 are preserved; entry 5 is not silently skipped | Journal write failure is fatal |
@@ -132,7 +133,7 @@ that completed any LLM call or tool invocation.
 ## Related BCs
 
 - BC-2.10.001 — depends on: every `BudgetPolicy::evaluate` call is the source trigger for a journal entry
-- BC-2.10.003 — related to: Deny entries are written before the halt is executed
+- BC-2.10.003 — related to: Deny entries are written before engine dispatch (halt / HITL interrupt / summarize call); see BC-2.10.003 for the halt and summarize paths
 - BC-2.10.004 — related to: Escalate entries are written before the HITL interrupt is raised; resume decision is also journaled
 - BC-2.04.007 — related to: EvidenceJournal is a write-once log; encryption at rest applies to journal entries as it does to state payloads
 

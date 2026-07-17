@@ -2,20 +2,21 @@
 document_type: domain-spec-section
 level: L2
 section: events
-version: "1.1"
+version: "1.2"
 status: active
 producer: business-analyst
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-17T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
 input-hash: "099352a"
 traces_to: L2-INDEX.md
-decisions: [D11, D13, D17]
+decisions: [D11, D13, D17, D18]
 changelog:
   - "1.0 (initial): base events authored."
   - "1.1 (ADV-P1D-PASS-29): F-P29-06 — relabel InterruptRaised Stream event field: `interrupt_raised` is an internal domain event; its SSE wire surface is the {\"__interrupt__\": [...]} JSON envelope (BC-2.12.007 EC-003, BC-2.05.001), NOT a StreamEvent variant. Decision: do not add interrupt variant to StreamEvent enum — no L2/BC evidence one was intended."
+  - "1.2 (2026-07-17): F-P94-fix-burst — BudgetEvaluated.Outcome: correct monolithic 'Deny (halt run)' to per-on_ceiling dispatch; PolicyDecision::Deny does not unconditionally halt — engine dispatches per BudgetConfig::on_ceiling (Halt → graceful halt; Escalate → HITL interrupt; Summarize → final summarize call → summary_halt). Canon: D18-P93-A, interface-definitions v2.33."
 ---
 
 # Domain Events (Processing Stages)
@@ -110,7 +111,7 @@ A GuardrailHook evaluated content at an ingress boundary.
 A BudgetPolicy evaluated a token/cost tally for the current Run.
 - **Trigger:** After each model call; after each tool invocation
 - **Preconditions:** BudgetPolicy configured in RunnableConfig
-- **Outcome:** Allow (continue), Escalate (raise HITL interrupt), or Deny (halt run)
+- **Outcome:** Allow (continue), Escalate (raise HITL interrupt), or Deny (engine dispatches per on_ceiling — halt, HITL escalation, or summarize)
 - **EvidenceJournal:** Entry appended with outcome (BC-2.10.002: append-only journal)
 
 ### StreamEventEmitted

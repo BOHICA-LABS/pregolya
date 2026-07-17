@@ -630,3 +630,17 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 174): D18-P92-A (RunnableConfig::budget_config: Option(BudgetConfig) — per-run override; resume ceiling patches RunnableConfig::budget_config; GraphConfig mutation rejected; §RunnableConfig struct defined in interface-definitions v2.32).
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 174 | Counter 0/3 (Phase 1d)
+
+---
+
+## Burst 175 Checkpoint (archived from STATE.md at burst 176)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 93 passes / 97 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 512). trajectory-tail →1→4→2→5. NEXT ACTION: dispatch adversary pass 94 — MUST include deferred probes (SS-03/SS-12/SS-16, ADR-001..003↔BCs, server-endpoint interface↔BC signatures, TV-index sampling, Domain A/B forcing-function traces) AND sibling-checks for burst-175 fixes. Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 175 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-93 FIX SUMMARY: F-P93-01 HIGH (BA): entities-server v1.7 — verbatim-canon rewrite (7 invented fields replaced; PolicyOutcome/token_ceiling/cost_ceiling_usd zero residue). F-P93-02 HIGH (D18-P93-A): Model A HITL trigger — PolicyDecision::Escalate ALWAYS HITL; Deny branches on on_ceiling; interface-definitions v2.33 (5-row decision table); BC-2.10.004 v1.4 (dual-path PC1a/PC1b, PC2/PC2b, TV-001b); BC-2.10.001 v1.3. F-P93-03 MED (PO): BC-2.10.004 stale CAP-012 quote fixed (capabilities-p0 v1.2 wording). F-P93-04 MED (PO): VP-BUDGET-05 collision → BC-2.10.003 v1.7 VP-BUDGET-07; sequence VP-BUDGET-01..07 clean. OBS-P93-01 (PO/D18-P93-B): gate #13 extended VP-uniqueness; bc-authoring-plan v2.26; VP-STREAM-02 collision found+fixed BC-2.06.002 v1.1.
+### BURST-175 SIBLING-CHECKS OWED (pass 94 must verify): BC-2.10.001 v1.3 PC3 Escalate→HITL canon; BC-2.10.003 v1.7 VP-BUDGET-07 no collision; BC-2.10.004 v1.4 dual-path forms (PC1a/PC1b, PC2/PC2b, TV-001b); interface-definitions v2.33 §OnCeiling 5-row table; bc-authoring-plan v2.26 gate #13 VP-uniqueness command; BC-2.06.002 v1.1 VP-STREAM-04; corpus VP census zero duplicates.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (burst 175): D18-P93-A (Model A HITL trigger: PolicyDecision::Escalate ALWAYS→HITL unconditionally; PolicyDecision::Deny→branches on on_ceiling; 5-row table in interface-definitions v2.33). D18-P93-B (cost-based ceilings NOT v1 scope; CAP-012 = JournalEntry.token_usage.estimated_cost tracking only).
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 175 | Counter 0/3 (Phase 1d)
