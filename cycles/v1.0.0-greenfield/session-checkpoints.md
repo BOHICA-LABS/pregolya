@@ -594,3 +594,14 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 171): D18-P89-A (end-of-burst corpus hash-currency sweep is mandatory standing step; first execution refreshed 94/95 BCs + 4/6 supplements; content coherence verified by passes 88-89).
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 171 | Counter 0/3 (Phase 1d)
+
+## Checkpoint archived from burst 172 (2026-07-17T10:05:00Z)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 90 passes / 94 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 85 = 43+16+26, 13 ADRs, 34 gates, test-vectors 512). trajectory-tail →2→4→4→1. NEXT ACTION: dispatch adversary pass 91 (counter 0/3; corpus hash census verified TOTAL MATCH 126/126 at burst 172 HEAD; D18-P90-A cascade scope extended). Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 172 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-90 CENSUS CLOSURE (burst 172): adversary pass-90 verdict CLEAN(strict) read-only caveat; state-manager census closure found ARCH-INDEX.md hash drift (edabdee vs 065003c; prd.md + module-criticality.md staled ARCH-INDEX at burst 171); D18-P90-A adjudicated (orchestrator): hash-only refreshes are state-manager-executable corpus-wide; cascade scope extended to files whose inputs: reference edited files; ARCH-INDEX.md refreshed (edabdee→065003c); full census TOTAL MATCH: supplements 6/6, BCs 95/95, arch 9/9, domain-spec 15/15, prd+product-brief 2/2 = 126 verified.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (burst 172): D18-P90-A (hash-refresh cascade scope extended; state-manager-executable corpus-wide; root cause: D18-P89-A authority-split blind spot for ARCH-INDEX).
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 172 | Counter 0/3 (Phase 1d)

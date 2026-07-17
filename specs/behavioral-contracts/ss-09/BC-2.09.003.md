@@ -23,7 +23,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "76e7960"
+input-hash: "e30c92e"
 extracted_from: null
 modified: []
 deprecated: null

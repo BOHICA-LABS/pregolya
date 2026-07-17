@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.11"
+version: "3.12"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-17T10:05:00Z
+timestamp: 2026-07-17T12:02:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "Phase 1d burst 172 COMPLETE — pass 90 adversary-CLEAN(strict) read-only; census closure found ARCH-INDEX hash drift (D18-P90-A fix; TOTAL MATCH 126/126); effective NOT CLEAN; trajectory →1 (P1D-90); counter 0/3; adversary pass 91 next; trajectory-tail →2→4→4→1"
+current_step: "Phase 1d burst 173 COMPLETE — pass 91 (1H+1M+2OBS, content-layer budget cluster) fixed: D18-P91-A on_ceiling canon (BudgetConfig) + D18-P91-B E-MEMORY-008 (census 86); trajectory →4 (P1D-91); counter 0/3; adversary pass 92 next; trajectory-tail →4→4→1→4"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -21,7 +21,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. Current: 192 lines (wc-l). margin from soft-target: 8 lines. margin from actual: 8 lines.
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. Current: 195 lines (wc-l). margin from soft-target: 5 lines. margin from actual: 5 lines.
   Historical content → cycle files (burst-log, convergence-trajectory, session-checkpoints, lessons, blocking-issues-resolved).
   Run /vsdd-factory:compact-state if this file grows past 200 lines. -->
 
@@ -38,24 +38,24 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-17 — burst 172: pass 90 coverage-caveat census; ARCH-INDEX hash drift found + D18-P90-A fix; TOTAL MATCH 126/126; effective NOT CLEAN; trajectory →1 (P1D-90); counter 0/3; trajectory-tail →2→4→4→1 |
+| **Last Updated** | 2026-07-17 — burst 173: pass 91 (1H+1M+2OBS, budget cluster); D18-P91-A on_ceiling canon + D18-P91-B E-MEMORY-008 (census 86 = 43+16+27); trajectory →4 (P1D-91); counter 0/3; trajectory-tail →4→4→1→4 |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Burst 172 COMPLETE — pass 90 census closure + D18-P90-A; NEXT: dispatch adversary pass 91. |
+| **Current Step** | Burst 173 COMPLETE — pass 91 + fix burst (3 specialists); NEXT: dispatch adversary pass 92. |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure); trajectory-tail →2→4→4→1 |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91); trajectory-tail →4→4→1→4 |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
 | 7: Convergence | not-started | | | | |
-| Adversary pass-90 complete; pass-91 next | in-progress | 2026-07-14 | — | counter 0/3 (P90: adv CLEAN(strict) read-only; census-closure found ARCH-INDEX drift; D18-P90-A fix; effective NOT CLEAN; passes 89→90) | trajectory-tail →2→4→4→1 |
-| Fix burst 172 complete (94 total) | complete | 2026-07-17 | 2026-07-17 | Pass 90: adversary CLEAN(strict) caveat; census-closure found ARCH-INDEX hash drift (edabdee→065003c; inputs staled by burst-171 prd.md+module-criticality); D18-P90-A hash-refresh authorized cascade; TOTAL MATCH 126/126; counter 0/3 | trajectory-tail →2→4→4→1 |
+| Adversary pass-91 complete; pass-92 next | in-progress | 2026-07-14 | — | counter 0/3 (P91: NOT CLEAN 1H+1M+2OBS; budget-cluster content-layer; D18-P91-A+B; passes 90→91) | trajectory-tail →4→4→1→4 |
+| Fix burst 173 complete (95 total) | complete | 2026-07-17 | 2026-07-17 | Pass 91: NOT CLEAN 4 findings (1H+1M+2OBS); D18-P91-A (on_ceiling canon BudgetConfig) + D18-P91-B (E-MEMORY-008 minted; census 85→86 = 43+16+27); all fixed; counter 0/3 | trajectory-tail →4→4→1→4 |
 
 ## Current Phase Steps
 
@@ -63,11 +63,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1d pass 88 + fix burst | adversary + PO + architect + state-manager | COMPLETE | Pass 88: NOT CLEAN — 4 findings (2 MED + 2 LOW) ALL FIXED. Novelty MEDIUM (all burst-167 template-compliance fallout). F-P88-01 (MED, PO): error-taxonomy + interface-definitions body-modified at burst 167 without version/changelog/timestamp propagation; FIXED: error-taxonomy → v1.17 (ts 07-17), interface-definitions → v2.28 (ts 07-17); cascade: BC-2.07.001 hash → 0e9aa46, BC-2.14.001/002 → 0a1320f. F-P88-02 (MED, PO): bc-authoring-plan gate prose had rename residue ("Error Category Codes table" → "Error Categories table"; "Flag Interaction Rules" → "Flag Interactions"); zero live old-name refs. F-P88-03 (LOW, PO): bc-authoring-plan v2.8/v2.9 changelog rows missing; RECONSTRUCTED from git (v2.8 = burst 143 gate #21 sub-check; v2.9 = burst 145 gate #20 AUTH/POLICY/INTERNAL widening). F-P88-04 (LOW, PO): SS-TBD frontmatter/guideline rewritten to historical/RESOLVED form. bc-authoring-plan → v2.23. Architecture tree: 8-file hash census clean (7-char MD5 verified; purity-boundary-map already current). Sibling-checks 5/5 (3 PASS, 2 → findings). Trajectory →4 (P1D-88). Counter 0/3. Burst 168. |
 | Phase 1d burst 169 — provenance-integrity sweep | PO + BA + architect + state-manager | COMPLETE | Burst 169 (no adversary pass): corpus-wide live-file provenance eradication — STATE.md and other live-mutable files removed from spec artifact `inputs:` lists (D18-P88-A). PO: nfr-catalog v1.1 (hash 2153125), module-criticality v1.4 (2ed30d9, +ADR-008/012/013 as true inputs), prd.md v1.2 (ba3a37f), bc-authoring-plan v2.24 (e786fea), product-brief.md v1.2 (9d9847b). BA: 9 version-bumped (risks v1.1 live-pointer intro rewritten; invariants v1.1; capabilities-p0 v1.1; capabilities-p1-p2 v1.3; entities-server v1.5; entities-graph v1.1; edge-cases v1.1; assumptions v1.1 [broken input path fixed]; L2-INDEX v1.3) + 6 hash-format-only migrations; census 14/14 MATCH. Architect: ARCH-INDEX v1.4, system-overview v1.1, module-decomposition v1.8; cascades verification-coverage-matrix v1.5, api-surface v1.3, dependency-graph v1.1, purity-boundary-map v1.3, tooling-selection v1.1; verification-architecture hash+ts only (formal v1.3 bump pending next commit cycle); VP-INDEX v1.1 (hook-format: Tool: prefix removed); census 9/9 CLEAN. Hash censuses post-write: supplements 6/6 + domain-spec 14/14 + architecture 9/9 + BCs 95/95 MATCH (no recompute). Counter 0/3. |
 | Phase 1d burst 170 — verification-architecture v1.3 + D18-P88-A corpus-wide closure | architect + state-manager | COMPLETE | Burst 170 (no adversary pass): verification-architecture.md formally bumped to v1.3; BC-INDEX removed from inputs:; six stable BC inputs + invariants.md + prd.md; input-hash 270a1de→8091abc. D18-P88-A interpretation note: versioned indexes (ARCH-INDEX, L2-INDEX) legitimate; rolling state-manager-authority files (STATE.md, BC-INDEX, STORY-INDEX) forbidden. 30-file corpus closure (29 burst-169 + 1 burst-170). Architecture census 9/9 CLEAN. Counter 0/3. Burst 170. |
 | Phase 1d burst 171 — pass 89 + fix burst + corpus hash-currency sweep | adversary + PO + state-manager | COMPLETE | Pass 89: NOT CLEAN — 4 findings (1H+2M+1L) ALL FIXED. Novelty MEDIUM (all provenance-wave echoes). F-P89-01 (HIGH [process-gap], PO): gate #34 census block embedded stale per-file hash values asserting false PASS; STRUCTURAL FIX: per-file hash values NEVER recorded in gate text; frontmatter = single source of truth; bc-authoring-plan → v2.25. F-P89-02 (MED, PO): bc-authoring-plan frontmatter hash e786fea contradicted v2.24 changelog (e238778); reconciled: full chain documented (90d28fa→e238778→e786fea→41c29d9); frontmatter = 41c29d9. F-P89-03 (MED, PO): nfr-catalog "pending recomputation" deferral language + stale pre-removal hash; FIXED: v1.2, hash 2153125→0f05a12, deferral language closed. F-P89-04 (LOW, PO): BC-2.08.006 PC-3 stale "(or SS-TBD is used as a placeholder)" clause dropped; v1.2; hash 8095694→412902d. Corpus hash-currency sweep (D18-P89-A first execution): 4/6 supplements DRIFT + 94/95 BCs STALE refreshed to TOTAL MATCH (coherence verified passes 88-89). D18-P89-A codified. Trajectory →4 (P1D-89). Counter 0/3. Burst 171. |
-| Phase 1d burst 172 — pass 90 coverage-caveat census + D18-P90-A hash refresh | adversary + state-manager | COMPLETE | Pass 90 adversary verdict: CLEAN(strict) with read-only coverage caveat. State-manager coverage-caveat closure: ARCH-INDEX.md hash drift found (edabdee vs 065003c computed; inputs prd.md + module-criticality.md staled by burst-171 D18-P89-A sweep; ARCH-INDEX last touched burst 169). D18-P90-A adjudication (orchestrator): hash-only refreshes are state-manager-executable corpus-wide; cascade scope extended to files whose inputs: reference edited files. ARCH-INDEX.md refreshed (edabdee→065003c). Full census 126/126 TOTAL MATCH: supplements 6/6, BCs 95/95, arch 9/9, domain-spec 15/15, prd 1, product-brief 1. Effective pass-90 verdict: NOT CLEAN (1 census-closure finding). Trajectory →1 (P1D-90). Counter 0/3. Fix bursts 93→94. Burst 172. |
+| Phase 1d burst 172 — pass 90 coverage-caveat census + D18-P90-A hash refresh | adversary + state-manager | COMPLETE | Pass 90 adversary verdict: CLEAN(strict) read-only with coverage caveat. State-manager coverage-caveat closure: ARCH-INDEX.md hash drift found (edabdee vs 065003c computed; inputs prd.md + module-criticality.md staled by burst-171 D18-P89-A PO-scope sweep; ARCH-INDEX last touched burst 169). D18-P90-A adjudication (orchestrator): hash-only refreshes are state-manager-executable corpus-wide; cascade scope extended to files whose inputs: reference edited files. ARCH-INDEX.md refreshed (edabdee→065003c). Full census 126/126 TOTAL MATCH: supplements 6/6, BCs 95/95, arch 9/9, domain-spec 15/15, prd 1, product-brief 1. Effective pass-90 verdict: NOT CLEAN (1 census-closure finding). Trajectory →1 (P1D-90). Counter 0/3. Fix bursts 93→94. Burst 172. |
+| Phase 1d burst 173 — pass 91 + fix burst (3 specialists) | adversary + PO + BA + architect + state-manager | COMPLETE | Pass 91: NOT CLEAN — 4 findings (1H+1M+2OBS) ALL FIXED. Novelty MEDIUM (first genuine CONTENT-layer finding cluster: budget subsystem semantic mis-anchor). F-P91-01 (HIGH, PO+BA): SS-10 BC trio + CAP-012 attributed on_ceiling to BudgetPolicy TRAIT (impossible — pure trait carries no data field); canon = BudgetConfig STRUCT; FIXED: BC-2.10.001 v1.2, BC-2.10.003 v1.5, BC-2.10.004 v1.2, BC-2.06.003 v1.1, capabilities-p0 v1.2; post-fix corpus grep zero residual. F-P91-02 (MED, architect): OnCeiling + BudgetConfig undefined in interface-definitions; FIXED: v2.29 adds full defs (OnCeiling {Halt,Escalate,Summarize{summarize_prompt}}, BudgetConfig {soft_limit,hard_limit,on_ceiling}) + engine-branches-on-config prose; siblings module-decomposition v1.9, purity-boundary-map v1.4. F-P91-03 (OBS, architect): TOML default_on_ceiling omitted Summarize; ADJUDICATED bare-string default intentionally excludes Summarize (table form documented). F-P91-04 (OBS, PO): BC-2.15.004 EC-004 mapped read failure to E-MEMORY-002 StorageFull (write-semantic); E-MEMORY-008 MemoryStoreReadFailed MINTED (DURABILITY/broken/Maybe; anchor EC-004+TV-008; gate #31 PASS); BC-2.15.004 v1.1; error-taxonomy v1.18; interface-definitions v2.30. ERROR-CODE CENSUS 85→86 = 43+16+27. D18-P91-A + D18-P91-B. D18-P89-A sweep TOTAL MATCH. Trajectory →4 (P1D-91). Counter 0/3. Fix bursts 94→95. Burst 173. |
 
 ## Decisions Log
 
@@ -105,6 +105,8 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | D18-P88-A | Live/mutable files under state-manager authority (STATE.md, sprint-state.yaml, rolling index files: BC-INDEX, STORY-INDEX) must NOT appear in any spec artifact's frontmatter `inputs:` list; stable facts are baked in at authoring time and cited by decision ID. INTERPRETATION (burst 170): versioned changelog-bearing spec indexes (ARCH-INDEX, L2-INDEX) ARE legitimate inputs — they carry immutable version history; the forbidden class is rolling live-mutable files. Corpus closure: 30 files total (29 burst-169 across PO/BA/architect + 1 burst-170: verification-architecture). | burst-168 process note: STATE.md-as-input re-drifted nfr-catalog/module-criticality hashes on every state write; sweep found the class was corpus-wide; burst-170 clarified interpretation boundary | phase-1d | 2026-07-17 | orchestrator+PO+BA+architect |
 | D18-P89-A | END-OF-BURST HASH-CURRENCY SWEEP: every state-manager burst commit is preceded by a corpus-wide input-hash census; any file staled by the burst's edits gets `compute-input-hash --update` in the SAME commit (mechanical refresh sanctioned when the burst's adversary/fix cycle already verified content coherence; otherwise flag for review instead of refreshing). Prevents the pass-89 class: frontmatter/census/changelog hash incoherence from partial propagation. | F-P89-01/02/03: bursts 168-170 updated primary fields but not siblings; 94/95 BCs + 4/6 supplements staled silently | phase-1d | 2026-07-17 | adversary+PO+state-manager |
 | D18-P90-A | Mechanical hash-only refreshes (`compute-input-hash --update`; zero content change) are state-manager-executable corpus-wide under the D18-P89-A standing sweep, regardless of content authority — content changes remain owner-authority. D18-P89-A sweep scope EXTENDED: after any burst, refresh not only files edited by the burst but ALL files whose `inputs:` lists reference an edited file (transitive, until census TOTAL MATCH). Root cause of ARCH-INDEX drift: burst-171 D18-P89-A sweep covered PO-scope supplements/BCs but not architect-authority ARCH-INDEX which listed prd.md + module-criticality.md (both swept) as inputs. | burst-172 verify census: ARCH-INDEX.md (architect-authority) staled by burst-171 PO-scope sweep; authority split created blind spot | phase-1d | 2026-07-17 | orchestrator+state-manager |
+| D18-P91-A | on_ceiling canon: BudgetConfig struct (GraphConfig.budget_config) owns on_ceiling/soft_limit/hard_limit; BudgetPolicy trait stays pure+data-free (evaluate() only); engine branches on BudgetConfig::on_ceiling after Deny. OnCeiling + BudgetConfig now defined in interface-definitions §BudgetPolicy; TOML bare-string default excludes Summarize (table form [budget.on_ceiling] mode/summarize_prompt documented inline). | F-P91-01/02/03: SS-10 trio + CAP-012 attributed a data field to a pure trait; interface surface was incomplete | phase-1d | 2026-07-17 | adversary+architect+PO+BA |
+| D18-P91-B | E-MEMORY-008 MemoryStoreReadFailed minted (DURABILITY/broken/Maybe; anchor BC-2.15.004 EC-004+TV-008). Error-code census 85→86 = 43+16+27. | F-P91-04: MEMORY namespace had no read/IO-failure code; StorageFull was semantically wrong for reads | phase-1d | 2026-07-17 | adversary+PO |
 
 ## Risk Register
 
@@ -142,16 +144,16 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | DEFER-002 | Machine enforcement of gate #28 date-validity (pre-commit hook + CI lint for changelog-date monotonicity and frontmatter-currency) | Phase 3 CI hardening | 3rd manual-sweep failure (F-P64-02/F-P65-01/F-P75-01); gate #28 Rules 4+5 are prose-only until Phase 3. DEFER-001 archived in cycles/v0.0.0-pre-pipeline/lessons.md |
 
 ## Concurrent Cycles
-None currently active. Counter 0/3; trajectory-tail →2→4→4→1.
+None currently active. Counter 0/3; trajectory-tail →4→4→1→4.
 
 ## Convergence Status
 
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 90 (Phase 1d) |
-| Fix bursts completed | 94 (Phase 1d: 72 fix + 5 D19/D20 expansion + 1 pass-77 fix + 1 pass-78 fix + full gate #33 sweep + 1 pass-79 fix + 1 pass-80 fix + 1 pass-81 fix + 1 pass-82 fix + 1 pass-83 fix + 1 pass-84 PO-half fix + 1 pass-84 architect-half fix + 1 pass-85 fix + 1 pass-86 fix + 1 pass-87 fix [large] + 1 pass-88 fix + 1 provenance burst + 1 verification-architecture v1.3 burst + 1 pass-89 fix + corpus hash-currency sweep + 1 pass-90 census-closure ARCH-INDEX hash refresh) |
-| Convergence counter | 0 of 3 (Phase 1d; effective NOT CLEAN pass 90: census-closure found ARCH-INDEX drift, D18-P90-A fix applied; counter stays 0/3; pre-pipeline 3/3 CLOSED) |
-| Finding trajectory | →4→2→2→4→4→1 |
+| Adversary passes completed | 91 (Phase 1d) |
+| Fix bursts completed | 95 (Phase 1d: 72 fix + 5 D19/D20 expansion + 1 pass-77 fix + 1 pass-78 fix + full gate #33 sweep + 1 pass-79 fix + 1 pass-80 fix + 1 pass-81 fix + 1 pass-82 fix + 1 pass-83 fix + 1 pass-84 PO-half fix + 1 pass-84 architect-half fix + 1 pass-85 fix + 1 pass-86 fix + 1 pass-87 fix [large] + 1 pass-88 fix + 1 provenance burst + 1 verification-architecture v1.3 burst + 1 pass-89 fix + corpus hash-currency sweep + 1 pass-90 census-closure ARCH-INDEX hash refresh + 1 pass-91 fix [budget cluster]) |
+| Convergence counter | 0 of 3 (Phase 1d; NOT CLEAN pass 91: 1H+1M+2OBS budget cluster; D18-P91-A/B fixed; counter stays 0/3; pre-pipeline 3/3 CLOSED) |
+| Finding trajectory | →4→2→2→4→4→1→4 |
 
 
 ## Session Resume Checkpoint
@@ -159,13 +161,14 @@ None currently active. Counter 0/3; trajectory-tail →2→4→4→1.
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 
 ### RESUME IN ONE BREATH
-"ferrochain Phase 1d convergence loop, 90 passes / 94 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 85 = 43+16+26, 13 ADRs, 34 gates, test-vectors 512). trajectory-tail →2→4→4→1. NEXT ACTION: dispatch adversary pass 91 (counter 0/3; corpus hash census verified TOTAL MATCH 126/126 at burst 172 HEAD; D18-P90-A cascade scope extended). Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
-### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 172 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
-### PASS-90 CENSUS CLOSURE (burst 172): adversary pass-90 verdict CLEAN(strict) read-only caveat; state-manager census closure found ARCH-INDEX.md hash drift (edabdee vs 065003c; prd.md + module-criticality.md staled ARCH-INDEX at burst 171); D18-P90-A adjudicated (orchestrator): hash-only refreshes are state-manager-executable corpus-wide; cascade scope extended to files whose inputs: reference edited files; ARCH-INDEX.md refreshed (edabdee→065003c); full census TOTAL MATCH: supplements 6/6, BCs 95/95, arch 9/9, domain-spec 15/15, prd+product-brief 2/2 = 126 verified.
+"ferrochain Phase 1d convergence loop, 91 passes / 95 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 512). trajectory-tail →4→4→1→4. NEXT ACTION: dispatch adversary pass 92 (counter 0/3; D18-P91-A on_ceiling canon [BudgetConfig]; D18-P91-B E-MEMORY-008 minted). Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 173 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-91 FIX SUMMARY: D18-P91-A: on_ceiling canon = BudgetConfig::on_ceiling (not BudgetPolicy trait); BCs 2.10.001/003/004 v1.2/1.5/1.2 fixed; BC-2.06.003 v1.1 corpus residual; capabilities-p0 v1.2 CAP-012; interface-definitions v2.29 adds OnCeiling+BudgetConfig defs; module-decomposition v1.9 + purity-boundary-map v1.4 type inventories. D18-P91-B: E-MEMORY-008 MemoryStoreReadFailed (DURABILITY/broken/Maybe); BC-2.15.004 v1.1; error-taxonomy v1.18; interface-definitions v2.30; census 86 = 43+16+27.
+### PASS-92 SIBLING-CHECKS: SS-10 trio (BC-2.10.001/003/004) + BC-2.06.003 + BC-2.15.004 (on_ceiling/BudgetConfig coherence + E-MEMORY-008 anchor); interface-definitions v2.30 (OnCeiling/BudgetConfig defs + E-MEMORY-008 census row); error-taxonomy v1.18 (E-MEMORY-008 row); census 86=43+16+27 recount; module-decomposition v1.9 + purity-boundary-map v1.4 type inventories; capabilities-p0 v1.2 CAP-012.
 ### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
-### DECISION DELTA (burst 172): D18-P90-A (hash-refresh cascade scope extended; state-manager-executable corpus-wide; root cause: D18-P89-A authority-split blind spot for ARCH-INDEX).
+### DECISION DELTA (burst 173): D18-P91-A (on_ceiling canon: BudgetConfig struct owns on_ceiling; BudgetPolicy trait stays pure); D18-P91-B (E-MEMORY-008 MemoryStoreReadFailed minted; census 85→86 = 43+16+27).
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
-### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 172 | Counter 0/3 (Phase 1d)
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 173 | Counter 0/3 (Phase 1d)
 
 ## Historical Content
 
@@ -174,7 +177,7 @@ None currently active. Counter 0/3; trajectory-tail →2→4→4→1.
 | Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
 | 95 Behavioral Contracts (ss-01..ss-17/, ~13,800+ lines) + BC-INDEX.md v1.1 (48P0/39P1/8P2) | `.factory/specs/behavioral-contracts/ss-NN/` + `BC-INDEX.md` |
 | L3 PRD (index + BC summary tables, 607 lines) + v1.0 Step-E annotation (BC-2.08.009) | `.factory/specs/prd.md` |
-| PRD supplements: bc-authoring-plan v2.25, error-taxonomy v1.17, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.28, test-vectors v1.7 | `.factory/specs/prd-supplements/` |
+| PRD supplements: bc-authoring-plan v2.25, error-taxonomy v1.18, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.30, test-vectors v1.7 | `.factory/specs/prd-supplements/` |
 | L2 domain spec (15-shard, 1,889 lines) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
 | Session checkpoints bursts 5–78 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
@@ -184,7 +187,7 @@ None currently active. Counter 0/3; trajectory-tail →2→4→4→1.
 | Planning studies (naming decision, file-size standard) | `.factory/planning/naming-decision-study.md` + `file-size-standard-study.md` |
 | Semport pass 1 analysis state (deepening items, risks) | `.factory/semport/core/ANALYSIS-STATE.md` |
 | D16 comparative assessment + 3 part-files (COMPARATIVE-ASSESSMENT.md synthesis) | `.factory/comparative/COMPARATIVE-ASSESSMENT.md` (+ `assessment-parts/`) |
-| Architecture core: ARCH-INDEX v1.4 + 9 section files + ADR-013 (~1,300+ lines), 13 ADRs | `.factory/specs/architecture/` + `decisions/` |
+| Architecture core: ARCH-INDEX v1.4 + 9 section files (module-decomposition v1.9, purity-boundary-map v1.4) + ADR-013 (~1,300+ lines), 13 ADRs | `.factory/specs/architecture/` + `decisions/` |
 | VP-INDEX + VP-001..005 (D17-Q7 top-3 BSP invariants + MCP integration VPs) | `.factory/specs/verification-properties/` |
 | DTU assessment (DTU_REQUIRED: true; 3 cassette clone sets; pre-Phase-3 gate ≥8/7/3) | `.factory/planning/dtu-assessment.md` |
 | ADR tech validation (schemars 1.2.1, rmp-serde 1.3.1, Kani 0.67.0 no-async) | `.factory/planning/adr-tech-validation.md` |

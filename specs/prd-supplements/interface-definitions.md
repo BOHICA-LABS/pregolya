@@ -1,12 +1,14 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.28"
+version: "2.30"
 status: active
 producer: product-owner
 timestamp: 2026-07-17T00:00:00Z
 phase: 1d
 changelog:
+  - "2.30 (F-P91-04, 2026-07-17): Census update 85→86 — E-MEMORY-008 (MemoryStoreReadFailed, DURABILITY) minted in error-taxonomy.md v1.18 (BC-2.15.004 EC-004/TV-008 anchor). E-MEMORY-008 is covered by the existing E-MEMORY-* blanket annotation (§Library/execution-layer codes blanket omission); category DURABILITY is already in the blanket annotation category list (VAL/POLICY/DURABILITY/SECURITY); no HTTP routing row or blanket annotation body change needed. Updated census: 43 HTTP + 16 individual + 27 blanket = 86 (E-MEMORY-* 7→8 in blanket group; E-MCP-* 5 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 = 27)."
+  - "2.29 (F-P91-02/F-P91-03, 2026-07-17): F-P91-02 (MED) — add OnCeiling enum and BudgetConfig struct to §BudgetPolicy; both are SS-10 public API surface items absent from the interface spec, leaving implementers unable to build the halt-vs-summarize branch without them. OnCeiling variants: Halt | Escalate | Summarize { summarize_prompt: String } per BC-2.10.003 v1.2 Architecture Anchors + BC-2.10.004. BudgetConfig fields: soft_limit: Option<u64> (Escalate threshold — BC-2.10.001 TV-002), hard_limit: Option<u64> (Deny threshold — BC-2.10.001 TV-003), on_ceiling: OnCeiling (BC-2.10.003 + BC-2.10.004). Prose paragraph added: engine branches on BudgetConfig::on_ceiling after Deny; BudgetPolicy::evaluate stays pure; ADR-009 Option 3 section anchor. BC anchor updated: BC-2.10.003 + BC-2.10.004 + ADR-009 added; TV citation text updated. F-P91-03 (OBS) — fix TOML default_on_ceiling comment: state that 'summarize' is config-API-only (requires summarize_prompt payload; not expressible as a bare-string default; table form documented). Sibling sweep: module-decomposition.md budget note + purity-boundary-map.md core::budget row updated with OnCeiling and BudgetConfig."
   - "2.28 (F-P88-01, 2026-07-17): Version/changelog/timestamp propagation for pass-87 burst body changes. Pass-87 (bc-authoring-plan v2.21) added §CLI Interface, §Exit Code Semantics, and §JSON Output Schema stubs; renamed §'Flag Interaction Rules' → §'Flag Interactions'; and normalized input-hash from legacy 64-char SHA-256 to 7-char MD5 ('cdce094'). Those body modifications landed without a corresponding version/timestamp bump, leaving the file at v2.27/2026-07-15. Correction applied: version 2.27 → 2.28, timestamp → 2026-07-17. No semantic content changes in this entry."
   - "2.27 (2026-07-15, F-P83-01/F-P83-02): Mandatory sibling sweep of all BC anchor lines — two mis-citations corrected. F-P83-01 (ToolCallDialect §ProviderFallbackPolicy, line ~314): old citation 'BC-2.08.013 PC1–PC4 (object-safe trait contract, built-in impls, E-PROV-009 on parse failure)' was wrong on two counts — PC1–PC4 cover only the NativeOpenAiJson and NativeAnthropic dialect round-trips; object-safety lives at PC10; E-PROV-009 is raised at PC8 (HermesChatMlXml malformed JSON) and PC9 (any dialect serialize/deserialize error). Fixed to 'BC-2.08.013 PC1–PC9 (built-in dialect round-trips; PC8/PC9 = E-PROV-009 on parse failure) + PC10 (object-safe trait contract)'. F-P83-02 (ProviderFallbackPolicy, line ~336): old citation 'BC-2.08.014 PC1–PC4 (ordered fallback semantics, E-PROV-010 on chain exhaustion)' incorrectly attributed E-PROV-010 to the PC1–PC4 block; PC4 = ordered chain semantics (no error raised); E-PROV-010 is raised at PC5 (chain exhausted postcondition). Fixed to 'BC-2.08.014 PC1–PC4 (ordered fallback semantics) + PC5 (E-PROV-010 on chain exhaustion)'. Sweep covered all 13 BC anchor locations in the file; no other mis-citations found. Disposition census unchanged: 43 HTTP + 16 individual + 26 blanket = 85."
   - "2.26 (2026-07-15, F-P82-02): E-CHKPT-008 omission note raise-timing corrected. Previous wording stated both sub-cases were raised 'at construction time', which was wrong for the malformed-FTS5-query case. Fixed: (1) `FtsSearchConfig.limit = 0` raised at FtsSearchConfig construction time (BC-2.04.008 PC6/EC-004); (2) malformed FTS5 query string raised at fts_search call time via SQLite FTS5 parse error propagation (BC-2.04.008 EC-002). Clarified that `query` is a standalone first parameter to fts_search, NOT a field of FtsSearchConfig. BC citations split to match each sub-case. Disposition census unchanged: 43 HTTP + 16 individual + 26 blanket = 85."
@@ -44,7 +46,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "fa3a26c"
+input-hash: "4c7330b"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."
@@ -269,7 +271,57 @@ pub enum PolicyDecision {
     Escalate { reason: String, current_usage: TokenUsage },
     Deny { reason: String, current_usage: TokenUsage },
 }
+
+/// Behavior when a `PolicyDecision::Deny` threshold is reached.
+///
+/// Configured via `BudgetConfig::on_ceiling`. The execution engine reads this field
+/// after receiving `PolicyDecision::Deny` to determine whether to halt, escalate,
+/// or summarize. The `BudgetPolicy::evaluate` trait method itself stays pure and
+/// data-free; the engine owns the dispatch (ADR-009 Option 3).
+///
+/// Authority: BC-2.10.003 v1.2 (Halt + Summarize variants),
+/// BC-2.10.004 (Escalate variant).
+pub enum OnCeiling {
+    /// Stop the run immediately; transition to `failed` with E-BUDGET-001
+    /// (BC-2.10.003 PC5).
+    Halt,
+    /// Suspend via HITL interrupt; run parks in `interrupted` status, awaiting
+    /// `BudgetResume::Extend { new_ceiling }` or `BudgetResume::Halt` (BC-2.10.004).
+    Escalate,
+    /// Issue one final LLM call using `summarize_prompt` as a `HumanMessage`;
+    /// return the model response as run output with `status = summary_halt`
+    /// (BC-2.10.003 PC8). If the summarize call itself triggers `Deny`, the run falls
+    /// back to `Halt` semantics — E-BUDGET-001, `status = failed` (BC-2.10.003 EC-005).
+    Summarize { summarize_prompt: String },
+}
+
+/// Configuration for the built-in budget governance policy.
+///
+/// Carried via `GraphConfig::budget_config: Option<BudgetConfig>` (ADR-009 Option 3).
+/// The engine constructs a `BudgetPolicy` implementation from these fields; policy
+/// evaluation itself is pure (`BudgetPolicy::evaluate` has no side effects).
+///
+/// Authority: BC-2.10.001 TV-001/TV-002/TV-003 (`soft_limit` + `hard_limit` thresholds),
+/// BC-2.10.003 + BC-2.10.004 (`on_ceiling` behavior), ADR-009 Option 3.
+pub struct BudgetConfig {
+    /// Token count at which `PolicyDecision::Escalate` is returned.
+    /// `None` = no soft ceiling; the Escalate path is never triggered by token count alone.
+    pub soft_limit: Option<u64>,
+    /// Token count at which `PolicyDecision::Deny` is returned.
+    /// `None` = no hard ceiling; the Deny path is never triggered by token count alone.
+    pub hard_limit: Option<u64>,
+    /// Engine behavior when the hard ceiling (`PolicyDecision::Deny`) is reached.
+    pub on_ceiling: OnCeiling,
+}
 ```
+
+> **Engine branching on `BudgetConfig::on_ceiling`:** After receiving `PolicyDecision::Deny`
+> from `BudgetPolicy::evaluate`, the execution engine reads `BudgetConfig::on_ceiling` to
+> determine the response: `Halt` → transition to `failed` with E-BUDGET-001 (BC-2.10.003);
+> `Escalate` → suspend via HITL interrupt (BC-2.10.004); `Summarize { summarize_prompt }` →
+> issue one final LLM call and transition to `summary_halt` (BC-2.10.003 PC8). The
+> `BudgetPolicy` trait stays pure and data-free — `evaluate` has no knowledge of `on_ceiling`
+> semantics; the engine owns the dispatch (ADR-009 Option 3, section anchor only).
 
 > **`RunContext`** — RESOLVED. Defined by BC-2.10.001 precondition 3: "The execution engine
 > has access to the `RunContext` (thread_id, run_id, sub-agent identity if applicable) for
@@ -295,9 +347,11 @@ pub enum PolicyDecision {
 
 **BC anchor:** BC-2.10.001 precondition 3 (RunContext fields: thread_id, run_id, sub-agent identity),
 BC-2.10.001 PC3 (PolicyDecision variants + purity invariant),
-BC-2.10.001 TV-001–TV-003 (variant payloads verified),
+BC-2.10.001 TV-001–TV-003 (soft_limit/hard_limit thresholds + variant payloads),
 BC-2.10.002 INV (journal writes are caller responsibility),
-BC-2.10.003 v1.2 PC5 + INV + TV-007 (BudgetInfo shape and arithmetic)
+BC-2.10.003 v1.2 (OnCeiling Halt + Summarize variants; PC5/INV/TV-007 BudgetInfo shape and arithmetic),
+BC-2.10.004 (OnCeiling Escalate variant — HITL interrupt path),
+ADR-009 Option 3 (BudgetConfig placement in GraphConfig; pure/effectful boundary)
 
 ### ToolCallDialect
 
@@ -677,6 +731,10 @@ backend = "wasm"               # "wasm" (default, enforcing) | "container" | "pr
 # Global budget policy — overridable per run
 default_token_limit = null     # null = unlimited (operator must set a limit)
 default_on_ceiling = "halt"    # "halt" | "escalate"
+                               # "summarize" is config-API-only; requires a summarize_prompt
+                               # payload and is not expressible as a bare-string default —
+                               # use table form: [budget.on_ceiling] mode = "summarize"
+                               #                 summarize_prompt = "Summarize your findings."
 ```
 
 **BC anchor:** BC-2.12.005, BC-2.13.001, BC-2.13.002

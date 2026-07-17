@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.3"
+version: "1.4"
 status: active
 producer: architect
 timestamp: 2026-07-17T00:00:00Z
@@ -10,10 +10,11 @@ phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
-input-hash: "b7003b6"
+input-hash: "e182efd"
 traces_to: ARCH-INDEX.md
 decisions: [D17]
 changelog:
+  - "1.4 (F-P91-02 sibling sweep, 2026-07-17): update core::budget Pure Core row to include OnCeiling enum and BudgetConfig struct (both newly defined in interface-definitions.md v2.29); row now lists all six core::budget types."
   - "1.3 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst. No spec content changes."
   - "1.2 (F-P85-01/F-P85-02/F-P85-03 / 2026-07-16): F-P85-01 (HIGH): correct splitters::parity citation R8/BC-2.07.003 → R8/BC-2.07.002 (BC-2.07.003 is Short-Document single-chunk, not the R8 Red Gate; the non-ASCII parity Red Gate BC is BC-2.07.002). F-P85-02 (HIGH): correct memory::write_guard Boundary citation ADR-012/BC-2.15.006 → ADR-012/BC-2.15.005 (BC-2.15.006 is Frozen-Snapshot Context Mutation governing graph::scheduler + core::context_mutation; the MemoryWriteGuard enforcement BC is BC-2.15.005 per its Architecture Anchors). F-P85-03 (MED): add missing Pure Core row for core::budget (BudgetPolicy trait, PolicyDecision, TokenUsage, RunContext — definitions-only, no execution logic per ADR-009 Option 3 / BC-2.10.001); closes Iron Law completeness gap. Pure Core 21→22, total 57→58 (28 effectful / 8 boundary unchanged). Re-verification of all 16 v1.1 rows: remaining 14 rows PASS citation correctness audit."
   - "1.1 (OBS-P84-C / 2026-07-16): classify 16 previously-unclassified modules — adds server::security, macros::tool/entrypoint/task, splitters::parity, core::context_mutation, core::write_guard to Pure Core; mcp::discovery, mcp::server, memory::skills, ferrochain-standard-tests, xtask, ferrochain-community to Effectful Shell; server::stores, sandbox::policy, memory::write_guard to Boundary Modules. Closes Iron Law gap (adversarial pass 84 finding OBS-P84-C). Also reclassify memory::store from Pure Core → Boundary (defect: '(validation)' qualifier left async dispatch surface unclassified, violating Iron Law; parallel to checkpoint::saver storage-trait Boundary pattern; BC-2.15.001 / SS-15). Module count: 41 rows before (15 pure / 22 effectful / 4 boundary) → 57 rows after (21 pure / 28 effectful / 8 boundary)."
@@ -66,7 +67,7 @@ side effects. Kani proofs operate here.
 | `splitters::parity` | ferrochain-splitters | deterministic equality check against golden reference vectors; no I/O (R8 / BC-2.07.002) | — |
 | `core::context_mutation` | ferrochain-core | definitions-only: `ContextSourceSpec`, `ContextMutationConfig` pure structs; no execution logic (ADR-012 Decision 1) | — |
 | `core::write_guard` | ferrochain-core | definitions-only: `MemoryWriteRequest`, `MemoryWriteGuard` trait (`validate()` synchronous, no I/O per ADR-012 Decision 1), `WriteGuardDecision` | — |
-| `core::budget` | ferrochain-core | definitions-only: `BudgetPolicy` trait (`evaluate()` pure, no async, no I/O per ADR-009 Option 3), `PolicyDecision` enum (Allow/Escalate/Deny), `TokenUsage` struct, `RunContext` struct; no execution logic (dispatch engine lives in `graph::budget`) (ADR-009 Option 3 / BC-2.10.001) | — |
+| `core::budget` | ferrochain-core | definitions-only: `BudgetPolicy` trait (`evaluate()` pure, no async, no I/O per ADR-009 Option 3), `PolicyDecision` enum (Allow/Escalate/Deny), `OnCeiling` enum (Halt/Escalate/Summarize — BC-2.10.003 v1.2 + BC-2.10.004), `BudgetConfig` struct (soft_limit, hard_limit, on_ceiling — BC-2.10.001 + ADR-009), `TokenUsage` struct, `RunContext` struct; no execution logic (dispatch engine lives in `graph::budget`) (ADR-009 Option 3 / BC-2.10.001) | — |
 
 **Kani constraint:** Kani model checking operates on finite, bounded loops. `graph::channels`
 reducer loop must be bounded by the number of tasks per super-step. `sandbox::path_guard`

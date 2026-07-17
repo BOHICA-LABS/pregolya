@@ -22,7 +22,7 @@ inputs:
   - .factory/specs/domain-spec/events.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "336688a"
+input-hash: "ac72d8d"
 extracted_from: null
 modified: []
 deprecated: null

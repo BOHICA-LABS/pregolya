@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.004
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,8 @@ wave: 2
 phase: 1b
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.1 (F-P91-04, 2026-07-17): EC-004 adjudication — E-MEMORY-002 StorageFull is a write-capacity code (wrong semantic for a backend read I/O failure). No existing MEMORY code covers read I/O failure. Minted E-MEMORY-008 (MemoryStoreReadFailed, DURABILITY, broken, Maybe) as the correct code. EC-004 updated: removed E-MEMORY-002 and hedge 'or equivalent propagated storage error'; now cites E-MEMORY-008 MemoryStoreReadFailed. Added TV-008 to satisfy gate #33 raise-condition anchor for E-MEMORY-008. error-taxonomy.md v1.18 adds E-MEMORY-008 row (MEMORY namespace); census 85→86 (blanket 26→27: E-MEMORY-* 7→8)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -103,7 +105,7 @@ is implementation-defined but stable across calls with no writes in between.
 ### EC-004: MemoryStore storage error during load_skill
 **Scenario:** The backing SQLite file returns an I/O error on read.
 **Expected behavior:** Returns `Err(FerrochainError { category: DURABILITY, code:
-E-MEMORY-002 StorageFull })` or equivalent propagated storage error. Does NOT panic.
+E-MEMORY-008 MemoryStoreReadFailed })`. Does NOT panic.
 Does NOT return `Ok(None)` to mask the error (DI-014).
 
 ### EC-005: skill_exists versus load_skill round-trip
@@ -125,6 +127,7 @@ guarantee is required).
 | TV-005 | `skill_exists("py_helpers")` after write | `Ok(true)` | Existence check |
 | TV-006 | `skill_exists("nope")` with no such skill | `Ok(false)` | Existence check absent |
 | TV-007 | Overwrite skill "py_helpers" via guarded write; `load_skill("py_helpers")` | Returns updated content | Load-on-demand; no stale cache |
+| TV-008 | Backend `MemoryStore` returns an I/O error during `load_skill("py_helpers")` (e.g., SQLite file read failure) | `Err(E-MEMORY-008 MemoryStoreReadFailed)`; does not panic; does not return `Ok(None)` | EC-004 — read I/O failure propagates as structured error (DI-014) |
 
 ## Verification Properties
 

@@ -32,10 +32,11 @@ traces_to: STATE.md
 | P1D-24 | 2026-07-14 | 2 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (wire-object field-set: Run completed_at/updated_at semantics; ThreadStatus enum; NEW CLASS: wire-object completeness) |
 | P1D-83 | 2026-07-15 | 3 | 0 | 1 | 2 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (semantic-mis-anchor-and-partial-fix-residue: ADR-013 tools/list-vs-call BC swap + ToolCallDialect/ProviderFallbackPolicy anchor PC mis-citations) |
 | P1D-86 | 2026-07-16 | 2 | 0 | 0 | 0 | 0 | LOW | 0/3 | FINDINGS_REMAIN (2 OBS: template-stub TODO markers + gate #28 Rule 5 document-type scope; both fixed same burst; D18-P86-A) |
+| P1D-91 | 2026-07-17 | 4 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (budget-cluster content-layer: on_ceiling mis-anchor to BudgetPolicy TRAIT + BudgetConfig/OnCeiling undefined in interface-definitions + E-MEMORY-008 minted; D18-P91-A/B) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91)`
 
 ## Per-Pass Details
 

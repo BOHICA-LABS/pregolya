@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.001
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.2 (F-P91-01, 2026-07-17): Attribute soft_limit/hard_limit configuration fields to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. PC1: reframed from 'RunnableConfig includes a BudgetPolicy' to 'BudgetConfig configured in GraphConfig.budget_config; engine constructs BudgetPolicy from it'. TV-001: 'BudgetPolicy with soft_limit = ...' → 'BudgetConfig with soft_limit = ...'; TV-002/TV-003: 'Same policy' → 'Same BudgetConfig'. soft_limit and hard_limit are BudgetConfig fields per interface-definitions v2.29; BudgetPolicy::evaluate is pure and data-free."
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: trait/PolicyDecision/TokenUsage/RunContext anchor moved from ferrochain-graph/src/budget/policy.rs to ferrochain-core/src/budget.rs (definitions, per ADR-009 Option 3). Module field resolved from stale placeholder to ferrochain-core (trait + types) / ferrochain-graph (engine). BudgetEngine/EvidenceJournal anchors unchanged (ferrochain-graph)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
@@ -25,7 +26,7 @@ inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "26a3900"
+input-hash: "23b9dad"
 extracted_from: null
 modified: []
 deprecated: null
@@ -51,9 +52,10 @@ confirms adk-rust has no native token/cost ceiling primitive.
 
 ## Preconditions
 
-1. A `RunnableConfig` for the run includes a `BudgetPolicy` (may be a composed chain of multiple
-   policies; absence of a policy means the default Allow-all policy is applied silently — see
-   BC-2.10.002 for the journal record in this case).
+1. A `BudgetConfig` is configured in `GraphConfig.budget_config` for the run; the engine
+   constructs a `BudgetPolicy` implementation from it (may be a composed chain of multiple
+   policies). Absence of a `BudgetConfig` means the default Allow-all policy is applied
+   silently — see BC-2.10.002 for the journal record in this case.
 2. A `TokenUsage` struct is updated after every LLM call and tool invocation with cumulative
    token counts (prompt, completion, total) and estimated cost.
 3. The execution engine has access to the `RunContext` (thread_id, run_id, sub-agent identity
@@ -124,9 +126,9 @@ is evaluated independently and may choose to continue, escalate, or deny the par
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | BudgetPolicy with `soft_limit = 100_000`, `hard_limit = 200_000`; current usage = 50_000 tokens | `PolicyDecision::Allow`; journal entry written | Happy path — under soft limit |
-| TV-002 | Same policy; current usage = 110_000 tokens (exceeds soft limit) | `PolicyDecision::Escalate { reason: "soft limit exceeded", current_usage: ... }`; journal entry written | Escalate path — see BC-2.10.004 |
-| TV-003 | Same policy; current usage = 210_000 tokens (exceeds hard limit) | `PolicyDecision::Deny { reason: "hard limit exceeded", current_usage: ... }`; journal entry written | Deny path — see BC-2.10.003 |
+| TV-001 | BudgetConfig with `soft_limit = 100_000`, `hard_limit = 200_000`; current usage = 50_000 tokens | `PolicyDecision::Allow`; journal entry written | Happy path — under soft limit |
+| TV-002 | Same BudgetConfig; current usage = 110_000 tokens (exceeds soft limit) | `PolicyDecision::Escalate { reason: "soft limit exceeded", current_usage: ... }`; journal entry written | Escalate path — see BC-2.10.004 |
+| TV-003 | Same BudgetConfig; current usage = 210_000 tokens (exceeds hard limit) | `PolicyDecision::Deny { reason: "hard limit exceeded", current_usage: ... }`; journal entry written | Deny path — see BC-2.10.003 |
 | TV-004 | Composed policy chain: [SoftLimitPolicy(100k→Escalate), HardLimitPolicy(200k→Deny)]; usage = 110k | Escalate wins (first matching policy in chain by precedence) | Chain composition; most restrictive wins |
 | TV-005 | Sub-agent run with Deny policy at 10k; sub-agent accumulates 12k | Sub-agent returns `Err(E-BUDGET-001 BudgetCeilingReached)`; parent run receives structured error, evaluates its own policy separately | Sub-agent independent evaluation |
 

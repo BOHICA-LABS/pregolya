@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "fda3a2b"
+input-hash: "cef6cf8"
 extracted_from: null
 modified: []
 deprecated: null

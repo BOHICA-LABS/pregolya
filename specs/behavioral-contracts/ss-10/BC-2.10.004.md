@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.004
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.2 (F-P91-01, 2026-07-17): Attribute on_ceiling to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. Description: 'policy\\'s on_ceiling mode is escalate' → 'BudgetConfig::on_ceiling is OnCeiling::Escalate'. PC1: 'BudgetPolicy with on_ceiling = escalate ... in RunnableConfig' → 'BudgetConfig with on_ceiling = OnCeiling::Escalate ... in GraphConfig.budget_config'. TV-001: same BudgetConfig attribution + OnCeiling::Escalate enum form. EC-001: 'on_ceiling = escalate' → 'BudgetConfig::on_ceiling = OnCeiling::Escalate'. on_ceiling is a data field on BudgetConfig; BudgetPolicy::evaluate is pure and data-free (interface-definitions v2.29 §Engine branching note + ADR-009 Option 3)."
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 propagation. Module field resolved from stale placeholder. All Architecture Anchor crate references already correct per ADR-009 split (BudgetEscalation/BudgetResume types + journal stay in ferrochain-graph as dispatch/escalation artifacts, not policy definitions)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "df40fc4"
+input-hash: "32380f9"
 extracted_from: null
 modified: []
 deprecated: null
@@ -42,8 +43,8 @@ removal_reason: null
 
 ## Description
 
-When a `BudgetPolicy::evaluate` call returns `PolicyDecision::Escalate` and the policy's
-`on_ceiling` mode is `escalate`, the execution engine suspends the run via the same
+When a `BudgetPolicy::evaluate` call returns `PolicyDecision::Escalate` and the configured
+`BudgetConfig::on_ceiling` is `OnCeiling::Escalate`, the execution engine suspends the run via the same
 `interrupt()` mechanism used by standard HITL interrupts (BC-2.05.001). The interrupt payload
 carries a typed `BudgetEscalation` context (current usage, ceiling, policy name, reason).
 The run parks in `interrupted` status, durably checkpointed, until a human or orchestrator
@@ -53,7 +54,7 @@ the resume value is consumed FIFO and the interrupted node re-executes from its 
 
 ## Preconditions
 
-1. A `BudgetPolicy` with `on_ceiling = escalate` is configured in the `RunnableConfig`.
+1. A `BudgetConfig` with `on_ceiling = OnCeiling::Escalate` is configured in `GraphConfig.budget_config`.
 2. A `BudgetPolicy::evaluate` call has returned `PolicyDecision::Escalate` after an LLM call
    or tool invocation.
 3. A `CheckpointSaver` is attached to the graph (an interrupt without a checkpointer is a
@@ -98,7 +99,7 @@ the resume value is consumed FIFO and the interrupted node re-executes from its 
 ## Edge Cases
 
 ### EC-001: Budget escalation without a CheckpointSaver
-**Scenario:** A graph with `on_ceiling = escalate` runs without a `CheckpointSaver`.
+**Scenario:** A graph with `BudgetConfig::on_ceiling = OnCeiling::Escalate` runs without a `CheckpointSaver`.
 **Expected behavior:** On the first `PolicyDecision::Escalate`, the engine returns
 `Err(E-GRAPH-016 InterruptWithoutCheckpointer)` rather than raising an interrupt without
 durable state. The run transitions to `failed`.
@@ -140,7 +141,7 @@ block the parent — it surfaces as an explicit result.
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | BudgetPolicy `on_ceiling = escalate, soft_limit = 10k`; run accumulates 12k tokens on 3rd LLM call | Run transitions to `interrupted`; caller receives `{"__interrupt__": [BudgetEscalation { ... }]}`; checkpoint with INTERRUPT marker written | Happy path — escalation triggered |
+| TV-001 | BudgetConfig `on_ceiling = OnCeiling::Escalate, soft_limit = 10k`; run accumulates 12k tokens on 3rd LLM call | Run transitions to `interrupted`; caller receives `{"__interrupt__": [BudgetEscalation { ... }]}`; checkpoint with INTERRUPT marker written | Happy path — escalation triggered |
 | TV-002 | Resume with `BudgetResume::Extend { new_ceiling: 50k }` after TV-001 | Interrupted node re-executes from super-step start; new ceiling 50k is active; execution continues; journal records Extend decision | Resume with extended ceiling |
 | TV-003 | Resume with `BudgetResume::Halt` after TV-001 | Run halts gracefully; same behavior as BC-2.10.003; journal records Halt decision | Resume with halt decision |
 | TV-004 | Process crash after INTERRUPT-marker checkpoint; restart; resume with Extend | On restart, run is in `interrupted`; `Command(resume = Extend { ... })` resumes from correct checkpoint | Durable escalation across restart — DI-003 |

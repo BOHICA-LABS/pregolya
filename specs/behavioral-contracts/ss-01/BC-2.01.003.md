@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "97adc3b"
+input-hash: "5ef54c6"
 extracted_from: null
 modified: []
 deprecated: null

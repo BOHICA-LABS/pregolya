@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.003
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1b
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.5 (F-P91-01, 2026-07-17): Attribute on_ceiling to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. Description: 'policy\\'s on_ceiling mode is halt' → 'BudgetConfig::on_ceiling is OnCeiling::Halt'. PC1: 'BudgetPolicy with on_ceiling = halt ... in RunnableConfig' → 'BudgetConfig with on_ceiling = OnCeiling::Halt ... in GraphConfig.budget_config'. PC4 (Summarize variant): same correction (BudgetPolicy → BudgetConfig; RunnableConfig → GraphConfig.budget_config). PC5 (remaining-budget): 'BudgetPolicy is active' → 'BudgetConfig is active'. Architecture Anchor: 'BudgetPolicy::on_ceiling field' → 'BudgetConfig::on_ceiling field'. on_ceiling is a data field on BudgetConfig; BudgetPolicy::evaluate is pure and data-free (interface-definitions v2.29 §Engine branching note + ADR-009 Option 3)."
   - "1.4 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-BUDGET-001 message-prefix correction. PC5: added 'BudgetCeilingReached:' prefix to message string (was 'run halted: budget ceiling reached'; now 'BudgetCeilingReached: run halted: budget ceiling reached'). Taxonomy E-BUDGET-001 corrected from elaborate 'run <run_id> halted; token budget of <limit> exceeded at <actual> tokens' to 'BudgetCeilingReached: run halted: budget ceiling reached' (BC wins on content)."
   - "1.3 (pass-72 fix, 2026-07-15): F-P72-05 — VP Anchors section missing VP-BUDGET-05 and VP-BUDGET-06 (both added in v1.2 Verification Properties table but not propagated to VP Anchors). Added VP-BUDGET-05 and VP-BUDGET-06 to VP Anchors section."
   - "1.2 (D20 sub-burst 1, 2026-07-15): Add OnCeiling::Summarize variant behavior (PCs 4+8, EC-005, TV-006) and remaining-budget exposure via RunContext.budget_info (PC5, TV-007) per D20 orchestrator adjudication items (2) stop-and-summarize and (2) remaining-budget exposure."
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "873b54e"
+input-hash: "ae4c192"
 extracted_from: null
 modified: []
 deprecated: null
@@ -40,9 +41,9 @@ removal_reason: null
 
 ## Description
 
-When a `BudgetPolicy::evaluate` call returns `PolicyDecision::Deny` and the policy's
-`on_ceiling` mode is `halt`, the execution engine completes all in-flight tasks for the
-current super-step, writes their outputs to the checkpoint via `put_writes`, then stops
+When a `BudgetPolicy::evaluate` call returns `PolicyDecision::Deny` and the configured
+`BudgetConfig::on_ceiling` is `OnCeiling::Halt`, the execution engine completes all in-flight
+tasks for the current super-step, writes their outputs to the checkpoint via `put_writes`, then stops
 the run — making no further LLM calls or tool invocations. The run transitions to `failed`
 with a structured `FerrochainError { component: BUDGET, category: POLICY, code: "E-BUDGET-001" }`.
 The checkpoint at the last completed super-step is preserved and retrievable. The Domain B
@@ -56,13 +57,13 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
 
 ## Preconditions
 
-1. A `BudgetPolicy` with `on_ceiling = halt` is configured in the `RunnableConfig`.
+1. A `BudgetConfig` with `on_ceiling = OnCeiling::Halt` is configured in `GraphConfig.budget_config`.
 2. A `BudgetPolicy::evaluate` call has returned `PolicyDecision::Deny` after an LLM call
    or tool invocation.
 3. The execution engine is currently at an evaluation point (post-LLM-call or
    post-tool-invocation) within a super-step.
-4. *(Summarize variant)* `BudgetPolicy` with `on_ceiling = OnCeiling::Summarize { summarize_prompt: String }` is configured in `RunnableConfig`. The `summarize_prompt` is a non-empty string injected as a `HumanMessage` before the final LLM call.
-5. *(Remaining-budget exposure)* A `BudgetPolicy` is active (any `on_ceiling` variant). `graph::budget_engine` populates `RunContext.budget_info: BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<u32> }` at each super-step boundary before dispatching tasks.
+4. *(Summarize variant)* `BudgetConfig` with `on_ceiling = OnCeiling::Summarize { summarize_prompt: String }` is configured in `GraphConfig.budget_config`. The `summarize_prompt` is a non-empty string injected as a `HumanMessage` before the final LLM call.
+5. *(Remaining-budget exposure)* A `BudgetConfig` is active (any `on_ceiling` variant). `graph::budget_engine` populates `RunContext.budget_info: BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<u32> }` at each super-step boundary before dispatching tasks.
 
 ## Postconditions
 
@@ -189,7 +190,7 @@ the sub-agent's halt.
 
 - `ferrochain-graph/src/pregel/loop.rs` — halt path in `tick()`: after `Deny` decision, no new task scheduling; allow in-flight tasks to settle; call `put_writes`; transition run to `failed`; Summarize path: inject `HumanMessage(summarize_prompt)`, issue one final LLM call, return `summary_halt` result; budget_info population at each super-step boundary
 - `ferrochain-graph/src/pregel/errors.rs` — `FerrochainError` variant for `E-BUDGET-001 BudgetCeilingReached`
-- `ferrochain-core/src/budget.rs` — `BudgetPolicy::on_ceiling` field: `OnCeiling::Halt | OnCeiling::Escalate | OnCeiling::Summarize { summarize_prompt: String }` (definitions, per ADR-009 Option 3); `BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<u32> }` struct; `RunContext.budget_info: BudgetInfo` field (v1.2 addition)
+- `ferrochain-core/src/budget.rs` — `BudgetConfig::on_ceiling` field: `OnCeiling::Halt | OnCeiling::Escalate | OnCeiling::Summarize { summarize_prompt: String }` (per ADR-009 Option 3 and interface-definitions v2.29 §BudgetConfig); `BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<u32> }` struct; `RunContext.budget_info: BudgetInfo` field (v1.2 addition)
 
 ## Story Anchor
 

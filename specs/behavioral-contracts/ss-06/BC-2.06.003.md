@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.003
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,8 @@ wave: 1
 phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
+changelog:
+  - "1.1 (F-P91-01, 2026-07-17): EC-005 sweep fix — 'BudgetPolicy with on_ceiling = halt' → 'BudgetConfig with on_ceiling = OnCeiling::Halt'. on_ceiling is a field of BudgetConfig (interface-definitions v2.29 §BudgetConfig); BudgetPolicy::evaluate is pure and data-free. Part of the full SS-10 + corpus sweep for BudgetPolicy::on_ceiling mis-attributions."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
   - domain-spec/invariants.md#DI-011
@@ -22,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "2ca637c"
+input-hash: "2f7e802"
 extracted_from: null
 modified: []
 deprecated: null
@@ -107,7 +109,7 @@ path (DI-012). The rejected content does not enter the model context in either p
 answer (error or fallback content) is the same in both runs.
 
 ### EC-005: Budget ceiling reached during streaming run
-**Scenario:** A `BudgetPolicy` with `on_ceiling = halt` (BC-2.10.003) is configured. The
+**Scenario:** A `BudgetConfig` with `on_ceiling = OnCeiling::Halt` (BC-2.10.003) is configured. The
 ceiling is reached during the streaming run.
 **Expected behavior:** Both the streaming run and a hypothetical equivalent unary run halt at
 the same step with the same error. The event stream for the streaming run ends with an error

@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p0
-version: "1.1"
+version: "1.2"
 status: active
 producer: business-analyst
 timestamp: 2026-07-17T00:00:00Z
@@ -16,6 +16,7 @@ input-hash: "8da8b31"
 traces_to: L2-INDEX.md
 decisions: [D1, D7, D8, D11, D13, D17]
 changelog:
+  - "v1.2 (2026-07-17): F-P91-01 attribution fix — CAP-012 `on_ceiling` was mis-attributed to the `BudgetPolicy` trait; corrected to the budget configuration (`BudgetConfig::on_ceiling`) per api-surface.md ~line 70 and ADR-009. No other capabilities affected."
   - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D-NNN decisions baked at authoring time); COMPARATIVE-ASSESSMENT.md added (D17/CONFLICT-*/NE-* grounding for CAP-004, CAP-005, CAP-007, CAP-008, CAP-012, CAP-013, CAP-016); domain-a-soc-analyst.md added (CAP-013 guardrail-on-ingress forcing function); domain-b-dark-factory.md added (CAP-005 multi-day durability, CAP-012 budget governance forcing function); input-hash recomputed."
 ---
 
@@ -153,7 +154,7 @@ is explicitly called out by name.
 Evaluate token and cost consumption per run and per sub-agent against a composable
 BudgetPolicy (allow / escalate / deny). Record every evaluation in an append-only
 EvidenceJournal. When the ceiling is reached, degrade gracefully: halt the run, or escalate
-to a HITL interrupt, according to the policy's `on_ceiling` setting.
+to a HITL interrupt, according to the budget configuration's `on_ceiling` setting (`BudgetConfig::on_ceiling`).
 
 **Grounding:** product-brief.md §Scope cross-cutting — Phase-1 BC backlog D17-Q4: "budget
 governance allow/escalate/deny policy trait, composable, append-only evidence journal —
