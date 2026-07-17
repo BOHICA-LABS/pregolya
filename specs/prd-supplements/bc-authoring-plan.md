@@ -1,17 +1,17 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.18"
+version: "2.19"
 status: active
 producer: product-owner
 total_standing_gates: 33
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-07-16T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/STATE.md
-input-hash: "6fed331325c7bdfc4085b45c54e92aabc9255643d861ef286bdd1eed30c89055"
+input-hash: "80954d3"
 traces_to: prd.md
 total_bcs: 95
 total_batches: 15
@@ -1183,9 +1183,13 @@ split by wave avoids exception).
 
     4. **TEMPORAL-NEIGHBOR SWEEP:** When any file is edited in a fix burst, ALL neighboring changelog rows in that file — not only the newly added row — must be date-audited in the same burst. Pass N's changelog dates may not exceed pass N+1's artifact dates, nor precede pass N-1's beyond same-day. A row whose date exceeds an adjacent pass's canonical date is a gate failure even if the row was authored in an earlier burst.
 
-    5. **FRONTMATTER-CURRENCY:** Each document's frontmatter `timestamp:` field must equal the date of the file's newest changelog entry. A frontmatter timestamp that exceeds the current burst date, or that does not match the newest changelog entry's date, is a self-contradiction.
+    5. **FRONTMATTER-CURRENCY (scoped by document type — adjudication D18-P86-A, 2026-07-16):**
+       - **Supplement documents** (`introduced:` frontmatter field absent — bc-authoring-plan, test-vectors, error-taxonomy, interface-definitions, nfr-catalog, module-criticality): `timestamp:` must equal the date of the file's newest changelog entry. A supplement `timestamp:` that exceeds the current burst date, or that does not match the newest changelog entry's date, is a self-contradiction.
+       - **BC files** (`introduced:` frontmatter field present): `timestamp:` is the authoring date (stable, never updated after initial v1.0 authoring). BC currency is tracked via `version:` + `## Changelog` + `introduced:`. A BC `timestamp:` that does not match the v1.0 changelog row's date is a self-contradiction.
 
-    **Machine enforcement deferral (OBS-P75-A):** Pre-commit hook and CI lint enforcement of rules 4 and 5 is DEFERRED to Phase 3 CI hardening. Deferral logged by state-manager as a STATE.md drift/deferral entry. Until machine enforcement, burst discipline governs — every PO burst that touches a changelog file must manually run the date-validity sub-check.
+       **Convention note:** BC-2.07.002 (ts 2026-07-13, newest changelog 2026-07-15), BC-2.08.011 (ts 2026-07-13, newest changelog 2026-07-14), and BC-2.08.012 (ts 2026-07-13, newest changelog 2026-07-14) are COMPLIANT under the scoped rule — each timestamp equals its v1.0 initial authoring date. DEFER-002 machine enforcement at Phase 3 must branch on `introduced:` field presence: `if has_introduced: assert timestamp == v1.0_changelog_date; else: assert timestamp == max_changelog_date`.
+
+    **Machine enforcement deferral (OBS-P75-A / DEFER-002):** Pre-commit hook and CI lint enforcement of rules 4 and 5 is DEFERRED to Phase 3 CI hardening. Deferral logged by state-manager as a STATE.md drift/deferral entry. Until machine enforcement, burst discipline governs — every PO burst that touches a changelog file must manually run the date-validity sub-check. The scoped Rule 5 (D18-P86-A) must be reflected in the Phase 3 linter: branch on `introduced:` presence as described in the Convention note above.
 
     **Revert rule:** If git history shows a BC was never substantively modified (only metadata
     touches such as `bc_id` addition and `status: draft → active`), the version MUST be
@@ -1639,6 +1643,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.19 | 2026-07-16 | F-P86-02 (process-gap adjudication): gate #28 Rule 5 (FRONTMATTER-CURRENCY) scoped by document type. Supplements (`introduced:` field absent) retain the existing rule: `timestamp:` must equal the newest changelog entry date. BC files (`introduced:` field present) are excluded: `timestamp:` is the authoring date (stable, never updated after v1.0). This resolves the contradiction between Rule 5 as written and the BC corpus — BC-2.07.002 (ts 2026-07-13, newest changelog 2026-07-15), BC-2.08.011 (ts 2026-07-13, newest changelog 2026-07-14), and BC-2.08.012 (ts 2026-07-13, newest changelog 2026-07-14) are all COMPLIANT under the scoped rule (each timestamp equals its v1.0 initial authoring date). Corpus sweep: module-criticality.md timestamp corrected 2026-07-14 → 2026-07-15 (metadata-only; matches v1.3 changelog entry date). Zero Rule-5 violations remain under the scoped rule. DEFER-002 machine enforcement note updated: branch on `introduced:` field presence (`if has_introduced: assert timestamp == v1.0_changelog_date; else: assert timestamp == max_changelog_date`). | F-P86-02, D18-P86-A |
 | 2.18 | 2026-07-15 | D18-P78-B (F-P78-02/03 process-gap): gate #33 step 11 added — every omission-note BC-anchor citation in interface-definitions.md must resolve to a raising PC/EC (success-path citations = violation). Motivating instances: F-P78-02 (E-PROV-010 cited PC4/EC-002 which are success paths; correct = PC5/EC-004) and F-P78-03 (E-PROV-009 cited PC4 which is a success parse; correct = PC8/PC9/EC-002). `total_standing_gates` unchanged at 33 (step-11 extension of gate #33, not a new gate). | D18-P78-B, F-P78-02, F-P78-03 |
 | 2.17 | 2026-07-15 | D18-P77-B (F-P77-01 process-gap): gate #33 extended with SEMANTIC-AGREEMENT sub-check (steps 7–10). For every live taxonomy code, the row's Message Format template and raise-condition annotation must semantically agree with the anchor BC's authoritative `message:` text and EC/TV trigger conditions; on divergence the BC wins (taxonomy is corrected). Motivating instance: E-SBXD-006 regex-vs-wildcard divergence on DI-010 credential boundary survived both gates #20 and #33 (both are name/presence-only; neither verified predicate agreement). `total_standing_gates` unchanged at 33 (sub-check extension of gate #33, not a new gate). | D18-P77-B, F-P77-01 |
 | 2.16 | 2026-07-15 | F-P75-01/D18-P75-A: gate #28 date-validity sub-check extended with two new rules — (4) TEMPORAL-NEIGHBOR SWEEP: all neighboring changelog rows in any edited file must be date-audited in the same burst, not just the new row; pass N dates may not exceed pass N+1 artifact dates; (5) FRONTMATTER-CURRENCY: frontmatter `timestamp:` must equal the date of the file's newest changelog entry. Trigger: 3rd recurrence of future-dated-changelog class (F-P75-01/OBS-P75-A; prior: F-P64-02, F-P65-01). Machine enforcement (pre-commit hook / CI lint) DEFERRED to Phase 3 CI hardening — deferral logged by state-manager. `total_standing_gates` unchanged at 33 (widening of gate #28, not a new gate). Plan version 2.15 → 2.16. | F-P75-01, D18-P75-A |

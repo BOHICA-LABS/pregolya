@@ -4,7 +4,7 @@ level: L3
 version: "1.3"
 status: active
 producer: product-owner
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-15T00:00:00Z
 phase: 1a
 changelog:
   - "1.1 (ADV-P1D-PASS-31): OBS-P31-1 add exclusion-criteria note (facade/re-export crates #1/#16/#17/#18 excluded; xtask classified as dev-tooling for CI gate); ferrochain-macros (#15) DECISION — receives HIGH-tier row (not excluded) because #[tool]/#[entrypoint] proc-macros affect P0 tool-calling and graph-composition paths per ADR-008; add ferrochain-macros to Module Inventory + HIGH row to classification table; update Classification Summary counts (HIGH 7→8, Total 19→20)."
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/STATE.md
-input-hash: "5ad2071b56c8cfe9f9e484a3b5f9c173eefd5081bfeccc0f3e6b75db816867f7"
+input-hash: "fed74e2"
 traces_to: prd.md
 primary_consumers: [architect, test-writer, formal-verifier]
 architect_note: "Architect must confirm crate-to-subsystem mapping and fill Architecture Module column after producing ARCH-INDEX.md"

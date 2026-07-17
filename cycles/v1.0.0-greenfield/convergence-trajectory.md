@@ -31,10 +31,11 @@ traces_to: STATE.md
 | P1D-23 | 2026-07-14 | 1 | 0 | 1 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (HTTP endpoint coherence; NEW CLASS) |
 | P1D-24 | 2026-07-14 | 2 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (wire-object field-set: Run completed_at/updated_at semantics; ThreadStatus enum; NEW CLASS: wire-object completeness) |
 | P1D-83 | 2026-07-15 | 3 | 0 | 1 | 2 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (semantic-mis-anchor-and-partial-fix-residue: ADR-013 tools/list-vs-call BC swap + ToolCallDialect/ProviderFallbackPolicy anchor PC mis-citations) |
+| P1D-86 | 2026-07-16 | 2 | 0 | 0 | 0 | 0 | LOW | 0/3 | FINDINGS_REMAIN (2 OBS: template-stub TODO markers + gate #28 Rule 5 document-type scope; both fixed same burst; D18-P86-A) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86)`
 
 ## Per-Pass Details
 
@@ -260,3 +261,23 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **New standing gates:** wire-object census gate (gate #18; trigger: any new entity field addition; command: three-way cross-check interface-definitions ↔ entities-server ↔ BC wire-object postconditions).
 **Trajectory after:** 14→5→7→13→3→3→3→5→2→4→4→1→1→2→1→1→1→4→2→3→1→1→1→2
 **Counter:** 0/3
+
+---
+
+### Pass P1D-86 Details
+
+**Date:** 2026-07-16
+**Verdict:** NOT CLEAN (strict) — 2 OBS findings, CLEAN (PR-merge) — zero CRIT/HIGH/MED
+**Findings delta:** -2 vs pass 85 (4→2); all OBS, both fixed same burst
+**Axes rotated:** template-stub sweep (test-vectors TODO markers); gate #28 Rule 5 document-type scope (D18-P86-A); purity-boundary-map v1.2 recount 58=22/28/8 + 3 anchor citations + 35-module completeness; test-vectors 512=503+9 recount; error-code census 85=43+16+26; gate #19 retired-name full-tree; gate #13 anchor-matrix spot; gate #28 Rules 1–5 on all touched files; sibling-checks 3/3
+**Fix summary:** F-P86-01 OBS — test-vectors.md v1.6 carried 2 [TODO:] markers in Per-Subsystem Test Vectors and Cross-Subsystem Integration Vectors template-conformance stub sections; FIXED: authoritative forward-reference wording; test-vectors → v1.7. F-P86-02 OBS [process-gap] — gate #28 Rule 5 FRONTMATTER-CURRENCY as written contradicted BC-corpus timestamp convention; ADJUDICATED D18-P86-A Option B: scoped by document type (supplements = newest changelog date; BCs = v1.0 authoring date); FIXED: bc-authoring-plan → v2.19; module-criticality timestamp corrected 2026-07-14→2026-07-15; both supplements input-hashes normalized to 7-char form. Zero corpus violations under scoped rule (9-file verification).
+**New standing gates:** none (Rule 5 narrowed in scope, not widened; gate count stays 33)
+**Trajectory after:** →2 (P1D-86)
+**Counter:** 0/3
+
+## Frontmatter Fields (extracted from STATE.md)
+
+<!-- When compacting STATE.md, adversary_pass_* frontmatter fields are
+     converted to rows in the Finding Progression table above.
+     Original field format: adversary_pass_N_findings: "description"
+     Original field format: adversary_pass_N_date: "YYYY-MM-DD" -->

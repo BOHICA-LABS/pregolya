@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "1.6"
+version: "1.7"
 status: active
 producer: product-owner
 timestamp: 2026-07-16T00:00:00Z
@@ -146,8 +146,10 @@ primary_consumers: [test-writer, holdout-evaluator]
 > authoritative index. Per-subsystem inline vector tables are not duplicated here —
 > see each BC file's `## Test Vectors` section for the full `TV-NNN` rows.
 
-[TODO: If inline per-subsystem tables are required in this supplement, populate
-from the BC files following the template format.]
+Canonical per-BC vector tables reside in the individual BC files
+(`behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Test Vectors`). No inline per-subsystem
+duplication exists in this supplement by design — the BC Test Vector Inventory table above
+is the authoritative index. To inspect a specific BC's vectors, load the corresponding BC file.
 
 ---
 
@@ -156,9 +158,9 @@ from the BC files following the template format.]
 > Integration scenarios that span multiple subsystems. These are not covered by
 > individual BC files and require end-to-end test composition.
 
-| Scenario | Input | Step 1 Output | Step 2 Input | Final Output |
-|----------|-------|--------------|-------------|-------------|
-| [TODO: add cross-subsystem integration scenarios] | | | | |
+Cross-subsystem integration scenarios are authored by the test-writer at Phase 3 from the
+wave schedule (`stories/STORY-INDEX.md`). This section is populated during Phase 3 story
+delivery; no integration vectors exist at Phase 1a by design.
 
 ---
 
@@ -256,6 +258,7 @@ from the BC files following the template format.]
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.7 | 2026-07-16 | F-P86-01: replaced TODO markers with authoritative forward-reference text in two sections. Per-Subsystem Test Vectors: removed conditional TODO, replaced with authoritative statement that canonical per-BC vectors reside in individual BC files (`behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Test Vectors`); no inline duplication by design. Cross-Subsystem Integration Vectors: removed empty placeholder table row, replaced with forward-reference statement that integration scenarios are authored by test-writer at Phase 3 from the wave schedule (`stories/STORY-INDEX.md`). Retroactive changelog note: v1.6 added three template-conformance sections (Per-Subsystem Test Vectors, Cross-Subsystem Integration Vectors, Golden File References) as structural stubs per template compliance; this was not recorded in the v1.6 changelog entry. | F-P86-01 |
 | 1.6 | 2026-07-16 | F-P85-04 (MED): Grand-total reconciliation. Independent recount of TV Count column (95 rows, header excluded) yields 503 canonical test vectors (per-SS: SS-01=20, SS-02=33, SS-03=15, SS-04=35, SS-05=32, SS-06=15, SS-07=17, SS-08=71, SS-09=41, SS-10=22, SS-11=25, SS-12=47, SS-13=34, SS-14=30, SS-15=41, SS-16=15, SS-17=10). BC-2.07.002 GTV Count column = 9 golden test vectors (separate classification from canonical TVs). Convention established: 503 canonical TVs + 9 GTVs = 512 total vectors. Old total "approximately 516" replaced with exact reconciled figures. "approximately" hedge removed. v1.5 figure of 516 was carried forward from the v1.5 "534→516 (−18)" arithmetic without a fresh row-sum. Sibling-sweep: no other .factory/specs/ or .factory/planning/ documents cite 516 as a test-vector total. Stale "516" appears only in this file's grand-total line (fixed here) and in v1.5 changelog history (preserved). | F-P85-04 |
 | 1.5 | 2026-07-15 | F-P84-01 + OBS-P84-A + OBS-P84-B (D18-P84-A): SS-11 counts corrected (header-row over-count): BC-2.11.001 5→4, BC-2.11.002 6→5, BC-2.11.003 5→4, BC-2.11.004 5→4, BC-2.11.005 5→4, BC-2.11.006 5→4. SS-04 same defect audited and corrected: BC-2.04.001/002/003/004/006/007 5→4 each (BC-2.04.005 was already correct at 5). SS-13 same defect audited and corrected: BC-2.13.001/002 5→4, BC-2.13.003/004/005/006 6→5. Format label "narrative" → "table (unlabelled)" for all 19 affected rows (SS-04 001–007, SS-11 001–006, SS-13 001–006) — these BCs use `\| Input \| Expected Output \| Category \|` tables without TV-NNN IDs, not prose narrative. Usage note 3 rewritten accordingly. Total updated 534→516 (−18). | F-P84-01, OBS-P84-A, OBS-P84-B |
 | 1.4 | 2026-07-15 | F-P73-01: added 9 D20 BC inventory rows (BC-2.04.008, BC-2.08.013, BC-2.08.014, BC-2.09.006, BC-2.09.007, BC-2.13.007, BC-2.15.004, BC-2.15.005, BC-2.15.006) with live-derived vector counts; BC-2.10.003 TV count corrected 5→7 (v1.2 added TV-006/007 for OnCeiling::Summarize + RunContext.budget_info); total updated 86→95 BCs, ~475→~534 vectors; frontmatter input-hash annotation updated 86→95. | F-P73-01 |

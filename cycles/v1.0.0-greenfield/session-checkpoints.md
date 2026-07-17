@@ -504,3 +504,16 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **DECISION DELTA (burst 162):** None — ADR-013 tools/list-vs-call swap correction + interface anchor fixes only (no new adjudications).
 
 **WRAP METADATA:** Date: 2026-07-15 | Cycle: v1.0.0-greenfield | Burst: 162 | Counter: 0/3 (Phase 1d; reset by pass 83 findings)
+
+---
+
+## Checkpoint archived from STATE.md at burst 166 (replaced by burst 166 checkpoint)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 85 passes / 87 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 85 = 43+16+26, 13 ADRs, 33 gates, test-vectors 512). trajectory-tail →2→3→1→4. NEXT ACTION: dispatch adversary pass 86. Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 165 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-86 SIBLING-CHECKS: test-vectors v1.6 (512 = 503 TV + 9 GTV; GTV convention note explicit in blockquote); purity-boundary-map v1.2 (58 rows, 22/28/8; core::budget Pure Core row added; splitters::parity→BC-2.07.002; memory::write_guard→BC-2.15.005); gate #28 currency on both touched files.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (bursts 152–165): D18-P74-A (gate #19 retired-name); D18-P75-A (gate #28 Rules 4/5) + DEFER-002; D18-P77-A (ADR-012 INV-1); D18-P77-B (gate #33 steps 7–10); D18-P78-A (universal error prefix); D18-P78-B (gate #33 step 11 omission-note); D18-P84-A (no version pins in body citations). 33 gates.
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-16 | Cycle v1.0.0-greenfield | Burst 165 | Counter 0/3 (Phase 1d)
