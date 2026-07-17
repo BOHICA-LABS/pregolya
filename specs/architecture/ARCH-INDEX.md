@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/STATE.md
-input-hash: "df4e938670d28633"
+input-hash: "e44c5e2"
 traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20]

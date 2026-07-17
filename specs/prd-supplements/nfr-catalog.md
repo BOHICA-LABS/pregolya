@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/domain-spec/risks.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/STATE.md
-input-hash: "465a82f"
+input-hash: "0dfb733"
 traces_to: prd.md
 primary_consumers: [architect, performance-engineer, formal-verifier]
 ---

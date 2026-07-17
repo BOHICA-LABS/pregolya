@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/STATE.md
-input-hash: "b8ac573"
+input-hash: "54ec07f"
 traces_to: prd.md
 primary_consumers: [architect, test-writer, formal-verifier]
 architect_note: "Architect must confirm crate-to-subsystem mapping and fill Architecture Module column after producing ARCH-INDEX.md"

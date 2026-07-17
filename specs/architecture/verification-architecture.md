@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/BC-INDEX.md
-input-hash: "2d2537ae23f62153"
+input-hash: "243128a"
 traces_to: ARCH-INDEX.md
 decisions: [D17]
 ---

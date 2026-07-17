@@ -289,6 +289,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-88 — Pass 88 (2026-07-17, burst 168)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|---------|
+| P1D-88 | 2026-07-17 | 4 | 0 | 0 | 2 | 2 | MEDIUM | 0/3 | FINDINGS_REMAIN |
+
+**Axes rotated:** gate #34 input-hash currency (F-P88-01 cascade); gate #28 Rules 1–5 rename-residue check (F-P88-02); bc-authoring-plan changelog completeness (F-P88-03); SS-TBD historical form (F-P88-04); gate #34 architecture-tree census (8 files; PASS); error-code census 85 (PASS); hedge sweep (PASS); gate #28 scoped on all 07-17 files (PASS); sibling-checks 5/5 (3 PASS, 2 → findings F-P88-01).
+**Fix summary:** F-P88-01 MED (PO) — error-taxonomy + interface-definitions body-modified at burst 167 without version/changelog/timestamp propagation; FIXED: error-taxonomy → v1.17 (ts 07-17), interface-definitions → v2.28 (ts 07-17); cascade: BC-2.07.001 hash → 0e9aa46, BC-2.14.001/002 → 0a1320f. F-P88-02 MED (PO) — bc-authoring-plan gate prose had rename residue ("Error Category Codes table" → "Error Categories table" in gates #16/#22; "Flag Interaction Rules" → "Flag Interactions" in gate #29); FIXED: zero live old-name refs. F-P88-03 LOW (PO) — bc-authoring-plan v2.8/v2.9 changelog rows missing; RECONSTRUCTED from git archaeology (v2.8 = burst 143 gate #21 sub-check; v2.9 = burst 145 gate #20 AUTH/POLICY/INTERNAL widening). F-P88-04 LOW (PO) — ss_tbd_note frontmatter + guideline #1 in bc-authoring-plan still in present-tense assertion form; FIXED: rewritten to historical/RESOLVED form.
+**Architecture tree (routed follow-through, complete):** 8-file hash census in architecture/ — api-surface e595e17, ARCH-INDEX e44c5e2, dependency-graph 8a78228, module-decomposition 41235f3, system-overview 90d28fa, tooling-selection aae3d13, verification-architecture 243128a, verification-coverage-matrix bdd28b4; purity-boundary-map already current (3bcecc0); ADRs carry no input-hash fields. Zero drift.
+**Trajectory after:** →4 (P1D-88)
+**Counter:** 0/3
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "23a4f9b5afbbeaf7"
+input-hash: "bdd28b4"
 traces_to: ARCH-INDEX.md
 changelog:
   - "1.0 (initial): base verification coverage matrix authored."

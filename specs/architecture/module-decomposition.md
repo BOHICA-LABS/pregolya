@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/STATE.md
-input-hash: "1268b7a2425859ea"
+input-hash: "41235f3"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20]
 changelog:
