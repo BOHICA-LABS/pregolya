@@ -5,12 +5,16 @@ adr_id: "012"
 slug: self-improvement-primitives
 title: "Self-Improvement Primitives: Skill Registry, Runtime Context Mutation, Guarded Memory Writes (D20)"
 status: accepted
+date: 2026-07-15
 producer: architect
 timestamp: 2026-07-15T00:00:00Z
-version: "1.2"
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D20]
+supersedes: null
+superseded_by: null
+subsystems_affected: [SS-15]
 ---
 
 # ADR-012: Self-Improvement Primitives
@@ -103,8 +107,10 @@ pub context_mutations: Option<ContextMutationConfig>,
 ```
 
 Execution loading is performed by `graph::scheduler` at run start (before the first
-super-step begins), analogously to how `graph::budget` evaluates `BudgetPolicy` between
-super-steps. The loaded content is prepended to the initial context passed to the first
+super-step begins), analogously to how `graph::budget_engine` populates
+`RunContext.budget_info` at each super-step boundary before task dispatch
+(BC-2.10.003 PC9) — both are phase-boundary operations, not per-call evaluations.
+The loaded content is prepended to the initial context passed to the first
 super-step. No new module row is added for the loading behavior — it is a new behavior of
 the existing `graph::scheduler` module (same treatment as the HITL interrupt-queue check
 added to the orchestrator in ADR-001 rev-1 without a new module row).
@@ -142,8 +148,7 @@ This is the **execution module**: receives every attempted write to a guarded me
 namespace, calls `MemoryWriteGuard::validate()`, and either commits the write, blocks it
 with an error, or commits the sanitized payload from `Transform`. Injection scanning
 implementations (`MemoryWriteGuard` implementors) are provided by the operator or by
-ferrochain-memory's built-in scanner. The built-in scanner checks for prompt-injection
-patterns (role-injection prefixes, instruction-override markers).
+ferrochain-memory's built-in scanner.
 
 ### Placement Summary
 
@@ -215,7 +220,8 @@ run when a fresh `ContextMutationConfig` load occurs.
 - Parity with Hermes MEMORY.md / SOUL.md stable-tier semantics: frozen tiers prevent
   cache churn during a run.
 - Consistent with BSP super-step model: between-run updates are the natural boundary
-  for context refreshes (analogous to budget policy evaluation between super-steps).
+  for context refreshes (analogous to `graph::budget_engine` populating
+  `RunContext.budget_info` at super-step boundaries before task dispatch — BC-2.10.003 PC9).
 - Live mutation would require re-assembling the system prompt at arbitrary super-steps,
   invalidating provider caches and making the run non-reproducible from a caching standpoint.
 
@@ -267,6 +273,14 @@ reside in existing crates (ferrochain-core, ferrochain-memory). No new crate.
 
 ---
 
+## Rationale
+
+D20 promotes self-improvement primitives to framework scope. The ADR-009 Option 3 split pattern (pure-trait definitions in ferrochain-core, effectful engine in the domain crate) is applied consistently: context-mutation types and write-guard types are pure-core, while enforcement and routing live in ferrochain-memory. The frozen-snapshot semantics for ContextMutationConfig preserve provider prompt-prefix caching (ADR-011 cache-key contract) and are consistent with Hermes MEMORY.md stable-tier semantics. The new `MemoryWriteGuard` seam is architecturally separate from `GuardrailHook`/`BoundaryType` to avoid conflating ingress-path safety with write-path safety. Module-criticality growth is minimal: only `memory::write_guard` earns a new HIGH row; definition-only modules follow the `core::budget` precedent.
+
+## Alternatives Considered
+
+See `### Alternatives Considered (Decision N)` subsections in each Decision section above for full per-decision alternative analysis. At the top level: the key rejected paths were (a) placing everything in a new crate (rejected — 18-crate roster frozen), (b) live context mutation (rejected — cache-invalidation), and (c) extending BoundaryType for write-path guards (rejected — conflates ingress and write paths).
+
 ## Consequences
 
 ### Module-Decomposition Changes
@@ -317,10 +331,19 @@ seam that does not interact with `ProvenanceTag`, `GuardrailHook`, or `BoundaryT
 
 ---
 
+## Source / Origin
+
+- **D20 human authority** — promotes self-improvement and self-learning loop to framework-scope primitives per D19 holdout-domain brief (domain-d-hermes-agent.md req 3 + req 4).
+- **ADR-009 Option 3** — trait-in-core / engine-in-domain split pattern applied to all three primitives.
+- **BC-2.15.001–006** — behavioral contracts for SS-15 Long-Horizon Memory; write-guard enforcement and skill-registry loading are contractual obligations specified there.
+- **BC-2.10.003 PC9** — `RunContext.budget_info` population at super-step boundaries (analogy for frozen-snapshot load-at-run-start model).
+- **ADR-011** — cache-key contract that frozen-snapshot semantics must respect.
+
 ## Changelog
 
 | Version | Date | Author | References | Summary |
 |---------|------|--------|------------|---------|
+| 1.3 | 2026-07-17 | architect | F-P95-01, D18-P84-A | Reconcile two stale 'budget policy evaluation between super-steps' analogies with BC canon. (1) Primitive B description: 'analogously to how graph::budget evaluates BudgetPolicy between super-steps' → 'analogously to how graph::budget_engine populates RunContext.budget_info at each super-step boundary before task dispatch (BC-2.10.003 PC9) — both are phase-boundary operations, not per-call evaluations'. (2) Decision 3 rationale bullet: 'analogous to budget policy evaluation between super-steps' → 'analogous to graph::budget_engine populating RunContext.budget_info at super-step boundaries before task dispatch — BC-2.10.003 PC9'. Template structure: add date, subsystems_affected, superseded_by, supersedes frontmatter fields; add Rationale, Alternatives Considered, Source / Origin sections. |
 | 1.2 | 2026-07-15 | architect | OBS-P77-C, D18-P77-A | Rename ADR-012 DI-001 → ADR-012 INV-1 (Decision 3 body). DI-NNN is the reserved domain-invariant namespace (DI-001..DI-014); local ADR invariants must use non-DI identifiers. Adjudication D18-P77-A recorded. PO to propagate rename to BC-2.15.006 (lines ~69, ~150) and capabilities-p1-p2.md (~line 111). |
 | 1.1 | 2026-07-15 | architect | F-P72-02, ADR-013 | Reconcile Decision 4 to actual downstream state: headline clarified as ADR-012 scope (33→34); gate #25 updated to note final universe = 35 post-ADR-013 (mcp::server MEDIUM); memory::skills cell corrected from "No new row" to "No new criticality row" distinguishing structural decomposition row from criticality-counted row; Consequences item 2 clarified "structural module rows" to distinguish from criticality rows; Error Codes advisory annotated with actually-minted E-MEMORY-007 (namespace MEMORY, number 007). |
 | 1.0 | 2026-07-15 | architect | D20 | Initial decision: placement of three self-improvement primitives; injection-scanning seam (new MemoryWriteGuard, no BoundaryType amendment); frozen-snapshot semantics; universe 33→34 (+memory::write_guard HIGH row). |

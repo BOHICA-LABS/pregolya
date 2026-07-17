@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.26"
+version: "2.27"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -10,7 +10,7 @@ phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "0325b3c"
+input-hash: "6d54dea"
 traces_to: prd.md
 total_bcs: 95
 total_batches: 15
@@ -394,7 +394,7 @@ split by wave avoids exception).
     authoring or VP assignment burst, run the following census across all BC bodies:
     ```
     grep -rh "^| VP-" .factory/specs/behavioral-contracts/ --include="*.md" \
-      | grep -oE "VP-[A-Z]+-[0-9]+" | sort | uniq -d
+      | grep -oE "VP-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]+" | sort | uniq -d
     ```
     Expected output: **empty** (zero duplicate VP IDs). Any non-empty output is a collision
     — each VP ID must be defined in exactly one BC body. Resolution: keep the older (lower
@@ -1763,6 +1763,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.27 | 2026-07-17 | F-P95-02 (process-gap) — gate #13 VP-census regex widened: old `VP-[A-Z]+-[0-9]+` silently missed multi-segment domain IDs (VP-BSP-DET-01, VP-DI001-01) and digit-bearing domains — SS-03's entire VP set was invisible. New regex: `VP-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]+`. Verified: VP-BSP-DET-01, VP-DI001-01, VP-BUDGET-05, VP-SPLIT-001 all extracted correctly; old regex missed VP-BSP-DET-01 and VP-DI001-01 (confirmed by running both patterns). Post-fix corpus census (new regex): 141 unique VP IDs extracted — zero duplicates. Old regex captured only 71 IDs (50 invisible). `total_standing_gates` unchanged at 34 (sub-check widening, not a new gate). | F-P95-02 |
 | 2.26 | 2026-07-17 | OBS-P93-01 (process-gap) — gate #13 VP uniqueness sub-check added. Prior anchor-matrix census detected BC VP Anchors ↔ VP-INDEX drift but did NOT detect same VP-<DOMAIN>-NNN ID defined in two BC bodies with different semantics (cross-BC collision). New sub-check: `grep -rh "^| VP-" .factory/specs/behavioral-contracts/ --include="*.md" | grep -oE "VP-[A-Z]+-[0-9]+" \| sort \| uniq -d` — expected empty output. Motivating instance: F-P93-04 — BC-2.10.003 VP-BUDGET-05 (Summarize path) collided with BC-2.10.004 VP-BUDGET-05 (HITL interrupt path). Resolved by renumbering BC-2.10.003's to VP-BUDGET-07. Census run immediately after fix: zero duplicate VP IDs found (PASS). `total_standing_gates` unchanged at 34 (sub-check extension of gate #13, not a new gate). | OBS-P93-01, F-P93-04 |
 | 2.25 | 2026-07-17 | F-P89-01/02 + class-sweep (pass-89 fix burst). (1) F-P89-01 — Gate #34 structural fix: removed stale per-file hash values from census block (class: hash-values-in-gate-text, same churn as STATE.md-in-inputs). Replaced with: (a) existing census commands [already authoritative], (b) explicitly-NON-AUTHORITATIVE last-run snapshot (2026-07-17: supplements 2/6 MATCH, 4/6 DRIFT; BCs 1/95 MATCH [BC-2.08.006], 94/95 STALE pre-existing), (c) rule sentence: "per-file hash values are NEVER recorded in gate text; frontmatter input-hash is the single source of truth." (2) F-P89-02 — Frontmatter input-hash reconciled: v2.24 wrote e238778 (burst-168); bursts 169-170 bumped inputs (prd.md→v1.2, L2-INDEX→v1.3), producing e786fea without a changelog entry; current recompute yields 41c29d9. Full chain: 90d28fa → e238778 (burst-168) → e786fea (bursts 169-170, previously undocumented) → 41c29d9 (this burst). (3) Class sweep — no other gate-text 7-char hash literals found in .factory/specs/; no other "pending recomput" live-prose instances; no other SS-TBD live BC body residue beyond BC-2.08.006 precondition (fixed separately this burst). | F-P89-01, F-P89-02, pass-89 |
 | 2.24 | 2026-07-17 | Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file; input-hash drifts on every state write with zero spec-content signal for this supplement. All genuine derivation sources (prd.md, domain-spec/L2-INDEX.md) were already listed and are unchanged. Input-hash recomputed (90d28fa → e238778). | burst-168-provenance-fix |

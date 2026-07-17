@@ -11,15 +11,21 @@ producer: architect
 timestamp: 2026-07-14T14:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
-decisions: [D9, D11, D17]
+decisions: [D9, D11, D17, D18]
 supersedes: []
+superseded_by: null
+date: 2026-07-14
+subsystems_affected: [SS-03, SS-05, SS-10]
 changelog:
+  - "rev-2 (F-P95-01, D18-P84-A, 2026-07-17): Reconcile budget-evaluation placement with BC canon. Four stale 'between-super-steps' characterizations corrected: (1) §Orchestrator responsibilities item 7: 'Evaluating budget policy between super-steps' → per-LLM-call and per-tool-invocation within tick() during Collecting; halt execution lands at super-step boundary after in-flight tasks settle; budget_info populated before task dispatch. (2) §Alternative B Pros table 'Budget governance fit': 'between orchestrator state transitions' → evaluation call sites within Collecting, halt dispatch is post-Collecting gate. (3) §Decision rationale item 2: 'orchestrator transition concern' → evaluation call sites in Collecting phase, halt not woven into JoinSet loop. (4) §Consequences 'Budget governance': 'transition hook between Reducing and Checkpointing' → per-call evaluation during Collecting (BC-2.10.001 PC1/PC2) with super-step-boundary halt landing (BC-2.10.003 EC-001) and pre-dispatch budget_info population (BC-2.10.003 PC9). Reconciled model: EVALUATION is per-LLM-call/per-tool-invocation within tick() during Collecting; HALT EXECUTION lands at the current super-step boundary (in-flight tasks settle, then no new super-step); BUDGET-INFO POPULATION is the legitimate super-step-boundary budget activity (before task dispatch)."
   - "rev-1 (ADV-P1D-PASS-36): F-P36-02 adjudicate interrupt-queue check timing. Line ~101 'after reduction' retired — corrected to 'at the Collecting→Reducing transition' to match line 163 and LangGraph HITL semantics. Consequences section expanded with precise nuanced rule: completed-sibling writes are reduced and checkpointed; interrupted node's in-progress writes are discarded; only the INTERRUPT marker is written for the interrupted task. Both references now agree on Collecting→Reducing as the detection point."
 ---
 
 # ADR-001: Graph Execution Model
 
 **Status:** ACCEPTED — D9 gate passed 2026-07-14. **Decision: Alternative B (Hybrid orchestrator-loop + actor-scheduler).**
+
+## Context
 
 **Context:** ferrochain-graph is the highest-complexity, highest-risk crate in the workspace.
 D9 mandated ≥2 alternatives presented to human before ADR lock. Human selected Alternative B
@@ -29,6 +35,12 @@ below as the rejected alternative with rationale.
 **Human Decision Record:** Alternative B selected 2026-07-14. Rationale accepted verbatim:
 budget governance (D17-Q4) integrates as an orchestrator transition concern; crash isolation
 is cleaner in the HYBRID model; type-state machine pattern bounds the complexity.
+
+---
+
+## Alternatives Considered
+
+See detailed analysis in §Alternative A (LangGraph-Faithful BSP with Channel Versioning) and §Alternative B (Hybrid Orchestrator-Loop + Actor-Scheduler) below. Alternative A was rejected due to `versions_seen` memory growth, JoinSet cancellation complexity, and awkward budget governance integration in the collection loop. Alternative B (chosen) is a Hybrid orchestrator-loop + actor-scheduler per D11.1 steering.
 
 ---
 
@@ -101,7 +113,7 @@ The orchestrator loop is responsible for:
 4. Applying reducers in task-identity-sorted order (DI-001).
 5. Calling `put_writes` for each completed task before declaring the super-step done (DI-002).
 6. Checking the interrupt queue at the Collecting→Reducing transition (DI-003).
-7. Evaluating budget policy (SS-10) between super-steps.
+7. Budget policy call sites (SS-10): `BudgetPolicy::evaluate` is called after every LLM call and tool invocation within `tick()` during Collecting (BC-2.10.001 PC1/PC2). On `Deny`, in-flight Collecting tasks settle before the engine stops scheduling new work — halt execution lands at the current super-step boundary (BC-2.10.003 EC-001). `RunContext.budget_info` is populated by `graph::budget_engine` before each super-step's task dispatch (BC-2.10.003 PC9).
 
 The actor scheduler is a Tokio task that owns a `HashMap<TaskId, JoinHandle<Output>>`.
 It receives `Dispatch(task_id, future)` messages and sends back `Completed(task_id, output)`.
@@ -112,7 +124,7 @@ The scheduler has no knowledge of graph semantics — it is a bounded concurrenc
 | Factor | Assessment |
 |--------|-----------|
 | Architectural clarity | Orchestrator owns all state transitions; actor scheduler is a generic concurrency primitive |
-| Budget governance fit | Budget checks happen cleanly between orchestrator state transitions (D17-Q4) |
+| Budget governance fit | Budget evaluation call sites live within Collecting (per-LLM-call, per-tool-invocation in `tick()`); halt dispatch is a clean post-Collecting gate without polluting BSP channel operations or reduction logic (D17-Q4) |
 | Extensibility | New dispatch modes (priority scheduling, rate limiting) extend the scheduler without touching graph logic |
 | Crash isolation | Scheduler crash is isolated from orchestrator loop state; partially-completed tasks are tracked in the orchestrator's in-flight set |
 | Idiomatic Rust | MPSC message-passing is idiomatic async Rust; avoids JoinSet cancellation complexity |
@@ -145,7 +157,7 @@ machine over random task-completion sequences.
 Alternative A (LangGraph-faithful BSP) is REJECTED. Rationale:
 
 1. D11.1 explicitly steered toward HYBRID (orchestrator-loop + actor-scheduler).
-2. Budget governance (D17-Q4) integrates cleanly as an orchestrator transition concern (not woven into a JoinSet collection loop).
+2. Budget governance (D17-Q4) integrates cleanly: evaluation call sites live within the orchestrator's Collecting phase (per-LLM-call and per-tool-invocation in `tick()`); halt dispatch is a post-Collecting gate — not woven into a JoinSet collection loop.
 3. Crash isolation is architecturally cleaner: scheduler crash is isolated from orchestrator state.
 4. Type-state machine pattern bounds complexity and prevents illegal state transitions.
 5. VP-001 Kani proof applies equally to both alternatives (pure reducer function is identical).
@@ -155,12 +167,24 @@ graphs; JoinSet cancellation complexity under partial super-step failure; budget
 integration is awkward in the collection loop; Python event-loop idiom doesn't map cleanly
 to Rust JoinSet semantics.
 
+## Rationale
+
+Alternative B (Hybrid orchestrator-loop + actor-scheduler) was selected per D11.1 human steering. The orchestrator-loop pattern provides clean architectural separation: the orchestrator owns all state-machine transitions while the actor scheduler is a generic bounded-concurrency primitive. Crash isolation is cleaner than Alternative A — a scheduler crash is isolated from orchestrator state. The type-state machine pattern (`Idle → Dispatching → Collecting → Reducing → Checkpointing → Idle`) makes illegal transitions unrepresentable at compile time. Budget governance evaluation call sites live within the Collecting phase (per-LLM-call and per-tool-invocation in `tick()`), cleanly separated from BSP channel operations and reduction logic (BC-2.10.001 PC1/PC2). See D9 gate record and D11.1 steering for full human rationale.
+
 ## Consequences
 
 - `graph::scheduler` contains both the orchestrator state machine and the actor scheduler.
 - Orchestrator state machine: `Idle → Dispatching → Collecting → Reducing → Checkpointing → Idle` (enum-based type-state).
 - Actor scheduler: Tokio MPSC select loop; receives `Dispatch(task_id, future)`, sends `Completed(task_id, output)`.
-- Budget governance as orchestrator transition hook between Reducing and Checkpointing states.
+- Budget governance: `BudgetPolicy::evaluate` is called after each LLM call and tool invocation within `tick()` during Collecting (BC-2.10.001 PC1/PC2) — not as a between-super-step hook. On `Deny`, in-flight Collecting tasks settle before no new super-step is scheduled; halt execution lands at the super-step boundary (BC-2.10.003 EC-001). `RunContext.budget_info` is populated by `graph::budget_engine` before each super-step's task dispatch (BC-2.10.003 PC9).
 - `graph::bsp_engine` contains the pure reducer function (VP-001 Kani target).
 - HITL interrupt: orchestrator checks interrupt queue at the Collecting→Reducing transition (DI-003). Precise rule: when the orchestrator detects an INTERRUPT marker among the collected task outputs, it (1) runs reducers on outputs from COMPLETED sibling tasks only — the interrupted node contributes no state delta; (2) writes the INTERRUPT marker as the interrupted task's sole output; (3) proceeds through Checkpointing so the reduced sibling state and the INTERRUPT marker are durably persisted together; (4) suspends after Checkpointing rather than initiating the next Idle→Dispatching cycle. The interrupted node's in-progress writes from the halted execution attempt are NOT included in the reduction or checkpoint state. On resume (BC-2.05.003), the interrupted node re-executes from its function entry — sibling writes from the interrupted super-step are already checkpointed and those nodes do not re-run.
 - `put_writes` called per completed task in the Collecting phase (DI-002 sync durability default).
+
+## Source / Origin
+
+- **D9 human gate** — 2026-07-14: mandated ≥2 alternatives before ADR lock; human selected Alternative B (Hybrid orchestrator-loop + actor-scheduler).
+- **D11.1 steering** — explicit human direction toward the HYBRID model.
+- **D17-Q4** — budget governance (allow/escalate/deny policy trait, composable, append-only evidence journal) mandate; drives budget evaluation placement in Collecting phase (BC-2.10.001 PC1/PC2).
+- **Behavioral contracts** — BC-2.03.001 (BSP execution), BC-2.05.001 (HITL interrupt), BC-2.10.001–004 (budget governance), DI-001 (reducer determinism), DI-002 (sync durability), DI-003 (HITL FIFO resume-value delivery).
+- **PRD supplements** — `.factory/specs/prd-supplements/nfr-catalog.md` NFR-001 (latency), `.factory/specs/architecture/ARCH-INDEX.md` Subsystem Registry.

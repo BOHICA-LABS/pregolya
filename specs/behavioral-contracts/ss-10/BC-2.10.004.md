@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.004
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.6 (F-P95-03 + coordinator CAP-012-v1.3 update, 2026-07-17): (a) Preconditions restructured: malformed 1a/1b/2/2b numbering (PC1b and PC2b were verbatim duplicates of the Deny+on_ceiling=Escalate trigger; no plain PC1 existed) replaced with clean PC1 (config context: BudgetConfig active in GraphConfig.budget_config), PC2 (trigger — two alternatives: soft-ceiling path Escalate + `on_ceiling` NOT consulted; OR hard-ceiling path Deny + on_ceiling=OnCeiling::Escalate). PC3 and PC4 (CheckpointSaver, evaluation point) unchanged in content, renumbered from 3 and 4 (were already correct ordinals, now references are cleaned). One statement of the Deny+Escalate trigger total. (b) Capability Anchor Justification updated to CAP-012 v1.3 verbatim: old quote used two-mode 'halt the run, or escalate to a HITL interrupt' text; new quote enumerates all three modes per v1.3: 'halt the run, escalate to a HITL interrupt, or issue a final summarize call (summary_halt), according to the budget configuration\\'s `on_ceiling` setting (`BudgetConfig::on_ceiling` — `OnCeiling::Halt | Escalate | Summarize`)'. Cite sweep: BC-2.10.001 v1.4→v1.5 updated 'PC1b/PC2b' references → 'PC2 (hard-ceiling path)' (lines 79+151)."
   - "1.5 (F-P94-02, 2026-07-17): Convention verdict: renumber TV-001b → TV-006 to eliminate the corpus's only lettered sub-vector and restore unambiguous TV-NNN sequential numbering throughout. TV-001b removed from between TV-001 and TV-002; appended as TV-006 at end of table. Notes text unchanged. test-vectors.md BC-2.10.004 row updated 5→6 (v1.8). No other TV-001b references found in corpus (sweep performed)."
   - "1.4 (F-P93-02/F-P93-03, 2026-07-17): F-P93-02 (HIGH) — BC corrected to reflect Model A canon (interface-definitions.md v2.33 §PolicyDecision×on_ceiling decision table): `PolicyDecision::Escalate` (soft-limit) ALWAYS triggers HITL interrupt unconditionally, `on_ceiling` NOT consulted; `PolicyDecision::Deny` + `on_ceiling=OnCeiling::Escalate` (hard-ceiling) ALSO routes to this same HITL interrupt mechanism. (a) H1 title updated to name both paths. (b) Description first sentence revised: soft-path Escalate → unconditional HITL; additionally Deny+OnCeiling::Escalate → same HITL path. (c) PC1 renamed PC1a (hard-ceiling config path) + PC1b added (OR: Deny returned + on_ceiling=Escalate). (d) PC2 labeled '(Soft-ceiling path)' + PC2b added '(Hard-ceiling path)' for Deny+on_ceiling=Escalate trigger. (e) TV-001b added: on_ceiling=Halt + soft_limit crossed → Escalate → HITL fires (proves on_ceiling not consulted for the Escalate path). F-P93-03 (MED) — Capability Anchor Justification verbatim CAP-012 quote updated to v1.2 text: old 'the policy\\'s `on_ceiling` setting' → new 'the budget configuration\\'s `on_ceiling` setting (`BudgetConfig::on_ceiling`)' per capabilities-p0.md v1.2."
   - "1.3 (F-P92-01, 2026-07-17): PC6 BudgetResume::Extend ceiling-application mechanism corrected per interface-definitions v2.31 §RunnableConfig struct definition and architect adjudication D18-P92-A. Old: 'The new_ceiling replaces the policy\\'s current ceiling in the RunnableConfig for the resumed execution.' New: 'The new_ceiling is applied by patching RunnableConfig::budget_config with BudgetConfig { hard_limit: Some(new_ceiling), ..original } for the resumed execution.' Ceiling is applied via the budget_config field on RunnableConfig — not by mutating BudgetPolicy. GraphConfig::budget_config is shared across concurrent runs and must not be mutated per-resume."
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "32380f9"
+input-hash: "609e79e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -59,14 +60,14 @@ the resume value is consumed FIFO and the interrupted node re-executes from its 
 
 ## Preconditions
 
-1a. *(Hard-ceiling config path)* A `BudgetConfig` with `on_ceiling = OnCeiling::Escalate` is
-    configured in `GraphConfig.budget_config`.
-1b. OR: a `BudgetPolicy::evaluate` call has returned `PolicyDecision::Deny` and
-    `BudgetConfig::on_ceiling` = `OnCeiling::Escalate`.
-2. *(Soft-ceiling path)* A `BudgetPolicy::evaluate` call has returned `PolicyDecision::Escalate`
-   after an LLM call or tool invocation.
-2b. *(Hard-ceiling path)* A `BudgetPolicy::evaluate` call has returned `PolicyDecision::Deny`,
-    and `BudgetConfig::on_ceiling` = `OnCeiling::Escalate`.
+1. A `BudgetConfig` is configured in `GraphConfig.budget_config`.
+2. *(Trigger — exactly one of two paths holds):*
+   - **(Soft-ceiling path)** A `BudgetPolicy::evaluate` call has returned
+     `PolicyDecision::Escalate` after an LLM call or tool invocation —
+     `BudgetConfig::on_ceiling` is NOT consulted for this path (see
+     interface-definitions v2.33 "any — not consulted" row).
+   - **(Hard-ceiling path)** A `BudgetPolicy::evaluate` call has returned
+     `PolicyDecision::Deny` and `BudgetConfig::on_ceiling` = `OnCeiling::Escalate`.
 3. A `CheckpointSaver` is attached to the graph (an interrupt without a checkpointer is a
    precondition violation — same as BC-2.05.001 EC-001).
 4. The execution engine is currently at an evaluation point within a super-step.
@@ -190,7 +191,7 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-012 |
-| Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p0.md §CAP-012 — this BC specifies the "escalate to a HITL interrupt" behavior named in the "when the ceiling is reached, degrade gracefully: halt the run, or escalate to a HITL interrupt, according to the budget configuration's `on_ceiling` setting (`BudgetConfig::on_ceiling`)" clause of CAP-012 |
+| Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p0.md §CAP-012 — this BC specifies the "escalate to a HITL interrupt" behavior named in the "When the ceiling is reached, degrade gracefully: halt the run, escalate to a HITL interrupt, or issue a final summarize call (summary_halt), according to the budget configuration's `on_ceiling` setting (`BudgetConfig::on_ceiling` — `OnCeiling::Halt \| Escalate \| Summarize`)" clause of CAP-012 (v1.3) |
 | Secondary Capability | CAP-006 ("HITL Interrupt / Resume with FIFO Resume-Value Delivery") per capabilities-p0.md §CAP-006 — this BC reuses the interrupt/resume mechanism of CAP-006 for budget escalation |
 | L2 Domain Invariants | DI-003 (HITL FIFO Resume-Value Delivery) — budget escalation participates in the same FIFO resume-value queue as all other interrupts |
 | D17 Commitment | D17-Q4 — budget governance escalate mode; D17-Q2 — HITL interrupt reuse |

@@ -2,7 +2,9 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.003
-version: "1.0"
+version: "1.1"
+changelog:
+  - "1.1 (OBS-P95-A, 2026-07-17): VP-SPLIT-06..008 renumbered to VP-SPLIT-06..08 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — renumber is the production-grade call). No VP-INDEX registration affected (SPLIT VPs are BC-local)."
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,7 +23,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
-input-hash: "eb7b0ca"
+input-hash: "c435798"
 extracted_from: null
 modified: []
 deprecated: null
@@ -118,9 +120,9 @@ no `None`, and no index-out-of-bounds occurs. This is the minimal-document degen
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-SPLIT-006 | For any input with `len_codepoints < chunk_size`, result has length 1 | Property test (proptest: random short docs) | Phase 1 |
-| VP-SPLIT-007 | No panic on any combination of valid `(input, chunk_size, overlap)` where `input` is shorter than `chunk_size` | Property test + fuzz | Phase 1 |
-| VP-SPLIT-008 | Empty input returns `[]`, not `[""]` | Unit test | Phase 1 |
+| VP-SPLIT-06 | For any input with `len_codepoints < chunk_size`, result has length 1 | Property test (proptest: random short docs) | Phase 1 |
+| VP-SPLIT-07 | No panic on any combination of valid `(input, chunk_size, overlap)` where `input` is shorter than `chunk_size` | Property test + fuzz | Phase 1 |
+| VP-SPLIT-08 | Empty input returns `[]`, not `[""]` | Unit test | Phase 1 |
 
 ## Related BCs
 
@@ -138,7 +140,7 @@ _[to be filled after story decomposition]_
 
 ## VP Anchors
 
-- VP-SPLIT-006, VP-SPLIT-007, VP-SPLIT-008
+- VP-SPLIT-06, VP-SPLIT-07, VP-SPLIT-08
 
 ## Traceability
 

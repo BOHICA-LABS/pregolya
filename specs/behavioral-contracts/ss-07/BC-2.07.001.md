@@ -2,7 +2,9 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.001
-version: "1.0"
+version: "1.1"
+changelog:
+  - "1.1 (OBS-P95-A, 2026-07-17): VP-SPLIT-01..003 renumbered to VP-SPLIT-01..03 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — below >5 threshold — so renumber is the production-grade correct call over documenting the convention). No VP-INDEX registration affected (SPLIT VPs are BC-local)."
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/specs/prd-supplements/error-taxonomy.md
-input-hash: "ce5b481"
+input-hash: "2cfe7c6"
 extracted_from: null
 modified: []
 deprecated: null
@@ -125,9 +127,9 @@ non-ASCII input, which is a correctness regression addressed by R8.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-SPLIT-001 | All chunk lengths measured in code points are ≤ chunk_size | Property test (proptest: random Unicode strings) | Phase 1 |
-| VP-SPLIT-002 | No code points are lost between chunks (all input code points appear in output) | Property test: `chunks.join("") == input` (for overlap=0) | Phase 1 |
-| VP-SPLIT-003 | Chunk byte lengths may exceed chunk_size for multi-byte inputs | Unit test (CJK/emoji golden vectors) | Phase 1 |
+| VP-SPLIT-01 | All chunk lengths measured in code points are ≤ chunk_size | Property test (proptest: random Unicode strings) | Phase 1 |
+| VP-SPLIT-02 | No code points are lost between chunks (all input code points appear in output) | Property test: `chunks.join("") == input` (for overlap=0) | Phase 1 |
+| VP-SPLIT-03 | Chunk byte lengths may exceed chunk_size for multi-byte inputs | Unit test (CJK/emoji golden vectors) | Phase 1 |
 
 ## Related BCs
 
@@ -146,7 +148,7 @@ _[to be filled after story decomposition]_
 
 ## VP Anchors
 
-- VP-SPLIT-001, VP-SPLIT-002, VP-SPLIT-003
+- VP-SPLIT-01, VP-SPLIT-02, VP-SPLIT-03
 
 ## Traceability
 

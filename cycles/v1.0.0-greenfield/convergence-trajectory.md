@@ -379,6 +379,34 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-94 — Pass 94 (2026-07-17, burst 176)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-94 | 2026-07-17 | 3 | 0 | 0 | 3 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (SS-10 burst-175 fix radius echo) |
+
+**Axes rotated:** BC-2.10.004 TV-001b stale / lettered sub-vector anomaly (F-P94-02 PO); BC-2.10.001 Deny monolithic characterization without dispatch branching (F-P94-03 propagation echo); BC-INDEX byte-exact title sync broken by trailing italic annotation (F-P94-01 state-manager).
+**Fix summary:** F-P94-02 MED (PO) — TV-001b RENAMED → TV-006 (eliminates only lettered sub-vector in corpus; zero special-case conventions); BC-2.10.004 v1.5; test-vectors v1.8 (row 5→6 + Notes; SS-10 subtotal 22→23; canonical TVs 503→504; GRAND TOTAL 512→513 = 504+9). F-P94-03 MED (PO) — BC-2.10.001 v1.4: Description + PC3 three-way dispatch block (Halt→BC-2.10.003 / Escalate→BC-2.10.004 PC1b+PC2b / Summarize→BC-2.10.003 PC8); Related-BCs dual-path; EC-004 "(with on_ceiling=Halt in this scenario)"; bonus: BC-2.10.002 v1.2 (TV-002 Note + Related-BCs "before engine dispatch"); events.md v1.2 (BudgetEvaluated Outcome dispatch-per-on_ceiling). F-P94-01 MED (state-manager) — BC-INDEX.md v1.5: BC-2.10.003 row trailing italic annotation deleted; byte-exact H1 match.
+**Hash sweep:** BC-INDEX/STATE.md live-index/live-state exempted; no spec content staled by burst-176 edits; TOTAL MATCH.
+**Trajectory after:** →3 (P1D-94); cumulative tail →1→4→2→5→3
+**Counter:** 0/3
+
+---
+
+### P1D-95 — Pass 95 (2026-07-17, burst 177)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-95 | 2026-07-17 | 4 | 0 | 0 | 2 | 2 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN (ADR budget-placement reconciliation; gate #13 regex; BC PC restructure; CAP-012 three-mode) |
+
+**Axes rotated:** ADR-001/009/012 budget evaluation "between super-steps" vs BC canon per-call-during-Collecting (F-P95-01 architect); gate #13 VP-census regex inert for multi-segment/digit-bearing IDs — 50 VPs invisible (F-P95-02 process-gap); BC-2.10.004 PC verbatim duplicate + malformed 1a/1b/2/2b numbering (F-P95-03); CAP-012 omitted D20 Summarize mode (F-P95-04 BA); VP-SPLIT 3-digit width (OBS-P95-A).
+**Fix summary:** F-P95-01 MED (architect) — ADR-001 rev-2: four "between super-steps" sites corrected to per-call-during-Collecting model (evaluation within tick(); HALT lands at super-step boundary after in-flight settle; budget_info population is legitimate phase-boundary activity); template structure backfill (superseded_by/date/subsystems_affected frontmatter + Context/Alternatives/Rationale/Source sections). ADR-009 v1.3: 3 sites (budget_info population context); ADR-012 v1.3: 2 sites (analogy re-anchored from eval-timing to budget_info population). Architecture/BC/domain-spec confirmed clean. F-P95-02 MED (PO) — bc-authoring-plan v2.27: gate #13 regex → `VP-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]+`; verified all 4 shape classes; census re-run: **141 unique VP IDs** (was 71; 50 invisible); zero duplicates. F-P95-03 LOW (PO) — BC-2.10.004 v1.6: clean PC1..PC4 (verbatim duplicate removed; malformed 1a/1b/2b fixed); BC-2.10.001 v1.5: PC3 dispatch block + Related-BCs → "PC2 (hard-ceiling path)". F-P95-04 LOW (BA) — capabilities-p0 v1.3: three-mode (halt/escalate to HITL/summary_halt; OnCeiling::Halt|Escalate|Summarize); BC-2.10.004 v1.6 CAP-012 verbatim quote refreshed in-burst (cross-dependency closed). OBS-P95-A (PO) — VP-SPLIT-01..03 renumbered 3-digit→2-digit (blast radius 3 files; below >5 threshold; BC-2.07.001 v1.1/.002 v1.3/.003 v1.1; no VP-INDEX impact).
+**D18-P89-A sweep:** capabilities-p0 v1.3 + ADR/BC edits cascade; iterative convergence: pass 1 = 72 updated, pass 2 = 112 updated, pass 3 = 10 updated, pass 4 = 2 updated, pass 5 = 0 (converged); **128/128 TOTAL MATCH**.
+**Trajectory after:** →4 (P1D-95); cumulative tail →4→2→5→3→4
+**Counter:** 0/3
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

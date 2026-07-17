@@ -14,7 +14,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/naming-decision-study.md
   - .factory/semport/reference-manifest.md
-input-hash: "9d9847b"
+input-hash: "7541481"
 traces_to: ""
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17]
 changelog:

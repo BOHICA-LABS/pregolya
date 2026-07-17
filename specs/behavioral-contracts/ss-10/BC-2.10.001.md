@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.001
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
+  - "1.5 (F-P95-03, 2026-07-17): Update PC3 Deny cite and Related-BCs cite to reflect BC-2.10.004 v1.6 precondition renumbering. Old cites 'BC-2.10.004 PC1b/PC2b' (stale after v1.6 restructure) replaced with 'BC-2.10.004 PC2 (hard-ceiling path)' at PC3 dispatch block (×1) and Related-BCs line (×1). Semantics unchanged — the hard-ceiling Deny+on_ceiling=Escalate path is now cleanly PC2 in BC-2.10.004."
   - "1.4 (F-P94-03, 2026-07-17): Fix Deny characterization to reflect three-way on_ceiling dispatch per interface-definitions v2.33 §PolicyDecision×on_ceiling decision table. (a) Description: 'Deny (halt the run immediately)' → 'Deny (engine dispatches per BudgetConfig::on_ceiling — halt, HITL escalation, or summarize)'. (b) PC3 Deny clause: 'execution halts at the next safe super-step boundary (BC-2.10.003)' → three-way dispatch: Halt→BC-2.10.003; Escalate→BC-2.10.004 PC1b/PC2b; Summarize→BC-2.10.003 PC8. (c) Related BCs: BC-2.10.003 line updated to reflect Halt and Summarize paths; BC-2.10.004 line updated to reflect both soft-ceiling Escalate and hard-ceiling Deny+on_ceiling=Escalate HITL paths. Sweep fix: EC-004 expected-behavior clarified with '(on_ceiling=Halt in this scenario)' to prevent implicit halt assumption."
   - "1.3 (D18-P93-B, 2026-07-17): Cost-ceiling scope adjudication. CAP-012 names 'Cost Metering' but does NOT require a configurable cost-based ceiling in v1. Verdict: metering-via-journal satisfies the cost dimension. `JournalEntry.token_usage.estimated_cost` (BC-2.10.002 PC2) provides cost observability; `BudgetConfig` v1 thresholds (`soft_limit`, `hard_limit`) are token counts (`u64`) only. Cost-based ceiling evaluation would require a `Decimal` or `f64` threshold field — not present in v1 spec. Scope note added to Traceability table. Reported as D18-P93-B for state-manager."
   - "1.2 (F-P91-01, 2026-07-17): Attribute soft_limit/hard_limit configuration fields to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. PC1: reframed from 'RunnableConfig includes a BudgetPolicy' to 'BudgetConfig configured in GraphConfig.budget_config; engine constructs BudgetPolicy from it'. TV-001: 'BudgetPolicy with soft_limit = ...' → 'BudgetConfig with soft_limit = ...'; TV-002/TV-003: 'Same policy' → 'Same BudgetConfig'. soft_limit and hard_limit are BudgetConfig fields per interface-definitions v2.29; BudgetPolicy::evaluate is pure and data-free."
@@ -28,7 +29,7 @@ inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "23b9dad"
+input-hash: "c42fb8a"
 extracted_from: null
 modified: []
 deprecated: null
@@ -76,7 +77,7 @@ confirms adk-rust has no native token/cost ceiling primitive.
      (BC-2.10.004).
    - `PolicyDecision::Deny { reason: String, current_usage: TokenUsage }` — engine dispatch
      is governed by `BudgetConfig::on_ceiling`: `Halt` → graceful halt (BC-2.10.003);
-     `Escalate` → HITL interrupt (BC-2.10.004 PC1b/PC2b); `Summarize` → final summarize
+     `Escalate` → HITL interrupt (BC-2.10.004 PC2 hard-ceiling path); `Summarize` → final summarize
      call then `summary_halt` (BC-2.10.003 PC8).
 4. Every policy evaluation — including `Allow` outcomes — is appended to the `EvidenceJournal`
    (BC-2.10.002). No evaluation is silently discarded.
@@ -148,7 +149,7 @@ is evaluated independently and may choose to continue, escalate, or deny the par
 
 - BC-2.10.002 — composes with: every evaluation call produces an EvidenceJournal entry (specified there)
 - BC-2.10.003 — depends on: Deny + on_ceiling=Halt dispatches graceful halt (BC-2.10.003); Deny + on_ceiling=Summarize dispatches final summarize call then summary_halt (BC-2.10.003 PC8)
-- BC-2.10.004 — depends on: PolicyDecision::Escalate (soft-ceiling) always triggers HITL interrupt; PolicyDecision::Deny + on_ceiling=Escalate also routes to HITL interrupt (BC-2.10.004 PC1b/PC2b)
+- BC-2.10.004 — depends on: PolicyDecision::Escalate (soft-ceiling) always triggers HITL interrupt; PolicyDecision::Deny + on_ceiling=Escalate also routes to HITL interrupt (BC-2.10.004 PC2 hard-ceiling path)
 - BC-2.05.001 — related to: Escalate reuses the `interrupt()` mechanism defined there
 
 ## Architecture Anchors

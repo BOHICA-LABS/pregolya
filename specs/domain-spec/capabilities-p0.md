@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p0
-version: "1.2"
+version: "1.3"
 status: active
 producer: business-analyst
 timestamp: 2026-07-17T00:00:00Z
@@ -12,10 +12,11 @@ inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "8da8b31"
+input-hash: "c21d1b3"
 traces_to: L2-INDEX.md
 decisions: [D1, D7, D8, D11, D13, D17]
 changelog:
+  - "v1.3 (2026-07-17): F-P95-04 fix — CAP-012 on_ceiling enumeration was stale (two-mode: Halt | Escalate only). Expanded to all three canonical variants: Halt | Escalate | Summarize per interface-definitions §OnCeiling, BC-2.10.003 PC8, and D20 addition."
   - "v1.2 (2026-07-17): F-P91-01 attribution fix — CAP-012 `on_ceiling` was mis-attributed to the `BudgetPolicy` trait; corrected to the budget configuration (`BudgetConfig::on_ceiling`) per api-surface.md ~line 70 and ADR-009. No other capabilities affected."
   - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D-NNN decisions baked at authoring time); COMPARATIVE-ASSESSMENT.md added (D17/CONFLICT-*/NE-* grounding for CAP-004, CAP-005, CAP-007, CAP-008, CAP-012, CAP-013, CAP-016); domain-a-soc-analyst.md added (CAP-013 guardrail-on-ingress forcing function); domain-b-dark-factory.md added (CAP-005 multi-day durability, CAP-012 budget governance forcing function); input-hash recomputed."
 ---
@@ -153,8 +154,9 @@ is explicitly called out by name.
 
 Evaluate token and cost consumption per run and per sub-agent against a composable
 BudgetPolicy (allow / escalate / deny). Record every evaluation in an append-only
-EvidenceJournal. When the ceiling is reached, degrade gracefully: halt the run, or escalate
-to a HITL interrupt, according to the budget configuration's `on_ceiling` setting (`BudgetConfig::on_ceiling`).
+EvidenceJournal. When the ceiling is reached, degrade gracefully: halt the run, escalate
+to a HITL interrupt, or issue a final summarize call (summary_halt), according to the budget
+configuration's `on_ceiling` setting (`BudgetConfig::on_ceiling` — `OnCeiling::Halt | Escalate | Summarize`).
 
 **Grounding:** product-brief.md §Scope cross-cutting — Phase-1 BC backlog D17-Q4: "budget
 governance allow/escalate/deny policy trait, composable, append-only evidence journal —

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.002
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
-input-hash: "eb7b0ca"
+input-hash: "c435798"
 extracted_from: null
 modified: []
 deprecated: null
@@ -162,8 +162,8 @@ Additional baseline:
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-SPLIT-004 | All GTV-001 through GTV-009 produce byte-identical chunk lists to Python reference | Golden-vector unit tests (Red Gate) | Wave 0 (Red Gate first) |
-| VP-SPLIT-005 | Property test: arbitrary Unicode input → chunk counts match Python reference (sampled) | proptest + reference Python subprocess | Phase 1 |
+| VP-SPLIT-04 | All GTV-001 through GTV-009 produce byte-identical chunk lists to Python reference | Golden-vector unit tests (Red Gate) | Wave 0 (Red Gate first) |
+| VP-SPLIT-05 | Property test: arbitrary Unicode input → chunk counts match Python reference (sampled) | proptest + reference Python subprocess | Phase 1 |
 
 > **Red Gate Discipline:** `tests/red_gate/test_BC_2_07_002_python_parity.rs` must be
 > committed and failing before splitter implementation begins. This is a D17-Q9 mandate.
@@ -185,7 +185,7 @@ _[to be filled after story decomposition]_
 
 ## VP Anchors
 
-- VP-SPLIT-004, VP-SPLIT-005
+- VP-SPLIT-04, VP-SPLIT-05
 
 ## Traceability
 
@@ -205,6 +205,7 @@ _[to be filled after story decomposition]_
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.3 | 2026-07-17 | VP-SPLIT-04..005 renumbered to VP-SPLIT-04..05 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — renumber is the production-grade call). No VP-INDEX registration affected (SPLIT VPs are BC-local). | OBS-P95-A |
 | 1.2 | 2026-07-15 | Changelog date metadata correction: v1.1 row date corrected from 2026-07-16 → 2026-07-14 (PASS-36 occurred on 2026-07-14; prior date was a future-date typo sharing the same root cause as F-P64-02 in bc-authoring-plan.md and test-vectors.md). (F-P65-01, pass-65) | F-P65-01 |
 | 1.1 | 2026-07-14 | GTV-008 expected value explicitly marked PROVISIONAL; note updated to state values marked PROVISIONAL must be Python-verified before Red Gate test is written (F-P36-03 fix, ADV-P1D-PASS-36) | F-P36-03 |
 | 1.0 | 2026-07-13 | Initial authoring | Greenfield batch 2 |
