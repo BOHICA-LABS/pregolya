@@ -616,3 +616,17 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 173): D18-P91-A (on_ceiling canon: BudgetConfig struct owns on_ceiling; BudgetPolicy trait stays pure); D18-P91-B (E-MEMORY-008 MemoryStoreReadFailed minted; census 85→86 = 43+16+27).
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 173 | Counter 0/3 (Phase 1d)
+
+---
+
+## Archived from STATE.md Session Resume Checkpoint (burst 174, displaced by burst 175)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 92 passes / 96 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 512). trajectory-tail →4→1→4→2. NEXT ACTION: dispatch adversary pass 93 (counter 0/3; D18-P92-A RunnableConfig::budget_config: Option(BudgetConfig) canon; BC-2.10.003 v1.6/BC-2.10.004 v1.3 terminal sweep; interface-definitions v2.32 §RunnableConfig defined). Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 174 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-92 FIX SUMMARY: F-P92-01 HIGH (PO): BC-2.10.003 TV-001/007 + BC-2.10.004 PC6 BudgetPolicy-owns-data forms fixed; BC-2.10.003 v1.6, BC-2.10.004 v1.3; terminal sweep. F-P92-02 MED (D18-P92-A): RunnableConfig gains budget_config: Option(BudgetConfig) (per-run override; None=inherit GraphConfig::budget_config); interface-definitions v2.32 §RunnableConfig 4-field struct + BudgetResume::Extend; api-surface v1.4; module-decomposition v1.10; entities-server v1.6 (BudgetConfig entity + trait split + ER line).
+### PASS-93 SIBLING-CHECKS: SS-10 pair (BC-2.10.003 v1.6 TVs/PC7, BC-2.10.004 v1.3 PC6) zero data-bearing-BudgetPolicy or fieldless-RunnableConfig-ceiling residue; interface-definitions v2.32 §RunnableConfig (4 fields + citations); api-surface v1.4 RunnableConfig row; module-decomposition v1.10; entities-server v1.6 (BudgetConfig entity + trait split + ER line); budget-cluster terminal-sweep verification.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (burst 174): D18-P92-A (RunnableConfig::budget_config: Option(BudgetConfig) — per-run override; resume ceiling patches RunnableConfig::budget_config; GraphConfig mutation rejected; §RunnableConfig struct defined in interface-definitions v2.32).
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 174 | Counter 0/3 (Phase 1d)

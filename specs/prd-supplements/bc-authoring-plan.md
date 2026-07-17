@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.25"
+version: "2.26"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -388,6 +388,23 @@ split by wave avoids exception).
     must match BC-INDEX on every anchor-affecting burst to prevent forward propagation of drift.
     Source of truth: ADV-P1D-PASS-16.md §F-P16-01 + anchor-matrix reconciliation;
     ADV-P1D-PASS-40 §OBS-P40-1 (widening).
+    **VP uniqueness sub-check (added P93 — OBS-P93-01):** The registered-VP axis above checks
+    BC VP Anchors ↔ VP-INDEX, but does NOT detect the same `VP-<DOMAIN>-NNN` ID being defined
+    in two different BC bodies with different semantics (a cross-BC collision). After any BC
+    authoring or VP assignment burst, run the following census across all BC bodies:
+    ```
+    grep -rh "^| VP-" .factory/specs/behavioral-contracts/ --include="*.md" \
+      | grep -oE "VP-[A-Z]+-[0-9]+" | sort | uniq -d
+    ```
+    Expected output: **empty** (zero duplicate VP IDs). Any non-empty output is a collision
+    — each VP ID must be defined in exactly one BC body. Resolution: keep the older (lower
+    phase) definition as canonical; renumber the newer definition to the next free sequential
+    ID in the same domain (e.g., VP-BUDGET-07 if VP-BUDGET-06 is already used). Update both
+    the VP table row and the VP Anchors section in the affected BC, then re-run the census.
+    Motivating instance: F-P93-04 — BC-2.10.003 and BC-2.10.004 both defined VP-BUDGET-05
+    with different semantics (Summarize path vs HITL interrupt path). Resolved 2026-07-17:
+    BC-2.10.004's VP-BUDGET-05 (Phase 1) kept canonical; BC-2.10.003's VP-BUDGET-05
+    renumbered → VP-BUDGET-07 (next free after VP-BUDGET-06).
 14. **Harness-fn registry + executable-string census gate (added P17 — standing gate):**
     VP-INDEX.md `harness_fn` column is the authoritative registry for Phase-6 `cargo kani --harness`
     invocation identifiers. Any change to a VP harness function name MUST update VP-INDEX.md
@@ -1746,6 +1763,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.26 | 2026-07-17 | OBS-P93-01 (process-gap) — gate #13 VP uniqueness sub-check added. Prior anchor-matrix census detected BC VP Anchors ↔ VP-INDEX drift but did NOT detect same VP-<DOMAIN>-NNN ID defined in two BC bodies with different semantics (cross-BC collision). New sub-check: `grep -rh "^| VP-" .factory/specs/behavioral-contracts/ --include="*.md" | grep -oE "VP-[A-Z]+-[0-9]+" \| sort \| uniq -d` — expected empty output. Motivating instance: F-P93-04 — BC-2.10.003 VP-BUDGET-05 (Summarize path) collided with BC-2.10.004 VP-BUDGET-05 (HITL interrupt path). Resolved by renumbering BC-2.10.003's to VP-BUDGET-07. Census run immediately after fix: zero duplicate VP IDs found (PASS). `total_standing_gates` unchanged at 34 (sub-check extension of gate #13, not a new gate). | OBS-P93-01, F-P93-04 |
 | 2.25 | 2026-07-17 | F-P89-01/02 + class-sweep (pass-89 fix burst). (1) F-P89-01 — Gate #34 structural fix: removed stale per-file hash values from census block (class: hash-values-in-gate-text, same churn as STATE.md-in-inputs). Replaced with: (a) existing census commands [already authoritative], (b) explicitly-NON-AUTHORITATIVE last-run snapshot (2026-07-17: supplements 2/6 MATCH, 4/6 DRIFT; BCs 1/95 MATCH [BC-2.08.006], 94/95 STALE pre-existing), (c) rule sentence: "per-file hash values are NEVER recorded in gate text; frontmatter input-hash is the single source of truth." (2) F-P89-02 — Frontmatter input-hash reconciled: v2.24 wrote e238778 (burst-168); bursts 169-170 bumped inputs (prd.md→v1.2, L2-INDEX→v1.3), producing e786fea without a changelog entry; current recompute yields 41c29d9. Full chain: 90d28fa → e238778 (burst-168) → e786fea (bursts 169-170, previously undocumented) → 41c29d9 (this burst). (3) Class sweep — no other gate-text 7-char hash literals found in .factory/specs/; no other "pending recomput" live-prose instances; no other SS-TBD live BC body residue beyond BC-2.08.006 precondition (fixed separately this burst). | F-P89-01, F-P89-02, pass-89 |
 | 2.24 | 2026-07-17 | Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file; input-hash drifts on every state write with zero spec-content signal for this supplement. All genuine derivation sources (prd.md, domain-spec/L2-INDEX.md) were already listed and are unchanged. Input-hash recomputed (90d28fa → e238778). | burst-168-provenance-fix |
 | 2.23 | 2026-07-17 | F-P88-02/03/04 — (1) Gate #16/gate #22 live gate prose: "Error Category Codes table" → "Error Categories table" (2 sites; section was renamed in pass-87 burst); gate #29 live scope item: "Flag Interaction Rules table rows" → "Flag Interactions table rows" (1 site; section renamed in pass-87 burst). Line-1297 "Flag Interaction Rules row for sandbox-wasm" in Motivating Instance block verified historical audit-trail — left as-is. Full .factory/specs/ grep for both old names: all remaining occurrences are changelog/audit-trail rows, all exempt. (2) Changelog gap adjudication: versions 2.8 and 2.9 EXISTED in committed git history (4ed9ed1 and 96f6317 respectively) but their changelog TABLE ROWS were omitted when version numbers were incremented. Reconstructed entries added to close the gap (git dates and commit descriptions used as evidence; see rows below). (3) Frontmatter `subsystem_note` and guideline #1 rewritten to past-tense/historical form: SS-TBD status was RESOLVED at Phase 1b (2026-07-14); all 95 BCs carry real SS-NN IDs. (4) error-taxonomy.md bumped v1.16→v1.17 and interface-definitions.md bumped v2.27→v2.28 with timestamps → 2026-07-17, recording the pass-87 body changes that lacked version propagation (F-P88-01). input-hash updated after all edits. | F-P88-01, F-P88-02, F-P88-03, F-P88-04 |

@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.32"
+version: "2.33"
 status: active
 producer: product-owner
 timestamp: 2026-07-17T00:00:00Z
 phase: 1d
 changelog:
+  - "2.33 (F-P93-02, 2026-07-17): Adjudicate contradictory HITL-trigger model (F-P93-02 HIGH). VERDICT: Model A — `PolicyDecision::Escalate` (soft-ceiling) ALWAYS triggers the HITL interrupt unconditionally, independent of `BudgetConfig::on_ceiling`; `PolicyDecision::Deny` (hard-ceiling) branches on `on_ceiling` (Halt | Escalate→HITL | Summarize). BC authority: BC-2.10.001 PC3 — 'Escalate → execution suspends; the run transitions to `interrupted` via the HITL interrupt mechanism (BC-2.10.004)' — no on_ceiling qualification. Changes: (1) §OnCeiling enum docstring updated: field governs `PolicyDecision::Deny` dispatch ONLY; explicit statement that `PolicyDecision::Escalate` routes to HITL unconditionally per BC-2.10.001 PC3 without consulting `on_ceiling`. (2) `OnCeiling::Escalate` variant docstring updated: this variant means 'when `PolicyDecision::Deny` (hard ceiling) is received, redirect to HITL instead of halting'; clarifies both the soft-limit Escalate path and this hard-ceiling Deny→Escalate path use the same `BudgetEscalation` interrupt mechanism. (3) Engine-branching note replaced with a complete PolicyDecision × on_ceiling decision table — zero unspecified cells. Previously the note covered only `PolicyDecision::Deny` dispatch and left `PolicyDecision::Escalate` entirely unspecified. Now all three PolicyDecision variants are fully specified with Engine Action, Run Status, and Resume Mechanism columns. BC anchor updated to cite BC-2.10.001 PC3 as the Escalate-path authority. Sibling architecture docs (api-surface, module-decomposition) do not state the trigger model at decision-table precision — no change required."
   - "2.32 (F-P92-01-sweep, 2026-07-17): §RunnableConfig doc comment — stale verbatim citations to old BC-2.10.003 PC7 and BC-2.10.004 PC6 text updated to match new wording from same burst (F-P92-01/F-P92-02). Old PC7 quote: 'operator supplies a new RunnableConfig with a higher ceiling'. New: 'operator supplies a new RunnableConfig with budget_config: Some(BudgetConfig { hard_limit: Some(higher_ceiling), .. })'. Old PC6 quote: 'new_ceiling replaces the policy\\'s current ceiling in the RunnableConfig for the resumed execution'. New: 'The new_ceiling is applied by patching RunnableConfig::budget_config with BudgetConfig { hard_limit: Some(new_ceiling), ..original } for the resumed execution'. The struct definition itself (pub budget_config: Option<BudgetConfig>) was already correct from v2.31; this entry corrects only the inline authority citations in the doc comment. Exhaust-sweep finding: pattern 'policy\\'s.{0,20}ceiling' matched interface-definitions.md line 155 (prd-supplement, in-scope for fixes per task)."
   - "2.31 (F-P92-02, 2026-07-17): OPTION A adjudication — add `budget_config: Option<BudgetConfig>` to §RunnableConfig. Authority: BC-2.10.004 PC6 explicitly places new_ceiling 'in the RunnableConfig for the resumed execution'; BC-2.10.003 PC7/TV-004 say 'operator supplies a new RunnableConfig with a higher ceiling'. BudgetResume::Extend { new_ceiling } is processed by the engine, which patches RunnableConfig::budget_config with a cloned BudgetConfig{ hard_limit: Some(new_ceiling), ..original } before resuming — this applies the extended ceiling to only that resumed execution without mutating GraphConfig (which is shared across concurrent runs on the same graph). Formal §RunnableConfig struct block added with all four known fields (recursion_limit, thread_id, budget_config, context_mutations) and per-field BC citations. TOML [budget] comment updated: 'overridable per run' expanded with explicit reference to RunnableConfig::budget_config and BudgetResume::Extend mechanism. Sibling sweep: api-surface.md v1.3→v1.4 (new §ferrochain-core Public Types row for RunnableConfig), module-decomposition.md v1.9→v1.10 (budget definitions note extended). purity-boundary-map unchanged — BudgetConfig already a pure core type; adding Option<BudgetConfig> to RunnableConfig does not change core::config purity classification."
   - "2.30 (F-P91-04, 2026-07-17): Census update 85→86 — E-MEMORY-008 (MemoryStoreReadFailed, DURABILITY) minted in error-taxonomy.md v1.18 (BC-2.15.004 EC-004/TV-008 anchor). E-MEMORY-008 is covered by the existing E-MEMORY-* blanket annotation (§Library/execution-layer codes blanket omission); category DURABILITY is already in the blanket annotation category list (VAL/POLICY/DURABILITY/SECURITY); no HTTP routing row or blanket annotation body change needed. Updated census: 43 HTTP + 16 individual + 27 blanket = 86 (E-MEMORY-* 7→8 in blanket group; E-MCP-* 5 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 = 27)."
@@ -329,21 +330,31 @@ pub enum PolicyDecision {
     Deny { reason: String, current_usage: TokenUsage },
 }
 
-/// Behavior when a `PolicyDecision::Deny` threshold is reached.
+/// Engine behavior when `PolicyDecision::Deny` (hard-ceiling exceeded) is received.
 ///
-/// Configured via `BudgetConfig::on_ceiling`. The execution engine reads this field
-/// after receiving `PolicyDecision::Deny` to determine whether to halt, escalate,
-/// or summarize. The `BudgetPolicy::evaluate` trait method itself stays pure and
-/// data-free; the engine owns the dispatch (ADR-009 Option 3).
+/// `on_ceiling` is consulted by the execution engine ONLY for `PolicyDecision::Deny`.
+/// It does NOT affect handling of `PolicyDecision::Escalate`: a soft-ceiling Escalate
+/// decision ALWAYS suspends the run via HITL interrupt — `on_ceiling` is not read for
+/// that path (BC-2.10.001 PC3).
 ///
-/// Authority: BC-2.10.003 v1.2 (Halt + Summarize variants),
-/// BC-2.10.004 (Escalate variant).
+/// When `PolicyDecision::Deny` is received, the engine reads this field to choose
+/// between halting immediately, re-escalating to HITL (same mechanism as the soft-limit
+/// path), or issuing a final summarize LLM call. The `BudgetPolicy::evaluate` trait
+/// stays pure and data-free; the engine owns all dispatch (ADR-009 Option 3).
+///
+/// Authority: BC-2.10.001 PC3 (Escalate decision → HITL unconditionally),
+/// BC-2.10.003 v1.2 (Halt + Summarize variants for Deny),
+/// BC-2.10.004 (Escalate variant for Deny; also covers the soft-limit Escalate path).
 pub enum OnCeiling {
-    /// Stop the run immediately; transition to `failed` with E-BUDGET-001
-    /// (BC-2.10.003 PC5).
+    /// Stop the run immediately when `PolicyDecision::Deny` (hard ceiling) is received;
+    /// transition to `failed` with E-BUDGET-001 (BC-2.10.003 PC5).
     Halt,
-    /// Suspend via HITL interrupt; run parks in `interrupted` status, awaiting
+    /// When `PolicyDecision::Deny` (hard ceiling) is received, suspend via HITL interrupt
+    /// rather than halting; run parks in `interrupted` status, awaiting
     /// `BudgetResume::Extend { new_ceiling }` or `BudgetResume::Halt` (BC-2.10.004).
+    /// This is the "escalate on ceiling hit" mode: both the soft-ceiling
+    /// `PolicyDecision::Escalate` path (always HITL) and this hard-ceiling Deny→Escalate
+    /// path use the same `BudgetEscalation` interrupt mechanism (BC-2.10.004).
     Escalate,
     /// Issue one final LLM call using `summarize_prompt` as a `HumanMessage`;
     /// return the model response as run output with `status = summary_halt`
@@ -372,13 +383,23 @@ pub struct BudgetConfig {
 }
 ```
 
-> **Engine branching on `BudgetConfig::on_ceiling`:** After receiving `PolicyDecision::Deny`
-> from `BudgetPolicy::evaluate`, the execution engine reads `BudgetConfig::on_ceiling` to
-> determine the response: `Halt` → transition to `failed` with E-BUDGET-001 (BC-2.10.003);
-> `Escalate` → suspend via HITL interrupt (BC-2.10.004); `Summarize { summarize_prompt }` →
-> issue one final LLM call and transition to `summary_halt` (BC-2.10.003 PC8). The
-> `BudgetPolicy` trait stays pure and data-free — `evaluate` has no knowledge of `on_ceiling`
-> semantics; the engine owns the dispatch (ADR-009 Option 3, section anchor only).
+> **Engine dispatch decision table — complete `PolicyDecision` × `on_ceiling` → action
+> mapping. Zero unspecified cells.**
+> `BudgetPolicy::evaluate` is pure and data-free — `evaluate` has no knowledge of
+> `on_ceiling`; the engine owns all dispatch (ADR-009 Option 3).
+>
+> | `PolicyDecision` | `BudgetConfig::on_ceiling` | Engine Action | Run Status | Resume Mechanism |
+> |---|---|---|---|---|
+> | `Allow` | (any — not consulted) | Continue execution; journal entry written (BC-2.10.002) | unchanged | — |
+> | `Escalate` | **(any — not consulted)** | Trigger HITL interrupt with `BudgetEscalation` payload; `on_ceiling` is NOT read for this path (BC-2.10.004; authority: BC-2.10.001 PC3) | `interrupted` | `BudgetResume::Extend { new_ceiling }` or `BudgetResume::Halt` |
+> | `Deny` | `Halt` | Graceful halt per BC-2.10.003: complete in-flight super-step tasks, call `put_writes`, error `E-BUDGET-001` | `failed` | Resumable via new `RunnableConfig` with higher `hard_limit` (not a HITL resume) |
+> | `Deny` | `Escalate` | Trigger HITL interrupt with `BudgetEscalation` payload; same `interrupt()` mechanism as the `Escalate` row above (BC-2.10.004) | `interrupted` | `BudgetResume::Extend { new_ceiling }` or `BudgetResume::Halt` |
+> | `Deny` | `Summarize { summarize_prompt }` | Issue one final LLM call per BC-2.10.003 PC8; fall back to `Halt` semantics (E-BUDGET-001, `status = failed`) if the summarize call itself triggers `Deny` (BC-2.10.003 EC-005) | `summary_halt` (or `failed` on recursive `Deny`) | — |
+>
+> Escalate-path authority: BC-2.10.001 PC3 — "execution suspends; the run transitions to
+> `interrupted` via the HITL interrupt mechanism (BC-2.10.004)" — no `on_ceiling`
+> qualification. Deny-path authority: BC-2.10.003 (Halt + Summarize), BC-2.10.004
+> (Deny + `on_ceiling = Escalate` → HITL).
 
 > **`RunContext`** — RESOLVED. Defined by BC-2.10.001 precondition 3: "The execution engine
 > has access to the `RunContext` (thread_id, run_id, sub-agent identity if applicable) for

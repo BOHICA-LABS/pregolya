@@ -363,6 +363,22 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-93 — Pass 93 (2026-07-17, burst 175)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-93 | 2026-07-17 | 5 | 0 | 2 | 2 | 0 | 1 | HIGH | 0/3 | FINDINGS_REMAIN (budget model-level cluster + VP ID collision class) |
+
+**Axes rotated:** entities-server §BudgetConfig/§EvidenceJournal verbatim-canon (F-P93-01 BA drift); HITL trigger model coherence across interface-definitions + BC-2.10.004 + BC-2.10.001 (F-P93-02 contradiction); CAP-012 verbatim quote in BC-2.10.004 (F-P93-03 staleness); VP-BUDGET-05 ID collision BC-2.10.003 vs BC-2.10.004 (F-P93-04); gate #13/#14 BC-local VP uniqueness census gap (OBS-P93-01 process-gap).
+**Fix summary:** F-P93-01 HIGH (BA) — entities-server v1.7 verbatim-canon transcription; BudgetConfig fields/OnCeiling variants/EvidenceEntry corrected; residue sweep zero. F-P93-02 HIGH (architect+PO — D18-P93-A) — Model A adopted: PolicyDecision::Escalate ALWAYS HITL unconditional; PolicyDecision::Deny branches on on_ceiling (Halt/Escalate→HITL/Summarize); 5-row decision table in interface-definitions v2.33; BC-2.10.004 v1.4 dual-path (PC1a/PC1b, PC2/PC2b, TV-001b); BC-INDEX title cite. F-P93-03 MED (PO) — CAP-012 quote updated to v1.2 verbatim in BC-2.10.004 v1.4. F-P93-04 MED (PO) — VP-BUDGET-05 collision: BC-2.10.004 keeps canonical; BC-2.10.003 VP-BUDGET-05→VP-BUDGET-07; BC-2.10.003 v1.7. OBS-P93-01 [process-gap] (PO) — gate #13 VP-uniqueness sub-check + census command; bc-authoring-plan v2.26; in-burst census caught VP-STREAM-02 collision (BC-2.06.001 vs BC-2.06.002) — BC-2.06.002 v1.1 VP-STREAM-02→VP-STREAM-04; corpus-wide census zero duplicates.
+**D18-P93-A:** PolicyDecision::Escalate (soft-ceiling) → HITL ALWAYS unconditional; PolicyDecision::Deny (hard-ceiling) branches on on_ceiling (Halt/Escalate/Summarize). 5-row decision table in interface-definitions v2.33.
+**D18-P93-B:** Cost-based ceilings NOT v1 scope; CAP-012 cost-metering satisfied by JournalEntry.token_usage.estimated_cost (BC-2.10.002 PC2); scope note in BC-2.10.001 v1.3 Traceability.
+**Hash sweep:** 7/126 stale (api-surface.md + 6 BCs with entities-server.md in inputs); updated; 126/126 TOTAL MATCH.
+**Trajectory after:** →5 (P1D-93); cumulative tail →4→1→4→2→5
+**Counter:** 0/3
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

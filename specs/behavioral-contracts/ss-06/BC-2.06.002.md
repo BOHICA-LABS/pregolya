@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.002
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,8 @@ wave: 1
 phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
+changelog:
+  - "1.1 (F-P93-04 class-sweep, 2026-07-17): VP ID collision resolved. BC-2.06.001 and BC-2.06.002 both defined VP-STREAM-02 with semantically identical (run_id + parent_ids) descriptions. Resolution per append-only-numbering policy: BC-2.06.001's VP-STREAM-02 (lower ID, canonical) kept; BC-2.06.002's VP-STREAM-02 renumbered → VP-STREAM-04 (next free after VP-STREAM-03 in BC-2.06.003). VP Anchors updated accordingly. Detected by OBS-P93-01 VP uniqueness census."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
 inputs:
@@ -127,7 +129,7 @@ full ancestry chain is preserved. Performance is O(depth) for `parent_ids` alloc
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-STREAM-02 | All events for a run share the same `run_id`; subgraph events carry correct `parent_ids` ancestry | Integration test — collect all events for nested run scenario; assert UUID uniqueness + parent chain correctness | Phase 1 |
+| VP-STREAM-04 | All events for a run share the same `run_id`; subgraph events carry correct `parent_ids` ancestry | Integration test — collect all events for nested run scenario; assert UUID uniqueness + parent chain correctness | Phase 1 |
 
 ## Related BCs
 
@@ -148,7 +150,7 @@ _[to be filled after story decomposition]_
 
 ## VP Anchors
 
-- VP-STREAM-02
+- VP-STREAM-04
 
 ## Traceability
 

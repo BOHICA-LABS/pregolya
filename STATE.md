@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.13"
+version: "3.14"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-17T13:40:00Z
+timestamp: 2026-07-17T16:01:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "Phase 1d burst 174 COMPLETE — pass 92 (1H+1M budget-cluster echo) fixed + D18-P92-A RunnableConfig::budget_config canon; trajectory →2 (P1D-92); BC-2.10.003 v1.6, BC-2.10.004 v1.3, interface-definitions v2.32, api-surface v1.4, module-decomposition v1.10, entities-server v1.6; counter 0/3; adversary pass 93 next; trajectory-tail →4→1→4→2"
+current_step: "Phase 1d burst 175 COMPLETE — pass 93 (2H+2M+1PG) fixed D-18-P93-A + D-18-P93-B: interface-definitions v2.33, entities-server v1.7, BC-2.10.004 v1.4, bc-authoring-plan v2.26; BC-2.10.001 v1.3, BC-2.10.003 v1.7, BC-2.06.002 v1.1; trajectory →5 (P1D-93); trajectory-tail →1→4→2→5; counter 0/3; pass 94 next (deferred content probes)"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -21,7 +21,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. Current: 195 lines (wc-l). margin from soft-target: 5 lines. margin from actual: 305 lines.
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. Current: ~198 lines (wc-l). margin from soft-target: ~2 lines. margin from actual: ~302 lines.
   Historical content → cycle files (burst-log, convergence-trajectory, session-checkpoints, lessons, blocking-issues-resolved).
   Run /vsdd-factory:compact-state if this file grows past 200 lines. -->
 
@@ -38,24 +38,24 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-17 — burst 174: pass 92 (1H+1M budget-cluster echo); D18-P92-A RunnableConfig::budget_config canon (per-run override; None=inherit GraphConfig::budget_config); BC-2.10.003 v1.6, BC-2.10.004 v1.3, interface-definitions v2.32, api-surface v1.4, module-decomposition v1.10, entities-server v1.6; trajectory →2 (P1D-92); counter 0/3; trajectory-tail →4→1→4→2 |
+| **Last Updated** | 2026-07-17 — burst 175: pass 93 (2H+2M+1OBS); D18-P93-A Model A HITL trigger (PolicyDecision::Escalate ALWAYS→HITL; Deny branches on on_ceiling); D18-P93-B cost-ceiling NOT v1 scope; interface-definitions v2.33, entities-server v1.7, BC-2.10.004 v1.4, BC-2.10.001 v1.3, BC-2.10.003 v1.7, bc-authoring-plan v2.26, BC-2.06.002 v1.1; trajectory →5 (P1D-93); counter 0/3; trajectory-tail →1→4→2→5 |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Burst 174 COMPLETE — pass 92 + fix burst (PO + architect + BA); NEXT: dispatch adversary pass 93. |
+| **Current Step** | Burst 175 COMPLETE — pass 93 + fix burst (BA + architect + PO); NEXT: dispatch adversary pass 94 (deferred probes owed: SS-03/SS-12/SS-16, ADR-001..003, server endpoints, TV-index, Domain A/B). |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
 | 7: Convergence | not-started | | | | |
-| Adversary pass-92 complete; pass-93 next | in-progress | 2026-07-14 | — | counter 0/3 (P92: NOT CLEAN 1H+1M budget-cluster echo; D18-P92-A RunnableConfig::budget_config; passes 91→92) | trajectory-tail →4→1→4→2 |
-| Fix burst 174 complete (96 total) | complete | 2026-07-17 | 2026-07-17 | Pass 92: NOT CLEAN 2 findings (1H+1M); BC-2.10.003 v1.6 + BC-2.10.004 v1.3 (terminal TV/PC sweep) + D18-P92-A (RunnableConfig::budget_config: Option(BudgetConfig)); all fixed; counter 0/3 | trajectory-tail →4→1→4→2 |
+| Adversary pass-93 complete; pass-94 next | in-progress | 2026-07-14 | — | counter 0/3 (P93: NOT CLEAN 2H+2M+1OBS; D18-P93-A Model A HITL trigger; D18-P93-B cost-ceiling scope; passes 92→93) | trajectory-tail →1→4→2→5 |
+| Fix burst 175 complete (97 total) | complete | 2026-07-17 | 2026-07-17 | Pass 93: NOT CLEAN 5 findings (2H+2M+1OBS); entities-server v1.7 + D18-P93-A (interface-definitions v2.33, BC-2.10.004 v1.4) + BC-2.10.003 v1.7 + bc-authoring-plan v2.26 + BC-2.06.002 v1.1; all fixed; counter 0/3 | trajectory-tail →1→4→2→5 |
 
 ## Current Phase Steps
 
@@ -63,11 +63,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1d burst 170 — verification-architecture v1.3 + D18-P88-A corpus-wide closure | architect + state-manager | COMPLETE | Burst 170 (no adversary pass): verification-architecture.md formally bumped to v1.3; BC-INDEX removed from inputs:; six stable BC inputs + invariants.md + prd.md; input-hash 270a1de→8091abc. D18-P88-A interpretation note: versioned indexes (ARCH-INDEX, L2-INDEX) legitimate; rolling state-manager-authority files (STATE.md, BC-INDEX, STORY-INDEX) forbidden. 30-file corpus closure (29 burst-169 + 1 burst-170). Architecture census 9/9 CLEAN. Counter 0/3. Burst 170. |
 | Phase 1d burst 171 — pass 89 + fix burst + corpus hash-currency sweep | adversary + PO + state-manager | COMPLETE | Pass 89: NOT CLEAN — 4 findings (1H+2M+1L) ALL FIXED. Novelty MEDIUM (all provenance-wave echoes). F-P89-01 (HIGH [process-gap], PO): gate #34 census block embedded stale per-file hash values asserting false PASS; STRUCTURAL FIX: per-file hash values NEVER recorded in gate text; frontmatter = single source of truth; bc-authoring-plan → v2.25. F-P89-02 (MED, PO): bc-authoring-plan frontmatter hash e786fea contradicted v2.24 changelog (e238778); reconciled: full chain documented (90d28fa→e238778→e786fea→41c29d9); frontmatter = 41c29d9. F-P89-03 (MED, PO): nfr-catalog "pending recomputation" deferral language + stale pre-removal hash; FIXED: v1.2, hash 2153125→0f05a12, deferral language closed. F-P89-04 (LOW, PO): BC-2.08.006 PC-3 stale "(or SS-TBD is used as a placeholder)" clause dropped; v1.2; hash 8095694→412902d. Corpus hash-currency sweep (D18-P89-A first execution): 4/6 supplements DRIFT + 94/95 BCs STALE refreshed to TOTAL MATCH (coherence verified passes 88-89). D18-P89-A codified. Trajectory →4 (P1D-89). Counter 0/3. Burst 171. |
 | Phase 1d burst 172 — pass 90 coverage-caveat census + D18-P90-A hash refresh | adversary + state-manager | COMPLETE | Pass 90 adversary verdict: CLEAN(strict) read-only with coverage caveat. State-manager coverage-caveat closure: ARCH-INDEX.md hash drift found (edabdee vs 065003c computed; inputs prd.md + module-criticality.md staled by burst-171 D18-P89-A PO-scope sweep; ARCH-INDEX last touched burst 169). D18-P90-A adjudication (orchestrator): hash-only refreshes are state-manager-executable corpus-wide; cascade scope extended to files whose inputs: reference edited files. ARCH-INDEX.md refreshed (edabdee→065003c). Full census 126/126 TOTAL MATCH: supplements 6/6, BCs 95/95, arch 9/9, domain-spec 15/15, prd 1, product-brief 1. Effective pass-90 verdict: NOT CLEAN (1 census-closure finding). Trajectory →1 (P1D-90, census-closure). Counter 0/3. Fix bursts 93→94. Burst 172. |
 | Phase 1d burst 173 — pass 91 + fix burst (3 specialists) | adversary + PO + BA + architect + state-manager | COMPLETE | Pass 91: NOT CLEAN — 4 findings (1H+1M+2OBS) ALL FIXED. Novelty MEDIUM (first genuine CONTENT-layer finding cluster: budget subsystem semantic mis-anchor). F-P91-01 (HIGH, PO+BA): SS-10 BC trio + CAP-012 attributed on_ceiling to BudgetPolicy TRAIT (impossible — pure trait carries no data field); canon = BudgetConfig STRUCT; FIXED: BC-2.10.001 v1.2, BC-2.10.003 v1.5, BC-2.10.004 v1.2, BC-2.06.003 v1.1, capabilities-p0 v1.2; post-fix corpus grep zero residual. F-P91-02 (MED, architect): OnCeiling + BudgetConfig undefined in interface-definitions; FIXED: v2.29 adds full defs (OnCeiling {Halt,Escalate,Summarize{summarize_prompt}}, BudgetConfig {soft_limit,hard_limit,on_ceiling}) + engine-branches-on-config prose; siblings module-decomposition v1.9, purity-boundary-map v1.4. F-P91-03 (OBS, architect): TOML default_on_ceiling omitted Summarize; ADJUDICATED bare-string default intentionally excludes Summarize (table form documented). F-P91-04 (OBS, PO): BC-2.15.004 EC-004 mapped read failure to E-MEMORY-002 StorageFull (write-semantic); E-MEMORY-008 MemoryStoreReadFailed MINTED (DURABILITY/broken/Maybe; anchor EC-004+TV-008; gate #31 PASS); BC-2.15.004 v1.1; error-taxonomy v1.18; interface-definitions v2.30. ERROR-CODE CENSUS 85→86 = 43+16+27. D18-P91-A + D18-P91-B. D18-P89-A sweep TOTAL MATCH. Trajectory →4 (P1D-91). Counter 0/3. Fix bursts 94→95. Burst 173. |
 | Phase 1d burst 174 — pass 92 + fix burst (PO + architect + BA) | adversary + PO + architect + BA + state-manager | COMPLETE | Pass 92: NOT CLEAN — 2 findings (1H+1M) ALL FIXED. Novelty MEDIUM (partial-fix echo of pass-91 budget cluster at previously-unswept sites). F-P92-01 (HIGH, PO): BC-2.10.003 TV-001/007 + BC-2.10.004 PC6 still carried BudgetPolicy-owns-data forms (TV-001 "BudgetPolicy halt at 10k", TV-007 "BudgetPolicy with token ceiling", PC6 "policy's current ceiling"); terminal sweep; BC-2.10.003 v1.6, BC-2.10.004 v1.3. F-P92-02 (MED, D18-P92-A): RunnableConfig had no budget_config field defined despite BC-2.10.003 PC7 + BC-2.10.004 PC6 naming it as resume-patch target; ADJUDICATED OPTION A: RunnableConfig gains budget_config: Option(BudgetConfig) (per-run override; None=inherit GraphConfig::budget_config); interface-definitions v2.32 §RunnableConfig struct (4 fields + BC citations + BudgetResume::Extend); api-surface v1.4; module-decomposition v1.10; entities-server v1.6. Trajectory →2 (P1D-92). Counter 0/3. Fix bursts 95→96. Burst 174. |
+| Phase 1d burst 175 — pass 93 + fix burst (BA + architect + PO) | adversary + BA + architect + PO + state-manager | COMPLETE | Pass 93: NOT CLEAN — 5 findings (2H+2M+1OBS) ALL FIXED. Novelty HIGH. F-P93-01 (HIGH, BA): entities-server v1.7 verbatim-canon from interface-definitions §BudgetPolicy + BC-2.10.002 PC2 (7 invented fields replaced; PolicyOutcome/token_ceiling/cost_ceiling_usd zero residue). F-P93-02 (HIGH, D18-P93-A): contradictory HITL trigger model adjudicated → Model A: PolicyDecision::Escalate ALWAYS HITL; PolicyDecision::Deny branches on on_ceiling; interface-definitions v2.33 (5-row decision table + §OnCeiling docstring); BC-2.10.004 v1.4 (dual-path PC1a/PC1b, PC2/PC2b, TV-001b); BC-2.10.001 v1.3 (PC3 precise cite). F-P93-03 (MED, PO): BC-2.10.004 stale CAP-012 quote fixed (capabilities-p0 v1.2 wording); folded into v1.4 changelog. F-P93-04 (MED, PO): VP-BUDGET-05 ID collision BC-2.10.003 vs BC-2.10.004 — BC-2.10.003 v1.7 renumbers to VP-BUDGET-07; sequence VP-BUDGET-01..07 no gaps/collisions. OBS-P93-01 (PO): gate #13 extended with BC-local VP-uniqueness sub-check; bc-authoring-plan v2.26; census: VP-STREAM-02 collision found+fixed (BC-2.06.002 v1.1 VP-STREAM-04); post-fix zero duplicates corpus-wide. D18-P89-A hash sweep: 7/126 stale→126/126 TOTAL MATCH. Trajectory →5 (P1D-93). Counter 0/3. Fix bursts 96→97. Burst 175. |
 
 ## Decisions Log
 
@@ -108,6 +108,8 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | D18-P91-A | on_ceiling canon: BudgetConfig struct (GraphConfig.budget_config) owns on_ceiling/soft_limit/hard_limit; BudgetPolicy trait stays pure+data-free (evaluate() only); engine branches on BudgetConfig::on_ceiling after Deny. OnCeiling + BudgetConfig now defined in interface-definitions §BudgetPolicy; TOML bare-string default excludes Summarize (table form [budget.on_ceiling] mode/summarize_prompt documented inline). | F-P91-01/02/03: SS-10 trio + CAP-012 attributed a data field to a pure trait; interface surface was incomplete | phase-1d | 2026-07-17 | adversary+architect+PO+BA |
 | D18-P91-B | E-MEMORY-008 MemoryStoreReadFailed minted (DURABILITY/broken/Maybe; anchor BC-2.15.004 EC-004+TV-008). Error-code census 85→86 = 43+16+27. | F-P91-04: MEMORY namespace had no read/IO-failure code; StorageFull was semantically wrong for reads | phase-1d | 2026-07-17 | adversary+PO |
 | D18-P92-A | RunnableConfig gains `budget_config: Option(BudgetConfig)` — per-run override, None = inherit GraphConfig::budget_config; resume ceiling changes patch RunnableConfig::budget_config (BudgetResume::Extend); GraphConfig-level mutation rejected (would leak across concurrent runs). §RunnableConfig struct now fully defined in interface-definitions v2.32 (4 fields: recursion_limit, thread_id, budget_config, context_mutations + per-field BC citations + BudgetResume::Extend mechanism prose). | F-P92-02: resume-path sites named RunnableConfig as ceiling-patch target but field was undefined; Option B (GraphConfig mutation) = production-grade race defect across concurrent runs; reference-corpus RunnableConfig = per-call override bag (TypedDict total=False) decisive. | phase-1d | 2026-07-17 | adversary+architect+PO+BA |
+| D18-P93-A | Model A HITL trigger canon: PolicyDecision::Escalate ALWAYS fires HITL unconditionally (no on_ceiling qualification); PolicyDecision::Deny branches on on_ceiling (Halt→E-BUDGET-001+halt; Escalate→HITL/interrupted; Summarize→summary call+summary_halt; recursive Deny→Halt fallback). Complete 5-row decision table in interface-definitions v2.33 §OnCeiling; BC-2.10.004 v1.4 dual-path (PC1a/PC1b, PC2/PC2b, TV-001b); BC-2.10.001 v1.3 PC3 precise cite. | F-P93-02: three-way contradiction (interface-definitions missing Escalate handler; BC-2.10.004 title implied on_ceiling gate; BC-2.10.001 PC3 verbatim = Escalate→HITL unconditionally); Model A chosen: BC-2.10.001 PC3 is sole Escalate canon; PC2 scope = Deny-path only | phase-1d | 2026-07-17 | adversary+architect+PO |
+| D18-P93-B | Cost-based ceilings (cost_ceiling_usd field, cost-based PolicyDecision variants) are NOT v1 scope; CAP-012 is fully satisfied by JournalEntry.token_usage.estimated_cost (read-only cost tracking only); no E-BUDGET cost-ceiling enforcement codes in v1. | F-P93-01 fix: entities-server v1.7 rewrite revealed cost_ceiling_usd was an invented field; confirmed non-scope via CAP-012 plain reading (estimated_cost = cost tracking, not enforcement); PO adjudication in-burst | phase-1d | 2026-07-17 | adversary+PO |
 
 ## Risk Register
 
@@ -145,16 +147,16 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | DEFER-002 | Machine enforcement of gate #28 date-validity (pre-commit hook + CI lint for changelog-date monotonicity and frontmatter-currency) | Phase 3 CI hardening | 3rd manual-sweep failure (F-P64-02/F-P65-01/F-P75-01); gate #28 Rules 4+5 are prose-only until Phase 3. DEFER-001 archived in cycles/v0.0.0-pre-pipeline/lessons.md |
 
 ## Concurrent Cycles
-None currently active. Counter 0/3; trajectory-tail →4→1→4→2.
+None currently active. Counter 0/3; trajectory-tail →1→4→2→5.
 
 ## Convergence Status
 
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 92 (Phase 1d) |
-| Fix bursts completed | 96 (Phase 1d: 72 fix + 5 D19/D20 expansion + 1 pass-77 fix + 1 pass-78 fix + full gate #33 sweep + 1 pass-79 fix + 1 pass-80 fix + 1 pass-81 fix + 1 pass-82 fix + 1 pass-83 fix + 1 pass-84 PO-half fix + 1 pass-84 architect-half fix + 1 pass-85 fix + 1 pass-86 fix + 1 pass-87 fix [large] + 1 pass-88 fix + 1 provenance burst + 1 verification-architecture v1.3 burst + 1 pass-89 fix + corpus hash-currency sweep + 1 pass-90 census-closure ARCH-INDEX hash refresh + 1 pass-91 fix [budget cluster] + 1 pass-92 fix [budget echo + D18-P92-A]) |
-| Convergence counter | 0 of 3 (Phase 1d; NOT CLEAN pass 92: 1H+1M budget-cluster echo; D18-P92-A fixed; counter stays 0/3; pre-pipeline 3/3 CLOSED) |
-| Finding trajectory | →4→2→2→4→4→1→4→2 |
+| Adversary passes completed | 93 (Phase 1d) |
+| Fix bursts completed | 97 (Phase 1d: 72 fix + 5 D19/D20 expansion + 1 pass-77 fix + 1 pass-78 fix + full gate #33 sweep + 1 pass-79 fix + 1 pass-80 fix + 1 pass-81 fix + 1 pass-82 fix + 1 pass-83 fix + 1 pass-84 PO-half fix + 1 pass-84 architect-half fix + 1 pass-85 fix + 1 pass-86 fix + 1 pass-87 fix [large] + 1 pass-88 fix + 1 provenance burst + 1 verification-architecture v1.3 burst + 1 pass-89 fix + corpus hash-currency sweep + 1 pass-90 census-closure ARCH-INDEX hash refresh + 1 pass-91 fix [budget cluster] + 1 pass-92 fix [budget echo + D18-P92-A] + 1 pass-93 fix [HITL trigger + entities-server + VP-collision + gate-#13]) |
+| Convergence counter | 0 of 3 (Phase 1d; NOT CLEAN pass 93: 2H+2M+1OBS; D18-P93-A+D18-P93-B fixed; counter stays 0/3; pre-pipeline 3/3 CLOSED) |
+| Finding trajectory | →4→2→2→4→4→1→4→2→5 |
 
 
 ## Session Resume Checkpoint
@@ -162,14 +164,14 @@ None currently active. Counter 0/3; trajectory-tail →4→1→4→2.
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 
 ### RESUME IN ONE BREATH
-"ferrochain Phase 1d convergence loop, 92 passes / 96 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 512). trajectory-tail →4→1→4→2. NEXT ACTION: dispatch adversary pass 93 (counter 0/3; D18-P92-A RunnableConfig::budget_config: Option(BudgetConfig) canon; BC-2.10.003 v1.6/BC-2.10.004 v1.3 terminal sweep; interface-definitions v2.32 §RunnableConfig defined). Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
-### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 174 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
-### PASS-92 FIX SUMMARY: F-P92-01 HIGH (PO): BC-2.10.003 TV-001/007 + BC-2.10.004 PC6 BudgetPolicy-owns-data forms fixed; BC-2.10.003 v1.6, BC-2.10.004 v1.3; terminal sweep. F-P92-02 MED (D18-P92-A): RunnableConfig gains budget_config: Option(BudgetConfig) (per-run override; None=inherit GraphConfig::budget_config); interface-definitions v2.32 §RunnableConfig 4-field struct + BudgetResume::Extend; api-surface v1.4; module-decomposition v1.10; entities-server v1.6 (BudgetConfig entity + trait split + ER line).
-### PASS-93 SIBLING-CHECKS: SS-10 pair (BC-2.10.003 v1.6 TVs/PC7, BC-2.10.004 v1.3 PC6) zero data-bearing-BudgetPolicy or fieldless-RunnableConfig-ceiling residue; interface-definitions v2.32 §RunnableConfig (4 fields + citations); api-surface v1.4 RunnableConfig row; module-decomposition v1.10; entities-server v1.6 (BudgetConfig entity + trait split + ER line); budget-cluster terminal-sweep verification.
+"ferrochain Phase 1d convergence loop, 93 passes / 97 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 512). trajectory-tail →1→4→2→5. NEXT ACTION: dispatch adversary pass 94 — MUST include deferred probes (SS-03/SS-12/SS-16, ADR-001..003↔BCs, server-endpoint interface↔BC signatures, TV-index sampling, Domain A/B forcing-function traces) AND sibling-checks for burst-175 fixes. Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 175 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-93 FIX SUMMARY: F-P93-01 HIGH (BA): entities-server v1.7 — verbatim-canon rewrite (7 invented fields replaced; PolicyOutcome/token_ceiling/cost_ceiling_usd zero residue). F-P93-02 HIGH (D18-P93-A): Model A HITL trigger — PolicyDecision::Escalate ALWAYS HITL; Deny branches on on_ceiling; interface-definitions v2.33 (5-row decision table); BC-2.10.004 v1.4 (dual-path PC1a/PC1b, PC2/PC2b, TV-001b); BC-2.10.001 v1.3. F-P93-03 MED (PO): BC-2.10.004 stale CAP-012 quote fixed (capabilities-p0 v1.2 wording). F-P93-04 MED (PO): VP-BUDGET-05 collision → BC-2.10.003 v1.7 VP-BUDGET-07; sequence VP-BUDGET-01..07 clean. OBS-P93-01 (PO/D18-P93-B): gate #13 extended VP-uniqueness; bc-authoring-plan v2.26; VP-STREAM-02 collision found+fixed BC-2.06.002 v1.1.
+### BURST-175 SIBLING-CHECKS OWED (pass 94 must verify): BC-2.10.001 v1.3 PC3 Escalate→HITL canon; BC-2.10.003 v1.7 VP-BUDGET-07 no collision; BC-2.10.004 v1.4 dual-path forms (PC1a/PC1b, PC2/PC2b, TV-001b); interface-definitions v2.33 §OnCeiling 5-row table; bc-authoring-plan v2.26 gate #13 VP-uniqueness command; BC-2.06.002 v1.1 VP-STREAM-04; corpus VP census zero duplicates.
 ### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
-### DECISION DELTA (burst 174): D18-P92-A (RunnableConfig::budget_config: Option(BudgetConfig) — per-run override; resume ceiling patches RunnableConfig::budget_config; GraphConfig mutation rejected; §RunnableConfig struct defined in interface-definitions v2.32).
+### DECISION DELTA (burst 175): D18-P93-A (Model A HITL trigger: PolicyDecision::Escalate ALWAYS→HITL unconditionally; PolicyDecision::Deny→branches on on_ceiling; 5-row table in interface-definitions v2.33). D18-P93-B (cost-based ceilings NOT v1 scope; CAP-012 = JournalEntry.token_usage.estimated_cost tracking only).
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
-### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 174 | Counter 0/3 (Phase 1d)
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 175 | Counter 0/3 (Phase 1d)
 
 ## Historical Content
 
@@ -178,7 +180,7 @@ None currently active. Counter 0/3; trajectory-tail →4→1→4→2.
 | Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
 | 95 Behavioral Contracts (ss-01..ss-17/, ~13,800+ lines) + BC-INDEX.md v1.1 (48P0/39P1/8P2) | `.factory/specs/behavioral-contracts/ss-NN/` + `BC-INDEX.md` |
 | L3 PRD (index + BC summary tables, 607 lines) + v1.0 Step-E annotation (BC-2.08.009) | `.factory/specs/prd.md` |
-| PRD supplements: bc-authoring-plan v2.25, error-taxonomy v1.18, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.32, test-vectors v1.7 | `.factory/specs/prd-supplements/` |
+| PRD supplements: bc-authoring-plan v2.26, error-taxonomy v1.18, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.33, test-vectors v1.7 | `.factory/specs/prd-supplements/` |
 | L2 domain spec (15-shard, 1,889 lines) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
 | Session checkpoints bursts 5–78 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |

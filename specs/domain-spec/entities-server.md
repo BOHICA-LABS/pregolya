@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.6"
+version: "1.7"
 status: active
 producer: business-analyst
 timestamp: 2026-07-17T00:00:00Z
 changelog:
+  - "1.7 (2026-07-17): F-P93-01 — correct v1.6 semantic drift in §BudgetConfig and §EvidenceJournal. BudgetConfig fields renamed from invented {token_ceiling, cost_ceiling_usd, on_ceiling: PolicyOutcome (Allow|Escalate|Deny)} to verbatim canon {soft_limit: Option<u64>, hard_limit: Option<u64>, on_ceiling: OnCeiling (Halt|Escalate|Summarize)} per interface-definitions.md §BudgetPolicy v2.29, BC-2.10.001 TV-001–003, BC-2.10.003 v1.2, and BC-2.10.004. EvidenceEntry field set replaced with BC-2.10.002 PC2 JournalEntry verbatim: {run_id, sub_agent_id, evaluation_point, token_usage, policy_name, decision: PolicyDecision (Allow|Escalate|Deny), reason, timestamp}; invented fields node_name/cost_usd/tokens_used/policy_outcome removed — none exist in canon. Residue sweep: 'PolicyOutcome', 'token_ceiling', 'cost_ceiling_usd' are zero live occurrences post-fix (changelog exempt). entities-graph.md confirmed clean."
   - "1.6 (2026-07-17): D18-P92-A budget canon — BudgetPolicy rewritten as pure data-free trait; BudgetConfig added as the configuration data struct carrying token_ceiling/cost_ceiling_usd/on_ceiling; ER relationship updated from stale BudgetPolicy-injection phrasing to BudgetConfig per-run override model."
   - "1.5 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D11/D13/D17 decisions and CONFLICT-6 grounding baked at authoring time from COMPARATIVE-ASSESSMENT.md, not live state); input-hash recomputed."
   - "1.4 (ADV-P1D-PASS-59): F-P59-02 — add Transform same-boundary rule to §GuardrailHook: new_content must be the same IngressContent variant as the evaluated content (ToolResult stays ToolResult, RagChunk stays RagChunk, MemoryItem stays MemoryItem); inner payload may change freely per BC-2.11.002 EC-003."
@@ -79,22 +80,37 @@ The external value injected to resume a pending Interrupt.
 ## Policy / Governance Domain
 
 ### BudgetConfig
-Configuration data for token and cost limits on a Run.
-- **Fields:** token_ceiling: Option<u64>, cost_ceiling_usd: Option<Decimal>, on_ceiling: PolicyOutcome (Allow | Escalate | Deny)
+Configuration data for token-ceiling thresholds and ceiling-response behavior for a Run.
+- **Fields (verbatim — interface-definitions.md §BudgetPolicy v2.29, BC-2.10.001 TV-001–003):**
+  - `soft_limit: Option<u64>` — token count at which `PolicyDecision::Escalate` is returned; `None` = no soft ceiling
+  - `hard_limit: Option<u64>` — token count at which `PolicyDecision::Deny` is returned; `None` = no hard ceiling
+  - `on_ceiling: OnCeiling` — engine behavior when the hard ceiling is reached
+- **OnCeiling variants (verbatim — BC-2.10.003 v1.2 + BC-2.10.004):** `Halt` | `Escalate` | `Summarize { summarize_prompt: String }`
+  - `Halt` — stop run immediately; transition to `failed` with E-BUDGET-001
+  - `Escalate` — suspend via HITL interrupt; awaits `BudgetResume::Extend` or `BudgetResume::Halt`
+  - `Summarize { summarize_prompt: String }` — one final LLM call using the prompt; transition to `summary_halt`
 - **Relationships:** Optionally set in RunnableConfig::budget_config (per-run override, 0——1); graph-level default lives in GraphConfig::budget_config. The engine constructs the effective BudgetPolicy from the resolved BudgetConfig at run time.
-- **Source:** D17-Q4, HS-4/HS-9, domain-b dark-factory.
+- **Source:** D17-Q4, HS-4/HS-9, domain-b dark-factory; interface-definitions.md §BudgetPolicy (F-P91-02 v2.29).
 
 ### BudgetPolicy (trait)
-A composable allow/escalate/deny policy evaluated against token and cost tallies for a Run.
+A composable allow/escalate/deny policy evaluated against token tallies for a Run.
 - **Nature:** Pure trait — data-free. The engine constructs a BudgetPolicy implementation from the effective BudgetConfig (RunnableConfig::budget_config if set, otherwise GraphConfig::budget_config).
 - **Composition:** Policies form a chain; first Deny outcome wins.
 - **Source:** D17-Q4, D18-P92-A.
 
 ### EvidenceJournal
-Append-only log of BudgetPolicy evaluations and usage events for a single Run.
-- **Fields:** run_id: Uuid, entries: Vec<EvidenceEntry>
-- **EvidenceEntry fields:** timestamp, tokens_used: u64, cost_usd: Decimal, policy_outcome: PolicyOutcome, node_name: NodeName
-- **Invariant:** Append-only — no entry may be modified or deleted after writing.
+Append-only log of BudgetPolicy evaluations for a single Run.
+- **Fields:** run_id: Uuid, entries: Vec<JournalEntry>
+- **JournalEntry fields (verbatim — BC-2.10.002 PC2; canonical Rust struct name `JournalEntry`):**
+  - `run_id: Uuid` — UUID of the run that triggered the evaluation
+  - `sub_agent_id: Option<SubAgentId>` — sub-agent identifier; null if not a sub-agent run
+  - `evaluation_point: EvaluationPoint` — trigger: `AfterLlmCall | AfterToolInvocation`
+  - `token_usage: TokenUsage` — snapshot at evaluation time (prompt, completion, total, estimated_cost)
+  - `policy_name: String` — name of the policy or composed chain evaluated
+  - `decision: PolicyDecision` — `Allow | Escalate | Deny` (BC-2.10.001 PC3)
+  - `reason: String` — human-readable reason; empty string for Allow when no threshold message
+  - `timestamp: Timestamp` — wall-clock timestamp of the evaluation
+- **Invariant:** Append-only — no entry may be modified or deleted after writing (BC-2.10.002 INV).
 
 ### ProvenanceTag
 Metadata attached to content at an ingress boundary, recording its origin.
