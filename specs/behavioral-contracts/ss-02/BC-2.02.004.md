@@ -23,7 +23,15 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "c6aab1e7dd2e500b29743778f2278ca84d85b5543cd6519c090108caae59a603"
+input-hash: "76fae6b"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.02.004: EphemeralValue Cleared-After-Super-Step Semantics (Red Gate — R10)

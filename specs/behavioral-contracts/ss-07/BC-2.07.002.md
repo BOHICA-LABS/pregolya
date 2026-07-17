@@ -24,7 +24,15 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
-input-hash: "5b8bf9d99596c65c49b958b1e2235b60f1d5e780102e5e5fcc31c97a4a86bfe2"
+input-hash: "7832955"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.07.002: Non-ASCII Boundary Parity with Python Reference Implementation (Emoji, CJK) — R8 Red Gate

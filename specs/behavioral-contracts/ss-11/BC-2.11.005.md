@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "e03b672"
+input-hash: "d26122c"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11
@@ -25,6 +25,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
   - "1.2 (ADV-P1D-PASS-59): F-P59-02 — EC-002 description and TV fixed to typecheck against Transform { new_content: IngressContent }. Bare ContentBlock::text('[REDACTED]') → IngressContent::ToolResult(ContentBlock::text('[REDACTED]')); EC-002 description updated to reflect IngressContent wrapper (same-boundary rule). ToolResult used as the concrete example boundary per BC-2.11.002 EC-003 authority."
 modified: []
+extracted_from: null
 deprecated: null
 deprecated_by: null
 replacement: null

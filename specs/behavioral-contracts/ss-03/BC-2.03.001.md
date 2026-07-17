@@ -30,7 +30,15 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "19a5567c0bc106d5cf83270335021aea43256ce374f0df4652894fc0deda7e67"
+input-hash: "41a0688"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.03.001: BSP Super-Step Execution Determinism — Kani VP Seed (NE-17)

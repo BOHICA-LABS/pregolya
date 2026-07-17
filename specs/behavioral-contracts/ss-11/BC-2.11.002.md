@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "e03b672"
+input-hash: "d26122c"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11
@@ -29,6 +29,7 @@ changelog:
   - "1.4 (ADV-P1D-PASS-59): F-P59-02 — (1) EC-003 description clarified: the different-variant claim is about the inner ContentBlock variant within IngressContent::ToolResult, not a cross-IngressContent-boundary swap (same-boundary rule established by interface-definitions.md v2.14). (2) EC-003 TV fixed: bare ContentBlock::text('[REDACTED: PII]') → IngressContent::ToolResult(ContentBlock::text('[REDACTED: PII]')) to typecheck against Transform { new_content: IngressContent }."
   - "1.5 (F-P84-OBS-B/D18-P84-A): body version pin removed from PC1 — `interface-definitions.md v2.13 §GuardrailHook §IngressContent` → `interface-definitions.md §GuardrailHook §IngressContent` (section anchors retained; version pins on living supplements dropped per D18-P84-A adjudication; changelog entries are exempt audit trail)."
 modified: []
+extracted_from: null
 deprecated: null
 deprecated_by: null
 replacement: null

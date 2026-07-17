@@ -22,7 +22,15 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "1d92402035d51508b517b4b5cf646dfd4e36a364cd6b8793a56db4ff53a7e0a6"
+input-hash: "c564388"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.06.003: Streaming and Unary Run Produce Identical Final Answer (NE-13)

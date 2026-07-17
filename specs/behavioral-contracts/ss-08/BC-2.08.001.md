@@ -26,7 +26,15 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "ae89c62b019d905ca0e99acb7494c237c97cd0f81a8aa1142b7521d68afff2d1"
+input-hash: "9ba2a24"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.08.001: Chat Model Streaming Completions Conformance

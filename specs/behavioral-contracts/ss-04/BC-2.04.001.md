@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "b70ff73bc43c6e0f2789620e0e7fc41b2e5bc60892d1fbf730f8e71cce052be6"
+input-hash: "32de589"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04
@@ -25,6 +25,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-6): E-category canon — EC-002 and test vector error category corrected from `CheckpointError` to `DURABILITY, code: E-CHKPT-001` (F-P6-03, status/category canon sweep)."
   - "1.1 (ADV-P1D-PASS-20): F-P20-02 — `Checkpointer` → `CheckpointSaver` in PC-1 (canonical trait name correction)."
 modified: []
+extracted_from: null
 deprecated: null
 deprecated_by: null
 replacement: null

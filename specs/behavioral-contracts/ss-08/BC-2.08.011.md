@@ -22,7 +22,15 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "9d30ffb534046864"
+input-hash: "45b2b0d"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.08.011: `#[entrypoint]` Attribute Macro — START Edge Auto-Wiring for StateGraph

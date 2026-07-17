@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "01382649ae22c497f23c7d3371208c8694ad3996050b31954a83ad5108d55b0f"
+input-hash: "99e4ad1"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -22,6 +22,7 @@ capability: CAP-015
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 modified: []
+extracted_from: null
 deprecated: null
 deprecated_by: null
 replacement: null

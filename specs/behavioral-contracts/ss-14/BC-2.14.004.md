@@ -23,7 +23,15 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "24d438f"
+input-hash: "0be5169"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.14.004: Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests

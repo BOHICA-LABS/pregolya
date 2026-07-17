@@ -13,7 +13,15 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "b70ff73bc43c6e0f2789620e0e7fc41b2e5bc60892d1fbf730f8e71cce052be6"
+input-hash: "32de589"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04

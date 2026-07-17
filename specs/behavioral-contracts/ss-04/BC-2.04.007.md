@@ -11,7 +11,15 @@ inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "eb52159636d4b87eedb687560fb4b2f284ebc61457daed44e8c711665bc13d51"
+input-hash: "9e6093d"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04

@@ -21,7 +21,15 @@ traces_to:
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "[pending state-manager]"
+input-hash: "ed8125a"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.08.014: Provider Failover Chain (ProviderFallbackPolicy; Ordered Fallback on 429/5xx/Auth)

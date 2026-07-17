@@ -22,7 +22,15 @@ inputs:
   - .factory/specs/domain-spec/entities-server.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "213d0c231547be235d411a4eba37f42635b8f6c6cfd62d22fc0e9c68a6f13ed1"
+input-hash: "1ab7f5d"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.15.001: KV and Vector Memory Persistence Across Threads (Not Per-Checkpoint)

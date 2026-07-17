@@ -22,7 +22,15 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/failure-modes.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "4569589baed2bb214a911b14ad0e9cb291fc6d65212f36f69b14c904362e3e6a"
+input-hash: "447fd45"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.16.003: Circuit Breaker Trips After Repeated Failure; Prevents Infinite Retry

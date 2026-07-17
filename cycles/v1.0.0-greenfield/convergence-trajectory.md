@@ -275,6 +275,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Trajectory after:** →2 (P1D-86)
 **Counter:** 0/3
 
+### Pass P1D-87 Details
+
+**Date:** 2026-07-17
+**Verdict:** NOT CLEAN (strict) — 1 HIGH + 1 MED; NOT CLEAN (PR-merge) — HIGH present
+**Findings delta:** same count as pass 86 (2 findings); severity escalated OBS→HIGH/MED
+**Axes rotated:** gate #28 Rules 1–5 self-consistency check (F-P87-01 Rule 1 vs Rule 5 contradiction); input-hash corpus census (F-P87-02 format uniformity); gate #33 spot PASS; hedge sweep PASS; gates #19/#25/census-recompute/version-pin PASS; sibling-checks: test-vectors v1.7 PASS; bc-authoring-plan v2.19 PARTIAL (Rule-1 gap); module-criticality PARTIAL (hash format); gate #28 scoped PASS post-fix
+**Fix summary:** F-P87-01 HIGH (PO) — gate #28 Rule 1 contradicted D18-P86-A Rule 5 BC-file scoping; FIXED: Rule 1 scoped supplements-only; 5-rule decision tree with `introduced:` entry predicate written for DEFER-002 linter; bc-authoring-plan → v2.20 (D18-P87-A). F-P87-02 MED (PO) — input-hash format split 7-char MD5 vs 64-char SHA; FIXED: canonical = 7-char MD5 declared; gate #34 INPUT-HASH FORMAT CONSISTENCY minted (zero-exception; `[live-index]` sole exception); corpus normalized 95/95 BCs + 6/6 supplements; bc-authoring-plan → v2.21→v2.22 (D18-P87-B).
+**New standing gates:** gate #34 INPUT-HASH FORMAT CONSISTENCY (total 33→34)
+**Incidental:** hook-forced template compliance on ~98 BC files (lifecycle frontmatter blocks added); error-taxonomy/interface-definitions section renames/additions (non-content-mutating)
+**Trajectory after:** →2 (P1D-87)
+**Counter:** 0/3
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

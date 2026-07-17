@@ -25,7 +25,15 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "3db217e0076b10cb15c339c26ebbf8a6d5f46763b6e6d3c2a1fd187ac0718ea5"
+input-hash: "2f1c064"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.05.004: Command(resume=value) API Contract for Programmatic Resume

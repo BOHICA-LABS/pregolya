@@ -23,7 +23,15 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "b8d6b656a36659b344bb8d6b676d6c2862676124b4eb61e645298dca3360aa89"
+input-hash: "d4a910b"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.16.001: Per-Tool Retry Policy Keyed by tool_name (Not Args Hash)

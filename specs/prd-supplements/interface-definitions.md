@@ -43,7 +43,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "4513c08bec419d649699ab043220d57416534c354f94b95838760bcc6313788d"
+input-hash: "cdce094"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."
@@ -55,6 +55,10 @@ note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' cover
 > ferrochain is a library crate workspace, not a CLI application.
 > The public interface is the set of public Rust traits, types, and the
 > ferrochain-server HTTP API.
+
+## CLI Interface
+
+ferrochain is a Rust library framework — there is no standalone CLI tool. The interface surface consists of: (a) public Rust traits and types (see §Public Rust Trait Signatures below), (b) the embedded `ferrochain-server` HTTP API (see §ferrochain-server HTTP API below), and (c) Cargo feature flags (see §Cargo Feature Flags below). All interface contracts are expressed in Rust types; there are no command-line flags or environment variable arguments.
 
 ## Public Rust Trait Signatures (ferrochain-core)
 
@@ -554,6 +558,14 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 
 > **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY/SECURITY), E-SPLIT-* (BC-2.07.x, VAL) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only.
 
+## Exit Code Semantics
+
+ferrochain is a library — process exit codes do not apply. The embedded `ferrochain-server` uses standard HTTP status codes; see §HTTP Status Codes in the §ferrochain-server HTTP API section above. Library errors propagate as `FerrochainError` values per the error taxonomy.
+
+## JSON Output Schema
+
+Canonical JSON output shapes for `ferrochain-server` API responses. The primary response objects are defined in the sections below.
+
 ## Run Object Schema
 
 ```json
@@ -683,7 +695,7 @@ default_on_ceiling = "halt"    # "halt" | "escalate"
 | `budget` | on | Budget governance policy primitive | BC-2.10.001 |
 | `guardrail` | on | Content provenance + guardrail hook | BC-2.11.001 |
 
-## Flag Interaction Rules
+## Flag Interactions
 
 | Flag A | Flag B | Interaction |
 |--------|--------|-------------|

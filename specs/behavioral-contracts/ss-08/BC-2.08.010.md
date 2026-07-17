@@ -24,7 +24,15 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "fb878c3d65bb7061"
+input-hash: "90aeaec"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.08.010: `#[tool]` Attribute Macro — async fn to Tool Implementor via schemars::JsonSchema

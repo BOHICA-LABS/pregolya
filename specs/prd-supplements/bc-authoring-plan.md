@@ -1,17 +1,17 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.19"
+version: "2.22"
 status: active
 producer: product-owner
-total_standing_gates: 33
-timestamp: 2026-07-16T00:00:00Z
+total_standing_gates: 34
+timestamp: 2026-07-17T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/STATE.md
-input-hash: "80954d3"
+input-hash: "ddae3ae"
 traces_to: prd.md
 total_bcs: 95
 total_batches: 15
@@ -1137,16 +1137,24 @@ split by wave avoids exception).
 
     Any version > 1.0 without a changelog in either form is a gate failure.
 
-    **Date-validity sub-check (added P65 — OBS-P65-1 widening):**
-    For every changelog entry in any BC file (Form A frontmatter list entries AND Form B body
-    table rows), the date value MUST satisfy three conditions:
-    1. `date ≤ frontmatter timestamp` — a changelog entry for a prior version cannot be dated
-       after the document's own `timestamp:` field without self-contradiction.
+    **Date-validity sub-check (added P65 — OBS-P65-1 widening; scoped P87 — D18-P87-A):**
+    For every changelog entry in any changelog-bearing file (BC file or supplement) (Form A
+    frontmatter list entries AND Form B body table rows), the date value MUST satisfy the
+    following five rules, scoped by document type:
+    1. **`date ≤ frontmatter timestamp` (SUPPLEMENT documents only — `introduced:` field absent):**
+       A changelog entry date must not exceed the document's `timestamp:` field. Since supplement
+       `timestamp:` always equals the newest changelog entry date (Rule 5 supplement branch), all
+       individual entry dates satisfy this constraint when Rule 5 holds.
+       **BC files (`introduced:` field present): Rule 1 does NOT apply.** `timestamp:` is frozen
+       at the v1.0 authoring date; subsequent changelog entries carry dates AFTER `timestamp:` by
+       design — COMPLIANT per Rule 5 BC branch (D18-P87-A). The date ceiling for BC changelog
+       entries is Rule 2 only.
     2. `date ≤ current burst date` — no future-dated changelog entries; the date must not
-       exceed the date on which the burst is executed.
+       exceed the date on which the burst is executed. (Applies to ALL document types.)
     3. Monotonic per file ordering convention — Form B tables (newest-at-top) must have
        dates non-increasing reading top-to-bottom; Form A lists must have dates non-decreasing
        reading bottom-to-top. A v1.1 row dated AFTER the superseding v1.2 row is a violation.
+       (Applies to ALL document types.)
 
     **Form-B set (must be enumerated alongside prd-supplements in every date sweep):**
     Three BCs carry Form-B (`## Changelog`) body tables:
@@ -1165,8 +1173,11 @@ split by wave avoids exception).
       .factory/specs/prd-supplements/test-vectors.md
     ```
     For each extracted date, assert: (a) `date ≤` current burst date, and (b) dates within each
-    file decrease monotonically reading top-to-bottom (newest-at-top convention). Any date
-    later than the burst date or violating monotonicity is a gate failure.
+    file decrease monotonically reading top-to-bottom (newest-at-top convention). For
+    **SUPPLEMENT files only** (bc-authoring-plan, test-vectors), additionally assert:
+    (c) `date ≤ frontmatter timestamp:` field (Rule 1 supplement branch — D18-P87-A).
+    Any date later than the burst date, violating monotonicity, or exceeding the supplement
+    `timestamp:` is a gate failure.
 
     **Motivating instances:**
     - F-P64-02 (ADV-P1D-PASS-64): bc-authoring-plan.md v1.1 and test-vectors.md v1.1 rows
@@ -1189,7 +1200,25 @@ split by wave avoids exception).
 
        **Convention note:** BC-2.07.002 (ts 2026-07-13, newest changelog 2026-07-15), BC-2.08.011 (ts 2026-07-13, newest changelog 2026-07-14), and BC-2.08.012 (ts 2026-07-13, newest changelog 2026-07-14) are COMPLIANT under the scoped rule — each timestamp equals its v1.0 initial authoring date. DEFER-002 machine enforcement at Phase 3 must branch on `introduced:` field presence: `if has_introduced: assert timestamp == v1.0_changelog_date; else: assert timestamp == max_changelog_date`.
 
-    **Machine enforcement deferral (OBS-P75-A / DEFER-002):** Pre-commit hook and CI lint enforcement of rules 4 and 5 is DEFERRED to Phase 3 CI hardening. Deferral logged by state-manager as a STATE.md drift/deferral entry. Until machine enforcement, burst discipline governs — every PO burst that touches a changelog file must manually run the date-validity sub-check. The scoped Rule 5 (D18-P86-A) must be reflected in the Phase 3 linter: branch on `introduced:` presence as described in the Convention note above.
+    **Machine enforcement deferral (OBS-P75-A / DEFER-002):** Pre-commit hook and CI lint enforcement of rules 1–5 is DEFERRED to Phase 3 CI hardening. Deferral logged by state-manager as a STATE.md drift/deferral entry. Until machine enforcement, burst discipline governs — every PO burst that touches a changelog file must manually run the date-validity sub-check.
+
+    The Phase 3 linter MUST implement the following decision tree, branching on `introduced:`
+    field presence (D18-P86-A for Rule 5 scoping; D18-P87-A for Rule 1 scoping):
+
+    ```
+    if document has `introduced:` field (BC files):
+        assert date ≤ current_burst_date               [Rule 2 — universal]
+        assert monotonic_ordering_within_file          [Rule 3 — universal]
+        assert temporal_neighbor_sweep                 [Rule 4 — universal]
+        assert timestamp == v1.0_changelog_row_date    [Rule 5 BC branch]
+        # Rule 1 does NOT apply — timestamp frozen at v1.0 authoring date
+    else (supplement documents, `introduced:` field absent):
+        assert date ≤ frontmatter_timestamp            [Rule 1 — supplement branch only]
+        assert date ≤ current_burst_date               [Rule 2 — universal]
+        assert monotonic_ordering_within_file          [Rule 3 — universal]
+        assert temporal_neighbor_sweep                 [Rule 4 — universal]
+        assert timestamp == max_changelog_date         [Rule 5 supplement branch]
+    ```
 
     **Revert rule:** If git history shows a BC was never substantively modified (only metadata
     touches such as `bc_id` addition and `status: draft → active`), the version MUST be
@@ -1637,12 +1666,84 @@ split by wave avoids exception).
 
     Source: ADV-P1D-PASS-66 §OBS-P66-1 [process-gap]; extended D18-P77-B (ADV-P1D-PASS-77).
 
+34. **Frontmatter input-hash format-consistency gate — INPUT-HASH FORMAT CONSISTENCY
+    (added P87 — standing gate [process-gap, F-P87-02]; D18-P87-B RESOLVED pass-87 fix burst):**
+
+    **Canonical format (D18-P87-B RESOLVED):**
+    `compute-input-hash <file>` returns a **7-char truncated MD5** for ALL spec artifacts —
+    prd-supplements and BC files alike. The two-format convention documented at minting was
+    incorrect: BC files do NOT use 64-char SHA-256. The canonical format is 7-char truncated
+    MD5 for all files. The 64-char SHA-256 hashes in older BC files were produced by the manual
+    ADV-P1D-PASS-9 §F-P9-02 procedure (a different algorithm); those values are legacy drift,
+    not an alternate canonical format.
+
+    | File type | Canonical format | Enforcement |
+    |-----------|-----------------|-------------|
+    | prd-supplements | 7-char truncated MD5 | `validate-input-hash` hook — blocks non-conforming writes |
+    | BC files (`.factory/specs/behavioral-contracts/`) | 7-char truncated MD5 | `validate-input-hash` hook |
+    | Architecture files (`.factory/specs/architecture/`) | Under architect authority | Not PO scope |
+    | `BC-INDEX.md` | `"[live-index]"` (sanctioned — see below) | State-manager authority; exempt from hash tracking |
+
+    **Sanctioned exception class — `[live-index]` (BC-INDEX.md only):**
+    BC-INDEX.md is a state-manager-maintained rolling aggregate of all BC titles, statuses, and
+    metadata. It has no stable `inputs:` field (it depends on every BC file by definition) and
+    receives targeted row-level edits as BCs are created, modified, or retired. Requiring a
+    recomputed hash after every BC change would make every BC authoring burst a two-step cascade.
+    The `[live-index]` placeholder is the permanent sanctioned sentinel for this file class.
+    Only BC-INDEX.md carries this placeholder; it is not a general escape hatch for other files.
+
+    **Computation tool (all file types):**
+    ```
+    compute-input-hash <file>
+    ```
+    The tool reads the `inputs:` frontmatter, computes 7-char truncated MD5 of the content
+    manifest, and returns the canonical value.
+
+    **Census commands (drift detection):**
+    ```
+    # prd-supplements: stored must match compute-input-hash
+    for f in .factory/specs/prd-supplements/*.md; do
+      computed=$(compute-input-hash "$f" 2>&1)
+      stored=$(grep "^input-hash:" "$f" | sed 's/input-hash: "\(.*\)"/\1/')
+      [ "$computed" = "$stored" ] || echo "DRIFT: $f stored=$stored computed=$computed"
+    done
+    # Expected: empty (0 DRIFT)
+
+    # BC files: ALL entries must match compute-input-hash (zero-exception)
+    # Sanctioned exceptions: only BC-INDEX.md with "[live-index]" is exempt
+    compute-input-hash --scan .factory/specs/behavioral-contracts/
+    # Expected: STALE=0 (MATCH equals TOTAL minus 1 for BC-INDEX.md which is excluded by scan)
+    ```
+
+    **Trigger:** Every burst that creates or modifies a spec artifact with `inputs:` frontmatter
+    + every adversary rotation.
+
+    **Census at pass-87 completion (2026-07-17) — FINAL after full 61-file normalization:**
+    - prd-supplements (6 files): **PASS** — all correct 7-char MD5:
+      bc-authoring-plan "ddae3ae" | test-vectors "5c68c70" | error-taxonomy "f766c52" |
+      nfr-catalog "465a82f" | interface-definitions "cdce094" | module-criticality "b8ac573"
+    - BC files: **95/95 MATCH, STALE=0** (compute-input-hash --scan confirms clean)
+    - BC-INDEX.md: `"[live-index]"` — sanctioned exception, state-manager authority (see above)
+    - No `[pending state-manager]` placeholders remain (all 8 resolved to canonical 7-char MD5)
+
+    **Motivating instance (F-P87-02, ADV-P1D-PASS-87):** Adversary claimed 64-char SHA-256
+    was canonical for ALL files. `validate-input-hash` hook blocked the attempted 64-char write
+    on test-vectors.md and provided the computed 7-char hash. The two-format hypothesis followed
+    from that observation. Pass-87 fix burst resolved: `compute-input-hash` returns 7-char for BC
+    files too — a single canonical format applies across all spec artifact types.
+
+    Source: F-P87-02 [process-gap]. Decision: D18-P87-B RESOLVED (single format, 7-char MD5,
+    no human adjudication required). `total_standing_gates` 33 → 34.
+
 ---
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.22 | 2026-07-17 | Pass-87 burst completion — all 61 remaining stale BC hashes normalized (53 legacy 64-char SHA-256 + 8 `[pending state-manager]` placeholders → correct 7-char MD5 via compute-input-hash for each). Full lifecycle frontmatter (extracted_from, modified, deprecated, deprecated_by, replacement, retired, removed, removal_reason) added to all files that lacked it. test-vectors.md cascade: hash updated "334c597" → "5c68c70" (BC-2.01.001 and BC-2.07.002 in its inputs both changed). Gate #34 updated: Placeholder row rewritten to document only the `[live-index]` sanctioned exception class with explicit rationale; `[pending state-manager]` class removed (all resolved). Census line updated to 95/95 MATCH, STALE=0. Final gate #34 state: zero-exception compliance. | F-P87-02, D18-P87-B |
+| 2.21 | 2026-07-17 | Pass-87 fix burst — D18-P87-B RESOLVED: single-format canonical (7-char truncated MD5 for all spec artifacts). `compute-input-hash` returns 7-char for BC files too; the two-format convention documented in v2.20 was incorrect. Gate #34 rewritten to remove two-format language and document the corrected single-format convention with zero-exception census commands. Input-hash cleanup completed: (1) 3 prd-supplements normalized from legacy 64-char SHA-256 to correct 7-char (error-taxonomy "f766c52", nfr-catalog "465a82f", interface-definitions "cdce094"); (2) 19 BC files in ss-08/ss-10/ss-11/ss-14 updated from stale abbreviated hashes to correct 7-char; (3) 15 additional BC files (ss-01/03/04/05/07/08/12/13/16) updated after cascade drift triggered by error-taxonomy.md section rename (prerequisite for template compliance); (4) module-criticality.md stale hash corrected ("fed74e2" → "b8ac573", STATE.md drift). Supplement template compliance: error-taxonomy "Error Category Codes" renamed → "Error Categories"; interface-definitions: added §CLI Interface, §Exit Code Semantics, §JSON Output Schema stubs and renamed §Flag Interaction Rules → §Flag Interactions. BC template compliance: lifecycle frontmatter keys added to 37 BC files missing extracted_from/modified/deprecated/etc. Pre-existing residual: 53 BC files with legacy 64-char SHA-256 hashes (not caused by this burst; route to dedicated cleanup burst). prd-supplements census: 6/6 PASS. BC 7-char census: 34/34 CLEAN. | F-P87-01, F-P87-02, D18-P87-B |
+| 2.20 | 2026-07-16 | F-P87-01 (HIGH, process-gap): gate #28 date-validity sub-check Rule 1 (`date ≤ frontmatter timestamp`) scoped to supplement documents only per D18-P87-A. BC files (`introduced:` field present) are exempt — `timestamp:` is frozen at v1.0 authoring date, so post-v1.0 changelog rows carry dates AFTER `timestamp:` by design (COMPLIANT per Rule 5 BC branch). Changes: (1) header updated: "any BC file" → "any changelog-bearing file (BC file or supplement)"; "three conditions" → "five rules, scoped by document type"; (2) Rule 1 rewritten with supplement-only scope and explicit BC exemption; (3) Rule 2/3 annotated "(Applies to ALL document types.)"; (4) census command assertion extended with Rule 1 supplement-only assertion (c); (5) DEFER-002 note updated from "rules 4 and 5" to "rules 1–5" with full five-rule decision tree keyed on `introduced:` presence. Contradiction-free verification: BC-2.07.002 (ts 07-13, changelog 07-15) PASS; BC-2.08.011 (ts 07-13, changelog 07-14) PASS; BC-2.08.012 (ts 07-13, changelog 07-14) PASS; bc-authoring-plan (ts 07-16, changelog 07-16) PASS; test-vectors (ts 07-16, changelog 07-16) PASS; module-criticality (ts 07-15, changelog 07-15) PASS. F-P87-02 (MED, process-gap): input-hash format conflict surfaced and documented. `validate-input-hash` hook (PostToolUse enforcer) blocked attempted 64-char SHA-256 write on test-vectors.md, revealing two-format convention: prd-supplements use 7-char truncated MD5 (hook-enforced), BC files use 64-char SHA-256 (ADV-P1D-PASS-9 convention). Adversary premise (64-char canonical for all files) is incorrect; burst 166 normalization to 7-char was CORRECT for supplements. Gate #34 INPUT-HASH FORMAT CONSISTENCY minted documenting the per-type convention and flagging D18-P87-B for human adjudication on whether to unify formats. `total_standing_gates` 33 → 34. input-hash updated: stored "80954d3" → "ddae3ae" (recomputed by validate-input-hash hook; inputs unchanged, STATE.md drift). | F-P87-01, F-P87-02, D18-P87-A, D18-P87-B |
 | 2.19 | 2026-07-16 | F-P86-02 (process-gap adjudication): gate #28 Rule 5 (FRONTMATTER-CURRENCY) scoped by document type. Supplements (`introduced:` field absent) retain the existing rule: `timestamp:` must equal the newest changelog entry date. BC files (`introduced:` field present) are excluded: `timestamp:` is the authoring date (stable, never updated after v1.0). This resolves the contradiction between Rule 5 as written and the BC corpus — BC-2.07.002 (ts 2026-07-13, newest changelog 2026-07-15), BC-2.08.011 (ts 2026-07-13, newest changelog 2026-07-14), and BC-2.08.012 (ts 2026-07-13, newest changelog 2026-07-14) are all COMPLIANT under the scoped rule (each timestamp equals its v1.0 initial authoring date). Corpus sweep: module-criticality.md timestamp corrected 2026-07-14 → 2026-07-15 (metadata-only; matches v1.3 changelog entry date). Zero Rule-5 violations remain under the scoped rule. DEFER-002 machine enforcement note updated: branch on `introduced:` field presence (`if has_introduced: assert timestamp == v1.0_changelog_date; else: assert timestamp == max_changelog_date`). | F-P86-02, D18-P86-A |
 | 2.18 | 2026-07-15 | D18-P78-B (F-P78-02/03 process-gap): gate #33 step 11 added — every omission-note BC-anchor citation in interface-definitions.md must resolve to a raising PC/EC (success-path citations = violation). Motivating instances: F-P78-02 (E-PROV-010 cited PC4/EC-002 which are success paths; correct = PC5/EC-004) and F-P78-03 (E-PROV-009 cited PC4 which is a success parse; correct = PC8/PC9/EC-002). `total_standing_gates` unchanged at 33 (step-11 extension of gate #33, not a new gate). | D18-P78-B, F-P78-02, F-P78-03 |
 | 2.17 | 2026-07-15 | D18-P77-B (F-P77-01 process-gap): gate #33 extended with SEMANTIC-AGREEMENT sub-check (steps 7–10). For every live taxonomy code, the row's Message Format template and raise-condition annotation must semantically agree with the anchor BC's authoritative `message:` text and EC/TV trigger conditions; on divergence the BC wins (taxonomy is corrected). Motivating instance: E-SBXD-006 regex-vs-wildcard divergence on DI-010 credential boundary survived both gates #20 and #33 (both are name/presence-only; neither verified predicate agreement). `total_standing_gates` unchanged at 33 (sub-check extension of gate #33, not a new gate). | D18-P77-B, F-P77-01 |

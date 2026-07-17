@@ -23,7 +23,15 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "8c0a3bfa7e3af2b161c2e4487b1648eaaf004db7c9c2dbaf985f81524b4b0b8e"
+input-hash: "d501778"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.15.002: User/App/Session Tier Isolation — User-Private Does Not Bleed Across Scopes

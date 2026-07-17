@@ -23,7 +23,15 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "52a17071cee3caa71f1444034dfc1360e7155b5f849e4a1146d466cfca1b5939"
+input-hash: "788e383"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.17.001: Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace Confinement VP

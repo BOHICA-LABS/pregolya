@@ -29,7 +29,15 @@ inputs:
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "955ff9af541859b84e6de6334611fa025316b8011be69978c85433c99ae38329"
+input-hash: "db0e259"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.05.006: Risk-Tiered Interrupt Classification (Typed Action-Risk Levels for Domain A SOC)

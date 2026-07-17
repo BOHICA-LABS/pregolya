@@ -19,7 +19,15 @@ traces_to:
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "[pending state-manager]"
+input-hash: "ed8125a"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.09.007: MCP Server Tool Invocation (tools/call; External Client Executes Registered Tool)

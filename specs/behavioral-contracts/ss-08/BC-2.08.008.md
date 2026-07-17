@@ -21,7 +21,15 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "aafe536d4dd8105cacbe7feb3973c86ca39570ac7ab2afa12da6eb615001cd4e"
+input-hash: "43435de"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.08.008: Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15)

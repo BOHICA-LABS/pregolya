@@ -23,7 +23,15 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/specs/prd-supplements/error-taxonomy.md
-input-hash: "b51bbcdc6748dae09c25bd4ce107a1d634ec29f37e03a4cc06e058eb4f6b96eb"
+input-hash: "6544164"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.07.001: Chunk Boundaries Are Unicode Code-Point Counts (Not Bytes)

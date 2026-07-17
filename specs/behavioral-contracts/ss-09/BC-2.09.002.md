@@ -23,7 +23,15 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "95d985aed572bdd2367904ed17990526978e6c41f47a9a55cab6aae2be05879d"
+input-hash: "9d6479b"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.09.002: ToolInvocation Routing to Correct MCP Server Transport

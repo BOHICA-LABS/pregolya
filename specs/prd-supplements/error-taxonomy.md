@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "a1dfc62558bfb6e93d2998cb24bd2b4cf4fe298faaecd92c1d69e118c6c8b172"
+input-hash: "f766c52"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer]
 ---
@@ -39,7 +39,7 @@ primary_consumers: [implementer, test-writer]
 > Codes follow convention: `E-<COMPONENT>-<NNN>` where COMPONENT is the crate abbreviation.
 > All errors are `FerrochainError { component: Component, category: Category, retry_hint, code, message }`.
 
-## Error Category Codes
+## Error Categories
 
 | Category Code | Category | Description | Default RetryHint |
 |--------------|----------|-------------|-------------------|

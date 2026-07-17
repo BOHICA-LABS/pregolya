@@ -26,7 +26,15 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "2f92ab2cc13f2e58346849554a0486f4777713669500c1d2608270d75b0d1678"
+input-hash: "585f099"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.05.005: Resume on Empty Interrupt Queue Returns Err(NoActiveInterrupt)

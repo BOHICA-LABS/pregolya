@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "01382649ae22c497f23c7d3371208c8694ad3996050b31954a83ad5108d55b0f"
+input-hash: "99e4ad1"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -25,6 +25,7 @@ changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-8): F-P8-01 title census — H1 updated to add '— Kani VP Seed' suffix (vp_seed designation codified in heading per title-authority convention)."
 modified: []
+extracted_from: null
 deprecated: null
 deprecated_by: null
 replacement: null

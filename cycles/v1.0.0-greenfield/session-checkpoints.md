@@ -517,3 +517,16 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (bursts 152–165): D18-P74-A (gate #19 retired-name); D18-P75-A (gate #28 Rules 4/5) + DEFER-002; D18-P77-A (ADR-012 INV-1); D18-P77-B (gate #33 steps 7–10); D18-P78-A (universal error prefix); D18-P78-B (gate #33 step 11 omission-note); D18-P84-A (no version pins in body citations). 33 gates.
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-16 | Cycle v1.0.0-greenfield | Burst 165 | Counter 0/3 (Phase 1d)
+
+---
+
+## Session Resume Checkpoint (2026-07-16) — burst 166 checkpoint (archived at burst 167)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 86 passes / 88 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 85 = 43+16+26, 13 ADRs, 33 gates, test-vectors 512). trajectory-tail →3→1→4→2. NEXT ACTION: dispatch adversary pass 87. Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 166 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-87 SIBLING-CHECKS: test-vectors v1.7 (TODO-free, forward-reference wording in Per-Subsystem and Cross-Subsystem sections); bc-authoring-plan v2.19 (Rule 5 scoped by document type per D18-P86-A, `introduced:` field branching logic); module-criticality v1.3 (ts 2026-07-15, input-hash 7-char); gate #28 on all touched files; 9-file corpus sweep for Rule 5 compliance.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (bursts 152–166): D18-P74-A (gate #19 retired-name); D18-P75-A (gate #28 Rules 4/5) + DEFER-002; D18-P77-A (ADR-012 INV-1); D18-P77-B (gate #33 steps 7–10); D18-P78-A (universal error prefix); D18-P78-B (gate #33 step 11 omission-note); D18-P84-A (no version pins in body citations); D18-P86-A (gate #28 Rule 5 scoped by doc type). 33 gates.
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-16 | Cycle v1.0.0-greenfield | Burst 166 | Counter 0/3 (Phase 1d)

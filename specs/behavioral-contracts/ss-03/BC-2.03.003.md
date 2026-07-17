@@ -23,7 +23,15 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
-input-hash: "790f9b48deb301334c38df38c152d63d14d273488465906929d8744e8b7a8684"
+input-hash: "cd7f788"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.03.003: Deterministic Reducer Application Order (Task-Identity Sort)

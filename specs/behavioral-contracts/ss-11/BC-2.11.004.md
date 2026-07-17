@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "a7b3552"
+input-hash: "b67ce4c"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11
@@ -28,6 +28,7 @@ changelog:
   - "1.3 (ADV-P1D-PASS-58): F-P58-02 type-name linkage — `memory_item` in PC1 is typed as `IngressContent::MemoryItem(Value)` in the GuardrailHook trait signature (interface-definitions.md v2.13 §IngressContent). Payload type `Value` = serde_json::Value; internal structure is memory-store-specific."
   - "1.4 (F-P84-OBS-B/D18-P84-A): body version pin removed from PC1 — `interface-definitions.md v2.13 §GuardrailHook §IngressContent` → `interface-definitions.md §GuardrailHook §IngressContent` (section anchors retained; version pins on living supplements dropped per D18-P84-A adjudication; changelog entries are exempt audit trail)."
 modified: []
+extracted_from: null
 deprecated: null
 deprecated_by: null
 replacement: null

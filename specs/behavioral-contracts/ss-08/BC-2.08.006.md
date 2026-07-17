@@ -25,7 +25,15 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/entities-server.md
   - .factory/semport/partners/behavioral-intent.md
-input-hash: "7ad5fb3d9b6ff60fda612ed4b7fa01db598f255d3bff66972065b9490fd2e374"
+input-hash: "8095694"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.08.006: Standalone SDK Crate Split Architecture (ferrochain-\<provider\>-sdk + Adapter)

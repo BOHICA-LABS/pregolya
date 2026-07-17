@@ -27,7 +27,15 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "652cdd2669ff7d88629b2aa57e10170aa0f2db8b256b426e436b5f662028cb39"
+input-hash: "41d734f"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.09.004: MCP Bare ToolException Re-Raise Preserving Type Identity (Red Gate — R11)

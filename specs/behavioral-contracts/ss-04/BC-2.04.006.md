@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "fca691175e716e7cb43ab0ff9261c58070a462103ced00424a31e77c9e46f4de"
+input-hash: "1c8bd65"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04
@@ -24,6 +24,7 @@ capability: CAP-005
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 modified: []
+extracted_from: null
 deprecated: null
 deprecated_by: null
 replacement: null

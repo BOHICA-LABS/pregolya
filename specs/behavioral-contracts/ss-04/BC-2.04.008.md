@@ -25,7 +25,15 @@ traces_to:
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "[pending state-manager]"
+input-hash: "bea5cc4"
+modified: []
+extracted_from: null
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.04.008: FTS Conversation Search Over Checkpoint History (Single-Process; SQLite FTS5)

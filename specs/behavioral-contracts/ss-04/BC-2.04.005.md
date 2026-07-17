@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "34d333f475a31da2d33621ac0cd45245e25281b7d4cd732641995c6a7d940639"
+input-hash: "3d1804e"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04
@@ -26,6 +26,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-1): Invariant 3 rewritten — SCHEDULED channel routing vs. skip-on-reapply distinction clarified; `ERROR_SOURCE_NODE` no-negative-index note added; `SCHEDULED` NOT-skipped note added (F-P1-HIGH, semport/graph/behavioral-intent.md validation)."
   - "1.2 (ADV-P1D-PASS-66): F-P66-02 — EC-006 and TV added: checkpoint read failure during crash recovery (`get_tuple()` returns `Err(E-CHKPT-003 CheckpointReadFailed)`) → recovery halts, error propagated to caller. Confirms E-CHKPT-003 anchor to this BC. (OBS-P28-2 class; gate #33 reverse-verification finding.)"
 modified: []
+extracted_from: null
 deprecated: null
 deprecated_by: null
 replacement: null

@@ -23,7 +23,15 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "6428c3a"
+input-hash: "1858bed"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.10.002: Append-Only EvidenceJournal Records Every Budget Evaluation

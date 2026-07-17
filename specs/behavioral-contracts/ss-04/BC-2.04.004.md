@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "34d333f475a31da2d33621ac0cd45245e25281b7d4cd732641995c6a7d940639"
+input-hash: "3d1804e"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04
@@ -25,6 +25,7 @@ changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-6): E-category canon — EC-003 and test vector error category corrected from `StateUpdateError` to `VAL, code: E-GRAPH-007` (F-P6-03, status/category canon sweep)."
 modified: []
+extracted_from: null
 deprecated: null
 deprecated_by: null
 replacement: null

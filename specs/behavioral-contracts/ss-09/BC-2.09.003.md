@@ -23,7 +23,15 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "d00e05bb7e47fd44dd782b9ae5ea4b09de7e6c9e2c95f4824e8626d13c9ec16e"
+input-hash: "4b5042c"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.09.003: Tool-Result Content Treated as Untrusted Ingress (DI-012 Applies)

@@ -23,7 +23,15 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "e126488de9a80f0b8ce2baba65fe90193464ce6b7c55b8e0082d47ba28e814b6"
+input-hash: "5205254"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.12.006: IdempotencyStore / RateLimitStore / RunStore Trait Seams with Durable Backends (NE-08)

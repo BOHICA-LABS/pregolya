@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "b70ff73bc43c6e0f2789620e0e7fc41b2e5bc60892d1fbf730f8e71cce052be6"
+input-hash: "32de589"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04
@@ -25,6 +25,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-4): category canon sweep — EC-003 and test vector error category corrected from `ConfigError` to `VAL` (13-category sweep, F-P4-xx)."
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(FerrochainError { category: VAL, message: ... })` and the durability-string-turbo TV row had `Err(FerrochainError { category: VAL })` with no code. Added code: E-CORE-005 (ValidationFailed) — unknown durability tier string is a VAL construction-time failure at run start."
 modified: []
+extracted_from: null
 deprecated: null
 deprecated_by: null
 replacement: null

@@ -25,7 +25,15 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "659edac"
+input-hash: "6020753"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
 ---
 
 # BC-2.10.003: Graceful Halt When Budget Ceiling Reached (on_ceiling = halt | summarize); Remaining-Budget Exposure
