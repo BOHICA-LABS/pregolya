@@ -581,3 +581,16 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (bursts 152–170): D18-P74-A (gate #19 retired-name); D18-P75-A (gate #28 Rules 4/5) + DEFER-002; D18-P77-A (ADR-012 INV-1); D18-P77-B (gate #33 steps 7–10); D18-P78-A (universal error prefix); D18-P78-B (gate #33 step 11 omission-note); D18-P84-A (no version pins in body citations); D18-P86-A (gate #28 Rule 5 scoped by doc type); D18-P87-A (gate #28 Rule 1 scoped supplements-only); D18-P87-B (gate #34 input-hash canon; 34 gates); D18-P88-A (live-file exclusion from inputs: lists; 30-file closure bursts 169–170; interpretation: versioned indexes legitimate, rolling authority files forbidden).
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 170 | Counter 0/3 (Phase 1d)
+
+---
+
+## Checkpoint archived from STATE.md burst 172 (superseded by burst 172 checkpoint)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 89 passes / 93 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 85 = 43+16+26, 13 ADRs, 34 gates, test-vectors 512). trajectory-tail →2→2→4→4. NEXT ACTION: dispatch adversary pass 90 (counter 0/3; full corpus TOTAL MATCH 126/126 at burst 171 HEAD; D18-P89-A first execution complete — 94/95 BCs + 4/6 supplements refreshed). Loop per D15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 171 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-90 SIBLING-CHECKS: bc-authoring-plan v2.25 (gate #34 no-values rule; no per-file hash values in gate text; snapshot = date+count only); nfr-catalog v1.2 (deferral language closed; v1.1 preserved as audit trail); BC-2.08.006 v1.2 (SS-TBD clause removed); corpus hash-currency TOTAL MATCH 126/126 (D18-P89-A first execution: 94/95 BCs + 4/6 supplements refreshed; architecture 9/9 + domain-spec 14/14 already MATCH); D18-P89-A standing step: state-manager must run end-of-burst census after adversary pass 90 fixes.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (burst 171): D18-P89-A (end-of-burst corpus hash-currency sweep is mandatory standing step; first execution refreshed 94/95 BCs + 4/6 supplements; content coherence verified by passes 88-89).
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 171 | Counter 0/3 (Phase 1d)

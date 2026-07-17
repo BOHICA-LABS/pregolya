@@ -35,7 +35,7 @@ traces_to: STATE.md
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure)`
 
 ## Per-Pass Details
 
@@ -314,6 +314,22 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Corpus hash-currency sweep (D18-P89-A first execution):** 4/6 supplements DRIFT (error-taxonomy f766c52/c987193; interface-definitions cdce094/841e167; module-criticality 2ed30d9/68e4fbf; test-vectors 5c68c70/2154b7b) + 94/95 BCs STALE; ALL refreshed to TOTAL MATCH (coherence verified passes 88-89). D18-P89-A standing step codified.
 **Trajectory after:** →4 (P1D-89); cumulative tail →2→2→4→4
 **Counter:** 0/3
+
+---
+
+### P1D-90 — Pass 90 (2026-07-17, burst 172)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|---------|
+| P1D-90 | 2026-07-17 | 1 | 0 | 0 | 0 | 1 | LOW | 0/3 | FINDINGS_REMAIN (census-closure) |
+
+**Adversary verdict (read-only):** CLEAN(strict) — all standard gates PASS; coverage caveat: D18-P89-A hash-currency census delegated to state-manager.
+**State-manager census closure (D18-P89-A standing step):** ARCH-INDEX.md hash drift: stored=edabdee, computed=065003c. Root cause: burst-171 D18-P89-A sweep refreshed prd.md + module-criticality.md (both in ARCH-INDEX inputs:) without cascading to ARCH-INDEX itself (authority-split blind spot: D18-P89-A scope only covered directly-edited files, not files referencing them). ARCH-INDEX last touched burst 169 (1a915c6).
+**D18-P90-A adjudication (orchestrator):** Hash-only refreshes are state-manager-executable corpus-wide regardless of content authority. D18-P89-A sweep scope EXTENDED: cascade to all files whose inputs: lists reference any edited file (transitive, until census TOTAL MATCH).
+**Fix summary:** ARCH-INDEX.md input-hash refreshed (edabdee→065003c). Full post-fix census: supplements 6/6, BCs 95/95, arch 9/9, domain-spec 15/15, prd 1, product-brief 1 = TOTAL MATCH 126/126.
+**Effective verdict:** NOT CLEAN (1 census-closure finding). Adversary spec-content verdict: CLEAN(strict).
+**Trajectory after:** →1 (P1D-90, census-closure); cumulative tail →2→4→4→1
+**Counter:** 0/3 (census-closure finding prevents streak advancement; effective NOT CLEAN per D14 strict-zero)
 
 ---
 
