@@ -45,10 +45,12 @@ traces_to: STATE.md
 | P1D-101 | 2026-07-17 | 2 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN strict (1 MED [process-gap] + 1 OBS; final D18-P99-A radius residue + BC-2.11.002 changelog order); CLEAN PR-merge |
 | P1D-102 | 2026-07-17 | 2 | 0 | 0 | 0 | 1 | LOW | 0/3 | FINDINGS_REMAIN strict; CLEAN PR-merge (1 LOW F-P102-01 + 1 OBS/process-gap F-P102-OBS-A; gate #28 Rule 6 VERSION-MONOTONICITY minted; D18-P102-A; bc-authoring-plan v2.31) |
 | P1D-103 | 2026-07-18 | 2 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (1 MED F-P103-01 nfr-catalog direction + 1 OBS/process-gap OBS-P103-A gate #28 Rule 6 direction-blind census; five-class hook-aligned model adopted; D18-P103-A; bc-authoring-plan v2.32) |
+| P1D-104 | 2026-07-18 | 1 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (1 MED F-P104-01 ARCH-INDEX.md missing v1.1 changelog row; reconstructed from git history via burst-187; architect; changelog-completeness new class) |
+| P1D-105 | 2026-07-19 | 1 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (1 MED F-P105-01 SECURITY description omits 2/3 members + contradicts E-SBXD-002 POLICY; 2 OBS: OBS-P105-A adjudicated SECURITY/POLICY rule; OBS-P105-B Form-B self-correction process-gap; error-taxonomy v1.18→v1.19; bc-authoring-plan v2.32→v2.33) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105)`
 
 ## Per-Pass Details
 
@@ -529,6 +531,34 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Fix summary:** F-P103-01 MED (PO) — nfr-catalog.md changelog rows swapped to descending order (supplement convention per D18-P64-B; pure reorder; no content change; no version bump). OBS-P103-A OBS [process-gap] (PO + orchestrator — D18-P103-A) — gate #28 Rule 6 census rewritten from internal-monotonicity-only to five-class hook-aligned direction-asserting model (prd-supplements/ desc; architecture/ Form A+B desc; behavioral-contracts/ Form A asc; behavioral-contracts/ Form B non-INDEX desc; BC-INDEX exempt); corpus re-run: 27 Form-A behavioral-contract files corrected desc→asc; 7 architecture Form-A files corrected asc→desc (ARCH-INDEX, api-surface, dependency-graph, module-decomposition, system-overview, tooling-selection, verification-coverage-matrix); purity-boundary-map retained desc; 3 Form-B ADRs retained desc; BC-INDEX retained desc (exempt); all pure reorders; verification-coverage-matrix hash cabbed8→6b6537d; bc-authoring-plan v2.31→v2.32. BC-INDEX edit blocker (validate-count-propagation): root cause = STATE.md hash census stale after burst-185 reorders (not yet committed); resolved by this burst-185 STATE.md write + D18-P89-A hash census TOTAL MATCH 126/126; [process-gap] engine-improvement candidate logged (hook's BC-count pattern matching is tight — see D18-P103-A notes).
 **Hash sweep (D18-P89-A):** 3 files stale after burst-185 PO reorders: module-criticality.md + verification-architecture.md + 1 transitive; all refreshed; **TOTAL MATCH 126/126**.
 **Trajectory after:** →2 (P1D-103); cumulative tail →3→2→2→2
+**Counter:** 0/3
+
+---
+
+### P1D-104 — Pass 104 (2026-07-18, burst 187)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-104 | 2026-07-18 | 1 | 0 | 0 | 1 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes rotated (sibling-checks from burst-185 owed list — carried forward):** direction-asserting census corpus-wide PASS; 8 double-flip reorders spot-checked pure (row-SET audit confirmed no text lost); Rule 6 five-class coherence (prose↔census↔hook) PASS; BC-INDEX edit blocker RESOLVED (burst-185 commit + D18-P89-A sweep cleared hook's count-pattern matcher).
+**Fix summary:** F-P104-01 MED (architect) — ARCH-INDEX.md v1.1 changelog row reconstructed from commit 8aebfcd (burst 86, 2026-07-14); v1.0 row reconstructed from commit ef41eda (burst 73, 2026-07-13); api-surface.md v1.0 row reconstructed from ef41eda; all annotated with NOTE markers per F-P88-03 precedent. No version bump/timestamp change (pure changelog-metadata reconstruction). Missing-level sweep all arch files + ADR-009/012/013 PASS. sidecar-learning.md 2026-07-18T16:53:31Z included.
+**Hash sweep (D18-P89-A):** 2 stale (module-criticality.md + verification-architecture.md transitively); all refreshed; **TOTAL MATCH 128/128**. Pre-existing ARCH-INDEX + L2-INDEX drift flagged for burst-188 follow-up sweep.
+**Trajectory after:** →1 (P1D-104); cumulative tail →3→2→2→1
+**Counter:** 0/3
+
+---
+
+### P1D-105 — Pass 105 (2026-07-19, burst 189)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-105 | 2026-07-19 | 1 | 0 | 0 | 1 | 0 | 2 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes rotated (burst-187/188 sibling-checks):** ARCH-INDEX changelog completeness (5 rows descending) PASS; api-surface changelog completeness (5 rows descending) PASS; reconstruction source commits (8aebfcd/ef41eda) CLOSED BY ORCHESTRATOR; missing-level sweep corpus-complete PASS; gate #28 completeness-axis spot-check PASS; hash-currency TOTAL MATCH CLOSED BY ORCHESTRATOR (burst-188 bookkeeping-only, 5/5 spot-diffs hash-field-only).
+**Fix summary:** F-P105-01 MED (PO) — error-taxonomy.md SECURITY description corrected: was "Workspace escape, sandbox policy enforcement" (contradicted E-SBXD-002 POLICY; omitted 2/3 SECURITY members); corrected to "Workspace/sandbox escape; approver-role authorization failure; agent-memory write injection prevention" spanning all 3 SECURITY members (E-SBXD-001/E-GRAPH-013/E-MEMORY-007). Production-grade sibling sweep of all 11 other category descriptions: TIMEOUT/TRANSPORT/DURABILITY/CONCURRENCY descriptions broadened to span full member sets (same-class omission fix; TIMEOUT adds E-SERVER-016 IdempotencyLockTimeout; TRANSPORT adds E-PROV-008+E-MCP-005; DURABILITY adds E-MEMORY-002/005/008+E-SERVER-014+E-BUDGET-002; CONCURRENCY adds E-SERVER-007/012/015). error-taxonomy.md v1.18→v1.19. OBS-P105-A adjudicated: SECURITY/POLICY authorization-failure categorization rule documented as blockquote after Error Categories table (attack-vector→SECURITY; legitimate-caller privilege/access→POLICY; anchor BCs: BC-2.05.006/BC-2.15.002/BC-2.15.003). OBS-P105-B (process-gap) fixed: bc-authoring-plan v2.32→v2.33 — MANDATORY PRE-EMISSION CHECK block added to gate #28 (Form-A + Form-B union check before any "missing changelog" filing; known Form-B-only files enumerated).
+**Hash sweep (D18-P89-A):** 3 BC files staled by error-taxonomy.md content change (BC-2.14.001.md 93b1aed→bf1eab4; BC-2.14.002.md 93b1aed→bf1eab4; BC-2.07.001.md d1dbee0→bb08508); all refreshed; full scan **TOTAL MATCH 126/126**. error-taxonomy.md and bc-authoring-plan.md own input-hashes unchanged (hashes computed from their inputs, which did not change).
+**Trajectory after:** →1 (P1D-105); cumulative tail →2→2→1→1
 **Counter:** 0/3
 
 ---

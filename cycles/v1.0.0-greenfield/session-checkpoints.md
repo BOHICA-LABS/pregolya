@@ -770,3 +770,16 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 185): D18-P103-A — Gate #28 Rule 6 five-class hook-aligned direction-asserting model; BC-INDEX edit blocker root cause documented; [process-gap] engine-improvement candidate logged (adversary+PO+orchestrator).
 ### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-18 | Cycle v1.0.0-greenfield | Burst 185 | Counter 0/3 (Phase 1d)
+
+---
+
+## Checkpoint archived from burst 188 (2026-07-19T00:26:00Z)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 104 passes / 108 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 513=504+9, purity-map 58, 13 ADRs [ADR-006 rev-4], 34 gates [gate #28 Rules 1–6, five-class direction model], StreamEvent 12 variants, VP census 141). F-P104-01 RESOLVED (burst 187): ARCH-INDEX v1.1+v1.0 + api-surface v1.0 reconstructed from git history (commits 8aebfcd+ef41eda); missing-level sweep all arch files + ADR-009/012/013 PASS. Burst 188 (bookkeeping-only): hash-currency closure D18-P89-A — corpus TOTAL MATCH 128/128 spec corpus (rc.22 canonical hashes). NEXT ACTION: dispatch adversary pass 105. Loop per D15 until 3/3 CLEAN(strict), then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
+### PASS-105 SIBLING-CHECKS: (a) ARCH-INDEX changelog 1.4/1.3/1.2/1.1/1.0 descending VERIFIED — NOTEs cite commits 8aebfcd (v1.1) + ef41eda (v1.0); (b) api-surface changelog 1.4/1.3/1.2/1.1/1.0 VERIFIED — NOTE cites ef41eda (v1.0); (c) missing-level sweep all arch files + ADR-009/012/013 PASS; (d) gate #28 completeness-axis corpus spot-check (pass-105 adversary owns); (e) corpus hash-currency TOTAL MATCH confirmed burst 188 (rc.22 canonical hashes).
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3.
+### DECISION DELTA (this session, bursts 164–188): D18-P86-A through D18-P103-A (14 decisions; no new decisions in bursts 186–188; full details in burst-186 session-checkpoints.md).
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule during streaks (bookkeeping-only commits).
+### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 188 | Counter 0/3 | No open findings

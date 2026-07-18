@@ -1,11 +1,11 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.32"
+version: "2.33"
 status: active
 producer: product-owner
 total_standing_gates: 34
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-18T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -1131,6 +1131,23 @@ split by wave avoids exception).
     left as `[]` regardless of changelog presence. It does NOT substitute for the
     `changelog:` key.
 
+    **MANDATORY PRE-EMISSION CHECK — Form-B false-positive trap (OBS-P105-B; prior: F-P49-01):**
+    Before emitting ANY "absent changelog," "missing changelog," or "no changelog for version > 1.0"
+    finding against any BC or supplement file, run BOTH form checks and union the results:
+    1. **Form A check:** `grep -l "^changelog:" <file>` — non-empty output means changelog exists → finding is **INVALID** (false positive).
+    2. **Form B check:** `grep -l "^## Changelog" <file>` — non-empty output means changelog exists → finding is **INVALID** (false positive).
+    A "missing changelog" finding is ONLY valid when BOTH Form A AND Form B return empty output for the target file.
+
+    Known Form-B-only files (FAIL Form A but are COMPLIANT — always check Form B before filing a finding):
+    - BCs: `BC-2.07.002`, `BC-2.08.011`, `BC-2.08.012`
+    - Supplements: `bc-authoring-plan.md`, `test-vectors.md`, `verification-architecture.md`
+    - Any ADR or supplement that uses a `## Changelog` body section rather than a frontmatter `changelog:` YAML list
+
+    Rationale: the existing CRITICAL note and Union coverage rule text (below) were insufficient to
+    prevent this pattern — F-P49-01 (pass-49) and OBS-P105-B (pass-105) both reproduced because the
+    adversary ran Form A alone and stopped. This standalone step makes the pre-emission check
+    explicit and non-optional.
+
     **Census command (two-form check required — F-P49-01 false-positive fix):**
 
     Step 1 — Identify all BCs with version > "1.0":
@@ -1931,6 +1948,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.33 | 2026-07-18 | OBS-P105-B (process-gap): gate #28 mandatory pre-emission check added. F-P49-01 false-positive was reproduced at pass-105 — adversary ran only Form A (frontmatter `changelog:`) and missed Form-B files (body `## Changelog` table) despite the existing "CRITICAL" and "Union coverage rule" text. Fix: inserted a standalone MANDATORY PRE-EMISSION CHECK block with per-step explicit Form A + Form B checks and "finding is INVALID" gate for each; enumerated known Form-B files (BCs: BC-2.07.002/011/012; supplements: bc-authoring-plan.md, test-vectors.md, verification-architecture.md). F-P105-01/OBS-P105-A: error-taxonomy.md SECURITY category description corrected (new description spans all 3 SECURITY members: E-SBXD-001/E-GRAPH-013/E-MEMORY-007; removed "sandbox policy enforcement" phrase that contradicted E-SBXD-002 POLICY category); SECURITY vs POLICY authorization-failure categorization rule documented as new blockquote note; error-taxonomy.md bumped 1.18→1.19. `total_standing_gates` unchanged at 34 (sub-check widening of gate #28, not a new gate). | OBS-P105-B, F-P105-01, OBS-P105-A |
 | 2.32 | 2026-07-17 | OBS-P103-A (process-gap): gate #28 Rule 6 census was direction-agnostic — structurally unable to flag a consistently-wrong-direction file (a file whose changelog runs in the wrong direction for its class but is internally monotonic). Motivating instance: nfr-catalog.md ran 1.1→1.2 (ascending) but prd-supplements/ class requires DESCENDING; the burst-184 census passed it because the sequence has no inversions. Extended census command to direction-aware: replaced single-param `expected_dir(path)` with `expected_dir(path, form)` that correctly handles all five file classes (prd-supplements/ → desc; architecture/ → desc; behavioral-contracts/ Form A → asc; behavioral-contracts/ Form B non-INDEX → desc per hook; behavioral-contracts/ *INDEX.md → exempt). Direction rules confirmed via hook-source audit: `validate-changelog-monotonicity` hook fires on all `.factory/**/*.md` `## Changelog` body tables except `*STATE.md|*INDEX.md|*burst-log*|*convergence-trajectory*|*session-checkpoint*|*lessons*` — enforcing descending for architecture Form B and BC Form B non-INDEX. Gate prose Rule 6 bullet updated to match: BC Form A = asc; architecture all forms = desc; BC Form B non-INDEX = desc (hook-enforced); BC-INDEX = exempt. Motivating instance block for OBS-P103-A updated to document hook discovery, per-class rules, and BC-INDEX exemption rationale. Corpus-wide census results: 27 BC Form A files corrected desc→asc; nfr-catalog.md corrected asc→desc (F-P103-01); 7 architecture Form A files corrected asc→desc (ARCH-INDEX, api-surface, dependency-graph, module-decomposition, system-overview, tooling-selection, verification-coverage-matrix); purity-boundary-map.md retained desc (architecture Form A); 3 ADRs (Form B) retained desc per hook; BC-INDEX.md retained desc (count-propagation blocker); verification-coverage-matrix.md input-hash refreshed (pre-existing drift cabbed8→6b6537d). Post-fix census: PASS. `total_standing_gates` unchanged at 34 (sub-check extension of gate #28 Rule 6). | OBS-P103-A, F-P103-01 |
 | 2.31 | 2026-07-17 | Gate #28 extended: Rule 6 VERSION-MONOTONICITY (CHANGELOG-MONOTONICITY) sub-check added. Codified at 3rd recurrence (F-P97-03/BC-2.08.006, F-P101-02/BC-2.11.002, F-P102-01/BC-2.11.005). Direction-agnostic Python census command included (covers all changelog-bearing files corpus-wide). Machine enforcement deferral updated from "rules 1–5" to "rules 1–6"; Phase 3 decision tree extended with `assert version_monotonicity_within_file [Rule 6 — universal]` in both branches. bc-authoring-plan self-compliance verified (v2.31 changelog table descending — PASS). `total_standing_gates` unchanged at 34 (sub-check extension of gate #28). | F-P102-01 codification |
 | 2.30 | 2026-07-17 | F-P98-01 (count reconciliation): Gate #27 exemption note placeholder-total corrected 59 → 60 (59 literal `[architect to assign]` + 1 semantic variant `[architect to confirm]` in BC-2.08.009, caught at pass 97 per F-P97-01). Source reference updated from F-P96-01 alone to F-P96-01 + F-P97-01. Grep sweep for other live "59" placeholder-total references (changelog rows exempt): zero additional hits found. `total_standing_gates` unchanged at 34. | F-P98-01 |
