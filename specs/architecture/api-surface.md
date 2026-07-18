@@ -11,6 +11,7 @@ changelog:
   - "1.3 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst; add [Section Content] template compliance fix. No spec content changes."
   - "1.2 (ADV-P1D-PASS-64): F-P64-01 adjudication — default port 7437 is mandated; replaced 'no default port mandated' with authoritative default per interface-definitions.md §Base URL."
   - "1.1 (ADV-P1D-PASS-25): F-P25-04 to_problem_detail()→to_problem() method name correction."
+  - "1.0 (initial / 2026-07-13): initial API surface authored — ferrochain-core Public Traits, ferrochain-server HTTP endpoint catalog, and ferrochain-server Public Types. NOTE (F-P104-01, 2026-07-18): reconstructed from commit ef41eda (burst 73, 2026-07-13) — no initial changelog row was written at authoring."
 phase: 1b
 inputs:
   - .factory/specs/prd.md
