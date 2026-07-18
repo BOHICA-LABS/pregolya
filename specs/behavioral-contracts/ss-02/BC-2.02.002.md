@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.002
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.2 (F-P107-01 census, 2026-07-18): E-GRAPH-001 struct expanded to include task_ids and step fields missing from prior struct form. Was: { channel } (EC-001) or { channel, reason } (PC3/EC-002) — both lacking taxonomy placeholders '<task_ids>' and '<n>' (super-step). Now: { channel, task_ids, step } (3 fields, 1:1 with taxonomy '<channel>', '<task_ids>', '<n>'). The 'reason' field was static text (not a taxonomy placeholder); replaced by the two structurally required dynamic fields. PC3, EC-001, EC-002, TV-002 updated. Same-class defect as E-GRAPH-011 discovered during message↔struct census rerun."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - domain-spec/invariants.md#DI-001
@@ -65,7 +66,7 @@ completion order.
    (`update([])` is a no-op).
 3. A `LastValue` channel that receives two or more writes from different tasks in the same
    super-step raises `Err(E-GRAPH-001 InvalidUpdateError { channel: name,
-   reason: "LastValue received multiple concurrent writes" })`; the run transitions to
+   task_ids: [<id_1>, <id_2>, ...], step: <n> })`; the run transitions to
    `failed`.
 
 ### Append (BinaryOperatorAggregate)
@@ -100,7 +101,7 @@ completion order.
 ### EC-001: Concurrent LastValue writes from two tasks in same super-step
 **Scenario:** Node A and Node B both return `{ "result": value }` targeting the same
 `LastValue` channel `"result"` in the same super-step.
-**Expected behavior:** `Err(E-GRAPH-001 InvalidUpdateError { channel: "result" })` is
+**Expected behavior:** `Err(E-GRAPH-001 InvalidUpdateError { channel: "result", task_ids: ["node_a", "node_b"], step: 1 })` is
 returned from `invoke`/`stream`; the run transitions to `failed`. No value is written to
 the channel.
 **Reference:** DEC-005 (Concurrent LastValue Writes in Same Super-Step).
@@ -108,8 +109,7 @@ the channel.
 ### EC-002: Append channel with Overwrite — two Overwrites in same step
 **Scenario:** Two tasks both return `Overwrite(v)` for the same `Append` channel in the
 same super-step.
-**Expected behavior:** `Err(E-GRAPH-001 InvalidUpdateError { channel: name, reason:
-"multiple Overwrite values in same step" })` is raised at `apply_writes`; the run fails.
+**Expected behavior:** `Err(E-GRAPH-001 InvalidUpdateError { channel: name, task_ids: [<id_1>, <id_2>], step: <n> })` is raised at `apply_writes`; the run fails.
 
 ### EC-003: BarrierValue channel — one writer has not delivered by step end
 **Scenario:** A `BarrierValue` channel expects writes from two upstream nodes. Only one
@@ -131,7 +131,7 @@ differ from task completion order at runtime).
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | Node returns `{ "value": 42 }` to `LastValue<i64>` channel; no other writer | Channel stores `42` after step | Happy path — single write |
-| TV-002 | Two nodes both return `{ "value": X }` to same `LastValue<i64>` channel | `Err(E-GRAPH-001 InvalidUpdateError)` | Concurrent LastValue writes |
+| TV-002 | Nodes `"node_a"` and `"node_b"` both return `{ "value": X }` to same `LastValue<i64>` channel in super-step 1 | `Err(E-GRAPH-001 InvalidUpdateError { channel: "value", task_ids: ["node_a", "node_b"], step: 1 })` | Concurrent LastValue writes — both conflicting task IDs and step captured |
 | TV-003 | Three nodes return `[3, 1, 2]` (in task-identity-sort order P, Q, R) to `Append<Vec<i64>>` channel | Channel value is `[3, 1, 2]` (sorted write order) | Deterministic fold order — DI-001 |
 | TV-004 | Node returns `Overwrite([99])` to `Append<Vec<i64>>` channel | Channel value is `[99]` (bypass fold) | Overwrite replaces accumulated value |
 | TV-005 | `LastValue` channel receives zero writes in a step | Channel unchanged (no-op) | update([]) → no-op |

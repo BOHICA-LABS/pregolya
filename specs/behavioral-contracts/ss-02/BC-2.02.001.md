@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.001
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.2 (F-P107-01 census, 2026-07-18): E-GRAPH-007 struct expanded from single-field to two-field form. Was: { key } (1 field — missing node_id). Now: { node_id, key } (2 fields, 1:1 with taxonomy message placeholders '<node_id>' and '<key>'). EC-001 and TV-005 updated. Same-class defect as E-GRAPH-011 discovered during message↔struct census rerun (pass-106 sweep wrongly passed this code)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -90,7 +91,7 @@ inference step that makes those keys typed and reducer-governed.
 ### EC-001: Node writes to an unregistered channel key
 **Scenario:** A node function returns `{ "unknown_key": value }` where `unknown_key` is
 not in the state schema.
-**Expected behavior:** `Err(E-GRAPH-007 UnknownChannelKey { key: "unknown_key" })` is
+**Expected behavior:** `Err(E-GRAPH-007 UnknownChannelKey { node_id: "agent", key: "unknown_key" })` is
 returned from `invoke`/`stream` at the `apply_writes` stage; the run transitions to
 `failed`. The error is not silently ignored.
 
@@ -120,7 +121,7 @@ transitions to `failed`.
 | TV-002 | Same graph; node returns `None` | `invoke({"messages": []})` returns `{"messages": []}` (no mutation) | Node returns None — no channel mutation |
 | TV-003 | Builder with no `START` edge; `compile()` | `Err(E-GRAPH-008 UnreachableGraph)` | No entry edge — compile-time validation |
 | TV-004 | `add_node("agent", fn)` called twice on same builder | Second call returns `Err(E-GRAPH-009 DuplicateNodeName)` | Duplicate node name |
-| TV-005 | Node returns `{ "bad_key": 1 }` on invoke | `Err(E-GRAPH-007 UnknownChannelKey { key: "bad_key" })` from invoke | Unregistered channel key at runtime |
+| TV-005 | Node `"agent"` returns `{ "bad_key": 1 }` on invoke | `Err(E-GRAPH-007 UnknownChannelKey { node_id: "agent", key: "bad_key" })` from invoke | Unregistered channel key at runtime |
 
 ## Verification Properties
 

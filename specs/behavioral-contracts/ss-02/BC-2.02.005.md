@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.005
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.2 (F-P107-01, 2026-07-18): E-GRAPH-011 ConditionalEdgePanic struct corrected from single-field to two-field form. Was: { source: 'source_node' } (1 field — wrong field name, missing panic message). Now: { source_node: <edge source node name>, message: <captured panic text> } (2 fields, 1:1 with taxonomy placeholders '<source_node>' and '<message>'). Root cause: EC-003 prose 'preserving the panic message as the error source' was ambiguous — 'source' was used as the error source (i.e., a catch-all field), conflating node name and panic text. Fix: PC5 struct updated; EC-003 struct updated and ambiguous 'error source' prose clarified; TV-005 struct updated. Three-site sibling sweep within file (TD-VSDD-060) — all uses updated."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -68,7 +69,8 @@ edge routing function. Static edges and `Send` fan-out (BC-2.02.006) are distinc
 4. If `path_map` is provided, symbolic return values from `path_fn` are translated via the
    map before scheduling; the raw string must appear as a key in the map.
 5. If `path_fn` raises a Rust panic or returns an `Err`, the graph transitions to `failed`
-   with `Err(E-GRAPH-011 ConditionalEdgePanic { source: "source_node" })`.
+   with `Err(E-GRAPH-011 ConditionalEdgePanic { source_node: "source_node", message: "<captured panic text>" })`,
+   preserving both the edge source node name and the captured panic text in the error struct.
 
 ## Invariants
 
@@ -99,9 +101,11 @@ drop the routing result.
 ### EC-003: path_fn panics (unwind)
 **Scenario:** `path_fn` panics due to a programming error (index out of bounds, unwrap on
 None, etc.).
-**Expected behavior:** The panic is caught by the Pregel executor; the run transitions
-to `failed` with `Err(E-GRAPH-011 ConditionalEdgePanic { source: "source_node" })`
-preserving the panic message as the error source.
+**Expected behavior:** The panic is caught by the Pregel executor (via `std::panic::catch_unwind`
+or equivalent); the run transitions to `failed` with
+`Err(E-GRAPH-011 ConditionalEdgePanic { source_node: "source_node", message: "<captured panic text>" })`,
+preserving both the edge source node name (for routing context) and the captured panic text
+(the panic payload stringified) in the two-field error struct.
 
 ### EC-004: path_fn returns empty list
 **Scenario:** `path_fn` returns `NodeNames([])` (empty routing result, not `End`).
@@ -123,7 +127,7 @@ from the run; the graph fails. Missing path_map entries are not silently ignored
 | TV-002 | `path_fn` returns `End` | Run completes; status `completed` | END routing — graph terminates |
 | TV-003 | `path_fn` returns `NodeNames(["branch_a", "branch_b"])` | Both nodes triggered in next step | Multi-target routing |
 | TV-004 | `path_fn` returns `NodeName("ghost")` where `"ghost"` is not a registered node | `Err(E-GRAPH-003 UnknownRoutingTarget { node: "ghost" })` | Unknown target |
-| TV-005 | `path_fn` panics | `Err(E-GRAPH-011 ConditionalEdgePanic)` | Panic catch |
+| TV-005 | `path_fn` panics with message `"index out of bounds: the len is 0 but the index is 0"` | `Err(E-GRAPH-011 ConditionalEdgePanic { source_node: "source_node", message: "index out of bounds: the len is 0 but the index is 0" })` | Panic catch — both source node and panic text captured |
 | TV-006 | `path_fn` returns `NodeNames([])` | No nodes scheduled from this edge; graph may halt | Empty routing result |
 
 ## Verification Properties

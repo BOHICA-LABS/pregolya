@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.003
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.2 (F-P107-01 census, 2026-07-18): E-GRAPH-004 struct expanded to include step field missing from prior struct form. Was: { channel, writer } (2 fields — missing taxonomy placeholder '<n>' for super-step). Now: { channel, writer, step } (3 fields, 1:1 with taxonomy '<channel>', '<writer>', '<n>'). EC-003 and TV-004 updated. Same-class defect as E-GRAPH-011 discovered during message↔struct census rerun."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -106,8 +107,8 @@ active. No error.
 ### EC-003: One writer delivers twice in same step
 **Scenario:** Writer `"a"` produces two writes to the `NamedBarrierValue` channel in the
 same super-step (e.g., via two separate `Send` tasks both named `"a"`).
-**Expected behavior:** `Err(E-GRAPH-004 DuplicateBarrierWrite { channel: name, writer:
-"a" })` is returned; the run transitions to `failed`. A named writer must write exactly
+**Expected behavior:** `Err(E-GRAPH-004 DuplicateBarrierWrite { channel: name, writer: "a", step: <n> })`
+is returned; the run transitions to `failed`. A named writer must write exactly
 once per step to avoid ambiguity.
 
 ### EC-004: NamedBarrierValue with unknown writer name registered at compile time
@@ -123,7 +124,7 @@ name, writer: "ghost" })`; no compiled graph is produced.
 | TV-001 | `NamedBarrierValue(writers=["a","b","c"])`; step delivers from `"a"` and `"b"` only | Channel unavailable; downstream not triggered; run continues | **Red Gate vector** — must fail before implementation |
 | TV-002 | Same channel; step delivers from all three `"a"`, `"b"`, `"c"` | Channel available; downstream triggered | Happy-path barrier satisfaction |
 | TV-003 | Same channel; zero writers deliver | Channel unavailable; downstream not triggered; no error | Zero-delivery step |
-| TV-004 | Writer `"a"` delivers twice in same step | `Err(E-GRAPH-004 DuplicateBarrierWrite)` | Duplicate write from same named writer |
+| TV-004 | Writer `"a"` delivers twice in super-step 2 | `Err(E-GRAPH-004 DuplicateBarrierWrite { channel: "results", writer: "a", step: 2 })` | Duplicate write — channel, writer, and step all captured |
 | TV-005 | Step N: `"a"`, `"b"` deliver (barrier unsatisfied). Step N+1: `"a"`, `"b"`, `"c"` all deliver | Step N: not triggered. Step N+1: triggered. | Per-step independent evaluation |
 
 ## Verification Properties

@@ -1782,3 +1782,36 @@ Phase 1d pass 68 adversarial review completed: CLEAN — 0 findings. Counter adv
 ## Archived from STATE.md Current Phase Steps (burst 189 rotation)
 
 | Phase 1d burst 184 — pass 102 + fix burst (PO) | adversary + PO + state-manager | COMPLETE | Pass 102: NOT CLEAN strict (CLEAN PR-merge) — 1L+1OBS/process-gap. Novelty LOW (3rd recurrence of changelog-transposition class; codification threshold met). Sibling-checks (burst-183 owed): events.md v1.5 ordering PASS; BC-2.11.002 ascending PASS; radius grep PASS — GuardrailDecision radius FULLY CLOSED. F-P102-01 (LOW, PO): BC-2.11.005 changelog rows reordered ascending (pure metadata; gate #28 Rule 3). F-P102-OBS-A (OBS [process-gap], PO+orchestrator — D18-P102-A): gate #28 Rule 6 VERSION-MONOTONICITY minted; bc-authoring-plan v2.30→v2.31; 14 transposed files repaired; orchestrator correction: error-taxonomy+interface-definitions restored descending/supplement-convention. D18-P89-A sweep 4-pass: 9→12→81→0 stale; TOTAL MATCH 128/128. Trajectory →2 (pass-102). Counter 0/3. Fix bursts 105→106. Burst 184. |
+
+## Archived from STATE.md Current Phase Steps (burst 191 rotation)
+
+| Phase 1d burst 186 — SESSION WRAP (pass 104 captured) | state-manager | COMPLETE | SESSION WRAP: Pass 104 captured durably (F-P104-01 MED OPEN; NOT CLEAN strict+PR-merge; 1 MED; ARCH-INDEX.md v1.1 changelog row missing; architect dispatch = FIRST ACTION on resume). All burst-185 sibling-checks PASS (direction-asserting census PASS; 8/8 double-flip reorders pure; Rule 6 coherence PASS; BC-INDEX blocker resolved). pass-104.md written. Old checkpoint (burst-185) archived to session-checkpoints.md. New RESUME snapshot in STATE.md. Burst-181 rotated to burst-log. sidecar-learning.md committed. Counter 0/3. Trajectory-tail →3→2→2→2; burst 187 appends →1 (pass-104). Burst 186. |
+
+## Archived from STATE.md Phase Progress adversary-pass rows (burst 191 compaction)
+
+| Adversary pass-104 complete; pass-105 next | complete | 2026-07-14 | 2026-07-18 | counter 0/3 (P104: NOT CLEAN strict 1M; NOT CLEAN PR-merge; F-P104-01 RESOLVED fix burst 108 burst 187) | trajectory-tail →2→2→2→1 |
+| Fix burst 108 complete (F-P104-01 RESOLVED) | complete | 2026-07-18 | 2026-07-18 | ARCH-INDEX v1.1+v1.0 + api-surface v1.0 reconstructed; cascade TOTAL MATCH 2/2; sidecar-learning.md included | trajectory-tail →2→2→2→1 |
+| Burst 188 hash-currency closure (D18-P89-A) | complete | 2026-07-19 | 2026-07-19 | TOTAL MATCH 128/128 spec corpus; 95 BCs + 18 spec files refreshed to rc.22 canonical hashes | trajectory-tail →2→2→2→1 |
+| Adversary pass-105 complete; fix burst 109 complete | complete | 2026-07-19 | 2026-07-19 | counter 0/3 (P105: NOT CLEAN strict 1M+2OBS; F-P105-01 RESOLVED; OBS-P105-A adjudicated; OBS-P105-B fixed in bc-authoring-plan v2.33) | trajectory-tail →2→2→1→1 |
+| Fix burst 109 complete (F-P105-01 RESOLVED) | complete | 2026-07-19 | 2026-07-19 | error-taxonomy v1.18→v1.19 (SECURITY description + 4 category descriptions + SECURITY/POLICY rule); bc-authoring-plan v2.32→v2.33 (gate #28 MANDATORY PRE-EMISSION CHECK); D18-P89-A sweep TOTAL MATCH 126/126; 3 BC hashes refreshed | trajectory-tail →2→2→1→1 |
+| Adversary pass-106 complete; fix burst 110 complete | complete | 2026-07-19 | 2026-07-19 | counter 0/3 (P106: NOT CLEAN strict 1M+1OBS; F-P106-01 RESOLVED; OBS-P106-A RESOLVED; bc-authoring-plan v2.33→v2.34; error-taxonomy v1.19→v1.20) | trajectory-tail →2→1→1→1 |
+
+---
+
+## Burst: pass-107 record + fix burst 111 (F-P107-01 RESOLVED) (2026-07-19)
+
+**Adversary verdict:** NOT CLEAN strict+PR-merge — 1 MED (F-P107-01). Counter 0/3 (unchanged).
+**Files touched (fix burst 111):**
+- specs/behavioral-contracts/ss-02/BC-2.02.005.md (v1.1→v1.2: E-GRAPH-011 struct {source}→{source_node,message}; EC-003/PC5/TV-005 updated; "panic message as the error source" ambiguity removed)
+- specs/behavioral-contracts/ss-02/BC-2.02.001.md (v1.1→v1.2: E-GRAPH-007 struct {key}→{node_id,key}; EC-001/TV-005 updated)
+- specs/behavioral-contracts/ss-02/BC-2.02.002.md (v1.1→v1.2: E-GRAPH-001 struct {channel}/{channel,reason}→{channel,task_ids,step}; PC3/EC-001/EC-002/TV-002 updated)
+- specs/behavioral-contracts/ss-02/BC-2.02.003.md (v1.1→v1.2: E-GRAPH-004 struct {channel,writer}→{channel,writer,step}; EC-003/TV-004 updated)
+- specs/prd-supplements/error-taxonomy.md (v1.20→v1.21: corrigendum row; v1.20 "21 PASS" claim corrected to 5 FAIL/17 PASS; taxonomy rows unchanged)
+- cycles/v1.0.0-greenfield/adversarial-reviews/pass-107.md (new)
+- STATE.md (v3.30→v3.31; compaction: 6 Phase Progress rows + 1 Current Phase Steps row archived; burst-191 row added)
+- cycles/v1.0.0-greenfield/burst-log.md (this file; burst-191 entry + compaction archives added)
+**D18-P89-A sweep:** TOTAL MATCH — input files for all 4 BC files and error-taxonomy unchanged; computed hashes match frontmatter hashes; no refresh needed.
+**Codifications:** none (no new decisions; F-P107-01 = same class as OBS-P106-A under D18-P77-B gate #33 SEMANTIC-AGREEMENT)
+**Dim-5:** counter 0/3 (unchanged); next action: dispatch adversary pass 108
+**Dim-7:** finding trajectory tail →1→1→1→1 (passes 104/105/106/107); trajectory append →1 (pass-107)
+**Root cause documented:** EC-003 prose "preserving the panic message as the error source" — "error source" conflated source-node routing context with panic-text payload; sweep accepted single `source` field as covering both taxonomy placeholders without noticing two-field requirement.
