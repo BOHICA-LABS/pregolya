@@ -13,7 +13,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "5da00db"
+input-hash: "3c54b46"
 traces_to: .factory/specs/product-brief.md
 sections:
   - capabilities-p0.md

@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "ade14bd"
+input-hash: "fc82aff"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04

@@ -1736,4 +1736,45 @@ Phase 1d pass 68 adversarial review completed: CLEAN — 0 findings. Counter adv
 
 ## Archived from STATE.md Current Phase Steps (burst 187 rotation)
 
+<!-- No rotation during burst 187: STATE.md had exactly 5 rows (183–187); no row exceeded the limit. -->
+
+---
+
+## Burst: bookkeeping/hash-currency closure (D18-P89-A) (2026-07-19)
+
+**Parent-commit:** 53edc0f — fix(phase-1d): burst-187 — pass-104 record + fix-burst-108 (F-P104-01 RESOLVED)
+**Adversary verdict:** n/a (bookkeeping-only burst; no adversary dispatched; counter 0/3 unchanged; trajectory →2→2→2→1 unchanged)
+**Files touched (Dim-1):** 21 unique files (input-hash field refreshes only; zero content changes)
+- specs/domain-spec/L2-INDEX.md (5da00db→3c54b46)
+- specs/architecture/ARCH-INDEX.md (b6f6a46→311dc79)
+- specs/prd.md (→8534417)
+- specs/module-criticality.md (→bcf5bd3)
+- specs/prd-supplements/module-criticality.md (→c462ae9)
+- specs/prd-supplements/bc-authoring-plan.md (85b295b→af6d8ca)
+- specs/prd-supplements/error-taxonomy.md (→87b1e6b)
+- specs/prd-supplements/interface-definitions.md (→825d4b1)
+- specs/prd-supplements/nfr-catalog.md (→fae7585)
+- specs/prd-supplements/test-vectors.md (→bfc0066)
+- specs/architecture/system-overview.md (→327ffb7)
+- specs/architecture/module-decomposition.md (→2897516)
+- specs/architecture/dependency-graph.md (→a105493)
+- specs/architecture/api-surface.md (→3918228)
+- specs/architecture/verification-architecture.md (→01afe5f)
+- specs/architecture/purity-boundary-map.md (→1506cfd)
+- specs/architecture/tooling-selection.md (→0caa2b3)
+- specs/architecture/verification-coverage-matrix.md (→fdd85e3)
+- specs/behavioral-contracts/ss-01..ss-17/ (95 BC files; all listing L2-INDEX.md or prd.md as inputs; hashes refreshed to rc.22 canonical)
+- STATE.md (version 3.27→3.28; timestamp advanced; burst-188 rows added)
+- cycles/v1.0.0-greenfield/burst-log.md (this file; burst-188 entry added)
+**Codifications:** none (bookkeeping-only; D18-P89-A + D18-P90-A standing rules executed; no new decisions)
+**Dim-2:** input-hash census TOTAL MATCH 128/128 spec corpus; STALE=16 cycle-historical files (live-state exempt); NOINPUT=18; root-cause tool-version-upgrade drift (pre-rc.18 → rc.22: AWK block-boundary detection + REPO_ROOT fallback changed)
+**Dim-5:** counter 0/3 (unchanged; no adversary pass in burst 188); next action: dispatch adversary pass 105
+**Dim-6:** VP census unchanged (VP-001..VP-005 all MATCH; VP-INDEX MATCH; no new VPs added)
+**Dim-7:** finding trajectory tail →2→2→2→1 (unchanged; bookkeeping burst does not reset or advance streak); 95 BCs + 18 spec files all MATCH post-refresh
+**Closes:** pre-existing hash drift flagged in burst-187 D18-P89-A sweep: ARCH-INDEX.md b6f6a46→311dc79; L2-INDEX.md 5da00db→3c54b46
+
+## Archived from STATE.md Current Phase Steps (burst 188 rotation)
+
+| Phase 1d burst 183 — pass 101 + fix burst (BA + PO) | adversary + BA + PO + state-manager | COMPLETE | Pass 101: NOT CLEAN strict (CLEAN PR-merge) — 1M [process-gap] + 1OBS BOTH FIXED. Novelty MEDIUM (final D18-P99-A radius residue + BC-2.11.002 changelog ordering). Radius-closure: all GuardrailDecision radius items verified closed (SS-11 9-dim triple PASS; ADR-006 rev-4+interface v2.35 PASS; gate #12 PASS; StreamEvent 12-variant triple-coherence PASS; run-lifecycle SM PASS; BC-INDEX subsystem sync PASS). F-P101-01 (MED [process-gap], BA): events.md GuardrailChecked Stream-surface ordering clause "fires before the enclosing tool_end" unconditional → FIXED: boundary-qualified (ToolResult: tool_call_id present, fires before tool_end; RagChunk/MemoryItem: tool_call_id absent, fires within NodeStart/NodeEnd, before inference; per ADR-006+BC-2.06.001 PC4); events.md v1.4→v1.5. F-P101-02 (OBS, PO): BC-2.11.002 changelog rows v1.6/v1.5 display-inverted → FIXED: reordered ascending (pure metadata reorder; gate #28 Rule 3 satisfied). D18-P89-A sweep: events.md v1.5 staled BC-2.06.001.md + BC-2.06.002.md; 2/2 refreshed; TOTAL MATCH. GuardrailDecision radius (burst-181/182/183 three-burst propagation) NOW FULLY CLOSED. Trajectory →2 (pass-101). Counter 0/3. Fix bursts 104→105. Burst 183. |
+
 | Phase 1d burst 182 — pass 100 + fix burst (BA + PO + architect) | adversary + BA + PO + architect + state-manager | COMPLETE | Pass 100: NOT CLEAN strict (CLEAN PR-merge) — 2M+1OBS ALL FIXED. Novelty MEDIUM (D18-P99-A propagation echo: ToolResult boundary updated in burst 181; RAG/memory siblings + events.md vocabulary missed). F-P100-01 (MED, BA): events.md StreamEventEmitted Outcome blanket "identical content DI-011" contradicted guardrail_decision unary carve-out → FIXED: Outcome qualified (execution-lifecycle DI-011 equivalence; guardrail_decision stream-observer-only per BC-2.06.001 PC4); events.md v1.3→v1.4. F-P100-02 (MED, PO): BC-2.11.003 + BC-2.11.004 lacked GuardrailDecision emission postconditions symmetric with BC-2.11.002 → FIXED: both v1.4→v1.5 (PC3 Fail-emission + PC4 Transform-emission; boundary-adapted: RagChunk/MemoryItem, NodeStart/NodeEnd, tool_call_id: None, INV-5 cites); 9-dimension symmetry-triple verified fully symmetric; ADR-006 rev-3→rev-4 (downstream scope note + BC cite extended 002/003/004); interface-definitions v2.34→v2.35 (/stream row + §StreamEvent anchors per-boundary). F-P100-03 (OBS, BA): events.md GuardrailChecked Outcome retired Accept/Reject/Redact → FIXED: canonical Pass/Fail/Transform (F-P58-03 authority; consolidated into v1.4). D18-P89-A sweep: 3 stale; all refreshed; 126/126 TOTAL MATCH. Trajectory →3 (pass-100). Counter 0/3. Fix bursts 103→104. Burst 182. |
