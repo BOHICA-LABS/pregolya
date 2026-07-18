@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/events.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "4de2733"
+input-hash: "6e0baf8"
 changelog:
   - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). (a) PC2 — added GuardrailDecision bullet (12th variant) after ToolEnd; updated ToolEnd bullet to reference post-guardrail content semantics per interface-definitions §StreamEvent. (b) PC4 causal ordering updated with GuardrailDecision[RagChunk|MemoryItem]* and GuardrailDecision[ToolResult]* positions. (c) New EC-006: N ContentBlocks K rejected → K GuardrailDecision events in evaluation order before ONE ToolEnd with post-guardrail output. H1 title updated to include guardrail_decision."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."

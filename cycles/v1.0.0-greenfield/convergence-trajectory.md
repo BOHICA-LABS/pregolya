@@ -42,10 +42,11 @@ traces_to: STATE.md
 | P1D-98 | 2026-07-17 | 1 | 0 | 0 | 0 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN strict; CLEAN PR-merge (bc-authoring-plan gate #27 claim-vs-artifact echo) |
 | P1D-99 | 2026-07-17 | 1 | 0 | 0 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (OBS adjudicated substantive → D18-P99-A: GuardrailDecision StreamEvent scope expansion) |
 | P1D-100 | 2026-07-17 | 3 | 0 | 0 | 2 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (D18-P99-A propagation echo: SS-11 RAG/Memory boundary symmetry gap + events.md vocabulary) |
+| P1D-101 | 2026-07-17 | 2 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN strict (1 MED [process-gap] + 1 OBS; final D18-P99-A radius residue + BC-2.11.002 changelog order); CLEAN PR-merge |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101)`
 
 ## Per-Pass Details
 
@@ -483,6 +484,21 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Fix summary:** F-P97-01 HIGH (PO) — BC-2.08.009 v1.0→v1.1: Module field "ferrochain-macros [architect to confirm crate→subsystem in Phase 1b]" → "ferrochain-macros (re-exported ferrochain-core)" per module-decomposition v1.10 §ferrochain-macros; changelog section added (Group-A form); bc-authoring-plan v2.29 count row updated (60th placeholder incl. variant; v2.28 historical row preserved). F-P97-02 MED (PO) — prd.md v1.2→v1.3: §10 stale "(architect to confirm crate→subsystem mapping in Phase 1b)" parenthetical deleted. F-P97-03 LOW (PO) — BC-2.08.006 changelog rows reordered 1.3/1.2/1.1 (metadata-only; no version bump). F-P97-04 LOW [process-gap] (PO) — bc-authoring-plan v2.28→v2.29: gate #27 residue-class widened literal→semantic `architect to (assign|confirm|determine|resolve)`, scope ALL .factory/specs/; sweep command added; widened sweep run corpus-wide: 7 hits total, 2 fixed (F-P97-01/02), 5 changelog/gate-rule exempt; zero live after fixes; bonus sweeps ("PO to confirm/assign", "to be confirmed", "TBD by") all zero. F-P97-05 LOW (PO) — BC-2.10.003 v1.7→v1.8: VP-BUDGET-06/07 Phase column "Wave 1"→"Phase 1".
 **D18-P89-A sweep (4-pass convergence):** prd.md v1.3 + BC-2.08.009 v1.1 + BC-2.10.003 v1.8 + bc-authoring-plan v2.29 triggered cascade; pass 1 = 95 updated; pass 2 = 111 updated; pass 3 = 3 updated; pass 4 = 0 stale; **126/126 TOTAL MATCH**.
 **Trajectory after:** →5 (P1D-97); cumulative tail →3→4→1→5
+**Counter:** 0/3
+
+---
+
+### P1D-101 — Pass 101 (2026-07-17, burst 183)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-101 | 2026-07-17 | 2 | 0 | 0 | 1 | 0 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN strict (1 MED [process-gap] + 1 OBS; CLEAN PR-merge) |
+
+**Axes rotated (radius-closure directive):** SS-11 triple-symmetry BC-2.11.002 v1.6/.003 v1.5/.004 v1.5 9-dimension table PASS. ADR-006 rev-4 downstream-amendments scope note + BC cite 002/003/004 PASS. Interface-definitions v2.35 /stream row + §StreamEvent BC anchors per-boundary; remaining 002-only cites verified as type-definition authorities PASS. Zero Accept/Reject/Redact live vocabulary corpus-wide PASS. Gate #12 StreamEvent 12-variant census across BC-2.06.001/ADR-006/interface-definitions/events.md PASS. StreamEvent 12-variant triple-coherence PASS. Run-lifecycle state machine (NodeStart/NodeEnd/ToolInvoked/ToolEnd/GuardrailDecision ordering) coherent across all three boundary documents PASS. BC-INDEX subsystem sync: BC-2.11.003+.004 title cells post-v1.5 bump PASS. events.md GuardrailChecked Stream-surface ordering clause unconditional (F-P101-01 MED). BC-2.11.002 changelog rows display-inverted (F-P101-02 OBS).
+**Fix summary:** F-P101-01 MED [process-gap] (BA) — events.md v1.4→v1.5: GuardrailChecked Stream-surface ordering clause boundary-qualified (ToolResult: fires before enclosing tool_end, tool_call_id present; RagChunk/MemoryItem: fires within NodeStart/NodeEnd envelope, before inference, tool_call_id absent; per ADR-006 + BC-2.06.001 PC4); sweep confirmed ToolInvoked stream-surface line correctly tool-scoped (no change); zero other unconditional ordering claims. F-P101-02 OBS (PO) — BC-2.11.002 changelog rows v1.6/v1.5 reordered to ascending convention (pure metadata reorder; no content change; YAML valid; gate #28 Rule 3 satisfied).
+**Radius-closure verdict:** GuardrailDecision radius (D18-P99-A, burst-181/182/183 three-burst propagation) is NOW FULLY CLOSED. F-P101-01 was the final residue. If pass-102 finds further GuardrailDecision-radius residue, escalate severity one level for repeated propagation failure.
+**D18-P89-A sweep:** events.md v1.5 edits — check files whose inputs: reference events.md. BC-2.06.001.md lists events.md in inputs; hash refreshed. BC-2.06.002.md lists events.md in inputs; hash refreshed (no content change from BC-2.11.002 reorder). Corpus-wide census after updates: TOTAL MATCH (0 stale).
+**Trajectory after:** →2 (P1D-101); cumulative tail →5→1→1→3→2
 **Counter:** 0/3
 
 ---

@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: events
-version: "1.4"
+version: "1.5"
 status: active
 producer: business-analyst
 timestamp: 2026-07-17T00:00:00Z
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (2026-07-17): F-P94-fix-burst — BudgetEvaluated.Outcome: correct monolithic 'Deny (halt run)' to per-on_ceiling dispatch; PolicyDecision::Deny does not unconditionally halt — engine dispatches per BudgetConfig::on_ceiling (Halt → graceful halt; Escalate → HITL interrupt; Summarize → final summarize call → summary_halt). Canon: D18-P93-A, interface-definitions v2.33."
   - "1.3 (2026-07-17): F-P99-01 — StreamEventEmitted trigger: extend to include guardrail_decision surface (Fail/Transform only; Pass not streamed); GuardrailChecked: add stream surface line (guardrail_decision metadata-only payload per BC-2.11.005 INV-5, fires before enclosing tool_end); ToolInvoked tool_end: note post-guardrail content semantics. Canon: ADR-006 rev-3, interface-definitions v2.34 §StreamEvent, BC-2.06.001 v1.3."
   - "1.4 (2026-07-17): F-P100-01 — StreamEventEmitted Outcome: removed blanket 'identical content to unary callers' claim; qualified guardrail_decision as stream-observer-only (not delivered to unary callers; DI-011 scoped to execution-path equivalence, not stream-observer equivalence; canon: BC-2.06.003, ADR-006 rev-3). F-P100-03 — GuardrailChecked Outcome: retired Accept/Reject/Redact vocabulary; aligned to canonical Pass/Fail/Transform (GuardrailResult variants per ubiquitous-language-server.md §GuardrailHook v1.2 F-P58-03); Transform explicitly noted as strict superset of redact-only to preserve semantics."
+  - "1.5 (2026-07-17): F-P101-01 — GuardrailChecked Stream surface: rewrote unconditional 'fires before the enclosing tool_end' to boundary-qualified ordering; ToolResult fires before enclosing tool_end (tool_call_id present); RagChunk/MemoryItem fire within enclosing NodeStart/NodeEnd window before inference (tool_call_id absent). Sweep: no other unconditional tool_end-ordering or tool_call_id-always-present claims for guardrail_decision found elsewhere in file. Canon: ADR-006 rev-4, BC-2.06.001 v1.3 PC4, BC-2.11.003/004 v1.5."
 ---
 
 # Domain Events (Processing Stages)
@@ -108,7 +109,7 @@ A GuardrailHook evaluated content at an ingress boundary.
 - **Trigger:** ToolResult received; RAG chunk retrieved; memory returned
 - **Preconditions:** GuardrailHook registered for this IngressBoundary
 - **Outcome:** Pass (content passes into model context unchanged), Fail (content blocked; replaced by a guardrail-generated error block; carries reason and GuardrailSeverity), or Transform (guardrail rewrites content; sanitized replacement forwarded, original discarded — encompasses redaction, sanitization, and arbitrary content substitution; a strict superset of redact-only)
-- **Stream surface:** `guardrail_decision` (Fail/Transform only; metadata-only payload — boundary, decision, reason/severity [Fail only], ingress_id, tool_call_id; zero bytes of rejected content per BC-2.11.005 INV-5; fires before the enclosing `tool_end`)
+- **Stream surface:** `guardrail_decision` (Fail/Transform only; metadata-only payload — boundary, decision, reason/severity [Fail only], ingress_id, tool_call_id; zero bytes of rejected content per BC-2.11.005 INV-5; ordering is boundary-dependent: ToolResult fires before the enclosing `tool_end` (tool_call_id present); RagChunk/MemoryItem fire within the enclosing NodeStart/NodeEnd window before inference (tool_call_id absent) — per ADR-006 ordering and BC-2.06.001 PC4)
 
 ### BudgetEvaluated
 A BudgetPolicy evaluated a token/cost tally for the current Run.
