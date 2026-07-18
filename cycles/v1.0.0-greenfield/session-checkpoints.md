@@ -756,3 +756,17 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 184): D18-P102-A — Gate #28 Rule 6 VERSION-MONOTONICITY minted (adversary+PO+orchestrator).
 ### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 184 | Counter 0/3 (Phase 1d)
+
+---
+
+## Checkpoint archived from burst 185 (2026-07-18T10:30:00Z)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 103 passes / 107 fix bursts, counter 0/3 (strict-zero D-14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 513 = 504+9, StreamEvent 12 variants). trajectory-tail →3→2→2→2. NEXT ACTION: dispatch adversary pass 104 — PASS-104 SIBLING-CHECKS (HEAVY — two bursts of direction churn need independent verification): (a) run the v2.32 direction-asserting census — expect corpus-wide PASS; (b) spot 8 reordered files across ALL five classes (2 Form-A contract asc, 1 behavioral-contracts Form-B desc, 2 architecture Form-A desc incl. one double-flipped like api-surface, nfr-catalog desc, 1 ADR desc, purity-boundary-map desc) verifying PURE reorders vs git history (no row text lost across double-flip — compare row SETS against 2 commits back); (c) Rule 6 five-class prose ↔ census command ↔ actual hook behavior coherence; (d) BC-INDEX edit blocker status. Loop per D-15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 185 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-103 FIX SUMMARY: F-P103-01 (MED, PO) — nfr-catalog.md changelog rows swapped to descending (supplement convention per D18-P64-B; pure reorder; no version bump). OBS-P103-A (OBS [process-gap], PO+orchestrator — D18-P103-A) — gate #28 Rule 6 five-class hook-aligned model adopted; bc-authoring-plan v2.31→v2.32; 27 Form-A contract files corrected desc→asc; 7 arch Form-A files corrected asc→desc; BC-INDEX edit blocker resolved (root cause: STATE.md hash census stale pending this burst commit + fraction-format count ambiguous to count-pattern hook). D18-P89-A sweep: 3 stale; TOTAL MATCH 126/126.
+### BURST-185 SIBLING-CHECKS OWED (pass 104 must verify): direction-asserting census corpus-wide PASS; 8 reordered file spot-check pure + double-flip row-SET audit; Rule 6 five-class coherence; BC-INDEX blocker resolved confirmation.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (burst 185): D18-P103-A — Gate #28 Rule 6 five-class hook-aligned direction-asserting model; BC-INDEX edit blocker root cause documented; [process-gap] engine-improvement candidate logged (adversary+PO+orchestrator).
+### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-18 | Cycle v1.0.0-greenfield | Burst 185 | Counter 0/3 (Phase 1d)
