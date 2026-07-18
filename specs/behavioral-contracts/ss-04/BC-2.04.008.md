@@ -7,11 +7,11 @@ status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 changelog:
-  - "1.4 (2026-07-15, F-P82-01): PC3 corrected — `query: &str` was incorrectly listed as a field of `FtsSearchConfig`. Fixed: `query` is the standalone first parameter of `fts_search` (not a config field); `FtsSearchConfig` fields are `thread_id: Option<&str>` and `limit: usize` only. Signature (Description block), PC1, EC-002, TV-001 all agree with this fix; only PC3 carried the contradiction. No other content changed."
-  - "1.3 (2026-07-15, F-P78-04/D18-P78-A): PC6 message string corrected — added 'FtsLimitZero: ' prefix per universal <Name>: <detail> convention (D18-P78-A adjudication). Updated 'got 0' to 'got <limit>' for parametric template consistency with taxonomy row E-CHKPT-008. No change to EC-004 or TV-004 (those use variant name only, no message string)."
-  - "1.2 (2026-07-15, F-P74-01): Description fix — CheckpointStore::fts_search → CheckpointSaver::fts_search; retired identifier per gate #19 shared-type canon (P18 census). No other retired spellings found in full-file scan (RunConfig, BaseCheckpointSaver, AIMessage-Rust-context, Checkpointer)."
-  - "1.1 (D20 sub-burst 2): E-CHKPT-008/E-CHKPT-009 split — EC-006 updated to use E-CHKPT-009 (INTERNAL/Fts5Unavailable) instead of E-CHKPT-008; ambiguity note removed; resolution note added; Traceability Error Code Minted row updated; error code minted blockquote updated to document both codes."
   - "1.0: Initial greenfield spec (D20 sub-burst 1)."
+  - "1.1 (D20 sub-burst 2): E-CHKPT-008/E-CHKPT-009 split — EC-006 updated to use E-CHKPT-009 (INTERNAL/Fts5Unavailable) instead of E-CHKPT-008; ambiguity note removed; resolution note added; Traceability Error Code Minted row updated; error code minted blockquote updated to document both codes."
+  - "1.2 (2026-07-15, F-P74-01): Description fix — CheckpointStore::fts_search → CheckpointSaver::fts_search; retired identifier per gate #19 shared-type canon (P18 census). No other retired spellings found in full-file scan (RunConfig, BaseCheckpointSaver, AIMessage-Rust-context, Checkpointer)."
+  - "1.3 (2026-07-15, F-P78-04/D18-P78-A): PC6 message string corrected — added 'FtsLimitZero: ' prefix per universal <Name>: <detail> convention (D18-P78-A adjudication). Updated 'got 0' to 'got <limit>' for parametric template consistency with taxonomy row E-CHKPT-008. No change to EC-004 or TV-004 (those use variant name only, no message string)."
+  - "1.4 (2026-07-15, F-P82-01): PC3 corrected — `query: &str` was incorrectly listed as a field of `FtsSearchConfig`. Fixed: `query` is the standalone first parameter of `fts_search` (not a config field); `FtsSearchConfig` fields are `thread_id: Option<&str>` and `limit: usize` only. Signature (Description block), PC1, EC-002, TV-001 all agree with this fix; only PC3 carried the contradiction. No other content changed."
 origin: greenfield
 priority: P1
 subsystem: SS-04

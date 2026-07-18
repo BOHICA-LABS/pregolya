@@ -15,8 +15,8 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
   - "1.1 (ADV-P1D-PASS-34): F-P34-02 EC-003 + TV-004 — replace E-RETRY-003 with E-RETRY-004 (InvalidRetryLimit). E-RETRY-003 is CircuitBreakerOpen (BC-2.16.003, POLICY/Later); zero-limit construction rejection is a misconfiguration → VAL, RetryHint Never. New code E-RETRY-004 minted in error-taxonomy.md 1.5."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
 inputs:

@@ -44,10 +44,11 @@ traces_to: STATE.md
 | P1D-100 | 2026-07-17 | 3 | 0 | 0 | 2 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (D18-P99-A propagation echo: SS-11 RAG/Memory boundary symmetry gap + events.md vocabulary) |
 | P1D-101 | 2026-07-17 | 2 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN strict (1 MED [process-gap] + 1 OBS; final D18-P99-A radius residue + BC-2.11.002 changelog order); CLEAN PR-merge |
 | P1D-102 | 2026-07-17 | 2 | 0 | 0 | 0 | 1 | LOW | 0/3 | FINDINGS_REMAIN strict; CLEAN PR-merge (1 LOW F-P102-01 + 1 OBS/process-gap F-P102-OBS-A; gate #28 Rule 6 VERSION-MONOTONICITY minted; D18-P102-A; bc-authoring-plan v2.31) |
+| P1D-103 | 2026-07-18 | 2 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (1 MED F-P103-01 nfr-catalog direction + 1 OBS/process-gap OBS-P103-A gate #28 Rule 6 direction-blind census; five-class hook-aligned model adopted; D18-P103-A; bc-authoring-plan v2.32) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103)`
 
 ## Per-Pass Details
 
@@ -514,6 +515,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Fix summary:** F-P102-01 LOW (PO) — BC-2.11.005 changelog rows reordered ascending (1.0, 1.1, 1.2, 1.3); pure metadata reorder; gate #28 Rule 3 satisfied. F-P102-OBS-A OBS [process-gap] (PO + orchestrator codification — D18-P102-A) — gate #28 gains Rule 6 VERSION-MONOTONICITY; bc-authoring-plan v2.30→v2.31; first full census: 14 total transposed files repaired (BC-2.11.005 + 13 additional latent: api-surface.md, module-decomposition.md, BC-2.03.001, BC-2.05.006, BC-2.06.001, BC-2.08.002, BC-2.09.001, BC-2.09.005, BC-2.12.005, BC-2.12.007, BC-2.14.002 [ascending/BC-convention] + error-taxonomy.md 8 violations + interface-definitions.md 22 violations [descending/supplement-convention per D18-P64-B]). Orchestrator correction: first census pass incorrectly force-ascended error-taxonomy + interface-definitions; caught and reversed before commit; census command corrected to be direction-aware.
 **D18-P89-A sweep:** bc-authoring-plan v2.31 + 14 transposed-changelog repairs triggered cascade. Iterative convergence: pass 1 = 9 stale; pass 2 = 12 stale; pass 3 = 81 stale; pass 4 = 0 stale; **TOTAL MATCH 128/128**.
 **Trajectory after:** →2 (P1D-102); cumulative tail →1→3→2→2
+**Counter:** 0/3
+
+---
+
+### P1D-103 — Pass 103 (2026-07-18, burst 185)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-103 | 2026-07-18 | 2 | 0 | 0 | 1 | 0 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes rotated:** gate #28 Rule 6 sibling-checks from burst-184 (14-file census re-verify, Rule 6 prose coherence, zero violations); GuardrailDecision 12-variant propagation spot-check (OBS-P103-B positive); nfr-catalog direction audit (F-P103-01 MED); gate #28 Rule 6 direction-blind census structural flaw (OBS-P103-A process-gap); hook-source audit of actual enforcement model.
+**Fix summary:** F-P103-01 MED (PO) — nfr-catalog.md changelog rows swapped to descending order (supplement convention per D18-P64-B; pure reorder; no content change; no version bump). OBS-P103-A OBS [process-gap] (PO + orchestrator — D18-P103-A) — gate #28 Rule 6 census rewritten from internal-monotonicity-only to five-class hook-aligned direction-asserting model (prd-supplements/ desc; architecture/ Form A+B desc; behavioral-contracts/ Form A asc; behavioral-contracts/ Form B non-INDEX desc; BC-INDEX exempt); corpus re-run: 27 Form-A behavioral-contract files corrected desc→asc; 7 architecture Form-A files corrected asc→desc (ARCH-INDEX, api-surface, dependency-graph, module-decomposition, system-overview, tooling-selection, verification-coverage-matrix); purity-boundary-map retained desc; 3 Form-B ADRs retained desc; BC-INDEX retained desc (exempt); all pure reorders; verification-coverage-matrix hash cabbed8→6b6537d; bc-authoring-plan v2.31→v2.32. BC-INDEX edit blocker (validate-count-propagation): root cause = STATE.md hash census stale after burst-185 reorders (not yet committed); resolved by this burst-185 STATE.md write + D18-P89-A hash census TOTAL MATCH 126/126; [process-gap] engine-improvement candidate logged (hook's BC-count pattern matching is tight — see D18-P103-A notes).
+**Hash sweep (D18-P89-A):** 3 files stale after burst-185 PO reorders: module-criticality.md + verification-architecture.md + 1 transitive; all refreshed; **TOTAL MATCH 126/126**.
+**Trajectory after:** →2 (P1D-103); cumulative tail →3→2→2→2
 **Counter:** 0/3
 
 ---

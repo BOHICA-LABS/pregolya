@@ -15,8 +15,8 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
   - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-004, TV-001, TV-004, TV-005 each had a specific 'Validation failed for...' message matching E-CORE-005 but no code field. Added code: E-CORE-005 to all five sites."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-014

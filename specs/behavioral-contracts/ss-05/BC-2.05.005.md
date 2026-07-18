@@ -7,8 +7,8 @@ status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 changelog:
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
   - "1.1 (ADV-P1D-PASS-27): F-P27-01 replace retired E-GRAPH-* wildcard citation in EC-001 and TV-003 with concrete E-GRAPH-002 POLICY→422 per-endpoint override citation (BC-2.14.002 PC3 9th override); wildcard was retired by OBS-1 narrowing in P26."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
 origin: greenfield
 priority: P0
 subsystem: SS-05

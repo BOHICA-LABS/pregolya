@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.31"
+version: "2.32"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -1243,15 +1243,27 @@ split by wave avoids exception).
        determined from the file's first two distinct-version rows — once established, no
        subsequent version transition may reverse it.
 
-       - **BC files** (`.factory/specs/behavioral-contracts/`) and **architecture files**
-         (`.factory/specs/architecture/`), Form A or B: direction = **ascending** (oldest
-         version at top, newest at bottom).
+       - **BC files** (`.factory/specs/behavioral-contracts/`), Form A (frontmatter YAML list):
+         direction = **ascending** (oldest version at top, newest at bottom) per gate
+         convention. Form B (`## Changelog` body table, non-INDEX files only): direction =
+         **descending** (newest version at top) — machine-enforced by the
+         `validate-changelog-monotonicity` hook. `*INDEX.md` files are **exempt** from this
+         direction rule: the `validate-changelog-monotonicity` hook skips them, and the
+         `validate-count-propagation` hook blocks all BC-INDEX.md edits until STATE.md count
+         drift is resolved by state-manager. BC-INDEX.md direction is maintained descending
+         as a by-product of hook enforcement on its last edit; no census direction assertion
+         is emitted for INDEX files.
+       - **Architecture files** (`.factory/specs/architecture/`), Form A or B: direction =
+         **descending** (newest version at top) — machine-enforced by the
+         `validate-changelog-monotonicity` hook for Form B; Form A follows the same descending
+         convention by project policy (confirmed during pass-103 fix burst via hook-source
+         audit: hook fires on all `.factory/**/*.md` `## Changelog` body tables except
+         `*STATE.md|*INDEX.md|*burst-log*|*convergence-trajectory*|*session-checkpoint*|*lessons*`).
        - **Supplement files** (`.factory/specs/prd-supplements/`), Form A or B: direction =
          **descending** (newest version at top) per D18-P64-B. `error-taxonomy.md` and
          `interface-definitions.md` use Form A YAML frontmatter but follow this descending
-         convention — the form (A vs B) does NOT determine direction; the file's path
-         (`behavioral-contracts/` or `architecture/` = ascending; `prd-supplements/` =
-         descending) determines convention.
+         convention — the form (A vs B) does NOT determine direction; the file-class path
+         determines convention.
        - **Equal-version adjacent rows** (same-version multi-event entries) are permitted and
          do not affect direction determination.
 
@@ -1266,12 +1278,50 @@ split by wave avoids exception).
        - F-P102-01 (ADV-P1D-PASS-102): BC-2.11.005 — version 1.3 appeared before 1.2 in the
          ascending YAML list; corrected by swapping the two rows (pure reorder, no version bump)
 
-       **Census command (copy-paste runnable; direction-agnostic; section-scoped to avoid
+       **Motivating instance (OBS-P103-A — direction-blindness, 2026-07-17):**
+       - OBS-P103-A (ADV-P1D-PASS-103): nfr-catalog.md changelog ran 1.1→1.2 (ascending) but
+         prd-supplements/ class requires DESCENDING (newest-at-top per D18-P64-B). The prior
+         direction-agnostic census was structurally unable to flag a consistently-wrong-direction
+         file — nfr-catalog.md passed burst-184 census because the 1.1→1.2 sequence is
+         internally monotonic even though the direction is wrong. Extended to direction-aware in
+         this burst (v2.32). Direction rules discovered via hook-source audit during fix burst:
+         prd-supplements/ → desc; architecture/ → desc (hook-enforced for Form B, project policy
+         for Form A); behavioral-contracts/ Form A → asc; behavioral-contracts/ Form B non-INDEX
+         → desc (hook-enforced); behavioral-contracts/ *INDEX.md → exempt (hook skips;
+         count-propagation blocks edits). Single-entry and single-distinct-version files exempt
+         from the direction assertion (monotonicity trivially satisfied).
+         Corpus-wide pass-103 census results: 27 BC Form A files corrected desc→asc;
+         nfr-catalog.md corrected asc→desc (F-P103-01); 7 architecture Form A files corrected
+         asc→desc (ARCH-INDEX, api-surface, dependency-graph, module-decomposition,
+         system-overview, tooling-selection, verification-coverage-matrix);
+         purity-boundary-map.md retained desc (architecture Form A — reverted after erroneous
+         asc correction); 3 ADRs (Form B) retained desc per hook enforcement; BC-INDEX.md
+         retained desc (count-propagation blocker prevents any edit);
+         verification-coverage-matrix.md input-hash refreshed (pre-existing drift
+         `cabbed8`→`6b6537d` surfaced by changelog reorder edit). Post-fix census: PASS.
+
+       **Census command (copy-paste runnable; direction-aware (v2.32+); section-scoped to avoid
        false positives from example YAML in gate prose; covers all changelog-bearing files
        corpus-wide — 95 BCs + prd-supplements + architecture changelogs):**
        ```bash
        python3 << 'CENSUS'
        import re, glob
+       def expected_dir(path, form):
+           # Rule: prd-supplements and architecture are always descending.
+           # BC Form A (frontmatter YAML): ascending per gate convention.
+           # BC Form B (## Changelog table):
+           #   - *INDEX.md files: exempt (validate-changelog-monotonicity skips them;
+           #     validate-count-propagation blocks edits until STATE.md count is resolved).
+           #   - All other BC Form B: descending (machine-enforced by hook).
+           if '/prd-supplements/' in path: return 'desc'
+           if '/architecture/' in path: return 'desc'
+           if '/behavioral-contracts/' in path:
+               basename = path.split('/')[-1]
+               if form == 'B':
+                   if 'INDEX' in basename: return None  # exempt — hook skips, count-propagation blocks
+                   return 'desc'  # validate-changelog-monotonicity hook-enforced
+               return 'asc'  # Form A: ascending per gate convention
+           return None
        def chk(path):
            text = open(path).read()
            parts = text.split('---', 2)
@@ -1289,8 +1339,12 @@ split by wave avoids exception).
                    for j in range(len(nums)-1):
                        if nums[j] == nums[j+1]: continue
                        if (nums[j+1] > nums[j]) != asc:
-                           return '  %s (Form-A): %s->%s breaks %s' % (
+                           return '  %s (Form-A): %s->%s breaks monotonicity (%s)' % (
                                path, vers[j], vers[j+1], 'asc' if asc else 'desc')
+                   exp = expected_dir(path, 'A')
+                   if exp is not None and ('asc' if asc else 'desc') != exp:
+                       return '  %s (Form-A): direction=%s but file-class requires %s' % (
+                           path, 'asc' if asc else 'desc', exp)
                    return None
            # Form B: ## Changelog body section only
            bm = re.search(r'(?:^|\n)## Changelog\n(.*?)(?=\n## |\Z)', body, re.DOTALL)
@@ -1304,8 +1358,12 @@ split by wave avoids exception).
                    for j in range(len(nums)-1):
                        if nums[j] == nums[j+1]: continue
                        if (nums[j+1] > nums[j]) != asc:
-                           return '  %s (Form-B): %s->%s breaks %s' % (
+                           return '  %s (Form-B): %s->%s breaks monotonicity (%s)' % (
                                path, vers[j], vers[j+1], 'asc' if asc else 'desc')
+                   exp = expected_dir(path, 'B')
+                   if exp is not None and ('asc' if asc else 'desc') != exp:
+                       return '  %s (Form-B): direction=%s but file-class requires %s' % (
+                           path, 'asc' if asc else 'desc', exp)
            return None
        files = sorted(
            glob.glob('.factory/specs/behavioral-contracts/**/*.md', recursive=True) +
@@ -1313,10 +1371,10 @@ split by wave avoids exception).
            glob.glob('.factory/specs/architecture/**/*.md', recursive=True)
        )
        errs = [r for r in (chk(f) for f in files) if r]
-       print('\n'.join(errs) if errs else 'PASS -- all changelog version sequences are monotonic')
+       print('\n'.join(errs) if errs else 'PASS -- all changelog version sequences are monotonic and direction-correct')
        CENSUS
        ```
-       Expected output after corpus fix: **PASS — all changelog version sequences are monotonic**
+       Expected output after corpus fix: **PASS — all changelog version sequences are monotonic and direction-correct**
 
        **Scope:** ALL changelog-bearing files in `.factory/specs/`. This is a corpus-wide
        check — not limited to the file being edited in the current burst.
@@ -1873,6 +1931,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.32 | 2026-07-17 | OBS-P103-A (process-gap): gate #28 Rule 6 census was direction-agnostic — structurally unable to flag a consistently-wrong-direction file (a file whose changelog runs in the wrong direction for its class but is internally monotonic). Motivating instance: nfr-catalog.md ran 1.1→1.2 (ascending) but prd-supplements/ class requires DESCENDING; the burst-184 census passed it because the sequence has no inversions. Extended census command to direction-aware: replaced single-param `expected_dir(path)` with `expected_dir(path, form)` that correctly handles all five file classes (prd-supplements/ → desc; architecture/ → desc; behavioral-contracts/ Form A → asc; behavioral-contracts/ Form B non-INDEX → desc per hook; behavioral-contracts/ *INDEX.md → exempt). Direction rules confirmed via hook-source audit: `validate-changelog-monotonicity` hook fires on all `.factory/**/*.md` `## Changelog` body tables except `*STATE.md|*INDEX.md|*burst-log*|*convergence-trajectory*|*session-checkpoint*|*lessons*` — enforcing descending for architecture Form B and BC Form B non-INDEX. Gate prose Rule 6 bullet updated to match: BC Form A = asc; architecture all forms = desc; BC Form B non-INDEX = desc (hook-enforced); BC-INDEX = exempt. Motivating instance block for OBS-P103-A updated to document hook discovery, per-class rules, and BC-INDEX exemption rationale. Corpus-wide census results: 27 BC Form A files corrected desc→asc; nfr-catalog.md corrected asc→desc (F-P103-01); 7 architecture Form A files corrected asc→desc (ARCH-INDEX, api-surface, dependency-graph, module-decomposition, system-overview, tooling-selection, verification-coverage-matrix); purity-boundary-map.md retained desc (architecture Form A); 3 ADRs (Form B) retained desc per hook; BC-INDEX.md retained desc (count-propagation blocker); verification-coverage-matrix.md input-hash refreshed (pre-existing drift cabbed8→6b6537d). Post-fix census: PASS. `total_standing_gates` unchanged at 34 (sub-check extension of gate #28 Rule 6). | OBS-P103-A, F-P103-01 |
 | 2.31 | 2026-07-17 | Gate #28 extended: Rule 6 VERSION-MONOTONICITY (CHANGELOG-MONOTONICITY) sub-check added. Codified at 3rd recurrence (F-P97-03/BC-2.08.006, F-P101-02/BC-2.11.002, F-P102-01/BC-2.11.005). Direction-agnostic Python census command included (covers all changelog-bearing files corpus-wide). Machine enforcement deferral updated from "rules 1–5" to "rules 1–6"; Phase 3 decision tree extended with `assert version_monotonicity_within_file [Rule 6 — universal]` in both branches. bc-authoring-plan self-compliance verified (v2.31 changelog table descending — PASS). `total_standing_gates` unchanged at 34 (sub-check extension of gate #28). | F-P102-01 codification |
 | 2.30 | 2026-07-17 | F-P98-01 (count reconciliation): Gate #27 exemption note placeholder-total corrected 59 → 60 (59 literal `[architect to assign]` + 1 semantic variant `[architect to confirm]` in BC-2.08.009, caught at pass 97 per F-P97-01). Source reference updated from F-P96-01 alone to F-P96-01 + F-P97-01. Grep sweep for other live "59" placeholder-total references (changelog rows exempt): zero additional hits found. `total_standing_gates` unchanged at 34. | F-P98-01 |
 | 2.29 | 2026-07-17 | F-P97-04 (process-gap): Gate #27 residue class widened from literal `[architect to assign]` to semantic class `architect to (assign\|confirm\|determine\|resolve)` (bracketed or unbracketed); scope extended from `behavioral-contracts/` only to ALL of `.factory/specs/`; corpus-wide sweep command added. Sweep run: 2 live hits found and fixed in same burst (BC-2.08.009:199 per F-P97-01; prd.md:635 per F-P97-02); 2 exempt (bc-authoring-plan gate-rule text + changelog row). Additional sweeps — "PO to (confirm\|assign)": 0 hits; "to be confirmed": 0 hits; "TBD by": 0 hits. `total_standing_gates` unchanged at 34 (census widening of gate #27, not a new gate). | F-P97-04 |

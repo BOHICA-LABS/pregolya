@@ -33,8 +33,8 @@ retired: null
 removed: null
 removal_reason: null
 changelog:
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
   - "1.1 (ADV-P1D-PASS-31): F-P31-01 add PC7 for GET /runs?schedule_id aggregate query endpoint — limit default 10, max 100 (clamped), offset default 0, created_at DESC ordering declared as canon; update TV-002 notes to cite F-P31-01 pagination."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
 ---
 
 # BC-2.12.004: CronSchedule Creation and Proactive Run Execution

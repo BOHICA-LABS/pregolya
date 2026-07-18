@@ -16,9 +16,9 @@ red_gate: false
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
-  - "1.2 (ADV-P1D-PASS-33): F-P33-01 add PC21-PC23 — GET /assistants list-collection postcondition block (response shape { assistants: [Assistant], total_count: u64 }, limit default 10 max 100 clamped / offset 0 / created_at DESC); interface-definitions.md §Canonical Pagination Convention BC anchors updated. F-P33-02 add cross-reference to run-config merge precedence canon in Description."
   - "1.1 (ADV-P1D-PASS-32): F-P32-03 add PC20 — GET /assistants/{id}/versions pagination (limit default 10 max 100 clamped / offset 0 / ordering exemption: version ASC) matching interface-definitions.md §Assistants /versions row."
+  - "1.2 (ADV-P1D-PASS-33): F-P33-01 add PC21-PC23 — GET /assistants list-collection postcondition block (response shape { assistants: [Assistant], total_count: u64 }, limit default 10 max 100 clamped / offset 0 / created_at DESC); interface-definitions.md §Canonical Pagination Convention BC anchors updated. F-P33-02 add cross-reference to run-config merge precedence canon in Description."
+  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:

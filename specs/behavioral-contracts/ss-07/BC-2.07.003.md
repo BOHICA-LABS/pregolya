@@ -4,8 +4,8 @@ level: L3
 bc_id: BC-2.07.003
 version: "1.2"
 changelog:
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-splitters per module-decomposition.md v1.10."
   - "1.1 (OBS-P95-A, 2026-07-17): VP-SPLIT-06..008 renumbered to VP-SPLIT-06..08 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — renumber is the production-grade call). No VP-INDEX registration affected (SPLIT VPs are BC-local)."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-splitters per module-decomposition.md v1.10."
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield

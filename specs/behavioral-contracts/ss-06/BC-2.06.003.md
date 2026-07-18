@@ -15,9 +15,9 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). New invariant added: GuardrailDecision is a stream-observer notification only — not emitted in unary mode; GuardrailHook::evaluate fires on both paths per DI-012; absence from unary output is NOT a DI-011 violation (execution-path vs stream-observer equivalence)."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server / ferrochain-graph per module-decomposition.md v1.10."
   - "1.1 (F-P91-01, 2026-07-17): EC-005 sweep fix — 'BudgetPolicy with on_ceiling = halt' → 'BudgetConfig with on_ceiling = OnCeiling::Halt'. on_ceiling is a field of BudgetConfig (interface-definitions v2.29 §BudgetConfig); BudgetPolicy::evaluate is pure and data-free. Part of the full SS-10 + corpus sweep for BudgetPolicy::on_ceiling mis-attributions."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server / ferrochain-graph per module-decomposition.md v1.10."
+  - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). New invariant added: GuardrailDecision is a stream-observer notification only — not emitted in unary mode; GuardrailHook::evaluate fires on both paths per DI-012; absence from unary output is NOT a DI-011 violation (execution-path vs stream-observer equivalence)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
   - domain-spec/invariants.md#DI-011

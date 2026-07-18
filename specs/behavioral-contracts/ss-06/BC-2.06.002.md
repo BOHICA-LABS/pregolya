@@ -15,8 +15,8 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
   - "1.1 (F-P93-04 class-sweep, 2026-07-17): VP ID collision resolved. BC-2.06.001 and BC-2.06.002 both defined VP-STREAM-02 with semantically identical (run_id + parent_ids) descriptions. Resolution per append-only-numbering policy: BC-2.06.001's VP-STREAM-02 (lower ID, canonical) kept; BC-2.06.002's VP-STREAM-02 renumbered → VP-STREAM-04 (next free after VP-STREAM-03 in BC-2.06.003). VP Anchors updated accordingly. Detected by OBS-P93-01 VP uniqueness census."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
 inputs:

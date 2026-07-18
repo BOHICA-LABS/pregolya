@@ -14,8 +14,8 @@ input-hash: "d6c6495"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7]
 changelog:
-  - "1.0 (initial): crate dependency DAG authored."
   - "1.1 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst; add [Section Content] template compliance fix. No spec content changes."
+  - "1.0 (initial): crate dependency DAG authored."
 ---
 
 # Dependency Graph: ferrochain

@@ -15,8 +15,8 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
-  - "1.2 (F-P94-03 sweep, 2026-07-17): Fix two Deny-halt characterizations that omit the three-way on_ceiling dispatch. TV-002 Note: 'Deny recorded before halt' → 'Deny recorded before engine dispatch (on_ceiling=Halt scenario)' — TV-002 tests a specific Halt scenario so the note is now explicit. Related BCs BC-2.10.003 line: 'Deny entries are written before the halt is executed' → 'Deny entries are written before engine dispatch (halt / HITL interrupt / summarize call); see BC-2.10.003 for halt and summarize paths'."
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 propagation. Module field resolved from stale placeholder: EvidenceJournal and append API remain in ferrochain-graph; SQLite backend in ferrochain-checkpoint. No Architecture Anchor crate changes (all existing anchors already correct per ADR-009 split)."
+  - "1.2 (F-P94-03 sweep, 2026-07-17): Fix two Deny-halt characterizations that omit the three-way on_ceiling dispatch. TV-002 Note: 'Deny recorded before halt' → 'Deny recorded before engine dispatch (on_ceiling=Halt scenario)' — TV-002 tests a specific Halt scenario so the note is now explicit. Related BCs BC-2.10.003 line: 'Deny entries are written before the halt is executed' → 'Deny entries are written before engine dispatch (halt / HITL interrupt / summarize call); see BC-2.10.003 for halt and summarize paths'."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:

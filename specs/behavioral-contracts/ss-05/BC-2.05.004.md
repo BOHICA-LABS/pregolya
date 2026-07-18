@@ -10,8 +10,8 @@ origin: greenfield
 priority: P0
 subsystem: SS-05
 changelog:
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
   - "1.1 (ADV-P1D-PASS-25): F-P25-05 PC4 'id field'→'interrupt_id field' with authority citations."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
 capability: CAP-006
 wave: 1
 phase: 1a

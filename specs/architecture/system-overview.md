@@ -15,8 +15,8 @@ input-hash: "12b3713"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D9, D11, D13, D17]
 changelog:
-  - "1.0 (initial): system overview authored."
   - "1.1 (provenance-fix-169/2026-07-17): remove .factory/STATE.md from inputs (not a genuine spec-content input; D-NNN decisions are baked-in stable facts); add domain-spec/invariants.md (genuine: DI-001, DI-008, DI-010 cited in Principles table)."
+  - "1.0 (initial): system overview authored."
 ---
 
 # System Overview: ferrochain

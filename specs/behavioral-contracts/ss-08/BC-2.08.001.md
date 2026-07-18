@@ -15,8 +15,8 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-standard-tests per module-decomposition.md v1.10."
   - "1.1 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(FerrochainError { category: TRANSPORT, … })` (Unicode-ellipsis form) without specifying a code in this BC. Added code: E-PROV-003 (StreamInterrupted) explicitly to EC-003 per gate #30 rule: ellipsis forms are exempt only if the BC itself specifies the code for that path. Code confirmed from cross-referenced BC-2.08.007 EC-001/TV-001."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-standard-tests per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011

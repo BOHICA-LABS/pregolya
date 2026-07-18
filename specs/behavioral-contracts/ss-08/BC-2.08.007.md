@@ -15,9 +15,9 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
-  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-<provider>-sdk per module-decomposition.md v1.10."
-  - "1.2 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-PROV-002 message-prefix correction. PC1: added 'ProviderTimeout:' prefix per universal <ErrorName>: <detail> convention (D18-P78-A adjudication; BC lacked prefix). Message was 'stream chunk timeout after <duration>'; corrected to 'ProviderTimeout: stream chunk timeout after <duration>'. Taxonomy E-PROV-002 corrected simultaneously: dropped '<provider>' parameter and changed '<ms>ms' to '<duration>' (BC wins on content — no provider name in BC message; duration placeholder more precise than ms-specific)."
   - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-003, EC-004, TV-001, TV-003, TV-005 each had category-only FerrochainError constructions with no code field. Added code: E-PROV-002 (ProviderTimeout) to TIMEOUT constructions and code: E-PROV-003 (StreamInterrupted) to TRANSPORT constructions per error-taxonomy.md BC anchors."
+  - "1.2 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-PROV-002 message-prefix correction. PC1: added 'ProviderTimeout:' prefix per universal <ErrorName>: <detail> convention (D18-P78-A adjudication; BC lacked prefix). Message was 'stream chunk timeout after <duration>'; corrected to 'ProviderTimeout: stream chunk timeout after <duration>'. Taxonomy E-PROV-002 corrected simultaneously: dropped '<provider>' parameter and changed '<ms>ms' to '<duration>' (BC wins on content — no provider name in BC message; duration placeholder more precise than ms-specific)."
+  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-<provider>-sdk per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-014

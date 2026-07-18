@@ -742,3 +742,17 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 183): No new D-NNN decisions. F-P101-01 final D18-P99-A radius fix (BA). F-P101-02 BC-2.11.002 metadata reorder (PO).
 ### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 183 | Counter 0/3 (Phase 1d)
+
+---
+
+## Burst 184 — Session Resume Checkpoint (archived from STATE.md by burst 185)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 102 passes / 106 fix bursts, counter 0/3 (strict-zero D-14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 513 = 504+9, StreamEvent 12 variants). trajectory-tail →1→3→2→2. NEXT ACTION: dispatch adversary pass 103 — PASS-103 SIBLING-CHECKS: (1) gate #28 Rule 6 VERSION-MONOTONICITY census re-verify: all 14 repaired files ascending/descending correct per file-class (BCs+architecture ascend; prd-supplements descend per D18-P64-B; equal-version adjacency permitted), (2) bc-authoring-plan v2.31 Rule 6 prose coherent with prior Rules 1–5, (3) zero live changelog-transposition violations corpus-wide (124 files). Loop per D-15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 184 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-102 FIX SUMMARY: F-P102-01 (LOW, PO) — BC-2.11.005 changelog rows reordered ascending (1.0, 1.1, 1.2, 1.3); pure metadata reorder; gate #28 Rule 3. F-P102-OBS-A (OBS [process-gap], PO+orchestrator — D18-P102-A) — gate #28 Rule 6 VERSION-MONOTONICITY minted; bc-authoring-plan v2.30→v2.31; first census: 14 total transposed files repaired; orchestrator correction: error-taxonomy+interface-definitions restored to descending/supplement-convention. D18-P89-A sweep 4-pass: 9→12→81→0 stale; TOTAL MATCH 128/128.
+### BURST-184 SIBLING-CHECKS OWED (pass 103 must verify): gate #28 Rule 6 census re-verify (14 repaired files correct direction); bc-authoring-plan v2.31 Rule 6 coherent; zero corpus-wide changelog-transposition violations.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (burst 184): D18-P102-A — Gate #28 Rule 6 VERSION-MONOTONICITY minted (adversary+PO+orchestrator).
+### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 184 | Counter 0/3 (Phase 1d)

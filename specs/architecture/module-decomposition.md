@@ -14,17 +14,17 @@ input-hash: "0426dd1"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20]
 changelog:
-  - "1.0 (initial): base module decomposition authored."
-  - "1.1 (ADV-P1D-PASS-29): F-P29-04 correct core::events description from past-tense (RunStarted/Ended, NodeStarted/Ended) to imperative canon (RunStart/Stream/End, NodeStart/Stream/End) per BC-2.06.001 authority."
-  - "1.2 (ADV-P1D-PASS-37): F-P37-01 reconcile criticality column drift against authoritative module-criticality.md — core::message CRITICAL→HIGH; graph::channels CRITICAL→HIGH; graph::event_emitter HIGH→MEDIUM; ferrochain-macros section heading MEDIUM→HIGH; macros::tool/entrypoint/task all MEDIUM→HIGH."
-  - "1.3 (ADV-P1D-PASS-61): F-P61-01 add ferrochain-core budget definitions note per ADR-009 Option 3; qualify graph::budget row to clarify trait lives in core; rename BudgetContext → RunContext per pass-61 adjudication."
-  - "1.4 (ADV-P1D-PASS-62): F-P62-01 add deny-anyhow-in-lib (ADR-010/NE-03/DI-014) and deny-description-cache-key (ADR-011/NE-05) to xtask inventory; add non-exhaustive qualifier citing behavioral-contracts/ as authoritative subcommand registry."
-  - "1.5 (D20/ADR-012): add ferrochain-core self-improvement definitions note (core::context_mutation + core::write_guard, definitions-only, no new rows per ADR-009 precedent); add memory::skills (MEDIUM) and memory::write_guard (HIGH) module rows to ferrochain-memory per ADR-012 placements. Universe 33→34 (+memory::write_guard HIGH execution row, gate #25)."
-  - "1.6 (D20/CAP-021+CAP-020): add mcp::server (MEDIUM) to ferrochain-mcp for CAP-021 MCP server role; add BC anchors note to ferrochain-mcp section; update ferrochain-memory BC anchors to BC-2.15.001–006 for CAP-020. Universe 34→35 (+mcp::server MEDIUM execution row, gate #25)."
-  - "1.7 (F-P72-04/ADR-013): correct mcp::server attribution from ADR-012 to ADR-013; ADR-012 contains no MCP server content."
-  - "1.8 (provenance-fix-169/2026-07-17): remove .factory/STATE.md from inputs (not a genuine spec-content input; D-NNN decisions are baked-in stable facts per PO corpus adjudication)."
-  - "1.9 (F-P91-02 sibling sweep, 2026-07-17): update budget definitions note to include OnCeiling enum and BudgetConfig struct (both newly defined in interface-definitions.md v2.29); note now lists all six core::budget types: BudgetPolicy, PolicyDecision, OnCeiling, BudgetConfig, TokenUsage, RunContext."
   - "1.10 (F-P92-02, 2026-07-17): budget definitions note extended — RunnableConfig (core::config, SS-01) gains budget_config: Option<BudgetConfig> per OPTION A adjudication (BC-2.10.004 PC6 / BC-2.10.003 PC7/TV-004). Parallel to the context_mutations addition in the self-improvement definitions note. No new module rows — BudgetConfig is already a pure-core type in core::budget; the field addition does not change core::config's module boundary or criticality tier."
+  - "1.9 (F-P91-02 sibling sweep, 2026-07-17): update budget definitions note to include OnCeiling enum and BudgetConfig struct (both newly defined in interface-definitions.md v2.29); note now lists all six core::budget types: BudgetPolicy, PolicyDecision, OnCeiling, BudgetConfig, TokenUsage, RunContext."
+  - "1.8 (provenance-fix-169/2026-07-17): remove .factory/STATE.md from inputs (not a genuine spec-content input; D-NNN decisions are baked-in stable facts per PO corpus adjudication)."
+  - "1.7 (F-P72-04/ADR-013): correct mcp::server attribution from ADR-012 to ADR-013; ADR-012 contains no MCP server content."
+  - "1.6 (D20/CAP-021+CAP-020): add mcp::server (MEDIUM) to ferrochain-mcp for CAP-021 MCP server role; add BC anchors note to ferrochain-mcp section; update ferrochain-memory BC anchors to BC-2.15.001–006 for CAP-020. Universe 34→35 (+mcp::server MEDIUM execution row, gate #25)."
+  - "1.5 (D20/ADR-012): add ferrochain-core self-improvement definitions note (core::context_mutation + core::write_guard, definitions-only, no new rows per ADR-009 precedent); add memory::skills (MEDIUM) and memory::write_guard (HIGH) module rows to ferrochain-memory per ADR-012 placements. Universe 33→34 (+memory::write_guard HIGH execution row, gate #25)."
+  - "1.4 (ADV-P1D-PASS-62): F-P62-01 add deny-anyhow-in-lib (ADR-010/NE-03/DI-014) and deny-description-cache-key (ADR-011/NE-05) to xtask inventory; add non-exhaustive qualifier citing behavioral-contracts/ as authoritative subcommand registry."
+  - "1.3 (ADV-P1D-PASS-61): F-P61-01 add ferrochain-core budget definitions note per ADR-009 Option 3; qualify graph::budget row to clarify trait lives in core; rename BudgetContext → RunContext per pass-61 adjudication."
+  - "1.2 (ADV-P1D-PASS-37): F-P37-01 reconcile criticality column drift against authoritative module-criticality.md — core::message CRITICAL→HIGH; graph::channels CRITICAL→HIGH; graph::event_emitter HIGH→MEDIUM; ferrochain-macros section heading MEDIUM→HIGH; macros::tool/entrypoint/task all MEDIUM→HIGH."
+  - "1.1 (ADV-P1D-PASS-29): F-P29-04 correct core::events description from past-tense (RunStarted/Ended, NodeStarted/Ended) to imperative canon (RunStart/Stream/End, NodeStart/Stream/End) per BC-2.06.001 authority."
+  - "1.0 (initial): base module decomposition authored."
 ---
 
 # Module Decomposition: ferrochain
