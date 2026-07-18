@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "3dea2b9"
+input-hash: "856b2fa"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11
@@ -23,8 +23,8 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
-  - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). PC1 — extended with streaming surface isolation clause: ToolEnd.data carries post-guardrail content; GuardrailDecision carries metadata only; zero rejected bytes in any StreamEvent payload. New INV-5 — streaming surface subject to same content isolation; GuardrailDecision carries metadata only; enforced structurally via ordering."
   - "1.2 (ADV-P1D-PASS-59): F-P59-02 — EC-002 description and TV fixed to typecheck against Transform { new_content: IngressContent }. Bare ContentBlock::text('[REDACTED]') → IngressContent::ToolResult(ContentBlock::text('[REDACTED]')); EC-002 description updated to reflect IngressContent wrapper (same-boundary rule). ToolResult used as the concrete example boundary per BC-2.11.002 EC-003 authority."
+  - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). PC1 — extended with streaming surface isolation clause: ToolEnd.data carries post-guardrail content; GuardrailDecision carries metadata only; zero rejected bytes in any StreamEvent payload. New INV-5 — streaming surface subject to same content isolation; GuardrailDecision carries metadata only; enforced structurally via ordering."
 modified: []
 extracted_from: null
 deprecated: null

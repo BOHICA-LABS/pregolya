@@ -10,10 +10,10 @@ origin: greenfield
 priority: P0
 subsystem: SS-14
 changelog:
-  - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core / ferrochain-server per module-decomposition.md v1.10."
   - "1.1 (ADV-P1D-PASS-25): F-P25-01 PC3 add per-endpoint override block (E-SERVER-016→503); OBS-1 invariant precedence carve-out added."
   - "1.2 (ADV-P1D-PASS-26): F-P26-01 PC3 Known-overrides enumeration expanded to all 8 per-endpoint override classes; E-SERVER-004 removed from invariant divergence-example list (POLICY→403 is the categorical default, not a divergence)."
   - "1.3 (ADV-P1D-PASS-27): F-P27-01 add 9th Known-override: E-GRAPH-002 POLICY→422 on resume endpoint; canon: pass-23 deliberately set 422 (semantic state validation failure — no active interrupt slot); POLICY→403 categorical default does not apply because 'no active interrupt' is an unprocessable-entity condition, not a policy rejection."
+  - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core / ferrochain-server per module-decomposition.md v1.10."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "dfae81d"
+input-hash: "77e86b4"
 extracted_from: null
 modified: []
 deprecated: null

@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-003-durability-tiers.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "[state-manager to compute]"
+input-hash: "ebc7d06"
 ---
 
 # ADR Technology Validation — ferrochain Phase-1

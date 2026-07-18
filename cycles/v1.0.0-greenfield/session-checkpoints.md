@@ -728,3 +728,17 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 182): No new D-NNN decisions. F-P100-02 symmetric propagation: BC-2.11.003 v1.5 + BC-2.11.004 v1.5 (PO). Architect: ADR-006 rev-4 citation-completeness. F-P100-01/03: events.md v1.4 vocabulary (BA).
 ### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 182 | Counter 0/3 (Phase 1d)
+
+---
+
+## Burst 183 — Session Resume Checkpoint (archived from STATE.md by burst 184)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 101 passes / 105 fix bursts, counter 0/3 (strict-zero D-14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 513 = 504+9, StreamEvent 12 variants). trajectory-tail →1→1→3→2. NEXT ACTION: dispatch adversary pass 102 — PASS-102 SIBLING-CHECKS (short — radius should be closed): (1) events.md v1.5 boundary-qualified ordering clause coherent with ADR-006 causal ordering + BC-2.06.001 PC4 (ToolResult: before tool_end; RagChunk/MemoryItem: within NodeStart/NodeEnd), (2) BC-2.11.002 changelog ascending convention (v1.5 above v1.6), (3) FINAL radius grep — if pass 102 finds ANY further GuardrailDecision-radius residue, escalate severity one level for repeated propagation failure (three-burst propagation now complete: burst-181 ToolResult, burst-182 RAG/Memory+vocabulary, burst-183 ordering clause). Loop per D-15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 183 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-101 FIX SUMMARY: F-P101-01 (MED [process-gap], BA) — events.md v1.4→v1.5: GuardrailChecked Stream-surface ordering clause boundary-qualified (ToolResult: fires before enclosing tool_end, tool_call_id present; RagChunk/MemoryItem: fires within NodeStart/NodeEnd, before inference, tool_call_id absent; per ADR-006+BC-2.06.001 PC4); ToolInvoked line correctly tool-scoped (sweep PASS); zero other unconditional ordering claims found. F-P101-02 (OBS, PO) — BC-2.11.002 changelog rows v1.6/v1.5 reordered ascending (pure metadata; gate #28 Rule 3). D18-P89-A sweep: events.md v1.5 staled BC-2.06.001.md + BC-2.06.002.md; 2/2 refreshed; TOTAL MATCH. GuardrailDecision radius NOW FULLY CLOSED.
+### BURST-183 SIBLING-CHECKS OWED (pass 102 must verify): events.md v1.5 boundary-qualified ordering clause; BC-2.11.002 ascending changelog; final radius grep for any GuardrailDecision residue.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (burst 183): No new D-NNN decisions. F-P101-01 final D18-P99-A radius fix (BA). F-P101-02 BC-2.11.002 metadata reorder (PO).
+### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 183 | Counter 0/3 (Phase 1d)

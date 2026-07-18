@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.30"
+version: "2.31"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -10,7 +10,7 @@ phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "2a4d9da"
+input-hash: "85b295b"
 traces_to: prd.md
 total_bcs: 95
 total_batches: 15
@@ -1235,7 +1235,96 @@ split by wave avoids exception).
 
        **Convention note:** BC-2.07.002 (ts 2026-07-13, newest changelog 2026-07-15), BC-2.08.011 (ts 2026-07-13, newest changelog 2026-07-14), and BC-2.08.012 (ts 2026-07-13, newest changelog 2026-07-14) are COMPLIANT under the scoped rule — each timestamp equals its v1.0 initial authoring date. DEFER-002 machine enforcement at Phase 3 must branch on `introduced:` field presence: `if has_introduced: assert timestamp == v1.0_changelog_date; else: assert timestamp == max_changelog_date`.
 
-    **Machine enforcement deferral (OBS-P75-A / DEFER-002):** Pre-commit hook and CI lint enforcement of rules 1–5 is DEFERRED to Phase 3 CI hardening. Deferral logged by state-manager as a STATE.md drift/deferral entry. Until machine enforcement, burst discipline governs — every PO burst that touches a changelog file must manually run the date-validity sub-check.
+    6. **VERSION-MONOTONICITY (CHANGELOG-MONOTONICITY — added 2026-07-17; codified at 3rd
+       recurrence per lessons-codification.md policy; prior: F-P97-03/BC-2.08.006,
+       F-P101-02/BC-2.11.002, F-P102-01/BC-2.11.005):**
+       Every changelog-bearing file's version entries MUST be ordered monotonically in ONE
+       direction consistent with that file's own established convention. The direction is
+       determined from the file's first two distinct-version rows — once established, no
+       subsequent version transition may reverse it.
+
+       - **BC files** (`.factory/specs/behavioral-contracts/`) and **architecture files**
+         (`.factory/specs/architecture/`), Form A or B: direction = **ascending** (oldest
+         version at top, newest at bottom).
+       - **Supplement files** (`.factory/specs/prd-supplements/`), Form A or B: direction =
+         **descending** (newest version at top) per D18-P64-B. `error-taxonomy.md` and
+         `interface-definitions.md` use Form A YAML frontmatter but follow this descending
+         convention — the form (A vs B) does NOT determine direction; the file's path
+         (`behavioral-contracts/` or `architecture/` = ascending; `prd-supplements/` =
+         descending) determines convention.
+       - **Equal-version adjacent rows** (same-version multi-event entries) are permitted and
+         do not affect direction determination.
+
+       **Why this is independent of Rule 3 (date ordering):** Rule 3 detects date VALUES that
+       are out of temporal order relative to surrounding rows. Rule 6 detects version NUMBERS
+       that are positionally transposed — even when both transposed entries share the same date,
+       making the transposition invisible to a date-ordering check.
+
+       **Motivating instances (3-recurrence threshold met 2026-07-17):**
+       - F-P97-03 (ADV-P1D-PASS-97): BC-2.08.006 changelog transposition
+       - F-P101-02 (ADV-P1D-PASS-101): BC-2.11.002 changelog transposition
+       - F-P102-01 (ADV-P1D-PASS-102): BC-2.11.005 — version 1.3 appeared before 1.2 in the
+         ascending YAML list; corrected by swapping the two rows (pure reorder, no version bump)
+
+       **Census command (copy-paste runnable; direction-agnostic; section-scoped to avoid
+       false positives from example YAML in gate prose; covers all changelog-bearing files
+       corpus-wide — 95 BCs + prd-supplements + architecture changelogs):**
+       ```bash
+       python3 << 'CENSUS'
+       import re, glob
+       def chk(path):
+           text = open(path).read()
+           parts = text.split('---', 2)
+           fm = parts[1] if len(parts) >= 3 else ''
+           body = parts[2] if len(parts) >= 3 else text
+           # Form A: changelog: YAML list in frontmatter only
+           fm_m = re.search(r'^changelog:\s*\n((?:[ \t]+-[ \t]+.*\n)+)', fm, re.MULTILINE)
+           if fm_m:
+               vers = re.findall(r'^[ \t]+-[ \t]+"(\d+\.\d+)', fm_m.group(0), re.MULTILINE)
+               if len(vers) >= 2:
+                   nums = [tuple(int(x) for x in v.split('.')) for v in vers]
+                   i = next((j for j in range(len(nums)-1) if nums[j] != nums[j+1]), None)
+                   if i is None: return None
+                   asc = nums[i+1] > nums[i]
+                   for j in range(len(nums)-1):
+                       if nums[j] == nums[j+1]: continue
+                       if (nums[j+1] > nums[j]) != asc:
+                           return '  %s (Form-A): %s->%s breaks %s' % (
+                               path, vers[j], vers[j+1], 'asc' if asc else 'desc')
+                   return None
+           # Form B: ## Changelog body section only
+           bm = re.search(r'(?:^|\n)## Changelog\n(.*?)(?=\n## |\Z)', body, re.DOTALL)
+           if bm:
+               vers = re.findall(r'^\|\s*(\d+\.\d+)\s*\|', bm.group(1), re.MULTILINE)
+               if len(vers) >= 2:
+                   nums = [tuple(int(x) for x in v.split('.')) for v in vers]
+                   i = next((j for j in range(len(nums)-1) if nums[j] != nums[j+1]), None)
+                   if i is None: return None
+                   asc = nums[i+1] > nums[i]
+                   for j in range(len(nums)-1):
+                       if nums[j] == nums[j+1]: continue
+                       if (nums[j+1] > nums[j]) != asc:
+                           return '  %s (Form-B): %s->%s breaks %s' % (
+                               path, vers[j], vers[j+1], 'asc' if asc else 'desc')
+           return None
+       files = sorted(
+           glob.glob('.factory/specs/behavioral-contracts/**/*.md', recursive=True) +
+           glob.glob('.factory/specs/prd-supplements/*.md') +
+           glob.glob('.factory/specs/architecture/**/*.md', recursive=True)
+       )
+       errs = [r for r in (chk(f) for f in files) if r]
+       print('\n'.join(errs) if errs else 'PASS -- all changelog version sequences are monotonic')
+       CENSUS
+       ```
+       Expected output after corpus fix: **PASS — all changelog version sequences are monotonic**
+
+       **Scope:** ALL changelog-bearing files in `.factory/specs/`. This is a corpus-wide
+       check — not limited to the file being edited in the current burst.
+
+       **Trigger:** Every burst that creates new BCs, bumps any version, or edits any
+       changelog entry + every adversary rotation.
+
+    **Machine enforcement deferral (OBS-P75-A / DEFER-002):** Pre-commit hook and CI lint enforcement of rules 1–6 is DEFERRED to Phase 3 CI hardening. Deferral logged by state-manager as a STATE.md drift/deferral entry. Until machine enforcement, burst discipline governs — every PO burst that touches a changelog file must manually run the date-validity and version-monotonicity sub-checks.
 
     The Phase 3 linter MUST implement the following decision tree, branching on `introduced:`
     field presence (D18-P86-A for Rule 5 scoping; D18-P87-A for Rule 1 scoping):
@@ -1246,6 +1335,7 @@ split by wave avoids exception).
         assert monotonic_ordering_within_file          [Rule 3 — universal]
         assert temporal_neighbor_sweep                 [Rule 4 — universal]
         assert timestamp == v1.0_changelog_row_date    [Rule 5 BC branch]
+        assert version_monotonicity_within_file        [Rule 6 — universal]
         # Rule 1 does NOT apply — timestamp frozen at v1.0 authoring date
     else (supplement documents, `introduced:` field absent):
         assert date ≤ frontmatter_timestamp            [Rule 1 — supplement branch only]
@@ -1253,6 +1343,7 @@ split by wave avoids exception).
         assert monotonic_ordering_within_file          [Rule 3 — universal]
         assert temporal_neighbor_sweep                 [Rule 4 — universal]
         assert timestamp == max_changelog_date         [Rule 5 supplement branch]
+        assert version_monotonicity_within_file        [Rule 6 — universal]
     ```
 
     **Revert rule:** If git history shows a BC was never substantively modified (only metadata
@@ -1782,6 +1873,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.31 | 2026-07-17 | Gate #28 extended: Rule 6 VERSION-MONOTONICITY (CHANGELOG-MONOTONICITY) sub-check added. Codified at 3rd recurrence (F-P97-03/BC-2.08.006, F-P101-02/BC-2.11.002, F-P102-01/BC-2.11.005). Direction-agnostic Python census command included (covers all changelog-bearing files corpus-wide). Machine enforcement deferral updated from "rules 1–5" to "rules 1–6"; Phase 3 decision tree extended with `assert version_monotonicity_within_file [Rule 6 — universal]` in both branches. bc-authoring-plan self-compliance verified (v2.31 changelog table descending — PASS). `total_standing_gates` unchanged at 34 (sub-check extension of gate #28). | F-P102-01 codification |
 | 2.30 | 2026-07-17 | F-P98-01 (count reconciliation): Gate #27 exemption note placeholder-total corrected 59 → 60 (59 literal `[architect to assign]` + 1 semantic variant `[architect to confirm]` in BC-2.08.009, caught at pass 97 per F-P97-01). Source reference updated from F-P96-01 alone to F-P96-01 + F-P97-01. Grep sweep for other live "59" placeholder-total references (changelog rows exempt): zero additional hits found. `total_standing_gates` unchanged at 34. | F-P98-01 |
 | 2.29 | 2026-07-17 | F-P97-04 (process-gap): Gate #27 residue class widened from literal `[architect to assign]` to semantic class `architect to (assign\|confirm\|determine\|resolve)` (bracketed or unbracketed); scope extended from `behavioral-contracts/` only to ALL of `.factory/specs/`; corpus-wide sweep command added. Sweep run: 2 live hits found and fixed in same burst (BC-2.08.009:199 per F-P97-01; prd.md:635 per F-P97-02); 2 exempt (bc-authoring-plan gate-rule text + changelog row). Additional sweeps — "PO to (confirm\|assign)": 0 hits; "to be confirmed": 0 hits; "TBD by": 0 hits. `total_standing_gates` unchanged at 34 (census widening of gate #27, not a new gate). | F-P97-04 |
 | 2.28 | 2026-07-17 | F-P96-01: Gate #27 exemption updated — `[architect to assign]` placeholder class removed from accepted exemptions. All 59 vestigial Module-field placeholders across `.factory/specs/behavioral-contracts/` resolved to authoritative crate assignments per module-decomposition.md v1.10. New BCs must carry resolved Module fields from authoring. | F-P96-01 |

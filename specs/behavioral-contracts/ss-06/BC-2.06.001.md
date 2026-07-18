@@ -24,12 +24,12 @@ inputs:
   - .factory/specs/domain-spec/events.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "6e0baf8"
+input-hash: "7880b22"
 changelog:
-  - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). (a) PC2 — added GuardrailDecision bullet (12th variant) after ToolEnd; updated ToolEnd bullet to reference post-guardrail content semantics per interface-definitions §StreamEvent. (b) PC4 causal ordering updated with GuardrailDecision[RagChunk|MemoryItem]* and GuardrailDecision[ToolResult]* positions. (c) New EC-006: N ContentBlocks K rejected → K GuardrailDecision events in evaluation order before ONE ToolEnd with post-guardrail output. H1 title updated to include guardrail_decision."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-46): F-P46-01 adjudication — add EC-005 (failed-run stream termination). BC-2.06.001 PC2 states RunEnd emits 'once at run completion' (completion-only contract) but had no explicit edge case for failed runs. EC-005 makes the authority explicit: stream closes after error SSE event; no RunEnd emitted on failure. This resolves EC-001 hedge in BC-2.12.007 and establishes the source-of-truth for failure-termination across the streaming surface."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
+  - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). (a) PC2 — added GuardrailDecision bullet (12th variant) after ToolEnd; updated ToolEnd bullet to reference post-guardrail content semantics per interface-definitions §StreamEvent. (b) PC4 causal ordering updated with GuardrailDecision[RagChunk|MemoryItem]* and GuardrailDecision[ToolResult]* positions. (c) New EC-006: N ContentBlocks K rejected → K GuardrailDecision events in evaluation order before ONE ToolEnd with post-guardrail output. H1 title updated to include guardrail_decision."
 extracted_from: null
 modified: []
 deprecated: null
