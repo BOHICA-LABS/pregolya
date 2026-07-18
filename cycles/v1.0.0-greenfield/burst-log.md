@@ -1815,3 +1815,30 @@ Phase 1d pass 68 adversarial review completed: CLEAN — 0 findings. Counter adv
 **Dim-5:** counter 0/3 (unchanged); next action: dispatch adversary pass 108
 **Dim-7:** finding trajectory tail →1→1→1→1 (passes 104/105/106/107); trajectory append →1 (pass-107)
 **Root cause documented:** EC-003 prose "preserving the panic message as the error source" — "error source" conflated source-node routing context with panic-text payload; sweep accepted single `source` field as covering both taxonomy placeholders without noticing two-field requirement.
+
+---
+
+## Archived from STATE.md Current Phase Steps (burst 192 rotation)
+
+| Phase 1d burst 187 — pass 104 record + fix burst 108 (F-P104-01 RESOLVED) | architect + state-manager | COMPLETE | Pass 104: NOT CLEAN strict+PR-merge — 1 MED (F-P104-01). F-P104-01 RESOLVED: ARCH-INDEX.md v1.1 row reconstructed from commit 8aebfcd (burst 86, 2026-07-14) + v1.0 row from commit ef41eda (burst 73, 2026-07-13) with NOTE markers; api-surface.md v1.0 row reconstructed from ef41eda with NOTE. No version bump/timestamp change (pure changelog-metadata reconstruction per F-P88-03 precedent). Missing-level corpus sweep all arch files + ADR-009/012/013: all PASS. D18-P89-A sweep: 2 stale (module-criticality.md + verification-coverage-matrix.md transitively) → refreshed; cascade TOTAL MATCH. Pre-existing stale flagged: ARCH-INDEX.md own input-hash (b6f6a46→0ec6c18), L2-INDEX.md (5da00db→3c54b46) — require separate sweep. sidecar-learning.md 2026-07-18T16:53:31Z included. Trajectory →1 (P1D-104). Counter 0/3. Fix bursts 107→108. Burst 187. |
+
+---
+
+## Burst: hash-currency closure burst-192 (D18-P89-A cascade, burst-191 sweep miss) (2026-07-19)
+
+**Parent-commit:** 90975f0 (burst-191 — pass-107 + fix-burst-111)
+**Adversary verdict:** N/A — bookkeeping-only burst; no adversary pass dispatched.
+**Files touched (Dim-1): 5 unique files**
+- specs/behavioral-contracts/ss-07/BC-2.07.001.md (input-hash b52167a→43fee7a; error-taxonomy listed in inputs; v1.21 cascade; zero content change)
+- specs/behavioral-contracts/ss-14/BC-2.14.001.md (input-hash 4138081→cda09ef; error-taxonomy listed in inputs; v1.21 cascade; zero content change)
+- specs/behavioral-contracts/ss-14/BC-2.14.002.md (input-hash 4138081→cda09ef; error-taxonomy listed in inputs; v1.21 cascade; zero content change)
+- STATE.md (v3.31→v3.32; current_step updated; burst-192 row added; burst-187 rotated to burst-log)
+- cycles/v1.0.0-greenfield/burst-log.md (this file; burst-192 entry + burst-187 archive added)
+**Dim-2:** No new behavioral contracts authored. Hash-only refresh (zero content change) on 3 BCs — mechanical per D18-P89-A + D18-P90-A.
+**D18-P89-A sweep end-state:** TOTAL=126 MATCH=126 STALE=0 — TOTAL MATCH confirmed.
+**Process observation (sweep-miss root cause):** Burst-191 D18-P89-A sweep manually checked only the 4 directly-edited BC files and error-taxonomy itself without running `--scan specs`; D18-P90-A transitive cascade rule not applied, allowing 3 downstream BCs (listing error-taxonomy in their inputs:) to slip through.
+**Codifications:** none — no new decisions or process rules. Bookkeeping-only burst.
+**Dim-5:** counter 0/3 (unchanged; no adversary pass; no streak impact)
+**Dim-6:** No new decisions codified. D18-P89-A + D18-P90-A standing rules apply without amendment.
+**Dim-7:** Finding trajectory tail →1→1→1→1 (unchanged; bookkeeping-only burst; no pass appended).
+**Closes:** none — no findings closed in this burst. Hash-currency closure only.

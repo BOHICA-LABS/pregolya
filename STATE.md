@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.31"
+version: "3.32"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-19T11:34:00Z
+timestamp: 2026-07-19T11:43:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "burst 191 COMPLETE — pass-107 record + fix burst 111 (F-P107-01 RESOLVED): 4 ss-02 BC structs v1.2 (E-GRAPH-011 {source→source_node,+message}; E-GRAPH-007 {key→node_id+key}; E-GRAPH-001 {channel→+task_ids+step}; E-GRAPH-004 {channel+writer→+step}); error-taxonomy v1.20→v1.21 corrigendum (census 5 FAIL/17 PASS); EC-003 ambiguity removed; D18-P89-A TOTAL MATCH; trajectory-tail →1→1→1→1; counter 0/3; D-14; D-15; D-107; NEXT: dispatch adversary pass 108"
+current_step: "burst 192 COMPLETE — hash-currency closure (D18-P89-A cascade, burst-191 sweep miss): 3 BC hashes refreshed (BC-2.07.001 →43fee7a; BC-2.14.001 →cda09ef; BC-2.14.002 →cda09ef); root cause: --scan specs not run in burst-191; TOTAL=126 MATCH=126; D18-P89-A TOTAL MATCH; trajectory-tail →1→1→1→1; counter 0/3; D-14; D-15; D-107; NEXT: dispatch adversary pass 108"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -38,9 +38,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-19 — burst 191: pass-107 record + fix burst 111 (F-P107-01 RESOLVED): 4 ss-02 BC structs v1.2 (E-GRAPH-011/007/001/004 struct-field corrections); error-taxonomy v1.20→v1.21 corrigendum (census 5 FAIL/17 PASS); D18-P89-A TOTAL MATCH; trajectory-tail →1→1→1→1 |
+| **Last Updated** | 2026-07-19 — burst 192: hash-currency closure (D18-P89-A cascade, burst-191 sweep miss): 3 BC hashes refreshed (BC-2.07.001/BC-2.14.001/BC-2.14.002); TOTAL=126 MATCH=126; trajectory-tail →1→1→1→1 |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | burst 191 COMPLETE — pass-107 record + fix burst 111 (F-P107-01 RESOLVED); 4 ss-02 BC structs v1.2; error-taxonomy v1.21 corrigendum; D18-P89-A TOTAL MATCH; trajectory-tail →1→1→1→1; counter 0/3; D-14; D-15; D-107; NEXT: dispatch adversary pass 108 |
+| **Current Step** | burst 192 COMPLETE — hash-currency closure (D18-P89-A cascade, burst-191 sweep miss); 3 BC hashes refreshed; TOTAL=126 MATCH=126; trajectory-tail →1→1→1→1; counter 0/3; NEXT: dispatch adversary pass 108 |
 
 ## Phase Progress
 
@@ -63,11 +63,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1d burst 187 — pass 104 record + fix burst 108 (F-P104-01 RESOLVED) | architect + state-manager | COMPLETE | Pass 104: NOT CLEAN strict+PR-merge — 1 MED (F-P104-01). F-P104-01 RESOLVED: ARCH-INDEX.md v1.1 row reconstructed from commit 8aebfcd (burst 86, 2026-07-14) + v1.0 row from commit ef41eda (burst 73, 2026-07-13) with NOTE markers; api-surface.md v1.0 row reconstructed from ef41eda with NOTE. No version bump/timestamp change (pure changelog-metadata reconstruction per F-P88-03 precedent). Missing-level corpus sweep all arch files + ADR-009/012/013: all PASS. D18-P89-A sweep: 2 stale (module-criticality.md + verification-coverage-matrix.md transitively) → refreshed; cascade TOTAL MATCH. Pre-existing stale flagged: ARCH-INDEX.md own input-hash (b6f6a46→0ec6c18), L2-INDEX.md (5da00db→3c54b46) — require separate sweep. sidecar-learning.md 2026-07-18T16:53:31Z included. Trajectory →1 (P1D-104). Counter 0/3. Fix bursts 107→108. Burst 187. |
 | Phase 1d burst 188 — bookkeeping/hash-currency closure (D18-P89-A) | state-manager | COMPLETE | Burst 188 (no adversary pass): pre-existing stale input-hash files resolved — root cause tool-version-upgrade drift (pre-rc.18 hashes; rc.22 AWK block-boundary detection changed + REPO_ROOT fallback added). L2-INDEX.md: 5da00db→3c54b46; ARCH-INDEX.md: b6f6a46→311dc79 (refreshed 4× due to cascade: prd.md + prd-supplements/module-criticality.md cascade). Full D18-P90-A transitive cascade: 18 spec files + 95 BCs refreshed to rc.22 canonical hashes. Census end-state: TOTAL=162, MATCH=128 spec corpus (zero stale spec files), STALE=16 cycle historical (live-state exempt), NOINPUT=18. TOTAL MATCH confirmed. No content changes; hash-currency closure only. Trajectory-tail →2→2→2→1 (unchanged; bookkeeping-only burst). Counter 0/3. Fix bursts 108 (unchanged). Burst 188. |
 | Phase 1d burst 189 — pass-105 record + fix burst 109 (F-P105-01 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 105: NOT CLEAN strict+PR-merge — 1M+2OBS. F-P105-01 RESOLVED: error-taxonomy v1.18→v1.19 — SECURITY description rewritten to "Workspace/sandbox escape; approver-role authorization failure; agent-memory write injection prevention"; removed 'sandbox policy enforcement' phrase; TIMEOUT/TRANSPORT/DURABILITY/CONCURRENCY descriptions broadened to cover full membership; SECURITY/POLICY categorization rule blockquote added. OBS-P105-A adjudicated (SECURITY=attack-vector boundary; POLICY=legitimate-caller constraint). OBS-P105-B fixed: bc-authoring-plan v2.32→v2.33 MANDATORY PRE-EMISSION CHECK for gate #28 Form-B false-positive trap. D18-P89-A sweep: 3 BC hashes refreshed (BC-2.14.001, BC-2.14.002, BC-2.07.001); TOTAL MATCH 126/126. Trajectory →1 (P1D-105). Counter 0/3. Fix bursts 108→109. Burst 189. |
 | Phase 1d burst 190 — pass-106 record + fix burst 110 (F-P106-01 RESOLVED, OBS-P106-A RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 106: NOT CLEAN strict+PR-merge — 1M+1OBS. F-P106-01 RESOLVED: bc-authoring-plan v2.33→v2.34 — BC-INDEX.md added to Known Form-B-only files under new "Indexes:" bullet; catch-all broadened to "Any index, ADR, or supplement"; difference-set verification: 11 Form-B-only files {ADR-007/009/012/013, BC-INDEX.md, BC-2.07.002/BC-2.08.011/BC-2.08.012, bc-authoring-plan.md, test-vectors.md, verification-architecture.md} all covered; zero omissions. OBS-P106-A RESOLVED: error-taxonomy v1.19→v1.20 — E-MEMORY-006 message corrected to `InsufficientPrivilege: operation '<operation>' requires <required>` (1:1 struct-field mapping to BC-2.15.003 EC-005 {operation, required}; gate #33 BC-wins); 22-code struct-bearing sibling sweep: 21 PASS, 1 fixed. D18-P89-A sweep: 3 BC hashes refreshed (BC-2.07.001 →b52167a; BC-2.14.001 →4138081; BC-2.14.002 →4138081); TOTAL MATCH 126/126. Trajectory →1 (P1D-106). Counter 0/3. Fix bursts 109→110. Burst 190. |
 | Phase 1d burst 191 — pass-107 record + fix burst 111 (F-P107-01 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 107: NOT CLEAN strict+PR-merge — 1M. F-P107-01 RESOLVED: 4 ss-02 BC structs v1.2 — E-GRAPH-011 BC-2.02.005 {source}→{source_node,message}; E-GRAPH-007 BC-2.02.001 {key}→{node_id,key}; E-GRAPH-001 BC-2.02.002 {channel}→{channel,task_ids,step}; E-GRAPH-004 BC-2.02.003 {channel,writer}→{channel,writer,step}; error-taxonomy v1.20→v1.21 corrigendum (false "21 PASS" → 5 FAIL/17 PASS); EC-003 "panic message as the error source" ambiguity removed. D18-P89-A sweep: TOTAL MATCH (input hashes unchanged). Trajectory →1 (P1D-107). Counter 0/3. Fix bursts 110→111. Burst 191. |
+| Phase 1d burst 192 — hash-currency closure (D18-P89-A cascade, burst-191 sweep miss) | state-manager | COMPLETE | Burst 192 (no adversary pass): burst-191 D18-P89-A sweep missed 3 BCs listing error-taxonomy in inputs — BC-2.07.001 →43fee7a; BC-2.14.001 →cda09ef; BC-2.14.002 →cda09ef. Root cause: direct-edit sweep only; --scan specs not run; D18-P90-A transitive rule not applied. Scan end-state: TOTAL=126 MATCH=126. No content changes; hash-currency closure only. Trajectory-tail →1→1→1→1 (unchanged). Counter 0/3. Fix bursts 111 (unchanged). Burst 192. |
 
 ## Decisions Log
 
@@ -166,25 +166,25 @@ None currently active. Counter 0/3; trajectory-tail →1→1→1→1.
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 
 ### RESUME IN ONE BREATH
-"ferrochain Phase 1d convergence loop, 107 passes / 111 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 513=504+9, purity-map 58, 13 ADRs [ADR-006 rev-4], 34 gates [gate #28 Rules 1–6, five-class direction model], StreamEvent 12 variants, VP census 141). F-P107-01 RESOLVED (burst 191): 4 ss-02 BC structs corrected (E-GRAPH-011 BC-2.02.005 v1.1→v1.2 {source}→{source_node,message}; E-GRAPH-007 BC-2.02.001 v1.1→v1.2 {key}→{node_id,key}; E-GRAPH-001 BC-2.02.002 v1.1→v1.2 {channel}→{channel,task_ids,step}; E-GRAPH-004 BC-2.02.003 v1.1→v1.2 {channel,writer}→{channel,writer,step}); error-taxonomy v1.20→v1.21 corrigendum (v1.20 '21 PASS' claim corrected to 5 FAIL/17 PASS; root cause: EC-003 ambiguous 'error source' phrasing); D18-P89-A TOTAL MATCH (no input files changed). Trajectory-tail →1→1→1→1. NEXT ACTION: dispatch adversary pass 108. Loop per D15 until 3/3 CLEAN(strict), then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+"ferrochain Phase 1d convergence loop, 107 passes / 111 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 513=504+9, purity-map 58, 13 ADRs [ADR-006 rev-4], 34 gates [gate #28 Rules 1–6, five-class direction model], StreamEvent 12 variants, VP census 141). F-P107-01 RESOLVED (burst 191): 4 ss-02 BC structs corrected (E-GRAPH-011 BC-2.02.005 v1.1→v1.2 {source}→{source_node,message}; E-GRAPH-007 BC-2.02.001 v1.1→v1.2 {key}→{node_id,key}; E-GRAPH-001 BC-2.02.002 v1.1→v1.2 {channel}→{channel,task_ids,step}; E-GRAPH-004 BC-2.02.003 v1.1→v1.2 {channel,writer}→{channel,writer,step}); error-taxonomy v1.20→v1.21 corrigendum (v1.20 '21 PASS' claim corrected to 5 FAIL/17 PASS; root cause: EC-003 ambiguous 'error source' phrasing); burst-192 hash-currency closure: 3 BC hashes refreshed (BC-2.07.001 →43fee7a; BC-2.14.001 →cda09ef; BC-2.14.002 →cda09ef); D18-P89-A TOTAL MATCH 126/126. Trajectory-tail →1→1→1→1. NEXT ACTION: dispatch adversary pass 108. Loop per D15 until 3/3 CLEAN(strict), then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
 ### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
 ### PASS-108 SIBLING-CHECKS: (a) 4 ss-02 BC structs match taxonomy placeholders 1:1: E-GRAPH-001 BC-2.02.002 v1.2 struct {channel,task_ids,step} ↔ `<channel>/<task_ids>/<n>` PASS; E-GRAPH-004 BC-2.02.003 v1.2 struct {channel,writer,step} ↔ `<channel>/<writer>/<n>` PASS; E-GRAPH-007 BC-2.02.001 v1.2 struct {node_id,key} ↔ `<node_id>/<key>` PASS; E-GRAPH-011 BC-2.02.005 v1.2 struct {source_node,message} ↔ `<source_node>/<message>` PASS; all four at v1.2, ascending changelogs (v1.1→v1.2), D18-P86-A BC timestamps frozen at v1.0 authoring date; (b) corrigendum row present as top entry in error-taxonomy v1.21; v1.20 row NOT rewritten — preserved as historical record; (c) census claim in v1.21 states "22 codes checked, 5 FAIL (E-MEMORY-006 fixed v1.20; E-GRAPH-011, E-GRAPH-007, E-GRAPH-001, E-GRAPH-004 fixed this burst), 17 PASS"; (d) grep "panic message as the error source" across .factory/: zero live hits — contradiction phrasing removed from BC-2.02.005 EC-003; (e) no interface-definitions drift — the 4 expanded structs (E-GRAPH-001/004/007/011) are BC-anchor structs, not interface-definitions types; interface-definitions §GRAPH section unchanged.
 ### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3.
-### DECISION DELTA (this session, bursts 164–191): D18-P86-A through D18-P103-A (14 decisions; no new decisions in bursts 186–191; full details in burst-186 session-checkpoints.md).
+### DECISION DELTA (this session, bursts 164–192): D18-P86-A through D18-P103-A (14 decisions; no new decisions in bursts 186–192; full details in burst-186 session-checkpoints.md).
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule during streaks (bookkeeping-only commits).
-### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 191 | Counter 0/3 | No open findings (F-P107-01 RESOLVED)
+### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 192 | Counter 0/3 | No open findings (F-P107-01 RESOLVED)
 
 ## Historical Content
 
 | Content | Location |
 |---------|----------|
-| Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2; + archived bursts 171–191) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
+| Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2; + archived bursts 171–192) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
 | 95 Behavioral Contracts (ss-01..ss-17/, ~13,800+ lines) + BC-INDEX.md v1.5 (48P0/39P1/8P2) | `.factory/specs/behavioral-contracts/ss-NN/` + `BC-INDEX.md` |
 | L3 PRD (index + BC summary tables, 607 lines) + v1.3 (BC-2.08.009 v1.1 resolved) | `.factory/specs/prd.md` |
 | PRD supplements: bc-authoring-plan v2.34, error-taxonomy v1.21, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.35, test-vectors v1.8 | `.factory/specs/prd-supplements/` |
 | L2 domain spec (15-shard, 1,889 lines; events.md v1.5) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
-| Session checkpoints bursts 5–78, bursts 176–190 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Session checkpoints bursts 5–78, bursts 176–191 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (12 lessons, 12 codified guardrails incl. Guardrail #12 test-count methodology, Drift/Deferral DEFER-001) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
 | Holdout domain briefs A/B/C (SOC analyst, dark factory, OpenClaw) | `.factory/planning/holdout-domains/domain-{a,b,c}-*.md` |
 | Reference corpus manifest (v1.4.0 — adk-rust Corpus 5 added) | `.factory/semport/reference-manifest.md` |
