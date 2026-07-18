@@ -563,6 +563,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-106 — Pass 106 (2026-07-19, burst 190)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-106 | 2026-07-19 | 1 | 0 | 0 | 1 | 0 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes rotated (burst-189 sibling-checks):** F-P105-01 RESOLVED (3 SECURITY members spanned; zero "sandbox policy enforcement" residue); OBS-P105-A RESOLVED (rule blockquote coherent with BC-2.05.006/BC-2.15.002/BC-2.15.003); OBS-P105-B PARTIALLY RESOLVED → F-P106-01; 12/12 category descriptions verified spanning membership (VAL/AUTH/RATE/TIMEOUT/TRANSPORT/INTERNAL/DURABILITY/POLICY/TOOL/CONCURRENCY/SECURITY/TENANCY — all PASS); test-vectors census 504+9=513 per-SS sums PASS; StreamEvent 12-variant coherence PASS; gate #33 E-CHKPT-002 spot PASS; burst-189 hash refreshes UNVERIFIABLE (adversary read-only) — mechanical, sanctioned.
+**Fix summary (burst 190 — fix burst 110):** F-P106-01 MED [process-gap] (PO+orchestrator) — bc-authoring-plan v2.33→v2.34: BC-INDEX.md added to Known Form-B-only files list under new "Indexes:" bullet; catch-all broadened from "Any ADR or supplement" to "Any index, ADR, or supplement that uses a `## Changelog` body section"; difference-set verification: 11 Form-B-only files confirmed ({ADR-007, ADR-009, ADR-012, ADR-013, BC-INDEX.md, BC-2.07.002, BC-2.08.011, BC-2.08.012, bc-authoring-plan.md, test-vectors.md, verification-architecture.md}); zero omissions. OBS-P106-A (PO) — error-taxonomy.md v1.19→v1.20: E-MEMORY-006 message corrected to `InsufficientPrivilege: operation '<operation>' requires <required>` (1:1 struct-field mapping to BC-2.15.003 EC-005 {operation, required}; "AdminContext" hardcode and unfillable `<caller_privilege>` placeholder removed); 22-code struct-bearing sibling sweep: 21 PASS, 1 fixed (E-MEMORY-006); gate #33 BC-wins applied.
+**Hash sweep (D18-P89-A):** 3 BC files staled by error-taxonomy.md content change (BC-2.07.001.md →b52167a; BC-2.14.001.md →4138081; BC-2.14.002.md →4138081); all refreshed; full scan **TOTAL MATCH 126/126**. bc-authoring-plan.md and error-taxonomy.md own input-hashes unchanged (computed from their inputs, which did not change).
+**Trajectory after:** →1 (P1D-106); cumulative tail →2→1→1→1
+**Counter:** 0/3
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are
