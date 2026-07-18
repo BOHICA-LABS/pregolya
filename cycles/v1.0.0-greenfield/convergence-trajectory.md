@@ -422,6 +422,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-99 — Pass 99 (2026-07-17, burst 181)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-99 | 2026-07-17 | 1 | 0 | 0 | 0 | 0 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN (OBS adjudicated substantive → scope expansion D18-P99-A: GuardrailDecision StreamEvent variant) |
+
+**Axes rotated:** Gate #27 semantic sweep PASS; hedge sweep PASS; gates #28/#33/#34/#13 spot-checks PASS; VP-BUDGET collision drain confirmed PASS; RetryHint↔SS-16 coherence PASS; NFR↔BC harness-string agreement PASS; SS-04 crash-window semantics PASS; StreamEvent variant-count sibling-check 1/1 PASS (baseline 11; finding upgrades to 12). New cross-subsystem seam: SS-06↔SS-11 observability gap (guardrail ingress decisions unobservable in streaming taxonomy).
+**Fix summary:** F-P99-01 OBS→adjudicated substantive (architect+PO+BA) — D18-P99-A scope expansion: ADD StreamEvent::GuardrailDecision (12th variant; Fail/Transform only, Pass not streamed; metadata-only payload: boundary IngressBoundary, decision, reason/severity [Fail only], ingress_id, tool_call_id [ToolResult only] + run_id/parent_ids). ToolEnd carries POST-guardrail content (zero-bytes isolation guarantee extended to streaming surface). GuardrailDecision fires BEFORE ToolEnd/within NodeStart-NodeEnd. Unary mode: no emission. Files: ADR-006 rev-3 + interface-definitions v2.34 + BC-2.06.001 v1.3 + BC-2.11.002 v1.6 + BC-2.11.005 v1.3 + BC-2.06.003 v1.3 + BC-INDEX title cell + events.md v1.3. test-vectors UNCHANGED 513.
+**D18-P89-A sweep:** to be completed post-STATE.md write; census target files include all BCs + supplements whose inputs: reference ADR-006/interface-definitions/BC-2.06.001/BC-2.11.002/BC-2.11.005/BC-2.06.003/events.md.
+**Trajectory after:** →1 (P1D-99); cumulative tail →1→5→1→1
+**Counter:** 0/3
+
+---
+
 ### P1D-98 — Pass 98 (2026-07-17, burst 180)
 
 | Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |

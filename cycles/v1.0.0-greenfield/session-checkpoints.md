@@ -686,3 +686,17 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 179): No new D-NNN decisions. F-P97-04 fix: bc-authoring-plan v2.29 gate #27 semantic-class widened + sweep command added (PO).
 ### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 179 | Counter 0/3 (Phase 1d)
+
+---
+
+## Burst 180 — Session Resume Checkpoint (archived from STATE.md by burst 181)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 98 passes / 102 fix bursts, counter 0/3 (strict-zero D-14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 513 = 504+9). trajectory-tail →4→1→5→1. NEXT ACTION: dispatch adversary pass 99 — PASS-99 SIBLING-CHECKS: (1) bc-authoring-plan v2.30 gate #27 body ('all 60 legacy placeholders resolved — 59 literal + 1 semantic variant'), (2) bc-authoring-plan v2.30 changelog row present + v2.28/v2.29 historical rows untouched, (3) zero other live '59' placeholder-total references outside changelogs. [Note: CLEAN(PR-merge) at pass 98; remaining defect stream is fix-echo class; pass-99 sibling-list intentionally SHORT to weight fresh probing over re-verification.] Loop per D-15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 180 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-98 FIX SUMMARY: F-P98-01 (LOW [claim-vs-artifact], PO): bc-authoring-plan v2.29→v2.30 gate #27 Exemptions "all 59 legacy placeholders resolved" → "all 60 legacy placeholders resolved — 59 literal + 1 semantic variant"; source ref extended F-P96-01 alone → F-P96-01 + F-P97-01; v2.30 changelog row added; v2.28/v2.29 historical rows untouched; post-fix grep zero other live 59-refs. D18-P89-A census: 126/126 TOTAL MATCH (bc-authoring-plan inputs unchanged; no files list bc-authoring-plan in inputs:; 0 stale).
+### BURST-180 SIBLING-CHECKS OWED (pass 99 must verify): bc-authoring-plan v2.30 gate #27 60-count body + v2.30 changelog row + v2.28/v2.29 untouched + zero other live 59-refs (all verified at burst-180; pass 99 to re-confirm fresh-context).
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (burst 180): No new D-NNN decisions. F-P98-01 fix: bc-authoring-plan v2.30 count reconciliation (PO).
+### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 180 | Counter 0/3 (Phase 1d)

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.001
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,8 +24,9 @@ inputs:
   - .factory/specs/domain-spec/events.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "fb4241c"
+input-hash: "1c38d18"
 changelog:
+  - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). (a) PC2 — added GuardrailDecision bullet (12th variant) after ToolEnd; updated ToolEnd bullet to reference post-guardrail content semantics per interface-definitions §StreamEvent. (b) PC4 causal ordering updated with GuardrailDecision[RagChunk|MemoryItem]* and GuardrailDecision[ToolResult]* positions. (c) New EC-006: N ContentBlocks K rejected → K GuardrailDecision events in evaluation order before ONE ToolEnd with post-guardrail output. H1 title updated to include guardrail_decision."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-46): F-P46-01 adjudication — add EC-005 (failed-run stream termination). BC-2.06.001 PC2 states RunEnd emits 'once at run completion' (completion-only contract) but had no explicit edge case for failed runs. EC-005 makes the authority explicit: stream closes after error SSE event; no RunEnd emitted on failure. This resolves EC-001 hedge in BC-2.12.007 and establishes the source-of-truth for failure-termination across the streaming surface."
@@ -39,7 +40,7 @@ removed: null
 removal_reason: null
 ---
 
-# BC-2.06.001: Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end)
+# BC-2.06.001: Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end; guardrail_decision)
 
 ## Description
 
@@ -74,10 +75,26 @@ Wire format is ferrochain-native (not LangChain astream_events v2 wire compat) p
    - `StreamEvent::NodeEnd` — once per node execution at completion; carries `node_name`, output
    - `StreamEvent::ToolStart` — once per tool invocation; carries `run_id`, `tool_name`, `tool_call_id`, input
    - `StreamEvent::ToolStream` — once per chunk from a streaming tool (if tool streams)
-   - `StreamEvent::ToolEnd` — once per tool invocation at completion; carries `tool_call_id`, output
+   - `StreamEvent::ToolEnd` — once per tool invocation at completion; carries `tool_call_id`, post-guardrail output — see interface-definitions §StreamEvent ToolEnd content semantics (F-P99-01)
+   - `StreamEvent::GuardrailDecision` — zero or more per boundary phase; emitted for Fail and Transform outcomes only (Pass is never streamed); carries `boundary` (IngressBoundary: ToolResult/RagChunk/MemoryItem), `decision` (GuardrailDecisionKind: Fail/Transform), `reason` (Option<String>, Some for Fail only), `severity` (Option<GuardrailSeverityWire>, Some for Fail only), `ingress_id` (Uuid), `tool_call_id` (Option<String>, Some for ToolResult boundary only); emits BEFORE ToolEnd (ToolResult boundary) or within NodeStart/NodeEnd before inference (RAG/Memory boundaries)
 3. Each event carries `run_id` (UUID) and `parent_ids` (ordered ancestry list) per BC-2.06.002.
-4. Events are emitted in the causal ordering defined in `events.md` Event Ordering Rules:
-   `RunStart → (StepStart → (NodeStart → (ToolStart → ToolEnd)* → NodeEnd)* → StepEnd)* → RunEnd`.
+4. Events are emitted in the following causal ordering (updated F-P99-01):
+   ```
+   RunStart
+     → (StepStart
+         → (NodeStart
+             → GuardrailDecision[RagChunk|MemoryItem]*   // RAG/Memory boundary: within NodeStart/NodeEnd; before inference
+             → (ToolStart
+                 → GuardrailDecision[ToolResult]*         // ToolResult boundary: within ToolStart/ToolEnd; before ToolEnd
+                 → ToolEnd                                // always the final event in its window
+               )*
+             → NodeEnd
+           )*
+         → StepEnd
+       )*
+   → RunEnd
+   ```
+   `GuardrailDecision*` = zero or more — one per non-Pass ContentBlock/chunk/item. `ToolEnd` is always the final event in its window.
 5. No event is emitted from a code path that bypasses actual graph execution.
 
 ## Invariants
@@ -129,6 +146,21 @@ did not previously have an explicit failed-run EC. This EC makes the rule unambi
 the authority cited by BC-2.12.007 EC-001 (failure path) and BC-2.12.007 EC-003 (interrupt path).
 The minimal coherent rule consistent with PC2: `RunEnd` fires on and only on the happy-path
 completion; all non-completion terminal states (failed, interrupted) end the stream without `RunEnd`.
+
+### EC-006: Multiple ContentBlocks with partial rejection at ToolResult boundary (F-P99-01)
+**Scenario:** A single tool invocation produces N ContentBlocks. K of them (0 < K ≤ N) are
+rejected or transformed by the `GuardrailHook` evaluation.
+**Expected behavior:** K `GuardrailDecision` events are emitted in evaluation order (one per
+rejected/transformed ContentBlock, preserving the order in which the hook evaluated each block)
+BEFORE the single enclosing `ToolEnd`. Exactly ONE `ToolEnd` is then emitted, carrying the
+post-guardrail output (error blocks substituted at the positions of rejected ContentBlocks;
+passed/transformed content included). Zero bytes of the K rejected ContentBlocks appear in any
+`StreamEvent` payload — including the K `GuardrailDecision` events themselves, which carry
+metadata only (reason, severity, ingress_id, tool_call_id). The batch-then-single-ToolEnd
+structure ensures the ToolEnd always remains the terminal event in the ToolStart/ToolEnd window.
+**Phase-3 test obligation:** A test for this EC should exercise a multi-ContentBlock tool result
+with at least one rejection to verify the ordering invariant (K events before 1 ToolEnd) and
+the zero-bytes guarantee on all emitted events.
 
 ## Canonical Test Vectors
 

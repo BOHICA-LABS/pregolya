@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.005
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -23,6 +23,7 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
+  - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). PC1 — extended with streaming surface isolation clause: ToolEnd.data carries post-guardrail content; GuardrailDecision carries metadata only; zero rejected bytes in any StreamEvent payload. New INV-5 — streaming surface subject to same content isolation; GuardrailDecision carries metadata only; enforced structurally via ordering."
   - "1.2 (ADV-P1D-PASS-59): F-P59-02 — EC-002 description and TV fixed to typecheck against Transform { new_content: IngressContent }. Bare ContentBlock::text('[REDACTED]') → IngressContent::ToolResult(ContentBlock::text('[REDACTED]')); EC-002 description updated to reflect IngressContent wrapper (same-boundary rule). ToolResult used as the concrete example boundary per BC-2.11.002 EC-003 authority."
 modified: []
 extracted_from: null
@@ -61,7 +62,11 @@ single synchronous operation in the current super-step.
 ## Postconditions
 
 1. The model input buffer (the complete list of messages/content passed to the model on the
-   current inference call) contains zero bytes of the rejected content unit's original data
+   current inference call) contains zero bytes of the rejected content unit's original data.
+   The streaming surface enforces the same isolation guarantee: `ToolEnd.data` carries post-guardrail
+   content only — raw rejected payloads are never present in any `StreamEvent` payload. This
+   includes `StreamEvent::GuardrailDecision` itself, which carries metadata only (reason, severity,
+   ingress_id, boundary, tool_call_id) and contains zero bytes of the rejected content (INV-5)
 2. An error block is injected at the position where the rejected content unit would have appeared;
    the error block contains `reason` (the rejection reason from the hook) and the
    `ProvenanceTag.ingress_id` — neither of which contains the original content
@@ -83,6 +88,11 @@ single synchronous operation in the current super-step.
    the raw rejected content in a location that is ever forwarded to the model as context
 4. Parallel guardrail composition (two hooks run in parallel): if any hook returns `Fail`,
    the content is treated as rejected — fail-closed parallel composition
+5. The streaming surface is subject to the same content isolation guarantee: `GuardrailDecision`
+   carries metadata only (reason, severity, ingress_id, boundary, tool_call_id) — zero bytes
+   of the rejected content appear in any `StreamEvent` payload. This is enforced structurally
+   by the causal ordering: `GuardrailDecision` emits BEFORE `ToolEnd`; `ToolEnd` carries
+   post-guardrail content, never the raw rejected payload (ADR-006 rev-3, F-P99-01)
 
 ## Edge Cases
 

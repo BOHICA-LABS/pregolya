@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.20"
+version: "3.21"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-17T23:59:30Z
+timestamp: 2026-07-18T00:02:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "Phase 1d burst 180 COMPLETE — pass 98 (1L claim-vs-artifact) fixed: bc-authoring-plan v2.30 gate #27 count reconciliation (59→60); trajectory →1 (P1D-98); trajectory-tail →4→1→5→1; counter 0/3 D-14; D-15 loop; adversary pass 99 next"
+current_step: "Phase 1d burst 181 COMPLETE — pass 99 (1 OBS → D18-P99-A GuardrailDecision StreamEvent scope expansion) fixed across ADR-006 rev-3 + interface-definitions v2.34 + 4 BCs + events.md v1.3; trajectory →1 (P1D-99); trajectory-tail →1→5→1→1; counter 0/3 D-14; D-15 loop; adversary pass 100 next"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -21,7 +21,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. Current: ~198 lines (wc-l). margin from soft-target: ~2 lines. margin from actual: ~302 lines.
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. Current: ~199 lines (wc-l). margin from soft-target: ~1 line. margin from actual: ~301 lines.
   Historical content → cycle files (burst-log, convergence-trajectory, session-checkpoints, lessons, blocking-issues-resolved).
   Run /vsdd-factory:compact-state if this file grows past 200 lines. -->
 
@@ -38,24 +38,24 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-17 — burst 180: pass 98 (1L claim-vs-artifact FIXED: bc-authoring-plan v2.30 gate #27 count reconciliation 59→60); trajectory →1 (P1D-98); trajectory-tail →4→1→5→1; counter 0/3 |
+| **Last Updated** | 2026-07-17 — burst 181: pass 99 (1 OBS→D18-P99-A GuardrailDecision StreamEvent scope expansion FIXED: ADR-006 rev-3 + interface-definitions v2.34 + BC-2.06.001 v1.3 + BC-2.11.002 v1.6 + BC-2.11.005 v1.3 + BC-2.06.003 v1.3 + events.md v1.3); trajectory →1 (P1D-99); trajectory-tail →1→5→1→1; counter 0/3 |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Burst 180 COMPLETE — pass 98 + fix burst (PO); NEXT: dispatch adversary pass 99 (sibling-checks: bc-authoring-plan v2.30 gate #27 60-count body + v2.30 changelog row + v2.28/v2.29 untouched + zero other live 59-refs). |
+| **Current Step** | Burst 181 COMPLETE — pass 99 + fix burst (architect+PO+BA); NEXT: dispatch adversary pass 100 (sibling-checks: ADR-006 rev-3 ↔ interface v2.34 ↔ BC-2.06.001 v1.3 triple-agreement 12-variant enum + ordering; BC-2.11.002 v1.6 / BC-2.11.005 v1.3 INV-5 / BC-2.06.003 v1.3 coherence; events.md v1.3 stream surfaces; BC-INDEX title sync; EC-006 without TV convention check; test-vectors unchanged 513). |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
 | 7: Convergence | not-started | | | | |
-| Adversary pass-98 complete; pass-99 next | in-progress | 2026-07-14 | — | counter 0/3 (P98: NOT CLEAN strict 1L claim-vs-artifact; CLEAN PR-merge; passes 97→98) | trajectory-tail →4→1→5→1 |
-| Fix burst 180 complete (102 total) | complete | 2026-07-17 | 2026-07-17 | Pass 98: NOT CLEAN strict (CLEAN PR-merge) 1L; gate #27 count claim-vs-artifact; bc-authoring-plan v2.30; D18-P89-A sweep 126/126 TOTAL MATCH; fixed; counter 0/3 | trajectory-tail →4→1→5→1 |
+| Adversary pass-99 complete; pass-100 next | in-progress | 2026-07-14 | — | counter 0/3 (P99: NOT CLEAN strict 1 OBS→D18-P99-A scope expansion; CLEAN PR-merge; passes 98→99) | trajectory-tail →1→5→1→1 |
+| Fix burst 181 complete (103 total) | complete | 2026-07-17 | 2026-07-17 | Pass 99: NOT CLEAN strict (CLEAN PR-merge) 1 OBS→adjudicated D18-P99-A; GuardrailDecision StreamEvent scope expansion; ADR-006 rev-3 + interface-definitions v2.34 + 4 BCs + events.md v1.3; D18-P89-A sweep 3/3 stale refreshed TOTAL MATCH; counter 0/3 | trajectory-tail →1→5→1→1 |
 
 ## Current Phase Steps
 
@@ -63,11 +63,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1d burst 176 — pass 94 + fix burst (PO + BA + state-manager) | adversary + PO + BA + state-manager | COMPLETE | Pass 94: NOT CLEAN — 3 MED ALL FIXED. Novelty MEDIUM (all localized to SS-10 burst-175 fix radius). F-P94-02 (MED, PO): BC-2.10.004 TV-001b RENAMED → TV-006; BC-2.10.004 v1.4→v1.5; test-vectors v1.7→v1.8 (GRAND TOTAL 512→513). F-P94-03 (MED, PO): BC-2.10.001 v1.3→v1.4 (PC3 three-way dispatch + Related-BCs dual-path); BC-2.10.002 v1.1→v1.2. F-P94-01 (MED, state-manager): BC-INDEX v1.4→v1.5 (title sync). Trajectory →3 (P1D-94). Counter 0/3. Fix bursts 97→98. Burst 176. |
 | Phase 1d burst 177 — pass 95 + fix burst (architect + PO + BA) | adversary + architect + PO + BA + state-manager | COMPLETE | Pass 95: NOT CLEAN — 2M+2L+1OBS ALL FIXED. F-P95-01 (MED, architect): ADR-001 rev-2, ADR-009 v1.3, ADR-012 v1.3 (eval-timing corrected). F-P95-02 (MED [process-gap], PO): gate #13 regex VP-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]+ (71→141 VPs); bc-authoring-plan v2.27. F-P95-03 (LOW, PO): BC-2.10.004 v1.6 PC restructure. F-P95-04 (LOW, BA): capabilities-p0 v1.3. OBS-P95-A (PO): VP-SPLIT-01..08 renumber. D18-P89-A sweep 128/128 TOTAL MATCH. Trajectory →4 (P1D-95). Counter 0/3. Fix bursts 98→99. Burst 177. |
 | Phase 1d burst 178 — pass 96 + fix burst (PO) | adversary + PO + state-manager | COMPLETE | Pass 96: NOT CLEAN strict (CLEAN PR-merge) — 1 OBS [process-gap] FIXED. Novelty LOW. F-P96-01 (OBS [process-gap], PO): 59 BC Traceability Module fields resolved from `[architect to assign — <crate>]` placeholders per module-decomposition v1.10; each BC patch-bumped; bc-authoring-plan v2.28. D18-P89-A sweep: 95/95 TOTAL MATCH. Trajectory →1 (P1D-96). Counter 0/3. Fix bursts 99→100. Burst 178. |
 | Phase 1d burst 179 — pass 97 + fix burst (PO) | adversary + PO + state-manager | COMPLETE | Pass 97: NOT CLEAN strict (CLEAN PR-merge) — 1H+1M+3L ALL FIXED. Novelty HIGH (burst-178 literal sweep missed semantic variant "architect to confirm" — 1 live BC residue + 1 PRD residue survived; Module-placeholder count corrected 59→60 total incl. variant). F-P97-01 (HIGH, PO): BC-2.08.009 v1.0→v1.1 (Module field resolved; changelog added; bc-authoring-plan v2.29 count row: 60th incl. variant). F-P97-02 (MED, PO): prd.md v1.2→v1.3 §10 stale parenthetical deleted. F-P97-03 (LOW, PO): BC-2.08.006 changelog reordered 1.3/1.2/1.1. F-P97-04 (LOW [process-gap], PO): bc-authoring-plan v2.28→v2.29 gate #27 semantic-class widened + sweep command; 7 hits: 2 fixed, 5 exempt; zero live. F-P97-05 (LOW, PO): BC-2.10.003 v1.7→v1.8 VP-BUDGET-06/07 Phase "Wave 1"→"Phase 1". D18-P89-A sweep 4-pass 126/126 TOTAL MATCH. Trajectory →5 (P1D-97). Counter 0/3. Fix bursts 100→101. Burst 179. |
 | Phase 1d burst 180 — pass 98 + fix burst (PO) | adversary + PO + state-manager | COMPLETE | Pass 98: NOT CLEAN strict (CLEAN PR-merge) — 1L claim-vs-artifact FIXED. Novelty MEDIUM (fix-echo: burst-179 updated count in v2.29 changelog row but not in live gate #27 body). F-P98-01 (LOW [claim-vs-artifact], PO): bc-authoring-plan v2.29→v2.30 gate #27 Exemptions "all 59 legacy placeholders resolved" → "all 60 legacy placeholders resolved — 59 literal + 1 semantic variant"; source ref F-P96-01+F-P97-01; v2.30 changelog row added; v2.28/v2.29 untouched; post-fix grep zero other live 59-refs. Sibling-checks 5/5 PASS; additional probes (SS-05↔SS-10, BC-2.07.002 GTV-003, BC H1↔INDEX 5-BC sample, gate #27 semantic sweep re-run) all PASS. D18-P89-A sweep 126/126 TOTAL MATCH. Trajectory →1 (P1D-98). Counter 0/3. Fix bursts 101→102. Burst 180. |
+| Phase 1d burst 181 — pass 99 + fix burst (architect + PO + BA) | adversary + architect + PO + BA + state-manager | COMPLETE | Pass 99: NOT CLEAN strict (CLEAN PR-merge) — 1 OBS adjudicated substantive → scope expansion D18-P99-A. Novelty MEDIUM (genuinely new cross-subsystem seam: SS-06↔SS-11 observability gap; no gate covers cross-BC behavioral-observability contracts). F-P99-01 (OBS→adjudicated, architect+PO+BA): guardrail ingress decisions unobservable in StreamEvent taxonomy; ToolEnd pre/post-guardrail semantics unspecified; latent security angle (raw rejected payloads to SSE consumers). D18-P99-A: ADD StreamEvent::GuardrailDecision (12th variant; Fail/Transform only; metadata-only payload incl. IngressBoundary, GuardrailOutcome, reason/severity [Fail only], ingress_id, tool_call_id [ToolResult only], run_id/parent_ids); ToolEnd POST-guardrail guarantee; GuardrailDecision fires BEFORE ToolEnd / within NodeStart-NodeEnd; unary mode: no emission. ADR-006 rev-3 + interface-definitions v2.34 + BC-2.06.001 v1.3 + BC-2.11.002 v1.6 + BC-2.11.005 v1.3 + BC-2.06.003 v1.3 + BC-INDEX title + events.md v1.3. test-vectors UNCHANGED 513. Hook false-positive [process-gap] noted (D18-P78-A decisions-row "12 BCs lacked prefix" matched by count-propagation hook; immutable audit trail; non-blocking). D18-P89-A sweep: 3 stale (api-surface.md + BC-2.06.001 + BC-2.06.002 via events.md/interface-definitions change); all refreshed to hook-verified hashes; TOTAL MATCH. Trajectory →1 (P1D-99). Counter 0/3. Fix bursts 102→103. Burst 181. |
 
 ## Decisions Log
 
@@ -110,6 +110,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | D18-P92-A | RunnableConfig gains `budget_config: Option(BudgetConfig)` — per-run override, None = inherit GraphConfig::budget_config; resume ceiling changes patch RunnableConfig::budget_config (BudgetResume::Extend); GraphConfig-level mutation rejected (would leak across concurrent runs). §RunnableConfig struct now fully defined in interface-definitions v2.32 (4 fields: recursion_limit, thread_id, budget_config, context_mutations + per-field BC citations + BudgetResume::Extend mechanism prose). | F-P92-02: resume-path sites named RunnableConfig as ceiling-patch target but field was undefined; Option B (GraphConfig mutation) = production-grade race defect across concurrent runs; reference-corpus RunnableConfig = per-call override bag (TypedDict total=False) decisive. | phase-1d | 2026-07-17 | adversary+architect+PO+BA |
 | D18-P93-A | Model A HITL trigger canon: PolicyDecision::Escalate ALWAYS fires HITL unconditionally (no on_ceiling qualification); PolicyDecision::Deny branches on on_ceiling (Halt→E-BUDGET-001+halt; Escalate→HITL/interrupted; Summarize→summary call+summary_halt; recursive Deny→Halt fallback). Complete 5-row decision table in interface-definitions v2.33 §OnCeiling; BC-2.10.004 v1.4 dual-path (PC1a/PC1b, PC2/PC2b, TV-001b); BC-2.10.001 v1.3 PC3 precise cite. | F-P93-02: three-way contradiction (interface-definitions missing Escalate handler; BC-2.10.004 title implied on_ceiling gate; BC-2.10.001 PC3 verbatim = Escalate→HITL unconditionally); Model A chosen: BC-2.10.001 PC3 is sole Escalate canon; PC2 scope = Deny-path only | phase-1d | 2026-07-17 | adversary+architect+PO |
 | D18-P93-B | Cost-based ceilings (cost_ceiling_usd field, cost-based PolicyDecision variants) are NOT v1 scope; CAP-012 is fully satisfied by JournalEntry.token_usage.estimated_cost (read-only cost tracking only); no E-BUDGET cost-ceiling enforcement codes in v1. | F-P93-01 fix: entities-server v1.7 rewrite revealed cost_ceiling_usd was an invented field; confirmed non-scope via CAP-012 plain reading (estimated_cost = cost tracking, not enforcement); PO adjudication in-burst | phase-1d | 2026-07-17 | adversary+PO |
+| D18-P99-A | ADD StreamEvent::GuardrailDecision (12th variant; Fail/Transform only, Pass not streamed; metadata-only payload: boundary IngressBoundary, decision GuardrailOutcome, reason/severity [Fail only], ingress_id, tool_call_id [ToolResult only] + run_id/parent_ids); ToolEnd carries POST-guardrail content (zero-bytes isolation guarantee extended to streaming surface); GuardrailDecision fires BEFORE ToolEnd (ToolResult) / within NodeStart-NodeEnd (RAG/Memory); unary mode: no emission; NOT a DI-011 violation (execution-path vs stream-observer equivalence). | F-P99-01: SS-06↔SS-11 observability seam — no gate covers cross-BC behavioral-observability contracts; Domain-A live-analyst forcing function + security lens decisive | phase-1d | 2026-07-17 | adversary+architect+PO+BA |
 
 ## Risk Register
 
@@ -147,16 +148,16 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | DEFER-002 | Machine enforcement of gate #28 date-validity (pre-commit hook + CI lint for changelog-date monotonicity and frontmatter-currency) | Phase 3 CI hardening | 3rd manual-sweep failure (F-P64-02/F-P65-01/F-P75-01); gate #28 Rules 4+5 are prose-only until Phase 3. DEFER-001 archived in cycles/v0.0.0-pre-pipeline/lessons.md |
 
 ## Concurrent Cycles
-None currently active. Counter 0/3; trajectory-tail →4→1→5→1.
+None currently active. Counter 0/3; trajectory-tail →1→5→1→1.
 
 ## Convergence Status
 
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 98 (Phase 1d) |
-| Fix bursts completed | 102 (Phase 1d: 72 fix + 5 D19/D20 expansion + 1 pass-77 fix + 1 pass-78 fix + full gate #33 sweep + 1 pass-79 fix + 1 pass-80 fix + 1 pass-81 fix + 1 pass-82 fix + 1 pass-83 fix + 1 pass-84 PO-half fix + 1 pass-84 architect-half fix + 1 pass-85 fix + 1 pass-86 fix + 1 pass-87 fix [large] + 1 pass-88 fix + 1 provenance burst + 1 verification-architecture v1.3 burst + 1 pass-89 fix + corpus hash-currency sweep + 1 pass-90 census-closure ARCH-INDEX hash refresh + 1 pass-91 fix [budget cluster] + 1 pass-92 fix [budget echo + D18-P92-A] + 1 pass-93 fix [HITL trigger + entities-server + VP-collision + gate-#13] + 1 pass-94 fix [TV-006 renumber + BC dispatch propagation + BC-INDEX title sync] + 1 pass-95 fix [ADR eval-timing + gate-#13 regex + BC-2.10.004 PC restructure + CAP-012 three-mode + VP-SPLIT renumber] + 1 pass-96 fix [59 BC Module placeholders resolved + bc-authoring-plan v2.28] + 1 pass-97 fix [semantic residue-class sweep + BC-2.08.009 v1.1 + prd v1.3 + BC-2.10.003 v1.8 + bc-authoring-plan v2.29] + 1 pass-98 fix [bc-authoring-plan v2.30 count reconciliation]) |
-| Convergence counter | 0 of 3 (Phase 1d; NOT CLEAN strict pass 98: 1L claim-vs-artifact gate #27 count; CLEAN PR-merge; counter stays 0/3; pre-pipeline 3/3 CLOSED) |
-| Finding trajectory | →4→2→2→4→4→1→4→2→5→3→4→1→5→1 |
+| Adversary passes completed | 99 (Phase 1d) |
+| Fix bursts completed | 103 (Phase 1d: 72 fix + 5 D19/D20 expansion + 1 pass-77 fix + 1 pass-78 fix + full gate #33 sweep + 1 pass-79 fix + 1 pass-80 fix + 1 pass-81 fix + 1 pass-82 fix + 1 pass-83 fix + 1 pass-84 PO-half fix + 1 pass-84 architect-half fix + 1 pass-85 fix + 1 pass-86 fix + 1 pass-87 fix [large] + 1 pass-88 fix + 1 provenance burst + 1 verification-architecture v1.3 burst + 1 pass-89 fix + corpus hash-currency sweep + 1 pass-90 census-closure ARCH-INDEX hash refresh + 1 pass-91 fix [budget cluster] + 1 pass-92 fix [budget echo + D18-P92-A] + 1 pass-93 fix [HITL trigger + entities-server + VP-collision + gate-#13] + 1 pass-94 fix [TV-006 renumber + BC dispatch propagation + BC-INDEX title sync] + 1 pass-95 fix [ADR eval-timing + gate-#13 regex + BC-2.10.004 PC restructure + CAP-012 three-mode + VP-SPLIT renumber] + 1 pass-96 fix [59 BC Module placeholders resolved + bc-authoring-plan v2.28] + 1 pass-97 fix [semantic residue-class sweep + BC-2.08.009 v1.1 + prd v1.3 + BC-2.10.003 v1.8 + bc-authoring-plan v2.29] + 1 pass-98 fix [bc-authoring-plan v2.30 count reconciliation] + 1 pass-99 fix [GuardrailDecision scope expansion ADR-006 rev-3 + interface-definitions v2.34 + 4 BCs + events.md v1.3]) |
+| Convergence counter | 0 of 3 (Phase 1d; NOT CLEAN strict pass 99: 1 OBS adjudicated substantive → D18-P99-A GuardrailDecision scope expansion; CLEAN PR-merge; counter stays 0/3; pre-pipeline 3/3 CLOSED) |
+| Finding trajectory | →4→2→2→4→4→1→4→2→5→3→4→1→5→1→1 |
 
 
 ## Session Resume Checkpoint
@@ -164,33 +165,33 @@ None currently active. Counter 0/3; trajectory-tail →4→1→5→1.
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 
 ### RESUME IN ONE BREATH
-"ferrochain Phase 1d convergence loop, 98 passes / 102 fix bursts, counter 0/3 (strict-zero D-14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 513 = 504+9). trajectory-tail →4→1→5→1. NEXT ACTION: dispatch adversary pass 99 — PASS-99 SIBLING-CHECKS: (1) bc-authoring-plan v2.30 gate #27 body ('all 60 legacy placeholders resolved — 59 literal + 1 semantic variant'), (2) bc-authoring-plan v2.30 changelog row present + v2.28/v2.29 historical rows untouched, (3) zero other live '59' placeholder-total references outside changelogs. [Note: CLEAN(PR-merge) at pass 98; remaining defect stream is fix-echo class; pass-99 sibling-list intentionally SHORT to weight fresh probing over re-verification.] Loop per D-15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
-### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 180 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
-### PASS-98 FIX SUMMARY: F-P98-01 (LOW [claim-vs-artifact], PO): bc-authoring-plan v2.29→v2.30 gate #27 Exemptions "all 59 legacy placeholders resolved" → "all 60 legacy placeholders resolved — 59 literal + 1 semantic variant"; source ref extended F-P96-01 alone → F-P96-01 + F-P97-01; v2.30 changelog row added; v2.28/v2.29 historical rows untouched; post-fix grep zero other live 59-refs. D18-P89-A census: 126/126 TOTAL MATCH (bc-authoring-plan inputs unchanged; no files list bc-authoring-plan in inputs:; 0 stale).
-### BURST-180 SIBLING-CHECKS OWED (pass 99 must verify): bc-authoring-plan v2.30 gate #27 60-count body + v2.30 changelog row + v2.28/v2.29 untouched + zero other live 59-refs (all verified at burst-180; pass 99 to re-confirm fresh-context).
+"ferrochain Phase 1d convergence loop, 99 passes / 103 fix bursts, counter 0/3 (strict-zero D-14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 513 = 504+9, StreamEvent 12 variants). trajectory-tail →1→5→1→1. NEXT ACTION: dispatch adversary pass 100 — PASS-100 SIBLING-CHECKS: (1) ADR-006 rev-3 ↔ interface-definitions v2.34 ↔ BC-2.06.001 v1.3 triple-agreement on 12-variant enum + GuardrailDecision types + causal ordering, (2) BC-2.11.002 v1.6 PC3/PC4 Fail/Transform emission clauses, (3) BC-2.11.005 v1.3 PC1 streaming-surface extension + NEW INV-5, (4) BC-2.06.003 v1.3 stream-observer-only invariant, (5) events.md v1.3 StreamEventEmitted + GuardrailChecked + ToolInvoked tool_end note, (6) BC-INDEX title cell sync to BC-2.06.001 new H1, (7) EC-006 without TV (EC-without-TV per convention), (8) test-vectors UNCHANGED 513. [D18-P99-A scope expansion; hook false-positive [process-gap] D18-P78-A decisions-row noted non-blocking.] Loop per D-15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 181 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-99 FIX SUMMARY: F-P99-01 (OBS→adjudicated substantive, architect+PO+BA) — D18-P99-A: ADD StreamEvent::GuardrailDecision (12th variant; Fail/Transform only; metadata-only payload). ADR-006 rev-3 (12-variant enum + IngressBoundary/GuardrailOutcome/GuardrailSeverity types + causal ordering + template sections). interface-definitions v2.34 (§StreamEvent 11→12 rows; ToolEnd post-guardrail guarantee). BC-2.06.001 v1.3 (PC2 12-variant + PC4 ordering + EC-006 K-of-N). BC-2.11.002 v1.6 (PC3 Fail + PC4 Transform). BC-2.11.005 v1.3 (PC1 streaming-surface + INV-5). BC-2.06.003 v1.3 (stream-observer invariant). BC-INDEX title updated. events.md v1.3. test-vectors UNCHANGED 513. D18-P89-A sweep: 3 stale (api-surface.md 6e28474→11d636c; BC-2.06.001 fb4241c→1c38d18; BC-2.06.002 6fbca82→60a5288); TOTAL MATCH.
+### BURST-181 SIBLING-CHECKS OWED (pass 100 must verify): ADR-006 rev-3 ↔ interface v2.34 ↔ BC-2.06.001 v1.3 triple-agreement 12-variant enum + ordering; BC-2.11.002 v1.6 / BC-2.11.005 v1.3 INV-5 / BC-2.06.003 v1.3 coherence; events.md v1.3 stream surfaces; BC-INDEX title sync; EC-006 without TV (convention check); test-vectors unchanged 513.
 ### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
-### DECISION DELTA (burst 180): No new D-NNN decisions. F-P98-01 fix: bc-authoring-plan v2.30 count reconciliation (PO).
+### DECISION DELTA (burst 181): D18-P99-A — StreamEvent::GuardrailDecision scope expansion (adversary+architect+PO+BA).
 ### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
-### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 180 | Counter 0/3 (Phase 1d)
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 181 | Counter 0/3 (Phase 1d)
 
 ## Historical Content
 
 | Content | Location |
 |---------|----------|
-| Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2; + archived bursts 171–180) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
+| Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2; + archived bursts 171–181) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
 | 95 Behavioral Contracts (ss-01..ss-17/, ~13,800+ lines) + BC-INDEX.md v1.5 (48P0/39P1/8P2) | `.factory/specs/behavioral-contracts/ss-NN/` + `BC-INDEX.md` |
 | L3 PRD (index + BC summary tables, 607 lines) + v1.3 (BC-2.08.009 v1.1 resolved) | `.factory/specs/prd.md` |
-| PRD supplements: bc-authoring-plan v2.30, error-taxonomy v1.18, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.33, test-vectors v1.8 | `.factory/specs/prd-supplements/` |
-| L2 domain spec (15-shard, 1,889 lines) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
+| PRD supplements: bc-authoring-plan v2.30, error-taxonomy v1.18, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.34, test-vectors v1.8 | `.factory/specs/prd-supplements/` |
+| L2 domain spec (15-shard, 1,889 lines; events.md v1.3) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
-| Session checkpoints bursts 5–78, bursts 176–179 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Session checkpoints bursts 5–78, bursts 176–180 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (12 lessons, 12 codified guardrails incl. Guardrail #12 test-count methodology, Drift/Deferral DEFER-001) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
 | Holdout domain briefs A/B/C (SOC analyst, dark factory, OpenClaw) | `.factory/planning/holdout-domains/domain-{a,b,c}-*.md` |
 | Reference corpus manifest (v1.4.0 — adk-rust Corpus 5 added) | `.factory/semport/reference-manifest.md` |
 | Planning studies (naming decision, file-size standard) | `.factory/planning/naming-decision-study.md` + `file-size-standard-study.md` |
 | Semport pass 1 analysis state (deepening items, risks) | `.factory/semport/core/ANALYSIS-STATE.md` |
 | D16 comparative assessment + 3 part-files (COMPARATIVE-ASSESSMENT.md synthesis) | `.factory/comparative/COMPARATIVE-ASSESSMENT.md` (+ `assessment-parts/`) |
-| Architecture core: ARCH-INDEX v1.4 + 9 section files (module-decomposition v1.10, purity-boundary-map v1.4) + ADR-013 (~1,300+ lines), 13 ADRs | `.factory/specs/architecture/` + `decisions/` |
+| Architecture core: ARCH-INDEX v1.4 + 9 section files (module-decomposition v1.10, purity-boundary-map v1.4) + ADR-006 rev-3 + ADR-013 (~1,300+ lines), 13 ADRs | `.factory/specs/architecture/` + `decisions/` |
 | VP-INDEX + VP-001..005 (D17-Q7 top-3 BSP invariants + MCP integration VPs) | `.factory/specs/verification-properties/` |
 | DTU assessment (DTU_REQUIRED: true; 3 cassette clone sets; pre-Phase-3 gate ≥8/7/3) | `.factory/planning/dtu-assessment.md` |
 | ADR tech validation (schemars 1.2.1, rmp-serde 1.3.1, Kani 0.67.0 no-async) | `.factory/planning/adr-tech-validation.md` |

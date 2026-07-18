@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.33"
+version: "2.34"
 status: active
 producer: product-owner
 timestamp: 2026-07-17T00:00:00Z
 phase: 1d
 changelog:
+  - "2.34 (F-P99-01, 2026-07-17): Axis (a) Add GuardrailDecision (12th StreamEvent variant) — fires for non-Pass guardrail outcomes (Fail/Transform only; Pass not streamed) at tool-result, RAG, and memory ingress boundaries. Audit-log-only is insufficient for Domain A SOC live-analyst use case (domain-a-soc-analyst.md §5 NEW forcing function); SSE consumer has zero in-band signal otherwise. Axis (b) ToolEnd.data carries POST-guardrail content — raw rejected payloads must not exit the security boundary via any StreamEvent (same isolation as model input buffer, BC-2.11.005 PC1). Axis (c) Ordering: GuardrailDecision fires before ToolEnd within the ToolStart/ToolEnd window (ToolResult boundary); within NodeStart/NodeEnd window before inference (RagChunk/MemoryItem boundaries). Axis (d) StreamEvent variant count 11→12; wire token guardrail_decision; supporting types IngressBoundary/GuardrailDecisionKind/GuardrailSeverityWire. New §StreamEvent section added to Public Rust Trait Signatures; /stream endpoint row updated to reference guardrail_decision events and ToolEnd post-guardrail semantics. ADR-006 rev-3 is co-artifact. Downstream PO amendments required: BC-2.06.001 PC2/PC4/new-EC-006, BC-2.11.002 PC3/PC4, BC-2.11.005 PC1/new-INV-5, BC-2.06.003 new-INV note."
   - "2.33 (F-P93-02, 2026-07-17): Adjudicate contradictory HITL-trigger model (F-P93-02 HIGH). VERDICT: Model A — `PolicyDecision::Escalate` (soft-ceiling) ALWAYS triggers the HITL interrupt unconditionally, independent of `BudgetConfig::on_ceiling`; `PolicyDecision::Deny` (hard-ceiling) branches on `on_ceiling` (Halt | Escalate→HITL | Summarize). BC authority: BC-2.10.001 PC3 — 'Escalate → execution suspends; the run transitions to `interrupted` via the HITL interrupt mechanism (BC-2.10.004)' — no on_ceiling qualification. Changes: (1) §OnCeiling enum docstring updated: field governs `PolicyDecision::Deny` dispatch ONLY; explicit statement that `PolicyDecision::Escalate` routes to HITL unconditionally per BC-2.10.001 PC3 without consulting `on_ceiling`. (2) `OnCeiling::Escalate` variant docstring updated: this variant means 'when `PolicyDecision::Deny` (hard ceiling) is received, redirect to HITL instead of halting'; clarifies both the soft-limit Escalate path and this hard-ceiling Deny→Escalate path use the same `BudgetEscalation` interrupt mechanism. (3) Engine-branching note replaced with a complete PolicyDecision × on_ceiling decision table — zero unspecified cells. Previously the note covered only `PolicyDecision::Deny` dispatch and left `PolicyDecision::Escalate` entirely unspecified. Now all three PolicyDecision variants are fully specified with Engine Action, Run Status, and Resume Mechanism columns. BC anchor updated to cite BC-2.10.001 PC3 as the Escalate-path authority. Sibling architecture docs (api-surface, module-decomposition) do not state the trigger model at decision-table precision — no change required."
   - "2.32 (F-P92-01-sweep, 2026-07-17): §RunnableConfig doc comment — stale verbatim citations to old BC-2.10.003 PC7 and BC-2.10.004 PC6 text updated to match new wording from same burst (F-P92-01/F-P92-02). Old PC7 quote: 'operator supplies a new RunnableConfig with a higher ceiling'. New: 'operator supplies a new RunnableConfig with budget_config: Some(BudgetConfig { hard_limit: Some(higher_ceiling), .. })'. Old PC6 quote: 'new_ceiling replaces the policy\\'s current ceiling in the RunnableConfig for the resumed execution'. New: 'The new_ceiling is applied by patching RunnableConfig::budget_config with BudgetConfig { hard_limit: Some(new_ceiling), ..original } for the resumed execution'. The struct definition itself (pub budget_config: Option<BudgetConfig>) was already correct from v2.31; this entry corrects only the inline authority citations in the doc comment. Exhaust-sweep finding: pattern 'policy\\'s.{0,20}ceiling' matched interface-definitions.md line 155 (prd-supplement, in-scope for fixes per task)."
   - "2.31 (F-P92-02, 2026-07-17): OPTION A adjudication — add `budget_config: Option<BudgetConfig>` to §RunnableConfig. Authority: BC-2.10.004 PC6 explicitly places new_ceiling 'in the RunnableConfig for the resumed execution'; BC-2.10.003 PC7/TV-004 say 'operator supplies a new RunnableConfig with a higher ceiling'. BudgetResume::Extend { new_ceiling } is processed by the engine, which patches RunnableConfig::budget_config with a cloned BudgetConfig{ hard_limit: Some(new_ceiling), ..original } before resuming — this applies the extended ceiling to only that resumed execution without mutating GraphConfig (which is shared across concurrent runs on the same graph). Formal §RunnableConfig struct block added with all four known fields (recursion_limit, thread_id, budget_config, context_mutations) and per-field BC citations. TOML [budget] comment updated: 'overridable per run' expanded with explicit reference to RunnableConfig::budget_config and BudgetResume::Extend mechanism. Sibling sweep: api-surface.md v1.3→v1.4 (new §ferrochain-core Public Types row for RunnableConfig), module-decomposition.md v1.9→v1.10 (budget definitions note extended). purity-boundary-map unchanged — BudgetConfig already a pure core type; adding Option<BudgetConfig> to RunnableConfig does not change core::config purity classification."
@@ -554,6 +555,109 @@ pub enum WriteGuardDecision {
 
 **BC anchor:** BC-2.15.005 PC1–PC5 (guard validation contract, E-MEMORY-007 on Deny, Transform semantics)
 
+### StreamEvent
+
+The complete streaming event taxonomy emitted by `ferrochain-graph` during a run and
+serialized to SSE by `ferrochain-server`. **12 variants** (11 execution lifecycle + 1
+guardrail observability). All variants carry `run_id` and `parent_ids` (BC-2.06.002).
+
+```rust
+/// Streaming events emitted during graph execution.
+/// All variants carry `run_id` (stable per-run UUID) and `parent_ids` (ancestry chain)
+/// for event correlation (BC-2.06.002).
+///
+/// Wire format: JSON with `#[serde(tag = "event", rename_all = "snake_case")]`.
+/// Example: `{"event": "guardrail_decision", "run_id": "...", ...}`.
+///
+/// Authority: BC-2.06.001 (variant enumeration + causal ordering), ADR-006 rev-3.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "event", rename_all = "snake_case")]
+pub enum StreamEvent {
+    // Run lifecycle — wire: run_start | run_stream | run_end
+    RunStart   { run_id: RunId, parent_ids: Vec<RunId>, data: RunStartData },
+    RunStream  { run_id: RunId, parent_ids: Vec<RunId>, data: ChunkData },
+    RunEnd     { run_id: RunId, parent_ids: Vec<RunId>, data: RunEndData },
+    // Super-step lifecycle — wire: step_start | step_end
+    StepStart  { run_id: RunId, parent_ids: Vec<RunId>, step: u32 },
+    StepEnd    { run_id: RunId, parent_ids: Vec<RunId>, step: u32 },
+    // Node lifecycle — wire: node_start | node_stream | node_end
+    NodeStart  { run_id: RunId, parent_ids: Vec<RunId>, node: String, data: NodeData },
+    NodeStream { run_id: RunId, parent_ids: Vec<RunId>, node: String, data: ChunkData },
+    NodeEnd    { run_id: RunId, parent_ids: Vec<RunId>, node: String, data: NodeData },
+    // Tool lifecycle — wire: tool_start | tool_stream | tool_end
+    // ToolEnd content semantics: `data` carries POST-guardrail content —
+    // the content the model context receives, not the raw tool output.
+    // Raw rejected payloads are absent from ToolEnd and all StreamEvents
+    // (BC-2.11.005 INV-5 — zero bytes of rejected content in any stream payload).
+    ToolStart  { run_id: RunId, parent_ids: Vec<RunId>, tool: String, data: ToolData },
+    ToolStream { run_id: RunId, parent_ids: Vec<RunId>, tool: String, data: ChunkData },
+    ToolEnd    { run_id: RunId, parent_ids: Vec<RunId>, tool: String, data: ToolData },
+    // Guardrail observability — wire: guardrail_decision  (F-P99-01, 2026-07-17)
+    // Emitted ONLY for Fail and Transform outcomes; Pass is never streamed.
+    // Stream-observer notification only: NOT emitted in unary mode.
+    // Underlying GuardrailHook::evaluate fires on both streaming and unary paths
+    // per DI-012 — absence from unary output is not a DI-011 violation (BC-2.06.003).
+    GuardrailDecision {
+        run_id:       RunId,
+        parent_ids:   Vec<RunId>,
+        /// The ingress boundary at which this decision was made.
+        boundary:     IngressBoundary,
+        /// Fail or Transform. Pass decisions are not streamed.
+        decision:     GuardrailDecisionKind,
+        /// Rejection reason — Some for Fail; None for Transform.
+        reason:       Option<String>,
+        /// Rejection severity — Some for Fail; None for Transform.
+        severity:     Option<GuardrailSeverityWire>,
+        /// Correlates to the audit log entry (BC-2.11.005 PC3 `ingress_id`).
+        ingress_id:   Uuid,
+        /// Correlates to the enclosing ToolStart/ToolEnd; None for RagChunk/MemoryItem.
+        tool_call_id: Option<String>,
+    },
+}
+
+/// Causal ordering (BC-2.06.001 PC4 — updated F-P99-01):
+///
+/// RunStart
+///   → (StepStart
+///       → (NodeStart
+///           → GuardrailDecision[RagChunk|MemoryItem]*    // RAG/Memory: within Node window
+///           → (ToolStart
+///               → GuardrailDecision[ToolResult]*          // ToolResult: before ToolEnd
+///               → ToolEnd                                 // Always last in its window
+///             )*
+///           → NodeEnd
+///         )*
+///       → StepEnd
+///     )*
+/// → RunEnd
+///
+/// GuardrailDecision* = 0..N — one per non-Pass ContentBlock/chunk/item.
+/// A tool invocation producing N ContentBlocks with K failures emits K GuardrailDecision
+/// events before one ToolEnd.
+
+/// The ingress boundary at which a GuardrailDecision was produced.
+/// Maps to IngressContent variants in GuardrailHook (§GuardrailHook above).
+/// BC authority: BC-2.11.001–BC-2.11.004 (three boundary types).
+pub enum IngressBoundary { ToolResult, RagChunk, MemoryItem }
+
+/// The non-trivial outcome streamed to observers. Pass is never streamed.
+/// BC authority: BC-2.11.002 PC3 (Fail), BC-2.11.002 PC4 (Transform).
+pub enum GuardrailDecisionKind { Fail, Transform }
+
+/// Wire-serializable severity mirroring GuardrailSeverity for stream consumers.
+/// BC authority: BC-2.11.002 INV-3, BC-2.11.005 PC4/PC5.
+pub enum GuardrailSeverityWire { Critical, High, Medium, Low }
+```
+
+**BC anchor:**
+BC-2.06.001 PC2 (variant enumeration + ToolEnd output semantics),
+BC-2.06.001 PC4 (causal ordering — updated F-P99-01),
+BC-2.06.002 (run_id + parent_ids on every variant),
+BC-2.06.003 (streaming/unary execution equivalence; GuardrailDecision stream-only notification),
+BC-2.11.002 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for ToolResult boundary),
+BC-2.11.005 PC1/INV (ToolEnd post-guardrail content; zero rejected bytes in any StreamEvent),
+ADR-006 rev-3 (design authority for this taxonomy).
+
 ## ferrochain-server HTTP API
 
 ### Base URL
@@ -609,7 +713,7 @@ an explicit documented exemption.
 | POST | `/threads/{thread_id}/runs` | Create and start a run (async; returns 202 with `run_id`); run-supplied `config`/`metadata`/`context` deep-merge over the Assistant's stored values, run wins at leaf key (BC-2.12.003 §Run-Config Merge Precedence Invariant, F-P33-02) | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs` | List runs for a thread; `?status=queued\|in_progress\|completed\|failed\|interrupted\|cancelled` filter + canonical pagination (`?limit=N` default 10 max 100, `?offset=N`; `created_at` DESC) — F-P31-01 | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}` | Get run status and result | BC-2.12.003 |
-| GET | `/threads/{thread_id}/runs/{run_id}/stream` | Stream run output as server-sent events (SSE; happy path emits run_start, node_start/stream/end, run_end; **run_end is emitted on completion only** — interrupted runs terminate with interrupt envelope as terminal frame, failed runs terminate with error SSE event; neither emits run_end; BC-2.06.001 PC2+EC-005, BC-2.12.007 EC-001/EC-003) | BC-2.12.007 |
+| GET | `/threads/{thread_id}/runs/{run_id}/stream` | Stream run output as server-sent events (SSE; happy path emits run_start, node_start/stream/end, run_end; **run_end is emitted on completion only** — interrupted runs terminate with interrupt envelope as terminal frame, failed runs terminate with error SSE event; neither emits run_end; BC-2.06.001 PC2+EC-005, BC-2.12.007 EC-001/EC-003). **Guardrail decisions (F-P99-01):** `guardrail_decision` events are emitted for non-Pass guardrail outcomes (Fail/Transform only — Pass not streamed); fire within the tool lifecycle window (before `tool_end`) for ToolResult boundary, and within the node lifecycle window for RAG/Memory boundaries; see §StreamEvent for complete taxonomy and ordering. **ToolEnd content semantics:** `tool_end.data` carries POST-guardrail content — raw rejected payloads are never emitted in any SSE event (BC-2.11.005 INV-5). BC-2.11.002 PC3/PC4, ADR-006 rev-3. | BC-2.12.007 |
 | POST | `/threads/{thread_id}/runs/{run_id}/resume` | Deliver resume value to interrupted run | BC-2.05.004 |
 | POST | `/threads/{thread_id}/runs/{run_id}/cancel` | Cancel a queued or in_progress run (transitions to cancelled) | BC-2.12.003 |
 | DELETE | `/threads/{thread_id}/runs/{run_id}` | Delete a terminal run record (completed/failed/cancelled only; HTTP 409 if queued, in_progress, or interrupted — cancel or resume-to-complete first) | BC-2.12.003 |
