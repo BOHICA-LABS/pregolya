@@ -672,3 +672,17 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 177): No new D-NNN decisions. F-P95-01 fix: ADR-001/009/012 eval-timing corrected (architect). F-P95-02 fix: gate #13 regex expanded 71→141 VPs (PO). F-P95-03 fix: BC-2.10.004 v1.6 PC restructure (PO). F-P95-04 fix: capabilities-p0 v1.3 three-mode CAP-012 (BA). OBS-P95-A fix: VP-SPLIT digit renumber (PO).
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 177 | Counter 0/3 (Phase 1d)
+
+---
+
+## Checkpoint — Burst 179 (2026-07-17, archived from STATE.md at burst 180)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 97 passes / 101 fix bursts, counter 0/3 (strict-zero D-14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 513 = 504+9). trajectory-tail →3→4→1→5. NEXT ACTION: dispatch adversary pass 98 — PASS-98 SIBLING-CHECKS: (1) BC-2.08.009 v1.1 (canonical Module form 'ferrochain-macros (re-exported ferrochain-core)' + valid YAML changelog insertion), (2) prd v1.3 §10 stale parenthetical removed, (3) gate #27 semantic-class text + re-run its sweep command (expect zero live), (4) BC-2.10.003 v1.8 Phase column (VP-BUDGET-06/07 'Wave 1'→'Phase 1'), (5) BC-2.08.006 monotonic changelog order, (6) bc-authoring-plan v2.29 count-correction row (60 total). Loop per D-15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 179 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-97 FIX SUMMARY: F-P97-01 (HIGH, PO): BC-2.08.009 v1.0→v1.1 (Module field: 'ferrochain-macros [architect to confirm crate→subsystem in Phase 1b]' → 'ferrochain-macros (re-exported ferrochain-core)' per module-decomposition v1.10; changelog added Group-A form; bc-authoring-plan v2.29 count row: 60th placeholder incl. variant). F-P97-02 (MED, PO): prd.md v1.2→v1.3 §10 stale "(architect to confirm...)" parenthetical deleted. F-P97-03 (LOW, PO): BC-2.08.006 changelog rows reordered 1.3/1.2/1.1. F-P97-04 (LOW [process-gap], PO): bc-authoring-plan v2.28→v2.29 gate #27 semantic-class widened + sweep command added; 7 hits: 2 fixed, 5 exempt; zero live. F-P97-05 (LOW, PO): BC-2.10.003 v1.7→v1.8 VP-BUDGET-06/07 Phase "Wave 1"→"Phase 1". D18-P89-A sweep: 4-pass convergence (95+111+3+0 updated); 126/126 TOTAL MATCH.
+### BURST-179 SIBLING-CHECKS OWED (pass 98 must verify): BC-2.08.009 v1.1 canonical Module form + YAML changelog; prd v1.3 §10; gate #27 semantic-class text + sweep command re-run; BC-2.10.003 v1.8 Phase column; BC-2.08.006 monotonic order; bc-authoring-plan v2.29 count-correction row.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (burst 179): No new D-NNN decisions. F-P97-04 fix: bc-authoring-plan v2.29 gate #27 semantic-class widened + sweep command added (PO).
+### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 179 | Counter 0/3 (Phase 1d)

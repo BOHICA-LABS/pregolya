@@ -422,6 +422,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-98 — Pass 98 (2026-07-17, burst 180)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-98 | 2026-07-17 | 1 | 0 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (fix-echo: burst-179 updated count in changelog row but not in live gate #27 body) |
+
+**Axes rotated:** bc-authoring-plan gate #27 body count claim-vs-artifact (F-P98-01 LOW); burst-179 sibling-checks 5/5 PASS; SS-05↔SS-10 shared interrupt mechanism content probe PASS; BC-2.07.002 GTV-003 provenance PASS; BC H1↔INDEX 5-BC sample PASS; gate #27 semantic sweep re-run zero live PASS.
+**Fix summary:** F-P98-01 LOW [claim-vs-artifact] (PO) — bc-authoring-plan v2.29→v2.30: gate #27 Exemptions prose "all 59 legacy placeholders resolved" → "all 60 legacy placeholders resolved — 59 literal + 1 semantic variant"; source reference extended F-P96-01 alone → F-P96-01 + F-P97-01; v2.30 changelog row added; v2.28/v2.29 historical rows untouched; post-fix grep for other live "59" placeholder-total references: zero additional hits.
+**D18-P89-A sweep:** bc-authoring-plan inputs (prd.md, L2-INDEX.md) unchanged; no files list bc-authoring-plan in their inputs:; **126/126 TOTAL MATCH** (0 stale).
+**Trajectory after:** →1 (P1D-98); cumulative tail →4→1→5→1
+**Counter:** 0/3
+
+---
+
 ### P1D-97 — Pass 97 (2026-07-17, burst 179)
 
 | Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |

@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.29"
+version: "2.30"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -1065,7 +1065,7 @@ split by wave avoids exception).
     with wrong-crate assignment are NOT exempt — the wrong-crate error is independent of whether
     the file exists. The deferral-actor placeholder class is no longer an accepted exemption —
     all Module fields must carry resolved crate assignments from the time of authoring
-    (F-P96-01, 2026-07-17; all 59 legacy placeholders resolved).
+    (F-P96-01 + F-P97-01, 2026-07-17; all 60 legacy placeholders resolved — 59 literal + 1 semantic variant).
 
     **Banned placeholder class (widened F-P97-04, 2026-07-17):** Any phrase matching
     `architect to (assign|confirm|determine|resolve)` — bracketed or unbracketed — in live spec
@@ -1782,6 +1782,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.30 | 2026-07-17 | F-P98-01 (count reconciliation): Gate #27 exemption note placeholder-total corrected 59 → 60 (59 literal `[architect to assign]` + 1 semantic variant `[architect to confirm]` in BC-2.08.009, caught at pass 97 per F-P97-01). Source reference updated from F-P96-01 alone to F-P96-01 + F-P97-01. Grep sweep for other live "59" placeholder-total references (changelog rows exempt): zero additional hits found. `total_standing_gates` unchanged at 34. | F-P98-01 |
 | 2.29 | 2026-07-17 | F-P97-04 (process-gap): Gate #27 residue class widened from literal `[architect to assign]` to semantic class `architect to (assign\|confirm\|determine\|resolve)` (bracketed or unbracketed); scope extended from `behavioral-contracts/` only to ALL of `.factory/specs/`; corpus-wide sweep command added. Sweep run: 2 live hits found and fixed in same burst (BC-2.08.009:199 per F-P97-01; prd.md:635 per F-P97-02); 2 exempt (bc-authoring-plan gate-rule text + changelog row). Additional sweeps — "PO to (confirm\|assign)": 0 hits; "to be confirmed": 0 hits; "TBD by": 0 hits. `total_standing_gates` unchanged at 34 (census widening of gate #27, not a new gate). | F-P97-04 |
 | 2.28 | 2026-07-17 | F-P96-01: Gate #27 exemption updated — `[architect to assign]` placeholder class removed from accepted exemptions. All 59 vestigial Module-field placeholders across `.factory/specs/behavioral-contracts/` resolved to authoritative crate assignments per module-decomposition.md v1.10. New BCs must carry resolved Module fields from authoring. | F-P96-01 |
 | 2.27 | 2026-07-17 | F-P95-02 (process-gap) — gate #13 VP-census regex widened: old `VP-[A-Z]+-[0-9]+` silently missed multi-segment domain IDs (VP-BSP-DET-01, VP-DI001-01) and digit-bearing domains — SS-03's entire VP set was invisible. New regex: `VP-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]+`. Verified: VP-BSP-DET-01, VP-DI001-01, VP-BUDGET-05, VP-SPLIT-001 all extracted correctly; old regex missed VP-BSP-DET-01 and VP-DI001-01 (confirmed by running both patterns). Post-fix corpus census (new regex): 141 unique VP IDs extracted — zero duplicates. Old regex captured only 71 IDs (50 invisible). `total_standing_gates` unchanged at 34 (sub-check widening, not a new gate). | F-P95-02 |
