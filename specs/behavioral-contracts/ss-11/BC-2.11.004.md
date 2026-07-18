@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.004
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -27,6 +27,7 @@ changelog:
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-004 and the TV panic row had `Err(FerrochainError { category: INTERNAL })` with no code. Added code: E-CORE-007 (GuardrailHookPanic) — same code as BC-2.11.002/003 (memory item ingress boundary shares identical panic-and-fail-closed pattern)."
   - "1.3 (ADV-P1D-PASS-58): F-P58-02 type-name linkage — `memory_item` in PC1 is typed as `IngressContent::MemoryItem(Value)` in the GuardrailHook trait signature (interface-definitions.md v2.13 §IngressContent). Payload type `Value` = serde_json::Value; internal structure is memory-store-specific."
   - "1.4 (F-P84-OBS-B/D18-P84-A): body version pin removed from PC1 — `interface-definitions.md v2.13 §GuardrailHook §IngressContent` → `interface-definitions.md §GuardrailHook §IngressContent` (section anchors retained; version pins on living supplements dropped per D18-P84-A adjudication; changelog entries are exempt audit trail)."
+  - "1.5 (F-P100-02, 2026-07-17): Symmetric GuardrailDecision emission clauses added (ADR-006 rev-3). PC3 — added streaming notification clause: a `StreamEvent::GuardrailDecision { boundary: MemoryItem, decision: Fail, reason: Some(reason), severity: Some(severity_wire), ingress_id, tool_call_id: None }` is emitted within the enclosing NodeStart/NodeEnd window (BC-2.06.001 PC4); event carries metadata only; zero bytes of rejected memory item in any StreamEvent payload (BC-2.11.005 INV-5). PC4 — added streaming notification clause: a `StreamEvent::GuardrailDecision { boundary: MemoryItem, decision: Transform, reason: None, severity: None, ingress_id, tool_call_id: None }` is emitted within the enclosing NodeStart/NodeEnd window; reason and severity absent for Transform outcomes. Symmetric with BC-2.11.002 PC3/PC4 (ToolResult exemplar); boundary adapted to MemoryItem; window adapted to NodeStart/NodeEnd; tool_call_id is None."
 modified: []
 extracted_from: null
 deprecated: null
@@ -68,9 +69,15 @@ model context injection.
    `IngressContent::MemoryItem(Value)` in the GuardrailHook trait (interface-definitions.md §GuardrailHook §IngressContent)
 2. `GuardrailResult::Pass` → item forwarded unchanged
 3. `GuardrailResult::Fail { reason, severity }` → item not forwarded; error block injected at
-   the item's position; run continues unless `Critical`
+   the item's position; run continues unless `Critical`;
+   a `StreamEvent::GuardrailDecision { boundary: MemoryItem, decision: Fail, reason: Some(reason),
+   severity: Some(severity_wire), ingress_id, tool_call_id: None }` is emitted within the
+   enclosing NodeStart/NodeEnd window (BC-2.06.001 PC4) — the event carries metadata only; zero
+   bytes of the rejected memory item appear in any `StreamEvent` payload (BC-2.11.005 INV-5)
 4. `GuardrailResult::Transform { new_content }` → transformed content forwarded; original
-   memory item discarded
+   memory item discarded; a `StreamEvent::GuardrailDecision { boundary: MemoryItem, decision:
+   Transform, reason: None, severity: None, ingress_id, tool_call_id: None }` is emitted within
+   the enclosing NodeStart/NodeEnd window (reason and severity are absent for Transform outcomes)
 5. The hook fires for content destined for model context injection — not for memory operations
    that purely read-and-store without touching the current context (e.g., background memory
    consolidation that does not produce context input)

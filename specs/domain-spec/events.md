@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: events
-version: "1.3"
+version: "1.4"
 status: active
 producer: business-analyst
 timestamp: 2026-07-17T00:00:00Z
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-29): F-P29-06 — relabel InterruptRaised Stream event field: `interrupt_raised` is an internal domain event; its SSE wire surface is the {\"__interrupt__\": [...]} JSON envelope (BC-2.12.007 EC-003, BC-2.05.001), NOT a StreamEvent variant. Decision: do not add interrupt variant to StreamEvent enum — no L2/BC evidence one was intended."
   - "1.2 (2026-07-17): F-P94-fix-burst — BudgetEvaluated.Outcome: correct monolithic 'Deny (halt run)' to per-on_ceiling dispatch; PolicyDecision::Deny does not unconditionally halt — engine dispatches per BudgetConfig::on_ceiling (Halt → graceful halt; Escalate → HITL interrupt; Summarize → final summarize call → summary_halt). Canon: D18-P93-A, interface-definitions v2.33."
   - "1.3 (2026-07-17): F-P99-01 — StreamEventEmitted trigger: extend to include guardrail_decision surface (Fail/Transform only; Pass not streamed); GuardrailChecked: add stream surface line (guardrail_decision metadata-only payload per BC-2.11.005 INV-5, fires before enclosing tool_end); ToolInvoked tool_end: note post-guardrail content semantics. Canon: ADR-006 rev-3, interface-definitions v2.34 §StreamEvent, BC-2.06.001 v1.3."
+  - "1.4 (2026-07-17): F-P100-01 — StreamEventEmitted Outcome: removed blanket 'identical content to unary callers' claim; qualified guardrail_decision as stream-observer-only (not delivered to unary callers; DI-011 scoped to execution-path equivalence, not stream-observer equivalence; canon: BC-2.06.003, ADR-006 rev-3). F-P100-03 — GuardrailChecked Outcome: retired Accept/Reject/Redact vocabulary; aligned to canonical Pass/Fail/Transform (GuardrailResult variants per ubiquitous-language-server.md §GuardrailHook v1.2 F-P58-03); Transform explicitly noted as strict superset of redact-only to preserve semantics."
 ---
 
 # Domain Events (Processing Stages)
@@ -106,7 +107,7 @@ A Tool Runnable was called with a ToolUse ContentBlock.
 A GuardrailHook evaluated content at an ingress boundary.
 - **Trigger:** ToolResult received; RAG chunk retrieved; memory returned
 - **Preconditions:** GuardrailHook registered for this IngressBoundary
-- **Outcome:** Accept (content passes into model context), Reject (content replaced by error), or Redact
+- **Outcome:** Pass (content passes into model context unchanged), Fail (content blocked; replaced by a guardrail-generated error block; carries reason and GuardrailSeverity), or Transform (guardrail rewrites content; sanitized replacement forwarded, original discarded — encompasses redaction, sanitization, and arbitrary content substitution; a strict superset of redact-only)
 - **Stream surface:** `guardrail_decision` (Fail/Transform only; metadata-only payload — boundary, decision, reason/severity [Fail only], ingress_id, tool_call_id; zero bytes of rejected content per BC-2.11.005 INV-5; fires before the enclosing `tool_end`)
 
 ### BudgetEvaluated
@@ -119,7 +120,7 @@ A BudgetPolicy evaluated a token/cost tally for the current Run.
 ### StreamEventEmitted
 A typed streaming event was emitted by the execution engine.
 - **Trigger:** Any phase transition (run/step/node/tool start|stream|end) or guardrail outcome (Fail/Transform — emitted as guardrail_decision; Pass is not streamed)
-- **Outcome:** Delivered to all active stream subscribers; identical content delivered to unary callers (DI-011)
+- **Outcome:** Delivered to all active stream subscribers. Execution-lifecycle events have unary-equivalent content (DI-011 execution-path equivalence); `guardrail_decision` is stream-observer-only — not delivered to unary callers, whose guardrail outcomes are observable via error blocks in the final output (BC-2.06.003).
 
 ---
 

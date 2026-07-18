@@ -700,3 +700,17 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 180): No new D-NNN decisions. F-P98-01 fix: bc-authoring-plan v2.30 count reconciliation (PO).
 ### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
 ### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 180 | Counter 0/3 (Phase 1d)
+
+---
+
+## Burst 181 — Session Resume Checkpoint (archived from STATE.md by burst 182)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 99 passes / 103 fix bursts, counter 0/3 (strict-zero D-14; baseline 95 BCs 48/39/8, 21 CAPs, universe 35, census 86 = 43+16+27, 13 ADRs, 34 gates, test-vectors 513 = 504+9, StreamEvent 12 variants). trajectory-tail →1→5→1→1. NEXT ACTION: dispatch adversary pass 100 — PASS-100 SIBLING-CHECKS: (1) ADR-006 rev-3 ↔ interface-definitions v2.34 ↔ BC-2.06.001 v1.3 triple-agreement on 12-variant enum + GuardrailDecision types + causal ordering, (2) BC-2.11.002 v1.6 PC3/PC4 Fail/Transform emission clauses, (3) BC-2.11.005 v1.3 PC1 streaming-surface extension + NEW INV-5, (4) BC-2.06.003 v1.3 stream-observer-only invariant, (5) events.md v1.3 StreamEventEmitted + GuardrailChecked + ToolInvoked tool_end note, (6) BC-INDEX title cell sync to BC-2.06.001 new H1, (7) EC-006 without TV (EC-without-TV per convention), (8) test-vectors UNCHANGED 513. [D18-P99-A scope expansion; hook false-positive [process-gap] D18-P78-A decisions-row noted non-blocking.] Loop per D-15 until 3/3, then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, pushed, CI green); factory-artifacts = burst 181 (run `git -C .factory log -1 --format='%h %s'`); no worktrees; no PRs; no in-flight agents.
+### PASS-99 FIX SUMMARY: F-P99-01 (OBS→adjudicated substantive, architect+PO+BA) — D18-P99-A: ADD StreamEvent::GuardrailDecision (12th variant; Fail/Transform only; metadata-only payload). ADR-006 rev-3 (12-variant enum + IngressBoundary/GuardrailOutcome/GuardrailSeverity types + causal ordering + template sections). interface-definitions v2.34 (§StreamEvent 11→12 rows; ToolEnd post-guardrail guarantee). BC-2.06.001 v1.3 (PC2 12-variant + PC4 ordering + EC-006 K-of-N). BC-2.11.002 v1.6 (PC3 Fail + PC4 Transform). BC-2.11.005 v1.3 (PC1 streaming-surface + INV-5). BC-2.06.003 v1.3 (stream-observer invariant). BC-INDEX title updated. events.md v1.3. test-vectors UNCHANGED 513. D18-P89-A sweep: 3 stale (api-surface.md 6e28474→11d636c; BC-2.06.001 fb4241c→1c38d18; BC-2.06.002 6fbca82→60a5288); TOTAL MATCH.
+### BURST-181 SIBLING-CHECKS OWED (pass 100 must verify): ADR-006 rev-3 ↔ interface v2.34 ↔ BC-2.06.001 v1.3 triple-agreement 12-variant enum + ordering; BC-2.11.002 v1.6 / BC-2.11.005 v1.3 INV-5 / BC-2.06.003 v1.3 coherence; events.md v1.3 stream surfaces; BC-INDEX title sync; EC-006 without TV (convention check); test-vectors unchanged 513.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3 (Domain-D scope, D20 integration, 3 v2 deferrals, ADR-013).
+### DECISION DELTA (burst 181): D18-P99-A — StreamEvent::GuardrailDecision scope expansion (adversary+architect+PO+BA).
+### STANDING DIRECTIVES: D-15 autonomous loop (verbatim in frontmatter); D-14 strict-zero 3-consecutive-clean.
+### WRAP METADATA: Date 2026-07-17 | Cycle v1.0.0-greenfield | Burst 181 | Counter 0/3 (Phase 1d)

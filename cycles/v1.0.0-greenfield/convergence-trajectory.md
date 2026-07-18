@@ -34,10 +34,18 @@ traces_to: STATE.md
 | P1D-86 | 2026-07-16 | 2 | 0 | 0 | 0 | 0 | LOW | 0/3 | FINDINGS_REMAIN (2 OBS: template-stub TODO markers + gate #28 Rule 5 document-type scope; both fixed same burst; D18-P86-A) |
 | P1D-91 | 2026-07-17 | 4 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (budget-cluster content-layer: on_ceiling mis-anchor to BudgetPolicy TRAIT + BudgetConfig/OnCeiling undefined in interface-definitions + E-MEMORY-008 minted; D18-P91-A/B) |
 | P1D-92 | 2026-07-17 | 2 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (budget-cluster echo: BudgetPolicy-owns-data TV/PC residue + RunnableConfig::budget_config field gap; D18-P92-A) |
+| P1D-93 | 2026-07-17 | 5 | 0 | 2 | 2 | 0 | HIGH | 0/3 | FINDINGS_REMAIN (budget-cluster model-level: entities-server invented fields + HITL-trigger contradiction + VP collision class new; D18-P93-A/B) |
+| P1D-94 | 2026-07-17 | 3 | 0 | 0 | 3 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (SS-10 burst-175 fix radius: TV-001b→TV-006 renumber + BC-2.10.001 Deny monolithic residue + BC-INDEX trailing annotation) |
+| P1D-95 | 2026-07-17 | 5 | 0 | 0 | 2 | 2 | MEDIUM | 0/3 | FINDINGS_REMAIN (ADR eval-timing + gate #13 regex inert for multi-segment VPs + BC-2.10.004 PC lettered sub-numbering + CAP-012 three-mode omission; VP-SPLIT renumber) |
+| P1D-96 | 2026-07-17 | 1 | 0 | 0 | 0 | 0 | LOW | 0/3 | FINDINGS_REMAIN strict; CLEAN PR-merge (59 BC Module placeholders [process-gap]) |
+| P1D-97 | 2026-07-17 | 5 | 0 | 1 | 1 | 3 | HIGH | 0/3 | FINDINGS_REMAIN (semantic residue-class: burst-178 literal sweep missed semantic variant phrasing) |
+| P1D-98 | 2026-07-17 | 1 | 0 | 0 | 0 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN strict; CLEAN PR-merge (bc-authoring-plan gate #27 claim-vs-artifact echo) |
+| P1D-99 | 2026-07-17 | 1 | 0 | 0 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (OBS adjudicated substantive → D18-P99-A: GuardrailDecision StreamEvent scope expansion) |
+| P1D-100 | 2026-07-17 | 3 | 0 | 0 | 2 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN (D18-P99-A propagation echo: SS-11 RAG/Memory boundary symmetry gap + events.md vocabulary) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100)`
 
 ## Per-Pass Details
 
@@ -429,6 +437,21 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 | P1D-99 | 2026-07-17 | 1 | 0 | 0 | 0 | 0 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN (OBS adjudicated substantive → scope expansion D18-P99-A: GuardrailDecision StreamEvent variant) |
 
 **Axes rotated:** Gate #27 semantic sweep PASS; hedge sweep PASS; gates #28/#33/#34/#13 spot-checks PASS; VP-BUDGET collision drain confirmed PASS; RetryHint↔SS-16 coherence PASS; NFR↔BC harness-string agreement PASS; SS-04 crash-window semantics PASS; StreamEvent variant-count sibling-check 1/1 PASS (baseline 11; finding upgrades to 12). New cross-subsystem seam: SS-06↔SS-11 observability gap (guardrail ingress decisions unobservable in streaming taxonomy).
+**Trajectory after:** →1 (P1D-99); cumulative tail →1→5→1→1
+**Counter:** 0/3
+
+---
+
+### P1D-100 — Pass 100 (2026-07-17, burst 182)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-100 | 2026-07-17 | 3 | 0 | 0 | 2 | 0 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN (D18-P99-A propagation echo: SS-11 RAG/Memory boundary symmetry gap + events.md vocabulary) |
+
+**Axes rotated:** ADR-006 rev-3 ↔ interface-definitions v2.34 ↔ BC-2.06.001 v1.3 triple-agreement (12-variant enum, fields, ordering) PASS. BC-2.11.002 v1.6 INV-5 + BC-2.11.005 v1.3 PC1 streaming-surface + BC-2.06.003 v1.3 stream-observer invariant all PASS. BC-INDEX byte-exact title sync PASS. EC-006 without TV convention PASS. test-vectors 513 PASS. Wire-token census PASS. Enum-mapping probes (IngressBoundary↔GuardrailOutcome↔GuardrailSeverity) PASS. DI-012 no-orphan PASS. prd.md staleness PASS. CAP-007 11-token scope: NOT STALE (false-positive discipline). SS-11 BC-2.11.003 + BC-2.11.004 PC3/PC4 emission postconditions (D18-P99-A propagation gap — F-P100-02). events.md Outcome contradictions (F-P100-01 + F-P100-03).
+**Fix summary:** F-P100-01 MED (BA) — events.md v1.3→v1.4: StreamEventEmitted Outcome qualified (execution-lifecycle DI-011 equivalence; guardrail_decision stream-observer-only, unary observes via error blocks per BC-2.06.003). Sole occurrence. F-P100-02 MED (PO) — BC-2.11.003 v1.4→v1.5 + BC-2.11.004 v1.4→v1.5: PC3 Fail-emission + PC4 Transform-emission added per boundary (RagChunk/MemoryItem; NodeStart/NodeEnd window; tool_call_id: None; INV-5 cites). 9-dimension symmetry-triple verified: fully symmetric; one intentional asymmetry (emission window per ADR-006 ordering; design-correct); one consistent non-gap (no TV rows; mirrors BC-2.11.002). Architect follow-through: ADR-006 rev-3→rev-4 (downstream-amendments scope note + BC cite extended to 002/003/004). Interface-definitions v2.34→v2.35 (/stream row + §StreamEvent BC anchors per-boundary; remaining 002-only cites verified as type-definition authorities; correct). F-P100-03 OBS (BA) — events.md v1.4 (consolidated with F-P100-01): GuardrailChecked Outcome aligned Accept/Reject/Redact→Pass/Fail/Transform (F-P58-03 retirement record authority; Transform = strict superset of Redact; no semantic narrowing).
+**D18-P89-A sweep:** interface-definitions v2.35 + events.md v1.4 edits stale: BC-2.06.001.md (events.md input), BC-2.06.002.md (events.md input), api-surface.md (interface-definitions input); all three refreshed via compute-input-hash --update; **126/126 TOTAL MATCH** (3 stale → 0 stale).
+**Trajectory after:** →3 (P1D-100); cumulative tail →1→5→1→1→3
 **Fix summary:** F-P99-01 OBS→adjudicated substantive (architect+PO+BA) — D18-P99-A scope expansion: ADD StreamEvent::GuardrailDecision (12th variant; Fail/Transform only, Pass not streamed; metadata-only payload: boundary IngressBoundary, decision, reason/severity [Fail only], ingress_id, tool_call_id [ToolResult only] + run_id/parent_ids). ToolEnd carries POST-guardrail content (zero-bytes isolation guarantee extended to streaming surface). GuardrailDecision fires BEFORE ToolEnd/within NodeStart-NodeEnd. Unary mode: no emission. Files: ADR-006 rev-3 + interface-definitions v2.34 + BC-2.06.001 v1.3 + BC-2.11.002 v1.6 + BC-2.11.005 v1.3 + BC-2.06.003 v1.3 + BC-INDEX title cell + events.md v1.3. test-vectors UNCHANGED 513.
 **D18-P89-A sweep:** to be completed post-STATE.md write; census target files include all BCs + supplements whose inputs: reference ADR-006/interface-definitions/BC-2.06.001/BC-2.11.002/BC-2.11.005/BC-2.06.003/events.md.
 **Trajectory after:** →1 (P1D-99); cumulative tail →1→5→1→1
