@@ -2484,3 +2484,58 @@ Phase 1d pass 117 adversarial review completed: NOT CLEAN strict+PR-merge — 1 
 - Counter: 0 of 3 (unchanged; fix burst 120 pushes new HEAD; frozen-HEAD streak rule)
 - Trajectory: ...→1→2→1→1 (tail after P1D-117)
 - NEXT: dispatch adversary pass 118
+
+---
+
+## Burst 203 — Phase 1d Pass 118 Record + Fix Burst 121 (F-P118-01/02/03 RESOLVED)
+
+**Date:** 2026-07-19
+**Agents:** adversary (pass 118) + product-owner + business-analyst + state-manager
+**Phase:** 1d — adversarial spec-crystallization loop
+**Files touched:** specs/prd-supplements/bc-authoring-plan.md (v2.39→v2.40 §12 canonical forms + terminal-set + grep-verify); specs/behavioral-contracts/ss-12/BC-2.12.004.md (v1.2→v1.3 PC2b +summary_halt + Related BCs); specs/behavioral-contracts/ss-05/BC-2.05.004.md (v1.2→v1.3 invariant status list +summary_halt); specs/behavioral-contracts/ss-05/BC-2.05.005.md (v1.3→v1.4 Related BCs + VP-HITL-10 "four"→"five"); specs/domain-spec/entities-server.md (v1.8→v1.9 completed_at Source citation corrected); all 127 spec files (D18-P89-A hash sweep); STATE.md, burst-log.md, convergence-trajectory.md (state-manager)
+**Versions bumped:** STATE.md v3.43→v3.44; bc-authoring-plan v2.39→v2.40; BC-2.12.004 v1.2→v1.3; BC-2.05.004 v1.2→v1.3; BC-2.05.005 v1.3→v1.4; entities-server v1.8→v1.9
+
+### Summary
+
+Phase 1d pass 118 adversarial review completed: NOT CLEAN strict+PR-merge — 2 HIGH + 1 MED (3 findings). Counter unchanged at 0/3. All 3 findings RESOLVED in fix burst 121.
+
+**Part A — F-P117-01 8-file touch set VERIFIED CLOSED:** Checks (a)–(e) from PASS-118 SIBLING-CHECKS all PASS — summary_halt present in all 8 touched files, output invariant coherent with BC-2.10.003 PC8(c), semantics table coherent. Corpus-wide extension check (f) FAILED — 3-member terminal-set residue found in sibling BCs outside burst-120 scope: BC-2.12.004:70+163, BC-2.05.004:99–100, BC-2.05.005:137. Root cause: burst-120 sweep scoped to 8-file touch set only.
+
+**3 findings (Part B):**
+- F-P118-01 HIGH [process-gap]: bc-authoring-plan §12 lifecycle census gate STILL mandated 3-member terminal set {completed, failed, cancelled} — running this gate against the now-correct four-member form in BC-2.12.003 v1.4 PC8 would fire a false HIGH finding and mandate reverting the F-P117-01 adjudication. Batch-table line 270 also drifted (3-member form).
+- F-P118-02 HIGH: Sibling propagation miss — BC-2.12.004 lines 70+163 (cron-lifecycle arrow + Related BCs description), BC-2.05.004 lines 99–100 (non-interrupted guard invariant), BC-2.05.005 line 137 (Related BCs description) + VP-HITL-10 count "four" — all carry old 3-member forms.
+- F-P118-03 MED: entities-server v1.8 line 57 completed_at Source cited "BC-2.12.003 PC8(c)(d)" — PC8(c)(d) notation belongs to BC-2.10.003 (OnCeiling::Summarize path), not BC-2.12.003; correct clause for completed_at is BC-2.12.003 PC13.
+
+**Fix burst 121 changes:**
+- bc-authoring-plan v2.39→v2.40: §12 canonical terminal-set four-member {completed,failed,cancelled,summary_halt}; grep-verify examples updated; batch-table line 270 synced verbatim.
+- BC-2.12.004 v1.2→v1.3: PC2b lifecycle arrow `completed | failed | cancelled | summary_halt`; Related BCs §BC-2.12.003 description four-member form.
+- BC-2.05.004 v1.2→v1.3: invariant non-interrupted status guard adds `summary_halt`; TD-VSDD-060 sweep: only lines 99–100 enumerate the full non-interrupted guard set (other specific-value/outcome-description sites exempt).
+- BC-2.05.005 v1.3→v1.4: Related BCs §BC-2.12.003 description +summary_halt; VP-HITL-10 "four non-interrupted states" → "five non-interrupted terminal/running states"; parameterized list adds summary_halt.
+- entities-server v1.8→v1.9: completed_at Source line 57: `"F-P24-01, BC-2.12.003 PC8(c)(d)"` → `"F-P24-01, BC-2.12.003 PC13, BC-2.10.003 PC8(c)(d)"`; TD-VSDD-060 sweep: no other BC-2.12.003 PC8(c)(d) conflations.
+
+**FULL closure-grep table published in pass-118.md:** zero non-exempt 3-member terminal-set hits remain corpus-wide. Exempt categories: gate-instruction prose, error-struct concrete transition-value TV rows, execution-path single-transition sequences.
+
+**D18-P89-A hash sweep:** `compute-input-hash --scan .factory/specs --update` run twice; first pass STALE=6 UPDATED=6; second pass STALE=0 TOTAL=127 MATCH=127 confirmed.
+
+### Files Written
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-118.md` | NEW — pass-118 adversarial review report (0C/2H/1M/0L) incl. full closure-grep table |
+| `.factory/specs/prd-supplements/bc-authoring-plan.md` | v2.39→v2.40 — §12 canonical four-member terminal-set + grep-verify + batch-table line 270 |
+| `.factory/specs/behavioral-contracts/ss-12/BC-2.12.004.md` | v1.2→v1.3 — PC2b lifecycle arrow +summary_halt; Related BCs four-member form |
+| `.factory/specs/behavioral-contracts/ss-05/BC-2.05.004.md` | v1.2→v1.3 — invariant non-interrupted status list +summary_halt |
+| `.factory/specs/behavioral-contracts/ss-05/BC-2.05.005.md` | v1.3→v1.4 — Related BCs +summary_halt; VP-HITL-10 "four"→"five" |
+| `.factory/specs/domain-spec/entities-server.md` | v1.8→v1.9 — completed_at Source BC-2.12.003 PC13 + BC-2.10.003 PC8(c)(d) |
+| All 127 spec files | D18-P89-A hash sweep — STALE=0 TOTAL=127 MATCH=127 |
+| `.factory/cycles/v1.0.0-greenfield/convergence-trajectory.md` | append P1D-118 row + per-pass detail |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | this burst-203 narrative |
+| `.factory/STATE.md` | v3.43→v3.44; trajectory-tail →1→1→1→3 (P1D-118); counter 0/3; fix bursts 120→121 |
+
+### Convergence Status After Burst 203
+
+- Phase 1d passes: 118 (2 HIGH + 1 MED — counter 0/3)
+- Fix bursts: 121 (F-P118-01/02/03 RESOLVED)
+- Counter: 0 of 3 (unchanged; fix burst 121 pushes new HEAD; frozen-HEAD streak rule)
+- Trajectory: ...→1→1→1→3 (tail after P1D-118)
+- NEXT: dispatch adversary pass 119

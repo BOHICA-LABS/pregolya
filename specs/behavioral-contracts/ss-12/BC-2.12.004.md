@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.004
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,7 +23,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "d9aaf26"
+input-hash: "ad3f745"
 extracted_from: null
 modified: []
 deprecated: null
@@ -35,6 +35,7 @@ removal_reason: null
 changelog:
   - "1.1 (ADV-P1D-PASS-31): F-P31-01 add PC7 for GET /runs?schedule_id aggregate query endpoint — limit default 10, max 100 (clamped), offset default 0, created_at DESC ordering declared as canon; update TV-002 notes to cite F-P31-01 pagination."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
+  - "1.3 (F-P118-02, fix burst 121, 2026-07-19): Propagate four-member terminal set from BC-2.12.003 v1.4 (F-P117-01 adjudication). PC2b: lifecycle arrow `completed | failed | cancelled` → `completed | failed | cancelled | summary_halt`. Related BCs §BC-2.12.003 description: same three-member form → four-member form. TD-VSDD-060 file-wide sweep: only these two sites enumerated the terminal set; all other status references are specific-value or query-result forms (exempt)."
 ---
 
 # BC-2.12.004: CronSchedule Creation and Proactive Run Execution
@@ -67,7 +68,7 @@ interactive runs.
    a. Creates a new `Run` with a freshly allocated `run_id` and `thread_id` (no
       checkpoint history — isolated fresh session).
    b. Sets `Run.status = RunStatus::Queued`; the Run progresses through the standard
-      `queued → in_progress → completed | failed | cancelled; in_progress ⇄ interrupted (resume via POST .../resume)` lifecycle.
+      `queued → in_progress → completed | failed | cancelled | summary_halt; in_progress ⇄ interrupted (resume via POST .../resume)` lifecycle.
 3. The `cron_id` is returned in the creation response; subsequent `GET /schedules/{cron_id}`
    reflects current `enabled` state and `last_fired_at` timestamp.
 4. Setting `enabled: false` via `PATCH /schedules/{cron_id}` prevents all future firings
@@ -160,7 +161,7 @@ queue_depth }`.
 
 ## Related BCs
 
-- BC-2.12.003 — depends on: Run lifecycle (queued → in_progress → completed | failed | cancelled; in_progress ⇄ interrupted) is the standard lifecycle each cron-fired Run follows
+- BC-2.12.003 — depends on: Run lifecycle (queued → in_progress → completed | failed | cancelled | summary_halt; in_progress ⇄ interrupted) is the standard lifecycle each cron-fired Run follows
 - BC-2.12.001 — depends on: thread creation semantics apply to cron-fired fresh sessions
 - BC-2.05.001 — related to: domain-c requires isolated sessions per cron run (same isolation guarantee as HITL session isolation)
 

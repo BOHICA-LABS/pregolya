@@ -47,10 +47,11 @@ traces_to: STATE.md
 | P1D-103 | 2026-07-18 | 2 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (1 MED F-P103-01 nfr-catalog direction + 1 OBS/process-gap OBS-P103-A gate #28 Rule 6 direction-blind census; five-class hook-aligned model adopted; D18-P103-A; bc-authoring-plan v2.32) |
 | P1D-104 | 2026-07-18 | 1 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (1 MED F-P104-01 ARCH-INDEX.md missing v1.1 changelog row; reconstructed from git history via burst-187; architect; changelog-completeness new class) |
 | P1D-105 | 2026-07-19 | 1 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (1 MED F-P105-01 SECURITY description omits 2/3 members + contradicts E-SBXD-002 POLICY; 2 OBS: OBS-P105-A adjudicated SECURITY/POLICY rule; OBS-P105-B Form-B self-correction process-gap; error-taxonomy v1.18→v1.19; bc-authoring-plan v2.32→v2.33) |
+| P1D-118 | 2026-07-19 | 3 | 0 | 2 | 1 | 0 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (F-P118-01 HIGH [process-gap] bc-authoring-plan §12 gate mandated 3-member terminal set — would actively revert F-P117-01; batch-table line 270 drifted; F-P118-02 HIGH sibling propagation: BC-2.12.004 lines 70+163 + BC-2.05.004 lines 99–100 + BC-2.05.005 line 137; F-P118-03 MED entities-server line 57 completed_at mis-cited BC-2.12.003 PC8(c)(d) → correct BC-2.12.003 PC13 + BC-2.10.003 PC8(c)(d)) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118)`
 
 ## Per-Pass Details
 
@@ -720,6 +721,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Hash sweep (D18-P89-A):** STALE=0 TOTAL=127 MATCH=127 confirmed in burst-202 (two-pass: 82 files + 3 files stale).
 **Trajectory after:** →1 (P1D-117); cumulative tail →2→0→1→2→1→1
 **Counter:** 0/3 (unchanged; fix burst 120 pushes new HEAD; NEXT: pass 118)
+
+---
+
+### P1D-118 — Pass 118 (2026-07-19, burst 203)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-118 | 2026-07-19 | 3 | 0 | 2 | 1 | 0 | 0 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes exercised (burst-203 pass-118):** F-P117-01 8-file touch set verified CLOSED — checks (a)-(e) all PASS (summary_halt in all 8 touched files; H1/BC-INDEX/prd.md title sync; output invariant coherent with BC-2.10.003 PC8(c); semantics table coherent; BC-2.12.003/BC-2.12.006/BC-2.06.001/interface-definitions/entities-server/ubiquitous-language-server all correct). Corpus-wide extension check (f) FAILED: 3-member terminal-set hits found in BC-2.12.004, BC-2.05.004, BC-2.05.005 outside burst-120 8-file scope. Entities-server completed_at source citation mis-noted.
+**Fix summary (burst 203 — fix burst 121):** F-P118-01 HIGH [process-gap] (PO) — bc-authoring-plan v2.39→v2.40: §12 lifecycle census gate canonical terminal-set updated to four-member {completed,failed,cancelled,summary_halt}; grep-verify examples updated; batch-table line 270 synced verbatim. F-P118-02 HIGH (PO) — BC-2.12.004 v1.2→v1.3: PC2b lifecycle arrow +summary_halt; Related BCs §BC-2.12.003 description four-member form. BC-2.05.004 v1.2→v1.3: invariant non-interrupted status guard +summary_halt. BC-2.05.005 v1.3→v1.4: Related BCs §BC-2.12.003 description +summary_halt; VP-HITL-10 "four"→"five non-interrupted terminal/running states". F-P118-03 MED (BA) — entities-server v1.8→v1.9: completed_at Source "F-P24-01, BC-2.12.003 PC8(c)(d)" → "F-P24-01, BC-2.12.003 PC13, BC-2.10.003 PC8(c)(d)". FULL closure-grep table published: zero non-exempt 3-member terminal-set hits remain corpus-wide.
+**Hash sweep (D18-P89-A):** STALE=0 TOTAL=127 MATCH=127 confirmed in burst-203 (two-pass: 6 stale updated on first pass, second pass STALE=0).
+**Trajectory after:** →3 (P1D-118); cumulative tail →1→1→1→3
+**Counter:** 0/3 (unchanged; fix burst 121 pushes new HEAD; NEXT: pass 119)
 
 ---
 

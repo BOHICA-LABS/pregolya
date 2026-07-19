@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.005
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -10,6 +10,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-27): F-P27-01 replace retired E-GRAPH-* wildcard citation in EC-001 and TV-003 with concrete E-GRAPH-002 POLICY→422 per-endpoint override citation (BC-2.14.002 PC3 9th override); wildcard was retired by OBS-1 narrowing in P26."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
   - "1.3 (F-P109-01, 2026-07-18): Add thread_id to all E-GRAPH-002 struct/variant sites — 9 sites (EC-001/002/003/004, TV-001/002/003/004/005). Canonical form { thread_id, run_status } per PC1/PC3. EC-002 and TV-002 were bare-variant forms (no struct braces); expanded to full struct with run_status: 'completed'. TD-VSDD-060 file-wide sweep: all 10 E-GRAPH-002 occurrences (including PC1 which was already correct) now uniformly carry both fields. Alias: thread_id <-> <run_id> (interrupt context — registered in gate #33 v2.36)."
+  - "1.4 (F-P118-02, fix burst 121, 2026-07-19): Related BCs §BC-2.12.003 run lifecycle state list: add summary_halt — '(queued/in_progress/completed/failed/interrupted/cancelled/summary_halt)'. VP-HITL-10: 'four non-interrupted states' → 'five non-interrupted terminal/running states'; parameterized list adds summary_halt. TD-VSDD-060 file-wide sweep: these two sites are the only status enumerations not already exhaustive; all E-GRAPH-002 { run_status } struct sites enumerate specific concrete values (not the full set) and are exempt."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -127,14 +128,14 @@ The engine does not buffer the preemptive resume value for a future interrupt.
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
 | VP-HITL-09 | Spurious Command(resume=) never mutates checkpoint or run state | Unit test (assert checkpoint unchanged after Err) | Phase 1 |
-| VP-HITL-10 | Error carries run_status field for all four non-interrupted states | Unit test (parameterized over completed/failed/in_progress/slot-exhausted) | Phase 1 |
+| VP-HITL-10 | Error carries run_status field for all five non-interrupted terminal/running states | Unit test (parameterized over completed/failed/in_progress/summary_halt/slot-exhausted) | Phase 1 |
 
 ## Related BCs
 
 - BC-2.05.001 — composes with: the dual of this BC — interrupt() establishes the slot this BC guards against
 - BC-2.05.002 — composes with: FIFO slot exhaustion detected here after BC-2.05.002's delivery
 - BC-2.05.004 — composes with: Command(resume=) submitted here is the same Command type BC-2.05.004 defines
-- BC-2.12.003 — related to: run lifecycle states (queued/in_progress/completed/failed/interrupted/cancelled) are defined in the server's run contract; BC-2.12.003 defines `in_progress`
+- BC-2.12.003 — related to: run lifecycle states (queued/in_progress/completed/failed/interrupted/cancelled/summary_halt) are defined in the server's run contract; BC-2.12.003 defines `in_progress`
 
 ## Architecture Anchors
 

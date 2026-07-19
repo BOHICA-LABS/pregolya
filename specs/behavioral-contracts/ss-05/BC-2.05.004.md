@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.004
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -12,6 +12,7 @@ subsystem: SS-05
 changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-05 PC4 'id field'→'interrupt_id field' with authority citations."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.3 (F-P118-02, fix burst 121, 2026-07-19): Invariant non-interrupted status list gains summary_halt: '(status queued, in_progress, completed, failed, cancelled, or summary_halt) returns Err(E-GRAPH-002 NoActiveInterrupt)'. TD-VSDD-060 file-wide sweep: line 87 'completed / interrupted / failed' describes specific re-execution outcomes (not a terminal-set enumeration; cancelled/summary_halt absent by design as it covers the resumed-execution state machine); exempt. Only line 99-100 enumerates the full non-interrupted guard set."
 capability: CAP-006
 wave: 1
 phase: 1a
@@ -97,7 +98,7 @@ mixin). This BC specifies the full `Command` shape and the contract each field s
 - `Command.PARENT` is only valid inside a subgraph execution context; submitting it at the
   root graph level returns `Err(E-GRAPH-015 NoParentGraph)`.
 - A `Command` submitted to a non-interrupted run (status `queued`, `in_progress`, `completed`,
-  `failed`, or `cancelled`) returns `Err(E-GRAPH-002 NoActiveInterrupt)` (see BC-2.05.005).
+  `failed`, `cancelled`, or `summary_halt`) returns `Err(E-GRAPH-002 NoActiveInterrupt)` (see BC-2.05.005).
 
 ## Edge Cases
 

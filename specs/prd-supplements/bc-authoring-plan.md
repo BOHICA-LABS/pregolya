@@ -1,11 +1,11 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.39"
+version: "2.40"
 status: active
 producer: product-owner
 total_standing_gates: 34
-timestamp: 2026-07-18T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -267,7 +267,7 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | P1 | CAP-010 | DI-014 | Wave 2 |
 | BC-2.12.001 | Thread resource CRUD (create, read, list, delete durable conversation history) | P1 | CAP-014 | — | Wave 1 |
 | BC-2.12.002 | Assistant resource CRUD (named agent config with graph reference) | P1 | CAP-014 | — | Wave 1 |
-| BC-2.12.003 | Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/cancelled; interrupted is pausable/resumable) | P1 | CAP-014 | — | Wave 1 |
+| BC-2.12.003 | Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/cancelled/summary_halt; interrupted is pausable/resumable) | P1 | CAP-014 | — | Wave 1 |
 
 ### Batch 11 — Server Cont. + Long-Horizon Memory (P1/P2)
 *7 BCs — SS.12 cont. + SS.15*
@@ -363,13 +363,22 @@ split by wave avoids exception).
     - This rule is generalized from F-P6-03 (ADV-P1D-PASS-6 fix). Source of truth: ADV-P1D-PASS-8.md §F-P8-04.
 12. **Lifecycle-arrow census gate (added P12):** Any BC or supplement that contains a Run
     state-machine lifecycle arrow MUST use one of the two canonical forms:
-    - *Title/prose* form: `queued → in_progress → completed/failed/cancelled; interrupted is pausable/resumable`
-    - *Diagram/arrow* form: `queued → in_progress → completed | failed | cancelled; in_progress ⇄ interrupted (resume via POST .../resume)`
-    Terminal set = {completed, failed, cancelled} only. `interrupted` MUST NOT appear as a
-    terminal state in any lifecycle arrow. The single authority for the state machine is
-    BC-2.12.003 PC7-PC9. Run `grep -rn "in_progress →\|in_progress→\|→ interrupted\|⇄" .factory/specs/`
-    and verify every hit: (a) shows `interrupted` as pausable/resumable, and (b) lists only
-    `completed | failed | cancelled` as terminal. Source of truth: ADV-P1D-PASS-12.md §F-P12-01.
+    - *Title/prose* form: `queued → in_progress → completed/failed/cancelled/summary_halt; interrupted is pausable/resumable`
+    - *Diagram/arrow* form: `queued → in_progress → completed | failed | cancelled | summary_halt; in_progress ⇄ interrupted (resume via POST .../resume)`
+    Terminal set = {completed, failed, cancelled, summary_halt}. `summary_halt` is the
+    budget-summarize terminal state reached via `in_progress → summary_halt` on
+    `OnCeiling::Summarize` (BC-2.10.003 PC8(c)(d)); it carries the summarize model response
+    as output; `completed_at` is set; it is not cancellable (already terminal — HTTP 409 per
+    BC-2.12.003 PC12); it is directly deletable without a prior cancel step; it emits `RunEnd`.
+    `interrupted` MUST NOT appear as a terminal state in any lifecycle arrow. The single
+    authority for the state machine is BC-2.12.003 v1.4 PC7-PC9. Run
+    `grep -rn "in_progress →\|in_progress→\|→ interrupted\|⇄" .factory/specs/`
+    and verify every hit: (a) shows `interrupted` as pausable/resumable, and (b) lists all
+    four terminal states `completed | failed | cancelled | summary_halt`. Additionally verify
+    no hit enumerates only `completed | failed | cancelled` (three-member set) as the full
+    terminal set — every such hit must gain `summary_halt`. Source of truth:
+    ADV-P1D-PASS-12.md §F-P12-01; F-P117-01 adjudication (fix burst 120, BC-2.12.003 v1.4);
+    F-P118-01 four-member canonicalization (fix burst 121).
 13. **Anchor-matrix census gate (added P16 — standing gate, subsumes all prior per-axis checks; widened P40 — five-way):**
     After any BC authoring burst, run the full anchor-matrix census across all 95 BCs × 6 axes
     {CAP, DI, NE, R (R-NNN/R8-10-11 aliases), ADR, registered-VP}. For each axis, perform a
@@ -2111,6 +2120,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.40 | 2026-07-19 | F-P118-01 (HIGH, process-gap): Gate #12 Lifecycle-Arrow Census Gate updated to reflect four-member terminal set. (1) Both canonical forms updated: title/prose form gains `/summary_halt`; diagram/arrow form gains `\| summary_halt`. (2) "Terminal set = {completed, failed, cancelled} only" → "{completed, failed, cancelled, summary_halt}" with inline rationale: `summary_halt` is the budget-summarize terminal state reached via `in_progress → summary_halt` on `OnCeiling::Summarize` (BC-2.10.003 PC8(c)(d)); carries summarize output; `completed_at` set; not cancellable; directly deletable; emits `RunEnd`. (3) grep-verify instruction updated: verify hits list all FOUR terminal states; explicitly disallow three-member-only enumerations. (4) Authority citations updated: BC-2.12.003 v1.4 + F-P117-01 adjudication (fix burst 120) + F-P118-01 (fix burst 121). (5) Batch-10 table entry for BC-2.12.003 synced to BC-INDEX:122 / BC H1 four-member verbatim form. F-P118-02: sibling BC propagation — BC-2.12.004 v1.2→v1.3 (PC2b + Related BCs: add `\| summary_halt`); BC-2.05.004 v1.2→v1.3 (Invariant non-interrupted status list: add `summary_halt`); BC-2.05.005 v1.3→v1.4 (Related BCs + VP-HITL-10: add `summary_halt`). Corpus-wide closure grep: 5 three-member terminal-set hits enumerated — all in bc-authoring-plan.md and BC-2.12.004/BC-2.05.004/BC-2.05.005; all fixed this burst. BC-2.12.003 v1.4 (canonical) and BC-2.12.006 already correct. `total_standing_gates` unchanged at 34. | F-P118-01, F-P118-02 |
 | 2.39 | 2026-07-18 | F-P112-01 (MED): E-CORE-007 `<content_type>` rendered-value adjudication. ADJUDICATED: BARE variant name. interface-definitions.md §IngressContent (lines 270-272) is the pre-existing authoritative definition specifying bare names ('ToolResult', 'RagChunk', 'MemoryItem'). The qualified 'IngressContent::ToolResult/RagChunk/MemoryItem' form introduced incidentally by burst-115 (F-P111-01) contradicted the interface-definitions source of truth. BC fixes: BC-2.11.002 EC-001/TV (v1.7→v1.8), BC-2.11.003 EC-004/TV (v1.6→v1.7), BC-2.11.004 EC-004/TV (v1.6→v1.7) — all 6 annotation sites now render bare variant names. Gate #33 context-sourced exception registry updated: E-CORE-007 `<content_type>` now explicitly noted as rendering BARE variant name per interface-definitions.md §IngressContent; per-BC named values updated to bare-quoted form '"ToolResult"/"RagChunk"/"MemoryItem"'. F-P112-02 (MED, process-gap): E-CORE-005 polymorphic message adjudication. ADJUDICATED: E-CORE-005 taxonomy format 'Validation failed for '<field>': <reason>' is the SINGLE required message shape corpus-wide. 5 divergent BC sites rewound to canonical form: BC-2.04.002 EC-003 (v1.2→v1.3), BC-2.04.007 EC-003 (v1.5→v1.6), BC-2.08.002 EC-005 (v1.3→v1.4), BC-2.08.006 EC-002 (v1.3→v1.4), BC-2.08.014 EC-006 (v1.2→v1.3; site discovered by F-P112-02 corpus-wide sweep, not in pass-56 census). Addendum note added to pass-56 second-pass census block. error-taxonomy.md v1.25→v1.26 adjudication row. `total_standing_gates` unchanged at 34. | F-P112-01, F-P112-02 |
 | 2.38 | 2026-07-18 | F-P111-01 (MED, process-gap): gate #33 Step A extended with **Form 3** — `FerrochainError { ..., code: E-xxx-NNN, ... }` wrapper constructions where the error code appears as a `code:` field rather than as the leading variant identifier (Form 1/2). Prior Step A greps (`Err(E-` and variant-name-brace) silently missed all wrapper-form sites. Form 3 procedure: `grep -rn 'FerrochainError {' .factory/specs/behavioral-contracts/ | grep 'code:' | grep -v '~~\|changelog' | grep -v 'message:'` (Step 3a); Step 3b: verify false positives for multi-line structs where `message:` appears on the continuation line. **Wrapper-form discipline** added inline: bare `{ category, code }` wrapper is ONLY valid for placeholder-free taxonomy messages; codes with `<placeholder>` tokens require (a) inline `message:` template, (b) explicit struct fields, or (c) registered context-sourced exception. **Context-sourced registry** extended from E-MEMORY-007 to also include **E-CORE-007** (`<boundary>` from `ProvenanceTag.boundary_type`; `<content_type>` from `IngressContent` variant discriminant; both deterministically available as `GuardrailHook::evaluate()` arguments). **Full wrapper-form sweep (Form 3, F-P111-01):** 21 violation records across 15 BC files fixed in fix-burst 115 (E-CORE-007 × 6 sites, E-RETRY-002 × 1, E-RETRY-001 × 1, E-CORE-001 × 1, E-PROV-002 × 3, E-PROV-003 × 3, E-MEMORY-008 × 1, E-GRAPH-006 × 1, E-GRAPH-017 × 3, E-CHKPT-001 × 2, E-GRAPH-007 × 2, E-CORE-005 × 2, E-CHKPT-005 × 1, E-MCP-004 × 1, E-GRAPH-008 × 1, E-PROV-001 × 3, E-PROV-006 × 2). Complete census table published in error-taxonomy.md v1.25 changelog. `total_standing_gates` unchanged at 34 (Form 3 is a Step A extension of gate #33, not a new gate). | F-P111-01 |
 | 2.37 | 2026-07-18 | F-P110-02 (HIGH, process-gap): gate #33 Step B check-1 cross-anchor scope clarification. The prior text required field-name consistency "within the same BC" — the v2.37 clarification redefines "intra-corpus" as EVERY struct site in every BC the taxonomy BC-Anchor cell lists for the code (primary AND secondary anchors). Root cause of F-P110-02: TD-VSDD-060 sweep anchored "in-file" missed E-SBXD-001 secondary anchor BC-2.13.004 TV-002 (2-field `{ resolved, root }`) diverging from primary anchor BC-2.13.005 canonical 3-field form `{ requested, resolved, root }`. The Step B check-1 prose now names this cross-anchor obligation explicitly: "The PRIMARY anchor's most authoritative construct determines the canonical field name and field count; update ALL diverging sites in ALL anchor BCs." Additionally: full re-census under v2.37 cross-anchor scope found 34 struct-bearing codes total (prior: 30); 4 newly-scoped: E-GRAPH-009 (PASS), E-GRAPH-014 (FAIL — fixed in BC-2.05.006 v1.4), E-CRON-002 (PASS), E-SERVER-006 (PASS). `total_standing_gates` unchanged at 34 (sub-check clarification of gate #33, not a new gate). | F-P110-02 |
