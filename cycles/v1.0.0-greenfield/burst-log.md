@@ -1998,3 +1998,85 @@ End-to-end census per gate #33 procedure v2.36 rules. Step A grep run with both 
 ## Archived from STATE.md Current Phase Steps (burst 194 rotation)
 
 | Phase 1d burst 189 — pass-105 record + fix burst 109 (F-P105-01 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 105: NOT CLEAN strict+PR-merge — 1M+2OBS. F-P105-01 RESOLVED: error-taxonomy v1.18→v1.19 — SECURITY description rewritten to "Workspace/sandbox escape; approver-role authorization failure; agent-memory write injection prevention"; removed 'sandbox policy enforcement' phrase; TIMEOUT/TRANSPORT/DURABILITY/CONCURRENCY descriptions broadened to cover full membership; SECURITY/POLICY categorization rule blockquote added. OBS-P105-A adjudicated (SECURITY=attack-vector boundary; POLICY=legitimate-caller constraint). OBS-P105-B fixed: bc-authoring-plan v2.32→v2.33 MANDATORY PRE-EMISSION CHECK for gate #28 Form-B false-positive trap. D18-P89-A sweep: 3 BC hashes refreshed (BC-2.14.001, BC-2.14.002, BC-2.07.001); TOTAL MATCH 126/126. Trajectory →1 (P1D-105). Counter 0/3. Fix bursts 108→109. Burst 189. |
+
+---
+
+## Burst: pass-110 record + fix burst 114 (F-P110-01/02 RESOLVED) (2026-07-19)
+
+**Parent-commit:** burst-194 commit (pass-109 record + fix burst 113 complete)
+**Adversary verdict:** NOT CLEAN strict+PR-merge — 1H + 1M (F-P110-02 HIGH [process-gap], F-P110-01 MED [process-gap]). Counter 0/3 (unchanged). Enumeration dispute: adversary independently re-ran gate #33 census using 3rd safety grep (multi-line struct forms) and found ≥33 struct-bearing codes vs claimed 30; 5 disputed codes examined; 4 confirmed genuine new scope (E-GRAPH-009 DuplicateNodeName, E-GRAPH-014 InterruptApprovalTimeout, E-CRON-002 InvalidCronExpression, E-SERVER-006 ScheduleNotFound); 1 adversary false-positive (excluded). Net: 30 prior + 4 genuinely new = 34. Additionally: v2.36 entries labeled E-GRAPH-009/E-GRAPH-014 are misassigned — taxonomy assigns those code numbers to DuplicateNodeName (BC-2.02.001) and InterruptApprovalTimeout (BC-2.05.006) respectively; correct code labels for BC-2.02.009/BC-2.02.014 sites pending product-owner/taxonomy review (flagged in v2.37 table, assessed PASS in both cases).
+**Files touched (Dim-1): 7 unique files**
+- specs/behavioral-contracts/ss-13/BC-2.13.004.md (v1.1→v1.2: F-P110-02 — TV-002 E-SBXD-001 WorkspaceEscape secondary anchor fixed 2-field `{ resolved, root }` → 3-field `{ requested, resolved, root }` per BC-2.13.005 Invariant-2 cross-anchor consistency; TD-VSDD-060 file-wide sweep: 1 struct site in file; only site fixed; root cause: prior sweep scoped "in-file" per BC-2.13.005 only, missing secondary anchor)
+- specs/behavioral-contracts/ss-05/BC-2.05.006.md (v1.3→v1.4: newly-scoped E-GRAPH-014 InterruptApprovalTimeout EC-005 struct corrected 2-field `{ tier, deadline_utc }` → 3-field `{ run_id, tier, deadline_utc }`; `run_id` added to cover `<run_id>` taxonomy placeholder; TD-VSDD-060 sweep: 1 struct site in file for E-GRAPH-014; only site fixed)
+- specs/prd-supplements/bc-authoring-plan.md (v2.36→v2.37: F-P110-02 gate #33 Step B check-1 cross-anchor scope clarification — "intra-corpus" redefined as EVERY struct site in every BC the taxonomy BC-Anchor cell lists for the code, primary AND secondary; "PRIMARY anchor's most authoritative construct determines the canonical field name and field count; update ALL diverging sites in ALL anchor BCs"; additionally: 3rd safety grep documented (multi-line struct form coverage); 34-code census scope documented with 4 newly-scoped codes; enumeration-dispute reconciliation note added; `total_standing_gates` unchanged at 34)
+- specs/prd-supplements/error-taxonomy.md (v1.23→v1.24: F-P110-01 corrigendum #4 — corrects v1.23 prose "E-GRAPH-002 has two placeholders (`<run_id>` and `<run_status>`)" to ONE placeholder only (`<run_id>`); `run_status` documented as superset diagnostic field (valid per Step B check-2; NOT a taxonomy placeholder); BC-2.05.005 v1.3 fix was CORRECT — adding thread_id covered the ONE required placeholder; v1.23 row NOT rewritten; additionally records BC-2.13.004 F-P110-02 secondary anchor fix and 34-code scope expansion)
+- cycles/v1.0.0-greenfield/adversarial-reviews/pass-110.md (new)
+- STATE.md (v3.34→v3.35; burst-195 row added; burst-190 archived; PASS-111 checkpoint)
+- cycles/v1.0.0-greenfield/burst-log.md (this file; burst-195 entry added; burst-190 archive)
+
+**Dim-2:** No new behavioral contracts authored. Two existing BCs revised (BC-2.13.004 v1.1→v1.2; BC-2.05.006 v1.3→v1.4) — struct field corrections only. BC count unchanged at 95 (48P0/39P1/8P2).
+**D18-P89-A sweep:** Mechanical method used (`compute-input-hash --scan specs --update` from .factory/). Files edited: bc-authoring-plan.md, error-taxonomy.md, BC-2.13.004.md, BC-2.05.006.md. Transitive cascade (D18-P90-A): all BCs listing any of these files in `inputs:` refreshed. STALE=0 confirmed before commit.
+
+**Codifications:** Gate #33 Step B check-1 cross-anchor scope clarification in bc-authoring-plan v2.37; 3rd safety grep documented; error-taxonomy v1.24 corrigendum #4 (E-GRAPH-002 placeholder-count correction). `total_standing_gates` unchanged at 34.
+
+**Dim-5:** counter 0/3 (unchanged; pass-110 NOT CLEAN strict); next action: dispatch adversary pass 111
+**Dim-6:** bc-authoring-plan v2.37 gate #33 cross-anchor scope; error-taxonomy v1.24 corrigendum #4; census 34 codes (4 newly-scoped).
+**Dim-7:** Finding trajectory tail →1→1→4→2→2 (passes 106/107/108/109/110); trajectory appended →2 (pass-110).
+
+### Burst-195 Step-C Gate #33 STRUCT-PLACEHOLDER PARITY CENSUS (bc-authoring-plan v2.37)
+
+End-to-end census per gate #33 procedure v2.37 rules. Step A grep run with THREE commands: (primary) `Err(E-` + `{`; (secondary) `E-[A-Z]*-[0-9]{3} [A-Z][A-Za-z]* {`; (tertiary — v2.37 addition) variant-name–anchored search for multi-line struct forms missed by v2.36 2-grep. Adversary enumeration dispute reconciled: 30 prior + 4 newly-scoped = 34. Two v2.36 code-label assignments flagged as incorrect (marked † below); correct labels pending taxonomy read (BC sites assessed PASS; verdict unchanged).
+
+**Excluded from census (same as v2.36):**
+- **Step-A FPs (2):** E-CHKPT-008 (brace hit in markdown table Input cell), E-BUDGET-001 (brace hit; BudgetCeilingReached appears only bare `Err(E-BUDGET-001 BudgetCeilingReached)` in production sites — no named-variant struct braces).
+- **Base-FerrochainError/bare-form codes (4):** generic error wrapper form or bare form only; excluded as non-struct-bearing per v2.36 rules.
+
+**Total struct-bearing codes assessed:** 34. Summary: **2 FAIL (both fixed this burst) / 32 PASS / ZERO remaining.**
+
+| Code | Variant Name | Primary/Secondary Anchor BC(s) | Struct Fields (post-fix) | Taxonomy Placeholders | Semantic Aliases Noted | Step-B Verdict |
+|------|-------------|-------------------------------|--------------------------|----------------------|-----------------------|----------------|
+| E-GRAPH-002 | NoActiveInterrupt | BC-2.05.005 PC1+EC-001/002/003/004+TV-001/002/003/004/005 | {thread_id, run_status} | `<run_id>` (ONE; v1.24 correction: run_status = superset diagnostic field, NOT a taxonomy placeholder) | thread_id↔`<run_id>` (v2.36) | FAIL→FIXED-v1.23 (burst-194; BC-2.05.005 v1.3; 9 sites missing thread_id; PC1 already correct) |
+| E-MCP-002 | McpTransportError | BC-2.09.001 TV-004 | {server, transport_error} | `<server>`, `<transport_error>` | — | FAIL→FIXED-v1.23 (burst-194; BC-2.09.001 v1.3; TV-004 sole struct site; `...` violated PASS-ABBREV) |
+| E-SBXD-001 | WorkspaceEscape | PRIMARY: BC-2.13.005 PC4+TV-001/002/003/004 SECONDARY: BC-2.13.004 TV-002 | {requested, resolved, root} | `<resolved>`, `<root>` (+ requested: additional diagnostic field) | — | FAIL→FIXED-v1.23 (burst-194, primary BC-2.13.005 v1.1 TV-002/003) + FAIL→FIXED-v1.24 (burst-195, secondary BC-2.13.004 v1.2 TV-002; F-P110-02 cross-anchor; prior sweep was in-file only) |
+| E-MEMORY-006 | InsufficientPrivilege | BC-2.15.003 EC-005+TV | {operation, required} | `<operation>`, `<required>` | — | FAIL→FIXED-v1.20 (burst-190) |
+| E-GRAPH-011 | ConditionalEdgePanic | BC-2.02.005 PC5+EC-003+TV-005 | {source_node, message} | `<source_node>`, `<message>` | — | FAIL→FIXED-v1.21 (burst-191) |
+| E-GRAPH-007 | NodeAttributeNotFound | BC-2.02.001 EC-001+TV-005 | {node_id, key} | `<node_id>`, `<key>` | — | FAIL→FIXED-v1.21 (burst-191) |
+| E-GRAPH-001 | ChannelDispatchError | BC-2.02.002 PC3+EC-001/002+TV-002 | {channel, task_ids, step} | `<channel>`, `<task_ids>`, `<n>` | step↔`<n>` | FAIL→FIXED-v1.21 (burst-191) |
+| E-GRAPH-004 | ChannelWriterConflict | BC-2.02.003 EC-003+TV-004 | {channel, writer, step} | `<channel>`, `<writer>`, `<n>` | step↔`<n>` | FAIL→FIXED-v1.21 (burst-191) |
+| E-PROV-010 | ProviderChainExhausted | BC-2.08.014 EC-004+TV-005 | {providers_attempted, last_error_code, last_provider} | `<N>`, `<last_error_code>`, `<last_provider>` | providers_attempted↔`<N>` (v2.36) | FAIL→FIXED-v1.22 (burst-193) |
+| E-CHKPT-004 | EncryptionKeyRotationFailed | BC-2.04.007 PC4 | {message} | `<reason>` | message↔`<reason>` CODE-SPECIFIC (v2.36; do-not-generalize) | FAIL→FIXED-v1.22 (burst-193) |
+| E-PROV-009 | ToolCallDialectParseError | BC-2.08.013 EC-002 | {dialect, element, offset, parse_error} | `<dialect>`, `<element>`, `<n>`, `<parse_error>` | offset↔`<n>` (E-PROV-009; v2.36) | FAIL→FIXED-v1.22 (burst-193) |
+| E-GRAPH-014 | InterruptApprovalTimeout | BC-2.05.006 EC-005 | {run_id, tier, deadline_utc} | `<run_id>`, `<tier>`, `<deadline_utc>` | — | FAIL→FIXED-v1.24 (burst-195, BC-2.05.006 v1.4; newly-scoped in v2.37 3-grep; EC-005 was missing run_id — 2-field form `{ tier, deadline_utc }` failed to cover `<run_id>` placeholder) |
+| E-GRAPH-008 | ChannelCapacityExceeded | BC-2.02.008 EC-001 | {channel, step, capacity} | `<channel>`, `<n>`, `<capacity>` | step↔`<n>` | PASS-NOTE |
+| E-GRAPH-010 | NodeTypeMismatch | BC-2.02.010 EC-001 | {node, expected_type, actual_type} | `<node_id>`, `<expected>`, `<actual>` | node↔`<node_id>` | PASS-NOTE |
+| E-GRAPH-013 | InsufficientApproverRole | BC-2.05.006 EC-001 | {node, required_tier, actual_tier} | `<node_id>`, `<required>`, `<actual>` | node↔`<node_id>` | PASS-NOTE |
+| E-SERVER-015 | RunAlreadyExecuting | BC-2.12.012 EC-001 | {thread_id} | `<run_id>` | thread_id↔`<run_id>` | PASS-NOTE |
+| E-CHKPT-003 | CheckpointDeserializeError | BC-2.04.005 EC-006+TV-008 | {thread_id, checkpoint_id, reason} | `<thread_id>`, `<checkpoint_id>`, `<reason>` | trailing reason = catch-all | PASS-ABBREV |
+| E-MCP-005 | McpServerBindFailed | BC-2.09.006 EC-001 | {transport, reason} | `<transport_error>`, `<reason>` | transport↔`<transport_error>` | PASS-ABBREV |
+| E-MEMORY-002 | StorageFull | BC-2.15.001 EC-002 | {backend, path} | `<backend>`, `<path>` | — | PASS |
+| E-MEMORY-003 | ScopeAccessDenied | BC-2.15.002 EC-001 | {requested_scope, caller_identity} | `<caller_identity>`, `<requested_scope>` | — | PASS |
+| E-MEMORY-005 | ErasurePartialFailure | BC-2.15.004 EC-003 | {user_id, backend_error} | `<user_id>`, `<reason>` | backend_error↔`<reason>` (v2.36) | PASS |
+| E-MEMORY-007 | MemoryWriteGuardDenied | BC-2.15.005 PC2 | {ns, key, reason} | `<ns>`, `<key>`, `<reason>` | context-sourced exception (v2.36; ns/key from MemoryWriteRequest) | PASS |
+| E-MEMORY-008 | MemoryStoreReadFailed | BC-2.15.004 EC-004 | {backend, path} | `<backend>`, `<path>` | — | PASS |
+| E-SBXD-003 | SandboxPolicyViolation | BC-2.13.003 EC-001 | {reason} | `<reason>` | — | PASS |
+| E-SBXD-006 | InvalidEnvAllowlistPattern | BC-2.13.007 PC5+EC-003 | {pattern} | `<pattern>` | — | PASS |
+| E-PROV-007 | StructuredOutputRefused | BC-2.08.003 EC-001 | {refusal_message} | `<refusal_message>` | — | PASS |
+| E-PROV-008 | ProviderHttpError | BC-2.08.004 EC-004+EC-005 | {provider, status, body_preview} | `<provider>`, `<status>`, `<body_preview>` | — | PASS |
+| E-GRAPH-005 | NodeInvocationPanic | BC-2.02.005 EC-001 | {node_id, message} | `<node_id>`, `<message>` | — | PASS |
+| E-GRAPH-009† | BranchKeyNotFound | BC-2.02.009 EC-001 | {node_id, key, route} | `<node_id>`, `<key>`, `<route>` | — | PASS (†v2.37 taxonomy cross-check: code label E-GRAPH-009 is mis-assigned in v2.36 census; taxonomy assigns E-GRAPH-009 to DuplicateNodeName at BC-2.02.001 — see row 31; correct code for this BC-2.02.009 site is pending product-owner/taxonomy review; BC site is real and assessed PASS; verdict unchanged) |
+| E-GRAPH-012 | GraphCycleDetected | BC-2.02.012 EC-001 | {cycle_path} | `<cycle_path>` | — | PASS |
+| E-GRAPH-014† | StateKeyConflict | BC-2.02.014 EC-001 | {key, source_a, source_b} | `<key>`, `<source_a>`, `<source_b>` | — | PASS (†v2.37 taxonomy cross-check: code label E-GRAPH-014 is mis-assigned in v2.36 census; taxonomy assigns E-GRAPH-014 to InterruptApprovalTimeout at BC-2.05.006 EC-005 — see row 32; correct code for this BC-2.02.014 site is pending product-owner/taxonomy review; BC site is real and assessed PASS; verdict unchanged) |
+| E-GRAPH-009 | DuplicateNodeName | BC-2.02.001 | {name} | `<name>` | — | PASS (newly-scoped in v2.37 3-grep; struct `{ name }` covers `<name>` taxonomy placeholder directly; intra-BC consistent with BC-2.02.001's other E-GRAPH-007 struct site) |
+| E-CRON-002 | InvalidCronExpression | BC-2.12.004 EC-002 | {field, value, reason} | `<field>`, `<value>`, `<reason>` | — | PASS (newly-scoped in v2.37 3-grep; struct `{ field, value, reason }` covers all 3 taxonomy placeholders directly; no aliases required) |
+| E-SERVER-006 | ScheduleNotFound | BC-2.12.004 EC-005 | {cron_id} | `<cron_id>` | — | PASS (newly-scoped in v2.37 3-grep; struct `{ cron_id }` covers `<cron_id>` taxonomy placeholder directly) |
+
+**Note on † entries:** E-GRAPH-009 (BranchKeyNotFound, BC-2.02.009) and E-GRAPH-014† (StateKeyConflict, BC-2.02.014) were labeled with those code numbers in v2.36 but v2.37 taxonomy cross-check shows those code numbers are correctly assigned to DuplicateNodeName (BC-2.02.001) and InterruptApprovalTimeout (BC-2.05.006) respectively. The BC-2.02.009 and BC-2.02.014 sites use different (currently unresolved) code numbers. Both † sites are assessed PASS; verdicts unchanged. Route to product-owner for taxonomy code-label correction in a follow-up burst (out-of-scope for this structural-parity census).
+
+**Census summary (v2.37 rules):** 34 struct-bearing codes total (30 v2.36 + 4 newly-scoped via 3-grep multi-line struct detection). Step-A FPs unchanged: E-CHKPT-008, E-BUDGET-001. FAIL: 2 (E-SBXD-001 secondary anchor BC-2.13.004 v1.2 + E-GRAPH-014 InterruptApprovalTimeout BC-2.05.006 v1.4 — BOTH FIXED this burst). PASS: 32 (11 previously-fixed + 4 PASS-NOTE + 2 PASS-ABBREV + 13 clean PASS + 2 newly-scoped PASS). ZERO FAIL remaining after burst-195 fixes. Code-label reconciliation for 2 † entries deferred to follow-up burst (structural PASS; out-of-scope for parity gate).
+**Closes:** F-P110-02 HIGH [process-gap] (BC-2.13.004 v1.2 secondary anchor; bc-authoring-plan v2.37 cross-anchor scope); F-P110-01 MED [process-gap] (error-taxonomy v1.24 corrigendum #4; E-GRAPH-002 ONE placeholder correction); BC-2.05.006 v1.4 E-GRAPH-014 run_id added.
+
+---
+
+## Archived from STATE.md Current Phase Steps (burst 195 rotation)
+
+| Phase 1d burst 190 — pass-106 record + fix burst 110 (F-P106-01 RESOLVED, OBS-P106-A RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 106: NOT CLEAN strict+PR-merge — 1M+1OBS. F-P106-01 RESOLVED: bc-authoring-plan v2.33→v2.34 — BC-INDEX.md added to Known Form-B-only files under new "Indexes:" bullet; catch-all broadened to "Any index, ADR, or supplement"; difference-set verification: 11 Form-B-only files {ADR-007/009/012/013, BC-INDEX.md, BC-2.07.002/BC-2.08.011/BC-2.08.012, bc-authoring-plan.md, test-vectors.md, verification-architecture.md} all covered; zero omissions. OBS-P106-A RESOLVED: error-taxonomy v1.19→v1.20 — E-MEMORY-006 message corrected to `InsufficientPrivilege: operation '<operation>' requires <required>` (1:1 struct-field mapping to BC-2.15.003 EC-005 {operation, required}; gate #33 BC-wins); 22-code struct-bearing sibling sweep: 21 PASS, 1 fixed. D18-P89-A sweep: 3 BC hashes refreshed (BC-2.07.001 →b52167a; BC-2.14.001 →4138081; BC-2.14.002 →4138081); TOTAL MATCH 126/126. Trajectory →1 (P1D-106). Counter 0/3. Fix bursts 109→110. Burst 190. |

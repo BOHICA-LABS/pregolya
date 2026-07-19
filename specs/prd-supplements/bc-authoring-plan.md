@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.36"
+version: "2.37"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -1884,11 +1884,19 @@ split by wave avoids exception).
 
     **Step B — Per-code assessment (three checks):**
 
-    1. **Intra-BC/intra-corpus field-name consistency:** all sites for the same variant in the
-       same BC must use identical field names. If `{ source: ... }` appears in PC4 but
-       `{ message: "..." }` in PC5/EC/TV, one site is wrong — BC-wins rule: the site used by
-       the majority or by the most authoritative construct (TV/EC over PC description prose)
-       determines the canonical field name; update the minority site.
+    1. **Intra-BC/intra-corpus field-name consistency:** all sites for the same variant across
+       ALL anchor BCs listed in the taxonomy BC-Anchor cell for the code must use identical
+       field names. **"Intra-corpus" means EVERY struct site in every BC the taxonomy anchors
+       this code to (primary AND secondary anchors) — not just within a single BC file.**
+       If `{ source: ... }` appears in PC4 of BC-A but `{ message: "..." }` in PC5/EC/TV of
+       BC-A, or if the primary anchor BC uses 3-field form `{ requested, resolved, root }` but
+       a secondary anchor BC uses 2-field form `{ resolved, root }`, one site is wrong. BC-wins
+       rule: the PRIMARY anchor's most authoritative construct (TV/EC over PC description prose)
+       determines the canonical field name and field count; update ALL diverging sites in ALL
+       anchor BCs. The root cause of pass-110's F-P110-02 was that the TD-VSDD-060 sweep was
+       anchored "in file" rather than "across ALL anchor BCs" — E-SBXD-001 BC-2.13.004 (secondary
+       anchor) diverged from BC-2.13.005 (primary anchor, canonical 3-field form) because the
+       sweep never checked the secondary anchor. This cross-anchor scope is mandatory.
 
     2. **Placeholder coverage:** collect the DISTINCT dynamic placeholders from the taxonomy
        Message Format (`<placeholder>` tokens). The struct field set must be a SUPERSET of
@@ -2067,6 +2075,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.37 | 2026-07-18 | F-P110-02 (HIGH, process-gap): gate #33 Step B check-1 cross-anchor scope clarification. The prior text required field-name consistency "within the same BC" — the v2.37 clarification redefines "intra-corpus" as EVERY struct site in every BC the taxonomy BC-Anchor cell lists for the code (primary AND secondary anchors). Root cause of F-P110-02: TD-VSDD-060 sweep anchored "in-file" missed E-SBXD-001 secondary anchor BC-2.13.004 TV-002 (2-field `{ resolved, root }`) diverging from primary anchor BC-2.13.005 canonical 3-field form `{ requested, resolved, root }`. The Step B check-1 prose now names this cross-anchor obligation explicitly: "The PRIMARY anchor's most authoritative construct determines the canonical field name and field count; update ALL diverging sites in ALL anchor BCs." Additionally: full re-census under v2.37 cross-anchor scope found 34 struct-bearing codes total (prior: 30); 4 newly-scoped: E-GRAPH-009 (PASS), E-GRAPH-014 (FAIL — fixed in BC-2.05.006 v1.4), E-CRON-002 (PASS), E-SERVER-006 (PASS). `total_standing_gates` unchanged at 34 (sub-check clarification of gate #33, not a new gate). | F-P110-02 |
 | 2.36 | 2026-07-18 | F-P109-02 (MED, process-gap): gate #33 check-2 registry extended with four semantic aliases (`offset ↔ <n>` for E-PROV-009 — byte offset in dialect parse error; `providers_attempted ↔ <N>` for E-PROV-010 — abbreviation, tried-count; `backend_error ↔ <reason>` for E-MEMORY-005 — storage backend failure detail; `message ↔ <reason>` for E-CHKPT-004 CODE-SPECIFIC — full constructed message string is the reason, do not apply to codes where `message` maps to `<message>` placeholder) and two new exception classes: (1) context-sourced placeholder exception — for errors where taxonomy placeholders `<ns>` and `<key>` are sourced from a named request context object at the raise site (currently registered: E-MEMORY-007, `<ns>` and `<key>` from `MemoryWriteRequest.namespace`/`.key`); struct may omit those fields without failing check 2 if and only if BC names context object, placeholder is deterministically available at raise site, and exception is registered by code; (2) PASS-ABBREV rule — TV-row `...` abbreviation PASSES check 2 only if a non-TV (PC or EC) full-struct site in the same BC explicitly names all fields; when the abbreviated TV row is the sole struct-bearing site for a code in the BC, the `...` form is a FAIL — all fields must be listed explicitly. Motivating instance for PASS-ABBREV: BC-2.09.001 TV-004 `{ server: "math", ... }` was the sole E-MCP-002 struct site — expanded to `{ server: "math", transport_error: "connection refused" }` in BC-2.09.001 v1.3. `total_standing_gates` unchanged at 34. | F-P109-02 |
 | 2.35 | 2026-07-18 | F-P108-04 (HIGH, process-gap): gate #33 extended with STRUCT-PLACEHOLDER PARITY CENSUS sub-check (Steps A–C). Two consecutive sweeps (v1.20 "21 PASS," v1.21 "17 PASS") produced false completeness claims because they checked that struct fields EXISTED but did not verify CONSTRUCTIBILITY: (1) intra-BC field-name consistency across sites, and (2) struct field set is a SUPERSET of all distinct taxonomy placeholders with no combined multi-placeholder field. Root cause confirmed by three burst-112 failures: E-PROV-010 (`last_error` combined `<last_error_code>/<last_provider>` into one field), E-CHKPT-004 (`source` in PC4 vs `message` in PC5/EC-002/TV), E-PROV-009 (`reason` catch-all embedded mid-message `<n>` offset, can't independently render `<element>` and `<n>`). New sub-check: Step A (enumerate all struct-shorthand Err(E-...) sites via grep), Step B (per-code: assert intra-BC field-name consistency + assert field set is SUPERSET of all distinct taxonomy placeholders + catch-all `reason` only valid for TRAILING-only variable content), Step C (full per-code TABLE as mandatory output; prose-only completeness claims are INVALID). Motivating instances, catch-all rule, and known semantic aliases (step↔\<n\>, node↔\<node_id\>, thread_id↔\<run_id\>) documented inline. `total_standing_gates` unchanged at 34 (sub-check extension of gate #33, not a new gate). | F-P108-04 |
 | 2.34 | 2026-07-18 | F-P106-01 (process-gap): gate #28 Form-B-only known-file list was missing `BC-INDEX.md` and the catch-all did not cover indexes. Fix: (1) added `BC-INDEX.md` to explicit "Indexes" bullet in the Known Form-B-only files list; (2) catch-all broadened from "Any ADR or supplement" to "Any index, ADR, or supplement that uses a `## Changelog` body section." SIBLING-SWEEP (TD-VSDD-060): corpus-wide diff of `grep -rl "^## Changelog"` vs `grep -rl "^changelog:"` across `.factory/specs/` — Form-B-only set confirmed as {ADR-007, ADR-009, ADR-012, ADR-013, BC-INDEX.md, BC-2.07.002.md, BC-2.08.011.md, BC-2.08.012.md, bc-authoring-plan.md, test-vectors.md, verification-architecture.md}; domain-spec/ubiquitous-language-server.md has BOTH forms (not Form-B-only, excluded). After fix, all 11 Form-B-only files are covered (explicit list covers 7; broadened catch-all covers ADR-007/009/012/013; BC-INDEX.md covered by both). Zero omissions. L2-INDEX/ARCH-INDEX/VP-INDEX confirmed Form-A only (adversary assertion verified). `total_standing_gates` unchanged at 34 (sub-list correction of gate #28, not a new gate). | F-P106-01 |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.004
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -24,6 +24,7 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-8): F-P8-01 title census — H1 updated to add '— Kani VP Seed' suffix (vp_seed designation codified in heading per title-authority convention)."
+  - "1.2 (F-P110-02, 2026-07-18): Fix TV-002 E-SBXD-001 WorkspaceEscape struct — 2-field form `{ resolved, root }` missing `requested`. Canonical 3-field form `{ requested, resolved, root }` per BC-2.13.005 Invariant-2 (cross-anchor consistency under gate #33 v2.37). TV-002 fix: add `requested: \"/workspace/../etc/passwd\"`. TD-VSDD-060 file-wide sweep: only one E-SBXD-001 struct site in this file (line 108 in Canonical Test Vectors). The prior in-file sweep missed this because the secondary anchor BC-2.13.004 was not scoped by the TD-VSDD-060 sweep anchored 'in-file' rather than 'across ALL anchor BCs' — the systemic root cause corrected in bc-authoring-plan gate #33 v2.37."
 modified: []
 extracted_from: null
 deprecated: null
@@ -105,7 +106,7 @@ formally prove that no file operation can observe content outside the declared w
 |-------|----------------|----------|
 | `canonicalize_beneath_root("/workspace", "/workspace/subdir/file.txt")` (file exists) | `Ok(PathBuf::from("/workspace/subdir/file.txt"))` | happy-path |
 | `canonicalize_beneath_root("/workspace", "/workspace/foo/../bar")` (bar exists) | `Ok(PathBuf::from("/workspace/bar"))` | edge-case (benign traversal) |
-| `canonicalize_beneath_root("/workspace", "/workspace/../etc/passwd")` | `Err(E-SBXD-001: WorkspaceEscape { resolved: "/etc/passwd", root: "/workspace" })` | error (string escape) |
+| `canonicalize_beneath_root("/workspace", "/workspace/../etc/passwd")` | `Err(E-SBXD-001: WorkspaceEscape { requested: "/workspace/../etc/passwd", resolved: "/etc/passwd", root: "/workspace" })` | error (string escape) |
 | `canonicalize_beneath_root("/workspace", "/etc/passwd")` | `Err(E-SBXD-001: WorkspaceEscape)` | error (absolute path outside root) |
 | Attempt to call `std::fs::read("/workspace/file.txt")` directly without `WorkspaceFs` facade | Compile-error or lint violation — `WorkspaceFs` facade is the only permitted path | structural |
 

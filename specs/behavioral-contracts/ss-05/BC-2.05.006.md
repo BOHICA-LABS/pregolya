@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.006
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -10,6 +10,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-27): F-P27-06 Architecture Anchor renamed risk_tier.rs → action_risk.rs for consistency with the action_risk wire-field canon (retired-identifier gate #19)."
   - "1.2 (pass-45): F-P45-02 — corrected BC-2.10.004 relationship in Related BCs: budget escalation reuses base interrupt mechanism (BC-2.05.001) with BudgetEscalation payload and BudgetResume::Extend|Halt resume; it is NOT a risk-tiered High interrupt and is NOT subject to RiskGatePolicy or High-tier approver gating."
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
+  - "1.4 (F-P110-CENSUS, 2026-07-18): Fix EC-005 E-GRAPH-014 InterruptApprovalTimeout struct — 2-field form `{ tier, deadline_utc }` missing `run_id`. Taxonomy message format `interrupt for run '<run_id>' (tier '<tier>') expired at deadline '<deadline_utc>'` has 3 distinct placeholders; struct must be a SUPERSET of all taxonomy placeholders (gate #33 Step B check 2). Added `run_id: \"<run_id>\"` as first field. TD-VSDD-060 sweep: only one E-GRAPH-014 struct site in this file (EC-005 line ~148); TV-006 uses bare-variant form (no struct fields — not subject to parity check)."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -145,7 +146,7 @@ set the tier; absence is not equivalent to `ReadOnly` or `Low`.
 **Scenario:** `RiskGatePolicy { High: RequireApprover(SeniorAnalyst), timeout: 4h }`.
 No approval arrives within 4 hours.
 **Expected behavior:** The graph transitions to `failed` with `E-GRAPH-014
-InterruptApprovalTimeout { tier: High, deadline_utc: "<ISO-8601 timestamp>" }`. The run is NOT
+InterruptApprovalTimeout { run_id: "<run_id>", tier: High, deadline_utc: "<ISO-8601 timestamp>" }`. The run is NOT
 auto-approved; it fails closed. Operators must restart the run manually or apply a time-extension Command.
 
 **Deadline persistence:** The deadline is computed at `interrupt()` time as
