@@ -738,6 +738,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-119 — Pass 119 (2026-07-19, burst 204)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-119 | 2026-07-19 | 1 | 0 | 0 | 1 | 0 | 2 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes exercised (burst-204 pass-119):** F-P118-01/02/03 ALL CLOSED — checks (a)-(f) all PASS (bc-authoring-plan v2.40 §12 four-member canonical set; BC-2.12.004 v1.3 PC2b +summary_halt; BC-2.05.004 v1.3 invariant +summary_halt; BC-2.05.005 v1.4 Related BCs + VP-HITL-10 "five states"; entities-server v1.9 completed_at PC13 citation; corpus-wide grep CONCURS zero non-exempt 3-member hits). BC-2.05.005 v1.4 deeper sweep found within-BC PC↔VP contradiction: Preconditions §2 guard body (4 clauses a-d) disagrees with VP-HITL-10 "five non-interrupted states" — `summary_halt` missing from normative body. OBS-1 identified delegation gap: `queued` and `cancelled` also absent from guard (BC-2.05.004 invariant delegates all six statuses to BC-2.05.005 but BC-2.05.005 PC§2 only covers four). OBS-2 identified VP-HITL-10 "five" count imprecise — after OBS-1 resolution, correct count is 7.
+**Fix summary (burst 204 — fix burst 122):** F-P119-01 MED (PO) — BC-2.05.005 v1.4→v1.5: Preconditions §2 adds clause (e) `summary_halt` (BC-2.10.003 PC8(d)); OBS-1 adjudicated production-grade totality: adds clauses (f) `queued` and (g) `cancelled`; Description updated to enumerate all non-interrupted statuses; TV-006 `summary_halt` guard, TV-007 `queued` guard, TV-008 `cancelled` guard added in canonical `{thread_id, run_status}` form. OBS-2 resolved: VP-HITL-10 rewritten with derivable 7-case count (6 non-interrupted run_status values + interrupted-slots-consumed scenario). BC-2.05.004 v1.3→v1.4: no normative change; changelog records OBS-1 adjudication (delegation wording confirmed coherent in both directions). test-vectors.md v1.8→v1.9: BC-2.05.005 TV Count 5→8; SS-05 subtotal 32→35; grand totals 504→507 canonical, 513→516 all vectors.
+**Hash sweep (D18-P89-A):** run after burst-204 changes; STALE=0 confirmed (see burst-204 narrative in burst-log.md).
+**Trajectory after:** →1 (P1D-119); cumulative tail →1→1→3→1
+**Counter:** 0/3 (unchanged; fix burst 122 pushes new HEAD; NEXT: pass 120)
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

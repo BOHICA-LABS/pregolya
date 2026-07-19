@@ -2539,3 +2539,46 @@ Phase 1d pass 118 adversarial review completed: NOT CLEAN strict+PR-merge — 2 
 - Counter: 0 of 3 (unchanged; fix burst 121 pushes new HEAD; frozen-HEAD streak rule)
 - Trajectory: ...→1→1→1→3 (tail after P1D-118)
 - NEXT: dispatch adversary pass 119
+
+---
+
+## Burst 199 (Archived from Current Phase Steps in burst 204)
+
+**Burst ID:** 199 | **Date:** 2026-07-19 | **Type:** Adversary pass record + fix burst
+
+**Summary:** Phase 1d burst 199 — pass-114 CRIT record + fix burst 117 (F-P114-01 RESOLVED). Pass 114: NOT CLEAN strict+PR-merge — 1C. F-P114-01 CRIT RESOLVED: ADR-005 v1.0 AtomicU64 MonotonicClock violates BC-2.04.003 PC1 (next_id vs get_next_version) + Inv1 (restart-zero breaks monotonicity) + BC-2.04.005 (crash-recovery PK collision) + BC-2.04.006 Inv1 (cross-restart PK uniqueness); VP-002 v1.0 "per saver instance" understated; all 7 ss-04 anchor files cited nonexistent architecture/ferrochain-checkpoint.md. Fix burst 117: ADR-005 v1.1 stateless ZST get_next_version(current: Option<CheckpointId>, _channel) → Result; persisted-max seeding per (thread_id, checkpoint_ns); E-CHKPT-003 failure path documented; 7 BC anchors → real files; VP-002 v1.1 durable-store framing; tooling-selection get_next_version. BC-INDEX v1.5→v1.6. Counter RESET 1/3→0/3. Trajectory →1 (P1D-114 CRIT). Fix bursts 116→117.
+
+---
+
+## Burst 204 (2026-07-19) — Pass 119 Record + Fix Burst 122
+
+**Burst ID:** 204 | **Date:** 2026-07-19 | **Type:** Adversary pass record + fix burst (state-burst single-commit protocol TD-VSDD-053)
+
+**Pass-119 Summary:** NOT CLEAN strict — 0C/0H/1M/2OBS-folded. F-P118-01/02/03 ALL CLOSED (corpus-wide grep CONCURS zero non-exempt 3-member terminal-set hits). New finding F-P119-01 MED: BC-2.05.005 v1.4 Preconditions §2 missing `summary_halt` guard clause — within-BC PC↔VP contradiction (VP-HITL-10 says "five non-interrupted states" but normative guard body lists only 4). OBS-1: `queued` and `cancelled` also absent (delegation gap vs BC-2.05.004 invariant). OBS-2: VP-HITL-10 "five states" count imprecise. Counter 0/3 (unchanged).
+
+**Fix Burst 122 Changes:**
+
+- BC-2.05.005 v1.4→v1.5: F-P119-01 RESOLVED — Preconditions §2 adds clause (e) `summary_halt` (run terminated via OnCeiling::Summarize; BC-2.10.003 PC8(d) + BC-2.12.003 PC8); OBS-1 adjudication chose production-grade TOTALITY (guard is a complete predicate over ALL non-interrupted run_status values) — adds clauses (f) `queued` (never-started; no interrupt slot before first node) and (g) `cancelled` (in-flight slots discarded); Description updated to enumerate all seven guard cases; TV-006 {thread_id, run_status: "summary_halt"}, TV-007 {thread_id, run_status: "queued"}, TV-008 {thread_id, run_status: "cancelled"} added; OBS-2 RESOLVED — VP-HITL-10 rewritten: "six non-interrupted run_status values (completed, failed, in_progress, summary_halt, queued, cancelled) plus the interrupted-slots-consumed scenario (PC2(d)/TV-002) — 7 total parameterized test cases". TD-VSDD-060 sweep: Preconditions §2 normative guard (7 clauses a-g) total over all guard cases; VP-HITL-10 7-case derivable; Related BCs lifecycle reference (~line 138) exempt; all E-GRAPH-002 {run_status} struct sites exempt (specific concrete values).
+- BC-2.05.004 v1.3→v1.4: No normative change — Invariants §4 (lines 99-101) already correctly delegated all six non-interrupted statuses to BC-2.05.005; changelog records OBS-1 adjudication (production-grade totality; delegation coherent in both directions).
+- test-vectors.md v1.8→v1.9: BC-2.05.005 TV Count 5→8; SS-05 subtotal 32→35; grand totals 504→507 canonical, 513→516 all vectors; timestamp 2026-07-19.
+
+### Files Written
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-119.md` | NEW — pass-119 adversarial review (0C/0H/1M/2OBS-folded) incl. per-site enumeration table + census-sweep table |
+| `.factory/specs/behavioral-contracts/ss-05/BC-2.05.005.md` | v1.4→v1.5 — Preconditions §2 7-case guard (a-g); Description; TV-006/007/008; VP-HITL-10 7-case rewrite |
+| `.factory/specs/behavioral-contracts/ss-05/BC-2.05.004.md` | v1.3→v1.4 — Changelog OBS-1 adjudication; no normative change |
+| `.factory/specs/prd-supplements/test-vectors.md` | v1.8→v1.9 — BC-2.05.005 TV Count 5→8; SS-05 subtotal 35; totals 507/516 |
+| All spec files | D18-P89-A hash sweep — STALE=0 (see below) |
+| `.factory/cycles/v1.0.0-greenfield/convergence-trajectory.md` | append P1D-119 row + per-pass detail |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | this burst-204 narrative; burst-199 archived |
+| `.factory/STATE.md` | v3.44→v3.45; test-vectors 513→516; trajectory-tail →1→1→3→1 (P1D-119); counter 0/3; fix bursts 121→122 |
+
+### Convergence Status After Burst 204
+
+- Phase 1d passes: 119 (1 MED — counter 0/3)
+- Fix bursts: 122 (F-P119-01 RESOLVED; OBS-1 adjudication: production-grade totality)
+- Counter: 0 of 3 (unchanged; fix burst 122 pushes new HEAD; frozen-HEAD streak rule)
+- Trajectory: ...→1→1→3→1 (tail after P1D-119)
+- NEXT: dispatch adversary pass 120
