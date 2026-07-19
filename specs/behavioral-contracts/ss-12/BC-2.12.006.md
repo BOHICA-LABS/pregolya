@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "6627b5d"
+input-hash: "41bb7e2"
 extracted_from: null
 modified: []
 deprecated: null

@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.9"
+version: "1.10"
 status: active
 producer: business-analyst
 timestamp: 2026-07-17T00:00:00Z
 changelog:
+  - "1.10 (F-P120-01, fix burst 123, 2026-07-19): Correct Command depiction in §ResumeValue from 2-variant enum (Command::Resume/Command::Goto) to struct-with-optional-fields form matching BC-2.05.004. Command { resume, update, goto, graph } with independently-settable combinable fields and Command.PARENT subgraph-escape semantics documented. TD-VSDD-060 sweep: capabilities-p0.md:113 'Command(resume=value)' is API-call notation (not enum variant syntax), already-consistent with BC-2.05.004 struct form; exempt. ubiquitous-language-core.md:142 drifted; fixed in same burst (file bumped to v1.1). No other drifted Command-depiction sites found in domain-spec shards."
   - "1.9 (2026-07-19): F-P118-03 — fix wrong BC citation on completed_at semantics line. Changed Source from 'F-P24-01, BC-2.12.003 PC8(c)(d)' to 'F-P24-01, BC-2.12.003 PC13, BC-2.10.003 PC8(c)(d)'. PC13 is the correct BC-2.12.003 clause governing completed_at (matches updated_at's PC13 citation on the adjacent line and interface-definitions:867). PC8(c)(d) belongs to BC-2.10.003 (OnCeiling::Summarize → summary_halt path), retained as a separate correctly-attributed reference. TD-VSDD-060 sweep: line 58 BC-2.10.003 PC8(c)(d) was already correct; frontmatter v1.8 entry references BC-2.12.003 PC7/PC8 (no lettered subparts) which is correct for the lifecycle state-machine; no other BC-2.12.003 PC8(c)(d) conflations found."
   - "1.8 (2026-07-19): F-P117-01 — add `summary_halt` to the RunStatus terminal set throughout §Run. completed_at semantics: add `summary_halt` as a terminal state that sets completed_at. RunStatus lifecycle: add `| summary_halt` as a fourth terminal alternative reached via in_progress → summary_halt on the OnCeiling::Summarize path (BC-2.12.003 PC7/PC8); carries the summarize model response as final output. §OnCeiling Summarize bullet already correctly cited summary_halt (line ~91); no change needed there. Whole-file sweep confirmed no other RunStatus terminal-set enumerations missed."
   - "1.7 (2026-07-17): F-P93-01 — correct v1.6 semantic drift in §BudgetConfig and §EvidenceJournal. BudgetConfig fields renamed from invented {token_ceiling, cost_ceiling_usd, on_ceiling: PolicyOutcome (Allow|Escalate|Deny)} to verbatim canon {soft_limit: Option<u64>, hard_limit: Option<u64>, on_ceiling: OnCeiling (Halt|Escalate|Summarize)} per interface-definitions.md §BudgetPolicy v2.29, BC-2.10.001 TV-001–003, BC-2.10.003 v1.2, and BC-2.10.004. EvidenceEntry field set replaced with BC-2.10.002 PC2 JournalEntry verbatim: {run_id, sub_agent_id, evaluation_point, token_usage, policy_name, decision: PolicyDecision (Allow|Escalate|Deny), reason, timestamp}; invented fields node_name/cost_usd/tokens_used/policy_outcome removed — none exist in canon. Residue sweep: 'PolicyOutcome', 'token_ceiling', 'cost_ceiling_usd' are zero live occurrences post-fix (changelog exempt). entities-graph.md confirmed clean."
@@ -75,7 +76,12 @@ A suspended execution point within a Run, awaiting an external ResumeValue.
 ### ResumeValue
 The external value injected to resume a pending Interrupt.
 - **Fields:** interrupt_id: Uuid, value: Command
-- **Command variants:** `Command::Resume(value: Value)`, `Command::Goto(node: NodeName)`
+- **Command shape (authority: BC-2.05.004):** A struct with four independently-settable optional fields — `resume`, `update`, `goto`, `graph` — freely combinable (e.g., resume+goto per EC-001; resume+update per TV-002; resume+goto per TV-003):
+  - `resume: Option<Value>` — places the value into the interrupted task's FIFO scratchpad slot; the node re-executes with it available via `interrupt()`.
+  - `update: Option<StateDelta>` — state side-load: channel updates applied BEFORE the node re-executes.
+  - `goto: Option<GotoTarget>` — forces routing to one or more nodes or `Send`s after command processing; bypasses normal conditional-edge routing.
+  - `graph: Option<GraphRef>` — `None` (default) = current graph; `Command.PARENT` = escape to parent graph (valid only inside a subgraph; returns `Err(E-GRAPH-015 NoParentGraph)` at root level).
+  A `Command` with no `resume`, no `update`, and no `goto` is a valid no-op resume signal that merely unblocks the super-step.
 - **Invariant (DI-003):** Delivery is strictly FIFO; injection into an empty interrupt queue returns `Err(NoActiveInterrupt)`.
 
 ---

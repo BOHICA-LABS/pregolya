@@ -2,10 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.0"
+version: "1.1"
 status: active
 producer: business-analyst
 timestamp: 2026-07-14T00:00:00Z
+changelog:
+  - "1.1 (F-P120-01, fix burst 123, 2026-07-19): Correct §ResumeValue definition from 2-variant enum form 'Command::Resume(value)' to struct form aligned to BC-2.05.004: Command with independently-settable optional fields resume/update/goto/graph, combinable as compound commands (EC-001/TV-002/TV-003). TD-VSDD-060 sweep: this file:142 was the only Command-depiction site; fixed here."
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -139,7 +141,13 @@ actor to provide a ResumeValue. Raised by a node calling `interrupt()`. The Run 
 to `interrupted` and is durably persisted.
 
 **ResumeValue**
-The external value injected to resume an Interrupt. Takes the form `Command::Resume(value)`.
+The external value injected to resume an Interrupt. Structured as a `Command` — a struct
+with independently-settable optional fields: `resume` (value delivered to the interrupted
+task's scratchpad), `update` (state side-load applied to graph channels before re-execution),
+`goto` (routing override to one or more nodes or `Send`s), and `graph` (scope selector;
+`Command.PARENT` escapes to a parent graph). Fields are freely combinable: a single `Command`
+can simultaneously resume a value, side-load state, and redirect routing (BC-2.05.004
+EC-001/TV-002/TV-003). Authority: BC-2.05.004.
 Delivered strictly FIFO if multiple Interrupts are stacked (DI-003). The interrupted node
 re-executes from the start of its super-step with the dequeued resume value in its scratchpad.
 

@@ -2582,3 +2582,33 @@ Phase 1d pass 118 adversarial review completed: NOT CLEAN strict+PR-merge — 2 
 - Counter: 0 of 3 (unchanged; fix burst 122 pushes new HEAD; frozen-HEAD streak rule)
 - Trajectory: ...→1→1→3→1 (tail after P1D-119)
 - NEXT: dispatch adversary pass 120
+
+---
+
+## Burst 205 (2026-07-19) — Pass 120 Record + Fix Burst 123
+
+**Burst ID:** 205 | **Date:** 2026-07-19 | **Type:** Adversary pass record + fix burst (state-burst single-commit protocol TD-VSDD-053)
+
+**Pass-120 Summary:** NOT CLEAN strict — 0C/1H/0M/0L. F-P119-01/OBS-1/OBS-2 ALL CLOSED (summary_halt cascade FULLY CLOSED: 7-case guard verified, TV arithmetic 8/35/507/516 independently re-summed PASS). Cleared axes: ss-13 env-allowlist CLEAN; ss-07 GTV Red Gate CLEAN; schedule lifecycle CLEAN. New finding F-P120-01 HIGH: Command modeled as 2-variant enum in entities-server.md:78 + ubiquitous-language-core.md:142 vs BC-2.05.004 authoritative struct {resume,update,goto,graph}+Command.PARENT; compound commands EC-001/TV-002/TV-003 unrepresentable in enum form. Novelty MEDIUM-HIGH (first combinability-invariant propagation gap in Phase 1d). Counter 0/3 unchanged.
+
+**Fix Burst 123 Changes:**
+
+- entities-server.md v1.9→v1.10: §ResumeValue Command re-expressed as struct-with-optional-fields (4 fields: resume/update/goto/graph all Option<_>) + combinability invariant prose + Command.PARENT super-node cite + E-GRAPH-015 reference + DI-003 invariant
+- ubiquitous-language-core.md v1.0→v1.1: §ResumeValue Command same struct form (matching BC-2.05.004 fields/semantics exactly)
+- Sweep: capabilities-p0.md:113 API-call notation exempt; zero other live Command enum-form depictions in domain-spec; no BC/supplement drift
+
+**Also archived from Current Phase Steps:** burst-200 row (pass-115 record + fix burst 118) rotated to burst-log per 5-row rotation policy.
+
+### Burst-200 (Archived from Current Phase Steps)
+
+**Burst ID:** 200 | **Date:** 2026-07-19 | **Type:** Adversary pass record + fix burst
+
+**Summary:** Phase 1d burst 200 — pass-115 record + fix burst 118 (F-P115-01/02 RESOLVED). Pass 115: NOT CLEAN strict+PR-merge — 2H. F-P115-01 RESOLVED [HIGH ripple]: verification-architecture v1.3→v1.4 (checkpoint::clock: "monotonic AtomicU64 read" → "pure get_next_version(current) successor function; stateless, no atomic counter"); purity-boundary-map v1.4→v1.5 (Pure Guarantee: "Monotonic counter increment" → "Pure successor function of caller-supplied `current`"). F-P115-02 RESOLVED [HIGH]: interface-definitions v2.35→v2.36 (§CheckpointSaver 3-method→5-method: add `put` + `get_next_version` provided method; BC anchor 001–007; Gate #31 type note extended with Checkpoint/CheckpointMetadata/CheckpointId); ADR-005 v1.1→v1.2 (§CheckpointSaver Trait Placement — provided-method default delegates to MonotonicClock; langgraph BaseCheckpointSaver parity); BC-2.04.003 v1.4→v1.5 (PC1 provided-method wording); api-surface v1.4→v1.5 (BC anchor 001–007; paper-fix caught by TD-VSDD-059 + corrected in-burst). D18-P89-A sweep: STALE=0. Trajectory →2 (P1D-115). Counter 0/3. Fix bursts 117→118. Burst 200.
+
+### Convergence Status After Burst 205
+
+- Phase 1d passes: 120 (1H — counter 0/3)
+- Fix bursts: 123 (F-P120-01 RESOLVED)
+- Counter: 0 of 3 (unchanged; fix burst 123 pushes new HEAD; frozen-HEAD streak rule)
+- Trajectory: ...→1→3→1→1 (tail after P1D-120)
+- NEXT: dispatch adversary pass 121
