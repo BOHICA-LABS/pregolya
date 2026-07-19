@@ -773,6 +773,19 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 
 ---
 
+## Checkpoint archived from burst 193 (2026-07-19T13:40:00Z)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 108 passes / 112 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 513=504+9, purity-map 58, 13 ADRs [ADR-006 rev-4], 34 gates [gate #28 Rules 1–6, five-class direction model + gate #33 STRUCT-PLACEHOLDER PARITY CENSUS v2.35 Steps A/B/C], StreamEvent 12 variants, VP census 141). F-P108-04 RESOLVED [process-gap]: gate #33 STRUCT-PLACEHOLDER PARITY CENSUS codified in bc-authoring-plan v2.35; 36-code census (8 FAIL-all-fixed [E-MEMORY-006 v1.20; E-GRAPH-011/007/001/004 v1.21; E-PROV-010/E-CHKPT-004/E-PROV-009 v1.22], 28 PASS, zero remaining). F-P108-01 RESOLVED: BC-2.08.014 v1.2 EC-004/TV-005 {providers_attempted, last_error_code, last_provider}. F-P108-02 RESOLVED: BC-2.04.007 v1.5 PC4 source→message. F-P108-03 RESOLVED: BC-2.08.013 v1.2 EC-002 {dialect, element, offset, parse_error}. error-taxonomy v1.21→v1.22 corrigendum #2 (8 FAIL/28 PASS canon). Trajectory-tail →1→1→1→4. NEXT ACTION: dispatch adversary pass 109. Loop per D15 until 3/3 CLEAN(strict), then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
+### PASS-109 SIBLING-CHECKS: (a) gate #33 STRUCT-PLACEHOLDER PARITY CENSUS Steps A/B/C present in bc-authoring-plan v2.35; Step-C per-code TABLE format binding — prose claims of census completion INVALID; (b) 3 BC struct fixes match taxonomy 1:1: BC-2.08.014 v1.2 EC-004 {providers_attempted, last_error_code, last_provider} PASS; BC-2.04.007 v1.5 PC4 {message: "EncryptionKeyRotationFailed: <reason>"} PASS; BC-2.08.013 v1.2 EC-002 {dialect, element, offset, parse_error} PASS; ascending changelogs, BC timestamps frozen per D18-P86-A; (c) corrigendum #2 at top of error-taxonomy v1.22 changelog; v1.21 row NOT rewritten; (d) census tally 36 codes / 8 FAIL-all-fixed / 28 PASS, zero remaining — verify by re-running gate #33 Steps A-C independently; (e) E-PROV-009 offset↔`<n>` semantic alias noted as PASS-NOTE in Step-C table.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3.
+### DECISION DELTA (this session, bursts 164–193): D18-P86-A through D18-P103-A (14 decisions; no new decisions in bursts 186–193; full details in burst-186 session-checkpoints.md).
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule during streaks (bookkeeping-only commits).
+### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 193 | Counter 0/3 | No open findings (F-P108-04/01/02/03 RESOLVED)
+
+---
+
 ## Checkpoint archived from burst 192 (2026-07-19T11:43:00Z)
 
 ### RESUME IN ONE BREATH

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.001
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -10,6 +10,7 @@ changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-66): F-P66-01 — EC-006 and TV-008 added: JSON-RPC -32601 MethodNotFound when server does not implement tools/list → Err(E-MCP-003 McpNotImplemented). Re-anchor for E-MCP-003 from BC-2.09.005 (lifecycle scope) to this BC (discovery path — first MCP method invoked). (OBS-P28-2 class; gate #33 reverse-verification finding.)"
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
+  - "1.3 (CENSUS-P109, 2026-07-18): Expand TV-004 E-MCP-002 McpTransportError struct from `{ server: \"math\", ... }` to `{ server: \"math\", transport_error: \"connection refused\" }` — `...` abbreviation failed PASS-ABBREV rule (no defining full-struct PC/EC site in BC; TV-004 was the sole struct site). TD-VSDD-060 sweep: no other E-MCP-002 struct sites in file."
 origin: greenfield
 priority: P1
 subsystem: SS-09
@@ -134,7 +135,7 @@ or remove the non-implementing server.
 | TV-001 | 1 server with 3 tools, `server_name = None`, `tool_name_prefix = false` | `Ok(vec![tool_a, tool_b, tool_c])` | Happy-path single server |
 | TV-002 | 2 servers (3 + 2 tools), `server_name = None` | `Ok(vec![5 tools])`, concurrent fan-out | Multi-server fan-out |
 | TV-003 | `server_name = Some("math")`, other server irrelevant | `Ok(vec![math tools only])` | Server filter |
-| TV-004 | Server unreachable (connection refused) | `Err(E-MCP-002 McpTransportError { server: "math", ... })` | Transport error |
+| TV-004 | Server unreachable (connection refused) | `Err(E-MCP-002 McpTransportError { server: "math", transport_error: "connection refused" })` | Transport error |
 | TV-005 | `tool_name_prefix = true`, server "fs", tool "read_file" | tool name = `"fs_read_file"` | Prefix application |
 | TV-006 | Server with 250 tools across 3 pages | `Ok(vec![250 tools])` | Cursor pagination |
 | TV-007 | Server returns empty `tools: []` | `Ok(vec![])` | Empty server |

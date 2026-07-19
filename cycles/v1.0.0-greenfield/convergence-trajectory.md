@@ -577,6 +577,48 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-107 — Pass 107 (2026-07-19, burst 191)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-107 | 2026-07-19 | 1 | 0 | 0 | 1 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes rotated (burst-190 sibling-checks):** F-P106-01 RESOLVED (BC-INDEX.md in Known Form-B-only list; 11-file set complete); OBS-P106-A RESOLVED (E-MEMORY-006 message 1:1 struct-field match); 12/12 category descriptions checked; gate #33 reverse-census first formal pass (Steps A/B); hash sweeps UNVERIFIABLE (adversary read-only) — mechanical, sanctioned.
+**Fix summary (burst 191 — fix burst 111):** F-P107-01 MED [process-gap] (PO) — 4 ss-02 BC structs corrected to match error-taxonomy placeholders: E-GRAPH-011 BC-2.02.005 v1.1→v1.2 `{source}` → `{source_node, message}`; E-GRAPH-007 BC-2.02.001 v1.1→v1.2 `{key}` → `{node_id, key}`; E-GRAPH-001 BC-2.02.002 v1.1→v1.2 `{channel}` → `{channel, task_ids, step}`; E-GRAPH-004 BC-2.02.003 v1.1→v1.2 `{channel, writer}` → `{channel, writer, step}`; error-taxonomy v1.20→v1.21 corrigendum (false "21 PASS" corrected to "5 FAIL/17 PASS"; root cause: EC-003 ambiguous "error source" phrasing); EC-003 "panic message as the error source" contradiction removed. D18-P89-A sweep: TOTAL MATCH (input hashes unchanged — error-taxonomy content change not present in BC inputs for these 4 files).
+**Hash sweep (D18-P89-A):** TOTAL MATCH (input hashes unchanged for burst-191 scope; burst-192 follow-up sweep identified 3 stale BCs missed by burst-191 sweep — BC-2.07.001, BC-2.14.001, BC-2.14.002 all refreshed in burst-192).
+**Trajectory after:** →1 (P1D-107); cumulative tail →1→1→1→1
+**Counter:** 0/3
+
+---
+
+### P1D-108 — Pass 108 (2026-07-19, burst 193)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-108 | 2026-07-19 | 4 | 0 | 1 | 2 | 1 | 0 | MEDIUM-HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes rotated (burst-191/192 sibling-checks):** F-P107-01 RESOLVED — 4 structs verified 1:1 against error-taxonomy placeholders (E-GRAPH-001/004/007/011 all v1.2); corrigendum in error-taxonomy v1.21 top entry; zero "panic message as the error source" residue corpus-wide; burst-192 hash-currency closure (3 stale BCs identified + refreshed; root cause: burst-191 sweep missed transitive D18-P90-A rule).
+**Fix summary (burst 193 — fix burst 112):** F-P108-04 HIGH [process-gap] (PO+orchestrator) — gate #33 STRUCT-PLACEHOLDER PARITY CENSUS Steps A/B/C codified in bc-authoring-plan v2.35; first formal full census: 36 codes, 8 FAIL (E-MEMORY-006, E-GRAPH-011/007/001/004, E-PROV-010, E-CHKPT-004, E-PROV-009) all fixed in prior bursts; 28 PASS; zero remaining. F-P108-01 HIGH (PO) — BC-2.08.014 v1.2 EC-004/TV-005 expanded to 3-field struct `{providers_attempted, last_error_code, last_provider}`. F-P108-02 MED (PO) — BC-2.04.007 v1.5 PC4 `source→message` for intra-BC field consistency. F-P108-03 MED (PO) — BC-2.08.013 v1.2 EC-002 expanded to 4-field struct `{dialect, element, offset, parse_error}`. error-taxonomy v1.21→v1.22 corrigendum #2 (8 FAIL/28 PASS canon; v1.21 row preserved). F-P108-05 LOW (PO) — (E-PROV-009 offset↔`<n>` alias noted PASS-NOTE — semantic alias pre-dating alias registry).
+**Hash sweep (D18-P89-A):** Run pending as of burst-193 commit; hash sweep incorporated into burst-194 (this burst).
+**Trajectory after:** →4 (P1D-108); cumulative tail →1→1→1→4
+**Counter:** 0/3
+
+---
+
+### P1D-109 — Pass 109 (2026-07-19, burst 194)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-109 | 2026-07-19 | 2 | 0 | 1 | 1 | 0 | 0 | MEDIUM-HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes rotated (burst-193 sibling-checks):** gate #33 STRUCT-PLACEHOLDER PARITY CENSUS Steps A/B/C present in bc-authoring-plan v2.35 PASS; 3 BC struct fixes match taxonomy 1:1 (BC-2.08.014 v1.2, BC-2.04.007 v1.5, BC-2.08.013 v1.2) PASS; corrigendum #2 at top of error-taxonomy v1.22 changelog; v1.21 row NOT rewritten PASS; census tally 36/8-FAIL-all-fixed/28-PASS PASS; gate #33 Step-C TABLE format binding confirmed — independent census run (see F-P109-01): **census claim (e) FAILED** — E-GRAPH-002 falsely marked PASS in v1.22; 9/10 BC-2.05.005 sites missing thread_id; v1.22 used wrong BC anchor (BC-2.02.006 BarrierWaitTimeout instead of BC-2.05.005 NoActiveInterrupt); 3rd consecutive false census claim for this code.
+**Fix summary (burst 194 — fix burst 113):** F-P109-01 HIGH [process-gap] (PO) — BC-2.05.005 v1.2→v1.3: thread_id added at 9 sites (EC-001/002/003/004, TV-001/002/003/004/005); PC1 already correct; canonical 2-field form `{thread_id, run_status}` now uniform across all 10 E-GRAPH-002 sites; alias `thread_id ↔ <run_id>` registered in bc-authoring-plan v2.36; PASS-ABBREV rule corollary added (TV-row `...` = FAIL when sole struct site). Full v2.36 census re-run: 30 codes (2 FPs excluded: E-CHKPT-008/E-BUDGET-001; 4 base-form excluded; net 30 vs 36 under v1.22 rules); 3 FAIL: E-GRAPH-002 (fixed v1.3), E-MCP-002 (BC-2.09.001 TV-004 sole-site `...` fixed v1.3), E-SBXD-001 (BC-2.13.005 TV-002/003 missing requested+root fields fixed v1.1); 27 PASS. F-P109-02 MED [process-gap] (PO) — bc-authoring-plan v2.35→v2.36: 4 aliases added (offset↔`<n>`, providers_attempted↔`<N>`, backend_error↔`<reason>`, message↔`<reason>` CODE-SPECIFIC E-CHKPT-004 do-not-generalize); context-sourced placeholder exception class defined (E-MEMORY-007 registered); PASS-ABBREV rule explicit with negative corollary. error-taxonomy v1.22→v1.23 corrigendum #3 (v1.22 row preserved).
+**Hash sweep (D18-P89-A):** Run in burst-194 (this burst). Files edited: BC-2.05.005, BC-2.09.001, BC-2.13.005, bc-authoring-plan, error-taxonomy. Transitive cascade (D18-P90-A) applied. TOTAL MATCH confirmed (STALE=0 after --scan specs).
+**Trajectory after:** →2 (P1D-109); cumulative tail →1→1→4→2
+**Counter:** 0/3
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

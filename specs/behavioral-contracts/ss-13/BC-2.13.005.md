@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.005
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -29,6 +29,8 @@ replacement: null
 retired: null
 removed: null
 removal_reason: null
+changelog:
+  - "1.1 (CENSUS-P109, 2026-07-18): Fix TV-002 and TV-003 E-SBXD-001 WorkspaceEscape struct — both rows used `{ resolved: \"/etc/passwd\" }` (single field) missing `requested` and `root`. Canonical 3-field form `{ requested, resolved, root }` per PC4/Invariant-2/VP-2.13.005-C. TV-002 fix: add `requested: \"/workspace/link_a\"`; TV-003 fix: add `requested: \"/workspace/rel_escape\"`. Both rows also missing `root: \"/workspace\"`. TD-VSDD-060 sweep: no other E-SBXD-001 struct sites in file."
 priority: P1
 wave: 1
 ---
@@ -96,9 +98,9 @@ This BC directly covers domain edge case DEC-011.
 |-------|----------------|----------|
 | `canonicalize_beneath_root("/workspace", "/workspace/escape_link")` where `escape_link → /etc/passwd` | `Err(E-SBXD-001: WorkspaceEscape { requested: "/workspace/escape_link", resolved: "/etc/passwd", root: "/workspace" })` | DEC-011 (domain edge case) |
 | `canonicalize_beneath_root("/workspace", "/workspace/internal_link")` where `internal_link → /workspace/subdir/file` | `Ok(PathBuf::from("/workspace/subdir/file"))` | happy-path (internal symlink) |
-| `canonicalize_beneath_root("/workspace", "/workspace/link_a")` where chain resolves to `/etc/passwd` | `Err(E-SBXD-001: WorkspaceEscape { resolved: "/etc/passwd" })` | edge-case (chained symlinks) |
+| `canonicalize_beneath_root("/workspace", "/workspace/link_a")` where chain resolves to `/etc/passwd` | `Err(E-SBXD-001: WorkspaceEscape { requested: "/workspace/link_a", resolved: "/etc/passwd", root: "/workspace" })` | edge-case (chained symlinks) |
 | `canonicalize_beneath_root("/workspace", "/workspace/dangling_link")` where target missing | `Err(SandboxError::PathNotFound)` | edge-case (dangling symlink — not an escape error) |
-| `canonicalize_beneath_root("/workspace", "/workspace/rel_escape")` where `rel_escape → ../etc/passwd` | `Err(E-SBXD-001: WorkspaceEscape { resolved: "/etc/passwd" })` | edge-case (relative symlink escape) |
+| `canonicalize_beneath_root("/workspace", "/workspace/rel_escape")` where `rel_escape → ../etc/passwd` | `Err(E-SBXD-001: WorkspaceEscape { requested: "/workspace/rel_escape", resolved: "/etc/passwd", root: "/workspace" })` | edge-case (relative symlink escape) |
 
 ## Verification Properties
 

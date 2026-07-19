@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.35"
+version: "2.36"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -1897,6 +1897,13 @@ split by wave avoids exception).
        - `node` ↔ `<node_id>` (graph node identifier)
        - `thread_id` ↔ `<run_id>` (in interrupt context — a run is identified by its thread)
        - `transport_error` ↔ `<transport_error>` (transport failure detail)
+       - `offset` ↔ `<n>` (E-PROV-009 — byte offset in dialect parse error)
+       - `providers_attempted` ↔ `<N>` (E-PROV-010 — abbreviation; tried-count)
+       - `backend_error` ↔ `<reason>` (E-MEMORY-005 — storage backend failure detail)
+       - `message` ↔ `<reason>` (E-CHKPT-004 CODE-SPECIFIC — the entire constructed error
+         message string is the reason; taxonomy corrected to bare `<reason>` per v1.16 BC-wins
+         rule; field renamed from `source` to `message` in v1.22; do NOT apply this alias to
+         other codes where `message` maps to a `<message>` taxonomy placeholder)
        A single catch-all field that embeds MULTIPLE placeholder values mid-string is NOT
        acceptable when the taxonomy has more than one distinct placeholder (the message cannot
        be reconstructed from fields with independent variable positions). A trailing catch-all
@@ -1905,6 +1912,22 @@ split by wave avoids exception).
        dedicated struct fields. The accepted trailing catch-all instances are:
        E-CHKPT-003 `{ thread_id, checkpoint_id, reason }`, E-MCP-005 `{ transport, reason }`,
        E-SBXD-003 `{ reason }` (static prefix + single trailing placeholder).
+
+       **Context-sourced placeholder exception:** For errors where taxonomy placeholders
+       `<ns>` and `<key>` are sourced from a named request context object at the raise site
+       (e.g., `MemoryWriteRequest { namespace, key, value }`), the struct may omit those
+       fields without failing check 2 if and only if: (a) the BC explicitly names the
+       context object as the placeholder source (e.g., "sourced from `MemoryWriteRequest`"),
+       (b) the placeholder is deterministically available at the raise site via that context
+       (no runtime computation or I/O required), and (c) this exception is registered by code
+       (error code: E-MEMORY-007). Currently registered context-sourced exceptions: E-MEMORY-007
+       (`<ns>` and `<key>` sourced from `MemoryWriteRequest.namespace` / `.key`).
+
+       **Abbreviation acceptance (PASS-ABBREV):** A TV row using `{ field_a, field_b, ... }`
+       where `...` replaces one or more trailing fields PASSES check 2 only if a non-TV
+       (PC or EC) full-struct site exists in the same BC that explicitly names all fields.
+       When TV-row abbreviation is the SOLE struct-bearing site for a code in the BC, the
+       `...` form is a FAIL — the TV row must list all fields explicitly.
 
     3. **No-hardcoded-value check in general-case EC/PC:** where the BC parameterizes a field
        (e.g., `<key_id>`), the struct field must not use a hardcoded value in a general-case
@@ -2044,6 +2067,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.36 | 2026-07-18 | F-P109-02 (MED, process-gap): gate #33 check-2 registry extended with four semantic aliases (`offset ↔ <n>` for E-PROV-009 — byte offset in dialect parse error; `providers_attempted ↔ <N>` for E-PROV-010 — abbreviation, tried-count; `backend_error ↔ <reason>` for E-MEMORY-005 — storage backend failure detail; `message ↔ <reason>` for E-CHKPT-004 CODE-SPECIFIC — full constructed message string is the reason, do not apply to codes where `message` maps to `<message>` placeholder) and two new exception classes: (1) context-sourced placeholder exception — for errors where taxonomy placeholders `<ns>` and `<key>` are sourced from a named request context object at the raise site (currently registered: E-MEMORY-007, `<ns>` and `<key>` from `MemoryWriteRequest.namespace`/`.key`); struct may omit those fields without failing check 2 if and only if BC names context object, placeholder is deterministically available at raise site, and exception is registered by code; (2) PASS-ABBREV rule — TV-row `...` abbreviation PASSES check 2 only if a non-TV (PC or EC) full-struct site in the same BC explicitly names all fields; when the abbreviated TV row is the sole struct-bearing site for a code in the BC, the `...` form is a FAIL — all fields must be listed explicitly. Motivating instance for PASS-ABBREV: BC-2.09.001 TV-004 `{ server: "math", ... }` was the sole E-MCP-002 struct site — expanded to `{ server: "math", transport_error: "connection refused" }` in BC-2.09.001 v1.3. `total_standing_gates` unchanged at 34. | F-P109-02 |
 | 2.35 | 2026-07-18 | F-P108-04 (HIGH, process-gap): gate #33 extended with STRUCT-PLACEHOLDER PARITY CENSUS sub-check (Steps A–C). Two consecutive sweeps (v1.20 "21 PASS," v1.21 "17 PASS") produced false completeness claims because they checked that struct fields EXISTED but did not verify CONSTRUCTIBILITY: (1) intra-BC field-name consistency across sites, and (2) struct field set is a SUPERSET of all distinct taxonomy placeholders with no combined multi-placeholder field. Root cause confirmed by three burst-112 failures: E-PROV-010 (`last_error` combined `<last_error_code>/<last_provider>` into one field), E-CHKPT-004 (`source` in PC4 vs `message` in PC5/EC-002/TV), E-PROV-009 (`reason` catch-all embedded mid-message `<n>` offset, can't independently render `<element>` and `<n>`). New sub-check: Step A (enumerate all struct-shorthand Err(E-...) sites via grep), Step B (per-code: assert intra-BC field-name consistency + assert field set is SUPERSET of all distinct taxonomy placeholders + catch-all `reason` only valid for TRAILING-only variable content), Step C (full per-code TABLE as mandatory output; prose-only completeness claims are INVALID). Motivating instances, catch-all rule, and known semantic aliases (step↔\<n\>, node↔\<node_id\>, thread_id↔\<run_id\>) documented inline. `total_standing_gates` unchanged at 34 (sub-check extension of gate #33, not a new gate). | F-P108-04 |
 | 2.34 | 2026-07-18 | F-P106-01 (process-gap): gate #28 Form-B-only known-file list was missing `BC-INDEX.md` and the catch-all did not cover indexes. Fix: (1) added `BC-INDEX.md` to explicit "Indexes" bullet in the Known Form-B-only files list; (2) catch-all broadened from "Any ADR or supplement" to "Any index, ADR, or supplement that uses a `## Changelog` body section." SIBLING-SWEEP (TD-VSDD-060): corpus-wide diff of `grep -rl "^## Changelog"` vs `grep -rl "^changelog:"` across `.factory/specs/` — Form-B-only set confirmed as {ADR-007, ADR-009, ADR-012, ADR-013, BC-INDEX.md, BC-2.07.002.md, BC-2.08.011.md, BC-2.08.012.md, bc-authoring-plan.md, test-vectors.md, verification-architecture.md}; domain-spec/ubiquitous-language-server.md has BOTH forms (not Form-B-only, excluded). After fix, all 11 Form-B-only files are covered (explicit list covers 7; broadened catch-all covers ADR-007/009/012/013; BC-INDEX.md covered by both). Zero omissions. L2-INDEX/ARCH-INDEX/VP-INDEX confirmed Form-A only (adversary assertion verified). `total_standing_gates` unchanged at 34 (sub-list correction of gate #28, not a new gate). | F-P106-01 |
 | 2.33 | 2026-07-18 | OBS-P105-B (process-gap): gate #28 mandatory pre-emission check added. F-P49-01 false-positive was reproduced at pass-105 — adversary ran only Form A (frontmatter `changelog:`) and missed Form-B files (body `## Changelog` table) despite the existing "CRITICAL" and "Union coverage rule" text. Fix: inserted a standalone MANDATORY PRE-EMISSION CHECK block with per-step explicit Form A + Form B checks and "finding is INVALID" gate for each; enumerated known Form-B files (BCs: BC-2.07.002/011/012; supplements: bc-authoring-plan.md, test-vectors.md, verification-architecture.md). F-P105-01/OBS-P105-A: error-taxonomy.md SECURITY category description corrected (new description spans all 3 SECURITY members: E-SBXD-001/E-GRAPH-013/E-MEMORY-007; removed "sandbox policy enforcement" phrase that contradicted E-SBXD-002 POLICY category); SECURITY vs POLICY authorization-failure categorization rule documented as new blockquote note; error-taxonomy.md bumped 1.18→1.19. `total_standing_gates` unchanged at 34 (sub-check widening of gate #28, not a new gate). | OBS-P105-B, F-P105-01, OBS-P105-A |
