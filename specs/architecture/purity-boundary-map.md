@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.4"
+version: "1.5"
 status: active
 producer: architect
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -14,6 +14,7 @@ input-hash: "1506cfd"
 traces_to: ARCH-INDEX.md
 decisions: [D17]
 changelog:
+  - "1.5 (F-P115-01, 2026-07-19): checkpoint::clock Pure Core row — Pure Guarantee column corrected from 'Monotonic counter increment; UUID wall-clock rejection is pure check' to 'Pure successor function of caller-supplied `current`; UUID wall-clock rejection is pure check'. Reflects ADR-005 rev-2 stateless get_next_version design; retired AtomicU64 counter language excised."
   - "1.4 (F-P91-02 sibling sweep, 2026-07-17): update core::budget Pure Core row to include OnCeiling enum and BudgetConfig struct (both newly defined in interface-definitions.md v2.29); row now lists all six core::budget types."
   - "1.3 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst. No spec content changes."
   - "1.2 (F-P85-01/F-P85-02/F-P85-03 / 2026-07-16): F-P85-01 (HIGH): correct splitters::parity citation R8/BC-2.07.003 → R8/BC-2.07.002 (BC-2.07.003 is Short-Document single-chunk, not the R8 Red Gate; the non-ASCII parity Red Gate BC is BC-2.07.002). F-P85-02 (HIGH): correct memory::write_guard Boundary citation ADR-012/BC-2.15.006 → ADR-012/BC-2.15.005 (BC-2.15.006 is Frozen-Snapshot Context Mutation governing graph::scheduler + core::context_mutation; the MemoryWriteGuard enforcement BC is BC-2.15.005 per its Architecture Anchors). F-P85-03 (MED): add missing Pure Core row for core::budget (BudgetPolicy trait, PolicyDecision, TokenUsage, RunContext — definitions-only, no execution logic per ADR-009 Option 3 / BC-2.10.001); closes Iron Law completeness gap. Pure Core 21→22, total 57→58 (28 effectful / 8 boundary unchanged). Re-verification of all 16 v1.1 rows: remaining 14 rows PASS citation correctness audit."
@@ -56,7 +57,7 @@ side effects. Kani proofs operate here.
 | `graph::hitl` (queue logic) | ferrochain-graph | FIFO queue dequeue / interrupt-state transitions are pure data transforms | — |
 | `graph::definition` | ferrochain-graph | Graph topology construction; no execution | — |
 | `checkpoint::session_index` | ferrochain-checkpoint | Triple-address uniqueness validation is pure math | VP-002 |
-| `checkpoint::clock` | ferrochain-checkpoint | Monotonic counter increment; UUID wall-clock rejection is pure check | — |
+| `checkpoint::clock` | ferrochain-checkpoint | Pure successor function of caller-supplied `current`; UUID wall-clock rejection is pure check | — |
 | `checkpoint::lineage` | ferrochain-checkpoint | Fork-pointer construction is pure (no I/O to the DB) | — |
 | `sandbox::path_guard` | ferrochain-sandbox | `canonicalize_beneath_root` is pure path arithmetic after OS resolution | VP-003 |
 | `splitters::recursive` | ferrochain-splitters | Chunk boundary computation is pure string iteration | — |

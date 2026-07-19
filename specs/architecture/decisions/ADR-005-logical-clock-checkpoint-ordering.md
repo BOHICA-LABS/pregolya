@@ -14,8 +14,9 @@ timestamp: 2026-07-19T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D11]
-version: "1.1"
+version: "1.2"
 changelog:
+  - "1.2 (F-P115-02, 2026-07-19): Placement adjudication — add §CheckpointSaver Trait Placement subsection. BC-2.04.003 PC1 says 'A CheckpointSaver implementation provides a get_next_version(current, channel) method'; to satisfy this literally, get_next_version is now also a provided method on the CheckpointSaver trait with a default impl delegating to MonotonicClock::get_next_version. MonotonicClock remains the canonical pure-core algorithm implementation; the trait default is a thin delegation wrapper. Aligns with langgraph BaseCheckpointSaver reference corpus placement."
   - "1.1 (F-P114-01, 2026-07-19): CRIT — replace argument-less MonotonicClock::next_id() AtomicU64 counter with stateless get_next_version(current, channel) per BC-2.04.003 PC1; correct 'Cross-instance ordering: not required' to cross-restart monotonicity guarantee via persisted-max seeding; define seeding scope as per-(thread_id, checkpoint_ns); document E-CHKPT-003 failure path at get_tuple() read; reconcile API surface with BC-2.04.003; add Rationale, Alternatives Considered, Source/Origin sections per adr-template.md."
   - "1.0 (2026-07-14, initial): base ADR accepted; CONFLICT-4 resolution; CheckpointId as u64 newtype; AtomicU64 per-instance counter design (superseded in 1.1)."
 ---
@@ -157,6 +158,28 @@ pub struct CheckpointMetadata {
 
 Fork creates a new `CheckpointId` (via `get_next_version`) with `parent_checkpoint_id = Some(source_id)`.
 State is NOT copied; the parent checkpoint is referenced by pointer only.
+
+### CheckpointSaver Trait Placement (F-P115-02)
+
+BC-2.04.003 PC1 specifies: "A `CheckpointSaver` implementation provides a `get_next_version(current, channel)` method." To honor this literally — and to match the langgraph `BaseCheckpointSaver` reference corpus, which places `get_next_version` on the saver class — `get_next_version` is also exposed as a **provided method on the `CheckpointSaver` trait**, with a default implementation that delegates to `MonotonicClock::get_next_version`:
+
+```rust
+// Provided method on CheckpointSaver trait — callers can override, but the default is correct
+fn get_next_version(
+    current: Option<CheckpointId>,
+    channel: &ChannelName,
+) -> Result<CheckpointId, FerrochainError> {
+    MonotonicClock::get_next_version(current, channel)
+}
+```
+
+This is a static (no `&self`) trait method because `get_next_version` is pure — it takes only data in and returns data out. No saver instance state is required.
+
+**`MonotonicClock` status unchanged:** `MonotonicClock::get_next_version` remains the canonical pure-core algorithm implementation in `checkpoint::clock`. Its Pure Core classification in the Purity Boundary Map is unchanged. The trait default is a thin delegation wrapper; the algorithm lives in `MonotonicClock`.
+
+**Why not `MonotonicClock` only?** An associated function on `MonotonicClock` satisfies the implementation contract but does not satisfy the BC-2.04.003 PC1 "provides a method" language, which names the saver as the provider. The reference corpus confirms the saver-level placement. The provided-method pattern achieves both: trait conformance and algorithm encapsulation.
+
+**Override semantics:** Saver implementations MAY override the default if they require backend-specific ordering logic (e.g., a distributed backend that uses a server-side sequence). The default override uses `MonotonicClock`.
 
 ## Rationale
 

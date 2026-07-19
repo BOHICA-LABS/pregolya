@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.4"
+version: "1.5"
 status: active
 producer: architect
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 changelog:
+  - "1.5 (F-P115-02 ripple, 2026-07-19): Extend CheckpointSaver BC anchor range from BC-2.04.001–006 to BC-2.04.001–007. BC-2.04.007 is now a live anchor because the `put` method (added to the trait per F-P115-02 adjudication) carries BC-2.04.007 PC1/INV-1 encryption-parity obligations. Sweep: no method-count enumerations or get_next_version absence claims present in this file — api-surface.md delegates all signatures to interface-definitions.md."
   - "1.4 (F-P92-02, 2026-07-17): Add §ferrochain-core Public Types table. RunnableConfig gains budget_config: Option<BudgetConfig> (OPTION A — BC-2.10.004 PC6 / BC-2.10.003 PC7/TV-004). Row documents all four known RunnableConfig fields (recursion_limit, thread_id, budget_config, context_mutations)."
   - "1.3 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst; add [Section Content] template compliance fix. No spec content changes."
   - "1.2 (ADV-P1D-PASS-64): F-P64-01 adjudication — default port 7437 is mandated; replaced 'no default port mandated' with authoritative default per interface-definitions.md §Base URL."
@@ -16,7 +17,7 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "3918228"
+input-hash: "d8f681d"
 traces_to: ARCH-INDEX.md
 decisions: [D13, D17]
 ---
@@ -57,7 +58,7 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 
 | Trait | Crate | SS | BC Anchors |
 |-------|-------|----|-----------|
-| `CheckpointSaver` | ferrochain-checkpoint | SS-04 | BC-2.04.001–006 |
+| `CheckpointSaver` | ferrochain-checkpoint | SS-04 | BC-2.04.001–007 |
 
 ## Public Traits (ferrochain-server)
 

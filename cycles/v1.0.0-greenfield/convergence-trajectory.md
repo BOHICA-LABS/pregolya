@@ -50,7 +50,7 @@ traces_to: STATE.md
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115)`
 
 ## Per-Pass Details
 
@@ -674,6 +674,34 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Hash sweep (D18-P89-A):** CLEAN pass — no spec edits; frozen-corpus rule active; hash sweep N/A (bookkeeping-only burst 198).
 **Trajectory after:** →0 (P1D-113 CLEAN); cumulative tail →2→1→2→0
 **Counter:** 1/3 STREAK ACTIVE
+
+---
+
+### P1D-114 — Pass 114 (2026-07-19, burst 199)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-114 | 2026-07-19 | 1 | 1 | 0 | 0 | 0 | 0 | HIGH | 0/3 | FINDINGS_REMAIN (CRIT; streak RESET 1/3→0/3) |
+
+**Axes exercised (burst-199 pass-114):** F-P113 CLEAN axes carried: F-P112-01/02 RESOLVED verified; API-surface↔interface-definitions↔error-taxonomy 10-sample CLEAN. ADR-005 pre-burst state (rev-1) found non-conformant.
+**Fix summary (burst 199 — fix burst 117):** F-P114-01 CRIT (architect) — ADR-005 v1.0→v1.1 MonotonicClock redesigned stateless ZST; `get_next_version(current: Option<CheckpointId>, _channel)` replaces `next_id(&self)`; persisted-max seeding per (thread_id, checkpoint_ns) via `get_tuple()`; "Cross-instance ordering: not required" retracted; E-CHKPT-003 failure path at get_tuple() documented; 7 ss-04 BC anchors corrected (nonexistent `architecture/ferrochain-checkpoint.md` → `architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md`); VP-002 v1.0→v1.1 "unique across the durable store (monotonicity preserved across restarts via persisted-max seeding)"; tooling-selection get_next_version reference; BC-INDEX v1.5→v1.6.
+**Hash sweep (D18-P89-A):** STALE=0 confirmed in burst-199.
+**Trajectory after:** →1 (P1D-114 CRIT); cumulative tail →2→0→1
+**Counter:** 0/3 RESET (streak 1/3 from pass-113 invalidated; fix burst 117 pushes new HEAD)
+
+---
+
+### P1D-115 — Pass 115 (2026-07-19, burst 200)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-115 | 2026-07-19 | 2 | 0 | 2 | 0 | 0 | 0 | HIGH | 0/3 | FINDINGS_REMAIN (2 HIGH; counter 0/3 unchanged) |
+
+**Axes exercised (burst-200 pass-115):** F-P114-01 RESOLVED at design level — crash-recovery walk end-to-end PASS; 7 anchor targets verified (1 partial → F-P115-02 on separate axis); zero rev-1 BC residue (AtomicU64/next_id/per saver instance) in live spec corpus (semport + retraction-table exempt).
+**Fix summary (burst 200 — fix burst 118):** F-P115-01 HIGH (architect) — verification-architecture v1.3→v1.4 (checkpoint::clock sync-core mandate: "monotonic AtomicU64 read — sync increment and compare" → "pure get_next_version(current) successor function; stateless, no atomic counter"); purity-boundary-map v1.4→v1.5 (checkpoint::clock Pure Guarantee: "Monotonic counter increment" → "Pure successor function of caller-supplied `current`"). F-P115-02 HIGH (architect + PO) — interface-definitions v2.35→v2.36 (§CheckpointSaver 3-method→5-method: add `put` + `get_next_version` provided method; BC anchor range 001–006→001–007; Gate #31 type note extended); ADR-005 v1.1→v1.2 (§CheckpointSaver Trait Placement adjudication); BC-2.04.003 v1.4→v1.5 (PC1 sharpened to provided-method wording); api-surface v1.4→v1.5 (BC anchor range 001–006→001–007). NOTE: initial paper-fix on api-surface (changelog-only, no body edit) caught by orchestrator TD-VSDD-059 verification and corrected in-burst.
+**Hash sweep (D18-P89-A):** STALE=0 confirmed in burst-200 (see compute-input-hash sweep below).
+**Trajectory after:** →2 (P1D-115); cumulative tail →2→0→1→2
+**Counter:** 0/3 (unchanged; fix burst 118 pushes new HEAD; NEXT: pass 116)
 
 ---
 

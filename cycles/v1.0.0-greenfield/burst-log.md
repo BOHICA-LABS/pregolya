@@ -2270,3 +2270,88 @@ Adversary pass 113: CLEAN (strict) and CLEAN (PR-merge). Zero findings of any se
 - Counter: 1 of 3 STREAK ACTIVE
 - Trajectory: ...→2→1→2→0 (tail after P1D-113)
 - NEXT: dispatch adversary pass 114 (fresh-hunt only; corpus FROZEN — no spec edits since burst 197)
+
+## Burst 199 (2026-07-19) — Pass-114 CRIT Record + Fix Burst 117 (F-P114-01 RESOLVED)
+
+**Agents dispatched:** adversary (pass-114); architect + product-owner (fix burst 117); state-manager (bookkeeping)
+**Phase:** 1d convergence loop
+**Type:** ADVERSARIAL PASS + FIX BURST
+
+### Pass-114 Summary
+
+Adversary pass 114: NOT CLEAN (strict) and NOT CLEAN (PR-merge). 1 CRIT finding.
+
+- F-P114-01 CRIT: ADR-005 rev-1 AtomicU64 MonotonicClock violates BC-2.04.003 Inv1 (cross-restart monotonicity), BC-2.04.005 (crash recovery PK collision), BC-2.04.006 Inv1 (composite PK uniqueness). All 7 ss-04 BCs cited nonexistent `architecture/ferrochain-checkpoint.md`. Streak RESET 1/3→0/3.
+
+### Fix Burst 117 Summary
+
+- **Architect:** ADR-005 v1.0→v1.1 — stateless MonotonicClock ZST; `get_next_version(current: Option<CheckpointId>, _channel)` replaces `next_id(&self)`; persisted-max seeding per (thread_id, checkpoint_ns); E-CHKPT-003 failure path; Rationale/Alternatives/Source sections; retraction of "Cross-instance ordering: not required" claim. 7 ss-04 BC anchors corrected. VP-002 v1.0→v1.1 "unique across the durable store (monotonicity preserved across restarts via persisted-max seeding)". tooling-selection updated. BC-INDEX v1.5→v1.6.
+
+**Convergence counter:** RESET 1/3→0/3. Frozen-corpus rule suspended until next CLEAN.
+
+### Files Written
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-114.md` | NEW — pass-114 adversarial review report (1 CRIT, F-P114-01) |
+| `.factory/specs/architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md` | v1.0→v1.1 — stateless MonotonicClock design |
+| `.factory/specs/verification-properties/VP-002.md` | v1.0→v1.1 — durable-store uniqueness framing |
+| `.factory/specs/behavioral-contracts/ss-04/BC-2.04.001–007` | Architecture Anchors corrected (7 files) |
+| `.factory/specs/architecture/tooling-selection.md` | get_next_version reference updated |
+| `.factory/specs/behavioral-contracts/BC-INDEX.md` | v1.5→v1.6 |
+| `.factory/STATE.md` | v3.38→v3.39; trajectory-tail →2→0→1 (P1D-114 CRIT); counter 0/3 RESET |
+
+### Convergence Status After Burst 199
+
+- Phase 1d passes: 114 (1 CRIT finding — streak RESET)
+- Fix bursts: 117 (F-P114-01 RESOLVED)
+- Counter: 0 of 3 RESET
+- Trajectory: ...→2→0→1 (tail after P1D-114 CRIT)
+- NEXT: dispatch adversary pass 115
+
+---
+
+## Burst 200 (2026-07-19) — Pass-115 Record + Fix Burst 118 (F-P115-01/02 RESOLVED)
+
+**Agents dispatched:** state-manager (pass-115 write); architect + product-owner (fix burst 118 already applied to working tree); state-manager (bookkeeping + burst commit)
+**Phase:** 1d convergence loop
+**Type:** ADVERSARIAL PASS RECORD + FIX BURST BOOKKEEPING
+
+### Pass-115 Summary
+
+Adversary pass 115: NOT CLEAN (strict) and NOT CLEAN (PR-merge). 2 HIGH findings.
+
+- F-P115-01 HIGH: ADR-005 rev-2 ripple not swept — verification-architecture.md line 43 and purity-boundary-map.md line 59 still described retracted AtomicU64 design ("monotonic AtomicU64 read — sync increment and compare" / "Monotonic counter increment"). Kani-harness extraction risk.
+- F-P115-02 HIGH: interface-definitions §CheckpointSaver 3-method trait (put_writes/get_tuple/list) — missing `put` and `get_next_version`; BC-2.04.006 PC2, BC-2.04.007 PC1, BC-2.04.002 PC4, BC-2.04.001 EC-003 structurally unsatisfiable; get_next_version placement (BC-2.04.003 PC1 "saver provides") unresolved between ADR-005 and interface-definitions.
+- Part A: F-P114-01 CLOSED at design level (crash-recovery walk end-to-end PASS); 7 anchor targets verified (1 partial on separate axis); zero rev-1 BC residue.
+
+### Fix Burst 118 Summary
+
+- **Architect:** verification-architecture v1.3→v1.4 (checkpoint::clock description corrected); purity-boundary-map v1.4→v1.5 (Pure Guarantee column corrected); ADR-005 v1.1→v1.2 (§CheckpointSaver Trait Placement adjudication — provided method default delegation to MonotonicClock; langgraph BaseCheckpointSaver parity); api-surface v1.4→v1.5 (BC anchor range 001–006→001–007; initial paper-fix caught by TD-VSDD-059 check and corrected in-burst).
+- **Product-owner:** interface-definitions v2.35→v2.36 (§CheckpointSaver 5-method trait; `put` with full doc-comment, E-CHKPT-005 tenancy error, 4 BC anchor annotations; `get_next_version` provided method; BC anchor range extended 001–007; Gate #31 type note extended); BC-2.04.003 v1.4→v1.5 (PC1 sharpened to provided-method wording with MAY-override semantics).
+
+**Convergence counter:** 0/3 (unchanged; fix burst 118 pushes new HEAD).
+
+### Files Written
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-115.md` | NEW — pass-115 adversarial review report (0C/2H/0M/0L) |
+| `.factory/specs/architecture/verification-architecture.md` | v1.3→v1.4 — checkpoint::clock stateless description |
+| `.factory/specs/architecture/purity-boundary-map.md` | v1.4→v1.5 — Pure Guarantee column corrected |
+| `.factory/specs/architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md` | v1.1→v1.2 — §CheckpointSaver Trait Placement |
+| `.factory/specs/architecture/api-surface.md` | v1.4→v1.5 — BC anchor range 001–007 |
+| `.factory/specs/prd-supplements/interface-definitions.md` | v2.35→v2.36 — 5-method CheckpointSaver |
+| `.factory/specs/behavioral-contracts/ss-04/BC-2.04.003.md` | v1.4→v1.5 — PC1 provided-method wording |
+| `.factory/cycles/v1.0.0-greenfield/convergence-trajectory.md` | append P1D-114 + P1D-115 (catch-up + current) |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | archive burst-199 + this burst-200 narrative |
+| `.factory/cycles/v1.0.0-greenfield/session-checkpoints.md` | archive burst-199 checkpoint |
+| `.factory/STATE.md` | v3.39→v3.40; trajectory-tail →2→0→1→2 (P1D-115); counter 0/3; fix bursts 117→118 |
+
+### Convergence Status After Burst 200
+
+- Phase 1d passes: 115 (2 HIGH findings — counter 0/3)
+- Fix bursts: 118 (F-P115-01/02 RESOLVED)
+- Counter: 0 of 3 (unchanged)
+- Trajectory: ...→2→0→1→2 (tail after P1D-115)
+- NEXT: dispatch adversary pass 116

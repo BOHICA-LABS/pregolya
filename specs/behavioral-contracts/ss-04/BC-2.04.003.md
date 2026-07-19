@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.003
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -34,6 +34,7 @@ changelog:
   - "1.2 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-CHKPT-002 message-prefix correction. EC-003: added 'MonotonicClockRegression:' prefix to message string (was 'checkpoint_id must be monotonic: random UUID rejected'; now 'MonotonicClockRegression: checkpoint_id must be monotonic: random UUID rejected'). This is a D18-P78-A BC correction (BC lacked universal <ErrorName>: prefix). Taxonomy message kept as-is (already 'MonotonicClockRegression: <reason>' general-case format; BC EC-003 is a specific instantiation). [NOTE: the 'Taxonomy message kept as-is' sub-claim is incorrect — see v1.3 corrigendum above.]"
   - "1.3 (2026-07-15, F-P79-02 CORRIGENDUM): Audit-trail correction for v1.2 claim. The v1.2 entry stated: 'Taxonomy message kept as-is (already MonotonicClockRegression: <reason> general-case format; BC EC-003 is a specific instantiation).' That claim is FALSE per git ground truth. Pre-sweep error-taxonomy.md (HEAD~1 of .factory, burst-156 state) line 118 read verbatim: 'MonotonicClockRegression: checkpoint ID <new_id> is not strictly greater than current <current_id>' — a regression-comparison semantic, not a general-case <reason> placeholder, and not the UUID-rejection message in BC EC-003. The burst-157 sweep DID change the taxonomy body from 'checkpoint ID <new_id> is not strictly greater than current <current_id>' to 'checkpoint_id must be monotonic: random UUID rejected' to align with the UUID-rejection semantic of BC EC-003. The v1.2 'kept as-is' claim is therefore incorrect. No live BC body or taxonomy content changed by this corrigendum; the live row in error-taxonomy.md (MonotonicClockRegression: checkpoint_id must be monotonic: random UUID rejected) and BC EC-003 (MonotonicClockRegression: checkpoint_id must be monotonic: random UUID rejected) are both correct."
   - "1.4 (2026-07-19, F-P114-01 fix burst 117): Anchor correction — Architecture Anchors updated from nonexistent 'architecture/ferrochain-checkpoint.md' to 'architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md' per architect adjudication (burst 117). Coherence check against ADR-005 rev-2: PC1 get_next_version(current, channel) signature correct; EC-003 E-CHKPT-002 return path correct; no rev-1 residue (next_id / per saver instance) found in body. No BC body content changed."
+  - "1.5 (2026-07-19, F-P115-02 fix burst 118): PC1 sharpened to architect-adjudicated wording — full typed signature + provided-method semantics stated explicitly. Old: 'A `CheckpointSaver` implementation provides a `get_next_version(current, channel)` method'. New: full typed signature with MAY-override note. Adoption rationale: the original wording was ambiguous about whether `get_next_version` is a required method or a provided default; this exact ambiguity caused F-P115-02's secondary note; production-grade lens favors precision. No other body content changed."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -59,7 +60,7 @@ NTP adjustment, or under clock skew in distributed deployments must have unambig
 
 ## Preconditions
 
-1. A `CheckpointSaver` implementation provides a `get_next_version(current, channel)` method
+1. The `CheckpointSaver` trait provides `get_next_version(current: Option<CheckpointId>, channel: &ChannelName) -> Result<CheckpointId, FerrochainError>` as a provided method (default impl delegates to `MonotonicClock::get_next_version`); implementations MAY override
 2. A new checkpoint is being created for a `(thread_id, checkpoint_ns)` pair
 3. The checkpoint ID is computed before writing to storage
 

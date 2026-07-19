@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.35"
+version: "2.36"
 status: active
 producer: product-owner
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 phase: 1d
 changelog:
+  - "2.36 (F-P115-02, 2026-07-19): §CheckpointSaver — add `put` and `get_next_version` methods (trait becomes 5-method). (A) `put` method: persists full checkpoint state blob; called once per run under DurabilityTier::Exit or at run completion (BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003); encrypted when EncryptedSerializer active (BC-2.04.007 PC1); raises E-CHKPT-005 on tenant-context conflict (BC-2.04.006 EC-005). BC anchor annotations: BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003, BC-2.04.006 PC2, BC-2.04.007 PC1+INV-1. (B) `get_next_version` provided method: default impl delegates to MonotonicClock::get_next_version; implementors MAY override; channel param accepted for API compatibility only (BC-2.04.003 PC1/PC5); E-CHKPT-002 on u64 overflow. BC anchor line extended: BC-2.04.001 through BC-2.04.007 with per-method precision. Gate #31 type note extended: Checkpoint and CheckpointMetadata (entities-graph.md §Checkpoint), CheckpointId (ADR-005 / BC-2.04.003 newtype over u64) added. Architect routing: api-surface.md CheckpointSaver row BC range 001–006 is now stale (needs 001–007); flagged for architect."
   - "2.35 (F-P100-02, 2026-07-17): Citation-completeness amendment — no behavioral change. /stream endpoint row BC citation extended from 'BC-2.11.002 PC3/PC4' to 'BC-2.11.002/003/004 PC3/PC4 (per-boundary)'. §StreamEvent BC anchor extended: BC-2.11.003 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for RagChunk boundary) and BC-2.11.004 PC3/PC4 (GuardrailDecision for MemoryItem boundary) added alongside existing BC-2.11.002 PC3/PC4 (ToolResult boundary). GuardrailDecision fires symmetrically at all three ingress boundaries; prior citations listed only the ToolResult boundary BC. ADR-006 rev-4 is co-artifact."
   - "2.34 (F-P99-01, 2026-07-17): Axis (a) Add GuardrailDecision (12th StreamEvent variant) — fires for non-Pass guardrail outcomes (Fail/Transform only; Pass not streamed) at tool-result, RAG, and memory ingress boundaries. Audit-log-only is insufficient for Domain A SOC live-analyst use case (domain-a-soc-analyst.md §5 NEW forcing function); SSE consumer has zero in-band signal otherwise. Axis (b) ToolEnd.data carries POST-guardrail content — raw rejected payloads must not exit the security boundary via any StreamEvent (same isolation as model input buffer, BC-2.11.005 PC1). Axis (c) Ordering: GuardrailDecision fires before ToolEnd within the ToolStart/ToolEnd window (ToolResult boundary); within NodeStart/NodeEnd window before inference (RagChunk/MemoryItem boundaries). Axis (d) StreamEvent variant count 11→12; wire token guardrail_decision; supporting types IngressBoundary/GuardrailDecisionKind/GuardrailSeverityWire. New §StreamEvent section added to Public Rust Trait Signatures; /stream endpoint row updated to reference guardrail_decision events and ToolEnd post-guardrail semantics. ADR-006 rev-3 is co-artifact. Downstream PO amendments required: BC-2.06.001 PC2/PC4/new-EC-006, BC-2.11.002 PC3/PC4, BC-2.11.005 PC1/new-INV-5, BC-2.06.003 new-INV note."
   - "2.33 (F-P93-02, 2026-07-17): Adjudicate contradictory HITL-trigger model (F-P93-02 HIGH). VERDICT: Model A — `PolicyDecision::Escalate` (soft-ceiling) ALWAYS triggers the HITL interrupt unconditionally, independent of `BudgetConfig::on_ceiling`; `PolicyDecision::Deny` (hard-ceiling) branches on `on_ceiling` (Halt | Escalate→HITL | Summarize). BC authority: BC-2.10.001 PC3 — 'Escalate → execution suspends; the run transitions to `interrupted` via the HITL interrupt mechanism (BC-2.10.004)' — no on_ceiling qualification. Changes: (1) §OnCeiling enum docstring updated: field governs `PolicyDecision::Deny` dispatch ONLY; explicit statement that `PolicyDecision::Escalate` routes to HITL unconditionally per BC-2.10.001 PC3 without consulting `on_ceiling`. (2) `OnCeiling::Escalate` variant docstring updated: this variant means 'when `PolicyDecision::Deny` (hard ceiling) is received, redirect to HITL instead of halting'; clarifies both the soft-limit Escalate path and this hard-ceiling Deny→Escalate path use the same `BudgetEscalation` interrupt mechanism. (3) Engine-branching note replaced with a complete PolicyDecision × on_ceiling decision table — zero unspecified cells. Previously the note covered only `PolicyDecision::Deny` dispatch and left `PolicyDecision::Escalate` entirely unspecified. Now all three PolicyDecision variants are fully specified with Engine Action, Run Status, and Resume Mechanism columns. BC anchor updated to cite BC-2.10.001 PC3 as the Escalate-path authority. Sibling architecture docs (api-surface, module-decomposition) do not state the trigger model at decision-table precision — no change required."
@@ -207,12 +208,50 @@ pub trait CheckpointSaver: Send + Sync {
     /// List checkpoints for a thread (newest first).
     async fn list(&self, config: &CheckpointConfig, limit: Option<usize>)
         -> Result<impl Stream<Item = Result<CheckpointTuple, FerrochainError>>, FerrochainError>;
+
+    /// Persist a full checkpoint state blob.
+    ///
+    /// Called once per run under `DurabilityTier::Exit`, or at the end of any run that
+    /// produced a complete checkpoint (BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003).
+    /// Both `checkpoint` and `metadata` bytes are encrypted when an `EncryptedSerializer`
+    /// is active (BC-2.04.007 PC1).
+    ///
+    /// # Errors
+    /// - `Err(FerrochainError { category: TENANCY, code: "E-CHKPT-005" })` if the composite
+    ///   triple `(config.thread_id, config.checkpoint_ns, config.checkpoint_id)` already
+    ///   exists under a different tenant context (BC-2.04.006 EC-005).
+    async fn put(
+        &self,
+        config: CheckpointConfig,
+        checkpoint: Checkpoint,
+        metadata: CheckpointMetadata,
+    ) -> Result<(), FerrochainError>;
+
+    /// Compute the next monotonic checkpoint ID for a `(thread_id, checkpoint_ns)` pair.
+    ///
+    /// Default implementation delegates to `MonotonicClock::get_next_version`.
+    /// Implementors MAY override for backend-specific ordering logic.
+    ///
+    /// # Arguments
+    /// - `current`: `None` for a fresh pair (no prior checkpoints); `Some(c)` for the
+    ///   `checkpoint_id` from the most recently loaded `CheckpointTuple` for this pair.
+    /// - `channel`: accepted for API compatibility (BC-2.04.003 PC1); unused for ordering
+    ///   (all channels within a super-step share a single `next_version` — BC-2.04.003 PC5).
+    ///
+    /// # Errors
+    /// - `Err(E-CHKPT-002)` on `u64` overflow (unreachable in practice).
+    fn get_next_version(
+        current: Option<CheckpointId>,
+        channel: &ChannelName,
+    ) -> Result<CheckpointId, FerrochainError> {
+        MonotonicClock::get_next_version(current, channel)
+    }
 }
 ```
 
-**BC anchor:** BC-2.04.001 through BC-2.04.006
+**BC anchor:** BC-2.04.001 through BC-2.04.007; `put` method: BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003, BC-2.04.006 PC2, BC-2.04.007 PC1+INV-1; `get_next_version` provided method: BC-2.04.003 PC1/PC5
 
-> **Gate #31 type note — `CheckpointConfig`, `ChannelName`, `ChannelValue`, `TaskId`, `CheckpointTuple`:** `CheckpointConfig` is the checkpoint-addressing config; not formally enumerated as a spec-level struct — logically derived from BC-2.04.006 triple-address invariant (`thread_id: Uuid`, `checkpoint_ns: NamespaceId`, `checkpoint_id: Option<LogicalClockId>`); flagged corpus-unresolved for architect. `ChannelName` and `ChannelValue` are defined in entities-graph.md §GraphState (`Map<ChannelName, ChannelValue>`). `TaskId` is defined in VP-001.md (Kani harness: `TaskId(i as u64)` newtype around u64). `CheckpointTuple` is defined in entities-graph.md §CheckpointTuple.
+> **Gate #31 type note — `CheckpointConfig`, `ChannelName`, `ChannelValue`, `TaskId`, `CheckpointTuple`, `Checkpoint`, `CheckpointMetadata`, `CheckpointId`:** `CheckpointConfig` is the checkpoint-addressing config; not formally enumerated as a spec-level struct — logically derived from BC-2.04.006 triple-address invariant (`thread_id: Uuid`, `checkpoint_ns: NamespaceId`, `checkpoint_id: Option<LogicalClockId>`); flagged corpus-unresolved for architect. `ChannelName` and `ChannelValue` are defined in entities-graph.md §GraphState (`Map<ChannelName, ChannelValue>`). `TaskId` is defined in VP-001.md (Kani harness: `TaskId(i as u64)` newtype around u64). `CheckpointTuple` is defined in entities-graph.md §CheckpointTuple. `Checkpoint` and `CheckpointMetadata` are defined in entities-graph.md §Checkpoint (`Checkpoint` has fields `checkpoint_id: LogicalClockId`, `thread_id`, `checkpoint_ns: NamespaceId`, `parent_checkpoint_id: Option<LogicalClockId>`, `state: GraphState`, `metadata: CheckpointMetadata`, `pending_sends: Vec<Send>`; `CheckpointMetadata` is the inline metadata sub-type on `Checkpoint`). `CheckpointId` is a newtype over `u64` per ADR-005 / BC-2.04.003 Architecture Anchors (monotonic logical clock; `get_next_version` produces instances).
 
 ### GuardrailHook
 
