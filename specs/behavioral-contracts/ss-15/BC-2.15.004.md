@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.004
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (F-P91-04, 2026-07-17): EC-004 adjudication — E-MEMORY-002 StorageFull is a write-capacity code (wrong semantic for a backend read I/O failure). No existing MEMORY code covers read I/O failure. Minted E-MEMORY-008 (MemoryStoreReadFailed, DURABILITY, broken, Maybe) as the correct code. EC-004 updated: removed E-MEMORY-002 and hedge 'or equivalent propagated storage error'; now cites E-MEMORY-008 MemoryStoreReadFailed. Added TV-008 to satisfy gate #33 raise-condition anchor for E-MEMORY-008. error-taxonomy.md v1.18 adds E-MEMORY-008 row (MEMORY namespace); census 85→86 (blanket 26→27: E-MEMORY-* 7→8)."
+  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-004 carried bare `Err(FerrochainError { category: DURABILITY, code: E-MEMORY-008 MemoryStoreReadFailed })` without message; E-MEMORY-008 taxonomy has <backend_error> placeholder (SQLite I/O error detail, available at raise site). Added inline message template to EC-004."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -104,8 +105,9 @@ is implementation-defined but stable across calls with no writes in between.
 
 ### EC-004: MemoryStore storage error during load_skill
 **Scenario:** The backing SQLite file returns an I/O error on read.
-**Expected behavior:** Returns `Err(FerrochainError { category: DURABILITY, code:
-E-MEMORY-008 MemoryStoreReadFailed })`. Does NOT panic.
+**Expected behavior:** Returns `Err(FerrochainError { category: DURABILITY, code: E-MEMORY-008 MemoryStoreReadFailed,
+message: "MemoryStoreReadFailed: backend read failed: <backend_error>" })`
+(where `<backend_error>` is the SQLite I/O error detail, available at the raise site). Does NOT panic.
 Does NOT return `Ok(None)` to mask the error (DI-014).
 
 ### EC-005: skill_exists versus load_skill round-trip

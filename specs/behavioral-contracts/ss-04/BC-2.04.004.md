@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.004
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -24,6 +24,7 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-6): E-category canon — EC-003 and test vector error category corrected from `StateUpdateError` to `VAL, code: E-GRAPH-007` (F-P6-03, status/category canon sweep)."
+  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-003 and the corresponding TV row carried bare `Err(FerrochainError { category: VAL, code: E-GRAPH-007 })` without message; E-GRAPH-007 has <node_id> and <key> placeholders. Added inline message template to EC-003; TV row PASS-ABBREV via EC-003."
 modified: []
 extracted_from: null
 deprecated: null
@@ -81,7 +82,7 @@ branch lineage entirely and requires full state duplication.
 |----|-------------|-------------------|
 | EC-001 | Two concurrent forks from the same parent `P` (DEC-008) | Both `C_fork1` and `C_fork2` have `parent = P`; their own IDs are distinct monotonic values both > P; no shared-state corruption; each fork is independently resumable |
 | EC-002 | Fork chain depth N = 200 (deep branch history) | Parent chain walk succeeds iteratively (no stack overflow); all 200 ancestors retrievable via `get_state_history` following parent pointers |
-| EC-003 | Fork with `values` update containing an unknown channel key | `Err(FerrochainError { category: VAL, code: E-GRAPH-007 })`; no partial checkpoint is written; `C_parent` unchanged |
+| EC-003 | Fork with `values` update containing an unknown channel key | `Err(FerrochainError { category: VAL, code: E-GRAPH-007, message: "UnknownChannelKey: node '<node_id>' returned write for key '<key>' which is not registered in the state schema" })` (where `<node_id>` is the fork call site identifier; `<key>` is the unrecognized channel key; both available at the raise site); no partial checkpoint is written; `C_parent` unchanged |
 | EC-004 | Fork from a checkpoint that is itself a fork (chained forks) | Works correctly; grandchild fork's parent chain walks through the intermediate fork to the root |
 
 ## Canonical Test Vectors
@@ -90,7 +91,7 @@ branch lineage entirely and requires full state duplication.
 |-------|----------------|----------|
 | `update_state(config.with_checkpoint_id("cp-5"), {k: v})` on thread `"t1"` | New checkpoint with `parent = "cp-5"`, new `checkpoint_id > "cp-5"`, `source = "update"`; original `"cp-5"` unchanged in storage | happy-path |
 | Two parallel fork calls from `"cp-5"`: `fork_a` and `fork_b` | Both have `parent = "cp-5"`; fork_a.id != fork_b.id; walking from either arrives at `"cp-5"`; no shared mutable state | edge-case |
-| Fork with `values = {nonexistent_channel: 42}` | `Err(FerrochainError { category: VAL, code: E-GRAPH-007 })`; storage unchanged | error |
+| Fork with `values = {nonexistent_channel: 42}` | `Err(FerrochainError { category: VAL, code: E-GRAPH-007 })`; storage unchanged (PASS-ABBREV via EC-003) | error |
 | Fork from fork: create `cp-5` → fork to `cp-6` → fork again to `cp-7` | `cp-7.parent = "cp-6"`, `cp-6.parent = "cp-5"`; parent walk from `cp-7` reaches both ancestors | edge-case |
 
 ## Verification Properties

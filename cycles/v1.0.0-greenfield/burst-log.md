@@ -2080,3 +2080,82 @@ End-to-end census per gate #33 procedure v2.37 rules. Step A grep run with THREE
 ## Archived from STATE.md Current Phase Steps (burst 195 rotation)
 
 | Phase 1d burst 190 — pass-106 record + fix burst 110 (F-P106-01 RESOLVED, OBS-P106-A RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 106: NOT CLEAN strict+PR-merge — 1M+1OBS. F-P106-01 RESOLVED: bc-authoring-plan v2.33→v2.34 — BC-INDEX.md added to Known Form-B-only files under new "Indexes:" bullet; catch-all broadened to "Any index, ADR, or supplement"; difference-set verification: 11 Form-B-only files {ADR-007/009/012/013, BC-INDEX.md, BC-2.07.002/BC-2.08.011/BC-2.08.012, bc-authoring-plan.md, test-vectors.md, verification-architecture.md} all covered; zero omissions. OBS-P106-A RESOLVED: error-taxonomy v1.19→v1.20 — E-MEMORY-006 message corrected to `InsufficientPrivilege: operation '<operation>' requires <required>` (1:1 struct-field mapping to BC-2.15.003 EC-005 {operation, required}; gate #33 BC-wins); 22-code struct-bearing sibling sweep: 21 PASS, 1 fixed. D18-P89-A sweep: 3 BC hashes refreshed (BC-2.07.001 →b52167a; BC-2.14.001 →4138081; BC-2.14.002 →4138081); TOTAL MATCH 126/126. Trajectory →1 (P1D-106). Counter 0/3. Fix bursts 109→110. Burst 190. |
+
+---
+
+## Burst: pass-111 record + fix burst 115 (F-P111-01 RESOLVED) (2026-07-19)
+
+**Parent-commit:** burst-195 commit (pass-110 record + fix burst 114 complete)
+**Adversary verdict:** NOT CLEAN strict+PR-merge — 0H + 1M (F-P111-01 MED [process-gap]). Counter 0/3 (unchanged). MAJOR: all four carry-forward Part-B axes exercised IN FULL and CLEAN — holdout-domains↔BC/CAP (Domains C+D fully dispositioned), purity-map(58)↔module-decomp(49 rows: 22P+28E+8B, +9 definitions-only) Iron Law holds, CAP(21)↔BC(95) bidirectional zero orphans, DI(14) all cited, ss-16/ss-17 remainder sound. Part A: F-P110-01/02 both RESOLVED verbatim; 8-code spot census PASS; cross-anchor full sweep PASS (E-SBXD-001, E-GRAPH-016 PASS; E-CORE-007 wrapper-form noted → F-P111-01).
+**Files touched (Dim-1): 19 unique files**
+- specs/behavioral-contracts/ss-11/BC-2.11.002.md (v1.4→v1.5; wait, task says v1.5→v1.6: F-P111-01 context-sourced exception — `<boundary>` from ProvenanceTag.boundary_type, `<content_type>` from IngressContent variant discriminant; sources registered in gate #33 v2.38 context-source registry; inline context-source cite added)
+- specs/behavioral-contracts/ss-11/BC-2.11.003.md (v1.5→v1.6: F-P111-01 same context-sourced exception registration; BC-2.11.003 is a secondary anchor for E-CORE-007 guardrail dispatch boundary check)
+- specs/behavioral-contracts/ss-11/BC-2.11.004.md (v1.5→v1.6: F-P111-01 same context-sourced exception registration; BC-2.11.004 is a tertiary anchor for E-CORE-007 content-type check)
+- specs/behavioral-contracts/ss-16/BC-2.16.002.md (v1.1→v1.2: F-P111-01 E-RETRY-002 inline template — `Err(E-RETRY-002 RetryGlobalLimitReached: "global retry limit of <global_limit> exhausted")` added; `<global_limit>` now sourced)
+- specs/behavioral-contracts/ss-16/BC-2.16.001.md (v1.2→v1.3: wrapper-form discipline compliance — Form-3 census site corrected per gate #33 v2.38 rules)
+- specs/behavioral-contracts/ss-01/BC-2.01.001.md (v1.1→v1.2: wrapper-form discipline compliance — Form-3 census site corrected)
+- specs/behavioral-contracts/ss-14/BC-2.14.004.md (v1.1→v1.2: wrapper-form discipline compliance — Form-3 census site corrected)
+- specs/behavioral-contracts/ss-08/BC-2.08.007.md (v1.3→v1.4: wrapper-form discipline compliance — Form-3 census site corrected)
+- specs/behavioral-contracts/ss-08/BC-2.08.001.md (v1.2→v1.3: wrapper-form discipline compliance — Form-3 census site corrected)
+- specs/behavioral-contracts/ss-15/BC-2.15.004.md (v1.1→v1.2: wrapper-form discipline compliance — Form-3 census site corrected)
+- specs/behavioral-contracts/ss-03/BC-2.03.001.md (v1.4→v1.5: wrapper-form discipline compliance — Form-3 census site corrected)
+- specs/behavioral-contracts/ss-04/BC-2.04.001.md (v1.1→v1.2: wrapper-form discipline compliance — Form-3 census site corrected)
+- specs/behavioral-contracts/ss-04/BC-2.04.004.md (v1.1→v1.2: wrapper-form discipline compliance — Form-3 census site corrected)
+- specs/behavioral-contracts/ss-04/BC-2.04.006.md (v1.3→v1.4: wrapper-form discipline compliance — Form-3 census site corrected)
+- specs/behavioral-contracts/ss-09/BC-2.09.002.md (v1.1→v1.2: wrapper-form discipline compliance — Form-3 census site corrected)
+- specs/behavioral-contracts/ss-17/BC-2.17.002.md (v1.2→v1.3: wrapper-form discipline compliance — Form-3 census site corrected)
+- specs/behavioral-contracts/ss-08/BC-2.08.004.md (v1.4→v1.5: wrapper-form discipline compliance — Form-3 census site corrected)
+- specs/prd-supplements/bc-authoring-plan.md (v2.37→v2.38: gate #33 Step-A Form 3 wrapper-form detection added; patterns 3a [FerrochainError:: prefix form] + 3b [false-positive check for bare-struct wrapper]; wrapper-form discipline codified — bare {category, code} valid ONLY for placeholder-less codes; inline message: template / PASS-ABBREV / registered context-source required for codes with placeholders; context-source registry entries for E-CORE-007 added; `total_standing_gates` unchanged at 34)
+- specs/prd-supplements/error-taxonomy.md (v1.24→v1.25: Form-3 census documented as new scope — 17 codes assessed for wrapper-form, 27 violation sites found and fixed; resolution approach breakdown documented; v1.24 structural-parity claim NOT contradicted — Form-3 is a new census dimension, not a correction; no corrigendum required)
+
+**Dim-2:** No new behavioral contracts authored. 17 BCs revised (wrapper-form compliance + E-CORE-007 context-sourced registrations + E-RETRY-002 inline template). BC count unchanged at 95 (48P0/39P1/8P2).
+**D18-P89-A sweep:** Mechanical method used (`compute-input-hash --scan specs --update` from .factory/). Files edited: bc-authoring-plan.md, error-taxonomy.md, and 17 BC files. Transitive cascade (D18-P90-A): all BCs listing any of these supplement files in `inputs:` refreshed. STALE=0 confirmed before commit.
+
+**Codifications:** Gate #33 v2.38 Step-A Form 3 (wrapper-form grep); wrapper-form discipline (bare {category, code} valid ONLY for placeholder-less codes); context-source registry entries for E-CORE-007 (`<boundary>` from ProvenanceTag.boundary_type, `<content_type>` from IngressContent discriminant); error-taxonomy v1.25 Form-3 census scope documentation. `total_standing_gates` unchanged at 34.
+
+**Dim-5:** counter 0/3 (unchanged; pass-111 NOT CLEAN strict — 1M); next action: dispatch adversary pass 112
+**Dim-6:** bc-authoring-plan v2.38 gate #33 wrapper-form detection; error-taxonomy v1.25 Form-3 census; 17 BC wrapper-form compliance fixes (27 sites).
+**Dim-7:** Finding trajectory tail →1→4→2→2→1 (passes 107/108/109/110/111); trajectory appended →1 (pass-111). Novelty MEDIUM.
+
+### Burst-196 Gate #33 Form-3 Wrapper-Form Census (bc-authoring-plan v2.38)
+
+Full Form-3 census per gate #33 v2.38. Step-A Form 3 patterns applied: (3a) `FerrochainError::VariantName {` prefix form; (3b) bare struct `FerrochainError { category: ..., code: ... }` form (false-positive check applied — bare {category, code} valid ONLY for placeholder-less codes). 17 BC files assessed; 27 violation sites found and resolved.
+
+**Resolution approaches used:**
+| Approach | Description | Codes Resolved |
+|----------|-------------|----------------|
+| Context-sourced exception | Placeholder values derived from named struct fields of request/context objects; registered in gate #33 context-source registry | E-CORE-007 (`<boundary>` ← ProvenanceTag.boundary_type; `<content_type>` ← IngressContent variant discriminant) |
+| Inline message template | Explicit inline template string added to BC site covering all taxonomy placeholders | E-RETRY-002 (`<global_limit>` — inline template: `"global retry limit of <global_limit> exhausted"`) |
+| Wrapper-form to inline (15 codes) | Bare {category, code} wrapper replaced with inline message template or PASS-ABBREV per v2.38 discipline; 15 additional BC files bumped | See tally table below |
+
+**Tally table — 17 codes / 27 sites / approaches (gate #33 v2.38):**
+
+| BC File | Error Code(s) | Sites Fixed | Approach | Version Bump |
+|---------|--------------|-------------|----------|--------------|
+| BC-2.11.002 | E-CORE-007 | 1 | context-sourced exception (ProvenanceTag.boundary_type / IngressContent discriminant) | v1.5→v1.6 |
+| BC-2.11.003 | E-CORE-007 | 1 | context-sourced exception (same registration) | v1.5→v1.6 |
+| BC-2.11.004 | E-CORE-007 | 1 | context-sourced exception (same registration) | v1.5→v1.6 |
+| BC-2.16.002 | E-RETRY-002 | 1 | inline message template (`<global_limit>` covered) | v1.1→v1.2 |
+| BC-2.16.001 | E-RETRY-001 | 2 | wrapper-form → inline template | v1.2→v1.3 |
+| BC-2.01.001 | E-CORE-001 | 2 | wrapper-form → inline template | v1.1→v1.2 |
+| BC-2.14.004 | E-PERF-004 | 1 | wrapper-form → inline template | v1.1→v1.2 |
+| BC-2.08.007 | E-PROV-003 | 2 | wrapper-form → inline template | v1.3→v1.4 |
+| BC-2.08.001 | E-PROV-001 | 2 | wrapper-form → inline template | v1.2→v1.3 |
+| BC-2.15.004 | E-MEMORY-005 | 2 | wrapper-form → inline template | v1.1→v1.2 |
+| BC-2.03.001 | E-GRAPH-003 | 2 | wrapper-form → inline template | v1.4→v1.5 |
+| BC-2.04.001 | E-CHKPT-001 | 2 | wrapper-form → inline template | v1.1→v1.2 |
+| BC-2.04.004 | E-CHKPT-006 | 1 | wrapper-form → inline template | v1.1→v1.2 |
+| BC-2.04.006 | E-CHKPT-002 | 2 | wrapper-form → inline template | v1.3→v1.4 |
+| BC-2.09.002 | E-MCP-001 | 2 | wrapper-form → inline template | v1.1→v1.2 |
+| BC-2.17.002 | E-FUZZ-001 | 2 | wrapper-form → inline template | v1.2→v1.3 |
+| BC-2.08.004 | E-PROV-006 | 1 | wrapper-form → inline template | v1.4→v1.5 |
+| **TOTAL** | **17 codes across 17 BC files** | **27 sites** | context-sourced: 3 sites; inline template: 24 sites | — |
+
+**Post-census result (v2.38 rules):** ZERO wrapper-form violations remaining. All 17 codes now comply with gate #33 v2.38 wrapper-form discipline.
+**Closes:** F-P111-01 MED [process-gap] (gate #33 v2.38 wrapper-form detection; E-CORE-007 context-sourced exception; E-RETRY-002 inline template; 15 additional BC wrapper-form compliance fixes).
+
+---
+
+## Archived from STATE.md Current Phase Steps (burst 196 rotation)
+
+| Phase 1d burst 191 — pass-107 record + fix burst 111 (F-P107-01 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 107: NOT CLEAN strict+PR-merge — 1M. F-P107-01 RESOLVED: 4 ss-02 BC structs v1.2 — E-GRAPH-011 BC-2.02.005 {source}→{source_node,message}; E-GRAPH-007 BC-2.02.001 {key}→{node_id,key}; E-GRAPH-001 BC-2.02.002 {channel}→{channel,task_ids,step}; E-GRAPH-004 BC-2.02.003 {channel,writer}→{channel,writer,step}; error-taxonomy v1.20→v1.21 corrigendum (false "21 PASS" → 5 FAIL/17 PASS); EC-003 "panic message as the error source" ambiguity removed. D18-P89-A sweep: TOTAL MATCH (input hashes unchanged). Trajectory →1 (P1D-107). Counter 0/3. Fix bursts 110→111. Burst 191. |

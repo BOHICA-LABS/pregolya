@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.007
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-003, EC-004, TV-001, TV-003, TV-005 each had category-only FerrochainError constructions with no code field. Added code: E-PROV-002 (ProviderTimeout) to TIMEOUT constructions and code: E-PROV-003 (StreamInterrupted) to TRANSPORT constructions per error-taxonomy.md BC anchors."
   - "1.2 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-PROV-002 message-prefix correction. PC1: added 'ProviderTimeout:' prefix per universal <ErrorName>: <detail> convention (D18-P78-A adjudication; BC lacked prefix). Message was 'stream chunk timeout after <duration>'; corrected to 'ProviderTimeout: stream chunk timeout after <duration>'. Taxonomy E-PROV-002 corrected simultaneously: dropped '<provider>' parameter and changed '<ms>ms' to '<duration>' (BC wins on content — no provider name in BC message; duration placeholder more precise than ms-specific)."
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-<provider>-sdk per module-decomposition.md v1.10."
+  - "1.4 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-004 and TV-003 carried `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003 })` bare wrappers; E-PROV-003 has `<provider>` and `<tokens>` placeholders. Added inline `message:` template to both; EC-004 is the authoritative full-form site; TV-003 PASS-ABBREV via EC-004."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-014
@@ -117,8 +118,10 @@ on the first chunk wait, not only after partial content is received.
 ### EC-004: TCP RST during deltaable block accumulation
 **Scenario:** The stream has delivered `message-start`, `content-block-start{text,0}`,
 and 5 text delta events. The TCP connection is then reset.
-**Expected behavior:** `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003 })`. The 5
-accumulated text deltas are not returned to the caller.
+**Expected behavior:** `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003,
+message: "StreamInterrupted: TCP connection to '<provider>' reset mid-stream after <tokens> tokens" })`
+(where `<provider>` = the provider adapter name, e.g., "openai"; `<tokens>` = approximate token count
+at time of reset; both available at the raise site from the stream context). The 5 accumulated text deltas are not returned to the caller.
 
 ### EC-005: Client constructed without timeout (non-test code)
 **Scenario:** `reqwest::Client::new()` is called in non-test provider code.
@@ -131,7 +134,7 @@ and fails the build. No runtime behavior change — this is a static enforcement
 |---|-------|-----------------|-------|
 | TV-001 | Stream fixture stalls after chunk 1, per-chunk timeout = 100ms | `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002 })` — no partial Ok | Per-chunk timeout |
 | TV-002 | Stream fixture delivers all chunks within 29s, timeout = 30s | `Ok(AiMessage)` — complete response | Normal slow stream |
-| TV-003 | Stream fixture delivers 0 chunks then TCP RST | `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003 })` | Connection drop |
+| TV-003 | Stream fixture delivers 0 chunks then TCP RST | `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003, message: "StreamInterrupted: TCP connection to 'openai' reset mid-stream after 0 tokens" })` | Connection drop |
 | TV-004 | `reqwest::Client::new()` in production src/ | CI lint reports violation; build fails | EC-005 |
 | TV-005 | Stream stalls before message-start event | `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002 })` | EC-003 — early stall |
 

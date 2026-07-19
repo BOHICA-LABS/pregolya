@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.37"
+version: "2.38"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -1872,15 +1872,41 @@ split by wave avoids exception).
 
     **Step A — Enumerate all struct-shorthand sites:**
     ```
-    # Primary: Err( with brace-open struct shorthand
+    # Form 1: Err( with brace-open struct shorthand
     grep -rn 'Err(E-' .factory/specs/behavioral-contracts/ --include="*.md" \
       | grep '{' | grep -v "~~\|changelog"
-    # Secondary: variant-name followed by brace (catches non-Err( forms)
+    # Form 2: variant-name followed by brace (catches non-Err( forms)
     grep -rn 'E-[A-Z]*-[0-9]\{3\}[[:space:]][A-Z][A-Za-z]*[[:space:]]*{' \
       .factory/specs/behavioral-contracts/ --include="*.md" | grep -v "~~\|changelog"
+    # Form 3: FerrochainError wrapper construction (code appears as `code:` field inside struct)
+    # Step 3a — single-pass for wrapper sites missing `message:` on the same line:
+    grep -rn 'FerrochainError {' .factory/specs/behavioral-contracts/ --include="*.md" \
+      | grep 'code:' | grep -v '~~\|changelog' | grep -v 'message:'
+    # Step 3b — false-positive check: a line flagged by Step 3a but with `message:` on the
+    # continuation (next) line is NOT a violation — it is a multi-line struct with a valid
+    # message field. Manually inspect the line immediately following each Step 3a hit before
+    # recording it as a violation.
     ```
     Collect the complete list of `(code, file, line)` tuples where a struct shorthand
-    (`VariantName { field: value, ... }`) appears.
+    (`VariantName { field: value, ... }`) or wrapper form (`FerrochainError { ..., code: E-xxx-NNN, ... }`)
+    appears.
+
+    **Wrapper-form discipline (applies to all Form 3 sites):** A bare wrapper
+    `FerrochainError { category: X, code: E-YYY-NNN }` with NO `message:` field is ONLY
+    valid for codes whose taxonomy Message Format contains NO `<placeholder>` tokens (fixed
+    message strings). For codes with one or more taxonomy placeholders, the struct MUST include
+    one of:
+    - **(a) Inline `message:` template** — e.g., `message: "Foo: bar '<placeholder>'"` with
+      the placeholder token(s) shown verbatim so the reader can trace each to its source at
+      the raise site.
+    - **(b) Explicit individual struct fields** — e.g., `{ code, field_a, field_b }` where
+      `field_a` and `field_b` satisfy Step B check 2 (field set is a SUPERSET of all distinct
+      taxonomy placeholders, with registered semantic aliases permitted).
+    - **(c) Registered context-sourced exception** — see the context-sourced exception
+      registry in Step B check 2; the BC must name the context object and the placeholder
+      mapping.
+    A bare `{ category, code }` wrapper that has taxonomy placeholders and satisfies none of
+    (a), (b), or (c) is a Step B check 2 FAIL regardless of Form 1/2 verdict for the same code.
 
     **Step B — Per-code assessment (three checks):**
 
@@ -1922,14 +1948,22 @@ split by wave avoids exception).
        E-SBXD-003 `{ reason }` (static prefix + single trailing placeholder).
 
        **Context-sourced placeholder exception:** For errors where taxonomy placeholders
-       `<ns>` and `<key>` are sourced from a named request context object at the raise site
-       (e.g., `MemoryWriteRequest { namespace, key, value }`), the struct may omit those
+       are sourced from a named context object at the raise site, the struct may omit those
        fields without failing check 2 if and only if: (a) the BC explicitly names the
-       context object as the placeholder source (e.g., "sourced from `MemoryWriteRequest`"),
-       (b) the placeholder is deterministically available at the raise site via that context
-       (no runtime computation or I/O required), and (c) this exception is registered by code
-       (error code: E-MEMORY-007). Currently registered context-sourced exceptions: E-MEMORY-007
-       (`<ns>` and `<key>` sourced from `MemoryWriteRequest.namespace` / `.key`).
+       context object as the placeholder source, (b) the placeholder is deterministically
+       available at the raise site via that context (no runtime computation or I/O required),
+       and (c) this exception is registered by error code below. Currently registered
+       context-sourced exceptions:
+       - **E-MEMORY-007** — `<ns>` and `<key>` sourced from `MemoryWriteRequest.namespace`
+         / `.key`.
+       - **E-CORE-007** — `<boundary>` sourced from `ProvenanceTag.boundary_type` (available
+         as the `provenance_tag` argument to `GuardrailHook::evaluate()`); `<content_type>`
+         sourced from the `IngressContent` variant discriminant (available as the `content`
+         argument). Both are deterministically available at the panic catch site — no runtime
+         computation or I/O required. BC-2.11.002 names `BoundaryType::ToolResult` /
+         `IngressContent::ToolResult`; BC-2.11.003 names `BoundaryType::RAGRetrieval` /
+         `IngressContent::RagChunk`; BC-2.11.004 names `BoundaryType::MemoryIngress` /
+         `IngressContent::MemoryItem`.
 
        **Abbreviation acceptance (PASS-ABBREV):** A TV row using `{ field_a, field_b, ... }`
        where `...` replaces one or more trailing fields PASSES check 2 only if a non-TV
@@ -2075,6 +2109,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.38 | 2026-07-18 | F-P111-01 (MED, process-gap): gate #33 Step A extended with **Form 3** — `FerrochainError { ..., code: E-xxx-NNN, ... }` wrapper constructions where the error code appears as a `code:` field rather than as the leading variant identifier (Form 1/2). Prior Step A greps (`Err(E-` and variant-name-brace) silently missed all wrapper-form sites. Form 3 procedure: `grep -rn 'FerrochainError {' .factory/specs/behavioral-contracts/ | grep 'code:' | grep -v '~~\|changelog' | grep -v 'message:'` (Step 3a); Step 3b: verify false positives for multi-line structs where `message:` appears on the continuation line. **Wrapper-form discipline** added inline: bare `{ category, code }` wrapper is ONLY valid for placeholder-free taxonomy messages; codes with `<placeholder>` tokens require (a) inline `message:` template, (b) explicit struct fields, or (c) registered context-sourced exception. **Context-sourced registry** extended from E-MEMORY-007 to also include **E-CORE-007** (`<boundary>` from `ProvenanceTag.boundary_type`; `<content_type>` from `IngressContent` variant discriminant; both deterministically available as `GuardrailHook::evaluate()` arguments). **Full wrapper-form sweep (Form 3, F-P111-01):** 21 violation records across 15 BC files fixed in fix-burst 115 (E-CORE-007 × 6 sites, E-RETRY-002 × 1, E-RETRY-001 × 1, E-CORE-001 × 1, E-PROV-002 × 3, E-PROV-003 × 3, E-MEMORY-008 × 1, E-GRAPH-006 × 1, E-GRAPH-017 × 3, E-CHKPT-001 × 2, E-GRAPH-007 × 2, E-CORE-005 × 2, E-CHKPT-005 × 1, E-MCP-004 × 1, E-GRAPH-008 × 1, E-PROV-001 × 3, E-PROV-006 × 2). Complete census table published in error-taxonomy.md v1.25 changelog. `total_standing_gates` unchanged at 34 (Form 3 is a Step A extension of gate #33, not a new gate). | F-P111-01 |
 | 2.37 | 2026-07-18 | F-P110-02 (HIGH, process-gap): gate #33 Step B check-1 cross-anchor scope clarification. The prior text required field-name consistency "within the same BC" — the v2.37 clarification redefines "intra-corpus" as EVERY struct site in every BC the taxonomy BC-Anchor cell lists for the code (primary AND secondary anchors). Root cause of F-P110-02: TD-VSDD-060 sweep anchored "in-file" missed E-SBXD-001 secondary anchor BC-2.13.004 TV-002 (2-field `{ resolved, root }`) diverging from primary anchor BC-2.13.005 canonical 3-field form `{ requested, resolved, root }`. The Step B check-1 prose now names this cross-anchor obligation explicitly: "The PRIMARY anchor's most authoritative construct determines the canonical field name and field count; update ALL diverging sites in ALL anchor BCs." Additionally: full re-census under v2.37 cross-anchor scope found 34 struct-bearing codes total (prior: 30); 4 newly-scoped: E-GRAPH-009 (PASS), E-GRAPH-014 (FAIL — fixed in BC-2.05.006 v1.4), E-CRON-002 (PASS), E-SERVER-006 (PASS). `total_standing_gates` unchanged at 34 (sub-check clarification of gate #33, not a new gate). | F-P110-02 |
 | 2.36 | 2026-07-18 | F-P109-02 (MED, process-gap): gate #33 check-2 registry extended with four semantic aliases (`offset ↔ <n>` for E-PROV-009 — byte offset in dialect parse error; `providers_attempted ↔ <N>` for E-PROV-010 — abbreviation, tried-count; `backend_error ↔ <reason>` for E-MEMORY-005 — storage backend failure detail; `message ↔ <reason>` for E-CHKPT-004 CODE-SPECIFIC — full constructed message string is the reason, do not apply to codes where `message` maps to `<message>` placeholder) and two new exception classes: (1) context-sourced placeholder exception — for errors where taxonomy placeholders `<ns>` and `<key>` are sourced from a named request context object at the raise site (currently registered: E-MEMORY-007, `<ns>` and `<key>` from `MemoryWriteRequest.namespace`/`.key`); struct may omit those fields without failing check 2 if and only if BC names context object, placeholder is deterministically available at raise site, and exception is registered by code; (2) PASS-ABBREV rule — TV-row `...` abbreviation PASSES check 2 only if a non-TV (PC or EC) full-struct site in the same BC explicitly names all fields; when the abbreviated TV row is the sole struct-bearing site for a code in the BC, the `...` form is a FAIL — all fields must be listed explicitly. Motivating instance for PASS-ABBREV: BC-2.09.001 TV-004 `{ server: "math", ... }` was the sole E-MCP-002 struct site — expanded to `{ server: "math", transport_error: "connection refused" }` in BC-2.09.001 v1.3. `total_standing_gates` unchanged at 34. | F-P109-02 |
 | 2.35 | 2026-07-18 | F-P108-04 (HIGH, process-gap): gate #33 extended with STRUCT-PLACEHOLDER PARITY CENSUS sub-check (Steps A–C). Two consecutive sweeps (v1.20 "21 PASS," v1.21 "17 PASS") produced false completeness claims because they checked that struct fields EXISTED but did not verify CONSTRUCTIBILITY: (1) intra-BC field-name consistency across sites, and (2) struct field set is a SUPERSET of all distinct taxonomy placeholders with no combined multi-placeholder field. Root cause confirmed by three burst-112 failures: E-PROV-010 (`last_error` combined `<last_error_code>/<last_provider>` into one field), E-CHKPT-004 (`source` in PC4 vs `message` in PC5/EC-002/TV), E-PROV-009 (`reason` catch-all embedded mid-message `<n>` offset, can't independently render `<element>` and `<n>`). New sub-check: Step A (enumerate all struct-shorthand Err(E-...) sites via grep), Step B (per-code: assert intra-BC field-name consistency + assert field set is SUPERSET of all distinct taxonomy placeholders + catch-all `reason` only valid for TRAILING-only variable content), Step C (full per-code TABLE as mandatory output; prose-only completeness claims are INVALID). Motivating instances, catch-all rule, and known semantic aliases (step↔\<n\>, node↔\<node_id\>, thread_id↔\<run_id\>) documented inline. `total_standing_gates` unchanged at 34 (sub-check extension of gate #33, not a new gate). | F-P108-04 |

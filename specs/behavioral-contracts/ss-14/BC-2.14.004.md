@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.004
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core (HTTP client factory) / xtask (lint gate) per module-decomposition.md v1.10."
+  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5, EC-003, and TV-004 all carried `Err(FerrochainError { category: TIMEOUT, code: \"E-PROV-002\" })` bare wrappers; E-PROV-002 has `<duration>` placeholder. Added inline `message:` template at all three sites; `<duration>` sourced from the configured HTTP client timeout value at the raise site."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -67,7 +68,10 @@ Connection Timeout) uniformly.
 4. If the timeout duration is configurable at runtime (e.g. via `FerrochainConfig`), the default
    value in the config struct is `Duration::from_secs(30)` — not `Duration::ZERO` or `None`.
 5. When the timeout fires, the HTTP client returns an error that the ferrochain adapter converts
-   to `Err(FerrochainError { category: TIMEOUT, code: "E-PROV-002" })` — not a hang, not a panic.
+   to `Err(FerrochainError { category: TIMEOUT, code: "E-PROV-002",
+   message: "ProviderTimeout: stream chunk timeout after <duration>" })`
+   (where `<duration>` is the configured HTTP client timeout, e.g., "30s")
+   — not a hang, not a panic.
 6. Connection timeout and request timeout are both set (if the HTTP crate distinguishes them);
    a connection timeout without a request timeout still leaves the system vulnerable to slow
    responses, so both must be set to non-zero values.
@@ -103,7 +107,9 @@ fully exempt from the `Client::new()` prohibition.
 for longer than the timeout duration.
 **Expected behavior:** The client's timeout mechanism terminates the connection. The ferrochain
 streaming adapter catches the timeout error from the HTTP client and yields
-`Err(FerrochainError { category: TIMEOUT, code: "E-PROV-002" })` to the stream consumer.
+`Err(FerrochainError { category: TIMEOUT, code: "E-PROV-002",
+message: "ProviderTimeout: stream chunk timeout after <duration>" })`
+(where `<duration>` is the configured timeout, e.g., "30s") to the stream consumer.
 No partial output is silently promoted to a successful response.
 **Reference:** error-taxonomy.md E-PROV-002.
 
@@ -128,7 +134,7 @@ request. The timeout applies to each individual request, not the client's lifeti
 | TV-001 | `ClientBuilder::new().timeout(Duration::from_secs(30)).build()` in production code | `Ok(Client { ... })` — lint passes | Happy path — correct builder pattern |
 | TV-002 | `Client::new()` in `src/provider/openai.rs` (non-test) | CI lint error: "`Client::new()` in non-test code; use `ClientBuilder::new().timeout(...)` instead" | Lint enforcement |
 | TV-003 | `ClientBuilder::new().build()` (no `.timeout()` call) | CI lint error: missing `.timeout()` call on `ClientBuilder` | Missing timeout |
-| TV-004 | Mock server with 35s response delay; client timeout set to 30s | `Err(FerrochainError { category: TIMEOUT, code: "E-PROV-002" })` received before server responds | Timeout fires correctly |
+| TV-004 | Mock server with 35s response delay; client timeout set to 30s | `Err(FerrochainError { category: TIMEOUT, code: "E-PROV-002", message: "ProviderTimeout: stream chunk timeout after 30s" })` received before server responds | Timeout fires correctly |
 | TV-005 | `Client::new()` inside `#[cfg(test)]` block | CI lint passes — test exemption | Test code exempt |
 
 ## Verification Properties

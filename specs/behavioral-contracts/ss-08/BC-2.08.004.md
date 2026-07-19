@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.004
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 drain — replaced E-PROV-008 placeholder with E-PROV-008 (ProviderHttpError, TRANSPORT) in EC-004, EC-005, TV-004, TV-005. Both sites (HTTP 5xx and unparseable error body) share TRANSPORT category; one code is correct per task-1 discipline. E-PROV-008 minted in error-taxonomy.md v1.8 this burst."
   - "1.3 (2026-07-15, F-P78-SWEEP/D18-P78-A): Three message-prefix corrections. (1) E-PROV-004 EC-001: added 'ProviderAuthFailed:' prefix. Taxonomy E-PROV-004 detail corrected from \"'<provider>' rejected API key — check credentials\" to 'authentication failed' (BC wins on content). (2) E-PROV-008 EC-004: added 'ProviderHttpError:' prefix (5xx case). (3) E-PROV-008 EC-005: added 'ProviderHttpError:' prefix (unparseable body case). Taxonomy E-PROV-008 updated to show both message forms."
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-standard-tests per module-decomposition.md v1.10."
+  - "1.5 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. (1) PC3 had bare `Err(FerrochainError { category: RATE, code: E-PROV-001, retry_hint: Later(Duration) })` without message; added inline message template. (2) PC5 had `Err(FerrochainError { category: VAL, code: E-CORE-005, … })` with Unicode-ellipsis; expanded to full message template. (3) EC-002 had `Err(FerrochainError { category: VAL, code: E-PROV-006, … })` with Unicode-ellipsis; expanded to full message template; TV-002 PASS-ABBREV via EC-002. (4) EC-003 had bare `Err(FerrochainError { category: RATE, code: E-PROV-001, retry_hint: RetryHint::Later(…) })` without message; added inline message template; TV-003 PASS-ABBREV via EC-003."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -73,12 +74,17 @@ support.
    context-overflow-specific error code so callers can distinguish this VAL subtype
    from other validation errors and apply summarization/trim middleware.
 3. A provider 429 (rate limit) response maps to
-   `Err(FerrochainError { category: RATE, code: E-PROV-001, retry_hint: Later(Duration) })`.
+   `Err(FerrochainError { category: RATE, code: E-PROV-001, retry_hint: Later(Duration),
+   message: "RateLimited: provider '<provider>' returned 429; retry after <retry_after>s" })`
+   (where `<provider>` is the provider adapter name; `<retry_after>` is the `Retry-After` header value in seconds when present, or 0 when absent; both available at the error mapping site).
    The `retry_hint` field carries the `Retry-After` header value when present.
 4. A provider 5xx response maps to `Err(FerrochainError { category: TRANSPORT, … })`.
 5. A provider-side validation error (e.g., invalid model name, unsupported parameter)
-   maps to `Err(FerrochainError { category: VAL, code: E-CORE-005, … })` — not silently returning
-   an empty or stub `AiMessage`. (Provider-specific subtypes may use more specific VAL codes; E-CORE-005 is the minimum fallback for unrecognized provider validation errors without a dedicated code.)
+   maps to `Err(FerrochainError { category: VAL, code: E-CORE-005,
+   message: "Validation failed for 'request': <provider_error>" })`
+   (where `<provider_error>` is the provider's error message text, available from the HTTP error response body)
+   — not silently returning an empty or stub `AiMessage`.
+   (Provider-specific subtypes may use more specific VAL codes; E-CORE-005 is the minimum fallback for unrecognized provider validation errors without a dedicated code.)
 6. No error variant causes a panic in non-test code.
 
 ## Invariants
@@ -105,13 +111,18 @@ The `{:?}` format of the associated credential shows `"<redacted>"`.
 ### EC-002: Context overflow vs generic validation error
 **Scenario:** The provider returns HTTP 400 with body `{"error": {"type": "invalid_request_error",
 "message": "This model's maximum context length is 128000 tokens."}}`.
-**Expected behavior:** `Err(FerrochainError { category: VAL, code: E-PROV-006, … })` — not
-a generic VAL error; E-PROV-006 (ContextLengthExceeded) distinguishes context overflow from other VAL subtypes so callers can apply summarization/trim middleware.
+**Expected behavior:** `Err(FerrochainError { category: VAL, code: E-PROV-006,
+message: "ContextLengthExceeded: provider '<provider>' rejected request — context length <actual> exceeds maximum <limit> tokens" })`
+(where `<provider>` is the provider adapter name; `<actual>` and `<limit>` are parsed from the 400 error body; all available at the error mapping site)
+— not a generic VAL error; E-PROV-006 (ContextLengthExceeded) distinguishes context overflow from other VAL subtypes so callers can apply summarization/trim middleware.
+TV-002 PASS-ABBREV via this EC-002 full-form site.
 
 ### EC-003: Rate limit with Retry-After header
 **Scenario:** The provider returns HTTP 429 with `Retry-After: 60` header.
-**Expected behavior:** `Err(FerrochainError { category: RATE, code: E-PROV-001, retry_hint:
-RetryHint::Later(Duration::from_secs(60)) })`.
+**Expected behavior:** `Err(FerrochainError { category: RATE, code: E-PROV-001, retry_hint: RetryHint::Later(Duration::from_secs(60)),
+message: "RateLimited: provider '<provider>' returned 429; retry after 60s" })`
+(where `<provider>` is the provider adapter name; `60` comes from `Retry-After: 60` header; both available at the error mapping site).
+TV-003 PASS-ABBREV via this EC-003 full-form site.
 
 ### EC-004: Provider 500 internal error
 **Scenario:** The provider returns HTTP 500 with an HTML error page.
@@ -130,8 +141,8 @@ format: <first 256 chars>" })`. No panic. The partial body is included for diagn
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | Cassette: HTTP 401 | `Err(FerrochainError { category: AUTH, code: E-PROV-004 })` — key not in message | Auth error |
-| TV-002 | Cassette: HTTP 400 "context length exceeded" | `Err(FerrochainError { category: VAL, code: E-PROV-006 })` | Context overflow (E-PROV-006 ContextLengthExceeded) |
-| TV-003 | Cassette: HTTP 429 with `Retry-After: 30` | `Err(FerrochainError { category: RATE, code: E-PROV-001, retry_hint: Later(30s) })` | Rate limit |
+| TV-002 | Cassette: HTTP 400 "context length exceeded" | `Err(FerrochainError { category: VAL, code: E-PROV-006 })` | Context overflow (E-PROV-006 ContextLengthExceeded). PASS-ABBREV via EC-002. |
+| TV-003 | Cassette: HTTP 429 with `Retry-After: 30` | `Err(FerrochainError { category: RATE, code: E-PROV-001, retry_hint: Later(30s) })` | Rate limit. PASS-ABBREV via EC-003. |
 | TV-004 | Cassette: HTTP 500 | `Err(FerrochainError { category: TRANSPORT, code: E-PROV-008 })` | Provider 5xx — code deferred |
 | TV-005 | Cassette: HTTP 400 unknown JSON body | `Err(FerrochainError { category: TRANSPORT, code: E-PROV-008 })` — no panic | Unknown format — code deferred |
 

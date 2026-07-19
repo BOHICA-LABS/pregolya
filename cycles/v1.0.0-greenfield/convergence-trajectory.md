@@ -619,6 +619,34 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-110 — Pass 110 (2026-07-19, burst 195)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-110 | 2026-07-19 | 2 | 0 | 1 | 1 | 0 | 0 | MEDIUM-HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes rotated (burst-194 sibling-checks):** F-P109-01 RESOLVED — BC-2.05.005 v1.3 all 10 E-GRAPH-002 sites carry `{thread_id, run_status}`; alias thread_id↔`<run_id>` in gate #33 v2.36; PASS. F-P109-02 RESOLVED — bc-authoring-plan v2.36 alias registry 8 entries; context-sourced exception class; PASS-ABBREV corollary; PASS. Gate #33 v2.36 census 30 codes / 3 FAIL-all-fixed / 27 PASS independent re-run: FAILED census claim (e) — E-SBXD-001 BC-2.13.004 secondary anchor not swept (prior sweep in-file only); adversary 3rd safety grep found 4 genuinely newly-scoped codes (E-GRAPH-009 DuplicateNodeName, E-GRAPH-014 InterruptApprovalTimeout, E-CRON-002, E-SERVER-006). Net: 34 codes total (30 prior + 4 new).
+**Fix summary (burst 195 — fix burst 114):** F-P110-02 HIGH [process-gap] (PO+orchestrator) — BC-2.13.004 v1.1→v1.2 TV-002 expanded to 3-field `{requested, resolved, root}`; bc-authoring-plan v2.36→v2.37 Step B check-1 cross-anchor scope — "ALL BCs in taxonomy BC-Anchor cell (primary AND secondary)"; full v2.37 census: 34 codes; 4 newly-scoped (E-GRAPH-009 PASS, E-GRAPH-014 FAIL→FIXED v1.4, E-CRON-002 PASS, E-SERVER-006 PASS); 2 FAIL-both-fixed; 32 PASS; ZERO remaining. F-P110-01 MED [process-gap] (PO) — error-taxonomy v1.23→v1.24 corrigendum #4: E-GRAPH-002 has ONE placeholder `<run_id>` (not two); run_status = extra diagnostic superset field; v1.23 row preserved. BC-2.05.006 v1.4: EC-005 E-GRAPH-014 run_id added (newly-scoped). total_standing_gates unchanged at 34.
+**Hash sweep (D18-P89-A):** STALE=0 confirmed after `--scan specs`.
+**Trajectory after:** →2 (P1D-110); cumulative tail →1→4→2→2
+**Counter:** 0/3
+
+---
+
+### P1D-111 — Pass 111 (2026-07-19, burst 196)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-111 | 2026-07-19 | 1 | 0 | 0 | 1 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes rotated (burst-195 sibling-checks):** F-P110-02 RESOLVED — BC-2.13.004 v1.2 TV-002 3-field `{requested, resolved, root}` confirmed; cross-anchor consistent with BC-2.13.005; PASS. F-P110-01 RESOLVED — error-taxonomy v1.24 corrigendum #4 ONE placeholder confirmed; run_status = superset diagnostic field; BC-2.05.006 v1.4 EC-005 run_id confirmed; PASS. Census v2.37 34 codes / 32 PASS / 2 FAIL-both-fixed PASS. Cross-anchor full sweep: E-SBXD-001 PASS, E-GRAPH-016 PASS, E-CORE-007 wrapper-form noted → F-P111-01. MAJOR: all four carry-forward Part-B axes exercised IN FULL and CLEAN — holdout-domains↔BC/CAP (Domains C+D fully dispositioned), purity-map(58)↔module-decomp(49 rows: 22P+28E+8B, +9 definitions-only) Iron Law holds 10/10 spot-check, CAP(21)↔BC(95) bidirectional zero orphans, DI(14) all cited, ss-16/ss-17 remainder sound.
+**Fix summary (burst 196 — fix burst 115):** F-P111-01 MED [process-gap] (PO+orchestrator) — gate #33 v2.37→v2.38: Step-A Form 3 wrapper-form grep (patterns 3a + 3b false-positive check); wrapper-form discipline codified (bare {category, code} valid ONLY for placeholder-less codes; inline message: template / PASS-ABBREV / registered context-source required for codes with placeholders). E-CORE-007 resolved via context-sourced exception: `<boundary>` from ProvenanceTag.boundary_type, `<content_type>` from IngressContent variant discriminant; registered in gate #33; BC-2.11.002/003/004 v1.5→v1.6. E-RETRY-002 resolved via inline template: BC-2.16.002 v1.1→v1.2. Full Form-3 census: 17 codes / 27 violation sites across 17 BC files; all resolved; ZERO remaining. 15 additional BCs bumped: BC-2.16.001 v1.3, BC-2.01.001 v1.2, BC-2.14.004 v1.2, BC-2.08.007 v1.4, BC-2.08.001 v1.3, BC-2.15.004 v1.2, BC-2.03.001 v1.5, BC-2.04.001 v1.2, BC-2.04.004 v1.2, BC-2.04.006 v1.4, BC-2.09.002 v1.2, BC-2.17.002 v1.3, BC-2.08.004 v1.5. error-taxonomy v1.24→v1.25 (Form-3 census documented as new scope; no corrigendum needed). total_standing_gates unchanged at 34.
+**Hash sweep (D18-P89-A):** Run this burst; STALE=0 confirmed after `--scan specs`.
+**Trajectory after:** →1 (P1D-111); cumulative tail →4→2→2→1
+**Counter:** 0/3
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.001
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-34): F-P34-02 EC-003 + TV-004 — replace E-RETRY-003 with E-RETRY-004 (InvalidRetryLimit). E-RETRY-003 is CircuitBreakerOpen (BC-2.16.003, POLICY/Later); zero-limit construction rejection is a misconfiguration → VAL, RetryHint Never. New code E-RETRY-004 minted in error-taxonomy.md 1.5."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
+  - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5 had `Err(FerrochainError { component: RETRY, category: POLICY, code: E-RETRY-001, retry_hint: Never })` — bare wrapper missing message field for E-RETRY-001 which has `<tool_name>` and `<attempt_limit>` placeholders. Added `message:` template inline; `<tool_name>` from `ToolRetryPolicy.tool_name`; `<attempt_limit>` from `ToolRetryPolicy.attempt_limit` — both deterministically available at raise site."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
 inputs:
@@ -67,7 +68,10 @@ different arguments must share the same retry counter.
    just policy.
 5. When the per-tool retry limit for `T` is reached, the combinator returns
    `Err(FerrochainError { component: RETRY, category: POLICY, code: E-RETRY-001,
-   retry_hint: Never })` without invoking `T` again.
+   retry_hint: Never,
+   message: "RetryExhausted: per-tool retry limit for tool '<tool_name>' exhausted after <attempt_limit> attempts" })`
+   (where `<tool_name>` from `ToolRetryPolicy.tool_name`; `<attempt_limit>` from `ToolRetryPolicy.attempt_limit`)
+   without invoking `T` again.
 6. The `ToolRetryPolicy` struct carries the tool name string and the per-tool `attempt_limit`
    as named fields; both must be present to construct a policy.
 

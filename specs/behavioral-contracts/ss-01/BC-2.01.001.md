@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.001
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
+  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC6 had `Err(FerrochainError { category: VAL, code: E-CORE-001 })` bare wrapper; E-CORE-001 has `<n>` (block position) and `<type>` (type tag) placeholders. Added inline `message:` template to PC6; added EC-006 with concrete placeholder values as the authoritative full-form site."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-001
   - domain-spec/invariants.md#DI-008
@@ -67,8 +68,11 @@ content from satisfying a typed-content parameter. This contract encodes the Lan
 5. An unknown provider-specific block maps to `ContentBlock::NonStandard { value: serde_json::Value }`
    rather than causing a deserialization error.
 6. Construction succeeds and returns `Ok(message)` when all content block types are valid;
-   construction returns `Err(FerrochainError { category: VAL, code: E-CORE-001 })` when an
-   unrecognized block type is encountered and the API contract requires strict validation.
+   construction returns `Err(FerrochainError { category: VAL, code: E-CORE-001,
+   message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough" })`
+   (where `<n>` is the block's 0-based position index; `<type>` is the unrecognized type tag string;
+   both are available at the deserialization call site)
+   when an unrecognized block type is encountered and the API contract requires strict validation.
 
 ## Invariants
 
@@ -106,6 +110,14 @@ The caller must wrap in `ContentBlock::Text(TextContentBlock { text: s, annotati
 **Scenario:** A message contains `[ContentBlock::Text(...), ContentBlock::Image(...), ContentBlock::ToolCall(...)]`.
 **Expected behavior:** All blocks are accepted in sequence; the resulting `Vec<ContentBlock>` preserves
 insertion order. Each block is independently accessible by variant match.
+
+### EC-006: Strict-mode deserialization with unrecognized block type
+**Scenario:** A provider response contains a block with `"type": "provider_v2_block"` at position 2
+(0-based) in a message, and the caller requests strict validation (non-lenient mode; `NonStandard`
+passthrough disabled).
+**Expected behavior:** `Err(FerrochainError { category: VAL, code: E-CORE-001,
+message: "StrictContentBlockValidation: block at position 2 has unrecognized type tag 'provider_v2_block'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough" })`.
+Deserialization does not fall through to a `NonStandard` block; the error propagates to the caller.
 
 ### EC-005: Serde round-trip with extras field
 **Scenario:** A `TextContentBlock` with an `extras` field containing provider metadata is

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.002
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
+  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC8 had bare `Err(FerrochainError { code: E-MCP-004 ToolNotFound })` without message; E-MCP-004 has <tool_name> placeholder. Added inline message template; <tool_name> is available from the ToolInvocation at the raise site."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -77,7 +78,8 @@ Transport failures and content-conversion errors always propagate regardless of 
    return `Err(...)` regardless of flag.
 7. `structuredContent` from `CallToolResult` is surfaced as `MCPToolArtifact { structured_content }`
    alongside the content blocks (content+artifact response format).
-8. Tool not found in routing table: `Err(FerrochainError { code: E-MCP-004 ToolNotFound })`.
+8. Tool not found in routing table: `Err(FerrochainError { code: E-MCP-004 ToolNotFound, message: "ToolNotFound: tool '<tool_name>' is not registered with any MCP server" })`
+   (where `<tool_name>` is available from the `ToolInvocation.tool_name` field at the raise site).
 
 ## Invariants
 

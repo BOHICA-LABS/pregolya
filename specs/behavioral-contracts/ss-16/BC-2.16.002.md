@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.002
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
+  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5 had `Err(FerrochainError { component: RETRY, category: POLICY, code: E-RETRY-002, retry_hint: Never })` — bare wrapper missing message field for E-RETRY-002 which has `<global_limit>` placeholder. Added `message:` template inline; `<global_limit>` sourced from `RetryPolicy.global_limit` (type `NonZeroU32`, deterministically available at raise site). Pattern matches BC-2.16.003 PC2 (CircuitBreakerOpen inline message precedent)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
 inputs:
@@ -65,8 +66,10 @@ an explicit `RetryPolicy::unlimited()` method that emits a diagnostic warning.
    `"RetryPolicy::unlimited() constructed — no global retry bound; only use in tests or controlled environments"`.
 5. When the global limit across all tool calls in a single run is exhausted,
    the combinator returns `Err(FerrochainError { component: RETRY, category: POLICY,
-   code: E-RETRY-002, retry_hint: Never })` and halts further tool invocations for
-   the current run.
+   code: E-RETRY-002, retry_hint: Never,
+   message: "GlobalLimitExhausted: global retry budget of <global_limit> exhausted across all tools in this run" })`
+   (where `<global_limit>` is `RetryPolicy.global_limit: NonZeroU32`, available at raise site)
+   and halts further tool invocations for the current run.
 6. The global limit applies cumulatively across all tool types in a run; it is not
    reset per-tool. A run with three tools each having `attempt_limit=5` and
    `global_limit=Some(8)` stops after 8 total failures across all tools.
