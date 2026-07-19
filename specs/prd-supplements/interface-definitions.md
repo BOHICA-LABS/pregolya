@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.37"
+version: "2.38"
 status: active
 producer: product-owner
 timestamp: 2026-07-19T00:00:00Z
 phase: 1d
 changelog:
+  - "2.38 (F-P117-01, fix burst 120, 2026-07-19): summary_halt promoted to first-class terminal Run status throughout (Option 1 adjudication — BC-2.10.003 PC8(d) is authoritative). (1) §Run Object Schema status enum: add 'summary_halt' (in_progress → summary_halt via OnCeiling::Summarize per BC-2.10.003 PC8(d)). (2) status description: state machine enumeration gains '| summary_halt'. (3) completed_at terminal set: add 'summary_halt'. (4) output note: 'present only when status=completed or status=summary_halt; for summary_halt output=summarize model response (BC-2.10.003 PC8(c))'. (5) §Runs HTTP table GET runs filter: add summary_halt to status filter enumeration. (6) §Runs HTTP table DELETE runs description: add summary_halt to deletable terminal states."
   - "2.37 (F-P116-01, 2026-07-19): §CheckpointSaver — dyn-compatibility fixes per ADR-005 v1.3 §Object-Safety (F-P116-01). (A) `get_next_version` provided-method receiver: `&self` added as first parameter (was receiver-less, causing E0038 on Arc<dyn CheckpointSaver>). Rationale: dyn-compatibility requires a receiver on every non-Sized-bounded method; virtual dispatch of backend overrides through Arc<dyn CheckpointSaver> vtable requires &self; langgraph BaseCheckpointSaver.get_next_version is an instance method — prior 'static method' parity claim corrected (F-P116-01). Default body unchanged — still delegates to MonotonicClock::get_next_version(current, channel), ignoring &self. (B) `list` return type: `Result<impl Stream<Item = Result<CheckpointTuple, FerrochainError>>, FerrochainError>` → `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>`. Rationale: `impl Stream` opaque return is NOT dyn-compatible even with async-trait desugaring (E0038); Pin<Box<dyn Stream<Item = ...> + Send>> is the established dyn-compatible boxed-stream pattern for object-safe async traits. Authority: ADR-005 v1.3 §Object-Safety of the 5-Method CheckpointSaver Trait."
   - "2.36 (F-P115-02, 2026-07-19): §CheckpointSaver — add `put` and `get_next_version` methods (trait becomes 5-method). (A) `put` method: persists full checkpoint state blob; called once per run under DurabilityTier::Exit or at run completion (BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003); encrypted when EncryptedSerializer active (BC-2.04.007 PC1); raises E-CHKPT-005 on tenant-context conflict (BC-2.04.006 EC-005). BC anchor annotations: BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003, BC-2.04.006 PC2, BC-2.04.007 PC1+INV-1. (B) `get_next_version` provided method: default impl delegates to MonotonicClock::get_next_version; implementors MAY override; channel param accepted for API compatibility only (BC-2.04.003 PC1/PC5); E-CHKPT-002 on u64 overflow. BC anchor line extended: BC-2.04.001 through BC-2.04.007 with per-method precision. Gate #31 type note extended: Checkpoint and CheckpointMetadata (entities-graph.md §Checkpoint), CheckpointId (ADR-005 / BC-2.04.003 newtype over u64) added. Architect routing: api-surface.md CheckpointSaver row BC range 001–006 is now stale (needs 001–007); flagged for architect."
   - "2.35 (F-P100-02, 2026-07-17): Citation-completeness amendment — no behavioral change. /stream endpoint row BC citation extended from 'BC-2.11.002 PC3/PC4' to 'BC-2.11.002/003/004 PC3/PC4 (per-boundary)'. §StreamEvent BC anchor extended: BC-2.11.003 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for RagChunk boundary) and BC-2.11.004 PC3/PC4 (GuardrailDecision for MemoryItem boundary) added alongside existing BC-2.11.002 PC3/PC4 (ToolResult boundary). GuardrailDecision fires symmetrically at all three ingress boundaries; prior citations listed only the ToolResult boundary BC. ADR-006 rev-4 is co-artifact."
@@ -53,7 +54,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "825d4b1"
+input-hash: "f403998"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."
@@ -753,12 +754,12 @@ an explicit documented exemption.
 | Method | Path | Description | BC Anchor |
 |--------|------|-------------|-----------|
 | POST | `/threads/{thread_id}/runs` | Create and start a run (async; returns 202 with `run_id`); run-supplied `config`/`metadata`/`context` deep-merge over the Assistant's stored values, run wins at leaf key (BC-2.12.003 §Run-Config Merge Precedence Invariant, F-P33-02) | BC-2.12.003 |
-| GET | `/threads/{thread_id}/runs` | List runs for a thread; `?status=queued\|in_progress\|completed\|failed\|interrupted\|cancelled` filter + canonical pagination (`?limit=N` default 10 max 100, `?offset=N`; `created_at` DESC) — F-P31-01 | BC-2.12.003 |
+| GET | `/threads/{thread_id}/runs` | List runs for a thread; `?status=queued\|in_progress\|completed\|failed\|interrupted\|cancelled\|summary_halt` filter + canonical pagination (`?limit=N` default 10 max 100, `?offset=N`; `created_at` DESC) — F-P31-01 | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}` | Get run status and result | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}/stream` | Stream run output as server-sent events (SSE; happy path emits run_start, node_start/stream/end, run_end; **run_end is emitted on completion only** — interrupted runs terminate with interrupt envelope as terminal frame, failed runs terminate with error SSE event; neither emits run_end; BC-2.06.001 PC2+EC-005, BC-2.12.007 EC-001/EC-003). **Guardrail decisions (F-P99-01):** `guardrail_decision` events are emitted for non-Pass guardrail outcomes (Fail/Transform only — Pass not streamed); fire within the tool lifecycle window (before `tool_end`) for ToolResult boundary, and within the node lifecycle window for RAG/Memory boundaries; see §StreamEvent for complete taxonomy and ordering. **ToolEnd content semantics:** `tool_end.data` carries POST-guardrail content — raw rejected payloads are never emitted in any SSE event (BC-2.11.005 INV-5). BC-2.11.002/003/004 PC3/PC4 (per-boundary), ADR-006 rev-3. | BC-2.12.007 |
 | POST | `/threads/{thread_id}/runs/{run_id}/resume` | Deliver resume value to interrupted run | BC-2.05.004 |
 | POST | `/threads/{thread_id}/runs/{run_id}/cancel` | Cancel a queued or in_progress run (transitions to cancelled) | BC-2.12.003 |
-| DELETE | `/threads/{thread_id}/runs/{run_id}` | Delete a terminal run record (completed/failed/cancelled only; HTTP 409 if queued, in_progress, or interrupted — cancel or resume-to-complete first) | BC-2.12.003 |
+| DELETE | `/threads/{thread_id}/runs/{run_id}` | Delete a terminal run record (completed/failed/cancelled/summary_halt; HTTP 409 if queued, in_progress, or interrupted — cancel or resume-to-complete/summary_halt first) | BC-2.12.003 |
 
 ### Cron Schedules
 
@@ -858,13 +859,13 @@ Canonical JSON output shapes for `ferrochain-server` API responses. The primary 
     "assistant_id": { "type": "string" },
     "status": {
       "type": "string",
-      "enum": ["queued", "in_progress", "interrupted", "completed", "failed", "cancelled"],
-      "description": "Run state machine: queued → in_progress → completed | failed | cancelled; in_progress ⇄ interrupted (resume via POST .../resume). Authority: BC-2.12.003 PC7-PC9. multitask_strategy='enqueue' creates the new run in 'queued' state; it transitions to 'in_progress' after the current run finishes. Use POST .../cancel to transition queued/in_progress→cancelled."
+      "enum": ["queued", "in_progress", "interrupted", "completed", "failed", "cancelled", "summary_halt"],
+      "description": "Run state machine: queued → in_progress → completed | failed | cancelled | summary_halt; in_progress ⇄ interrupted (resume via POST .../resume). summary_halt is a terminal state produced by the OnCeiling::Summarize budget path (BC-2.10.003 PC8(d)). Authority: BC-2.12.003 PC7-PC9 (v1.4). multitask_strategy='enqueue' creates the new run in 'queued' state; it transitions to 'in_progress' after the current run finishes. Use POST .../cancel to transition queued/in_progress→cancelled."
     },
     "created_at": { "type": "string", "format": "date-time" },
     "updated_at": { "type": "string", "format": "date-time", "description": "Set on every Run state mutation (status transition, output/error write). Always present. Authority: BC-2.12.003 PC13." },
-    "completed_at": { "type": ["string", "null"], "format": "date-time", "description": "Set only on terminal transition (status → completed | failed | cancelled). Null in all non-terminal states (queued, in_progress, interrupted). Distinct from updated_at — terminal-timestamp semantics. Authority: F-P24-01." },
-    "output": { "description": "Final graph state; present only when status=completed" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time", "description": "Set only on terminal transition (status → completed | failed | cancelled | summary_halt). Null in all non-terminal states (queued, in_progress, interrupted). Distinct from updated_at — terminal-timestamp semantics. Authority: F-P24-01, BC-2.12.003 PC13 v1.4." },
+    "output": { "description": "Final graph state; present only when status=completed or status=summary_halt. For summary_halt, output carries the summarize model response (BC-2.10.003 PC8(c)). Null in all other states." },
     "error": {
       "type": ["object", "null"],
       "description": "RFC-7807 problem detail; present only when status=failed",

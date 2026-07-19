@@ -29,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "1b8c979"
+input-hash: "b4070e4"
 extracted_from: null
 modified: []
 deprecated: null

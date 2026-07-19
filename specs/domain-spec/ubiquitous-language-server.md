@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-server
-version: "1.2"
+version: "1.3"
 status: active
 producer: business-analyst
 timestamp: 2026-07-14T00:00:00Z
@@ -15,8 +15,9 @@ input-hash: "ecdcabd"
 traces_to: L2-INDEX.md
 decisions: [D2, D13, D17]
 changelog:
+  - "1.3 (2026-07-19): F-P117-01 — add summary_halt to Run status lifecycle. Terminal set now: completed | failed | cancelled | summary_halt. summary_halt reached via in_progress to summary_halt on the OnCeiling::Summarize path (BC-2.12.003 PC7/PC8); first-class terminal state per product-owner adjudication. Body changelog table row added. Whole-file sweep: no other terminal-set enumerations found."
+  - "1.2 (ADV-P1D-PASS-58): F-P58-03 — update ProvenanceTag and GuardrailHook to BC-authoritative terminology. ProvenanceTag: source_type/tool_name/invocation_id/timestamp to boundary_type (ToolResult|RAGRetrieval|MemoryIngress), ingress_id, sequence_position; removed User/Model per BC-2.11.001 EC-004. GuardrailHook: Accept/Reject/Redact retired to Pass/Fail{reason,severity}/Transform{new_content}; callable signature updated to match interface-definitions.md v2.13."
   - "1.1 (initial active version)."
-  - "1.2 (ADV-P1D-PASS-58): F-P58-03 — update §ProvenanceTag and §GuardrailHook to BC-authoritative terminology. ProvenanceTag: source_type/tool_name?/invocation_id?/timestamp → boundary_type (ToolResult|RAGRetrieval|MemoryIngress), ingress_id, sequence_position; removed User/Model per BC-2.11.001 EC-004. GuardrailHook: Accept/Reject/Redact retired → Pass/Fail{reason,severity}/Transform{new_content}; callable signature updated to match interface-definitions.md v2.13."
 ---
 
 # Ubiquitous Language — Server, Policy/Safety, Error Terms, and Reconciliation
@@ -35,7 +36,8 @@ with LangGraph Platform (D13).
 
 **Run**
 A single execution of an Assistant with a Thread. Status lifecycle:
-`queued → in_progress → completed | failed | cancelled; in_progress ⇄ interrupted (resume via POST .../resume)`.
+`queued → in_progress → completed | failed | cancelled | summary_halt; in_progress ⇄ interrupted (resume via POST .../resume)`.
+`summary_halt` is reached via in_progress on the OnCeiling::Summarize path (BC-2.12.003 PC7/PC8); it is a first-class terminal state carrying the summarize model response as final output. State-machine authority: BC-2.12.003 PC7/PC8.
 (`requires_action` renamed to `interrupted` for HITL-parked runs; `expired` deferred — v1.0.0 maps timeout-expired interrupts to `failed` via E-GRAPH-014 InterruptApprovalTimeout.)
 Streaming and unary Run endpoints drive the same execution engine (DI-011).
 
@@ -132,7 +134,7 @@ not retriable.
 | `BaseCheckpointSaver` | CheckpointSaver | name preserved from LangGraph BaseCheckpointSaver; same interface |
 | `RunnableConfig` | RunnableConfig | name preserved; no rename |
 | `BaseMessage` | Message | Renamed; ContentBlock replaces raw string content |
-| `HumanMessage`, `AIMessage`, `SystemMessage`, `ToolMessage` | Message enum: Ai(AiMessage) | Human(HumanMessage) | System(SystemMessage) | Tool(ToolMessage) | Variant instead of subclass |
+| `HumanMessage`, `AIMessage`, `SystemMessage`, `ToolMessage` | Message enum: Ai(AiMessage) \| Human(HumanMessage) \| System(SystemMessage) \| Tool(ToolMessage) | Variant instead of subclass |
 | `ToolCall` / `ToolMessage` | ContentBlock::ToolCall / ToolMessage | Typed ContentBlock variants; tool-result: ToolMessage per BC-2.09.002 |
 | `BaseException` hierarchy | FerrochainError 2D struct | Different structure; adk-rust P-01/P-04 adopted (CONFLICT-6) |
 | Thread (LangGraph Platform) | Thread | Same concept; no wire compat with Platform |
@@ -146,5 +148,6 @@ not retriable.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
-| 1.2 | 2026-07-15 | F-P58-03 — §ProvenanceTag and §GuardrailHook updated to BC-authoritative terminology. ProvenanceTag: `source_type`/`tool_name?`/`invocation_id?`/`timestamp` → `boundary_type` (ToolResult|RAGRetrieval|MemoryIngress), `ingress_id`, `sequence_position`; User/Model removed per BC-2.11.001 EC-004. GuardrailHook: Accept/Reject/Redact retired → `Pass`/`Fail{reason,severity}`/`Transform{new_content}` with `GuardrailResult`; callable signature updated to match interface-definitions.md v2.13. | F-P58-03 |
+| 1.3 | 2026-07-19 | F-P117-01 — add `summary_halt` to Run status lifecycle. Terminal set: completed \| failed \| cancelled \| summary_halt. `summary_halt` is a first-class terminal state reached via in_progress on the OnCeiling::Summarize path (BC-2.12.003 PC7/PC8). | F-P117-01 |
+| 1.2 | 2026-07-15 | F-P58-03 — §ProvenanceTag and §GuardrailHook updated to BC-authoritative terminology. ProvenanceTag: `source_type`/`tool_name?`/`invocation_id?`/`timestamp` → `boundary_type` (ToolResult\|RAGRetrieval\|MemoryIngress), `ingress_id`, `sequence_position`; User/Model removed per BC-2.11.001 EC-004. GuardrailHook: Accept/Reject/Redact retired → `Pass`/`Fail{reason,severity}`/`Transform{new_content}` with `GuardrailResult`; callable signature updated to match interface-definitions.md v2.13. | F-P58-03 |
 | 1.1 | 2026-07-14 | Reconciliation table line 132: changed ferrochain identifier from `Store` to `MemoryStore` to match canonical Rust trait name per BC-2.15.001 Architecture Anchors and module-decomposition.md:149 (F-P39-01, ADV-P1D-PASS-39) | F-P39-01 |

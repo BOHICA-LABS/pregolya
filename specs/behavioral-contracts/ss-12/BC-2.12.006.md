@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.006
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
+  - "1.2 (F-P117-01, fix burst 120, 2026-07-19): PC7 — add summary_halt to the enumerated transition set (RunStore must persist all lifecycle transitions including the budget-summarize terminal state per BC-2.10.003 PC8(d) and BC-2.12.003 PC8 post-fix)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "1934663"
+input-hash: "1dc4528"
 extracted_from: null
 modified: []
 deprecated: null
@@ -79,7 +80,7 @@ eviction.
 
 **RunStore:**
 7. Every `Run` state transition (queued, in_progress, interrupted, completed,
-   failed, cancelled) is written to the `RunStore` before the HTTP response
+   failed, cancelled, summary_halt) is written to the `RunStore` before the HTTP response
    is returned to the caller.
 8. `GET /threads/{thread_id}/runs/{run_id}` reads directly from the `RunStore`; no in-memory copy is
    consulted separately.

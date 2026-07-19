@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,11 +21,12 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "ecfe659"
+input-hash: "94920b6"
 changelog:
   - "1.1 (ADV-P1D-PASS-31): F-P31-01 PC18 list-runs endpoint — add limit (default 10, max 100; values > 100 clamped) and offset pagination params + declare created_at DESC ordering (pagination coherence canon)."
   - "1.2 (ADV-P1D-PASS-33): F-P33-02 add Run-Config Merge Precedence invariant — run-supplied config/metadata/context deep-merge over Assistant's stored values, run wins at leaf key. Upstream-check result: no contradicting semantics in BC-2.01.003 or semport behavioral-intent §2.3; leaf-level deep-merge adopted as spec canon."
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
+  - "1.4 (F-P117-01, fix burst 120, 2026-07-19): summary_halt promoted to first-class terminal Run status throughout (Option 1 adjudication: BC-2.10.003 PC8(d) explicitly asserts the Run status IS summary_halt '(not failed)'; entities-server.md §91 agrees). H1 title and Description: add summary_halt to state machine enumeration. PC7: add in_progress → summary_halt arc (OnCeiling::Summarize path per BC-2.10.003 PC8(c)(d)). PC8: terminal set {completed, failed, cancelled} → {completed, failed, cancelled, summary_halt}. PC13: completed_at terminal set gains summary_halt. PC18: status filter enum gains 'summary_halt'. PC19: deletable terminal states gain summary_halt. Output invariant: output populated when status ∈ {completed, summary_halt} (summary_halt output = summarize model response per BC-2.10.003 PC8(c)); null in all other states. Traceability state machine description updated."
 extracted_from: null
 modified: []
 deprecated: null
@@ -36,13 +37,13 @@ removed: null
 removal_reason: null
 ---
 
-# BC-2.12.003: Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/cancelled; interrupted is pausable/resumable)
+# BC-2.12.003: Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/cancelled/summary_halt; interrupted is pausable/resumable)
 
 ## Description
 
 A Run is a single execution of a ferrochain graph against a Thread, dispatched by
 ferrochain-server. This BC specifies the Run creation endpoint, its lifecycle state
-machine (`queued → in_progress → completed | failed | cancelled`, with `interrupted` as a pausable/resumable state), and the
+machine (`queued → in_progress → completed | failed | cancelled | summary_halt`, with `interrupted` as a pausable/resumable state; `summary_halt` is a budget-summarize terminal state per BC-2.10.003 PC8(d)), and the
 failure modes including the `E-SERVER-002 RunNotFound` error. Runs are created synchronously
 via `POST /threads/{thread_id}/runs`; execution begins asynchronously. Status can be
 polled via `GET /threads/{thread_id}/runs/{run_id}`. No wire-compatibility with
@@ -83,16 +84,18 @@ LangGraph Platform (D13).
 
 7. Lifecycle states and valid transitions:
    ```
-   queued      → in_progress  (executor picks up the run)
-   in_progress → completed    (graph reaches END)
-   in_progress → failed       (unhandled error in graph or executor)
-   in_progress → interrupted  (HITL interrupt raised; graph paused, awaiting resume)
-   in_progress → cancelled    (POST .../cancel called while run is active)
-   queued      → cancelled    (POST .../cancel called before executor picks up the run)
-   interrupted → in_progress  (caller posts resume value via POST .../runs/{run_id}/resume)
+   queued      → in_progress   (executor picks up the run)
+   in_progress → completed     (graph reaches END)
+   in_progress → failed        (unhandled error in graph or executor)
+   in_progress → interrupted   (HITL interrupt raised; graph paused, awaiting resume)
+   in_progress → cancelled     (POST .../cancel called while run is active)
+   in_progress → summary_halt  (OnCeiling::Summarize path: budget ceiling hit; one final summarize LLM call completes; model response returned as output — BC-2.10.003 PC8(c)(d))
+   queued      → cancelled     (POST .../cancel called before executor picks up the run)
+   interrupted → in_progress   (caller posts resume value via POST .../runs/{run_id}/resume)
    ```
-8. Terminal states (no further transitions possible): `completed`, `failed`, and `cancelled`.
+8. Terminal states (no further transitions possible): `completed`, `failed`, `cancelled`, and `summary_halt`.
    `interrupted` is **not** terminal — it is a pausable/resumable state.
+   `summary_halt` is terminal (no further transitions); it is not cancellable (already terminal when the cancel signal would arrive — HTTP 409 per PC12). A `summary_halt` run IS directly deletable (PC19) without needing a prior cancel step.
 9. A Run that is `interrupted` can be resumed via
    `POST /threads/{thread_id}/runs/{run_id}/resume { resume_value }` (see BC-2.05.002
    for HITL contract); this transitions the Run back to `in_progress`.
@@ -110,7 +113,7 @@ LangGraph Platform (D13).
 
 13. Returns `Run { run_id, thread_id, assistant_id, status, output?, error?, created_at, updated_at, completed_at? }`.
     `updated_at` is set on every state mutation. `completed_at` is set only on terminal
-    transition (status → `completed` | `failed` | `cancelled`); it is `null` in all
+    transition (status → `completed` | `failed` | `cancelled` | `summary_halt`); it is `null` in all
     non-terminal states (`queued`, `in_progress`, `interrupted`). Authority: F-P24-01.
 14. Returns HTTP 404 with `{ code: "E-SERVER-002", message: "RunNotFound: run '<run_id>' does not exist in thread '<thread_id>'" }` if not found.
 15. A completed Run carries `output: GraphOutput` (the final state values).
@@ -120,13 +123,13 @@ LangGraph Platform (D13).
 ### List Runs (`GET /threads/{thread_id}/runs`)
 
 17. Returns `{ runs: [Run], total_count: u64 }` for all runs on the thread.
-18. Accepts `status` filter query param (`"queued"`, `"in_progress"`, `"completed"`, `"failed"`, `"interrupted"`, `"cancelled"`) and canonical pagination params: `limit` (default 10, max 100; values > 100 clamped to 100) and `offset` (default 0); results ordered `created_at` descending (F-P31-01, ADV-P1D-PASS-31).
+18. Accepts `status` filter query param (`"queued"`, `"in_progress"`, `"completed"`, `"failed"`, `"interrupted"`, `"cancelled"`, `"summary_halt"`) and canonical pagination params: `limit` (default 10, max 100; values > 100 clamped to 100) and `offset` (default 0); results ordered `created_at` descending (F-P31-01, ADV-P1D-PASS-31).
 
 ### Delete Run (`DELETE /threads/{thread_id}/runs/{run_id}`)
 
-19. Deletes a Run record that is in a terminal state (`completed`, `failed`, or `cancelled`).
+19. Deletes a Run record that is in a terminal state (`completed`, `failed`, `cancelled`, or `summary_halt`).
     Cannot delete a `queued`, `in_progress`, or `interrupted` Run — HTTP 409 is returned.
-    For `interrupted` Runs: either resume (POST .../resume) to complete/fail/cancel, or
+    For `interrupted` Runs: either resume (POST .../resume) to complete/fail/cancel/summary_halt, or
     cancel first (POST .../cancel → `cancelled`), then delete once terminal.
     **Decision basis (F-02):** DELETE = record deletion only. Separation from cancellation
     follows langgraph-sdk semantics (`runs.cancel()` ≠ delete). Prevents accidental data
@@ -139,8 +142,9 @@ LangGraph Platform (D13).
 - The executor MUST NOT start a Run that was created in a `queued` state on a different
   server instance without distributed coordination — in single-node deployment, all
   `queued` Runs on startup are retried.
-- Run output (`output`) is populated ONLY when `status = "completed"`. It is `null` in
-  all other states.
+- Run output (`output`) is populated when `status ∈ {"completed", "summary_halt"}`. For
+  `summary_halt`, output carries the summarize model response (BC-2.10.003 PC8(c)). It is
+  `null` in all other states (`queued`, `in_progress`, `interrupted`, `failed`, `cancelled`).
 - Run error (`error`) is populated ONLY when `status = "failed"`. It is `null` in all other states.
 - A Run cannot be in `in_progress` state if no executor task is active for it (no orphan runs).
 - **Run-Config Merge Precedence (F-P33-02):** When a Create-Run request body supplies `config`,
@@ -223,7 +227,7 @@ _[to be filled after verification-architecture phase]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-014 |
-| Capability Anchor Justification | CAP-014 ("Durable-Run HTTP Server (Threads, Assistants, Runs, Crons)") per capabilities-p1-p2.md §CAP-014 — this BC implements the Run resource lifecycle, which is explicitly listed as the third of the four managed resources: "Run (single execution)". Canonical state machine: queued → in_progress → completed/failed/cancelled; interrupted is pausable/resumable (PC7-PC9 are the authoritative source; see PC7 for transition arcs, PC8 for terminal-set definition, PC9 for interrupted→in_progress resume arc) |
+| Capability Anchor Justification | CAP-014 ("Durable-Run HTTP Server (Threads, Assistants, Runs, Crons)") per capabilities-p1-p2.md §CAP-014 — this BC implements the Run resource lifecycle, which is explicitly listed as the third of the four managed resources: "Run (single execution)". Canonical state machine: queued → in_progress → completed/failed/cancelled/summary_halt; interrupted is pausable/resumable (PC7-PC9 are the authoritative source; see PC7 for transition arcs, PC8 for terminal-set definition, PC9 for interrupted→in_progress resume arc) |
 | L2 Domain Invariants | — |
 | DEC Reference | DEC-006 (Resume Value Injection with Empty Interrupt Queue — applies to the `interrupted` state resume path) |
 | Risk Source | — |

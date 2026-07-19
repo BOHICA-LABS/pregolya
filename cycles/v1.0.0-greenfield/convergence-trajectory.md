@@ -696,12 +696,30 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 | Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
 |------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
 | P1D-115 | 2026-07-19 | 2 | 0 | 2 | 0 | 0 | 0 | HIGH | 0/3 | FINDINGS_REMAIN (2 HIGH; counter 0/3 unchanged) |
+| P1D-116 | 2026-07-19 | 1 | 0 | 1 | 0 | 0 | 0 | HIGH | 0/3 | FINDINGS_REMAIN (1 HIGH; counter 0/3 unchanged) |
+| P1D-117 | 2026-07-19 | 1 | 0 | 1 | 0 | 0 | 0 | HIGH | 0/3 | FINDINGS_REMAIN (1 HIGH; counter 0/3 unchanged; novelty HIGH — SS-10↔SS-12 cross-subsystem gap new class) |
 
 **Axes exercised (burst-200 pass-115):** F-P114-01 RESOLVED at design level — crash-recovery walk end-to-end PASS; 7 anchor targets verified (1 partial → F-P115-02 on separate axis); zero rev-1 BC residue (AtomicU64/next_id/per saver instance) in live spec corpus (semport + retraction-table exempt).
 **Fix summary (burst 200 — fix burst 118):** F-P115-01 HIGH (architect) — verification-architecture v1.3→v1.4 (checkpoint::clock sync-core mandate: "monotonic AtomicU64 read — sync increment and compare" → "pure get_next_version(current) successor function; stateless, no atomic counter"); purity-boundary-map v1.4→v1.5 (checkpoint::clock Pure Guarantee: "Monotonic counter increment" → "Pure successor function of caller-supplied `current`"). F-P115-02 HIGH (architect + PO) — interface-definitions v2.35→v2.36 (§CheckpointSaver 3-method→5-method: add `put` + `get_next_version` provided method; BC anchor range 001–006→001–007; Gate #31 type note extended); ADR-005 v1.1→v1.2 (§CheckpointSaver Trait Placement adjudication); BC-2.04.003 v1.4→v1.5 (PC1 sharpened to provided-method wording); api-surface v1.4→v1.5 (BC anchor range 001–006→001–007). NOTE: initial paper-fix on api-surface (changelog-only, no body edit) caught by orchestrator TD-VSDD-059 verification and corrected in-burst.
 **Hash sweep (D18-P89-A):** STALE=0 confirmed in burst-200 (see compute-input-hash sweep below).
 **Trajectory after:** →2 (P1D-115); cumulative tail →2→0→1→2
 **Counter:** 0/3 (unchanged; fix burst 118 pushes new HEAD; NEXT: pass 116)
+
+---
+
+**Axes exercised (burst-201 pass-116):** F-P115-01/02 RESOLVED verified — ADR-005 v1.4 &self in get_next_version; §Object-Safety table (all 5 CheckpointSaver methods dyn-compatible); §Adjacent Trait Object-Safety Adjudications (Runnable→DynRunnable seam; BaseChatModel static dispatch; MonotonicClock ZST receiver-less confirmed separate symbol); interface-definitions v2.37 &self + Pin<Box<dyn Stream>>; BC-2.04.003 v1.6 PC1 &self.
+**Fix summary (burst 201 — fix burst 119):** F-P116-01 HIGH (architect + PO) — ADR-005 v1.2→v1.3 (&self on get_next_version + §Object-Safety table 5-method); ADR-005 v1.3→v1.4 (§Adjacent Trait Object-Safety Adjudications: Runnable→DynRunnable seam, BaseChatModel static dispatch, MonotonicClock ZST receiver-less via separate symbol); interface-definitions v2.36→v2.37 (get_next_version &self; list() Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>); BC-2.04.003 v1.5→v1.6 (PC1 &self + Architecture Anchors &self cite).
+**Hash sweep (D18-P89-A):** STALE=0 confirmed in burst-201.
+**Trajectory after:** →1 (P1D-116); cumulative tail →2→0→1→2→1
+**Counter:** 0/3 (unchanged; fix burst 119 pushes new HEAD; NEXT: pass 117)
+
+---
+
+**Axes exercised (burst-202 pass-117):** F-P116-01 RESOLVED verified — ADR-005 v1.4 §Object-Safety + §Adjacent Adjudications; interface-definitions v2.37 &self + Pin<Box<dyn Stream>>; BC-2.04.003 v1.6 PC1 &self. NFR-009 anchor, ss-10 budget canon, ss-12↔api-surface BC anchor range: all cleared.
+**Fix summary (burst 202 — fix burst 120):** F-P117-01 HIGH (PO + BA) — BC-2.12.003 v1.3→v1.4 (PC7 in_progress→summary_halt arc; PC8 terminal set +summary_halt; PC13 completed_at +summary_halt; PC18 status filter +summary_halt; PC19 deletable +summary_halt; Output Invariant status ∈ {completed,summary_halt}); BC-2.12.006 v1.1→v1.2 (PC7 RunStore +summary_halt); BC-2.06.001 v1.3→v1.4 (EC-005 RunEnd emitted for completed+summary_halt); interface-definitions v2.37→v2.38 (status enum +summary_halt; completed_at +summary_halt; output note +summary_halt; GET filter +summary_halt; DELETE +summary_halt); entities-server v1.7→v1.8 (RunStatus lifecycle + completed_at semantics); ubiquitous-language-server v1.2→v1.3 (Run lifecycle). Option 1 adjudication: summary_halt first-class terminal.
+**Hash sweep (D18-P89-A):** STALE=0 TOTAL=127 MATCH=127 confirmed in burst-202 (two-pass: 82 files + 3 files stale).
+**Trajectory after:** →1 (P1D-117); cumulative tail →2→0→1→2→1→1
+**Counter:** 0/3 (unchanged; fix burst 120 pushes new HEAD; NEXT: pass 118)
 
 ---
 
