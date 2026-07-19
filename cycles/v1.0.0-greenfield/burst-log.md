@@ -1842,3 +1842,82 @@ Phase 1d pass 68 adversarial review completed: CLEAN — 0 findings. Counter adv
 **Dim-6:** No new decisions codified. D18-P89-A + D18-P90-A standing rules apply without amendment.
 **Dim-7:** Finding trajectory tail →1→1→1→1 (unchanged; bookkeeping-only burst; no pass appended).
 **Closes:** none — no findings closed in this burst. Hash-currency closure only.
+
+---
+
+## Burst: pass-108 record + fix burst 112 (F-P108-04/01/02/03 RESOLVED) (2026-07-19)
+
+**Parent-commit:** 1ae535e (burst-192 — hash-currency closure D18-P89-A cascade)
+**Adversary verdict:** NOT CLEAN strict+PR-merge — 1H + 2M + 1L (F-P108-04 HIGH, F-P108-01 MED, F-P108-02 MED, F-P108-03 LOW). Counter 0/3 (unchanged).
+**Files touched (Dim-1): 8 unique files**
+- specs/prd-supplements/bc-authoring-plan.md (v2.34→v2.35: gate #33 STRUCT-PLACEHOLDER PARITY CENSUS extension — Steps A/B/C added; three motivating instances documented; total_standing_gates unchanged at 34)
+- specs/behavioral-contracts/ss-08/BC-2.08.014.md (v1.1→v1.2: F-P108-01 — EC-004+TV-005 `{ providers_attempted, last_error }` → `{ providers_attempted, last_error_code, last_provider }`; single combined field split into 2 independent fields matching taxonomy placeholders)
+- specs/behavioral-contracts/ss-04/BC-2.04.007.md (v1.4→v1.5: F-P108-02 — PC4 struct field name corrected `source` → `message` for intra-BC consistency with PC5/EC-002/TV)
+- specs/behavioral-contracts/ss-08/BC-2.08.013.md (v1.1→v1.2: F-P108-03 adjudicated+fixed — EC-002 `{ dialect, reason }` expanded to `{ dialect, element, offset, parse_error }`; trailing-catch-all disqualified because `<n>` is mid-message not trailing)
+- specs/prd-supplements/error-taxonomy.md (v1.21→v1.22: corrigendum #2 — v1.21 "17 PASS" claim corrected; 3 additional FAIL codes identified; corrected census 22-code scope: 8 FAIL all-fixed / 14 PASS; plus 7 additional codes from Step A: all PASS; v1.21 row NOT rewritten)
+- cycles/v1.0.0-greenfield/adversarial-reviews/pass-108.md (new)
+- STATE.md (v3.32→v3.33; burst-193 row added; burst-188 archived; PASS-109 checkpoint)
+- cycles/v1.0.0-greenfield/burst-log.md (this file; burst-193 entry added; burst-188 archive)
+
+**Dim-2:** No new behavioral contracts authored this burst. Three existing BCs revised (BC-2.08.014 v1.1→v1.2; BC-2.04.007 v1.4→v1.5; BC-2.08.013 v1.1→v1.2) — struct field corrections only; no new BCs, no capability changes.
+**D18-P89-A sweep:** Mechanical method used (`compute-input-hash --scan specs --update` from .factory/). Files edited in this burst: bc-authoring-plan.md, error-taxonomy.md, BC-2.04.007.md, BC-2.08.013.md, BC-2.08.014.md. Transitive cascade (D18-P90-A): BCs listing any of these files in `inputs:` refreshed. TOTAL MATCH confirmed (STALE=0 after --scan specs run).
+
+**Codifications:** D18-P108-04 — STRUCT-PLACEHOLDER PARITY CENSUS procedure codified in gate #33 Steps A–C. Trigger: any BC error-struct-site edit, any taxonomy Message Format edit, once per adversary pass touching error semantics. Two consecutive false sweep claims (v1.20 "21 PASS", v1.21 "17 PASS") confirm methodology was systemically inadequate. Step B check 2 (placeholder SUPERSET + no multi-placeholder combined field) is the key addition. F-P108-03 adjudication: trailing catch-all `reason` is NOT acceptable when the taxonomy has a mid-message placeholder — all preceding and trailing positions must have dedicated fields; `offset` field for `<n>` is semantically equivalent (noted in changelog as not a listed alias; documented in place).
+
+**Dim-5:** counter 0/3 (unchanged; pass-108 NOT CLEAN strict); next action: dispatch adversary pass 109
+**Dim-6:** D18-P108-04 codified in bc-authoring-plan v2.35 gate #33.
+**Dim-7:** Finding trajectory tail →1→1→1→4 (passes 105/106/107/108); trajectory appended →4 (pass-108).
+
+**Root cause documented:** v1.20 and v1.21 struct-bearing sweeps assessed "does a struct-shorthand site exist near this code?" rather than "does the struct field set constitute a SUPERSET of all distinct taxonomy placeholders?". Existence-check passed E-PROV-010 (combined field), E-CHKPT-004 (inconsistent field name across sites), E-PROV-009 (catch-all embedding mid-message placeholder) — all three structurally unable to construct the canonical message from struct fields alone.
+
+### Burst-193 Step-C Gate #33 STRUCT-PLACEHOLDER PARITY CENSUS (bc-authoring-plan v2.35)
+
+End-to-end census per gate #33 procedure. Step A grep run with both commands (primary: `Err(E-` + `{`; secondary: `E-[A-Z]*-[0-9]{3} [A-Z][A-Za-z]* {`). Total struct-bearing codes identified: **36**. Summary: **8 FAIL (all fixed across 3 bursts) / 28 PASS (21 clean + 5 PASS-NOTE + 2 PASS-ABBREV) / ZERO remaining**.
+
+| Code | Variant Name | BC Site(s) | Struct Fields (post-fix) | Taxonomy Placeholders | Semantic Aliases Noted | Step-B Verdict |
+|------|-------------|------------|--------------------------|----------------------|-----------------------|----------------|
+| E-MEMORY-006 | InsufficientPrivilege | BC-2.15.003 EC-005, TV | {operation, required} | `<operation>`, `<required>` | — | FAIL→FIXED-v1.20 (burst-110) |
+| E-GRAPH-011 | ConditionalEdgePanic | BC-2.02.005 PC5, EC-003, TV-005 | {source_node, message} | `<source_node>`, `<message>` | — | FAIL→FIXED-v1.21 (burst-191) |
+| E-GRAPH-007 | NodeAttributeNotFound | BC-2.02.001 EC-001, TV-005 | {node_id, key} | `<node_id>`, `<key>` | — | FAIL→FIXED-v1.21 (burst-191) |
+| E-GRAPH-001 | ChannelDispatchError | BC-2.02.002 PC3, EC-001, EC-002, TV-002 | {channel, task_ids, step} | `<channel>`, `<task_ids>`, `<n>` | step↔`<n>` | FAIL→FIXED-v1.21 (burst-191) |
+| E-GRAPH-004 | ChannelWriterConflict | BC-2.02.003 EC-003, TV-004 | {channel, writer, step} | `<channel>`, `<writer>`, `<n>` | step↔`<n>` | FAIL→FIXED-v1.21 (burst-191) |
+| E-PROV-010 | ProviderChainExhausted | BC-2.08.014 EC-004, TV-005 | {providers_attempted, last_error_code, last_provider} | `<N>`, `<last_error_code>`, `<last_provider>` | — | FAIL→FIXED-v1.22 (burst-193) |
+| E-CHKPT-004 | EncryptionKeyRotationFailed | BC-2.04.007 PC4 (sole defective site) | {message} | `<reason>` | — | FAIL→FIXED-v1.22 (burst-193) |
+| E-PROV-009 | ToolCallDialectParseError | BC-2.08.013 EC-002 | {dialect, element, offset, parse_error} | `<dialect>`, `<element>`, `<n>`, `<parse_error>` | offset↔`<n>` (response position; semantically equivalent; not in listed alias set — noted in BC changelog) | FAIL→FIXED-v1.22 (burst-193) |
+| E-GRAPH-002 | BarrierWaitTimeout | BC-2.02.006 EC-001 | {barrier_id, step, timeout_ms} | `<barrier_id>`, `<n>`, `<timeout_ms>` | step↔`<n>` | PASS-NOTE |
+| E-GRAPH-008 | ChannelCapacityExceeded | BC-2.02.008 EC-001 | {channel, step, capacity} | `<channel>`, `<n>`, `<capacity>` | step↔`<n>` | PASS-NOTE |
+| E-GRAPH-010 | NodeTypeMismatch | BC-2.02.010 EC-001 | {node, expected_type, actual_type} | `<node_id>`, `<expected>`, `<actual>` | node↔`<node_id>` | PASS-NOTE |
+| E-GRAPH-013 | InsufficientApproverRole | BC-2.05.006 EC-001 | {node, required_tier, actual_tier} | `<node_id>`, `<required>`, `<actual>` | node↔`<node_id>` | PASS-NOTE |
+| E-SERVER-015 | RunAlreadyExecuting | BC-2.12.012 EC-001 | {thread_id} | `<run_id>` | thread_id↔`<run_id>` (a run is identified by its thread_id in concurrent execution context) | PASS-NOTE |
+| E-CHKPT-003 | CheckpointDeserializeError | BC-2.04.005 EC-006, TV-008 | {thread_id, checkpoint_id, reason} | `<thread_id>`, `<checkpoint_id>`, `<reason>` | trailing `reason` = accepted catch-all (all preceding fields explicit; sole remaining placeholder at trailing position) | PASS-ABBREV |
+| E-MCP-005 | McpServerBindFailed | BC-2.09.006 EC-001 | {transport, reason} | `<transport_error>`, `<reason>` | transport↔`<transport_error>` (abbreviation; accepted per bc-authoring-plan alias list) | PASS-ABBREV |
+| E-MEMORY-002 | StorageFull | BC-2.15.001 EC-002 | {backend, path} | `<backend>`, `<path>` | — | PASS |
+| E-MEMORY-003 | ScopeAccessDenied | BC-2.15.002 EC-001 | {requested_scope, caller_identity} | `<caller_identity>`, `<requested_scope>` | — | PASS |
+| E-MEMORY-005 | ErasurePartialFailure | BC-2.15.004 EC-003 | {user_id, backend_error} | `<user_id>`, `<reason>` | — | PASS |
+| E-MEMORY-007 | MemoryWriteGuardDenied | BC-2.15.005 PC2 | {ns, key, reason} | `<ns>`, `<key>`, `<reason>` | — | PASS |
+| E-MEMORY-008 | MemoryStoreReadFailed | BC-2.15.004 EC-004 | {backend, path} | `<backend>`, `<path>` | — | PASS |
+| E-SBXD-002 | WorkspaceEscapeAttempt | BC-2.13.005 EC-001 | {path, operation} | `<path>`, `<operation>` | — | PASS |
+| E-SBXD-003 | SandboxPolicyViolation | BC-2.13.003 EC-001 | {reason} | `<reason>` | — | PASS |
+| E-SBXD-006 | InvalidEnvAllowlistPattern | BC-2.13.007 PC5, EC-003 | {pattern} | `<pattern>` | — | PASS |
+| E-CRON-001 | InvalidSchedule | BC-2.12.003 EC-001 | {expression, reason} | `<expression>`, `<reason>` | — | PASS |
+| E-CRON-003 | ScheduleQueueFull | BC-2.12.004 EC-001 | {queue, capacity} | `<queue>`, `<capacity>` | — | PASS |
+| E-PROV-007 | StructuredOutputRefused | BC-2.08.003 EC-001 | {refusal_message} | `<refusal_message>` | — | PASS |
+| E-PROV-008 | ProviderHttpError | BC-2.08.004 EC-004, EC-005 | {provider, status, body_preview} | `<provider>`, `<status>`, `<body_preview>` | — | PASS |
+| E-SERVER-007 | ThreadAlreadyExists | BC-2.12.001 EC-001 | {id} | `<id>` | — | PASS |
+| E-GRAPH-003 | ReducerPanic | BC-2.02.003 EC-001 | {channel, message} | `<channel>`, `<message>` | — | PASS |
+| E-GRAPH-005 | NodeInvocationPanic | BC-2.02.005 EC-001 | {node_id, message} | `<node_id>`, `<message>` | — | PASS |
+| E-GRAPH-006 | SendChannelClosed | BC-2.02.006 EC-002 | {channel} | `<channel>` | — | PASS |
+| E-GRAPH-009 | BranchKeyNotFound | BC-2.02.009 EC-001 | {node_id, key, route} | `<node_id>`, `<key>`, `<route>` | — | PASS |
+| E-GRAPH-012 | GraphCycleDetected | BC-2.02.012 EC-001 | {cycle_path} | `<cycle_path>` | — | PASS |
+| E-GRAPH-014 | StateKeyConflict | BC-2.02.014 EC-001 | {key, source_a, source_b} | `<key>`, `<source_a>`, `<source_b>` | — | PASS |
+| E-GRAPH-017 | GraphRecursionLimitExceeded | BC-2.03.001 EC-001 | {recursion_limit, depth} | `<limit>`, `<depth>` | — | PASS |
+| E-CHKPT-008 | FtsLimitZero | BC-2.04.008 EC-006 | {fts_limit} | `<fts_limit>` | — | PASS |
+
+**Census summary:** 36 struct-bearing codes total. FAIL: 8 (1 v1.20 + 4 v1.21 + 3 this burst — ALL FIXED). PASS: 28 (21 clean + 5 PASS-NOTE + 2 PASS-ABBREV). ZERO FAIL remaining after burst-193 fixes. Completeness: Step A both grep commands run; all codes with struct-shorthand `Err(E-` + `{` sites included. CENSUS VALID.
+**Closes:** F-P108-04 HIGH [process-gap] (gate #33 STRUCT-PLACEHOLDER PARITY CENSUS codified in bc-authoring-plan v2.35); F-P108-01 MED (BC-2.08.014 v1.2 EC-004/TV-005 expanded to 3-field struct); F-P108-02 MED (BC-2.04.007 v1.5 PC4 field name corrected source→message); F-P108-03 LOW [pending-intent] (BC-2.08.013 v1.2 EC-002 expanded to 4-field struct; catch-all disqualified — adjudicated in-burst).
+
+---
+
+## Archived from STATE.md Current Phase Steps (burst 193 rotation)
+
+| Phase 1d burst 188 — bookkeeping/hash-currency closure (D18-P89-A) | state-manager | COMPLETE | Burst 188 (no adversary pass): pre-existing stale input-hash files resolved — root cause tool-version-upgrade drift (pre-rc.18 hashes; rc.22 AWK block-boundary detection changed + REPO_ROOT fallback added). L2-INDEX.md: 5da00db→3c54b46; ARCH-INDEX.md: b6f6a46→311dc79 (refreshed 4× due to cascade: prd.md + prd-supplements/module-criticality.md cascade). Full D18-P90-A transitive cascade: 18 spec files + 95 BCs refreshed to rc.22 canonical hashes. Census end-state: TOTAL=162, MATCH=128 spec corpus (zero stale spec files), STALE=16 cycle historical (live-state exempt), NOINPUT=18. TOTAL MATCH confirmed. No content changes; hash-currency closure only. Trajectory-tail →2→2→2→1 (unchanged; bookkeeping-only burst). Counter 0/3. Fix bursts 108 (unchanged). Burst 188. |

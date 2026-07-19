@@ -773,6 +773,19 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 
 ---
 
+## Checkpoint archived from burst 192 (2026-07-19T11:43:00Z)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 107 passes / 111 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 513=504+9, purity-map 58, 13 ADRs [ADR-006 rev-4], 34 gates [gate #28 Rules 1–6, five-class direction model], StreamEvent 12 variants, VP census 141). F-P107-01 RESOLVED (burst 191): 4 ss-02 BC structs corrected (E-GRAPH-011 BC-2.02.005 v1.1→v1.2 {source}→{source_node,message}; E-GRAPH-007 BC-2.02.001 v1.1→v1.2 {key}→{node_id,key}; E-GRAPH-001 BC-2.02.002 v1.1→v1.2 {channel}→{channel,task_ids,step}; E-GRAPH-004 BC-2.02.003 v1.1→v1.2 {channel,writer}→{channel,writer,step}); error-taxonomy v1.20→v1.21 corrigendum (v1.20 '21 PASS' claim corrected to 5 FAIL/17 PASS; root cause: EC-003 ambiguous 'error source' phrasing); burst-192 hash-currency closure: 3 BC hashes refreshed (BC-2.07.001 →43fee7a; BC-2.14.001 →cda09ef; BC-2.14.002 →cda09ef); D18-P89-A TOTAL MATCH 126/126. Trajectory-tail →1→1→1→1. NEXT ACTION: dispatch adversary pass 108. Loop per D15 until 3/3 CLEAN(strict), then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
+### PASS-108 SIBLING-CHECKS: (a) 4 ss-02 BC structs match taxonomy placeholders 1:1: E-GRAPH-001 BC-2.02.002 v1.2 struct {channel,task_ids,step} ↔ `<channel>/<task_ids>/<n>` PASS; E-GRAPH-004 BC-2.02.003 v1.2 struct {channel,writer,step} ↔ `<channel>/<writer>/<n>` PASS; E-GRAPH-007 BC-2.02.001 v1.2 struct {node_id,key} ↔ `<node_id>/<key>` PASS; E-GRAPH-011 BC-2.02.005 v1.2 struct {source_node,message} ↔ `<source_node>/<message>` PASS; all four at v1.2, ascending changelogs, D18-P86-A BC timestamps frozen at v1.0 authoring date; (b) corrigendum row present as top entry in error-taxonomy v1.21; v1.20 row NOT rewritten — preserved as historical record; (c) census claim in v1.21 states "22 codes checked, 5 FAIL (E-MEMORY-006 fixed v1.20; E-GRAPH-011, E-GRAPH-007, E-GRAPH-001, E-GRAPH-004 fixed this burst), 17 PASS"; (d) grep "panic message as the error source" across .factory/: zero live hits — contradiction phrasing removed from BC-2.02.005 EC-003; (e) no interface-definitions drift — the 4 expanded structs (E-GRAPH-001/004/007/011) are BC-anchor structs, not interface-definitions types; interface-definitions §GRAPH section unchanged.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3.
+### DECISION DELTA (this session, bursts 164–192): D18-P86-A through D18-P103-A (14 decisions; no new decisions in bursts 186–192; full details in burst-186 session-checkpoints.md).
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule during streaks (bookkeeping-only commits).
+### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 192 | Counter 0/3 | No open findings (F-P107-01 RESOLVED)
+
+---
+
 ## Checkpoint archived from burst 188 (2026-07-19T00:26:00Z)
 
 ### RESUME IN ONE BREATH

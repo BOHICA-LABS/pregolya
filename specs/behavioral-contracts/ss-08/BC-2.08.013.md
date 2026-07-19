@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.013
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -12,6 +12,7 @@ subsystem: SS-08
 capability: CAP-009
 changelog:
   - "1.1 (OBS-P77-B, 2026-07-15): Architecture Anchor corrected — 'built-in enum variants' → 'built-in trait implementations'. ToolCallDialect is an object-safe pluggable trait (per BC body Description and interface-definitions v2.23); NativeOpenAiJson, NativeAnthropic, HermesChatMlXml are concrete struct implementations of that trait, not enum variants."
+  - "1.2 (F-P108-03, 2026-07-18): EC-002 expanded from 2-field catch-all `{ dialect, reason }` to 4-field explicit struct `{ dialect, element, offset, parse_error }`. Adjudication: the taxonomy Message Format for E-PROV-009 has 4 distinct placeholders (`<dialect>`, `<element>`, `<n>`, `<parse_error>`); the `<n>` offset is MID-message (not trailing), making a catch-all `reason` structurally unable to render independent `<element>` and `<n>` values. Expanded variant: `{ dialect: \"HermesChatMlXml\", element: \"<tool_call>\", offset: 2, parse_error: \"key must be a string\" }`. Sibling sweep (all E-PROV-009 sites in this BC): PC8 uses FerrochainError message-template form (correctly shows 4 values in message string); PC9, EC-005, TV-006 use bare form (no struct fields; not subject to parity check). No taxonomy change needed — E-PROV-009 message format already shows 4 placeholders."
 wave: 2
 phase: 1b
 producer: product-owner
@@ -122,7 +123,7 @@ Text outside tags preserved; tool call parsed.
 ### EC-002: HermesChatMlXml — malformed JSON in tool_call tag
 **Scenario:** Model emits `<tool_call>{name: get_weather}</tool_call>` (not valid JSON).
 **Expected behavior:** `Err(E-PROV-009 ToolCallDialectParseError { dialect: "HermesChatMlXml",
-reason: "JSON parse error at offset N: key must be a string" })`.
+element: "<tool_call>", offset: 2, parse_error: "key must be a string" })`.
 
 ### EC-003: HermesChatMlXml — multiple tool calls in one response
 **Scenario:** Model emits two `<tool_call>` tags in one assistant message.

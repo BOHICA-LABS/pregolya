@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.34"
+version: "2.35"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -1856,6 +1856,101 @@ split by wave avoids exception).
         chain semantics / EC-002 = credential-refresh success; correct = PC5 / EC-004) and
         F-P78-03 (E-PROV-009 cited PC4 = NativeAnthropic success-parse; correct = PC8/PC9/EC-002).
 
+    **STRUCT-PLACEHOLDER PARITY CENSUS (D18-P108-04, F-P108-04 [process-gap]):**
+
+    Presence-verification (steps 1–6) and semantic-agreement (steps 7–11) are necessary but
+    not sufficient. A code whose taxonomy message format uses N distinct dynamic placeholders
+    must be renderable from N independently-accessible fields in the variant struct. A single
+    "catch-all" field that embeds multiple placeholder values (e.g., `last_error:
+    "E-PROV-008/provider-b"` combining `<last_error_code>` and `<last_provider>`) or an
+    intra-BC field-name inconsistency (e.g., `{ source: <reason> }` in PC4 but `{ message:
+    "EncryptionKeyRotationFailed: ..." }` in PC5) silently prevents the canonical message from
+    being constructed from struct fields alone.
+
+    Extended procedure (performed AFTER steps 7–11, on every BC error-struct-site edit and
+    once per adversarial pass touching error semantics):
+
+    **Step A — Enumerate all struct-shorthand sites:**
+    ```
+    # Primary: Err( with brace-open struct shorthand
+    grep -rn 'Err(E-' .factory/specs/behavioral-contracts/ --include="*.md" \
+      | grep '{' | grep -v "~~\|changelog"
+    # Secondary: variant-name followed by brace (catches non-Err( forms)
+    grep -rn 'E-[A-Z]*-[0-9]\{3\}[[:space:]][A-Z][A-Za-z]*[[:space:]]*{' \
+      .factory/specs/behavioral-contracts/ --include="*.md" | grep -v "~~\|changelog"
+    ```
+    Collect the complete list of `(code, file, line)` tuples where a struct shorthand
+    (`VariantName { field: value, ... }`) appears.
+
+    **Step B — Per-code assessment (three checks):**
+
+    1. **Intra-BC/intra-corpus field-name consistency:** all sites for the same variant in the
+       same BC must use identical field names. If `{ source: ... }` appears in PC4 but
+       `{ message: "..." }` in PC5/EC/TV, one site is wrong — BC-wins rule: the site used by
+       the majority or by the most authoritative construct (TV/EC over PC description prose)
+       determines the canonical field name; update the minority site.
+
+    2. **Placeholder coverage:** collect the DISTINCT dynamic placeholders from the taxonomy
+       Message Format (`<placeholder>` tokens). The struct field set must be a SUPERSET of
+       those placeholders. Known semantic aliases are acceptable and must be noted:
+       - `step` ↔ `<n>` (super-step counter)
+       - `node` ↔ `<node_id>` (graph node identifier)
+       - `thread_id` ↔ `<run_id>` (in interrupt context — a run is identified by its thread)
+       - `transport_error` ↔ `<transport_error>` (transport failure detail)
+       A single catch-all field that embeds MULTIPLE placeholder values mid-string is NOT
+       acceptable when the taxonomy has more than one distinct placeholder (the message cannot
+       be reconstructed from fields with independent variable positions). A trailing catch-all
+       `reason` is ONLY acceptable when: (a) the taxonomy has exactly ONE remaining placeholder
+       at the TRAILING position of the message, and (b) all preceding placeholders already have
+       dedicated struct fields. The accepted trailing catch-all instances are:
+       E-CHKPT-003 `{ thread_id, checkpoint_id, reason }`, E-MCP-005 `{ transport, reason }`,
+       E-SBXD-003 `{ reason }` (static prefix + single trailing placeholder).
+
+    3. **No-hardcoded-value check in general-case EC/PC:** where the BC parameterizes a field
+       (e.g., `<key_id>`), the struct field must not use a hardcoded value in a general-case
+       EC or PC; only concrete test-vector examples may use concrete literals.
+
+    **Step C — Output the per-code TABLE (MANDATORY; prose completeness claims are INVALID):**
+
+    | Code | Variant Name | BC Sites (file:line) | Struct Fields | Taxonomy Placeholders | Semantic Aliases Noted | Step-B Verdict |
+    |------|-------------|---------------------|---------------|----------------------|-----------------------|----------------|
+
+    A **PASS** verdict means all three Step B checks pass for every site of that code.
+    A **FAIL** verdict means at least one check fails; the failing site(s) must be fixed in
+    the same burst.
+
+    **Trigger:** Any edit to a BC error-struct site (add, rename, or remove a field), any
+    taxonomy Message Format edit, and once per adversarial pass touching error semantics.
+
+    **Completeness gate:** The census result is only valid if Step A was run with both grep
+    commands and ALL codes with at least one struct-shorthand site are included in Step C.
+    A census table missing any code from Step A output is INCOMPLETE and the completeness
+    claim is invalid.
+
+    **Motivating instances (F-P108-04, ADV-P1D-PASS-108):**
+    - **E-PROV-010 ProviderChainExhausted:** v1.20 sweep ("21 PASS") and v1.21 corrigendum
+      ("17 PASS") both missed: BC-2.08.014 EC-004 used `{ providers_attempted, last_error }`
+      with `last_error: "E-PROV-008/provider-b"` combining two taxonomy placeholders
+      `<last_error_code>/<last_provider>` into one field. Step B check 2 detects this:
+      taxonomy has 3 distinct placeholders (`<N>`, `<last_error_code>`, `<last_provider>`);
+      struct has only 2 fields with one combining two values. Fixed in BC-2.08.014 v1.2.
+    - **E-CHKPT-004 EncryptionKeyRotationFailed:** v1.4 prefix-sweep fixed 4 sites but missed
+      PC4, which still used `{ source: <reason> }` while PC5/EC-002/TV used `{ message:
+      "EncryptionKeyRotationFailed: ..." }`. Step B check 1 (intra-BC consistency) would have
+      caught this immediately. Fixed in BC-2.04.007 v1.5.
+    - **E-PROV-009 ToolCallDialectParseError:** EC-002 used `{ dialect, reason }` with
+      `reason: "JSON parse error at offset N: key must be a string"` — the `N` offset is
+      MID-message in the 4-placeholder taxonomy format, so `reason` cannot independently
+      render `<element>` and `<n>`. Step B check 2 catches: 4 distinct placeholders in
+      taxonomy (`<dialect>`, `<element>`, `<n>`, `<parse_error>`); struct has only 2 fields.
+      Expanded to `{ dialect, element, offset, parse_error }` in BC-2.08.013 v1.2.
+    - **Root cause of repeated false PASS across 3 bursts:** prior sweeps enumerated struct
+      SITES but assessed only "does some struct field exist?" — they did not systematically
+      map each taxonomy placeholder to a named struct field. Step B makes this mapping
+      explicit and mandatory per site.
+
+    Source: ADV-P1D-PASS-108 §F-P108-04 [process-gap].
+
     **Motivating instance (F-P77-01, ADV-P1D-PASS-77):** E-SBXD-006 taxonomy row described a
     REGEX model ("is not a valid regex pattern — <reason>"; "fails regex compilation") while
     BC-2.13.007 PC5/EC-003/EC-005/TV-005/TV-006 mandates the EXACT-NAME/WILDCARD model
@@ -1949,6 +2044,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.35 | 2026-07-18 | F-P108-04 (HIGH, process-gap): gate #33 extended with STRUCT-PLACEHOLDER PARITY CENSUS sub-check (Steps A–C). Two consecutive sweeps (v1.20 "21 PASS," v1.21 "17 PASS") produced false completeness claims because they checked that struct fields EXISTED but did not verify CONSTRUCTIBILITY: (1) intra-BC field-name consistency across sites, and (2) struct field set is a SUPERSET of all distinct taxonomy placeholders with no combined multi-placeholder field. Root cause confirmed by three burst-112 failures: E-PROV-010 (`last_error` combined `<last_error_code>/<last_provider>` into one field), E-CHKPT-004 (`source` in PC4 vs `message` in PC5/EC-002/TV), E-PROV-009 (`reason` catch-all embedded mid-message `<n>` offset, can't independently render `<element>` and `<n>`). New sub-check: Step A (enumerate all struct-shorthand Err(E-...) sites via grep), Step B (per-code: assert intra-BC field-name consistency + assert field set is SUPERSET of all distinct taxonomy placeholders + catch-all `reason` only valid for TRAILING-only variable content), Step C (full per-code TABLE as mandatory output; prose-only completeness claims are INVALID). Motivating instances, catch-all rule, and known semantic aliases (step↔\<n\>, node↔\<node_id\>, thread_id↔\<run_id\>) documented inline. `total_standing_gates` unchanged at 34 (sub-check extension of gate #33, not a new gate). | F-P108-04 |
 | 2.34 | 2026-07-18 | F-P106-01 (process-gap): gate #28 Form-B-only known-file list was missing `BC-INDEX.md` and the catch-all did not cover indexes. Fix: (1) added `BC-INDEX.md` to explicit "Indexes" bullet in the Known Form-B-only files list; (2) catch-all broadened from "Any ADR or supplement" to "Any index, ADR, or supplement that uses a `## Changelog` body section." SIBLING-SWEEP (TD-VSDD-060): corpus-wide diff of `grep -rl "^## Changelog"` vs `grep -rl "^changelog:"` across `.factory/specs/` — Form-B-only set confirmed as {ADR-007, ADR-009, ADR-012, ADR-013, BC-INDEX.md, BC-2.07.002.md, BC-2.08.011.md, BC-2.08.012.md, bc-authoring-plan.md, test-vectors.md, verification-architecture.md}; domain-spec/ubiquitous-language-server.md has BOTH forms (not Form-B-only, excluded). After fix, all 11 Form-B-only files are covered (explicit list covers 7; broadened catch-all covers ADR-007/009/012/013; BC-INDEX.md covered by both). Zero omissions. L2-INDEX/ARCH-INDEX/VP-INDEX confirmed Form-A only (adversary assertion verified). `total_standing_gates` unchanged at 34 (sub-list correction of gate #28, not a new gate). | F-P106-01 |
 | 2.33 | 2026-07-18 | OBS-P105-B (process-gap): gate #28 mandatory pre-emission check added. F-P49-01 false-positive was reproduced at pass-105 — adversary ran only Form A (frontmatter `changelog:`) and missed Form-B files (body `## Changelog` table) despite the existing "CRITICAL" and "Union coverage rule" text. Fix: inserted a standalone MANDATORY PRE-EMISSION CHECK block with per-step explicit Form A + Form B checks and "finding is INVALID" gate for each; enumerated known Form-B files (BCs: BC-2.07.002/011/012; supplements: bc-authoring-plan.md, test-vectors.md, verification-architecture.md). F-P105-01/OBS-P105-A: error-taxonomy.md SECURITY category description corrected (new description spans all 3 SECURITY members: E-SBXD-001/E-GRAPH-013/E-MEMORY-007; removed "sandbox policy enforcement" phrase that contradicted E-SBXD-002 POLICY category); SECURITY vs POLICY authorization-failure categorization rule documented as new blockquote note; error-taxonomy.md bumped 1.18→1.19. `total_standing_gates` unchanged at 34 (sub-check widening of gate #28, not a new gate). | OBS-P105-B, F-P105-01, OBS-P105-A |
 | 2.32 | 2026-07-17 | OBS-P103-A (process-gap): gate #28 Rule 6 census was direction-agnostic — structurally unable to flag a consistently-wrong-direction file (a file whose changelog runs in the wrong direction for its class but is internally monotonic). Motivating instance: nfr-catalog.md ran 1.1→1.2 (ascending) but prd-supplements/ class requires DESCENDING; the burst-184 census passed it because the sequence has no inversions. Extended census command to direction-aware: replaced single-param `expected_dir(path)` with `expected_dir(path, form)` that correctly handles all five file classes (prd-supplements/ → desc; architecture/ → desc; behavioral-contracts/ Form A → asc; behavioral-contracts/ Form B non-INDEX → desc per hook; behavioral-contracts/ *INDEX.md → exempt). Direction rules confirmed via hook-source audit: `validate-changelog-monotonicity` hook fires on all `.factory/**/*.md` `## Changelog` body tables except `*STATE.md|*INDEX.md|*burst-log*|*convergence-trajectory*|*session-checkpoint*|*lessons*` — enforcing descending for architecture Form B and BC Form B non-INDEX. Gate prose Rule 6 bullet updated to match: BC Form A = asc; architecture all forms = desc; BC Form B non-INDEX = desc (hook-enforced); BC-INDEX = exempt. Motivating instance block for OBS-P103-A updated to document hook discovery, per-class rules, and BC-INDEX exemption rationale. Corpus-wide census results: 27 BC Form A files corrected desc→asc; nfr-catalog.md corrected asc→desc (F-P103-01); 7 architecture Form A files corrected asc→desc (ARCH-INDEX, api-surface, dependency-graph, module-decomposition, system-overview, tooling-selection, verification-coverage-matrix); purity-boundary-map.md retained desc (architecture Form A); 3 ADRs (Form B) retained desc per hook; BC-INDEX.md retained desc (count-propagation blocker); verification-coverage-matrix.md input-hash refreshed (pre-existing drift cabbed8→6b6537d). Post-fix census: PASS. `total_standing_gates` unchanged at 34 (sub-check extension of gate #28 Rule 6). | OBS-P103-A, F-P103-01 |

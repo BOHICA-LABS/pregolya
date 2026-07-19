@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.007
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -30,6 +30,7 @@ changelog:
   - "1.2 (ADV-P1D-PASS-27): F-P27-02 add E-CHKPT-004 EncryptionKeyRotationFailed code name throughout BC body (description, PC4, PC5, EC-001, EC-002, test vector 3) — reverse-anchor fix; error-taxonomy.md corrected SECURITY→INTERNAL per this BC's authoritative category."
   - "1.3 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 (empty key material), EC-004 (missing cipher header in legacy blob), and the empty-key TV row all had FerrochainError constructions without code fields. Added: code: E-CORE-005 (ValidationFailed) to EC-003 and TV empty-key row; code: E-CHKPT-007 (CipherHeaderMissing) minted this burst for EC-004 — unencrypted legacy blob in encrypted store is a distinct INTERNAL invariant violation from E-CHKPT-004 (key rotation failure)."
   - "1.4 (2026-07-15, F-P78-SWEEP/D18-P78-A): Four message-prefix corrections across two error codes. (1) E-CHKPT-004 PC5: added 'EncryptionKeyRotationFailed:' prefix to message string. (2) E-CHKPT-004 EC-002: same correction. (3) E-CHKPT-004 test vector (key-v2 rotation row): added 'EncryptionKeyRotationFailed:' prefix. (4) E-CHKPT-007 EC-004: added 'CipherHeaderMissing:' prefix to message string. Taxonomy E-CHKPT-004 corrected from wrapper format 'checkpoint state encryption key rotation error: <reason>' to direct '<reason>' (BC wins; no wrapper). Taxonomy E-CHKPT-007 corrected from elaborate key/path format to 'CipherHeaderMissing: missing cipher header: blob may be unencrypted' (BC wins on content)."
+  - "1.5 (F-P108-02, 2026-07-18): PC4 struct field name corrected from `source` to `message` for intra-BC consistency. PC4 used `{ source: <reason> }` while PC5, EC-002, and the key-v2 TV all use `{ message: \"EncryptionKeyRotationFailed: ...<detail>...\" }`. Root cause: v1.4 (F-P78-SWEEP) added the 'EncryptionKeyRotationFailed:' prefix to 4 sites but missed PC4 — the struct in PC4 still used the old `source` field name from the pre-v1.4 era. Fix: PC4 now reads `{ message: \"EncryptionKeyRotationFailed: <reason>\" }` consistent with all other struct sites in this BC and with the taxonomy 'EncryptionKeyRotationFailed: <reason>' message format."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -70,7 +71,7 @@ swallowed or logged-only. This satisfies NE-11.
 3. Decryption on read (`get_tuple`, `list`) produces bytes identical to the original
    unencrypted serialization
 4. If key rotation fails (new key is invalid, or old key is invalidated before rotation
-   completes), `Err(E-CHKPT-004 EncryptionKeyRotationFailed { source: <reason> })`
+   completes), `Err(E-CHKPT-004 EncryptionKeyRotationFailed { message: "EncryptionKeyRotationFailed: <reason>" })`
    (i.e., `FerrochainError { category: INTERNAL, code: "E-CHKPT-004" }`) is returned
    from the failing `put` or `put_writes` call; the write is NOT committed
 5. Decrypting with a key that is no longer in the active keyring returns
