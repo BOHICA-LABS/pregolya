@@ -10,7 +10,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/risks.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "5008790"
+input-hash: "3f9cd20"
 changelog:
   - "1.2 (2026-07-17, F-P89-03): Resolved pending hash recomputation from v1.1. Recomputed input-hash against current post-STATE.md-removal inputs (prd.md, risks.md, invariants.md): 2153125 → 0f05a12. The value 2153125 was the pre-v1.1 hash computed when STATE.md was still an input; v1.1 removed STATE.md but deferred the recompute. No content change — hash correction only."
   - "1.1 (2026-07-17): Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file; input-hash drifts on every state write with zero spec-content signal for this supplement. All genuine derivation sources (prd.md, risks.md, invariants.md) are already listed and unchanged. D-NNN decision references cited inline (D17-Q7, D12, D17-Q2, D17-Q4, D17-Q8) are stable baked-in facts, not live STATE.md dependencies. Input-hash marked pending recomputation."

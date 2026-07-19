@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: bounded-contexts
-version: "1.0"
+version: "1.1"
 status: active
 producer: business-analyst
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -13,6 +13,9 @@ inputs:
 input-hash: "fba49e3"
 traces_to: L2-INDEX.md
 decisions: [D1, D4, D6, D11, D13, D17]
+changelog:
+  - "1.0 (initial): base bounded contexts authored."
+  - "1.1 (F-P121-01, fix burst 124, 2026-07-19): Context 6 MCP Adapter: 'conversion from MCP tool result to ToolResult ContentBlock' → 'ToolMessage (BC-2.09.002)'; translation seam: 'ToolResult from MCPTool' / 'ToolResult → GuardrailHook boundary' → canonical ToolMessage/IngressContent::ToolResult phrasing. TD-VSDD-060 sweep: only Context 6 had ToolResult ContentBlock vocabulary; fixed."
 ---
 
 # Bounded Contexts
@@ -107,11 +110,10 @@ and exercises the ChatModel interface.
 **Model:** MCPTool, MCP server connection, tool discovery protocol, untrusted ingress
 boundary.
 **What it owns:** MCP client transport; runtime tool capability discovery; conversion from
-MCP tool result to ToolResult ContentBlock; untrusted-ingress tagging.
+MCP tool call result to `ToolMessage` (BC-2.09.002); untrusted-ingress tagging.
 **What it does NOT own:** Graph scheduling; guardrail evaluation (that is Context 2/Core).
 **Translation seam with Core:** MCPTool implements the Tool Runnable interface.
-**Translation seam with Graph:** ToolResult from MCPTool must pass GuardrailHook before
-entering model context (DI-012). The seam is the ToolResult → GuardrailHook boundary.
+**Translation seam with Graph:** The `ToolMessage` content produced by MCPTool passes through `GuardrailHook` as `IngressContent::ToolResult(ContentBlock)` before entering the model context (DI-012). The seam is the tool-result content → GuardrailHook boundary.
 **Key invariants:** DI-012 (guardrail on tool-result ingress), DEC-012 (bare ToolException).
 
 ---

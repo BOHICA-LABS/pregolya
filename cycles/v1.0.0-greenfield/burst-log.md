@@ -2612,3 +2612,108 @@ Phase 1d pass 118 adversarial review completed: NOT CLEAN strict+PR-merge — 2 
 - Counter: 0 of 3 (unchanged; fix burst 123 pushes new HEAD; frozen-HEAD streak rule)
 - Trajectory: ...→1→3→1→1 (tail after P1D-120)
 - NEXT: dispatch adversary pass 121
+
+---
+
+## Burst 206 (2026-07-19) — Pass 121 Record + Fix Burst 124 (F-P121-01/02 RESOLVED, L2 Type Audit)
+
+**Date:** 2026-07-19
+**Agents:** adversary (pass 121) + business-analyst (fix burst 124) + state-manager
+**Phase:** 1d — adversarial spec-crystallization loop
+**Files touched:** adversarial-reviews/pass-121.md (NEW); specs/domain-spec/entities-graph.md (v1.1→v1.2); specs/domain-spec/ubiquitous-language-core.md (v1.1→v1.2); specs/domain-spec/events.md (v1.5→v1.6); specs/domain-spec/bounded-contexts.md (v1.0→v1.1); specs/domain-spec/edge-cases.md (v1.1→v1.2); specs/domain-spec/entities-server.md (v1.10→v1.11); specs/domain-spec/capabilities-p0.md (v1.3→v1.4); all spec files (D18-P89-A hash sweep); STATE.md, burst-log.md, convergence-trajectory.md (state-manager)
+**Versions bumped:** STATE.md v3.46→v3.47; entities-graph v1.1→v1.2; ubiquitous-language-core v1.1→v1.2; events.md v1.5→v1.6; bounded-contexts v1.0→v1.1; edge-cases v1.1→v1.2; entities-server v1.10→v1.11; capabilities-p0 v1.3→v1.4
+
+### Summary
+
+Phase 1d pass 121 adversarial review completed: NOT CLEAN strict+PR-merge — 0C/1H/1M/0L/1OBS (3 total). Counter unchanged at 0/3. F-P121-01/02 RESOLVED in fix burst 124. OBS [process-gap] CONVERGED via comprehensive 37-row L2-vs-BC type audit (class-closure deliverable).
+
+**Part A — F-P120-01 8-file touch set VERIFIED CLOSED:** Checks (a)–(e) from PASS-121 SIBLING-CHECKS all PASS — entities-server v1.10 Command struct form correct; ubiquitous-language-core v1.1 same; zero live enum-form Command depictions; E-GRAPH-015 cite coherent; no BC/supplement drift.
+
+**3 findings (Part B):**
+- F-P121-01 HIGH: L2 ContentBlock depictions drifted — entities-graph.md + ubiquitous-language-core.md depict ~5-variant form (ToolUse/ImageUrl/Document/ToolResult/one-other) vs BC-2.01.001 PC2 canonical 14 variants; ToolCall fields use wrong JSON-RPC form (id/type/function) vs BC form (id/name/input_schema/description); ToolResult wrongly classified as ContentBlock variant instead of ToolMessage content per BC-2.09.002; NonStandard/DI-008 extensibility variant absent.
+- F-P121-02 MED: L2 Message role enum closed at 4 roles {Human,AI,System,Tool} in both entities-graph + ubiquitous-language-core vs BC-2.01.002 PC7/EC-005 requiring Function/Chat/Remove extension roles.
+- OBS [process-gap]: per-token sweeps leave systemic L2-vs-BC type drift invisible; prior passes swept only BC-strengthening-event-triggered types; mandated comprehensive one-time L2-vs-BC type audit as class-closure deliverable.
+
+**Fix burst 124 changes (7 shards):**
+- entities-graph.md v1.1→v1.2: ContentBlock 14-variant canonical form; ToolCall correct fields (id/name/input_schema/description); ToolMessage DI-012 rewrite (ToolResult as ToolMessage payload, not ContentBlock arm); ContentBlock→ToolMessage cross-section relationships table added; Message role set extended (4-primary+Function/Chat/Remove); NonStandard/DI-008 variant added.
+- ubiquitous-language-core.md v1.1→v1.2: ContentBlock 14-variant canonical glossary; correct ToolCall fields; Message role set extended to 4-primary+Function/Chat/Remove.
+- events.md v1.5→v1.6: ToolInvoked event — description field and outcome field aligned to BC-2.09.* MCP tool invocation contract.
+- bounded-contexts.md v1.0→v1.1: MCP seam ToolMessage rewrite — ToolResult crosses as ToolMessage (not raw ContentBlock) per BC-2.09.002; seam table updated.
+- edge-cases.md v1.1→v1.2: DEC-010 edge case added — ToolResult/ToolMessage reclassification boundary (what happens when a ToolResult is received without a preceding ToolUse; BC-2.01.001 + BC-2.09.002 boundary).
+- entities-server.md v1.10→v1.11: cross-section ContentBlock→ToolMessage relationship row added to entity relationship table per BC-2.09.002 seam.
+- capabilities-p0.md v1.3→v1.4: CAP-007 StreamEvent variant count 11→12; guardrail_decision variant added (Fail/Transform only, metadata payload per D18-P99-A adjudication from pass 99).
+
+**8 shards unmodified-clean (no fixes needed):** entities-core.md, ubiquitous-language-graph.md, ubiquitous-language-server.md, invariants.md, entities-memory.md, entities-mcp.md, capabilities-p1-p2.md, L2-INDEX.md — all type depictions matched BC canon on audit.
+
+**Routed item RESOLVED:** get_next_version exclusion from L2 CheckpointSaver operations list — orchestrator confirms pass-116 adjudication: pure computed helper, not a persistence op; semantically correct; no L2 edit needed. Axis settled; do not re-flag in pass-122.
+
+### Comprehensive L2-vs-BC Type Audit (37-Row Table) — Class-Closure Deliverable
+
+This table is the OBS-class closure deliverable. It was produced by the business-analyst as part of fix burst 124. All 37 rows verified MATCH after fix burst 124 changes were applied.
+
+| Row | L2 Shard | Section / Type | L2 Pre-Fix Depiction | BC Authority | Canon | Status |
+|-----|----------|---------------|----------------------|--------------|-------|--------|
+| 1 | entities-graph.md | §ContentBlock variant count | ~5 variants (Text/ToolUse/ImageUrl/Document/ToolResult) | BC-2.01.001 PC2 | 14 variants | DRIFT → **FIXED** |
+| 2 | entities-graph.md | §ContentBlock ToolCall fields | id/type/function (JSON-RPC) | BC-2.01.001 PC2 §ToolUse | id/name/input_schema/description | DRIFT → **FIXED** |
+| 3 | entities-graph.md | §ContentBlock ToolResult classification | ContentBlock variant arm | BC-2.09.002 | ToolMessage payload (separate type) | DRIFT → **FIXED** |
+| 4 | entities-graph.md | §ContentBlock NonStandard/DI-008 | Absent | BC-2.01.001 DI-008 | Present (extensibility discriminant) | DRIFT → **FIXED** |
+| 5 | entities-graph.md | §Message role set | 4-role enum {Human,AI,System,Tool} | BC-2.01.002 PC7 / EC-005 | 4-primary + Function/Chat/Remove | DRIFT → **FIXED** |
+| 6 | entities-graph.md | §ContentBlock→ToolMessage cross-section relationship | Row absent from entity relationship table | BC-2.09.002 | ToolMessage contains ToolResult content (seam relationship) | DRIFT → **FIXED** |
+| 7 | ubiquitous-language-core.md | §ContentBlock variant glossary | ~5-variant gloss | BC-2.01.001 PC2 | 14-variant glossary | DRIFT → **FIXED** |
+| 8 | ubiquitous-language-core.md | §ContentBlock ToolCall fields | id/type/function | BC-2.01.001 PC2 §ToolUse | id/name/input_schema/description | DRIFT → **FIXED** |
+| 9 | ubiquitous-language-core.md | §Message role glossary | 4-role only | BC-2.01.002 PC7 | 4-primary + Function/Chat/Remove | DRIFT → **FIXED** |
+| 10 | events.md | §ToolInvoked description field | Absent from event schema | BC-2.09.* MCP invocation contract | Required — tool invocation description | DRIFT → **FIXED** |
+| 11 | events.md | §ToolInvoked outcome field | Absent from event schema | BC-2.09.* MCP invocation contract | Required — tool execution outcome | DRIFT → **FIXED** |
+| 12 | bounded-contexts.md | §MCP seam ToolResult type crossing | ContentBlock crossing boundary | BC-2.09.002 | ToolMessage seam (ToolResult carried as ToolMessage) | DRIFT → **FIXED** |
+| 13 | edge-cases.md | §DEC-010 ToolResult/ToolMessage boundary | Absent | BC-2.01.001 + BC-2.09.002 edge-case surface | DEC-010: ToolResult received without preceding ToolUse | DRIFT → **FIXED** |
+| 14 | entities-server.md | §cross-section ContentBlock→ToolMessage row | Relationship row absent | BC-2.09.002 | Seam relationship row required | DRIFT → **FIXED** |
+| 15 | capabilities-p0.md | §CAP-007 StreamEvent variant count | 11 variants | CAP-007 + D18-P99-A | 12 variants (guardrail_decision) | DRIFT → **FIXED** |
+| 16 | capabilities-p0.md | §CAP-007 guardrail_decision variant spec | Absent | CAP-007 + D18-P99-A | Present (Fail/Transform only; metadata: boundary/decision/reason/severity/ingress_id/tool_call_id) | DRIFT → **FIXED** |
+| 17 | entities-server.md | §ContentBlock variants | Not depicted (server-scope shard) | N/A (server shard; ContentBlock canon in entities-graph) | Confirmed: server shard correctly defers to entities-graph for ContentBlock canon | MATCH |
+| 18 | entities-server.md | §Message roles | Not depicted (server-scope shard defers to entities-graph) | N/A | Correctly delegated | MATCH |
+| 19 | entities-graph.md | §RunStatus enum | 4-terminal set {completed/failed/cancelled/summary_halt} | BC-2.12.003 PC8 | 4-terminal set (summary_halt added per pass-117) | MATCH |
+| 20 | entities-graph.md | §Command struct | struct-with-optional-fields {resume/update/goto/graph} | BC-2.05.004 | Struct form + combinability invariant | MATCH (fixed burst 205) |
+| 21 | entities-graph.md | §ResumeValue struct | ResumeValue struct fields | BC-2.05.004 | ResumeValue correct field set | MATCH |
+| 22 | entities-graph.md | §CheckpointSaver methods | put/get/list/put_writes/get_next_version | BC-2.04.003 + interface-definitions v2.36 | 5-method trait (provided-method default for get_next_version) | MATCH |
+| 23 | ubiquitous-language-core.md | §Command struct | struct-with-optional-fields | BC-2.05.004 | Struct form correct | MATCH (fixed burst 205) |
+| 24 | ubiquitous-language-server.md | §RunStatus lifecycle | 4-terminal set + summary_halt | BC-2.12.003 | Correct | MATCH |
+| 25 | ubiquitous-language-server.md | §Run actor roles | Run actor taxonomy | BC-2.12.* | Correct | MATCH |
+| 26 | capabilities-p0.md | §CheckpointSaver operations list | get_next_version excluded from persistence-op list | BC-2.04.* | Confirmed correct per pass-116 adjudication: pure computed helper, not persistence op | MATCH (routed item resolved) |
+| 27 | capabilities-p0.md | §RunStatus transitions | RunStatus transition diagram | BC-2.12.003 | 4-terminal set + summary_halt correct | MATCH |
+| 28 | events.md | §NodeStarted event schema | NodeStarted fields | BC-2.06.* | Correct field set | MATCH |
+| 29 | events.md | §RunEnd event schema | RunEnd fields + summary_halt | BC-2.06.001 EC-005 | summary_halt propagated per burst 202 | MATCH |
+| 30 | events.md | §StreamToken event schema | StreamToken fields | BC-2.08.* | Correct | MATCH |
+| 31 | bounded-contexts.md | §Memory seam types | Memory boundary types | BC-2.15.* | Correct | MATCH |
+| 32 | bounded-contexts.md | §Guardrail seam types | GuardrailOutcome/IngressBoundary | BC-2.11.* | Correct | MATCH |
+| 33 | edge-cases.md | §CheckpointSaver error cases | Checkpoint edge cases | BC-2.04.005 | Correct | MATCH |
+| 34 | edge-cases.md | §BudgetPolicy OnCeiling decision table | OnCeiling 3-way branch | BC-2.10.* + D18-P91-A | Correct (Halt/Escalate/Summarize) | MATCH |
+| 35 | entities-server.md | §RunStatus lifecycle (server view) | 4-terminal set | BC-2.12.003 | Correct | MATCH |
+| 36 | entities-server.md | §HITL interrupt fields | Interrupt slot fields | BC-2.05.005 | Correct after 7-case guard propagation (burst 204) | MATCH |
+| 37 | invariants.md | §Checkpoint invariants | CheckpointId uniqueness + monotonicity | BC-2.04.006 + ADR-005 | Correct (stateless ZST get_next_version per burst 201) | MATCH |
+
+**Audit summary:** 13 DRIFT-fixed + 24 MATCH = 37 rows total. 7 shards modified; 8 shards unmodified-clean. OBS process-gap class CONVERGED: comprehensive audit complete, all rows MATCH after fix burst 124. Subsequent BC strengthenings must include L2 propagation check in-burst (row 13 pattern — DEC-010 edge case added same burst as BC seam clarification).
+
+### Files Written
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-121.md` | NEW — pass-121 adversarial review report (0C/1H/1M/0L/1OBS) |
+| `.factory/specs/domain-spec/entities-graph.md` | v1.1→v1.2 — ContentBlock 14-variant + ToolCall correct fields + ToolMessage DI-012 rewrite + relationships + Message 4-primary+3-extension |
+| `.factory/specs/domain-spec/ubiquitous-language-core.md` | v1.1→v1.2 — ContentBlock 14-variant glossary + Message 4-primary+3-extension |
+| `.factory/specs/domain-spec/events.md` | v1.5→v1.6 — ToolInvoked desc/outcome fields added |
+| `.factory/specs/domain-spec/bounded-contexts.md` | v1.0→v1.1 — MCP seam ToolMessage (ToolResult carried as ToolMessage, not ContentBlock) |
+| `.factory/specs/domain-spec/edge-cases.md` | v1.1→v1.2 — DEC-010 ToolResult/ToolMessage reclassification boundary edge case |
+| `.factory/specs/domain-spec/entities-server.md` | v1.10→v1.11 — ContentBlock→ToolMessage cross-section relationship row added |
+| `.factory/specs/domain-spec/capabilities-p0.md` | v1.3→v1.4 — CAP-007 StreamEvent 11→12 variants; guardrail_decision per D18-P99-A |
+| All spec files | D18-P89-A hash sweep — STALE=0 (see below) |
+| `.factory/cycles/v1.0.0-greenfield/convergence-trajectory.md` | append P1D-120 (backfill — missed in burst 205) + P1D-121 rows |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | burst-201 archived from Current Phase Steps + this burst-206 narrative |
+| `.factory/STATE.md` | v3.46→v3.47; trajectory-tail →3→1→1→3 (P1D-121); counter 0/3; passes 120→121; fix bursts 123→124; Phase Progress rows pass-117+pass-118 archived |
+
+### Convergence Status After Burst 206
+
+- Phase 1d passes: 121 (1H/1M/1OBS — counter 0/3)
+- Fix bursts: 124 (F-P121-01/02 RESOLVED; OBS type-audit class CONVERGED)
+- Counter: 0 of 3 (unchanged; fix burst 124 pushes new HEAD; frozen-HEAD streak rule)
+- Trajectory: ...→3→1→1→3 (tail after P1D-121)
+- NEXT: dispatch adversary pass 122

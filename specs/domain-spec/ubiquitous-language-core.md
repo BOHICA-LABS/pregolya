@@ -2,12 +2,13 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.1"
+version: "1.2"
 status: active
 producer: business-analyst
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 changelog:
   - "1.1 (F-P120-01, fix burst 123, 2026-07-19): Correct §ResumeValue definition from 2-variant enum form 'Command::Resume(value)' to struct form aligned to BC-2.05.004: Command with independently-settable optional fields resume/update/goto/graph, combinable as compound commands (EC-001/TV-002/TV-003). TD-VSDD-060 sweep: this file:142 was the only Command-depiction site; fixed here."
+  - "1.2 (F-P121-01/02, fix burst 124, 2026-07-19): §Message: 'The four roles are: Human/AI/System/Tool' expanded to note 4 primary + legacy Function (BC-2.01.002 PC7), Chat arbitrary-role discriminant, Remove history-control token (BC-2.01.002 EC-005). §ContentBlock: replaced 5-variant drifted list (Text/ImageUrl/ToolUse/ToolResult/Document with wrong fields) with canonical 14-variant reference per BC-2.01.001 PC2; ToolCall fields {id,name,args} per BC-2.08.002/013; NonStandard DI-008 passthrough; tool results → ToolMessage per BC-2.09.002. TD-VSDD-060 sweep: only Message and ContentBlock depiction sites in this file; both fixed."
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -44,15 +45,13 @@ to B, then B's output to C. In ferrochain, `|` on Runnables produces a RunnableS
 `RunnableSequence` in LangChain v1.
 
 **Message**
-One turn in a conversation, always carrying a role. The four roles are: Human (user), AI
-(assistant), System (system instruction), Tool (tool result turn). Message content is always
-`Vec<ContentBlock>`. The role determines how the message is placed in the model context window.
+One turn in a conversation, always carrying a role. Four primary roles: Human (user), AI (assistant), System (system instruction), Tool (tool result turn — requires `tool_call_id`). Additionally: legacy `Function` role (type tag `"function"`, backward-compat deserialization per BC-2.01.002 PC7), arbitrary-role `Chat` discriminant, and `Remove` history-control token (removes a message by id from conversation history, BC-2.01.002 EC-005). Message content is always `Vec<ContentBlock>`. The role determines how the message is placed in the model context window.
 
 **ContentBlock**
-A typed content variant: Text, ImageUrl, ToolUse, ToolResult, or Document. Never a bare String.
-- `ToolUse` carries `tool_name`, `tool_call_id`, `input: Value` — the model's request to call a tool.
-- `ToolResult` carries `tool_call_id`, `content: Vec<ContentBlock>`, `is_error: bool` — the tool's response.
-- `ToolResult` content is always treated as untrusted ingress (must pass GuardrailHook before entering model context, per DI-012).
+A typed content variant. Fourteen canonical variants per BC-2.01.001 PC2: Text, Reasoning, ToolCall, ToolCallChunk, InvalidToolCall, Image, Video, Audio, PlainText, File, ServerToolCall, ServerToolCallChunk, ServerToolResult, NonStandard. Never a bare String.
+- `ToolCall` carries `{ id, name, args }` — the model's request to invoke a tool (BC-2.08.002/BC-2.08.013).
+- `NonStandard { value: Value }` is the DI-008 load-bearing passthrough for unrecognized provider-specific blocks; it deserializes rather than errors.
+- Tool results return as `ToolMessage` (BC-2.09.002), not as a ContentBlock variant. Tool result content is untrusted ingress: it passes `GuardrailHook` as `IngressContent::ToolResult(ContentBlock)` before entering the model context (DI-012).
 
 **UsageMetadata**
 Token accounting attached to an AI Message: `input_tokens`, `output_tokens`, `total_tokens`.

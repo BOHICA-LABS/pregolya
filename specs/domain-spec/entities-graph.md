@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: entities-graph
-version: "1.1"
+version: "1.2"
 status: active
 producer: business-analyst
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -15,6 +15,7 @@ traces_to: L2-INDEX.md
 decisions: [D11, D17]
 changelog:
   - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D11/D17 decisions and CONFLICT-*/NE-* entity sources baked at authoring time from COMPARATIVE-ASSESSMENT.md, not live state); input-hash recomputed."
+  - "v1.2 (F-P121-01/02, fix burst 124, 2026-07-19): ContentBlock: replace 5-variant drifted list (Text/ImageUrl/ToolUse/ToolResult/Document) with canonical 14-variant reference per BC-2.01.001 PC2; ToolCall fields {id,name,args} per BC-2.08.002/013; NonStandard DI-008 passthrough noted; tool results → ToolMessage per BC-2.09.002. Tool entity DI-012 invariant: 'ToolResult ContentBlocks' → canonical ToolMessage/IngressContent::ToolResult phrasing. Message roles: expand closed 4-variant (Human|AI|System|Tool) to note Function legacy (BC-2.01.002 PC7), Chat arbitrary-role, Remove history-control (BC-2.01.002 EC-005). Relationships summary: 'Tool returns ToolResult (ContentBlock subtype)' → ToolMessage per BC-2.09.002. TD-VSDD-060 sweep: all ContentBlock-depicting sites in this file fixed."
 ---
 
 # Domain Entities — Core Primitives, Graph, and Checkpoint
@@ -28,13 +29,14 @@ changelog:
 
 ### ContentBlock
 Typed union of content variants a message can carry.
-- **Variants:** Text(content: String), ImageUrl(url, detail?), ToolUse(tool_name, tool_call_id, input: Value), ToolResult(tool_call_id, content: Vec<ContentBlock>, is_error: bool), Document(source, metadata)
-- **Invariant:** ToolResult content is always untrusted ingress. Must pass GuardrailHook before entering the model context (DI-012).
+- **Variants (BC-2.01.001 PC2 — 14 canonical):** Text, Reasoning, ToolCall, ToolCallChunk, InvalidToolCall, Image, Video, Audio, PlainText, File, ServerToolCall, ServerToolCallChunk, ServerToolResult, NonStandard. `ToolCall` carries `{ id, name, args }` (BC-2.08.002/BC-2.08.013). `NonStandard { value: Value }` is the DI-008 load-bearing passthrough for unrecognized provider-specific blocks.
+- **Tool results:** Tool invocation results are carried as `ToolMessage` (BC-2.09.002), not as a ContentBlock variant. Tool result content passes `GuardrailHook` as `IngressContent::ToolResult(ContentBlock)` before entering the model context (DI-012).
 - **Note:** No bare String message content; ContentBlock is the only way to attach content to a Message.
 
 ### Message
-One turn in a conversation, always typed by role.
-- **Fields:** role: Role (Human | AI | System | Tool), content: Vec<ContentBlock>, id: Option<String>, usage_metadata: Option<UsageMetadata>
+One turn in a conversation, always typed by role (BC-2.01.002).
+- **Variants:** 4 primary — `Ai(AiMessage)`, `Human(HumanMessage)`, `System(SystemMessage)`, `Tool(ToolMessage)`; plus legacy `Function(FunctionMessage)` (type tag `"function"`, BC-2.01.002 PC7), arbitrary-role `Chat` discriminant, and `Remove(RemoveMessage { id })` history-control token (BC-2.01.002 EC-005, load-bearing).
+- **Key fields (per variant):** content: Vec<ContentBlock>, id: Option<String>; AiMessage additionally carries tool_calls: Vec<ToolCall>, usage_metadata: Option<UsageMetadata>; ToolMessage requires tool_call_id: String (not Option).
 - **Relationships:** Message 1→N ContentBlock. Thread 1→N Message.
 - **Note:** Role drives how the message is placed in the model's context window.
 
@@ -49,7 +51,7 @@ The universal computation interface — anything that can be invoked asynchronou
 A Runnable with an associated schema — name, description, and JSON Schema for input.
 - **Fields:** name: String, description: String, input_schema: JsonSchema, runnable: Runnable
 - **Subtypes:** FunctionTool (Rust async fn), MCPTool (from MCP server), StructuredTool
-- **Invariant (DI-012):** ToolResult ContentBlocks produced by any Tool are untrusted ingress.
+- **Invariant (DI-012):** Content produced by any Tool returns as a `ToolMessage` (BC-2.09.002) and is untrusted ingress; it passes `GuardrailHook` as `IngressContent::ToolResult(ContentBlock)` before entering the model context.
 
 ---
 
@@ -138,5 +140,5 @@ Checkpoint 0——1 parent Checkpoint
 CheckpointSaver owns N Checkpoint
 Thread 1——N Checkpoint (via thread_id)
 Message 1——N ContentBlock
-Tool returns ToolResult (ContentBlock subtype)
+Tool invocation produces ToolMessage (BC-2.09.002); content passes GuardrailHook as IngressContent::ToolResult before model context entry (DI-012)
 ```

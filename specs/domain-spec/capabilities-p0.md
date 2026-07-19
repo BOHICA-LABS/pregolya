@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p0
-version: "1.3"
+version: "1.4"
 status: active
 producer: business-analyst
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -17,6 +17,7 @@ traces_to: L2-INDEX.md
 decisions: [D1, D7, D8, D11, D13, D17]
 changelog:
   - "v1.3 (2026-07-17): F-P95-04 fix — CAP-012 on_ceiling enumeration was stale (two-mode: Halt | Escalate only). Expanded to all three canonical variants: Halt | Escalate | Summarize per interface-definitions §OnCeiling, BC-2.10.003 PC8, and D20 addition."
+  - "v1.4 (OBS-P121 audit, fix burst 124, 2026-07-19): CAP-007 §StreamEvent variant list: add 12th variant guardrail_decision (F-P99-01, interface-definitions v2.34 §StreamEvent). Prior list of 11 variants was authored before the guardrail observability axis was added. Canon: interface-definitions §StreamEvent 12 variants."
   - "v1.2 (2026-07-17): F-P91-01 attribution fix — CAP-012 `on_ceiling` was mis-attributed to the `BudgetPolicy` trait; corrected to the budget configuration (`BudgetConfig::on_ceiling`) per api-surface.md ~line 70 and ADR-009. No other capabilities affected."
   - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D-NNN decisions baked at authoring time); COMPARATIVE-ASSESSMENT.md added (D17/CONFLICT-*/NE-* grounding for CAP-004, CAP-005, CAP-007, CAP-008, CAP-012, CAP-013, CAP-016); domain-a-soc-analyst.md added (CAP-013 guardrail-on-ingress forcing function); domain-b-dark-factory.md added (CAP-005 multi-day durability, CAP-012 budget governance forcing function); input-hash recomputed."
 ---
@@ -118,9 +119,11 @@ in D17-Q2 and the brief states "cannot be retrofitted post-graph-design." Both D
 ### CAP-007: Structured Streaming Event Taxonomy
 
 Emit typed per-phase streaming events: run_start / run_stream / run_end, step_start /
-step_end, node_start / node_stream / node_end, tool_start / tool_stream / tool_end — each
-carrying a run_id, parent_ids chain, and phase-specific payload. Streaming and unary runs
-drive the same engine and produce identical final answers.
+step_end, node_start / node_stream / node_end, tool_start / tool_stream / tool_end,
+guardrail_decision (Fail/Transform outcomes only; Pass is not streamed — F-P99-01,
+interface-definitions §StreamEvent v2.34) — 12 variants total, each carrying a run_id,
+parent_ids chain, and phase-specific payload. Streaming and unary runs drive the same
+engine and produce identical final answers.
 
 **Grounding:** product-brief.md §Scope Wave 1 — `ferrochain-server` streaming and unary run
 equivalence (NE-13/D17), CONFLICT-5 typed per-phase event taxonomy. Brief §Scope "streaming

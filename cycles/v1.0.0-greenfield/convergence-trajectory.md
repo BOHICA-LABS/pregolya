@@ -752,6 +752,34 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-120 — Pass 120 (2026-07-19, burst 205)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-120 | 2026-07-19 | 1 | 0 | 1 | 0 | 0 | 0 | MEDIUM-HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes exercised (burst-205 pass-120):** F-P119-01/OBS-1/OBS-2 ALL CLOSED — summary_halt cascade FULLY CLOSED: BC-2.05.005 v1.5 7-case guard (a-g) verified; BC-2.05.004 v1.4 bidirectional delegation coherent; VP-HITL-10 7-case derivable count; test-vectors v1.9 TV Count 8/SS-05 35/507/516 independently re-summed PASS; STATE.md baseline cites "test-vectors 516=507+9"; no live 504/513 citations. ss-13 env-allowlist CLEAN; ss-07 GTV Red Gate CLEAN; schedule lifecycle CLEAN (BC-2.12.004 v1.3 cron PC2b four-terminal-set confirmed). New finding F-P120-01 HIGH: Command modeled as 2-variant enum in entities-server.md:78 + ubiquitous-language-core.md:142 vs BC-2.05.004 authoritative struct {resume,update,goto,graph}+Command.PARENT; compound commands EC-001/TV-002/TV-003 unrepresentable in enum form; root cause: BC-2.05.004 combinability invariant hardened passes 117-118 without propagating to L2 entity/glossary shards.
+**Fix summary (burst 205 — fix burst 123):** F-P120-01 HIGH (BA) — entities-server v1.9→v1.10: §ResumeValue Command re-expressed as struct-with-optional-fields {resume: Option\<ResumeValue\>, update: Option\<UpdateValue\>, goto: Option\<GotoValue\>, graph: Option\<SubgraphValue\>}; combinability invariant prose; Command.PARENT super-node cite; E-GRAPH-015 reference; DI-003 invariant. ubiquitous-language-core v1.0→v1.1: §ResumeValue Command same struct form. Sweep: zero other live enum-form Command depictions in domain-spec; capabilities-p0.md API-call notation exempt.
+**Hash sweep (D18-P89-A):** STALE=0 confirmed in burst-205.
+**Trajectory after:** →1 (P1D-120); cumulative tail →1→3→1→1
+**Counter:** 0/3 (unchanged; fix burst 123 pushes new HEAD; NEXT: pass 121)
+
+---
+
+### P1D-121 — Pass 121 (2026-07-19, burst 206)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-121 | 2026-07-19 | 3 | 0 | 1 | 1 | 0 | 1 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes exercised (burst-206 pass-121):** F-P120-01 CLOSED — checks (a)-(e) from PASS-121 SIBLING-CHECKS all PASS: entities-server v1.10 §ResumeValue Command struct form; ubiquitous-language-core v1.1 same form; zero live enum-form Command depictions; E-GRAPH-015 cite coherent; no BC/supplement drift. New findings: F-P121-01 HIGH — L2 ContentBlock ~5-variant (ToolUse/ImageUrl/Document/ToolResult/one-other) vs BC-2.01.001 PC2 canonical 14 variants; wrong ToolCall fields (JSON-RPC id/type/function vs BC id/name/input_schema/description); ToolResult wrongly a ContentBlock variant (BC-2.09.002 requires ToolMessage); NonStandard/DI-008 absent; root cause: entities-graph.md + ubiquitous-language-core.md authored from pre-hardening draft BC-2.01.001. F-P121-02 MED — L2 Message 4-role closed enum {Human,AI,System,Tool} vs BC-2.01.002 PC7/EC-005 requiring Function/Chat/Remove extension roles in both entities-graph + ubiquitous-language-core. OBS [process-gap] — per-token sweeps leave systemic L2-vs-BC type drift; first comprehensive L2-vs-BC audit mandated as class-closure deliverable.
+**Fix summary (burst 206 — fix burst 124):** F-P121-01 HIGH (BA) — entities-graph v1.1→v1.2: ContentBlock 14-variant canonical form + ToolCall correct fields + ToolMessage DI-012 rewrite (ToolResult classified as ToolMessage content, not ContentBlock arm) + cross-section relationships table + NonStandard/DI-008 variant. ubiquitous-language-core v1.1→v1.2: ContentBlock 14-variant + correct ToolCall fields + Message roles. F-P121-02 MED (BA) — entities-graph v1.1→v1.2 + ubiquitous-language-core v1.1→v1.2: Message role set extended to 4-primary+3-extension (Function/Chat/Remove). Also fixed in same burst: events.md v1.5→v1.6 (ToolInvoked desc/outcome); bounded-contexts.md v1.0→v1.1 (MCP seam ToolMessage); edge-cases.md v1.1→v1.2 (DEC-010 ToolResult/ToolMessage reclassification boundary edge case); entities-server.md v1.10→v1.11 (cross-section ContentBlock→ToolMessage relationship table); capabilities-p0.md v1.3→v1.4 (CAP-007 StreamEvent 11→12 variants, guardrail_decision added per D18-P99-A). OBS CONVERGED — 37-row comprehensive L2-vs-BC type audit published in burst-206 burst-log: 13 DRIFT-fixed sites, 24 MATCH sites, 8 shards unmodified-clean. Routed item (get_next_version L2 exclusion) RESOLVED by orchestrator: pass-116 adjudication confirmed semantically correct — pure computed helper not a persistence op, no edit needed. OBS class closed via audit; no follow-up story required.
+**Hash sweep (D18-P89-A):** STALE=0 confirmed in burst-206 (see burst-log).
+**Trajectory after:** →3 (P1D-121); cumulative tail →3→1→1→3
+**Counter:** 0/3 (unchanged; fix burst 124 pushes new HEAD; NEXT: pass 122)
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

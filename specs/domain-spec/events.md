@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: events
-version: "1.5"
+version: "1.6"
 status: active
 producer: business-analyst
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (2026-07-17): F-P99-01 — StreamEventEmitted trigger: extend to include guardrail_decision surface (Fail/Transform only; Pass not streamed); GuardrailChecked: add stream surface line (guardrail_decision metadata-only payload per BC-2.11.005 INV-5, fires before enclosing tool_end); ToolInvoked tool_end: note post-guardrail content semantics. Canon: ADR-006 rev-3, interface-definitions v2.34 §StreamEvent, BC-2.06.001 v1.3."
   - "1.4 (2026-07-17): F-P100-01 — StreamEventEmitted Outcome: removed blanket 'identical content to unary callers' claim; qualified guardrail_decision as stream-observer-only (not delivered to unary callers; DI-011 scoped to execution-path equivalence, not stream-observer equivalence; canon: BC-2.06.003, ADR-006 rev-3). F-P100-03 — GuardrailChecked Outcome: retired Accept/Reject/Redact vocabulary; aligned to canonical Pass/Fail/Transform (GuardrailResult variants per ubiquitous-language-server.md §GuardrailHook v1.2 F-P58-03); Transform explicitly noted as strict superset of redact-only to preserve semantics."
   - "1.5 (2026-07-17): F-P101-01 — GuardrailChecked Stream surface: rewrote unconditional 'fires before the enclosing tool_end' to boundary-qualified ordering; ToolResult fires before enclosing tool_end (tool_call_id present); RagChunk/MemoryItem fire within enclosing NodeStart/NodeEnd window before inference (tool_call_id absent). Sweep: no other unconditional tool_end-ordering or tool_call_id-always-present claims for guardrail_decision found elsewhere in file. Canon: ADR-006 rev-4, BC-2.06.001 v1.3 PC4, BC-2.11.003/004 v1.5."
+  - "1.6 (F-P121-01, fix burst 124, 2026-07-19): §ToolInvoked description: 'ToolUse ContentBlock' → 'ContentBlock::ToolCall in an AiMessage' (canonical BC-2.01.001 PC2 variant name). §ToolInvoked outcome: 'ToolResult ContentBlock produced' → 'ToolMessage produced (BC-2.09.002)' per BC-2.09.002 authority. TD-VSDD-060 sweep: only ToolInvoked was the affected domain-event site in this file; both lines fixed."
 ---
 
 # Domain Events (Processing Stages)
@@ -98,10 +99,10 @@ Graph execution reached a terminal node or interrupt with no more work.
 ## Tool and Model Events
 
 ### ToolInvoked
-A Tool Runnable was called with a ToolUse ContentBlock.
-- **Trigger:** Model output contains a tool_use block; execution engine dispatches
+A Tool Runnable was called by the execution engine in response to a `ContentBlock::ToolCall` in an AiMessage.
+- **Trigger:** Model output contains a `ContentBlock::ToolCall` block; execution engine dispatches
 - **Preconditions:** Tool registered; policy allows invocation
-- **Outcome:** ToolResult ContentBlock produced; GuardrailHook fired on result (DI-012)
+- **Outcome:** `ToolMessage` produced (BC-2.09.002); GuardrailHook fired on result content as `IngressContent::ToolResult` before model context entry (DI-012)
 - **Stream events:** `tool_start`, `tool_stream` (for streaming tools), `tool_end` (carries post-guardrail ToolResult — content is guardrail-filtered per BC-2.06.001 v1.3; Fail/Transform outcomes emit `guardrail_decision` before `tool_end`)
 
 ### GuardrailChecked
