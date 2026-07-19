@@ -1,10 +1,10 @@
 ---
 document_type: bc-index
 level: L3
-version: "1.5"
+version: "1.6"
 status: active
 producer: state-manager
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-19T00:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
@@ -163,6 +163,7 @@ traces_to: .factory/specs/prd.md
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.6 | 2026-07-19 | F-P114-01 fix burst 117: Architecture Anchor fields corrected in BC-2.04.001–007 (7 files) — replaced nonexistent `architecture/ferrochain-checkpoint.md` citation with adjudicated real targets per architect guidance. Per-file versions: BC-2.04.001 v1.3, BC-2.04.002 v1.4, BC-2.04.003 v1.4, BC-2.04.004 v1.3, BC-2.04.005 v1.3, BC-2.04.006 v1.5, BC-2.04.007 v1.7. No BC body content changed. | F-P114-01 fix burst 117 |
 | 1.5 | 2026-07-17 | F-P94-01: BC-2.10.003 index row trailing italic `_(v1.2: adds OnCeiling::Summarize + RunContext.budget_info / BudgetInfo)_` removed — title now byte-exact match to H1 in ss-10/BC-2.10.003.md. | F-P94-01 |
 | 1.4 | 2026-07-15 | OBS-P74-B: Carry-Forward Note #5 appended "(later grown to 95 via D20)" for parallelism with prd OQR-4 clarifier convention. | OBS-P74-B |
 | 1.3 | 2026-07-15 | F-P73-02: Carry-Forward Note #1 updated "All 86 BCs" → "All 95 BCs" (9 D20 BCs verified to carry `subsystem: SS-NN` frontmatter); version and timestamp bumped. | F-P73-02 |

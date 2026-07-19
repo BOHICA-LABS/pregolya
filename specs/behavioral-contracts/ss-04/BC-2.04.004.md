@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.004
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -25,6 +25,7 @@ changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-6): E-category canon — EC-003 and test vector error category corrected from `StateUpdateError` to `VAL, code: E-GRAPH-007` (F-P6-03, status/category canon sweep)."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-003 and the corresponding TV row carried bare `Err(FerrochainError { category: VAL, code: E-GRAPH-007 })` without message; E-GRAPH-007 has <node_id> and <key> placeholders. Added inline message template to EC-003; TV row PASS-ABBREV via EC-003."
+  - "1.3 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/ferrochain-checkpoint.md' to two adjudicated targets: (1) 'architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md §Fork Lineage' for CheckpointMetadata { parent_checkpoint_id } definition; (2) 'architecture/module-decomposition.md §ferrochain-checkpoint' for checkpoint::lineage row. No BC body content changed."
 modified: []
 extracted_from: null
 deprecated: null
@@ -122,7 +123,8 @@ branch lineage entirely and requires full state duplication.
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-checkpoint.md` — CheckpointMetadata.parents field, update_state contract (filled by architect)
+- `architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md §Fork Lineage` — `CheckpointMetadata { parent_checkpoint_id: Option<CheckpointId> }` definition; fork creates new ID via `get_next_version` with `parent_checkpoint_id = Some(source_id)`
+- `architecture/module-decomposition.md §ferrochain-checkpoint` — `checkpoint::lineage` row: fork via `parent_checkpoint_id`; no state copy on fork (SS-04)
 
 ## Story Anchor
 

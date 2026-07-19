@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.004.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.005.md
   - .factory/specs/behavioral-contracts/ss-17/BC-2.17.002.md
-input-hash: "d5b8027"
+input-hash: "ca39dc1"
 traces_to: ARCH-INDEX.md
 decisions: [D17]
 ---

@@ -46,7 +46,7 @@ This file documents ferrochain's formal verification and testing tooling selecti
 Harnesses must target the synchronous pure core of each module. The async orchestration
 layer (ADR-001 Alt-B Tokio runtime) is not Kani-verifiable; the sync reducer cores it
 calls ARE. This drives the sync-core mandate: `graph::bsp_engine::reduce_super_step`,
-`checkpoint::session_index::derive_key`, and `checkpoint::clock::next_id` MUST be
+`checkpoint::session_index::derive_key`, and `checkpoint::clock::get_next_version` MUST be
 extractable as sync functions. See verification-architecture.md § Kani Async Constraint.
 
 **Constraint — purity:** Any harness that reaches I/O code will produce a verification

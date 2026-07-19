@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.006
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
 timestamp: 2026-07-14T00:00:00Z
@@ -12,6 +12,7 @@ changelog:
   - "1.2 (ADV-P1D-PASS-28): OBS-P28-2 added EC-005 (SessionAddressCollision raise-condition) — E-CHKPT-005 had no behavioral home specifying when it is raised; EC-005 derives the raise-condition from Invariant 1 (composite-PK uniqueness guard at the tenancy boundary)."
   - "1.3 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(FerrochainError { category: VAL })` with no code for the case where both `checkpoint_ns` and `thread_id` are missing. Added code: E-CORE-005 (ValidationFailed) — missing required field `thread_id` is a VAL construction-time validation failure."
   - "1.4 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. (1) EC-003 had bare `Err(FerrochainError { category: VAL, code: E-CORE-005 })` without message; E-CORE-005 has <field> and <detail> placeholders. Added inline message template for the missing thread_id case. (2) EC-005 had `Err(FerrochainError { category: TENANCY, code: \"E-CHKPT-005\" })` without message; E-CHKPT-005 has <t> (thread_id) and <ns> (checkpoint_ns) placeholders. Added inline message template; both are available from config at raise site."
+  - "1.5 (2026-07-19, F-P114-01 fix burst 117): Anchor correction — Architecture Anchors updated from single nonexistent 'architecture/ferrochain-checkpoint.md' to two adjudicated targets: (1) 'prd-supplements/interface-definitions.md §CheckpointSaver' for trait signatures; (2) 'architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md §Consequences' for composite PK cross-restart uniqueness guarantee. Per architect adjudication (burst 117). No BC body content changed."
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -129,7 +130,8 @@ the adk-rust identity-triple collapse is the explicit counter-example.
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-checkpoint.md` — CheckpointSaver trait signatures, storage schema primary key (filled by architect)
+- `prd-supplements/interface-definitions.md §CheckpointSaver` — `CheckpointSaver: Send + Sync` trait signatures (trait methods, return types)
+- `architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md §Consequences` — composite PK `(thread_id, checkpoint_ns, checkpoint_id)` cross-restart uniqueness guarantee; `CheckpointId` as `u64` newtype
 
 ## Story Anchor
 

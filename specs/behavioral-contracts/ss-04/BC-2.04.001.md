@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.001
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -25,6 +25,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-6): E-category canon — EC-002 and test vector error category corrected from `CheckpointError` to `DURABILITY, code: E-CHKPT-001` (F-P6-03, status/category canon sweep)."
   - "1.1 (ADV-P1D-PASS-20): F-P20-02 — `Checkpointer` → `CheckpointSaver` in PC-1 (canonical trait name correction)."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-002 and the corresponding TV row carried bare `Err(FerrochainError { category: DURABILITY, code: E-CHKPT-001 })` without message; E-CHKPT-001 has <task_id> and <backend_error> placeholders. Added inline message template to EC-002; TV row PASS-ABBREV via EC-002."
+  - "1.3 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/ferrochain-checkpoint.md' to two adjudicated targets: (1) 'prd-supplements/interface-definitions.md §CheckpointSaver' for trait signatures (put_writes, get_tuple, list); (2) 'architecture/module-decomposition.md §ferrochain-checkpoint' for checkpoint::saver row. No BC body content changed."
 modified: []
 extracted_from: null
 deprecated: null
@@ -123,7 +124,8 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-checkpoint.md` — checkpoint trait and storage contracts (filled by architect)
+- `prd-supplements/interface-definitions.md §CheckpointSaver` — `CheckpointSaver: Send + Sync` trait signatures (`put_writes`, `get_tuple`, `list`)
+- `architecture/module-decomposition.md §ferrochain-checkpoint` — `checkpoint::saver` row: `CheckpointSaver` trait + `put_writes` contract (SS-04)
 
 ## Story Anchor
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.005
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -25,6 +25,7 @@ changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-1): Invariant 3 rewritten — SCHEDULED channel routing vs. skip-on-reapply distinction clarified; `ERROR_SOURCE_NODE` no-negative-index note added; `SCHEDULED` NOT-skipped note added (F-P1-HIGH, semport/graph/behavioral-intent.md validation)."
   - "1.2 (ADV-P1D-PASS-66): F-P66-02 — EC-006 and TV added: checkpoint read failure during crash recovery (`get_tuple()` returns `Err(E-CHKPT-003 CheckpointReadFailed)`) → recovery halts, error propagated to caller. Confirms E-CHKPT-003 anchor to this BC. (OBS-P28-2 class; gate #33 reverse-verification finding.)"
+  - "1.3 (2026-07-19, F-P114-01 fix burst 117): Anchor correction — Architecture Anchors updated from nonexistent 'architecture/ferrochain-checkpoint.md' to 'architecture/module-decomposition.md §ferrochain-checkpoint' (checkpoint::saver row) per architect adjudication (burst 117). No BC body content changed."
 modified: []
 extracted_from: null
 deprecated: null
@@ -137,7 +138,7 @@ them freshly rather than replaying stale control state.
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-checkpoint.md` — _reapply_writes_to_succeeded_nodes, pending_writes schema (filled by architect)
+- `architecture/module-decomposition.md §ferrochain-checkpoint` — `checkpoint::saver` row: `CheckpointSaver` trait + `put_writes` contract (SS-04)
 
 ## Story Anchor
 

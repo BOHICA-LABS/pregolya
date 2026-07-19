@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.002
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -25,6 +25,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-4): category canon sweep — EC-003 and test vector error category corrected from `ConfigError` to `VAL` (13-category sweep, F-P4-xx)."
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(FerrochainError { category: VAL, message: ... })` and the durability-string-turbo TV row had `Err(FerrochainError { category: VAL })` with no code. Added code: E-CORE-005 (ValidationFailed) — unknown durability tier string is a VAL construction-time failure at run start."
   - "1.3 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-003 message reworded from 'unknown durability tier: \"<value>\"' to 'Validation failed for 'durability': unknown tier \"<value>\"' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV bare form unchanged — PASS-ABBREV via EC-003."
+  - "1.4 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/ferrochain-checkpoint.md' to 'architecture/decisions/ADR-003-durability-tiers.md' — DurabilityTier enum, CheckpointSaverConfig::default(), Sync-default rationale. No BC body content changed."
 modified: []
 extracted_from: null
 deprecated: null
@@ -118,7 +119,7 @@ developer ceremony — the unsafe faster modes require a deliberate choice.
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-checkpoint.md` — DurabilityTier enum and default handling (filled by architect)
+- `architecture/decisions/ADR-003-durability-tiers.md` — `DurabilityTier` enum, `CheckpointSaverConfig::default()`, Sync-default rationale
 
 ## Story Anchor
 
