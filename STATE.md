@@ -1,19 +1,19 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.40"
+version: "3.42"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-20T01:03:00Z
+timestamp: 2026-07-19T09:10:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "burst 200 COMPLETE — pass-115 NOT CLEAN 0C/2H (F-P115-01: verification-architecture+purity-boundary-map AtomicU64 ripple; F-P115-02: interface-definitions 3-method CheckpointSaver unsatisfiable + get_next_version placement); fix burst 118 COMPLETE (verification-architecture v1.4 + purity-boundary-map v1.5 + ADR-005 v1.2 + api-surface v1.5 + interface-definitions v2.36 + BC-2.04.003 v1.5); trajectory-tail →2→0→1→2; counter 0/3; NEXT: dispatch adversary pass 116 (sibling-checks loaded; D-chain cite D-115 latest phase-1d pass)"
+current_step: "burst 201 COMPLETE — pass-116 NOT CLEAN 0C/1H (F-P116-01: get_next_version receiver-less E0038 on Arc<dyn CheckpointSaver>; override promise undispatchable; langgraph parity misstated); fix burst 119 COMPLETE (ADR-005 v1.4 + interface-definitions v2.37 + BC-2.04.003 v1.6); trajectory-tail →0→1→2→1; counter 0/3; NEXT: dispatch adversary pass 117 (D-chain cite D-116 latest phase-1d pass)"
 current_cycle: v1.0.0-greenfield
-convergence_status: "PHASE_1D_PASS_115_REMEDIATED_AWAITING_PASS_116"
+convergence_status: "PHASE_1D_PASS_116_REMEDIATED_AWAITING_PASS_117"
 pipeline: IN_PROGRESS
 dtu_required: true
 dtu_assessment: 2026-07-14
@@ -37,39 +37,39 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-19 — burst 200: pass-115 NOT CLEAN 0C/2H (F-P115-01 verification-architecture+purity-boundary-map AtomicU64 ripple; F-P115-02 interface-definitions 3-method CheckpointSaver); fix burst 118 complete; trajectory-tail →2→0→1→2 |
+| **Last Updated** | 2026-07-19 — burst 201: pass-116 NOT CLEAN 0C/1H (F-P116-01 get_next_version receiver-less E0038 on Arc<dyn CheckpointSaver>; ADR-005 v1.4 + interface-definitions v2.37 + BC-2.04.003 v1.6); fix burst 119 complete; trajectory-tail →0→1→2→1 |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | burst 200 COMPLETE — pass-115 NOT CLEAN 0C/2H; fix burst 118 COMPLETE; trajectory-tail →2→0→1→2; NEXT: pass 116 |
+| **Current Step** | burst 201 COMPLETE — pass-116 NOT CLEAN 0C/1H (F-P116-01 E0038); fix burst 119 COMPLETE (ADR-005 v1.4 + interface-definitions v2.37 + BC-2.04.003 v1.6); trajectory-tail →0→1→2→1; NEXT: pass 117 |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →1 (P1D-106) →1 (P1D-107) →4 (P1D-108) →2 (P1D-109) →2 (P1D-110) →1 (P1D-111) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →1 (P1D-106) →1 (P1D-107) →4 (P1D-108) →2 (P1D-109) →2 (P1D-110) →1 (P1D-111) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
 | 7: Convergence | not-started | | | | |
-| Adversary pass-112 complete; fix burst 116 complete | complete | 2026-07-19 | 2026-07-19 | counter 0/3 (P112: NOT CLEAN strict 2M; F-P112-01 RESOLVED: BC-2.11.002/003/004 bare variant names v1.8/v1.7/v1.7; bc-authoring-plan v2.39; F-P112-02 RESOLVED: E-CORE-005 5 BCs canonical format; error-taxonomy v1.26) | trajectory-tail →2→1→2; 0/3 at this pass |
 | Adversary pass-113 CLEAN; burst 198 bookkeeping | complete | 2026-07-19 | 2026-07-19 | counter 1/3 STREAK ACTIVE (P113: CLEAN strict+PR-merge; 0 findings; C-1 dual-registry CLEARED; C-2 IngressBoundary/BoundaryType CLEARED; Obs-1 non-blocking; frozen-corpus rule in effect) | trajectory-tail →2→1→2→0; 1/3 |
 | Adversary pass-114 CRIT; fix burst 117 complete | complete | 2026-07-19 | 2026-07-19 | counter RESET 0/3 (P114: NOT CLEAN 1C; F-P114-01 CRIT: ADR-005 rev-1 AtomicU64 violates BC-2.04.003 PC1/Inv1 + BC-2.04.005 crash-recovery + BC-2.04.006 Inv1; 7 nonexistent anchors; fix burst 117: ADR-005 v1.1 stateless get_next_version + 7 BC anchors + VP-002 v1.1 durable-store + tooling-selection) | trajectory-tail →2→0→1; 0/3 RESET |
 | Adversary pass-115 complete; fix burst 118 complete | complete | 2026-07-19 | 2026-07-19 | counter 0/3 (P115: NOT CLEAN 2H; F-P115-01 RESOLVED: verification-architecture v1.4 + purity-boundary-map v1.5 AtomicU64 ripple fixed; F-P115-02 RESOLVED: interface-definitions v2.36 5-method CheckpointSaver + ADR-005 v1.2 + BC-2.04.003 v1.5 + api-surface v1.5) | trajectory-tail →2→0→1→2; 0/3 |
-| Adversary pass-116 (next) | pending | — | — | — | — |
+| Adversary pass-116 complete; fix burst 119 complete | complete | 2026-07-19 | 2026-07-19 | counter 0/3 (P116: NOT CLEAN 1H; F-P116-01 RESOLVED: ADR-005 v1.4 get_next_version &self E0038 fix + §Object-Safety + §Adjacent Adjudications; interface-definitions v2.37 &self + Pin<Box<dyn Stream>>; BC-2.04.003 v1.6 PC1 &self) | trajectory-tail →0→1→2→1; 0/3 |
+| Adversary pass-117 (next) | pending | — | — | — | — |
 
 ## Current Phase Steps
 
-<!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. (Bursts 194–195 archived to burst-log in burst 200.) -->
+<!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. (Bursts 194–196 archived to burst-log in burst 201.) -->
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1d burst 196 — pass-111 record + fix burst 115 (F-P111-01 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 111: NOT CLEAN strict+PR-merge — 1M. F-P111-01 RESOLVED [process-gap MED]: gate #33 v2.38 Step-A Form 3 wrapper-form detection (17 codes / 27 sites / 17 behavioral-contract files); E-CORE-007 context-sourced exception (ProvenanceTag.boundary_type / IngressContent discriminant); BC-2.11.002/003/004 v1.5→v1.6; E-RETRY-002 inline template; BC-2.16.002 v1.1→v1.2; 15 additional BCs bumped for wrapper-form compliance; error-taxonomy v1.24→v1.25 (Form-3 census new scope). MAJOR: 4 carry-forward axes all CLEAN (holdout-domains↔BC/CAP, purity-map↔module-decomp, CAP↔BC bidirectional, ss-16/ss-17). D18-P89-A sweep: STALE=0. Trajectory →1 (P1D-111). Counter 0/3. Fix bursts 114→115. Burst 196. |
 | Phase 1d burst 197 — pass-112 record + fix burst 116 (F-P112-01/02 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 112: NOT CLEAN strict+PR-merge — 2M. F-P112-01 RESOLVED [MED]: E-CORE-007 `<content_type>` rendered-value; BARE variant wins (interface-definitions §IngressContent pre-existing authority; Source-of-Truth Rule 3); BC-2.11.002 v1.7→v1.8; BC-2.11.003/004 v1.6→v1.7; bc-authoring-plan v2.38→v2.39 (bare-quoted values). F-P112-02 RESOLVED [MED process-gap]: E-CORE-005 non-template prose drift; canonical format `Validation failed for '<field>': <reason>`; 5 BCs fixed (BC-2.04.002/007, BC-2.08.002/006/014); error-taxonomy v1.25→v1.26 adjudication row. D18-P89-A sweep: STALE=0. Trajectory →2 (P1D-112). Counter 0/3. Fix bursts 115→116. Burst 197. |
 | Phase 1d burst 198 — pass-113 CLEAN(strict) 1/3; bookkeeping only | state-manager | COMPLETE | Pass 113: CLEAN strict+PR-merge — 0 findings. F-P112-01/02 RESOLVED verified. Obs-1 non-blocking (BC-2.14.003 TV-002 code-only cite outside message-sweep scope). C-1 dual-registry CLEARED (arch-view 35 vs PO-view 22 intentional). C-2 IngressBoundary/BoundaryType CLEARED (two distinct enums by design). Counter 0/3→1/3 STREAK ACTIVE. Frozen-corpus rule active. Trajectory →0 (P1D-113 CLEAN). Burst 198. |
 | Phase 1d burst 199 — pass-114 CRIT record + fix burst 117 (F-P114-01 RESOLVED) | adversary + architect + PO + state-manager | COMPLETE | Pass 114: NOT CLEAN strict+PR-merge — 1C. F-P114-01 CRIT RESOLVED: ADR-005 v1.0 AtomicU64 MonotonicClock violates BC-2.04.003 PC1 (next_id vs get_next_version) + Inv1 (restart-zero breaks monotonicity) + BC-2.04.005 (crash-recovery PK collision) + BC-2.04.006 Inv1 (cross-restart PK uniqueness); VP-002 v1.0 "per saver instance" understated; all 7 ss-04 anchor files cited nonexistent architecture/ferrochain-checkpoint.md. Fix burst 117: ADR-005 v1.1 stateless ZST get_next_version(current: Option<CheckpointId>, _channel) → Result; persisted-max seeding per (thread_id, checkpoint_ns); E-CHKPT-003 failure path documented; 7 BC anchors → real files; VP-002 v1.1 durable-store framing; tooling-selection get_next_version. BC-INDEX v1.5→v1.6. Counter RESET 1/3→0/3. Trajectory →1 (P1D-114 CRIT). Fix bursts 116→117. Burst 199. |
 | Phase 1d burst 200 — pass-115 record + fix burst 118 (F-P115-01/02 RESOLVED) | state-manager + architect + PO | COMPLETE | Pass 115: NOT CLEAN strict+PR-merge — 2H. F-P115-01 RESOLVED [HIGH ripple]: verification-architecture v1.3→v1.4 (checkpoint::clock: "monotonic AtomicU64 read" → "pure get_next_version(current) successor function; stateless, no atomic counter"); purity-boundary-map v1.4→v1.5 (Pure Guarantee: "Monotonic counter increment" → "Pure successor function of caller-supplied `current`"). F-P115-02 RESOLVED [HIGH]: interface-definitions v2.35→v2.36 (§CheckpointSaver 3-method→5-method: add `put` + `get_next_version` provided method; BC anchor 001–007; Gate #31 type note extended with Checkpoint/CheckpointMetadata/CheckpointId); ADR-005 v1.1→v1.2 (§CheckpointSaver Trait Placement — provided-method default delegates to MonotonicClock; langgraph BaseCheckpointSaver parity); BC-2.04.003 v1.4→v1.5 (PC1 provided-method wording); api-surface v1.4→v1.5 (BC anchor 001–007; paper-fix caught by TD-VSDD-059 + corrected in-burst). D18-P89-A sweep: STALE=0. Trajectory →2 (P1D-115). Counter 0/3. Fix bursts 117→118. Burst 200. |
+| Phase 1d burst 201 — pass-116 record + fix burst 119 (F-P116-01 RESOLVED) | adversary + architect + PO + state-manager | COMPLETE | Pass 116: NOT CLEAN strict+PR-merge — 1H. F-P116-01 RESOLVED [HIGH E0038]: get_next_version receiver-less → &self (E0038 dyn-compat on Arc<dyn CheckpointSaver>); ADR-005 v1.2→v1.4 (v1.3: &self + §Object-Safety table + list residual flagged; v1.4: §Adjacent Trait Object-Safety Adjudications — Runnable→DynRunnable seam, BaseChatModel static dispatch, MonotonicClock ZST receiver-less confirmed separate symbol); interface-definitions v2.36→v2.37 (&self on get_next_version; list → Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>); BC-2.04.003 v1.5→v1.6 (PC1 &self + Architecture Anchors &self cite). D18-P89-A sweep: STALE=0. Trajectory →1 (P1D-116). Counter 0/3. Fix bursts 118→119. Burst 201. |
 
 ## Decisions Log
 
@@ -151,48 +151,48 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | DEFER-002 | Machine enforcement of gate #28 date-validity (pre-commit hook + CI lint for changelog-date monotonicity and frontmatter-currency) | Phase 3 CI hardening | 3rd manual-sweep failure (F-P64-02/F-P65-01/F-P75-01); gate #28 Rules 4+5 are prose-only until Phase 3. DEFER-001 archived in cycles/v0.0.0-pre-pipeline/lessons.md |
 
 ## Concurrent Cycles
-None currently active. Counter 0/3 (P115: NOT CLEAN strict 2H); trajectory-tail →2→0→1→2; frozen-corpus rule SUSPENDED until next CLEAN.
+None currently active. Counter 0/3 (P116: NOT CLEAN strict 1H); trajectory-tail →0→1→2→1; frozen-corpus rule SUSPENDED until next CLEAN.
 
 ## Convergence Status
 
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 115 (Phase 1d) |
-| Fix bursts completed | 118 (Phase 1d; F-P115-01/02 RESOLVED in burst 200) |
-| Convergence counter | 0 of 3 (Phase 1d; pass 115 NOT CLEAN strict 2H; counter unchanged; BC-5.39.001 frozen-HEAD streak rule — fix burst 118 pushes new HEAD; NEXT: pass 116; pre-pipeline 3/3 CLOSED) |
-| Finding trajectory | →4→2→2→4→4→1→4→2→5→3→4→1→5→1→1→3→2→2→2→1→1→1→1→4→2→2→1→2→0→1→2 |
+| Adversary passes completed | 116 (Phase 1d) |
+| Fix bursts completed | 119 (Phase 1d; F-P116-01 RESOLVED in burst 201) |
+| Convergence counter | 0 of 3 (Phase 1d; pass 116 NOT CLEAN strict 1H; counter unchanged; BC-5.39.001 frozen-HEAD streak rule — fix burst 119 pushes new HEAD; NEXT: pass 117; pre-pipeline 3/3 CLOSED) |
+| Finding trajectory | →4→2→2→4→4→1→4→2→5→3→4→1→5→1→1→3→2→2→2→1→1→1→1→4→2→2→1→2→0→1→2→1 |
 
 ## Session Resume Checkpoint
 
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 
 ### RESUME IN ONE BREATH
-"ferrochain Phase 1d convergence loop, 115 passes / 118 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 513=504+9, purity-map 58, 13 ADRs [ADR-006 rev-4, ADR-005 rev-2 w/ §CheckpointSaver Trait Placement], 34 gates, StreamEvent 12 variants, VP census 141). F-P115-01 RESOLVED [HIGH ripple]: verification-architecture v1.4 checkpoint::clock stateless description; purity-boundary-map v1.5 Pure Guarantee 'Pure successor function of caller-supplied `current`'. F-P115-02 RESOLVED [HIGH]: interface-definitions v2.36 5-method CheckpointSaver (put_writes/get_tuple/list/put/get_next_version); ADR-005 v1.2 §CheckpointSaver Trait Placement (provided-method default → MonotonicClock); BC-2.04.003 v1.5 PC1 provided-method wording; api-surface v1.5 BC anchor 001–007. NOTE: initial paper-fix caught by TD-VSDD-059 + corrected in-burst. COUNTER 0/3 (pass 115 NOT CLEAN strict; fix burst 118 pushes new HEAD). NEXT ACTION: dispatch adversary pass 116 (sibling-checks loaded; PASS-116 checklist follows)."
+"ferrochain Phase 1d convergence loop, 116 passes / 119 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 513=504+9, purity-map 58, 13 ADRs [ADR-006 rev-4, ADR-005 rev-4 w/ §CheckpointSaver Object-Safety + §Adjacent Trait Object-Safety Adjudications], 34 gates, StreamEvent 12 variants, VP census 141). F-P116-01 RESOLVED [HIGH E0038]: ADR-005 v1.2→v1.4 (v1.3: get_next_version &self + §Object-Safety table; v1.4: §Adjacent Trait Object-Safety Adjudications — Runnable→DynRunnable seam, BaseChatModel static dispatch, MonotonicClock ZST receiver-less confirmed separate symbol); interface-definitions v2.36→v2.37 (get_next_version &self; list → Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>); BC-2.04.003 v1.5→v1.6 (PC1 &self + Architecture Anchors &self cite). COUNTER 0/3 (pass 116 NOT CLEAN strict; fix burst 119 pushes new HEAD). NEXT ACTION: dispatch adversary pass 117 (sibling-checks loaded; PASS-117 checklist follows)."
 ### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
-### PASS-116 SIBLING-CHECKS: (a) verification-architecture v1.4 + purity-boundary-map v1.5 stateless-clock descriptions coherent with ADR-005 rev-2 (spot-verify: verification-architecture §sync-core-mandate checkpoint::clock row; purity-boundary-map §Pure Core checkpoint::clock Pure Guarantee column — both must read stateless/no-counter language); (b) interface-definitions v2.36 5-method CheckpointSaver — verify `put` doc-comment cites BC-2.04.002 PC4/EC-002 + BC-2.04.001 EC-003 + BC-2.04.006 PC2 + BC-2.04.007 PC1+INV-1; `get_next_version` provided-method default cites BC-2.04.003 PC1/PC5; BC anchor line extends 001–007; (c) BC-2.04.003 v1.5 PC1 carries provided-method wording (not bare "provides a method") with MAY-override semantics; (d) ADR-005 v1.2 §CheckpointSaver Trait Placement coherent with interface-definitions `get_next_version` default delegation to MonotonicClock; (e) api-surface v1.5 CheckpointSaver row BC anchor range = 001–007 in BOTH body table AND changelog entry (paper-fix was corrected — verify both locations); (f) grep AtomicU64 / next_id / per-saver-instance zero live spec residue (semport dependency-disposition + ADR-005 comparison-table/alternatives-considered + changelog rows exempt).
+### PASS-117 SIBLING-CHECKS: (a) ADR-005 v1.4 §CheckpointSaver Trait Placement: get_next_version has &self receiver in both trait definition and provided-method body; §Object-Safety table lists all 5 CheckpointSaver methods with dyn-compat status; §Adjacent Trait Object-Safety Adjudications confirms Runnable→DynRunnable seam, BaseChatModel static dispatch, MonotonicClock ZST receiver-less is separate symbol; (b) interface-definitions v2.37: get_next_version signature shows &self; list return type = Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>; (c) BC-2.04.003 v1.6 PC1: quoted signature includes &self receiver; Architecture Anchors cite includes &self; (d) grep `fn get_next_version` in .factory/specs — all occurrences must have &self receiver; (e) grep for receiver-less `get_next_version(current:` (without &self) across all specs — must be 0 hits in non-changelog content; (f) VP-002 input-hash current (ADR-005 in inputs: list); api-surface input-hash current (interface-definitions in inputs: list).
 ### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3.
-### DECISION DELTA (this session): no new decisions in bursts 197–200; last decision D18-P103-A; full log above.
+### DECISION DELTA (this session): no new decisions in bursts 198–201; last decision D18-P103-A; full log above.
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule SUSPENDED (counter 0/3; resumes at next CLEAN strict).
-### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 200 | Counter 0/3 | No open findings (F-P115-01/02 RESOLVED in fix burst 118; pass 116 next)
+### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 201 | Counter 0/3 | No open findings (F-P116-01 RESOLVED in fix burst 119; pass 117 next)
 
 ## Historical Content
 
 | Content | Location |
 |---------|----------|
-| Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2; + archived bursts 171–200) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
+| Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2; + archived bursts 171–201) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
 | 95 Behavioral Contracts (ss-01..ss-17/, ~13,800+ lines) + BC-INDEX.md v1.6 (48P0/39P1/8P2) | `.factory/specs/behavioral-contracts/ss-NN/` + `BC-INDEX.md` |
 | L3 PRD (index + BC summary tables, 607 lines) + v1.3 (BC-2.08.009 v1.1 resolved) | `.factory/specs/prd.md` |
-| PRD supplements: bc-authoring-plan v2.39, error-taxonomy v1.26, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.36, test-vectors v1.8 | `.factory/specs/prd-supplements/` |
+| PRD supplements: bc-authoring-plan v2.39, error-taxonomy v1.26, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.37, test-vectors v1.8 | `.factory/specs/prd-supplements/` |
 | L2 domain spec (15-shard, 1,889 lines; events.md v1.5) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
-| Session checkpoints bursts 5–78, bursts 176–199 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Session checkpoints bursts 5–78, bursts 176–200 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (12 lessons, 12 codified guardrails incl. Guardrail #12 test-count methodology, Drift/Deferral DEFER-001) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
 | Holdout domain briefs A/B/C (SOC analyst, dark factory, OpenClaw) | `.factory/planning/holdout-domains/domain-{a,b,c}-*.md` |
 | Reference corpus manifest (v1.4.0 — adk-rust Corpus 5 added) | `.factory/semport/reference-manifest.md` |
 | Planning studies (naming decision, file-size standard) | `.factory/planning/naming-decision-study.md` + `file-size-standard-study.md` |
 | Semport pass 1 analysis state (deepening items, risks) | `.factory/semport/core/ANALYSIS-STATE.md` |
 | D16 comparative assessment + 3 part-files (COMPARATIVE-ASSESSMENT.md synthesis) | `.factory/comparative/COMPARATIVE-ASSESSMENT.md` (+ `assessment-parts/`) |
-| Architecture core: ARCH-INDEX v1.4 + 9 section files (module-decomposition v1.10, purity-boundary-map v1.5, verification-architecture v1.4) + ADR-006 rev-4 + ADR-005 rev-2 + ADR-013 (~1,300+ lines), 13 ADRs | `.factory/specs/architecture/` + `decisions/` |
+| Architecture core: ARCH-INDEX v1.4 + 9 section files (module-decomposition v1.10, purity-boundary-map v1.5, verification-architecture v1.4) + ADR-006 rev-4 + ADR-005 rev-4 + ADR-013 (~1,300+ lines), 13 ADRs | `.factory/specs/architecture/` + `decisions/` |
 | VP-INDEX + VP-001..005 (D17-Q7 top-3 BSP invariants + MCP integration VPs) | `.factory/specs/verification-properties/` |
 | DTU assessment (DTU_REQUIRED: true; 3 cassette clone sets; pre-Phase-3 gate ≥8/7/3) | `.factory/planning/dtu-assessment.md` |
 | ADR tech validation (schemars 1.2.1, rmp-serde 1.3.1, Kani 0.67.0 no-async) | `.factory/planning/adr-tech-validation.md` |

@@ -14,8 +14,10 @@ timestamp: 2026-07-19T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D11]
-version: "1.2"
+version: "1.4"
 changelog:
+  - "1.4 (burst 119 coordinator sweep, 2026-07-19): Extend §Object-Safety section with Runnable and BaseChatModel adjudications: (1) verification-architecture.md:43 'pure get_next_version(current) successor function' description confirmed accurate — Kani target is MonotonicClock::get_next_version (ZST associated function), not the CheckpointSaver trait method; no edit to verification-architecture.md. (2) Runnable<Input, Output> dyn-compat axis settled: zero dyn Runnable<...> uses in specs/; the separate DynRunnable<Value, Value> type-erased trait (BC-2.01.003/004) is the heterogeneous composition seam; impl Stream return and generic type params in Runnable are non-issues; no interface-definitions.md change required. (3) BaseChatModel same conclusion: zero dyn BaseChatModel uses in specs/; always monomorphic impl BaseChatModel for ChatOpenAI/Anthropic/Ollama; no interface-definitions.md change required. No PO routing for items 2 or 3."
+  - "1.3 (F-P116-01, 2026-07-19): dyn-compat fix — add &self receiver to get_next_version provided method on CheckpointSaver trait (was receiver-less, causing E0038 on Arc<dyn CheckpointSaver>). Three-reason rationale: (1) dyn-compatibility requires a receiver on every non-Sized-bounded method; (2) virtual dispatch of backend overrides through the vtable requires &self; (3) langgraph BaseCheckpointSaver.get_next_version is an instance method — the parity claim required correction from 'static method' to 'instance method'. Purity preserved: default body delegates entirely to MonotonicClock::get_next_version (ZST, no self use). Add §Object-Safety of the 5-Method CheckpointSaver Trait subsection with explicit dyn-compatibility conclusion. API Surface Reconciliation rev-2 Signature row updated to include &self."
   - "1.2 (F-P115-02, 2026-07-19): Placement adjudication — add §CheckpointSaver Trait Placement subsection. BC-2.04.003 PC1 says 'A CheckpointSaver implementation provides a get_next_version(current, channel) method'; to satisfy this literally, get_next_version is now also a provided method on the CheckpointSaver trait with a default impl delegating to MonotonicClock::get_next_version. MonotonicClock remains the canonical pure-core algorithm implementation; the trait default is a thin delegation wrapper. Aligns with langgraph BaseCheckpointSaver reference corpus placement."
   - "1.1 (F-P114-01, 2026-07-19): CRIT — replace argument-less MonotonicClock::next_id() AtomicU64 counter with stateless get_next_version(current, channel) per BC-2.04.003 PC1; correct 'Cross-instance ordering: not required' to cross-restart monotonicity guarantee via persisted-max seeding; define seeding scope as per-(thread_id, checkpoint_ns); document E-CHKPT-003 failure path at get_tuple() read; reconcile API surface with BC-2.04.003; add Rationale, Alternatives Considered, Source/Origin sections per adr-template.md."
   - "1.0 (2026-07-14, initial): base ADR accepted; CONFLICT-4 resolution; CheckpointId as u64 newtype; AtomicU64 per-instance counter design (superseded in 1.1)."
@@ -23,7 +25,7 @@ changelog:
 
 # ADR-005: Logical Clock and Checkpoint Ordering
 
-**Status:** Accepted rev-2
+**Status:** Accepted rev-4
 
 ## Context
 
@@ -127,7 +129,7 @@ BC-2.04.003 PC1 specifies `get_next_version(current, channel)` as the required m
 
 | Dimension | rev-1 (retracted) | rev-2 (this ADR) |
 |-----------|-------------------|-------------------|
-| Signature | `next_id(&self) -> CheckpointId` | `get_next_version(current: Option<CheckpointId>, _channel: &ChannelName) -> Result<CheckpointId, FerrochainError>` |
+| Signature | `next_id(&self) -> CheckpointId` | `get_next_version(&self, current: Option<CheckpointId>, _channel: &ChannelName) -> Result<CheckpointId, FerrochainError>` |
 | State | AtomicU64 counter in instance | Stateless; all state in `current` parameter |
 | Seeding | None (starts at 0) | Sourced from persisted `CheckpointTuple` by caller |
 | Cross-restart | Resets to 0 (PK collision risk) | Monotonicity preserved via persisted-max seed |
@@ -159,13 +161,14 @@ pub struct CheckpointMetadata {
 Fork creates a new `CheckpointId` (via `get_next_version`) with `parent_checkpoint_id = Some(source_id)`.
 State is NOT copied; the parent checkpoint is referenced by pointer only.
 
-### CheckpointSaver Trait Placement (F-P115-02)
+### CheckpointSaver Trait Placement (F-P115-02; corrected F-P116-01)
 
-BC-2.04.003 PC1 specifies: "A `CheckpointSaver` implementation provides a `get_next_version(current, channel)` method." To honor this literally — and to match the langgraph `BaseCheckpointSaver` reference corpus, which places `get_next_version` on the saver class — `get_next_version` is also exposed as a **provided method on the `CheckpointSaver` trait**, with a default implementation that delegates to `MonotonicClock::get_next_version`:
+BC-2.04.003 PC1 specifies that the `CheckpointSaver` trait provides `get_next_version` as a provided method with a default implementation delegating to `MonotonicClock::get_next_version`; implementations MAY override. To honor this — and to match the langgraph `BaseCheckpointSaver` reference corpus, which places `get_next_version` as an **instance method** on the saver class — `get_next_version` is exposed as a provided method on the `CheckpointSaver` trait with an `&self` receiver:
 
 ```rust
 // Provided method on CheckpointSaver trait — callers can override, but the default is correct
 fn get_next_version(
+    &self,
     current: Option<CheckpointId>,
     channel: &ChannelName,
 ) -> Result<CheckpointId, FerrochainError> {
@@ -173,13 +176,57 @@ fn get_next_version(
 }
 ```
 
-This is a static (no `&self`) trait method because `get_next_version` is pure — it takes only data in and returns data out. No saver instance state is required.
+**Receiver rationale (`&self` required, not optional):** Three independent reasons mandate an `&self` receiver:
+
+1. **dyn-compatibility (E0038 avoidance):** A receiver-less associated function on a trait makes the trait NOT dyn-compatible under E0038 unless the method carries a `where Self: Sized` bound. `bounded-contexts.md:64` mandates `Arc<dyn CheckpointSaver>`; `semport/rust-translation-strategy.md:183-184` confirms dyn dispatch at the effectful-shell seam. Without `&self` (and without a `where Self: Sized` bound, which would exclude the method from the vtable entirely), the compiler rejects the trait object construction.
+
+2. **Virtual dispatch of backend overrides:** Static methods are not virtually dispatched through trait objects — the override use case (e.g., a distributed backend using a server-side sequence counter) is only reachable through the vtable when the method carries a receiver. A receiver-less method's override is dead code when called through `Arc<dyn CheckpointSaver>`.
+
+3. **langgraph instance-method parity:** langgraph's `BaseCheckpointSaver.get_next_version(self, current, channel)` is an instance method on the saver class. The prior "static method" parity claim was incorrect; the correct parity is instance-method parity.
+
+**Purity preserved by delegation:** The `&self` receiver does NOT make `get_next_version` impure. The default body delegates entirely to `MonotonicClock::get_next_version(current, channel)`, which is a stateless pure-core function (ZST; ignores `&self` completely). Concrete overrides that DO use instance state (e.g., a distributed sequence counter accessed via `&self`) are effectful shell implementations — the pure-core algorithm lives in `MonotonicClock`.
 
 **`MonotonicClock` status unchanged:** `MonotonicClock::get_next_version` remains the canonical pure-core algorithm implementation in `checkpoint::clock`. Its Pure Core classification in the Purity Boundary Map is unchanged. The trait default is a thin delegation wrapper; the algorithm lives in `MonotonicClock`.
 
 **Why not `MonotonicClock` only?** An associated function on `MonotonicClock` satisfies the implementation contract but does not satisfy the BC-2.04.003 PC1 "provides a method" language, which names the saver as the provider. The reference corpus confirms the saver-level placement. The provided-method pattern achieves both: trait conformance and algorithm encapsulation.
 
-**Override semantics:** Saver implementations MAY override the default if they require backend-specific ordering logic (e.g., a distributed backend that uses a server-side sequence). The default override uses `MonotonicClock`.
+**Override semantics:** Saver implementations MAY override the default if they require backend-specific ordering logic (e.g., a distributed backend that uses a server-side sequence). The default body delegates to `MonotonicClock`.
+
+### Object-Safety of the 5-Method CheckpointSaver Trait
+
+`bounded-contexts.md:64` mandates `Arc<dyn CheckpointSaver>`. The following table states the dyn-compatibility status of each method explicitly so this axis is settled.
+
+| Method | Receiver | Async | Return type | dyn-compatible? |
+|--------|----------|-------|-------------|-----------------|
+| `put_writes` | `&self` | yes | `Result<(), FerrochainError>` | Yes — with async-trait boxed-future desugaring per ferrochain effectful-shell seam strategy |
+| `get_tuple` | `&self` | yes | `Result<Option<CheckpointTuple>, FerrochainError>` | Yes — with async-trait boxed-future desugaring |
+| `list` | `&self` | yes | `Result<impl Stream<...>, FerrochainError>` | **Residual concern** — `impl Stream` opaque return is NOT dyn-compatible even after async-trait desugaring; must become `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>` in the trait definition; this change belongs in interface-definitions.md §CheckpointSaver (PO-owned; out of ADR-005 scope) |
+| `put` | `&self` | yes | `Result<(), FerrochainError>` | Yes — with async-trait boxed-future desugaring |
+| `get_next_version` | `&self` (corrected v1.3) | no | `Result<CheckpointId, FerrochainError>` | Yes — synchronous; concrete return type; `&self` receiver added this revision |
+
+**Conditions for complete dyn-compatibility:**
+
+1. **Async methods** (put_writes, get_tuple, list, put): desugared via the `#[async_trait]` crate attribute or explicit `-> Pin<Box<dyn Future<Output = ...> + Send + '_>>` return types — eliminating the implicit `impl Future` from the vtable. This is the established ferrochain effectful-shell seam strategy.
+2. **`list` opaque stream:** `impl Stream<...>` replaced with `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>` in the trait definition. Flagged to interface-definitions.md §CheckpointSaver owner (PO-owned).
+3. **`get_next_version` receiver:** `&self` added in this revision (v1.3). Condition satisfied.
+
+**Conclusion:** With conditions 1 and 2 applied (async-trait desugaring + `list` return type correction in interface-definitions.md) and condition 3 satisfied by this revision, the 5-method `CheckpointSaver` trait is dyn-compatible and `Arc<dyn CheckpointSaver>` compiles without E0038.
+
+### Adjacent Trait Object-Safety Adjudications (burst 119 coordinator sweep)
+
+**`Runnable<Input, Output>` — axis settled, dyn NOT required:**
+
+`Runnable<Input, Output>` is a generic trait with `impl Stream` opaque returns (`stream()`) and an `impl Runnable` opaque return (`pipe()`, bounded by `where Self: Sized`). These characteristics make `dyn Runnable<Input, Output>` non-trivially dyn-compatible. However, the spec corpus contains **zero** instances of `dyn Runnable<...>`. The architecture resolves heterogeneous pipeline composition through a separate `DynRunnable<Value, Value>` type-erased object-safe trait (BC-2.01.003/BC-2.01.004; interface-definitions.md:824 E-CORE-004 note). `Runnable<Input, Output>` is always monomorphized — the `pipe()` combinator and concrete stage types are statically dispatched. The `impl Stream` return in `Runnable::stream()` and the `impl Runnable` return in `pipe()` are therefore **non-issues** for the production architecture. No changes to interface-definitions.md §Runnable are required.
+
+**Authority:** semport/core/rust-translation-strategy.md:345–347 (recommends separate `DynRunnable` as candidate ADR); BC-2.01.003 EC-001 and BC-2.01.004 EC-001 and TV-004 (spec `DynRunnable<Value, Value>` as the type-erased composition path).
+
+**`BaseChatModel` — axis settled, dyn NOT required:**
+
+`BaseChatModel: Runnable<Vec<Message>, AiMessage>` inherits all of `Runnable`'s non-dyn characteristics and adds its own: `stream_chat()` returns `impl Stream`, `bind_tools()` returns `impl BaseChatModel`, and `with_structured_output<T>()` has a generic type parameter. The spec corpus contains **zero** instances of `dyn BaseChatModel` or `Arc<dyn BaseChatModel>`. Provider crates exclusively use static dispatch: `impl BaseChatModel for ChatOpenAI`, `impl BaseChatModel for ChatAnthropic`, `impl BaseChatModel for ChatOllama` (architecture/system-overview.md:72–76, module-decomposition.md:161–165). No changes to interface-definitions.md §BaseChatModel are required.
+
+**`MonotonicClock::get_next_version` Kani target — description confirmed accurate:**
+
+`verification-architecture.md:43` describes the Kani verification target as "pure `get_next_version(current)` successor function; stateless, no atomic counter." This refers to `MonotonicClock::get_next_version(current: Option<CheckpointId>, _channel: &ChannelName)` — a receiver-less associated function on the `MonotonicClock` ZST in `checkpoint::clock`. This function is correctly receiver-less (associated function on a zero-size type, not a trait method) and correctly described as pure and stateless. The v1.3 change adding `&self` to the `CheckpointSaver` trait method does not affect the `MonotonicClock` associated function — these are two different functions. No edit to verification-architecture.md is required.
 
 ## Rationale
 
@@ -210,7 +257,7 @@ The per-`(thread_id, checkpoint_ns)` seeding scope is chosen over a store-global
 - Return type is `Result<CheckpointId, FerrochainError>` rather than a plain `CheckpointId` — callers must propagate the overflow error even though it is unreachable in practice. This is the production-grade default (no silent panic for arithmetic).
 - `CheckpointId` is `u64`, not `String` or `Uuid`. Downstream systems that expect UUID-format IDs must adapt.
 
-### Status as of rev-2 (2026-07-19)
+### Status as of rev-4 (2026-07-19)
 
 In-effect per this ADR revision. Implementation of `checkpoint::clock::get_next_version` is
 pending Phase 3 (Wave 1, ferrochain-checkpoint story). The retired `checkpoint::clock::next_id`

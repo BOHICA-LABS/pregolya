@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.36"
+version: "2.37"
 status: active
 producer: product-owner
 timestamp: 2026-07-19T00:00:00Z
 phase: 1d
 changelog:
+  - "2.37 (F-P116-01, 2026-07-19): §CheckpointSaver — dyn-compatibility fixes per ADR-005 v1.3 §Object-Safety (F-P116-01). (A) `get_next_version` provided-method receiver: `&self` added as first parameter (was receiver-less, causing E0038 on Arc<dyn CheckpointSaver>). Rationale: dyn-compatibility requires a receiver on every non-Sized-bounded method; virtual dispatch of backend overrides through Arc<dyn CheckpointSaver> vtable requires &self; langgraph BaseCheckpointSaver.get_next_version is an instance method — prior 'static method' parity claim corrected (F-P116-01). Default body unchanged — still delegates to MonotonicClock::get_next_version(current, channel), ignoring &self. (B) `list` return type: `Result<impl Stream<Item = Result<CheckpointTuple, FerrochainError>>, FerrochainError>` → `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>`. Rationale: `impl Stream` opaque return is NOT dyn-compatible even with async-trait desugaring (E0038); Pin<Box<dyn Stream<Item = ...> + Send>> is the established dyn-compatible boxed-stream pattern for object-safe async traits. Authority: ADR-005 v1.3 §Object-Safety of the 5-Method CheckpointSaver Trait."
   - "2.36 (F-P115-02, 2026-07-19): §CheckpointSaver — add `put` and `get_next_version` methods (trait becomes 5-method). (A) `put` method: persists full checkpoint state blob; called once per run under DurabilityTier::Exit or at run completion (BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003); encrypted when EncryptedSerializer active (BC-2.04.007 PC1); raises E-CHKPT-005 on tenant-context conflict (BC-2.04.006 EC-005). BC anchor annotations: BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003, BC-2.04.006 PC2, BC-2.04.007 PC1+INV-1. (B) `get_next_version` provided method: default impl delegates to MonotonicClock::get_next_version; implementors MAY override; channel param accepted for API compatibility only (BC-2.04.003 PC1/PC5); E-CHKPT-002 on u64 overflow. BC anchor line extended: BC-2.04.001 through BC-2.04.007 with per-method precision. Gate #31 type note extended: Checkpoint and CheckpointMetadata (entities-graph.md §Checkpoint), CheckpointId (ADR-005 / BC-2.04.003 newtype over u64) added. Architect routing: api-surface.md CheckpointSaver row BC range 001–006 is now stale (needs 001–007); flagged for architect."
   - "2.35 (F-P100-02, 2026-07-17): Citation-completeness amendment — no behavioral change. /stream endpoint row BC citation extended from 'BC-2.11.002 PC3/PC4' to 'BC-2.11.002/003/004 PC3/PC4 (per-boundary)'. §StreamEvent BC anchor extended: BC-2.11.003 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for RagChunk boundary) and BC-2.11.004 PC3/PC4 (GuardrailDecision for MemoryItem boundary) added alongside existing BC-2.11.002 PC3/PC4 (ToolResult boundary). GuardrailDecision fires symmetrically at all three ingress boundaries; prior citations listed only the ToolResult boundary BC. ADR-006 rev-4 is co-artifact."
   - "2.34 (F-P99-01, 2026-07-17): Axis (a) Add GuardrailDecision (12th StreamEvent variant) — fires for non-Pass guardrail outcomes (Fail/Transform only; Pass not streamed) at tool-result, RAG, and memory ingress boundaries. Audit-log-only is insufficient for Domain A SOC live-analyst use case (domain-a-soc-analyst.md §5 NEW forcing function); SSE consumer has zero in-band signal otherwise. Axis (b) ToolEnd.data carries POST-guardrail content — raw rejected payloads must not exit the security boundary via any StreamEvent (same isolation as model input buffer, BC-2.11.005 PC1). Axis (c) Ordering: GuardrailDecision fires before ToolEnd within the ToolStart/ToolEnd window (ToolResult boundary); within NodeStart/NodeEnd window before inference (RagChunk/MemoryItem boundaries). Axis (d) StreamEvent variant count 11→12; wire token guardrail_decision; supporting types IngressBoundary/GuardrailDecisionKind/GuardrailSeverityWire. New §StreamEvent section added to Public Rust Trait Signatures; /stream endpoint row updated to reference guardrail_decision events and ToolEnd post-guardrail semantics. ADR-006 rev-3 is co-artifact. Downstream PO amendments required: BC-2.06.001 PC2/PC4/new-EC-006, BC-2.11.002 PC3/PC4, BC-2.11.005 PC1/new-INV-5, BC-2.06.003 new-INV note."
@@ -207,7 +208,7 @@ pub trait CheckpointSaver: Send + Sync {
 
     /// List checkpoints for a thread (newest first).
     async fn list(&self, config: &CheckpointConfig, limit: Option<usize>)
-        -> Result<impl Stream<Item = Result<CheckpointTuple, FerrochainError>>, FerrochainError>;
+        -> Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>;
 
     /// Persist a full checkpoint state blob.
     ///
@@ -241,6 +242,7 @@ pub trait CheckpointSaver: Send + Sync {
     /// # Errors
     /// - `Err(E-CHKPT-002)` on `u64` overflow (unreachable in practice).
     fn get_next_version(
+        &self,
         current: Option<CheckpointId>,
         channel: &ChannelName,
     ) -> Result<CheckpointId, FerrochainError> {
