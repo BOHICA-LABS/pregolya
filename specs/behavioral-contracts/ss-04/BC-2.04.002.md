@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.002
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -24,6 +24,7 @@ changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-4): category canon sweep — EC-003 and test vector error category corrected from `ConfigError` to `VAL` (13-category sweep, F-P4-xx)."
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(FerrochainError { category: VAL, message: ... })` and the durability-string-turbo TV row had `Err(FerrochainError { category: VAL })` with no code. Added code: E-CORE-005 (ValidationFailed) — unknown durability tier string is a VAL construction-time failure at run start."
+  - "1.3 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-003 message reworded from 'unknown durability tier: \"<value>\"' to 'Validation failed for 'durability': unknown tier \"<value>\"' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV bare form unchanged — PASS-ABBREV via EC-003."
 modified: []
 extracted_from: null
 deprecated: null
@@ -79,7 +80,7 @@ developer ceremony — the unsafe faster modes require a deliberate choice.
 |----|-------------|-------------------|
 | EC-001 | Caller passes `DurabilityTier::Async` explicitly | Accepted; `put_writes` submitted as futures; loop does not block on each task's write; futures joined on run exit |
 | EC-002 | Caller passes `DurabilityTier::Exit` explicitly | Accepted; zero `put_writes` mid-run; single `put` on graph exit; fastest, no crash recovery within a run |
-| EC-003 | `durability` field present in config but set to an unrecognized string | `Err(FerrochainError { category: VAL, code: E-CORE-005, message: "unknown durability tier: \"<value>\"" })` at run start |
+| EC-003 | `durability` field present in config but set to an unrecognized string | `Err(FerrochainError { category: VAL, code: E-CORE-005, message: "Validation failed for 'durability': unknown tier \"<value>\"" })` at run start |
 | EC-004 | Subgraph nested inside a root graph; no explicit durability on subgraph | Subgraph inherits parent's effective durability tier via `RunnableConfig` propagation |
 
 ## Canonical Test Vectors

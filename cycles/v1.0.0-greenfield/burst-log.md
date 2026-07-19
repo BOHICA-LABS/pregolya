@@ -2159,3 +2159,70 @@ Full Form-3 census per gate #33 v2.38. Step-A Form 3 patterns applied: (3a) `Fer
 ## Archived from STATE.md Current Phase Steps (burst 196 rotation)
 
 | Phase 1d burst 191 — pass-107 record + fix burst 111 (F-P107-01 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 107: NOT CLEAN strict+PR-merge — 1M. F-P107-01 RESOLVED: 4 ss-02 BC structs v1.2 — E-GRAPH-011 BC-2.02.005 {source}→{source_node,message}; E-GRAPH-007 BC-2.02.001 {key}→{node_id,key}; E-GRAPH-001 BC-2.02.002 {channel}→{channel,task_ids,step}; E-GRAPH-004 BC-2.02.003 {channel,writer}→{channel,writer,step}; error-taxonomy v1.20→v1.21 corrigendum (false "21 PASS" → 5 FAIL/17 PASS); EC-003 "panic message as the error source" ambiguity removed. D18-P89-A sweep: TOTAL MATCH (input hashes unchanged). Trajectory →1 (P1D-107). Counter 0/3. Fix bursts 110→111. Burst 191. |
+
+---
+
+## Burst 197 — Phase 1d Pass 112 Record + Fix Burst 116 (F-P112-01/02 RESOLVED)
+
+**Date:** 2026-07-19
+**Agents:** adversary (pass 112) + product-owner (fix burst 116) + state-manager (STATE update)
+**Files touched:** specs/behavioral-contracts/ss-11/BC-2.11.002.md (PO fix — bare-form adjudication, v1.7→v1.8); specs/behavioral-contracts/ss-11/BC-2.11.003.md (PO fix — bare-form adjudication, v1.6→v1.7); specs/behavioral-contracts/ss-11/BC-2.11.004.md (PO fix — bare-form adjudication, v1.6→v1.7); specs/behavioral-contracts/ss-04/BC-2.04.002.md (PO fix — E-CORE-005 canonical format, v1.2→v1.3); specs/behavioral-contracts/ss-04/BC-2.04.007.md (PO fix — E-CORE-005 canonical format, v1.5→v1.6); specs/behavioral-contracts/ss-08/BC-2.08.002.md (PO fix — E-CORE-005 canonical format, v1.3→v1.4); specs/behavioral-contracts/ss-08/BC-2.08.006.md (PO fix — E-CORE-005 canonical format, v1.3→v1.4); specs/behavioral-contracts/ss-08/BC-2.08.014.md (PO fix — E-CORE-005 canonical format, v1.2→v1.3); specs/prd-supplements/bc-authoring-plan.md (PO fix — registry bare-form + census addendum, v2.38→v2.39); specs/prd-supplements/error-taxonomy.md (PO fix — adjudication row, v1.25→v1.26); cycles/v1.0.0-greenfield/adversarial-reviews/pass-112.md (adversary report, new); STATE.md (state-manager, v3.36→v3.37); burst-log.md, convergence-trajectory.md (state-manager)
+**Versions bumped:** STATE.md v3.36→v3.37; BC-2.11.002 v1.7→v1.8; BC-2.11.003 v1.6→v1.7; BC-2.11.004 v1.6→v1.7; BC-2.04.002 v1.2→v1.3; BC-2.04.007 v1.5→v1.6; BC-2.08.002 v1.3→v1.4; BC-2.08.006 v1.3→v1.4; BC-2.08.014 v1.2→v1.3; bc-authoring-plan v2.38→v2.39; error-taxonomy v1.25→v1.26
+
+### Summary
+
+Phase 1d pass 112 adversarial review completed: NOT CLEAN strict; NOT CLEAN PR-merge — 2 MED findings. Counter stays 0/3.
+
+**Part A verification (burst-115 owed sibling-checks):** All PASS. 17/17 sampled Form-3 templates match taxonomy verbatim; independent Form-3 re-enumeration confirms ZERO wrapper violations. VERSION NOTE: BC-2.11.002 found at v1.7 (not v1.6 as stated in burst-196 checkpoint) — brief-side staleness only; file content correct; this difference generates F-P112-01.
+
+**3 clean axes exercised:** events.md/BC-2.06.x boundary-enum coherence (BoundaryType variants consistent across all surfaces — CLEAN); E-PROV-003 cross-BC (both anchor BCs consistent — CLEAN); interface-definitions §error-handling (HTTP status mapping and error body shape consistent — CLEAN).
+
+**2 MED findings:**
+
+**F-P112-01 (MED) — RESOLVED:** E-CORE-007 `<content_type>` rendered-value contradiction. ADJUDICATED: BARE variant name wins. interface-definitions §IngressContent is the pre-existing authoritative definition (supplements supersede BC prose per Source-of-Truth Precedence Rule 3). Burst-115 introduced qualified enum-path form (`IngressContent::ToolResult` etc.) which contradicts the §IngressContent definition. Fix: BC-2.11.002 v1.7→v1.8, BC-2.11.003 v1.6→v1.7, BC-2.11.004 v1.6→v1.7 — qualified form reverted to bare names (`"ToolResult"`, `"RagChunk"`, `"MemoryItem"`); source description updated from "content variant discriminant" to "IngressContent variant discriminant"; bc-authoring-plan gate #33 registry updated to v2.39 with bare-quoted values. interface-definitions unchanged (already correct).
+
+**F-P112-02 (MED, process-gap) — RESOLVED:** E-CORE-005 single taxonomy format (`Validation failed for '<field>': <reason>`) vs ≥4 divergent message shapes in ≥5 BCs. Novel process class: gate #33 SEMANTIC-AGREEMENT sub-check (D18-P77-B) only verifies `message:` template annotations; it does NOT sweep manually-authored prose in EC/TV description text. Full corpus census (8 BC files hosting E-CORE-005 sites): 5 FIXED, 3 already-conforming (see census table). bc-authoring-plan v2.39 census addendum. error-taxonomy v1.26 adjudication row (documents both F-P112-01 and F-P112-02).
+
+### F-P112-01 Adjudication Record
+
+**Finding:** E-CORE-007 `<content_type>` rendered-value uses qualified form `IngressContent::ToolResult` in burst-115 BC annotations and gate #33 registry; interface-definitions §IngressContent defines bare variant names.
+
+**Adjudication:** BARE variant name wins. Source-of-Truth Precedence Rule 3 (PRD supplements supersede BC prose for the same surface area). interface-definitions §IngressContent is the pre-existing authoritative source for IngressContent variant names — burst-115 was incorrect to introduce the qualified form as the rendered value.
+
+**Scope:** BC-2.11.002 EC-001 and TV panic row (ToolResult), BC-2.11.003 EC-004 and TV panic row (RagChunk), BC-2.11.004 EC-004 and TV panic row (MemoryItem). gate #33 registry E-CORE-007 entry `<content_type>` rendered values.
+
+**Resolution:** Qualified form (`IngressContent::X`) → bare form (`X`) in all 6 BC annotation sites and in the registry entry. Source description corrected from "content variant discriminant" to "IngressContent variant discriminant" (retains the containing type name for orientation; the rendered VALUE is the bare variant). interface-definitions unchanged.
+
+**No cross-owner routing required:** Adjudication is PO-scope (BC body + gate #33 registry). interface-definitions authority was already correct — supplement supersedes, no supplement edit needed.
+
+### E-CORE-005 Site Census Table (F-P112-02)
+
+| BC | EC | Pre-fix Message Text | Post-fix Message Text | Status |
+|----|-----|---------------------|----------------------|--------|
+| BC-2.04.002 | EC-003 | `unknown durability tier: "<value>"` | `Validation failed for 'durability': unknown tier "<value>"` | FIXED |
+| BC-2.04.007 | EC-003 | `EncryptedSerializer: key material must be non-empty` | `Validation failed for 'key_material': must be non-empty` | FIXED |
+| BC-2.08.002 | EC-005 | `model <name> does not support tool calling` | `Validation failed for 'model': model '<name>' does not support tool calling` | FIXED |
+| BC-2.08.006 | EC-002 | `timeout must be set; use .timeout(Duration::from_secs(30))` | `Validation failed for 'timeout': must be set; use .timeout(Duration::from_secs(30))` | FIXED |
+| BC-2.08.014 | EC-006 | `ProviderFallbackPolicy.chain must not be empty` | `Validation failed for 'ProviderFallbackPolicy.chain': must not be empty` | FIXED (corpus-sweep find) |
+| BC-2.04.006 | (various) | already canonical | — | ALREADY-CONFORMING |
+| BC-2.08.004 | (various) | already canonical | — | ALREADY-CONFORMING |
+| BC-2.14.006 | (various) | already canonical | — | ALREADY-CONFORMING |
+
+**Census result:** 8 BC files; 5 FIXED; 3 already-conforming. ZERO non-canonical E-CORE-005 sites remaining.
+
+### D18-P89-A Hash Sweep
+
+Triggered by fix burst 116. Files edited: BC-2.11.002, BC-2.11.003, BC-2.11.004, BC-2.04.002, BC-2.04.007, BC-2.08.002, BC-2.08.006, BC-2.08.014, bc-authoring-plan, error-taxonomy. Transitive cascade (D18-P90-A) applied: any file whose `inputs:` lists reference an edited file also swept. STALE=0 confirmed after `compute-input-hash --scan specs --update`.
+
+### Convergence Status After Burst 197
+
+- Phase 1d passes: 112 (NOT CLEAN strict; 2M)
+- Fix bursts: 116 (Phase 1d; F-P112-01/02 RESOLVED)
+- Counter: 0 of 3
+- Trajectory: ...→2→2→1→2 (tail after P1D-112)
+
+---
+
+## Archived from STATE.md Current Phase Steps (burst 197 rotation)
+
+| Phase 1d burst 192 — hash-currency closure (D18-P89-A cascade, burst-191 sweep miss) | state-manager | COMPLETE | Burst 192 (no adversary pass): burst-191 D18-P89-A sweep missed 3 BCs listing error-taxonomy in inputs — BC-2.07.001 →43fee7a; BC-2.14.001 →cda09ef; BC-2.14.002 →cda09ef. Root cause: direct-edit sweep only; --scan specs not run; D18-P90-A transitive rule not applied. Scan end-state: TOTAL=126 MATCH=126. No content changes; hash-currency closure only. Trajectory-tail →1→1→1→1 (unchanged). Counter 0/3. Fix bursts 111 (unchanged). Burst 192. |

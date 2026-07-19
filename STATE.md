@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.36"
+version: "3.37"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-19T18:40:00Z
+timestamp: 2026-07-19T07:06:31Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "burst 196 COMPLETE — pass-111 record + fix burst 115 (F-P111-01 RESOLVED): gate #33 v2.38 wrapper-form Form-3 census (17 codes / 27 sites / 17 BC files); E-CORE-007 context-sourced (ProvenanceTag.boundary_type / IngressContent discriminant); E-RETRY-002 inline template; BC-2.11.002/003/004 v1.6; BC-2.16.002 v1.2; error-taxonomy v1.25; trajectory-tail →4→2→2→1; counter 0/3; D-14; D-15; D-111; NEXT: dispatch adversary pass 112"
+current_step: "burst 197 COMPLETE — pass-112 record + fix burst 116 (F-P112-01/02 RESOLVED): E-CORE-007 bare-form adjudication (interface-definitions §IngressContent authority; BC-2.11.002/003/004 v1.8/v1.7/v1.7); E-CORE-005 8-BC corpus census (5 FIXED canonical format); bc-authoring-plan v2.39; error-taxonomy v1.26; trajectory-tail →2→2→1→2; counter 0/3; D-14; D-15; D-112; NEXT: dispatch adversary pass 113"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -21,9 +21,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. Current: ~201 lines (wc-l). margin from soft-target: -1 lines (at soft limit). margin from actual: ~299 lines.
-  Historical content → cycle files (burst-log, convergence-trajectory, session-checkpoints, lessons, blocking-issues-resolved).
-  Run /vsdd-factory:compact-state if this file grows past 200 lines. -->
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. Current: ~199 lines (wc-l after trim). Historical content → cycle files (burst-log, convergence-trajectory, session-checkpoints, lessons, blocking-issues-resolved). Run /vsdd-factory:compact-state if this file grows past 200 lines. -->
 
 # Pipeline State: ferrochain
 

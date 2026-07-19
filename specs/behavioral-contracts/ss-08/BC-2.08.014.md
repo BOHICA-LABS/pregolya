@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.014
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (ADV-P81-01): F-P81-01 — TV-007 had fabricated PascalCase variant name `E-CORE-005 ValidationFailed`; no such variant exists in error-taxonomy.md (E-CORE-005 message is plain prose). Fixed to canonical bare-code form matching sibling BC-2.08.002 TV-005: `Err(FerrochainError { category: VAL, code: E-CORE-005 })`."
   - "1.2 (F-P108-01, 2026-07-18): EC-004 and TV-005 expanded to use two separate fields `last_error_code` and `last_provider` instead of single `last_error` field. Root cause: the taxonomy Message Format for E-PROV-010 uses two distinct placeholders `<last_error_code>/<last_provider>` that cannot be rendered from a single combined field; BC-wins rule applies. EC-004: `{ providers_attempted: 3, last_error: \"E-PROV-008/provider-b\" }` → `{ providers_attempted: 3, last_error_code: \"E-PROV-008\", last_provider: \"provider-b\" }`. TV-005: expanded from bare form with inline `providers_attempted: 3` annotation to full struct with all three fields. Sibling sweep (all E-PROV-010 sites in this BC): PC5 uses message-template form with `<last_error_code>/<last_provider>` placeholders (already correctly separated); Description and TV-006 use bare form (no struct fields; not subject to parity check). PASS after fix."
+  - "1.3 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-006 message reworded from 'ProviderFallbackPolicy.chain must not be empty' to 'Validation failed for 'ProviderFallbackPolicy.chain': must not be empty' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV-007 bare form unchanged — PASS-ABBREV via EC-006. Note: EC-006 was added after the ADV-P1D-PASS-56 census and was not in that census; discovered by F-P112-02 corpus-wide sweep."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
 inputs:
@@ -146,7 +147,7 @@ Fallback chain is NOT attempted. TIMEOUT is not a failover trigger condition.
 ### EC-006: Empty fallback chain at config construction
 **Scenario:** `ProviderFallbackPolicy { chain: vec![] }` passed to `ChatConfig`.
 **Expected behavior:** `Err(FerrochainError { category: VAL, code: E-CORE-005,
-message: "ProviderFallbackPolicy.chain must not be empty" })` at config construction time.
+message: "Validation failed for 'ProviderFallbackPolicy.chain': must not be empty" })` at config construction time.
 No runtime failover attempt occurs. (DI-008.)
 
 ## Canonical Test Vectors

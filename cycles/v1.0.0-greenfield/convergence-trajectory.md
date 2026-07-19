@@ -50,7 +50,7 @@ traces_to: STATE.md
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112)`
 
 ## Per-Pass Details
 
@@ -638,11 +638,26 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 | Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
 |------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
 | P1D-111 | 2026-07-19 | 1 | 0 | 0 | 1 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+| P1D-112 | 2026-07-19 | 2 | 0 | 0 | 2 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
 
 **Axes rotated (burst-195 sibling-checks):** F-P110-02 RESOLVED — BC-2.13.004 v1.2 TV-002 3-field `{requested, resolved, root}` confirmed; cross-anchor consistent with BC-2.13.005; PASS. F-P110-01 RESOLVED — error-taxonomy v1.24 corrigendum #4 ONE placeholder confirmed; run_status = superset diagnostic field; BC-2.05.006 v1.4 EC-005 run_id confirmed; PASS. Census v2.37 34 codes / 32 PASS / 2 FAIL-both-fixed PASS. Cross-anchor full sweep: E-SBXD-001 PASS, E-GRAPH-016 PASS, E-CORE-007 wrapper-form noted → F-P111-01. MAJOR: all four carry-forward Part-B axes exercised IN FULL and CLEAN — holdout-domains↔BC/CAP (Domains C+D fully dispositioned), purity-map(58)↔module-decomp(49 rows: 22P+28E+8B, +9 definitions-only) Iron Law holds 10/10 spot-check, CAP(21)↔BC(95) bidirectional zero orphans, DI(14) all cited, ss-16/ss-17 remainder sound.
 **Fix summary (burst 196 — fix burst 115):** F-P111-01 MED [process-gap] (PO+orchestrator) — gate #33 v2.37→v2.38: Step-A Form 3 wrapper-form grep (patterns 3a + 3b false-positive check); wrapper-form discipline codified (bare {category, code} valid ONLY for placeholder-less codes; inline message: template / PASS-ABBREV / registered context-source required for codes with placeholders). E-CORE-007 resolved via context-sourced exception: `<boundary>` from ProvenanceTag.boundary_type, `<content_type>` from IngressContent variant discriminant; registered in gate #33; BC-2.11.002/003/004 v1.5→v1.6. E-RETRY-002 resolved via inline template: BC-2.16.002 v1.1→v1.2. Full Form-3 census: 17 codes / 27 violation sites across 17 BC files; all resolved; ZERO remaining. 15 additional BCs bumped: BC-2.16.001 v1.3, BC-2.01.001 v1.2, BC-2.14.004 v1.2, BC-2.08.007 v1.4, BC-2.08.001 v1.3, BC-2.15.004 v1.2, BC-2.03.001 v1.5, BC-2.04.001 v1.2, BC-2.04.004 v1.2, BC-2.04.006 v1.4, BC-2.09.002 v1.2, BC-2.17.002 v1.3, BC-2.08.004 v1.5. error-taxonomy v1.24→v1.25 (Form-3 census documented as new scope; no corrigendum needed). total_standing_gates unchanged at 34.
 **Hash sweep (D18-P89-A):** Run this burst; STALE=0 confirmed after `--scan specs`.
 **Trajectory after:** →1 (P1D-111); cumulative tail →4→2→2→1
+**Counter:** 0/3
+
+---
+
+### P1D-112 — Pass 112 (2026-07-19, burst 197)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-112 | 2026-07-19 | 2 | 0 | 0 | 2 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes rotated (burst-196 sibling-checks):** F-P111-01 RESOLVED — gate #33 v2.38 Form-3 procedure executable; E-CORE-007 context-sourced exception verified; E-RETRY-002 inline template `<global_limit>` confirmed; 6-site spot-verify PASS; 17/17 template verification PASS (PASS-WITH-NOTE on 3 E-CORE-007 sites — qualified form generates F-P112-01). VERSION NOTE: BC-2.11.002 found at v1.7 (not v1.6 in checkpoint) — brief-side staleness. Three clean axes: events.md/BC-2.06.x boundary-enum coherence CLEAN; E-PROV-003 cross-BC CLEAN; interface-definitions §error-handling CLEAN.
+**Fix summary (burst 197 — fix burst 116):** F-P112-01 MED (PO) — E-CORE-007 `<content_type>` rendered-value adjudication; BARE variant name wins (interface-definitions §IngressContent pre-existing authority; supplements supersede BC prose per Source-of-Truth Precedence Rule 3); BC-2.11.002 v1.7→v1.8 (EC-001 + TV panic row: `"IngressContent::ToolResult"` → `"ToolResult"`; source note: "content variant discriminant" → "IngressContent variant discriminant"); BC-2.11.003 v1.6→v1.7 (symmetric; RagChunk); BC-2.11.004 v1.6→v1.7 (symmetric; MemoryItem); bc-authoring-plan gate #33 registry updated to v2.39 (bare-quoted values). F-P112-02 MED [process-gap] (PO) — E-CORE-005 polymorphic message adjudication; canonical format `Validation failed for '<field>': <reason>` is the SINGLE required shape; corpus census 8 BC files (5 FIXED: BC-2.04.002 'durability' v1.2→v1.3, BC-2.04.007 'key_material' v1.5→v1.6, BC-2.08.002 'model' v1.3→v1.4, BC-2.08.006 'timeout' v1.3→v1.4, BC-2.08.014 'ProviderFallbackPolicy.chain' v1.2→v1.3; 3 already-conforming: BC-2.04.006, BC-2.08.004, BC-2.14.006); bc-authoring-plan v2.39 census addendum; error-taxonomy v1.25→v1.26 adjudication row. No cross-owner routing. total_standing_gates unchanged at 34.
+**Hash sweep (D18-P89-A):** Run this burst; STALE=0 confirmed after `compute-input-hash --scan specs --update`.
+**Trajectory after:** →2 (P1D-112); cumulative tail →2→2→1→2
 **Counter:** 0/3
 
 ---
