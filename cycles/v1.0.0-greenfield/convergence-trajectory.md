@@ -50,7 +50,7 @@ traces_to: STATE.md
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN)`
 
 ## Per-Pass Details
 
@@ -659,6 +659,21 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 **Hash sweep (D18-P89-A):** Run this burst; STALE=0 confirmed after `compute-input-hash --scan specs --update`.
 **Trajectory after:** →2 (P1D-112); cumulative tail →2→2→1→2
 **Counter:** 0/3
+
+---
+
+### P1D-113 — Pass 113 (2026-07-19, burst 198)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-113 | 2026-07-19 | 0 | 0 | 0 | 0 | 0 | 1 | LOW | 1/3 | FINDINGS_REMAIN (CLEAN strict 1/3 — streak active; convergence requires 3/3) |
+
+**Axes exercised (burst-198 pass-113):** F-P112-01 RESOLVED — BC-2.11.002 v1.8/BC-2.11.003 v1.7/BC-2.11.004 v1.7 bare-form confirmed; E-CORE-007 zero qualified-path forms corpus-wide; PASS. F-P112-02 RESOLVED — E-CORE-005 canonical format `Validation failed for '<field>': <reason>` confirmed at all 5 fixed sites; 3 already-conforming sites still conforming; PASS. TV-count re-sum 513 CLEAN. VP-INDEX 3-way propagation CLEAN. NFR↔VP 10-sample CLEAN. BC-INDEX H1 sync 10-sample CLEAN. Subsystem↔ARCH-INDEX 17/17 CLEAN. DI orphan check 14/14 CLEAN. BC-INDEX arithmetic 95=48+39+8 CLEAN. Module-criticality dual-registry CLEAN (intentional dual-scope). BC-2.06.x↔SS-11 guardrail coherence CLEAN (IngressBoundary/BoundaryType two distinct enums by design).
+**Cleared candidates:** C-1 module-criticality dual-registry (arch-view 35 vs PO-view 22 — intentional; 13 arch-only infrastructure/tooling modules correctly absent from PO-view; CLEARED). C-2 IngressBoundary vs BoundaryType (two distinct enums by design; BoundaryType = security dispatch routing; IngressBoundary = stream observer API alias; IngressContent = data-shape payload; each BC uses correct enum per surface; CLEARED).
+**Obs-1 (non-blocking):** BC-2.14.003 TV-002 references E-CORE-005 as code-only cite (expected-output field) — correctly outside manually-authored message text census scope; no spec defect.
+**Hash sweep (D18-P89-A):** CLEAN pass — no spec edits; frozen-corpus rule active; hash sweep N/A (bookkeeping-only burst 198).
+**Trajectory after:** →0 (P1D-113 CLEAN); cumulative tail →2→1→2→0
+**Counter:** 1/3 STREAK ACTIVE
 
 ---
 

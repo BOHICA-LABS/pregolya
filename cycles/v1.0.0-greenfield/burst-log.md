@@ -2226,3 +2226,47 @@ Triggered by fix burst 116. Files edited: BC-2.11.002, BC-2.11.003, BC-2.11.004,
 ## Archived from STATE.md Current Phase Steps (burst 197 rotation)
 
 | Phase 1d burst 192 — hash-currency closure (D18-P89-A cascade, burst-191 sweep miss) | state-manager | COMPLETE | Burst 192 (no adversary pass): burst-191 D18-P89-A sweep missed 3 BCs listing error-taxonomy in inputs — BC-2.07.001 →43fee7a; BC-2.14.001 →cda09ef; BC-2.14.002 →cda09ef. Root cause: direct-edit sweep only; --scan specs not run; D18-P90-A transitive rule not applied. Scan end-state: TOTAL=126 MATCH=126. No content changes; hash-currency closure only. Trajectory-tail →1→1→1→1 (unchanged). Counter 0/3. Fix bursts 111 (unchanged). Burst 192. |
+
+---
+
+## Archived from STATE.md Current Phase Steps (burst 198 rotation)
+
+| Phase 1d burst 193 — pass-108 record + fix burst 112 (F-P108-01/02/03/04/05 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 108: NOT CLEAN strict+PR-merge — 1H+2M+1L. F-P108-04 HIGH [process-gap]: gate #33 STRUCT-PLACEHOLDER PARITY CENSUS codified (bc-authoring-plan v2.35 Steps A/B/C); first formal census 36 codes: 8 FAIL (E-MEMORY-006, E-GRAPH-011/007/001/004, E-PROV-010, E-CHKPT-004, E-PROV-009 — all fixed in prior bursts), 28 PASS, zero remaining. F-P108-01 HIGH: BC-2.08.014 v1.2 EC-004/TV-005 expanded to 3-field struct {providers_attempted, last_error_code, last_provider}. F-P108-02 MED: BC-2.04.007 v1.5 PC4 source→message correction. F-P108-03 MED: BC-2.08.013 v1.2 EC-002 expanded to 4-field struct {dialect, element, offset, parse_error}. F-P108-05 LOW: E-PROV-009 offset↔`<n>` semantic alias PASS-NOTE. error-taxonomy v1.21→v1.22 corrigendum #2 (8 FAIL/28 PASS canon). Trajectory →4 (P1D-108). Counter 0/3. Fix bursts 111→112. Burst 193. |
+
+---
+
+## Burst 198 (2026-07-19) — Pass-113 CLEAN(strict) 1/3; bookkeeping only
+
+**Agents dispatched:** state-manager (bookkeeping only)
+**Phase:** 1d convergence loop
+**Type:** BOOKKEEPING-ONLY — frozen-corpus rule active; no spec edits
+
+### Pass-113 Summary
+
+Adversary pass 113: CLEAN (strict) and CLEAN (PR-merge). Zero findings of any severity.
+
+- F-P112-01 RESOLVED independently verified: BC-2.11.002 v1.8/BC-2.11.003 v1.7/BC-2.11.004 v1.7 bare-form confirmed; E-CORE-007 zero qualified-path forms corpus-wide.
+- F-P112-02 RESOLVED independently verified: E-CORE-005 canonical format `Validation failed for '<field>': <reason>` confirmed at all 5 fixed sites; 3 already-conforming sites still conforming.
+- Obs-1 (non-blocking): BC-2.14.003 TV-002 references E-CORE-005 as code-only cite in expected-output field — correctly outside manually-authored message text census scope; no spec defect.
+- C-1 Cleared: arch-view 35 modules vs PO-view 22 modules — intentional dual-scope; 13 arch-only infrastructure/tooling modules correctly absent from PO-view; CLEARED.
+- C-2 Cleared: IngressBoundary vs BoundaryType — two distinct enums by design (BoundaryType = security dispatch routing; IngressBoundary = stream observer API alias; IngressContent = data-shape payload); CLEARED.
+
+**Convergence counter:** 0/3 → 1/3 STREAK ACTIVE. Frozen-corpus rule in effect.
+
+### Files Written
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-113.md` | NEW — pass-113 adversarial review report (CLEAN strict 1/3) |
+| `.factory/STATE.md` | v3.37→v3.38; trajectory-tail →2→1→2→0 (4-component); counter 1/3 streak active; D-chain cite D-113; burst-198 phase steps rotation |
+| `.factory/cycles/v1.0.0-greenfield/convergence-trajectory.md` | append →0 (P1D-113 CLEAN) to shorthand + P1D-113 detailed section; counter 1/3 STREAK ACTIVE |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | archive burst-193 (burst-198 rotation) + this burst-198 narrative |
+| `.factory/cycles/v1.0.0-greenfield/session-checkpoints.md` | archive burst-197 checkpoint |
+
+### Convergence Status After Burst 198
+
+- Phase 1d passes: 113 (CLEAN strict — 1/3 streak active)
+- Fix bursts: 116 (no new fixes; frozen-corpus rule in effect)
+- Counter: 1 of 3 STREAK ACTIVE
+- Trajectory: ...→2→1→2→0 (tail after P1D-113)
+- NEXT: dispatch adversary pass 114 (fresh-hunt only; corpus FROZEN — no spec edits since burst 197)

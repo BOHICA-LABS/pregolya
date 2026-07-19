@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.37"
+version: "3.38"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-19T07:06:31Z
+timestamp: 2026-07-19T23:45:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "burst 197 COMPLETE — pass-112 record + fix burst 116 (F-P112-01/02 RESOLVED): E-CORE-007 bare-form adjudication (interface-definitions §IngressContent authority; BC-2.11.002/003/004 v1.8/v1.7/v1.7); E-CORE-005 8-BC corpus census (5 FIXED canonical format); bc-authoring-plan v2.39; error-taxonomy v1.26; trajectory-tail →2→2→1→2; counter 0/3; D-14; D-15; D-112; NEXT: dispatch adversary pass 113"
+current_step: "burst 198 COMPLETE — pass-113 CLEAN(strict) 1/3 STREAK ACTIVE; D-chain cite D-113 (latest pass); frozen-corpus rule in effect; trajectory-tail →2→1→2→0; counter 1/3; NEXT: dispatch adversary pass 114 (fresh-hunt only; corpus FROZEN)"
 current_cycle: v1.0.0-greenfield
 pipeline: IN_PROGRESS
 dtu_required: true
@@ -21,7 +21,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. Current: ~199 lines (wc-l after trim). Historical content → cycle files (burst-log, convergence-trajectory, session-checkpoints, lessons, blocking-issues-resolved). Run /vsdd-factory:compact-state if this file grows past 200 lines. -->
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. Current: ~198 lines (wc-l after trim). margin from soft-target: +2. margin from actual: +2. Historical content → cycle files (burst-log, convergence-trajectory, session-checkpoints, lessons, blocking-issues-resolved). Run /vsdd-factory:compact-state if this file grows past 200 lines. -->
 
 # Pipeline State: ferrochain
 
@@ -36,26 +36,25 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-19 — burst 196: pass-111 record + fix burst 115 (F-P111-01 RESOLVED); gate #33 v2.38 wrapper-form Form-3 census (17 codes / 27 sites); E-CORE-007 context-sourced; E-RETRY-002 inline template; BC-2.11.002/003/004 v1.6; error-taxonomy v1.25; trajectory-tail →4→2→2→1 |
+| **Last Updated** | 2026-07-19 — burst 198: pass-113 CLEAN(strict) 1/3 STREAK ACTIVE; frozen-corpus rule in effect; counter 1/3; trajectory-tail →2→1→2→0 |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | burst 196 COMPLETE — pass-111 record + fix burst 115 (F-P111-01 RESOLVED); gate #33 v2.38 wrapper-form Form-3 census (17 codes / 27 sites / 17 BCs); E-CORE-007 context-sourced exception; E-RETRY-002 inline template; error-taxonomy v1.25; trajectory-tail →4→2→2→1; counter 0/3; NEXT: dispatch adversary pass 112 |
+| **Current Step** | burst 198 COMPLETE — pass-113 CLEAN(strict) 1/3 STREAK ACTIVE; frozen-corpus rule in effect; trajectory-tail →2→1→2→0; counter 1/3; NEXT: dispatch adversary pass 114 (fresh-hunt only; corpus FROZEN) |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →1 (P1D-106) →1 (P1D-107) →4 (P1D-108) →2 (P1D-109) →2 (P1D-110) →1 (P1D-111) |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →1 (P1D-106) →1 (P1D-107) →4 (P1D-108) →2 (P1D-109) →2 (P1D-110) →1 (P1D-111) →2 (P1D-112) →0 (P1D-113 CLEAN) |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
 | 7: Convergence | not-started | | | | |
-| Adversary pass-109 complete; fix burst 113 complete | complete | 2026-07-19 | 2026-07-19 | counter 0/3 (P109: NOT CLEAN strict 1H+1M; F-P109-01 RESOLVED: BC-2.05.005 v1.3 thread_id 9 sites; F-P109-02 RESOLVED: bc-authoring-plan v2.36 4 aliases + context-sourced exception + PASS-ABBREV; BC-2.09.001 v1.3 / BC-2.13.005 v1.1 census fixes; error-taxonomy v1.23 corrigendum #3; gate #33 v2.36 census 30-code 3 FAIL-all-fixed 27 PASS) | trajectory-tail →1→1→4→2; 0/3 |
-| Adversary pass-110 complete; fix burst 114 complete | complete | 2026-07-19 | 2026-07-19 | counter 0/3 (P110: NOT CLEAN strict 1H+1M [process-gap]; F-P110-02 RESOLVED: BC-2.13.004 v1.2 secondary anchor WorkspaceEscape cross-anchor fix; bc-authoring-plan v2.37 Step B check-1; F-P110-01 RESOLVED: error-taxonomy v1.24 corrigendum #4 E-GRAPH-002 ONE placeholder; BC-2.05.006 v1.4 E-GRAPH-014 run_id; census v2.37 34 codes 2 FAIL-all-fixed 32 PASS) | trajectory-tail →1→4→2→2; 0/3 |
-| Adversary pass-111 complete; fix burst 115 complete | complete | 2026-07-19 | 2026-07-19 | counter 0/3 (P111: NOT CLEAN strict 1M [process-gap]; F-P111-01 RESOLVED: gate #33 v2.38 wrapper-form Form-3 (17 codes / 27 sites / 17 BCs); E-CORE-007 context-sourced exception; E-RETRY-002 inline template; BC-2.11.002/003/004 v1.6; BC-2.16.002 v1.2; error-taxonomy v1.25; 4 carry-forward axes all CLEAN) | trajectory-tail →4→2→2→1; 0/3 |
-| Adversary pass-112 (next) | pending | — | — | — | — |
+| Adversary pass-112 complete; fix burst 116 complete | complete | 2026-07-19 | 2026-07-19 | counter 0/3 (P112: NOT CLEAN strict 2M; F-P112-01 RESOLVED: BC-2.11.002/003/004 bare variant names v1.8/v1.7/v1.7; bc-authoring-plan v2.39; F-P112-02 RESOLVED: E-CORE-005 5 BCs canonical format; error-taxonomy v1.26) | trajectory-tail →2→1→2; 0/3 at this pass |
+| Adversary pass-113 CLEAN; burst 198 bookkeeping | complete | 2026-07-19 | 2026-07-19 | counter 1/3 STREAK ACTIVE (P113: CLEAN strict+PR-merge; 0 findings; C-1 dual-registry CLEARED; C-2 IngressBoundary/BoundaryType CLEARED; Obs-1 non-blocking; frozen-corpus rule in effect) | trajectory-tail →2→1→2→0; 1/3 |
+| Adversary pass-114 (next) | pending | — | — | — | — |
 
 ## Current Phase Steps
 
@@ -63,11 +62,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1d burst 192 — hash-currency closure (D18-P89-A cascade, burst-191 sweep miss) | state-manager | COMPLETE | Burst 192 (no adversary pass): burst-191 D18-P89-A sweep missed 3 BCs listing error-taxonomy in inputs — BC-2.07.001 →43fee7a; BC-2.14.001 →cda09ef; BC-2.14.002 →cda09ef. Root cause: direct-edit sweep only; --scan specs not run; D18-P90-A transitive rule not applied. Scan end-state: TOTAL=126 MATCH=126. No content changes; hash-currency closure only. Trajectory-tail →1→1→1→1 (unchanged). Counter 0/3. Fix bursts 111 (unchanged). Burst 192. |
-| Phase 1d burst 193 — pass-108 record + fix burst 112 (F-P108-04/01/02/03 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 108: NOT CLEAN strict+PR-merge — 1H+2M+1L. F-P108-04 RESOLVED [process-gap]: gate #33 STRUCT-PLACEHOLDER PARITY CENSUS codified in bc-authoring-plan v2.35 (Steps A/B/C; 36-code full census: 8 FAIL-all-fixed [E-MEMORY-006 v1.20; E-GRAPH-011/007/001/004 v1.21; E-PROV-010/E-CHKPT-004/E-PROV-009 v1.22], 28 PASS, zero remaining). F-P108-01 RESOLVED: BC-2.08.014 v1.2 EC-004/TV-005 expanded to 3-field struct {providers_attempted, last_error_code, last_provider}. F-P108-02 RESOLVED: BC-2.04.007 v1.5 PC4 field corrected source→message for intra-BC consistency. F-P108-03 RESOLVED: BC-2.08.013 v1.2 EC-002 expanded to 4-field struct {dialect, element, offset, parse_error}. error-taxonomy v1.21→v1.22 corrigendum #2. D18-P89-A sweep: TOTAL MATCH (incorporated into burst-194). Trajectory →4 (P1D-108). Counter 0/3. Fix bursts 111→112. Burst 193. |
-| Phase 1d burst 194 — pass-109 record + fix burst 113 (F-P109-01/02 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 109: NOT CLEAN strict+PR-merge — 1H+1M. F-P109-01 RESOLVED [process-gap]: BC-2.05.005 v1.3 thread_id added at 9 sites (EC-001/002/003/004, TV-001/002/003/004/005); PC1 already correct; alias thread_id↔`<run_id>` registered in gate #33 v2.36; PASS-ABBREV rule corollary added (TV-row `...` = FAIL when sole struct site). Full v2.36 census re-run: 30 codes (2 FPs excluded: E-CHKPT-008/E-BUDGET-001; 4 base-form excluded; net 30 vs 36 under v1.22 rules); 3 FAIL: E-GRAPH-002 (fixed v1.3), E-MCP-002 (BC-2.09.001 TV-004 sole-site `...` fixed v1.3), E-SBXD-001 (BC-2.13.005 TV-002/003 missing requested+root fields fixed v1.1); 27 PASS. F-P109-02 MED [process-gap] (PO) — bc-authoring-plan v2.35→v2.36: 4 aliases added (offset↔`<n>`, providers_attempted↔`<N>`, backend_error↔`<reason>`, message↔`<reason>` CODE-SPECIFIC E-CHKPT-004 do-not-generalize); context-sourced placeholder exception class defined (E-MEMORY-007 registered); PASS-ABBREV rule explicit with negative corollary. error-taxonomy v1.22→v1.23 corrigendum #3. D18-P89-A sweep: TOTAL MATCH. Trajectory →2 (P1D-109). Counter 0/3. Fix bursts 112→113. Burst 194. |
+| Phase 1d burst 194 — pass-109 record + fix burst 113 (F-P109-01/02 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 109: NOT CLEAN strict+PR-merge — 1H+1M. F-P109-01 RESOLVED [process-gap]: BC-2.05.005 v1.3 thread_id added at 9 sites (EC-001/002/003/004, TV-001/002/003/004/005); PC1 already correct; alias thread_id↔`<run_id>` registered in gate #33 v2.36; PASS-ABBREV rule corollary added (TV-row `...` = FAIL when sole struct site). Full v2.36 census re-run: 30 codes (2 FPs excluded: E-CHKPT-008/E-BUDGET-001; 4 base-form excluded; net 30 vs 36 under v1.22 rules); 3 FAIL: E-GRAPH-002 (fixed v1.3), E-MCP-002 (BC-2.09.001 TV-004 sole-site `...` fixed v1.3), E-SBXD-001 (BC-2.13.005 TV-002/003 missing requested+root fields fixed v1.1); 27 PASS. F-P109-02 MED [process-gap] (PO) — bc-authoring-plan v2.35→v2.36: 4 aliases added; context-sourced placeholder exception class defined (E-MEMORY-007 registered); PASS-ABBREV rule explicit. error-taxonomy v1.22→v1.23. D18-P89-A sweep: TOTAL MATCH. Trajectory →2 (P1D-109). Counter 0/3. Fix bursts 112→113. Burst 194. |
 | Phase 1d burst 195 — pass-110 record + fix burst 114 (F-P110-01/02 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 110: NOT CLEAN strict+PR-merge — 1H+1M. F-P110-02 RESOLVED [process-gap HIGH]: BC-2.13.004 v1.2 TV-002 WorkspaceEscape secondary anchor fixed 2-field→3-field {requested, resolved, root}; bc-authoring-plan v2.37 Step B check-1 cross-anchor scope (ALL anchor BCs per taxonomy BC-Anchor cell). F-P110-01 RESOLVED [process-gap MED]: error-taxonomy v1.24 corrigendum #4 — E-GRAPH-002 ONE placeholder `<run_id>` (not two); run_status = superset diagnostic field. BC-2.05.006 v1.4: E-GRAPH-014 run_id added (newly-scoped). Census v2.37: 34 codes (4 newly-scoped; 2 FAIL-all-fixed; 32 PASS). D18-P89-A sweep: STALE=0. Trajectory →2 (P1D-110). Counter 0/3. Fix bursts 113→114. Burst 195. |
 | Phase 1d burst 196 — pass-111 record + fix burst 115 (F-P111-01 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 111: NOT CLEAN strict+PR-merge — 1M. F-P111-01 RESOLVED [process-gap MED]: gate #33 v2.38 Step-A Form 3 wrapper-form detection (17 codes / 27 sites / 17 BCs); E-CORE-007 context-sourced exception (ProvenanceTag.boundary_type / IngressContent discriminant); BC-2.11.002/003/004 v1.5→v1.6; E-RETRY-002 inline template; BC-2.16.002 v1.1→v1.2; 15 additional BCs bumped for wrapper-form compliance; error-taxonomy v1.24→v1.25 (Form-3 census new scope). MAJOR: 4 carry-forward axes all CLEAN (holdout-domains↔BC/CAP, purity-map↔module-decomp, CAP↔BC bidirectional, ss-16/ss-17). D18-P89-A sweep: STALE=0. Trajectory →1 (P1D-111). Counter 0/3. Fix bursts 114→115. Burst 196. |
+| Phase 1d burst 197 — pass-112 record + fix burst 116 (F-P112-01/02 RESOLVED) | adversary + PO + state-manager | COMPLETE | Pass 112: NOT CLEAN strict+PR-merge — 2M. F-P112-01 RESOLVED [MED]: E-CORE-007 `<content_type>` rendered-value; BARE variant wins (interface-definitions §IngressContent pre-existing authority; Source-of-Truth Rule 3); BC-2.11.002 v1.7→v1.8; BC-2.11.003/004 v1.6→v1.7; bc-authoring-plan v2.38→v2.39 (bare-quoted values). F-P112-02 RESOLVED [MED process-gap]: E-CORE-005 non-template prose drift; canonical format `Validation failed for '<field>': <reason>`; 5 BCs fixed (BC-2.04.002/007, BC-2.08.002/006/014); error-taxonomy v1.25→v1.26 adjudication row. D18-P89-A sweep: STALE=0. Trajectory →2 (P1D-112). Counter 0/3. Fix bursts 115→116. Burst 197. |
+| Phase 1d burst 198 — pass-113 CLEAN(strict) 1/3; bookkeeping only | state-manager | COMPLETE | Pass 113: CLEAN strict+PR-merge — 0 findings. F-P112-01/02 RESOLVED verified. Obs-1 non-blocking (BC-2.14.003 TV-002 code-only cite outside message-sweep scope). C-1 dual-registry CLEARED (arch-view 35 vs PO-view 22 intentional). C-2 IngressBoundary/BoundaryType CLEARED (two distinct enums by design). Counter 0/3→1/3 STREAK ACTIVE. Frozen-corpus rule active. Trajectory →0 (P1D-113 CLEAN). Burst 198. |
 
 ## Decisions Log
 
@@ -150,29 +149,29 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | DEFER-002 | Machine enforcement of gate #28 date-validity (pre-commit hook + CI lint for changelog-date monotonicity and frontmatter-currency) | Phase 3 CI hardening | 3rd manual-sweep failure (F-P64-02/F-P65-01/F-P75-01); gate #28 Rules 4+5 are prose-only until Phase 3. DEFER-001 archived in cycles/v0.0.0-pre-pipeline/lessons.md |
 
 ## Concurrent Cycles
-None currently active. Counter 0/3; trajectory-tail →4→2→2→1.
+None currently active. Counter 1/3 STREAK ACTIVE; trajectory-tail →2→1→2→0.
 
 ## Convergence Status
 
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 111 (Phase 1d) |
-| Fix bursts completed | 115 (Phase 1d; F-P111-01 RESOLVED in burst 196) |
-| Convergence counter | 0 of 3 (Phase 1d; NOT CLEAN strict pass 111: 1M [process-gap]; F-P111-01 RESOLVED; counter stays 0/3 awaiting pass 112; pre-pipeline 3/3 CLOSED) |
-| Finding trajectory | →4→2→2→4→4→1→4→2→5→3→4→1→5→1→1→3→2→2→2→1→1→1→1→4→2→2→1 |
+| Adversary passes completed | 113 (Phase 1d) |
+| Fix bursts completed | 116 (Phase 1d; F-P112-01/02 RESOLVED in burst 197) |
+| Convergence counter | 1 of 3 (Phase 1d; CLEAN strict pass 113: 0/0/0/0; streak ACTIVE 1/3; frozen-corpus rule in effect; NEXT: pass 114; pre-pipeline 3/3 CLOSED) |
+| Finding trajectory | →4→2→2→4→4→1→4→2→5→3→4→1→5→1→1→3→2→2→2→1→1→1→1→4→2→2→1→2→0 |
 
 ## Session Resume Checkpoint
 
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 
 ### RESUME IN ONE BREATH
-"ferrochain Phase 1d convergence loop, 111 passes / 115 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 513=504+9, purity-map 58, 13 ADRs [ADR-006 rev-4], 34 gates [gate #28 Rules 1–6, five-class direction model + gate #33 STRUCT-PLACEHOLDER PARITY CENSUS v2.38 wrapper-form Form-3 discipline], StreamEvent 12 variants, VP census 141). F-P111-01 RESOLVED [MED, process-gap]: gate #33 v2.38 Step-A Form 3 wrapper-form detection; E-CORE-007 context-sourced exception (ProvenanceTag.boundary_type / IngressContent variant discriminant); E-RETRY-002 inline template; BC-2.11.002/003/004 v1.5→v1.6; BC-2.16.002 v1.1→v1.2; 15 additional BCs wrapper-form compliance; error-taxonomy v1.24→v1.25 (Form-3 new scope). MAJOR: 4 carry-forward axes all CLEAN (holdout-domains↔BC/CAP, purity-map↔module-decomp Iron Law, CAP↔BC bidirectional zero-orphans, ss-16/ss-17 sound). Trajectory-tail →4→2→2→1. NEXT ACTION: dispatch adversary pass 112. Loop per D15 until 3/3 CLEAN(strict), then /vsdd-factory:check-input-drift then Phase 1 human approval gate."
+"ferrochain Phase 1d convergence loop, 113 passes / 116 fix bursts, counter 1/3 STREAK ACTIVE (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 513=504+9, purity-map 58, 13 ADRs [ADR-006 rev-4], 34 gates [gate #28 Rules 1–6, five-class direction model + gate #33 v2.39 wrapper-form Form-3 + non-template prose discipline], StreamEvent 12 variants, VP census 141). F-P112-01 RESOLVED [MED]: E-CORE-007 bare variant wins; BC-2.11.002 v1.7→v1.8, BC-2.11.003/004 v1.6→v1.7; bc-authoring-plan v2.38→v2.39. F-P112-02 RESOLVED [MED process-gap]: E-CORE-005 non-template prose; 5 BCs fixed; error-taxonomy v1.25→v1.26. PASS-113 CLEAN(strict): YES — counter 0/3→1/3 STREAK ACTIVE. Frozen-corpus rule in effect. NEXT ACTION: dispatch adversary pass 114 (fresh-hunt only; corpus FROZEN — no sibling-checks owed)."
 ### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
-### PASS-112 SIBLING-CHECKS: (a) gate #33 v2.38 Form-3 procedure + wrapper-form discipline present in bc-authoring-plan (bare {category, code} valid ONLY for placeholder-less codes; inline message: template / PASS-ABBREV / registered context-source required for codes with placeholders); (b) E-CORE-007 context-source registration precise — `<boundary>` ← ProvenanceTag.boundary_type, `<content_type>` ← IngressContent variant discriminant — and coherent with BC-2.11.002/003/004 v1.6 + BC-2.06 guardrail dispatch semantics; (c) E-RETRY-002 v1.2 inline template renders `<global_limit>` — verify template string in BC-2.16.002; ascending changelog v1.1→v1.2; (d) spot-verify 6 of the 27 fixed wrapper sites strictly from v2.38 text (select from: BC-2.01.001 v1.2, BC-2.03.001 v1.5, BC-2.08.001 v1.3, BC-2.08.004 v1.5, BC-2.09.002 v1.2, BC-2.17.002 v1.3); (e) verify NO new message: template contradicts its taxonomy Message Format row (inline templates must match taxonomy rows — gate #33 semantic agreement, D18-P77-B); note carry-forward: none (all prior axes clean this pass).
+### PASS-114 SIBLING-CHECKS: none (corpus FROZEN — no spec edits since burst 197; pass-113 zero-finding CLEAN; fresh-hunt only; if CLEAN strict → 2/3 → dispatch pass 115; if findings → reset streak to 0/3, dispatch fix burst 117).
 ### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3.
-### DECISION DELTA (this session, bursts 164–196): D18-P86-A through D18-P103-A (14 decisions; no new decisions in bursts 186–196; full details in burst-186 session-checkpoints.md).
+### DECISION DELTA (this session): no new decisions in bursts 197–198; last decision D18-P103-A; full log above.
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule during streaks (bookkeeping-only commits).
-### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 196 | Counter 0/3 | No open findings (F-P111-01 RESOLVED)
+### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 198 | Counter 1/3 | No open findings (pass 113 CLEAN)
 
 ## Historical Content
 
@@ -181,10 +180,10 @@ None currently active. Counter 0/3; trajectory-tail →4→2→2→1.
 | Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2; + archived bursts 171–196) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
 | 95 Behavioral Contracts (ss-01..ss-17/, ~13,800+ lines) + BC-INDEX.md v1.5 (48P0/39P1/8P2) | `.factory/specs/behavioral-contracts/ss-NN/` + `BC-INDEX.md` |
 | L3 PRD (index + BC summary tables, 607 lines) + v1.3 (BC-2.08.009 v1.1 resolved) | `.factory/specs/prd.md` |
-| PRD supplements: bc-authoring-plan v2.38, error-taxonomy v1.25, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.35, test-vectors v1.8 | `.factory/specs/prd-supplements/` |
+| PRD supplements: bc-authoring-plan v2.39, error-taxonomy v1.26, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.35, test-vectors v1.8 | `.factory/specs/prd-supplements/` |
 | L2 domain spec (15-shard, 1,889 lines; events.md v1.5) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
-| Session checkpoints bursts 5–78, bursts 176–195 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Session checkpoints bursts 5–78, bursts 176–197 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (12 lessons, 12 codified guardrails incl. Guardrail #12 test-count methodology, Drift/Deferral DEFER-001) | `cycles/v0.0.0-pre-pipeline/lessons.md` |
 | Holdout domain briefs A/B/C (SOC analyst, dark factory, OpenClaw) | `.factory/planning/holdout-domains/domain-{a,b,c}-*.md` |
 | Reference corpus manifest (v1.4.0 — adk-rust Corpus 5 added) | `.factory/semport/reference-manifest.md` |
