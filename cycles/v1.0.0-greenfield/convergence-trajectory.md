@@ -808,6 +808,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-124 — Pass 124 (2026-07-19, burst 209)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-124 | 2026-07-19 | 2 | 0 | 1 | 1 | 0 | 0 | MEDIUM-HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes exercised (burst-209 pass-124):** F-P123-01/OBS-P123-b ALL CLOSED — PASS-124 sibling-checks (a)-(e) all PASS: interface-definitions v2.39 §MemoryStore block present; 6-method signature correct; MemoryScope/MemoryEntry inline; E-MEMORY-001/002/003/004 raise sites present; BC-2.15.001/002 traced; GDPR standalone confirmed; BC-2.15.006 v1.2 PC1 method name correct. NOTE: sibling-check (a) PARTIAL PASS — E-MEMORY-003 raise site present at memory_get in v2.39, but BC-2.15.002 Invariant + error taxonomy class define E-MEMORY-003 as WRITE-path error; read-path per BC = isolation-by-invisibility (Ok(None)); this is a security-boundary mis-anchor → escalated to F-P124-01 HIGH. New findings: F-P124-01 HIGH — E-MEMORY-003 MemoryStoreFailed mis-anchored to memory_get in interface-definitions v2.39 §MemoryStore; BC-2.15.002 Invariant defines E-MEMORY-003 as WRITE error (DURABILITY/broken/Maybe, anchor BC-2.15.001 EC-005); memory_get canonical behavior per BC-2.15.002 PC1/TV-001 + PC6 storage-layer predicate = isolation-by-invisibility (Ok(None) for cross-owner/non-existent-key reads; no error raised); surfacing E-MEMORY-003 on read violates isolation-by-invisibility security boundary (adversary infers key existence across namespace boundaries via error vs no-error); E-MEMORY-003 must be on memory_set only; memory_get's sole error code is E-MEMORY-004 (MemoryStoreReadFailed; BC-2.15.004 EC-004). F-P124-02 MED — VP-002 received L3→L4 template conformance in burst-117; VPs VP-001/003/004/005 were never swept — 1-vs-4 level split in VP corpus; all 5 VPs must be structurally uniform L4 (37-field core frontmatter + Source Contract/Proof Method/Lifecycle sections); asymmetric template compliance is a structural gap. Novelty MEDIUM-HIGH: first detection of error-code security-boundary mis-anchor (write-path error code on read-path method violates isolation-by-invisibility security contract); L3/L4 VP template uniformity gap is a companion meta-structural defect.
+**Fix summary (burst 209 — fix burst 127):** F-P124-01 HIGH (BA) — interface-definitions v2.39→v2.40: E-MEMORY-003 moved from memory_get to memory_set; memory_get §Errors updated (E-MEMORY-003 removed; E-MEMORY-004 only); isolation-by-invisibility note added to memory_get (Ok(None) cross-owner reads per BC-2.15.002 PC1/TV-001/PC6 storage-layer predicate; no E-MEMORY-003 raised); memory_set §Errors updated (E-MEMORY-002 + E-MEMORY-003 both listed); E-MEMORY placement table minted: 001 vector_search / 002+003 memory_set / 004 memory_get. F-P124-02 MED (architect) — VP-001/003/004/005 v1.0→v1.1 L3→L4: all 4 VPs receive canonical 37-field core frontmatter + Source Contract/Proof Method/Lifecycle sections; proof_method kani (VP-001 graph-cycle-free + VP-003 checkpoint-idempotent) vs manual (VP-004 hitl-deterministic + VP-005 mcp-tool-call-isolation; Kani no-async per ADR-tech-validation); red_gate: true (VP-004/005), false (VP-001/003); input-hash --check PASS all 5 VPs. VP-INDEX: all 5 entries updated to v1.1; level: L3 UNCHANGED (index convention). All 5 VPs now structurally uniform L4.
+**Hash sweep (D18-P89-A):** STALE=0. interface-definitions.md v2.40 + 5 VPs v1.1; transitive sweep (api-surface.md + any inputs-referencing files) confirms TOTAL MATCH.
+**Trajectory after:** →2 (P1D-124); cumulative tail →3→5→3→2
+**Counter:** 0/3 (unchanged; fix burst 127 pushes new HEAD; NEXT: pass 125)
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

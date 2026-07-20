@@ -2861,3 +2861,50 @@ Phase 1d burst 203 — pass-118 record + fix burst 121 (F-P118-01/02/03 RESOLVED
 - Counter: 0 of 3 (unchanged; fix burst 126 pushes new HEAD; frozen-HEAD streak rule)
 - Trajectory: ...→3→1→1→3→5→3 (tail after P1D-123)
 - NEXT: dispatch adversary pass 124
+
+---
+
+## Burst 209 (2026-07-19) — Pass 124 Record + Fix Burst 127 (F-P124-01/02 RESOLVED)
+
+**Burst ID:** 209 | **Date:** 2026-07-19 | **Type:** Adversary pass record + fix burst (state-burst single-commit protocol TD-VSDD-053)
+
+**Pass-124 Summary:** NOT CLEAN strict — 0C/1H/1M/0L. F-P123-01/OBS-P123-b ALL CLOSED — PASS-124 sibling-checks (a)-(e) all PASS: interface-definitions v2.39 §MemoryStore block present with 6-method signature (memory_set/memory_get/memory_delete/memory_search/vector_search/hybrid_search); MemoryScope/MemoryEntry inline; E-MEMORY-001/002/003/004 raise sites present; BC-2.15.001/002 traced; GDPR standalone confirmed. BC-2.15.006 v1.2 PC1 MemoryStore::memory_get(MemoryScope::App(...)) correct method name; Architecture Anchors updated. OBS-P123-a L-023 codified. NOTE: sibling-check (a) PARTIAL PASS — E-MEMORY-003 raise site anchored to memory_get in interface-definitions v2.39, but BC-2.15.002 Invariant + error taxonomy class DURABILITY/broken/WRITE define E-MEMORY-003 as a write-path error; memory_get read-path per BC = silent Ok(None) isolation-by-invisibility (PC1/TV-001/PC6 storage-layer predicate); this is the security-boundary mis-anchor that becomes F-P124-01. New findings: F-P124-01 HIGH (security-boundary defect) — E-MEMORY-003 MemoryStoreFailed anchored to memory_get in interface-definitions v2.39 §MemoryStore; BC-2.15.002 Invariant defines E-MEMORY-003 as WRITE error (DURABILITY/broken/Maybe); error taxonomy reinforces WRITE-path classification; memory_get canonical behavior per BC-2.15.002 PC1/TV-001 + PC6 storage-layer predicate = isolation-by-invisibility (Ok(None), no error raised); cross-owner/non-existent-key reads silently return empty — surfacing E-MEMORY-003 on read violates the isolation-by-invisibility security boundary (adversary could infer key existence across namespace boundaries via error vs no-error). E-MEMORY-003 must be on memory_set; memory_get's only error code is E-MEMORY-004 (MemoryStoreReadFailed; BC-2.15.004 EC-004). F-P124-02 MED — VP-002 (Bursting Supervisor Property) received L3→L4 template conformance in burst-117; VPs VP-001/003/004/005 were never swept — 1-vs-4 level split in VP corpus; all 5 VPs must be structurally uniform L4. Counter 0/3 unchanged.
+
+**Fix Burst 127 Changes:**
+
+- interface-definitions.md v2.39→v2.40 (BA): F-P124-01 RESOLVED — E-MEMORY-003 MemoryStoreFailed moved from memory_get to memory_set; memory_get §Errors updated: E-MEMORY-003 removed, E-MEMORY-004 (MemoryStoreReadFailed) retained as sole error; §Isolation-by-invisibility note added to memory_get: "Cross-owner/non-existent-key reads return Ok(None) silently per BC-2.15.002 PC1/TV-001/PC6 storage-layer predicate — no E-MEMORY-003 raised (isolation-by-invisibility security boundary)"; memory_set §Errors updated: E-MEMORY-002 + E-MEMORY-003 both listed; E-MEMORY placement table added to §MemoryStore: 001 vector_search / 002+003 memory_set / 004 memory_get.
+- VP-001 v1.0→v1.1 (architect): F-P124-02 RESOLVED — L3→L4 canonical template applied; 37-field core frontmatter including source_contract/proof_method/lifecycle sections; proof_method: kani; red_gate: false; input-hash computed.
+- VP-003 v1.0→v1.1 (architect): L3→L4 same template; proof_method: kani; red_gate: false; input-hash computed.
+- VP-004 v1.0→v1.1 (architect): L3→L4 same template; proof_method: manual (no Kani support for async); red_gate: true; input-hash computed.
+- VP-005 v1.0→v1.1 (architect): L3→L4 same template; proof_method: manual; red_gate: true; input-hash computed.
+- VP-INDEX.md (architect): level: L3 UNCHANGED (index convention — level field tracks individual VP level separately); all 5 VP entries updated to v1.1; input-hash --check PASS across all 5 VPs.
+- D18-P89-A hash sweep: STALE=0 (interface-definitions.md v2.40 + 5 VPs v1.1; transitive sweep confirms api-surface.md and any inputs-referencing files current; TOTAL MATCH).
+
+### Archived from Current Phase Steps: Burst-204
+
+**Burst-204 Summary (archived in burst 209 from STATE.md Current Phase Steps):**
+Phase 1d burst 204 — pass-119 record + fix burst 122 (F-P119-01 + OBS-1/OBS-2 RESOLVED). Pass 119: NOT CLEAN strict+PR-merge — 0C/0H/1M/2OBS-folded. F-P118-01/02/03 ALL CLOSED (corpus-wide grep CONCURS zero non-exempt 3-member terminal-set hits). New finding F-P119-01 MED: BC-2.05.005 v1.4 Preconditions §2 missing `summary_halt` guard clause — within-BC PC↔VP contradiction (VP-HITL-10 says "five non-interrupted states" but normative guard body listed only 4). OBS-1: `queued` and `cancelled` also absent (delegation gap vs BC-2.05.004 invariant). OBS-2: VP-HITL-10 "five states" count imprecise. Fix burst 122: BC-2.05.005 v1.4→v1.5 (7-case guard a-g: summary_halt clause (e) + production-grade totality adjudication adds queued (f) + cancelled (g); Description updated; TV-006/007/008 added); BC-2.05.004 v1.3→v1.4 (changelog OBS-1 adjudication; no normative change); test-vectors.md v1.8→v1.9 (BC-2.05.005 TV Count 5→8; SS-05 subtotal 32→35; grand totals 504→507/513→516); OBS-2 RESOLVED (VP-HITL-10 rewritten: derivable 7-case count). D18-P89-A sweep: STALE=0. Trajectory →1 (P1D-119). Counter 0/3. Fix bursts 121→122. Burst 204.
+
+### Files Written
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-124.md` | NEW — pass-124 adversarial review report (0C/1H/1M/0L) |
+| `.factory/specs/prd-supplements/interface-definitions.md` | v2.39→v2.40 — E-MEMORY-003 moved to memory_set; memory_get isolation-by-invisibility note + Ok(None) security-boundary prose; E-MEMORY placement table (001 vector_search / 002+003 memory_set / 004 memory_get) |
+| `.factory/specs/verification-properties/VP-001.md` | v1.0→v1.1 — L3→L4 canonical template; 37-field frontmatter + Source Contract/Proof Method/Lifecycle sections; proof_method: kani |
+| `.factory/specs/verification-properties/VP-003.md` | v1.0→v1.1 — L3→L4 canonical template; proof_method: kani |
+| `.factory/specs/verification-properties/VP-004.md` | v1.0→v1.1 — L3→L4 canonical template; proof_method: manual; red_gate: true |
+| `.factory/specs/verification-properties/VP-005.md` | v1.0→v1.1 — L3→L4 canonical template; proof_method: manual; red_gate: true |
+| `.factory/specs/verification-properties/VP-INDEX.md` | all 5 VP entries updated to v1.1; level: L3 UNCHANGED (index convention) |
+| All spec files | D18-P89-A hash sweep — STALE=0 |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | burst-204 archived + this burst-209 narrative |
+| `.factory/cycles/v1.0.0-greenfield/convergence-trajectory.md` | append P1D-124 row + per-pass detail |
+| `.factory/STATE.md` | v3.49→v3.50; trajectory-tail →3→5→3→2 (P1D-124); counter 0/3; passes 123→124; fix bursts 126→127 |
+
+### Convergence Status After Burst 209
+
+- Phase 1d passes: 124 (1H/1M — counter 0/3)
+- Fix bursts: 127 (F-P124-01/02 RESOLVED)
+- Counter: 0 of 3 (unchanged; fix burst 127 pushes new HEAD; frozen-HEAD streak rule)
+- Trajectory: ...→3→1→1→3→5→3→2 (tail after P1D-124)
+- NEXT: dispatch adversary pass 125

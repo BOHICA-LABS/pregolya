@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.39"
+version: "2.40"
 status: active
 producer: product-owner
 timestamp: 2026-07-19T00:00:00Z
 phase: 1d
 changelog:
+  - "2.40 (F-P124-01, fix burst 127, 2026-07-19): §MemoryStore — E-MEMORY-003 ScopeAccessDenied raise-site mis-anchored to memory_get; BC wins (BC-2.15.002 Invariant defines it as a WRITE error; PC1/TV-001 define cross-owner READ as Ok(None) — isolation-by-invisibility). Three changes: (1) memory_set docstring: added E-MEMORY-003 ScopeAccessDenied raise site with full struct form { requested_scope, caller_identity } (BC-2.15.002 Invariant). (2) memory_get docstring: removed E-MEMORY-003 raise site; replaced with BC-true cross-owner read semantics documenting isolation-by-invisibility (cross-owner reads return Ok(None) per BC-2.15.002 PC1/TV-001); E-MEMORY-004 NoScopeContext placement retained (correct per BC-2.15.002 EC-001). (3) BC anchor footer: E-MEMORY-003 re-anchored from memory_get to memory_set. Sweep of E-MEMORY-001/002/004: all PASS (E-MEMORY-001 on vector_search correct per BC-2.15.001 EC-001; E-MEMORY-002 on memory_set correct per BC-2.15.001 EC-004; E-MEMORY-004 on memory_get correct per BC-2.15.002 EC-001)."
   - "2.39 (OBS-P123-b, fix burst 126, 2026-07-19): §Public Rust Trait Signatures — add §MemoryStore block (OBS-P123-b promoted to blocker under production-grade lens). Derived strictly from BC-2.15.001 PC1–PC7 (6-method surface: memory_set/memory_get/memory_delete/memory_search/vector_search/hybrid_search) + BC-2.15.002 MemoryScope tier-isolation semantics (scope parameter on every method; storage-layer WHERE-predicate enforcement). Supporting types: MemoryScope enum (3 variants: User/App/Session) and MemoryEntry struct (scope/key/value/author_id) defined inline. Error raise sites cited per-method: E-MEMORY-001 (vector_search EC-001), E-MEMORY-002 (memory_set EC-004), E-MEMORY-003 (memory_get scope-mismatch per BC-2.15.002 Invariant, opt-in enforcement), E-MEMORY-004 (memory_get BC-2.15.002 EC-001). BC-2.15.003 GDPR erasure confirmed NOT a trait method (standalone admin fn requiring AdminContext); excluded. memory_delete_session (BC-2.15.002 Invariant) confirmed standalone store fn, not a trait method; excluded from the 6-method surface. Gate #31: MemoryScope RESOLVED, MemoryEntry RESOLVED, query_embedding RESOLVED. Cross-check: api-surface.md MemoryStore BC anchor range BC-2.15.001–003 verified accurate (no architect routing required). Ubiquitous-language-server.md MemoryStore entry (line 142) in sync. BC-2.15.006 PC1 method-name drift fixed in this burst (MemoryStore::get → MemoryStore::memory_get; MemoryScope::App scope type made explicit; EC-001 and Architecture Anchors updated; BC-2.15.006 version 1.1 → 1.2)."
   - "2.38 (F-P117-01, fix burst 120, 2026-07-19): summary_halt promoted to first-class terminal Run status throughout (Option 1 adjudication — BC-2.10.003 PC8(d) is authoritative). (1) §Run Object Schema status enum: add 'summary_halt' (in_progress → summary_halt via OnCeiling::Summarize per BC-2.10.003 PC8(d)). (2) status description: state machine enumeration gains '| summary_halt'. (3) completed_at terminal set: add 'summary_halt'. (4) output note: 'present only when status=completed or status=summary_halt; for summary_halt output=summarize model response (BC-2.10.003 PC8(c))'. (5) §Runs HTTP table GET runs filter: add summary_halt to status filter enumeration. (6) §Runs HTTP table DELETE runs description: add summary_halt to deletable terminal states."
   - "2.37 (F-P116-01, 2026-07-19): §CheckpointSaver — dyn-compatibility fixes per ADR-005 v1.3 §Object-Safety (F-P116-01). (A) `get_next_version` provided-method receiver: `&self` added as first parameter (was receiver-less, causing E0038 on Arc<dyn CheckpointSaver>). Rationale: dyn-compatibility requires a receiver on every non-Sized-bounded method; virtual dispatch of backend overrides through Arc<dyn CheckpointSaver> vtable requires &self; langgraph BaseCheckpointSaver.get_next_version is an instance method — prior 'static method' parity claim corrected (F-P116-01). Default body unchanged — still delegates to MonotonicClock::get_next_version(current, channel), ignoring &self. (B) `list` return type: `Result<impl Stream<Item = Result<CheckpointTuple, FerrochainError>>, FerrochainError>` → `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>`. Rationale: `impl Stream` opaque return is NOT dyn-compatible even with async-trait desugaring (E0038); Pin<Box<dyn Stream<Item = ...> + Send>> is the established dyn-compatible boxed-stream pattern for object-safe async traits. Authority: ADR-005 v1.3 §Object-Safety of the 5-Method CheckpointSaver Trait."
@@ -624,6 +625,11 @@ pub trait MemoryStore: Send + Sync {
     /// last-writer-wins (LWW) semantics (BC-2.15.001 Invariant).
     /// Raises E-MEMORY-002 StorageFull if the backing store reaches capacity
     /// (BC-2.15.001 EC-004).
+    /// Raises E-MEMORY-003 ScopeAccessDenied when identity enforcement is active
+    /// (opt-in at the server layer — BC-2.15.002 Invariant) and the caller-supplied
+    /// scope mismatches the verified caller identity:
+    /// `Err(E-MEMORY-003 ScopeAccessDenied { requested_scope, caller_identity })`
+    /// (BC-2.15.002 Invariant).
     async fn memory_set(
         &self,
         scope: MemoryScope,
@@ -633,13 +639,12 @@ pub trait MemoryStore: Send + Sync {
 
     /// Read a single entry by `(scope, key)`.
     ///
-    /// Returns `Ok(None)` if the key was never written or was explicitly deleted via
-    /// `memory_delete` (BC-2.15.001 PC3). Scope isolation enforced at the storage layer
+    /// Returns `Ok(None)` if the key was never written, was explicitly deleted via
+    /// `memory_delete` (BC-2.15.001 PC3), or was written under a different owner's
+    /// scope (isolation-by-invisibility: cross-owner reads return `Ok(None)`, not an
+    /// error — BC-2.15.002 PC1/TV-001). Scope isolation enforced at the storage layer
     /// (`WHERE scope_key = ?` predicate — BC-2.15.002 PC6): entries from other scopes
-    /// are never returned (BC-2.15.002 PC1–PC3).
-    /// Raises E-MEMORY-003 ScopeAccessDenied when identity enforcement is active (opt-in
-    /// at the server layer — BC-2.15.002 Invariant) and the caller-supplied scope
-    /// mismatches the verified caller identity.
+    /// are silently invisible, never returned.
     /// Raises E-MEMORY-004 NoScopeContext when no session context is derivable from the
     /// call context and the caller omitted an explicit scope (BC-2.15.002 EC-001).
     async fn memory_get(
@@ -740,7 +745,7 @@ pub struct MemoryEntry {
 >
 > **`query_embedding: Vec<f32>`** — RESOLVED. Standard float-32 embedding vector; dimensionality determined by the configured embedding backend. (gate #31 RESOLVED)
 
-**BC anchor:** BC-2.15.001 PC1–PC7 (6-method surface — every method traces to a BC PC: `memory_set`=PC1, `memory_get`=PC3, `memory_delete`=PC3, `memory_search`=PC4, `vector_search`=PC5–PC6, `hybrid_search`=PC7) + BC-2.15.002 PC1–PC6 + INV (MemoryScope tier isolation; storage-layer enforcement; opt-in identity enforcement) + E-MEMORY-001 (`vector_search`; BC-2.15.001 EC-001) + E-MEMORY-002 (`memory_set`; BC-2.15.001 EC-004) + E-MEMORY-003 (`memory_get`; BC-2.15.002 Invariant) + E-MEMORY-004 (`memory_get`; BC-2.15.002 EC-001)
+**BC anchor:** BC-2.15.001 PC1–PC7 (6-method surface — every method traces to a BC PC: `memory_set`=PC1, `memory_get`=PC3, `memory_delete`=PC3, `memory_search`=PC4, `vector_search`=PC5–PC6, `hybrid_search`=PC7) + BC-2.15.002 PC1–PC6 + INV (MemoryScope tier isolation; storage-layer enforcement; opt-in identity enforcement) + E-MEMORY-001 (`vector_search`; BC-2.15.001 EC-001) + E-MEMORY-002 (`memory_set`; BC-2.15.001 EC-004) + E-MEMORY-003 (`memory_set`; BC-2.15.002 Invariant) + E-MEMORY-004 (`memory_get`; BC-2.15.002 EC-001)
 
 ### StreamEvent
 
