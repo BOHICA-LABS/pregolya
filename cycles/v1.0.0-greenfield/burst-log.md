@@ -2983,3 +2983,97 @@ Phase 1d burst 204 — pass-119 record + fix burst 122 (F-P119-01 + OBS-1/OBS-2 
 - Counter: 1 of 3 STREAK ACTIVE (frozen-HEAD rule on 02d8ccd; 2 more CLEAN(strict) passes needed)
 - Trajectory: ...→3→5→3→2→1→0 (tail after P1D-126)
 - NEXT: dispatch adversary pass 127 (fresh-hunt only; no carry-forward axes; corpus frozen at 02d8ccd)
+
+---
+
+## Burst 212 (2026-07-19) — Pass 127 CLEAN(strict) Record — Streak 2/3 [catch-up from burst-213]
+
+**Burst ID:** 212 | **Date:** 2026-07-19 | **Type:** Adversary pass record — CLEAN(strict) — bookkeeping-only burst (frozen-corpus rule active; TD-VSDD-053)
+
+**Pass-127 Summary:** CLEAN strict/PR-merge — 0C/0H/0M/0L/0OBS. Part A streak qual STANDING: VP-003 v1.2 BC-2.13.004 cell = "Primary VP obligation; Kani VP Seed" confirmed; summary_halt BC-2.05.005 v1.5 7-case guard (e) present; holdout-D BC anchors existence-validated. Fresh-hunt axes all CLEAN: ss-12 BC-2.12.002 CRUD 7-endpoint coherence (7 CRUD endpoints 1:1 vs interface-definitions routing table; method/path alignment PASS; EC gate #33 PASS; BC-2.12.002 vs BC-2.12.001 cross-BC PASS); §StreamEvent 12-variant field schema vs BC-2.06.002 (run_id+parent_ids on every variant confirmed; GuardrailDecision schema metadata-only coherent; DI-011 non-violation rationale documented; 12-variant count PASS); DI-001..014 statement-level census (all 14 DIs mapped to enforcing BCs; zero orphan DIs; all BC-to-DI reverse citations resolve; DI-001 no namespace squatting per D18-P77-A; DI-011 GuardrailDecision citation coherent); NFR-001..011 vs VP/DI/BC coverage web (all 11 NFRs trace to enforcement anchors; VP-001..005 L4 citations coherent; no floating NFR; NFR-catalog v1.2 timestamp currency PASS). Counter advances 1/3 → 2/3 STREAK ACTIVE. FROZEN-CORPUS RULE ACTIVE (no spec edits; bookkeeping-only burst).
+
+**No Fix Burst** (CLEAN(strict) pass — zero findings; corpus stays frozen at 02d8ccd).
+
+**Also archived from Current Phase Steps:** burst-207 row (pass-122 record + fix burst 125, F-P122-01/02/03 RESOLVED) rotated to burst-log per 5-row rotation policy.
+
+### Burst-207 (Archived from Current Phase Steps)
+
+**Burst ID:** 207 | **Date:** 2026-07-19 | **Type:** Adversary pass record + fix burst
+
+**Summary:** Phase 1d burst 207 — pass-122 record + fix burst 125 (F-P122-01/02/03 RESOLVED; OBS-P122-a process-gap codified). Pass 122: NOT CLEAN strict+PR-merge — 1H/2M/2OBS. F-P121-01/02 ALL CLOSED — checks (a)-(e) PASS: entities-graph v1.2 ContentBlock 14-variant correct; ToolCall {id,name,args} correct; ToolMessage DI-012; Message 4-primary+3-extension; no ContentBlock::ToolResult residue; 37-row L2-vs-BC type audit convergence claim checked. New findings: F-P122-01 HIGH — ContentBlock pre-hardening vocabulary residue at 3 sites outside L2 audit scope (BC-2.11.002 + capabilities-p0 + bounded-contexts); audit scope was L2-domain-spec-only and structurally excluded ss-01..ss-17 + capability spec non-CAP-007 sections. F-P122-02/03 MED (2 audit rows): audit row 2 phantom ContentBlock::ToolUse (should be ContentBlock::ToolCall per BC-2.08.002); audit row 8 ContentBlock wrong-canon form; audit row 34 correct pre-fix depiction was "get" not "get_tuple". OBS-P122-a [process-gap]: burst-124 "class-CONVERGED" claim falsified — corpus-wide token grep required (not L2-only audit). OBS-P122-b: audit row 22 pre-fix depiction fabricated (minor; MATCH verdict retained). Fix burst 125: BC-2.11.002 v1.8→v1.9 (ContentBlock::ToolUse residue removed; correct canonical form); capabilities-p0 v1.4→v1.5 (same residue); bounded-contexts v1.1→v1.2 (same); CORRIGENDUM-2 rows appended to burst-206 record; corpus-wide token sweep confirms zero residue; class-CONVERGED claim retracted; burst-206 CORRIGENDUM appended. D18-P89-A sweep: STALE=0. Trajectory →5 (P1D-122). Counter 0/3. Fix bursts 124→125. Burst 207.
+
+### Files Written (Burst 212)
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-127.md` | NEW — pass-127 adversarial review report (0C/0H/0M/0L/0OBS — CLEAN strict/PR-merge) |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | burst-207 archived (this catch-up entry written by burst-213) |
+| `.factory/STATE.md` | v3.52→v3.53; trajectory-tail →2→1→0→0 (P1D-127 CLEAN); counter 1/3→2/3 STREAK ACTIVE; passes 126→127; frozen-corpus rule ACTIVE |
+
+### Convergence Status After Burst 212
+
+- Phase 1d passes: 127 (CLEAN strict/PR-merge — counter 2/3 STREAK ACTIVE)
+- Fix bursts: 128 (no new fix burst; corpus frozen at 02d8ccd)
+- Counter: 2 of 3 STREAK ACTIVE (frozen-HEAD rule on 02d8ccd; 1 more CLEAN(strict) pass needed)
+- Trajectory: ...→3→5→3→2→1→0→0 (tail after P1D-127)
+- NEXT: dispatch adversary pass 128 (convergence-completing pass; D-chain cite D-127; if CLEAN(strict) → 3/3 CONVERGED)
+
+---
+
+## Burst 213 (2026-07-19) — Pass 128 CLEAN(strict) CONVERGED — Phase 1d CASCADE CLOSED
+
+**Burst ID:** 213 | **Date:** 2026-07-19 | **Type:** Adversary pass record — CONVERGENCE_REACHED — bookkeeping-only CONVERGED burst (frozen-corpus rule active; TD-VSDD-053 single-commit protocol)
+
+**Pass-128 Summary:** CLEAN strict/PR-merge — 0C/0H/0M/0L/0OBS. Part A streak qual STANDING: VP-003 v1.2 BC-2.13.004 "Kani VP Seed" confirmed; summary_halt BC-2.05.005 v1.5 7-case guard (e) present; holdout-D BC anchors coherent. Fresh-hunt axes all CLEAN: ss-14 full family (BC-2.14.001..006: gate registry coherent, deny-* D18-P62-A, error-code anchors PASS, changelog ascending PASS); ss-16 full family (E-RETRY split preserved, BC-2.16.002 inline template, RetryHint coherent PASS); ss-17 full family (2 fuzz targets D18-P63-A, VP cross-refs, verification-architecture PASS); ss-15 SkillStore/MemoryWriteGuard↔interface-definitions (BC-2.15.004 name-keyed D18-P72-A, BC-2.15.006 INV-1 form D18-P77-A, §MemoryStore present, E-MEMORY placement PASS); CAP-018/019/020 bidirectionality (forward + reverse all coherent, behavioral-intent PASS); error-code web gate #33 comprehensive run (census 86=43+16+27 reproduced; Form-3 wrappers; Step-C table; cross-anchor scope; alias registry 8+E-MEMORY-007 PASS). Cleared-not-reported: error.rs/errors.rs aspirational-anchor (non-defect, TD-VSDD-091); SkillStore async refinement (non-defect, D18-P72-A). Counter advances 2/3 → 3/3. BC-5.39.001 3-CLEAN frozen-HEAD streak SATISFIED. CASCADE CLOSED.
+
+**No Fix Burst** (CONVERGENCE_REACHED — zero findings; corpus stays frozen at 02d8ccd).
+
+### S-7.02 Cycle-Closing Checklist — Process-Gap Findings Passes 105–128
+
+Scan of passes 105–128 adversarial-reviews/ and burst-log for [process-gap] findings. All 12 process-gaps identified; each has a codified closure.
+
+| Process-gap Finding | Source Pass | Codification |
+|---------------------|-------------|-------------|
+| Gate #28 MANDATORY PRE-EMISSION CHECK — BC-INDEX.md absent from Known Form-B-only files list | OBS-P105-B → F-P106-01 | bc-authoring-plan v2.33→v2.34: BC-INDEX.md added to known-files list; "Any index, ADR, or supplement..." catch-all updated; gate #28 pre-emission check complete |
+| Struct-Placeholder Parity Census methodology emitted false completeness claims (two consecutive bursts) | F-P108-04 HIGH | bc-authoring-plan v2.35: gate #33 STRUCT-PLACEHOLDER PARITY CENSUS minted with Step A/B/C executable procedures; per-code TABLE format binding required (prose-only claims INVALID) |
+| Census Step-C table discipline — "0 remaining" claim false; 9 of 10 E-GRAPH-002 sites missing thread_id | F-P109-01 HIGH | bc-authoring-plan v2.36: Step-C per-code TABLE format binding enforced; PASS-ABBREV corollary documented; census Step-C table discipline codified |
+| Gate #33 Check-2 alias registry under-specified — 4 semantic aliases + E-MEMORY-007 context-sourced class unregistered | F-P109-02 MED | bc-authoring-plan v2.36: alias registry extended to 8 entries + E-MEMORY-007 class; ≥8 independent verdicts derivable; context-sourced exception 3-part criterion documented |
+| Gate #33 Step-B cross-anchor scope — sweep scoped "in-file" not "across all anchor BCs"; E-SBXD-001 secondary anchor missed | F-P110-02 HIGH | bc-authoring-plan v2.37: Step B check-1 scope extended to "ALL BCs in taxonomy BC-Anchor cell (primary+secondary)"; cross-anchor scope |
+| Corrigendum rationale error — E-GRAPH-002 changelog v1.23 claimed two placeholders; actual count is one | F-P110-01 MED | error-taxonomy v1.24 corrigendum #4: corrected to ONE placeholder `<run_id>`; `run_status` documented as superset diagnostic field (NOT a taxonomy placeholder) |
+| Gate #33 Step-A blind to FerrochainError wrapper-form constructions | F-P111-01 MED | bc-authoring-plan v2.38: Step-A Form-3 (dual grep patterns 3a/3b for FerrochainError wrapper detection); E-CORE-007 context-sourced registered; E-RETRY-002 inline template confirmed |
+| Gate #33 SEMANTIC-AGREEMENT non-template prose coverage gap — E-CORE-005 ≥4 divergent message shapes | F-P112-02 MED | bc-authoring-plan v2.39: non-template prose sweep added (8-file E-CORE-005 census); error-taxonomy v1.26 adjudication row |
+| bc-authoring-plan §12 lifecycle census gate mandated 3-member terminal set — would actively revert F-P117-01 fix | F-P118-01 HIGH | bc-authoring-plan lifecycle census gate updated: 4-member terminal set adjudication; batch-table line 270 corrected; D18-P118-A |
+| Per-token sweeps leave systemic L2-vs-BC type drift | OBS-P121 process-gap | 37-row L2-vs-BC type audit published in fix burst 124 as class-closure deliverable; CONVERGED per pass-123 check (OBS verified closed) |
+| Burst-124 audit scope L2-only; BC layer + capability enumerations structurally missed | OBS-P122-a process-gap | Corpus-wide token sweep (ContentBlock vocabulary) completed in burst-207 fix burst 125; zero residue confirmed; CONVERGED |
+| Carry-forward axes named non-existent interface-definitions sections; passes 121–122 cleared vacuously | OBS-P123-a process-gap | L-023 axis-existence validation codified in cycles/v1.0.0-greenfield/lessons.md: before clearing or carrying any axis, verify the named section/anchor exists in the cited document |
+
+**Additional standing codification (pre-105 but governing 105+):**
+- D18-P103-A hook-alignment: gate #28 Rule 6 direction model re-specified as 5-class hook-aligned (bc-authoring-plan v2.31→v2.32); all subsequent Rule 6 applications use the hook-validated direction assertions; no recurrence of direction-model process-gap in passes 105–128.
+
+**S-7.02 result: PASS — NO open process-gap lacks codification or a deferral row.** All 12 process-gaps from passes 105–128 have codified closures. Zero process-gaps remain unaddressed.
+
+**Also archived from Current Phase Steps:** burst-208 row (pass-123 record + fix burst 126, F-P123-01 + OBS-P123-b RESOLVED) rotated to burst-log per 5-row rotation policy.
+
+### Burst-208 (Archived from Current Phase Steps)
+
+**Burst ID:** 208 | **Date:** 2026-07-19 | **Type:** Adversary pass record + fix burst
+
+**Summary:** Phase 1d burst 208 — pass-123 record + fix burst 126 (F-P123-01 + OBS-P123-b RESOLVED). Pass 123: NOT CLEAN strict+PR-merge — 0C/0H/1M/0L/2OBS. F-P122-01/02/03 ALL CLOSED: burst-207 checks (a)-(e) PASS; corpus-wide token sweep confirms zero ContentBlock pre-hardening residue; OBS-P122-a class-CONVERGED re-confirmed with corpus-wide scan. New findings: F-P123-01 MED — CORRIGENDUM rows 2/8 in burst-206 appendix cited "ContentBlock::ToolUse" (phantom); correct canonical form = ContentBlock::ToolCall={id,name,args} per BC-2.08.002; Tool-entity fields at entities-graph:52; root cause: corrigendum row authored from stale draft before BC-2.08.002 hardening. OBS-P123-a [process-gap]: carry-forward axes §Tool/§McpServer/§MemoryStore named non-existent interface-definitions sections; passes 121-122 cleared vacuously against non-existent anchors; axis-existence validation required before clear/carry — codified as L-023. OBS-P123-b: MemoryStore trait signature absent from interface-definitions §Public Rust Trait Signatures while P1 SS-15 siblings present; promoted to blocker; resolved in fix burst 126. Fix burst 126: CORRIGENDUM-2 appended to burst-206 record correcting rows 2/8; interface-definitions v2.38→v2.39 §MemoryStore trait signature added to §Public Rust Trait Signatures (BC-2.15.006 v1.1→v1.2); api-surface.md D18-P89-A sweep STALE=1→0. Trajectory →3 (P1D-123). Counter 0/3. Fix bursts 125→126. Burst 208.
+
+### Files Written (Burst 213)
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-128.md` | NEW — pass-128 adversarial review report (0C/0H/0M/0L/0OBS — CLEAN strict/PR-merge — CONVERGENCE_REACHED) |
+| `.factory/cycles/v1.0.0-greenfield/convergence-trajectory.md` | P1D-127 catch-up + P1D-128 + Phase 1d Convergence Summary CLOSED appended |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | burst-207 + burst-208 archived; burst-212 + burst-213 narratives; S-7.02 checklist |
+| `.factory/cycles/v1.0.0-greenfield/session-checkpoints.md` | burst-211 + burst-212 checkpoints archived |
+| `.factory/STATE.md` | v3.53→v3.54; trajectory-tail →0→0→0 (P1D-128 CLEAN — CONVERGED); counter 2/3→3/3 PHASE 1D CONVERGED; Phase 1 gate cell updated; cascade CLOSED; burst-213 step row added; resume checkpoint rewritten |
+
+### Convergence Status After Burst 213
+
+- Phase 1d passes: 128 (CLEAN strict/PR-merge — counter 3/3 PHASE 1D CONVERGED)
+- Fix bursts: 128 (no new fix burst; corpus stays frozen at 02d8ccd)
+- Counter: 3 of 3 PHASE 1D CONVERGED (BC-5.39.001 3-CLEAN frozen-HEAD streak SATISFIED; passes 126/127/128 all CLEAN strict on 02d8ccd; CASCADE CLOSED)
+- Trajectory: ...→3→5→3→2→1→0→0→0 (tail after P1D-128)
+- NEXT: /vsdd-factory:check-input-drift → consistency-validator fresh audit → Phase 1 human approval gate

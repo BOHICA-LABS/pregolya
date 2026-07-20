@@ -850,6 +850,52 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-127 — Pass 127 (2026-07-19, burst 212) [catch-up from burst-213]
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-127 | 2026-07-19 | 0 | 0 | 0 | 0 | 0 | 0 | ZERO | 2/3 STREAK ACTIVE | FINDINGS_REMAIN (0 findings; convergence not yet achieved; streak 2/3) |
+
+**Axes exercised (burst-212 pass-127):** Part A streak qual STANDING — VP-003 v1.2 BC-2.13.004 cell = "Primary VP obligation; Kani VP Seed" confirmed; summary_halt BC-2.05.005 v1.5 7-case guard (e) present; holdout-D BC anchors existence-validated. Fresh-hunt axes all CLEAN: ss-12 BC-2.12.002 CRUD 7-endpoint coherence 1:1 (BC-2.12.002 7 endpoints = interface-definitions routing table, method/path 1:1 match, EC table gate #33 PASS); §StreamEvent 12-variant field schema vs BC-2.06.002 (run_id+parent_ids on every variant; GuardrailDecision schema coherent; DI-011 non-violation rationale documented; 12-variant count confirmed); DI-001..014 statement-level census (zero orphans; all 14 DIs mapped to enforcing BCs; BC-to-DI reverse citations all resolve; DI-001 no namespace squatting; DI-011 citation semantics coherent); NFR-001..011 vs VP/DI/BC web (all 11 NFRs trace to enforcement anchors; VP-001..005 all L4 citations coherent; no floating NFR; NFR-catalog v1.2 timestamp currency PASS). No carry-forward axes. Novelty ZERO.
+**Fix summary:** No fix burst (CLEAN(strict) pass — no findings). Corpus frozen at 02d8ccd spec-state.
+**Hash sweep (D18-P89-A):** N/A — no spec edits this burst (frozen-corpus rule active; bookkeeping-only burst).
+**Trajectory after:** →0 (P1D-127 CLEAN); cumulative tail →2→1→0→0
+**Counter:** 2/3 STREAK ACTIVE (advances from 1/3; second CLEAN(strict) on frozen HEAD 02d8ccd; frozen-HEAD streak rule; NEXT: pass 128 convergence-completing pass)
+
+---
+
+### P1D-128 — Pass 128 (2026-07-19, burst 213) — CONVERGED
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-128 | 2026-07-19 | 0 | 0 | 0 | 0 | 0 | 0 | ZERO | 3/3 CONVERGED | CONVERGENCE_REACHED — Phase 1d cascade COMPLETE; BC-5.39.001 3-CLEAN SATISFIED on frozen HEAD 02d8ccd |
+
+**Axes exercised (burst-213 pass-128):** Part A streak qual STANDING — VP-003 v1.2 BC-2.13.004 "Kani VP Seed" confirmed; summary_halt BC-2.05.005 v1.5 guard (e) present; holdout-D anchors coherent (all three axes reproduce from pass-127). Fresh-hunt axes all CLEAN: ss-14 full family (BC-2.14.001..006 statement-level: gate registry coherent, deny-* D18-P62-A aligned, error-code anchors sound, changelog ascending PASS); ss-16 full family (E-RETRY-003/004 split preserved, BC-2.16.002 inline template present, RetryHint coherent, changelog PASS); ss-17 full family (2 fuzz targets per D18-P63-A, VP cross-references resolve, verification-architecture coherent, changelog PASS); ss-15 SkillStore/MemoryWriteGuard↔interface-definitions (BC-2.15.004 name-keyed per D18-P72-A, BC-2.15.006 INV-1 form, §MemoryStore section present per OBS-P123-b fix, E-MEMORY placement correct, no ghost criticality row); CAP-018/019/020 bidirectionality (forward + reverse mappings coherent, behavioral-intent aligned, no orphan CAPs, no phantom BC refs); error-code web gate #33 comprehensive run (census 86=43+16+27 reproduced, Form-3 wrappers annotated, Step-C table discipline confirmed, cross-anchor scope honored, alias registry 8 entries + E-MEMORY-007 complete). Cleared-not-reported: error.rs/errors.rs aspirational-anchor (non-defect; TD-VSDD-091; no canon contradicted); SkillStore async refinement (non-defect; D18-P72-A; coherent). Novelty ZERO.
+**Fix summary:** No fix burst (CLEAN(strict) pass — CONVERGENCE_REACHED; Phase 1d cascade CLOSED).
+**Hash sweep (D18-P89-A):** N/A — no spec edits this burst (frozen-corpus rule active; bookkeeping-only CONVERGED burst).
+**Trajectory after:** →0 (P1D-128 CLEAN — CONVERGENCE_REACHED); cumulative tail →1→0→0→0
+**Counter:** 3/3 PHASE 1D CONVERGED (BC-5.39.001 3-CLEAN frozen-HEAD streak rule SATISFIED; passes 126/127/128 all CLEAN strict on frozen HEAD 02d8ccd; CASCADE CLOSED)
+
+---
+
+## Phase 1d Convergence Summary — CLOSED
+
+**Phase 1d adversarial cascade status:** CLOSED
+**Closed at:** pass 128 (burst 213, 2026-07-19)
+**Total passes:** 128 adversarial passes (Phase 1d)
+**Total fix bursts:** 128 fix bursts (Phase 1d)
+**Convergence criterion:** BC-5.39.001 strict-zero (D14) — three consecutive passes with ZERO findings of any severity on frozen HEAD
+**Final frozen spec-state:** 02d8ccd
+**Final trajectory tail:** →1→0→0→0 (passes 125/126/127/128)
+**Streak passes (convergence-closing):** pass-126 CLEAN strict (1/3), pass-127 CLEAN strict (2/3), pass-128 CLEAN strict (3/3)
+
+**NEXT STEP SEQUENCE:**
+1. `/vsdd-factory:check-input-drift` — re-hash all spec inputs to detect drift since last hash computation
+2. `consistency-validator` fresh-context audit — cross-document consistency check on fully-frozen Phase 1 corpus
+3. HUMAN APPROVAL GATE — Phase 1 Spec Crystallization sign-off → Phase 2 Story Decomposition
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

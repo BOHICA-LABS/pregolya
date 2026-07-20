@@ -900,3 +900,27 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (this session): no new decisions in burst 210; last decision D18-P103-A; full log above.
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule SUSPENDED (counter 0/3; resumes at next CLEAN strict).
 ### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 210 | Counter 0/3 | No open findings (F-P125-01 RESOLVED in fix burst 128; pass 126 next)
+
+---
+
+## Burst 211 Session Checkpoint (archived from STATE.md by burst-212)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 126 passes / 128 fix bursts, counter 1/3 STREAK ACTIVE (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 516=507+9, purity-map 58, 13 ADRs [ADR-006 rev-4, ADR-005 rev-4 w/ §CheckpointSaver Object-Safety + §Adjacent Trait Object-Safety Adjudications], 34 gates, StreamEvent 12 variants, VP census 141 all L4; L2 type audit 37-row table + corpus-wide token sweep). Pass-126 CLEAN strict/PR-merge: ZERO findings (0C/0H/0M/0L/0OBS). F-P125-01 CLOSED [VP-003 v1.2 verified]. All carry-forward axes CLEARED: holdout C/D existence-validated; ss-02 channel trio coherent; prd.md↔supplements consistent (E-MEMORY-003 correct; summary_halt fully propagated; 95=48/39/8 PASS). Fresh hunt ZERO. COUNTER 1/3 STREAK ACTIVE (frozen-HEAD rule; corpus FROZEN at 02d8ccd; no spec edits until 3/3 or new finding). NEXT ACTION: dispatch adversary pass 127 (fresh-hunt only; no carry-forward axes; corpus frozen at 02d8ccd)."
+### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3.
+### DECISION DELTA (this session): no new decisions in burst 211; last decision D18-P103-A; full log above.
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule ACTIVE (counter 1/3; no spec edits until 3/3 or new finding).
+### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 211 | Counter 1/3 STREAK ACTIVE | No open findings (pass-126 CLEAN strict; streak 1/3; pass 127 next)
+
+---
+
+## Burst 212 Session Checkpoint (archived from STATE.md by burst-213)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 127 passes / 128 fix bursts, counter 2/3 STREAK ACTIVE (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 516=507+9, purity-map 58, 13 ADRs [ADR-006 rev-4, ADR-005 rev-4 w/ §CheckpointSaver Object-Safety + §Adjacent Trait Object-Safety Adjudications], 34 gates, StreamEvent 12 variants, VP census 141 all L4; L2 type audit 37-row table + corpus-wide token sweep). Pass-127 CLEAN strict/PR-merge: ZERO findings (0C/0H/0M/0L/0OBS). Part A streak qual STANDING: VP-003 v1.2 BC-2.13.004 cell = 'Kani VP Seed' confirmed; summary_halt BC-2.05.005 v1.5 7-case guard (e) present; holdout-D BC anchors existence-validated. Fresh-hunt axes all CLEAN: ss-12 BC-2.12.002 CRUD 7-endpoint coherence 1:1; §StreamEvent 12-variant field schema vs BC-2.06.002 (run_id+parent_ids on every variant; GuardrailDecision schema coherent); DI-001..014 statement-level census zero orphans all mapped to enforcing BCs; NFR-001..011 vs VP/DI/BC web fully coherent. COUNTER 2/3 STREAK ACTIVE (frozen-HEAD rule; corpus FROZEN at 02d8ccd; no spec edits until 3/3 or new finding). NEXT ACTION: dispatch adversary pass 128 (D-chain cite D-127; convergence-completing; if CLEAN(strict) → 3/3 CONVERGED → /vsdd-factory:check-input-drift → Phase 1 human approval gate)."
+### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3.
+### DECISION DELTA (this session): no new decisions in bursts 211-212; last decision D18-P103-A; full log above.
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule ACTIVE (counter 2/3; no spec edits until 3/3 or new finding).
+### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 212 | Counter 2/3 STREAK ACTIVE | No open findings (pass-127 CLEAN strict; streak 2/3; pass 128 next)
