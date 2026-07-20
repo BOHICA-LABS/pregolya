@@ -2908,3 +2908,78 @@ Phase 1d burst 204 — pass-119 record + fix burst 122 (F-P119-01 + OBS-1/OBS-2 
 - Counter: 0 of 3 (unchanged; fix burst 127 pushes new HEAD; frozen-HEAD streak rule)
 - Trajectory: ...→3→1→1→3→5→3→2 (tail after P1D-124)
 - NEXT: dispatch adversary pass 125
+
+---
+
+## Burst 210 (2026-07-19) — Pass 125 Record + Fix Burst 128 (F-P125-01 RESOLVED)
+
+**Burst ID:** 210 | **Date:** 2026-07-19 | **Type:** Adversary pass record + fix burst (state-burst single-commit protocol TD-VSDD-053)
+
+**Pass-125 Summary:** NOT CLEAN strict — 0C/0H/1M/0L. F-P124-01/02 ALL CLOSED — PASS-125 sibling-checks (a)-(e) all PASS: interface-definitions v2.40 E-MEMORY placement table (001 vector_search / 002+003 memory_set / 004 memory_get) verified; memory_get isolation-by-invisibility text coherent with BC-2.15.002 PC1/TV-001/PC6; all 5 VPs uniform L4 + input-hash PASS; VP-INDEX level:L3 convention intact; grep E-MEMORY-003 zero memory_get-anchored sites. Carry-forward carry-pass: ADR-008/010/011 PASS; ss-14↔NFR-009 PASS; ss-06↔BC-2.12.007 PASS; ss-03 recursion arithmetic PASS; RetryHint↔ss-16 PASS; gate inventory 34 PASS. NOT cleared (carry-forward to pass-126): holdout-domain briefs C/D deep coherence; ss-02 channel BC trio; prd.md↔supplements precedence. New finding F-P125-01 MED: VP-003 v1.1 BC Traceability table cell BC-2.13.004 mislabeled "Primary VP obligation; Red Gate" — Red Gate = VP-004/005-only R11 designation; VP-003 proof_method kani; correct = "Primary VP obligation; Kani VP Seed"; introduced by burst-127 L4 conformance sweep sourcing from wrong VP sibling. Counter 0/3 unchanged.
+
+**Fix Burst 128 Changes:**
+
+- VP-003.md v1.1→v1.2 (architect): F-P125-01 RESOLVED — BC Traceability table cell for BC-2.13.004 corrected from "Primary VP obligation; Red Gate" to "Primary VP obligation; Kani VP Seed"; full-file sweep confirms zero stray Red Gate strings in VP-003.md body.
+- D18-P89-A hash sweep: STALE=0 (VP-003 v1.2; transitive sweep TOTAL MATCH).
+
+**Also archived from Current Phase Steps:** burst-205 row (pass-120 record + fix burst 123) rotated to burst-log per 5-row rotation policy.
+
+### Burst-205 (Archived from Current Phase Steps)
+
+**Burst ID:** 205 | **Date:** 2026-07-19 | **Type:** Adversary pass record + fix burst
+
+**Summary:** Phase 1d burst 205 — pass-120 record + fix burst 123 (F-P120-01 RESOLVED). Pass 120: NOT CLEAN strict+PR-merge — 0C/1H/0M/0L. F-P119-01/OBS-1/OBS-2 ALL CLOSED (summary_halt cascade FULLY CLOSED: BC-2.05.005 v1.5 7-case guard a-g verified; BC-2.05.004 v1.4 delegation coherent; VP-HITL-10 7-case derivable count; test-vectors v1.9 TV Count 8/SS-05 35/507/516 re-summed PASS; no live 504/513 citations). Cleared: ss-13 env-allowlist CLEAN; ss-07 GTV Red Gate CLEAN; schedule lifecycle CLEAN (BC-2.12.004 v1.3 cron PC2b four-terminal-set confirmed). New finding F-P120-01 HIGH: Command modeled as 2-variant enum in entities-server.md:78 + ubiquitous-language-core.md:142 vs BC-2.05.004 authoritative struct {resume,update,goto,graph}+Command.PARENT; compound commands EC-001/TV-002/TV-003 unrepresentable in enum form; root cause: BC-2.05.004 combinability invariant hardened passes 117-118 without propagating to L2 entity/glossary shards. Fix burst 123: entities-server v1.9→v1.10 (Command struct form + combinability invariant + Command.PARENT cite + E-GRAPH-015 + DI-003); ubiquitous-language-core v1.0→v1.1 (same struct form). D18-P89-A sweep: STALE=0. Trajectory →1 (P1D-120). Counter 0/3. Fix bursts 122→123. Burst 205.
+
+### Files Written (Burst 210)
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-125.md` | NEW — pass-125 adversarial review report (0C/0H/1M/0L) |
+| `.factory/specs/verification-properties/VP-003.md` | v1.1→v1.2 — BC Traceability cell BC-2.13.004 corrected: "Red Gate" → "Kani VP Seed"; full-file Red Gate sweep zero stray hits |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | burst-205 archived + this burst-210 narrative (added in burst-211 catch-up) |
+| `.factory/cycles/v1.0.0-greenfield/convergence-trajectory.md` | P1D-125 row + per-pass detail (added in burst-211 catch-up; omitted from burst-210 commit) |
+| `.factory/STATE.md` | v3.50→v3.51; trajectory-tail →5→3→2→1 (P1D-125); counter 0/3; passes 124→125; fix bursts 127→128 |
+
+### Convergence Status After Burst 210
+
+- Phase 1d passes: 125 (1M — counter 0/3)
+- Fix bursts: 128 (F-P125-01 RESOLVED)
+- Counter: 0 of 3 (unchanged; fix burst 128 pushes new HEAD 02d8ccd; frozen-HEAD streak rule)
+- Trajectory: ...→3→5→3→2→1 (tail after P1D-125)
+- NEXT: dispatch adversary pass 126
+
+---
+
+## Burst 211 (2026-07-19) — Pass 126 CLEAN(strict) Record — Streak 1/3
+
+**Burst ID:** 211 | **Date:** 2026-07-19 | **Type:** Adversary pass record — CLEAN(strict) — bookkeeping-only burst (frozen-corpus rule active; TD-VSDD-053)
+
+**Pass-126 Summary:** CLEAN strict/PR-merge — 0C/0H/0M/0L/0OBS. F-P125-01 CLOSED — sibling-checks (a)-(d) all PASS: VP-003 v1.2 BC-2.13.004 cell = "Primary VP obligation; Kani VP Seed" confirmed; zero stray Red Gate in VP-003.md; VP suite uniform L4; Source Contract section coherent (proof_method: kani, kani_target: workspace-confinement). All three multi-pass carry-forward axes deep-read with ZERO yield: holdout domains C/D CLEARED (9 BC + 2 CAP anchors existence-validated; briefs coherent); ss-02 channel trio CLEARED (BC-2.02.002/003/004 cross-BC coherent; BarrierValue no-dup-error = intentional idempotent); prd.md↔supplements CLEARED (E-MEMORY-003 consistent — pass-125 "MemoryStoreFailed" was report paraphrase only, corpus correct; summary_halt fully propagated; 95=48/39/8 PASS). Fresh hunt: ZERO additional candidates. Novelty ZERO. Counter advances 0/3 → 1/3. FROZEN-CORPUS RULE ACTIVE (no spec edits; bookkeeping-only burst).
+
+**No Fix Burst** (CLEAN(strict) pass — zero findings; corpus stays frozen at 02d8ccd).
+
+**Also archived from Current Phase Steps:** burst-206 row (pass-121 record + fix burst 124, F-P121-01/02 RESOLVED, L2 type audit) rotated to burst-log per 5-row rotation policy.
+
+### Burst-206 (Archived from Current Phase Steps)
+
+**Burst ID:** 206 | **Date:** 2026-07-19 | **Type:** Adversary pass record + fix burst
+
+**Summary:** Phase 1d burst 206 — pass-121 record + fix burst 124 (F-P121-01/02 RESOLVED; L2 type audit). Pass 121: NOT CLEAN strict+PR-merge — 1H/1M/1OBS. F-P120-01 CLOSED — checks (a)-(e) PASS. New findings: F-P121-01 HIGH — L2 ContentBlock ~5-variant vs BC-2.01.001 PC2 canonical 14 variants; wrong ToolCall fields ({id,type,function} vs {id,name,args}); ToolResult wrongly a ContentBlock variant (BC-2.09.002 requires ToolMessage); NonStandard/DI-008 absent; root cause: entities-graph.md + ubiquitous-language-core.md authored from pre-hardening draft. F-P121-02 MED — L2 Message 4-role closed enum vs BC-2.01.002 PC7/EC-005 requiring Function/Chat/Remove extension roles in both sites. OBS [process-gap] — L2-only sweeps leave systemic L2-vs-BC type drift; first comprehensive 37-row L2-vs-BC audit mandated. Fix burst 124: entities-graph v1.1→v1.2 (ContentBlock 14-variant correct + ToolCall {id,name,args} correct + ToolMessage DI-012 rewrite + relationships + Message 4-primary+3-extension); ubiquitous-language-core v1.1→v1.2 (same); events v1.5→v1.6; bounded-contexts v1.0→v1.1; edge-cases v1.1→v1.2; entities-server v1.10→v1.11; capabilities-p0 v1.3→v1.4 (CAP-007 StreamEvent 12 variants). OBS CONVERGED: 37-row L2-vs-BC type audit published (13 DRIFT-fixed + 24 MATCH). D18-P89-A sweep: STALE=0. Trajectory →3 (P1D-121). Counter 0/3. Fix bursts 123→124. Burst 206.
+
+### Files Written (Burst 211)
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-126.md` | NEW — pass-126 adversarial review report (0C/0H/0M/0L/0OBS — CLEAN strict/PR-merge) |
+| `.factory/cycles/v1.0.0-greenfield/convergence-trajectory.md` | P1D-125 (catch-up from burst-210) + P1D-126 rows + per-pass detail |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | burst-205 (catch-up) + burst-206 archived; burst-210 + burst-211 narratives |
+| `.factory/cycles/v1.0.0-greenfield/session-checkpoints.md` | burst-210 checkpoint archived |
+| `.factory/STATE.md` | v3.51→v3.52; trajectory-tail →3→2→1→0 (P1D-126 CLEAN); counter 0/3→1/3 STREAK ACTIVE; passes 125→126; frozen-corpus rule ACTIVE |
+
+### Convergence Status After Burst 211
+
+- Phase 1d passes: 126 (CLEAN strict/PR-merge — counter 1/3 STREAK ACTIVE)
+- Fix bursts: 128 (no new fix burst; corpus frozen at 02d8ccd)
+- Counter: 1 of 3 STREAK ACTIVE (frozen-HEAD rule on 02d8ccd; 2 more CLEAN(strict) passes needed)
+- Trajectory: ...→3→5→3→2→1→0 (tail after P1D-126)
+- NEXT: dispatch adversary pass 127 (fresh-hunt only; no carry-forward axes; corpus frozen at 02d8ccd)

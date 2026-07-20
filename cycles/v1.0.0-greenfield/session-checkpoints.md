@@ -887,3 +887,16 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (this session): no new decisions in burst 209; last decision D18-P103-A; full log above.
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule SUSPENDED (counter 0/3; resumes at next CLEAN strict).
 ### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 209 | Counter 0/3 | No open findings (F-P124-01/02 RESOLVED in fix burst 127; pass 125 next)
+
+---
+
+## Burst 210 Session Checkpoint (archived from STATE.md by burst-211)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 125 passes / 128 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 516=507+9, purity-map 58, 13 ADRs [ADR-006 rev-4, ADR-005 rev-4 w/ §CheckpointSaver Object-Safety + §Adjacent Trait Object-Safety Adjudications], 34 gates, StreamEvent 12 variants, VP census 141 all L4; L2 type audit 37-row table + corpus-wide token sweep). F-P125-01 RESOLVED [1M]: VP-003 v1.1→v1.2 — BC Traceability table cell for BC-2.13.004 corrected from 'Primary VP obligation; Red Gate' to 'Primary VP obligation; Kani VP Seed' (BC-2.13.004 vp_seed:true kani_target:workspace-confinement; Red Gate = VP-004/VP-005 only R11 designation; zero stray Red Gate in VP-003.md confirmed); VP suite structurally uniform L4. COUNTER 0/3 (pass 125 NOT CLEAN strict; fix burst 128 pushes new HEAD). NEXT ACTION: dispatch adversary pass 126 (sibling-checks loaded; PASS-126 checklist follows)."
+### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
+### PASS-126 SIBLING-CHECKS: (a) VP-003 v1.2 BC-2.13.004 cell = "Primary VP obligation; Kani VP Seed" (not Red Gate); (b) zero stray "Red Gate" strings in VP-003.md body; (c) VP suite structurally uniform L4 post-edit; (d) holdout-domain briefs C/D deep coherence; (e) ss-02 channel BC trio deep-read (BC-2.02.002/003/004); (f) prd.md body↔supplements precedence conflicts.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3.
+### DECISION DELTA (this session): no new decisions in burst 210; last decision D18-P103-A; full log above.
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule SUSPENDED (counter 0/3; resumes at next CLEAN strict).
+### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 210 | Counter 0/3 | No open findings (F-P125-01 RESOLVED in fix burst 128; pass 126 next)

@@ -822,6 +822,34 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-125 — Pass 125 (2026-07-19, burst 210)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-125 | 2026-07-19 | 1 | 0 | 0 | 1 | 0 | 0 | LOW-MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes exercised (burst-210 pass-125):** F-P124-01/02 ALL CLOSED — PASS-125 sibling-checks (a)-(e) all PASS: interface-definitions v2.40 E-MEMORY placement table (001 vector_search / 002+003 memory_set / 004 memory_get) correct; memory_get isolation-by-invisibility text coherent with BC-2.15.002 PC1/TV-001/PC6; all 5 VPs uniform L4 + input-hash PASS; VP-INDEX level:L3 convention intact; grep E-MEMORY-003 zero memory_get-anchored sites. Carry-forward cleared: ADR-008/010/011 soundness PASS; ss-14↔NFR-009 timeout consistent; ss-06↔BC-2.12.007 consistent; ss-03 recursion arithmetic PASS; RetryHint↔ss-16 PASS; gate inventory 34 PASS; E-MEMORY placement PASS; VP L4 uniformity PASS. NOT cleared (carry-forward to pass-126): holdout-domain briefs C/D deep coherence; ss-02 channel BC trio deep-read (BC-2.02.002/003/004); prd.md body↔supplements precedence. New finding: F-P125-01 MED — VP-003 v1.1 BC Traceability table cell for BC-2.13.004 mislabeled "Primary VP obligation; Red Gate"; BC-2.13.004 has vp_seed:true + kani_target:workspace-confinement (no red_gate:true); Red Gate is VP-004/005-only R11 designation; VP-003 proof_method is kani; correct label = "Primary VP obligation; Kani VP Seed"; introduced by burst-127 L4 conformance sweep sourcing template from VP-004/005 instead of VP-001/002. Novelty LOW-MEDIUM: label transcription defect in same VP conformance sweep class as F-P124-02; conceptual Kani VP Seed vs Red Gate distinction established passes 117–124; decaying severity (HIGH→MED); trajectory decaying (2→1).
+**Fix summary (burst 210 — fix burst 128):** F-P125-01 MED (architect) — VP-003 v1.1→v1.2: BC Traceability table cell for BC-2.13.004 corrected from "Red Gate" to "Kani VP Seed"; full-file sweep confirms zero stray Red Gate strings in VP-003.md. D18-P89-A hash sweep: STALE=0.
+**Hash sweep (D18-P89-A):** STALE=0. VP-003 v1.2; transitive sweep confirms TOTAL MATCH.
+**Trajectory after:** →1 (P1D-125); cumulative tail →5→3→2→1
+**Counter:** 0/3 (unchanged; fix burst 128 pushes new HEAD 02d8ccd; frozen-HEAD streak rule; NEXT: pass 126)
+
+---
+
+### P1D-126 — Pass 126 (2026-07-19, burst 211)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-126 | 2026-07-19 | 0 | 0 | 0 | 0 | 0 | 0 | ZERO | 1/3 STREAK ACTIVE | FINDINGS_REMAIN (0 findings; convergence not yet achieved; streak 1/3) |
+
+**Axes exercised (burst-211 pass-126):** F-P125-01 CLOSED — PASS-126 sibling-checks (a)-(d) all PASS: VP-003 v1.2 BC-2.13.004 cell = "Primary VP obligation; Kani VP Seed" confirmed; zero stray Red Gate in VP-003.md; VP suite uniform L4 post-edit; Source Contract sibling-line (proof_method: kani, kani_target: workspace-confinement) coherent. All three multi-pass carry-forward axes cleared by deep-read: (1) Holdout C/D — 9 BC + 2 CAP anchors existence-validated; briefs internally coherent; L2 domain spec alignment PASS. (2) ss-02 channel trio (BC-2.02.002/003/004) — send/receive/close cross-BC semantics coherent; close→send error path consistent; receive-on-closed semantics consistent; unnamed BarrierValue no-dup-error = intentional idempotent arrival (no finding). (3) prd.md↔supplements — E-MEMORY-003 consistent (pass-125 "MemoryStoreFailed" reference was report paraphrase, not corpus defect; CLEARED CANDIDATE); summary_halt fully propagated (BC-2.05.005 v1.5 7-case guard; test-vectors v1.9 arithmetic 8/35/507/516 PASS); 95=48/39/8 arithmetic PASS; prd.md deference to supplements intact. Fresh hunt: ZERO additional candidates across corpus. All four carry-forward axes entering pass-126 now CLEARED; no axes carry forward to pass-127. Novelty ZERO.
+**Fix summary:** No fix burst (CLEAN(strict) pass — no findings). Corpus frozen at 02d8ccd spec-state.
+**Hash sweep (D18-P89-A):** N/A — no spec edits this burst (frozen-corpus rule active; bookkeeping-only burst).
+**Trajectory after:** →0 (P1D-126 CLEAN); cumulative tail →3→2→1→0
+**Counter:** 1/3 STREAK ACTIVE (advances from 0/3; first CLEAN(strict) on post-burst-128 HEAD 02d8ccd; frozen-HEAD streak rule satisfied; NEXT: pass 127 fresh-hunt only — no carry-forward axes)
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are
