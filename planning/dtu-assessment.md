@@ -10,15 +10,15 @@ inputs:
   - .factory/STATE.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/api-surface.md
-  - .factory/specs/behavioral-contracts/ss-TBD/BC-2.08.001.md
-  - .factory/specs/behavioral-contracts/ss-TBD/BC-2.08.002.md
-  - .factory/specs/behavioral-contracts/ss-TBD/BC-2.08.003.md
-  - .factory/specs/behavioral-contracts/ss-TBD/BC-2.08.004.md
-  - .factory/specs/behavioral-contracts/ss-TBD/BC-2.08.005.md
-  - .factory/specs/behavioral-contracts/ss-TBD/BC-2.08.006.md
-  - .factory/specs/behavioral-contracts/ss-TBD/BC-2.08.007.md
-  - .factory/specs/behavioral-contracts/ss-TBD/BC-2.08.008.md
-input-hash: "[state-manager to compute]"
+  - .factory/specs/behavioral-contracts/ss-08/BC-2.08.001.md
+  - .factory/specs/behavioral-contracts/ss-08/BC-2.08.002.md
+  - .factory/specs/behavioral-contracts/ss-08/BC-2.08.003.md
+  - .factory/specs/behavioral-contracts/ss-08/BC-2.08.004.md
+  - .factory/specs/behavioral-contracts/ss-08/BC-2.08.005.md
+  - .factory/specs/behavioral-contracts/ss-08/BC-2.08.006.md
+  - .factory/specs/behavioral-contracts/ss-08/BC-2.08.007.md
+  - .factory/specs/behavioral-contracts/ss-08/BC-2.08.008.md
+input-hash: "e62b22d"
 traces_to: .factory/specs/architecture/ARCH-INDEX.md
 decisions: [D3, D13]
 dtu_required: true

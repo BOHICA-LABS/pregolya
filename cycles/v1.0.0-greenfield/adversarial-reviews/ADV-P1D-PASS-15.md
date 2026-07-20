@@ -18,10 +18,10 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-009-budget-governance-placement.md
   - .factory/specs/architecture/decisions/ADR-010-error-taxonomy-anyhow-confinement.md
   - .factory/specs/architecture/decisions/ADR-011-cache-key-content-hash.md
-  - .factory/specs/prd.md §9 NE Disposition Table
+  - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/adk-rust/patterns-observed.md
-input-hash: "pending"
+input-hash: "1ec9375"
 findings:
   - id: F-P15-01
     severity: HIGH

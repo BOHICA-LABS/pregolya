@@ -8,7 +8,7 @@ producer: product-owner
 scope: NE-anchor axis (BC-INDEX NE Anchors column + PRD §7 RTM NE citations + PRD §9 NE Disposition Table + BC bodies — complete NE axis census, first time)
 inputs:
   - .factory/specs/behavioral-contracts/BC-INDEX.md
-  - .factory/specs/prd.md §2 BC catalog + §7 RTM + §9 NE Disposition Table
+  - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.006.md
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.007.md
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.002.md
@@ -22,7 +22,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-03/BC-2.03.003.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/prd-supplements/bc-authoring-plan.md
-input-hash: "pending"
+input-hash: "c9d64f6"
 findings:
   - id: F-P16-01
     severity: HIGH
