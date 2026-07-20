@@ -7,7 +7,6 @@ producer: architect
 timestamp: 2026-07-14T14:00:00Z
 phase: 1b
 inputs:
-  - .factory/STATE.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/api-surface.md
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.001.md
@@ -18,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.006.md
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.007.md
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.008.md
-input-hash: "e62b22d"
+input-hash: "b926930"
 traces_to: .factory/specs/architecture/ARCH-INDEX.md
 decisions: [D3, D13]
 dtu_required: true
@@ -109,6 +108,14 @@ Streaming events (BC-2.06) are consumed by the caller. Log output is to stderr v
 None identified — ferrochain does not call external enrichment services. It is a
 general-purpose agent framework; domain-specific enrichment (threat intel, geocoding,
 etc.) is the responsibility of user-defined tools.
+
+## Dependency Summary
+
+| # | Service | Category | Fidelity | DTU? | Justification |
+|---|---------|----------|----------|------|---------------|
+| 1 | OpenAI Chat Completions API | Outbound/LLM | L3 (Behavioral) | YES | SSE streaming conformance, tool-call round-trip, error taxonomy, transport-error scenarios per BC-2.08.001-007 |
+| 2 | Anthropic Messages API | Outbound/LLM | L3 (Behavioral) | YES | Same conformance battery as OpenAI via ferrochain-standard-tests; distinct SSE envelope + error shapes |
+| 3 | Ollama REST API | Outbound/LLM | L2 (Stateful) | YES (cassette) | D3 early integration; keyless; simpler NDJSON format; GPU-free CI fallback required |
 
 ## Per-Surface Clone Specification
 
@@ -237,7 +244,21 @@ round-trip testing. The cassette remains the CI baseline for keyless environment
 | 2 | SQLite (checkpoint) | Bundled first-party dependency; not an external service. |
 | 3 | WASM runtime (sandbox) | First-party; ferrochain-sandbox implements the execution contract. |
 
-## DTU Clone Storage Layout
+## DTU Architecture
+
+ferrochain uses a **cassette-based** clone mechanism rather than Docker Compose
+clone servers. The "DTU" here is an in-process wiremock record/replay layer:
+cassette files stored under `.factory/dtu-clones/` are loaded by test harnesses
+at suite start, eliminating live provider keys in CI without running separate
+containers.
+
+| Clone | Mechanism | Fidelity | Port Required |
+|-------|-----------|----------|---------------|
+| openai-cassettes | wiremock in-process | L3 | none (in-process) |
+| anthropic-cassettes | wiremock in-process | L3 | none (in-process) |
+| ollama-cassettes | wiremock in-process (+ optional local container) | L2 | none (cassette path) |
+
+### DTU Clone Storage Layout
 
 ```
 .factory/dtu-clones/
@@ -316,3 +337,18 @@ requires careful wiremock configuration — standard chunk-delivery cassettes
 are insufficient; connection-drop and delay scenarios require behavioral cassette
 extensions. Mitigation: cassette README documents capture procedure for each
 error scenario.
+
+## Clone Development Approach
+
+Each DTU cassette set is developed as a VSDD story in Wave 2 with:
+- Behavioral contracts derived from live provider API documentation and
+  the BC-2.08 conformance matrix (see §BC-2.08 Coverage Matrix above)
+- Cassette capture via wiremock record mode against a live provider (one-time,
+  requires developer API keys; recorded cassettes are committed as fixture files)
+- Contract tests verifying cassette content matches the BC-2.08 fidelity
+  requirements (SSE chunk-by-chunk framing, error JSON envelopes, token-usage
+  field presence)
+- Cassette wiring stories are prerequisites to all BC-2.08 conformance stories;
+  see §Pre-Phase-3 Clone-Existence Check Obligation for the gate criteria
+- No Docker packaging required — cassettes are plain JSON files loaded
+  in-process by wiremock; no container runtime needed in CI

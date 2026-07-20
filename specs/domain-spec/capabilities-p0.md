@@ -2,20 +2,21 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p0
-version: "1.5"
+version: "1.6"
 status: active
 producer: business-analyst
-timestamp: 2026-07-19T00:00:00Z
+timestamp: 2026-07-20T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "8fe3546"
+input-hash: "2b2bd5a"
 traces_to: L2-INDEX.md
 decisions: [D1, D7, D8, D11, D13, D17]
 changelog:
+  - "v1.6 (2026-07-20): CAP-002 scope clarification added — listed Runnable examples (model call, prompt template, output parser, tool, graph) are user-implementable instances; ferrochain ships the trait and composition machinery in v1 only; PromptTemplate / OutputParser first-party impls are post-v1/community deliverables. Grounded in product-brief v1.3 out-of-scope dispositions and audit Q1 GAP. input-hash updated (drift: 8fe3546→2b2bd5a)."
   - "v1.3 (2026-07-17): F-P95-04 fix — CAP-012 on_ceiling enumeration was stale (two-mode: Halt | Escalate only). Expanded to all three canonical variants: Halt | Escalate | Summarize per interface-definitions §OnCeiling, BC-2.10.003 PC8, and D20 addition."
   - "v1.4 (OBS-P121 audit, fix burst 124, 2026-07-19): CAP-007 §StreamEvent variant list: add 12th variant guardrail_decision (F-P99-01, interface-definitions v2.34 §StreamEvent). Prior list of 11 variants was authored before the guardrail observability axis was added. Canon: interface-definitions §StreamEvent 12 variants."
   - "v1.5 (F-P122-01, fix burst 125, 2026-07-19): CAP-001 illustrative ContentBlock list: replaced 5-token drifted list (text, image_url, tool_use, tool_result, document) with canonical 14-variant enumeration per BC-2.01.001 PC2; added tool results → ToolMessage per BC-2.09.002."
@@ -56,6 +57,10 @@ differentiator #4 (product-brief §Overflow Competitive Differentiator Traceabil
 
 Express any computation — model call, prompt template, output parser, tool, graph — as a
 Runnable that can be invoked, streamed, batched, and composed via `|` pipe into chains.
+The listed examples (model call, prompt template, output parser, tool, graph) are all
+user-implementable instances of the `Runnable` trait — ferrochain ships the trait and
+composition machinery in v1, not first-party `PromptTemplate` or `OutputParser`
+implementations; those are post-v1/community deliverables.
 Provides the universal composition protocol across all ferrochain crates.
 
 **Grounding:** product-brief.md §Scope Wave 0 — "Runnable" is the core LangChain v1 semantic

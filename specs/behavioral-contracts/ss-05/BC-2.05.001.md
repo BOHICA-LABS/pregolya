@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "98c1e99"
+input-hash: "f22c8ae"
 changelog:
   - "1.1 (ADV-P1D-PASS-26): F-P26-03 TV-005 field name risk_tier→action_risk (propagation of F-P25-06 action_risk canon; retired field name drained per RETIRED-IDENTIFIER RESIDUE GREP gate)."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."

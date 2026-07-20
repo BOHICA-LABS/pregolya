@@ -3077,3 +3077,72 @@ Scan of passes 105–128 adversarial-reviews/ and burst-log for [process-gap] fi
 - Counter: 3 of 3 PHASE 1D CONVERGED (BC-5.39.001 3-CLEAN frozen-HEAD streak SATISFIED; passes 126/127/128 all CLEAN strict on 02d8ccd; CASCADE CLOSED)
 - Trajectory: ...→3→5→3→2→1→0→0→0 (tail after P1D-128)
 - NEXT: /vsdd-factory:check-input-drift → consistency-validator fresh audit → Phase 1 human approval gate
+
+---
+
+## Burst 214 (2026-07-20) — Input-Drift Closure [archived from STATE.md current-phase-steps in burst-215]
+
+**Burst ID:** 214 | **Date:** 2026-07-20 | **Type:** state-manager — pre-gate input-drift check; dtu-assessment path repair; PASS-15/16 section-anchor fix; cycles bookkeeping hash refresh
+
+**Summary:** Pre-gate input-drift check complete. dtu-assessment.md: inputs repaired ss-TBD→ss-08 for BC-2.08.001..008; hash 55f6386. ADV-P1D-PASS-15: section-anchor pseudo-input ".factory/specs/prd.md §9 NE Disposition Table" → plain path; hash 1ec9375. ADV-P1D-PASS-16: section-anchor pseudo-input ".factory/specs/prd.md §2 BC catalog + §7 RTM + §9 NE Disposition Table" → plain path; hash c9d64f6. 16 cycles bookkeeping files (burst-logs, lessons, checkpoints, blocking-issues) hash-refreshed (safe-to-bump class). Final scan: TOTAL=191 MATCH=152 STALE=0 NOINPUT=39. Spec corpus ZERO-DRIFT. NEXT: consistency-validator fresh-context audit → Phase 1 human approval gate.
+
+### Files Written (Burst 214)
+
+| File | Change |
+|------|--------|
+| `.factory/planning/dtu-assessment.md` | inputs: ss-TBD paths → ss-08 paths; hash 55f6386 |
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-15.md` | section-anchor pseudo-input repaired; hash 1ec9375 |
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-16.md` | section-anchor pseudo-input repaired; hash c9d64f6 |
+| 16 cycles bookkeeping files | D18-P89-A safe-to-bump class hash refresh |
+| `.factory/STATE.md` | v3.54→v3.55; current_step updated; input-drift COMPLETE |
+
+### Convergence Status After Burst 214
+
+- Phase 1d passes: 128 (3/3 PHASE 1D CONVERGED — CASCADE CLOSED)
+- Input-drift: COMPLETE (STALE=0 spec corpus + cycles bookkeeping)
+- NEXT: consistency-validator fresh-context audit → Phase 1 human approval gate
+
+---
+
+## Burst 215 (2026-07-20) — Pre-Gate Audit Closure; Phase 1 GATE-READY
+
+**Burst ID:** 215 | **Date:** 2026-07-20 | **Type:** state-manager — pre-gate fresh-context audit closure; D18-P88-A BLOCKER fix (dtu-assessment STATE.md input removed); template compliance; cascade hash refresh; gate-ready STATE.md update
+
+**Fresh-Context Consistency Audit Verdict (Q1–Q7):**
+
+| Q | Check | Verdict | Action |
+|---|-------|---------|--------|
+| Q1 | 8 langchain-core subsystems excluded by omission (absent from BCs/SSes/crate roster; scope ambiguity) | GAP → FIXED | PO: product-brief v1.2→v1.3 — 8 explicit out-of-scope dispositions (callbacks SUPERSEDED-by-SS-06; prompts EXCLUDED; output-parsers SUPERSEDED-by-with_structured_output; LC-serialization EXCLUDED; retrievers EXCLUDED; vectorstores PARTIALLY-COVERED-SS-15; embeddings TRAIT-ONLY-SS-15; chat_history SUPERSEDED-by-channels+Thread); BA: capabilities-p0 v1.5→v1.6 CAP-002 user-implementable-examples clarification |
+| Q2 | Subsystem completeness (langchain-core 8 subsystems now all covered or explicitly excluded) | PASS | — |
+| Q3 | Risk closure (R8/R10/R11 + ADR-004 all closed in Phase 1 corpus) | PASS | — |
+| Q4 | Deliverables completeness (all Phase 1 artifacts present and coherent) | PASS | — |
+| Q5 | "Three holdout domains" vs actual Four — L2-INDEX Design-Forcing-Function Summary stale | NOTE → FIXED | BA: L2-INDEX v1.3→v1.4 — "Four holdout domains"; Domain D row (Hermes Agent, inbound MCP server role per D19/D20); D19 added to decisions list |
+| Q6 | dtu-assessment.md lists .factory/STATE.md in inputs: — D18-P88-A violation (perpetual re-drift on every state write) | BLOCKER → FIXED | state-manager: STATE.md removed from inputs; Dependency Summary + DTU Architecture + Clone Development Approach sections added for template compliance; hash cascade dc7d525 |
+| Q7 | Count coherence: 95 BCs / 5 VPs / 516 test-vectors | PASS | — |
+
+**D18-P89-A Cascade Sweep:** 5 passes to convergence. Final: TOTAL=191 MATCH=152 STALE=0 NOINPUT=39.
+
+**Gate-Readiness Statement:** All three Phase 1 pre-gate checks COMPLETE — (1) adversarial convergence 3/3 DONE (passes 126/127/128 CLEAN strict on frozen HEAD 02d8ccd; CASCADE CLOSED); (2) input-drift DONE (burst 214 STALE=0 + burst 215 cascade STALE=0); (3) fresh-context consistency audit DONE (1 BLOCKER + 1 GAP + 1 NOTE all fixed). Phase 1 Spec Crystallization is GATE-READY. AWAITING HUMAN APPROVAL to advance to Phase 2 Story Decomposition.
+
+### Archived from STATE.md Current Phase Steps: Burst-210 Row
+
+*(burst-210 full narrative already in burst-log §Burst 210 above; row archived from STATE.md in this burst)*
+
+### Files Written (Burst 215)
+
+| File | Change |
+|------|--------|
+| `.factory/planning/dtu-assessment.md` | BLOCKER FIX: STATE.md removed from inputs:; Dependency Summary + DTU Architecture + Clone Development Approach added (template compliance); hash recomputed dc7d525 |
+| `.factory/specs/product-brief.md` | v1.2→v1.3: Q1-GAP fix — 8 explicit out-of-scope dispositions for langchain-core subsystems |
+| `.factory/specs/domain-spec/L2-INDEX.md` | v1.3→v1.4: Q5-NOTE fix — Domain D (Hermes Agent) added; "Four holdout domains"; D19 in decisions list |
+| `.factory/specs/domain-spec/capabilities-p0.md` | v1.5→v1.6: CAP-002 user-implementable-examples clarification |
+| 116 spec + cycles files | D18-P89-A cascade hash refresh (5 passes to STALE=0) |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | burst-214 + burst-215 narratives appended |
+| `.factory/STATE.md` | v3.55→v3.56; current_step GATE-READY; Phase 1 gate cell updated; burst-215 step row; burst-210 row archived; resume checkpoint rewritten |
+
+### Convergence Status After Burst 215
+
+- Phase 1d passes: 128 (3/3 PHASE 1D CONVERGED — CASCADE CLOSED)
+- Fix bursts: 128 (no new fix burst)
+- Phase 1 status: GATE-READY — all pre-gate checks COMPLETE; AWAITING HUMAN APPROVAL
+- NEXT: Human approves Phase 1 → Phase 2 Story Decomposition (dispatch story-writer; rehydrate wave plan)

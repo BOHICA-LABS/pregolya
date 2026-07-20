@@ -1,10 +1,10 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.3"
+version: "1.4"
 status: active
 producer: business-analyst
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-20T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -30,8 +30,9 @@ sections:
   - ubiquitous-language-core.md
   - ubiquitous-language-server.md
   - bounded-contexts.md
-decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D20]
+decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20]
 changelog:
+  - "v1.4 (2026-07-20): Design-Forcing-Function Summary updated — Four holdout domains (was three); Domain D (Hermes Agent, inbound MCP server role per D19/D20) added to forcing-function table. D19 added to decisions list. TD-VSDD-060 sweep: one stale occurrence corrected; second occurrence (v1.1 changelog: 'all three were over 1,500-token threshold') refers to split files, not holdout domains — accurate, no change."
   - "v1.3 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D-NNN decisions baked at authoring time, not live state); domain-d-hermes-agent.md added (D19/D20 forcing function for CAP-020/CAP-021 added in v1.2); input-hash recomputed. All section files updated in same burst."
   - "v1.2 (D20 sub-burst 2): CAP-020 (Self-Improvement Primitives: SkillStore + MemoryWriteGuard + Frozen-Snapshot Context Mutation, P1) and CAP-021 (MCP Server Role: Expose Registered Tools as MCP Server Endpoint, P1) added to capabilities-p1-p2.md (v1.1). CAP count 19→21; P1 count 5→7; total 19→21. D20 added to decisions list."
   - "v1.1: Split capabilities.md → capabilities-p0.md + capabilities-p1-p2.md; entities.md → entities-graph.md + entities-server.md; ubiquitous-language.md → ubiquitous-language-core.md + ubiquitous-language-server.md (all three were over 1,500-token threshold per DF-021)"
@@ -109,13 +110,14 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 
 ## Design-Forcing-Function Summary (D8)
 
-Three holdout domains constrain the domain model as Phase-1 forcing functions:
+Four holdout domains constrain the domain model as Phase-1 forcing functions:
 
 | Domain | Primary Forcing Pressure | Key Capabilities |
 |--------|--------------------------|-----------------|
 | A — SOC Analyst | Risk-tiered HITL auth gates; forensic audit; prompt-injection isolation | CAP-004, CAP-006, CAP-013, CAP-015 |
 | B — Dark Factory | Multi-day durable runs; budget governance; convergence loops | CAP-004, CAP-005, CAP-006, CAP-012 |
 | C — OpenClaw | Persistent sessions; channel ingress; local-first deployment | CAP-005, CAP-014, CAP-017 |
+| D — Hermes Agent | Inbound MCP server role; expose registered tools as MCP endpoint | CAP-020, CAP-021 |
 
 ## Key Anchors from COMPARATIVE-ASSESSMENT.md (D17)
 
