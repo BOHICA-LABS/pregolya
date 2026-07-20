@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "9a11eea"
+input-hash: "30f6699"
 traces_to: STATE.md
 ---
 
@@ -3146,3 +3146,62 @@ Scan of passes 105–128 adversarial-reviews/ and burst-log for [process-gap] fi
 - Fix bursts: 128 (no new fix burst)
 - Phase 1 status: GATE-READY — all pre-gate checks COMPLETE; AWAITING HUMAN APPROVAL
 - NEXT: Human approves Phase 1 → Phase 2 Story Decomposition (dispatch story-writer; rehydrate wave plan)
+
+---
+
+### Archived from STATE.md Current Phase Steps: Burst-211 Row
+
+*(burst-211 full narrative already in burst-log §Burst 211 above; row archived from STATE.md in burst 216)*
+
+---
+
+## Burst 216 (2026-07-20) — D21 Ecosystem-Parity Scope Expansion APPROVED; Phase 1 Reopened
+
+**Burst ID:** 216 | **Date:** 2026-07-20 | **Type:** state-manager — human-directed scope expansion decision record; Phase 1 GATE-READY → IN PROGRESS; Phase 1d 3/3 convergence SUPERSEDED; R12 risk registered; session checkpoint rewritten; single commit per TD-VSDD-053
+
+**Decision D21 — Ecosystem-Parity Scope Expansion (human directive):**
+
+Human reviewed holdout-traceability analysis and directed ALL FIVE previously-excluded/partially-covered langchain-core subsystems be promoted to v1 scope:
+
+| # | Subsystem | Prior Disposition (product-brief.md v1.3) | v1 Scope Rationale |
+|---|-----------|-------------------------------------------|---------------------|
+| 1 | **Prompt Templates** (PromptTemplate, ChatPromptTemplate, MessagesPlaceholder, FewShot*) | EXCLUDED (CAP-002 "user-implementable-examples") | Parity-driven: foundational LLM input construction; every LangChain user depends on this |
+| 2 | **LC Serialization / lc-JSON** (LcSerializable, Reviver, round-trip registry) | EXCLUDED | Parity-driven: chain serialization, save/load, versioning completeness |
+| 3 | **Retrievers** (standalone Retriever trait + external-adapter extension points) | EXCLUDED | Parity-driven: RAG completeness; retriever composability (ensemble, contextual-compression) |
+| 4 | **Vectorstores** (VectorStore abstraction: add_texts/similarity_search/from_texts/as_retriever/MMR + adapters) | PARTIALLY-COVERED-SS-15 | Parity-driven: full abstraction layer needed for RAG chain completeness |
+| 5 | **Embeddings** (Embeddings trait + first-party provider impls) | TRAIT-ONLY-SS-15 | **Holdout-forced** (Domain C CAP-017 vector path dead surface without concrete impl) + parity-driven |
+
+Human confirmed: embeddings = holdout-forced (Domain C CAP-017); other 4 = parity-driven. Chose full-5 after reviewing the traceability analysis.
+
+**Scope Delta:**
+- BCs: ~40-80 new behavioral contracts across 5 subsystems
+- Crate roster: 18 → ~20-21 crates (new crates: ferrochain-embeddings + likely ferrochain-vectorstores; exact roster: architect decision)
+- ADRs: 3-4 new (VectorStore abstraction; prompt-template rendering + injection-safety model; lc-JSON round-trip schema/versioning; embeddings provider trait)
+- Supersedes: product-brief.md v1.3 §Out-of-Scope for all 5 subsystems; CAP-002 "not a v1 deliverable" clarification for prompt-templates/output-parsers
+
+**Convergence Impact:**
+- Prior Phase 1d convergence: 3/3 CONVERGED (passes 126/127/128 on frozen HEAD 02d8ccd) — SUPERSEDED by perimeter change
+- New convergence counter: 0/3 (re-convergence required on expanded perimeter)
+- BC-5.39.001 frozen-HEAD streak rule: perimeter change resets streak; counting must restart on new expanded-perimeter HEAD
+
+**Risk R12 Registered:**
+- Risk: ~9,600 ref LOC across 5 subsystems; new attack surface (lc-JSON deserialization = arbitrary-input; template injection via PromptTemplate/FewShot user-controlled inputs)
+- Severity: High (Phase 1 re-convergence cost + injection/deserialization safety)
+- Mitigation: architecture-first — injection-safety ADR (template input escaping + prompt-injection defense) + deserialization-safety ADR before any BC authoring; adversarial scrutiny on new ADRs before first BC authored
+
+**NEXT Workstream:**
+Architecture-first expansion → BA CAPs → PO BCs → VP → Phase 1d cascade from 0/3.
+
+### Files Written (Burst 216)
+
+| File | Change |
+|------|--------|
+| `.factory/STATE.md` | v3.56→v3.57; D21 decision row added; R12 risk row added; Phase 1 status GATE-READY → IN PROGRESS; convergence_status RESET 0/3; burst-211 step row archived; burst-216 step row added; session checkpoint rewritten for expansion workstream; trajectory-tail →1→0→0→0 added to current_step + Last Updated |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | burst-211 archive note + burst-216 full narrative appended |
+
+### Convergence Status After Burst 216
+
+- Phase 1d passes: 128 (pre-expansion perimeter; SUPERSEDED by D21)
+- Fix bursts: 128 (no new fix burst in bursts 211–216)
+- Phase 1 status: IN PROGRESS — D21 ecosystem-parity scope expansion; 0/3 pending expanded-perimeter re-convergence
+- NEXT: architect-first expansion (ADRs + crate roster ~20-21 + module-decomp → subsystem numbering) → BA new CAPs → PO new BCs → VP → Phase 1d cascade from 0/3
