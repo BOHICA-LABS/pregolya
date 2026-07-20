@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "c3307fc"
+input-hash: "3da1365"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-29): F-P29-03 — replace non-canonical `node_delta` with canonical `node_stream` at PC2, EC-004, and TV-002. BC-2.06.001 is the streaming taxonomy authority; `node_delta` was never a valid variant. Added to retired-identifier registry (bc-authoring-plan.md gate #19)."

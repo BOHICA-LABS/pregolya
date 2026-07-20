@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p0
-version: "1.4"
+version: "1.5"
 status: active
 producer: business-analyst
 timestamp: 2026-07-19T00:00:00Z
@@ -18,6 +18,7 @@ decisions: [D1, D7, D8, D11, D13, D17]
 changelog:
   - "v1.3 (2026-07-17): F-P95-04 fix — CAP-012 on_ceiling enumeration was stale (two-mode: Halt | Escalate only). Expanded to all three canonical variants: Halt | Escalate | Summarize per interface-definitions §OnCeiling, BC-2.10.003 PC8, and D20 addition."
   - "v1.4 (OBS-P121 audit, fix burst 124, 2026-07-19): CAP-007 §StreamEvent variant list: add 12th variant guardrail_decision (F-P99-01, interface-definitions v2.34 §StreamEvent). Prior list of 11 variants was authored before the guardrail observability axis was added. Canon: interface-definitions §StreamEvent 12 variants."
+  - "v1.5 (F-P122-01, fix burst 125, 2026-07-19): CAP-001 illustrative ContentBlock list: replaced 5-token drifted list (text, image_url, tool_use, tool_result, document) with canonical 14-variant enumeration per BC-2.01.001 PC2; added tool results → ToolMessage per BC-2.09.002."
   - "v1.2 (2026-07-17): F-P91-01 attribution fix — CAP-012 `on_ceiling` was mis-attributed to the `BudgetPolicy` trait; corrected to the budget configuration (`BudgetConfig::on_ceiling`) per api-surface.md ~line 70 and ADR-009. No other capabilities affected."
   - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D-NNN decisions baked at authoring time); COMPARATIVE-ASSESSMENT.md added (D17/CONFLICT-*/NE-* grounding for CAP-004, CAP-005, CAP-007, CAP-008, CAP-012, CAP-013, CAP-016); domain-a-soc-analyst.md added (CAP-013 guardrail-on-ingress forcing function); domain-b-dark-factory.md added (CAP-005 multi-day durability, CAP-012 budget governance forcing function); input-hash recomputed."
 ---
@@ -39,8 +40,11 @@ Each capability is grounded in the product brief. IDs are stable from this spec 
 ### CAP-001: Type-Safe Message and Content Primitive Construction
 
 Construct typed messages (AiMessage, HumanMessage, SystemMessage, ToolMessage) whose content
-is a sequence of typed ContentBlocks (text, image_url, tool_use, tool_result, document).
-Guarantee that no caller can observe raw untyped content where a typed variant is expected.
+is a sequence of typed ContentBlocks — Text, Reasoning, ToolCall, ToolCallChunk,
+InvalidToolCall, Image, Video, Audio, PlainText, File, ServerToolCall, ServerToolCallChunk,
+ServerToolResult, NonStandard — per BC-2.01.001 PC2; tool results are ToolMessage per
+BC-2.09.002. Guarantee that no caller can observe raw untyped content where a typed variant
+is expected.
 
 **Grounding:** product-brief.md §Scope Wave 0 — `ferrochain-core` typed message/content
 primitives (Runnable, Message, ContentBlock).

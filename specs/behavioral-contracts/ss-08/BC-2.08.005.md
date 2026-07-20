@@ -25,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "c16013f"
+input-hash: "9a8efed"
 extracted_from: null
 modified: []
 deprecated: null

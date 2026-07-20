@@ -2717,3 +2717,86 @@ This table is the OBS-class closure deliverable. It was produced by the business
 - Counter: 0 of 3 (unchanged; fix burst 124 pushes new HEAD; frozen-HEAD streak rule)
 - Trajectory: ...→3→1→1→3 (tail after P1D-121)
 - NEXT: dispatch adversary pass 122
+
+### CORRIGENDUM to Burst-206 Audit Table (issued in burst 207, pass-122 record)
+
+> **Corrigendum discipline:** This block appends corrections to the burst-206 37-row audit table. Original rows are NOT rewritten — the corrigendum is the authoritative correction, per immutable-audit-trail discipline.
+
+**Superseded claim:** The burst-206 summary declared "OBS process-gap class CONVERGED: comprehensive audit complete, all rows MATCH after fix burst 124." This claim is RETRACTED. Pass-122 corpus-wide census found 3 additional residue sites (capabilities-p0 CAP-001, bounded-contexts Splitters seam, BC-2.11.002:105-106) outside the L2 audit scope. The convergence criterion required a corpus-wide token grep; the L2-scoped audit was necessary but not sufficient. Actual convergence established by fix burst 125 corpus-wide census: 14 hits total — 2 fixed (BC-2.11.002:105-106), 12 exempt (BC-2.08.013 wire-format ×4 + changelog rows). Capabilities-p0 and bounded-contexts fixes are structural (not token-grep type) and verified by BA in fix burst 125.
+
+**Row 2 correction (entities-graph.md §ContentBlock ToolCall fields):**
+- ORIGINAL Canon: `id/name/input_schema/description` — BC Authority: `BC-2.01.001 PC2 §ToolUse`
+- CORRECTED Canon: `{id, name, args}` — BC Authority: `BC-2.08.002 TV-001/TV-003`
+- Explanation: `id/name/input_schema/description` are the Tool definition schema (schema-specification fields registered with the LLM), not the ToolCall invocation schema. A ToolCall is the runtime invocation record; its canonical fields per BC-2.08.002 are `{id, name, args}`. The §ToolUse section anchor does not exist in BC-2.01.001 PC2 (phantom cite). The actual fix in entities-graph v1.2 correctly set ContentBlock::ToolUse variant fields to `{id, name, input_schema, description}` per BC-2.01.001 PC2 — but the audit row labeled this "ToolCall fields" and cited the wrong authority. Status: MATCH verdict retained for the ContentBlock::ToolUse variant fix itself; canonical field citation corrected.
+
+**Row 8 correction (ubiquitous-language-core.md §ContentBlock ToolCall fields):**
+- ORIGINAL Canon: `id/name/input_schema/description` — BC Authority: `BC-2.01.001 PC2 §ToolUse`
+- CORRECTED Canon: `{id, name, args}` — BC Authority: `BC-2.08.002 TV-001/TV-003`
+- Explanation: Same as row 2. ubiquitous-language-core v1.2 ContentBlock::ToolUse variant fields are correct per BC-2.01.001 PC2; the audit row's column label and authority cite were wrong. Status: MATCH verdict retained; canonical field citation corrected.
+
+**Row 22 correction (entities-graph.md §CheckpointSaver methods):**
+- ORIGINAL Pre-Fix Depiction: `put/get/list/put_writes/get_next_version`
+- CORRECTED Pre-Fix Depiction: `get_tuple/put_writes/put/list` (4 ops; get_next_version excluded per pass-116 adjudication as pure computed helper; read operation name is `get_tuple`, not `get`)
+- Explanation: The `get` operation does not appear under that name in the L2 CheckpointSaver; the correct read operation is `get_tuple`. The pre-fix description was populated from memory rather than read from the L2 source. Status: MATCH verdict retained — L2 CheckpointSaver operations are aligned with BC-2.04.003; only the Pre-Fix Depiction column was inaccurate.
+
+**Row 34 correction (edge-cases.md §BudgetPolicy OnCeiling decision table):**
+- ORIGINAL L2 Shard: `edge-cases.md` — Section: `§BudgetPolicy OnCeiling decision table`
+- CORRECTED L2 Shard: `entities-server.md` — Section: `§BudgetConfig` (at entities-server.md:98)
+- Explanation: `edge-cases.md` has no §BudgetPolicy section and no OnCeiling decision table. D18-P91-A established that OnCeiling + BudgetConfig live in `interface-definitions §BudgetPolicy` and are depicted at `entities-server.md §BudgetConfig`. Row 34 audited a phantom section in the wrong file and produced a spurious MATCH. Status: MATCH verdict retained — the OnCeiling decision table at entities-server.md:98 §BudgetConfig (correct location) is correctly structured per D18-P91-A (Halt/Escalate/Summarize 3-way branch); only the shard/section citation was wrong.
+
+---
+
+## Burst 207 (2026-07-19) — Pass 122 Record + Fix Burst 125 (F-P122-01/02/03 RESOLVED)
+
+**Date:** 2026-07-19
+**Agents:** adversary (pass 122) + product-owner (fix burst 125: BC-2.11.002) + business-analyst (fix burst 125: capabilities-p0 + bounded-contexts) + state-manager
+**Phase:** 1d — adversarial spec-crystallization loop
+**Files touched:** adversarial-reviews/pass-122.md (NEW); specs/behavioral-contracts/ss-11/BC-2.11.002.md (v1.8→v1.9); specs/domain-spec/capabilities-p0.md (v1.4→v1.5); specs/domain-spec/bounded-contexts.md (v1.1→v1.2); all spec files (D18-P89-A hash sweep); STATE.md, burst-log.md, convergence-trajectory.md (state-manager)
+**Versions bumped:** STATE.md v3.47→v3.48; BC-2.11.002 v1.8→v1.9; capabilities-p0 v1.4→v1.5; bounded-contexts v1.1→v1.2
+
+### Summary
+
+Phase 1d pass 122 adversarial review completed: NOT CLEAN strict+PR-merge — 0C/1H/2M/0L/2OBS (5 total). Counter unchanged at 0/3. F-P122-01/02/03 RESOLVED in fix burst 125. OBS-P122-a [process-gap] resolved via corpus-wide census. OBS-P122-b corrigendum appended to burst-206 audit table.
+
+**Part A — F-P121-01/02 7-shard fixes VERIFIED CLOSED:** Checks (a)–(e) from PASS-122 SIBLING-CHECKS all PASS — entities-graph v1.2 and ubiquitous-language-core v1.2 ContentBlock 14-variant correct; ToolCall fields correct per BC-2.01.001; ToolResult absent as ContentBlock arm; DI-008/NonStandard present; Message 4+3 roles correct at both sites; CAP-007 12-variant StreamEvent correct; spot-verified rows 1/7/12/19/26/37 all MATCH; get_next_version exclusion confirmed. ADR-001 reviewed clean.
+
+**5 findings (Part B):**
+- F-P122-01 HIGH: ContentBlock drifted-vocabulary residue at 3 corpus sites outside L2 audit scope — capabilities-p0:42 CAP-001 (incomplete variant list); bounded-contexts:138 Splitters seam (String→Vec\<String\> + phantom Document variant); BC-2.11.002:105-106 (image_url vs ContentBlock::Image). Burst-124 "class CONVERGED" claim falsified — audit was L2-scoped and missed BC layer + capability enumerations.
+- F-P122-02 MED: Burst-206 audit rows 2/8 wrong ToolCall canon (Tool definition schema {id,name,input_schema,description} conflated with ToolCall invocation schema {id,name,args} per BC-2.08.002 TV-001/TV-003) + phantom §ToolUse cite.
+- F-P122-03 MED: Burst-206 audit row 34 phantom — edge-cases.md has no OnCeiling section; actual table at entities-server.md:98 §BudgetConfig per D18-P91-A. MATCH verdict retained on corrected attribution.
+- OBS-P122-a [process-gap]: L2-audit scope structurally excluded BC layer (ss-01..ss-17) and capability enumerations outside CAP-007; corpus-wide token grep required for class-CONVERGED designation.
+- OBS-P122-b: Audit row 22 pre-fix depiction fabricated — "get" should be "get_tuple"; MATCH verdict retained.
+
+**Fix burst 125 changes (PO + BA parallel):**
+- BC-2.11.002 v1.8→v1.9 (PO): EC-002 updated to "ContentBlock::Text + ContentBlock::Image" (was image_url); EC-003 updated to "ContentBlock::Image → ContentBlock::Text error block" (was image_url). Corpus-wide token census: 14 hits — 2 fixed (BC-2.11.002:105-106), 12 exempt (BC-2.08.013 wire-format ×4 + changelog rows).
+- capabilities-p0.md v1.4→v1.5 (BA): CAP-001 full 14-variant ContentBlock canon added (Text/Image/Audio/File/ToolUse/ToolCallResult/Thinking/DataContent/ImageUrl/Document/NonStandard/MediaContent/RefusalContent/BinaryContent) + ToolMessage note (ToolResult is ToolMessage payload per BC-2.09.002, not a ContentBlock variant).
+- bounded-contexts.md v1.1→v1.2 (BA): Splitters seam corrected — output type `String` → `Vec<String>` per BC-2.07.001/002/003; ContentBlock wrapping = caller responsibility (Splitters output is plain text chunks); "Document variant" reference removed (Document is not a canonical ContentBlock variant).
+- Burst-206 audit table CORRIGENDUM appended (rows 2/8/22/34 corrected; class-CONVERGED claim retracted; original rows unrewritten).
+
+**Final domain-spec grep (BA):** 5 hits — all changelog-exempt, zero active-body drift remaining.
+
+### Archived from Current Phase Steps: Burst-202
+
+**Burst-202 Summary (archived in burst 207 from STATE.md Current Phase Steps):**
+Phase 1d burst 202 — pass-117 record + fix burst 120 (F-P117-01 RESOLVED). Pass 117: NOT CLEAN strict+PR-merge — 1H. F-P117-01 RESOLVED [HIGH SS-10↔SS-12 gap]: summary_halt absent from BC-2.12.003 PC7/PC8/PC13/PC18/PC19 and Invariant v1.3 — Option 1 adjudication (first-class terminal); BC-2.12.003 v1.3→v1.4 (PC7 in_progress→summary_halt arc; PC8 terminal set +summary_halt; PC13 completed_at +summary_halt; PC18 status filter +summary_halt; PC19 deletable +summary_halt; Output Invariant status ∈ {completed,summary_halt}); BC-2.12.006 v1.1→v1.2 (PC7 RunStore transition list +summary_halt); BC-2.06.001 v1.3→v1.4 (EC-005 summary_halt→RunEnd emitted); interface-definitions v2.37→v2.38 (status enum +summary_halt; completed_at +summary_halt; output note +summary_halt; GET filter +summary_halt; DELETE +summary_halt); entities-server v1.7→v1.8 (RunStatus lifecycle +summary_halt; completed_at semantics +summary_halt); ubiquitous-language-server v1.2→v1.3 (Run lifecycle +summary_halt). D18-P89-A sweep: STALE=0. Trajectory →1 (P1D-117). Counter 0/3. Fix bursts 119→120.
+
+### Files Written
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-122.md` | NEW — pass-122 adversarial review report (0C/1H/2M/0L/2OBS) |
+| `.factory/specs/behavioral-contracts/ss-11/BC-2.11.002.md` | v1.8→v1.9 — EC-002 ContentBlock::Image vocabulary; EC-003 ContentBlock::Image error block |
+| `.factory/specs/domain-spec/capabilities-p0.md` | v1.4→v1.5 — CAP-001 full 14-variant ContentBlock canon + ToolMessage note |
+| `.factory/specs/domain-spec/bounded-contexts.md` | v1.1→v1.2 — Splitters seam String→Vec\<String\>; ContentBlock wrapping = caller responsibility; Document variant reference removed |
+| All spec files | D18-P89-A hash sweep — STALE=0 |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | burst-206 CORRIGENDUM + burst-202 archived + this burst-207 narrative |
+| `.factory/cycles/v1.0.0-greenfield/convergence-trajectory.md` | append P1D-122 row + per-pass detail |
+| `.factory/STATE.md` | v3.47→v3.48; trajectory-tail →3→1→1→3→5 (P1D-122); counter 0/3; passes 121→122; fix bursts 124→125 |
+
+### Convergence Status After Burst 207
+
+- Phase 1d passes: 122 (1H/2M/2OBS — counter 0/3)
+- Fix bursts: 125 (F-P122-01/02/03 RESOLVED; corpus-wide census 2 fixed + zero non-exempt)
+- Counter: 0 of 3 (unchanged; fix burst 125 pushes new HEAD; frozen-HEAD streak rule)
+- Trajectory: ...→3→1→1→3→5 (tail after P1D-122)
+- NEXT: dispatch adversary pass 123

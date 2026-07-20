@@ -54,7 +54,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "b151c19"
+input-hash: "1a9f45e"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."

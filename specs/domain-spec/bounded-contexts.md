@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: bounded-contexts
-version: "1.1"
+version: "1.2"
 status: active
 producer: business-analyst
 timestamp: 2026-07-19T00:00:00Z
@@ -16,6 +16,7 @@ decisions: [D1, D4, D6, D11, D13, D17]
 changelog:
   - "1.0 (initial): base bounded contexts authored."
   - "1.1 (F-P121-01, fix burst 124, 2026-07-19): Context 6 MCP Adapter: 'conversion from MCP tool result to ToolResult ContentBlock' → 'ToolMessage (BC-2.09.002)'; translation seam: 'ToolResult from MCPTool' / 'ToolResult → GuardrailHook boundary' → canonical ToolMessage/IngressContent::ToolResult phrasing. TD-VSDD-060 sweep: only Context 6 had ToolResult ContentBlock vocabulary; fixed."
+  - "1.2 (F-P122-01, fix burst 125, 2026-07-19): Context 8 Splitters translation seam: 'Splitters accept and return ContentBlocks (Document variant)' → 'Splitters accept plain UTF-8 String inputs and return Vec<String> chunk strings' per BC-2.07.001/002/003 preconditions. Document is not a canonical ContentBlock variant (BC-2.01.001 PC2 14-variant list). ContentBlock wrapping is caller responsibility."
 ---
 
 # Bounded Contexts
@@ -135,7 +136,7 @@ use in their test suites.
 **Model:** TextSplitter, chunk boundary algorithm, code-point counting.
 **What it owns:** Document chunking logic; boundary correctness (code-point not byte).
 **What it does NOT own:** Embedding; vector store; model invocation.
-**Translation seam with Core:** Splitters accept and return ContentBlocks (Document variant).
+**Translation seam with Core:** Splitters accept plain UTF-8 String inputs and return Vec<String> chunk strings (BC-2.07.001/BC-2.07.002/BC-2.07.003). ContentBlock wrapping (e.g., into ContentBlock::Text or ContentBlock::PlainText) is the caller's responsibility at the use site.
 **Key invariants:** R-004 (code-point parity), DEC-001, DEC-002.
 
 ---

@@ -780,6 +780,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-122 — Pass 122 (2026-07-19, burst 207)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-122 | 2026-07-19 | 5 | 0 | 1 | 2 | 0 | 2 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes exercised (burst-207 pass-122):** F-P121-01/02 CLOSED — PASS-122 sibling-checks (a)-(e) all PASS: entities-graph v1.2 ContentBlock 14-variant correct; ubiquitous-language-core v1.2 same; ToolCall fields correct per BC-2.01.001; ToolResult absent as ContentBlock arm; DI-008/NonStandard present; Message 4+3 roles at both sites correct; CAP-007 12-variant StreamEvent with guardrail_decision; spot-verified rows 1/7/12/19/26/37 all MATCH; get_next_version exclusion confirmed; ADR-001 clean. New findings: F-P122-01 HIGH — ContentBlock drifted-vocabulary residue at 3 corpus sites outside L2 audit scope: capabilities-p0:42 CAP-001 (incomplete variant list); bounded-contexts:138 Splitters seam (String→Vec\<String\> + phantom Document variant reference per BC-2.07.001/002/003); BC-2.11.002:105-106 (image_url vs ContentBlock::Image in EC-002/003). Burst-124 "class CONVERGED" claim falsified — audit was L2-domain-spec-only, missing BC layer and capability enumerations. F-P122-02 MED — burst-206 audit rows 2/8 wrong ToolCall canon: {id,name,input_schema,description} (Tool definition schema, conflated) vs {id,name,args} per BC-2.08.002 TV-001/TV-003 + phantom §ToolUse section cite in BC-2.01.001 PC2. F-P122-03 MED — burst-206 audit row 34 phantom: edge-cases.md has no §BudgetPolicy OnCeiling section; actual OnCeiling table lives at entities-server.md:98 §BudgetConfig per D18-P91-A; MATCH verdict retained on corrected attribution. OBS-P122-a [process-gap] — audit scope L2-only; BC layer + capability enumerations structurally missed; corpus-wide token grep required for class-CONVERGED designation. OBS-P122-b — audit row 22 pre-fix depiction fabricated ("get" vs actual "get_tuple"); MATCH verdict retained. Novelty HIGH: first detection of self-certifying convergence claim with under-scoped evidence; audit table phantom cites and field-name conflation (Tool schema vs ToolCall schema) are new defect classes.
+**Fix summary (burst 207 — fix burst 125):** F-P122-01 HIGH (PO + BA) — BC-2.11.002 v1.8→v1.9: EC-002 "ContentBlock::Text + ContentBlock::Image"; EC-003 "ContentBlock::Image → ContentBlock::Text error block". corpus-wide token census: 14 hits — 2 fixed (BC-2.11.002:105-106), 12 exempt (BC-2.08.013 wire-format ×4 + changelog rows). capabilities-p0.md v1.4→v1.5: CAP-001 full 14-variant ContentBlock canon (Text/Image/Audio/File/ToolUse/ToolCallResult/Thinking/DataContent/ImageUrl/Document/NonStandard/MediaContent/RefusalContent/BinaryContent) + ToolMessage note. bounded-contexts.md v1.1→v1.2: Splitters seam output type String→Vec\<String\> per BC-2.07.001/002/003; ContentBlock wrapping = caller responsibility; "Document variant" reference removed. Burst-206 audit table CORRIGENDUM appended: rows 2/8 ToolCall canon corrected, row 22 pre-fix depiction corrected, row 34 shard/section corrected; class-CONVERGED claim retracted; original rows unrewritten. Final domain-spec grep: 5 hits, all changelog-exempt, zero active-body drift.
+**Hash sweep (D18-P89-A):** STALE=0 confirmed in burst-207.
+**Trajectory after:** →5 (P1D-122); cumulative tail →3→1→1→3→5
+**Counter:** 0/3 (unchanged; fix burst 125 pushes new HEAD; NEXT: pass 123)
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

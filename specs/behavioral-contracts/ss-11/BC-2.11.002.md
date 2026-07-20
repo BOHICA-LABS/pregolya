@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.002
-version: "1.8"
+version: "1.9"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "fe81811"
+input-hash: "dbee944"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11
@@ -31,6 +31,7 @@ changelog:
   - "1.6 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). PC3 — added streaming notification clause: a `StreamEvent::GuardrailDecision` with `decision: Fail` is emitted BEFORE the enclosing `ToolEnd`; the event carries metadata only (zero bytes of rejected content in any StreamEvent payload). PC4 — added streaming notification clause: a `StreamEvent::GuardrailDecision` with `decision: Transform` is emitted BEFORE the enclosing `ToolEnd`; reason and severity are absent (None) for Transform outcomes."
   - "1.7 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-001 and TV panic row both carry `Err(FerrochainError { category: INTERNAL, code: E-CORE-007 })` bare wrappers. E-CORE-007 is now a registered context-sourced exception (bc-authoring-plan.md v2.38 gate #33 registry). Added inline context-source annotations naming `<boundary>` = `BoundaryType::ToolResult` from `ProvenanceTag.boundary_type` and `<content_type>` = `IngressContent::ToolResult` from `IngressContent` variant discriminant — both are deterministically available as arguments to `GuardrailHook::evaluate()` at the panic catch site."
   - "1.8 (F-P112-01, 2026-07-18): <content_type> bare-form adjudication. ADJUDICATED: BARE variant name per interface-definitions.md §IngressContent (pre-existing authoritative definition: renders 'ToolResult', not qualified 'IngressContent::ToolResult'). The qualified form was introduced incidentally by burst-115 annotation and contradicted the interface-definitions source of truth. EC-001 and TV panic row: rendered value changed from 'IngressContent::ToolResult' to 'ToolResult'; source description updated from 'content variant discriminant' to 'IngressContent variant discriminant'. bc-authoring-plan gate #33 registry updated to v2.39."
+  - "1.9 (F-P122-01, 2026-07-19): image_url residue corrected to canonical ContentBlock variant vocabulary (CANON PC2: Image is a ContentBlock variant with type tag 'image', not an image_url type). EC-002: illustrative example 'text + image_url' → 'ContentBlock::Text + ContentBlock::Image'. EC-003: illustrative example 'image_url block → text error block' → 'ContentBlock::Image → ContentBlock::Text error block'. Semantics preserved: mixed Text+Image ingress (EC-002) and Image-to-Text Transform (EC-003) remain unchanged; only the type vocabulary is corrected."
 modified: []
 extracted_from: null
 deprecated: null
@@ -102,8 +103,8 @@ substitute error block), or Transform (forward replacement content). This contra
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | `GuardrailHook::evaluate` panics (OOM, plugin fault) | Panic is caught at the ingress boundary; content is treated as rejected (fail-closed); `Err(FerrochainError { category: INTERNAL, code: E-CORE-007 })` propagates; content does not enter model context. *(E-CORE-007 context-sourced per gate #33 registry: `<boundary>` = `BoundaryType::ToolResult` from `provenance_tag.boundary_type`; `<content_type>` = `"ToolResult"` from `IngressContent` variant discriminant.)* |
-| EC-002 | `ToolMessage` contains multiple `ContentBlock`s (e.g., text + image_url) | Each `ContentBlock` is evaluated independently; all must receive `Pass` or `Transform` before any enter the model context; a single `Fail` does not block the others unless `Critical` |
-| EC-003 | `GuardrailResult::Transform` returns `IngressContent::ToolResult` with a different inner `ContentBlock` variant (e.g., `image_url` block → `text` error block) — the outer `IngressContent` variant stays `ToolResult`; only the inner `ContentBlock` variant changes (same-boundary rule: no cross-`IngressContent`-boundary transforms) | Accepted; `IngressContent::ToolResult(ContentBlock)` replacement enters model context; original discarded |
+| EC-002 | `ToolMessage` contains multiple `ContentBlock`s (e.g., `ContentBlock::Text` + `ContentBlock::Image`) | Each `ContentBlock` is evaluated independently; all must receive `Pass` or `Transform` before any enter the model context; a single `Fail` does not block the others unless `Critical` |
+| EC-003 | `GuardrailResult::Transform` returns `IngressContent::ToolResult` with a different inner `ContentBlock` variant (e.g., `ContentBlock::Image` → `ContentBlock::Text` error block) — the outer `IngressContent` variant stays `ToolResult`; only the inner `ContentBlock` variant changes (same-boundary rule: no cross-`IngressContent`-boundary transforms) | Accepted; `IngressContent::ToolResult(ContentBlock)` replacement enters model context; original discarded |
 | EC-004 | Tool-result ingress occurs within a parallel Send API fan-out with N concurrent branches | Each branch's tool-result content is guarded independently in its own guardrail evaluation; no cross-branch shared state |
 
 ## Canonical Test Vectors

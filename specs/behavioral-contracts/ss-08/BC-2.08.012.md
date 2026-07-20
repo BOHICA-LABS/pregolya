@@ -22,7 +22,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "f43eb22"
+input-hash: "6bc9d3a"
 extracted_from: null
 modified: []
 deprecated: null
