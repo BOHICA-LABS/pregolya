@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.006
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -11,6 +11,7 @@ priority: P1
 subsystem: SS-15
 capability: CAP-020
 changelog:
+  - "1.2 (OBS-P123-b cross-fix, fix burst 126, 2026-07-19): PC1 and Architecture Anchors corrected to use the canonical MemoryStore trait API per interface-definitions.md v2.39 §MemoryStore. (A) Method name: MemoryStore::get → MemoryStore::memory_get (BC-2.15.001 PC3 is the authoritative method name). (B) Scope parameter: spec.namespace is now explicitly typed as MemoryScope::App(spec.namespace) — context mutation sources are operator-managed, app-level content (BC-2.15.002 PC3); this matches test vector TV-001 namespace 'agent' which is an app-level concept. (C) Architecture Anchors scheduler call updated to reflect correct method signature. No behavioral change — the resolution of which MemoryScope tier applies to ContextSourceSpec.namespace was implicit in the prior text; this entry makes it explicit."
   - "1.1 (OBS-P77-C, 2026-07-15): ADR-012 DI-001 renamed to ADR-012 INV-1 per architect adjudication D18-P77-A (ADR-012 v1.2 local-invariant rename). Updated in Invariants (cache-coherence invariant label) and Architecture Anchors (§Decision 3 reference)."
 wave: 2
 phase: 1b
@@ -59,7 +60,10 @@ frozen-tier semantics of Hermes SOUL.md / MEMORY.md.
 ## Postconditions
 
 1. Before the first super-step executes, `graph::scheduler` loads each `ContextSourceSpec`
-   from `MemoryStore` in declaration order: `MemoryStore::get(spec.namespace, spec.key)`.
+   from `MemoryStore` in declaration order:
+   `MemoryStore::memory_get(MemoryScope::App(spec.namespace), &spec.key)`.
+   `ContextSourceSpec.namespace` is treated as an app-scoped namespace — context mutation
+   sources are operator-managed, app-level content (BC-2.15.002 PC3).
 2. The loaded content is prepended to the initial system instruction that is passed to the
    first super-step's model context. Sources that return `None` (key absent) are silently
    skipped — their absence is not an error.
@@ -97,7 +101,7 @@ frozen-tier semantics of Hermes SOUL.md / MEMORY.md.
 ### EC-001: Source key not present in MemoryStore
 **Scenario:** `ContextSourceSpec { namespace: "agent", key: "MEMORY.md" }` but no such key
 has been written yet.
-**Expected behavior:** `MemoryStore::get` returns `None`. The source is skipped (omitted from
+**Expected behavior:** `MemoryStore::memory_get` returns `None`. The source is skipped (omitted from
 the context prepend). No error is raised. The run proceeds with the remaining sources (if any)
 or with no prepended content.
 
@@ -156,7 +160,7 @@ context.
 ## Architecture Anchors
 
 - `ferrochain-core/src/context_mutation.rs` (`core::context_mutation`) — `ContextSourceSpec` struct `{ namespace: String, key: String }`; `ContextMutationConfig` struct `{ sources: Vec<ContextSourceSpec> }`; `RunnableConfig.context_mutations: Option<ContextMutationConfig>` (per ADR-012 Decision 1, Primitive B)
-- `ferrochain-graph/src/pregel/scheduler.rs` (`graph::scheduler`) — pre-first-super-step load: iterates `ContextMutationConfig.sources`, calls `MemoryStore::get` per source, prepends loaded content to initial context; no new module row (added behavior of existing scheduler module per ADR-012 Decision 4)
+- `ferrochain-graph/src/pregel/scheduler.rs` (`graph::scheduler`) — pre-first-super-step load: iterates `ContextMutationConfig.sources`, calls `MemoryStore::memory_get(MemoryScope::App(spec.namespace), &spec.key)` per source, prepends loaded content to initial context; no new module row (added behavior of existing scheduler module per ADR-012 Decision 4)
 - ADR-012 §Decision 3 — frozen-snapshot semantics adopted; live mutation rejected; ADR-012 INV-1 (cache-coherence invariant)
 - ADR-011 — cache-key obligation: loaded context bytes must be included in system-instruction hash input
 

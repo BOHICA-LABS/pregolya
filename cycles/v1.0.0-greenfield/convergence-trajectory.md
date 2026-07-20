@@ -794,6 +794,20 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+### P1D-123 — Pass 123 (2026-07-19, burst 208)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P1D-123 | 2026-07-19 | 3 | 0 | 0 | 1 | 0 | 2 | MEDIUM-HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge |
+
+**Axes exercised (burst-208 pass-123):** F-P122-01/02/03 CLOSED — PASS-123 sibling-checks (a)-(e) all PASS: BC-2.11.002 v1.9 EC-002/003 ContentBlock::Image vocabulary correct; capabilities-p0 v1.5 CAP-001 14-variant correct; bounded-contexts v1.2 Splitters Vec\<String\> seam correct; burst-206 CORRIGENDUM present + original rows unrewritten; independent token grep clean (14 hits: 2 fixed + 12 exempt; zero non-exempt). Carry-forward: ADR-008/010/011 sound; ss-14↔NFR-009 timeout consistent; ss-06↔BC-2.12.007 consistent; ss-09 §Tool/§McpServer drift-free (NOTE: §Tool/§McpServer sections absent — vacuous clear; see OBS-P123-a). New findings: F-P123-01 MED — CORRIGENDUM-1 rows 2/8 Explanation (burst-206 CORRIGENDUM block, burst-log.md) re-embeds phantom "ContentBlock::ToolUse variant with {id, name, input_schema, description}": no ContentBlock::ToolUse variant; ContentBlock::ToolCall = {id, name, args} per BC-2.08.002 TV-001/TV-003; {name, description, input_schema} = Tool-entity fields (entities-graph:52); spec corpus CORRECT; corrigendum prose defect only. OBS-P123-a [process-gap] — carry-forward axis targets §Tool/§McpServer/§MemoryStore named non-existent interface-definitions sections; passes 121–122 cleared vacuously; existence-validation before clear/carry mandated; codified as L-023. OBS-P123-b — MemoryStore trait signature absent from interface-definitions §Public Rust Trait Signatures while P1 SS-15 siblings present; promoted to blocker under production-grade lens. Novelty MEDIUM-HIGH: "correction that needs correction" meta-defect class (corrigendum re-embeds the defect class it corrected); phantom-section axis-clears (vacuous PASS against non-existent sections) are related new class.
+**Fix summary (burst 208 — fix burst 126):** F-P123-01 MED — CORRIGENDUM-2 appended to burst-206/207 CORRIGENDUM block in burst-log.md: rows 2/8 Explanation clause superseded (ContentBlock::ToolUse → ContentBlock::ToolCall; Tool-entity field attribution corrected to entities-graph:52); CORRECTED Canon ({id,name,args} per BC-2.08.002) retained. OBS-P123-a [process-gap] — codified as lesson L-023: axis-existence validation before clearing/carrying forward; §Tool/§McpServer axis RETIRED (phantom sections). OBS-P123-b — interface-definitions v2.38→v2.39 (BA): §MemoryStore trait block added (6-method surface: memory_set/memory_get/memory_delete/memory_search/vector_search/hybrid_search; MemoryScope/MemoryEntry types inline; E-MEMORY-001/002/003/004 raise sites; BC-2.15.001 PC1–PC7 + BC-2.15.002 INV traced; GDPR erasure + memory_delete_session standalone confirmed; gate #31 RESOLVED: MemoryScope/MemoryEntry/query_embedding). BC-2.15.006 v1.1→v1.2 (PO): PC1 method MemoryStore::get → MemoryStore::memory_get(MemoryScope::App(spec.namespace), &spec.key); EC-001 text updated; Architecture Anchors updated.
+**Hash sweep (D18-P89-A):** STALE=1 before sweep (api-surface.md — transitive: inputs interface-definitions.md which changed v2.38→v2.39) → updated → STALE=0. TOTAL=127 MATCH=127.
+**Trajectory after:** →3 (P1D-123); cumulative tail →1→1→3→5→3
+**Counter:** 0/3 (unchanged; fix burst 126 pushes new HEAD; NEXT: pass 124)
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

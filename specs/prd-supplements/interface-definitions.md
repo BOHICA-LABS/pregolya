@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.38"
+version: "2.39"
 status: active
 producer: product-owner
 timestamp: 2026-07-19T00:00:00Z
 phase: 1d
 changelog:
+  - "2.39 (OBS-P123-b, fix burst 126, 2026-07-19): §Public Rust Trait Signatures — add §MemoryStore block (OBS-P123-b promoted to blocker under production-grade lens). Derived strictly from BC-2.15.001 PC1–PC7 (6-method surface: memory_set/memory_get/memory_delete/memory_search/vector_search/hybrid_search) + BC-2.15.002 MemoryScope tier-isolation semantics (scope parameter on every method; storage-layer WHERE-predicate enforcement). Supporting types: MemoryScope enum (3 variants: User/App/Session) and MemoryEntry struct (scope/key/value/author_id) defined inline. Error raise sites cited per-method: E-MEMORY-001 (vector_search EC-001), E-MEMORY-002 (memory_set EC-004), E-MEMORY-003 (memory_get scope-mismatch per BC-2.15.002 Invariant, opt-in enforcement), E-MEMORY-004 (memory_get BC-2.15.002 EC-001). BC-2.15.003 GDPR erasure confirmed NOT a trait method (standalone admin fn requiring AdminContext); excluded. memory_delete_session (BC-2.15.002 Invariant) confirmed standalone store fn, not a trait method; excluded from the 6-method surface. Gate #31: MemoryScope RESOLVED, MemoryEntry RESOLVED, query_embedding RESOLVED. Cross-check: api-surface.md MemoryStore BC anchor range BC-2.15.001–003 verified accurate (no architect routing required). Ubiquitous-language-server.md MemoryStore entry (line 142) in sync. BC-2.15.006 PC1 method-name drift fixed in this burst (MemoryStore::get → MemoryStore::memory_get; MemoryScope::App scope type made explicit; EC-001 and Architecture Anchors updated; BC-2.15.006 version 1.1 → 1.2)."
   - "2.38 (F-P117-01, fix burst 120, 2026-07-19): summary_halt promoted to first-class terminal Run status throughout (Option 1 adjudication — BC-2.10.003 PC8(d) is authoritative). (1) §Run Object Schema status enum: add 'summary_halt' (in_progress → summary_halt via OnCeiling::Summarize per BC-2.10.003 PC8(d)). (2) status description: state machine enumeration gains '| summary_halt'. (3) completed_at terminal set: add 'summary_halt'. (4) output note: 'present only when status=completed or status=summary_halt; for summary_halt output=summarize model response (BC-2.10.003 PC8(c))'. (5) §Runs HTTP table GET runs filter: add summary_halt to status filter enumeration. (6) §Runs HTTP table DELETE runs description: add summary_halt to deletable terminal states."
   - "2.37 (F-P116-01, 2026-07-19): §CheckpointSaver — dyn-compatibility fixes per ADR-005 v1.3 §Object-Safety (F-P116-01). (A) `get_next_version` provided-method receiver: `&self` added as first parameter (was receiver-less, causing E0038 on Arc<dyn CheckpointSaver>). Rationale: dyn-compatibility requires a receiver on every non-Sized-bounded method; virtual dispatch of backend overrides through Arc<dyn CheckpointSaver> vtable requires &self; langgraph BaseCheckpointSaver.get_next_version is an instance method — prior 'static method' parity claim corrected (F-P116-01). Default body unchanged — still delegates to MonotonicClock::get_next_version(current, channel), ignoring &self. (B) `list` return type: `Result<impl Stream<Item = Result<CheckpointTuple, FerrochainError>>, FerrochainError>` → `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>`. Rationale: `impl Stream` opaque return is NOT dyn-compatible even with async-trait desugaring (E0038); Pin<Box<dyn Stream<Item = ...> + Send>> is the established dyn-compatible boxed-stream pattern for object-safe async traits. Authority: ADR-005 v1.3 §Object-Safety of the 5-Method CheckpointSaver Trait."
   - "2.36 (F-P115-02, 2026-07-19): §CheckpointSaver — add `put` and `get_next_version` methods (trait becomes 5-method). (A) `put` method: persists full checkpoint state blob; called once per run under DurabilityTier::Exit or at run completion (BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003); encrypted when EncryptedSerializer active (BC-2.04.007 PC1); raises E-CHKPT-005 on tenant-context conflict (BC-2.04.006 EC-005). BC anchor annotations: BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003, BC-2.04.006 PC2, BC-2.04.007 PC1+INV-1. (B) `get_next_version` provided method: default impl delegates to MonotonicClock::get_next_version; implementors MAY override; channel param accepted for API compatibility only (BC-2.04.003 PC1/PC5); E-CHKPT-002 on u64 overflow. BC anchor line extended: BC-2.04.001 through BC-2.04.007 with per-method precision. Gate #31 type note extended: Checkpoint and CheckpointMetadata (entities-graph.md §Checkpoint), CheckpointId (ADR-005 / BC-2.04.003 newtype over u64) added. Architect routing: api-surface.md CheckpointSaver row BC range 001–006 is now stale (needs 001–007); flagged for architect."
@@ -597,6 +598,149 @@ pub enum WriteGuardDecision {
 > **`Value`** — EXTERNAL. `serde_json::Value` — Rust standard JSON value type. (gate #31 EXTERNAL)
 
 **BC anchor:** BC-2.15.005 PC1–PC5 (guard validation contract, E-MEMORY-007 on Deny, Transform semantics)
+
+### MemoryStore
+
+The foundational long-horizon key-value and vector memory store. Provides cross-thread,
+cross-session durability independent of the checkpoint lifecycle (BC-2.15.001 Invariant).
+**Six-method surface:** `memory_set`, `memory_get`, `memory_delete`, `memory_search`,
+`vector_search`, `hybrid_search` (BC-2.15.001 PC1–PC7). Scope isolation is enforced at
+the storage layer, not the application layer (BC-2.15.002 PC6).
+
+```rust
+/// Long-horizon KV and vector memory store, decoupled from the checkpoint lifecycle.
+/// Entries persist across threads and process restarts (SQLite backend — BC-2.15.001 PC2).
+/// An ephemeral in-memory backend is also provided for tests (BC-2.15.001 Invariant).
+///
+/// Authority: BC-2.15.001 (6-method surface + cross-thread durability),
+///            BC-2.15.002 (MemoryScope tier isolation; scope parameter on every method),
+///            BC-2.15.003 (GDPR erasure — admin-only standalone fn; NOT a trait method).
+/// Module: ferrochain-memory (memory::store).
+pub trait MemoryStore: Send + Sync {
+    /// Write a key-value entry to the store under `scope` and `key`.
+    ///
+    /// The entry is readable from any thread via `memory_get` with the same scope
+    /// (BC-2.15.001 PC1–PC2). Concurrent writes to the same `(scope, key)` use
+    /// last-writer-wins (LWW) semantics (BC-2.15.001 Invariant).
+    /// Raises E-MEMORY-002 StorageFull if the backing store reaches capacity
+    /// (BC-2.15.001 EC-004).
+    async fn memory_set(
+        &self,
+        scope: MemoryScope,
+        key: &str,
+        value: Value,
+    ) -> Result<(), FerrochainError>;
+
+    /// Read a single entry by `(scope, key)`.
+    ///
+    /// Returns `Ok(None)` if the key was never written or was explicitly deleted via
+    /// `memory_delete` (BC-2.15.001 PC3). Scope isolation enforced at the storage layer
+    /// (`WHERE scope_key = ?` predicate — BC-2.15.002 PC6): entries from other scopes
+    /// are never returned (BC-2.15.002 PC1–PC3).
+    /// Raises E-MEMORY-003 ScopeAccessDenied when identity enforcement is active (opt-in
+    /// at the server layer — BC-2.15.002 Invariant) and the caller-supplied scope
+    /// mismatches the verified caller identity.
+    /// Raises E-MEMORY-004 NoScopeContext when no session context is derivable from the
+    /// call context and the caller omitted an explicit scope (BC-2.15.002 EC-001).
+    async fn memory_get(
+        &self,
+        scope: MemoryScope,
+        key: &str,
+    ) -> Result<Option<Value>, FerrochainError>;
+
+    /// Delete an entry by `(scope, key)`.
+    ///
+    /// After deletion, `memory_get` for the same `(scope, key)` returns `Ok(None)`
+    /// (BC-2.15.001 PC3). Idempotent: deleting a non-existent key returns `Ok(())`.
+    async fn memory_delete(
+        &self,
+        scope: MemoryScope,
+        key: &str,
+    ) -> Result<(), FerrochainError>;
+
+    /// Full-text keyword search over entries in `scope`.
+    ///
+    /// Returns all entries whose stored value contains `query` as a case-insensitive
+    /// substring (BC-2.15.001 PC4). Results are ordered by recency (most recently
+    /// written first) by default. Search is strictly scoped: app-scoped entries are
+    /// not returned by a user-scope search (BC-2.15.002 EC-003).
+    async fn memory_search(
+        &self,
+        scope: MemoryScope,
+        query: &str,
+    ) -> Result<Vec<MemoryEntry>, FerrochainError>;
+
+    /// Vector similarity search over entries in `scope` that have stored embeddings.
+    ///
+    /// Returns the top-`top_k` entries ranked by cosine similarity between the stored
+    /// embedding and `query_embedding` (BC-2.15.001 PC5). Entries without a stored
+    /// embedding are excluded from results (BC-2.15.001 PC6).
+    /// Raises E-MEMORY-001 EmbeddingBackendNotConfigured if no embedding backend is
+    /// configured (BC-2.15.001 EC-001).
+    async fn vector_search(
+        &self,
+        scope: MemoryScope,
+        query_embedding: Vec<f32>,
+        top_k: usize,
+    ) -> Result<Vec<MemoryEntry>, FerrochainError>;
+
+    /// Hybrid search: union of keyword and vector similarity results.
+    ///
+    /// De-duplicates by key (higher-ranked copy retained); returns up to `top_k`
+    /// results (BC-2.15.001 PC7). Degrades gracefully to keyword-only when no
+    /// embedding backend is configured: the vector component is silently skipped
+    /// with a DEBUG log; no error is raised (BC-2.15.001 EC-005).
+    async fn hybrid_search(
+        &self,
+        scope: MemoryScope,
+        query: &str,
+        top_k: usize,
+    ) -> Result<Vec<MemoryEntry>, FerrochainError>;
+}
+
+/// Memory scope tier for isolation enforcement (BC-2.15.002).
+///
+/// Scope flows from the trait method parameter directly to the SQL `WHERE scope_key = ?`
+/// predicate — never collapsed or merged (NE-12 tenancy partition analog;
+/// BC-2.15.002 Invariant / PC6).
+pub enum MemoryScope {
+    /// Private to the named user across all of that user's sessions (BC-2.15.002 PC1).
+    User(String),
+    /// Shared across all callers within the same application deployment
+    /// (BC-2.15.002 PC3/PC5).
+    App(String),
+    /// Private to the named session; eligible for cleanup via `memory_delete_session`
+    /// (BC-2.15.002 PC2 / Invariant — standalone store fn, not a trait method).
+    Session(String),
+}
+
+/// An entry returned by search operations (`memory_search`, `vector_search`,
+/// `hybrid_search`).
+///
+/// Authority: BC-2.15.001 PC4–PC7 (search return payload),
+///            BC-2.15.003 §Invariants (author_id required for GDPR erasure of
+///            app-scoped entries attributed to a specific user).
+pub struct MemoryEntry {
+    /// The scope under which this entry was written (BC-2.15.002 tier model).
+    pub scope: MemoryScope,
+    /// The storage key.
+    pub key: String,
+    /// The stored value (`serde_json::Value`).
+    pub value: Value,
+    /// Author identity, required for GDPR erasure of app-scoped entries
+    /// (BC-2.15.003 §Invariants: author_id tracking). `None` for entries
+    /// lacking attribution or for non-app-scoped entries.
+    pub author_id: Option<String>,
+}
+```
+
+> **`MemoryScope`** — RESOLVED. Defined inline above; variants match BC-2.15.002 scope definitions: `User(user_id)`, `App(app_id)`, `Session(session_id)` (BC-2.15.002 Preconditions). (gate #31 RESOLVED)
+>
+> **`MemoryEntry`** — RESOLVED. Defined inline above; fields satisfy BC-2.15.001 PC4–PC7 search return requirements and BC-2.15.003 `author_id` tracking obligation. (gate #31 RESOLVED)
+>
+> **`query_embedding: Vec<f32>`** — RESOLVED. Standard float-32 embedding vector; dimensionality determined by the configured embedding backend. (gate #31 RESOLVED)
+
+**BC anchor:** BC-2.15.001 PC1–PC7 (6-method surface — every method traces to a BC PC: `memory_set`=PC1, `memory_get`=PC3, `memory_delete`=PC3, `memory_search`=PC4, `vector_search`=PC5–PC6, `hybrid_search`=PC7) + BC-2.15.002 PC1–PC6 + INV (MemoryScope tier isolation; storage-layer enforcement; opt-in identity enforcement) + E-MEMORY-001 (`vector_search`; BC-2.15.001 EC-001) + E-MEMORY-002 (`memory_set`; BC-2.15.001 EC-004) + E-MEMORY-003 (`memory_get`; BC-2.15.002 Invariant) + E-MEMORY-004 (`memory_get`; BC-2.15.002 EC-001)
 
 ### StreamEvent
 

@@ -2744,6 +2744,14 @@ This table is the OBS-class closure deliverable. It was produced by the business
 - CORRECTED L2 Shard: `entities-server.md` — Section: `§BudgetConfig` (at entities-server.md:98)
 - Explanation: `edge-cases.md` has no §BudgetPolicy section and no OnCeiling decision table. D18-P91-A established that OnCeiling + BudgetConfig live in `interface-definitions §BudgetPolicy` and are depicted at `entities-server.md §BudgetConfig`. Row 34 audited a phantom section in the wrong file and produced a spurious MATCH. Status: MATCH verdict retained — the OnCeiling decision table at entities-server.md:98 §BudgetConfig (correct location) is correctly structured per D18-P91-A (Halt/Escalate/Summarize 3-way branch); only the shard/section citation was wrong.
 
+**CORRIGENDUM-2 to CORRIGENDUM Rows 2/8 Explanation (issued in burst 208, pass-123 record):**
+
+> **Corrigendum-2 scope:** Corrects the Explanation clause in the Row 2 and Row 8 corrections above. The CORRECTED Canon (`{id, name, args}` per BC-2.08.002 TV-001/TV-003) is retained unchanged — that correction is correct.
+
+**Rows 2 and 8 Explanation — SUPERSEDED clause and CORRECTION:**
+- **SUPERSEDED Explanation clause (rows 2 and 8):** "The actual fix in entities-graph v1.2 correctly set ContentBlock::ToolUse variant fields to `{id, name, input_schema, description}` per BC-2.01.001 PC2"
+- **CORRECTED Explanation:** There is NO `ContentBlock::ToolUse` variant in entities-graph v1.2. The runtime invocation variant is `ContentBlock::ToolCall` with canonical fields `{id, name, args}` per BC-2.08.002 TV-001/TV-003. The fields `{id, name, input_schema, description}` cited in the superseded clause are **Tool entity definition fields** (entities-graph.md §Tool, approximately line 52) — the schema-specification struct for a tool registered with the LLM — not ContentBlock variant fields. The CORRIGENDUM-1 Explanation re-embedded the exact field-name conflation it was correcting (F-P122-02 defect class), but in the audit-log prose rather than the spec corpus. **Spec corpus is CORRECT and unaffected** — entities-graph v1.2 has `ContentBlock::ToolCall` with `{id, name, args}`; this defect was confined to corrigendum prose. (F-P123-01 MED; fixed in burst 208.)
+
 ---
 
 ## Burst 207 (2026-07-19) — Pass 122 Record + Fix Burst 125 (F-P122-01/02/03 RESOLVED)
@@ -2800,3 +2808,56 @@ Phase 1d burst 202 — pass-117 record + fix burst 120 (F-P117-01 RESOLVED). Pas
 - Counter: 0 of 3 (unchanged; fix burst 125 pushes new HEAD; frozen-HEAD streak rule)
 - Trajectory: ...→3→1→1→3→5 (tail after P1D-122)
 - NEXT: dispatch adversary pass 123
+
+---
+
+## Burst 208 (2026-07-19) — Pass 123 Record + Fix Burst 126 (F-P123-01 + OBS-P123-b RESOLVED)
+
+**Date:** 2026-07-19
+**Agents:** adversary (pass 123) + product-owner (fix burst 126: BC-2.15.006) + business-analyst (fix burst 126: interface-definitions) + state-manager
+**Phase:** 1d — adversarial spec-crystallization loop
+**Files touched:** adversarial-reviews/pass-123.md (NEW); specs/prd-supplements/interface-definitions.md (v2.38→v2.39); specs/behavioral-contracts/ss-15/BC-2.15.006.md (v1.1→v1.2); specs/architecture/api-surface.md (D18-P89-A hash sweep); STATE.md, burst-log.md, convergence-trajectory.md, lessons.md (state-manager)
+**Versions bumped:** STATE.md v3.48→v3.49; interface-definitions.md v2.38→v2.39; BC-2.15.006 v1.1→v1.2
+
+### Summary
+
+Phase 1d pass 123 adversarial review completed: NOT CLEAN strict+PR-merge — 0C/0H/1M/0L/2OBS (3 total). Counter unchanged at 0/3. F-P123-01 RESOLVED (CORRIGENDUM-2 appended). OBS-P123-a codified as lesson L-023. OBS-P123-b RESOLVED (interface-definitions v2.39 §MemoryStore + BC-2.15.006 v1.2).
+
+**Part A — F-P122-01/02/03 fixes VERIFIED CLOSED:** Checks (a)–(e) from PASS-123 SIBLING-CHECKS all PASS — BC-2.11.002 v1.9 EC-002/003 canonical ContentBlock::Image vocabulary present; capabilities-p0 v1.5 CAP-001 14-variant correct; bounded-contexts v1.2 Splitters Vec\<String\> correct; burst-206 CORRIGENDUM present + original rows unrewritten; independent token grep clean (14 hits: 2 fixed + 12 exempt). Carry-forward: ADR-008/010/011 sound; ss-14↔NFR-009 timeout consistent; ss-06 ordering↔BC-2.12.007 consistent. ss-09 §Tool/§McpServer: no drift found (NOTE: sections absent — vacuous clear; OBS-P123-a).
+
+**3 findings (Part B):**
+- F-P123-01 MED: Burst-206 CORRIGENDUM rows 2/8 Explanation re-embeds phantom "ContentBlock::ToolUse variant with {id, name, input_schema, description}" — exact F-P122-02 defect class reintroduced in corrigendum prose; no ContentBlock::ToolUse variant; correct: ContentBlock::ToolCall = {id, name, args} per BC-2.08.002 TV-001/TV-003; {name, description, input_schema} are Tool-entity fields (entities-graph:52); spec corpus CORRECT and unaffected.
+- OBS-P123-a [process-gap]: Carry-forward axes §Tool/§McpServer/§MemoryStore named non-existent interface-definitions sections; passes 121–122 cleared vacuously; adversary must grep-verify section existence before clearing or carrying forward. Codified as L-023.
+- OBS-P123-b: MemoryStore trait signature absent from interface-definitions §Public Rust Trait Signatures while P1 SS-15 siblings (CheckpointSaver, WriteGuard) present; promoted to blocker under production-grade lens.
+
+**Fix burst 126 changes (PO + BA parallel):**
+- interface-definitions.md v2.38→v2.39 (BA): §MemoryStore trait block added — 6-method surface (memory_set/memory_get/memory_delete/memory_search/vector_search/hybrid_search; &self receivers); MemoryScope enum inline (User/App/Session variants per BC-2.15.002 PC1/PC2/PC3); MemoryEntry struct inline (scope/key/value/author_id fields per BC-2.15.001 PC4–PC7 + BC-2.15.003 §Invariants); E-MEMORY-001/002/003/004 raise sites per-method; BC-2.15.001 PC1–PC7 + BC-2.15.002 INV fully traced; GDPR erasure (BC-2.15.003) confirmed standalone admin fn, not trait method; memory_delete_session confirmed standalone store fn; gate #31 RESOLVED for MemoryScope/MemoryEntry/query_embedding.
+- BC-2.15.006.md v1.1→v1.2 (PO): PC1 method name MemoryStore::get → MemoryStore::memory_get; scope parameter added as MemoryScope::App(spec.namespace) (BC-2.15.002 PC3 — context mutation sources are operator-managed app-level content); Architecture Anchors updated with correct call signature; EC-001 text updated (MemoryStore::get → MemoryStore::memory_get).
+- burst-log.md: CORRIGENDUM-2 appended to burst-206/207 CORRIGENDUM block (rows 2/8 Explanation clause corrected; CORRECTED Canon {id,name,args} retained).
+
+### Archived from Current Phase Steps: Burst-203
+
+**Burst-203 Summary (archived in burst 208 from STATE.md Current Phase Steps):**
+Phase 1d burst 203 — pass-118 record + fix burst 121 (F-P118-01/02/03 RESOLVED). Pass 118: NOT CLEAN strict+PR-merge — 2H/1M. F-P118-01 RESOLVED [HIGH process-gap]: bc-authoring-plan §12 gate canonical terminal-set 3-member → 4-member {completed,failed,cancelled,summary_halt}; grep-verify examples updated; batch-table line 270 synced. F-P118-02 RESOLVED [HIGH sibling propagation]: BC-2.12.004 v1.2→v1.3 (PC2b lifecycle arrow +summary_halt + Related BCs); BC-2.05.004 v1.2→v1.3 (invariant non-interrupted status guard +summary_halt); BC-2.05.005 v1.3→v1.4 (Related BCs +summary_halt + VP-HITL-10 "four"→"five"). F-P118-03 RESOLVED [MED citation]: entities-server v1.8→v1.9 (completed_at Source "BC-2.12.003 PC8(c)(d)" → "BC-2.12.003 PC13, BC-2.10.003 PC8(c)(d)"). Corpus-wide closure-grep: zero non-exempt 3-member terminal-set hits. D18-P89-A sweep: STALE=0 TOTAL=127 MATCH=127. Trajectory →3 (P1D-118). Counter 0/3. Fix bursts 120→121. Burst 203.
+
+### Files Written
+
+| File | Change |
+|------|--------|
+| `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/pass-123.md` | NEW — pass-123 adversarial review report (0C/0H/1M/0L/2OBS) |
+| `.factory/specs/prd-supplements/interface-definitions.md` | v2.38→v2.39 — §MemoryStore trait block (6 methods + MemoryScope enum + MemoryEntry struct + E-MEMORY-001/002/003/004 raise sites; BC-2.15.001/002 traced) |
+| `.factory/specs/behavioral-contracts/ss-15/BC-2.15.006.md` | v1.1→v1.2 — PC1 + EC-001 + Architecture Anchors: MemoryStore::get → memory_get(MemoryScope::App(spec.namespace), &spec.key) |
+| `.factory/specs/architecture/api-surface.md` | D18-P89-A hash sweep — input-hash updated (transitive: api-surface.md inputs include interface-definitions.md) |
+| All other spec files | D18-P89-A hash sweep — STALE=0 |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | CORRIGENDUM-2 appended + burst-203 archived + this burst-208 narrative |
+| `.factory/cycles/v1.0.0-greenfield/convergence-trajectory.md` | append P1D-123 row + per-pass detail |
+| `.factory/cycles/v1.0.0-greenfield/lessons.md` | append L-023 [OBS-P123-a codified] |
+| `.factory/STATE.md` | v3.48→v3.49; trajectory-tail →1→1→3→5→3 (P1D-123); counter 0/3; passes 122→123; fix bursts 125→126 |
+
+### Convergence Status After Burst 208
+
+- Phase 1d passes: 123 (1M/2OBS — counter 0/3)
+- Fix bursts: 126 (F-P123-01 + OBS-P123-b RESOLVED)
+- Counter: 0 of 3 (unchanged; fix burst 126 pushes new HEAD; frozen-HEAD streak rule)
+- Trajectory: ...→3→1→1→3→5→3 (tail after P1D-123)
+- NEXT: dispatch adversary pass 124
