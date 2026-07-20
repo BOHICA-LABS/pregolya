@@ -874,3 +874,16 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (this session): no new decisions in bursts 198–201; last decision D18-P103-A; full log in STATE.md.
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule SUSPENDED (counter 0/3; resumes at next CLEAN strict).
 ### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 201 | Counter 0/3 | No open findings (F-P116-01 RESOLVED in fix burst 119; pass 117 next)
+
+---
+
+## Burst 209 Session Checkpoint (archived from STATE.md by burst-210)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1d convergence loop, 124 passes / 127 fix bursts, counter 0/3 (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 516=507+9, purity-map 58, 13 ADRs [ADR-006 rev-4, ADR-005 rev-4 w/ §CheckpointSaver Object-Safety + §Adjacent Trait Object-Safety Adjudications], 34 gates, StreamEvent 12 variants, VP census 141 all L4; L2 type audit 37-row table + corpus-wide token sweep). F-P124-01 RESOLVED [1H]: interface-definitions v2.39→v2.40 — E-MEMORY-003 moved from memory_get to memory_set (BC-2.15.002 Invariant cite); memory_get now documents isolation-by-invisibility (Ok(None) cross-owner reads per PC1/TV-001+PC6 storage-layer predicate); E-MEMORY placement table: 001 vector_search / 002+003 memory_set / 004 memory_get. F-P124-02 RESOLVED [1M]: VP-001/003/004/005 v1.0→v1.1 L3→L4 (canonical template: 37-field core frontmatter + Source Contract/Proof Method/Lifecycle sections; proof_method kani (001/003) vs manual (004/005); red_gate=true (004/005); input-hash --check PASS); all 5 VPs now uniform L4; VP-INDEX level:L3 UNCHANGED (index convention). COUNTER 0/3 (pass 124 NOT CLEAN strict; fix burst 127 pushes new HEAD). NEXT ACTION: dispatch adversary pass 125 (sibling-checks loaded; PASS-125 checklist follows)."
+### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
+### PASS-125 SIBLING-CHECKS: (a) interface-definitions v2.40 E-MEMORY placement table (001/002/003/004) verified against BC-2.15.001/002 EC/TV raise sites; (b) memory_get isolation-by-invisibility text coherent with BC-2.15.002 PC1/TV-001/PC6; (c) all 5 VPs uniform L4 (section inventory + frontmatter), input-hash --check PASS; (d) VP-INDEX level:L3 convention NOT churned; (e) grep E-MEMORY-003 zero memory_get-anchored live sites.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3.
+### DECISION DELTA (this session): no new decisions in burst 209; last decision D18-P103-A; full log above.
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule SUSPENDED (counter 0/3; resumes at next CLEAN strict).
+### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 209 | Counter 0/3 | No open findings (F-P124-01/02 RESOLVED in fix burst 127; pass 125 next)
