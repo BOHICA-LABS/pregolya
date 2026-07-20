@@ -1,19 +1,19 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.52"
+version: "3.53"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-19T22:55:00Z
+timestamp: 2026-07-19T23:45:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "burst 211 COMPLETE — pass-126 CLEAN(strict)/CLEAN(PR-merge) 0C/0H/0M/0L/0OBS; counter 1/3 STREAK ACTIVE; frozen-corpus rule ACTIVE (no spec edits); NEXT: dispatch adversary pass 127 (D-chain cite D-126 latest phase-1d pass); trajectory-tail →3→2→1→0"
+current_step: "burst 212 COMPLETE — pass-127 CLEAN(strict)/CLEAN(PR-merge) 0C/0H/0M/0L/0OBS; counter 2/3 STREAK ACTIVE; frozen-corpus ACTIVE; NEXT: dispatch adversary pass 128 (D-chain cite D-127 latest phase-1d pass; convergence-completing; if CLEAN(strict) → 3/3 → check-input-drift → Phase 1 human approval gate); trajectory-tail →2→1→0→0"
 current_cycle: v1.0.0-greenfield
-convergence_status: "PHASE_1D_PASS_126_CLEAN_STRICT_STREAK_1_OF_3"
+convergence_status: "PHASE_1D_PASS_127_CLEAN_STRICT_STREAK_2_OF_3"
 pipeline: IN_PROGRESS
 dtu_required: true
 dtu_assessment: 2026-07-14
@@ -22,8 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. 200 lines (wc-l); margin from soft-target: 0 lines; margin from actual: 300 lines (hard limit 500). Burst-211 trim: burst-206 rotated to burst-log. Historical content → cycle files (burst-log, convergence-trajectory, session-checkpoints, lessons, blocking-issues-resolved). Run /vsdd-factory:compact-state if this file grows past 200 lines. -->
-
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. 200 lines (wc-l); margin from soft-target: 0 lines; margin from actual: 300 lines (hard limit 500). Burst-212 trim: burst-207 rotated to burst-log. Historical content → cycle files. Run /vsdd-factory:compact-state if this file grows past 200 lines. -->
 # Pipeline State: ferrochain
 
 ## Project Metadata
@@ -37,16 +36,16 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-19 — burst 211: pass-126 CLEAN(strict)/CLEAN(PR-merge) 0C/0H/0M/0L/0OBS; F-P125-01 CLOSED (VP-003 v1.2 verified); holdout C/D + ss-02 trio + prd.md↔supplements all deep-read ZERO yield; counter 1/3 STREAK ACTIVE; trajectory-tail →3→2→1→0 |
+| **Last Updated** | 2026-07-19 — burst 212: pass-127 CLEAN(strict)/CLEAN(PR-merge) 0C/0H/0M/0L/0OBS; Part A streak qual STANDING (VP-003 v1.2 / summary_halt / holdout-D anchors); fresh-hunt: ss-12 CRUD 7-ep 1:1; StreamEvent 12-var run_id+parent_ids CLEAN; DI-001..014 zero orphans CLEAN; NFR-001..011 vs VP/DI/BC web CLEAN; counter 2/3 STREAK ACTIVE; trajectory-tail →2→1→0→0 |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | burst 211 COMPLETE — pass-126 CLEAN(strict)/CLEAN(PR-merge) 0C/0H/0M/0L; F-P125-01 CLOSED; 3 carry-forward axes cleared; counter 1/3 STREAK ACTIVE; frozen-corpus ACTIVE; NEXT: pass 127 (D-chain cite D-126); trajectory-tail →3→2→1→0 |
+| **Current Step** | burst 212 COMPLETE — pass-127 CLEAN(strict)/CLEAN(PR-merge) 0C/0H/0M/0L; Part A STANDING; 4 fresh axes all CLEAN; counter 2/3 STREAK ACTIVE; frozen-corpus ACTIVE; NEXT: pass 128 (D-chain cite D-127; convergence-completing; CLEAN(strict) → 3/3 → check-input-drift → Phase 1 human approval gate); trajectory-tail →2→1→0→0 |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →1 (P1D-106) →1 (P1D-107) →4 (P1D-108) →2 (P1D-109) →2 (P1D-110) →1 (P1D-111) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN) |
+| 1: Spec Crystallization | in-progress | 2026-07-14 | | | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 BCs +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →1 (P1D-106) →1 (P1D-107) →4 (P1D-108) →2 (P1D-109) →2 (P1D-110) →1 (P1D-111) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN) →0 (P1D-127 CLEAN) |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -60,17 +59,18 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | Adversary pass-124 complete; fix burst 127 complete | complete | 2026-07-19 | 2026-07-19 | counter 0/3 (P124: NOT CLEAN 1H/1M; F-P124-01 RESOLVED [HIGH E-MEMORY-003 mis-anchored to memory_get — security-boundary defect; moved to memory_set; memory_get isolation-by-invisibility documented]: interface-definitions v2.39→v2.40; F-P124-02 RESOLVED [MED VP-001/003/004/005 L3→L4 template sweep]: all 5 VPs now v1.1 L4) | trajectory-tail →3→5→3→2; 0/3 |
 | Adversary pass-125 complete; fix burst 128 complete | complete | 2026-07-19 | 2026-07-19 | counter 0/3 (P125: NOT CLEAN 1M; F-P125-01 RESOLVED [MED VP-003 BC Traceability cell BC-2.13.004 Red Gate→Kani VP Seed]: VP-003 v1.1→v1.2) | trajectory-tail →3→2→1; 0/3 |
 | Adversary pass-126 complete | complete | 2026-07-19 | 2026-07-19 | counter 1/3 STREAK ACTIVE (P126: CLEAN strict/PR-merge 0C/0H/0M/0L; F-P125-01 CLOSED [VP-003 v1.2 verified]; holdout C/D + ss-02 trio + prd.md↔supplements all ZERO yield) | trajectory-tail →3→2→1→0; 1/3 |
-| Adversary pass-127 (next) | pending | — | — | — | — |
+| Adversary pass-127 complete | complete | 2026-07-19 | 2026-07-19 | counter 2/3 STREAK ACTIVE (P127: CLEAN strict/PR-merge 0C/0H/0M/0L; Part A qual STANDING; fresh-hunt: ss-12 CRUD 7-ep 1:1; StreamEvent 12-var run_id+parent_ids+GuardrailDecision CLEAN; DI-001..014 zero orphans CLEAN; NFR-001..011 vs VP/DI/BC web CLEAN) | trajectory-tail →2→1→0→0; 2/3 |
+| Adversary pass-128 (next) | pending | — | — | — | — |
 ## Current Phase Steps
 
-<!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. (Bursts 194–201 archived burst-206; burst-202 archived burst-207; burst-203 archived burst-208; burst-204 archived burst-209; burst-205 archived burst-210; burst-206 archived burst-211.) -->
+<!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. (Bursts 194–201 archived burst-206; burst-202 archived burst-207; burst-203 archived burst-208; burst-204 archived burst-209; burst-205 archived burst-210; burst-206 archived burst-211; burst-207 archived burst-212.) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1d burst 207 — pass-122 record + fix burst 125 (F-P122-01/02/03 RESOLVED; burst-206 corrigendum) | adversary + PO + BA + state-manager | COMPLETE | Pass 122: NOT CLEAN strict+PR-merge — 0C/1H/2M/0L/2OBS. F-P122-01 RESOLVED [HIGH ContentBlock residue 3 sites outside L2 audit scope: BC-2.11.002 image_url + capabilities-p0 CAP-001 + bounded-contexts Splitters seam]; F-P122-02/03 RESOLVED [2×MED audit rows 2/8/34 phantom/wrong ToolCall canon]; burst-206 CORRIGENDUM appended (rows 2/8 ToolCall {id,name,args}; row 34 entities-server:98 §BudgetConfig; row 22 get_tuple; class-CONVERGED retracted). D18-P89-A sweep: STALE=0. Trajectory →5 (P1D-122). Counter 0/3. Fix bursts 124→125. Burst 207. |
 | Phase 1d burst 208 — pass-123 record + fix burst 126 (F-P123-01 + OBS-P123-b RESOLVED) | adversary + PO + BA + state-manager | COMPLETE | Pass 123: NOT CLEAN strict+PR-merge — 0C/0H/1M/0L/2OBS. F-P123-01 RESOLVED [MED CORRIGENDUM rows 2/8 Explanation phantom ContentBlock::ToolUse]; OBS-P123-a CODIFIED [process-gap: axis-existence validation]; OBS-P123-b RESOLVED [interface-definitions v2.38→v2.39 §MemoryStore + BC-2.15.006 v1.1→v1.2]. CORRIGENDUM-2 appended. D18-P89-A sweep: STALE=1→0 (api-surface.md updated). Trajectory →3 (P1D-123). Counter 0/3. Fix bursts 125→126. Burst 208. |
 | Phase 1d burst 209 — pass-124 record + fix burst 127 (F-P124-01/02 RESOLVED) | adversary + PO + architect + state-manager | COMPLETE | Pass 124: NOT CLEAN strict+PR-merge — 0C/1H/1M/0L. F-P124-01 RESOLVED [HIGH E-MEMORY-003 mis-anchored to memory_get — security-boundary defect; interface-definitions v2.39→v2.40: E-MEMORY-003 moved to memory_set; memory_get isolation-by-invisibility documented (Ok(None) cross-owner reads per BC-2.15.002 PC1/TV-001/PC6); full placement table: 001 vector_search / 002+003 memory_set / 004 memory_get]; F-P124-02 RESOLVED [MED VP-001/003/004/005 L3→L4 template sweep: all 5 VPs v1.0→v1.1; 37-field core frontmatter + Source Contract/Proof Method/Lifecycle sections; proof_method kani (001/003) / manual (004/005); red_gate=true (004/005); input-hash --check PASS; VP-INDEX level:L3 UNCHANGED (convention)]. D18-P89-A sweep: STALE=0. Trajectory →2 (P1D-124). Counter 0/3. Fix bursts 126→127. Burst 209. |
 | Phase 1d burst 210 — pass-125 record + fix burst 128 (F-P125-01 RESOLVED) | adversary + architect + state-manager | COMPLETE | Pass 125: NOT CLEAN strict+PR-merge — 0C/0H/1M/0L. F-P125-01 RESOLVED [MED VP-003 BC Traceability cell BC-2.13.004 Red Gate→Kani VP Seed]: VP-003 v1.1→v1.2 (traceability cell corrected; full-file sweep zero stray Red Gate). CLEARED: F-P124-01/02 sibling-checks a-e PASS; ss-03 recursion arithmetic PASS; RetryHint↔ss-16 PASS; gate inventory 34 PASS. D18-P89-A sweep: STALE=0. Trajectory →1 (P1D-125). Counter 0/3. Fix bursts 127→128. Burst 210. |
 | Phase 1d burst 211 — pass-126 CLEAN(strict) record (streak 1/3; frozen-corpus rule) | adversary + state-manager | COMPLETE | Pass 126: CLEAN strict/PR-merge — 0C/0H/0M/0L/0OBS. F-P125-01 CLOSED [VP-003 v1.2 confirmed Kani VP Seed; Source Contract coherent]. All 3 carry-forward axes deep-read ZERO yield: holdout C/D (9 BC + 2 CAP existence-validated; coherent); ss-02 trio (BC-2.02.002/003/004 cross-BC coherent; BarrierValue no-dup intentional); prd.md↔supplements (E-MEMORY-003 consistent; summary_halt propagated; 95=48/39/8 PASS). CLEARED CANDIDATE: E-MEMORY-003 label = pass-125 paraphrase issue, corpus correct. No fix burst (CLEAN). Trajectory →0 (P1D-126). Counter 1/3 STREAK ACTIVE. Burst 211. |
+| Phase 1d burst 212 — pass-127 CLEAN(strict) record (streak 2/3; frozen-corpus rule) | adversary + state-manager | COMPLETE | Pass 127: CLEAN strict/PR-merge — 0C/0H/0M/0L/0OBS. Part A streak qual STANDING [VP-003 v1.2 / summary_halt BC-2.05.005 v1.5 / holdout-D BC anchors all reproduce]. Fresh-hunt CLEAN: ss-12 BC-2.12.002 CRUD 7-ep 1:1; §StreamEvent 12-var run_id+parent_ids on every variant + GuardrailDecision schema coherent; DI-001..014 zero orphans all mapped to enforcing BCs; NFR-001..011 vs VP/DI/BC web fully coherent. No fix burst (CLEAN). Trajectory →0 (P1D-127). Counter 2/3 STREAK ACTIVE. Burst 212. |
 
 ## Decisions Log
 
@@ -152,28 +152,28 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | DEFER-002 | Machine enforcement of gate #28 date-validity (pre-commit hook + CI lint for changelog-date monotonicity and frontmatter-currency) | Phase 3 CI hardening | 3rd manual-sweep failure (F-P64-02/F-P65-01/F-P75-01); gate #28 Rules 4+5 are prose-only until Phase 3. DEFER-001 archived in cycles/v0.0.0-pre-pipeline/lessons.md |
 
 ## Concurrent Cycles
-None currently active. Counter 1/3 STREAK ACTIVE (P126: CLEAN strict); trajectory-tail →3→2→1→0; frozen-corpus rule ACTIVE (no spec edits until 3/3 or new finding).
+None currently active. Counter 2/3 STREAK ACTIVE (P127: CLEAN strict); trajectory-tail →2→1→0→0; frozen-corpus rule ACTIVE (no spec edits until 3/3 or new finding).
 
 ## Convergence Status
 | Metric | Value |
 |--------|-------|
-| Adversary passes completed | 126 (Phase 1d) |
-| Fix bursts completed | 128 (Phase 1d; last fix burst 128 — F-P125-01 RESOLVED in burst 210; no new fix burst in burst 211) |
-| Convergence counter | 1 of 3 STREAK ACTIVE (Phase 1d; pass 126 CLEAN strict/PR-merge; BC-5.39.001 frozen-HEAD streak rule on 02d8ccd; NEXT: pass 127; pre-pipeline 3/3 CLOSED) |
-| Finding trajectory | →4→2→2→4→4→1→4→2→5→3→4→1→5→1→1→3→2→2→2→1→1→1→1→4→2→2→1→2→0→1→2→1→1→3→1→1→3→5→3→2→1→0 |
+| Adversary passes completed | 127 (Phase 1d) |
+| Fix bursts completed | 128 (Phase 1d; last fix burst 128 — F-P125-01 RESOLVED in burst 210; no new fix burst in bursts 211–212) |
+| Convergence counter | 2 of 3 STREAK ACTIVE (Phase 1d; passes 126-127 CLEAN strict/PR-merge; BC-5.39.001 frozen-HEAD streak rule on 02d8ccd; NEXT: pass 128 convergence-completing; pre-pipeline 3/3 CLOSED) |
+| Finding trajectory | →4→2→2→4→4→1→4→2→5→3→4→1→5→1→1→3→2→2→2→1→1→1→1→4→2→2→1→2→0→1→2→1→1→3→1→1→3→5→3→2→1→0→0 |
 
 ## Session Resume Checkpoint
 
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 
 ### RESUME IN ONE BREATH
-"ferrochain Phase 1d convergence loop, 126 passes / 128 fix bursts, counter 1/3 STREAK ACTIVE (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 516=507+9, purity-map 58, 13 ADRs [ADR-006 rev-4, ADR-005 rev-4 w/ §CheckpointSaver Object-Safety + §Adjacent Trait Object-Safety Adjudications], 34 gates, StreamEvent 12 variants, VP census 141 all L4; L2 type audit 37-row table + corpus-wide token sweep). Pass-126 CLEAN strict/PR-merge: ZERO findings (0C/0H/0M/0L/0OBS). F-P125-01 CLOSED [VP-003 v1.2 verified]: BC-2.13.004 cell = 'Primary VP obligation; Kani VP Seed'; zero stray Red Gate in VP-003.md; Source Contract coherent; VP suite uniform L4. Three carry-forward axes deep-read ZERO yield: holdout C/D (9 BC + 2 CAP anchors existence-validated; coherent); ss-02 trio (BC-2.02.002/003/004 cross-BC coherent; BarrierValue no-dup intentional); prd.md↔supplements (E-MEMORY-003 consistent; summary_halt propagated; 95=48/39/8 PASS). CLEARED CANDIDATE: E-MEMORY-003 'label' in pass-125 was report paraphrase only, corpus consistent. COUNTER 1/3 STREAK ACTIVE (frozen-HEAD rule; corpus FROZEN at 02d8ccd; no spec edits until 3/3 or new finding). NEXT ACTION: dispatch adversary pass 127 (D-chain cite D-126; fresh-hunt only; no carry-forward axes)."
+"ferrochain Phase 1d convergence loop, 127 passes / 128 fix bursts, counter 2/3 STREAK ACTIVE (strict-zero D14; baseline 95 BCs 48/39/8, 21 CAPs, 35 modules, census 86=43+16+27, test-vectors 516=507+9, purity-map 58, 13 ADRs [ADR-006 rev-4, ADR-005 rev-4 w/ §CheckpointSaver Object-Safety + §Adjacent Trait Object-Safety Adjudications], 34 gates, StreamEvent 12 variants, VP census 141 all L4; L2 type audit 37-row table + corpus-wide token sweep). Pass-127 CLEAN strict/PR-merge: ZERO findings (0C/0H/0M/0L/0OBS). Part A streak qual STANDING: VP-003 v1.2 BC-2.13.004 cell = 'Kani VP Seed' confirmed; summary_halt BC-2.05.005 v1.5 7-case guard (e) present; holdout-D BC anchors existence-validated. Fresh-hunt axes all CLEAN: ss-12 BC-2.12.002 CRUD 7-endpoint coherence 1:1; §StreamEvent 12-variant field schema vs BC-2.06.002 (run_id+parent_ids on every variant; GuardrailDecision schema coherent); DI-001..014 statement-level census zero orphans all mapped to enforcing BCs; NFR-001..011 vs VP/DI/BC web fully coherent. COUNTER 2/3 STREAK ACTIVE (frozen-HEAD rule; corpus FROZEN at 02d8ccd; no spec edits until 3/3 or new finding). NEXT ACTION: dispatch adversary pass 128 (D-chain cite D-127; convergence-completing; if CLEAN(strict) → 3/3 CONVERGED → /vsdd-factory:check-input-drift → Phase 1 human approval gate)."
 ### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
-### PASS-127 NOTE: corpus FROZEN at 02d8ccd spec-state — no sibling-checks owed; fresh-hunt only. All carry-forward axes cleared in pass-126. If CLEAN(strict): counter 2/3. If finding: reset to 0/3 + fix burst (unfreezes corpus).
+### PASS-128 NOTE: corpus FROZEN at 02d8ccd spec-state — this is the convergence-completing pass. If CLEAN(strict): 3/3 CONVERGED → run /vsdd-factory:check-input-drift → Phase 1 human approval gate. If finding: reset to 0/3 + fix burst (unfreezes corpus).
 ### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 18 crates [R6 time-sensitive]; (3) langgraph 0.2.5 watch [R4]; (4) Phase 1 human approval gate awaiting 3/3.
-### DECISION DELTA (this session): no new decisions in burst 211; last decision D18-P103-A; full log above.
-### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule ACTIVE (counter 1/3; no spec edits until 3/3 or new finding).
-### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 211 | Counter 1/3 STREAK ACTIVE | No open findings (pass-126 CLEAN strict; streak 1/3; pass 127 next)
+### DECISION DELTA (this session): no new decisions in bursts 211-212; last decision D18-P103-A; full log above.
+### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule ACTIVE (counter 2/3; no spec edits until 3/3 or new finding).
+### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 212 | Counter 2/3 STREAK ACTIVE | No open findings (pass-127 CLEAN strict; streak 2/3; pass 128 next)
 
 ## Historical Content
 
@@ -185,7 +185,7 @@ None currently active. Counter 1/3 STREAK ACTIVE (P126: CLEAN strict); trajector
 | PRD supplements: bc-authoring-plan v2.40, error-taxonomy v1.26, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.40, test-vectors v1.9 | `.factory/specs/prd-supplements/` |
 | L2 domain spec (15-shard, 1,889 lines; events.md v1.6) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
-| Session checkpoints bursts 5–78, bursts 176–210 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Session checkpoints bursts 5–78, bursts 176–211 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (23 lessons, 23 codified guardrails incl. L-023 axis-existence validation) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Holdout domain briefs A/B/C (SOC analyst, dark factory, OpenClaw) | `.factory/planning/holdout-domains/domain-{a,b,c}-*.md` |
 | Reference corpus manifest (v1.4.0 — adk-rust Corpus 5 added) | `.factory/semport/reference-manifest.md` |
