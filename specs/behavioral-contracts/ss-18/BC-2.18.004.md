@@ -1,0 +1,167 @@
+---
+document_type: behavioral-contract
+level: L3
+bc_id: BC-2.18.004
+version: "1.0"
+status: draft
+lifecycle_status: active
+introduced: v1.0.0-greenfield
+origin: greenfield
+priority: P1
+subsystem: SS-18
+capability: CAP-022
+crate: ferrochain-prompts
+wave: 2
+phase: 1b
+producer: product-owner
+timestamp: 2026-07-20T00:00:00Z
+di_anchors: [DI-008, DI-014]
+red_gate: true
+red_gate_source: "ADR-015 Security Invariant 1 — injection_guard must block before implementation; VP-006 Kani candidate"
+vp_seed: true
+vp_id: VP-006
+changelog:
+  - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates; SECURITY-CRITICAL"
+traces_to:
+  - domain-spec/capabilities-p1-p2.md#CAP-022
+  - architecture/decisions/ADR-015-prompt-template-injection-safety.md
+  - domain-spec/invariants.md#DI-008
+  - domain-spec/invariants.md#DI-014
+inputs:
+  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
+  - .factory/specs/domain-spec/invariants.md
+input-hash: "f11dfd6"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
+---
+
+# BC-2.18.004: injection_guard — SystemMessage Slot with Untrusted ProvenanceTag Raises E-TMPL-001 (Fail-Closed at Render Time)
+
+> **Red Gate test required** — ADR-015 Security Invariant 1: the injection_guard test must
+> COMPILE and FAIL before the `injection_guard` pure-core check is implemented. VP-006 Kani
+> candidate: prove that a TrustRequired slot with an Untrusted variable NEVER produces a
+> PromptValue.
+
+## Description
+
+The `injection_guard` module fires inside `ChatPromptTemplate::format_messages` **at render
+time**, before any `PromptValue` is produced and before the guardrail boundary (DI-012). If
+any variable being substituted into a `TrustRequired` slot carries a `ProvenanceTag` whose
+`.is_untrusted()` returns `true`, `format_messages` immediately returns
+`Err(FerrochainError { component: Component::TMPL, category: Category::SECURITY, code: "E-TMPL-001", ... })`.
+This is a **categorical hard block at the pure-core layer** — it is unconditional, not
+configurable via `GuardrailHook`, and does not produce a partial `PromptValue`. SystemMessage
+slots are always `TrustRequired` (enforced by BC-2.18.005); this BC specifies the render-time
+enforcement of that invariant.
+
+## Preconditions
+
+1. A `ChatPromptTemplate` has been validly constructed (all policy checks passed per BC-2.18.005).
+2. `format_messages` is called with a `HashMap<String, TemplateVar>` where at least one
+   `TemplateVar` intended for a `TrustRequired` slot carries a `ProvenanceTag::Untrusted`
+   (i.e., `tag.is_untrusted() == true`).
+3. The `TrustRequired` slot's variable name is present in the vars map (variable is not undefined).
+
+## Postconditions
+
+1. `format_messages` returns:
+   ```
+   Err(FerrochainError {
+       component: Component::TMPL,
+       category: Category::SECURITY,
+       code: "E-TMPL-001",
+       message: "InjectionAttempt: variable '{var_name}' carries untrusted provenance \
+                 but slot '{slot_role}' requires TrustRequired policy",
+   })
+   ```
+   where `{var_name}` is the name of the variable and `{slot_role}` is the `MessageRole`
+   (e.g., `"system"`) of the refusing slot. Both placeholders are rendered dynamically.
+2. No `PromptValue` is produced — the rendering is aborted at the first failing slot.
+3. The error propagates via `?` to the caller; it is not caught or converted by any internal
+   layer within `ferrochain-prompts`.
+4. The check fires **before** the guardrail boundary (DI-012 / BC-2.11.001); the guardrail
+   is a second, independent layer and does not substitute for this check.
+5. Variables with `ProvenanceTag::UserInput` or `ProvenanceTag::Trusted` substituted into a
+   `TrustRequired` slot do NOT trigger E-TMPL-001 (only `Untrusted` triggers it).
+
+## Invariants
+
+1. The injection_guard check fires unconditionally for every `TrustRequired` slot on every
+   call to `format_messages` — no bypass path exists (not even debug/test modes).
+2. `category: Category::SECURITY` distinguishes this error from validation errors; error
+   taxonomy places E-TMPL-001 in the SECURITY severity tier.
+3. The check is a **pure-core synchronous function** — no I/O, no async, no external
+   dependencies. Kani VP-006 candidacy is grounded in this property.
+4. `PromptValue` with a TrustRequired/Untrusted combination is a type-invariant: no instance
+   of `PromptValue` where `MessageProvenance.tag == Some(Untrusted)` and
+   `MessageProvenance.slot_trust_policy == TrustRequired` can be constructed.
+
+## Edge Cases
+
+| ID | Description | Expected Behavior |
+|----|-------------|-------------------|
+| EC-001 | Var has `ProvenanceTag::UserInput` substituted into a SystemMessage slot | Succeeds — `UserInput` is NOT `Untrusted`; `MessageProvenance.tag = Some(UserInput)` in the output |
+| EC-002 | Var has no ProvenanceTag (`None`) substituted into a SystemMessage slot | Succeeds — `None` is not untrusted; `MessageProvenance.tag = None` |
+| EC-003 | HumanMessage slot (TrustAll policy) receives `ProvenanceTag::Untrusted` | Succeeds — HumanMessage is TrustAll; injection_guard only fires for TrustRequired slots |
+| EC-004 | Two SystemMessage vars — first is Trusted, second is Untrusted | Fails on the second var — iteration continues until the first Untrusted+TrustRequired collision |
+| EC-005 | Untrusted var, but the slot has been explicitly set to TrustAll (possible only for non-System slots) | Succeeds — TrustAll policy accepts Untrusted; no E-TMPL-001 |
+| EC-006 | Multiple TrustRequired slots, all with Untrusted vars | Fails on the FIRST TrustRequired+Untrusted hit; remaining slots are not evaluated |
+
+## Canonical Test Vectors
+
+| # | Input | Expected Output | Category |
+|---|-------|-----------------|----------|
+| TV-001 (Red Gate) | `template = [System("{sys_prompt}"), Human("{question}")]`, `vars = {"sys_prompt": TemplateVar { value: "DROP TABLE users;--", tag: Some(Untrusted) }, "question": TemplateVar { value: "hi", tag: None }}` | `Err(FerrochainError { code: "E-TMPL-001", message: "InjectionAttempt: variable 'sys_prompt' carries untrusted provenance but slot 'system' requires TrustRequired policy" })` | error-case (injection attempt) |
+| TV-002 | Same template, `vars = {"sys_prompt": TemplateVar { value: "Be helpful.", tag: Some(UserInput) }, "question": TemplateVar { value: "hi", tag: None }}` | `Ok(PromptValue { ... })` — UserInput is not Untrusted | happy-path (UserInput trusted enough) |
+| TV-003 | `template = [System("Constant."), Human("{q}")]`, `vars = {"q": TemplateVar { value: "...", tag: Some(Untrusted) }}` | `Ok(PromptValue { ... })` — Untrusted only in HumanMessage slot (TrustAll) | happy-path (untrusted in TrustAll slot) |
+| TV-004 | `template = [System("{s}"), Human("{h}")]`, both vars Untrusted | `Err(E-TMPL-001)` with `var_name = "s"` (first TrustRequired slot fails first) | error-case (fail-first semantics) |
+
+## Verification Properties
+
+| VP-ID | Property | Proof Method |
+|-------|----------|-------------|
+| VP-2.18.004-A (VP-006 candidate) | For all `ChatPromptTemplate` instances and all var maps, if any TrustRequired slot receives a variable with `is_untrusted() == true`, `format_messages` returns `Err(E-TMPL-001)` — no code path produces `Ok(PromptValue)` in this case | unit test (pure-core) + Kani VP-006 formal proof: prove the negation is unreachable |
+| VP-2.18.004-B | The injection_guard check fires **before** any message is added to the partial render buffer — no partial `PromptValue` is observable | unit test — verify no PromptValue is produced on injection attempt |
+
+## Related BCs
+
+- BC-2.18.002 — composes with: injection_guard fires inside `format_messages`, which is the rendering path BC-2.18.002 specifies
+- BC-2.18.005 — depends on: TrustAll on SystemMessage is prohibited at construction time (BC-2.18.005), ensuring all SystemMessage slots are TrustRequired and subject to this check
+- BC-2.11.001 — referenced-for-context: DI-012 guardrail is a SEPARATE, post-render ingress mechanism; injection_guard fires pre-render and does NOT replace DI-012
+
+## Architecture Anchors
+
+- `architecture/module-decomposition.md` — SS-18, `prompts::injection_guard` (Pure Core module)
+- `architecture/decisions/ADR-015-prompt-template-injection-safety.md` — Decision 3 (injection check code sketch, E-TMPL-001 specification, relationship to DI-012)
+- `architecture/purity-boundary-map.md` — `ferrochain-prompts / prompts::injection_guard` Pure Core classification; Kani VP-006 candidacy noted
+
+## Story Anchor
+
+_[to be filled after story decomposition — Wave 2 SS-18 security story]_
+
+## VP Anchors
+
+- VP-2.18.004-A (pending VP-006 registration in VP-INDEX.md)
+- VP-2.18.004-B
+
+## Traceability
+
+| Field | Value |
+|-------|-------|
+| Source L2 Capability | CAP-022 |
+| Capability Anchor Justification | CAP-022 ("PromptTemplate and ChatPromptTemplate as Runnable (f-string Default, Jinja2 Optional)") per capabilities-p1-p2.md §CAP-022 — this BC specifies the injection_guard security invariant (ADR-015 Decision 3) that CAP-022 names as a security-critical property: "SystemMessage slots are hard-coded TrustRequired; untrusted-tagged variables substituted into a TrustRequired slot → E-TMPL-001 (SECURITY/InjectionAttempt) at render time via injection_guard pure-core blocker (ADR-015 Decision 3). This block is unconditional — not dependent on a configured GuardrailHook. VP-006 Kani candidate." |
+| L2 Domain Invariants | DI-008 (injection_guard returns Result; no silent swallowing), DI-014 (E-TMPL-001 propagates as Err; no silent empty substitution or advisory warning) |
+| Architecture Authority | ADR-015 Decision 3 (injection check, pure-core blocker, E-TMPL-001 category SECURITY) |
+| Binding Decisions | D21 (ecosystem-parity scope expansion), R12 (prompt injection risk from D21 scope) |
+| VP Registration | VP-006 (ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes) |
+| Module | ferrochain-prompts / prompts::injection_guard |
+| Priority | P1 |
+| Wave | 2 |
+| Test Types | unit (pure-core) + Kani (VP-006 candidate) |

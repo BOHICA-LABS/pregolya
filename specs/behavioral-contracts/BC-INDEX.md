@@ -1,10 +1,10 @@
 ---
 document_type: bc-index
 level: L3
-version: "1.6"
+version: "1.7"
 status: active
 producer: state-manager
-timestamp: 2026-07-19T00:00:00Z
+timestamp: 2026-07-20T00:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"

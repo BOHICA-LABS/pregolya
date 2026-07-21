@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,8 +13,9 @@ capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-20T00:00:00Z
 changelog:
+  - "1.2 (D21/Batch-3b-i/2026-07-20): Component enum expanded 12→16 per ADR-010 v1.1. Added TMPL (ferrochain-prompts, SS-18), SRLZ (ferrochain-core::serializable, SS-19), VS (ferrochain-vectorstores, SS-21), EMBED (ferrochain-core::embeddings, SS-22) to Description and Postcondition 2 component list. Category axis unchanged at 12."
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "4e5800f"
+input-hash: "d08b7f3"
 extracted_from: null
 modified: []
 deprecated: null
@@ -43,9 +44,9 @@ removal_reason: null
 
 Every error emitted by the ferrochain library crate family is an instance of `FerrochainError`,
 a struct with two orthogonal dimensions: `component` (which crate emitted the error: CORE, GRAPH,
-CHKPT, SERVER, PROV, MCP, SPLIT, SBXD, RETRY, CRON, MEMORY, BUDGET) and `category` (the error
-class: VAL, AUTH, RATE, TIMEOUT, TRANSPORT, INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY,
-SECURITY, TENANCY). Each error also carries a `retry_hint` (Never / Maybe / Later(Duration)),
+CHKPT, SERVER, PROV, MCP, SPLIT, SBXD, RETRY, CRON, MEMORY, BUDGET, TMPL, SRLZ, VS, EMBED —
+16 components as of D21) and `category` (the error class: VAL, AUTH, RATE, TIMEOUT, TRANSPORT,
+INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY, SECURITY, TENANCY — 12 categories, unchanged). Each error also carries a `retry_hint` (Never / Maybe / Later(Duration)),
 a machine-readable `code` string (e.g. `E-CORE-001`), and a human-readable `message`. This
 contract adopts the adk-rust P-01/P-04 pattern (CONFLICT-6) and applies it uniformly across
 all ferrochain crates.

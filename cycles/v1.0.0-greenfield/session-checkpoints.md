@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "87e3f55"
+input-hash: "f5bcdd5"
 traces_to: STATE.md
 ---
 
@@ -936,3 +936,15 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 218): no new decisions; 4 ADRs updated v1.0→v1.1 (dep-validation outcomes); adr-tech-validation v1.1.0.
 ### STANDING DIRECTIVES: D15 autonomous loop; expansion workstream: BA CAPs → PO BCs + error-code fold → VP → Phase 1d cascade from 0/3.
 ### WRAP METADATA: Date 2026-07-20 | Cycle v1.0.0-greenfield | Burst 218 | Phase 1 IN PROGRESS — D21 dep-validation COMPLETE | Re-convergence required (0/3)
+
+---
+
+## Burst 219 Checkpoint (archived burst-220)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 SPEC CRYSTALLIZATION — D21 L2 CAP LAYER COMPLETE (burst 219). 33 total CAPs (CAP-022..033 added: SS-18 prompts, SS-19 lc-serialization, SS-20 retrievers, SS-21 vectorstores, SS-22 embeddings). CAP-002 REVERSED: prompt templates NOW in v1 scope. entities-graph v1.4 (+Document, PromptValue, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType). ubiquitous-language-core v1.4 (+15 D21 terms, ref-corpus reconciled). L2-INDEX v1.6 (Domain C forcing-function CAP-031/032/033). Re-convergence required (0/3). PO OBLIGATION: (1) author expansion BCs per architect handoff bands (SS-18 ~4-6, SS-19 ~5-7, SS-20 ~3-5, SS-21 ~4-6, SS-22 ~3-5); (2) fold 7 error codes (E-TMPL-001/002/003, E-SRLZ-001/002, E-EMBED-001, E-VS-001) into error-taxonomy.md; (3) move 5 subsystems from product-brief out-of-scope to in-scope. NEXT: PO behavioral-contract authoring → VP-006..010 → Phase 1d cascade from 0/3."
+### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 20 crates [R6 time-sensitive; roster finalized burst 217]; (3) langgraph 0.2.5 watch [R4].
+### DECISION DELTA (burst 219): no new decisions; L2 domain-spec CAP count 21→33; CAP-002 reversal; +7 entities +15 UL terms.
+### STANDING DIRECTIVES: D15 autonomous loop; expansion workstream: PO behavioral-contract authoring (SS-18..22 bands) + 7 error codes fold + product-brief scope-move → VP-006..010 → Phase 1d cascade from 0/3.
+### WRAP METADATA: Date 2026-07-20 | Cycle v1.0.0-greenfield | Burst 219 | Phase 1 IN PROGRESS — D21 L2 CAP layer COMPLETE (33 CAPs) | Re-convergence required (0/3)

@@ -1,0 +1,146 @@
+---
+document_type: behavioral-contract
+level: L3
+bc_id: BC-2.19.003
+version: "1.0"
+status: draft
+lifecycle_status: active
+introduced: v1.0.0-greenfield
+origin: greenfield
+priority: P1
+subsystem: SS-19
+capability: CAP-025
+crate: ferrochain-core
+wave: 2
+phase: 1b
+producer: product-owner
+timestamp: 2026-07-20T00:00:00Z
+di_anchors: [DI-008]
+changelog:
+  - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
+traces_to:
+  - domain-spec/capabilities-p1-p2.md#CAP-025
+  - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
+  - domain-spec/invariants.md#DI-008
+inputs:
+  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
+  - .factory/specs/domain-spec/invariants.md
+input-hash: "68904f4"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
+---
+
+# BC-2.19.003: Inventory-Based Type Registry — Link-Time Registration, Feature-Gated Partner Entries, OnceLock Allowlist
+
+## Description
+
+The serialization registry is populated at link time via `inventory::submit!` macros, not
+by a hand-maintained list. Core ferrochain types register unconditionally;
+partner-crate types (e.g., OpenAI, Anthropic, Ollama adapters) register only when their
+corresponding Cargo feature is enabled (e.g., `feature = "openai"`). At program startup,
+`Reviver::new()` calls `inventory::iter::<LcEntry>()` to collect all registered entries into
+a `HashMap<Vec<String>, ConstructorFn>`, which is wrapped in a `OnceLock` for thread-safe
+single initialization. The allowlist used by BC-2.19.005's Reviver is derived from this
+registry — it is never a hand-edited list.
+
+## Preconditions
+
+1. The `inventory` crate (version 0.3.24, dtolnay) is a dependency of `ferrochain-core`.
+2. Each type `T` that must participate in serialization declares its `LcEntry` via
+   `inventory::submit! { LcEntry { lc_id: &["..."], constructor: |kwargs| { ... } } }`.
+3. For partner crate entries: the `inventory::submit!` is inside a
+   `#[cfg(feature = "openai")]` (or equivalent) guard so it is a no-op if the feature is not enabled.
+4. `Reviver::new()` is called once at program startup; subsequent calls return the
+   cached `OnceLock` value.
+
+## Postconditions
+
+1. After link step, `inventory::iter::<LcEntry>()` returns an iterator over all `LcEntry`
+   items for every registered type whose feature is enabled in the current binary.
+2. `Reviver::new()` returns a `Reviver` instance backed by a `HashMap` containing exactly
+   the entries produced by `inventory::iter::<LcEntry>()`. No additional entries are added
+   at runtime.
+3. The `OnceLock` ensures the registry is initialized at most once per process — concurrent
+   calls to `Reviver::new()` are safe and return the same registry.
+4. Partner crate entries are NOT present in the registry when their feature is disabled (e.g.,
+   `cargo build --no-default-features` produces a registry with only core types).
+5. `Reviver::registry_size() → usize` returns the count of registered entries (used for
+   smoke-test assertions in CI).
+
+## Invariants
+
+1. The registry is **append-only at link time** — no runtime API adds or removes entries.
+   This property is what makes `OnceLock` initialization safe.
+2. If two `inventory::submit!` calls register the same `lc_id` (a programming error), the
+   second entry panics at startup with a descriptive error (duplicate registration detection).
+3. The registry is the sole source of the allowlist — BC-2.19.005's Reviver checks against
+   this `HashMap`, not against a separate hard-coded list.
+4. Feature-gated entries follow the same `LcEntry` struct as unconditional entries — there
+   is no separate "optional entry" type.
+
+## Edge Cases
+
+| ID | Description | Expected Behavior |
+|----|-------------|-------------------|
+| EC-001 | Binary compiled with `--no-default-features` (no partner features) | Registry contains only core ferrochain types; partner type ids are absent; `Reviver::revive()` on a partner type id returns `Err(E-SRLZ-001)` |
+| EC-002 | Binary compiled with `features = ["openai", "anthropic"]` | Registry contains core + OpenAI + Anthropic entries; Ollama entries absent if `"ollama"` feature not enabled |
+| EC-003 | Duplicate `inventory::submit!` for the same `lc_id` | Panics at startup with `DuplicateRegistration` error — caught in CI; not a production runtime path |
+| EC-004 | `inventory::iter::<LcEntry>()` called before `Reviver::new()` | Valid — iter is lazy; it does not require Reviver to be initialized |
+| EC-005 | Multiple threads call `Reviver::new()` concurrently at program startup | `OnceLock` ensures initialization runs exactly once; all callers receive the same `Reviver` after initialization |
+
+## Canonical Test Vectors
+
+| # | Input | Expected Output | Category |
+|---|-------|-----------------|----------|
+| TV-001 | `Reviver::new()` in a binary with core features only | `reviver.registry_size()` == 141 (or the current count of core-registered types) | happy-path (registry size) |
+| TV-002 | `Reviver::new()` with `features = ["openai"]` | `reviver.registry_size()` == 141 + N (N = count of OpenAI-registered types) | happy-path (feature-gated partner) |
+| TV-003 | Lookup `["langchain_core", "prompts", "prompt", "PromptTemplate"]` in registry | Entry found; constructor fn is callable | happy-path (lookup) |
+| TV-004 | Lookup unknown id `["my_custom_type"]` in registry | `None` returned from HashMap; leads to E-SRLZ-001 in Reviver::revive | edge-case (missing id) |
+
+## Verification Properties
+
+| VP-ID | Property | Proof Method |
+|-------|----------|-------------|
+| VP-2.19.003-A | `Reviver::new()` called N times returns identical `registry_size()` (idempotent startup) | unit test — call new() 3 times in sequence; assert same size |
+| VP-2.19.003-B | Feature-gated entries are absent when the feature is not enabled | integration test — compile with `--no-default-features`; assert partner ids not in registry |
+
+## Related BCs
+
+- BC-2.19.001 — depends on: round-trip requires a registered type; this BC specifies how types become registered
+- BC-2.19.004 — composes with: legacy namespace remapping adds alias entries to the same registry at startup
+- BC-2.19.005 — depends on: Reviver allowlist containment (BC-2.19.005) is grounded in this registry
+
+## Architecture Anchors
+
+- `architecture/module-decomposition.md` — SS-19, `core::serializable::registry` sub-module
+- `architecture/decisions/ADR-016-lc-json-deserialization-safety.md` — Decision 4 (inventory crate choice, feature-gated partner registration, OnceLock initialization, duplicate detection)
+- `architecture/purity-boundary-map.md` — `ferrochain-core / core::serializable` Pure Core (initialization is pure; no I/O)
+
+## Story Anchor
+
+_[to be filled after story decomposition — Wave 2 SS-19 story]_
+
+## VP Anchors
+
+- VP-2.19.003-A, VP-2.19.003-B
+
+## Traceability
+
+| Field | Value |
+|-------|-------|
+| Source L2 Capability | CAP-025 |
+| Capability Anchor Justification | CAP-025 ("Reviver and Type Registry (Inventory-Based; Allowlist Containment; Legacy-Namespace Remap)") per capabilities-p1-p2.md §CAP-025 — this BC specifies the inventory-based link-time registration mechanism, feature-gated partner entries, and OnceLock allowlist derivation, which CAP-025 identifies as the registry substrate for the Reviver's allowlist-containment model |
+| L2 Domain Invariants | DI-008 (Reviver::new() returns Result; no panic on registry initialization except duplicate detection) |
+| Architecture Authority | ADR-016 Decision 4 (inventory crate 0.3.24, feature-gated partner registration, OnceLock initialization, duplicate detection panic) |
+| Binding Decisions | D21 (ecosystem-parity scope expansion) |
+| Module | ferrochain-core / core::serializable::registry |
+| Priority | P1 |
+| Wave | 2 |
+| Test Types | unit + integration (feature-flag compilation variants) |

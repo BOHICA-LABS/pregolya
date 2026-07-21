@@ -1,7 +1,7 @@
 ---
 document_type: product-brief
 level: L1
-version: "1.3"
+version: "1.4"
 status: approved
 producer: product-owner
 timestamp: 2026-07-20T00:00:00Z
@@ -16,8 +16,9 @@ inputs:
   - .factory/semport/reference-manifest.md
 input-hash: "83a8f7e"
 traces_to: ""
-decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17]
+decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21]
 changelog:
+  - "v1.4 (2026-07-20): D21 ecosystem-parity scope-move (burst 216) — 5 langchain-core subsystems moved from Out-of-Scope to In Scope: prompt templates (SS-18/CAP-022..023, ferrochain-prompts), LC serialization/lc-JSON (SS-19/CAP-024..025, ferrochain-core::serializable), retrievers (SS-20/CAP-026..027, ferrochain-vectorstores), vectorstores (SS-21/CAP-028..030, ferrochain-vectorstores), embeddings (SS-22/CAP-031..033, ferrochain-core + ferrochain-openai + ferrochain-ollama). Callbacks and output parsers remain excluded (superseded). chat_history remains excluded (superseded). Out-of-Scope 8-subsystem table condensed: 5 detailed entries replaced with IN-v1-per-D21 single-line pointers; 3 remain unchanged. CAP-002 clarification updated (PromptTemplate now in-scope per D21; only OutputParser remains post-v1). 4 new Wave 2 bullets added to §In Scope."
   - "v1.3 (2026-07-20): Q1-GAP fix (burst 215) — explicit exclusion record for 8 langchain-core subsystems present in semport/core/rust-translation-strategy.md but absent from all BCs, SSes, and crate roster. Prevents Phase-2 story-writer scope ambiguity. Eight dispositions added to Out of Scope with rationale traceable to wave plan, 18-crate roster, and D1/D7/D13. CAP-002 clarification wording provided for BA routing."
   - "v1.2 (2026-07-17): Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file with no spec-content signal for this brief. All genuine derivation sources (market-intel, COMPARATIVE-ASSESSMENT, holdout domain files, naming study, semport reference manifest) are already listed. Input-hash recomputed."
   - "v1.1: SR-01 compress core sections; SR-02 relocate security defaults to Overflow; SR-03 mark locked tech; SR-04 reformulate time-to-market criterion"
@@ -89,6 +90,21 @@ Wave 2 — Partners + conformance + MCP (P1, D7 roadmap)
   scoped memory isolation, GDPR erasure (D17-Q4 memory holdout; domain-c cross-session requirement)
 - `ferrochain-standard-tests`: port of LangChain's langchain-tests conformance suite; all
   Wave 2 provider crates must pass before v1 release
+- `ferrochain-prompts`: `PromptTemplate` (f-string render, partial binding, strict-undefined
+  guard, injection guard — E-TMPL-001/002), `ChatPromptTemplate` (multi-message render,
+  PromptValue + MessageProvenance), `MessagesPlaceholder`, `FewShotPromptTemplate`
+  (SS-18/CAP-022..023, D21)
+- `ferrochain-core` (LC serialization): `LcSerializable` round-trip registry, reviver allowlist
+  containment (security-critical Fail-Closed, VP-010 Kani candidate), lc_secrets() credential
+  stripping, namespace remap (SS-19/CAP-024..025, D21)
+- `ferrochain-vectorstores`: `Retriever` trait + `VectorStoreRetriever` (SearchType:
+  Similarity / SimilarityScoreThreshold / MMR, BoundaryType::RAGRetrieval guardrail DI-012);
+  `VectorStore` trait + `InMemoryVectorStore` + zero-norm guard (VP-009 Kani candidate);
+  `MetadataFilter` (SS-20..21/CAP-026..030, D21)
+- Embeddings: `Embeddings` trait in `ferrochain-core`; `EmbeddingsOpenAI` in
+  `ferrochain-openai`; `EmbeddingsOllama` in `ferrochain-ollama`; dimension-mismatch
+  contract (E-EMBED-001), batch partial-failure (DI-014), redacted-Debug credential
+  opacity (DI-010) (SS-22/CAP-031..033, D21)
 
 Post-v1 community ecosystem
 - Demand-ranked community integration crates: conformance-validated via ferrochain-standard-tests,
@@ -123,12 +139,14 @@ Cross-cutting (all waves)
 - langchain-community v1.0.0a1 API tracking: alpha churn risk; community wave targets
   demand-ranked integration surface, not the archived module manifest
 
-**Langchain-core subsystems excluded from v1 scope (semport scope clarification — Q1-GAP burst 215)**
+**Langchain-core subsystems — disposition table (semport scope clarification — Q1-GAP burst 215; updated D21 burst 216)**
 
-The following 8 langchain-core subsystems have detailed port strategies in
-`semport/core/rust-translation-strategy.md` but no BC, SS, crate, or wave assignment. Their
-absence was implicit; this table makes each disposition explicit to prevent Phase-2 scope
-ambiguity. Every disposition is traceable to the 18-crate roster, wave plan, and decision record.
+The following langchain-core subsystems have detailed port strategies in
+`semport/core/rust-translation-strategy.md`. Their dispositions are made explicit here to prevent
+Phase-2 scope ambiguity. **5 of the original 8 exclusions were moved IN-SCOPE per D21** (prompt
+templates, LC serialization/lc-JSON, retrievers, vectorstores, embeddings — SS-18..22). **3 remain
+excluded** (callbacks, output parsers, chat_history). Every disposition is traceable to the 18-crate
+roster, wave plan, and decision record.
 
 - `callbacks` (~4,850 LOC) — SUPERSEDED; no 1:1 port: ferrochain's observer surface is the
   typed `astream_events` v2 event taxonomy (SS-06/CAP-007, BC-2.06.001–003). The 20+ lifecycle
@@ -137,12 +155,7 @@ ambiguity. Every disposition is traceable to the 18-crate roster, wave plan, and
   tracer and other `CallbackHandler` impls are not in the 18-crate roster; they target the
   community wave. No `callbacks/` module ships in v1.
 
-- `prompt templates` (~4,495 LOC) — EXCLUDED; post-v1/community wave: `PromptTemplate`,
-  `ChatPromptTemplate`, `MessagesPlaceholder`, `FewShot*` are not in the 18-crate roster or any
-  wave plan. CAP-002 names "prompt template" as a user-implementable Runnable example, not a v1
-  deliverable (see CAP-002 clarification note in §Overflow below). The primary model-invocation
-  use case is served by the Message/ContentBlock API (SS-01/CAP-001). Template crates may target
-  the community wave via the ferrochain-standard-tests conformance path.
+- `prompt templates` (~4,495 LOC) — **IN v1 per D21** → SS-18 (ferrochain-prompts), CAP-022..023; see §In Scope Wave 2.
 
 - `output parsers` (~2,253 LOC) — PRIMARY USE CASE SUPERSEDED; standalone trait post-v1:
   `with_structured_output<T: DeserializeOwned + JsonSchema>` on `ChatModel` (BC-2.08.003)
@@ -153,37 +166,13 @@ ambiguity. Every disposition is traceable to the 18-crate roster, wave plan, and
   infrastructure for SS-06 streaming conformance tests; if so, it is an internal utility, not a
   first-class public API surface.
 
-- `LC serialization / load` (`lc-JSON`, ~2,656 LOC) — EXCLUDED; post-v1: the full
-  `LcSerializable` / `Reviver` / round-trip registry (141 core entries + partner registrations,
-  ADR-3 shape from semport Pass 8) has no SS, BC, wave assignment, or accepted ADR. The candidate
-  ADRs (ADR-3, ADR-6, ADR-7 from semport) are unaccepted research output, not commitments. The
-  Python→ferrochain migration use case (the primary motivation for lc-JSON) is covered by the
-  explicitly in-scope one-way Python-checkpoint import tool (product-brief §Out of Scope: "Python
-  runtime or PyO3 interop: one-way Python-checkpoint import tool is in scope"). Full round-trip
-  lc-JSON serialization targets a post-v1 iteration; community wave entry point.
+- `LC serialization / load` (`lc-JSON`, ~2,656 LOC) — **IN v1 per D21** → SS-19 (ferrochain-core::serializable), CAP-024..025; see §In Scope Wave 2.
 
-- `retrievers` (~328 LOC) — EXCLUDED; memory-scoped retrieval covered by SS-15 (P2); standalone
-  `Retriever` trait post-v1: the `Retriever: Runnable<Input=String, Output=Vec<Document>>`
-  abstraction as a standalone interface decoupled from memory has no SS, BC, or crate in the
-  wave plan. Within ferrochain-memory (SS-15/CAP-017, P2), vector similarity search on memory
-  keys covers the holdout-domain retrieval needs. A general-purpose `Retriever` trait with
-  external database adapter crates (pgvector, chroma, weaviate, etc.) targets the community wave.
+- `retrievers` (~328 LOC) — **IN v1 per D21** → SS-20 (ferrochain-vectorstores), CAP-026..027; see §In Scope Wave 2.
 
-- `vectorstores` (~1,873 LOC) — PARTIALLY COVERED by SS-15 (P2); standalone VectorStore trait
-  post-v1: ferrochain-memory (SS-15/CAP-017) implements hybrid KV + vector retrieval scoped to
-  the memory tier (Domain C OpenClaw long-horizon cross-session memory use case). This covers
-  memory-scoped vector similarity. A standalone `VectorStore` trait (add_texts, similarity_search,
-  from_texts, as_retriever, MMR) with external adapter crates is out of v1 scope; those targets
-  are community wave. The distinction is memory-tier vector search (in-scope as P2) vs
-  general-purpose vector database abstraction (post-v1).
+- `vectorstores` (~1,873 LOC) — **IN v1 per D21** → SS-21 (ferrochain-vectorstores), CAP-028..030; see §In Scope Wave 2.
 
-- `embeddings` (~238 LOC) — TRAIT ONLY implicit in SS-15 (P2); provider implementations
-  post-v1: the `Embeddings` trait (`embed_documents`, `embed_query`) is a thin prerequisite for
-  ferrochain-memory's vector search capability. The trait definition itself is expected to land
-  in ferrochain-core as part of the SS-15/P2 wave. However, first-party embedding provider
-  implementations (OpenAI text-embedding-*, Ollama embeddings, Anthropic) are not v1
-  deliverables — the D3 early-integration priority covers chat models only. Embedding provider
-  crates target the community wave via the ferrochain-standard-tests conformance path.
+- `embeddings` (~238 LOC) — **IN v1 per D21** → SS-22 (ferrochain-core + ferrochain-openai + ferrochain-ollama), CAP-031..033; see §In Scope Wave 2.
 
 - `chat_history` (~246 LOC) — SUPERSEDED; no 1:1 port: `BaseChatMessageHistory` /
   `InMemoryChatMessageHistory` / `RunnableWithMessageHistory` solve in-session message injection
@@ -193,11 +182,13 @@ ambiguity. Every disposition is traceable to the 18-crate roster, wave plan, and
   conversation persistence in ferrochain-server. These jointly cover the `chat_history` use case
   without a dedicated class. No `ChatMessageHistory` trait or crate is in the 18-crate roster.
 
-> **CAP-002 clarification for BA** (BA must propagate to capabilities-p0.md per BA domain ownership):
+> **CAP-002 clarification for BA** (BA must propagate to capabilities-p0.md per BA domain ownership;
+> updated D21 — PromptTemplate moved in-scope):
 > In CAP-002, insert one sentence after the opening paragraph: "The listed examples (model call,
 > prompt template, output parser, tool, graph) are all user-implementable instances of the
-> `Runnable` trait — ferrochain ships the trait and composition machinery in v1, not first-party
-> `PromptTemplate` or `OutputParser` implementations; those are post-v1/community deliverables."
+> `Runnable` trait — ferrochain ships the trait and composition machinery in v1; first-party
+> `PromptTemplate` is also in v1 (SS-18/D21), but first-party `OutputParser` implementations
+> remain post-v1/community deliverables."
 
 ## Success Criteria
 

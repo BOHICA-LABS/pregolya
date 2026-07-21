@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "1.9"
+version: "2.0"
 status: active
 producer: product-owner
-timestamp: 2026-07-19T00:00:00Z
+timestamp: 2026-07-20T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -130,12 +130,33 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.16.003 | SS-16 | 5 | — | `TV-NNN` | | Circuit breaker after repeated failure |
 | BC-2.17.001 | SS-17 | 5 | — | `TV-NNN` | | Kani harness scope (all 3 VPs) |
 | BC-2.17.002 | SS-17 | 5 | — | `TV-NNN` | | cargo-fuzz targets |
+| BC-2.18.001 | SS-18 | 6 | — | `TV-NNN` | | PromptTemplate f-string render; partial binding; strict-undefined guard |
+| BC-2.18.002 | SS-18 | 4 | — | `TV-NNN` | | ChatPromptTemplate multi-message render; PromptValue + MessageProvenance |
+| BC-2.18.003 | SS-18 | 4 | — | `TV-NNN` | | MessagesPlaceholder expansion; FewShotPromptTemplate composition |
+| BC-2.18.004 | SS-18 | 4 | — | `TV-NNN` | **RG** | injection_guard — TrustRequired slot + Untrusted tag → E-TMPL-001 |
+| BC-2.18.005 | SS-18 | 4 | — | `TV-NNN` | **RG** | SlotTrustPolicy::TrustAll on SystemMessage → E-TMPL-002 at construction |
+| BC-2.19.001 | SS-19 | 4 | — | `TV-NNN` | | LcSerializable round-trip; Serialized::Constructor form |
+| BC-2.19.002 | SS-19 | 4 | — | `TV-NNN` | | lc_secrets() strips credential fields before serialization |
+| BC-2.19.003 | SS-19 | 4 | — | `TV-NNN` | | Inventory-based type registry; OnceLock allowlist |
+| BC-2.19.004 | SS-19 | 4 | — | `TV-NNN` | | Legacy namespace remap; OLD_CORE_NAMESPACES_MAPPING aliases |
+| BC-2.19.005 | SS-19 | 4 | — | `TV-NNN` | **RG** | Reviver allowlist containment — unregistered id → E-SRLZ-001 (VP-010) |
+| BC-2.19.006 | SS-19 | 4 | — | `TV-NNN` | | Langchain-monolith type ids → E-SRLZ-002 (not silent None) |
+| BC-2.20.001 | SS-20 | 3 | — | `TV-NNN` | | Retriever trait; get_relevant_documents dyn-compatible; Arc<dyn Retriever> |
+| BC-2.20.002 | SS-20 | 3 | — | `TV-NNN` | **RG** | BoundaryType::RAGRetrieval guardrail covers all Retriever returns (DI-012) |
+| BC-2.20.003 | SS-20 | 5 | — | `TV-NNN` | | VectorStoreRetriever; SearchType; k/fetch_k/lambda_mult config; as_retriever() |
+| BC-2.21.001 | SS-21 | 5 | — | `TV-NNN` | | VectorStore trait; VectorStoreFactory; Arc<dyn VectorStore> dyn-safety |
+| BC-2.21.002 | SS-21 | 5 | — | `TV-NNN` | | InMemoryVectorStore; Arc<dyn Embeddings> DI; cosine similarity |
+| BC-2.21.003 | SS-21 | 5 | — | `TV-NNN` | **RG** | Zero-norm guard — cosine denominator → E-VS-001 before division (VP-009) |
+| BC-2.21.004 | SS-21 | 5 | — | `TV-NNN` | | MetadataFilter Eq/Ne/In; similarity_search_with_filter; #[non_exhaustive] |
+| BC-2.22.001 | SS-22 | 5 | — | `TV-NNN` | | Embeddings trait; embed_documents batch; dimensionality contract → E-EMBED-001 (VP-008) |
+| BC-2.22.002 | SS-22 | 5 | — | `TV-NNN` | **RG** | EmbeddingsOpenAI; OpenAiApiKey redacted-Debug credential opacity (DI-010) |
+| BC-2.22.003 | SS-22 | 5 | — | `TV-NNN` | | EmbeddingsOllama; no API key; POST /api/embed; use_legacy_endpoint toggle |
 
-**Total vectors (95 authored BCs):** 507 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **516 total vectors** across 95 BC files.
+**Total vectors (116 authored BCs):** 599 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **608 total vectors** across 116 BC files.
 
 > **GTV convention:** The TV Count column counts standard canonical vectors; the GTV Count column counts golden test vectors (Red Gate acceptance data reproduced in §GTV). Grand totals are expressed as `<TV Count> + <GTV Count> = <total>` to prevent ambiguity.
 
-**Red Gate BCs (5):** BC-2.02.003, BC-2.02.004, BC-2.07.002, BC-2.09.004, BC-2.09.005
+**Red Gate BCs (11):** BC-2.02.003, BC-2.02.004, BC-2.07.002, BC-2.09.004, BC-2.09.005, BC-2.18.004, BC-2.18.005, BC-2.19.005, BC-2.20.002, BC-2.21.003, BC-2.22.002
 
 ---
 
@@ -232,6 +253,12 @@ delivery; no integration vectors exist at Phase 1a by design.
 | BC-2.07.002 | `tests/red_gate/test_BC_2_07_002_python_parity.rs` | R8 | ferrochain-splitters implementation |
 | BC-2.09.004 | `tests/red_gate/test_BC_2_09_004_tool_exception.rs` | R11 | ferrochain-mcp ToolException impl |
 | BC-2.09.005 | `tests/red_gate/test_BC_2_09_005_no_live_connections.rs` | R11 | MultiServerMcpClient impl |
+| BC-2.18.004 | `tests/red_gate/test_BC_2_18_004_injection_guard.rs` | ADR-015 Security Invariant 1 | injection_guard impl in ferrochain-prompts |
+| BC-2.18.005 | `tests/red_gate/test_BC_2_18_005_trustall_rejection.rs` | ADR-015 Security Invariant 2 | from_messages() SlotTrustPolicy guard in ferrochain-prompts |
+| BC-2.19.005 | `tests/red_gate/test_BC_2_19_005_reviver_allowlist.rs` | ADR-016 Security Invariant | Reviver::revive() in ferrochain-core |
+| BC-2.20.002 | `tests/red_gate/test_BC_2_20_002_rag_guardrail.rs` | ADR-014 §DI-012 | Retriever guardrail wiring in ferrochain-graph |
+| BC-2.21.003 | `tests/red_gate/test_BC_2_21_003_zero_norm_guard.rs` | ADR-014 v1.1 Hardening | cosine similarity impl in ferrochain-vectorstores |
+| BC-2.22.002 | `tests/red_gate/test_BC_2_22_002_credential_opacity.rs` | DI-010 Credential Opacity | EmbeddingsOpenAI::new() credential impl in ferrochain-openai |
 
 ---
 
@@ -258,6 +285,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.0 | 2026-07-20 | D21/Batch-3b-ii: Added 21 new BC inventory rows (SS-18 BCs 2.18.001–005, SS-19 BCs 2.19.001–006, SS-20 BCs 2.20.001–003, SS-21 BCs 2.21.001–004, SS-22 BCs 2.22.001–003). SS-18 subtotal=22 TVs, SS-19=24, SS-20=11, SS-21=20, SS-22=15; total new canonical TVs=92. Grand total updated: 507→599 canonical TVs; 599+9 GTVs = 608 total vectors. Red Gate BCs updated from 5→11: added BC-2.18.004, BC-2.18.005, BC-2.19.005, BC-2.20.002, BC-2.21.003, BC-2.22.002 to Red Gate Vector Summary. | D21/ADR-014/015/016/017 |
 | 1.9 | 2026-07-19 | F-P119-01 + OBS-1 + OBS-2, fix burst 122: BC-2.05.005 v1.4→v1.5 adds 3 canonical TVs (TV-006 summary_halt guard, TV-007 queued guard, TV-008 cancelled guard per OBS-1 production-grade totality adjudication). BC-2.05.005 row: TV Count 5→8; Notes updated to '(v1.5 adds TV-006/007/008)'. SS-05 subtotal 32→35. Grand total: 504→507 canonical TVs; 507+9 GTVs = 516 total vectors. | F-P119-01 |
 | 1.8 | 2026-07-17 | F-P94-02: Convention verdict — renumber (option ii): TV-001b in BC-2.10.004 renamed TV-006, eliminating the corpus's only lettered sub-vector. BC-2.10.004 row: TV Count 5→6, Notes updated to "(v1.5 adds TV-006)". Recount from ground truth: SS-10 subtotal 22→23 (BC-2.10.001=5, BC-2.10.002=5, BC-2.10.003=7, BC-2.10.004=6). Grand total: 503→504 canonical TVs; 504+9 GTVs = 513 total vectors. BC-2.10.004 v1.4→v1.5. | F-P94-02 |
 | 1.7 | 2026-07-16 | F-P86-01: replaced TODO markers with authoritative forward-reference text in two sections. Per-Subsystem Test Vectors: removed conditional TODO, replaced with authoritative statement that canonical per-BC vectors reside in individual BC files (`behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Test Vectors`); no inline duplication by design. Cross-Subsystem Integration Vectors: removed empty placeholder table row, replaced with forward-reference statement that integration scenarios are authored by test-writer at Phase 3 from the wave schedule (`stories/STORY-INDEX.md`). Retroactive changelog note: v1.6 added three template-conformance sections (Per-Subsystem Test Vectors, Cross-Subsystem Integration Vectors, Golden File References) as structural stubs per template compliance; this was not recorded in the v1.6 changelog entry. | F-P86-01 |
