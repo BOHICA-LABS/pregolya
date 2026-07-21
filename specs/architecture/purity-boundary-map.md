@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.6"
+version: "1.7"
 status: active
 producer: architect
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
-input-hash: "5fa9ca7"
+input-hash: "5f4d310"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21]
 changelog:
+  - "1.7 (burst-224/2026-07-21): F-P129-11 — split vectorstores::mmr into vectorstores::similarity (new Pure Core; VP-009 Kani P0 target; cosine_similarity shared primitive) + vectorstores::mmr (Pure Core; MMR-only algorithm; calls vectorstores::similarity; VP cleared). F-P129-09 — add core::guardrail Pure Core row (definitions-only: GuardrailHook trait + BoundaryType enum; ADR-014 Decision 6); relocate core::retriever from Pure Core → Boundary (GuardedDocuments::rag_ingress dispatches to injected &dyn GuardrailHook — pure routing gate delegating to effectful impl; ADR-014 Decision 6 / DI-012). Pure Core 30→31 (add similarity +1, add guardrail +1, remove retriever -1); Boundary 10→11 (add retriever). Total 72→74."
   - "1.6 (D21/2026-07-20): ecosystem-parity scope expansion — add 14 new module rows across Pure Core, Effectful Shell, and Boundary columns; pure-core additions (+8): core::documents, core::retriever, core::embeddings (definitions-only), prompts::template, prompts::chat_template, prompts::few_shot, prompts::injection_guard, vectorstores::mmr; effectful shell additions (+4): openai::embeddings, ollama::embeddings, vectorstores::memory, vectorstores::retriever; boundary additions (+2): core::serializable (Reviver dispatch), vectorstores::store (VectorStore trait + factory seam). Pure Core 22→30, Effectful 28→32, Boundary 8→10, total 58→72. ADRs: ADR-014/015/016/017."
   - "1.5 (F-P115-01, 2026-07-19): checkpoint::clock Pure Core row — Pure Guarantee column corrected from 'Monotonic counter increment; UUID wall-clock rejection is pure check' to 'Pure successor function of caller-supplied `current`; UUID wall-clock rejection is pure check'. Reflects ADR-005 rev-2 stateless get_next_version design; retired AtomicU64 counter language excised."
   - "1.4 (F-P91-02 sibling sweep, 2026-07-17): update core::budget Pure Core row to include OnCeiling enum and BudgetConfig struct (both newly defined in interface-definitions.md v2.29); row now lists all six core::budget types."
@@ -36,7 +37,7 @@ Every ferrochain module appears in exactly one of three columns: **Pure Core** (
 no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not Kani-provable),
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
 effectful dependency). All 49 criticality-universe modules plus structural and definitions-only
-modules are enumerated in `## Purity Classification` below (72 total rows after D21 expansion). Enforcement invariants follow
+modules are enumerated in `## Purity Classification` below (74 total rows after burst-224 expansion). Enforcement invariants follow
 in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -70,14 +71,15 @@ side effects. Kani proofs operate here.
 | `core::context_mutation` | ferrochain-core | definitions-only: `ContextSourceSpec`, `ContextMutationConfig` pure structs; no execution logic (ADR-012 Decision 1) | — |
 | `core::write_guard` | ferrochain-core | definitions-only: `MemoryWriteRequest`, `MemoryWriteGuard` trait (`validate()` synchronous, no I/O per ADR-012 Decision 1), `WriteGuardDecision` | — |
 | `core::budget` | ferrochain-core | definitions-only: `BudgetPolicy` trait (`evaluate()` pure, no async, no I/O per ADR-009 Option 3), `PolicyDecision` enum (Allow/Escalate/Deny), `OnCeiling` enum (Halt/Escalate/Summarize — BC-2.10.003 v1.2 + BC-2.10.004), `BudgetConfig` struct (soft_limit, hard_limit, on_ceiling — BC-2.10.001 + ADR-009), `TokenUsage` struct, `RunContext` struct; no execution logic (dispatch engine lives in `graph::budget`) (ADR-009 Option 3 / BC-2.10.001) | — |
+| `core::guardrail` | ferrochain-core | definitions-only: `GuardrailHook` trait (`fn check(&self, boundary: BoundaryType, docs: &[Document]) → Result<(), FerrochainError>` — synchronous, no async, no I/O in trait body); `BoundaryType` enum (ToolResult \| RAGRetrieval \| MemoryIngress — 3 variants, PASS-58 canon; not `#[non_exhaustive]`); no execution logic; promoted from graph::provenance/mcp::ingress per trait-in-core precedent matching ADR-009/ADR-012 pattern (ADR-014 Decision 6 / DI-012 / BC-2.20.002) | — |
 | `core::documents` | ferrochain-core | `Document { page_content, metadata, id }` pure data carrier; construction is pure type-system enforcement; no I/O (ADR-014 / SS-20) | — |
-| `core::retriever` | ferrochain-core | `Retriever` trait definition; trait body is zero-LOC pure interface; no execution logic (ADR-014 / SS-20) | — |
 | `core::embeddings` | ferrochain-core | `Embeddings` trait definition; definitions-only: trait body + dimensionality contract types; no execution logic (ADR-017 / SS-22) | — |
 | `prompts::template` | ferrochain-prompts | f-string engine: variable substitution is pure string iteration + format; `{var}` extraction at construction; `.partial()` builder returns new pure value (ADR-015 / SS-18) | — |
 | `prompts::chat_template` | ferrochain-prompts | `ChatPromptTemplate` message construction: given substituted variables, produces `PromptValue` with per-message `MessageProvenance`; pure data transform with no I/O (ADR-015 / SS-18) | — |
 | `prompts::few_shot` | ferrochain-prompts | `FewShotPromptTemplate`: pure assembly of example messages + template rendering; no I/O; snapshot-fixture parity tests (ADR-015 / SS-18) | — |
 | `prompts::injection_guard` | ferrochain-prompts | `SlotTrustPolicy` enforcement: pure synchronous check — for each TrustRequired slot, checks substituted variable's ProvenanceTag; returns `Err(E-TMPL-001)` or `Ok(())`; no async, no I/O (ADR-015 / SS-18) | VP-006 candidate |
-| `vectorstores::mmr` | ferrochain-vectorstores | Maximal Marginal Relevance selection: pure `Vec<f32>` cosine arithmetic + diversity penalty; no network, no I/O; inputs: query embedding + candidate embeddings + params; output: ranked document indices (ADR-014 / SS-21) | VP-009 candidate |
+| `vectorstores::mmr` | ferrochain-vectorstores | Maximal Marginal Relevance selection: calls `vectorstores::similarity::cosine_similarity` for pairwise distances; pure diversity-penalty scoring pass; no network, no I/O; inputs: query embedding + candidate embeddings + params; output: ranked document indices (ADR-014 / SS-21; F-P129-11 burst-224) | — |
+| `vectorstores::similarity` | ferrochain-vectorstores | Shared cosine similarity primitive: `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, FerrochainError>`; IEEE-754 zero-norm L2-guard (checks `a.iter().map(\|x\| x*x).sum::<f32>().sqrt() == 0.0 \|\| b…`); returns `Err(E-VS-001)` on zero-norm; pure `Vec<f32>` inner product; no `ndarray`, no I/O; called by vectorstores::memory, vectorstores::mmr, and any future VectorStore backend (ADR-014 / SS-21; F-P129-11 burst-224) | VP-009 |
 
 **Kani constraint:** Kani model checking operates on finite, bounded loops. `graph::channels`
 reducer loop must be bounded by the number of tasks per super-step. `sandbox::path_guard`
@@ -142,6 +144,7 @@ dispatch is integration-tested.
 | `memory::store` | ferrochain-memory | `MemoryStore` key/query validation logic; no I/O | async KV/vector/erasure ops dispatched to backend implementations (sqlite/in_memory/search/skills); parallel structure to `checkpoint::saver` storage-trait Boundary pattern (BC-2.15.001 / SS-15) |
 | `core::serializable` | ferrochain-core | Pure part: `LcSerializable` trait definitions; `Reviver` allowlist lookup (pure HashMap check); secret-key stripping from kwargs (pure map operation); E-SRLZ-001/002 error construction | Effectful part: registered constructor functions (`fn(Map) -> Box<dyn Any>`) are called at deserialization time — these constructors may allocate, decode, or otherwise have side effects; `inventory::iter` traversal at startup populates `OnceLock` (ADR-016 / SS-19) |
 | `vectorstores::store` | ferrochain-vectorstores | Pure part: `VectorStore` trait definition + `MetadataFilter` validation logic; `as_retriever()` returns concrete `VectorStoreRetriever` (pure construction) | Effectful part: `add_texts`, `similarity_search`, `delete` and all other async instance methods dispatch to the concrete backend impl (e.g., `vectorstores::memory`, or a community adapter) (ADR-014 / SS-21) |
+| `core::retriever` | ferrochain-core | Pure part: `Retriever` trait definition (zero-LOC pure interface); `GuardedDocuments` newtype (pure data wrapper — `Vec<Document>` private field, no public constructor, `#[non_exhaustive]` on inner); `GuardedDocuments::rag_ingress(docs: Vec<Document>, guardrail: &dyn GuardrailHook) → Result<GuardedDocuments, FerrochainError>` — pure routing gate: calls `guardrail.check(BoundaryType::RAGRetrieval, &docs)`, propagates `Err` or wraps in `Ok(GuardedDocuments)` | Effectful part: `guardrail.check()` dispatches to an injected `&dyn GuardrailHook` implementation — impls may log, call external policy services, or scan content; DI-012 enforcement by type: graph nodes that inject retrieved docs into context accept `&GuardedDocuments`, making bypass a compile-time type error (ADR-014 Decision 6 / BC-2.20.002 / DI-012) |
 
 > **Storage-trait Boundary pattern:** `checkpoint::saver` (SS-04) and `memory::store` (SS-15)
 > both follow the same canonical pattern: the trait module defines pure validation logic + an

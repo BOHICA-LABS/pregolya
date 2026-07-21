@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
-input-hash: "e58d32a"
+input-hash: "5269654"
 changelog:
   - "1.1.0 (crates.io/2026-07-20): Add §6 D21 ADR technology validation — inventory 0.3.24 GREEN, minijinja 2.21.0 GREEN, mustache REJECTED (abandoned 2018-02), embeddings no-crate GREEN, vector-math no-crate GREEN."
   - "1.0.0 (2026-07-13): Initial validation covering ADR-002/003/004/008 — schemars, rmp-serde, verification toolchain, provider APIs, competitive watch."

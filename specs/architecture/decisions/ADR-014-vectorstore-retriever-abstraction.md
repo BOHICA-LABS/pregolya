@@ -5,10 +5,10 @@ adr_id: "014"
 slug: vectorstore-retriever-abstraction
 title: "VectorStore + Retriever Abstraction: Async Dyn-Compatible Traits, Factory Pattern, MMR Surface, and SS-15 Boundary"
 status: accepted
-date: "2026-07-20"
+date: "2026-07-21"
 producer: architect
-timestamp: 2026-07-20T00:00:00Z
-version: "1.1"
+timestamp: 2026-07-21T00:00:00Z
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,8 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.3 (burst-224/2026-07-21): Collision correction — error-taxonomy.md line 288 already defines E-VS-003 (VectorStoreRetriever config validation, VAL, BC-2.20.003). Write-time zero-norm rejection code corrected from E-VS-003 → E-VS-004 throughout Decision 5 heading, table, code sketches, and Consequences section. PO handoff updated to mint E-VS-004."
+  - "1.2 (burst-224/2026-07-21): F-P129-05 — fix Hardening Note: VP-009 is Zero-Norm Cosine Guard (Kani P0), not MMR proptest; reference VP-2.21.003-C for MMR proptest sub-property. F-P129-11 — update cosine primitive location: vectorstores::mmr → vectorstores::similarity. F-P129-08 — add Decision 5: write-time zero-norm rejection (E-VS-004, corrected in v1.3) at add_texts/from_texts_sync; search-time E-VS-001 (VP-009) remains as defense-in-depth. F-P129-09 — add Decision 6: GuardedDocuments newtype (no public constructor; sole constructor rag_ingress); GuardrailHook promoted to core::guardrail (pure-core, trait-in-core precedent); core::retriever reclassified Boundary; DI-012 becomes compile-time type-error enforcement. Add Consequences bullets for E-VS-004 (corrected in v1.3), GuardedDocuments, and core::guardrail."
   - "1.1 (crates.io/2026-07-20): Add zero-norm vector guard hardening note for cosine similarity (NaN prevention, 2-line check, no new dep)."
   - "1.0 (D21/2026-07-20): Initial ADR — crate placement (ferrochain-vectorstores new crate; Retriever + Document in ferrochain-core), async dyn-compatible trait shapes, VectorStoreFactory pattern, MMR surface, SS-15 MemoryStore boundary definition, inventory extension seam."
 ---
@@ -235,19 +237,28 @@ filtering implement this optional method; in-memory impl implements via post-fil
 
 ### Hardening note — zero-norm vector guard
 
-The in-memory cosine similarity implementation MUST guard against zero-norm vectors
-before performing division. A zero-length embedding vector produces a NaN result
-(`0.0 / 0.0`) that silently corrupts ranking and propagates through similarity scores.
-The guard is two lines and requires no new dependency:
+The cosine similarity implementation MUST guard against zero-norm vectors before
+performing division. A zero-length embedding vector produces a NaN result (`0.0 / 0.0`)
+that silently corrupts ranking and propagates through similarity scores. The guard is
+two lines and requires no new dependency:
 
 ```rust
 let norm = v.iter().map(|x| x * x).sum::<f32>().sqrt();
-if norm == 0.0 { return Err(FerrochainError { code: "E-VS-001", ... }); }
+if norm == 0.0 { return Err(FerrochainError { component: Component::VS, category: Category::VAL, code: "E-VS-001", ... }); }
 ```
 
-This check belongs in `vectorstores::mmr` (pure-core) before any cosine call. VP-009
-(MMR semantic diversity) should include a proptest property asserting no NaN in output
-scores for any valid non-zero query embedding.
+This check belongs in `vectorstores::similarity` (pure-core) — the shared cosine
+primitive called by `vectorstores::memory`, `vectorstores::mmr`, and any future backend
+— not in `vectorstores::mmr` specifically.
+
+**VP-009** is the Zero-Norm Cosine Guard: a Kani P0 formal proof that
+`cosine_similarity` returns `Err(E-VS-001)` when either input vector has L2 norm equal
+to 0.0. This property is exhaustive over all IEEE-754 zero-norm input combinations;
+the target harness is `vectorstores::similarity::cosine_similarity`.
+
+The MMR output-quality property (no NaN in output scores for valid non-zero embeddings)
+is a separate, complementary sub-property anchored to BC-2.21.003 as **VP-2.21.003-C**
+(proptest P1 — statistically explores the non-zero input space).
 
 ## Decision 3 — SS-15 (MemoryStore) Boundary Definition
 
@@ -285,6 +296,150 @@ Community VectorStore adapters (post-v1) register via the `inventory` crate with
 The `ferrochain-vectorstores` crate exports the `VectorStore` + `VectorStoreFactory` traits
 and the `inventory` submit macro re-export. Community adapters implement `VectorStoreFactory`
 and call `inventory::submit! { VectorStoreFactoryDescriptor { name: "chroma", ... } }`.
+
+## Decision 5 — Write-Time Zero-Norm Guard (E-VS-004)
+
+### Problem
+
+The search-time cosine guard (`E-VS-001`, VP-009 Kani P0) fires when a zero-norm
+document is already in the index. A single stored zero-norm embedding makes every
+subsequent similarity query fail — total search outage — with poor diagnosability.
+The store is effectively unusable until the bad document is deleted.
+
+### Decision
+
+`add_texts` and `from_texts_sync` MUST reject any document whose embedding vector has
+L2 norm == 0.0 at write time, before the document is persisted to the index.
+
+**Error code:** `E-VS-004` (new code; NOT a reuse of `E-VS-001`; E-VS-003 is already taken by VectorStoreRetriever config validation per error-taxonomy.md)
+
+| Code | Trigger | Context |
+|------|---------|---------|
+| `E-VS-001` | Search-time cosine guard; zero-norm query or stored embedding encountered during similarity computation | — |
+| `E-VS-004` | Write-time zero-norm rejection; embedding rejected before storage | `document_index` (0-based index of the offending document) |
+
+Both codes are in the `VS` namespace (`ferrochain-vectorstores`). Error taxonomy must
+mint `E-VS-004` (PO obligation — see §PO Obligations).
+
+**`document_index` placement:** structured context field, NOT interpolated in the
+message string (gate #33 / cross-cutting error-context convention):
+
+```rust
+FerrochainError {
+    component: Component::VS,
+    category: Category::VAL,
+    code: "E-VS-004",
+    message: "embedding vector has zero L2 norm; document rejected at write time",
+    context: {
+        "document_index": <0-based usize index of rejected document>,
+    },
+}
+```
+
+### Write-time check sketch
+
+```rust
+// in add_texts / from_texts_sync, after embedding generation, before index write:
+for (i, embedding) in embeddings.iter().enumerate() {
+    let norm = embedding.iter().map(|x| x * x).sum::<f32>().sqrt();
+    if norm == 0.0 {
+        return Err(FerrochainError {
+            component: Component::VS,
+            category: Category::VAL,
+            code: "E-VS-004",
+            message: "embedding vector has zero L2 norm; document rejected at write time",
+            context: [("document_index", i)].into(),
+        });
+    }
+}
+```
+
+### Defense-in-depth
+
+The search-time guard (`E-VS-001`, VP-009 Kani P0 in `vectorstores::similarity`)
+remains active alongside the write-time guard. Both guards are required:
+
+- **Write-time E-VS-004** — primary gate; prevents bad data from entering the index
+- **Search-time E-VS-001** — defense-in-depth; handles embeddings loaded from external
+  stores that bypassed ferrochain's write path, or future index migration scenarios
+
+## Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)
+
+### Problem
+
+BC-2.20.002 (SECURITY-MANDATORY P0, DI-012) requires that every batch of documents
+entering the graph context via RAG passes through the `BoundaryType::RAGRetrieval`
+guardrail. The prior VP for BC-2.20.002 was "code review + unit test per graph node"
+— not mechanizable: guardrail bypass is detected only at review time or runtime, not at
+compile time. A single missed graph-node update silently skips the guardrail.
+
+### Decision
+
+Introduce `GuardedDocuments` — a newtype in `core::retriever` that is a type-level
+proof that the RAG guardrail has been applied. There is no public struct constructor;
+`GuardedDocuments::rag_ingress` is the sole public constructor.
+
+**Newtype shape (ferrochain-core / core::retriever):**
+
+```rust
+// No `pub` on the inner field; construction is gated entirely through rag_ingress.
+pub struct GuardedDocuments(Vec<Document>);
+
+impl GuardedDocuments {
+    /// Sole public constructor. Calls guardrail.check(BoundaryType::RAGRetrieval, &docs).
+    /// Returns Err if the guardrail rejects the document batch.
+    pub fn rag_ingress(
+        docs: Vec<Document>,
+        guardrail: &dyn GuardrailHook,
+    ) -> Result<GuardedDocuments, FerrochainError> {
+        guardrail.check(BoundaryType::RAGRetrieval, &docs)?;
+        Ok(GuardedDocuments(docs))
+    }
+
+    /// Read-only access to the inner documents.
+    pub fn documents(&self) -> &[Document] {
+        &self.0
+    }
+}
+```
+
+**GuardrailHook trait** is defined in a new module `core::guardrail` (ferrochain-core)
+— promoted from per-subsystem dispatch modules (graph::provenance, mcp::ingress) to
+ferrochain-core, consistent with the trait-in-core precedent established for
+`BudgetPolicy` → `core::budget` (ADR-009) and `MemoryWriteGuard` → `core::write_guard`
+(ADR-012). Existing per-subsystem dispatch modules import from ferrochain-core.
+
+```rust
+// ferrochain-core: core::guardrail
+pub trait GuardrailHook: Send + Sync {
+    /// Synchronous policy check. No async, no I/O in trait body.
+    fn check(
+        &self,
+        boundary: BoundaryType,
+        docs: &[Document],
+    ) -> Result<(), FerrochainError>;
+}
+
+/// Guardrail application boundary points. Not #[non_exhaustive] — 3 variants are
+/// the canonical closed set (PASS-58 canon).
+pub enum BoundaryType {
+    ToolResult,
+    RAGRetrieval,
+    MemoryIngress,
+}
+```
+
+### Enforcement pattern
+
+Graph nodes that inject retrieved documents into agent context accept `&GuardedDocuments`
+(not `Vec<Document>` or `&[Document]`). Bypassing the guardrail is a compile-time type
+error — `Vec<Document>` does not coerce to `GuardedDocuments`.
+
+### Purity classification
+
+- `core::guardrail` → **Pure Core** (definitions-only: trait + enum, no execution logic)
+- `core::retriever` → **Boundary Module** (pure routing gate in `rag_ingress` delegates
+  to effectful `&dyn GuardrailHook` implementation)
 
 ## Rationale
 
@@ -368,4 +523,21 @@ applicability. Two separate crates with a clear boundary is correct.
 - DI-012 guardrail: documents returned by `Retriever::get_relevant_documents` enter the
   graph context as `BoundaryType::RAGRetrieval`. This existing boundary type correctly covers
   all VectorStore-backed retrievers — no extension needed.
+- **E-VS-004** (Decision 5): new write-time zero-norm error code minted in the `VS` namespace
+  (E-VS-003 is taken — VectorStoreRetriever config validation, error-taxonomy.md);
+  `add_texts` and `from_texts_sync` reject documents whose embedding has L2 norm == 0.0 before
+  persistence; `document_index` carried as structured context field. Error taxonomy must mint
+  `E-VS-004` (PO obligation; BC-2.21.002 write-time contract row).
+- **GuardedDocuments** (Decision 6): new newtype in `core::retriever`; no public constructor;
+  sole constructor is `GuardedDocuments::rag_ingress(docs, &dyn GuardrailHook)`; graph nodes
+  consuming RAG output accept `&GuardedDocuments`, making DI-012 guardrail bypass a compile-time
+  type error rather than a review-time finding.
+- **core::guardrail** (Decision 6): new Pure Core definitions module in ferrochain-core hosting
+  `GuardrailHook` trait and `BoundaryType` enum; promotes from per-subsystem modules consistent
+  with ADR-009 + ADR-012 trait-in-core pattern. `core::retriever` reclassified from Pure Core
+  to Boundary Module (routes through effectful `&dyn GuardrailHook`).
+- **vectorstores::similarity** (Decision 2 + F-P129-11): new Pure Core module in
+  ferrochain-vectorstores hosting the shared `cosine_similarity` primitive (called by
+  `vectorstores::memory`, `vectorstores::mmr`, and future backends); VP-009 Kani P0 target.
+  `vectorstores::mmr` retains Pure Core classification but no longer hosts `cosine_similarity`.
 

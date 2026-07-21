@@ -29,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "86fdd69"
+input-hash: "fbd3dfb"
 extracted_from: null
 modified: []
 deprecated: null

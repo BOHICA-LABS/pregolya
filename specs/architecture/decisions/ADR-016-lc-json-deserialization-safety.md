@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.1"
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-19]
 changelog:
+  - "1.2 (burst-224/2026-07-21): F-P129-06 — fix Decision 3 Property 1 and Property 4 code sketches: replace non-canonical `category: Serialization` with `component: Component::SRLZ, category: Category::VAL` per ADR-010 adjudication (Serialization is not a canonical Category variant)."
   - "1.1 (crates.io/2026-07-20): Record validated pin `inventory = \"0.3\"` (0.3.24, dtolnay, MSRV 1.62, WASM-safe); add keep-pin-fresh note re: compiler-internal tracking."
   - "1.0 (D21/2026-07-20): Initial ADR — core::serializable in ferrochain-core, inventory-crate static registry, 141 core-internal entries, feature-gated partner registration, untrusted-deserialization safety (allowlist = registered set, no path loading, secret stripping), 12 langchain-monolith entries unregistered, one-way Python checkpoint import compatibility."
 ---
@@ -158,7 +159,7 @@ Five safety properties, each enforced by construction:
 The `Reviver` checks `inventory::iter::<LcEntry>()` at startup and builds a `HashMap<Vec<String>, &LcEntry>`.
 Any `id` NOT in this map returns:
 ```
-Err(FerrochainError { category: Serialization, code: "E-SRLZ-001",
+Err(FerrochainError { component: Component::SRLZ, category: Category::VAL, code: "E-SRLZ-001",
     message: "unknown-serializable: type id not in registry" })
 ```
 No fallback, no silent `None`. Consistent with DI-014 (no silent empty returns on validation failure).
@@ -193,7 +194,7 @@ via the `kwargs` map. Constructors that need credentials receive them via normal
 `LLMChain`, `ToolAgentAction`, `OutputFixingParser`, and the other 9 entries that resolve
 to the `langchain` aggregation package (which ferrochain does not port) return:
 ```
-Err(FerrochainError { category: Serialization, code: "E-SRLZ-002",
+Err(FerrochainError { component: Component::SRLZ, category: Category::VAL, code: "E-SRLZ-002",
     message: "unsupported-serializable: langchain-monolith type not ported to ferrochain" })
 ```
 This is a structured error with a clear message — not a panic, not a silent `None`.

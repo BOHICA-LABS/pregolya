@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.002
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,10 +14,11 @@ crate: ferrochain-vectorstores
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction"
+  - "1.1 (F-P224/H-2/2026-07-21): Write-time zero-norm guard added per ADR-014 Decision 5. `add_texts` and `from_texts_sync` now return `Err(E-VS-004)` with `document_index` context (0-based) when any document's embedding vector has L2 norm == 0.0 at write time; no documents from the batch are persisted. Distinct from E-VS-001 (search-time cosine guard). Added: PC4 (write-time zero-norm precondition/postcondition), EC-007, TV-006. E-VS-004 minted in error-taxonomy.md v1.28."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-029
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "36f72ed"
+input-hash: "7fee295"
 extracted_from: null
 modified: []
 deprecated: null
@@ -58,12 +59,22 @@ unconditionally before any cosine division.
 2. `arc_embeddings.embed_documents(texts)` succeeds and returns `Vec<Vec<f32>>` where each
    inner `Vec<f32>` is non-empty and has the same dimensionality as the query embedding.
 3. Concurrent read and write access may occur; `RwLock` serializes writes.
+4. **Zero-norm write-time guard:** before any `(Document, Vec<f32>)` pair is appended to
+   the internal store (in both `from_texts_sync` and `add_texts`), the L2 norm of each
+   embedding vector is checked. If `norm == 0.0` for the vector at batch position `i`,
+   `from_texts_sync` / `add_texts` returns `Err(E-VS-004)` with `document_index: i`
+   and NO documents from the batch are persisted (all-or-nothing; ADR-014 Decision 5).
 
 ## Postconditions
 
 1. `from_texts_sync(texts, arc_embeddings, config)`:
    - Calls `arc_embeddings.embed_documents(texts.clone()).await` to pre-compute all document
      embeddings.
+   - Checks each embedding vector's L2 norm before persisting: if any vector has norm == 0.0,
+     returns `Err(FerrochainError { component: Component::VS, category: Category::VAL,
+     code: "E-VS-004", message: "embedding vector has zero L2 norm; document rejected at write time",
+     document_index: <i> })` where `<i>` is the 0-based index of the first zero-norm vector.
+     No `InMemoryVectorStore` is constructed (ADR-014 Decision 5 — all-or-nothing).
    - Stores each `(Document { page_content: text, ... }, Vec<f32>)` pair in the internal
      `RwLock<Vec<(Document, Vec<f32>)>>`.
    - Returns `Ok(InMemoryVectorStore { ... })` — the store is ready for search immediately.
@@ -71,6 +82,9 @@ unconditionally before any cosine division.
      `Embeddings` impl (no partial construction, DI-008).
 2. `add_texts(texts, metadatas)`:
    - Calls `arc_embeddings.embed_documents(new_texts).await` to embed the new texts.
+   - Checks each embedding vector's L2 norm before acquiring the write lock: if any vector
+     has norm == 0.0, returns `Err(FerrochainError { code: "E-VS-004", document_index: <i> })`;
+     no documents from the batch are appended (all-or-nothing per Invariant 2, DI-014).
    - Acquires a write lock on the `RwLock` and appends new `(Document, Vec<f32>)` pairs.
    - Returns `Ok(Vec<String>)` of assigned document IDs.
 3. `similarity_search(query, k)`:
@@ -109,6 +123,7 @@ unconditionally before any cosine division.
 | EC-004 | Concurrent `add_texts` and `similarity_search` | `RwLock` ensures no data race; `similarity_search` holds a read lock that cannot interleave with the write lock of `add_texts` |
 | EC-005 | Two document vectors with identical embeddings | Both returned in similarity search; ordering between them is implementation-defined (e.g., stable sort by insertion order) |
 | EC-006 | Embedding dimensionality mismatch between stored docs and query vector | `Err(FerrochainError { code: "E-VS-002" })` — dimensionality mismatch detected before cosine computation |
+| EC-007 | `add_texts(["doc A", "doc B"], None)` where "doc B"'s embedding is `vec![0.0f32; 768]` (zero-norm, `document_index = 1`) | `Err(FerrochainError { code: "E-VS-004", document_index: 1 })` — batch rejected; "doc A" is NOT persisted (all-or-nothing; ADR-014 Decision 5) |
 
 ## Canonical Test Vectors
 
@@ -119,6 +134,7 @@ unconditionally before any cosine division.
 | TV-003 | `store.similarity_search_with_score("query", 2)` | `Ok(vec![(doc_a, 0.9), (doc_b, 0.7)])` — scores in [0.0, 1.0] | happy-path (scored search) |
 | TV-004 | `store.add_texts(["doc C"], None)` → `store.similarity_search("C", 1)` | `Ok(vec![Document { page_content: "doc C" }])` — newly added doc searchable | happy-path (add then search) |
 | TV-005 | `from_texts_sync(...)` when `embed_documents` returns `Err` | `Err(FerrochainError { ... })` — construction fails | error-case (embedding failure) |
+| TV-006 | `store.add_texts(["doc A", "doc B"], None)` where mock embeddings return `[vec![1.0f32; 3], vec![0.0f32; 3]]` (doc B has zero L2 norm; `document_index = 1`) | `Err(FerrochainError { code: "E-VS-004", message: "embedding vector has zero L2 norm; document rejected at write time", document_index: 1 })` — neither doc persisted | error-case (write-time zero-norm, ADR-014 Decision 5) |
 
 ## Verification Properties
 
@@ -154,7 +170,7 @@ _[to be filled after story decomposition — Wave 2 SS-21 story]_
 | Source L2 Capability | CAP-029 |
 | Capability Anchor Justification | CAP-029 ("InMemoryVectorStore — Arc<dyn Embeddings> DI; RwLock Interior Mutability; Vec<f32> Cosine; E-VS-001 Zero-Norm Guard") per capabilities-p1-p2.md §CAP-029 — this BC specifies the Arc-DI wiring, RwLock interior mutability, Vec<f32> cosine computation, and VectorStoreFactory constructor that CAP-029 defines as the InMemoryVectorStore's implementation contract (zero-norm guard is in sibling BC-2.21.003) |
 | L2 Domain Invariants | DI-008 (from_texts_sync, add_texts, similarity_search all return Result; no .unwrap()), Arc-DI wiring per workspace convention (no placeholder construction) |
-| Architecture Authority | ADR-014 Decision 2 (InMemoryVectorStore internal structure, Arc<dyn Embeddings> injection, RwLock, Vec<f32> cosine, no ndarray) |
+| Architecture Authority | ADR-014 Decision 2 (InMemoryVectorStore internal structure, Arc<dyn Embeddings> injection, RwLock, Vec<f32> cosine, no ndarray); ADR-014 Decision 5 (write-time zero-norm guard — `add_texts` and `from_texts_sync` reject zero-norm vectors with E-VS-004 before persistence) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | ferrochain-vectorstores / vectorstores::memory |
 | Priority | P1 |

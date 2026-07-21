@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.11"
+version: "1.12"
 status: active
 producer: architect
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "7c0f2fc"
+input-hash: "7aace89"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21]
 changelog:
+  - "1.12 (burst-224/2026-07-21): F-P129-11 — add vectorstores::similarity module (shared cosine_similarity primitive, VP-009 Kani target); update vectorstores::mmr description to MMR-selection-only (no longer hosts cosine_similarity); update VP anchors note. F-P129-09 — add core::guardrail definitions module (GuardrailHook trait + BoundaryType enum, promoted to ferrochain-core consistent with trait-in-core precedent); add GuardedDocuments type note to core::retriever (rag_ingress enforcement gate). Module universe 49→50 (+vectorstores::similarity MEDIUM; core::guardrail definitions-only, no criticality row per ADR-009 precedent)."
   - "1.11 (D21/2026-07-20): ecosystem-parity scope expansion — add ferrochain-prompts section (SS-18: prompts::template, prompts::chat_template, prompts::few_shot, prompts::injection_guard); add ferrochain-vectorstores section (SS-20/SS-21: vectorstores::store, vectorstores::retriever, vectorstores::memory, vectorstores::mmr); add ferrochain-core new modules: core::documents, core::retriever, core::embeddings, core::serializable; add provider embedding modules in ferrochain-openai (openai::embeddings) and ferrochain-ollama (ollama::embeddings); ferrochain-anthropic explicitly excluded from SS-22 (no embedding API). Module universe 35→49 (+14 criticality-counted rows: 4 in ferrochain-core, 4 in ferrochain-prompts, 4 in ferrochain-vectorstores, 2 in provider crates). ADRs: ADR-014/015/016/017."
   - "1.10 (F-P92-02, 2026-07-17): budget definitions note extended — RunnableConfig (core::config, SS-01) gains budget_config: Option<BudgetConfig> per OPTION A adjudication (BC-2.10.004 PC6 / BC-2.10.003 PC7/TV-004). Parallel to the context_mutations addition in the self-improvement definitions note. No new module rows — BudgetConfig is already a pure-core type in core::budget; the field addition does not change core::config's module boundary or criticality tier."
   - "1.9 (F-P91-02 sibling sweep, 2026-07-17): update budget definitions note to include OnCeiling enum and BudgetConfig struct (both newly defined in interface-definitions.md v2.29); note now lists all six core::budget types: BudgetPolicy, PolicyDecision, OnCeiling, BudgetConfig, TokenUsage, RunContext."
@@ -250,7 +251,7 @@ Re-exported from ferrochain-core.
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
 | `core::documents` | `Document { page_content, metadata, id }` type — carrier for all retrieval output; derives Serialize/Deserialize/JsonSchema; #[non_exhaustive] | MEDIUM | SS-20 |
-| `core::retriever` | `Retriever` trait: async dyn-compatible `get_relevant_documents(&self, query: &str)`; `Arc<dyn Retriever>` seam for graph RAG nodes | MEDIUM | SS-20 |
+| `core::retriever` | `Retriever` trait: async dyn-compatible `get_relevant_documents(&self, query: &str)`; `Arc<dyn Retriever>` seam for graph RAG nodes; `GuardedDocuments` newtype (no public constructor) + `GuardedDocuments::rag_ingress(docs, guardrail)` sole constructor enforcing DI-012 RAGRetrieval guardrail at call time (ADR-014 Decision 6) | MEDIUM | SS-20 |
 | `core::embeddings` | `Embeddings` trait: async dyn-compatible `embed_documents` + `embed_query`; dimensionality contract (E-EMBED-001 on mismatch); no `ndarray` dep | MEDIUM | SS-22 |
 | `core::serializable` | `LcSerializable` trait + `Serialized` wire enum + `Reviver` + `inventory`-based static registry (141 core entries); valid-namespace `OnceLock<HashSet>` derived from registry; E-SRLZ-001/002 error codes | HIGH | SS-19 |
 
@@ -263,6 +264,25 @@ Re-exported from ferrochain-core.
 > convention). `core::embeddings` — DI-009 timeout applies to provider impls; DI-014 no silent
 > empty returns applies to batch operations. `core::serializable` — DI-010 secret opacity
 > enforced via `lc_secrets()` stripping; DI-014 no silent None on unregistered types.
+
+> **Guardrail definitions (SS-20, DI-012, definitions-only — ADR-014 Decision 6):** ferrochain-core
+> hosts DEFINITIONS for the DI-012 guardrail interface promoted in burst-224 (F-P129-09). These are
+> pure type and trait definitions with no execution logic — no criticality-counted module row per
+> ADR-009 definitions-only precedent.
+>
+> - `core::guardrail` (`ferrochain-core/src/guardrail.rs`): `GuardrailHook` trait (pure synchronous
+>   policy check: `fn check(&self, boundary: BoundaryType, docs: &[Document]) -> Result<(), FerrochainError>`),
+>   `BoundaryType` enum (ToolResult | RAGRetrieval | MemoryIngress — 3 variants, PASS-58 canon;
+>   BoundaryType is NOT extended), promoted from graph::provenance/mcp::ingress to ferrochain-core
+>   consistent with trait-in-core precedent (BudgetPolicy → core::budget, MemoryWriteGuard →
+>   core::write_guard). Existing dispatch modules (graph::provenance, mcp::ingress) import from
+>   ferrochain-core.
+>
+> `core::retriever` gains `GuardedDocuments` (private-field newtype wrapping `Vec<Document>` with
+> no external constructor) and `GuardedDocuments::rag_ingress(docs, &dyn GuardrailHook) →
+> Result<GuardedDocuments, FerrochainError>` as the sole public constructor. Graph nodes that
+> inject retrieved documents into context accept `&GuardedDocuments`, making bypass a type error
+> (ADR-014 Decision 6 / BC-2.20.002 VP upgrade).
 
 ## ferrochain-prompts (SS-18) — MEDIUM
 
@@ -296,10 +316,11 @@ constructor pattern), in-memory VectorStore backend, MMR selection algorithm, `V
 | `vectorstores::store` | `VectorStore` trait (`add_texts`, `similarity_search`, `similarity_search_with_score`, `max_marginal_relevance_search`, `delete`, `as_retriever`); `VectorStoreFactory` trait; `MetadataFilter` type | MEDIUM | SS-21 |
 | `vectorstores::retriever` | `VectorStoreRetriever<'_>` wrapping `&dyn VectorStore`; impl `Retriever`; `SearchType` enum (Similarity / SimilarityScoreThreshold / Mmr) | MEDIUM | SS-20 |
 | `vectorstores::memory` | In-memory VectorStore backend; `Arc<dyn Embeddings>` injection via constructor; interior mutability via `RwLock`; `Vec<f32>` cosine similarity; no `ndarray` dep | MEDIUM | SS-21 |
-| `vectorstores::mmr` | Maximal Marginal Relevance selection algorithm; pure math (`Vec<f32>` cosine + diversity penalty); `lambda_mult` parameter; no I/O | MEDIUM | SS-21 |
+| `vectorstores::similarity` | Shared cosine similarity primitive: `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, FerrochainError>`; zero-norm IEEE-754 guard (E-VS-001) before division; pure `Vec<f32>` inner product, no `ndarray`, no I/O; called by `vectorstores::memory`, `vectorstores::mmr`, and any future VectorStore backend | MEDIUM | SS-21 |
+| `vectorstores::mmr` | Maximal Marginal Relevance selection algorithm; calls `vectorstores::similarity::cosine_similarity` for pairwise similarity + diversity penalty; `lambda_mult` ∈ [0.0, 1.0] parameter; pure math, no I/O | MEDIUM | SS-21 |
 
-> **VP anchors:** `vectorstores::mmr` is VP-009 candidate (Kani bounded proof that cosine
-> similarity returns values in [-1.0, 1.0] and MMR ranking is monotonically non-increasing).
+> **VP anchors:** `vectorstores::similarity` is VP-009 target (Kani P0 proof that `cosine_similarity`
+> returns `Err(E-VS-001)` and never `Ok(f32::NAN)` when either vector norm is 0.0; BC-2.21.003).
 > `vectorstores::memory` in-memory backend serves as the integration test double for
 > VectorStore conformance tests (analogous to `checkpoint::memory` for checkpoint backends).
 

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "5c232a3"
+input-hash: "24397ea"
 traces_to: STATE.md
 ---
 
@@ -3538,3 +3538,91 @@ Burst-217 row archived from STATE.md Current Phase Steps:
 - Phase 1d passes: 128 (pre-expansion perimeter; SUPERSEDED by D21)
 - Phase 1 status: D21 VP layer COMPLETE (VP-006..010 authored); all D21 authoring obligations fulfilled
 - NEXT: Phase 1d adversarial cascade re-run on expanded 116-BC / SS-18..22 perimeter → 3/3 CLEAN(strict) → check-input-drift → consistency audit → Phase 1 HUMAN GATE
+
+---
+
+## Current Phase Steps Row Archived (burst 224 — from STATE.md)
+
+Burst-218 row archived from STATE.md Current Phase Steps:
+> "Burst 218 — D21 dep-validation COMPLETE; ADR-014..017 v1.0→v1.1 (mustache DROPPED; pins recorded); adr-tech-validation v1.1.0; PO error-code obligation logged | architect + state-manager | COMPLETE | ADR-014 v1.1: zero-norm cosine guard + E-VS-001; VP-009 extended. ADR-015 v1.1: mustache DROPPED (abandoned 2018-02); minijinja="2" (2.21.0) only; autoescape+sandboxed+strict-undefined; E-TMPL-003. ADR-016 v1.1: inventory="0.3" (0.3.24) pin confirmed. ADR-017 v1.1: Ollama /api/embed preferred; OpenAI model currency. adr-tech-validation v1.0.0→v1.1.0. Burst 218."
+
+---
+
+## Burst 224 (2026-07-21) — P1D-129 Fix-Burst (12 findings: 3H/7M/2L); E-VS-004 minted; hash sweep STALE→0; STATE.md v3.64
+
+### Summary
+
+Architect and product-owner closed all 12 findings from Phase 1d adversarial pass P1D-129 (first pass on the D21 expanded perimeter; pass was NOT CLEAN: 3 HIGH / 7 MED / 2 LOW). State-manager ran the D18-P89-A/P90-A hash-currency sweep until STALE=0 (transitive; 3 passes on specs/ + individual index file checks). Convergence counter stays 0/3 — the push of burst-224 resets any frozen-HEAD streak, so P1D-130 must run against the new HEAD.
+
+### Key Fixes by Finding
+
+| Finding | Severity | Fix |
+|---------|----------|-----|
+| F-P129-01 / F-P129-04 | HIGH | BC-2.19.005 v1.1: Reviver allowlist PC/EC/TV strengthened |
+| F-P129-02 | HIGH | BC-2.19.006 v1.1: LcSerializable safety envelope tightened |
+| F-P129-03 | HIGH | error-taxonomy v1.28: E-TMPL-001 scoped to Untrusted-only; SECURITY description expanded |
+| F-P129-05 | MED | ADR-014 v1.3 + VP-009 v1.3: zero-norm note clarified; VP-009 non-monolith scoping |
+| F-P129-06 | MED | ADR-016 v1.2: Category::VAL sketches added |
+| F-P129-07 | MED | BC-2.20.003 v1.2: compile_fail VP gate binding added |
+| F-P129-08 | MED | ADR-014 v1.3 Decision 5: E-VS-004 write-time contract added; E-VS-003→E-VS-004 collision caught and corrected |
+| F-P129-09 | MED | ADR-014 v1.3 Decision 6: GuardedDocuments typed-wrapper specified |
+| F-P129-10 | MED | error-taxonomy v1.28: SECURITY description expanded to cover injection, reviver, template sub-classes |
+| F-P129-11 | MED | ADR-014 v1.3: vectorstores::similarity relocated to correct module |
+| F-P129-12 | LOW | ADR-015 v1.2 + BC-2.18.004 v1.1: source-order iteration invariant documented |
+| F-P129-13 (LOW) | LOW | BC-2.20.002 v1.1: H-3 compile_fail VP binding; BC-2.21.002 v1.1: H-2 E-VS-004 write-time PC/EC/TV |
+
+### Architect Changes (burst 224)
+
+| File | Change |
+|------|--------|
+| `.factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md` | v1.1→v1.3: VP-009 zero-norm note (F-P129-05); Decision 5 E-VS-004 write-time contract + E-VS-003→E-VS-004 collision correction (F-P129-08); Decision 6 GuardedDocuments typed-wrapper (F-P129-09); vectorstores::similarity relocation (F-P129-11) |
+| `.factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md` | v1.1→v1.2: source-order iteration invariant (F-P129-12) |
+| `.factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md` | v1.1→v1.2: Category::VAL sketches (F-P129-06) |
+| `.factory/specs/architecture/module-decomposition.md` | v1.11→v1.12 |
+| `.factory/specs/architecture/purity-boundary-map.md` | v1.6→v1.7: core::guardrail Pure Core; core::retriever→Boundary |
+| `.factory/specs/architecture/verification-architecture.md` | v1.5→v1.7: VP-010 non-monolith scoping + compile_fail row |
+| `.factory/specs/architecture/verification-coverage-matrix.md` | v1.6→v1.8 |
+| `.factory/specs/verification-properties/VP-006.md` | v1.0→v1.1 |
+| `.factory/specs/verification-properties/VP-009.md` | v1.1→v1.3: zero-norm note fix + non-monolith scoping |
+| `.factory/specs/verification-properties/VP-010.md` | v1.0→v1.2 |
+| `.factory/specs/verification-properties/VP-INDEX.md` | v1.2→v1.3 |
+| `.factory/specs/module-criticality.md` | v1.3→v1.4: 41 modules |
+
+### Product-Owner Changes (burst 224)
+
+| File | Change |
+|------|--------|
+| `.factory/specs/behavioral-contracts/ss-18/BC-2.18.004.md` | v1.0→v1.1 (F-P129-12) |
+| `.factory/specs/behavioral-contracts/ss-19/BC-2.19.005.md` | v1.0→v1.1 (F-P129-01/04) |
+| `.factory/specs/behavioral-contracts/ss-19/BC-2.19.006.md` | v1.0→v1.1 (F-P129-02) |
+| `.factory/specs/behavioral-contracts/ss-20/BC-2.20.002.md` | v1.0→v1.1 (H-3 compile_fail VP) |
+| `.factory/specs/behavioral-contracts/ss-20/BC-2.20.003.md` | v1.1→v1.2 (F-P129-07) |
+| `.factory/specs/behavioral-contracts/ss-21/BC-2.21.002.md` | v1.0→v1.1 (H-2 E-VS-004 write-time PC/EC/TV) |
+| `.factory/specs/behavioral-contracts/ss-21/BC-2.21.003.md` | v1.0→v1.1 (H-4 similarity module) |
+| `.factory/specs/prd-supplements/error-taxonomy.md` | v1.27→v1.28: E-VS-004 minted; census 96=43+16+37; E-TMPL-001 Untrusted-only (F-P129-03); SECURITY description expanded (F-P129-10) |
+| `.factory/specs/prd-supplements/interface-definitions.md` | v2.41→v2.42 |
+| `.factory/specs/prd.md` | v1.4→v1.5 |
+| `.factory/specs/prd-supplements/test-vectors.md` | v2.0→v2.1: 609 total = 600+9 |
+
+### Hash Sweep (burst 224 — D18-P89-A / D18-P90-A)
+
+Transitive sweep iterated until STALE=0.
+
+| Pass | Action | Result |
+|------|--------|--------|
+| Pass 1 | `--scan specs/ --update` | TOTAL=157 STALE=95→0 (but then ARCH-INDEX stale) |
+| Pass 2 | `--scan specs/ --update` | STALE=8→0 |
+| Pass 3 | `--scan specs/ --update` | STALE=0 FINAL |
+| ARCH-INDEX manual | `--update ARCH-INDEX.md` | PASS (was stale: 484a536) |
+| module-criticality | `--update module-criticality.md` | PASS (staled by ARCH-INDEX update) |
+| verification-coverage-matrix | `--update verification-coverage-matrix.md` | PASS (staled transitively) |
+| planning/dtu-assessment | `--update dtu-assessment.md` | PASS |
+| Final census | specs TOTAL=157 STALE=0; planning TOTAL=5 STALE=0; all index files PASS | STALE=0 FINAL |
+
+### Convergence Status After Burst 224
+
+- Phase 1d passes: 129 (1 post-D21 expanded-perimeter pass; NOT CLEAN)
+- Fix bursts: 129 (burst 224 closes all 12 P1D-129 findings)
+- Phase 1 status: P1D-129 fix-burst COMPLETE; all 12 findings closed; E-VS-004 minted; census 96=43+16+37; TVs 609
+- Convergence counter: 0/3 (burst 224 push resets frozen-HEAD streak)
+- NEXT: adversary pass P1D-130 on new frozen HEAD; follow-up: 10 BCs not yet individually read (BC-2.18.002/003, 2.19.002/003/004, 2.20.001, 2.21.001/004, 2.22.002/003) + interface-definitions trait-method coverage cross-check

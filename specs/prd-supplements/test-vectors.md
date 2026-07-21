@@ -1,16 +1,16 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "2.0"
+version: "2.1"
 status: active
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "55534b9"
+input-hash: "4ba13ec"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 ---
@@ -145,14 +145,14 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.20.002 | SS-20 | 3 | — | `TV-NNN` | **RG** | BoundaryType::RAGRetrieval guardrail covers all Retriever returns (DI-012) |
 | BC-2.20.003 | SS-20 | 5 | — | `TV-NNN` | | VectorStoreRetriever; SearchType; k/fetch_k/lambda_mult config; as_retriever() |
 | BC-2.21.001 | SS-21 | 5 | — | `TV-NNN` | | VectorStore trait; VectorStoreFactory; Arc<dyn VectorStore> dyn-safety |
-| BC-2.21.002 | SS-21 | 5 | — | `TV-NNN` | | InMemoryVectorStore; Arc<dyn Embeddings> DI; cosine similarity |
+| BC-2.21.002 | SS-21 | 6 | — | `TV-NNN` | (v1.1 adds TV-006) | InMemoryVectorStore; Arc<dyn Embeddings> DI; cosine similarity; write-time zero-norm guard E-VS-004 |
 | BC-2.21.003 | SS-21 | 5 | — | `TV-NNN` | **RG** | Zero-norm guard — cosine denominator → E-VS-001 before division (VP-009) |
 | BC-2.21.004 | SS-21 | 5 | — | `TV-NNN` | | MetadataFilter Eq/Ne/In; similarity_search_with_filter; #[non_exhaustive] |
 | BC-2.22.001 | SS-22 | 5 | — | `TV-NNN` | | Embeddings trait; embed_documents batch; dimensionality contract → E-EMBED-001 (VP-008) |
 | BC-2.22.002 | SS-22 | 5 | — | `TV-NNN` | **RG** | EmbeddingsOpenAI; OpenAiApiKey redacted-Debug credential opacity (DI-010) |
 | BC-2.22.003 | SS-22 | 5 | — | `TV-NNN` | | EmbeddingsOllama; no API key; POST /api/embed; use_legacy_endpoint toggle |
 
-**Total vectors (116 authored BCs):** 599 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **608 total vectors** across 116 BC files.
+**Total vectors (116 authored BCs):** 600 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **609 total vectors** across 116 BC files.
 
 > **GTV convention:** The TV Count column counts standard canonical vectors; the GTV Count column counts golden test vectors (Red Gate acceptance data reproduced in §GTV). Grand totals are expressed as `<TV Count> + <GTV Count> = <total>` to prevent ambiguity.
 
@@ -285,6 +285,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.1 | 2026-07-21 | F-P224/H-2: BC-2.21.002 v1.1 adds TV-006 (write-time zero-norm guard — add_texts returns Err(E-VS-004) when any document embedding has L2 norm == 0.0; document_index context field). BC-2.21.002 row: TV Count 5→6. SS-21 subtotal: 20→21 TVs (BC-2.21.001=5, BC-2.21.002=6, BC-2.21.003=5, BC-2.21.004=5). Grand total: 599→600 canonical TVs; 600+9 GTVs = 609 total vectors. | F-P224, H-2 |
 | 2.0 | 2026-07-20 | D21/Batch-3b-ii: Added 21 new BC inventory rows (SS-18 BCs 2.18.001–005, SS-19 BCs 2.19.001–006, SS-20 BCs 2.20.001–003, SS-21 BCs 2.21.001–004, SS-22 BCs 2.22.001–003). SS-18 subtotal=22 TVs, SS-19=24, SS-20=11, SS-21=20, SS-22=15; total new canonical TVs=92. Grand total updated: 507→599 canonical TVs; 599+9 GTVs = 608 total vectors. Red Gate BCs updated from 5→11: added BC-2.18.004, BC-2.18.005, BC-2.19.005, BC-2.20.002, BC-2.21.003, BC-2.22.002 to Red Gate Vector Summary. | D21/ADR-014/015/016/017 |
 | 1.9 | 2026-07-19 | F-P119-01 + OBS-1 + OBS-2, fix burst 122: BC-2.05.005 v1.4→v1.5 adds 3 canonical TVs (TV-006 summary_halt guard, TV-007 queued guard, TV-008 cancelled guard per OBS-1 production-grade totality adjudication). BC-2.05.005 row: TV Count 5→8; Notes updated to '(v1.5 adds TV-006/007/008)'. SS-05 subtotal 32→35. Grand total: 504→507 canonical TVs; 507+9 GTVs = 516 total vectors. | F-P119-01 |
 | 1.8 | 2026-07-17 | F-P94-02: Convention verdict — renumber (option ii): TV-001b in BC-2.10.004 renamed TV-006, eliminating the corpus's only lettered sub-vector. BC-2.10.004 row: TV Count 5→6, Notes updated to "(v1.5 adds TV-006)". Recount from ground truth: SS-10 subtotal 22→23 (BC-2.10.001=5, BC-2.10.002=5, BC-2.10.003=7, BC-2.10.004=6). Grand total: 503→504 canonical TVs; 504+9 GTVs = 513 total vectors. BC-2.10.004 v1.4→v1.5. | F-P94-02 |

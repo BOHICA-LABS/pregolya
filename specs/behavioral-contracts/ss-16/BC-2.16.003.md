@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/failure-modes.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "cedd243"
+input-hash: "140e56d"
 extracted_from: null
 modified: []
 deprecated: null

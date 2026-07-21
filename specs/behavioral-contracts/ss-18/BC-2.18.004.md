@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.004
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: ferrochain-prompts
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
 red_gate_source: "ADR-015 Security Invariant 1 — injection_guard must block before implementation; VP-006 Kani candidate"
@@ -22,6 +22,7 @@ vp_seed: true
 vp_id: VP-006
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates; SECURITY-CRITICAL"
+  - "1.1 (F-P224/F-P129-12/2026-07-21): Deterministic evaluation order specified for multi-variable TrustRequired slots. When one TrustRequired slot references multiple template variables (e.g., System('{a}: {b}')), iteration follows template source order (parse order of variable references in the template string), NOT HashMap iteration order — ensuring the <var_name> in E-TMPL-001 is deterministic. Added Invariant 5 (source-order discipline), EC-007 (intra-slot multi-untrusted-variable determinism), TV-005 (canonical test vector). Note: if ADR-015 code sketch implies HashMap iteration, that is a contradiction to route to architect."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "9eec8c9"
+input-hash: "2951b51"
 extracted_from: null
 modified: []
 deprecated: null
@@ -102,6 +103,12 @@ enforcement of that invariant.
 4. `PromptValue` with a TrustRequired/Untrusted combination is a type-invariant: no instance
    of `PromptValue` where `MessageProvenance.tag == Some(Untrusted)` and
    `MessageProvenance.slot_trust_policy == TrustRequired` can be constructed.
+5. **Source-order evaluation discipline:** when a single TrustRequired slot references
+   multiple template variables (e.g., `System("{a}: {b}")`), the injection_guard iterates
+   variables in **template source order** (the order variable references appear in the
+   template string, as produced by the minijinja parser) — NOT in HashMap iteration order.
+   This ensures the `<var_name>` in the E-TMPL-001 error message is deterministic and
+   reproducible regardless of HashMap seed or insertion order.
 
 ## Edge Cases
 
@@ -113,6 +120,7 @@ enforcement of that invariant.
 | EC-004 | Two SystemMessage vars — first is Trusted, second is Untrusted | Fails on the second var — iteration continues until the first Untrusted+TrustRequired collision |
 | EC-005 | Untrusted var, but the slot has been explicitly set to TrustAll (possible only for non-System slots) | Succeeds — TrustAll policy accepts Untrusted; no E-TMPL-001 |
 | EC-006 | Multiple TrustRequired slots, all with Untrusted vars | Fails on the FIRST TrustRequired+Untrusted hit; remaining slots are not evaluated |
+| EC-007 | One TrustRequired slot `System("{a}: {b}")` — both `a` and `b` carry `ProvenanceTag::Untrusted` | `Err(E-TMPL-001)` with `var_name = "a"` — first occurrence in template source order; `b` is not evaluated (fail-first); HashMap iteration order is NOT used |
 
 ## Canonical Test Vectors
 
@@ -122,6 +130,7 @@ enforcement of that invariant.
 | TV-002 | Same template, `vars = {"sys_prompt": TemplateVar { value: "Be helpful.", tag: Some(UserInput) }, "question": TemplateVar { value: "hi", tag: None }}` | `Ok(PromptValue { ... })` — UserInput is not Untrusted | happy-path (UserInput trusted enough) |
 | TV-003 | `template = [System("Constant."), Human("{q}")]`, `vars = {"q": TemplateVar { value: "...", tag: Some(Untrusted) }}` | `Ok(PromptValue { ... })` — Untrusted only in HumanMessage slot (TrustAll) | happy-path (untrusted in TrustAll slot) |
 | TV-004 | `template = [System("{s}"), Human("{h}")]`, both vars Untrusted | `Err(E-TMPL-001)` with `var_name = "s"` (first TrustRequired slot fails first) | error-case (fail-first semantics) |
+| TV-005 | `template = [System("{a}: {b}")]`, `vars = {"a": TemplateVar { value: "inject", tag: Some(Untrusted) }, "b": TemplateVar { value: "also inject", tag: Some(Untrusted) }}` | `Err(FerrochainError { code: "E-TMPL-001", message: "InjectionAttempt: variable 'a' carries untrusted provenance but slot 'system' requires TrustRequired policy" })` — `a` appears first in template source order | error-case (intra-slot multi-var determinism) |
 
 ## Verification Properties
 

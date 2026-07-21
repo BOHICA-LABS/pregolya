@@ -878,6 +878,48 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 
 ---
 
+## Phase 1d Re-Convergence — D21 Expanded Perimeter (passes 129+)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|---------|
+| P1D-129 | 2026-07-21 | 12 | 0 | 3 | 7 | 2 | HIGH | 0/3 | FINDINGS_REMAIN (expanded-perimeter pass 1; all 12 fixed in burst 224; E-VS-004 minted; counter resets on push) |
+
+### Pass P1D-129 (2026-07-21) — Expanded Perimeter Pass 1
+
+**Findings:** 12 (0 CRIT, 3 HIGH, 7 MED, 2 LOW)
+**Novelty:** HIGH (first pass on D21 expanded perimeter; new attack surfaces in SS-18..22)
+**Convergence counter:** 0 of 3 (frozen-HEAD resets on burst-224 push)
+**Coverage level:** D21 expanded perimeter — 116 BCs / SS-18..22 / 10 VPs / ADR-014..017
+
+Key findings:
+- F-P129-01/04 HIGH: BC-2.19.005 Reviver allowlist PC/EC/TV gaps
+- F-P129-02 HIGH: BC-2.19.006 LcSerializable safety envelope incomplete
+- F-P129-03 HIGH: error-taxonomy E-TMPL-001 scope too broad (must be Untrusted-only); SECURITY description incomplete
+- F-P129-05 MED: ADR-014 + VP-009 zero-norm note imprecise
+- F-P129-06 MED: ADR-016 Category::VAL sketches missing
+- F-P129-07 MED: BC-2.20.003 compile_fail VP gate binding absent
+- F-P129-08 MED: ADR-014 Decision 5 E-VS-004 write-time contract missing; E-VS-003→E-VS-004 collision caught and corrected
+- F-P129-09 MED: ADR-014 Decision 6 GuardedDocuments typed-wrapper unspecified
+- F-P129-10 MED: error-taxonomy SECURITY description omits injection/reviver/template sub-classes
+- F-P129-11 MED: ADR-014 vectorstores::similarity in wrong module
+- F-P129-12 LOW: ADR-015 + BC-2.18.004 source-order iteration invariant undocumented
+- F-P129-13 LOW: BC-2.20.002 H-3 / BC-2.21.002 H-2 VP gate bindings absent
+
+All 12 findings fixed in burst 224. E-VS-004 minted (write-time vector-store error code; E-VS-003→E-VS-004 collision corrected). Error census 96=43+16+37. Test-vectors 609=600+9.
+
+**Fix summary:** Burst 224 — architect (ADR-014 v1.3/015 v1.2/016 v1.2; VP-006/009/010 bumped; module-decomp v1.12; purity-boundary-map v1.7; verification-architecture v1.7; coverage-matrix v1.8) + product-owner (7 BC files v1.1; error-taxonomy v1.28; interface-definitions v2.42; prd.md v1.5; test-vectors v2.1).
+**Hash sweep (D18-P89-A):** STALE→0 (3 transitive passes; ARCH-INDEX + module-criticality + verification-coverage-matrix + dtu-assessment individually updated).
+**Trajectory after:** →12 (P1D-129 NOT CLEAN); cumulative tail →0→0→0→12
+**Counter:** 0/3 RESET (burst-224 push resets frozen-HEAD streak; P1D-130 must run against new HEAD)
+
+---
+
+## Trajectory Shorthand Update (post-D21 expansion)
+
+`[D21 expansion burst 216: 0/3 RESET] →12 (P1D-129, expanded-perimeter pass 1, NOT CLEAN: 3H/7M/2L)`
+
+---
+
 ## Phase 1d Convergence Summary — CLOSED
 
 **Phase 1d adversarial cascade status:** CLOSED

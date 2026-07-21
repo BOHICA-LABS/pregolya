@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.003
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,11 +14,12 @@ crate: ferrochain-vectorstores
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.1 (D21/Batch-3b-i/2026-07-20): E-CFG-001 → E-VS-003 reassignment per ADR-010 v1.1 (no CFG component; VS component owns all VectorStoreRetriever config validation errors). Updated: Invariant 2 (error code + added full struct form with E-CORE-005 message pattern), TV-004 (full struct form for lambda_mult violation), TV-005 (full struct form for fetch_k < k violation). TD-VSDD-060 E-CFG residue: zero (grep confirmed below)."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-20 Document Retrieval"
+  - "1.2 (F-P224/F-P129-07/2026-07-21): Invariant 2 corrected — 'clamped to [0.0, 1.0]' → 'validated against [0.0, 1.0]'. The clamping language contradicted TV-004 which shows rejection semantics (Err, not silently clamped value). Validation with rejection is the correct behavior."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-027
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "36f72ed"
+input-hash: "7fee295"
 extracted_from: null
 modified: []
 deprecated: null
@@ -77,7 +78,7 @@ candidate pool size), and `lambda_mult` (MMR diversity weight).
 
 1. `SearchType` is `#[non_exhaustive]` — match arms in callers must include `_` wildcard to guard
    against future variants.
-2. `lambda_mult` is clamped to `[0.0, 1.0]` at construction time; values outside this range are
+2. `lambda_mult` is **validated against** `[0.0, 1.0]` at construction time; values outside this range are
    rejected with `Err(FerrochainError { code: "E-VS-003", message: "Validation failed for 'lambda_mult': must be in [0.0, 1.0]" })` at `as_retriever()` call.
 3. `k ≥ 1` is enforced at construction time; `k = 0` is rejected.
 4. `fetch_k ≥ k` is enforced at construction time for `SearchType::Mmr` (the candidate pool must

@@ -1,16 +1,17 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.2"
+version: "1.3"
 status: active
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 changelog:
-  - "1.0 (initial): VP catalog authored with 5 VPs (3 Kani P0 + 2 integration P1)."
-  - "1.1 (provenance-fix-169/2026-07-17): reorder VP Catalog columns so Tool is at awk $5 (validate-vp-consistency hook compatibility); remove 'Tool: ' prefix from Summary metric labels so declared label normalizes to bare tool name matching VP row normalization."
+  - "1.3 (burst-224/2026-07-21): F-P129-11 — update VP-009 module from vectorstores-mmr to vectorstores-similarity; cosine_similarity is the shared primitive in the renamed module; MMR selection algorithm (vectorstores::mmr) is a separate caller of cosine_similarity."
   - "1.2 (burst-223/2026-07-21): D21 VP layer — add VP-006..010 (3 Kani + 2 proptest); total 5→10, P0 3→5, P1 2→5, Kani 3→6, proptest 0→2."
+  - "1.1 (provenance-fix-169/2026-07-17): reorder VP Catalog columns so Tool is at awk $5 (validate-vp-consistency hook compatibility); remove 'Tool: ' prefix from Summary metric labels so declared label normalizes to bare tool name matching VP row normalization."
+  - "1.0 (initial): VP catalog authored with 5 VPs (3 Kani P0 + 2 integration P1)."
 ---
 
 # VP-INDEX: ferrochain Verification Properties
@@ -49,5 +50,5 @@ changelog:
 | VP-006 | BC-2.18.004 | injection_guard | Kani | 6 | P1 | draft | DI-008 | ferrochain-prompts | `injection_guard_fail_closed` | VP-006.md |
 | VP-007 | BC-2.19.001 | serializable | proptest | 3 | P1 | draft | DI-008 | ferrochain-core | n/a (proptest) | VP-007.md |
 | VP-008 | BC-2.22.001 | embeddings | proptest | 3 | P1 | draft | DI-014 | ferrochain-core | n/a (proptest) | VP-008.md |
-| VP-009 | BC-2.21.003 | vectorstores-mmr | Kani | 6 | P0 | draft | DI-014 | ferrochain-vectorstores | `zero_norm_guard_fail_closed` | VP-009.md |
+| VP-009 | BC-2.21.003 | vectorstores-similarity | Kani | 6 | P0 | draft | DI-014 | ferrochain-vectorstores | `zero_norm_guard_fail_closed` | VP-009.md |
 | VP-010 | BC-2.19.005 | serializable-reviver | Kani | 6 | P0 | draft | DI-014 | ferrochain-core | `allowlist_rejects_unregistered_id` | VP-010.md |

@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.1"
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.2 (burst-224/2026-07-21): F-P129-12 — specify template-source-order iteration for slot.variable_names() per BC-2.18.004 Invariant 5 + EC-007 + TV-005; determinism note added to Decision 3 injection-check prose and code sketch. HashSet/HashMap iteration prohibited for this loop."
   - "1.1 (crates.io/2026-07-20): Drop abandoned `mustache` crate (last release 2018-02, ~8yr stale — production-grade violation). Template engines: f-string (default) + jinja2/minijinja only. Pin: `minijinja = \"2\"` (2.21.0, default-features=false, optional). Add minijinja autoescape + sandboxed/restricted-mode + strict-undefined safety notes."
   - "1.0 (D21/2026-07-20): Initial ADR — ferrochain-prompts new crate, slot trust model (SystemMessage slots TrustRequired immutable), ProvenanceTag pass-through via PromptValue, f-string always-on + mustache/jinja2 optional features, injection_guard module as pure-core blocker before guardrail boundary."
 ---
@@ -148,6 +149,13 @@ impl ChatPromptTemplate {
     ) -> Result<PromptValue, FerrochainError> {
         for slot in &self.slots {
             if slot.policy == SlotTrustPolicy::TrustRequired {
+                // slot.variable_names() returns names in TEMPLATE SOURCE ORDER
+                // (left-to-right, first-occurrence position in the template string).
+                // This guarantees deterministic error reporting: when multiple variables
+                // carry untrusted provenance, E-TMPL-001 always names the FIRST one in
+                // template source order. Slot variable storage MUST use Vec<String> or
+                // another insertion-order structure — HashSet/HashMap iteration is
+                // PROHIBITED here. (BC-2.18.004 Invariant 5 / EC-007 / TV-005)
                 for var_name in slot.variable_names() {
                     if let Some(var) = vars.get(var_name) {
                         if var.provenance_tag.is_some_and(|t| t.is_untrusted()) {
@@ -170,6 +178,19 @@ impl ChatPromptTemplate {
     }
 }
 ```
+
+**Iteration determinism invariant (BC-2.18.004 Invariant 5 / EC-007 / TV-005):**
+`slot.variable_names()` MUST return variable names in **template source order** —
+left-to-right, first-occurrence order as the variable placeholders appear in the
+template string. Consequences:
+- When multiple variables in a `TrustRequired` slot carry untrusted provenance, the
+  `E-TMPL-001` error always names the **first** such variable in template source order.
+  This is deterministic and testable (TV-005).
+- Implementers MUST store slot variable names in a `Vec<String>` (or `IndexMap`), NOT a
+  `HashSet<String>` or unordered structure. HashMap iteration order is undefined and
+  produces non-deterministic errors under EC-007 (multiple-untrusted-vars scenario).
+- The `vars: HashMap<String, TemplateVar>` parameter is used only for **O(1) lookup**
+  (`vars.get(var_name)`); its iteration order is irrelevant to the check correctness.
 
 This is a **hard block at the pure-core layer**, not a guardrail advisory. The error is
 `E-TMPL-001` (SECURITY category) and propagates via `?` to the caller. The guardrail

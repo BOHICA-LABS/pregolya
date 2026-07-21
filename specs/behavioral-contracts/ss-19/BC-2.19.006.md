@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.006
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,10 +14,11 @@ crate: ferrochain-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 di_anchors: [DI-008, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
+  - "1.1 (F-P224/F-P129-02/2026-07-21): PC1 and PC5 corrected — Category::COMPATIBILITY → Category::VAL per ADR-010 adjudication (E-SRLZ-002 = VAL in error-taxonomy.md v1.27; COMPATIBILITY is a non-canonical variant absent from the 12-member category enum). PC5 rationale rewritten: monolith type id is a validation failure (type known but unsupported), not a compatibility domain concept per taxonomy membership rules."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "719504b"
+input-hash: "cbd45f7"
 extracted_from: null
 modified: []
 deprecated: null
@@ -66,7 +67,7 @@ available in ferrochain." The error is propagated as `Err`; it is never a silent
    ```
    Err(FerrochainError {
        component: Component::SRLZ,
-       category: Category::COMPATIBILITY,
+       category: Category::VAL,
        code: "E-SRLZ-002",
        message: "unsupported-serializable: langchain-monolith type not ported to ferrochain",
    })
@@ -79,9 +80,11 @@ available in ferrochain." The error is propagated as `Err`; it is never a silent
    b. Legacy remap then retry (BC-2.19.004) — if found, dispatch;
    c. `LANGCHAIN_MONOLITH_TYPES` check (this BC) — if found, return E-SRLZ-002;
    d. Default fallthrough: return E-SRLZ-001.
-5. `category: Category::COMPATIBILITY` (not SECURITY) — a monolith type id in a serialized
-   envelope is a compatibility gap, not an attack vector. The type name is a known, fixed
-   value in the LANGCHAIN_MONOLITH_TYPES set.
+5. `category: Category::VAL` — a monolith type id in a serialized envelope is a validation
+   failure: the type path is recognized as a known langchain-monolith namespace but is not
+   supported in ferrochain. ADR-010 adjudicates E-SRLZ-002 as VAL (recorded in
+   error-taxonomy.md v1.27 E-SRLZ-002 row). `COMPATIBILITY` is not a canonical member of
+   the 12-member category enum; it was never a valid assignment.
 
 ## Invariants
 

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "1.5"
+version: "1.7"
 status: active
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-19/BC-2.19.005.md
   - .factory/specs/behavioral-contracts/ss-21/BC-2.21.003.md
   - .factory/specs/behavioral-contracts/ss-22/BC-2.22.001.md
-input-hash: "b279860"
+input-hash: "4d6e389"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21]
 ---
@@ -75,7 +75,7 @@ Ten VPs committed before v1.0 release — VP-001..005 (original five) plus VP-00
 | VP-006 | BC-2.18.004 | DI-008 | ferrochain-prompts / injection_guard | Kani | 6 | P1 |
 | VP-007 | BC-2.19.001 | DI-008 | ferrochain-core / serializable | proptest | 3 | P1 |
 | VP-008 | BC-2.22.001 | DI-014 | ferrochain-core / embeddings | proptest | 3 | P1 |
-| VP-009 | BC-2.21.003 | DI-014 | ferrochain-vectorstores / vectorstores-mmr | Kani | 6 | P0 |
+| VP-009 | BC-2.21.003 | DI-014 | ferrochain-vectorstores / vectorstores-similarity | Kani | 6 | P0 |
 | VP-010 | BC-2.19.005 | DI-014 | ferrochain-core / serializable-reviver | Kani | 6 | P0 |
 
 **Total: 10 VPs — 5 P0 / 5 P1 | Tool breakdown: Kani ×6, proptest ×2, integration ×2**
@@ -165,7 +165,7 @@ Pure path arithmetic (prefix checks, symlink detection) is tractable for Kani; O
 
 ---
 
-**VP-009 — Zero-Norm Cosine Guard** (ferrochain-vectorstores / vectorstores-mmr) `red_gate: true`
+**VP-009 — Zero-Norm Cosine Guard** (ferrochain-vectorstores / vectorstores-similarity) `red_gate: true`
 
 Property: For any symbolic pair of finite `f32` vectors where either L2 norm is `0.0`
 (IEEE-754 exact equality), `cosine_similarity` returns `Err(E-VS-001)` and never
@@ -201,22 +201,28 @@ fn zero_norm_guard_fail_closed() {
 }
 ```
 
-Feasibility: MEDIUM-HIGH. `cosine_similarity` is a pure-core sync function (ADR-014 Decision 2 §Hardening
-note). Kani 0.67.0 models `f32` symbolically over IEEE-754 domain. Requires `#[kani::unwind(9)]` for
-the 8-element vector iteration. Estimated proof time: 5–15 min. Red Gate: tests TV-001 and TV-002 must
-compile-and-fail before Phase 3 story delivery for SS-21.
+Feasibility: MEDIUM-HIGH. `cosine_similarity` is a pure-core sync function in `vectorstores::similarity`
+(ADR-014 v1.2 §Hardening note; relocated from vectorstores::mmr per F-P129-11). Kani 0.67.0 models
+`f32` symbolically over IEEE-754 domain. Requires `#[kani::unwind(9)]` for the 8-element vector
+iteration. Estimated proof time: 5–15 min. Red Gate: tests TV-001 and TV-002 must compile-and-fail
+before Phase 3 story delivery for SS-21.
 
 ---
 
 **VP-010 — Reviver Allowlist Containment** (ferrochain-core / serializable-reviver) `red_gate: true`
 
-Property: For any type-ID path not present in the registered allowlist, `allowlist_check`
-returns `Err(E-SRLZ-001)`. The `Ok(())` path is unreachable for unregistered IDs.
+Property: For any type-ID path that is (a) not present in the registered allowlist AND
+(b) not a LangChain monolith passthrough type (`LANGCHAIN_MONOLITH_TYPES`), `allowlist_check`
+returns `Err(E-SRLZ-001)`. The `Ok(())` path is unreachable for non-monolith unregistered IDs.
+Broader "never Ok for ANY unregistered id" invariant is jointly covered with BC-2.19.006 unit
+tests (monolith ids correctly produce `E-SRLZ-002`, not `E-SRLZ-001` — VP-010 proof domain
+excludes those IDs per VP-010.md v1.1 scoping).
 
 Formal statement:
 ```
 ∀ id: &[String] (depth ≤ 4, each segment ≤ 16 bytes ASCII printable),
-  registry: &HashMap<Vec<String>, ()> (5 concrete entries):
+  registry: &HashMap<Vec<String>, ()> (5 concrete entries),
+  id ∉ LANGCHAIN_MONOLITH_TYPES:
     !registry.contains_key(id) → allowlist_check(id, registry) == Err(E-SRLZ-001)
 ```
 
@@ -235,15 +241,16 @@ fn allowlist_rejects_unregistered_id() {
     registry.insert(vec!["lc".into(), "PromptTemplate".into()], ());
     // 4 more concrete entries
     kani::assume(!registry.contains_key(&id));
+    kani::assume(!LANGCHAIN_MONOLITH_TYPES.contains(&id.as_slice())); // non-monolith domain
     let result = allowlist_check(&id, &registry);
-    kani::assert(matches!(result, Err(FerrochainError { code: "E-SRLZ-001", .. })), "unregistered id must be rejected");
+    kani::assert(matches!(result, Err(FerrochainError { code: "E-SRLZ-001", .. })), "unregistered non-monolith id must be rejected");
 }
 ```
 
 Feasibility: HIGH. `OnceLock<HashMap>` complexity excluded by extracting `allowlist_check` as a standalone
-pure function. Bounded: ID depth ≤ 4, segments ≤ 16 ASCII bytes, registry fixed at 5 concrete entries.
-HashMap lookup is directly modeled by Kani's CBMC backend. Red Gate: must compile-and-fail before Phase 3
-story delivery for SS-19.
+pure function. Bounded: ID depth ≤ 4, segments ≤ 16 ASCII bytes, registry fixed at 5 concrete entries,
+non-monolith domain assumption (VP-010.md v1.1 scoping per F-P129-04). HashMap lookup is directly modeled
+by Kani's CBMC backend. Red Gate: must compile-and-fail before Phase 3 story delivery for SS-19.
 
 ## Should Prove (P1 — Core Algorithms, Conformance Contracts)
 
@@ -364,7 +371,7 @@ Modules where behavioral testing is the primary verification method:
 | ferrochain-splitters | Pure but no formal invariant; golden-vector parity sufficient | Unit, PropTest |
 | ferrochain-sandbox backends | OS-level execution; not Kani-tractable | Integration |
 | Budget governance (journal) | Append-only ordering; soak tests cover most cases | Unit, Soak |
-| Content provenance/guardrail | Hook dispatch coverage is behavioral; not state-machine | Unit, Integration |
+| Content provenance/guardrail | DI-012 RAGRetrieval boundary enforced via GuardedDocuments compile_fail (ADR-014 Decision 6; VP-2.20.002-A); hook dispatch coverage is behavioral; not state-machine | compile_fail, Unit, Integration |
 
 ## Fuzzing Targets (BC-2.17.002)
 
@@ -390,6 +397,8 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 1.7 | 2026-07-21 | architect | burst-224 / VP-chain propagation | VP-010 formal statement scoped to non-monolith domain (id ∉ LANGCHAIN_MONOLITH_TYPES) per VP-010.md v1.1 / F-P129-04; harness sketch updated with LANGCHAIN_MONOLITH_TYPES assumption and corrected assertion; feasibility note updated. Test-Sufficient 'Content provenance/guardrail' row updated to reflect GuardedDocuments compile_fail mechanism (ADR-014 Decision 6 / VP-2.20.002-A). Input-hash refreshed: b279860 → d7ef822 (BC-2.18.004 v1.1 + BC-2.19.005 v1.1 bumped by PO in same burst). |
+| 1.6 | 2026-07-21 | architect | burst-224 / F-P129-11 | VP-009 module renamed from `ferrochain-vectorstores / vectorstores-mmr` to `ferrochain-vectorstores / vectorstores-similarity` in Committed VP Obligations table and VP-009 P0 entry; propagates VP-INDEX v1.3 module rename. cosine_similarity is a shared primitive in vectorstores::similarity; MMR algorithm is a separate caller. |
 | 1.5 | 2026-07-21 | architect | burst-223 / D21 | VP layer for D21 ecosystem-parity expansion: add VP-006..010 (3 Kani P1/P0 + 2 proptest P1) to Committed VP Obligations table and Provable Properties Catalog. Total 5→10 VPs; P0 3→5; P1 2→5; Kani 3→6; proptest 0→2. Add SS-18..22 BCs to inputs. |
 | 1.4 | 2026-07-19 | architect | burst-118 / F-P115-01 | checkpoint::clock sync-core mandate rewritten to reflect ADR-005 rev-2 stateless design. Replaced "(monotonic AtomicU64 read) — sync increment and compare" with "pure `get_next_version(current)` successor function; stateless, no atomic counter". No VP or coverage-matrix changes — VP-002 target is checkpoint::session_index; checkpoint::clock is not a direct VP target. |
 | 1.3 | 2026-07-17 | architect | burst-169 / D18-P88-A | Formal version bump deferred from burst-169 (prd v1.2 cascade): timestamp advanced to 2026-07-17 in that burst; validate-changelog-monotonicity blocked the bump because no committed changelog baseline existed. Burst-169 now committed (1a915c6). Same-day provenance amendment (D18-P88-A): removed forbidden live-index input BC-INDEX.md; replaced with the six stable versioned BC files the document actually derives from (BC-2.03.001 VP-001 anchor, BC-2.04.006 VP-002 anchor, BC-2.13.004 VP-003 anchor, BC-2.09.004 VP-004 anchor, BC-2.09.005 VP-005 anchor, BC-2.17.002 fuzzing-targets authority); input-hash recomputed 270a1de → 8091abc. No spec content changes. |

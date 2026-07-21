@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "5c232a3"
+input-hash: "24397ea"
 traces_to: STATE.md
 ---
 
@@ -985,3 +985,24 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 2. Re-run Phase 1d adversarial cascade on expanded perimeter → 3/3 CLEAN(strict).
 3. Re-run pre-gate: check-input-drift → consistency audit → Phase 1 HUMAN GATE.
 ### WRAP METADATA: Date 2026-07-21 | Cycle v1.0.0-greenfield | Burst 222 | Phase 1 IN PROGRESS — D21 spec-body COMPLETE | Re-convergence required (0/3)
+
+---
+
+## Burst 223 Checkpoint (archived burst-224)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21 ecosystem-parity scope expansion (5 langchain-core subsystems → v1). D21 VP layer COMPLETE (burst 223): VP-006..010 authored (Kani×4 + proptest×2), VP-INDEX v1.2 = 10 VPs (5 P0/5 P1), verification-architecture v1.5, coverage-matrix v1.6. All D21 authoring obligations fulfilled. NEXT: Phase 1d adversarial cascade re-run 0/3 on expanded 116-BC / SS-18..22 / 10-VP perimeter → 3/3 CLEAN(strict) → check-input-drift → fresh consistency audit → Phase 1 HUMAN APPROVAL GATE."
+### COMMITTED (through burst 223):
+- Burst 217 (1351aaa): ADR-014/015/016/017; ARCH-INDEX v1.5 (roster 20; SS-18..22; 17 ADRs); module-decomposition v1.11 (35→49); purity-boundary-map v1.6 (58→72).
+- Burst 218 (20e1727): ADR dep-validation (mustache DROPPED; minijinja 2.21.0; inventory 0.3.24); adr-tech-validation v1.1.0.
+- Burst 219 (3762dab): CAP-022..033 (33 CAPs); capabilities-p0 v1.7 (CAP-002 reversed); entities-graph v1.4; ubiquitous-language-core v1.4; L2-INDEX v1.6.
+- Burst 220 (WIP wrap): 21 new BC files (SS-18..22) + error-taxonomy v1.27 + interface-definitions v2.41 + test-vectors v2.0 + product-brief v1.4 + ADR-010 v1.1 + BC-2.14.001 v1.2 + api-surface v1.6 + bc-authoring-plan v2.41.
+- Burst 222: prd.md v1.4 body COMPLETE; BC-INDEX.md v1.8 COMPLETE (116 BCs: 51 P0/56 P1/9 P2); BC-2.19.001 v1.1 (VP-007 seeded).
+- Burst 223 (this commit): VP-006..010 authored; VP-INDEX v1.2 (10 VPs); verification-architecture v1.5; coverage-matrix v1.6; hash sweep STALE→0 (5 passes).
+### NEXT-ACTIONS (exact, ordered):
+1. Re-run Phase 1d adversarial cascade on the EXPANDED 116 behavioral-contract / SS-18..22 / 10-VP perimeter → 3/3 CLEAN(strict) (prior convergence SUPERSEDED).
+2. Re-run pre-gate: /vsdd-factory:check-input-drift → fresh-context consistency audit → Phase 1 HUMAN APPROVAL GATE.
+### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 20 crates; #[non_exhaustive] gate update (Phase 3).
+### DECISION DELTA: D21 (ecosystem-parity 5-subsystem expansion, human-directed 2026-07-20); ADR-014/015/016/017 minted; ADR-010 rev component-axis 12→16.
+### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-223 commit (pushed). No worktrees. No PRs.
+### WRAP METADATA: Date 2026-07-21 | Cycle v1.0.0-greenfield | Burst 223 | Phase 1 IN PROGRESS — D21 VP layer COMPLETE | Re-convergence required (0/3)

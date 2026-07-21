@@ -1,10 +1,10 @@
 ---
 document_type: prd
 level: L3
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -28,6 +28,7 @@ supplements:
   - prd-supplements/bc-authoring-plan.md
   - prd-supplements/test-vectors.md
 changelog:
+  - "v1.5 (F-P224/2026-07-21): §5 E-VS range row updated — E-VS-004 ZeroNormWriteTime (STATIC) added to examples column (write-time zero-norm guard on add_texts/from_texts_sync; minted in error-taxonomy.md v1.28; BC-2.21.002 v1.1 anchor)."
   - "v1.4 (2026-07-20): D21 ecosystem-parity expansion (burst 216) — 21 new BCs across 5 subsystems SS-18..22 (ferrochain-prompts/core-serializable/vectorstores/embeddings); BC total 95→116, P0 48→51, P1 39→56, P2 8→9; §2 adds subsections 2.18–2.22; §3 public-traits list extended with Retriever/VectorStore/VectorStoreFactory/Embeddings; §5 error taxonomy adds E-TMPL/E-SRLZ/E-VS/E-EMBED components; §5b count 95→116 BC files; §7 RTM +21 rows."
   - "v1.3 (F-P97-02, 2026-07-17): §10 Module Criticality — deleted stale deferral parenthetical '(architect to confirm crate→subsystem mapping in Phase 1b)'. Mapping fully resolved at Phase 1b (2026-07-14); parenthetical survived sweep. Input-hash updated."
   - "v1.2 (2026-07-17): Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file with no spec-content signal for the PRD. All genuine derivation sources (product-brief, domain-spec files, COMPARATIVE-ASSESSMENT) are already listed. D-NNN decision references in the PRD body are stable baked-in facts. Input-hash recomputed."
@@ -488,7 +489,7 @@ Summary:
 | E-BUDGET-001–099 | ferrochain-graph budget subsystem | intra-crate | E-BUDGET-001 BudgetCeilingReached, E-BUDGET-002 JournalWriteFailed |
 | E-TMPL-001–099 | ferrochain-prompts | crate | E-TMPL-001 InjectionAttempt (SECURITY), E-TMPL-002 SystemSlotTrustAllRejected, E-TMPL-003 UndefinedVariable |
 | E-SRLZ-001–099 | ferrochain-core (lc-serializable) | intra-crate | E-SRLZ-001 UnknownSerializableType (STATIC — type id not echoed), E-SRLZ-002 UnsupportedMonolithType |
-| E-VS-001–099 | ferrochain-vectorstores | crate | E-VS-001 ZeroNormVector (STATIC), E-VS-002 DimensionMismatch (STATIC), E-VS-003 RetrieverConfigInvalid |
+| E-VS-001–099 | ferrochain-vectorstores | crate | E-VS-001 ZeroNormVector (STATIC), E-VS-002 DimensionMismatch (STATIC), E-VS-003 RetrieverConfigInvalid, E-VS-004 ZeroNormWriteTime (STATIC) |
 | E-EMBED-001–099 | ferrochain-core (embeddings) | intra-crate | E-EMBED-001 EmbeddingDimensionMismatch (STATIC) |
 
 See `prd-supplements/error-taxonomy.md` for the complete catalog.

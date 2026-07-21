@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.005
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: ferrochain-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
 red_gate_source: "ADR-016 Security Invariant — Reviver must reject unknown type ids at all times; allowlist test must COMPILE and FAIL before Reviver::revive() is implemented; VP-010 Kani candidate"
@@ -22,6 +22,7 @@ vp_seed: true
 vp_id: VP-010
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization; SECURITY-CRITICAL"
+  - "1.1 (F-P224/F-P129-01+F-P129-04/2026-07-21): (1) F-P129-01: PC1 and Invariant 3 corrected — Category::SECURITY → Category::VAL per ADR-010 §SRLZ adjudication (error-taxonomy.md line 279 already recorded E-SRLZ-001 as VAL; this BC was out of sync). Invariant 3 rationale rewritten: deserialization containment is input validation against the registry, not an attack-vector boundary event. (2) F-P129-04: VP-2.19.005-A restated to scope non-monolith unregistered ids only and add joint coverage note with BC-2.19.006/VP-010."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "719504b"
+input-hash: "cbd45f7"
 extracted_from: null
 modified: []
 deprecated: null
@@ -76,7 +77,7 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
    ```
    Err(FerrochainError {
        component: Component::SRLZ,
-       category: Category::SECURITY,
+       category: Category::VAL,
        code: "E-SRLZ-001",
        message: "unknown-serializable: type id not in registry",
    })
@@ -96,8 +97,14 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
    below any other check or transformation.
 2. The check uses the same `HashMap` that was populated at startup (BC-2.19.003) —
    no secondary list, no `allow_all` flag, no runtime override.
-3. `category: Category::SECURITY` distinguishes this from a validation error — an unknown
-   type id is a potential deserialization attack vector, not a user input mistake.
+3. `category: Category::VAL` — the allowlist check validates the `id` field of the
+   deserialized input against the registry. An unregistered type id is a validation
+   failure: the input does not conform to the allowed inventory. The `SECURITY` category
+   is reserved for errors guarding concrete attack-vector boundaries per ADR-010 taxonomy
+   membership rules (E-SBXD-001 workspace escape, E-GRAPH-013 approver-role gate,
+   E-MEMORY-007 write injection, E-TMPL-001 prompt injection). Deserialization containment
+   enforced by registry lookup is input validation, not a boundary-crossing attack-vector
+   event. This adjudication is recorded in error-taxonomy.md v1.28 (E-SRLZ-001 row: VAL).
 4. The `E-SRLZ-001` message text is fixed (`"unknown-serializable: type id not in registry"`);
    it does NOT include the received id in the message to avoid leaking attacker-controlled
    data into structured logs (gate #33 STRUCT-PLACEHOLDER PARITY: the message format has
@@ -127,7 +134,7 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
 
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
-| VP-2.19.005-A (VP-010 candidate) | For ALL possible `Serialized` inputs where `id` is not in the registry (after remap), `revive()` returns `Err(E-SRLZ-001)` and NEVER returns `Ok(...)` — no bypass path exists | unit test (exhaustive known-bad id space) + Kani VP-010 formal proof: enumerate all reachable code paths in `revive()`, prove `Ok` is unreachable when id is not in HashMap |
+| VP-2.19.005-A (VP-010 candidate) | `allowlist_check` returns `Err(E-SRLZ-001)` for all **non-monolith** unregistered ids (ids not in `LANGCHAIN_MONOLITH_TYPES`). For monolith ids see BC-2.19.006 (`Err(E-SRLZ-002)`). VP-010 Kani proof covers the non-monolith domain exclusively; joint coverage with BC-2.19.006 unit tests establishes the full invariant: `revive()` never returns `Ok` for any unregistered id. | unit test (exhaustive known-bad non-monolith id space) + Kani VP-010 formal proof: enumerate all reachable code paths in `revive()` for non-monolith ids, prove `Ok` is unreachable; BC-2.19.006 unit tests cover the monolith-id domain |
 | VP-2.19.005-B | The allowlist check is the FIRST operation in `revive()` — no kwargs parsing or type dispatch occurs before it | code structural test: verify `revive()` calls registry lookup before any serde call |
 
 ## Related BCs

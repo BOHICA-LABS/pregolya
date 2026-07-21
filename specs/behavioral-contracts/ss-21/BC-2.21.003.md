@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.003
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: ferrochain-vectorstores
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
 red_gate_source: "ADR-014 v1.1 Hardening Note — zero-norm guard must be a failing test BEFORE the cosine implementation exists; a zero-norm vector silently produces NaN that corrupts similarity rankings without the guard; VP-009 Kani candidate"
@@ -22,6 +22,7 @@ vp_seed: true
 vp_id: VP-009
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction; SECURITY-CRITICAL hardening per ADR-014 v1.1"
+  - "1.1 (F-P224/H-4/2026-07-21): Module references corrected — `vectorstores::mmr` → `vectorstores::similarity` for cosine primitive (4 sites: Description, Architecture Anchors ×2, Traceability Module row). The `mmr` module implements the MMR selection algorithm; `cosine_similarity` lives in the dedicated `vectorstores::similarity` module with harness file `ferrochain-vectorstores/src/similarity.rs`. Genuine MMR-algorithm references in other BCs/docs are unaffected."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-029
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "36f72ed"
+input-hash: "7fee295"
 extracted_from: null
 modified: []
 deprecated: null
@@ -55,7 +56,7 @@ removal_reason: null
 
 ## Description
 
-Before computing cosine similarity between two `Vec<f32>` vectors in `vectorstores::mmr`
+Before computing cosine similarity between two `Vec<f32>` vectors in `vectorstores::similarity`
 (or any cosine call site in `ferrochain-vectorstores`), the implementation computes the
 L2 norm of each vector:
 
@@ -148,9 +149,9 @@ two lines and has negligible performance overhead compared to the cosine computa
 
 ## Architecture Anchors
 
-- `architecture/module-decomposition.md` — SS-21, `vectorstores::mmr` sub-module (cosine_similarity pure-core function)
+- `architecture/module-decomposition.md` — SS-21, `vectorstores::similarity` module (cosine_similarity pure-core function; harness file `ferrochain-vectorstores/src/similarity.rs`)
 - `architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md` — Decision 2 §Hardening note (zero-norm guard specification, E-VS-001 error, VP-009 candidacy note)
-- `architecture/purity-boundary-map.md` — `vectorstores::mmr` Pure Core; Kani VP-009 candidacy noted
+- `architecture/purity-boundary-map.md` — `vectorstores::similarity` Pure Core; Kani VP-009 candidacy noted
 
 ## Story Anchor
 
@@ -172,7 +173,7 @@ _[to be filled after story decomposition — Wave 2 SS-21 security-hardening sto
 | Architecture Authority | ADR-014 v1.1 §Hardening Note (zero-norm guard specification, E-VS-001, VP-009 candidacy) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | VP Registration | VP-009 (ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes) |
-| Module | ferrochain-vectorstores / vectorstores::mmr |
+| Module | ferrochain-vectorstores / vectorstores::similarity |
 | Priority | P0 |
 | Wave | 2 |
 | Test Types | unit (Red Gate) + proptest + Kani (VP-009 candidate) |

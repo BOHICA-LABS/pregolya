@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.002
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,12 +14,13 @@ crate: ferrochain-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 di_anchors: [DI-012]
 red_gate: true
 red_gate_source: "ADR-014 Decision 2 Consequences §DI-012 — 'documents returned by Retriever::get_relevant_documents enter the graph context as BoundaryType::RAGRetrieval'; guardrail coverage test must COMPILE and FAIL before any graph node wires Arc<dyn Retriever>"
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-20 Document Retrieval; SECURITY MANDATORY per architect handoff"
+  - "1.1 (F-P224/H-3/2026-07-21): VP-2.20.002-A replaced with typed-wrapper specification per architect handoff (H-5 from F-P129-08). Old VP was non-mechanizable ('code review + unit test per graph node'). New VP: graph nodes accept `&GuardedDocuments`; passing `Vec<Document>` directly is a compile-time type error enforced by the type system (ADR-014 Decision 6 / purity-boundary-map). Red Gate = compile_fail test."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-026
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "36f72ed"
+input-hash: "7fee295"
 extracted_from: null
 modified: []
 deprecated: null
@@ -117,7 +118,7 @@ context MUST pass those documents through the guardrail before use. The DI-012 i
 
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
-| VP-2.20.002-A | Every graph node that calls `get_relevant_documents` and uses the result calls the guardrail with `BoundaryType::RAGRetrieval` before use | code review + unit test per graph node (each node's test suite includes a guardrail-presence assertion) |
+| VP-2.20.002-A | Graph nodes that consume RAG output accept `&GuardedDocuments`; passing `Vec<Document>` directly is a compile-time type error enforced by the type system (ADR-014 Decision 6 / purity-boundary-map) | `compile_fail` test verifying `fn inject_context(docs: Vec<Document>)` does not satisfy the required `fn inject_context(docs: &GuardedDocuments)` signature — the type system enforces the guardrail boundary statically |
 | VP-2.20.002-B | Guardrail failure propagates as `Err` without document fallback | unit test — mock guardrail returns Err; assert no partial-list return |
 
 ## Related BCs
