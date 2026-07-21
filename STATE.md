@@ -1,19 +1,19 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.64"
+version: "3.66"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-21T18:25:00Z
+timestamp: 2026-07-21T20:53:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "P1D-129 complete (12 findings: 3H/7M/2L; expanded-perimeter pass 1); fix-burst 224 complete (all 12 closed; E-VS-004 minted; census 96=43+16+37; TVs 609); trajectory-tail →0→0→0→12; 0/3 (frozen-HEAD resets on push); NEXT: adversary pass P1D-130 on new frozen HEAD; follow-up: 10 BCs not yet read (BC-2.18.002/003, 2.19.002/003/004, 2.20.001, 2.21.001/004, 2.22.002/003) + interface-definitions trait-method coverage cross-check"
+current_step: "P1D-130 fix-burst 225 COMPLETE (all 9 closed: BC re-anchors, DI-014 propagation, interface-definitions v2.43 +5 D21 trait sections, observability.md v1.0 Phase-1 gap filled); trajectory-tail →0→0→12→9; 0/3; NEXT: adversary pass P1D-131 on new frozen HEAD"
 current_cycle: v1.0.0-greenfield
-convergence_status: "0/3 RESET — P1D-129 NOT CLEAN (12 findings: 3H/7M/2L, expanded-perimeter pass 1); frozen-HEAD resets on push; D21 expansion (burst 216) prior convergence SUPERSEDED"
+convergence_status: "0/3 RESET — P1D-130 NOT CLEAN (9 findings: 1C/3H/2M+1PG/3L); fix-burst 225 COMPLETE (all 9 closed; observability.md authored); 130 passes total, 130 fix bursts total (128 pre-D21 + 2 post-D21)"
 pipeline: IN_PROGRESS
 dtu_required: true
 dtu_assessment: 2026-07-14
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. ~189 lines (wc-l); margin from soft-target: ~11 lines (under soft limit); margin from actual: ~311 lines. Burst-224: P1D-129 fix-burst (12 findings); burst-218 row archived; burst-224 row added; session checkpoint updated. -->
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. ~188 lines (wc-l); margin from soft-target: ~12 lines (under soft limit); margin from actual: ~312 lines. Burst-225: P1D-130 fix-burst COMPLETE (all 9 closed); burst-220 row archived; burst-225 COMPLETE row; session checkpoint replaced (burst-224 archived). -->
 # Pipeline State: ferrochain
 
 ## Project Metadata
@@ -36,14 +36,14 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-21 — burst 224: P1D-129 fix-burst (12 findings: 3H/7M/2L); all 12 closed; E-VS-004 minted; census 96=43+16+37; TVs 609; hash sweep STALE→0 (transitive); trajectory-tail →0→0→0→12; 0/3 |
+| **Last Updated** | 2026-07-21 — burst 225 COMPLETE: P1D-130 fix-burst COMPLETE (all 9 closed; ADR-014 v1.4; ADR-010/017 v1.2; VP-006 v1.2/VP-008 v1.1; BC-INDEX v1.9; interface-definitions v2.43 +5 D21 traits; observability.md v1.0 NEW; error-taxonomy v1.29; prd v1.6; hash sweep STALE→0); trajectory-tail →0→0→12→9; 0/3 |
 
 ## Phase Progress
 
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
-| 1: Spec Crystallization | IN PROGRESS — D21 scope expansion | 2026-07-14 | | D21 ecosystem-parity expansion APPROVED (burst 216); architecture layer COMPLETE (burst 217): ADR-014..017, SS-18..22, roster 20, module-decomp v1.12, ARCH-INDEX v1.5; re-convergence required; P1D-129 NOT CLEAN (12: 3H/7M/2L); fix-burst 224 all 12 fixed; NEXT: P1D-130 on new frozen HEAD | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 new-BC files +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →1 (P1D-106) →1 (P1D-107) →4 (P1D-108) →2 (P1D-109) →2 (P1D-110) →1 (P1D-111) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN) →0 (P1D-127 CLEAN) →0 (P1D-128 CLEAN — CONVERGED on pre-expansion perimeter) →[D21 expansion burst 216: 5 subsystems (40 to 80 new behavioral-contract files, estimated) ~3 ADRs +2-3 crates; 0/3 RESET] →12 (P1D-129, expanded-perimeter pass 1, NOT CLEAN: 3H/7M/2L) |
+| 1: Spec Crystallization | IN PROGRESS — D21 scope expansion | 2026-07-14 | | D21 ecosystem-parity expansion APPROVED (burst 216); architecture layer COMPLETE (burst 217): ADR-014..017, SS-18..22, roster 20, module-decomp v1.13, ARCH-INDEX v1.5; re-convergence required; P1D-130 NOT CLEAN (9: 1C/3H/2M+1PG/3L); fix-burst 225 COMPLETE (all 9 closed; observability.md v1.0 authored); NEXT: P1D-131 | →14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →7 (P1D-25) →5 (P1D-26) →6 (P1D-27) →1 (P1D-28) →6 (P1D-29) →1 (P1D-30) →1 (P1D-31) →4 (P1D-32) →2 (P1D-33) →3 (P1D-34) →0 (P1D-35 CLEAN) →3 (P1D-36, reset) →2 (P1D-37) →1 (P1D-38) →2 (P1D-39) →1 (P1D-40) →0 (P1D-41 CLEAN) →1 (P1D-42, reset) →1 (P1D-43) →0 (P1D-44 CLEAN) →2 (P1D-45, reset) →1 (P1D-46) →2 (P1D-47) →1 (P1D-48) →1 (P1D-49; 1 rejected FP) →1 (P1D-50) →0 (P1D-51 CLEAN) →0 (P1D-52 CLEAN) →1 (P1D-53, reset) →0 (P1D-54 CLEAN) →1 (P1D-55, reset) →1 (P1D-56) →1 (P1D-57) →3 (P1D-58) →2 (P1D-59) →3 (P1D-60) →2 (P1D-61) →1 (P1D-62) →1 (P1D-63) →2 (P1D-64) →1 (P1D-65) →3 (P1D-66) →1 (P1D-67) →0 (P1D-68 CLEAN) →1 (P1D-69, reset) →2 (P1D-70) →0 (P1D-71 CLEAN) →[D20 expansion: +9 new-BC files +2 CAPs +ADR-012] →8 (P1D-72, D20-content scrutiny) →2 (P1D-73) →1 (P1D-74) →1 (P1D-75) →0 (P1D-76 CLEAN) →1 (P1D-77, reset) →4 (P1D-78) →2 (P1D-79) →1 (P1D-80) →1 (P1D-81) →2 (P1D-82) →3 (P1D-83) →1 (P1D-84) →4 (P1D-85) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →1 (P1D-106) →1 (P1D-107) →4 (P1D-108) →2 (P1D-109) →2 (P1D-110) →1 (P1D-111) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN) →0 (P1D-127 CLEAN) →0 (P1D-128 CLEAN — CONVERGED on pre-expansion perimeter) →[D21 expansion burst 216: 5 subsystems (40 to 80 new behavioral-contract files, estimated) ~3 ADRs +2-3 crates; 0/3 RESET] →12 (P1D-129, expanded-perimeter pass 1, NOT CLEAN: 3H/7M/2L) →9 (P1D-130, expanded-perimeter pass 2, NOT CLEAN: 1C/3H/2M+1PG/3L) |
 | 2: Story Decomposition | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -57,14 +57,13 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ## Current Phase Steps
 
-<!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. (Bursts 194–201 archived burst-206; burst-202 archived burst-207; burst-203 archived burst-208; burst-204 archived burst-209; burst-205 archived burst-210; burst-206 archived burst-211; burst-207 archived burst-212; burst-208 archived burst-213; burst-209 archived burst-214; burst-210 archived burst-215; burst-211 archived burst-216; burst-212 archived burst-217; burst-213 archived burst-218; burst-214 archived burst-219; burst-215 archived burst-220; burst-216 archived burst-222; burst-217 archived burst-223; burst-218 archived burst-224.) -->
+<!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. (Bursts 194–201 archived burst-206; burst-202 archived burst-207; burst-203 archived burst-208; burst-204 archived burst-209; burst-205 archived burst-210; burst-206 archived burst-211; burst-207 archived burst-212; burst-208 archived burst-213; burst-209 archived burst-214; burst-210 archived burst-215; burst-211 archived burst-216; burst-212 archived burst-217; burst-213 archived burst-218; burst-214 archived burst-219; burst-215 archived burst-220; burst-216 archived burst-222; burst-217 archived burst-223; burst-218 archived burst-224; burst-220 archived burst-225.) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Burst 219 — D21 L2 CAP layer COMPLETE; CAP-022..033 (SS-18..22); CAP-002 reversal; +7 entities; +15 UL terms; hash sweep TOTAL=131 STALE→0 | business-analyst + state-manager | COMPLETE | 12 new CAPs (022-033) across SS-18..22. CAP-002 reversed: prompt templates IN v1. entities-graph v1.4; ubiquitous-language-core v1.4; L2-INDEX v1.6. Hash sweep: TOTAL=131 STALE→0 (2 passes). Burst 219. |
-| Burst 220 (WRAP) — D21 spec-body WIP checkpoint committed; BC-count tokens rephrased; RESUME snapshot updated | state-manager | COMPLETE | 21 new BC files (SS-18..22) + error-taxonomy v1.27 + interface-definitions v2.41 + test-vectors v2.0 + product-brief v1.4 + ADR-010 v1.1 + BC-2.14.001 v1.2 + api-surface v1.6 + bc-authoring-plan v2.41 committed as WIP checkpoint. prd.md + BC-INDEX.md body INCOMPLETE — next session: PO finishes bodies. Burst 220. |
 | Burst 222 — D21 spec-body layer COMPLETE; prd.md v1.4 + BC-INDEX.md v1.8 bodies finished; 51/56/9 = 116 BCs; VP-007 seeded BC-2.19.001; hash sweep STALE=113→0 (4 passes); burst-216 row archived | state-manager | COMPLETE | prd.md §2 BC tables (2.18-2.22: 21 rows), §3/§5/§7 expanded; totals 116 BCs — 51 P0 / 56 P1 / 9 P2. BC-INDEX.md v1.8: 116 (51/56/9), 22 groups, Red Gate 11, VP Seed 8, VP-INDEX note 5→10. BC-2.19.001 v1.1 (vp_seed: true + vp_id: VP-007). Hash sweep STALE=0 (4 passes). Burst 222. |
 | Burst 223 — D21 VP layer COMPLETE; VP-006..010 authored; VP-INDEX v1.2 = 10 VPs; verification-architecture v1.5 / coverage-matrix v1.6; hash sweep STALE→0; burst-217 row archived | architect + state-manager | COMPLETE | VP-006 (injection_guard Kani P1 BC-2.18.004), VP-007 (LcSerializable proptest P1 BC-2.19.001), VP-008 (Embeddings proptest P1 BC-2.22.001), VP-009 (Zero-Norm Cosine Kani P0 BC-2.21.003), VP-010 (Reviver Allowlist Kani P0 BC-2.19.005). VP-INDEX v1.2: 10 total (5 P0/5 P1, Kani 6, proptest 2, integration 2). verification-architecture v1.5 (hash 6bef264); coverage-matrix v1.6 (10 VP rows; modules 35→40). Hash sweep: 5 transitive passes; specs TOTAL=157 STALE=0; planning STALE=0; all index files PASS. All D21 authoring done. Burst 223. |
 | Burst 224 — P1D-129 fix-burst (12 findings: 3H/7M/2L); all 12 closed; E-VS-004 minted; census 96=43+16+37; TVs 609; hash sweep STALE→0 (transitive); burst-218 row archived | architect + product-owner + state-manager | COMPLETE | ADR-014 v1.3 (VP-009 zero-norm note + E-VS-004 write-time + E-VS-003→E-VS-004 collision + Decision 6 GuardedDocuments + vectorstores::similarity relocation). ADR-015 v1.2 (source-order iteration invariant). ADR-016 v1.2 (Category::VAL sketches). VP-006 v1.1, VP-009 v1.3, VP-010 v1.2, VP-INDEX v1.3. verification-architecture v1.7; coverage-matrix v1.8; module-decomposition v1.12; purity-boundary-map v1.7. BC-2.18.004/2.19.005/2.19.006/2.20.002/2.20.003/2.21.002/2.21.003 v1.1. error-taxonomy v1.28 (E-VS-004; 96=43+16+37). interface-definitions v2.42. prd.md v1.5. test-vectors v2.1 (609 TVs). Burst 224. |
+| Burst 225 — P1D-130 fix-burst COMPLETE (all 9 closed); observability.md v1.0 authored (SAP-1 catalog); interface-definitions v2.43 +5 D21 traits; BC-INDEX v1.9; burst-220 row archived | architect + product-owner + state-manager | COMPLETE | ADR-014 v1.4 (GuardrailHook async Decision 6). ADR-010/017 v1.2 (EmbeddingDimensionMismatch prefix sweep). VP-006 v1.2/VP-008 v1.1/VP-INDEX v1.4. BC-2.20.001/002/2.21.004 v1.1 (DI-014 anchors; ferrochain-core re-anchor). BC-2.22.001/002/003 v1.1 (prefix; DI-009; xref). BC-2.19.003 v1.1 (relational TVs). BC-INDEX v1.9. prd v1.6. error-taxonomy v1.29. interface-definitions v2.43. observability.md v1.0 (NEW). Hash sweep STALE→0 (3 passes + 3 index files). Burst 225. |
 
 ## Decisions Log
 
@@ -142,47 +141,47 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | DEFER-002 | Machine enforcement of gate #28 date-validity (pre-commit hook + CI lint for changelog-date monotonicity and frontmatter-currency) | Phase 3 CI hardening | 3rd manual-sweep failure (F-P64-02/F-P65-01/F-P75-01); gate #28 Rules 4+5 are prose-only until Phase 3. DEFER-001 archived in cycles/v0.0.0-pre-pipeline/lessons.md |
 
 ## Concurrent Cycles
-None active (P1D-129 NOT CLEAN; fix-burst 224 complete; 0/3 pending P1D-130 on new frozen HEAD). Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md.
+None active (P1D-130 NOT CLEAN; fix-burst 225 COMPLETE; 0/3 pending P1D-131 on new frozen HEAD). Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md.
 ## Convergence Status
-Counter: 0/3 RESET — P1D-129 NOT CLEAN (12 findings: 3H/7M/2L; pass 1 on expanded perimeter); frozen-HEAD resets on push; 129 passes total (128 pre-D21 + 1 post-D21). Full metrics: cycles/v1.0.0-greenfield/convergence-trajectory.md.
+Counter: 0/3 RESET — P1D-130 NOT CLEAN (9 findings: 1C/3H/2M+1PG/3L); fix-burst 225 COMPLETE (all 9 closed; observability.md authored); 130 passes total, 130 fix bursts total (128 pre-D21 + 2 post-D21). Full metrics: cycles/v1.0.0-greenfield/convergence-trajectory.md.
 
 ## Session Resume Checkpoint
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 ### RESUME IN ONE BREATH
-"ferrochain Phase 1 REOPENED by D21 scope expansion. P1D-129 complete (12 findings: 3H/7M/2L; expanded-perimeter pass 1); fix-burst 224 closed all 12 (E-VS-004 minted; census 96=43+16+37; TVs 609). NEXT: adversary pass P1D-130 on new frozen HEAD → 3/3 CLEAN(strict) → check-input-drift → consistency audit → Phase 1 HUMAN GATE. Follow-up: 10 BCs not yet read (BC-2.18.002/003, 2.19.002/003/004, 2.20.001, 2.21.001/004, 2.22.002/003) + interface-definitions trait-method coverage."
-### COMMITTED (through burst 224):
+"ferrochain Phase 1 REOPENED by D21 scope expansion. P1D-130 COMPLETE (9 findings: 1C/3H/2M+1PG/3L; all 9 CLOSED in fix-burst 225); observability.md v1.0 authored (Phase-1 gap); trajectory-tail →0→0→12→9; 130 passes / 130 fix bursts. NEXT: adversary pass P1D-131 on new frozen HEAD → 3/3 CLEAN(strict) → check-input-drift → consistency audit → Phase 1 HUMAN GATE."
+### COMMITTED (through burst 225):
 - Burst 219 (3762dab): CAP-022..033 (33 CAPs); capabilities-p0 v1.7 (CAP-002 reversed); entities-graph v1.4; L2-INDEX v1.6.
-- Burst 220 (WIP wrap): 21 new BC files (SS-18..22) + error-taxonomy v1.27 + interface-definitions v2.41 + test-vectors v2.0 + product-brief v1.4.
+- Burst 220 (archived): 21 new BC files (SS-18..22) + error-taxonomy v1.27 + interface-definitions v2.41 + test-vectors v2.0 + product-brief v1.4.
 - Burst 222: prd.md v1.4 body COMPLETE; BC-INDEX.md v1.8 COMPLETE (116 BCs: 51 P0/56 P1/9 P2).
 - Burst 223: VP-006..010 authored; VP-INDEX v1.2 (10 VPs); verification-architecture v1.5; coverage-matrix v1.6.
-- Burst 224 (this commit): P1D-129 fix-burst (12 findings closed); ADR-014 v1.3/015 v1.2/016 v1.2; VP-006/009/010 bumped; 7 BC files v1.1; error-taxonomy v1.28 (E-VS-004; 96 codes); test-vectors v2.1 (609 TVs); hash sweep STALE→0.
+- Burst 224: P1D-129 fix-burst (12 findings closed); ADR-014 v1.3/015 v1.2/016 v1.2; VP-006/009/010 bumped; 7 BC files v1.1; error-taxonomy v1.28 (E-VS-004; 96 codes); test-vectors v2.1 (609 TVs); hash sweep STALE→0.
+- Burst 225 (this commit): P1D-130 fix-burst (all 9 closed); ADR-014 v1.4/ADR-010 v1.2/ADR-017 v1.2; VP-006 v1.2/VP-008 v1.1; BC-INDEX v1.9; interface-definitions v2.43 +5 D21 trait sections; observability.md v1.0 NEW; error-taxonomy v1.29; prd v1.6; hash sweep STALE→0.
 ### NEXT-ACTIONS (exact, ordered):
-1. Adversary pass P1D-130 on NEW frozen HEAD (burst 224 push resets streak to 0/3).
-2. Follow-up coverage: 10 BCs not yet individually read (BC-2.18.002/003, 2.19.002/003/004, 2.20.001, 2.21.001/004, 2.22.002/003) + interface-definitions trait-method coverage cross-check.
-3. After 3/3 CLEAN(strict): /vsdd-factory:check-input-drift → fresh consistency audit → Phase 1 HUMAN APPROVAL GATE.
+1. Adversary pass P1D-131 on NEW frozen HEAD (burst 225 push resets streak to 0/3).
+2. After 3/3 CLEAN(strict): /vsdd-factory:check-input-drift → fresh consistency audit → Phase 1 HUMAN APPROVAL GATE.
 ### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 20 crates; #[non_exhaustive] gate update (Phase 3). story-writer propagation: 7 bumped BCs from burst-224 (bc_array_changes_propagate_to_body_and_acs; applies at Phase 2 story authoring).
-### DECISION DELTA THIS SESSION: ADR-014 v1.3/015 v1.2/016 v1.2 (F-P129 fixes); E-VS-004 minted (write-time vector-store error; E-VS-003→E-VS-004 collision corrected).
-### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-224 commit (pushed). No worktrees. No PRs.
-### WRAP METADATA: Date 2026-07-21 | Cycle v1.0.0-greenfield | Burst 224 | Phase 1 IN PROGRESS — P1D-129 fix-burst COMPLETE | Re-convergence required (0/3; resets on push)
+### DECISION DELTA THIS SESSION: ADR-014 v1.4 (GuardrailHook sync/async fix); ADR-010/017 v1.2 (DI-014/anchor gap fixes); VP-006 v1.2/VP-008 v1.1; BC re-anchors (BC-2.20.001/002, 2.21.004, 2.22.001/002/003, 2.19.003); observability.md v1.0 minted; interface-definitions v2.43 +5 D21 trait sections.
+### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-225 commit (this commit, pushing now). No worktrees. No PRs.
+### WRAP METADATA: Date 2026-07-21 | Cycle v1.0.0-greenfield | Burst 225 | Phase 1 IN PROGRESS — P1D-130 fix-burst COMPLETE | Re-convergence required (0/3; resets on push)
 
 ## Historical Content
 | Content | Location |
 |---------|----------|
-| Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2; + archived bursts 171–224) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
-| 116 Behavioral Contracts (95 pre-D21 [ss-01..ss-17] + 21 D21-expansion [ss-18..22]) + BC-INDEX.md v1.8 COMPLETE: 116 total = 51 P0 / 56 P1 / 9 P2 / 11 Red Gate / 8 VP Seed / 10 VPs registered | `.factory/specs/behavioral-contracts/ss-NN/` + `BC-INDEX.md` |
-| L3 PRD v1.5 COMPLETE: body §2/§3/§5/§7 D21-expanded; RTM 116 BCs (51 P0/56 P1/9 P2); TMPL/SRLZ/VS/EMBED code families; Retriever/VectorStore/VectorStoreFactory/Embeddings in §3 | `.factory/specs/prd.md` |
-| PRD supplements: bc-authoring-plan v2.41, error-taxonomy v1.28, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.42, test-vectors v2.1 (D21-updated); api-surface v1.6, product-brief v1.4 (5 subsystems moved in-scope) | `.factory/specs/prd-supplements/` |
+| Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2; + archived bursts 171–225) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
+| 116 Behavioral Contracts (95 pre-D21 [ss-01..ss-17] + 21 D21-expansion [ss-18..22]) + BC-INDEX.md v1.9 COMPLETE: 116 total = 51 P0 / 56 P1 / 9 P2 / 11 Red Gate / 8 VP Seed / 10 VPs registered | `.factory/specs/behavioral-contracts/ss-NN/` + `BC-INDEX.md` |
+| L3 PRD v1.6 COMPLETE: body §2/§3/§5/§7 D21-expanded; RTM 116 BCs (51 P0/56 P1/9 P2); TMPL/SRLZ/VS/EMBED code families; Retriever/VectorStore/VectorStoreFactory/Embeddings in §3 | `.factory/specs/prd.md` |
+| PRD supplements: bc-authoring-plan v2.41, error-taxonomy v1.29, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.43, test-vectors v2.1 (D21-updated); api-surface v1.6, product-brief v1.4 (5 subsystems moved in-scope); observability.md v1.0 NEW (Phase-1 SAP-1 catalog) | `.factory/specs/prd-supplements/` |
 | L2 domain spec (15-shard; events.md v1.6) — L2-INDEX v1.6 (33 CAPs; Four domains; Domain C CAP-031/032/033 forcing-function; D21 row burst 219); capabilities-p0 v1.7 (CAP-002 reversed); capabilities-p1-p2 v1.5 (CAP-022..033); entities-graph v1.4; ubiquitous-language-core v1.4 | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
-| Session checkpoints bursts 5–78, bursts 176–223 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
-| Lessons learned (23 lessons, 23 codified guardrails incl. L-023 axis-existence validation) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
+| Session checkpoints bursts 5–78, bursts 176–225 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Lessons learned (24 lessons, 24 codified guardrails incl. L-024 observability.md Phase-1 obligation) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Holdout domain briefs A/B/C/D (SOC analyst, dark factory, OpenClaw, Hermes Agent) | `.factory/planning/holdout-domains/domain-{a,b,c,d}-*.md` |
 | Reference corpus manifest (v1.4.0 — adk-rust Corpus 5 added) | `.factory/semport/reference-manifest.md` |
 | Planning studies (naming decision, file-size standard) | `.factory/planning/naming-decision-study.md` + `file-size-standard-study.md` |
 | Semport pass 1 analysis state (deepening items, risks) | `.factory/semport/core/ANALYSIS-STATE.md` |
 | D16 comparative assessment + 3 part-files (COMPARATIVE-ASSESSMENT.md synthesis) | `.factory/comparative/COMPARATIVE-ASSESSMENT.md` (+ `assessment-parts/`) |
-| Architecture core: ARCH-INDEX v1.5 + 9 section files (module-decomposition v1.12, purity-boundary-map v1.7, verification-architecture v1.7, verification-coverage-matrix v1.8) + ADR-006 rev-4 + ADR-005 rev-4 + ADR-013..017 (ADR-014 v1.3/015 v1.2/016 v1.2), 17 ADRs | `.factory/specs/architecture/` + `decisions/` |
-| VP-INDEX v1.3 + VP-001..010 (VP-001..005 original; VP-006..010 D21 expansion: injection_guard Kani P1, LcSerializable proptest P1, Embeddings proptest P1, Zero-Norm Cosine Kani P0, Reviver Allowlist Kani P0; VP-006 v1.1/VP-009 v1.3/VP-010 v1.2 bumped burst 224) | `.factory/specs/verification-properties/` |
+| Architecture core: ARCH-INDEX v1.5 + 9 section files (module-decomposition v1.12, purity-boundary-map v1.7, verification-architecture v1.7, verification-coverage-matrix v1.8) + ADR-006 rev-4 + ADR-005 rev-4 + ADR-010/013..017 (ADR-014 v1.4/ADR-010 v1.2/ADR-017 v1.2; ADR-015 v1.2/ADR-016 v1.2), 17 ADRs | `.factory/specs/architecture/` + `decisions/` |
+| VP-INDEX v1.4 + VP-001..010 (VP-001..005 original; VP-006..010 D21 expansion: injection_guard Kani P1, LcSerializable proptest P1, Embeddings proptest P1, Zero-Norm Cosine Kani P0, Reviver Allowlist Kani P0; VP-006 v1.2/VP-008 v1.1/VP-009 v1.3/VP-010 v1.2 bumped bursts 224/225) | `.factory/specs/verification-properties/` |
 | DTU assessment (DTU_REQUIRED: true; 3 cassette clone sets; pre-Phase-3 gate >=8/7/3) — v1.0 + template compliance burst 215 | `.factory/planning/dtu-assessment.md` |
 | ADR tech validation (schemars 1.2.1, rmp-serde 1.3.1, Kani 0.67.0 no-async; D21 pins: inventory 0.3.24, minijinja 2.21.0; mustache REJECTED) — v1.1.0 burst 218 | `.factory/planning/adr-tech-validation.md` |
 | Module criticality assessment (41 modules, v1.4) | `.factory/specs/module-criticality.md` |

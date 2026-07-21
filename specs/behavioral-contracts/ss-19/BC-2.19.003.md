@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.003
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,10 +14,11 @@ crate: ferrochain-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
+  - "1.1 (F-P130-08/2026-07-21): TV-001/TV-002 made falsifiable. Removed hedged magic-number assertion `registry_size() == 141 (or the current count…)`. TV-001 now asserts relational equality to `LANGCHAIN_CORE_REGISTRY.len()` named constant; TV-002 asserts feature-gated delta `registry_size() >= core_count + 1`. The literal 141 is retained as informative prose only."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -99,8 +100,8 @@ registry — it is never a hand-edited list.
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 | `Reviver::new()` in a binary with core features only | `reviver.registry_size()` == 141 (or the current count of core-registered types) | happy-path (registry size) |
-| TV-002 | `Reviver::new()` with `features = ["openai"]` | `reviver.registry_size()` == 141 + N (N = count of OpenAI-registered types) | happy-path (feature-gated partner) |
+| TV-001 | `Reviver::new()` in a binary with core features only | `reviver.registry_size() == LANGCHAIN_CORE_REGISTRY.len()` where `LANGCHAIN_CORE_REGISTRY` is the named compile-time constant listing all core `inventory::submit!` entries. Assertion is an equality against the constant, not against a hardcoded literal. (As of the reference corpus, `LANGCHAIN_CORE_REGISTRY.len() == 141`; the test is correct even when that count changes.) | happy-path (registry size — relational assertion) |
+| TV-002 | `Reviver::new()` with `features = ["openai"]` enabled | `reviver.registry_size() >= core_count + 1` where `core_count = LANGCHAIN_CORE_REGISTRY.len()` and the delta of at least 1 asserts that at least one OpenAI entry was registered. The test is a feature-gated lower-bound check, not a magic absolute number. | happy-path (feature-gated partner — relational assertion) |
 | TV-003 | Lookup `["langchain_core", "prompts", "prompt", "PromptTemplate"]` in registry | Entry found; constructor fn is callable | happy-path (lookup) |
 | TV-004 | Lookup unknown id `["my_custom_type"]` in registry | `None` returned from HashMap; leads to E-SRLZ-001 in Reviver::revive | edge-case (missing id) |
 

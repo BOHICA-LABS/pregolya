@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "24397ea"
+input-hash: "a03e596"
 traces_to: STATE.md
 ---
 
@@ -3626,3 +3626,85 @@ Transitive sweep iterated until STALE=0.
 - Phase 1 status: P1D-129 fix-burst COMPLETE; all 12 findings closed; E-VS-004 minted; census 96=43+16+37; TVs 609
 - Convergence counter: 0/3 (burst 224 push resets frozen-HEAD streak)
 - NEXT: adversary pass P1D-130 on new frozen HEAD; follow-up: 10 BCs not yet individually read (BC-2.18.002/003, 2.19.002/003/004, 2.20.001, 2.21.001/004, 2.22.002/003) + interface-definitions trait-method coverage cross-check
+
+---
+
+## Burst 225 — P1D-130 Fix-Burst COMPLETE; observability.md authored | 2026-07-21
+
+**Date:** 2026-07-21
+**Agents:** adversary (pass P1D-130) + architect (fix-burst 225 architect-half) + product-owner (fix-burst 225 PO-half) + state-manager (burst commit)
+**Files touched (architect fixes):**
+- `specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md` (v1.3→v1.4: Decision 6 GuardrailHook rebuilt as canonical async evaluate(IngressContent::RagChunk, ProvenanceTag)→GuardrailResult)
+- `specs/architecture/decisions/ADR-010-error-taxonomy-anyhow-confinement.md` (v1.1→v1.2: EmbeddingDimensionMismatch prefix sweep)
+- `specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md` (v1.1→v1.2: EmbeddingDimensionMismatch prefix sweep)
+- `specs/architecture/module-decomposition.md` (v1.12→v1.13)
+- `specs/architecture/purity-boundary-map.md` (v1.7→v1.8)
+- `specs/architecture/verification-architecture.md` (v1.7→v1.8: DI-014 reference corrected)
+- `specs/verification-properties/VP-006.md` (v1.1→v1.2: DI-008→DI-014)
+- `specs/verification-properties/VP-008.md` (v1.0→v1.1: EmbeddingDimensionMismatch prefix + hash 563cf62)
+- `specs/verification-properties/VP-INDEX.md` (v1.3→v1.4)
+
+**Files touched (PO fixes):**
+- `specs/behavioral-contracts/ss-20/BC-2.20.001.md` (v1.0→v1.1: DI-014 di_anchors; ferrochain-core: core::guardrail re-anchor)
+- `specs/behavioral-contracts/ss-20/BC-2.20.002.md` (v1.1→v1.2: ferrochain-guardrail→ferrochain-core: core::guardrail; DI-014 di_anchors)
+- `specs/behavioral-contracts/ss-21/BC-2.21.004.md` (v1.0→v1.1: DI-014 di_anchors)
+- `specs/behavioral-contracts/ss-22/BC-2.22.001.md` (v1.0→v1.1: EmbeddingDimensionMismatch prefix)
+- `specs/behavioral-contracts/ss-22/BC-2.22.002.md` (v1.0→v1.1: DI-009 anchor + BC-2.14.004 xref)
+- `specs/behavioral-contracts/ss-22/BC-2.22.003.md` (v1.0→v1.1: DI-009 anchor + BC-2.14.004 xref)
+- `specs/behavioral-contracts/ss-19/BC-2.19.003.md` (v1.0→v1.1: TV-001/002 relational assertions; non-falsifiable count 141 removed)
+- `specs/behavioral-contracts/BC-INDEX.md` (v1.8→v1.9: DI-014 rows; EmbeddingDimensionMismatch prefix)
+- `specs/prd.md` (v1.5→v1.6: prd §2/§7 DI-014 rows; observability.md registered in frontmatter §11)
+- `specs/prd-supplements/error-taxonomy.md` (v1.28→v1.29: EmbeddingDimensionMismatch: prefix canonical)
+- `specs/prd-supplements/interface-definitions.md` (v2.42→v2.43: +5 D21 trait sections: §Retriever, §VectorStore/§VectorStoreFactory, §Embeddings, §ChatPromptTemplate/PromptValue, §LcSerializable/Reviver; GuardedDocuments::rag_ingress async per ADR-014 v1.4; no orphan methods)
+- `specs/prd-supplements/observability.md` (v1.0 NEW: Canonical Structured Event Catalog; census 2 event_types: embeddings.legacy_model_warning BC-2.22.002, ferrochain.mcp.guardrail.unregistered BC-2.09.003; SAP-1 same-commit rule stated)
+- `sidecar-learning.md` (session learning captured)
+
+**Hash sweep:** 3 transitive passes across 158 spec files + ARCH-INDEX + dtu-assessment + module-criticality individual checks; STALE→0.
+
+**State files:** STATE.md (v3.65→v3.66), cycles/v1.0.0-greenfield/burst-log.md, convergence-trajectory.md, session-checkpoints.md, lessons.md.
+
+**Versions bumped:** ADR-014 v1.3→v1.4; ADR-010 v1.1→v1.2; ADR-017 v1.1→v1.2; VP-006 v1.1→v1.2; VP-008 v1.0→v1.1; VP-INDEX v1.3→v1.4; module-decomposition v1.12→v1.13; purity-boundary-map v1.7→v1.8; verification-architecture v1.7→v1.8; BC-2.20.001 v1.0→v1.1; BC-2.20.002 v1.1→v1.2; BC-2.21.004 v1.0→v1.1; BC-2.22.001/002/003 v1.0→v1.1; BC-2.19.003 v1.0→v1.1; BC-INDEX v1.8→v1.9; prd v1.5→v1.6; error-taxonomy v1.28→v1.29; interface-definitions v2.42→v2.43; observability.md v1.0 (NEW); STATE.md v3.65→v3.66.
+
+### Summary
+
+Pass P1D-130 adversarial review completed against frozen HEAD d21676d: NOT CLEAN — 9 findings (1 CRIT / 3 HIGH / 2 MED+1PG / 3 LOW). Convergence counter 0/3, streak RESET. Expanded-perimeter pass 2.
+
+**Findings:**
+- F-P130-01 CRIT: ADR-014 Decision 6 GuardrailHook::check defined as synchronous — contradicts canonical SS-11 async evaluate(IngressContent::RagChunk, ProvenanceTag)→GuardrailResult contract.
+- F-P130-02 HIGH: BC-2.20.002 cites nonexistent `ferrochain-guardrail` crate in 3 locations; correct crate is `ferrochain-core: core::guardrail`.
+- F-P130-03 HIGH: interface-definitions v2.42 missing ALL D21 trait surfaces — §Retriever, §VectorStore/§VectorStoreFactory, §Embeddings, §ChatPromptTemplate/PromptValue, §LcSerializable/Reviver sections absent.
+- F-P130-04 HIGH: DI-014 cited in BC bodies but missing from di_anchors of BC-2.20.001/002 + BC-2.21.004 and their BC-INDEX rows.
+- F-P130-05 MED: VP-006 DI anchor references DI-008 instead of DI-014.
+- F-P130-06 MED [PROCESS-GAP]: Canonical Structured Event Catalog (observability.md) does not exist; ≥5 BCs emit event_types (incl. BC-2.22.002 embeddings.legacy_model_warning); SAP-1 obligation unmet.
+- F-P130-07 LOW: E-EMBED-001 prefix collides with E-VS-002 DimensionMismatch:; canonical = EmbeddingDimensionMismatch:.
+- F-P130-08 LOW: BC-2.19.003 TV-001/002 hedge magic count 141 — non-falsifiable; reframe relational.
+- F-P130-09 LOW: BC-2.22.002/003 specify 30s timeout without DI-009 anchor / BC-2.14.004 xref.
+
+**Fix-burst 225 — ALL 9 FIXED:**
+- F-P130-01 FIXED (architect): ADR-014 v1.4 — Decision 6 rebuilt on canonical async evaluate(IngressContent::RagChunk, ProvenanceTag)→GuardrailResult. All 3 async arms honored (pass/fail/transform). Per-document async calls in core::retriever (Boundary layer). core::guardrail remains Pure Core. BoundaryType re-definition removed. compile_fail Red Gate concept preserved. GuardedDocuments::rag_ingress now async in core::retriever.
+- F-P130-02 FIXED (PO): BC-2.20.002 v1.2 — exactly 3 replacements: Description, Precondition 1, Architecture Anchors updated `ferrochain-guardrail`→`ferrochain-core: core::guardrail`. BC-2.20.001 v1.1 + BC-2.21.004 v1.1 also re-anchored. Corpus swept for ferrochain-guardrail residue; all cleared.
+- F-P130-03 FIXED (PO): interface-definitions v2.43 — +5 D21 trait sections added (§Retriever, §VectorStore/§VectorStoreFactory, §Embeddings, §ChatPromptTemplate/PromptValue, §LcSerializable/Reviver) with signatures verbatim from ADR-014/015/016/017. GuardedDocuments::rag_ingress matches ADR-014 v1.4 async contract. Per-method BC anchors. No orphan methods/clauses in either direction.
+- F-P130-04 FIXED (PO): DI-014 added to di_anchors of BC-2.20.001/002 + BC-2.21.004. BC-INDEX v1.9 DI-014 rows updated. prd.md v1.6 §2/§7 rows updated.
+- F-P130-05 FIXED (architect): VP-006 v1.2 / VP-INDEX v1.4 / verification-architecture v1.8 — DI anchor corrected DI-008→DI-014. module-decomposition v1.13 and purity-boundary-map v1.8 updated.
+- F-P130-06 FIXED (PO): observability.md v1.0 authored. Census: `grep event_type =` across all BCs + architecture → 2 distinct event_type values found: `embeddings.legacy_model_warning` (BC-2.22.002) + `ferrochain.mcp.guardrail.unregistered` (BC-2.09.003). Full field schema, emitting BC, audit role, recurrence policy per row. SAP-1 same-commit rule stated. Registered in prd.md frontmatter + §11. Phase-1 deliverable gap filled.
+- F-P130-07 FIXED (PO): error-taxonomy v1.29 — E-EMBED-001 prefix corrected to EmbeddingDimensionMismatch: (canonical). BC-2.22.001 v1.1 updated. ADR-010 v1.2 + ADR-017 v1.2 + VP-008 v1.1 swept for prefix. Gate #33 both-direction sweep clean.
+- F-P130-08 FIXED (PO): BC-2.19.003 v1.1 — TV-001/002 reframed as relational assertions. Non-falsifiable magic count 141 removed.
+- F-P130-09 FIXED (PO): BC-2.22.002 v1.1 + BC-2.22.003 v1.1 — DI-009 anchors added to both; BC-2.14.004 xref added. BC-INDEX v1.9 propagated.
+
+### Lesson Captured (burst 225)
+
+**L-024 [codified]:** SAP-1 OBLIGATION FIRES AT SPEC LAYER, NOT JUST CODE LAYER. BCs that declare named `event_type =` emission sites in their TVs/PCs constitute a Canonical Structured Event Catalog obligation at Phase 1, before Phase 3 implementation. The catalog must exist before any adversary pass on the expanded perimeter. Codified: observability.md v1.0 created in this burst; SAP-1 same-commit rule stated therein.
+
+### Convergence Status After Burst 225
+
+- Phase 1d passes: 130 (128 pre-D21 + 2 post-D21 expanded-perimeter passes; NOT CLEAN)
+- Fix bursts: 130 (fix-burst 225 COMPLETE — all 9 findings closed)
+- Phase 1 status: P1D-130 fix-burst COMPLETE; observability.md Phase-1 deliverable gap filled
+- Convergence counter: 0/3 (P1D-130 NOT CLEAN; frozen-HEAD streak RESETS on push of this commit)
+- NEXT: adversary pass P1D-131 on new frozen HEAD → cascade toward 3/3 CLEAN(strict) → check-input-drift → fresh consistency audit → Phase 1 HUMAN GATE
+
+### Archived Current Phase Steps Row (displaced from STATE.md — burst-220 row)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Burst 220 (WRAP) — D21 spec-body WIP checkpoint committed; BC-count tokens rephrased; RESUME snapshot updated | state-manager | COMPLETE | 21 new BC files (SS-18..22) + error-taxonomy v1.27 + interface-definitions v2.41 + test-vectors v2.0 + product-brief v1.4 + ADR-010 v1.1 + BC-2.14.001 v1.2 + api-surface v1.6 + bc-authoring-plan v2.41 committed as WIP checkpoint. prd.md + BC-INDEX.md body INCOMPLETE — next session: PO finishes bodies. Burst 220. |

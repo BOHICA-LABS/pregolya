@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.1"
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-22, SS-08]
 changelog:
+  - "1.2 (burst-225/2026-07-21): F-P130-07 sibling sweep — correct stale E-EMBED-001 message prefix in §Dimensionality contract: `DimensionMismatch: ...` → `EmbeddingDimensionMismatch: ...` per error-taxonomy v1.29 (PO renamed prefix to distinguish from E-VS-002 which retains bare `DimensionMismatch:`)."
   - "1.1 (crates.io/2026-07-20): Add Ollama endpoint preference (prefer POST /api/embed, `input` field; /api/embeddings legacy fallback with `use_legacy_endpoint` toggle); note OpenAI model currency (text-embedding-3-small/large current, ada-002 legacy)."
   - "1.0 (D21/2026-07-20): Initial ADR — Embeddings trait in ferrochain-core (core::embeddings), async dyn-compatible shape, dimensionality contract, ferrochain-openai + ferrochain-ollama gain embeddings modules, ferrochain-anthropic excluded (no embedding API), ferrochain-vectorstores uses Embeddings for in-memory backend."
 ---
@@ -95,7 +96,7 @@ Every `Embeddings` implementation MUST guarantee:
 - `embed_query(text)` returns a vector of the same length as any `embed_documents` vector
 
 Violation of these invariants MUST return `Err(FerrochainError { category: VALIDATION,
-code: "E-EMBED-001", message: "DimensionMismatch: ..." })`. Returning a ragged result
+code: "E-EMBED-001", message: "EmbeddingDimensionMismatch: ..." })`. Returning a ragged result
 silently (wrong-length vectors in the output) violates DI-014 (no silent failures).
 
 VP-008 candidate: proptest property test that for any valid `Embeddings` impl, all

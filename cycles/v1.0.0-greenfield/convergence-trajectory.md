@@ -883,6 +883,7 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 | Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
 |------|------|-------|------|------|-----|-----|---------|---------|---------|
 | P1D-129 | 2026-07-21 | 12 | 0 | 3 | 7 | 2 | HIGH | 0/3 | FINDINGS_REMAIN (expanded-perimeter pass 1; all 12 fixed in burst 224; E-VS-004 minted; counter resets on push) |
+| P1D-130 | 2026-07-21 | 9 | 1 | 3 | 2 | 3 | HIGH | 0/3 | FINDINGS_REMAIN (1C/3H/2M+1PG/3L; expanded-perimeter pass 2; all 9 closed in fix-burst 225: BC re-anchors, DI-014 propagation, interface-definitions v2.43 +5 D21 trait sections, observability.md v1.0 created) |
 
 ### Pass P1D-129 (2026-07-21) — Expanded Perimeter Pass 1
 
@@ -914,9 +915,33 @@ All 12 findings fixed in burst 224. E-VS-004 minted (write-time vector-store err
 
 ---
 
+### Pass P1D-130 (2026-07-21) — Expanded Perimeter Pass 2
+
+**Findings:** 9 (1 CRIT, 3 HIGH, 2 MED+1PG, 3 LOW)
+**Novelty:** HIGH (CRIT sync/async contract inversion; missing D21 trait surfaces; crate-name phantom)
+**Convergence counter:** 0 of 3 (streak RESET; fix-burst 225 partial)
+**Coverage level:** D21 expanded perimeter — 116 BCs / SS-18..22 / 10 VPs / ADR-014..017 / frozen HEAD d21676d
+
+Key findings:
+- F-P130-01 CRIT: ADR-014 Decision 6 GuardrailHook::check defined as synchronous — contradicts canonical SS-11 async evaluate(IngressContent::RagChunk, ProvenanceTag)→GuardrailResult. FIXED (architect): ADR-014 v1.4 Decision 6 rebuilt on canonical async evaluate; all 3 async arms honored; per-document async calls in core::retriever (Boundary); core::guardrail stays Pure Core; BoundaryType re-definition removed.
+- F-P130-02 HIGH: BC-2.20.002 cites nonexistent `ferrochain-guardrail` crate in 3 locations. Correct crate: `ferrochain-core: core::guardrail`. FIXED (PO): BC-2.20.002 v1.2; BC-2.20.001 v1.1; BC-2.21.004 v1.1; BC-INDEX v1.9; ferrochain-guardrail residue swept corpus-wide.
+- F-P130-03 HIGH: interface-definitions v2.42 missing ALL D21 trait surfaces — §Retriever, §VectorStore/§VectorStoreFactory, §Embeddings, §ChatPromptTemplate/PromptValue, §LcSerializable/Reviver sections absent. FIXED (PO): interface-definitions v2.43 +5 D21 trait sections added, GuardedDocuments::rag_ingress async per ADR-014 v1.4; no orphan methods.
+- F-P130-04 HIGH: DI-014 cited in BC bodies but absent from di_anchors of BC-2.20.001/002 + BC-2.21.004 and their BC-INDEX rows. FIXED (PO): DI-014 added to di_anchors in BC-2.20.001/002 + BC-2.21.004; BC-INDEX v1.9 + prd §2/§7 rows updated.
+- F-P130-05 MED: VP-006 DI anchor references DI-008 instead of DI-014. FIXED (architect): VP-006 v1.2 / VP-INDEX v1.4 / verification-architecture v1.8 updated.
+- F-P130-06 MED [PROCESS-GAP]: Canonical Structured Event Catalog (observability.md) does not exist; ≥5 BCs already emit event_types (incl. BC-2.22.002 embeddings.legacy_model_warning); SAP-1 obligation unmet. FIXED (PO): observability.md v1.0 authored — census 2 event_types (embeddings.legacy_model_warning, ferrochain.mcp.guardrail.unregistered); SAP-1 same-commit rule stated; registered in prd frontmatter §11. Phase-1 deliverable gap filled.
+- F-P130-07 LOW: E-EMBED-001 prefix collides with E-VS-002 DimensionMismatch:; canonical = EmbeddingDimensionMismatch:. FIXED (PO): error-taxonomy v1.29 prefix corrected; BC-2.22.001 v1.1; gate #33 both-direction sweep clean.
+- F-P130-08 LOW: BC-2.19.003 TV-001/002 hedge magic count 141 — non-falsifiable. FIXED (PO): BC-2.19.003 v1.1 TV-001/002 reframed as relational assertions (removes non-falsifiable count 141).
+- F-P130-09 LOW: BC-2.22.002/003 specify 30s timeout without DI-009 anchor / BC-2.14.004 xref. FIXED (PO): BC-2.22.002 v1.1 + BC-2.22.003 v1.1 DI-009 anchors added + BC-2.14.004 xref; BC-INDEX v1.9 propagated.
+
+**Fix summary (burst 225 COMPLETE — all 9 closed):** F-P130-01 + F-P130-05 fixed by architect (ADR-014 v1.4; VP-006 v1.2; VP-INDEX v1.4; verification-architecture v1.8; module-decomposition v1.13; purity-boundary-map v1.8). F-P130-02/03/04/06/07/08/09 fixed by PO (BC-2.20.001/002/2.21.004 v1.1; BC-2.22.001/002/003 v1.1; BC-2.19.003 v1.1; BC-INDEX v1.9; interface-definitions v2.43; error-taxonomy v1.29; observability.md v1.0; prd v1.6; ADR-010 v1.2/ADR-017 v1.2 EmbeddingDimensionMismatch prefix sweep). Hash sweep: STALE→0 (3 passes + 3 index files).
+**Trajectory after:** →9 (P1D-130 NOT CLEAN); cumulative tail →0→12→9
+**Counter:** 0/3 (fix-burst 225 COMPLETE; P1D-131 required on new frozen HEAD)
+
+---
+
 ## Trajectory Shorthand Update (post-D21 expansion)
 
-`[D21 expansion burst 216: 0/3 RESET] →12 (P1D-129, expanded-perimeter pass 1, NOT CLEAN: 3H/7M/2L)`
+`[D21 expansion burst 216: 0/3 RESET] →12 (P1D-129, expanded-perimeter pass 1, NOT CLEAN: 3H/7M/2L) →9 (P1D-130, expanded-perimeter pass 2, NOT CLEAN: 1C/3H/2M+1PG/3L)`
 
 ---
 

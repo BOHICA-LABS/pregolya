@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
-input-hash: "8e2d144"
+input-hash: "a3e41ba"
 extracted_from: null
 modified: []
 deprecated: null

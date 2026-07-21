@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.12"
+version: "1.13"
 status: active
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
@@ -10,10 +10,11 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "7aace89"
+input-hash: "f29354e"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21]
 changelog:
+  - "1.13 (burst-225/2026-07-21): F-P130-01 sibling sweep — correct core::guardrail comment block: GuardrailHook method updated from wrong sync `fn check` to canonical `async fn evaluate` per interface-definitions.md §GuardrailHook; full type list (GuardrailHook, GuardrailResult, IngressContent, GuardrailSeverity, BoundaryType); rag_ingress note updated: async per-document evaluate calls per BC-2.11.003 PC5."
   - "1.12 (burst-224/2026-07-21): F-P129-11 — add vectorstores::similarity module (shared cosine_similarity primitive, VP-009 Kani target); update vectorstores::mmr description to MMR-selection-only (no longer hosts cosine_similarity); update VP anchors note. F-P129-09 — add core::guardrail definitions module (GuardrailHook trait + BoundaryType enum, promoted to ferrochain-core consistent with trait-in-core precedent); add GuardedDocuments type note to core::retriever (rag_ingress enforcement gate). Module universe 49→50 (+vectorstores::similarity MEDIUM; core::guardrail definitions-only, no criticality row per ADR-009 precedent)."
   - "1.11 (D21/2026-07-20): ecosystem-parity scope expansion — add ferrochain-prompts section (SS-18: prompts::template, prompts::chat_template, prompts::few_shot, prompts::injection_guard); add ferrochain-vectorstores section (SS-20/SS-21: vectorstores::store, vectorstores::retriever, vectorstores::memory, vectorstores::mmr); add ferrochain-core new modules: core::documents, core::retriever, core::embeddings, core::serializable; add provider embedding modules in ferrochain-openai (openai::embeddings) and ferrochain-ollama (ollama::embeddings); ferrochain-anthropic explicitly excluded from SS-22 (no embedding API). Module universe 35→49 (+14 criticality-counted rows: 4 in ferrochain-core, 4 in ferrochain-prompts, 4 in ferrochain-vectorstores, 2 in provider crates). ADRs: ADR-014/015/016/017."
   - "1.10 (F-P92-02, 2026-07-17): budget definitions note extended — RunnableConfig (core::config, SS-01) gains budget_config: Option<BudgetConfig> per OPTION A adjudication (BC-2.10.004 PC6 / BC-2.10.003 PC7/TV-004). Parallel to the context_mutations addition in the self-improvement definitions note. No new module rows — BudgetConfig is already a pure-core type in core::budget; the field addition does not change core::config's module boundary or criticality tier."
@@ -270,18 +271,22 @@ Re-exported from ferrochain-core.
 > pure type and trait definitions with no execution logic — no criticality-counted module row per
 > ADR-009 definitions-only precedent.
 >
-> - `core::guardrail` (`ferrochain-core/src/guardrail.rs`): `GuardrailHook` trait (pure synchronous
->   policy check: `fn check(&self, boundary: BoundaryType, docs: &[Document]) -> Result<(), FerrochainError>`),
->   `BoundaryType` enum (ToolResult | RAGRetrieval | MemoryIngress — 3 variants, PASS-58 canon;
->   BoundaryType is NOT extended), promoted from graph::provenance/mcp::ingress to ferrochain-core
->   consistent with trait-in-core precedent (BudgetPolicy → core::budget, MemoryWriteGuard →
->   core::write_guard). Existing dispatch modules (graph::provenance, mcp::ingress) import from
->   ferrochain-core.
+> - `core::guardrail` (`ferrochain-core/src/guardrail.rs`): `GuardrailHook` trait (canonical
+>   `async fn evaluate(&self, content: IngressContent, provenance_tag: ProvenanceTag) -> GuardrailResult`
+>   per interface-definitions.md §GuardrailHook — `#[async_trait]` desugared; definitions-only,
+>   no execution logic in trait body); `GuardrailResult` enum (Pass | Fail{reason,severity} |
+>   Transform{new_content}); `IngressContent` enum (ToolResult(ContentBlock) | RagChunk(Value) |
+>   MemoryItem(Value)); `GuardrailSeverity` enum (Critical/High/Medium/Low); `BoundaryType` enum
+>   (ToolResult | RAGRetrieval | MemoryIngress — 3 variants, PASS-58 canon; not extended).
+>   Promoted from graph::provenance/mcp::ingress to ferrochain-core consistent with trait-in-core
+>   precedent (BudgetPolicy → core::budget, MemoryWriteGuard → core::write_guard). Existing
+>   dispatch modules (graph::provenance, mcp::ingress) import from ferrochain-core.
 >
 > `core::retriever` gains `GuardedDocuments` (private-field newtype wrapping `Vec<Document>` with
-> no external constructor) and `GuardedDocuments::rag_ingress(docs, &dyn GuardrailHook) →
-> Result<GuardedDocuments, FerrochainError>` as the sole public constructor. Graph nodes that
-> inject retrieved documents into context accept `&GuardedDocuments`, making bypass a type error
+> no external constructor) and `GuardedDocuments::rag_ingress(docs, &dyn GuardrailHook) async →
+> Result<GuardedDocuments, FerrochainError>` as the sole public constructor — per-document async
+> `evaluate` calls per BC-2.11.003 PC5. Graph nodes that inject retrieved documents into context
+> accept `&GuardedDocuments`, making bypass a compile-time type error
 > (ADR-014 Decision 6 / BC-2.20.002 VP upgrade).
 
 ## ferrochain-prompts (SS-18) — MEDIUM

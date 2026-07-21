@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.001
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,12 +14,13 @@ crate: ferrochain-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 di_anchors: [DI-008, DI-014]
 vp_seed: true
 vp_id: VP-008
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-22 Embeddings"
+  - "1.1 (F-P130-07/2026-07-21): Fix E-EMBED-001 message prefix: `DimensionMismatch:` → `EmbeddingDimensionMismatch:` to match canonical PRD name and eliminate collision with E-VS-002 prefix. Gate #33 reverse: error-taxonomy.md v1.28→v1.29 updated in same burst."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-031
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "96557c2"
+input-hash: "9a0a33e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -69,7 +70,7 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
    - If `texts` is empty: `Ok(vec![])` — zero vectors; no error.
    - If the provider returns an inconsistent batch (inner vectors of different lengths):
      `Err(FerrochainError { component: Component::EMBED, category: Category::VALIDATION,
-     code: "E-EMBED-001", message: "DimensionMismatch: embedding batch returned inconsistent
+     code: "E-EMBED-001", message: "EmbeddingDimensionMismatch: embedding batch returned inconsistent
      vector lengths" })`.
    - If the provider returns a partial batch error (e.g., rate limit, service error):
      `Err(FerrochainError { ... })` for the whole call — NO silent truncation to a partial

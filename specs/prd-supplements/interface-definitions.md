@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.42"
+version: "2.43"
 status: active
 producer: product-owner
 timestamp: 2026-07-21T00:00:00Z
 phase: 1d
 changelog:
+  - "2.43 (F-P130-03/2026-07-21): Add six missing D21 trait sections to §Public Rust Trait Signatures (F-P130-03 HIGH). Sections added with verbatim ADR-authoritative signatures + per-method BC anchors: (1) §Retriever Trait and GuardedDocuments — ADR-014 Decision 2 + Decision 6; anchors BC-2.20.001..003. (2) §VectorStore Trait and VectorStoreFactory — ADR-014 Decision 2; anchors BC-2.21.001..004. (3) §Embeddings Trait — ADR-017 Decision 2; anchors BC-2.22.001..003. (4) §ChatPromptTemplate and PromptValue Surface — ADR-015; anchors BC-2.18.001..005. (5) §LcSerializable and Reviver Surface — ADR-016; anchors BC-2.19.001..006. Coverage cross-check: all methods have BC anchors; no orphan methods found in either direction."
   - "2.42 (F-P224/H-1/2026-07-21): Blanket omission annotation updated for E-VS-004 (ZeroNormWriteTime, VAL, BC-2.21.002) minted in error-taxonomy.md v1.28. E-VS-* namespace 3→4 codes; blanket group total 36→37. Disposition census 95→96 (43 HTTP + 16 individual + 37 blanket = 96). E-VS-004 is library-layer only (write-path Err return from add_texts / from_texts_sync; no direct HTTP terminal response in v1)."
   - "2.41 (D21/Batch-3b-i/2026-07-20): Blanket omission annotation updated for D21 ecosystem-parity expansion. (1) Added four new component namespaces to §Library/execution-layer codes blanket omission: E-TMPL-* (BC-2.18.x, SECURITY/VAL), E-SRLZ-* (BC-2.19.x, VAL), E-VS-* (BC-2.20.x/BC-2.21.x, VAL), E-EMBED-* (BC-2.22.x, VAL) — all library-layer only per ADR-010 v1.1, no HTTP terminal responses. (2) Disposition census updated: 86→95 (blanket 27→36; 43 HTTP + 16 individual + 36 blanket = 95). (3) Note appended to §Error Type citing Component enum expansion 12→16 and #[non_exhaustive] gate count 13→17."
   - "2.40 (F-P124-01, fix burst 127, 2026-07-19): §MemoryStore — E-MEMORY-003 ScopeAccessDenied raise-site mis-anchored to memory_get; BC wins (BC-2.15.002 Invariant defines it as a WRITE error; PC1/TV-001 define cross-owner READ as Ok(None) — isolation-by-invisibility). Three changes: (1) memory_set docstring: added E-MEMORY-003 ScopeAccessDenied raise site with full struct form { requested_scope, caller_identity } (BC-2.15.002 Invariant). (2) memory_get docstring: removed E-MEMORY-003 raise site; replaced with BC-true cross-owner read semantics documenting isolation-by-invisibility (cross-owner reads return Ok(None) per BC-2.15.002 PC1/TV-001); E-MEMORY-004 NoScopeContext placement retained (correct per BC-2.15.002 EC-001). (3) BC anchor footer: E-MEMORY-003 re-anchored from memory_get to memory_set. Sweep of E-MEMORY-001/002/004: all PASS (E-MEMORY-001 on vector_search correct per BC-2.15.001 EC-001; E-MEMORY-002 on memory_set correct per BC-2.15.001 EC-004; E-MEMORY-004 on memory_get correct per BC-2.15.002 EC-001)."
@@ -58,7 +59,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "f251177"
+input-hash: "ed03360"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."
@@ -851,6 +852,423 @@ BC-2.06.003 (streaming/unary execution equivalence; GuardrailDecision stream-onl
 BC-2.11.002 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for ToolResult boundary), BC-2.11.003 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for RagChunk boundary), BC-2.11.004 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for MemoryItem boundary),
 BC-2.11.005 PC1/INV (ToolEnd post-guardrail content; zero rejected bytes in any StreamEvent),
 ADR-006 rev-3 (design authority for this taxonomy).
+
+### Retriever Trait and GuardedDocuments
+
+**Source:** ADR-014 Decision 2 (trait shape) + Decision 6 (GuardedDocuments); ferrochain-core: core::retriever, core::documents, core::guardrail.
+
+```rust
+// ferrochain-core: core::retriever
+#[async_trait]
+pub trait Retriever: Send + Sync {
+    /// Returns documents relevant to `query`, ranked by relevance (implementation-defined).
+    /// BC anchor: BC-2.20.001 PC2 (success/failure semantics, Result, DI-008 no .unwrap()),
+    /// BC-2.20.001 PC4 (#[non_exhaustive] Document shape)
+    async fn get_relevant_documents(
+        &self,
+        query: &str,
+    ) -> Result<Vec<Document>, FerrochainError>;
+}
+
+// ferrochain-core: core::documents
+/// Pure data carrier for all retrieval output. No methods, no I/O.
+/// BC anchor: BC-2.20.001 PC3 (field semantics: page_content non-empty for content docs,
+/// metadata MAY be empty, id: Option<String>), BC-2.20.001 INV-3 (no methods/I/O/async)
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
+#[non_exhaustive]
+pub struct Document {
+    /// The retrieved text content. Non-empty for content-bearing documents.
+    pub page_content: String,
+    /// Arbitrary key/value metadata. May be empty `{}`.
+    pub metadata: serde_json::Map<String, serde_json::Value>,
+    /// Optional stable ID assigned by the backend. None when backend assigns no stable IDs.
+    pub id: Option<String>,
+}
+
+// ferrochain-core: core::guardrail
+/// Newtype wrapper produced by `rag_ingress`; the sole type accepted by graph nodes that
+/// consume retrieved documents. Passing `Vec<Document>` directly to a node that expects
+/// `&GuardedDocuments` is a compile-time type error (VP-2.20.002-A compile_fail gate).
+/// BC anchor: BC-2.20.002 VP-2.20.002-A (compile_fail gate — Vec<Document> not accepted),
+/// BC-2.20.002 PC1 (no page_content use before guardrail clearance)
+pub struct GuardedDocuments(Vec<Document>);
+
+impl GuardedDocuments {
+    /// Evaluate each document through the guardrail hook before returning.
+    /// Async, per-document evaluation. Returns Err on first guardrail rejection —
+    /// does NOT silently continue with remaining documents (DI-014).
+    /// BC anchor: BC-2.20.002 PC2 (Err propagates on rejection, no silent continuation),
+    /// BC-2.20.002 PC3 (guardrail fires BEFORE any doc content is used),
+    /// BC-2.20.002 PC4 (documents failing guardrail never enter prompt under any condition)
+    pub async fn rag_ingress(
+        docs: Vec<Document>,
+        guardrail: &dyn GuardrailHook,
+    ) -> Result<GuardedDocuments, FerrochainError> { ... }
+
+    /// Access the guardrail-cleared documents.
+    pub fn documents(&self) -> &[Document] { &self.0 }
+}
+```
+
+**BC anchor:**
+BC-2.20.001 (Retriever trait — async dyn-compat, Document carrier, Arc\<dyn Retriever\> graph seam),
+BC-2.20.002 (DI-012 RAGRetrieval guardrail coverage — GuardedDocuments typed wrapper enforces guardrail boundary at compile time; Red Gate test),
+BC-2.20.003 (VectorStoreRetriever — SearchType/k/fetch_k/lambda_mult; as_retriever() → Retriever).
+ADR-014 Decision 1 (crate placement: Retriever + Document in ferrochain-core), Decision 2 (trait shape, Document struct), Decision 6 (GuardedDocuments typed wrapper, rag_ingress async per-document evaluation).
+
+---
+
+### VectorStore Trait and VectorStoreFactory
+
+**Source:** ADR-014 Decision 2; ferrochain-vectorstores: vectorstores::store.
+
+```rust
+// ferrochain-vectorstores: vectorstores::store
+#[async_trait]
+pub trait VectorStore: Send + Sync {
+    /// Add texts (with optional per-text metadata) to the store. Returns assigned IDs.
+    /// BC anchor: BC-2.21.001 PC1 (add_texts semantics), BC-2.21.002 PC2 (InMemoryVectorStore
+    /// acquires write lock, embeds via Arc<dyn Embeddings>, stores Vec<f32>)
+    async fn add_texts(
+        &self,
+        texts: Vec<String>,
+        metadatas: Option<Vec<serde_json::Map<String, serde_json::Value>>>,
+    ) -> Result<Vec<String>, FerrochainError>;
+
+    /// Return the top-k documents most similar to `query`.
+    /// BC anchor: BC-2.21.001 PC2, BC-2.21.002 PC3/PC4 (cosine similarity, RwLock read lock)
+    async fn similarity_search(
+        &self,
+        query: &str,
+        k: usize,
+    ) -> Result<Vec<Document>, FerrochainError>;
+
+    /// Return the top-k documents with their cosine similarity scores.
+    /// BC anchor: BC-2.21.001 PC3
+    async fn similarity_search_with_score(
+        &self,
+        query: &str,
+        k: usize,
+    ) -> Result<Vec<(Document, f32)>, FerrochainError>;
+
+    /// Maximal Marginal Relevance search balancing relevance and diversity.
+    /// BC anchor: BC-2.21.001 PC4, BC-2.20.003 PC3/INV-3 (SearchType::Mmr dispatch path)
+    async fn max_marginal_relevance_search(
+        &self,
+        query: &str,
+        k: usize,
+        fetch_k: usize,
+        lambda_mult: f32,
+    ) -> Result<Vec<Document>, FerrochainError>;
+
+    /// Delete documents by stable ID. Returns Ok(()) even if some IDs do not exist.
+    /// BC anchor: BC-2.21.001 PC5
+    async fn delete(&self, ids: &[&str]) -> Result<(), FerrochainError>;
+
+    /// Construct a VectorStoreRetriever adapter over this store.
+    /// Raises E-VS-003 (VAL) if config is invalid (lambda_mult outside [0,1], k < 1, etc.).
+    /// BC anchor: BC-2.20.003 PC1 (as_retriever() construction), BC-2.20.003 INV-2 (E-VS-003 on invalid config)
+    fn as_retriever(&self) -> VectorStoreRetriever<'_>;
+
+    /// Additive metadata-filter similarity search. Default falls back to similarity_search
+    /// (no filtering — lossy for real filter arguments). Implementations with native backend
+    /// filter support MUST override this method.
+    /// BC anchor: BC-2.21.004 PC5–PC6 (filter semantics; native pre-filter vs InMemoryVectorStore post-filter),
+    /// BC-2.21.004 INV-3 (default fallback contract — lossy for real filters)
+    async fn similarity_search_with_filter(
+        &self,
+        query: &str,
+        k: usize,
+        filter: MetadataFilter,
+    ) -> Result<Vec<Document>, FerrochainError> {
+        // Default: ignore filter; fallback to base similarity_search
+        let _ = filter;
+        self.similarity_search(query, k).await
+    }
+}
+
+/// Factory trait for constructing a concrete VectorStore from raw texts.
+/// Sized-bounded to preserve Arc<dyn VectorStore> dyn-safety (Sized is not object-safe).
+/// BC anchor: BC-2.21.001 INV-2 (Sized-bounded factory separation rationale)
+pub trait VectorStoreFactory: VectorStore + Sized {
+    type Config: Default;
+
+    /// Construct a new store by embedding `texts` using `embedding`.
+    /// Not callable through Arc<dyn VectorStore> — use only at construction time.
+    /// BC anchor: BC-2.21.002 PC1 (InMemoryVectorStore::from_texts_sync semantics and signature)
+    fn from_texts_sync(
+        texts: Vec<String>,
+        embedding: Arc<dyn Embeddings>,
+        config: Self::Config,
+    ) -> impl std::future::Future<Output = Result<Self, FerrochainError>> + Send;
+}
+
+/// Adapter returned by VectorStore::as_retriever(). Implements Retriever.
+/// BC anchor: BC-2.20.003 PC1–PC3 (SearchType dispatch: Similarity, SimilarityScoreThreshold, Mmr),
+/// BC-2.20.003 INV-1 (#[non_exhaustive] on SearchType)
+pub struct VectorStoreRetriever<'a> {
+    store: &'a dyn VectorStore,
+    search_type: SearchType,
+    k: usize,
+    fetch_k: usize,
+    lambda_mult: f32,
+}
+
+/// Dispatch enum for VectorStoreRetriever search strategy.
+/// BC anchor: BC-2.20.003 PC2–PC3 (variant semantics), BC-2.20.003 INV-1 (#[non_exhaustive])
+#[derive(Debug, Clone, Default)]
+#[non_exhaustive]
+pub enum SearchType {
+    #[default]
+    Similarity,
+    SimilarityScoreThreshold { score_threshold: f32 },
+    Mmr,
+}
+
+/// Optional metadata filter for similarity_search_with_filter.
+/// BC anchor: BC-2.21.004 PC1–PC4 (multi-clause AND conjunction),
+/// BC-2.21.004 INV-1 (#[non_exhaustive] — future variants Gte/Lt/Contains permitted)
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub struct MetadataFilter {
+    pub filters: Vec<FilterClause>,
+}
+
+/// Single filter predicate on document metadata.
+/// All three variants use serde_json::Value::PartialEq for exact match (no type coercion).
+/// BC anchor: BC-2.21.004 PC1 (Eq semantics), BC-2.21.004 PC2 (Ne semantics — absent key passes),
+/// BC-2.21.004 PC3 (In semantics — absent key fails), BC-2.21.004 INV-5 (no type coercion)
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum FilterClause {
+    Eq { key: String, value: serde_json::Value },
+    Ne { key: String, value: serde_json::Value },
+    In { key: String, values: Vec<serde_json::Value> },
+}
+```
+
+**BC anchor:**
+BC-2.21.001 (VectorStore trait surface, VectorStoreFactory Sized-bounded separation, Arc\<dyn VectorStore\> dyn-safety),
+BC-2.21.002 (InMemoryVectorStore — Arc\<dyn Embeddings\> DI, RwLock interior mutability, Vec\<f32\> cosine, VectorStoreFactory constructor),
+BC-2.21.003 (zero-norm vector guard → E-VS-001 before cosine division; VP-009 Kani candidate),
+BC-2.21.004 (MetadataFilter — Eq/Ne/In FilterClause; additive similarity_search_with_filter; pre vs post filter; #[non_exhaustive]).
+ADR-014 Decision 2 (all method signatures, VectorStoreRetriever, SearchType, MetadataFilter), Decision 3 (InMemoryVectorStore), Decision 4 (zero-norm guard E-VS-001), Decision 5 (write-time zero-norm guard E-VS-004).
+
+---
+
+### Embeddings Trait
+
+**Source:** ADR-017 Decision 2; ferrochain-core: core::embeddings.
+
+```rust
+// ferrochain-core: core::embeddings
+#[async_trait]
+pub trait Embeddings: Send + Sync {
+    /// Embed a batch of texts. Output must satisfy: output.len() == texts.len() and all
+    /// inner vectors have the same length. Violations → Err(E-EMBED-001).
+    /// Partial provider failure → Err for entire call; no truncated partial result (DI-014).
+    /// BC anchor: BC-2.22.001 PC2 (batch semantics, dimensionality contract → E-EMBED-001,
+    /// DI-014 no partial result), BC-2.22.001 INV-1 (all valid impls must satisfy dimensionality)
+    async fn embed_documents(
+        &self,
+        texts: Vec<String>,
+    ) -> Result<Vec<Vec<f32>>, FerrochainError>;
+
+    /// Embed a single query text. Returns one vector of the model's declared dimension.
+    /// BC anchor: BC-2.22.001 PC3 (embed_query semantics, dimension consistent with embed_documents),
+    /// BC-2.22.001 INV-2 (embed_query dimension matches embed_documents dimension for same model)
+    async fn embed_query(
+        &self,
+        text: String,
+    ) -> Result<Vec<f32>, FerrochainError>;
+}
+```
+
+**BC anchor:**
+BC-2.22.001 (Embeddings trait — embed_documents batch, embed_query, dimensionality contract → E-EMBED-001, batch partial-failure as Err, Arc\<dyn Embeddings\> dyn-safe; VP-008 proptest seed),
+BC-2.22.002 (EmbeddingsOpenAI — text-embedding-3-small/large/ada-002-legacy; OpenAiApiKey DI-010 credential opacity; reqwest/rustls-tls/.timeout(30s); DI-009 per BC-2.14.004),
+BC-2.22.003 (EmbeddingsOllama — no API key; /api/embed preferred; use_legacy_endpoint toggle; 30s unconditional per DI-009 / BC-2.14.004).
+ADR-017 Decision 2 (Embeddings trait surface, dyn-safety via #[async_trait] + &self, dimensionality contract, E-EMBED-001 authority).
+
+---
+
+### ChatPromptTemplate and PromptValue Surface
+
+**Source:** ADR-015; ferrochain-prompts: prompts::template.
+
+```rust
+// ferrochain-prompts: prompts::template
+
+/// Controls whether a named template slot may receive untrusted input.
+/// BC anchor: BC-2.18.003 PC1–PC2 (TrustAll vs TrustRequired semantics),
+/// BC-2.18.004 PC5 (injection_guard checks ProvenanceTag::Untrusted against TrustRequired slots → E-TMPL-001),
+/// BC-2.18.005 PC1 (TrustAll on SystemMessage construction → E-TMPL-002)
+#[derive(Debug, Clone, PartialEq)]
+pub enum SlotTrustPolicy {
+    /// Slot accepts any TemplateVar, including untrusted provenance.
+    TrustAll,
+    /// Slot requires ProvenanceTag::Trusted or ProvenanceTag::Internal.
+    /// Untrusted input → E-TMPL-001 (injection_guard fail-closed; VP-006 Kani candidate).
+    TrustRequired,
+}
+
+impl ChatPromptTemplate {
+    /// Construct from a list of (role, template_string, trust_policy) tuples.
+    /// Raises E-TMPL-002 if TrustAll is specified for a SystemMessage role (prohibited).
+    /// BC anchor: BC-2.18.001 PC1 (construction from (role, template, policy) tuples),
+    /// BC-2.18.005 PC1 (TrustAll on SystemMessage → E-TMPL-002 at construction time)
+    pub fn from_messages(
+        messages: Vec<(MessageRole, &str, SlotTrustPolicy)>,
+    ) -> Result<Self, FerrochainError> { ... }
+
+    /// Render the template with the provided variable bindings.
+    /// Runs injection_guard on each slot. Raises E-TMPL-001 (fail-closed) if an untrusted
+    /// var is bound to a TrustRequired slot. Raises E-TMPL-003 if a required slot has no binding.
+    /// BC anchor: BC-2.18.001 PC2 (format_messages rendering semantics, PromptValue output),
+    /// BC-2.18.004 PC3–PC5 (injection_guard call site; fail-closed; ProvenanceTag drives decision),
+    /// BC-2.18.002 PC1–PC2 (strict-undefined slot detection → E-TMPL-003)
+    pub fn format_messages(
+        &self,
+        vars: HashMap<String, TemplateVar>,
+    ) -> Result<PromptValue, FerrochainError> { ... }
+}
+
+/// The rendered output of ChatPromptTemplate::format_messages.
+/// Each message carries its MessageProvenance for downstream trust decisions.
+/// BC anchor: BC-2.18.001 PC3 (PromptValue structure), BC-2.18.003 PC3 (provenance per message)
+#[non_exhaustive]
+pub struct PromptValue {
+    pub messages: Vec<(Message, MessageProvenance)>,
+}
+
+/// Provenance metadata attached to each rendered message.
+/// BC anchor: BC-2.18.003 PC2–PC3 (provenance tagging at render time),
+/// BC-2.18.004 PC1 (ProvenanceTag::Untrusted drives injection_guard fail-closed decision)
+#[non_exhaustive]
+pub struct MessageProvenance {
+    pub tag: Option<ProvenanceTag>,
+    pub slot_trust_policy: SlotTrustPolicy,
+}
+```
+
+**BC anchor:**
+BC-2.18.001 (ChatPromptTemplate — from_messages construction, format_messages rendering, PromptValue output),
+BC-2.18.002 (strict-undefined slot detection → E-TMPL-003),
+BC-2.18.003 (SlotTrustPolicy — TrustAll vs TrustRequired; MessageProvenance per rendered message),
+BC-2.18.004 (injection_guard — ProvenanceTag::Untrusted on TrustRequired slot → E-TMPL-001 fail-closed; VP-006 Kani candidate),
+BC-2.18.005 (TrustAll on SystemMessage → E-TMPL-002 at construction).
+ADR-015 Decision 1 (ChatPromptTemplate surface), Decision 2 (SlotTrustPolicy enum), Decision 3 (injection_guard fail-closed semantics).
+
+---
+
+### LcSerializable and Reviver Surface
+
+**Source:** ADR-016; ferrochain-core: core::serializable.
+
+```rust
+// ferrochain-core: core::serializable
+
+/// Implemented by types that participate in the lc-JSON serialization protocol.
+/// Registration via inventory::submit! at link time (see BC-2.19.003).
+/// BC anchor: BC-2.19.001 PC1–PC3 (round-trip contract via Serialized::Constructor),
+/// BC-2.19.002 PC1–PC3 (lc_secrets exclusion from Constructor kwargs → Serialized::Secret)
+pub trait LcSerializable: Send + Sync {
+    /// The lc_id path (e.g., &["langchain", "schema", "document", "Document"]).
+    /// Used as the registry key in Reviver's HashMap.
+    /// BC anchor: BC-2.19.001 PC1 (lc_id is the allowlist key for revive dispatch)
+    fn lc_id() -> &'static [&'static str] where Self: Sized;
+
+    /// Secret field names — excluded from Serialized::Constructor kwargs.
+    /// BC anchor: BC-2.19.002 PC1 (secrets produce Serialized::Secret, not Constructor)
+    fn lc_secrets(&self) -> &'static [&'static str] { &[] }
+
+    /// Non-secret serializable attributes. Default: empty map.
+    /// BC anchor: BC-2.19.001 PC2 (Constructor::kwargs sourced from lc_attributes)
+    fn lc_attributes(&self) -> serde_json::Map<String, serde_json::Value> {
+        serde_json::Map::new()
+    }
+
+    /// True if this type participates in round-trip serialization.
+    /// BC anchor: BC-2.19.001 INV-1 (types returning false produce Serialized::NotImplemented)
+    fn is_lc_serializable() -> bool where Self: Sized { false }
+}
+
+/// Wire envelope produced by lc_serialize(). One of three variants.
+/// BC anchor: BC-2.19.001 PC2 (Constructor variant shape — lc field, id, kwargs),
+/// BC-2.19.002 PC2 (Secret variant shape — lc field, id; no kwargs),
+/// BC-2.19.001 INV-1 (NotImplemented for types with is_lc_serializable() == false)
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum Serialized {
+    Constructor {
+        lc: u8,
+        id: Vec<String>,
+        kwargs: serde_json::Map<String, serde_json::Value>,
+    },
+    Secret {
+        lc: u8,
+        id: Vec<String>,
+    },
+    NotImplemented {
+        lc: u8,
+        id: Vec<String>,
+        repr: Option<String>,
+    },
+}
+
+/// Link-time registry entry. Submitted via inventory::submit! in each type's module.
+/// BC anchor: BC-2.19.003 PC2 (LcEntry struct shape: lc_id + constructor fn),
+/// BC-2.19.003 INV-1 (registry is append-only at link time; OnceLock safe)
+pub struct LcEntry {
+    pub lc_id: &'static [&'static str],
+    /// Deserializes kwargs back into a boxed Any. Called by Reviver::revive.
+    /// BC anchor: BC-2.19.005 PC2 (Reviver dispatches to this constructor fn)
+    pub constructor: fn(
+        serde_json::Map<String, serde_json::Value>,
+    ) -> Result<Box<dyn Any + Send + Sync>, FerrochainError>,
+}
+
+inventory::collect!(LcEntry);
+
+/// Reconstructs types from their Serialized representations.
+/// Backed by a OnceLock<HashMap<Vec<String>, ConstructorFn>> initialized from
+/// inventory::iter::<LcEntry>() at startup.
+/// BC anchor: BC-2.19.003 PC3–PC4 (OnceLock singleton, thread-safe concurrent initialization),
+/// BC-2.19.005 PC1–PC3 (allowlist containment — unregistered id → E-SRLZ-001 fail-closed; VP-010 Kani candidate),
+/// BC-2.19.006 PC1–PC2 (langchain-monolith ids → E-SRLZ-002 structured error)
+pub struct Reviver { /* OnceLock<HashMap<Vec<String>, ConstructorFn>> */ }
+
+impl Reviver {
+    /// Initialize or return the cached registry. Thread-safe via OnceLock.
+    /// BC anchor: BC-2.19.003 PC2 (HashMap from inventory::iter), BC-2.19.003 PC3 (OnceLock idempotent)
+    pub fn new() -> Self { ... }
+
+    /// Reconstruct a value from a Serialized envelope.
+    /// Raises E-SRLZ-001 if type id is not in the allowlist registry (fail-closed).
+    /// Raises E-SRLZ-002 if id matches a known langchain-monolith type.
+    /// BC anchor: BC-2.19.005 PC2–PC3 (fail-closed revive; allowlist check precedes dispatch),
+    /// BC-2.19.006 PC2 (E-SRLZ-002 for monolith ids — structured error, not silent None)
+    pub fn revive(
+        &self,
+        s: Serialized,
+    ) -> Result<Box<dyn Any + Send + Sync>, FerrochainError> { ... }
+
+    /// Return the count of registered entries. Used for CI smoke-test assertions.
+    /// BC anchor: BC-2.19.003 PC5 (registry_size used in TV-001/TV-002 relational assertions)
+    pub fn registry_size(&self) -> usize { ... }
+}
+```
+
+**BC anchor:**
+BC-2.19.001 (LcSerializable — round-trip via Serialized::Constructor; lc_id, lc_attributes, is_lc_serializable),
+BC-2.19.002 (lc_secrets exclusion from Constructor kwargs → Serialized::Secret variant),
+BC-2.19.003 (inventory-based type registry — LcEntry, link-time submit!, feature-gated partner entries, OnceLock, Reviver::registry_size smoke-test),
+BC-2.19.004 (legacy namespace remapping — alias entries added to same registry at startup),
+BC-2.19.005 (Reviver allowlist containment — unregistered id → E-SRLZ-001, fail-closed; VP-010 Kani candidate),
+BC-2.19.006 (langchain-monolith type ids → E-SRLZ-002, structured error — not silent None or E-SRLZ-001).
+ADR-016 Decision 1 (LcSerializable trait), Decision 2 (Serialized enum), Decision 3 (lc_secrets), Decision 4 (inventory crate 0.3.24, dtolnay; OnceLock initialization), Decision 5 (Reviver allowlist containment).
+
+---
 
 ## ferrochain-server HTTP API
 

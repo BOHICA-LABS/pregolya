@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "1.7"
+version: "1.8"
 status: active
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-19/BC-2.19.005.md
   - .factory/specs/behavioral-contracts/ss-21/BC-2.21.003.md
   - .factory/specs/behavioral-contracts/ss-22/BC-2.22.001.md
-input-hash: "4d6e389"
+input-hash: "1ba9084"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21]
 ---
@@ -72,7 +72,7 @@ Ten VPs committed before v1.0 release — VP-001..005 (original five) plus VP-00
 | VP-003 | BC-2.13.004 | DI-007 | ferrochain-sandbox / path-guard | Kani | 6 | P0 |
 | VP-004 | BC-2.09.004 | DI-014 | ferrochain-mcp / mcp-adapter | integration | 3 | P1 |
 | VP-005 | BC-2.09.005 | DI-014 | ferrochain-mcp / mcp-client | integration | 3 | P1 |
-| VP-006 | BC-2.18.004 | DI-008 | ferrochain-prompts / injection_guard | Kani | 6 | P1 |
+| VP-006 | BC-2.18.004 | DI-014 | ferrochain-prompts / injection_guard | Kani | 6 | P1 |
 | VP-007 | BC-2.19.001 | DI-008 | ferrochain-core / serializable | proptest | 3 | P1 |
 | VP-008 | BC-2.22.001 | DI-014 | ferrochain-core / embeddings | proptest | 3 | P1 |
 | VP-009 | BC-2.21.003 | DI-014 | ferrochain-vectorstores / vectorstores-similarity | Kani | 6 | P0 |
@@ -397,6 +397,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 1.8 | 2026-07-21 | architect | burst-225 / F-P130-05 | Correct VP-006 DI column in Committed VP Obligations table: DI-008 → DI-014. VP-006 proves the fail-closed property (injection detected → Err returned, no PromptValue produced); the semantically correct invariant is DI-014 (Error Propagation / No Silent Swallowing), not DI-008 (Library Constructor Result Contract). Siblings VP-009 and VP-010 both anchor DI-014 for the same class of proof. Propagates VP-INDEX.md v1.4 and VP-006.md v1.2 corrections. |
 | 1.7 | 2026-07-21 | architect | burst-224 / VP-chain propagation | VP-010 formal statement scoped to non-monolith domain (id ∉ LANGCHAIN_MONOLITH_TYPES) per VP-010.md v1.1 / F-P129-04; harness sketch updated with LANGCHAIN_MONOLITH_TYPES assumption and corrected assertion; feasibility note updated. Test-Sufficient 'Content provenance/guardrail' row updated to reflect GuardedDocuments compile_fail mechanism (ADR-014 Decision 6 / VP-2.20.002-A). Input-hash refreshed: b279860 → d7ef822 (BC-2.18.004 v1.1 + BC-2.19.005 v1.1 bumped by PO in same burst). |
 | 1.6 | 2026-07-21 | architect | burst-224 / F-P129-11 | VP-009 module renamed from `ferrochain-vectorstores / vectorstores-mmr` to `ferrochain-vectorstores / vectorstores-similarity` in Committed VP Obligations table and VP-009 P0 entry; propagates VP-INDEX v1.3 module rename. cosine_similarity is a shared primitive in vectorstores::similarity; MMR algorithm is a separate caller. |
 | 1.5 | 2026-07-21 | architect | burst-223 / D21 | VP layer for D21 ecosystem-parity expansion: add VP-006..010 (3 Kani P1/P0 + 2 proptest P1) to Committed VP Obligations table and Provable Properties Catalog. Total 5→10 VPs; P0 3→5; P1 2→5; Kani 3→6; proptest 0→2. Add SS-18..22 BCs to inputs. |

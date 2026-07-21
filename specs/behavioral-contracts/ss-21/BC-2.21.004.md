@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.004
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,19 +14,21 @@ crate: ferrochain-vectorstores
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
-di_anchors: [DI-008]
+timestamp: 2026-07-21T00:00:00Z
+di_anchors: [DI-008, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction"
+  - "1.1 (F-P130-04/2026-07-21): Add DI-014 to di_anchors — PC8 already cited DI-014 in body ('empty result is valid; it is not silently replaced with unfiltered results'); frontmatter anchor was missing."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-030
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - domain-spec/invariants.md#DI-008
+  - domain-spec/invariants.md#DI-014
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "7fee295"
+input-hash: "efb961b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -154,7 +156,7 @@ _[to be filled after story decomposition — Wave 2 SS-21 story]_
 |-------|-------|
 | Source L2 Capability | CAP-030 |
 | Capability Anchor Justification | CAP-030 ("MetadataFilter — Eq / Ne / In Clause Filtering on Document Metadata During Search") per capabilities-p1-p2.md §CAP-030 — this BC specifies the MetadataFilter and FilterClause types (Eq/Ne/In), the additive similarity_search_with_filter method, and the pre-filter/post-filter behavioral split that CAP-030 identifies as a distinct capability axis from the base VectorStore contract |
-| L2 Domain Invariants | DI-008 (similarity_search_with_filter returns Result; no .unwrap()) |
+| L2 Domain Invariants | DI-008 (similarity_search_with_filter returns Result; no .unwrap()), DI-014 (empty filter result `Ok(vec![])` is valid; NOT silently replaced with unfiltered results — per PC8 and EC-006) |
 | Architecture Authority | ADR-014 Decision 2 §Metadata filter surface (MetadataFilter struct, FilterClause variants, additive method, pre vs post filter, #[non_exhaustive]) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | ferrochain-vectorstores / vectorstores::filter |

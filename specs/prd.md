@@ -27,7 +27,9 @@ supplements:
   - prd-supplements/module-criticality.md
   - prd-supplements/bc-authoring-plan.md
   - prd-supplements/test-vectors.md
+  - prd-supplements/observability.md
 changelog:
+  - "v1.6 (F-P130/2026-07-21): Fix burst 225 — 7 adversarial pass P1D-130 findings closed. (1) F-P130-02: BC-2.20.002 v1.1→v1.2 — 3 nonexistent `ferrochain-guardrail` crate references replaced with canonical `ferrochain-core: core::guardrail` per ADR-014 v1.4 PO Obligations. (2) F-P130-03: interface-definitions.md v2.42→v2.43 — 5 missing D21 trait sections added (Retriever+GuardedDocuments, VectorStore+VectorStoreFactory, Embeddings, ChatPromptTemplate/PromptValue, LcSerializable/Reviver) with verbatim ADR signatures and per-method BC anchors. (3) F-P130-04: DI-014 added to di_anchors of BC-2.20.001 v1.0→v1.1, BC-2.20.002 v1.1→v1.2, BC-2.21.004 v1.0→v1.1; propagated to BC-INDEX + prd.md §2 + §7 RTM. (4) F-P130-06: observability.md v1.0 created — Canonical Structured Event Catalog with 2 confirmed event_type emissions; SAP-1 policy stated; registered in supplements list. (5) F-P130-07: E-EMBED-001 prefix `DimensionMismatch:` → `EmbeddingDimensionMismatch:` in error-taxonomy.md v1.28→v1.29 and BC-2.22.001 v1.0→v1.1; E-VS-002 unchanged; gate #33 forward+reverse clean. (6) F-P130-08: BC-2.19.003 v1.0→v1.1 TV-001/TV-002 made falsifiable — relational assertions against LANGCHAIN_CORE_REGISTRY.len() and feature-gated delta >= 1. (7) F-P130-09: DI-009 added to di_anchors of BC-2.22.002 v1.0→v1.1 and BC-2.22.003 v1.0→v1.1; BC-2.14.004 cross-reference added in PC2/INV-5 and PC4/INV-2 prose; propagated to BC-INDEX + §2 + §7 RTM."
   - "v1.5 (F-P224/2026-07-21): §5 E-VS range row updated — E-VS-004 ZeroNormWriteTime (STATIC) added to examples column (write-time zero-norm guard on add_texts/from_texts_sync; minted in error-taxonomy.md v1.28; BC-2.21.002 v1.1 anchor)."
   - "v1.4 (2026-07-20): D21 ecosystem-parity expansion (burst 216) — 21 new BCs across 5 subsystems SS-18..22 (ferrochain-prompts/core-serializable/vectorstores/embeddings); BC total 95→116, P0 48→51, P1 39→56, P2 8→9; §2 adds subsections 2.18–2.22; §3 public-traits list extended with Retriever/VectorStore/VectorStoreFactory/Embeddings; §5 error taxonomy adds E-TMPL/E-SRLZ/E-VS/E-EMBED components; §5b count 95→116 BC files; §7 RTM +21 rows."
   - "v1.3 (F-P97-02, 2026-07-17): §10 Module Criticality — deleted stale deferral parenthetical '(architect to confirm crate→subsystem mapping in Phase 1b)'. Mapping fully resolved at Phase 1b (2026-07-14); parenthetical survived sweep. Input-hash updated."
@@ -377,8 +379,8 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.20.001 | Retriever Trait — get_relevant_documents Async Dyn-Compatible; Document Carrier Type; Arc\<dyn Retriever\> Graph Seam | P1 | DI-008, DI-012 | ss-20/BC-2.20.001.md |
-| BC-2.20.002 | BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns Entering Graph Context (DI-012 Coverage Obligation) | P0 | DI-012 | ss-20/BC-2.20.002.md |
+| BC-2.20.001 | Retriever Trait — get_relevant_documents Async Dyn-Compatible; Document Carrier Type; Arc\<dyn Retriever\> Graph Seam | P1 | DI-008, DI-012, DI-014 | ss-20/BC-2.20.001.md |
+| BC-2.20.002 | BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns Entering Graph Context (DI-012 Coverage Obligation) | P0 | DI-012, DI-014 | ss-20/BC-2.20.002.md |
 | BC-2.20.003 | VectorStoreRetriever — SearchType Enum (Similarity \| SimilarityScoreThreshold \| Mmr); k / fetch_k / lambda_mult Configuration; Constructed via as_retriever() | P1 | DI-008 | ss-20/BC-2.20.003.md |
 
 ### 2.21 VectorStore Abstraction (CAP-028, CAP-029, CAP-030) — P0/P1
@@ -392,7 +394,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.21.001 | VectorStore Trait — Instance-Method Surface; VectorStoreFactory Sized-Bounded Separation; Arc\<dyn VectorStore\> Dyn-Safety | P1 | DI-008 | ss-21/BC-2.21.001.md |
 | BC-2.21.002 | InMemoryVectorStore — Arc\<dyn Embeddings\> DI; RwLock Interior Mutability; Vec\<f32\> Cosine; VectorStoreFactory Constructor | P1 | DI-008 | ss-21/BC-2.21.002.md |
 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division (VP-009 Kani Candidate) | P0 | DI-008, DI-014 | ss-21/BC-2.21.003.md |
-| BC-2.21.004 | MetadataFilter — Eq / Ne / In FilterClause; Additive similarity_search_with_filter; Native Pre-Filter vs InMemoryVectorStore Post-Filter; #[non_exhaustive] | P1 | DI-008 | ss-21/BC-2.21.004.md |
+| BC-2.21.004 | MetadataFilter — Eq / Ne / In FilterClause; Additive similarity_search_with_filter; Native Pre-Filter vs InMemoryVectorStore Post-Filter; #[non_exhaustive] | P1 | DI-008, DI-014 | ss-21/BC-2.21.004.md |
 
 ### 2.22 Embeddings (CAP-031, CAP-032, CAP-033) — P1
 
@@ -403,8 +405,8 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
 | BC-2.22.001 | Embeddings Trait — embed_documents Batch; embed_query; Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err; Arc\<dyn Embeddings\> Dyn-Safe (VP-008 Proptest Seed) | P1 | DI-008, DI-014 | ss-22/BC-2.22.001.md |
-| BC-2.22.002 | EmbeddingsOpenAI — text-embedding-3-small/large/ada-002-legacy; OpenAiApiKey Redacted-Debug Credential Opacity (DI-010); reqwest/rustls-tls/.timeout(30s); Batch Partial-Failure as Err | P1 | DI-008, DI-010, DI-014 | ss-22/BC-2.22.002.md |
-| BC-2.22.003 | EmbeddingsOllama — No API Key; POST /api/embed Preferred; use_legacy_endpoint Toggle for /api/embeddings; reqwest/rustls-tls/.timeout(30s) Unconditional | P1 | DI-008, DI-014 | ss-22/BC-2.22.003.md |
+| BC-2.22.002 | EmbeddingsOpenAI — text-embedding-3-small/large/ada-002-legacy; OpenAiApiKey Redacted-Debug Credential Opacity (DI-010); reqwest/rustls-tls/.timeout(30s); Batch Partial-Failure as Err | P1 | DI-008, DI-009, DI-010, DI-014 | ss-22/BC-2.22.002.md |
+| BC-2.22.003 | EmbeddingsOllama — No API Key; POST /api/embed Preferred; use_legacy_endpoint Toggle for /api/embeddings; reqwest/rustls-tls/.timeout(30s) Unconditional | P1 | DI-008, DI-009, DI-014 | ss-22/BC-2.22.003.md |
 
 ---
 
@@ -666,16 +668,16 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.19.004 | CAP-025, DI-008 | ferrochain-core (core::serializable) | P2 | U |
 | BC-2.19.005 | CAP-025, DI-008, DI-014 | ferrochain-core (core::serializable) | P0 | U, K |
 | BC-2.19.006 | CAP-025, DI-008, DI-014 | ferrochain-core (core::serializable) | P1 | U |
-| BC-2.20.001 | CAP-026, DI-008, DI-012 | ferrochain-core (core::retriever) | P1 | U, I |
-| BC-2.20.002 | CAP-026, DI-012 | ferrochain-core (core::retriever) | P0 | U, I |
+| BC-2.20.001 | CAP-026, DI-008, DI-012, DI-014 | ferrochain-core (core::retriever) | P1 | U, I |
+| BC-2.20.002 | CAP-026, DI-012, DI-014 | ferrochain-core (core::retriever) | P0 | U, I |
 | BC-2.20.003 | CAP-027, DI-008 | ferrochain-vectorstores | P1 | U |
 | BC-2.21.001 | CAP-028, DI-008 | ferrochain-vectorstores | P1 | U |
 | BC-2.21.002 | CAP-029, DI-008 | ferrochain-vectorstores | P1 | U, I |
 | BC-2.21.003 | CAP-029, DI-008, DI-014 | ferrochain-vectorstores | P0 | U, K |
-| BC-2.21.004 | CAP-030, DI-008 | ferrochain-vectorstores | P1 | U |
+| BC-2.21.004 | CAP-030, DI-008, DI-014 | ferrochain-vectorstores | P1 | U |
 | BC-2.22.001 | CAP-031, DI-008, DI-014 | ferrochain-core (core::embeddings) | P1 | U, P |
-| BC-2.22.002 | CAP-032, DI-008, DI-010, DI-014 | ferrochain-openai | P1 | U, I |
-| BC-2.22.003 | CAP-033, DI-008, DI-014 | ferrochain-ollama | P1 | U, I |
+| BC-2.22.002 | CAP-032, DI-008, DI-009, DI-010, DI-014 | ferrochain-openai | P1 | U, I |
+| BC-2.22.003 | CAP-033, DI-008, DI-009, DI-014 | ferrochain-ollama | P1 | U, I |
 
 **Totals:** 116 BCs — 51 P0 / 56 P1 / 9 P2
 
@@ -742,3 +744,24 @@ Summary:
 | ferrochain-splitters | MEDIUM | Correctness-critical (code-point parity) but isolated |
 | ferrochain-standard-tests | MEDIUM | Test infrastructure — quality signal, not production gate |
 | ferrochain-community | LOW | Third-party contributed; not in-tree at v1 |
+
+---
+
+## 11. Observability — Canonical Structured Event Catalog
+
+> **Supplement:** Full catalog is in `prd-supplements/observability.md`.
+
+The Canonical Structured Event Catalog enumerates every `tracing::*!(event_type = "...")` emission
+that is specified across the BC corpus. Per SAP-1 (CLAUDE.md §Standing Adversary Probes), each
+emission site must have a catalog row with full field schema, emitting BC anchor, audit role, and
+recurrence policy.
+
+**Census at Phase 1d (2026-07-21):** 2 distinct `event_type` values specified.
+
+| event_type | Log Level | Emitting BC | Trigger |
+|------------|-----------|-------------|---------|
+| `embeddings.legacy_model_warning` | `WARN` | BC-2.22.002 PC3/EC-002 | `EmbeddingsOpenAI` constructed with `"text-embedding-ada-002"` (legacy model) |
+| `ferrochain.mcp.guardrail.unregistered` | `WARN` | BC-2.09.003 PC4/EC-002 | MCP tool result enters model context with no `GuardrailHook` registered (default-permit per OQR-5) |
+
+**SAP-1 obligation:** implementers adding a new `event_type` emission in any `crates/` file must add a
+same-commit catalog row to `prd-supplements/observability.md`. Missing rows are P1 findings in adversarial review.

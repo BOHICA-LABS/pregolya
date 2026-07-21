@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "24397ea"
+input-hash: "a03e596"
 traces_to: STATE.md
 ---
 
@@ -1006,3 +1006,45 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA: D21 (ecosystem-parity 5-subsystem expansion, human-directed 2026-07-20); ADR-014/015/016/017 minted; ADR-010 rev component-axis 12→16.
 ### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-223 commit (pushed). No worktrees. No PRs.
 ### WRAP METADATA: Date 2026-07-21 | Cycle v1.0.0-greenfield | Burst 223 | Phase 1 IN PROGRESS — D21 VP layer COMPLETE | Re-convergence required (0/3)
+
+---
+
+## Burst 224 Checkpoint (archived burst-225 WRAP)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21 scope expansion. P1D-129 complete (12 findings: 3H/7M/2L; expanded-perimeter pass 1); fix-burst 224 closed all 12 (E-VS-004 minted; census 96=43+16+37; TVs 609). NEXT: adversary pass P1D-130 on new frozen HEAD → 3/3 CLEAN(strict) → check-input-drift → consistency audit → Phase 1 HUMAN GATE. Follow-up: 10 BCs not yet read (BC-2.18.002/003, 2.19.002/003/004, 2.20.001, 2.21.001/004, 2.22.002/003) + interface-definitions trait-method coverage."
+### COMMITTED (through burst 224):
+- Burst 219 (3762dab): CAP-022..033 (33 CAPs); capabilities-p0 v1.7 (CAP-002 reversed); entities-graph v1.4; L2-INDEX v1.6.
+- Burst 220 (WIP wrap): 21 new BC files (SS-18..22) + error-taxonomy v1.27 + interface-definitions v2.41 + test-vectors v2.0 + product-brief v1.4.
+- Burst 222: prd.md v1.4 body COMPLETE; BC-INDEX.md v1.8 COMPLETE (116 BCs: 51 P0/56 P1/9 P2).
+- Burst 223: VP-006..010 authored; VP-INDEX v1.2 (10 VPs); verification-architecture v1.5; coverage-matrix v1.6.
+- Burst 224 (this commit): P1D-129 fix-burst (12 findings closed); ADR-014 v1.3/015 v1.2/016 v1.2; VP-006/009/010 bumped; 7 BC files v1.1; error-taxonomy v1.28 (E-VS-004; 96 codes); test-vectors v2.1 (609 TVs); hash sweep STALE→0.
+### NEXT-ACTIONS (exact, ordered):
+1. Adversary pass P1D-130 on NEW frozen HEAD (burst 224 push resets streak to 0/3).
+2. Follow-up coverage: 10 BCs not yet individually read (BC-2.18.002/003, 2.19.002/003/004, 2.20.001, 2.21.001/004, 2.22.002/003) + interface-definitions trait-method coverage cross-check.
+3. After 3/3 CLEAN(strict): /vsdd-factory:check-input-drift → fresh consistency audit → Phase 1 HUMAN APPROVAL GATE.
+### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 20 crates; #[non_exhaustive] gate update (Phase 3). story-writer propagation: 7 bumped BCs from burst-224 (bc_array_changes_propagate_to_body_and_acs; applies at Phase 2 story authoring).
+### DECISION DELTA THIS SESSION: ADR-014 v1.3/015 v1.2/016 v1.2 (F-P129 fixes); E-VS-004 minted (write-time vector-store error; E-VS-003→E-VS-004 collision corrected).
+### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-224 commit d21676d (pushed). No worktrees. No PRs.
+### WRAP METADATA: Date 2026-07-21 | Cycle v1.0.0-greenfield | Burst 224 | Phase 1 IN PROGRESS — P1D-129 fix-burst COMPLETE | Re-convergence required (0/3; resets on push)
+
+---
+
+## Burst 225 Checkpoint (archived burst-225 COMPLETE)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21 scope expansion. P1D-130 complete (9 findings: 1C/3H/2M+1PG/3L; expanded-perimeter pass 2); fix-burst 225 closed all 9 (BC-2.20.001/002/2.21.004 DI-014 re-anchors; ferrochain-guardrail→ferrochain-core:core::guardrail; interface-definitions v2.43 +5 D21 trait sections; observability.md v1.0 authored [SAP-1 catalog; 2 event_types]; error-taxonomy v1.29 EmbeddingDimensionMismatch prefix; BC-2.19.003/2.22.002/003 TV/anchor fixes). NEXT: adversary pass P1D-131 on new frozen HEAD → 3/3 CLEAN(strict) → check-input-drift → consistency audit → Phase 1 HUMAN GATE."
+### COMMITTED (through burst 225):
+- Burst 219 (3762dab): CAP-022..033 (33 CAPs); capabilities-p0 v1.7 (CAP-002 reversed); entities-graph v1.4; L2-INDEX v1.6.
+- Burst 220 (WIP wrap): 21 new BC files (SS-18..22) + error-taxonomy v1.27 + interface-definitions v2.41 + test-vectors v2.0 + product-brief v1.4.
+- Burst 222: prd.md v1.4 body COMPLETE; BC-INDEX.md v1.8 COMPLETE (116 BCs: 51 P0/56 P1/9 P2).
+- Burst 223: VP-006..010 authored; VP-INDEX v1.2 (10 VPs); verification-architecture v1.5; coverage-matrix v1.6.
+- Burst 224: P1D-129 fix-burst (12 findings closed); ADR-014 v1.3/015 v1.2/016 v1.2; VP-006/009/010 bumped; 7 BC files v1.1; error-taxonomy v1.28 (E-VS-004; 96 codes); test-vectors v2.1 (609 TVs); hash sweep STALE→0.
+- Burst 225 (this commit): P1D-130 fix-burst COMPLETE (all 9 closed); ADR-014 v1.4; ADR-010/017 v1.2 prefix sweep; VP-006 v1.2; VP-008 v1.1; VP-INDEX v1.4; 7 BC files v1.1; BC-INDEX v1.9; prd v1.6; error-taxonomy v1.29; interface-definitions v2.43 (+5 D21 trait sections); observability.md v1.0 (NEW — SAP-1 catalog); hash sweep STALE→0 (3 passes + 3 index files).
+### NEXT-ACTIONS (exact, ordered):
+1. Adversary pass P1D-131 on NEW frozen HEAD (burst 225 push resets streak to 0/3).
+2. After 3/3 CLEAN(strict): /vsdd-factory:check-input-drift → fresh consistency audit → Phase 1 HUMAN APPROVAL GATE.
+### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 20 crates; #[non_exhaustive] gate update (Phase 3). story-writer propagation: 16 bumped BCs from bursts 224+225 (bc_array_changes_propagate_to_body_and_acs; applies at Phase 2 story authoring).
+### DECISION DELTA THIS SESSION: ADR-014 v1.4 (GuardrailHook async canon, Decision 6 rebuilt); observability.md v1.0 (Phase-1 SAP-1 deliverable gap filled; L-024 codified).
+### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-225 commit (this push). No worktrees. No PRs.
+### WRAP METADATA: Date 2026-07-21 | Cycle v1.0.0-greenfield | Burst 225 | Phase 1 IN PROGRESS — P1D-130 fix-burst COMPLETE | Re-convergence required (0/3; resets on push)

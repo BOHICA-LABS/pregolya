@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.001
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,20 +14,22 @@ crate: ferrochain-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
-di_anchors: [DI-008, DI-012]
+timestamp: 2026-07-21T00:00:00Z
+di_anchors: [DI-008, DI-012, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-20 Document Retrieval"
+  - "1.1 (F-P130-04/2026-07-21): Add DI-014 to di_anchors — EC-002 already cited DI-014 in body ('error propagated, not swallowed; no Vec::new() fallback on partial failure'); frontmatter anchor was missing."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-026
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - domain-spec/invariants.md#DI-008
   - domain-spec/invariants.md#DI-012
+  - domain-spec/invariants.md#DI-014
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "7fee295"
+input-hash: "efb961b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -140,7 +142,7 @@ _[to be filled after story decomposition — Wave 2 SS-20 story]_
 |-------|-------|
 | Source L2 Capability | CAP-026 |
 | Capability Anchor Justification | CAP-026 ("Retriever Trait — get_relevant_documents; Arc<dyn Retriever> Seam; DI-012 RAGRetrieval Guardrail Coverage") per capabilities-p1-p2.md §CAP-026 — this BC specifies the exact Retriever trait surface, Document carrier type, and Arc<dyn Retriever> dyn-compatibility contract that CAP-026 defines as the foundational document-retrieval seam for graph nodes |
-| L2 Domain Invariants | DI-008 (get_relevant_documents returns Result; no .unwrap() on retrieval results), DI-012 (documents entering graph context via Retriever must pass BoundaryType::RAGRetrieval guardrail — coverage assertion in BC-2.20.002) |
+| L2 Domain Invariants | DI-008 (get_relevant_documents returns Result; no .unwrap() on retrieval results), DI-012 (documents entering graph context via Retriever must pass BoundaryType::RAGRetrieval guardrail — coverage assertion in BC-2.20.002), DI-014 (errors propagated via `?`; no silent `Vec::new()` fallback on partial or backend failure — per EC-002) |
 | Architecture Authority | ADR-014 Decision 1 (Retriever + Document in ferrochain-core) and Decision 2 (trait shape, async dyn-compat, Document struct) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | ferrochain-core / core::retriever, core::documents |

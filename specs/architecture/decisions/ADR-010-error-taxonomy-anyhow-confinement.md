@@ -14,8 +14,9 @@ date: "2026-07-20"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.1"
+version: "1.2"
 changelog:
+  - "1.2 (burst-225/2026-07-21): F-P130-07 sibling sweep — correct stale E-EMBED-001 rationale prefix in EMBED component table: `DimensionMismatch:` → `EmbeddingDimensionMismatch:` per error-taxonomy v1.29 (PO renamed to distinguish from E-VS-002 which retains bare `DimensionMismatch:`)."
   - "1.1 (D21/2026-07-20): Component axis expanded from 12 → 16 by adjudicating error codes introduced in ADR-014 (VectorStore), ADR-015 (Prompt Templates), ADR-016 (lc-JSON), and ADR-017 (Embeddings). Four new components added: TMPL (ferrochain-prompts), SRLZ (ferrochain-core::serializable), VS (ferrochain-vectorstores), EMBED (ferrochain-core::embeddings + providers). Category axis unchanged at 12. E-CFG-001 (VectorStoreRetriever config) reassigned to E-VS-NNN — no CFG component created. ADR-016 category error corrected: 'Serialization' → VAL. #[non_exhaustive] gate count 13 → 17. All four new components are library-layer only; no RFC-7807 status rows needed in BC-2.14.002."
   - "1.0 (D17/2026-07-14): Initial ADR — anyhow confinement rules, FerrochainError at all library boundaries, thiserror for internal errors, CI enforcement via cargo xtask deny-anyhow-in-lib."
 ---
@@ -157,7 +158,7 @@ Canonical abbreviation: **EMBED** (as coined by ADR-017).
 
 | Code | Category | Rationale |
 |------|----------|-----------|
-| E-EMBED-001 | VAL | DimensionMismatch: embed_documents or embed_query returned vectors of inconsistent length — violates the dimensionality contract (DI-014 / ADR-017 Decision 2). Input or provider error. |
+| E-EMBED-001 | VAL | EmbeddingDimensionMismatch: embed_documents or embed_query returned vectors of inconsistent length — violates the dimensionality contract (DI-014 / ADR-017 Decision 2). Input or provider error. |
 
 `Component::Embed` ↔ `EMBED` in prose/code.
 

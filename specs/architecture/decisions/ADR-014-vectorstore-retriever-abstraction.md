@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-21"
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
-version: "1.3"
+version: "1.4"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.4 (burst-225/2026-07-21): F-P130-01 (CRITICAL) — Decision 6 GuardrailHook re-definition removed; replaced with canonical `async fn evaluate` signature from interface-definitions.md §GuardrailHook (authority-deference: BC-2.11.001..006 supersede on contract semantics). GuardedDocuments::rag_ingress made async; mechanism corrected to per-document evaluate calls with IngressContent::RagChunk per BC-2.11.003 PC1/PC5; all three GuardrailResult arms (Pass/Fail/Transform) honoured. BoundaryType re-definition in Decision 6 body removed — BoundaryType is defined in core::guardrail per BC-2.11.001 canonical precedent; only referenced here via ProvenanceTag. Purity classification note updated: rag_ingress is async → Boundary Module classification confirmed unchanged. Consequences bullets updated accordingly. Sibling sweep: purity-boundary-map.md v1.8 (core::guardrail + core::retriever rows), module-decomposition.md v1.13 (guardrail comment block). PO handoff text for BC-2.20.002 ferrochain-guardrail→ferrochain-core anchor corrections (F-P130-02) recorded in §PO Obligations."
   - "1.3 (burst-224/2026-07-21): Collision correction — error-taxonomy.md line 288 already defines E-VS-003 (VectorStoreRetriever config validation, VAL, BC-2.20.003). Write-time zero-norm rejection code corrected from E-VS-003 → E-VS-004 throughout Decision 5 heading, table, code sketches, and Consequences section. PO handoff updated to mint E-VS-004."
   - "1.2 (burst-224/2026-07-21): F-P129-05 — fix Hardening Note: VP-009 is Zero-Norm Cosine Guard (Kani P0), not MMR proptest; reference VP-2.21.003-C for MMR proptest sub-property. F-P129-11 — update cosine primitive location: vectorstores::mmr → vectorstores::similarity. F-P129-08 — add Decision 5: write-time zero-norm rejection (E-VS-004, corrected in v1.3) at add_texts/from_texts_sync; search-time E-VS-001 (VP-009) remains as defense-in-depth. F-P129-09 — add Decision 6: GuardedDocuments newtype (no public constructor; sole constructor rag_ingress); GuardrailHook promoted to core::guardrail (pure-core, trait-in-core precedent); core::retriever reclassified Boundary; DI-012 becomes compile-time type-error enforcement. Add Consequences bullets for E-VS-004 (corrected in v1.3), GuardedDocuments, and core::guardrail."
   - "1.1 (crates.io/2026-07-20): Add zero-norm vector guard hardening note for cosine similarity (NaN prevention, 2-line check, no new dep)."
@@ -386,14 +387,47 @@ proof that the RAG guardrail has been applied. There is no public struct constru
 pub struct GuardedDocuments(Vec<Document>);
 
 impl GuardedDocuments {
-    /// Sole public constructor. Calls guardrail.check(BoundaryType::RAGRetrieval, &docs).
-    /// Returns Err if the guardrail rejects the document batch.
-    pub fn rag_ingress(
+    /// Sole public constructor. Per-document async guardrail gate per BC-2.11.003.
+    ///
+    /// For each document D in `docs`:
+    ///   1. Constructs `IngressContent::RagChunk(serde_json::to_value(&D)?)`.
+    ///   2. Constructs `ProvenanceTag { boundary_type: BoundaryType::RAGRetrieval,
+    ///      ingress_id, sequence_position: i }` per BC-2.11.001.
+    ///   3. Calls `guardrail.evaluate(chunk, tag).await`.
+    ///   4. GuardrailResult arms:
+    ///      - Pass               → D included in GuardedDocuments
+    ///      - Fail{reason,sev}   → propagates Err (BC-2.20.002 PC2 / DI-014; no
+    ///                             silent continuation with remaining documents)
+    ///      - Transform{content} → deserializes RagChunk Value back to Document;
+    ///                             transformed document included (BC-2.11.003 PC4)
+    ///
+    /// N documents → N independent `GuardrailHook::evaluate` calls (BC-2.11.003 PC5).
+    pub async fn rag_ingress(
         docs: Vec<Document>,
         guardrail: &dyn GuardrailHook,
     ) -> Result<GuardedDocuments, FerrochainError> {
-        guardrail.check(BoundaryType::RAGRetrieval, &docs)?;
-        Ok(GuardedDocuments(docs))
+        let ingress_id = Uuid::new_v4();
+        let mut guarded = Vec::with_capacity(docs.len());
+        for (i, doc) in docs.into_iter().enumerate() {
+            let chunk = IngressContent::RagChunk(serde_json::to_value(&doc)?);
+            let tag = ProvenanceTag {
+                boundary_type: BoundaryType::RAGRetrieval,
+                ingress_id,
+                sequence_position: i,
+            };
+            match guardrail.evaluate(chunk, tag).await {
+                GuardrailResult::Pass => guarded.push(doc),
+                GuardrailResult::Fail { reason, severity } => {
+                    return Err(FerrochainError { /* guardrail rejection — error taxonomy entry required */ });
+                }
+                GuardrailResult::Transform { new_content } => {
+                    if let IngressContent::RagChunk(val) = new_content {
+                        guarded.push(serde_json::from_value(val)?);
+                    }
+                }
+            }
+        }
+        Ok(GuardedDocuments(guarded))
     }
 
     /// Read-only access to the inner documents.
@@ -403,31 +437,53 @@ impl GuardedDocuments {
 }
 ```
 
-**GuardrailHook trait** is defined in a new module `core::guardrail` (ferrochain-core)
+**GuardrailHook trait** is defined in `core::guardrail` (ferrochain-core)
 — promoted from per-subsystem dispatch modules (graph::provenance, mcp::ingress) to
 ferrochain-core, consistent with the trait-in-core precedent established for
 `BudgetPolicy` → `core::budget` (ADR-009) and `MemoryWriteGuard` → `core::write_guard`
 (ADR-012). Existing per-subsystem dispatch modules import from ferrochain-core.
 
+**Canonical trait (interface-definitions.md §GuardrailHook — authoritative; not re-minted here):**
+
 ```rust
-// ferrochain-core: core::guardrail
+// ferrochain-core: core::guardrail — definitions-only (trait + supporting enums; no execution logic)
+#[async_trait]
 pub trait GuardrailHook: Send + Sync {
-    /// Synchronous policy check. No async, no I/O in trait body.
-    fn check(
+    async fn evaluate(
         &self,
-        boundary: BoundaryType,
-        docs: &[Document],
-    ) -> Result<(), FerrochainError>;
+        content: IngressContent,
+        provenance_tag: ProvenanceTag,
+    ) -> GuardrailResult;
 }
 
-/// Guardrail application boundary points. Not #[non_exhaustive] — 3 variants are
-/// the canonical closed set (PASS-58 canon).
-pub enum BoundaryType {
-    ToolResult,
-    RAGRetrieval,
-    MemoryIngress,
+pub enum GuardrailResult {
+    Pass,
+    Fail { reason: String, severity: GuardrailSeverity },
+    Transform { new_content: IngressContent },
 }
+
+// IngressContent variants encode the ingress boundary — RagChunk corresponds to
+// BoundaryType::RAGRetrieval in ProvenanceTag (BC-2.11.001).
+pub enum IngressContent {
+    ToolResult(ContentBlock),
+    RagChunk(serde_json::Value),  // Document serialized to Value at RAG ingress
+    MemoryItem(serde_json::Value),
+}
+
+pub enum GuardrailSeverity { Critical, High, Medium, Low }
+
+/// BoundaryType — canonical 3-variant closed set (PASS-58 canon, not #[non_exhaustive]).
+/// Defined in core::guardrail; used in ProvenanceTag per BC-2.11.001.
+/// Variants: ToolResult | RAGRetrieval | MemoryIngress.
+/// (Full definition per BC-2.11.001 — not re-enumerated here to avoid divergence.)
 ```
+
+Authority: BC-2.11.001 (ProvenanceTag + BoundaryType), BC-2.11.002 (ToolResult boundary),
+BC-2.11.003 (RAGRetrieval boundary — primary authority for rag_ingress mechanism),
+BC-2.11.004 (MemoryIngress boundary), BC-2.11.005 (fail-closed), BC-2.11.006 (no-hook default).
+The canonical full definition is in interface-definitions.md §GuardrailHook — that section
+is the source of truth for compiler-facing types. Decision 6 mechanizes BC-2.20.002 coverage
+obligation on top of the established SS-11 contract.
 
 ### Enforcement pattern
 
@@ -437,9 +493,15 @@ error — `Vec<Document>` does not coerce to `GuardedDocuments`.
 
 ### Purity classification
 
-- `core::guardrail` → **Pure Core** (definitions-only: trait + enum, no execution logic)
-- `core::retriever` → **Boundary Module** (pure routing gate in `rag_ingress` delegates
-  to effectful `&dyn GuardrailHook` implementation)
+- `core::guardrail` → **Pure Core** (definitions-only: `GuardrailHook` trait with
+  `async fn evaluate` signature, `GuardrailResult`, `IngressContent`, `GuardrailSeverity`,
+  `BoundaryType` — zero execution logic; the `async` on `evaluate` is a trait method signature
+  requirement, not an indication of I/O in the trait body; `core::guardrail` contains no call sites)
+- `core::retriever` → **Boundary Module** (`rag_ingress` is `async fn`: per-document routing
+  gate that dispatches to the injected `&dyn GuardrailHook` implementation for each document.
+  The Boundary Module classification holds regardless of the async surface — async boundary
+  modules are the norm per the `memory::write_guard` + `graph::provenance` pattern; the
+  pure validation logic and effectful GuardrailHook dispatch are cleanly separated.)
 
 ## Rationale
 
@@ -529,15 +591,63 @@ applicability. Two separate crates with a clear boundary is correct.
   persistence; `document_index` carried as structured context field. Error taxonomy must mint
   `E-VS-004` (PO obligation; BC-2.21.002 write-time contract row).
 - **GuardedDocuments** (Decision 6): new newtype in `core::retriever`; no public constructor;
-  sole constructor is `GuardedDocuments::rag_ingress(docs, &dyn GuardrailHook)`; graph nodes
-  consuming RAG output accept `&GuardedDocuments`, making DI-012 guardrail bypass a compile-time
-  type error rather than a review-time finding.
+  sole constructor is `GuardedDocuments::rag_ingress(docs, &dyn GuardrailHook)` — `async fn`;
+  iterates per-document, calling `guardrail.evaluate(IngressContent::RagChunk(...), provenance_tag).await`
+  per BC-2.11.003 PC1/PC5 (N documents → N evaluate calls); honors all three GuardrailResult
+  arms (Pass → include; Fail → propagate Err per BC-2.20.002 PC2; Transform → include
+  deserialized replacement Document). Graph nodes consuming RAG output accept `&GuardedDocuments`,
+  making DI-012 guardrail bypass a compile-time type error (compile_fail Red Gate / VP-2.20.002-A).
 - **core::guardrail** (Decision 6): new Pure Core definitions module in ferrochain-core hosting
-  `GuardrailHook` trait and `BoundaryType` enum; promotes from per-subsystem modules consistent
-  with ADR-009 + ADR-012 trait-in-core pattern. `core::retriever` reclassified from Pure Core
-  to Boundary Module (routes through effectful `&dyn GuardrailHook`).
+  the canonical `GuardrailHook` trait (`async fn evaluate` per interface-definitions.md §GuardrailHook),
+  `GuardrailResult`, `IngressContent`, `GuardrailSeverity`, and `BoundaryType`; promotes from
+  per-subsystem modules consistent with ADR-009 + ADR-012 trait-in-core pattern.
+  `core::retriever` reclassified from Pure Core to Boundary Module (async `rag_ingress`
+  routes through effectful `&dyn GuardrailHook`).
 - **vectorstores::similarity** (Decision 2 + F-P129-11): new Pure Core module in
   ferrochain-vectorstores hosting the shared `cosine_similarity` primitive (called by
   `vectorstores::memory`, `vectorstores::mmr`, and future backends); VP-009 Kani P0 target.
   `vectorstores::mmr` retains Pure Core classification but no longer hosts `cosine_similarity`.
+
+## PO Obligations
+
+### E-VS-004 (carried from v1.3)
+
+Error taxonomy must mint `E-VS-004` — write-time zero-norm rejection in the `VS` namespace
+(`ferrochain-vectorstores`); `add_texts` and `from_texts_sync` reject documents whose
+embedding has L2 norm == 0.0 before persistence; `document_index` carried as structured
+context field (gate #33 Form 3 convention). BC-2.21.002 write-time contract row authority.
+
+### BC-2.20.002 Anchor Corrections (F-P130-02 — burst-225)
+
+BC-2.20.002 contains three occurrences of `ferrochain-guardrail` that reference a
+nonexistent crate. This crate does not exist; the guardrail trait and BoundaryType enum
+live in `ferrochain-core: core::guardrail` (Decision 6 of this ADR; trait-in-core
+precedent per ADR-009/ADR-012).
+
+**PO must apply the following three textual corrections to BC-2.20.002:**
+
+1. **Description paragraph** (currently: "…variant in `ferrochain-guardrail` already covers
+   this seam — no new variant, trait, or guardrail is introduced by this BC.")
+   → Replace `` `ferrochain-guardrail` `` with `` `ferrochain-core: core::guardrail` ``.
+
+2. **Precondition 1** (currently: "`BoundaryType::RAGRetrieval` exists in
+   `ferrochain-guardrail: guardrail::boundary` (defined in BC-2.11.001).")
+   → Replace `` `ferrochain-guardrail: guardrail::boundary` `` with
+   `` `ferrochain-core: core::guardrail` ``.
+
+3. **Architecture Anchors** (currently: "`architecture/purity-boundary-map.md` —
+   `ferrochain-guardrail` guardrail boundary enforcement")
+   → Replace `` `ferrochain-guardrail` guardrail boundary enforcement `` with
+   `` `ferrochain-core: core::guardrail` guardrail boundary enforcement ``.
+
+Additionally, **VP-2.20.002-A** references the compile_fail Red Gate mechanism —
+the type it calls is `GuardedDocuments::rag_ingress` in `ferrochain-core: core::retriever`.
+The compile_fail test verifies that a graph node accepting `Vec<Document>` directly
+does not satisfy the required `&GuardedDocuments` parameter — unchanged by this correction.
+
+**VP-2.20.002-B** ("guardrail failure propagates as Err without document fallback") remains
+valid — `rag_ingress` propagates `Err` on `GuardrailResult::Fail` per BC-2.20.002 PC2.
+
+No BC body postconditions or test vectors need rewording — the behavioral contract is
+unchanged; only the crate anchor in three prose locations is wrong.
 

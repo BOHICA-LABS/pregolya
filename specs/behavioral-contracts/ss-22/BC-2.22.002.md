@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.002
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,23 +14,25 @@ crate: ferrochain-openai
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
-di_anchors: [DI-008, DI-010, DI-014]
+timestamp: 2026-07-21T00:00:00Z
+di_anchors: [DI-008, DI-009, DI-010, DI-014]
 red_gate: true
 red_gate_source: "DI-010 Credential Opacity — OpenAiApiKey must implement redacted Debug that emits '<redacted>' not the key value; test must COMPILE and FAIL (revealing the key via derived Debug) before the redacted impl is written"
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-22 Embeddings; SECURITY: OpenAiApiKey credential opacity"
+  - "1.1 (F-P130-09/2026-07-21): Add DI-009 to di_anchors — PC2/INV-5 specify the mandatory 30s timeout but did not cite DI-009; add BC-2.14.004 cross-reference in PC2 and INV-5 prose."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-032
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - domain-spec/invariants.md#DI-008
+  - domain-spec/invariants.md#DI-009
   - domain-spec/invariants.md#DI-010
   - domain-spec/invariants.md#DI-014
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "96557c2"
+input-hash: "9a0a33e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -64,7 +66,8 @@ returns `Err` for the whole call, never a truncated vector (DI-014).
 ## Preconditions
 
 1. `EmbeddingsOpenAI` is constructed with a valid `OpenAiApiKey` and a model name.
-2. The `reqwest::Client` is built with `rustls-tls` and `.timeout(Duration::from_secs(30))`.
+2. The `reqwest::Client` is built with `rustls-tls` and `.timeout(Duration::from_secs(30))`
+   (DI-009 — 30s HTTP timeout mandatory; see BC-2.14.004 for the workspace-wide invariant).
 3. The OpenAI `/v1/embeddings` endpoint is reachable from the runtime environment.
 
 ## Postconditions
@@ -104,8 +107,9 @@ returns `Err` for the whole call, never a truncated vector (DI-014).
 4. Model name validation is NOT enforced at construction (the field is a free `String`) —
    an invalid model name fails at the first API call with an `Err(FerrochainError { ... })`
    from the HTTP response.
-5. The 30-second timeout applies to each individual HTTP request (not the total batch session).
-   A provider that responds slowly on a large batch triggers the timeout per-request.
+5. The 30-second timeout applies to each individual HTTP request (not the total batch session),
+   per DI-009 / BC-2.14.004 (workspace-wide 30s HTTP timeout invariant). A provider that
+   responds slowly on a large batch triggers the timeout per-request.
 
 ## Edge Cases
 
@@ -160,7 +164,7 @@ _[to be filled after story decomposition — Wave 2 SS-22 story]_
 |-------|-------|
 | Source L2 Capability | CAP-032 |
 | Capability Anchor Justification | CAP-032 ("EmbeddingsOpenAI — text-embedding-3-small/large; OpenAiApiKey Newtype; Batch Semantics; reqwest/rustls-tls") per capabilities-p1-p2.md §CAP-032 — this BC specifies the EmbeddingsOpenAI implementation with model currency (3-small/3-large/ada-002-legacy), OpenAiApiKey redacted-Debug credential opacity, reqwest/rustls-tls/30s HTTP constraints, and DI-014 batch partial-failure semantics that CAP-032 names as the BC surface distinct from the abstract Embeddings trait |
-| L2 Domain Invariants | DI-008 (embed_documents/embed_query return Result; no .unwrap()), DI-010 (OpenAiApiKey redacted Debug — credential values never transit AI context or logs), DI-014 (batch partial-failure propagates as Err for entire call; no truncated result) |
+| L2 Domain Invariants | DI-008 (embed_documents/embed_query return Result; no .unwrap()), DI-009 (reqwest client built with .timeout(Duration::from_secs(30)) — no raw Client::new(); per BC-2.14.004), DI-010 (OpenAiApiKey redacted Debug — credential values never transit AI context or logs), DI-014 (batch partial-failure propagates as Err for entire call; no truncated result) |
 | Architecture Authority | ADR-017 Decision 3 (ferrochain-openai scope, model names, OpenAiApiKey, batch failure, reqwest constraints) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | ferrochain-openai / openai::embeddings |

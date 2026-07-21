@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.003
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,20 +14,22 @@ crate: ferrochain-ollama
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
-di_anchors: [DI-008, DI-014]
+timestamp: 2026-07-21T00:00:00Z
+di_anchors: [DI-008, DI-009, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-22 Embeddings"
+  - "1.1 (F-P130-09/2026-07-21): Add DI-009 to di_anchors — PC4/INV-2 specify the mandatory 30s timeout (including localhost) but did not cite DI-009; add BC-2.14.004 cross-reference in PC4 and INV-2 prose."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-033
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - domain-spec/invariants.md#DI-008
+  - domain-spec/invariants.md#DI-009
   - domain-spec/invariants.md#DI-014
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "96557c2"
+input-hash: "9a0a33e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -77,8 +79,9 @@ unconditional and applies even for `localhost` targets.
      `{ "model": "<model>", "prompt": "<text>" }`. Returns `Ok(vec)`.
 3. **No API key:** `EmbeddingsOllama` has no `api_key` field. No `Authorization` header is set.
 4. **HTTP client:** `reqwest` dep uses `default-features = false, features = ["rustls-tls"]`.
-   Client is built with `.timeout(Duration::from_secs(30))`. This applies for `localhost`
-   targets — the timeout is unconditional and not disabled for local connections.
+   Client is built with `.timeout(Duration::from_secs(30))` (DI-009 — 30s timeout mandatory;
+   see BC-2.14.004). This applies for `localhost` targets — the timeout is unconditional and
+   not disabled for local connections.
 5. **Model validation:** not enforced at construction — invalid or unpulled model names fail
    at the first API call with `Err(FerrochainError { ... })` from the HTTP response body.
 
@@ -89,7 +92,8 @@ unconditional and applies even for `localhost` targets.
    construction via `use_legacy_endpoint`. Auto-detection by probing both endpoints is
    explicitly forbidden (it creates unpredictable behavior and masks misconfiguration).
 2. **rustls-tls unconditional for localhost.** The 30-second timeout and rustls-tls apply even
-   when `base_url` is `localhost` or `127.0.0.1`. There is no `if localhost { skip_tls }` branch.
+   when `base_url` is `localhost` or `127.0.0.1`, per DI-009 / BC-2.14.004 (workspace-wide
+   30s HTTP timeout invariant). There is no `if localhost { skip_tls }` branch.
    This is consistent with the workspace convention: reqwest configuration is uniform, not
    environment-conditional.
 3. **Batch DI-014 compliance for legacy endpoint.** When `use_legacy_endpoint: true` and a
@@ -153,7 +157,7 @@ _[to be filled after story decomposition — Wave 2 SS-22 story]_
 |-------|-------|
 | Source L2 Capability | CAP-033 |
 | Capability Anchor Justification | CAP-033 ("EmbeddingsOllama — Model-Configurable; /api/embed (Default); use_legacy_endpoint Toggle; No API Key") per capabilities-p1-p2.md §CAP-033 — this BC specifies the EmbeddingsOllama implementation with no-API-key local deployment, POST /api/embed preferred endpoint with use_legacy_endpoint toggle for /api/embeddings, reqwest/rustls-tls/30s unconditional (including localhost), and DI-014 batch partial-failure semantics that CAP-033 defines as a BC surface distinct from EmbeddingsOpenAI |
-| L2 Domain Invariants | DI-008 (embed_documents/embed_query return Result; no .unwrap()), DI-014 (legacy endpoint batch partial-failure propagates as Err for entire call; already-received embeddings are NOT returned as partial list) |
+| L2 Domain Invariants | DI-008 (embed_documents/embed_query return Result; no .unwrap()), DI-009 (reqwest client built with .timeout(Duration::from_secs(30)) — unconditional including localhost; per BC-2.14.004), DI-014 (legacy endpoint batch partial-failure propagates as Err for entire call; already-received embeddings are NOT returned as partial list) |
 | Architecture Authority | ADR-017 Decision 3 and v1.1 (ferrochain-ollama scope, /api/embed preferred, use_legacy_endpoint, no API key, reqwest constraints) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | ferrochain-ollama / ollama::embeddings |
