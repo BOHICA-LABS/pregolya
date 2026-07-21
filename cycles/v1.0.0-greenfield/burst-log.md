@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "87e3f55"
+input-hash: "5c232a3"
 traces_to: STATE.md
 ---
 
@@ -3443,3 +3443,52 @@ Additional PO obligations (same session as BC authoring):
 - Fix bursts: 128 (no new fix burst)
 - Phase 1 status: IN PROGRESS — D21 L2 CAP layer COMPLETE (33 CAPs, SS-18..22); 0/3 pending expanded-perimeter re-convergence
 - NEXT: PO authors expansion BCs (SS-18..22 bands) + folds 7 error codes + product-brief scope-move → VP-006..010 → Phase 1d cascade from 0/3
+
+## Burst 221 (2026-07-21) — STATE.md Compaction + Sidecar-Learning Commit
+
+STATE.md compacted from oversize to 198 lines (burst-221). Resolved risks R1-R5/R7/R9 archived to blocking-issues-resolved.md. Concurrent-cycle (CC) and convergence-status (CS) sections condensed. Redundant phase-milestone (PM) rows removed. sidecar-learning.md committed.
+
+*(burst-216 full narrative already in burst-log §Burst 216 above; row archived from STATE.md Current Phase Steps in burst-222)*
+
+## Burst 222 (2026-07-21) — D21 Spec-Body Layer COMPLETE; Hash Sweep STALE=113→0
+
+### Summary
+
+Product-owner completed the D21 spec-body layer: prd.md v1.4 body fully written (§2 BC tables, §3 traits, §5 code families, §7 RTM) and BC-INDEX.md v1.8 body fully written (summary, subsystem registry, Red Gate table, VP Seed table, Full Catalog). VP-007 assigned to BC-2.19.001 (lc-JSON round-trip proptest seed). Hash sweep ran 4 transitive passes to reach STALE=0.
+
+### PO Changes (burst 222)
+
+| File | Change |
+|------|--------|
+| `.factory/specs/prd.md` | v1.4 body COMPLETED: §2 BC tables 2.18-2.22 (21 rows added), §3 +Retriever/VectorStore/VectorStoreFactory/Embeddings, §5 +TMPL/SRLZ/VS/EMBED code families, §5b 95→116 BCs, §7 RTM +21 rows; totals "116 BCs — 51 P0 / 56 P1 / 9 P2" |
+| `.factory/specs/behavioral-contracts/BC-INDEX.md` | v1.7→v1.8 body COMPLETED: summary 116 (51/56/9), subsystem registry +SS-18..22 (22 groups), Red Gate table 11 entries, VP Seed table 8 entries, Full Catalog +21 rows, VP-INDEX note 5→10 |
+| `.factory/specs/behavioral-contracts/ss-19/BC-2.19.001.md` | v1.0→v1.1: vp_seed: true + vp_id: VP-007 added to frontmatter |
+
+### Hash Sweep (burst 222 — D18-P89-A / D18-P90-A)
+
+Transitive sweep iterated until STALE=0. 4 passes required:
+
+| Pass | STALE before | Updated | STALE after |
+|------|-------------|---------|-------------|
+| Pass 1 | 113 | 115 | 139 (transitive) |
+| Pass 2 | 139 | 146 | 16 (transitive) |
+| Pass 3 | 16 | 18 | 5 (transitive) |
+| Pass 4 | 5 | 6 | 0 FINAL |
+
+Final census: TOTAL=212 MATCH=173 STALE=0 UNCOMPUTED=0 NOINPUT=39.
+
+### Current Phase Steps Row Archived (burst 222)
+
+Burst 216 row archived from STATE.md Current Phase Steps: "D21 ecosystem-parity scope expansion APPROVED; Phase 1 GATE-READY → IN PROGRESS". Full burst-216 narrative in §Burst 216 above.
+
+### Propagation Obligations Recorded
+
+(a) **architect**: reconcile VP-007 seed (= BC-2.19.001) into VP-INDEX / verification-architecture / verification-coverage-matrix in next architect burst (vp_index_is_vp_catalog_source_of_truth).
+(b) **story-writer**: SS-18..22 propagation for new BCs applies when Phase 2 story files are created (bc_array_changes_propagate_to_body_and_acs).
+
+### Convergence Status After Burst 222
+
+- Phase 1d passes: 128 (pre-expansion perimeter; SUPERSEDED by D21)
+- Fix bursts: 128 (no new fix burst)
+- Phase 1 status: IN PROGRESS — D21 spec-body COMPLETE (116 BCs: 51 P0/56 P1/9 P2; VP-007 seeded BC-2.19.001); 0/3 pending expanded-perimeter re-convergence
+- NEXT: architect VP-006..010 + VP-INDEX (5→10) + verification-architecture/coverage-matrix → Phase 1d cascade 0/3

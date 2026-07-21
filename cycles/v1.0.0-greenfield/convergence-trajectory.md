@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "a52171c"
+input-hash: "ade0f8f"
 traces_to: STATE.md
 ---
 

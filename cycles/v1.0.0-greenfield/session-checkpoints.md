@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "f5bcdd5"
+input-hash: "5c232a3"
 traces_to: STATE.md
 ---
 
@@ -948,3 +948,22 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (burst 219): no new decisions; L2 domain-spec CAP count 21→33; CAP-002 reversal; +7 entities +15 UL terms.
 ### STANDING DIRECTIVES: D15 autonomous loop; expansion workstream: PO behavioral-contract authoring (SS-18..22 bands) + 7 error codes fold + product-brief scope-move → VP-006..010 → Phase 1d cascade from 0/3.
 ### WRAP METADATA: Date 2026-07-20 | Cycle v1.0.0-greenfield | Burst 219 | Phase 1 IN PROGRESS — D21 L2 CAP layer COMPLETE (33 CAPs) | Re-convergence required (0/3)
+
+---
+
+## Burst 220 Checkpoint (archived burst-222)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21 ecosystem-parity scope expansion (5 langchain-core subsystems → v1: prompt-templates SS-18, lc-JSON SS-19, retrievers SS-20, vectorstores SS-21, embeddings SS-22). Prior 128-pass 3/3 Phase-1d convergence SUPERSEDED — must re-converge on expanded perimeter. Architecture + CAP layers COMMITTED (through burst 219, HEAD after this wrap). D21 spec-body layer is WIP: 21 new behavioral-contract files authored + error-model integrated, but prd.md + BC-INDEX.md BODIES INCOMPLETE. NEXT: finish prd/BC-INDEX bodies → commit → author VPs → re-run Phase 1d cascade → re-gate."
+### COMMITTED (through burst 220):
+- Burst 217 (1351aaa): ADR-014/015/016/017; ARCH-INDEX v1.5; module-decomposition v1.11; purity-boundary-map v1.6.
+- Burst 218 (20e1727): ADR dep-validation (mustache DROPPED); adr-tech-validation v1.1.0.
+- Burst 219 (3762dab): CAP-022..033 (33 CAPs total); capabilities-p0 v1.7; capabilities-p1-p2 v1.5; entities-graph v1.4; ubiquitous-language-core v1.4; L2-INDEX v1.6.
+- Burst 220 (this wrap): 21 new behavioral-contract files (SS-18..22) + error-taxonomy v1.27 + interface-definitions v2.41 + test-vectors v2.0 + product-brief v1.4 + ADR-010 v1.1 + BC-2.14.001 v1.2 + api-surface v1.6 + bc-authoring-plan v2.41.
+### NEXT-ACTIONS (at time of wrap):
+1. product-owner: FINISH prd.md + BC-INDEX.md bodies (D21 expansion)
+2. state-manager: commit the completed coherent D21 spec-body layer
+3. architect: author VP-006..010 + VP-INDEX + verification-architecture/coverage-matrix
+4. Re-run Phase 1d adversarial cascade on expanded perimeter → 3/3 CLEAN(strict)
+5. Re-run pre-gate: /vsdd-factory:check-input-drift → Phase 1 HUMAN APPROVAL GATE
+### WRAP METADATA: Date 2026-07-21 | Cycle v1.0.0-greenfield | Burst 220 (WRAP) | Phase 1 IN PROGRESS — D21 spec-body WIP checkpoint | Re-convergence required (0/3)

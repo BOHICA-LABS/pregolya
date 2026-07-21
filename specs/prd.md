@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "ef12c39"
+input-hash: "bb2bd9a"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21]
 supplements:
@@ -339,6 +339,72 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.17.001 | Kani harness scope: BSP determinism VP + session tenancy VP + workspace confinement VP | P2 | DI-001, DI-005, DI-007 | ss-17/BC-2.17.001.md |
 | BC-2.17.002 | cargo-fuzz targets: serialization round-trip and graph-execution paths | P2 | — | ss-17/BC-2.17.002.md |
 
+### 2.18 Prompt Templates (CAP-022, CAP-023) — P1
+
+> **D21 ecosystem-parity expansion.** ferrochain-prompts crate; wave 2.
+> ADR-015 injection-safety constraints mandate BC-2.18.004 and BC-2.18.005 as Red Gate
+> tests (ADR-015 Security Invariants 1 and 2). BC-2.18.004 is also VP-006 Kani candidate.
+
+| BC ID | Title | Priority | DI | File |
+|-------|-------|----------|----|------|
+| BC-2.18.001 | PromptTemplate F-String Rendering, Partial Binding, Variable Detection, and Strict-Undefined Guard | P1 | DI-008, DI-014 | ss-18/BC-2.18.001.md |
+| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance | P1 | DI-008 | ss-18/BC-2.18.002.md |
+| BC-2.18.003 | MessagesPlaceholder Vec\<Message\> In-Place Expansion and FewShotPromptTemplate Few-Shot Composition | P1 | DI-008 | ss-18/BC-2.18.003.md |
+| BC-2.18.004 | injection_guard — SystemMessage Slot with Untrusted ProvenanceTag Raises E-TMPL-001 (Fail-Closed at Render Time) | P1 | DI-008, DI-014 | ss-18/BC-2.18.004.md |
+| BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | P1 | DI-008, DI-014 | ss-18/BC-2.18.005.md |
+
+### 2.19 LC Serialization (CAP-024, CAP-025) — P0/P1/P2
+
+> **D21 ecosystem-parity expansion.** ferrochain-core (core::serializable); wave 2.
+> ADR-016 security invariant mandates BC-2.19.005 as Red Gate test + VP-010 Kani candidate.
+> BC-2.19.001 is VP-007 proptest seed (round-trip serialize→Serialized→deserialize→equivalent).
+
+| BC ID | Title | Priority | DI | File |
+|-------|-------|----------|----|------|
+| BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | P1 | DI-008 | ss-19/BC-2.19.001.md |
+| BC-2.19.002 | lc_secrets() Credential Fields Stripped from kwargs Before Serialization and Constructor Dispatch | P1 | DI-008, DI-010 | ss-19/BC-2.19.002.md |
+| BC-2.19.003 | Inventory-Based Type Registry — Link-Time Registration, Feature-Gated Partner Entries, OnceLock Allowlist | P1 | DI-008 | ss-19/BC-2.19.003.md |
+| BC-2.19.004 | Legacy Namespace Remap — OLD_CORE_NAMESPACES_MAPPING Aliases Resolve to Canonical Constructors | P2 | DI-008 | ss-19/BC-2.19.004.md |
+| BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed, VP-010 Kani Candidate) | P0 | DI-008, DI-014 | ss-19/BC-2.19.005.md |
+| BC-2.19.006 | Langchain-Monolith Type Ids Return E-SRLZ-002 (Structured Error, Not Silent None or E-SRLZ-001) | P1 | DI-008, DI-014 | ss-19/BC-2.19.006.md |
+
+### 2.20 Document Retrieval (CAP-026, CAP-027) — P0/P1
+
+> **D21 ecosystem-parity expansion.** ferrochain-core (Retriever trait) + ferrochain-vectorstores
+> (VectorStoreRetriever); wave 2. BC-2.20.002 is a Red Gate test enforcing DI-012 RAG-guardrail
+> coverage obligation — required before any graph node wires Arc\<dyn Retriever\>.
+
+| BC ID | Title | Priority | DI | File |
+|-------|-------|----------|----|------|
+| BC-2.20.001 | Retriever Trait — get_relevant_documents Async Dyn-Compatible; Document Carrier Type; Arc\<dyn Retriever\> Graph Seam | P1 | DI-008, DI-012 | ss-20/BC-2.20.001.md |
+| BC-2.20.002 | BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns Entering Graph Context (DI-012 Coverage Obligation) | P0 | DI-012 | ss-20/BC-2.20.002.md |
+| BC-2.20.003 | VectorStoreRetriever — SearchType Enum (Similarity \| SimilarityScoreThreshold \| Mmr); k / fetch_k / lambda_mult Configuration; Constructed via as_retriever() | P1 | DI-008 | ss-20/BC-2.20.003.md |
+
+### 2.21 VectorStore Abstraction (CAP-028, CAP-029, CAP-030) — P0/P1
+
+> **D21 ecosystem-parity expansion.** ferrochain-vectorstores crate; wave 2.
+> BC-2.21.003 is a Red Gate test + VP-009 Kani candidate: zero-norm vector guard prevents
+> NaN corruption in cosine similarity ranking.
+
+| BC ID | Title | Priority | DI | File |
+|-------|-------|----------|----|------|
+| BC-2.21.001 | VectorStore Trait — Instance-Method Surface; VectorStoreFactory Sized-Bounded Separation; Arc\<dyn VectorStore\> Dyn-Safety | P1 | DI-008 | ss-21/BC-2.21.001.md |
+| BC-2.21.002 | InMemoryVectorStore — Arc\<dyn Embeddings\> DI; RwLock Interior Mutability; Vec\<f32\> Cosine; VectorStoreFactory Constructor | P1 | DI-008 | ss-21/BC-2.21.002.md |
+| BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division (VP-009 Kani Candidate) | P0 | DI-008, DI-014 | ss-21/BC-2.21.003.md |
+| BC-2.21.004 | MetadataFilter — Eq / Ne / In FilterClause; Additive similarity_search_with_filter; Native Pre-Filter vs InMemoryVectorStore Post-Filter; #[non_exhaustive] | P1 | DI-008 | ss-21/BC-2.21.004.md |
+
+### 2.22 Embeddings (CAP-031, CAP-032, CAP-033) — P1
+
+> **D21 ecosystem-parity expansion.** ferrochain-core (Embeddings trait) + ferrochain-openai
+> + ferrochain-ollama; wave 2. BC-2.22.001 is VP-008 proptest seed (dimensionality invariant).
+> BC-2.22.002 is a Red Gate test for DI-010 OpenAiApiKey credential opacity.
+
+| BC ID | Title | Priority | DI | File |
+|-------|-------|----------|----|------|
+| BC-2.22.001 | Embeddings Trait — embed_documents Batch; embed_query; Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err; Arc\<dyn Embeddings\> Dyn-Safe (VP-008 Proptest Seed) | P1 | DI-008, DI-014 | ss-22/BC-2.22.001.md |
+| BC-2.22.002 | EmbeddingsOpenAI — text-embedding-3-small/large/ada-002-legacy; OpenAiApiKey Redacted-Debug Credential Opacity (DI-010); reqwest/rustls-tls/.timeout(30s); Batch Partial-Failure as Err | P1 | DI-008, DI-010, DI-014 | ss-22/BC-2.22.002.md |
+| BC-2.22.003 | EmbeddingsOllama — No API Key; POST /api/embed Preferred; use_legacy_endpoint Toggle for /api/embeddings; reqwest/rustls-tls/.timeout(30s) Unconditional | P1 | DI-008, DI-014 | ss-22/BC-2.22.003.md |
+
 ---
 
 ## 3. Interface Definition
@@ -350,7 +416,10 @@ ferrochain is a Rust library framework, not a CLI tool. The public interface sur
 
 - **Public Rust traits:** `Runnable<Input, Output>`, `CheckpointSaver`, `GuardrailHook`,
   `BudgetPolicy`, `BaseChatModel`, `Tool`, `MemoryStore`, `SkillStore`, `MemoryWriteGuard`,
-  `ToolCallDialect`, `ProviderFallbackPolicy` _(last 4 added D20)_
+  `ToolCallDialect`, `ProviderFallbackPolicy` _(last 4 added D20)_;
+  `Retriever`, `VectorStore`, `VectorStoreFactory`, `Embeddings`
+  _(added D21 — see `prd-supplements/interface-definitions.md §Retriever`,
+  `§VectorStore`, `§VectorStoreFactory`, `§Embeddings`)_
 - **Error type:** `FerrochainError { component: Component, category: Category, retry_hint, code }`
 - **ferrochain-server:** First-party HTTP server with `/threads`, `/assistants`,
   `/threads/{id}/runs` (thread-nested; includes `…/stream`, `…/resume`, `…/cancel`),
@@ -417,6 +486,10 @@ Summary:
 | E-RETRY-001–099 | ferrochain-core retry combinator | intra-crate | E-RETRY-001 RetryExhausted, E-RETRY-003 CircuitBreakerOpen |
 | E-CRON-001–099 | ferrochain-server scheduler | intra-crate | E-CRON-001 AssistantNotFoundAtFiring, E-CRON-002 InvalidCronExpression |
 | E-BUDGET-001–099 | ferrochain-graph budget subsystem | intra-crate | E-BUDGET-001 BudgetCeilingReached, E-BUDGET-002 JournalWriteFailed |
+| E-TMPL-001–099 | ferrochain-prompts | crate | E-TMPL-001 InjectionAttempt (SECURITY), E-TMPL-002 SystemSlotTrustAllRejected, E-TMPL-003 UndefinedVariable |
+| E-SRLZ-001–099 | ferrochain-core (lc-serializable) | intra-crate | E-SRLZ-001 UnknownSerializableType (STATIC — type id not echoed), E-SRLZ-002 UnsupportedMonolithType |
+| E-VS-001–099 | ferrochain-vectorstores | crate | E-VS-001 ZeroNormVector (STATIC), E-VS-002 DimensionMismatch (STATIC), E-VS-003 RetrieverConfigInvalid |
+| E-EMBED-001–099 | ferrochain-core (embeddings) | intra-crate | E-EMBED-001 EmbeddingDimensionMismatch (STATIC) |
 
 See `prd-supplements/error-taxonomy.md` for the complete catalog.
 
@@ -425,7 +498,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 ## 5b. Test Vectors
 
 > **Supplement:** `prd-supplements/test-vectors.md` — consolidated test-vector catalog
-> indexing the canonical test vectors embedded in all 95 BC files.
+> indexing the canonical test vectors embedded in all 116 BC files.
 > Primary consumers: test-writer, holdout-evaluator.
 
 ---
@@ -581,8 +654,29 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.15.004 | CAP-020, DI-008, DI-014 | ferrochain-memory (memory::skills) | P1 | U, I |
 | BC-2.15.005 | CAP-020, DI-008, DI-012, DI-014 | ferrochain-core (core::write\_guard), ferrochain-memory | P1 | U, I |
 | BC-2.15.006 | CAP-020, DI-002, DI-008, DI-014 | ferrochain-core (core::context\_mutation), ferrochain-graph | P1 | I |
+| BC-2.18.001 | CAP-022, DI-008, DI-014 | ferrochain-prompts | P1 | U |
+| BC-2.18.002 | CAP-022, DI-008 | ferrochain-prompts | P1 | U |
+| BC-2.18.003 | CAP-023, DI-008 | ferrochain-prompts | P1 | U |
+| BC-2.18.004 | CAP-022, DI-008, DI-014 | ferrochain-prompts | P1 | U, K |
+| BC-2.18.005 | CAP-022, DI-008, DI-014 | ferrochain-prompts | P1 | U |
+| BC-2.19.001 | CAP-024, DI-008 | ferrochain-core (core::serializable) | P1 | U, P |
+| BC-2.19.002 | CAP-024, DI-008, DI-010 | ferrochain-core (core::serializable) | P1 | U |
+| BC-2.19.003 | CAP-025, DI-008 | ferrochain-core (core::serializable) | P1 | U |
+| BC-2.19.004 | CAP-025, DI-008 | ferrochain-core (core::serializable) | P2 | U |
+| BC-2.19.005 | CAP-025, DI-008, DI-014 | ferrochain-core (core::serializable) | P0 | U, K |
+| BC-2.19.006 | CAP-025, DI-008, DI-014 | ferrochain-core (core::serializable) | P1 | U |
+| BC-2.20.001 | CAP-026, DI-008, DI-012 | ferrochain-core (core::retriever) | P1 | U, I |
+| BC-2.20.002 | CAP-026, DI-012 | ferrochain-core (core::retriever) | P0 | U, I |
+| BC-2.20.003 | CAP-027, DI-008 | ferrochain-vectorstores | P1 | U |
+| BC-2.21.001 | CAP-028, DI-008 | ferrochain-vectorstores | P1 | U |
+| BC-2.21.002 | CAP-029, DI-008 | ferrochain-vectorstores | P1 | U, I |
+| BC-2.21.003 | CAP-029, DI-008, DI-014 | ferrochain-vectorstores | P0 | U, K |
+| BC-2.21.004 | CAP-030, DI-008 | ferrochain-vectorstores | P1 | U |
+| BC-2.22.001 | CAP-031, DI-008, DI-014 | ferrochain-core (core::embeddings) | P1 | U, P |
+| BC-2.22.002 | CAP-032, DI-008, DI-010, DI-014 | ferrochain-openai | P1 | U, I |
+| BC-2.22.003 | CAP-033, DI-008, DI-014 | ferrochain-ollama | P1 | U, I |
 
-**Totals:** 95 BCs — 48 P0 / 39 P1 / 8 P2
+**Totals:** 116 BCs — 51 P0 / 56 P1 / 9 P2
 
 ---
 

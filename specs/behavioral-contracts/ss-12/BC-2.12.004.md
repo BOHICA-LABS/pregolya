@@ -23,7 +23,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "1d3e00d"
+input-hash: "51bd956"
 extracted_from: null
 modified: []
 deprecated: null

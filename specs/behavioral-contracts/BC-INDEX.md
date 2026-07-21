@@ -1,10 +1,10 @@
 ---
 document_type: bc-index
 level: L3
-version: "1.7"
+version: "1.8"
 status: active
 producer: state-manager
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
@@ -13,23 +13,25 @@ traces_to: .factory/specs/prd.md
 
 # BC-INDEX: ferrochain Behavioral Contracts
 
-> **95 BCs total — 48 P0 / 39 P1 / 8 P2 | 5 Red Gate | 3 VP Seed (Kani) | 5 VPs registered**
+> **116 BCs total — 51 P0 / 56 P1 / 9 P2 | 11 Red Gate | 8 VP Seed | 10 VPs registered**
 >
 > Subsystem IDs: SS-01 through SS-17 assigned by architect at Phase 1 Step D (2026-07-14).
+> SS-18 through SS-22 added D21 ecosystem-parity expansion (2026-07-20).
 > All BCs reside under `specs/behavioral-contracts/ss-NN/` per ARCH-INDEX Subsystem Registry.
-> VP-INDEX: 5 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1).
+> VP-INDEX: 10 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
+> VP-006–VP-010 pending architect authoring — seeds assigned in D21 burst).
 
 ## Summary
 
 | Metric | Count |
 |--------|-------|
-| Total BCs | 95 |
-| Priority P0 | 48 |
-| Priority P1 | 39 |
-| Priority P2 | 8 |
-| Red Gate BCs | 5 |
-| VP Seed (Kani) BCs | 3 |
-| Subsection groups | 17 (SS-2.01 – SS-2.17) |
+| Total BCs | 116 |
+| Priority P0 | 51 |
+| Priority P1 | 56 |
+| Priority P2 | 9 |
+| Red Gate BCs | 11 |
+| VP Seed BCs | 8 |
+| Subsection groups | 22 (SS-2.01 – SS-2.22) |
 
 ## Red Gate BCs
 
@@ -40,14 +42,27 @@ traces_to: .factory/specs/prd.md
 | BC-2.07.002 | Non-ASCII Boundary Parity with Python Reference Implementation | R8 (splitter code-point parity) |
 | BC-2.09.004 | MCP Bare ToolException Re-Raise Preserving Type Identity | R11 (MCP upstream test void) |
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections | R11 (MCP upstream test void) |
+| BC-2.18.004 | injection_guard — SystemMessage Slot with Untrusted ProvenanceTag Raises E-TMPL-001 (Fail-Closed) | ADR-015 Security Invariant 1 |
+| BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | ADR-015 Security Invariant 2 |
+| BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed, VP-010 Kani Candidate) | ADR-016 Security Invariant |
+| BC-2.20.002 | BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns Entering Graph Context | ADR-014 Consequences §DI-012 |
+| BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division (VP-009 Kani Candidate) | ADR-014 v1.1 Hardening Note |
+| BC-2.22.002 | EmbeddingsOpenAI — OpenAiApiKey Redacted-Debug Credential Opacity (DI-010); Batch Partial-Failure as Err | DI-010 Credential Opacity |
 
-## VP Seed BCs (Kani Formal Verification)
+## VP Seed BCs
 
-| BC ID | Title | NE Anchor |
-|-------|-------|-----------|
-| BC-2.03.001 | BSP Super-Step Execution Determinism | NE-17 |
-| BC-2.04.006 | Session Triple-Address Uniqueness | NE-12 |
-| BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root | NE-02 |
+| VP ID | BC ID | Title | Proof Method | NE / Security Anchor |
+|-------|-------|-------|-------------|----------------------|
+| VP-001 | BC-2.03.001 | BSP Super-Step Execution Determinism | Kani | NE-17 |
+| VP-002 | BC-2.04.006 | Session Triple-Address Uniqueness | Kani | NE-12 |
+| VP-003 | BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root | Kani | NE-02 |
+| VP-006 | BC-2.18.004 | injection_guard — SystemMessage Slot with Untrusted ProvenanceTag Raises E-TMPL-001 | Kani (candidate) | ADR-015 Security Invariant 1 |
+| VP-007 | BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | Proptest | CAP-024 round-trip invariant |
+| VP-008 | BC-2.22.001 | Embeddings Trait — Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err | Proptest | CAP-031 dimensionality invariant |
+| VP-009 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division | Kani (candidate) | ADR-014 v1.1 Hardening Note |
+| VP-010 | BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed) | Kani (candidate) | ADR-016 Security Invariant |
+
+_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); architect to author VP body files in Phase 6._
 
 ## Full BC Catalog
 
@@ -148,6 +163,27 @@ traces_to: .factory/specs/prd.md
 | BC-2.16.003 | Circuit Breaker Trips After Repeated Failure; Prevents Infinite Retry | CAP-018 | NE-09 | | P2 | | | ss-16/BC-2.16.003.md |
 | BC-2.17.001 | Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace Confinement VP | CAP-019 | | DI-001,DI-005,DI-007 | P2 | | | ss-17/BC-2.17.001.md |
 | BC-2.17.002 | cargo-fuzz Targets — Serialization Round-Trip (Checkpoint) and Graph-Execution Paths | CAP-019 | | | P2 | | | ss-17/BC-2.17.002.md |
+| BC-2.18.001 | PromptTemplate F-String Rendering, Partial Binding, Variable Detection, and Strict-Undefined Guard | CAP-022 | | DI-008,DI-014 | P1 | | | ss-18/BC-2.18.001.md |
+| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance | CAP-022 | | DI-008 | P1 | | | ss-18/BC-2.18.002.md |
+| BC-2.18.003 | MessagesPlaceholder Vec\<Message\> In-Place Expansion and FewShotPromptTemplate Few-Shot Composition | CAP-023 | | DI-008 | P1 | | | ss-18/BC-2.18.003.md |
+| BC-2.18.004 | injection_guard — SystemMessage Slot with Untrusted ProvenanceTag Raises E-TMPL-001 (Fail-Closed at Render Time) | CAP-022 | | DI-008,DI-014 | P1 | **RG** | **VP-006** | ss-18/BC-2.18.004.md |
+| BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | CAP-022 | | DI-008,DI-014 | P1 | **RG** | | ss-18/BC-2.18.005.md |
+| BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | CAP-024 | | DI-008 | P1 | | **VP-007** | ss-19/BC-2.19.001.md |
+| BC-2.19.002 | lc_secrets() Credential Fields Stripped from kwargs Before Serialization and Constructor Dispatch | CAP-024 | | DI-008,DI-010 | P1 | | | ss-19/BC-2.19.002.md |
+| BC-2.19.003 | Inventory-Based Type Registry — Link-Time Registration, Feature-Gated Partner Entries, OnceLock Allowlist | CAP-025 | | DI-008 | P1 | | | ss-19/BC-2.19.003.md |
+| BC-2.19.004 | Legacy Namespace Remap — OLD_CORE_NAMESPACES_MAPPING Aliases Resolve to Canonical Constructors | CAP-025 | | DI-008 | P2 | | | ss-19/BC-2.19.004.md |
+| BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed, VP-010 Kani Candidate) | CAP-025 | | DI-008,DI-014 | P0 | **RG** | **VP-010** | ss-19/BC-2.19.005.md |
+| BC-2.19.006 | Langchain-Monolith Type Ids Return E-SRLZ-002 (Structured Error, Not Silent None or E-SRLZ-001) | CAP-025 | | DI-008,DI-014 | P1 | | | ss-19/BC-2.19.006.md |
+| BC-2.20.001 | Retriever Trait — get_relevant_documents Async Dyn-Compatible; Document Carrier Type; Arc\<dyn Retriever\> Graph Seam | CAP-026 | | DI-008,DI-012 | P1 | | | ss-20/BC-2.20.001.md |
+| BC-2.20.002 | BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns Entering Graph Context (DI-012 Coverage Obligation) | CAP-026 | | DI-012 | P0 | **RG** | | ss-20/BC-2.20.002.md |
+| BC-2.20.003 | VectorStoreRetriever — SearchType Enum (Similarity \| SimilarityScoreThreshold \| Mmr); k / fetch_k / lambda_mult Configuration; Constructed via as_retriever() | CAP-027 | | DI-008 | P1 | | | ss-20/BC-2.20.003.md |
+| BC-2.21.001 | VectorStore Trait — Instance-Method Surface; VectorStoreFactory Sized-Bounded Separation; Arc\<dyn VectorStore\> Dyn-Safety | CAP-028 | | DI-008 | P1 | | | ss-21/BC-2.21.001.md |
+| BC-2.21.002 | InMemoryVectorStore — Arc\<dyn Embeddings\> DI; RwLock Interior Mutability; Vec\<f32\> Cosine; VectorStoreFactory Constructor | CAP-029 | | DI-008 | P1 | | | ss-21/BC-2.21.002.md |
+| BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division (VP-009 Kani Candidate) | CAP-029 | | DI-008,DI-014 | P0 | **RG** | **VP-009** | ss-21/BC-2.21.003.md |
+| BC-2.21.004 | MetadataFilter — Eq / Ne / In FilterClause; Additive similarity_search_with_filter; Native Pre-Filter vs InMemoryVectorStore Post-Filter; #[non_exhaustive] | CAP-030 | | DI-008 | P1 | | | ss-21/BC-2.21.004.md |
+| BC-2.22.001 | Embeddings Trait — embed_documents Batch; embed_query; Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err; Arc\<dyn Embeddings\> Dyn-Safe (VP-008 Proptest Seed) | CAP-031 | | DI-008,DI-014 | P1 | | **VP-008** | ss-22/BC-2.22.001.md |
+| BC-2.22.002 | EmbeddingsOpenAI — text-embedding-3-small/large/ada-002-legacy; OpenAiApiKey Redacted-Debug Credential Opacity (DI-010); reqwest/rustls-tls/.timeout(30s); Batch Partial-Failure as Err | CAP-032 | | DI-008,DI-010,DI-014 | P1 | **RG** | | ss-22/BC-2.22.002.md |
+| BC-2.22.003 | EmbeddingsOllama — No API Key; POST /api/embed Preferred; use_legacy_endpoint Toggle for /api/embeddings; reqwest/rustls-tls/.timeout(30s) Unconditional | CAP-033 | | DI-008,DI-014 | P1 | | | ss-22/BC-2.22.003.md |
 
 ## Carry-Forward Notes (RESOLVED at Phase 1 Step D, 2026-07-14)
 
@@ -163,6 +199,8 @@ traces_to: .factory/specs/prd.md
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.8 | 2026-07-21 | D21 spec-body layer complete (burst 222): header 95→116 BCs; P0 48→51, P1 39→56, P2 8→9; Red Gate 5→11 (+BC-2.18.004/005, BC-2.19.005, BC-2.20.002, BC-2.21.003, BC-2.22.002); VP Seed 3→8 (+VP-006→BC-2.18.004, VP-007→BC-2.19.001, VP-008→BC-2.22.001, VP-009→BC-2.21.003, VP-010→BC-2.19.005); VP-INDEX 5→10; subsection groups 17→22; Full Catalog +21 rows (SS-18..22); VP Seed table restructured with VP ID column. BC-2.19.001 v1.0→v1.1 (VP-007 seed assigned). | D21 burst-222 |
+| 1.7 | 2026-07-20 | D21 ecosystem-parity expansion: 21 BC files authored (SS-18..22); frontmatter/changelog updated in prd.md + BC-INDEX.md. Body incomplete (this entry). | D21 burst-216 |
 | 1.6 | 2026-07-19 | F-P114-01 fix burst 117: Architecture Anchor fields corrected in BC-2.04.001–007 (7 files) — replaced nonexistent `architecture/ferrochain-checkpoint.md` citation with adjudicated real targets per architect guidance. Per-file versions: BC-2.04.001 v1.3, BC-2.04.002 v1.4, BC-2.04.003 v1.4, BC-2.04.004 v1.3, BC-2.04.005 v1.3, BC-2.04.006 v1.5, BC-2.04.007 v1.7. No BC body content changed. | F-P114-01 fix burst 117 |
 | 1.5 | 2026-07-17 | F-P94-01: BC-2.10.003 index row trailing italic `_(v1.2: adds OnCeiling::Summarize + RunContext.budget_info / BudgetInfo)_` removed — title now byte-exact match to H1 in ss-10/BC-2.10.003.md. | F-P94-01 |
 | 1.4 | 2026-07-15 | OBS-P74-B: Carry-Forward Note #5 appended "(later grown to 95 via D20)" for parallelism with prd OQR-4 clarifier convention. | OBS-P74-B |
