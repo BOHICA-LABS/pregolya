@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.59"
+version: "3.60"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-21T00:03:00Z
+timestamp: 2026-07-21T22:30:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "D21 architecture layer + dep-validation COMPLETE (ADRs 014-017 v1.1, mustache dropped, pins: inventory 0.3.24 / minijinja 2.21.0 / no embedding+vector crates); adr-tech-validation v1.1.0; NEXT: BA authors CAP-022..033 then PO authors expansion BCs + folds ADR-authored error codes (E-TMPL-001/002/003, E-SRLZ-001/002, E-EMBED-001, E-VS-001) into taxonomy; D-chain cite D-128 latest greenfield; trajectory-tail →1→0→0→0; 0/3 RESET"
+current_step: "D21 L2 CAP layer COMPLETE (CAP-022..033, 33 CAPs total; SS-18..22; CAP-002 reversed; Domain C embeddings forcing-function linked CAP-031/032/033); NEXT: PO authors expansion BCs (SS-18 ~4-6, SS-19 ~5-7, SS-20 ~3-5, SS-21 ~4-6, SS-22 ~3-5) + folds 7 error codes (E-TMPL-001/002/003, E-SRLZ-001/002, E-EMBED-001, E-VS-001) into error-taxonomy.md + moves 5 subsystems from product-brief out-of-scope to in-scope; then VP-006..010; then re-run Phase 1d cascade; D-chain cite D-128 latest greenfield; trajectory-tail →1→0→0→0; 0/3 RESET"
 current_cycle: v1.0.0-greenfield
 convergence_status: "RESET — D21 scope expansion (burst 216); prior 3/3 CONVERGED on pre-expansion perimeter SUPERSEDED; 0/3 pending expanded-perimeter re-convergence"
 pipeline: IN_PROGRESS
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. 196 lines (wc-l); margin from soft-target: 4 lines; margin from actual: 304 lines. Burst-218: burst-213 rotated to burst-log; burst-218 row added; Last Updated + current_step + session checkpoint updated. Historical content → cycle files. Run /vsdd-factory:compact-state if this file grows past 200 lines. -->
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. 196 lines (wc-l); margin from soft-target: 4 lines; margin from actual: 304 lines. Burst-219: burst-214 rotated to burst-log; burst-219 row added; Last Updated + current_step + session checkpoint updated. Historical content → cycle files. Run /vsdd-factory:compact-state if this file grows past 200 lines. -->
 # Pipeline State: ferrochain
 
 ## Project Metadata
@@ -36,9 +36,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-20 — burst 218: D21 dep-validation COMPLETE (ADR-014..017 v1.0→v1.1; mustache dropped; pins: inventory 0.3.24 / minijinja 2.21.0); adr-tech-validation v1.0.0→v1.1.0; PO error-code obligation logged (7 codes: E-TMPL-001/002/003, E-SRLZ-001/002, E-EMBED-001, E-VS-001); hash sweep STALE→0; trajectory-tail →1→0→0→0; 0/3 RESET |
+| **Last Updated** | 2026-07-20 — burst 219: D21 L2 CAP layer COMPLETE (CAP-022..033, 33 CAPs total; SS-18..22; CAP-002 reversed; entities-graph v1.4 +7 entities; ubiquitous-language-core v1.4 +15 terms; L2-INDEX v1.6 CAP 21→33; Domain C CAP-031/032/033 forcing-function linked); hash sweep TOTAL=131 STALE→0 (2 passes, 118 files refreshed); trajectory-tail →1→0→0→0; 0/3 RESET |
 | **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Phase 1 IN PROGRESS — D21 dep-validation COMPLETE (ADRs 014-017 v1.1; mustache dropped); NEXT: BA authors CAP-022..033 → PO BCs + folds 7 ADR-authored error codes into taxonomy → VP-006..010 → Phase 1d cascade 0/3 |
+| **Current Step** | Phase 1 IN PROGRESS — D21 L2 CAP layer COMPLETE (33 CAPs); NEXT: PO authors expansion BCs (SS-18..22 bands) + folds 7 error codes + product-brief scope-move → VP-006..010 → Phase 1d cascade 0/3 |
 
 ## Phase Progress
 
@@ -58,14 +58,14 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | Phase 1d cascade CLOSED | complete | 2026-07-19 | 2026-07-19 | pass-128 CLEAN(strict)/CLEAN(PR-merge) — 3/3 CONVERGED; BC-5.39.001 3-CLEAN satisfied on frozen HEAD 02d8ccd; CASCADE CLOSED | trajectory tail →0→0→0; 3/3 CONVERGED |
 ## Current Phase Steps
 
-<!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. (Bursts 194–201 archived burst-206; burst-202 archived burst-207; burst-203 archived burst-208; burst-204 archived burst-209; burst-205 archived burst-210; burst-206 archived burst-211; burst-207 archived burst-212; burst-208 archived burst-213; burst-209 archived burst-214; burst-210 archived burst-215; burst-211 archived burst-216; burst-212 archived burst-217; burst-213 archived burst-218.) -->
+<!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. (Bursts 194–201 archived burst-206; burst-202 archived burst-207; burst-203 archived burst-208; burst-204 archived burst-209; burst-205 archived burst-210; burst-206 archived burst-211; burst-207 archived burst-212; burst-208 archived burst-213; burst-209 archived burst-214; burst-210 archived burst-215; burst-211 archived burst-216; burst-212 archived burst-217; burst-213 archived burst-218; burst-214 archived burst-219.) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1d burst 214 — input-drift closure (dtu-assessment path repair; PASS-15/16 section-anchor fix; cycles bookkeeping hash refresh) | state-manager | COMPLETE | Pre-gate input-drift check complete. dtu-assessment.md: inputs repaired ss-TBD→ss-08 for BC-2.08.001..008; hash 55f6386. ADV-P1D-PASS-15: section-anchor pseudo-input ".factory/specs/prd.md §9 NE Disposition Table" → plain path; hash 1ec9375. ADV-P1D-PASS-16: section-anchor pseudo-input ".factory/specs/prd.md §2 BC catalog + §7 RTM + §9 NE Disposition Table" → plain path; hash c9d64f6. 16 cycles bookkeeping files (burst-logs, lessons, checkpoints, blocking-issues) hash-refreshed (safe-to-bump class). Final scan: TOTAL=191 MATCH=152 STALE=0 NOINPUT=39. Spec corpus ZERO-DRIFT. Burst 214. |
 | Burst 215 — pre-gate audit closure; Phase 1 GATE-READY (1 BLOCKER + 1 GAP + 1 NOTE fixed; cascade STALE=0) | state-manager | COMPLETE | BLOCKER: dtu-assessment STATE.md input removed (D18-P88-A); Dependency Summary + DTU Architecture + Clone Development Approach sections added; hash dc7d525. GAP: product-brief v1.3 (8 langchain-core explicit exclusions). NOTE: L2-INDEX v1.4 (Domain D Hermes Agent). capabilities-p0 v1.6 (CAP-002 clarification). D18-P89-A: 5 passes STALE=0; TOTAL=191 MATCH=152 NOINPUT=39. Phase 1 GATE-READY. AWAITING HUMAN APPROVAL for Phase 2. Burst 215. |
 | Burst 216 — D21 ecosystem-parity scope expansion APPROVED; Phase 1 GATE-READY → IN PROGRESS | orchestrator + state-manager | COMPLETE | D21: 5 langchain-core subsystems promoted to v1 scope (prompt-templates, lc-JSON/LcSerializable, retrievers, vectorstores, embeddings). Holdout-forced: embeddings only (Domain C CAP-017). Other 4: parity-driven. Scope delta: ~40-80 new BCs, 2-3 new crates (18→~20-21), 3-4 new ADRs. Supersedes product-brief.md v1.3 §Out-of-Scope for these 5 + CAP-002 prompt-templates clarification. Phase 1d 3/3 convergence SUPERSEDED by perimeter change. R12 expansion risk registered. Session checkpoint rewritten. NEXT: architect-first expansion. Burst 216. |
 | Burst 217 — D21 architecture layer COMPLETE; 4 new ADRs + arch file updates committed; hash sweep STALE→0 | architect + state-manager | COMPLETE | ADR-014 (VectorStore+Retriever abstraction; ferrochain-vectorstores new crate #20), ADR-015 (prompt injection safety; ferrochain-prompts new crate #19; SECURITY-CRITICAL), ADR-016 (lc-JSON deserialization safety; core::serializable; SECURITY-CRITICAL), ADR-017 (embeddings trait+providers; ferrochain-anthropic excluded). ARCH-INDEX v1.4→v1.5 (SS-18..22 rows; roster 20; 17 ADRs). module-decomp v1.10→v1.11 (+14 modules, 35→49). purity-boundary-map v1.5→v1.6 (+14 rows, 58→72). D18-P89-A sweep: TOTAL=131 MATCH=131 STALE=0. VP candidates VP-006..010 anchored (VP-006/009/010 Kani; VP-008 proptest; VP-007 TBD). Architect handoff table in burst-217 burst-log. NEXT: BA CAPs (CAP-022..033). Burst 217. |
 | Burst 218 — D21 dep-validation COMPLETE; ADR-014..017 v1.0→v1.1 (mustache DROPPED; pins recorded); adr-tech-validation v1.1.0; PO error-code obligation logged | architect + state-manager | COMPLETE | ADR-014 v1.1: zero-norm cosine guard + E-VS-001; VP-009 extended. ADR-015 v1.1: mustache DROPPED (abandoned 2018-02); minijinja="2" (2.21.0) only; autoescape+sandboxed+strict-undefined; E-TMPL-003. ADR-016 v1.1: inventory="0.3" (0.3.24) pin confirmed. ADR-017 v1.1: Ollama /api/embed preferred; OpenAI model currency. adr-tech-validation v1.0.0→v1.1.0 (§6 D21 pin table; research provenance crates.io/2026-07-20). PO obligation: 7 ADR-authored error codes (E-TMPL-001/002/003, E-SRLZ-001/002, E-EMBED-001, E-VS-001) must be folded into error-taxonomy.md during SS-18..22 BC authoring. D18-P89-A: planning STALE→0; specs STALE=0. Burst 218. |
+| Burst 219 — D21 L2 CAP layer COMPLETE; CAP-022..033 (SS-18..22); CAP-002 reversal; +7 entities; +15 UL terms; hash sweep TOTAL=131 STALE→0 | business-analyst + state-manager | COMPLETE | 12 new CAPs (022-033) across SS-18..22: CAP-022/023 (SS-18 prompts); CAP-024/025/026 (SS-19 lc-serialization); CAP-027/028 (SS-20 retrievers); CAP-029/030 (SS-21 vectorstores); CAP-031/032/033 (SS-22 embeddings; Domain C forcing-function linked). CAP-002 reversed: prompt templates IN v1. entities-graph v1.4 +Document, PromptValue, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType. ubiquitous-language-core v1.4 +15 D21 terms. L2-INDEX v1.6: CAP 21→33; Domain C CAP-031/032/033 forcing-function linkage; D21 row. PO obligation: SS-18..22 BC bands + 7 error codes fold + product-brief scope-move. Hash sweep: TOTAL=131 STALE→0 (2 passes; 118 files refreshed). Burst 219. |
 
 ## Decisions Log
 
@@ -155,7 +155,7 @@ None currently active. D21 scope expansion APPROVED (burst 216); architecture la
 | Metric | Value |
 |--------|-------|
 | Adversary passes completed | 128 (Phase 1d, pre-expansion perimeter) |
-| Fix bursts completed | 128 (Phase 1d; last fix burst 128 — F-P125-01 RESOLVED in burst 210; no new fix bursts in bursts 211–218) |
+| Fix bursts completed | 128 (Phase 1d; last fix burst 128 — F-P125-01 RESOLVED in burst 210; no new fix bursts in bursts 211–219) |
 | Convergence counter | RESET — D21 scope expansion (burst 216); prior 3/3 CONVERGED (passes 126/127/128 on frozen HEAD 02d8ccd) SUPERSEDED by perimeter change; 0/3 pending expanded-perimeter re-convergence |
 | Finding trajectory | [pre-expansion perimeter; 128 passes] →4→2→2→4→4→1→4→2→5→3→4→1→5→1→1→3→2→2→2→1→1→1→1→4→2→2→1→2→0→1→2→1→1→3→1→1→3→5→3→2→1→0→0→0 |
 
@@ -164,24 +164,24 @@ None currently active. D21 scope expansion APPROVED (burst 216); architecture la
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 
 ### RESUME IN ONE BREATH
-"ferrochain Phase 1 SPEC CRYSTALLIZATION — D21 ARCHITECTURE LAYER + DEP-VALIDATION COMPLETE (burst 218). ADR-014..017 v1.1: mustache DROPPED (abandoned 2018-02); minijinja="2" (2.21.0) pinned; inventory="0.3" (0.3.24) pinned; zero-norm cosine guard (E-VS-001); Ollama /api/embed preferred. adr-tech-validation v1.1.0. PO OBLIGATION: fold 7 ADR-authored error codes (E-TMPL-001/002/003, E-SRLZ-001/002, E-EMBED-001, E-VS-001) into error-taxonomy.md during SS-18..22 BC authoring. Re-convergence required (0/3). NEXT: BA authors CAP-022..033 (SS-18..22) → PO authors ~19-29 new BCs + folds 7 error codes → VP-006..010 files authored → Phase 1d cascade from 0/3. PO error-code obligation table: see burst-218 in cycles/v1.0.0-greenfield/burst-log.md."
+"ferrochain Phase 1 SPEC CRYSTALLIZATION — D21 L2 CAP LAYER COMPLETE (burst 219). 33 total CAPs (CAP-022..033 added: SS-18 prompts, SS-19 lc-serialization, SS-20 retrievers, SS-21 vectorstores, SS-22 embeddings). CAP-002 REVERSED: prompt templates NOW in v1 scope. entities-graph v1.4 (+Document, PromptValue, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType). ubiquitous-language-core v1.4 (+15 D21 terms, ref-corpus reconciled). L2-INDEX v1.6 (Domain C forcing-function CAP-031/032/033). Re-convergence required (0/3). PO OBLIGATION: (1) author expansion BCs per architect handoff bands (SS-18 ~4-6, SS-19 ~5-7, SS-20 ~3-5, SS-21 ~4-6, SS-22 ~3-5); (2) fold 7 error codes (E-TMPL-001/002/003, E-SRLZ-001/002, E-EMBED-001, E-VS-001) into error-taxonomy.md; (3) move 5 subsystems from product-brief out-of-scope to in-scope. NEXT: PO BCs → VP-006..010 → Phase 1d cascade from 0/3."
 ### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
 ### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 20 crates [R6 time-sensitive; roster finalized burst 217]; (3) langgraph 0.2.5 watch [R4].
-### DECISION DELTA (burst 218): no new decisions; 4 ADRs updated v1.0→v1.1 (dep-validation outcomes); adr-tech-validation v1.1.0.
-### STANDING DIRECTIVES: D15 autonomous loop; expansion workstream: BA CAPs → PO BCs + error-code fold → VP → Phase 1d cascade from 0/3.
-### WRAP METADATA: Date 2026-07-20 | Cycle v1.0.0-greenfield | Burst 218 | Phase 1 IN PROGRESS — D21 dep-validation COMPLETE | Re-convergence required (0/3)
+### DECISION DELTA (burst 219): no new decisions; L2 domain-spec CAP count 21→33; CAP-002 reversal; +7 entities +15 UL terms.
+### STANDING DIRECTIVES: D15 autonomous loop; expansion workstream: PO BCs (SS-18..22 bands) + 7 error codes fold + product-brief scope-move → VP-006..010 → Phase 1d cascade from 0/3.
+### WRAP METADATA: Date 2026-07-20 | Cycle v1.0.0-greenfield | Burst 219 | Phase 1 IN PROGRESS — D21 L2 CAP layer COMPLETE (33 CAPs) | Re-convergence required (0/3)
 
 ## Historical Content
 
 | Content | Location |
 |---------|----------|
-| Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2; + archived bursts 171–218) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
+| Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2; + archived bursts 171–219) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
 | 95 Behavioral Contracts (ss-01..ss-17/, ~13,800+ lines) + BC-INDEX.md v1.3 (48P0/39P1/8P2) | `.factory/specs/behavioral-contracts/ss-NN/` + `BC-INDEX.md` |
 | L3 PRD (index + BC summary tables, 607 lines) + v1.3 (BC-2.08.009 v1.1 resolved) | `.factory/specs/prd.md` |
 | PRD supplements: bc-authoring-plan v2.40, error-taxonomy v1.26, nfr-catalog v1.2, module-criticality v1.4, interface-definitions v2.40, test-vectors v1.9 | `.factory/specs/prd-supplements/` |
-| L2 domain spec (15-shard, 1,889 lines; events.md v1.6) — L2-INDEX v1.4 (Four domains; Domain D Hermes Agent added burst 215) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
+| L2 domain spec (15-shard; events.md v1.6) — L2-INDEX v1.6 (33 CAPs; Four domains; Domain C CAP-031/032/033 forcing-function; D21 row burst 219); capabilities-p0 v1.7 (CAP-002 reversed); capabilities-p1-p2 v1.5 (CAP-022..033); entities-graph v1.4 (+7 entities Retrieval+Serialization Domain); ubiquitous-language-core v1.4 (+15 D21 terms) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
-| Session checkpoints bursts 5–78, bursts 176–217 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Session checkpoints bursts 5–78, bursts 176–218 (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (23 lessons, 23 codified guardrails incl. L-023 axis-existence validation) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Holdout domain briefs A/B/C/D (SOC analyst, dark factory, OpenClaw, Hermes Agent) | `.factory/planning/holdout-domains/domain-{a,b,c,d}-*.md` |
 | Reference corpus manifest (v1.4.0 — adk-rust Corpus 5 added) | `.factory/semport/reference-manifest.md` |

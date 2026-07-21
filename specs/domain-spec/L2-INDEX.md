@@ -1,7 +1,7 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.4"
+version: "1.6"
 status: active
 producer: business-analyst
 timestamp: 2026-07-20T00:00:00Z
@@ -30,8 +30,10 @@ sections:
   - ubiquitous-language-core.md
   - ubiquitous-language-server.md
   - bounded-contexts.md
-decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20]
+decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21]
 changelog:
+  - "v1.6 (2026-07-20): D21 second-half CAP authoring complete. ID Registry: CAP-NNN count 27→33 (CAP-028..033 authored for SS-21/22). Priority Distribution: P1 count 13→19; total 27→33. capabilities-p1-p2.md updated (v1.4→v1.5); entities-graph.md updated (v1.3→v1.4, VectorStore/Embeddings/MetadataFilter/SearchType added); ubiquitous-language-core.md updated (v1.3→v1.4, 6 D21 terms added). Domain C forcing-function row updated (SS-22/CAP-031..033 added). Document Map updated."
+  - "v1.5 (2026-07-20): D21 first-half CAP authoring complete. ID Registry: CAP-NNN count 21→27 (CAP-022..027 authored for SS-18/19/20). Priority Distribution: P1 count 7→13; total 21→27. capabilities-p1-p2.md updated (v1.3→v1.4); capabilities-p0.md updated (v1.6→v1.7, CAP-002 D21 reversal); entities-graph.md updated (v1.2→v1.3, Document/PromptValue/Serialized added); ubiquitous-language-core.md updated (v1.2→v1.3, 9 D21 terms added). D21 added to decisions list. Document Map row descriptions updated."
   - "v1.4 (2026-07-20): Design-Forcing-Function Summary updated — Four holdout domains (was three); Domain D (Hermes Agent, inbound MCP server role per D19/D20) added to forcing-function table. D19 added to decisions list. TD-VSDD-060 sweep: one stale occurrence corrected; second occurrence (v1.1 changelog: 'all three were over 1,500-token threshold') refers to split files, not holdout domains — accurate, no change."
   - "v1.3 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D-NNN decisions baked at authoring time, not live state); domain-d-hermes-agent.md added (D19/D20 forcing function for CAP-020/CAP-021 added in v1.2); input-hash recomputed. All section files updated in same burst."
   - "v1.2 (D20 sub-burst 2): CAP-020 (Self-Improvement Primitives: SkillStore + MemoryWriteGuard + Frozen-Snapshot Context Mutation, P1) and CAP-021 (MCP Server Role: Expose Registered Tools as MCP Server Endpoint, P1) added to capabilities-p1-p2.md (v1.1). CAP count 19→21; P1 count 5→7; total 19→21. D20 added to decisions list."
@@ -55,9 +57,9 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 
 | Section | File | Lines | Primary Consumer | Purpose |
 |---------|------|-------|-----------------|---------|
-| Capabilities — P0 | capabilities-p0.md | ~125 | product-owner, architect, story-writer | CAP-001–008 (Wave 0/1) + CAP-012, CAP-013, CAP-016 (D17-elevated to P0; cross-cutting Wave 0/1) |
-| Capabilities — P1/P2 | capabilities-p1-p2.md | ~115 | product-owner, architect, story-writer | P1: CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-020, CAP-021 (Wave 2 + Wave 0/1); P2: CAP-017, CAP-018, CAP-019 |
-| Entities — Core/Graph/Checkpoint | entities-graph.md | ~100 | architect, product-owner | Core primitives, graph, and checkpoint entities |
+| Capabilities — P0 | capabilities-p0.md | ~140 | product-owner, architect, story-writer | CAP-001–008 (Wave 0/1) + CAP-012, CAP-013, CAP-016 (D17-elevated to P0; cross-cutting Wave 0/1); CAP-002 revised v1.7 (D21 reversal) |
+| Capabilities — P1/P2 | capabilities-p1-p2.md | ~380 | product-owner, architect, story-writer | P1: CAP-009–011, CAP-014–015, CAP-020–033 (Wave 2 + Wave 0/1; D21 full expansion CAP-022..033); P2: CAP-017, CAP-018, CAP-019 |
+| Entities — Core/Graph/Checkpoint/Retrieval/Serialization/VectorStore/Embeddings | entities-graph.md | ~200 | architect, product-owner | Core primitives, graph, checkpoint + D21 full: Document, PromptValue, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType |
 | Entities — Server/Policy/Provider | entities-server.md | ~95 | architect, product-owner | Server, governance, and provider entities |
 | Domain Invariants | invariants.md | ~156 | product-owner, architect | DI-NNN business rules (14 invariants) |
 | Domain Events | events.md | ~140 | architect | Processing stages, triggers, preconditions |
@@ -66,7 +68,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Risks | risks.md | ~51 | product-owner, architect | R-NNN risk register (8 risks) |
 | Failure Modes | failure-modes.md | ~140 | architect, test-writer | FM-NNN runtime failure catalog (14 modes) |
 | Differentiators | differentiators.md | ~62 | product-owner | Competitive differentiator → CAP-NNN traceability |
-| Ubiquitous Language — Core/Graph | ubiquitous-language-core.md | ~105 | all agents | Core and graph term definitions |
+| Ubiquitous Language — Core/Graph/D21 | ubiquitous-language-core.md | ~215 | all agents | Core and graph term definitions + D21 full (15 terms): PromptTemplate, ChatPromptTemplate, MessagesPlaceholder, FewShot, LcSerializable, Reviver, Retriever, Document, VectorStoreRetriever, VectorStore, InMemoryVectorStore, MetadataFilter, Embeddings, EmbeddingsOpenAI, EmbeddingsOllama |
 | Ubiquitous Language — Server/Policy | ubiquitous-language-server.md | ~100 | all agents | Server, policy/safety, error terms + reconciliation table |
 | Bounded Contexts | bounded-contexts.md | ~155 | architect | Crate-level subsystem boundaries |
 
@@ -86,7 +88,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 
 | ID Format | Count | Section |
 |-----------|-------|---------|
-| CAP-NNN | 21 | capabilities-p0.md (CAP-001–008, CAP-012, CAP-013, CAP-016) + capabilities-p1-p2.md (CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-017, CAP-018, CAP-019, CAP-020, CAP-021) |
+| CAP-NNN | 33 | capabilities-p0.md (CAP-001–008, CAP-012, CAP-013, CAP-016) + capabilities-p1-p2.md (CAP-009–011, CAP-014–015, CAP-017–033) |
 | DI-NNN | 14 | invariants.md |
 | DEC-NNN | 13 | edge-cases.md |
 | ASM-NNN | 9 | assumptions.md |
@@ -100,7 +102,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Priority | Count | Capabilities |
 |----------|-------|-------------|
 | P0 (must-have) | 11 | CAP-001, CAP-002, CAP-003, CAP-004, CAP-005, CAP-006, CAP-007, CAP-008, CAP-012, CAP-013, CAP-016 |
-| P1 (should-have) | 7 | CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-020, CAP-021 |
+| P1 (should-have) | 19 | CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-020, CAP-021, CAP-022, CAP-023, CAP-024, CAP-025, CAP-026, CAP-027, CAP-028, CAP-029, CAP-030, CAP-031, CAP-032, CAP-033 |
 | P2 (nice-to-have) | 3 | CAP-017, CAP-018, CAP-019 |
 
 > **Priority note (ADV-P1D-PASS-21):** CAP-012, CAP-013, and CAP-016 were elevated from P1 to P0
@@ -116,7 +118,7 @@ Four holdout domains constrain the domain model as Phase-1 forcing functions:
 |--------|--------------------------|-----------------|
 | A — SOC Analyst | Risk-tiered HITL auth gates; forensic audit; prompt-injection isolation | CAP-004, CAP-006, CAP-013, CAP-015 |
 | B — Dark Factory | Multi-day durable runs; budget governance; convergence loops | CAP-004, CAP-005, CAP-006, CAP-012 |
-| C — OpenClaw | Persistent sessions; channel ingress; local-first deployment | CAP-005, CAP-014, CAP-017 |
+| C — OpenClaw | Persistent sessions; channel ingress; local-first deployment; pluggable embedding backends [NEW D21 requirement — CAP-017 vector path requires a concrete Embeddings impl; SS-22 is the holdout-necessary D21 piece for Domain C evaluation] | CAP-005, CAP-014, CAP-017, CAP-031, CAP-032, CAP-033 |
 | D — Hermes Agent | Inbound MCP server role; expose registered tools as MCP endpoint | CAP-020, CAP-021 |
 
 ## Key Anchors from COMPARATIVE-ASSESSMENT.md (D17)

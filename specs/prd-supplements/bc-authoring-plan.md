@@ -10,7 +10,7 @@ phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "f3164d7"
+input-hash: "2ae0d44"
 traces_to: prd.md
 total_bcs: 95
 total_batches: 15

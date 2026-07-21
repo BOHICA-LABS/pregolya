@@ -2,13 +2,15 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.2"
+version: "1.4"
 status: active
 producer: business-analyst
-timestamp: 2026-07-19T00:00:00Z
+timestamp: 2026-07-20T00:00:00Z
 changelog:
-  - "1.1 (F-P120-01, fix burst 123, 2026-07-19): Correct §ResumeValue definition from 2-variant enum form 'Command::Resume(value)' to struct form aligned to BC-2.05.004: Command with independently-settable optional fields resume/update/goto/graph, combinable as compound commands (EC-001/TV-002/TV-003). TD-VSDD-060 sweep: this file:142 was the only Command-depiction site; fixed here."
+  - "1.4 (2026-07-20): D21 second-half ubiquitous-language additions — 6 new terms: VectorStore, InMemoryVectorStore, MetadataFilter, Embeddings, EmbeddingsOpenAI, EmbeddingsOllama. Appended to D21 section. Total D21 terms: 15."
+  - "1.3 (2026-07-20): D21 ubiquitous-language additions — 9 new terms: PromptTemplate, ChatPromptTemplate, MessagesPlaceholder, FewShotPromptTemplate, LcSerializable, Reviver, Retriever, Document, VectorStoreRetriever. New section '## Prompts, Serialization, and Retrieval Terms (D21 Additions)' appended. D21 added to decisions list."
   - "1.2 (F-P121-01/02, fix burst 124, 2026-07-19): §Message: 'The four roles are: Human/AI/System/Tool' expanded to note 4 primary + legacy Function (BC-2.01.002 PC7), Chat arbitrary-role discriminant, Remove history-control token (BC-2.01.002 EC-005). §ContentBlock: replaced 5-variant drifted list (Text/ImageUrl/ToolUse/ToolResult/Document with wrong fields) with canonical 14-variant reference per BC-2.01.001 PC2; ToolCall fields {id,name,args} per BC-2.08.002/013; NonStandard DI-008 passthrough; tool results → ToolMessage per BC-2.09.002. TD-VSDD-060 sweep: only Message and ContentBlock depiction sites in this file; both fixed."
+  - "1.1 (F-P120-01, fix burst 123, 2026-07-19): Correct §ResumeValue definition from 2-variant enum form 'Command::Resume(value)' to struct form aligned to BC-2.05.004: Command with independently-settable optional fields resume/update/goto/graph, combinable as compound commands (EC-001/TV-002/TV-003). TD-VSDD-060 sweep: this file:142 was the only Command-depiction site; fixed here."
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -16,7 +18,7 @@ inputs:
   - .factory/semport/reference-manifest.md
 input-hash: "14175d7"
 traces_to: L2-INDEX.md
-decisions: [D2, D17]
+decisions: [D2, D17, D21]
 ---
 
 # Ubiquitous Language — Core Primitives and Graph Terms
@@ -160,3 +162,132 @@ An application-layer pattern for SOC-analyst-style approval gates: action-risk l
 (read-only, low, medium, high) that route Interrupt delivery to different approver roles.
 Not a core LangGraph primitive — built as a graph pattern on top of ferrochain's HITL
 contract. See domain-a-soc-analyst.md §5.
+
+---
+
+## Prompts, Serialization, and Retrieval Terms (D21 Additions)
+
+> D21 (burst 216) promoted SS-18 (Prompt Templates), SS-19 (LC Serialization), and
+> SS-20 (Document Retrieval) to full v1 scope. The terms below cover the ubiquitous language
+> for these three subsystems. Reference-corpus column gives the LangChain v1 origin term.
+
+**PromptTemplate**
+A single-message template that substitutes named variables into a string to produce a
+formatted prompt. Variables are declared at construction time; required variables not supplied
+at render time produce E-TMPL-003 (strict-undefined). Renders to a `PromptValue`. Implements
+`Runnable`. Corresponds to `PromptTemplate` in LangChain v1 (`langchain_core.prompts.prompt`).
+In ferrochain: `ferrochain-prompts::PromptTemplate`, f-string engine by default.
+
+**ChatPromptTemplate**
+A multi-message template that produces a `Vec<Message>` (wrapped as `PromptValue`) from a
+sequence of role-labelled message slots, each with its own `SlotTrustPolicy`. SystemMessage
+slots are hard-coded `TrustRequired` — this constraint is architectural, not configurable.
+Implements `Runnable`. Corresponds to `ChatPromptTemplate` in LangChain v1
+(`langchain_core.prompts.chat`). In ferrochain: `ferrochain-prompts::ChatPromptTemplate`.
+
+**MessagesPlaceholder**
+A chat template slot that expands a `Vec<Message>` variable in-place (rather than substituting
+a scalar string). Used to inject conversation history, agent scratchpad, or tool-result
+sequences at a fixed position in a ChatPromptTemplate. Corresponds to `MessagesPlaceholder`
+in LangChain v1 (`langchain_core.prompts.chat`).
+
+**FewShotPromptTemplate** (also: **FewShot**)
+A template type that formats a list of `(input, output)` example pairs as alternating
+Human/AI message turns and injects them before the user-turn slot in a ChatPromptTemplate.
+Enables dynamic few-shot prompting without manually constructing example messages. Corresponds
+to `FewShotChatMessagePromptTemplate` in LangChain v1.
+
+**LcSerializable**
+The opt-in trait a type implements to participate in the lc-JSON round-trip protocol.
+Methods: `lc_id()` (namespace path as `&[&str]`), `lc_secrets()` (credential field names
+stripped from serialized output, DI-010), `lc_attributes()` (extra metadata), and
+`is_lc_serializable()` (opt-in gate). Types that implement `LcSerializable` can be serialized
+to a `Serialized::Constructor` envelope and reconstructed via Reviver. Corresponds to
+`Serializable` base class in LangChain v1 (`langchain_core.load.serializable`).
+
+**Reviver**
+The deserializer that reconstructs typed values from `Serialized::Constructor` envelopes using
+the `inventory`-based static type registry. The Reviver looks up the `id` in the registered
+`LcEntry` set — unknown types produce E-SRLZ-001; langchain-monolith types produce E-SRLZ-002;
+legacy namespace aliases are remapped transparently. No path-based loading exists. Corresponds
+to the `Reviver` function / `loads()` entrypoint in LangChain v1
+(`langchain_core.load.load`). In ferrochain: `ferrochain_core::serializable::Reviver`.
+
+**Retriever**
+The dyn-compatible async trait for document retrieval: given a query string, returns a ranked
+`Vec<Document>`. Held as `Arc<dyn Retriever>` in graph nodes. Object-safe via `&self` receiver
+and `#[async_trait]` desugaring (no generic type params). All documents returned by any
+Retriever and entering graph context pass `BoundaryType::RAGRetrieval` guardrail (DI-012).
+Corresponds to `BaseRetriever` in LangChain v1 (`langchain_core.retrievers`). In ferrochain:
+`ferrochain_core::retriever::Retriever`.
+
+**Document**
+A pure data carrier returned by Retriever implementations: `page_content: String` (the text),
+`metadata: Map<String, Value>` (annotations), `id: Option<String>` (VectorStore-assigned ID).
+RAG pipeline output. All Documents entering graph context pass the DI-012 guardrail at
+`BoundaryType::RAGRetrieval`. Corresponds to `Document` in LangChain v1
+(`langchain_core.documents.base`). In ferrochain: `ferrochain_core::documents::Document`.
+
+**VectorStoreRetriever**
+A concrete `Retriever` backed by a `&dyn VectorStore`, configured with a `SearchType`
+(Similarity | SimilarityScoreThreshold | Mmr), `k` (final document count), `fetch_k`
+(MMR candidate pool), and `lambda_mult` (MMR diversity parameter, 0.0–1.0). Constructed
+via `VectorStore::as_retriever()`. Can be type-erased to `Arc<dyn Retriever>`. Corresponds
+to `VectorStoreRetriever` in LangChain v1 (`langchain_core.vectorstores.base`). In
+ferrochain: `ferrochain_vectorstores::retriever::VectorStoreRetriever`.
+
+**VectorStore**
+The abstract document-index trait: a content store that can be queried by vector similarity.
+Core operations: add texts (returns document IDs), k-nearest similarity search, MMR search,
+delete by ID, and `as_retriever()` (returns a concrete `VectorStoreRetriever`). All instance
+methods use `&self` (dyn-compatible); static constructors live on the separate
+`VectorStoreFactory` trait (E0038-safe). `Arc<dyn VectorStore>` is the seam for community
+adapters (Qdrant, Chroma, pgvector, etc.). Corresponds to `VectorStore` abstract base class
+in LangChain v1 (`langchain_core.vectorstores.base`). In ferrochain: ferrochain-vectorstores,
+`vectorstores::store::VectorStore`.
+
+**InMemoryVectorStore**
+The reference `VectorStore` implementation: an in-memory document index backed by
+`RwLock<Vec<(Document, Vec<f32>)>>`, constructed with an injected `Arc<dyn Embeddings>`.
+Stores pre-computed `Vec<f32>` embedding vectors alongside documents. Computes cosine similarity
+at query time. Enforces the zero-norm guard (E-VS-001) before any cosine division to prevent NaN
+score corruption. Suitable for testing, small corpora, and unit tests of graph nodes that
+perform RAG. Not persistence-backed. Corresponds roughly to
+`InMemoryVectorStore` in LangChain v1 (`langchain_core.vectorstores.in_memory`). In
+ferrochain: `ferrochain_vectorstores::memory::InMemoryVectorStore`.
+
+**MetadataFilter**
+An optional filter applied to VectorStore similarity searches based on Document metadata field
+values. Expressed as a list of `FilterClause` predicates: `Eq` (field equals value), `Ne`
+(not equal), `In` (field in a set of values). Community adapters may push MetadataFilter to
+the backend as a server-side pre-filter; InMemoryVectorStore applies it as a post-filter.
+Both `MetadataFilter` and `FilterClause` are `#[non_exhaustive]` for forward extensibility.
+No direct LangChain v1 equivalent as a named type; ferrochain promotes it to a first-class
+domain type. In ferrochain: `ferrochain_vectorstores::filter::MetadataFilter`.
+
+**Embeddings**
+The abstract text-to-vector conversion trait: given one or more text strings, returns
+`Vec<f32>` embedding vectors of consistent dimensionality. Two methods: `embed_documents`
+(batch — one vector per input text) and `embed_query` (single query). The dimensionality
+contract guarantees all returned vectors have the same length and batch.len() == texts.len();
+violations return E-EMBED-001. Batch failures return `Err` — no silent partial results
+(DI-014). Held as `Arc<dyn Embeddings>` by VectorStore backends and ferrochain-memory.
+Corresponds to `Embeddings` abstract base class in LangChain v1
+(`langchain_core.embeddings.base`). In ferrochain: `ferrochain_core::embeddings::Embeddings`.
+
+**EmbeddingsOpenAI**
+The first-party OpenAI embedding implementation. Default model: `text-embedding-3-small`;
+also supports `text-embedding-3-large` and legacy `text-embedding-ada-002`. API key accepted
+as `OpenAiApiKey` newtype with redacted Debug (DI-010). Batch failure returns `Err` (DI-014).
+reqwest/rustls-tls mandatory; 30-second timeout (DI-009). Corresponds to
+`OpenAIEmbeddings` in LangChain v1 (`langchain_openai`). In ferrochain:
+`ferrochain_openai::embeddings::EmbeddingsOpenAI`.
+
+**EmbeddingsOllama**
+The first-party Ollama local-embedding implementation. No default model (caller provides a
+locally-pulled model name). No API key required. Default endpoint: `POST /api/embed`
+(`input` field); `use_legacy_endpoint: bool` opt-in for `POST /api/embeddings` (`prompt`
+field) for older Ollama deployments. reqwest/rustls-tls; 30-second timeout (DI-009) even for
+localhost. ferrochain-anthropic has NO `Embeddings` impl (Anthropic provides no public
+embedding API). Corresponds to `OllamaEmbeddings` in LangChain v1 (`langchain_ollama`). In
+ferrochain: `ferrochain_ollama::embeddings::EmbeddingsOllama`.

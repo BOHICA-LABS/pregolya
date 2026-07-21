@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p0
-version: "1.6"
+version: "1.7"
 status: active
 producer: business-analyst
 timestamp: 2026-07-20T00:00:00Z
@@ -14,8 +14,9 @@ inputs:
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
 input-hash: "2b2bd5a"
 traces_to: L2-INDEX.md
-decisions: [D1, D7, D8, D11, D13, D17]
+decisions: [D1, D7, D8, D11, D13, D17, D21]
 changelog:
+  - "v1.7 (2026-07-20): CAP-002 D21 reversal — PromptTemplate/ChatPromptTemplate flipped from 'post-v1/community' to v1 deliverables (SS-18/ferrochain-prompts, CAP-022/CAP-023); standalone OutputParser remains post-v1; with_structured_output covered by provider conformance (CAP-009), not a separate OutputParser. Prior v1.6 clarification partially superseded by D21 scope expansion (burst 216). D21 added to decisions list."
   - "v1.6 (2026-07-20): CAP-002 scope clarification added — listed Runnable examples (model call, prompt template, output parser, tool, graph) are user-implementable instances; ferrochain ships the trait and composition machinery in v1 only; PromptTemplate / OutputParser first-party impls are post-v1/community deliverables. Grounded in product-brief v1.3 out-of-scope dispositions and audit Q1 GAP. input-hash updated (drift: 8fe3546→2b2bd5a)."
   - "v1.3 (2026-07-17): F-P95-04 fix — CAP-012 on_ceiling enumeration was stale (two-mode: Halt | Escalate only). Expanded to all three canonical variants: Halt | Escalate | Summarize per interface-definitions §OnCeiling, BC-2.10.003 PC8, and D20 addition."
   - "v1.4 (OBS-P121 audit, fix burst 124, 2026-07-19): CAP-007 §StreamEvent variant list: add 12th variant guardrail_decision (F-P99-01, interface-definitions v2.34 §StreamEvent). Prior list of 11 variants was authored before the guardrail observability axis was added. Canon: interface-definitions §StreamEvent 12 variants."
@@ -57,18 +58,29 @@ differentiator #4 (product-brief §Overflow Competitive Differentiator Traceabil
 
 Express any computation — model call, prompt template, output parser, tool, graph — as a
 Runnable that can be invoked, streamed, batched, and composed via `|` pipe into chains.
-The listed examples (model call, prompt template, output parser, tool, graph) are all
-user-implementable instances of the `Runnable` trait — ferrochain ships the trait and
-composition machinery in v1, not first-party `PromptTemplate` or `OutputParser`
-implementations; those are post-v1/community deliverables.
+The listed examples are all user-implementable instances of the `Runnable` trait — ferrochain
+ships the trait and composition machinery in v1.
+
+**D21 scope update (v1.7):** `PromptTemplate` and `ChatPromptTemplate` ARE now v1 deliverables
+(SS-18 / ferrochain-prompts, CAP-022 / CAP-023). The prior v1.6 clarification that
+"PromptTemplate first-party impls are post-v1/community deliverables" is superseded by D21
+(burst 216). Standalone `OutputParser` remains a post-v1/community deliverable — it is not
+part of the D21 expansion. The `with_structured_output` use case is covered in v1 via provider
+conformance (CAP-009), not a separate first-party OutputParser implementation. Summary of what
+flipped and what did not:
+- **Flipped to v1:** PromptTemplate, ChatPromptTemplate (CAP-022/023, SS-18)
+- **Unchanged (post-v1):** standalone OutputParser; `with_structured_output` is provider-
+  conformance scope (CAP-009), not a separate OutputParser implementation
+
 Provides the universal composition protocol across all ferrochain crates.
 
 **Grounding:** product-brief.md §Scope Wave 0 — "Runnable" is the core LangChain v1 semantic
 primitive (reference-manifest.md, semport Corpus 1 langchain==1.3.13). The brief lists
-`(Runnable, Message, ContentBlock)` as Wave 0 foundation.
+`(Runnable, Message, ContentBlock)` as Wave 0 foundation. D21 (burst 216) supersedes the
+product-brief §Out-of-Scope entry for PromptTemplate for the purposes of v1 scope.
 **Anchor justification:** CAP-002 covers Runnable composition because the product-brief names
 it explicitly in Wave 0 and it is the composition primitive that all higher capabilities
-(chains, graphs, providers) depend on.
+(chains, graphs, providers, and now prompt templates) depend on.
 
 ### CAP-003: StateGraph Definition (Nodes, Edges, Channels, Reducers)
 

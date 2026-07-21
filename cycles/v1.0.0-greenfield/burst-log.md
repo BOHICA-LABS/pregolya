@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "d3e0ace"
+input-hash: "87e3f55"
 traces_to: STATE.md
 ---
 
@@ -3342,3 +3342,104 @@ The following 7 error codes were authored at ADR level (architect authority) and
 - Fix bursts: 128 (no new fix burst)
 - Phase 1 status: IN PROGRESS — D21 architecture layer + dep-validation COMPLETE (ADR-014..017 v1.1); 0/3 pending expanded-perimeter re-convergence
 - NEXT: BA authors CAP-022..033 (SS-18..22) → PO authors ~19-29 expansion BCs + folds 7 ADR-authored error codes (E-TMPL-001/002/003, E-SRLZ-001/002, E-EMBED-001, E-VS-001) into taxonomy → VP-006..010 VP files → Phase 1d cascade from 0/3
+
+---
+
+## Burst 219 — D21 L2 CAP Layer COMPLETE (CAP-022..033, SS-18..22, CAP-002 Reversal) | 2026-07-20
+
+### Archive: Burst 214 Step Row (rotated from STATE.md Current Phase Steps)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1d burst 214 — input-drift closure (dtu-assessment path repair; PASS-15/16 section-anchor fix; cycles bookkeeping hash refresh) | state-manager | COMPLETE | Pre-gate input-drift check complete. dtu-assessment.md: inputs repaired ss-TBD→ss-08 for BC-2.08.001..008; hash 55f6386. ADV-P1D-PASS-15: section-anchor pseudo-input ".factory/specs/prd.md §9 NE Disposition Table" → plain path; hash 1ec9375. ADV-P1D-PASS-16: section-anchor pseudo-input ".factory/specs/prd.md §2 BC catalog + §7 RTM + §9 NE Disposition Table" → plain path; hash c9d64f6. 16 cycles bookkeeping files (burst-logs, lessons, checkpoints, blocking-issues) hash-refreshed (safe-to-bump class). Final scan: TOTAL=191 MATCH=152 STALE=0 NOINPUT=39. Spec corpus ZERO-DRIFT. Burst 214. |
+
+### CAP Layer Summary — 12 New CAPs (022-033) Across SS-18..22
+
+| CAP ID | Subsystem | SS |
+|--------|-----------|----|
+| CAP-022 | PromptTemplate rendering — variable interpolation + format_messages | SS-18 |
+| CAP-023 | FewShot/MessagesPlaceholder support — dynamic message injection | SS-18 |
+| CAP-024 | LcSerializable round-trip — serialization + deserialization with type registry | SS-19 |
+| CAP-025 | LC JSON format compliance — lc_kwargs + lc_id + lc_namespace canonical fields | SS-19 |
+| CAP-026 | Reviver/loader pattern — deserialization factory + namespace routing | SS-19 |
+| CAP-027 | Retriever trait — similarity search + invoke interface | SS-20 |
+| CAP-028 | External retriever adapters — extension points for VectorStore-backed retrieval | SS-20 |
+| CAP-029 | VectorStore trait — add_texts/similarity_search/from_texts/as_retriever | SS-21 |
+| CAP-030 | MMR + external adapters — maximal marginal relevance + adapter extension points | SS-21 |
+| CAP-031 | Embeddings trait — embed_documents/embed_query provider abstraction | SS-22 |
+| CAP-032 | OpenAI + Ollama embeddings providers — first-party impls | SS-22 |
+| CAP-033 | Embeddings caching + batch support — async batch + DTU cassette parity | SS-22 |
+
+**Domain C forcing-function:** CAP-031/032/033 (SS-22 embeddings) directly enable the Domain C (OpenClaw) RAG pipeline vector path. Without concrete embeddings impls, Domain C holdout scenario would be dead surface.
+
+**CAP-002 Reversal:** capabilities-p0 v1.6→v1.7 — prompt templates flipped INTO v1 scope. Output-parser standalone pattern remains post-v1.
+
+### Entities Added (entities-graph v1.2→v1.4)
+
+New section: "Retrieval and Serialization Domain"
+
+| Entity | Description |
+|--------|-------------|
+| Document | Retrieval unit: page_content (str) + metadata (map); canonical I/O for Retriever + VectorStore |
+| PromptValue | Abstract prompt container: to_string() + to_messages(); bridge between templates and LLM inputs |
+| Serialized | LC-JSON wire envelope: lc_kwargs + lc_id + lc_namespace + lc_graph fields |
+| VectorStore | Abstraction for similarity-search backends; add_texts/similarity_search/from_texts/as_retriever/MMR |
+| Embeddings | Provider abstraction: embed_documents(Vec<str>) → Vec<Vec<f64>> + embed_query(str) → Vec<f64> |
+| MetadataFilter | Document filter predicate for retrieval (key/value/operator triples; AND/OR composition) |
+| SearchType | Retrieval strategy enum: Similarity \| MMR \| SimilarityScoreThreshold |
+
+### Ubiquitous Language Added (ubiquitous-language-core v1.2→v1.4)
+
++15 D21 terms with reference-corpus reconciliation. Terms cover: PromptTemplate, ChatPromptTemplate, MessagesPlaceholder, FewShotPromptTemplate, PromptValue, LcSerializable, lc-JSON, Reviver, Retriever, VectorStore, Document, Embeddings, MMR, MetadataFilter, SearchType.
+
+### L2-INDEX v1.4→v1.6 Changes
+
+- CAP count 21→33 (12 new CAPs)
+- P1/P2 recounts updated
+- Domain C section: forcing-function linkage to CAP-031/032/033
+- D21 row added to decisions log section
+
+### PO BC-Authoring Obligation (SS-18..22 Expansion)
+
+Per architect handoff (burst-217 burst-log §Handoff table):
+
+| Subsystem | SS | Crate | BC Band |
+|-----------|-----|-------|---------|
+| Prompt Templates | SS-18 | ferrochain-prompts | ~4-6 BCs |
+| LC Serialization | SS-19 | ferrochain-core::serializable | ~5-7 BCs |
+| Retrievers | SS-20 | ferrochain-core::retriever | ~3-5 BCs |
+| Vector Stores | SS-21 | ferrochain-vectorstores | ~4-6 BCs |
+| Embeddings | SS-22 | ferrochain-anthropic excluded (ADR-017) | ~3-5 BCs |
+
+Additional PO obligations (same session as BC authoring):
+- Fold 7 ADR-authored error codes into error-taxonomy.md: E-TMPL-001/002/003, E-SRLZ-001/002, E-EMBED-001, E-VS-001
+- Move 5 subsystems from product-brief.md §Out-of-Scope to §In-Scope
+- Note: CAP-002 reversal is DONE (capabilities-p0 v1.7) — PO does not need to redo it
+
+### Hash Sweep (D18-P89-A)
+
+- specs scan pass 1: TOTAL=131 MATCH=21 STALE=110 UPDATED=110
+- specs scan pass 2: TOTAL=131 MATCH=131 STALE=0 — ZERO-DRIFT
+- planning scan: TOTAL=5 MATCH=3 STALE=0 — ZERO-DRIFT
+- Root cause: L2-INDEX.md is an input to many BCs and supplements; CAP/entity edits caused cascade (118 files refreshed across 2 passes)
+
+### Files Written / Committed (Burst 219)
+
+| File | Change |
+|------|--------|
+| `.factory/specs/domain-spec/capabilities-p1-p2.md` | v1.3→v1.5: +CAP-022..033 for SS-18..22 |
+| `.factory/specs/domain-spec/capabilities-p0.md` | v1.6→v1.7: CAP-002 reversal (prompt templates INTO v1; output-parser standalone stays post-v1) |
+| `.factory/specs/domain-spec/entities-graph.md` | v1.2→v1.4: +7 entities (Document, PromptValue, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType) |
+| `.factory/specs/domain-spec/ubiquitous-language-core.md` | v1.2→v1.4: +15 D21 terms with reference-corpus reconciliation |
+| `.factory/specs/domain-spec/L2-INDEX.md` | v1.4→v1.6: CAP count 21→33; P1/P2 recounts; Domain C CAP-031/032/033 forcing-function; D21 row |
+| `.factory/STATE.md` | v3.59→v3.60: burst-214 step row archived; burst-219 row added; current_step updated; Last Updated + session checkpoint refreshed |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | burst-214 archive row + burst-219 full narrative appended |
+| `.factory/cycles/v1.0.0-greenfield/session-checkpoints.md` | burst-218 checkpoint archived |
+| 118 spec/planning files (hash-only refresh) | input-hash mechanical refresh (D18-P89-A standing sweep) |
+
+### Convergence Status After Burst 219
+
+- Phase 1d passes: 128 (pre-expansion perimeter; SUPERSEDED by D21)
+- Fix bursts: 128 (no new fix burst)
+- Phase 1 status: IN PROGRESS — D21 L2 CAP layer COMPLETE (33 CAPs, SS-18..22); 0/3 pending expanded-perimeter re-convergence
+- NEXT: PO authors expansion BCs (SS-18..22 bands) + folds 7 error codes + product-brief scope-move → VP-006..010 → Phase 1d cascade from 0/3

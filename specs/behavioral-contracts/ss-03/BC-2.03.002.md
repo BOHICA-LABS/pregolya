@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
-input-hash: "6848c50"
+input-hash: "3b01e6f"
 extracted_from: null
 modified: []
 deprecated: null

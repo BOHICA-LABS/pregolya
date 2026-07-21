@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "9a11eea"
+input-hash: "87e3f55"
 traces_to: STATE.md
 ---
 
@@ -924,3 +924,15 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA (this session): no new decisions in bursts 211-212; last decision D18-P103-A; full log above.
 ### STANDING DIRECTIVES: D15 autonomous loop (verbatim in frontmatter); D14 strict-zero 3-consecutive-clean; frozen-corpus rule ACTIVE (counter 2/3; no spec edits until 3/3 or new finding).
 ### WRAP METADATA: Date 2026-07-19 | Cycle v1.0.0-greenfield | Burst 212 | Counter 2/3 STREAK ACTIVE | No open findings (pass-127 CLEAN strict; streak 2/3; pass 128 next)
+
+---
+
+## Burst 218 Checkpoint (archived burst-219)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 SPEC CRYSTALLIZATION — D21 ARCHITECTURE LAYER + DEP-VALIDATION COMPLETE (burst 218). ADR-014..017 v1.1: mustache DROPPED (abandoned 2018-02); minijinja="2" (2.21.0) pinned; inventory="0.3" (0.3.24) pinned; zero-norm cosine guard (E-VS-001); Ollama /api/embed preferred. adr-tech-validation v1.1.0. PO OBLIGATION: fold 7 ADR-authored error codes (E-TMPL-001/002/003, E-SRLZ-001/002, E-EMBED-001, E-VS-001) into error-taxonomy.md during SS-18..22 BC authoring. Re-convergence required (0/3). NEXT: BA authors CAP-022..033 (SS-18..22) → PO authors ~19-29 new BCs + folds 7 error codes → VP-006..010 files authored → Phase 1d cascade from 0/3. PO error-code obligation table: see burst-218 in cycles/v1.0.0-greenfield/burst-log.md."
+### HEADS: develop d018d3f (= origin, clean, CI green); factory-artifacts: see git -C .factory log -1; no worktrees; no PRs; no in-flight agents.
+### PENDING HUMAN ACTIONS: (1) direnv allow . [B1]; (2) regenerate + run publish-all.sh for 20 crates [R6 time-sensitive; roster finalized burst 217]; (3) langgraph 0.2.5 watch [R4].
+### DECISION DELTA (burst 218): no new decisions; 4 ADRs updated v1.0→v1.1 (dep-validation outcomes); adr-tech-validation v1.1.0.
+### STANDING DIRECTIVES: D15 autonomous loop; expansion workstream: BA CAPs → PO BCs + error-code fold → VP → Phase 1d cascade from 0/3.
+### WRAP METADATA: Date 2026-07-20 | Cycle v1.0.0-greenfield | Burst 218 | Phase 1 IN PROGRESS — D21 dep-validation COMPLETE | Re-convergence required (0/3)
