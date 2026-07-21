@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.0"
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.1 (crates.io/2026-07-20): Add zero-norm vector guard hardening note for cosine similarity (NaN prevention, 2-line check, no new dep)."
   - "1.0 (D21/2026-07-20): Initial ADR — crate placement (ferrochain-vectorstores new crate; Retriever + Document in ferrochain-core), async dyn-compatible trait shapes, VectorStoreFactory pattern, MMR surface, SS-15 MemoryStore boundary definition, inventory extension seam."
 ---
 
@@ -231,6 +232,22 @@ pub enum FilterClause {
 Optional parameter on `similarity_search_with_filter` (additive method on the trait,
 not breaking the base contract). Community adapters that support native metadata
 filtering implement this optional method; in-memory impl implements via post-filter.
+
+### Hardening note — zero-norm vector guard
+
+The in-memory cosine similarity implementation MUST guard against zero-norm vectors
+before performing division. A zero-length embedding vector produces a NaN result
+(`0.0 / 0.0`) that silently corrupts ranking and propagates through similarity scores.
+The guard is two lines and requires no new dependency:
+
+```rust
+let norm = v.iter().map(|x| x * x).sum::<f32>().sqrt();
+if norm == 0.0 { return Err(FerrochainError { code: "E-VS-001", ... }); }
+```
+
+This check belongs in `vectorstores::mmr` (pure-core) before any cosine call. VP-009
+(MMR semantic diversity) should include a proptest property asserting no NaN in output
+scores for any valid non-zero query embedding.
 
 ## Decision 3 — SS-15 (MemoryStore) Boundary Definition
 

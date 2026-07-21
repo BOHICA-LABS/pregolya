@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "30f6699"
+input-hash: "d3e0ace"
 traces_to: STATE.md
 ---
 
@@ -3274,3 +3274,71 @@ Working specification for BA (CAP authoring), PO (BC authoring), and formal-veri
 - Fix bursts: 128 (no new fix burst in bursts 212–217)
 - Phase 1 status: IN PROGRESS — D21 architecture layer COMPLETE; 0/3 pending expanded-perimeter re-convergence
 - NEXT: BA authors CAP-022..033 (SS-18..22) → PO authors ~19-29 new BCs + out-of-scope→in-scope migration + CAP-002 revision → VP-006..010 VP files → Phase 1d cascade from 0/3
+
+---
+
+## Archived Step Row — Burst 213 (rotated out of STATE.md by burst 218)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Phase 1d burst 213 — pass-128 CLEAN(strict) CONVERGED record (3/3; Phase 1d CASCADE CLOSED) | adversary + state-manager | COMPLETE | Pass 128: CLEAN strict/PR-merge — 0C/0H/0M/0L/0OBS. Part A streak qual STANDING [VP-003 v1.2 / summary_halt / holdout-D anchors]. Fresh-hunt CLEAN: ss-14/ss-16/ss-17 full families; ss-15 SkillStore/MemoryWriteGuard↔interface-definitions; CAP-018/019/020 bidirectionality; error-code web gate #33 comprehensive run. ZERO findings. Cleared-not-reported: error.rs/errors.rs aspirational-anchor (non-defect, TD-VSDD-091); SkillStore async refinement (non-defect, D18-P72-A). S-7.02 cycle-closing checklist: PASS (all 12 process-gaps 105–128 codified; zero open). Novelty ZERO. Trajectory →0 (P1D-128 — CONVERGED). Counter 3/3 PHASE 1D CONVERGED. CASCADE CLOSED. Burst 213. |
+
+---
+
+## Burst 218 — D21 ADR Dep-Validation Refinements (mustache DROPPED, pins recorded)
+
+**Date:** 2026-07-20
+**Agents:** architect (ADR edits + adr-tech-validation), state-manager (commit)
+**Summary:** Architect research-fix burst — 4 ADRs updated v1.0→v1.1 with crates.io-verified dep-validation outcomes; adr-tech-validation updated v1.0.0→v1.1.0; hash sweep STALE→0.
+
+### Outcome — D21 Technology Validation Results (crates.io/2026-07-20)
+
+| ADR | Change | Result | Detail |
+|-----|--------|--------|--------|
+| ADR-014 (VectorStore+Retriever) | v1.0→v1.1 | GREEN | Added zero-norm cosine guard hardening note (NaN prevention, 2-line check, no new dep); VP-009 extended; anchors E-VS-001 |
+| ADR-015 (Prompt Injection Safety) | v1.0→v1.1 | GREEN (mustache REJECTED) | Dropped abandoned `mustache` crate (last release 2018-02 — 8-yr stale; production-grade violation). Template engines: f-string (default) + jinja2/minijinja only. Pin: `minijinja = "2"` (2.21.0, default-features=false, optional). Added autoescape + sandboxed/restricted-mode + strict-undefined safety notes. Anchors E-TMPL-003 |
+| ADR-016 (lc-JSON Safety) | v1.0→v1.1 | GREEN | Recorded validated pin `inventory = "0.3"` (0.3.24, dtolnay, MSRV 1.62, WASM-safe); added keep-pin-fresh note |
+| ADR-017 (Embeddings) | v1.0→v1.1 | GREEN | Added Ollama endpoint preference (prefer POST /api/embed, `input` field; /api/embeddings legacy fallback with `use_legacy_endpoint` toggle); noted OpenAI model currency (text-embedding-3-small/large current, ada-002 legacy) |
+
+**Research provenance:** crates.io/2026-07-20 (live registry verification via Perplexity sonar-deep-research); documented in adr-tech-validation.md v1.1.0 §6 D21 ADR validation table.
+
+### PO Error-Code Obligation (fold into error-taxonomy.md during SS-18..22 BC authoring)
+
+The following 7 error codes were authored at ADR level (architect authority) and are NOT yet in error-taxonomy.md. The PO MUST fold all 7 into error-taxonomy.md in the same burst that authors the first BC in the relevant subsystem section.
+
+| Code | Namespace | Condition | Source ADR | First authored |
+|------|-----------|-----------|------------|----------------|
+| E-TMPL-001 | TMPL | Slot substitution blocked (TrustRequired slot + untrusted input) | ADR-015 v1.0 | burst 217 |
+| E-TMPL-002 | TMPL | Template parse/render failure | ADR-015 v1.0 | burst 217 |
+| E-TMPL-003 | TMPL/VALIDATION | UndefinedVariable — minijinja strict-undefined mode fires | ADR-015 v1.1 | burst 218 |
+| E-SRLZ-001 | SRLZ | Unregistered type deserialization attempt (allowlist miss) | ADR-016 v1.0 | burst 217 |
+| E-SRLZ-002 | SRLZ | Round-trip integrity check failure | ADR-016 v1.0 | burst 217 |
+| E-EMBED-001 | EMBED | Embedding provider call failure | ADR-017 v1.0 | burst 217 |
+| E-VS-001 | VS | Zero-norm vector detected in cosine similarity guard | ADR-014 v1.1 | burst 218 |
+
+**PO routing:** flagged in STATE.md `current_step`. Resolve all 7 in the same session that authors SS-18..22 BCs.
+
+### Hash Sweep (D18-P89-A)
+
+- `planning/adr-tech-validation.md`: input-hash `6cf515f` (stale) → `e58d32a` (refreshed; ADR-014..017 v1.1 hashes now current)
+- specs scan: TOTAL=131 MATCH=131 STALE=0 — no stale specs
+- planning scan: TOTAL=5 MATCH=3 STALE=0 — no stale planning files (both passes clean)
+
+### Files Written / Committed (Burst 218)
+
+| File | Change |
+|------|--------|
+| `.factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md` | v1.0→v1.1: zero-norm cosine guard hardening note; VP-009 extended; E-VS-001 anchor |
+| `.factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md` | v1.0→v1.1: mustache DROPPED (abandoned 2018-02); minijinja="2" (2.21.0) pin; autoescape+sandboxed+strict-undefined safety notes; E-TMPL-003 anchor |
+| `.factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md` | v1.0→v1.1: inventory="0.3" (0.3.24) pin confirmed; keep-pin-fresh note |
+| `.factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md` | v1.0→v1.1: Ollama /api/embed preferred; OpenAI model currency note |
+| `.factory/planning/adr-tech-validation.md` | v1.0.0→v1.1.0: §6 D21 pin table added (research provenance crates.io/2026-07-20); input-hash 6cf515f→e58d32a |
+| `.factory/STATE.md` | v3.58→v3.59: burst-213 step row archived; burst-218 step row added; current_step updated (dep-validation COMPLETE, PO obligation flagged); Last Updated refreshed |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | burst-213 archive note + burst-218 full narrative appended |
+
+### Convergence Status After Burst 218
+
+- Phase 1d passes: 128 (pre-expansion perimeter; SUPERSEDED by D21)
+- Fix bursts: 128 (no new fix burst)
+- Phase 1 status: IN PROGRESS — D21 architecture layer + dep-validation COMPLETE (ADR-014..017 v1.1); 0/3 pending expanded-perimeter re-convergence
+- NEXT: BA authors CAP-022..033 (SS-18..22) → PO authors ~19-29 expansion BCs + folds 7 ADR-authored error codes (E-TMPL-001/002/003, E-SRLZ-001/002, E-EMBED-001, E-VS-001) into taxonomy → VP-006..010 VP files → Phase 1d cascade from 0/3

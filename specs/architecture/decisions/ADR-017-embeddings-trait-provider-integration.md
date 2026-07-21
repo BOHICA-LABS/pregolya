@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.0"
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-22, SS-08]
 changelog:
+  - "1.1 (crates.io/2026-07-20): Add Ollama endpoint preference (prefer POST /api/embed, `input` field; /api/embeddings legacy fallback with `use_legacy_endpoint` toggle); note OpenAI model currency (text-embedding-3-small/large current, ada-002 legacy)."
   - "1.0 (D21/2026-07-20): Initial ADR — Embeddings trait in ferrochain-core (core::embeddings), async dyn-compatible shape, dimensionality contract, ferrochain-openai + ferrochain-ollama gain embeddings modules, ferrochain-anthropic excluded (no embedding API), ferrochain-vectorstores uses Embeddings for in-memory backend."
 ---
 
@@ -112,19 +113,25 @@ degradation to `Vec::new()` (DI-014 / Code Conventions: no silent empty returns)
 
 **ferrochain-openai** → gains `openai::embeddings` module
 
-OpenAI provides the `text-embedding-3-small`, `text-embedding-3-large`, and
-`text-embedding-ada-002` models via the `/v1/embeddings` endpoint. These are the
-dominant embedding models in the Python langchain ecosystem (~4 of the 23 partner
-registry entries relate to OpenAI). `ferrochain-openai` gains an `EmbeddingsOpenAI` struct
-that implements `Embeddings`. reqwest client with `rustls-tls` mandatory per workspace
-convention; 30-second timeout per DI-009.
+OpenAI provides the `/v1/embeddings` endpoint supporting multiple text embedding models.
+**Model currency (crates.io/2026-07-20):** `text-embedding-3-small` and
+`text-embedding-3-large` are the current recommended models; `text-embedding-ada-002`
+is legacy (still supported by OpenAI but superseded by the 3-series — prefer 3-small for
+cost/performance balance). `ferrochain-openai` gains an `EmbeddingsOpenAI` struct
+configurable to any model name string, defaulting to `text-embedding-3-small`. These are
+the dominant embedding models in the Python langchain ecosystem (~4 of the 23 partner
+registry entries relate to OpenAI). reqwest client with `rustls-tls` mandatory per
+workspace convention; 30-second timeout per DI-009.
 
 **ferrochain-ollama** → gains `ollama::embeddings` module
 
-Ollama exposes a `/api/embeddings` endpoint (also accessible via `/api/embed` in recent
-versions) that supports any local model with embedding capabilities (e.g.,
-`nomic-embed-text`, `mxbai-embed-large`). `ferrochain-ollama` gains an `EmbeddingsOllama`
-struct. No API key required (Ollama is local); uses the existing Ollama base URL config.
+Ollama exposes two embedding endpoints: `POST /api/embed` (newer, uses `input` field,
+**preferred**) and `POST /api/embeddings` (legacy, uses `prompt` field, fallback). Both
+support any local model with embedding capabilities (e.g., `nomic-embed-text`,
+`mxbai-embed-large`). `EmbeddingsOllama` defaults to `POST /api/embed`; a
+`use_legacy_endpoint: bool` config field enables the `/api/embeddings` fallback for Ollama
+deployments that predate the `/api/embed` introduction. No API key required (Ollama is
+local); uses the existing Ollama base URL config.
 
 ### Provider explicitly excluded from v1
 

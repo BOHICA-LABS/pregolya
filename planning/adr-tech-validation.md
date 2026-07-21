@@ -1,18 +1,26 @@
 ---
 artifact: planning/adr-tech-validation
-version: 1.0.0
+version: 1.1.0
 created: 2026-07-13T00:00:00Z
+updated: 2026-07-20T00:00:00Z
 input_level: L3
-recommendation: MOSTLY-VALID (1 competitive BLOCKER-flag, 2 STALE version corrections)
+recommendation: MOSTLY-VALID (1 competitive BLOCKER-flag, 2 STALE version corrections; D21 ADRs validated 2026-07-20)
 confidence: high
 assessor: research-agent (perplexity sonar-deep-research + crates.io registry verification)
-assessed_at: 2026-07-13
+assessed_at: 2026-07-20
 inputs:
   - .factory/specs/architecture/decisions/ADR-002-checkpoint-format.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-003-durability-tiers.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "ebc7d06"
+  - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
+  - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
+  - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
+  - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
+input-hash: "e58d32a"
+changelog:
+  - "1.1.0 (crates.io/2026-07-20): Add §6 D21 ADR technology validation — inventory 0.3.24 GREEN, minijinja 2.21.0 GREEN, mustache REJECTED (abandoned 2018-02), embeddings no-crate GREEN, vector-math no-crate GREEN."
+  - "1.0.0 (2026-07-13): Initial validation covering ADR-002/003/004/008 — schemars, rmp-serde, verification toolchain, provider APIs, competitive watch."
 ---
 
 # ADR Technology Validation — ferrochain Phase-1
@@ -28,6 +36,7 @@ against Perplexity `sonar-deep-research` (web-grounded) plus direct registry/doc
 3. **Verification toolchain (SS-17):** VALID with one important caveat — Kani **0.67.0** (2026-01-16), cargo-fuzz **0.13.2** (2026-06-09), cargo-mutants **27.1.0** (2026-06-02) all current & maintained. **CAVEAT/BLOCKER for harness authoring: Kani still has no native async/`.await` support** — tokio proof harnesses must drive futures via a manual executor/`block_on`, not verify real async scheduling. SS-17 should state this explicitly.
 4. **Provider APIs (DTU):** VALID — OpenAI official OpenAPI spec still published (`github.com/openai/openai-openapi`); Anthropic version header still **`2023-06-01`** (no official OpenAPI spec, community spec only); Ollama API docs now at `docs.ollama.com/api` (unversioned, stable). **One breaking-change flag:** OpenAI is deprecating older surfaces (Realtime API beta removed; Assistants API sunset; migration to Responses API) — Anthropic & Ollama: no breaking changes in last 6 mo.
 5. **Competitive watch (R4 / SC-2):** **BLOCKER-FLAG** — the `langgraph` crate on crates.io (**0.2.5**, 2026-07-01) now ships `PostgresSaver`/`SqliteSaver` durable checkpointing with pause/resume + time-travel. NOT yet 1.0/GA (~50% docs, pre-1.0), but it directly targets ferrochain's differentiator. `rig-core` **0.40.0** (2026-07-11) has serializable `AgentRun` (persist-intent) but no GA durable checkpointer; swiftide/kalosm: none.
+6. **D21 ADRs (ADR-014 through ADR-017, crates.io/2026-07-20):** VALID — `inventory = "0.3"` (0.3.24) GREEN; `minijinja = "2"` (2.21.0) GREEN; `mustache` crate REJECTED (abandoned, last release 2018-02); embeddings approach (no separate crate — OpenAI+Ollama HTTP direct) GREEN; vector-math approach (no crate — `Vec<f32>` cosine) GREEN.
 
 ---
 
@@ -136,12 +145,42 @@ mature* competitor"; (b) monitor the `langgraph` crate's release cadence (0.1.0�
 development); (c) ferrochain's edge must be articulated as maturity/verification/durability-tier
 rigor (ADR-003, SS-17 proofs), not merely "first to have checkpointing in Rust."
 
+## 6. D21 ADR Technology Validation (ADR-014 through ADR-017) — VALID
+
+**Verification date:** 2026-07-20 (crates.io registry API, live).
+
+| Crate / approach | Decision | Finding | Verdict |
+|------------------|----------|---------|---------|
+| `inventory = "0.3"` | ADR-016 registry mechanism | Current: 0.3.24 (dtolnay, Q1-2026 active, MSRV 1.62, edition-agnostic, WASM-safe). Linker-section constructor model is sound. | GREEN — pin as `"0.3"` |
+| `minijinja = "2"` | ADR-015 jinja2 template engine | Current: 2.21.0. Autoescape, sandboxed mode, strict-undefined all present in 2.x API. Active maintenance (2024-present). MIT licensed. | GREEN — pin as `"2"` (default-features=false) |
+| `mustache` crate | ADR-015 mustache engine | Last release: 2018-02-21 (0.9.0). No commit activity since 2018. Predates Rust 2018 edition. Cannot be a v1 dependency. | REJECTED — abandoned |
+| Embeddings: no separate crate | ADR-017 | No embedding-specific Rust crate needed. OpenAI `/v1/embeddings` and Ollama `/api/embed` are direct HTTP calls via `reqwest`. `Vec<f32>` output is sufficient. | GREEN — HTTP direct, no new dep |
+| Vector math: `Vec<f32>` only | ADR-014 | `ndarray` explicitly rejected (heavy transitive dep for ferrochain-core). `Vec<f32>` cosine + zero-norm guard is correct and dep-free for the in-memory backend. | GREEN — no ndarray |
+| `ramhorns = "1"` | ADR-015 mustache fallback | Evaluated as fallback only. Current: 1.0.0 (experimental, sparse maintenance). Not needed — minijinja covers the mustache-syntax use case as a superset. | NOT NEEDED — not used |
+
+### Notes
+
+- **inventory pin maintenance:** `inventory` and similar constructor-section crates (`linkme`) track
+  Rust compiler internals. Keep the pin at `"0.3"` (caret) and re-verify when upgrading the pinned
+  Rust toolchain channel in `rust-toolchain.toml`.
+- **minijinja sandboxed mode:** ADR-015 Decision 4 specifies that ferrochain-prompts enables sandboxed
+  mode for all jinja2 rendering. This is backed by minijinja 2.x's `Environment::set_sandboxed(true)`
+  API (verified present in 2.21.0 docs).
+- **Ollama endpoint split:** `/api/embed` (newer, `input` field) vs `/api/embeddings` (legacy, `prompt`
+  field) confirmed against `docs.ollama.com/api` (2026-07-20). ADR-017 `EmbeddingsOllama` defaults
+  to `/api/embed` with `use_legacy_endpoint` toggle — aligns with current Ollama documentation.
+- **OpenAI model currency:** `text-embedding-3-small` and `text-embedding-3-large` confirmed as
+  current recommended models; `text-embedding-ada-002` confirmed legacy/superseded. OpenAI `/v1/embeddings`
+  endpoint stable (no breaking changes in 2026 window for embeddings).
+
 ---
 
 ## Sources
 
 - crates.io registry API (live, 2026-07-13): schemars, rmp-serde, kani-verifier, cargo-fuzz,
   cargo-mutants, langgraph, rig-core, bincode, postcard — version + release-date fields.
+- crates.io registry API (live, 2026-07-20): inventory (0.3.24), minijinja (2.21.0),
+  mustache (0.9.0/2018-02-21, abandoned), ramhorns — D21 ADR pin verification.
 - docs.rs: schemars 1.2.1 `SchemaSettings` (JSON Schema 2020-12 default); langgraph 0.2.5 crate docs
   (checkpointer backends).
 - Perplexity `sonar-deep-research` (web-grounded, 2026-07-13): schemars ecosystem & API-stability

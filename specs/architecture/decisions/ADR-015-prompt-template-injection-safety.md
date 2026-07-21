@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.0"
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.1 (crates.io/2026-07-20): Drop abandoned `mustache` crate (last release 2018-02, ~8yr stale — production-grade violation). Template engines: f-string (default) + jinja2/minijinja only. Pin: `minijinja = \"2\"` (2.21.0, default-features=false, optional). Add minijinja autoescape + sandboxed/restricted-mode + strict-undefined safety notes."
   - "1.0 (D21/2026-07-20): Initial ADR — ferrochain-prompts new crate, slot trust model (SystemMessage slots TrustRequired immutable), ProvenanceTag pass-through via PromptValue, f-string always-on + mustache/jinja2 optional features, injection_guard module as pure-core blocker before guardrail boundary."
 ---
 
@@ -42,20 +43,20 @@ Four questions must be resolved:
 1. **Crate placement:** new `ferrochain-prompts` or fold into ferrochain-core?
 2. **Trust model:** how does ProvenanceTag interact with template slot rendering?
 3. **Injection prevention:** what blocks untrusted content from reaching SystemMessage slots?
-4. **Template engine selection:** which of f-string / mustache / jinja2 is supported?
+4. **Template engine selection:** which engines are supported, and which are safe to depend on?
 
 ## Decision 1 — Crate Placement: `ferrochain-prompts` (new crate)
 
 Prompt templates are not placed in ferrochain-core because:
-- Mustache rendering pulls in the `mustache` crate; Jinja2 rendering pulls in `minijinja`.
-  These are optional capabilities that should not bloat every ferrochain-core user.
-- The f-string engine is small (written in-house, ~100 LOC), but grouping all three engines
+- Jinja2 rendering pulls in the `minijinja` crate (2.21.0). This is an optional capability
+  that should not bloat every ferrochain-core user.
+- The f-string engine is small (written in-house, ~100 LOC), but grouping both engines
   in a dedicated crate is cleaner than a feature-gated blob in ferrochain-core.
 - Template logic is higher-level than the core type primitives; it depends on `core::message`,
   `core::runnable`, and `core::credentials` but adds nothing to the core trait contract.
 
 `ferrochain-prompts` depends on ferrochain-core. It exports:
-- `PromptTemplate` — single-message template (f-string / mustache / jinja2)
+- `PromptTemplate` — single-message template (f-string default; jinja2 via optional feature)
 - `ChatPromptTemplate` — multi-message template; produces `Vec<Message>`
 - `MessagesPlaceholder` — inserts a `Vec<Message>` variable into a chat template
 - `FewShotPromptTemplate` — few-shot example builder
@@ -199,8 +200,28 @@ Three template engines are supported via Cargo features in `ferrochain-prompts`:
 | Engine | Cargo feature | Dependency | Status |
 |--------|--------------|-----------|--------|
 | f-string | always-on (no feature flag) | none (in-house implementation) | DEFAULT |
-| mustache | `feature = "mustache"` | `mustache` crate | optional |
-| jinja2 | `feature = "jinja2"` | `minijinja` crate | optional |
+| jinja2 | `feature = "jinja2"` | `minijinja = "2"` (2.21.0, `default-features = false`) | optional |
+
+**mustache crate dropped:** the `mustache` crate on crates.io has not had a release since
+2018-02 (~8yr stale; predates Rust 2018 edition). Using it in v1 violates the
+production-grade default. The mustache-syntax use case is fully covered by the jinja2 engine
+— minijinja is a superset of mustache variable substitution. No `ramhorns` fallback needed.
+
+**minijinja injection safety mechanisms (backing the trust model):** `minijinja` 2.21.0
+provides three mechanisms directly relevant to the slot trust model:
+- **Autoescape**: available and configurable per-template; ferrochain-prompts leaves it
+  off by default for LLM prompts (not HTML) but exposes it for callers that render into
+  web contexts.
+- **Sandboxed mode**: restricts attribute access, method calls, and filter invocations
+  to an explicit allowlist; ferrochain-prompts enables sandboxed mode for all jinja2
+  template rendering, preventing template authors from calling arbitrary methods on
+  substituted values.
+- **Strict-undefined mode**: raises `E-TMPL-003` (VALIDATION) on any undefined variable
+  reference rather than silently substituting an empty string — prevents accidental
+  information hiding during template development.
+
+These mechanisms are complementary to the `SlotTrustPolicy` injection check (Decision 3),
+which fires at the variable-substitution level before engine rendering.
 
 The f-string engine is written in-house (~100 LOC) following Python's `str.format` semantics:
 - `{variable}` is a substitution point
@@ -208,8 +229,8 @@ The f-string engine is written in-house (~100 LOC) following Python's `str.forma
 - Nested attribute access `{x.y}` is NOT supported in v1 (security simplification: no
   arbitrary object traversal in templates; if needed, callers pre-compute the value)
 
-The mustache and jinja2 engines render **the template string only** — the template itself
-is authored by the developer and is trusted. Only VARIABLE VALUES are potentially untrusted.
+The jinja2 engine renders **the template string only** — the template itself is authored
+by the developer and is trusted. Only VARIABLE VALUES are potentially untrusted.
 The injection check (Decision 3) fires regardless of which template engine is used.
 
 ## Rationale
@@ -238,8 +259,8 @@ mismatched crate. Snapshot tests validate parity with the Python reference.
 ### Alt A: Prompt templates in ferrochain-core
 
 Arguments for: no extra crate; templates are primitives.
-Rejected: minijinja and mustache crates would become transitive deps of all ferrochain-core
-users even when they don't use templates. Core stays lean; optional capabilities belong in
+Rejected: the minijinja crate would become a transitive dep of all ferrochain-core users
+even when they don't use templates. Core stays lean; optional capabilities belong in
 dedicated crates.
 
 ### Alt B: Inject the trust check into the existing GuardrailHook (DI-012 extension)
@@ -291,5 +312,8 @@ matters (and prompt injection to system position matters), it must be enforced.
   are new error codes; they belong in the error taxonomy (ferrochain-core `core::error`).
 - ferrochain-prompts depends on ferrochain-core. No new deps on ferrochain-graph or
   ferrochain-memory — prompt templates are lower in the dependency graph than execution.
-- Template engines with external deps (mustache, minijinja) are opt-in Cargo features.
-  Default dependency tree: ferrochain-prompts → ferrochain-core only.
+- The jinja2 engine has an external dep (`minijinja = "2"`, 2.21.0, `default-features = false`)
+  and is opt-in via `feature = "jinja2"`. Default dependency tree: ferrochain-prompts →
+  ferrochain-core only (no minijinja unless the `jinja2` feature is enabled).
+- `E-TMPL-003` (VALIDATION/UndefinedVariable) is added for minijinja strict-undefined mode
+  violations; it belongs in the error taxonomy alongside `E-TMPL-001` and `E-TMPL-002`.

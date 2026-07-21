@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.0"
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-19]
 changelog:
+  - "1.1 (crates.io/2026-07-20): Record validated pin `inventory = \"0.3\"` (0.3.24, dtolnay, MSRV 1.62, WASM-safe); add keep-pin-fresh note re: compiler-internal tracking."
   - "1.0 (D21/2026-07-20): Initial ADR — core::serializable in ferrochain-core, inventory-crate static registry, 141 core-internal entries, feature-gated partner registration, untrusted-deserialization safety (allowlist = registered set, no path loading, secret stripping), 12 langchain-monolith entries unregistered, one-way Python checkpoint import compatibility."
 ---
 
@@ -73,6 +74,13 @@ to collect `submit!`-registered values into a static iterable at program startup
 - **Feature-gated partner registration**: `ferrochain-openai` calls `inventory::submit!`
   for its 4 lc-ids only when `features = ["lc-serializable"]` is enabled. Enabling that
   feature in `Cargo.toml` is the only way to make those types loadable.
+
+**Validated pin (crates.io/2026-07-20):** `inventory = "0.3"` (current: 0.3.24, dtolnay,
+actively released Q1-2026, edition-agnostic, MSRV 1.62, WASM-safe via constructor model).
+Note: keep this pin reasonably current when updating the Rust toolchain — constructor-section
+crates (`inventory`, `linkme`) track compiler internals and occasionally require a patch
+bump alongside a Rust stable release. The caret `"0.3"` bound covers patch updates within
+the 0.3 series automatically.
 
 The valid-namespace allowlist is **derived from the registered set** at program startup
 (one `OnceLock<HashSet<String>>` populated by iterating over `inventory::iter::<LcEntry>()`
