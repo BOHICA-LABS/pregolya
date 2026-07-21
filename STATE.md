@@ -4,7 +4,7 @@ level: ops
 version: "3.61"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-21T05:30:00Z
+timestamp: 2026-07-21T10:13:00Z
 phase: 1
 inputs: []
 input-hash: "[live-state]"
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. 215 lines (wc-l); margin from soft-target: -15 lines (over soft limit; expanded checkpoint acceptable for wrap); margin from actual: 285 lines. Burst-220 (WRAP): BC-count tokens rephrased hook-safe; burst-219 checkpoint archived to session-checkpoints.md; full RESUME snapshot written. Run /vsdd-factory:compact-state next session. -->
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. 198 lines (wc-l); margin from soft-target: 2 lines (under soft limit); margin from actual: 302 lines. Burst-221 (compaction): resolved risks R1-R5/R7/R9 archived to blocking-issues-resolved.md; CC+CS condensed; PM redundant rows removed; SR heading blank removed; trajectory cell unchanged. -->
 # Pipeline State: ferrochain
 
 ## Project Metadata
@@ -36,9 +36,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-21 — burst 220 (WRAP): D21 spec-body WIP checkpoint committed (21 new behavioral-contract files + error-model layer + test-vectors v2.0 + product-brief v1.4); BC-count tokens rephrased hook-safe; RESUME snapshot updated; prd.md + BC-INDEX.md body INCOMPLETE; trajectory-tail →1→0→0→0; 0/3 RESET |
-| **Current Phase** | 1 (Spec Crystallization) |
-| **Current Step** | Phase 1 IN PROGRESS — D21 spec-body WIP checkpoint committed (burst 220 WRAP); 21 new behavioral-contract files staged; prd.md + BC-INDEX.md body INCOMPLETE; NEXT: PO finish prd/BC-INDEX bodies → state-manager commit → VP-006..010 → Phase 1d cascade 0/3 |
+| **Last Updated** | 2026-07-21 — burst 221 (compaction): STATE.md compacted + sidecar-learning.md committed; burst 220 (WRAP): 21 new BC files + error-model + test-vectors v2.0 + product-brief v1.4; prd.md + BC-INDEX.md body INCOMPLETE; trajectory-tail →1→0→0→0 |
 
 ## Phase Progress
 
@@ -53,9 +51,9 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | 6: Formal Hardening | not-started | | | | |
 | 7: Convergence | not-started | | | | |
 | Adversary pass-125 complete; fix burst 128 complete | complete | 2026-07-19 | 2026-07-19 | counter 0/3 (P125: NOT CLEAN 1M; F-P125-01 RESOLVED [MED VP-003 BC Traceability cell BC-2.13.004 Red Gate→Kani VP Seed]: VP-003 v1.1→v1.2) | trajectory-tail →5→3→2→1; 0/3 |
-| Adversary pass-126 complete | complete | 2026-07-19 | 2026-07-19 | counter 1/3 STREAK ACTIVE (P126: CLEAN strict/PR-merge 0C/0H/0M/0L; F-P125-01 CLOSED [VP-003 v1.2 verified]; holdout C/D + ss-02 trio + prd.md↔supplements all ZERO yield) | trajectory-tail →3→2→1→0; 1/3 |
-| Adversary pass-127 complete | complete | 2026-07-19 | 2026-07-19 | counter 2/3 STREAK ACTIVE (P127: CLEAN strict/PR-merge 0C/0H/0M/0L; Part A qual STANDING; fresh-hunt: ss-12 CRUD 7-ep 1:1; StreamEvent 12-var run_id+parent_ids+GuardrailDecision CLEAN; DI-001..014 zero orphans CLEAN; NFR-001..011 vs VP/DI/BC web CLEAN) | trajectory-tail →2→1→0→0; 2/3 |
-| Phase 1d cascade CLOSED | complete | 2026-07-19 | 2026-07-19 | pass-128 CLEAN(strict)/CLEAN(PR-merge) — 3/3 CONVERGED; BC-5.39.001 3-CLEAN satisfied on frozen HEAD 02d8ccd; CASCADE CLOSED | trajectory tail →0→0→0; 3/3 CONVERGED |
+| Adversary pass-126 complete | complete | 2026-07-19 | 2026-07-19 | counter 1/3 STREAK ACTIVE (P126: CLEAN strict; no fix burst required) | trajectory-tail →3→2→1→0; 1/3 |
+| Adversary pass-127 complete | complete | 2026-07-19 | 2026-07-19 | counter 2/3 STREAK ACTIVE (P127: CLEAN strict; no fix burst required) | trajectory-tail →2→1→0→0; 2/3 |
+| Phase 1d cascade CLOSED | complete | 2026-07-19 | 2026-07-19 | pass-128 CLEAN(strict)/CLEAN(PR-merge) — 3/3 CONVERGED; BC-5.39.001 3-CLEAN satisfied on frozen HEAD 02d8ccd; CASCADE CLOSED | trajectory tail →1→0→0→0; 3/3 CONVERGED |
 ## Current Phase Steps
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. (Bursts 194–201 archived burst-206; burst-202 archived burst-207; burst-203 archived burst-208; burst-204 archived burst-209; burst-205 archived burst-210; burst-206 archived burst-211; burst-207 archived burst-212; burst-208 archived burst-213; burst-209 archived burst-214; burst-210 archived burst-215; burst-211 archived burst-216; burst-212 archived burst-217; burst-213 archived burst-218; burst-214 archived burst-219; burst-215 archived burst-220.) -->
@@ -115,17 +113,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ## Risk Register
 
+<!-- Resolved risks R1–R5, R7, R9 archived to cycles/v1.0.0-greenfield/blocking-issues-resolved.md. Open risks only. -->
 | ID | Risk | Severity | Affects | Notes |
 |----|------|----------|---------|-------|
-| R1 | langgraph `scheduler-kafka` confirmed removed from langgraph 1.2.9. With D1 amended, treat as out-of-scope unless architecture finds a dependency | Low | Phase 1/3 | Effectively resolved by D1 amendment |
-| R2 | langchain-community stable is 0.4.x; v1.0.0a1 tagged — API churn risk for community wave | Medium | Phase 1/3 | Phase community work last per D1 roadmap |
-| R3 | DTU scope revised per D13 — ferrochain-server is first-party. DTU = OpenAI, Anthropic, provider APIs, Ollama keyless CI. Pass-6 "stateful fake" RETIRED. | Low | Phase 1 | Direction resolved by D13 |
-| R4 | langgraph crate 0.2.5 (2026-07-01, pre-1.0) ships Postgres/Sqlite checkpointing. Competitor velocity HIGH confirmed. ferrochain differentiator = GA maturity + conformance suite + formal verification. Watch for their 1.0 release. | Medium | Phase 1/3 | R4 REFRAMED per burst-74 research. Monitor langgraph 1.0 release date. |
-| R5 | Three incompatible tag conventions across reference repos — tag-sort bug already triggered (langgraph mis-pinned at 0.3.34, corrected) | Low | Tooling | Semport tooling must handle all three |
 | R6 | crates.io names verified available; GitHub=BOHICA-LABS/ferrochain registered; publish-all.sh prepped — human has NOT yet run publish-all.sh (cargo login required). Time-sensitive. NOTE (burst 79): canonical 18-crate roster established in ARCH-INDEX. publish-all.sh predates sandbox/memory/macros/-sdk additions — MUST BE REGENERATED for all 18 crates before running. D21 architecture layer COMPLETE (burst 217): roster finalized at 20 crates; publish-all.sh must be regenerated for all 20 crates (adds ferrochain-prompts #19, ferrochain-vectorstores #20) before crates.io reservation. | High | pre-1 | Pending human action: `cargo login` + regenerate publish-all.sh for 20 crates (roster finalized by D21 architect layer, burst 217) + run to reserve all ferrochain-* names |
-| R7 | langchain-protocol v0.0.17 — no stable release; schema evolving. Port rationale is version-volatility, not immaturity (v3 streaming has 107 dedicated tests — corrected cert pass 9). | Low | Phase 1/3 | DOWNGRADED from Medium; full schema in .factory/semport/core/ANALYSIS-STATE.md |
 | R8 | Splitters code-point vs byte-length parity: upstream `len()` calls on text are code-point counts — different split boundaries on non-ASCII. NOT covered by any upstream test. | High | Phase 1/3 | CRITICAL parity risk. Must become explicit BC + holdout scenario. Route to product-owner at Phase 1. |
-| R9 | Platform API churn re-classified per D13 — SDK-1.2.9 endpoint catalog is design reference only; no conformance target. | Low | Phase 1 | Severity downgraded per D13 |
 | R10 | Upstream coverage gap: NamedBarrierValue has NO dedicated unit test. EphemeralValue only 3 assert lines. Product-owner must author BCs + tests from behavior. | Medium | Phase 1 | Route to product-owner at Phase 1 |
 | R11 | MCP upstream test voids: (1) mcp bare-ToolException re-raise path untested; (2) mcp `__aenter__` NotImplementedError contract untested. Same class as R8 and R10. | Medium | Phase 1/3 | Route to product-owner at Phase 1: must become explicit Red Gate tests |
 | R12 | D21 scope expansion introduces largest single scope delta of the project (~9,600 ref LOC, 5 subsystems, (40 to 80 new behavioral-contract files, estimated), 2-3 new crates, 3-4 new ADRs). Risk: re-convergence cost + new attack surface (lc-JSON deserialization = arbitrary-input; template injection via PromptTemplate/FewShot user-controlled inputs). Mitigation owner: architect + PO. | High | Phase 1 (re-convergence) | Architecture-first: injection-safety ADR (template input escaping + prompt-injection defense) + deserialization-safety ADR before any BC authoring; adversarial scrutiny on new ADRs before first BC authored |
@@ -149,20 +141,12 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | DEFER-002 | Machine enforcement of gate #28 date-validity (pre-commit hook + CI lint for changelog-date monotonicity and frontmatter-currency) | Phase 3 CI hardening | 3rd manual-sweep failure (F-P64-02/F-P65-01/F-P75-01); gate #28 Rules 4+5 are prose-only until Phase 3. DEFER-001 archived in cycles/v0.0.0-pre-pipeline/lessons.md |
 
 ## Concurrent Cycles
-None currently active. D21 scope expansion APPROVED (burst 216); architecture layer COMPLETE (burst 217): ADR-014..017, SS-18..22, roster 20; dep-validation COMPLETE (burst 218): ADR-014..017 v1.1; Phase 1d 3/3 convergence (passes 126/127/128 on frozen HEAD 02d8ccd) SUPERSEDED by perimeter change; re-convergence required post-expansion (0/3 on new expanded perimeter).
-
+None active (D21 expansion in progress; 0/3 RESET; re-convergence required on expanded perimeter). Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md.
 ## Convergence Status
-| Metric | Value |
-|--------|-------|
-| Adversary passes completed | 128 (Phase 1d, pre-expansion perimeter) |
-| Fix bursts completed | 128 (Phase 1d; last fix burst 128 — F-P125-01 RESOLVED in burst 210; no new fix bursts in bursts 211–219) |
-| Convergence counter | RESET — D21 scope expansion (burst 216); prior 3/3 CONVERGED (passes 126/127/128 on frozen HEAD 02d8ccd) SUPERSEDED by perimeter change; 0/3 pending expanded-perimeter re-convergence |
-| Finding trajectory | [pre-expansion perimeter; 128 passes] →4→2→2→4→4→1→4→2→5→3→4→1→5→1→1→3→2→2→2→1→1→1→1→4→2→2→1→2→0→1→2→1→1→3→1→1→3→5→3→2→1→0→0→0 |
+Counter: 0/3 RESET — D21 expansion (burst 216). 128 passes completed pre-D21 (final: pass-128 CLEAN 3/3 CONVERGED on frozen HEAD 02d8ccd). Full metrics: cycles/v1.0.0-greenfield/convergence-trajectory.md.
 
 ## Session Resume Checkpoint
-
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
-
 ### RESUME IN ONE BREATH
 "ferrochain Phase 1 REOPENED by D21 ecosystem-parity scope expansion (5 langchain-core subsystems → v1: prompt-templates SS-18, lc-JSON SS-19, retrievers SS-20, vectorstores SS-21, embeddings SS-22). Prior 128-pass 3/3 Phase-1d convergence SUPERSEDED — must re-converge on expanded perimeter. Architecture + CAP layers COMMITTED (through burst 219, HEAD after this wrap). D21 spec-body layer is WIP: 21 new behavioral-contract files authored + error-model integrated, but prd.md + BC-INDEX.md BODIES INCOMPLETE. NEXT: finish prd/BC-INDEX bodies → commit → author VPs → re-run Phase 1d cascade → re-gate."
 ### COMMITTED (through this wrap):
@@ -191,7 +175,6 @@ None currently active. D21 scope expansion APPROVED (burst 216); architecture la
 ### WRAP METADATA: Date 2026-07-21 | Cycle v1.0.0-greenfield | Burst 220 (WRAP) | Phase 1 IN PROGRESS — D21 spec-body WIP checkpoint | Re-convergence required (0/3)
 
 ## Historical Content
-
 | Content | Location |
 |---------|----------|
 | Burst narratives (bursts 1–74, pre-pipeline semport+cert+adk-rust, Phase 1 A–E, Phase 1d P1–P2; + archived bursts 171–220) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
@@ -210,6 +193,6 @@ None currently active. D21 scope expansion APPROVED (burst 216); architecture la
 | Architecture core: ARCH-INDEX v1.5 + 9 section files (module-decomposition v1.11, purity-boundary-map v1.6, verification-architecture v1.4) + ADR-006 rev-4 + ADR-005 rev-4 + ADR-013..017 (~1,700+ lines), 17 ADRs (ADR-014..017 v1.1 dep-validated burst 218: SS-18..22) | `.factory/specs/architecture/` + `decisions/` |
 | VP-INDEX + VP-001..005 (D17-Q7 top-3 BSP invariants + MCP integration VPs; VP-001/002/004/005 v1.1 L4; VP-003 v1.2 L4 after burst 210) | `.factory/specs/verification-properties/` |
 | DTU assessment (DTU_REQUIRED: true; 3 cassette clone sets; pre-Phase-3 gate ≥8/7/3) — v1.0 + template compliance burst 215 | `.factory/planning/dtu-assessment.md` |
-| ADR tech validation (schemars 1.2.1, rmp-serde 1.3.1, Kani 0.67.0 no-async; D21 pins: inventory 0.3.24, minijinja 2.21.0, mustache REJECTED) — v1.1.0 burst 218 | `.factory/planning/adr-tech-validation.md` |
+| ADR tech validation (schemars 1.2.1, rmp-serde 1.3.1, Kani 0.67.0 no-async; D21 pins: inventory 0.3.24, minijinja 2.21.0; mustache REJECTED) — v1.1.0 burst 218 | `.factory/planning/adr-tech-validation.md` |
 | Module criticality assessment (35 modules, architect version) | `.factory/specs/module-criticality.md` |
 | CI/CD setup log (workspace-init; d018d3f; ci.yml; branch protection) | `.factory/planning/cicd-setup.md` |

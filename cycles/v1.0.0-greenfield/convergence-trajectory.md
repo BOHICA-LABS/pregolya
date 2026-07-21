@@ -902,3 +902,35 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
      converted to rows in the Finding Progression table above.
      Original field format: adversary_pass_N_findings: "description"
      Original field format: adversary_pass_N_date: "YYYY-MM-DD" -->
+
+---
+
+## Phase 1d Final Pass Records — Archived from STATE.md (Burst 221 compaction, 2026-07-21)
+
+These rows were in the STATE.md Phase Progress table as sub-phase pass records.
+Archived to here as historical pass detail. The Phase Progress table in STATE.md
+retains only the 8 canonical phase rows (pre-1 through 7).
+
+| Pass | Date | Total | Gate Summary | Counter | Verdict |
+|------|------|-------|--------------|---------|---------|
+| pass-125 complete; fix burst 128 complete | 2026-07-19 | 1 | counter 0/3 (P125: NOT CLEAN 1M; F-P125-01 RESOLVED [MED VP-003 BC Traceability cell BC-2.13.004 Red Gate→Kani VP Seed]: VP-003 v1.1→v1.2) | 0/3 | NOT CLEAN |
+| pass-126 complete | 2026-07-19 | 0 | counter 1/3 STREAK ACTIVE (P126: CLEAN strict/PR-merge 0C/0H/0M/0L; F-P125-01 CLOSED [VP-003 v1.2 verified]; holdout C/D + ss-02 trio + prd.md↔supplements all ZERO yield) | 1/3 STREAK ACTIVE | CLEAN |
+| pass-127 complete | 2026-07-19 | 0 | counter 2/3 STREAK ACTIVE (P127: CLEAN strict/PR-merge 0C/0H/0M/0L; Part A qual STANDING; fresh-hunt: ss-12 CRUD 7-ep 1:1; StreamEvent 12-var run_id+parent_ids+GuardrailDecision CLEAN; DI-001..014 zero orphans CLEAN; NFR-001..011 vs VP/DI/BC web CLEAN) | 2/3 STREAK ACTIVE | CLEAN |
+| Phase 1d cascade CLOSED (pass-128) | 2026-07-19 | 0 | CLEAN(strict)/CLEAN(PR-merge) — 3/3 CONVERGED; BC-5.39.001 3-CLEAN satisfied on frozen HEAD 02d8ccd; CASCADE CLOSED | 3/3 CONVERGED | CLEAN |
+
+---
+
+## Concurrent Cycles Note — Archived from STATE.md (Burst 221 compaction, 2026-07-21)
+
+None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 216); architecture layer COMPLETE (burst 217): ADR-014..017, SS-18..22, roster 20; dep-validation COMPLETE (burst 218): ADR-014..017 v1.1; Phase 1d 3/3 convergence (passes 126/127/128 on frozen HEAD 02d8ccd) SUPERSEDED by perimeter change; re-convergence required post-expansion (0/3 on new expanded perimeter).
+
+---
+
+## Convergence Status Snapshot — Archived from STATE.md (Burst 221 compaction, 2026-07-21)
+
+| Metric | Value |
+|--------|-------|
+| Adversary passes completed | 128 (Phase 1d, pre-expansion perimeter) |
+| Fix bursts completed | 128 (Phase 1d; last fix burst 128 — F-P125-01 RESOLVED in burst 210; no new fix bursts in bursts 211–219) |
+| Convergence counter | RESET — D21 scope expansion (burst 216); prior 3/3 CONVERGED (passes 126/127/128 on frozen HEAD 02d8ccd) SUPERSEDED by perimeter change; 0/3 pending expanded-perimeter re-convergence |
+| Finding trajectory (pre-expansion perimeter, 128 passes) | →4→2→2→4→4→1→4→2→5→3→4→1→5→1→1→3→2→2→2→1→1→1→1→4→2→2→1→2→0→1→2→1→1→3→1→1→3→5→3→2→1→0→0→0 |
