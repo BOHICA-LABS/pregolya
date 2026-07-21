@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.10"
+version: "1.11"
 status: active
 producer: architect
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-20T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
 input-hash: "79e002f"
 traces_to: ARCH-INDEX.md
-decisions: [D4, D6, D7, D12, D13, D17, D20]
+decisions: [D4, D6, D7, D12, D13, D17, D20, D21]
 changelog:
+  - "1.11 (D21/2026-07-20): ecosystem-parity scope expansion — add ferrochain-prompts section (SS-18: prompts::template, prompts::chat_template, prompts::few_shot, prompts::injection_guard); add ferrochain-vectorstores section (SS-20/SS-21: vectorstores::store, vectorstores::retriever, vectorstores::memory, vectorstores::mmr); add ferrochain-core new modules: core::documents, core::retriever, core::embeddings, core::serializable; add provider embedding modules in ferrochain-openai (openai::embeddings) and ferrochain-ollama (ollama::embeddings); ferrochain-anthropic explicitly excluded from SS-22 (no embedding API). Module universe 35→49 (+14 criticality-counted rows: 4 in ferrochain-core, 4 in ferrochain-prompts, 4 in ferrochain-vectorstores, 2 in provider crates). ADRs: ADR-014/015/016/017."
   - "1.10 (F-P92-02, 2026-07-17): budget definitions note extended — RunnableConfig (core::config, SS-01) gains budget_config: Option<BudgetConfig> per OPTION A adjudication (BC-2.10.004 PC6 / BC-2.10.003 PC7/TV-004). Parallel to the context_mutations addition in the self-improvement definitions note. No new module rows — BudgetConfig is already a pure-core type in core::budget; the field addition does not change core::config's module boundary or criticality tier."
   - "1.9 (F-P91-02 sibling sweep, 2026-07-17): update budget definitions note to include OnCeiling enum and BudgetConfig struct (both newly defined in interface-definitions.md v2.29); note now lists all six core::budget types: BudgetPolicy, PolicyDecision, OnCeiling, BudgetConfig, TokenUsage, RunContext."
   - "1.8 (provenance-fix-169/2026-07-17): remove .factory/STATE.md from inputs (not a genuine spec-content input; D-NNN decisions are baked-in stable facts per PO corpus adjudication)."
@@ -239,3 +240,82 @@ Re-exported from ferrochain-core.
 - `deny-expect-in-lib`: CI lint gate; rejects `.expect()` and `.unwrap()` in library code (NE-07)
 - `deny-anyhow-in-lib`: CI lint gate; scans library crate `src/` for `anyhow` imports; sole enforcement of NE-03 / DI-014 anyhow confinement — `anyhow` is banned from all `ferrochain-*` library crates (ADR-010)
 - `deny-description-cache-key`: CI lint gate; scans `cache_key` / `CacheKey` / `cache_key_for` call sites in `ferrochain-*` library crates for description-proxy usage; sole enforcement of NE-05 content-hash cache-key contract (ADR-011)
+
+## ferrochain-core — D21 additions (SS-19, SS-20, SS-22)
+
+> **New modules added in D21.** These extend ferrochain-core without adding new Cargo
+> dependencies beyond `inventory` (for `core::serializable` registry) and `async-trait`
+> (already present for existing async traits).
+
+| Module | Responsibility | Criticality | SS |
+|--------|---------------|-------------|-----|
+| `core::documents` | `Document { page_content, metadata, id }` type — carrier for all retrieval output; derives Serialize/Deserialize/JsonSchema; #[non_exhaustive] | MEDIUM | SS-20 |
+| `core::retriever` | `Retriever` trait: async dyn-compatible `get_relevant_documents(&self, query: &str)`; `Arc<dyn Retriever>` seam for graph RAG nodes | MEDIUM | SS-20 |
+| `core::embeddings` | `Embeddings` trait: async dyn-compatible `embed_documents` + `embed_query`; dimensionality contract (E-EMBED-001 on mismatch); no `ndarray` dep | MEDIUM | SS-22 |
+| `core::serializable` | `LcSerializable` trait + `Serialized` wire enum + `Reviver` + `inventory`-based static registry (141 core entries); valid-namespace `OnceLock<HashSet>` derived from registry; E-SRLZ-001/002 error codes | HIGH | SS-19 |
+
+> **core::serializable criticality (HIGH):** deserialization of external lc-JSON blobs is a
+> security-sensitive surface (R12). The Reviver enforces an allowlist-by-registration safety
+> property and must be formally tested for allowlist containment (VP-010 candidate). HIGH tier
+> matches the security significance and cross-cutting nature of lc-JSON round-trip support.
+
+> **NE anchors:** `core::documents` — #[non_exhaustive] required (public API type per workspace
+> convention). `core::embeddings` — DI-009 timeout applies to provider impls; DI-014 no silent
+> empty returns applies to batch operations. `core::serializable` — DI-010 secret opacity
+> enforced via `lc_secrets()` stripping; DI-014 no silent None on unregistered types.
+
+## ferrochain-prompts (SS-18) — MEDIUM
+
+Responsibilities: prompt template construction (PromptTemplate, ChatPromptTemplate,
+MessagesPlaceholder, FewShot*), f-string rendering engine, optional mustache/jinja2,
+injection safety guard (pure-core blocker for untrusted content in system-position slots).
+
+| Module | Responsibility | Criticality | SS |
+|--------|---------------|-------------|-----|
+| `prompts::template` | `PromptTemplate`; f-string engine (in-house, no external dep); variable extraction at construction; `.partial()` builder | MEDIUM | SS-18 |
+| `prompts::chat_template` | `ChatPromptTemplate` + `MessagesPlaceholder`; multi-message template; `PromptValue` output with per-message `MessageProvenance` | MEDIUM | SS-18 |
+| `prompts::few_shot` | `FewShotPromptTemplate`; example selectors; snapshot-frozen golden fixture tests | MEDIUM | SS-18 |
+| `prompts::injection_guard` | `SlotTrustPolicy` enum; SystemMessage-slot `TrustRequired` immutable enforcement; render-time `E-TMPL-001` blocker for untrusted ProvenanceTag in TrustRequired slot; pure-core, no I/O | HIGH | SS-18 |
+
+> **prompts::injection_guard criticality (HIGH):** the injection blocker is a security-critical
+> pure-core module. It must prevent untrusted content from reaching SystemMessage positions
+> regardless of caller configuration. VP-006 candidate: Kani proof that untrusted-tagged
+> variable substitution into a TrustRequired slot always returns Err (never renders).
+> Consistent with the production-grade default — security invariants enforced by construction.
+
+> **BC anchors:** BC-2.18.001–TBD (BA to author following D21 CAP authoring; injection-safety
+> invariant is PO-owned security BC). ADR-015 governs the trust model and engine selection.
+
+## ferrochain-vectorstores (SS-20, SS-21) — MEDIUM
+
+Responsibilities: `VectorStore` trait (async dyn-compatible), `VectorStoreFactory` (Sized-bounded
+constructor pattern), in-memory VectorStore backend, MMR selection algorithm, `VectorStoreRetriever`.
+
+| Module | Responsibility | Criticality | SS |
+|--------|---------------|-------------|-----|
+| `vectorstores::store` | `VectorStore` trait (`add_texts`, `similarity_search`, `similarity_search_with_score`, `max_marginal_relevance_search`, `delete`, `as_retriever`); `VectorStoreFactory` trait; `MetadataFilter` type | MEDIUM | SS-21 |
+| `vectorstores::retriever` | `VectorStoreRetriever<'_>` wrapping `&dyn VectorStore`; impl `Retriever`; `SearchType` enum (Similarity / SimilarityScoreThreshold / Mmr) | MEDIUM | SS-20 |
+| `vectorstores::memory` | In-memory VectorStore backend; `Arc<dyn Embeddings>` injection via constructor; interior mutability via `RwLock`; `Vec<f32>` cosine similarity; no `ndarray` dep | MEDIUM | SS-21 |
+| `vectorstores::mmr` | Maximal Marginal Relevance selection algorithm; pure math (`Vec<f32>` cosine + diversity penalty); `lambda_mult` parameter; no I/O | MEDIUM | SS-21 |
+
+> **VP anchors:** `vectorstores::mmr` is VP-009 candidate (Kani bounded proof that cosine
+> similarity returns values in [-1.0, 1.0] and MMR ranking is monotonically non-increasing).
+> `vectorstores::memory` in-memory backend serves as the integration test double for
+> VectorStore conformance tests (analogous to `checkpoint::memory` for checkpoint backends).
+
+> **BC anchors:** BC-2.20.001–TBD (Retriever), BC-2.21.001–TBD (VectorStore). ADR-014 governs
+> trait shapes, factory pattern, SS-15 boundary, and inventory extension seam.
+
+## Provider Embeddings Modules (SS-22) — MEDIUM
+
+Each embedding-capable provider crate gains a new `<provider>::embeddings` module.
+ferrochain-anthropic is EXCLUDED — Anthropic provides no public embeddings API (ADR-017).
+
+| Module | Crate | Responsibility | Criticality | SS |
+|--------|-------|---------------|-------------|-----|
+| `openai::embeddings` | ferrochain-openai | `EmbeddingsOpenAI` impl of `Embeddings` trait; `/v1/embeddings` endpoint; models: text-embedding-3-small/large, text-embedding-ada-002; `OpenAiApiKey` newtype; reqwest rustls-tls; 30s timeout | MEDIUM | SS-22 |
+| `ollama::embeddings` | ferrochain-ollama | `EmbeddingsOllama` impl of `Embeddings` trait; `/api/embeddings` endpoint; model-configurable (nomic-embed-text, mxbai-embed-large, etc.); no API key; reqwest rustls-tls; 30s timeout | MEDIUM | SS-22 |
+
+> **NE anchors (both embedding modules):** DI-009 (mandatory timeout); DI-010 (OpenAI key is
+> `OpenAiApiKey` newtype with redacted Debug); DI-014 (batch failures return Err, not Vec::new()).
+> xtask `deny-client-new` CI gate enforces the reqwest timeout requirement at the workspace level.

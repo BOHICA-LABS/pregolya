@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.5"
+version: "1.6"
 status: active
 producer: architect
-timestamp: 2026-07-19T00:00:00Z
+timestamp: 2026-07-20T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
 input-hash: "8734b69"
 traces_to: ARCH-INDEX.md
-decisions: [D17]
+decisions: [D17, D21]
 changelog:
+  - "1.6 (D21/2026-07-20): ecosystem-parity scope expansion — add 14 new module rows across Pure Core, Effectful Shell, and Boundary columns; pure-core additions (+8): core::documents, core::retriever, core::embeddings (definitions-only), prompts::template, prompts::chat_template, prompts::few_shot, prompts::injection_guard, vectorstores::mmr; effectful shell additions (+4): openai::embeddings, ollama::embeddings, vectorstores::memory, vectorstores::retriever; boundary additions (+2): core::serializable (Reviver dispatch), vectorstores::store (VectorStore trait + factory seam). Pure Core 22→30, Effectful 28→32, Boundary 8→10, total 58→72. ADRs: ADR-014/015/016/017."
   - "1.5 (F-P115-01, 2026-07-19): checkpoint::clock Pure Core row — Pure Guarantee column corrected from 'Monotonic counter increment; UUID wall-clock rejection is pure check' to 'Pure successor function of caller-supplied `current`; UUID wall-clock rejection is pure check'. Reflects ADR-005 rev-2 stateless get_next_version design; retired AtomicU64 counter language excised."
   - "1.4 (F-P91-02 sibling sweep, 2026-07-17): update core::budget Pure Core row to include OnCeiling enum and BudgetConfig struct (both newly defined in interface-definitions.md v2.29); row now lists all six core::budget types."
   - "1.3 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst. No spec content changes."
@@ -34,8 +35,8 @@ changelog:
 Every ferrochain module appears in exactly one of three columns: **Pure Core** (deterministic,
 no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not Kani-provable),
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
-effectful dependency). All 35 criticality-universe modules plus structural and definitions-only
-modules are enumerated in `## Purity Classification` below. Enforcement invariants follow
+effectful dependency). All 49 criticality-universe modules plus structural and definitions-only
+modules are enumerated in `## Purity Classification` below (72 total rows after D21 expansion). Enforcement invariants follow
 in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -69,6 +70,14 @@ side effects. Kani proofs operate here.
 | `core::context_mutation` | ferrochain-core | definitions-only: `ContextSourceSpec`, `ContextMutationConfig` pure structs; no execution logic (ADR-012 Decision 1) | — |
 | `core::write_guard` | ferrochain-core | definitions-only: `MemoryWriteRequest`, `MemoryWriteGuard` trait (`validate()` synchronous, no I/O per ADR-012 Decision 1), `WriteGuardDecision` | — |
 | `core::budget` | ferrochain-core | definitions-only: `BudgetPolicy` trait (`evaluate()` pure, no async, no I/O per ADR-009 Option 3), `PolicyDecision` enum (Allow/Escalate/Deny), `OnCeiling` enum (Halt/Escalate/Summarize — BC-2.10.003 v1.2 + BC-2.10.004), `BudgetConfig` struct (soft_limit, hard_limit, on_ceiling — BC-2.10.001 + ADR-009), `TokenUsage` struct, `RunContext` struct; no execution logic (dispatch engine lives in `graph::budget`) (ADR-009 Option 3 / BC-2.10.001) | — |
+| `core::documents` | ferrochain-core | `Document { page_content, metadata, id }` pure data carrier; construction is pure type-system enforcement; no I/O (ADR-014 / SS-20) | — |
+| `core::retriever` | ferrochain-core | `Retriever` trait definition; trait body is zero-LOC pure interface; no execution logic (ADR-014 / SS-20) | — |
+| `core::embeddings` | ferrochain-core | `Embeddings` trait definition; definitions-only: trait body + dimensionality contract types; no execution logic (ADR-017 / SS-22) | — |
+| `prompts::template` | ferrochain-prompts | f-string engine: variable substitution is pure string iteration + format; `{var}` extraction at construction; `.partial()` builder returns new pure value (ADR-015 / SS-18) | — |
+| `prompts::chat_template` | ferrochain-prompts | `ChatPromptTemplate` message construction: given substituted variables, produces `PromptValue` with per-message `MessageProvenance`; pure data transform with no I/O (ADR-015 / SS-18) | — |
+| `prompts::few_shot` | ferrochain-prompts | `FewShotPromptTemplate`: pure assembly of example messages + template rendering; no I/O; snapshot-fixture parity tests (ADR-015 / SS-18) | — |
+| `prompts::injection_guard` | ferrochain-prompts | `SlotTrustPolicy` enforcement: pure synchronous check — for each TrustRequired slot, checks substituted variable's ProvenanceTag; returns `Err(E-TMPL-001)` or `Ok(())`; no async, no I/O (ADR-015 / SS-18) | VP-006 candidate |
+| `vectorstores::mmr` | ferrochain-vectorstores | Maximal Marginal Relevance selection: pure `Vec<f32>` cosine arithmetic + diversity penalty; no network, no I/O; inputs: query embedding + candidate embeddings + params; output: ranked document indices (ADR-014 / SS-21) | VP-009 candidate |
 
 **Kani constraint:** Kani model checking operates on finite, bounded loops. `graph::channels`
 reducer loop must be bounded by the number of tasks per super-step. `sandbox::path_guard`
@@ -110,6 +119,10 @@ Kani is not applicable here.
 | `ferrochain-standard-tests` | ferrochain-standard-tests | shared conformance suite; invokes provider HTTP stacks via DTU doubles (BC-2.08.013–014) | Integration (DTU) |
 | `xtask` | xtask | filesystem reads (file-size gate) + subprocess spawning (lint CI gates); CI enforcement binary (SS-17) | CI/Unit |
 | `ferrochain-community` | ferrochain-community | post-v1 placeholder; expected effectful shell when populated (LOW-tier, community contributions) | advisory (post-v1) |
+| `openai::embeddings` | ferrochain-openai | reqwest HTTP call to `api.openai.com/v1/embeddings`; `OpenAiApiKey` credential; 30s timeout; SSE not used (blocking JSON response) (ADR-017 / DI-009) | Integration (DTU) |
+| `ollama::embeddings` | ferrochain-ollama | reqwest HTTP call to `localhost:<port>/api/embeddings`; no API key; 30s timeout (ADR-017 / DI-009) | Integration |
+| `vectorstores::memory` | ferrochain-vectorstores | In-memory VectorStore backend; `RwLock<Vec<(Document, Vec<f32>)>>` interior mutability; `Arc<dyn Embeddings>` injection for embed calls (which are async I/O); async `add_texts` + `similarity_search` (ADR-014 / SS-21) | Unit + Integration |
+| `vectorstores::retriever` | ferrochain-vectorstores | `VectorStoreRetriever` dispatches to `&dyn VectorStore` (async I/O); impl `Retriever`; bridge from Retriever trait to VectorStore methods (ADR-014 / SS-20) | Integration |
 
 ### Boundary Modules (Pure Logic + Effectful Dispatch)
 
@@ -127,6 +140,8 @@ dispatch is integration-tested.
 | `sandbox::policy` | ferrochain-sandbox | `SandboxPolicy` evaluation: pure compatibility check of policy requirements against backend capabilities; `Err(PolicyNotEnforceable)` on mismatch (NE-01 / SS-13) | Effectful backend enforcement when policy is applied (calls sandbox backend) |
 | `memory::write_guard` | ferrochain-memory | pure `MemoryWriteGuard::validate()` call (synchronous, no I/O per ADR-012 Decision 1); returns `WriteGuardDecision` (Allow/Deny/Transform) | effectful `MemoryStore` write commit/abort; injection-scanner guard enforcement (ADR-012 / BC-2.15.005) |
 | `memory::store` | ferrochain-memory | `MemoryStore` key/query validation logic; no I/O | async KV/vector/erasure ops dispatched to backend implementations (sqlite/in_memory/search/skills); parallel structure to `checkpoint::saver` storage-trait Boundary pattern (BC-2.15.001 / SS-15) |
+| `core::serializable` | ferrochain-core | Pure part: `LcSerializable` trait definitions; `Reviver` allowlist lookup (pure HashMap check); secret-key stripping from kwargs (pure map operation); E-SRLZ-001/002 error construction | Effectful part: registered constructor functions (`fn(Map) -> Box<dyn Any>`) are called at deserialization time — these constructors may allocate, decode, or otherwise have side effects; `inventory::iter` traversal at startup populates `OnceLock` (ADR-016 / SS-19) |
+| `vectorstores::store` | ferrochain-vectorstores | Pure part: `VectorStore` trait definition + `MetadataFilter` validation logic; `as_retriever()` returns concrete `VectorStoreRetriever` (pure construction) | Effectful part: `add_texts`, `similarity_search`, `delete` and all other async instance methods dispatch to the concrete backend impl (e.g., `vectorstores::memory`, or a community adapter) (ADR-014 / SS-21) |
 
 > **Storage-trait Boundary pattern:** `checkpoint::saver` (SS-04) and `memory::store` (SS-15)
 > both follow the same canonical pattern: the trait module defines pure validation logic + an

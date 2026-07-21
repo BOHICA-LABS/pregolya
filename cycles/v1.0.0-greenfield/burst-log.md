@@ -3205,3 +3205,72 @@ Architecture-first expansion → BA CAPs → PO BCs → VP → Phase 1d cascade 
 - Fix bursts: 128 (no new fix burst in bursts 211–216)
 - Phase 1 status: IN PROGRESS — D21 ecosystem-parity scope expansion; 0/3 pending expanded-perimeter re-convergence
 - NEXT: architect-first expansion (ADRs + crate roster ~20-21 + module-decomp → subsystem numbering) → BA new CAPs → PO new BCs → VP → Phase 1d cascade from 0/3
+
+---
+
+### Archived from STATE.md Current Phase Steps: Burst-212 Row
+
+*(burst-212 full narrative already in burst-log §Burst 212 above; row archived from STATE.md in burst 217)*
+
+**Step row content (verbatim from STATE.md v3.57):**
+Phase 1d burst 212 — pass-127 CLEAN(strict) record (streak 2/3; frozen-corpus rule). adversary + state-manager. COMPLETE. Pass 127: CLEAN strict/PR-merge — 0C/0H/0M/0L/0OBS. Part A streak qual STANDING [VP-003 v1.2 / summary_halt BC-2.05.005 v1.5 / holdout-D BC anchors all reproduce]. Fresh-hunt CLEAN: ss-12 BC-2.12.002 CRUD 7-ep 1:1; §StreamEvent 12-var run_id+parent_ids on every variant + GuardrailDecision schema coherent; DI-001..014 zero orphans all mapped to enforcing BCs; NFR-001..011 vs VP/DI/BC web fully coherent. No fix burst (CLEAN). Trajectory →0 (P1D-127). Counter 2/3 STREAK ACTIVE. Burst 212.
+
+---
+
+## Burst 217 (2026-07-20) — D21 Architecture Layer COMPLETE
+
+**Burst ID:** 217 | **Date:** 2026-07-20 | **Type:** state-manager — commit D21 architecture-expansion layer (ADR-014..017, module-decomp v1.11, purity-boundary-map v1.6, ARCH-INDEX v1.5); architect handoff table persisted; D18-P89-A hash sweep STALE→0; STATE.md v3.57→v3.58; single commit per TD-VSDD-053
+
+### Context
+
+Burst 216 approved D21 ecosystem-parity scope expansion (5 subsystems). The architect burst (not separately committed) produced the expansion artifacts: ADR-014 through ADR-017 (4 new ADRs), ARCH-INDEX v1.5 (SS-18..22 registry rows; roster 18→20 crates), module-decomposition v1.11 (+14 modules, universe 35→49), purity-boundary-map v1.6 (+14 rows, total 58→72 entries). Burst 217 commits these artifacts and updates all state references.
+
+### Architect DESIGN-SUMMARY HANDOFF TABLE
+
+Working specification for BA (CAP authoring), PO (BC authoring), and formal-verifier (VP candidates). All cells sourced from ADR-014..017 + module-decomposition v1.11 + purity-boundary-map v1.6.
+
+| SS | Name | Primary Crate(s) | ADR | BC-band | CAPs (BA to author) | Security Invariants |
+|----|------|-----------------|-----|---------|--------------------|--------------------|
+| SS-18 | Prompt Templates | ferrochain-prompts (new #19) | ADR-015 | BC-2.18.001–TBD (~3-5 BCs) | CAP-022..xxx (template construction, rendering, injection guard, FewShot) | VP-006: injection_guard blocks untrusted content into TrustRequired SystemMessage slots at render time — categorical error (Err return), not policy-configurable; SlotTrustPolicy immutable; ProvenanceTag pass-through via PromptValue |
+| SS-19 | LC Serialization / Round-Trip Registry | ferrochain-core (core::serializable) | ADR-016 | BC-2.19.001–TBD (~4-6 BCs) | CAP-xxx (round-trip serialize/deserialize, registry registration, secret stripping, one-way Python import) | VP-010: type NOT in registry NEVER successfully deserializes via Reviver; no path loading; lc_secrets() strips credentials (DI-010); E-SRLZ-001/002 propagate as structured errors (DI-014); inventory-based static registry (link-time, not runtime) |
+| SS-20 | Document Retrieval | ferrochain-core (core::documents, core::retriever) + ferrochain-vectorstores (vectorstores::retriever) | ADR-014 | BC-2.20.001–TBD (~2-4 BCs) | CAP-xxx (Retriever trait, RAG integration, VectorStoreRetriever impl) | Documents from retrieval enter graph via existing BoundaryType::RAGRetrieval (DI-012 / BC-2.11.001) — no BoundaryType extension required; VP-007: not yet explicitly anchored (candidate: dyn-compatibility soundness or round-trip retrieve-Document roundtrip; TBD by PO/formal-verifier during CAP authoring) |
+| SS-21 | VectorStore Abstraction | ferrochain-vectorstores (new #20) | ADR-014 | BC-2.21.001–TBD (~5-8 BCs) | CAP-xxx (add_texts, similarity_search, MMR search, VectorStoreFactory, in-memory backend, SS-15 boundary) | VP-009: vectorstores::mmr cosine similarity values ∈ [-1.0, 1.0] + MMR ranking monotonically non-increasing (Kani bounded proof); VectorStoreFactory on separate trait (E0038-safe, not on VectorStore vtable); reqwest in community adapters MUST use rustls-tls |
+| SS-22 | Embeddings | ferrochain-core (core::embeddings) + ferrochain-openai (openai::embeddings) + ferrochain-ollama (ollama::embeddings) | ADR-017 | BC-2.22.001–TBD (~3-5 BCs) | CAP-017 (existing; expand provider impl scope) + CAP-xxx (batch embed, provider conformance, error propagation) | VP-008: proptest dimensionality invariant — for any valid Embeddings impl, embed_documents and embed_query return consistent dimensionality; DI-009 mandatory 30s timeout; DI-010 API key newtype with redacted Debug; DI-014 batch failures return Err not Vec::new(); ferrochain-anthropic EXCLUDED (no Anthropic embedding API) |
+
+**Approximate BC total for D21 expansion:** ~17-29 new BCs across SS-18..22 (ARCH-INDEX uses "TBD" ranges pending BA CAP authoring). BA authors CAP-022..033 first; PO authors BCs band-by-band from CAPs.
+
+**CAP-002 revision required:** CAP-002 ("prompt templates not a v1 deliverable") must be revised by PO to reflect SS-18 promotion to in-scope. All 5 subsystems' product-brief.md §Out-of-Scope entries superseded by D21.
+
+### VP Candidates VP-006..010
+
+| VP | Property | Module | Tool | Source ADR | Status |
+|----|----------|--------|------|------------|--------|
+| VP-006 | Untrusted-tagged variable substitution into TrustRequired slot always returns Err (never renders into SystemMessage) | prompts::injection_guard | Kani | ADR-015 | candidate — pending formal VP file authoring by formal-verifier |
+| VP-007 | Not yet explicitly anchored in architect ADRs. Candidate: lc-JSON round-trip identity for registered types (encode then decode returns type-equivalent value), or SS-20 dyn-Retriever soundness property. To be determined by PO/formal-verifier during SS-19/SS-20 BC authoring. | TBD | TBD | ADR-014 or ADR-016 | pending — VP number reserved |
+| VP-008 | For any valid Embeddings impl, embed_documents and embed_query calls return consistent vector dimensionality (proptest property test) | core::embeddings (conformance harness in ferrochain-standard-tests) | proptest | ADR-017 | candidate — pending formal VP file authoring |
+| VP-009 | vectorstores::mmr cosine similarity ∈ [-1.0, 1.0] and MMR ranking is monotonically non-increasing (bounded Kani proof) | vectorstores::mmr | Kani (bounded) | ADR-014 | candidate — pending formal VP file authoring |
+| VP-010 | Type NOT in lc-JSON registry NEVER successfully deserializes via Reviver (allowlist containment) | core::serializable | Kani | ADR-016 | candidate — pending formal VP file authoring |
+
+### Files Written / Committed (Burst 217)
+
+| File | Change |
+|------|--------|
+| `.factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md` | NEW v1.0 — VectorStore + Retriever abstraction; crate placement; async dyn-compatible traits; VectorStoreFactory pattern; MMR surface; SS-15 boundary (ADR-014) |
+| `.factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md` | NEW v1.0 — Prompt template rendering + injection safety; ferrochain-prompts new crate; slot trust model; ProvenanceTag pass-through; f-string always-on + mustache/jinja2 optional; injection_guard pure-core blocker (SECURITY-CRITICAL) (ADR-015) |
+| `.factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md` | NEW v1.0 — lc-JSON round-trip + deserialization safety; core::serializable in ferrochain-core; inventory static registry; 141 core entries; feature-gated partner registration; untrusted-input containment; secret stripping; one-way Python compat (SECURITY-CRITICAL) (ADR-016) |
+| `.factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md` | NEW v1.0 — Embeddings trait + provider integration; core::embeddings in ferrochain-core; async dyn-compatible shape; dimensionality contract; ferrochain-openai + ferrochain-ollama gain embeddings modules; ferrochain-anthropic excluded (ADR-017) |
+| `.factory/specs/architecture/ARCH-INDEX.md` | v1.4→v1.5: SS-18..22 registry rows; canonical crate roster 18→20 (+ferrochain-prompts #19, +ferrochain-vectorstores #20); ADR registry 13→17 (ADR-014..017) |
+| `.factory/specs/architecture/module-decomposition.md` | v1.10→v1.11: +14 modules (4 core, 4 prompts, 4 vectorstores, 2 provider embeddings); universe 35→49 |
+| `.factory/specs/architecture/purity-boundary-map.md` | v1.5→v1.6: +14 rows; total 58→72; prompts::injection_guard (VP-006 candidate) + vectorstores::mmr (VP-009 candidate) added to pure-core table |
+| `.factory/specs/module-criticality.md` | input-hash refreshed (D18-P89-A sweep: staled by arch edits) |
+| `.factory/specs/architecture/verification-coverage-matrix.md` | input-hash refreshed (D18-P89-A sweep: staled by arch edits) |
+| `.factory/sidecar-learning.md` | session-end markers appended (established practice) |
+| `.factory/STATE.md` | v3.57→v3.58: burst-212 step row archived; burst-217 step row added; ARCH-INDEX v1.4→v1.5 cite refresh (D18-P72-D row); R6 updated for 20-crate roster; Historical Content arch row updated (v1.5/v1.11/v1.6/17 ADRs); session checkpoint rewritten for BA-CAP-authoring next step |
+| `.factory/cycles/v1.0.0-greenfield/burst-log.md` | burst-212 archive note + burst-217 full narrative appended |
+
+### Convergence Status After Burst 217
+
+- Phase 1d passes: 128 (pre-expansion perimeter; SUPERSEDED by D21)
+- Fix bursts: 128 (no new fix burst in bursts 212–217)
+- Phase 1 status: IN PROGRESS — D21 architecture layer COMPLETE; 0/3 pending expanded-perimeter re-convergence
+- NEXT: BA authors CAP-022..033 (SS-18..22) → PO authors ~19-29 new BCs + out-of-scope→in-scope migration + CAP-002 revision → VP-006..010 VP files → Phase 1d cascade from 0/3

@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.4"
+version: "1.5"
 status: active
 producer: architect
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-20T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -14,8 +14,9 @@ inputs:
 input-hash: "311dc79"
 traces_to: prd.md
 deployment_topology: single-service
-decisions: [D4, D6, D9, D11, D13, D17, D20]
+decisions: [D4, D6, D9, D11, D13, D17, D20, D21]
 changelog:
+  - "1.5 (D21/2026-07-20): ecosystem-parity scope expansion — add SS-18 (Prompt Templates, ferrochain-prompts), SS-19 (LC Serialization, ferrochain-core), SS-20 (Document Retrieval, ferrochain-core + ferrochain-vectorstores), SS-21 (VectorStore Abstraction, ferrochain-vectorstores), SS-22 (Embeddings, ferrochain-core + providers); Canonical Crate Roster 18→20 (+ferrochain-prompts +ferrochain-vectorstores); ADR registry 13→17 (ADR-014 VectorStore+Retriever, ADR-015 PromptInjectionSafety, ADR-016 lc-JSON safety, ADR-017 Embeddings); VP candidates noted (no new VP files yet)."
   - "1.4 (provenance-fix-169/2026-07-17): remove .factory/STATE.md from inputs (not a genuine spec-content input; D-NNN decisions are baked-in stable facts per PO corpus adjudication)."
   - "1.3 (F-P72-04/ADR-013): add ADR-013 (mcp::server module placement) to ADR registry; update SS-09 D20 capability note to attribute mcp::server to ADR-013 (not ADR-012); ADR count 12→13."
   - "1.2 (D20/CAP-021+CAP-020): SS-09 BC range 001–005→001–007 (CAP-021 MCP server role); SS-15 BC range 001–003→001–006 (CAP-020 self-improvement primitives); SS-04 001–007→001–008; SS-08 001–012→001–014; SS-13 001–006→001–007; BC total 86→95."
@@ -79,14 +80,21 @@ changelog:
 | SS-15 | Long-Horizon Memory | 2.15 | ferrochain-memory | BC-2.15.001–006 | 2 |
 | SS-16 | Tool Retry + Circuit Breaker | 2.16 | ferrochain-core | BC-2.16.001–003 | 2 |
 | SS-17 | Formal Verification Pipeline | 2.17 | xtask, ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox | BC-2.17.001–002 | 6 |
+| SS-18 | Prompt Templates | 2.18 | ferrochain-prompts | BC-2.18.001–TBD | 2 |
+| SS-19 | LC Serialization / Round-Trip Registry | 2.19 | ferrochain-core | BC-2.19.001–TBD | 2 |
+| SS-20 | Document Retrieval | 2.20 | ferrochain-core, ferrochain-vectorstores | BC-2.20.001–TBD | 2 |
+| SS-21 | VectorStore Abstraction | 2.21 | ferrochain-vectorstores | BC-2.21.001–TBD | 2 |
+| SS-22 | Embeddings | 2.22 | ferrochain-core, ferrochain-openai, ferrochain-ollama | BC-2.22.001–TBD | 2 |
 
 > **D20 Capability Additions (v1.2):** SS-09 adds CAP-021 (MCP server role) per ADR-013 — introduces `mcp::server` execution module in ferrochain-mcp; BC range extended from 001–005 to 001–007. SS-15 adds CAP-020 (self-improvement primitives) per ADR-012 — includes `SkillStore`, `MemoryWriteGuard` execution modules and `ContextMutationConfig` definitions; BC range extended from 001–003 to 001–006.
+
+> **D21 Capability Additions (v1.5):** SS-18 (Prompt Templates) via ADR-015 — ferrochain-prompts new crate; injection safety pure-core guard. SS-19 (LC Serialization) via ADR-016 — core::serializable in ferrochain-core; inventory-based static registry; 141 core entries + feature-gated partner registration. SS-20 (Document Retrieval) via ADR-014 — Retriever trait + Document type in ferrochain-core; VectorStoreRetriever in ferrochain-vectorstores. SS-21 (VectorStore Abstraction) via ADR-014 — ferrochain-vectorstores new crate; in-memory backend + MMR. SS-22 (Embeddings) via ADR-017 — Embeddings trait in ferrochain-core; impls in ferrochain-openai + ferrochain-ollama (ferrochain-anthropic excluded: no embedding API). BC ranges TBD pending BA CAP authoring.
 
 ## Canonical Crate Roster (Source of Truth)
 
 > **Authoritative.** All other documents (ADR-007, system-overview, dependency-graph) derive
 > from this table. Derivation: D6 base (9) + D1 (mcp, standard-tests) + D13 (server)
-> + P2-05 (sandbox, memory) + ADR-008 (macros) + D17-Q5 (3 × -sdk) = **18 published crates**.
+> + P2-05 (sandbox, memory) + ADR-008 (macros) + D17-Q5 (3 × -sdk) + D21 (prompts, vectorstores) = **20 published crates**.
 
 | # | Crate | Origin | Wave | Published |
 |---|-------|--------|------|-----------|
@@ -108,9 +116,11 @@ changelog:
 | 16 | ferrochain-openai-sdk | D17-Q5 | 2 | YES |
 | 17 | ferrochain-anthropic-sdk | D17-Q5 | 2 | YES |
 | 18 | ferrochain-ollama-sdk | D17-Q5 | 2 | YES |
+| 19 | ferrochain-prompts | D21/ADR-015 | 2 | YES |
+| 20 | ferrochain-vectorstores | D21/ADR-014 | 2 | YES |
 | — | xtask | D12 | — | NO (workspace binary) |
 
-R6 namespace reservation: publish-all.sh must cover all 18 published crates before public announcement.
+R6 namespace reservation: publish-all.sh must cover all 20 published crates before public announcement.
 
 ## ADR Registry
 
@@ -129,6 +139,10 @@ R6 namespace reservation: publish-all.sh must cover all 18 published crates befo
 | ADR-011 | Cache-Key Content-Hash Contract (NE-05) | accepted — constrained by D17 NE adoption | — |
 | ADR-012 | Self-Improvement Primitives: Skill Registry, Context Mutation, Guarded Writes (D20) | accepted — D20 authority | — |
 | ADR-013 | MCP Server Module Placement in ferrochain-mcp (CAP-021) | accepted — D19/D20 authority | — |
+| ADR-014 | VectorStore + Retriever Abstraction (D21) | accepted — D21 authority | — |
+| ADR-015 | Prompt Template Rendering and Injection Safety (D21, SECURITY-CRITICAL) | accepted — D21 authority | — |
+| ADR-016 | lc-JSON Round-Trip and Deserialization Safety (D21, SECURITY-CRITICAL) | accepted — D21 authority | — |
+| ADR-017 | Embeddings Trait and Provider Integration (D21) | accepted — D21 authority | — |
 
 ## Verification Properties (VP-INDEX)
 
