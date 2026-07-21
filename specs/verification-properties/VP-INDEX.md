@@ -1,15 +1,16 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.1"
+version: "1.2"
 status: active
 producer: architect
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 changelog:
   - "1.0 (initial): VP catalog authored with 5 VPs (3 Kani P0 + 2 integration P1)."
   - "1.1 (provenance-fix-169/2026-07-17): reorder VP Catalog columns so Tool is at awk $5 (validate-vp-consistency hook compatibility); remove 'Tool: ' prefix from Summary metric labels so declared label normalizes to bare tool name matching VP row normalization."
+  - "1.2 (burst-223/2026-07-21): D21 VP layer — add VP-006..010 (3 Kani + 2 proptest); total 5→10, P0 3→5, P1 2→5, Kani 3→6, proptest 0→2."
 ---
 
 # VP-INDEX: ferrochain Verification Properties
@@ -19,20 +20,20 @@ changelog:
 > (Provable Properties Catalog + P0 list) and `verification-coverage-matrix.md`
 > (VP-to-Module table + Totals row) in the same burst.
 >
-> Arithmetic invariant: total (5) = P0 (3) + P1 (2) = Kani (3) + integration (2).
+> Arithmetic invariant: total (10) = P0 (5) + P1 (5) = Kani (6) + proptest (2) + integration (2).
 
 ## Summary
 
 | Metric | Count |
 |--------|-------|
-| Total VPs | 5 |
-| Priority P0 | 3 |
-| Priority P1 | 2 |
-| Kani | 3 |
-| proptest | 0 |
+| Total VPs | 10 |
+| Priority P0 | 5 |
+| Priority P1 | 5 |
+| Kani | 6 |
+| proptest | 2 |
 | fuzz | 0 |
 | integration | 2 |
-| Status: draft | 5 |
+| Status: draft | 10 |
 | Status: active | 0 |
 | Status: passed | 0 |
 
@@ -45,3 +46,8 @@ changelog:
 | VP-003 | BC-2.13.004 | path-guard | Kani | 6 | P0 | draft | DI-007 | ferrochain-sandbox | `workspace_confinement_harness` | VP-003.md |
 | VP-004 | BC-2.09.004 | mcp-adapter | integration | 3 | P1 | draft | DI-014 | ferrochain-mcp | n/a (integration test) | VP-004.md |
 | VP-005 | BC-2.09.005 | mcp-client | integration | 3 | P1 | draft | DI-014 | ferrochain-mcp | n/a (integration test) | VP-005.md |
+| VP-006 | BC-2.18.004 | injection_guard | Kani | 6 | P1 | draft | DI-008 | ferrochain-prompts | `injection_guard_fail_closed` | VP-006.md |
+| VP-007 | BC-2.19.001 | serializable | proptest | 3 | P1 | draft | DI-008 | ferrochain-core | n/a (proptest) | VP-007.md |
+| VP-008 | BC-2.22.001 | embeddings | proptest | 3 | P1 | draft | DI-014 | ferrochain-core | n/a (proptest) | VP-008.md |
+| VP-009 | BC-2.21.003 | vectorstores-mmr | Kani | 6 | P0 | draft | DI-014 | ferrochain-vectorstores | `zero_norm_guard_fail_closed` | VP-009.md |
+| VP-010 | BC-2.19.005 | serializable-reviver | Kani | 6 | P0 | draft | DI-014 | ferrochain-core | `allowlist_rejects_unregistered_id` | VP-010.md |

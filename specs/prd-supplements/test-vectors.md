@@ -10,7 +10,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "8b04a14"
+input-hash: "55534b9"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 ---

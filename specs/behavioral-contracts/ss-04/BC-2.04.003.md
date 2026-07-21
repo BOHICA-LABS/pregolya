@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "4bb494c"
+input-hash: "3d28fb5"
 extracted_from: null
 modified: []
 deprecated: null

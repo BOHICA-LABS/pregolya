@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "1.5"
+version: "1.6"
 status: active
 producer: architect
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "e10fff6"
+input-hash: "f5be3ff"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.6 (burst-223/2026-07-21): D21 VP layer — add VP-006..010 to VP-to-Module table; add SS-18..22 module rows to Per-Module Coverage Status; update Totals 5→10 VPs, Kani 3→6, proptest 0→2; update Coverage by Criticality Tier to reflect new D21 modules."
   - "1.5 (provenance-fix-169/2026-07-17): cascade input-hash recompute (VP-INDEX.md v1.1 content change — column reorder for hook compatibility)."
   - "1.4 (provenance-fix-169/2026-07-17): cascade input-hash recompute (module-decomposition.md v1.8 content change); add [Section Content] template compliance fix."
   - "1.3 (gate #25 backfill + D20/CAP-021): F-backfill add write-guard enforcement HIGH row missing since ADR-012 D20 burst (matrix header was 33, module-criticality was 34 — drift corrected); add mcp-server MEDIUM row (CAP-021); header 33→35 (CRITICAL 9 / HIGH 13 / MEDIUM 11 / LOW 2); Coverage-by-Tier HIGH 12→13, MEDIUM 10→11."
@@ -27,7 +28,7 @@ changelog:
 ## [Section Content]
 
 > **VP-INDEX.md is the authoritative VP catalog.** This matrix derives from it.
-> Arithmetic invariant: VP total (5) = Kani (3) + integration (2). Status is updated per gate.
+> Arithmetic invariant: VP total (10) = P0 (5) + P1 (5) = Kani (6) + proptest (2) + integration (2). Status is updated per gate.
 
 ## VP-to-Module Mapping
 
@@ -38,13 +39,18 @@ changelog:
 | VP-003 | Workspace Path Confinement | path-guard | ferrochain-sandbox | Kani | BC-2.13.004 | 6 | draft |
 | VP-004 | MCP ToolException Type-Identity Preservation | mcp-adapter | ferrochain-mcp | integration | BC-2.09.004 | 3 | draft |
 | VP-005 | MultiServerMcpClient Holds No Live Connections | mcp-client | ferrochain-mcp | integration | BC-2.09.005 | 3 | draft |
+| VP-006 | injection_guard Fail-Closed | injection_guard | ferrochain-prompts | Kani | BC-2.18.004 | 6 | draft |
+| VP-007 | LcSerializable Round-Trip | serializable | ferrochain-core | proptest | BC-2.19.001 | 3 | draft |
+| VP-008 | Embeddings Dimensionality Contract | embeddings | ferrochain-core | proptest | BC-2.22.001 | 3 | draft |
+| VP-009 | Zero-Norm Cosine Guard | vectorstores-mmr | ferrochain-vectorstores | Kani | BC-2.21.003 | 6 | draft |
+| VP-010 | Reviver Allowlist Containment | serializable-reviver | ferrochain-core | Kani | BC-2.19.005 | 6 | draft |
 
-**Totals: 5 VPs | Kani: 3 | proptest: 0 | fuzz: 0 | integration: 2**
+**Totals: 10 VPs | Kani: 6 | proptest: 2 | fuzz: 0 | integration: 2**
 
 ## Per-Module Coverage Status
 
-> This table covers all 35 architecture modules from `.factory/specs/module-criticality.md`.
-> Tier groupings follow the authoritative inventory (CRITICAL 9 / HIGH 13 / MEDIUM 11 / LOW 2).
+> This table covers all 40 architecture modules (35 pre-D21 + 5 added by D21 VP layer).
+> Tier groupings: CRITICAL 11 / HIGH 16 / MEDIUM 11 / LOW 2 (D21 adds 2 CRITICAL, 3 HIGH).
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
@@ -83,13 +89,18 @@ changelog:
 | write-guard enforcement | ferrochain-memory | — | — | — | yes | `WriteGuardDecision` enforcement; injection scanning dispatch (D20/ADR-012) |
 | xtask | xtask | — | — | — | — | CI lint gates only; advisory ≥70% |
 | ferrochain-community | ferrochain-community | — | — | — | — | Post-v1 placeholder; not in-tree at v1 |
+| injection_guard | ferrochain-prompts | VP-006 | — | — | yes | D21/SS-18; prompt injection safety; Kani P1 (BC-2.18.004) |
+| serializable | ferrochain-core | — | VP-007 | — | yes | D21/SS-19; LcSerializable round-trip; proptest P1 (BC-2.19.001) |
+| serializable-reviver | ferrochain-core | VP-010 | — | — | yes | D21/SS-19; allowlist containment; Kani P0 red_gate (BC-2.19.005) |
+| vectorstores-mmr | ferrochain-vectorstores | VP-009 | — | — | yes | D21/SS-21; zero-norm cosine guard; Kani P0 red_gate (BC-2.21.003) |
+| embeddings | ferrochain-core | — | VP-008 | — | yes | D21/SS-22; dimensionality contract; proptest P1 (BC-2.22.001) |
 
 ## Coverage by Criticality Tier
 
 | Tier | Modules | Kani VPs | proptest | fuzz | Kill Rate Target |
 |------|---------|---------|---------|------|-----------------|
-| CRITICAL | 9 | 3 (VP-001, VP-002, VP-003) | all | subset | ≥ 95% |
-| HIGH | 13 | 0 | most | subset | ≥ 90% |
+| CRITICAL | 11 | 5 (VP-001, VP-002, VP-003, VP-009, VP-010) | all | subset | ≥ 95% |
+| HIGH | 16 | 1 (VP-006) | most + VP-007, VP-008 | subset | ≥ 90% |
 | MEDIUM | 11 | 0 | some | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | ≥ 70% |
 

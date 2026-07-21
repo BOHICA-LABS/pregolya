@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "1.4"
+version: "1.5"
 status: active
 producer: architect
-timestamp: 2026-07-19T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -16,9 +16,14 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.004.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.005.md
   - .factory/specs/behavioral-contracts/ss-17/BC-2.17.002.md
-input-hash: "0417d4d"
+  - .factory/specs/behavioral-contracts/ss-18/BC-2.18.004.md
+  - .factory/specs/behavioral-contracts/ss-19/BC-2.19.001.md
+  - .factory/specs/behavioral-contracts/ss-19/BC-2.19.005.md
+  - .factory/specs/behavioral-contracts/ss-21/BC-2.21.003.md
+  - .factory/specs/behavioral-contracts/ss-22/BC-2.22.001.md
+input-hash: "b279860"
 traces_to: ARCH-INDEX.md
-decisions: [D17]
+decisions: [D17, D21]
 ---
 
 # Verification Architecture: ferrochain
@@ -28,7 +33,7 @@ decisions: [D17]
 
 ## [Section Content]
 
-This file documents ferrochain's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the five committed VP obligations (VP-001–VP-005, three Kani P0 + two integration P1), and the P0/P1 property catalog with proof harness skeleton patterns.
+This file documents ferrochain's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the ten committed VP obligations (VP-001–VP-010), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1).
 
 ## Kani Async Constraint (Verified Kani 0.67.0)
 
@@ -56,9 +61,9 @@ on a `Future` will fail at verification time. Consequences:
    }
    ```
 
-## Committed VP Obligations (D17-Q7 + R11)
+## Committed VP Obligations (D17-Q7 + R11 + D21)
 
-Five VPs committed before v1.0 release — three Kani (D17-Q7 / NFR-003 formal-proof obligations: VP-001/002/003) plus two integration (R11 Red Gate: VP-004/005):
+Ten VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion):
 
 | VP | BC Anchor | DI | Module | Tool | Phase | Priority |
 |----|-----------|-----|--------|------|-------|---------|
@@ -67,8 +72,13 @@ Five VPs committed before v1.0 release — three Kani (D17-Q7 / NFR-003 formal-p
 | VP-003 | BC-2.13.004 | DI-007 | ferrochain-sandbox / path-guard | Kani | 6 | P0 |
 | VP-004 | BC-2.09.004 | DI-014 | ferrochain-mcp / mcp-adapter | integration | 3 | P1 |
 | VP-005 | BC-2.09.005 | DI-014 | ferrochain-mcp / mcp-client | integration | 3 | P1 |
+| VP-006 | BC-2.18.004 | DI-008 | ferrochain-prompts / injection_guard | Kani | 6 | P1 |
+| VP-007 | BC-2.19.001 | DI-008 | ferrochain-core / serializable | proptest | 3 | P1 |
+| VP-008 | BC-2.22.001 | DI-014 | ferrochain-core / embeddings | proptest | 3 | P1 |
+| VP-009 | BC-2.21.003 | DI-014 | ferrochain-vectorstores / vectorstores-mmr | Kani | 6 | P0 |
+| VP-010 | BC-2.19.005 | DI-014 | ferrochain-core / serializable-reviver | Kani | 6 | P0 |
 
-**Total: 5 VPs — 3 P0 / 2 P1 | Tool breakdown: Kani ×3, integration ×2**
+**Total: 10 VPs — 5 P0 / 5 P1 | Tool breakdown: Kani ×6, proptest ×2, integration ×2**
 
 ## Provable Properties Catalog
 
@@ -153,14 +163,194 @@ Feasibility: MEDIUM-HIGH. Requires modeling path canonicalization without OS sys
 Pure path arithmetic (prefix checks, symlink detection) is tractable for Kani; OS-level
 `std::fs::canonicalize` must be replaced with a pure model in the harness.
 
+---
+
+**VP-009 — Zero-Norm Cosine Guard** (ferrochain-vectorstores / vectorstores-mmr) `red_gate: true`
+
+Property: For any symbolic pair of finite `f32` vectors where either L2 norm is `0.0`
+(IEEE-754 exact equality), `cosine_similarity` returns `Err(E-VS-001)` and never
+produces `Ok(f32::NAN)`. Division is unreachable when either norm is zero.
+
+Formal statement:
+```
+∀ a: &[f32], b: &[f32], 1 ≤ |a| = |b| ≤ 8, all elements finite:
+  let norm_a = sqrt(Σ aᵢ²);  let norm_b = sqrt(Σ bᵢ²)
+  (norm_a == 0.0 ∨ norm_b == 0.0) →
+    cosine_similarity(a, b) == Err(E-VS-001)
+    ∧ cosine_similarity(a, b) ≠ Ok(NaN)
+```
+
+Kani harness sketch:
+```rust
+#[kani::proof]
+#[kani::unwind(9)]
+fn zero_norm_guard_fail_closed() {
+    let len: usize = kani::any();
+    kani::assume(len >= 1 && len <= 8);
+    let a: Vec<f32> = (0..len).map(|_| { let x: f32 = kani::any(); kani::assume(x.is_finite()); x }).collect();
+    let b: Vec<f32> = (0..len).map(|_| { let x: f32 = kani::any(); kani::assume(x.is_finite()); x }).collect();
+    let norm_a = a.iter().map(|x| x * x).sum::<f32>().sqrt();
+    let norm_b = b.iter().map(|x| x * x).sum::<f32>().sqrt();
+    let result = cosine_similarity(&a, &b);
+    if norm_a == 0.0 || norm_b == 0.0 {
+        kani::assert(matches!(result, Err(FerrochainError { code: "E-VS-001", .. })), "guard must fire");
+        kani::assert(!matches!(result, Ok(v) if v.is_nan()), "Ok(NaN) unreachable");
+    } else {
+        kani::assert(result.is_ok(), "non-zero norm must produce Ok");
+    }
+}
+```
+
+Feasibility: MEDIUM-HIGH. `cosine_similarity` is a pure-core sync function (ADR-014 Decision 2 §Hardening
+note). Kani 0.67.0 models `f32` symbolically over IEEE-754 domain. Requires `#[kani::unwind(9)]` for
+the 8-element vector iteration. Estimated proof time: 5–15 min. Red Gate: tests TV-001 and TV-002 must
+compile-and-fail before Phase 3 story delivery for SS-21.
+
+---
+
+**VP-010 — Reviver Allowlist Containment** (ferrochain-core / serializable-reviver) `red_gate: true`
+
+Property: For any type-ID path not present in the registered allowlist, `allowlist_check`
+returns `Err(E-SRLZ-001)`. The `Ok(())` path is unreachable for unregistered IDs.
+
+Formal statement:
+```
+∀ id: &[String] (depth ≤ 4, each segment ≤ 16 bytes ASCII printable),
+  registry: &HashMap<Vec<String>, ()> (5 concrete entries):
+    !registry.contains_key(id) → allowlist_check(id, registry) == Err(E-SRLZ-001)
+```
+
+Kani harness sketch:
+```rust
+#[kani::proof]
+fn allowlist_rejects_unregistered_id() {
+    let depth: usize = kani::any();
+    kani::assume(depth >= 1 && depth <= 4);
+    let id: Vec<String> = (0..depth).map(|_| {
+        let len: usize = kani::any();
+        kani::assume(len >= 1 && len <= 16);
+        (0..len).map(|_| { let c: u8 = kani::any(); kani::assume(c.is_ascii_graphic()); c as char }).collect()
+    }).collect();
+    let mut registry: HashMap<Vec<String>, ()> = HashMap::new();
+    registry.insert(vec!["lc".into(), "PromptTemplate".into()], ());
+    // 4 more concrete entries
+    kani::assume(!registry.contains_key(&id));
+    let result = allowlist_check(&id, &registry);
+    kani::assert(matches!(result, Err(FerrochainError { code: "E-SRLZ-001", .. })), "unregistered id must be rejected");
+}
+```
+
+Feasibility: HIGH. `OnceLock<HashMap>` complexity excluded by extracting `allowlist_check` as a standalone
+pure function. Bounded: ID depth ≤ 4, segments ≤ 16 ASCII bytes, registry fixed at 5 concrete entries.
+HashMap lookup is directly modeled by Kani's CBMC backend. Red Gate: must compile-and-fail before Phase 3
+story delivery for SS-19.
+
 ## Should Prove (P1 — Core Algorithms, Conformance Contracts)
 
-No P1 Kani VPs committed at Phase 1 (the 2 committed P1 VPs — VP-004/VP-005 — are integration-tier, Phase 3). Additional Kani candidates for Phase 6 consideration:
-- Monotonic clock: `∀ t1 < t2: Clock, clock_id(t1) < clock_id(t2)` (DI-004)
-- Fork lineage: no state copy on fork; pointer only (DI-004)
-- BarrierValue: all expected writers present before barrier releases (DI-001)
+**VP-006 — injection_guard Fail-Closed** (ferrochain-prompts / injection_guard) `Kani P1 Phase 6`
 
-These are candidates for post-v1 or v1 stretch if Phase 6 capacity allows.
+Property: For any slot variable with `ProvenanceTag::External` (or `::ToolOutput`) where the
+slot policy is `TrustRequired`, `check_slot_trust` returns `Err(E-INJ-001)` and never returns
+`Ok(PromptValue)`. The safe passage (`TrustAll`) path is only reachable when the policy
+explicitly permits it.
+
+Formal statement:
+```
+∀ slots: Vec<SlotVar>, |slots| ≤ 4:
+  ∃ slot ∈ slots: slot.trust_policy == TrustRequired ∧ slot.tag ∈ {External, ToolOutput} →
+    check_slot_trust(slots) == Err(E-INJ-001)
+```
+
+Kani harness sketch:
+```rust
+#[kani::proof]
+fn injection_guard_fail_closed() {
+    let n: usize = kani::any();
+    kani::assume(n >= 1 && n <= 4);
+    let slots: Vec<SlotVar> = (0..n).map(|_| SlotVar {
+        trust_policy: kani::any(),
+        tag: kani::any(),
+        value: kani::any(),
+    }).collect();
+    let result = check_slot_trust(&slots);
+    let has_violation = slots.iter().any(|s|
+        s.trust_policy == SlotTrustPolicy::TrustRequired
+        && matches!(s.tag, ProvenanceTag::External | ProvenanceTag::ToolOutput)
+    );
+    if has_violation {
+        kani::assert(matches!(result, Err(FerrochainError { code: "E-INJ-001", .. })), "fail-closed: must return E-INJ-001");
+    } else {
+        kani::assert(result.is_ok(), "no violation: must pass");
+    }
+}
+```
+
+Feasibility: HIGH. `check_slot_trust` is a pure sync function over bounded Vec. Enum variants are
+finite (ProvenanceTag: 3 variants; SlotTrustPolicy: 2 variants). Harness bounds: ≤ 4 slots.
+Estimated proof time: 1–3 min.
+
+---
+
+**VP-007 — LcSerializable Round-Trip** (ferrochain-core / serializable) `proptest P1 Phase 3`
+
+Property: For all types implementing `LcSerializable`, `deserialize(serialize(x)) ≡ x`.
+Serialization is deterministic and lossless for registered types (excluding fields listed
+in `lc_secrets()`, which are stripped by design).
+
+Why proptest (not Kani): 141 registered types exceed practical Kani bounds. proptest's shrinking
+is more actionable for debugging round-trip failures than a CBMC counterexample.
+
+proptest strategy sketch:
+```rust
+proptest! {
+    #[test]
+    fn prop_prompt_template_round_trip(tmpl in any::<PromptTemplate>()) {
+        let serialized = tmpl.lc_serialize().expect("serialize");
+        let recovered = PromptTemplate::lc_deserialize(&serialized).expect("deserialize");
+        prop_assert_eq!(tmpl.lc_id(), recovered.lc_id());
+        prop_assert_eq!(tmpl.input_variables(), recovered.input_variables());
+    }
+}
+```
+
+Feasibility: HIGH. proptest shrinking identifies concrete failing inputs. `Arbitrary` impls
+required for all `LcSerializable` types by Phase 3. Secret-field exclusion (`lc_secrets()`)
+is explicit in the equivalence check, not a gap.
+
+---
+
+**VP-008 — Embeddings Dimensionality Contract** (ferrochain-core / embeddings) `proptest P1 Phase 3`
+
+Property: For any batch of non-empty strings, all vectors returned by `embed_documents`
+have equal length, and `embed_query` returns a vector of the same length as any vector
+in the batch result. An empty input batch returns `Ok(vec![])`.
+
+Why proptest (not Kani): `embed_documents` and `embed_query` are `#[async_trait]` methods.
+Kani 0.67.0 has no native async support; the proptest harness uses a synchronous mock
+embeddings implementation that enforces the dimensionality contract structurally.
+
+proptest strategy sketch:
+```rust
+proptest! {
+    #[test]
+    fn prop_dimensionality_contract_holds(texts in vec(any::<String>().prop_filter("non-empty", |s| !s.is_empty()), 1..=32)) {
+        let rt = tokio::runtime::Builder::new_current_thread().build().unwrap();
+        rt.block_on(async {
+            let embedder = MockEmbeddings::new_fixed_dim(128);
+            let batch = embedder.embed_documents(texts).await.expect("embed_documents");
+            let dim = batch[0].len();
+            prop_assert!(batch.iter().all(|v| v.len() == dim), "ragged batch");
+            let q = embedder.embed_query("query".into()).await.expect("embed_query");
+            prop_assert_eq!(q.len(), dim, "query/batch dim mismatch");
+            Ok(())
+        })?;
+    }
+}
+```
+
+Feasibility: HIGH. Mock embeddings implementation makes the contract hold by construction;
+the test validates that a ragged-returning implementation would be caught. Phase 3 delivery
+requires a concrete `MockEmbeddings` struct implementing `Embeddings` with fixed-dim output.
 
 ## Test-Sufficient (No Kani)
 
@@ -200,6 +390,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 1.5 | 2026-07-21 | architect | burst-223 / D21 | VP layer for D21 ecosystem-parity expansion: add VP-006..010 (3 Kani P1/P0 + 2 proptest P1) to Committed VP Obligations table and Provable Properties Catalog. Total 5→10 VPs; P0 3→5; P1 2→5; Kani 3→6; proptest 0→2. Add SS-18..22 BCs to inputs. |
 | 1.4 | 2026-07-19 | architect | burst-118 / F-P115-01 | checkpoint::clock sync-core mandate rewritten to reflect ADR-005 rev-2 stateless design. Replaced "(monotonic AtomicU64 read) — sync increment and compare" with "pure `get_next_version(current)` successor function; stateless, no atomic counter". No VP or coverage-matrix changes — VP-002 target is checkpoint::session_index; checkpoint::clock is not a direct VP target. |
 | 1.3 | 2026-07-17 | architect | burst-169 / D18-P88-A | Formal version bump deferred from burst-169 (prd v1.2 cascade): timestamp advanced to 2026-07-17 in that burst; validate-changelog-monotonicity blocked the bump because no committed changelog baseline existed. Burst-169 now committed (1a915c6). Same-day provenance amendment (D18-P88-A): removed forbidden live-index input BC-INDEX.md; replaced with the six stable versioned BC files the document actually derives from (BC-2.03.001 VP-001 anchor, BC-2.04.006 VP-002 anchor, BC-2.13.004 VP-003 anchor, BC-2.09.004 VP-004 anchor, BC-2.09.005 VP-005 anchor, BC-2.17.002 fuzzing-targets authority); input-hash recomputed 270a1de → 8091abc. No spec content changes. |
 | 1.2 | 2026-07-15 | architect | D18-P63-A | Removed outlier "Splitter inputs" row from §Fuzzing Targets per BC-2.17.002 authority (two targets only: fuzz_checkpoint_serde + fuzz_graph_execution); added named harness IDs to remaining rows; added non-normative note directing splitter robustness to proptest + BC-2.07.002 Red Gate suite with post-v1 fuzz candidacy. Coverage-matrix already shows splitter fuzz = — (no matrix edit required). |

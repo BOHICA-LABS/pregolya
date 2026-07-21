@@ -29,7 +29,7 @@ inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "37b6afa"
+input-hash: "29ece49"
 extracted_from: null
 modified: []
 deprecated: null

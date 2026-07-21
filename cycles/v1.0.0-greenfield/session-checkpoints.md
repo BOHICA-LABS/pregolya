@@ -967,3 +967,21 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 4. Re-run Phase 1d adversarial cascade on expanded perimeter → 3/3 CLEAN(strict)
 5. Re-run pre-gate: /vsdd-factory:check-input-drift → Phase 1 HUMAN APPROVAL GATE
 ### WRAP METADATA: Date 2026-07-21 | Cycle v1.0.0-greenfield | Burst 220 (WRAP) | Phase 1 IN PROGRESS — D21 spec-body WIP checkpoint | Re-convergence required (0/3)
+
+---
+
+## Burst 222 Checkpoint (archived burst-223)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21 ecosystem-parity scope expansion (5 langchain-core subsystems → v1). D21 spec-body layer COMPLETE (burst 222): prd.md v1.4 body COMPLETE (116 BCs: 51 P0/56 P1/9 P2); BC-INDEX.md v1.8 COMPLETE (116 total, 11 Red Gate, 8 VP Seed, 10 VPs registered). VP-007 seeded BC-2.19.001. Hash sweep STALE=113→0 (4 passes). NEXT: architect VP-006..010 + VP-INDEX (5→10) + verification-architecture/coverage-matrix → Phase 1d cascade 0/3 re-convergence on expanded perimeter."
+### COMMITTED (through burst 222):
+- Burst 217 (1351aaa): ADR-014/015/016/017; ARCH-INDEX v1.5 (roster 18→20 crates: +ferrochain-prompts #19, +ferrochain-vectorstores #20; SS-18..22 registry; ADR table 13→17); module-decomposition v1.11 (universe 35→49); purity-boundary-map v1.6 (58→72).
+- Burst 218 (20e1727): ADR dep-validation (mustache DROPPED; pins inventory 0.3.24, minijinja 2.21.0; no embedding/vector crate); adr-tech-validation v1.1.0.
+- Burst 219 (3762dab): CAP-022..033 (33 CAPs total); capabilities-p0 v1.7 (CAP-002 reversal); capabilities-p1-p2 v1.5; entities-graph v1.4; ubiquitous-language-core v1.4; L2-INDEX v1.6.
+- Burst 220 (WIP wrap): 21 new BC files (SS-18..22) + error-taxonomy v1.27 + interface-definitions v2.41 + test-vectors v2.0 + product-brief v1.4 + ADR-010 v1.1 + BC-2.14.001 v1.2 + api-surface v1.6 + bc-authoring-plan v2.41.
+- Burst 222 (this commit): prd.md v1.4 body COMPLETE; BC-INDEX.md v1.8 COMPLETE (116 BCs: 51 P0/56 P1/9 P2); BC-2.19.001 v1.1 (VP-007 seeded); hash sweep STALE=113→0 (4 passes, 115 files refreshed).
+### NEXT-ACTIONS (exact, ordered):
+1. architect: author VP-006..010 files + VP-INDEX (5→10) + verification-architecture + verification-coverage-matrix updates.
+2. Re-run Phase 1d adversarial cascade on expanded perimeter → 3/3 CLEAN(strict).
+3. Re-run pre-gate: check-input-drift → consistency audit → Phase 1 HUMAN GATE.
+### WRAP METADATA: Date 2026-07-21 | Cycle v1.0.0-greenfield | Burst 222 | Phase 1 IN PROGRESS — D21 spec-body COMPLETE | Re-convergence required (0/3)

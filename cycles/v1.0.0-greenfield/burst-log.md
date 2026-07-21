@@ -3492,3 +3492,49 @@ Burst 216 row archived from STATE.md Current Phase Steps: "D21 ecosystem-parity 
 - Fix bursts: 128 (no new fix burst)
 - Phase 1 status: IN PROGRESS — D21 spec-body COMPLETE (116 BCs: 51 P0/56 P1/9 P2; VP-007 seeded BC-2.19.001); 0/3 pending expanded-perimeter re-convergence
 - NEXT: architect VP-006..010 + VP-INDEX (5→10) + verification-architecture/coverage-matrix → Phase 1d cascade 0/3
+
+## Burst 223 (2026-07-21) — D21 VP Layer COMPLETE; Hash Sweep STALE→0; STATE.md v3.63
+
+### Summary
+
+Architect authored VP-006..VP-010 (5 new verification-property files) and updated VP-INDEX.md (v1.1→v1.2), verification-architecture.md (v1.4→v1.5), and verification-coverage-matrix.md (v1.5→v1.6). State-manager ran the D18-P89-A/P90-A hash-currency sweep until STALE=0 (transitive passes through specs + planning + all index files). All D21 authoring NEXT-ACTIONS from burst-222 are now done. Phase 1d adversarial cascade re-run (0/3 on expanded 116-BC / SS-18..22 perimeter) is the next step.
+
+### Architect Changes (burst 223)
+
+| File | Change |
+|------|--------|
+| `.factory/specs/verification-properties/VP-006.md` | NEW v1.0 — injection_guard Fail-Closed; BC-2.18.004; Kani P1; input-hash 70ba4ba |
+| `.factory/specs/verification-properties/VP-007.md` | NEW v1.0 — LcSerializable Round-Trip; BC-2.19.001; proptest P1; input-hash f80ee1d |
+| `.factory/specs/verification-properties/VP-008.md` | NEW v1.0 — Embeddings Dimensionality; BC-2.22.001; proptest P1; input-hash 4cf22b8 |
+| `.factory/specs/verification-properties/VP-009.md` | NEW v1.0 — Zero-Norm Cosine Guard; BC-2.21.003; Kani P0; input-hash c7cb567 |
+| `.factory/specs/verification-properties/VP-010.md` | NEW v1.0 — Reviver Allowlist Containment; BC-2.19.005; Kani P0; input-hash 6bc3add |
+| `.factory/specs/verification-properties/VP-INDEX.md` | v1.1→v1.2: total 5→10; P0 3→5; P1 2→5; Kani 3→6; proptest 0→2; VP-006..010 rows added |
+| `.factory/specs/architecture/verification-architecture.md` | v1.4→v1.5: obligations 5→10; VP-006..010 catalog rows; hash 6bef264 |
+| `.factory/specs/architecture/verification-coverage-matrix.md` | v1.5→v1.6: VP-to-Module table +5 rows; modules 35→40 (SS-18..22); CRITICAL 9→11; HIGH 13→16; hash architect-set then cascade-updated to f5be3ff |
+
+### Hash Sweep (burst 223 — D18-P89-A / D18-P90-A)
+
+Transitive sweep iterated until STALE=0 across all artifact directories. Files updated included verification-architecture.md, verification-coverage-matrix.md, ARCH-INDEX.md, L2-INDEX.md, module-criticality.md, dtu-assessment.md, and transitive dependants throughout specs/ and planning/.
+
+| Pass | Action | Result |
+|------|--------|--------|
+| Initial scan | scan .factory/specs | TOTAL=157 MATCH=157 STALE=0 (scan missed index files) |
+| ARCH-INDEX manual check | --check on ARCH-INDEX.md | STALE: 311dc79 ≠ 1968df8; updated |
+| L2-INDEX manual check | --check on L2-INDEX.md | STALE: 3c54b46 ≠ f49b669; updated |
+| Pass 2 scan | scan --update .factory/specs + .factory/planning | specs UPDATED=91; planning UPDATED=1 |
+| Pass 3 scan | scan --update .factory/specs | UPDATED=7 |
+| Pass 4 scan | scan .factory/specs | STALE=0 |
+| module-criticality manual fix | --update module-criticality.md + dtu-assessment.md | PASS |
+| verification-coverage-matrix fix | --update verification-coverage-matrix.md | PASS |
+| Final census | specs TOTAL=157 STALE=0 + planning TOTAL=5 STALE=0 + all index files PASS | STALE=0 FINAL |
+
+### Current Phase Steps Row Archived (burst 223)
+
+Burst-217 row archived from STATE.md Current Phase Steps:
+> "Burst 217 — D21 architecture layer COMPLETE; 4 new ADRs + arch file updates committed; hash sweep STALE→0 | architect + state-manager | COMPLETE | ADR-014..017, ARCH-INDEX v1.5 (roster 20; SS-18..22; 17 ADRs), module-decomp v1.11 (+14 modules, 35→49), purity-boundary-map v1.6 (+14 rows, 58→72). VP candidates VP-006..010 anchored. Burst 217."
+
+### Convergence Status After Burst 223
+
+- Phase 1d passes: 128 (pre-expansion perimeter; SUPERSEDED by D21)
+- Phase 1 status: D21 VP layer COMPLETE (VP-006..010 authored); all D21 authoring obligations fulfilled
+- NEXT: Phase 1d adversarial cascade re-run on expanded 116-BC / SS-18..22 perimeter → 3/3 CLEAN(strict) → check-input-drift → consistency audit → Phase 1 HUMAN GATE
