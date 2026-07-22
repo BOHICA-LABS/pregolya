@@ -3828,3 +3828,57 @@ Pass P1D-130 adversarial review completed against frozen HEAD d21676d: NOT CLEAN
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | Burst 223 — Phase 1d VP authoring COMPLETE; VP-006..010 authored; VP-INDEX v1.2 (10 VPs total); verification-architecture v1.5; coverage-matrix v1.6; burst-217 row archived | architect + state-manager | COMPLETE | VP-006 injection_guard_fail_closed (Kani P1, DI-014, ferrochain-prompts). VP-007 serializable (proptest P1, DI-008, ferrochain-core). VP-008 embeddings (proptest P1, DI-014, ferrochain-core). VP-009 vectorstores-similarity (Kani P0, DI-014, ferrochain-vectorstores). VP-010 serializable-reviver (Kani P0, DI-014, ferrochain-core). VP-INDEX v1.2: 10 VPs, P0=5/P1=5, Kani=6/proptest=2/integration=2. verification-architecture v1.5 (10-VP roster). coverage-matrix v1.6. Burst 223. |
+
+---
+
+## Burst 228 — Domain E Brief + D-23 Full-Parity Scope Expansion (2026-07-22)
+
+**Agents dispatched:** product-owner (Domain E brief + traceability analysis), state-manager (D-23 decision record, R13 risk, STATE.md update)
+
+### Domain E Brief Authoring (Product Owner)
+
+Product-owner authored `.factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md` v1.0 (502 lines). The brief characterizes the agentic coding CLI assistant problem space (Claude Code / Codex-class interactive terminal agent) and dispositions all 20 identified requirements against the current v1 ferrochain surface.
+
+**Traceability summary:**
+- COVERED = 15 (ReAct loop, file/bash tool substrate, workspace confinement, shell sandboxing, TTY streaming, MCP client, sub-agent spawning, ceiling-triggered summarize compaction, session checkpoint+resume, project-context skill injection, guardrail on tool results, structured error taxonomy, provider abstraction, budget governance, credential opacity+TLS)
+- DEGRADED-BUT-BUILDABLE = 5 (per-tool-call interactive HITL hook, rolling proactive context compaction, multi-session cross-session project memory CAP-017 P2, tool retry for transient failures CAP-018 P2, first-party file/bash tool contracts)
+- HOLDOUT-FORCED GAPS = 0
+
+Net assessment: Domain E is the most cleanly supported of all five holdout domains. Zero forced gaps. Five degraded-but-buildable needs, all structurally solvable within the planned primitive surface.
+
+### Human Scope Decision D-23
+
+Human reviewed the traceability analysis (0 holdout-forced gaps, 5 degraded-but-buildable) and chose FULL PARITY EXPANSION of all five degraded capabilities into v1 scope (mirrors D21 full-5 choice for ecosystem parity):
+
+1. **First-class per-tool-call interactive HITL hook** — pre-tool-call approval at sub-node granularity, replacing the awkward 2-node-per-tool pattern; interacts with SS-05 HITL + BC-2.05.001-006 surface
+2. **Rolling proactive context compaction primitive** — first-class, beyond OnCeiling::Summarize ceiling-trigger; interacts with CAP-012/BC-2.10.003, BC-2.04.008, BC-2.15.006
+3. **CAP-017 multi-session cross-session project memory** — promoted P2/Wave 2 → v1 Wave-1 scope
+4. **CAP-018 tool retry for transient failures** — promoted P2 → v1 Wave-1 scope
+5. **First-party file/bash tool contracts** — file read/write/edit + shell exec as first-party ferrochain surface on the SS-13 sandbox substrate, with permission-gating integration
+
+Driver: Domain E as forcing function; parity-driven (human informed of 0 forced gaps, chose expansion anyway — same reasoning as D21).
+
+### Consequence: Perimeter Expansion
+
+Phase 1d convergence perimeter EXPANDS again. 0/3 streak continues on the NEW perimeter. Architecture-first sequence per D21/R12 precedent (burst 216-220 pattern): architect D-23 ADRs + subsystem updates → BA CAPs → PO BCs + supplements → architect VPs if warranted → cascade re-run.
+
+Estimated scope delta: ~2 new/updated ADRs (per-tool HITL hook API; rolling compaction primitive), several new CAPs + CAP-017/018 Wave-1 promotions, new BC band(s) for first-party tools + compaction + per-tool HITL.
+
+### Hash Sweep (D18-P89-A)
+
+specs/ untouched this burst (only new planning file added). Pre-commit census:
+- BC files: TOTAL=116 MATCH=116 STALE=0 UNCOMPUTED=0 — PASS
+- prd-supplements: 0 DRIFT — PASS
+- New planning file `domain-e-agentic-coding-assistant.md`: carries `input-hash: "[pending state-manager]"` (consistent with domain-b and domain-d sibling files; planning files are not covered by compute-input-hash --scan)
+
+### Convergence Status After Burst 228
+
+- Phase 1d passes: 132 (128 pre-D21 + 4 post-D21 expanded-perimeter passes; NOT CLEAN at last pass)
+- Fix bursts: 132 total
+- Phase 1 status: D-23 Full-Parity Expansion APPROVED; perimeter expands; 0/3 continues on new larger perimeter
+- Trajectory tail: →12→9→7→8→[D-23 expansion; 0/3 RESET]
+- NEXT: burst 229 architect D-23 architecture layer → adversary pass D-133 → cascade toward 3/3 CLEAN(strict) → check-input-drift → Phase 1 HUMAN GATE
+
+### Archived Current Phase Steps Row (displaced from STATE.md at burst 229)
+
+_(no row archived this burst — Current Phase Steps went from 4 to 5 rows, still at the 5-row limit)_

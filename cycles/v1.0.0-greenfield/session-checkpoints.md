@@ -1048,3 +1048,22 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA THIS SESSION: ADR-014 v1.4 (GuardrailHook async canon, Decision 6 rebuilt); observability.md v1.0 (Phase-1 SAP-1 deliverable gap filled; L-024 codified).
 ### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-225 commit (this push). No worktrees. No PRs.
 ### WRAP METADATA: Date 2026-07-21 | Cycle v1.0.0-greenfield | Burst 225 | Phase 1 IN PROGRESS — P1D-130 fix-burst COMPLETE | Re-convergence required (0/3; resets on push)
+
+---
+
+## Archived Checkpoint — Burst 227 (archived at burst 228)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21 scope expansion. P1D-132 COMPLETE (8 findings: 4H/1M/3L; all 8 CLOSED in fix-burst 227); ADR-015 v1.4 MessagesPlaceholder trust derivation (MessageListVar struct anchors BC-2.18.003 PC2); VP-006 v1.4 TrustLevel residue purge; verification-architecture v2.0; nfr-catalog v1.4; interface-definitions v2.45; prd v1.8; 5 BC minor fixes; D22 RECORDED (Domain E agentic coding assistant holdout; brief authoring pending burst 228); trajectory-tail →0→12→9→7→8; 132 passes / 132 fix bursts (128 pre-D21 + 4 post-D21). NEXT: burst 228 PO Domain E brief + traceability → P1D-133 → 3/3 CLEAN → Phase 1 HUMAN GATE."
+### COMMITTED (through burst 227):
+- Burst 220 (archived): 21 new BC files (SS-18..22) + error-taxonomy v1.27 + interface-definitions v2.41 + test-vectors v2.0 + product-brief v1.4.
+- Burst 222: prd.md v1.4 body COMPLETE; BC-INDEX.md v1.8 COMPLETE (116 BCs: 51 P0/56 P1/9 P2).
+- Burst 223: VP-006..010 authored; VP-INDEX v1.2 (10 VPs); verification-architecture v1.5; coverage-matrix v1.6.
+- Burst 224: P1D-129 fix-burst (12 findings closed); ADR-014 v1.3/015 v1.2/016 v1.2; VP-006/009/010 bumped; 7 BC files v1.1; error-taxonomy v1.28 (E-VS-004; 96 codes); test-vectors v2.1 (609 TVs); hash sweep STALE→0.
+- Burst 225: P1D-130 fix-burst (all 9 closed); ADR-014 v1.4/ADR-010 v1.2/ADR-017 v1.2; VP-006 v1.2/VP-008 v1.1; BC-INDEX v1.9; interface-definitions v2.43 +5 D21 trait sections; observability.md v1.0 NEW; error-taxonomy v1.29; prd v1.6; hash sweep STALE→0.
+- Burst 226: P1D-131 fix-burst (all 7 closed); ADR-015 v1.3 (TrustLevel)/ADR-014 v1.5; VP-006 v1.3; BC-INDEX v2.0; 10 BC files bumped; error-taxonomy v1.30 (E-CORE-008+E-VS-005; census 98); interface-definitions v2.44; observability.md v1.1; nfr-catalog v1.3; prd v1.7; hash sweep STALE→0 (5 passes+ARCH-INDEX).
+- Burst 227 (this commit): P1D-132 fix-burst (all 8 closed); ADR-015 v1.4 MessageListVar trust derivation; VP-006 v1.4 TrustLevel residue; verification-architecture v2.0; BC-2.18.001/002/003/2.09.003/2.19.002; nfr-catalog v1.4; interface-definitions v2.45; prd v1.8; D22 Domain E holdout; hash sweep STALE→0 (95+17+6 files, 4 passes).
+### NEXT-ACTIONS: Burst 228 PO Domain E brief + traceability; adversary pass P1D-133; 3/3 CLEAN; Phase 1 HUMAN GATE.
+### PENDING: B1 direnv allow; R6 publish-all.sh 20 crates; #[non_exhaustive] gate (Phase 3).
+### HEADS: develop d018d3f. factory-artifacts: burst-227 commit.
+### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 227 | Phase 1 IN PROGRESS — P1D-132 fix-burst COMPLETE | Re-convergence required (0/3); D22 Domain E holdout recorded
