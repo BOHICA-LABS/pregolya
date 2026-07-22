@@ -1067,3 +1067,26 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### PENDING: B1 direnv allow; R6 publish-all.sh 20 crates; #[non_exhaustive] gate (Phase 3).
 ### HEADS: develop d018d3f. factory-artifacts: burst-227 commit.
 ### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 227 | Phase 1 IN PROGRESS — P1D-132 fix-burst COMPLETE | Re-convergence required (0/3); D22 Domain E holdout recorded
+
+---
+
+## Archived Checkpoint — Burst 228 (archived at burst 229)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21+D-23 scope expansion. P1D-132 COMPLETE (all 8 CLOSED in fix-burst 227); D22 Domain E brief COMPLETE (15 COVERED/5 DEGRADED/0 HOLDOUT-FORCED); D-23 Full-Parity Expansion APPROVED by human (all 5 degraded → v1 scope); R13 risk added; 0/3 on new larger perimeter. NEXT: burst 229 architect D-23 layer (ADR-018/019/020 + SS-23) → BA CAPs → PO BCs → adversary D-133 → 3/3 CLEAN → Phase 1 HUMAN GATE."
+### COMMITTED (through burst 228):
+- Bursts 220-224 (archived): SS-18..22 BCs; P1D-129 fix-burst; VP-006..010; ADR-014/015/016; error-taxonomy v1.28; test-vectors v2.1.
+- Burst 225: P1D-130 fix-burst (9 closed); ADR-014 v1.4; ADR-010/017 v1.2; VP-006 v1.2; VP-008 v1.1; BC-INDEX v1.9; interface-definitions v2.43 +5 D21 traits; observability.md v1.0 NEW; hash sweep STALE→0.
+- Burst 226: P1D-131 fix-burst (7 closed); ADR-015 v1.3 TrustLevel; BC-INDEX v2.0; 10 BC files; error-taxonomy v1.30; interface-definitions v2.44; nfr-catalog v1.3; prd v1.7; hash sweep STALE→0 (5 passes).
+- Burst 227: P1D-132 fix-burst (8 closed); ADR-015 v1.4 MessageListVar; VP-006 v1.4; verification-architecture v2.0; 5 BC minor fixes; nfr-catalog v1.4; interface-definitions v2.45; prd v1.8; D22 Domain E holdout; hash sweep STALE→0.
+- Burst 228 (this commit): Domain E brief v1.0 (15 COVERED/5 DEGRADED/0 HOLDOUT-FORCED); D-23 Full-Parity Expansion APPROVED; R13 added; hash census STALE=0 (BC 116/116 MATCH; prd-supplements 0 DRIFT).
+### NEXT-ACTIONS (exact, ordered):
+1. Burst 229: architect — ADR-018 (per-tool HITL hook), ADR-019 (rolling compaction), ADR-020 (first-party tools); SS-23; module-decomp v1.15; ARCH-INDEX v1.6.
+2. BA CAPs: CAP-017/018 Wave-1 promotion; new CAPs for per-tool HITL + rolling compaction.
+3. PO BCs: BC band for per-tool HITL (SS-05), rolling compaction (SS-10), first-party tools (SS-23); BC-INDEX update.
+4. Adversary pass D-133 on frozen HEAD.
+5. After 3/3 CLEAN(strict): /vsdd-factory:check-input-drift → consistency audit → Phase 1 HUMAN GATE.
+### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 20 crates (will become 21 after burst 229 SS-23); #[non_exhaustive] gate (Phase 3).
+### DECISION DELTA: D-22 Domain E holdout + D-23 Full-Parity Expansion APPROVED (5 capabilities: per-tool HITL, rolling compaction, CAP-017/018 Wave-1, first-party tools).
+### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-228 commit.
+### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 228 | Phase 1 IN PROGRESS — D-23 Full-Parity Expansion APPROVED | Re-convergence required (0/3 on D23 perimeter)

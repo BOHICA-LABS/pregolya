@@ -3882,3 +3882,60 @@ specs/ untouched this burst (only new planning file added). Pre-commit census:
 ### Archived Current Phase Steps Row (displaced from STATE.md at burst 229)
 
 _(no row archived this burst — Current Phase Steps went from 4 to 5 rows, still at the 5-row limit)_
+
+---
+
+## Burst 229 — D23 Architecture Layer COMPLETE
+
+**Date:** 2026-07-22
+**Agents:** architect (D23 ADRs + SS), state-manager (hash cascade + STATE.md + cycle files)
+**Status:** COMPLETE
+
+### Summary
+
+Burst 229 commits the D23 architecture layer authored in the prior turn by the architect. Three new ADRs were minted and three architecture files updated. The hash cascade (D18-P89-A/P90-A sweep) propagated changes through module-criticality.md and verification-coverage-matrix.md. A routing deviation was absorbed: the architect directly edited STATE.md mechanical stale-cite fixes (ARCH-INDEX v1.5→v1.6 ×3, BC-INDEX v1.9→v2.0 ×2, historical content rows, timestamp) — state-manager verified correctness and absorbed without revert.
+
+### Files Touched This Burst
+
+**New architecture decisions:**
+- `.factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md` v1.0 (NEW): PreToolCallHook trait + PreToolDecision enum (Allow/Deny/Transform); graph::hitl sub-module; 16th StreamEvent variant (PreToolCallHook approval point).
+- `.factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md` v1.0 (NEW): CompactionTrigger/Policy/Summary/ConversationSnapshot types; BudgetConfig extension; graph::budget compaction engine dispatch; 15th StreamEvent variant (CompactionApplied).
+- `.factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md` v1.0 (NEW): ferrochain-tools crate #21; SS-23 First-Party Tool Library; tools::fs/shell/search sub-modules; E-TOOLS-001..007 error namespace; dep research (similar + regex crates) in flight — Decision 7 pending architect dep-pins patch burst.
+
+**Updated architecture files (architect-authored):**
+- `.factory/specs/architecture/module-decomposition.md` v1.14 → v1.15: SS-23 ferrochain-tools section added (tools::fs MEDIUM, tools::shell MEDIUM, tools::search MEDIUM); graph::hitl extended for ADR-018 PreToolCallHook; core::budget extended for D23 compaction types; graph::budget extended for compaction engine dispatch. Module universe 50 → 53.
+- `.factory/specs/architecture/ARCH-INDEX.md` v1.5 → v1.6: SS-23 row added (First-Party Tool Library, ferrochain-tools crate #21); ADR registry 17 → 20 (ADR-018/019/020); Canonical Crate Roster 20 → 21 (ferrochain-tools #21); SS-15 wave 2→1; SS-16 wave 2→1; VP-011/012/013 D23 candidate anchors noted (not yet minted pending PO BC authoring).
+- `.factory/specs/architecture/purity-boundary-map.md` v1.9 → v1.10: ferrochain-tools purity rows added (tools::fs/shell = effectful; tools::search = effectful); graph::hitl PreToolCallHook rows; graph::budget compaction-engine rows.
+
+**Hash cascade files (state-manager-authored via D18-P89-A/P90-A sweep):**
+- `.factory/specs/module-criticality.md` v1.4 → v1.5: input-hash cascade refresh (ARCH-INDEX.md v1.6 + module-decomposition.md v1.15 both changed). Hash: ac2e35a → db6f656. No criticality content rows added (ferrochain-tools criticality rows deferred to architect D23 content authoring per ADR-020).
+- `.factory/specs/architecture/verification-coverage-matrix.md` v1.8 → v1.9: input-hash cascade refresh (module-decomposition.md v1.15 + module-criticality.md v1.5 cascade). Hash: 52d04b1 → 06eaf17. No VP table changes (D23 VP candidates VP-011/012/013 not yet minted; pending PO BC authoring).
+
+**State files:**
+- `.factory/STATE.md` v3.69 → v3.70: current_step updated; R6 20→21 crates; R13 updated; burst-229 row added to Current Phase Steps; burst-224 row archived; Session Resume Checkpoint replaced; Historical Content rows updated (module-criticality v1.4→v1.5, verification-coverage-matrix v1.8→v1.9). Routing deviation absorbed (architect wrote mechanical stale-cite fixes).
+
+### Routing Deviation Note
+
+The architect directly edited `.factory/STATE.md` during D23 authoring to fix stale citations: ARCH-INDEX version references (v1.5→v1.6, ×3 locations), BC-INDEX version reference (v1.9→v2.0, ×2 locations), Historical Content row citations, and timestamp. Per agent routing table, STATE.md edits are state-manager's domain. However, all edits were factually correct mechanical cite-repairs. State-manager absorbed them rather than reverting, per production-grade default (fix in scope). This event is recorded here for audit trail. Recurrence: orchestrator should remind architect that STATE.md edits route to state-manager.
+
+### Hash Sweep Results (D18-P89-A compliance)
+
+Sweep scope: all spec artifacts with `inputs:` frontmatter.
+
+- BC files (95 files): TOTAL=95 MATCH=95 STALE=0 — PASS
+- prd-supplements: TOTAL=10 MATCH=10 STALE=0 — PASS
+- domain-spec shards: TOTAL=15 MATCH=15 STALE=0 — PASS
+- architecture sections (excluding new ADR files, which have no inputs): STALE detected: module-criticality.md (inputs: ARCH-INDEX+module-decomp) → refreshed to db6f656; verification-coverage-matrix.md (inputs: VP-INDEX+module-decomp+module-criticality) → cascade refresh to 06eaf17
+- Final census: TOTAL STALE=0 — PASS
+
+### Archived Current Phase Steps Row (displaced from STATE.md at burst 229)
+
+| Burst 224 — P1D-129 fix-burst COMPLETE (all 12 closed); ADR-014 v1.3 (Decision 5 halt-and-escalate canon) + ADR-015 v1.2 + ADR-016 v1.2; VP-006 v1.2/VP-009 v1.2/VP-010 v1.1 (D21 VP block minted); 7 BC files v1.1 (SS-18..22 + BC-2.04.008 + BC-2.15.006); error-taxonomy v1.28 (E-VS-004; 96 codes); test-vectors v2.1 (609 TVs; 37 new); hash sweep STALE→0 (3 passes); burst-218 row archived | architect + PO + state-manager | COMPLETE | P1D-129 fix-burst: all 12 findings CLOSED. ADR-014 v1.3 Decision 5 halt-and-escalate; ADR-015 v1.2 TrustLevel scaffold; ADR-016 v1.2 LcSerializable round-trip. VP-006 v1.2/VP-009 v1.2/VP-010 v1.1 (3 D21 Kani VPs). BC-2.18.001-003/2.19.001-005/2.20.001/BC-2.21.001-003/BC-2.22.001 v1.1. error-taxonomy v1.28 (E-VS-004 VectorStoreSimilarityFailed minted). test-vectors v2.1 (609 TVs; 37 new D21 vectors). Hash sweep STALE→0. |
+
+### Convergence Status After Burst 229
+
+- Phase 1d passes: 132 (128 pre-D21 + 4 post-D21 expanded-perimeter passes; NOT CLEAN at last pass)
+- Fix bursts: 132 total
+- Phase 1 status: D23 architecture layer COMPLETE; dep research (similar+regex) in flight; 0/3 on D23 perimeter
+- Trajectory tail: →12→9→7→8→[D-23 expansion; 0/3 RESET; architecture layer complete]
+- NEXT: burst 230 BA D23 CAP layer → architect dep-pins patch → PO BCs → adversary pass D-133 → cascade toward 3/3 CLEAN(strict) → check-input-drift → Phase 1 HUMAN GATE

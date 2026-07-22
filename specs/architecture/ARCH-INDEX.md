@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.5"
+version: "1.6"
 status: active
 producer: architect
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -14,8 +14,9 @@ inputs:
 input-hash: "456cab5"
 traces_to: prd.md
 deployment_topology: single-service
-decisions: [D4, D6, D9, D11, D13, D17, D20, D21]
+decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.6 (D23/2026-07-22): D23 architecture layer — add SS-23 (First-Party Tool Library, ferrochain-tools crate #21); ADR registry 17→20 (ADR-018 per-tool-call approval hook, ADR-019 rolling context compaction, ADR-020 first-party tool library); Canonical Crate Roster 20→21 (+ferrochain-tools); SS-15 wave 2→1 (CAP-017 D23 item 3); SS-16 wave 2→1 (CAP-018 D23 item 4); VP table updated to reflect current VP-INDEX v1.4 (10 VPs, 5 Kani P0, 5 P1); VP-011/012/013 D23 candidate anchors noted; fix stale Document Map ADR count (was 13, actually 17 post-D21, now 20 post-D23); fix stale VP total in VP section header (was 5, now 10)."
   - "1.5 (D21/2026-07-20): ecosystem-parity scope expansion — add SS-18 (Prompt Templates, ferrochain-prompts), SS-19 (LC Serialization, ferrochain-core), SS-20 (Document Retrieval, ferrochain-core + ferrochain-vectorstores), SS-21 (VectorStore Abstraction, ferrochain-vectorstores), SS-22 (Embeddings, ferrochain-core + providers); Canonical Crate Roster 18→20 (+ferrochain-prompts +ferrochain-vectorstores); ADR registry 13→17 (ADR-014 VectorStore+Retriever, ADR-015 PromptInjectionSafety, ADR-016 lc-JSON safety, ADR-017 Embeddings); VP candidates noted (no new VP files yet)."
   - "1.4 (provenance-fix-169/2026-07-17): remove .factory/STATE.md from inputs (not a genuine spec-content input; D-NNN decisions are baked-in stable facts per PO corpus adjudication)."
   - "1.3 (F-P72-04/ADR-013): add ADR-013 (mcp::server module placement) to ADR registry; update SS-09 D20 capability note to attribute mcp::server to ADR-013 (not ADR-012); ADR count 12→13."
@@ -42,7 +43,7 @@ changelog:
 | Tooling Selection | tooling-selection.md | formal-verifier | Kani, cargo-fuzz, cargo-mutants, proptest versions + config |
 | Verification Coverage Matrix | verification-coverage-matrix.md | consistency-validator | VP-to-module coverage status |
 
-**ADRs:** `.factory/specs/architecture/decisions/` — 13 files (ADR-001 to ADR-013)
+**ADRs:** `.factory/specs/architecture/decisions/` — 20 files (ADR-001 to ADR-020)
 
 **Module Criticality:** `.factory/specs/module-criticality.md`
 
@@ -77,24 +78,27 @@ changelog:
 | SS-12 | Durable-Run HTTP Server | 2.12 | ferrochain-server | BC-2.12.001–007 | 1 |
 | SS-13 | Sandboxed Tool Execution | 2.13 | ferrochain-sandbox | BC-2.13.001–007 | 1 |
 | SS-14 | Typed Error Taxonomy | 2.14 | ferrochain-core | BC-2.14.001–006 | 1 |
-| SS-15 | Long-Horizon Memory | 2.15 | ferrochain-memory | BC-2.15.001–006 | 2 |
-| SS-16 | Tool Retry + Circuit Breaker | 2.16 | ferrochain-core | BC-2.16.001–003 | 2 |
+| SS-15 | Long-Horizon Memory | 2.15 | ferrochain-memory | BC-2.15.001–006 | 1 |
+| SS-16 | Tool Retry + Circuit Breaker | 2.16 | ferrochain-core | BC-2.16.001–003 | 1 |
 | SS-17 | Formal Verification Pipeline | 2.17 | xtask, ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox | BC-2.17.001–002 | 6 |
 | SS-18 | Prompt Templates | 2.18 | ferrochain-prompts | BC-2.18.001–TBD | 2 |
 | SS-19 | LC Serialization / Round-Trip Registry | 2.19 | ferrochain-core | BC-2.19.001–TBD | 2 |
 | SS-20 | Document Retrieval | 2.20 | ferrochain-core, ferrochain-vectorstores | BC-2.20.001–TBD | 2 |
 | SS-21 | VectorStore Abstraction | 2.21 | ferrochain-vectorstores | BC-2.21.001–TBD | 2 |
 | SS-22 | Embeddings | 2.22 | ferrochain-core, ferrochain-openai, ferrochain-ollama | BC-2.22.001–TBD | 2 |
+| SS-23 | First-Party Tool Library | 2.23 | ferrochain-tools | BC-2.23.001–TBD | 1 |
 
 > **D20 Capability Additions (v1.2):** SS-09 adds CAP-021 (MCP server role) per ADR-013 — introduces `mcp::server` execution module in ferrochain-mcp; BC range extended from 001–005 to 001–007. SS-15 adds CAP-020 (self-improvement primitives) per ADR-012 — includes `SkillStore`, `MemoryWriteGuard` execution modules and `ContextMutationConfig` definitions; BC range extended from 001–003 to 001–006.
 
 > **D21 Capability Additions (v1.5):** SS-18 (Prompt Templates) via ADR-015 — ferrochain-prompts new crate; injection safety pure-core guard. SS-19 (LC Serialization) via ADR-016 — core::serializable in ferrochain-core; inventory-based static registry; 141 core entries + feature-gated partner registration. SS-20 (Document Retrieval) via ADR-014 — Retriever trait + Document type in ferrochain-core; VectorStoreRetriever in ferrochain-vectorstores. SS-21 (VectorStore Abstraction) via ADR-014 — ferrochain-vectorstores new crate; in-memory backend + MMR. SS-22 (Embeddings) via ADR-017 — Embeddings trait in ferrochain-core; impls in ferrochain-openai + ferrochain-ollama (ferrochain-anthropic excluded: no embedding API). BC ranges TBD pending BA CAP authoring.
 
+> **D23 Capability Additions (v1.6):** SS-23 (First-Party Tool Library) via ADR-020 — ferrochain-tools new crate (crate #21); tools::fs (ReadFileTool/WriteFileTool/EditFileTool/ListDirTool), tools::shell (BashTool), tools::search (GrepTool). SS-05 (HITL) extended with per-tool-call PreToolCallHook API per ADR-018 — sub-node granularity HITL (PreToolCallHook trait, PreToolDecision enum). SS-10 (Budget Governance) extended with rolling compaction primitive per ADR-019 — CompactionTrigger/CompactionPolicy/CompactionSummary types in core::budget; compaction engine in graph::budget. SS-15 (Long-Horizon Memory) promoted Wave 2→1 (CAP-017 multi-session memory, D23 item 3). SS-16 (Tool Retry + Circuit Breaker) promoted Wave 2→1 (CAP-018 tool retry, D23 item 4). BC ranges TBD pending BA CAP authoring + PO BC authoring.
+
 ## Canonical Crate Roster (Source of Truth)
 
 > **Authoritative.** All other documents (ADR-007, system-overview, dependency-graph) derive
 > from this table. Derivation: D6 base (9) + D1 (mcp, standard-tests) + D13 (server)
-> + P2-05 (sandbox, memory) + ADR-008 (macros) + D17-Q5 (3 × -sdk) + D21 (prompts, vectorstores) = **20 published crates**.
+> + P2-05 (sandbox, memory) + ADR-008 (macros) + D17-Q5 (3 × -sdk) + D21 (prompts, vectorstores) + D23 (tools) = **21 published crates**.
 
 | # | Crate | Origin | Wave | Published |
 |---|-------|--------|------|-----------|
@@ -118,9 +122,10 @@ changelog:
 | 18 | ferrochain-ollama-sdk | D17-Q5 | 2 | YES |
 | 19 | ferrochain-prompts | D21/ADR-015 | 2 | YES |
 | 20 | ferrochain-vectorstores | D21/ADR-014 | 2 | YES |
+| 21 | ferrochain-tools | D23/ADR-020 | 1 | YES |
 | — | xtask | D12 | — | NO (workspace binary) |
 
-R6 namespace reservation: publish-all.sh must cover all 20 published crates before public announcement.
+R6 namespace reservation: publish-all.sh must cover all 21 published crates before public announcement.
 
 ## ADR Registry
 
@@ -143,15 +148,25 @@ R6 namespace reservation: publish-all.sh must cover all 20 published crates befo
 | ADR-015 | Prompt Template Rendering and Injection Safety (D21, SECURITY-CRITICAL) | accepted — D21 authority | — |
 | ADR-016 | lc-JSON Round-Trip and Deserialization Safety (D21, SECURITY-CRITICAL) | accepted — D21 authority | — |
 | ADR-017 | Embeddings Trait and Provider Integration (D21) | accepted — D21 authority | — |
+| ADR-018 | Per-Tool-Call Approval Hook (D23) | accepted — D23 authority | — |
+| ADR-019 | Rolling Context Compaction Primitive (D23) | accepted — D23 authority | — |
+| ADR-020 | First-Party Tool Library (D23) | accepted — D23 authority | — |
 
 ## Verification Properties (VP-INDEX)
 
-5 VPs total (3 Kani P0 + 2 integration P1):
+10 VPs total (5 Kani P0 + 2 proptest P1 + 2 integration P1 + 1 Kani P1 — see VP-INDEX v1.4):
 
-| VP | BC Anchor | Module | Tool | Status |
-|----|-----------|--------|------|--------|
-| VP-001 | BC-2.03.001 (BSP determinism) | ferrochain-graph / bsp-engine | Kani | draft |
-| VP-002 | BC-2.04.006 (session tenancy) | ferrochain-checkpoint / session-index | Kani | draft |
-| VP-003 | BC-2.13.004 (workspace confinement) | ferrochain-sandbox / path-guard | Kani | draft |
-| VP-004 | BC-2.09.004 (MCP ToolException) | ferrochain-mcp / mcp-adapter | integration | draft |
-| VP-005 | BC-2.09.005 (MCP no live connections) | ferrochain-mcp / mcp-client | integration | draft |
+| VP | BC Anchor | Module | Tool | Priority | Status |
+|----|-----------|--------|------|----------|--------|
+| VP-001 | BC-2.03.001 (BSP determinism) | ferrochain-graph / bsp-engine | Kani | P0 | draft |
+| VP-002 | BC-2.04.006 (session tenancy) | ferrochain-checkpoint / session-index | Kani | P0 | draft |
+| VP-003 | BC-2.13.004 (workspace confinement) | ferrochain-sandbox / path-guard | Kani | P0 | draft |
+| VP-004 | BC-2.09.004 (MCP ToolException) | ferrochain-mcp / mcp-adapter | integration | P1 | draft |
+| VP-005 | BC-2.09.005 (MCP no live connections) | ferrochain-mcp / mcp-client | integration | P1 | draft |
+| VP-006 | BC-2.18.004 (injection_guard fail-closed) | ferrochain-prompts / injection_guard | Kani | P1 | draft |
+| VP-007 | BC-2.19.001 (serializable round-trip) | ferrochain-core / serializable | proptest | P1 | draft |
+| VP-008 | BC-2.22.001 (embeddings dimension parity) | ferrochain-core / embeddings | proptest | P1 | draft |
+| VP-009 | BC-2.21.003 (zero-norm guard fail-closed) | ferrochain-vectorstores / vectorstores-similarity | Kani | P0 | draft |
+| VP-010 | BC-2.19.005 (allowlist rejects unregistered) | ferrochain-core / serializable-reviver | Kani | P0 | draft |
+
+> **D23 VP Candidates (not yet minted):** VP-011 (graph::hitl PreToolCallHook fail-closed dispatch — Kani P0 candidate); VP-012 (graph::budget compaction invariants — Kani/proptest P1 candidate); VP-013 (ferrochain-tools path-guard parity with sandbox — Kani P1 candidate). To be minted at burst 229 completion or PO BC authoring gate.

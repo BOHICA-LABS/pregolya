@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.9"
+version: "1.10"
 status: active
 producer: architect
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
 input-hash: "a5d98b6"
 traces_to: ARCH-INDEX.md
-decisions: [D17, D21]
+decisions: [D17, D21, D23]
 changelog:
+  - "1.10 (D23/2026-07-22): Add 3 new Effectful Shell rows: tools::fs, tools::shell, tools::search (ferrochain-tools crate #21, SS-23, ADR-020). Add 1 new Boundary row: graph::hitl (pre-tool dispatch) — pure PreToolDecision routing + effectful PreToolCallHook::pre_invoke dispatch (ADR-018). Fix stale intro count: 49→53 criticality-universe modules (50 pre-D23 + 3 new tools, correcting 1-off from burst-224 that added vectorstores::similarity without updating prose). Pure Core 31 (unchanged) + Effectful Shell 35 (+3) + Boundary 12 (+1) = 78 total."
   - "1.9 (burst-226/2026-07-21): F-P131-05 sibling sweep — prompts::injection_guard Pure Core row: replace 'checks substituted variable's ProvenanceTag' with 'checks substituted variable's TrustLevel' per ADR-015 v1.3 adjudication; TrustLevel is SS-18-local type in prompts::template, distinct from core::guardrail::ProvenanceTag (SS-11). F-P131-01 sibling sweep — core::retriever Boundary row: replace monolithic 'Fail → propagate Err' with severity-bifurcated description: Critical → Err(E-CORE-008) batch aborts (BC-2.11.005 PC4); non-Critical → error-entry Document substituted, batch continues (BC-2.11.005 PC5)."
   - "1.8 (burst-225/2026-07-21): F-P130-01 sibling sweep — correct core::guardrail Pure Core row: GuardrailHook method updated from wrong sync `fn check(&self, boundary: BoundaryType, docs: &[Document]) → Result<(), FerrochainError>` to canonical `async fn evaluate(&self, content: IngressContent, provenance_tag: ProvenanceTag) -> GuardrailResult` per interface-definitions.md §GuardrailHook (BC-2.11.002..006 authority); full type set listed (GuardrailResult, IngressContent, GuardrailSeverity, BoundaryType). Correct core::retriever Boundary row: rag_ingress description updated from sync `guardrail.check(BoundaryType::RAGRetrieval, &docs)` batch call to async per-document `guardrail.evaluate(IngressContent::RagChunk(...), provenance_tag).await` calls per BC-2.11.003 PC1/PC5; all three GuardrailResult arms noted. Classification unchanged (both remain Pure Core / Boundary Module respectively)."
   - "1.7 (burst-224/2026-07-21): F-P129-11 — split vectorstores::mmr into vectorstores::similarity (new Pure Core; VP-009 Kani P0 target; cosine_similarity shared primitive) + vectorstores::mmr (Pure Core; MMR-only algorithm; calls vectorstores::similarity; VP cleared). F-P129-09 — add core::guardrail Pure Core row (definitions-only: GuardrailHook trait + BoundaryType enum; ADR-014 Decision 6); relocate core::retriever from Pure Core → Boundary (GuardedDocuments::rag_ingress dispatches to injected &dyn GuardrailHook — pure routing gate delegating to effectful impl; ADR-014 Decision 6 / DI-012). Pure Core 30→31 (add similarity +1, add guardrail +1, remove retriever -1); Boundary 10→11 (add retriever). Total 72→74."
@@ -38,8 +39,9 @@ changelog:
 Every ferrochain module appears in exactly one of three columns: **Pure Core** (deterministic,
 no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not Kani-provable),
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
-effectful dependency). All 49 criticality-universe modules plus structural and definitions-only
-modules are enumerated in `## Purity Classification` below (74 total rows after burst-224 expansion). Enforcement invariants follow
+effectful dependency). All 53 criticality-universe modules plus structural and definitions-only
+modules are enumerated in `## Purity Classification` below (78 total rows after D23 expansion:
+31 Pure Core + 35 Effectful Shell + 12 Boundary). Enforcement invariants follow
 in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -127,6 +129,9 @@ Kani is not applicable here.
 | `ollama::embeddings` | ferrochain-ollama | reqwest HTTP call to `localhost:<port>/api/embeddings`; no API key; 30s timeout (ADR-017 / DI-009) | Integration |
 | `vectorstores::memory` | ferrochain-vectorstores | In-memory VectorStore backend; `RwLock<Vec<(Document, Vec<f32>)>>` interior mutability; `Arc<dyn Embeddings>` injection for embed calls (which are async I/O); async `add_texts` + `similarity_search` (ADR-014 / SS-21) | Unit + Integration |
 | `vectorstores::retriever` | ferrochain-vectorstores | `VectorStoreRetriever` dispatches to `&dyn VectorStore` (async I/O); impl `Retriever`; bridge from Retriever trait to VectorStore methods (ADR-014 / SS-20) | Integration |
+| `tools::fs` | ferrochain-tools | OS filesystem I/O: `ReadFileTool` (file read syscall), `WriteFileTool` (file write/create syscall), `EditFileTool` (read + string-replace + write), `ListDirTool` (readdir syscall); `PathGuard` validation is pure path arithmetic but OS `canonicalize()` is effectful; all operations produce observable filesystem state changes (ADR-020 / SS-23) | Integration |
+| `tools::shell` | ferrochain-tools | subprocess execution via ferrochain-sandbox WASM or container backend; stdout/stderr/exit-code capture; wall-clock timeout (tokio timer); observable process-tree state (ADR-020 / SS-23) | Integration |
+| `tools::search` | ferrochain-tools | in-process `regex` crate pattern matching over OS filesystem; directory traversal is I/O (readdir syscall chain); CPU-bound regex matching sits atop effectful directory walk; `PathGuard` validation before traversal (ADR-020 / SS-23) | Integration |
 
 ### Boundary Modules (Pure Logic + Effectful Dispatch)
 
@@ -147,6 +152,7 @@ dispatch is integration-tested.
 | `core::serializable` | ferrochain-core | Pure part: `LcSerializable` trait definitions; `Reviver` allowlist lookup (pure HashMap check); secret-key stripping from kwargs (pure map operation); E-SRLZ-001/002 error construction | Effectful part: registered constructor functions (`fn(Map) -> Box<dyn Any>`) are called at deserialization time — these constructors may allocate, decode, or otherwise have side effects; `inventory::iter` traversal at startup populates `OnceLock` (ADR-016 / SS-19) |
 | `vectorstores::store` | ferrochain-vectorstores | Pure part: `VectorStore` trait definition + `MetadataFilter` validation logic; `as_retriever()` returns concrete `VectorStoreRetriever` (pure construction) | Effectful part: `add_texts`, `similarity_search`, `delete` and all other async instance methods dispatch to the concrete backend impl (e.g., `vectorstores::memory`, or a community adapter) (ADR-014 / SS-21) |
 | `core::retriever` | ferrochain-core | Pure part: `Retriever` trait definition (zero-LOC pure interface); `GuardedDocuments` newtype (pure data wrapper — `Vec<Document>` private field, no public constructor, `#[non_exhaustive]` on inner); `GuardedDocuments::rag_ingress(docs: Vec<Document>, guardrail: &dyn GuardrailHook) -> Result<GuardedDocuments, FerrochainError>` **`async fn`** — per-document routing gate: for each Document calls `guardrail.evaluate(IngressContent::RagChunk(serde_json::to_value(&doc)?), ProvenanceTag { boundary_type: BoundaryType::RAGRetrieval, ingress_id, sequence_position: i }).await`; N documents → N evaluate calls (BC-2.11.003 PC5); dispatches on GuardrailResult: Pass → include; Fail Critical severity → propagate Err(E-CORE-008) batch aborts (BC-2.11.005 PC4); Fail non-Critical severity → substitute error-entry Document at position i, batch continues (BC-2.11.005 PC5); Transform → include deserialized replacement Document (BC-2.11.003 PC4) | Effectful part: `guardrail.evaluate()` dispatches to an injected `&dyn GuardrailHook` implementation — impls may log, call external policy services, or scan content; DI-012 enforcement by type: graph nodes that inject retrieved docs into context accept `&GuardedDocuments`, making bypass a compile-time type error (ADR-014 Decision 6 / BC-2.20.002 / DI-012) |
+| `graph::hitl (pre-tool dispatch)` | ferrochain-graph | Pure part: `pre_tool_dispatch` routing function — pure pattern-match on `PreToolDecision` variant; fail-closed: Deny variant never allows tool invocation (VP-011 Kani P0 candidate); `Edit` variant substitutes caller-supplied `modified_args` (pure struct replacement); `Approve` variant passes call through unchanged; all routing decisions are deterministic given the `PreToolDecision` value (ADR-018 Decision 3) | Effectful part: `PreToolCallHook::pre_invoke(preview: &ToolCallPreview) -> PreToolDecision` — user-injected async hook impl may present UI, call external approval service, read policy store, or emit `tool_approval_request` streaming event; `PendingHumanApproval` variant dispatches `interrupt(ToolApprovalRequest{..})` reusing BC-2.05.001 machinery (ADR-018 Decisions 1+4) |
 
 > **Storage-trait Boundary pattern:** `checkpoint::saver` (SS-04) and `memory::store` (SS-15)
 > both follow the same canonical pattern: the trait module defines pure validation logic + an

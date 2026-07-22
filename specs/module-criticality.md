@@ -1,20 +1,21 @@
 ---
 document_type: module-criticality
 level: L3
-version: "1.4"
+version: "1.5"
 status: active
 producer: architect
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
-input-hash: "ac2e35a"
+input-hash: "db6f656"
 traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "1.5 (burst-229/2026-07-22): Input-hash cascade refresh — ARCH-INDEX.md v1.6 + module-decomposition.md v1.15 both changed in burst 229 (D23 architecture layer: ADR-018/019/020, SS-23 ferrochain-tools crate #21, Wave-1 promotions SS-15/SS-16). No content rows added (ferrochain-tools criticality rows deferred to architect D23 content authoring). Hash: ac2e35a → db6f656."
   - "1.4 (burst-224/2026-07-21): D21+burst-224 backfill — add 6 criticality rows missing since burst-223 (D21 module universe not propagated to this file). CRITICAL +2: serializable-reviver (VP-010 Kani P0 / SS-19), vectorstores-similarity (VP-009 Kani P0 / SS-21 / burst-224 final name after F-P129-11). HIGH +3: injection_guard (VP-006 Kani P1 / SS-18), serializable (VP-007 proptest P1 / SS-19), embeddings (VP-008 proptest P1 / SS-22). MEDIUM +1: vectorstores-mmr (SS-21; MMR-only after VP-009 relocated to vectorstores-similarity in burst-224). Summary 35→41. Definitions-only D21 artifacts (core::guardrail) excluded per no-row precedent (ADR-014 Decision 6 / ADR-009 Option 3). Input-hash refresh pending compute-input-hash (module-decomposition.md v1.12 changed in same burst)."
   - "1.3 (D20/CAP-021): add mcp-server MEDIUM row (+1 execution module; CAP-021 MCP server role, inbound tool-call dispatch). Summary 34→35: MEDIUM 10→11 total."
   - "1.2 (D20/ADR-012): add memory::write_guard HIGH row (+1 execution module per ADR-012 Decision 4 gate #25 ruling; write-path injection scanning enforcement, security-significant). Summary 33→34: HIGH 12→13 total. Definitions-only D20 artifacts (core::context_mutation, core::write_guard, memory::skills) excluded per no-row precedent (ADR-009 Option 3 / D18-P61-C)."

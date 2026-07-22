@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.14"
+version: "1.15"
 status: active
 producer: architect
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
 input-hash: "9bdb30d"
 traces_to: ARCH-INDEX.md
-decisions: [D4, D6, D7, D12, D13, D17, D20, D21]
+decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.15 (D23/2026-07-22): Add ferrochain-tools crate #21 section (SS-23): tools::fs, tools::shell, tools::search (all MEDIUM). Extend graph::hitl row for ADR-018 PreToolCallHook types. Extend core::budget definitions note for D23 compaction types (CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary — ADR-019). Extend graph::budget row for compaction engine dispatch. Note Wave 1 promotions: core::retry (SS-16) and ferrochain-memory (SS-15) per D23 items 3+4. Module universe 50→53 (+tools::fs +tools::shell +tools::search; definitions-only additions follow no-criticality-row precedent per ADR-009)."
   - "1.14 (burst-226/2026-07-21): F-P131-05 sibling sweep — prompts::injection_guard row: replace 'untrusted ProvenanceTag in TrustRequired slot' with 'TrustLevel::Untrusted in TrustRequired slot'; add note that TrustLevel is SS-18-local type distinct from core::guardrail::ProvenanceTag (SS-11) per ADR-015 v1.3 adjudication."
   - "1.13 (burst-225/2026-07-21): F-P130-01 sibling sweep — correct core::guardrail comment block: GuardrailHook method updated from wrong sync `fn check` to canonical `async fn evaluate` per interface-definitions.md §GuardrailHook; full type list (GuardrailHook, GuardrailResult, IngressContent, GuardrailSeverity, BoundaryType); rag_ingress note updated: async per-document evaluate calls per BC-2.11.003 PC5."
   - "1.12 (burst-224/2026-07-21): F-P129-11 — add vectorstores::similarity module (shared cosine_similarity primitive, VP-009 Kani target); update vectorstores::mmr description to MMR-selection-only (no longer hosts cosine_similarity); update VP anchors note. F-P129-09 — add core::guardrail definitions module (GuardrailHook trait + BoundaryType enum, promoted to ferrochain-core consistent with trait-in-core precedent); add GuardedDocuments type note to core::retriever (rag_ingress enforcement gate). Module universe 49→50 (+vectorstores::similarity MEDIUM; core::guardrail definitions-only, no criticality row per ADR-009 precedent)."
@@ -51,7 +52,7 @@ credential security primitives, streaming event types.
 | `core::credentials` | API key newtypes with redacted Debug; no Serialize; no Deref<Target=str> | CRITICAL | SS-14 |
 | `core::events` | Streaming event taxonomy types (RunStart/Stream/End, NodeStart/Stream/End, etc.) | HIGH | SS-06 |
 | `core::config` | `RunnableConfig`, `ChatConfig` structs | MEDIUM | SS-01 |
-| `core::retry` | `ToolRetryPolicy` (keyed by tool_name; P-71 ADOPT), `CircuitBreaker` state machine, `RetryPolicy` with finite `global_limit: Option<NonZeroU32>`; shared combinator — provider crates and graph both route through this | MEDIUM | SS-16 |
+| `core::retry` | `ToolRetryPolicy` (keyed by tool_name; P-71 ADOPT), `CircuitBreaker` state machine, `RetryPolicy` with finite `global_limit: Option<NonZeroU32>`; shared combinator — provider crates and graph both route through this; **D23 item 4 (CAP-018): promoted from Wave 2 → Wave 1** | MEDIUM | SS-16 |
 
 > **Budget definitions (SS-10, trait-definitions-only — ADR-009 Option 3):** ferrochain-core hosts
 > the DEFINITIONS for budget governance: `BudgetPolicy` trait, `PolicyDecision` enum (Allow/Escalate/Deny),
@@ -66,6 +67,16 @@ credential security primitives, streaming event types.
 > budget override field (F-P92-02, OPTION A); `None` inherits `GraphConfig::budget_config`; `Some(bc)`
 > overrides for that single run/resume. Used by `BudgetResume::Extend { new_ceiling }` to apply the
 > extended ceiling without mutating the graph-level config (BC-2.10.004 PC6, BC-2.10.003 PC7/TV-004).
+>
+> **D23 compaction additions (ADR-019):** `core::budget` gains four new definitions-only types:
+> `CompactionTrigger` enum (Disabled/OnWatermark{fraction: f32}/OnMessageCount{count: usize}/OnTokenCount{tokens: u64}),
+> `CompactionPolicy` trait (async `compact(&ConversationSnapshot, &RunContext) -> Result<CompactionSummary, FerrochainError>`),
+> `ConversationSnapshot` struct (turns: Vec<(usize, Message)>, token_estimate: u64), and `CompactionSummary`
+> struct (summary_text: String, compacted_range: RangeInclusive<usize>). All definitions-only; execution
+> lives in `graph::budget` (compaction engine). `BudgetConfig` gains two new fields:
+> `compaction_trigger: CompactionTrigger` (default: Disabled) and
+> `compaction_policy: Option<Arc<dyn CompactionPolicy>>` (None = DefaultSummarizationPolicy). No new
+> criticality-counted module rows (definitions-only precedent per ADR-009 Option 3).
 
 > **Self-improvement definitions (SS-01/SS-15, trait-definitions-only — ADR-012 D20):** ferrochain-core
 > hosts DEFINITIONS for the three D20 self-improvement primitives. These are pure types and traits with
@@ -99,9 +110,9 @@ content provenance.
 | `graph::definition` | `StateGraph` builder, node/edge registration, conditional routing | HIGH | SS-02 |
 | `graph::channels` | LastValue / Append / BarrierValue / NamedBarrierValue / EphemeralValue reducers | HIGH | SS-02 |
 | `graph::bsp_engine` | Super-step executor: task dispatch, versions_seen / task-identity sort, InvalidUpdateError | CRITICAL | SS-03 |
-| `graph::hitl` | Interrupt queue (FIFO), suspend/resume protocol, risk-tiered classification | CRITICAL | SS-05 |
+| `graph::hitl` | Interrupt queue (FIFO), suspend/resume protocol, risk-tiered classification; `PreToolCallHook` trait + `ToolCallPreview` + `PreToolDecision` (Approve/Deny/Edit/PendingHumanApproval) + `ToolApprovalRequest` + `AlwaysApprovePolicy` (ADR-018); `pre_tool_dispatch` routing function — fail-closed Deny invariant (VP-011 candidate); `GraphConfig.pre_tool_hook: Option<Arc<dyn PreToolCallHook>>` hook registration | CRITICAL | SS-05 |
 | `graph::scheduler` | Orchestrator loop and/or actor-scheduler (decision pending ADR-001 D9 gate) | CRITICAL | SS-03 |
-| `graph::budget` | `BudgetEngine` dispatch (allow/escalate/deny via `BudgetPolicy` trait from ferrochain-core), `EvidenceJournal`, ceiling halt/escalate — trait definitions live in `core::budget` per ADR-009 Option 3 | HIGH | SS-10 |
+| `graph::budget` | `BudgetEngine` dispatch (allow/escalate/deny via `BudgetPolicy` trait from ferrochain-core), `EvidenceJournal`, ceiling halt/escalate — trait definitions live in `core::budget` per ADR-009 Option 3; compaction engine: evaluates `CompactionTrigger` after each super-step, builds `ConversationSnapshot` via `CheckpointSaver::search_history` (BC-2.04.008), calls `CompactionPolicy::compact()`, applies mid-run message-window mutation, appends `CompactionEvent` to `EvidenceJournal`, emits `compaction_event` streaming event (ADR-019) | HIGH | SS-10 |
 | `graph::provenance` | `ProvenanceTag` attachment at ingress boundaries, `GuardrailHook` dispatch | HIGH | SS-11 |
 | `graph::event_emitter` | Streaming event emission; run_id + parent_ids correlation | MEDIUM | SS-06 |
 
@@ -190,6 +201,7 @@ The SDK crates have no ferrochain-core dep and are publishable standalone. Enfor
 
 Responsibilities: long-horizon memory persistence (KV + vector), GDPR erasure protocol,
 search (keyword / vector / hybrid). Canonical trait: `MemoryStore`.
+**D23 item 3 (CAP-017): promoted from Wave 2 → Wave 1.**
 
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
@@ -346,3 +358,37 @@ ferrochain-anthropic is EXCLUDED — Anthropic provides no public embeddings API
 > **NE anchors (both embedding modules):** DI-009 (mandatory timeout); DI-010 (OpenAI key is
 > `OpenAiApiKey` newtype with redacted Debug); DI-014 (batch failures return Err, not Vec::new()).
 > xtask `deny-client-new` CI gate enforces the reqwest timeout requirement at the workspace level.
+
+## ferrochain-tools (SS-23) — MEDIUM
+
+Responsibilities: first-party file I/O, bash execution, and text-search tools;
+implements the `Tool` trait (ferrochain-core) with sandbox path-guard integration
+(ferrochain-sandbox) and risk-tier defaults (ferrochain-graph::hitl::ActionRisk).
+Crate #21. **D23 item 5 / Wave 1.**
+
+| Module | Responsibility | Criticality | SS |
+|--------|---------------|-------------|-----|
+| `tools::fs` | `ReadFileTool`, `WriteFileTool`, `EditFileTool`, `ListDirTool` — all path-guarded via `sandbox::path_guard`; `ReadFileTool` enforces `max_bytes` limit (default 1 MiB; E-TOOLS-002 on excess); `EditFileTool` exact-string replace (E-TOOLS-003 on old_string not found); opt-in fuzzy fallback via `EditConfig::fuzzy_threshold` with `similar` crate; `WriteFileTool`/`EditFileTool` default `ActionRisk::High`; `ReadFileTool`/`ListDirTool` default `ActionRisk::ReadOnly` (ADR-020 / SS-23) | MEDIUM | SS-23 |
+| `tools::shell` | `BashTool` — subprocess execution via ferrochain-sandbox backend (WASM or container); stdout/stderr/exit-code capture in `BashOutput`; `max_output_bytes` truncation with `BashOutput::truncated: bool` (E-TOOLS-005 advisory); 30s timeout default (E-TOOLS-004 on timeout); default `ActionRisk::High`; minimum risk floor `ActionRisk::Medium` — configuration error if caller attempts `ReadOnly` or `Low` (E-TOOLS-007) (ADR-020 / SS-23) | MEDIUM | SS-23 |
+| `tools::search` | `GrepTool` — in-process regex search via `regex` crate; path-guarded directory traversal via `sandbox::path_guard`; `max_results` cap (E-TOOLS-006 advisory); default `ActionRisk::ReadOnly`; accepts `{pattern, path, recursive, case_insensitive, max_results}` (ADR-020 / SS-23) | MEDIUM | SS-23 |
+
+**ADR anchor:** ADR-020 governs crate placement (separate from ferrochain-sandbox), dependency
+graph (ferrochain-tools → ferrochain-sandbox/core/graph/macros, one-way; no reverse dep),
+risk tier defaults, retry classification, and `E-TOOLS-*` error namespace.
+
+**VP anchors:**
+- VP-011 candidate (Kani P0) — `graph::hitl::pre_tool_dispatch`: fail-closed Deny; Deny
+  never allows tool invocation (ADR-018 Decision 3).
+- VP-012 candidate (integration P1) — interrupt/resume cycle with PreToolCallHook denial
+  completes without deadlock (ADR-018 Decision 4).
+- VP-013 candidate (Kani P0) — `BashTool::set_risk(ReadOnly)` and `set_risk(Low)` always
+  return `Err(E-TOOLS-007)`, never succeed (ADR-020 Decision 3 / BashTool risk floor).
+
+**Dependency research flags (ADR-020 Decision 7):**
+- `similar` crate (dtolnay) — fuzzy-match fallback for EditFileTool; confirm current stable
+  version + MIT/Apache-2.0 license compatibility.
+- `regex` crate — GrepTool in-process pattern engine; confirm presence in workspace
+  `[workspace.dependencies]` or add.
+
+**BC anchors:** TBD — PO to author SS-23 behavioral contracts (prerequisite for Phase 2
+story decomposition). `E-TOOLS-*` error namespace (PO obligation: amend error-taxonomy.md).

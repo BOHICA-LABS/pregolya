@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "1.8"
+version: "1.9"
 status: active
 producer: architect
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "52d04b1"
+input-hash: "06eaf17"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.9 (burst-229/2026-07-22): Input-hash cascade refresh — module-decomposition.md v1.15 changed (D23: SS-23 ferrochain-tools + graph::hitl/budget D23 types) + module-criticality.md v1.5 cascade (ARCH-INDEX.md v1.6 + module-decomposition.md v1.15). Hash: 52d04b1 → 06eaf17. No VP table changes (D23 VP candidates not yet minted; pending PO BC authoring)."
   - "1.8 (burst-224/2026-07-21): Fix Coverage by Criticality Tier MEDIUM count: 11 → 12 (vectorstores-mmr reclassified CRITICAL → MEDIUM when VP-009 moved to vectorstores-similarity; F-P129-11 reclassification, not an addition). Fix tier membership description in header note. Refresh input-hash cascade: 8bc637f → 78d9c11 (module-decomposition.md v1.12) → c766473 final (module-criticality.md v1.4 D21+burst-224 backfill in same burst)."
   - "1.7 (burst-224/2026-07-21): F-P129-11 — VP-009 module renamed vectorstores-mmr → vectorstores-similarity in VP-to-Module table; Per-Module Coverage Status split into vectorstores-similarity (VP-009 Kani P0) + vectorstores-mmr (no Kani VP, caller of similarity). Totals unchanged (10 VPs, Kani 6). Propagates VP-INDEX v1.3 + module-decomposition v1.12."
   - "1.6 (burst-223/2026-07-21): D21 VP layer — add VP-006..010 to VP-to-Module table; add SS-18..22 module rows to Per-Module Coverage Status; update Totals 5→10 VPs, Kani 3→6, proptest 0→2; update Coverage by Criticality Tier to reflect new D21 modules."
