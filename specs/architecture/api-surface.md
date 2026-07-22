@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.7"
+version: "1.8"
 status: active
 producer: architect
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 changelog:
+  - "1.8 (burst-238/2026-07-23): F-P138-02 stale-handoff sweep — remove stale Note on api-surface.md §Error Type: 'ADR-010 amendment required to add TOOLS variant — architect task per error-taxonomy.md §TOOLS delegation note.' ADR-010 v1.3 (burst-232) already registered TOOLS as component 17; error-taxonomy.md §TOOLS delegation note was removed in v1.32 (burst-233 F-P133-09); TOOLS already listed as 17th component in the enum. Dangling cross-reference to removed delegation note deleted."
   - "1.7 (D23/2026-07-22): Add D23 API surfaces. (1) ferrochain-core Public Traits: +PreToolCallHook (SS-05, BC-2.05.007), +CompactionPolicy (SS-10, BC-2.10.005/006). (2) ferrochain-graph Public Types: StreamEvent BC range 001–002→001–006 + 15-variant count noted; +CompactionTrigger (SS-10, BC-2.10.005), +CompactionEvent (SS-10, BC-2.10.006/BC-2.06.006). (3) §Public Traits and Types (ferrochain-tools) added: ActionRisk, PreToolDecision, ToolCallPreview, PathGuard, ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool (VP-013), GrepTool. (4) Component enum 16→17 (+TOOLS); #[non_exhaustive] gate count 17→18. ADR-010 amendment delegated to architect."
   - "1.6 (D21/Batch-3b-i/2026-07-20): Component enum expanded 12→16 per ADR-010 v1.1. Added TMPL (ferrochain-prompts), SRLZ (ferrochain-core::serializable), VS (ferrochain-vectorstores), EMBED (ferrochain-core::embeddings) to Component list. #[non_exhaustive] gate count 13→17 (16 named variants + Custom = 17). Implementer updates ALL three gate locations (gate crate, expected count constant, expected symbol list) when creating ferrochain-core/src/error.rs at Wave 0 per CLAUDE.md non-exhaustive gate rule."
   - "1.5 (F-P115-02 ripple, 2026-07-19): Extend CheckpointSaver BC anchor range from BC-2.04.001–006 to BC-2.04.001–007. BC-2.04.007 is now a live anchor because the `put` method (added to the trait per F-P115-02 adjudication) carries BC-2.04.007 PC1/INV-1 encryption-parity obligations. Sweep: no method-count enumerations or get_next_version absence claims present in this file — api-surface.md delegates all signatures to interface-definitions.md."
@@ -158,6 +159,6 @@ cross-thread aggregate query for schedule-fired runs only.
 `FerrochainError { component: Component, category: Category, retry_hint: RetryHint, code: &'static str }`
 
 Authoritative list lives in `error-taxonomy.md` §Components; enum reproduced here for the FerrochainError type definition:
-`Component` = CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS (17 components as of D23; `#[non_exhaustive]` gate count 17→18: 17 named + `Custom`). Note: ADR-010 amendment required to add TOOLS variant — architect task per error-taxonomy.md §TOOLS delegation note.
+`Component` = CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS (17 components as of D23; `#[non_exhaustive]` gate count 17→18: 17 named + `Custom`).
 Full catalog: `prd-supplements/error-taxonomy.md`.
 RFC-7807 serialization: `FerrochainError::to_problem()` (BC-2.14.002). Note: corrected from `to_problem_detail()` (F-P25-04; BC-2.14.002 is authoritative for method name).

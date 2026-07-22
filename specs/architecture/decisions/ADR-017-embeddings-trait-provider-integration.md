@@ -5,10 +5,10 @@ adr_id: "017"
 slug: embeddings-trait-provider-integration
 title: "Embeddings Trait and Provider Integration: Async Dyn-Compatible Trait, Dimensionality Contract, and First-Party Provider Scope"
 status: accepted
-date: "2026-07-20"
+date: "2026-07-23"
 producer: architect
-timestamp: 2026-07-20T00:00:00Z
-version: "1.2"
+timestamp: 2026-07-23T00:00:00Z
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-22, SS-08]
 changelog:
+  - "1.3 (burst-238/2026-07-23): Stale-handoff sweep — remove stale 'VP-008 candidate' labels (two sites: §Dimensionality contract body paragraph, §Consequences bullets). VP-008 was seeded in burst-223 (D21, VP-INDEX v1.2, proptest P1). Replace with 'VP-008 (proptest P1, seeded burst-223)'."
   - "1.2 (burst-225/2026-07-21): F-P130-07 sibling sweep — correct stale E-EMBED-001 message prefix in §Dimensionality contract: `DimensionMismatch: ...` → `EmbeddingDimensionMismatch: ...` per error-taxonomy v1.29 (PO renamed prefix to distinguish from E-VS-002 which retains bare `DimensionMismatch:`)."
   - "1.1 (crates.io/2026-07-20): Add Ollama endpoint preference (prefer POST /api/embed, `input` field; /api/embeddings legacy fallback with `use_legacy_endpoint` toggle); note OpenAI model currency (text-embedding-3-small/large current, ada-002 legacy)."
   - "1.0 (D21/2026-07-20): Initial ADR — Embeddings trait in ferrochain-core (core::embeddings), async dyn-compatible shape, dimensionality contract, ferrochain-openai + ferrochain-ollama gain embeddings modules, ferrochain-anthropic excluded (no embedding API), ferrochain-vectorstores uses Embeddings for in-memory backend."
@@ -99,7 +100,7 @@ Violation of these invariants MUST return `Err(FerrochainError { category: VALID
 code: "E-EMBED-001", message: "EmbeddingDimensionMismatch: ..." })`. Returning a ragged result
 silently (wrong-length vectors in the output) violates DI-014 (no silent failures).
 
-VP-008 candidate: proptest property test that for any valid `Embeddings` impl, all
+VP-008 (proptest P1, seeded burst-223): proptest property test that for any valid `Embeddings` impl, all
 output vectors have the same length and `embed_query` length == `embed_documents` inner length.
 
 ### Batch error semantics
@@ -239,7 +240,7 @@ respective provider crates. An intermediary crate adds complexity with no benefi
 - ferrochain-anthropic gains NO embeddings module in v1.
 - ferrochain-vectorstores depends on ferrochain-core for `Arc<dyn Embeddings>` in its
   in-memory VectorStore backend constructor.
-- VP-008 candidate: proptest dimensionality invariant for any Embeddings impl.
+- VP-008 (proptest P1, seeded burst-223): proptest dimensionality invariant for any Embeddings impl.
 - Both `EmbeddingsOpenAI` and `EmbeddingsOllama` require `reqwest` with `rustls-tls`.
   They must NOT use `reqwest::Client::new()` without `.timeout()` (DI-009; xtask CI gate
   `deny-client-new` enforces this workspace-wide).

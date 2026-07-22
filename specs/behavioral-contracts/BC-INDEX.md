@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "2.4"
+version: "2.5"
 status: active
 producer: state-manager
 timestamp: 2026-07-22T00:00:00Z
@@ -9,6 +9,8 @@ project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
+changelog:
+  - "2.5 (burst-238/sweep/2026-07-22): Update VP-INDEX status note — 'VP-006–VP-010 pending architect authoring' was stale; VP-INDEX v1.2 (burst-223) registered VP-006–010 and VP-006.md–VP-010.md all exist. Note updated to reflect completed state."
 ---
 
 # BC-INDEX: ferrochain Behavioral Contracts
@@ -20,8 +22,8 @@ traces_to: .factory/specs/prd.md
 > SS-23 (First-Party Tools) added D23 first-class approval hook + compaction expansion (2026-07-22).
 > All BCs reside under `specs/behavioral-contracts/ss-NN/` per ARCH-INDEX Subsystem Registry.
 > VP-INDEX: 13 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
-> VP-006–VP-010 pending architect authoring — seeds assigned D21 burst;
-> VP-011–VP-013 seeds assigned D23 burst-231).
+> VP-006–VP-010 assigned VP-INDEX v1.2 (burst-223, 2026-07-21) and authored — VP-006.md–VP-010.md all complete;
+> VP-011–VP-013 seeds assigned D23 burst-232 and authored — VP-011.md–VP-013.md all complete).
 
 ## Summary
 

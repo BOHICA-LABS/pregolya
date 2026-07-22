@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.13"
+version: "1.14"
 status: active
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "e88d70f"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.14 (burst-238/2026-07-23): Stale-handoff sweep — remove stale 'VP-006 candidate' label on prompts::injection_guard Pure Core row; VP-006 was seeded in burst-223 (D21, VP-INDEX v1.2, Kani P1). Replace with 'VP-006 (Kani P1, seeded burst-223)'."
   - "1.13 (burst-236/F-P136-02/2026-07-23): Fix missing `run_ctx: &RunContext` parameter in `PreToolCallHook::pre_invoke` signature on graph::hitl Boundary row. Canonical signature per ADR-018 Decision 1 + BC-2.05.007 PC2 is `pre_invoke(&self, preview: &ToolCallPreview, run_ctx: &RunContext) -> PreToolDecision`; rendered form was truncated to `pre_invoke(preview: &ToolCallPreview) -> PreToolDecision`. Sibling sweep (TD-VSDD-060): module-decomposition.md graph::hitl row does not render pre_invoke signature (no fix needed); ADR-018 canonical signature correct (no fix needed); ADR-020 prose reference only, no parameter list (no fix needed); zero `graph::approval` occurrences in architecture layer (clean). Architecture-layer sweep: CLEAN."
   - "1.12 (burst-235/F-P135-05/2026-07-22): Add missing `sandbox::process` Effectful Shell row (ProcessBackend — BC-2.13.002, SS-13) — spawns OS subprocesses via `tokio::process::Command` with `.kill_on_drop(true)`; DI-015 co-enforcer (defense-in-depth); Effectful Shell because it directly interacts with the OS process tree. Iron Law gap: BC-2.13.002 is a full behavioral contract but the module had no purity classification row. Effectful Shell 35→36; total 78→79."
   - "1.11 (burst-233/2026-07-22): F-P133-07 sibling sweep (TD-VSDD-060) — remove stale 'VP-011 Kani P0 candidate' label in graph::hitl Boundary row (VP-011 seeded burst-232, Kani P0)."
@@ -84,7 +85,7 @@ side effects. Kani proofs operate here.
 | `prompts::template` | ferrochain-prompts | f-string engine: variable substitution is pure string iteration + format; `{var}` extraction at construction; `.partial()` builder returns new pure value (ADR-015 / SS-18) | — |
 | `prompts::chat_template` | ferrochain-prompts | `ChatPromptTemplate` message construction: given substituted variables, produces `PromptValue` with per-message `MessageProvenance`; pure data transform with no I/O (ADR-015 / SS-18) | — |
 | `prompts::few_shot` | ferrochain-prompts | `FewShotPromptTemplate`: pure assembly of example messages + template rendering; no I/O; snapshot-fixture parity tests (ADR-015 / SS-18) | — |
-| `prompts::injection_guard` | ferrochain-prompts | `SlotTrustPolicy` enforcement: pure synchronous check — for each TrustRequired slot, checks substituted variable's `TrustLevel` (`var.trust_level.is_some_and(\|t\| t.is_untrusted())`); returns `Err(E-TMPL-001)` or `Ok(())`; no async, no I/O (ADR-015 v1.3 / SS-18); `TrustLevel` is SS-18-local type in `prompts::template`, distinct from `core::guardrail::ProvenanceTag` (SS-11) | VP-006 candidate |
+| `prompts::injection_guard` | ferrochain-prompts | `SlotTrustPolicy` enforcement: pure synchronous check — for each TrustRequired slot, checks substituted variable's `TrustLevel` (`var.trust_level.is_some_and(\|t\| t.is_untrusted())`); returns `Err(E-TMPL-001)` or `Ok(())`; no async, no I/O (ADR-015 v1.3 / SS-18); `TrustLevel` is SS-18-local type in `prompts::template`, distinct from `core::guardrail::ProvenanceTag` (SS-11) | VP-006 (Kani P1, seeded burst-223) |
 | `vectorstores::mmr` | ferrochain-vectorstores | Maximal Marginal Relevance selection: calls `vectorstores::similarity::cosine_similarity` for pairwise distances; pure diversity-penalty scoring pass; no network, no I/O; inputs: query embedding + candidate embeddings + params; output: ranked document indices (ADR-014 / SS-21; F-P129-11 burst-224) | — |
 | `vectorstores::similarity` | ferrochain-vectorstores | Shared cosine similarity primitive: `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, FerrochainError>`; IEEE-754 zero-norm L2-guard (checks `a.iter().map(\|x\| x*x).sum::<f32>().sqrt() == 0.0 \|\| b…`); returns `Err(E-VS-001)` on zero-norm; pure `Vec<f32>` inner product; no `ndarray`, no I/O; called by vectorstores::memory, vectorstores::mmr, and any future VectorStore backend (ADR-014 / SS-21; F-P129-11 burst-224) | VP-009 |
 

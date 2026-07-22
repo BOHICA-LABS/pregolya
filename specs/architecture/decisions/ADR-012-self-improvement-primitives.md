@@ -7,8 +7,8 @@ title: "Self-Improvement Primitives: Skill Registry, Runtime Context Mutation, G
 status: accepted
 date: 2026-07-15
 producer: architect
-timestamp: 2026-07-15T00:00:00Z
-version: "1.3"
+timestamp: 2026-07-23T00:00:00Z
+version: "1.4"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D20]
@@ -305,15 +305,7 @@ See `### Alternatives Considered (Decision N)` subsections in each Decision sect
 
 ### Error Codes
 
-Guarded write failures require a new error code in the MEMORY namespace. PO must mint
-`E-MEM-NNN` (category: SECURITY, retry_hint: Never) for `MemoryWriteGuard::Deny`.
-Naming suggestion: `E-MEM-004 MemoryWriteGuardDenied` — PO has final authority per
-bc-authoring-plan.md error-taxonomy ownership.
-
-> **Advisory correction (v1.1, F-P72-02 OBS):** PO minted `E-MEMORY-007
-> MemoryWriteGuardDenied`. The namespace prefix is `MEMORY` (not `MEM`) and the
-> assigned number is `007` (not `004`). The authoritative minted code is `E-MEMORY-007`.
-> The suggestion above was advisory only; PO authority prevails per bc-authoring-plan.md.
+`E-MEMORY-007 MemoryWriteGuardDenied` is the authoritative error code for `MemoryWriteGuard::Deny` (category: SECURITY, retry_hint: Never; minted by PO per bc-authoring-plan.md error-taxonomy ownership, F-P72-02 OBS). Namespace prefix `MEMORY`, number `007`.
 
 ### Cache-Key Obligation (ADR-011)
 
@@ -343,6 +335,7 @@ seam that does not interact with `ProvenanceTag`, `GuardrailHook`, or `BoundaryT
 
 | Version | Date | Author | References | Summary |
 |---------|------|--------|------------|---------|
+| 1.4 | 2026-07-23 | architect | burst-238 | Stale-handoff sweep — consolidate Error Codes section: remove stale 'PO must mint E-MEM-NNN' obligation and advisory correction blockquote; rewrite as single past-tense statement (E-MEMORY-007 MemoryWriteGuardDenied already minted per F-P72-02 OBS). |
 | 1.3 | 2026-07-17 | architect | F-P95-01, D18-P84-A | Reconcile two stale 'budget policy evaluation between super-steps' analogies with BC canon. (1) Primitive B description: 'analogously to how graph::budget evaluates BudgetPolicy between super-steps' → 'analogously to how graph::budget_engine populates RunContext.budget_info at each super-step boundary before task dispatch (BC-2.10.003 PC9) — both are phase-boundary operations, not per-call evaluations'. (2) Decision 3 rationale bullet: 'analogous to budget policy evaluation between super-steps' → 'analogous to graph::budget_engine populating RunContext.budget_info at super-step boundaries before task dispatch — BC-2.10.003 PC9'. Template structure: add date, subsystems_affected, superseded_by, supersedes frontmatter fields; add Rationale, Alternatives Considered, Source / Origin sections. |
 | 1.2 | 2026-07-15 | architect | OBS-P77-C, D18-P77-A | Rename ADR-012 DI-001 → ADR-012 INV-1 (Decision 3 body). DI-NNN is the reserved domain-invariant namespace (DI-001..DI-014); local ADR invariants must use non-DI identifiers. Adjudication D18-P77-A recorded. PO to propagate rename to BC-2.15.006 (lines ~69, ~150) and capabilities-p1-p2.md (~line 111). |
 | 1.1 | 2026-07-15 | architect | F-P72-02, ADR-013 | Reconcile Decision 4 to actual downstream state: headline clarified as ADR-012 scope (33→34); gate #25 updated to note final universe = 35 post-ADR-013 (mcp::server MEDIUM); memory::skills cell corrected from "No new row" to "No new criticality row" distinguishing structural decomposition row from criticality-counted row; Consequences item 2 clarified "structural module rows" to distinguish from criticality rows; Error Codes advisory annotated with actually-minted E-MEMORY-007 (namespace MEMORY, number 007). |

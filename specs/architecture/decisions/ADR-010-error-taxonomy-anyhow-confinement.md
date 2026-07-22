@@ -6,16 +6,17 @@ slug: error-taxonomy-anyhow-confinement
 title: "Error Taxonomy and anyhow Confinement (P-78 / NE-03 / DI-014)"
 status: accepted
 producer: architect
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
-date: "2026-07-22"
+date: "2026-07-23"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.5"
+version: "1.6"
 changelog:
+  - "1.6 (burst-238/2026-07-23): Stale-handoff sweep — rewrite three future-tense PO obligations added in v1.1 (D21) to past-tense facts: (1) SRLZ 'PO must apply Category::Val when authoring BC-2.19.x' → 'PO applied Category::Val (error-taxonomy v1.27/D21)'; (2) VS E-CFG-001 resolution 'PO assigns next available VS sequence number when authoring BC-2.21.x' → 'PO assigned E-VS-003 (error-taxonomy v1.27/D21; anchor BC-2.20.003)'; (3) VS table row 'E-VS-NNN (was E-CFG-001)' → 'E-VS-003 (was E-CFG-001)'; remove 'PO assigns next sequence number' from table cell."
   - "1.5 (burst-234/2026-07-22): PO minted E-TOOLS-009 InvalidRegexPattern (VAL/Never; fields pattern: String + compile_error: String; anchor BC-2.23.006 PC-4/EC-002/TV-003 — invalid-regex path in GrepTool). Add E-TOOLS-009 row to TOOLS component table. Update Source/Origin cite range 001..007 → 001..009 (TD-VSDD-060 sibling sweep). TOOLS namespace is now 9 codes (001..009); component count and #[non_exhaustive] gate count unchanged."
   - "1.4 (burst-233/2026-07-22): F-P133-03 sibling sweep — add E-TOOLS-008 FileIoError to TOOLS component table (category TOOL, RetryHint Maybe); covers OS-level I/O errors during file tool execution; wraps std::io::ErrorKind; anchor BCs: BC-2.23.001–004, BC-2.23.006. Component count and #[non_exhaustive] gate count unchanged (TOOLS already registered as component 17 in v1.3; new code is within existing component)."
   - "1.3 (burst-232/2026-07-22): D23 — register TOOLS as component 17 (ferrochain-tools, SS-23). Component axis 16→17. E-TOOLS-001..007 adjudicated (codes coined by error-taxonomy v1.31 during D23 BC authoring). E-TOOLS-004 (BashTimeout) carries RetryHint::Never diverging from the TIMEOUT category default (Later); rationale in §Component Axis Expansion (D23). E-TOOLS-005 (BashOutput.truncated) and E-TOOLS-006 (GrepResult.capped) are informational payload fields, not FerrochainError Err returns — they are outside the component×category axis. #[non_exhaustive] gate count 17→18."
@@ -119,8 +120,8 @@ Canonical abbreviation: **SRLZ** (as coined by ADR-016).
 **Category correction:** ADR-016 used `category: Serialization` — this is not one of the
 12 canonical categories. Both E-SRLZ codes are correctly **VAL**: the Reviver is rejecting
 input JSON whose `id` field references an unknown or unsupported type. Callers provided
-bad input. The PO must apply `Category::Val` (not a new Serialization category) when
-authoring BC-2.19.x and the error-taxonomy rows for SRLZ.
+bad input. The PO applied `Category::Val` (not a new Serialization category) when
+authoring BC-2.19.x and the error-taxonomy rows for SRLZ (error-taxonomy v1.27/D21; E-SRLZ-001/002 minted as VAL).
 
 | Code | Category | Rationale |
 |------|----------|-----------|
@@ -140,13 +141,13 @@ However, no CFG component is created. Configuration-validation errors for a give
 component belong to that component's namespace — this is the universal pattern:
 E-RETRY-004 (RetryPolicy config, RETRY), E-SBXD-006 (SandboxConfig allowlist, SBXD),
 E-SPLIT-001/002 (TextSplitter config, SPLIT). VectorStoreRetriever config validation
-errors are therefore **E-VS-NNN** codes, not E-CFG-NNN. The PO assigns the next
-available VS sequence number when authoring BC-2.21.x.
+errors are therefore **E-VS-NNN** codes, not E-CFG-NNN. The PO assigned E-VS-003 as the next
+available VS sequence number (error-taxonomy v1.27/D21; anchor BC-2.20.003).
 
 | Code | Category | Rationale |
 |------|----------|-----------|
 | E-VS-001 | VAL | ZeroNormVector: cosine similarity guard — zero-length embedding vector produces NaN; caller or embedding backend returned an invalid vector (ADR-014 hardening note). |
-| E-VS-NNN (was E-CFG-001) | VAL | VectorStoreRetriever config validation (k, fetch_k, lambda_mult range checks). PO assigns next sequence number. No CFG component. |
+| E-VS-003 (was E-CFG-001) | VAL | VectorStoreRetriever config validation (k, fetch_k, lambda_mult range checks). Assigned E-VS-003 (error-taxonomy v1.27/D21; anchor BC-2.20.003). No CFG component. |
 
 `Component::Vs` ↔ `VS` in prose/code.
 

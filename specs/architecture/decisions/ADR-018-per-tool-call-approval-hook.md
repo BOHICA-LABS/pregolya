@@ -7,8 +7,8 @@ title: "First-Class Per-Tool-Call Approval Hook: PreToolCallHook Trait, Pre-Invo
 status: accepted
 date: "2026-07-22"
 producer: architect
-timestamp: 2026-07-22T00:00:00Z
-version: "1.1"
+timestamp: 2026-07-23T00:00:00Z
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-05, SS-06, SS-16]
 changelog:
+  - "1.2 (burst-238/2026-07-23): Stale-handoff sweep — resolve 4 stale PO-must obligations: (1) BC-2.05.008 authored (skip-hook-on-resume invariant, burst-229, active); (2) BC-2.06.004/005 authored (streaming event variants, burst-229, active); (3) BC-2.08.010 v1.1 amended (action_risk macro param, burst-229, active); (4) Status section updated to reflect all BCs delivered and VP-011 seeded."
   - "1.1 (burst-233/2026-07-22): F-P133-07 sibling sweep (TD-VSDD-060) — remove stale 'VP-011 candidate' labels (VP-011 seeded burst-232, Kani P0). Two sites updated: §Decision 2 dispatch sequence step 4 Deny path, and §Rationale summary line."
   - "1.0 (D23/2026-07-22): Initial ADR — per-tool-call approval hook replacing the 2-node-per-tool workaround identified in domain-e-agentic-coding-assistant.md §3 item 5 / §6 item 1."
 ---
@@ -128,8 +129,8 @@ execution. The function:
 
 **On resume semantics:** The engine captures the pending `ToolCallPreview` in the
 checkpoint. On `Command::Resume(decision)`, the engine applies the decision directly
-without re-calling `pre_invoke` (the hook is skipped for the resumed dispatch). PO must
-author a BC for this "skip-hook-on-resume" invariant as an extension to SS-05.
+without re-calling `pre_invoke` (the hook is skipped for the resumed dispatch). BC-2.05.008
+authors this "skip-hook-on-resume" invariant as an extension to SS-05 (authored burst-229, active).
 
 ## Decision 4 — `PendingHumanApproval` Reuses Existing Interrupt Machinery
 
@@ -151,8 +152,7 @@ engine emits a new streaming event variant `tool_approval_request` carrying
 `tool_approval_resolved` event is emitted when the resume decision arrives.
 
 The existing 12-variant streaming event taxonomy (BC-2.06.001 v1.4) grows to 14 variants.
-**PO BC obligation (SS-06):** author BC-2.06.004 and BC-2.06.005 (or amend BC-2.06.001)
-for these two new variants.
+BC-2.06.004 and BC-2.06.005 author these two new variants (authored burst-229, active).
 
 ## Decision 6 — Retry / Approval Ordering (CAP-018 Wave Promotion Interaction)
 
@@ -173,8 +173,8 @@ Each retry attempt flows through `pre_tool_dispatch` independently:
 
 **`#[tool(action_risk = ...)]` macro extension (ADR-008):** The `#[tool]` proc-macro gains
 an optional `action_risk` parameter populating `ToolCallPreview.action_risk` at dispatch
-time. If absent, `action_risk = None`. **ferrochain-macros BC obligation:** PO must amend
-BC-2.08.010 to include the `action_risk` attribute parameter.
+time. If absent, `action_risk = None`. BC-2.08.010 v1.1 amended to include the
+`action_risk` attribute parameter (burst-229, active).
 
 ## Rationale
 
@@ -255,12 +255,10 @@ presenting a dialog for a tool the framework has already classified as persisten
 - The `#[tool(action_risk = ...)]` macro extension requires amending BC-2.08.010 and the
   `ferrochain-macros` implementation.
 - "Skip-hook-on-resume" is a novel invariant differing from standard BC-2.05.003
-  node-re-execute semantics; PO must author it explicitly to avoid downstream ambiguity.
+  node-re-execute semantics; BC-2.05.008 authors it explicitly (authored burst-229, active).
 - `PreToolDecision::Edit` allows argument modification by humans — the engine must
   validate that `modified_args` remains a valid JSON object before invoking the tool.
 
-### Status as of 2026-07-22
+### Status as of 2026-07-23
 
-Architecture decision accepted. No implementation yet (Phase 1). BCs for new SS-05 and
-SS-06 behaviors, the `#[tool(action_risk = ...)` macro extension, and VP-011 authoring
-are gated on PO BC delivery per the HANDOFF in the D23 burst report.
+Architecture decision accepted. No implementation yet (Phase 1). All BC obligations satisfied: BC-2.05.008 (skip-hook-on-resume invariant), BC-2.06.004/005 (streaming event variants), BC-2.08.010 v1.1 (`action_risk` macro param) — all authored burst-229. VP-011 seeded burst-232 (Kani P0). Implementation deferred to Phase 3.

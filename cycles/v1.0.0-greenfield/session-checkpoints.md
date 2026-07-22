@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "f6596c2"
+input-hash: "5cd59cc"
 traces_to: STATE.md
 ---
 
@@ -1204,3 +1204,19 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
 ### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-236 commit (see git -C .factory log -1).
 ### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 236 | Phase 1 IN PROGRESS — burst-236 COMMITTED; NEXT: P1D-137 | NEXT: adversary cascade P1D-137
+
+---
+
+### Checkpoint — Burst 237 (archived from STATE.md at burst-238)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21+D-23 scope expansion. D23 authoring COMPLETE (bursts 229-232). Burst-237 fix-burst ALL AGENTS COMMITTED to factory-artifacts. All 3 P1D-137 findings closed. All 3 were derived-table DI/wave propagation residue (not real spec defects — census clean, only index/plan tables not swept on di_anchors change). BC-INDEX v2.5 BC-2.13.002 DI col; prd.md v1.12 §2.13+RTM; bc-authoring-plan v2.44 DI-015 row + DI-009 correction + CAP-017 wave promo. Hash sweep 88 files STALE=0. trajectory-tail →7→6→6→3; 0/3. NEXT: adversary pass P1D-138 on FROZEN HEAD (D21+D23 expanded perimeter)."
+### COMMITTED (through burst 237):
+- Burst 237 (last committed): BC-INDEX v2.5 (BC-2.13.002 DI col); prd.md v1.12 (§2.13+RTM DI col); bc-authoring-plan v2.44; lessons.md L-025; hash sweep 88 files STALE=0.
+### NEXT-ACTIONS (exact, ordered):
+1. Adversary pass P1D-138 on FROZEN HEAD (D21+D23 expanded perimeter; full scope; streak 0/3).
+2. PRIORITY COVERAGE NOTE per P1D-137: remaining un-deep-read surfaces: SS-01/02/03 core BC bodies line-by-line, most ADR bodies, error-taxonomy full re-read (census confirmed clean but no line-by-line read of SS-01..03 BCs).
+3. After 3/3 CLEAN(strict): /vsdd-factory:check-input-drift → fresh consistency audit → Phase 1 HUMAN GATE.
+### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
+### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-237 commit (see git -C .factory log -1).
+### WRAP METADATA: Date 2026-07-23 | Cycle v1.0.0-greenfield | Burst 237 | Phase 1 IN PROGRESS — burst-237 COMMITTED; NEXT: P1D-138 | NEXT: adversary cascade P1D-138

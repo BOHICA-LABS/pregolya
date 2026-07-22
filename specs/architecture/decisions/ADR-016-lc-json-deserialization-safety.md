@@ -5,10 +5,10 @@ adr_id: "016"
 slug: lc-json-deserialization-safety
 title: "lc-JSON Round-Trip and Deserialization Safety: Type Registry, Reviver Design, Untrusted-Input Containment"
 status: accepted
-date: "2026-07-20"
+date: "2026-07-23"
 producer: architect
-timestamp: 2026-07-20T00:00:00Z
-version: "1.2"
+timestamp: 2026-07-23T00:00:00Z
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-19]
 changelog:
+  - "1.3 (burst-238/2026-07-23): Stale-handoff sweep — remove stale 'VP-010 candidate' label in §Consequences bullets. VP-010 was seeded in burst-223 (D21, VP-INDEX v1.2, Kani P0). Replace with 'VP-010 (Kani P0, seeded burst-223)'."
   - "1.2 (burst-224/2026-07-21): F-P129-06 — fix Decision 3 Property 1 and Property 4 code sketches: replace non-canonical `category: Serialization` with `component: Component::SRLZ, category: Category::VAL` per ADR-010 adjudication (Serialization is not a canonical Category variant)."
   - "1.1 (crates.io/2026-07-20): Record validated pin `inventory = \"0.3\"` (0.3.24, dtolnay, MSRV 1.62, WASM-safe); add keep-pin-fresh note re: compiler-internal tracking."
   - "1.0 (D21/2026-07-20): Initial ADR — core::serializable in ferrochain-core, inventory-crate static registry, 141 core-internal entries, feature-gated partner registration, untrusted-deserialization safety (allowlist = registered set, no path loading, secret stripping), 12 langchain-monolith entries unregistered, one-way Python checkpoint import compatibility."
@@ -308,4 +309,4 @@ security posture is strictly better than the reference.
   populated from `inventory::iter::<LcEntry>()`. This adds ~1ms to binary startup.
 - The one-way Python checkpoint import tool uses the Reviver with full safety properties.
   E-SRLZ-001 / E-SRLZ-002 propagate as structured errors to the import caller.
-- VP-010 candidate: prove that a type NOT in the registry NEVER successfully deserializes.
+- VP-010 (Kani P0, seeded burst-223): prove that a type NOT in the registry NEVER successfully deserializes.

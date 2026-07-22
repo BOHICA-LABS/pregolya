@@ -2,18 +2,20 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.18"
+version: "1.20"
 status: active
 producer: architect
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "c5b8148"
+input-hash: "7eac711"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.20 (burst-238/2026-07-23): Stale-handoff sweep (continuation) — fix graph::scheduler description: remove stale '(decision pending ADR-001 D9 gate)' note; D9 gate passed 2026-07-14, Alternative B selected per D11.1 steering (ADR-001); update description to 'Outer orchestrator loop + actor-scheduler synthesis (ADR-001 Alternative B, D9 gate passed 2026-07-14)'."
+  - "1.19 (burst-238/2026-07-23): Stale-handoff sweep — (1) Fix VP-010 label in core::serializable criticality note: 'VP-010 candidate' → 'VP-010 (Kani P0, seeded burst-223)'; VP-010 was seeded in burst-223 (D21, VP-INDEX v1.2). (2) Fix VP-006 label in prompts::injection_guard criticality note: 'VP-006 candidate' → 'VP-006 (Kani P1, seeded burst-223)'. (3) Fix stale BC-2.18.001–TBD anchor in prompts BC anchors note → BC-2.18.001–005 (BCs authored in D21 burst). (4) Fix stale BC-2.20.001–TBD / BC-2.21.001–TBD in vectorstores BC anchors note → BC-2.20.001–003 (Retriever) / BC-2.21.001–004 (VectorStore) (BCs authored in D21 burst)."
   - "1.18 (burst-235/F-P135-05/2026-07-22): Add missing `sandbox::process` module row to ferrochain-sandbox (SS-13) section — ProcessBackend is a full behavioral contract (BC-2.13.002) and must appear in module-decomposition per Iron Law. Module is MEDIUM criticality (Effectful Shell; explicitly non-default, opt-in only via `unsafe_process_no_isolation()`). DI-015 co-enforcement note added: ProcessBackend enforces subprocess timeout at the sandbox layer via `.kill_on_drop(true)` (defense-in-depth beneath BashTool's outer `tokio::time::timeout`). Module universe 53→54."
   - "1.17 (burst-234/2026-07-22): TD-VSDD-060 sibling sweep — update SS-23 E-TOOLS-* count note: '8 codes post-burst-233' → '9 codes post-burst-234'; add E-TOOLS-009 InvalidRegexPattern to cite. Input-hash refresh for upstream prd.md drift."
   - "1.16 (burst-233/2026-07-22): F-P133-07 — fix SS-23 VP anchor block: VP-011 corrected from 'candidate (Kani P0) graph::hitl' to 'VP-011 (Kani P0, seeded burst-232)'; VP-012 corrected from 'candidate (integration P1) interrupt/resume' to 'VP-012 (Kani P1, seeded burst-232) — OnWatermark arithmetic, BC-2.10.005, ferrochain-core, ADR-019'; VP-013 corrected from 'candidate (Kani P0)' to 'VP-013 (Kani P1, seeded burst-232)'. F-P133-08 — fix similar crate attribution: 'dtolnay' → 'mitsuhiko'; 'MIT/Apache-2.0' → 'Apache-2.0 single-licensed'; section renamed 'Dependency research flags' → 'Validated external dependencies'; both deps marked as confirmed (ADR-020 Decision 7 v1.1). BC anchors updated to reflect SS-23 BCs as authored (BC-2.23.001..006)."
@@ -114,7 +116,7 @@ content provenance.
 | `graph::channels` | LastValue / Append / BarrierValue / NamedBarrierValue / EphemeralValue reducers | HIGH | SS-02 |
 | `graph::bsp_engine` | Super-step executor: task dispatch, versions_seen / task-identity sort, InvalidUpdateError | CRITICAL | SS-03 |
 | `graph::hitl` | Interrupt queue (FIFO), suspend/resume protocol, risk-tiered classification; `PreToolCallHook` trait + `ToolCallPreview` + `PreToolDecision` (Approve/Deny/Edit/PendingHumanApproval) + `ToolApprovalRequest` + `AlwaysApprovePolicy` (ADR-018); `pre_tool_dispatch` routing function — fail-closed Deny invariant (VP-011, Kani P0, seeded burst-232); `GraphConfig.pre_tool_hook: Option<Arc<dyn PreToolCallHook>>` hook registration | CRITICAL | SS-05 |
-| `graph::scheduler` | Orchestrator loop and/or actor-scheduler (decision pending ADR-001 D9 gate) | CRITICAL | SS-03 |
+| `graph::scheduler` | Outer orchestrator loop + actor-scheduler synthesis (ADR-001 Alternative B; D9 gate passed 2026-07-14) | CRITICAL | SS-03 |
 | `graph::budget` | `BudgetEngine` dispatch (allow/escalate/deny via `BudgetPolicy` trait from ferrochain-core), `EvidenceJournal`, ceiling halt/escalate — trait definitions live in `core::budget` per ADR-009 Option 3; compaction engine: evaluates `CompactionTrigger` after each super-step, builds `ConversationSnapshot` via `CheckpointSaver::search_history` (BC-2.04.008), calls `CompactionPolicy::compact()`, applies mid-run message-window mutation, appends `CompactionEvent` to `EvidenceJournal`, emits `compaction_event` streaming event (ADR-019) | HIGH | SS-10 |
 | `graph::provenance` | `ProvenanceTag` attachment at ingress boundaries, `GuardrailHook` dispatch | HIGH | SS-11 |
 | `graph::event_emitter` | Streaming event emission; run_id + parent_ids correlation | MEDIUM | SS-06 |
@@ -275,7 +277,7 @@ Re-exported from ferrochain-core.
 
 > **core::serializable criticality (HIGH):** deserialization of external lc-JSON blobs is a
 > security-sensitive surface (R12). The Reviver enforces an allowlist-by-registration safety
-> property and must be formally tested for allowlist containment (VP-010 candidate). HIGH tier
+> property and must be formally tested for allowlist containment (VP-010 (Kani P0, seeded burst-223)). HIGH tier
 > matches the security significance and cross-cutting nature of lc-JSON round-trip support.
 
 > **NE anchors:** `core::documents` — #[non_exhaustive] required (public API type per workspace
@@ -321,12 +323,11 @@ injection safety guard (pure-core blocker for untrusted content in system-positi
 
 > **prompts::injection_guard criticality (HIGH):** the injection blocker is a security-critical
 > pure-core module. It must prevent untrusted content from reaching SystemMessage positions
-> regardless of caller configuration. VP-006 candidate: Kani proof that untrusted-tagged
+> regardless of caller configuration. VP-006 (Kani P1, seeded burst-223): Kani proof that untrusted-tagged
 > variable substitution into a TrustRequired slot always returns Err (never renders).
 > Consistent with the production-grade default — security invariants enforced by construction.
 
-> **BC anchors:** BC-2.18.001–TBD (BA to author following D21 CAP authoring; injection-safety
-> invariant is PO-owned security BC). ADR-015 governs the trust model and engine selection.
+> **BC anchors:** BC-2.18.001–005. ADR-015 governs the trust model and engine selection.
 
 ## ferrochain-vectorstores (SS-20, SS-21) — MEDIUM
 
@@ -346,7 +347,7 @@ constructor pattern), in-memory VectorStore backend, MMR selection algorithm, `V
 > `vectorstores::memory` in-memory backend serves as the integration test double for
 > VectorStore conformance tests (analogous to `checkpoint::memory` for checkpoint backends).
 
-> **BC anchors:** BC-2.20.001–TBD (Retriever), BC-2.21.001–TBD (VectorStore). ADR-014 governs
+> **BC anchors:** BC-2.20.001–003 (Retriever), BC-2.21.001–004 (VectorStore). ADR-014 governs
 > trait shapes, factory pattern, SS-15 boundary, and inventory extension seam.
 
 ## Provider Embeddings Modules (SS-22) — MEDIUM

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.005
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ vp_seed: true
 vp_id: VP-013
 red_gate: false
 changelog:
+  - "1.4 (burst-238/F-P138-03/2026-07-22): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-013' (VP-INDEX v1.5 burst-232 seeded VP-013 Kani P1; ferrochain-tools risk_floor_rejects_below_medium). Both sites updated (VP Anchors section + Traceability VP Registration row). Gate #28 close F-P138-03."
   - "1.3 (burst-235/F-P135-05/2026-07-22): Fix four occurrences of wrong implementation phrasing 'tokio::time::timeout over/wrapping tokio::process::Command' (Description, PC-3, Invariants DI-015 bullet, Traceability) — implied BashTool calls tokio::process::Command directly, contradicting the sandbox-mandatory Invariant. Correct: tokio::time::timeout wraps the sandbox backend execute() call; tokio::process::Command is managed by sandbox::process internally. Architect adjudication F-P135-05."
   - "1.2 (F-P134-06/2026-07-22): Re-anchor DI-009 (HTTP connection timeout) → DI-015 (Subprocess Execution Timeout) per architect adjudication of finding F-P134-06. di_anchors [DI-009,DI-014]→[DI-014,DI-015]; traces_to DI-009→DI-015; Description, PC-3, Invariants DI-009 analog bullet, and Traceability L2 Invariants row updated. Gate #28 F-P134-06 close. input-hash refreshed to 835edd0 (invariants.md updated by BA to mint DI-015; final stable hash after BA writes settled)."
   - "1.1 (Burst-232/2026-07-22): Fix Category::CONFIGURATION → Category::VAL in PC-4 (E-TOOLS-007 BashRiskTierViolation). CONFIGURATION is not in the canonical 12-member Category enum; E-TOOLS-007 is VAL per error-taxonomy v1.31. Gate #33 reverse-verify E-TOOLS-007 ↔ BC-2.23.005: taxonomy VAL ↔ BC PC-4 VAL — PASS."
@@ -33,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "3e9c659"
+input-hash: "9ed2507"
 extracted_from: null
 modified: []
 deprecated: null
@@ -182,7 +183,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 
 ## VP Anchors
 
-- VP-013 (ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring)
+- VP-013 (assigned in VP-INDEX v1.5 as VP-013 — Kani P1; ferrochain-tools risk_floor_rejects_below_medium)
 - VP-2.23.005-B
 - VP-2.23.005-C
 
@@ -195,7 +196,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 | L2 Domain Invariants | DI-014 (Error Propagation — timeout and sandbox errors propagate as Err; non-zero exit code surfaced in BashOutput, never swallowed), DI-015 (Subprocess Execution Timeout — max_duration wall-clock timeout enforced by BashTool via tokio::time::timeout wrapping sandbox execute() call; exceed → terminate subprocess via sandbox → Err(E-TOOLS-004 BashTimeout)) |
 | Architecture Authority | ADR-020 Decisions 2, 3, 4, and 5; ADR-018 Decision 6 (retry-through-hook ordering) |
 | Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
-| VP Registration | VP-013 (ARCH-INDEX D23 candidate — Kani P1; architect to assign VP-INDEX entry) |
+| VP Registration | VP-013 (assigned in VP-INDEX v1.5 as VP-013 — Kani P1; ferrochain-tools risk_floor_rejects_below_medium) |
 | Module | ferrochain-tools / tools::shell |
 | Priority | P1 |
 | Wave | 1 |

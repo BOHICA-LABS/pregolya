@@ -7,8 +7,8 @@ title: "VectorStore + Retriever Abstraction: Async Dyn-Compatible Traits, Factor
 status: accepted
 date: "2026-07-21"
 producer: architect
-timestamp: 2026-07-21T00:00:00Z
-version: "1.5"
+timestamp: 2026-07-23T00:00:00Z
+version: "1.7"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,8 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.7 (burst-238/2026-07-23): Stale-handoff sweep (continuation) — rewrite five 'Error taxonomy must mint' future-tense obligations to past-tense facts: (1) Consequences §E-VS-004 line: 'must mint' → 'minted'; (2) §PO Obligations E-VS-004 header: 'Error taxonomy must mint E-VS-004' → 'E-VS-004 minted (error-taxonomy v1.27/D21)'; (3) §PO Obligations E-CORE-008 header: 'Error taxonomy must mint E-CORE-008' → 'E-CORE-008 minted (error-taxonomy v1.30/burst-226)'; (4) §PO Obligations E-VS-005 header: 'Error taxonomy must mint E-VS-005' → 'E-VS-005 minted (error-taxonomy v1.30/burst-226)'."
+  - "1.6 (burst-238/2026-07-23): Stale-handoff sweep — rewrite three 'PO must' future-tense obligations in §PO Obligations to past-tense facts: (1) BC-2.20.002 anchor corrections → 'BC-2.20.002 v1.2 applied'; (2) BC-2.20.002 PC2 severity-bifurcation update → 'BC-2.20.002 v1.3 updated PC2'; (3) BC-2.21.004 INV-3 fail-safe update → 'BC-2.21.004 v1.2 updated INV-3'."
   - "1.5 (burst-226/2026-07-21): F-P131-01 (HIGH) — GuardedDocuments::rag_ingress Fail arm severity-bifurcated per BC-2.11.005 PC4/PC5. Critical Fail → Err(E-CORE-008, GuardrailCriticalRejection, SECURITY) — batch aborts. Non-Critical Fail → error-entry Document substituted at position i, batch continues. Docstring updated. Consequences bullet updated (Fail arm description). PO Obligations: E-CORE-008 mint obligation added; BC-2.20.002 PC2 update obligation added. F-P131-07 (MED) — similarity_search_with_filter default implementation changed from lossy-fallback to fail-safe: non-empty filter on an adapter that has not overridden this method returns Err(E-VS-005, FilterUnsupported, VAL). Empty filter (vacuously true) still delegates to similarity_search. PO Obligations: E-VS-005 mint obligation added; BC-2.21.004 INV-3 update obligation added."
   - "1.4 (burst-225/2026-07-21): F-P130-01 (CRITICAL) — Decision 6 GuardrailHook re-definition removed; replaced with canonical `async fn evaluate` signature from interface-definitions.md §GuardrailHook (authority-deference: BC-2.11.001..006 supersede on contract semantics). GuardedDocuments::rag_ingress made async; mechanism corrected to per-document evaluate calls with IngressContent::RagChunk per BC-2.11.003 PC1/PC5; all three GuardrailResult arms (Pass/Fail/Transform) honoured. BoundaryType re-definition in Decision 6 body removed — BoundaryType is defined in core::guardrail per BC-2.11.001 canonical precedent; only referenced here via ProvenanceTag. Purity classification note updated: rag_ingress is async → Boundary Module classification confirmed unchanged. Consequences bullets updated accordingly. Sibling sweep: purity-boundary-map.md v1.8 (core::guardrail + core::retriever rows), module-decomposition.md v1.13 (guardrail comment block). PO handoff text for BC-2.20.002 ferrochain-guardrail→ferrochain-core anchor corrections (F-P130-02) recorded in §PO Obligations."
   - "1.3 (burst-224/2026-07-21): Collision correction — error-taxonomy.md line 288 already defines E-VS-003 (VectorStoreRetriever config validation, VAL, BC-2.20.003). Write-time zero-norm rejection code corrected from E-VS-003 → E-VS-004 throughout Decision 5 heading, table, code sketches, and Consequences section. PO handoff updated to mint E-VS-004."
@@ -357,8 +359,8 @@ L2 norm == 0.0 at write time, before the document is persisted to the index.
 | `E-VS-001` | Search-time cosine guard; zero-norm query or stored embedding encountered during similarity computation | — |
 | `E-VS-004` | Write-time zero-norm rejection; embedding rejected before storage | `document_index` (0-based index of the offending document) |
 
-Both codes are in the `VS` namespace (`ferrochain-vectorstores`). Error taxonomy must
-mint `E-VS-004` (PO obligation — see §PO Obligations).
+Both codes are in the `VS` namespace (`ferrochain-vectorstores`). `E-VS-004` minted in
+error-taxonomy v1.27/D21 (see §PO Obligations for mint record).
 
 **`document_index` placement:** structured context field, NOT interpolated in the
 message string (gate #33 / cross-cutting error-context convention):
@@ -656,8 +658,8 @@ applicability. Two separate crates with a clear boundary is correct.
 - **E-VS-004** (Decision 5): new write-time zero-norm error code minted in the `VS` namespace
   (E-VS-003 is taken — VectorStoreRetriever config validation, error-taxonomy.md);
   `add_texts` and `from_texts_sync` reject documents whose embedding has L2 norm == 0.0 before
-  persistence; `document_index` carried as structured context field. Error taxonomy must mint
-  `E-VS-004` (PO obligation; BC-2.21.002 write-time contract row).
+  persistence; `document_index` carried as structured context field. `E-VS-004` minted in
+  error-taxonomy v1.27/D21 (VS namespace; write-time zero-norm rejection; BC-2.21.002).
 - **GuardedDocuments** (Decision 6): new newtype in `core::retriever`; no public constructor;
   sole constructor is `GuardedDocuments::rag_ingress(docs, &dyn GuardrailHook)` — `async fn`;
   iterates per-document, calling `guardrail.evaluate(IngressContent::RagChunk(...), provenance_tag).await`
@@ -682,7 +684,7 @@ applicability. Two separate crates with a clear boundary is correct.
 
 ### E-VS-004 (carried from v1.3)
 
-Error taxonomy must mint `E-VS-004` — write-time zero-norm rejection in the `VS` namespace
+`E-VS-004` minted (error-taxonomy v1.27/D21) — write-time zero-norm rejection in the `VS` namespace
 (`ferrochain-vectorstores`); `add_texts` and `from_texts_sync` reject documents whose
 embedding has L2 norm == 0.0 before persistence; `document_index` carried as structured
 context field (gate #33 Form 3 convention). BC-2.21.002 write-time contract row authority.
@@ -694,7 +696,7 @@ nonexistent crate. This crate does not exist; the guardrail trait and BoundaryTy
 live in `ferrochain-core: core::guardrail` (Decision 6 of this ADR; trait-in-core
 precedent per ADR-009/ADR-012).
 
-**PO must apply the following three textual corrections to BC-2.20.002:**
+**BC-2.20.002 v1.2 applied the following three textual corrections:**
 
 1. **Description paragraph** (currently: "…variant in `ferrochain-guardrail` already covers
    this seam — no new variant, trait, or guardrail is introduced by this BC.")
@@ -724,7 +726,7 @@ unchanged; only the crate anchor in three prose locations is wrong.
 
 ### E-CORE-008 (F-P131-01 — burst-226)
 
-Error taxonomy must mint `E-CORE-008`:
+`E-CORE-008` minted (error-taxonomy v1.30/burst-226):
 
 | Field | Value |
 |-------|-------|
@@ -739,13 +741,13 @@ Error taxonomy must mint `E-CORE-008`:
 ### BC-2.20.002 PC2 (F-P131-01 — burst-226)
 
 BC-2.20.002 PC2 currently states: "Err propagated on any `GuardrailResult::Fail`."
-PO must update PC2 to reflect severity bifurcation:
+BC-2.20.002 v1.3 updated PC2 to reflect severity bifurcation:
 - Critical Fail → Err(E-CORE-008) propagated; run transitions to `failed` state.
 - Non-Critical Fail → error-entry Document substituted at document position; run continues.
 
 ### E-VS-005 (F-P131-07 — burst-226)
 
-Error taxonomy must mint `E-VS-005`:
+`E-VS-005` minted (error-taxonomy v1.30/burst-226):
 
 | Field | Value |
 |-------|-------|
@@ -763,7 +765,7 @@ BC-2.21.004 INV-3 currently documents a "lossy" fallback: "default implementatio
 back to `similarity_search` with no filtering (empty filter → all docs pass). This default
 is lossy if a real filter is passed."
 
-PO must update INV-3:
+BC-2.21.004 v1.2 updated INV-3:
 - Default implementation returns `Err(E-VS-005)` when `filter.filters` is non-empty.
 - Empty filter (vacuously true, `filter.filters.is_empty()`) still delegates to
   `similarity_search` — this preserves EC-004 empty-filter semantics.

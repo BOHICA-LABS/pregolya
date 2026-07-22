@@ -5,10 +5,10 @@ adr_id: "020"
 slug: first-party-tool-library
 title: "First-Party Tool Library: ferrochain-tools Crate, tools::fs / tools::shell / tools::search Modules, SS-23 Subsystem"
 status: accepted
-date: "2026-07-22"
+date: "2026-07-23"
 producer: architect
-timestamp: 2026-07-22T00:00:00Z
-version: "1.7"
+timestamp: 2026-07-23T00:00:00Z
+version: "1.8"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-23]
 changelog:
+  - "1.8 (burst-238/2026-07-23): Stale-handoff sweep (OBS + proactive). (1) Remove '(PO to verify at error-taxonomy authoring)' from Decision 5 E-TOOLS-008 gate #33 sentence — E-TOOLS-008 was minted in error-taxonomy v1.32 (burst-233) with gate #33 forward+reverse verification confirmed in that burst. (2) Remove completed 'PO obligation (error-taxonomy.md)' paragraph — E-TOOLS-* 9-code section was added by PO in error-taxonomy v1.32 (burst-233); BC-2.23.001-004 and BC-2.23.006 OS-error path amendments also completed in burst-233."
   - "1.7 (burst-235/F-P135-05/2026-07-22): Decision 2 `tools::shell` section — add implementation note clarifying that `tokio::time::timeout` wraps the sandbox backend `execute()` call, NOT `tokio::process::Command` directly; BashTool never calls `tokio::process::Command` directly (would violate BC-2.23.005 sandbox-mandatory invariant); ProcessBackend uses `tokio::process::Command` with `.kill_on_drop(true)` internally (ensures async cancellation kills the OS subprocess). Architect adjudication of F-P135-05: DI-015 split-enforcement decision documented; BC-2.13.002 PO handoff and BA invariants.md handoff issued in same burst."
   - "1.6 (burst-234/2026-07-22): F-P134-02 label format normalization — Decision 5 anchor list: normalize BC-2.23.006 label to prescribed canonical form `(GrepTool — tools::search traversal I/O error)`. Prior v1.5 intermediate form `(GrepTool traversal I/O error paths — tools::search)` was substantively correct but did not match prescribed format. TD-VSDD-060 sweep: sole occurrence in body text at Decision 5 adjudication paragraph; ADR-010 TOOLS table unaffected (no per-BC labels in that table)."
   - "1.5 (burst-234/2026-07-22): F-P134-02 — Decision 5 anchor list (E-TOOLS-008 adjudication paragraph, line ~224): fix BC-2.23.006 label from `(WriteFileTool missing parent dir)` to `(GrepTool traversal I/O error paths — tools::search)`. BC-2.23.006 is GrepTool / tools::search; the missing-parent-dir scenario belongs to BC-2.23.002 EC-003. ADR-010 TOOLS table label for BC-2.23.006 verified correct (no change required)."
@@ -231,16 +232,10 @@ discovered during file tool execution are not VAL [path is syntactically valid i
 SECURITY [path passed PathGuard; E-TOOLS-001 covers the confinement violation case], not
 TIMEOUT, not INTERNAL; TOOL is the exact fit). RetryHint: `Maybe` — some OS errors are
 transient (e.g., `StorageFull` may resolve); caller must inspect `io_kind` to determine
-retry feasibility. Message form: `"<tool_type> I/O error on '<path>': <io_kind>"` — subject
-to gate #33 constraint in `error-taxonomy.md` (PO to verify at error-taxonomy authoring).
+retry feasibility. Message form: `"<tool_type> I/O error on '<path>': <io_kind>"` — gate #33
+forward+reverse verification confirmed in error-taxonomy v1.32 (burst-233).
 Anchor BCs: BC-2.23.001 (ReadFileTool), BC-2.23.002 (WriteFileTool), BC-2.23.003
 (EditFileTool), BC-2.23.004 (ListDirTool), BC-2.23.006 (GrepTool — tools::search traversal I/O error).
-
-**PO obligation (error-taxonomy.md):** add the `E-TOOLS-*` section with these 9 codes
-to `.factory/specs/prd-supplements/error-taxonomy.md`. For E-TOOLS-008 specifically:
-category TOOL, RetryHint Maybe, message form subject to gate #33 check; amend PC
-error-path rows in BC-2.23.001–004 and BC-2.23.006 to cite `E-TOOLS-008 FileIoError`
-replacing the current "I/O category" and "VALIDATION" labels.
 
 ## Decision 6 — Purity Boundary Classification
 

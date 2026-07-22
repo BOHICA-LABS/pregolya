@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.003
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,13 +14,14 @@ crate: ferrochain-vectorstores
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
 red_gate_source: "ADR-014 v1.1 Hardening Note — zero-norm guard must be a failing test BEFORE the cosine implementation exists; a zero-norm vector silently produces NaN that corrupts similarity rankings without the guard; VP-009 Kani candidate"
 vp_seed: true
 vp_id: VP-009
 changelog:
+  - "1.2 (burst-238/sweep/2026-07-22): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-009 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-009' (VP-INDEX v1.2 burst-223 seeded VP-009 Kani P0; VP-009.md exists). Completed-handoff residue removal."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction; SECURITY-CRITICAL hardening per ADR-014 v1.1"
   - "1.1 (F-P224/H-4/2026-07-21): Module references corrected — `vectorstores::mmr` → `vectorstores::similarity` for cosine primitive (4 sites: Description, Architecture Anchors ×2, Traceability Module row). The `mmr` module implements the MMR selection algorithm; `cosine_similarity` lives in the dedicated `vectorstores::similarity` module with harness file `ferrochain-vectorstores/src/similarity.rs`. Genuine MMR-algorithm references in other BCs/docs are unaffected."
 traces_to:
@@ -32,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "286ef88"
+input-hash: "bb1559f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -159,7 +160,7 @@ _[to be filled after story decomposition — Wave 2 SS-21 security-hardening sto
 
 ## VP Anchors
 
-- VP-2.21.003-A (pending VP-009 registration in VP-INDEX.md)
+- VP-2.21.003-A (VP-009 assigned VP-INDEX v1.2; VP-009.md exists)
 - VP-2.21.003-B
 - VP-2.21.003-C
 
@@ -172,7 +173,7 @@ _[to be filled after story decomposition — Wave 2 SS-21 security-hardening sto
 | L2 Domain Invariants | DI-008 (cosine_similarity returns Result; no .unwrap() on cosine computation), DI-014 (E-VS-001 propagates as Err; no silent NaN or 0.0 fallthrough — cosine_similarity never returns Ok(f32::NAN)) |
 | Architecture Authority | ADR-014 v1.1 §Hardening Note (zero-norm guard specification, E-VS-001, VP-009 candidacy) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| VP Registration | VP-009 (ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes) |
+| VP Registration | VP-009 (assigned in VP-INDEX v1.2 as VP-009 — Kani P0; ferrochain-vectorstores zero_norm_guard_fail_closed) |
 | Module | ferrochain-vectorstores / vectorstores::similarity |
 | Priority | P0 |
 | Wave | 2 |

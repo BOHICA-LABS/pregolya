@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.005
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,13 +14,14 @@ crate: ferrochain-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
 red_gate_source: "ADR-016 Security Invariant — Reviver must reject unknown type ids at all times; allowlist test must COMPILE and FAIL before Reviver::revive() is implemented; VP-010 Kani candidate"
 vp_seed: true
 vp_id: VP-010
 changelog:
+  - "1.2 (burst-238/sweep/2026-07-22): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-010 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-010' (VP-INDEX v1.2 burst-223 seeded VP-010 Kani P0; VP-010.md exists). Completed-handoff residue removal."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization; SECURITY-CRITICAL"
   - "1.1 (F-P224/F-P129-01+F-P129-04/2026-07-21): (1) F-P129-01: PC1 and Invariant 3 corrected — Category::SECURITY → Category::VAL per ADR-010 §SRLZ adjudication (error-taxonomy.md line 279 already recorded E-SRLZ-001 as VAL; this BC was out of sync). Invariant 3 rationale rewritten: deserialization containment is input validation against the registry, not an attack-vector boundary event. (2) F-P129-04: VP-2.19.005-A restated to scope non-monolith unregistered ids only and add joint coverage note with BC-2.19.006/VP-010."
 traces_to:
@@ -32,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "44b5407"
+input-hash: "380e5ee"
 extracted_from: null
 modified: []
 deprecated: null
@@ -156,7 +157,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 security story]_
 
 ## VP Anchors
 
-- VP-2.19.005-A (pending VP-010 registration in VP-INDEX.md)
+- VP-2.19.005-A (VP-010 assigned VP-INDEX v1.2; VP-010.md exists)
 - VP-2.19.005-B
 
 ## Traceability
@@ -168,7 +169,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 security story]_
 | L2 Domain Invariants | DI-008 (revive returns Result; no panic or unsafe unwrap), DI-014 (E-SRLZ-001 propagates as Err; no silent fallthrough, no default-constructed value returned) |
 | Architecture Authority | ADR-016 Decision 6 (allowlist-first check, E-SRLZ-001 category SECURITY, no id in error message, VP-010 Kani candidacy) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| VP Registration | VP-010 (ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes) |
+| VP Registration | VP-010 (assigned in VP-INDEX v1.2 as VP-010 — Kani P0; ferrochain-core allowlist_rejects_unregistered_id) |
 | Module | ferrochain-core / core::serializable::reviver |
 | Priority | P0 |
 | Wave | 2 |

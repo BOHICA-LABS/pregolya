@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.001
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,11 +14,12 @@ crate: ferrochain-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 di_anchors: [DI-008, DI-014]
 vp_seed: true
 vp_id: VP-008
 changelog:
+  - "1.2 (burst-238/sweep/2026-07-22): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-008 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-008' (VP-INDEX v1.2 burst-223 seeded VP-008 proptest P1; VP-008.md exists). Completed-handoff residue removal."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-22 Embeddings"
   - "1.1 (F-P130-07/2026-07-21): Fix E-EMBED-001 message prefix: `DimensionMismatch:` → `EmbeddingDimensionMismatch:` to match canonical PRD name and eliminate collision with E-VS-002 prefix. Gate #33 reverse: error-taxonomy.md v1.28→v1.29 updated in same burst."
 traces_to:
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "3914ca2"
+input-hash: "13c4e9f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -141,7 +142,7 @@ _[to be filled after story decomposition — Wave 2 SS-22 story]_
 
 ## VP Anchors
 
-- VP-2.22.001-A (pending VP-008 registration in VP-INDEX.md)
+- VP-2.22.001-A (VP-008 assigned VP-INDEX v1.2; VP-008.md exists)
 - VP-2.22.001-B
 - VP-2.22.001-C
 
@@ -154,7 +155,7 @@ _[to be filled after story decomposition — Wave 2 SS-22 story]_
 | L2 Domain Invariants | DI-008 (embed_documents and embed_query return Result; no .unwrap()), DI-014 (batch partial-failure propagates as Err; no silent truncation or Vec::new() fallback) |
 | Architecture Authority | ADR-017 Decisions 1 and 2 (trait placement, async dyn-compat shape, dimensionality contract, batch error semantics) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| VP Registration | VP-008 (ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes) |
+| VP Registration | VP-008 (assigned in VP-INDEX v1.2 as VP-008 — proptest P1; ferrochain-core embeddings) |
 | Module | ferrochain-core / core::embeddings |
 | Priority | P1 |
 | Wave | 2 |

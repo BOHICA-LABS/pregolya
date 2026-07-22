@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.006
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.3 (burst-238/F-P138-01/2026-07-22): Architecture Anchors Decision 5 annotation updated: stale 'architect to append E-TOOLS-008/009 to ADR-020 TOOLS table' replaced with 'appended to ADR-020 TOOLS table in ADR-020 v1.7 (burst-238 sweep: satisfied)'. Completed-handoff residue removal. Gate #28 close F-P138-01."
   - "1.2 (burst-234/F-P134-01/2026-07-22): PC-6 / EC-008 / TV-006 — add E-TOOLS-008 FileIoError (Category::TOOL/Maybe) for OS-level I/O errors during traversal. Traversal-error semantics DECIDED: fail-the-whole-search (not skip-with-warning). Rationale: (1) consistent with sibling tools BC-2.23.001–004 which all fail on E-TOOLS-008; (2) DI-014 no-silent-swallow — returning partial results without signalling the search was cut short is indistinguishable from complete results; (3) guard-verify-before-open invariant establishes that mid-traversal path failures are surfaced; (4) silently-incomplete search results are more hazardous than explicit Err. Structured fields per taxonomy: tool_type='GrepTool' (static), path=<offending path>, io_kind=<std::io::ErrorKind debug name>. Invariants DI-014 bullet updated to include OS-error path. Architecture Anchors Decision 5 updated to note E-TOOLS-008 burst-234. Traceability L2 Domain Invariants updated with E-TOOLS-008 gate #33 reverse anchor. Gate #33 E-TOOLS-008 both-direction PASS: taxonomy v1.32 anchors this BC ('BC-2.23.006 OS-error paths') AND this BC now cites E-TOOLS-008 in PC-6/EC-008/TV-006. TV census: 5→6; test-vectors.md total 669→670."
   - "1.1 (burst-233/F-P133-03/2026-07-22): PC-4 / EC-002 / TV-003 — assign E-TOOLS-009 InvalidRegexPattern (Category::VAL/Never) to the invalid-regex path (was 'VALIDATION category' with no code). 'VALIDATION' is not in the canonical 12-member Category enum; adjudicated: no existing TOOLS code covers regex compile failure; E-CORE-005 wrong component; E-TOOLS-009 minted. Structured fields: pattern: <pattern string>, compile_error: <regex crate error>. Gate #33 forward+reverse: E-TOOLS-009 now covers this raise site; error-taxonomy.md v1.32 anchors BC-2.23.006 in E-TOOLS-009 row. ARCHITECT FLAG: ADR-010 v1.4 and ADR-020 v1.3 TOOLS tables need E-TOOLS-009 appended."
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 GrepTool."
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "3e9c659"
+input-hash: "9ed2507"
 extracted_from: null
 modified: []
 deprecated: null
@@ -172,7 +173,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 
 ## Architecture Anchors
 
-- `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (GrepTool, in-process regex, no subprocess, max_results 100), Decision 3 (ReadOnly ActionRisk), Decision 5 (E-TOOLS-001/006; E-TOOLS-008 OS-error paths minted burst-234; E-TOOLS-009 minted burst-233 — architect to append E-TOOLS-008/009 to ADR-020 TOOLS table), Decision 7 (`regex = "1"` pin, linear-time guarantee, MSRV 1.65)
+- `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (GrepTool, in-process regex, no subprocess, max_results 100), Decision 3 (ReadOnly ActionRisk), Decision 5 (E-TOOLS-001/006; E-TOOLS-008 OS-error paths minted burst-234; E-TOOLS-009 minted burst-233 — appended to ADR-020 TOOLS table in ADR-020 v1.7 (burst-238 sweep: satisfied)), Decision 7 (`regex = "1"` pin, linear-time guarantee, MSRV 1.65)
 - `architecture/module-decomposition.md` — SS-23, `tools::search` module in ferrochain-tools
 - `architecture/purity-boundary-map.md` — SS-23 Effectful Shell (filesystem traversal)
 
