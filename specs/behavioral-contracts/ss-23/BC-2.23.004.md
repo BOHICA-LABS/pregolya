@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.004
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.1 (burst-233/F-P133-03/2026-07-22): PC-3 / PC-5 / EC-002 / EC-005 / TV-004 — assign E-TOOLS-008 FileIoError to the OS-level I/O error paths (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'ListDirTool', path: <dir_path>, io_kind: <ErrorKind debug name> ('NotADirectory' for PC-3/EC-002; 'NotFound' for PC-5/EC-005). Gate #33 forward+reverse clean."
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 ListDirTool."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "4661c22"
+input-hash: "d4604ce"
 extracted_from: null
 modified: []
 deprecated: null
@@ -77,10 +78,15 @@ filter at the application layer.
    `Err(FerrochainError { component: "TOOLS", category: Category::SECURITY,
    code: "E-TOOLS-001", message: "PathConfinementViolation: path '<path>' is outside the
    configured PathGuard scope" })`.
-3. **Path is a file, not a directory:** Returns `Err(FerrochainError)` — I/O category,
-   OS error ("Not a directory" or equivalent).
+3. **Path is a file, not a directory:** Returns
+   `Err(FerrochainError { component: "TOOLS", category: Category::TOOL, code: "E-TOOLS-008",
+   message: "ListDirTool I/O error on '<path>': NotADirectory",
+   tool_type: "ListDirTool", path: <dir_path>, io_kind: "NotADirectory" })`.
 4. **Empty directory:** Returns `ToolOutput::Json([])` — zero entries, not an error.
-5. **Permission denied:** Returns `Err(FerrochainError)` — I/O category, OS error detail.
+5. **Permission denied or not found:** Returns
+   `Err(FerrochainError { component: "TOOLS", category: Category::TOOL, code: "E-TOOLS-008",
+   message: "ListDirTool I/O error on '<path>': <io_kind>",
+   tool_type: "ListDirTool", path: <dir_path>, io_kind: <std::io::ErrorKind debug name> })`.
 
 ## Invariants
 
@@ -98,10 +104,10 @@ filter at the application layer.
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | Path is outside PathGuard scope | `Err(E-TOOLS-001 PathConfinementViolation)` — no I/O |
-| EC-002 | Path resolves to a file (not a directory) | `Err(FerrochainError)` — I/O category, not-a-directory OS error |
+| EC-002 | Path resolves to a file (not a directory) | `Err(E-TOOLS-008 FileIoError)` — `{ tool_type: "ListDirTool", path: "<path>", io_kind: "NotADirectory" }` |
 | EC-003 | Directory is empty | `ToolOutput::Json([])` — empty array, not an error |
 | EC-004 | Directory contains a symlink | Entry with `kind: "Symlink"` included; size_bytes is `null`; the symlink target is NOT resolved for PathGuard (symlink target check is the caller's responsibility) |
-| EC-005 | Directory not found | `Err(FerrochainError)` — I/O category, OS error (no such file or directory) |
+| EC-005 | Directory not found | `Err(E-TOOLS-008 FileIoError)` — `{ tool_type: "ListDirTool", path: "<path>", io_kind: "NotFound" }` |
 | EC-006 | Directory has 10,000 entries | `ToolOutput::Json(<10,000 entries>)` — no truncation at this layer; callers should handle large listings at application layer |
 
 ## Canonical Test Vectors
@@ -111,7 +117,7 @@ filter at the application layer.
 | TV-001 | `{ "path": "/workspace" }` — workspace contains 3 files + 1 subdir, within PathGuard | `ToolOutput::Json([{...}, {...}, {...}, {...}])` — 4 entries sorted by name | happy-path |
 | TV-002 | `{ "path": "/etc" }` — outside PathGuard scope | `Err(E-TOOLS-001)` — `PathConfinementViolation: path '/etc' is outside the configured PathGuard scope` | security (confinement) |
 | TV-003 | `{ "path": "/workspace/empty_dir" }` — exists, empty | `ToolOutput::Json([])` | edge-case (empty dir) |
-| TV-004 | `{ "path": "/workspace/src/main.rs" }` — path is a file | `Err(FerrochainError)` — I/O category, not-a-directory | error-case |
+| TV-004 | `{ "path": "/workspace/src/main.rs" }` — path is a file | `Err(E-TOOLS-008 FileIoError)` — `{ tool_type: "ListDirTool", path: "/workspace/src/main.rs", io_kind: "NotADirectory" }` | error-case |
 
 ## Verification Properties
 

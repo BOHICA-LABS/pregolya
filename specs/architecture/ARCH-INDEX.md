@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.7"
+version: "1.8"
 status: active
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
@@ -11,11 +11,12 @@ inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "c42e44e"
+input-hash: "55151ff"
 traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.8 (burst-233/2026-07-22): F-P133-06 — resolve stale BC-2.23.005 Category::CONFIGURATION contradiction note in VP section callout (~L176): update to RESOLVED (BC-2.23.005 v1.1 = VAL, burst-232, consistent with error-taxonomy v1.31 and VP-013 harness)."
   - "1.7 (burst-232/2026-07-22): D23 VP loop closure — VP-011/012/013 SEEDED with BC anchors (no longer candidates); VP section total 10→13 (6 Kani P0 + 3 Kani P1 + 2 proptest P1 + 2 integration P1); VP-INDEX reference v1.4→v1.5; SS-05 BC range 001–006→001–008; SS-06 BC range 001–003→001–006; SS-10 BC range 001–004→001–006; SS-23 BC range TBD→001–006."
   - "1.6 (D23/2026-07-22): D23 architecture layer — add SS-23 (First-Party Tool Library, ferrochain-tools crate #21); ADR registry 17→20 (ADR-018 per-tool-call approval hook, ADR-019 rolling context compaction, ADR-020 first-party tool library); Canonical Crate Roster 20→21 (+ferrochain-tools); SS-15 wave 2→1 (CAP-017 D23 item 3); SS-16 wave 2→1 (CAP-018 D23 item 4); VP table reflects VP-INDEX v1.5 (10 VPs at D23 open; VP-011..013 minted at burst-232 bringing total to 13); VP-011/012/013 D23 candidate anchors noted; fix stale Document Map ADR count (was 13, actually 17 post-D21, now 20 post-D23); fix stale VP total in VP section header (was 5, now 10)."
   - "1.5 (D21/2026-07-20): ecosystem-parity scope expansion — add SS-18 (Prompt Templates, ferrochain-prompts), SS-19 (LC Serialization, ferrochain-core), SS-20 (Document Retrieval, ferrochain-core + ferrochain-vectorstores), SS-21 (VectorStore Abstraction, ferrochain-vectorstores), SS-22 (Embeddings, ferrochain-core + providers); Canonical Crate Roster 18→20 (+ferrochain-prompts +ferrochain-vectorstores); ADR registry 13→17 (ADR-014 VectorStore+Retriever, ADR-015 PromptInjectionSafety, ADR-016 lc-JSON safety, ADR-017 Embeddings); VP candidates noted (no new VP files yet)."

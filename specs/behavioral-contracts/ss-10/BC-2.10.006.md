@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.006
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.1 (burst-233/F-P133-10/2026-07-22): Step 5 EvidenceJournal entry — rename field `trigger_tokens_remaining` → `tokens_remaining_after`. Adjudication: the value is captured AFTER window replacement in step 3, so `trigger_tokens_remaining` was semantically misleading (suggests the value was captured at trigger time/step 1, not post-replacement). Renaming to `tokens_remaining_after` aligns with BC-2.06.006 streaming event payload which uses `tokens_remaining_after` for the same conceptual value. Both BCs now agree on the canonical field name for post-compaction remaining tokens."
   - "1.0 (D23/2026-07-22): Initial BC — D23 rolling compaction, SS-10 compaction execution contract."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "96858e5"
+input-hash: "4d03e50"
 extracted_from: null
 modified: []
 deprecated: null
@@ -90,7 +91,7 @@ continues with the pre-compaction window). The write MUST succeed before proceed
 
 **Step 5 — EvidenceJournal entry:**
 `CompactionEvent { compacted_range, summary_token_count: summary_text.token_count(),
-trigger_tokens_remaining: RunContext.budget_info.tokens_remaining }` is appended to the
+tokens_remaining_after: RunContext.budget_info.tokens_remaining }` is appended to the
 `EvidenceJournal` (BC-2.10.001 append-only journal). This entry provides an audit trail
 of when and why compaction occurred.
 

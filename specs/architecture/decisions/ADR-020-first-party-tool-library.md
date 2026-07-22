@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-22"
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
-version: "1.1"
+version: "1.4"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,9 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-23]
 changelog:
+  - "1.4 (burst-234/2026-07-22): PO minted E-TOOLS-009 InvalidRegexPattern (VAL/Never; fields pattern: String + compile_error: String; anchor BC-2.23.006 PC-4/EC-002/TV-003). Add E-TOOLS-009 row to Decision 5 table. Update PO obligation to 9 codes (TD-VSDD-060 sweep: '8 codes' → '9 codes'). TOOLS namespace is now 9 codes (001..009)."
+  - "1.3 (burst-233/2026-07-22): F-P133-07 sibling sweep (TD-VSDD-060) — remove stale 'VP-013 Kani P0 candidate' label in §Positive Properties / Rationale (VP-013 seeded burst-232, Kani P1; also correct Kani P0 → Kani P1)."
+  - "1.2 (burst-233/2026-07-22): F-P133-01 — fix fabricated E-SANDBOX namespace in Decision 2: tools::fs out-of-guard return corrected from `FerrochainError::sandbox(E-SANDBOX-xxx)` to `Err(E-TOOLS-001 PathConfinementViolation)`; tools::shell timeout return corrected from `FerrochainError::sandbox(E-SANDBOX-timeout)` to `Err(E-TOOLS-004 BashTimeout)`. F-P133-03 adjudication — add E-TOOLS-008 FileIoError to Decision 5 table; category TOOL (OS-level file execution failure; confirmed via ADR-010 12-category axis); RetryHint Maybe; PO obligation extended to 8 codes (anchor BCs 2.23.001–004 and 2.23.006)."
   - "1.1 (dep-validation/2026-07-22): Decision 7 updated with validated pin results (research-agent crates.io/2026-07-21): `similar` 3.1.1 → pin `\"3\"`, owner corrected to mitsuhiko (Armin Ronacher, NOT dtolnay), Apache-2.0 single-licensed (cargo-deny allowlist note added), MSRV 1.85 (consequence flagged); `regex` 1.13.1 → pin `\"1\"`, MIT OR Apache-2.0, MSRV 1.65, both net-new [workspace.dependencies] (workspace uninitialized); linear-time matching guarantee rationale added; in-body research-flag language resolved."
   - "1.0 (D23/2026-07-22): Initial ADR — introduces ferrochain-tools as crate #21. Closes the DEGRADED gap for first-party file/bash/search tools in domain-e-agentic-coding-assistant.md §3 items 1-5."
 ---
@@ -86,7 +89,7 @@ Implements `Tool` for:
 | `ListDirTool` | List directory entries at path | `ReadOnly` |
 
 Path arguments are validated against `PathGuard` (ferrochain-sandbox) before any I/O.
-Out-of-guard paths return `Err(FerrochainError::sandbox(E-SANDBOX-xxx))`.
+Out-of-guard paths return `Err(E-TOOLS-001 PathConfinementViolation)`.
 
 `EditFileTool` receives:
 ```json
@@ -124,7 +127,7 @@ pub struct BashOutput {
 truncation behavior.
 
 Timeout: `max_duration: Duration` (default: 30 seconds per NFR catalog — same as reqwest
-client policy). Timeout returns `Err(FerrochainError::sandbox(E-SANDBOX-timeout))`.
+client policy). Timeout returns `Err(E-TOOLS-004 BashTimeout)`.
 
 ### `tools::search` — Grep / Text Search
 
@@ -204,9 +207,27 @@ A new error component namespace `E-TOOLS-*` is established for errors originatin
 | E-TOOLS-005 | BashOutputTruncated | BashTool output exceeded max_output_bytes (non-fatal) |
 | E-TOOLS-006 | SearchResultsCapped | GrepTool result count hit max_results ceiling |
 | E-TOOLS-007 | BashRiskTierViolation | Attempted to lower BashTool risk below Medium |
+| E-TOOLS-008 | FileIoError | OS-level I/O error during file tool execution (wraps `std::io::ErrorKind`); structured fields: `path: String`, `io_kind: String` (ErrorKind debug name, e.g. "NotFound", "PermissionDenied", "StorageFull", "NotADirectory") |
+| E-TOOLS-009 | InvalidRegexPattern | `GrepTool` pattern string failed to compile as a valid regex; structured fields: `pattern: String`, `compile_error: String` (the `regex` crate compile error message); anchor BC-2.23.006 PC-4/EC-002/TV-003 |
 
-**PO obligation (error-taxonomy.md):** add the `E-TOOLS-*` section with these 7 codes
-to `.factory/specs/prd-supplements/error-taxonomy.md`.
+**E-TOOLS-008 category adjudication (F-P133-03, burst-233):** BC-2.23.001–004 and
+BC-2.23.006 reference OS-level filesystem errors with non-canonical "I/O" and "VALIDATION"
+category labels; neither appears in the 12-category canonical axis (ADR-010). Adjudicated
+category: **TOOL** ("tool execution failures" per ADR-010 §Category axis — OS errors
+discovered during file tool execution are not VAL [path is syntactically valid input], not
+SECURITY [path passed PathGuard; E-TOOLS-001 covers the confinement violation case], not
+TIMEOUT, not INTERNAL; TOOL is the exact fit). RetryHint: `Maybe` — some OS errors are
+transient (e.g., `StorageFull` may resolve); caller must inspect `io_kind` to determine
+retry feasibility. Message form: `"<tool_type> I/O error on '<path>': <io_kind>"` — subject
+to gate #33 constraint in `error-taxonomy.md` (PO to verify at error-taxonomy authoring).
+Anchor BCs: BC-2.23.001 (ReadFileTool), BC-2.23.002 (WriteFileTool), BC-2.23.003
+(EditFileTool), BC-2.23.004 (ListDirTool), BC-2.23.006 (WriteFileTool missing parent dir).
+
+**PO obligation (error-taxonomy.md):** add the `E-TOOLS-*` section with these 9 codes
+to `.factory/specs/prd-supplements/error-taxonomy.md`. For E-TOOLS-008 specifically:
+category TOOL, RetryHint Maybe, message form subject to gate #33 check; amend PC
+error-path rows in BC-2.23.001–004 and BC-2.23.006 to cite `E-TOOLS-008 FileIoError`
+replacing the current "I/O category" and "VALIDATION" labels.
 
 ## Decision 6 — Purity Boundary Classification
 
@@ -331,8 +352,8 @@ application authors to reason about risk tiers for every use case.
   (ferrochain-graph::hitl), PreToolCallHook (ADR-018), and retry policy (BC-2.16.001).
 - VP-003 (path-confinement Kani proof) is reused by `tools::fs` without modification;
   path-confinement correctness proof coverage extends to first-party tools.
-- `BashTool` risk floor invariant (`Medium` minimum) can be expressed as a Kani P0
-  candidate (VP-013): `BashTool::set_risk(ReadOnly)` and `set_risk(Low)` return error,
+- `BashTool` risk floor invariant (`Medium` minimum) is formally captured as VP-013
+  (Kani P1, seeded burst-232): `BashTool::set_risk(ReadOnly)` and `set_risk(Low)` return error,
   never succeed.
 
 ### Negative / Trade-offs

@@ -1,7 +1,7 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.8"
+version: "1.9"
 status: active
 producer: business-analyst
 timestamp: 2026-07-22T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
   - .factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md
-input-hash: "f49b669"
+input-hash: "5ae9ded"
 traces_to: .factory/specs/product-brief.md
 sections:
   - capabilities-p0.md
@@ -33,6 +33,7 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "v1.9 (2026-07-22): Fix burst 233 F-P133-08 (BA micro-fix) — capabilities-p1-p2.md v1.7→v1.8 (CAP-036 similar-crate facts corrected per ADR-020 Decision 7 v1.1: pin `\"3\"`, owner mitsuhiko, Apache-2.0 single-licensed; stale confirm-before-write instruction removed). TD-VSDD-060 sweep: no other dtolnay/MIT similar-crate facts in domain-spec/ tree."
   - "v1.8 (2026-07-22): D23 L2 CAP layer (burst-230) — capabilities-p1-p2.md v1.6→v1.7 (CAP-017/018 promoted P2→P1; CAP-034..038 authored; D23 section added); entities-graph.md v1.5→v1.6 (HITL Approval Hook Domain + Context Compaction Domain sections added; Tool entity first-party subtypes; Relationships Summary extended); ubiquitous-language-core.md v1.5→v1.6 (D23 section: 13 new terms — PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary, ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool). CAP census: 33→38. Priority: P1 19→26, P2 3→1. D23 and domain-e added. Document Map updated."
   - "v1.7 (2026-07-21): F-P131-04/05 adjudication (burst-226) — entities-graph.md v1.4→v1.5 (PromptValue MessageProvenance.tag→highest_trust_level; TrustLevel entity added to Retrieval and Serialization Domain; Relationships Summary updated); entities-server.md v1.11→v1.12 (ProvenanceTag disambiguation note added); capabilities-p1-p2.md v1.5→v1.6 (CAP-022 strict-undefined universal; CAP-022 security invariant TrustLevel::Untrusted explicit; CAP-023 highest-severity TrustLevel); ubiquitous-language-core.md v1.4→v1.5 (TrustLevel D21 term added; 15→16 D21 terms); ubiquitous-language-server.md v1.3→v1.4 (ProvenanceTag disambiguation note added). Document Map updated."
   - "v1.6 (2026-07-20): D21 second-half CAP authoring complete. ID Registry: CAP-NNN count 27→33 (CAP-028..033 authored for SS-21/22). Priority Distribution: P1 count 13→19; total 27→33. capabilities-p1-p2.md updated (v1.4→v1.5); entities-graph.md updated (v1.3→v1.4, VectorStore/Embeddings/MetadataFilter/SearchType added); ubiquitous-language-core.md updated (v1.3→v1.4, 6 D21 terms added). Domain C forcing-function row updated (SS-22/CAP-031..033 added). Document Map updated."

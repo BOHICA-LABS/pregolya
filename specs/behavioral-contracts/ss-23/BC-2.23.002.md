@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.002
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.1 (burst-233/F-P133-03/2026-07-22): PC-5 / EC-003 / EC-004 / EC-006 / TV-004 — assign E-TOOLS-008 FileIoError to the OS-level I/O error paths (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'WriteFileTool', path: <file_path>, io_kind: <ErrorKind debug name>. Gate #33 forward+reverse: E-TOOLS-008 now covers these raise sites; error-taxonomy.md v1.32 anchors BC-2.23.002 in E-TOOLS-008 row."
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 WriteFileTool."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "4661c22"
+input-hash: "d4604ce"
 extracted_from: null
 modified: []
 deprecated: null
@@ -80,7 +81,10 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
 4. **Overwrite existing file:** If `path` already exists, it is replaced atomically. No backup
    is created. The caller is responsible for any desired backup semantics.
 5. **I/O error:** OS-level I/O failure (disk full, permission denied) propagates as
-   `Err(FerrochainError)` (TOOLS, I/O category). The temporary file is removed on error.
+   `Err(FerrochainError { component: "TOOLS", category: Category::TOOL, code: "E-TOOLS-008",
+   message: "WriteFileTool I/O error on '<path>': <io_kind>", tool_type: "WriteFileTool",
+   path: <file_path>, io_kind: <std::io::ErrorKind debug name> })`.
+   The temporary file is removed on error.
 
 ## Invariants
 
@@ -101,10 +105,10 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
 |----|-------------|-------------------|
 | EC-001 | Path is outside PathGuard scope | `Err(E-TOOLS-001 PathConfinementViolation)` — no I/O |
 | EC-002 | Target file exists; caller writes different content | File atomically replaced; old content is gone; `ToolOutput::Text("written: <path>")` |
-| EC-003 | Parent directory does not exist | `Err(FerrochainError)` — I/O category; OS error: "No such file or directory" |
-| EC-004 | Disk full during write | `Err(FerrochainError)` — I/O category; temp file removed; target file unchanged |
+| EC-003 | Parent directory does not exist | `Err(E-TOOLS-008 FileIoError)` — `{ tool_type: "WriteFileTool", path: "<path>", io_kind: "NotFound" }` |
+| EC-004 | Disk full during write | `Err(E-TOOLS-008 FileIoError)` — `{ tool_type: "WriteFileTool", path: "<path>", io_kind: "StorageFull" }`; temp file removed; target file unchanged |
 | EC-005 | `content` is empty string | `ToolOutput::Text("written: <path>")` — zero-byte file created atomically |
-| EC-006 | Path is a directory (not a file) | `Err(FerrochainError)` — I/O category; rename to a directory fails at OS level |
+| EC-006 | Path is a directory (not a file) | `Err(E-TOOLS-008 FileIoError)` — `{ tool_type: "WriteFileTool", path: "<path>", io_kind: "IsADirectory" }`; rename to a directory fails at OS level |
 
 ## Canonical Test Vectors
 
@@ -113,7 +117,7 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
 | TV-001 | `{ "path": "/workspace/out.txt", "content": "hello" }` — path within PathGuard, parent exists | `ToolOutput::Text("written: /workspace/out.txt")` | happy-path |
 | TV-002 | `{ "path": "/etc/shadow", "content": "evil" }` — outside PathGuard | `Err(E-TOOLS-001)` — `PathConfinementViolation: path '/etc/shadow' is outside the configured PathGuard scope` | security (confinement) |
 | TV-003 | `{ "path": "/workspace/existing.txt", "content": "new" }` — overwrites existing | `ToolOutput::Text("written: /workspace/existing.txt")`; file contains `"new"` | overwrite semantics |
-| TV-004 | `{ "path": "/workspace/nodir/out.txt", "content": "x" }` — parent `/workspace/nodir/` missing | `Err(FerrochainError)` — I/O error, parent dir missing | error-case (missing parent) |
+| TV-004 | `{ "path": "/workspace/nodir/out.txt", "content": "x" }` — parent `/workspace/nodir/` missing | `Err(E-TOOLS-008 FileIoError)` — `{ tool_type: "WriteFileTool", path: "/workspace/nodir/out.txt", io_kind: "NotFound" }` | error-case (missing parent) |
 | TV-005 | `{ "path": "/workspace/empty.txt", "content": "" }` | `ToolOutput::Text("written: /workspace/empty.txt")`; zero-byte file | edge-case (empty content) |
 
 ## Verification Properties

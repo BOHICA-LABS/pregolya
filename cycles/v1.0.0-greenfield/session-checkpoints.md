@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "d48bb84"
+input-hash: "8db23b4"
 traces_to: STATE.md
 ---
 
@@ -1133,3 +1133,28 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA: D23 dep-validation COMPLETE burst 230 (ADR-020 v1.1: similar=3.1.1, regex=1.13.1, fuzzy-matcher REJECTED). BA CAP layer COMPLETE burst 230 (CAP-034..038; CAP-017/018 Wave-1 promotion).
 ### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-230 commit.
 ### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 230 | Phase 1 IN PROGRESS — D23 arch+dep-pins+CAP COMPLETE, PO BC layer NEXT | NEXT: burst 231 PO BC layer
+
+## Archived Checkpoint — Burst 233 pre-commit (archived at burst 233 commit)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21+D-23 scope expansion. D23 authoring COMPLETE (bursts 229-232). Burst-233 fix-burst P1D-133 architect scope COMPLETE (F-P133-01/03/06/07/08 + TD-VSDD-060 candidate sweeps): ADR-020 v1.3; ARCH-INDEX v1.8; VP-013.md v1.1; verification-architecture v2.2; module-decomposition v1.16; ADR-010 v1.4; ADR-018 v1.1; ADR-019 v1.1; purity-boundary-map v1.11; VP-012.md v1.1 (hash 78c9ac2). NEXT: adversary pass P1D-133 on full D21+D23 perimeter."
+### COMMITTED (through burst 232):
+- Burst 232 (last committed): D23 VP layer + ADR-010 v1.3 + PO micro-fix: VP-011/012/013 v1.0; VP-INDEX v1.5; ARCH-INDEX v1.8; verification-architecture v2.1; verification-coverage-matrix v2.0; BC-2.23.001/003/005 v1.1; hash sweep STALE=0 (specs/ 174 MATCH=174).
+### BURST 233 (pending commit — architect scope):
+- ADR-020 v1.3: E-SANDBOX→E-TOOLS fix (Decision 2); E-TOOLS-008 FileIoError adjudication (Decision 5); VP-013 candidate sweep (§Rationale).
+- ARCH-INDEX v1.8: stale BC-2.23.005 contradiction note resolved.
+- VP-013.md v1.1: stale contradiction flags removed; input-hash 0cf9b33.
+- verification-architecture v2.2: stale contradiction note resolved (§VP-013 body).
+- module-decomposition v1.16: VP-011/012/013 anchor block corrected; similar→mitsuhiko attribution; validated deps section; VP-011 candidate sweep (line 114).
+- ADR-010 v1.4: E-TOOLS-008 FileIoError added to TOOLS component table.
+- ADR-018 v1.1: VP-011 candidate sweep (×2 sites).
+- ADR-019 v1.1: VP-012 candidate sweep (×2 sites).
+- purity-boundary-map v1.11: VP-011 candidate sweep (graph::hitl row).
+- VP-012.md v1.1: VP-012 candidate sweep; input-hash 78c9ac2.
+### NEXT-ACTIONS (exact, ordered):
+1. State-manager commit burst-233 to factory-artifacts branch.
+2. Adversary pass P1D-133 on FROZEN HEAD — full D21+D23 expanded perimeter.
+3. After 3/3 CLEAN(strict): /vsdd-factory:check-input-drift → fresh consistency audit → Phase 1 HUMAN GATE.
+### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
+### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-232 commit (pushed). Burst-233 pending commit.
+### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 233 | Phase 1 IN PROGRESS — burst-233 architect COMPLETE, state-manager commit NEXT | NEXT: P1D-133 adversary cascade on D21+D23 perimeter

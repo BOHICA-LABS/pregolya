@@ -2,19 +2,20 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.003
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 origin: greenfield
-priority: P2
+priority: P1
 subsystem: SS-16
 capability: CAP-018
-wave: 2
+wave: 1
 phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
+  - "1.2 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
@@ -24,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/failure-modes.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "df7133f"
+input-hash: "cfb9e9a"
 extracted_from: null
 modified: []
 deprecated: null
@@ -134,9 +135,9 @@ The tool is always invoked regardless of failure count.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-BC216003-01 | Circuit transitions CLOSED→OPEN after exactly `failure_threshold` consecutive failures | Unit test (state machine) | Post-v1 |
-| VP-BC216003-02 | Call to tool in OPEN state returns E-RETRY-003 without invoking implementation | Unit test (mock tool; call count assertion) | Post-v1 |
-| VP-BC216003-03 | Half-open → CLOSED on probe success; OPEN on probe failure | Integration test (time-controlled clock) | Post-v1 |
+| VP-BC216003-01 | Circuit transitions CLOSED→OPEN after exactly `failure_threshold` consecutive failures | Unit test (state machine) | v1 phase |
+| VP-BC216003-02 | Call to tool in OPEN state returns E-RETRY-003 without invoking implementation | Unit test (mock tool; call count assertion) | v1 phase |
+| VP-BC216003-03 | Half-open → CLOSED on probe success; OPEN on probe failure | Integration test (time-controlled clock) | v1 phase |
 
 ## Related BCs
 
@@ -167,7 +168,7 @@ _[to be filled after story decomposition]_
 | L2 Domain Invariants | — |
 | NE References | NE-09 (P-63 REJECT — termination illusory without circuit breaker) |
 | FM References | FM-012 (Tool-Retry Loops Forever — this BC is its primary detection and prevention mechanism) |
-| Priority | P2 |
-| Wave | Wave 2 |
+| Priority | P1 |
+| Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
 | Module | ferrochain-core |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.003
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.2 (burst-233/F-P133-03/2026-07-22): PC-5 — assign E-TOOLS-008 FileIoError to the OS-level I/O error path for file-not-found (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'EditFileTool', path: <file_path>, io_kind: <ErrorKind debug name>. Gate #33 forward+reverse clean."
   - "1.1 (Burst-232/2026-07-22): Fix Category::VALIDATION → Category::VAL in PC-2 (E-TOOLS-003 EditOldStringNotFound). VALIDATION is not in the canonical 12-member Category enum; E-TOOLS-003 is VAL per error-taxonomy v1.31. D23 straggler sweep."
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 EditFileTool."
 traces_to:
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "4661c22"
+input-hash: "d4604ce"
 extracted_from: null
 modified: []
 deprecated: null
@@ -82,7 +83,9 @@ controls whether all occurrences are replaced (default false — first occurrenc
    always tried first.
 4. **Path confinement violation:** Returns `Err(E-TOOLS-001 PathConfinementViolation)`.
    No I/O performed.
-5. **File not found:** Returns `Err(FerrochainError)` — I/O category, OS error detail.
+5. **File not found:** Returns `Err(FerrochainError { component: "TOOLS", category: Category::TOOL,
+   code: "E-TOOLS-008", message: "EditFileTool I/O error on '<path>': <io_kind>",
+   tool_type: "EditFileTool", path: <file_path>, io_kind: <std::io::ErrorKind debug name> })`.
 6. **Conditional retry safe:** `old_string` not found (E-TOOLS-003) is structurally a no-op
    (the file was not modified). Re-retrying after E-TOOLS-003 is safe without re-approval
    because no state was changed. This is the only retry-safe failure mode; write failures

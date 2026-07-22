@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.9"
+version: "1.10"
 status: active
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "9bf75e8"
+input-hash: "d3e4d43"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21, D23]
 supplements:
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.10 (burst-233/F-P133-02/2026-07-22): BC-2.16.001/002/003 Wave-1 promotion per D23 — §2.16 header P2→P1; BC table rows P2→P1; §7 RTM rows P2→P1; §7 totals 72 P1/6 P2 → 75 P1/3 P2. §5 TOOLS component range row updated to list E-TOOLS-008 (FileIoError) and E-TOOLS-009 (InvalidRegexPattern). VP-013 Security Anchor corrected: ADR-018 Decision 6 → ADR-020 Decision 3."
   - "v1.9 (D23/2026-07-22): D23 First-Party Tools + Per-Tool Approval + Rolling Compaction expansion. (1) §2: BC-2.05.007/008 added to §2.05 (PreToolCallHook dispatch + skip-hook-on-resume); BC-2.06.004/005/006 added to §2.06 (StreamEvents 13/14/15); BC-2.10.005/006 added to §2.10 (CompactionTrigger config, compaction execution); §2.23 added (SS-23 First-Party Tool Library — 6 tool BCs). (2) §3: PreToolCallHook + CompactionPolicy traits added; first-party tools bullet. (3) §5: E-TOOLS-001–099 range row added (TOOLS component). (4) §5b: BC file count 116→129. (5) §7 RTM: BC-2.15.001/002/003 P2→P1 (CAP-017 wave promotion); +13 rows; totals updated to 129 (51 P0 / 72 P1 / 6 P2). D23 added to decisions list."
   - "v1.8 (burst-227/F-P132-01/2026-07-21): §11 Observability emission census: convert from stale duplicate table (2 entries, retired ferrochain.mcp.guardrail.unregistered listed as active) to pointer+count form citing observability.md as the sole catalog authority. Active count updated to 6 (per observability.md v1.1). Prevents future dual-maintenance drift."
   - "v1.7 (burst-226/F-P131-01+F-P131-07/2026-07-21): §5 error taxonomy ranges updated: CORE 007→008 (E-CORE-008 GuardrailCriticalRejection), VS 004→005 (E-VS-005 FilterUnsupported). Census: 96→98."
@@ -332,13 +333,13 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.15.005 | Guarded memory and skill writes (MemoryWriteGuard; E-MEMORY-007) | P1 | DI-008, DI-012, DI-014 | ss-15/BC-2.15.005.md |
 | BC-2.15.006 | Frozen-snapshot context mutation — memory-sourced system-prompt content | P1 | DI-002, DI-008, DI-014 | ss-15/BC-2.15.006.md |
 
-### 2.16 Tool Retry with Circuit Breaker (CAP-018) — P2
+### 2.16 Tool Retry with Circuit Breaker (CAP-018) — P1
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.16.001 | Per-tool retry policy keyed by tool_name (not args hash) (NE-09) | P2 | — | ss-16/BC-2.16.001.md |
-| BC-2.16.002 | Finite global_limit non-None default (NE-09) | P2 | — | ss-16/BC-2.16.002.md |
-| BC-2.16.003 | Circuit breaker trips after repeated failure; prevents infinite retry (NE-09) | P2 | — | ss-16/BC-2.16.003.md |
+| BC-2.16.001 | Per-tool retry policy keyed by tool_name (not args hash) (NE-09) | P1 | — | ss-16/BC-2.16.001.md |
+| BC-2.16.002 | Finite global_limit non-None default (NE-09) | P1 | — | ss-16/BC-2.16.002.md |
+| BC-2.16.003 | Circuit breaker trips after repeated failure; prevents infinite retry (NE-09) | P1 | — | ss-16/BC-2.16.003.md |
 
 ### 2.17 Formal Verification Pipeline (CAP-019) — P2
 
@@ -524,7 +525,7 @@ Summary:
 | E-SRLZ-001–099 | ferrochain-core (lc-serializable) | intra-crate | E-SRLZ-001 UnknownSerializableType (STATIC — type id not echoed), E-SRLZ-002 UnsupportedMonolithType |
 | E-VS-001–099 | ferrochain-vectorstores | crate | E-VS-001 ZeroNormVector (STATIC), E-VS-002 DimensionMismatch (STATIC), E-VS-003 RetrieverConfigInvalid, E-VS-004 ZeroNormWriteTime (STATIC), E-VS-005 FilterUnsupported |
 | E-EMBED-001–099 | ferrochain-core (embeddings) | intra-crate | E-EMBED-001 EmbeddingDimensionMismatch (STATIC) |
-| E-TOOLS-001–099 | ferrochain-tools | crate | E-TOOLS-001 PathEscape (SECURITY), E-TOOLS-002 FileSizeExceeded, E-TOOLS-003 ExactMatchNotFound, E-TOOLS-004 BashTimeout, E-TOOLS-007 BashRiskTierViolation |
+| E-TOOLS-001–099 | ferrochain-tools | crate | E-TOOLS-001 PathEscape (SECURITY), E-TOOLS-002 FileSizeExceeded, E-TOOLS-003 ExactMatchNotFound, E-TOOLS-004 BashTimeout, E-TOOLS-005 BashOutputTruncated, E-TOOLS-006 BashGrepResultsTruncated, E-TOOLS-007 BashRiskTierViolation, E-TOOLS-008 FileIoError (TOOL/Maybe), E-TOOLS-009 InvalidRegexPattern (VAL/Never) |
 
 See `prd-supplements/error-taxonomy.md` for the complete catalog.
 
@@ -672,9 +673,9 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.15.001 | CAP-017 | ferrochain-memory | P1 | I |
 | BC-2.15.002 | CAP-017 | ferrochain-memory | P1 | I, P |
 | BC-2.15.003 | CAP-017 | ferrochain-memory | P1 | I |
-| BC-2.16.001 | CAP-018, NE-09 | ferrochain-core | P2 | U, I |
-| BC-2.16.002 | CAP-018, NE-09 | ferrochain-core | P2 | U |
-| BC-2.16.003 | CAP-018, NE-09 | ferrochain-core | P2 | U, I |
+| BC-2.16.001 | CAP-018, NE-09 | ferrochain-core | P1 | U, I |
+| BC-2.16.002 | CAP-018, NE-09 | ferrochain-core | P1 | U |
+| BC-2.16.003 | CAP-018, NE-09 | ferrochain-core | P1 | U, I |
 | BC-2.17.001 | CAP-019, DI-001, DI-005, DI-007 | ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox | P2 | K |
 | BC-2.17.002 | CAP-019 | ferrochain-graph, ferrochain-checkpoint | P2 | F |
 | BC-2.08.010 | CAP-002, DI-008, ADR-004, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
@@ -724,7 +725,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.23.005 | CAP-038, DI-008 | ferrochain-tools | P1 | U, K |
 | BC-2.23.006 | CAP-038, DI-008 | ferrochain-tools | P1 | U |
 
-**Totals:** 129 BCs — 51 P0 / 72 P1 / 6 P2
+**Totals:** 129 BCs — 51 P0 / 75 P1 / 3 P2
 
 ---
 

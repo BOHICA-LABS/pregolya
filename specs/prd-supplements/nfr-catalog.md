@@ -10,7 +10,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/risks.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "ec3e035"
+input-hash: "e3493a9"
 changelog:
   - "1.4 (burst-227/F-P132-05+F-P132-07/2026-07-21): (1) NFR-013: Restate to conform to BC-2.22.001 EC-002 adjudication — drop E-EMBED-001 citation (wrong error code; E-EMBED-001 is EmbeddingDimensionMismatch post-response) and drop pre-send batch-size cap mandate (no BC specifies a pre-send cap; EC-002 deliberate adjudication stands). New statement: embed_documents with an over-limit batch completes deterministically — either Ok or structured Err propagating provider rejection; no panic; no silent truncation. Validation method conforms. (2) NFR-014: Add jinja2/minijinja render benchmark to Validation Method so the stated engine-neutral bound is independently verified for both engines."
   - "1.3 (burst-226/F-P131-07+F-P131-08/2026-07-21): (1) NFR-012: InMemoryVectorStore O(n·d) linear scan corpus envelope per ADR-014 v1.5. (2) NFR-013: embed_documents input-size constraint vs provider max-batch-size caps per ADR-017. (3) NFR-014: template render bounds — max template variables and slots per render call per ADR-015. (4) NFR-009 extended: add embedding call sites (ferrochain-prompts not applicable; ferrochain-vectorstores and ferrochain-core::embeddings are new HTTP-timeout scopes for embed_documents/embed_query). (5) NFR-to-Module map updated: NFR-009 extended to ferrochain-vectorstores + ferrochain-core::embeddings; NFR-012/013/014 rows added."

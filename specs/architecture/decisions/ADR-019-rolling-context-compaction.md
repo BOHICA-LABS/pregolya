@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-22"
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
-version: "1.0"
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-10, SS-04]
 changelog:
+  - "1.1 (burst-233/2026-07-22): F-P133-07 sibling sweep (TD-VSDD-060) — remove stale 'VP-012 candidate' labels (VP-012 seeded burst-232, Kani P1). Two sites updated: §Compaction Trigger Evaluation Sequence step 1 watermark check, and §Positive Properties rationale line."
   - "1.0 (D23/2026-07-22): Initial ADR — rolling proactive context compaction as a first-class framework primitive. Closes the DEGRADED gap identified in domain-e-agentic-coding-assistant.md §3 item 10."
 ---
 
@@ -121,7 +122,7 @@ The `BudgetEngine` in `graph::budget` (execution counterpart of `core::budget` d
 per ADR-009) evaluates `CompactionTrigger` after each super-step:
 
 1. **Watermark check:** `tokens_remaining / ceiling < (1.0 - fraction)` using `budget_info`
-   in `RunContext`. This is a pure arithmetic comparison (VP-012 candidate).
+   in `RunContext`. This is a pure arithmetic comparison (VP-012, Kani P1, seeded burst-232).
 2. **History snapshot:** query `CheckpointSaver::search_history` (BC-2.04.008) to retrieve
    the `count` most recent turns (or all turns up to the token estimate threshold).
 3. **Compact:** call `compaction_policy.compact(&snapshot, &run_ctx).await`.
@@ -249,7 +250,7 @@ Frozen-snapshot is a next-run-start mechanism; it cannot extend the current run.
 - Compaction is auditable via `EvidenceJournal` entries and observable via streaming events.
 - `CompactionTrigger::Disabled` (default) preserves full backward compatibility; existing
   graphs are unaffected.
-- `OnWatermark` arithmetic is a pure comparison — VP-012 Kani candidate (trigger fires if
+- `OnWatermark` arithmetic is a pure comparison — VP-012 (Kani P1, seeded burst-232) (trigger fires if
   and only if `tokens_remaining / ceiling < (1.0 - fraction)`).
 - Framework-owned compaction ensures checkpoint immutability is respected: original turns
   are not deleted, only superseded in the active message window.

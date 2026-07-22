@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/planning/market-intel.md
-input-hash: "0f6895c"
+input-hash: "9eab40a"
 traces_to: L2-INDEX.md
 decisions: [D1, D2, D7, D17]
 changelog:

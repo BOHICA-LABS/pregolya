@@ -14,8 +14,10 @@ date: "2026-07-22"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.3"
+version: "1.5"
 changelog:
+  - "1.5 (burst-234/2026-07-22): PO minted E-TOOLS-009 InvalidRegexPattern (VAL/Never; fields pattern: String + compile_error: String; anchor BC-2.23.006 PC-4/EC-002/TV-003 — invalid-regex path in GrepTool). Add E-TOOLS-009 row to TOOLS component table. Update Source/Origin cite range 001..007 → 001..009 (TD-VSDD-060 sibling sweep). TOOLS namespace is now 9 codes (001..009); component count and #[non_exhaustive] gate count unchanged."
+  - "1.4 (burst-233/2026-07-22): F-P133-03 sibling sweep — add E-TOOLS-008 FileIoError to TOOLS component table (category TOOL, RetryHint Maybe); covers OS-level I/O errors during file tool execution; wraps std::io::ErrorKind; anchor BCs: BC-2.23.001–004, BC-2.23.006. Component count and #[non_exhaustive] gate count unchanged (TOOLS already registered as component 17 in v1.3; new code is within existing component)."
   - "1.3 (burst-232/2026-07-22): D23 — register TOOLS as component 17 (ferrochain-tools, SS-23). Component axis 16→17. E-TOOLS-001..007 adjudicated (codes coined by error-taxonomy v1.31 during D23 BC authoring). E-TOOLS-004 (BashTimeout) carries RetryHint::Never diverging from the TIMEOUT category default (Later); rationale in §Component Axis Expansion (D23). E-TOOLS-005 (BashOutput.truncated) and E-TOOLS-006 (GrepResult.capped) are informational payload fields, not FerrochainError Err returns — they are outside the component×category axis. #[non_exhaustive] gate count 17→18."
   - "1.2 (burst-225/2026-07-21): F-P130-07 sibling sweep — correct stale E-EMBED-001 rationale prefix in EMBED component table: `DimensionMismatch:` → `EmbeddingDimensionMismatch:` per error-taxonomy v1.29 (PO renamed to distinguish from E-VS-002 which retains bare `DimensionMismatch:`)."
   - "1.1 (D21/2026-07-20): Component axis expanded from 12 → 16 by adjudicating error codes introduced in ADR-014 (VectorStore), ADR-015 (Prompt Templates), ADR-016 (lc-JSON), and ADR-017 (Embeddings). Four new components added: TMPL (ferrochain-prompts), SRLZ (ferrochain-core::serializable), VS (ferrochain-vectorstores), EMBED (ferrochain-core::embeddings + providers). Category axis unchanged at 12. E-CFG-001 (VectorStoreRetriever config) reassigned to E-VS-NNN — no CFG component created. ADR-016 category error corrected: 'Serialization' → VAL. #[non_exhaustive] gate count 13 → 17. All four new components are library-layer only; no RFC-7807 status rows needed in BC-2.14.002."
@@ -219,6 +221,8 @@ by ADR-020 and error-taxonomy v1.31).
 | E-TOOLS-003 | VAL | Never | EditOldStringNotFound: `old_string` literal not found in the target file; caller supplied a stale or incorrect patch string. Input constraint violation. |
 | E-TOOLS-004 | TIMEOUT | **Never** | BashTimeout: Bash process exceeded the execution time limit. **RetryHint divergence:** TIMEOUT category default is `Later(Duration)`, but BashTimeout carries `RetryHint::Never` — the same command will timeout again unless the caller changes the command or limit. Callers must not auto-retry without user intervention. |
 | E-TOOLS-007 | VAL | Never | BashRiskTierViolation: ActionRisk below the minimum allowed floor (ReadOnly or Low rejected); caller attempted to invoke a command below the enforced risk floor. Input constraint violation. |
+| E-TOOLS-008 | TOOL | Maybe | FileIoError: OS-level I/O error during file tool execution; wraps `std::io::ErrorKind` in structured fields (`path: String`, `io_kind: String` — ErrorKind debug name, e.g. "NotFound", "PermissionDenied", "StorageFull", "NotADirectory"); covers file-not-found/permission-denied/not-a-directory/disk-full/missing-parent-dir conditions in tools::fs and tools::search. RetryHint::Maybe because some IO errors are transient (e.g. StorageFull); caller inspects `io_kind` field to determine retry eligibility. Anchor BCs: BC-2.23.001–004, BC-2.23.006. |
+| E-TOOLS-009 | VAL | Never | InvalidRegexPattern: `GrepTool` `pattern` argument failed to compile as a valid regex; structured fields: `pattern: String`, `compile_error: String` (the `regex` crate compile error message). Caller supplied an invalid pattern — input constraint violation; retrying the same pattern is futile. Anchor: BC-2.23.006 PC-4/EC-002/TV-003. |
 
 **Informational payload fields (NOT FerrochainError Err returns):**
 
@@ -317,6 +321,6 @@ would be futile without caller action (E-TOOLS-004 BashTimeout).
 - **ADR-016** (lc-JSON Deserialization Safety): coins `E-SRLZ-001/002`; SRLZ component adjudicated here; `category: Serialization` corrected to `VAL`.
 - **ADR-017** (Embeddings Trait): coins `E-EMBED-001`; EMBED component adjudicated here.
 - **D21** (burst 216, 2026-07-20): ecosystem-parity scope expansion triggering component axis review.
-- **ADR-020** (BashTool / ferrochain-tools): coins `E-TOOLS-001..007`; TOOLS component adjudicated here. E-TOOLS-004 RetryHint::Never divergence rationale documented in §Component Axis Expansion (D23).
+- **ADR-020** (BashTool / ferrochain-tools): TOOLS namespace; original D23 codes E-TOOLS-001..007; E-TOOLS-008 FileIoError added burst-233; E-TOOLS-009 InvalidRegexPattern added burst-234; full range E-TOOLS-001..009 (excluding informational payload fields 005/006). TOOLS component adjudicated here. E-TOOLS-004 RetryHint::Never divergence rationale documented in §Component Axis Expansion (D23).
 - **error-taxonomy v1.31** (D23 BC layer): E-TOOLS-001..007 minted; error census 105.
 - **D23** (burst 232, 2026-07-22): ferrochain-tools / SS-23 scope expansion triggering component axis review.

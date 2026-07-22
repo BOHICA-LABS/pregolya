@@ -4122,3 +4122,63 @@ Architect flagged three SS-23 behavioral contracts with incorrect `Category:` va
 - Phase 1 status: D23 authoring COMPLETE (bursts 229-232); 0/3 on D23 expanded perimeter
 - Trajectory tail: →12→9→7→8→[D-23 expansion; 0/3 RESET; ALL D23 layers (arch+CAP+BC+VP) complete]
 - NEXT: adversary pass P1D-133 on FROZEN HEAD (post-burst-232 commit) on FULL D21+D23 expanded perimeter → cascade toward 3/3 CLEAN(strict) → check-input-drift → fresh consistency audit → Phase 1 HUMAN GATE
+
+---
+
+### Archived Current Phase Steps Row (displaced from STATE.md at burst 233)
+
+| Burst 229 — D23 architecture layer COMPLETE (ADR-018/019/020, SS-23 ferrochain-tools crate #21, roster 21, universe 53, SS-15/SS-16 Wave-1 promotions); hash cascade STALE=0; routing deviation noted (architect wrote STATE.md mechanical stale-cite fixes; absorbed by state-manager); burst-224 row archived | architect + state-manager | COMPLETE | ADR-018 v1.0 (PreToolCallHook/PreToolDecision; graph::hitl; 16th StreamEvent variant). ADR-019 v1.0 (CompactionTrigger/Policy/Summary/ConversationSnapshot; BudgetConfig extension; graph::budget compaction engine). ADR-020 v1.0 (ferrochain-tools crate #21; SS-23; tools::fs/shell/search; E-TOOLS-001..007 namespace; dep research similar+regex in flight). module-decomposition v1.15; purity-boundary-map v1.10; ARCH-INDEX v1.8 (v1.6 burst 229; v1.7 burst 232; v1.8 burst 233). Hash cascade: module-criticality v1.5 + verification-coverage-matrix v1.9. Burst 229. |
+
+---
+
+## Burst 233 Narrative — P1D-133 Fix-Burst (2026-07-22)
+
+**Phase:** 1d adversarial cascade — first pass on the complete D21+D23 expanded perimeter
+
+**Pass verdict:** P1D-133 NOT CLEAN (10 findings: 0 CRIT / 3 HIGH / 5 MED / 2 LOW); streak 0/3.
+
+**Agents dispatched:** architect, BA (business-analyst), PO (product-owner), state-manager.
+
+### Architect scope (F-P133-01/03/06/07/08 + sibling sweeps)
+
+- **ADR-020 v1.1→v1.4**: Decision 2 fix — E-SANDBOX-001 fabrication purged; correct codes E-TOOLS-001 + E-TOOLS-004 substituted. Decision 5 adjudication — E-TOOLS-008 FileIoError minted for fs path-traversal + I/O failures; PathGuard returns this on all access-denial paths. E-TOOLS-009 InvalidRegexPattern appended to Decision 2 table (minted by PO in parallel; 9-code sweep completed). VP-013 candidate seeded in §Rationale.
+- **ADR-010 v1.4→v1.5**: E-TOOLS-008 FileIoError and E-TOOLS-009 InvalidRegexPattern added to the TOOLS component row in the error-code table. Provenance narrative updated.
+- **ADR-018 v1.1**: VP-011 candidate → seeded sweep at two sites (§Rationale + §Decision §VP) updated to "VP-011 (Kani P0, seeded burst-232)".
+- **ADR-019 v1.1**: VP-012 candidate → seeded sweep at two sites updated to "VP-012 (Kani P1, seeded burst-232)".
+- **ARCH-INDEX v1.8**: Stale CONFIGURATION flag resolved (F-P133-03); BC-2.23.005 contradiction note removed.
+- **VP-013 v1.1→v1.2**: Stale contradiction flags removed; ADR-020 Decision 3 anchor added to §Decision; input-hash refreshed (1cfe51d).
+- **verification-architecture v2.2**: Stale contradiction note resolved in VP-013 body (F-P133-06).
+- **module-decomposition v1.16→v1.17**: VP-011/012/013 anchor block corrected (F-P133-07); similar crate attribution corrected to mitsuhiko/Apache-2.0 (F-P133-08); E-TOOLS-009 added to SS-23 9-code note; validated deps section updated; input-hash refreshed (088bd7a → 1511512 post-sweep).
+- **purity-boundary-map v1.11**: VP-011 candidate sweep — graph::hitl row updated.
+- **VP-012 v1.1**: VP-012 candidate → seeded sweep; input-hash refreshed (78c9ac2 → 344dbb8 post-sweep).
+
+### BA scope (F-P133-* CAP layer)
+
+- **capabilities-p1-p2 v1.7→v1.8**: CAP-036 similar facts synced with ADR-020 Decision 7 (similar 3.1.1 mitsuhiko attribution + Apache-2.0 single-licensed; previously showed dtolnay/MIT/Apache-2.0 which was F-P133 finding).
+- **L2-INDEX v1.8→v1.9**: Capabilities census updated to reflect v1.8 sync.
+
+### PO scope (F-P133-02/04/05/09/10 + error-taxonomy minting)
+
+- **BC-2.16.001 v1.5 / BC-2.16.002 v1.3 / BC-2.16.003 v1.2**: F-P133-02 CAP-018 promotion propagation — all three HITL-hook BCs promoted from P2→P1 Wave 1 priority.
+- **BC-2.23.001 v1.2 / BC-2.23.002 v1.1 / BC-2.23.003 v1.2 / BC-2.23.004 v1.1 / BC-2.23.006 v1.1**: I/O category corrected to TOOL; E-TOOLS-008 FileIoError added on path-traversal + I/O failure conditions; VALIDATION category corrected to VAL; E-TOOLS-009 InvalidRegexPattern added on invalid-regex precondition.
+- **BC-2.10.006 v1.1**: F-P133-10 — tokens_remaining_after field renamed per interface-definitions authoritatively canonical spelling.
+- **BC-INDEX v2.2**: Triple updated 51/72/6 → 51/75/3 (3 P2 BCs promoted to P1 Wave 1); VP-013 anchor updated to ADR-020 Decision 3.
+- **prd v1.9→v1.10**: RTM updated; BC-INDEX v2.2 reference; priority triple updated.
+- **error-taxonomy v1.31→v1.32**: E-TOOLS-008 FileIoError (TOOLS/broken/P1) and E-TOOLS-009 InvalidRegexPattern (TOOLS/broken/P1) minted; CreateFileTool→ListDirTool rename corrected; PC anchors added; stale delegation note removed. Census 105→107 = 43+17+47.
+- **interface-definitions v2.46→v2.47**: tokens_remaining_after canonical spelling confirmed; BC-2.10.006 anchor updated.
+- **bc-authoring-plan v2.42→v2.43**: PO process notes updated; priority triple 51/75/3 recorded.
+
+### State-manager scope (this burst)
+
+- **Hash sweep**: passes 1–3 completed. First pass: TOTAL=153 UPDATED=153. After transitive cascade (updating a file changes its content, invalidating downstream hashes), two additional passes reached TOTAL=153 MATCH=153 STALE=0. Index files swept individually: ARCH-INDEX, BC-INDEX (live-index, skipped), L2-INDEX, VP-INDEX (live-index, skipped).
+- **Convergence trajectory**: P1D-133 row appended (10 findings: 0C/3H/5M/2L).
+- **STATE.md**: v3.74→v3.75; timestamp updated; current_step updated; convergence_status updated; Phase 1 finding progression appended (→10); Current Phase Steps updated (burst-229 archived, burst-233 row replaced with full scope); Session Resume Checkpoint replaced; Historical Content versions updated.
+- **Routing deviation absorbed**: architect modified STATE.md mid-burst (state-manager scope); content verified and updated in this commit.
+
+### Post-Burst Status
+
+- Phase 1d passes: 133 total (128 pre-D21 + 5 post-D21+D23)
+- Fix bursts: 133 total
+- Convergence counter: 0/3 (P1D-133 NOT CLEAN)
+- Trajectory tail: →12→9→7→8→10 (P1D-133 D21+D23 first pass)
+- NEXT: adversary pass P1D-134 on FROZEN HEAD (post-burst-233 commit)

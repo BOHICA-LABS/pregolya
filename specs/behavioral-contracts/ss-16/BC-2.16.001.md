@@ -7,10 +7,10 @@ status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 origin: greenfield
-priority: P2
+priority: P1
 subsystem: SS-16
 capability: CAP-018
-wave: 2
+wave: 1
 phase: 1a
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-34): F-P34-02 EC-003 + TV-004 — replace E-RETRY-003 with E-RETRY-004 (InvalidRetryLimit). E-RETRY-003 is CircuitBreakerOpen (BC-2.16.003, POLICY/Later); zero-limit construction rejection is a misconfiguration → VAL, RetryHint Never. New code E-RETRY-004 minted in error-taxonomy.md 1.5."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
   - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5 had `Err(FerrochainError { component: RETRY, category: POLICY, code: E-RETRY-001, retry_hint: Never })` — bare wrapper missing message field for E-RETRY-001 which has `<tool_name>` and `<attempt_limit>` placeholders. Added `message:` template inline; `<tool_name>` from `ToolRetryPolicy.tool_name`; `<attempt_limit>` from `ToolRetryPolicy.attempt_limit` — both deterministically available at raise site."
+  - "1.5 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
   - "1.4 (D23/2026-07-22): Add retry-approval ordering invariant per ADR-018 Decision 3. Specifies the fixed dispatch sequence: circuit_breaker.check → pre_tool_dispatch → tool.invoke → retry_policy.record(result); record(result) fires unconditionally after invoke regardless of approval path."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "71263b5"
+input-hash: "0e47561"
 extracted_from: null
 modified: []
 deprecated: null
@@ -142,8 +143,8 @@ after a success.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-BC216001-01 | Two calls to same tool with different args share one counter | Unit test (counter state inspection) | Post-v1 |
-| VP-BC216001-02 | Per-tool limit is reached in exactly `attempt_limit` calls regardless of arg variation | Property test (arbitrary args, fixed limit) | Post-v1 |
+| VP-BC216001-01 | Two calls to same tool with different args share one counter | Unit test (counter state inspection) | v1 phase |
+| VP-BC216001-02 | Per-tool limit is reached in exactly `attempt_limit` calls regardless of arg variation | Property test (arbitrary args, fixed limit) | v1 phase |
 
 ## Related BCs
 
@@ -173,7 +174,7 @@ _[to be filled after story decomposition]_
 | L2 Domain Invariants | — |
 | NE References | NE-09 (P-63 REJECT), P-71 (ADOPT — shared retry combinator) |
 | FM References | FM-012 (Tool-Retry Loops Forever) |
-| Priority | P2 |
-| Wave | Wave 2 |
+| Priority | P1 |
+| Wave | Wave 1 |
 | Test Types | U (unit), P (property) |
 | Module | ferrochain-core |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.001
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.2 (burst-233/F-P133-03/2026-07-22): PC-4 / EC-005 / TV-004 — assign E-TOOLS-008 FileIoError to the OS-level I/O error path (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'ReadFileTool', path: <file_path>, io_kind: <ErrorKind debug name>. Gate #33 forward+reverse: E-TOOLS-008 now covers this raise site; error-taxonomy.md v1.32 anchors BC-2.23.001 in E-TOOLS-008 row."
   - "1.1 (Burst-232/2026-07-22): Fix Category::VALIDATION → Category::VAL in PC-3 (E-TOOLS-002 FileReadExceedsLimit). VALIDATION is not in the canonical 12-member Category enum; E-TOOLS-002 is VAL per error-taxonomy v1.31. D23 straggler sweep."
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 ReadFileTool."
 traces_to:
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "4661c22"
+input-hash: "d4604ce"
 extracted_from: null
 modified: []
 deprecated: null
@@ -83,9 +84,11 @@ limit.
    exceeds configured limit of <max_bytes> bytes" })`.
    The file is NOT read into memory before this check; the implementation uses
    `std::fs::metadata()` to obtain the size before opening the file.
-4. **File not found or permission denied:** The tool propagates the OS I/O error as a
-   `FerrochainError` (TOOLS, I/O category). This is not a path-confinement violation; it is a
-   runtime filesystem error.
+4. **File not found or permission denied:** The tool propagates the OS I/O error as
+   `Err(FerrochainError { component: "TOOLS", category: Category::TOOL, code: "E-TOOLS-008",
+   message: "ReadFileTool I/O error on '<path>': <io_kind>", tool_type: "ReadFileTool",
+   path: <file_path>, io_kind: <std::io::ErrorKind debug name> })`.
+   This is not a path-confinement violation; it is a runtime filesystem error.
 5. VP-003 (workspace confinement Kani proof) coverage extends to `ReadFileTool` without
    modification: `PathGuard` is the same type already proven; no new Kani proof is required.
 
@@ -112,7 +115,7 @@ limit.
 | EC-002 | Path is a symlink that resolves to a target outside PathGuard scope | `Err(E-TOOLS-001 PathConfinementViolation)` — symlink target must also pass `PathGuard::check` |
 | EC-003 | File exists, is within scope, but size is 1,048,577 bytes (1 byte over 1 MiB default) | `Err(E-TOOLS-002 FileReadExceedsLimit)` — file not read; error message includes actual size and limit |
 | EC-004 | File exists, within scope, size ≤ max_bytes, but contains binary (non-UTF-8) bytes | `ToolOutput::Text(contents)` with U+FFFD replacement for non-UTF-8 bytes — not an error; caller annotated |
-| EC-005 | File does not exist | `Err(FerrochainError)` with I/O category; message includes OS error detail |
+| EC-005 | File does not exist | `Err(E-TOOLS-008 FileIoError)` — `{ tool_type: "ReadFileTool", path: "<path>", io_kind: "NotFound" }` |
 | EC-006 | `ReadFileConfig::max_bytes` is set to 0 (caller misconfiguration) | `Err(E-TOOLS-002 FileReadExceedsLimit)` for any non-empty file; zero-byte files return `ToolOutput::Text("")` |
 | EC-007 | Concurrent invocations of `ReadFileTool` for the same path | Both complete independently; no locking; last-write-wins on the filesystem is an accepted OS behavior |
 
@@ -123,7 +126,7 @@ limit.
 | TV-001 | `{ "path": "/workspace/README.md" }` — file exists, 512 bytes, within PathGuard | `ToolOutput::Text("<file contents>")` | happy-path |
 | TV-002 | `{ "path": "/etc/passwd" }` — outside PathGuard scope `("/workspace")` | `Err(E-TOOLS-001)` — `PathConfinementViolation: path '/etc/passwd' is outside the configured PathGuard scope` | security (confinement) |
 | TV-003 | `{ "path": "/workspace/large.bin" }` — file is 2 MiB, max_bytes = 1,048,576 | `Err(E-TOOLS-002)` — `FileReadExceedsLimit: file '/workspace/large.bin' is 2097152 bytes, exceeds configured limit of 1048576 bytes` | size-limit |
-| TV-004 | `{ "path": "/workspace/missing.txt" }` — file does not exist | `Err(FerrochainError)` — I/O category, OS error detail | error-case (not-found) |
+| TV-004 | `{ "path": "/workspace/missing.txt" }` — file does not exist | `Err(E-TOOLS-008 FileIoError)` — `{ tool_type: "ReadFileTool", path: "/workspace/missing.txt", io_kind: "NotFound" }` | error-case (not-found) |
 | TV-005 | `{ "path": "/workspace/binary.bin" }` — binary file, 100 bytes, within scope | `ToolOutput::Text(<lossily-decoded string>)` — no error | edge-case (binary) |
 
 ## Verification Properties

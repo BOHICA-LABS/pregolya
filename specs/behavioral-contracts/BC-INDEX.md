@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "2.1"
+version: "2.2"
 status: active
 producer: state-manager
 timestamp: 2026-07-22T00:00:00Z
@@ -13,7 +13,7 @@ traces_to: .factory/specs/prd.md
 
 # BC-INDEX: ferrochain Behavioral Contracts
 
-> **129 BCs total — 51 P0 / 72 P1 / 6 P2 | 11 Red Gate | 11 VP Seed | 13 VPs registered**
+> **129 BCs total — 51 P0 / 75 P1 / 3 P2 | 11 Red Gate | 11 VP Seed | 13 VPs registered**
 >
 > Subsystem IDs: SS-01 through SS-17 assigned by architect at Phase 1 Step D (2026-07-14).
 > SS-18 through SS-22 added D21 ecosystem-parity expansion (2026-07-20).
@@ -29,8 +29,8 @@ traces_to: .factory/specs/prd.md
 |--------|-------|
 | Total BCs | 129 |
 | Priority P0 | 51 |
-| Priority P1 | 72 |
-| Priority P2 | 6 |
+| Priority P1 | 75 |
+| Priority P2 | 3 |
 | Red Gate BCs | 11 |
 | VP Seed BCs | 11 |
 | Subsection groups | 23 (SS-2.01 – SS-2.23) |
@@ -65,7 +65,7 @@ traces_to: .factory/specs/prd.md
 | VP-010 | BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed) | Kani (candidate) | ADR-016 Security Invariant |
 | VP-011 | BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny | Kani (candidate) | ADR-018 Decision 1 |
 | VP-012 | BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; Watermark Arithmetic | Kani (candidate) | ADR-019 Decision 3 |
-| VP-013 | BC-2.23.005 | BashTool — Non-Lowerable Medium Risk Floor; Sandboxed Shell Execution | Kani (candidate) | ADR-018 Decision 6 |
+| VP-013 | BC-2.23.005 | BashTool — Non-Lowerable Medium Risk Floor; Sandboxed Shell Execution | Kani (candidate) | ADR-020 Decision 3 |
 
 _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-011/012/013 seeds assigned burst-231 (2026-07-22); architect to author VP body files in Phase 6._
 
@@ -170,9 +170,9 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.15.004 | SkillStore Registry — Load-on-Demand Skill Documents | CAP-020 | | DI-008,DI-014 | P1 | | | ss-15/BC-2.15.004.md |
 | BC-2.15.005 | Guarded Memory and Skill Writes (MemoryWriteGuard; E-MEMORY-007) | CAP-020 | | DI-008,DI-012,DI-014 | P1 | | | ss-15/BC-2.15.005.md |
 | BC-2.15.006 | Frozen-Snapshot Context Mutation — Memory-Sourced System-Prompt Content | CAP-020 | | DI-002,DI-008,DI-014 | P1 | | | ss-15/BC-2.15.006.md |
-| BC-2.16.001 | Per-Tool Retry Policy Keyed by tool_name (Not Args Hash) | CAP-018 | NE-09 | | P2 | | | ss-16/BC-2.16.001.md |
-| BC-2.16.002 | Finite global_limit Non-None Default for All Retry Policies | CAP-018 | NE-09 | | P2 | | | ss-16/BC-2.16.002.md |
-| BC-2.16.003 | Circuit Breaker Trips After Repeated Failure; Prevents Infinite Retry | CAP-018 | NE-09 | | P2 | | | ss-16/BC-2.16.003.md |
+| BC-2.16.001 | Per-Tool Retry Policy Keyed by tool_name (Not Args Hash) | CAP-018 | NE-09 | | P1 | | | ss-16/BC-2.16.001.md |
+| BC-2.16.002 | Finite global_limit Non-None Default for All Retry Policies | CAP-018 | NE-09 | | P1 | | | ss-16/BC-2.16.002.md |
+| BC-2.16.003 | Circuit Breaker Trips After Repeated Failure; Prevents Infinite Retry | CAP-018 | NE-09 | | P1 | | | ss-16/BC-2.16.003.md |
 | BC-2.17.001 | Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace Confinement VP | CAP-019 | | DI-001,DI-005,DI-007 | P2 | | | ss-17/BC-2.17.001.md |
 | BC-2.17.002 | cargo-fuzz Targets — Serialization Round-Trip (Checkpoint) and Graph-Execution Paths | CAP-019 | | | P2 | | | ss-17/BC-2.17.002.md |
 | BC-2.18.001 | PromptTemplate F-String Rendering, Partial Binding, Variable Detection, and Strict-Undefined Guard | CAP-022 | | DI-008,DI-014 | P1 | | | ss-18/BC-2.18.001.md |
@@ -217,6 +217,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.2 | 2026-07-22 | burst-233/F-P133-02: BC-2.16.001/002/003 Wave-1 promotion per D23 — priority P2→P1, wave 2→1; header 72 P1/6 P2 → 75 P1/3 P2; Full Catalog P2→P1 for all three rows. VP-013 Security Anchor corrected: ADR-018 Decision 6 → ADR-020 Decision 3 (BashTool non-lowerable Medium risk floor is ADR-020 Decision 3, not ADR-018). | burst-233 F-P133-02 |
 | 2.1 | 2026-07-22 | D23 INTEGRATE burst-231: header 116→129 BCs; P1 56→72, P2 9→6 (BC-2.15.001/002/003 promoted P2→P1); VP Seed 8→11 (+VP-011→BC-2.05.007, VP-012→BC-2.10.005, VP-013→BC-2.23.005); VP-INDEX 10→13; subsection groups 22→23 (+SS-23 First-Party Tools); Full Catalog +13 rows (BC-2.05.007/008, BC-2.06.004/005/006, BC-2.10.005/006, BC-2.23.001–006). | D23 burst-231 |
 | 2.0 | 2026-07-21 | Burst-226 (F-P131-01/02/03/05/06/07): (1) F-P131-05 TrustLevel migration: BC-2.18.004 v1.1→1.2 (title updated to canonical TrustLevel form; EC/TV/INV migrated from ProvenanceTag to TrustLevel). BC-2.18.002 v1.0→1.1 (INV-2/PC3 TrustLevel). BC-2.09.003 v1.1→1.2 (PC1 ProvenanceTag struct form; PC4 canonical guardrail.unregistered_passthrough). BC-2.11.006 v1.1→1.2 (PC2 canonical event_type). (2) F-P131-01: BC-2.20.002 v1.2→1.3 (PC2 severity-bifurcated Fail; E-CORE-008). (3) F-P131-07: BC-2.21.004 v1.1→1.2 (INV-3 fail-safe E-VS-005). (4) F-P131-02+03: BC-2.13.002 v1.0→1.1 (event_type sandbox.process_no_isolation_execute). BC-2.12.006 v1.2→1.3 (event_type server.rate_limit_store_in_memory). BC-2.15.003 v1.1→1.2 (event_type memory.gdpr_unattributed_session_entries). BC-2.12.005 v1.4→1.5 (event_type server.security_config_cors_wildcard). BC-2.18.004 H1 title already updated in v1.9→2.0 scope. | burst-226 F-P131 |
 | 1.9 | 2026-07-21 | F-P130 fix burst 225: DI column updates — (1) BC-2.20.001: DI-008,DI-012 → DI-008,DI-012,DI-014 (F-P130-04). (2) BC-2.20.002: DI-012 → DI-012,DI-014 (F-P130-02/04). (3) BC-2.21.004: DI-008 → DI-008,DI-014 (F-P130-04). (4) BC-2.22.002: DI-008,DI-010,DI-014 → DI-008,DI-009,DI-010,DI-014 (F-P130-09). (5) BC-2.22.003: DI-008,DI-014 → DI-008,DI-009,DI-014 (F-P130-09). | F-P130 burst-225 |

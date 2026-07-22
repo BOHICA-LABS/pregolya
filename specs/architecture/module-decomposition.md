@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.15"
+version: "1.17"
 status: active
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
@@ -10,10 +10,12 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "b094758"
+input-hash: "98b2258"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.17 (burst-234/2026-07-22): TD-VSDD-060 sibling sweep — update SS-23 E-TOOLS-* count note: '8 codes post-burst-233' → '9 codes post-burst-234'; add E-TOOLS-009 InvalidRegexPattern to cite. Input-hash refresh for upstream prd.md drift."
+  - "1.16 (burst-233/2026-07-22): F-P133-07 — fix SS-23 VP anchor block: VP-011 corrected from 'candidate (Kani P0) graph::hitl' to 'VP-011 (Kani P0, seeded burst-232)'; VP-012 corrected from 'candidate (integration P1) interrupt/resume' to 'VP-012 (Kani P1, seeded burst-232) — OnWatermark arithmetic, BC-2.10.005, ferrochain-core, ADR-019'; VP-013 corrected from 'candidate (Kani P0)' to 'VP-013 (Kani P1, seeded burst-232)'. F-P133-08 — fix similar crate attribution: 'dtolnay' → 'mitsuhiko'; 'MIT/Apache-2.0' → 'Apache-2.0 single-licensed'; section renamed 'Dependency research flags' → 'Validated external dependencies'; both deps marked as confirmed (ADR-020 Decision 7 v1.1). BC anchors updated to reflect SS-23 BCs as authored (BC-2.23.001..006)."
   - "1.15 (D23/2026-07-22): Add ferrochain-tools crate #21 section (SS-23): tools::fs, tools::shell, tools::search (all MEDIUM). Extend graph::hitl row for ADR-018 PreToolCallHook types. Extend core::budget definitions note for D23 compaction types (CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary — ADR-019). Extend graph::budget row for compaction engine dispatch. Note Wave 1 promotions: core::retry (SS-16) and ferrochain-memory (SS-15) per D23 items 3+4. Module universe 50→53 (+tools::fs +tools::shell +tools::search; definitions-only additions follow no-criticality-row precedent per ADR-009)."
   - "1.14 (burst-226/2026-07-21): F-P131-05 sibling sweep — prompts::injection_guard row: replace 'untrusted ProvenanceTag in TrustRequired slot' with 'TrustLevel::Untrusted in TrustRequired slot'; add note that TrustLevel is SS-18-local type distinct from core::guardrail::ProvenanceTag (SS-11) per ADR-015 v1.3 adjudication."
   - "1.13 (burst-225/2026-07-21): F-P130-01 sibling sweep — correct core::guardrail comment block: GuardrailHook method updated from wrong sync `fn check` to canonical `async fn evaluate` per interface-definitions.md §GuardrailHook; full type list (GuardrailHook, GuardrailResult, IngressContent, GuardrailSeverity, BoundaryType); rag_ingress note updated: async per-document evaluate calls per BC-2.11.003 PC5."
@@ -110,7 +112,7 @@ content provenance.
 | `graph::definition` | `StateGraph` builder, node/edge registration, conditional routing | HIGH | SS-02 |
 | `graph::channels` | LastValue / Append / BarrierValue / NamedBarrierValue / EphemeralValue reducers | HIGH | SS-02 |
 | `graph::bsp_engine` | Super-step executor: task dispatch, versions_seen / task-identity sort, InvalidUpdateError | CRITICAL | SS-03 |
-| `graph::hitl` | Interrupt queue (FIFO), suspend/resume protocol, risk-tiered classification; `PreToolCallHook` trait + `ToolCallPreview` + `PreToolDecision` (Approve/Deny/Edit/PendingHumanApproval) + `ToolApprovalRequest` + `AlwaysApprovePolicy` (ADR-018); `pre_tool_dispatch` routing function — fail-closed Deny invariant (VP-011 candidate); `GraphConfig.pre_tool_hook: Option<Arc<dyn PreToolCallHook>>` hook registration | CRITICAL | SS-05 |
+| `graph::hitl` | Interrupt queue (FIFO), suspend/resume protocol, risk-tiered classification; `PreToolCallHook` trait + `ToolCallPreview` + `PreToolDecision` (Approve/Deny/Edit/PendingHumanApproval) + `ToolApprovalRequest` + `AlwaysApprovePolicy` (ADR-018); `pre_tool_dispatch` routing function — fail-closed Deny invariant (VP-011, Kani P0, seeded burst-232); `GraphConfig.pre_tool_hook: Option<Arc<dyn PreToolCallHook>>` hook registration | CRITICAL | SS-05 |
 | `graph::scheduler` | Orchestrator loop and/or actor-scheduler (decision pending ADR-001 D9 gate) | CRITICAL | SS-03 |
 | `graph::budget` | `BudgetEngine` dispatch (allow/escalate/deny via `BudgetPolicy` trait from ferrochain-core), `EvidenceJournal`, ceiling halt/escalate — trait definitions live in `core::budget` per ADR-009 Option 3; compaction engine: evaluates `CompactionTrigger` after each super-step, builds `ConversationSnapshot` via `CheckpointSaver::search_history` (BC-2.04.008), calls `CompactionPolicy::compact()`, applies mid-run message-window mutation, appends `CompactionEvent` to `EvidenceJournal`, emits `compaction_event` streaming event (ADR-019) | HIGH | SS-10 |
 | `graph::provenance` | `ProvenanceTag` attachment at ingress boundaries, `GuardrailHook` dispatch | HIGH | SS-11 |
@@ -377,18 +379,22 @@ graph (ferrochain-tools → ferrochain-sandbox/core/graph/macros, one-way; no re
 risk tier defaults, retry classification, and `E-TOOLS-*` error namespace.
 
 **VP anchors:**
-- VP-011 candidate (Kani P0) — `graph::hitl::pre_tool_dispatch`: fail-closed Deny; Deny
-  never allows tool invocation (ADR-018 Decision 3).
-- VP-012 candidate (integration P1) — interrupt/resume cycle with PreToolCallHook denial
-  completes without deadlock (ADR-018 Decision 4).
-- VP-013 candidate (Kani P0) — `BashTool::set_risk(ReadOnly)` and `set_risk(Low)` always
-  return `Err(E-TOOLS-007)`, never succeed (ADR-020 Decision 3 / BashTool risk floor).
+- VP-011 (Kani P0, seeded burst-232) — `graph::hitl::pre_tool_dispatch`: fail-closed Deny;
+  Deny never allows tool invocation (ADR-018 Decision 3 / BC-2.05.007).
+- VP-012 (Kani P1, seeded burst-232) — OnWatermark arithmetic: `on_watermark` never produces
+  a token count exceeding the hard limit; no overflow; BC-2.10.005, ferrochain-core,
+  core::budget (ADR-019 Decision 2).
+- VP-013 (Kani P1, seeded burst-232) — `BashTool::set_risk(ReadOnly)` and `set_risk(Low)`
+  always return `Err(E-TOOLS-007)`, never succeed (ADR-020 Decision 3 / BashTool risk floor /
+  BC-2.23.005).
 
-**Dependency research flags (ADR-020 Decision 7):**
-- `similar` crate (dtolnay) — fuzzy-match fallback for EditFileTool; confirm current stable
-  version + MIT/Apache-2.0 license compatibility.
-- `regex` crate — GrepTool in-process pattern engine; confirm presence in workspace
-  `[workspace.dependencies]` or add.
+**Validated external dependencies (ADR-020 Decision 7):**
+- `similar` crate (mitsuhiko) — fuzzy-match fallback for EditFileTool; pinned `"3"` (3.1.1,
+  Apache-2.0 single-licensed, MSRV 1.85). Confirmed ADR-020 Decision 7 v1.1.
+- `regex` crate — GrepTool in-process pattern engine; pinned `"1"` (1.13.1, MIT/Apache-2.0,
+  linear-time DFA, net-new dep). Confirmed ADR-020 Decision 7 v1.1.
 
-**BC anchors:** TBD — PO to author SS-23 behavioral contracts (prerequisite for Phase 2
-story decomposition). `E-TOOLS-*` error namespace (PO obligation: amend error-taxonomy.md).
+**BC anchors:** BC-2.23.001 (ReadFileTool), BC-2.23.002 (WriteFileTool), BC-2.23.003
+(EditFileTool), BC-2.23.004 (ListDirTool), BC-2.23.005 (BashTool, VP-013 seed),
+BC-2.23.006 (GrepTool). `E-TOOLS-*` error namespace: 9 codes post-burst-234
+(E-TOOLS-008 FileIoError added burst-233; E-TOOLS-009 InvalidRegexPattern added burst-234).

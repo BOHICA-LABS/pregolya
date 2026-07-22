@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.42"
+version: "2.43"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -10,14 +10,15 @@ phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "9f40140"
+input-hash: "6a6e6f4"
 traces_to: prd.md
 total_bcs: 129
 total_batches: 20
 p0_count: 51
-p1_count: 72
-p2_count: 6
+p1_count: 75
+p2_count: 3
 changelog:
+  - "2.43 (burst-233/F-P133-02/2026-07-22): BC-2.16.001/002/003 Wave-1 promotion per D23 — SS.16 priority P2→P1; frontmatter p1_count 72→75, p2_count 6→3; Summary table P1 72→75, P2 6→3; Full BC table rows P2→Post-v1→P1/Wave 1."
   - "2.42 (D23/2026-07-22): D21 retroactive registration (Batches 16-18, +21 BCs); D23 Integration (Batches 19-20, +13 BCs); BC-2.15.001/002/003 promoted P2→P1; SS.18..23 added to subsystem map; counts 95→129."
   - "2.41 (D21/2026-07-20): D21 ADR-010 v1.1 error-model integration."
 subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs assigned at Phase 1b — RESOLVED 2026-07-14, see BC-INDEX. All 95 BCs carry real SS-NN subsystem IDs."
@@ -36,8 +37,8 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 |--------|-------|
 | Total BCs | 129 |
 | P0 (must-have) | 51 |
-| P1 (should-have) | 72 |
-| P2 (nice-to-have) | 6 |
+| P1 (should-have) | 75 |
+| P2 (nice-to-have) | 3 |
 | Batches | 20 |
 | BCs per batch (max) | 9 (Batch 9 only — Step-E exception; planning cap remains 8) |
 | Subsystems covered | 23 (SS.01–SS.23, mapping CAP-001–CAP-038) |
@@ -61,7 +62,7 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | SS.13 | CAP-015 | ferrochain-graph/sandbox | P1 |
 | SS.14 | CAP-016 | ferrochain-core | P0 |
 | SS.15 | CAP-017 (P2), CAP-020 (P1) | ferrochain-memory | P1/P2 |
-| SS.16 | CAP-018 | ferrochain-core | P2 |
+| SS.16 | CAP-018 | ferrochain-core | P1 |
 | SS.17 | CAP-019 | all (formal verification) | P2 |
 | SS.18 | CAP-022, CAP-023 | ferrochain-prompts | P1 |
 | SS.19 | CAP-024, CAP-025 | ferrochain-core | P1 |
@@ -296,9 +297,9 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 
 | BC ID | Title | Priority | CAP | DI | Wave |
 |-------|-------|----------|-----|----|------|
-| BC-2.16.001 | Per-tool retry policy keyed by tool_name (not args hash) (NE-09) | P2 | CAP-018 | — | Post-v1 |
-| BC-2.16.002 | Finite global_limit non-None default for all retry policies (NE-09) | P2 | CAP-018 | — | Post-v1 |
-| BC-2.16.003 | Circuit breaker trips after repeated failure; prevents infinite retry (NE-09) | P2 | CAP-018 | — | Post-v1 |
+| BC-2.16.001 | Per-tool retry policy keyed by tool_name (not args hash) (NE-09) | P1 | CAP-018 | — | Wave 1 |
+| BC-2.16.002 | Finite global_limit non-None default for all retry policies (NE-09) | P1 | CAP-018 | — | Wave 1 |
+| BC-2.16.003 | Circuit breaker trips after repeated failure; prevents infinite retry (NE-09) | P1 | CAP-018 | — | Wave 1 |
 | BC-2.17.001 | Kani harness scope: BSP determinism VP + session tenancy VP + workspace confinement VP | P2 | CAP-019 | DI-001, DI-005, DI-007 | Phase 6 |
 | BC-2.17.002 | cargo-fuzz targets: serialization round-trip (checkpoint) and graph-execution paths | P2 | CAP-019 | — | Phase 6 |
 

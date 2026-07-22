@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.7"
+version: "1.8"
 status: active
 producer: business-analyst
 timestamp: 2026-07-22T00:00:00Z
@@ -13,10 +13,11 @@ inputs:
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
   - .factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md
-input-hash: "fe36f46"
+input-hash: "ee95c85"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.8 (2026-07-22): Fix burst 233 F-P133-08 (BA micro-fix) — CAP-036 similar-crate facts corrected per ADR-020 Decision 7 v1.1: `similar = \"3\"`, owner mitsuhiko (Armin Ronacher), Apache-2.0 single-licensed (NOT MIT), cargo-deny `[licenses.allow]` must include `\"Apache-2.0\"`; stale pre-write confirm instruction removed. TD-VSDD-060 sibling sweep: no other dtolnay/MIT similar-crate references in this file."
   - "1.7 (2026-07-22): D23 CAP layer (burst-230) — CAP-017/018 promoted P2/Wave 2 → P1/Wave 1 per domain-e forcing function (domain-e-agentic-coding-assistant.md §3 items 13/16 DEGRADED closures); CAP-034..038 authored (per-tool-call approval hook CAP-034, rolling context compaction CAP-035, first-party fs tools CAP-036, shell tool CAP-037, search tool CAP-038). P1 count 19→26; P2 count 3→1 (CAP-019 only); total section CAPs 22→29; L2 total 33→38. CAP-018 strengthened with ADR-018 Decision 6 retry-approval ordering. CAP-017 strengthened with Embeddings availability and CAP-035 additive coupling. domain-e-agentic-coding-assistant.md added to inputs. D23 added to decisions list. TD-VSDD-060 sweep: CAP-017/018 removed from P2 section; P2 now CAP-019 only."
   - "1.6 (2026-07-21): F-P131-04/05 adjudication (burst-226) — CAP-022: strict-undefined is now a UNIVERSAL engine-neutral contract; both f-string (default) and jinja2 engines raise E-TMPL-003 on undefined variables (ADR-015 Decision 4 F-P131-04); Security invariant updated to reference TrustLevel::Untrusted explicitly instead of generic 'untrusted-tagged'. CAP-023: 'highest-severity ProvenanceTag across substituted variables' → 'highest-severity TrustLevel across substituted variables' (ADR-015 §Decision 3 F-P131-05). TD-VSDD-060 sibling sweep: no other ProvenanceTag trust-variant or engine-gated strict-undefined residue in this file."
   - "1.5 (2026-07-20): D21 second-half CAP authoring — CAP-028..033 added (SS-21 VectorStore Abstraction, SS-22 Embeddings). P1 count 13→19; total section CAP count 16→22. New section 'P1 — VectorStore Abstraction and Embeddings (Wave 2 / SS-21..22)' added. Grounded in ADR-014 (SS-21), ADR-017 (SS-22), burst-217 handoff table. Domain C forcing-function linkage for SS-22 documented in CAP-031."
@@ -636,8 +637,8 @@ All four validate path arguments against `PathGuard` (ferrochain-sandbox) at inv
 out-of-guard paths return `Err(E-TOOLS-001 PathConfinementViolation)`. VP-003 (workspace
 path-confinement Kani proof) coverage extends to all four tools without modification —
 PathGuard is the same type already proven. `EditFileTool` exact-match only by default; opt-in
-fuzzy fallback via `EditConfig::fuzzy_threshold: Option<f32>` (`similar` crate — confirm
-current stable version + MIT license before Cargo.toml write; ADR-020 Decision 7).
+fuzzy fallback via `EditConfig::fuzzy_threshold: Option<f32>` (`similar = "3"`, mitsuhiko,
+Apache-2.0 — ADR-020 Decision 7; cargo-deny `[licenses.allow]` must include `"Apache-2.0"`).
 
 All four integrate with PreToolCallHook (CAP-034) via ActionRisk annotations and with
 RetryPolicy (CAP-018) per BC-2.16.001. WriteFileTool and EditFileTool non-idempotent —

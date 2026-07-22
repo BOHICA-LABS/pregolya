@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.1"
+version: "2.2"
 status: active
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.007.md
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.005.md
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
-input-hash: "d43b0fa"
+input-hash: "d4ec26d"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -485,10 +485,10 @@ Formal statement:
   (r == Medium ∨ r == High ∨ r == Critical) → check_risk_floor(r) == Ok(())
 ```
 
-Note on BC contradiction: BC-2.23.005 uses `Category::CONFIGURATION` for E-TOOLS-007, which
-is not in the 12-category canonical axis. Error-taxonomy v1.31 correctly uses `VAL`
-(ValidationError). This VP harness and formal statement use `VAL` per the canonical taxonomy.
-The BC contradiction is routed to the Product Owner for amendment (out of architect scope).
+**RESOLVED (burst-232, 2026-07-22):** BC-2.23.005 was amended to `Category::VAL` in v1.1
+(same burst that seeded VP-013). The prior `Category::CONFIGURATION` label was non-canonical
+(not present in the 12-category axis per ADR-010). BC-2.23.005 v1.1 = VAL, consistent with
+error-taxonomy v1.31 and this VP harness. No active contradictions.
 
 Kani harness sketch:
 ```rust
@@ -572,6 +572,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.2 | 2026-07-22 | architect | burst-233 / F-P133-06 | F-P133-06 sibling sweep: resolve stale BC-2.23.005 Category::CONFIGURATION contradiction note in §VP-013 property body. Note was "routed to PO for amendment"; BC-2.23.005 was amended to `VAL` in burst-232 (v1.1) — contradiction is now closed. Note updated to RESOLVED status, consistent with error-taxonomy v1.31 and VP harness. No VP catalog or coverage-matrix changes. |
 | 2.1 | 2026-07-22 | architect | burst-232 / D23 | D23 VP layer: add VP-011..013 (Kani P0/P1) to Committed VP Obligations table and Provable Properties Catalog. VP-011 (graph::hitl, P0): PreToolCallHook fail-closed dispatch. VP-012 (core-budget, P1): OnWatermark arithmetic. VP-013 (tools-shell, P1): BashTool risk floor. Total 10→13 VPs; P0 5→6; P1 5→7; Kani 6→9. Add BC-2.05.007/2.10.005/2.23.005 to inputs; decisions D17/D21 → D17/D21/D23. Input-hash refresh pending. |
 | 2.0 | 2026-07-21 | architect | burst-227 / F-P132-03 | VP-006 Feasibility section: `ProvenanceTag: 3 variants` → `TrustLevel: 3 variants` (ProvenanceTag is a struct with Uuid field, not an enum; TrustLevel is the Kani input). Propagates VP-006.md v1.4 residue sweep. |
 | 1.9 | 2026-07-21 | architect | burst-226 / F-P131-05 | VP-006 section corrected: replace nonexistent `ProvenanceTag::External \| ProvenanceTag::ToolOutput` variants with `TrustLevel::Untrusted` (SS-18-local trust classifier per ADR-015 v1.3); fix error code `E-INJ-001` → `E-TMPL-001` (SECURITY/InjectionAttempt). Formal statement, harness sketch, and explanatory note updated throughout. `TrustLevel` is distinct from `core::guardrail::ProvenanceTag` (SS-11 ingress struct). `SlotVar.tag` field renamed to `SlotVar.trust_level` in harness. |

@@ -13,7 +13,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "32cf29c"
+input-hash: "731fd7e"
 traces_to: L2-INDEX.md
 decisions: [D17]
 changelog:

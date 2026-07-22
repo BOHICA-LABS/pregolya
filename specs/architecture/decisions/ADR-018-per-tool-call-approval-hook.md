@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-22"
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
-version: "1.0"
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-05, SS-06, SS-16]
 changelog:
+  - "1.1 (burst-233/2026-07-22): F-P133-07 sibling sweep (TD-VSDD-060) — remove stale 'VP-011 candidate' labels (VP-011 seeded burst-232, Kani P0). Two sites updated: §Decision 2 dispatch sequence step 4 Deny path, and §Rationale summary line."
   - "1.0 (D23/2026-07-22): Initial ADR — per-tool-call approval hook replacing the 2-node-per-tool workaround identified in domain-e-agentic-coding-assistant.md §3 item 5 / §6 item 1."
 ---
 
@@ -119,7 +120,7 @@ execution. The function:
 2. `hook.pre_invoke(preview, run_ctx).await`.
 3. `Approve` → proceed to tool invocation.
 4. `Deny { reason }` → construct `ToolOutput::Error(reason)`; do **not** invoke the tool;
-   return error to model context. This path MUST be fail-closed — VP-011 Kani candidate.
+   return error to model context. This path MUST be fail-closed — VP-011 (Kani P0, seeded burst-232).
 5. `Edit { modified_args }` → replace `tool_args` with `modified_args`; proceed.
 6. `PendingHumanApproval { prompt }` → call `interrupt(ToolApprovalRequest { preview, prompt })`
    internally (BC-2.05.001 machinery); on resume, the caller delivers
@@ -238,7 +239,7 @@ presenting a dialog for a tool the framework has already classified as persisten
 
 - Application authors build 20-tool ReAct coding agents with a single hook, not a
   40-node graph.
-- Fail-closed `Deny` is a pure routing decision provable by Kani (VP-011 candidate).
+- Fail-closed `Deny` is a pure routing decision provable by Kani (VP-011, Kani P0, seeded burst-232).
 - `PendingHumanApproval` reuses the existing interrupt/resume machinery — zero new
   failure modes in the checkpoint path.
 - Interactive approval survives process restart transparently (BC-2.05.001 durability).

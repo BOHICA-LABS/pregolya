@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.006
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.1 (burst-233/F-P133-03/2026-07-22): PC-4 / EC-002 / TV-003 — assign E-TOOLS-009 InvalidRegexPattern (Category::VAL/Never) to the invalid-regex path (was 'VALIDATION category' with no code). 'VALIDATION' is not in the canonical 12-member Category enum; adjudicated: no existing TOOLS code covers regex compile failure; E-CORE-005 wrong component; E-TOOLS-009 minted. Structured fields: pattern: <pattern string>, compile_error: <regex crate error>. Gate #33 forward+reverse: E-TOOLS-009 now covers this raise site; error-taxonomy.md v1.32 anchors BC-2.23.006 in E-TOOLS-009 row. ARCHITECT FLAG: ADR-010 v1.4 and ADR-020 v1.3 TOOLS tables need E-TOOLS-009 appended."
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 GrepTool."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-038
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "4661c22"
+input-hash: "d4604ce"
 extracted_from: null
 modified: []
 deprecated: null
@@ -61,7 +62,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    `{ "pattern": "<regex>", "path": "<path>", "recursive": true, "case_insensitive": false,
    "max_results": 100 }`.
 3. `pattern` is a valid regex string compilable by the `regex` crate. An invalid pattern
-   is rejected at invocation time with `Err(FerrochainError)`.
+   is rejected at invocation time with `Err(E-TOOLS-009 InvalidRegexPattern)` (Category::VAL).
 4. `path` resolves to an existing file or directory within `PathGuard` scope.
 
 ## Postconditions
@@ -88,8 +89,10 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    `Err(FerrochainError { component: "TOOLS", category: Category::SECURITY,
    code: "E-TOOLS-001", message: "PathConfinementViolation: path '<path>' is outside the
    configured PathGuard scope" })`.
-4. **Invalid regex:** Returns `Err(FerrochainError)` — VALIDATION category, regex compile
-   error detail from the `regex` crate.
+4. **Invalid regex:** Returns
+   `Err(FerrochainError { component: "TOOLS", category: Category::VAL, code: "E-TOOLS-009",
+   message: "InvalidRegexPattern: pattern '<pattern>' failed to compile: <compile_error>",
+   pattern: <pattern string from args>, compile_error: <error from regex crate> })`.
 5. **No matches found:** Returns `ToolOutput::Json({ "matches": [], "capped": false })` —
    not an error.
 
@@ -114,7 +117,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | Path is outside PathGuard scope | `Err(E-TOOLS-001 PathConfinementViolation)` — no I/O |
-| EC-002 | Pattern is invalid regex (e.g., `"[unclosed"`) | `Err(FerrochainError)` — VALIDATION category, regex compile error |
+| EC-002 | Pattern is invalid regex (e.g., `"[unclosed"`) | `Err(E-TOOLS-009 InvalidRegexPattern)` — `{ pattern: "[unclosed", compile_error: "<regex crate error message>" }` — Category::VAL |
 | EC-003 | Pattern matches 150 files with `max_results = 100` | `ToolOutput::Json({ ..., "capped": true })` — first 100 matches; non-fatal |
 | EC-004 | Pattern matches no files | `ToolOutput::Json({ "matches": [], "capped": false })` — empty results, not an error |
 | EC-005 | `path` is a file (not a directory), `recursive: true` | Only that file is searched; `recursive` is ignored when path is a file |
@@ -127,7 +130,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 |---|-------|-----------------|----------|
 | TV-001 | `{ "pattern": "fn main", "path": "/workspace/src", "recursive": true }` — 3 matches in 2 files | `ToolOutput::Json({ "matches": [3 entries], "capped": false })` | happy-path |
 | TV-002 | `{ "pattern": "TODO", "path": "/workspace", "max_results": 2, "recursive": true }` — 5 matches exist | `ToolOutput::Json({ "matches": [2 entries], "capped": true })` | cap enforcement |
-| TV-003 | `{ "pattern": "[bad regex", "path": "/workspace" }` — invalid pattern | `Err(FerrochainError)` — VALIDATION, regex compile error | invalid pattern |
+| TV-003 | `{ "pattern": "[bad regex", "path": "/workspace" }` — invalid pattern | `Err(E-TOOLS-009 InvalidRegexPattern)` — `{ pattern: "[bad regex", compile_error: "<regex crate error>" }` — VAL | invalid pattern |
 | TV-004 | `{ "pattern": "NOTFOUND", "path": "/workspace" }` | `ToolOutput::Json({ "matches": [], "capped": false })` | no matches |
 | TV-005 | `{ "pattern": "foo", "path": "/etc" }` — outside PathGuard | `Err(E-TOOLS-001 PathConfinementViolation)` | security (confinement) |
 
@@ -148,7 +151,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 
 ## Architecture Anchors
 
-- `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (GrepTool, in-process regex, no subprocess, max_results 100), Decision 3 (ReadOnly ActionRisk), Decision 5 (E-TOOLS-001/006), Decision 7 (`regex = "1"` pin, linear-time guarantee, MSRV 1.65)
+- `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (GrepTool, in-process regex, no subprocess, max_results 100), Decision 3 (ReadOnly ActionRisk), Decision 5 (E-TOOLS-001/006; E-TOOLS-009 minted burst-233 — architect to append to ADR-020 TOOLS table), Decision 7 (`regex = "1"` pin, linear-time guarantee, MSRV 1.65)
 - `architecture/module-decomposition.md` — SS-23, `tools::search` module in ferrochain-tools
 - `architecture/purity-boundary-map.md` — SS-23 Effectful Shell (filesystem traversal)
 
