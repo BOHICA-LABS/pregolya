@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.006
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.2 (burst-234/F-P134-01/2026-07-22): PC-6 / EC-008 / TV-006 — add E-TOOLS-008 FileIoError (Category::TOOL/Maybe) for OS-level I/O errors during traversal. Traversal-error semantics DECIDED: fail-the-whole-search (not skip-with-warning). Rationale: (1) consistent with sibling tools BC-2.23.001–004 which all fail on E-TOOLS-008; (2) DI-014 no-silent-swallow — returning partial results without signalling the search was cut short is indistinguishable from complete results; (3) guard-verify-before-open invariant establishes that mid-traversal path failures are surfaced; (4) silently-incomplete search results are more hazardous than explicit Err. Structured fields per taxonomy: tool_type='GrepTool' (static), path=<offending path>, io_kind=<std::io::ErrorKind debug name>. Invariants DI-014 bullet updated to include OS-error path. Architecture Anchors Decision 5 updated to note E-TOOLS-008 burst-234. Traceability L2 Domain Invariants updated with E-TOOLS-008 gate #33 reverse anchor. Gate #33 E-TOOLS-008 both-direction PASS: taxonomy v1.32 anchors this BC ('BC-2.23.006 OS-error paths') AND this BC now cites E-TOOLS-008 in PC-6/EC-008/TV-006. TV census: 5→6; test-vectors.md total 669→670."
   - "1.1 (burst-233/F-P133-03/2026-07-22): PC-4 / EC-002 / TV-003 — assign E-TOOLS-009 InvalidRegexPattern (Category::VAL/Never) to the invalid-regex path (was 'VALIDATION category' with no code). 'VALIDATION' is not in the canonical 12-member Category enum; adjudicated: no existing TOOLS code covers regex compile failure; E-CORE-005 wrong component; E-TOOLS-009 minted. Structured fields: pattern: <pattern string>, compile_error: <regex crate error>. Gate #33 forward+reverse: E-TOOLS-009 now covers this raise site; error-taxonomy.md v1.32 anchors BC-2.23.006 in E-TOOLS-009 row. ARCHITECT FLAG: ADR-010 v1.4 and ADR-020 v1.3 TOOLS tables need E-TOOLS-009 appended."
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 GrepTool."
 traces_to:
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "d4604ce"
+input-hash: "6e07319"
 extracted_from: null
 modified: []
 deprecated: null
@@ -95,6 +96,21 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    pattern: <pattern string from args>, compile_error: <error from regex crate> })`.
 5. **No matches found:** Returns `ToolOutput::Json({ "matches": [], "capped": false })` —
    not an error.
+6. **OS-level I/O error during traversal (fail-the-whole-search):** If an OS-level I/O
+   error occurs on any visited path during recursive directory traversal — e.g.,
+   `PermissionDenied` when opening a subdirectory, `NotFound` for a file deleted between
+   directory listing and open, `NotADirectory` for a path whose type changed mid-traversal,
+   or any other `std::io::Error` from the filesystem — the search is aborted immediately.
+   The tool returns:
+   `Err(FerrochainError { component: "TOOLS", category: Category::TOOL,
+   code: "E-TOOLS-008", message: "GrepTool I/O error on '<path>': <io_kind>",
+   tool_type: "GrepTool", path: <offending_path_string>,
+   io_kind: <std::io::ErrorKind debug name e.g. "PermissionDenied"> })`.
+   Partial results accumulated before the error are NOT returned; the caller receives only
+   the `Err` so that the incomplete search is never silently treated as a complete result
+   (DI-014). This also applies to I/O errors on the root `path` argument after it passes
+   `PathGuard::check` — the guard pass and the subsequent `fs::open` are distinct steps;
+   an I/O error at open time is E-TOOLS-008, not E-TOOLS-001.
 
 ## Invariants
 
@@ -105,8 +121,11 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
   untrusted user-supplied patterns.
 - `PathGuard::check` is called for the root `path` argument. For recursive traversal,
   each visited path is also verified against the guard before the file is opened.
-- **DI-014 (No Silent Swallowing):** Path violations and invalid patterns propagate as
-  `Err`. Zero matches return `Ok` with an empty array — not silently swallowed as an error.
+- **DI-014 (No Silent Swallowing):** Path violations, invalid patterns, and OS-level I/O
+  errors during traversal all propagate as `Err`. Zero matches return `Ok` with an empty
+  array — not silently swallowed as an error. Partial traversal results accumulated before
+  an I/O error are discarded; the caller receives only the `Err` so that an incomplete
+  search is never silently accepted as a complete result (PC-6).
 - `ActionRisk::ReadOnly` — no write to the filesystem occurs. `RiskGatePolicy` auto-approve
   semantics apply (BC-2.05.006).
 - Result ordering: matches are returned in file-path-then-line-number order (lexicographic
@@ -123,6 +142,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 | EC-005 | `path` is a file (not a directory), `recursive: true` | Only that file is searched; `recursive` is ignored when path is a file |
 | EC-006 | Adversarial pattern like `"(a+)+"` (exponential in NFA) | `regex` crate rejects or compiles to linear-time DFA; no catastrophic backtracking; search completes in bounded time |
 | EC-007 | `case_insensitive: true`, pattern `"Hello"` | Matches `"hello"`, `"HELLO"`, `"Hello"` etc. |
+| EC-008 | `PermissionDenied` on a subdirectory mid-traversal (PathGuard passed root; OS denies subdir open) | `Err(E-TOOLS-008 FileIoError)` — `{ tool_type: "GrepTool", path: "/workspace/secret", io_kind: "PermissionDenied" }` — search aborted; partial results discarded (DI-014) |
 
 ## Canonical Test Vectors
 
@@ -133,6 +153,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 | TV-003 | `{ "pattern": "[bad regex", "path": "/workspace" }` — invalid pattern | `Err(E-TOOLS-009 InvalidRegexPattern)` — `{ pattern: "[bad regex", compile_error: "<regex crate error>" }` — VAL | invalid pattern |
 | TV-004 | `{ "pattern": "NOTFOUND", "path": "/workspace" }` | `ToolOutput::Json({ "matches": [], "capped": false })` | no matches |
 | TV-005 | `{ "pattern": "foo", "path": "/etc" }` — outside PathGuard | `Err(E-TOOLS-001 PathConfinementViolation)` | security (confinement) |
+| TV-006 | `{ "pattern": "fn ", "path": "/workspace", "recursive": true }` — PathGuard passes; subdir `/workspace/secret` returns `PermissionDenied` on open | `Err(E-TOOLS-008 FileIoError)` — `{ tool_type: "GrepTool", path: "/workspace/secret", io_kind: "PermissionDenied" }` — search aborted; no partial matches returned | traversal I/O error |
 
 ## Verification Properties
 
@@ -151,7 +172,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 
 ## Architecture Anchors
 
-- `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (GrepTool, in-process regex, no subprocess, max_results 100), Decision 3 (ReadOnly ActionRisk), Decision 5 (E-TOOLS-001/006; E-TOOLS-009 minted burst-233 — architect to append to ADR-020 TOOLS table), Decision 7 (`regex = "1"` pin, linear-time guarantee, MSRV 1.65)
+- `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (GrepTool, in-process regex, no subprocess, max_results 100), Decision 3 (ReadOnly ActionRisk), Decision 5 (E-TOOLS-001/006; E-TOOLS-008 OS-error paths minted burst-234; E-TOOLS-009 minted burst-233 — architect to append E-TOOLS-008/009 to ADR-020 TOOLS table), Decision 7 (`regex = "1"` pin, linear-time guarantee, MSRV 1.65)
 - `architecture/module-decomposition.md` — SS-23, `tools::search` module in ferrochain-tools
 - `architecture/purity-boundary-map.md` — SS-23 Effectful Shell (filesystem traversal)
 
@@ -171,7 +192,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 |-------|-------|
 | Source L2 Capability | CAP-038 |
 | Capability Anchor Justification | CAP-038 ("First-Party Search Tool (tools::search — GrepTool)") per capabilities-p1-p2.md §CAP-038 — this BC specifies GrepTool's in-process regex semantics, linear-time `regex` crate guarantee, max_results 100 capping, hermetic no-subprocess invariant, PathGuard scope validation, and E-TOOLS-001/006 error codes that CAP-038 names as the distinct search surface warranting its own CAP band |
-| L2 Domain Invariants | DI-014 (Error Propagation — path violations and invalid patterns propagate as Err; zero matches returns Ok([]) not Err; capping is non-fatal) |
+| L2 Domain Invariants | DI-014 (Error Propagation — path violations, invalid patterns, and OS-level I/O errors during traversal all propagate as Err; zero matches returns Ok([]) not Err; capping is non-fatal; E-TOOLS-008 is the carrier for traversal I/O errors — gate #33 reverse anchor: this BC now cites E-TOOLS-008 in PC-6/EC-008/TV-006 matching taxonomy v1.32 forward anchor) |
 | Architecture Authority | ADR-020 Decisions 2, 3, 5, and 7 (GrepTool contract, regex dep pin, ReadOnly ActionRisk, E-TOOLS-001/006) |
 | Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
 | VP Registration | VP-2.23.006-A/B/C (unit/integration tests) |

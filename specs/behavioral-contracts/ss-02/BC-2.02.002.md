@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "a7f1795"
+input-hash: "fce5f95"
 extracted_from: null
 modified: []
 deprecated: null

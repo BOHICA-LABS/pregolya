@@ -4182,3 +4182,73 @@ Architect flagged three SS-23 behavioral contracts with incorrect `Category:` va
 - Convergence counter: 0/3 (P1D-133 NOT CLEAN)
 - Trajectory tail: →12→9→7→8→10 (P1D-133 D21+D23 first pass)
 - NEXT: adversary pass P1D-134 on FROZEN HEAD (post-burst-233 commit)
+
+## Burst 234 — 2026-07-22 — P1D-134 Fix-Burst (D21+D23 expanded perimeter)
+
+**Burst type:** Fix-burst  
+**Cycle:** v1.0.0-greenfield  
+**Agents dispatched:** architect, business-analyst, product-owner, state-manager  
+**Convergence status after burst:** 0/3 — P1D-134 NOT CLEAN; 134 passes / 134 fix bursts
+
+### Summary
+
+P1D-134 was the second adversarial pass on the D21+D23 expanded perimeter (first pass was P1D-133). Found 7 findings (0 CRIT / 3 HIGH / 1 MED / 3 LOW/OBS). All 7 closed in this fix-burst. Key deliverables: DI-015 "Subprocess Execution Timeout" minted as the 15th domain invariant; E-TOOLS-008 GrepTool gate #33 both-direction anchor made real in BC-2.23.006; test-vectors count grew 669→670. Hash sweep ran 6 passes (384 file updates) to propagate invariants.md and ADR-019/ADR-020 changes transitively across the full spec corpus. VP-012 input-hash refreshed (d582172 → stable hash; ADR-019 v1.2 was an input).
+
+### Findings Closed
+
+| ID | Severity | Description | Owner | Files Changed |
+|----|----------|-------------|-------|---------------|
+| F-P134-01 | HIGH | BC-2.23.006 missing E-TOOLS-008 OS-error EC/PC/TV — gate #33 was one-directional | product-owner | BC-2.23.006 v1.1→v1.2; test-vectors v2.2→v2.3 (TV-006) |
+| F-P134-02 | HIGH | ADR-020 GrepTool/tools::search label — two-step normalize missing in Decision 4 | architect | ADR-020 v1.4→v1.6 |
+| F-P134-03 | HIGH | BC-2.08.010 referenced BC-2.05.004 ×2; should be BC-2.05.007 (fork-contract rename) | product-owner | BC-2.08.010 v1.1→v1.2; BC-2.05.007 v1.0→v1.1 (reciprocal) |
+| F-P134-04 | MED | ADR-019 Decision 3 step 5 field name trigger_tokens_remaining stale (renamed tokens_remaining_after in burst 233) | architect + BA | ADR-019 v1.1→v1.2; entities-graph v1.6→v1.7 |
+| F-P134-05 | LOW | BC-2.06.006 traces_to + inputs still listed ADR-018 (already removed from Decision 4 provenance) | product-owner | BC-2.06.006 v1.0→v1.1 |
+| F-P134-06 | LOW | DI-015 gap: no domain invariant for subprocess execution timeout enforced by BC-2.23.005 | BA + product-owner | invariants.md v1.1→v1.2; L2-INDEX v1.9→v1.10; BC-2.23.005 v1.1→v1.2 |
+| F-P134-07 | LOW | BC-2.10.006 missing explicit non-interaction invariant for compaction×PendingHumanApproval | product-owner | BC-2.10.006 v1.1→v1.2 |
+
+### Files Changed
+
+**Architect (F-P134-02, F-P134-04):**
+- `.factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md` v1.4→v1.6 (GrepTool label two-step normalize; Decision 4 updated)
+- `.factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md` v1.1→v1.2 (Decision 3 step 5: trigger_tokens_remaining→tokens_remaining_after)
+
+**Business Analyst (F-P134-04 sibling, F-P134-06):**
+- `.factory/specs/domain-spec/entities-graph.md` v1.6→v1.7 (trigger_tokens_remaining→tokens_remaining_after field rename; hash 0dac18e pre-burst)
+- `.factory/specs/domain-spec/invariants.md` v1.1→v1.2 (DI-015 Subprocess Execution Timeout added under "Tool Execution Invariants"; hash 0dac18e pre-burst)
+- `.factory/specs/domain-spec/L2-INDEX.md` v1.9→v1.10 (DI census 14→15; DI-015 row added to ID Registry)
+
+**Product Owner (F-P134-01, F-P134-03, F-P134-05, F-P134-06, F-P134-07):**
+- `.factory/specs/behavioral-contracts/ss-23/BC-2.23.006.md` v1.1→v1.2 (+E-TOOLS-008 PC/EC/TV-006; gate #33 both-direction)
+- `.factory/specs/behavioral-contracts/ss-08/BC-2.08.010.md` v1.1→v1.2 (BC-2.05.004→BC-2.05.007 ×2)
+- `.factory/specs/behavioral-contracts/ss-05/BC-2.05.007.md` v1.0→v1.1 (reciprocal link to BC-2.08.010)
+- `.factory/specs/behavioral-contracts/ss-06/BC-2.06.006.md` v1.0→v1.1 (ADR-018 removed from traces_to+inputs; hash ee8a02b)
+- `.factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md` v1.1→v1.2 (di_anchors [DI-009,DI-014]→[DI-014,DI-015]; hash 835edd0)
+- `.factory/specs/behavioral-contracts/ss-10/BC-2.10.006.md` v1.1→v1.2 (compaction×PendingHumanApproval non-interaction invariant added)
+- `.factory/specs/prd-supplements/test-vectors.md` v2.2→v2.3 (TV-006 E-TOOLS-008 traversal I/O error; total 669→670 = 661 canonical + 9 GTV)
+
+**Sidecar:**
+- `.factory/cycles/v1.0.0-greenfield/sidecar-learning.md` (updated with burst-234 lesson)
+
+### Hash Sweep
+
+**Trigger:** invariants.md v1.2 + ADR-019 v1.2 + ADR-020 v1.6 changed — all downstream `inputs:` dependents became stale.
+
+| Pass | Files Updated | STALE After |
+|------|---------------|-------------|
+| 1 | 121 | 263 |
+| 2 | 89 | 174 |
+| 3 | 72 | 102 |
+| 4 | 58 | 44 |
+| 5 | 31 | 13 |
+| 6 | 13 | 0 |
+| **Total** | **384** | **0** |
+
+Key transitive refreshes: VP-012 (d582172→88db41b; ADR-019 input); VP-011 (→4babb55); VP-013 (→87979c0); ARCH-INDEX (→cf36b41); verification-coverage-matrix (→df86e86); module-criticality (→2892aae). ~90+ BC files that list invariants.md in inputs were refreshed in pass 1.
+
+### Convergence After Burst
+
+- 134 adversary passes, 134 fix bursts (128 pre-D21 + 6 post-D21+D23)
+- Trajectory tail: →7→8→10→7
+- 3-CLEAN streak: 0/3 (P1D-134 NOT CLEAN)
+- Next: adversary cascade P1D-135 on FROZEN HEAD (D21+D23 expanded perimeter)
+

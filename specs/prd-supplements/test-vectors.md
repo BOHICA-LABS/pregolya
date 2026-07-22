@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "2.2"
+version: "2.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
@@ -10,10 +10,11 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "3b84623"
+input-hash: "ef6bd52"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "2.3 (burst-234/F-P134-01/2026-07-22): BC-2.23.006 TV count 5→6 (+TV-006 traversal I/O error, E-TOOLS-008). Grand total 669→670 (661 canonical + 9 GTV). Notes column updated to add E-TOOLS-008 cite."
   - "2.2 (D23/2026-07-22): Add 13 new D23 BC rows (+60 TVs); grand total 609→669 (660 canonical + 9 GTV). New rows: BC-2.05.007 (6 TV, VP-011 Kani seed), BC-2.05.008 (4 TV), BC-2.06.004 (4 TV), BC-2.06.005 (3 TV), BC-2.06.006 (4 TV), BC-2.10.005 (5 TV, VP-012 Kani seed), BC-2.10.006 (4 TV), BC-2.23.001 (5 TV), BC-2.23.002 (5 TV), BC-2.23.003 (5 TV), BC-2.23.004 (4 TV), BC-2.23.005 (6 TV, VP-013 Kani seed), BC-2.23.006 (5 TV). BC count 116→129."
   - "2.1 (D21/2026-07-21): Initial supplement created from prd.md §7 RTM inventory. 116 BCs catalogued; 600 canonical TV + 9 GTV = 609 total. RG BCs: 11. GTV source: BC-2.07.002 §Golden Test Vectors."
 ---
@@ -166,9 +167,9 @@ changelog:
 | BC-2.23.003 | SS-23 | 5 | — | `TV-NNN` | | EditFileTool — exact-match string replace; E-TOOLS-003 on no-match; opt-in fuzzy fallback |
 | BC-2.23.004 | SS-23 | 4 | — | `TV-NNN` | | ListDirTool — PathGuard-confined directory listing; ReadOnly; DirEntry struct; E-TOOLS-001 |
 | BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
-| BC-2.23.006 | SS-23 | 5 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006 |
+| BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (129 authored BCs):** 660 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **669 total vectors** across 129 BC files.
+**Total vectors (129 authored BCs):** 661 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **670 total vectors** across 129 BC files.
 
 > **GTV convention:** The TV Count column counts standard canonical vectors; the GTV Count column counts golden test vectors (Red Gate acceptance data reproduced in §GTV). Grand totals are expressed as `<TV Count> + <GTV Count> = <total>` to prevent ambiguity.
 
@@ -301,6 +302,8 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.3 | 2026-07-22 | burst-234/F-P134-01: BC-2.23.006 TV count 5→6 (+TV-006 traversal I/O error, E-TOOLS-008 FileIoError). Grand total 669→670 (661 canonical + 9 GTV). Notes column updated to cite E-TOOLS-008/009. | burst-234/F-P134-01 |
+| 2.2 | 2026-07-22 | D23: Add 13 new D23 BC rows (+60 TVs); grand total 609→669 (660 canonical + 9 GTV). New rows: BC-2.05.007 (6 TV, VP-011 Kani seed), BC-2.05.008 (4 TV), BC-2.06.004 (4 TV), BC-2.06.005 (3 TV), BC-2.06.006 (4 TV), BC-2.10.005 (5 TV, VP-012 Kani seed), BC-2.10.006 (4 TV), BC-2.23.001 (5 TV), BC-2.23.002 (5 TV), BC-2.23.003 (5 TV), BC-2.23.004 (4 TV), BC-2.23.005 (6 TV, VP-013 Kani seed), BC-2.23.006 (5 TV). BC count 116→129. | D23 |
 | 2.1 | 2026-07-21 | F-P224/H-2: BC-2.21.002 v1.1 adds TV-006 (write-time zero-norm guard — add_texts returns Err(E-VS-004) when any document embedding has L2 norm == 0.0; document_index context field). BC-2.21.002 row: TV Count 5→6. SS-21 subtotal: 20→21 TVs (BC-2.21.001=5, BC-2.21.002=6, BC-2.21.003=5, BC-2.21.004=5). Grand total: 599→600 canonical TVs; 600+9 GTVs = 609 total vectors. | F-P224, H-2 |
 | 2.0 | 2026-07-20 | D21/Batch-3b-ii: Added 21 new BC inventory rows (SS-18 BCs 2.18.001–005, SS-19 BCs 2.19.001–006, SS-20 BCs 2.20.001–003, SS-21 BCs 2.21.001–004, SS-22 BCs 2.22.001–003). SS-18 subtotal=22 TVs, SS-19=24, SS-20=11, SS-21=20, SS-22=15; total new canonical TVs=92. Grand total updated: 507→599 canonical TVs; 599+9 GTVs = 608 total vectors. Red Gate BCs updated from 5→11: added BC-2.18.004, BC-2.18.005, BC-2.19.005, BC-2.20.002, BC-2.21.003, BC-2.22.002 to Red Gate Vector Summary. | D21/ADR-014/015/016/017 |
 | 1.9 | 2026-07-19 | F-P119-01 + OBS-1 + OBS-2, fix burst 122: BC-2.05.005 v1.4→v1.5 adds 3 canonical TVs (TV-006 summary_halt guard, TV-007 queued guard, TV-008 cancelled guard per OBS-1 production-grade totality adjudication). BC-2.05.005 row: TV Count 5→8; Notes updated to '(v1.5 adds TV-006/007/008)'. SS-05 subtotal 32→35. Grand total: 504→507 canonical TVs; 507+9 GTVs = 516 total vectors. | F-P119-01 |

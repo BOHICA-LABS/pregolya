@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: entities-graph
-version: "1.6"
+version: "1.7"
 status: active
 producer: business-analyst
 timestamp: 2026-07-22T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "b14600a"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D21, D23]
 changelog:
+  - "v1.7 (2026-07-22): Fix burst-234 BA sibling-sweep — CompactionSummary §Application: renamed CompactionEvent field trigger_tokens_remaining → tokens_remaining_after (canonical name per BC-2.10.006 v1.1 burst-233, ADR-019 Decision 3 v1.2 burst-234). TD-VSDD-060 sweep: sole occurrence; no other domain-spec files affected."
   - "v1.6 (2026-07-22): D23 entity additions (burst-230) — new section '## HITL Approval Hook Domain': PreToolCallHook, PreToolDecision, ToolCallPreview, ToolApprovalRequest (ferrochain-graph::hitl, ADR-018). New section '## Context Compaction Domain': CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary (ferrochain-core::budget + graph::budget, ADR-019). Tool entity updated: first-party subtypes from SS-23 added (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, GrepTool). Relationships Summary extended. D23 added to decisions list."
   - "v1.5 (2026-07-21): F-P131-05 adjudication (burst-226) — PromptValue entity: MessageProvenance field renamed tag: Option<ProvenanceTag> → highest_trust_level: Option<TrustLevel>; Invariant updated from '.tag is Untrusted' to '.highest_trust_level is Some(TrustLevel::Untrusted)'. TrustLevel entity added to Retrieval and Serialization Domain (ferrochain-prompts: prompts::template; 3 variants: Untrusted | UserInput | Trusted; severity ordering Untrusted > UserInput > Trusted; disambiguation from ProvenanceTag; authority ADR-015 §Decision 3 + CAP-022/023). Relationships Summary updated: ProvenanceTag line → TrustLevel. TD-VSDD-060 sibling sweep: no other ProvenanceTag trust-variant residue in this file."
   - "v1.4 (2026-07-20): D21 second-half entity additions — VectorStore (ferrochain-vectorstores, ADR-014), Embeddings (ferrochain-core core::embeddings, ADR-017), MetadataFilter (ferrochain-vectorstores, ADR-014), SearchType (ferrochain-vectorstores, ADR-014). Added to '## Retrieval and Serialization Domain'. Relationships Summary extended."

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.007
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ vp_seed: true
 vp_id: VP-011
 red_gate: false
 changelog:
+  - "1.1 (burst-234/F-P134-03/2026-07-22): Add reciprocal Related BCs entry for BC-2.08.010 — the `#[tool]` proc-macro sets `action_risk` which is consumed by this BC's `pre_tool_dispatch` via `ToolCallPreview.action_risk`. BC-2.08.010 v1.2 corrected its mis-anchor (BC-2.05.004 → this BC); reciprocal link added here per anchor-back rule."
   - "1.0 (D23/2026-07-22): Initial BC — D23 per-tool-call approval hook, SS-05 extension. VP-011 Kani P0 seed."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "e02cee7"
+input-hash: "f9e45d5"
 extracted_from: null
 modified: []
 deprecated: null
@@ -143,6 +144,7 @@ under no code path does a `Deny` decision allow the tool to execute.
 - BC-2.05.008 — depends on: skip-hook-on-resume invariant (this BC's PendingHumanApproval path → BC-2.05.008)
 - BC-2.16.001 — related to: retry ordering — each retry attempt invokes pre_tool_dispatch independently
 - BC-2.23.005 — related to: BashTool High risk; ADR-020 Decision 4 retry-approval ordering
+- BC-2.08.010 — composes with: `#[tool(action_risk = ...)]` macro attribute produces the `action_risk()` value that this BC's `pre_tool_dispatch` receives via `ToolCallPreview.action_risk`; the declared risk tier is the hook's primary input for approve/deny/edit decisions
 
 ## Architecture Anchors
 

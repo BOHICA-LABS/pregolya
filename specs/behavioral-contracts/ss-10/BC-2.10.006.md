@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.006
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.2 (burst-234/F-P134-07/2026-07-22): Add Invariant — Compaction × PendingHumanApproval temporal non-interaction. Closes the F-P134-07 LOW/OBS ambiguity: no BC previously stated that compaction (which fires only at super-step boundaries, PC-4) cannot fire while a run is parked at a PendingHumanApproval interrupt (which is NOT at a super-step boundary). Also states the durability corollary: a ToolApprovalRequest's message-window references survive any subsequent compaction because compaction can only fire after the approval is resolved and the run resumes to a super-step. Cross-references BC-2.05.007 PC-4 and BC-2.05.008 PC-4."
   - "1.1 (burst-233/F-P133-10/2026-07-22): Step 5 EvidenceJournal entry — rename field `trigger_tokens_remaining` → `tokens_remaining_after`. Adjudication: the value is captured AFTER window replacement in step 3, so `trigger_tokens_remaining` was semantically misleading (suggests the value was captured at trigger time/step 1, not post-replacement). Renaming to `tokens_remaining_after` aligns with BC-2.06.006 streaming event payload which uses `tokens_remaining_after` for the same conceptual value. Both BCs now agree on the canonical field name for post-compaction remaining tokens."
   - "1.0 (D23/2026-07-22): Initial BC — D23 rolling compaction, SS-10 compaction execution contract."
 traces_to:
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "4d03e50"
+input-hash: "4a27b98"
 extracted_from: null
 modified: []
 deprecated: null
@@ -124,6 +125,7 @@ The run proceeds from the next super-step with the compacted context window acti
   model-generated and non-deterministic. This is an accepted tradeoff documented in the
   `EvidenceJournal` entry; BSP determinism invariants (BC-2.03.001 / VP-001) are not
   violated because compaction runs BETWEEN super-steps, not within them.
+- **Compaction × PendingHumanApproval temporal non-interaction (cross-ref BC-2.05.007 PC-4, BC-2.05.008 PC-4):** Compaction fires only at super-step boundaries (PC-4 above); a run parked at a `PendingHumanApproval` interrupt (BC-2.05.007 PC-4 / BC-2.05.008 PC-4) is NOT at a super-step boundary — it is suspended mid-scheduler-step waiting for a `Command::Resume(PreToolDecision)`. Therefore compaction CANNOT fire during the park window. Corollary: a `ToolApprovalRequest`'s `ToolCallPreview` payload and message-window references (serialized to checkpoint per BC-2.05.008 PC-3) are stable across any later compaction, because that compaction can only occur after the approval is resolved and the run has advanced to the next super-step boundary.
 
 ## Edge Cases
 

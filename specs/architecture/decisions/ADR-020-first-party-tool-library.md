@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-22"
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
-version: "1.4"
+version: "1.6"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,8 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-23]
 changelog:
+  - "1.6 (burst-234/2026-07-22): F-P134-02 label format normalization — Decision 5 anchor list: normalize BC-2.23.006 label to prescribed canonical form `(GrepTool — tools::search traversal I/O error)`. Prior v1.5 intermediate form `(GrepTool traversal I/O error paths — tools::search)` was substantively correct but did not match prescribed format. TD-VSDD-060 sweep: sole occurrence in body text at Decision 5 adjudication paragraph; ADR-010 TOOLS table unaffected (no per-BC labels in that table)."
+  - "1.5 (burst-234/2026-07-22): F-P134-02 — Decision 5 anchor list (E-TOOLS-008 adjudication paragraph, line ~224): fix BC-2.23.006 label from `(WriteFileTool missing parent dir)` to `(GrepTool traversal I/O error paths — tools::search)`. BC-2.23.006 is GrepTool / tools::search; the missing-parent-dir scenario belongs to BC-2.23.002 EC-003. ADR-010 TOOLS table label for BC-2.23.006 verified correct (no change required)."
   - "1.4 (burst-234/2026-07-22): PO minted E-TOOLS-009 InvalidRegexPattern (VAL/Never; fields pattern: String + compile_error: String; anchor BC-2.23.006 PC-4/EC-002/TV-003). Add E-TOOLS-009 row to Decision 5 table. Update PO obligation to 9 codes (TD-VSDD-060 sweep: '8 codes' → '9 codes'). TOOLS namespace is now 9 codes (001..009)."
   - "1.3 (burst-233/2026-07-22): F-P133-07 sibling sweep (TD-VSDD-060) — remove stale 'VP-013 Kani P0 candidate' label in §Positive Properties / Rationale (VP-013 seeded burst-232, Kani P1; also correct Kani P0 → Kani P1)."
   - "1.2 (burst-233/2026-07-22): F-P133-01 — fix fabricated E-SANDBOX namespace in Decision 2: tools::fs out-of-guard return corrected from `FerrochainError::sandbox(E-SANDBOX-xxx)` to `Err(E-TOOLS-001 PathConfinementViolation)`; tools::shell timeout return corrected from `FerrochainError::sandbox(E-SANDBOX-timeout)` to `Err(E-TOOLS-004 BashTimeout)`. F-P133-03 adjudication — add E-TOOLS-008 FileIoError to Decision 5 table; category TOOL (OS-level file execution failure; confirmed via ADR-010 12-category axis); RetryHint Maybe; PO obligation extended to 8 codes (anchor BCs 2.23.001–004 and 2.23.006)."
@@ -221,7 +223,7 @@ transient (e.g., `StorageFull` may resolve); caller must inspect `io_kind` to de
 retry feasibility. Message form: `"<tool_type> I/O error on '<path>': <io_kind>"` — subject
 to gate #33 constraint in `error-taxonomy.md` (PO to verify at error-taxonomy authoring).
 Anchor BCs: BC-2.23.001 (ReadFileTool), BC-2.23.002 (WriteFileTool), BC-2.23.003
-(EditFileTool), BC-2.23.004 (ListDirTool), BC-2.23.006 (WriteFileTool missing parent dir).
+(EditFileTool), BC-2.23.004 (ListDirTool), BC-2.23.006 (GrepTool — tools::search traversal I/O error).
 
 **PO obligation (error-taxonomy.md):** add the `E-TOOLS-*` section with these 9 codes
 to `.factory/specs/prd-supplements/error-taxonomy.md`. For E-TOOLS-008 specifically:

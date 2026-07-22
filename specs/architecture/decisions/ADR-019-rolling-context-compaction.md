@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-22"
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
-version: "1.1"
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-10, SS-04]
 changelog:
+  - "1.2 (burst-234/2026-07-22): F-P134-04 — Decision 3 step 5: rename CompactionEvent journal field `trigger_tokens_remaining` → `tokens_remaining_after` to match BC-2.10.006 v1.1 canonical field name and Decision 4 streaming payload (both use `tokens_remaining_after`). TD-VSDD-060 sibling sweep: sole remaining occurrence in architect-scope files; entities-graph.md (domain-spec, out of scope) and BC-2.10.006 changelog (historical documentation, out of scope) retain the old name in quoted context only."
   - "1.1 (burst-233/2026-07-22): F-P133-07 sibling sweep (TD-VSDD-060) — remove stale 'VP-012 candidate' labels (VP-012 seeded burst-232, Kani P1). Two sites updated: §Compaction Trigger Evaluation Sequence step 1 watermark check, and §Positive Properties rationale line."
   - "1.0 (D23/2026-07-22): Initial ADR — rolling proactive context compaction as a first-class framework primitive. Closes the DEGRADED gap identified in domain-e-agentic-coding-assistant.md §3 item 10."
 ---
@@ -130,7 +131,7 @@ per ADR-009) evaluates `CompactionTrigger` after each super-step:
    a single `SystemMessage(summary_text)`. The original checkpoint records are NOT deleted
    (immutable checkpoint history per BC-2.04.001).
 5. **Journal:** append a `CompactionEvent { compacted_range, summary_token_count,
-   trigger_tokens_remaining }` to `EvidenceJournal` (BC-2.10.001 append-only journal).
+   tokens_remaining_after }` to `EvidenceJournal` (BC-2.10.001 append-only journal).
 6. **Stream:** emit a `compaction_event` streaming event (see Decision 4).
 7. Continue the run from the next super-step with the compacted context.
 

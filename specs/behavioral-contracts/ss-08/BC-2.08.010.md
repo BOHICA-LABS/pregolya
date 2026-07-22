@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.010
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,10 +26,11 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
-input-hash: "ee52435"
+input-hash: "7d52928"
 changelog:
-  - "1.0 (initial): base BC authored."
+  - "1.2 (burst-234/F-P134-03/2026-07-22): Fix mis-anchor — replace both BC-2.05.004 references with BC-2.05.007. PC-1 body and Related BCs both cited BC-2.05.004 (Command-resume API) for the PreToolCallHook / ToolCallPreview / pre_tool_dispatch contract; that contract lives in BC-2.05.007 (PreToolCallHook Dispatch). BC-2.05.004 is the Command(resume=value) programmatic-resume API — unrelated to pre_tool_dispatch. Verified: BC-2.05.007 §Preconditions PC-3 explicitly defines ToolCallPreview construction and §Invariants Retry-ordering clause confirms pre_tool_dispatch dispatch. Reciprocal link added to BC-2.05.007 Related BCs. TD-VSDD-060 sibling sweep: one PC-1 site + one Related BCs site — both corrected in this burst."
   - "1.1 (D23/2026-07-22): Add optional `action_risk` attribute parameter (`action_risk = ActionRisk::High`) per ADR-018 Decision 6. PC3 updated to document optional attribute; PC1 extended with `action_risk()` method on generated struct; `ToolCallPreview.action_risk` carries the value when `pre_tool_dispatch` hook is called. New EC-005: omitting `action_risk` defaults to `None` (no risk tier constraint). Related BCs: BC-2.05.004 and BC-2.23.005 forward refs added."
+  - "1.0 (initial): base BC authored."
 extracted_from: null
 modified: []
 deprecated: null
@@ -72,7 +73,7 @@ type MUST have a committed snapshot test per BC-2.08.009 (schema naming stabilit
    - `schema()` returning `schemars::schema_for!(<ArgStruct>)` as `schemars::Schema`
    - `action_risk()` returning `Option<ActionRisk>` — `Some(ActionRisk::<Tier>)` when the
      `action_risk` attribute is present; `None` when omitted. This value is carried into
-     `ToolCallPreview.action_risk` when the `pre_tool_dispatch` hook is invoked (BC-2.05.004).
+     `ToolCallPreview.action_risk` when the `pre_tool_dispatch` hook is invoked (BC-2.05.007).
    - `Runnable<ToolInput, ToolOutput>` with `invoke` delegating to the annotated function body
 2. A private `<PascalCaseName>Args` struct is generated with one field per function parameter;
    the struct derives `serde::Deserialize + schemars::JsonSchema`.
@@ -150,7 +151,7 @@ on the caller's behalf.
 - BC-2.08.011 — sibling: `#[entrypoint]` macro (same proc-macro crate, different attribute)
 - BC-2.08.012 — sibling: `#[task]` macro (same proc-macro crate)
 - BC-2.01.003 — depends on: Runnable trait invocation contract governs invoke dispatch
-- BC-2.05.004 — composes with: `action_risk()` value is carried into `ToolCallPreview.action_risk` for `PreToolCallHook` evaluation; hook sees the declared risk tier before deciding to approve/deny/edit
+- BC-2.05.007 — composes with: `action_risk()` value is carried into `ToolCallPreview.action_risk` for `PreToolCallHook` evaluation; hook sees the declared risk tier before deciding to approve/deny/edit
 - BC-2.23.005 — example: BashTool sets `action_risk = ActionRisk::Medium` as a risk floor; illustrates the `action_risk` attribute in practice
 
 ## Architecture Anchors
