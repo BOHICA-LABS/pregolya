@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.0"
+version: "2.1"
 status: active
 producer: architect
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -21,9 +21,12 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-19/BC-2.19.005.md
   - .factory/specs/behavioral-contracts/ss-21/BC-2.21.003.md
   - .factory/specs/behavioral-contracts/ss-22/BC-2.22.001.md
-input-hash: "bf6be42"
+  - .factory/specs/behavioral-contracts/ss-05/BC-2.05.007.md
+  - .factory/specs/behavioral-contracts/ss-10/BC-2.10.005.md
+  - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
+input-hash: "d43b0fa"
 traces_to: ARCH-INDEX.md
-decisions: [D17, D21]
+decisions: [D17, D21, D23]
 ---
 
 # Verification Architecture: ferrochain
@@ -33,7 +36,7 @@ decisions: [D17, D21]
 
 ## [Section Content]
 
-This file documents ferrochain's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the ten committed VP obligations (VP-001–VP-010), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1).
+This file documents ferrochain's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the thirteen committed VP obligations (VP-001–VP-013), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1).
 
 ## Kani Async Constraint (Verified Kani 0.67.0)
 
@@ -47,6 +50,8 @@ on a `Future` will fail at verification time. Consequences:
    - `checkpoint::session_index` (VP-002 target) — sync key derivation logic
    - `checkpoint::clock` — pure `get_next_version(current)` successor function; stateless, no atomic counter
    - `graph::bsp_engine` (VP-001 target) — sync reducer; async orchestration wraps it
+   - `graph::hitl` (VP-011 target) — sync `route_pre_tool_decision(decision: PreToolDecision) -> DispatchOutcome` extracted from async `pre_tool_dispatch`; `shield_hook_result(result: Result<PreToolDecision, HookError>) -> PreToolDecision` is the companion sync adapter
+   - `core::budget` (VP-012 target) — sync `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, fraction: f32) -> bool`; pure arithmetic, no I/O
 3. **ADR-001 Alt-B constraint:** The HYBRID orchestrator-loop is `async` (Tokio runtime).
    This is intentional and correct. The Kani-verifiable invariants live inside the
    synchronous `reduce_super_step()` core that the orchestrator calls. Async orchestration
@@ -61,9 +66,9 @@ on a `Future` will fail at verification time. Consequences:
    }
    ```
 
-## Committed VP Obligations (D17-Q7 + R11 + D21)
+## Committed VP Obligations (D17-Q7 + R11 + D21 + D23)
 
-Ten VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion):
+Thirteen VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-011..013 (D23 tools/budget layer):
 
 | VP | BC Anchor | DI | Module | Tool | Phase | Priority |
 |----|-----------|-----|--------|------|-------|---------|
@@ -77,8 +82,11 @@ Ten VPs committed before v1.0 release — VP-001..005 (original five) plus VP-00
 | VP-008 | BC-2.22.001 | DI-014 | ferrochain-core / embeddings | proptest | 3 | P1 |
 | VP-009 | BC-2.21.003 | DI-014 | ferrochain-vectorstores / vectorstores-similarity | Kani | 6 | P0 |
 | VP-010 | BC-2.19.005 | DI-014 | ferrochain-core / serializable-reviver | Kani | 6 | P0 |
+| VP-011 | BC-2.05.007 | DI-014 | ferrochain-graph / hitl | Kani | 6 | P0 |
+| VP-012 | BC-2.10.005 | DI-014 | ferrochain-core / core-budget | Kani | 6 | P1 |
+| VP-013 | BC-2.23.005 | DI-014 | ferrochain-tools / tools-shell | Kani | 6 | P1 |
 
-**Total: 10 VPs — 5 P0 / 5 P1 | Tool breakdown: Kani ×6, proptest ×2, integration ×2**
+**Total: 13 VPs — 6 P0 / 7 P1 | Tool breakdown: Kani ×9, proptest ×2, integration ×2**
 
 ## Provable Properties Catalog
 
@@ -252,6 +260,59 @@ pure function. Bounded: ID depth ≤ 4, segments ≤ 16 ASCII bytes, registry fi
 non-monolith domain assumption (VP-010.md v1.1 scoping per F-P129-04). HashMap lookup is directly modeled
 by Kani's CBMC backend. Red Gate: must compile-and-fail before Phase 3 story delivery for SS-19.
 
+---
+
+**VP-011 — PreToolCallHook Fail-Closed** (ferrochain-graph / hitl) `Kani P0 red_gate: true`
+
+Property: For any `PreToolDecision::Deny` and for any hook result that is `Err(HookError)` or
+produces a hook panic, `route_pre_tool_decision` returns `DispatchOutcome::Reject(_)`.
+`DispatchOutcome::Proceed(_)` is unreachable unless the decision is `PreToolDecision::Approve`.
+
+Formal statement:
+```
+∀ decision: PreToolDecision:
+  decision == Deny    → route_pre_tool_decision(decision) == Reject(_)
+  decision == Approve → route_pre_tool_decision(decision) == Proceed(_)
+  (no other variant exists; enum is exhaustive)
+
+∀ result: Result<PreToolDecision, HookError>:
+  result == Err(_) → shield_hook_result(result) == Deny
+  result == Ok(Approve) → shield_hook_result(result) == Approve
+  result == Ok(Deny)    → shield_hook_result(result) == Deny
+```
+
+Kani harness sketch:
+```rust
+#[kani::proof]
+fn deny_excludes_tool_invocation() {
+    let decision: PreToolDecision = kani::any();
+    let outcome = route_pre_tool_decision(decision);
+    match decision {
+        PreToolDecision::Deny => {
+            kani::assert(matches!(outcome, DispatchOutcome::Reject(_)), "Deny must map to Reject");
+        }
+        PreToolDecision::Approve => {
+            kani::assert(matches!(outcome, DispatchOutcome::Proceed(_)), "Approve must map to Proceed");
+        }
+    }
+}
+
+#[kani::proof]
+fn hook_error_resolves_to_deny_and_reject() {
+    // Err path — any HookError must produce Deny
+    let err: HookError = kani::any();
+    let decision = shield_hook_result(Err(err));
+    kani::assert(decision == PreToolDecision::Deny, "HookError must resolve to Deny");
+    let outcome = route_pre_tool_decision(decision);
+    kani::assert(matches!(outcome, DispatchOutcome::Reject(_)), "Deny must map to Reject");
+}
+```
+
+Feasibility: HIGH. `PreToolDecision` is a 2-variant enum; `DispatchOutcome` has two variants.
+`route_pre_tool_decision` and `shield_hook_result` are pure sync functions extracted from the
+async `pre_tool_dispatch` per the sync-core mandate above. No I/O in harness; enum state-space
+is exhaustively checkable by Kani. Estimated proof time: < 1 min.
+
 ## Should Prove (P1 — Core Algorithms, Conformance Contracts)
 
 **VP-006 — injection_guard Fail-Closed** (ferrochain-prompts / injection_guard) `Kani P1 Phase 6`
@@ -365,6 +426,114 @@ Feasibility: HIGH. Mock embeddings implementation makes the contract hold by con
 the test validates that a ragged-returning implementation would be caught. Phase 3 delivery
 requires a concrete `MockEmbeddings` struct implementing `Embeddings` with fixed-dim output.
 
+---
+
+**VP-012 — OnWatermark Arithmetic** (ferrochain-core / core-budget) `Kani P1 Phase 6`
+
+Property: `check_watermark_trigger(tokens_remaining, ceiling, fraction)` returns `true` if and
+only if `(tokens_remaining as f32) / (ceiling as f32) < (1.0 - fraction)` for all valid inputs
+in the bounded domain. The function never overflows, produces NaN, or returns an incorrect
+trigger decision within the bounded domain.
+
+Formal statement:
+```
+∀ tokens_remaining: u64 ∈ (0, ceiling], ceiling: u64 ∈ (0, 2^24],
+  fraction: f32 ∈ (0.0, 1.0], fraction.is_finite():
+    check_watermark_trigger(tokens_remaining, ceiling, fraction)
+    == ((tokens_remaining as f32) / (ceiling as f32) < (1.0f32 - fraction))
+```
+
+Bound rationale: `ceiling ≤ 2^24` ensures exact f32 representation; above 2^24 f32 loses
+integer precision and the arithmetic guarantee is not meaningful.
+
+Kani harness sketch:
+```rust
+#[kani::proof]
+fn watermark_arithmetic_harness() {
+    let tokens_remaining: u64 = kani::any();
+    let ceiling: u64 = kani::any();
+    let fraction: f32 = kani::any();
+    kani::assume(tokens_remaining > 0 && ceiling > 0 && tokens_remaining <= ceiling);
+    kani::assume(ceiling <= 1 << 24);
+    kani::assume(fraction > 0.0 && fraction <= 1.0 && fraction.is_finite());
+    let result = check_watermark_trigger(tokens_remaining, ceiling, fraction);
+    let r = tokens_remaining as f32;
+    let c = ceiling as f32;
+    let expected = r / c < (1.0f32 - fraction);
+    kani::assert(result == expected, "OnWatermark arithmetic must match reference");
+}
+```
+
+Feasibility: MEDIUM-HIGH. `check_watermark_trigger` is a pure sync arithmetic function in
+`ferrochain-core::core::budget` (definitions-only, not the graph::budget engine). The bounded
+domain (`ceiling ≤ 2^24`) makes the f32 arithmetic tractable for Kani's IEEE-754 model.
+Estimated proof time: 5–10 min. Note: `fraction > 0.0` assumption excludes the degenerate
+`fraction = 0.0` case (always-fire); if that case is in scope, a separate harness is warranted.
+
+---
+
+**VP-013 — BashTool Risk Floor** (ferrochain-tools / tools-shell) `Kani P1 Phase 6`
+
+Property: For all `ActionRisk r ∈ {ReadOnly, Low}`, `check_risk_floor(r)` returns
+`Err(FerrochainError { code: "E-TOOLS-007", category: VAL })` and never returns `Ok(())`.
+The Low/ReadOnly risk tiers are unconditionally below the minimum allowed floor.
+
+Formal statement:
+```
+∀ r: ActionRisk:
+  (r == ReadOnly ∨ r == Low) → check_risk_floor(r) == Err(E-TOOLS-007, category: VAL)
+  (r == Medium ∨ r == High ∨ r == Critical) → check_risk_floor(r) == Ok(())
+```
+
+Note on BC contradiction: BC-2.23.005 uses `Category::CONFIGURATION` for E-TOOLS-007, which
+is not in the 12-category canonical axis. Error-taxonomy v1.31 correctly uses `VAL`
+(ValidationError). This VP harness and formal statement use `VAL` per the canonical taxonomy.
+The BC contradiction is routed to the Product Owner for amendment (out of architect scope).
+
+Kani harness sketch:
+```rust
+#[kani::proof]
+fn risk_floor_rejects_below_medium() {
+    // ReadOnly path
+    let result_ro = check_risk_floor(ActionRisk::ReadOnly);
+    kani::assert(
+        matches!(result_ro, Err(FerrochainError { code: "E-TOOLS-007", .. })),
+        "ReadOnly must be rejected with E-TOOLS-007",
+    );
+    // Low path
+    let result_low = check_risk_floor(ActionRisk::Low);
+    kani::assert(
+        matches!(result_low, Err(FerrochainError { code: "E-TOOLS-007", .. })),
+        "Low must be rejected with E-TOOLS-007",
+    );
+}
+
+#[kani::proof]
+fn risk_floor_exhaustive_coverage() {
+    let idx: u8 = kani::any();
+    kani::assume(idx <= 4);
+    let risk = match idx {
+        0 => ActionRisk::ReadOnly,
+        1 => ActionRisk::Low,
+        2 => ActionRisk::Medium,
+        3 => ActionRisk::High,
+        _ => ActionRisk::Critical,
+    };
+    let result = check_risk_floor(risk);
+    if idx < 2 {
+        kani::assert(
+            matches!(result, Err(FerrochainError { code: "E-TOOLS-007", .. })),
+            "ReadOnly/Low must return E-TOOLS-007",
+        );
+    } else {
+        kani::assert(result.is_ok(), "Medium/High/Critical must pass floor check");
+    }
+}
+```
+
+Feasibility: HIGH. `ActionRisk` is a 5-variant enum; `check_risk_floor` is a pure sync match.
+State-space is trivially finite for Kani. Estimated proof time: < 1 min.
+
 ## Test-Sufficient (No Kani)
 
 Modules where behavioral testing is the primary verification method:
@@ -403,6 +572,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.1 | 2026-07-22 | architect | burst-232 / D23 | D23 VP layer: add VP-011..013 (Kani P0/P1) to Committed VP Obligations table and Provable Properties Catalog. VP-011 (graph::hitl, P0): PreToolCallHook fail-closed dispatch. VP-012 (core-budget, P1): OnWatermark arithmetic. VP-013 (tools-shell, P1): BashTool risk floor. Total 10→13 VPs; P0 5→6; P1 5→7; Kani 6→9. Add BC-2.05.007/2.10.005/2.23.005 to inputs; decisions D17/D21 → D17/D21/D23. Input-hash refresh pending. |
 | 2.0 | 2026-07-21 | architect | burst-227 / F-P132-03 | VP-006 Feasibility section: `ProvenanceTag: 3 variants` → `TrustLevel: 3 variants` (ProvenanceTag is a struct with Uuid field, not an enum; TrustLevel is the Kani input). Propagates VP-006.md v1.4 residue sweep. |
 | 1.9 | 2026-07-21 | architect | burst-226 / F-P131-05 | VP-006 section corrected: replace nonexistent `ProvenanceTag::External \| ProvenanceTag::ToolOutput` variants with `TrustLevel::Untrusted` (SS-18-local trust classifier per ADR-015 v1.3); fix error code `E-INJ-001` → `E-TMPL-001` (SECURITY/InjectionAttempt). Formal statement, harness sketch, and explanatory note updated throughout. `TrustLevel` is distinct from `core::guardrail::ProvenanceTag` (SS-11 ingress struct). `SlotVar.tag` field renamed to `SlotVar.trust_level` in harness. |
 | 1.8 | 2026-07-21 | architect | burst-225 / F-P130-05 | Correct VP-006 DI column in Committed VP Obligations table: DI-008 → DI-014. VP-006 proves the fail-closed property (injection detected → Err returned, no PromptValue produced); the semantically correct invariant is DI-014 (Error Propagation / No Silent Swallowing), not DI-008 (Library Constructor Result Contract). Siblings VP-009 and VP-010 both anchor DI-014 for the same class of proof. Propagates VP-INDEX.md v1.4 and VP-006.md v1.2 corrections. |

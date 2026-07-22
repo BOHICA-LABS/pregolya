@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "fc9b5e5"
+input-hash: "d48bb84"
 traces_to: STATE.md
 ---
 
@@ -4061,3 +4061,64 @@ Product-owner authored the full D23 behavioral-contract layer covering first-par
 - Phase 1 status: D23 BC layer COMPLETE (burst 231); 0/3 on D23 perimeter
 - Trajectory tail: →12→9→7→8→[D-23 expansion; 0/3 RESET; arch + CAP + BC layers complete]
 - NEXT: burst 232 architect (ADR-010 v1.3 component axis 16→17 + ARCH-INDEX band ranges/VP-seeded status + VP-011..013 minting + VP-INDEX 10→13 + verification docs) → adversary pass P1D-133 on full D21+D23 perimeter → cascade toward 3/3 CLEAN(strict) → check-input-drift → Phase 1 HUMAN GATE
+
+---
+
+## Burst 232 — 2026-07-22 — D23 VP Layer + ADR-010 v1.3 + PO Category Micro-fix
+
+**Agents:** architect (VP-011/012/013; ARCH-INDEX v1.7; ADR-010 v1.3), product-owner (BC-2.23.001/003/005 v1.1 micro-fix), state-manager (hash sweep; STATE.md v3.72→v3.73; burst-log)
+
+**Context:** Final authoring burst for D23 Full-Parity Expansion. Burst 231 closed the BC layer (13 new contracts, BC-INDEX v2.1 at 129 BCs). Burst 232 closes the VP and verification-architecture layer, plus a one-line category correction on three tools BCs caught by the architect during review.
+
+**Session notes:** Two API-error interruptions recovered during this session (context compaction between sub-bursts). All work completed within the session; no partial-burst state left on disk.
+
+### Sub-burst 232a — Architect: VP-011/012/013 + ARCH-INDEX v1.7 + ADR-010 v1.3
+
+**New Verification Properties (D23 VP layer):**
+
+- `VP-011.md` v1.0 — Kani P0, `graph::hitl`, BC-2.05.007 (PreToolCallHook fail-closed dispatch). 4 proof harnesses: `deny_excludes_tool_invocation`, `approve_permits_tool_invocation`, `hook_dispatch_is_exhaustive`, `deny_deny_deny_zero_invocations`. input-hash c230b53.
+- `VP-012.md` v1.0 — Kani P1, `core-budget`, BC-2.10.005 (OnWatermark arithmetic). 3 proof harnesses: `watermark_arithmetic_harness`, `hard_ceiling_rejects_above`, `soft_ceiling_triggers_watermark`. input-hash c24ba76.
+- `VP-013.md` v1.0 — Kani P1, `tools-shell`, BC-2.23.005 (BashTool risk floor). 3 proof harnesses: `risk_floor_rejects_below_medium`, `medium_risk_passes_floor`, `high_risk_passes_floor`. input-hash b22523b (pre-sweep).
+
+**Updated architecture documents:**
+
+- `ARCH-INDEX.md` v1.6 → v1.7: SS-05 BC band 001-008; SS-06 BC band 001-006; SS-10 BC band 001-006; SS-23 BC band 001-006; VP section 10→13 (+VP-011..013 seeded rows). input-hash c42e44e.
+- `VP-INDEX.md` v1.4 → v1.5: 13 VPs total = 6 Kani P0 + 3 Kani P1 + 2 proptest P1 + 2 integration P1; arithmetic invariant updated (10→13; Kani 6→9; P0 5→6; P1 5→7).
+- `verification-architecture.md` v2.0 → v2.1: Provable Properties Catalog +VP-011 (graph::hitl / fail-closed), +VP-012 (core-budget / OnWatermark), +VP-013 (tools-shell / BashTool risk floor). P0 count 5→6. input-hash d43b0fa (post-sweep).
+- `verification-coverage-matrix.md` v1.9 → v2.0: VP-to-Module table +3 rows (VP-011 ferrochain-graph/hitl, VP-012 ferrochain-core/core-budget, VP-013 ferrochain-tools/tools-shell); Totals row 10→13. input-hash 59612fc (post-sweep).
+- `ADR-010-error-taxonomy-anyhow-confinement.md` v1.2 → v1.3: component axis 16→17 (TOOLS namespace added; ferrochain-tools crate family as consumer); TOOLS enum comment added; gate count 17→18 (gate #18: E-TOOLS-NNN = anyhow confined to crate root, no boundary leakage); §D23 Impact section; E-TOOLS-004 RetryHint::Never divergence note + informational payload-field annotations.
+
+### Sub-burst 232b — Product Owner: BC Category Micro-fix
+
+Architect flagged three SS-23 behavioral contracts with incorrect `Category:` values during VP-011/013 authoring. Fixed:
+
+- `BC-2.23.001.md` v1.0 → v1.1: `Category::VALIDATION` → `VAL` (ReadFileTool validation contract)
+- `BC-2.23.003.md` v1.0 → v1.1: `Category::VALIDATION` → `VAL` (EditFileTool validation contract)
+- `BC-2.23.005.md` v1.0 → v1.1: `Category::CONFIGURATION` → `VAL` (BashTool risk floor; pre-condition check, not configuration)
+
+13-file BC sibling sweep: all SS-23 BCs checked; no other category errors found. input-hash 4661c22 for all three.
+
+### Sub-burst 232c — State Manager: Hash Sweep + STATE.md + Burst-log
+
+**Hash sweep (D18-P89-A compliance) — transitive until STALE=0:**
+
+- specs/ pass 1 (--scan --update): TOTAL=174 MATCH=170 STALE=4 → UPDATED=4 (VP-013.md hash b22523b→412fcba; verification-architecture.md stale from VP-011..013 add; verification-coverage-matrix.md stale from VP-INDEX change; module-criticality.md stale from transitive)
+- specs/ verify: TOTAL=174 MATCH=174 STALE=0 — PASS
+- cycles/ pass 1 (--scan --update): TOTAL=54 MATCH=39 STALE=15 → UPDATED=15 (cycles/v0.0.0-pre-pipeline/session-checkpoints.md, burst-log.md, blocking-issues-resolved.md, lessons.md; cycles/v1.0.0-greenfield/session-checkpoints.md, burst-log.md, blocking-issues-resolved.md, lessons.md, convergence-trajectory.md; cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-14.md, ADV-P1D-PASS-15.md, ADV-P1D-PASS-17.md, pass-92.md, pass-93.md, pass-94.md)
+- cycles/ verify: TOTAL=54 MATCH=54 STALE=0 — PASS
+
+**Defensive count-propagation sweep** (S-7.02): "13 VPs" and "VP-INDEX v1.5" searched across STATE.md, ARCH-INDEX.md, prd.md, BC-INDEX.md — all updated in this burst or confirmed current. Historical burst row references (VP-INDEX v1.4, "10 VPs") are immutable audit trail; intentionally not updated.
+
+**STATE.md** v3.72 → v3.73: timestamp 2026-07-22T20:20:00Z; current_step updated (D23 COMPLETE; trajectory-tail →12→9→7→8→[D-23]; 0/3); Phase 1 Progress row gate text updated (D23 authoring COMPLETE; ARCH-INDEX v1.7; VP-011/012/013 minted; VP-INDEX v1.5 13 VPs; ADR-010 v1.3; BC-2.23.001/003/005 v1.1); stale cites fixed (ARCH-INDEX v1.6→v1.7 at 6 locations; VP-INDEX v1.4→v1.5 at 6 locations); burst-232 row added to Current Phase Steps; burst-227 row archived to this burst-log (see below); Historical Content rows updated (VP-INDEX v1.5; VP-011..013; verification-architecture v2.1; verification-coverage-matrix v2.0; ADR-010 v1.3; BC-2.23.001/003/005 v1.1); Session Resume Checkpoint replaced (NEXT-ACTIONS: P1D-133 first); R13 status updated (D23 authoring COMPLETE); Last Updated includes trajectory-tail.
+
+### Archived Current Phase Steps Row (displaced from STATE.md at burst 232)
+
+| Burst 227 — P1D-132 fix-burst COMPLETE (all 8 closed); ADR-015 v1.4 (MessageListVar + OutputVar; ADR-015 D2 amended); VP-006 v1.4 (DI corrected DI-008→DI-014 + TrustLevel harness); verification-architecture v2.0; prd v1.8; BC-2.08.010 v1.2/BC-2.10.001 v1.2/BC-2.16.001 v1.0; hash sweep STALE=0 (specs/ 167 TOTAL, 5 passes; cycles/ STALE=0); D22 recorded; burst-223 row archived | architect + PO + state-manager | COMPLETE | ADR-015 v1.4 (F-P132-03 HIGH: MessageListVar + OutputVar types; ADR-015 D2 amended: PromptValue is a sum type). VP-006 v1.4 (F-P132-02 MED: DI-008→DI-014 correction; TrustLevel harness renamed injection_guard_fail_closed). verification-architecture v2.0 (VP-006 DI column corrected). BC-2.08.010 v1.2 (F-P132-01 HIGH: action_risk uses macro param; risk_override removed). BC-2.10.001 v1.2 (F-P132-04 HIGH: on_ceiling field canonical path). BC-2.16.001 v1.0 (F-P132-05 HIGH: retry-approval ordering; no retry after HITL Deny). prd v1.8 (§4.4 + BC-2.08.010/BC-2.10.001/BC-2.16.001 RTM updated). Hash sweep STALE=0 (specs/ 167 TOTAL 5 passes; cycles/ STALE=0). D22 Domain E recorded. Burst 227. |
+
+### Convergence Status After Burst 232
+
+- Phase 1d passes: 132 (128 pre-D21 + 4 post-D21 expanded-perimeter passes; NOT CLEAN at last pass P1D-132)
+- Fix bursts: 132 total
+- Phase 1 status: D23 authoring COMPLETE (bursts 229-232); 0/3 on D23 expanded perimeter
+- Trajectory tail: →12→9→7→8→[D-23 expansion; 0/3 RESET; ALL D23 layers (arch+CAP+BC+VP) complete]
+- NEXT: adversary pass P1D-133 on FROZEN HEAD (post-burst-232 commit) on FULL D21+D23 expanded perimeter → cascade toward 3/3 CLEAN(strict) → check-input-drift → fresh consistency audit → Phase 1 HUMAN GATE

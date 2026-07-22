@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.005
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ vp_seed: true
 vp_id: VP-013
 red_gate: false
 changelog:
+  - "1.1 (Burst-232/2026-07-22): Fix Category::CONFIGURATION → Category::VAL in PC-4 (E-TOOLS-007 BashRiskTierViolation). CONFIGURATION is not in the canonical 12-member Category enum; E-TOOLS-007 is VAL per error-taxonomy v1.31. Gate #33 reverse-verify E-TOOLS-007 ↔ BC-2.23.005: taxonomy VAL ↔ BC PC-4 VAL — PASS."
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 BashTool. VP-013 Kani seed candidate."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-037
@@ -89,7 +90,7 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
    code: "E-TOOLS-004", message: "BashTimeout: command exceeded max_duration of <seconds>s" })`.
 4. **Risk floor violation at startup:** `ToolConfig::override_risk(ActionRisk::ReadOnly)` or
    `override_risk(ActionRisk::Low)` called on a `BashTool` instance. At `ToolRegistry::register`
-   time the framework returns `Err(FerrochainError { component: "TOOLS", category: Category::CONFIGURATION,
+   time the framework returns `Err(FerrochainError { component: "TOOLS", category: Category::VAL,
    code: "E-TOOLS-007", message: "BashRiskTierViolation: BashTool risk tier cannot be lowered
    below Medium; attempted: '<tier>'" })`. The graph does not start.
 5. **Sandbox policy violation:** The command attempts an operation disallowed by the sandbox

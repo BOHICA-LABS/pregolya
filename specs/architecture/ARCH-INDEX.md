@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.6"
+version: "1.7"
 status: active
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
@@ -11,12 +11,13 @@ inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "456cab5"
+input-hash: "c42e44e"
 traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
-  - "1.6 (D23/2026-07-22): D23 architecture layer — add SS-23 (First-Party Tool Library, ferrochain-tools crate #21); ADR registry 17→20 (ADR-018 per-tool-call approval hook, ADR-019 rolling context compaction, ADR-020 first-party tool library); Canonical Crate Roster 20→21 (+ferrochain-tools); SS-15 wave 2→1 (CAP-017 D23 item 3); SS-16 wave 2→1 (CAP-018 D23 item 4); VP table updated to reflect current VP-INDEX v1.4 (10 VPs, 5 Kani P0, 5 P1); VP-011/012/013 D23 candidate anchors noted; fix stale Document Map ADR count (was 13, actually 17 post-D21, now 20 post-D23); fix stale VP total in VP section header (was 5, now 10)."
+  - "1.7 (burst-232/2026-07-22): D23 VP loop closure — VP-011/012/013 SEEDED with BC anchors (no longer candidates); VP section total 10→13 (6 Kani P0 + 3 Kani P1 + 2 proptest P1 + 2 integration P1); VP-INDEX reference v1.4→v1.5; SS-05 BC range 001–006→001–008; SS-06 BC range 001–003→001–006; SS-10 BC range 001–004→001–006; SS-23 BC range TBD→001–006."
+  - "1.6 (D23/2026-07-22): D23 architecture layer — add SS-23 (First-Party Tool Library, ferrochain-tools crate #21); ADR registry 17→20 (ADR-018 per-tool-call approval hook, ADR-019 rolling context compaction, ADR-020 first-party tool library); Canonical Crate Roster 20→21 (+ferrochain-tools); SS-15 wave 2→1 (CAP-017 D23 item 3); SS-16 wave 2→1 (CAP-018 D23 item 4); VP table reflects VP-INDEX v1.5 (10 VPs at D23 open; VP-011..013 minted at burst-232 bringing total to 13); VP-011/012/013 D23 candidate anchors noted; fix stale Document Map ADR count (was 13, actually 17 post-D21, now 20 post-D23); fix stale VP total in VP section header (was 5, now 10)."
   - "1.5 (D21/2026-07-20): ecosystem-parity scope expansion — add SS-18 (Prompt Templates, ferrochain-prompts), SS-19 (LC Serialization, ferrochain-core), SS-20 (Document Retrieval, ferrochain-core + ferrochain-vectorstores), SS-21 (VectorStore Abstraction, ferrochain-vectorstores), SS-22 (Embeddings, ferrochain-core + providers); Canonical Crate Roster 18→20 (+ferrochain-prompts +ferrochain-vectorstores); ADR registry 13→17 (ADR-014 VectorStore+Retriever, ADR-015 PromptInjectionSafety, ADR-016 lc-JSON safety, ADR-017 Embeddings); VP candidates noted (no new VP files yet)."
   - "1.4 (provenance-fix-169/2026-07-17): remove .factory/STATE.md from inputs (not a genuine spec-content input; D-NNN decisions are baked-in stable facts per PO corpus adjudication)."
   - "1.3 (F-P72-04/ADR-013): add ADR-013 (mcp::server module placement) to ADR registry; update SS-09 D20 capability note to attribute mcp::server to ADR-013 (not ADR-012); ADR count 12→13."
@@ -68,12 +69,12 @@ changelog:
 | SS-02 | StateGraph Definition | 2.02 | ferrochain-graph | BC-2.02.001–006 | 1 |
 | SS-03 | BSP Execution Engine | 2.03 | ferrochain-graph | BC-2.03.001–003 | 1 |
 | SS-04 | Durable Checkpointing | 2.04 | ferrochain-checkpoint | BC-2.04.001–008 | 1 |
-| SS-05 | HITL Interrupt / Resume | 2.05 | ferrochain-graph | BC-2.05.001–006 | 1 |
-| SS-06 | Streaming Event Taxonomy | 2.06 | ferrochain-graph, ferrochain-core | BC-2.06.001–003 | 1 |
+| SS-05 | HITL Interrupt / Resume | 2.05 | ferrochain-graph | BC-2.05.001–008 | 1 |
+| SS-06 | Streaming Event Taxonomy | 2.06 | ferrochain-graph, ferrochain-core | BC-2.06.001–006 | 1 |
 | SS-07 | Text Splitting | 2.07 | ferrochain-splitters | BC-2.07.001–003 | 1 |
 | SS-08 | Provider Conformance + Standard Tests | 2.08 | ferrochain-openai, ferrochain-anthropic, ferrochain-ollama, ferrochain-standard-tests | BC-2.08.001–014 | 2 |
 | SS-09 | MCP Tool Adapter | 2.09 | ferrochain-mcp | BC-2.09.001–007 | 2 |
-| SS-10 | Budget Governance | 2.10 | ferrochain-graph | BC-2.10.001–004 | 1 |
+| SS-10 | Budget Governance | 2.10 | ferrochain-graph | BC-2.10.001–006 | 1 |
 | SS-11 | Content Provenance / Guardrail | 2.11 | ferrochain-graph | BC-2.11.001–006 | 1 |
 | SS-12 | Durable-Run HTTP Server | 2.12 | ferrochain-server | BC-2.12.001–007 | 1 |
 | SS-13 | Sandboxed Tool Execution | 2.13 | ferrochain-sandbox | BC-2.13.001–007 | 1 |
@@ -86,7 +87,7 @@ changelog:
 | SS-20 | Document Retrieval | 2.20 | ferrochain-core, ferrochain-vectorstores | BC-2.20.001–TBD | 2 |
 | SS-21 | VectorStore Abstraction | 2.21 | ferrochain-vectorstores | BC-2.21.001–TBD | 2 |
 | SS-22 | Embeddings | 2.22 | ferrochain-core, ferrochain-openai, ferrochain-ollama | BC-2.22.001–TBD | 2 |
-| SS-23 | First-Party Tool Library | 2.23 | ferrochain-tools | BC-2.23.001–TBD | 1 |
+| SS-23 | First-Party Tool Library | 2.23 | ferrochain-tools | BC-2.23.001–006 | 1 |
 
 > **D20 Capability Additions (v1.2):** SS-09 adds CAP-021 (MCP server role) per ADR-013 — introduces `mcp::server` execution module in ferrochain-mcp; BC range extended from 001–005 to 001–007. SS-15 adds CAP-020 (self-improvement primitives) per ADR-012 — includes `SkillStore`, `MemoryWriteGuard` execution modules and `ContextMutationConfig` definitions; BC range extended from 001–003 to 001–006.
 
@@ -154,7 +155,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 
 ## Verification Properties (VP-INDEX)
 
-10 VPs total (5 Kani P0 + 2 proptest P1 + 2 integration P1 + 1 Kani P1 — see VP-INDEX v1.4):
+13 VPs total (6 Kani P0 + 3 Kani P1 + 2 proptest P1 + 2 integration P1 — see VP-INDEX v1.5):
 
 | VP | BC Anchor | Module | Tool | Priority | Status |
 |----|-----------|--------|------|----------|--------|
@@ -168,5 +169,8 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | VP-008 | BC-2.22.001 (embeddings dimension parity) | ferrochain-core / embeddings | proptest | P1 | draft |
 | VP-009 | BC-2.21.003 (zero-norm guard fail-closed) | ferrochain-vectorstores / vectorstores-similarity | Kani | P0 | draft |
 | VP-010 | BC-2.19.005 (allowlist rejects unregistered) | ferrochain-core / serializable-reviver | Kani | P0 | draft |
+| VP-011 | BC-2.05.007 (PreToolCallHook fail-closed) | ferrochain-graph / hitl | Kani | P0 | draft |
+| VP-012 | BC-2.10.005 (OnWatermark arithmetic) | ferrochain-core / core-budget | Kani | P1 | draft |
+| VP-013 | BC-2.23.005 (BashTool risk floor) | ferrochain-tools / tools-shell | Kani | P1 | draft |
 
-> **D23 VP Candidates (not yet minted):** VP-011 (graph::hitl PreToolCallHook fail-closed dispatch — Kani P0 candidate); VP-012 (graph::budget compaction invariants — Kani/proptest P1 candidate); VP-013 (ferrochain-tools path-guard parity with sandbox — Kani P1 candidate). To be minted at burst 229 completion or PO BC authoring gate.
+> **D23 VPs SEEDED (burst-232):** VP-011/012/013 minted with BC anchors, Kani harness skeletons, and input-hashes. VP-011 (graph::hitl / PreToolCallHook fail-closed — Kani P0 red_gate); VP-012 (core-budget / OnWatermark arithmetic — Kani P1); VP-013 (tools-shell / BashTool risk floor — Kani P1). BC-2.23.005 category contradiction noted (CONFIGURATION vs VAL) — routed to PO for amendment.

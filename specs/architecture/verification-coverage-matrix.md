@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "1.9"
+version: "2.0"
 status: active
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "4ffa1c1"
+input-hash: "59612fc"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "2.0 (burst-232/2026-07-22): D23 VP layer — add VP-011..013 to VP-to-Module table; update hitl row (VP-011 Kani P0); add core-budget row (VP-012 Kani P1); add tools-shell row (VP-013 Kani P1). Totals: 10→13 VPs, Kani 6→9. Coverage-by-Criticality-Tier: CRITICAL Kani VPs 5→6 (+VP-011; hitl is CRITICAL per module-criticality.md); HIGH Kani VPs 1→3 (+VP-012 core-budget, +VP-013 tools-shell; ferrochain-tools criticality tier deferred to module-criticality.md D23 content authoring burst). Per-module count 41→43 (+2 new rows). Input-hash refresh pending VP-INDEX.md v1.5."
   - "1.9 (burst-229/2026-07-22): Input-hash cascade refresh — module-decomposition.md v1.15 changed (D23: SS-23 ferrochain-tools + graph::hitl/budget D23 types) + module-criticality.md v1.5 cascade (ARCH-INDEX.md v1.6 + module-decomposition.md v1.15). Hash: 52d04b1 → 06eaf17. No VP table changes (D23 VP candidates not yet minted; pending PO BC authoring)."
   - "1.8 (burst-224/2026-07-21): Fix Coverage by Criticality Tier MEDIUM count: 11 → 12 (vectorstores-mmr reclassified CRITICAL → MEDIUM when VP-009 moved to vectorstores-similarity; F-P129-11 reclassification, not an addition). Fix tier membership description in header note. Refresh input-hash cascade: 8bc637f → 78d9c11 (module-decomposition.md v1.12) → c766473 final (module-criticality.md v1.4 D21+burst-224 backfill in same burst)."
   - "1.7 (burst-224/2026-07-21): F-P129-11 — VP-009 module renamed vectorstores-mmr → vectorstores-similarity in VP-to-Module table; Per-Module Coverage Status split into vectorstores-similarity (VP-009 Kani P0) + vectorstores-mmr (no Kani VP, caller of similarity). Totals unchanged (10 VPs, Kani 6). Propagates VP-INDEX v1.3 + module-decomposition v1.12."
@@ -31,7 +32,7 @@ changelog:
 ## [Section Content]
 
 > **VP-INDEX.md is the authoritative VP catalog.** This matrix derives from it.
-> Arithmetic invariant: VP total (10) = P0 (5) + P1 (5) = Kani (6) + proptest (2) + integration (2). Status is updated per gate.
+> Arithmetic invariant: VP total (13) = P0 (6) + P1 (7) = Kani (9) + proptest (2) + integration (2). Status is updated per gate.
 
 ## VP-to-Module Mapping
 
@@ -47,19 +48,22 @@ changelog:
 | VP-008 | Embeddings Dimensionality Contract | embeddings | ferrochain-core | proptest | BC-2.22.001 | 3 | draft |
 | VP-009 | Zero-Norm Cosine Guard | vectorstores-similarity | ferrochain-vectorstores | Kani | BC-2.21.003 | 6 | draft |
 | VP-010 | Reviver Allowlist Containment | serializable-reviver | ferrochain-core | Kani | BC-2.19.005 | 6 | draft |
+| VP-011 | PreToolCallHook Fail-Closed | hitl | ferrochain-graph | Kani | BC-2.05.007 | 6 | draft |
+| VP-012 | OnWatermark Arithmetic | core-budget | ferrochain-core | Kani | BC-2.10.005 | 6 | draft |
+| VP-013 | BashTool Risk Floor | tools-shell | ferrochain-tools | Kani | BC-2.23.005 | 6 | draft |
 
-**Totals: 10 VPs | Kani: 6 | proptest: 2 | fuzz: 0 | integration: 2**
+**Totals: 13 VPs | Kani: 9 | proptest: 2 | fuzz: 0 | integration: 2**
 
 ## Per-Module Coverage Status
 
-> This table covers all 41 architecture modules (35 pre-D21 + 5 added by D21 VP layer + 1 from F-P129-11 split).
-> Tier groupings: CRITICAL 11 / HIGH 16 / MEDIUM 12 / LOW 2 (D21 established CRITICAL 11 / HIGH 16 / MEDIUM 11, with vectorstores-mmr classified CRITICAL as the VP-009 host; F-P129-11 burst-224 adds vectorstores-similarity as the new CRITICAL VP-009 host and reclassifies vectorstores-mmr CRITICAL → MEDIUM — net CRITICAL unchanged at 11, MEDIUM +1 = 12).
+> This table covers all 43 architecture modules (35 pre-D21 + 5 added by D21 VP layer + 1 from F-P129-11 split + 2 new D23 rows: core-budget and tools-shell).
+> Tier groupings: CRITICAL 11 / HIGH 18 / MEDIUM 12 / LOW 2 (D21 established CRITICAL 11 / HIGH 16 / MEDIUM 11, with vectorstores-mmr classified CRITICAL as the VP-009 host; F-P129-11 burst-224 adds vectorstores-similarity as the new CRITICAL VP-009 host and reclassifies vectorstores-mmr CRITICAL → MEDIUM — net CRITICAL unchanged at 11, MEDIUM +1 = 12; D23 burst-232 adds 2 HIGH rows: core-budget and tools-shell — HIGH +2 = 18).
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
 | bsp-engine | ferrochain-graph | VP-001 | yes (BC-2.03.003) | yes (BC-2.17.002) | yes | Core VP target |
 | channels | ferrochain-graph | — | yes (BC-2.02.002) | — | yes | Reducer invariants via proptest |
-| hitl | ferrochain-graph | — | — | — | yes | FIFO + suspend/resume |
+| hitl | ferrochain-graph | VP-011 | — | — | yes | D23/SS-05; PreToolCallHook fail-closed; Kani P0 red_gate (BC-2.05.007) |
 | scheduler | ferrochain-graph | — | — | — | yes | Pending ADR-001 |
 | budget | ferrochain-graph | — | yes | — | yes | EvidenceJournal ordering |
 | provenance | ferrochain-graph | — | — | — | yes | Hook dispatch |
@@ -98,13 +102,15 @@ changelog:
 | vectorstores-similarity | ferrochain-vectorstores | VP-009 | — | — | yes | D21/SS-21; shared cosine_similarity primitive; zero-norm guard; Kani P0 red_gate (BC-2.21.003) |
 | vectorstores-mmr | ferrochain-vectorstores | — | — | — | yes | D21/SS-21; MMR selection algorithm; calls vectorstores::similarity::cosine_similarity |
 | embeddings | ferrochain-core | — | VP-008 | — | yes | D21/SS-22; dimensionality contract; proptest P1 (BC-2.22.001) |
+| core-budget | ferrochain-core | VP-012 | — | — | yes | D23/SS-10; OnWatermark arithmetic; Kani P1 (BC-2.10.005) |
+| tools-shell | ferrochain-tools | VP-013 | — | — | yes | D23/SS-23; BashTool risk floor; Kani P1 (BC-2.23.005) |
 
 ## Coverage by Criticality Tier
 
 | Tier | Modules | Kani VPs | proptest | fuzz | Kill Rate Target |
 |------|---------|---------|---------|------|-----------------|
-| CRITICAL | 11 | 5 (VP-001, VP-002, VP-003, VP-009, VP-010) | all | subset | ≥ 95% |
-| HIGH | 16 | 1 (VP-006) | most + VP-007, VP-008 | subset | ≥ 90% |
+| CRITICAL | 11 | 6 (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) | all | subset | ≥ 95% |
+| HIGH | 18 | 3 (VP-006, VP-012, VP-013) | most + VP-007, VP-008 | subset | ≥ 90% |
 | MEDIUM | 12 | 0 | some | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | ≥ 70% |
 

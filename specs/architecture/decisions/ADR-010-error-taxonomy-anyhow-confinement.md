@@ -6,16 +6,17 @@ slug: error-taxonomy-anyhow-confinement
 title: "Error Taxonomy and anyhow Confinement (P-78 / NE-03 / DI-014)"
 status: accepted
 producer: architect
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
-decisions: [D17, D21]
-date: "2026-07-20"
+decisions: [D17, D21, D23]
+date: "2026-07-22"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.2"
+version: "1.3"
 changelog:
+  - "1.3 (burst-232/2026-07-22): D23 — register TOOLS as component 17 (ferrochain-tools, SS-23). Component axis 16→17. E-TOOLS-001..007 adjudicated (codes coined by error-taxonomy v1.31 during D23 BC authoring). E-TOOLS-004 (BashTimeout) carries RetryHint::Never diverging from the TIMEOUT category default (Later); rationale in §Component Axis Expansion (D23). E-TOOLS-005 (BashOutput.truncated) and E-TOOLS-006 (GrepResult.capped) are informational payload fields, not FerrochainError Err returns — they are outside the component×category axis. #[non_exhaustive] gate count 17→18."
   - "1.2 (burst-225/2026-07-21): F-P130-07 sibling sweep — correct stale E-EMBED-001 rationale prefix in EMBED component table: `DimensionMismatch:` → `EmbeddingDimensionMismatch:` per error-taxonomy v1.29 (PO renamed to distinguish from E-VS-002 which retains bare `DimensionMismatch:`)."
   - "1.1 (D21/2026-07-20): Component axis expanded from 12 → 16 by adjudicating error codes introduced in ADR-014 (VectorStore), ADR-015 (Prompt Templates), ADR-016 (lc-JSON), and ADR-017 (Embeddings). Four new components added: TMPL (ferrochain-prompts), SRLZ (ferrochain-core::serializable), VS (ferrochain-vectorstores), EMBED (ferrochain-core::embeddings + providers). Category axis unchanged at 12. E-CFG-001 (VectorStoreRetriever config) reassigned to E-VS-NNN — no CFG component created. ADR-016 category error corrected: 'Serialization' → VAL. #[non_exhaustive] gate count 13 → 17. All four new components are library-layer only; no RFC-7807 status rows needed in BC-2.14.002."
   - "1.0 (D17/2026-07-14): Initial ADR — anyhow confinement rules, FerrochainError at all library boundaries, thiserror for internal errors, CI enforcement via cargo xtask deny-anyhow-in-lib."
@@ -44,7 +45,7 @@ crate. All public functions return `Result<T, FerrochainError>`.
 ```rust
 #[derive(Debug, Clone)]
 pub struct FerrochainError {
-    pub component: Component,     // authoritative list lives in error-taxonomy.md §Components; enum reproduced here for the FerrochainError type definition (v1.1 — 16 components): CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED
+    pub component: Component,     // authoritative list lives in error-taxonomy.md §Components; enum reproduced here for the FerrochainError type definition (v1.2 — 17 components): CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS
     pub category: Category,       // canonical Category Codes (12 — unchanged): VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY
     pub retry_hint: RetryHint,    // canonical: Never | Maybe | Later(Duration)
     pub code: &'static str,       // "E-GRAPH-001", "E-CHKPT-002", "E-TMPL-001", "E-VS-001", etc.
@@ -170,8 +171,8 @@ when the non-exhaustive gate grows:
 
 1. **Gate crate** — `tests/external/<gate-name>/`: add `Component::Tmpl`, `Component::Srlz`,
    `Component::Vs`, `Component::Embed` to the expected symbol list.
-2. **Expected count constant** — update from 13 (12 named + `Custom`) to **17**
-   (16 named + `Custom`).
+2. **Expected count constant** — update from 13 (12 named + `Custom`) to **18**
+   (17 named + `Custom`). As of D23, count is 18 (17 named + `Custom`).
 3. **Expected symbol list** — add the four new variant symbols.
 
 The implementer who creates `ferrochain-core/src/error.rs` (Wave 0) owns this gate update.
@@ -190,8 +191,64 @@ surfaced directly (SECURITY→403, VAL→400) but no per-endpoint overrides are 
 |---------|-------|-----------|
 | v1.0 (D17) | 12 | CORE GRAPH CHKPT SERVER PROV MCP SPLIT SBXD RETRY CRON MEMORY BUDGET |
 | v1.1 (D21) | **16** | + TMPL SRLZ VS EMBED |
+| v1.2 (D23) | **17** | + TOOLS |
 
 Category axis: **12 — unchanged** (VAL AUTH RATE TIMEOUT TRANSPORT INTERNAL DURABILITY POLICY TOOL CONCURRENCY SECURITY TENANCY). No new category is warranted.
+
+## Component Axis Expansion (D23) — 16 → 17
+
+D23 (burst 232, 2026-07-22) introduced `ferrochain-tools` (SS-23) via ADR-020, coining the
+TOOLS error code prefix. The component axis grows from 16 to 17. The category axis remains
+**unchanged at 12**.
+
+### Axis-alignment rationale
+
+`ferrochain-tools` is a new crate (ADR-020 Decision 1: `ferrochain-tools` is the published
+crate housing BashTool, Python REPL, file-edit tools, and grep utilities). New crate → new
+component, following the same rule as GRAPH, CHKPT, MCP, SPLIT, SBXD, MEMORY.
+
+#### TOOLS — ferrochain-tools (SS-23, new crate)
+
+`ferrochain-tools` is the 21st published crate. Canonical abbreviation: **TOOLS** (as coined
+by ADR-020 and error-taxonomy v1.31).
+
+| Code | Category | RetryHint | Rationale |
+|------|----------|-----------|-----------|
+| E-TOOLS-001 | SECURITY | Never | PathConfinementViolation: file-write path escapes workspace; matches SBXD pattern — blocking security violation; caller must not retry. |
+| E-TOOLS-002 | VAL | Never | FileReadExceedsLimit: read byte count exceeds configured limit; caller provided an oversized path or limit is misconfigured. Input constraint violation. |
+| E-TOOLS-003 | VAL | Never | EditOldStringNotFound: `old_string` literal not found in the target file; caller supplied a stale or incorrect patch string. Input constraint violation. |
+| E-TOOLS-004 | TIMEOUT | **Never** | BashTimeout: Bash process exceeded the execution time limit. **RetryHint divergence:** TIMEOUT category default is `Later(Duration)`, but BashTimeout carries `RetryHint::Never` — the same command will timeout again unless the caller changes the command or limit. Callers must not auto-retry without user intervention. |
+| E-TOOLS-007 | VAL | Never | BashRiskTierViolation: ActionRisk below the minimum allowed floor (ReadOnly or Low rejected); caller attempted to invoke a command below the enforced risk floor. Input constraint violation. |
+
+**Informational payload fields (NOT FerrochainError Err returns):**
+
+E-TOOLS-005 and E-TOOLS-006 are **outside the component × category axis**. They are
+boolean/numeric fields on success payload structs, not `Err(FerrochainError)` returns:
+- `BashOutput.truncated: bool` (E-TOOLS-005): output exceeded the truncation limit; the
+  BashTool invocation succeeded but the output was truncated. This is an informational
+  field on `BashOutput`, not a `Result::Err`.
+- `GrepResult.capped: bool` (E-TOOLS-006): match count exceeded the cap; the grep
+  succeeded but results were capped. This is an informational field on `GrepResult`,
+  not a `Result::Err`.
+
+These identifiers appear in error-taxonomy v1.31 for completeness; they are NOT
+FerrochainError codes and do NOT add to the component count or the #[non_exhaustive]
+gate. The PO confirmed their non-Err nature in the D23 BC layer (BC-2.23.003/004).
+
+#### #[non_exhaustive] gate update requirement (D23)
+
+Adding `Component::Tools` (one variant) to the D21 gate update requirement:
+
+1. **Gate crate** — `tests/external/<gate-name>/`: add `Component::Tools` to the expected
+   symbol list (joins the D21 additions: Tmpl, Srlz, Vs, Embed).
+2. **Expected count constant** — update from **17** (D21 value: 16 named + `Custom`) to
+   **18** (17 named + `Custom`).
+3. **Expected symbol list** — add `Component::Tools`.
+
+The implementer who creates `ferrochain-tools/src/error.rs` (Wave TBD) owns this gate update.
+The gate file must be updated in the SAME commit that adds `Component::Tools` to `error.rs`.
+
+`Component::Tools` ↔ `TOOLS` in prose/code.
 
 ## Rationale
 
@@ -210,11 +267,13 @@ at the public boundary.
 The CI lint gate (`cargo xtask deny-anyhow-in-lib`) is the enforcement mechanism — policy
 without tooling enforcement is not production-grade.
 
-The component axis expansion rationale (D21) is recorded inline in the §Component Axis Expansion
-section above. The governing principle: new crate → new component; intra-crate logical subsystem
-→ component following RETRY/CRON/BUDGET precedent; cross-crate concern → single component
-(PROV/EMBED pattern). No new category was warranted — all D21 error conditions map to
-existing VAL, SECURITY, or other established categories.
+The component axis expansion rationale (D21 and D23) is recorded inline in the §Component Axis
+Expansion sections above. The governing principle: new crate → new component; intra-crate logical
+subsystem → component following RETRY/CRON/BUDGET precedent; cross-crate concern → single component
+(PROV/EMBED pattern). No new category was warranted for either D21 or D23 — all error conditions
+map to existing VAL, SECURITY, TIMEOUT, or other established categories. The D23 TOOLS component
+also establishes the RetryHint::Never divergence precedent for TIMEOUT-category codes where retry
+would be futile without caller action (E-TOOLS-004 BashTimeout).
 
 ## Consequences
 
@@ -258,3 +317,6 @@ existing VAL, SECURITY, or other established categories.
 - **ADR-016** (lc-JSON Deserialization Safety): coins `E-SRLZ-001/002`; SRLZ component adjudicated here; `category: Serialization` corrected to `VAL`.
 - **ADR-017** (Embeddings Trait): coins `E-EMBED-001`; EMBED component adjudicated here.
 - **D21** (burst 216, 2026-07-20): ecosystem-parity scope expansion triggering component axis review.
+- **ADR-020** (BashTool / ferrochain-tools): coins `E-TOOLS-001..007`; TOOLS component adjudicated here. E-TOOLS-004 RetryHint::Never divergence rationale documented in §Component Axis Expansion (D23).
+- **error-taxonomy v1.31** (D23 BC layer): E-TOOLS-001..007 minted; error census 105.
+- **D23** (burst 232, 2026-07-22): ferrochain-tools / SS-23 scope expansion triggering component axis review.

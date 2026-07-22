@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.001
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.1 (Burst-232/2026-07-22): Fix Category::VALIDATION → Category::VAL in PC-3 (E-TOOLS-002 FileReadExceedsLimit). VALIDATION is not in the canonical 12-member Category enum; E-TOOLS-002 is VAL per error-taxonomy v1.31. D23 straggler sweep."
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 ReadFileTool."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
@@ -77,7 +78,7 @@ limit.
    No I/O is performed; no side effect occurs.
 3. **File size exceeds limit:** `PathGuard` passes but the file's metadata size exceeds
    `max_bytes`. The tool returns
-   `Err(FerrochainError { component: "TOOLS", category: Category::VALIDATION,
+   `Err(FerrochainError { component: "TOOLS", category: Category::VAL,
    code: "E-TOOLS-002", message: "FileReadExceedsLimit: file '<path>' is <actual_bytes> bytes,
    exceeds configured limit of <max_bytes> bytes" })`.
    The file is NOT read into memory before this check; the implementation uses
