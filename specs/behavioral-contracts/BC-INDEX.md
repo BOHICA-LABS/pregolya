@@ -1,16 +1,17 @@
 ---
 document_type: bc-index
 level: L3
-version: "2.5"
+version: "2.6"
 status: active
 producer: state-manager
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-22T12:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
-  - "2.5 (burst-238/sweep/2026-07-22): Update VP-INDEX status note — 'VP-006–VP-010 pending architect authoring' was stale; VP-INDEX v1.2 (burst-223) registered VP-006–010 and VP-006.md–VP-010.md all exist. Note updated to reflect completed state."
+  - "2.6 (burst-239/F-P139/2026-07-22): BC-2.06.001 title updated to match current H1 (H1 is source of truth per bc_h1_is_title_source_of_truth policy — drift from D23 v1.5 update not swept to index). No BC count changes. BCs modified this burst: BC-2.04.001 v1.4 (+Inv-5 append-only), BC-2.10.006 v1.4 (citation fix), BC-2.06.001 v1.6 (PC2 type + Description), BC-2.07.003 v1.3 (PC5), BC-2.07.001 v1.3 (TV-005), BC-2.05.008 v1.1 (Related BCs + EC-006)."
+  - "2.5 (burst-238/sweep/2026-07-23): Update VP-INDEX status note — 'VP-006–VP-010 pending architect authoring' was stale; VP-INDEX v1.2 (burst-223) registered VP-006–010 and VP-006.md–VP-010.md all exist. Note updated to reflect completed state."
 ---
 
 # BC-INDEX: ferrochain Behavioral Contracts
@@ -104,7 +105,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.05.006 | Risk-Tiered Interrupt Classification (Typed Action-Risk Levels for Domain A SOC) | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.006.md |
 | BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny (VP-011 Kani Seed) | CAP-034 | | DI-014 | P1 | | **VP** | ss-05/BC-2.05.007.md |
 | BC-2.05.008 | Skip-Hook-on-Resume Invariant — ToolApprovalRequest Checkpoint Persistence; Command::Resume(PreToolDecision); No Re-Invocation of pre_invoke | CAP-034 | | DI-014 | P1 | | | ss-05/BC-2.05.008.md |
-| BC-2.06.001 | Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end; guardrail_decision) | CAP-007 | | DI-011 | P0 | | | ss-06/BC-2.06.001.md |
+| BC-2.06.001 | Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end; guardrail_decision; tool_approval_request/resolved; compaction_event) — 15 Variants | CAP-007 | | DI-011 | P0 | | | ss-06/BC-2.06.001.md |
 | BC-2.06.002 | run_id + parent_ids Correlation Across All Streaming Events | CAP-007 | | | P0 | | | ss-06/BC-2.06.002.md |
 | BC-2.06.003 | Streaming and Unary Run Produce Identical Final Answer (NE-13) | CAP-007 | NE-13 | DI-011 | P0 | | | ss-06/BC-2.06.003.md |
 | BC-2.06.004 | `tool_approval_request` StreamEvent (Event 13) — Payload; Emission Timing; Causal Ordering Before Interrupt | CAP-034 | | DI-014 | P1 | | | ss-06/BC-2.06.004.md |
@@ -219,6 +220,8 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.6 | 2026-07-22 | burst-239/F-P139: BC-2.06.001 title corrected to match H1 (H1 authority — title was stale from pre-D23 era). BCs updated this burst: BC-2.04.001 v1.4 (+Inv-5 append-only invariant, F-P139-01a), BC-2.10.006 v1.4 (citation fix to BC-2.04.001 Inv-5, F-P139-01b), BC-2.06.001 v1.6 (PC2 tokens_remaining_after u64→Option<i64> F-P139-02; Description Step-no-Stream F-P139-04), BC-2.07.003 v1.3 (PC5 mandate [] F-P139-03), BC-2.07.001 v1.3 (TV-005 [] F-P139-03), BC-2.05.008 v1.1 (Related BCs PC-4 scope + EC-006 F-P139-07). | burst-239 F-P139 |
+| 2.5 | 2026-07-23 | burst-238/sweep/2026-07-23: Update VP-INDEX status note — 'VP-006–VP-010 pending architect authoring' was stale; VP-INDEX v1.2 (burst-223) registered VP-006–010 and VP-006.md–VP-010.md all exist. Note updated to reflect completed state. | burst-238 |
 | 2.4 | 2026-07-22 | burst-237/F-P137-01: BC-2.13.002 DI column DI-006 → DI-006,DI-015. Propagates burst-235 F-P135-05 di_anchors addition (co-enforcer of DI-015 Subprocess Execution Timeout; kill_on_drop PC-6+INV-6) to the index row — BC file frontmatter was correct since burst-235 but index was not swept. DI-anchor reconcile sweep: no other drift found (BC-2.20.003 and BC-2.18.004/005 apparent discrepancies confirmed as awk false-positives from \\| in title). | burst-237 F-P137-01 |
 | 2.3 | 2026-07-22 | burst-235/F-P135-03: BC-2.23.005 DI column DI-009,DI-014 → DI-014,DI-015. Propagates burst-234 F-P134-06 re-anchor (DI-009→DI-015 adjudication) to the index row — BC file frontmatter was correct since burst-234 but index was not swept. | burst-235 F-P135-03 |
 | 2.2 | 2026-07-22 | burst-233/F-P133-02: BC-2.16.001/002/003 Wave-1 promotion per D23 — priority P2→P1, wave 2→1; header 72 P1/6 P2 → 75 P1/3 P2; Full Catalog P2→P1 for all three rows. VP-013 Security Anchor corrected: ADR-018 Decision 6 → ADR-020 Decision 3 (BashTool non-lowerable Medium risk floor is ADR-020 Decision 3, not ADR-018). | burst-233 F-P133-02 |

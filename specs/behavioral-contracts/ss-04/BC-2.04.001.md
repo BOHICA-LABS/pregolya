@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.001
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -26,6 +26,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-20): F-P20-02 — `Checkpointer` → `CheckpointSaver` in PC-1 (canonical trait name correction)."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-002 and the corresponding TV row carried bare `Err(FerrochainError { category: DURABILITY, code: E-CHKPT-001 })` without message; E-CHKPT-001 has <task_id> and <backend_error> placeholders. Added inline message template to EC-002; TV row PASS-ABBREV via EC-002."
   - "1.3 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/ferrochain-checkpoint.md' to two adjudicated targets: (1) 'prd-supplements/interface-definitions.md §CheckpointSaver' for trait signatures (put_writes, get_tuple, list); (2) 'architecture/module-decomposition.md §ferrochain-checkpoint' for checkpoint::saver row. No BC body content changed."
+  - "1.4 (2026-07-22, F-P139-01a, burst-239): Add Invariant 5 — checkpoint append-only / records-never-deleted general invariant. This invariant was absent from all SS-04 BCs: BC-2.10.006 cited 'BC-2.04.001 immutability' for original-record preservation but BC-2.04.001 contained only four write-timing invariants with no explicit never-deleted property. BC-2.04.004 Inv-2 covers only fork-scoped immutability. Inv-5 here covers the general case (any in-run operation, including compaction). BC-2.10.006 Description, Invariants, and Related BCs updated to cite BC-2.04.001 Inv-5 (F-P139-01b, same burst)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -78,6 +79,11 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
    the task is marked committed
 4. The super-step boundary (apply_writes + new checkpoint) does not execute until all
    `put_writes` submissions are at minimum queued (async) or confirmed (sync)
+5. Checkpoint records are append-only: a persisted checkpoint record (whether written via
+   `put` or recorded via `put_writes`) is never deleted or mutated in place by any in-run
+   operation, including compaction. Compaction writes a new checkpoint entry with the
+   compacted window; all prior records remain in the store and are readable via the
+   `search_history` API (BC-2.04.008).
 
 ## Edge Cases
 

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "5cd59cc"
+input-hash: "f833a0e"
 traces_to: STATE.md
 ---
 
@@ -4406,3 +4406,74 @@ Final: TOTAL=174 MATCH=174 STALE=0.
 ### Archived from STATE.md Current Phase Steps
 
 | Burst 232 — D23 VP layer + ADR-010 v1.3 + PO micro-fix COMPLETE: VP-011/012/013 v1.0 minted; VP-INDEX v1.5 (13 VPs); ARCH-INDEX v1.8; verification-architecture v2.1; verification-coverage-matrix v2.0; ADR-010 v1.3; BC-2.23.001/003/005 v1.1; hash sweep STALE=0; burst-227 row archived | architect + product-owner + state-manager | COMPLETE | VP-011.md v1.0 (Kani P0, graph::hitl). VP-012.md v1.0 (Kani P1, core-budget). VP-013.md v1.0 (Kani P1, tools-shell). VP-INDEX v1.5 (13 VPs). ARCH-INDEX v1.8. verification-architecture v2.1. verification-coverage-matrix v2.0. ADR-010 v1.3 (TOOLS component 17). BC-2.23.001/003/005 v1.1 (Category→VAL). Hash sweep STALE=0 (specs/ 174 MATCH=174). Burst 232. |
+
+---
+
+## Burst 239 — 2026-07-23 — P1D-139 Fix-Burst: All 7 Findings Closed; BC-2.04.001 Inv-5 Minted; tokens_remaining_after Type; Burst-238 Date Reconciled
+
+**Date:** 2026-07-23
+**Agents:** product-owner (PO) + architect + business-analyst (BA) + state-manager
+**Pass:** P1D-139 (7 findings: 0C/2H/1M/4L — deep-read of never-opened SS-02/04/07 BC bodies + ADR-002/005/018/019)
+
+### Context
+
+Seventh adversarial pass on the D21+D23 expanded perimeter. P1D-139 applied a mandated deep-read to surfaces that had never been opened by any prior adversary pass: SS-02 (StateGraph Definition / CAP-003), SS-04 (Checkpoint / CAP-005), SS-07 (Splitters / CAP-008), and ADR-002/005/018/019 bodies. The uptick from 3→7 findings reflects that these surfaces had accumulated silent propagation gaps since D23 authoring. Both HIGH findings were latent D23-seam incomplete-propagation triads: the checkpoint-immutability invariant was never stated in BC-2.04.001 despite being anchored in the compaction design, and the CompactionEvent.tokens_remaining_after type mismatch was only fixed at the interface-definitions level (burst-236) but never propagated to SS-06 BC-2.06.001 PC2. These are genuine content gaps, not process residue.
+
+### Findings Closed
+
+| Finding | Severity | Fix |
+|---------|----------|-----|
+| F-P139-01 | HIGH | BC-2.04.001 v1.3→v1.4: Inv-5 minted — "Checkpoint records are append-only: once written, a record is never deleted or mutated in place; records remain readable via search_history (BC-2.04.008)." Also BC-2.10.006 v1.3→v1.4: citation corrected to reference BC-2.04.001 Inv-5 |
+| F-P139-02 | HIGH | BC-2.06.001 v1.5→v1.6: PC2 tokens_remaining_after type corrected u64→Option<i64> (propagating burst-236 F-P136-04 fix from interface-definitions to this never-opened SS-06 BC body) |
+| F-P139-03 | MED | BC-2.07.003 v1.2→v1.3 (PC5 empty-string guard [""]→[]) + BC-2.07.001 v1.2→v1.3 (TV-005 [""]→[]) |
+| F-P139-04 | LOW | BC-2.06.001 v1.6 (same as F-P139-02): Description Step-has-no-Stream note added to clarify streaming does not apply to this BC |
+| F-P139-05 | LOW | ADR-018 v1.2→v1.3: date corrected 2026-07-22→2026-07-23 (architect); ADR-019 v1.2→v1.3: Decision 4 payload type corrected; BC-INDEX burst-238 changelog date row 2026-07-22→2026-07-23 (state-manager index-date half) |
+| F-P139-06 | LOW | BC-INDEX v2.5→v2.6: BC-2.06.001 title in Full Catalog table synced to H1 (source-of-truth per bc_h1_is_title_source_of_truth policy; drift from D23 v1.5 update not swept to index) |
+| F-P139-07 | LOW | BC-2.05.008 v1.0→v1.1: resume-routing PC-1..3 added + EC-006 corrected (Resume(PendingHumanApproval) raises Err, not routes to HITL) |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `specs/behavioral-contracts/ss-04/BC-2.04.001.md` | v1.3→v1.4: Inv-5 checkpoint append-only invariant minted |
+| `specs/behavioral-contracts/ss-10/BC-2.10.006.md` | v1.3→v1.4: citation updated to BC-2.04.001 Inv-5 |
+| `specs/behavioral-contracts/ss-06/BC-2.06.001.md` | v1.5→v1.6: PC2 u64→Option<i64>; Description Step-no-Stream |
+| `specs/behavioral-contracts/ss-07/BC-2.07.003.md` | v1.2→v1.3: PC5 [""]→[] |
+| `specs/behavioral-contracts/ss-07/BC-2.07.001.md` | v1.2→v1.3: TV-005 [""]→[] |
+| `specs/behavioral-contracts/ss-05/BC-2.05.008.md` | v1.0→v1.1: resume-routing PC-1..3 + EC-006 |
+| `specs/behavioral-contracts/BC-INDEX.md` | v2.5→v2.6: BC-2.06.001 title sync + burst-238 date reconciled 2026-07-22→2026-07-23 |
+| `specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md` | v1.2→v1.3: date 2026-07-22→2026-07-23 |
+| `specs/architecture/decisions/ADR-019-rolling-context-compaction.md` | v1.2→v1.3: Decision 4 payload type |
+| `specs/domain-spec/events.md` | v1.7→v1.8: BC-2.04.001 Inv-5 reference + tokens_remaining_after type |
+| `sidecar-learning.md` | session-end marker added |
+| 15 spec files (transitive hash cascade) | input-hash cascade (D18-P89-A/P90-A sweep) |
+| `cycles/v1.0.0-greenfield/convergence-trajectory.md` | P1D-137/138/139 rows appended (P1D-137+138 were missing — backfilled) |
+| `STATE.md` | v3.81→3.82: P1D-139 + burst-239 recorded; burst-234 archived |
+
+### Hash Sweep Summary
+
+Triggered by: BC-2.04.001 v1.4, BC-2.06.001 v1.6, BC-2.07.001/003 v1.3, events.md v1.8 cascade.
+
+| Pass | Files Updated | STALE After |
+|------|---------------|-------------|
+| 1 | 13 | 2 |
+| 2 | 2 | 0 |
+| 3 (verify) | 0 | 0 |
+| **Total** | **15** | **0** |
+
+Final: TOTAL=174 MATCH=174 STALE=0.
+
+### Process Note — ORCHESTRATOR-BRIEFING-ACCURACY
+
+P1D-139 adversary brief mislabeled subsystem contents: described SS-02 as "chat model BC" (SS-02=StateGraph Definition/CAP-003) and SS-08 as "tool dispatch" (SS-08=Provider Conformance/CAP-009). These descriptions caused the adversary to form incorrect priors about what to find. Future adversary dispatch briefs must reference BCs by ID (e.g., "read BC-2.08.001 through BC-2.08.014") and instruct the adversary to read actual titles rather than asserting subsystem contents. Logged as process note; no D-NNN required (process-improvement only, not a spec decision).
+
+### Convergence After Burst
+
+- 139 adversary passes, 139 fix bursts (128 pre-D21 + 11 post-D21+D23)
+- Trajectory tail: →6→3→3→7 (uptick from deep-read of large never-opened surface — expected; both HIGHs were latent D23-seam propagation gaps)
+- 3-CLEAN streak: 0/3 (P1D-139 NOT CLEAN — 2H/1M/4L)
+- Next: adversary cascade P1D-140 on FROZEN HEAD (D21+D23 expanded perimeter; never-opened surfaces: SS-08 + SS-09/12/14 + ADR-001/003/004/006/007/008/009/011/013/016/017 + prd §1-§6 + nfr-catalog + domain-spec remaining + VP-001-005/007)
+
+### Archived from STATE.md Current Phase Steps
+
+| Burst 234 — P1D-134 fix-burst ALL AGENTS COMPLETE (F-P134-01..07 all closed; DI-015 minted; E-TOOLS-008 GrepTool gate #33 real; TVs 669→670; ADR-019 v1.2/ADR-020 v1.6; entities-graph v1.7; invariants v1.2; hash sweep 6 passes STALE=0; burst-230 row archived); 0/3. NEXT: P1D-135. | architect + BA + product-owner + state-manager | COMPLETE | F-P134-01 BC-2.23.006 E-TOOLS-008 OS-error gate #33 both-direction anchor (v1.1→v1.2; TV-006; TVs 669→670). F-P134-02 ADR-020 GrepTool label two-step normalize (v1.4→v1.6; BC-2.23.006). F-P134-03 BC-2.08.010 BC-2.05.004→BC-2.05.007 ×2 reference correction (v1.1→v1.2). F-P134-04 ADR-019 trigger_tokens_remaining→tokens_remaining_after Decision 3 step 5 (v1.1→v1.2); entities-graph sibling (v1.6→v1.7; hash 0dac18e). F-P134-05 BC-2.06.006 ADR-018 removed from traces_to+inputs (v1.0→v1.1; hash ee8a02b). F-P134-06 invariants.md DI-015 Subprocess Execution Timeout minted (v1.1→v1.2; enforcer BC-2.23.005; L2-INDEX v1.9→v1.10 census 14→15; BC-2.23.005 di_anchors [DI-014]→[DI-014,DI-015] v1.1→v1.2; hash 835edd0). F-P134-07 BC-2.10.006 compaction×PendingHumanApproval non-interaction invariant (v1.1→v1.2). Hash sweep: 6 passes, 384 files updated, STALE=0. VP-012 refreshed (d582172 → final stable hash). Burst 234. |

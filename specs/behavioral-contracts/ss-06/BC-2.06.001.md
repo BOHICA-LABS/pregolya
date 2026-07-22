@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.001
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/events.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "2f14966"
+input-hash: "b79623f"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-46): F-P46-01 adjudication — add EC-005 (failed-run stream termination). BC-2.06.001 PC2 states RunEnd emits 'once at run completion' (completion-only contract) but had no explicit edge case for failed runs. EC-005 makes the authority explicit: stream closes after error SSE event; no RunEnd emitted on failure. This resolves EC-001 hedge in BC-2.12.007 and establishes the source-of-truth for failure-termination across the streaming surface."
@@ -32,6 +32,7 @@ changelog:
   - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). (a) PC2 — added GuardrailDecision bullet (12th variant) after ToolEnd; updated ToolEnd bullet to reference post-guardrail content semantics per interface-definitions §StreamEvent. (b) PC4 causal ordering updated with GuardrailDecision[RagChunk|MemoryItem]* and GuardrailDecision[ToolResult]* positions. (c) New EC-006: N ContentBlocks K rejected → K GuardrailDecision events in evaluation order before ONE ToolEnd with post-guardrail output. H1 title updated to include guardrail_decision."
   - "1.4 (F-P117-01, fix burst 120, 2026-07-19): EC-005 — clarify summary_halt (budget OnCeiling::Summarize terminal state) DOES emit RunEnd with the summarize model response as output (like completed, not like failed). Updated EC-005 final rule sentence to enumerate output-producing states (completed + summary_halt → RunEnd emitted) vs. non-output terminal states (failed, cancelled) and paused state (interrupted) → stream ends without RunEnd."
   - "1.5 (D23/2026-07-22): StreamEvent taxonomy 12→15 variants (+tool_approval_request event 13 per ADR-018, +tool_approval_resolved event 14 per ADR-018, +compaction_event event 15 per ADR-019). H1 title updated. PC2 extended with three new variant bullets. Related BCs: forward refs BC-2.06.004/005/006 added."
+  - "1.6 (2026-07-22, F-P139-02 + F-P139-04, burst-239): (F-P139-02) PC2 CompactionEvent bullet: `tokens_remaining_after` type corrected u64 → Option<i64>, matching BC-2.06.006 PC1 and interface-definitions §BudgetInfo.tokens_remaining (F-P136-04 sibling-sweep gap — missed BC-2.06.001 PC2). (F-P139-04) Description corrected: Step has no Stream variant. Removed claim 'each with Start / Stream / End variants' (false for Step); replaced with qualified statement that Run/Node/Tool have Start/Stream/End while Step has Start and End only."
 extracted_from: null
 modified: []
 deprecated: null
@@ -47,8 +48,10 @@ removal_reason: null
 ## Description
 
 The graph execution engine emits a strictly typed `StreamEvent` for every phase transition
-during a run. Events are grouped into four lifecycle categories — Run, Step, Node, Tool —
-each with Start / Stream / End variants carrying phase-specific typed payloads. CONFLICT-5
+during a run. Events are grouped into four lifecycle categories — Run, Step, Node, Tool.
+Three categories (Run, Node, Tool) have Start / Stream / End variants; Step has Start and
+End only (no Stream variant, as super-steps aggregate node/tool activity rather than
+chunk-level output). Each variant carries phase-specific typed payloads. CONFLICT-5
 mandates this typed taxonomy; the adk-rust flat `Event` envelope (agent-turn lifecycle only,
 no `run_id` correlation tree, no per-phase Start/End pairs) is the rejected counter-example.
 Wire format is ferrochain-native (not LangChain astream_events v2 wire compat) per D13.
@@ -81,7 +84,7 @@ Wire format is ferrochain-native (not LangChain astream_events v2 wire compat) p
    - `StreamEvent::GuardrailDecision` — zero or more per boundary phase; emitted for Fail and Transform outcomes only (Pass is never streamed); carries `boundary` (IngressBoundary: ToolResult/RagChunk/MemoryItem), `decision` (GuardrailDecisionKind: Fail/Transform), `reason` (Option<String>, Some for Fail only), `severity` (Option<GuardrailSeverityWire>, Some for Fail only), `ingress_id` (Uuid), `tool_call_id` (Option<String>, Some for ToolResult boundary only); emits BEFORE ToolEnd (ToolResult boundary) or within NodeStart/NodeEnd before inference (RAG/Memory boundaries)
    - `StreamEvent::ToolApprovalRequest` — emitted BEFORE `interrupt()` when `pre_tool_dispatch` returns `PreToolDecision::PendingHumanApproval`; carries `run_id`, `tool_name`, `tool_args`, `action_risk` (Option<ActionRisk>), `prompt` (human-facing approval request text); causal ordering and interrupt semantics specified in BC-2.06.004
    - `StreamEvent::ToolApprovalResolved` — emitted AFTER interrupt consumed, BEFORE decision applied, on `Command::Resume(PreToolDecision)` delivery for a suspended approval; carries `run_id`, `tool_name`, `decision` (PreToolDecision variant), `reason` (Option<String>), `modified_args` (Option<ToolArgs>); causal ordering specified in BC-2.06.005
-   - `StreamEvent::CompactionEvent` — emitted after a compaction cycle completes and the compacted checkpoint is durably written (step 6 of BC-2.10.006 7-step sequence); carries `run_id`, `trigger` (CompactionTrigger variant), `compacted_turns` (RangeInclusive<usize>), `summary_token_count` (u64), `tokens_remaining_after` (u64); causal ordering specified in BC-2.06.006
+   - `StreamEvent::CompactionEvent` — emitted after a compaction cycle completes and the compacted checkpoint is durably written (step 6 of BC-2.10.006 7-step sequence); carries `run_id`, `trigger` (CompactionTrigger variant), `compacted_turns` (RangeInclusive<usize>), `summary_token_count` (u64), `tokens_remaining_after` (Option<i64>); causal ordering specified in BC-2.06.006
 3. Each event carries `run_id` (UUID) and `parent_ids` (ordered ancestry list) per BC-2.06.002.
 4. Events are emitted in the following causal ordering (updated F-P99-01):
    ```

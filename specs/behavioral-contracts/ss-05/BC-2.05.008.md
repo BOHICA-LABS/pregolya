@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.008
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ vp_seed: false
 red_gate: false
 changelog:
   - "1.0 (D23/2026-07-22): Initial BC — D23 per-tool-call approval hook, SS-05 skip-hook-on-resume invariant."
+  - "1.1 (2026-07-22, F-P139-07, burst-239): (a) Related BCs: 'BC-2.05.007 PC-1 through PC-4 applied on resume' corrected to 'PC-1 through PC-3' — PC-4 is PendingHumanApproval, the trigger path that issued the interrupt, and is never a valid resume decision delivered by the caller. (b) EC-006 added: explicit behavior when Command::Resume(PendingHumanApproval { .. }) is delivered — invalid payload, returns Err per BC-2.05.004 contract."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "a1aa070"
+input-hash: "de093f4"
 extracted_from: null
 modified: []
 deprecated: null
@@ -108,6 +109,7 @@ decision out-of-band.
 | EC-003 | Resume with Edit after process restart | modified_args validated; if valid, tool invoked with modified_args; if invalid, Deny fallback |
 | EC-004 | Multiple PendingHumanApproval interrupts queued (N sequential tool calls each needing approval) | FIFO: first ToolApprovalRequest resumed first; N separate Command::Resume calls required; hook not re-called for any |
 | EC-005 | A second tool invocation during the node's re-execution after the first approval is resumed | The second tool invocation goes through pre_tool_dispatch (BC-2.05.007) normally — pre_invoke is called for the SECOND dispatch (only skipped for the specific dispatch that was in PendingHumanApproval) |
+| EC-006 | `Command::Resume(PreToolDecision::PendingHumanApproval { .. })` delivered as the resume payload | `PendingHumanApproval` is a hook RETURN value that triggers interrupt issuance (BC-2.05.007 PC-4); it is not a valid decision payload for `Command::Resume`. The engine returns `Err(FerrochainError)` per BC-2.05.004 invalid-payload contract. No tool invocation, no state mutation, run remains in `interrupted` state. |
 
 ## Canonical Test Vectors
 
@@ -132,7 +134,7 @@ decision out-of-band.
 - BC-2.05.002 — depends on: FIFO delivery of ToolApprovalRequest interrupts
 - BC-2.05.003 — related to: node re-execute is a DIFFERENT mechanism; this BC specifies skip-hook-on-resume which differs from node re-execute semantics
 - BC-2.05.004 — depends on: Command::Resume(PreToolDecision) is the programmatic resume API
-- BC-2.05.007 — depends on: pre_tool_dispatch dispatch rules (PC-1 through PC-4) applied on resume
+- BC-2.05.007 — depends on: pre_tool_dispatch dispatch rules PC-1 through PC-3 applied on resume; PC-4 (PendingHumanApproval) is the hook RETURN value that triggered the interrupt and is NOT a valid resume decision payload
 - BC-2.06.004 — related to: tool_approval_request streaming event emitted when PendingHumanApproval issued
 - BC-2.06.005 — related to: tool_approval_resolved streaming event emitted when Command::Resume arrives
 

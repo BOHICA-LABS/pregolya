@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-22"
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
-version: "1.2"
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-10, SS-04]
 changelog:
+  - "1.3 (burst-239/2026-07-23): F-P139-01 — update BC-2.04.001 citations in Decision 3 step 4 and Consequences Positive to BC-2.04.001 Inv-5 (append-only checkpoint records, matching PO canonical anchor). F-P139-02 — Decision 4 CompactionEvent field tokens_remaining_after: u64 → Option<i64> (None when no token ceiling; negative on Deny — per BC-2.06.001 PC2, BC-2.06.006 PC1, interface-definitions §BudgetInfo). TD-VSDD-060 sibling sweep: no other stale BC-2.04.001 immutability citations or tokens_remaining_after: u64 renderings found in architecture-layer docs."
   - "1.2 (burst-234/2026-07-22): F-P134-04 — Decision 3 step 5: rename CompactionEvent journal field `trigger_tokens_remaining` → `tokens_remaining_after` to match BC-2.10.006 v1.1 canonical field name and Decision 4 streaming payload (both use `tokens_remaining_after`). TD-VSDD-060 sibling sweep: sole remaining occurrence in architect-scope files; entities-graph.md (domain-spec, out of scope) and BC-2.10.006 changelog (historical documentation, out of scope) retain the old name in quoted context only."
   - "1.1 (burst-233/2026-07-22): F-P133-07 sibling sweep (TD-VSDD-060) — remove stale 'VP-012 candidate' labels (VP-012 seeded burst-232, Kani P1). Two sites updated: §Compaction Trigger Evaluation Sequence step 1 watermark check, and §Positive Properties rationale line."
   - "1.0 (D23/2026-07-22): Initial ADR — rolling proactive context compaction as a first-class framework primitive. Closes the DEGRADED gap identified in domain-e-agentic-coding-assistant.md §3 item 10."
@@ -129,7 +130,7 @@ per ADR-009) evaluates `CompactionTrigger` after each super-step:
 3. **Compact:** call `compaction_policy.compact(&snapshot, &run_ctx).await`.
 4. **Apply:** write a new checkpoint state where `messages[compacted_range]` is replaced by
    a single `SystemMessage(summary_text)`. The original checkpoint records are NOT deleted
-   (immutable checkpoint history per BC-2.04.001).
+   (append-only checkpoint records per BC-2.04.001 Inv-5).
 5. **Journal:** append a `CompactionEvent { compacted_range, summary_token_count,
    tokens_remaining_after }` to `EvidenceJournal` (BC-2.10.001 append-only journal).
 6. **Stream:** emit a `compaction_event` streaming event (see Decision 4).
@@ -155,7 +156,7 @@ compaction_event {
     trigger: CompactionTrigger (which variant fired),
     compacted_turns: RangeInclusive<usize>,
     summary_token_count: u64,
-    tokens_remaining_after: u64,
+    tokens_remaining_after: Option<i64>,
 }
 ```
 
@@ -253,8 +254,8 @@ Frozen-snapshot is a next-run-start mechanism; it cannot extend the current run.
   graphs are unaffected.
 - `OnWatermark` arithmetic is a pure comparison — VP-012 (Kani P1, seeded burst-232) (trigger fires if
   and only if `tokens_remaining / ceiling < (1.0 - fraction)`).
-- Framework-owned compaction ensures checkpoint immutability is respected: original turns
-  are not deleted, only superseded in the active message window.
+- Framework-owned compaction respects BC-2.04.001 Inv-5 (append-only checkpoint records):
+  original turns are not deleted, only superseded in the active message window.
 
 ### Negative / Trade-offs
 

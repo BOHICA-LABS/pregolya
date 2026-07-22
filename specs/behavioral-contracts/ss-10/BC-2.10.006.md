@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.006
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ vp_seed: false
 red_gate: false
 changelog:
   - "1.3 (burst-236/F-P136-04/2026-07-23): Step 5 EvidenceJournal CompactionEvent.tokens_remaining_after type clarified: source is `RunContext.budget_info.tokens_remaining: Option<i64>` (interface-definitions.md §BudgetInfo). When no token ceiling is configured (OnMessageCount/OnTokenCount triggers with neither soft_limit nor hard_limit set), tokens_remaining is None — the EvidenceJournal entry carries `tokens_remaining_after: Option<i64>` matching the source type. Three-site reconciliation with BC-2.06.006 PC1 and interface-def §StreamEvent (F-P136-04)."
+  - "1.4 (2026-07-22, F-P139-01b, burst-239): Fix stale 'BC-2.04.001 immutability' citations (Description, Invariants, Related BCs). F-P139-01 (deep-read pass) found that BC-2.04.001 contains no immutability invariant — that BC is about put_writes timing. The anchor is now BC-2.04.001 Inv-5, which was added in this same burst (F-P139-01a) as a new general checkpoint append-only invariant covering all in-run operations including compaction."
   - "1.2 (burst-234/F-P134-07/2026-07-22): Add Invariant — Compaction × PendingHumanApproval temporal non-interaction. Closes the F-P134-07 LOW/OBS ambiguity: no BC previously stated that compaction (which fires only at super-step boundaries, PC-4) cannot fire while a run is parked at a PendingHumanApproval interrupt (which is NOT at a super-step boundary). Also states the durability corollary: a ToolApprovalRequest's message-window references survive any subsequent compaction because compaction can only fire after the approval is resolved and the run resumes to a super-step. Cross-references BC-2.05.007 PC-4 and BC-2.05.008 PC-4."
   - "1.1 (burst-233/F-P133-10/2026-07-22): Step 5 EvidenceJournal entry — rename field `trigger_tokens_remaining` → `tokens_remaining_after`. Adjudication: the value is captured AFTER window replacement in step 3, so `trigger_tokens_remaining` was semantically misleading (suggests the value was captured at trigger time/step 1, not post-replacement). Renaming to `tokens_remaining_after` aligns with BC-2.06.006 streaming event payload which uses `tokens_remaining_after` for the same conceptual value. Both BCs now agree on the canonical field name for post-compaction remaining tokens."
   - "1.0 (D23/2026-07-22): Initial BC — D23 rolling compaction, SS-10 compaction execution contract."
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "e1a7fb5"
+input-hash: "30af7bb"
 extracted_from: null
 modified: []
 deprecated: null
@@ -54,8 +55,9 @@ returned `CompactionSummary` by replacing `messages[compacted_range]` with a sin
 `SystemMessage(summary_text)` in the ACTIVE message window (mid-run mutation — NOT
 next-run frozen-snapshot), (4) write the updated checkpoint durably, (5) append a
 `CompactionEvent` to `EvidenceJournal`, (6) emit `compaction_event` streaming event
-(BC-2.06.006), (7) continue the run. Original checkpoint records are NOT deleted (BC-2.04.001
-immutability). If `compact()` fails, the cycle is aborted without mutating the message window.
+(BC-2.06.006), (7) continue the run. Original checkpoint records are NOT deleted
+(BC-2.04.001 Inv-5 — append-only; records never deleted or mutated in place). If `compact()`
+fails, the cycle is aborted without mutating the message window.
 
 ## Preconditions
 
@@ -108,9 +110,9 @@ The run proceeds from the next super-step with the compacted context window acti
 
 ## Invariants
 
-- **Checkpoint immutability (BC-2.04.001):** Original message records are NEVER deleted from
-  the checkpoint store. The compaction writes a NEW checkpoint entry with the compacted
-  window; the old entries remain in the store and are readable via history APIs.
+- **Checkpoint append-only invariant (BC-2.04.001 Inv-5):** Original message records are
+  NEVER deleted from the checkpoint store. The compaction writes a NEW checkpoint entry with
+  the compacted window; the old entries remain in the store and are readable via history APIs.
 - **Mid-run, not next-run:** Compaction takes effect immediately in the current run.
   This is structurally different from BC-2.15.006 (frozen-snapshot context mutation),
   which takes effect only at the next run's start. The two mechanisms are NOT interchangeable.
@@ -160,7 +162,7 @@ The run proceeds from the next super-step with the compacted context window acti
 
 ## Related BCs
 
-- BC-2.04.001 — depends on: checkpoint immutability invariant (original records not deleted)
+- BC-2.04.001 — depends on: Inv-5 checkpoint append-only invariant (original records never deleted or mutated in place; compaction appends new checkpoint entries; history readable via search_history)
 - BC-2.04.008 — depends on: search_history FTS for ConversationSnapshot assembly
 - BC-2.10.001 — composes with: EvidenceJournal append-only invariant
 - BC-2.10.003 — related to: OnCeiling::Summarize is reactive ceiling path; compaction execution is proactive mid-run path

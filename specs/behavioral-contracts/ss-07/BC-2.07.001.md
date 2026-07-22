@@ -2,10 +2,11 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.001
-version: "1.2"
+version: "1.3"
 changelog:
   - "1.1 (OBS-P95-A, 2026-07-17): VP-SPLIT-01..003 renumbered to VP-SPLIT-01..03 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — below >5 threshold — so renumber is the production-grade correct call over documenting the convention). No VP-INDEX registration affected (SPLIT VPs are BC-local)."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-splitters per module-decomposition.md v1.10."
+  - "1.3 (2026-07-22, F-P139-03, burst-239): TV-005 corrected — empty string expected output changed from '[\"\"]` or `[]`' to `[]` only. Sibling fix to BC-2.07.003 PC5 (F-P139-03 same burst): BC-2.07.003 EC-005 and VP-SPLIT-08 already mandate `[]`; BC-2.07.003 PC5 previously hedged 'either acceptable' but that was the internal contradiction. TV-005 now aligns with the mandated `[]` behavior."
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -120,7 +121,7 @@ non-ASCII input, which is a correctness regression addressed by R8.
 | TV-002 | `"中文测试"` (4 CJK, 12 bytes) | 2 | 0 | `["中文", "测试"]` | CJK code-point split |
 | TV-003 | `"a" * 99 + "🎉"` (99+1=100 code pts, 103 bytes) | 100 | 0 | `["aaa...a🎉"]` | Emoji at boundary — single chunk |
 | TV-004 | `"🎉🎊🎈"` (3 emoji, 12 bytes) | 2 | 0 | `["🎉🎊", "🎈"]` | Emoji code-point split |
-| TV-005 | `""` (empty string) | 100 | 0 | `[""]` or `[]` | Empty doc — per BC-2.07.003 below |
+| TV-005 | `""` (empty string) | 100 | 0 | `[]` | Empty doc — empty string returns no chunks (BC-2.07.003 PC5) |
 | TV-006 | `chunk_size=0` | — | — | `Err(E-SPLIT-001)` | Zero chunk validation |
 | TV-007 | `overlap >= chunk_size` | 10 | 10 | `Err(E-SPLIT-002)` | Overlap constraint |
 

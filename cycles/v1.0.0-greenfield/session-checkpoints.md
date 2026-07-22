@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "5cd59cc"
+input-hash: "f833a0e"
 traces_to: STATE.md
 ---
 
@@ -1220,3 +1220,20 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
 ### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-237 commit (see git -C .factory log -1).
 ### WRAP METADATA: Date 2026-07-23 | Cycle v1.0.0-greenfield | Burst 237 | Phase 1 IN PROGRESS — burst-237 COMMITTED; NEXT: P1D-138 | NEXT: adversary cascade P1D-138
+
+---
+
+### Checkpoint — Burst 238 (archived from STATE.md at burst-239)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21+D-23 scope expansion. D23 authoring COMPLETE (bursts 229-232). Burst-238 fix-burst ALL AGENTS COMMITTED to factory-artifacts. All 3 P1D-138 findings closed (0C/1H/2M — all stale completed-handoff flags). Corpus-wide handoff-flag sweep: 15 files updated (3 reported + 12 proactive). error-taxonomy v1.33; BC-2.23.005/006 VP satisfied; BC-2.18.004/19.005/21.003/22.001 VP=assigned; ADR-010 v1.6/ADR-012 v1.4/ADR-014 v1.7/ADR-016/017/018/020 stale-handoff cleared; module-decomposition v1.20; BC-INDEX v2.5 satisfied; L-026 codified. Hash sweep STALE=0. trajectory-tail →6→6→3→3; 0/3. NEXT: adversary pass P1D-139 on FROZEN HEAD."
+### COMMITTED (through burst 238):
+- Burst 238 (last committed): error-taxonomy v1.33 (stale ARCHITECT FLAG removed); api-surface v1.8 (F-P138-02); BC-2.23.005/006 + BC-2.18.004/19.005/21.003/22.001 VP satisfied; 7 ADRs proactive stale-handoff cleared; L-026; hash sweep STALE=0.
+### NEXT-ACTIONS (exact, ordered):
+1. Adversary pass P1D-139 on FROZEN HEAD (D21+D23 expanded perimeter; full scope; streak 0/3).
+2. DEEP-READ MANDATE for P1D-139: error-taxonomy full re-read (v1.33 has E-TOOLS-001..009 — verify all 9 anchors). SS-01/02/03 core BC bodies line-by-line. Most ADR bodies (ADR-014 v1.7 especially).
+3. HANDOFF-FLAG SCAN (L-026 guardrail): at burst close, grep corpus for "ARCHITECT FLAG", "PO must", "architect to assign", "amendment required" satisfied-at-HEAD flags.
+4. After 3/3 CLEAN(strict): /vsdd-factory:check-input-drift → fresh consistency audit → Phase 1 HUMAN GATE.
+### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
+### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-238 commit (see git -C .factory log -1).
+### WRAP METADATA: Date 2026-07-23 | Cycle v1.0.0-greenfield | Burst 238 | Phase 1 IN PROGRESS — burst-238 COMMITTED; NEXT: P1D-139 | NEXT: adversary cascade P1D-139

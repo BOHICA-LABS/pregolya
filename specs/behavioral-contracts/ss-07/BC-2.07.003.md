@@ -2,10 +2,11 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.003
-version: "1.2"
+version: "1.3"
 changelog:
   - "1.1 (OBS-P95-A, 2026-07-17): VP-SPLIT-06..008 renumbered to VP-SPLIT-06..08 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — renumber is the production-grade call). No VP-INDEX registration affected (SPLIT VPs are BC-local)."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-splitters per module-decomposition.md v1.10."
+  - "1.3 (2026-07-22, F-P139-03, burst-239): PC5 tightened to mandate `[]` only for empty-string input. Previous PC5 allowed either `[]` OR `['']', citing 'either acceptable if consistent with Python reference.' This is incorrect and internally contradictory: EC-005 already says 'must not return [\"\"]' and TV-004 shows `[]`. PC5 now explicitly prohibits `[\"\"]\` and mandates `[]` as the required behavior. Sibling BC-2.07.001 TV-005 corrected from `[\"\"]` or `[]` to `[]` in the same burst (F-P139-03)."
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -56,7 +57,7 @@ no `None`, and no index-out-of-bounds occurs. This is the minimal-document degen
 2. **No overlap is applied.** The returned list has length 1, not 2 or more (there are no preceding chunks to overlap with).
 3. No panic occurs, no array-index-out-of-bounds, no underflow arithmetic.
 4. The chunk's content is byte-identical to the input document (no truncation, no extra whitespace trimming beyond what the separator logic would do).
-5. For an empty string input (`len_codepoints = 0`): the splitter returns `[]` (empty list) OR `[""]` — the behavior must be documented and consistent. The preferred behavior is `[]` (consistent with "no chunks if no content") but either is acceptable if consistent with the Python reference.
+5. For an empty string input (`len_codepoints = 0`): the splitter returns `[]` (empty list). Returning `[""]` (an empty-string chunk) is **incorrect** — it is useless noise with no semantic content, is explicitly contradicted by EC-005 and TV-004, and does not match Python reference behavior. `[]` is the sole mandated output. This is verified by VP-SPLIT-08.
 
 ## Invariants
 
