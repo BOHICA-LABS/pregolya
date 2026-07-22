@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.001
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -33,6 +33,7 @@ changelog:
   - "1.4 (F-P117-01, fix burst 120, 2026-07-19): EC-005 — clarify summary_halt (budget OnCeiling::Summarize terminal state) DOES emit RunEnd with the summarize model response as output (like completed, not like failed). Updated EC-005 final rule sentence to enumerate output-producing states (completed + summary_halt → RunEnd emitted) vs. non-output terminal states (failed, cancelled) and paused state (interrupted) → stream ends without RunEnd."
   - "1.5 (D23/2026-07-22): StreamEvent taxonomy 12→15 variants (+tool_approval_request event 13 per ADR-018, +tool_approval_resolved event 14 per ADR-018, +compaction_event event 15 per ADR-019). H1 title updated. PC2 extended with three new variant bullets. Related BCs: forward refs BC-2.06.004/005/006 added."
   - "1.6 (2026-07-22, F-P139-02 + F-P139-04, burst-239): (F-P139-02) PC2 CompactionEvent bullet: `tokens_remaining_after` type corrected u64 → Option<i64>, matching BC-2.06.006 PC1 and interface-definitions §BudgetInfo.tokens_remaining (F-P136-04 sibling-sweep gap — missed BC-2.06.001 PC2). (F-P139-04) Description corrected: Step has no Stream variant. Removed claim 'each with Start / Stream / End variants' (false for Step); replaced with qualified statement that Run/Node/Tool have Start/Stream/End while Step has Start and End only."
+  - "1.7 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 extracted_from: null
 modified: []
 deprecated: null
@@ -202,8 +203,8 @@ the zero-bytes guarantee on all emitted events.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/pregel/events.rs` — `StreamEvent` enum definition with all phase variants
-- `ferrochain-graph/src/pregel/loop.rs` — emission points inside `tick()` (NodeStart/End, ToolStart/End) and `after_tick()` (StepEnd)
+- `ferrochain-graph/src/event_emitter.rs` (`graph::event_emitter`) — `StreamEvent` enum definition with all phase variants
+- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — emission points inside `tick()` (NodeStart/End, ToolStart/End) and `after_tick()` (StepEnd)
 - `ferrochain-server/src/streaming.rs` — SSE / streaming endpoint that yields `StreamEvent` to callers
 
 ## Story Anchor

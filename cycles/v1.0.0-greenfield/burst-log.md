@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "f833a0e"
+input-hash: "331fb06"
 traces_to: STATE.md
 ---
 
@@ -4477,3 +4477,89 @@ P1D-139 adversary brief mislabeled subsystem contents: described SS-02 as "chat 
 ### Archived from STATE.md Current Phase Steps
 
 | Burst 234 — P1D-134 fix-burst ALL AGENTS COMPLETE (F-P134-01..07 all closed; DI-015 minted; E-TOOLS-008 GrepTool gate #33 real; TVs 669→670; ADR-019 v1.2/ADR-020 v1.6; entities-graph v1.7; invariants v1.2; hash sweep 6 passes STALE=0; burst-230 row archived); 0/3. NEXT: P1D-135. | architect + BA + product-owner + state-manager | COMPLETE | F-P134-01 BC-2.23.006 E-TOOLS-008 OS-error gate #33 both-direction anchor (v1.1→v1.2; TV-006; TVs 669→670). F-P134-02 ADR-020 GrepTool label two-step normalize (v1.4→v1.6; BC-2.23.006). F-P134-03 BC-2.08.010 BC-2.05.004→BC-2.05.007 ×2 reference correction (v1.1→v1.2). F-P134-04 ADR-019 trigger_tokens_remaining→tokens_remaining_after Decision 3 step 5 (v1.1→v1.2); entities-graph sibling (v1.6→v1.7; hash 0dac18e). F-P134-05 BC-2.06.006 ADR-018 removed from traces_to+inputs (v1.0→v1.1; hash ee8a02b). F-P134-06 invariants.md DI-015 Subprocess Execution Timeout minted (v1.1→v1.2; enforcer BC-2.23.005; L2-INDEX v1.9→v1.10 census 14→15; BC-2.23.005 di_anchors [DI-014]→[DI-014,DI-015] v1.1→v1.2; hash 835edd0). F-P134-07 BC-2.10.006 compaction×PendingHumanApproval non-interaction invariant (v1.1→v1.2). Hash sweep: 6 passes, 384 files updated, STALE=0. VP-012 refreshed (d582172 → final stable hash). Burst 234. |
+
+---
+
+## Burst 240 — 2026-07-22 — P1D-140 Fix-Burst: All 8 Findings Closed; 22-BC pregel→graph:: Layout; E-MCP-006 Minted; Census 108
+
+**Date:** 2026-07-22
+**Agents:** architect + product-owner Wave-1 + product-owner Wave-2 + state-manager
+**Pass:** P1D-140 (8 findings: 0C/1H/5M/2L — deep-read SS-08/09/12/14 BC bodies + 11 ADR bodies)
+
+### Context
+
+Eighth adversarial pass on the D21+D23 expanded perimeter. P1D-140 applied the mandated deep-read to surfaces that had never been opened by any prior pass: SS-08 (Provider Conformance / CAP-009), SS-09 (Graph State Definition / CAP-010), SS-12 (Server Infrastructure), SS-14 (Embeddings), and 11 ADR bodies (ADR-001/003/004/006/007/008/009/011/013/016/017). The uptick from 3→8 reflects that the SS-08/09/12/14 BC bodies had never been read, accumulating a systemic layout contradiction since ADR-001 established the flat `graph::` layout: all 22 BCs spanning SS-02/03/05/06/08/09/10/12/15 still cited `pregel/*.rs` paths contradicting ADR-001 canon. The HIGH finding was the largest single structural sweep in this re-convergence phase (35 path refs, 22 files).
+
+State-manager F-P140-07 (LOW) was a governance fix: burst-238 dates were recorded as 2026-07-22 in 7 files while ARCH-INDEX v1.9 recorded the canonical date as 2026-07-23. All 7 files normalized to 2026-07-23.
+
+### Findings Closed
+
+| Finding | Severity | Fix |
+|---------|----------|-----|
+| F-P140-01 | HIGH | 22 BC files swept: pregel/*.rs path refs corrected to flat graph:: layout per ADR-001 canon. BC-2.02.002/003/004/005/006, BC-2.03.001/002/003, BC-2.05.001/002/003/004/005, BC-2.06.001/002/003/004/005/006, BC-2.10.001/002/003/004, BC-2.12.007, BC-2.15.006 — all version-bumped. BC-2.03.003 bsp_engine.rs target corrected for VP-001 alignment. 35 total path refs corrected; zero residual. |
+| F-P140-02 | MED | BC-2.08.007 v1.4→v1.5 + BC-2.14.004 v1.2→v1.3: E-PROV-002 message generalized from "stream chunk timeout after <duration>" to "request timed out after <duration>" (applies to all request-level timeout scenarios, not only streaming) |
+| F-P140-03 | MED | BC-2.09.002 v1.2→v1.3: McpError::Transport wrapping clarified — FerrochainError with .source() pointing to the wrapped McpError, not a bare McpError passthrough |
+| F-P140-04 | MED | E-MCP-006 McpContentUnsupported minted: VAL/broken/Never; BC-2.09.002 PC6/TV-005 anchor; MCP error-code count 5→6; error-taxonomy census 107→108 |
+| F-P140-05 | MED | E-PROV-001 severity corrected degraded→broken: 429 RateLimited returns bare Err with no partial payload (BC-2.08.004 PC3 canon; degraded was incorrect — no partial data is available) |
+| F-P140-06 | MED | module-decomposition v1.20→v1.21: graph module-row clarifications for bsp_engine, scheduler, event_emitter, hitl. ADR-017 v1.3→v1.4: VALIDATION→Category::VAL alignment; dangling E-EMBED-003 reference removed from rejected-alternatives section |
+| F-P140-07 | LOW | Burst-238 date normalization: 7 files had 2026-07-22; canonical date per ARCH-INDEX v1.9 is 2026-07-23. Files corrected: error-taxonomy.md v1.33 changelog row, BC-2.18.004 v1.3, BC-2.19.005 v1.2, BC-2.21.003 v1.2, BC-2.22.001 v1.2, BC-2.23.005 v1.4, BC-2.23.006 v1.3 |
+| F-P140-08 | LOW | interface-definitions v2.48→v2.49: blanket annotation added clarifying census 107→108 with E-MCP-006 inclusion; census statement updated |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `specs/behavioral-contracts/ss-02/BC-2.02.002/003/004/005/006.md` | F-P140-01: pregel→graph:: layout (5 BCs, version bumps) |
+| `specs/behavioral-contracts/ss-03/BC-2.03.001/002/003.md` | F-P140-01: pregel→graph:: layout + BC-2.03.003 bsp_engine.rs VP-001 alignment (3 BCs) |
+| `specs/behavioral-contracts/ss-05/BC-2.05.001/002/003/004/005.md` | F-P140-01: pregel→graph:: layout (5 BCs) |
+| `specs/behavioral-contracts/ss-06/BC-2.06.001/002/003/004/005/006.md` | F-P140-01: pregel→graph:: layout (6 BCs) |
+| `specs/behavioral-contracts/ss-10/BC-2.10.001/002/003/004.md` | F-P140-01: pregel→graph:: layout (4 BCs) |
+| `specs/behavioral-contracts/ss-12/BC-2.12.007.md` | F-P140-01: pregel→graph:: layout |
+| `specs/behavioral-contracts/ss-15/BC-2.15.006.md` | F-P140-01: pregel→graph:: layout |
+| `specs/behavioral-contracts/ss-08/BC-2.08.007.md` | F-P140-02: E-PROV-002 message generalized (v1.4→v1.5) |
+| `specs/behavioral-contracts/ss-14/BC-2.14.004.md` | F-P140-02: E-PROV-002 message generalized (v1.2→v1.3) |
+| `specs/behavioral-contracts/ss-09/BC-2.09.002.md` | F-P140-03+04: McpError wrapping + E-MCP-006 PC6/TV-005 anchor (v1.2→v1.3) |
+| `specs/prd-supplements/error-taxonomy.md` | F-P140-04+07: E-MCP-006 minted; census 107→108; burst-238 date 2026-07-22→2026-07-23 in v1.33 row (v1.33→v1.34) |
+| `specs/architecture/module-decomposition.md` | F-P140-06: graph module-row clarifications (v1.20→v1.21) |
+| `specs/architecture/decisions/ADR-017-error-taxonomy.md` | F-P140-06: VALIDATION→Category::VAL; E-EMBED-003 dangling ref removed (v1.3→v1.4) |
+| `specs/behavioral-contracts/ss-18/BC-2.18.004.md` | F-P140-07: burst-238 date 2026-07-22→2026-07-23 |
+| `specs/behavioral-contracts/ss-19/BC-2.19.005.md` | F-P140-07: burst-238 date 2026-07-22→2026-07-23 |
+| `specs/behavioral-contracts/ss-21/BC-2.21.003.md` | F-P140-07: burst-238 date 2026-07-22→2026-07-23 |
+| `specs/behavioral-contracts/ss-22/BC-2.22.001.md` | F-P140-07: burst-238 date 2026-07-22→2026-07-23 |
+| `specs/behavioral-contracts/ss-23/BC-2.23.005.md` | F-P140-07: burst-238 date 2026-07-22→2026-07-23 |
+| `specs/behavioral-contracts/ss-23/BC-2.23.006.md` | F-P140-07: burst-238 date 2026-07-22→2026-07-23 |
+| `specs/prd-supplements/interface-definitions.md` | F-P140-08: blanket annotation + census 107→108 statement (v2.48→v2.49) |
+| `sidecar-learning.md` | session-end marker updated |
+| ~30 spec files (transitive hash cascade) | input-hash cascade (D18-P89-A/P90-A sweep — 5 passes to STALE=0) |
+| `cycles/v1.0.0-greenfield/convergence-trajectory.md` | P1D-140 row appended |
+| `STATE.md` | v3.82→v3.83: P1D-140 + burst-240 recorded; burst-235 archived |
+
+### Hash Sweep Summary
+
+Triggered by: 22-BC pregel→graph:: edits + error-taxonomy v1.34 + module-decomposition v1.21 + ADR-017 v1.4 + interface-definitions v2.49 + 7-file burst-238 date normalization. BC-2.22.001 required two extra passes (its inputs — ADR-017 and capabilities-p1-p2 — were both edited in this burst; validate-input-hash hook fired after date edit, requiring re-run of compute-input-hash).
+
+| Pass | Files Updated | STALE After |
+|------|---------------|-------------|
+| 1 | ~24 | ~6 |
+| 2 | ~6 | ~2 |
+| 3 | ~2 | 0 |
+| 4 (post-date-edits) | ~2 | ~1 |
+| 5 (verify) | 0 | 0 |
+| **Total** | **~34** | **0** |
+
+Final: STALE=0. All 22 swept BCs + transitive consumers updated.
+
+### Governance Fix: Burst-238 Date Normalization
+
+F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 files while ARCH-INDEX v1.9 (the canonical date authority) recorded 2026-07-23. Root cause: the burst-238 state-manager commit was made close to UTC midnight, and some files received the pre-midnight date while the primary index received the post-midnight date. All 7 outliers normalized to 2026-07-23 as the canonical burst-238 date. This is the second burst-238 date normalization (burst-239 corrected BC-INDEX + ADR-018 cross-index mismatch; burst-240 corrected the 6 remaining BC files and the error-taxonomy changelog row).
+
+### Convergence After Burst
+
+- 140 adversary passes, 140 fix bursts (128 pre-D21 + 12 post-D21+D23)
+- Trajectory tail: →3→3→7→8 (uptick from deep-read of large never-opened surface SS-08/09/12/14 + 11 ADR bodies; HIGH was systemic pregel-layout class)
+- 3-CLEAN streak: 0/3 (P1D-140 NOT CLEAN — 1H/5M/2L)
+- Next: adversary cascade P1D-141 on FROZEN HEAD (D21+D23 expanded perimeter; mandated deep-read: SS-12 BC-2.12.002/003/004/005 + SS-14 BC-2.14.002/003/005 bodies; prd.md §1-§6 prose; nfr-catalog full; domain-spec entities-core/entities-server/ubiquitous-language-*/edge-cases/failure-modes/risks/bounded-contexts/assumptions/differentiators; VP-002/003/004/005/007 bodies)
+
+### Archived from STATE.md Current Phase Steps
+
+| Burst 235 — P1D-135 fix-burst ALL AGENTS COMPLETE (F-P135-01..06 all closed; DI-015 split-enforcement BC-2.13.002 co-enforcer; TVs 670→671; universe 53→54; events.md v1.7; bc-authoring-plan updated; hash sweep 7 passes STALE=0; burst-231 row archived); 0/3. NEXT: P1D-136. | PO + architect + BA + state-manager | COMPLETE | F-P135-01 HIGH prd.md §7 RTM 13-BC CAP anchors corrected [RTM never-opened surface]. F-P135-02 HIGH prd.md §2+§7 DI col DI-014 all 13 D23 BCs + DI-015 BC-2.23.005; DI-008 unbacked citation removed. F-P135-03 MED BC-INDEX v2.2→v2.3 BC-2.23.005 DI column DI-014→DI-014,DI-015. F-P135-04 MED prd.md §2.15 header + 3 SS-15 rows P2→P1. F-P135-05 MED ADR-020 v1.7 tools::shell timeout wraps sandbox.execute() + module-decomp v1.18 +sandbox::process MEDIUM universe 53→54 + purity-boundary-map v1.12 +sandbox::process Effectful Shell + invariants v1.3 DI-015 split-enforcement co-enforcer BC-2.13.002 + BC-2.13.002 v1.2 kill_on_drop PC-6+INV-6 TV-5 + BC-2.23.005 v1.3 tokio::process phrasing. F-P135-06 MED events.md v1.7 +D23 StreamEvents 13/14/15 + ToolApprovalRaised/Resolved+CompactionExecuted domain events + ordering rules 7-8 + decisions +D21,D23. Hash sweep: 7 passes STALE=0. Burst 235. |

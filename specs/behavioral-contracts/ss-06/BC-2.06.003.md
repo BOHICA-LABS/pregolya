@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.003
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P91-01, 2026-07-17): EC-005 sweep fix — 'BudgetPolicy with on_ceiling = halt' → 'BudgetConfig with on_ceiling = OnCeiling::Halt'. on_ceiling is a field of BudgetConfig (interface-definitions v2.29 §BudgetConfig); BudgetPolicy::evaluate is pure and data-free. Part of the full SS-10 + corpus sweep for BudgetPolicy::on_ceiling mis-attributions."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server / ferrochain-graph per module-decomposition.md v1.10."
   - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). New invariant added: GuardrailDecision is a stream-observer notification only — not emitted in unary mode; GuardrailHook::evaluate fires on both paths per DI-012; absence from unary output is NOT a DI-011 violation (execution-path vs stream-observer equivalence)."
+  - "1.4 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
   - domain-spec/invariants.md#DI-011
@@ -152,7 +153,7 @@ equivalent in both.
 ## Architecture Anchors
 
 - `ferrochain-server/src/run_handler.rs` — streaming and unary endpoints must call the same underlying `execute_run(graph, config, checkpoint_saver)` function; no streaming-specific branch in execution logic
-- `ferrochain-graph/src/pregel/mod.rs` — single `Pregel::execute` or equivalent function used by both paths; streaming is a presentation layer concern, not an execution logic difference
+- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — single `Pregel::execute` or equivalent function used by both paths; streaming is a presentation layer concern, not an execution logic difference
 
 ## Story Anchor
 

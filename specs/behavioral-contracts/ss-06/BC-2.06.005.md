@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.005
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ vp_seed: false
 red_gate: false
 changelog:
   - "1.0 (D23/2026-07-22): Initial BC — D23 streaming event taxonomy extension, event 14 tool_approval_resolved."
+  - "1.1 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -129,7 +130,7 @@ event always pairs with a prior `BC-2.06.004 tool_approval_request` event for th
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-018-per-tool-call-approval-hook.md` — Decision 5 (tool_approval_resolved event, complementary to tool_approval_request)
-- `architecture/module-decomposition.md` — SS-06, `ferrochain-graph / pregel/events.rs`
+- `architecture/module-decomposition.md` — SS-06, `graph::event_emitter (ferrochain-graph/src/event_emitter.rs)`
 
 ## Story Anchor
 

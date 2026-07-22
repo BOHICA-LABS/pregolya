@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.001
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ input-hash: "a580b16"
 changelog:
   - "1.1 (ADV-P1D-PASS-26): F-P26-03 TV-005 field name risk_tier→action_risk (propagation of F-P25-06 action_risk canon; retired field name drained per RETIRED-IDENTIFIER RESIDUE GREP gate)."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 extracted_from: null
 modified: []
 deprecated: null
@@ -146,7 +147,7 @@ is returned. The graph does not proceed and does not leave a partial checkpoint.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/pregel/loop.rs` — interrupt handling inside `tick()`
+- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — interrupt handling inside `tick()`
 - `ferrochain-graph/src/types.rs` — `NodeInterrupt`, `InterruptPayload`, `Command` types
 - `ferrochain-checkpoint/src/base.rs` — `put_writes` with INTERRUPT channel index
 

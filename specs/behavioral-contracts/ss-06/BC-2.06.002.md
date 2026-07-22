@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.002
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P93-04 class-sweep, 2026-07-17): VP ID collision resolved. BC-2.06.001 and BC-2.06.002 both defined VP-STREAM-02 with semantically identical (run_id + parent_ids) descriptions. Resolution per append-only-numbering policy: BC-2.06.001's VP-STREAM-02 (lower ID, canonical) kept; BC-2.06.002's VP-STREAM-02 renumbered → VP-STREAM-04 (next free after VP-STREAM-03 in BC-2.06.003). VP Anchors updated accordingly. Detected by OBS-P93-01 VP uniqueness census."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
+  - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
 inputs:
@@ -141,8 +142,8 @@ full ancestry chain is preserved. Performance is O(depth) for `parent_ids` alloc
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/pregel/events.rs` — `StreamEvent` base fields: `run_id: Uuid`, `parent_ids: Vec<Uuid>`
-- `ferrochain-graph/src/pregel/context.rs` — `ExecutionContext` that propagates `run_id` and `parent_ids` into nested invocations
+- `ferrochain-graph/src/event_emitter.rs` (`graph::event_emitter`) — `StreamEvent` base fields: `run_id: Uuid`, `parent_ids: Vec<Uuid>`
+- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — `ExecutionContext` that propagates `run_id` and `parent_ids` into nested invocations
 - `ferrochain-server/src/run_lifecycle.rs` — `run_id` UUID generation at `Run` creation
 
 ## Story Anchor

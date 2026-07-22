@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.002
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -128,7 +129,7 @@ This is the enforcement mechanism for DI-001's concurrent-write prohibition.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/pregel/reducer.rs` — concurrent write detection
+- `ferrochain-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — concurrent write detection
 - `ferrochain-core/src/errors.rs` — `E-GRAPH-001` definition
 
 ## Story Anchor

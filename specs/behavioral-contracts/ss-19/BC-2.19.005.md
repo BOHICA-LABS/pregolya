@@ -21,7 +21,7 @@ red_gate_source: "ADR-016 Security Invariant — Reviver must reject unknown typ
 vp_seed: true
 vp_id: VP-010
 changelog:
-  - "1.2 (burst-238/sweep/2026-07-22): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-010 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-010' (VP-INDEX v1.2 burst-223 seeded VP-010 Kani P0; VP-010.md exists). Completed-handoff residue removal."
+  - "1.2 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-010 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-010' (VP-INDEX v1.2 burst-223 seeded VP-010 Kani P0; VP-010.md exists). Completed-handoff residue removal."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization; SECURITY-CRITICAL"
   - "1.1 (F-P224/F-P129-01+F-P129-04/2026-07-21): (1) F-P129-01: PC1 and Invariant 3 corrected — Category::SECURITY → Category::VAL per ADR-010 §SRLZ adjudication (error-taxonomy.md line 279 already recorded E-SRLZ-001 as VAL; this BC was out of sync). Invariant 3 rationale rewritten: deserialization containment is input validation against the registry, not an attack-vector boundary event. (2) F-P129-04: VP-2.19.005-A restated to scope non-monolith unregistered ids only and add joint coverage note with BC-2.19.006/VP-010."
 traces_to:

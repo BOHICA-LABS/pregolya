@@ -21,7 +21,7 @@ red_gate_source: "ADR-014 v1.1 Hardening Note — zero-norm guard must be a fail
 vp_seed: true
 vp_id: VP-009
 changelog:
-  - "1.2 (burst-238/sweep/2026-07-22): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-009 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-009' (VP-INDEX v1.2 burst-223 seeded VP-009 Kani P0; VP-009.md exists). Completed-handoff residue removal."
+  - "1.2 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-009 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-009' (VP-INDEX v1.2 burst-223 seeded VP-009 Kani P0; VP-009.md exists). Completed-handoff residue removal."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction; SECURITY-CRITICAL hardening per ADR-014 v1.1"
   - "1.1 (F-P224/H-4/2026-07-21): Module references corrected — `vectorstores::mmr` → `vectorstores::similarity` for cosine primitive (4 sites: Description, Architecture Anchors ×2, Traceability Module row). The `mmr` module implements the MMR selection algorithm; `cosine_similarity` lives in the dedicated `vectorstores::similarity` module with harness file `ferrochain-vectorstores/src/similarity.rs`. Genuine MMR-algorithm references in other BCs/docs are unaffected."
 traces_to:

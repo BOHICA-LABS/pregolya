@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.006
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -154,8 +155,8 @@ is returned from the run when the PUSH task is scheduled in the next step. The r
 ## Architecture Anchors
 
 - `ferrochain-graph/src/types.rs` — `Send`, `UntrackedValue`, `TASKS` topic channel
-- `ferrochain-graph/src/pregel/algo.rs` — `prepare_next_tasks`, PUSH task creation from TASKS topic
-- `ferrochain-graph/src/pregel/loop.rs` — `apply_writes`, UntrackedValue sanitization of Send.arg
+- `ferrochain-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — `prepare_next_tasks`, PUSH task creation from TASKS topic
+- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — `apply_writes`, UntrackedValue sanitization of Send.arg
 
 ## Story Anchor
 

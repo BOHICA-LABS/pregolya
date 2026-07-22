@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.003
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.6 (F-P92-01/F-P92-02, 2026-07-17): F-P92-01 — two residual BudgetPolicy-owns-data attributions corrected in canonical test vectors. TV-001 Input: 'BudgetPolicy halt at 10k tokens' → 'BudgetConfig { on_ceiling: OnCeiling::Halt, hard_limit: Some(10_000) }'. TV-007 Input: 'BudgetPolicy with token ceiling = 10000' → 'BudgetConfig with hard_limit = Some(10_000)'. F-P92-02 — precision updates per architect D18-P92-A: PC7 ceiling reference expanded to full field path ('supplies a new RunnableConfig with budget_config: Some(BudgetConfig { hard_limit: Some(higher_ceiling), .. })'); TV-004 Notes column expanded to name the field path ('new RunnableConfig carries budget_config: Some(BudgetConfig { hard_limit: Some(N) })') per interface-definitions v2.31 §RunnableConfig."
   - "1.7 (F-P93-04, 2026-07-17): VP ID collision resolved. BC-2.10.003 and BC-2.10.004 both defined VP-BUDGET-05 with different semantics. Resolution per append-only-numbering policy: BC-2.10.004's VP-BUDGET-05 (Phase 1, older) is canonical; BC-2.10.003's Summarize-path VP-BUDGET-05 renumbered → VP-BUDGET-07 (next free after VP-BUDGET-06). VP Anchors updated: VP-BUDGET-04, VP-BUDGET-05, VP-BUDGET-06 → VP-BUDGET-04, VP-BUDGET-06, VP-BUDGET-07. Zero VP-BUDGET-NN collisions across SS-10 after this change."
   - "1.8 (F-P97-05, 2026-07-17): VP table Phase-column axis normalized. VP-BUDGET-06 and VP-BUDGET-07 'Wave 1' corrected to 'Phase 1' to match the SS-10 convention established by VP-BUDGET-01/02/04/05 (all Phase 1). The v1.2 additions used the wave axis; the column carries the VSDD pipeline phase, not the wave. No behavioral change."
+  - "1.9 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -191,8 +192,8 @@ the sub-agent's halt.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/pregel/loop.rs` — halt path in `tick()`: after `Deny` decision, no new task scheduling; allow in-flight tasks to settle; call `put_writes`; transition run to `failed`; Summarize path: inject `HumanMessage(summarize_prompt)`, issue one final LLM call, return `summary_halt` result; budget_info population at each super-step boundary
-- `ferrochain-graph/src/pregel/errors.rs` — `FerrochainError` variant for `E-BUDGET-001 BudgetCeilingReached`
+- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — halt path in `tick()`: after `Deny` decision, no new task scheduling; allow in-flight tasks to settle; call `put_writes`; transition run to `failed`; Summarize path: inject `HumanMessage(summarize_prompt)`, issue one final LLM call, return `summary_halt` result; budget_info population at each super-step boundary
+- `ferrochain-graph/src/budget.rs` (`graph::budget`) — `FerrochainError` variant for `E-BUDGET-001 BudgetCeilingReached`
 - `ferrochain-core/src/budget.rs` — `BudgetConfig::on_ceiling` field: `OnCeiling::Halt | OnCeiling::Escalate | OnCeiling::Summarize { summarize_prompt: String }` (per ADR-009 Option 3 and interface-definitions v2.29 §BudgetConfig); `BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<u32> }` struct; `RunContext.budget_info: BudgetInfo` field (v1.2 addition)
 
 ## Story Anchor
@@ -216,4 +217,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-core (BudgetPolicy + OnCeiling types) / ferrochain-graph (halt path in pregel loop) |
+| Module | ferrochain-core (BudgetPolicy + OnCeiling types) / ferrochain-graph (halt path in graph::scheduler / graph::budget) |

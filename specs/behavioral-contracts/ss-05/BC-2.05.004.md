@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.004
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,7 @@ changelog:
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
   - "1.3 (F-P118-02, fix burst 121, 2026-07-19): Invariant non-interrupted status list gains summary_halt: '(status queued, in_progress, completed, failed, cancelled, or summary_halt) returns Err(E-GRAPH-002 NoActiveInterrupt)'. TD-VSDD-060 file-wide sweep: line 87 'completed / interrupted / failed' describes specific re-execution outcomes (not a terminal-set enumeration; cancelled/summary_halt absent by design as it covers the resumed-execution state machine); exempt. Only line 99-100 enumerates the full non-interrupted guard set."
   - "1.4 (OBS-1 adjudication, fix burst 122, 2026-07-19): No normative text change — Invariants §4 (lines 99-101) already correctly delegated all six non-interrupted run_status values (queued, in_progress, completed, failed, cancelled, summary_halt) to BC-2.05.005. OBS-1 adjudication chose production-grade totality: BC-2.05.005 was updated to enumerate all six statuses plus the interrupted-slots-consumed scenario; delegation is now coherent in both directions. TD-VSDD-060 sweep: PC7 status transition description (line 87) — 'interrupted→in_progress→completed/interrupted/failed' describes re-execution path outcomes, not the terminal set; cancelled/summary_halt absent by design; exempt. Invariants non-interrupted guard (lines 99-101) — already exhaustive over all six statuses; unchanged."
+  - "1.5 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 capability: CAP-006
 wave: 1
 phase: 1a
@@ -160,7 +161,7 @@ modified (see BC-2.05.005).
 ## Architecture Anchors
 
 - `ferrochain-graph/src/types.rs` — `Command { resume, update, goto, graph }` struct + `Command.PARENT` constant
-- `ferrochain-graph/src/pregel/loop.rs` — `_suppress_interrupt` path that consumes Command fields
+- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — `_suppress_interrupt` path that consumes Command fields
 
 ## Story Anchor
 

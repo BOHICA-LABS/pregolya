@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.006
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ vp_seed: false
 red_gate: false
 changelog:
   - "1.2 (burst-236/F-P136-04/2026-07-23): PC1 JSON payload `tokens_remaining_after` type fixed: `<u64>` → `<i64 | null>`. Source is `RunContext.budget_info.tokens_remaining: Option<i64>` (interface-definitions.md §BudgetInfo v2.21). When no token ceiling is configured (OnMessageCount/OnTokenCount triggers fire), `tokens_remaining` is `None` → u64 has no representation; may also be negative (i64) on Deny. Invariants updated to note the `Option<i64>` source type. BC-2.10.006 Step 5 and interface-def §StreamEvent CompactionEvent updated identically (three-site reconciliation F-P136-04)."
+  - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.1 (burst-234/F-P134-05/2026-07-22): Remove spurious ADR-018 (per-tool-call approval hook) from traces_to and inputs. BC-2.06.006 is compaction_event (event 15); its sole architecture authority is ADR-019 Decision 4. ADR-018 was copy-paste residue from BC-2.06.004/005 (tool_approval streaming events which DO depend on ADR-018). input-hash recomputed after inputs list change: 9c3892a → ee8a02b."
   - "1.0 (D23/2026-07-22): Initial BC — D23 streaming event taxonomy extension, event 15 compaction_event."
 traces_to:
@@ -137,7 +138,7 @@ host to update context-window visualization without polling.
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-019-rolling-context-compaction.md` — Decision 4 (compaction_event streaming event, payload fields)
-- `architecture/module-decomposition.md` — SS-06, `ferrochain-graph / pregel/events.rs`; SS-10, `ferrochain-graph / budget`
+- `architecture/module-decomposition.md` — SS-06, `graph::event_emitter (ferrochain-graph/src/event_emitter.rs)`; SS-10, `ferrochain-graph / budget`
 
 ## Story Anchor
 

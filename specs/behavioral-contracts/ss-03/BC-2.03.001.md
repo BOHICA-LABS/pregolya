@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.001
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.3 (ADV-P1D-PASS-56): OBS-P56-1 resolved — tighten 10007 claim in Reference Evidence. The `DEFAULT_RECURSION_LIMIT` constant in `langgraph._internal._config` (verified against `.reference/langgraph` pinned source) reads from the `LANGGRAPH_DEFAULT_RECURSION_LIMIT` environment variable with a hardcoded default of 10007. This is a code constant, not itself an env var. Distinct from langchain-core's `DEFAULT_RECURSION_LIMIT = 25` in `langchain_core.runnables.config` (Runnable-layer). The 10007 claim was always accurate; this edit adds the precise constant name and source module."
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
   - "1.5 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. (1) PC5 had E-GRAPH-017 message `\"GraphRecursionLimitExceeded: ...\"` with Unicode-ellipsis abbreviation; expanded to full template with <run_id>, <step>, <limit> placeholders (all available at raise site). (2) EC-005 had bare `Err(FerrochainError { code: E-GRAPH-006, ... })` with Unicode-ellipsis; added inline message template for E-GRAPH-006 BspDeterminismViolation. (3) EC-006 had `Err(FerrochainError { category: POLICY, code: E-GRAPH-017 })` without message; added full message template as authoritative site. TV-006 PASS-ABBREV via EC-006."
+  - "1.6 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -179,8 +180,8 @@ message: "GraphRecursionLimitExceeded: run '<run_id>' halted after super-step <s
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/pregel/scheduler.rs` (to be created)
-- `ferrochain-graph/src/pregel/reducer.rs` (to be created)
+- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`)
+- `ferrochain-graph/src/bsp_engine.rs` (`graph::bsp_engine`)
 - `tests/kani/bsp_determinism.rs` (Phase 6 artifact)
 
 ## Story Anchor

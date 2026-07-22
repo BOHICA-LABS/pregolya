@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.004
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (F-P93-02/F-P93-03, 2026-07-17): F-P93-02 (HIGH) — BC corrected to reflect Model A canon (interface-definitions.md v2.33 §PolicyDecision×on_ceiling decision table): `PolicyDecision::Escalate` (soft-limit) ALWAYS triggers HITL interrupt unconditionally, `on_ceiling` NOT consulted; `PolicyDecision::Deny` + `on_ceiling=OnCeiling::Escalate` (hard-ceiling) ALSO routes to this same HITL interrupt mechanism. (a) H1 title updated to name both paths. (b) Description first sentence revised: soft-path Escalate → unconditional HITL; additionally Deny+OnCeiling::Escalate → same HITL path. (c) PC1 renamed PC1a (hard-ceiling config path) + PC1b added (OR: Deny returned + on_ceiling=Escalate). (d) PC2 labeled '(Soft-ceiling path)' + PC2b added '(Hard-ceiling path)' for Deny+on_ceiling=Escalate trigger. (e) TV-001b added: on_ceiling=Halt + soft_limit crossed → Escalate → HITL fires (proves on_ceiling not consulted for the Escalate path). F-P93-03 (MED) — Capability Anchor Justification verbatim CAP-012 quote updated to v1.2 text: old 'the policy\\'s `on_ceiling` setting' → new 'the budget configuration\\'s `on_ceiling` setting (`BudgetConfig::on_ceiling`)' per capabilities-p0.md v1.2."
   - "1.5 (F-P94-02, 2026-07-17): Convention verdict: renumber TV-001b → TV-006 to eliminate the corpus's only lettered sub-vector and restore unambiguous TV-NNN sequential numbering throughout. TV-001b removed from between TV-001 and TV-002; appended as TV-006 at end of table. Notes text unchanged. test-vectors.md BC-2.10.004 row updated 5→6 (v1.8). No other TV-001b references found in corpus (sweep performed)."
   - "1.6 (F-P95-03 + coordinator CAP-012-v1.3 update, 2026-07-17): (a) Preconditions restructured: malformed 1a/1b/2/2b numbering (PC1b and PC2b were verbatim duplicates of the Deny+on_ceiling=Escalate trigger; no plain PC1 existed) replaced with clean PC1 (config context: BudgetConfig active in GraphConfig.budget_config), PC2 (trigger — two alternatives: soft-ceiling path Escalate + `on_ceiling` NOT consulted; OR hard-ceiling path Deny + on_ceiling=OnCeiling::Escalate). PC3 and PC4 (CheckpointSaver, evaluation point) unchanged in content, renumbered from 3 and 4 (were already correct ordinals, now references are cleaned). One statement of the Deny+Escalate trigger total. (b) Capability Anchor Justification updated to CAP-012 v1.3 verbatim: old quote used two-mode 'halt the run, or escalate to a HITL interrupt' text; new quote enumerates all three modes per v1.3: 'halt the run, escalate to a HITL interrupt, or issue a final summarize call (summary_halt), according to the budget configuration\\'s `on_ceiling` setting (`BudgetConfig::on_ceiling` — `OnCeiling::Halt | Escalate | Summarize`)'. Cite sweep: BC-2.10.001 v1.4→v1.5 updated 'PC1b/PC2b' references → 'PC2 (hard-ceiling path)' (lines 79+151)."
+  - "1.7 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
   - domain-spec/capabilities-p0.md#CAP-006
@@ -174,7 +175,7 @@ block the parent — it surfaces as an explicit result.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/pregel/loop.rs` — Escalate path: call `interrupt(BudgetEscalation {...})` using the same interrupt entry point as standard HITL interrupts
+- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — Escalate path: call `interrupt(BudgetEscalation {...})` using the same interrupt entry point as standard HITL interrupts
 - `ferrochain-graph/src/budget/types.rs` — `BudgetEscalation` struct (interrupt payload), `BudgetResume` enum (resume value variants)
 - `ferrochain-graph/src/budget/journal.rs` — journal entry for Escalate and for resume decisions (Extend / Halt)
 
@@ -199,4 +200,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | I (integration) |
-| Module | ferrochain-graph (pregel loop escalation path, BudgetEscalation/BudgetResume types, journal) |
+| Module | ferrochain-graph (graph::scheduler escalation path, BudgetEscalation/BudgetResume types, journal) |

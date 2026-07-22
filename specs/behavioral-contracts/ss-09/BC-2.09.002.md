@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.002
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,10 +14,11 @@ wave: 2
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
+  - "1.3 (burst-240/F-P140-03/F-P140-04/2026-07-22): Two defect fixes. (1) F-P140-03: PC5/EC-004/TV-004 restated public error type as FerrochainError — previously surfaced raw McpError::Transport as the public type, contradicting error-taxonomy.md ('All errors are FerrochainError{...}'), BC-2.09.001 PC7 (transport failure → FerrochainError E-MCP-002), and BC-2.09.004 PC1 (McpError in .source only). Transport failures now return FerrochainError{component:MCP, category:TRANSPORT, code:E-MCP-002} with McpError::Transport preserved in .source(). EC-004 is the authoritative full-form site; TV-004 PASS-ABBREV via EC-004. (2) F-P140-04: PC6/TV-005 restated public error type — previously surfaced raw McpError::ContentConversion('audio content not supported'), with no E-MCP code and no FerrochainError wrapper. Minted E-MCP-006 McpContentUnsupported (VAL, broken) in error-taxonomy.md v1.34 same burst. Content-conversion errors now return FerrochainError{component:MCP, category:VAL, code:E-MCP-006} with McpError::ContentConversion in .source(). PC6 is the authoritative full-form site; TV-005 PASS-ABBREV via PC6. Gate #33 forward (E-MCP-006): both placeholders covered — <tool> = ToolInvocation.tool_name, <content_type> = content block variant name; both available at the raise site."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC8 had bare `Err(FerrochainError { code: E-MCP-004 ToolNotFound })` without message; E-MCP-004 has <tool_name> placeholder. Added inline message template; <tool_name> is available from the ToolInvocation at the raise site."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -73,9 +74,21 @@ Transport failures and content-conversion errors always propagate regardless of 
      minimal text fallback block.
    - `isError = true`, `handle_tool_errors = false`: returns
      `Err(McpError::ToolExecution { blocks })`. (Legacy opt-out — agent sees the error.)
-5. Transport failures (`McpError::Transport`) ALWAYS return `Err(...)` regardless of flag.
-6. Content-conversion errors (`McpError::ContentConversion`, e.g., AudioContent) ALWAYS
-   return `Err(...)` regardless of flag.
+5. Transport failures (e.g., TCP reset, connection refused) ALWAYS return
+   `Err(FerrochainError { component: MCP, category: TRANSPORT, code: E-MCP-002,
+   message: "McpTransportError: cannot connect to MCP server '<server>': <transport_error>" })`
+   regardless of flag (where `<server>` = server name from the tool's `SessionSource`;
+   `<transport_error>` = transport failure description, e.g., "connection reset by peer").
+   The underlying `McpError::Transport` is preserved in `.source()`. See EC-004 for the
+   authoritative full-form struct.
+6. Content-conversion errors (unsupported content block types returned by the MCP tool,
+   e.g., `AudioContent`) ALWAYS return
+   `Err(FerrochainError { component: MCP, category: VAL, code: E-MCP-006,
+   message: "McpContentUnsupported: MCP tool '<tool>' returned unsupported content type '<content_type>'" })`
+   regardless of flag (where `<tool>` = tool name from `ToolInvocation.tool_name`;
+   `<content_type>` = content block variant name, e.g., `"AudioContent"`; both available at
+   the raise site). The underlying `McpError::ContentConversion` is preserved in `.source()`.
+   This is the authoritative full-form site for E-MCP-006 gate #33; TV-005 PASS-ABBREV via this PC6.
 7. `structuredContent` from `CallToolResult` is surfaced as `MCPToolArtifact { structured_content }`
    alongside the content blocks (content+artifact response format).
 8. Tool not found in routing table: `Err(FerrochainError { code: E-MCP-004 ToolNotFound, message: "ToolNotFound: tool '<tool_name>' is not registered with any MCP server" })`
@@ -111,8 +124,12 @@ original `Connection` in the client's map is unchanged.
 
 ### EC-004: handle_tool_errors=false, transport error (not isError)
 **Scenario:** `handle_tool_errors = false`; server TCP connection reset mid-call.
-**Expected behavior:** `Err(McpError::Transport(...))` propagates — the flag does not
-suppress transport errors even in legacy mode.
+**Expected behavior:** `Err(FerrochainError { component: MCP, category: TRANSPORT,
+code: E-MCP-002, message: "McpTransportError: cannot connect to MCP server '<server>':
+<transport_error>" })` (where `<server>` = server name from the tool's `SessionSource`;
+`<transport_error>` = e.g., "connection reset by peer") — the flag does not suppress
+transport errors even in legacy mode. McpError::Transport is preserved in `.source()`.
+TV-004 PASS-ABBREV via this EC-004 full-form site.
 
 ### EC-005: structuredContent present alongside text content
 **Scenario:** `CallToolResult` has `content: [TextContent("summary")]` and
@@ -127,8 +144,8 @@ suppress transport errors even in legacy mode.
 | TV-001 | OnDemand, isError=false, text result | `Ok(ToolMessage{status: Success, content: [text]})` | Happy-path tool call |
 | TV-002 | isError=true, handle_tool_errors=true (default) | `Ok(ToolMessage{status: Error, content: [err_text]})` | Error → agent self-correction |
 | TV-003 | isError=true, handle_tool_errors=false | `Err(McpError::ToolExecution{...})` | Legacy opt-out |
-| TV-004 | TCP reset mid-call | `Err(McpError::Transport(...))` regardless of handle_tool_errors flag | Transport always propagates |
-| TV-005 | AudioContent in result | `Err(McpError::ContentConversion("audio content not supported"))` regardless of flag | Conversion always propagates |
+| TV-004 | TCP reset mid-call | `Err(FerrochainError { component: MCP, category: TRANSPORT, code: E-MCP-002 })` regardless of handle_tool_errors flag. PASS-ABBREV via EC-004. | Transport always propagates (E-MCP-002) |
+| TV-005 | AudioContent in result | `Err(FerrochainError { component: MCP, category: VAL, code: E-MCP-006 })` regardless of flag. PASS-ABBREV via PC6. | Conversion always propagates (E-MCP-006) |
 | TV-006 | isError=true, content=[], handle_tool_errors=true | `Ok(ToolMessage{status: Error, content: ["MCP tool ... returned an error with no content"]})` | Fallback minimal block |
 | TV-007 | structuredContent present | ToolMessage carries `MCPToolArtifact { structured_content }` alongside content | Artifact surfaced |
 
