@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-21"
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
-version: "1.4"
+version: "1.5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.5 (burst-226/2026-07-21): F-P131-01 (HIGH) — GuardedDocuments::rag_ingress Fail arm severity-bifurcated per BC-2.11.005 PC4/PC5. Critical Fail → Err(E-CORE-008, GuardrailCriticalRejection, SECURITY) — batch aborts. Non-Critical Fail → error-entry Document substituted at position i, batch continues. Docstring updated. Consequences bullet updated (Fail arm description). PO Obligations: E-CORE-008 mint obligation added; BC-2.20.002 PC2 update obligation added. F-P131-07 (MED) — similarity_search_with_filter default implementation changed from lossy-fallback to fail-safe: non-empty filter on an adapter that has not overridden this method returns Err(E-VS-005, FilterUnsupported, VAL). Empty filter (vacuously true) still delegates to similarity_search. PO Obligations: E-VS-005 mint obligation added; BC-2.21.004 INV-3 update obligation added."
   - "1.4 (burst-225/2026-07-21): F-P130-01 (CRITICAL) — Decision 6 GuardrailHook re-definition removed; replaced with canonical `async fn evaluate` signature from interface-definitions.md §GuardrailHook (authority-deference: BC-2.11.001..006 supersede on contract semantics). GuardedDocuments::rag_ingress made async; mechanism corrected to per-document evaluate calls with IngressContent::RagChunk per BC-2.11.003 PC1/PC5; all three GuardrailResult arms (Pass/Fail/Transform) honoured. BoundaryType re-definition in Decision 6 body removed — BoundaryType is defined in core::guardrail per BC-2.11.001 canonical precedent; only referenced here via ProvenanceTag. Purity classification note updated: rag_ingress is async → Boundary Module classification confirmed unchanged. Consequences bullets updated accordingly. Sibling sweep: purity-boundary-map.md v1.8 (core::guardrail + core::retriever rows), module-decomposition.md v1.13 (guardrail comment block). PO handoff text for BC-2.20.002 ferrochain-guardrail→ferrochain-core anchor corrections (F-P130-02) recorded in §PO Obligations."
   - "1.3 (burst-224/2026-07-21): Collision correction — error-taxonomy.md line 288 already defines E-VS-003 (VectorStoreRetriever config validation, VAL, BC-2.20.003). Write-time zero-norm rejection code corrected from E-VS-003 → E-VS-004 throughout Decision 5 heading, table, code sketches, and Consequences section. PO handoff updated to mint E-VS-004."
   - "1.2 (burst-224/2026-07-21): F-P129-05 — fix Hardening Note: VP-009 is Zero-Norm Cosine Guard (Kani P0), not MMR proptest; reference VP-2.21.003-C for MMR proptest sub-property. F-P129-11 — update cosine primitive location: vectorstores::mmr → vectorstores::similarity. F-P129-08 — add Decision 5: write-time zero-norm rejection (E-VS-004, corrected in v1.3) at add_texts/from_texts_sync; search-time E-VS-001 (VP-009) remains as defense-in-depth. F-P129-09 — add Decision 6: GuardedDocuments newtype (no public constructor; sole constructor rag_ingress); GuardrailHook promoted to core::guardrail (pure-core, trait-in-core precedent); core::retriever reclassified Boundary; DI-012 becomes compile-time type-error enforcement. Add Consequences bullets for E-VS-004 (corrected in v1.3), GuardedDocuments, and core::guardrail."
@@ -234,7 +235,44 @@ pub enum FilterClause {
 
 Optional parameter on `similarity_search_with_filter` (additive method on the trait,
 not breaking the base contract). Community adapters that support native metadata
-filtering implement this optional method; in-memory impl implements via post-filter.
+filtering MUST override this method with a native implementation.
+
+**F-P131-07 adjudication (burst-226) — default must be fail-safe, not lossy:**
+The default trait implementation of `similarity_search_with_filter` MUST NOT silently
+ignore a non-empty filter (the former "lossy fallback to `similarity_search`"). Silent
+degradation is a cross-tenant-exposure hazard: an adapter that forgets to override
+would return unfiltered results as if filtering occurred.
+
+Default implementation:
+
+```rust
+// Default implementation — fail-safe for adapters that have not overridden this method.
+async fn similarity_search_with_filter(
+    &self,
+    query: &str,
+    k: usize,
+    filter: MetadataFilter,
+) -> Result<Vec<Document>, FerrochainError> {
+    if !filter.filters.is_empty() {
+        // Non-empty filter on an adapter that has not overridden this method.
+        // Returning silently-unfiltered results would expose cross-tenant data.
+        return Err(FerrochainError {
+            component: Component::VS,
+            category: Category::VAL,
+            code: "E-VS-005",
+            message: "FilterUnsupported: this VectorStore backend does not support \
+                      metadata filtering; override similarity_search_with_filter to \
+                      provide native filter support".to_string(),
+        });
+    }
+    // Empty filter = vacuously true (BC-2.21.004 EC-004) — delegate to unfiltered search.
+    self.similarity_search(query, k).await
+}
+```
+
+An empty `MetadataFilter` (no filter clauses) is vacuously true — the default
+implementation delegates to `similarity_search` in that case, preserving the
+empty-filter semantics per BC-2.21.004 EC-004.
 
 ### Hardening note — zero-norm vector guard
 
@@ -396,8 +434,11 @@ impl GuardedDocuments {
     ///   3. Calls `guardrail.evaluate(chunk, tag).await`.
     ///   4. GuardrailResult arms:
     ///      - Pass               → D included in GuardedDocuments
-    ///      - Fail{reason,sev}   → propagates Err (BC-2.20.002 PC2 / DI-014; no
-    ///                             silent continuation with remaining documents)
+    ///      - Fail{reason,sev}   → Critical severity → Err(E-CORE-008) propagated;
+    ///                             batch aborts (BC-2.11.005 PC4).
+    ///                             Non-Critical severity → error-entry Document
+    ///                             substituted at position i; batch continues
+    ///                             (BC-2.11.005 PC5).
     ///      - Transform{content} → deserializes RagChunk Value back to Document;
     ///                             transformed document included (BC-2.11.003 PC4)
     ///
@@ -418,7 +459,34 @@ impl GuardedDocuments {
             match guardrail.evaluate(chunk, tag).await {
                 GuardrailResult::Pass => guarded.push(doc),
                 GuardrailResult::Fail { reason, severity } => {
-                    return Err(FerrochainError { /* guardrail rejection — error taxonomy entry required */ });
+                    match severity {
+                        GuardrailSeverity::Critical => {
+                            // Critical rejection: abort the entire batch (BC-2.11.005 PC4).
+                            return Err(FerrochainError {
+                                component: Component::CORE,
+                                category: Category::SECURITY,
+                                code: "E-CORE-008",
+                                message: format!(
+                                    "GuardrailCriticalRejection: document at position {} \
+                                     critically rejected at RAGRetrieval boundary — {}",
+                                    i, reason
+                                ),
+                            });
+                        }
+                        _ => {
+                            // Non-Critical: substitute an error-entry Document at
+                            // this position and continue the batch (BC-2.11.005 PC5).
+                            guarded.push(Document {
+                                page_content: format!("[GUARDRAIL BLOCKED: {}]", reason),
+                                metadata: serde_json::json!({
+                                    "ferrochain.guardrail_blocked": true,
+                                    "ferrochain.guardrail_reason": reason,
+                                    "ferrochain.sequence_position": i,
+                                }),
+                                id: None,
+                            });
+                        }
+                    }
                 }
                 GuardrailResult::Transform { new_content } => {
                     if let IngressContent::RagChunk(val) = new_content {
@@ -594,8 +662,10 @@ applicability. Two separate crates with a clear boundary is correct.
   sole constructor is `GuardedDocuments::rag_ingress(docs, &dyn GuardrailHook)` — `async fn`;
   iterates per-document, calling `guardrail.evaluate(IngressContent::RagChunk(...), provenance_tag).await`
   per BC-2.11.003 PC1/PC5 (N documents → N evaluate calls); honors all three GuardrailResult
-  arms (Pass → include; Fail → propagate Err per BC-2.20.002 PC2; Transform → include
-  deserialized replacement Document). Graph nodes consuming RAG output accept `&GuardedDocuments`,
+  arms (Pass → include; Fail Critical → Err(E-CORE-008) aborts batch per BC-2.11.005 PC4;
+  Fail non-Critical → error-entry Document substituted at position i, batch continues per
+  BC-2.11.005 PC5; Transform → include deserialized replacement Document).
+  Graph nodes consuming RAG output accept `&GuardedDocuments`,
   making DI-012 guardrail bypass a compile-time type error (compile_fail Red Gate / VP-2.20.002-A).
 - **core::guardrail** (Decision 6): new Pure Core definitions module in ferrochain-core hosting
   the canonical `GuardrailHook` trait (`async fn evaluate` per interface-definitions.md §GuardrailHook),
@@ -645,9 +715,57 @@ the type it calls is `GuardedDocuments::rag_ingress` in `ferrochain-core: core::
 The compile_fail test verifies that a graph node accepting `Vec<Document>` directly
 does not satisfy the required `&GuardedDocuments` parameter — unchanged by this correction.
 
-**VP-2.20.002-B** ("guardrail failure propagates as Err without document fallback") remains
-valid — `rag_ingress` propagates `Err` on `GuardrailResult::Fail` per BC-2.20.002 PC2.
+**VP-2.20.002-B** ("guardrail failure propagates as Err without document fallback") scope
+updated: this now specifically covers the Critical-severity path (Err(E-CORE-008) propagation).
+Non-Critical path behavior (error-entry Document substitution) is covered by BC-2.11.005 PC5.
 
 No BC body postconditions or test vectors need rewording — the behavioral contract is
 unchanged; only the crate anchor in three prose locations is wrong.
+
+### E-CORE-008 (F-P131-01 — burst-226)
+
+Error taxonomy must mint `E-CORE-008`:
+
+| Field | Value |
+|-------|-------|
+| Code | E-CORE-008 |
+| Namespace | CORE (ferrochain-core) |
+| Category | SECURITY |
+| Mnemonic | GuardrailCriticalRejection |
+| Anchor BC | BC-2.20.002 (Guardrail Coverage at RAG Ingress) |
+| Raise condition | `GuardedDocuments::rag_ingress` receives `GuardrailResult::Fail { severity: GuardrailSeverity::Critical, reason }` from the guardrail hook during RAGRetrieval boundary evaluation — the batch is aborted and the Err propagated to the caller (BC-2.11.005 PC4). |
+| Recovery | `Never` — Critical guardrail rejection is always fatal to the RAG batch; callers must handle the Err and fail the run. |
+
+### BC-2.20.002 PC2 (F-P131-01 — burst-226)
+
+BC-2.20.002 PC2 currently states: "Err propagated on any `GuardrailResult::Fail`."
+PO must update PC2 to reflect severity bifurcation:
+- Critical Fail → Err(E-CORE-008) propagated; run transitions to `failed` state.
+- Non-Critical Fail → error-entry Document substituted at document position; run continues.
+
+### E-VS-005 (F-P131-07 — burst-226)
+
+Error taxonomy must mint `E-VS-005`:
+
+| Field | Value |
+|-------|-------|
+| Code | E-VS-005 |
+| Namespace | VS (ferrochain-vectorstores) |
+| Category | VAL |
+| Mnemonic | FilterUnsupported |
+| Anchor BC | BC-2.21.004 (VectorStore metadata filter contract) |
+| Raise condition | `VectorStore::similarity_search_with_filter` called with a non-empty `MetadataFilter` on an adapter that has not overridden the default trait implementation. The default implementation returns this error rather than silently degrading to an unfiltered search. |
+| Recovery | `Never` — the caller must either use a VectorStore adapter that overrides `similarity_search_with_filter` natively, or call `similarity_search` directly if filtering is not required. |
+
+### BC-2.21.004 INV-3 (F-P131-07 — burst-226)
+
+BC-2.21.004 INV-3 currently documents a "lossy" fallback: "default implementation falls
+back to `similarity_search` with no filtering (empty filter → all docs pass). This default
+is lossy if a real filter is passed."
+
+PO must update INV-3:
+- Default implementation returns `Err(E-VS-005)` when `filter.filters` is non-empty.
+- Empty filter (vacuously true, `filter.filters.is_empty()`) still delegates to
+  `similarity_search` — this preserves EC-004 empty-filter semantics.
+- Remove the "lossy" description. The new behavior is fail-safe, not lossy.
 

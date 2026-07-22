@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.005
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-014
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
   - domain-spec/invariants.md#DI-013
@@ -24,12 +24,13 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "0b2ce2a"
+input-hash: "93e6aa2"
 changelog:
   - "1.1 (ADV-P1D-PASS-26): F-P26-04 removed debug_route_path reference from invariant — debug route is fixed at /_debug (minimal config surface decision; TVs do not depend on a configurable path)."
   - "1.2 (ADV-P1D-PASS-27): F-P27-05 removed stale '(or the configured debug route path)' parenthetical from PC4 — residue of the pre-P26-04 configurable-path design; path is fixed at /_debug."
   - "1.3 (ADV-P1D-PASS-28): OBS-P28-1 removed inline fix-annotation residue from PC4 body — the F-P27-05 inline parenthetical '(F-P27-05: removed ...) was annotation residue in the postcondition text; correction is preserved only in the changelog."
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
+  - "1.5 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'server.security_config_cors_wildcard' to EC-003 and Invariants WARN emission per observability census (SAP-1)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -94,7 +95,7 @@ Separately, for the opt-in path:
   minimal config surface + secure-default simplicity; TVs all use `/_debug` hardcoded.)
 - Constructing `SecurityConfig` with an explicit `allowed_origins: [AllowOrigin::Any]`
   (CORS wildcard) is permitted for local-dev use cases, but the server emits a `WARN`
-  log on startup: `"SecurityConfig: CORS wildcard configured — do not use in production"`.
+  log on startup with `event_type = "server.security_config_cors_wildcard"`: `"SecurityConfig: CORS wildcard configured — do not use in production"`.
 
 ## Edge Cases
 
@@ -115,8 +116,7 @@ exists; `403` is the correct secure response in both cases: key absent and key w
 **Scenario:** `SecurityConfig { allowed_origins: [AllowOrigin::Any], .. }` is passed
 at server startup.
 **Expected behavior:** Server starts (it is not a fatal error), but a `WARN`-level log
-line is emitted at startup: `"SecurityConfig: CORS wildcard configured — do not use in
-production"`. The warning fires on every startup, not just first-run.
+line is emitted at startup with `event_type = "server.security_config_cors_wildcard"`: `"SecurityConfig: CORS wildcard configured — do not use in production"`. The warning fires on every startup, not just first-run.
 
 ### EC-004: Default config; non-debug route not affected
 **Scenario:** `SecurityConfig::default()`; `GET /threads` (a standard API route).

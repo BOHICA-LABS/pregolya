@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.006
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,10 +13,11 @@ capability: CAP-014
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
   - "1.2 (F-P117-01, fix burst 120, 2026-07-19): PC7 — add summary_halt to the enumerated transition set (RunStore must persist all lifecycle transitions including the budget-summarize terminal state per BC-2.10.003 PC8(d) and BC-2.12.003 PC8 post-fix)."
+  - "1.3 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'server.rate_limit_store_in_memory' to EC-005 startup WARN emission per observability census (SAP-1). EC-005 and Invariants updated."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "2e62ab6"
+input-hash: "1870d95"
 extracted_from: null
 modified: []
 deprecated: null
@@ -104,6 +105,7 @@ eviction.
 - The in-memory default `RunStore` is explicitly documented as non-durable: a process
   restart loses all Run records. Operators requiring durability must configure a
   persistent backend.
+- The in-memory `RateLimitStore` emits `event_type = "server.rate_limit_store_in_memory"` at server startup as an operator signal to configure a distributed backend for multi-instance deployments.
 
 ## Edge Cases
 
@@ -149,8 +151,7 @@ the error is surfaced.
 `RateLimitStore`; a caller sends requests to both.
 **Expected behavior:** Each instance enforces the rate limit independently. The
 in-memory default is documented as not suitable for multi-instance rate limiting.
-A `WARN` log is emitted at startup if no distributed `RateLimitStore` is configured:
-`"RateLimitStore: in-memory backend — rate limits are not coordinated across instances"`.
+A `WARN` log is emitted at startup if no distributed `RateLimitStore` is configured, with `event_type = "server.rate_limit_store_in_memory"` and structured field `{ backend: "in_memory" }`: `"RateLimitStore: in-memory backend — rate limits are not coordinated across instances"`.
 
 ## Canonical Test Vectors
 

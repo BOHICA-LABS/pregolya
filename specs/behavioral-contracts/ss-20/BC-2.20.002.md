@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.002
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-20 Document Retrieval; SECURITY MANDATORY per architect handoff"
   - "1.1 (F-P224/H-3/2026-07-21): VP-2.20.002-A replaced with typed-wrapper specification per architect handoff (H-5 from F-P129-08). Old VP was non-mechanizable ('code review + unit test per graph node'). New VP: graph nodes accept `&GuardedDocuments`; passing `Vec<Document>` directly is a compile-time type error enforced by the type system (ADR-014 Decision 6 / purity-boundary-map). Red Gate = compile_fail test."
   - "1.2 (F-P130-02/F-P130-04/2026-07-21): (1) Replace 3 nonexistent `ferrochain-guardrail` crate references with canonical `ferrochain-core: core::guardrail` per ADR-014 v1.4 PO Obligations. (2) Add DI-014 to di_anchors — PC2/PC4 and EC-002 already cite DI-014 in body; frontmatter was missing the anchor."
+  - "1.3 (burst-226/F-P131-01/2026-07-21): PC2 updated per ADR-014 v1.5 severity-bifurcated Fail semantics: Critical Fail → Err(E-CORE-008) propagated, run failed; Non-Critical Fail → error-entry Document substituted at position, batch continues. VP-2.20.002-B scope narrowed to Critical path only. EC-002 updated to reflect Critical-only abort semantics."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-026
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "efb961b"
+input-hash: "789dcd2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -77,9 +78,10 @@ context MUST pass those documents through the guardrail before use. The DI-012 i
 1. Before any `Doc.page_content` is incorporated into an `HumanMessage`, `SystemMessage`,
    chat history window, or any other graph-context structure, the graph node MUST call
    the guardrail with `boundary_type: BoundaryType::RAGRetrieval`.
-2. If the guardrail raises a policy violation (returns `Err`), the node propagates the
-   error via `?` — it does NOT silently strip the offending document and continue with
-   the remaining documents (DI-014 — no silent fallthrough).
+2. The guardrail Fail arm is severity-bifurcated (ADR-014 v1.5):
+   - `GuardrailSeverity::Critical` Fail → `GuardedDocuments::rag_ingress` returns `Err(E-CORE-008 GuardrailCriticalRejection)`. The graph node propagates the error via `?`; no `GuardedDocuments` is produced; the run transitions to `failed` state.
+   - Non-Critical Fail (High/Medium/Low) → error-entry Document substituted at the rejected document's position (with `page_content: "[GUARDRAIL BLOCKED: <reason>]"`, `metadata.ferrochain.guardrail_blocked: true`); batch continues; `GuardedDocuments` is eventually produced containing the error-entry substitution.
+   DI-014 applies to the Critical path only — non-critical continuation is explicit batch behavior, not silent error swallowing.
 3. The guardrail call occurs BEFORE the document content is used for any purpose in the
    graph context. There is no deferred check or "check at final boundary" alternative
    (DI-012 — guardrail at ingress, not egress).
@@ -104,7 +106,7 @@ context MUST pass those documents through the guardrail before use. The DI-012 i
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | Graph node receives empty `Vec<Document>` from retriever | No guardrail call needed (no content to gate); node continues; `Vec::new()` return of zero documents is NOT a policy violation |
-| EC-002 | Graph node receives 10 documents; guardrail rejects 2 | Node propagates `Err` for the first failed document via `?`; does NOT silently continue with the remaining 8 |
+| EC-002 | Graph node passes 10 documents to `rag_ingress`; guardrail returns Critical Fail for document at position 3 | `rag_ingress` returns `Err(E-CORE-008)`; graph node propagates via `?`; no `GuardedDocuments` returned; documents 0–2 and 4–9 are NOT accessible |
 | EC-003 | Graph node uses `doc.metadata` (not `doc.page_content`) in context | Metadata entering graph context is ALSO gated — RAGRetrieval boundary covers the full Document, not only page_content |
 | EC-004 | Graph node stores retrieved documents in a MemoryStore (not directly in prompt) | MemoryStore write is a separate boundary (ADR-012 write guard); RAGRetrieval guardrail still applies to the retrieval ingress; both checks run |
 
@@ -121,7 +123,7 @@ context MUST pass those documents through the guardrail before use. The DI-012 i
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
 | VP-2.20.002-A | Graph nodes that consume RAG output accept `&GuardedDocuments`; passing `Vec<Document>` directly is a compile-time type error enforced by the type system (ADR-014 Decision 6 / purity-boundary-map) | `compile_fail` test verifying `fn inject_context(docs: Vec<Document>)` does not satisfy the required `fn inject_context(docs: &GuardedDocuments)` signature — the type system enforces the guardrail boundary statically |
-| VP-2.20.002-B | Guardrail failure propagates as `Err` without document fallback | unit test — mock guardrail returns Err; assert no partial-list return |
+| VP-2.20.002-B | Critical-severity guardrail Fail propagates as `Err(E-CORE-008)` — no `GuardedDocuments` produced on Critical path | unit test — mock guardrail returns Critical Fail; assert Err(E-CORE-008) returned and no GuardedDocuments accessible |
 
 ## Related BCs
 

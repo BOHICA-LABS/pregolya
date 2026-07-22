@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.003
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,9 +14,10 @@ wave: 2
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp / ferrochain-core (guardrail hook traits) per module-decomposition.md v1.10."
+  - "1.2 (burst-226/F-P131-05+F-P131-02/2026-07-21): (1) PC1: ProvenanceTag::McpToolResult{server_name, tool_name} replaced with canonical SS-11 struct form ProvenanceTag { boundary_type: BoundaryType::ToolResult, ingress_id: <uuid>, sequence_position: <n> } per ADR-015 v1.3 adjudication. Server/tool identity moves to guardrail audit log. (2) PC4/EC-002/TV-003: canonical guardrail.unregistered_passthrough emission per item-4 adjudication — unified event_type with BC-2.11.006; merged field schema {boundary_type, ingress_id, item_count, timestamp} + MCP conditional {server_name, tool_name}. Invariants updated accordingly."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "103a50a"
+input-hash: "7eec67f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -59,7 +60,7 @@ silent permit.
 1. Before any converted content block enters the model context (i.e., before
    the `ToolMessage` is added to the message history), the registered
    `GuardrailHook` fires with the content blocks and a
-   `ProvenanceTag::McpToolResult { server_name, tool_name }` provenance marker.
+   `ProvenanceTag { boundary_type: BoundaryType::ToolResult, ingress_id: <generated UUID>, sequence_position: 0 }` provenance marker. (Server name and tool name are captured in the guardrail audit-log entry at evaluation time — they are NOT fields in ProvenanceTag.)
 2. If the hook accepts: the content blocks proceed normally into the model context.
 3. If the hook rejects: the content blocks do NOT enter the model context. The
    tool result is replaced with a `ToolMessage { status: Error, content: [rejection_block] }`.
@@ -67,7 +68,7 @@ silent permit.
    from the rejected payload).
 4. If no `GuardrailHook` is registered: the content blocks are permitted through
    (default-permit) and a WARNING log entry is emitted at level `WARN` with
-   `event_type = "ferrochain.mcp.guardrail.unregistered"`.
+   `event_type = "guardrail.unregistered_passthrough"`, fields `{ boundary_type: "ToolResult", ingress_id: <uuid>, item_count: N, timestamp: <ts>, server_name: <server>, tool_name: <tool> }`.
 5. The guardrail fires unconditionally on every non-error MCP tool result;
    there is no opt-out code path for tool-result ingress (DI-012).
 
@@ -78,7 +79,7 @@ silent permit.
   context under any code path.
 - The guardrail hook fires AFTER content-block conversion (the blocks passed to
   the hook are ferrochain `ContentBlock` values, not raw MCP wire bytes).
-- The `ProvenanceTag::McpToolResult` is always attached; it is not optional.
+- The `ProvenanceTag` is always attached with `boundary_type: BoundaryType::ToolResult`; it is not optional.
 - The hook is synchronous-or-async consistent: async hooks are awaited in the
   Tokio async context; there is no blocking-call escape hatch.
 
@@ -95,8 +96,7 @@ enters the model context. The run continues with a rejection `ToolMessage`.
 ### EC-002: No guardrail registered
 **Scenario:** `InvocationContext` has no `GuardrailHook` set (default construction).
 **Expected behavior:** The content blocks pass through (default-permit). A WARN log
-entry is emitted: `[WARN] ferrochain.mcp.guardrail.unregistered: tool result from
-'<server>/<tool>' entered model context without guardrail check`. This implements
+entry is emitted: `WARN guardrail.unregistered_passthrough: { boundary_type: "ToolResult", ingress_id: <uuid>, item_count: N, timestamp: <ts>, server_name: <server>, tool_name: <tool> }`. This implements
 OQR-5 (default-permit-with-WARNING).
 
 ### EC-003: Guardrail rejects, empty replacement
@@ -118,7 +118,7 @@ as accepted context. The guardrail fires only on success results.
 |---|-------|-----------------|-------|
 | TV-001 | Benign text result + active accepting guardrail | Hook fires; `ToolMessage{status: Success, content: [text]}` enters model context | Happy-path guardrail pass |
 | TV-002 | Injection text `"Ignore previous instructions..."` + rejecting guardrail | Hook fires; content blocked; `ToolMessage{status: Error, content: ["...blocked by guardrail..."]}` | Injection blocked |
-| TV-003 | Benign text + no guardrail registered | Content passes; `WARN ferrochain.mcp.guardrail.unregistered` logged | Default-permit with WARNING |
+| TV-003 | Benign text + no guardrail registered | Content passes; `WARN guardrail.unregistered_passthrough` logged with fields {boundary_type: "ToolResult", server_name, tool_name, ingress_id, item_count, timestamp} | Default-permit with WARNING |
 | TV-004 | isError=true result + active guardrail | Guardrail does NOT fire; error handled per BC-2.09.002 | Error results skip guardrail |
 | TV-005 | Hook rejects, no replacement provided | Fallback rejection message in ToolMessage; no raw rejected content leaked | Guardrail reject, no leak |
 

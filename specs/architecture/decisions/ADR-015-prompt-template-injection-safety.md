@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.2"
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.3 (burst-226/2026-07-21): F-P131-05 (CRITICAL) — ProvenanceTag shape adjudication. `ProvenanceTag` (SS-11 ingress-boundary struct) and template-composition trust level are TWO DISTINCT CONCERNS. Introduce `TrustLevel` enum (Untrusted|UserInput|Trusted) in `ferrochain-prompts: prompts::template` as the SS-18-local trust classifier. `TemplateVar.trust_level: Option<TrustLevel>` replaces the former implicit `Option<ProvenanceTag>` coupling. `MessageProvenance.highest_trust_level: Option<TrustLevel>` replaces `tag: Option<ProvenanceTag>`. Injection check updated: `var.trust_level.is_some_and(|t| t.is_untrusted())`. `ProvenanceTag` remains the SS-11 canonical 3-field struct (boundary_type/ingress_id/sequence_position) — no trust dimension added. BC-2.09.003 `ProvenanceTag::McpToolResult { server_name, tool_name }` is an outdated pre-PASS-58 variant; PO handoff: update PC1 to canonical struct form (`boundary_type: BoundaryType::ToolResult`). F-P131-04 (MED) — strict-undefined is a UNIVERSAL template-engine contract. Both f-string (default) and jinja2 (optional) engines raise E-TMPL-003 for undefined variables. E-TMPL-003 is engine-neutral. Decision 4 updated to state universal obligation."
   - "1.2 (burst-224/2026-07-21): F-P129-12 — specify template-source-order iteration for slot.variable_names() per BC-2.18.004 Invariant 5 + EC-007 + TV-005; determinism note added to Decision 3 injection-check prose and code sketch. HashSet/HashMap iteration prohibited for this loop."
   - "1.1 (crates.io/2026-07-20): Drop abandoned `mustache` crate (last release 2018-02, ~8yr stale — production-grade violation). Template engines: f-string (default) + jinja2/minijinja only. Pin: `minijinja = \"2\"` (2.21.0, default-features=false, optional). Add minijinja autoescape + sandboxed/restricted-mode + strict-undefined safety notes."
   - "1.0 (D21/2026-07-20): Initial ADR — ferrochain-prompts new crate, slot trust model (SystemMessage slots TrustRequired immutable), ProvenanceTag pass-through via PromptValue, f-string always-on + mustache/jinja2 optional features, injection_guard module as pure-core blocker before guardrail boundary."
@@ -109,11 +110,72 @@ impl ChatPromptTemplate {
 are intended to carry user-supplied or model-generated content). Callers may explicitly set
 them to `TrustRequired` for additional hardening in pipelines that have tighter trust budgets.
 
-## Decision 3 — ProvenanceTag Pass-Through and Injection Prevention
+## Decision 3 — TrustLevel Classification and Injection Prevention
 
-### PromptValue carries provenance
+**F-P131-05 adjudication (burst-226):** `ProvenanceTag` (SS-11 ingress-boundary struct) and
+template-composition trust serve two distinct axes and MUST NOT be conflated.
 
-The rendered output type carries per-message provenance inherited from substituted variables:
+`ProvenanceTag` tracks WHICH ingress event produced content and WHERE within that event
+(fields: `boundary_type`, `ingress_id`, `sequence_position`). These fields are meaningful
+only at tool-result / RAG / memory ingress boundaries. Template variables are a composition
+step — there is no ingress event and no sequence position. Forcing full ingress audit fields
+onto a template variable would be semantically incorrect.
+
+`TrustLevel` is introduced in `ferrochain-prompts: prompts::template` as the SS-18-local
+trust classifier, **distinct from and independent of** `ProvenanceTag`.
+
+### TrustLevel — template-variable trust classifier
+
+```rust
+// ferrochain-prompts: prompts::template
+/// Trust classification for a template variable's value.
+/// Distinct from `core::guardrail::ProvenanceTag` (SS-11 ingress-boundary audit struct).
+/// Used ONLY within the SS-18 template composition layer.
+/// Severity ordering: Untrusted > UserInput > Trusted.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(kani, derive(kani::Arbitrary))]
+pub enum TrustLevel {
+    /// Content derived from an external/adversarial source (e.g., a RAG retrieval
+    /// result or an MCP tool output). Substituting `Untrusted` content into a
+    /// `TrustRequired` slot raises E-TMPL-001 (injection_guard fail-closed).
+    Untrusted,
+    /// Content from a user (trusted as a human operator but potentially naive or
+    /// exploitable). Acceptable in `TrustRequired` slots when user trust is granted.
+    UserInput,
+    /// Developer-controlled content. Always acceptable in any slot.
+    Trusted,
+}
+
+impl TrustLevel {
+    /// Returns `true` only for `Untrusted` — the sole trigger for E-TMPL-001.
+    pub fn is_untrusted(&self) -> bool {
+        matches!(self, Self::Untrusted)
+    }
+}
+```
+
+`TemplateVar` carries `Option<TrustLevel>`:
+
+```rust
+pub struct TemplateVar {
+    pub value: String,
+    /// Trust classification for this variable's value.
+    /// `None` is treated as `Trusted` (developer-supplied literal; no external origin).
+    pub trust_level: Option<TrustLevel>,
+}
+```
+
+**Relationship to `ProvenanceTag`:** When a developer derives a template variable from a
+RAG result (which arrived at the ingress boundary with a `ProvenanceTag { boundary_type:
+BoundaryType::RAGRetrieval, ingress_id: ..., sequence_position: ... }`), they translate the
+ingress provenance into a `TrustLevel` for the composition step:
+`trust_level: Some(TrustLevel::Untrusted)`. The ingress `ProvenanceTag` record is already
+captured in the guardrail audit log at ingress time and need not be threaded through template
+composition.
+
+### PromptValue carries TrustLevel
+
+The rendered output type carries per-message trust inherited from substituted variables:
 
 ```rust
 #[non_exhaustive]
@@ -123,18 +185,17 @@ pub struct PromptValue {
 
 #[non_exhaustive]
 pub struct MessageProvenance {
-    /// Highest-severity ProvenanceTag from any variable substituted into this message.
-    /// None if no variables were substituted (template literal only).
-    pub tag: Option<ProvenanceTag>,
+    /// Highest-severity TrustLevel from any variable substituted into this message.
+    /// `None` if no variables were substituted (template literal only) or all
+    /// substituted variables carried `None` trust_level (developer-supplied values).
+    pub highest_trust_level: Option<TrustLevel>,
     pub slot_trust_policy: SlotTrustPolicy,
 }
 ```
 
-`ProvenanceTag` is imported from ferrochain-core (BC-2.11.001 / SS-11). When a variable
-carrying a `ProvenanceTag` is substituted into a message slot:
-- The slot's `MessageProvenance.tag` is set to the variable's ProvenanceTag.
-- If multiple variables are substituted into the same message, the tag is the highest-
-  severity tag across all variables (tag severity ordering: `Untrusted > UserInput > Trusted`).
+When multiple variables are substituted into the same message, `highest_trust_level` is
+the maximum-severity `TrustLevel` across all variables
+(`Untrusted > UserInput > Trusted`). Only `Untrusted` triggers E-TMPL-001.
 
 ### Injection check (pure-core blocker)
 
@@ -158,7 +219,7 @@ impl ChatPromptTemplate {
                 // PROHIBITED here. (BC-2.18.004 Invariant 5 / EC-007 / TV-005)
                 for var_name in slot.variable_names() {
                     if let Some(var) = vars.get(var_name) {
-                        if var.provenance_tag.is_some_and(|t| t.is_untrusted()) {
+                        if var.trust_level.is_some_and(|t| t.is_untrusted()) {
                             return Err(FerrochainError {
                                 component: Component::TMPL,
                                 category: Category::SECURITY,
@@ -239,10 +300,27 @@ provides three mechanisms directly relevant to the slot trust model:
   substituted values.
 - **Strict-undefined mode**: raises `E-TMPL-003` (VALIDATION) on any undefined variable
   reference rather than silently substituting an empty string — prevents accidental
-  information hiding during template development.
+  information hiding during template development. This behavior is UNIVERSAL across both
+  template engines (see "Universal strict-undefined contract" below).
 
 These mechanisms are complementary to the `SlotTrustPolicy` injection check (Decision 3),
 which fires at the variable-substitution level before engine rendering.
+
+**Universal strict-undefined contract (F-P131-04 adjudication, burst-226):**
+Undefined-variable detection is a **universal, engine-neutral obligation** — it applies to
+BOTH template engines. A missing variable is an error regardless of which engine is active.
+
+- **f-string engine (default, always-on):** Raises `E-TMPL-003` when a `{variable}` placeholder
+  references a name absent from the `vars: HashMap<String, TemplateVar>`. This is the behavior
+  mandated by BC-2.18.001 INV3 ("f-string DEFAULT engine raises E-TMPL-003 always-on").
+- **jinja2 engine (optional, `feature = "jinja2"`):** Configures minijinja with
+  `strict_undefined = true`, producing the same `E-TMPL-003` error for undefined references.
+
+`E-TMPL-003` (VAL/UndefinedVariable) is **engine-neutral** — the error code, message prefix,
+and semantics are identical regardless of which engine is active. Callers cannot assume
+undefined variables are silently empty-substituted in either engine. This obligation binds
+even when only the f-string feature is compiled in (the default build). The error-taxonomy
+entry for E-TMPL-003 MUST describe it as engine-neutral (PO handoff).
 
 The f-string engine is written in-house (~100 LOC) following Python's `str.format` semantics:
 - `{variable}` is a substitution point
@@ -264,7 +342,7 @@ caller's guardrail configuration. This follows the production-grade default prin
 security-critical invariants are enforced by construction, not by convention.
 
 **Why TrustRequired for SystemMessage slots only (not all slots)?** HumanMessage slots are
-designed to carry user-supplied content — blocking `ProvenanceTag::UserInput` there would
+designed to carry user-supplied content — blocking `TrustLevel::UserInput` there would
 prevent all user-input-driven prompt construction. The injection risk is specifically in the
 System position, where an adversarially crafted string can override instructions, bypass
 safety constraints, or hijack agent behavior. AIMessage slots are treated as TrustAll by
@@ -326,7 +404,8 @@ matters (and prompt injection to system position matters), it must be enforced.
 - `ferrochain-prompts` is the 19th published crate (D21 addition; `ferrochain-vectorstores`
   is the 20th).
 - `prompts::injection_guard` is a Pure Core module — no async, no I/O, Kani-candidacy
-  noted (VP-006 candidate: prove that untrusted content never renders into SystemMessage).
+  noted (VP-006: prove that `TrustLevel::Untrusted` in a `TrustRequired` slot always
+  produces `Err(E-TMPL-001)` — harness uses `kani::Arbitrary` on `TrustLevel`).
 - `PromptValue` carries `MessageProvenance` — callers that previously assumed raw `Vec<Message>`
   from a template must unwrap or use the helper `.into_messages()` method.
 - `E-TMPL-001` (SECURITY/InjectionAttempt) and `E-TMPL-002` (VALIDATION/SystemSlotPolicy)
@@ -336,5 +415,43 @@ matters (and prompt injection to system position matters), it must be enforced.
 - The jinja2 engine has an external dep (`minijinja = "2"`, 2.21.0, `default-features = false`)
   and is opt-in via `feature = "jinja2"`. Default dependency tree: ferrochain-prompts →
   ferrochain-core only (no minijinja unless the `jinja2` feature is enabled).
-- `E-TMPL-003` (VALIDATION/UndefinedVariable) is added for minijinja strict-undefined mode
-  violations; it belongs in the error taxonomy alongside `E-TMPL-001` and `E-TMPL-002`.
+- `E-TMPL-003` (VALIDATION/UndefinedVariable) is engine-neutral — raised by BOTH the
+  f-string (default) and jinja2 (optional) engines. The error-taxonomy description MUST NOT
+  attribute it to minijinja only (PO handoff; see below).
+- `TrustLevel` enum (`Untrusted | UserInput | Trusted`) is a new type in
+  `ferrochain-prompts: prompts::template`. It is distinct from `core::guardrail::ProvenanceTag`
+  (SS-11). SS-18 BC files and interface-definitions that reference `ProvenanceTag::Untrusted`,
+  `::UserInput`, `::Trusted`, or `::Internal` for template trust purposes must be updated to
+  use `TrustLevel::*` variants (PO handoff; variant `Internal` does not exist — remove it).
+- `TemplateVar.trust_level: Option<TrustLevel>` replaces any earlier `provenance_tag:
+  Option<ProvenanceTag>` field reference in SS-18 artifacts.
+- `MessageProvenance.highest_trust_level: Option<TrustLevel>` replaces the former `tag:
+  Option<ProvenanceTag>` field reference in SS-18 artifacts.
+
+## PO Handoffs (burst-226 adjudications)
+
+### F-P131-05: ProvenanceTag shape adjudication
+
+| File | Change required |
+|------|----------------|
+| BC-2.18.004 | Replace all `ProvenanceTag::Untrusted/::UserInput/::Trusted/::Internal` references with `TrustLevel::Untrusted/::UserInput/::Trusted`. Variant `Internal` does not exist — remove. Update PC5, EC-001..EC-007, TV-001..TV-005 as applicable. |
+| BC-2.18.002 INV-2 | Replace `ProvenanceTag severity ordering: Untrusted > UserInput > Trusted` with `TrustLevel severity ordering: Untrusted > UserInput > Trusted`. |
+| BC-2.09.003 PC1 | Replace `ProvenanceTag::McpToolResult { server_name, tool_name }` (outdated pre-PASS-58 form) with the canonical SS-11 struct form: `ProvenanceTag { boundary_type: BoundaryType::ToolResult, ingress_id: <uuid>, sequence_position: <n> }`. Server name and tool name belong in the guardrail audit log entry at ingress time, not in ProvenanceTag. |
+| interface-definitions | (a) L1110: replace `ProvenanceTag::Trusted or ProvenanceTag::Internal` with `TrustLevel::Trusted or None (absent trust_level treated as Trusted)`. (b) Update `TemplateVar` struct: `trust_level: Option<TrustLevel>` replaces any `provenance_tag: Option<ProvenanceTag>`. (c) Update `MessageProvenance`: `highest_trust_level: Option<TrustLevel>` replaces `tag: Option<ProvenanceTag>`. (d) Fix BC assignment swap at L1128-1129 and L1155-1156 (see F-P131-04 below). |
+| error-taxonomy E-TMPL-001 | Update raise-condition: replace `ProvenanceTag::Untrusted` with `TrustLevel::Untrusted`. |
+
+### F-P131-04: Universal strict-undefined contract
+
+| File | Change required |
+|------|----------------|
+| error-taxonomy E-TMPL-003 | Remove "Uses minijinja strict-undefined mode." from description. New description: "Engine-neutral: raised by both the f-string (default) and jinja2 engines when a template variable `{name}` is referenced but the name is absent from the input variable map." Anchor: BC-2.18.001 (not BC-2.18.002). |
+| interface-definitions L1128-1129 | BC assignment is swapped. The `ChatPromptTemplate` multi-message formatting behavior traces to BC-2.18.002; the strict-undefined / `E-TMPL-003` / `UndefinedVariable` behavior traces to BC-2.18.001. Fix the crossed references. |
+| interface-definitions L1155-1156 | Same swap — correct to match the assignments above. |
+
+## BA Handoffs (burst-226 adjudications)
+
+### F-P131-04: Universal strict-undefined contract
+
+| File | Change required |
+|------|----------------|
+| capabilities-p1-p2.md CAP-022 | Update wording: strict-undefined is a universal engine obligation (both f-string and jinja2 engines raise E-TMPL-003 on undefined variables), not a minijinja-only feature. |

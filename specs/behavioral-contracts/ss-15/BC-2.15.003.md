@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.003
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,9 +13,10 @@ capability: CAP-017
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-memory per module-decomposition.md v1.10."
+  - "1.2 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'memory.gdpr_unattributed_session_entries' to EC-004 WARN emission per observability census (SAP-1). EC-004 updated with structured event_type and fields."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -24,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/entities-server.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "8bc9bb2"
+input-hash: "444fb1c"
 extracted_from: null
 modified: []
 deprecated: null
@@ -120,9 +121,7 @@ the new entry.
 **Scenario:** An old session predates the introduction of `session_id → user_id`
 tracking. Session-scoped entries exist but cannot be attributed.
 **Expected behavior:** Erasure proceeds for all tiers that have attribution data.
-A `WARN` log is emitted: `"GDPR erasure: N session entries could not be attributed to
-user_id=<id> due to missing session-user mapping; these entries are NOT deleted."` The
-receipt includes `unattributed_session_count: N`. This is a documented limitation.
+A `WARN` log is emitted with `event_type = "memory.gdpr_unattributed_session_entries"` and structured fields `{ user_id: <id>, unattributed_session_count: N }`: `"GDPR erasure: N session entries could not be attributed to user_id=<id> due to missing session-user mapping; these entries are NOT deleted."` The receipt includes `unattributed_session_count: N`. This is a documented limitation.
 
 ### EC-005: Caller without admin privilege attempts erasure
 **Scenario:** A standard `RunnableConfig` context (graph node) calls the erasure API.

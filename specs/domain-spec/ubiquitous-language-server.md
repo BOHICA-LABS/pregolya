@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-server
-version: "1.3"
+version: "1.4"
 status: active
 producer: business-analyst
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -15,6 +15,7 @@ input-hash: "fde4f5f"
 traces_to: L2-INDEX.md
 decisions: [D2, D13, D17]
 changelog:
+  - "1.4 (2026-07-21): F-P131-05 adjudication (burst-226) — §ProvenanceTag: disambiguation note added clarifying that ProvenanceTag (SS-11, no trust-level dimension) is distinct from TrustLevel (SS-18, ferrochain-prompts: prompts::template; ADR-015 §Decision 3). Changelog table updated. TD-VSDD-060 sweep: no ProvenanceTag trust-variant residue in this file."
   - "1.3 (2026-07-19): F-P117-01 — add summary_halt to Run status lifecycle. Terminal set now: completed | failed | cancelled | summary_halt. summary_halt reached via in_progress to summary_halt on the OnCeiling::Summarize path (BC-2.12.003 PC7/PC8); first-class terminal state per product-owner adjudication. Body changelog table row added. Whole-file sweep: no other terminal-set enumerations found."
   - "1.2 (ADV-P1D-PASS-58): F-P58-03 — update ProvenanceTag and GuardrailHook to BC-authoritative terminology. ProvenanceTag: source_type/tool_name/invocation_id/timestamp to boundary_type (ToolResult|RAGRetrieval|MemoryIngress), ingress_id, sequence_position; removed User/Model per BC-2.11.001 EC-004. GuardrailHook: Accept/Reject/Redact retired to Pass/Fail{reason,severity}/Transform{new_content}; callable signature updated to match interface-definitions.md v2.13."
   - "1.1 (initial active version)."
@@ -69,6 +70,11 @@ Metadata attached to content at ingress, recording `boundary_type` (ToolResult |
 Used for forensic audit trails (Domain A SOC) and guardrail call context.
 User messages and model scratch-pad are not tagged — they do not traverse the guardrail path (BC-2.11.001 EC-004).
 Authority: entities-server.md §ProvenanceTag.
+**Disambiguation (ADR-015 §Decision 3, burst-226):** `ProvenanceTag` is the SS-11 ingress-boundary
+audit record with three structural fields — it has NO trust-level dimension and carries no variants
+named Untrusted, UserInput, or Trusted. Template-composition trust is handled by `TrustLevel`
+(`ferrochain-prompts: prompts::template`; see ubiquitous-language-core.md §TrustLevel).
+The two types serve distinct axes and must not be conflated.
 
 **GuardrailHook**
 A registered callable that validates content at an ingress boundary (ToolResult, RAG chunk,
@@ -148,6 +154,7 @@ not retriable.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.4 | 2026-07-21 | F-P131-05 (burst-226) — §ProvenanceTag: disambiguation note added. ProvenanceTag (SS-11, 3-field ingress-boundary audit struct) has no trust-level dimension. Template-composition trust is handled by `TrustLevel` (`ferrochain-prompts: prompts::template`; ADR-015 §Decision 3). Two axes must not be conflated. | F-P131-05 |
 | 1.3 | 2026-07-19 | F-P117-01 — add `summary_halt` to Run status lifecycle. Terminal set: completed \| failed \| cancelled \| summary_halt. `summary_halt` is a first-class terminal state reached via in_progress on the OnCeiling::Summarize path (BC-2.12.003 PC7/PC8). | F-P117-01 |
 | 1.2 | 2026-07-15 | F-P58-03 — §ProvenanceTag and §GuardrailHook updated to BC-authoritative terminology. ProvenanceTag: `source_type`/`tool_name?`/`invocation_id?`/`timestamp` → `boundary_type` (ToolResult\|RAGRetrieval\|MemoryIngress), `ingress_id`, `sequence_position`; User/Model removed per BC-2.11.001 EC-004. GuardrailHook: Accept/Reject/Redact retired → `Pass`/`Fail{reason,severity}`/`Transform{new_content}` with `GuardrailResult`; callable signature updated to match interface-definitions.md v2.13. | F-P58-03 |
 | 1.1 | 2026-07-14 | Reconciliation table line 132: changed ferrochain identifier from `Store` to `MemoryStore` to match canonical Rust trait name per BC-2.15.001 Architecture Anchors and module-decomposition.md:149 (F-P39-01, ADV-P1D-PASS-39) | F-P39-01 |

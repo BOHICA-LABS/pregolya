@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.43"
+version: "2.44"
 status: active
 producer: product-owner
 timestamp: 2026-07-21T00:00:00Z
 phase: 1d
 changelog:
+  - "2.44 (burst-226/F-P131-01+F-P131-05+F-P131-06+F-P131-07/2026-07-21): (1) F-P131-05: ChatPromptTemplate section — TrustLevel migration. Added TrustLevel enum + TemplateVar struct definitions. MessageProvenance.tag → MessageProvenance.highest_trust_level. SlotTrustPolicy TrustRequired doc comment: ProvenanceTag::Trusted/Internal → TrustLevel::Trusted/None. format_messages BC anchor: BC-2.18.001↔BC-2.18.002 swap (format_messages rendering → BC-2.18.002; strict-undefined → BC-2.18.001). BC anchor footer: ProvenanceTag → TrustLevel; ADR-015 Decision 4 added. (2) F-P131-01: GuardedDocuments::rag_ingress docstring updated with severity-bifurcated Fail semantics (Critical → Err(E-CORE-008); Non-Critical → error-entry substitution). E-CORE-008 individual omission note added. (3) F-P131-07: similarity_search_with_filter default method doc updated: lossy fallback → fail-safe Err(E-VS-005 FilterUnsupported) on non-empty filter. (4) Disposition census 96→98: individual 16→17 (+E-CORE-008), blanket 37→38 (+E-VS-005)."
   - "2.43 (F-P130-03/2026-07-21): Add six missing D21 trait sections to §Public Rust Trait Signatures (F-P130-03 HIGH). Sections added with verbatim ADR-authoritative signatures + per-method BC anchors: (1) §Retriever Trait and GuardedDocuments — ADR-014 Decision 2 + Decision 6; anchors BC-2.20.001..003. (2) §VectorStore Trait and VectorStoreFactory — ADR-014 Decision 2; anchors BC-2.21.001..004. (3) §Embeddings Trait — ADR-017 Decision 2; anchors BC-2.22.001..003. (4) §ChatPromptTemplate and PromptValue Surface — ADR-015; anchors BC-2.18.001..005. (5) §LcSerializable and Reviver Surface — ADR-016; anchors BC-2.19.001..006. Coverage cross-check: all methods have BC anchors; no orphan methods found in either direction."
   - "2.42 (F-P224/H-1/2026-07-21): Blanket omission annotation updated for E-VS-004 (ZeroNormWriteTime, VAL, BC-2.21.002) minted in error-taxonomy.md v1.28. E-VS-* namespace 3→4 codes; blanket group total 36→37. Disposition census 95→96 (43 HTTP + 16 individual + 37 blanket = 96). E-VS-004 is library-layer only (write-path Err return from add_texts / from_texts_sync; no direct HTTP terminal response in v1)."
   - "2.41 (D21/Batch-3b-i/2026-07-20): Blanket omission annotation updated for D21 ecosystem-parity expansion. (1) Added four new component namespaces to §Library/execution-layer codes blanket omission: E-TMPL-* (BC-2.18.x, SECURITY/VAL), E-SRLZ-* (BC-2.19.x, VAL), E-VS-* (BC-2.20.x/BC-2.21.x, VAL), E-EMBED-* (BC-2.22.x, VAL) — all library-layer only per ADR-010 v1.1, no HTTP terminal responses. (2) Disposition census updated: 86→95 (blanket 27→36; 43 HTTP + 16 individual + 36 blanket = 95). (3) Note appended to §Error Type citing Component enum expansion 12→16 and #[non_exhaustive] gate count 13→17."
@@ -59,7 +60,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "ed03360"
+input-hash: "e09ca36"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."
@@ -895,9 +896,13 @@ pub struct GuardedDocuments(Vec<Document>);
 
 impl GuardedDocuments {
     /// Evaluate each document through the guardrail hook before returning.
-    /// Async, per-document evaluation. Returns Err on first guardrail rejection —
-    /// does NOT silently continue with remaining documents (DI-014).
-    /// BC anchor: BC-2.20.002 PC2 (Err propagates on rejection, no silent continuation),
+    /// Async, per-document evaluation. Fail behavior is severity-bifurcated (ADR-014 v1.5):
+    /// - `GuardrailSeverity::Critical` Fail → returns `Err(E-CORE-008 GuardrailCriticalRejection)`;
+    ///   entire batch is aborted; no `GuardedDocuments` produced (DI-014 fail-closed).
+    /// - Non-Critical Fail (High/Medium/Low) → error-entry Document substituted at the rejected
+    ///   position (`page_content: "[GUARDRAIL BLOCKED: <reason>]"`, `metadata.ferrochain.guardrail_blocked: true`);
+    ///   batch continues; `GuardedDocuments` produced with the substitution.
+    /// BC anchor: BC-2.20.002 PC2 (severity-bifurcated Fail; Critical → Err(E-CORE-008); non-critical → substitution),
     /// BC-2.20.002 PC3 (guardrail fires BEFORE any doc content is used),
     /// BC-2.20.002 PC4 (documents failing guardrail never enter prompt under any condition)
     pub async fn rag_ingress(
@@ -970,19 +975,23 @@ pub trait VectorStore: Send + Sync {
     /// BC anchor: BC-2.20.003 PC1 (as_retriever() construction), BC-2.20.003 INV-2 (E-VS-003 on invalid config)
     fn as_retriever(&self) -> VectorStoreRetriever<'_>;
 
-    /// Additive metadata-filter similarity search. Default falls back to similarity_search
-    /// (no filtering — lossy for real filter arguments). Implementations with native backend
-    /// filter support MUST override this method.
+    /// Metadata-filter similarity search. Default returns `Err(E-VS-005 FilterUnsupported)` when
+    /// `filter.filters` is non-empty — fail-safe (not lossy). An empty `MetadataFilter` (vacuously
+    /// true, `filter.filters.is_empty()`) delegates to `similarity_search`.
+    /// Implementations with native backend filter support MUST override this method.
     /// BC anchor: BC-2.21.004 PC5–PC6 (filter semantics; native pre-filter vs InMemoryVectorStore post-filter),
-    /// BC-2.21.004 INV-3 (default fallback contract — lossy for real filters)
+    /// BC-2.21.004 INV-3 (default fail-safe: Err(E-VS-005 FilterUnsupported) on non-empty filter)
     async fn similarity_search_with_filter(
         &self,
         query: &str,
         k: usize,
         filter: MetadataFilter,
     ) -> Result<Vec<Document>, FerrochainError> {
-        // Default: ignore filter; fallback to base similarity_search
-        let _ = filter;
+        // Default: fail-safe on non-empty filter — returning unfiltered results would be lossy
+        // and a potential cross-tenant-exposure hazard (ADR-014 v1.5 F-P131-07 adjudication).
+        if !filter.filters.is_empty() {
+            return Err(FerrochainError::new("E-VS-005", "FilterUnsupported: metadata filter is not supported by this VectorStore implementation"));
+        }
         self.similarity_search(query, k).await
     }
 }
@@ -1099,16 +1108,50 @@ ADR-017 Decision 2 (Embeddings trait surface, dyn-safety via #[async_trait] + &s
 ```rust
 // ferrochain-prompts: prompts::template
 
+/// Trust classification of a template variable at injection time.
+/// Distinct from `ProvenanceTag` (SS-11 ingress boundary struct).
+/// `None` trust_level in a TemplateVar is treated as `Trusted` by injection_guard.
+/// BC anchor: BC-2.18.004 PC2 (TrustLevel::Untrusted triggers E-TMPL-001),
+/// BC-2.18.002 INV-2 (TrustLevel severity ordering: Untrusted > UserInput > Trusted)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TrustLevel {
+    /// Content from an untrusted external source (e.g., MCP tool result, RAG chunk without guardrail).
+    Untrusted,
+    /// Content from an end-user (e.g., user chat input) — less trusted than internal but not fully untrusted.
+    UserInput,
+    /// Content from a trusted source (e.g., hard-coded system prompt). Default when trust_level is None.
+    Trusted,
+}
+
+impl TrustLevel {
+    /// Returns true only for `TrustLevel::Untrusted`.
+    /// BC anchor: BC-2.18.004 PC2 (injection_guard fail-closed predicate)
+    pub fn is_untrusted(&self) -> bool {
+        matches!(self, Self::Untrusted)
+    }
+}
+
+/// A template variable value with its trust classification.
+/// `trust_level: None` is treated as `TrustLevel::Trusted` by `injection_guard`.
+/// BC anchor: BC-2.18.004 PC2 (trust_level: Some(TrustLevel::Untrusted) triggers E-TMPL-001),
+/// BC-2.18.002 PC1–PC2 (MessageProvenance.highest_trust_level = max trust_level across slot vars)
+pub struct TemplateVar {
+    /// The string value to substitute into the template.
+    pub value: String,
+    /// Trust classification. `None` is treated as `TrustLevel::Trusted`.
+    pub trust_level: Option<TrustLevel>,
+}
+
 /// Controls whether a named template slot may receive untrusted input.
 /// BC anchor: BC-2.18.003 PC1–PC2 (TrustAll vs TrustRequired semantics),
-/// BC-2.18.004 PC5 (injection_guard checks ProvenanceTag::Untrusted against TrustRequired slots → E-TMPL-001),
+/// BC-2.18.004 PC5 (injection_guard checks TrustLevel::Untrusted against TrustRequired slots → E-TMPL-001),
 /// BC-2.18.005 PC1 (TrustAll on SystemMessage construction → E-TMPL-002)
 #[derive(Debug, Clone, PartialEq)]
 pub enum SlotTrustPolicy {
     /// Slot accepts any TemplateVar, including untrusted provenance.
     TrustAll,
-    /// Slot requires ProvenanceTag::Trusted or ProvenanceTag::Internal.
-    /// Untrusted input → E-TMPL-001 (injection_guard fail-closed; VP-006 Kani candidate).
+    /// Slot requires `TrustLevel::Trusted` or `None` (absent `trust_level` treated as Trusted).
+    /// `trust_level: Some(TrustLevel::Untrusted)` → E-TMPL-001 (injection_guard fail-closed; VP-006 Kani candidate).
     TrustRequired,
 }
 
@@ -1124,9 +1167,9 @@ impl ChatPromptTemplate {
     /// Render the template with the provided variable bindings.
     /// Runs injection_guard on each slot. Raises E-TMPL-001 (fail-closed) if an untrusted
     /// var is bound to a TrustRequired slot. Raises E-TMPL-003 if a required slot has no binding.
-    /// BC anchor: BC-2.18.001 PC2 (format_messages rendering semantics, PromptValue output),
-    /// BC-2.18.004 PC3–PC5 (injection_guard call site; fail-closed; ProvenanceTag drives decision),
-    /// BC-2.18.002 PC1–PC2 (strict-undefined slot detection → E-TMPL-003)
+    /// BC anchor: BC-2.18.002 PC1–PC2 (format_messages multi-message rendering semantics, PromptValue output),
+    /// BC-2.18.004 PC3–PC5 (injection_guard call site; fail-closed; TrustLevel drives decision),
+    /// BC-2.18.001 PC2 (strict-undefined variable reference → E-TMPL-003)
     pub fn format_messages(
         &self,
         vars: HashMap<String, TemplateVar>,
@@ -1143,21 +1186,23 @@ pub struct PromptValue {
 
 /// Provenance metadata attached to each rendered message.
 /// BC anchor: BC-2.18.003 PC2–PC3 (provenance tagging at render time),
-/// BC-2.18.004 PC1 (ProvenanceTag::Untrusted drives injection_guard fail-closed decision)
+/// BC-2.18.004 PC1 (TrustLevel::Untrusted in highest_trust_level drives injection_guard fail-closed decision)
 #[non_exhaustive]
 pub struct MessageProvenance {
-    pub tag: Option<ProvenanceTag>,
+    /// Highest-severity TrustLevel observed across all TemplateVar values substituted into this slot.
+    /// `None` = all variables had `trust_level: None` (treated as Trusted by injection_guard).
+    pub highest_trust_level: Option<TrustLevel>,
     pub slot_trust_policy: SlotTrustPolicy,
 }
 ```
 
 **BC anchor:**
-BC-2.18.001 (ChatPromptTemplate — from_messages construction, format_messages rendering, PromptValue output),
-BC-2.18.002 (strict-undefined slot detection → E-TMPL-003),
+BC-2.18.001 (ChatPromptTemplate — from_messages construction, PromptValue output; strict-undefined variable reference → E-TMPL-003),
+BC-2.18.002 (format_messages multi-message rendering semantics),
 BC-2.18.003 (SlotTrustPolicy — TrustAll vs TrustRequired; MessageProvenance per rendered message),
-BC-2.18.004 (injection_guard — ProvenanceTag::Untrusted on TrustRequired slot → E-TMPL-001 fail-closed; VP-006 Kani candidate),
+BC-2.18.004 (injection_guard — TrustLevel::Untrusted on TrustRequired slot → E-TMPL-001 fail-closed; VP-006 Kani candidate),
 BC-2.18.005 (TrustAll on SystemMessage → E-TMPL-002 at construction).
-ADR-015 Decision 1 (ChatPromptTemplate surface), Decision 2 (SlotTrustPolicy enum), Decision 3 (injection_guard fail-closed semantics).
+ADR-015 Decision 1 (ChatPromptTemplate surface), Decision 2 (SlotTrustPolicy enum), Decision 3 (injection_guard fail-closed semantics), Decision 4 (TrustLevel enum — engine-neutral; both f-string and jinja2 raise E-TMPL-003 on undefined variable).
 
 ---
 
@@ -1397,6 +1442,8 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 
 > **E-CORE-007 library-layer omission (ADV-P1D-PASS-56-COMPLETION):** E-CORE-007 (GuardrailHookPanic, INTERNAL — BC-2.11.002 / BC-2.11.003 / BC-2.11.004) is raised when a `GuardrailHook::evaluate` call panics at any content-ingress boundary (tool-result, RAG chunk, or memory item). INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from the guardrail ingress pipeline in library code; it is never emitted as a terminal HTTP response by ferrochain-server (if ever propagated to a server-side run, it would surface embedded in Run.error). Fail-closed semantics: content that triggered the panic is treated as rejected and does not enter the model context. Intentionally omitted from the HTTP status table; same treatment as E-CORE-006.
 
+> **E-CORE-008 library-layer omission (burst-226/F-P131-01/2026-07-21):** E-CORE-008 (GuardrailCriticalRejection, SECURITY — BC-2.20.002 PC2) is raised by `GuardedDocuments::rag_ingress` when any document receives `GuardrailResult::Fail { severity: GuardrailSeverity::Critical }`. SECURITY→403 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from `GuardedDocuments::rag_ingress` in library code; it is never emitted as a terminal HTTP response by ferrochain-server (if ever propagated to a server-side run, it would surface embedded in Run.error, not as a direct HTTP 403). Fail-closed semantics: the entire batch is aborted; no `GuardedDocuments` is produced. Intentionally omitted from the HTTP status table; same treatment as E-CORE-007.
+
 > **E-CHKPT-008 library-layer omission (D20 sub-burst 2; raise-timing corrected F-P82-02):** E-CHKPT-008 (FtsLimitZero, VAL) covers two distinct sub-cases with different raise times: **(1) `FtsSearchConfig.limit = 0`** — raised at **`FtsSearchConfig` construction time** (DI-008 construction-result contract; BC-2.04.008 PC6/EC-004); **(2) malformed FTS5 query string** — raised at **`fts_search` call time** when SQLite FTS5 fails to parse the query string passed as the standalone `query: &str` first parameter (SQLite FTS5 parse error propagation; BC-2.04.008 EC-002). Note: `query` is a standalone first parameter to `fts_search`, NOT a field of `FtsSearchConfig`. VAL→400 is the categorical mapping. In v1 both sub-cases surface as a direct `Err(FerrochainError)` return from library code; neither is emitted as a terminal HTTP response by ferrochain-server (no FTS search endpoint in v1; if ever surfaced via server, it would appear embedded in Run.error). Intentionally omitted from the HTTP status table.
 
 > **E-CHKPT-009 library-layer omission (D20 sub-burst 2):** E-CHKPT-009 (Fts5Unavailable, INTERNAL — BC-2.04.008 EC-006) is raised at `CheckpointSaver::new()` construction time when FTS is requested but the SQLite build does not include the FTS5 extension. INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from `CheckpointSaver::new()` in library code; it is never emitted as a terminal HTTP response by ferrochain-server (server startup with a bad FTS5 config fails before any listener is bound). Intentionally omitted from the HTTP status table; same treatment as E-CHKPT-005 and E-SERVER-013 (startup-time library errors).
@@ -1405,7 +1452,7 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 
 > **E-PROV-010 library-layer omission (D20 sub-burst 2):** E-PROV-010 (ProviderChainExhausted, POLICY — BC-2.08.014 PC5/EC-004) is raised when all providers in the `ProviderFallbackPolicy` chain have been tried and all failed. POLICY→403 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from the provider dispatch layer in library code; it propagates as Run.error on the server side (same treatment as E-PROV-007 StructuredOutputRefused). Never a direct HTTP terminal response. Intentionally omitted from the HTTP status table.
 
-> **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30; D21/2026-07-20):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY/SECURITY), E-SPLIT-* (BC-2.07.x, VAL), E-TMPL-* (BC-2.18.x, SECURITY/VAL), E-SRLZ-* (BC-2.19.x, VAL), E-VS-* (BC-2.20.x/BC-2.21.x, VAL), E-EMBED-* (BC-2.22.x, VAL) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only. **D21 additions confirmed library-layer only:** E-TMPL-001 (BC-2.18.004 — prompt injection guard, ferrochain-prompts), E-SRLZ-001 (BC-2.19.005 — Reviver allowlist fail-closed, ferrochain-core::serializable), E-VS-001 (BC-2.21.003 — zero-norm cosine guard, ferrochain-vectorstores), E-EMBED-001 (BC-2.22.001 — dimensionality contract, ferrochain-core::embeddings); all library-layer Err returns. **Disposition census (F-P224): 43 HTTP + 16 individual + 37 blanket = 96.** Blanket group breakdown: E-MCP-* 5 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 4 + E-EMBED-* 1 = 37. (E-VS-* 3→4: E-VS-004 ZeroNormWriteTime added in error-taxonomy.md v1.28.)
+> **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30; D21/2026-07-20):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY/SECURITY), E-SPLIT-* (BC-2.07.x, VAL), E-TMPL-* (BC-2.18.x, SECURITY/VAL), E-SRLZ-* (BC-2.19.x, VAL), E-VS-* (BC-2.20.x/BC-2.21.x, VAL), E-EMBED-* (BC-2.22.x, VAL) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only. **D21 additions confirmed library-layer only:** E-TMPL-001 (BC-2.18.004 — prompt injection guard, ferrochain-prompts), E-SRLZ-001 (BC-2.19.005 — Reviver allowlist fail-closed, ferrochain-core::serializable), E-VS-001 (BC-2.21.003 — zero-norm cosine guard, ferrochain-vectorstores), E-EMBED-001 (BC-2.22.001 — dimensionality contract, ferrochain-core::embeddings); all library-layer Err returns. **Disposition census (burst-226/F-P131-01+F-P131-07/2026-07-21): 43 HTTP + 17 individual + 38 blanket = 98.** (+1 individual: E-CORE-008 GuardrailCriticalRejection SECURITY library-layer omission note; +1 blanket: E-VS-005 FilterUnsupported in E-VS-* namespace.) Blanket group breakdown: E-MCP-* 5 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 = 38. (E-VS-* 4→5: E-VS-005 FilterUnsupported added burst-226.)
 
 ## Exit Code Semantics
 

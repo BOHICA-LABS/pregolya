@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.004
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-008, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction"
   - "1.1 (F-P130-04/2026-07-21): Add DI-014 to di_anchors — PC8 already cited DI-014 in body ('empty result is valid; it is not silently replaced with unfiltered results'); frontmatter anchor was missing."
+  - "1.2 (burst-226/F-P131-07/2026-07-21): INV-3 fail-safe default — default similarity_search_with_filter returns Err(E-VS-005 FilterUnsupported) on non-empty filter; empty filter (vacuously true) still delegates to similarity_search. Removes lossy fallback language. EC-005 updated: non-overriding adapter returns Err(E-VS-005), not lossy result. Per ADR-014 v1.5 Decision 2 F-P131-07 adjudication."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-030
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "efb961b"
+input-hash: "789dcd2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -93,10 +94,7 @@ post-filter on the similarity result set. Both `MetadataFilter` and `FilterClaus
    `Contains` variants in future minor versions without breaking existing implementations.
 2. `similarity_search_with_filter` is an **additional** method on `VectorStore` — it does NOT
    override or shadow `similarity_search`. Both methods coexist; callers choose which to call.
-3. Implementations that do NOT override `similarity_search_with_filter` receive a default
-   implementation that falls back to `similarity_search` with no filtering (empty filter →
-   all docs pass). This default is lossy if a real filter is passed — implementations that
-   advertise native filter support MUST override this method.
+3. The default implementation returns `Err(E-VS-005 FilterUnsupported)` when `filter.filters` is non-empty. This is a fail-safe default — silently returning unfiltered results as if filtering occurred would be a cross-tenant-exposure hazard. An empty `MetadataFilter` (`filter.filters.is_empty()`) is vacuously true; the default delegates to `similarity_search(query, k)` in that case (EC-004 semantics preserved). Adapters that support native metadata filtering MUST override this method with a native implementation.
 4. A `MetadataFilter` with `filters: vec![]` (empty filter) is equivalent to no filter — all
    documents pass a zero-clause AND conjunction (vacuously true).
 5. Filter evaluation is exact match using `serde_json::Value`'s `PartialEq` — no type coercion,
@@ -110,7 +108,7 @@ post-filter on the similarity result set. Both `MetadataFilter` and `FilterClaus
 | EC-002 | `FilterClause::Ne` with a key absent from the document's metadata | Document PASSES the clause (absent key is Not Equal to any value) |
 | EC-003 | `FilterClause::In` with empty `values` vec | Document FAILS (nothing is "in" an empty set) |
 | EC-004 | `MetadataFilter { filters: vec![] }` (empty filter) | All documents pass; result is equivalent to `similarity_search(query, k)` |
-| EC-005 | `similarity_search_with_filter` called on a backend that doesn't support native filtering | Default impl falls back to post-filter approach (no error, just less efficient) |
+| EC-005 | `similarity_search_with_filter` called with a non-empty filter on a backend that has NOT overridden this method | Default impl returns `Err(E-VS-005 FilterUnsupported)` — fail-safe; does NOT silently return unfiltered results |
 | EC-006 | Filter narrows result set to 0 documents | `Ok(vec![])` — empty result; NOT silently replaced with unfiltered results |
 | EC-007 | Two `Eq` clauses for the same `key` but different values | Document must satisfy BOTH (logical AND) — impossible for a single-valued key; result is always `Ok(vec![])` |
 

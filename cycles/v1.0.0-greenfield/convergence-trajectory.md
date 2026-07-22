@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "ade0f8f"
+input-hash: "3d27fe6"
 traces_to: STATE.md
 ---
 
@@ -884,6 +884,7 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 |------|------|-------|------|------|-----|-----|---------|---------|---------|
 | P1D-129 | 2026-07-21 | 12 | 0 | 3 | 7 | 2 | HIGH | 0/3 | FINDINGS_REMAIN (expanded-perimeter pass 1; all 12 fixed in burst 224; E-VS-004 minted; counter resets on push) |
 | P1D-130 | 2026-07-21 | 9 | 1 | 3 | 2 | 3 | HIGH | 0/3 | FINDINGS_REMAIN (1C/3H/2M+1PG/3L; expanded-perimeter pass 2; all 9 closed in fix-burst 225: BC re-anchors, DI-014 propagation, interface-definitions v2.43 +5 D21 trait sections, observability.md v1.0 created) |
+| P1D-131 | 2026-07-21 | 7 | 1 | 3 | 3 | 0 | HIGH | 0/3 | FINDINGS_REMAIN (1C/3H/3M; expanded-perimeter pass 3; all 7 closed in fix-burst 226: TrustLevel minted ADR-015 v1.3, E-CORE-008/E-VS-005 minted census 98, observability re-census v1.1, nfr-catalog v1.3 D21 coverage) |
 
 ### Pass P1D-129 (2026-07-21) — Expanded Perimeter Pass 1
 
@@ -939,9 +940,31 @@ Key findings:
 
 ---
 
+### Pass P1D-131 (2026-07-21) — Expanded Perimeter Pass 3
+
+**Findings:** 7 (1 CRIT, 3 HIGH, 3 MED)
+**Novelty:** HIGH (CRIT ProvenanceTag/TrustLevel trust-axis schism; rag_ingress severity bifurcation; fail-safe filter default gap)
+**Convergence counter:** 0 of 3 (streak RESET; fix-burst 226 COMPLETE)
+**Coverage level:** D21 expanded perimeter — 116 BCs / SS-18..22 / 10 VPs / ADR-014..017 / frozen HEAD (burst-225 push)
+
+Key findings:
+- F-P131-01 HIGH: ADR-014 rag_ingress guardrail decision: ERROR-propagation severity not bifurcated — timeout/unavailable should be configurable vs hard-fail. FIXED (architect): ADR-014 v1.5 rag_ingress severity bifurcation; E-CORE-008 minted (RAG_INGRESS_GUARDRAIL_UNAVAILABLE, OPERATIONAL/unavailable).
+- F-P131-02 HIGH: BC-2.09.003 ProvenanceTag struct definition missing — body references canonical SS-11 ProvenanceTag without citing BC-2.11.001/002 nor defining the struct in BC-2.09.003. FIXED (PO): BC-2.09.003 v1.2 canonical ProvenanceTag struct cross-ref + canonical emission re-anchored.
+- F-P131-03 HIGH: BC-2.11.006 missing canonical emission section — observability catalog entry for guardrail.unregistered_passthrough not cross-referenced from BC body. FIXED (PO): BC-2.11.006 v1.2 canonical emission section added + observability.md v1.1 re-census (ferrochain.mcp.guardrail.unregistered retired; guardrail.unregistered_passthrough canonical).
+- F-P131-04 MED: BC-2.12.005 / BC-2.12.006 / BC-2.13.002 / BC-2.15.003 event_type assignments inconsistent with observability.md v1.0 catalog census — 4 BCs cite event_types not listed in catalog or use retired spellings. FIXED (PO): 4 BC files v-bumped with corrected event_type assignments; observability.md v1.1 re-census closed.
+- F-P131-05 CRIT: ADR-015 ProvenanceTag trust-axis schism — prompt template injection guard relies on ProvenanceTag.trust_level field, but ProvenanceTag is a canonical SS-11 struct (immutable mcp/rag provenance data) that should NOT carry a mutable trust-policy axis. Trust classification for templates is a separate concern. FIXED (architect+BA+PO): TrustLevel enum Untrusted|UserInput|Trusted minted in prompts::template module (ADR-015 v1.3 Decision 4 universal strict-undefined); ProvenanceTag stays canonical SS-11 struct; entities-graph v1.5 (TrustLevel entity); PromptValue gains highest_trust_level; ubiquitous-language-core v1.5 (+TrustLevel, 16 D21 terms); capabilities-p1-p2 v1.6 (CAP-022 universal strict-undefined; CAP-023 TrustLevel); BC-2.18.004 v1.2 / BC-2.18.002 v1.1 (TrustLevel migration); VP-006 v1.3 (TrustLevel harness).
+- F-P131-06 MED: nfr-catalog missing D21 coverage — NFR-012/013/014 for prompt template / retriever / vectorstore subsystems absent; NFR-009 (external API timeout) not extended to cover all 5 D21 HTTP-bearing subsystems. FIXED (PO): nfr-catalog v1.3 (NFR-012 prompts timeout/rate-limit; NFR-013 retrievers; NFR-014 vectorstores; NFR-009 extension to all D21 partners).
+- F-P131-07 MED: ADR-014 fail-safe filter default not specified — rag_ingress guardrail filter default behavior (block-all vs pass-all) on initialization before any guardrail registered is undefined. FIXED (architect): ADR-014 v1.5 fail-safe filter default = block-all (Deny) on empty registry; E-VS-005 minted (VECTORSTORE_GUARDRAIL_UNREGISTERED, SECURITY/misconfigured/Fatal).
+
+**Fix summary (burst 226 COMPLETE — all 7 closed):** F-P131-05 CRIT + F-P131-01/07 fixed by architect (ADR-015 v1.3; ADR-014 v1.5; VP-006 v1.3; verification-architecture v1.9; purity-boundary-map v1.9; module-decomposition v1.14). F-P131-05 also required BA (entities-graph v1.5; entities-server v1.12; ubiquitous-language-core v1.5; ubiquitous-language-server v1.4; capabilities-p1-p2 v1.6; L2-INDEX v1.7) and PO (BC-2.18.004 v1.2; BC-2.18.002 v1.1; BC-INDEX v2.0). F-P131-02/03/04/06 fixed by PO (BC-2.09.003 v1.2; BC-2.11.006 v1.2; BC-2.12.005 v1.5; BC-2.12.006 v1.3; BC-2.13.002 v1.1; BC-2.15.003 v1.2; BC-2.20.002 v1.3; BC-2.21.004 v1.2; error-taxonomy v1.30 (E-CORE-008+E-VS-005; census 98=43+17+38); interface-definitions v2.44; observability.md v1.1; nfr-catalog v1.3; prd v1.7). Hash sweep: STALE→0 (5 transitive passes + ARCH-INDEX individually).
+**Trajectory after:** →7 (P1D-131 NOT CLEAN); cumulative tail →0→12→9→7
+**Counter:** 0/3 (fix-burst 226 COMPLETE; P1D-132 required on new frozen HEAD)
+
+---
+
 ## Trajectory Shorthand Update (post-D21 expansion)
 
-`[D21 expansion burst 216: 0/3 RESET] →12 (P1D-129, expanded-perimeter pass 1, NOT CLEAN: 3H/7M/2L) →9 (P1D-130, expanded-perimeter pass 2, NOT CLEAN: 1C/3H/2M+1PG/3L)`
+`[D21 expansion burst 216: 0/3 RESET] →12 (P1D-129, expanded-perimeter pass 1, NOT CLEAN: 3H/7M/2L) →9 (P1D-130, expanded-perimeter pass 2, NOT CLEAN: 1C/3H/2M+1PG/3L) →7 (P1D-131, expanded-perimeter pass 3, NOT CLEAN: 1C/3H/3M)`
 
 ---
 

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.13"
+version: "1.14"
 status: active
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
@@ -10,10 +10,11 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "f29354e"
+input-hash: "6265cdf"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21]
 changelog:
+  - "1.14 (burst-226/2026-07-21): F-P131-05 sibling sweep — prompts::injection_guard row: replace 'untrusted ProvenanceTag in TrustRequired slot' with 'TrustLevel::Untrusted in TrustRequired slot'; add note that TrustLevel is SS-18-local type distinct from core::guardrail::ProvenanceTag (SS-11) per ADR-015 v1.3 adjudication."
   - "1.13 (burst-225/2026-07-21): F-P130-01 sibling sweep — correct core::guardrail comment block: GuardrailHook method updated from wrong sync `fn check` to canonical `async fn evaluate` per interface-definitions.md §GuardrailHook; full type list (GuardrailHook, GuardrailResult, IngressContent, GuardrailSeverity, BoundaryType); rag_ingress note updated: async per-document evaluate calls per BC-2.11.003 PC5."
   - "1.12 (burst-224/2026-07-21): F-P129-11 — add vectorstores::similarity module (shared cosine_similarity primitive, VP-009 Kani target); update vectorstores::mmr description to MMR-selection-only (no longer hosts cosine_similarity); update VP anchors note. F-P129-09 — add core::guardrail definitions module (GuardrailHook trait + BoundaryType enum, promoted to ferrochain-core consistent with trait-in-core precedent); add GuardedDocuments type note to core::retriever (rag_ingress enforcement gate). Module universe 49→50 (+vectorstores::similarity MEDIUM; core::guardrail definitions-only, no criticality row per ADR-009 precedent)."
   - "1.11 (D21/2026-07-20): ecosystem-parity scope expansion — add ferrochain-prompts section (SS-18: prompts::template, prompts::chat_template, prompts::few_shot, prompts::injection_guard); add ferrochain-vectorstores section (SS-20/SS-21: vectorstores::store, vectorstores::retriever, vectorstores::memory, vectorstores::mmr); add ferrochain-core new modules: core::documents, core::retriever, core::embeddings, core::serializable; add provider embedding modules in ferrochain-openai (openai::embeddings) and ferrochain-ollama (ollama::embeddings); ferrochain-anthropic explicitly excluded from SS-22 (no embedding API). Module universe 35→49 (+14 criticality-counted rows: 4 in ferrochain-core, 4 in ferrochain-prompts, 4 in ferrochain-vectorstores, 2 in provider crates). ADRs: ADR-014/015/016/017."
@@ -300,7 +301,7 @@ injection safety guard (pure-core blocker for untrusted content in system-positi
 | `prompts::template` | `PromptTemplate`; f-string engine (in-house, no external dep); variable extraction at construction; `.partial()` builder | MEDIUM | SS-18 |
 | `prompts::chat_template` | `ChatPromptTemplate` + `MessagesPlaceholder`; multi-message template; `PromptValue` output with per-message `MessageProvenance` | MEDIUM | SS-18 |
 | `prompts::few_shot` | `FewShotPromptTemplate`; example selectors; snapshot-frozen golden fixture tests | MEDIUM | SS-18 |
-| `prompts::injection_guard` | `SlotTrustPolicy` enum; SystemMessage-slot `TrustRequired` immutable enforcement; render-time `E-TMPL-001` blocker for untrusted ProvenanceTag in TrustRequired slot; pure-core, no I/O | HIGH | SS-18 |
+| `prompts::injection_guard` | `SlotTrustPolicy` enum; SystemMessage-slot `TrustRequired` immutable enforcement; render-time `E-TMPL-001` blocker for `TrustLevel::Untrusted` in `TrustRequired` slot; pure-core, no I/O; `TrustLevel` is SS-18-local type distinct from `core::guardrail::ProvenanceTag` (SS-11) | HIGH | SS-18 |
 
 > **prompts::injection_guard criticality (HIGH):** the injection blocker is a security-critical
 > pure-core module. It must prevent untrusted content from reaching SystemMessage positions

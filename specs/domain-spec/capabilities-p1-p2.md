@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.5"
+version: "1.6"
 status: active
 producer: business-analyst
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/product-brief.md
@@ -16,6 +16,7 @@ input-hash: "cf67214"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21]
 changelog:
+  - "1.6 (2026-07-21): F-P131-04/05 adjudication (burst-226) — CAP-022: strict-undefined is now a UNIVERSAL engine-neutral contract; both f-string (default) and jinja2 engines raise E-TMPL-003 on undefined variables (ADR-015 Decision 4 F-P131-04); Security invariant updated to reference TrustLevel::Untrusted explicitly instead of generic 'untrusted-tagged'. CAP-023: 'highest-severity ProvenanceTag across substituted variables' → 'highest-severity TrustLevel across substituted variables' (ADR-015 §Decision 3 F-P131-05). TD-VSDD-060 sibling sweep: no other ProvenanceTag trust-variant or engine-gated strict-undefined residue in this file."
   - "1.5 (2026-07-20): D21 second-half CAP authoring — CAP-028..033 added (SS-21 VectorStore Abstraction, SS-22 Embeddings). P1 count 13→19; total section CAP count 16→22. New section 'P1 — VectorStore Abstraction and Embeddings (Wave 2 / SS-21..22)' added. Grounded in ADR-014 (SS-21), ADR-017 (SS-22), burst-217 handoff table. Domain C forcing-function linkage for SS-22 documented in CAP-031."
   - "1.4 (2026-07-20): D21 first-half CAP authoring — CAP-022..027 added (SS-18 Prompt Templates, SS-19 LC Serialization, SS-20 Document Retrieval). P1 count 7→13; total section CAP count 10→16. Section header updated. Grounded in ADR-014 (SS-20), ADR-015 (SS-18), ADR-016 (SS-19), burst-217 handoff table. D21 added to decisions list. input-hash unchanged (no new planning-level inputs; ADR grounding is inline per convention)."
   - "1.3 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D-NNN decisions baked at authoring time); COMPARATIVE-ASSESSMENT.md added (HS-6/D17-Q5 grounding for CAP-009, CONFLICT-7 for CAP-017, NE-09 for CAP-018, D17-Q7 for CAP-019); domain-c-openclaw.md added (CAP-017 long-horizon memory forcing function); domain-d-hermes-agent.md added (CAP-020/CAP-021 D19/D20 forcing functions); input-hash recomputed."
@@ -162,11 +163,18 @@ client-vs-server semantic collision.
 
 Construct single-message PromptTemplates and multi-message ChatPromptTemplates as Runnables.
 Render via f-string engine (always-on, in-house ~100 LOC, Python `str.format` semantics:
-`{variable}` substitution, `{{` / `}}` literal-brace escapes, no nested attribute access in v1).
+`{variable}` substitution, `{{` / `}}` literal-brace escapes, no nested attribute access in v1;
+strict-undefined: raises E-TMPL-003 when a `{variable}` placeholder references a name absent
+from the input variable map — always-on regardless of engine).
 Optionally render via jinja2 engine (Cargo feature `"jinja2"`, minijinja 2.x, sandboxed mode
-mandatory, strict-undefined raises E-TMPL-003). Support partial variable binding: pre-bound
-variables are merged with call-time variables; call-time wins on key collision. Detect required
-variable names at template-construction time (static introspection, not deferred to render).
+mandatory; strict-undefined: minijinja configured with `strict_undefined = true`, raising
+E-TMPL-003 for undefined references — same error, same semantics as f-string engine).
+**Strict-undefined is a UNIVERSAL engine-neutral contract** (ADR-015 Decision 4, F-P131-04
+adjudication): E-TMPL-003 is raised by BOTH engines on any undefined variable reference.
+Callers may not assume undefined variables are silently empty-substituted in either engine.
+Support partial variable binding: pre-bound variables are merged with call-time variables;
+call-time wins on key collision. Detect required variable names at template-construction time
+(static introspection, not deferred to render).
 
 **Grounding:** D21 human authority (burst 216) — SS-18 (ferrochain-prompts) promoted from
 post-v1/community to full v1 scope, superseding the product-brief §Out-of-Scope entry for
@@ -180,10 +188,11 @@ the default engine (mustache DROPPED as production-grade violation — crates.io
 rust-translation-strategy §4 `.partial()` requirement. Rendering and composition cannot share
 a CAP with FewShot/MessagesPlaceholder because the acceptance shapes differ (scalar vs
 message-list substitution).
-**Security invariant:** SystemMessage slots are hard-coded `TrustRequired`; untrusted-tagged
-variables substituted into a TrustRequired slot → E-TMPL-001 (SECURITY/InjectionAttempt) at
-render time via `injection_guard` pure-core blocker (ADR-015 Decision 3). This block is
-unconditional — not dependent on a configured GuardrailHook. VP-006 Kani candidate.
+**Security invariant:** SystemMessage slots are hard-coded `TrustRequired`; variables carrying
+`TrustLevel::Untrusted` (see entities-graph.md §TrustLevel) substituted into a TrustRequired
+slot → E-TMPL-001 (SECURITY/InjectionAttempt) at render time via `injection_guard` pure-core
+blocker (ADR-015 Decision 3). This block is unconditional — not dependent on a configured
+GuardrailHook. VP-006 Kani candidate.
 **Architecture authority:** ADR-015.
 
 ### CAP-023: MessagesPlaceholder and FewShotPromptTemplate — Message-List and Few-Shot Composition
@@ -193,7 +202,7 @@ enabling dynamic message-list injection (conversation history windows, streamed 
 sequences). Compose few-shot examples into a ChatPromptTemplate via `FewShotPromptTemplate`:
 accepts a `Vec` of `(input, output)` example pairs, formats each as a Human/AI message pair,
 and injects the sequence before the user-turn slot. All composition produces a `PromptValue`
-output carrying per-message `MessageProvenance` (highest-severity ProvenanceTag across
+output carrying per-message `MessageProvenance` (highest-severity `TrustLevel` across
 substituted variables + SlotTrustPolicy), enabling downstream guardrail and observability use
 (ADR-015 Decision 3).
 

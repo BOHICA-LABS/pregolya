@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.002
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -14,13 +14,15 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "fb22cef"
+input-hash: "8224bc7"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
 capability: CAP-015
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.1 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'sandbox.process_no_isolation_execute' to the mandated WARN-level log emission per observability census (SAP-1). PC1 and VP-2.13.002-A updated to specify the structured event_type field."
 modified: []
 extracted_from: null
 deprecated: null
@@ -56,6 +58,7 @@ enforcement).
 1. Before code execution begins, a log message is emitted at `WARN` level with the text:
    `"ProcessBackend: no filesystem isolation, no network isolation, no memory bounds —
    untrusted code runs with OS-level privileges of the ferrochain process"`
+   The log entry MUST include `event_type = "sandbox.process_no_isolation_execute"` as a structured field alongside the message.
 2. The warning is emitted once per `execute()` invocation, not only at construction time
 3. The process backend executes the tool function and returns its result
 4. `ProcessBackend::capabilities()` returns
@@ -99,7 +102,7 @@ enforcement).
 
 | VP-ID | Property | Proof Method |
 |-------|----------|--------------|
-| VP-2.13.002-A | Every `execute()` call on `ProcessBackend` emits at least one WARN-level log entry containing the words "no filesystem isolation" | unit test — tracing subscriber capture |
+| VP-2.13.002-A | Every `execute()` call on `ProcessBackend` emits at least one WARN-level log entry with `event_type = "sandbox.process_no_isolation_execute"` containing the words "no filesystem isolation" | unit test — tracing subscriber capture |
 | VP-2.13.002-B | No public API of `ferrochain-sandbox` returns a `ProcessBackend` without "unsafe" and "no_isolation" in the function name | structural test — API surface scan |
 | VP-2.13.002-C | `ProcessBackend::capabilities().enforcing()` is `false` | unit test |
 

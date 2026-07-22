@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,10 +14,11 @@ crate: ferrochain-prompts
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
+  - "1.1 (burst-226/F-P131-05/2026-07-21): TrustLevel migration — INV-2 'ProvenanceTag severity ordering' → 'TrustLevel severity ordering'. PC3: MessageProvenance.tag → MessageProvenance.highest_trust_level; ProvenanceTag → TrustLevel in provenance aggregation context. EC-001, EC-002 updated: ProvenanceTag → TrustLevel; tag field → highest_trust_level. TV-001, TV-002: Provenance.tag → Provenance.highest_trust_level; ProvenanceTag variants → TrustLevel variants."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "2951b51"
+input-hash: "2c807f0"
 extracted_from: null
 modified: []
 deprecated: null
@@ -43,7 +44,7 @@ removal_reason: null
 
 `ChatPromptTemplate` renders a sequence of typed message slots into a `PromptValue`, which
 carries `Vec<(Message, MessageProvenance)>`. Each slot is rendered independently; the resulting
-`Message` is paired with a `MessageProvenance` recording the highest-severity `ProvenanceTag`
+`Message` is paired with a `MessageProvenance` recording the highest-severity `TrustLevel`
 from all variables substituted into that slot, plus the slot's `SlotTrustPolicy`. Callers may
 extract a plain `Vec<Message>` via `.into_messages()` when provenance data is not needed
 downstream. All slot policies are validated at construction time; SystemMessage slots are
@@ -64,9 +65,9 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
    → Result<PromptValue, FerrochainError>` returns `Ok(prompt_value)` on success.
 2. `PromptValue.messages` is a `Vec<(Message, MessageProvenance)>` with one entry per slot,
    in the order slots were declared at construction.
-3. For each slot: `MessageProvenance.tag` is `Some(tag)` where `tag` is the highest-severity
-   `ProvenanceTag` across all variables substituted into that slot; `None` if no variable carried
-   a tag (template-literal slots).
+3. For each slot: `MessageProvenance.highest_trust_level` is `Some(trust_level)` where `trust_level` is the highest-severity
+   `TrustLevel` across all variables substituted into that slot; `None` if no variable carried
+   a trust level (template-literal slots).
 4. `MessageProvenance.slot_trust_policy` reflects the slot's policy as declared at construction.
 5. `PromptValue.into_messages()` extracts `Vec<Message>` by discarding provenance metadata;
    the original `PromptValue` is consumed.
@@ -77,19 +78,19 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 
 1. Slot order in the rendered `PromptValue` matches the order slots were declared at
    construction — no reordering occurs.
-2. Tag severity ordering for provenance aggregation: `Untrusted > UserInput > Trusted`.
-   When multiple variables with different tags are substituted into one slot, the
-   highest-severity tag wins.
+2. TrustLevel severity ordering for provenance aggregation: `Untrusted > UserInput > Trusted`.
+   When multiple variables with different TrustLevel values are substituted into one slot, the
+   highest-severity TrustLevel wins.
 3. A slot that is a template literal (no variable substitutions) always has
-   `MessageProvenance.tag = None`.
+   `MessageProvenance.highest_trust_level = None`.
 4. `ChatPromptTemplate` construction is pure (no I/O, no async); it returns `Result`.
 
 ## Edge Cases
 
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
-| EC-001 | HumanMessage slot gets a var with ProvenanceTag::Untrusted | Renders successfully (TrustAll policy); `MessageProvenance.tag = Some(Untrusted)` |
-| EC-002 | Slot has two variables — one `Trusted`, one `UserInput` | `MessageProvenance.tag = Some(UserInput)` (higher severity wins) |
+| EC-001 | HumanMessage slot gets a var with TrustLevel::Untrusted | Renders successfully (TrustAll policy); `MessageProvenance.highest_trust_level = Some(TrustLevel::Untrusted)` |
+| EC-002 | Slot has two variables — one `TrustLevel::Trusted`, one `TrustLevel::UserInput` | `MessageProvenance.highest_trust_level = Some(TrustLevel::UserInput)` (higher severity wins) |
 | EC-003 | Template literal SystemMessage (no variable substitutions) | Renders normally; `MessageProvenance.tag = None`; `slot_trust_policy = TrustRequired` |
 | EC-004 | ChatPromptTemplate with a single HumanMessage slot | Valid construction; renders a single-element `PromptValue.messages` |
 | EC-005 | `into_messages()` called twice | Second call is a compile-time error (moves `PromptValue`); not a runtime concern |
@@ -98,8 +99,8 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 | `template = [System("You are helpful."), Human("{question}")]`, `vars = {"question": TemplateVar { value: "What is Rust?", tag: None }}` | `Ok(PromptValue { messages: [(SystemMessage("You are helpful."), Provenance { tag: None, policy: TrustRequired }), (HumanMessage("What is Rust?"), Provenance { tag: None, policy: TrustAll })] })` | happy-path |
-| TV-002 | Same template, `vars = {"question": TemplateVar { value: "...", tag: Some(UserInput) }}` | HumanMessage slot: `Provenance { tag: Some(UserInput), policy: TrustAll }` | happy-path (provenance threading) |
+| TV-001 | `template = [System("You are helpful."), Human("{question}")]`, `vars = {"question": TemplateVar { value: "What is Rust?", tag: None }}` | `Ok(PromptValue { messages: [(SystemMessage("You are helpful."), Provenance { highest_trust_level: None, policy: TrustRequired }), (HumanMessage("What is Rust?"), Provenance { highest_trust_level: None, policy: TrustAll })] })` | happy-path |
+| TV-002 | Same template, `vars = {"question": TemplateVar { value: "...", trust_level: Some(TrustLevel::UserInput) }}` | HumanMessage slot: `Provenance { highest_trust_level: Some(TrustLevel::UserInput), policy: TrustAll }` | happy-path (provenance threading) |
 | TV-003 | `template.format_messages({})` with all variables pre-bound as partials | `Ok(PromptValue { messages: [...] })` | happy-path (partial binding only) |
 | TV-004 | `into_messages()` on TV-001 result | `Vec<Message>` with `[SystemMessage("You are helpful."), HumanMessage("What is Rust?")]` | happy-path (extraction) |
 

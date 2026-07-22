@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "1.8"
+version: "1.9"
 status: active
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-19/BC-2.19.005.md
   - .factory/specs/behavioral-contracts/ss-21/BC-2.21.003.md
   - .factory/specs/behavioral-contracts/ss-22/BC-2.22.001.md
-input-hash: "1ba9084"
+input-hash: "af0d309"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21]
 ---
@@ -256,16 +256,22 @@ by Kani's CBMC backend. Red Gate: must compile-and-fail before Phase 3 story del
 
 **VP-006 — injection_guard Fail-Closed** (ferrochain-prompts / injection_guard) `Kani P1 Phase 6`
 
-Property: For any slot variable with `ProvenanceTag::External` (or `::ToolOutput`) where the
-slot policy is `TrustRequired`, `check_slot_trust` returns `Err(E-INJ-001)` and never returns
+Property: For any slot variable with `TrustLevel::Untrusted` where the slot policy is
+`TrustRequired`, `check_slot_trust` returns `Err(E-TMPL-001)` and never returns
 `Ok(PromptValue)`. The safe passage (`TrustAll`) path is only reachable when the policy
 explicitly permits it.
+
+Note (burst-226 / F-P131-05): `TrustLevel` is the SS-18-local trust classifier in
+`ferrochain-prompts: prompts::template`. It is distinct from `core::guardrail::ProvenanceTag`
+(SS-11 ingress-boundary struct). Harness uses `kani::Arbitrary` on `TrustLevel` (3-variant
+enum: `Untrusted | UserInput | Trusted`). Error code is `E-TMPL-001` (SECURITY/InjectionAttempt).
 
 Formal statement:
 ```
 ∀ slots: Vec<SlotVar>, |slots| ≤ 4:
-  ∃ slot ∈ slots: slot.trust_policy == TrustRequired ∧ slot.tag ∈ {External, ToolOutput} →
-    check_slot_trust(slots) == Err(E-INJ-001)
+  ∃ slot ∈ slots: slot.trust_policy == TrustRequired
+                  ∧ slot.trust_level == Some(TrustLevel::Untrusted) →
+    check_slot_trust(slots) == Err(FerrochainError { code: "E-TMPL-001", category: SECURITY })
 ```
 
 Kani harness sketch:
@@ -276,16 +282,16 @@ fn injection_guard_fail_closed() {
     kani::assume(n >= 1 && n <= 4);
     let slots: Vec<SlotVar> = (0..n).map(|_| SlotVar {
         trust_policy: kani::any(),
-        tag: kani::any(),
+        trust_level: kani::any(),  // Option<TrustLevel>: None | Some(Untrusted|UserInput|Trusted)
         value: kani::any(),
     }).collect();
     let result = check_slot_trust(&slots);
     let has_violation = slots.iter().any(|s|
         s.trust_policy == SlotTrustPolicy::TrustRequired
-        && matches!(s.tag, ProvenanceTag::External | ProvenanceTag::ToolOutput)
+        && s.trust_level == Some(TrustLevel::Untrusted)
     );
     if has_violation {
-        kani::assert(matches!(result, Err(FerrochainError { code: "E-INJ-001", .. })), "fail-closed: must return E-INJ-001");
+        kani::assert(matches!(result, Err(FerrochainError { code: "E-TMPL-001", .. })), "fail-closed: must return E-TMPL-001");
     } else {
         kani::assert(result.is_ok(), "no violation: must pass");
     }
@@ -397,6 +403,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 1.9 | 2026-07-21 | architect | burst-226 / F-P131-05 | VP-006 section corrected: replace nonexistent `ProvenanceTag::External \| ProvenanceTag::ToolOutput` variants with `TrustLevel::Untrusted` (SS-18-local trust classifier per ADR-015 v1.3); fix error code `E-INJ-001` → `E-TMPL-001` (SECURITY/InjectionAttempt). Formal statement, harness sketch, and explanatory note updated throughout. `TrustLevel` is distinct from `core::guardrail::ProvenanceTag` (SS-11 ingress struct). `SlotVar.tag` field renamed to `SlotVar.trust_level` in harness. |
 | 1.8 | 2026-07-21 | architect | burst-225 / F-P130-05 | Correct VP-006 DI column in Committed VP Obligations table: DI-008 → DI-014. VP-006 proves the fail-closed property (injection detected → Err returned, no PromptValue produced); the semantically correct invariant is DI-014 (Error Propagation / No Silent Swallowing), not DI-008 (Library Constructor Result Contract). Siblings VP-009 and VP-010 both anchor DI-014 for the same class of proof. Propagates VP-INDEX.md v1.4 and VP-006.md v1.2 corrections. |
 | 1.7 | 2026-07-21 | architect | burst-224 / VP-chain propagation | VP-010 formal statement scoped to non-monolith domain (id ∉ LANGCHAIN_MONOLITH_TYPES) per VP-010.md v1.1 / F-P129-04; harness sketch updated with LANGCHAIN_MONOLITH_TYPES assumption and corrected assertion; feasibility note updated. Test-Sufficient 'Content provenance/guardrail' row updated to reflect GuardedDocuments compile_fail mechanism (ADR-014 Decision 6 / VP-2.20.002-A). Input-hash refreshed: b279860 → d7ef822 (BC-2.18.004 v1.1 + BC-2.19.005 v1.1 bumped by PO in same burst). |
 | 1.6 | 2026-07-21 | architect | burst-224 / F-P129-11 | VP-009 module renamed from `ferrochain-vectorstores / vectorstores-mmr` to `ferrochain-vectorstores / vectorstores-similarity` in Committed VP Obligations table and VP-009 P0 entry; propagates VP-INDEX v1.3 module rename. cosine_similarity is a shared primitive in vectorstores::similarity; MMR algorithm is a separate caller. |

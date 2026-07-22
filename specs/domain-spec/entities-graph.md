@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: entities-graph
-version: "1.4"
+version: "1.5"
 status: active
 producer: business-analyst
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -14,6 +14,7 @@ input-hash: "8dce7df"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D21]
 changelog:
+  - "v1.5 (2026-07-21): F-P131-05 adjudication (burst-226) — PromptValue entity: MessageProvenance field renamed tag: Option<ProvenanceTag> → highest_trust_level: Option<TrustLevel>; Invariant updated from '.tag is Untrusted' to '.highest_trust_level is Some(TrustLevel::Untrusted)'. TrustLevel entity added to Retrieval and Serialization Domain (ferrochain-prompts: prompts::template; 3 variants: Untrusted | UserInput | Trusted; severity ordering Untrusted > UserInput > Trusted; disambiguation from ProvenanceTag; authority ADR-015 §Decision 3 + CAP-022/023). Relationships Summary updated: ProvenanceTag line → TrustLevel. TD-VSDD-060 sibling sweep: no other ProvenanceTag trust-variant residue in this file."
   - "v1.4 (2026-07-20): D21 second-half entity additions — VectorStore (ferrochain-vectorstores, ADR-014), Embeddings (ferrochain-core core::embeddings, ADR-017), MetadataFilter (ferrochain-vectorstores, ADR-014), SearchType (ferrochain-vectorstores, ADR-014). Added to '## Retrieval and Serialization Domain'. Relationships Summary extended."
   - "v1.3 (2026-07-20): D21 entity additions — Document (ferrochain-core core::documents, ADR-014), PromptValue (ferrochain-prompts, ADR-015), Serialized (ferrochain-core core::serializable, ADR-016). New section '## Retrieval and Serialization Domain' added. Relationships Summary extended. D21 added to decisions list."
   - "v1.2 (F-P121-01/02, fix burst 124, 2026-07-19): ContentBlock: replace 5-variant drifted list (Text/ImageUrl/ToolUse/ToolResult/Document) with canonical 14-variant reference per BC-2.01.001 PC2; ToolCall fields {id,name,args} per BC-2.08.002/013; NonStandard DI-008 passthrough noted; tool results → ToolMessage per BC-2.09.002. Tool entity DI-012 invariant: 'ToolResult ContentBlocks' → canonical ToolMessage/IngressContent::ToolResult phrasing. Message roles: expand closed 4-variant (Human|AI|System|Tool) to note Function legacy (BC-2.01.002 PC7), Chat arbitrary-role, Remove history-control (BC-2.01.002 EC-005). Relationships summary: 'Tool returns ToolResult (ContentBlock subtype)' → ToolMessage per BC-2.09.002. TD-VSDD-060 sweep: all ContentBlock-depicting sites in this file fixed."
@@ -146,17 +147,48 @@ Pure data carrier returned by any Retriever implementation.
 Rendered output of a PromptTemplate or ChatPromptTemplate invocation; the carrier that
 delivers a formatted prompt to a chat model call while preserving provenance.
 - **Fields:** messages: Vec<(Message, MessageProvenance)> where MessageProvenance carries:
-  tag: Option<ProvenanceTag> (highest-severity tag from variables substituted into this
-  message; None if no variables were substituted), slot_trust_policy: SlotTrustPolicy
+  highest_trust_level: Option<TrustLevel> (highest-severity TrustLevel from variables
+  substituted into this message; None if no variables were substituted or all used
+  developer-supplied values with no explicit trust_level), slot_trust_policy: SlotTrustPolicy
   (TrustAll | TrustRequired, inherited from the template slot)
 - **Crate:** ferrochain-prompts, module `prompts::prompt_value`
 - **Conversion:** `.into_messages()` extracts `Vec<Message>` for direct use in a model call;
   provenance data is discarded after this conversion.
-- **Invariant:** If any MessageProvenance.tag is Untrusted and the corresponding slot policy
-  is TrustRequired, `format_messages()` raises E-TMPL-001 (SECURITY) before PromptValue
-  is produced — a PromptValue with a TrustRequired/Untrusted combination never exists.
+- **Invariant:** If any MessageProvenance.highest_trust_level is Some(TrustLevel::Untrusted)
+  and the corresponding slot policy is TrustRequired, `format_messages()` raises E-TMPL-001
+  (SECURITY) before PromptValue is produced — a PromptValue with a
+  TrustRequired/TrustLevel::Untrusted combination never exists.
 - **Note:** Corresponds to LangChain's `PromptValue` type; ferrochain adds per-message
   MessageProvenance for security-critical provenance threading (ADR-015 Decision 3).
+  `TrustLevel` (see §TrustLevel below) is the SS-18-local trust classifier — distinct from
+  `ProvenanceTag` (SS-11 ingress-boundary audit struct, entities-server.md §ProvenanceTag).
+
+### TrustLevel
+Template-variable trust classifier for the SS-18 template composition layer; distinct from
+and independent of `ProvenanceTag` (SS-11 ingress-boundary audit struct).
+- **Variants (severity ordering: Untrusted > UserInput > Trusted):**
+  - `Untrusted` — content derived from an external/adversarial source (e.g., a RAG retrieval
+    result or an MCP tool output); substituting into a `TrustRequired` slot raises E-TMPL-001
+    (SECURITY/InjectionAttempt) at render time
+  - `UserInput` — content from a human operator; acceptable in `TrustRequired` slots when
+    user trust is granted to the human principal
+  - `Trusted` — developer-controlled content; always acceptable in any template slot
+- **Crate:** ferrochain-prompts, module `prompts::template`
+- **Usage:** `TemplateVar.trust_level: Option<TrustLevel>` — `None` is treated as `Trusted`
+  (developer-supplied literal; no external origin). `MessageProvenance.highest_trust_level:
+  Option<TrustLevel>` carries the maximum-severity TrustLevel across all variables substituted
+  into a single message (`Untrusted > UserInput > Trusted` ordering). Only `Untrusted` triggers
+  E-TMPL-001; `UserInput` and `Trusted` (or None) are always accepted.
+- **Distinct from ProvenanceTag (ADR-015 §Decision 3):** `ProvenanceTag` (entities-server.md
+  §ProvenanceTag) is the SS-11 ingress-boundary audit struct with fields `boundary_type:
+  BoundaryType`, `ingress_id: Uuid`, `sequence_position: usize`. It records WHICH ingress event
+  produced content and WHERE within that event. `TrustLevel` is the SS-18 composition-layer
+  classifier for template-variable trust at render time. When a developer derives a template
+  variable from a RAG result (which arrived at the ingress boundary with a ProvenanceTag), they
+  translate that into `TrustLevel::Untrusted` for the composition step. The ingress ProvenanceTag
+  record is captured in the guardrail audit log at ingress time and need not be threaded through
+  template composition.
+- **Authority:** ADR-015 §Decision 3; CAP-022/CAP-023.
 
 ### Serialized
 The lc-JSON wire envelope for types implementing `LcSerializable`. The sum type that
@@ -262,7 +294,7 @@ Embeddings::embed_documents returns Vec<Vec<f32>> (one per input); embed_query r
 Embeddings dimensionality invariant: all vectors same length (E-EMBED-001 on violation)
 EmbeddingsOpenAI + EmbeddingsOllama implement Embeddings; ferrochain-anthropic has NO impl
 ChatPromptTemplate::format_messages produces PromptValue (Vec<(Message, MessageProvenance)>)
-PromptValue carries per-message ProvenanceTag from substituted variables
+PromptValue carries per-message TrustLevel (MessageProvenance.highest_trust_level) from substituted variables; TrustLevel::Untrusted in a TrustRequired slot → E-TMPL-001 (ADR-015 §Decision 3)
 LcSerializable::serialize produces Serialized; Reviver::revive consumes Serialized → typed value
 Serialized.Constructor.kwargs has credential fields stripped (lc_secrets() / DI-010)
 ```

@@ -1,10 +1,10 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.6"
+version: "1.7"
 status: active
 producer: business-analyst
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -32,6 +32,7 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21]
 changelog:
+  - "v1.7 (2026-07-21): F-P131-04/05 adjudication (burst-226) — entities-graph.md v1.4→v1.5 (PromptValue MessageProvenance.tag→highest_trust_level; TrustLevel entity added to Retrieval and Serialization Domain; Relationships Summary updated); entities-server.md v1.11→v1.12 (ProvenanceTag disambiguation note added); capabilities-p1-p2.md v1.5→v1.6 (CAP-022 strict-undefined universal; CAP-022 security invariant TrustLevel::Untrusted explicit; CAP-023 highest-severity TrustLevel); ubiquitous-language-core.md v1.4→v1.5 (TrustLevel D21 term added; 15→16 D21 terms); ubiquitous-language-server.md v1.3→v1.4 (ProvenanceTag disambiguation note added). Document Map updated."
   - "v1.6 (2026-07-20): D21 second-half CAP authoring complete. ID Registry: CAP-NNN count 27→33 (CAP-028..033 authored for SS-21/22). Priority Distribution: P1 count 13→19; total 27→33. capabilities-p1-p2.md updated (v1.4→v1.5); entities-graph.md updated (v1.3→v1.4, VectorStore/Embeddings/MetadataFilter/SearchType added); ubiquitous-language-core.md updated (v1.3→v1.4, 6 D21 terms added). Domain C forcing-function row updated (SS-22/CAP-031..033 added). Document Map updated."
   - "v1.5 (2026-07-20): D21 first-half CAP authoring complete. ID Registry: CAP-NNN count 21→27 (CAP-022..027 authored for SS-18/19/20). Priority Distribution: P1 count 7→13; total 21→27. capabilities-p1-p2.md updated (v1.3→v1.4); capabilities-p0.md updated (v1.6→v1.7, CAP-002 D21 reversal); entities-graph.md updated (v1.2→v1.3, Document/PromptValue/Serialized added); ubiquitous-language-core.md updated (v1.2→v1.3, 9 D21 terms added). D21 added to decisions list. Document Map row descriptions updated."
   - "v1.4 (2026-07-20): Design-Forcing-Function Summary updated — Four holdout domains (was three); Domain D (Hermes Agent, inbound MCP server role per D19/D20) added to forcing-function table. D19 added to decisions list. TD-VSDD-060 sweep: one stale occurrence corrected; second occurrence (v1.1 changelog: 'all three were over 1,500-token threshold') refers to split files, not holdout domains — accurate, no change."
@@ -59,7 +60,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 |---------|------|-------|-----------------|---------|
 | Capabilities — P0 | capabilities-p0.md | ~140 | product-owner, architect, story-writer | CAP-001–008 (Wave 0/1) + CAP-012, CAP-013, CAP-016 (D17-elevated to P0; cross-cutting Wave 0/1); CAP-002 revised v1.7 (D21 reversal) |
 | Capabilities — P1/P2 | capabilities-p1-p2.md | ~380 | product-owner, architect, story-writer | P1: CAP-009–011, CAP-014–015, CAP-020–033 (Wave 2 + Wave 0/1; D21 full expansion CAP-022..033); P2: CAP-017, CAP-018, CAP-019 |
-| Entities — Core/Graph/Checkpoint/Retrieval/Serialization/VectorStore/Embeddings | entities-graph.md | ~200 | architect, product-owner | Core primitives, graph, checkpoint + D21 full: Document, PromptValue, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType |
+| Entities — Core/Graph/Checkpoint/Retrieval/Serialization/VectorStore/Embeddings | entities-graph.md | ~200 | architect, product-owner | Core primitives, graph, checkpoint + D21 full: Document, PromptValue, TrustLevel, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType |
 | Entities — Server/Policy/Provider | entities-server.md | ~95 | architect, product-owner | Server, governance, and provider entities |
 | Domain Invariants | invariants.md | ~156 | product-owner, architect | DI-NNN business rules (14 invariants) |
 | Domain Events | events.md | ~140 | architect | Processing stages, triggers, preconditions |
@@ -68,7 +69,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Risks | risks.md | ~51 | product-owner, architect | R-NNN risk register (8 risks) |
 | Failure Modes | failure-modes.md | ~140 | architect, test-writer | FM-NNN runtime failure catalog (14 modes) |
 | Differentiators | differentiators.md | ~62 | product-owner | Competitive differentiator → CAP-NNN traceability |
-| Ubiquitous Language — Core/Graph/D21 | ubiquitous-language-core.md | ~215 | all agents | Core and graph term definitions + D21 full (15 terms): PromptTemplate, ChatPromptTemplate, MessagesPlaceholder, FewShot, LcSerializable, Reviver, Retriever, Document, VectorStoreRetriever, VectorStore, InMemoryVectorStore, MetadataFilter, Embeddings, EmbeddingsOpenAI, EmbeddingsOllama |
+| Ubiquitous Language — Core/Graph/D21 | ubiquitous-language-core.md | ~215 | all agents | Core and graph term definitions + D21 full (16 terms): PromptTemplate, ChatPromptTemplate, MessagesPlaceholder, FewShot, LcSerializable, Reviver, Retriever, Document, VectorStoreRetriever, VectorStore, InMemoryVectorStore, MetadataFilter, Embeddings, EmbeddingsOpenAI, EmbeddingsOllama, TrustLevel |
 | Ubiquitous Language — Server/Policy | ubiquitous-language-server.md | ~100 | all agents | Server, policy/safety, error terms + reconciliation table |
 | Bounded Contexts | bounded-contexts.md | ~155 | architect | Crate-level subsystem boundaries |
 

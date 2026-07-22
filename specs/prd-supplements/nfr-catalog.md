@@ -1,17 +1,18 @@
 ---
 document_type: prd-supplement-nfr-catalog
 level: L3
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/risks.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "9c8ed1a"
+input-hash: "911f13e"
 changelog:
+  - "1.3 (burst-226/F-P131-07+F-P131-08/2026-07-21): (1) NFR-012: InMemoryVectorStore O(n·d) linear scan corpus envelope per ADR-014 v1.5. (2) NFR-013: embed_documents input-size constraint vs provider max-batch-size caps per ADR-017. (3) NFR-014: template render bounds — max template variables and slots per render call per ADR-015. (4) NFR-009 extended: add embedding call sites (ferrochain-prompts not applicable; ferrochain-vectorstores and ferrochain-core::embeddings are new HTTP-timeout scopes for embed_documents/embed_query). (5) NFR-to-Module map updated: NFR-009 extended to ferrochain-vectorstores + ferrochain-core::embeddings; NFR-012/013/014 rows added."
   - "1.2 (2026-07-17, F-P89-03): Resolved pending hash recomputation from v1.1. Recomputed input-hash against current post-STATE.md-removal inputs (prd.md, risks.md, invariants.md): 2153125 → 0f05a12. The value 2153125 was the pre-v1.1 hash computed when STATE.md was still an input; v1.1 removed STATE.md but deferred the recompute. No content change — hash correction only."
   - "1.1 (2026-07-17): Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file; input-hash drifts on every state write with zero spec-content signal for this supplement. All genuine derivation sources (prd.md, risks.md, invariants.md) are already listed and unchanged. D-NNN decision references cited inline (D17-Q7, D12, D17-Q2, D17-Q4, D17-Q8) are stable baked-in facts, not live STATE.md dependencies. Input-hash marked pending recomputation."
 traces_to: prd.md
@@ -37,9 +38,12 @@ primary_consumers: [architect, performance-engineer, formal-verifier]
 | NFR-006 | Conformance | All Wave 2 provider crates must pass ferrochain-standard-tests before v1 release | 100% pass rate (0 failures) for ferrochain-openai, -anthropic, -ollama across all 5 conformance categories (streaming, tool-call, structured-output, error-fidelity, token-accounting) | `cargo test -p ferrochain-standard-tests -- --include-ignored` | P1 | R-003 | BC-2.08.001–005, BC-2.08.008 |
 | NFR-007 | Performance | ferrochain-graph single-threaded graph execution throughput | ≥ 100 nodes/second on M1 Mac for a 10-node linear graph (no IO) | Criterion benchmark: `cargo bench --bench graph_throughput` | P1 | N/A | BC-2.03.001 |
 | NFR-008 | Reliability | HITL interrupt state must survive process restart; no resume values lost | 0 resume values lost in 50 interrupt-crash-restart cycles with sync-tier checkpointing | Soak test: `cargo test --test hitl_crash_recovery` | P0 | N/A — DI-003 | BC-2.05.001, BC-2.05.002 |
-| NFR-009 | Security | No outbound HTTP connection may hang indefinitely | 0 `reqwest::ClientBuilder` calls without `.timeout()` in non-test code; all timed out within 30s | CI lint: `cargo xtask check-client-timeout`; integration test: timeout injection | P0 | N/A — DI-009 | BC-2.14.004 |
+| NFR-009 | Security | No outbound HTTP connection may hang indefinitely | 0 `reqwest::ClientBuilder` calls without `.timeout()` in non-test code; all timed out within 30s. Applies to all outbound provider calls including `embed_documents` and `embed_query` call paths in ferrochain-openai and ferrochain-ollama | CI lint: `cargo xtask check-client-timeout`; integration test: timeout injection | P0 | N/A — DI-009 | BC-2.14.004, BC-2.22.002, BC-2.22.003 |
 | NFR-010 | Adoptability | ferrochain-core crates.io download rate | ≥ 4,000 downloads/month within 12 months of public release | Measure at 3-month, 6-month, 12-month post-launch against langchain-rust baseline | P1 | ASM-005 | N/A (launch metric) |
 | NFR-011 | Correctness | BSP reducer output must be deterministic regardless of task completion order | ∀ identical graph inputs: output state is identical regardless of concurrency scheduling; zero counterexamples found by Kani in ≤ 1,000 bounds | `cargo kani --harness bsp_determinism_harness --unwind 8` | P0 | R-001 (competitor velocity) | BC-2.03.001, BC-2.03.003 |
+| NFR-012 | Performance | InMemoryVectorStore cosine similarity scan must not degrade unboundedly for large corpora | ≤ 5s for a corpus of 100,000 documents with 1,536-dim embeddings (OpenAI `text-embedding-3-small` dimension) on M1 Mac baseline hardware; linear O(n·d) time complexity confirmed by benchmark | Criterion benchmark: `cargo bench --bench vectorstore_scan_100k`; complexity verified by profiling against 10k, 50k, 100k corpus sizes | P1 | N/A — ADR-014 v1.5 §Performance Note | BC-2.21.002, BC-2.21.003 |
+| NFR-013 | Reliability | Embedding providers must reject over-size batches before sending to provider API | 0 silent truncations; `embed_documents` returns `Err(E-EMBED-001)` when input batch exceeds provider max-batch-size; batch-size cap documented per provider | Integration test: send batch of size = max+1 for each provider; assert Err not silent truncation | P1 | N/A — ADR-017 Decision 2 (dimensionality contract) | BC-2.22.001, BC-2.22.002, BC-2.22.003 |
+| NFR-014 | Security | Template render must complete in bounded time regardless of variable count | `ChatPromptTemplate::format_messages` completes in ≤ 100ms for a template with 500 variables across 20 slots on M1 Mac | Criterion benchmark: `cargo bench --bench template_render_500vars`; no unbounded regex backtracking (f-string engine is linear scan) | P1 | N/A — ADR-015 Decision 4 (engine-neutral; both f-string and jinja2 must be bounded) | BC-2.18.001, BC-2.18.004 |
 
 ## NFR Categories
 
@@ -65,9 +69,12 @@ primary_consumers: [architect, performance-engineer, formal-verifier]
 | NFR-006 | ferrochain-standard-tests, all provider crates | Standard-tests crate must be in CI for Wave 2 |
 | NFR-007 | ferrochain-graph (BSP engine) | Pre-allocated task buffers; no per-super-step heap allocation for task scheduling |
 | NFR-008 | ferrochain-checkpoint, ferrochain-graph | HITL state must be checkpointed before returning from interrupt() |
-| NFR-009 | All crates with outbound HTTP (ferrochain-\<provider\>, ferrochain-mcp, ferrochain-server) | Builder pattern enforces timeout; no default client construction |
+| NFR-009 | All crates with outbound HTTP (ferrochain-\<provider\>, ferrochain-mcp, ferrochain-server, ferrochain-vectorstores where provider calls occur, ferrochain-core::embeddings call sites) | Builder pattern enforces timeout; no default client construction; embedding provider calls included |
 | NFR-010 | ferrochain-core (published crate) | Documentation quality and README completeness affect download rate |
 | NFR-011 | ferrochain-graph (BSP reducer application) | Sort-then-apply reducer strategy; no fold over unordered iterator |
+| NFR-012 | ferrochain-vectorstores (InMemoryVectorStore) | O(n·d) linear scan — no index structure; use InMemoryVectorStore only within documented corpus size envelope |
+| NFR-013 | ferrochain-core::embeddings trait, ferrochain-openai (EmbeddingsOpenAI), ferrochain-ollama (EmbeddingsOllama) | Batch-size guard before provider call; use provider-declared max batch size |
+| NFR-014 | ferrochain-prompts (ChatPromptTemplate::format_messages) | f-string engine linear scan; no regex backtracking; bounded per-variable iteration |
 
 ## Success Criteria Cross-Reference
 

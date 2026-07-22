@@ -29,7 +29,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "3dcd2b1"
+input-hash: "f94e0d3"
 extracted_from: null
 modified: []
 deprecated: null

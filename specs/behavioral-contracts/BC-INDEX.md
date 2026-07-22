@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "1.9"
+version: "2.0"
 status: active
 producer: state-manager
 timestamp: 2026-07-21T00:00:00Z
@@ -42,7 +42,7 @@ traces_to: .factory/specs/prd.md
 | BC-2.07.002 | Non-ASCII Boundary Parity with Python Reference Implementation | R8 (splitter code-point parity) |
 | BC-2.09.004 | MCP Bare ToolException Re-Raise Preserving Type Identity | R11 (MCP upstream test void) |
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections | R11 (MCP upstream test void) |
-| BC-2.18.004 | injection_guard — SystemMessage Slot with Untrusted ProvenanceTag Raises E-TMPL-001 (Fail-Closed) | ADR-015 Security Invariant 1 |
+| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | ADR-015 Security Invariant 1 |
 | BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | ADR-015 Security Invariant 2 |
 | BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed, VP-010 Kani Candidate) | ADR-016 Security Invariant |
 | BC-2.20.002 | BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns Entering Graph Context | ADR-014 Consequences §DI-012 |
@@ -56,7 +56,7 @@ traces_to: .factory/specs/prd.md
 | VP-001 | BC-2.03.001 | BSP Super-Step Execution Determinism | Kani | NE-17 |
 | VP-002 | BC-2.04.006 | Session Triple-Address Uniqueness | Kani | NE-12 |
 | VP-003 | BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root | Kani | NE-02 |
-| VP-006 | BC-2.18.004 | injection_guard — SystemMessage Slot with Untrusted ProvenanceTag Raises E-TMPL-001 | Kani (candidate) | ADR-015 Security Invariant 1 |
+| VP-006 | BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 | Kani (candidate) | ADR-015 Security Invariant 1 |
 | VP-007 | BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | Proptest | CAP-024 round-trip invariant |
 | VP-008 | BC-2.22.001 | Embeddings Trait — Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err | Proptest | CAP-031 dimensionality invariant |
 | VP-009 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division | Kani (candidate) | ADR-014 v1.1 Hardening Note |
@@ -166,7 +166,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.18.001 | PromptTemplate F-String Rendering, Partial Binding, Variable Detection, and Strict-Undefined Guard | CAP-022 | | DI-008,DI-014 | P1 | | | ss-18/BC-2.18.001.md |
 | BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance | CAP-022 | | DI-008 | P1 | | | ss-18/BC-2.18.002.md |
 | BC-2.18.003 | MessagesPlaceholder Vec\<Message\> In-Place Expansion and FewShotPromptTemplate Few-Shot Composition | CAP-023 | | DI-008 | P1 | | | ss-18/BC-2.18.003.md |
-| BC-2.18.004 | injection_guard — SystemMessage Slot with Untrusted ProvenanceTag Raises E-TMPL-001 (Fail-Closed at Render Time) | CAP-022 | | DI-008,DI-014 | P1 | **RG** | **VP-006** | ss-18/BC-2.18.004.md |
+| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | CAP-022 | | DI-008,DI-014 | P1 | **RG** | **VP-006** | ss-18/BC-2.18.004.md |
 | BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | CAP-022 | | DI-008,DI-014 | P1 | **RG** | | ss-18/BC-2.18.005.md |
 | BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | CAP-024 | | DI-008 | P1 | | **VP-007** | ss-19/BC-2.19.001.md |
 | BC-2.19.002 | lc_secrets() Credential Fields Stripped from kwargs Before Serialization and Constructor Dispatch | CAP-024 | | DI-008,DI-010 | P1 | | | ss-19/BC-2.19.002.md |
@@ -199,6 +199,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.0 | 2026-07-21 | Burst-226 (F-P131-01/02/03/05/06/07): (1) F-P131-05 TrustLevel migration: BC-2.18.004 v1.1→1.2 (title updated to canonical TrustLevel form; EC/TV/INV migrated from ProvenanceTag to TrustLevel). BC-2.18.002 v1.0→1.1 (INV-2/PC3 TrustLevel). BC-2.09.003 v1.1→1.2 (PC1 ProvenanceTag struct form; PC4 canonical guardrail.unregistered_passthrough). BC-2.11.006 v1.1→1.2 (PC2 canonical event_type). (2) F-P131-01: BC-2.20.002 v1.2→1.3 (PC2 severity-bifurcated Fail; E-CORE-008). (3) F-P131-07: BC-2.21.004 v1.1→1.2 (INV-3 fail-safe E-VS-005). (4) F-P131-02+03: BC-2.13.002 v1.0→1.1 (event_type sandbox.process_no_isolation_execute). BC-2.12.006 v1.2→1.3 (event_type server.rate_limit_store_in_memory). BC-2.15.003 v1.1→1.2 (event_type memory.gdpr_unattributed_session_entries). BC-2.12.005 v1.4→1.5 (event_type server.security_config_cors_wildcard). BC-2.18.004 H1 title already updated in v1.9→2.0 scope. | burst-226 F-P131 |
 | 1.9 | 2026-07-21 | F-P130 fix burst 225: DI column updates — (1) BC-2.20.001: DI-008,DI-012 → DI-008,DI-012,DI-014 (F-P130-04). (2) BC-2.20.002: DI-012 → DI-012,DI-014 (F-P130-02/04). (3) BC-2.21.004: DI-008 → DI-008,DI-014 (F-P130-04). (4) BC-2.22.002: DI-008,DI-010,DI-014 → DI-008,DI-009,DI-010,DI-014 (F-P130-09). (5) BC-2.22.003: DI-008,DI-014 → DI-008,DI-009,DI-014 (F-P130-09). | F-P130 burst-225 |
 | 1.8 | 2026-07-21 | D21 spec-body layer complete (burst 222): header 95→116 BCs; P0 48→51, P1 39→56, P2 8→9; Red Gate 5→11 (+BC-2.18.004/005, BC-2.19.005, BC-2.20.002, BC-2.21.003, BC-2.22.002); VP Seed 3→8 (+VP-006→BC-2.18.004, VP-007→BC-2.19.001, VP-008→BC-2.22.001, VP-009→BC-2.21.003, VP-010→BC-2.19.005); VP-INDEX 5→10; subsection groups 17→22; Full Catalog +21 rows (SS-18..22); VP Seed table restructured with VP ID column. BC-2.19.001 v1.0→v1.1 (VP-007 seed assigned). | D21 burst-222 |
 | 1.7 | 2026-07-20 | D21 ecosystem-parity expansion: 21 BC files authored (SS-18..22); frontmatter/changelog updated in prd.md + BC-INDEX.md. Body incomplete (this entry). | D21 burst-216 |

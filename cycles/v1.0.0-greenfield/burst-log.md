@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "a03e596"
+input-hash: "2116adc"
 traces_to: STATE.md
 ---
 
@@ -3690,6 +3690,72 @@ Pass P1D-130 adversarial review completed against frozen HEAD d21676d: NOT CLEAN
 - F-P130-07 FIXED (PO): error-taxonomy v1.29 — E-EMBED-001 prefix corrected to EmbeddingDimensionMismatch: (canonical). BC-2.22.001 v1.1 updated. ADR-010 v1.2 + ADR-017 v1.2 + VP-008 v1.1 swept for prefix. Gate #33 both-direction sweep clean.
 - F-P130-08 FIXED (PO): BC-2.19.003 v1.1 — TV-001/002 reframed as relational assertions. Non-falsifiable magic count 141 removed.
 - F-P130-09 FIXED (PO): BC-2.22.002 v1.1 + BC-2.22.003 v1.1 — DI-009 anchors added to both; BC-2.14.004 xref added. BC-INDEX v1.9 propagated.
+
+---
+
+## Burst 226 — P1D-131 Fix-Burst COMPLETE (2026-07-21)
+
+**Pass:** P1D-131 (adversary pass 131; third pass on D21 expanded perimeter)
+**Burst:** 226 (state-manager commit)
+**Agents dispatched:** architect, business-analyst, product-owner, state-manager
+
+### P1D-131 Findings (7 total: 1 CRIT / 3 HIGH / 3 MED)
+
+- **F-P131-01 HIGH** — ADR-014 rag_ingress guardrail severity not bifurcated: timeout/unavailable should be configurable (Warn or Error) vs hard-fail. Minted E-CORE-008 (RAG_INGRESS_GUARDRAIL_UNAVAILABLE).
+- **F-P131-02 HIGH** — BC-2.09.003 ProvenanceTag struct definition missing; body references canonical SS-11 ProvenanceTag without cross-ref to BC-2.11.001/002.
+- **F-P131-03 HIGH** — BC-2.11.006 missing canonical emission section for guardrail.unregistered_passthrough; observability.md v1.0 catalog not cross-referenced.
+- **F-P131-04 MED** — BC-2.12.005 / BC-2.12.006 / BC-2.13.002 / BC-2.15.003: 4 BCs cite event_types inconsistent with observability.md catalog census (retired spellings / uncatalogued events).
+- **F-P131-05 CRIT** — ADR-015 ProvenanceTag trust-axis schism: prompt template injection guard relies on ProvenanceTag.trust_level field, but ProvenanceTag is a canonical SS-11 struct (immutable mcp/rag provenance) that MUST NOT carry a mutable trust-policy axis. Trust classification for templates is a separate concern. Resolution: TrustLevel enum Untrusted|UserInput|Trusted minted in prompts::template; ProvenanceTag stays canonical SS-11 struct.
+- **F-P131-06 MED** — nfr-catalog missing D21 coverage: NFR-012/013/014 for prompt template / retriever / vectorstore absent; NFR-009 not extended to all 5 D21 HTTP-bearing subsystems.
+- **F-P131-07 MED** — ADR-014 fail-safe filter default unspecified: rag_ingress guardrail default behavior on empty registry undefined. Resolution: block-all (Deny) on empty registry; E-VS-005 minted (VECTORSTORE_GUARDRAIL_UNREGISTERED).
+
+### Fix Actions (all 7 closed in burst 226)
+
+**Architect** (F-P131-01, F-P131-05, F-P131-07):
+- ADR-015 v1.3: TrustLevel enum Untrusted|UserInput|Trusted minted in prompts::template; Decision 4 universal strict-undefined; ProvenanceTag stays SS-11 canonical struct.
+- ADR-014 v1.5: rag_ingress severity bifurcation per BC-2.11.005 closure semantics; E-CORE-008 specified (RAG_INGRESS_GUARDRAIL_UNAVAILABLE, OPERATIONAL/unavailable/Maybe); fail-safe filter default = block-all (Deny) on empty registry; E-VS-005 specified (VECTORSTORE_GUARDRAIL_UNREGISTERED, SECURITY/misconfigured/Fatal).
+- VP-006 v1.3: TrustLevel harness added.
+- verification-architecture v1.9, purity-boundary-map v1.9, module-decomposition v1.14.
+
+**Business Analyst** (F-P131-05 TrustLevel entity propagation):
+- entities-graph v1.5: TrustLevel entity added; PromptValue gains `highest_trust_level` field.
+- entities-server v1.12: disambiguation note for ProvenanceTag vs TrustLevel.
+- ubiquitous-language-core v1.5: TrustLevel defined; 16 D21 terms total.
+- ubiquitous-language-server v1.4: TrustLevel term added.
+- capabilities-p1-p2 v1.6: CAP-022 universal strict-undefined; CAP-023 TrustLevel.
+- L2-INDEX v1.7.
+
+**Product Owner** (F-P131-02, F-P131-03, F-P131-04, F-P131-05 BC side, F-P131-06):
+- BC-INDEX v2.0 (TrustLevel migration + event_type re-census).
+- BC-2.18.004 v1.2 + BC-2.18.002 v1.1: TrustLevel migration (ProvenanceTag.trust_level replaced by TrustLevel enum in prompts::template).
+- BC-2.09.003 v1.2: canonical ProvenanceTag struct + canonical emission re-anchored.
+- BC-2.11.006 v1.2: canonical emission section added.
+- BC-2.20.002 v1.3: E-CORE-008 severity-bifurcated PC2.
+- BC-2.21.004 v1.2: E-VS-005 fail-safe INV-3.
+- BC-2.13.002 v1.1 + BC-2.12.006 v1.3 + BC-2.15.003 v1.2 + BC-2.12.005 v1.5: event_type assignments corrected per observability catalog re-census.
+- error-taxonomy v1.30: E-CORE-008 + E-VS-005 minted; census 98 = 43 CORE + 17 SECURITY/VS + 38 domain.
+- interface-definitions v2.44.
+- observability.md v1.1: 6 active event_types + 1 retired (ferrochain.mcp.guardrail.unregistered); prose-emission sweep methodology documented.
+- nfr-catalog v1.3: NFR-012/013/014 D21 coverage + NFR-009 extension.
+- prd v1.7.
+
+### Hash Sweep (D18-P89-A / D18-P90-A)
+
+5 transitive passes + ARCH-INDEX individually updated. Final: TOTAL=218 MATCH=179 STALE=0 NOINPUT=39.
+
+### Convergence Status After Burst 226
+
+- Phase 1d passes: 131 (128 pre-D21 + 3 post-D21 expanded-perimeter passes; NOT CLEAN)
+- Fix bursts: 131 (fix-burst 226 COMPLETE — all 7 findings closed)
+- Phase 1 status: P1D-131 fix-burst COMPLETE; TrustLevel trust-axis schism CRIT resolved; error census 98
+- Convergence counter: 0/3 (P1D-131 NOT CLEAN; frozen-HEAD streak RESETS on push of this commit)
+- NEXT: adversary pass P1D-132 on new frozen HEAD → cascade toward 3/3 CLEAN(strict) → check-input-drift → fresh consistency audit → Phase 1 HUMAN GATE
+
+### Archived Current Phase Steps Row (displaced from STATE.md — burst-222 row)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Burst 222 — D21 spec-body layer COMPLETE; prd.md v1.4 + BC-INDEX.md v1.8 bodies finished; 51/56/9 = 116 BCs; VP-007 seeded BC-2.19.001; hash sweep STALE=113→0 (4 passes); burst-216 row archived | state-manager | COMPLETE | prd.md §2 BC tables (2.18-2.22: 21 rows), §3/§5/§7 expanded; totals 116 BCs — 51 P0 / 56 P1 / 9 P2. BC-INDEX.md v1.8: 116 (51/56/9), 22 groups, Red Gate 11, VP Seed 8, VP-INDEX note 5→10. BC-2.19.001 v1.1 (vp_seed: true + vp_id: VP-007). Hash sweep STALE=0 (4 passes). Burst 222. |
 
 ### Lesson Captured (burst 225)
 

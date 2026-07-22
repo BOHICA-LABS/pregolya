@@ -2,13 +2,14 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.10"
+version: "1.12"
 status: active
 producer: business-analyst
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 changelog:
-  - "1.10 (F-P120-01, fix burst 123, 2026-07-19): Correct Command depiction in §ResumeValue from 2-variant enum (Command::Resume/Command::Goto) to struct-with-optional-fields form matching BC-2.05.004. Command { resume, update, goto, graph } with independently-settable combinable fields and Command.PARENT subgraph-escape semantics documented. TD-VSDD-060 sweep: capabilities-p0.md:113 'Command(resume=value)' is API-call notation (not enum variant syntax), already-consistent with BC-2.05.004 struct form; exempt. ubiquitous-language-core.md:142 drifted; fixed in same burst (file bumped to v1.1). No other drifted Command-depiction sites found in domain-spec shards."
+  - "1.12 (burst-226, 2026-07-21): F-P131-05 adjudication — §ProvenanceTag: disambiguation note added clarifying that ProvenanceTag (SS-11, 3-field ingress-boundary audit struct) has no trust-level dimension, and that template-composition trust is handled by TrustLevel in ferrochain-prompts: prompts::template (entities-graph.md §TrustLevel). The two axes must not be conflated (ADR-015 §Decision 3). TD-VSDD-060 sweep: no ProvenanceTag trust-variant residue in this file."
   - "1.11 (F-P121-01, fix burst 124, 2026-07-19): §Cross-Section Relationships: 'produces ToolResult → GuardrailHook fires → content enters Message' → 'produces ToolMessage (BC-2.09.002) → GuardrailHook fires on content as IngressContent::ToolResult → filtered content enters model context'. TD-VSDD-060 sweep: this was the only ToolResult-as-ContentBlock site in this file; fixed."
+  - "1.10 (F-P120-01, fix burst 123, 2026-07-19): Correct Command depiction in §ResumeValue from 2-variant enum (Command::Resume/Command::Goto) to struct-with-optional-fields form matching BC-2.05.004. Command { resume, update, goto, graph } with independently-settable combinable fields and Command.PARENT subgraph-escape semantics documented. TD-VSDD-060 sweep: capabilities-p0.md:113 'Command(resume=value)' is API-call notation (not enum variant syntax), already-consistent with BC-2.05.004 struct form; exempt. ubiquitous-language-core.md:142 drifted; fixed in same burst (file bumped to v1.1). No other drifted Command-depiction sites found in domain-spec shards."
   - "1.9 (2026-07-19): F-P118-03 — fix wrong BC citation on completed_at semantics line. Changed Source from 'F-P24-01, BC-2.12.003 PC8(c)(d)' to 'F-P24-01, BC-2.12.003 PC13, BC-2.10.003 PC8(c)(d)'. PC13 is the correct BC-2.12.003 clause governing completed_at (matches updated_at's PC13 citation on the adjacent line and interface-definitions:867). PC8(c)(d) belongs to BC-2.10.003 (OnCeiling::Summarize → summary_halt path), retained as a separate correctly-attributed reference. TD-VSDD-060 sweep: line 58 BC-2.10.003 PC8(c)(d) was already correct; frontmatter v1.8 entry references BC-2.12.003 PC7/PC8 (no lettered subparts) which is correct for the lifecycle state-machine; no other BC-2.12.003 PC8(c)(d) conflations found."
   - "1.8 (2026-07-19): F-P117-01 — add `summary_halt` to the RunStatus terminal set throughout §Run. completed_at semantics: add `summary_halt` as a terminal state that sets completed_at. RunStatus lifecycle: add `| summary_halt` as a fourth terminal alternative reached via in_progress → summary_halt on the OnCeiling::Summarize path (BC-2.12.003 PC7/PC8); carries the summarize model response as final output. §OnCeiling Summarize bullet already correctly cited summary_halt (line ~91); no change needed there. Whole-file sweep confirmed no other RunStatus terminal-set enumerations missed."
   - "1.7 (2026-07-17): F-P93-01 — correct v1.6 semantic drift in §BudgetConfig and §EvidenceJournal. BudgetConfig fields renamed from invented {token_ceiling, cost_ceiling_usd, on_ceiling: PolicyOutcome (Allow|Escalate|Deny)} to verbatim canon {soft_limit: Option<u64>, hard_limit: Option<u64>, on_ceiling: OnCeiling (Halt|Escalate|Summarize)} per interface-definitions.md §BudgetPolicy v2.29, BC-2.10.001 TV-001–003, BC-2.10.003 v1.2, and BC-2.10.004. EvidenceEntry field set replaced with BC-2.10.002 PC2 JournalEntry verbatim: {run_id, sub_agent_id, evaluation_point, token_usage, policy_name, decision: PolicyDecision (Allow|Escalate|Deny), reason, timestamp}; invented fields node_name/cost_usd/tokens_used/policy_outcome removed — none exist in canon. Residue sweep: 'PolicyOutcome', 'token_ceiling', 'cost_ceiling_usd' are zero live occurrences post-fix (changelog exempt). entities-graph.md confirmed clean."
@@ -127,6 +128,16 @@ Metadata attached to content at an ingress boundary, recording its origin.
 - **Fields:** boundary_type: BoundaryType (ToolResult | RAGRetrieval | MemoryIngress), ingress_id: Uuid, sequence_position: usize
 - **Note (BC-2.11.001 EC-004):** BoundaryType covers exactly ToolResult, RAGRetrieval, and MemoryIngress. User messages and model scratch-pad do not receive a ProvenanceTag and do not traverse the guardrail path.
 - **Relationships:** ProvenanceTag attached to every content unit at an ingress boundary before GuardrailHook fires or the content is forwarded to model context (BC-2.11.001 PC1–PC3).
+- **Disambiguation — ProvenanceTag vs TrustLevel (ADR-015 §Decision 3, burst-226):**
+  `ProvenanceTag` is the SS-11 ingress-boundary audit struct. Its three fields record WHICH
+  ingress event produced content (`boundary_type`) and WHERE within that event (`ingress_id`,
+  `sequence_position`). It has NO trust-level dimension and carries no variants named Untrusted,
+  UserInput, or Trusted. Template-composition trust is a separate concern handled by `TrustLevel`
+  (enum: Untrusted | UserInput | Trusted; severity ordering Untrusted > UserInput > Trusted;
+  located in `ferrochain-prompts: prompts::template` — see entities-graph.md §TrustLevel).
+  When ingress content is later used as a template variable, developers translate the ingress
+  provenance into a `TrustLevel` for the composition step. The two types serve distinct axes
+  and must never be conflated.
 
 ### GuardrailHook
 A registered callable that validates content at an ingress boundary before model context entry.

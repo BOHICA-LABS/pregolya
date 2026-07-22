@@ -2,17 +2,17 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.006
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
-input-hash: "47752b3"
+input-hash: "c3e5f64"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11
@@ -22,6 +22,7 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
+  - "1.2 (burst-226/F-P131-02/2026-07-21): Canonical no-hook WARN emission adjudicated — unified event_type 'guardrail.unregistered_passthrough' replaces prose-specified-only WARN. Merged field schema: {boundary_type, ingress_id, item_count, timestamp} base + conditional {server_name, tool_name} when ToolResult from MCP. PC2, INV-2, test vectors updated. ONE log line per boundary crossing (no double-logging with BC-2.09.003)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -59,10 +60,9 @@ users who require guardrails must explicitly register a `GuardrailHook`.
 
 1. Every content unit is forwarded to the model context without modification
 2. A `WARN`-level structured log entry is emitted once per ingress boundary crossing:
-   - For tool-result: `"GuardrailHook not registered; tool-result content passing unguarded"` with
-     fields `{ boundary_type: "ToolResult", ingress_id: <uuid>, item_count: N, timestamp: <ts> }`
-   - For RAG: equivalent with `boundary_type: "RAGRetrieval"`
-   - For memory: equivalent with `boundary_type: "MemoryIngress"`
+   - All boundary types: `event_type = "guardrail.unregistered_passthrough"` with required fields `{ boundary_type: <"ToolResult"|"RAGRetrieval"|"MemoryIngress">, ingress_id: <uuid>, item_count: N, timestamp: <ts> }`
+   - For ToolResult boundaries originating from MCP tool calls: additionally includes conditional fields `{ server_name: <server>, tool_name: <tool> }`
+   - ONE log line per boundary crossing event; no double-logging (BC-2.09.003 no-hook path and BC-2.11.006 share the same canonical emission)
 3. The WARNING is emitted once per ingress boundary crossing event, not once per content unit
    within the event (an ingress event with N items produces 1 WARNING, not N)
 4. The `ProvenanceTag` remains attached to the forwarded content (unchanged from BC-2.11.001
@@ -73,8 +73,7 @@ users who require guardrails must explicitly register a `GuardrailHook`.
 
 1. The WARNING is emitted at `WARN` level — not `INFO`, not `ERROR`; log aggregators configured
    at `WARN` will surface it; operators who silence `WARN` accept the responsibility
-2. The WARNING log entry is machine-parseable (structured fields: `boundary_type`, `ingress_id`,
-   `item_count`, `timestamp`) to support automated alerting on unguarded ingress
+2. The WARNING log entry is machine-parseable (canonical `event_type = "guardrail.unregistered_passthrough"` with structured fields: `boundary_type`, `ingress_id`, `item_count`, `timestamp`; conditionally `server_name`, `tool_name` for MCP ToolResult boundaries) to support automated alerting on unguarded ingress
 3. `ProvenanceTag` attachment (BC-2.11.001) fires unconditionally — even in the no-hook case,
    content carries a `ProvenanceTag`; the WARNING log entry references the `ingress_id` from the tag
 4. If a `GuardrailHook` is registered after run start (hot-registration is implementation-defined;
@@ -94,8 +93,8 @@ users who require guardrails must explicitly register a `GuardrailHook`.
 
 | Input | Expected Output | Category |
 |-------|----------------|----------|
-| No `GuardrailHook` registered; `ToolMessage` `ContentBlock` arrives | `ContentBlock` forwarded to model context unchanged; exactly 1 `WARN` log entry emitted with `boundary_type: "ToolResult"`, `ingress_id` matching `ProvenanceTag.ingress_id`, `item_count: 1` | happy-path (default-permit for tool-result) |
-| No `GuardrailHook` registered; RAG retrieval returns 3 chunks | All 3 chunks forwarded unchanged; exactly 1 `WARN` emitted with `boundary_type: "RAGRetrieval"`, `item_count: 3` | edge-case (single WARN per crossing, not per chunk) |
+| No `GuardrailHook` registered; `ToolMessage` `ContentBlock` arrives (from MCP server "math-server", tool "add") | `ContentBlock` forwarded unchanged; exactly 1 `WARN` log entry with `event_type = "guardrail.unregistered_passthrough"`, `boundary_type: "ToolResult"`, `ingress_id` matching `ProvenanceTag.ingress_id`, `item_count: 1`, `server_name: "math-server"`, `tool_name: "add"` | happy-path (default-permit for tool-result) |
+| No `GuardrailHook` registered; RAG retrieval returns 3 chunks | All 3 chunks forwarded unchanged; exactly 1 `WARN` emitted with `event_type = "guardrail.unregistered_passthrough"`, `boundary_type: "RAGRetrieval"`, `item_count: 3`; no `server_name`/`tool_name` fields (RAG boundary, not MCP) | edge-case (single WARN per crossing, not per chunk) |
 | No `GuardrailHook` registered; memory read returns 0 items | 0 items forwarded; 0 `WARN` emitted; no error | edge-case (zero-item — no crossing, no warning) |
 | `GuardrailHook` registered mid-run after first tool-result ingress | First ingress: `WARN` emitted, content forwarded (hook was `None`); subsequent ingresses: hook evaluates per BC-2.11.002/003/004; no `WARN` on hook-guarded ingresses | edge-case (hot-registration) |
 

@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.4"
+version: "1.5"
 status: active
 producer: business-analyst
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-21T00:00:00Z
 changelog:
+  - "1.5 (2026-07-21): F-P131-05 adjudication (burst-226) — TrustLevel term added to D21 section (ferrochain-prompts: prompts::template; 3 variants: Untrusted | UserInput | Trusted; severity ordering Untrusted > UserInput > Trusted; distinct from ProvenanceTag; authority ADR-015 §Decision 3). D21 total terms: 15 → 16."
   - "1.4 (2026-07-20): D21 second-half ubiquitous-language additions — 6 new terms: VectorStore, InMemoryVectorStore, MetadataFilter, Embeddings, EmbeddingsOpenAI, EmbeddingsOllama. Appended to D21 section. Total D21 terms: 15."
   - "1.3 (2026-07-20): D21 ubiquitous-language additions — 9 new terms: PromptTemplate, ChatPromptTemplate, MessagesPlaceholder, FewShotPromptTemplate, LcSerializable, Reviver, Retriever, Document, VectorStoreRetriever. New section '## Prompts, Serialization, and Retrieval Terms (D21 Additions)' appended. D21 added to decisions list."
   - "1.2 (F-P121-01/02, fix burst 124, 2026-07-19): §Message: 'The four roles are: Human/AI/System/Tool' expanded to note 4 primary + legacy Function (BC-2.01.002 PC7), Chat arbitrary-role discriminant, Remove history-control token (BC-2.01.002 EC-005). §ContentBlock: replaced 5-variant drifted list (Text/ImageUrl/ToolUse/ToolResult/Document with wrong fields) with canonical 14-variant reference per BC-2.01.001 PC2; ToolCall fields {id,name,args} per BC-2.08.002/013; NonStandard DI-008 passthrough; tool results → ToolMessage per BC-2.09.002. TD-VSDD-060 sweep: only Message and ContentBlock depiction sites in this file; both fixed."
@@ -291,3 +292,26 @@ field) for older Ollama deployments. reqwest/rustls-tls; 30-second timeout (DI-0
 localhost. ferrochain-anthropic has NO `Embeddings` impl (Anthropic provides no public
 embedding API). Corresponds to `OllamaEmbeddings` in LangChain v1 (`langchain_ollama`). In
 ferrochain: `ferrochain_ollama::embeddings::EmbeddingsOllama`.
+
+**TrustLevel**
+Template-variable trust classifier for the SS-18 template composition layer
+(`ferrochain-prompts: prompts::template`). **Distinct from and independent of `ProvenanceTag`**
+(SS-11 ingress-boundary audit struct — see ubiquitous-language-server.md §ProvenanceTag and
+entities-server.md §ProvenanceTag). Three variants with severity ordering
+`Untrusted > UserInput > Trusted`:
+- `Untrusted` — content derived from an external/adversarial source (e.g., a RAG retrieval
+  result or an MCP tool output); substituting into a `TrustRequired` slot raises E-TMPL-001
+  (SECURITY/InjectionAttempt) at render time
+- `UserInput` — content from a human operator; acceptable in `TrustRequired` slots when
+  user trust is granted to the human principal
+- `Trusted` — developer-controlled content; always acceptable in any template slot
+`TemplateVar.trust_level: Option<TrustLevel>` — `None` is treated as `Trusted` (developer-
+supplied literal; no external origin). `MessageProvenance.highest_trust_level: Option<TrustLevel>`
+carries the maximum-severity TrustLevel across all variables substituted into a message.
+**Distinct from ProvenanceTag:** `ProvenanceTag` records ingress-boundary origin
+(`boundary_type: BoundaryType` / `ingress_id: Uuid` / `sequence_position: usize`); it has no
+trust-level dimension. `TrustLevel` classifies template-variable trust at composition time.
+When a developer derives a template variable from a RAG result (which arrived with a
+ProvenanceTag), they translate the ingress provenance into `TrustLevel::Untrusted` for the
+composition step. The ingress ProvenanceTag record is captured in the guardrail audit log at
+ingress time and need not be threaded through template composition. Authority: ADR-015 §Decision 3.
