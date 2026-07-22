@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "2.3"
+version: "2.4"
 status: active
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
@@ -10,10 +10,11 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "ef6bd52"
+input-hash: "70958ae"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "2.4 (burst-235/F-P135-05/2026-07-22): BC-2.13.002 TV count 4→5 (+kill-on-drop DI-015 co-enforcement TV). Grand total 670→671 (662 canonical + 9 GTV)."
   - "2.3 (burst-234/F-P134-01/2026-07-22): BC-2.23.006 TV count 5→6 (+TV-006 traversal I/O error, E-TOOLS-008). Grand total 669→670 (661 canonical + 9 GTV). Notes column updated to add E-TOOLS-008 cite."
   - "2.2 (D23/2026-07-22): Add 13 new D23 BC rows (+60 TVs); grand total 609→669 (660 canonical + 9 GTV). New rows: BC-2.05.007 (6 TV, VP-011 Kani seed), BC-2.05.008 (4 TV), BC-2.06.004 (4 TV), BC-2.06.005 (3 TV), BC-2.06.006 (4 TV), BC-2.10.005 (5 TV, VP-012 Kani seed), BC-2.10.006 (4 TV), BC-2.23.001 (5 TV), BC-2.23.002 (5 TV), BC-2.23.003 (5 TV), BC-2.23.004 (4 TV), BC-2.23.005 (6 TV, VP-013 Kani seed), BC-2.23.006 (5 TV). BC count 116→129."
   - "2.1 (D21/2026-07-21): Initial supplement created from prd.md §7 RTM inventory. 116 BCs catalogued; 600 canonical TV + 9 GTV = 609 total. RG BCs: 11. GTV source: BC-2.07.002 §Golden Test Vectors."
@@ -118,7 +119,7 @@ changelog:
 | BC-2.12.006 | SS-12 | 6 | — | `TV-NNN` | | Trait seams (IdempotencyStore etc.) |
 | BC-2.12.007 | SS-12 | 6 | — | `TV-NNN` | | Streaming/unary same graph engine |
 | BC-2.13.001 | SS-13 | 4 | — | table (unlabelled) | | Enforcing sandbox is default |
-| BC-2.13.002 | SS-13 | 4 | — | table (unlabelled) | | Process backend requires explicit opt-in |
+| BC-2.13.002 | SS-13 | 5 | — | table (unlabelled) | | Process backend requires explicit opt-in |
 | BC-2.13.003 | SS-13 | 5 | — | table (unlabelled) | | Strict policy + non-enforcing → Err |
 | BC-2.13.004 | SS-13 | 5 | — | table (unlabelled) | | canonicalize_beneath_root; VP seed |
 | BC-2.13.005 | SS-13 | 5 | — | table (unlabelled) | | Symlink escape → Err(WorkspaceEscape) |
@@ -169,7 +170,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (129 authored BCs):** 661 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **670 total vectors** across 129 BC files.
+**Total vectors (129 authored BCs):** 662 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **671 total vectors** across 129 BC files.
 
 > **GTV convention:** The TV Count column counts standard canonical vectors; the GTV Count column counts golden test vectors (Red Gate acceptance data reproduced in §GTV). Grand totals are expressed as `<TV Count> + <GTV Count> = <total>` to prevent ambiguity.
 
@@ -302,6 +303,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.4 | 2026-07-22 | burst-235/F-P135-05: BC-2.13.002 TV count 4→5 (+kill-on-drop DI-015 co-enforcement TV). Grand total 670→671 (662 canonical + 9 GTV). | burst-235/F-P135-05 |
 | 2.3 | 2026-07-22 | burst-234/F-P134-01: BC-2.23.006 TV count 5→6 (+TV-006 traversal I/O error, E-TOOLS-008 FileIoError). Grand total 669→670 (661 canonical + 9 GTV). Notes column updated to cite E-TOOLS-008/009. | burst-234/F-P134-01 |
 | 2.2 | 2026-07-22 | D23: Add 13 new D23 BC rows (+60 TVs); grand total 609→669 (660 canonical + 9 GTV). New rows: BC-2.05.007 (6 TV, VP-011 Kani seed), BC-2.05.008 (4 TV), BC-2.06.004 (4 TV), BC-2.06.005 (3 TV), BC-2.06.006 (4 TV), BC-2.10.005 (5 TV, VP-012 Kani seed), BC-2.10.006 (4 TV), BC-2.23.001 (5 TV), BC-2.23.002 (5 TV), BC-2.23.003 (5 TV), BC-2.23.004 (4 TV), BC-2.23.005 (6 TV, VP-013 Kani seed), BC-2.23.006 (5 TV). BC count 116→129. | D23 |
 | 2.1 | 2026-07-21 | F-P224/H-2: BC-2.21.002 v1.1 adds TV-006 (write-time zero-norm guard — add_texts returns Err(E-VS-004) when any document embedding has L2 norm == 0.0; document_index context field). BC-2.21.002 row: TV Count 5→6. SS-21 subtotal: 20→21 TVs (BC-2.21.001=5, BC-2.21.002=6, BC-2.21.003=5, BC-2.21.004=5). Grand total: 599→600 canonical TVs; 600+9 GTVs = 609 total vectors. | F-P224, H-2 |

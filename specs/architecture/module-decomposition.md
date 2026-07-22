@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.17"
+version: "1.18"
 status: active
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
@@ -10,10 +10,11 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "b01468b"
+input-hash: "980624e"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.18 (burst-235/F-P135-05/2026-07-22): Add missing `sandbox::process` module row to ferrochain-sandbox (SS-13) section — ProcessBackend is a full behavioral contract (BC-2.13.002) and must appear in module-decomposition per Iron Law. Module is MEDIUM criticality (Effectful Shell; explicitly non-default, opt-in only via `unsafe_process_no_isolation()`). DI-015 co-enforcement note added: ProcessBackend enforces subprocess timeout at the sandbox layer via `.kill_on_drop(true)` (defense-in-depth beneath BashTool's outer `tokio::time::timeout`). Module universe 53→54."
   - "1.17 (burst-234/2026-07-22): TD-VSDD-060 sibling sweep — update SS-23 E-TOOLS-* count note: '8 codes post-burst-233' → '9 codes post-burst-234'; add E-TOOLS-009 InvalidRegexPattern to cite. Input-hash refresh for upstream prd.md drift."
   - "1.16 (burst-233/2026-07-22): F-P133-07 — fix SS-23 VP anchor block: VP-011 corrected from 'candidate (Kani P0) graph::hitl' to 'VP-011 (Kani P0, seeded burst-232)'; VP-012 corrected from 'candidate (integration P1) interrupt/resume' to 'VP-012 (Kani P1, seeded burst-232) — OnWatermark arithmetic, BC-2.10.005, ferrochain-core, ADR-019'; VP-013 corrected from 'candidate (Kani P0)' to 'VP-013 (Kani P1, seeded burst-232)'. F-P133-08 — fix similar crate attribution: 'dtolnay' → 'mitsuhiko'; 'MIT/Apache-2.0' → 'Apache-2.0 single-licensed'; section renamed 'Dependency research flags' → 'Validated external dependencies'; both deps marked as confirmed (ADR-020 Decision 7 v1.1). BC anchors updated to reflect SS-23 BCs as authored (BC-2.23.001..006)."
   - "1.15 (D23/2026-07-22): Add ferrochain-tools crate #21 section (SS-23): tools::fs, tools::shell, tools::search (all MEDIUM). Extend graph::hitl row for ADR-018 PreToolCallHook types. Extend core::budget definitions note for D23 compaction types (CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary — ADR-019). Extend graph::budget row for compaction engine dispatch. Note Wave 1 promotions: core::retry (SS-16) and ferrochain-memory (SS-15) per D23 items 3+4. Module universe 50→53 (+tools::fs +tools::shell +tools::search; definitions-only additions follow no-criticality-row precedent per ADR-009)."
@@ -157,6 +158,7 @@ Responsibilities: Axum HTTP server, resource CRUD, cron scheduler, security defa
 | `sandbox::wasm` | WASM execution backend (default `sandbox-wasm` feature) | MEDIUM | SS-13 |
 | `sandbox::container` | Container execution backend (`sandbox-container` feature) | MEDIUM | SS-13 |
 | `sandbox::seatbelt` | macOS Seatbelt deny-by-default profile (NE-16) | MEDIUM | SS-13 |
+| `sandbox::process` | `ProcessBackend` — explicit non-default OS process execution; only accessible via `Sandbox::unsafe_process_no_isolation()`; provides `env_clear()` + wall-clock timeout (`tokio::process::Command` with `.kill_on_drop(true)`); WARN log on every `execute()` call; `BackendCapabilities { filesystem_isolated: false, network_isolated: false, memory_bounded: false }`; DI-015 co-enforcer at sandbox layer via `.kill_on_drop(true)` — ensures subprocess is killed on Future drop when BashTool's outer `tokio::time::timeout` fires (BC-2.13.002 / SS-13) | MEDIUM | SS-13 |
 | `sandbox::policy` | `SandboxPolicy` enforcement; Err(PolicyNotEnforceable) on mismatch | MEDIUM | SS-13 |
 
 **VP anchor:** `sandbox::path_guard` is VP-003 target (workspace confinement Kani harness).

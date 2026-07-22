@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.10"
+version: "1.11"
 status: active
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "d794a85"
+input-hash: "37c25d2"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21, D23]
 supplements:
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.11 (burst-235/F-P135/2026-07-22): RTM and §2 reconciliation — 13 D23 BC rows propagated from BC frontmatter source-of-truth. Gate #28 close. (1) F-P135-01: §7 RTM Source(L2) CAP column fixed for all 13 D23 rows (CAP-006/007/012/034–038 placeholder → authoritative CAP-034/035/036/037/038 per BC frontmatter); BC-2.10.005 Module corrected ferrochain-graph → ferrochain-core (VP-012 core-budget crate: ferrochain-core confirmed). (2) F-P135-02: §2.05 DI DI-003→DI-014 (BC-2.05.007/008); §2.06 DI DI-011→DI-014 (BC-2.06.004/005/006); §2.10 DI —→DI-014 (BC-2.10.005) and DI-002→DI-014 (BC-2.10.006); §2.23 DI DI-008→DI-014 (BC-2.23.001–004,006) and DI-008→DI-014,DI-015 (BC-2.23.005); §7 RTM DI column corrected to match. DI-008 citation removed from all SS-23 RTM rows — no SS-23 BC anchors DI-008 per frontmatter (adjudicated unbacked; PRD-only citation removed). (3) F-P135-04: §2.15 header P1/P2→P1; BC-2.15.001/002/003 rows P2→P1 (D23 CAP-017 promotion swept §7 RTM + BC-INDEX but not §2.15 body — now reconciled). Note: F-P135-03 (BC-INDEX BC-2.23.005 DI-009,DI-014→DI-014,DI-015) applied to BC-INDEX.md v2.2→v2.3 in same burst."
   - "v1.10 (burst-233/F-P133-02/2026-07-22): BC-2.16.001/002/003 Wave-1 promotion per D23 — §2.16 header P2→P1; BC table rows P2→P1; §7 RTM rows P2→P1; §7 totals 72 P1/6 P2 → 75 P1/3 P2. §5 TOOLS component range row updated to list E-TOOLS-008 (FileIoError) and E-TOOLS-009 (InvalidRegexPattern). VP-013 Security Anchor corrected: ADR-018 Decision 6 → ADR-020 Decision 3."
   - "v1.9 (D23/2026-07-22): D23 First-Party Tools + Per-Tool Approval + Rolling Compaction expansion. (1) §2: BC-2.05.007/008 added to §2.05 (PreToolCallHook dispatch + skip-hook-on-resume); BC-2.06.004/005/006 added to §2.06 (StreamEvents 13/14/15); BC-2.10.005/006 added to §2.10 (CompactionTrigger config, compaction execution); §2.23 added (SS-23 First-Party Tool Library — 6 tool BCs). (2) §3: PreToolCallHook + CompactionPolicy traits added; first-party tools bullet. (3) §5: E-TOOLS-001–099 range row added (TOOLS component). (4) §5b: BC file count 116→129. (5) §7 RTM: BC-2.15.001/002/003 P2→P1 (CAP-017 wave promotion); +13 rows; totals updated to 129 (51 P0 / 72 P1 / 6 P2). D23 added to decisions list."
   - "v1.8 (burst-227/F-P132-01/2026-07-21): §11 Observability emission census: convert from stale duplicate table (2 entries, retired ferrochain.mcp.guardrail.unregistered listed as active) to pointer+count form citing observability.md as the sole catalog authority. Active count updated to 6 (per observability.md v1.1). Prevents future dual-maintenance drift."
@@ -204,8 +205,8 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.05.004 | Command(resume=value) API contract | P0 | DI-003 | ss-05/BC-2.05.004.md |
 | BC-2.05.005 | Resume on empty interrupt queue returns Err(NoActiveInterrupt) | P0 | DI-003 | ss-05/BC-2.05.005.md |
 | BC-2.05.006 | Risk-tiered interrupt classification (typed action-risk levels for Domain A) | P0 | DI-003, ASM-008 | ss-05/BC-2.05.006.md |
-| BC-2.05.007 | PreToolCallHook dispatch — pre_invoke contract; Approve/Deny/Edit/PendingHumanApproval; fail-closed Deny (VP-011 Kani seed) | P1 | DI-003 | ss-05/BC-2.05.007.md |
-| BC-2.05.008 | Skip-hook-on-resume invariant — ToolApprovalRequest checkpoint persistence; Command::Resume(PreToolDecision); no re-invocation of pre_invoke | P1 | DI-003 | ss-05/BC-2.05.008.md |
+| BC-2.05.007 | PreToolCallHook dispatch — pre_invoke contract; Approve/Deny/Edit/PendingHumanApproval; fail-closed Deny (VP-011 Kani seed) | P1 | DI-014 | ss-05/BC-2.05.007.md |
+| BC-2.05.008 | Skip-hook-on-resume invariant — ToolApprovalRequest checkpoint persistence; Command::Resume(PreToolDecision); no re-invocation of pre_invoke | P1 | DI-014 | ss-05/BC-2.05.008.md |
 
 ### 2.06 Structured Streaming Event Taxonomy (CAP-007) — P0
 
@@ -214,9 +215,9 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.06.001 | Typed per-phase event taxonomy (run/step/node/tool start-stream-end) | P0 | DI-011 | ss-06/BC-2.06.001.md |
 | BC-2.06.002 | run_id + parent_ids correlation across all events in a run | P0 | — | ss-06/BC-2.06.002.md |
 | BC-2.06.003 | Streaming and unary run produce identical final answer (NE-13) | P0 | DI-011 | ss-06/BC-2.06.003.md |
-| BC-2.06.004 | `tool_approval_request` StreamEvent (event 13) — payload; emission before interrupt; causal ordering | P1 | DI-011 | ss-06/BC-2.06.004.md |
-| BC-2.06.005 | `tool_approval_resolved` StreamEvent (event 14) — payload on Command::Resume; decision outcome | P1 | DI-011 | ss-06/BC-2.06.005.md |
-| BC-2.06.006 | `compaction_event` StreamEvent (event 15) — payload; emission after compaction completes; trigger variant | P1 | DI-011 | ss-06/BC-2.06.006.md |
+| BC-2.06.004 | `tool_approval_request` StreamEvent (event 13) — payload; emission before interrupt; causal ordering | P1 | DI-014 | ss-06/BC-2.06.004.md |
+| BC-2.06.005 | `tool_approval_resolved` StreamEvent (event 14) — payload on Command::Resume; decision outcome | P1 | DI-014 | ss-06/BC-2.06.005.md |
+| BC-2.06.006 | `compaction_event` StreamEvent (event 15) — payload; emission after compaction completes; trigger variant | P1 | DI-014 | ss-06/BC-2.06.006.md |
 
 ### 2.07 Text Splitting with Code-Point Boundary Correctness (CAP-008) — P0
 
@@ -269,8 +270,8 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.10.002 | Append-only EvidenceJournal recording of every budget evaluation | P0 | — | ss-10/BC-2.10.002.md |
 | BC-2.10.003 | Graceful halt when budget ceiling reached (on_ceiling = halt \| summarize); remaining-budget exposure (RunContext.budget\_info) | P0 | — | ss-10/BC-2.10.003.md |
 | BC-2.10.004 | Budget escalation to HITL interrupt when on_ceiling = escalate | P0 | DI-003 | ss-10/BC-2.10.004.md |
-| BC-2.10.005 | CompactionTrigger configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; BudgetConfig extension; watermark arithmetic (VP-012 Kani seed) | P1 | — | ss-10/BC-2.10.005.md |
-| BC-2.10.006 | Compaction execution — ConversationSnapshot from FTS; mid-run window REPLACEMENT; CompactionEvent → EvidenceJournal; checkpoint immutability; DefaultSummarizationPolicy | P1 | DI-002 | ss-10/BC-2.10.006.md |
+| BC-2.10.005 | CompactionTrigger configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; BudgetConfig extension; watermark arithmetic (VP-012 Kani seed) | P1 | DI-014 | ss-10/BC-2.10.005.md |
+| BC-2.10.006 | Compaction execution — ConversationSnapshot from FTS; mid-run window REPLACEMENT; CompactionEvent → EvidenceJournal; checkpoint immutability; DefaultSummarizationPolicy | P1 | DI-014 | ss-10/BC-2.10.006.md |
 
 ### 2.11 Content Provenance Tagging and Guardrail-on-Ingress (CAP-013) — P0
 
@@ -322,13 +323,13 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.14.005 | Every API key type: newtype + Debug→"<redacted>"; no #[derive(Serialize)]; no Deref<Target=str> (NE-10) | P0 | DI-010 | ss-14/BC-2.14.005.md |
 | BC-2.14.006 | Validation failures propagate Err(FerrochainError); no public API returns None for validation failure (NE-03) | P0 | DI-014 | ss-14/BC-2.14.006.md |
 
-### 2.15 Long-Horizon Cross-Session Memory Store + Self-Improvement Primitives (CAP-017, CAP-020) — P1/P2
+### 2.15 Long-Horizon Cross-Session Memory Store + Self-Improvement Primitives (CAP-017, CAP-020) — P1
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.15.001 | KV and vector memory persistence across threads (not per-checkpoint) | P2 | — | ss-15/BC-2.15.001.md |
-| BC-2.15.002 | User/app/session tier isolation — user-private does not bleed across scopes | P2 | — | ss-15/BC-2.15.002.md |
-| BC-2.15.003 | GDPR erasure removes all traces from all memory tiers | P2 | — | ss-15/BC-2.15.003.md |
+| BC-2.15.001 | KV and vector memory persistence across threads (not per-checkpoint) | P1 | — | ss-15/BC-2.15.001.md |
+| BC-2.15.002 | User/app/session tier isolation — user-private does not bleed across scopes | P1 | — | ss-15/BC-2.15.002.md |
+| BC-2.15.003 | GDPR erasure removes all traces from all memory tiers | P1 | — | ss-15/BC-2.15.003.md |
 | BC-2.15.004 | SkillStore registry — load-on-demand skill documents | P1 | DI-008, DI-014 | ss-15/BC-2.15.004.md |
 | BC-2.15.005 | Guarded memory and skill writes (MemoryWriteGuard; E-MEMORY-007) | P1 | DI-008, DI-012, DI-014 | ss-15/BC-2.15.005.md |
 | BC-2.15.006 | Frozen-snapshot context mutation — memory-sourced system-prompt content | P1 | DI-002, DI-008, DI-014 | ss-15/BC-2.15.006.md |
@@ -428,12 +429,12 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.23.001 | ReadFileTool — PathGuard-confined file read; 1 MiB max_bytes limit; E-TOOLS-001/E-TOOLS-002 | P1 | DI-008 | ss-23/BC-2.23.001.md |
-| BC-2.23.002 | WriteFileTool — PathGuard-confined atomic write; High ActionRisk; no auto-retry; E-TOOLS-001 | P1 | DI-008 | ss-23/BC-2.23.002.md |
-| BC-2.23.003 | EditFileTool — exact-match string replace; E-TOOLS-003 on no-match; opt-in fuzzy fallback (EditConfig::fuzzy_threshold); conditional retry safe | P1 | DI-008 | ss-23/BC-2.23.003.md |
-| BC-2.23.004 | ListDirTool — PathGuard-confined directory listing; ReadOnly ActionRisk; DirEntry struct; E-TOOLS-001 | P1 | DI-008 | ss-23/BC-2.23.004.md |
-| BC-2.23.005 | BashTool — sandboxed shell execution; non-lowerable Medium risk floor; BashOutput; 256 KiB output cap; 30 s timeout; E-TOOLS-004/005/007 (VP-013 Kani seed) | P1 | DI-008 | ss-23/BC-2.23.005.md |
-| BC-2.23.006 | GrepTool — in-process regex search; linear-time `regex` crate; max_results 100 cap; hermetic; PathGuard scope; E-TOOLS-001/006 | P1 | DI-008 | ss-23/BC-2.23.006.md |
+| BC-2.23.001 | ReadFileTool — PathGuard-confined file read; 1 MiB max_bytes limit; E-TOOLS-001/E-TOOLS-002 | P1 | DI-014 | ss-23/BC-2.23.001.md |
+| BC-2.23.002 | WriteFileTool — PathGuard-confined atomic write; High ActionRisk; no auto-retry; E-TOOLS-001 | P1 | DI-014 | ss-23/BC-2.23.002.md |
+| BC-2.23.003 | EditFileTool — exact-match string replace; E-TOOLS-003 on no-match; opt-in fuzzy fallback (EditConfig::fuzzy_threshold); conditional retry safe | P1 | DI-014 | ss-23/BC-2.23.003.md |
+| BC-2.23.004 | ListDirTool — PathGuard-confined directory listing; ReadOnly ActionRisk; DirEntry struct; E-TOOLS-001 | P1 | DI-014 | ss-23/BC-2.23.004.md |
+| BC-2.23.005 | BashTool — sandboxed shell execution; non-lowerable Medium risk floor; BashOutput; 256 KiB output cap; 30 s timeout; E-TOOLS-004/005/007 (VP-013 Kani seed) | P1 | DI-014, DI-015 | ss-23/BC-2.23.005.md |
+| BC-2.23.006 | GrepTool — in-process regex search; linear-time `regex` crate; max_results 100 cap; hermetic; PathGuard scope; E-TOOLS-001/006 | P1 | DI-014 | ss-23/BC-2.23.006.md |
 
 ---
 
@@ -711,19 +712,19 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.22.001 | CAP-031, DI-008, DI-014 | ferrochain-core (core::embeddings) | P1 | U, P |
 | BC-2.22.002 | CAP-032, DI-008, DI-009, DI-010, DI-014 | ferrochain-openai | P1 | U, I |
 | BC-2.22.003 | CAP-033, DI-008, DI-009, DI-014 | ferrochain-ollama | P1 | U, I |
-| BC-2.05.007 | CAP-006, DI-003 | ferrochain-graph | P1 | U, K |
-| BC-2.05.008 | CAP-006, DI-003 | ferrochain-graph | P1 | U, I |
-| BC-2.06.004 | CAP-007, DI-011 | ferrochain-graph | P1 | U, I |
-| BC-2.06.005 | CAP-007, DI-011 | ferrochain-graph | P1 | U, I |
-| BC-2.06.006 | CAP-007, DI-011 | ferrochain-graph | P1 | U |
-| BC-2.10.005 | CAP-012 | ferrochain-graph | P1 | U, K |
-| BC-2.10.006 | CAP-012, DI-002 | ferrochain-graph | P1 | U, I |
-| BC-2.23.001 | CAP-034, DI-008 | ferrochain-tools | P1 | U, I |
-| BC-2.23.002 | CAP-035, DI-008 | ferrochain-tools | P1 | U, I |
-| BC-2.23.003 | CAP-036, DI-008 | ferrochain-tools | P1 | U, I |
-| BC-2.23.004 | CAP-037, DI-008 | ferrochain-tools | P1 | U |
-| BC-2.23.005 | CAP-038, DI-008 | ferrochain-tools | P1 | U, K |
-| BC-2.23.006 | CAP-038, DI-008 | ferrochain-tools | P1 | U |
+| BC-2.05.007 | CAP-034, DI-014 | ferrochain-graph | P1 | U, K |
+| BC-2.05.008 | CAP-034, DI-014 | ferrochain-graph | P1 | U, I |
+| BC-2.06.004 | CAP-034, DI-014 | ferrochain-graph | P1 | U, I |
+| BC-2.06.005 | CAP-034, DI-014 | ferrochain-graph | P1 | U, I |
+| BC-2.06.006 | CAP-035, DI-014 | ferrochain-graph | P1 | U |
+| BC-2.10.005 | CAP-035, DI-014 | ferrochain-core | P1 | U, K |
+| BC-2.10.006 | CAP-035, DI-014 | ferrochain-graph | P1 | U, I |
+| BC-2.23.001 | CAP-036, DI-014 | ferrochain-tools | P1 | U, I |
+| BC-2.23.002 | CAP-036, DI-014 | ferrochain-tools | P1 | U, I |
+| BC-2.23.003 | CAP-036, DI-014 | ferrochain-tools | P1 | U, I |
+| BC-2.23.004 | CAP-036, DI-014 | ferrochain-tools | P1 | U |
+| BC-2.23.005 | CAP-037, DI-014, DI-015 | ferrochain-tools | P1 | U, K |
+| BC-2.23.006 | CAP-038, DI-014 | ferrochain-tools | P1 | U |
 
 **Totals:** 129 BCs — 51 P0 / 75 P1 / 3 P2
 

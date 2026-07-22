@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "a08f894"
+input-hash: "8d3b534"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11

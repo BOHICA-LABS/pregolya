@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "d48bb84"
+input-hash: "079892a"
 traces_to: STATE.md
 ---
 
@@ -4251,4 +4251,58 @@ Key transitive refreshes: VP-012 (d582172→88db41b; ADR-019 input); VP-011 (→
 - Trajectory tail: →7→8→10→7
 - 3-CLEAN streak: 0/3 (P1D-134 NOT CLEAN)
 - Next: adversary cascade P1D-135 on FROZEN HEAD (D21+D23 expanded perimeter)
+
+---
+
+## Burst 235 — 2026-07-22 — P1D-135 Fix-Burst: All 6 Findings Closed; DI-015 Split-Enforcement; Events.md v1.7
+
+### Context
+Third adversarial pass on the D21+D23 expanded perimeter. P1D-135 found 6 findings (0C/2H/4M): two HIGH findings revealed a never-opened §7 RTM surface (13 D23 BCs had wrong CAP anchors + DI mis-mapping); four MED findings addressed DI-015 split-enforcement (BC-2.13.002 as co-enforcer with kill_on_drop kill guarantee), events.md D23 StreamEvents parity gap, and SS-15 priority corrections.
+
+### Agents Dispatched
+- **product-owner**: F-P135-01 (§7 RTM CAP anchors), F-P135-02 (DI columns), F-P135-03 (BC-INDEX DI col), F-P135-04 (SS-15 P2→P1)
+- **architect**: F-P135-05 (ADR-020 v1.7 + module-decomp + purity-boundary-map + BC-2.13.002 + BC-2.23.005)
+- **business-analyst**: F-P135-06 (events.md v1.7)
+- **state-manager**: convergence-trajectory, burst-log, session-checkpoints, STATE.md v3.77
+
+### Files Modified
+
+| File | Version | Change |
+|------|---------|--------|
+| `specs/prd.md` | v1.10→v1.11 | §7 RTM: 13 D23 BC rows: CAP anchors corrected (CAP-034..038); DI cols: DI-014 all 13, +DI-015 BC-2.23.005; DI-008 unbacked citation removed; BC-2.10.005 module fix; §2.15 header + 3 SS-15 rows P2→P1 |
+| `specs/behavioral-contracts/BC-INDEX.md` | v2.2→v2.3 | BC-2.23.005 DI column: DI-009,DI-014→DI-014,DI-015 |
+| `specs/behavioral-contracts/ss-13/BC-2.13.002.md` | v1.1→v1.2 | DI-015 co-enforcement: kill_on_drop ProcessBackend PC-6+INV-6; +TV-5 kill-on-drop guarantee; di_anchors [DI-014]→[DI-014,DI-015]; input-hash 6c6933f |
+| `specs/behavioral-contracts/ss-23/BC-2.23.005.md` | v1.2→v1.3 | tokio::process::Command phrasing fixes; DI-015 co-enforcer note; input-hash 8c9a68b |
+| `specs/architecture/decisions/ADR-020-first-party-tool-library.md` | v1.6→v1.7 | tools::shell timeout wraps sandbox.execute() (not tokio::process::Command directly); ProcessBackend kill_on_drop; Decision 3 updated |
+| `specs/architecture/module-decomposition.md` | v1.17→v1.18 | +sandbox::process MEDIUM row; universe 53→54; input-hash 54d21fb |
+| `specs/architecture/purity-boundary-map.md` | v1.11→v1.12 | +sandbox::process Effectful Shell row; 79 total rows; input-hash 192f96f |
+| `specs/domain-spec/invariants.md` | v1.2→v1.3 | DI-015 split-enforcement note: BC-2.23.005 primary enforcer + BC-2.13.002 co-enforcer; input-hash 0dac18e (unchanged — entities-graph is the input, not events.md) |
+| `specs/domain-spec/events.md` | v1.6→v1.7 | +D23 StreamEvents 13/14/15 (ToolApprovalRequested, ToolApprovalGranted, ToolApprovalDenied); ToolApprovalRaised/Resolved domain events; CompactionExecuted domain event; ordering rules 7-8; decisions section +D21,D23; input-hash updated |
+| `specs/domain-spec/L2-INDEX.md` | v1.10→v1.11 | events-count ripple (events.md entry updated); input-hash b250716 |
+| `specs/prd-supplements/test-vectors.md` | v2.3→v2.4 | +TV-5 (BC-2.13.002 kill-on-drop guarantee); 670→671 TVs; input-hash 56bdcb9 |
+| `sidecar-learning.md` | updated | RTM-never-opened lesson; DI-015 split-enforcement pattern recorded |
+
+### Hash Sweep Summary
+
+7 passes required (transitive: ADR-020 inputs → ARCH-INDEX → multiple BC files referencing architecture). Final: MATCH=174, STALE=0.
+
+| Pass | Files Updated | STALE After |
+|------|---------------|-------------|
+| 1 | 97 | 177 |
+| 2 | 82 | 95 |
+| 3 | 61 | 34 |
+| 4 | 29 | 5 |
+| 5 | 5 | 2 |
+| 6 | 2 | 1 |
+| 7 | 1 | 0 |
+| **Total** | **277** | **0** |
+
+Key transitive refreshes: ARCH-INDEX (cf36b41→0fb93c1 after module-decomp input); L2-INDEX (5ae9ded→b250716 after events.md update); ~80+ BC files refreshed in first 2 passes.
+
+### Convergence After Burst
+
+- 135 adversary passes, 135 fix bursts (128 pre-D21 + 7 post-D21+D23)
+- Trajectory tail: →8→10→7→6
+- 3-CLEAN streak: 0/3 (P1D-135 NOT CLEAN)
+- Next: adversary cascade P1D-136 on FROZEN HEAD (D21+D23 expanded perimeter)
 

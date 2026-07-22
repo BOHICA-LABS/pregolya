@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: invariants
-version: "1.2"
+version: "1.3"
 status: active
 producer: business-analyst
 timestamp: 2026-07-22T00:00:00Z
@@ -10,10 +10,11 @@ phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "b14600a"
+input-hash: "8dce7df"
 traces_to: L2-INDEX.md
 decisions: [D11, D17]
 changelog:
+  - "v1.3 (2026-07-22): Fix burst 235 — DI-015 Enforcer bullet corrected per F-P135-05 architect adjudication (SPLIT enforcement): added co-enforcer BC-2.13.002 (sandbox::process ProcessBackend, .kill_on_drop(true)); clarified that tokio::time::timeout wraps sandbox execute() call in BashTool, not tokio::process::Command directly (which is spawned internally by sandbox::process). input-hash refreshed."
   - "v1.2 (2026-07-22): Fix burst 234 — DI-015 (Subprocess Execution Timeout, Mandatory) added per F-P134-06 architect adjudication; no subprocess-execution-timeout invariant existed in DI-001..014. Census: 14→15 invariants. New section: Tool Execution Invariants. input-hash refreshed (0dac18e)."
   - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D11/D17 decisions and CONFLICT-*/NE-* invariant sources were baked at authoring time from COMPARATIVE-ASSESSMENT.md, not live state); input-hash recomputed."
 ---
@@ -168,5 +169,5 @@ The executor must terminate the subprocess and return a structured timeout error
 indefinitely. Distinct from DI-009 (which governs outbound HTTP-client connection timeouts).
 
 - **Source:** F-P134-06 (architect adjudication — subprocess-execution-timeout invariant absent from DI-001..014; counter-example: adk-rust spawns subprocesses without configurable timeout)
-- **Enforcer:** BC-2.23.005 (BashTool, `tools::shell`); implementation: `tokio::time::timeout` wrapping `tokio::process::Command`
+- **Enforcer:** BC-2.23.005 (BashTool, `tools::shell`); co-enforcer: BC-2.13.002 (`sandbox::process` ProcessBackend — defense-in-depth via `.kill_on_drop(true)`); implementation: `tokio::time::timeout` wrapping the sandbox backend `execute()` call in BashTool; `tokio::process::Command` is spawned by `sandbox::process` internally — NOT called directly by BashTool
 - **Invariant class:** reliability, operational safety

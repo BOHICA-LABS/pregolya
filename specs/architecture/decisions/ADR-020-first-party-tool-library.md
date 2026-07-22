@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-22"
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
-version: "1.6"
+version: "1.7"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-23]
 changelog:
+  - "1.7 (burst-235/F-P135-05/2026-07-22): Decision 2 `tools::shell` section — add implementation note clarifying that `tokio::time::timeout` wraps the sandbox backend `execute()` call, NOT `tokio::process::Command` directly; BashTool never calls `tokio::process::Command` directly (would violate BC-2.23.005 sandbox-mandatory invariant); ProcessBackend uses `tokio::process::Command` with `.kill_on_drop(true)` internally (ensures async cancellation kills the OS subprocess). Architect adjudication of F-P135-05: DI-015 split-enforcement decision documented; BC-2.13.002 PO handoff and BA invariants.md handoff issued in same burst."
   - "1.6 (burst-234/2026-07-22): F-P134-02 label format normalization — Decision 5 anchor list: normalize BC-2.23.006 label to prescribed canonical form `(GrepTool — tools::search traversal I/O error)`. Prior v1.5 intermediate form `(GrepTool traversal I/O error paths — tools::search)` was substantively correct but did not match prescribed format. TD-VSDD-060 sweep: sole occurrence in body text at Decision 5 adjudication paragraph; ADR-010 TOOLS table unaffected (no per-BC labels in that table)."
   - "1.5 (burst-234/2026-07-22): F-P134-02 — Decision 5 anchor list (E-TOOLS-008 adjudication paragraph, line ~224): fix BC-2.23.006 label from `(WriteFileTool missing parent dir)` to `(GrepTool traversal I/O error paths — tools::search)`. BC-2.23.006 is GrepTool / tools::search; the missing-parent-dir scenario belongs to BC-2.23.002 EC-003. ADR-010 TOOLS table label for BC-2.23.006 verified correct (no change required)."
   - "1.4 (burst-234/2026-07-22): PO minted E-TOOLS-009 InvalidRegexPattern (VAL/Never; fields pattern: String + compile_error: String; anchor BC-2.23.006 PC-4/EC-002/TV-003). Add E-TOOLS-009 row to Decision 5 table. Update PO obligation to 9 codes (TD-VSDD-060 sweep: '8 codes' → '9 codes'). TOOLS namespace is now 9 codes (001..009)."
@@ -130,6 +131,16 @@ truncation behavior.
 
 Timeout: `max_duration: Duration` (default: 30 seconds per NFR catalog — same as reqwest
 client policy). Timeout returns `Err(E-TOOLS-004 BashTimeout)`.
+
+> **Implementation note (F-P135-05):** `tokio::time::timeout(max_duration, sandbox.execute(…))`
+> is the correct implementation — the timeout wraps the **sandbox backend `execute()` call**,
+> NOT `tokio::process::Command` directly. BashTool must not call `tokio::process::Command`
+> directly; doing so would violate BC-2.23.005 Invariant ("All sandbox execution is via
+> ferrochain-sandbox — there is no fallback direct OS execution path"). The `tokio::process::Command`
+> lives inside `sandbox::process` (ProcessBackend); when `tokio::time::timeout` fires and drops
+> the Future, ProcessBackend's `.kill_on_drop(true)` setting causes Tokio to kill the OS subprocess
+> on Drop. For WASM and container backends, the backend runtime handles process termination.
+> BC-2.13.002 co-enforces DI-015 at the sandbox layer via this `.kill_on_drop(true)` mechanism.
 
 ### `tools::search` — Grep / Text Search
 

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.11"
+version: "1.12"
 status: active
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
@@ -10,10 +10,11 @@ phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
-input-hash: "a90874d"
+input-hash: "0cc61fd"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.12 (burst-235/F-P135-05/2026-07-22): Add missing `sandbox::process` Effectful Shell row (ProcessBackend — BC-2.13.002, SS-13) — spawns OS subprocesses via `tokio::process::Command` with `.kill_on_drop(true)`; DI-015 co-enforcer (defense-in-depth); Effectful Shell because it directly interacts with the OS process tree. Iron Law gap: BC-2.13.002 is a full behavioral contract but the module had no purity classification row. Effectful Shell 35→36; total 78→79."
   - "1.11 (burst-233/2026-07-22): F-P133-07 sibling sweep (TD-VSDD-060) — remove stale 'VP-011 Kani P0 candidate' label in graph::hitl Boundary row (VP-011 seeded burst-232, Kani P0)."
   - "1.10 (D23/2026-07-22): Add 3 new Effectful Shell rows: tools::fs, tools::shell, tools::search (ferrochain-tools crate #21, SS-23, ADR-020). Add 1 new Boundary row: graph::hitl (pre-tool dispatch) — pure PreToolDecision routing + effectful PreToolCallHook::pre_invoke dispatch (ADR-018). Fix stale intro count: 49→53 criticality-universe modules (50 pre-D23 + 3 new tools, correcting 1-off from burst-224 that added vectorstores::similarity without updating prose). Pure Core 31 (unchanged) + Effectful Shell 35 (+3) + Boundary 12 (+1) = 78 total."
   - "1.9 (burst-226/2026-07-21): F-P131-05 sibling sweep — prompts::injection_guard Pure Core row: replace 'checks substituted variable's ProvenanceTag' with 'checks substituted variable's TrustLevel' per ADR-015 v1.3 adjudication; TrustLevel is SS-18-local type in prompts::template, distinct from core::guardrail::ProvenanceTag (SS-11). F-P131-01 sibling sweep — core::retriever Boundary row: replace monolithic 'Fail → propagate Err' with severity-bifurcated description: Critical → Err(E-CORE-008) batch aborts (BC-2.11.005 PC4); non-Critical → error-entry Document substituted, batch continues (BC-2.11.005 PC5)."
@@ -41,8 +42,8 @@ Every ferrochain module appears in exactly one of three columns: **Pure Core** (
 no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not Kani-provable),
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
 effectful dependency). All 53 criticality-universe modules plus structural and definitions-only
-modules are enumerated in `## Purity Classification` below (78 total rows after D23 expansion:
-31 Pure Core + 35 Effectful Shell + 12 Boundary). Enforcement invariants follow
+modules are enumerated in `## Purity Classification` below (79 total rows after burst-235 expansion:
+31 Pure Core + 36 Effectful Shell + 12 Boundary). Enforcement invariants follow
 in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -112,6 +113,7 @@ Kani is not applicable here.
 | `sandbox::wasm` | ferrochain-sandbox | wasmtime engine (executes arbitrary WASM) | Integration |
 | `sandbox::container` | ferrochain-sandbox | Docker/OCI container launch | Integration |
 | `sandbox::seatbelt` | ferrochain-sandbox | macOS Seatbelt syscall (OS integration) | Integration |
+| `sandbox::process` | ferrochain-sandbox | OS subprocess spawning via `tokio::process::Command` with `.kill_on_drop(true)`; `env_clear()` + wall-clock timeout enforcement; DI-015 co-enforcer at sandbox layer — subprocess killed on Future drop when BashTool's `tokio::time::timeout` cancels; only accessible via `unsafe_process_no_isolation()` (BC-2.13.002 / SS-13) | Integration |
 | `ferrochain-openai` (invoke) | ferrochain-openai | reqwest HTTP call to api.openai.com | Integration (DTU) |
 | `ferrochain-anthropic` (invoke) | ferrochain-anthropic | reqwest HTTP call to api.anthropic.com | Integration (DTU) |
 | `ferrochain-ollama` (invoke) | ferrochain-ollama | reqwest HTTP call to localhost:11434 | Integration |

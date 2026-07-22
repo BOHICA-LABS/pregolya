@@ -2,18 +2,19 @@
 document_type: domain-spec-section
 level: L2
 section: events
-version: "1.6"
+version: "1.7"
 status: active
 producer: business-analyst
-timestamp: 2026-07-19T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "b14600a"
+input-hash: "8dce7df"
 traces_to: L2-INDEX.md
-decisions: [D11, D13, D17, D18]
+decisions: [D11, D13, D17, D18, D21, D23]
 changelog:
+  - "1.7 (F-P135-06, fix burst 235, 2026-07-22): StreamEventEmitted Trigger: D23 stream events 13-15 added — tool_approval_request (BC-2.06.004), tool_approval_resolved (BC-2.06.005), compaction_event (BC-2.06.006); StreamEvent taxonomy updated to 15 variants (12-variant base + 3 D23). Domain events added: CompactionExecuted (BC-2.10.006, after CheckpointWritten — mid-run window replacement + EvidenceJournal); ToolApprovalRaised + ToolApprovalResolved (BC-2.05.007/008, after ResumeValueReceived — PreToolCallHook suspend/resume cycle). Ordering rules 7-8 added. decisions: D21 added (RagChunk/MemoryItem ingress types already referenced in v1.5); D23 added (scope driver for all D23 additions)."
   - "1.0 (initial): base events authored."
   - "1.1 (ADV-P1D-PASS-29): F-P29-06 — relabel InterruptRaised Stream event field: `interrupt_raised` is an internal domain event; its SSE wire surface is the {\"__interrupt__\": [...]} JSON envelope (BC-2.12.007 EC-003, BC-2.05.001), NOT a StreamEvent variant. Decision: do not add interrupt variant to StreamEvent enum — no L2/BC evidence one was intended."
   - "1.2 (2026-07-17): F-P94-fix-burst — BudgetEvaluated.Outcome: correct monolithic 'Deny (halt run)' to per-on_ceiling dispatch; PolicyDecision::Deny does not unconditionally halt — engine dispatches per BudgetConfig::on_ceiling (Halt → graceful halt; Escalate → HITL interrupt; Summarize → final summarize call → summary_halt). Canon: D18-P93-A, interface-definitions v2.33."
@@ -74,6 +75,15 @@ A new Checkpoint stored to the CheckpointSaver at a super-step boundary.
 - **Preconditions:** GraphState valid; CheckpointSaver writable
 - **Outcome:** Checkpoint persisted with monotonic ID (DI-004); parent pointer set
 
+### CompactionExecuted
+BudgetEngine completed a mid-run compaction cycle: active message window replaced, EvidenceJournal updated, stream notified.
+- **Trigger:** `CompactionTrigger` condition met after a super-step; `CompactionPolicy::compact()` returned `Ok(CompactionSummary)` (BC-2.10.006)
+- **Preconditions:** Run in `in_progress`; between super-steps (compaction CANNOT fire mid-node or during a `PendingHumanApproval` park window — BC-2.10.006 × BC-2.05.007 temporal non-interaction invariant); `BudgetConfig.compaction_trigger != Disabled`
+- **Outcome:** `messages[compacted_range]` in ACTIVE conversation window replaced by single `SystemMessage(summary_text)` (mid-run mutation — takes effect immediately; distinct from BC-2.15.006 frozen-snapshot which takes effect at next run start); original checkpoint records NOT deleted (BC-2.04.001 immutability); `CompactionEvent { compacted_range, summary_token_count, tokens_remaining_after }` appended to `EvidenceJournal` (BC-2.10.001 append-only, step 5); `compaction_event` StreamEvent emitted AFTER checkpoint commit (step 6 post-commit ordering)
+- **EvidenceJournal entry fields:** `compacted_range` (`RangeInclusive<usize>`), `summary_token_count` (u64), `tokens_remaining_after` (u64 — captured AFTER window replacement, same schema as BC-2.06.006 streaming payload)
+- **Stream event:** `compaction_event` (event 15) — post-commit; payload: `{ run_id, trigger, compacted_turns: { start, end }, summary_token_count, tokens_remaining_after }` (BC-2.06.006 PC-1)
+- **Non-fatal failure paths:** `compact()` error or `put_writes` failure aborts cycle without message-window mutation; no journal entry or stream event emitted; run continues with pre-compaction window (BC-2.10.006 invariants)
+
 ### InterruptRaised
 Graph execution suspended at a node boundary awaiting a ResumeValue.
 - **Trigger:** Node calls `interrupt()` or graph meets an interrupt edge condition
@@ -86,6 +96,20 @@ An external actor delivers a ResumeValue for a pending Interrupt.
 - **Trigger:** `POST /threads/{thread_id}/runs/{run_id}/resume`
 - **Preconditions:** Run in `interrupted`; matching interrupt exists
 - **Outcome:** ResumeValue enqueued FIFO (DI-003); Run transitions back to `in_progress`
+
+### ToolApprovalRaised
+A `PreToolCallHook` returned `PendingHumanApproval`; tool dispatch suspended awaiting human decision.
+- **Trigger:** `pre_tool_dispatch` receives `PreToolDecision::PendingHumanApproval` from configured hook (BC-2.05.007 PC-4)
+- **Preconditions:** Run in `in_progress`; `GraphConfig.pre_tool_hook` configured; hook returned `PendingHumanApproval { prompt }`
+- **Outcome:** `ToolApprovalRequest { preview: ToolCallPreview { tool_name, tool_args, action_risk }, prompt }` serialized to checkpoint (msgpack per BC-2.05.008 PC-3 / BC-2.04.002 wire format); run transitions to `interrupted`; `hook.pre_invoke` will NOT be re-called on resume (skip-hook-on-resume invariant, BC-2.05.008)
+- **Stream event:** `tool_approval_request` (event 13) — emitted BEFORE the run transitions to `interrupted` (causal ordering per BC-2.06.004 PC-2); payload: `{ run_id, tool_name, tool_args, action_risk, prompt }`. The interrupt payload is surfaced via the `{"__interrupt__": [ToolApprovalRequest]}` envelope (BC-2.05.001 machinery) — analogous to `InterruptRaised` (F-P29-06 pattern); the `tool_approval_request` stream event is the consumer's signal to surface an approval dialog before the status poll returns `interrupted`.
+
+### ToolApprovalResolved
+A human (or automation) delivered `Command::Resume(PreToolDecision)` for a pending `ToolApprovalRequest` interrupt.
+- **Trigger:** `POST /threads/{thread_id}/runs/{run_id}/resume` with `Command::Resume(PreToolDecision)` carrying `Approve`, `Deny { reason }`, or `Edit { modified_args }` (BC-2.05.004/2.05.008)
+- **Preconditions:** Run in `interrupted`; pending `ToolApprovalRequest` interrupt present in checkpoint (FIFO queue per BC-2.05.002)
+- **Outcome:** `hook.pre_invoke` NOT re-called (BC-2.05.008 skip-hook-on-resume — human decision IS the hook decision for this dispatch attempt); delivered `PreToolDecision` applied per BC-2.05.007 PC-1/2/3: `Approve` → tool invoked with original checkpoint args; `Deny { reason }` → `ToolOutput::Error(reason)` (fail-closed, tool not invoked); `Edit { modified_args }` → args replaced then tool invoked (with JSON-object validation); run transitions back to `in_progress`
+- **Stream event:** `tool_approval_resolved` (event 14) — emitted AFTER interrupt consumed, BEFORE decision applied (causal ordering per BC-2.06.005 PC-3); payload: `{ run_id, tool_name, decision, reason, modified_args }`. Always pairs with a prior `tool_approval_request` for the same `run_id` + `tool_name`.
 
 ### RunCompleted
 Graph execution reached a terminal node or interrupt with no more work.
@@ -121,8 +145,8 @@ A BudgetPolicy evaluated a token/cost tally for the current Run.
 
 ### StreamEventEmitted
 A typed streaming event was emitted by the execution engine.
-- **Trigger:** Any phase transition (run/step/node/tool start|stream|end) or guardrail outcome (Fail/Transform — emitted as guardrail_decision; Pass is not streamed)
-- **Outcome:** Delivered to all active stream subscribers. Execution-lifecycle events have unary-equivalent content (DI-011 execution-path equivalence); `guardrail_decision` is stream-observer-only — not delivered to unary callers, whose guardrail outcomes are observable via error blocks in the final output (BC-2.06.003).
+- **Trigger:** Any phase transition (run/step/node/tool start|stream|end), guardrail outcome (Fail/Transform — emitted as `guardrail_decision`; Pass is not streamed), pre-tool approval suspension (`tool_approval_request` event 13 — on `PendingHumanApproval`; D23 per BC-2.06.004), pre-tool approval resolution (`tool_approval_resolved` event 14 — on `Command::Resume(PreToolDecision)`; D23 per BC-2.06.005), or post-compaction-commit notification (`compaction_event` event 15 — D23 per BC-2.06.006). **StreamEvent taxonomy: 15 variants** (12-variant base per BC-2.06.001 — includes `guardrail_decision` — + events 13/14/15 per D23).
+- **Outcome:** Delivered to all active stream subscribers. Execution-lifecycle events have unary-equivalent content (DI-011 execution-path equivalence); `guardrail_decision` is stream-observer-only — not delivered to unary callers, whose guardrail outcomes are observable via error blocks in the final output (BC-2.06.003). `tool_approval_request` and `tool_approval_resolved` are notification-only events (no unary equivalent — approval dialogs are stream-consumer surfaces only; BC-2.06.004/005). `compaction_event` is a post-commit observer notification (not reflected in unary response payload; BC-2.06.006).
 
 ---
 
@@ -147,3 +171,5 @@ Administrative creation events; not execution events.
 4. `ReducersApplied` before `CheckpointWritten`.
 5. `CheckpointWritten` before next `SuperStepStarted`.
 6. `InterruptRaised` terminates the current super-step chain until `ResumeValueReceived`.
+7. `ToolApprovalRaised` (`tool_approval_request` stream event) emitted before run transitions to `interrupted`; `ToolApprovalResolved` (`tool_approval_resolved` stream event) emitted before the resumed `PreToolDecision` is applied — both precede their downstream state effects (BC-2.06.004/005 causal ordering).
+8. `CompactionExecuted` (`compaction_event` stream event) emitted after the compacted checkpoint is durably written — stream consumer sees the event only after the state mutation is committed (BC-2.06.006 PC-2 post-commit ordering); `CompactionExecuted` can only follow a `CheckpointWritten` within the same super-step boundary cycle.

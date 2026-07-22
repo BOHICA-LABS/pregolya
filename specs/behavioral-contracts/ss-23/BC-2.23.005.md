@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.005
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ vp_seed: true
 vp_id: VP-013
 red_gate: false
 changelog:
+  - "1.3 (burst-235/F-P135-05/2026-07-22): Fix four occurrences of wrong implementation phrasing 'tokio::time::timeout over/wrapping tokio::process::Command' (Description, PC-3, Invariants DI-015 bullet, Traceability) — implied BashTool calls tokio::process::Command directly, contradicting the sandbox-mandatory Invariant. Correct: tokio::time::timeout wraps the sandbox backend execute() call; tokio::process::Command is managed by sandbox::process internally. Architect adjudication F-P135-05."
   - "1.2 (F-P134-06/2026-07-22): Re-anchor DI-009 (HTTP connection timeout) → DI-015 (Subprocess Execution Timeout) per architect adjudication of finding F-P134-06. di_anchors [DI-009,DI-014]→[DI-014,DI-015]; traces_to DI-009→DI-015; Description, PC-3, Invariants DI-009 analog bullet, and Traceability L2 Invariants row updated. Gate #28 F-P134-06 close. input-hash refreshed to 835edd0 (invariants.md updated by BA to mint DI-015; final stable hash after BA writes settled)."
   - "1.1 (Burst-232/2026-07-22): Fix Category::CONFIGURATION → Category::VAL in PC-4 (E-TOOLS-007 BashRiskTierViolation). CONFIGURATION is not in the canonical 12-member Category enum; E-TOOLS-007 is VAL per error-taxonomy v1.31. Gate #33 reverse-verify E-TOOLS-007 ↔ BC-2.23.005: taxonomy VAL ↔ BC PC-4 VAL — PASS."
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 BashTool. VP-013 Kani seed candidate."
@@ -32,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "6e07319"
+input-hash: "3e9c659"
 extracted_from: null
 modified: []
 deprecated: null
@@ -54,7 +55,7 @@ prohibited. Output is captured in a `BashOutput { stdout: String, stderr: String
 exit_code: i32, truncated: bool }` struct. A `max_output_bytes` limit (default 256 KiB)
 caps captured output: when exceeded, the first 256 KiB is returned with `truncated: true`
 (E-TOOLS-005, informational — non-fatal). A `max_duration` timeout (default 30 seconds, enforcing DI-015 (Subprocess Execution Timeout)
-via `tokio::time::timeout` over `tokio::process::Command` — distinct from DI-009 which governs
+via `tokio::time::timeout` wrapping the sandbox backend `execute()` call — distinct from DI-009 which governs
 HTTP connection timeouts) terminates the command and returns `Err(E-TOOLS-004 BashTimeout)`. The risk tier CANNOT be lowered below `ActionRisk::Medium` —
 attempting to set `ReadOnly` or `Low` via `ToolConfig::override_risk` returns a configuration
 error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
@@ -87,7 +88,9 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
    (`BashOutputTruncated`) is an informational annotation in the output object, not an `Err`.
    The command is allowed to complete (truncation is output-cap, not process-kill).
 3. **Timeout (DI-015):** The command runs for longer than `max_duration`. `tokio::time::timeout`
-   wrapping `tokio::process::Command` fires; the sandbox kills the process. The tool returns
+   wrapping the sandbox backend `execute()` call fires; the sandbox kills the subprocess
+   (ProcessBackend via `.kill_on_drop(true)` async drop; WASM/container backends via runtime-level
+   process termination). The tool returns
    `Err(FerrochainError { component: "TOOLS", category: Category::TIMEOUT, code: "E-TOOLS-004",
    message: "BashTimeout: command exceeded max_duration of <seconds>s" })`. This raise-condition
    directly enacts DI-015 (Subprocess Execution Timeout): exceed `max_duration` → terminate
@@ -112,8 +115,11 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 - `max_output_bytes` truncation is applied BEFORE returning to the caller; the sandbox
   buffer is bounded and does not grow unboundedly.
 - **DI-015 (Subprocess Execution Timeout):** `max_duration` (default 30 seconds) is the
-  governing subprocess wall-clock timeout, enforced via `tokio::time::timeout` over
-  `tokio::process::Command`. When a command exceeds `max_duration` the sandbox terminates
+  governing subprocess wall-clock timeout, enforced via `tokio::time::timeout` wrapping the
+  sandbox backend `execute()` call; `tokio::process::Command` is managed by `sandbox::process`
+  (ProcessBackend) internally — BashTool does NOT call `tokio::process::Command` directly
+  (doing so would violate the Invariant above: "All sandbox execution is via ferrochain-sandbox").
+  When a command exceeds `max_duration` the sandbox terminates
   the process and the tool returns `Err(E-TOOLS-004 BashTimeout)`. Production graphs that
   need a different default must set `BashConfig::max_duration` explicitly; zero-duration is
   rejected (configuration error). DI-009 (HTTP connection timeout) does NOT govern subprocess
@@ -186,7 +192,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 |-------|-------|
 | Source L2 Capability | CAP-037 |
 | Capability Anchor Justification | CAP-037 ("First-Party Shell Execution Tool (tools::shell — BashTool)") per capabilities-p1-p2.md §CAP-037 — this BC specifies BashTool's non-lowerable Medium risk floor, BashOutput struct, 256 KiB output cap, 30s timeout, E-TOOLS-004/005/007 error codes, sandbox-mandatory execution, and retry enrollment semantics that CAP-037 names as the distinct framework safety invariant warranting its own CAP band |
-| L2 Domain Invariants | DI-014 (Error Propagation — timeout and sandbox errors propagate as Err; non-zero exit code surfaced in BashOutput, never swallowed), DI-015 (Subprocess Execution Timeout — max_duration wall-clock timeout on tokio::process::Command via tokio::time::timeout; exceed → terminate process → Err(E-TOOLS-004 BashTimeout)) |
+| L2 Domain Invariants | DI-014 (Error Propagation — timeout and sandbox errors propagate as Err; non-zero exit code surfaced in BashOutput, never swallowed), DI-015 (Subprocess Execution Timeout — max_duration wall-clock timeout enforced by BashTool via tokio::time::timeout wrapping sandbox execute() call; exceed → terminate subprocess via sandbox → Err(E-TOOLS-004 BashTimeout)) |
 | Architecture Authority | ADR-020 Decisions 2, 3, 4, and 5; ADR-018 Decision 6 (retry-through-hook ordering) |
 | Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
 | VP Registration | VP-013 (ARCH-INDEX D23 candidate — Kani P1; architect to assign VP-INDEX entry) |

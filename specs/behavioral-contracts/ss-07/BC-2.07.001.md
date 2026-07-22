@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/specs/prd-supplements/error-taxonomy.md
-input-hash: "f9ef8ee"
+input-hash: "9dea1b6"
 extracted_from: null
 modified: []
 deprecated: null
