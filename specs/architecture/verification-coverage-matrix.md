@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "fc33c4f"
+input-hash: "52d04b1"
 traces_to: ARCH-INDEX.md
 changelog:
   - "1.8 (burst-224/2026-07-21): Fix Coverage by Criticality Tier MEDIUM count: 11 → 12 (vectorstores-mmr reclassified CRITICAL → MEDIUM when VP-009 moved to vectorstores-similarity; F-P129-11 reclassification, not an addition). Fix tier membership description in header note. Refresh input-hash cascade: 8bc637f → 78d9c11 (module-decomposition.md v1.12) → c766473 final (module-criticality.md v1.4 D21+burst-224 backfill in same burst)."

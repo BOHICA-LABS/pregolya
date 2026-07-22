@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.3"
+version: "1.4"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.4 (burst-227/2026-07-21): F-P132-03 (coordinator flag 2) — Add 'MessagesPlaceholder trust derivation' subsection to Decision 3. ADR-015 v1.3 defined `TemplateVar` for scalar substitution but gave no counterpart type or derivation rule for `Vec<Message>` placeholder variables. BC-2.18.003 PC2 cited 'ADR-015 v1.3 semantics' but the rule was unanchored. Fix: introduce `MessageListVar { messages: Vec<Message>, trust_level: Option<TrustLevel> }` and state the uniform derivation rule: each expanded message's `MessageProvenance.highest_trust_level` = `MessageListVar.trust_level`; `None` → `None` (treated as Trusted). API shape (TemplateInput enum) deferred to story implementation."
   - "1.3 (burst-226/2026-07-21): F-P131-05 (CRITICAL) — ProvenanceTag shape adjudication. `ProvenanceTag` (SS-11 ingress-boundary struct) and template-composition trust level are TWO DISTINCT CONCERNS. Introduce `TrustLevel` enum (Untrusted|UserInput|Trusted) in `ferrochain-prompts: prompts::template` as the SS-18-local trust classifier. `TemplateVar.trust_level: Option<TrustLevel>` replaces the former implicit `Option<ProvenanceTag>` coupling. `MessageProvenance.highest_trust_level: Option<TrustLevel>` replaces `tag: Option<ProvenanceTag>`. Injection check updated: `var.trust_level.is_some_and(|t| t.is_untrusted())`. `ProvenanceTag` remains the SS-11 canonical 3-field struct (boundary_type/ingress_id/sequence_position) — no trust dimension added. BC-2.09.003 `ProvenanceTag::McpToolResult { server_name, tool_name }` is an outdated pre-PASS-58 variant; PO handoff: update PC1 to canonical struct form (`boundary_type: BoundaryType::ToolResult`). F-P131-04 (MED) — strict-undefined is a UNIVERSAL template-engine contract. Both f-string (default) and jinja2 (optional) engines raise E-TMPL-003 for undefined variables. E-TMPL-003 is engine-neutral. Decision 4 updated to state universal obligation."
   - "1.2 (burst-224/2026-07-21): F-P129-12 — specify template-source-order iteration for slot.variable_names() per BC-2.18.004 Invariant 5 + EC-007 + TV-005; determinism note added to Decision 3 injection-check prose and code sketch. HashSet/HashMap iteration prohibited for this loop."
   - "1.1 (crates.io/2026-07-20): Drop abandoned `mustache` crate (last release 2018-02, ~8yr stale — production-grade violation). Template engines: f-string (default) + jinja2/minijinja only. Pin: `minijinja = \"2\"` (2.21.0, default-features=false, optional). Add minijinja autoescape + sandboxed/restricted-mode + strict-undefined safety notes."
@@ -274,6 +275,33 @@ error — it does not require a new BoundaryType variant.
 
 `core::write_guard` (ADR-012) covers write-path safety; `prompts::injection_guard` covers
 template-composition safety. Both are pure-core blockers with no async I/O.
+
+### MessagesPlaceholder trust derivation (anchors BC-2.18.003 PC2)
+
+`MessagesPlaceholder` expands a `Vec<Message>` call-site variable into individual messages.
+Unlike scalar `TemplateVar` (which carries a `String` value), a placeholder variable wraps a
+message list together with its declared trust classification:
+
+```rust
+pub struct MessageListVar {
+    pub messages: Vec<Message>,
+    /// Trust classification applied uniformly to all messages in this expansion.
+    /// `None` is treated as `Trusted` (developer-supplied history; no external origin).
+    pub trust_level: Option<TrustLevel>,
+}
+```
+
+**Derivation rule:** Each expanded message's `MessageProvenance.highest_trust_level` is set
+to the parent `MessageListVar.trust_level` — uniform across every message in the expansion.
+When `trust_level` is `None`, every expanded message's `highest_trust_level` is `None`
+(treated as Trusted by `injection_guard`). This anchors BC-2.18.003 PC2: "each expanded
+message's `MessageProvenance.highest_trust_level` is derived from the `Vec<Message>`
+variable's declared `trust_level: Option<TrustLevel>`."
+
+`MessageListVar` is the call-site input type for `MessagesPlaceholder` slots; scalar slots
+continue to use `TemplateVar`. Both are present in the call-time input map — the concrete
+API shape (e.g., `enum TemplateInput { Scalar(TemplateVar), Messages(MessageListVar) }`) is
+resolved during story implementation and does not constrain the decision here.
 
 ## Decision 4 — Template Engine Selection
 

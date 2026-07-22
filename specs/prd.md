@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
 timestamp: 2026-07-21T00:00:00Z
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.8 (burst-227/F-P132-01/2026-07-21): §11 Observability emission census: convert from stale duplicate table (2 entries, retired ferrochain.mcp.guardrail.unregistered listed as active) to pointer+count form citing observability.md as the sole catalog authority. Active count updated to 6 (per observability.md v1.1). Prevents future dual-maintenance drift."
   - "v1.7 (burst-226/F-P131-01+F-P131-07/2026-07-21): §5 error taxonomy ranges updated: CORE 007→008 (E-CORE-008 GuardrailCriticalRejection), VS 004→005 (E-VS-005 FilterUnsupported). Census: 96→98."
   - "v1.6 (F-P130/2026-07-21): Fix burst 225 — 7 adversarial pass P1D-130 findings closed. (1) F-P130-02: BC-2.20.002 v1.1→v1.2 — 3 nonexistent `ferrochain-guardrail` crate references replaced with canonical `ferrochain-core: core::guardrail` per ADR-014 v1.4 PO Obligations. (2) F-P130-03: interface-definitions.md v2.42→v2.43 — 5 missing D21 trait sections added (Retriever+GuardedDocuments, VectorStore+VectorStoreFactory, Embeddings, ChatPromptTemplate/PromptValue, LcSerializable/Reviver) with verbatim ADR signatures and per-method BC anchors. (3) F-P130-04: DI-014 added to di_anchors of BC-2.20.001 v1.0→v1.1, BC-2.20.002 v1.1→v1.2, BC-2.21.004 v1.0→v1.1; propagated to BC-INDEX + prd.md §2 + §7 RTM. (4) F-P130-06: observability.md v1.0 created — Canonical Structured Event Catalog with 2 confirmed event_type emissions; SAP-1 policy stated; registered in supplements list. (5) F-P130-07: E-EMBED-001 prefix `DimensionMismatch:` → `EmbeddingDimensionMismatch:` in error-taxonomy.md v1.28→v1.29 and BC-2.22.001 v1.0→v1.1; E-VS-002 unchanged; gate #33 forward+reverse clean. (6) F-P130-08: BC-2.19.003 v1.0→v1.1 TV-001/TV-002 made falsifiable — relational assertions against LANGCHAIN_CORE_REGISTRY.len() and feature-gated delta >= 1. (7) F-P130-09: DI-009 added to di_anchors of BC-2.22.002 v1.0→v1.1 and BC-2.22.003 v1.0→v1.1; BC-2.14.004 cross-reference added in PC2/INV-5 and PC4/INV-2 prose; propagated to BC-INDEX + §2 + §7 RTM."
   - "v1.5 (F-P224/2026-07-21): §5 E-VS range row updated — E-VS-004 ZeroNormWriteTime (STATIC) added to examples column (write-time zero-norm guard on add_texts/from_texts_sync; minted in error-taxonomy.md v1.28; BC-2.21.002 v1.1 anchor)."
@@ -757,12 +758,13 @@ that is specified across the BC corpus. Per SAP-1 (CLAUDE.md §Standing Adversar
 emission site must have a catalog row with full field schema, emitting BC anchor, audit role, and
 recurrence policy.
 
-**Census at Phase 1d (2026-07-21):** 2 distinct `event_type` values specified.
+**Catalog authority:** `prd-supplements/observability.md` is the **single source of truth** for all
+`event_type` emission registrations. This section does not duplicate the catalog table; consult
+`observability.md` for the full row-by-row schema, field definitions, audit roles, and recurrence
+policies.
 
-| event_type | Log Level | Emitting BC | Trigger |
-|------------|-----------|-------------|---------|
-| `embeddings.legacy_model_warning` | `WARN` | BC-2.22.002 PC3/EC-002 | `EmbeddingsOpenAI` constructed with `"text-embedding-ada-002"` (legacy model) |
-| `ferrochain.mcp.guardrail.unregistered` | `WARN` | BC-2.09.003 PC4/EC-002 | MCP tool result enters model context with no `GuardrailHook` registered (default-permit per OQR-5) |
+**Current active count (2026-07-21):** **6** distinct `event_type` values active, 1 retired.
+Full catalog: `prd-supplements/observability.md`.
 
 **SAP-1 obligation:** implementers adding a new `event_type` emission in any `crates/` file must add a
 same-commit catalog row to `prd-supplements/observability.md`. Missing rows are P1 findings in adversarial review.

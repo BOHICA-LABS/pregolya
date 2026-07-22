@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "3d27fe6"
+input-hash: "1fc01e1"
 traces_to: STATE.md
 ---
 
@@ -885,6 +885,7 @@ Sibling checks ALL PASS. 5/5 spot rotation GREEN. 14/14 DIs anchored. 3/3 FIXED 
 | P1D-129 | 2026-07-21 | 12 | 0 | 3 | 7 | 2 | HIGH | 0/3 | FINDINGS_REMAIN (expanded-perimeter pass 1; all 12 fixed in burst 224; E-VS-004 minted; counter resets on push) |
 | P1D-130 | 2026-07-21 | 9 | 1 | 3 | 2 | 3 | HIGH | 0/3 | FINDINGS_REMAIN (1C/3H/2M+1PG/3L; expanded-perimeter pass 2; all 9 closed in fix-burst 225: BC re-anchors, DI-014 propagation, interface-definitions v2.43 +5 D21 trait sections, observability.md v1.0 created) |
 | P1D-131 | 2026-07-21 | 7 | 1 | 3 | 3 | 0 | HIGH | 0/3 | FINDINGS_REMAIN (1C/3H/3M; expanded-perimeter pass 3; all 7 closed in fix-burst 226: TrustLevel minted ADR-015 v1.3, E-CORE-008/E-VS-005 minted census 98, observability re-census v1.1, nfr-catalog v1.3 D21 coverage) |
+| P1D-132 | 2026-07-22 | 8 | 0 | 4 | 1 | 3 | HIGH | 0/3 | FINDINGS_REMAIN (0C/4H/1M/3L; expanded-perimeter pass 4; all 8 closed in fix-burst 227: ADR-015 v1.4 MessageListVar trust derivation, VP-006 v1.4 TrustLevel harness, verification-architecture v2.0, BC-2.18.001/002/003/2.09.003/2.19.002 minor fixes, nfr-catalog v1.4, interface-definitions v2.45, prd v1.8; D22 Domain E holdout recorded) |
 
 ### Pass P1D-129 (2026-07-21) — Expanded Perimeter Pass 1
 
@@ -962,9 +963,35 @@ Key findings:
 
 ---
 
+### Pass P1D-132 (2026-07-22) — Expanded Perimeter Pass 4
+
+**Findings:** 8 (0 CRIT, 4 HIGH, 1 MED, 3 LOW)
+**Novelty:** HIGH (MessagesPlaceholder trust derivation gap; ChatPromptTemplate anchor errors; TrustLevel BC residue)
+**Convergence counter:** 0 of 3 (streak RESET; fix-burst 227 COMPLETE)
+**Coverage level:** D21 expanded perimeter — 116 BCs / SS-18..22 / 10 VPs / ADR-014..017 / frozen HEAD (burst-226 push)
+
+Key findings:
+- F-P132-01 HIGH: ADR-015 MessagesPlaceholder trust derivation: `MessageListVar` struct missing `trust_level` field; uniform derivation rule unspecified; BC-2.18.003 PC2 underpinned only by inference, not explicit contract.
+- F-P132-02 HIGH: interface-definitions v2.44 ChatPromptTemplate: 4 anchor citations incorrect (wrong BC or wrong section).
+- F-P132-03 HIGH: BC-2.18.002 / BC-2.18.003 TrustLevel residue — explicit derivation rule for MessageListVar not stated; ADR-015 Decision 3 needed.
+- F-P132-04 HIGH: BC-2.18.001 description qualifier too broad ("any prompt variable") — must scope to untrusted-only inputs.
+- F-P132-05 MED: prd.md §11 embeds raw event_type list inline — catalog-drift liability; pointer+count form required (observability.md is sole authority).
+- F-P132-06 LOW: BC-2.09.003 ProvenanceTag struct label minor clarity gap.
+- F-P132-07 LOW: nfr-catalog NFR-013 description incorrect BC reference; NFR-014 jinja2 benchmark missing.
+- F-P132-08 LOW: BC-2.19.002 serde field-name convention absent.
+
+All 8 findings fixed in burst 227. ADR-015 v1.4 Decision 3 minted (`MessageListVar { messages, trust_level: TrustLevel }`; uniform derivation rule; anchors BC-2.18.003 PC2). VP-006 v1.4 TrustLevel harness update (hash 03de1aa). verification-architecture v2.0 (hash ddc4a64). 5 BC minor fixes. prd v1.8 §11 pointer+count form. interface-definitions v2.45. nfr-catalog v1.4. D22 Domain E holdout recorded.
+
+**Fix summary:** Burst 227 — architect (ADR-015 v1.4; VP-006 v1.4; verification-architecture v2.0) + product-owner (BC-2.18.001 v1.1; BC-2.18.002 v1.2; BC-2.18.003 v1.1; BC-2.09.003 v1.3; BC-2.19.002 v1.1; prd v1.8; interface-definitions v2.45; nfr-catalog v1.4).
+**Hash sweep (D18-P89-A):** STALE→0 (4 passes; 95+17+6+0 files); final TOTAL=218 MATCH=179 STALE=0 NOINPUT=39.
+**Trajectory after:** →8 (P1D-132 NOT CLEAN); cumulative tail →12→9→7→8
+**Counter:** 0/3 (fix-burst 227 COMPLETE; P1D-133 required on new frozen HEAD)
+
+---
+
 ## Trajectory Shorthand Update (post-D21 expansion)
 
-`[D21 expansion burst 216: 0/3 RESET] →12 (P1D-129, expanded-perimeter pass 1, NOT CLEAN: 3H/7M/2L) →9 (P1D-130, expanded-perimeter pass 2, NOT CLEAN: 1C/3H/2M+1PG/3L) →7 (P1D-131, expanded-perimeter pass 3, NOT CLEAN: 1C/3H/3M)`
+`[D21 expansion burst 216: 0/3 RESET] →12 (P1D-129, expanded-perimeter pass 1, NOT CLEAN: 3H/7M/2L) →9 (P1D-130, expanded-perimeter pass 2, NOT CLEAN: 1C/3H/2M+1PG/3L) →7 (P1D-131, expanded-perimeter pass 3, NOT CLEAN: 1C/3H/3M) →8 (P1D-132, expanded-perimeter pass 4, NOT CLEAN: 4H/1M/3L)`
 
 ---
 

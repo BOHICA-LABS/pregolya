@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.003
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ producer: product-owner
 timestamp: 2026-07-20T00:00:00Z
 di_anchors: [DI-008]
 changelog:
+  - "1.1 (burst-227/F-P132-03/2026-07-21): PC2 MessagesPlaceholder trust derivation: replace broken 'ProvenanceTag (if any); each expanded message inherits the same tag' with explicit ADR-015-conformant trust derivation — each expanded message's MessageProvenance.highest_trust_level is derived from the Vec<Message> variable's declared trust_level: Option<TrustLevel>; None if unset."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-023
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "2c807f0"
+input-hash: "346cbe5"
 extracted_from: null
 modified: []
 deprecated: null
@@ -66,7 +67,12 @@ their outputs composable with the injection_guard (BC-2.18.004) and guardrail pi
    the placeholder position — each message in the Vec becomes a separate entry in
    `PromptValue.messages`.
 2. The expanded messages carry `MessageProvenance` derived from the `Vec<Message>` variable's
-   `ProvenanceTag` (if any); each expanded message inherits the same tag.
+   declared `trust_level: Option<TrustLevel>` (per ADR-015 v1.3 semantics): a
+   `Vec<Message>` conversation-history variable is externally-supplied content; each expanded
+   message's `MessageProvenance.highest_trust_level` is set to the variable's declared
+   `trust_level` value. If the variable has no declared `trust_level` (i.e., `trust_level:
+   None`), every expanded message's `highest_trust_level` is `None` (treated as Trusted by
+   injection_guard).
 3. If the `Vec<Message>` variable is absent from the call-time vars map, the behavior follows
    the slot's `required: bool` setting: if required (default), returns `Err(E-TMPL-003)`; if
    optional, expands to zero messages.

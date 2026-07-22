@@ -11,7 +11,7 @@ previous_review: pass-92.md
 cycle: v1.0.0-greenfield
 traces_to: STATE.md
 inputs: [specs/behavioral-contracts/, specs/prd-supplements/, specs/architecture/, specs/domain-spec/]
-input-hash: "5758a30"
+input-hash: "96720c4"
 ---
 
 # Adversarial Review: ferrochain (Pass 93)

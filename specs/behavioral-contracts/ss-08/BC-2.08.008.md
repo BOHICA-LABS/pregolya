@@ -23,7 +23,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "e8d99df"
+input-hash: "3e2cddb"
 extracted_from: null
 modified: []
 deprecated: null

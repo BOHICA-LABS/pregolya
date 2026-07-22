@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.001
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ producer: product-owner
 timestamp: 2026-07-20T00:00:00Z
 di_anchors: [DI-008, DI-014]
 changelog:
+  - "1.1 (burst-227/F-P132-04/2026-07-21): Description ¶1: remove 'in strict-undefined mode (jinja2 engine or explicit f-string strict mode)' qualifier — E-TMPL-003 is unconditional and engine-neutral per INV-3/PC4/ADR-015 Decision 4; description now states the raise is unconditional in both f-string and jinja2 engines."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "2c807f0"
+input-hash: "346cbe5"
 extracted_from: null
 modified: []
 deprecated: null
@@ -47,9 +48,10 @@ f-string template using Python `str.format` semantics: `{variable}` substitution
 `}}`  as literal-brace escapes, and no nested attribute access in v1. Partial variable binding
 pre-fills a subset of variables at template-construction time; call-time variables are merged
 in and override partial bindings on key collision. Required variable names are detected at
-construction time (static introspection, before any render call). An undefined variable in
-strict-undefined mode (jinja2 engine or explicit f-string strict mode) raises
-`Err(FerrochainError { code: "E-TMPL-003" })` rather than silently substituting an empty string.
+construction time (static introspection, before any render call). An undefined variable raises
+`Err(FerrochainError { code: "E-TMPL-003" })` unconditionally — in both the f-string engine and
+the jinja2 engine — rather than silently substituting an empty string. There is no lenient mode;
+E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 Decision 4).
 
 ## Preconditions
 

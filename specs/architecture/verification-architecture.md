@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "1.9"
+version: "2.0"
 status: active
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-19/BC-2.19.005.md
   - .factory/specs/behavioral-contracts/ss-21/BC-2.21.003.md
   - .factory/specs/behavioral-contracts/ss-22/BC-2.22.001.md
-input-hash: "af0d309"
+input-hash: "02f29d4"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21]
 ---
@@ -299,7 +299,7 @@ fn injection_guard_fail_closed() {
 ```
 
 Feasibility: HIGH. `check_slot_trust` is a pure sync function over bounded Vec. Enum variants are
-finite (ProvenanceTag: 3 variants; SlotTrustPolicy: 2 variants). Harness bounds: ≤ 4 slots.
+finite (TrustLevel: 3 variants; SlotTrustPolicy: 2 variants). Harness bounds: ≤ 4 slots.
 Estimated proof time: 1–3 min.
 
 ---
@@ -403,6 +403,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.0 | 2026-07-21 | architect | burst-227 / F-P132-03 | VP-006 Feasibility section: `ProvenanceTag: 3 variants` → `TrustLevel: 3 variants` (ProvenanceTag is a struct with Uuid field, not an enum; TrustLevel is the Kani input). Propagates VP-006.md v1.4 residue sweep. |
 | 1.9 | 2026-07-21 | architect | burst-226 / F-P131-05 | VP-006 section corrected: replace nonexistent `ProvenanceTag::External \| ProvenanceTag::ToolOutput` variants with `TrustLevel::Untrusted` (SS-18-local trust classifier per ADR-015 v1.3); fix error code `E-INJ-001` → `E-TMPL-001` (SECURITY/InjectionAttempt). Formal statement, harness sketch, and explanatory note updated throughout. `TrustLevel` is distinct from `core::guardrail::ProvenanceTag` (SS-11 ingress struct). `SlotVar.tag` field renamed to `SlotVar.trust_level` in harness. |
 | 1.8 | 2026-07-21 | architect | burst-225 / F-P130-05 | Correct VP-006 DI column in Committed VP Obligations table: DI-008 → DI-014. VP-006 proves the fail-closed property (injection detected → Err returned, no PromptValue produced); the semantically correct invariant is DI-014 (Error Propagation / No Silent Swallowing), not DI-008 (Library Constructor Result Contract). Siblings VP-009 and VP-010 both anchor DI-014 for the same class of proof. Propagates VP-INDEX.md v1.4 and VP-006.md v1.2 corrections. |
 | 1.7 | 2026-07-21 | architect | burst-224 / VP-chain propagation | VP-010 formal statement scoped to non-monolith domain (id ∉ LANGCHAIN_MONOLITH_TYPES) per VP-010.md v1.1 / F-P129-04; harness sketch updated with LANGCHAIN_MONOLITH_TYPES assumption and corrected assertion; feasibility note updated. Test-Sufficient 'Content provenance/guardrail' row updated to reflect GuardedDocuments compile_fail mechanism (ADR-014 Decision 6 / VP-2.20.002-A). Input-hash refreshed: b279860 → d7ef822 (BC-2.18.004 v1.1 + BC-2.19.005 v1.1 bumped by PO in same burst). |

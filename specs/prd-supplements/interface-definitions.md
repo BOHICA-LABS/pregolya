@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.44"
+version: "2.45"
 status: active
 producer: product-owner
 timestamp: 2026-07-21T00:00:00Z
 phase: 1d
 changelog:
+  - "2.45 (burst-227/F-P132-02/2026-07-21): §ChatPromptTemplate — complete BC-2.18.x anchor swap from burst-226 partial-propagation. (1) SlotTrustPolicy doc anchor: BC-2.18.003 PC1-PC2 (MessagesPlaceholder!) → BC-2.18.002 PC4 (slot_trust_policy field) + BC-2.18.005 PC1-PC5 (construction-time policy guard). (2) from_messages anchor: BC-2.18.001 PC1 (PromptTemplate construction!) → BC-2.18.002 PC1 (ChatPromptTemplate construction). (3) PromptValue struct anchor: BC-2.18.001 PC3 (input_variables()!) → BC-2.18.002 PC2 (PromptValue.messages). (4) MessageProvenance struct anchor: BC-2.18.003 PC2-PC3 (MessagesPlaceholder!) → BC-2.18.002 PC3-PC4 (highest_trust_level + slot_trust_policy). (5) Footer: BC-2.18.001 description corrected to PromptTemplate F-String scope; BC-2.18.003 description corrected to MessagesPlaceholder/FewShot scope; BC-2.18.005 description corrected to construction guard scope."
   - "2.44 (burst-226/F-P131-01+F-P131-05+F-P131-06+F-P131-07/2026-07-21): (1) F-P131-05: ChatPromptTemplate section — TrustLevel migration. Added TrustLevel enum + TemplateVar struct definitions. MessageProvenance.tag → MessageProvenance.highest_trust_level. SlotTrustPolicy TrustRequired doc comment: ProvenanceTag::Trusted/Internal → TrustLevel::Trusted/None. format_messages BC anchor: BC-2.18.001↔BC-2.18.002 swap (format_messages rendering → BC-2.18.002; strict-undefined → BC-2.18.001). BC anchor footer: ProvenanceTag → TrustLevel; ADR-015 Decision 4 added. (2) F-P131-01: GuardedDocuments::rag_ingress docstring updated with severity-bifurcated Fail semantics (Critical → Err(E-CORE-008); Non-Critical → error-entry substitution). E-CORE-008 individual omission note added. (3) F-P131-07: similarity_search_with_filter default method doc updated: lossy fallback → fail-safe Err(E-VS-005 FilterUnsupported) on non-empty filter. (4) Disposition census 96→98: individual 16→17 (+E-CORE-008), blanket 37→38 (+E-VS-005)."
   - "2.43 (F-P130-03/2026-07-21): Add six missing D21 trait sections to §Public Rust Trait Signatures (F-P130-03 HIGH). Sections added with verbatim ADR-authoritative signatures + per-method BC anchors: (1) §Retriever Trait and GuardedDocuments — ADR-014 Decision 2 + Decision 6; anchors BC-2.20.001..003. (2) §VectorStore Trait and VectorStoreFactory — ADR-014 Decision 2; anchors BC-2.21.001..004. (3) §Embeddings Trait — ADR-017 Decision 2; anchors BC-2.22.001..003. (4) §ChatPromptTemplate and PromptValue Surface — ADR-015; anchors BC-2.18.001..005. (5) §LcSerializable and Reviver Surface — ADR-016; anchors BC-2.19.001..006. Coverage cross-check: all methods have BC anchors; no orphan methods found in either direction."
   - "2.42 (F-P224/H-1/2026-07-21): Blanket omission annotation updated for E-VS-004 (ZeroNormWriteTime, VAL, BC-2.21.002) minted in error-taxonomy.md v1.28. E-VS-* namespace 3→4 codes; blanket group total 36→37. Disposition census 95→96 (43 HTTP + 16 individual + 37 blanket = 96). E-VS-004 is library-layer only (write-path Err return from add_texts / from_texts_sync; no direct HTTP terminal response in v1)."
@@ -60,7 +61,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "e09ca36"
+input-hash: "0254c09"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."
@@ -1143,9 +1144,9 @@ pub struct TemplateVar {
 }
 
 /// Controls whether a named template slot may receive untrusted input.
-/// BC anchor: BC-2.18.003 PC1–PC2 (TrustAll vs TrustRequired semantics),
+/// BC anchor: BC-2.18.002 PC4 (slot_trust_policy recorded in MessageProvenance per rendered slot),
 /// BC-2.18.004 PC5 (injection_guard checks TrustLevel::Untrusted against TrustRequired slots → E-TMPL-001),
-/// BC-2.18.005 PC1 (TrustAll on SystemMessage construction → E-TMPL-002)
+/// BC-2.18.005 PC1–PC5 (TrustAll on SystemMessage slot rejected at construction → E-TMPL-002; TrustAll on non-System slots accepted)
 #[derive(Debug, Clone, PartialEq)]
 pub enum SlotTrustPolicy {
     /// Slot accepts any TemplateVar, including untrusted provenance.
@@ -1158,8 +1159,8 @@ pub enum SlotTrustPolicy {
 impl ChatPromptTemplate {
     /// Construct from a list of (role, template_string, trust_policy) tuples.
     /// Raises E-TMPL-002 if TrustAll is specified for a SystemMessage role (prohibited).
-    /// BC anchor: BC-2.18.001 PC1 (construction from (role, template, policy) tuples),
-    /// BC-2.18.005 PC1 (TrustAll on SystemMessage → E-TMPL-002 at construction time)
+    /// BC anchor: BC-2.18.002 PC1 (ChatPromptTemplate construction via from_messages, returns Result per DI-008),
+    /// BC-2.18.005 PC1 (TrustAll on SystemMessage → E-TMPL-002 at construction time; fail-closed)
     pub fn from_messages(
         messages: Vec<(MessageRole, &str, SlotTrustPolicy)>,
     ) -> Result<Self, FerrochainError> { ... }
@@ -1178,14 +1179,14 @@ impl ChatPromptTemplate {
 
 /// The rendered output of ChatPromptTemplate::format_messages.
 /// Each message carries its MessageProvenance for downstream trust decisions.
-/// BC anchor: BC-2.18.001 PC3 (PromptValue structure), BC-2.18.003 PC3 (provenance per message)
+/// BC anchor: BC-2.18.002 PC2 (PromptValue.messages: Vec<(Message, MessageProvenance)>; one entry per slot in declaration order)
 #[non_exhaustive]
 pub struct PromptValue {
     pub messages: Vec<(Message, MessageProvenance)>,
 }
 
 /// Provenance metadata attached to each rendered message.
-/// BC anchor: BC-2.18.003 PC2–PC3 (provenance tagging at render time),
+/// BC anchor: BC-2.18.002 PC3–PC4 (highest_trust_level aggregation per slot; slot_trust_policy reflection),
 /// BC-2.18.004 PC1 (TrustLevel::Untrusted in highest_trust_level drives injection_guard fail-closed decision)
 #[non_exhaustive]
 pub struct MessageProvenance {
@@ -1197,11 +1198,11 @@ pub struct MessageProvenance {
 ```
 
 **BC anchor:**
-BC-2.18.001 (ChatPromptTemplate — from_messages construction, PromptValue output; strict-undefined variable reference → E-TMPL-003),
-BC-2.18.002 (format_messages multi-message rendering semantics),
-BC-2.18.003 (SlotTrustPolicy — TrustAll vs TrustRequired; MessageProvenance per rendered message),
+BC-2.18.001 (PromptTemplate — f-string rendering, partial binding, variable detection, strict-undefined guard → E-TMPL-003; engine-neutral; single-message surface),
+BC-2.18.002 (ChatPromptTemplate — from_messages construction, format_messages multi-message rendering, PromptValue output, per-slot MessageProvenance),
+BC-2.18.003 (MessagesPlaceholder Vec<Message> in-place expansion; FewShotPromptTemplate few-shot composition),
 BC-2.18.004 (injection_guard — TrustLevel::Untrusted on TrustRequired slot → E-TMPL-001 fail-closed; VP-006 Kani candidate),
-BC-2.18.005 (TrustAll on SystemMessage → E-TMPL-002 at construction).
+BC-2.18.005 (SlotTrustPolicy::TrustAll on SystemMessage slot → E-TMPL-002 at construction time; fail-closed construction guard).
 ADR-015 Decision 1 (ChatPromptTemplate surface), Decision 2 (SlotTrustPolicy enum), Decision 3 (injection_guard fail-closed semantics), Decision 4 (TrustLevel enum — engine-neutral; both f-string and jinja2 raise E-TMPL-003 on undefined variable).
 
 ---

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.002
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ producer: product-owner
 timestamp: 2026-07-20T00:00:00Z
 di_anchors: [DI-008, DI-010]
 changelog:
+  - "1.1 (burst-227/F-P132-08/2026-07-21): Clarify serde field-name convention: lc_secrets() returns serde-serialized names (not Rust field names). Invariant 3 extended. TV-001 note updated: 'api_key field absent' → 'openai_api_key (serde-serialized name) absent from kwargs'."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-024
@@ -81,6 +82,11 @@ no configuration knob overrides it (DI-010).
 2. The stripping is **idempotent** — stripping a `kwargs` map that already lacks the secret
    keys produces the same result.
 3. `lc_secrets()` is a `&'static [&'static str]` — compile-time constant, no runtime mutation.
+   The strings are **serde-serialized field names** (i.e., the name as it appears in the `kwargs`
+   JSON map after any `#[serde(rename = ...)]` attribute), not the Rust source field names.
+   Example: a Rust field `api_key` with `#[serde(rename = "openai_api_key")]` produces
+   `lc_secrets() = &["openai_api_key"]`. The `kwargs` map always uses serde-serialized names;
+   `lc_secrets()` stripping operates on those names.
 4. After serialization, a `Debug` print of `Serialized::Constructor` never reveals a credential
    value because the field is absent from `kwargs` (DI-010 — credential opacity extends to the
    serialized form).
@@ -99,7 +105,7 @@ no configuration knob overrides it (DI-010).
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 | `OpenAiChatModel { api_key: ApiKey("sk-abc..."), model: "gpt-4o" }` → `serialize()` | `Serialized::Constructor { kwargs: {"model": "gpt-4o"} }` — `api_key` field absent | happy-path (secret stripped) |
+| TV-001 | `OpenAiChatModel { api_key: ApiKey("sk-abc..."), model: "gpt-4o" }` → `serialize()` | `Serialized::Constructor { kwargs: {"model": "gpt-4o"} }` — `openai_api_key` (serde-serialized name of the `api_key` Rust field, via `#[serde(rename = "openai_api_key")]`) is absent from kwargs | happy-path (secret stripped) |
 | TV-002 | `Serialized::Constructor { kwargs: {"model": "gpt-4o", "openai_api_key": "sk-injected"} }` → `Reviver::revive()` | Constructor dispatched with `kwargs = {"model": "gpt-4o"}` — injected key stripped | happy-path (reviver stripping) |
 | TV-003 | Type with no `lc_secrets()` → serialize | All fields present in kwargs | happy-path (no-op stripping) |
 | TV-004 | Type with 3 credential fields → serialize | All 3 absent from kwargs output | happy-path (multiple secrets) |

@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.004.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.005.md
   - .factory/specs/architecture/verification-coverage-matrix.md
-input-hash: "be23943"
+input-hash: "0fc1f4c"
 findings:
   - id: F-P14-01
     severity: HIGH

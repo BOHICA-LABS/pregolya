@@ -3774,3 +3774,57 @@ Pass P1D-130 adversarial review completed against frozen HEAD d21676d: NOT CLEAN
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | Burst 220 (WRAP) — D21 spec-body WIP checkpoint committed; BC-count tokens rephrased; RESUME snapshot updated | state-manager | COMPLETE | 21 new BC files (SS-18..22) + error-taxonomy v1.27 + interface-definitions v2.41 + test-vectors v2.0 + product-brief v1.4 + ADR-010 v1.1 + BC-2.14.001 v1.2 + api-surface v1.6 + bc-authoring-plan v2.41 committed as WIP checkpoint. prd.md + BC-INDEX.md body INCOMPLETE — next session: PO finishes bodies. Burst 220. |
+
+## Burst 227 — P1D-132 Fix-Burst COMPLETE (2026-07-22)
+
+**Pass:** P1D-132 (adversary pass 132; fourth pass on D21 expanded perimeter)
+**Burst:** 227 (state-manager commit)
+**Agents dispatched:** architect, product-owner, state-manager
+
+### P1D-132 Findings (8 total: 0 CRIT / 4 HIGH / 1 MED / 3 LOW)
+
+- **F-P132-01 HIGH** — ADR-015 MessagesPlaceholder trust derivation: no mechanism specified for how template-level TrustLevel is derived when a MessageListVar (messages placeholder) is used. `trust_level` field on `MessageListVar` struct is the structural gap — the uniform derivation rule is unspecified.
+- **F-P132-02 HIGH** — interface-definitions v2.44: 4 ChatPromptTemplate anchor citations incorrect (pointing to wrong BC or BC section).
+- **F-P132-03 HIGH** — BC-2.18.002/BC-2.18.003: TrustLevel residue from burst-226 incomplete — explicit trust derivation rule for MessageListVar not stated in BCs; BC-2.18.003 PC2 semantics underspecified.
+- **F-P132-04 HIGH** — BC-2.18.001: description qualifier ambiguous (over-broad) — "any prompt variable" wording did not properly scope to untrusted-only inputs.
+- **F-P132-05 MED** — prd.md §11 observability: embedding raw event_type list inline in PRD §11 body is a catalog-drift liability; should be pointer+count form (observability.md is sole authority).
+- **F-P132-06 LOW** — BC-2.09.003: struct label for ProvenanceTag minor clarity gap.
+- **F-P132-07 LOW** — nfr-catalog: NFR-013 description did not correctly reference BC-2.22.001 EC-002; NFR-014 jinja2 performance benchmark entry missing.
+- **F-P132-08 LOW** — BC-2.19.002: serde field-name convention not stated.
+
+### Fix Actions (all 8 closed in burst 227)
+
+**Architect** (F-P132-01, F-P132-03 anchor side):
+- ADR-015 v1.4 (Decision 3 MessagesPlaceholder: `MessageListVar { messages, trust_level: TrustLevel }`; uniform derivation rule — template TrustLevel = min(all MessageListVar.trust_level values); anchors BC-2.18.003 PC2).
+- VP-006 v1.4: TrustLevel harness update — residue from burst-226 purged (hash 03de1aa).
+- verification-architecture v2.0: MessagesPlaceholder feasibility note added (hash ddc4a64).
+
+**Product Owner** (F-P132-02, F-P132-03 BC side, F-P132-04, F-P132-05, F-P132-06, F-P132-07, F-P132-08):
+- BC-2.18.001 v1.1: description qualifier tightened (F-P132-04).
+- BC-2.18.002 v1.2: explicit TrustLevel derivation from MessageListVar + trust_level field cross-ref to ADR-015 Decision 3 (F-P132-03).
+- BC-2.18.003 v1.1: PC2 semantics explicit — uniform derivation rule from ADR-015 Decision 3 (F-P132-03).
+- BC-2.09.003 v1.3: struct label clarity (F-P132-06).
+- BC-2.19.002 v1.1: serde field-name convention stated (F-P132-08).
+- prd.md v1.8: §11 observability converted to pointer+count form; observability.md is sole authority for event_type catalog (F-P132-05).
+- interface-definitions v2.45: +4 ChatPromptTemplate anchor corrections (F-P132-02).
+- nfr-catalog v1.4: NFR-013 restated per BC-2.22.001 EC-002; NFR-014 jinja2 benchmark added (F-P132-07).
+
+**Human directive D22 recorded:** ferrochain must be capable of building an agentic coding assistant (Claude Code / Codex clone). Burst 228 = product-owner authors `planning/holdout-domains/domain-e-brief.md` + holdout-traceability analysis.
+
+### Hash Sweep (D18-P89-A / D18-P90-A)
+
+4 passes: pass-1 (95 files updated), pass-2 (17 files updated), pass-3 (6 files updated), pass-4 (0 stale). Final: TOTAL=218 MATCH=179 STALE=0 NOINPUT=39.
+
+### Convergence Status After Burst 227
+
+- Phase 1d passes: 132 (128 pre-D21 + 4 post-D21 expanded-perimeter passes; NOT CLEAN)
+- Fix bursts: 132 (fix-burst 227 COMPLETE — all 8 findings closed)
+- Phase 1 status: P1D-132 fix-burst COMPLETE; ADR-015 v1.4 MessageListVar trust derivation anchor; D22 Domain E holdout recorded
+- Convergence counter: 0/3 (P1D-132 NOT CLEAN; frozen-HEAD streak RESETS on push of this commit)
+- NEXT: burst 228 product-owner Domain E brief + traceability analysis → adversary pass P1D-133 on new frozen HEAD → cascade toward 3/3 CLEAN(strict) → check-input-drift → fresh consistency audit → Phase 1 HUMAN GATE
+
+### Archived Current Phase Steps Row (displaced from STATE.md — burst-223 row)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Burst 223 — Phase 1d VP authoring COMPLETE; VP-006..010 authored; VP-INDEX v1.2 (10 VPs total); verification-architecture v1.5; coverage-matrix v1.6; burst-217 row archived | architect + state-manager | COMPLETE | VP-006 injection_guard_fail_closed (Kani P1, DI-014, ferrochain-prompts). VP-007 serializable (proptest P1, DI-008, ferrochain-core). VP-008 embeddings (proptest P1, DI-014, ferrochain-core). VP-009 vectorstores-similarity (Kani P0, DI-014, ferrochain-vectorstores). VP-010 serializable-reviver (Kani P0, DI-014, ferrochain-core). VP-INDEX v1.2: 10 VPs, P0=5/P1=5, Kani=6/proptest=2/integration=2. verification-architecture v1.5 (10-VP roster). coverage-matrix v1.6. Burst 223. |
