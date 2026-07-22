@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: tooling-selection
-version: "1.1"
+version: "1.2"
 status: active
 producer: architect
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "b572e4a"
+input-hash: "8b8e847"
 traces_to: ARCH-INDEX.md
-decisions: [D17]
+decisions: [D17, D21, D23]
 changelog:
+  - "1.2 (burst-241/2026-07-23): F-P141-02 — expand Kani §Target from D17-Q7 3-VP set to full 9-VP catalog (6 P0 + 3 P1); expand Cargo integration row to all 7 Kani-hosting crates; update [Section Content] intro sentence. VP-009/010/011 confirmed P0 (fail-closed security/safety proofs). Add D21/D23 to decisions."
   - "1.1 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst; add [Section Content] template compliance fix. No spec content changes."
   - "1.0 (initial): tooling selection authored."
 ---
@@ -26,17 +27,25 @@ changelog:
 
 ## [Section Content]
 
-This file documents ferrochain's formal verification and testing tooling selection: Kani model checker (VP-001/002/003), cargo-fuzz, cargo-mutants, and proptest. All selections are driven by D17-Q7 (NFR-003 formal-proof obligations) and CAP-019.
+This file documents ferrochain's formal verification and testing tooling selection: Kani model checker (9 VPs: 6 P0 + 3 P1), cargo-fuzz, cargo-mutants, and proptest. All selections are driven by D17-Q7 + D21 + D23 (NFR-003 formal-proof obligations) and CAP-019.
 
 ## Formal Verification: Kani
 
-**Target:** VP-001 (BSP determinism), VP-002 (session tenancy), VP-003 (workspace confinement)
+**P0 targets (v1 convergence gate — all must pass before Phase 7):**
+VP-001 (BSP determinism / ferrochain-graph), VP-002 (session tenancy / ferrochain-checkpoint),
+VP-003 (workspace confinement / ferrochain-sandbox), VP-009 (zero-norm cosine guard /
+ferrochain-vectorstores), VP-010 (reviver allowlist containment / ferrochain-core),
+VP-011 (PreToolCallHook fail-closed / ferrochain-graph)
+
+**P1 targets (Phase 6 goals):**
+VP-006 (injection_guard fail-closed / ferrochain-prompts), VP-012 (OnWatermark arithmetic /
+ferrochain-core), VP-013 (BashTool risk floor / ferrochain-tools)
 
 | Property | Value |
 |----------|-------|
 | Crate | `kani` (Kani Rust Verifier) |
 | Version target | 0.67.0 (verified 2026-07, latest stable) |
-| Cargo integration | `[dev-dependencies]` in ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox |
+| Cargo integration | `[dev-dependencies]` in ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox, ferrochain-vectorstores, ferrochain-core, ferrochain-prompts, ferrochain-tools |
 | Invocation | `cargo kani --harness <harness_name>` |
 | CI gate | Phase 6 only; Kani is NOT a per-PR gate (too slow); run in dedicated Phase 6 job |
 | Bounded loops | All harnesses must assert `kani::assume(n <= 4)` or equivalent bound |

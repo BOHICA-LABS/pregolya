@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-nfr-catalog
 level: L3
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
 timestamp: 2026-07-21T00:00:00Z
@@ -10,8 +10,9 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/risks.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "f05de49"
+input-hash: "79655ae"
 changelog:
+  - "1.5 (burst-241/Wave-2/2026-07-23): F-P141-02 VP-gate expansion — NFR-003 expanded from 3 to 6 P0 Kani proof targets (VP-001/002/003 from D17-Q7 + VP-009 zero-norm, VP-010 allowlist, VP-011 tool-deny from D21+D23). NFR-to-Module map updated to add ferrochain-vectorstores and ferrochain-core for VP-009/010, and P1 targets VP-006/012/013. Success Criteria row updated to '6 P0'."
   - "1.4 (burst-227/F-P132-05+F-P132-07/2026-07-21): (1) NFR-013: Restate to conform to BC-2.22.001 EC-002 adjudication — drop E-EMBED-001 citation (wrong error code; E-EMBED-001 is EmbeddingDimensionMismatch post-response) and drop pre-send batch-size cap mandate (no BC specifies a pre-send cap; EC-002 deliberate adjudication stands). New statement: embed_documents with an over-limit batch completes deterministically — either Ok or structured Err propagating provider rejection; no panic; no silent truncation. Validation method conforms. (2) NFR-014: Add jinja2/minijinja render benchmark to Validation Method so the stated engine-neutral bound is independently verified for both engines."
   - "1.3 (burst-226/F-P131-07+F-P131-08/2026-07-21): (1) NFR-012: InMemoryVectorStore O(n·d) linear scan corpus envelope per ADR-014 v1.5. (2) NFR-013: embed_documents input-size constraint vs provider max-batch-size caps per ADR-017. (3) NFR-014: template render bounds — max template variables and slots per render call per ADR-015. (4) NFR-009 extended: add embedding call sites (ferrochain-prompts not applicable; ferrochain-vectorstores and ferrochain-core::embeddings are new HTTP-timeout scopes for embed_documents/embed_query). (5) NFR-to-Module map updated: NFR-009 extended to ferrochain-vectorstores + ferrochain-core::embeddings; NFR-012/013/014 rows added."
   - "1.2 (2026-07-17, F-P89-03): Resolved pending hash recomputation from v1.1. Recomputed input-hash against current post-STATE.md-removal inputs (prd.md, risks.md, invariants.md): 2153125 → 0f05a12. The value 2153125 was the pre-v1.1 hash computed when STATE.md was still an input; v1.1 removed STATE.md but deferred the recompute. No content change — hash correction only."
@@ -33,7 +34,7 @@ primary_consumers: [architect, performance-engineer, formal-verifier]
 |----|----------|-------------|--------|------------------|----------|-------------|---------|
 | NFR-001 | Performance | `Runnable::invoke` latency overhead above direct async fn call | ≤ 1ms per invocation on M1 Mac baseline hardware | Criterion benchmark: `cargo bench --bench runnable_overhead` | P0 | N/A | BC-2.01.003 |
 | NFR-002 | Reliability | Tasks completed before process crash must not be lost when sync-tier checkpointing is active | 0 completed tasks lost in 100 crash-restart cycles | Chaos test: `cargo test --test crash_recovery -- --nocapture` | P0 | N/A — DI-002 (per-task durability invariant) / CONFLICT-2 | BC-2.04.001, BC-2.04.005 |
-| NFR-003 | Formal Verification | All 3 committed VP obligations must pass Kani harness before v1 convergence | 3/3 Kani proofs: BSP determinism (DI-001), session tenancy partition (DI-005), workspace confinement (DI-007) | `cargo kani --harness bsp_determinism_harness && cargo kani --harness session_tenancy_harness && cargo kani --harness workspace_confinement_harness` in Phase 6 | P0 | N/A — D17-Q7 mandate | BC-2.03.001, BC-2.04.006, BC-2.13.004 |
+| NFR-003 | Formal Verification | All 6 P0 Kani VP obligations must pass before v1 convergence | 6/6 P0 Kani proofs: VP-001 BSP determinism (DI-001), VP-002 session tenancy (DI-005), VP-003 workspace confinement (DI-007), VP-009 zero-norm cosine guard (DI-014), VP-010 reviver allowlist containment (DI-014), VP-011 PreToolCallHook fail-closed (DI-014) | `cargo kani --harness bsp_determinism_harness && cargo kani --harness session_tenancy_harness && cargo kani --harness workspace_confinement_harness && cargo kani --harness zero_norm_guard_fail_closed && cargo kani --harness allowlist_rejects_unregistered_id && cargo kani --harness deny_excludes_tool_invocation` in Phase 6 | P0 | N/A — D17-Q7 + D21 + D23 mandate | BC-2.03.001, BC-2.04.006, BC-2.13.004, BC-2.21.003, BC-2.19.005, BC-2.05.007 |
 | NFR-004 | Maintainability | Production crate source files (excluding tests) must not exceed line limits | ≤ 500 lines soft limit; ≤ 750 lines hard limit (CI fails); test files: ≤ 1,000 soft / ≤ 1,500 hard | CI: `cargo xtask check-file-size` | P0 | N/A — D12 mandate | N/A (CI policy) |
 | NFR-005 | Security | `FerrochainError` and all `Debug` impls must never emit secret material | Zero occurrences of API key literal patterns in captured `{:?}` output across all error variants | Static analysis: `cargo test --test debug_redaction_audit` | P0 | N/A — DI-010 | BC-2.14.005 |
 | NFR-006 | Conformance | All Wave 2 provider crates must pass ferrochain-standard-tests before v1 release | 100% pass rate (0 failures) for ferrochain-openai, -anthropic, -ollama across all 5 conformance categories (streaming, tool-call, structured-output, error-fidelity, token-accounting) | `cargo test -p ferrochain-standard-tests -- --include-ignored` | P1 | R-003 | BC-2.08.001–005, BC-2.08.008 |
@@ -64,7 +65,7 @@ primary_consumers: [architect, performance-engineer, formal-verifier]
 |--------|------------------|---------------------|
 | NFR-001 | ferrochain-core (Runnable trait) | Dispatch overhead must be zero-cost abstraction; avoid heap alloc in hot path |
 | NFR-002 | ferrochain-checkpoint | Sync-tier write must be synchronous before returning from put_writes |
-| NFR-003 | ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox | Three distinct Kani proof targets; each requires a dedicated harness |
+| NFR-003 | ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox, ferrochain-vectorstores, ferrochain-core | Six P0 Kani proof targets (VP-001/002/003/009/010/011); each requires a dedicated harness; three P1 targets (VP-006/012/013) hosted in ferrochain-prompts, ferrochain-core, ferrochain-tools |
 | NFR-004 | All crates | cargo xtask must enforce at CI gate; exceptions via allowlist only |
 | NFR-005 | ferrochain-core (credential newtypes) | All API key types must implement newtype pattern; no bare String |
 | NFR-006 | ferrochain-standard-tests, all provider crates | Standard-tests crate must be in CI for Wave 2 |
@@ -87,4 +88,4 @@ primary_consumers: [architect, performance-engineer, formal-verifier]
 | Competitive time-to-market | ferrochain-graph GA ships before competing Rust framework announces equivalent | NFR-007 (quality signal) |
 | Provider conformance | 100% ferrochain-standard-tests pass rate | NFR-006 |
 | Holdout evaluation | Mean ≥ 0.85; critical holdout floor ≥ 0.60 | NFR-002, NFR-008 (durability for Domains A/B) |
-| Formal verification | All 3 VP obligations pass Kani | NFR-003, NFR-011 |
+| Formal verification | All 6 P0 VP obligations pass Kani | NFR-003, NFR-011 |

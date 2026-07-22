@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.12"
+version: "1.13"
 status: active
 producer: business-analyst
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 changelog:
+  - "1.13 (burst-241 F-P141-05, 2026-07-23): Run entity: add error: Option<FerrochainError> field (BC-2.12.003 PC13/PC16 + invariant 'Run error populated ONLY when status=failed'). The field was absent despite being a first-class Read-Run response field per PC13 and PC16. output/error symmetry documented: output is Some when status∈{completed, summary_halt}; error is Some when status=failed; all other states both are None. Wire representation of error exposes {code, message, component, category} subset of FerrochainError (RFC-7807 compatible, PC16)."
   - "1.12 (burst-226, 2026-07-21): F-P131-05 adjudication — §ProvenanceTag: disambiguation note added clarifying that ProvenanceTag (SS-11, 3-field ingress-boundary audit struct) has no trust-level dimension, and that template-composition trust is handled by TrustLevel in ferrochain-prompts: prompts::template (entities-graph.md §TrustLevel). The two axes must not be conflated (ADR-015 §Decision 3). TD-VSDD-060 sweep: no ProvenanceTag trust-variant residue in this file."
   - "1.11 (F-P121-01, fix burst 124, 2026-07-19): §Cross-Section Relationships: 'produces ToolResult → GuardrailHook fires → content enters Message' → 'produces ToolMessage (BC-2.09.002) → GuardrailHook fires on content as IngressContent::ToolResult → filtered content enters model context'. TD-VSDD-060 sweep: this was the only ToolResult-as-ContentBlock site in this file; fixed."
   - "1.10 (F-P120-01, fix burst 123, 2026-07-19): Correct Command depiction in §ResumeValue from 2-variant enum (Command::Resume/Command::Goto) to struct-with-optional-fields form matching BC-2.05.004. Command { resume, update, goto, graph } with independently-settable combinable fields and Command.PARENT subgraph-escape semantics documented. TD-VSDD-060 sweep: capabilities-p0.md:113 'Command(resume=value)' is API-call notation (not enum variant syntax), already-consistent with BC-2.05.004 struct form; exempt. ubiquitous-language-core.md:142 drifted; fixed in same burst (file bumped to v1.1). No other drifted Command-depiction sites found in domain-spec shards."
@@ -23,7 +24,7 @@ phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "8dce7df"
+input-hash: "e978d8d"
 traces_to: L2-INDEX.md
 decisions: [D11, D13, D17]
 ---
@@ -55,7 +56,8 @@ A named agent configuration hosted by ferrochain-server.
 
 ### Run
 A single execution of an Assistant with a Thread.
-- **Fields:** run_id: Uuid, thread_id: Uuid, assistant_id: Uuid, status: RunStatus, config: RunnableConfig, created_at: Timestamp, updated_at: Timestamp, completed_at: Option<Timestamp>, output: Option<Value>
+- **Fields:** run_id: Uuid, thread_id: Uuid, assistant_id: Uuid, status: RunStatus, config: RunnableConfig, created_at: Timestamp, updated_at: Timestamp, completed_at: Option<Timestamp>, output: Option<Value>, error: Option<FerrochainError>
+- **output/error symmetry (BC-2.12.003 PC15/PC16 + invariants):** `output` is `Some(GraphOutput)` when `status ∈ {completed, summary_halt}` (for `summary_halt`, output carries the summarize model response per BC-2.10.003 PC8(c)); `None` in all other states. `error` is `Some(FerrochainError)` ONLY when `status = failed`; carries `{code, message, component, category}` from the propagated `FerrochainError` (BC-2.12.003 PC16); `None` in all other states. The two fields are mutually exclusive — a Run is never both `output`-populated and `error`-populated.
 - **updated_at semantics:** Set on every state mutation (status transition, output/error write). Always present. Source: BC-2.12.003 PC13.
 - **completed_at semantics:** Set only on terminal transition (to `completed`, `failed`, `cancelled`, or `summary_halt`); `None` in non-terminal states (`queued`, `in_progress`, `interrupted`). Operationally distinct from updated_at — provides a clean terminal-timestamp without noise from intermediate mutations. Source: F-P24-01, BC-2.12.003 PC13, BC-2.10.003 PC8(c)(d).
 - **RunStatus lifecycle:** queued → in_progress → completed | failed | cancelled | summary_halt; in_progress ⇄ interrupted (resume via POST .../resume)

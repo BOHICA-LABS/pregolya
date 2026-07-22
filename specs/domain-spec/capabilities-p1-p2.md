@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.8"
+version: "1.9"
 status: active
 producer: business-analyst
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/product-brief.md
@@ -13,10 +13,11 @@ inputs:
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
   - .factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md
-input-hash: "fe36f46"
+input-hash: "f2bf365"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.9 (2026-07-23): Fix burst 241 F-P141-02 (BA wave 2) — CAP-019 VP gate expanded 3 → 6 P0 Kani proofs: added VP-009 (zero-norm cosine guard, DI-014/BC-2.21.003), VP-010 (reviver allowlist containment, DI-014/BC-2.19.005), VP-011 (PreToolCallHook fail-closed, DI-014/BC-2.05.007) per architect P0-intent ruling. Grounding wording updated 3→6 VP obligations; DI invariant list in phase-placement note extended to DI-001/DI-005/DI-007/DI-014. TD-VSDD-060 sibling sweep: no other '3 committed VP' gate phrasing found in this file."
   - "1.8 (2026-07-22): Fix burst 233 F-P133-08 (BA micro-fix) — CAP-036 similar-crate facts corrected per ADR-020 Decision 7 v1.1: `similar = \"3\"`, owner mitsuhiko (Armin Ronacher), Apache-2.0 single-licensed (NOT MIT), cargo-deny `[licenses.allow]` must include `\"Apache-2.0\"`; stale pre-write confirm instruction removed. TD-VSDD-060 sibling sweep: no other dtolnay/MIT similar-crate references in this file."
   - "1.7 (2026-07-22): D23 CAP layer (burst-230) — CAP-017/018 promoted P2/Wave 2 → P1/Wave 1 per domain-e forcing function (domain-e-agentic-coding-assistant.md §3 items 13/16 DEGRADED closures); CAP-034..038 authored (per-tool-call approval hook CAP-034, rolling context compaction CAP-035, first-party fs tools CAP-036, shell tool CAP-037, search tool CAP-038). P1 count 19→26; P2 count 3→1 (CAP-019 only); total section CAPs 22→29; L2 total 33→38. CAP-018 strengthened with ADR-018 Decision 6 retry-approval ordering. CAP-017 strengthened with Embeddings availability and CAP-035 additive coupling. domain-e-agentic-coding-assistant.md added to inputs. D23 added to decisions list. TD-VSDD-060 sweep: CAP-017/018 removed from P2 section; P2 now CAP-019 only."
   - "1.6 (2026-07-21): F-P131-04/05 adjudication (burst-226) — CAP-022: strict-undefined is now a UNIVERSAL engine-neutral contract; both f-string (default) and jinja2 engines raise E-TMPL-003 on undefined variables (ADR-015 Decision 4 F-P131-04); Security invariant updated to reference TrustLevel::Untrusted explicitly instead of generic 'untrusted-tagged'. CAP-023: 'highest-severity ProvenanceTag across substituted variables' → 'highest-severity TrustLevel across substituted variables' (ADR-015 §Decision 3 F-P131-05). TD-VSDD-060 sibling sweep: no other ProvenanceTag trust-variant or engine-gated strict-undefined residue in this file."
@@ -723,15 +724,19 @@ surface.
 
 ### CAP-019: Formal Verification Pipeline (Kani + cargo-fuzz)
 
-Run Kani harness proofs for the three committed VP obligations (D17-Q7): BSP determinism VP
-(VP-001, DI-001/NE-17), session triple-address uniqueness VP (VP-002, DI-005/NE-12), and
-workspace path confinement VP (VP-003, DI-007/NE-02). Run cargo-fuzz on the core
-serialization and graph-execution paths. Both tools locked by D17-Q7.
+Run Kani harness proofs for the six committed P0 VP obligations (D17-Q7 + D21 + D23): BSP
+determinism VP (VP-001, DI-001/NE-17), session triple-address uniqueness VP (VP-002,
+DI-005/NE-12), workspace path confinement VP (VP-003, DI-007/NE-02), zero-norm cosine guard
+VP (VP-009, DI-014/BC-2.21.003), reviver allowlist containment VP (VP-010,
+DI-014/BC-2.19.005), and PreToolCallHook fail-closed VP (VP-011, DI-014/BC-2.05.007). Run
+cargo-fuzz on the core serialization and graph-execution paths. Both tools locked by D17-Q7.
 
-**Grounding:** product-brief.md §Success Criteria — "All 3 committed VP obligations pass Kani
-harness before v1 convergence (D17-Q7)"; §Scope cross-cutting — "Formal verification
-pipeline: Kani proofs + cargo-fuzz [both locked: D17-Q7]."
-**Anchor justification:** CAP-019 covers formal verification because D17-Q7 commits the top-3
-VP obligations by name and the brief's success criteria include VP coverage as a gate metric.
+**Grounding:** product-brief.md §Success Criteria — "All 6 P0 Kani VP obligations pass Kani
+harness before v1 convergence (D17-Q7 + D21 + D23)"; §Scope cross-cutting — "Formal
+verification pipeline: Kani proofs + cargo-fuzz [both locked: D17-Q7]."
+**Anchor justification:** CAP-019 covers formal verification because D17-Q7 commits the
+original three VP obligations by name; D21 and D23 added VP-009/010/011 as P0 fail-closed
+security/safety proofs confirmed by architect P0-intent ruling (burst-241 F-P141-02). The
+brief's success criteria include VP coverage as a gate metric.
 **Note on phase placement:** VP deliverables belong to Phase 6 (formal hardening). The
-behavioral invariants they prove (DI-001, DI-005, DI-007) are Phase-1 BC scope.
+behavioral invariants they prove (DI-001, DI-005, DI-007, DI-014) are Phase-1 BC scope.

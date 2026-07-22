@@ -1237,3 +1237,21 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
 ### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-238 commit (see git -C .factory log -1).
 ### WRAP METADATA: Date 2026-07-23 | Cycle v1.0.0-greenfield | Burst 238 | Phase 1 IN PROGRESS — burst-238 COMMITTED; NEXT: P1D-139 | NEXT: adversary cascade P1D-139
+
+---
+
+## Checkpoint archived from STATE.md — Burst 240
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21+D-23 scope expansion. D23 authoring COMPLETE (bursts 229-232). Burst-240 fix-burst ALL AGENTS COMMITTED to factory-artifacts. All 8 P1D-140 findings closed (0C/1H/5M/2L — deep-read SS-08/09/12/14 BC bodies + 11 ADR bodies; HIGH = 22-BC pregel-layout-vs-ADR-001 contradiction [flat graph:: layout, 35 path refs]; E-MCP-006 McpContentUnsupported minted, census 108; module-decomp v1.21; ADR-017 v1.4; burst-238 dates normalized 7 files 2026-07-22→2026-07-23; hash sweep STALE=0). trajectory-tail →3→3→7→8 (uptick: deep-read large never-opened surface); 0/3. NEXT: adversary pass P1D-141 on FROZEN HEAD."
+### COMMITTED (through burst 240):
+- Burst 240 (last committed): 22-BC pregel→graph:: layout sweep; E-MCP-006 minted (census 108); error-taxonomy v1.34; BC-2.08.007 v1.5/BC-2.14.004 v1.3/BC-2.09.002 v1.3; interface-definitions v2.49; module-decomposition v1.21; ADR-017 v1.4; burst-238 dates normalized (7 files); hash sweep STALE=0.
+### NEXT-ACTIONS (exact, ordered):
+1. Adversary pass P1D-141 on FROZEN HEAD (D21+D23 expanded perimeter; full scope; streak 0/3).
+2. DEEP-READ MANDATE for P1D-141: SS-12 BC-2.12.002/003/004/005 bodies; SS-14 BC-2.14.002/003/005 bodies; prd.md §1-§6 full prose; nfr-catalog full body; domain-spec entities-core/entities-server/ubiquitous-language-core/ubiquitous-language-graph/edge-cases/failure-modes/risks/bounded-contexts/assumptions/differentiators; VP-002/003/004/005/007 bodies.
+3. BRIEFING-ACCURACY GUARD: adversary dispatch brief must reference BCs by ID; adversary reads actual titles (not asserted subsystem contents).
+4. HANDOFF-FLAG SCAN (L-026 guardrail): at burst close, grep corpus for "ARCHITECT FLAG", "PO must", "architect to assign", "amendment required" satisfied-at-HEAD flags.
+5. After 3/3 CLEAN(strict): /vsdd-factory:check-input-drift → fresh consistency audit → Phase 1 HUMAN GATE.
+### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
+### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-240 commit (see git -C .factory log -1).
+### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 240 | Phase 1 IN PROGRESS — burst-240 COMMITTED; NEXT: P1D-141 | NEXT: adversary cascade P1D-141

@@ -2,19 +2,20 @@
 document_type: architecture-section
 level: L3
 section: system-overview
-version: "1.1"
+version: "1.2"
 status: active
 producer: architect
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "fe379f2"
+input-hash: "253c4bc"
 traces_to: ARCH-INDEX.md
-decisions: [D4, D6, D7, D9, D11, D13, D17]
+decisions: [D4, D6, D7, D9, D11, D13, D17, D21, D23]
 changelog:
+  - "1.2 (burst-241/2026-07-23): F-P141-02 — expand NFR-003 Key Constraints gate from 3 P0 Kani VPs (VP-001/002/003, D17-Q7 only) to 6 P0 Kani VPs (VP-001/002/003/009/010/011, D17-Q7 + D21 + D23); add note on 3 P1 Kani VPs (VP-006/012/013). VP-009 (zero-norm cosine guard, SAFETY), VP-010 (reviver allowlist containment, SECURITY), VP-011 (PreToolCallHook fail-closed, SECURITY/SAFETY) confirmed P0 under production-grade default — fail-closed security/safety proofs are must-pass-before-v1. Add D21/D23 to decisions list."
   - "1.1 (provenance-fix-169/2026-07-17): remove .factory/STATE.md from inputs (not a genuine spec-content input; D-NNN decisions are baked-in stable facts); add domain-spec/invariants.md (genuine: DI-001, DI-008, DI-010 cited in Principles table)."
   - "1.0 (initial): system overview authored."
 ---
@@ -99,5 +100,5 @@ xtask                     — Cargo workspace tooling: file-size gate, timeout l
 
 - **D9 gate:** ferrochain-graph execution model ADR (ADR-001) requires ≥2 alternatives presented to human before lock.
 - **D5 gate:** serde/schemars ADR (ADR-004) must precede any proc-macro BCs (#[tool], #[entrypoint]).
-- **NFR-003:** All 3 Kani VPs (VP-001, VP-002, VP-003) must pass before v1 release.
+- **NFR-003:** All 6 P0 Kani VPs (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) must pass before v1 release (Phase 6 convergence gate). Three P1 Kani VPs (VP-006, VP-012, VP-013) are Phase 6 goals but not gate-blocking. See verification-architecture.md for full VP catalog.
 - **NFR-004:** File size gate ≤750 lines hard; CI blocks on violation.

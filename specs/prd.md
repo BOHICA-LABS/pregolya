@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.12"
+version: "1.14"
 status: active
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "37c25d2"
+input-hash: "1557f93"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21, D23]
 supplements:
@@ -29,6 +29,8 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.14 (burst-241/Wave-2/F-P141-02/2026-07-23): VP-gate expansion — 6 P0 Kani proof obligations. §4 NFR-003 target updated '3 committed VP' → '6 P0 Kani VP obligations pass before v1 convergence'. §2.17 OQR-3 note expanded: invariants +DI-014; enforcing BCs +BC-2.21.003/2.19.005/2.05.007; plural 'harnesses'/'are Phase-6 artifacts'. BC-2.17.001 row retitled to '6 P0 VP obligations (VP-001/002/003/009/010/011) + 3 P1 VP obligations (VP-006/012/013)', DI column +DI-014. §6.3 KD-003 table: BC-2.03.001/2.04.006/2.13.004 retitled with VP-00N Kani P0 harness target label; +BC-2.21.003 (VP-009)/BC-2.19.005 (VP-010)/BC-2.05.007 (VP-011) Kani P0 rows; BC-2.17.001 updated to '6 P0 + 3 P1'."
+  - "v1.13 (burst-241/F-P141-03/F-P141-04/2026-07-22): §5 error taxonomy summary table label corrections — alignment to error-taxonomy.md source of truth (gate #33 reverse, TD-VSDD-060 sibling sweep). (1) F-P141-03 (MED): E-CORE-002 label corrected — was 'RunnableCompositionError' (wrong: pipe composition is E-CORE-004); corrected to 'MessageRoleUnrecognized' (BC-2.01.002, message role validation — taxonomy message: 'Message role <role> is not a recognized message type'); E-CORE-004 PipeCompositionFailed added to CORE examples to explicitly represent the composition error. (2) F-P141-04 (LOW): E-TOOLS-006 label corrected — was 'BashGrepResultsTruncated' (wrong: 'Bash' prefix misattributes GrepTool informational payload field to BashTool); corrected to 'GrepResultsCapped' (taxonomy: GrepResult.capped payload field, BC-2.23.006 PC-2). (3) TD-VSDD-060 sibling sweep of all §5 TOOLS examples — three additional label mismatches found and fixed: E-TOOLS-001 'PathEscape' → 'PathConfinementViolation' (taxonomy message prefix 'PathConfinementViolation:', BC-2.23.001); E-TOOLS-002 'FileSizeExceeded' → 'FileReadExceedsLimit' (taxonomy message prefix 'FileReadExceedsLimit:', BC-2.23.001); E-TOOLS-003 'ExactMatchNotFound' → 'EditOldStringNotFound' (taxonomy message prefix 'EditOldStringNotFound:', BC-2.23.003). All five corrected labels now match error-taxonomy.md v1.34 message prefixes exactly. error-taxonomy.md not modified — all defects were PRD-side labels."
   - "v1.12 (burst-237/F-P137-01/2026-07-22): BC-2.13.002 DI column DI-006 → DI-006, DI-015 in §2.13 body table and §7 RTM. Propagates burst-235 F-P135-05 di_anchors co-enforcement (DI-015 Subprocess Execution Timeout) to prd.md — BC file frontmatter was correct since burst-235 but prd.md DI columns were not swept."
   - "v1.11 (burst-235/F-P135/2026-07-22): RTM and §2 reconciliation — 13 D23 BC rows propagated from BC frontmatter source-of-truth. Gate #28 close. (1) F-P135-01: §7 RTM Source(L2) CAP column fixed for all 13 D23 rows (CAP-006/007/012/034–038 placeholder → authoritative CAP-034/035/036/037/038 per BC frontmatter); BC-2.10.005 Module corrected ferrochain-graph → ferrochain-core (VP-012 core-budget crate: ferrochain-core confirmed). (2) F-P135-02: §2.05 DI DI-003→DI-014 (BC-2.05.007/008); §2.06 DI DI-011→DI-014 (BC-2.06.004/005/006); §2.10 DI —→DI-014 (BC-2.10.005) and DI-002→DI-014 (BC-2.10.006); §2.23 DI DI-008→DI-014 (BC-2.23.001–004,006) and DI-008→DI-014,DI-015 (BC-2.23.005); §7 RTM DI column corrected to match. DI-008 citation removed from all SS-23 RTM rows — no SS-23 BC anchors DI-008 per frontmatter (adjudicated unbacked; PRD-only citation removed). (3) F-P135-04: §2.15 header P1/P2→P1; BC-2.15.001/002/003 rows P2→P1 (D23 CAP-017 promotion swept §7 RTM + BC-INDEX but not §2.15 body — now reconciled). Note: F-P135-03 (BC-INDEX BC-2.23.005 DI-009,DI-014→DI-014,DI-015) applied to BC-INDEX.md v2.2→v2.3 in same burst."
   - "v1.10 (burst-233/F-P133-02/2026-07-22): BC-2.16.001/002/003 Wave-1 promotion per D23 — §2.16 header P2→P1; BC table rows P2→P1; §7 RTM rows P2→P1; §7 totals 72 P1/6 P2 → 75 P1/3 P2. §5 TOOLS component range row updated to list E-TOOLS-008 (FileIoError) and E-TOOLS-009 (InvalidRegexPattern). VP-013 Security Anchor corrected: ADR-018 Decision 6 → ADR-020 Decision 3."
@@ -346,13 +348,13 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 ### 2.17 Formal Verification Pipeline (CAP-019) — P2
 
 > **Phase anchor (OQR-3):** VP proof deliverables belong to Phase 6. The behavioral
-> invariants they prove (DI-001, DI-005, DI-007) are specified in Phase-1 BCs
-> (BC-2.03.001, BC-2.04.006, BC-2.13.004). These BCs describe the behavioral contract;
-> the Kani harness that proves them is a Phase-6 artifact.
+> invariants they prove (DI-001, DI-005, DI-007, DI-014) are specified in Phase-1 BCs
+> (BC-2.03.001, BC-2.04.006, BC-2.13.004, BC-2.21.003, BC-2.19.005, BC-2.05.007). These BCs describe the behavioral contract;
+> the Kani harnesses that prove them are Phase-6 artifacts.
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.17.001 | Kani harness scope: BSP determinism VP + session tenancy VP + workspace confinement VP | P2 | DI-001, DI-005, DI-007 | ss-17/BC-2.17.001.md |
+| BC-2.17.001 | Kani harness scope: 6 P0 VP obligations (VP-001/002/003/009/010/011) + 3 P1 VP obligations (VP-006/012/013) | P2 | DI-001, DI-005, DI-007, DI-014 | ss-17/BC-2.17.001.md |
 | BC-2.17.002 | cargo-fuzz targets: serialization round-trip and graph-execution paths | P2 | — | ss-17/BC-2.17.002.md |
 
 ### 2.18 Prompt Templates (CAP-022, CAP-023) — P1
@@ -482,7 +484,7 @@ Summary table:
 |--------|----------|--------|----------|
 | NFR-001 | Performance | Runnable::invoke latency overhead ≤ 1ms over direct async fn | P0 |
 | NFR-002 | Reliability | Zero tasks lost on process crash during sync-tier checkpoint | P0 |
-| NFR-003 | Formal Verification | All 3 committed VP obligations pass Kani before v1 | P0 |
+| NFR-003 | Formal Verification | All 6 P0 Kani VP obligations pass before v1 convergence | P0 |
 | NFR-004 | Maintainability | Production crate: ≤500 lines soft / ≤750 hard; CI gate | P0 |
 | NFR-005 | Security | FerrochainError Debug impl never emits secret material | P0 |
 | NFR-006 | Conformance | ferrochain-standard-tests: 100% pass for all Wave 2 providers | P1 |
@@ -511,7 +513,7 @@ Summary:
 
 | Range | Component | Level | Examples |
 |-------|-----------|-------|---------|
-| E-CORE-001–099 | ferrochain-core | crate | E-CORE-001 InvalidContentBlock, E-CORE-002 RunnableCompositionError, E-CORE-008 GuardrailCriticalRejection |
+| E-CORE-001–099 | ferrochain-core | crate | E-CORE-001 InvalidContentBlock, E-CORE-002 MessageRoleUnrecognized, E-CORE-004 PipeCompositionFailed, E-CORE-008 GuardrailCriticalRejection |
 | E-GRAPH-001–099 | ferrochain-graph | crate | E-GRAPH-001 InvalidUpdateError, E-GRAPH-002 NoActiveInterrupt |
 | E-CHKPT-001–099 | ferrochain-checkpoint | crate | E-CHKPT-001 CheckpointWriteFailed, E-CHKPT-002 MonotonicClockRegression |
 | E-SERVER-001–099 | ferrochain-server | crate | ~~E-SERVER-001 PolicyNotEnforceable~~ (retired — duplicate of E-SBXD-002; see error-taxonomy.md tombstone), E-SERVER-002 RunNotFound |
@@ -527,7 +529,7 @@ Summary:
 | E-SRLZ-001–099 | ferrochain-core (lc-serializable) | intra-crate | E-SRLZ-001 UnknownSerializableType (STATIC — type id not echoed), E-SRLZ-002 UnsupportedMonolithType |
 | E-VS-001–099 | ferrochain-vectorstores | crate | E-VS-001 ZeroNormVector (STATIC), E-VS-002 DimensionMismatch (STATIC), E-VS-003 RetrieverConfigInvalid, E-VS-004 ZeroNormWriteTime (STATIC), E-VS-005 FilterUnsupported |
 | E-EMBED-001–099 | ferrochain-core (embeddings) | intra-crate | E-EMBED-001 EmbeddingDimensionMismatch (STATIC) |
-| E-TOOLS-001–099 | ferrochain-tools | crate | E-TOOLS-001 PathEscape (SECURITY), E-TOOLS-002 FileSizeExceeded, E-TOOLS-003 ExactMatchNotFound, E-TOOLS-004 BashTimeout, E-TOOLS-005 BashOutputTruncated, E-TOOLS-006 BashGrepResultsTruncated, E-TOOLS-007 BashRiskTierViolation, E-TOOLS-008 FileIoError (TOOL/Maybe), E-TOOLS-009 InvalidRegexPattern (VAL/Never) |
+| E-TOOLS-001–099 | ferrochain-tools | crate | E-TOOLS-001 PathConfinementViolation (SECURITY), E-TOOLS-002 FileReadExceedsLimit, E-TOOLS-003 EditOldStringNotFound, E-TOOLS-004 BashTimeout, E-TOOLS-005 BashOutputTruncated, E-TOOLS-006 GrepResultsCapped, E-TOOLS-007 BashRiskTierViolation, E-TOOLS-008 FileIoError (TOOL/Maybe), E-TOOLS-009 InvalidRegexPattern (VAL/Never) |
 
 See `prd-supplements/error-taxonomy.md` for the complete catalog.
 
@@ -565,10 +567,13 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 
 | BC ID | Contribution |
 |-------|-------------|
-| BC-2.03.001 | BSP determinism behavioral contract that Kani harness will prove (Phase 6) |
-| BC-2.04.006 | Session tenancy triple-address contract that Kani harness will prove (Phase 6) |
-| BC-2.13.004 | Workspace confinement behavioral contract that Kani harness will prove (Phase 6) |
-| BC-2.17.001 | Kani harness scope and VP obligation specification |
+| BC-2.03.001 | VP-001 Kani P0 harness target — BSP determinism behavioral contract (Phase 6) |
+| BC-2.04.006 | VP-002 Kani P0 harness target — Session tenancy triple-address contract (Phase 6) |
+| BC-2.13.004 | VP-003 Kani P0 harness target — Workspace confinement behavioral contract (Phase 6) |
+| BC-2.21.003 | VP-009 Kani P0 harness target — Zero-norm cosine guard behavioral contract (Phase 6) |
+| BC-2.19.005 | VP-010 Kani P0 harness target — Reviver allowlist containment behavioral contract (Phase 6) |
+| BC-2.05.007 | VP-011 Kani P0 harness target — PreToolCallHook fail-closed Deny behavioral contract (Phase 6) |
+| BC-2.17.001 | Kani harness scope and VP obligation specification (6 P0 + 3 P1) |
 | BC-2.17.002 | cargo-fuzz targets for serialization and graph paths |
 
 ### 6.4 KD-004 — Idiomatic Async-First Trait Design + 2D Error Taxonomy
@@ -678,7 +683,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.16.001 | CAP-018, NE-09 | ferrochain-core | P1 | U, I |
 | BC-2.16.002 | CAP-018, NE-09 | ferrochain-core | P1 | U |
 | BC-2.16.003 | CAP-018, NE-09 | ferrochain-core | P1 | U, I |
-| BC-2.17.001 | CAP-019, DI-001, DI-005, DI-007 | ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox | P2 | K |
+| BC-2.17.001 | CAP-019, DI-001, DI-005, DI-007, DI-014 | ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox, ferrochain-vectorstores, ferrochain-core | P2 | K |
 | BC-2.17.002 | CAP-019 | ferrochain-graph, ferrochain-checkpoint | P2 | F |
 | BC-2.08.010 | CAP-002, DI-008, ADR-004, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
 | BC-2.08.011 | CAP-003, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
@@ -740,7 +745,7 @@ All are resolved here. Flagged-for-human column indicates whether human gate rev
 |---|----------|-----------|-----------|---------|
 | OQR-1 | HITL risk tiers — extend CAP-006 or new capability? | Extension of CAP-006. BC-2.05.006 adds typed action-risk levels within the HITL interrupt model. No new CAP. | The interrupt mechanism is unchanged; risk tiers are a BC-level typing of interrupt types within the same subsystem. ASM-008 confirms the capability is HITL, just richer. | No |
 | OQR-2 | Agent registry — first-class vs application-layer vs deferred? | Application-layer concern. CAP-014 Assistant concept (named agent config) in ferrochain-server covers named agent registration at the server level. No separate "agent registry" primitive is in scope for v1. | LangChain v1 has no first-class agent registry; adk-rust's agent registry is REJECT (P-17). The Assistant concept in LangGraph Platform (the server's domain) is the right analog. | No |
-| OQR-3 | CAP-019 phase anchoring — behavioral invariants Phase-1 vs proof deliverables Phase-6? | Behavioral invariants (DI-001, DI-005, DI-007) get Phase-1 BCs. Kani proof deliverables belong to Phase 6. BC-2.17.001 specifies the VP scope; the harness that proves them is Phase-6 work. | This is already stated explicitly in CAP-019's domain-spec entry. No ambiguity — confirmed as documented. | No |
+| OQR-3 | CAP-019 phase anchoring — behavioral invariants Phase-1 vs proof deliverables Phase-6? | Behavioral invariants (DI-001, DI-005, DI-007, DI-014) get Phase-1 BCs (BC-2.03.001, BC-2.04.006, BC-2.13.004, BC-2.21.003, BC-2.19.005, BC-2.05.007). Kani proof deliverables belong to Phase 6. BC-2.17.001 specifies the VP scope (6 P0 + 3 P1); the harnesses that prove them are Phase-6 work. | This is already stated explicitly in CAP-019's domain-spec entry. Expanded from 3 to 9 VPs (6 P0 + 3 P1) per D21+D23 (burst-241). | No |
 | OQR-4 | D5 proc-macro BC dependency — note gating ADR? | BCs for #[tool], #[entrypoint], #[task] proc-macro attributes are GATED on D5 ADR. They are not in the 83-BC plan. A placeholder note is in each affected subsection's BC index. D17-Q6 accepted D5 gate. | D5 ADR (schemars/proc-macro decision) must precede proc-macro BCs per D17-Q6. The 83-BC base plan contained no proc-macro BCs; 3 were added as Phase-1b amendments (BC-2.08.010–012, Batch 13) after ADR-004 and ADR-008 acceptance (total at Batch 13: 86 BCs; later grown to 95 via D20). If D5 ADR produces an ADOPT disposition, proc-macro BCs become a Phase-1b addition via the BC authoring plan. | No (D5 ADR is the gate, not human) |
 | OQR-5 | DI-012 default hook behavior — default-permit or default-deny? | Default-permit with WARNING LOG at WARN level when no GuardrailHook is registered. Graph does not fail. Operator sees a warning. _(Changelog: updated INFO→WARN 2026-07-13 to match BC-2.11.006 and BC-2.09.003 which both emit `WARN`-level; INFO is insufficient for an operator-actionable security alert.)_ | Security posture (NE-01, NE-14) is about enforcing defaults for sandbox and server config — not about blocking all content when no guardrail is configured. A missing guardrail is valid for most non-SOC use cases. Domain A users must explicitly register a GuardrailHook. default-deny would break every RAG and MCP use case that doesn't need content filtering. BC-2.11.006 specifies this contract. | No |
 

@@ -2,18 +2,19 @@
 document_type: domain-spec-section
 level: L2
 section: entities-graph
-version: "1.7"
+version: "1.8"
 status: active
 producer: business-analyst
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "8dce7df"
+input-hash: "e978d8d"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D21, D23]
 changelog:
+  - "v1.8 (2026-07-23): Fix burst-241 F-P141-01 (false-closure) — CompactionSummary §Application: genuinely apply the rename trigger_tokens_remaining → tokens_remaining_after. The v1.7 changelog entry claimed this rename was already applied ('sole occurrence') but the body retained the stale field name `trigger_tokens_remaining`. v1.7 was a false-closure; this entry is the genuine fix. TD-VSDD-060 sibling sweep: zero trigger_tokens_remaining occurrences remain in domain-spec/ body text (changelog historical entries and out-of-scope BC/ADR files exempted)."
   - "v1.7 (2026-07-22): Fix burst-234 BA sibling-sweep — CompactionSummary §Application: renamed CompactionEvent field trigger_tokens_remaining → tokens_remaining_after (canonical name per BC-2.10.006 v1.1 burst-233, ADR-019 Decision 3 v1.2 burst-234). TD-VSDD-060 sweep: sole occurrence; no other domain-spec files affected."
   - "v1.6 (2026-07-22): D23 entity additions (burst-230) — new section '## HITL Approval Hook Domain': PreToolCallHook, PreToolDecision, ToolCallPreview, ToolApprovalRequest (ferrochain-graph::hitl, ADR-018). New section '## Context Compaction Domain': CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary (ferrochain-core::budget + graph::budget, ADR-019). Tool entity updated: first-party subtypes from SS-23 added (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, GrepTool). Relationships Summary extended. D23 added to decisions list."
   - "v1.5 (2026-07-21): F-P131-05 adjudication (burst-226) — PromptValue entity: MessageProvenance field renamed tag: Option<ProvenanceTag> → highest_trust_level: Option<TrustLevel>; Invariant updated from '.tag is Untrusted' to '.highest_trust_level is Some(TrustLevel::Untrusted)'. TrustLevel entity added to Retrieval and Serialization Domain (ferrochain-prompts: prompts::template; 3 variants: Untrusted | UserInput | Trusted; severity ordering Untrusted > UserInput > Trusted; disambiguation from ProvenanceTag; authority ADR-015 §Decision 3 + CAP-022/023). Relationships Summary updated: ProvenanceTag line → TrustLevel. TD-VSDD-060 sibling sweep: no other ProvenanceTag trust-variant residue in this file."
@@ -345,7 +346,7 @@ Read-only slice of recent conversation history assembled by the BudgetEngine fro
 Output produced by a `CompactionPolicy::compact()` call; applied to the active message window.
 - **Fields (`#[non_exhaustive]`):** `summary_text: String` (injected as a SystemMessage), `compacted_range: RangeInclusive<usize>` (which turn indices are replaced)
 - **Crate:** ferrochain-core, module `core::budget`
-- **Application:** BudgetEngine replaces `messages[compacted_range]` with `SystemMessage(summary_text)` in the active conversation window. Original checkpoint records are NOT deleted (BC-2.04.001 immutable checkpoint history). A `CompactionEvent { compacted_range, summary_token_count, trigger_tokens_remaining }` is appended to EvidenceJournal; a `compaction_event` streaming event (15th variant) is emitted.
+- **Application:** BudgetEngine replaces `messages[compacted_range]` with `SystemMessage(summary_text)` in the active conversation window. Original checkpoint records are NOT deleted (BC-2.04.001 immutable checkpoint history). A `CompactionEvent { compacted_range, summary_token_count, tokens_remaining_after }` is appended to EvidenceJournal; a `compaction_event` streaming event (15th variant) is emitted.
 
 ---
 

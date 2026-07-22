@@ -2,20 +2,21 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p0
-version: "1.7"
+version: "1.8"
 status: active
 producer: business-analyst
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "4d8e793"
+input-hash: "ea369f1"
 traces_to: L2-INDEX.md
 decisions: [D1, D7, D8, D11, D13, D17, D21]
 changelog:
+  - "v1.8 (burst-241 OBS-P141-B, 2026-07-23): CAP-007: replace stale '12 variants total' absolute claim with forward-reference note '12-variant base; extended to 15 by D23 (CAP-034 events 13-14 tool-approval, CAP-035 event 15 compaction)'. CAP-007 legitimately defines the 12-variant BASE; a cross-referencing reader consulting the base spec was misled into believing 12 was the final count. TD-VSDD-060 sweep: sole stale absolute '12' streaming count in domain-spec/; all other '12' occurrences are historical changelog entries or already describe the 12-variant base correctly."
   - "v1.7 (2026-07-20): CAP-002 D21 reversal — PromptTemplate/ChatPromptTemplate flipped from 'post-v1/community' to v1 deliverables (SS-18/ferrochain-prompts, CAP-022/CAP-023); standalone OutputParser remains post-v1; with_structured_output covered by provider conformance (CAP-009), not a separate OutputParser. Prior v1.6 clarification partially superseded by D21 scope expansion (burst 216). D21 added to decisions list."
   - "v1.6 (2026-07-20): CAP-002 scope clarification added — listed Runnable examples (model call, prompt template, output parser, tool, graph) are user-implementable instances; ferrochain ships the trait and composition machinery in v1 only; PromptTemplate / OutputParser first-party impls are post-v1/community deliverables. Grounded in product-brief v1.3 out-of-scope dispositions and audit Q1 GAP. input-hash updated (drift: 8fe3546→2b2bd5a)."
   - "v1.3 (2026-07-17): F-P95-04 fix — CAP-012 on_ceiling enumeration was stale (two-mode: Halt | Escalate only). Expanded to all three canonical variants: Halt | Escalate | Summarize per interface-definitions §OnCeiling, BC-2.10.003 PC8, and D20 addition."
@@ -142,9 +143,10 @@ in D17-Q2 and the brief states "cannot be retrofitted post-graph-design." Both D
 Emit typed per-phase streaming events: run_start / run_stream / run_end, step_start /
 step_end, node_start / node_stream / node_end, tool_start / tool_stream / tool_end,
 guardrail_decision (Fail/Transform outcomes only; Pass is not streamed — F-P99-01,
-interface-definitions §StreamEvent v2.34) — 12 variants total, each carrying a run_id,
-parent_ids chain, and phase-specific payload. Streaming and unary runs drive the same
-engine and produce identical final answers.
+interface-definitions §StreamEvent v2.34) — 12-variant base; extended to 15 by D23
+(CAP-034 events 13-14 tool-approval, CAP-035 event 15 compaction) — each carrying a
+run_id, parent_ids chain, and phase-specific payload. Streaming and unary runs drive
+the same engine and produce identical final answers.
 
 **Grounding:** product-brief.md §Scope Wave 1 — `ferrochain-server` streaming and unary run
 equivalence (NE-13/D17), CONFLICT-5 typed per-phase event taxonomy. Brief §Scope "streaming

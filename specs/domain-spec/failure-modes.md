@@ -2,17 +2,20 @@
 document_type: domain-spec-section
 level: L2
 section: failure-modes
-version: "1.0"
+version: "1.1"
 status: active
 producer: business-analyst
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/specs/product-brief.md
-input-hash: "7cf75fd"
+input-hash: "734af31"
 traces_to: L2-INDEX.md
-decisions: [D17]
+decisions: [D17, D20, D21, D23]
+changelog:
+  - "v1.1 (burst-241 OBS-P141-A, 2026-07-23): Add FM-015 through FM-019 — five SECURITY-CRITICAL failure modes introduced by D21/D23 that each carry a dedicated Kani VP or error-code gate. FM-015 (PreToolCallHook Deny bypass, VP-011/D23) added to Graph Execution. FM-016 (Injection-guard bypass, VP-006/D21) and FM-018 (Reviver allowlist bypass, VP-010/D21) added to Core/Sandbox. FM-017 (Zero-norm NaN corruption, VP-009/D21) and FM-019 (First-party tool path escape, E-TOOLS-001/D23) added to Providers and Tools. Subsystem Summary table updated with new FM ranges and severities. decisions list updated to D17/D20/D21/D23."
+  - "v1.0 (2026-07-14): Initial FM register authored (D17 adk-rust NE-*/CONFLICT-* counter-examples)."
 ---
 
 # Failure Modes
@@ -64,6 +67,20 @@ checkpoint_id on their first write, creating an ambiguous history.
 **Trigger:** Wall-clock timestamp or sequential counter used without fork-awareness.
 **Counter-example source:** CONFLICT-4 — adk-rust UUID v4 + wall-clock.
 **Detection:** Concurrent-fork integration test; Kani VP candidate.
+
+### FM-015: PreToolCallHook Deny Bypass (SECURITY-CRITICAL)
+**What goes wrong:** `PreToolCallHook::pre_invoke` returns `PreToolDecision::Deny { reason }` but
+the tool is invoked anyway — the fail-closed contract (VP-011) is violated. The denied tool
+executes with full side-effect authority despite an explicit deny decision, undermining
+human-in-the-loop governance of high-risk tools (BashTool, WriteFileTool, EditFileTool).
+**Trigger:** A code path in the graph dispatch loop that checks the hook return but enters
+the tool invocation branch regardless; or a race condition where the Deny check and the
+dispatch branch are not atomically coupled.
+**Counter-example source:** D23 security requirement (ADR-018 Decision 4, BC-2.05.007 fail-closed
+invariant). No adk-rust counter-example — this is a ferrochain-first HITL capability.
+**Detection:** VP-011 Kani proof (BC-2.05.007 fail-closed VP candidate — exhaustive property:
+`Deny` return NEVER leads to tool invocation, regardless of execution path). Integration test:
+mock hook returning Deny for all inputs; assert tool fn body is never called.
 
 ---
 
@@ -135,6 +152,36 @@ retries a permanently failing tool call without bound. The run never terminates.
 **Detection:** DEC unit test — tool that always fails must hit a finite retry bound; circuit
 breaker trips.
 
+### FM-017: Zero-Norm NaN Corruption in Embedding Similarity (SECURITY-CRITICAL)
+**What goes wrong:** An embedding provider returns a zero-magnitude vector (all components 0.0)
+for a degenerate input (empty string, whitespace-only, adversarially crafted token sequence).
+Cosine similarity computes 0/0 = NaN for comparisons involving the zero vector. NaN propagates
+through the similarity ranking and infects the top-k result set with non-deterministic ordering
+(NaN comparisons are undefined). RAG retrieval delivers wrong or arbitrary documents to the
+model context.
+**Trigger:** No zero-norm guard in the embedding normalization path; provider returns all-zero
+vector without error; downstream similarity comparison proceeds without checking for NaN.
+**Counter-example source:** D21 embeddings addition (ADR-017). No adk-rust counter-example —
+ferrochain-first capability.
+**Detection:** VP-009 Kani proof (pure arithmetic property: zero-norm input must return
+`Err(E-VS-001)` before similarity computation proceeds; NaN must never enter the result
+set). Unit test: embed_documents with zero-magnitude vector; assert E-VS-001 returned,
+not a NaN-contaminated result.
+
+### FM-019: First-Party File Tool Path Escape (SECURITY-CRITICAL)
+**What goes wrong:** `ReadFileTool`, `WriteFileTool`, or `EditFileTool` resolves a user-supplied
+(or model-supplied) relative path that escapes the allowed working directory via traversal
+sequences (`../../../etc/passwd`, symlink chains, absolute path injection). The tool
+accesses or overwrites files outside the intended scope with the host process's credentials.
+**Trigger:** Path not canonicalized against an allowed-root anchor before filesystem access;
+or allowed-root check applied before symlink resolution (TOCTOU).
+**Counter-example source:** D23 first-party tools (ADR-020/SS-23). No adk-rust counter-example —
+ferrochain-first capability.
+**Detection:** E-TOOLS-001 path validation error (must be returned for any path resolving outside
+allowed root); security integration test: supply `../` traversal paths and assert
+`Err(E-TOOLS-001)` returned before any I/O occurs. High action_risk annotation on
+WriteFileTool/EditFileTool enforces PreToolCallHook gate as an additional defense-in-depth layer.
+
 ---
 
 ## Core / Sandbox Subsystem
@@ -166,14 +213,44 @@ the constructor signature returns the initialized type directly, not `Result<T, 
 library code; proptest boundary: constructor called with adversarial inputs must yield
 `Err(FerrochainError)`, never panic.
 
+### FM-016: Injection-Guard Bypass at Template Render (SECURITY-CRITICAL)
+**What goes wrong:** A `TrustLevel::Untrusted` variable is substituted into a `TrustRequired`
+template slot but `E-TMPL-001` (SECURITY/InjectionAttempt) is NOT raised by
+`format_messages()`. Adversarial content from an external source (RAG retrieval, MCP tool
+output) enters the model context without the injection guard firing, enabling prompt-injection
+attacks (ADR-015 §Decision 3, CAP-022/023).
+**Trigger:** Trust-level/slot-policy check omitted from a code path in `format_messages()`; or
+conditional branching that skips the check for a subset of message variants.
+**Counter-example source:** D21 injection-guard requirement (ADR-015, CAP-022/CAP-023). No
+adk-rust counter-example — ferrochain-first template security capability.
+**Detection:** VP-006 Kani proof (exhaustive property: Untrusted variable in TrustRequired slot
+ALWAYS raises E-TMPL-001 before PromptValue is produced — no PromptValue with
+TrustRequired/Untrusted combination ever exists). Unit test: render template with Untrusted
+variable in TrustRequired slot; assert Err(E-TMPL-001), never Ok(PromptValue).
+
+### FM-018: Reviver Allowlist Bypass During Deserialization (SECURITY-CRITICAL)
+**What goes wrong:** `Reviver::revive()` processes a `Serialized::Constructor` payload whose
+`id` path (namespace vector) is NOT registered in the `LcEntry` allowlist. The Reviver
+instantiates the type anyway — either due to a missing registry check or a catch-all fallback
+branch — producing an object of an unauthorized type from untrusted wire data. This opens
+deserialization gadget chains and arbitrary type instantiation risks.
+**Trigger:** Allowlist lookup returns `None` but deserialization proceeds instead of returning
+`Err(E-SRLZ-001 UnknownType)`.
+**Counter-example source:** D21 serialization addition (ADR-016). No adk-rust counter-example —
+ferrochain-first capability.
+**Detection:** VP-010 Kani proof (property: `Constructor` with any `id` not in the registered
+`LcEntry` inventory ALWAYS returns `Err(E-SRLZ-001)` — no type instantiation occurs for
+unknown ids). Integration test: present crafted Constructor payloads with unknown id vectors;
+assert Err(E-SRLZ-001) for every unknown id.
+
 ---
 
 ## Subsystem Summary
 
 | Subsystem | FM Count | Highest Severity |
 |-----------|----------|-----------------|
-| Graph Execution | FM-001 to FM-004 | High (FM-001 breaks VP, FM-002 breaks durability) |
+| Graph Execution | FM-001 to FM-004, FM-015 | SECURITY-CRITICAL (FM-015 PreToolCallHook Deny bypass, VP-011/D23); High (FM-001 VP, FM-002 durability) |
 | Checkpoint / State | FM-005, FM-006 | High (FM-005 is a security failure) |
 | Server | FM-007, FM-008, FM-009 | High (FM-007 breaks behavioral contract; FM-008 is security) |
-| Providers and Tools | FM-010, FM-011, FM-012 | High (FM-010 is security; FM-011 is DoS-class) |
-| Core / Sandbox | FM-013, FM-014 | High (FM-013 is security/policy; FM-014 is reliability/availability) |
+| Providers and Tools | FM-010, FM-011, FM-012, FM-017, FM-019 | SECURITY-CRITICAL (FM-017 NaN corruption VP-009/D21; FM-019 path escape E-TOOLS-001/D23); High (FM-010 credential leak; FM-011 DoS) |
+| Core / Sandbox | FM-013, FM-014, FM-016, FM-018 | SECURITY-CRITICAL (FM-016 injection-guard bypass VP-006/D21; FM-018 reviver allowlist bypass VP-010/D21); High (FM-013 policy; FM-014 reliability) |

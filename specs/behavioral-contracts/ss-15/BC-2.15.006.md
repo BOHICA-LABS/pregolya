@@ -25,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "17f134e"
+input-hash: "f9dfd64"
 extracted_from: null
 modified: []
 deprecated: null

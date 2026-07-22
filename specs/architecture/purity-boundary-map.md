@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.14"
+version: "1.15"
 status: active
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
@@ -10,10 +10,11 @@ phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
-input-hash: "e88d70f"
+input-hash: "a9626d8"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.15 (burst-241/2026-07-23): F-P141-02 — expand Purity Enforcement Rule 3 from VP-001/002/003 to all 9 Kani VPs (6 P0 + 3 P1). VP-009/010/011 confirmed P0; all 9 Kani harness targets must operate exclusively on pure-core sync functions."
   - "1.14 (burst-238/2026-07-23): Stale-handoff sweep — remove stale 'VP-006 candidate' label on prompts::injection_guard Pure Core row; VP-006 was seeded in burst-223 (D21, VP-INDEX v1.2, Kani P1). Replace with 'VP-006 (Kani P1, seeded burst-223)'."
   - "1.13 (burst-236/F-P136-02/2026-07-23): Fix missing `run_ctx: &RunContext` parameter in `PreToolCallHook::pre_invoke` signature on graph::hitl Boundary row. Canonical signature per ADR-018 Decision 1 + BC-2.05.007 PC2 is `pre_invoke(&self, preview: &ToolCallPreview, run_ctx: &RunContext) -> PreToolDecision`; rendered form was truncated to `pre_invoke(preview: &ToolCallPreview) -> PreToolDecision`. Sibling sweep (TD-VSDD-060): module-decomposition.md graph::hitl row does not render pre_invoke signature (no fix needed); ADR-018 canonical signature correct (no fix needed); ADR-020 prose reference only, no parameter list (no fix needed); zero `graph::approval` occurrences in architecture layer (clean). Architecture-layer sweep: CLEAN."
   - "1.12 (burst-235/F-P135-05/2026-07-22): Add missing `sandbox::process` Effectful Shell row (ProcessBackend — BC-2.13.002, SS-13) — spawns OS subprocesses via `tokio::process::Command` with `.kill_on_drop(true)`; DI-015 co-enforcer (defense-in-depth); Effectful Shell because it directly interacts with the OS process tree. Iron Law gap: BC-2.13.002 is a full behavioral contract but the module had no purity classification row. Effectful Shell 35→36; total 78→79."
@@ -169,5 +170,5 @@ dispatch is integration-tested.
 
 1. Pure modules MUST NOT import `tokio`, `reqwest`, `axum`, or any I/O crate at the module level.
 2. Pure modules MUST NOT call any function that returns `impl Future` unless the future itself is pure (e.g., a test double).
-3. The Kani harness for VP-001/VP-002/VP-003 operates ONLY on the pure-core modules listed above.
+3. The Kani harness for all 9 Kani VPs (P0: VP-001/002/003/009/010/011; P1: VP-006/012/013) operates ONLY on pure-core sync functions listed above; each harness target must be extractable as a side-effect-free sync function before the Phase 6 harness can be written.
 4. Any refactor that moves I/O into a currently-pure module requires an architectural review and ADR update.

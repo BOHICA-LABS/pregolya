@@ -4563,3 +4563,36 @@ F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 
 ### Archived from STATE.md Current Phase Steps
 
 | Burst 235 — P1D-135 fix-burst ALL AGENTS COMPLETE (F-P135-01..06 all closed; DI-015 split-enforcement BC-2.13.002 co-enforcer; TVs 670→671; universe 53→54; events.md v1.7; bc-authoring-plan updated; hash sweep 7 passes STALE=0; burst-231 row archived); 0/3. NEXT: P1D-136. | PO + architect + BA + state-manager | COMPLETE | F-P135-01 HIGH prd.md §7 RTM 13-BC CAP anchors corrected [RTM never-opened surface]. F-P135-02 HIGH prd.md §2+§7 DI col DI-014 all 13 D23 BCs + DI-015 BC-2.23.005; DI-008 unbacked citation removed. F-P135-03 MED BC-INDEX v2.2→v2.3 BC-2.23.005 DI column DI-014→DI-014,DI-015. F-P135-04 MED prd.md §2.15 header + 3 SS-15 rows P2→P1. F-P135-05 MED ADR-020 v1.7 tools::shell timeout wraps sandbox.execute() + module-decomp v1.18 +sandbox::process MEDIUM universe 53→54 + purity-boundary-map v1.12 +sandbox::process Effectful Shell + invariants v1.3 DI-015 split-enforcement co-enforcer BC-2.13.002 + BC-2.13.002 v1.2 kill_on_drop PC-6+INV-6 TV-5 + BC-2.23.005 v1.3 tokio::process phrasing. F-P135-06 MED events.md v1.7 +D23 StreamEvents 13/14/15 + ToolApprovalRaised/Resolved+CompactionExecuted domain events + ordering rules 7-8 + decisions +D21,D23. Hash sweep: 7 passes STALE=0. Burst 235. |
+
+---
+
+### Archived from STATE.md Current Phase Steps — Burst 236
+
+| Burst 236 — P1D-136 fix-burst ALL AGENTS COMPLETE (F-P136-01..05+OBS all closed; crate/module placement-marker class; circular-dep F-P136-03 fixed; PreToolDecision variants corrected; tokens_remaining_after Option<i64>; hash sweep STALE=0; burst-231 row archived); 0/3. NEXT: P1D-137. | architect + product-owner + state-manager | COMPLETE | F-P136-01 interface-definitions GuardedDocuments core::guardrail→core::retriever (v2.47→v2.48). F-P136-02 PreToolCallHook graph::approval→graph::hitl + pre_tool_dispatch→pre_invoke + run_ctx: &RunContext restored; purity-boundary-map v1.13 sibling (pre_invoke +run_ctx; hash 0cc61fd). F-P136-03 CompactionConfig/Policy/Trigger graph::budget→core::budget (compile-impossible circular-dep fix). F-P136-04 CompactionEvent.tokens_remaining_after u64→Option<i64>; BC-2.06.006 v1.2; BC-2.10.006 v1.3. F-P136-05 BC-2.05.004→BC-2.05.007 anchor + BC-2.05.007 v1.2 sole-authority + VP-011 OBS. OBS: BC-2.10.005 v1.1 VP-012 assigned prose. Bonus: PreToolDecision Deny{reason}/Edit{named}/PendingHumanApproval{prompt} variant-shape. Hash sweep: 4 transitive STALE=0. Burst 236. |
+
+---
+
+### Burst 241 — P1D-141 Fix-Burst COMPLETE (2026-07-23)
+
+**Agents:** architect (F-P141-02 gate) + product-owner Wave-1 (F-P141-03/04 prd labels) + product-owner Wave-2 (gate expansion: prd/nfr-catalog/BC-2.17.001/product-brief/BC-INDEX) + business-analyst Wave-1 (F-P141-01/05/OBS-A/OBS-B domain-spec) + business-analyst Wave-2 (CAP-019 VP expansion) + state-manager
+
+**Status:** ALL 7 FINDINGS CLOSED
+
+**Pass:** P1D-141 (ninth pass; final deep-read of never-opened surfaces; NOT CLEAN: 1H/2M/4L-OBS; streak 0/3)
+
+**COVERAGE-CLOSURE MILESTONE:** As of P1D-141, the entire Phase-1d perimeter has had at least one line-by-line adversarial deep-read. Remaining passes (P1D-142+) target residual/regression plus still-sampled-only shards: ubiquitous-language-core/server, bounded-contexts, assumptions, differentiators, L2-INDEX, interface-definitions full.
+
+**Findings closed:**
+- F-P141-02 HIGH: formal-verification convergence-gate scope expanded 3→6 P0 Kani proofs (VP-001/002/003 from D17-Q7 + VP-009/010/011 from D21+D23 confirmed P0). Architect confirmed VP-009 zero-norm cosine guard (SAFETY), VP-010 reviver allowlist containment (SECURITY), VP-011 PreToolCallHook fail-closed (SECURITY/SAFETY) are all must-pass-before-v1 under production-grade default. Files: system-overview v1.1→v1.2, tooling-selection v1.1→v1.2, purity-boundary-map v1.14→v1.15. VP-INDEX/verification-architecture/verification-coverage-matrix confirmed already correct (unchanged).
+- F-P141-03 MED (PO Wave-1): prd v1.12→v1.13 — §5 error labels: E-CORE-002 MessageRoleUnrecognized and E-CORE-004 added; 3 E-TOOLS label sweep corrections.
+- F-P141-04 MED (PO Wave-1): prd v1.13 — E-TOOLS-006 de-Bashed in §5; Bash-specific phrasing removed from general tool error label.
+- PO Wave-2 (gate expansion): prd v1.13→v1.14 (§4 NFR-003 target "3 committed VP"→"6 P0 Kani VP obligations"; §2.17 OQR-3 note +DI-014 +BC-2.21.003/2.19.005/2.05.007; §6.3 KD-003 +3 Kani P0 rows; §7 RTM BC-2.17.001 title; §8 BC-2.17.001 body), nfr-catalog v1.4→v1.5 (NFR-003 "All 6 P0 Kani VP obligations"; module-map NFR-003 row updated; success-criteria updated), BC-2.17.001 v1.1→v1.2 (title → "Six P0 + Three P1"; all content expanded: 9 VPs [6 P0+3 P1]; hash afad399), product-brief v1.4→v1.5 (§Success Criteria "3 committed VP"→"6 P0 Kani VP obligations"), BC-INDEX v2.6→v2.7 (BC-2.17.001 title + DI-014 added).
+- F-P141-01 LOW (BA Wave-1): entities-graph v1.7→v1.8 — CompactionEvent field false-closure genuinely applied; trigger_tokens_remaining→tokens_remaining_after (consistent with D23 compact field naming canon).
+- F-P141-05 LOW (BA Wave-1): entities-server v1.12→v1.13 — Run.error field added (Option<String> error message for failed/cancelled runs; was present in interface-definitions but missing from entities-server).
+- OBS-A (BA Wave-1): failure-modes v1.0→v1.1 — FM-015..019 security failure modes minted: FM-015 Prompt Injection via Tool Result (VP-006/E-TOOLS-001), FM-016 Zero-Norm Cosine Guard Bypass (VP-009), FM-017 Unregistered Reviver Execution (VP-010), FM-018 PreToolCallHook Fail-Open (VP-011), FM-019 Vector Embedding Dimension Mismatch Bypass (VP-009/BC-2.21.003). Decisions section: D20/D21/D23 added. FM register 14→19. failure-modes v1.0 was a never-opened surface.
+- OBS-B (BA Wave-1): capabilities-p0 v1.7→v1.8 — CAP-007: stale "12 variants total" absolute count replaced with "12-variant base; extended to 15 by D23 (CAP-034 events 13-14 tool-approval, CAP-035 event 15 compaction)" forward-reference note. TD-VSDD-060 sweep: sole stale absolute '12' in domain-spec.
+- BA Wave-2: capabilities-p1-p2 v1.8→v1.9 — CAP-019 VP gate expanded 3→6 P0 Kani proofs; DI-014 invariant list extended; VP-009/010/011 described inline with BC anchors.
+
+**Hash sweep:** 3 transitive passes; TOTAL=174 MATCH=174 STALE=0 (all 176 modified files settled).
+
+**Convergence:** 141 passes total, 141 fix bursts total (128 pre-D21 + 13 post-D21+D23); trajectory-tail →7→8→7; 0/3; NEXT: adversary cascade P1D-142.

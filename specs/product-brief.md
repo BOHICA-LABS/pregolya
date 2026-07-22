@@ -1,7 +1,7 @@
 ---
 document_type: product-brief
 level: L1
-version: "1.4"
+version: "1.5"
 status: approved
 producer: product-owner
 timestamp: 2026-07-20T00:00:00Z
@@ -18,6 +18,7 @@ input-hash: "83a8f7e"
 traces_to: ""
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21]
 changelog:
+  - "v1.5 (burst-241/Wave-2/F-P141-02/2026-07-23): VP-gate expansion — Success Criteria 'Formal verification coverage' row updated from 3 to 6 P0 Kani VP obligations (D17-Q7 + D21 + D23) to align with nfr-catalog NFR-003 and BC-2.17.001 v1.2."
   - "v1.4 (2026-07-20): D21 ecosystem-parity scope-move (burst 216) — 5 langchain-core subsystems moved from Out-of-Scope to In Scope: prompt templates (SS-18/CAP-022..023, ferrochain-prompts), LC serialization/lc-JSON (SS-19/CAP-024..025, ferrochain-core::serializable), retrievers (SS-20/CAP-026..027, ferrochain-vectorstores), vectorstores (SS-21/CAP-028..030, ferrochain-vectorstores), embeddings (SS-22/CAP-031..033, ferrochain-core + ferrochain-openai + ferrochain-ollama). Callbacks and output parsers remain excluded (superseded). chat_history remains excluded (superseded). Out-of-Scope 8-subsystem table condensed: 5 detailed entries replaced with IN-v1-per-D21 single-line pointers; 3 remain unchanged. CAP-002 clarification updated (PromptTemplate now in-scope per D21; only OutputParser remains post-v1). 4 new Wave 2 bullets added to §In Scope."
   - "v1.3 (2026-07-20): Q1-GAP fix (burst 215) — explicit exclusion record for 8 langchain-core subsystems present in semport/core/rust-translation-strategy.md but absent from all BCs, SSes, and crate roster. Prevents Phase-2 story-writer scope ambiguity. Eight dispositions added to Out of Scope with rationale traceable to wave plan, 18-crate roster, and D1/D7/D13. CAP-002 clarification wording provided for BA routing."
   - "v1.2 (2026-07-17): Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file with no spec-content signal for this brief. All genuine derivation sources (market-intel, COMPARATIVE-ASSESSMENT, holdout domain files, naming study, semport reference manifest) are already listed. Input-hash recomputed."
@@ -198,7 +199,7 @@ roster, wave plan, and decision record.
 | Competitive time-to-market | ferrochain-graph durable-checkpointing GA release date vs. R4 watchlist competitor announcements | Binary: ferrochain-graph durable-checkpointing GA ships before any competing Rust framework announces equivalent GA; measured at release date against R4 watchlist. **Human may substitute a calendar target at Phase-1 approval gate.** | market-intel.md §1 (R4 watchlist), D7 rationale |
 | Provider conformance | ferrochain-standard-tests pass rate for ferrochain-openai, -anthropic, -ollama | 100% conformance (streaming, tool-calling, structured output, error propagation, token accounting) before v1 release | market-intel.md §4 differentiator #2 |
 | Holdout evaluation fidelity | VSDD wave-gate: mean holdout score and per-critical-scenario floor | Mean ≥ 0.85; each critical holdout ≥ 0.60; no rounding; all three domains pass Phase 4 gate | VSDD wave-gate protocol; domain-a §6, domain-b §6, domain-c §7 |
-| Formal verification coverage | VP coverage: BSP determinism (NE-17), session triple-address partition (DI-005/NE-12), workspace path confinement (DI-007/NE-02) | All 3 committed VP obligations (D17-Q7) pass Kani harness before v1 convergence | D17-Q7; COMPARATIVE-ASSESSMENT §6 |
+| Formal verification coverage | VP coverage: 6 P0 Kani proofs — BSP determinism (VP-001/NE-17), session tenancy (VP-002/DI-005/NE-12), workspace confinement (VP-003/DI-007/NE-02), zero-norm cosine guard (VP-009/DI-014), reviver allowlist containment (VP-010/DI-014), PreToolCallHook fail-closed (VP-011/DI-014) | All 6 P0 Kani VP obligations (D17-Q7 + D21 + D23) pass Kani harness before v1 convergence | D17-Q7 + D21 + D23; COMPARATIVE-ASSESSMENT §6 |
 
 ## Constraints & Integration Points
 

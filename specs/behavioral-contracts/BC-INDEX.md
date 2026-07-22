@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "2.6"
+version: "2.7"
 status: active
 producer: state-manager
 timestamp: 2026-07-22T12:00:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "2.7 (burst-241/Wave-2/F-P141-02/2026-07-23): BC-2.17.001 title updated to match new H1 (bc_h1_is_title_source_of_truth): 'Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace Confinement VP' → 'Six P0 Kani VP Obligations + Three P1 Kani VP Obligations'. DI column +DI-014."
   - "2.6 (burst-239/F-P139/2026-07-22): BC-2.06.001 title updated to match current H1 (H1 is source of truth per bc_h1_is_title_source_of_truth policy — drift from D23 v1.5 update not swept to index). No BC count changes. BCs modified this burst: BC-2.04.001 v1.4 (+Inv-5 append-only), BC-2.10.006 v1.4 (citation fix), BC-2.06.001 v1.6 (PC2 type + Description), BC-2.07.003 v1.3 (PC5), BC-2.07.001 v1.3 (TV-005), BC-2.05.008 v1.1 (Related BCs + EC-006)."
   - "2.5 (burst-238/sweep/2026-07-23): Update VP-INDEX status note — 'VP-006–VP-010 pending architect authoring' was stale; VP-INDEX v1.2 (burst-223) registered VP-006–010 and VP-006.md–VP-010.md all exist. Note updated to reflect completed state."
 ---
@@ -176,7 +177,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.16.001 | Per-Tool Retry Policy Keyed by tool_name (Not Args Hash) | CAP-018 | NE-09 | | P1 | | | ss-16/BC-2.16.001.md |
 | BC-2.16.002 | Finite global_limit Non-None Default for All Retry Policies | CAP-018 | NE-09 | | P1 | | | ss-16/BC-2.16.002.md |
 | BC-2.16.003 | Circuit Breaker Trips After Repeated Failure; Prevents Infinite Retry | CAP-018 | NE-09 | | P1 | | | ss-16/BC-2.16.003.md |
-| BC-2.17.001 | Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace Confinement VP | CAP-019 | | DI-001,DI-005,DI-007 | P2 | | | ss-17/BC-2.17.001.md |
+| BC-2.17.001 | Six P0 Kani VP Obligations + Three P1 Kani VP Obligations | CAP-019 | | DI-001,DI-005,DI-007,DI-014 | P2 | | | ss-17/BC-2.17.001.md |
 | BC-2.17.002 | cargo-fuzz Targets — Serialization Round-Trip (Checkpoint) and Graph-Execution Paths | CAP-019 | | | P2 | | | ss-17/BC-2.17.002.md |
 | BC-2.18.001 | PromptTemplate F-String Rendering, Partial Binding, Variable Detection, and Strict-Undefined Guard | CAP-022 | | DI-008,DI-014 | P1 | | | ss-18/BC-2.18.001.md |
 | BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance | CAP-022 | | DI-008 | P1 | | | ss-18/BC-2.18.002.md |

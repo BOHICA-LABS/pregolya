@@ -34,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "90b4f51"
+input-hash: "5ab2b68"
 extracted_from: null
 modified: []
 deprecated: null
