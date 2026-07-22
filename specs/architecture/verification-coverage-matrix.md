@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "06eaf17"
+input-hash: "2852204"
 traces_to: ARCH-INDEX.md
 changelog:
   - "1.9 (burst-229/2026-07-22): Input-hash cascade refresh — module-decomposition.md v1.15 changed (D23: SS-23 ferrochain-tools + graph::hitl/budget D23 types) + module-criticality.md v1.5 cascade (ARCH-INDEX.md v1.6 + module-decomposition.md v1.15). Hash: 52d04b1 → 06eaf17. No VP table changes (D23 VP candidates not yet minted; pending PO BC authoring)."

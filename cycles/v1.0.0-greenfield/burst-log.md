@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "2116adc"
+input-hash: "ee6bd1e"
 traces_to: STATE.md
 ---
 
@@ -3939,3 +3939,55 @@ Sweep scope: all spec artifacts with `inputs:` frontmatter.
 - Phase 1 status: D23 architecture layer COMPLETE; dep research (similar+regex) in flight; 0/3 on D23 perimeter
 - Trajectory tail: →12→9→7→8→[D-23 expansion; 0/3 RESET; architecture layer complete]
 - NEXT: burst 230 BA D23 CAP layer → architect dep-pins patch → PO BCs → adversary pass D-133 → cascade toward 3/3 CLEAN(strict) → check-input-drift → Phase 1 HUMAN GATE
+
+---
+
+## Burst 230 — D23 Dep-Validation Patch + L2 CAP Layer COMPLETE
+
+**Date:** 2026-07-22
+**Agents:** architect (ADR-020 dep-pins patch), business-analyst (D23 CAP layer), state-manager (hash sweep + STATE.md + cycle files)
+**Status:** COMPLETE
+
+### Summary
+
+Burst 230 commits two parallel work streams: (1) architect dep-validation patch to ADR-020 — Decision 7 pinned similar = "3" [3.1.1, mitsuhiko attribution corrected, Apache-2.0 single-license + cargo-deny note, MSRV 1.85 floor] and regex = "1" [1.13.1, net-new, linear-time guarantees rationale]; fuzzy-matcher REJECTED; adr-tech-validation.md v1.1.0 → v1.2.0 with D23 pin table; (2) BA D23 CAP layer — five new capabilities authored (CAP-034 per-tool approval hook, CAP-035 rolling compaction, CAP-036 fs tools, CAP-037 shell tool, CAP-038 search tool) plus CAP-017/018 promoted P2/Wave-2 → P1/Wave-1 with ADR-018 Decision 6 retry-approval ordering invariant added; L2 census 33 → 38; eight new entities across two domains; thirteen new ubiquitous-language terms.
+
+Hash sweep covered the full specs corpus (158 files → TOTAL MATCH=158 STALE=0) plus planning/ (dtu-assessment.md cascade from ARCH-INDEX change).
+
+### Files Touched This Burst
+
+**Architect — ADR-020 dep-pins patch:**
+- `.factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md` v1.0 → v1.1: Decision 7 RESOLVED — similar crate pinned "3" (3.1.1; Apache-2.0 only, mitsuhiko attribution, MSRV 1.85 floor, cargo-deny single-license constraint documented); regex crate pinned "1" (1.13.1; net-new dep for crate-internal use only; linear-time DFA guarantees). fuzzy-matcher crate REJECTED (lacks MSRV policy + GPL/commercial license ambiguity).
+- `.factory/planning/adr-tech-validation.md` v1.1.0 → v1.2.0: §7 D23 dep-validation table added (similar 3.1.1 / regex 1.13.1 / fuzzy-matcher REJECTED); provenance crates.io / 2026-07-21; hash 5eab38c.
+
+**Business Analyst — D23 CAP layer:**
+- `.factory/specs/domain-spec/capabilities-p1-p2.md` v1.6 → v1.7: CAP-034 per-tool-call approval hook (ADR-018); CAP-035 rolling context compaction (ADR-019); CAP-036 first-party fs tools (ADR-020/SS-23); CAP-037 first-party shell tool (ADR-020/SS-23); CAP-038 first-party search tool (ADR-020/SS-23). CAP-017 promoted P2/Wave-2 → P1/Wave-1 with ADR-018 Decision 6 retry-approval ordering invariant. CAP-018 promoted P2/Wave-2 → P1/Wave-1. P1 count 19 → 26; P2 count 3 → 1 (CAP-019 only). domain-e-agentic-coding-assistant.md added to inputs.
+- `.factory/specs/domain-spec/entities-graph.md` v1.5 → v1.6: New section "HITL Approval Hook Domain" — PreToolCallHook, PreToolDecision, ToolCallPreview, ToolApprovalRequest (graph::hitl, ADR-018). New section "Context Compaction Domain" — CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary (core::budget + graph::budget, ADR-019). Tool entity extended with first-party subtypes from SS-23 (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, GrepTool). Relationships Summary extended. D23 added to decisions list.
+- `.factory/specs/domain-spec/ubiquitous-language-core.md` v1.5 → v1.6: D23 section added — 13 new terms: PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary, ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool.
+- `.factory/specs/domain-spec/L2-INDEX.md` v1.7 → v1.8: CAP census 33 → 38 (P0 11 / P1 26 / P2 1); five holdout domains (Domain E added); D23 row added to decisions list; domain-e-agentic-coding-assistant.md added to inputs; Document Map updated (entities-graph line count + descriptions updated; ubiquitous-language-core D23 terms listed; capabilities-p1-p2 P2 count updated); Priority Distribution and Design-Forcing-Function Summary updated.
+
+**State files:**
+- `.factory/sidecar-learning.md`: session notes updated.
+- `.factory/STATE.md` v3.70 → v3.71: current_step updated; Phase 1 Progress row updated; burst-230 row added to Current Phase Steps; burst-225 row archived; Session Resume Checkpoint replaced; Historical Content L2 domain spec row updated.
+
+### Hash Sweep Results (D18-P89-A compliance)
+
+Sweep: `compute-input-hash --scan .factory/specs/ --update` (3 passes to convergence) + `--scan .factory/planning/ --update` (1 pass).
+
+- specs/ after 3 passes: TOTAL=158 MATCH=158 STALE=0 — PASS
+- planning/ after 1 pass: TOTAL=6 MATCH=6 STALE=0 — PASS
+- Transitive cascade confirmed: domain-spec (STALE=0 initial + STALE=0 final), architecture sections, all 95 pre-D21 BCs, all 21 D21 BCs, VP-001..010, prd.md, prd-supplements/, verification-properties/
+- L2-INDEX.md hash `f49b669` verified MATCH by compute-input-hash (BA computed correctly despite exec warning)
+- Non-spec stale cycle artifacts (adversarial reviews, burst-log, lessons, session-checkpoints): pre-existing historical staleness; not updated (historical records should not be retroactively rehashed)
+
+### Archived Current Phase Steps Row (displaced from STATE.md at burst 230)
+
+| Burst 225 — P1D-130 fix-burst COMPLETE (all 9 closed); observability.md v1.0 authored (SAP-1 catalog); interface-definitions v2.43 +5 D21 traits; BC-INDEX v2.0; burst-220 row archived | architect + product-owner + state-manager | COMPLETE | ADR-014 v1.4 (GuardrailHook async Decision 6). ADR-010/017 v1.2 (EmbeddingDimensionMismatch prefix sweep). VP-006 v1.2/VP-008 v1.1/VP-INDEX v1.4. BC-2.20.001/002/2.21.004 v1.1 (DI-014 anchors). BC-2.22.001/002/003 v1.1. BC-2.19.003 v1.1. BC-INDEX v2.0. prd v1.6. error-taxonomy v1.29. interface-definitions v2.43. observability.md v1.0 (NEW). Hash sweep STALE→0. Burst 225. |
+
+### Convergence Status After Burst 230
+
+- Phase 1d passes: 132 (128 pre-D21 + 4 post-D21 expanded-perimeter passes; NOT CLEAN at last pass)
+- Fix bursts: 132 total
+- Phase 1 status: D23 arch + dep-validation + CAP layer COMPLETE; 0/3 on D23 perimeter
+- Trajectory tail: →12→9→7→8→[D-23 expansion; 0/3 RESET; arch + CAP layer complete]
+- NEXT: burst 231 PO D23 BC layer (SS-23 ×6 tool BCs + SS-05/06/08/10/15/16 extensions + E-TOOLS-001..007 + supplements) → VP-011..013 → adversary pass D-133 → cascade toward 3/3 CLEAN(strict) → check-input-drift → Phase 1 HUMAN GATE

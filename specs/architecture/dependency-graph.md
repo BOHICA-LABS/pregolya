@@ -10,7 +10,7 @@ phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/prd.md
-input-hash: "ed91f73"
+input-hash: "60dc1df"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7]
 changelog:

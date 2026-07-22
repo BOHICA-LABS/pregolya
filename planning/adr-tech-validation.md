@@ -1,13 +1,13 @@
 ---
 artifact: planning/adr-tech-validation
-version: 1.1.0
+version: 1.2.0
 created: 2026-07-13T00:00:00Z
-updated: 2026-07-20T00:00:00Z
+updated: 2026-07-22T00:00:00Z
 input_level: L3
-recommendation: MOSTLY-VALID (1 competitive BLOCKER-flag, 2 STALE version corrections; D21 ADRs validated 2026-07-20)
+recommendation: MOSTLY-VALID (1 competitive BLOCKER-flag, 2 STALE version corrections; D21 ADRs validated 2026-07-20; D23 ADR-020 deps validated 2026-07-21)
 confidence: high
 assessor: research-agent (perplexity sonar-deep-research + crates.io registry verification)
-assessed_at: 2026-07-20
+assessed_at: 2026-07-22
 inputs:
   - .factory/specs/architecture/decisions/ADR-002-checkpoint-format.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
@@ -17,8 +17,10 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
-input-hash: "c4aed93"
+  - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
+input-hash: "5eab38c"
 changelog:
+  - "1.2.0 (crates.io/2026-07-21): Add §7 D23 ADR-020 dependency validation — `similar` 3.1.1 GREEN (pin `\"3\"`, owner mitsuhiko not dtolnay, Apache-2.0 single, MSRV 1.85, TextDiff::ratio() confirmed); `regex` 1.13.1 GREEN (pin `\"1\"`, MIT OR Apache-2.0, MSRV 1.65, linear-time guarantee, net-new workspace dep); fuzzy-matcher REJECTED (stale 2020); strsim deferred."
   - "1.1.0 (crates.io/2026-07-20): Add §6 D21 ADR technology validation — inventory 0.3.24 GREEN, minijinja 2.21.0 GREEN, mustache REJECTED (abandoned 2018-02), embeddings no-crate GREEN, vector-math no-crate GREEN."
   - "1.0.0 (2026-07-13): Initial validation covering ADR-002/003/004/008 — schemars, rmp-serde, verification toolchain, provider APIs, competitive watch."
 ---
@@ -37,6 +39,7 @@ against Perplexity `sonar-deep-research` (web-grounded) plus direct registry/doc
 4. **Provider APIs (DTU):** VALID — OpenAI official OpenAPI spec still published (`github.com/openai/openai-openapi`); Anthropic version header still **`2023-06-01`** (no official OpenAPI spec, community spec only); Ollama API docs now at `docs.ollama.com/api` (unversioned, stable). **One breaking-change flag:** OpenAI is deprecating older surfaces (Realtime API beta removed; Assistants API sunset; migration to Responses API) — Anthropic & Ollama: no breaking changes in last 6 mo.
 5. **Competitive watch (R4 / SC-2):** **BLOCKER-FLAG** — the `langgraph` crate on crates.io (**0.2.5**, 2026-07-01) now ships `PostgresSaver`/`SqliteSaver` durable checkpointing with pause/resume + time-travel. NOT yet 1.0/GA (~50% docs, pre-1.0), but it directly targets ferrochain's differentiator. `rig-core` **0.40.0** (2026-07-11) has serializable `AgentRun` (persist-intent) but no GA durable checkpointer; swiftide/kalosm: none.
 6. **D21 ADRs (ADR-014 through ADR-017, crates.io/2026-07-20):** VALID — `inventory = "0.3"` (0.3.24) GREEN; `minijinja = "2"` (2.21.0) GREEN; `mustache` crate REJECTED (abandoned, last release 2018-02); embeddings approach (no separate crate — OpenAI+Ollama HTTP direct) GREEN; vector-math approach (no crate — `Vec<f32>` cosine) GREEN.
+7. **D23 ADR-020 deps (crates.io/2026-07-21):** VALID with attribution fix — `similar = "3"` (3.1.1) GREEN, owner corrected to mitsuhiko (NOT dtolnay), Apache-2.0 single-licensed (cargo-deny allowlist required), MSRV 1.85; `regex = "1"` (1.13.1) GREEN, MIT OR Apache-2.0, MSRV 1.65, linear-time guarantee; fuzzy-matcher REJECTED (stale 2020, wrong shape); both deps net-new workspace entries (workspace uninitialized).
 
 ---
 
@@ -173,6 +176,24 @@ rigor (ADR-003, SS-17 proofs), not merely "first to have checkpointing in Rust."
   current recommended models; `text-embedding-ada-002` confirmed legacy/superseded. OpenAI `/v1/embeddings`
   endpoint stable (no breaking changes in 2026 window for embeddings).
 
+## 7. D23 ADR-020 Dependency Validation (ADR-020 Decision 7) — VALID with attribution fix
+
+**Verification date:** 2026-07-21 (crates.io registry API, live).
+
+| Crate / approach | Decision | Finding | Verdict |
+|------------------|----------|---------|---------|
+| `similar = "3"` | ADR-020 Decision 7 (EditFileTool fuzzy fallback) | Current: 3.1.1 (mitsuhiko, 2025). ATTRIBUTION FIX: owner is mitsuhiko (Armin Ronacher, also author of `minijinja`/`insta`), NOT dtolnay as ADR v1.0 stated. Apache-2.0 SINGLE-licensed (not dual). MSRV 1.85. `TextDiff::ratio()` confirmed as the correct difflib-parity mechanism for multi-line edit-block fuzzy matching. | GREEN — pin as `"3"` (caret on 3.x) |
+| `regex = "1"` | ADR-020 Decision 7 (GrepTool in-process matching) | Current: 1.13.1. MIT OR Apache-2.0 dual-licensed. MSRV 1.65. Linear-time finite-automata engine — no catastrophic backtracking on adversarial inputs. NOT currently a workspace dep (workspace uninitialized as of 2026-07-22). | GREEN — pin as `"1"` (caret on 1.x) |
+| `fuzzy-matcher` crate | ADR-020 Decision 7 alternative | Last release 2020; no maintenance activity; wrong shape for edit-block fuzzy matching. | REJECTED — stale, wrong API shape |
+| `strsim` crate | ADR-020 possible identifier-level typo tolerance | Current stable (maintained). Only appropriate for identifier-level typo tolerance (e.g., flag name suggestions), not for edit-block multi-line fuzzy replacement. | NOT ADOPTED — deferred; only if identifier-level fuzzy tolerance needed in future cycle |
+
+### Notes
+
+- **`similar` cargo-deny obligation:** Apache-2.0 single-licensed. `cargo-deny` `[licenses.allow]` list must include `"Apache-2.0"` explicitly at workspace initialization. `inventory` (0.3.24, ADR-016) is also Apache-2.0 only (confirmed in §6) — this obligation already existed. One `[licenses.allow]` entry covers both.
+- **MSRV floor impact:** `similar = "3"` (MSRV 1.85) is now the highest MSRV across all workspace deps validated to date. The pinned stable channel in `rust-toolchain.toml` must be ≥ 1.85. This supersedes the `inventory` 1.62 and `regex` 1.65 floors. Devops-engineer must verify at workspace init.
+- **Both deps are net-new:** Neither `similar` nor `regex` exist in the workspace today (root `Cargo.toml` not yet initialized). Both will be added as `[workspace.dependencies]` entries during devops-engineer workspace init. `ferrochain-tools` `Cargo.toml` will reference both via `similar.workspace = true` and `regex.workspace = true`.
+- **`similar` default-features:** `similar` 3.x exposes `inline`, `unicode`, and `bytes` features. For `EditFileTool`, only text-diff is needed; pin with `default-features = true` (includes `unicode` support, needed for multi-byte edits) or `features = ["text"]` if size-sensitive. Research-agent recommendation: keep defaults unless binary size audit demands trimming.
+
 ---
 
 ## Sources
@@ -181,6 +202,9 @@ rigor (ADR-003, SS-17 proofs), not merely "first to have checkpointing in Rust."
   cargo-mutants, langgraph, rig-core, bincode, postcard — version + release-date fields.
 - crates.io registry API (live, 2026-07-20): inventory (0.3.24), minijinja (2.21.0),
   mustache (0.9.0/2018-02-21, abandoned), ramhorns — D21 ADR pin verification.
+- crates.io registry API (live, 2026-07-21): similar (3.1.1, mitsuhiko, Apache-2.0 single,
+  MSRV 1.85), regex (1.13.1, rust-lang, MIT OR Apache-2.0, MSRV 1.65), fuzzy-matcher
+  (stale 2020), strsim (not adopted) — D23 ADR-020 Decision 7 pin verification.
 - docs.rs: schemars 1.2.1 `SchemaSettings` (JSON Schema 2020-12 default); langgraph 0.2.5 crate docs
   (checkpointer backends).
 - Perplexity `sonar-deep-research` (web-grounded, 2026-07-13): schemars ecosystem & API-stability

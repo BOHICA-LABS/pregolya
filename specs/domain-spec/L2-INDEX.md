@@ -1,10 +1,10 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.7"
+version: "1.8"
 status: active
 producer: business-analyst
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -13,6 +13,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
+  - .factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md
 input-hash: "f49b669"
 traces_to: .factory/specs/product-brief.md
 sections:
@@ -30,8 +31,9 @@ sections:
   - ubiquitous-language-core.md
   - ubiquitous-language-server.md
   - bounded-contexts.md
-decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21]
+decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "v1.8 (2026-07-22): D23 L2 CAP layer (burst-230) — capabilities-p1-p2.md v1.6→v1.7 (CAP-017/018 promoted P2→P1; CAP-034..038 authored; D23 section added); entities-graph.md v1.5→v1.6 (HITL Approval Hook Domain + Context Compaction Domain sections added; Tool entity first-party subtypes; Relationships Summary extended); ubiquitous-language-core.md v1.5→v1.6 (D23 section: 13 new terms — PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary, ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool). CAP census: 33→38. Priority: P1 19→26, P2 3→1. D23 and domain-e added. Document Map updated."
   - "v1.7 (2026-07-21): F-P131-04/05 adjudication (burst-226) — entities-graph.md v1.4→v1.5 (PromptValue MessageProvenance.tag→highest_trust_level; TrustLevel entity added to Retrieval and Serialization Domain; Relationships Summary updated); entities-server.md v1.11→v1.12 (ProvenanceTag disambiguation note added); capabilities-p1-p2.md v1.5→v1.6 (CAP-022 strict-undefined universal; CAP-022 security invariant TrustLevel::Untrusted explicit; CAP-023 highest-severity TrustLevel); ubiquitous-language-core.md v1.4→v1.5 (TrustLevel D21 term added; 15→16 D21 terms); ubiquitous-language-server.md v1.3→v1.4 (ProvenanceTag disambiguation note added). Document Map updated."
   - "v1.6 (2026-07-20): D21 second-half CAP authoring complete. ID Registry: CAP-NNN count 27→33 (CAP-028..033 authored for SS-21/22). Priority Distribution: P1 count 13→19; total 27→33. capabilities-p1-p2.md updated (v1.4→v1.5); entities-graph.md updated (v1.3→v1.4, VectorStore/Embeddings/MetadataFilter/SearchType added); ubiquitous-language-core.md updated (v1.3→v1.4, 6 D21 terms added). Domain C forcing-function row updated (SS-22/CAP-031..033 added). Document Map updated."
   - "v1.5 (2026-07-20): D21 first-half CAP authoring complete. ID Registry: CAP-NNN count 21→27 (CAP-022..027 authored for SS-18/19/20). Priority Distribution: P1 count 7→13; total 21→27. capabilities-p1-p2.md updated (v1.3→v1.4); capabilities-p0.md updated (v1.6→v1.7, CAP-002 D21 reversal); entities-graph.md updated (v1.2→v1.3, Document/PromptValue/Serialized added); ubiquitous-language-core.md updated (v1.2→v1.3, 9 D21 terms added). D21 added to decisions list. Document Map row descriptions updated."
@@ -59,8 +61,8 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Section | File | Lines | Primary Consumer | Purpose |
 |---------|------|-------|-----------------|---------|
 | Capabilities — P0 | capabilities-p0.md | ~140 | product-owner, architect, story-writer | CAP-001–008 (Wave 0/1) + CAP-012, CAP-013, CAP-016 (D17-elevated to P0; cross-cutting Wave 0/1); CAP-002 revised v1.7 (D21 reversal) |
-| Capabilities — P1/P2 | capabilities-p1-p2.md | ~380 | product-owner, architect, story-writer | P1: CAP-009–011, CAP-014–015, CAP-020–033 (Wave 2 + Wave 0/1; D21 full expansion CAP-022..033); P2: CAP-017, CAP-018, CAP-019 |
-| Entities — Core/Graph/Checkpoint/Retrieval/Serialization/VectorStore/Embeddings | entities-graph.md | ~200 | architect, product-owner | Core primitives, graph, checkpoint + D21 full: Document, PromptValue, TrustLevel, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType |
+| Capabilities — P1/P2 | capabilities-p1-p2.md | ~530 | product-owner, architect, story-writer | P1: CAP-009–011, CAP-014–015, CAP-017–018 (D23 Wave 1 promotions), CAP-020–038 (D21 + D23 additions); P2: CAP-019 only |
+| Entities — Core/Graph/Checkpoint/Retrieval/Serialization/VectorStore/Embeddings/HITL/Compaction | entities-graph.md | ~315 | architect, product-owner | Core primitives, graph, checkpoint + D21: Document, PromptValue, TrustLevel, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType + D23: PreToolCallHook, PreToolDecision, ToolCallPreview, ToolApprovalRequest, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary |
 | Entities — Server/Policy/Provider | entities-server.md | ~95 | architect, product-owner | Server, governance, and provider entities |
 | Domain Invariants | invariants.md | ~156 | product-owner, architect | DI-NNN business rules (14 invariants) |
 | Domain Events | events.md | ~140 | architect | Processing stages, triggers, preconditions |
@@ -69,7 +71,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Risks | risks.md | ~51 | product-owner, architect | R-NNN risk register (8 risks) |
 | Failure Modes | failure-modes.md | ~140 | architect, test-writer | FM-NNN runtime failure catalog (14 modes) |
 | Differentiators | differentiators.md | ~62 | product-owner | Competitive differentiator → CAP-NNN traceability |
-| Ubiquitous Language — Core/Graph/D21 | ubiquitous-language-core.md | ~215 | all agents | Core and graph term definitions + D21 full (16 terms): PromptTemplate, ChatPromptTemplate, MessagesPlaceholder, FewShot, LcSerializable, Reviver, Retriever, Document, VectorStoreRetriever, VectorStore, InMemoryVectorStore, MetadataFilter, Embeddings, EmbeddingsOpenAI, EmbeddingsOllama, TrustLevel |
+| Ubiquitous Language — Core/Graph/D21/D23 | ubiquitous-language-core.md | ~330 | all agents | Core and graph term definitions + D21 (16 terms) + D23 (13 terms: PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary, ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool) |
 | Ubiquitous Language — Server/Policy | ubiquitous-language-server.md | ~100 | all agents | Server, policy/safety, error terms + reconciliation table |
 | Bounded Contexts | bounded-contexts.md | ~155 | architect | Crate-level subsystem boundaries |
 
@@ -89,7 +91,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 
 | ID Format | Count | Section |
 |-----------|-------|---------|
-| CAP-NNN | 33 | capabilities-p0.md (CAP-001–008, CAP-012, CAP-013, CAP-016) + capabilities-p1-p2.md (CAP-009–011, CAP-014–015, CAP-017–033) |
+| CAP-NNN | 38 | capabilities-p0.md (CAP-001–008, CAP-012, CAP-013, CAP-016) + capabilities-p1-p2.md (CAP-009–011, CAP-014–015, CAP-017–038) |
 | DI-NNN | 14 | invariants.md |
 | DEC-NNN | 13 | edge-cases.md |
 | ASM-NNN | 9 | assumptions.md |
@@ -103,17 +105,22 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Priority | Count | Capabilities |
 |----------|-------|-------------|
 | P0 (must-have) | 11 | CAP-001, CAP-002, CAP-003, CAP-004, CAP-005, CAP-006, CAP-007, CAP-008, CAP-012, CAP-013, CAP-016 |
-| P1 (should-have) | 19 | CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-020, CAP-021, CAP-022, CAP-023, CAP-024, CAP-025, CAP-026, CAP-027, CAP-028, CAP-029, CAP-030, CAP-031, CAP-032, CAP-033 |
-| P2 (nice-to-have) | 3 | CAP-017, CAP-018, CAP-019 |
+| P1 (should-have) | 26 | CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-017 (D23), CAP-018 (D23), CAP-020, CAP-021, CAP-022, CAP-023, CAP-024, CAP-025, CAP-026, CAP-027, CAP-028, CAP-029, CAP-030, CAP-031, CAP-032, CAP-033, CAP-034, CAP-035, CAP-036, CAP-037, CAP-038 |
+| P2 (nice-to-have) | 1 | CAP-019 |
 
 > **Priority note (ADV-P1D-PASS-21):** CAP-012, CAP-013, and CAP-016 were elevated from P1 to P0
 > to align with D17-Q4 (budget governance), D17-Q8 (guardrail-on-ingress), and D17 CONFLICT-6
 > (error taxonomy) mandates. All constituent BCs are P0 in the PRD RTM (§2.10, §2.11, §2.14).
 > Detail relocated from capabilities-p1-p2.md to capabilities-p0.md.
+>
+> **D23 promotion note (2026-07-22):** CAP-017 (long-horizon memory) and CAP-018 (tool retry)
+> promoted P2 → P1 per domain-e-agentic-coding-assistant.md §3 items 13/16 DEGRADED closures.
+> CAP-034..038 authored as net-new P1 Wave 1 capabilities (per-tool-call approval hook ADR-018,
+> rolling context compaction ADR-019, first-party tool library ADR-020 / SS-23).
 
 ## Design-Forcing-Function Summary (D8)
 
-Four holdout domains constrain the domain model as Phase-1 forcing functions:
+Five holdout domains constrain the domain model as Phase-1 forcing functions:
 
 | Domain | Primary Forcing Pressure | Key Capabilities |
 |--------|--------------------------|-----------------|
@@ -121,6 +128,7 @@ Four holdout domains constrain the domain model as Phase-1 forcing functions:
 | B — Dark Factory | Multi-day durable runs; budget governance; convergence loops | CAP-004, CAP-005, CAP-006, CAP-012 |
 | C — OpenClaw | Persistent sessions; channel ingress; local-first deployment; pluggable embedding backends [NEW D21 requirement — CAP-017 vector path requires a concrete Embeddings impl; SS-22 is the holdout-necessary D21 piece for Domain C evaluation] | CAP-005, CAP-014, CAP-017, CAP-031, CAP-032, CAP-033 |
 | D — Hermes Agent | Inbound MCP server role; expose registered tools as MCP endpoint | CAP-020, CAP-021 |
+| E — Agentic Coding CLI | Fine-grained per-tool-call HITL; rolling context compaction; multi-session project memory; tool retry; first-party file/bash/search tools [D22/D23; five DEGRADED gaps closed to Wave 1] | CAP-017 (D23↑), CAP-018 (D23↑), CAP-034, CAP-035, CAP-036, CAP-037, CAP-038 |
 
 ## Key Anchors from COMPARATIVE-ASSESSMENT.md (D17)
 

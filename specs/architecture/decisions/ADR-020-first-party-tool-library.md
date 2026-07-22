@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-22"
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
-version: "1.0"
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-23]
 changelog:
+  - "1.1 (dep-validation/2026-07-22): Decision 7 updated with validated pin results (research-agent crates.io/2026-07-21): `similar` 3.1.1 → pin `\"3\"`, owner corrected to mitsuhiko (Armin Ronacher, NOT dtolnay), Apache-2.0 single-licensed (cargo-deny allowlist note added), MSRV 1.85 (consequence flagged); `regex` 1.13.1 → pin `\"1\"`, MIT OR Apache-2.0, MSRV 1.65, both net-new [workspace.dependencies] (workspace uninitialized); linear-time matching guarantee rationale added; in-body research-flag language resolved."
   - "1.0 (D23/2026-07-22): Initial ADR — introduces ferrochain-tools as crate #21. Closes the DEGRADED gap for first-party file/bash/search tools in domain-e-agentic-coding-assistant.md §3 items 1-5."
 ---
 
@@ -91,8 +92,8 @@ Out-of-guard paths return `Err(FerrochainError::sandbox(E-SANDBOX-xxx))`.
 ```json
 { "path": "...", "old_string": "...", "new_string": "...", "replace_all": false }
 ```
-It performs an exact-string replacement. The `similar` crate (dependency research flag —
-see Decision 7) is used ONLY if the host opts in to fuzzy-match fallback via
+It performs an exact-string replacement. The `similar` crate (`similar = "3"`, mitsuhiko,
+Apache-2.0 — see Decision 7) is used ONLY if the host opts in to fuzzy-match fallback via
 `EditConfig::fuzzy_threshold: Option<f32>`. Default is exact match only.
 
 `ReadFileTool` respects a configurable `max_bytes: u64` limit (default: 1 MiB) to prevent
@@ -136,9 +137,8 @@ client policy). Timeout returns `Err(FerrochainError::sandbox(E-SANDBOX-timeout)
 { "pattern": "...", "path": "...", "recursive": true, "case_insensitive": false, "max_results": 100 }
 ```
 
-The `regex` crate handles pattern matching (dependency research flag — see Decision 7;
-`regex` is an established workspace dep, confirm it is already in `Cargo.toml` or add).
-Results are capped at `max_results` (default 100) to prevent runaway output.
+The `regex` crate (`regex = "1"`, linear-time matching — see Decision 7) handles pattern
+matching. Results are capped at `max_results` (default 100) to prevent runaway output.
 
 `GrepTool` does NOT shell out to system `grep` or `ripgrep`; it uses the `regex` crate
 in-process to keep the tool hermetic and testable without system tool availability checks.
@@ -225,20 +225,39 @@ No new Pure Core modules are introduced by this ADR. The `core::budget` extensio
 (ADR-019 types) are definitions-only (pure data structures and traits); they reside in
 the existing Pure Core classification for `core::budget`.
 
-## Decision 7 — External Dependency Research Flags
+## Decision 7 — External Dependencies: Validated Pins
 
-The following dependencies require the research-agent to confirm exact crate names,
-current stable versions, and license compatibility before `Cargo.toml` is written:
+Research-agent validation completed 2026-07-21 (crates.io registry, live). All open questions resolved.
 
-| Purpose | Likely crate | Verify |
-|---------|-------------|--------|
-| Edit fuzzy-match fallback in `EditFileTool` | `similar` (dtolnay) | Current stable version, MIT license confirm |
-| Regex engine for `GrepTool` | `regex` (rust-lang) | Already in workspace? If not, confirm current stable |
-| File metadata in `ListDirTool` | stdlib only (`std::fs`) | No external dep needed |
-| Path guard integration | `ferrochain-sandbox` internal | No new external dep |
+| Purpose | Crate | Pin | License | MSRV | Notes |
+|---------|-------|-----|---------|------|-------|
+| Edit fuzzy-match fallback (`EditFileTool`) | `similar` (mitsuhiko) | `"3"` (3.1.1) | Apache-2.0 (single) | 1.85 | See notes below |
+| Regex engine (`GrepTool`) | `regex` (rust-lang) | `"1"` (1.13.1) | MIT OR Apache-2.0 | 1.65 | Net-new workspace dep; linear-time |
+| File metadata in `ListDirTool` | stdlib only (`std::fs`) | — | — | — | No external dep needed |
+| Path guard integration | `ferrochain-sandbox` internal | — | — | — | No new external dep |
 
-**Research flags (BA → research-agent):** Confirm `similar` stable version and license.
-Confirm `regex` is already a workspace dependency (check `Cargo.toml` `[workspace.dependencies]`).
+**`similar` attribution correction:** crate owner is mitsuhiko (Armin Ronacher — also
+author of `minijinja` and `insta`), NOT dtolnay. Pin as `similar = "3"` (caret — tracks
+3.x patch releases; latest 3.1.1 as of 2026-07-21).
+
+**`similar` license note:** Apache-2.0 single-licensed (NOT dual MIT/Apache-2.0).
+Acceptable for ferrochain's license posture. `cargo-deny` license policy config MUST
+include an explicit `"Apache-2.0"` entry in `[licenses.allow]` at workspace
+initialization — this is a devops-engineer obligation, not a blocker, but must not be
+omitted (omission causes `cargo-deny` to reject the license silently).
+
+**`similar` API rationale:** `TextDiff::ratio()` is the correct mechanism for multi-line
+edit-block fuzzy matching, providing difflib-parity behavior. This is the
+industry-standard approach for text editor edit-distance fuzzy fallback.
+
+**`regex` net-new dependency:** `regex` is NOT currently a workspace dependency — the
+root `Cargo.toml` workspace has not yet been initialized (as of 2026-07-22). Both
+`similar` and `regex` will be net-new `[workspace.dependencies]` entries when
+devops-engineer initializes the workspace.
+
+**`regex` linear-time guarantee:** The `regex` crate uses a finite-automata engine with
+linear-time matching — no catastrophic backtracking on adversarial inputs. This is an
+important safety property for `GrepTool`, which accepts arbitrary user-supplied patterns.
 
 ## Rationale
 
@@ -329,6 +348,14 @@ application authors to reason about risk tiers for every use case.
   typical coding-assistant search radius.
 - A new `E-TOOLS-*` error namespace requires a PO supplement amendment to
   `error-taxonomy.md` before Phase 2 story decomposition.
+- `similar` (dep pin `"3"`) has MSRV 1.85. This sets the effective MSRV floor for
+  `ferrochain-tools`. The pinned stable channel in `rust-toolchain.toml` (set by
+  devops-engineer at workspace init) MUST be ≥ 1.85. Above the 1.65 MSRV of `regex`
+  and the 1.62 MSRV of `inventory` (ADR-016) — toolchain channel selection must satisfy
+  the highest MSRV across the workspace, which is 1.85 as of D23.
+- `similar` is Apache-2.0 single-licensed. `cargo-deny` configuration must allow
+  `"Apache-2.0"` explicitly in `[licenses.allow]`. Devops-engineer owns this at
+  workspace init; failure to add it causes silent `cargo-deny` license rejection at CI.
 
 ### Status as of 2026-07-22
 

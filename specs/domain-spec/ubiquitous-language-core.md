@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.5"
+version: "1.6"
 status: active
 producer: business-analyst
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 changelog:
+  - "1.6 (2026-07-22): D23 ubiquitous-language additions (burst-230) — new section 'D23 Additions (HITL Approval Hook, Context Compaction, and First-Party Tools)': PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary (ADR-018/ADR-019); ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool (ADR-020 / SS-23). 13 new terms; total D23 + prior: 16 (D21) + 13 (D23) = 29 terms in this file. D23 added to decisions list."
   - "1.5 (2026-07-21): F-P131-05 adjudication (burst-226) — TrustLevel term added to D21 section (ferrochain-prompts: prompts::template; 3 variants: Untrusted | UserInput | Trusted; severity ordering Untrusted > UserInput > Trusted; distinct from ProvenanceTag; authority ADR-015 §Decision 3). D21 total terms: 15 → 16."
   - "1.4 (2026-07-20): D21 second-half ubiquitous-language additions — 6 new terms: VectorStore, InMemoryVectorStore, MetadataFilter, Embeddings, EmbeddingsOpenAI, EmbeddingsOllama. Appended to D21 section. Total D21 terms: 15."
   - "1.3 (2026-07-20): D21 ubiquitous-language additions — 9 new terms: PromptTemplate, ChatPromptTemplate, MessagesPlaceholder, FewShotPromptTemplate, LcSerializable, Reviver, Retriever, Document, VectorStoreRetriever. New section '## Prompts, Serialization, and Retrieval Terms (D21 Additions)' appended. D21 added to decisions list."
@@ -19,7 +20,7 @@ inputs:
   - .factory/semport/reference-manifest.md
 input-hash: "fde4f5f"
 traces_to: L2-INDEX.md
-decisions: [D2, D17, D21]
+decisions: [D2, D17, D21, D23]
 ---
 
 # Ubiquitous Language — Core Primitives and Graph Terms
@@ -315,3 +316,103 @@ When a developer derives a template variable from a RAG result (which arrived wi
 ProvenanceTag), they translate the ingress provenance into `TrustLevel::Untrusted` for the
 composition step. The ingress ProvenanceTag record is captured in the guardrail audit log at
 ingress time and need not be threaded through template composition. Authority: ADR-015 §Decision 3.
+
+---
+
+## D23 Additions — HITL Approval Hook, Context Compaction, and First-Party Tools
+
+> D23 (burst 230, 2026-07-22) added: (1) per-tool-call approval hook (ADR-018 / CAP-034),
+> (2) rolling context compaction (ADR-019 / CAP-035), and (3) first-party tool library
+> (ADR-020 / CAP-036..038 / SS-23). Reference-corpus column for tool library terms:
+> Claude Code (Anthropic) public documentation — the canonical Domain E exemplar.
+
+**PreToolCallHook**
+An async hook registered in `GraphConfig.pre_tool_hook: Option<Arc<dyn PreToolCallHook>>`,
+invoked by the graph engine immediately before every tool dispatch. Returns a `PreToolDecision`
+determining whether the tool proceeds, is denied, has its arguments edited, or is held pending
+human approval. Default implementation: `AlwaysApprovePolicy` (always approves; no I/O;
+backward compatible). Crate: ferrochain-graph, `graph::hitl`. Authority: ADR-018 / CAP-034.
+
+**PreToolDecision**
+The four-variant decision type returned by `PreToolCallHook::pre_invoke` (`#[non_exhaustive]`):
+`Approve` (proceed unchanged), `Deny { reason }` (fail-closed — tool NOT invoked; VP-011
+Kani candidate), `Edit { modified_args }` (proceed with modified arguments), and
+`PendingHumanApproval { prompt }` (suspend via `interrupt()`, reusing BC-2.05.001 machinery;
+resumed via `Command::Resume(PreToolDecision)`; hook NOT re-called on resume —
+"skip-hook-on-resume" invariant, PO BC obligation). Crate: ferrochain-graph, `graph::hitl`.
+Authority: ADR-018 / CAP-034.
+
+**CompactionTrigger**
+A `#[non_exhaustive]` configuration enum in `BudgetConfig.compaction_trigger` that controls
+when the BudgetEngine initiates proactive context compaction. Variants: `Disabled` (default;
+backward compatible), `OnWatermark { fraction: f32 }` (fires when `tokens_remaining / ceiling
+< (1.0 - fraction)`; VP-012 Kani candidate — pure arithmetic), `OnMessageCount { count }`,
+`OnTokenCount { tokens }`. Crate: ferrochain-core, `core::budget`. Authority: ADR-019 / CAP-035.
+
+**CompactionPolicy**
+An async trait whose single method `compact(&self, snapshot: &ConversationSnapshot, run_ctx)
+→ Result<CompactionSummary>` produces a compact representation of recent conversation history.
+Default impl: `DefaultSummarizationPolicy` (prompts the model; same mechanism as
+`OnCeiling::Summarize`). Registered as `BudgetConfig.compaction_policy: Option<Arc<dyn
+CompactionPolicy>>`. Custom impls MAY additionally write the summary to MemoryStore (CAP-017)
+as project knowledge — framework imposes no constraint beyond returning `CompactionSummary`
+(ADR-019 Decision 5). Crate: ferrochain-core, `core::budget`. Authority: ADR-019 / CAP-035.
+
+**ConversationSnapshot**
+A read-only ordered slice of recent conversation history assembled by the BudgetEngine from
+checkpoint FTS (BC-2.04.008) when a CompactionTrigger fires. Fields: `turns: Vec<(usize,
+Message)>` (turn-index / Message pairs) + `token_estimate: u64`. Passed to
+`CompactionPolicy::compact()` as the compaction input. Crate: ferrochain-core, `core::budget`.
+Authority: ADR-019 / CAP-035.
+
+**CompactionSummary**
+The output of a `CompactionPolicy::compact()` invocation. Fields: `summary_text: String`
+(injected as a `SystemMessage` into the active conversation window) + `compacted_range:
+RangeInclusive<usize>` (turn indices replaced). Applied mid-run (contrast with
+`frozen-snapshot`, which takes effect on the NEXT run). Original checkpoint records are NOT
+deleted (BC-2.04.001 immutability). Triggers a `compaction_event` streaming event (15th
+variant) and appends a `CompactionEvent` to `EvidenceJournal`. Crate: ferrochain-core,
+`core::budget`. Authority: ADR-019 / CAP-035.
+
+**ReadFileTool**
+First-party `Tool` in `ferrochain-tools::tools::fs` (SS-23, crate #21). Reads file contents
+at a PathGuard-confined path. `ActionRisk::ReadOnly`. Enforces a `max_bytes` limit (default
+1 MiB; E-TOOLS-002 on excess). VP-003 path-confinement coverage applies. Authority: ADR-020 / CAP-036.
+
+**WriteFileTool**
+First-party `Tool` in `ferrochain-tools::tools::fs` (SS-23). Creates or overwrites a file at a
+PathGuard-confined path. `ActionRisk::High`. Non-idempotent; no auto-retry. E-TOOLS-001 on
+out-of-guard path. Requires re-approval before retry via PreToolCallHook. Authority: ADR-020 / CAP-036.
+
+**EditFileTool**
+First-party `Tool` in `ferrochain-tools::tools::fs` (SS-23). Applies an exact-string replacement
+(`old_string → new_string`) to an existing file. `ActionRisk::High`. E-TOOLS-003 if `old_string`
+is not found. Opt-in fuzzy-match fallback via `EditConfig::fuzzy_threshold` (`similar` crate).
+Conditional retry is safe when E-TOOLS-003 fires (old_string mismatch is a structural no-op).
+Authority: ADR-020 / CAP-036.
+
+**ListDirTool**
+First-party `Tool` in `ferrochain-tools::tools::fs` (SS-23). Lists directory entries at a
+PathGuard-confined path. `ActionRisk::ReadOnly`. No size limit. Authority: ADR-020 / CAP-036.
+
+**BashTool**
+First-party `Tool` in `ferrochain-tools::tools::shell` (SS-23). Executes arbitrary shell
+commands via the ferrochain-sandbox WASM/container backend (BC-2.13.001–003; enforcing sandbox
+mandatory). `ActionRisk::High` (default). Risk tier CANNOT be lowered below `ActionRisk::Medium`
+— a framework safety invariant, not an application convention (VP-013 Kani candidate). Retry must
+be explicitly enrolled per-`tool_name` (BC-2.16.001); each retry flows through PreToolCallHook
+independently (ADR-018 Decision 6). Authority: ADR-020 / CAP-037.
+
+**BashOutput**
+The structured output of a `BashTool` invocation. Fields: `stdout: String`, `stderr: String`,
+`exit_code: i32`, `truncated: bool`. `max_output_bytes` limit (default 256 KiB); exceeding it
+returns first 256 KiB with `truncated = true` (E-TOOLS-005 informational; non-fatal).
+`max_duration` timeout (default 30s; E-TOOLS-004 on breach). Authority: ADR-020 / CAP-037.
+
+**GrepTool**
+First-party `Tool` in `ferrochain-tools::tools::search` (SS-23). In-process regex pattern
+matching using the `regex` crate (NOT shelling out to system grep — hermetic; unit-testable
+without system tool availability). `ActionRisk::ReadOnly`. `max_results` cap (default 100;
+E-TOOLS-006 `SearchResultsCapped` informational). Returns matches with file path and line number.
+Path validated by PathGuard for directory scoping. No sandbox execution — reads in-process.
+Authority: ADR-020 / CAP-038.

@@ -2,20 +2,22 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.6"
+version: "1.7"
 status: active
 producer: business-analyst
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "cf67214"
+  - .factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md
+input-hash: "fe36f46"
 traces_to: L2-INDEX.md
-decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21]
+decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.7 (2026-07-22): D23 CAP layer (burst-230) — CAP-017/018 promoted P2/Wave 2 → P1/Wave 1 per domain-e forcing function (domain-e-agentic-coding-assistant.md §3 items 13/16 DEGRADED closures); CAP-034..038 authored (per-tool-call approval hook CAP-034, rolling context compaction CAP-035, first-party fs tools CAP-036, shell tool CAP-037, search tool CAP-038). P1 count 19→26; P2 count 3→1 (CAP-019 only); total section CAPs 22→29; L2 total 33→38. CAP-018 strengthened with ADR-018 Decision 6 retry-approval ordering. CAP-017 strengthened with Embeddings availability and CAP-035 additive coupling. domain-e-agentic-coding-assistant.md added to inputs. D23 added to decisions list. TD-VSDD-060 sweep: CAP-017/018 removed from P2 section; P2 now CAP-019 only."
   - "1.6 (2026-07-21): F-P131-04/05 adjudication (burst-226) — CAP-022: strict-undefined is now a UNIVERSAL engine-neutral contract; both f-string (default) and jinja2 engines raise E-TMPL-003 on undefined variables (ADR-015 Decision 4 F-P131-04); Security invariant updated to reference TrustLevel::Untrusted explicitly instead of generic 'untrusted-tagged'. CAP-023: 'highest-severity ProvenanceTag across substituted variables' → 'highest-severity TrustLevel across substituted variables' (ADR-015 §Decision 3 F-P131-05). TD-VSDD-060 sibling sweep: no other ProvenanceTag trust-variant or engine-gated strict-undefined residue in this file."
   - "1.5 (2026-07-20): D21 second-half CAP authoring — CAP-028..033 added (SS-21 VectorStore Abstraction, SS-22 Embeddings). P1 count 13→19; total section CAP count 16→22. New section 'P1 — VectorStore Abstraction and Embeddings (Wave 2 / SS-21..22)' added. Grounded in ADR-014 (SS-21), ADR-017 (SS-22), burst-217 handoff table. Domain C forcing-function linkage for SS-22 documented in CAP-031."
   - "1.4 (2026-07-20): D21 first-half CAP authoring — CAP-022..027 added (SS-18 Prompt Templates, SS-19 LC Serialization, SS-20 Document Retrieval). P1 count 7→13; total section CAP count 10→16. Section header updated. Grounded in ADR-014 (SS-20), ADR-015 (SS-18), ADR-016 (SS-19), burst-217 handoff table. D21 added to decisions list. input-hash unchanged (no new planning-level inputs; ADR grounding is inline per convention)."
@@ -35,6 +37,10 @@ changelog:
 > half (CAP-022..027): SS-18 Prompt Templates, SS-19 LC Serialization, SS-20 Document
 > Retrieval. Second half (CAP-028..033): SS-21 VectorStore Abstraction, SS-22 Embeddings.
 > P1 count 7→19; total P1/P2 count 10→22. See changelog and the two D21 sections below.
+> **D23 update (2026-07-22):** CAP-017 and CAP-018 promoted P2/Wave 2 → P1/Wave 1 (domain-e
+> forcing function). CAP-034..038 authored: per-tool-call approval hook (ADR-018), rolling
+> context compaction (ADR-019), first-party tool library fs/shell/search (ADR-020 / SS-23).
+> P1 count 19→26; P2 count 3→1 (CAP-019 only); total 33→38. See D23 section below.
 
 ---
 
@@ -485,34 +491,234 @@ base URL).
 
 ---
 
-## P2 — Extended Capabilities (Post-v1 Candidates)
+## P1 — Long-Horizon Memory, Tool Retry, Approval Hook, Context Compaction, and First-Party Tools (Wave 1, D23)
 
-### CAP-017: Long-Horizon Cross-Session Memory Store (KV + Vector)
+> **D23 (2026-07-22):** CAP-017 and CAP-018 promoted P2/Wave 2 → P1/Wave 1 per
+> domain-e-agentic-coding-assistant.md §3 items 13 and 16 DEGRADED closures. CAP-034
+> through CAP-038 are net-new D23 capabilities: per-tool-call approval hook (ADR-018),
+> rolling context compaction (ADR-019), and first-party tool library (ADR-020 / SS-23).
+
+### CAP-017: Long-Horizon Cross-Session Memory Store (KV + Vector) [D23: P2→P1, Wave 2→Wave 1]
 
 Persist key-value and vector-embedding memory across threads, decoupled from checkpoints.
 Support hybrid retrieval (vector similarity + keyword). Provide user-private, app-scoped,
 and session-scoped tiers. GDPR erasure must remove all traces from all tiers (CONFLICT-7
-memory scope model). Default backend: SQLite with optional vector embeddings.
+memory scope model). Default backend: SQLite with optional vector embeddings via the
+`Arc<dyn Embeddings>` seam (CAP-031/032/033 — Embeddings impls are v1 deliverables, making
+the vector retrieval path holdout-executable from Wave 1). Rolling compaction (CAP-035) MAY
+write CompactionSummary to MemoryStore as an additive opt-in path (ADR-019 Decision 5); the
+two capabilities are independent — within-session compaction works without CAP-017, and
+CAP-017 is available without CAP-035.
 
 **Grounding:** product-brief.md §Constraints (implied by Domain C OpenClaw forcing function
 and LangGraph Store analog); CONFLICT-7 memory scope — user/app/session partitioning + GDPR
-erasure; domain-c-openclaw.md §2.6.
+erasure; domain-c-openclaw.md §2.6; domain-e-agentic-coding-assistant.md §3 item 13 / §6
+"Multi-session cross-session project memory" DEGRADED — D23 Wave 1 promotion authority.
 **Anchor justification:** CAP-017 covers long-horizon memory because Domain C identifies
-file-backed memory with vector retrieval as a gap (domain-c §5, item #2), and CONFLICT-7
-shapes the tier model.
+file-backed memory with vector retrieval as a gap (domain-c §5, item #2), CONFLICT-7 shapes
+the tier model, and Domain E requires multi-session project knowledge accumulation for the
+coding-assistant holdout evaluation. **D23 promotion (2026-07-22):** elevated P2/Wave 2 →
+P1/Wave 1; Embeddings impls (CAP-031/032/033) are now Wave 1 deliverables, making the full
+vector retrieval path viable at v1.
 
-### CAP-018: Tool Retry with Circuit Breaker
+### CAP-018: Tool Retry with Circuit Breaker [D23: P2→P1, Wave 2→Wave 1]
 
 Retry tool invocations with a per-tool retry policy keyed by `(tool_name)` — not args hash.
 Enforce a finite `global_limit` (not None). Trip a circuit breaker after repeated failures
 to prevent infinite retry on permanently failing tools.
 
+**Retry-approval ordering (ADR-018 Decision 6):** The ordered dispatch sequence for each
+tool invocation is: `circuit_breaker.check(tool_name)` → `pre_tool_dispatch(hook)` →
+`tool.invoke(args)` → `retry_policy.record(result)`. Circuit-breaker check is first — if
+the breaker is open, no approval dialog is presented (fast-reject for persistently failing
+tools). Each retry attempt flows through `pre_tool_dispatch(hook)` independently — an
+interactive PreToolCallHook may deny a retry even if it approved the first attempt. See
+CAP-034 for the per-tool-call approval hook.
+
 **Grounding:** product-brief.md §Constraints NE catalog — NE-09 (adk-rust P-63 termination
 hole REJECT): "Retry bound keyed on (tool_name) not args; finite global_limit non-None
-default; circuit-breaker on by default."
+default; circuit-breaker on by default." domain-e-agentic-coding-assistant.md §3 item 16 /
+§6 "Tool retry for transient failures" DEGRADED — D23 Wave 1 promotion authority.
 **Anchor justification:** CAP-018 covers tool retry because NE-09 is listed in the NE catalog
-as a ferrochain requirement derived from the adk-rust counter-example. The brief says all 17
-NE items must be anchored before Phase-2 story decomp.
+as a ferrochain requirement derived from the adk-rust counter-example. **D23 promotion
+(2026-07-22):** elevated P2/Wave 2 → P1/Wave 1; transient bash/network failures in
+coding-agent loops require circuit-breaker protection for Domain E holdout reliability.
+Retry-approval ordering (ADR-018 Decision 6) is a new v1 constraint added at promotion time.
+
+### CAP-034: Per-Tool-Call Interactive Approval Hook (PreToolCallHook / PreToolDecision)
+
+Provide a first-class `PreToolCallHook` trait in `ferrochain-graph::hitl` (NOT
+ferrochain-core — no dependency-inversion motivation exists; ADR-018 Decision 1 rationale)
+that the graph engine invokes before every tool dispatch, eliminating the 2-node-per-tool
+workaround. `GraphConfig.pre_tool_hook: Option<Arc<dyn PreToolCallHook>>`. Default:
+`AlwaysApprovePolicy` (backward compatible — existing graphs see no behaviour change).
+
+`PreToolCallHook::pre_invoke(preview: &ToolCallPreview, run_ctx: &RunContext)` returns a
+`PreToolDecision` (`#[non_exhaustive]`):
+- **Approve** — proceed to tool execution unchanged.
+- **Deny { reason }** — construct `ToolOutput::Error(reason)`; tool is NOT invoked.
+  Fail-closed under all code paths. VP-011 Kani candidate.
+- **Edit { modified_args }** — replace tool_args with modified_args; proceed.
+- **PendingHumanApproval { prompt }** — suspend via `interrupt()` (BC-2.05.001 machinery
+  reused); resume delivers `Command::Resume(PreToolDecision)`. Survives process restart.
+  "Skip-hook-on-resume" invariant: hook is NOT re-called on the resumed dispatch (PO BC
+  obligation, SS-05 extension).
+
+Two new streaming events: `tool_approval_request` (before internal interrupt) and
+`tool_approval_resolved` (on resume decision). BC-2.06.001 12-variant taxonomy grows to
+14. **PO BC obligations:** BC-2.06.004 / BC-2.06.005 (SS-06); amend BC-2.08.010 for
+`#[tool(action_risk = ...)]` macro parameter (SS-08).
+
+**Grounding:** D23 authority — domain-e-agentic-coding-assistant.md §3 item 5 / §6
+"Per-tool-call interactive HITL (fine-grained)" DEGRADED → closure "first-class pre-tool
+interrupt hook at sub-node granularity."
+**Anchor justification:** CAP-034 covers per-tool-call approval because D23 mandates closure
+of the Domain E DEGRADED gap. ADR-018 is the architecture authority. CAP-034 is distinct
+from CAP-006 (node-boundary HITL): CAP-006 governs graph-level interrupt/resume; CAP-034
+governs sub-node tool-dispatch granularity. PendingHumanApproval composes with CAP-006
+interrupt machinery rather than replacing it.
+**Architecture authority:** ADR-018. **Subsystems:** SS-05 (HITL extended), SS-06 (streaming
+events +2), SS-16 (ActionRisk / hook integration).
+
+### CAP-035: Rolling Proactive Context Compaction (CompactionTrigger / CompactionPolicy)
+
+Provide a first-class rolling compaction primitive in the budget engine. New types added to
+`core::budget` (definitions-only, ADR-009 Option 3):
+
+- `CompactionTrigger` (`#[non_exhaustive]`): `Disabled` (default; backward compatible),
+  `OnWatermark { fraction: f32 }` (trigger when `tokens_remaining / ceiling < (1.0 - fraction)`;
+  VP-012 Kani candidate — pure arithmetic), `OnMessageCount { count: usize }`,
+  `OnTokenCount { tokens: u64 }`.
+- `CompactionPolicy` trait: `async fn compact(&self, snapshot: &ConversationSnapshot,
+  run_ctx: &RunContext) → Result<CompactionSummary, FerrochainError>`.
+- `ConversationSnapshot`: ordered Vec<(turn_index, Message)> + token_estimate; assembled
+  from checkpoint FTS (BC-2.04.008) by the BudgetEngine.
+- `CompactionSummary`: `summary_text: String` + `compacted_range: RangeInclusive<usize>`.
+
+`BudgetConfig` gains `compaction_trigger: CompactionTrigger` (default `Disabled`) and
+`compaction_policy: Option<Arc<dyn CompactionPolicy>>` (None = `DefaultSummarizationPolicy`
+which prompts the model, same mechanism as `OnCeiling::Summarize`).
+
+`BudgetEngine` in `graph::budget` evaluates the trigger after each super-step; on trigger:
+assembles ConversationSnapshot → calls compact() → replaces messages[compacted_range] with
+SystemMessage(summary_text) in the active window → appends CompactionEvent to EvidenceJournal
+→ emits `compaction_event` streaming event (15th variant). Original checkpoint records are
+NOT deleted (BC-2.04.001 immutability). Custom CompactionPolicy impls MAY also write
+CompactionSummary to MemoryStore (CAP-017) as project knowledge — the framework imposes no
+constraint on compact() beyond returning CompactionSummary (ADR-019 Decision 5 additive).
+
+**PO BC obligations:** new BCs for SS-10 (compaction trigger semantics, watermark arithmetic,
+journal entry); amend BC-2.06.001 or author BC-2.06.006 for `compaction_event` (SS-06).
+
+**Grounding:** D23 authority — domain-e-agentic-coding-assistant.md §3 item 10 / §6 "Rolling
+proactive context compaction" DEGRADED → closure "first-class rolling-compaction primitive."
+**Anchor justification:** CAP-035 covers rolling compaction because D23 mandates closure of
+the Domain E DEGRADED gap. ADR-019 is the architecture authority. CAP-035 is distinct from
+CAP-012 OnCeiling::Summarize: CAP-012 governs what happens WHEN the ceiling is reached;
+CAP-035 governs proactive compaction BEFORE the ceiling. Both reside in SS-10 but at
+different trigger points. Additive with CAP-017 (cross-session persistence of summaries is
+opt-in at the application layer — not a mandatory coupling).
+**Architecture authority:** ADR-019. **Subsystems:** SS-10 (budget governance), SS-04
+(scheduler — BudgetEngine dispatch site), SS-06 (streaming events +1).
+
+### CAP-036: First-Party Filesystem Tools (tools::fs — ReadFileTool, WriteFileTool, EditFileTool, ListDirTool)
+
+Provide four `Tool`-implementing types in `ferrochain-tools::tools::fs` (SS-23, crate #21):
+
+| Tool | ActionRisk | Key constraints |
+|------|-----------|-----------------|
+| `ReadFileTool` | ReadOnly | max_bytes limit (default 1 MiB); E-TOOLS-002 on excess |
+| `WriteFileTool` | High | PathGuard-confined; non-idempotent; no auto-retry |
+| `EditFileTool` | High | exact-match old_string → new_string; E-TOOLS-003 if absent; conditional retry safe (old_string mismatch is structural no-op) |
+| `ListDirTool` | ReadOnly | PathGuard-confined; no size limit |
+
+All four validate path arguments against `PathGuard` (ferrochain-sandbox) at invocation time;
+out-of-guard paths return `Err(E-TOOLS-001 PathConfinementViolation)`. VP-003 (workspace
+path-confinement Kani proof) coverage extends to all four tools without modification —
+PathGuard is the same type already proven. `EditFileTool` exact-match only by default; opt-in
+fuzzy fallback via `EditConfig::fuzzy_threshold: Option<f32>` (`similar` crate — confirm
+current stable version + MIT license before Cargo.toml write; ADR-020 Decision 7).
+
+All four integrate with PreToolCallHook (CAP-034) via ActionRisk annotations and with
+RetryPolicy (CAP-018) per BC-2.16.001. WriteFileTool and EditFileTool non-idempotent —
+require re-approval before retry (ADR-020 Decision 4).
+
+**Granularity justification (3 CAPs for 3 modules):** tools::fs BC axis covers
+PathGuard-confinement + mixed ReadOnly/High risk + VP-003 Kani reuse. tools::shell (CAP-037)
+has a unique non-lowerable risk floor invariant (VP-013) warranting its own band. tools::search
+(CAP-038) is in-process ReadOnly with no PathGuard dependency. Three distinct BC acceptance
+shapes → three CAPs, following the D21 module-granularity convention.
+
+**Grounding:** D23 authority — ADR-020 Decision 2, SS-23. domain-e-agentic-coding-assistant.md
+§3 items 2–3 / §6 "File/bash tool substrate" + "Workspace confinement" first-party closure.
+**Anchor justification:** CAP-036 covers tools::fs because D23 mandates first-party Tool
+implementations on the ferrochain-sandbox substrate (Domain E holdout requires file read/write
+without application-authored wrapper code). ADR-020 is the architecture authority.
+**Architecture authority:** ADR-020. **Subsystem:** SS-23 (ferrochain-tools, crate #21).
+
+### CAP-037: First-Party Shell Execution Tool (tools::shell — BashTool)
+
+Provide `BashTool` in `ferrochain-tools::tools::shell` (SS-23, crate #21): executes shell
+commands via the ferrochain-sandbox WASM/container backend (BC-2.13.001–003; enforcing sandbox
+mandatory — no direct OS process execution outside the sandbox policy).
+
+**ActionRisk and risk floor invariant:** `BashTool` default `ActionRisk::High`. Risk tier
+CANNOT be lowered below `ActionRisk::Medium` — `ToolConfig::override_risk(ReadOnly)` or
+`override_risk(Low)` returns a configuration error at startup. This is a framework safety
+invariant, not an application convention. VP-013 Kani candidate.
+
+Output: `BashOutput { stdout: String, stderr: String, exit_code: i32, truncated: bool }`.
+`max_output_bytes` limit (default 256 KiB); exceeding it yields first 256 KiB with
+`truncated = true` (non-fatal; E-TOOLS-005 informational). `max_duration` timeout (default
+30s per NFR catalog); E-TOOLS-004 on breach.
+
+Retry: explicitly enrolled per-`tool_name` via RetryPolicy (CAP-018 / BC-2.16.001); NOT
+auto-retried (commands are not generally idempotent). Each retry flows through
+PreToolCallHook (CAP-034) independently — hook may deny a retry (ADR-018 Decision 6 /
+ADR-020 Decision 4). E-TOOLS-007 if risk floor violated at startup.
+
+**Grounding:** D23 authority — ADR-020 Decision 2, SS-23. domain-e-agentic-coding-assistant.md
+§3 item 4 / §6 "Shell sandboxing (WASM/container default)" first-party tool closure.
+**Anchor justification:** CAP-037 covers tools::shell as a separate CAP from CAP-036 because
+BashTool carries a uniquely important framework safety invariant (non-lowerable risk floor +
+VP-013 Kani proof candidate) requiring its own BC band. Conflating BashTool with filesystem
+tools would obscure this invariant and its acceptance shape.
+**Architecture authority:** ADR-020. **Subsystem:** SS-23 (ferrochain-tools, crate #21).
+
+### CAP-038: First-Party Search Tool (tools::search — GrepTool)
+
+Provide `GrepTool` in `ferrochain-tools::tools::search` (SS-23, crate #21): in-process regex
+pattern matching using the `regex` crate (NOT shelling out to system grep or ripgrep —
+hermetic and unit-testable without system tool availability). `ActionRisk::ReadOnly`.
+
+Accepts: `{ pattern: String, path: String, recursive: bool, case_insensitive: bool,
+max_results: usize }`. Results capped at `max_results` (default 100); E-TOOLS-006
+`SearchResultsCapped` on ceiling (informational — partial results returned). Returns
+matches with file path and line number. Path argument validated by PathGuard for directory
+scoping (E-TOOLS-001 on out-of-guard paths). No sandbox execution — in-process std::fs.
+No retry enrollment needed (pure read, idempotent).
+
+Performance note: in-process `regex` is sufficient for typical coding-assistant search
+radius; a ripgrep-backed variant is deferred to a future `ferrochain-tools-rg` extension
+(ADR-020 Decision 2 §Alternative D). Dependency flag: confirm `regex` crate is already a
+workspace dependency in `[workspace.dependencies]` before Cargo.toml write (ADR-020
+Decision 7).
+
+**Grounding:** D23 authority — ADR-020 Decision 2, SS-23. domain-e-agentic-coding-assistant.md
+§3 item 1 / §6 "File/bash tool substrate" first-party search closure.
+**Anchor justification:** CAP-038 covers tools::search as a separate CAP from CAP-036
+(filesystem) because GrepTool is in-process (no sandbox), ReadOnly only, and hermetic (no
+system tool dependency). Its BC acceptance shape covers regex semantics, max_results capping,
+and hermeticity — distinct from the filesystem tools' PathGuard-confinement + mixed-risk
+surface.
+**Architecture authority:** ADR-020. **Subsystem:** SS-23 (ferrochain-tools, crate #21).
+
+---
+
+## P2 — Extended Capabilities (Post-v1 Candidates)
+
+> **D23 update (2026-07-22):** CAP-017 (cross-session memory) and CAP-018 (tool retry)
+> promoted P2 → P1 per domain-e forcing function. This section now contains only CAP-019.
 
 ### CAP-019: Formal Verification Pipeline (Kani + cargo-fuzz)
 

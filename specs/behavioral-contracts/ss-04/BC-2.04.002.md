@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "6a3a169"
+input-hash: "9170b5b"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04

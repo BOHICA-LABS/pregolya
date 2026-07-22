@@ -2,18 +2,19 @@
 document_type: domain-spec-section
 level: L2
 section: entities-graph
-version: "1.5"
+version: "1.6"
 status: active
 producer: business-analyst
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
 input-hash: "8dce7df"
 traces_to: L2-INDEX.md
-decisions: [D11, D17, D21]
+decisions: [D11, D17, D21, D23]
 changelog:
+  - "v1.6 (2026-07-22): D23 entity additions (burst-230) — new section '## HITL Approval Hook Domain': PreToolCallHook, PreToolDecision, ToolCallPreview, ToolApprovalRequest (ferrochain-graph::hitl, ADR-018). New section '## Context Compaction Domain': CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary (ferrochain-core::budget + graph::budget, ADR-019). Tool entity updated: first-party subtypes from SS-23 added (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, GrepTool). Relationships Summary extended. D23 added to decisions list."
   - "v1.5 (2026-07-21): F-P131-05 adjudication (burst-226) — PromptValue entity: MessageProvenance field renamed tag: Option<ProvenanceTag> → highest_trust_level: Option<TrustLevel>; Invariant updated from '.tag is Untrusted' to '.highest_trust_level is Some(TrustLevel::Untrusted)'. TrustLevel entity added to Retrieval and Serialization Domain (ferrochain-prompts: prompts::template; 3 variants: Untrusted | UserInput | Trusted; severity ordering Untrusted > UserInput > Trusted; disambiguation from ProvenanceTag; authority ADR-015 §Decision 3 + CAP-022/023). Relationships Summary updated: ProvenanceTag line → TrustLevel. TD-VSDD-060 sibling sweep: no other ProvenanceTag trust-variant residue in this file."
   - "v1.4 (2026-07-20): D21 second-half entity additions — VectorStore (ferrochain-vectorstores, ADR-014), Embeddings (ferrochain-core core::embeddings, ADR-017), MetadataFilter (ferrochain-vectorstores, ADR-014), SearchType (ferrochain-vectorstores, ADR-014). Added to '## Retrieval and Serialization Domain'. Relationships Summary extended."
   - "v1.3 (2026-07-20): D21 entity additions — Document (ferrochain-core core::documents, ADR-014), PromptValue (ferrochain-prompts, ADR-015), Serialized (ferrochain-core core::serializable, ADR-016). New section '## Retrieval and Serialization Domain' added. Relationships Summary extended. D21 added to decisions list."
@@ -53,7 +54,10 @@ The universal computation interface — anything that can be invoked asynchronou
 ### Tool
 A Runnable with an associated schema — name, description, and JSON Schema for input.
 - **Fields:** name: String, description: String, input_schema: JsonSchema, runnable: Runnable
-- **Subtypes:** FunctionTool (Rust async fn), MCPTool (from MCP server), StructuredTool
+- **Subtypes:** FunctionTool (Rust async fn), MCPTool (from MCP server), StructuredTool;
+  and first-party (SS-23 / ADR-020): ReadFileTool (ReadOnly), WriteFileTool (High), EditFileTool
+  (High, exact-match), ListDirTool (ReadOnly), BashTool (High, non-lowerable ≥ Medium floor,
+  VP-013), GrepTool (ReadOnly, in-process regex).
 - **Invariant (DI-012):** Content produced by any Tool returns as a `ToolMessage` (BC-2.09.002) and is untrusted ingress; it passes `GuardrailHook` as `IngressContent::ToolResult(ContentBlock)` before entering the model context.
 
 ---
@@ -269,6 +273,81 @@ fires when `get_relevant_documents` is called.
 
 ---
 
+## HITL Approval Hook Domain
+
+> D23 additions (ADR-018). Entities live in `ferrochain-graph::hitl` alongside `ActionRisk`
+> and `RiskGatePolicy`. Placement rationale: no dependency-inversion need — no crate requires
+> these types without depending on ferrochain-graph (ADR-018 Decision 1).
+
+### PreToolCallHook
+Async hook invoked by the graph engine immediately before every tool dispatch.
+- **Interface:** `async fn pre_invoke(&self, preview: &ToolCallPreview, run_ctx: &RunContext) → PreToolDecision`
+- **Registration:** `GraphConfig.pre_tool_hook: Option<Arc<dyn PreToolCallHook>>`
+- **Default impl:** `AlwaysApprovePolicy` — always returns Approve without I/O; existing graphs unaffected.
+- **Crate:** ferrochain-graph, module `graph::hitl`
+- **Note:** Graph-scoped (not run-scoped): governs all runs on the graph, consistent with how `RiskGatePolicy` applies. ADR-018 Decision 2.
+
+### PreToolDecision
+The decision type returned by `PreToolCallHook::pre_invoke`; determines the tool dispatch outcome.
+- **Variants (`#[non_exhaustive]`):**
+  - `Approve` — proceed to tool execution unchanged
+  - `Deny { reason: String }` — construct `ToolOutput::Error(reason)`; tool is NOT invoked (fail-closed; VP-011 Kani candidate)
+  - `Edit { modified_args: serde_json::Value }` — replace tool_args with modified_args; proceed (engine validates modified_args is a valid JSON object before invocation)
+  - `PendingHumanApproval { prompt: Option<String> }` — suspend via `interrupt()` (BC-2.05.001 machinery reused); on `Command::Resume(PreToolDecision)` the decision is applied; hook is NOT re-called on the resumed dispatch ("skip-hook-on-resume" invariant — PO BC obligation for SS-05 extension)
+- **Crate:** ferrochain-graph, module `graph::hitl`
+- **Invariant:** `Deny` is fail-closed — the tool is never invoked when Deny is returned, regardless of code path. VP-011 Kani candidate.
+
+### ToolCallPreview
+Read-only snapshot of a pending tool invocation passed to `PreToolCallHook::pre_invoke`.
+- **Fields (`#[non_exhaustive]`):** `tool_name: String`, `tool_args: serde_json::Value`, `action_risk: Option<ActionRisk>`
+- **Crate:** ferrochain-graph, module `graph::hitl`
+- **Note:** `action_risk` populated from `#[tool(action_risk = ...)]` macro annotation (ADR-018 Decision 6 / BC-2.08.010 amendment). `None` if tool was registered without an action_risk annotation.
+
+### ToolApprovalRequest
+Interrupt payload serialized to the checkpoint when `PreToolDecision::PendingHumanApproval` is returned.
+- **Fields:** `preview: ToolCallPreview`, `prompt: Option<String>`
+- **Crate:** ferrochain-graph, module `graph::hitl`
+- **Note:** Serialized via msgpack to the existing checkpoint format (ADR-002). Survives process restart identically to standard BC-2.05.001 interrupts. Delivered via `Command::Resume(PreToolDecision)` when the human provides their decision.
+
+---
+
+## Context Compaction Domain
+
+> D23 additions (ADR-019). Type and trait definitions live in `core::budget` (definitions-only
+> per ADR-009 Option 3 pattern — same as BudgetPolicy). Dispatch logic lives in `graph::budget`.
+
+### CompactionTrigger
+Configuration type that controls when the BudgetEngine initiates proactive context compaction.
+- **Variants (`#[non_exhaustive]`):**
+  - `Disabled` — no proactive compaction (default; backward compatible; OnCeiling behaviour unchanged)
+  - `OnWatermark { fraction: f32 }` — trigger when `tokens_remaining / ceiling < (1.0 - fraction)`; e.g. fraction=0.8 = trigger at 80% budget consumed. VP-012 Kani candidate (pure arithmetic).
+  - `OnMessageCount { count: usize }` — trigger when active message count exceeds threshold
+  - `OnTokenCount { tokens: u64 }` — trigger when cumulative conversation token count exceeds threshold
+- **Crate:** ferrochain-core, module `core::budget`; field of `BudgetConfig`
+- **Note:** `Disabled` default means all existing graphs are unaffected (ADR-019 Decision 2).
+
+### CompactionPolicy
+Async trait that produces a `CompactionSummary` from a `ConversationSnapshot`.
+- **Interface:** `async fn compact(&self, snapshot: &ConversationSnapshot, run_ctx: &RunContext) → Result<CompactionSummary, FerrochainError>`
+- **Default impl:** `DefaultSummarizationPolicy` — prompts the model to produce a concise summary (same mechanism as `OnCeiling::Summarize`)
+- **Registration:** `BudgetConfig.compaction_policy: Option<Arc<dyn CompactionPolicy>>` (None = DefaultSummarizationPolicy)
+- **Crate:** ferrochain-core, module `core::budget`
+- **Note:** Custom impls MAY also write CompactionSummary to MemoryStore (CAP-017) as project knowledge — the framework imposes no constraint on what `compact()` does beyond returning CompactionSummary (ADR-019 Decision 5 additive coupling).
+
+### ConversationSnapshot
+Read-only slice of recent conversation history assembled by the BudgetEngine from checkpoint FTS (BC-2.04.008).
+- **Fields (`#[non_exhaustive]`):** `turns: Vec<(usize, Message)>` (ordered turn-index / Message pairs selected for compaction), `token_estimate: u64`
+- **Crate:** ferrochain-core, module `core::budget`
+- **Note:** Passed to `CompactionPolicy::compact()` as the compaction input. BudgetEngine selects which turns to include based on the active CompactionTrigger variant.
+
+### CompactionSummary
+Output produced by a `CompactionPolicy::compact()` call; applied to the active message window.
+- **Fields (`#[non_exhaustive]`):** `summary_text: String` (injected as a SystemMessage), `compacted_range: RangeInclusive<usize>` (which turn indices are replaced)
+- **Crate:** ferrochain-core, module `core::budget`
+- **Application:** BudgetEngine replaces `messages[compacted_range]` with `SystemMessage(summary_text)` in the active conversation window. Original checkpoint records are NOT deleted (BC-2.04.001 immutable checkpoint history). A `CompactionEvent { compacted_range, summary_token_count, trigger_tokens_remaining }` is appended to EvidenceJournal; a `compaction_event` streaming event (15th variant) is emitted.
+
+---
+
 ## Relationships Summary (This Section)
 
 ```
@@ -277,6 +356,7 @@ StateGraph 1——N Channel
 StateGraph 1——N Edge
 Node wraps Runnable
 Runnable subtypes: ChatModel, Tool, Chain, StateGraph, Node, PromptTemplate, ChatPromptTemplate
+Tool first-party subtypes (SS-23): ReadFileTool, WriteFileTool, EditFileTool, ListDirTool (tools::fs); BashTool (tools::shell, VP-013); GrepTool (tools::search)
 PregelTask belongs-to Node (via node_name)
 Checkpoint wraps GraphState
 Checkpoint 0——N PendingWrite
@@ -285,6 +365,10 @@ CheckpointSaver owns N Checkpoint
 Thread 1——N Checkpoint (via thread_id)
 Message 1——N ContentBlock
 Tool invocation produces ToolMessage (BC-2.09.002); content passes GuardrailHook as IngressContent::ToolResult before model context entry (DI-012)
+PreToolCallHook::pre_invoke fires before every tool dispatch; PreToolDecision routes → Approve / Deny / Edit / PendingHumanApproval
+ToolApprovalRequest persisted to checkpoint on PendingHumanApproval; Command::Resume(PreToolDecision) delivers the decision
+CompactionTrigger evaluated by BudgetEngine after each super-step; on trigger → ConversationSnapshot assembled from FTS → CompactionPolicy::compact() → CompactionSummary applied to active window
+CompactionSummary.compacted_range replaced by SystemMessage(summary_text); CompactionEvent appended to EvidenceJournal; compaction_event emitted (15th streaming variant)
 Retriever::get_relevant_documents returns Vec<Document>; Documents entering graph context pass BoundaryType::RAGRetrieval guardrail (DI-012)
 VectorStoreRetriever implements Retriever; backed by &dyn VectorStore; SearchType selects similarity vs MMR
 VectorStore 1——N Document (stores/indexes); VectorStoreRetriever wraps VectorStore
