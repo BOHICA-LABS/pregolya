@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "079892a"
+input-hash: "f6596c2"
 traces_to: STATE.md
 ---
 
@@ -1171,3 +1171,20 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
 ### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-234 commit (pushed).
 ### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 234 | Phase 1 IN PROGRESS — burst-234 COMMITTED; NEXT: P1D-135 | NEXT: adversary cascade P1D-135
+
+---
+
+## Archived Checkpoint — Burst 235 (archived at burst 236)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21+D-23 scope expansion. D23 authoring COMPLETE (bursts 229-232). Burst-235 fix-burst ALL AGENTS COMMITTED to factory-artifacts. All 6 P1D-135 findings closed. DI-015 split-enforcement: BC-2.13.002 v1.2 co-enforcer (kill_on_drop, ProcessBackend); ADR-020 v1.7 (tools::shell timeout→sandbox.execute()); events.md v1.7 (+D23 StreamEvents 13/14/15; ToolApprovalRaised/Resolved+CompactionExecuted); prd.md v1.11 (§7 RTM CAP anchors; DI-015 prop); TVs 670→671; universe 53→54; hash sweep 7 passes STALE=0; trajectory-tail →8→10→7→6; 0/3. NEXT: adversary pass P1D-136 on FROZEN HEAD (D21+D23 expanded perimeter)."
+### COMMITTED (through burst 235):
+- Burst 235 (last committed): P1D-135 fix-burst ALL AGENTS: prd.md v1.11; BC-INDEX v2.3; ADR-020 v1.7; module-decomposition v1.18 (universe 54); purity-boundary-map v1.12 (79 rows); invariants.md v1.3 (DI-015 split-enforcement); events.md v1.7; BC-2.13.002 v1.2 (kill_on_drop, TV-5; hash 6c6933f); BC-2.23.005 v1.3 (tokio phrasing; hash 8c9a68b); test-vectors v2.4 (671 TVs; hash 56bdcb9); sidecar-learning.md; hash sweep 7 passes STALE=0.
+### NEXT-ACTIONS (exact, ordered):
+1. Adversary pass P1D-136 on FROZEN HEAD (D21+D23 expanded perimeter; full scope; streak 0/3).
+2. ROTATION NOTE: P1D-135 found never-opened §7 RTM. Next adversary MUST rotate into un-audited surfaces: GuardedDocuments/rag_ingress chain, interface-definitions HTTP count vs error-taxonomy, SS-01..04 bodies (shallow per P1D-135 coverage statement).
+3. VP-2.13.002-D (kill-on-drop Kani VP): non-blocking; architect to consider at SS-13 VP assignment; covered by INV-6 + TV-5. Not an open finding.
+4. After 3/3 CLEAN(strict): /vsdd-factory:check-input-drift → fresh consistency audit → Phase 1 HUMAN GATE.
+### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
+### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-235 commit (see git -C .factory log -1).
+### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 235 | Phase 1 IN PROGRESS — burst-235 COMMITTED; NEXT: P1D-136 | NEXT: adversary cascade P1D-136

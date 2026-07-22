@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.006
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,11 +14,12 @@ crate: ferrochain-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.3 (burst-236/F-P136-04/2026-07-23): Step 5 EvidenceJournal CompactionEvent.tokens_remaining_after type clarified: source is `RunContext.budget_info.tokens_remaining: Option<i64>` (interface-definitions.md §BudgetInfo). When no token ceiling is configured (OnMessageCount/OnTokenCount triggers with neither soft_limit nor hard_limit set), tokens_remaining is None — the EvidenceJournal entry carries `tokens_remaining_after: Option<i64>` matching the source type. Three-site reconciliation with BC-2.06.006 PC1 and interface-def §StreamEvent (F-P136-04)."
   - "1.2 (burst-234/F-P134-07/2026-07-22): Add Invariant — Compaction × PendingHumanApproval temporal non-interaction. Closes the F-P134-07 LOW/OBS ambiguity: no BC previously stated that compaction (which fires only at super-step boundaries, PC-4) cannot fire while a run is parked at a PendingHumanApproval interrupt (which is NOT at a super-step boundary). Also states the durability corollary: a ToolApprovalRequest's message-window references survive any subsequent compaction because compaction can only fire after the approval is resolved and the run resumes to a super-step. Cross-references BC-2.05.007 PC-4 and BC-2.05.008 PC-4."
   - "1.1 (burst-233/F-P133-10/2026-07-22): Step 5 EvidenceJournal entry — rename field `trigger_tokens_remaining` → `tokens_remaining_after`. Adjudication: the value is captured AFTER window replacement in step 3, so `trigger_tokens_remaining` was semantically misleading (suggests the value was captured at trigger time/step 1, not post-replacement). Renaming to `tokens_remaining_after` aligns with BC-2.06.006 streaming event payload which uses `tokens_remaining_after` for the same conceptual value. Both BCs now agree on the canonical field name for post-compaction remaining tokens."
   - "1.0 (D23/2026-07-22): Initial BC — D23 rolling compaction, SS-10 compaction execution contract."
@@ -94,7 +95,10 @@ continues with the pre-compaction window). The write MUST succeed before proceed
 `CompactionEvent { compacted_range, summary_token_count: summary_text.token_count(),
 tokens_remaining_after: RunContext.budget_info.tokens_remaining }` is appended to the
 `EvidenceJournal` (BC-2.10.001 append-only journal). This entry provides an audit trail
-of when and why compaction occurred.
+of when and why compaction occurred. The `tokens_remaining_after` field is typed
+`Option<i64>` — matching `RunContext.budget_info.tokens_remaining: Option<i64>`
+(interface-definitions.md §BudgetInfo): `None` when no token ceiling is configured;
+negative when accumulated > ceiling on the Deny path.
 
 **Step 6 — Streaming event:**
 `StreamEvent::CompactionEvent` (BC-2.06.006) is emitted with the compaction summary payload.

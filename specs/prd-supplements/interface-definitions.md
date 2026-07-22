@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.47"
+version: "2.48"
 status: active
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1d
 changelog:
+  - "2.48 (burst-236/F-P136/2026-07-23): Fix burst 236 placement-marker corrections (five findings + sweep). (1) F-P136-01: §Retriever Trait/GuardedDocuments placement marker `core::guardrail` → `core::retriever` (ADR-014 Decision 6; GuardedDocuments struct and rag_ingress are in core::retriever, not core::guardrail); §-source line drops `, core::guardrail`. (2) F-P136-02: §PreToolCallHook three co-located fixes per ADR-018 Decision 1 + BC-2.05.007: (a) module `graph::approval` → `graph::hitl` in both §-source and code-block marker; (b) trait method `pre_tool_dispatch` → `pre_invoke`; (c) restore dropped second parameter `run_ctx: &RunContext`. (3) F-P136-03: §Compaction type-definition marker `ferrochain-graph: graph::budget` → `ferrochain-core: core::budget` for CompactionTrigger/ConversationSnapshot/CompactionSummary/CompactionPolicy (ADR-019 Decision 1); §-source extended to note execution engine in graph::budget. (4) F-P136-04: StreamEvent::CompactionEvent.tokens_remaining_after type `u64` → `Option<i64>` (source is RunContext.budget_info.tokens_remaining: Option<i64>; three-site reconciliation with BC-2.06.006 v1.2 and BC-2.10.006 v1.3). (5) F-P136-05: §PreToolCallHook BC anchors re-attributed — BC-2.05.004 (Command(resume=value) API) removed from trait/ToolCallPreview/PreToolDecision/fail-closed description; BC-2.05.007 is the authoritative contract; BC-2.05.004 retained only for Command::Resume(PreToolDecision) resume-API role. Sweep also corrects PreToolDecision variant shapes to ADR-018 Decision 1 / BC-2.05.007: Deny { reason: String }, Edit { modified_args: serde_json::Value }, PendingHumanApproval { prompt: Option<String> }."
   - "2.47 (burst-233/F-P133-03/2026-07-22): E-TOOLS-* blanket annotation updated — 7→9 codes (+E-TOOLS-008 FileIoError TOOL/Maybe, +E-TOOLS-009 InvalidRegexPattern VAL/Never, minted burst-233). Disposition census 105→107 (43 HTTP + 17 individual + 47 blanket). Blanket group breakdown: E-MCP-* 5 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 47."
   - "2.46 (D23/2026-07-22): Add D23 API surfaces. (1) StreamEvent enum 12→15 variants: +ToolApprovalRequest (event 13, PendingHumanApproval interrupt signal per ADR-018 Decision 5), +ToolApprovalResolved (event 14, resume decision applied), +CompactionEvent (event 15, post-compaction durable write per ADR-019 Decision 4) — causal ordering diagram updated. BC-2.06.004/005/006 anchor refs added to §StreamEvent. (2) §PreToolCallHook section added: ActionRisk enum (4 tiers: ReadOnly/Low/Medium/High), ToolCallPreview struct (tool_name, tool_args, action_risk: Option<ActionRisk>), PreToolDecision enum (4 variants: Approve/Deny/Edit/PendingHumanApproval), PreToolCallHook trait; source ADR-018 Decision 2–6. (3) §Compaction section added: CompactionTrigger enum (4 variants: Disabled/OnWatermark/OnMessageCount/OnTokenCount), ConversationSnapshot struct, CompactionSummary struct, CompactionPolicy trait; source ADR-019 Decision 1–5. (4) §First-Party Tools section added: PathGuard struct (E-TOOLS-001 sandbox confinement); ReadFileTool/WriteFileTool/EditFileTool/CreateFileTool/BashTool/GrepTool comment anchors. (5) /stream endpoint row: added tool_approval_request, tool_approval_resolved, compaction_event event mentions (D23/ADR-018/ADR-019). (6) Blanket omission annotation: E-TOOLS-* 7 new codes added; census 98→105 (43 HTTP + 17 individual + 45 blanket)."
   - "2.45 (burst-227/F-P132-02/2026-07-21): §ChatPromptTemplate — complete BC-2.18.x anchor swap from burst-226 partial-propagation. (1) SlotTrustPolicy doc anchor: BC-2.18.003 PC1-PC2 (MessagesPlaceholder!) → BC-2.18.002 PC4 (slot_trust_policy field) + BC-2.18.005 PC1-PC5 (construction-time policy guard). (2) from_messages anchor: BC-2.18.001 PC1 (PromptTemplate construction!) → BC-2.18.002 PC1 (ChatPromptTemplate construction). (3) PromptValue struct anchor: BC-2.18.001 PC3 (input_variables()!) → BC-2.18.002 PC2 (PromptValue.messages). (4) MessageProvenance struct anchor: BC-2.18.003 PC2-PC3 (MessagesPlaceholder!) → BC-2.18.002 PC3-PC4 (highest_trust_level + slot_trust_policy). (5) Footer: BC-2.18.001 description corrected to PromptTemplate F-String scope; BC-2.18.003 description corrected to MessagesPlaceholder/FewShot scope; BC-2.18.005 description corrected to construction guard scope."
@@ -862,7 +863,9 @@ pub enum StreamEvent {
         /// Token count of the generated summary text.
         summary_token_count:    u64,
         /// Tokens remaining in the budget window after compaction.
-        tokens_remaining_after: u64,
+        /// Source: RunContext.budget_info.tokens_remaining: Option<i64>.
+        /// None when no token ceiling is configured; negative i64 when accumulated > ceiling.
+        tokens_remaining_after: Option<i64>,
     },
 }
 
@@ -922,12 +925,12 @@ ADR-006 rev-3 (guardrail design authority), ADR-018 (per-tool-call approval hook
 
 ### PreToolCallHook
 
-**Source:** ADR-018 Decision 2 (trait shape) + Decision 3 (dispatch ordering) + Decision 4 (fail-closed Deny) + Decision 5 (streaming events) + Decision 6 (action_risk attribute); ferrochain-graph: graph::approval.
+**Source:** ADR-018 Decision 2 (trait shape) + Decision 3 (dispatch ordering) + Decision 4 (fail-closed Deny) + Decision 5 (streaming events) + Decision 6 (action_risk attribute); ferrochain-graph: graph::hitl.
 
-BC anchor: BC-2.05.004 (PreToolCallHook trait — pre-dispatch hook integration, ToolCallPreview shape, PreToolDecision enum, fail-closed Deny semantics), BC-2.05.007 (Deny never invokes tool.invoke — VP-011 Kani candidate), BC-2.06.004 (ToolApprovalRequest event), BC-2.06.005 (ToolApprovalResolved event), BC-2.08.010 PC1 (action_risk() method on Tool), BC-2.16.001 Invariant (retry-approval dispatch ordering).
+BC anchor: BC-2.05.007 (PreToolCallHook trait — pre_invoke contract; ToolCallPreview shape; PreToolDecision variants Approve/Deny/Edit/PendingHumanApproval; AlwaysApprovePolicy default; fail-closed Deny; hook failure = Deny; VP-011 Kani P0 seed), BC-2.05.004 (Command::Resume(PreToolDecision) resume-API: delivers PreToolDecision to engine when PendingHumanApproval interrupt is resolved), BC-2.06.004 (ToolApprovalRequest event), BC-2.06.005 (ToolApprovalResolved event), BC-2.08.010 PC1 (action_risk() method on Tool), BC-2.16.001 Invariant (retry-approval dispatch ordering).
 
 ```rust
-// ferrochain-graph: graph::approval
+// ferrochain-graph: graph::hitl
 
 /// Risk tier declared by a tool via the `action_risk` attribute.
 /// BashTool enforces a floor of `Medium`; `ReadOnly` and `Low` are
@@ -938,7 +941,7 @@ BC anchor: BC-2.05.004 (PreToolCallHook trait — pre-dispatch hook integration,
 pub enum ActionRisk { ReadOnly, Low, Medium, High }
 
 /// The tool call preview presented to the hook before invocation.
-/// BC anchor: BC-2.05.004 PC1 (ToolCallPreview shape).
+/// BC anchor: BC-2.05.007 PC3 (ToolCallPreview constructed read-only before pre_invoke call; action_risk populated from #[tool(action_risk = ...)] annotation).
 #[derive(Debug, Clone)]
 pub struct ToolCallPreview {
     pub tool_name:   String,
@@ -948,46 +951,60 @@ pub struct ToolCallPreview {
 }
 
 /// Decision returned by the PreToolCallHook.
-/// BC anchor: BC-2.05.004 PC2 (four-branch decision tree).
+/// BC anchor: BC-2.05.007 PC1-PC5 (four PreToolDecision branches; fail-closed Deny; hook error = Deny).
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum PreToolDecision {
-    /// Proceed with original args.
+    /// Proceed with original args. (BC-2.05.007 PC1)
     Approve,
-    /// Proceed with modified args (override tool_args with provided value).
-    Edit(serde_json::Value),
-    /// Abort the tool call; raise E-TOOLS-* or surface as Deny in ToolApprovalResolved.
-    /// The tool is NOT invoked. No retry_policy.record() call is made.
-    Deny,
+    /// Abort the tool call; return ToolOutput::Error(reason) without invoking the tool.
+    /// Fail-closed: the tool is NEVER invoked on Deny under any code path (VP-011 Kani P0).
+    /// BC anchor: BC-2.05.007 PC2 (Deny path — fail-closed; reason surfaced in ToolOutput::Error).
+    Deny { reason: String },
+    /// Proceed with modified args (override tool_args with modified_args value).
+    /// Engine validates modified_args is a JSON object; falls back to Deny if not.
+    /// BC anchor: BC-2.05.007 PC3 (Edit path; invalid modified_args → Deny fallback).
+    Edit { modified_args: serde_json::Value },
     /// Suspend the run (interrupt()) and await human approval via Command::Resume(PreToolDecision).
     /// ToolApprovalRequest StreamEvent is emitted before interrupt().
-    PendingHumanApproval,
+    /// BC anchor: BC-2.05.007 PC4 (PendingHumanApproval — reuses BC-2.05.001 interrupt machinery).
+    PendingHumanApproval { prompt: Option<String> },
 }
 
 /// Per-tool-call approval hook invoked before each tool.invoke().
-/// If not configured, all tool calls are implicitly Approve.
-/// Fail-closed: if the hook panics or returns Err, the engine treats the result as Deny.
-/// BC anchor: BC-2.05.004 (full contract), BC-2.05.007 (Deny never invokes tool.invoke).
+/// If not configured (GraphConfig.pre_tool_hook = None), AlwaysApprovePolicy semantics apply.
+/// Fail-closed: if the hook panics or returns an error, the engine treats the result as
+/// Deny { reason: "hook error: <detail>" } — tool is NOT invoked (BC-2.05.007 PC5).
+/// BC anchor: BC-2.05.007 PC1-PC6 (full dispatch contract: Approve/Deny/Edit/PendingHumanApproval/
+/// hook-error/no-hook paths; fail-closed invariant; VP-011 Kani P0 seed).
 #[async_trait]
 pub trait PreToolCallHook: Send + Sync {
     /// Called after circuit_breaker.check() passes and before tool.invoke().
-    /// Dispatch ordering: circuit_breaker.check → pre_tool_dispatch → tool.invoke → retry.record()
-    /// (BC-2.16.001 Invariant "Retry-Approval Ordering").
-    async fn pre_tool_dispatch(
+    /// Dispatch ordering: circuit_breaker.check → pre_invoke (this method) → tool.invoke → retry.record()
+    /// (ADR-018 Decision 6; BC-2.16.001 Invariant "Retry-Approval Ordering").
+    /// Note: `pre_tool_dispatch` is the free function in graph::hitl that calls this method —
+    /// do not confuse the dispatcher function with the trait method name.
+    async fn pre_invoke(
         &self,
         preview: &ToolCallPreview,
+        run_ctx: &RunContext,
     ) -> PreToolDecision;
 }
 ```
 
 ### Compaction
 
-**Source:** ADR-019 Decision 1 (CompactionTrigger enum) + Decision 2 (CompactionPolicy trait) + Decision 3 (7-step execution sequence) + Decision 4 (streaming event) + Decision 5 (mid-run vs next-run distinction); ferrochain-graph: graph::budget.
+**Source:** ADR-019 Decision 1 (CompactionTrigger enum) + Decision 2 (CompactionPolicy trait) + Decision 3 (7-step execution sequence) + Decision 4 (streaming event) + Decision 5 (mid-run vs next-run distinction); ferrochain-core: core::budget (type definitions — Decision 1); ferrochain-graph: graph::budget (BudgetEngine execution — Decision 3).
 
 BC anchor: BC-2.10.005 (CompactionTrigger evaluation — VP-012 Kani candidate for OnWatermark arithmetic), BC-2.10.006 (compaction execution — 7-step cycle, ConversationSnapshot assembly, mid-run REPLACEMENT, EvidenceJournal, streaming event, checkpoint immutability), BC-2.06.006 (CompactionEvent StreamEvent), BC-2.15.006 (frozen-snapshot — NEXT-run context mutation, explicitly distinct from BC-2.10.006 CURRENT-run mid-run mutation).
 
 ```rust
-// ferrochain-graph: graph::budget
+// ferrochain-core: core::budget
+// NOTE: CompactionTrigger, ConversationSnapshot, CompactionSummary, CompactionPolicy are
+// definitions-only types in ferrochain-core::core::budget (ADR-019 Decision 1 / ADR-009 Option 3).
+// The execution engine (BudgetEngine, EvidenceJournal dispatch) lives in ferrochain-graph::graph::budget.
+// If BudgetConfig gains fields of these types (it does — Decision 2), core→graph dep is avoided because
+// the type definitions live in core::budget, not in graph::budget.
 
 /// Configures when the BudgetEngine triggers a compaction cycle.
 /// BC anchor: BC-2.10.005 PC1-PC3 (trigger evaluation), BC-2.10.006 PC1 (precondition).
@@ -1093,7 +1110,7 @@ impl PathGuard {
 
 ### Retriever Trait and GuardedDocuments
 
-**Source:** ADR-014 Decision 2 (trait shape) + Decision 6 (GuardedDocuments); ferrochain-core: core::retriever, core::documents, core::guardrail.
+**Source:** ADR-014 Decision 2 (trait shape) + Decision 6 (GuardedDocuments); ferrochain-core: core::retriever, core::documents. (Note: core::guardrail provides types referenced by rag_ingress — GuardrailHook, IngressContent, ProvenanceTag — but GuardedDocuments itself is defined in core::retriever per ADR-014 Decision 6.)
 
 ```rust
 // ferrochain-core: core::retriever
@@ -1123,7 +1140,10 @@ pub struct Document {
     pub id: Option<String>,
 }
 
-// ferrochain-core: core::guardrail
+// ferrochain-core: core::retriever
+// (GuardedDocuments is in core::retriever — it references types from core::guardrail such as
+// GuardrailHook, IngressContent, and ProvenanceTag, but the struct and rag_ingress constructor
+// are defined in core::retriever per ADR-014 Decision 6.)
 /// Newtype wrapper produced by `rag_ingress`; the sole type accepted by graph nodes that
 /// consume retrieved documents. Passing `Vec<Document>` directly to a node that expects
 /// `&GuardedDocuments` is a compile-time type error (VP-2.20.002-A compile_fail gate).

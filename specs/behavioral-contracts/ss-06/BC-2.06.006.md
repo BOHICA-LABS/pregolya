@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.006
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,11 +14,12 @@ crate: ferrochain-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.2 (burst-236/F-P136-04/2026-07-23): PC1 JSON payload `tokens_remaining_after` type fixed: `<u64>` → `<i64 | null>`. Source is `RunContext.budget_info.tokens_remaining: Option<i64>` (interface-definitions.md §BudgetInfo v2.21). When no token ceiling is configured (OnMessageCount/OnTokenCount triggers fire), `tokens_remaining` is `None` → u64 has no representation; may also be negative (i64) on Deny. Invariants updated to note the `Option<i64>` source type. BC-2.10.006 Step 5 and interface-def §StreamEvent CompactionEvent updated identically (three-site reconciliation F-P136-04)."
   - "1.1 (burst-234/F-P134-05/2026-07-22): Remove spurious ADR-018 (per-tool-call approval hook) from traces_to and inputs. BC-2.06.006 is compaction_event (event 15); its sole architecture authority is ADR-019 Decision 4. ADR-018 was copy-paste residue from BC-2.06.004/005 (tool_approval streaming events which DO depend on ADR-018). input-hash recomputed after inputs list change: 9c3892a → ee8a02b."
   - "1.0 (D23/2026-07-22): Initial BC — D23 streaming event taxonomy extension, event 15 compaction_event."
 traces_to:
@@ -70,7 +71,7 @@ host to update context-window visualization without polling.
      "trigger":              "OnWatermark" | "OnMessageCount" | "OnTokenCount",
      "compacted_turns":      { "start": <usize>, "end": <usize> },
      "summary_token_count":  <u64>,
-     "tokens_remaining_after": <u64>
+     "tokens_remaining_after": <i64 | null>
    }
    ```
    - `trigger`: the `CompactionTrigger` variant that fired (string representation of the enum
@@ -93,8 +94,11 @@ host to update context-window visualization without polling.
 
 - Emission is post-commit: the stream consumer can trust that when `compaction_event` arrives,
   the run's active message window has already been replaced by the summary.
-- `tokens_remaining_after` reflects the token count in `RunContext.budget_info` AFTER the
-  compaction (not before). This is the meaningful value for capacity-management consumers.
+- `tokens_remaining_after` reflects `RunContext.budget_info.tokens_remaining` AFTER the
+  compaction (not before). Type is `Option<i64>`: `None` when no token ceiling is configured
+  (e.g., `OnMessageCount`/`OnTokenCount` triggers with neither `soft_limit` nor `hard_limit` set);
+  negative `i64` when `accumulated > ceiling` (Deny path). Wire serializes as `null` when
+  `None`. This is the meaningful value for capacity-management consumers.
 - `StreamEvent` variants are typed enum members (BC-2.06.001 invariant).
 - **DI-014:** The event payload must not be silently dropped; fire-and-forget semantics apply.
 

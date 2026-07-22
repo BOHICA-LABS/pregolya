@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.005
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,12 +14,13 @@ crate: ferrochain-core
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: true
 vp_id: VP-012
 red_gate: false
 changelog:
+  - "1.1 (burst-236/OBS-P136-A/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-012' (VP-INDEX v1.5 burst-232 seeded VP-012 Kani P1)."
   - "1.0 (D23/2026-07-22): Initial BC — D23 rolling compaction, SS-10 CompactionTrigger configuration contract. VP-012 Kani seed."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
@@ -154,7 +155,7 @@ _[to be filled after story decomposition — Wave 1 SS-10 extension story]_
 
 ## VP Anchors
 
-- VP-012 (ARCH-INDEX D23 candidate — Kani P1; architect to assign VP-INDEX entry)
+- VP-012 (assigned in VP-INDEX v1.5 as VP-012 — Kani P1; ferrochain-core `watermark_arithmetic_harness`)
 - VP-2.10.005-B
 - VP-2.10.005-C
 
@@ -167,7 +168,7 @@ _[to be filled after story decomposition — Wave 1 SS-10 extension story]_
 | L2 Domain Invariants | DI-014 (Error Propagation — invalid configuration values propagate as Err; not silently treated as Disabled) |
 | Architecture Authority | ADR-019 Decisions 1 and 2 (CompactionTrigger types in core::budget, BudgetConfig fields) |
 | Binding Decisions | D23 (rolling compaction mandate, SS-10 extension) |
-| VP Registration | VP-012 (ARCH-INDEX D23 candidate — Kani P1; architect to assign VP-INDEX entry) |
+| VP Registration | VP-012 (assigned in VP-INDEX v1.5 as VP-012 — Kani P1; ferrochain-core `watermark_arithmetic_harness`) |
 | Module | ferrochain-core / core::budget (definitions) |
 | Priority | P1 |
 | Wave | 1 |

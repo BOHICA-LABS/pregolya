@@ -4306,3 +4306,48 @@ Key transitive refreshes: ARCH-INDEX (cf36b41→0fb93c1 after module-decomp inpu
 - 3-CLEAN streak: 0/3 (P1D-135 NOT CLEAN)
 - Next: adversary cascade P1D-136 on FROZEN HEAD (D21+D23 expanded perimeter)
 
+---
+
+## Burst 236 — 2026-07-22 — P1D-136 Fix-Burst: All 6 Findings Closed; Crate/Module Placement-Marker Class; circular-dep F-P136-03
+
+**Agents:** architect (purity-boundary-map v1.13), product-owner (interface-definitions v2.48; BC-2.05.007 v1.2; BC-2.10.005 v1.1; BC-2.06.006 v1.2; BC-2.10.006 v1.3), state-manager (hash sweep; STATE.md v3.77→v3.78; burst-log; convergence-trajectory)
+
+**Context:** Fourth adversarial pass on the D21+D23 expanded perimeter. P1D-136 found 6 findings (0C/3H/2M/1L) — all from a single defect class: crate/module placement markers on D21/D23 trait and type blocks in interface-definitions.md. Critically, F-P136-03 was a compile-impossible circular dependency: CompactionConfig/CompactionPolicy/CompactionTrigger were placed in graph::budget but are inputs to core-module types, creating a core→graph circular dep; correct placement is core::budget. Additional findings corrected GuardedDocuments module placement (core::guardrail→core::retriever), PreToolCallHook module/method naming (graph::approval→graph::hitl, pre_tool_dispatch→pre_invoke, run_ctx: &RunContext restored), CompactionEvent.tokens_remaining_after type (u64→Option<i64>), BC-anchor citation (BC-2.05.004→BC-2.05.007), and PreToolDecision variant-shape corrections (Deny{reason}/Edit{named}/PendingHumanApproval{prompt}).
+
+**Session notes:** PO flagged a "pending architect action" for the purity-map run_ctx line — that was already resolved by architect (purity-boundary-map v1.13, hash 0cc61fd) before state-manager burst. No additional dispatch required.
+
+### Agents Dispatched
+
+- **architect**: F-P136-02 sibling: purity-boundary-map v1.13 (+run_ctx: &RunContext parameter at graph::hitl pre_invoke row); architecture-doc sweep clean; input-hash 0cc61fd
+- **product-owner**: F-P136-01 GuardedDocuments core::guardrail→core::retriever; F-P136-02 PreToolCallHook graph::approval→graph::hitl + pre_tool_dispatch→pre_invoke + run_ctx: &RunContext restored; F-P136-03 CompactionConfig/Policy/Trigger graph::budget→core::budget (circular-dep fix); F-P136-04 CompactionEvent.tokens_remaining_after u64→Option<i64> + BC-2.06.006 v1.2 + BC-2.10.006 v1.3; F-P136-05 BC-2.05.004→BC-2.05.007 anchor + BC-2.05.007 v1.2 (sole-authority + VP-011 OBS); bonus in-scope PreToolDecision variant-shape fixes; BC-2.10.005 v1.1 (VP-012 OBS assigned prose)
+
+### Files Modified
+
+| File | Version | Change |
+|------|---------|--------|
+| `specs/prd-supplements/interface-definitions.md` | v2.47→v2.48 | F-P136-01: GuardedDocuments core::guardrail→core::retriever; F-P136-02: PreToolCallHook graph::approval→graph::hitl + pre_tool_dispatch→pre_invoke + run_ctx: &RunContext restored; F-P136-03: CompactionConfig/Policy/Trigger graph::budget→core::budget (circular-dep fix); F-P136-04: CompactionEvent.tokens_remaining_after u64→Option<i64>; F-P136-05: BC-2.05.004→BC-2.05.007 anchor; bonus PreToolDecision Deny{reason}/Edit{named}/PendingHumanApproval{prompt} variant-shape; input-hash e4d7e1e |
+| `specs/architecture/purity-boundary-map.md` | v1.12→v1.13 | F-P136-02 sibling: pre_invoke signature +run_ctx: &RunContext at graph::hitl row; architecture-doc sweep clean; input-hash 0cc61fd |
+| `specs/behavioral-contracts/ss-05/BC-2.05.007.md` | v1.1→v1.2 | F-P136-05: sole-authority prose clarification + OBS VP-011 assigned prose; input-hash 5dcd85e |
+| `specs/behavioral-contracts/ss-10/BC-2.10.005.md` | v1.0→v1.1 | OBS: VP-012 assigned prose (watermark arithmetic proof); input-hash e1a7fb5 |
+| `specs/behavioral-contracts/ss-06/BC-2.06.006.md` | v1.1→v1.2 | F-P136-04: tokens_remaining_after type Option<i64>/null behavior (was u64); input-hash 9fb81d8 |
+| `specs/behavioral-contracts/ss-10/BC-2.10.006.md` | v1.2→v1.3 | F-P136-04: type clarification Step 5 tokens_remaining_after Option<i64>; input-hash e1a7fb5 |
+| `sidecar-learning.md` | updated | Placement-marker class lesson; circular-dep guard for crate placement in purity-map; pre_invoke vs pre_tool_dispatch naming discipline |
+
+### Hash Sweep Summary
+
+Edited files already carried current hashes (PO + architect updated inline). Transitive scan found 4 stale downstream files (VP-011, VP-012, verification-architecture, api-surface). Single scan pass resolved all.
+
+| Pass | Files Updated | STALE After |
+|------|---------------|-------------|
+| 1 | 4 | 0 |
+| **Total** | **4** | **0** |
+
+Final: TOTAL=174 MATCH=174 STALE=0.
+
+### Convergence After Burst
+
+- 136 adversary passes, 136 fix bursts (128 pre-D21 + 8 post-D21+D23)
+- Trajectory tail: →7→6→6
+- 3-CLEAN streak: 0/3 (P1D-136 NOT CLEAN)
+- Next: adversary cascade P1D-137 on FROZEN HEAD (D21+D23 expanded perimeter)
+

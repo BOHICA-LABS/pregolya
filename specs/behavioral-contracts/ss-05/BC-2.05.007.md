@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.007
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,12 +14,13 @@ crate: ferrochain-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: true
 vp_id: VP-011
 red_gate: false
 changelog:
+  - "1.2 (burst-236/OBS-P136-A/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-011' (VP-INDEX v1.5 burst-232 seeded VP-011 Kani P0)."
   - "1.1 (burst-234/F-P134-03/2026-07-22): Add reciprocal Related BCs entry for BC-2.08.010 — the `#[tool]` proc-macro sets `action_risk` which is consumed by this BC's `pre_tool_dispatch` via `ToolCallPreview.action_risk`. BC-2.08.010 v1.2 corrected its mis-anchor (BC-2.05.004 → this BC); reciprocal link added here per anchor-back rule."
   - "1.0 (D23/2026-07-22): Initial BC — D23 per-tool-call approval hook, SS-05 extension. VP-011 Kani P0 seed."
 traces_to:
@@ -158,7 +159,7 @@ _[to be filled after story decomposition — Wave 1 SS-05 extension story]_
 
 ## VP Anchors
 
-- VP-011 (ARCH-INDEX D23 candidate — Kani P0; architect to assign VP-INDEX entry)
+- VP-011 (assigned in VP-INDEX v1.5 as VP-011 — Kani P0; ferrochain-graph `deny_excludes_tool_invocation`)
 - VP-2.05.007-B
 - VP-2.05.007-C
 
@@ -171,7 +172,7 @@ _[to be filled after story decomposition — Wave 1 SS-05 extension story]_
 | L2 Domain Invariants | DI-014 (Error Propagation — Deny reason surfaced in ToolOutput::Error; never silently discarded) |
 | Architecture Authority | ADR-018 Decisions 1, 2, 3, and 6 (trait placement, GraphConfig registration, dispatch logic, retry ordering) |
 | Binding Decisions | D23 (per-tool-call approval hook mandate, SS-05 extension) |
-| VP Registration | VP-011 (ARCH-INDEX D23 candidate — Kani P0; architect to assign VP-INDEX entry) |
+| VP Registration | VP-011 (assigned in VP-INDEX v1.5 as VP-011 — Kani P0; ferrochain-graph `deny_excludes_tool_invocation`) |
 | Module | ferrochain-graph / hitl |
 | Priority | P1 |
 | Wave | 1 |
