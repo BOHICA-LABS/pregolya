@@ -1188,3 +1188,19 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
 ### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-235 commit (see git -C .factory log -1).
 ### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 235 | Phase 1 IN PROGRESS — burst-235 COMMITTED; NEXT: P1D-136 | NEXT: adversary cascade P1D-136
+
+---
+
+## Archived from STATE.md — burst-236 checkpoint
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21+D-23 scope expansion. D23 authoring COMPLETE (bursts 229-232). Burst-236 fix-burst ALL AGENTS COMMITTED to factory-artifacts. All 6 P1D-136 findings closed. Primary class: crate/module placement-markers on D21/D23 trait blocks (F-P136-01..03); compile-impossible core→graph circular dep fixed (F-P136-03: CompactionConfig/Policy/Trigger graph::budget→core::budget); PreToolCallHook graph::hitl+pre_invoke+run_ctx restored; purity-boundary-map v1.13; interface-definitions v2.48; tokens_remaining_after Option<i64>; PreToolDecision variant-shape corrected; hash sweep STALE=0; trajectory-tail →10→7→6→6; 0/3. NEXT: adversary pass P1D-137 on FROZEN HEAD (D21+D23 expanded perimeter)."
+### COMMITTED (through burst 236):
+- Burst 236 (last committed): P1D-136 fix-burst: interface-definitions v2.48; purity-boundary-map v1.13 (hash 0cc61fd); BC-2.05.007 v1.2; BC-2.10.005 v1.1; BC-2.06.006 v1.2; BC-2.10.006 v1.3; sidecar-learning.md; hash sweep 4 transitive STALE=0.
+### NEXT-ACTIONS (exact, ordered):
+1. Adversary pass P1D-137 on FROZEN HEAD (D21+D23 expanded perimeter; full scope; streak 0/3).
+2. PRIORITY COVERAGE NOTE per P1D-136 coverage statement: census axes still not fully recounted — 129-BC 51/75/3 split, 671 TV count, 38 CAP count, 15-DI orphan sweep, 20-ADR/21-crate/54-module full recount, 23 groups, SS-01..04 core BC bodies line-by-line. These are priority targets for P1D-137.
+3. After 3/3 CLEAN(strict): /vsdd-factory:check-input-drift → fresh consistency audit → Phase 1 HUMAN GATE.
+### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
+### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-236 commit (see git -C .factory log -1).
+### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 236 | Phase 1 IN PROGRESS — burst-236 COMMITTED; NEXT: P1D-137 | NEXT: adversary cascade P1D-137

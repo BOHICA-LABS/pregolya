@@ -1,16 +1,16 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.43"
+version: "2.44"
 status: active
 producer: product-owner
 total_standing_gates: 34
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "c7a652c"
+input-hash: "bcf2e85"
 traces_to: prd.md
 total_bcs: 129
 total_batches: 20
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.44 (burst-237/F-P137-02+F-P137-03/2026-07-23): F-P137-02 DI table: add DI-015 row (Subprocess Execution Timeout) — enforcers BC-2.23.005 (primary) + BC-2.13.002 (co-enforcer, .kill_on_drop(true)); remove BC-2.23.005 from DI-009 row (re-anchored burst-234 F-P134-06); DI-009 row corrected to {BC-2.08.007, BC-2.08.014, BC-2.14.004, BC-2.22.002, BC-2.22.003}; coverage 14/14→15/15. F-P137-03 CAP-017 wave-1 promotion: SS.15 subsystem map CAP-017 (P2)→(P1), priority P1/P2→P1; Batch 11 header (P1/P2)→(P1); BC-2.15.001/002/003 Wave 2→Wave 1. TD-VSDD-060 sweep: Batch 20 BC-2.23.005 DI column DI-009,DI-014→DI-014,DI-015 (same burst-234 re-anchor not propagated to batch table)."
   - "2.43 (burst-233/F-P133-02/2026-07-22): BC-2.16.001/002/003 Wave-1 promotion per D23 — SS.16 priority P2→P1; frontmatter p1_count 72→75, p2_count 6→3; Summary table P1 72→75, P2 6→3; Full BC table rows P2→Post-v1→P1/Wave 1."
   - "2.42 (D23/2026-07-22): D21 retroactive registration (Batches 16-18, +21 BCs); D23 Integration (Batches 19-20, +13 BCs); BC-2.15.001/002/003 promoted P2→P1; SS.18..23 added to subsystem map; counts 95→129."
   - "2.41 (D21/2026-07-20): D21 ADR-010 v1.1 error-model integration."
@@ -61,7 +62,7 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | SS.12 | CAP-014 | ferrochain-server | P1 |
 | SS.13 | CAP-015 | ferrochain-graph/sandbox | P1 |
 | SS.14 | CAP-016 | ferrochain-core | P0 |
-| SS.15 | CAP-017 (P2), CAP-020 (P1) | ferrochain-memory | P1/P2 |
+| SS.15 | CAP-017 (P1), CAP-020 (P1) | ferrochain-memory | P1 |
 | SS.16 | CAP-018 | ferrochain-core | P1 |
 | SS.17 | CAP-019 | all (formal verification) | P2 |
 | SS.18 | CAP-022, CAP-023 | ferrochain-prompts | P1 |
@@ -124,14 +125,15 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | DI-006 | BC-2.13.001, BC-2.13.002, BC-2.13.003, BC-2.13.006, BC-2.13.007 |
 | DI-007 | BC-2.13.004, BC-2.13.005, BC-2.17.001 |
 | DI-008 | BC-2.01.001, BC-2.01.002, BC-2.04.008, BC-2.08.006, BC-2.08.010, BC-2.08.013, BC-2.08.014, BC-2.09.006, BC-2.09.007, BC-2.13.007, BC-2.14.001, BC-2.14.003, BC-2.15.004, BC-2.15.005, BC-2.15.006, BC-2.18.001, BC-2.18.002, BC-2.18.003, BC-2.18.004, BC-2.18.005, BC-2.19.001, BC-2.19.002, BC-2.19.003, BC-2.19.004, BC-2.19.005, BC-2.19.006, BC-2.20.001, BC-2.20.003, BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004, BC-2.22.001, BC-2.22.002, BC-2.22.003 |
-| DI-009 | BC-2.08.007, BC-2.08.014, BC-2.14.004, BC-2.22.002, BC-2.22.003, BC-2.23.005 |
+| DI-009 | BC-2.08.007, BC-2.08.014, BC-2.14.004, BC-2.22.002, BC-2.22.003 |
 | DI-010 | BC-2.08.014, BC-2.09.007, BC-2.13.007, BC-2.14.005, BC-2.19.002, BC-2.22.002 |
 | DI-011 | BC-2.06.001, BC-2.06.003, BC-2.08.001, BC-2.12.007 |
 | DI-012 | BC-2.09.003, BC-2.11.001, BC-2.11.002, BC-2.11.003, BC-2.11.004, BC-2.11.005, BC-2.11.006, BC-2.15.005, BC-2.20.001, BC-2.20.002 |
 | DI-013 | BC-2.12.005 |
 | DI-014 | BC-2.04.008, BC-2.08.004, BC-2.08.007, BC-2.08.013, BC-2.08.014, BC-2.09.004, BC-2.09.005, BC-2.09.006, BC-2.09.007, BC-2.14.001, BC-2.14.006, BC-2.15.004, BC-2.15.005, BC-2.15.006, BC-2.18.001, BC-2.18.004, BC-2.18.005, BC-2.19.005, BC-2.19.006, BC-2.20.001, BC-2.20.002, BC-2.21.003, BC-2.21.004, BC-2.22.001, BC-2.22.002, BC-2.22.003, BC-2.05.007, BC-2.05.008, BC-2.06.004, BC-2.06.005, BC-2.06.006, BC-2.10.005, BC-2.10.006, BC-2.23.001, BC-2.23.002, BC-2.23.003, BC-2.23.004, BC-2.23.005, BC-2.23.006 |
+| DI-015 | BC-2.23.005, BC-2.13.002 |
 
-**Coverage: 14/14 DIs enforced. Zero orphan invariants.**
+**Coverage: 15/15 DIs enforced. Zero orphan invariants.**
 
 ---
 
@@ -279,7 +281,7 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | BC-2.12.002 | Assistant resource CRUD (named agent config with graph reference) | P1 | CAP-014 | — | Wave 1 |
 | BC-2.12.003 | Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/cancelled/summary_halt; interrupted is pausable/resumable) | P1 | CAP-014 | — | Wave 1 |
 
-### Batch 11 — Server Cont. + Long-Horizon Memory (P1/P2)
+### Batch 11 — Server Cont. + Long-Horizon Memory (P1)
 *7 BCs — SS.12 cont. + SS.15*
 
 | BC ID | Title | Priority | CAP | DI | Wave |
@@ -288,9 +290,9 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | BC-2.12.005 | SecurityConfig::default() denies CORS; debug route gated on explicit opt-in key (NE-14) | P1 | CAP-014 | DI-013 | Wave 1 |
 | BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore trait seams with durable backends (NE-08) | P1 | CAP-014 | — | Wave 1 |
 | BC-2.12.007 | Streaming endpoint and unary endpoint drive same graph engine, same final answer | P1 | CAP-014 | DI-011 | Wave 1 |
-| BC-2.15.001 | KV and vector memory persistence across threads (not per-checkpoint) | P1 | CAP-017 | — | Wave 2 |
-| BC-2.15.002 | User/app/session tier isolation — user-private does not bleed across scopes | P1 | CAP-017 | — | Wave 2 |
-| BC-2.15.003 | GDPR erasure removes all traces from all memory tiers | P1 | CAP-017 | — | Wave 2 |
+| BC-2.15.001 | KV and vector memory persistence across threads (not per-checkpoint) | P1 | CAP-017 | — | Wave 1 |
+| BC-2.15.002 | User/app/session tier isolation — user-private does not bleed across scopes | P1 | CAP-017 | — | Wave 1 |
+| BC-2.15.003 | GDPR erasure removes all traces from all memory tiers | P1 | CAP-017 | — | Wave 1 |
 
 ### Batch 12 — Tool Retry + Formal Verification (P2)
 *5 BCs — SS.16 + SS.17*
@@ -426,7 +428,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 | BC-2.23.002 | WriteFileTool — PathGuard-Confined Atomic Write; High ActionRisk; No Auto-Retry; E-TOOLS-001 | P1 | CAP-036 | DI-014 | Wave 1 |
 | BC-2.23.003 | EditFileTool — Exact-Match String Replace; E-TOOLS-003 on No-Match; Opt-In Fuzzy Fallback; Conditional Retry Safe | P1 | CAP-036 | DI-014 | Wave 1 |
 | BC-2.23.004 | ListDirTool — PathGuard-Confined Directory Listing; ReadOnly; E-TOOLS-001; DirEntry Struct | P1 | CAP-036 | DI-014 | Wave 1 |
-| BC-2.23.005 | BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; 256 KiB Output Cap; 30 s Timeout (VP-013 Kani Seed) | P1 | CAP-037 | DI-009, DI-014 | Wave 1 |
+| BC-2.23.005 | BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; 256 KiB Output Cap; 30 s Timeout (VP-013 Kani Seed) | P1 | CAP-037 | DI-014, DI-015 | Wave 1 |
 | BC-2.23.006 | GrepTool — In-Process Regex Search; Linear-Time `regex` Crate; max_results 100 Cap; PathGuard Scope; E-TOOLS-001/006 | P1 | CAP-038 | DI-014 | Wave 1 |
 
 ---

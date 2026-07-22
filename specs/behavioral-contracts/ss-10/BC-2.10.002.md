@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "84fbcbe"
+input-hash: "1247d9c"
 extracted_from: null
 modified: []
 deprecated: null

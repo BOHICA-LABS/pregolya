@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "2.3"
+version: "2.4"
 status: active
 producer: state-manager
 timestamp: 2026-07-22T00:00:00Z
@@ -152,7 +152,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore Trait Seams with Durable Backends (NE-08) | CAP-014 | NE-08 | | P1 | | | ss-12/BC-2.12.006.md |
 | BC-2.12.007 | Streaming Endpoint and Unary Endpoint Drive Same Graph Engine, Same Final Answer | CAP-014 | NE-13 | DI-011 | P1 | | | ss-12/BC-2.12.007.md |
 | BC-2.13.001 | Enforcing Sandbox Backend (WASM or Container) Is Default (NE-01) | CAP-015 | NE-01 | DI-006 | P1 | | | ss-13/BC-2.13.001.md |
-| BC-2.13.002 | Process Backend Requires Explicit Opt-In and Emits Loud Runtime Warning | CAP-015 | | DI-006 | P1 | | | ss-13/BC-2.13.002.md |
+| BC-2.13.002 | Process Backend Requires Explicit Opt-In and Emits Loud Runtime Warning | CAP-015 | | DI-006,DI-015 | P1 | | | ss-13/BC-2.13.002.md |
 | BC-2.13.003 | Strict Policy + Non-Enforcing Backend Returns Err(PolicyNotEnforceable) | CAP-015 | | DI-006 | P1 | | | ss-13/BC-2.13.003.md |
 | BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root at Access Time (NE-02) — Kani VP Seed | CAP-015 | NE-02 | DI-007 | P1 | | **VP** | ss-13/BC-2.13.004.md |
 | BC-2.13.005 | Symlink That Escapes Workspace Root Returns Err(WorkspaceEscape) | CAP-015 | NE-02 | DI-007 | P1 | | | ss-13/BC-2.13.005.md |
@@ -217,6 +217,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.4 | 2026-07-22 | burst-237/F-P137-01: BC-2.13.002 DI column DI-006 → DI-006,DI-015. Propagates burst-235 F-P135-05 di_anchors addition (co-enforcer of DI-015 Subprocess Execution Timeout; kill_on_drop PC-6+INV-6) to the index row — BC file frontmatter was correct since burst-235 but index was not swept. DI-anchor reconcile sweep: no other drift found (BC-2.20.003 and BC-2.18.004/005 apparent discrepancies confirmed as awk false-positives from \\| in title). | burst-237 F-P137-01 |
 | 2.3 | 2026-07-22 | burst-235/F-P135-03: BC-2.23.005 DI column DI-009,DI-014 → DI-014,DI-015. Propagates burst-234 F-P134-06 re-anchor (DI-009→DI-015 adjudication) to the index row — BC file frontmatter was correct since burst-234 but index was not swept. | burst-235 F-P135-03 |
 | 2.2 | 2026-07-22 | burst-233/F-P133-02: BC-2.16.001/002/003 Wave-1 promotion per D23 — priority P2→P1, wave 2→1; header 72 P1/6 P2 → 75 P1/3 P2; Full Catalog P2→P1 for all three rows. VP-013 Security Anchor corrected: ADR-018 Decision 6 → ADR-020 Decision 3 (BashTool non-lowerable Medium risk floor is ADR-020 Decision 3, not ADR-018). | burst-233 F-P133-02 |
 | 2.1 | 2026-07-22 | D23 INTEGRATE burst-231: header 116→129 BCs; P1 56→72, P2 9→6 (BC-2.15.001/002/003 promoted P2→P1); VP Seed 8→11 (+VP-011→BC-2.05.007, VP-012→BC-2.10.005, VP-013→BC-2.23.005); VP-INDEX 10→13; subsection groups 22→23 (+SS-23 First-Party Tools); Full Catalog +13 rows (BC-2.05.007/008, BC-2.06.004/005/006, BC-2.10.005/006, BC-2.23.001–006). | D23 burst-231 |

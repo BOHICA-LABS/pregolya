@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.11"
+version: "1.12"
 status: active
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.12 (burst-237/F-P137-01/2026-07-22): BC-2.13.002 DI column DI-006 → DI-006, DI-015 in §2.13 body table and §7 RTM. Propagates burst-235 F-P135-05 di_anchors co-enforcement (DI-015 Subprocess Execution Timeout) to prd.md — BC file frontmatter was correct since burst-235 but prd.md DI columns were not swept."
   - "v1.11 (burst-235/F-P135/2026-07-22): RTM and §2 reconciliation — 13 D23 BC rows propagated from BC frontmatter source-of-truth. Gate #28 close. (1) F-P135-01: §7 RTM Source(L2) CAP column fixed for all 13 D23 rows (CAP-006/007/012/034–038 placeholder → authoritative CAP-034/035/036/037/038 per BC frontmatter); BC-2.10.005 Module corrected ferrochain-graph → ferrochain-core (VP-012 core-budget crate: ferrochain-core confirmed). (2) F-P135-02: §2.05 DI DI-003→DI-014 (BC-2.05.007/008); §2.06 DI DI-011→DI-014 (BC-2.06.004/005/006); §2.10 DI —→DI-014 (BC-2.10.005) and DI-002→DI-014 (BC-2.10.006); §2.23 DI DI-008→DI-014 (BC-2.23.001–004,006) and DI-008→DI-014,DI-015 (BC-2.23.005); §7 RTM DI column corrected to match. DI-008 citation removed from all SS-23 RTM rows — no SS-23 BC anchors DI-008 per frontmatter (adjudicated unbacked; PRD-only citation removed). (3) F-P135-04: §2.15 header P1/P2→P1; BC-2.15.001/002/003 rows P2→P1 (D23 CAP-017 promotion swept §7 RTM + BC-INDEX but not §2.15 body — now reconciled). Note: F-P135-03 (BC-INDEX BC-2.23.005 DI-009,DI-014→DI-014,DI-015) applied to BC-INDEX.md v2.2→v2.3 in same burst."
   - "v1.10 (burst-233/F-P133-02/2026-07-22): BC-2.16.001/002/003 Wave-1 promotion per D23 — §2.16 header P2→P1; BC table rows P2→P1; §7 RTM rows P2→P1; §7 totals 72 P1/6 P2 → 75 P1/3 P2. §5 TOOLS component range row updated to list E-TOOLS-008 (FileIoError) and E-TOOLS-009 (InvalidRegexPattern). VP-013 Security Anchor corrected: ADR-018 Decision 6 → ADR-020 Decision 3."
   - "v1.9 (D23/2026-07-22): D23 First-Party Tools + Per-Tool Approval + Rolling Compaction expansion. (1) §2: BC-2.05.007/008 added to §2.05 (PreToolCallHook dispatch + skip-hook-on-resume); BC-2.06.004/005/006 added to §2.06 (StreamEvents 13/14/15); BC-2.10.005/006 added to §2.10 (CompactionTrigger config, compaction execution); §2.23 added (SS-23 First-Party Tool Library — 6 tool BCs). (2) §3: PreToolCallHook + CompactionPolicy traits added; first-party tools bullet. (3) §5: E-TOOLS-001–099 range row added (TOOLS component). (4) §5b: BC file count 116→129. (5) §7 RTM: BC-2.15.001/002/003 P2→P1 (CAP-017 wave promotion); +13 rows; totals updated to 129 (51 P0 / 72 P1 / 6 P2). D23 added to decisions list."
@@ -305,7 +306,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
 | BC-2.13.001 | Enforcing sandbox backend (WASM or container) is default | P1 | DI-006 | ss-13/BC-2.13.001.md |
-| BC-2.13.002 | Process backend requires explicit opt-in and emits loud runtime warning | P1 | DI-006 | ss-13/BC-2.13.002.md |
+| BC-2.13.002 | Process backend requires explicit opt-in and emits loud runtime warning | P1 | DI-006, DI-015 | ss-13/BC-2.13.002.md |
 | BC-2.13.003 | Strict policy + non-enforcing backend returns Err(PolicyNotEnforceable) | P1 | DI-006 | ss-13/BC-2.13.003.md |
 | BC-2.13.004 | All workspace file ops call canonicalize_beneath_root at access time | P1 | DI-007, NE-02 | ss-13/BC-2.13.004.md |
 | BC-2.13.005 | Symlink that escapes workspace root returns Err(WorkspaceEscape) | P1 | DI-007, NE-02 | ss-13/BC-2.13.005.md |
@@ -660,7 +661,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.12.006 | CAP-014, NE-08 | ferrochain-server | P1 | U, I |
 | BC-2.12.007 | CAP-014, DI-011, NE-13 | ferrochain-server | P1 | I, S |
 | BC-2.13.001 | CAP-015, DI-006, NE-01 | ferrochain-sandbox | P1 | U, I |
-| BC-2.13.002 | CAP-015, DI-006 | ferrochain-sandbox | P1 | U |
+| BC-2.13.002 | CAP-015, DI-006, DI-015 | ferrochain-sandbox | P1 | U |
 | BC-2.13.003 | CAP-015, DI-006 | ferrochain-sandbox | P1 | U |
 | BC-2.13.004 | CAP-015, DI-007, NE-02 | ferrochain-sandbox | P1 | U, P, K |
 | BC-2.13.005 | CAP-015, DI-007, NE-02 | ferrochain-sandbox | P1 | U |

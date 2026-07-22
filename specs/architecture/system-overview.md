@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "0644e23"
+input-hash: "fe379f2"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D9, D11, D13, D17]
 changelog:

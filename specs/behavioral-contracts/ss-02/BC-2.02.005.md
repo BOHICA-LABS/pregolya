@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "9a0ffec"
+input-hash: "cf417c2"
 extracted_from: null
 modified: []
 deprecated: null

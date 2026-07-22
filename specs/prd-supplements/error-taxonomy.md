@@ -43,7 +43,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "8b95785"
+input-hash: "77e0a14"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer]
 ---

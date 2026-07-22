@@ -4351,3 +4351,54 @@ Final: TOTAL=174 MATCH=174 STALE=0.
 - 3-CLEAN streak: 0/3 (P1D-136 NOT CLEAN)
 - Next: adversary cascade P1D-137 on FROZEN HEAD (D21+D23 expanded perimeter)
 
+
+---
+
+## Burst 237 — Fix-Burst for P1D-137 (F-P137-01/02/03) — COMPLETE
+
+**Date:** 2026-07-22
+**Agents:** state-manager (Part A: BC-INDEX + prd.md + hash sweep + STATE.md + lessons.md), product-owner (Part B: bc-authoring-plan)
+**Pass:** P1D-137 (3 MED findings — derived-table DI/wave propagation residue; census CLEAN)
+
+### Findings Closed
+
+| Finding | Severity | Fix |
+|---------|----------|-----|
+| F-P137-01 | MED | BC-INDEX.md v2.3→v2.4: BC-2.13.002 DI column `DI-006` → `DI-006,DI-015`; DI-anchor reconcile sweep (no other drift); prd.md v1.11→v1.12: §2.13 body + §7 RTM DI-006→DI-006,DI-015 |
+| F-P137-02 | MED | bc-authoring-plan.md v2.43→v2.44: DI-015 row added (BC-2.23.005 primary + BC-2.13.002 co-enforcer); DI-009 row corrected (BC-2.23.005 removed per burst-234 F-P134-06); coverage 14/14→15/15 |
+| F-P137-03 | MED | bc-authoring-plan.md v2.44: CAP-017 SS.15 map P2→P1; Batch 11 header (P1/P2)→(P1); BC-2.15.001/002/003 Wave 2→Wave 1; Batch 20 BC-2.23.005 DI cell DI-009,DI-014→DI-014,DI-015 |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `specs/behavioral-contracts/BC-INDEX.md` | v2.3→v2.4: BC-2.13.002 DI column + changelog |
+| `specs/prd.md` | v1.11→v1.12: §2.13 + §7 RTM BC-2.13.002 DI column |
+| `specs/prd-supplements/bc-authoring-plan.md` | v2.43→v2.44: DI table + wave/priority corrections |
+| 88 spec files (BC files, supplements, architecture) | input-hash cascade (D18-P89-A/P90-A sweep) |
+| `cycles/v1.0.0-greenfield/lessons.md` | L-025 codified: bc-authoring-plan DI table + BC-INDEX DI column in mandatory post-burst sweep |
+| `STATE.md` | v3.78→3.79: P1D-137 + burst-237 recorded |
+
+### Hash Sweep Summary
+
+Triggered by: prd.md v1.11→v1.12 (DI column corrections) — cascaded to all files with prd.md in inputs:.
+
+| Pass | Files Updated | STALE After |
+|------|---------------|-------------|
+| 1 | 81 | 6 |
+| 2 | 7 | 0 |
+| 3 (verify) | 0 | 0 |
+| **Total** | **88** | **0** |
+
+Final: TOTAL=174 MATCH=174 STALE=0.
+
+### Convergence After Burst
+
+- 137 adversary passes, 137 fix bursts (128 pre-D21 + 9 post-D21+D23)
+- Trajectory tail: →7→6→6→3 (decaying sharply — census clean, only derived-table residue)
+- 3-CLEAN streak: 0/3 (P1D-137 NOT CLEAN — 3 MED derived-table only)
+- Next: adversary cascade P1D-138 on FROZEN HEAD (D21+D23 expanded perimeter)
+
+### Archived from STATE.md Current Phase Steps
+
+| Burst 232 — D23 VP layer + ADR-010 v1.3 + PO micro-fix COMPLETE: VP-011/012/013 v1.0 minted; VP-INDEX v1.5 (13 VPs); ARCH-INDEX v1.8; verification-architecture v2.1; verification-coverage-matrix v2.0; ADR-010 v1.3; BC-2.23.001/003/005 v1.1; hash sweep STALE=0; burst-227 row archived | architect + product-owner + state-manager | COMPLETE | VP-011.md v1.0 (Kani P0, graph::hitl). VP-012.md v1.0 (Kani P1, core-budget). VP-013.md v1.0 (Kani P1, tools-shell). VP-INDEX v1.5 (13 VPs). ARCH-INDEX v1.8. verification-architecture v2.1. verification-coverage-matrix v2.0. ADR-010 v1.3 (TOOLS component 17). BC-2.23.001/003/005 v1.1 (Category→VAL). Hash sweep STALE=0 (specs/ 174 MATCH=174). Burst 232. |
