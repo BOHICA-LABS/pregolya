@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "ee6bd1e"
+input-hash: "fc9b5e5"
 traces_to: STATE.md
 ---
 
@@ -1112,3 +1112,24 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### DECISION DELTA: D-23 architecture layer COMPLETE burst 229 (ADR-018 per-tool HITL hook, ADR-019 rolling compaction, ADR-020 first-party tools, SS-23, roster 21, universe 53).
 ### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-229 commit.
 ### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 229 | Phase 1 IN PROGRESS — D23 arch COMPLETE, BA CAP layer NEXT | NEXT: burst 230 BA D23 CAP layer
+
+## Archived Checkpoint — Burst 230 (archived at burst 231)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 REOPENED by D21+D-23 scope expansion. D23 arch+dep-pins+CAP layer COMPLETE (bursts 229-230): ADR-018/019/020 v1.1, SS-23, roster 21, universe 53, SS-15/SS-16 Wave-1, CAP-034..038, CAP-017/018 Wave-1, census 38, L2-INDEX v1.8. 132 passes/132 fix bursts. 0/3 on D23 perimeter. NEXT: burst 231 PO BC layer → D-133 → 3/3 CLEAN → Phase 1 HUMAN GATE."
+### COMMITTED (through burst 230):
+- Bursts 220-225 (archived): SS-18..22 BCs; P1D-129/130 fix-bursts; VP-006..010; ADR-014/015/016; error-taxonomy v1.28-29; test-vectors v2.1; observability.md v1.0; interface-definitions v2.43.
+- Burst 226: P1D-131 fix-burst (7 closed); ADR-015 v1.3 TrustLevel; BC-INDEX v2.0; 10 BC files; error-taxonomy v1.30; interface-definitions v2.44.
+- Burst 227: P1D-132 fix-burst (8 closed); ADR-015 v1.4 MessageListVar; VP-006 v1.4; verification-architecture v2.0; 5 BC fixes; prd v1.8; D22 recorded.
+- Burst 228: Domain E brief v1.0 (15 COVERED/5 DEGRADED/0 HOLDOUT-FORCED); D-23 Full-Parity Expansion APPROVED; R13 added; hash census STALE=0.
+- Burst 229: D23 arch layer COMPLETE: ADR-018/019/020, SS-23, roster 21, universe 53, SS-15/SS-16 Wave-1; hash cascade STALE=0.
+- Burst 230 (this commit): D23 dep-pins patch (ADR-020 v1.1, similar=3.1.1, regex=1.13.1) + BA CAP layer (CAP-034..038, CAP-017/018 Wave-1, L2-INDEX v1.8, census 38); hash sweep STALE=0 (158 specs + cycles).
+### NEXT-ACTIONS (exact, ordered):
+1. Burst 231 (PO): SS-23 ×6 tool BCs (ReadFileTool/WriteFileTool/EditFileTool/ListDirTool/BashTool/GrepTool); BC-2.05.007 (PreToolCallHook dispatch) + BC-2.05.008 (skip-hook-on-resume); BC-2.06.004..006 (StreamEvents 13/14/15); BC-2.08.010 (action_risk); BC-2.10.005/006 (CompactionTrigger + compaction execution); BC-2.15.001/002/003 P2→P1; BC-2.16.001 retry-approval ordering; E-TOOLS-001..007 taxonomy; supplements.
+2. VP-011..013 (D23 candidate anchors): per-tool HITL hook VP, compaction VP, tool-library safety VP.
+3. Adversary pass D-133 on frozen HEAD after PO BC authoring complete.
+4. After 3/3 CLEAN(strict): /vsdd-factory:check-input-drift → consistency audit → Phase 1 HUMAN GATE.
+### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
+### DECISION DELTA: D23 dep-validation COMPLETE burst 230 (ADR-020 v1.1: similar=3.1.1, regex=1.13.1, fuzzy-matcher REJECTED). BA CAP layer COMPLETE burst 230 (CAP-034..038; CAP-017/018 Wave-1 promotion).
+### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-230 commit.
+### WRAP METADATA: Date 2026-07-22 | Cycle v1.0.0-greenfield | Burst 230 | Phase 1 IN PROGRESS — D23 arch+dep-pins+CAP COMPLETE, PO BC layer NEXT | NEXT: burst 231 PO BC layer

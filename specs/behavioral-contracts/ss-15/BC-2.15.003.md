@@ -2,21 +2,22 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.003
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 origin: greenfield
-priority: P2
+priority: P1
 subsystem: SS-15
 capability: CAP-017
-wave: 2
+wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-memory per module-decomposition.md v1.10."
   - "1.2 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'memory.gdpr_unattributed_session_entries' to EC-004 WARN emission per observability census (SAP-1). EC-004 updated with structured event_type and fields."
+  - "1.3 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/entities-server.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "0b34df9"
+input-hash: "6fcd240"
 extracted_from: null
 modified: []
 deprecated: null

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "ee6bd1e"
+input-hash: "fc9b5e5"
 traces_to: STATE.md
 ---
 
@@ -3991,3 +3991,73 @@ Sweep: `compute-input-hash --scan .factory/specs/ --update` (3 passes to converg
 - Phase 1 status: D23 arch + dep-validation + CAP layer COMPLETE; 0/3 on D23 perimeter
 - Trajectory tail: →12→9→7→8→[D-23 expansion; 0/3 RESET; arch + CAP layer complete]
 - NEXT: burst 231 PO D23 BC layer (SS-23 ×6 tool BCs + SS-05/06/08/10/15/16 extensions + E-TOOLS-001..007 + supplements) → VP-011..013 → adversary pass D-133 → cascade toward 3/3 CLEAN(strict) → check-input-drift → Phase 1 HUMAN GATE
+
+---
+
+## Burst 231 — D23 BC Layer COMPLETE
+
+**Date:** 2026-07-22
+**Agents:** product-owner (sub-burst 231a) + state-manager (sub-burst 231b)
+**Status:** COMPLETE
+
+### Sub-burst 231a — Product-Owner: D23 BC Authoring
+
+Product-owner authored the full D23 behavioral-contract layer covering first-party tools (SS-23), per-tool HITL hook extensions (SS-05), new StreamEvent variants 13/14/15 (SS-06), action_risk macro parameter (SS-08), rolling compaction BCs (SS-10), and CAP-017 Wave-1 promotion amendments (SS-15/SS-16).
+
+**New BC files (13, all v1.0):**
+- `.factory/specs/behavioral-contracts/ss-23/BC-2.23.001.md` — ReadFileTool execute contract (first-party file read)
+- `.factory/specs/behavioral-contracts/ss-23/BC-2.23.002.md` — WriteFileTool execute contract (first-party file write)
+- `.factory/specs/behavioral-contracts/ss-23/BC-2.23.003.md` — EditFileTool execute contract (first-party file patch)
+- `.factory/specs/behavioral-contracts/ss-23/BC-2.23.004.md` — ListDirTool execute contract (first-party directory listing)
+- `.factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md` — BashTool execute contract (first-party shell execution; VP seed → VP-013)
+- `.factory/specs/behavioral-contracts/ss-23/BC-2.23.006.md` — GrepTool execute contract (first-party pattern search)
+- `.factory/specs/behavioral-contracts/ss-05/BC-2.05.007.md` — PreToolCallHook dispatch contract (per-tool HITL; VP seed → VP-011)
+- `.factory/specs/behavioral-contracts/ss-05/BC-2.05.008.md` — skip-hook-on-resume invariant (resume semantics for HITL hook)
+- `.factory/specs/behavioral-contracts/ss-06/BC-2.06.004.md` — StreamEvent variant 13: PreToolCallDecision
+- `.factory/specs/behavioral-contracts/ss-06/BC-2.06.005.md` — StreamEvent variant 14: CompactionApplied
+- `.factory/specs/behavioral-contracts/ss-06/BC-2.06.006.md` — StreamEvent variant 15: HitlApprovalRequested
+- `.factory/specs/behavioral-contracts/ss-10/BC-2.10.005.md` — CompactionTrigger configuration contract (VP seed → VP-012)
+- `.factory/specs/behavioral-contracts/ss-10/BC-2.10.006.md` — Compaction execution contract (ConversationSnapshot + CompactionSummary)
+
+**Amended BCs (6):**
+- `BC-2.06.001.md` — StreamEvents enum header: 12→15 variants (adds PreToolCallDecision/CompactionApplied/HitlApprovalRequested)
+- `BC-2.08.010.md` — action_risk macro parameter: ADR-018 Decision 5 alignment
+- `BC-2.15.001.md` — CAP-017 long-horizon memory: P2/Wave-2 → P1/Wave-1 (D23 promotion; frontmatter wave field verified)
+- `BC-2.15.002.md` — CAP-017 related BC: P2/Wave-2 → P1/Wave-1 (frontmatter verified)
+- `BC-2.15.003.md` — CAP-017 related BC: P2/Wave-2 → P1/Wave-1 (frontmatter verified)
+- `BC-2.16.001.md` — retry-approval ordering invariant (ADR-018 Decision 6; CAP-018 Wave-1)
+
+**Supplements updated:**
+- `error-taxonomy.md` v1.30 → v1.31: E-TOOLS-001..007 minted (7 new codes; TOOLS component #17 = 17 codes; census 98→105 = 43+17+45; ADR-010 amendment flag recorded for SS-23 TOOLS namespace)
+- `interface-definitions.md` v2.45 → v2.46: PreToolCallHook/PreToolDecision/ToolCallPreview/ToolApprovalRequest surfaces; CompactionTrigger/CompactionPolicy/ConversationSnapshot/CompactionSummary surfaces; first-party tool execute() signatures; StreamEvent 15-variant enum updated
+- `test-vectors.md` v2.1 → v2.2: D23 test vectors for SS-23 ×6 tools + SS-05 HITL dispatch + SS-06 StreamEvents 13/14/15 + SS-10 compaction; grand total 609→669 TVs
+- `api-surface.md` v1.6 → v1.7: Component 17 (ferrochain-tools) added; gate 18 total
+- `bc-authoring-plan.md` → v2.42: SS-23 band added (23 groups; BP-23 authoring rules); VP-011..013 seed inventory updated
+- `prd.md` v1.8 → v1.9: §2 SS-23 subsection + BC-2.05.007/008 + BC-2.06.004/005/006 + BC-2.10.005/006 added; §3 PreToolCallHook + CompactionPolicy traits; §5 E-TOOLS-001–099 range row; §5b count 116→129; §7 RTM +13 rows (BC-2.15.001/002/003 P2→P1; totals 129 = 51 P0 / 72 P1 / 6 P2)
+- `BC-INDEX.md` v2.0 → v2.1: 129 BCs; 23 groups; VP seeds 8→11 (+VP-011/VP-012/VP-013 seeds); Full Catalog +13 rows (SS-23 ×6 + SS-05 ×2 + SS-06 ×3 + SS-10 ×2)
+
+### Sub-burst 231b — State-Manager: Hash Sweep + STATE.md
+
+**Hash sweep (D18-P89-A compliance):**
+
+- specs/ pass 1 (--scan --update): TOTAL=171 MATCH=90 STALE=81 → UPDATED=82
+- specs/ pass 2 (--scan --update): TOTAL=171 MATCH=164 STALE=7 → UPDATED=7
+- specs/ verify: TOTAL=171 MATCH=171 STALE=0 — PASS
+- cycles/ pass 1 (--scan --update): TOTAL=54 MATCH=8 STALE=10 → UPDATED=10
+- cycles/ verify: TOTAL=54 MATCH=18 STALE=0 — PASS
+
+**Defensive count-propagation sweep** (S-7.02): old count "116" greps across STATE.md, ARCH-INDEX.md, BC-INDEX.md, prd.md — live references updated (Historical Content rows in STATE.md). Historical burst-row references (burst-228 hash census TOTAL=116) are immutable audit-trail; intentionally not updated.
+
+**STATE.md** v3.71 → v3.72: current_step updated; frontmatter + Last Updated bumped; Phase 1 Progress row gate text updated; burst-231 row added to Current Phase Steps; burst-226 row archived; Historical Content BC row 116→129 + supplement versions; Session Resume Checkpoint replaced; Concurrent Cycles updated.
+
+### Archived Current Phase Steps Row (displaced from STATE.md at burst 231)
+
+| Burst 226 — P1D-131 fix-burst COMPLETE (all 7 closed); TrustLevel enum minted (ADR-015 v1.3); E-CORE-008/E-VS-005 minted; census 98; observability.md v1.1 re-census; BC-INDEX v2.0; hash sweep STALE→0 (5 passes+ARCH-INDEX); burst-222 row archived | architect + BA + PO + state-manager | COMPLETE | ADR-015 v1.3 (F-P131-05 CRIT: TrustLevel enum Untrusted/UserInput/Trusted; ProvenanceTag stays SS-11; Decision 4 universal strict-undefined). ADR-014 v1.5 (F-P131-01 rag_ingress severity bifurcation; E-CORE-008; F-P131-07 fail-safe filter default; E-VS-005). VP-006 v1.3 (TrustLevel harness). verification-architecture v1.9; purity-boundary-map v1.9; module-decomposition v1.14. entities-graph v1.5 (TrustLevel entity; PromptValue highest_trust_level); entities-server v1.12; ubiquitous-language-core v1.5 (+TrustLevel, 16 D21 terms); ubiquitous-language-server v1.4; capabilities-p1-p2 v1.6 (CAP-022 universal strict-undefined; CAP-023 TrustLevel); L2-INDEX v1.7. BC-INDEX v2.0. BC-2.18.004 v1.2/BC-2.18.002 v1.1 (TrustLevel migration). BC-2.09.003 v1.2/BC-2.11.006 v1.2 (canonical ProvenanceTag+emission). BC-2.20.002 v1.3 (E-CORE-008 severity-bifurcated PC2). BC-2.21.004 v1.2 (E-VS-005 fail-safe INV-3). BC-2.13.002 v1.1/BC-2.12.006 v1.3/BC-2.15.003 v1.2/BC-2.12.005 v1.5 (event_type catalog re-census). error-taxonomy v1.30 (E-CORE-008+E-VS-005; census 98=43+17+38). interface-definitions v2.44. observability.md v1.1 (6 active+1 retired; re-census). nfr-catalog v1.3 (NFR-012/013/014 D21 coverage; NFR-009 extension). prd v1.7. Hash sweep STALE→0 (5 passes). Burst 226. |
+
+### Convergence Status After Burst 231
+
+- Phase 1d passes: 132 (128 pre-D21 + 4 post-D21 expanded-perimeter passes; NOT CLEAN at last pass)
+- Fix bursts: 132 total
+- Phase 1 status: D23 BC layer COMPLETE (burst 231); 0/3 on D23 perimeter
+- Trajectory tail: →12→9→7→8→[D-23 expansion; 0/3 RESET; arch + CAP + BC layers complete]
+- NEXT: burst 232 architect (ADR-010 v1.3 component axis 16→17 + ARCH-INDEX band ranges/VP-seeded status + VP-011..013 minting + VP-INDEX 10→13 + verification docs) → adversary pass P1D-133 on full D21+D23 perimeter → cascade toward 3/3 CLEAN(strict) → check-input-drift → Phase 1 HUMAN GATE

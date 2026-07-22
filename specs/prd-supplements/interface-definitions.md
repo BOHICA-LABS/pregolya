@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.45"
+version: "2.46"
 status: active
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1d
 changelog:
+  - "2.46 (D23/2026-07-22): Add D23 API surfaces. (1) StreamEvent enum 12→15 variants: +ToolApprovalRequest (event 13, PendingHumanApproval interrupt signal per ADR-018 Decision 5), +ToolApprovalResolved (event 14, resume decision applied), +CompactionEvent (event 15, post-compaction durable write per ADR-019 Decision 4) — causal ordering diagram updated. BC-2.06.004/005/006 anchor refs added to §StreamEvent. (2) §PreToolCallHook section added: ActionRisk enum (4 tiers: ReadOnly/Low/Medium/High), ToolCallPreview struct (tool_name, tool_args, action_risk: Option<ActionRisk>), PreToolDecision enum (4 variants: Approve/Deny/Edit/PendingHumanApproval), PreToolCallHook trait; source ADR-018 Decision 2–6. (3) §Compaction section added: CompactionTrigger enum (4 variants: Disabled/OnWatermark/OnMessageCount/OnTokenCount), ConversationSnapshot struct, CompactionSummary struct, CompactionPolicy trait; source ADR-019 Decision 1–5. (4) §First-Party Tools section added: PathGuard struct (E-TOOLS-001 sandbox confinement); ReadFileTool/WriteFileTool/EditFileTool/CreateFileTool/BashTool/GrepTool comment anchors. (5) /stream endpoint row: added tool_approval_request, tool_approval_resolved, compaction_event event mentions (D23/ADR-018/ADR-019). (6) Blanket omission annotation: E-TOOLS-* 7 new codes added; census 98→105 (43 HTTP + 17 individual + 45 blanket)."
   - "2.45 (burst-227/F-P132-02/2026-07-21): §ChatPromptTemplate — complete BC-2.18.x anchor swap from burst-226 partial-propagation. (1) SlotTrustPolicy doc anchor: BC-2.18.003 PC1-PC2 (MessagesPlaceholder!) → BC-2.18.002 PC4 (slot_trust_policy field) + BC-2.18.005 PC1-PC5 (construction-time policy guard). (2) from_messages anchor: BC-2.18.001 PC1 (PromptTemplate construction!) → BC-2.18.002 PC1 (ChatPromptTemplate construction). (3) PromptValue struct anchor: BC-2.18.001 PC3 (input_variables()!) → BC-2.18.002 PC2 (PromptValue.messages). (4) MessageProvenance struct anchor: BC-2.18.003 PC2-PC3 (MessagesPlaceholder!) → BC-2.18.002 PC3-PC4 (highest_trust_level + slot_trust_policy). (5) Footer: BC-2.18.001 description corrected to PromptTemplate F-String scope; BC-2.18.003 description corrected to MessagesPlaceholder/FewShot scope; BC-2.18.005 description corrected to construction guard scope."
   - "2.44 (burst-226/F-P131-01+F-P131-05+F-P131-06+F-P131-07/2026-07-21): (1) F-P131-05: ChatPromptTemplate section — TrustLevel migration. Added TrustLevel enum + TemplateVar struct definitions. MessageProvenance.tag → MessageProvenance.highest_trust_level. SlotTrustPolicy TrustRequired doc comment: ProvenanceTag::Trusted/Internal → TrustLevel::Trusted/None. format_messages BC anchor: BC-2.18.001↔BC-2.18.002 swap (format_messages rendering → BC-2.18.002; strict-undefined → BC-2.18.001). BC anchor footer: ProvenanceTag → TrustLevel; ADR-015 Decision 4 added. (2) F-P131-01: GuardedDocuments::rag_ingress docstring updated with severity-bifurcated Fail semantics (Critical → Err(E-CORE-008); Non-Critical → error-entry substitution). E-CORE-008 individual omission note added. (3) F-P131-07: similarity_search_with_filter default method doc updated: lossy fallback → fail-safe Err(E-VS-005 FilterUnsupported) on non-empty filter. (4) Disposition census 96→98: individual 16→17 (+E-CORE-008), blanket 37→38 (+E-VS-005)."
   - "2.43 (F-P130-03/2026-07-21): Add six missing D21 trait sections to §Public Rust Trait Signatures (F-P130-03 HIGH). Sections added with verbatim ADR-authoritative signatures + per-method BC anchors: (1) §Retriever Trait and GuardedDocuments — ADR-014 Decision 2 + Decision 6; anchors BC-2.20.001..003. (2) §VectorStore Trait and VectorStoreFactory — ADR-014 Decision 2; anchors BC-2.21.001..004. (3) §Embeddings Trait — ADR-017 Decision 2; anchors BC-2.22.001..003. (4) §ChatPromptTemplate and PromptValue Surface — ADR-015; anchors BC-2.18.001..005. (5) §LcSerializable and Reviver Surface — ADR-016; anchors BC-2.19.001..006. Coverage cross-check: all methods have BC anchors; no orphan methods found in either direction."
@@ -61,7 +62,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "637d274"
+input-hash: "6d33182"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."
@@ -755,8 +756,9 @@ pub struct MemoryEntry {
 ### StreamEvent
 
 The complete streaming event taxonomy emitted by `ferrochain-graph` during a run and
-serialized to SSE by `ferrochain-server`. **12 variants** (11 execution lifecycle + 1
-guardrail observability). All variants carry `run_id` and `parent_ids` (BC-2.06.002).
+serialized to SSE by `ferrochain-server`. **15 variants** (11 execution lifecycle + 1
+guardrail observability + 2 per-tool-call approval [D23/ADR-018] + 1 compaction
+[D23/ADR-019]). All variants carry `run_id` and `parent_ids` (BC-2.06.002).
 
 ```rust
 /// Streaming events emitted during graph execution.
@@ -810,27 +812,86 @@ pub enum StreamEvent {
         /// Correlates to the enclosing ToolStart/ToolEnd; None for RagChunk/MemoryItem.
         tool_call_id: Option<String>,
     },
+    // Per-tool-call approval request — wire: tool_approval_request  (D23/2026-07-22, ADR-018)
+    // Emitted BEFORE interrupt() when pre_tool_dispatch hook returns PendingHumanApproval.
+    // Fires inside the NodeStart/NodeEnd window, BEFORE any ToolStart for this tool call.
+    // The run transitions to `interrupted` immediately after this event.
+    // Causal ordering authority: BC-2.06.004.
+    ToolApprovalRequest {
+        run_id:      RunId,
+        parent_ids:  Vec<RunId>,
+        tool_name:   String,
+        /// Serialized tool arguments as JSON.
+        tool_args:   serde_json::Value,
+        /// Risk tier declared via `action_risk` attribute on the tool; None if omitted.
+        action_risk: Option<ActionRisk>,
+        /// Human-readable approval request prompt for the approver.
+        prompt:      String,
+    },
+    // Per-tool-call approval resolved — wire: tool_approval_resolved  (D23/2026-07-22, ADR-018)
+    // Emitted AFTER interrupt is consumed by Command::Resume(PreToolDecision),
+    // BEFORE the approval decision is applied. Fires on run resume; correlates to
+    // the preceding ToolApprovalRequest by tool_name.
+    // Causal ordering authority: BC-2.06.005.
+    ToolApprovalResolved {
+        run_id:        RunId,
+        parent_ids:    Vec<RunId>,
+        tool_name:     String,
+        /// The resolution: Approve | Edit(modified_args) | Deny.
+        decision:      PreToolDecision,
+        /// Optional rationale from the human approver.
+        reason:        Option<String>,
+        /// Modified tool arguments when decision is Edit; None for Approve/Deny.
+        modified_args: Option<serde_json::Value>,
+    },
+    // Rolling compaction lifecycle event — wire: compaction_event  (D23/2026-07-22, ADR-019)
+    // Emitted at step 6 of the 7-step compaction cycle (BC-2.10.006), AFTER the
+    // compacted checkpoint is durably written. Fires between super-steps: after StepEnd
+    // and before the next StepStart.
+    // Causal ordering authority: BC-2.06.006.
+    CompactionEvent {
+        run_id:                 RunId,
+        parent_ids:             Vec<RunId>,
+        /// Which trigger condition fired (OnWatermark / OnMessageCount / OnTokenCount).
+        trigger:                CompactionTrigger,
+        /// First turn index replaced by the summary (inclusive start of compacted range).
+        compacted_start:        usize,
+        /// Last turn index replaced by the summary (inclusive end of compacted range).
+        compacted_end:          usize,
+        /// Token count of the generated summary text.
+        summary_token_count:    u64,
+        /// Tokens remaining in the budget window after compaction.
+        tokens_remaining_after: u64,
+    },
 }
 
-/// Causal ordering (BC-2.06.001 PC4 — updated F-P99-01):
+/// Causal ordering (BC-2.06.001 PC4 — updated D23/2026-07-22):
 ///
 /// RunStart
 ///   → (StepStart
 ///       → (NodeStart
 ///           → GuardrailDecision[RagChunk|MemoryItem]*    // RAG/Memory: within Node window
-///           → (ToolStart
+///           → (ToolApprovalRequest                        // On PendingHumanApproval (0 or 1 per tool call)
+///               → [run transitions to interrupted]
+///               → [external Command::Resume(PreToolDecision)]
+///               → ToolApprovalResolved                    // On resume; BEFORE decision applied
+///             )?
+///           → (ToolStart                                  // Only if Approve or Edit decision
 ///               → GuardrailDecision[ToolResult]*          // ToolResult: before ToolEnd
 ///               → ToolEnd                                 // Always last in its window
 ///             )*
 ///           → NodeEnd
 ///         )*
 ///       → StepEnd
+///       → CompactionEvent?                               // After StepEnd, before next StepStart (0 or 1)
 ///     )*
 /// → RunEnd
 ///
 /// GuardrailDecision* = 0..N — one per non-Pass ContentBlock/chunk/item.
 /// A tool invocation producing N ContentBlocks with K failures emits K GuardrailDecision
 /// events before one ToolEnd.
+/// ToolApprovalRequest/Resolved: 0 or 1 per tool call attempt (only on PendingHumanApproval path).
+/// CompactionEvent: 0 or 1 per super-step boundary (fires when compaction trigger threshold met).
 
 /// The ingress boundary at which a GuardrailDecision was produced.
 /// Maps to IngressContent variants in GuardrailHook (§GuardrailHook above).
@@ -847,13 +908,187 @@ pub enum GuardrailSeverityWire { Critical, High, Medium, Low }
 ```
 
 **BC anchor:**
-BC-2.06.001 PC2 (variant enumeration + ToolEnd output semantics),
-BC-2.06.001 PC4 (causal ordering — updated F-P99-01),
+BC-2.06.001 PC2 (variant enumeration + ToolEnd output semantics — updated D23 15 variants),
+BC-2.06.001 PC4 (causal ordering — updated D23/2026-07-22),
 BC-2.06.002 (run_id + parent_ids on every variant),
 BC-2.06.003 (streaming/unary execution equivalence; GuardrailDecision stream-only notification),
+BC-2.06.004 (ToolApprovalRequest — event 13; emitted before interrupt on PendingHumanApproval),
+BC-2.06.005 (ToolApprovalResolved — event 14; emitted on Command::Resume delivery),
+BC-2.06.006 (CompactionEvent — event 15; emitted after compacted checkpoint durably written),
 BC-2.11.002 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for ToolResult boundary), BC-2.11.003 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for RagChunk boundary), BC-2.11.004 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for MemoryItem boundary),
 BC-2.11.005 PC1/INV (ToolEnd post-guardrail content; zero rejected bytes in any StreamEvent),
-ADR-006 rev-3 (design authority for this taxonomy).
+ADR-006 rev-3 (guardrail design authority), ADR-018 (per-tool-call approval hook design authority), ADR-019 (rolling compaction design authority).
+
+### PreToolCallHook
+
+**Source:** ADR-018 Decision 2 (trait shape) + Decision 3 (dispatch ordering) + Decision 4 (fail-closed Deny) + Decision 5 (streaming events) + Decision 6 (action_risk attribute); ferrochain-graph: graph::approval.
+
+BC anchor: BC-2.05.004 (PreToolCallHook trait — pre-dispatch hook integration, ToolCallPreview shape, PreToolDecision enum, fail-closed Deny semantics), BC-2.05.007 (Deny never invokes tool.invoke — VP-011 Kani candidate), BC-2.06.004 (ToolApprovalRequest event), BC-2.06.005 (ToolApprovalResolved event), BC-2.08.010 PC1 (action_risk() method on Tool), BC-2.16.001 Invariant (retry-approval dispatch ordering).
+
+```rust
+// ferrochain-graph: graph::approval
+
+/// Risk tier declared by a tool via the `action_risk` attribute.
+/// BashTool enforces a floor of `Medium`; `ReadOnly` and `Low` are
+/// rejected at BashTool construction time (E-TOOLS-007).
+/// BC anchor: BC-2.23.005 PC3 (BashTool risk floor), BC-2.08.010 PC1 (action_risk() method).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[non_exhaustive]
+pub enum ActionRisk { ReadOnly, Low, Medium, High }
+
+/// The tool call preview presented to the hook before invocation.
+/// BC anchor: BC-2.05.004 PC1 (ToolCallPreview shape).
+#[derive(Debug, Clone)]
+pub struct ToolCallPreview {
+    pub tool_name:   String,
+    pub tool_args:   serde_json::Value,
+    /// Risk tier from the tool's `action_risk` attribute; None if omitted.
+    pub action_risk: Option<ActionRisk>,
+}
+
+/// Decision returned by the PreToolCallHook.
+/// BC anchor: BC-2.05.004 PC2 (four-branch decision tree).
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum PreToolDecision {
+    /// Proceed with original args.
+    Approve,
+    /// Proceed with modified args (override tool_args with provided value).
+    Edit(serde_json::Value),
+    /// Abort the tool call; raise E-TOOLS-* or surface as Deny in ToolApprovalResolved.
+    /// The tool is NOT invoked. No retry_policy.record() call is made.
+    Deny,
+    /// Suspend the run (interrupt()) and await human approval via Command::Resume(PreToolDecision).
+    /// ToolApprovalRequest StreamEvent is emitted before interrupt().
+    PendingHumanApproval,
+}
+
+/// Per-tool-call approval hook invoked before each tool.invoke().
+/// If not configured, all tool calls are implicitly Approve.
+/// Fail-closed: if the hook panics or returns Err, the engine treats the result as Deny.
+/// BC anchor: BC-2.05.004 (full contract), BC-2.05.007 (Deny never invokes tool.invoke).
+#[async_trait]
+pub trait PreToolCallHook: Send + Sync {
+    /// Called after circuit_breaker.check() passes and before tool.invoke().
+    /// Dispatch ordering: circuit_breaker.check → pre_tool_dispatch → tool.invoke → retry.record()
+    /// (BC-2.16.001 Invariant "Retry-Approval Ordering").
+    async fn pre_tool_dispatch(
+        &self,
+        preview: &ToolCallPreview,
+    ) -> PreToolDecision;
+}
+```
+
+### Compaction
+
+**Source:** ADR-019 Decision 1 (CompactionTrigger enum) + Decision 2 (CompactionPolicy trait) + Decision 3 (7-step execution sequence) + Decision 4 (streaming event) + Decision 5 (mid-run vs next-run distinction); ferrochain-graph: graph::budget.
+
+BC anchor: BC-2.10.005 (CompactionTrigger evaluation — VP-012 Kani candidate for OnWatermark arithmetic), BC-2.10.006 (compaction execution — 7-step cycle, ConversationSnapshot assembly, mid-run REPLACEMENT, EvidenceJournal, streaming event, checkpoint immutability), BC-2.06.006 (CompactionEvent StreamEvent), BC-2.15.006 (frozen-snapshot — NEXT-run context mutation, explicitly distinct from BC-2.10.006 CURRENT-run mid-run mutation).
+
+```rust
+// ferrochain-graph: graph::budget
+
+/// Configures when the BudgetEngine triggers a compaction cycle.
+/// BC anchor: BC-2.10.005 PC1-PC3 (trigger evaluation), BC-2.10.006 PC1 (precondition).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
+pub enum CompactionTrigger {
+    /// Compaction is disabled (default).
+    Disabled,
+    /// Compact when tokens_used / hard_limit >= fraction.
+    /// VP-012 Kani seed: arithmetic correctness of the fraction comparison.
+    /// BC anchor: BC-2.10.005 PC2 (OnWatermark evaluation rule).
+    OnWatermark { fraction: f64 },
+    /// Compact when the message count in the active window exceeds the threshold.
+    /// BC anchor: BC-2.10.005 PC3.
+    OnMessageCount { threshold: usize },
+    /// Compact when the estimated token count in the active window exceeds the threshold.
+    /// BC anchor: BC-2.10.005 PC3.
+    OnTokenCount { threshold: u64 },
+}
+
+/// Snapshot of recent conversation turns assembled from checkpoint FTS (BC-2.04.008).
+/// BC anchor: BC-2.10.006 Step 1 (snapshot assembly from search_history).
+#[derive(Debug, Clone)]
+pub struct ConversationSnapshot {
+    pub turns:           Vec<(usize, Message)>,
+    pub token_estimate:  u64,
+}
+
+/// Summary produced by a CompactionPolicy.
+/// BC anchor: BC-2.10.006 Step 2 (compact() return value).
+#[derive(Debug, Clone)]
+pub struct CompactionSummary {
+    pub summary_text:    String,
+    /// Inclusive range of turn indices to replace with the summary.
+    pub compacted_start: usize,
+    pub compacted_end:   usize,
+}
+
+/// Pluggable compaction strategy.
+/// Default: DefaultSummarizationPolicy (calls the configured LLM).
+/// BC anchor: BC-2.10.006 Step 2 (compact() contract — abort-on-Err, non-fatal).
+#[async_trait]
+pub trait CompactionPolicy: Send + Sync {
+    /// Summarize the given snapshot. Return Err to abort the compaction cycle (non-fatal;
+    /// run continues with pre-compaction window — BC-2.10.006 EC-001).
+    async fn compact(
+        &self,
+        snapshot: &ConversationSnapshot,
+        run_ctx:  &RunContext,
+    ) -> Result<CompactionSummary, FerrochainError>;
+}
+```
+
+### First-Party Tools
+
+**Source:** ADR-020 (ferrochain-tools crate); ferrochain-tools crate. All tools use `PathGuard` for workspace confinement (E-TOOLS-001 on escape) and implement the `Tool` trait via `#[ferrochain::tool]` proc-macro.
+
+BC anchor: BC-2.23.001 (ReadFileTool), BC-2.23.002 (WriteFileTool), BC-2.23.003 (EditFileTool), BC-2.23.004 (CreateFileTool), BC-2.23.005 (BashTool — ActionRisk::Medium floor, EC-005 timeout, EC-006 output truncation), BC-2.23.006 (GrepTool — match cap, E-TOOLS-006 capped flag).
+
+```rust
+// ferrochain-tools crate
+
+/// Workspace confinement guard.
+/// Resolves the path via `canonicalize` and verifies it falls under `root`.
+/// Shared by ReadFileTool, WriteFileTool, EditFileTool, CreateFileTool, GrepTool.
+/// BC anchor: BC-2.23.001–006 shared PathGuard invariant; E-TOOLS-001 on escape.
+pub struct PathGuard { root: PathBuf }
+impl PathGuard {
+    pub fn new(root: impl Into<PathBuf>) -> Result<Self, FerrochainError>;
+    /// Returns Err(E-TOOLS-001) if resolved path escapes root.
+    pub fn check(&self, path: &Path) -> Result<PathBuf, FerrochainError>;
+}
+
+// ReadFileTool — BC-2.23.001
+// Errors: E-TOOLS-001 (path confinement), E-TOOLS-002 (file exceeds max_bytes limit).
+// #[ferrochain::tool(name = "read_file", description = "...")]
+
+// WriteFileTool — BC-2.23.002
+// Errors: E-TOOLS-001 (path confinement). Creates parent dirs; overwrites atomically.
+// #[ferrochain::tool(name = "write_file", description = "...")]
+
+// EditFileTool — BC-2.23.003
+// Errors: E-TOOLS-001 (path confinement), E-TOOLS-003 (old_string not found).
+// Performs exact-string replacement; requires unique match (fails on 0 or >1 matches).
+// #[ferrochain::tool(name = "edit_file", description = "...")]
+
+// CreateFileTool — BC-2.23.004
+// Errors: E-TOOLS-001 (path confinement). Creates file; errors if already exists.
+// #[ferrochain::tool(name = "create_file", description = "...")]
+
+/// BashTool — BC-2.23.005.
+/// action_risk floor: ActionRisk::Medium — construction fails with E-TOOLS-007
+/// if action_risk < Medium is requested.
+/// Timeout: configurable max_duration (default 120s); E-TOOLS-004 on exceed.
+/// Output cap: stdout+stderr combined truncated to max_output_bytes; BashOutput.truncated = true (E-TOOLS-005 payload field).
+// #[ferrochain::tool(name = "bash", description = "...", action_risk = ActionRisk::Medium)]
+
+/// GrepTool — BC-2.23.006.
+/// Match cap: max_matches (default 100); GrepResult.capped = true when exceeded (E-TOOLS-006 payload field).
+/// Errors: E-TOOLS-001 (path confinement).
+// #[ferrochain::tool(name = "grep", description = "...")]
+```
 
 ### Retriever Trait and GuardedDocuments
 
@@ -1371,7 +1606,7 @@ an explicit documented exemption.
 | POST | `/threads/{thread_id}/runs` | Create and start a run (async; returns 202 with `run_id`); run-supplied `config`/`metadata`/`context` deep-merge over the Assistant's stored values, run wins at leaf key (BC-2.12.003 §Run-Config Merge Precedence Invariant, F-P33-02) | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs` | List runs for a thread; `?status=queued\|in_progress\|completed\|failed\|interrupted\|cancelled\|summary_halt` filter + canonical pagination (`?limit=N` default 10 max 100, `?offset=N`; `created_at` DESC) — F-P31-01 | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}` | Get run status and result | BC-2.12.003 |
-| GET | `/threads/{thread_id}/runs/{run_id}/stream` | Stream run output as server-sent events (SSE; happy path emits run_start, node_start/stream/end, run_end; **run_end is emitted on completion only** — interrupted runs terminate with interrupt envelope as terminal frame, failed runs terminate with error SSE event; neither emits run_end; BC-2.06.001 PC2+EC-005, BC-2.12.007 EC-001/EC-003). **Guardrail decisions (F-P99-01):** `guardrail_decision` events are emitted for non-Pass guardrail outcomes (Fail/Transform only — Pass not streamed); fire within the tool lifecycle window (before `tool_end`) for ToolResult boundary, and within the node lifecycle window for RAG/Memory boundaries; see §StreamEvent for complete taxonomy and ordering. **ToolEnd content semantics:** `tool_end.data` carries POST-guardrail content — raw rejected payloads are never emitted in any SSE event (BC-2.11.005 INV-5). BC-2.11.002/003/004 PC3/PC4 (per-boundary), ADR-006 rev-3. | BC-2.12.007 |
+| GET | `/threads/{thread_id}/runs/{run_id}/stream` | Stream run output as server-sent events (SSE; happy path emits run_start, node_start/stream/end, run_end; **run_end is emitted on completion only** — interrupted runs terminate with interrupt envelope as terminal frame, failed runs terminate with error SSE event; neither emits run_end; BC-2.06.001 PC2+EC-005, BC-2.12.007 EC-001/EC-003). **Guardrail decisions (F-P99-01):** `guardrail_decision` events are emitted for non-Pass guardrail outcomes (Fail/Transform only — Pass not streamed); fire within the tool lifecycle window (before `tool_end`) for ToolResult boundary, and within the node lifecycle window for RAG/Memory boundaries; see §StreamEvent for complete taxonomy and ordering. **ToolEnd content semantics:** `tool_end.data` carries POST-guardrail content — raw rejected payloads are never emitted in any SSE event (BC-2.11.005 INV-5). BC-2.11.002/003/004 PC3/PC4 (per-boundary), ADR-006 rev-3. **Tool approval events (D23/ADR-018):** `tool_approval_request` is emitted BEFORE the run is suspended into `interrupted` state when `pre_tool_dispatch` returns `PreToolDecision::PendingHumanApproval`; it carries `run_id`, `tool_name`, `tool_args`, `action_risk`, and `prompt`. `tool_approval_resolved` is emitted AFTER the interrupt is consumed and BEFORE the decision is applied, on `Command::Resume(PreToolDecision)` delivery; it carries `run_id`, `tool_name`, `decision`, `reason`, and `modified_args`. Both events fire within the NodeStart/NodeEnd window, before the ToolStart window for the same tool call; see §PreToolCallHook and BC-2.06.004/005. **Compaction event (D23/ADR-019):** `compaction_event` is emitted after a compaction cycle completes and the compacted checkpoint is durably written (step 6 of BC-2.10.006 7-step sequence); it carries `run_id`, `trigger`, `compacted_turns`, `summary_token_count`, and `tokens_remaining_after`; fires after StepEnd and before the next StepStart; see §Compaction and BC-2.06.006. | BC-2.12.007 |
 | POST | `/threads/{thread_id}/runs/{run_id}/resume` | Deliver resume value to interrupted run | BC-2.05.004 |
 | POST | `/threads/{thread_id}/runs/{run_id}/cancel` | Cancel a queued or in_progress run (transitions to cancelled) | BC-2.12.003 |
 | DELETE | `/threads/{thread_id}/runs/{run_id}` | Delete a terminal run record (completed/failed/cancelled/summary_halt; HTTP 409 if queued, in_progress, or interrupted — cancel or resume-to-complete/summary_halt first) | BC-2.12.003 |
@@ -1453,7 +1688,7 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 
 > **E-PROV-010 library-layer omission (D20 sub-burst 2):** E-PROV-010 (ProviderChainExhausted, POLICY — BC-2.08.014 PC5/EC-004) is raised when all providers in the `ProviderFallbackPolicy` chain have been tried and all failed. POLICY→403 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from the provider dispatch layer in library code; it propagates as Run.error on the server side (same treatment as E-PROV-007 StructuredOutputRefused). Never a direct HTTP terminal response. Intentionally omitted from the HTTP status table.
 
-> **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30; D21/2026-07-20):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY/SECURITY), E-SPLIT-* (BC-2.07.x, VAL), E-TMPL-* (BC-2.18.x, SECURITY/VAL), E-SRLZ-* (BC-2.19.x, VAL), E-VS-* (BC-2.20.x/BC-2.21.x, VAL), E-EMBED-* (BC-2.22.x, VAL) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only. **D21 additions confirmed library-layer only:** E-TMPL-001 (BC-2.18.004 — prompt injection guard, ferrochain-prompts), E-SRLZ-001 (BC-2.19.005 — Reviver allowlist fail-closed, ferrochain-core::serializable), E-VS-001 (BC-2.21.003 — zero-norm cosine guard, ferrochain-vectorstores), E-EMBED-001 (BC-2.22.001 — dimensionality contract, ferrochain-core::embeddings); all library-layer Err returns. **Disposition census (burst-226/F-P131-01+F-P131-07/2026-07-21): 43 HTTP + 17 individual + 38 blanket = 98.** (+1 individual: E-CORE-008 GuardrailCriticalRejection SECURITY library-layer omission note; +1 blanket: E-VS-005 FilterUnsupported in E-VS-* namespace.) Blanket group breakdown: E-MCP-* 5 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 = 38. (E-VS-* 4→5: E-VS-005 FilterUnsupported added burst-226.)
+> **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30; D21/2026-07-20; D23/2026-07-22):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY/SECURITY), E-SPLIT-* (BC-2.07.x, VAL), E-TMPL-* (BC-2.18.x, SECURITY/VAL), E-SRLZ-* (BC-2.19.x, VAL), E-VS-* (BC-2.20.x/BC-2.21.x, VAL), E-EMBED-* (BC-2.22.x, VAL), E-TOOLS-* (BC-2.23.x, SECURITY/VAL/TIMEOUT) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400, TIMEOUT→503) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only. **D21 additions confirmed library-layer only:** E-TMPL-001 (BC-2.18.004 — prompt injection guard, ferrochain-prompts), E-SRLZ-001 (BC-2.19.005 — Reviver allowlist fail-closed, ferrochain-core::serializable), E-VS-001 (BC-2.21.003 — zero-norm cosine guard, ferrochain-vectorstores), E-EMBED-001 (BC-2.22.001 — dimensionality contract, ferrochain-core::embeddings); all library-layer Err returns. **D23 additions confirmed library-layer only:** E-TOOLS-001 (BC-2.23.001–006 — PathGuard confinement SECURITY), E-TOOLS-002/003/007 (VAL construction/call-time), E-TOOLS-004 (BashTool timeout TIMEOUT/Never), E-TOOLS-005/006 (informational payload fields — not raised Err; included for census completeness); all ferrochain-tools library-layer. **Disposition census (D23/2026-07-22): 43 HTTP + 17 individual + 45 blanket = 105.** (+7 blanket: E-TOOLS-* 7 new codes.) Blanket group breakdown: E-MCP-* 5 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 7 = 45.
 
 ## Exit Code Semantics
 

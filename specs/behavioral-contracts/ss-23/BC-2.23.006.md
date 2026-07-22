@@ -1,0 +1,178 @@
+---
+document_type: behavioral-contract
+level: L3
+bc_id: BC-2.23.006
+version: "1.0"
+status: draft
+lifecycle_status: active
+introduced: v1.0.0-greenfield
+origin: greenfield
+priority: P1
+subsystem: SS-23
+capability: CAP-038
+crate: ferrochain-tools
+wave: 1
+phase: 1b
+producer: product-owner
+timestamp: 2026-07-22T00:00:00Z
+di_anchors: [DI-014]
+vp_seed: false
+red_gate: false
+changelog:
+  - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 GrepTool."
+traces_to:
+  - domain-spec/capabilities-p1-p2.md#CAP-038
+  - architecture/decisions/ADR-020-first-party-tool-library.md
+  - domain-spec/invariants.md#DI-014
+inputs:
+  - .factory/specs/domain-spec/capabilities-p1-p2.md
+  - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
+  - .factory/specs/domain-spec/invariants.md
+input-hash: "4661c22"
+extracted_from: null
+modified: []
+deprecated: null
+deprecated_by: null
+replacement: null
+retired: null
+removed: null
+removal_reason: null
+---
+
+# BC-2.23.006: GrepTool — In-Process Regex Search; Linear-Time `regex` Crate; max_results 100 Cap; Hermetic; PathGuard Scope; E-TOOLS-001/006
+
+## Description
+
+`GrepTool` in `ferrochain-tools::tools::search` implements the `Tool` trait with
+`ActionRisk::ReadOnly`. It performs regex pattern matching across a file or directory tree
+using the `regex` crate (pin `"1"`, linear-time finite-automata engine — no catastrophic
+backtracking on adversarial inputs). `GrepTool` does NOT shell out to system `grep` or
+`ripgrep`; it is hermetic and unit-testable without system tool availability. Results are
+capped at `max_results` (default 100); when the ceiling is reached the tool returns the
+first 100 matches with `capped: true` in the output and emits `E-TOOLS-006
+SearchResultsCapped` as an informational annotation (non-fatal). The directory path
+argument is validated against `PathGuard` (E-TOOLS-001 on violation).
+
+## Preconditions
+
+1. `GrepTool` is constructed with a `PathGuard` instance and optional `GrepConfig {
+   max_results: usize (default 100) }`.
+2. The caller invokes the tool with JSON args:
+   `{ "pattern": "<regex>", "path": "<path>", "recursive": true, "case_insensitive": false,
+   "max_results": 100 }`.
+3. `pattern` is a valid regex string compilable by the `regex` crate. An invalid pattern
+   is rejected at invocation time with `Err(FerrochainError)`.
+4. `path` resolves to an existing file or directory within `PathGuard` scope.
+
+## Postconditions
+
+1. **Happy path (results ≤ max_results):** All matches are returned. The tool returns
+   `ToolOutput::Json` with a `GrepResult` object:
+   ```json
+   {
+     "matches": [
+       { "file": "/workspace/src/main.rs", "line": 42, "text": "fn main() {" }
+     ],
+     "capped": false
+   }
+   ```
+   If `path` is a file, only that file is searched. If `path` is a directory and
+   `recursive: true`, all files under the directory (within PathGuard scope) are searched.
+   If `recursive: false`, only files directly in the directory are searched.
+2. **Results capped (non-fatal):** The match count reaches `max_results` before the full
+   file tree is searched. The tool returns `ToolOutput::Json({ "matches": [<first 100>], "capped": true })`.
+   This is NOT an `Err` — partial results are returned with the `capped` flag. The
+   informational code E-TOOLS-006 (`SearchResultsCapped`) appears in the structured output
+   annotations, not as a thrown error. Callers can detect the cap via `capped: true`.
+3. **Path confinement violation:** Returns
+   `Err(FerrochainError { component: "TOOLS", category: Category::SECURITY,
+   code: "E-TOOLS-001", message: "PathConfinementViolation: path '<path>' is outside the
+   configured PathGuard scope" })`.
+4. **Invalid regex:** Returns `Err(FerrochainError)` — VALIDATION category, regex compile
+   error detail from the `regex` crate.
+5. **No matches found:** Returns `ToolOutput::Json({ "matches": [], "capped": false })` —
+   not an error.
+
+## Invariants
+
+- `GrepTool` uses the `regex` crate exclusively. It does NOT shell out to grep, ripgrep,
+  or any system tool. No subprocess is spawned. This is a hermetic, in-process operation.
+- **Linear-time guarantee:** The `regex` crate uses a finite-automata engine. No regex
+  pattern can cause catastrophic backtracking. This is a correctness property for accepting
+  untrusted user-supplied patterns.
+- `PathGuard::check` is called for the root `path` argument. For recursive traversal,
+  each visited path is also verified against the guard before the file is opened.
+- **DI-014 (No Silent Swallowing):** Path violations and invalid patterns propagate as
+  `Err`. Zero matches return `Ok` with an empty array — not silently swallowed as an error.
+- `ActionRisk::ReadOnly` — no write to the filesystem occurs. `RiskGatePolicy` auto-approve
+  semantics apply (BC-2.05.006).
+- Result ordering: matches are returned in file-path-then-line-number order (lexicographic
+  by file path within a directory; line order within a file).
+
+## Edge Cases
+
+| ID | Description | Expected Behavior |
+|----|-------------|-------------------|
+| EC-001 | Path is outside PathGuard scope | `Err(E-TOOLS-001 PathConfinementViolation)` — no I/O |
+| EC-002 | Pattern is invalid regex (e.g., `"[unclosed"`) | `Err(FerrochainError)` — VALIDATION category, regex compile error |
+| EC-003 | Pattern matches 150 files with `max_results = 100` | `ToolOutput::Json({ ..., "capped": true })` — first 100 matches; non-fatal |
+| EC-004 | Pattern matches no files | `ToolOutput::Json({ "matches": [], "capped": false })` — empty results, not an error |
+| EC-005 | `path` is a file (not a directory), `recursive: true` | Only that file is searched; `recursive` is ignored when path is a file |
+| EC-006 | Adversarial pattern like `"(a+)+"` (exponential in NFA) | `regex` crate rejects or compiles to linear-time DFA; no catastrophic backtracking; search completes in bounded time |
+| EC-007 | `case_insensitive: true`, pattern `"Hello"` | Matches `"hello"`, `"HELLO"`, `"Hello"` etc. |
+
+## Canonical Test Vectors
+
+| # | Input | Expected Output | Category |
+|---|-------|-----------------|----------|
+| TV-001 | `{ "pattern": "fn main", "path": "/workspace/src", "recursive": true }` — 3 matches in 2 files | `ToolOutput::Json({ "matches": [3 entries], "capped": false })` | happy-path |
+| TV-002 | `{ "pattern": "TODO", "path": "/workspace", "max_results": 2, "recursive": true }` — 5 matches exist | `ToolOutput::Json({ "matches": [2 entries], "capped": true })` | cap enforcement |
+| TV-003 | `{ "pattern": "[bad regex", "path": "/workspace" }` — invalid pattern | `Err(FerrochainError)` — VALIDATION, regex compile error | invalid pattern |
+| TV-004 | `{ "pattern": "NOTFOUND", "path": "/workspace" }` | `ToolOutput::Json({ "matches": [], "capped": false })` | no matches |
+| TV-005 | `{ "pattern": "foo", "path": "/etc" }` — outside PathGuard | `Err(E-TOOLS-001 PathConfinementViolation)` | security (confinement) |
+
+## Verification Properties
+
+| VP-ID | Property | Proof Method |
+|-------|----------|-------------|
+| VP-2.23.006-A (VP-003 partial reuse) | PathGuard::check called for every accessed path (root + each recursive subpath) | Unit test: mock PathGuard that records calls; assert called for each file path visited |
+| VP-2.23.006-B | max_results capping: first 100 matches returned with capped=true when > 100 exist | Unit test: directory with 150 matching files; assert matches.len() == 100 and capped == true |
+| VP-2.23.006-C | Hermetic: no subprocess spawned during GrepTool invocation | Integration test: run with a system-command tracer; assert zero subprocess spawns |
+
+## Related BCs
+
+- BC-2.23.001 — sibling: ReadFileTool (same ReadOnly risk; same PathGuard substrate; different operation)
+- BC-2.23.004 — sibling: ListDirTool (ReadOnly; PathGuard; directory navigation)
+- BC-2.13.004 — depends on: PathGuard workspace-confinement contract (VP-003)
+- BC-2.05.006 — related to: ActionRisk::ReadOnly auto-approve semantics in RiskGatePolicy
+
+## Architecture Anchors
+
+- `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (GrepTool, in-process regex, no subprocess, max_results 100), Decision 3 (ReadOnly ActionRisk), Decision 5 (E-TOOLS-001/006), Decision 7 (`regex = "1"` pin, linear-time guarantee, MSRV 1.65)
+- `architecture/module-decomposition.md` — SS-23, `tools::search` module in ferrochain-tools
+- `architecture/purity-boundary-map.md` — SS-23 Effectful Shell (filesystem traversal)
+
+## Story Anchor
+
+_[to be filled after story decomposition — Wave 1 SS-23 story]_
+
+## VP Anchors
+
+- VP-2.23.006-A
+- VP-2.23.006-B
+- VP-2.23.006-C
+
+## Traceability
+
+| Field | Value |
+|-------|-------|
+| Source L2 Capability | CAP-038 |
+| Capability Anchor Justification | CAP-038 ("First-Party Search Tool (tools::search — GrepTool)") per capabilities-p1-p2.md §CAP-038 — this BC specifies GrepTool's in-process regex semantics, linear-time `regex` crate guarantee, max_results 100 capping, hermetic no-subprocess invariant, PathGuard scope validation, and E-TOOLS-001/006 error codes that CAP-038 names as the distinct search surface warranting its own CAP band |
+| L2 Domain Invariants | DI-014 (Error Propagation — path violations and invalid patterns propagate as Err; zero matches returns Ok([]) not Err; capping is non-fatal) |
+| Architecture Authority | ADR-020 Decisions 2, 3, 5, and 7 (GrepTool contract, regex dep pin, ReadOnly ActionRisk, E-TOOLS-001/006) |
+| Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
+| VP Registration | VP-2.23.006-A/B/C (unit/integration tests) |
+| Module | ferrochain-tools / tools::search |
+| Priority | P1 |
+| Wave | 1 |
+| Test Types | unit + integration |

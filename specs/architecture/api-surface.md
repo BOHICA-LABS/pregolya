@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.6"
+version: "1.7"
 status: active
 producer: architect
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 changelog:
+  - "1.7 (D23/2026-07-22): Add D23 API surfaces. (1) ferrochain-core Public Traits: +PreToolCallHook (SS-05, BC-2.05.007), +CompactionPolicy (SS-10, BC-2.10.005/006). (2) ferrochain-graph Public Types: StreamEvent BC range 001–002→001–006 + 15-variant count noted; +CompactionTrigger (SS-10, BC-2.10.005), +CompactionEvent (SS-10, BC-2.10.006/BC-2.06.006). (3) §Public Traits and Types (ferrochain-tools) added: ActionRisk, PreToolDecision, ToolCallPreview, PathGuard, ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool (VP-013), GrepTool. (4) Component enum 16→17 (+TOOLS); #[non_exhaustive] gate count 17→18. ADR-010 amendment delegated to architect."
   - "1.6 (D21/Batch-3b-i/2026-07-20): Component enum expanded 12→16 per ADR-010 v1.1. Added TMPL (ferrochain-prompts), SRLZ (ferrochain-core::serializable), VS (ferrochain-vectorstores), EMBED (ferrochain-core::embeddings) to Component list. #[non_exhaustive] gate count 13→17 (16 named variants + Custom = 17). Implementer updates ALL three gate locations (gate crate, expected count constant, expected symbol list) when creating ferrochain-core/src/error.rs at Wave 0 per CLAUDE.md non-exhaustive gate rule."
   - "1.5 (F-P115-02 ripple, 2026-07-19): Extend CheckpointSaver BC anchor range from BC-2.04.001–006 to BC-2.04.001–007. BC-2.04.007 is now a live anchor because the `put` method (added to the trait per F-P115-02 adjudication) carries BC-2.04.007 PC1/INV-1 encryption-parity obligations. Sweep: no method-count enumerations or get_next_version absence claims present in this file — api-surface.md delegates all signatures to interface-definitions.md."
   - "1.4 (F-P92-02, 2026-07-17): Add §ferrochain-core Public Types table. RunnableConfig gains budget_config: Option<BudgetConfig> (OPTION A — BC-2.10.004 PC6 / BC-2.10.003 PC7/TV-004). Row documents all four known RunnableConfig fields (recursion_limit, thread_id, budget_config, context_mutations)."
@@ -18,7 +19,7 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "5af6aba"
+input-hash: "4f9bc84"
 traces_to: ARCH-INDEX.md
 decisions: [D13, D17]
 ---
@@ -42,6 +43,8 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 | `GuardrailHook` | ferrochain-core | SS-11 | BC-2.11.002–004 |
 | `BudgetPolicy` | ferrochain-core | SS-10 | BC-2.10.001 |
 | `Tool` | ferrochain-core | SS-09 | BC-2.09.002 |
+| `PreToolCallHook` | ferrochain-core | SS-05 | BC-2.05.007 |
+| `CompactionPolicy` | ferrochain-core | SS-10 | BC-2.10.005, BC-2.10.006 |
 
 ## ferrochain-core Public Types
 
@@ -76,9 +79,27 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 | `StateGraph<State>` | Graph builder: nodes, edges, channels | SS-02 | BC-2.02.001–006 |
 | `GraphConfig` | Execution config: checkpoint_saver, interrupt_before/after | SS-03 | BC-2.03.001 |
 | `Command` | HITL resume carrier: `Command::resume(value)` | SS-05 | BC-2.05.004 |
-| `StreamEvent` | Streaming event enum; run_id + parent_ids | SS-06 | BC-2.06.001–002 |
+| `StreamEvent` | Streaming event enum; run_id + parent_ids; 15 variants (D23 adds ToolApprovalRequest/Resolved/CompactionEvent) | SS-06 | BC-2.06.001–006 |
 | `BudgetConfig` | Budget ceiling + on_ceiling policy | SS-10 | BC-2.10.001 |
+| `CompactionTrigger` | Disabled \| OnWatermark \| OnMessageCount \| OnTokenCount | SS-10 | BC-2.10.005 |
+| `CompactionEvent` | Streaming notification emitted after compaction completes | SS-10 | BC-2.10.006, BC-2.06.006 |
 | `ProvenanceTag` | Content source tag; attached at every ingress | SS-11 | BC-2.11.001 |
+
+## Public Traits and Types (ferrochain-tools)
+
+| Symbol | Kind | SS | BC Anchors |
+|--------|------|----|-----------|
+| `PreToolCallHook` | trait | SS-05 | BC-2.05.007 (see also ferrochain-core — trait is defined in core, tools crate provides impls) |
+| `ActionRisk` | enum (4 variants: ReadOnly/Low/Medium/High) | SS-23 | BC-2.23.005 |
+| `PreToolDecision` | enum (4 variants: Approve/Deny/Edit/PendingHumanApproval) | SS-05 | BC-2.05.007 |
+| `ToolCallPreview` | struct (tool_name, tool_args, action_risk: Option\<ActionRisk\>) | SS-05 | BC-2.05.007 |
+| `PathGuard` | struct (workspace-root-confined path validator; E-TOOLS-001 on escape) | SS-23 | BC-2.23.001–006 |
+| `ReadFileTool` | first-party tool | SS-23 | BC-2.23.001 |
+| `WriteFileTool` | first-party tool (High ActionRisk) | SS-23 | BC-2.23.002 |
+| `EditFileTool` | first-party tool | SS-23 | BC-2.23.003 |
+| `ListDirTool` | first-party tool (ReadOnly) | SS-23 | BC-2.23.004 |
+| `BashTool` | first-party tool (Medium ActionRisk floor; VP-013 Kani seed) | SS-23 | BC-2.23.005 |
+| `GrepTool` | first-party tool | SS-23 | BC-2.23.006 |
 
 ## ferrochain-server HTTP Endpoints
 
@@ -137,6 +158,6 @@ cross-thread aggregate query for schedule-fired runs only.
 `FerrochainError { component: Component, category: Category, retry_hint: RetryHint, code: &'static str }`
 
 Authoritative list lives in `error-taxonomy.md` §Components; enum reproduced here for the FerrochainError type definition:
-`Component` = CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED (16 components as of D21; `#[non_exhaustive]` gate count 13→17: 16 named + `Custom`).
+`Component` = CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS (17 components as of D23; `#[non_exhaustive]` gate count 17→18: 17 named + `Custom`). Note: ADR-010 amendment required to add TOOLS variant — architect task per error-taxonomy.md §TOOLS delegation note.
 Full catalog: `prd-supplements/error-taxonomy.md`.
 RFC-7807 serialization: `FerrochainError::to_problem()` (BC-2.14.002). Note: corrected from `to_problem_detail()` (F-P25-04; BC-2.14.002 is authoritative for method name).

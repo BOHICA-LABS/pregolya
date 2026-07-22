@@ -1,18 +1,21 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "2.1"
+version: "2.2"
 status: active
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "5898209"
+input-hash: "8930a8d"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
+changelog:
+  - "2.2 (D23/2026-07-22): Add 13 new D23 BC rows (+60 TVs); grand total 609→669 (660 canonical + 9 GTV). New rows: BC-2.05.007 (6 TV, VP-011 Kani seed), BC-2.05.008 (4 TV), BC-2.06.004 (4 TV), BC-2.06.005 (3 TV), BC-2.06.006 (4 TV), BC-2.10.005 (5 TV, VP-012 Kani seed), BC-2.10.006 (4 TV), BC-2.23.001 (5 TV), BC-2.23.002 (5 TV), BC-2.23.003 (5 TV), BC-2.23.004 (4 TV), BC-2.23.005 (6 TV, VP-013 Kani seed), BC-2.23.006 (5 TV). BC count 116→129."
+  - "2.1 (D21/2026-07-21): Initial supplement created from prd.md §7 RTM inventory. 116 BCs catalogued; 600 canonical TV + 9 GTV = 609 total. RG BCs: 11. GTV source: BC-2.07.002 §Golden Test Vectors."
 ---
 
 # Test Vector Catalog: ferrochain
@@ -62,9 +65,14 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.05.004 | SS-05 | 6 | — | `TV-NNN` | | Command(resume=value) API |
 | BC-2.05.005 | SS-05 | 8 | — | `TV-NNN` | | Empty queue → Err(NoActiveInterrupt) (v1.5 adds TV-006/007/008) |
 | BC-2.05.006 | SS-05 | 6 | — | `TV-NNN` | | Risk-tiered classification for Domain A |
+| BC-2.05.007 | SS-05 | 6 | — | `TV-NNN` | | PreToolCallHook dispatch — Approve/Deny/Edit/PendingHumanApproval; fail-closed Deny (VP-011 Kani seed) |
+| BC-2.05.008 | SS-05 | 4 | — | `TV-NNN` | | Skip-hook-on-resume invariant; ToolApprovalRequest checkpoint persistence |
 | BC-2.06.001 | SS-06 | 5 | — | `TV-NNN` | | Typed event taxonomy |
 | BC-2.06.002 | SS-06 | 5 | — | `TV-NNN` | | run_id + parent_ids correlation |
 | BC-2.06.003 | SS-06 | 5 | — | `TV-NNN` | | Streaming/unary identical final answer |
+| BC-2.06.004 | SS-06 | 4 | — | `TV-NNN` | | `tool_approval_request` StreamEvent (event 13); payload; emission before interrupt |
+| BC-2.06.005 | SS-06 | 3 | — | `TV-NNN` | | `tool_approval_resolved` StreamEvent (event 14); payload on Command::Resume |
+| BC-2.06.006 | SS-06 | 4 | — | `TV-NNN` | | `compaction_event` StreamEvent (event 15); payload; emission after compaction completes |
 | BC-2.07.001 | SS-07 | 7 | — | `TV-NNN` | | Code-point chunk size (not bytes) |
 | BC-2.07.002 | SS-07 | 3 | 9 | `TV-NNN` + GTV | **RG** | Non-ASCII parity (see §GTV below) |
 | BC-2.07.003 | SS-07 | 7 | — | `TV-NNN` | | Short doc < chunk_size → single chunk |
@@ -93,6 +101,8 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.10.002 | SS-10 | 5 | — | `TV-NNN` | | EvidenceJournal append-only |
 | BC-2.10.003 | SS-10 | 7 | — | `TV-NNN` | | Graceful halt \| summarize on ceiling (v1.2 adds TV-006/007) |
 | BC-2.10.004 | SS-10 | 6 | — | `TV-NNN` | | Budget escalation → HITL (v1.5 adds TV-006) |
+| BC-2.10.005 | SS-10 | 5 | — | `TV-NNN` | | CompactionTrigger config — Disabled/OnWatermark/OnMessageCount/OnTokenCount (VP-012 Kani seed) |
+| BC-2.10.006 | SS-10 | 4 | — | `TV-NNN` | | Compaction execution — ConversationSnapshot, mid-run REPLACEMENT, EvidenceJournal, checkpoint immutability |
 | BC-2.11.001 | SS-11 | 4 | — | table (unlabelled) | | ProvenanceTag at all ingress boundaries |
 | BC-2.11.002 | SS-11 | 5 | — | table (unlabelled) | | GuardrailHook at tool-result ingress |
 | BC-2.11.003 | SS-11 | 4 | — | table (unlabelled) | | GuardrailHook at RAG ingress |
@@ -151,8 +161,14 @@ primary_consumers: [test-writer, holdout-evaluator]
 | BC-2.22.001 | SS-22 | 5 | — | `TV-NNN` | | Embeddings trait; embed_documents batch; dimensionality contract → E-EMBED-001 (VP-008) |
 | BC-2.22.002 | SS-22 | 5 | — | `TV-NNN` | **RG** | EmbeddingsOpenAI; OpenAiApiKey redacted-Debug credential opacity (DI-010) |
 | BC-2.22.003 | SS-22 | 5 | — | `TV-NNN` | | EmbeddingsOllama; no API key; POST /api/embed; use_legacy_endpoint toggle |
+| BC-2.23.001 | SS-23 | 5 | — | `TV-NNN` | | ReadFileTool — PathGuard-confined file read; 1 MiB max_bytes; E-TOOLS-001/002 |
+| BC-2.23.002 | SS-23 | 5 | — | `TV-NNN` | | WriteFileTool — PathGuard-confined atomic write; High ActionRisk; E-TOOLS-001 |
+| BC-2.23.003 | SS-23 | 5 | — | `TV-NNN` | | EditFileTool — exact-match string replace; E-TOOLS-003 on no-match; opt-in fuzzy fallback |
+| BC-2.23.004 | SS-23 | 4 | — | `TV-NNN` | | ListDirTool — PathGuard-confined directory listing; ReadOnly; DirEntry struct; E-TOOLS-001 |
+| BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
+| BC-2.23.006 | SS-23 | 5 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006 |
 
-**Total vectors (116 authored BCs):** 600 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **609 total vectors** across 116 BC files.
+**Total vectors (129 authored BCs):** 660 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **669 total vectors** across 129 BC files.
 
 > **GTV convention:** The TV Count column counts standard canonical vectors; the GTV Count column counts golden test vectors (Red Gate acceptance data reproduced in §GTV). Grand totals are expressed as `<TV Count> + <GTV Count> = <total>` to prevent ambiguity.
 

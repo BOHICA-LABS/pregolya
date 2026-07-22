@@ -1,10 +1,10 @@
 ---
 document_type: prd
 level: L3
-version: "1.8"
+version: "1.9"
 status: active
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -19,7 +19,7 @@ inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
 input-hash: "9bf75e8"
 traces_to: domain-spec/L2-INDEX.md
-decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21]
+decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21, D23]
 supplements:
   - prd-supplements/interface-definitions.md
   - prd-supplements/error-taxonomy.md
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.9 (D23/2026-07-22): D23 First-Party Tools + Per-Tool Approval + Rolling Compaction expansion. (1) §2: BC-2.05.007/008 added to §2.05 (PreToolCallHook dispatch + skip-hook-on-resume); BC-2.06.004/005/006 added to §2.06 (StreamEvents 13/14/15); BC-2.10.005/006 added to §2.10 (CompactionTrigger config, compaction execution); §2.23 added (SS-23 First-Party Tool Library — 6 tool BCs). (2) §3: PreToolCallHook + CompactionPolicy traits added; first-party tools bullet. (3) §5: E-TOOLS-001–099 range row added (TOOLS component). (4) §5b: BC file count 116→129. (5) §7 RTM: BC-2.15.001/002/003 P2→P1 (CAP-017 wave promotion); +13 rows; totals updated to 129 (51 P0 / 72 P1 / 6 P2). D23 added to decisions list."
   - "v1.8 (burst-227/F-P132-01/2026-07-21): §11 Observability emission census: convert from stale duplicate table (2 entries, retired ferrochain.mcp.guardrail.unregistered listed as active) to pointer+count form citing observability.md as the sole catalog authority. Active count updated to 6 (per observability.md v1.1). Prevents future dual-maintenance drift."
   - "v1.7 (burst-226/F-P131-01+F-P131-07/2026-07-21): §5 error taxonomy ranges updated: CORE 007→008 (E-CORE-008 GuardrailCriticalRejection), VS 004→005 (E-VS-005 FilterUnsupported). Census: 96→98."
   - "v1.6 (F-P130/2026-07-21): Fix burst 225 — 7 adversarial pass P1D-130 findings closed. (1) F-P130-02: BC-2.20.002 v1.1→v1.2 — 3 nonexistent `ferrochain-guardrail` crate references replaced with canonical `ferrochain-core: core::guardrail` per ADR-014 v1.4 PO Obligations. (2) F-P130-03: interface-definitions.md v2.42→v2.43 — 5 missing D21 trait sections added (Retriever+GuardedDocuments, VectorStore+VectorStoreFactory, Embeddings, ChatPromptTemplate/PromptValue, LcSerializable/Reviver) with verbatim ADR signatures and per-method BC anchors. (3) F-P130-04: DI-014 added to di_anchors of BC-2.20.001 v1.0→v1.1, BC-2.20.002 v1.1→v1.2, BC-2.21.004 v1.0→v1.1; propagated to BC-INDEX + prd.md §2 + §7 RTM. (4) F-P130-06: observability.md v1.0 created — Canonical Structured Event Catalog with 2 confirmed event_type emissions; SAP-1 policy stated; registered in supplements list. (5) F-P130-07: E-EMBED-001 prefix `DimensionMismatch:` → `EmbeddingDimensionMismatch:` in error-taxonomy.md v1.28→v1.29 and BC-2.22.001 v1.0→v1.1; E-VS-002 unchanged; gate #33 forward+reverse clean. (6) F-P130-08: BC-2.19.003 v1.0→v1.1 TV-001/TV-002 made falsifiable — relational assertions against LANGCHAIN_CORE_REGISTRY.len() and feature-gated delta >= 1. (7) F-P130-09: DI-009 added to di_anchors of BC-2.22.002 v1.0→v1.1 and BC-2.22.003 v1.0→v1.1; BC-2.14.004 cross-reference added in PC2/INV-5 and PC4/INV-2 prose; propagated to BC-INDEX + §2 + §7 RTM."
@@ -202,6 +203,8 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.05.004 | Command(resume=value) API contract | P0 | DI-003 | ss-05/BC-2.05.004.md |
 | BC-2.05.005 | Resume on empty interrupt queue returns Err(NoActiveInterrupt) | P0 | DI-003 | ss-05/BC-2.05.005.md |
 | BC-2.05.006 | Risk-tiered interrupt classification (typed action-risk levels for Domain A) | P0 | DI-003, ASM-008 | ss-05/BC-2.05.006.md |
+| BC-2.05.007 | PreToolCallHook dispatch — pre_invoke contract; Approve/Deny/Edit/PendingHumanApproval; fail-closed Deny (VP-011 Kani seed) | P1 | DI-003 | ss-05/BC-2.05.007.md |
+| BC-2.05.008 | Skip-hook-on-resume invariant — ToolApprovalRequest checkpoint persistence; Command::Resume(PreToolDecision); no re-invocation of pre_invoke | P1 | DI-003 | ss-05/BC-2.05.008.md |
 
 ### 2.06 Structured Streaming Event Taxonomy (CAP-007) — P0
 
@@ -210,6 +213,9 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.06.001 | Typed per-phase event taxonomy (run/step/node/tool start-stream-end) | P0 | DI-011 | ss-06/BC-2.06.001.md |
 | BC-2.06.002 | run_id + parent_ids correlation across all events in a run | P0 | — | ss-06/BC-2.06.002.md |
 | BC-2.06.003 | Streaming and unary run produce identical final answer (NE-13) | P0 | DI-011 | ss-06/BC-2.06.003.md |
+| BC-2.06.004 | `tool_approval_request` StreamEvent (event 13) — payload; emission before interrupt; causal ordering | P1 | DI-011 | ss-06/BC-2.06.004.md |
+| BC-2.06.005 | `tool_approval_resolved` StreamEvent (event 14) — payload on Command::Resume; decision outcome | P1 | DI-011 | ss-06/BC-2.06.005.md |
+| BC-2.06.006 | `compaction_event` StreamEvent (event 15) — payload; emission after compaction completes; trigger variant | P1 | DI-011 | ss-06/BC-2.06.006.md |
 
 ### 2.07 Text Splitting with Code-Point Boundary Correctness (CAP-008) — P0
 
@@ -262,6 +268,8 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.10.002 | Append-only EvidenceJournal recording of every budget evaluation | P0 | — | ss-10/BC-2.10.002.md |
 | BC-2.10.003 | Graceful halt when budget ceiling reached (on_ceiling = halt \| summarize); remaining-budget exposure (RunContext.budget\_info) | P0 | — | ss-10/BC-2.10.003.md |
 | BC-2.10.004 | Budget escalation to HITL interrupt when on_ceiling = escalate | P0 | DI-003 | ss-10/BC-2.10.004.md |
+| BC-2.10.005 | CompactionTrigger configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; BudgetConfig extension; watermark arithmetic (VP-012 Kani seed) | P1 | — | ss-10/BC-2.10.005.md |
+| BC-2.10.006 | Compaction execution — ConversationSnapshot from FTS; mid-run window REPLACEMENT; CompactionEvent → EvidenceJournal; checkpoint immutability; DefaultSummarizationPolicy | P1 | DI-002 | ss-10/BC-2.10.006.md |
 
 ### 2.11 Content Provenance Tagging and Guardrail-on-Ingress (CAP-013) — P0
 
@@ -410,6 +418,22 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.22.002 | EmbeddingsOpenAI — text-embedding-3-small/large/ada-002-legacy; OpenAiApiKey Redacted-Debug Credential Opacity (DI-010); reqwest/rustls-tls/.timeout(30s); Batch Partial-Failure as Err | P1 | DI-008, DI-009, DI-010, DI-014 | ss-22/BC-2.22.002.md |
 | BC-2.22.003 | EmbeddingsOllama — No API Key; POST /api/embed Preferred; use_legacy_endpoint Toggle for /api/embeddings; reqwest/rustls-tls/.timeout(30s) Unconditional | P1 | DI-008, DI-009, DI-014 | ss-22/BC-2.22.003.md |
 
+### 2.23 First-Party Tool Library (CAP-034, CAP-035, CAP-036, CAP-037, CAP-038) — P1
+
+> **D23 expansion.** ferrochain-tools crate; Wave 1. PathGuard (workspace-confinement struct)
+> is the shared safety primitive for all file I/O tools. BashTool enforces a non-lowerable
+> Medium ActionRisk floor — the `action_risk` attribute cannot lower it below Medium
+> (E-TOOLS-007). BC-2.23.005 is VP-013 Kani seed (risk-floor invariant).
+
+| BC ID | Title | Priority | DI | File |
+|-------|-------|----------|----|------|
+| BC-2.23.001 | ReadFileTool — PathGuard-confined file read; 1 MiB max_bytes limit; E-TOOLS-001/E-TOOLS-002 | P1 | DI-008 | ss-23/BC-2.23.001.md |
+| BC-2.23.002 | WriteFileTool — PathGuard-confined atomic write; High ActionRisk; no auto-retry; E-TOOLS-001 | P1 | DI-008 | ss-23/BC-2.23.002.md |
+| BC-2.23.003 | EditFileTool — exact-match string replace; E-TOOLS-003 on no-match; opt-in fuzzy fallback (EditConfig::fuzzy_threshold); conditional retry safe | P1 | DI-008 | ss-23/BC-2.23.003.md |
+| BC-2.23.004 | ListDirTool — PathGuard-confined directory listing; ReadOnly ActionRisk; DirEntry struct; E-TOOLS-001 | P1 | DI-008 | ss-23/BC-2.23.004.md |
+| BC-2.23.005 | BashTool — sandboxed shell execution; non-lowerable Medium risk floor; BashOutput; 256 KiB output cap; 30 s timeout; E-TOOLS-004/005/007 (VP-013 Kani seed) | P1 | DI-008 | ss-23/BC-2.23.005.md |
+| BC-2.23.006 | GrepTool — in-process regex search; linear-time `regex` crate; max_results 100 cap; hermetic; PathGuard scope; E-TOOLS-001/006 | P1 | DI-008 | ss-23/BC-2.23.006.md |
+
 ---
 
 ## 3. Interface Definition
@@ -424,7 +448,12 @@ ferrochain is a Rust library framework, not a CLI tool. The public interface sur
   `ToolCallDialect`, `ProviderFallbackPolicy` _(last 4 added D20)_;
   `Retriever`, `VectorStore`, `VectorStoreFactory`, `Embeddings`
   _(added D21 — see `prd-supplements/interface-definitions.md §Retriever`,
-  `§VectorStore`, `§VectorStoreFactory`, `§Embeddings`)_
+  `§VectorStore`, `§VectorStoreFactory`, `§Embeddings`)_;
+  `PreToolCallHook`, `CompactionPolicy`
+  _(added D23 — see `prd-supplements/interface-definitions.md §PreToolCallHook`, `§Compaction`)_
+- **First-party tools (ferrochain-tools):** `ReadFileTool`, `WriteFileTool`, `EditFileTool`,
+  `ListDirTool`, `BashTool`, `GrepTool` — all PathGuard-confined; `ActionRisk` enum;
+  _(added D23 — see `prd-supplements/interface-definitions.md §First-Party Tools`)_
 - **Error type:** `FerrochainError { component: Component, category: Category, retry_hint, code }`
 - **ferrochain-server:** First-party HTTP server with `/threads`, `/assistants`,
   `/threads/{id}/runs` (thread-nested; includes `…/stream`, `…/resume`, `…/cancel`),
@@ -495,6 +524,7 @@ Summary:
 | E-SRLZ-001–099 | ferrochain-core (lc-serializable) | intra-crate | E-SRLZ-001 UnknownSerializableType (STATIC — type id not echoed), E-SRLZ-002 UnsupportedMonolithType |
 | E-VS-001–099 | ferrochain-vectorstores | crate | E-VS-001 ZeroNormVector (STATIC), E-VS-002 DimensionMismatch (STATIC), E-VS-003 RetrieverConfigInvalid, E-VS-004 ZeroNormWriteTime (STATIC), E-VS-005 FilterUnsupported |
 | E-EMBED-001–099 | ferrochain-core (embeddings) | intra-crate | E-EMBED-001 EmbeddingDimensionMismatch (STATIC) |
+| E-TOOLS-001–099 | ferrochain-tools | crate | E-TOOLS-001 PathEscape (SECURITY), E-TOOLS-002 FileSizeExceeded, E-TOOLS-003 ExactMatchNotFound, E-TOOLS-004 BashTimeout, E-TOOLS-007 BashRiskTierViolation |
 
 See `prd-supplements/error-taxonomy.md` for the complete catalog.
 
@@ -503,7 +533,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 ## 5b. Test Vectors
 
 > **Supplement:** `prd-supplements/test-vectors.md` — consolidated test-vector catalog
-> indexing the canonical test vectors embedded in all 116 BC files.
+> indexing the canonical test vectors embedded in all 129 BC files.
 > Primary consumers: test-writer, holdout-evaluator.
 
 ---
@@ -639,9 +669,9 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.14.004 | CAP-016, DI-009, NE-04 | ferrochain-core | P0 | U (CI lint) |
 | BC-2.14.005 | CAP-016, DI-010, NE-10 | ferrochain-core | P0 | U (CI lint) |
 | BC-2.14.006 | CAP-016, DI-014, NE-03 | ferrochain-core | P0 | U |
-| BC-2.15.001 | CAP-017 | ferrochain-memory | P2 | I |
-| BC-2.15.002 | CAP-017 | ferrochain-memory | P2 | I, P |
-| BC-2.15.003 | CAP-017 | ferrochain-memory | P2 | I |
+| BC-2.15.001 | CAP-017 | ferrochain-memory | P1 | I |
+| BC-2.15.002 | CAP-017 | ferrochain-memory | P1 | I, P |
+| BC-2.15.003 | CAP-017 | ferrochain-memory | P1 | I |
 | BC-2.16.001 | CAP-018, NE-09 | ferrochain-core | P2 | U, I |
 | BC-2.16.002 | CAP-018, NE-09 | ferrochain-core | P2 | U |
 | BC-2.16.003 | CAP-018, NE-09 | ferrochain-core | P2 | U, I |
@@ -680,8 +710,21 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.22.001 | CAP-031, DI-008, DI-014 | ferrochain-core (core::embeddings) | P1 | U, P |
 | BC-2.22.002 | CAP-032, DI-008, DI-009, DI-010, DI-014 | ferrochain-openai | P1 | U, I |
 | BC-2.22.003 | CAP-033, DI-008, DI-009, DI-014 | ferrochain-ollama | P1 | U, I |
+| BC-2.05.007 | CAP-006, DI-003 | ferrochain-graph | P1 | U, K |
+| BC-2.05.008 | CAP-006, DI-003 | ferrochain-graph | P1 | U, I |
+| BC-2.06.004 | CAP-007, DI-011 | ferrochain-graph | P1 | U, I |
+| BC-2.06.005 | CAP-007, DI-011 | ferrochain-graph | P1 | U, I |
+| BC-2.06.006 | CAP-007, DI-011 | ferrochain-graph | P1 | U |
+| BC-2.10.005 | CAP-012 | ferrochain-graph | P1 | U, K |
+| BC-2.10.006 | CAP-012, DI-002 | ferrochain-graph | P1 | U, I |
+| BC-2.23.001 | CAP-034, DI-008 | ferrochain-tools | P1 | U, I |
+| BC-2.23.002 | CAP-035, DI-008 | ferrochain-tools | P1 | U, I |
+| BC-2.23.003 | CAP-036, DI-008 | ferrochain-tools | P1 | U, I |
+| BC-2.23.004 | CAP-037, DI-008 | ferrochain-tools | P1 | U |
+| BC-2.23.005 | CAP-038, DI-008 | ferrochain-tools | P1 | U, K |
+| BC-2.23.006 | CAP-038, DI-008 | ferrochain-tools | P1 | U |
 
-**Totals:** 116 BCs — 51 P0 / 56 P1 / 9 P2
+**Totals:** 129 BCs — 51 P0 / 72 P1 / 6 P2
 
 ---
 

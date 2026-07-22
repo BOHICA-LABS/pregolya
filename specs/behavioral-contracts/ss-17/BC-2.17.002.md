@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "3c64e4e"
+input-hash: "40a5d61"
 extracted_from: null
 modified: []
 deprecated: null

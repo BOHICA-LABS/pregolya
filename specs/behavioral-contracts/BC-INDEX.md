@@ -1,10 +1,10 @@
 ---
 document_type: bc-index
 level: L3
-version: "2.0"
+version: "2.1"
 status: active
 producer: state-manager
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
@@ -13,25 +13,27 @@ traces_to: .factory/specs/prd.md
 
 # BC-INDEX: ferrochain Behavioral Contracts
 
-> **116 BCs total — 51 P0 / 56 P1 / 9 P2 | 11 Red Gate | 8 VP Seed | 10 VPs registered**
+> **129 BCs total — 51 P0 / 72 P1 / 6 P2 | 11 Red Gate | 11 VP Seed | 13 VPs registered**
 >
 > Subsystem IDs: SS-01 through SS-17 assigned by architect at Phase 1 Step D (2026-07-14).
 > SS-18 through SS-22 added D21 ecosystem-parity expansion (2026-07-20).
+> SS-23 (First-Party Tools) added D23 first-class approval hook + compaction expansion (2026-07-22).
 > All BCs reside under `specs/behavioral-contracts/ss-NN/` per ARCH-INDEX Subsystem Registry.
-> VP-INDEX: 10 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
-> VP-006–VP-010 pending architect authoring — seeds assigned in D21 burst).
+> VP-INDEX: 13 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
+> VP-006–VP-010 pending architect authoring — seeds assigned D21 burst;
+> VP-011–VP-013 seeds assigned D23 burst-231).
 
 ## Summary
 
 | Metric | Count |
 |--------|-------|
-| Total BCs | 116 |
+| Total BCs | 129 |
 | Priority P0 | 51 |
-| Priority P1 | 56 |
-| Priority P2 | 9 |
+| Priority P1 | 72 |
+| Priority P2 | 6 |
 | Red Gate BCs | 11 |
-| VP Seed BCs | 8 |
-| Subsection groups | 22 (SS-2.01 – SS-2.22) |
+| VP Seed BCs | 11 |
+| Subsection groups | 23 (SS-2.01 – SS-2.23) |
 
 ## Red Gate BCs
 
@@ -61,8 +63,11 @@ traces_to: .factory/specs/prd.md
 | VP-008 | BC-2.22.001 | Embeddings Trait — Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err | Proptest | CAP-031 dimensionality invariant |
 | VP-009 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division | Kani (candidate) | ADR-014 v1.1 Hardening Note |
 | VP-010 | BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed) | Kani (candidate) | ADR-016 Security Invariant |
+| VP-011 | BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny | Kani (candidate) | ADR-018 Decision 1 |
+| VP-012 | BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; Watermark Arithmetic | Kani (candidate) | ADR-019 Decision 3 |
+| VP-013 | BC-2.23.005 | BashTool — Non-Lowerable Medium Risk Floor; Sandboxed Shell Execution | Kani (candidate) | ADR-018 Decision 6 |
 
-_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); architect to author VP body files in Phase 6._
+_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-011/012/013 seeds assigned burst-231 (2026-07-22); architect to author VP body files in Phase 6._
 
 ## Full BC Catalog
 
@@ -95,9 +100,14 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.05.004 | Command(resume=value) API Contract for Programmatic Resume | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.004.md |
 | BC-2.05.005 | Resume on Empty Interrupt Queue Returns Err(NoActiveInterrupt) | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.005.md |
 | BC-2.05.006 | Risk-Tiered Interrupt Classification (Typed Action-Risk Levels for Domain A SOC) | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.006.md |
+| BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny (VP-011 Kani Seed) | CAP-034 | | DI-014 | P1 | | **VP** | ss-05/BC-2.05.007.md |
+| BC-2.05.008 | Skip-Hook-on-Resume Invariant — ToolApprovalRequest Checkpoint Persistence; Command::Resume(PreToolDecision); No Re-Invocation of pre_invoke | CAP-034 | | DI-014 | P1 | | | ss-05/BC-2.05.008.md |
 | BC-2.06.001 | Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end; guardrail_decision) | CAP-007 | | DI-011 | P0 | | | ss-06/BC-2.06.001.md |
 | BC-2.06.002 | run_id + parent_ids Correlation Across All Streaming Events | CAP-007 | | | P0 | | | ss-06/BC-2.06.002.md |
 | BC-2.06.003 | Streaming and Unary Run Produce Identical Final Answer (NE-13) | CAP-007 | NE-13 | DI-011 | P0 | | | ss-06/BC-2.06.003.md |
+| BC-2.06.004 | `tool_approval_request` StreamEvent (Event 13) — Payload; Emission Timing; Causal Ordering Before Interrupt | CAP-034 | | DI-014 | P1 | | | ss-06/BC-2.06.004.md |
+| BC-2.06.005 | `tool_approval_resolved` StreamEvent (Event 14) — Payload; Emission on Command::Resume; Decision Outcome | CAP-034 | | DI-014 | P1 | | | ss-06/BC-2.06.005.md |
+| BC-2.06.006 | `compaction_event` StreamEvent (Event 15) — Payload; Emission After Compaction Completes; Trigger Variant | CAP-035 | | DI-014 | P1 | | | ss-06/BC-2.06.006.md |
 | BC-2.07.001 | Chunk Boundaries Are Unicode Code-Point Counts (Not Bytes) | CAP-008 | | | P0 | | | ss-07/BC-2.07.001.md |
 | BC-2.07.002 | Non-ASCII Boundary Parity with Python Reference Implementation (Emoji, CJK) — R8 Red Gate | CAP-008 | | | P0 | **RG** | | ss-07/BC-2.07.002.md |
 | BC-2.07.003 | Short Document (length < chunk_size) — Single Chunk, No Overlap, No Panic | CAP-008 | | | P0 | | | ss-07/BC-2.07.003.md |
@@ -126,6 +136,8 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.10.002 | Append-Only EvidenceJournal Records Every Budget Evaluation | CAP-012 | | | P0 | | | ss-10/BC-2.10.002.md |
 | BC-2.10.003 | Graceful Halt When Budget Ceiling Reached (on_ceiling = halt \| summarize); Remaining-Budget Exposure | CAP-012 | | | P0 | | | ss-10/BC-2.10.003.md |
 | BC-2.10.004 | Budget Escalation to HITL Interrupt (Soft-Limit Escalate Path and Hard-Ceiling on_ceiling=Escalate Path) | CAP-012 | | DI-003 | P0 | | | ss-10/BC-2.10.004.md |
+| BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; BudgetConfig Extension; Watermark Arithmetic (VP-012 Kani Seed) | CAP-035 | | DI-014 | P1 | | **VP** | ss-10/BC-2.10.005.md |
+| BC-2.10.006 | Compaction Execution — ConversationSnapshot from FTS; Mid-Run Window REPLACEMENT; CompactionEvent → EvidenceJournal; Checkpoint Immutability; DefaultSummarizationPolicy | CAP-035 | | DI-014 | P1 | | | ss-10/BC-2.10.006.md |
 | BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary (Tool-Result, RAG, Memory) | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.001.md |
 | BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | CAP-013 | NE-06 | DI-012 | P0 | | | ss-11/BC-2.11.002.md |
 | BC-2.11.003 | GuardrailHook Fires at RAG Ingress | CAP-013 | NE-06 | DI-012 | P0 | | | ss-11/BC-2.11.003.md |
@@ -152,9 +164,9 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | CAP-016 | NE-04 | DI-009 | P0 | | | ss-14/BC-2.14.004.md |
 | BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref\<Target=str\> | CAP-016 | NE-10 | DI-010 | P0 | | | ss-14/BC-2.14.005.md |
 | BC-2.14.006 | Validation Failures Propagate Err(FerrochainError); No Silent None | CAP-016 | NE-03 | DI-014 | P0 | | | ss-14/BC-2.14.006.md |
-| BC-2.15.001 | KV and Vector Memory Persistence Across Threads (Not Per-Checkpoint) | CAP-017 | | | P2 | | | ss-15/BC-2.15.001.md |
-| BC-2.15.002 | User/App/Session Tier Isolation — User-Private Does Not Bleed Across Scopes | CAP-017 | | | P2 | | | ss-15/BC-2.15.002.md |
-| BC-2.15.003 | GDPR Erasure Removes All Traces from All Memory Tiers | CAP-017 | | | P2 | | | ss-15/BC-2.15.003.md |
+| BC-2.15.001 | KV and Vector Memory Persistence Across Threads (Not Per-Checkpoint) | CAP-017 | | | P1 | | | ss-15/BC-2.15.001.md |
+| BC-2.15.002 | User/App/Session Tier Isolation — User-Private Does Not Bleed Across Scopes | CAP-017 | | | P1 | | | ss-15/BC-2.15.002.md |
+| BC-2.15.003 | GDPR Erasure Removes All Traces from All Memory Tiers | CAP-017 | | | P1 | | | ss-15/BC-2.15.003.md |
 | BC-2.15.004 | SkillStore Registry — Load-on-Demand Skill Documents | CAP-020 | | DI-008,DI-014 | P1 | | | ss-15/BC-2.15.004.md |
 | BC-2.15.005 | Guarded Memory and Skill Writes (MemoryWriteGuard; E-MEMORY-007) | CAP-020 | | DI-008,DI-012,DI-014 | P1 | | | ss-15/BC-2.15.005.md |
 | BC-2.15.006 | Frozen-Snapshot Context Mutation — Memory-Sourced System-Prompt Content | CAP-020 | | DI-002,DI-008,DI-014 | P1 | | | ss-15/BC-2.15.006.md |
@@ -184,6 +196,12 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.22.001 | Embeddings Trait — embed_documents Batch; embed_query; Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err; Arc\<dyn Embeddings\> Dyn-Safe (VP-008 Proptest Seed) | CAP-031 | | DI-008,DI-014 | P1 | | **VP-008** | ss-22/BC-2.22.001.md |
 | BC-2.22.002 | EmbeddingsOpenAI — text-embedding-3-small/large/ada-002-legacy; OpenAiApiKey Redacted-Debug Credential Opacity (DI-010); reqwest/rustls-tls/.timeout(30s); Batch Partial-Failure as Err | CAP-032 | | DI-008,DI-009,DI-010,DI-014 | P1 | **RG** | | ss-22/BC-2.22.002.md |
 | BC-2.22.003 | EmbeddingsOllama — No API Key; POST /api/embed Preferred; use_legacy_endpoint Toggle for /api/embeddings; reqwest/rustls-tls/.timeout(30s) Unconditional | CAP-033 | | DI-008,DI-009,DI-014 | P1 | | | ss-22/BC-2.22.003.md |
+| BC-2.23.001 | ReadFileTool — PathGuard-Confined File Read; max_bytes 1 MiB Limit; E-TOOLS-001 / E-TOOLS-002 | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.001.md |
+| BC-2.23.002 | WriteFileTool — PathGuard-Confined Atomic Write; High ActionRisk; No Auto-Retry; E-TOOLS-001 | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.002.md |
+| BC-2.23.003 | EditFileTool — Exact-Match String Replace; E-TOOLS-003 on No-Match; Opt-In Fuzzy Fallback (EditConfig::fuzzy_threshold); Conditional Retry Safe | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.003.md |
+| BC-2.23.004 | ListDirTool — PathGuard-Confined Directory Listing; ReadOnly; E-TOOLS-001; DirEntry Struct | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.004.md |
+| BC-2.23.005 | BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; BashOutput; 256 KiB Output Cap; 30 s Timeout; E-TOOLS-004/005/007 (VP-013 Kani Seed) | CAP-037 | | DI-009,DI-014 | P1 | | **VP** | ss-23/BC-2.23.005.md |
+| BC-2.23.006 | GrepTool — In-Process Regex Search; Linear-Time `regex` Crate; max_results 100 Cap; Hermetic; PathGuard Scope; E-TOOLS-001/006 | CAP-038 | | DI-014 | P1 | | | ss-23/BC-2.23.006.md |
 
 ## Carry-Forward Notes (RESOLVED at Phase 1 Step D, 2026-07-14)
 
@@ -199,6 +217,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.1 | 2026-07-22 | D23 INTEGRATE burst-231: header 116→129 BCs; P1 56→72, P2 9→6 (BC-2.15.001/002/003 promoted P2→P1); VP Seed 8→11 (+VP-011→BC-2.05.007, VP-012→BC-2.10.005, VP-013→BC-2.23.005); VP-INDEX 10→13; subsection groups 22→23 (+SS-23 First-Party Tools); Full Catalog +13 rows (BC-2.05.007/008, BC-2.06.004/005/006, BC-2.10.005/006, BC-2.23.001–006). | D23 burst-231 |
 | 2.0 | 2026-07-21 | Burst-226 (F-P131-01/02/03/05/06/07): (1) F-P131-05 TrustLevel migration: BC-2.18.004 v1.1→1.2 (title updated to canonical TrustLevel form; EC/TV/INV migrated from ProvenanceTag to TrustLevel). BC-2.18.002 v1.0→1.1 (INV-2/PC3 TrustLevel). BC-2.09.003 v1.1→1.2 (PC1 ProvenanceTag struct form; PC4 canonical guardrail.unregistered_passthrough). BC-2.11.006 v1.1→1.2 (PC2 canonical event_type). (2) F-P131-01: BC-2.20.002 v1.2→1.3 (PC2 severity-bifurcated Fail; E-CORE-008). (3) F-P131-07: BC-2.21.004 v1.1→1.2 (INV-3 fail-safe E-VS-005). (4) F-P131-02+03: BC-2.13.002 v1.0→1.1 (event_type sandbox.process_no_isolation_execute). BC-2.12.006 v1.2→1.3 (event_type server.rate_limit_store_in_memory). BC-2.15.003 v1.1→1.2 (event_type memory.gdpr_unattributed_session_entries). BC-2.12.005 v1.4→1.5 (event_type server.security_config_cors_wildcard). BC-2.18.004 H1 title already updated in v1.9→2.0 scope. | burst-226 F-P131 |
 | 1.9 | 2026-07-21 | F-P130 fix burst 225: DI column updates — (1) BC-2.20.001: DI-008,DI-012 → DI-008,DI-012,DI-014 (F-P130-04). (2) BC-2.20.002: DI-012 → DI-012,DI-014 (F-P130-02/04). (3) BC-2.21.004: DI-008 → DI-008,DI-014 (F-P130-04). (4) BC-2.22.002: DI-008,DI-010,DI-014 → DI-008,DI-009,DI-010,DI-014 (F-P130-09). (5) BC-2.22.003: DI-008,DI-014 → DI-008,DI-009,DI-014 (F-P130-09). | F-P130 burst-225 |
 | 1.8 | 2026-07-21 | D21 spec-body layer complete (burst 222): header 95→116 BCs; P0 48→51, P1 39→56, P2 8→9; Red Gate 5→11 (+BC-2.18.004/005, BC-2.19.005, BC-2.20.002, BC-2.21.003, BC-2.22.002); VP Seed 3→8 (+VP-006→BC-2.18.004, VP-007→BC-2.19.001, VP-008→BC-2.22.001, VP-009→BC-2.21.003, VP-010→BC-2.19.005); VP-INDEX 5→10; subsection groups 17→22; Full Catalog +21 rows (SS-18..22); VP Seed table restructured with VP ID column. BC-2.19.001 v1.0→v1.1 (VP-007 seed assigned). | D21 burst-222 |

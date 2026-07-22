@@ -1,22 +1,25 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.41"
+version: "2.42"
 status: active
 producer: product-owner
 total_standing_gates: 34
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "8f675db"
+input-hash: "9f40140"
 traces_to: prd.md
-total_bcs: 95
-total_batches: 15
-p0_count: 48
-p1_count: 39
-p2_count: 8
+total_bcs: 129
+total_batches: 20
+p0_count: 51
+p1_count: 72
+p2_count: 6
+changelog:
+  - "2.42 (D23/2026-07-22): D21 retroactive registration (Batches 16-18, +21 BCs); D23 Integration (Batches 19-20, +13 BCs); BC-2.15.001/002/003 promoted P2→P1; SS.18..23 added to subsystem map; counts 95→129."
+  - "2.41 (D21/2026-07-20): D21 ADR-010 v1.1 error-model integration."
 subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs assigned at Phase 1b — RESOLVED 2026-07-14, see BC-INDEX. All 95 BCs carry real SS-NN subsystem IDs."
 ---
 
@@ -31,13 +34,13 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 
 | Metric | Value |
 |--------|-------|
-| Total BCs | 95 |
-| P0 (must-have) | 48 |
-| P1 (should-have) | 39 |
-| P2 (nice-to-have) | 8 |
-| Batches | 15 |
+| Total BCs | 129 |
+| P0 (must-have) | 51 |
+| P1 (should-have) | 72 |
+| P2 (nice-to-have) | 6 |
+| Batches | 20 |
 | BCs per batch (max) | 9 (Batch 9 only — Step-E exception; planning cap remains 8) |
-| Subsystems covered | 17 (SS.01–SS.17, mapping CAP-001–CAP-021) |
+| Subsystems covered | 23 (SS.01–SS.23, mapping CAP-001–CAP-038) |
 
 ## Subsystem → CAP Mapping
 
@@ -60,6 +63,12 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | SS.15 | CAP-017 (P2), CAP-020 (P1) | ferrochain-memory | P1/P2 |
 | SS.16 | CAP-018 | ferrochain-core | P2 |
 | SS.17 | CAP-019 | all (formal verification) | P2 |
+| SS.18 | CAP-022, CAP-023 | ferrochain-prompts | P1 |
+| SS.19 | CAP-024, CAP-025 | ferrochain-core | P1 |
+| SS.20 | CAP-026, CAP-027 | ferrochain-vectorstores | P1 |
+| SS.21 | CAP-028, CAP-029, CAP-030 | ferrochain-vectorstores | P1 |
+| SS.22 | CAP-031, CAP-032, CAP-033 | ferrochain-community | P1 |
+| SS.23 | CAP-034, CAP-035, CAP-036, CAP-037, CAP-038 | ferrochain-tools | P1 |
 
 ## D17 Phase-1 BC Commitments Coverage
 
@@ -113,13 +122,13 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | DI-005 | BC-2.04.006, BC-2.17.001 |
 | DI-006 | BC-2.13.001, BC-2.13.002, BC-2.13.003, BC-2.13.006, BC-2.13.007 |
 | DI-007 | BC-2.13.004, BC-2.13.005, BC-2.17.001 |
-| DI-008 | BC-2.01.001, BC-2.01.002, BC-2.04.008, BC-2.08.006, BC-2.08.010, BC-2.08.013, BC-2.08.014, BC-2.09.006, BC-2.09.007, BC-2.13.007, BC-2.14.001, BC-2.14.003, BC-2.15.004, BC-2.15.005, BC-2.15.006 |
-| DI-009 | BC-2.08.007, BC-2.08.014, BC-2.14.004 |
-| DI-010 | BC-2.08.014, BC-2.09.007, BC-2.13.007, BC-2.14.005 |
+| DI-008 | BC-2.01.001, BC-2.01.002, BC-2.04.008, BC-2.08.006, BC-2.08.010, BC-2.08.013, BC-2.08.014, BC-2.09.006, BC-2.09.007, BC-2.13.007, BC-2.14.001, BC-2.14.003, BC-2.15.004, BC-2.15.005, BC-2.15.006, BC-2.18.001, BC-2.18.002, BC-2.18.003, BC-2.18.004, BC-2.18.005, BC-2.19.001, BC-2.19.002, BC-2.19.003, BC-2.19.004, BC-2.19.005, BC-2.19.006, BC-2.20.001, BC-2.20.003, BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004, BC-2.22.001, BC-2.22.002, BC-2.22.003 |
+| DI-009 | BC-2.08.007, BC-2.08.014, BC-2.14.004, BC-2.22.002, BC-2.22.003, BC-2.23.005 |
+| DI-010 | BC-2.08.014, BC-2.09.007, BC-2.13.007, BC-2.14.005, BC-2.19.002, BC-2.22.002 |
 | DI-011 | BC-2.06.001, BC-2.06.003, BC-2.08.001, BC-2.12.007 |
-| DI-012 | BC-2.09.003, BC-2.11.001, BC-2.11.002, BC-2.11.003, BC-2.11.004, BC-2.11.005, BC-2.11.006, BC-2.15.005 |
+| DI-012 | BC-2.09.003, BC-2.11.001, BC-2.11.002, BC-2.11.003, BC-2.11.004, BC-2.11.005, BC-2.11.006, BC-2.15.005, BC-2.20.001, BC-2.20.002 |
 | DI-013 | BC-2.12.005 |
-| DI-014 | BC-2.04.008, BC-2.08.004, BC-2.08.007, BC-2.08.013, BC-2.08.014, BC-2.09.004, BC-2.09.005, BC-2.09.006, BC-2.09.007, BC-2.14.001, BC-2.14.006, BC-2.15.004, BC-2.15.005, BC-2.15.006 |
+| DI-014 | BC-2.04.008, BC-2.08.004, BC-2.08.007, BC-2.08.013, BC-2.08.014, BC-2.09.004, BC-2.09.005, BC-2.09.006, BC-2.09.007, BC-2.14.001, BC-2.14.006, BC-2.15.004, BC-2.15.005, BC-2.15.006, BC-2.18.001, BC-2.18.004, BC-2.18.005, BC-2.19.005, BC-2.19.006, BC-2.20.001, BC-2.20.002, BC-2.21.003, BC-2.21.004, BC-2.22.001, BC-2.22.002, BC-2.22.003, BC-2.05.007, BC-2.05.008, BC-2.06.004, BC-2.06.005, BC-2.06.006, BC-2.10.005, BC-2.10.006, BC-2.23.001, BC-2.23.002, BC-2.23.003, BC-2.23.004, BC-2.23.005, BC-2.23.006 |
 
 **Coverage: 14/14 DIs enforced. Zero orphan invariants.**
 
@@ -278,9 +287,9 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | BC-2.12.005 | SecurityConfig::default() denies CORS; debug route gated on explicit opt-in key (NE-14) | P1 | CAP-014 | DI-013 | Wave 1 |
 | BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore trait seams with durable backends (NE-08) | P1 | CAP-014 | — | Wave 1 |
 | BC-2.12.007 | Streaming endpoint and unary endpoint drive same graph engine, same final answer | P1 | CAP-014 | DI-011 | Wave 1 |
-| BC-2.15.001 | KV and vector memory persistence across threads (not per-checkpoint) | P2 | CAP-017 | — | Post-v1 |
-| BC-2.15.002 | User/app/session tier isolation — user-private does not bleed across scopes | P2 | CAP-017 | — | Post-v1 |
-| BC-2.15.003 | GDPR erasure removes all traces from all memory tiers | P2 | CAP-017 | — | Post-v1 |
+| BC-2.15.001 | KV and vector memory persistence across threads (not per-checkpoint) | P1 | CAP-017 | — | Wave 2 |
+| BC-2.15.002 | User/app/session tier isolation — user-private does not bleed across scopes | P1 | CAP-017 | — | Wave 2 |
+| BC-2.15.003 | GDPR erasure removes all traces from all memory tiers | P1 | CAP-017 | — | Wave 2 |
 
 ### Batch 12 — Tool Retry + Formal Verification (P2)
 *5 BCs — SS.16 + SS.17*
@@ -338,6 +347,86 @@ split by wave avoids exception).
 | BC ID | Title | Priority | CAP | DI | Wave |
 |-------|-------|----------|-----|----|------|
 | BC-2.13.007 | Environment variable sanitization at sandbox execution boundary | P1 | CAP-015 | DI-006, DI-008, DI-010 | Wave 1 |
+
+---
+
+## D21 Integration BCs (RETROACTIVE REGISTRATION — authored burst-222, 2026-07-21)
+
+D21 ecosystem-parity expansion produced 21 new BCs across SS-18..22 (CAP-022..033).
+These BCs were authored in burst-222 but not registered here at that time.
+Split into three batches to respect the planning cap of 8 BCs per batch.
+
+### Batch 16 — D21 Integration: Prompt Templates (P1, Phase-1b, D21)
+*8 BCs — SS.18 + SS.19 partial (Wave 2)*
+
+| BC ID | Title | Priority | CAP | DI | Wave |
+|-------|-------|----------|-----|----|------|
+| BC-2.18.001 | PromptTemplate F-String Rendering, Partial Binding, Variable Detection, Strict-Undefined Guard | P1 | CAP-022 | DI-008, DI-014 | Wave 2 |
+| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance | P1 | CAP-022 | DI-008 | Wave 2 |
+| BC-2.18.003 | MessagesPlaceholder Vec\<Message\> In-Place Expansion and FewShotPromptTemplate Composition | P1 | CAP-023 | DI-008 | Wave 2 |
+| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed) | P1 | CAP-022 | DI-008, DI-014 | Wave 2 |
+| BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | P1 | CAP-022 | DI-008, DI-014 | Wave 2 |
+| BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | P1 | CAP-024 | DI-008 | Wave 2 |
+| BC-2.19.002 | lc_secrets() Credential Fields Stripped from kwargs Before Serialization and Constructor Dispatch | P1 | CAP-024 | DI-008, DI-010 | Wave 2 |
+| BC-2.19.003 | Inventory-Based Type Registry — Link-Time Registration, Feature-Gated Partner Entries, OnceLock Allowlist | P1 | CAP-025 | DI-008 | Wave 2 |
+
+### Batch 17 — D21 Integration: Serialization + Retrieval + Vector Store (P0/P1/P2, Phase-1b, D21)
+*8 BCs — SS.19 cont. + SS.20 + SS.21 partial (Wave 2)*
+
+| BC ID | Title | Priority | CAP | DI | Wave |
+|-------|-------|----------|-----|----|------|
+| BC-2.19.004 | Legacy Namespace Remap — OLD_CORE_NAMESPACES_MAPPING Aliases Resolve to Canonical Constructors | P2 | CAP-025 | DI-008 | Wave 2 |
+| BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed, VP-010 Kani Candidate) | P0 | CAP-025 | DI-008, DI-014 | Wave 2 |
+| BC-2.19.006 | Langchain-Monolith Type Ids Return E-SRLZ-002 (Structured Error, Not Silent None or E-SRLZ-001) | P1 | CAP-025 | DI-008, DI-014 | Wave 2 |
+| BC-2.20.001 | Retriever Trait — get_relevant_documents Async Dyn-Compatible; Document Carrier; Arc\<dyn Retriever\> Graph Seam | P1 | CAP-026 | DI-008, DI-012, DI-014 | Wave 2 |
+| BC-2.20.002 | BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns (DI-012 Coverage) | P0 | CAP-026 | DI-012, DI-014 | Wave 2 |
+| BC-2.20.003 | VectorStoreRetriever — SearchType Enum; k / fetch_k / lambda_mult Configuration; as_retriever() | P1 | CAP-027 | DI-008 | Wave 2 |
+| BC-2.21.001 | VectorStore Trait — Instance-Method Surface; VectorStoreFactory Sized-Bounded Separation; Dyn-Safety | P1 | CAP-028 | DI-008 | Wave 2 |
+| BC-2.21.002 | InMemoryVectorStore — Arc\<dyn Embeddings\> DI; RwLock Interior Mutability; Vec\<f32\> Cosine | P1 | CAP-029 | DI-008 | Wave 2 |
+
+### Batch 18 — D21 Integration: Vector Store Cont. + Embeddings (P0/P1, Phase-1b, D21)
+*5 BCs — SS.21 cont. + SS.22 (Wave 2)*
+
+| BC ID | Title | Priority | CAP | DI | Wave |
+|-------|-------|----------|-----|----|------|
+| BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division (VP-009) | P0 | CAP-029 | DI-008, DI-014 | Wave 2 |
+| BC-2.21.004 | MetadataFilter — Eq / Ne / In FilterClause; similarity_search_with_filter; #[non_exhaustive] | P1 | CAP-030 | DI-008, DI-014 | Wave 2 |
+| BC-2.22.001 | Embeddings Trait — embed_documents Batch; embed_query; Dimensionality Contract → E-EMBED-001; VP-008 Proptest Seed | P1 | CAP-031 | DI-008, DI-014 | Wave 2 |
+| BC-2.22.002 | EmbeddingsOpenAI — text-embedding models; OpenAiApiKey Redacted-Debug; reqwest/rustls-tls; Batch Partial-Failure | P1 | CAP-032 | DI-008, DI-009, DI-010, DI-014 | Wave 2 |
+| BC-2.22.003 | EmbeddingsOllama — No API Key; POST /api/embed Preferred; use_legacy_endpoint Toggle; reqwest/rustls-tls | P1 | CAP-033 | DI-008, DI-009, DI-014 | Wave 2 |
+
+---
+
+## D23 Integration BCs (UNBLOCKED — ADR-018 approval hook + ADR-019 compaction + ADR-020 first-party tools)
+
+D23 decisions produced 13 new BCs across SS-05/06/10 (extensions) and SS-23 (new subsystem).
+BC-2.15.001/002/003 promoted P2→P1 in same decision band.
+Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6 BCs, SS.23 new).
+
+### Batch 19 — D23 Integration: PreToolCallHook + Compaction Events + Budget Extension (P1, Phase-1b, D23; Wave 1)
+*7 BCs — SS.05/SS.06/SS.10 extensions (Wave 1)*
+
+| BC ID | Title | Priority | CAP | DI | Wave |
+|-------|-------|----------|-----|----|------|
+| BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny (VP-011 Kani Seed) | P1 | CAP-034 | DI-014 | Wave 1 |
+| BC-2.05.008 | Skip-Hook-on-Resume Invariant — ToolApprovalRequest Checkpoint Persistence; No Re-Invocation of pre_invoke | P1 | CAP-034 | DI-014 | Wave 1 |
+| BC-2.06.004 | `tool_approval_request` StreamEvent (Event 13) — Payload; Emission Timing; Causal Ordering Before Interrupt | P1 | CAP-034 | DI-014 | Wave 1 |
+| BC-2.06.005 | `tool_approval_resolved` StreamEvent (Event 14) — Payload; Emission on Command::Resume; Decision Outcome | P1 | CAP-034 | DI-014 | Wave 1 |
+| BC-2.06.006 | `compaction_event` StreamEvent (Event 15) — Payload; Emission After Compaction Completes; Trigger Variant | P1 | CAP-035 | DI-014 | Wave 1 |
+| BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; Watermark Arithmetic (VP-012 Kani Seed) | P1 | CAP-035 | DI-014 | Wave 1 |
+| BC-2.10.006 | Compaction Execution — ConversationSnapshot from FTS; Mid-Run Window REPLACEMENT; CompactionEvent → EvidenceJournal | P1 | CAP-035 | DI-014 | Wave 1 |
+
+### Batch 20 — D23 Integration: First-Party Tool Library (P1, Phase-1b, D23; Wave 1)
+*6 BCs — SS.23 new subsystem (ferrochain-tools, Wave 1)*
+
+| BC ID | Title | Priority | CAP | DI | Wave |
+|-------|-------|----------|-----|----|------|
+| BC-2.23.001 | ReadFileTool — PathGuard-Confined File Read; max_bytes 1 MiB Limit; E-TOOLS-001 / E-TOOLS-002 | P1 | CAP-036 | DI-014 | Wave 1 |
+| BC-2.23.002 | WriteFileTool — PathGuard-Confined Atomic Write; High ActionRisk; No Auto-Retry; E-TOOLS-001 | P1 | CAP-036 | DI-014 | Wave 1 |
+| BC-2.23.003 | EditFileTool — Exact-Match String Replace; E-TOOLS-003 on No-Match; Opt-In Fuzzy Fallback; Conditional Retry Safe | P1 | CAP-036 | DI-014 | Wave 1 |
+| BC-2.23.004 | ListDirTool — PathGuard-Confined Directory Listing; ReadOnly; E-TOOLS-001; DirEntry Struct | P1 | CAP-036 | DI-014 | Wave 1 |
+| BC-2.23.005 | BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; 256 KiB Output Cap; 30 s Timeout (VP-013 Kani Seed) | P1 | CAP-037 | DI-009, DI-014 | Wave 1 |
+| BC-2.23.006 | GrepTool — In-Process Regex Search; Linear-Time `regex` Crate; max_results 100 Cap; PathGuard Scope; E-TOOLS-001/006 | P1 | CAP-038 | DI-014 | Wave 1 |
 
 ---
 
@@ -2121,6 +2210,7 @@ split by wave avoids exception).
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.42 | 2026-07-22 | D21 retroactive registration (Batches 16–18, +21 BCs: SS-18..22, CAP-022..033, 3 P0 + 17 P1 + 1 P2) and D23 integration (Batches 19–20, +13 BCs: SS-23 new subsystem + SS-05/06/10 extensions, all P1); BC-2.15.001/002/003 promoted P2→P1 per D23; SS.18..23 added to Subsystem→CAP table; DI-008/009/010/012/014 coverage rows updated with all 34 new BCs; counts: 95→129 total, P0 48→51, P1 39→72, P2 8→6, batches 15→20, subsystems 17→23. | D21 burst-222, D23 burst-231 |
 | 2.41 | 2026-07-20 | D21/Batch-3b-i ADR-010 v1.1 error-model integration: Error namespace list in §Error namespace discipline expanded 12→16 by adding E-TMPL, E-SRLZ, E-VS, E-EMBED. New namespaces correspond to ADR-015 (ferrochain-prompts TMPL), ADR-016 (ferrochain-core::serializable SRLZ), ADR-014 (ferrochain-vectorstores VS), ADR-017 (ferrochain-core::embeddings EMBED). Namespace list is now: E-CORE, E-GRAPH, E-CHKPT, E-SERVER, E-PROV, E-MCP, E-SPLIT, E-SBXD, E-RETRY, E-CRON, E-MEMORY, E-BUDGET, E-TMPL, E-SRLZ, E-VS, E-EMBED. Cross-cutting integrations for this expansion (error-taxonomy.md v1.27 9 new codes, BC-2.14.001 v1.2 component enum, interface-definitions.md v2.41 blanket annotation census 86→95, api-surface.md v1.6 Component enum, BC-2.20.003 v1.1 E-CFG-001→E-VS-003 reassignment) handled in companion files this burst. BC-2.14.002 verified: no change needed (all 4 new components library-layer only). TD-VSDD-060 E-CFG corpus sweep: zero active residue. | D21, ADR-010 v1.1 |
 | 2.40 | 2026-07-19 | F-P118-01 (HIGH, process-gap): Gate #12 Lifecycle-Arrow Census Gate updated to reflect four-member terminal set. (1) Both canonical forms updated: title/prose form gains `/summary_halt`; diagram/arrow form gains `\| summary_halt`. (2) "Terminal set = {completed, failed, cancelled} only" → "{completed, failed, cancelled, summary_halt}" with inline rationale: `summary_halt` is the budget-summarize terminal state reached via `in_progress → summary_halt` on `OnCeiling::Summarize` (BC-2.10.003 PC8(c)(d)); carries summarize output; `completed_at` set; not cancellable; directly deletable; emits `RunEnd`. (3) grep-verify instruction updated: verify hits list all FOUR terminal states; explicitly disallow three-member-only enumerations. (4) Authority citations updated: BC-2.12.003 v1.4 + F-P117-01 adjudication (fix burst 120) + F-P118-01 (fix burst 121). (5) Batch-10 table entry for BC-2.12.003 synced to BC-INDEX:122 / BC H1 four-member verbatim form. F-P118-02: sibling BC propagation — BC-2.12.004 v1.2→v1.3 (PC2b + Related BCs: add `\| summary_halt`); BC-2.05.004 v1.2→v1.3 (Invariant non-interrupted status list: add `summary_halt`); BC-2.05.005 v1.3→v1.4 (Related BCs + VP-HITL-10: add `summary_halt`). Corpus-wide closure grep: 5 three-member terminal-set hits enumerated — all in bc-authoring-plan.md and BC-2.12.004/BC-2.05.004/BC-2.05.005; all fixed this burst. BC-2.12.003 v1.4 (canonical) and BC-2.12.006 already correct. `total_standing_gates` unchanged at 34. | F-P118-01, F-P118-02 |
 | 2.39 | 2026-07-18 | F-P112-01 (MED): E-CORE-007 `<content_type>` rendered-value adjudication. ADJUDICATED: BARE variant name. interface-definitions.md §IngressContent (lines 270-272) is the pre-existing authoritative definition specifying bare names ('ToolResult', 'RagChunk', 'MemoryItem'). The qualified 'IngressContent::ToolResult/RagChunk/MemoryItem' form introduced incidentally by burst-115 (F-P111-01) contradicted the interface-definitions source of truth. BC fixes: BC-2.11.002 EC-001/TV (v1.7→v1.8), BC-2.11.003 EC-004/TV (v1.6→v1.7), BC-2.11.004 EC-004/TV (v1.6→v1.7) — all 6 annotation sites now render bare variant names. Gate #33 context-sourced exception registry updated: E-CORE-007 `<content_type>` now explicitly noted as rendering BARE variant name per interface-definitions.md §IngressContent; per-BC named values updated to bare-quoted form '"ToolResult"/"RagChunk"/"MemoryItem"'. F-P112-02 (MED, process-gap): E-CORE-005 polymorphic message adjudication. ADJUDICATED: E-CORE-005 taxonomy format 'Validation failed for '<field>': <reason>' is the SINGLE required message shape corpus-wide. 5 divergent BC sites rewound to canonical form: BC-2.04.002 EC-003 (v1.2→v1.3), BC-2.04.007 EC-003 (v1.5→v1.6), BC-2.08.002 EC-005 (v1.3→v1.4), BC-2.08.006 EC-002 (v1.3→v1.4), BC-2.08.014 EC-006 (v1.2→v1.3; site discovered by F-P112-02 corpus-wide sweep, not in pass-56 census). Addendum note added to pass-56 second-pass census block. error-taxonomy.md v1.25→v1.26 adjudication row. `total_standing_gates` unchanged at 34. | F-P112-01, F-P112-02 |

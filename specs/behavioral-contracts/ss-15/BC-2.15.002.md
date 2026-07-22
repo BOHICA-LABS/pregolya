@@ -2,20 +2,21 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.002
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 origin: greenfield
-priority: P2
+priority: P1
 subsystem: SS-15
 capability: CAP-017
-wave: 2
+wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-memory per module-decomposition.md v1.10."
+  - "1.2 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "a097712"
+input-hash: "0c8fd3a"
 extracted_from: null
 modified: []
 deprecated: null

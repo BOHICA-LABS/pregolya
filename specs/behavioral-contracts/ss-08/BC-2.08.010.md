@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.010
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,18 +13,23 @@ capability: CAP-002
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
   - architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - architecture/decisions/ADR-008-proc-macro-attributes.md
+  - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "2c8763e"
+  - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
+input-hash: "30e74f2"
+changelog:
+  - "1.0 (initial): base BC authored."
+  - "1.1 (D23/2026-07-22): Add optional `action_risk` attribute parameter (`action_risk = ActionRisk::High`) per ADR-018 Decision 6. PC3 updated to document optional attribute; PC1 extended with `action_risk()` method on generated struct; `ToolCallPreview.action_risk` carries the value when `pre_tool_dispatch` hook is called. New EC-005: omitting `action_risk` defaults to `None` (no risk tier constraint). Related BCs: BC-2.05.004 and BC-2.23.005 forward refs added."
 extracted_from: null
 modified: []
 deprecated: null
@@ -51,7 +56,10 @@ type MUST have a committed snapshot test per BC-2.08.009 (schema naming stabilit
 1. The annotated function is `async fn` returning `Result<T, FerrochainError>` where `T: serde::Serialize`.
 2. All parameter types implement `schemars::JsonSchema + serde::DeserializeOwned`.
 3. The `#[ferrochain::tool(name = "...", description = "...")]` attribute is present with both
-   `name` and `description` specified.
+   `name` and `description` specified. An optional `action_risk` attribute key (e.g.,
+   `action_risk = ActionRisk::High`) may be included to declare the tool's risk tier; if
+   omitted, the generated struct's `action_risk()` returns `None` and `ToolCallPreview.action_risk`
+   is `None` when the `pre_tool_dispatch` hook is called.
 4. `ferrochain-macros` is available as a direct or transitive dependency (re-exported from
    `ferrochain-core`).
 
@@ -62,6 +70,9 @@ type MUST have a committed snapshot test per BC-2.08.009 (schema naming stabilit
    - `Tool` trait with `name()` returning the supplied `name` literal
    - `description()` returning the supplied `description` literal
    - `schema()` returning `schemars::schema_for!(<ArgStruct>)` as `schemars::Schema`
+   - `action_risk()` returning `Option<ActionRisk>` — `Some(ActionRisk::<Tier>)` when the
+     `action_risk` attribute is present; `None` when omitted. This value is carried into
+     `ToolCallPreview.action_risk` when the `pre_tool_dispatch` hook is invoked (BC-2.05.004).
    - `Runnable<ToolInput, ToolOutput>` with `invoke` delegating to the annotated function body
 2. A private `<PascalCaseName>Args` struct is generated with one field per function parameter;
    the struct derives `serde::Deserialize + schemars::JsonSchema`.
@@ -110,6 +121,13 @@ Error message must guide the user to wrap with `FerrochainError`.
 **Expected behavior:** Compile-time error specifying both fields are required. The macro
 MUST NOT fall back to using the function name as the tool name silently (explicit contract).
 
+### EC-005: `action_risk` omitted from attribute
+**Scenario:** `#[ferrochain::tool(name = "search_web", description = "Searches the web")]` with no `action_risk` key.
+**Expected behavior:** Compiles successfully. `SearchWebTool::default().action_risk()` returns `None`.
+When the `pre_tool_dispatch` hook is called, `ToolCallPreview.action_risk` is `None`. The hook
+retains full discretion to approve, deny, or edit — no risk tier constraint is applied by the framework
+on the caller's behalf.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -132,6 +150,8 @@ MUST NOT fall back to using the function name as the tool name silently (explici
 - BC-2.08.011 — sibling: `#[entrypoint]` macro (same proc-macro crate, different attribute)
 - BC-2.08.012 — sibling: `#[task]` macro (same proc-macro crate)
 - BC-2.01.003 — depends on: Runnable trait invocation contract governs invoke dispatch
+- BC-2.05.004 — composes with: `action_risk()` value is carried into `ToolCallPreview.action_risk` for `PreToolCallHook` evaluation; hook sees the declared risk tier before deciding to approve/deny/edit
+- BC-2.23.005 — example: BashTool sets `action_risk = ActionRisk::Medium` as a risk floor; illustrates the `action_risk` attribute in practice
 
 ## Architecture Anchors
 
