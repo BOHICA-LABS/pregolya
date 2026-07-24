@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.10"
+version: "1.11"
 status: active
 producer: business-analyst
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/product-brief.md
@@ -17,6 +17,7 @@ input-hash: "f2bf365"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.11 (2026-07-23): Fix burst 243 F-P143-01 (MED) — CAP-029 VP-009 mis-description corrected. Two sites: (1) Grounding §VP-009 connection — stale 'MMR cosine values ∈ [-1.0, 1.0] + no NaN in output scores for any valid non-zero query embedding' replaced with Zero-Norm Cosine Guard framing: `cosine_similarity` in `vectorstores::similarity`, fail-closed via E-VS-001 before division, `Ok(f32::NAN)` unreachable, BC-2.21.003, DI-014, harness `zero_norm_guard_fail_closed`. (2) Anchor justification — 'VP-009 (Kani MMR bounded proof)' replaced with 'VP-009 (Kani Zero-Norm Cosine Guard — `zero_norm_guard_fail_closed` on `cosine_similarity`, BC-2.21.003, DI-014)'. TD-VSDD-060 sibling sweep: no other MMR-proof or vectorstores-mmr VP-009 framing found in live body text of .factory/specs/."
   - "1.10 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 1 enum-variant form occurrence of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Site: CAP-034 §PendingHumanApproval bullet. TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text."
   - "1.9 (2026-07-23): Fix burst 241 F-P141-02 (BA wave 2) — CAP-019 VP gate expanded 3 → 6 P0 Kani proofs: added VP-009 (zero-norm cosine guard, DI-014/BC-2.21.003), VP-010 (reviver allowlist containment, DI-014/BC-2.19.005), VP-011 (PreToolCallHook fail-closed, DI-014/BC-2.05.007) per architect P0-intent ruling. Grounding wording updated 3→6 VP obligations; DI invariant list in phase-placement note extended to DI-001/DI-005/DI-007/DI-014. TD-VSDD-060 sibling sweep: no other '3 committed VP' gate phrasing found in this file."
   - "1.8 (2026-07-22): Fix burst 233 F-P133-08 (BA micro-fix) — CAP-036 similar-crate facts corrected per ADR-020 Decision 7 v1.1: `similar = \"3\"`, owner mitsuhiko (Armin Ronacher), Apache-2.0 single-licensed (NOT MIT), cargo-deny `[licenses.allow]` must include `\"Apache-2.0\"`; stale pre-write confirm instruction removed. TD-VSDD-060 sibling sweep: no other dtolnay/MIT similar-crate references in this file."
@@ -378,11 +379,13 @@ is two lines and is unconditional. Implements `VectorStoreFactory` for `from_tex
 **Grounding:** D21/SS-21. ADR-014 Decision 4 specifies the InMemoryVectorStore struct
 (`Arc<dyn Embeddings>` + `RwLock<Vec<(Document, Vec<f32>)>>`), the Arc-DI wiring contract,
 and the `Vec<f32>` cosine approach (semport §8 avoidance of ndarray in core). ADR-014 v1.1
-§Hardening note specifies the zero-norm guard and its VP-009 connection (MMR cosine values ∈
-[-1.0, 1.0] + no NaN in output scores for any valid non-zero query embedding).
+§Hardening note specifies the zero-norm guard and its VP-009 connection (Zero-Norm Cosine Guard
+on `cosine_similarity` in `vectorstores::similarity`: fail-closed via E-VS-001 before division;
+`Ok(f32::NAN)` is unreachable for any input — BC-2.21.003, DI-014, harness `zero_norm_guard_fail_closed`).
 **Anchor justification:** CAP-029 is separated from CAP-028 because the in-memory implementation
 has its own BC surface — Arc-DI wiring, RwLock semantics, Vec<f32> cosine math, NaN prevention
-via E-VS-001, and VP-009 (Kani MMR bounded proof). These are not part of the abstract VectorStore
+via E-VS-001, and VP-009 (Kani Zero-Norm Cosine Guard — `zero_norm_guard_fail_closed` on
+`cosine_similarity`, BC-2.21.003, DI-014). These are not part of the abstract VectorStore
 contract and must not be forced on external backends.
 **Architecture authority:** ADR-014.
 

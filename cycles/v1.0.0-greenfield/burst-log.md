@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "331fb06"
+input-hash: "17b6129"
 traces_to: STATE.md
 ---
 
@@ -4626,3 +4626,29 @@ F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 
 ### Archived from STATE.md Current Phase Steps — Burst 237 (archived at burst-242)
 
 | Burst 237 — P1D-137 fix-burst ALL AGENTS COMPLETE (F-P137-01/02/03 all closed; BC-INDEX DI col BC-2.13.002; prd.md §2.13+RTM DI col; bc-authoring-plan DI-015 row + DI-009 correct + CAP-017 wave promo; hash sweep 88 STALE=0; burst-232 row archived); 0/3. NEXT: P1D-138. | product-owner + state-manager | COMPLETE | F-P137-01 BC-INDEX v2.5: BC-2.13.002 DI-006→DI-006,DI-015; prd.md v1.11→v1.12: §2.13 body + §7 RTM DI-006→DI-006,DI-015. F-P137-02 bc-authoring-plan v2.43→v2.44: DI-015 row added (BC-2.23.005 primary + BC-2.13.002 co-enforcer); DI-009 row corrected (BC-2.23.005 removed); coverage 14/14→15/15. F-P137-03 bc-authoring-plan v2.44: CAP-017 SS.15 map P2→P1; Batch 11 header (P1/P2)→(P1); BC-2.15.001/002/003 Wave-2→Wave-1; Batch-20 BC-2.23.005 DI-009,DI-014→DI-014,DI-015. lessons.md L-025 codified. Hash sweep: 3 passes, 88 files updated, STALE=0. Burst 237. |
+
+---
+
+### Burst 243 — P1D-143 Fix-Burst COMPLETE (2026-07-23)
+
+**Agents:** business-analyst (F-P143-01 CAP-029 VP-009 framing fix) + state-manager (hash sweep + commit)
+
+**Status:** F-P143-01 CLOSED
+
+**Pass:** P1D-143 (eleventh pass on D21+D23 expanded perimeter; broad regression + fresh-hunt; NOT CLEAN strict, CLEAN PR-merge: 0C/0H/1M/0L; streak 0/3)
+
+**Findings closed:**
+
+- F-P143-01 MED (BA): capabilities-p1-p2 §CAP-029 VP-009 anchor bore stale 'Kani MMR bounded proof' framing — propagation residue from F-P129-11 (VP-009 module was renamed vectorstores-mmr→vectorstores-similarity at burst 224 but the L2 domain-spec shard CAP-029 was never swept). Two sites corrected to Zero-Norm Cosine Guard framing: (1) Grounding §VP-009 connection — 'MMR cosine values ...' replaced with `cosine_similarity` in `vectorstores::similarity`, fail-closed via E-VS-001 before division, `Ok(f32::NAN)` unreachable, BC-2.21.003, DI-014, harness `zero_norm_guard_fail_closed`. (2) Anchor justification — 'VP-009 (Kani MMR bounded proof)' replaced with 'VP-009 (Kani Zero-Norm Cosine Guard — `zero_norm_guard_fail_closed` on `cosine_similarity`, BC-2.21.003, DI-014)'. capabilities-p1-p2 v1.10→v1.11. TD-VSDD-060 sibling sweep: 91 VP-009 hits across 23 files evaluated, zero additional live-body MMR framing found.
+
+**All 7 Part-A regression axes PASS:** census 129 BCs=51/75/3; 108 error codes; 13 VPs; 20 ADRs; 6-P0-Kani gate consistent in all 9 stating docs; Command-notation zero residue; pregel path zero residue; CreateFileTool zero residue. Input-hash uniform; version monotonicity clean.
+
+**Hash sweep (D18-P89-A/D18-P90-A):** 4 transitive passes; pass-1 TOTAL=235 MATCH=97 STALE=98 (update: 152 updated); pass-2 TOTAL=235 MATCH=171 STALE=24 (update: 26 updated); pass-3 TOTAL=235 MATCH=190 STALE=5 (update: 6 updated); pass-4 TOTAL=235 MATCH=195 STALE=0. Full corpus settled.
+
+**Convergence:** 143 passes total, 143 fix bursts total (128 pre-D21 + 15 post-D21+D23); trajectory-tail →8→7→4→1 (decaying); 0/3; NEXT: adversary cascade P1D-144 (broad regression + fresh-hunt) on new frozen HEAD (burst-243 commit SHA).
+
+---
+
+### Archived from STATE.md Current Phase Steps — Burst 238 (archived at burst-243)
+
+| Burst 238 — P1D-138 fix-burst ALL AGENTS COMPLETE (F-P138-01/02/03 closed + 12 proactive; stale-handoff-flag class corpus-wide sweep; error-taxonomy v1.32→v1.33; api-surface v1.8; 6 BC files VP satisfied; 7 ADRs stale-handoff cleared; module-decomposition v1.20; BC-INDEX v2.5 satisfied; hash sweep STALE=0; L-026 codified; burst-233 row archived); 0/3. NEXT: P1D-139. | architect + product-owner + state-manager | COMPLETE | F-P138-01 error-taxonomy v1.32→v1.33: stale ARCHITECT FLAG E-TOOLS-009 removed (HIGH). F-P138-02 api-surface v1.8: stale spec-authority annotation resolved. F-P138-03 BC-2.23.006 v1.2→v1.3: 'architect to append' → 'satisfied'. Proactive: BC-2.23.005 v1.3→v1.4, BC-2.18.004 v1.2→v1.3, BC-2.19.005 v1.3→v1.4, BC-2.21.003 v1.1→v1.2, BC-2.22.001 v1.1→v1.2 (all VP pending→assigned). BC-INDEX v2.5: VP-006..010 'pending architect authoring' → 'assigned+authored'. ADR-010 v1.5→v1.6, ADR-012 v1.3→v1.4, ADR-014 v1.5→v1.7, ADR-016 v1.3, ADR-017 v1.3, ADR-018 v1.2, ADR-020 v1.7→v1.8 (stale PO obligations/annotations → past-tense facts). module-decomposition v1.19→v1.20 ('D9 gate pending' → 'D9 gate passed'). ARCH-INDEX v1.9 stale markers removed. L-026 codified (handoff-flag closure scan guardrail). Hash sweep: 3 passes, ~57 files STALE=0. Burst 238. |

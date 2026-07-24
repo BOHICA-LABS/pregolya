@@ -29,7 +29,7 @@ traces_to:
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
-input-hash: "4ddd789"
+input-hash: "37df94f"
 extracted_from: null
 modified: []
 deprecated: null

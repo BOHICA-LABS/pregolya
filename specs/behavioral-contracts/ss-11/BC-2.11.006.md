@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
-input-hash: "30d82bb"
+input-hash: "0be8f91"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11

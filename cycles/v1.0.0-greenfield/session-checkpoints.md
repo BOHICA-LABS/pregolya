@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "49eed4b"
+input-hash: "8af845b"
 traces_to: STATE.md
 ---
 
@@ -1273,3 +1273,18 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### PENDING: B1 direnv allow; R6 publish-all.sh REGENERATE for 21 crates; #[non_exhaustive] gate (Phase 3).
 ### HEADS: develop d018d3f (clean, pushed). factory-artifacts: burst-241 commit (see git -C .factory log -1).
 ### WRAP METADATA: Date 2026-07-23 | Cycle v1.0.0-greenfield | Burst 241 | Phase 1 IN PROGRESS — burst-241 COMMITTED; NEXT: P1D-142 | NEXT: adversary cascade P1D-142
+
+---
+
+### Checkpoint archived at burst-243 (was live in STATE.md as burst-242 checkpoint)
+
+### RESUME IN ONE BREATH
+"ferrochain Phase 1 (Spec Crystallization) — Phase-1d adversarial re-convergence on the D21+D23 expanded perimeter. Cascade at P1D-142 complete (4 MED, all closed by fix-burst 242); 3-CLEAN streak 0/3. As of P1D-142 the ENTIRE perimeter has had >=1 line-by-line deep-read — no never-opened surfaces remain. NEXT: dispatch adversary pass P1D-143 (broad regression + fresh-hunt, no new surfaces) on the burst-242 frozen HEAD; if CLEAN(strict) the 3-CLEAN convergence streak begins."
+### HEADS: develop d018d3f (clean, pushed); factory-artifacts = THIS burst-242 wrap commit (pushed); no worktrees; no open PRs.
+### PERIMETER SNAPSHOT (verified P1D-142): 129 BCs (51 P0/75 P1/3 P2); 108 error codes (43 HTTP+17 individual+48 blanket); 38 CAPs; 15 DIs; 13 VPs (6 P0 Kani gate: VP-001/002/003/009/010/011 + 7 P1); 20 ADRs; 21 crates; 23 subsystem groups (SS-01..23); 671 TVs; 15 StreamEvents; FM-001..019; 14 bounded contexts.
+### NEXT-ACTION (exact): dispatch vsdd-factory:adversary fresh-context on frozen HEAD <burst-242 commit SHA>, broad regression/fresh-hunt — verify census + 6-P0-Kani gate + Command struct-notation + pregel→graph:: sweep + phantom-tool all hold; hunt residual cross-artifact drift; route findings by domain (product-owner/architect/business-analyst) → fix-burst → state-manager commit; if CLEAN(strict) start streak (needs 3 consecutive CLEAN-strict on unchanged HEAD; ANY fix push resets to 0/3 per frozen-HEAD rule).
+### CASCADE TRAJECTORY (post-D21+D23 expansion): P1D-129→142 finding counts 12,9,7,8,6,3,3,7,8,7,4 — decaying; every pass since ~P1D-133 found only first-read residue in the surface it was first to deep-read; deep behavioral chains verified clean across multiple fresh passes.
+### PENDING: B1 direnv allow; R6 publish-all.sh regenerate for 21 crates (adds ferrochain-prompts/vectorstores/tools) before crates.io reservation; #[non_exhaustive] physical gate update at Phase 3.
+### STANDING USER DIRECTIVE (verbatim, persistent): "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes."
+### DECISION DELTA THIS SESSION: none uncommitted (D22 Domain-E directive + D23 Domain-E full-parity expansion recorded + committed earlier this session at burst 228; all subsequent work = P1D-129..142 adversarial cascade + fix bursts 224-242, no new D-rows).
+### WRAP METADATA: Date 2026-07-23 | Cycle v1.0.0-greenfield | Burst 242 | Phase 1 IN PROGRESS — burst-242 COMMITTED + session-wrap; NEXT: adversary cascade P1D-143
