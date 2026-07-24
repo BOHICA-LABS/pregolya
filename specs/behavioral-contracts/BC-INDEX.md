@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "2.8"
+version: "2.9"
 status: active
 producer: state-manager
-timestamp: 2026-07-22T12:00:00Z
+timestamp: 2026-07-24T00:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "2.9 (burst-247/F-P146-02/2026-07-24): SS-23 title policy applied — 6 Full BC Catalog row titles synced to H1s per bc_h1_is_title_source_of_truth: BC-2.23.001 v1.3 E-TOOLS-001/E-TOOLS-002→E-TOOLS-001/002/008; BC-2.23.002 v1.2 E-TOOLS-001→E-TOOLS-001/008; BC-2.23.003 v1.3 +E-TOOLS-001/003/008 suffix appended; BC-2.23.004 v1.2 E-TOOLS-001;→E-TOOLS-001/008;; BC-2.23.005 v1.5 E-TOOLS-004/005/007→E-TOOLS-004/007 (E-TOOLS-005 Ok-path payload flag excluded from title); BC-2.23.006 v1.4 E-TOOLS-001/006→E-TOOLS-001/008/009 (E-TOOLS-006 Ok-path payload flag excluded from title)."
   - "2.8 (F-P142-03, burst-242, 2026-07-23): BC-2.05.008 and BC-2.06.005 titles updated to match new H1s (bc_h1_is_title_source_of_truth): Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority."
   - "2.7 (burst-241/Wave-2/F-P141-02/2026-07-23): BC-2.17.001 title updated to match new H1 (bc_h1_is_title_source_of_truth): 'Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace Confinement VP' → 'Six P0 Kani VP Obligations + Three P1 Kani VP Obligations'. DI column +DI-014."
   - "2.6 (burst-239/F-P139/2026-07-22): BC-2.06.001 title updated to match current H1 (H1 is source of truth per bc_h1_is_title_source_of_truth policy — drift from D23 v1.5 update not swept to index). No BC count changes. BCs modified this burst: BC-2.04.001 v1.4 (+Inv-5 append-only), BC-2.10.006 v1.4 (citation fix), BC-2.06.001 v1.6 (PC2 type + Description), BC-2.07.003 v1.3 (PC5), BC-2.07.001 v1.3 (TV-005), BC-2.05.008 v1.1 (Related BCs + EC-006)."
@@ -201,12 +202,12 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.22.001 | Embeddings Trait — embed_documents Batch; embed_query; Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err; Arc\<dyn Embeddings\> Dyn-Safe (VP-008 Proptest Seed) | CAP-031 | | DI-008,DI-014 | P1 | | **VP-008** | ss-22/BC-2.22.001.md |
 | BC-2.22.002 | EmbeddingsOpenAI — text-embedding-3-small/large/ada-002-legacy; OpenAiApiKey Redacted-Debug Credential Opacity (DI-010); reqwest/rustls-tls/.timeout(30s); Batch Partial-Failure as Err | CAP-032 | | DI-008,DI-009,DI-010,DI-014 | P1 | **RG** | | ss-22/BC-2.22.002.md |
 | BC-2.22.003 | EmbeddingsOllama — No API Key; POST /api/embed Preferred; use_legacy_endpoint Toggle for /api/embeddings; reqwest/rustls-tls/.timeout(30s) Unconditional | CAP-033 | | DI-008,DI-009,DI-014 | P1 | | | ss-22/BC-2.22.003.md |
-| BC-2.23.001 | ReadFileTool — PathGuard-Confined File Read; max_bytes 1 MiB Limit; E-TOOLS-001 / E-TOOLS-002 | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.001.md |
-| BC-2.23.002 | WriteFileTool — PathGuard-Confined Atomic Write; High ActionRisk; No Auto-Retry; E-TOOLS-001 | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.002.md |
-| BC-2.23.003 | EditFileTool — Exact-Match String Replace; E-TOOLS-003 on No-Match; Opt-In Fuzzy Fallback (EditConfig::fuzzy_threshold); Conditional Retry Safe | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.003.md |
-| BC-2.23.004 | ListDirTool — PathGuard-Confined Directory Listing; ReadOnly; E-TOOLS-001; DirEntry Struct | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.004.md |
-| BC-2.23.005 | BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; BashOutput; 256 KiB Output Cap; 30 s Timeout; E-TOOLS-004/005/007 (VP-013 Kani Seed) | CAP-037 | | DI-014,DI-015 | P1 | | **VP** | ss-23/BC-2.23.005.md |
-| BC-2.23.006 | GrepTool — In-Process Regex Search; Linear-Time `regex` Crate; max_results 100 Cap; Hermetic; PathGuard Scope; E-TOOLS-001/006 | CAP-038 | | DI-014 | P1 | | | ss-23/BC-2.23.006.md |
+| BC-2.23.001 | ReadFileTool — PathGuard-Confined File Read; max_bytes 1 MiB Limit; E-TOOLS-001/002/008 | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.001.md |
+| BC-2.23.002 | WriteFileTool — PathGuard-Confined Atomic Write; High ActionRisk; No Auto-Retry; E-TOOLS-001/008 | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.002.md |
+| BC-2.23.003 | EditFileTool — Exact-Match String Replace; E-TOOLS-003 on No-Match; Opt-In Fuzzy Fallback (EditConfig::fuzzy_threshold); Conditional Retry Safe; E-TOOLS-001/003/008 | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.003.md |
+| BC-2.23.004 | ListDirTool — PathGuard-Confined Directory Listing; ReadOnly; E-TOOLS-001/008; DirEntry Struct | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.004.md |
+| BC-2.23.005 | BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; BashOutput; 256 KiB Output Cap; 30 s Timeout; E-TOOLS-004/007 (VP-013 Kani Seed) | CAP-037 | | DI-014,DI-015 | P1 | | **VP** | ss-23/BC-2.23.005.md |
+| BC-2.23.006 | GrepTool — In-Process Regex Search; Linear-Time `regex` Crate; max_results 100 Cap; Hermetic; PathGuard Scope; E-TOOLS-001/008/009 | CAP-038 | | DI-014 | P1 | | | ss-23/BC-2.23.006.md |
 
 ## Carry-Forward Notes (RESOLVED at Phase 1 Step D, 2026-07-14)
 
@@ -222,6 +223,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.9 | 2026-07-24 | burst-247/F-P146-02: SS-23 title policy — 6 Full BC Catalog row titles synced to H1s per bc_h1_is_title_source_of_truth: BC-2.23.001 v1.3 E-TOOLS-001/002/008; BC-2.23.002 v1.2 E-TOOLS-001/008; BC-2.23.003 v1.3 +E-TOOLS-001/003/008; BC-2.23.004 v1.2 E-TOOLS-001/008;; BC-2.23.005 v1.5 E-TOOLS-004/007 (E-TOOLS-005 payload flag excluded); BC-2.23.006 v1.4 E-TOOLS-001/008/009 (E-TOOLS-006 payload flag excluded). | burst-247 F-P146-02 |
 | 2.8 | 2026-07-23 | F-P142-03, burst-242: BC-2.05.008 and BC-2.06.005 titles updated to match new H1s (bc_h1_is_title_source_of_truth): Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority. | F-P142-03 burst-242 |
 | 2.7 | 2026-07-23 | burst-241/Wave-2/F-P141-02: BC-2.17.001 title updated to match new H1 (bc_h1_is_title_source_of_truth): 'Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace Confinement VP' → 'Six P0 Kani VP Obligations + Three P1 Kani VP Obligations'. DI column +DI-014. | burst-241/F-P141-02 |
 | 2.6 | 2026-07-22 | burst-239/F-P139: BC-2.06.001 title corrected to match H1 (H1 authority — title was stale from pre-D23 era). BCs updated this burst: BC-2.04.001 v1.4 (+Inv-5 append-only invariant, F-P139-01a), BC-2.10.006 v1.4 (citation fix to BC-2.04.001 Inv-5, F-P139-01b), BC-2.06.001 v1.6 (PC2 tokens_remaining_after u64→Option<i64> F-P139-02; Description Step-no-Stream F-P139-04), BC-2.07.003 v1.3 (PC5 mandate [] F-P139-03), BC-2.07.001 v1.3 (TV-005 [] F-P139-03), BC-2.05.008 v1.1 (Related BCs PC-4 scope + EC-006 F-P139-07). | burst-239 F-P139 |

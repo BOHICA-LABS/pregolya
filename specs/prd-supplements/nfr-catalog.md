@@ -10,7 +10,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/risks.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "252c8fc"
+input-hash: "c22b651"
 changelog:
   - "1.5 (burst-241/Wave-2/2026-07-23): F-P141-02 VP-gate expansion — NFR-003 expanded from 3 to 6 P0 Kani proof targets (VP-001/002/003 from D17-Q7 + VP-009 zero-norm, VP-010 allowlist, VP-011 tool-deny from D21+D23). NFR-to-Module map updated to add ferrochain-vectorstores and ferrochain-core for VP-009/010, and P1 targets VP-006/012/013. Success Criteria row updated to '6 P0'."
   - "1.4 (burst-227/F-P132-05+F-P132-07/2026-07-21): (1) NFR-013: Restate to conform to BC-2.22.001 EC-002 adjudication — drop E-EMBED-001 citation (wrong error code; E-EMBED-001 is EmbeddingDimensionMismatch post-response) and drop pre-send batch-size cap mandate (no BC specifies a pre-send cap; EC-002 deliberate adjudication stands). New statement: embed_documents with an over-limit batch completes deterministically — either Ok or structured Err propagating provider rejection; no panic; no silent truncation. Validation method conforms. (2) NFR-014: Add jinja2/minijinja render benchmark to Validation Method so the stated engine-neutral bound is independently verified for both engines."

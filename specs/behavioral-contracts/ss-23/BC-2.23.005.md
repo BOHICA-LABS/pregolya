@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.005
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ vp_seed: true
 vp_id: VP-013
 red_gate: false
 changelog:
+  - "1.5 (burst-247/F-P146-02+OBS-naming/2026-07-24): (1) H1 title — remove payload flag E-TOOLS-005 from title error-code enumeration per SS-23 title policy (Ok-path payload flags excluded from raised-code enumeration). Before: 'E-TOOLS-004/005/007'. After: 'E-TOOLS-004/007'. E-TOOLS-005 is retained in the body as a payload annotation (BashOutput.truncated) — it is not removed from the contract, only from the raised-code title list. (2) PC-2 body — align truncation flag name from informal 'BashOutputTruncated'-style to canonical field-path notation 'BashOutput.truncated' per OBS naming-anchor (error-taxonomy v1.37 adds explicit canonical-field-path marker for E-TOOLS-005). TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
   - "1.4 (burst-238/F-P138-03/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-013' (VP-INDEX v1.5 burst-232 seeded VP-013 Kani P1; ferrochain-tools risk_floor_rejects_below_medium). Both sites updated (VP Anchors section + Traceability VP Registration row). Gate #28 close F-P138-03."
   - "1.3 (burst-235/F-P135-05/2026-07-22): Fix four occurrences of wrong implementation phrasing 'tokio::time::timeout over/wrapping tokio::process::Command' (Description, PC-3, Invariants DI-015 bullet, Traceability) — implied BashTool calls tokio::process::Command directly, contradicting the sandbox-mandatory Invariant. Correct: tokio::time::timeout wraps the sandbox backend execute() call; tokio::process::Command is managed by sandbox::process internally. Architect adjudication F-P135-05."
   - "1.2 (F-P134-06/2026-07-22): Re-anchor DI-009 (HTTP connection timeout) → DI-015 (Subprocess Execution Timeout) per architect adjudication of finding F-P134-06. di_anchors [DI-009,DI-014]→[DI-014,DI-015]; traces_to DI-009→DI-015; Description, PC-3, Invariants DI-009 analog bullet, and Traceability L2 Invariants row updated. Gate #28 F-P134-06 close. input-hash refreshed to 835edd0 (invariants.md updated by BA to mint DI-015; final stable hash after BA writes settled)."
@@ -34,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "0bc5c5d"
+input-hash: "6ab27a0"
 extracted_from: null
 modified: []
 deprecated: null
@@ -45,7 +46,7 @@ removed: null
 removal_reason: null
 ---
 
-# BC-2.23.005: BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; BashOutput; 256 KiB Output Cap; 30 s Timeout; E-TOOLS-004/005/007 (VP-013 Kani Seed)
+# BC-2.23.005: BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; BashOutput; 256 KiB Output Cap; 30 s Timeout; E-TOOLS-004/007 (VP-013 Kani Seed)
 
 ## Description
 
@@ -86,7 +87,7 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 2. **Output truncation (non-fatal):** Combined output (stdout + stderr) exceeds `max_output_bytes`.
    The tool returns `ToolOutput::Json(BashOutput)` with `truncated: true` and the first
    `max_output_bytes` bytes of output (priority: stdout first, then stderr). E-TOOLS-005
-   (`BashOutputTruncated`) is an informational annotation in the output object, not an `Err`.
+   (`BashOutput.truncated`) is an informational annotation in the output object, not an `Err`.
    The command is allowed to complete (truncation is output-cap, not process-kill).
 3. **Timeout (DI-015):** The command runs for longer than `max_duration`. `tokio::time::timeout`
    wrapping the sandbox backend `execute()` call fires; the sandbox kills the subprocess

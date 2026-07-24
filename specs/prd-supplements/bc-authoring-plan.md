@@ -1,16 +1,16 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.45"
+version: "2.46"
 status: active
 producer: product-owner
-total_standing_gates: 34
-timestamp: 2026-07-23T00:00:00Z
+total_standing_gates: 35
+timestamp: 2026-07-24T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "bacf294"
+input-hash: "05e973c"
 traces_to: prd.md
 total_bcs: 129
 total_batches: 20
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.46 (burst-247/F-P146-02+OBS/2026-07-24): (1) Gate #35 VP PROPERTY-BODY COHERENCE minted — on any edit to a VP-NNN.md or verification-architecture.md VP catalog entry, diff property statement + variant/branch coverage + harness sketch between the two docs; VP-NNN.md wins on divergence (CLAUDE.md source-of-truth precedence rule 4). Routing: architect scope for verification-architecture.md fixes. (2) SS-23 BC title error-code enumeration policy added as a non-numbered policy note in Authoring Guidelines (between items 11 and 12): titles enumerate ALL and ONLY raised error codes; Ok-path payload flags (E-TOOLS-005 BashOutput.truncated, E-TOOLS-006 GrepResult.capped) excluded. (3) Batch 20 BC title rows synchronized to exact H1 titles per bc_h1_is_title_source_of_truth: all 6 SS-23 BC rows updated (001 separator normalized; 001/002/004 E-TOOLS-008 added; 003 E-TOOLS-001/003/008 added + EditConfig::fuzzy_threshold restored; 005 BashOutput added, E-TOOLS-005 removed, E-TOOLS-004/007; 006 Hermetic added, E-TOOLS-001/008/009). total_standing_gates 34→35."
   - "2.45 (F-P142-03, burst-242, 2026-07-23): BC-2.06.005 title in Batch 20 table updated — 'Emission on Command::Resume' → 'Emission on Command(resume=…)' per BC-2.05.004 struct kwarg authority and BC-2.06.005 H1 (bc_h1_is_title_source_of_truth)."
   - "2.44 (burst-237/F-P137-02+F-P137-03/2026-07-23): F-P137-02 DI table: add DI-015 row (Subprocess Execution Timeout) — enforcers BC-2.23.005 (primary) + BC-2.13.002 (co-enforcer, .kill_on_drop(true)); remove BC-2.23.005 from DI-009 row (re-anchored burst-234 F-P134-06); DI-009 row corrected to {BC-2.08.007, BC-2.08.014, BC-2.14.004, BC-2.22.002, BC-2.22.003}; coverage 14/14→15/15. F-P137-03 CAP-017 wave-1 promotion: SS.15 subsystem map CAP-017 (P2)→(P1), priority P1/P2→P1; Batch 11 header (P1/P2)→(P1); BC-2.15.001/002/003 Wave 2→Wave 1. TD-VSDD-060 sweep: Batch 20 BC-2.23.005 DI column DI-009,DI-014→DI-014,DI-015 (same burst-234 re-anchor not propagated to batch table)."
   - "2.43 (burst-233/F-P133-02/2026-07-22): BC-2.16.001/002/003 Wave-1 promotion per D23 — SS.16 priority P2→P1; frontmatter p1_count 72→75, p2_count 6→3; Summary table P1 72→75, P2 6→3; Full BC table rows P2→Post-v1→P1/Wave 1."
@@ -425,12 +426,12 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 
 | BC ID | Title | Priority | CAP | DI | Wave |
 |-------|-------|----------|-----|----|------|
-| BC-2.23.001 | ReadFileTool — PathGuard-Confined File Read; max_bytes 1 MiB Limit; E-TOOLS-001 / E-TOOLS-002 | P1 | CAP-036 | DI-014 | Wave 1 |
-| BC-2.23.002 | WriteFileTool — PathGuard-Confined Atomic Write; High ActionRisk; No Auto-Retry; E-TOOLS-001 | P1 | CAP-036 | DI-014 | Wave 1 |
-| BC-2.23.003 | EditFileTool — Exact-Match String Replace; E-TOOLS-003 on No-Match; Opt-In Fuzzy Fallback; Conditional Retry Safe | P1 | CAP-036 | DI-014 | Wave 1 |
-| BC-2.23.004 | ListDirTool — PathGuard-Confined Directory Listing; ReadOnly; E-TOOLS-001; DirEntry Struct | P1 | CAP-036 | DI-014 | Wave 1 |
-| BC-2.23.005 | BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; 256 KiB Output Cap; 30 s Timeout (VP-013 Kani Seed) | P1 | CAP-037 | DI-014, DI-015 | Wave 1 |
-| BC-2.23.006 | GrepTool — In-Process Regex Search; Linear-Time `regex` Crate; max_results 100 Cap; PathGuard Scope; E-TOOLS-001/006 | P1 | CAP-038 | DI-014 | Wave 1 |
+| BC-2.23.001 | ReadFileTool — PathGuard-Confined File Read; max_bytes 1 MiB Limit; E-TOOLS-001/002/008 | P1 | CAP-036 | DI-014 | Wave 1 |
+| BC-2.23.002 | WriteFileTool — PathGuard-Confined Atomic Write; High ActionRisk; No Auto-Retry; E-TOOLS-001/008 | P1 | CAP-036 | DI-014 | Wave 1 |
+| BC-2.23.003 | EditFileTool — Exact-Match String Replace; E-TOOLS-003 on No-Match; Opt-In Fuzzy Fallback (EditConfig::fuzzy_threshold); Conditional Retry Safe; E-TOOLS-001/003/008 | P1 | CAP-036 | DI-014 | Wave 1 |
+| BC-2.23.004 | ListDirTool — PathGuard-Confined Directory Listing; ReadOnly; E-TOOLS-001/008; DirEntry Struct | P1 | CAP-036 | DI-014 | Wave 1 |
+| BC-2.23.005 | BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; BashOutput; 256 KiB Output Cap; 30 s Timeout; E-TOOLS-004/007 (VP-013 Kani Seed) | P1 | CAP-037 | DI-014, DI-015 | Wave 1 |
+| BC-2.23.006 | GrepTool — In-Process Regex Search; Linear-Time `regex` Crate; max_results 100 Cap; Hermetic; PathGuard Scope; E-TOOLS-001/008/009 | P1 | CAP-038 | DI-014 | Wave 1 |
 
 ---
 
@@ -454,6 +455,10 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     - A spec artifact is integrated once its authoritative index accepts it: BC files → BC-INDEX, domain-spec shards → L2-INDEX, architecture sections → ARCH-INDEX, prd.md and prd-supplements → prd.md supplements list, ADRs → ARCH-INDEX ADR log (stay `accepted`), product-brief → product review (stays `approved`).
     - VP files are the **only** exception: they may remain `status: draft` while Kani/integration harnesses are pre-implementation, provided VP-INDEX.md is `status: active` and lists the VP.
     - This rule is generalized from F-P6-03 (ADV-P1D-PASS-6 fix). Source of truth: ADV-P1D-PASS-8.md §F-P8-04.
+
+> **SS-23 BC Title Error-Code Enumeration Policy (F-P146-02, burst-247, 2026-07-24):**
+> For BC titles in subsystem SS-23 (ferrochain-tools), error codes in the title enumerate ALL and ONLY *raised* error codes — codes that appear as `Err(FerrochainError{code: "E-TOOLS-NNN"})` returns. Ok-path payload flags (E-TOOLS-005 `BashOutput.truncated`, E-TOOLS-006 `GrepResult.capped`) are NOT raised errors and MUST NOT appear in title enumerations. The trailing error-code section uses slash-separated format without spaces: `E-TOOLS-NNN/NNN/NNN`. Inline contextual error-code references (e.g., "E-TOOLS-003 on No-Match") are permitted where they describe the trigger condition; a complete trailing enumeration of all raised codes must also be present for machine extractability. Policy adjudication rationale: (1) listing a payload flag while omitting a real raised error is semantically inverted; (2) exhaustive enumeration of raised codes enables grepping BC titles to find all BCs that raise a given code; (3) consistent with BC-2.23.005 pre-existing exhaustive-enumeration pattern extended to all 6 SS-23 BCs. Applied burst-247: BC-2.23.001→`E-TOOLS-001/002/008`, BC-2.23.002→`E-TOOLS-001/008`, BC-2.23.003→`E-TOOLS-001/003/008`, BC-2.23.004→`E-TOOLS-001/008`, BC-2.23.005→`E-TOOLS-004/007` (E-TOOLS-005 payload flag removed from title), BC-2.23.006→`E-TOOLS-001/008/009` (E-TOOLS-006 payload flag removed, E-TOOLS-008/009 added).
+
 12. **Lifecycle-arrow census gate (added P12):** Any BC or supplement that contains a Run
     state-machine lifecycle arrow MUST use one of the two canonical forms:
     - *Title/prose* form: `queued → in_progress → completed/failed/cancelled/summary_halt; interrupted is pausable/resumable`
@@ -2208,12 +2213,71 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     Source: F-P87-02 [process-gap]. Decision: D18-P87-B RESOLVED (single format, 7-char MD5,
     no human adjudication required). `total_standing_gates` 33 → 34.
 
+35. **VP property-body coherence gate — VP PROPERTY-BODY COHERENCE
+    (added burst-247/OBS-P146-C — standing gate [process-gap]):**
+
+    Any burst that edits a `VP-NNN.md` file or edits a `verification-architecture.md`
+    catalog entry (any VP catalog row or the property description block for a listed VP)
+    MUST diff the following three elements between `VP-NNN.md` and the
+    `verification-architecture.md` entry for the same VP:
+
+    1. **Property statement** — the formal invariant or safety property being verified.
+    2. **Variant/branch coverage** — the set of cases, enum branches, or input classes the
+       proof or test covers (e.g., "all `ActionRisk` variants below Medium", "UUID vs
+       monotonic checkpoint ID forms").
+    3. **Harness sketch** — the Kani harness function signature, fuzz target entry point,
+       or proptest strategy outline described in the body.
+
+    **Source-of-truth rule (CLAUDE.md Source-of-Truth Precedence rule 4):** `VP-NNN.md` is
+    the authoritative source for all three elements. On divergence,
+    `verification-architecture.md` is corrected to match `VP-NNN.md` — never the reverse.
+    VP files supersede the prose verification narrative in PRD/architecture for the
+    property they cover.
+
+    **Census procedure:**
+
+    1. For every VP that has both a `VP-NNN.md` file and a catalog entry in
+       `verification-architecture.md`, open both files.
+    2. Extract the property statement from `VP-NNN.md` (typically the H2
+       `## Formal Property` or `## Property Statement` section) and from the
+       `verification-architecture.md` catalog row or property block.
+    3. Extract variant/branch coverage from `VP-NNN.md` (the `## Coverage` or
+       `## Variant Coverage` section) and from `verification-architecture.md`.
+    4. Extract the harness sketch from `VP-NNN.md` (the `## Kani Harness Sketch` or
+       `## Harness` section) and from `verification-architecture.md`.
+    5. Compare each pair. Any difference that changes the semantic content (not just
+       formatting) is a coherence failure.
+    6. On coherence failure: correct `verification-architecture.md` to match `VP-NNN.md`.
+       Do NOT modify `VP-NNN.md` to match `verification-architecture.md`.
+
+    **Trigger:** Any edit to a `VP-NNN.md` file (property statement, coverage, or harness
+    sketch) OR any edit to a VP catalog entry in `verification-architecture.md`.
+
+    **Scope:** All VP files under `.factory/specs/verification-properties/` and all VP
+    catalog entries in `.factory/specs/architecture/verification-architecture.md`.
+
+    **Pass threshold:** 100% of VP files with `verification-architecture.md` catalog entries
+    must have identical property statement, variant/branch coverage, and harness sketch
+    across both documents.
+
+    **Routing note:** Product-owner does NOT edit `verification-architecture.md` (architect
+    scope). On finding a coherence failure, route to architect via orchestrator with the
+    `VP-NNN.md` text as the authoritative version to propagate. The fix must be dispatched
+    and completed in scope — tech-debt deferral is prohibited under the production-grade
+    default.
+
+    Source: OBS-P146-C [process-gap]. `total_standing_gates` 34 → 35.
+
 ---
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.46 | 2026-07-24 | FIX-BURST 247: Gate #35 VP PROPERTY-BODY COHERENCE minted (standing gate — on any edit to VP-NNN.md or verification-architecture.md catalog entry, diff property statement + variant/branch coverage + harness sketch between the two; VP-NNN.md wins on divergence per CLAUDE.md rule 4; routing: architect scope for verification-architecture.md fixes); SS-23 BC title error-code enumeration policy added as non-numbered policy note in Authoring Guidelines (titles enumerate ALL and ONLY raised codes; Ok-path payload flags excluded); Batch 20 6 BC title rows synced to exact H1 titles per bc_h1_is_title_source_of_truth (001: E-TOOLS-001/002/008; 002: E-TOOLS-001/008; 003: fuzzy_threshold token restored + E-TOOLS-001/003/008; 004: E-TOOLS-001/008; 005: BashOutput segment added + payload flag E-TOOLS-005 removed + E-TOOLS-004/007; 006: Hermetic segment added + E-TOOLS-001/008/009). input-hash updated bacf294→b2c6f44. total_standing_gates 34→35. | burst-247, F-P146-02, OBS-P146-C |
+| 2.45 | 2026-07-23 | BC-2.06.005 Batch 20 title updated: 'Emission on Command::Resume' → 'Emission on Command(resume=…)' per BC-2.05.004 struct kwarg authority and BC-2.06.005 H1 (bc_h1_is_title_source_of_truth). | burst-242, F-P142-03 |
+| 2.44 | 2026-07-23 | DI coverage table: DI-015 row added (BC-2.23.005 primary + BC-2.13.002 co-enforcer, .kill_on_drop(true)); BC-2.23.005 removed from DI-009 row (re-anchored F-P134-06); DI-009 corrected to {BC-2.08.007, BC-2.08.014, BC-2.14.004, BC-2.22.002, BC-2.22.003}; coverage 14/14→15/15. CAP-017 wave-1 promotion: SS.15 subsystem map CAP-017 P2→P1; Batch 11 header (P1/P2)→(P1); BC-2.15.001/002/003 Wave 2→Wave 1. Batch 20 BC-2.23.005 DI column DI-009,DI-014→DI-014,DI-015. | burst-237, F-P137-02, F-P137-03 |
+| 2.43 | 2026-07-22 | BC-2.16.001/002/003 Wave-1 promotion per D23: SS.16 priority P2→P1; frontmatter p1_count 72→75, p2_count 6→3; Summary table P1 72→75, P2 6→3; Full BC table rows P2→Post-v1→P1/Wave 1. | burst-233, F-P133-02 |
 | 2.42 | 2026-07-22 | D21 retroactive registration (Batches 16–18, +21 BCs: SS-18..22, CAP-022..033, 3 P0 + 17 P1 + 1 P2) and D23 integration (Batches 19–20, +13 BCs: SS-23 new subsystem + SS-05/06/10 extensions, all P1); BC-2.15.001/002/003 promoted P2→P1 per D23; SS.18..23 added to Subsystem→CAP table; DI-008/009/010/012/014 coverage rows updated with all 34 new BCs; counts: 95→129 total, P0 48→51, P1 39→72, P2 8→6, batches 15→20, subsystems 17→23. | D21 burst-222, D23 burst-231 |
 | 2.41 | 2026-07-20 | D21/Batch-3b-i ADR-010 v1.1 error-model integration: Error namespace list in §Error namespace discipline expanded 12→16 by adding E-TMPL, E-SRLZ, E-VS, E-EMBED. New namespaces correspond to ADR-015 (ferrochain-prompts TMPL), ADR-016 (ferrochain-core::serializable SRLZ), ADR-014 (ferrochain-vectorstores VS), ADR-017 (ferrochain-core::embeddings EMBED). Namespace list is now: E-CORE, E-GRAPH, E-CHKPT, E-SERVER, E-PROV, E-MCP, E-SPLIT, E-SBXD, E-RETRY, E-CRON, E-MEMORY, E-BUDGET, E-TMPL, E-SRLZ, E-VS, E-EMBED. Cross-cutting integrations for this expansion (error-taxonomy.md v1.27 9 new codes, BC-2.14.001 v1.2 component enum, interface-definitions.md v2.41 blanket annotation census 86→95, api-surface.md v1.6 Component enum, BC-2.20.003 v1.1 E-CFG-001→E-VS-003 reassignment) handled in companion files this burst. BC-2.14.002 verified: no change needed (all 4 new components library-layer only). TD-VSDD-060 E-CFG corpus sweep: zero active residue. | D21, ADR-010 v1.1 |
 | 2.40 | 2026-07-19 | F-P118-01 (HIGH, process-gap): Gate #12 Lifecycle-Arrow Census Gate updated to reflect four-member terminal set. (1) Both canonical forms updated: title/prose form gains `/summary_halt`; diagram/arrow form gains `\| summary_halt`. (2) "Terminal set = {completed, failed, cancelled} only" → "{completed, failed, cancelled, summary_halt}" with inline rationale: `summary_halt` is the budget-summarize terminal state reached via `in_progress → summary_halt` on `OnCeiling::Summarize` (BC-2.10.003 PC8(c)(d)); carries summarize output; `completed_at` set; not cancellable; directly deletable; emits `RunEnd`. (3) grep-verify instruction updated: verify hits list all FOUR terminal states; explicitly disallow three-member-only enumerations. (4) Authority citations updated: BC-2.12.003 v1.4 + F-P117-01 adjudication (fix burst 120) + F-P118-01 (fix burst 121). (5) Batch-10 table entry for BC-2.12.003 synced to BC-INDEX:122 / BC H1 four-member verbatim form. F-P118-02: sibling BC propagation — BC-2.12.004 v1.2→v1.3 (PC2b + Related BCs: add `\| summary_halt`); BC-2.05.004 v1.2→v1.3 (Invariant non-interrupted status list: add `summary_halt`); BC-2.05.005 v1.3→v1.4 (Related BCs + VP-HITL-10: add `summary_halt`). Corpus-wide closure grep: 5 three-member terminal-set hits enumerated — all in bc-authoring-plan.md and BC-2.12.004/BC-2.05.004/BC-2.05.005; all fixed this burst. BC-2.12.003 v1.4 (canonical) and BC-2.12.006 already correct. `total_standing_gates` unchanged at 34. | F-P118-01, F-P118-02 |

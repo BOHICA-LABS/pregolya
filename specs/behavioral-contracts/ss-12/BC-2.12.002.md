@@ -25,7 +25,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "281d706"
+input-hash: "f57af07"
 extracted_from: null
 modified: []
 deprecated: null

@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "5fc87ca"
+input-hash: "fda5812"
 traces_to: ARCH-INDEX.md
 changelog:
   - "2.0 (burst-232/2026-07-22): D23 VP layer — add VP-011..013 to VP-to-Module table; update hitl row (VP-011 Kani P0); add core-budget row (VP-012 Kani P1); add tools-shell row (VP-013 Kani P1). Totals: 10→13 VPs, Kani 6→9. Coverage-by-Criticality-Tier: CRITICAL Kani VPs 5→6 (+VP-011; hitl is CRITICAL per module-criticality.md); HIGH Kani VPs 1→3 (+VP-012 core-budget, +VP-013 tools-shell; ferrochain-tools criticality tier deferred to module-criticality.md D23 content authoring burst). Per-module count 41→43 (+2 new rows). Input-hash refresh pending VP-INDEX.md v1.5."

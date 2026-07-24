@@ -10,7 +10,7 @@ phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
-input-hash: "031b7f9"
+input-hash: "7d3c5e9"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:

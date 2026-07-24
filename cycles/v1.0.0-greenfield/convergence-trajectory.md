@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "03e2272"
+input-hash: "5a130db"
 traces_to: STATE.md
 ---
 
@@ -1064,6 +1064,7 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 | P1D-143 | 2026-07-23 | 1 | 0 | 0 | 1 | 0 | LOW-MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; CLEAN PR-merge (F-P143-01 MED capabilities-p1-p2 §CAP-029 VP-009 anchor stale 'Kani MMR bounded proof' framing — F-P129-11 propagation residue [VP-009 module renamed vectorstores-mmr→vectorstores-similarity at burst 224]; two sites corrected to Zero-Norm Cosine Guard framing [cosine_similarity in vectorstores::similarity, fail-closed via E-VS-001 before division, Ok(f32::NAN) unreachable, BC-2.21.003, DI-014, harness zero_norm_guard_fail_closed]; capabilities-p1-p2 v1.10→v1.11; TD-VSDD-060 sibling sweep: 91 VP-009 hits across 23 files evaluated, zero additional live-body MMR framing) — F-P143-01 CLOSED fix-burst 243; all 7 Part-A regression axes PASS [census 129 BCs=51/75/3; 108 error codes; 13 VPs; 20 ADRs; 6-P0-Kani gate consistent in all 9 stating docs; Command-notation zero residue; pregel path zero residue; CreateFileTool zero residue]; input-hash uniform; version monotonicity clean; hash sweep 4 passes TOTAL=235 MATCH=195 STALE=0; streak 0/3 |
 | P1D-144 | 2026-07-23 | 4 | 0 | 2 | 2 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (F-P144-01 HIGH module-decomposition v1.21→v1.22 — tools-shell section header + module row MEDIUM→HIGH [VP-013 Kani P1 host; verification-coverage-matrix.md HIGH classification corroborates; core::budget row added HIGH VP-012 Kani P1; universe 54→55]; F-P144-02 HIGH module-criticality v1.5→v1.6 — core-budget+tools-shell rows added [VP-012/VP-013 Kani P1 hosts]; HIGH 16→18; Total 41→43; deferred posture removed; F-P144-03 MED ARCH-INDEX.md v1.9→v1.10 Document Map 'module-decomposition' description '18-crate catalog'→'21-crate catalog'; F-P144-04 MED error-taxonomy v1.34→v1.35 E-CRON-003 severity degraded→broken [BC-2.12.004 EC-004; no partial payload; precedent F-P140-05 E-PROV-001; cross-namespace 108-code sweep: E-CRON-003 was sole degraded survivor; post-fix broken=106/degraded=0/cosmetic=2]) — ALL 4 CLOSED fix-burst 244; all 8 Part-A regression axes PASS; hash sweep 3 passes TOTAL=176 MATCH=176 STALE=0 EXEMPT=1; streak 0/3 |
 | P1D-145 | 2026-07-24 | 5 | 0 | 1 | 2 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (F-P145-01 HIGH interface-definitions v2.50→v2.51 BashTool max_duration 120s→30s; F-P145-02 MED BC-INDEX body Changelog rows 2.7/2.8 missing; F-P145-03 MED error-taxonomy E-TOOLS-005/006 Category+Severity cols + OBS-P145-A broken-class background-ops clause; F-P145-04 LOW PathGuard scope precision; 1 OBS: see OBS-P145-A) — ALL 5 CLOSED fix-burst 246; hash sweep 6 passes TOTAL=200 MATCH=188 STALE=0; streak 0/3 |
+| P1D-146 | 2026-07-24 | 4 | 0 | 1 | 0 | 1 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (F-P146-01 HIGH verification-architecture v2.2→v2.3 VP-011 rewritten from false 2-variant exhaustive to authoritative 4-variant #[non_exhaustive] PreToolDecision (Approve/Deny/Edit/PendingHumanApproval); 4 proactive VP coherence fixes: VP-001 reduce_super_step, VP-003 canonicalize_beneath_root_pure, VP-006 policy field+is_untrusted, VP-007 serialize/Reviver::new().revive(); F-P146-02 LOW SS-23 BC title policy — all 6 BC titles must enumerate ALL AND ONLY raised error codes; Ok-path payload flags (E-TOOLS-005 BashOutput.truncated, E-TOOLS-006 GrepResult.capped) excluded; 6 H1s updated BC-2.23.001..006; BC-INDEX v2.8→v2.9; error-taxonomy v1.36→v1.37; OBS gate#35 VP PROPERTY-BODY COHERENCE minted [bc-authoring-plan v2.45→v2.46]; OBS naming [see narrative]) — ALL 4 CLOSED fix-burst 247; hash sweep 6 passes STALE=0; streak 0/3 |
 
 ### Pass P1D-145 (2026-07-24) — Expanded Perimeter Pass 17
 
@@ -1085,3 +1086,22 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 - **F-P145-04 LOW**: `interface-definitions` §First-Party Tools PathGuard scope stated "All tools use PathGuard" but BashTool uses ferrochain-sandbox backend, not PathGuard directly. Fixed: text updated to enumerate file-access tools (ReadFileTool/WriteFileTool/EditFileTool/ListDirTool/GrepTool) and note BashTool confinement via `ferrochain-sandbox` backend (BC-2.23.005).
 
 **Hash sweep:** 6 passes, TOTAL=200, MATCH=188, STALE=0, EXEMPT=38, SKIP_MISSING=12.
+
+### Pass P1D-146 (2026-07-24) — Expanded Perimeter Pass 18
+
+**Findings:** 4 (0 CRIT, 1 HIGH, 0 MED, 1 LOW, 2 OBS)
+**Streak:** 0/3 (NOT CLEAN strict)
+**Fix burst:** 247
+**Frozen HEAD:** burst-246 commit
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. Four findings:
+
+- **F-P146-01 HIGH**: `verification-architecture.md` VP-011 catalog entry described a false exhaustive 2-variant `PreToolDecision` model (`Approve` | `Deny`) when the authoritative model per ADR-020/BC-2.23.005 and the concrete fix from burst-236 is a 4-variant `#[non_exhaustive]` enum (`Approve` | `Deny { reason }` | `Edit { named_args }` | `PendingHumanApproval { prompt }`). Rewritten: `verification-architecture v2.2→v2.3`. Additionally, 4 proactive VP property-body coherence fixes applied in the same pass: VP-001 (`reduce_super_step` harness name), VP-003 (`canonicalize_beneath_root_pure` harness name), VP-006 (`policy` field + `is_untrusted` predicate), VP-007 (`serialize` / `Reviver::new().revive()`). Gate #35 VP PROPERTY-BODY COHERENCE minted in `bc-authoring-plan v2.45→v2.46` to prevent recurrence.
+
+- **F-P146-02 LOW**: SS-23 BC title policy — the 6 first-party tool BCs (BC-2.23.001..006) had titles that omitted raised error codes (E-TOOLS-008 missing from BC-2.23.002/003/004; E-TOOLS-004/007 subset incorrect in BC-2.23.005) or included Ok-path payload flags as if they were raised error codes (E-TOOLS-005/E-TOOLS-006 are `BashOutput.truncated` and `GrepResult.capped` fields, not raised `Err` variants). Fixed: all 6 H1 headings updated to enumerate ALL AND ONLY raised error codes; Ok-path payload flags excluded per SS-23 title policy. `BC-INDEX v2.8→v2.9` (6 row titles synced to H1 sources). `error-taxonomy v1.36→v1.37` (SS-23 title alignment annotation).
+
+- **OBS gate#35** (process-gap): VP PROPERTY-BODY COHERENCE gate minted. The BC authoring plan lacked a gate requiring the VP catalog entry in each spec to be verified against the actual Kani harness function names and proof properties before a VP is declared final. Gate #35 added to `bc-authoring-plan v2.45→v2.46`.
+
+- **OBS naming** (process-gap): SS-23 title policy was not explicitly documented; it was inferred from the SS-23 BC bodies. Codified in gate #35 application guidance.
+
+**Hash sweep:** 6 passes, STALE=0 (specs/ 174 MATCH, planning/ 3 MATCH, cycles/ 18 MATCH). Burst-247 commit.

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.006
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
+  - "1.4 (burst-247/F-P146-02+OBS-naming/2026-07-24): (1) H1 title — replace payload flag E-TOOLS-006 with the correct raised codes E-TOOLS-008 and E-TOOLS-009 per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded). Before: 'E-TOOLS-001/006'. After: 'E-TOOLS-001/008/009'. E-TOOLS-006 is retained in the body as a payload annotation (GrepResult.capped). (2) Description and PC-2 body — align capped-flag name from informal 'SearchResultsCapped'-style to canonical field-path notation 'GrepResult.capped' per OBS naming-anchor (error-taxonomy v1.37 adds explicit canonical-field-path marker for E-TOOLS-006). (3) Traceability Capability Anchor Justification — update error-code citation from 'E-TOOLS-001/006' to 'E-TOOLS-001/008/009 (E-TOOLS-006 is a non-raised payload flag)'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
   - "1.3 (burst-238/F-P138-01/2026-07-23): Architecture Anchors Decision 5 annotation updated: stale 'architect to append E-TOOLS-008/009 to ADR-020 TOOLS table' replaced with 'appended to ADR-020 TOOLS table in ADR-020 v1.7 (burst-238 sweep: satisfied)'. Completed-handoff residue removal. Gate #28 close F-P138-01."
   - "1.2 (burst-234/F-P134-01/2026-07-22): PC-6 / EC-008 / TV-006 — add E-TOOLS-008 FileIoError (Category::TOOL/Maybe) for OS-level I/O errors during traversal. Traversal-error semantics DECIDED: fail-the-whole-search (not skip-with-warning). Rationale: (1) consistent with sibling tools BC-2.23.001–004 which all fail on E-TOOLS-008; (2) DI-014 no-silent-swallow — returning partial results without signalling the search was cut short is indistinguishable from complete results; (3) guard-verify-before-open invariant establishes that mid-traversal path failures are surfaced; (4) silently-incomplete search results are more hazardous than explicit Err. Structured fields per taxonomy: tool_type='GrepTool' (static), path=<offending path>, io_kind=<std::io::ErrorKind debug name>. Invariants DI-014 bullet updated to include OS-error path. Architecture Anchors Decision 5 updated to note E-TOOLS-008 burst-234. Traceability L2 Domain Invariants updated with E-TOOLS-008 gate #33 reverse anchor. Gate #33 E-TOOLS-008 both-direction PASS: taxonomy v1.32 anchors this BC ('BC-2.23.006 OS-error paths') AND this BC now cites E-TOOLS-008 in PC-6/EC-008/TV-006. TV census: 5→6; test-vectors.md total 669→670."
   - "1.1 (burst-233/F-P133-03/2026-07-22): PC-4 / EC-002 / TV-003 — assign E-TOOLS-009 InvalidRegexPattern (Category::VAL/Never) to the invalid-regex path (was 'VALIDATION category' with no code). 'VALIDATION' is not in the canonical 12-member Category enum; adjudicated: no existing TOOLS code covers regex compile failure; E-CORE-005 wrong component; E-TOOLS-009 minted. Structured fields: pattern: <pattern string>, compile_error: <regex crate error>. Gate #33 forward+reverse: E-TOOLS-009 now covers this raise site; error-taxonomy.md v1.32 anchors BC-2.23.006 in E-TOOLS-009 row. ARCHITECT FLAG: ADR-010 v1.4 and ADR-020 v1.3 TOOLS tables need E-TOOLS-009 appended."
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "0bc5c5d"
+input-hash: "6ab27a0"
 extracted_from: null
 modified: []
 deprecated: null
@@ -42,7 +43,7 @@ removed: null
 removal_reason: null
 ---
 
-# BC-2.23.006: GrepTool — In-Process Regex Search; Linear-Time `regex` Crate; max_results 100 Cap; Hermetic; PathGuard Scope; E-TOOLS-001/006
+# BC-2.23.006: GrepTool — In-Process Regex Search; Linear-Time `regex` Crate; max_results 100 Cap; Hermetic; PathGuard Scope; E-TOOLS-001/008/009
 
 ## Description
 
@@ -52,8 +53,8 @@ using the `regex` crate (pin `"1"`, linear-time finite-automata engine — no ca
 backtracking on adversarial inputs). `GrepTool` does NOT shell out to system `grep` or
 `ripgrep`; it is hermetic and unit-testable without system tool availability. Results are
 capped at `max_results` (default 100); when the ceiling is reached the tool returns the
-first 100 matches with `capped: true` in the output and emits `E-TOOLS-006
-SearchResultsCapped` as an informational annotation (non-fatal). The directory path
+first 100 matches with `capped: true` in the output and emits `E-TOOLS-006`
+(`GrepResult.capped` payload flag) as an informational annotation (non-fatal). The directory path
 argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 
 ## Preconditions
@@ -85,7 +86,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 2. **Results capped (non-fatal):** The match count reaches `max_results` before the full
    file tree is searched. The tool returns `ToolOutput::Json({ "matches": [<first 100>], "capped": true })`.
    This is NOT an `Err` — partial results are returned with the `capped` flag. The
-   informational code E-TOOLS-006 (`SearchResultsCapped`) appears in the structured output
+   informational code E-TOOLS-006 (`GrepResult.capped` payload flag) appears in the structured output
    annotations, not as a thrown error. Callers can detect the cap via `capped: true`.
 3. **Path confinement violation:** Returns
    `Err(FerrochainError { component: "TOOLS", category: Category::SECURITY,
@@ -192,7 +193,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-038 |
-| Capability Anchor Justification | CAP-038 ("First-Party Search Tool (tools::search — GrepTool)") per capabilities-p1-p2.md §CAP-038 — this BC specifies GrepTool's in-process regex semantics, linear-time `regex` crate guarantee, max_results 100 capping, hermetic no-subprocess invariant, PathGuard scope validation, and E-TOOLS-001/006 error codes that CAP-038 names as the distinct search surface warranting its own CAP band |
+| Capability Anchor Justification | CAP-038 ("First-Party Search Tool (tools::search — GrepTool)") per capabilities-p1-p2.md §CAP-038 — this BC specifies GrepTool's in-process regex semantics, linear-time `regex` crate guarantee, max_results 100 capping, hermetic no-subprocess invariant, PathGuard scope validation, and E-TOOLS-001/008/009 raised error codes (E-TOOLS-006 is a non-raised payload flag: GrepResult.capped) that CAP-038 names as the distinct search surface warranting its own CAP band |
 | L2 Domain Invariants | DI-014 (Error Propagation — path violations, invalid patterns, and OS-level I/O errors during traversal all propagate as Err; zero matches returns Ok([]) not Err; capping is non-fatal; E-TOOLS-008 is the carrier for traversal I/O errors — gate #33 reverse anchor: this BC now cites E-TOOLS-008 in PC-6/EC-008/TV-006 matching taxonomy v1.32 forward anchor) |
 | Architecture Authority | ADR-020 Decisions 2, 3, 5, and 7 (GrepTool contract, regex dep pin, ReadOnly ActionRisk, E-TOOLS-001/006) |
 | Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
