@@ -11,7 +11,7 @@ inputs:
   - .factory/semport/langchain-research.md
   - .factory/planning/naming-decision-study.md
   - .factory/semport/reference-manifest.md
-input-hash: "f72e008"
+input-hash: "b3cd127"
 ---
 
 # Market Intelligence Assessment — ferrochain

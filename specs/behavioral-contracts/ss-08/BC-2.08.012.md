@@ -22,7 +22,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "75134ac"
+input-hash: "c69dadb"
 extracted_from: null
 modified: []
 deprecated: null

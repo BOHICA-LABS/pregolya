@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/prd-supplements/bc-authoring-plan.md
   - .factory/specs/domain-spec/ubiquitous-language-server.md
-input-hash: "37952da"
+input-hash: "c92ed1c"
 findings:
   - id: F-P19-01
     severity: HIGH

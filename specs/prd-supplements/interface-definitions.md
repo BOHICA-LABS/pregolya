@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.50"
+version: "2.51"
 status: active
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1d
 changelog:
+  - "2.51 (F-P145-01+F-P145-04, burst-246, 2026-07-23): (1) F-P145-01: §First-Party Tools BashTool stub — default max_duration corrected 120s→30s to match canon (BC-2.23.005 H1/Description/PC1/EC-002/TV-004/DI-015 chain, ADR-020 Decision 2, ubiquitous-language-core). TD-VSDD-060 sweep: rg 'max_duration|120s|120 s' .factory/specs/ — sole 120s live-body site was this line; all other max_duration references already read 30s/30 seconds; zero further residue. (2) F-P145-04: §First-Party Tools opening sentence — over-generalization 'All tools use PathGuard' reworded to distinguish the five file-access tools (PathGuard-confined) from BashTool (ferrochain-sandbox-confined per BC-2.23.005); 'All tools implement the Tool trait' clause preserved."
   - "2.50 (F-P142-01+F-P142-03, burst-242, 2026-07-23): (1) F-P142-01: §First-Party Tools — three CreateFileTool phantom sites replaced with ListDirTool per BC-2.23.004 H1: BC anchor BC-2.23.004 label, PathGuard shared-list doc comment, and tool stub comment+description. (2) F-P142-03: Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form at 6 sites (L835 ToolApprovalResolved emission comment, L881 causal ordering diagram, L921 BC-2.06.005 StreamEvent BC anchor, L931 §PreToolCallHook BC anchor BC-2.05.004 citation, L969 PendingHumanApproval doc comment, L1631 /stream endpoint row). Zero Command:: enum-variant and CreateFileTool residue remains."
   - "2.49 (burst-240/F-P140-04/2026-07-22): Blanket omission annotation updated — E-MCP-006 McpContentUnsupported (VAL/Never, minted burst-240) added to E-MCP-* namespace (5→6 codes). E-MCP-006 confirmed library-layer only: raised by _convert_mcp_content_to_block in ferrochain-mcp when a CallToolResult contains an unsupported content block type (e.g., AudioContent); surfaces as library Err(FerrochainError) return, never as a direct HTTP terminal response in v1 (propagates embedded in Run.error if it reaches ferrochain-server). Disposition census 107→108: 43 HTTP + 17 individual + 48 blanket. Blanket group breakdown: E-MCP-* 6 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 48."
   - "2.48 (burst-236/F-P136/2026-07-23): Fix burst 236 placement-marker corrections (five findings + sweep). (1) F-P136-01: §Retriever Trait/GuardedDocuments placement marker `core::guardrail` → `core::retriever` (ADR-014 Decision 6; GuardedDocuments struct and rag_ingress are in core::retriever, not core::guardrail); §-source line drops `, core::guardrail`. (2) F-P136-02: §PreToolCallHook three co-located fixes per ADR-018 Decision 1 + BC-2.05.007: (a) module `graph::approval` → `graph::hitl` in both §-source and code-block marker; (b) trait method `pre_tool_dispatch` → `pre_invoke`; (c) restore dropped second parameter `run_ctx: &RunContext`. (3) F-P136-03: §Compaction type-definition marker `ferrochain-graph: graph::budget` → `ferrochain-core: core::budget` for CompactionTrigger/ConversationSnapshot/CompactionSummary/CompactionPolicy (ADR-019 Decision 1); §-source extended to note execution engine in graph::budget. (4) F-P136-04: StreamEvent::CompactionEvent.tokens_remaining_after type `u64` → `Option<i64>` (source is RunContext.budget_info.tokens_remaining: Option<i64>; three-site reconciliation with BC-2.06.006 v1.2 and BC-2.10.006 v1.3). (5) F-P136-05: §PreToolCallHook BC anchors re-attributed — BC-2.05.004 (Command(resume=value) API) removed from trait/ToolCallPreview/PreToolDecision/fail-closed description; BC-2.05.007 is the authoritative contract; BC-2.05.004 retained only for Command::Resume(PreToolDecision) resume-API role. Sweep also corrects PreToolDecision variant shapes to ADR-018 Decision 1 / BC-2.05.007: Deny { reason: String }, Edit { modified_args: serde_json::Value }, PendingHumanApproval { prompt: Option<String> }."
@@ -66,7 +67,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "189454f"
+input-hash: "87eab4e"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."
@@ -1062,7 +1063,7 @@ pub trait CompactionPolicy: Send + Sync {
 
 ### First-Party Tools
 
-**Source:** ADR-020 (ferrochain-tools crate); ferrochain-tools crate. All tools use `PathGuard` for workspace confinement (E-TOOLS-001 on escape) and implement the `Tool` trait via `#[ferrochain::tool]` proc-macro.
+**Source:** ADR-020 (ferrochain-tools crate); ferrochain-tools crate. All file-access tools (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, GrepTool) use `PathGuard` for workspace confinement (E-TOOLS-001 on escape); BashTool is confined via the ferrochain-sandbox backend (BC-2.23.005). All tools implement the `Tool` trait via `#[ferrochain::tool]` proc-macro.
 
 BC anchor: BC-2.23.001 (ReadFileTool), BC-2.23.002 (WriteFileTool), BC-2.23.003 (EditFileTool), BC-2.23.004 (ListDirTool), BC-2.23.005 (BashTool — ActionRisk::Medium floor, EC-005 timeout, EC-006 output truncation), BC-2.23.006 (GrepTool — match cap, E-TOOLS-006 capped flag).
 
@@ -1100,7 +1101,7 @@ impl PathGuard {
 /// BashTool — BC-2.23.005.
 /// action_risk floor: ActionRisk::Medium — construction fails with E-TOOLS-007
 /// if action_risk < Medium is requested.
-/// Timeout: configurable max_duration (default 120s); E-TOOLS-004 on exceed.
+/// Timeout: configurable max_duration (default 30s); E-TOOLS-004 on exceed.
 /// Output cap: stdout+stderr combined truncated to max_output_bytes; BashOutput.truncated = true (E-TOOLS-005 payload field).
 // #[ferrochain::tool(name = "bash", description = "...", action_risk = ActionRisk::Medium)]
 

@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.006.md
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.007.md
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.008.md
-input-hash: "391d8bb"
+input-hash: "096b8e2"
 traces_to: .factory/specs/architecture/ARCH-INDEX.md
 decisions: [D3, D13]
 dtu_required: true

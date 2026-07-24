@@ -30,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "6ab27a0"
+input-hash: "0bc5c5d"
 extracted_from: null
 modified: []
 deprecated: null

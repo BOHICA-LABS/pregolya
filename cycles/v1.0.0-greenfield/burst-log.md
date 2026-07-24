@@ -4682,3 +4682,13 @@ F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 
 ### Archived from STATE.md Current Phase Steps — Burst 239 (archived at burst-244)
 
 | Burst 239 — P1D-139 fix-burst ALL AGENTS COMPLETE (F-P139-01..07 all closed; BC-2.04.001 Inv-5 minted; tokens_remaining_after u64→Option<i64>; events.md v1.8; burst-238 date reconciled 2026-07-22→2026-07-23 BC-INDEX+; hash sweep STALE=0; burst-234 row archived); 0/3. NEXT: P1D-140. | PO + architect + BA + state-manager | COMPLETE | F-P139-01 HIGH BC-2.04.001 v1.3→v1.4: Inv-5 minted (checkpoint append-only — records never deleted/mutated in place, readable via search_history BC-2.04.008) + BC-2.10.006 v1.3→v1.4 citation fix (F-P139-01b). F-P139-02 HIGH BC-2.06.001 v1.5→v1.6: PC2 tokens_remaining_after u64→Option<i64>; also F-P139-04 LOW Description Step-has-no-Stream fix. F-P139-03 MED BC-2.07.003 v1.2→v1.3 (PC5 [""]→[]) + BC-2.07.001 v1.2→v1.3 (TV-005 [""]→[]). F-P139-05 LOW ADR-018 v1.2→v1.3 date reconciled 2026-07-22→2026-07-23 (architect); ADR-019 v1.2→v1.3 Decision 4 payload type; BC-INDEX burst-238 changelog date row 2026-07-22→2026-07-23 (state-manager F-P139-05 index-date half). F-P139-06 LOW BC-INDEX v2.8 BC-2.06.001 title sync to H1. F-P139-07 LOW BC-2.05.008 v1.0→v1.1 resume-routing PC-1..3 + EC-006 Resume(PendingHumanApproval)→Err. BA: events.md v1.7→v1.8 (BC-2.04.001 Inv-5 reference + tokens_remaining_after type fix). Hash sweep: pass 1 13 STALE→updated, pass 2 2 STALE→updated, pass 3 TOTAL=174 MATCH=174 STALE=0. Burst 239. |
+
+## Burst 240 — P1D-140 fix-burst (ARCHIVED)
+
+**Date:** 2026-07-22/23  
+**Agents:** architect + PO Wave-1 + PO Wave-2 + state-manager  
+**Status:** COMPLETE
+
+**Summary:** F-P140-01..08 all closed; 22-BC pregel→graph:: flat layout [ADR-001 canon; 35 path refs; zero residual]; E-MCP-006 McpContentUnsupported minted; error-taxonomy v1.34; census 108; module-decomposition v1.21 + ADR-017 v1.4; interface-definitions v2.49; burst-238 dates normalized 7 files 2026-07-22→2026-07-23; hash sweep 5 passes STALE=0; burst-235 row archived. 0/3. NEXT: P1D-141.
+
+---
