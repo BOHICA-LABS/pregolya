@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.14"
+version: "1.15"
 status: active
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "1557f93"
+input-hash: "f1840ac"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21, D23]
 supplements:
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.15 (F-P142-03, burst-242, 2026-07-23): §2.05 BC-2.05.008 title and §2.06 BC-2.06.005 title updated to match new H1s (bc_h1_is_title_source_of_truth): Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority."
   - "v1.14 (burst-241/Wave-2/F-P141-02/2026-07-23): VP-gate expansion — 6 P0 Kani proof obligations. §4 NFR-003 target updated '3 committed VP' → '6 P0 Kani VP obligations pass before v1 convergence'. §2.17 OQR-3 note expanded: invariants +DI-014; enforcing BCs +BC-2.21.003/2.19.005/2.05.007; plural 'harnesses'/'are Phase-6 artifacts'. BC-2.17.001 row retitled to '6 P0 VP obligations (VP-001/002/003/009/010/011) + 3 P1 VP obligations (VP-006/012/013)', DI column +DI-014. §6.3 KD-003 table: BC-2.03.001/2.04.006/2.13.004 retitled with VP-00N Kani P0 harness target label; +BC-2.21.003 (VP-009)/BC-2.19.005 (VP-010)/BC-2.05.007 (VP-011) Kani P0 rows; BC-2.17.001 updated to '6 P0 + 3 P1'."
   - "v1.13 (burst-241/F-P141-03/F-P141-04/2026-07-22): §5 error taxonomy summary table label corrections — alignment to error-taxonomy.md source of truth (gate #33 reverse, TD-VSDD-060 sibling sweep). (1) F-P141-03 (MED): E-CORE-002 label corrected — was 'RunnableCompositionError' (wrong: pipe composition is E-CORE-004); corrected to 'MessageRoleUnrecognized' (BC-2.01.002, message role validation — taxonomy message: 'Message role <role> is not a recognized message type'); E-CORE-004 PipeCompositionFailed added to CORE examples to explicitly represent the composition error. (2) F-P141-04 (LOW): E-TOOLS-006 label corrected — was 'BashGrepResultsTruncated' (wrong: 'Bash' prefix misattributes GrepTool informational payload field to BashTool); corrected to 'GrepResultsCapped' (taxonomy: GrepResult.capped payload field, BC-2.23.006 PC-2). (3) TD-VSDD-060 sibling sweep of all §5 TOOLS examples — three additional label mismatches found and fixed: E-TOOLS-001 'PathEscape' → 'PathConfinementViolation' (taxonomy message prefix 'PathConfinementViolation:', BC-2.23.001); E-TOOLS-002 'FileSizeExceeded' → 'FileReadExceedsLimit' (taxonomy message prefix 'FileReadExceedsLimit:', BC-2.23.001); E-TOOLS-003 'ExactMatchNotFound' → 'EditOldStringNotFound' (taxonomy message prefix 'EditOldStringNotFound:', BC-2.23.003). All five corrected labels now match error-taxonomy.md v1.34 message prefixes exactly. error-taxonomy.md not modified — all defects were PRD-side labels."
   - "v1.12 (burst-237/F-P137-01/2026-07-22): BC-2.13.002 DI column DI-006 → DI-006, DI-015 in §2.13 body table and §7 RTM. Propagates burst-235 F-P135-05 di_anchors co-enforcement (DI-015 Subprocess Execution Timeout) to prd.md — BC file frontmatter was correct since burst-235 but prd.md DI columns were not swept."
@@ -209,7 +210,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.05.005 | Resume on empty interrupt queue returns Err(NoActiveInterrupt) | P0 | DI-003 | ss-05/BC-2.05.005.md |
 | BC-2.05.006 | Risk-tiered interrupt classification (typed action-risk levels for Domain A) | P0 | DI-003, ASM-008 | ss-05/BC-2.05.006.md |
 | BC-2.05.007 | PreToolCallHook dispatch — pre_invoke contract; Approve/Deny/Edit/PendingHumanApproval; fail-closed Deny (VP-011 Kani seed) | P1 | DI-014 | ss-05/BC-2.05.007.md |
-| BC-2.05.008 | Skip-hook-on-resume invariant — ToolApprovalRequest checkpoint persistence; Command::Resume(PreToolDecision); no re-invocation of pre_invoke | P1 | DI-014 | ss-05/BC-2.05.008.md |
+| BC-2.05.008 | Skip-hook-on-resume invariant — ToolApprovalRequest checkpoint persistence; Command(resume=PreToolDecision); no re-invocation of pre_invoke | P1 | DI-014 | ss-05/BC-2.05.008.md |
 
 ### 2.06 Structured Streaming Event Taxonomy (CAP-007) — P0
 
@@ -219,7 +220,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.06.002 | run_id + parent_ids correlation across all events in a run | P0 | — | ss-06/BC-2.06.002.md |
 | BC-2.06.003 | Streaming and unary run produce identical final answer (NE-13) | P0 | DI-011 | ss-06/BC-2.06.003.md |
 | BC-2.06.004 | `tool_approval_request` StreamEvent (event 13) — payload; emission before interrupt; causal ordering | P1 | DI-014 | ss-06/BC-2.06.004.md |
-| BC-2.06.005 | `tool_approval_resolved` StreamEvent (event 14) — payload on Command::Resume; decision outcome | P1 | DI-014 | ss-06/BC-2.06.005.md |
+| BC-2.06.005 | `tool_approval_resolved` StreamEvent (event 14) — payload on Command(resume=…); decision outcome | P1 | DI-014 | ss-06/BC-2.06.005.md |
 | BC-2.06.006 | `compaction_event` StreamEvent (event 15) — payload; emission after compaction completes; trigger variant | P1 | DI-014 | ss-06/BC-2.06.006.md |
 
 ### 2.07 Text Splitting with Code-Point Boundary Correctness (CAP-008) — P0

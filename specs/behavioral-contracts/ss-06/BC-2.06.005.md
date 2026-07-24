@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.005
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,8 +19,9 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
-  - "1.0 (D23/2026-07-22): Initial BC — D23 streaming event taxonomy extension, event 14 tool_approval_resolved."
+  - "1.2 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. H1 title, Description, PC-2, PC-4, TV-001/002/003 updated. Zero Command:: enum-variant residue remains in live body text."
   - "1.1 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
+  - "1.0 (D23/2026-07-22): Initial BC — D23 streaming event taxonomy extension, event 14 tool_approval_resolved."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
-input-hash: "b2201ed"
+input-hash: "2eca03d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -40,12 +41,12 @@ removed: null
 removal_reason: null
 ---
 
-# BC-2.06.005: `tool_approval_resolved` StreamEvent (Event 14) — Payload; Emission on Command::Resume; Decision Outcome
+# BC-2.06.005: `tool_approval_resolved` StreamEvent (Event 14) — Payload; Emission on Command(resume=…); Decision Outcome
 
 ## Description
 
 `StreamEvent::ToolApprovalResolved` is the 14th variant in the streaming event taxonomy.
-It is emitted when a `Command::Resume(PreToolDecision)` arrives for a run that is suspended
+It is emitted when a `Command(resume=PreToolDecision)` arrives for a run that is suspended
 at a `ToolApprovalRequest` interrupt. The event carries the run ID, tool name, and the
 resolved decision so that stream consumers can update their UI (e.g., mark the approval
 dialog as resolved). The event is emitted AFTER the run's interrupt state is consumed and
@@ -56,7 +57,7 @@ event always pairs with a prior `BC-2.06.004 tool_approval_request` event for th
 ## Preconditions
 
 1. A graph run is in `interrupted` state with a pending `ToolApprovalRequest` interrupt.
-2. `Command::Resume(PreToolDecision)` is delivered (via the API or programmatically).
+2. `Command(resume=PreToolDecision)` is delivered (via the API or programmatically).
 3. The `PreToolDecision` is one of: `Approve`, `Deny { reason }`, or `Edit { modified_args }`.
 
 ## Postconditions
@@ -81,7 +82,7 @@ event always pairs with a prior `BC-2.06.004 tool_approval_request` event for th
    applied (i.e., before `tool.invoke(args)` is called for Approve/Edit, or before
    `ToolOutput::Error` is constructed for Deny). Stream consumers see the resolution event
    before any downstream effects.
-4. **No emission without prior request:** If `Command::Resume` arrives for a run that has
+4. **No emission without prior request:** If `Command(resume=…)` arrives for a run that has
    no pending `ToolApprovalRequest` interrupt, it is handled by BC-2.05.004 (standard
    resume mechanics); no `tool_approval_resolved` event is emitted.
 
@@ -109,9 +110,9 @@ event always pairs with a prior `BC-2.06.004 tool_approval_request` event for th
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 | Tool suspended at PendingHumanApproval; `Command::Resume(Approve)` delivered | Stream: `ToolApprovalResolved { ..., "decision": "Approve" }` BEFORE tool invocation | happy-path (approve) |
-| TV-002 | `Command::Resume(Deny { reason: "blocked" })` | Stream: `ToolApprovalResolved { ..., "decision": "Deny", "reason": "blocked" }` | deny resolved |
-| TV-003 | `Command::Resume(Edit { modified_args: {"cmd": "ls"} })` | Stream: `ToolApprovalResolved { ..., "decision": "Edit", "modified_args": {"cmd": "ls"} }` | edit resolved |
+| TV-001 | Tool suspended at PendingHumanApproval; `Command(resume=Approve)` delivered | Stream: `ToolApprovalResolved { ..., "decision": "Approve" }` BEFORE tool invocation | happy-path (approve) |
+| TV-002 | `Command(resume=Deny { reason: "blocked" })` | Stream: `ToolApprovalResolved { ..., "decision": "Deny", "reason": "blocked" }` | deny resolved |
+| TV-003 | `Command(resume=Edit { modified_args: {"cmd": "ls"} })` | Stream: `ToolApprovalResolved { ..., "decision": "Edit", "modified_args": {"cmd": "ls"} }` | edit resolved |
 
 ## Verification Properties
 

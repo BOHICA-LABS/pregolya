@@ -1,7 +1,7 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.11"
+version: "1.12"
 status: active
 producer: business-analyst
 timestamp: 2026-07-22T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
   - .factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md
-input-hash: "b250716"
+input-hash: "40fe43d"
 traces_to: .factory/specs/product-brief.md
 sections:
   - capabilities-p0.md
@@ -33,6 +33,7 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "v1.12 (2026-07-23): Fix burst 242 F-P142-02 — Document Map failure-modes.md row updated: ~140→~257 lines, (14 modes)→(19 modes). ID Registry: FM-NNN count 14→19 (FM-015..019 added in failure-modes.md v1.1 burst-241). Registry sweep: CAP 38, DI 15, DEC 13, ASM 9, R 8 all confirmed stable — no additional drift found."
   - "v1.11 (2026-07-22): Fix burst 235 F-P135-06 (BA scope) — events.md v1.6→v1.7 (D23 execution-time transitions: StreamEvent taxonomy 12→15 variants; CompactionExecuted domain event added after CheckpointWritten; ToolApprovalRaised + ToolApprovalResolved domain events added after ResumeValueReceived; ordering rules 7-8 added; decisions D21+D23 added). Document Map line count updated: events.md ~140→~175."
   - "v1.10 (2026-07-22): Fix burst 234 — invariants.md v1.1→v1.2 (DI-015 Subprocess Execution Timeout added per F-P134-06 architect adjudication; Tool Execution Invariants section added). DI-NNN census 14→15. Document Map and ID Registry updated."
   - "v1.9 (2026-07-22): Fix burst 233 F-P133-08 (BA micro-fix) — capabilities-p1-p2.md v1.7→v1.8 (CAP-036 similar-crate facts corrected per ADR-020 Decision 7 v1.1: pin `\"3\"`, owner mitsuhiko, Apache-2.0 single-licensed; stale confirm-before-write instruction removed). TD-VSDD-060 sweep: no other dtolnay/MIT similar-crate facts in domain-spec/ tree."
@@ -72,7 +73,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Edge Cases | edge-cases.md | ~133 | story-writer, test-writer | DEC-NNN domain-level edge cases (13 cases) |
 | Assumptions | assumptions.md | ~48 | product-owner, test-writer | ASM-NNN with validation methods (9 assumptions) |
 | Risks | risks.md | ~51 | product-owner, architect | R-NNN risk register (8 risks) |
-| Failure Modes | failure-modes.md | ~140 | architect, test-writer | FM-NNN runtime failure catalog (14 modes) |
+| Failure Modes | failure-modes.md | ~257 | architect, test-writer | FM-NNN runtime failure catalog (19 modes) |
 | Differentiators | differentiators.md | ~62 | product-owner | Competitive differentiator → CAP-NNN traceability |
 | Ubiquitous Language — Core/Graph/D21/D23 | ubiquitous-language-core.md | ~330 | all agents | Core and graph term definitions + D21 (16 terms) + D23 (13 terms: PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary, ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool) |
 | Ubiquitous Language — Server/Policy | ubiquitous-language-server.md | ~100 | all agents | Server, policy/safety, error terms + reconciliation table |
@@ -99,7 +100,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | DEC-NNN | 13 | edge-cases.md |
 | ASM-NNN | 9 | assumptions.md |
 | R-NNN | 8 | risks.md |
-| FM-NNN | 14 | failure-modes.md |
+| FM-NNN | 19 | failure-modes.md |
 
 > **Risk ID scheme note (F-10):** The R-NNN scheme in domain-spec/risks.md is canonical for all spec artifacts (PRD RTM, BC Traced-To, NFR catalog). STATE.md uses a separate R-N numeric alias (R8, R10, R11 map to R-004, R-005, R-006 respectively) retained for decision-log continuity only — see risks.md §Dual Risk ID Reconciliation for the full cross-walk table.
 

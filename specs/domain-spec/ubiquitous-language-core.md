@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.6"
+version: "1.7"
 status: active
 producer: business-analyst
 timestamp: 2026-07-22T00:00:00Z
 changelog:
+  - "1.7 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 1 enum-variant form occurrence of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Site: §PreToolDecision definition block. TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text (changelog history exempt)."
   - "1.6 (2026-07-22): D23 ubiquitous-language additions (burst-230) — new section 'D23 Additions (HITL Approval Hook, Context Compaction, and First-Party Tools)': PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary (ADR-018/ADR-019); ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool (ADR-020 / SS-23). 13 new terms; total D23 + prior: 16 (D21) + 13 (D23) = 29 terms in this file. D23 added to decisions list."
   - "1.5 (2026-07-21): F-P131-05 adjudication (burst-226) — TrustLevel term added to D21 section (ferrochain-prompts: prompts::template; 3 variants: Untrusted | UserInput | Trusted; severity ordering Untrusted > UserInput > Trusted; distinct from ProvenanceTag; authority ADR-015 §Decision 3). D21 total terms: 15 → 16."
   - "1.4 (2026-07-20): D21 second-half ubiquitous-language additions — 6 new terms: VectorStore, InMemoryVectorStore, MetadataFilter, Embeddings, EmbeddingsOpenAI, EmbeddingsOllama. Appended to D21 section. Total D21 terms: 15."
@@ -338,7 +339,7 @@ The four-variant decision type returned by `PreToolCallHook::pre_invoke` (`#[non
 `Approve` (proceed unchanged), `Deny { reason }` (fail-closed — tool NOT invoked; VP-011
 Kani candidate), `Edit { modified_args }` (proceed with modified arguments), and
 `PendingHumanApproval { prompt }` (suspend via `interrupt()`, reusing BC-2.05.001 machinery;
-resumed via `Command::Resume(PreToolDecision)`; hook NOT re-called on resume —
+resumed via `Command(resume=PreToolDecision)`; hook NOT re-called on resume —
 "skip-hook-on-resume" invariant, PO BC obligation). Crate: ferrochain-graph, `graph::hitl`.
 Authority: ADR-018 / CAP-034.
 

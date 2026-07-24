@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.007
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ vp_seed: true
 vp_id: VP-011
 red_gate: false
 changelog:
+  - "1.3 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. PC-4 updated. Zero Command:: enum-variant residue remains in live body text."
   - "1.2 (burst-236/OBS-P136-A/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-011' (VP-INDEX v1.5 burst-232 seeded VP-011 Kani P0)."
   - "1.1 (burst-234/F-P134-03/2026-07-22): Add reciprocal Related BCs entry for BC-2.08.010 — the `#[tool]` proc-macro sets `action_risk` which is consumed by this BC's `pre_tool_dispatch` via `ToolCallPreview.action_risk`. BC-2.08.010 v1.2 corrected its mis-anchor (BC-2.05.004 → this BC); reciprocal link added here per anchor-back rule."
   - "1.0 (D23/2026-07-22): Initial BC — D23 per-tool-call approval hook, SS-05 extension. VP-011 Kani P0 seed."
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "03ce577"
+input-hash: "3003f9b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -82,7 +83,7 @@ under no code path does a `Deny` decision allow the tool to execute.
 4. **PendingHumanApproval:** `pre_invoke` returns `PreToolDecision::PendingHumanApproval { prompt }`.
    `pre_tool_dispatch` issues `interrupt(ToolApprovalRequest { preview, prompt })` via
    BC-2.05.001 machinery. The run is suspended. On resume, the delivered
-   `Command::Resume(PreToolDecision)` is applied via rules PC-1 through PC-3. See
+   `Command(resume=PreToolDecision)` is applied via rules PC-1 through PC-3. See
    BC-2.05.008 for the skip-hook-on-resume invariant.
 5. **Hook error (panic or `Err`):** If `hook.pre_invoke(...)` panics or returns an error,
    `pre_tool_dispatch` treats this as `Deny { reason: "hook error: <detail>" }`. The hook

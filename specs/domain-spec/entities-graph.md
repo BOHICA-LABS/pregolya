@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: entities-graph
-version: "1.8"
+version: "1.9"
 status: active
 producer: business-analyst
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -14,6 +14,7 @@ input-hash: "e978d8d"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D21, D23]
 changelog:
+  - "v1.9 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 3 enum-variant form occurrences of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Sites: §PreToolDecision PendingHumanApproval bullet (line 298), §ToolApprovalRequest Note (line 312), Relationships Summary (line 371). TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text."
   - "v1.8 (2026-07-23): Fix burst-241 F-P141-01 (false-closure) — CompactionSummary §Application: genuinely apply the rename trigger_tokens_remaining → tokens_remaining_after. The v1.7 changelog entry claimed this rename was already applied ('sole occurrence') but the body retained the stale field name `trigger_tokens_remaining`. v1.7 was a false-closure; this entry is the genuine fix. TD-VSDD-060 sibling sweep: zero trigger_tokens_remaining occurrences remain in domain-spec/ body text (changelog historical entries and out-of-scope BC/ADR files exempted)."
   - "v1.7 (2026-07-22): Fix burst-234 BA sibling-sweep — CompactionSummary §Application: renamed CompactionEvent field trigger_tokens_remaining → tokens_remaining_after (canonical name per BC-2.10.006 v1.1 burst-233, ADR-019 Decision 3 v1.2 burst-234). TD-VSDD-060 sweep: sole occurrence; no other domain-spec files affected."
   - "v1.6 (2026-07-22): D23 entity additions (burst-230) — new section '## HITL Approval Hook Domain': PreToolCallHook, PreToolDecision, ToolCallPreview, ToolApprovalRequest (ferrochain-graph::hitl, ADR-018). New section '## Context Compaction Domain': CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary (ferrochain-core::budget + graph::budget, ADR-019). Tool entity updated: first-party subtypes from SS-23 added (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, GrepTool). Relationships Summary extended. D23 added to decisions list."
@@ -295,7 +296,7 @@ The decision type returned by `PreToolCallHook::pre_invoke`; determines the tool
   - `Approve` — proceed to tool execution unchanged
   - `Deny { reason: String }` — construct `ToolOutput::Error(reason)`; tool is NOT invoked (fail-closed; VP-011 Kani candidate)
   - `Edit { modified_args: serde_json::Value }` — replace tool_args with modified_args; proceed (engine validates modified_args is a valid JSON object before invocation)
-  - `PendingHumanApproval { prompt: Option<String> }` — suspend via `interrupt()` (BC-2.05.001 machinery reused); on `Command::Resume(PreToolDecision)` the decision is applied; hook is NOT re-called on the resumed dispatch ("skip-hook-on-resume" invariant — PO BC obligation for SS-05 extension)
+  - `PendingHumanApproval { prompt: Option<String> }` — suspend via `interrupt()` (BC-2.05.001 machinery reused); on `Command(resume=PreToolDecision)` the decision is applied; hook is NOT re-called on the resumed dispatch ("skip-hook-on-resume" invariant — PO BC obligation for SS-05 extension)
 - **Crate:** ferrochain-graph, module `graph::hitl`
 - **Invariant:** `Deny` is fail-closed — the tool is never invoked when Deny is returned, regardless of code path. VP-011 Kani candidate.
 
@@ -309,7 +310,7 @@ Read-only snapshot of a pending tool invocation passed to `PreToolCallHook::pre_
 Interrupt payload serialized to the checkpoint when `PreToolDecision::PendingHumanApproval` is returned.
 - **Fields:** `preview: ToolCallPreview`, `prompt: Option<String>`
 - **Crate:** ferrochain-graph, module `graph::hitl`
-- **Note:** Serialized via msgpack to the existing checkpoint format (ADR-002). Survives process restart identically to standard BC-2.05.001 interrupts. Delivered via `Command::Resume(PreToolDecision)` when the human provides their decision.
+- **Note:** Serialized via msgpack to the existing checkpoint format (ADR-002). Survives process restart identically to standard BC-2.05.001 interrupts. Delivered via `Command(resume=PreToolDecision)` when the human provides their decision.
 
 ---
 
@@ -368,7 +369,7 @@ Thread 1——N Checkpoint (via thread_id)
 Message 1——N ContentBlock
 Tool invocation produces ToolMessage (BC-2.09.002); content passes GuardrailHook as IngressContent::ToolResult before model context entry (DI-012)
 PreToolCallHook::pre_invoke fires before every tool dispatch; PreToolDecision routes → Approve / Deny / Edit / PendingHumanApproval
-ToolApprovalRequest persisted to checkpoint on PendingHumanApproval; Command::Resume(PreToolDecision) delivers the decision
+ToolApprovalRequest persisted to checkpoint on PendingHumanApproval; Command(resume=PreToolDecision) delivers the decision
 CompactionTrigger evaluated by BudgetEngine after each super-step; on trigger → ConversationSnapshot assembled from FTS → CompactionPolicy::compact() → CompactionSummary applied to active window
 CompactionSummary.compacted_range replaced by SystemMessage(summary_text); CompactionEvent appended to EvidenceJournal; compaction_event emitted (15th streaming variant)
 Retriever::get_relevant_documents returns Vec<Document>; Documents entering graph context pass BoundaryType::RAGRetrieval guardrail (DI-012)

@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.49"
+version: "2.50"
 status: active
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
 phase: 1d
 changelog:
+  - "2.50 (F-P142-01+F-P142-03, burst-242, 2026-07-23): (1) F-P142-01: §First-Party Tools — three CreateFileTool phantom sites replaced with ListDirTool per BC-2.23.004 H1: BC anchor BC-2.23.004 label, PathGuard shared-list doc comment, and tool stub comment+description. (2) F-P142-03: Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form at 6 sites (L835 ToolApprovalResolved emission comment, L881 causal ordering diagram, L921 BC-2.06.005 StreamEvent BC anchor, L931 §PreToolCallHook BC anchor BC-2.05.004 citation, L969 PendingHumanApproval doc comment, L1631 /stream endpoint row). Zero Command:: enum-variant and CreateFileTool residue remains."
   - "2.49 (burst-240/F-P140-04/2026-07-22): Blanket omission annotation updated — E-MCP-006 McpContentUnsupported (VAL/Never, minted burst-240) added to E-MCP-* namespace (5→6 codes). E-MCP-006 confirmed library-layer only: raised by _convert_mcp_content_to_block in ferrochain-mcp when a CallToolResult contains an unsupported content block type (e.g., AudioContent); surfaces as library Err(FerrochainError) return, never as a direct HTTP terminal response in v1 (propagates embedded in Run.error if it reaches ferrochain-server). Disposition census 107→108: 43 HTTP + 17 individual + 48 blanket. Blanket group breakdown: E-MCP-* 6 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 48."
   - "2.48 (burst-236/F-P136/2026-07-23): Fix burst 236 placement-marker corrections (five findings + sweep). (1) F-P136-01: §Retriever Trait/GuardedDocuments placement marker `core::guardrail` → `core::retriever` (ADR-014 Decision 6; GuardedDocuments struct and rag_ingress are in core::retriever, not core::guardrail); §-source line drops `, core::guardrail`. (2) F-P136-02: §PreToolCallHook three co-located fixes per ADR-018 Decision 1 + BC-2.05.007: (a) module `graph::approval` → `graph::hitl` in both §-source and code-block marker; (b) trait method `pre_tool_dispatch` → `pre_invoke`; (c) restore dropped second parameter `run_ctx: &RunContext`. (3) F-P136-03: §Compaction type-definition marker `ferrochain-graph: graph::budget` → `ferrochain-core: core::budget` for CompactionTrigger/ConversationSnapshot/CompactionSummary/CompactionPolicy (ADR-019 Decision 1); §-source extended to note execution engine in graph::budget. (4) F-P136-04: StreamEvent::CompactionEvent.tokens_remaining_after type `u64` → `Option<i64>` (source is RunContext.budget_info.tokens_remaining: Option<i64>; three-site reconciliation with BC-2.06.006 v1.2 and BC-2.10.006 v1.3). (5) F-P136-05: §PreToolCallHook BC anchors re-attributed — BC-2.05.004 (Command(resume=value) API) removed from trait/ToolCallPreview/PreToolDecision/fail-closed description; BC-2.05.007 is the authoritative contract; BC-2.05.004 retained only for Command::Resume(PreToolDecision) resume-API role. Sweep also corrects PreToolDecision variant shapes to ADR-018 Decision 1 / BC-2.05.007: Deny { reason: String }, Edit { modified_args: serde_json::Value }, PendingHumanApproval { prompt: Option<String> }."
   - "2.47 (burst-233/F-P133-03/2026-07-22): E-TOOLS-* blanket annotation updated — 7→9 codes (+E-TOOLS-008 FileIoError TOOL/Maybe, +E-TOOLS-009 InvalidRegexPattern VAL/Never, minted burst-233). Disposition census 105→107 (43 HTTP + 17 individual + 47 blanket). Blanket group breakdown: E-MCP-* 5 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 47."
@@ -65,7 +66,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "9869246"
+input-hash: "153933f"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."
@@ -832,7 +833,7 @@ pub enum StreamEvent {
         prompt:      String,
     },
     // Per-tool-call approval resolved — wire: tool_approval_resolved  (D23/2026-07-22, ADR-018)
-    // Emitted AFTER interrupt is consumed by Command::Resume(PreToolDecision),
+    // Emitted AFTER interrupt is consumed by Command(resume=PreToolDecision),
     // BEFORE the approval decision is applied. Fires on run resume; correlates to
     // the preceding ToolApprovalRequest by tool_name.
     // Causal ordering authority: BC-2.06.005.
@@ -878,7 +879,7 @@ pub enum StreamEvent {
 ///           → GuardrailDecision[RagChunk|MemoryItem]*    // RAG/Memory: within Node window
 ///           → (ToolApprovalRequest                        // On PendingHumanApproval (0 or 1 per tool call)
 ///               → [run transitions to interrupted]
-///               → [external Command::Resume(PreToolDecision)]
+///               → [external Command(resume=PreToolDecision)]
 ///               → ToolApprovalResolved                    // On resume; BEFORE decision applied
 ///             )?
 ///           → (ToolStart                                  // Only if Approve or Edit decision
@@ -918,7 +919,7 @@ BC-2.06.001 PC4 (causal ordering — updated D23/2026-07-22),
 BC-2.06.002 (run_id + parent_ids on every variant),
 BC-2.06.003 (streaming/unary execution equivalence; GuardrailDecision stream-only notification),
 BC-2.06.004 (ToolApprovalRequest — event 13; emitted before interrupt on PendingHumanApproval),
-BC-2.06.005 (ToolApprovalResolved — event 14; emitted on Command::Resume delivery),
+BC-2.06.005 (ToolApprovalResolved — event 14; emitted on Command(resume=…) delivery),
 BC-2.06.006 (CompactionEvent — event 15; emitted after compacted checkpoint durably written),
 BC-2.11.002 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for ToolResult boundary), BC-2.11.003 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for RagChunk boundary), BC-2.11.004 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for MemoryItem boundary),
 BC-2.11.005 PC1/INV (ToolEnd post-guardrail content; zero rejected bytes in any StreamEvent),
@@ -928,7 +929,7 @@ ADR-006 rev-3 (guardrail design authority), ADR-018 (per-tool-call approval hook
 
 **Source:** ADR-018 Decision 2 (trait shape) + Decision 3 (dispatch ordering) + Decision 4 (fail-closed Deny) + Decision 5 (streaming events) + Decision 6 (action_risk attribute); ferrochain-graph: graph::hitl.
 
-BC anchor: BC-2.05.007 (PreToolCallHook trait — pre_invoke contract; ToolCallPreview shape; PreToolDecision variants Approve/Deny/Edit/PendingHumanApproval; AlwaysApprovePolicy default; fail-closed Deny; hook failure = Deny; VP-011 Kani P0 seed), BC-2.05.004 (Command::Resume(PreToolDecision) resume-API: delivers PreToolDecision to engine when PendingHumanApproval interrupt is resolved), BC-2.06.004 (ToolApprovalRequest event), BC-2.06.005 (ToolApprovalResolved event), BC-2.08.010 PC1 (action_risk() method on Tool), BC-2.16.001 Invariant (retry-approval dispatch ordering).
+BC anchor: BC-2.05.007 (PreToolCallHook trait — pre_invoke contract; ToolCallPreview shape; PreToolDecision variants Approve/Deny/Edit/PendingHumanApproval; AlwaysApprovePolicy default; fail-closed Deny; hook failure = Deny; VP-011 Kani P0 seed), BC-2.05.004 (Command(resume=PreToolDecision) resume-API: delivers PreToolDecision to engine when PendingHumanApproval interrupt is resolved), BC-2.06.004 (ToolApprovalRequest event), BC-2.06.005 (ToolApprovalResolved event), BC-2.08.010 PC1 (action_risk() method on Tool), BC-2.16.001 Invariant (retry-approval dispatch ordering).
 
 ```rust
 // ferrochain-graph: graph::hitl
@@ -966,7 +967,7 @@ pub enum PreToolDecision {
     /// Engine validates modified_args is a JSON object; falls back to Deny if not.
     /// BC anchor: BC-2.05.007 PC3 (Edit path; invalid modified_args → Deny fallback).
     Edit { modified_args: serde_json::Value },
-    /// Suspend the run (interrupt()) and await human approval via Command::Resume(PreToolDecision).
+    /// Suspend the run (interrupt()) and await human approval via Command(resume=PreToolDecision).
     /// ToolApprovalRequest StreamEvent is emitted before interrupt().
     /// BC anchor: BC-2.05.007 PC4 (PendingHumanApproval — reuses BC-2.05.001 interrupt machinery).
     PendingHumanApproval { prompt: Option<String> },
@@ -1063,14 +1064,14 @@ pub trait CompactionPolicy: Send + Sync {
 
 **Source:** ADR-020 (ferrochain-tools crate); ferrochain-tools crate. All tools use `PathGuard` for workspace confinement (E-TOOLS-001 on escape) and implement the `Tool` trait via `#[ferrochain::tool]` proc-macro.
 
-BC anchor: BC-2.23.001 (ReadFileTool), BC-2.23.002 (WriteFileTool), BC-2.23.003 (EditFileTool), BC-2.23.004 (CreateFileTool), BC-2.23.005 (BashTool — ActionRisk::Medium floor, EC-005 timeout, EC-006 output truncation), BC-2.23.006 (GrepTool — match cap, E-TOOLS-006 capped flag).
+BC anchor: BC-2.23.001 (ReadFileTool), BC-2.23.002 (WriteFileTool), BC-2.23.003 (EditFileTool), BC-2.23.004 (ListDirTool), BC-2.23.005 (BashTool — ActionRisk::Medium floor, EC-005 timeout, EC-006 output truncation), BC-2.23.006 (GrepTool — match cap, E-TOOLS-006 capped flag).
 
 ```rust
 // ferrochain-tools crate
 
 /// Workspace confinement guard.
 /// Resolves the path via `canonicalize` and verifies it falls under `root`.
-/// Shared by ReadFileTool, WriteFileTool, EditFileTool, CreateFileTool, GrepTool.
+/// Shared by ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, GrepTool.
 /// BC anchor: BC-2.23.001–006 shared PathGuard invariant; E-TOOLS-001 on escape.
 pub struct PathGuard { root: PathBuf }
 impl PathGuard {
@@ -1092,9 +1093,9 @@ impl PathGuard {
 // Performs exact-string replacement; requires unique match (fails on 0 or >1 matches).
 // #[ferrochain::tool(name = "edit_file", description = "...")]
 
-// CreateFileTool — BC-2.23.004
-// Errors: E-TOOLS-001 (path confinement). Creates file; errors if already exists.
-// #[ferrochain::tool(name = "create_file", description = "...")]
+// ListDirTool — BC-2.23.004
+// Errors: E-TOOLS-001 (path confinement), E-TOOLS-008 (not a directory, permission denied). Returns directory entries (depth 1) as JSON array of DirEntry objects.
+// #[ferrochain::tool(name = "list_dir", description = "...")]
 
 /// BashTool — BC-2.23.005.
 /// action_risk floor: ActionRisk::Medium — construction fails with E-TOOLS-007
@@ -1628,7 +1629,7 @@ an explicit documented exemption.
 | POST | `/threads/{thread_id}/runs` | Create and start a run (async; returns 202 with `run_id`); run-supplied `config`/`metadata`/`context` deep-merge over the Assistant's stored values, run wins at leaf key (BC-2.12.003 §Run-Config Merge Precedence Invariant, F-P33-02) | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs` | List runs for a thread; `?status=queued\|in_progress\|completed\|failed\|interrupted\|cancelled\|summary_halt` filter + canonical pagination (`?limit=N` default 10 max 100, `?offset=N`; `created_at` DESC) — F-P31-01 | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}` | Get run status and result | BC-2.12.003 |
-| GET | `/threads/{thread_id}/runs/{run_id}/stream` | Stream run output as server-sent events (SSE; happy path emits run_start, node_start/stream/end, run_end; **run_end is emitted on completion only** — interrupted runs terminate with interrupt envelope as terminal frame, failed runs terminate with error SSE event; neither emits run_end; BC-2.06.001 PC2+EC-005, BC-2.12.007 EC-001/EC-003). **Guardrail decisions (F-P99-01):** `guardrail_decision` events are emitted for non-Pass guardrail outcomes (Fail/Transform only — Pass not streamed); fire within the tool lifecycle window (before `tool_end`) for ToolResult boundary, and within the node lifecycle window for RAG/Memory boundaries; see §StreamEvent for complete taxonomy and ordering. **ToolEnd content semantics:** `tool_end.data` carries POST-guardrail content — raw rejected payloads are never emitted in any SSE event (BC-2.11.005 INV-5). BC-2.11.002/003/004 PC3/PC4 (per-boundary), ADR-006 rev-3. **Tool approval events (D23/ADR-018):** `tool_approval_request` is emitted BEFORE the run is suspended into `interrupted` state when `pre_tool_dispatch` returns `PreToolDecision::PendingHumanApproval`; it carries `run_id`, `tool_name`, `tool_args`, `action_risk`, and `prompt`. `tool_approval_resolved` is emitted AFTER the interrupt is consumed and BEFORE the decision is applied, on `Command::Resume(PreToolDecision)` delivery; it carries `run_id`, `tool_name`, `decision`, `reason`, and `modified_args`. Both events fire within the NodeStart/NodeEnd window, before the ToolStart window for the same tool call; see §PreToolCallHook and BC-2.06.004/005. **Compaction event (D23/ADR-019):** `compaction_event` is emitted after a compaction cycle completes and the compacted checkpoint is durably written (step 6 of BC-2.10.006 7-step sequence); it carries `run_id`, `trigger`, `compacted_turns`, `summary_token_count`, and `tokens_remaining_after`; fires after StepEnd and before the next StepStart; see §Compaction and BC-2.06.006. | BC-2.12.007 |
+| GET | `/threads/{thread_id}/runs/{run_id}/stream` | Stream run output as server-sent events (SSE; happy path emits run_start, node_start/stream/end, run_end; **run_end is emitted on completion only** — interrupted runs terminate with interrupt envelope as terminal frame, failed runs terminate with error SSE event; neither emits run_end; BC-2.06.001 PC2+EC-005, BC-2.12.007 EC-001/EC-003). **Guardrail decisions (F-P99-01):** `guardrail_decision` events are emitted for non-Pass guardrail outcomes (Fail/Transform only — Pass not streamed); fire within the tool lifecycle window (before `tool_end`) for ToolResult boundary, and within the node lifecycle window for RAG/Memory boundaries; see §StreamEvent for complete taxonomy and ordering. **ToolEnd content semantics:** `tool_end.data` carries POST-guardrail content — raw rejected payloads are never emitted in any SSE event (BC-2.11.005 INV-5). BC-2.11.002/003/004 PC3/PC4 (per-boundary), ADR-006 rev-3. **Tool approval events (D23/ADR-018):** `tool_approval_request` is emitted BEFORE the run is suspended into `interrupted` state when `pre_tool_dispatch` returns `PreToolDecision::PendingHumanApproval`; it carries `run_id`, `tool_name`, `tool_args`, `action_risk`, and `prompt`. `tool_approval_resolved` is emitted AFTER the interrupt is consumed and BEFORE the decision is applied, on `Command(resume=PreToolDecision)` delivery; it carries `run_id`, `tool_name`, `decision`, `reason`, and `modified_args`. Both events fire within the NodeStart/NodeEnd window, before the ToolStart window for the same tool call; see §PreToolCallHook and BC-2.06.004/005. **Compaction event (D23/ADR-019):** `compaction_event` is emitted after a compaction cycle completes and the compacted checkpoint is durably written (step 6 of BC-2.10.006 7-step sequence); it carries `run_id`, `trigger`, `compacted_turns`, `summary_token_count`, and `tokens_remaining_after`; fires after StepEnd and before the next StepStart; see §Compaction and BC-2.06.006. | BC-2.12.007 |
 | POST | `/threads/{thread_id}/runs/{run_id}/resume` | Deliver resume value to interrupted run | BC-2.05.004 |
 | POST | `/threads/{thread_id}/runs/{run_id}/cancel` | Cancel a queued or in_progress run (transitions to cancelled) | BC-2.12.003 |
 | DELETE | `/threads/{thread_id}/runs/{run_id}` | Delete a terminal run record (completed/failed/cancelled/summary_halt; HTTP 409 if queued, in_progress, or interrupted — cancel or resume-to-complete/summary_halt first) | BC-2.12.003 |

@@ -4596,3 +4596,33 @@ F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 
 **Hash sweep:** 3 transitive passes; TOTAL=174 MATCH=174 STALE=0 (all 176 modified files settled).
 
 **Convergence:** 141 passes total, 141 fix bursts total (128 pre-D21 + 13 post-D21+D23); trajectory-tail →7→8→7; 0/3; NEXT: adversary cascade P1D-142.
+
+---
+
+### Burst 242 — P1D-142 Fix-Burst + Session Wrap COMPLETE (2026-07-23)
+
+**Agents:** product-owner (F-P142-01 phantom-tool + F-P142-03 Command-notation main sweep) + business-analyst ×2 (F-P142-02 bounded-contexts + F-P142-04 + F-P142-03 domain-spec residue) + architect (F-P142-03 architecture residue) + state-manager (session wrap)
+
+**Status:** ALL 4 FINDINGS CLOSED + SESSION WRAP COMMITTED
+
+**Pass:** P1D-142 (tenth pass on D21+D23 expanded perimeter; sampled-only shards final; NOT CLEAN: 0C/0H/4M; streak 0/3)
+
+**Coverage milestone:** As of P1D-142, the ENTIRE perimeter has had ≥1 line-by-line deep-read — no never-opened surfaces remain. All subsequent passes are regression/fresh-hunt mode.
+
+**Findings closed:**
+
+- F-P142-01 MED (PO): interface-definitions §First-Party Tools — three CreateFileTool phantom sites replaced with ListDirTool per BC-2.23.004 H1 authority. Sites: BC anchor BC-2.23.004 label, PathGuard shared-list doc comment, tool stub comment+description. interface-definitions v2.49→v2.50.
+
+- F-P142-02 + F-P142-04 MED (BA): bounded-contexts v1.2→v1.3 — 6 orphaned crates (ferrochain-tools, ferrochain-memory, ferrochain-graph, ferrochain-server, ferrochain-retrieval, ferrochain-compaction) not assigned to any bounded context; 6 new bounded contexts authored (contexts 9-14, acyclically grounded in decisions D19/D20/D21/D23). L2-INDEX v1.11→v1.12 FM register propagated (FM-015..019 descriptions from failure-modes v1.1). entities-graph v1.8→v1.9, capabilities-p1-p2 v1.9→v1.10, events v1.8→v1.9, ubiquitous-language-core v1.6→v1.7.
+
+- F-P142-03 MED (PO + BA + architect): D23 authoring layer reintroduced banned enum-style Command::Resume(…) at 51 sites (PO 38 + BA 8 + architect 5); canonicalized corpus-wide to struct kwarg form Command(resume=…) per BC-2.05.004 v1.5 / F-P120-01 adjudication. Files: interface-definitions v2.50 (6 sites: L835 ToolApprovalResolved emission comment, L881 causal ordering diagram, L921 BC-2.06.005 StreamEvent BC anchor, L931 §PreToolCallHook BC anchor BC-2.05.004 citation, L969 PendingHumanApproval doc comment, L1631 /stream endpoint row); BC-2.05.007 v1.2→v1.3; BC-2.05.008 v1.1→v1.2; BC-2.06.001 v1.7→v1.8; BC-2.06.005 v1.1→v1.2; BC-2.10.006 v1.4→v1.5; BC-INDEX v2.7→v2.8 (titles); prd v1.14→v1.15 (§2.05/§2.06 titles); test-vectors v2.4→v2.5 (BC-2.06.005 Notes column); bc-authoring-plan v2.44→v2.45 (Batch 20 table title); entities-graph v1.9 (3 sites); events v1.9 (3 sites); capabilities-p1-p2 v1.10 (1 site); ubiquitous-language-core v1.7 (1 site); api-surface v1.8→v1.9 (1 site); ADR-018 v1.3→v1.4 (4 sites). Zero Command:: enum-form occurrences remain in live body text across entire corpus.
+
+**Lesson codified:** L-027 — scope-expansion layers (D21/D23) must re-check previously-adjudicated canonical-notation decisions (e.g. F-P120-01 Command struct form); closed findings regress when a new subsystem layer reintroduces the banned form. Corpus-wide adjudicated-notation grep (Command::, etc.) added to the fix-burst close scan.
+
+**Hash sweep:** 3 transitive passes; TOTAL=174 MATCH=174 STALE=0 (interface-definitions/api-surface/bc-authoring-plan/test-vectors + transitive consumers all settled).
+
+**Convergence:** 142 passes total, 142 fix bursts total (128 pre-D21 + 14 post-D21+D23); trajectory-tail →8→7→4 (decaying); 0/3; NEXT: adversary cascade P1D-143 (broad regression + fresh-hunt, no new surfaces).
+
+### Archived from STATE.md Current Phase Steps — Burst 237 (archived at burst-242)
+
+| Burst 237 — P1D-137 fix-burst ALL AGENTS COMPLETE (F-P137-01/02/03 all closed; BC-INDEX DI col BC-2.13.002; prd.md §2.13+RTM DI col; bc-authoring-plan DI-015 row + DI-009 correct + CAP-017 wave promo; hash sweep 88 STALE=0; burst-232 row archived); 0/3. NEXT: P1D-138. | product-owner + state-manager | COMPLETE | F-P137-01 BC-INDEX v2.5: BC-2.13.002 DI-006→DI-006,DI-015; prd.md v1.11→v1.12: §2.13 body + §7 RTM DI-006→DI-006,DI-015. F-P137-02 bc-authoring-plan v2.43→v2.44: DI-015 row added (BC-2.23.005 primary + BC-2.13.002 co-enforcer); DI-009 row corrected (BC-2.23.005 removed); coverage 14/14→15/15. F-P137-03 bc-authoring-plan v2.44: CAP-017 SS.15 map P2→P1; Batch 11 header (P1/P2)→(P1); BC-2.15.001/002/003 Wave-2→Wave-1; Batch-20 BC-2.23.005 DI-009,DI-014→DI-014,DI-015. lessons.md L-025 codified. Hash sweep: 3 passes, 88 files updated, STALE=0. Burst 237. |

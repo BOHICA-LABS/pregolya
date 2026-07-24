@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-23"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.3"
+version: "1.4"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-05, SS-06, SS-16]
 changelog:
+  - "1.4 (burst-242/2026-07-23): Fix-242 Command-notation sweep — convert 4 residual enum-variant form Command::Resume(...) occurrences (Decision 1 doc comment, Decision 3 step 6, Decision 3 on-resume paragraph, Decision 4 resume paragraph) to canonical struct kwarg form Command(resume=...). Canonical form per BC-2.05.004 v1.5 + F-P120-01 adjudication."
   - "1.3 (burst-239/2026-07-23): F-P139-05 — reconcile frontmatter date/timestamp mismatch: date corrected from 2026-07-22 to 2026-07-23, matching timestamp 2026-07-23T00:00:00Z (burst-238 canonical date per ARCH-INDEX v1.9)."
   - "1.2 (burst-238/2026-07-23): Stale-handoff sweep — resolve 4 stale PO-must obligations: (1) BC-2.05.008 authored (skip-hook-on-resume invariant, burst-229, active); (2) BC-2.06.004/005 authored (streaming event variants, burst-229, active); (3) BC-2.08.010 v1.1 amended (action_risk macro param, burst-229, active); (4) Status section updated to reflect all BCs delivered and VP-011 seeded."
   - "1.1 (burst-233/2026-07-22): F-P133-07 sibling sweep (TD-VSDD-060) — remove stale 'VP-011 candidate' labels (VP-011 seeded burst-232, Kani P0). Two sites updated: §Decision 2 dispatch sequence step 4 Deny path, and §Rationale summary line."
@@ -65,7 +66,7 @@ pub enum PreToolDecision {
     Deny { reason: String },
     /// Allow the tool with modified arguments (human narrowed the bash command, etc.).
     Edit { modified_args: serde_json::Value },
-    /// Suspend via interrupt() and wait for a human decision delivered via Command::Resume.
+    /// Suspend via interrupt() and wait for a human decision delivered via Command(resume=PreToolDecision).
     PendingHumanApproval { prompt: Option<String> },
 }
 
@@ -126,10 +127,10 @@ execution. The function:
 5. `Edit { modified_args }` → replace `tool_args` with `modified_args`; proceed.
 6. `PendingHumanApproval { prompt }` → call `interrupt(ToolApprovalRequest { preview, prompt })`
    internally (BC-2.05.001 machinery); on resume, the caller delivers
-   `Command::Resume(PreToolDecision)`. Apply the resumed decision via rules 3–5 above.
+   `Command(resume=PreToolDecision)`. Apply the resumed decision via rules 3–5 above.
 
 **On resume semantics:** The engine captures the pending `ToolCallPreview` in the
-checkpoint. On `Command::Resume(decision)`, the engine applies the decision directly
+checkpoint. On `Command(resume=decision)`, the engine applies the decision directly
 without re-calling `pre_invoke` (the hook is skipped for the resumed dispatch). BC-2.05.008
 authors this "skip-hook-on-resume" invariant as an extension to SS-05 (authored burst-229, active).
 
@@ -141,7 +142,7 @@ serialized to msgpack via the existing checkpoint format (ADR-002). Mid-approval
 survives process restart exactly as standard interrupts do. No new suspension mechanism is
 introduced.
 
-`Command::Resume(PreToolDecision)` delivers the decision. `PreToolDecision` is
+`Command(resume=PreToolDecision)` delivers the decision. `PreToolDecision` is
 `#[non_exhaustive]`; future variants (e.g., `EditAndRetry`) are addable without breaking
 existing hook implementations.
 

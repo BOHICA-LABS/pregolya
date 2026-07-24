@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: events
-version: "1.8"
+version: "1.9"
 status: active
 producer: business-analyst
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-07-22T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -14,6 +14,7 @@ input-hash: "e978d8d"
 traces_to: L2-INDEX.md
 decisions: [D11, D13, D17, D18, D21, D23]
 changelog:
+  - "1.9 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 3 enum-variant form occurrences of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Sites: §ToolApprovalResolved description (line 109), §ToolApprovalResolved Trigger (line 110), §StreamEventEmitted Trigger (line 149). TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text."
   - "1.8 (F-P139-01/02, fix burst 239, 2026-07-23): §CompactionExecuted Outcome: BC-2.04.001 immutability citation corrected to BC-2.04.001 Inv-5 (checkpoint append-only — records never deleted or mutated in place). §CompactionExecuted EvidenceJournal entry fields: tokens_remaining_after type corrected from u64 to Option<i64> to match BC-2.06.006 PC-1 / BC-2.06.001 PC2 / interface-definitions §BudgetInfo (None when no token ceiling; negative on Deny). TD-VSDD-060 sweep: no other stale BC-2.04.001 immutability citations or tokens_remaining_after: u64 renderings found in file."
   - "1.7 (F-P135-06, fix burst 235, 2026-07-22): StreamEventEmitted Trigger: D23 stream events 13-15 added — tool_approval_request (BC-2.06.004), tool_approval_resolved (BC-2.06.005), compaction_event (BC-2.06.006); StreamEvent taxonomy updated to 15 variants (12-variant base + 3 D23). Domain events added: CompactionExecuted (BC-2.10.006, after CheckpointWritten — mid-run window replacement + EvidenceJournal); ToolApprovalRaised + ToolApprovalResolved (BC-2.05.007/008, after ResumeValueReceived — PreToolCallHook suspend/resume cycle). Ordering rules 7-8 added. decisions: D21 added (RagChunk/MemoryItem ingress types already referenced in v1.5); D23 added (scope driver for all D23 additions)."
   - "1.0 (initial): base events authored."
@@ -106,8 +107,8 @@ A `PreToolCallHook` returned `PendingHumanApproval`; tool dispatch suspended awa
 - **Stream event:** `tool_approval_request` (event 13) — emitted BEFORE the run transitions to `interrupted` (causal ordering per BC-2.06.004 PC-2); payload: `{ run_id, tool_name, tool_args, action_risk, prompt }`. The interrupt payload is surfaced via the `{"__interrupt__": [ToolApprovalRequest]}` envelope (BC-2.05.001 machinery) — analogous to `InterruptRaised` (F-P29-06 pattern); the `tool_approval_request` stream event is the consumer's signal to surface an approval dialog before the status poll returns `interrupted`.
 
 ### ToolApprovalResolved
-A human (or automation) delivered `Command::Resume(PreToolDecision)` for a pending `ToolApprovalRequest` interrupt.
-- **Trigger:** `POST /threads/{thread_id}/runs/{run_id}/resume` with `Command::Resume(PreToolDecision)` carrying `Approve`, `Deny { reason }`, or `Edit { modified_args }` (BC-2.05.004/2.05.008)
+A human (or automation) delivered `Command(resume=PreToolDecision)` for a pending `ToolApprovalRequest` interrupt.
+- **Trigger:** `POST /threads/{thread_id}/runs/{run_id}/resume` with `Command(resume=PreToolDecision)` carrying `Approve`, `Deny { reason }`, or `Edit { modified_args }` (BC-2.05.004/2.05.008)
 - **Preconditions:** Run in `interrupted`; pending `ToolApprovalRequest` interrupt present in checkpoint (FIFO queue per BC-2.05.002)
 - **Outcome:** `hook.pre_invoke` NOT re-called (BC-2.05.008 skip-hook-on-resume — human decision IS the hook decision for this dispatch attempt); delivered `PreToolDecision` applied per BC-2.05.007 PC-1/2/3: `Approve` → tool invoked with original checkpoint args; `Deny { reason }` → `ToolOutput::Error(reason)` (fail-closed, tool not invoked); `Edit { modified_args }` → args replaced then tool invoked (with JSON-object validation); run transitions back to `in_progress`
 - **Stream event:** `tool_approval_resolved` (event 14) — emitted AFTER interrupt consumed, BEFORE decision applied (causal ordering per BC-2.06.005 PC-3); payload: `{ run_id, tool_name, decision, reason, modified_args }`. Always pairs with a prior `tool_approval_request` for the same `run_id` + `tool_name`.
@@ -146,7 +147,7 @@ A BudgetPolicy evaluated a token/cost tally for the current Run.
 
 ### StreamEventEmitted
 A typed streaming event was emitted by the execution engine.
-- **Trigger:** Any phase transition (run/step/node/tool start|stream|end), guardrail outcome (Fail/Transform — emitted as `guardrail_decision`; Pass is not streamed), pre-tool approval suspension (`tool_approval_request` event 13 — on `PendingHumanApproval`; D23 per BC-2.06.004), pre-tool approval resolution (`tool_approval_resolved` event 14 — on `Command::Resume(PreToolDecision)`; D23 per BC-2.06.005), or post-compaction-commit notification (`compaction_event` event 15 — D23 per BC-2.06.006). **StreamEvent taxonomy: 15 variants** (12-variant base per BC-2.06.001 — includes `guardrail_decision` — + events 13/14/15 per D23).
+- **Trigger:** Any phase transition (run/step/node/tool start|stream|end), guardrail outcome (Fail/Transform — emitted as `guardrail_decision`; Pass is not streamed), pre-tool approval suspension (`tool_approval_request` event 13 — on `PendingHumanApproval`; D23 per BC-2.06.004), pre-tool approval resolution (`tool_approval_resolved` event 14 — on `Command(resume=PreToolDecision)`; D23 per BC-2.06.005), or post-compaction-commit notification (`compaction_event` event 15 — D23 per BC-2.06.006). **StreamEvent taxonomy: 15 variants** (12-variant base per BC-2.06.001 — includes `guardrail_decision` — + events 13/14/15 per D23).
 - **Outcome:** Delivered to all active stream subscribers. Execution-lifecycle events have unary-equivalent content (DI-011 execution-path equivalence); `guardrail_decision` is stream-observer-only — not delivered to unary callers, whose guardrail outcomes are observable via error blocks in the final output (BC-2.06.003). `tool_approval_request` and `tool_approval_resolved` are notification-only events (no unary equivalent — approval dialogs are stream-consumer surfaces only; BC-2.06.004/005). `compaction_event` is a post-commit observer notification (not reflected in unary response payload; BC-2.06.006).
 
 ---

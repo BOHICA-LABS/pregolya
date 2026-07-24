@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "2.4"
+version: "2.5"
 status: active
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
@@ -10,10 +10,11 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "a70ed1c"
+input-hash: "8df346a"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "2.5 (F-P142-03, burst-242, 2026-07-23): BC-2.06.005 Notes column updated — 'payload on Command::Resume' → 'payload on Command(resume=…)' per BC-2.05.004 struct kwarg authority."
   - "2.4 (burst-235/F-P135-05/2026-07-22): BC-2.13.002 TV count 4→5 (+kill-on-drop DI-015 co-enforcement TV). Grand total 670→671 (662 canonical + 9 GTV)."
   - "2.3 (burst-234/F-P134-01/2026-07-22): BC-2.23.006 TV count 5→6 (+TV-006 traversal I/O error, E-TOOLS-008). Grand total 669→670 (661 canonical + 9 GTV). Notes column updated to add E-TOOLS-008 cite."
   - "2.2 (D23/2026-07-22): Add 13 new D23 BC rows (+60 TVs); grand total 609→669 (660 canonical + 9 GTV). New rows: BC-2.05.007 (6 TV, VP-011 Kani seed), BC-2.05.008 (4 TV), BC-2.06.004 (4 TV), BC-2.06.005 (3 TV), BC-2.06.006 (4 TV), BC-2.10.005 (5 TV, VP-012 Kani seed), BC-2.10.006 (4 TV), BC-2.23.001 (5 TV), BC-2.23.002 (5 TV), BC-2.23.003 (5 TV), BC-2.23.004 (4 TV), BC-2.23.005 (6 TV, VP-013 Kani seed), BC-2.23.006 (5 TV). BC count 116→129."
@@ -73,7 +74,7 @@ changelog:
 | BC-2.06.002 | SS-06 | 5 | — | `TV-NNN` | | run_id + parent_ids correlation |
 | BC-2.06.003 | SS-06 | 5 | — | `TV-NNN` | | Streaming/unary identical final answer |
 | BC-2.06.004 | SS-06 | 4 | — | `TV-NNN` | | `tool_approval_request` StreamEvent (event 13); payload; emission before interrupt |
-| BC-2.06.005 | SS-06 | 3 | — | `TV-NNN` | | `tool_approval_resolved` StreamEvent (event 14); payload on Command::Resume |
+| BC-2.06.005 | SS-06 | 3 | — | `TV-NNN` | | `tool_approval_resolved` StreamEvent (event 14); payload on Command(resume=…) |
 | BC-2.06.006 | SS-06 | 4 | — | `TV-NNN` | | `compaction_event` StreamEvent (event 15); payload; emission after compaction completes |
 | BC-2.07.001 | SS-07 | 7 | — | `TV-NNN` | | Code-point chunk size (not bytes) |
 | BC-2.07.002 | SS-07 | 3 | 9 | `TV-NNN` + GTV | **RG** | Non-ASCII parity (see §GTV below) |

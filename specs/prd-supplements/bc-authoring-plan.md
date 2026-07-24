@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.44"
+version: "2.45"
 status: active
 producer: product-owner
 total_standing_gates: 34
@@ -10,7 +10,7 @@ phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "b477ced"
+input-hash: "cfc4df1"
 traces_to: prd.md
 total_bcs: 129
 total_batches: 20
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.45 (F-P142-03, burst-242, 2026-07-23): BC-2.06.005 title in Batch 20 table updated — 'Emission on Command::Resume' → 'Emission on Command(resume=…)' per BC-2.05.004 struct kwarg authority and BC-2.06.005 H1 (bc_h1_is_title_source_of_truth)."
   - "2.44 (burst-237/F-P137-02+F-P137-03/2026-07-23): F-P137-02 DI table: add DI-015 row (Subprocess Execution Timeout) — enforcers BC-2.23.005 (primary) + BC-2.13.002 (co-enforcer, .kill_on_drop(true)); remove BC-2.23.005 from DI-009 row (re-anchored burst-234 F-P134-06); DI-009 row corrected to {BC-2.08.007, BC-2.08.014, BC-2.14.004, BC-2.22.002, BC-2.22.003}; coverage 14/14→15/15. F-P137-03 CAP-017 wave-1 promotion: SS.15 subsystem map CAP-017 (P2)→(P1), priority P1/P2→P1; Batch 11 header (P1/P2)→(P1); BC-2.15.001/002/003 Wave 2→Wave 1. TD-VSDD-060 sweep: Batch 20 BC-2.23.005 DI column DI-009,DI-014→DI-014,DI-015 (same burst-234 re-anchor not propagated to batch table)."
   - "2.43 (burst-233/F-P133-02/2026-07-22): BC-2.16.001/002/003 Wave-1 promotion per D23 — SS.16 priority P2→P1; frontmatter p1_count 72→75, p2_count 6→3; Summary table P1 72→75, P2 6→3; Full BC table rows P2→Post-v1→P1/Wave 1."
   - "2.42 (D23/2026-07-22): D21 retroactive registration (Batches 16-18, +21 BCs); D23 Integration (Batches 19-20, +13 BCs); BC-2.15.001/002/003 promoted P2→P1; SS.18..23 added to subsystem map; counts 95→129."
@@ -414,7 +415,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 | BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny (VP-011 Kani Seed) | P1 | CAP-034 | DI-014 | Wave 1 |
 | BC-2.05.008 | Skip-Hook-on-Resume Invariant — ToolApprovalRequest Checkpoint Persistence; No Re-Invocation of pre_invoke | P1 | CAP-034 | DI-014 | Wave 1 |
 | BC-2.06.004 | `tool_approval_request` StreamEvent (Event 13) — Payload; Emission Timing; Causal Ordering Before Interrupt | P1 | CAP-034 | DI-014 | Wave 1 |
-| BC-2.06.005 | `tool_approval_resolved` StreamEvent (Event 14) — Payload; Emission on Command::Resume; Decision Outcome | P1 | CAP-034 | DI-014 | Wave 1 |
+| BC-2.06.005 | `tool_approval_resolved` StreamEvent (Event 14) — Payload; Emission on Command(resume=…); Decision Outcome | P1 | CAP-034 | DI-014 | Wave 1 |
 | BC-2.06.006 | `compaction_event` StreamEvent (Event 15) — Payload; Emission After Compaction Completes; Trigger Variant | P1 | CAP-035 | DI-014 | Wave 1 |
 | BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; Watermark Arithmetic (VP-012 Kani Seed) | P1 | CAP-035 | DI-014 | Wave 1 |
 | BC-2.10.006 | Compaction Execution — ConversationSnapshot from FTS; Mid-Run Window REPLACEMENT; CompactionEvent → EvidenceJournal | P1 | CAP-035 | DI-014 | Wave 1 |
