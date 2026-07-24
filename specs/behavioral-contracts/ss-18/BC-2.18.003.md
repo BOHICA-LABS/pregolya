@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.003
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ timestamp: 2026-07-20T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.1 (burst-227/F-P132-03/2026-07-21): PC2 MessagesPlaceholder trust derivation: replace broken 'ProvenanceTag (if any); each expanded message inherits the same tag' with explicit ADR-015-conformant trust derivation — each expanded message's MessageProvenance.highest_trust_level is derived from the Vec<Message> variable's declared trust_level: Option<TrustLevel>; None if unset."
+  - "1.2 (F-P149-02/burst-250/2026-07-24): PC2 version pin de-pinned: 'per ADR-015 v1.3 semantics' → 'per ADR-015 Decision 3 §MessagesPlaceholder trust derivation' (TD-VSDD-091 stable-anchor enforcement, F-P149-02). input-hash updated to d2cc4f4 (drift from burst-227 ADR-015 content changes)."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-023
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "fa92953"
+input-hash: "d2cc4f4"
 extracted_from: null
 modified: []
 deprecated: null
@@ -67,7 +68,7 @@ their outputs composable with the injection_guard (BC-2.18.004) and guardrail pi
    the placeholder position — each message in the Vec becomes a separate entry in
    `PromptValue.messages`.
 2. The expanded messages carry `MessageProvenance` derived from the `Vec<Message>` variable's
-   declared `trust_level: Option<TrustLevel>` (per ADR-015 v1.3 semantics): a
+   declared `trust_level: Option<TrustLevel>` (per ADR-015 Decision 3 §MessagesPlaceholder trust derivation): a
    `Vec<Message>` conversation-history variable is externally-supplied content; each expanded
    message's `MessageProvenance.highest_trust_level` is set to the variable's declared
    `trust_level` value. If the variable has no declared `trust_level` (i.e., `trust_level:

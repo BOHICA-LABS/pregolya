@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.11"
+version: "1.12"
 status: active
 producer: business-analyst
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-07-24T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/product-brief.md
@@ -17,6 +17,7 @@ input-hash: "f2bf365"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.12 (2026-07-24): Fix burst 250 F-P149-01 + F-P149-02 (TD-VSDD-091) — de-pin ADR version citations in live body text. (1) CAP-029 §Zero-norm guard heading: 'ADR-014 v1.1 hardening' → 'ADR-014 Decision 2 §Hardening note'. (2) CAP-029 §Grounding: 'ADR-014 v1.1 §Hardening note' → 'ADR-014 Decision 2 §Hardening note'. (3) CAP-033 §Endpoint behavior heading: 'ADR-017 v1.1' → 'ADR-017 Decision 3'. (4) CAP-033 §Grounding near-miss (outside grep pattern; same violation): 'ADR-017 Decision 3 and v1.1 specify' → 'ADR-017 Decision 3 specifies'. TD-VSDD-060 sibling sweep: no other ADR version pins in live body text of this file."
   - "1.11 (2026-07-23): Fix burst 243 F-P143-01 (MED) — CAP-029 VP-009 mis-description corrected. Two sites: (1) Grounding §VP-009 connection — stale 'MMR cosine values ∈ [-1.0, 1.0] + no NaN in output scores for any valid non-zero query embedding' replaced with Zero-Norm Cosine Guard framing: `cosine_similarity` in `vectorstores::similarity`, fail-closed via E-VS-001 before division, `Ok(f32::NAN)` unreachable, BC-2.21.003, DI-014, harness `zero_norm_guard_fail_closed`. (2) Anchor justification — 'VP-009 (Kani MMR bounded proof)' replaced with 'VP-009 (Kani Zero-Norm Cosine Guard — `zero_norm_guard_fail_closed` on `cosine_similarity`, BC-2.21.003, DI-014)'. TD-VSDD-060 sibling sweep: no other MMR-proof or vectorstores-mmr VP-009 framing found in live body text of .factory/specs/."
   - "1.10 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 1 enum-variant form occurrence of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Site: CAP-034 §PendingHumanApproval bullet. TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text."
   - "1.9 (2026-07-23): Fix burst 241 F-P141-02 (BA wave 2) — CAP-019 VP gate expanded 3 → 6 P0 Kani proofs: added VP-009 (zero-norm cosine guard, DI-014/BC-2.21.003), VP-010 (reviver allowlist containment, DI-014/BC-2.19.005), VP-011 (PreToolCallHook fail-closed, DI-014/BC-2.05.007) per architect P0-intent ruling. Grounding wording updated 3→6 VP obligations; DI invariant list in phase-placement note extended to DI-001/DI-005/DI-007/DI-014. TD-VSDD-060 sibling sweep: no other '3 committed VP' gate phrasing found in this file."
@@ -370,7 +371,7 @@ time via `VectorStoreFactory::from_texts_sync` — Arc-DI wiring per workspace c
 placeholder construction is permitted. Text queries are converted to query vectors via the injected
 `Embeddings` impl at search time. Document vectors are generated at `add_texts` time.
 Cosine similarity is computed from `Vec<f32>` inner products (no ndarray — semport §8 avoidance).
-**Zero-norm guard (ADR-014 v1.1 hardening):** before any cosine division, the implementation
+**Zero-norm guard (ADR-014 Decision 2 §Hardening note):** before any cosine division, the implementation
 checks `norm = vec.iter().map(|x| x*x).sum::<f32>().sqrt()`. If `norm == 0.0`:
 `return Err(FerrochainError { code: "E-VS-001" })` (ADR-authored code; PO to formalize in
 error taxonomy). A zero-length embedding produces NaN that silently corrupts ranking — this guard
@@ -378,8 +379,7 @@ is two lines and is unconditional. Implements `VectorStoreFactory` for `from_tex
 
 **Grounding:** D21/SS-21. ADR-014 Decision 4 specifies the InMemoryVectorStore struct
 (`Arc<dyn Embeddings>` + `RwLock<Vec<(Document, Vec<f32>)>>`), the Arc-DI wiring contract,
-and the `Vec<f32>` cosine approach (semport §8 avoidance of ndarray in core). ADR-014 v1.1
-§Hardening note specifies the zero-norm guard and its VP-009 connection (Zero-Norm Cosine Guard
+and the `Vec<f32>` cosine approach (semport §8 avoidance of ndarray in core). ADR-014 Decision 2 §Hardening note specifies the zero-norm guard and its VP-009 connection (Zero-Norm Cosine Guard
 on `cosine_similarity` in `vectorstores::similarity`: fail-closed via E-VS-001 before division;
 `Ok(f32::NAN)` is unreachable for any input — BC-2.21.003, DI-014, harness `zero_norm_guard_fail_closed`).
 **Anchor justification:** CAP-029 is separated from CAP-028 because the in-memory implementation
@@ -476,7 +476,7 @@ Provide a first-party `Embeddings` impl (`ferrochain-ollama: ollama::embeddings`
 `EmbeddingsOllama`) for local Ollama deployments. No model default — callers configure a
 locally-pulled model name (e.g., `nomic-embed-text`, `mxbai-embed-large`). No API key
 required (Ollama is a local service; uses the existing Ollama base URL config). **Endpoint
-behavior (ADR-017 v1.1):** default sends `POST /api/embed` with `{ model, input: [text] }`
+behavior (ADR-017 Decision 3):** default sends `POST /api/embed` with `{ model, input: [text] }`
 (preferred — newer Ollama releases). When `use_legacy_endpoint: bool` is set to `true`, sends
 `POST /api/embeddings` with `{ model, prompt: text }` (legacy fallback for Ollama deployments
 that predate `/api/embed`). The legacy toggle is an explicit opt-in, not silent auto-detection
@@ -484,7 +484,7 @@ or feature sniffing. **HTTP client:** reqwest MUST use `default-features = false
 ["rustls-tls"]` and `.timeout(Duration::from_secs(30))` (DI-009) — the 30-second timeout
 applies even for localhost targets; the workspace CI gate enforces this unconditionally.
 
-**Grounding:** D21/SS-22. ADR-017 Decision 3 and v1.1 specify ferrochain-ollama gaining
+**Grounding:** D21/SS-22. ADR-017 Decision 3 specifies ferrochain-ollama gaining
 `ollama::embeddings`, the `/api/embed` preferred endpoint with `use_legacy_endpoint` toggle
 for `/api/embeddings`, the no-API-key characteristic, and the reqwest/rustls-tls/timeout
 constraints.

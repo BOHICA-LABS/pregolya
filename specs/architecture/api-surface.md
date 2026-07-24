@@ -21,7 +21,7 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "80499f6"
+input-hash: "a0b30be"
 traces_to: ARCH-INDEX.md
 decisions: [D13, D17]
 ---

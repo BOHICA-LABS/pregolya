@@ -1,7 +1,7 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.12"
+version: "1.13"
 status: active
 producer: business-analyst
 timestamp: 2026-07-22T00:00:00Z
@@ -33,6 +33,7 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "v1.13 (2026-07-24): Burst 250 F-P149-01/F-P149-02 — capabilities-p1-p2 v1.11→v1.12 (TD-VSDD-091 corpus-wide de-pin sweep: §CAP-029 VP-009 framing anchors — 2 sites (F-P149-01) + 3 sites (F-P149-02) + 1 near-miss 'Decision 3 and v1.1' outside grep pattern all replaced with stable 'ADR-014 Decision 2 §Hardening note' per D18-P84-A). Zero live-body ADR version pins remain in domain-spec/ corpus."
   - "v1.12 (2026-07-23): Fix burst 242 F-P142-02 — Document Map failure-modes.md row updated: ~140→~257 lines, (14 modes)→(19 modes). ID Registry: FM-NNN count 14→19 (FM-015..019 added in failure-modes.md v1.1 burst-241). Registry sweep: CAP 38, DI 15, DEC 13, ASM 9, R 8 all confirmed stable — no additional drift found."
   - "v1.11 (2026-07-22): Fix burst 235 F-P135-06 (BA scope) — events.md v1.6→v1.7 (D23 execution-time transitions: StreamEvent taxonomy 12→15 variants; CompactionExecuted domain event added after CheckpointWritten; ToolApprovalRaised + ToolApprovalResolved domain events added after ResumeValueReceived; ordering rules 7-8 added; decisions D21+D23 added). Document Map line count updated: events.md ~140→~175."
   - "v1.10 (2026-07-22): Fix burst 234 — invariants.md v1.1→v1.2 (DI-015 Subprocess Execution Timeout added per F-P134-06 architect adjudication; Tool Execution Invariants section added). DI-NNN census 14→15. Document Map and ID Registry updated."

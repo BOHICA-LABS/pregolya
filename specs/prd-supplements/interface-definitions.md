@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.51"
+version: "2.52"
 status: active
 producer: product-owner
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-07-24T00:00:00Z
 phase: 1d
 changelog:
+  - "2.52 (F-P149-02/burst-250/2026-07-24): Two live-body version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P149-02). (1) §GuardedDocuments rag_ingress doc comment: 'ADR-014 v1.5' → 'ADR-014 Decision 6 §GuardedDocuments' (severity-bifurcated Fail behavior is defined in Decision 6 rag_ingress code). (2) similarity_search_with_filter default body comment: 'ADR-014 v1.5 F-P131-07 adjudication' → 'ADR-014 Decision 2 §Metadata filter surface F-P131-07 adjudication' (F-P131-07 adjudication is embedded in Decision 2 §Metadata filter surface subsection)."
   - "2.51 (F-P145-01+F-P145-04, burst-246, 2026-07-23): (1) F-P145-01: §First-Party Tools BashTool stub — default max_duration corrected 120s→30s to match canon (BC-2.23.005 H1/Description/PC1/EC-002/TV-004/DI-015 chain, ADR-020 Decision 2, ubiquitous-language-core). TD-VSDD-060 sweep: rg 'max_duration|120s|120 s' .factory/specs/ — sole 120s live-body site was this line; all other max_duration references already read 30s/30 seconds; zero further residue. (2) F-P145-04: §First-Party Tools opening sentence — over-generalization 'All tools use PathGuard' reworded to distinguish the five file-access tools (PathGuard-confined) from BashTool (ferrochain-sandbox-confined per BC-2.23.005); 'All tools implement the Tool trait' clause preserved."
   - "2.50 (F-P142-01+F-P142-03, burst-242, 2026-07-23): (1) F-P142-01: §First-Party Tools — three CreateFileTool phantom sites replaced with ListDirTool per BC-2.23.004 H1: BC anchor BC-2.23.004 label, PathGuard shared-list doc comment, and tool stub comment+description. (2) F-P142-03: Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form at 6 sites (L835 ToolApprovalResolved emission comment, L881 causal ordering diagram, L921 BC-2.06.005 StreamEvent BC anchor, L931 §PreToolCallHook BC anchor BC-2.05.004 citation, L969 PendingHumanApproval doc comment, L1631 /stream endpoint row). Zero Command:: enum-variant and CreateFileTool residue remains."
   - "2.49 (burst-240/F-P140-04/2026-07-22): Blanket omission annotation updated — E-MCP-006 McpContentUnsupported (VAL/Never, minted burst-240) added to E-MCP-* namespace (5→6 codes). E-MCP-006 confirmed library-layer only: raised by _convert_mcp_content_to_block in ferrochain-mcp when a CallToolResult contains an unsupported content block type (e.g., AudioContent); surfaces as library Err(FerrochainError) return, never as a direct HTTP terminal response in v1 (propagates embedded in Run.error if it reaches ferrochain-server). Disposition census 107→108: 43 HTTP + 17 individual + 48 blanket. Blanket group breakdown: E-MCP-* 6 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 48."
@@ -67,7 +68,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "8a40441"
+input-hash: "24dc31b"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."
@@ -1156,7 +1157,7 @@ pub struct GuardedDocuments(Vec<Document>);
 
 impl GuardedDocuments {
     /// Evaluate each document through the guardrail hook before returning.
-    /// Async, per-document evaluation. Fail behavior is severity-bifurcated (ADR-014 v1.5):
+    /// Async, per-document evaluation. Fail behavior is severity-bifurcated (ADR-014 Decision 6 §GuardedDocuments):
     /// - `GuardrailSeverity::Critical` Fail → returns `Err(E-CORE-008 GuardrailCriticalRejection)`;
     ///   entire batch is aborted; no `GuardedDocuments` produced (DI-014 fail-closed).
     /// - Non-Critical Fail (High/Medium/Low) → error-entry Document substituted at the rejected
@@ -1248,7 +1249,7 @@ pub trait VectorStore: Send + Sync {
         filter: MetadataFilter,
     ) -> Result<Vec<Document>, FerrochainError> {
         // Default: fail-safe on non-empty filter — returning unfiltered results would be lossy
-        // and a potential cross-tenant-exposure hazard (ADR-014 v1.5 F-P131-07 adjudication).
+        // and a potential cross-tenant-exposure hazard (ADR-014 Decision 2 §Metadata filter surface F-P131-07 adjudication).
         if !filter.filters.is_empty() {
             return Err(FerrochainError::new("E-VS-005", "FilterUnsupported: metadata filter is not supported by this VectorStore implementation"));
         }

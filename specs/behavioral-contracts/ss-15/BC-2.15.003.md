@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/entities-server.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "2c0aa63"
+input-hash: "9c03aca"
 extracted_from: null
 modified: []
 deprecated: null

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.002
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.1 (F-P224/H-3/2026-07-21): VP-2.20.002-A replaced with typed-wrapper specification per architect handoff (H-5 from F-P129-08). Old VP was non-mechanizable ('code review + unit test per graph node'). New VP: graph nodes accept `&GuardedDocuments`; passing `Vec<Document>` directly is a compile-time type error enforced by the type system (ADR-014 Decision 6 / purity-boundary-map). Red Gate = compile_fail test."
   - "1.2 (F-P130-02/F-P130-04/2026-07-21): (1) Replace 3 nonexistent `ferrochain-guardrail` crate references with canonical `ferrochain-core: core::guardrail` per ADR-014 v1.4 PO Obligations. (2) Add DI-014 to di_anchors — PC2/PC4 and EC-002 already cite DI-014 in body; frontmatter was missing the anchor."
   - "1.3 (burst-226/F-P131-01/2026-07-21): PC2 updated per ADR-014 v1.5 severity-bifurcated Fail semantics: Critical Fail → Err(E-CORE-008) propagated, run failed; Non-Critical Fail → error-entry Document substituted at position, batch continues. VP-2.20.002-B scope narrowed to Critical path only. EC-002 updated to reflect Critical-only abort semantics."
+  - "1.4 (F-P149-02/burst-250/2026-07-24): PC2 version pin de-pinned: 'ADR-014 v1.5' → 'ADR-014 Decision 6 §GuardedDocuments' (TD-VSDD-091 stable-anchor enforcement, F-P149-02). input-hash updated to 1b115d2 (drift from burst-226 ADR-014 content changes)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-026
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -32,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "dda4aa1"
+input-hash: "1b115d2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -78,7 +79,7 @@ context MUST pass those documents through the guardrail before use. The DI-012 i
 1. Before any `Doc.page_content` is incorporated into an `HumanMessage`, `SystemMessage`,
    chat history window, or any other graph-context structure, the graph node MUST call
    the guardrail with `boundary_type: BoundaryType::RAGRetrieval`.
-2. The guardrail Fail arm is severity-bifurcated (ADR-014 v1.5):
+2. The guardrail Fail arm is severity-bifurcated (ADR-014 Decision 6 §GuardedDocuments):
    - `GuardrailSeverity::Critical` Fail → `GuardedDocuments::rag_ingress` returns `Err(E-CORE-008 GuardrailCriticalRejection)`. The graph node propagates the error via `?`; no `GuardedDocuments` is produced; the run transitions to `failed` state.
    - Non-Critical Fail (High/Medium/Low) → error-entry Document substituted at the rejected document's position (with `page_content: "[GUARDRAIL BLOCKED: <reason>]"`, `metadata.ferrochain.guardrail_blocked: true`); batch continues; `GuardedDocuments` is eventually produced containing the error-entry substitution.
    DI-014 applies to the Critical path only — non-critical continuation is explicit batch behavior, not silent error swallowing.

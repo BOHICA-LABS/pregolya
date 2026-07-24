@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.003
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ red_gate_source: "ADR-014 Decision 2 §Hardening note — zero-norm guard must b
 vp_seed: true
 vp_id: VP-009
 changelog:
+  - "1.4 (OBS-P149-01/burst-250/2026-07-24): PC5 VP attribution corrected: 'VP-009's proptest harness' → 'BC-local proptest sub-property VP-2.21.003-B'. VP-009 is the Kani formal-proof VP for the NaN guard (VP-2.21.003-A); the [-1,1] range property is covered by the BC-local proptest VP-2.21.003-B. input-hash updated dda4aa1→1b115d2 (drift from burst-249 ADR-014 content changes)."
   - "1.3 (F-P148-02/burst-249/2026-07-24): De-pinned all three 'ADR-014 v1.1 [§]Hardening Note' sites to 'ADR-014 Decision 2 §Hardening note' per ADR-014 v1.4 labeled anchor: (1) frontmatter red_gate_source, (2) Red Gate body callout, (3) Traceability Architecture Authority row."
   - "1.2 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-009 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-009' (VP-INDEX v1.2 burst-223 seeded VP-009 Kani P0; VP-009.md exists). Completed-handoff residue removal."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction; SECURITY-CRITICAL hardening per ADR-014 v1.1"
@@ -34,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "dda4aa1"
+input-hash: "1b115d2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -99,7 +100,7 @@ two lines and has negligible performance overhead compared to the cosine computa
    fallthrough to `0.0` or `Vec::new()`).
 4. When both norms are non-zero, the guard is a no-op and cosine computation proceeds normally.
 5. The output cosine value for non-zero vectors is in `[-1.0, 1.0]` — a property verified
-   by VP-009's proptest harness.
+   by BC-local proptest sub-property VP-2.21.003-B.
 
 ## Invariants
 

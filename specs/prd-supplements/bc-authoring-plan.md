@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.47"
+version: "2.48"
 status: active
 producer: product-owner
 total_standing_gates: 36
@@ -10,7 +10,7 @@ phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "2ebb3fa"
+input-hash: "dc35fc6"
 traces_to: prd.md
 total_bcs: 129
 total_batches: 20
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.48 (F-P149-02/burst-250/2026-07-24): Three live-body version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P149-02). (1) Retired-identifiers table: 'ADR-009 v1.1 confirms same rename' → 'ADR-009 §Decision confirms same rename' (PolicyDecision type is listed in ADR-009 §Decision / §Consequences). (2) Gate #20 census rule: 'per ADR-010 v1.1)' → 'per ADR-010 §Component Axis Expansion (D21))' (D21 component-axis expansion is the named section in ADR-010). (3) Gate #27 ownership rule: 'ADR-009 v1.2 Option 3 places budget TRAIT/types' → 'ADR-009 §Decision (Option 3 split) places budget TRAIT/types' (Option 3 is the chosen option in ADR-009 §Decision)."
   - "2.47 (burst-248/F-P147-02+F-P147-03/2026-07-24): Gate #36 VP↔BC RED-GATE PARITY minted (standing gate [process-gap, F-P147-03]) — every VP-NNN.md must carry explicit red_gate: frontmatter field (true or false, never absent); red_gate: true requires three-way corroboration: anchor BC frontmatter red_gate: true + BC-INDEX Red Gate membership + verifiable red_gate_source citation (anti-fabrication clause: citation must be quote-verifiable in the cited document); on divergence BC frontmatter + BC-INDEX census win over VP (BC supersedes VP for contract-discipline designations per CLAUDE.md Source-of-Truth Precedence); VP-side corrections route to architect; BC-side corrections route to product-owner. Motivating instance: VP-011 carried red_gate: true with fabricated ADR-018 citation (ADR-018 contains no Red Gate mandate); anchor BC-2.05.007 adjudicated false by architect; six VP files lacked the field entirely. F-P147-02: error-taxonomy.md v1.37→v1.38 E-TOOLS-002 placeholder count Two→Three corrected; taxonomy-wide placeholder-count parity scan: 10 other count-stating rows all verified correct (E-MCP-006 Two ✓, E-TMPL-001 Two ✓, E-TMPL-003 One ✓, E-VS-003 Two ✓, E-TOOLS-003 One ✓, E-TOOLS-004 One ✓, E-TOOLS-007 One ✓, E-TOOLS-008 Three ✓, E-TOOLS-009 Two ✓). total_standing_gates 35→36."
   - "2.46 (burst-247/F-P146-02+OBS/2026-07-24): (1) Gate #35 VP PROPERTY-BODY COHERENCE minted — on any edit to a VP-NNN.md or verification-architecture.md VP catalog entry, diff property statement + variant/branch coverage + harness sketch between the two docs; VP-NNN.md wins on divergence (CLAUDE.md source-of-truth precedence rule 4). Routing: architect scope for verification-architecture.md fixes. (2) SS-23 BC title error-code enumeration policy added as a non-numbered policy note in Authoring Guidelines (between items 11 and 12): titles enumerate ALL and ONLY raised error codes; Ok-path payload flags (E-TOOLS-005 BashOutput.truncated, E-TOOLS-006 GrepResult.capped) excluded. (3) Batch 20 BC title rows synchronized to exact H1 titles per bc_h1_is_title_source_of_truth: all 6 SS-23 BC rows updated (001 separator normalized; 001/002/004 E-TOOLS-008 added; 003 E-TOOLS-001/003/008 added + EditConfig::fuzzy_threshold restored; 005 BashOutput added, E-TOOLS-005 removed, E-TOOLS-004/007; 006 Hermetic added, E-TOOLS-001/008/009). total_standing_gates 34→35."
   - "2.45 (F-P142-03, burst-242, 2026-07-23): BC-2.06.005 title in Batch 20 table updated — 'Emission on Command::Resume' → 'Emission on Command(resume=…)' per BC-2.05.004 struct kwarg authority and BC-2.06.005 H1 (bc_h1_is_title_source_of_truth)."
@@ -746,7 +747,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     | `tool_name`, `invocation_id`, `timestamp` fields on ProvenanceTag | removed — ProvenanceTag fields are now `boundary_type`, `ingress_id`, `sequence_position` | F-P58-03 |
     | `GuardrailAction` (enum type name) | `GuardrailResult` | F-P57-01 (iface-def) + F-P58-03 (entities fully retired) |
     | `Accept`, `Reject(reason)`, `Redact(sanitized)` (GuardrailAction variants as guardrail API) | `Pass`, `Fail{reason,severity}`, `Transform{new_content}` (GuardrailResult variants) | F-P57-01 + F-P58-03 |
-    | `BudgetDecision` (enum type name) | `PolicyDecision` | F-P60-01 (interface-definitions.md §BudgetPolicy + bc-authoring-plan gate #31 registry; ADR-009 v1.1 confirms same rename) |
+    | `BudgetDecision` (enum type name) | `PolicyDecision` | F-P60-01 (interface-definitions.md §BudgetPolicy + bc-authoring-plan gate #31 registry; ADR-009 §Decision confirms same rename) |
     | `BudgetContext` (context param type name) | `RunContext` | F-P61-02 (interface-definitions.md §BudgetPolicy context param; gate #31 census table — near-name blindspot: corpus already named RunContext in BC-2.10.001 precondition 3 with identical contents) |
 
     Census command: `grep -rn "to_problem_detail\|risk_tier\|X-Debug-Key\|node_delta\|IngressSource\|GuardrailAction\b\|BudgetDecision\|BudgetContext\|CheckpointStore\b\|RunConfig\b\|BaseCheckpointSaver\b\|AIMessage\b\|\bCheckpointer\b" .factory/specs/ | grep -v "bc-authoring-plan\|~~\|changelog\|Census command\|retired.*list\|Retired Identifier\|action_risk.rs\|architecture/\|domain-spec/\|ADV-P1D-PASS"` — output must be ZERO live occurrences. Exclusions: bc-authoring-plan.md (registry document); architecture/ (architect scope — ADR-009 manages BudgetDecision rename in that domain); domain-spec/ (Python→Rust name-mapping tables in ubiquitous-language-server.md and related files use the retired names as translation labels, not live Rust type usages); `ADV-P1D-PASS` (YAML frontmatter changelog list items — always reference ADV-P1D-PASS-NN; these are audit trail, not live uses; exempted per gate #19 "A changelog or census-rule mention is not a hit" rule). **AIMessage operator note:** `AIMessage` hits in `**Reference:**` annotations that cite Python/semport source files are Python-context names, not Rust type usages, and are not violations; operator must verify context on any remaining AIMessage hit.
@@ -761,7 +762,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     MUST trigger a full category→status census for ALL error codes in the affected categories
     across ALL namespaces (E-CORE, E-GRAPH, E-CHKPT, E-SERVER, E-PROV, E-MCP, E-SPLIT,
     E-SBXD, E-RETRY, E-CRON, E-MEMORY, E-BUDGET, E-TMPL, E-SRLZ, E-VS, E-EMBED — not just
-    the namespace being edited; D21 added E-TMPL/E-SRLZ/E-VS/E-EMBED per ADR-010 v1.1).
+    the namespace being edited; D21 added E-TMPL/E-SRLZ/E-VS/E-EMBED per ADR-010 §Component Axis Expansion (D21)).
 
     The census must verify:
     1. Every AUTH-category code: maps to 401 (categorical) or has a documented per-endpoint override in BC-2.14.002 PC3.
@@ -1202,7 +1203,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
       free-text `## Architecture Anchors` bullet section. Gate #27 closes this blind spot.
     - F-P70-01 (ADV-P1D-PASS-70) — Gate #27 ownership rule listed "budget" in the
       ferrochain-graph group, and the quick-check pattern included `ferrochain-core/src/budget`
-      in the forbidden set. ADR-009 v1.2 Option 3 places budget TRAIT/types (`BudgetPolicy`,
+      in the forbidden set. ADR-009 §Decision (Option 3 split) places budget TRAIT/types (`BudgetPolicy`,
       `PolicyDecision`, `TokenUsage`, `RunContext`) in `ferrochain-core/src/budget.rs` —
       BC-2.10.001:141 and BC-2.10.003:139 are correct anchors to that path. Running the gate as
       written yields 2 false HIGH hits, risking backward "correction." Fixed: ownership rule

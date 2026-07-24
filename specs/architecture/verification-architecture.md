@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.4"
+version: "2.5"
 status: active
 producer: architect
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-24T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.007.md
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.005.md
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
-input-hash: "0c34547"
+input-hash: "b1a0b60"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -223,7 +223,7 @@ fn zero_norm_guard_fail_closed() {
 ```
 
 Feasibility: MEDIUM-HIGH. `cosine_similarity` is a pure-core sync function in `vectorstores::similarity`
-(ADR-014 v1.2 §Hardening note; relocated from vectorstores::mmr per F-P129-11). Kani 0.67.0 models
+(ADR-014 Decision 2 §Hardening note; relocated from vectorstores::mmr per F-P129-11). Kani 0.67.0 models
 `f32` symbolically over IEEE-754 domain. Requires `#[kani::unwind(9)]` for the 8-element vector
 iteration. Estimated proof time: 5–15 min. Red Gate: tests TV-001 and TV-002 must compile-and-fail
 before Phase 3 story delivery for SS-21.
@@ -366,7 +366,7 @@ See VP-011.md §Feasibility Assessment for full factor table.
 
 ## Should Prove (P1 — Core Algorithms, Conformance Contracts)
 
-**VP-006 — injection_guard Fail-Closed** (ferrochain-prompts / injection_guard) `Kani P1 Phase 6`
+**VP-006 — injection_guard Fail-Closed** (ferrochain-prompts / injection_guard) `Kani P1 Phase 6` `red_gate: true`
 
 Property: For any slot variable with `TrustLevel::Untrusted` where the slot policy is
 `TrustRequired`, `check_slot_trust` returns `Err(E-TMPL-001)` and never returns
@@ -630,6 +630,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.5 | 2026-07-24 | architect | FIX-BURST-250 / F-P149-01 | F-P149-01 (HIGH, architect half) de-pin volatile ADR version: VP-009 Feasibility note `ADR-014 v1.2 §Hardening note` → `ADR-014 Decision 2 §Hardening note` (TD-VSDD-091 per D18-P84-A: live-body citations use stable section anchors, not version pins). Sibling sweep (F-P149-03): VP-006 heading updated from `` `Kani P1 Phase 6` `` to `` `Kani P1 Phase 6` `red_gate: true` `` — parity with VP-009 and VP-010 headings (both carry `` `red_gate: true` ``). |
 | 2.4 | 2026-07-24 | architect | FIX-BURST-248 / F-P147-01 | F-P147-01 (HIGH) red_gate adjudication: VP-011 entry heading corrected — remove stale `red_gate: true` label. BC-2.05.007 is NOT Red-Gated (product-owner authority: BC-2.05.007 red_gate: false, burst-231; ADR-018 Decision 3 contains no compile-and-fail mandate; fabricated red_gate_source removed in VP-011 v1.1). Heading updated from `` `Kani P0 red_gate: true` `` to `` `Kani P0` ``. Red Gate census: 11 (unchanged). |
 | 2.3 | 2026-07-24 | architect | burst-247 / F-P146-01 | F-P146-01 (HIGH) VP-011 catalog correction: rewrite formal statement, prose, and harness sketch to match authoritative 4-variant `#[non_exhaustive]` PreToolDecision model (Approve/Deny/Edit/PendingHumanApproval per BC-2.05.007 PC1–PC4 + VP-011.md + interface-definitions). Removes stale two-variant exhaustive claim and "(no other variant exists; enum is exhaustive)" line. Fixes wrong Proceed-reachability prose (Approve-only → Approve AND valid Edit per PC-3). Replaces non-compiling `kani::any()` two-arm match with four concrete proof functions (deny_excludes_tool_invocation, approve_reaches_tool_invocation, hook_error_resolves_to_deny_and_reject, edit_invalid_args_falls_back_to_deny) mirroring VP-011.md §Proof Harness Skeleton. Fixes feasibility "2-variant" → "4-variant #[non_exhaustive]". Coherence sweep of 12 remaining VP catalog entries (OBS-P146 process-gap follow-up) found 4 additional harness-target divergences fixed in same burst: VP-001 `reduce_deterministic`→`reduce_super_step` + `sort_and_reduce`→`reduce_super_step` in formal statement; VP-003 harness `canonicalize_beneath_root`→`canonicalize_beneath_root_pure`; VP-006 SlotVar `trust_policy`+`value` fields→`policy` (no value field, `is_some_and(t.is_untrusted())` predicate per VP-006.md); VP-007 `lc_serialize()`/`lc_deserialize()`→`serialize()`/`Reviver::new().revive()`. TD-VSDD-060 sibling sweep: all PreToolDecision claims in architect-owned files (module-decomposition, purity-boundary-map, api-surface) verified correct (4-variant model already present); domain-spec + PO-owned files not modified. Input-hash updated: fb6e588→fd27b6d. |
 | 2.2 | 2026-07-22 | architect | burst-233 / F-P133-06 | F-P133-06 sibling sweep: resolve stale BC-2.23.005 Category::CONFIGURATION contradiction note in §VP-013 property body. Note was "routed to PO for amendment"; BC-2.23.005 was amended to `VAL` in burst-232 (v1.1) — contradiction is now closed. Note updated to RESOLVED status, consistent with error-taxonomy v1.31 and VP harness. No VP catalog or coverage-matrix changes. |
