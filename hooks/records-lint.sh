@@ -1,0 +1,366 @@
+#!/usr/bin/env bash
+# records-lint.sh — ferrochain factory records discipline lint
+#
+# Runs before every factory commit (.factory/ worktree). exit 0 = PASS, exit 1 = FAIL.
+#
+# CHECKS (by ID — violations route by ID):
+#   L1 — Version/Changelog Parity: frontmatter version > "1.0" requires at least one
+#        changelog entry (Form A: frontmatter `changelog:` key, or Form B: `## Changelog`
+#        body section). Codifies lesson L-010 (Gate #28) as a mechanical gate.
+#        Routing: state-manager (frontmatter fix) or spec owner (changelog authoring).
+#
+#   L7 — Changelog Monotonic Order: version entries in a `## Changelog` body section
+#        must appear in non-increasing (newest-first) order. A version number found AFTER
+#        a strictly lower version number is a violation.
+#        Routing: spec owner (reorder changelog entries so newest appears first).
+#
+#   L9 — Line-Cite Ban: newly-authored lines (added since HEAD) must not contain
+#        file:NNN line-number citations of the form `word.ext:digits`. Existing text
+#        in HEAD is grandfathered. Uses `git diff HEAD` so both staged and unstaged
+#        additions are caught. Only lines starting with `+` (additions) are checked.
+#        Routing: finding author (replace `path/file.ext:NNN` with symbol/anchor cite).
+#
+# SELF-PROBE: Each check self-probes against a synthetic violation before running on
+#             the real corpus. A self-probe failure means the check would be false-green —
+#             the script exits 2 immediately (script bug, not lint violation).
+#             Disable with --skip-self-probe for CI environments where probe cost matters.
+#
+# Cross-applied from the CLIP email-notifications Stage-3 cascade
+# (trend-gate #4 structural intervention + S3-39..S3-42 evidence), human-directed 2026-07-24.
+#
+# Usage: bash .factory/hooks/records-lint.sh [--skip-self-probe]
+# Exit:  0 if no FAIL lines; 1 on lint violations; 2 on self-probe failure (script bug).
+
+set -euo pipefail
+
+SKIP_SELF_PROBE=false
+for arg in "$@"; do
+  case "$arg" in
+    --skip-self-probe) SKIP_SELF_PROBE=true ;;
+  esac
+done
+
+# ── Config ────────────────────────────────────────────────────────────────────
+# Derived from .factory/artifact-path-registry.yaml artifact_types.
+# Add new patterns here when new records-tier artifact types are registered.
+# TODO(workspace-init): After workspace-init finalises artifact paths, verify
+#   that all RECORDS_PATTERNS below match at least one file under FACTORY_DIR.
+
+FACTORY_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Records-tier file glob patterns (relative to FACTORY_DIR).
+# Covers all artifact types declared in artifact-path-registry.yaml.
+RECORDS_PATTERNS=(
+  "specs/behavioral-contracts/**/*.md"      # behavioral-contract, bc-index
+  "specs/architecture/**/*.md"              # architecture-doc, adr, architecture-index, architecture-section
+  "specs/prd-supplements/*.md"              # prd-supplement
+  "specs/prd.md"                            # prd
+  "specs/product-brief.md"                  # product-brief
+  "specs/module-criticality.md"             # module-criticality
+  "specs/domain-spec/*.md"                  # domain-spec
+  "specs/verification-properties/*.md"      # verification-property, vp-index
+  "cycles/*/cycle-manifest.md"              # cycle-manifest
+  "cycles/*/burst-log.md"                   # burst-log
+  "cycles/*/convergence-trajectory.md"      # convergence-trajectory
+  "cycles/*/lessons.md"                     # lessons (records tier)
+  "stories/*.md"                            # story
+  "holdout-scenarios/*.md"                  # holdout-scenario
+  # TODO: semport/**/*.md — semport analysis files; add once semport artifact
+  #   type is registered in artifact-path-registry.yaml
+  # TODO: planning/*.md — planning artifacts; add if/when registered in registry
+)
+
+# L9 line-citation pattern.
+# Matches: word.ext:NNN where ext is a known code/doc extension and NNN is digits.
+# Catches: src/lib.rs:42  path/to/CLAUDE.md:156  Cargo.toml:8  api-surface.md:23
+# Does NOT catch: version strings (v1.2.3), URLs without line-number suffix,
+#   or colon-delimited identifiers without a leading file extension.
+LINE_CITE_PATTERN='\b[a-zA-Z0-9_.-]+\.(rs|md|toml|yaml|yml|ts|js|py|json|sh|txt):[0-9]{1,6}\b'
+
+# ── Counters ─────────────────────────────────────────────────────────────────
+
+PASS=0
+WARN=0
+FAIL=0
+
+emit() {
+  local level="$1"
+  local msg="$2"
+  echo "[$level] $msg"
+  case "$level" in
+    PASS) PASS=$((PASS + 1)) ;;
+    WARN) WARN=$((WARN + 1)) ;;
+    FAIL) FAIL=$((FAIL + 1)) ;;
+  esac
+}
+
+# ── Self-probe helpers ────────────────────────────────────────────────────────
+
+# probe_must_fail <check_id> <description>
+# Call after a check function has been run against a synthetic violation.
+# Expects the subshell exit code to be stored in PROBE_EXIT.
+probe_must_fail() {
+  local check_id="$1"
+  local description="$2"
+  if [ "${PROBE_EXIT:-0}" -eq 0 ]; then
+    echo "[SELF-PROBE FAIL] $check_id self-probe is false-green: '$description' was NOT detected."
+    echo "  This is a script bug — the check would silently pass on a real violation."
+    exit 2
+  fi
+}
+
+# ── Self-probes ───────────────────────────────────────────────────────────────
+# Each self-probe creates a synthetic violating artifact and verifies the
+# corresponding check catches it. A passing self-probe = the check is not false-green.
+
+run_self_probes() {
+  PROBE_TMP="$(mktemp -d)"
+  trap 'rm -rf "$PROBE_TMP"' EXIT
+
+  # ── L1 self-probe: version > 1.0 with no changelog ───────────────────────
+  # Synthetic violation: frontmatter version: "1.2" but no changelog entry.
+  PROBE_L1="$PROBE_TMP/l1-violation.md"
+  cat > "$PROBE_L1" <<'EOF'
+---
+document_type: behavioral-contract
+version: "1.2"
+status: active
+---
+# BC-9.99.001 Synthetic Violation
+
+No changelog entry here.
+EOF
+
+  PROBE_EXIT=0
+  # L1 check: version > 1.0 implies changelog (Form A or Form B)
+  BUMPED_VER="$(grep -m1 '^version:' "$PROBE_L1" | grep -oE '"[0-9]+\.[0-9]+"' | tr -d '"' || echo "")"
+  if [ -n "$BUMPED_VER" ]; then
+    MAJOR="$(echo "$BUMPED_VER" | cut -d. -f1)"
+    MINOR="$(echo "$BUMPED_VER" | cut -d. -f2)"
+    if [ "$MAJOR" -gt 1 ] || { [ "$MAJOR" -eq 1 ] && [ "$MINOR" -gt 0 ]; }; then
+      FORM_A="$(grep -c '^changelog:' "$PROBE_L1" || true)"
+      FORM_B="$(grep -c '^## Changelog' "$PROBE_L1" || true)"
+      if [ "$FORM_A" -eq 0 ] && [ "$FORM_B" -eq 0 ]; then
+        PROBE_EXIT=1
+      fi
+    fi
+  fi
+  probe_must_fail "L1" "version 1.2 with no changelog"
+
+  # ── L7 self-probe: changelog entries in wrong order ───────────────────────
+  # Synthetic violation: older version appears before newer version.
+  PROBE_L7="$PROBE_TMP/l7-violation.md"
+  cat > "$PROBE_L7" <<'EOF'
+---
+document_type: behavioral-contract
+version: "1.2"
+---
+# BC-9.99.002 Synthetic Violation
+
+## Changelog
+
+| Version | Change |
+|---------|--------|
+| 1.0     | Initial |
+| 1.2     | Second (this is newer but listed after older — wrong) |
+EOF
+
+  PROBE_EXIT=0
+  # L7 check: extract version numbers from changelog table rows (N.N pattern),
+  # verify they are in non-increasing order (newest first).
+  # Uses flag-based awk (not range pattern) to avoid early termination when the
+  # end-pattern /^## [A-Z]/ also matches the ## Changelog start line.
+  CHANGELOG_VERSIONS="$(awk '/## Changelog/{flag=1;next} /^## /{flag=0} flag' "$PROBE_L7" \
+    | grep -oE '^\| [0-9]+\.[0-9]+' | grep -oE '[0-9]+\.[0-9]+' || echo "")"
+  if [ -n "$CHANGELOG_VERSIONS" ]; then
+    PREV_VER=""
+    while IFS= read -r VER; do
+      if [ -n "$PREV_VER" ]; then
+        PREV_MAJ="$(echo "$PREV_VER" | cut -d. -f1)"
+        PREV_MIN="$(echo "$PREV_VER" | cut -d. -f2)"
+        CUR_MAJ="$(echo "$VER" | cut -d. -f1)"
+        CUR_MIN="$(echo "$VER" | cut -d. -f2)"
+        # If current is GREATER than prev, order is wrong (should be newest-first)
+        if [ "$CUR_MAJ" -gt "$PREV_MAJ" ] || \
+           { [ "$CUR_MAJ" -eq "$PREV_MAJ" ] && [ "$CUR_MIN" -gt "$PREV_MIN" ]; }; then
+          PROBE_EXIT=1
+          break
+        fi
+      fi
+      PREV_VER="$VER"
+    done <<< "$CHANGELOG_VERSIONS"
+  fi
+  probe_must_fail "L7" "changelog with version 1.0 before 1.2 (wrong order)"
+
+  # ── L9 self-probe: line-cite pattern in a synthetic diff addition ─────────
+  # Synthetic violation: a new line containing a file:NNN citation.
+  PROBE_L9_DIFF="+The function is defined at src/lib.rs:42 in the build path."
+  PROBE_EXIT=0
+  if echo "$PROBE_L9_DIFF" | grep -qE "^\+[^+].*${LINE_CITE_PATTERN}"; then
+    PROBE_EXIT=1
+  fi
+  probe_must_fail "L9" "addition line containing src/lib.rs:42"
+
+  rm -rf "$PROBE_TMP"
+  trap - EXIT
+}
+
+# ── Check L1 — Version/Changelog Parity ──────────────────────────────────────
+# For every records-tier markdown file: if frontmatter version > "1.0", at least
+# one changelog entry must be present (Form A: frontmatter `changelog:` key; OR
+# Form B: `## Changelog` body section). Codifies lesson L-010 / Gate #28.
+
+check_l1() {
+  local found_violation=0
+
+  for pattern in "${RECORDS_PATTERNS[@]}"; do
+    # shellcheck disable=SC2086
+    while IFS= read -r -d '' f; do
+      # Extract frontmatter version field (first occurrence)
+      VER="$(grep -m1 '^version:' "$f" | grep -oE '"[0-9]+\.[0-9]+"' | tr -d '"' || echo "")"
+      [ -z "$VER" ] && continue
+
+      MAJOR="$(echo "$VER" | cut -d. -f1)"
+      MINOR="$(echo "$VER" | cut -d. -f2)"
+
+      # Only check files with version > 1.0
+      if [ "$MAJOR" -gt 1 ] || { [ "$MAJOR" -eq 1 ] && [ "$MINOR" -gt 0 ]; }; then
+        FORM_A="$(grep -c '^changelog:' "$f" || true)"
+        FORM_B="$(grep -c '^## Changelog' "$f" || true)"
+        if [ "$FORM_A" -eq 0 ] && [ "$FORM_B" -eq 0 ]; then
+          rel="${f#$FACTORY_DIR/}"
+          emit FAIL "L1: $rel — version $VER but no changelog entry (add frontmatter changelog: or ## Changelog section)"
+          found_violation=1
+        fi
+      fi
+    done < <(find "$FACTORY_DIR" -path "$FACTORY_DIR/$pattern" -name "*.md" -print0 2>/dev/null || true)
+  done
+
+  if [ "$found_violation" -eq 0 ]; then
+    emit PASS "L1: version/changelog parity — all versioned records carry changelog entries"
+  fi
+}
+
+# ── Check L7 — Changelog Monotonic Order ─────────────────────────────────────
+# For every records-tier file with a ## Changelog section: version entries in
+# the table must appear in non-increasing (newest-first) order. An entry with a
+# version greater than the preceding entry is a violation.
+
+check_l7() {
+  local found_violation=0
+
+  for pattern in "${RECORDS_PATTERNS[@]}"; do
+    # shellcheck disable=SC2086
+    while IFS= read -r -d '' f; do
+      # Extract version numbers from ## Changelog table rows (| N.N format).
+      # Uses flag-based awk (not range pattern) to avoid early termination when
+      # /^## [A-Z]/ also matches the ## Changelog start line itself.
+      VERSIONS="$(awk '/## Changelog/{flag=1;next} /^## /{flag=0} flag' "$f" \
+        | grep -oE '^\| [0-9]+\.[0-9]+' | grep -oE '[0-9]+\.[0-9]+' || echo "")"
+      [ -z "$VERSIONS" ] && continue
+
+      PREV_VER=""
+      VIOLATION=""
+      while IFS= read -r VER; do
+        if [ -n "$PREV_VER" ]; then
+          PREV_MAJ="$(echo "$PREV_VER" | cut -d. -f1)"
+          PREV_MIN="$(echo "$PREV_VER" | cut -d. -f2)"
+          CUR_MAJ="$(echo "$VER" | cut -d. -f1)"
+          CUR_MIN="$(echo "$VER" | cut -d. -f2)"
+          if [ "$CUR_MAJ" -gt "$PREV_MAJ" ] || \
+             { [ "$CUR_MAJ" -eq "$PREV_MAJ" ] && [ "$CUR_MIN" -gt "$PREV_MIN" ]; }; then
+            VIOLATION="version $VER appears after $PREV_VER (newest-first required)"
+            break
+          fi
+        fi
+        PREV_VER="$VER"
+      done <<< "$VERSIONS"
+
+      if [ -n "$VIOLATION" ]; then
+        rel="${f#$FACTORY_DIR/}"
+        emit FAIL "L7: $rel — changelog out of order: $VIOLATION"
+        found_violation=1
+      fi
+    done < <(find "$FACTORY_DIR" -path "$FACTORY_DIR/$pattern" -name "*.md" -print0 2>/dev/null || true)
+  done
+
+  if [ "$found_violation" -eq 0 ]; then
+    emit PASS "L7: changelog monotonic order — all changelog sections are newest-first"
+  fi
+}
+
+# ── Check L9 — Line-Cite Ban ──────────────────────────────────────────────────
+# Newly-authored lines (additions since HEAD in .factory/) must not contain
+# file:NNN line-number citations. Only `+` lines (additions) from `git diff HEAD`
+# are checked — existing text in HEAD is grandfathered.
+# Covers all markdown additions, not only records-tier patterns, since line-cite
+# violations can appear in any spec artifact.
+
+check_l9() {
+  # Get additions from working tree + staged changes relative to HEAD
+  DIFF_OUTPUT="$(git -C "$FACTORY_DIR" diff HEAD -- '*.md' 2>/dev/null || true)"
+
+  if [ -z "$DIFF_OUTPUT" ]; then
+    emit WARN "L9: no diff relative to HEAD — nothing to check (acceptable if running on a clean tree)"
+    return
+  fi
+
+  VIOLATIONS="$(echo "$DIFF_OUTPUT" \
+    | grep -E '^\+[^+]' \
+    | grep -oE "${LINE_CITE_PATTERN}" \
+    || true)"
+
+  if [ -n "$VIOLATIONS" ]; then
+    emit FAIL "L9: line-cite ban — newly-added text contains file:NNN citations (retire with symbol/anchor cites):"
+    while IFS= read -r cite; do
+      echo "       $cite"
+    done <<< "$VIOLATIONS"
+    # Also show which files contain violations for easier routing
+    echo ""
+    echo "  Affected files (lines containing violations):"
+    echo "$DIFF_OUTPUT" | grep -n -E "^\+[^+].*${LINE_CITE_PATTERN}" \
+      | sed 's/^/       /' || true
+  else
+    emit PASS "L9: line-cite ban — no file:NNN citations in newly-authored additions"
+  fi
+}
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
+echo "records-lint: ferrochain factory records discipline"
+echo "  FACTORY_DIR: $FACTORY_DIR"
+echo ""
+
+if [ "$SKIP_SELF_PROBE" = false ]; then
+  echo "[SELF-PROBE] Verifying each check catches its synthetic violation..."
+  run_self_probes
+  echo "[SELF-PROBE] All self-probes passed — checks are not false-green."
+  echo ""
+fi
+
+echo "--- L1: Version/Changelog Parity ---"
+check_l1
+
+echo ""
+echo "--- L7: Changelog Monotonic Order ---"
+check_l7
+
+echo ""
+echo "--- L9: Line-Cite Ban (newly-authored additions) ---"
+check_l9
+
+echo ""
+echo "records-lint: PASS=$PASS WARN=$WARN FAIL=$FAIL"
+
+if [ "$FAIL" -gt 0 ]; then
+  echo "RESULT: FAIL — resolve violations before committing"
+  echo ""
+  echo "Routing guide:"
+  echo "  L1 violations → state-manager (frontmatter) or spec owner (changelog body)"
+  echo "  L7 violations → spec owner (reorder changelog entries, newest first)"
+  echo "  L9 violations → finding author (replace file:NNN with symbol/anchor cite)"
+  exit 1
+else
+  echo "RESULT: PASS"
+  exit 0
+fi
