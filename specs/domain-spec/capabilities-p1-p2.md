@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.12"
+version: "1.13"
 status: active
 producer: business-analyst
 timestamp: 2026-07-24T00:00:00Z
@@ -17,6 +17,7 @@ input-hash: "f2bf365"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.13 (2026-07-24): Fix burst 251 F-P150-02 (MED) — remove stale completed-delegation residue at two sites. (1) CAP-029 §Zero-norm guard: '(ADR-authored code; PO to formalize in error taxonomy)' → '(registered in error-taxonomy §VS — VAL, zero-norm cosine guard, BC-2.21.003)'. (2) CAP-031 §Dimensionality contract: '(ADR-authored code; PO to formalize in error taxonomy)' → '(registered in error-taxonomy §EMBED — VAL, dimensionality contract violation, BC-2.22.001)'. Both E-VS-001 and E-EMBED-001 were registered in error-taxonomy v1.27 (2026-07-20). L-026 stale-delegation sweep across all domain-spec shards: zero additional hits — only these two sites required remediation."
   - "1.12 (2026-07-24): Fix burst 250 F-P149-01 + F-P149-02 (TD-VSDD-091) — de-pin ADR version citations in live body text. (1) CAP-029 §Zero-norm guard heading: 'ADR-014 v1.1 hardening' → 'ADR-014 Decision 2 §Hardening note'. (2) CAP-029 §Grounding: 'ADR-014 v1.1 §Hardening note' → 'ADR-014 Decision 2 §Hardening note'. (3) CAP-033 §Endpoint behavior heading: 'ADR-017 v1.1' → 'ADR-017 Decision 3'. (4) CAP-033 §Grounding near-miss (outside grep pattern; same violation): 'ADR-017 Decision 3 and v1.1 specify' → 'ADR-017 Decision 3 specifies'. TD-VSDD-060 sibling sweep: no other ADR version pins in live body text of this file."
   - "1.11 (2026-07-23): Fix burst 243 F-P143-01 (MED) — CAP-029 VP-009 mis-description corrected. Two sites: (1) Grounding §VP-009 connection — stale 'MMR cosine values ∈ [-1.0, 1.0] + no NaN in output scores for any valid non-zero query embedding' replaced with Zero-Norm Cosine Guard framing: `cosine_similarity` in `vectorstores::similarity`, fail-closed via E-VS-001 before division, `Ok(f32::NAN)` unreachable, BC-2.21.003, DI-014, harness `zero_norm_guard_fail_closed`. (2) Anchor justification — 'VP-009 (Kani MMR bounded proof)' replaced with 'VP-009 (Kani Zero-Norm Cosine Guard — `zero_norm_guard_fail_closed` on `cosine_similarity`, BC-2.21.003, DI-014)'. TD-VSDD-060 sibling sweep: no other MMR-proof or vectorstores-mmr VP-009 framing found in live body text of .factory/specs/."
   - "1.10 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 1 enum-variant form occurrence of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Site: CAP-034 §PendingHumanApproval bullet. TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text."
@@ -373,8 +374,8 @@ placeholder construction is permitted. Text queries are converted to query vecto
 Cosine similarity is computed from `Vec<f32>` inner products (no ndarray — semport §8 avoidance).
 **Zero-norm guard (ADR-014 Decision 2 §Hardening note):** before any cosine division, the implementation
 checks `norm = vec.iter().map(|x| x*x).sum::<f32>().sqrt()`. If `norm == 0.0`:
-`return Err(FerrochainError { code: "E-VS-001" })` (ADR-authored code; PO to formalize in
-error taxonomy). A zero-length embedding produces NaN that silently corrupts ranking — this guard
+`return Err(FerrochainError { code: "E-VS-001" })` (registered in error-taxonomy §VS —
+VAL, zero-norm cosine guard, BC-2.21.003). A zero-length embedding produces NaN that silently corrupts ranking — this guard
 is two lines and is unconditional. Implements `VectorStoreFactory` for `from_texts_sync`.
 
 **Grounding:** D21/SS-21. ADR-014 Decision 4 specifies the InMemoryVectorStore struct
@@ -421,8 +422,8 @@ Embeddings>` compiles without E0038. **Dimensionality contract** (MUST hold for 
 (1) `embed_documents(texts).len() == texts.len()` — one vector per input; (2) all returned
 vectors have identical length (the model's embedding dimension); (3) `embed_query` returns a
 vector of the same length as any `embed_documents` vector for the same model. Contract violation
-→ `Err(FerrochainError { code: "E-EMBED-001" })` (ADR-authored code; PO to formalize in error
-taxonomy). Batch failure (e.g., provider rate limit mid-batch) → entire call returns `Err` —
+→ `Err(FerrochainError { code: "E-EMBED-001" })` (registered in error-taxonomy §EMBED —
+VAL, dimensionality contract violation, BC-2.22.001). Batch failure (e.g., provider rate limit mid-batch) → entire call returns `Err` —
 no silent partial-batch degradation to a truncated or empty Vec (DI-014). VP-008 proptest
 candidate (any valid Embeddings impl returns vectors with consistent length across embed_documents
 and embed_query).

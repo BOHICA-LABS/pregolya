@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-nfr-catalog
 level: L3
-version: "1.6"
+version: "1.7"
 status: active
 producer: product-owner
 timestamp: 2026-07-24T00:00:00Z
@@ -10,8 +10,9 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/risks.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "9a35289"
+input-hash: "b3ee658"
 changelog:
+  - "1.7 (F-P150-01/burst-251/2026-07-24): TD-VSDD-060 sweep — 14-NFR consistency audit, 2 module-map rows corrected. (1) NFR-013: 'Batch-size guard before provider call; use provider-declared max batch size' directly contradicted the requirement row (EC-002 adjudication: no pre-send cap mandated; provider-limit behavior = structured provider-error passthrough); rewritten to: provider rejection propagated as structured Err; no pre-send batch-size cap; no panic; no silent truncation; vecs.len() == texts.len() on any Ok path. (2) NFR-014: Architectural Impact was f-string-only; requirement row already mandates the engine-neutral ≤100ms bound covering both f-string and jinja2/minijinja (v1.4 changelog baked both engines into the requirement but map was not swept); extended to add jinja2/minijinja bounded-traversal obligation. 12 of 14 NFRs confirmed consistent."
   - "1.6 (F-P149-02/burst-250/2026-07-24): NFR-012 Risk Source version pin de-pinned: 'N/A — ADR-014 v1.5 §Performance Note' → 'N/A — ADR-014 Decision 2 §VectorStore trait' (TD-VSDD-091 stable-anchor enforcement, F-P149-02; ADR-014 has no §Performance Note heading — the InMemoryVectorStore O(n·d) design is documented in Decision 2 §VectorStore trait)."
   - "1.5 (burst-241/Wave-2/2026-07-23): F-P141-02 VP-gate expansion — NFR-003 expanded from 3 to 6 P0 Kani proof targets (VP-001/002/003 from D17-Q7 + VP-009 zero-norm, VP-010 allowlist, VP-011 tool-deny from D21+D23). NFR-to-Module map updated to add ferrochain-vectorstores and ferrochain-core for VP-009/010, and P1 targets VP-006/012/013. Success Criteria row updated to '6 P0'."
   - "1.4 (burst-227/F-P132-05+F-P132-07/2026-07-21): (1) NFR-013: Restate to conform to BC-2.22.001 EC-002 adjudication — drop E-EMBED-001 citation (wrong error code; E-EMBED-001 is EmbeddingDimensionMismatch post-response) and drop pre-send batch-size cap mandate (no BC specifies a pre-send cap; EC-002 deliberate adjudication stands). New statement: embed_documents with an over-limit batch completes deterministically — either Ok or structured Err propagating provider rejection; no panic; no silent truncation. Validation method conforms. (2) NFR-014: Add jinja2/minijinja render benchmark to Validation Method so the stated engine-neutral bound is independently verified for both engines."
@@ -76,8 +77,8 @@ primary_consumers: [architect, performance-engineer, formal-verifier]
 | NFR-010 | ferrochain-core (published crate) | Documentation quality and README completeness affect download rate |
 | NFR-011 | ferrochain-graph (BSP reducer application) | Sort-then-apply reducer strategy; no fold over unordered iterator |
 | NFR-012 | ferrochain-vectorstores (InMemoryVectorStore) | O(n·d) linear scan — no index structure; use InMemoryVectorStore only within documented corpus size envelope |
-| NFR-013 | ferrochain-core::embeddings trait, ferrochain-openai (EmbeddingsOpenAI), ferrochain-ollama (EmbeddingsOllama) | Batch-size guard before provider call; use provider-declared max batch size |
-| NFR-014 | ferrochain-prompts (ChatPromptTemplate::format_messages) | f-string engine linear scan; no regex backtracking; bounded per-variable iteration |
+| NFR-013 | ferrochain-core::embeddings trait, ferrochain-openai (EmbeddingsOpenAI), ferrochain-ollama (EmbeddingsOllama) | Provider rejection propagated as structured `Err`; no pre-send batch-size cap (EC-002 adjudication); no panic; no silent truncation; `vecs.len() == texts.len()` on any `Ok` path — over-limit batches pass through to the provider and are never intercepted pre-send |
+| NFR-014 | ferrochain-prompts (ChatPromptTemplate::format_messages) | f-string engine: linear scan; no regex backtracking; bounded per-variable iteration. jinja2/minijinja engine: bounded traversal; no unbounded recursion or backtracking; same ≤ 100ms ceiling applies independently — both engines must satisfy the engine-neutral bound stated in the requirement row |
 
 ## Success Criteria Cross-Reference
 

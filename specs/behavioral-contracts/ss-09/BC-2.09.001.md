@@ -28,7 +28,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "049597e"
+input-hash: "afc43c2"
 extracted_from: null
 modified: []
 deprecated: null

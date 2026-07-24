@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "4c1b2fb"
+input-hash: "7af21e4"
 traces_to: ARCH-INDEX.md
 changelog:
   - "2.2 (FIX-BURST-250/F-P149-03/2026-07-24): Add missing red_gate label to three Per-Module rows where VP is red_gate:true (VP-004/005/006) for parity with VP-009/VP-010 rows. injection_guard Notes: 'Kani P1 (BC-2.18.004)' → 'Kani P1 red_gate (BC-2.18.004)'. mcp-adapter Notes: 'ToolException fidelity' → 'ToolException type-identity; integration red_gate (BC-2.09.004)'. mcp-client Notes: 'Red Gate BCs' → 'integration red_gate (BC-2.09.005); no-live-connections'. Verified: VP-009 'Kani P0 red_gate (BC-2.21.003)' and VP-010 'Kani P0 red_gate (BC-2.19.005)' already correct. All 8 red_gate:false VP rows confirmed clean (no red_gate label)."
