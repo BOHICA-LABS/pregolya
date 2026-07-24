@@ -28,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "10f2752"
+input-hash: "fa3ab33"
 extracted_from: null
 modified: []
 deprecated: null

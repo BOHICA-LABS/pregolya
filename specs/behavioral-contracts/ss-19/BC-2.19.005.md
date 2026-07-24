@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.005
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,10 +17,11 @@ producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
-red_gate_source: "ADR-016 Security Invariant — Reviver must reject unknown type ids at all times; allowlist test must COMPILE and FAIL before Reviver::revive() is implemented; VP-010 Kani candidate"
+red_gate_source: "ADR-016 Decision 3 §Security Invariant — Reviver must reject unknown type ids at all times; allowlist test must COMPILE and FAIL before Reviver::revive() is implemented; VP-010 Kani candidate"
 vp_seed: true
 vp_id: VP-010
 changelog:
+  - "1.3 (F-P148-01/burst-249/2026-07-24): Architecture anchor de-pinned from 'Decision 6' to 'Decision 3 §Security Invariant' per ADR-016 v1.4 labeled anchor. Traceability Architecture Authority row: 'E-SRLZ-001 category SECURITY' corrected to 'E-SRLZ-001 category VAL' (already correct in Postconditions PC-1 and Invariant 3; Traceability row was the sole remaining SECURITY residue). red_gate_source and Red Gate body callout updated to Decision 3 §Security Invariant anchor form. input-hash updated to 5b4fe5e (ADR-016 v1.4 adds labeled anchors)."
   - "1.2 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-010 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-010' (VP-INDEX v1.2 burst-223 seeded VP-010 Kani P0; VP-010.md exists). Completed-handoff residue removal."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization; SECURITY-CRITICAL"
   - "1.1 (F-P224/F-P129-01+F-P129-04/2026-07-21): (1) F-P129-01: PC1 and Invariant 3 corrected — Category::SECURITY → Category::VAL per ADR-010 §SRLZ adjudication (error-taxonomy.md line 279 already recorded E-SRLZ-001 as VAL; this BC was out of sync). Invariant 3 rationale rewritten: deserialization containment is input validation against the registry, not an attack-vector boundary event. (2) F-P129-04: VP-2.19.005-A restated to scope non-monolith unregistered ids only and add joint coverage note with BC-2.19.006/VP-010."
@@ -33,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "9aa35a5"
+input-hash: "5b4fe5e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -46,7 +47,7 @@ removal_reason: null
 
 # BC-2.19.005: Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed, VP-010 Kani Candidate)
 
-> **Red Gate test required** — ADR-016 Security Invariant: the allowlist-containment test
+> **Red Gate test required** — ADR-016 Decision 3 §Security Invariant: the allowlist-containment test
 > must COMPILE and FAIL before `Reviver::revive()` is implemented. VP-010 Kani candidate:
 > prove that for ALL possible `Serialized` inputs, if the `id` is not in the registry,
 > the result is ALWAYS `Err(E-SRLZ-001)` — no code path produces `Ok(...)` for an
@@ -148,7 +149,7 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
 ## Architecture Anchors
 
 - `architecture/module-decomposition.md` — SS-19, `core::serializable::reviver` (pure-core revive fn)
-- `architecture/decisions/ADR-016-lc-json-deserialization-safety.md` — Decision 6 (allowlist-first revive, E-SRLZ-001, no id interpolation in error message, Kani VP-010 candidacy)
+- `architecture/decisions/ADR-016-lc-json-deserialization-safety.md` — Decision 3 §Security Invariant (allowlist-first revive; E-SRLZ-001; no id interpolation in error message; VP-010 Kani candidacy; formal property: Decision 3 Property 1)
 - `architecture/purity-boundary-map.md` — `ferrochain-core / core::serializable` Pure Core; Kani VP-010 candidacy noted
 
 ## Story Anchor
@@ -167,7 +168,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 security story]_
 | Source L2 Capability | CAP-025 |
 | Capability Anchor Justification | CAP-025 ("Reviver and Type Registry (Inventory-Based; Allowlist Containment; Legacy-Namespace Remap)") per capabilities-p1-p2.md §CAP-025 — this BC specifies the Allowlist Containment property that CAP-025 names as the second of its three defining subsystem capabilities; the allowlist-first revive is the primary deserialization security invariant for SS-19 |
 | L2 Domain Invariants | DI-008 (revive returns Result; no panic or unsafe unwrap), DI-014 (E-SRLZ-001 propagates as Err; no silent fallthrough, no default-constructed value returned) |
-| Architecture Authority | ADR-016 Decision 6 (allowlist-first check, E-SRLZ-001 category SECURITY, no id in error message, VP-010 Kani candidacy) |
+| Architecture Authority | ADR-016 Decision 3 §Security Invariant (allowlist-first check; E-SRLZ-001 category VAL — registry containment is input validation not a boundary-crossing attack-vector per ADR-010; no id in error message; VP-010 Kani candidacy) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | VP Registration | VP-010 (assigned in VP-INDEX v1.2 as VP-010 — Kani P0; ferrochain-core allowlist_rejects_unregistered_id) |
 | Module | ferrochain-core / core::serializable::reviver |

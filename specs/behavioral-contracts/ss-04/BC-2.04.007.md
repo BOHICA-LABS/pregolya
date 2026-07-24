@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "851855b"
+input-hash: "a7d11b9"
 extracted_from: null
 modified: []
 deprecated: null

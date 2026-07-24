@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.4"
+version: "1.5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.5 (burst-249/2026-07-24): F-P148-02 — add Security Invariant 2 labeled subsection to Decision 2 and Security Invariant 1 labeled subsection to Decision 3. Adjudication option (b): stable anchors added to ADR rather than remapping 7+ citation sites across 4 documents. Resolves unresolvable 'ADR-015 Security Invariant N' citations in BC-2.18.004, BC-2.18.005, BC-INDEX Red Gate table, VP-006 changelog, prd.md, test-vectors.md."
   - "1.4 (burst-227/2026-07-21): F-P132-03 (coordinator flag 2) — Add 'MessagesPlaceholder trust derivation' subsection to Decision 3. ADR-015 v1.3 defined `TemplateVar` for scalar substitution but gave no counterpart type or derivation rule for `Vec<Message>` placeholder variables. BC-2.18.003 PC2 cited 'ADR-015 v1.3 semantics' but the rule was unanchored. Fix: introduce `MessageListVar { messages: Vec<Message>, trust_level: Option<TrustLevel> }` and state the uniform derivation rule: each expanded message's `MessageProvenance.highest_trust_level` = `MessageListVar.trust_level`; `None` → `None` (treated as Trusted). API shape (TemplateInput enum) deferred to story implementation."
   - "1.3 (burst-226/2026-07-21): F-P131-05 (CRITICAL) — ProvenanceTag shape adjudication. `ProvenanceTag` (SS-11 ingress-boundary struct) and template-composition trust level are TWO DISTINCT CONCERNS. Introduce `TrustLevel` enum (Untrusted|UserInput|Trusted) in `ferrochain-prompts: prompts::template` as the SS-18-local trust classifier. `TemplateVar.trust_level: Option<TrustLevel>` replaces the former implicit `Option<ProvenanceTag>` coupling. `MessageProvenance.highest_trust_level: Option<TrustLevel>` replaces `tag: Option<ProvenanceTag>`. Injection check updated: `var.trust_level.is_some_and(|t| t.is_untrusted())`. `ProvenanceTag` remains the SS-11 canonical 3-field struct (boundary_type/ingress_id/sequence_position) — no trust dimension added. BC-2.09.003 `ProvenanceTag::McpToolResult { server_name, tool_name }` is an outdated pre-PASS-58 variant; PO handoff: update PC1 to canonical struct form (`boundary_type: BoundaryType::ToolResult`). F-P131-04 (MED) — strict-undefined is a UNIVERSAL template-engine contract. Both f-string (default) and jinja2 (optional) engines raise E-TMPL-003 for undefined variables. E-TMPL-003 is engine-neutral. Decision 4 updated to state universal obligation."
   - "1.2 (burst-224/2026-07-21): F-P129-12 — specify template-source-order iteration for slot.variable_names() per BC-2.18.004 Invariant 5 + EC-007 + TV-005; determinism note added to Decision 3 injection-check prose and code sketch. HashSet/HashMap iteration prohibited for this loop."
@@ -110,6 +111,19 @@ impl ChatPromptTemplate {
 `HumanMessage` and `AIMessage` slots default to `TrustAll` (appropriate: these positions
 are intended to carry user-supplied or model-generated content). Callers may explicitly set
 them to `TrustRequired` for additional hardening in pipelines that have tighter trust budgets.
+
+### Security Invariant 2 — SystemMessage Slot Always TrustRequired at Construction Time (BC-2.18.005 Red Gate)
+
+**The `TrustAll` policy on a SystemMessage slot is rejected at template construction time,
+before any rendering occurs.** Calling `ChatPromptTemplate::from_messages` with a
+`(MessageRole::System, _, SlotTrustPolicy::TrustAll)` tuple immediately returns
+`Err(FerrochainError { code: "E-TMPL-002" })`. There is no bypass: no caller-supplied
+override, no feature flag, no runtime configuration disables this check. Any
+`ChatPromptTemplate` that successfully constructs has all SystemMessage slots in the
+`TrustRequired` posture — rendering never executes without this guarantee.
+
+This is the Red Gate anchor for **BC-2.18.005**: the `E-TMPL-002` rejection test must
+compile and fail before `ChatPromptTemplate::from_messages` is implemented.
 
 ## Decision 3 — TrustLevel Classification and Injection Prevention
 
@@ -258,6 +272,20 @@ This is a **hard block at the pure-core layer**, not a guardrail advisory. The e
 `E-TMPL-001` (SECURITY category) and propagates via `?` to the caller. The guardrail
 boundary (DI-012) is a second layer for content entering the model context — it is not
 a replacement for this render-time check.
+
+### Security Invariant 1 — injection_guard Fail-Closed at Render Time (VP-006 Kani Candidate, BC-2.18.004 Red Gate)
+
+**`TrustLevel::Untrusted` in a `TrustRequired` slot ALWAYS causes `format_messages` to return
+`Err(E-TMPL-001)`.** No code path through the injection check produces `Ok(PromptValue)` when
+this condition holds. The check is unconditional — no bypass path, no advisory mode, no
+`GuardrailHook`-dependent override. No partial `PromptValue` is observable when the error
+fires: rendering aborts at the first failing slot variable.
+
+This is the Red Gate anchor for **BC-2.18.004**: the injection_guard test must compile and
+fail before `ChatPromptTemplate::format_messages` is implemented. Kani VP-006 proves this
+invariant formally: the `Ok` arm of `format_messages` is unreachable for any symbolic
+`(ChatPromptTemplate, HashMap<String, TemplateVar>)` pair where any `TrustRequired` slot
+receives a variable with `is_untrusted() == true`.
 
 ### Relationship to existing DI-012 / BC-2.11.001 guardrail model
 

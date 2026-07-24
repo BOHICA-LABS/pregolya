@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.15"
+version: "1.16"
 status: active
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "47ce662"
+input-hash: "ccbc310"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21, D23]
 supplements:
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.16 (F-P148-03/burst-249/2026-07-24): §2.18 Red Gate callout: 'ADR-015 Security Invariants 1 and 2' → 'ADR-015 Decision 3 §Security Invariant 1 and Decision 2 §Security Invariant 2' per ADR-015 v1.5 labeled anchors."
   - "v1.15 (F-P142-03, burst-242, 2026-07-23): §2.05 BC-2.05.008 title and §2.06 BC-2.06.005 title updated to match new H1s (bc_h1_is_title_source_of_truth): Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority."
   - "v1.14 (burst-241/Wave-2/F-P141-02/2026-07-23): VP-gate expansion — 6 P0 Kani proof obligations. §4 NFR-003 target updated '3 committed VP' → '6 P0 Kani VP obligations pass before v1 convergence'. §2.17 OQR-3 note expanded: invariants +DI-014; enforcing BCs +BC-2.21.003/2.19.005/2.05.007; plural 'harnesses'/'are Phase-6 artifacts'. BC-2.17.001 row retitled to '6 P0 VP obligations (VP-001/002/003/009/010/011) + 3 P1 VP obligations (VP-006/012/013)', DI column +DI-014. §6.3 KD-003 table: BC-2.03.001/2.04.006/2.13.004 retitled with VP-00N Kani P0 harness target label; +BC-2.21.003 (VP-009)/BC-2.19.005 (VP-010)/BC-2.05.007 (VP-011) Kani P0 rows; BC-2.17.001 updated to '6 P0 + 3 P1'."
   - "v1.13 (burst-241/F-P141-03/F-P141-04/2026-07-22): §5 error taxonomy summary table label corrections — alignment to error-taxonomy.md source of truth (gate #33 reverse, TD-VSDD-060 sibling sweep). (1) F-P141-03 (MED): E-CORE-002 label corrected — was 'RunnableCompositionError' (wrong: pipe composition is E-CORE-004); corrected to 'MessageRoleUnrecognized' (BC-2.01.002, message role validation — taxonomy message: 'Message role <role> is not a recognized message type'); E-CORE-004 PipeCompositionFailed added to CORE examples to explicitly represent the composition error. (2) F-P141-04 (LOW): E-TOOLS-006 label corrected — was 'BashGrepResultsTruncated' (wrong: 'Bash' prefix misattributes GrepTool informational payload field to BashTool); corrected to 'GrepResultsCapped' (taxonomy: GrepResult.capped payload field, BC-2.23.006 PC-2). (3) TD-VSDD-060 sibling sweep of all §5 TOOLS examples — three additional label mismatches found and fixed: E-TOOLS-001 'PathEscape' → 'PathConfinementViolation' (taxonomy message prefix 'PathConfinementViolation:', BC-2.23.001); E-TOOLS-002 'FileSizeExceeded' → 'FileReadExceedsLimit' (taxonomy message prefix 'FileReadExceedsLimit:', BC-2.23.001); E-TOOLS-003 'ExactMatchNotFound' → 'EditOldStringNotFound' (taxonomy message prefix 'EditOldStringNotFound:', BC-2.23.003). All five corrected labels now match error-taxonomy.md v1.34 message prefixes exactly. error-taxonomy.md not modified — all defects were PRD-side labels."
@@ -362,7 +363,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 > **D21 ecosystem-parity expansion.** ferrochain-prompts crate; wave 2.
 > ADR-015 injection-safety constraints mandate BC-2.18.004 and BC-2.18.005 as Red Gate
-> tests (ADR-015 Security Invariants 1 and 2). BC-2.18.004 is also VP-006 Kani candidate.
+> tests (ADR-015 Decision 3 §Security Invariant 1 and Decision 2 §Security Invariant 2). BC-2.18.004 is also VP-006 Kani candidate.
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|

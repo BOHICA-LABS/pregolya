@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "2.9"
+version: "3.0"
 status: active
 producer: state-manager
 timestamp: 2026-07-24T00:00:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.0 (burst-249/F-P148-01..05/2026-07-24): (1) MUST Red Gate: BC-2.21.003 Risk Source de-pinned 'ADR-014 v1.1 Hardening Note' → 'ADR-014 Decision 2 §Hardening note' (F-P148-03); (2) MUST VP Seed: VP-009 Security Anchor de-pinned same; (3) Enhanced Red Gate canonical form: BC-2.18.004 → 'ADR-015 Decision 3 §Security Invariant 1', BC-2.18.005 → 'ADR-015 Decision 2 §Security Invariant 2', BC-2.19.005 → 'ADR-016 Decision 3 §Security Invariant' (F-P148-02 ADR labeled anchors); (4) Enhanced VP Seed: VP-006 → 'ADR-015 Decision 3 §Security Invariant 1', VP-010 → 'ADR-016 Decision 3 §Security Invariant'; (5) BC version sync (F-P148-01..05 closures): BC-2.18.004 v1.4, BC-2.18.005 v1.1, BC-2.19.005 v1.3, BC-2.21.003 v1.3, BC-2.07.002 v1.5. OBS-04: GTV-003/008 Python-verified against pinned corpus (corrected — both provisional values were wrong); all 9 GTVs now verified (test-vectors v2.6). OBS-05: BC-2.07.002 splitter pin reconciled to in-tree langchain-text-splitters==1.1.2."
   - "2.9 (burst-247/F-P146-02/2026-07-24): SS-23 title policy applied — 6 Full BC Catalog row titles synced to H1s per bc_h1_is_title_source_of_truth: BC-2.23.001 v1.3 E-TOOLS-001/E-TOOLS-002→E-TOOLS-001/002/008; BC-2.23.002 v1.2 E-TOOLS-001→E-TOOLS-001/008; BC-2.23.003 v1.3 +E-TOOLS-001/003/008 suffix appended; BC-2.23.004 v1.2 E-TOOLS-001;→E-TOOLS-001/008;; BC-2.23.005 v1.5 E-TOOLS-004/005/007→E-TOOLS-004/007 (E-TOOLS-005 Ok-path payload flag excluded from title); BC-2.23.006 v1.4 E-TOOLS-001/006→E-TOOLS-001/008/009 (E-TOOLS-006 Ok-path payload flag excluded from title)."
   - "2.8 (F-P142-03, burst-242, 2026-07-23): BC-2.05.008 and BC-2.06.005 titles updated to match new H1s (bc_h1_is_title_source_of_truth): Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority."
   - "2.7 (burst-241/Wave-2/F-P141-02/2026-07-23): BC-2.17.001 title updated to match new H1 (bc_h1_is_title_source_of_truth): 'Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace Confinement VP' → 'Six P0 Kani VP Obligations + Three P1 Kani VP Obligations'. DI column +DI-014."
@@ -50,11 +51,11 @@ changelog:
 | BC-2.07.002 | Non-ASCII Boundary Parity with Python Reference Implementation | R8 (splitter code-point parity) |
 | BC-2.09.004 | MCP Bare ToolException Re-Raise Preserving Type Identity | R11 (MCP upstream test void) |
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections | R11 (MCP upstream test void) |
-| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | ADR-015 Security Invariant 1 |
-| BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | ADR-015 Security Invariant 2 |
-| BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed, VP-010 Kani Candidate) | ADR-016 Security Invariant |
+| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | ADR-015 Decision 3 §Security Invariant 1 |
+| BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | ADR-015 Decision 2 §Security Invariant 2 |
+| BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed, VP-010 Kani Candidate) | ADR-016 Decision 3 §Security Invariant |
 | BC-2.20.002 | BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns Entering Graph Context | ADR-014 Consequences §DI-012 |
-| BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division (VP-009 Kani Candidate) | ADR-014 v1.1 Hardening Note |
+| BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division (VP-009 Kani Candidate) | ADR-014 Decision 2 §Hardening note |
 | BC-2.22.002 | EmbeddingsOpenAI — OpenAiApiKey Redacted-Debug Credential Opacity (DI-010); Batch Partial-Failure as Err | DI-010 Credential Opacity |
 
 ## VP Seed BCs
@@ -64,11 +65,11 @@ changelog:
 | VP-001 | BC-2.03.001 | BSP Super-Step Execution Determinism | Kani | NE-17 |
 | VP-002 | BC-2.04.006 | Session Triple-Address Uniqueness | Kani | NE-12 |
 | VP-003 | BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root | Kani | NE-02 |
-| VP-006 | BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 | Kani (candidate) | ADR-015 Security Invariant 1 |
+| VP-006 | BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 | Kani (candidate) | ADR-015 Decision 3 §Security Invariant 1 |
 | VP-007 | BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | Proptest | CAP-024 round-trip invariant |
 | VP-008 | BC-2.22.001 | Embeddings Trait — Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err | Proptest | CAP-031 dimensionality invariant |
-| VP-009 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division | Kani (candidate) | ADR-014 v1.1 Hardening Note |
-| VP-010 | BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed) | Kani (candidate) | ADR-016 Security Invariant |
+| VP-009 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division | Kani (candidate) | ADR-014 Decision 2 §Hardening note |
+| VP-010 | BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed) | Kani (candidate) | ADR-016 Decision 3 §Security Invariant |
 | VP-011 | BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny | Kani (candidate) | ADR-018 Decision 1 |
 | VP-012 | BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; Watermark Arithmetic | Kani (candidate) | ADR-019 Decision 3 |
 | VP-013 | BC-2.23.005 | BashTool — Non-Lowerable Medium Risk Floor; Sandboxed Shell Execution | Kani (candidate) | ADR-020 Decision 3 |
@@ -223,6 +224,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.0 | 2026-07-24 | burst-249/F-P148-01..05: (1) MUST Red Gate de-pin: BC-2.21.003 'ADR-014 v1.1 Hardening Note'→'ADR-014 Decision 2 §Hardening note' (F-P148-03); (2) MUST VP Seed: VP-009 Security Anchor same de-pin; (3) Enhanced Red Gate canonical cite form per F-P148-02 ADR labeled anchors: BC-2.18.004→ADR-015 Decision 3 §Security Invariant 1, BC-2.18.005→ADR-015 Decision 2 §Security Invariant 2, BC-2.19.005→ADR-016 Decision 3 §Security Invariant; (4) Enhanced VP Seed: VP-006→ADR-015 Decision 3 §Security Invariant 1, VP-010→ADR-016 Decision 3 §Security Invariant; (5) BC versions noted: BC-2.18.004 v1.4, BC-2.18.005 v1.1, BC-2.19.005 v1.3, BC-2.21.003 v1.3, BC-2.07.002 v1.5; (6) F-P148-01 HIGH E-SRLZ-001 category VAL (BC-2.19.005 v1.3; VP-010 v1.3 PC1/Inv-3); (7) OBS-04 GTV-003/008 Python-verified against pinned corpus (test-vectors v2.6, 671 TVs, 9 GTVs verified); OBS-05 splitter pin reconciled to in-tree ==1.1.2 (BC-2.07.002 v1.5). | burst-249 F-P148-01..05 |
 | 2.9 | 2026-07-24 | burst-247/F-P146-02: SS-23 title policy — 6 Full BC Catalog row titles synced to H1s per bc_h1_is_title_source_of_truth: BC-2.23.001 v1.3 E-TOOLS-001/002/008; BC-2.23.002 v1.2 E-TOOLS-001/008; BC-2.23.003 v1.3 +E-TOOLS-001/003/008; BC-2.23.004 v1.2 E-TOOLS-001/008;; BC-2.23.005 v1.5 E-TOOLS-004/007 (E-TOOLS-005 payload flag excluded); BC-2.23.006 v1.4 E-TOOLS-001/008/009 (E-TOOLS-006 payload flag excluded). | burst-247 F-P146-02 |
 | 2.8 | 2026-07-23 | F-P142-03, burst-242: BC-2.05.008 and BC-2.06.005 titles updated to match new H1s (bc_h1_is_title_source_of_truth): Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority. | F-P142-03 burst-242 |
 | 2.7 | 2026-07-23 | burst-241/Wave-2/F-P141-02: BC-2.17.001 title updated to match new H1 (bc_h1_is_title_source_of_truth): 'Kani Harness Scope — BSP Determinism VP + Session Tenancy VP + Workspace Confinement VP' → 'Six P0 Kani VP Obligations + Three P1 Kani VP Obligations'. DI column +DI-014. | burst-241/F-P141-02 |

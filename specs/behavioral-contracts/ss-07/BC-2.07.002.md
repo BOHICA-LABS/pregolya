@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.002
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
-input-hash: "ee1af68"
+input-hash: "18b3c51"
 extracted_from: null
 modified: []
 deprecated: null
@@ -71,7 +71,7 @@ first (and fail), then the implementation must make it pass.
 ## Invariants
 
 - The golden test vectors in this BC are the normative specification — they take precedence over any ambiguous interpretation of the text-splitter algorithm.
-- The Python reference is `langchain-text-splitters==0.3.8` (or the version locked in `.factory/specs/domain-spec/L2-INDEX.md`). If the reference version changes, the golden vectors must be regenerated.
+- The Python reference is in-tree `langchain-text-splitters==1.1.2` at `langchain==1.3.13` SHA `42f8f79293cfb7589e5bc1d74a8ae4dfd0bf15e3` per `.factory/semport/reference-manifest.md` (the standalone `langchain-text-splitters==0.3.8` package is superseded — text-splitters is in-tree within the pinned langchain monorepo; no separate package version exists in the manifest). If the reference corpus pin changes, the golden vectors must be regenerated.
 - Parity applies to `RecursiveCharacterTextSplitter` and `CharacterTextSplitter` with the `length_function=len` setting (the default, which counts code points in Python).
 
 ## Reference Evidence
@@ -101,7 +101,7 @@ normative. The Rust implementation must produce byte-identical chunk strings.
 |-----------|-------|-----------|---------|-----------------|
 | GTV-001 | `"😀😃😄😁😆"` (5 emoji = 5 code pts, 20 bytes) | 3 | 0 | `["😀😃😄", "😁😆"]` |
 | GTV-002 | `"😀😃😄😁😆"` (5 emoji) | 3 | 1 | `["😀😃😄", "😄😁😆"]` |
-| GTV-003 | `"hello 😀 world"` (13 code pts) | 7 | 0 | `["hello", "😀 world"]` (after separator split on space) |
+| GTV-003 | `"hello 😀 world"` (13 code pts) | 7 | 0 | `["hello 😀", "world"]` (Python-verified against pinned corpus: `cd .reference/langchain/libs/text-splitters && python3 -c "import sys; sys.path.insert(0,'.'); from langchain_text_splitters import RecursiveCharacterTextSplitter; print(RecursiveCharacterTextSplitter(chunk_size=7,chunk_overlap=0,separators=['\n\n','\n',' ','']).split_text('hello 😀 world'))"`) |
 | GTV-004 | `"😀" * 100` (100 emoji, 400 bytes) | 10 | 0 | 10 chunks of 10 emoji each |
 
 ### Vector Group 2: CJK Unified Ideographs (U+4E00–U+9FFF, 3 bytes each)
@@ -116,16 +116,17 @@ normative. The Rust implementation must produce byte-identical chunk strings.
 
 | Vector ID | Input | chunk_size | overlap | Expected Chunks |
 |-----------|-------|-----------|---------|-----------------|
-| GTV-008 | `"abc" + "🎉" * 5 + "xyz"` (3+5+3=11 code pts) | 5 | 0 | `["abc🎉🎉", "🎉🎉🎉x", "yz"]` **(PROVISIONAL — must be Python-verified before Red Gate test is written)** |
+| GTV-008 | `"abc" + "🎉" * 5 + "xyz"` (3+5+3=11 code pts) | 5 | 0 | `["abc🎉🎉", "🎉🎉🎉xy", "z"]` (Python-verified against pinned corpus; prior PROVISIONAL value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` was wrong) |
 | GTV-009 | `"ñoño"` (4 code pts: ñ=U+00F1, o, ñ, o — 2 bytes each for ñ) | 2 | 0 | `["ño", "ño"]` |
 
-> **Note:** GTV-008 is marked **PROVISIONAL** — the concrete value `["abc🎉🎉", "🎉🎉🎉x", "yz"]`
-> was derived from code-point analysis but has not yet been confirmed by running the reference
-> Python implementation. Values marked PROVISIONAL must be Python-verified before the Red Gate
-> test is written; do not commit a Red Gate test that hard-codes a PROVISIONAL expected value.
-> GTV-003 similarly depends on separator logic and requires Python-reference verification before
-> any test is authored. The test-writer MUST run the reference implementation to compute actuals
-> and replace the PROVISIONAL marker with a VERIFIED confirmation once validated.
+> **Note (burst-249/2026-07-24):** GTV-008 and GTV-003 have been **Python-verified** against
+> the pinned corpus (`langchain-text-splitters==1.1.2` in-tree at `langchain==1.3.13`
+> SHA `42f8f79293cfb7589e5bc1d74a8ae4dfd0bf15e3`). Prior PROVISIONAL markers removed.
+> GTV-008 correction: `["abc🎉🎉", "🎉🎉🎉x", "yz"]` (wrong) → `["abc🎉🎉", "🎉🎉🎉xy", "z"]` (verified).
+> GTV-003 correction: `["hello", "😀 world"]` (wrong) → `["hello 😀", "world"]` (verified;
+> RecursiveCharacterTextSplitter merges "hello" + " " + "😀" = 7 code pts into chunk 1, then
+> "world" = 5 code pts as chunk 2 — not a bare space-split). All 9 GTVs are now verified;
+> the test-writer may author Red Gate tests directly from this table.
 
 ## Edge Cases
 
@@ -205,6 +206,7 @@ _[to be filled after story decomposition]_
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.5 | 2026-07-24 | OBS-P148-04/OBS-P148-05/burst-249: (1) GTV-008 PROVISIONAL resolved — corrected expected value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` → `["abc🎉🎉", "🎉🎉🎉xy", "z"]`; PROVISIONAL marker removed; Python-verified against pinned corpus. (2) GTV-003 separator-logic dependency resolved — corrected expected value `["hello", "😀 world"]` → `["hello 😀", "world"]`; Python-verified. (3) Invariant splitter reference reconciled: `langchain-text-splitters==0.3.8` → in-tree `langchain-text-splitters==1.1.2` at `langchain==1.3.13` SHA `42f8f79293cfb7589e5bc1d74a8ae4dfd0bf15e3` per reference-manifest.md (no standalone splitters pin exists in the manifest). input-hash updated to ea9cf4b (prd.md v1.16 input). | OBS-P148-04, OBS-P148-05 |
 | 1.4 | 2026-07-17 | F-P96-01: Module field resolved from placeholder to ferrochain-splitters per module-decomposition.md v1.10. | F-P96-01 |
 | 1.3 | 2026-07-17 | VP-SPLIT-04..005 renumbered to VP-SPLIT-04..05 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — renumber is the production-grade call). No VP-INDEX registration affected (SPLIT VPs are BC-local). | OBS-P95-A |
 | 1.2 | 2026-07-15 | Changelog date metadata correction: v1.1 row date corrected from 2026-07-16 → 2026-07-14 (PASS-36 occurred on 2026-07-14; prior date was a future-date typo sharing the same root cause as F-P64-02 in bc-authoring-plan.md and test-vectors.md). (F-P65-01, pass-65) | F-P65-01 |

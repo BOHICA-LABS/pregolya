@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.003
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,10 +17,11 @@ producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
-red_gate_source: "ADR-014 v1.1 Hardening Note — zero-norm guard must be a failing test BEFORE the cosine implementation exists; a zero-norm vector silently produces NaN that corrupts similarity rankings without the guard; VP-009 Kani candidate"
+red_gate_source: "ADR-014 Decision 2 §Hardening note — zero-norm guard must be a failing test BEFORE the cosine implementation exists; a zero-norm vector silently produces NaN that corrupts similarity rankings without the guard; VP-009 Kani candidate"
 vp_seed: true
 vp_id: VP-009
 changelog:
+  - "1.3 (F-P148-02/burst-249/2026-07-24): De-pinned all three 'ADR-014 v1.1 [§]Hardening Note' sites to 'ADR-014 Decision 2 §Hardening note' per ADR-014 v1.4 labeled anchor: (1) frontmatter red_gate_source, (2) Red Gate body callout, (3) Traceability Architecture Authority row."
   - "1.2 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-009 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-009' (VP-INDEX v1.2 burst-223 seeded VP-009 Kani P0; VP-009.md exists). Completed-handoff residue removal."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction; SECURITY-CRITICAL hardening per ADR-014 v1.1"
   - "1.1 (F-P224/H-4/2026-07-21): Module references corrected — `vectorstores::mmr` → `vectorstores::similarity` for cosine primitive (4 sites: Description, Architecture Anchors ×2, Traceability Module row). The `mmr` module implements the MMR selection algorithm; `cosine_similarity` lives in the dedicated `vectorstores::similarity` module with harness file `ferrochain-vectorstores/src/similarity.rs`. Genuine MMR-algorithm references in other BCs/docs are unaffected."
@@ -46,7 +47,7 @@ removal_reason: null
 
 # BC-2.21.003: Zero-Norm Vector Guard — Vec<f32> Cosine Denominator Check Returns E-VS-001 Before Division (VP-009 Kani Candidate)
 
-> **Red Gate test required** — ADR-014 v1.1 Hardening Note: the zero-norm guard test must
+> **Red Gate test required** — ADR-014 Decision 2 §Hardening note: the zero-norm guard test must
 > COMPILE and FAIL before the cosine similarity implementation is written. A zero-length
 > embedding vector (`norm == 0.0`) produces `0.0 / 0.0 = NaN` which silently corrupts
 > similarity ranking — every document appears equally relevant, producing nonsense
@@ -171,7 +172,7 @@ _[to be filled after story decomposition — Wave 2 SS-21 security-hardening sto
 | Source L2 Capability | CAP-029 |
 | Capability Anchor Justification | CAP-029 ("InMemoryVectorStore — Arc<dyn Embeddings> DI; RwLock Interior Mutability; Vec<f32> Cosine; E-VS-001 Zero-Norm Guard") per capabilities-p1-p2.md §CAP-029 — the "E-VS-001 Zero-Norm Guard" in the CAP title is exactly the property this BC specifies; CAP-029 calls it out as a mandatory hardening obligation for the Vec<f32> cosine path and notes the VP-009 connection explicitly |
 | L2 Domain Invariants | DI-008 (cosine_similarity returns Result; no .unwrap() on cosine computation), DI-014 (E-VS-001 propagates as Err; no silent NaN or 0.0 fallthrough — cosine_similarity never returns Ok(f32::NAN)) |
-| Architecture Authority | ADR-014 v1.1 §Hardening Note (zero-norm guard specification, E-VS-001, VP-009 candidacy) |
+| Architecture Authority | ADR-014 Decision 2 §Hardening note (zero-norm guard specification, E-VS-001, VP-009 candidacy) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | VP Registration | VP-009 (assigned in VP-INDEX v1.2 as VP-009 — Kani P0; ferrochain-vectorstores zero_norm_guard_fail_closed) |
 | Module | ferrochain-vectorstores / vectorstores::similarity |

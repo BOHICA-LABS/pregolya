@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.005
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,8 +17,9 @@ producer: product-owner
 timestamp: 2026-07-20T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
-red_gate_source: "ADR-015 Security Invariant 2 — SlotTrustPolicy::TrustAll on SystemMessage must be rejected at construction time"
+red_gate_source: "ADR-015 Decision 2 §Security Invariant 2 — SlotTrustPolicy::TrustAll on SystemMessage must be rejected at construction time"
 changelog:
+  - "1.1 (F-P148-03/burst-249/2026-07-24): red_gate_source and Red Gate body callout updated: 'ADR-015 Security Invariant 2' → 'ADR-015 Decision 2 §Security Invariant 2' per ADR-015 v1.5 labeled anchor. input-hash updated to fa92953 (ADR-015 v1.5 adds labeled anchors)."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates; SECURITY-CRITICAL"
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "5b8bf52"
+input-hash: "fa92953"
 extracted_from: null
 modified: []
 deprecated: null
@@ -42,7 +43,7 @@ removal_reason: null
 
 # BC-2.18.005: SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed)
 
-> **Red Gate test required** — ADR-015 Security Invariant 2: the construction-time policy
+> **Red Gate test required** — ADR-015 Decision 2 §Security Invariant 2: the construction-time policy
 > rejection test must COMPILE and FAIL before the `from_messages` guard is implemented.
 
 ## Description

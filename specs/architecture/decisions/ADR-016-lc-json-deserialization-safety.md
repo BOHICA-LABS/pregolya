@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-23"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.3"
+version: "1.4"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-19]
 changelog:
+  - "1.4 (burst-249/2026-07-24): F-P148-02 — add Security Invariant labeled subsection to Decision 3. Adjudication option (b): stable anchor added to ADR rather than remapping citation sites. Resolves unresolvable 'ADR-016 Security Invariant' citations in BC-2.19.005, BC-INDEX Red Gate table, VP-010.md. F-P148-01 context: BC-2.19.005 Architecture Authority cites 'ADR-016 Decision 6' (nonexistent; ADR-016 has only Decisions 1–5) — PO handoff to fix to 'ADR-016 Decision 3 Property 1'."
   - "1.3 (burst-238/2026-07-23): Stale-handoff sweep — remove stale 'VP-010 candidate' label in §Consequences bullets. VP-010 was seeded in burst-223 (D21, VP-INDEX v1.2, Kani P0). Replace with 'VP-010 (Kani P0, seeded burst-223)'."
   - "1.2 (burst-224/2026-07-21): F-P129-06 — fix Decision 3 Property 1 and Property 4 code sketches: replace non-canonical `category: Serialization` with `component: Component::SRLZ, category: Category::VAL` per ADR-010 adjudication (Serialization is not a canonical Category variant)."
   - "1.1 (crates.io/2026-07-20): Record validated pin `inventory = \"0.3\"` (0.3.24, dtolnay, MSRV 1.62, WASM-safe); add keep-pin-fresh note re: compiler-internal tracking."
@@ -206,6 +207,21 @@ The valid-namespace `HashSet<String>` is computed once at startup from the regis
 It is used only to provide a fast pre-check before the full registry lookup. The registry
 is still the authoritative gate. This design eliminates the allowlist drift class found in
 the Python implementation (namespaces in the allowlist but not in the registry, and vice versa).
+
+### Security Invariant — Reviver Fail-Closed Allowlist Gate (VP-010 Kani Candidate, BC-2.19.005 Red Gate)
+
+**Any type id NOT in the registry NEVER produces a successful deserialization.** Property 1
+(allowlist-first check) defines this as the primary deserialization security invariant:
+`revive()` rejects unknown ids as its FIRST operation — no constructor dispatch, no kwargs
+parsing, no heap allocation occurs before the registry gate fires. Combined with Property 2
+(no path-based loading), the only path to a successful `revive()` result is through a type
+registered at link time via `inventory::submit!`. This is a structural invariant determined
+by the `inventory` mechanism — not a runtime configuration or policy.
+
+This is the Red Gate anchor for **BC-2.19.005**: the allowlist-containment test must compile
+and fail before `Reviver::revive()` is implemented. Kani VP-010 proves this invariant
+formally: for all symbolic type-id inputs not in the registry (and not in
+`LANGCHAIN_MONOLITH_TYPES`), the `Ok` arm of `allowlist_check` is unreachable.
 
 ## Decision 4 — Legacy Namespace Remapping and Version Tolerance
 

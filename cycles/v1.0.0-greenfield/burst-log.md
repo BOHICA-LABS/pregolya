@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "b295a18"
+input-hash: "7796980"
 traces_to: STATE.md
 ---
 
@@ -4690,5 +4690,11 @@ F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 
 **Status:** COMPLETE
 
 **Summary:** F-P140-01..08 all closed; 22-BC pregel→graph:: flat layout [ADR-001 canon; 35 path refs; zero residual]; E-MCP-006 McpContentUnsupported minted; error-taxonomy v1.34; census 108; module-decomposition v1.21 + ADR-017 v1.4; interface-definitions v2.49; burst-238 dates normalized 7 files 2026-07-22→2026-07-23; hash sweep 5 passes STALE=0; burst-235 row archived. 0/3. NEXT: P1D-141.
+
+---
+
+### Archived from STATE.md Current Phase Steps — Burst 243 (archived at burst-249)
+
+| Burst 243 — P1D-143 adversary + fix-burst COMPLETE (F-P143-01 MED CAP-029 VP-009 framing residue CLOSED; capabilities-p1-p2 v1.11; all 7 regression axes PASS; hash sweep 4 passes STALE=0; burst-238 row archived); 0/3. NEXT: P1D-144. | business-analyst + state-manager | COMPLETE | F-P143-01 MED: capabilities-p1-p2 §CAP-029 VP-009 anchor stale 'MMR bounded proof' framing corrected to Zero-Norm Cosine Guard framing (cosine_similarity in vectorstores::similarity, fail-closed via E-VS-001, BC-2.21.003, DI-014, zero_norm_guard_fail_closed); v1.10→v1.11. TD-VSDD-060 sibling sweep: 91 VP-009 hits across 23 files, zero additional live-body MMR framing. Hash sweep: 4 passes TOTAL=235 MATCH=195 STALE=0. Burst 243. |
 
 ---

@@ -14,7 +14,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
   - .factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md
-input-hash: "ebfb61a"
+input-hash: "40fe43d"
 traces_to: .factory/specs/product-brief.md
 sections:
   - capabilities-p0.md

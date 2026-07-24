@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "48bc688"
+input-hash: "8f8f6b0"
 traces_to: ARCH-INDEX.md
 changelog:
   - "2.1 (FIX-BURST-248/F-P147-01/2026-07-24): Remove stale 'red_gate' label from hitl row Notes — BC-2.05.007 is NOT Red-Gated (product-owner authority, burst-231; ADR-018 Decision 3 has no compile-and-fail mandate). Notes changed from 'Kani P0 red_gate (BC-2.05.007)' to 'Kani P0 (BC-2.05.007)'. No VP table, totals, or criticality tier changes."

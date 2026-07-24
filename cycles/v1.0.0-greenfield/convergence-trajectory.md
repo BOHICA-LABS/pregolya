@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "d24c62d"
+input-hash: "2e47c00"
 traces_to: STATE.md
 ---
 
@@ -51,7 +51,7 @@ traces_to: STATE.md
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN 1/3) →0 (P1D-127 CLEAN 2/3) →0 (P1D-128 CLEAN 3/3 CONVERGED pre-D21+D23) →12 (P1D-129, D21+D23 re-baseline) →9 (P1D-130) →7 (P1D-131) →8 (P1D-132) →10 (P1D-133) →7 (P1D-134) →6 (P1D-135) →6 (P1D-136) →3 (P1D-137) →3 (P1D-138) →7 (P1D-139) →8 (P1D-140) →7 (P1D-141) →4 (P1D-142) →1 (P1D-143) →4 (P1D-144) →5 (P1D-145)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN 1/3) →0 (P1D-127 CLEAN 2/3) →0 (P1D-128 CLEAN 3/3 CONVERGED pre-D21+D23) →12 (P1D-129, D21+D23 re-baseline) →9 (P1D-130) →7 (P1D-131) →8 (P1D-132) →10 (P1D-133) →7 (P1D-134) →6 (P1D-135) →6 (P1D-136) →3 (P1D-137) →3 (P1D-138) →7 (P1D-139) →8 (P1D-140) →7 (P1D-141) →4 (P1D-142) →1 (P1D-143) →4 (P1D-144) →5 (P1D-145) →4 (P1D-146) →3 (P1D-147) →5 (P1D-148)`
 
 ## Per-Pass Details
 
@@ -991,7 +991,7 @@ All 8 findings fixed in burst 227. ADR-015 v1.4 Decision 3 minted (`MessageListV
 
 ## Trajectory Shorthand Update (post-D21 expansion)
 
-`[D21 expansion burst 216: 0/3 RESET] →12 (P1D-129, expanded-perimeter pass 1, NOT CLEAN: 3H/7M/2L) →9 (P1D-130, expanded-perimeter pass 2, NOT CLEAN: 1C/3H/2M+1PG/3L) →7 (P1D-131, expanded-perimeter pass 3, NOT CLEAN: 1C/3H/3M) →8 (P1D-132, expanded-perimeter pass 4, NOT CLEAN: 4H/1M/3L) →[D23 expansion burst 228: 0/3 RESET] →10 (P1D-133) →7 (P1D-134) →6 (P1D-135) →6 (P1D-136) →3 (P1D-137) →3 (P1D-138) →7 (P1D-139) →8 (P1D-140) →7 (P1D-141) →4 (P1D-142) →1 (P1D-143) →4 (P1D-144)`
+`[D21 expansion burst 216: 0/3 RESET] →12 (P1D-129, expanded-perimeter pass 1, NOT CLEAN: 3H/7M/2L) →9 (P1D-130, expanded-perimeter pass 2, NOT CLEAN: 1C/3H/2M+1PG/3L) →7 (P1D-131, expanded-perimeter pass 3, NOT CLEAN: 1C/3H/3M) →8 (P1D-132, expanded-perimeter pass 4, NOT CLEAN: 4H/1M/3L) →[D23 expansion burst 228: 0/3 RESET] →10 (P1D-133) →7 (P1D-134) →6 (P1D-135) →6 (P1D-136) →3 (P1D-137) →3 (P1D-138) →7 (P1D-139) →8 (P1D-140) →7 (P1D-141) →4 (P1D-142) →1 (P1D-143) →4 (P1D-144) →5 (P1D-145) →4 (P1D-146) →3 (P1D-147) →5 (P1D-148)`
 
 ---
 
@@ -1107,6 +1107,7 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 **Hash sweep:** 6 passes, STALE=0 (specs/ 174 MATCH, planning/ 3 MATCH, cycles/ 18 MATCH). Burst-247 commit.
 
 | P1D-147 | 2026-07-24 | 3 | 0 | 1 | 0 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (F-P147-01 HIGH VP-011 red_gate frontmatter adjudicated FALSE — ADR-018 Decision-3 mandate cited by adversary as justification for red_gate=true was FABRICATED (not present in actual ADR-018 body); BC frontmatter red_gate=false [burst-231]+11-row BC-INDEX census consistent; VP-012/VP-013 D23 siblings both false confirmed; verification-architecture v2.3→v2.4 [VP-011 catalog entry updated, red_gate_source null, residual "(Red Gate)" labels removed]; verification-coverage-matrix v2.0→v2.1; ARCH-INDEX v1.10→v1.11; census stays 11; F-P147-02 LOW E-TOOLS-002 placeholder count "Two→Three placeholders" [error-taxonomy v1.37→v1.38; 108-code parity scan complete]; F-P147-03 OBS red_gate field now explicit on all 13 VPs (5 true: VP-004/005/006/009/010; 8 false); gate #36 VP↔BC RED-GATE PARITY minted [bc-authoring-plan v2.46→v2.47; total_standing_gates 35→36; three-way corroboration + anti-fabrication clause + BC-wins divergence rule]; VP-001/002/003/006/007/008 gained explicit red_gate=false fields) — ALL 3 CLOSED fix-burst 248; hash sweep specs/174 planning/3 cycles/18 STALE=0; streak 0/3 |
+| P1D-148 | 2026-07-24 | 5 | 0 | 1 | 2 | 0 | MEDIUM-HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (F-P148-01 HIGH E-SRLZ-001 category SECURITY→VAL — BC-2.19.005 BC Traceability cell cited nonexistent "ADR-016 Decision 6" as Security Anchor; corrected to "ADR-016 Decision 3 §Security Invariant"; VP-010 v1.3 PC1/Invariant 3 category corrected; F-P148-02 MED citation-existence attack angle: body citations to ADR-015/ADR-016 §Security Invariant sections used bare section names with no verifiable labeled anchor; labeled anchors added to ADR-015 v1.5 (Decision 3 §Security Invariant 1, Decision 2 §Security Invariant 2) and ADR-016 v1.4 (Decision 3 §Security Invariant); 7 citing sites canonicalized: BC-2.18.004 v1.4, BC-2.18.005 v1.1 (changelog gap closed), BC-2.19.005 v1.3, prd v1.16, test-vectors v2.6, VP-010 v1.3, BC-INDEX v3.0; F-P148-03 MED version-pin violation per D18-P84-A — "ADR-014 v1.1 Hardening Note" version pin in body citations; de-pinned to "ADR-014 Decision 2 §Hardening note" in VP-009 v1.4 (3 sites), BC-2.21.003 v1.3 (3 sites), test-vectors Red Gate row, BC-INDEX v3.0; OBS-P148-04 GTV-003 provisional value ["hello😀", "world"] was wrong (Python verification: ["hello 😀", "world"] with space); GTV-008 provisional value ["abc🎉🎉", "🎉🎉🎉xy", "z"] was wrong (Python verification: correct); both corrected; all 9 GTVs Python-verified; PROVISIONAL markers removed from BC-2.07.002 v1.5 + test-vectors v2.6; OBS-P148-05 BC-2.07.002 splitter pin cited langchain-text-splitters==0.3.8 but in-tree version at langchain==1.3.13 SHA 42f8f79 is ==1.1.2; reconciled to in-tree version) — ALL 5 CLOSED fix-burst 249; hash sweep 4 passes TOTAL=176 MATCH=176 STALE=0; streak 0/3 |
 
 ### Pass P1D-147 (2026-07-24) — Expanded Perimeter Pass 19
 
@@ -1124,3 +1125,25 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 - **F-P147-03 OBS** (process-gap): Of the 13 VPs, 7 lacked an explicit `red_gate:` field (VP-001/002/003/006/007/008 + VP-011 prior to fix). Gate #36 VP↔BC RED-GATE PARITY minted in `bc-authoring-plan v2.46→v2.47` requiring: explicit `red_gate:` field on all VP frontmatters; three-way corroboration (VP frontmatter + verification-architecture catalog entry + BC-INDEX census); anti-fabrication clause (VP-INDEX red_gate sum must equal BC-INDEX red_gate sum); BC-wins on any divergence. All 13 VPs now carry explicit `red_gate:` fields: 5 true (VP-004/005/006/009/010), 8 false.
 
 **Hash sweep:** 3 passes, specs/ 174/174, planning/ 3/3, cycles/ 18/18, STALE=0. Burst-248 commit.
+
+### Pass P1D-148 (2026-07-24) — Expanded Perimeter Pass 20
+
+**Findings:** 5 (0 CRIT, 1 HIGH, 2 MED, 0 LOW, 2 OBS)
+**Streak:** 0/3 (NOT CLEAN strict)
+**Fix burst:** 249
+**Frozen HEAD:** burst-248 commit
+**Novel attack angle:** Citation-target existence — adversary verified that named §Security Invariant sections cited in BC bodies and VP bodies actually exist as labeled anchors in the referenced ADR. Three ADRs (ADR-014, ADR-015, ADR-016) had body references to section anchors that either used version pins (banned per D18-P84-A) or referenced section names for which no labeled anchor existed in the ADR body.
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. Five findings across security/serialization category mis-classification, missing labeled anchors in ADR security invariant sections, version-pin violations in VP/BC body citations, and GTV correctness verification. The novelty is MEDIUM-HIGH because the citation-existence attack (verifying that cited section anchors are actually present in the target document, not just plausible-sounding names) is a new class of finding not previously caught.
+
+- **F-P148-01 HIGH**: `BC-2.19.005` BC Traceability section cited "ADR-016 Decision 6" as the Security Anchor — Decision 6 does not exist in ADR-016 (which has only 3 Decisions). Corrected to "ADR-016 Decision 3 §Security Invariant". Simultaneously, the E-SRLZ-001 error code category in BC-2.19.005's BC Traceability was listed as SECURITY; the correct category is VAL (deserialization input validation, not a security boundary enforcement error). `BC-2.19.005 v1.2→v1.3` (category SECURITY→VAL; anchor ADR-016 Decision 6→Decision 3 §Security Invariant). `VP-010 v1.2→v1.3` (PC1 and Invariant 3 category field corrected SECURITY→VAL).
+
+- **F-P148-02 MED**: Body citations in BC-2.18.004, BC-2.18.005, BC-2.19.005, prd, test-vectors, VP-010, and BC-INDEX all referenced "ADR-015 Security Invariant 1", "ADR-015 Security Invariant 2", and "ADR-016 Security Invariant" as section names — but ADR-015 and ADR-016 bodies had no labeled anchors with those exact names. An adversary verifying the citation would find no navigable anchor. Fix: labeled anchors added to ADR-015 v1.5 as `### Decision 3 §Security Invariant 1` and `### Decision 2 §Security Invariant 2`, and to ADR-016 v1.4 as `### Decision 3 §Security Invariant`. All 7 citing sites updated to the canonical anchor form. `BC-2.18.004 v1.3→v1.4`; `BC-2.18.005 v1.0→v1.1` (changelog gap also closed — version bump had been applied without a changelog entry); `BC-2.19.005 v1.3` (same edit as F-P148-01 fix); `prd v1.15→v1.16`; `test-vectors v2.5→v2.6` (see also OBS-P148-04); `VP-010 v1.3` (same edit as F-P148-01 fix); `BC-INDEX v2.9→v3.0` (Red Gate table + VP Seed table 4 entries updated).
+
+- **F-P148-03 MED**: VP-009 body (3 sites), BC-2.21.003 body (3 sites), and test-vectors Red Gate table row cited "ADR-014 v1.1 Hardening Note" — a version pin on a body citation, prohibited per D18-P84-A. Fix: de-pinned to "ADR-014 Decision 2 §Hardening note" (section anchor only, no version). `VP-009 v1.3→v1.4`; `BC-2.21.003 v1.2→v1.3`; `test-vectors v2.6` (Red Gate row); `BC-INDEX v3.0` (VP Seed table VP-009 entry).
+
+- **OBS-P148-04**: GTV-003 provisional value `["hello😀", "world"]` failed Python verification — correct split is `["hello 😀", "world"]` (space before the emoji matters for the code-point boundary). GTV-008 provisional value `["abc🎉🎉", "🎉🎉🎉xy", "z"]` also verified against Python execution and confirmed correct. All 9 GTVs in test-vectors now Python-verified; all PROVISIONAL markers removed. `BC-2.07.002 v1.4→v1.5`; `test-vectors v2.5→v2.6`.
+
+- **OBS-P148-05**: BC-2.07.002 cited `langchain-text-splitters==0.3.8` as the pinned reference version. The in-tree version at langchain==1.3.13 (SHA 42f8f79) is `langchain-text-splitters==1.1.2`. Reconciled to `==1.1.2`. `BC-2.07.002 v1.5` (same edit as OBS-P148-04).
+
+**Hash sweep:** 4 passes, TOTAL=176 MATCH=176 STALE=0. Burst-249 commit.

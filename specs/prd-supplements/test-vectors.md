@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "2.5"
+version: "2.6"
 status: active
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
@@ -10,10 +10,11 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "5b7464c"
+input-hash: "b4d8c32"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "2.6 (F-P148-03/F-P148-05/burst-249/2026-07-24): Red Gate Vector Summary — de-pin ADR anchor labels: BC-2.18.004 'ADR-015 Security Invariant 1' → 'ADR-015 Decision 3 §Security Invariant 1'; BC-2.18.005 'ADR-015 Security Invariant 2' → 'ADR-015 Decision 2 §Security Invariant 2'; BC-2.19.005 'ADR-016 Security Invariant' → 'ADR-016 Decision 3 §Security Invariant'; BC-2.21.003 'ADR-014 v1.1 Hardening' → 'ADR-014 Decision 2 §Hardening note' (TD-VSDD-060 sibling sweep). Usage Notes §2: splitter version updated langchain-text-splitters==0.3.8 → langchain-text-splitters==1.1.2 (in-tree at langchain==1.3.13 SHA 42f8f79). Body changelog synced: backfill v2.5 row (was frontmatter-only)."
   - "2.5 (F-P142-03, burst-242, 2026-07-23): BC-2.06.005 Notes column updated — 'payload on Command::Resume' → 'payload on Command(resume=…)' per BC-2.05.004 struct kwarg authority."
   - "2.4 (burst-235/F-P135-05/2026-07-22): BC-2.13.002 TV count 4→5 (+kill-on-drop DI-015 co-enforcement TV). Grand total 670→671 (662 canonical + 9 GTV)."
   - "2.3 (burst-234/F-P134-01/2026-07-22): BC-2.23.006 TV count 5→6 (+TV-006 traversal I/O error, E-TOOLS-008). Grand total 669→670 (661 canonical + 9 GTV). Notes column updated to add E-TOOLS-008 cite."
@@ -234,7 +235,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 |--------|-------|------------|---------|-----------------|
 | GTV-001 | `"😀😃😄😁😆"` (5 emoji = 5 code pts, 20 bytes) | 3 | 0 | `["😀😃😄", "😁😆"]` |
 | GTV-002 | `"😀😃😄😁😆"` (5 emoji) | 3 | 1 | `["😀😃😄", "😄😁😆"]` |
-| GTV-003 | `"hello 😀 world"` (13 code pts) | 7 | 0 | `["hello", "😀 world"]` (after separator split on space) |
+| GTV-003 | `"hello 😀 world"` (13 code pts) | 7 | 0 | `["hello 😀", "world"]` (Python-verified; prior value `["hello", "😀 world"]` was wrong — splitter merges "hello"+" "+"😀" = 7 code pts into chunk 1) |
 | GTV-004 | `"😀" * 100` (100 emoji, 400 bytes) | 10 | 0 | 10 chunks of 10 emoji each |
 
 ### Group 2: CJK Unified Ideographs (U+4E00–U+9FFF, 3 bytes each in UTF-8)
@@ -249,17 +250,16 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | GTV ID | Input | chunk_size | overlap | Expected Chunks |
 |--------|-------|------------|---------|-----------------|
-| GTV-008 | `"abc" + "🎉" * 5 + "xyz"` (3+5+3=11 code pts) | 5 | 0 | `["abc🎉🎉", "🎉🎉🎉x", "yz"]` **(PROVISIONAL — must be Python-verified before Red Gate test is written)** |
+| GTV-008 | `"abc" + "🎉" * 5 + "xyz"` (3+5+3=11 code pts) | 5 | 0 | `["abc🎉🎉", "🎉🎉🎉xy", "z"]` (Python-verified; prior PROVISIONAL value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` was wrong) |
 | GTV-009 | `"ñoño"` (4 code pts: ñ=U+00F1, o, ñ, o — 2 bytes each for ñ) | 2 | 0 | `["ño", "ño"]` |
 
-> **Note on GTV-003 and GTV-008:** Exact expected chunks depend on separator logic.
-> GTV-008 carries a concrete value copied from BC-2.07.002 (the authoritative source); it is
-> marked **PROVISIONAL** pending verification against the Python reference implementation.
-> Values marked PROVISIONAL must be Python-verified before the Red Gate test is written —
-> do not commit a Red Gate test that hard-codes a PROVISIONAL expected value.
-> GTV-003 has no concrete value and must be computed from the reference before any test is authored.
-> The test-writer MUST run `langchain_text_splitters.RecursiveCharacterTextSplitter` with the
-> specified parameters and replace the PROVISIONAL marker with a VERIFIED confirmation once validated.
+> **Note (burst-249/2026-07-24):** GTV-003 and GTV-008 have been **Python-verified** against
+> the pinned corpus (`langchain-text-splitters==1.1.2` in-tree at `langchain==1.3.13`
+> SHA `42f8f79293cfb7589e5bc1d74a8ae4dfd0bf15e3`). Both PROVISIONAL markers removed.
+> GTV-008 correction: `["abc🎉🎉", "🎉🎉🎉x", "yz"]` → `["abc🎉🎉", "🎉🎉🎉xy", "z"]`.
+> GTV-003 correction: `["hello", "😀 world"]` → `["hello 😀", "world"]`.
+> All 9 GTVs are now verified; the test-writer may author Red Gate tests directly from this table.
+> Authoritative source: BC-2.07.002 §Golden Test Vectors.
 
 ---
 
@@ -272,11 +272,11 @@ delivery; no integration vectors exist at Phase 1a by design.
 | BC-2.07.002 | `tests/red_gate/test_BC_2_07_002_python_parity.rs` | R8 | ferrochain-splitters implementation |
 | BC-2.09.004 | `tests/red_gate/test_BC_2_09_004_tool_exception.rs` | R11 | ferrochain-mcp ToolException impl |
 | BC-2.09.005 | `tests/red_gate/test_BC_2_09_005_no_live_connections.rs` | R11 | MultiServerMcpClient impl |
-| BC-2.18.004 | `tests/red_gate/test_BC_2_18_004_injection_guard.rs` | ADR-015 Security Invariant 1 | injection_guard impl in ferrochain-prompts |
-| BC-2.18.005 | `tests/red_gate/test_BC_2_18_005_trustall_rejection.rs` | ADR-015 Security Invariant 2 | from_messages() SlotTrustPolicy guard in ferrochain-prompts |
-| BC-2.19.005 | `tests/red_gate/test_BC_2_19_005_reviver_allowlist.rs` | ADR-016 Security Invariant | Reviver::revive() in ferrochain-core |
+| BC-2.18.004 | `tests/red_gate/test_BC_2_18_004_injection_guard.rs` | ADR-015 Decision 3 §Security Invariant 1 | injection_guard impl in ferrochain-prompts |
+| BC-2.18.005 | `tests/red_gate/test_BC_2_18_005_trustall_rejection.rs` | ADR-015 Decision 2 §Security Invariant 2 | from_messages() SlotTrustPolicy guard in ferrochain-prompts |
+| BC-2.19.005 | `tests/red_gate/test_BC_2_19_005_reviver_allowlist.rs` | ADR-016 Decision 3 §Security Invariant | Reviver::revive() in ferrochain-core |
 | BC-2.20.002 | `tests/red_gate/test_BC_2_20_002_rag_guardrail.rs` | ADR-014 §DI-012 | Retriever guardrail wiring in ferrochain-graph |
-| BC-2.21.003 | `tests/red_gate/test_BC_2_21_003_zero_norm_guard.rs` | ADR-014 v1.1 Hardening | cosine similarity impl in ferrochain-vectorstores |
+| BC-2.21.003 | `tests/red_gate/test_BC_2_21_003_zero_norm_guard.rs` | ADR-014 Decision 2 §Hardening note | cosine similarity impl in ferrochain-vectorstores |
 | BC-2.22.002 | `tests/red_gate/test_BC_2_22_002_credential_opacity.rs` | DI-010 Credential Opacity | EmbeddingsOpenAI::new() credential impl in ferrochain-openai |
 
 ---
@@ -286,7 +286,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 1. **Happy-path minimum:** Each BC has at least one happy-path vector. Start there.
 2. **GTV discipline (BC-2.07.002):** Do not author the GTV-based tests until you have
    run the reference Python implementation to verify GTV-003 and GTV-008. Use
-   `langchain_text_splitters==0.3.8` (or the version in L2-INDEX.md).
+   `langchain-text-splitters==1.1.2` (in-tree at `langchain==1.3.13` SHA `42f8f79293cfb7589e5bc1d74a8ae4dfd0bf15e3` per `.factory/semport/reference-manifest.md`; standalone `langchain-text-splitters==0.3.8` cited in earlier BC versions is superseded by this in-tree pin).
 3. **Table (unlabelled) format (SS-04, SS-11, SS-13):** Test vectors in these BCs use
    markdown tables with `| Input | Expected Output | Category |` columns but without
    `TV-NNN` row identifiers (contrast with `TV-NNN` tables in SS-01–SS-03, SS-05–SS-10,
@@ -304,6 +304,8 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.6 | 2026-07-24 | F-P148-03/F-P148-05/burst-249: Red Gate Vector Summary — de-pin ADR anchor labels: BC-2.18.004 'ADR-015 Security Invariant 1' → 'ADR-015 Decision 3 §Security Invariant 1'; BC-2.18.005 'ADR-015 Security Invariant 2' → 'ADR-015 Decision 2 §Security Invariant 2'; BC-2.19.005 'ADR-016 Security Invariant' → 'ADR-016 Decision 3 §Security Invariant'; BC-2.21.003 'ADR-014 v1.1 Hardening' → 'ADR-014 Decision 2 §Hardening note' (TD-VSDD-060 sibling sweep). Usage Notes §2 GTV discipline: splitter version langchain-text-splitters==0.3.8 → langchain-text-splitters==1.1.2 (in-tree at langchain==1.3.13 SHA 42f8f79). | F-P148-03 |
+| 2.5 | 2026-07-23 | F-P142-03/burst-242: BC-2.06.005 Notes column — 'payload on Command::Resume' → 'payload on Command(resume=…)' per BC-2.05.004 struct kwarg authority. (Backfill: this row was recorded in frontmatter changelog only; body table now synced.) | F-P142-03 |
 | 2.4 | 2026-07-22 | burst-235/F-P135-05: BC-2.13.002 TV count 4→5 (+kill-on-drop DI-015 co-enforcement TV). Grand total 670→671 (662 canonical + 9 GTV). | burst-235/F-P135-05 |
 | 2.3 | 2026-07-22 | burst-234/F-P134-01: BC-2.23.006 TV count 5→6 (+TV-006 traversal I/O error, E-TOOLS-008 FileIoError). Grand total 669→670 (661 canonical + 9 GTV). Notes column updated to cite E-TOOLS-008/009. | burst-234/F-P134-01 |
 | 2.2 | 2026-07-22 | D23: Add 13 new D23 BC rows (+60 TVs); grand total 609→669 (660 canonical + 9 GTV). New rows: BC-2.05.007 (6 TV, VP-011 Kani seed), BC-2.05.008 (4 TV), BC-2.06.004 (4 TV), BC-2.06.005 (3 TV), BC-2.06.006 (4 TV), BC-2.10.005 (5 TV, VP-012 Kani seed), BC-2.10.006 (4 TV), BC-2.23.001 (5 TV), BC-2.23.002 (5 TV), BC-2.23.003 (5 TV), BC-2.23.004 (4 TV), BC-2.23.005 (6 TV, VP-013 Kani seed), BC-2.23.006 (5 TV). BC count 116→129. | D23 |

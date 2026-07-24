@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/specs/architecture/decisions/ADR-013-mcp-server-module-placement.md
-input-hash: "32eb826"
+input-hash: "e1e0d9e"
 traces_to: prd.md
 primary_consumers: [architect, test-writer, formal-verifier]
 architect_note: "Architect must confirm crate-to-subsystem mapping and fill Architecture Module column after producing ARCH-INDEX.md"
