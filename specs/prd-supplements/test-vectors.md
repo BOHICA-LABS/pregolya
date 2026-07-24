@@ -1,19 +1,20 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "2.6"
+version: "2.7"
 status: active
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-24T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "ab56730"
+input-hash: "3661871"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "2.7 (F-P152-01/F-P152-03/burst-253/2026-07-24): BC-2.10.005 TV count 5→6 (+TV-006 v1.2 add). BC-2.07.002 GTV count 9→11 (+GTV-010/011 grapheme-cluster discriminators, Python-verified). Group 4 added to §GTV. Grand total 671→674 (663 canonical + 11 GTV)."
   - "2.6 (F-P148-03/F-P148-05/burst-249/2026-07-24): Red Gate Vector Summary — de-pin ADR anchor labels: BC-2.18.004 'ADR-015 Security Invariant 1' → 'ADR-015 Decision 3 §Security Invariant 1'; BC-2.18.005 'ADR-015 Security Invariant 2' → 'ADR-015 Decision 2 §Security Invariant 2'; BC-2.19.005 'ADR-016 Security Invariant' → 'ADR-016 Decision 3 §Security Invariant'; BC-2.21.003 'ADR-014 v1.1 Hardening' → 'ADR-014 Decision 2 §Hardening note' (TD-VSDD-060 sibling sweep). Usage Notes §2: splitter version updated langchain-text-splitters==0.3.8 → langchain-text-splitters==1.1.2 (in-tree at langchain==1.3.13 SHA 42f8f79). Body changelog synced: backfill v2.5 row (was frontmatter-only)."
   - "2.5 (F-P142-03, burst-242, 2026-07-23): BC-2.06.005 Notes column updated — 'payload on Command::Resume' → 'payload on Command(resume=…)' per BC-2.05.004 struct kwarg authority."
   - "2.4 (burst-235/F-P135-05/2026-07-22): BC-2.13.002 TV count 4→5 (+kill-on-drop DI-015 co-enforcement TV). Grand total 670→671 (662 canonical + 9 GTV)."
@@ -78,7 +79,7 @@ changelog:
 | BC-2.06.005 | SS-06 | 3 | — | `TV-NNN` | | `tool_approval_resolved` StreamEvent (event 14); payload on Command(resume=…) |
 | BC-2.06.006 | SS-06 | 4 | — | `TV-NNN` | | `compaction_event` StreamEvent (event 15); payload; emission after compaction completes |
 | BC-2.07.001 | SS-07 | 7 | — | `TV-NNN` | | Code-point chunk size (not bytes) |
-| BC-2.07.002 | SS-07 | 3 | 9 | `TV-NNN` + GTV | **RG** | Non-ASCII parity (see §GTV below) |
+| BC-2.07.002 | SS-07 | 3 | 11 | `TV-NNN` + GTV | **RG** | Non-ASCII parity (see §GTV below); (v1.6 adds GTV-010/011 grapheme-cluster discriminators) |
 | BC-2.07.003 | SS-07 | 7 | — | `TV-NNN` | | Short doc < chunk_size → single chunk |
 | BC-2.08.001 | SS-08 | 4 | — | `TV-NNN` | | Streaming conformance |
 | BC-2.08.002 | SS-08 | 5 | — | `TV-NNN` | | Tool-call round-trip conformance |
@@ -105,7 +106,7 @@ changelog:
 | BC-2.10.002 | SS-10 | 5 | — | `TV-NNN` | | EvidenceJournal append-only |
 | BC-2.10.003 | SS-10 | 7 | — | `TV-NNN` | | Graceful halt \| summarize on ceiling (v1.2 adds TV-006/007) |
 | BC-2.10.004 | SS-10 | 6 | — | `TV-NNN` | | Budget escalation → HITL (v1.5 adds TV-006) |
-| BC-2.10.005 | SS-10 | 5 | — | `TV-NNN` | | CompactionTrigger config — Disabled/OnWatermark/OnMessageCount/OnTokenCount (VP-012 Kani seed) |
+| BC-2.10.005 | SS-10 | 6 | — | `TV-NNN` | | CompactionTrigger config — Disabled/OnWatermark/OnMessageCount/OnTokenCount (VP-012 Kani seed); (v1.2 adds TV-006) |
 | BC-2.10.006 | SS-10 | 4 | — | `TV-NNN` | | Compaction execution — ConversationSnapshot, mid-run REPLACEMENT, EvidenceJournal, checkpoint immutability |
 | BC-2.11.001 | SS-11 | 4 | — | table (unlabelled) | | ProvenanceTag at all ingress boundaries |
 | BC-2.11.002 | SS-11 | 5 | — | table (unlabelled) | | GuardrailHook at tool-result ingress |
@@ -172,7 +173,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (129 authored BCs):** 662 canonical test vectors (TV Count column) + 9 golden test vectors (GTV Count column, BC-2.07.002 only) = **671 total vectors** across 129 BC files.
+**Total vectors (129 authored BCs):** 663 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **674 total vectors** across 129 BC files.
 
 > **GTV convention:** The TV Count column counts standard canonical vectors; the GTV Count column counts golden test vectors (Red Gate acceptance data reproduced in §GTV). Grand totals are expressed as `<TV Count> + <GTV Count> = <total>` to prevent ambiguity.
 
@@ -253,12 +254,26 @@ delivery; no integration vectors exist at Phase 1a by design.
 | GTV-008 | `"abc" + "🎉" * 5 + "xyz"` (3+5+3=11 code pts) | 5 | 0 | `["abc🎉🎉", "🎉🎉🎉xy", "z"]` (Python-verified; prior PROVISIONAL value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` was wrong) |
 | GTV-009 | `"ñoño"` (4 code pts: ñ=U+00F1, o, ñ, o — 2 bytes each for ñ) | 2 | 0 | `["ño", "ño"]` |
 
-> **Note (burst-249/2026-07-24):** GTV-003 and GTV-008 have been **Python-verified** against
-> the pinned corpus (`langchain-text-splitters==1.1.2` in-tree at `langchain==1.3.13`
+### Group 4: Combining Sequences and ZWJ Emoji (Grapheme-Cluster Discriminators)
+
+> These vectors are specifically designed so that a Rust implementation using
+> `unicode-segmentation graphemes()` for length measurement would produce **different**
+> output than the correct code-point-counting reference. Each row states the wrong
+> (grapheme-aware) output so the discriminating power is explicit.
+
+| GTV ID | Input | chunk_size | overlap | Expected Chunks |
+|--------|-------|------------|---------|-----------------|
+| GTV-010 | `"abcéxyz"` (NFD é = e + U+0301 combining acute: 2 code pts, 1 grapheme; total 8 code pts, 7 graphemes) | 4 | 0 | `["abce", "́xyz"]` — code-point boundary 4 falls between e and its combining accent, orphaning U+0301 into chunk 2. **Wrong (grapheme):** `["abcé", "xyz"]` — a grapheme-aware impl keeps é intact (5 code pts in chunk 1 vs correct 4). Python-verified. |
+| GTV-011 | `"👨‍👩‍👧‍👦 hi"` (ZWJ family: U+1F468+ZWJ+U+1F469+ZWJ+U+1F467+ZWJ+U+1F466 = 7 code pts, 1 grapheme; total 10 code pts, 4 graphemes) | 4 | 0 | `["👨‍👩‍", "👧‍👦", "hi"]` — ZWJ sequence split at code-point boundary 4 → 3 chunks. **Wrong (grapheme):** `["👨‍👩‍👧‍👦", "hi"]` — a grapheme-aware impl treats ZWJ sequence as 1 grapheme (≤ chunk_size=4), producing 2 chunks instead of 3. Python-verified. |
+
+> **Note (burst-249/2026-07-24 + burst-253/2026-07-24):** GTV-003 and GTV-008 were **Python-verified** in
+> burst-249 against the pinned corpus (`langchain-text-splitters==1.1.2` in-tree at `langchain==1.3.13`
 > SHA `42f8f79293cfb7589e5bc1d74a8ae4dfd0bf15e3`). Both PROVISIONAL markers removed.
 > GTV-008 correction: `["abc🎉🎉", "🎉🎉🎉x", "yz"]` → `["abc🎉🎉", "🎉🎉🎉xy", "z"]`.
 > GTV-003 correction: `["hello", "😀 world"]` → `["hello 😀", "world"]`.
-> All 9 GTVs are now verified; the test-writer may author Red Gate tests directly from this table.
+> GTV-010 and GTV-011 added in burst-253 as grapheme-cluster discriminators — Python-verified
+> against same pinned corpus.
+> All 11 GTVs are now verified; the test-writer may author Red Gate tests directly from this table.
 > Authoritative source: BC-2.07.002 §Golden Test Vectors.
 
 ---
@@ -304,6 +319,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.7 | 2026-07-24 | F-P152-01/F-P152-03/burst-253: (1) F-P152-01: BC-2.10.005 TV count 5→6 (+TV-006 OnWatermark fraction=1.0 boundary, burst-252 add; v1.2 annotation). (2) F-P152-03: BC-2.07.002 GTV count 9→11 (+GTV-010 NFD combining discriminator, +GTV-011 ZWJ emoji discriminator; both Python-verified against pinned corpus). Group 4 added to §Golden Test Vectors. Grand total 671→674 (663 canonical + 11 GTV). | F-P152-01/F-P152-03 |
 | 2.6 | 2026-07-24 | F-P148-03/F-P148-05/burst-249: Red Gate Vector Summary — de-pin ADR anchor labels: BC-2.18.004 'ADR-015 Security Invariant 1' → 'ADR-015 Decision 3 §Security Invariant 1'; BC-2.18.005 'ADR-015 Security Invariant 2' → 'ADR-015 Decision 2 §Security Invariant 2'; BC-2.19.005 'ADR-016 Security Invariant' → 'ADR-016 Decision 3 §Security Invariant'; BC-2.21.003 'ADR-014 v1.1 Hardening' → 'ADR-014 Decision 2 §Hardening note' (TD-VSDD-060 sibling sweep). Usage Notes §2 GTV discipline: splitter version langchain-text-splitters==0.3.8 → langchain-text-splitters==1.1.2 (in-tree at langchain==1.3.13 SHA 42f8f79). | F-P148-03 |
 | 2.5 | 2026-07-23 | F-P142-03/burst-242: BC-2.06.005 Notes column — 'payload on Command::Resume' → 'payload on Command(resume=…)' per BC-2.05.004 struct kwarg authority. (Backfill: this row was recorded in frontmatter changelog only; body table now synced.) | F-P142-03 |
 | 2.4 | 2026-07-22 | burst-235/F-P135-05: BC-2.13.002 TV count 4→5 (+kill-on-drop DI-015 co-enforcement TV). Grand total 670→671 (662 canonical + 9 GTV). | burst-235/F-P135-05 |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.002
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
-input-hash: "9908bae"
+input-hash: "8b35bda"
 extracted_from: null
 modified: []
 deprecated: null
@@ -119,13 +119,27 @@ normative. The Rust implementation must produce byte-identical chunk strings.
 | GTV-008 | `"abc" + "🎉" * 5 + "xyz"` (3+5+3=11 code pts) | 5 | 0 | `["abc🎉🎉", "🎉🎉🎉xy", "z"]` (Python-verified against pinned corpus; prior PROVISIONAL value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` was wrong) |
 | GTV-009 | `"ñoño"` (4 code pts: ñ=U+00F1, o, ñ, o — 2 bytes each for ñ) | 2 | 0 | `["ño", "ño"]` |
 
-> **Note (burst-249/2026-07-24):** GTV-008 and GTV-003 have been **Python-verified** against
-> the pinned corpus (`langchain-text-splitters==1.1.2` in-tree at `langchain==1.3.13`
+### Vector Group 4: Combining Sequences and ZWJ Emoji (Grapheme-Cluster Discriminators)
+
+> These vectors are specifically designed so that a Rust implementation using
+> `unicode-segmentation graphemes()` for length measurement instead of
+> `.chars().count()` (code-point counting) would produce **different** output.
+> Each row states the wrong (grapheme-aware) output explicitly.
+
+| Vector ID | Input | chunk_size | overlap | Expected Chunks |
+|-----------|-------|-----------|---------|-----------------|
+| GTV-010 | `"abcéxyz"` (NFD é = e + U+0301 combining acute: 2 code pts, 1 grapheme; total 8 code pts, 7 graphemes) | 4 | 0 | `["abce", "́xyz"]` — code-point boundary 4 falls between e and its combining accent, orphaning U+0301 into chunk 2. **Wrong (grapheme):** `["abcé", "xyz"]` — a grapheme-aware impl counts é as 1 grapheme, keeping it intact in chunk 1 (5 code pts) and shifting the boundary to after the full grapheme cluster. Python-verified: `cd .reference/langchain/libs/text-splitters && python3 -c "import sys; sys.path.insert(0,'.'); from langchain_text_splitters import RecursiveCharacterTextSplitter; print(RecursiveCharacterTextSplitter(chunk_size=4,chunk_overlap=0,separators=['\n\n','\n',' ','']).split_text('abcéxyz'))"` |
+| GTV-011 | `"👨‍👩‍👧‍👦 hi"` (ZWJ family: U+1F468+ZWJ+U+1F469+ZWJ+U+1F467+ZWJ+U+1F466 = 7 code pts, 1 grapheme; " hi" = 3 code pts, 3 graphemes; total 10 code pts, 4 graphemes) | 4 | 0 | `["👨‍👩‍", "👧‍👦", "hi"]` — ZWJ sequence (7 code pts > chunk_size=4) is split at code-point boundary 4, producing 3 chunks. **Wrong (grapheme):** `["👨‍👩‍👧‍👦", "hi"]` — a grapheme-aware impl counts the entire ZWJ sequence as 1 grapheme (≤ chunk_size=4), keeping it whole and producing 2 chunks instead of 3. Python-verified: `cd .reference/langchain/libs/text-splitters && python3 -c "import sys; sys.path.insert(0,'.'); from langchain_text_splitters import RecursiveCharacterTextSplitter; print(RecursiveCharacterTextSplitter(chunk_size=4,chunk_overlap=0,separators=['\n\n','\n',' ','']).split_text('\U0001F468‍\U0001F469‍\U0001F467‍\U0001F466 hi'))"` |
+
+> **Note (burst-249/2026-07-24 + burst-253/2026-07-24):** GTV-008 and GTV-003 were **Python-verified** in
+> burst-249 against the pinned corpus (`langchain-text-splitters==1.1.2` in-tree at `langchain==1.3.13`
 > SHA `42f8f79293cfb7589e5bc1d74a8ae4dfd0bf15e3`). Prior PROVISIONAL markers removed.
 > GTV-008 correction: `["abc🎉🎉", "🎉🎉🎉x", "yz"]` (wrong) → `["abc🎉🎉", "🎉🎉🎉xy", "z"]` (verified).
 > GTV-003 correction: `["hello", "😀 world"]` (wrong) → `["hello 😀", "world"]` (verified;
 > RecursiveCharacterTextSplitter merges "hello" + " " + "😀" = 7 code pts into chunk 1, then
-> "world" = 5 code pts as chunk 2 — not a bare space-split). All 9 GTVs are now verified;
+> "world" = 5 code pts as chunk 2 — not a bare space-split).
+> GTV-010 and GTV-011 added in burst-253 as grapheme-cluster discriminators — Python-verified
+> against same pinned corpus. All 11 GTVs are now verified;
 > the test-writer may author Red Gate tests directly from this table.
 
 ## Edge Cases
@@ -163,7 +177,7 @@ Additional baseline:
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-SPLIT-04 | All GTV-001 through GTV-009 produce byte-identical chunk lists to Python reference | Golden-vector unit tests (Red Gate) | Wave 0 (Red Gate first) |
+| VP-SPLIT-04 | All GTV-001 through GTV-011 produce byte-identical chunk lists to Python reference | Golden-vector unit tests (Red Gate) | Wave 0 (Red Gate first) |
 | VP-SPLIT-05 | Property test: arbitrary Unicode input → chunk counts match Python reference (sampled) | proptest + reference Python subprocess | Phase 1 |
 
 > **Red Gate Discipline:** `tests/red_gate/test_BC_2_07_002_python_parity.rs` must be
@@ -206,6 +220,7 @@ _[to be filled after story decomposition]_
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.6 | 2026-07-24 | F-P152-03/burst-253: ADD GTV-010 and GTV-011 as grapheme-cluster discriminators. GTV-010: input "abcéxyz" (NFD é = e+U+0301, 8 code pts, 7 graphemes), chunk_size=4 → ["abce", "́xyz"]; wrong grapheme output: ["abcé", "xyz"] — grapheme-aware impl keeps é intact, shifting boundary. GTV-011: input "👨‍👩‍👧‍👦 hi" (ZWJ family 7 code pts + " hi", total 10 code pts), chunk_size=4 → ["👨‍👩‍", "👧‍👦", "hi"] (3 chunks); wrong grapheme output: ["👨‍👩‍👧‍👦", "hi"] (2 chunks — ZWJ treated as 1 grapheme ≤ 4). Both Python-verified against pinned corpus (langchain-text-splitters==1.1.2 in-tree at langchain==1.3.13 SHA 42f8f79). VP-SPLIT-04 range GTV-001..009 → GTV-001..011. GTV count 9→11. | F-P152-03 |
 | 1.5 | 2026-07-24 | OBS-P148-04/OBS-P148-05/burst-249: (1) GTV-008 PROVISIONAL resolved — corrected expected value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` → `["abc🎉🎉", "🎉🎉🎉xy", "z"]`; PROVISIONAL marker removed; Python-verified against pinned corpus. (2) GTV-003 separator-logic dependency resolved — corrected expected value `["hello", "😀 world"]` → `["hello 😀", "world"]`; Python-verified. (3) Invariant splitter reference reconciled: `langchain-text-splitters==0.3.8` → in-tree `langchain-text-splitters==1.1.2` at `langchain==1.3.13` SHA `42f8f79293cfb7589e5bc1d74a8ae4dfd0bf15e3` per reference-manifest.md (no standalone splitters pin exists in the manifest). input-hash updated to ea9cf4b (prd.md v1.16 input). | OBS-P148-04, OBS-P148-05 |
 | 1.4 | 2026-07-17 | F-P96-01: Module field resolved from placeholder to ferrochain-splitters per module-decomposition.md v1.10. | F-P96-01 |
 | 1.3 | 2026-07-17 | VP-SPLIT-04..005 renumbered to VP-SPLIT-04..05 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — renumber is the production-grade call). No VP-INDEX registration affected (SPLIT VPs are BC-local). | OBS-P95-A |

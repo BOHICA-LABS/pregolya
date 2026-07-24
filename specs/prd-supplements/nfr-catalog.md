@@ -10,7 +10,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/risks.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "626f5f4"
+input-hash: "d1acb32"
 changelog:
   - "1.7 (F-P150-01/burst-251/2026-07-24): TD-VSDD-060 sweep — 14-NFR consistency audit, 2 module-map rows corrected. (1) NFR-013: 'Batch-size guard before provider call; use provider-declared max batch size' directly contradicted the requirement row (EC-002 adjudication: no pre-send cap mandated; provider-limit behavior = structured provider-error passthrough); rewritten to: provider rejection propagated as structured Err; no pre-send batch-size cap; no panic; no silent truncation; vecs.len() == texts.len() on any Ok path. (2) NFR-014: Architectural Impact was f-string-only; requirement row already mandates the engine-neutral ≤100ms bound covering both f-string and jinja2/minijinja (v1.4 changelog baked both engines into the requirement but map was not swept); extended to add jinja2/minijinja bounded-traversal obligation. 12 of 14 NFRs confirmed consistent."
   - "1.6 (F-P149-02/burst-250/2026-07-24): NFR-012 Risk Source version pin de-pinned: 'N/A — ADR-014 v1.5 §Performance Note' → 'N/A — ADR-014 Decision 2 §VectorStore trait' (TD-VSDD-091 stable-anchor enforcement, F-P149-02; ADR-014 has no §Performance Note heading — the InMemoryVectorStore O(n·d) design is documented in Decision 2 §VectorStore trait)."

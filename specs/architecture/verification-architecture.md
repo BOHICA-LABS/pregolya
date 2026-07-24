@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.6"
+version: "2.7"
 status: active
 producer: architect
 timestamp: 2026-07-24T00:00:00Z
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.007.md
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.005.md
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
-input-hash: "6494ba9"
+input-hash: "a74575d"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -496,7 +496,7 @@ decision within the bounded domain.
 
 Formal statement:
 ```
-∀ tokens_remaining: u64 ∈ (0, ceiling], ceiling: u64 ∈ (0, 2^24],
+∀ tokens_remaining: u64 ∈ [0, ceiling], ceiling: u64 ∈ (0, 2^24],
   fraction: f64 ∈ (0.0, 1.0], fraction.is_finite():
     check_watermark_trigger(tokens_remaining, ceiling, fraction)
     == ((tokens_remaining as f64) / (ceiling as f64) <= (1.0f64 - fraction))
@@ -512,7 +512,8 @@ fn watermark_arithmetic_harness() {
     let tokens_remaining: u64 = kani::any();
     let ceiling: u64 = kani::any();
     let fraction: f64 = kani::any();
-    kani::assume(tokens_remaining > 0 && ceiling > 0 && tokens_remaining <= ceiling);
+    // tokens_remaining: u64 is always >= 0 by type; tokens_remaining=0 is IN-domain (EC-002).
+    kani::assume(ceiling > 0 && tokens_remaining <= ceiling);
     kani::assume(ceiling <= 1 << 24);
     kani::assume(fraction > 0.0 && fraction <= 1.0 && fraction.is_finite());
     let result = check_watermark_trigger(tokens_remaining, ceiling, fraction);
@@ -631,6 +632,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.7 | 2026-07-24 | architect | FIX-BURST-253 / F-P152-02 | VP-012 symbolic domain widening. Formal statement: `tokens_remaining ∈ (0, ceiling]` → `[0, ceiling]` (strict lower bound excluded the EC-002 boundary case that the burst-252 `<=` predicate change was meant to cover). Harness sketch: removed `tokens_remaining > 0` from multi-condition assume; u64 guarantees ≥ 0 by type. Added IN-domain comment. |
 | 2.6 | 2026-07-24 | architect | FIX-BURST-252 / F-P151-04+05 | VP-012 predicate + precision corrections. (1) F-P151-04: `<` → `<=` in VP-012 Property Statement, Formal Statement, harness expected expression, and core-budget sync-core line. Non-strict `<=` is required: with strict `<`, condition `tokens_remaining/ceiling < 0.0` can never be true (remaining≥0), so fraction=1.0/remaining=0 would never fire (contradicts BC-2.10.005 EC-002). (2) F-P151-05: `fraction: f32` → `fraction: f64` throughout VP-012 section (Property Statement, Formal Statement, harness). `f64` is the adjudicated type (interface-definitions §Compaction already used f64; f64 avoids precision issues for budgets >16M tokens). `watermark_boundary_does_not_fire` harness renamed `watermark_boundary_fires` (with `<=`, exactly-at-threshold now fires). Feasibility note updated: CBMC tractability bound 2^24 retained, rationale changed from f32-precision to state-space-only. |
 | 2.5 | 2026-07-24 | architect | FIX-BURST-250 / F-P149-01 | F-P149-01 (HIGH, architect half) de-pin volatile ADR version: VP-009 Feasibility note `ADR-014 v1.2 §Hardening note` → `ADR-014 Decision 2 §Hardening note` (TD-VSDD-091 per D18-P84-A: live-body citations use stable section anchors, not version pins). Sibling sweep (F-P149-03): VP-006 heading updated from `` `Kani P1 Phase 6` `` to `` `Kani P1 Phase 6` `red_gate: true` `` — parity with VP-009 and VP-010 headings (both carry `` `red_gate: true` ``). |
 | 2.4 | 2026-07-24 | architect | FIX-BURST-248 / F-P147-01 | F-P147-01 (HIGH) red_gate adjudication: VP-011 entry heading corrected — remove stale `red_gate: true` label. BC-2.05.007 is NOT Red-Gated (product-owner authority: BC-2.05.007 red_gate: false, burst-231; ADR-018 Decision 3 contains no compile-and-fail mandate; fabricated red_gate_source removed in VP-011 v1.1). Heading updated from `` `Kani P0 red_gate: true` `` to `` `Kani P0` ``. Red Gate census: 11 (unchanged). |

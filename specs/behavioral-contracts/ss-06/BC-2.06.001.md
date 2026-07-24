@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/events.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "7062263"
+input-hash: "5cdd986"
 changelog:
   - "1.9 (F-P151-03, burst-252, 2026-07-24): PC2 CompactionEvent bullet — wire shape updated to adjudicated flat form: `compacted_turns (RangeInclusive<usize>)` → `compacted_start (usize)` + `compacted_end (usize)`; `parent_ids (Vec<RunId>)` added (BC-2.06.002 Inv-2 mandate — every StreamEvent variant carries parent_ids). Sibling-sweep: BC-2.06.006 v1.4 and interface-definitions.md v2.53 updated identically (F-P151-03)."
   - "1.8 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. PC2 ToolApprovalResolved bullet and Related BCs updated. Zero Command:: enum-variant residue remains in live body text."
