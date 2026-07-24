@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-22"
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
-version: "1.4"
+version: "1.5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-10, SS-04]
 changelog:
+  - "1.5 (FIX-BURST-254/2026-07-24): F-P153-02 — annotate Decision 4 trigger field with wire-serialization clarification: on the SSE wire the field serializes as the bare variant-name string (\"OnWatermark\" | \"OnMessageCount\" | \"OnTokenCount\") per BC-2.06.006 PC1 — NOT serde's default full-variant form with nested fields ({\"OnWatermark\":{\"fraction\":0.8}}). Coherence check of remaining Decision 4 fields against BC-2.06.006 PC1: run_id, parent_ids, compacted_start, compacted_end, summary_token_count, tokens_remaining_after all match exactly — no other divergence found."
   - "1.4 (FIX-BURST-252/2026-07-24): Six compaction type-canon adjudications (F-P151-01/02/03/04/05/07). (1) F-P151-01: OnMessageCount/OnTokenCount field names confirmed as `count`/`tokens` (ADR-019 original authority wins over interface-def `threshold`). (2) F-P151-02: CompactionSummary shape — `compacted_range: RangeInclusive<usize>` → flat `compacted_start: usize` + `compacted_end: usize` (serde-safe, wire-consistent, matches interface-definitions §Compaction). (3) F-P151-03: StreamEvent::CompactionEvent — canonical shape is flat compacted_start/compacted_end + parent_ids: Vec<RunId> per BC-2.06.002 mandate; BC-2.06.006 PC1 omitted parent_ids and used nested compacted_turns (PO to fix). (4) F-P151-04: OnWatermark predicate — `<` → `<=` (`tokens_remaining / ceiling <= (1.0 - fraction)`); strict-less-than broke EC-002 (fraction=1.0 never fired); non-strict-leq is correct (fires when tokens_remaining=0 for fraction=1.0). (5) F-P151-05: fraction type f32 → f64 throughout (interface-definitions was already f64; ADR was stale; f64 avoids precision issues for budgets >16M tokens). (6) F-P151-07: Step 4 checkpoint write mechanism — `put_writes` → `put` (put_writes is for PregelTask outputs keyed by task_id within a super-step; compaction runs between super-steps and must write a full checkpoint blob; CheckpointSaver::put is the correct method). VP-012 updated in same burst to match adjudications 4+5."
   - "1.3 (burst-239/2026-07-23): F-P139-01 — update BC-2.04.001 citations in Decision 3 step 4 and Consequences Positive to BC-2.04.001 Inv-5 (append-only checkpoint records, matching PO canonical anchor). F-P139-02 — Decision 4 CompactionEvent field tokens_remaining_after: u64 → Option<i64> (None when no token ceiling; negative on Deny — per BC-2.06.001 PC2, BC-2.06.006 PC1, interface-definitions §BudgetInfo). TD-VSDD-060 sibling sweep: no other stale BC-2.04.001 immutability citations or tokens_remaining_after: u64 renderings found in architecture-layer docs."
   - "1.2 (burst-234/2026-07-22): F-P134-04 — Decision 3 step 5: rename CompactionEvent journal field `trigger_tokens_remaining` → `tokens_remaining_after` to match BC-2.10.006 v1.1 canonical field name and Decision 4 streaming payload (both use `tokens_remaining_after`). TD-VSDD-060 sibling sweep: sole remaining occurrence in architect-scope files; entities-graph.md (domain-spec, out of scope) and BC-2.10.006 changelog (historical documentation, out of scope) retain the old name in quoted context only."
@@ -168,7 +169,13 @@ When compaction completes, the engine emits a new streaming event:
 compaction_event {
     run_id,
     parent_ids: Vec<RunId>,       // BC-2.06.002 mandate: present on every StreamEvent variant
-    trigger: CompactionTrigger,   // which variant fired (OnWatermark / OnMessageCount / OnTokenCount)
+    trigger: CompactionTrigger,   // which variant fired; wire serialization: bare variant-name string only
+                                  // ("OnWatermark" | "OnMessageCount" | "OnTokenCount") per BC-2.06.006 PC1.
+                                  // NOT serde's default full-variant form ({"OnWatermark":{"fraction":0.8}}).
+                                  // The internal StreamEvent variant may hold the full enum for in-process use;
+                                  // SSE wire emission must serialize only the tag string — custom Serialize impl
+                                  // or a wire-only tag enum (e.g. #[serde(rename_all = "PascalCase")] on a
+                                  // fieldless mirror enum) is required.
     compacted_start: usize,       // inclusive start turn index (flat, not RangeInclusive)
     compacted_end: usize,         // inclusive end turn index
     summary_token_count: u64,

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "434241f"
+input-hash: "1137940"
 traces_to: STATE.md
 ---
 
@@ -48,10 +48,11 @@ traces_to: STATE.md
 | P1D-104 | 2026-07-18 | 1 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (1 MED F-P104-01 ARCH-INDEX.md missing v1.1 changelog row; reconstructed from git history via burst-187; architect; changelog-completeness new class) |
 | P1D-105 | 2026-07-19 | 1 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (1 MED F-P105-01 SECURITY description omits 2/3 members + contradicts E-SBXD-002 POLICY; 2 OBS: OBS-P105-A adjudicated SECURITY/POLICY rule; OBS-P105-B Form-B self-correction process-gap; error-taxonomy v1.18→v1.19; bc-authoring-plan v2.32→v2.33) |
 | P1D-118 | 2026-07-19 | 3 | 0 | 2 | 1 | 0 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (F-P118-01 HIGH [process-gap] bc-authoring-plan §12 gate mandated 3-member terminal set — would actively revert F-P117-01; batch-table line 270 drifted; F-P118-02 HIGH sibling propagation: BC-2.12.004 lines 70+163 + BC-2.05.004 lines 99–100 + BC-2.05.005 line 137; F-P118-03 MED entities-server line 57 completed_at mis-cited BC-2.12.003 PC8(c)(d) → correct BC-2.12.003 PC13 + BC-2.10.003 PC8(c)(d)) |
+| P1D-153 | 2026-07-24 | 2 | 0 | 1 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (1H F-P153-01 BC-2.17.001 v1.3 strict-< residue + VP-011 4-variant modernization; 1 LOW/OBS F-P153-02 ADR-019 v1.5 wire-serialization annotation; burst-253 regressions all held; fix-burst 254 COMPLETE) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN 1/3) →0 (P1D-127 CLEAN 2/3) →0 (P1D-128 CLEAN 3/3 CONVERGED pre-D21+D23) →12 (P1D-129, D21+D23 re-baseline) →9 (P1D-130) →7 (P1D-131) →8 (P1D-132) →10 (P1D-133) →7 (P1D-134) →6 (P1D-135) →6 (P1D-136) →3 (P1D-137) →3 (P1D-138) →7 (P1D-139) →8 (P1D-140) →7 (P1D-141) →4 (P1D-142) →1 (P1D-143) →4 (P1D-144) →5 (P1D-145) →4 (P1D-146) →3 (P1D-147) →5 (P1D-148) →4 (P1D-149) →2 (P1D-150) →7 (P1D-151, NOT CLEAN 0C/4H/3M)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN 1/3) →0 (P1D-127 CLEAN 2/3) →0 (P1D-128 CLEAN 3/3 CONVERGED pre-D21+D23) →12 (P1D-129, D21+D23 re-baseline) →9 (P1D-130) →7 (P1D-131) →8 (P1D-132) →10 (P1D-133) →7 (P1D-134) →6 (P1D-135) →6 (P1D-136) →3 (P1D-137) →3 (P1D-138) →7 (P1D-139) →8 (P1D-140) →7 (P1D-141) →4 (P1D-142) →1 (P1D-143) →4 (P1D-144) →5 (P1D-145) →4 (P1D-146) →3 (P1D-147) →5 (P1D-148) →4 (P1D-149) →2 (P1D-150) →7 (P1D-151, NOT CLEAN 0C/4H/3M) →3 (P1D-152, NOT CLEAN 0C/0H/3M) →2 (P1D-153, NOT CLEAN 0C/1H/0M/1OBS)`
 
 ## Per-Pass Details
 
@@ -1240,3 +1241,19 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 **Regression sweep — provider chain (SS-08):** Provider-chain BCs (BC-2.20.001/002, BC-2.21.001/002/003/004, BC-2.22.001/002/003) scanned for version-pin violations, TrustLevel migration completeness, and E-code category accuracy. CLEAN.
 
 **Hash sweep (D18-P89-A/D18-P90-A):** 3-pass transitive sweep; pass 1 specs/91 updated; pass 2 specs/8 updated; pass 3 specs/0 + planning/0 + cycles/0 STALE=0. Final: specs/174 MATCH=174, planning/3 MATCH=3, cycles/18 MATCH=18, STALE=0. Burst-253 commit.
+
+### Pass P1D-153 (2026-07-24) — Expanded Perimeter Pass 25
+
+**Findings:** 2 (0 CRIT, 1 HIGH, 0 MED, 0 LOW; 1 LOW/OBS)
+**Streak:** 0/3 (NOT CLEAN strict)
+**Fix burst:** 254
+**Frozen HEAD:** burst-253 commit (71c6aeb)
+**Novel attack angle:** Kani harness scope BC residual predicate audit (strict-< vs non-strict <= in VP-012 bullet of BC-2.17.001) + VP-011 bullet coverage completeness (Deny-only vs full 4-variant PreToolDecision).
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. Two findings: 1 HIGH + 1 LOW/OBS. Novelty MEDIUM. Burst-253 regression targets (VP-012 v1.3 domain widened, BC-2.07.002 v1.6 GTV-010/011, test-vectors v2.7 674 TVs) all held clean. Run-status state machine and compaction×suspend invariants verified clean. BC-2.17.001 was the sole artifact carrying the residual strict-`<` OnWatermark predicate (all other VP bullets clean; full BC staleness scan CLEAN post-fix).
+
+- **F-P153-01 HIGH** (PO, closed): `BC-2.17.001 v1.2→v1.3` — VP-012 Postcondition bullet retained the strict `<` predicate (`tokens_remaining / ceiling < (1.0 - fraction)`) that was superseded by ADR-019 Decision 3 and VP-012.md v1.3. The load-bearing non-strict `<=` boundary (EC-002: fraction=1.0, tokens_remaining=0 must fire the trigger) was missing, creating a harness-scope conflict with the formal VP. Fixed: VP-012 bullet corrected to non-strict `<=`; f64 arithmetic and domain `0 <= tokens_remaining <= ceiling` made explicit with a load-bearing note. Proactive (same v1.3 bump): VP-011 bullet was Deny-only and did not describe the full 4-variant `PreToolDecision` fail-closed contract (Approve/Deny/Edit/PendingHumanApproval per VP-011.md v1.2 authority). VP-011 bullet modernized to full 4-variant coverage: `DispatchOutcome::Proceed` reachable only from `Approve` and valid-`Edit`; `Deny` and invalid-`Edit` → `Reject`; hook errors shielded to `Deny`; `PendingHumanApproval` suspends via BC-2.05.001 and never invokes the tool. Full BC staleness scan: all other VP bullets clean, zero f32 arithmetic references remain.
+
+- **F-P153-02 LOW/OBS** (architect, closed): `ADR-019 v1.4→v1.5` — Decision 4 `trigger: CompactionTrigger` field carried a comment implying the variant name's wire serialization uses serde's default full-variant form. The BC-2.06.006 PC1 canon specifies that `CompactionTrigger` wire serialization is the bare variant-name string (NOT serde's full-variant form), requiring a custom `Serialize` implementation or a fieldless mirror enum. Decision 4 annotated to clarify: bare variant-name string per BC-2.06.006 PC1. Decision 4 field coherence check vs BC-2.06.006 PC1: all other fields match.
+
+**Hash sweep (D18-P89-A/D18-P90-A):** 2-pass transitive sweep; pass 1 UPDATED=22, pass 2 UPDATED=6; final TOTAL=235 MATCH=195 STALE=0. Burst-254 commit.
