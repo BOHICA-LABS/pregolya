@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "c85cdd3"
+input-hash: "8ab8e71"
 extracted_from: null
 modified: []
 deprecated: null

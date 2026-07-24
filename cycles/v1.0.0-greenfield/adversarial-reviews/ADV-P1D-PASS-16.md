@@ -22,7 +22,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-03/BC-2.03.003.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/prd-supplements/bc-authoring-plan.md
-input-hash: "233c0f5"
+input-hash: "aaf966d"
 findings:
   - id: F-P16-01
     severity: HIGH

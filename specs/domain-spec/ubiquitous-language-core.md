@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.7"
+version: "1.8"
 status: active
 producer: business-analyst
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-24T00:00:00Z
 changelog:
+  - "1.8 (2026-07-24): Fix burst 252 BA — ADR-019 v1.4 compaction type canon applied. CompactionTrigger: `OnWatermark { fraction: f32 }` → `f64`; predicate `<` → `<=` (non-strict; strict < cannot fire at fraction=1.0); added f64-arithmetic and non-strict rationale. CompactionSummary fields: `compacted_range: RangeInclusive<usize>` → flat `compacted_start: usize, compacted_end: usize`; slice form `messages[compacted_start..=compacted_end]`; CompactionEvent reference updated to flat fields. TD-VSDD-060 sweep: zero compacted_range / RangeInclusive / fraction: f32 occurrences remain in this file's body text (changelog exempt)."
   - "1.7 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 1 enum-variant form occurrence of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Site: §PreToolDecision definition block. TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text (changelog history exempt)."
   - "1.6 (2026-07-22): D23 ubiquitous-language additions (burst-230) — new section 'D23 Additions (HITL Approval Hook, Context Compaction, and First-Party Tools)': PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary (ADR-018/ADR-019); ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool (ADR-020 / SS-23). 13 new terms; total D23 + prior: 16 (D21) + 13 (D23) = 29 terms in this file. D23 added to decisions list."
   - "1.5 (2026-07-21): F-P131-05 adjudication (burst-226) — TrustLevel term added to D21 section (ferrochain-prompts: prompts::template; 3 variants: Untrusted | UserInput | Trusted; severity ordering Untrusted > UserInput > Trusted; distinct from ProvenanceTag; authority ADR-015 §Decision 3). D21 total terms: 15 → 16."
@@ -346,8 +347,9 @@ Authority: ADR-018 / CAP-034.
 **CompactionTrigger**
 A `#[non_exhaustive]` configuration enum in `BudgetConfig.compaction_trigger` that controls
 when the BudgetEngine initiates proactive context compaction. Variants: `Disabled` (default;
-backward compatible), `OnWatermark { fraction: f32 }` (fires when `tokens_remaining / ceiling
-< (1.0 - fraction)`; VP-012 Kani candidate — pure arithmetic), `OnMessageCount { count }`,
+backward compatible), `OnWatermark { fraction: f64 }` (fires when `tokens_remaining / ceiling
+<= (1.0 - fraction)`; non-strict `<=` — strict `<` cannot fire at fraction=1.0; f64 arithmetic;
+VP-012 Kani candidate — pure arithmetic), `OnMessageCount { count }`,
 `OnTokenCount { tokens }`. Crate: ferrochain-core, `core::budget`. Authority: ADR-019 / CAP-035.
 
 **CompactionPolicy**
@@ -368,12 +370,13 @@ Authority: ADR-019 / CAP-035.
 
 **CompactionSummary**
 The output of a `CompactionPolicy::compact()` invocation. Fields: `summary_text: String`
-(injected as a `SystemMessage` into the active conversation window) + `compacted_range:
-RangeInclusive<usize>` (turn indices replaced). Applied mid-run (contrast with
+(injected as a `SystemMessage` into the active conversation window) + `compacted_start: usize`
++ `compacted_end: usize` (inclusive range boundaries; slice form
+`messages[compacted_start..=compacted_end]`). Applied mid-run (contrast with
 `frozen-snapshot`, which takes effect on the NEXT run). Original checkpoint records are NOT
 deleted (BC-2.04.001 immutability). Triggers a `compaction_event` streaming event (15th
-variant) and appends a `CompactionEvent` to `EvidenceJournal`. Crate: ferrochain-core,
-`core::budget`. Authority: ADR-019 / CAP-035.
+variant) and appends a `CompactionEvent { compacted_start, compacted_end, … }` to `EvidenceJournal`.
+Crate: ferrochain-core, `core::budget`. Authority: ADR-019 / CAP-035.
 
 **ReadFileTool**
 First-party `Tool` in `ferrochain-tools::tools::fs` (SS-23, crate #21). Reads file contents

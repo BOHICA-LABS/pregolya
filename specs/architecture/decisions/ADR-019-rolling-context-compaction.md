@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-22"
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
-version: "1.3"
+version: "1.4"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-10, SS-04]
 changelog:
+  - "1.4 (FIX-BURST-252/2026-07-24): Six compaction type-canon adjudications (F-P151-01/02/03/04/05/07). (1) F-P151-01: OnMessageCount/OnTokenCount field names confirmed as `count`/`tokens` (ADR-019 original authority wins over interface-def `threshold`). (2) F-P151-02: CompactionSummary shape — `compacted_range: RangeInclusive<usize>` → flat `compacted_start: usize` + `compacted_end: usize` (serde-safe, wire-consistent, matches interface-definitions §Compaction). (3) F-P151-03: StreamEvent::CompactionEvent — canonical shape is flat compacted_start/compacted_end + parent_ids: Vec<RunId> per BC-2.06.002 mandate; BC-2.06.006 PC1 omitted parent_ids and used nested compacted_turns (PO to fix). (4) F-P151-04: OnWatermark predicate — `<` → `<=` (`tokens_remaining / ceiling <= (1.0 - fraction)`); strict-less-than broke EC-002 (fraction=1.0 never fired); non-strict-leq is correct (fires when tokens_remaining=0 for fraction=1.0). (5) F-P151-05: fraction type f32 → f64 throughout (interface-definitions was already f64; ADR was stale; f64 avoids precision issues for budgets >16M tokens). (6) F-P151-07: Step 4 checkpoint write mechanism — `put_writes` → `put` (put_writes is for PregelTask outputs keyed by task_id within a super-step; compaction runs between super-steps and must write a full checkpoint blob; CheckpointSaver::put is the correct method). VP-012 updated in same burst to match adjudications 4+5."
   - "1.3 (burst-239/2026-07-23): F-P139-01 — update BC-2.04.001 citations in Decision 3 step 4 and Consequences Positive to BC-2.04.001 Inv-5 (append-only checkpoint records, matching PO canonical anchor). F-P139-02 — Decision 4 CompactionEvent field tokens_remaining_after: u64 → Option<i64> (None when no token ceiling; negative on Deny — per BC-2.06.001 PC2, BC-2.06.006 PC1, interface-definitions §BudgetInfo). TD-VSDD-060 sibling sweep: no other stale BC-2.04.001 immutability citations or tokens_remaining_after: u64 renderings found in architecture-layer docs."
   - "1.2 (burst-234/2026-07-22): F-P134-04 — Decision 3 step 5: rename CompactionEvent journal field `trigger_tokens_remaining` → `tokens_remaining_after` to match BC-2.10.006 v1.1 canonical field name and Decision 4 streaming payload (both use `tokens_remaining_after`). TD-VSDD-060 sibling sweep: sole remaining occurrence in architect-scope files; entities-graph.md (domain-spec, out of scope) and BC-2.10.006 changelog (historical documentation, out of scope) retain the old name in quoted context only."
   - "1.1 (burst-233/2026-07-22): F-P133-07 sibling sweep (TD-VSDD-060) — remove stale 'VP-012 candidate' labels (VP-012 seeded burst-232, Kani P1). Two sites updated: §Compaction Trigger Evaluation Sequence step 1 watermark check, and §Positive Properties rationale line."
@@ -60,9 +61,11 @@ The existing definitions-only `core::budget` module (ADR-009 Option 3) gains:
 pub enum CompactionTrigger {
     /// No proactive compaction. OnCeiling behaviour is unchanged. (default)
     Disabled,
-    /// Compact when tokens_remaining / budget_ceiling < (1.0 - fraction).
-    /// fraction ∈ (0.0, 1.0]. E.g., 0.8 = trigger when 80% of budget consumed.
-    OnWatermark { fraction: f32 },
+    /// Compact when tokens_remaining / budget_ceiling <= (1.0 - fraction),
+    /// equivalently tokens_used / budget_ceiling >= fraction.
+    /// fraction ∈ (0.0, 1.0]. E.g., 0.8 = trigger when ≥80% of budget consumed.
+    /// fraction=1.0 fires only when tokens_remaining==0 (budget fully exhausted).
+    OnWatermark { fraction: f64 },
     /// Compact when the message count in the active conversation exceeds n.
     OnMessageCount { count: usize },
     /// Compact when the cumulative token count in the conversation exceeds a threshold.
@@ -79,18 +82,21 @@ pub struct ConversationSnapshot {
 }
 
 /// Output produced by a CompactionPolicy implementation.
+/// Flat scalar fields (not RangeInclusive) for serde compatibility and wire consistency.
 #[non_exhaustive]
 pub struct CompactionSummary {
     /// The compact summary text to inject as a SystemMessage.
     pub summary_text: String,
-    /// Which turn indices were compacted (inclusive range).
-    pub compacted_range: std::ops::RangeInclusive<usize>,
+    /// Inclusive start turn index of the compacted range.
+    pub compacted_start: usize,
+    /// Inclusive end turn index of the compacted range.
+    pub compacted_end: usize,
 }
 
 #[async_trait]
 pub trait CompactionPolicy: Send + Sync {
     /// Produce a CompactionSummary from a ConversationSnapshot.
-    /// The engine injects summary_text as a SystemMessage replacing the compacted_range.
+    /// The engine replaces messages[compacted_start..=compacted_end] with SystemMessage(summary_text).
     async fn compact(
         &self,
         snapshot: &ConversationSnapshot,
@@ -123,16 +129,24 @@ of the `ConversationSnapshot.turns` (same mechanism as `OnCeiling::Summarize`).
 The `BudgetEngine` in `graph::budget` (execution counterpart of `core::budget` definitions,
 per ADR-009) evaluates `CompactionTrigger` after each super-step:
 
-1. **Watermark check:** `tokens_remaining / ceiling < (1.0 - fraction)` using `budget_info`
-   in `RunContext`. This is a pure arithmetic comparison (VP-012, Kani P1, seeded burst-232).
+1. **Watermark check:** `tokens_remaining / ceiling <= (1.0 - fraction)` (equivalently:
+   `tokens_used / ceiling >= fraction`) using `budget_info` in `RunContext`. This is a pure
+   arithmetic comparison (VP-012, Kani P1, seeded burst-232). `fraction = 0.8` fires when
+   ≥80% consumed; `fraction = 1.0` fires only when tokens_remaining == 0.
 2. **History snapshot:** query `CheckpointSaver::search_history` (BC-2.04.008) to retrieve
    the `count` most recent turns (or all turns up to the token estimate threshold).
 3. **Compact:** call `compaction_policy.compact(&snapshot, &run_ctx).await`.
-4. **Apply:** write a new checkpoint state where `messages[compacted_range]` is replaced by
-   a single `SystemMessage(summary_text)`. The original checkpoint records are NOT deleted
-   (append-only checkpoint records per BC-2.04.001 Inv-5).
-5. **Journal:** append a `CompactionEvent { compacted_range, summary_token_count,
-   tokens_remaining_after }` to `EvidenceJournal` (BC-2.10.001 append-only journal).
+4. **Apply:** call `CheckpointSaver::get_next_version` to obtain a new CheckpointId, then
+   call `CheckpointSaver::put` to write a NEW full checkpoint entry where
+   `messages[compacted_start..=compacted_end]` is replaced by a single
+   `SystemMessage(summary_text)`. Using `put` (full checkpoint blob) rather than
+   `put_writes` (per-PregelTask output keyed by task_id) is correct because compaction
+   runs between super-steps and is not a task. The original checkpoint records are NOT
+   deleted (append-only checkpoint records per BC-2.04.001 Inv-5). If `put` fails, the
+   in-memory window is reverted; the run continues with the pre-compaction window.
+5. **Journal:** append a `CompactionEvent { compacted_start, compacted_end,
+   summary_token_count, tokens_remaining_after }` to `EvidenceJournal`
+   (BC-2.10.001 append-only journal).
 6. **Stream:** emit a `compaction_event` streaming event (see Decision 4).
 7. Continue the run from the next super-step with the compacted context.
 
@@ -153,8 +167,10 @@ When compaction completes, the engine emits a new streaming event:
 ```
 compaction_event {
     run_id,
-    trigger: CompactionTrigger (which variant fired),
-    compacted_turns: RangeInclusive<usize>,
+    parent_ids: Vec<RunId>,       // BC-2.06.002 mandate: present on every StreamEvent variant
+    trigger: CompactionTrigger,   // which variant fired (OnWatermark / OnMessageCount / OnTokenCount)
+    compacted_start: usize,       // inclusive start turn index (flat, not RangeInclusive)
+    compacted_end: usize,         // inclusive end turn index
     summary_token_count: u64,
     tokens_remaining_after: Option<i64>,
 }
@@ -253,15 +269,15 @@ Frozen-snapshot is a next-run-start mechanism; it cannot extend the current run.
 - `CompactionTrigger::Disabled` (default) preserves full backward compatibility; existing
   graphs are unaffected.
 - `OnWatermark` arithmetic is a pure comparison — VP-012 (Kani P1, seeded burst-232) (trigger fires if
-  and only if `tokens_remaining / ceiling < (1.0 - fraction)`).
+  and only if `tokens_remaining / ceiling <= (1.0 - fraction)`, equivalently `tokens_used / ceiling >= fraction`).
 - Framework-owned compaction respects BC-2.04.001 Inv-5 (append-only checkpoint records):
   original turns are not deleted, only superseded in the active message window.
 
 ### Negative / Trade-offs
 
 - Mid-run checkpoint mutation is a new primitive — the engine must ensure the compacted
-  state is durable before proceeding (a failed `put_writes` during compaction must not
-  silently corrupt the message window).
+  state is durable before proceeding (a failed `put` during compaction must not
+  silently corrupt the message window; revert in-memory state on `put` failure).
 - `ConversationSnapshot` assembly from FTS requires a `CheckpointSaver` dependency in
   `graph::budget`; this is already present (the engine holds the saver reference) but
   formalizes the coupling.

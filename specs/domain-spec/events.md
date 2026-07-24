@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: events
-version: "1.9"
+version: "1.10"
 status: active
 producer: business-analyst
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-24T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -14,6 +14,7 @@ input-hash: "e978d8d"
 traces_to: L2-INDEX.md
 decisions: [D11, D13, D17, D18, D21, D23]
 changelog:
+  - "1.10 (2026-07-24): Fix burst 252 BA — ADR-019 v1.4 compaction type canon applied at §CompactionExecuted. (1) Outcome: `messages[compacted_range]` → `messages[compacted_start..=compacted_end]`; CompactionEvent struct → flat `{ compacted_start, compacted_end, … }`. (2) EvidenceJournal entry fields: `compacted_range (RangeInclusive<usize>)` → flat `compacted_start (usize), compacted_end (usize)`. (3) Stream event payload: `compacted_turns: { start, end }` → flat `compacted_start, compacted_end`; mandatory `parent_ids: Vec<RunId>` added. (4) Non-fatal failure paths: `put_writes failure` → `put failure`. TD-VSDD-060 sweep: zero compacted_range / compacted_turns / RangeInclusive occurrences remain in this file's body text (changelog exempt); `put_writes` mentions reviewed — checkpoint-task-write reference in §PregelTask/DI-002 context is legitimate; §CompactionExecuted was the only compaction-related site."
   - "1.9 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 3 enum-variant form occurrences of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Sites: §ToolApprovalResolved description (line 109), §ToolApprovalResolved Trigger (line 110), §StreamEventEmitted Trigger (line 149). TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text."
   - "1.8 (F-P139-01/02, fix burst 239, 2026-07-23): §CompactionExecuted Outcome: BC-2.04.001 immutability citation corrected to BC-2.04.001 Inv-5 (checkpoint append-only — records never deleted or mutated in place). §CompactionExecuted EvidenceJournal entry fields: tokens_remaining_after type corrected from u64 to Option<i64> to match BC-2.06.006 PC-1 / BC-2.06.001 PC2 / interface-definitions §BudgetInfo (None when no token ceiling; negative on Deny). TD-VSDD-060 sweep: no other stale BC-2.04.001 immutability citations or tokens_remaining_after: u64 renderings found in file."
   - "1.7 (F-P135-06, fix burst 235, 2026-07-22): StreamEventEmitted Trigger: D23 stream events 13-15 added — tool_approval_request (BC-2.06.004), tool_approval_resolved (BC-2.06.005), compaction_event (BC-2.06.006); StreamEvent taxonomy updated to 15 variants (12-variant base + 3 D23). Domain events added: CompactionExecuted (BC-2.10.006, after CheckpointWritten — mid-run window replacement + EvidenceJournal); ToolApprovalRaised + ToolApprovalResolved (BC-2.05.007/008, after ResumeValueReceived — PreToolCallHook suspend/resume cycle). Ordering rules 7-8 added. decisions: D21 added (RagChunk/MemoryItem ingress types already referenced in v1.5); D23 added (scope driver for all D23 additions)."
@@ -81,10 +82,10 @@ A new Checkpoint stored to the CheckpointSaver at a super-step boundary.
 BudgetEngine completed a mid-run compaction cycle: active message window replaced, EvidenceJournal updated, stream notified.
 - **Trigger:** `CompactionTrigger` condition met after a super-step; `CompactionPolicy::compact()` returned `Ok(CompactionSummary)` (BC-2.10.006)
 - **Preconditions:** Run in `in_progress`; between super-steps (compaction CANNOT fire mid-node or during a `PendingHumanApproval` park window — BC-2.10.006 × BC-2.05.007 temporal non-interaction invariant); `BudgetConfig.compaction_trigger != Disabled`
-- **Outcome:** `messages[compacted_range]` in ACTIVE conversation window replaced by single `SystemMessage(summary_text)` (mid-run mutation — takes effect immediately; distinct from BC-2.15.006 frozen-snapshot which takes effect at next run start); original checkpoint records NOT deleted (BC-2.04.001 Inv-5 (checkpoint append-only — records never deleted or mutated in place)); `CompactionEvent { compacted_range, summary_token_count, tokens_remaining_after }` appended to `EvidenceJournal` (BC-2.10.001 append-only, step 5); `compaction_event` StreamEvent emitted AFTER checkpoint commit (step 6 post-commit ordering)
-- **EvidenceJournal entry fields:** `compacted_range` (`RangeInclusive<usize>`), `summary_token_count` (u64), `tokens_remaining_after` (`Option<i64>` — captured AFTER window replacement; same schema as BC-2.06.006 PC-1 / BC-2.06.001 PC2 / interface-definitions §BudgetInfo; None when no token ceiling configured, negative on Deny)
-- **Stream event:** `compaction_event` (event 15) — post-commit; payload: `{ run_id, trigger, compacted_turns: { start, end }, summary_token_count, tokens_remaining_after }` (BC-2.06.006 PC-1)
-- **Non-fatal failure paths:** `compact()` error or `put_writes` failure aborts cycle without message-window mutation; no journal entry or stream event emitted; run continues with pre-compaction window (BC-2.10.006 invariants)
+- **Outcome:** `messages[compacted_start..=compacted_end]` in ACTIVE conversation window replaced by single `SystemMessage(summary_text)` (mid-run mutation — takes effect immediately; distinct from BC-2.15.006 frozen-snapshot which takes effect at next run start); original checkpoint records NOT deleted (BC-2.04.001 Inv-5 (checkpoint append-only — records never deleted or mutated in place)); `CompactionEvent { compacted_start, compacted_end, summary_token_count, tokens_remaining_after }` appended to `EvidenceJournal` (BC-2.10.001 append-only, step 5); `compaction_event` StreamEvent emitted AFTER checkpoint commit (step 6 post-commit ordering)
+- **EvidenceJournal entry fields:** `compacted_start (usize), compacted_end (usize)` (inclusive range boundaries of the replaced turn window), `summary_token_count` (u64), `tokens_remaining_after` (`Option<i64>` — captured AFTER window replacement; same schema as BC-2.06.006 PC-1 / BC-2.06.001 PC2 / interface-definitions §BudgetInfo; None when no token ceiling configured, negative on Deny)
+- **Stream event:** `compaction_event` (event 15) — post-commit; payload: `{ run_id, trigger, compacted_start, compacted_end, summary_token_count, tokens_remaining_after, parent_ids: Vec<RunId> }` (BC-2.06.006 PC-1)
+- **Non-fatal failure paths:** `compact()` error or `put` failure aborts cycle without message-window mutation; no journal entry or stream event emitted; run continues with pre-compaction window (BC-2.10.006 invariants)
 
 ### InterruptRaised
 Graph execution suspended at a node boundary awaiting a ResumeValue.

@@ -1,7 +1,7 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.14"
+version: "1.15"
 status: active
 producer: business-analyst
 timestamp: 2026-07-24T00:00:00Z
@@ -33,6 +33,7 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "v1.15 (2026-07-24): Burst 252 F-P151-01..07 ADR-019 compaction type canon — capabilities-p1-p2 v1.13→v1.14 (CompactionTrigger count/tokens field names, OnWatermark non-strict <= predicate, f64 fraction/budget_tokens_used); entities-graph v1.9→v1.10 (CompactionTrigger/CompactionSummary entity type canon: flat compacted_start/end fields, f64, put mechanism); events v1.9→v1.10 (compaction_event wire payload flat fields per ADR-019 Decision 4; mandatory parent_ids per BC-2.06.002 Inv-2); ubiquitous-language-core v1.7→v1.8 (CompactionTrigger term: count/tokens variant fields, f64 fraction; CompactionSummary term: flat compacted_start/end, no RangeInclusive). Document Map line counts updated: capabilities-p1-p2 ~530→~750, entities-graph ~315→~390, ubiquitous-language-core ~330→~420."
   - "v1.14 (2026-07-24): Burst 251 F-P150-02 (MED) — capabilities-p1-p2 v1.12→v1.13 stale-delegation residue removed at CAP-029 (§Zero-norm guard) and CAP-031 (§Dimensionality contract); both 'PO to formalize in error taxonomy' imperatives replaced with past-tense factual citations (E-VS-001 and E-EMBED-001 registered since error-taxonomy v1.27). L-026 sweep: 6 hits in domain-spec, 2 fixed, 4 verified structural/legitimate (BC-to-CAP traceability fields)."
   - "v1.13 (2026-07-24): Burst 250 F-P149-01/F-P149-02 — capabilities-p1-p2 v1.11→v1.12 (TD-VSDD-091 corpus-wide de-pin sweep: §CAP-029 VP-009 framing anchors — 2 sites (F-P149-01) + 3 sites (F-P149-02) + 1 near-miss 'Decision 3 and v1.1' outside grep pattern all replaced with stable 'ADR-014 Decision 2 §Hardening note' per D18-P84-A). Zero live-body ADR version pins remain in domain-spec/ corpus."
   - "v1.12 (2026-07-23): Fix burst 242 F-P142-02 — Document Map failure-modes.md row updated: ~140→~257 lines, (14 modes)→(19 modes). ID Registry: FM-NNN count 14→19 (FM-015..019 added in failure-modes.md v1.1 burst-241). Registry sweep: CAP 38, DI 15, DEC 13, ASM 9, R 8 all confirmed stable — no additional drift found."
@@ -67,8 +68,8 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Section | File | Lines | Primary Consumer | Purpose |
 |---------|------|-------|-----------------|---------|
 | Capabilities — P0 | capabilities-p0.md | ~140 | product-owner, architect, story-writer | CAP-001–008 (Wave 0/1) + CAP-012, CAP-013, CAP-016 (D17-elevated to P0; cross-cutting Wave 0/1); CAP-002 revised v1.7 (D21 reversal) |
-| Capabilities — P1/P2 | capabilities-p1-p2.md | ~530 | product-owner, architect, story-writer | P1: CAP-009–011, CAP-014–015, CAP-017–018 (D23 Wave 1 promotions), CAP-020–038 (D21 + D23 additions); P2: CAP-019 only |
-| Entities — Core/Graph/Checkpoint/Retrieval/Serialization/VectorStore/Embeddings/HITL/Compaction | entities-graph.md | ~315 | architect, product-owner | Core primitives, graph, checkpoint + D21: Document, PromptValue, TrustLevel, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType + D23: PreToolCallHook, PreToolDecision, ToolCallPreview, ToolApprovalRequest, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary |
+| Capabilities — P1/P2 | capabilities-p1-p2.md | ~750 | product-owner, architect, story-writer | P1: CAP-009–011, CAP-014–015, CAP-017–018 (D23 Wave 1 promotions), CAP-020–038 (D21 + D23 additions); P2: CAP-019 only |
+| Entities — Core/Graph/Checkpoint/Retrieval/Serialization/VectorStore/Embeddings/HITL/Compaction | entities-graph.md | ~390 | architect, product-owner | Core primitives, graph, checkpoint + D21: Document, PromptValue, TrustLevel, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType + D23: PreToolCallHook, PreToolDecision, ToolCallPreview, ToolApprovalRequest, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary |
 | Entities — Server/Policy/Provider | entities-server.md | ~95 | architect, product-owner | Server, governance, and provider entities |
 | Domain Invariants | invariants.md | ~175 | product-owner, architect | DI-NNN business rules (15 invariants) |
 | Domain Events | events.md | ~175 | architect | Processing stages, triggers, preconditions; StreamEvent taxonomy 15 variants (D23); ToolApprovalRaised/Resolved + CompactionExecuted domain events (D23) |
@@ -77,7 +78,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Risks | risks.md | ~51 | product-owner, architect | R-NNN risk register (8 risks) |
 | Failure Modes | failure-modes.md | ~257 | architect, test-writer | FM-NNN runtime failure catalog (19 modes) |
 | Differentiators | differentiators.md | ~62 | product-owner | Competitive differentiator → CAP-NNN traceability |
-| Ubiquitous Language — Core/Graph/D21/D23 | ubiquitous-language-core.md | ~330 | all agents | Core and graph term definitions + D21 (16 terms) + D23 (13 terms: PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary, ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool) |
+| Ubiquitous Language — Core/Graph/D21/D23 | ubiquitous-language-core.md | ~420 | all agents | Core and graph term definitions + D21 (16 terms) + D23 (13 terms: PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary, ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool) |
 | Ubiquitous Language — Server/Policy | ubiquitous-language-server.md | ~100 | all agents | Server, policy/safety, error terms + reconciliation table |
 | Bounded Contexts | bounded-contexts.md | ~155 | architect | Crate-level subsystem boundaries |
 

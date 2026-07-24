@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.22"
+version: "1.23"
 status: active
 producer: architect
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-07-24T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "ea453b0"
+input-hash: "c6e8dcb"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.23 (FIX-BURST-252/2026-07-24): F-P151-01/02/05 compaction type-canon corrections. (1) core::budget row: `fraction: f32` → `fraction: f64` in check_watermark_trigger signature (F-P151-05). (2) D23 compaction additions note: `OnWatermark{fraction: f32}` → `OnWatermark{fraction: f64}` (F-P151-05); `CompactionSummary struct (summary_text: String, compacted_range: RangeInclusive<usize>)` → `(summary_text: String, compacted_start: usize, compacted_end: usize)` (F-P151-02 flat-fields adjudication). No module-universe count change."
   - "1.22 (burst-244/2026-07-23): F-P144-01/F-P144-02 — (1) ferrochain-tools section header MEDIUM → HIGH (tools-shell) / MEDIUM (tools-fs, tools-search); tools::shell module row MEDIUM → HIGH (VP-013 Kani P1; aligns with verification-coverage-matrix.md and module-criticality.md v1.6 adjudication). (2) Add core::budget module row to ferrochain-core base table (HIGH, VP-012 Kani P1, SS-10); update budget definitions note to remove stale no-row / no-execution-logic claim (core::budget now hosts check_watermark_trigger pure-core function, not only type definitions). Module universe 54→55 (+core::budget row)."
   - "1.21 (burst-240/2026-07-23): F-P140-01 layout-adjudication clarifications — expand four ferrochain-graph module row descriptions to make the canonical flat-layout file-path mapping unambiguous for BC sweep. (1) graph::bsp_engine: add WriteRecord/PregelTask types, reduce_super_step pure-function callout (VP-001 Kani target), apply_writes callout, ferrochain-graph/src/bsp_engine.rs path. (2) graph::scheduler: add orchestrator state-machine transition sequence, ExecutionContext {run_id, parent_ids} (propagated into nested invocations), CompiledGraph::run() entry point, ferrochain-graph/src/scheduler.rs path. (3) graph::event_emitter: explicitly name StreamEvent enum and tick/after_tick emission callsites, ferrochain-graph/src/event_emitter.rs path. (4) graph::hitl: add per-task interrupt bookkeeping (InterruptScratchpad, interrupt_counter) alongside interrupt queue, ferrochain-graph/src/hitl.rs path. Architecture-doc pregel Rust-path sweep: 0 stale pregel/ paths found in architecture/ layer; no architecture-doc changes required beyond this entry."
   - "1.20 (burst-238/2026-07-23): Stale-handoff sweep (continuation) — fix graph::scheduler description: remove stale '(decision pending ADR-001 D9 gate)' note; D9 gate passed 2026-07-14, Alternative B selected per D11.1 steering (ADR-001); update description to 'Outer orchestrator loop + actor-scheduler synthesis (ADR-001 Alternative B, D9 gate passed 2026-07-14)'."
@@ -60,7 +61,7 @@ credential security primitives, streaming event types.
 | `core::events` | Streaming event taxonomy types (RunStart/Stream/End, NodeStart/Stream/End, etc.) | HIGH | SS-06 |
 | `core::config` | `RunnableConfig`, `ChatConfig` structs | MEDIUM | SS-01 |
 | `core::retry` | `ToolRetryPolicy` (keyed by tool_name; P-71 ADOPT), `CircuitBreaker` state machine, `RetryPolicy` with finite `global_limit: Option<NonZeroU32>`; shared combinator — provider crates and graph both route through this; **D23 item 4 (CAP-018): promoted from Wave 2 → Wave 1** | MEDIUM | SS-16 |
-| `core::budget` | VP-012 Kani P1 target: pure-core `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, fraction: f32) -> bool` (BC-2.10.005 watermark arithmetic — seeded burst-232); type definitions: `BudgetPolicy` trait, `PolicyDecision` enum, `OnCeiling` enum, `BudgetConfig` struct, `TokenUsage` struct, `RunContext` struct (SS-10/ADR-009), `CompactionTrigger` enum, `CompactionPolicy` trait, `ConversationSnapshot` struct, `CompactionSummary` struct (D23/ADR-019); dispatch engine lives in `graph::budget` (ferrochain-graph); module path: `ferrochain-core/src/budget.rs` | HIGH | SS-10 |
+| `core::budget` | VP-012 Kani P1 target: pure-core `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, fraction: f64) -> bool` (BC-2.10.005 watermark arithmetic — seeded burst-232; f64 precision per FIX-BURST-252 adjudication); type definitions: `BudgetPolicy` trait, `PolicyDecision` enum, `OnCeiling` enum, `BudgetConfig` struct, `TokenUsage` struct, `RunContext` struct (SS-10/ADR-009), `CompactionTrigger` enum, `CompactionPolicy` trait, `ConversationSnapshot` struct, `CompactionSummary` struct (D23/ADR-019); dispatch engine lives in `graph::budget` (ferrochain-graph); module path: `ferrochain-core/src/budget.rs` | HIGH | SS-10 |
 
 > **Budget definitions (SS-10 — VP-012 elevation — ADR-009 Option 3):** ferrochain-core hosts
 > the DEFINITIONS for budget governance: `BudgetPolicy` trait, `PolicyDecision` enum (Allow/Escalate/Deny),
@@ -76,10 +77,10 @@ credential security primitives, streaming event types.
 > extended ceiling without mutating the graph-level config (BC-2.10.004 PC6, BC-2.10.003 PC7/TV-004).
 >
 > **D23 compaction additions (ADR-019):** `core::budget` gains four new definitions-only types:
-> `CompactionTrigger` enum (Disabled/OnWatermark{fraction: f32}/OnMessageCount{count: usize}/OnTokenCount{tokens: u64}),
+> `CompactionTrigger` enum (Disabled/OnWatermark{fraction: f64}/OnMessageCount{count: usize}/OnTokenCount{tokens: u64}),
 > `CompactionPolicy` trait (async `compact(&ConversationSnapshot, &RunContext) -> Result<CompactionSummary, FerrochainError>`),
 > `ConversationSnapshot` struct (turns: Vec<(usize, Message)>, token_estimate: u64), and `CompactionSummary`
-> struct (summary_text: String, compacted_range: RangeInclusive<usize>). All definitions-only; execution
+> struct (summary_text: String, compacted_start: usize, compacted_end: usize). All definitions-only; execution
 > lives in `graph::budget` (compaction engine). `BudgetConfig` gains two new fields:
 > `compaction_trigger: CompactionTrigger` (default: Disabled) and
 > `compaction_policy: Option<Arc<dyn CompactionPolicy>>` (None = DefaultSummarizationPolicy). No new

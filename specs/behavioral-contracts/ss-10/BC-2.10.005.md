@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.005
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ vp_seed: true
 vp_id: VP-012
 red_gate: false
 changelog:
+  - "1.2 (F-P151-04/05, burst-252, 2026-07-24): ADR-019 v1.4 adjudicated canon applied. (1) F-P151-04: OnWatermark predicate `< (1.0 - fraction)` → `<= (1.0 - fraction)` (non-strict is load-bearing: strict `<` can never fire when fraction=1.0 and tokens_remaining=0, violating EC-002). Applied at Description, PC2 (predicate + rationale), Invariants (predicate + Kani bound `0 < …` → `0 <=`), EC-002 (explicit `0.0 <= 0.0 = true` arithmetic), EC-004 (predicate), TV-001 (annotation), VP-012 (table row). (2) F-P151-05: f32 → f64 throughout OnWatermark context (Description, PC2 comparison arithmetic, Invariants); f64 preserves integer exactness up to 2^53 tokens (no precision loss for any realistic token count). (3) ADD TV-006: OnWatermark { fraction: 1.0 }, ceiling=100_000, remaining=0 → fires (0.0 <= 0.0), EC-002 boundary."
   - "1.1 (burst-236/OBS-P136-A/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-012' (VP-INDEX v1.5 burst-232 seeded VP-012 Kani P1)."
   - "1.0 (D23/2026-07-22): Initial BC — D23 rolling compaction, SS-10 CompactionTrigger configuration contract. VP-012 Kani seed."
 traces_to:
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "779237e"
+input-hash: "93af945"
 extracted_from: null
 modified: []
 deprecated: null
@@ -51,7 +52,7 @@ removal_reason: null
 `compaction_policy: Option<Arc<dyn CompactionPolicy>>` (default `None` → `DefaultSummarizationPolicy`).
 The four variants govern when the `BudgetEngine` in `graph::budget` initiates a compaction
 cycle. `Disabled` is the default and preserves full backward compatibility. `OnWatermark`
-uses a pure arithmetic comparison `(tokens_remaining / ceiling) < (1.0 - fraction)` that is
+uses a pure arithmetic comparison `(tokens_remaining / ceiling) <= (1.0 - fraction)` that is
 the VP-012 Kani P1 seed candidate. `DefaultSummarizationPolicy` (when `compaction_policy` is
 `None`) prompts the model to summarize the `ConversationSnapshot`, using the same mechanism
 as `OnCeiling::Summarize`.
@@ -72,11 +73,15 @@ as `OnCeiling::Summarize`.
 1. **Disabled (default):** No proactive compaction occurs during the run. `OnCeiling`
    behavior (BC-2.10.003) is unchanged. This variant preserves full backward compatibility.
 2. **OnWatermark { fraction }:** The `BudgetEngine` evaluates after each super-step:
-   `tokens_remaining / budget_ceiling < (1.0 - fraction)`.
+   `tokens_remaining / budget_ceiling <= (1.0 - fraction)`.
    - `fraction = 0.8` means "trigger when 80% of budget is consumed" (i.e., 20% remaining).
-   - The comparison uses `f32` arithmetic. `tokens_remaining` and `budget_ceiling` are
-     cast from `u64` to `f32` for the comparison; precision loss is accepted (the
-     threshold is approximate, not exact to the token).
+   - The comparison uses `f64` arithmetic. `tokens_remaining` and `budget_ceiling` are
+     cast from `u64` to `f64` for the comparison; `f64` preserves integer exactness up to
+     2^53 tokens (no precision loss for any realistic token count).
+   - **Non-strict (`<=`) is load-bearing:** strict `< (1.0 - fraction)` with `fraction = 1.0`
+     evaluates to `< 0.0`, which can never be true (operands are non-negative); `<= 0.0`
+     fires when `tokens_remaining == 0`, implementing the correct "trigger when 100%
+     consumed" semantics (EC-002).
    - When the condition is true, the compaction cycle is initiated (BC-2.10.006).
 3. **OnMessageCount { count }:** The `BudgetEngine` evaluates after each super-step:
    `active_window_message_count >= count`. When true, compaction is initiated.
@@ -91,10 +96,12 @@ as `OnCeiling::Summarize`.
 ## Invariants
 
 - **OnWatermark arithmetic (VP-012 Kani seed):** The trigger condition
-  `tokens_remaining / ceiling < (1.0 - fraction)` is a pure f32 comparison with no side
+  `tokens_remaining / ceiling <= (1.0 - fraction)` is a pure f64 comparison with no side
   effects. VP-012 Kani candidate: for any valid `(tokens_remaining, ceiling, fraction)` tuple
-  where `0 < tokens_remaining <= ceiling` and `fraction ∈ (0.0, 1.0]`, the comparison
-  returns the mathematically correct boolean.
+  where `0 <= tokens_remaining <= ceiling` and `fraction ∈ (0.0, 1.0]`, the comparison
+  returns the mathematically correct boolean. **Non-strict `<=` is load-bearing:** strict `<`
+  cannot fire when `fraction = 1.0` and `tokens_remaining = 0` (EC-002 boundary case requires
+  `0.0 <= 0.0 = true`).
 - `CompactionTrigger::Disabled` is the default — graphs without explicit compaction
   configuration see NO behavior change (backward compatible).
 - `CompactionTrigger` is `#[non_exhaustive]`: future variants (e.g., `OnIdle`) are addable
@@ -112,9 +119,9 @@ as `OnCeiling::Summarize`.
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | `OnWatermark { fraction: 0.0 }` at BudgetConfig construction | `Err` — fraction=0.0 always fires; configuration error |
-| EC-002 | `OnWatermark { fraction: 1.0 }` | Valid — triggers when 100% of budget consumed (i.e., `tokens_remaining == 0`); fires at ceiling |
+| EC-002 | `OnWatermark { fraction: 1.0 }` | Valid — triggers when 100% of budget consumed (i.e., `tokens_remaining == 0`); fires because `0.0 / ceiling = 0.0 <= 0.0` (non-strict equality; strict `<` would yield `0.0 < 0.0 = false` and could never fire — non-strict is load-bearing for this boundary) |
 | EC-003 | `OnMessageCount { count: 0 }` | `Err` — count=0 would always fire; configuration error |
-| EC-004 | `tokens_remaining > ceiling` (budget accounting error) | `OnWatermark` condition `tokens_remaining / ceiling < (1.0 - fraction)` evaluates to `false` for any fraction ≤ 1.0 (tokens_remaining/ceiling > 1.0); no spurious trigger |
+| EC-004 | `tokens_remaining > ceiling` (budget accounting error) | `OnWatermark` condition `tokens_remaining / ceiling <= (1.0 - fraction)` evaluates to `false` for any fraction ≤ 1.0 (tokens_remaining/ceiling > 1.0 > any valid `1.0 - fraction`); no spurious trigger |
 | EC-005 | `compaction_policy: None` with any trigger variant | `DefaultSummarizationPolicy` used; same summarization mechanism as `OnCeiling::Summarize` |
 | EC-006 | `CompactionTrigger::Disabled` (default) | No compaction throughout run; `OnCeiling` behavior unchanged |
 
@@ -122,17 +129,18 @@ as `OnCeiling::Summarize`.
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 | `OnWatermark { fraction: 0.8 }`, budget_ceiling=100_000, tokens_remaining=19_999 | Trigger fires (19_999/100_000 = 0.19999 < 0.2) | watermark fires |
+| TV-001 | `OnWatermark { fraction: 0.8 }`, budget_ceiling=100_000, tokens_remaining=19_999 | Trigger fires (19_999/100_000 = 0.19999 <= 0.2) | watermark fires |
 | TV-002 | `OnWatermark { fraction: 0.8 }`, budget_ceiling=100_000, tokens_remaining=20_001 | Trigger does NOT fire (20_001/100_000 = 0.20001 > 0.2) | watermark does not fire |
 | TV-003 | `OnWatermark { fraction: 0.0 }` construction | `Err` — configuration error; fraction=0.0 invalid | config error |
 | TV-004 | `OnMessageCount { count: 10 }`, active_window has 10 messages after super-step | Trigger fires | message count fires |
 | TV-005 | `Disabled` (default), any usage | No compaction event emitted; run proceeds to ceiling normally | disabled (default) |
+| TV-006 | `OnWatermark { fraction: 1.0 }`, budget_ceiling=100_000, tokens_remaining=0 | Trigger fires: `0.0 / 100_000 = 0.0 <= 0.0` (non-strict equality at EC-002 boundary) | watermark fraction=1.0 fires at zero remaining |
 
 ## Verification Properties
 
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
-| VP-012 (Kani P1 candidate) | OnWatermark: `tokens_remaining / ceiling < (1.0 - fraction)` fires if and only if the mathematical condition holds for all valid (tokens_remaining, ceiling, fraction) tuples | Kani: exhaustive over bounded integer ranges; f32 cast; assert correct boolean for all valid inputs |
+| VP-012 (Kani P1 candidate) | OnWatermark: `tokens_remaining / ceiling <= (1.0 - fraction)` fires if and only if the mathematical condition holds for all valid (tokens_remaining, ceiling, fraction) tuples (including the EC-002 boundary `remaining=0, fraction=1.0`) | Kani: exhaustive over bounded integer ranges; f64 cast; assert correct boolean for all valid inputs including the non-strict equality boundary |
 | VP-2.10.005-B | fraction=0.0 and count=0 and tokens=0 are rejected at construction with Err | Unit tests for each invalid configuration |
 | VP-2.10.005-C | Disabled default: no CompactionEvent emitted across a full run | Integration test: BudgetConfig with default Disabled; assert no CompactionEvent in stream |
 

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "2.2"
+version: "2.3"
 status: active
 producer: architect
 timestamp: 2026-07-24T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "7af21e4"
+input-hash: "e98fa69"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "2.3 (FIX-BURST-252/2026-07-24): Input-hash cascade refresh — module-decomposition.md v1.22→v1.23 (FIX-BURST-252 F-P151-02+05: fraction f32→f64 in core::budget, CompactionSummary flat fields). No VP-to-Module table or coverage-status changes (core-budget VP-012 mapping, tool, phase, priority, and Notes wording all unchanged — Notes 'OnWatermark arithmetic; Kani P1 (BC-2.10.005)' contains no predicate formula or type annotation requiring update)."
   - "2.2 (FIX-BURST-250/F-P149-03/2026-07-24): Add missing red_gate label to three Per-Module rows where VP is red_gate:true (VP-004/005/006) for parity with VP-009/VP-010 rows. injection_guard Notes: 'Kani P1 (BC-2.18.004)' → 'Kani P1 red_gate (BC-2.18.004)'. mcp-adapter Notes: 'ToolException fidelity' → 'ToolException type-identity; integration red_gate (BC-2.09.004)'. mcp-client Notes: 'Red Gate BCs' → 'integration red_gate (BC-2.09.005); no-live-connections'. Verified: VP-009 'Kani P0 red_gate (BC-2.21.003)' and VP-010 'Kani P0 red_gate (BC-2.19.005)' already correct. All 8 red_gate:false VP rows confirmed clean (no red_gate label)."
   - "2.1 (FIX-BURST-248/F-P147-01/2026-07-24): Remove stale 'red_gate' label from hitl row Notes — BC-2.05.007 is NOT Red-Gated (product-owner authority, burst-231; ADR-018 Decision 3 has no compile-and-fail mandate). Notes changed from 'Kani P0 red_gate (BC-2.05.007)' to 'Kani P0 (BC-2.05.007)'. No VP table, totals, or criticality tier changes."
   - "2.0 (burst-232/2026-07-22): D23 VP layer — add VP-011..013 to VP-to-Module table; update hitl row (VP-011 Kani P0); add core-budget row (VP-012 Kani P1); add tools-shell row (VP-013 Kani P1). Totals: 10→13 VPs, Kani 6→9. Coverage-by-Criticality-Tier: CRITICAL Kani VPs 5→6 (+VP-011; hitl is CRITICAL per module-criticality.md); HIGH Kani VPs 1→3 (+VP-012 core-budget, +VP-013 tools-shell; ferrochain-tools criticality tier deferred to module-criticality.md D23 content authoring burst). Per-module count 41→43 (+2 new rows). Input-hash refresh pending VP-INDEX.md v1.5."

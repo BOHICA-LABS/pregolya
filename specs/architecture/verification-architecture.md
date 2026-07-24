@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.5"
+version: "2.6"
 status: active
 producer: architect
 timestamp: 2026-07-24T00:00:00Z
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.007.md
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.005.md
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
-input-hash: "a950e7e"
+input-hash: "6494ba9"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -51,7 +51,7 @@ on a `Future` will fail at verification time. Consequences:
    - `checkpoint::clock` — pure `get_next_version(current)` successor function; stateless, no atomic counter
    - `graph::bsp_engine` (VP-001 target) — sync reducer; async orchestration wraps it
    - `graph::hitl` (VP-011 target) — sync `route_pre_tool_decision(decision: PreToolDecision) -> DispatchOutcome` extracted from async `pre_tool_dispatch`; `shield_hook_result(result: Result<PreToolDecision, HookError>) -> PreToolDecision` is the companion sync adapter
-   - `core::budget` (VP-012 target) — sync `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, fraction: f32) -> bool`; pure arithmetic, no I/O
+   - `core::budget` (VP-012 target) — sync `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, fraction: f64) -> bool`; pure arithmetic, no I/O; implements `<= (1.0 - fraction)` (non-strict, EC-002 correctness)
 3. **ADR-001 Alt-B constraint:** The HYBRID orchestrator-loop is `async` (Tokio runtime).
    This is intentional and correct. The Kani-verifiable invariants live inside the
    synchronous `reduce_super_step()` core that the orchestrator calls. Async orchestration
@@ -489,20 +489,21 @@ requires a concrete `MockEmbeddings` struct implementing `Embeddings` with fixed
 **VP-012 — OnWatermark Arithmetic** (ferrochain-core / core-budget) `Kani P1 Phase 6`
 
 Property: `check_watermark_trigger(tokens_remaining, ceiling, fraction)` returns `true` if and
-only if `(tokens_remaining as f32) / (ceiling as f32) < (1.0 - fraction)` for all valid inputs
-in the bounded domain. The function never overflows, produces NaN, or returns an incorrect
-trigger decision within the bounded domain.
+only if `(tokens_remaining as f64) / (ceiling as f64) <= (1.0 - fraction)` for all valid inputs
+in the bounded domain. Non-strict `<=` is load-bearing (EC-002: fraction=1.0 must fire when
+remaining=0). The function never overflows, produces NaN, or returns an incorrect trigger
+decision within the bounded domain.
 
 Formal statement:
 ```
 ∀ tokens_remaining: u64 ∈ (0, ceiling], ceiling: u64 ∈ (0, 2^24],
-  fraction: f32 ∈ (0.0, 1.0], fraction.is_finite():
+  fraction: f64 ∈ (0.0, 1.0], fraction.is_finite():
     check_watermark_trigger(tokens_remaining, ceiling, fraction)
-    == ((tokens_remaining as f32) / (ceiling as f32) < (1.0f32 - fraction))
+    == ((tokens_remaining as f64) / (ceiling as f64) <= (1.0f64 - fraction))
 ```
 
-Bound rationale: `ceiling ≤ 2^24` ensures exact f32 representation; above 2^24 f32 loses
-integer precision and the arithmetic guarantee is not meaningful.
+Bound rationale: `ceiling ≤ 2^24` is a CBMC tractability bound (not a precision constraint);
+f64 is exact up to 2^53, well above all realistic LLM token budgets as of D23.
 
 Kani harness sketch:
 ```rust
@@ -510,23 +511,23 @@ Kani harness sketch:
 fn watermark_arithmetic_harness() {
     let tokens_remaining: u64 = kani::any();
     let ceiling: u64 = kani::any();
-    let fraction: f32 = kani::any();
+    let fraction: f64 = kani::any();
     kani::assume(tokens_remaining > 0 && ceiling > 0 && tokens_remaining <= ceiling);
     kani::assume(ceiling <= 1 << 24);
     kani::assume(fraction > 0.0 && fraction <= 1.0 && fraction.is_finite());
     let result = check_watermark_trigger(tokens_remaining, ceiling, fraction);
-    let r = tokens_remaining as f32;
-    let c = ceiling as f32;
-    let expected = r / c < (1.0f32 - fraction);
+    let r = tokens_remaining as f64;
+    let c = ceiling as f64;
+    let expected = r / c <= (1.0f64 - fraction);  // non-strict <=
     kani::assert(result == expected, "OnWatermark arithmetic must match reference");
 }
 ```
 
 Feasibility: MEDIUM-HIGH. `check_watermark_trigger` is a pure sync arithmetic function in
-`ferrochain-core::core::budget` (definitions-only, not the graph::budget engine). The bounded
-domain (`ceiling ≤ 2^24`) makes the f32 arithmetic tractable for Kani's IEEE-754 model.
-Estimated proof time: 5–10 min. Note: `fraction > 0.0` assumption excludes the degenerate
-`fraction = 0.0` case (always-fire); if that case is in scope, a separate harness is warranted.
+`ferrochain-core::core::budget`. The bounded domain (`ceiling ≤ 2^24`) makes the f64
+arithmetic tractable for Kani's IEEE-754 model. Estimated proof time: 5–15 min.
+Note: `fraction > 0.0` assumption excludes the degenerate `fraction = 0.0` case (always-fire)
+which is rejected at BudgetConfig construction (EC-001 in BC-2.10.005).
 
 ---
 
@@ -630,6 +631,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.6 | 2026-07-24 | architect | FIX-BURST-252 / F-P151-04+05 | VP-012 predicate + precision corrections. (1) F-P151-04: `<` → `<=` in VP-012 Property Statement, Formal Statement, harness expected expression, and core-budget sync-core line. Non-strict `<=` is required: with strict `<`, condition `tokens_remaining/ceiling < 0.0` can never be true (remaining≥0), so fraction=1.0/remaining=0 would never fire (contradicts BC-2.10.005 EC-002). (2) F-P151-05: `fraction: f32` → `fraction: f64` throughout VP-012 section (Property Statement, Formal Statement, harness). `f64` is the adjudicated type (interface-definitions §Compaction already used f64; f64 avoids precision issues for budgets >16M tokens). `watermark_boundary_does_not_fire` harness renamed `watermark_boundary_fires` (with `<=`, exactly-at-threshold now fires). Feasibility note updated: CBMC tractability bound 2^24 retained, rationale changed from f32-precision to state-space-only. |
 | 2.5 | 2026-07-24 | architect | FIX-BURST-250 / F-P149-01 | F-P149-01 (HIGH, architect half) de-pin volatile ADR version: VP-009 Feasibility note `ADR-014 v1.2 §Hardening note` → `ADR-014 Decision 2 §Hardening note` (TD-VSDD-091 per D18-P84-A: live-body citations use stable section anchors, not version pins). Sibling sweep (F-P149-03): VP-006 heading updated from `` `Kani P1 Phase 6` `` to `` `Kani P1 Phase 6` `red_gate: true` `` — parity with VP-009 and VP-010 headings (both carry `` `red_gate: true` ``). |
 | 2.4 | 2026-07-24 | architect | FIX-BURST-248 / F-P147-01 | F-P147-01 (HIGH) red_gate adjudication: VP-011 entry heading corrected — remove stale `red_gate: true` label. BC-2.05.007 is NOT Red-Gated (product-owner authority: BC-2.05.007 red_gate: false, burst-231; ADR-018 Decision 3 contains no compile-and-fail mandate; fabricated red_gate_source removed in VP-011 v1.1). Heading updated from `` `Kani P0 red_gate: true` `` to `` `Kani P0` ``. Red Gate census: 11 (unchanged). |
 | 2.3 | 2026-07-24 | architect | burst-247 / F-P146-01 | F-P146-01 (HIGH) VP-011 catalog correction: rewrite formal statement, prose, and harness sketch to match authoritative 4-variant `#[non_exhaustive]` PreToolDecision model (Approve/Deny/Edit/PendingHumanApproval per BC-2.05.007 PC1–PC4 + VP-011.md + interface-definitions). Removes stale two-variant exhaustive claim and "(no other variant exists; enum is exhaustive)" line. Fixes wrong Proceed-reachability prose (Approve-only → Approve AND valid Edit per PC-3). Replaces non-compiling `kani::any()` two-arm match with four concrete proof functions (deny_excludes_tool_invocation, approve_reaches_tool_invocation, hook_error_resolves_to_deny_and_reject, edit_invalid_args_falls_back_to_deny) mirroring VP-011.md §Proof Harness Skeleton. Fixes feasibility "2-variant" → "4-variant #[non_exhaustive]". Coherence sweep of 12 remaining VP catalog entries (OBS-P146 process-gap follow-up) found 4 additional harness-target divergences fixed in same burst: VP-001 `reduce_deterministic`→`reduce_super_step` + `sort_and_reduce`→`reduce_super_step` in formal statement; VP-003 harness `canonicalize_beneath_root`→`canonicalize_beneath_root_pure`; VP-006 SlotVar `trust_policy`+`value` fields→`policy` (no value field, `is_some_and(t.is_untrusted())` predicate per VP-006.md); VP-007 `lc_serialize()`/`lc_deserialize()`→`serialize()`/`Reviver::new().revive()`. TD-VSDD-060 sibling sweep: all PreToolDecision claims in architect-owned files (module-decomposition, purity-boundary-map, api-surface) verified correct (4-variant model already present); domain-spec + PO-owned files not modified. Input-hash updated: fb6e588→fd27b6d. |

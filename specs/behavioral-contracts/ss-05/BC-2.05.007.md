@@ -32,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "9a6ff4a"
+input-hash: "d4d38b2"
 extracted_from: null
 modified: []
 deprecated: null

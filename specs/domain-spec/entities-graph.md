@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: entities-graph
-version: "1.9"
+version: "1.10"
 status: active
 producer: business-analyst
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-24T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -14,6 +14,7 @@ input-hash: "e978d8d"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D21, D23]
 changelog:
+  - "v1.10 (2026-07-24): Fix burst 252 BA — ADR-019 v1.4 compaction type canon applied. CompactionTrigger: `OnWatermark { fraction: f32 }` → `f64`; predicate `<` → `<=` (non-strict; strict < cannot fire at fraction=1.0); OnMessageCount/OnTokenCount descriptors → 'reaches or exceeds' phrasing. CompactionSummary fields: `compacted_range: RangeInclusive<usize>` → flat `compacted_start: usize, compacted_end: usize`; Application: `messages[compacted_range]` → `messages[compacted_start..=compacted_end]`; CompactionEvent struct updated to flat fields. Relationships Summary updated to flat-field form. TD-VSDD-060 sweep: zero compacted_range / RangeInclusive / fraction: f32 occurrences remain in this file's body text (changelog historical entries exempt)."
   - "v1.9 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 3 enum-variant form occurrences of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Sites: §PreToolDecision PendingHumanApproval bullet (line 298), §ToolApprovalRequest Note (line 312), Relationships Summary (line 371). TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text."
   - "v1.8 (2026-07-23): Fix burst-241 F-P141-01 (false-closure) — CompactionSummary §Application: genuinely apply the rename trigger_tokens_remaining → tokens_remaining_after. The v1.7 changelog entry claimed this rename was already applied ('sole occurrence') but the body retained the stale field name `trigger_tokens_remaining`. v1.7 was a false-closure; this entry is the genuine fix. TD-VSDD-060 sibling sweep: zero trigger_tokens_remaining occurrences remain in domain-spec/ body text (changelog historical entries and out-of-scope BC/ADR files exempted)."
   - "v1.7 (2026-07-22): Fix burst-234 BA sibling-sweep — CompactionSummary §Application: renamed CompactionEvent field trigger_tokens_remaining → tokens_remaining_after (canonical name per BC-2.10.006 v1.1 burst-233, ADR-019 Decision 3 v1.2 burst-234). TD-VSDD-060 sweep: sole occurrence; no other domain-spec files affected."
@@ -323,9 +324,9 @@ Interrupt payload serialized to the checkpoint when `PreToolDecision::PendingHum
 Configuration type that controls when the BudgetEngine initiates proactive context compaction.
 - **Variants (`#[non_exhaustive]`):**
   - `Disabled` — no proactive compaction (default; backward compatible; OnCeiling behaviour unchanged)
-  - `OnWatermark { fraction: f32 }` — trigger when `tokens_remaining / ceiling < (1.0 - fraction)`; e.g. fraction=0.8 = trigger at 80% budget consumed. VP-012 Kani candidate (pure arithmetic).
-  - `OnMessageCount { count: usize }` — trigger when active message count exceeds threshold
-  - `OnTokenCount { tokens: u64 }` — trigger when cumulative conversation token count exceeds threshold
+  - `OnWatermark { fraction: f64 }` — trigger when `tokens_remaining / ceiling <= (1.0 - fraction)`; e.g. fraction=0.8 = trigger at 80% budget consumed; non-strict `<=` (strict `<` cannot fire at fraction=1.0); f64 arithmetic. VP-012 Kani candidate (pure arithmetic).
+  - `OnMessageCount { count: usize }` — trigger when active message count reaches or exceeds threshold
+  - `OnTokenCount { tokens: u64 }` — trigger when cumulative conversation token count reaches or exceeds threshold
 - **Crate:** ferrochain-core, module `core::budget`; field of `BudgetConfig`
 - **Note:** `Disabled` default means all existing graphs are unaffected (ADR-019 Decision 2).
 
@@ -345,9 +346,9 @@ Read-only slice of recent conversation history assembled by the BudgetEngine fro
 
 ### CompactionSummary
 Output produced by a `CompactionPolicy::compact()` call; applied to the active message window.
-- **Fields (`#[non_exhaustive]`):** `summary_text: String` (injected as a SystemMessage), `compacted_range: RangeInclusive<usize>` (which turn indices are replaced)
+- **Fields (`#[non_exhaustive]`):** `summary_text: String` (injected as a SystemMessage), `compacted_start: usize` (first turn index replaced), `compacted_end: usize` (last turn index replaced, inclusive; slice form `messages[compacted_start..=compacted_end]`)
 - **Crate:** ferrochain-core, module `core::budget`
-- **Application:** BudgetEngine replaces `messages[compacted_range]` with `SystemMessage(summary_text)` in the active conversation window. Original checkpoint records are NOT deleted (BC-2.04.001 immutable checkpoint history). A `CompactionEvent { compacted_range, summary_token_count, tokens_remaining_after }` is appended to EvidenceJournal; a `compaction_event` streaming event (15th variant) is emitted.
+- **Application:** BudgetEngine replaces `messages[compacted_start..=compacted_end]` with `SystemMessage(summary_text)` in the active conversation window. Original checkpoint records are NOT deleted (BC-2.04.001 immutable checkpoint history). A `CompactionEvent { compacted_start, compacted_end, summary_token_count, tokens_remaining_after }` is appended to EvidenceJournal; a `compaction_event` streaming event (15th variant) is emitted.
 
 ---
 
@@ -371,7 +372,7 @@ Tool invocation produces ToolMessage (BC-2.09.002); content passes GuardrailHook
 PreToolCallHook::pre_invoke fires before every tool dispatch; PreToolDecision routes → Approve / Deny / Edit / PendingHumanApproval
 ToolApprovalRequest persisted to checkpoint on PendingHumanApproval; Command(resume=PreToolDecision) delivers the decision
 CompactionTrigger evaluated by BudgetEngine after each super-step; on trigger → ConversationSnapshot assembled from FTS → CompactionPolicy::compact() → CompactionSummary applied to active window
-CompactionSummary.compacted_range replaced by SystemMessage(summary_text); CompactionEvent appended to EvidenceJournal; compaction_event emitted (15th streaming variant)
+CompactionSummary applied: messages[compacted_start..=compacted_end] replaced by SystemMessage(summary_text); CompactionEvent { compacted_start, compacted_end, … } appended to EvidenceJournal; compaction_event emitted (15th streaming variant)
 Retriever::get_relevant_documents returns Vec<Document>; Documents entering graph context pass BoundaryType::RAGRetrieval guardrail (DI-012)
 VectorStoreRetriever implements Retriever; backed by &dyn VectorStore; SearchType selects similarity vs MMR
 VectorStore 1——N Document (stores/indexes); VectorStoreRetriever wraps VectorStore

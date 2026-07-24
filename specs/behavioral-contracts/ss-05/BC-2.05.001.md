@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.001
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,11 +24,12 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "27971fe"
+input-hash: "b471d2b"
 changelog:
-  - "1.1 (ADV-P1D-PASS-26): F-P26-03 TV-005 field name risk_tier→action_risk (propagation of F-P25-06 action_risk canon; retired field name drained per RETIRED-IDENTIFIER RESIDUE GREP gate)."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.4 (F-P151-06, burst-252, 2026-07-24): Related BCs — add BC-2.10.006 cross-reference (compaction × suspend non-interaction). A run parked by generic interrupt() (PC5: super-step boundary has not advanced) is not at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during any interrupt() park window."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.1 (ADV-P1D-PASS-26): F-P26-03 TV-005 field name risk_tier→action_risk (propagation of F-P25-06 action_risk canon; retired field name drained per RETIRED-IDENTIFIER RESIDUE GREP gate)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -143,6 +144,7 @@ is returned. The graph does not proceed and does not leave a partial checkpoint.
 - BC-2.05.005 — composes with: empty-queue guard is the dual of this (what happens when no interrupt exists)
 - BC-2.04.001 — depends on: per-task put_writes durability is the storage primitive this uses
 - BC-2.04.005 — related to: crash-recovery for interrupted runs uses the INTERRUPT marker
+- BC-2.10.006 — related to: a run parked by `interrupt()` (PC5: super-step boundary has not advanced, run in `interrupted` status) is NOT at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during any interrupt() park window
 - _(v2-deferred: in-flight cancellation — cancelling a run that is currently mid-super-step and propagating a CancelledError through the active node tasks is deferred to v2; v1 interrupt-and-resume covers only voluntary pause-and-wait, not async abort of executing nodes)_
 
 ## Architecture Anchors

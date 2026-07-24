@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.006
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,8 +19,9 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
-  - "1.2 (burst-236/F-P136-04/2026-07-23): PC1 JSON payload `tokens_remaining_after` type fixed: `<u64>` → `<i64 | null>`. Source is `RunContext.budget_info.tokens_remaining: Option<i64>` (interface-definitions.md §BudgetInfo v2.21). When no token ceiling is configured (OnMessageCount/OnTokenCount triggers fire), `tokens_remaining` is `None` → u64 has no representation; may also be negative (i64) on Deny. Invariants updated to note the `Option<i64>` source type. BC-2.10.006 Step 5 and interface-def §StreamEvent CompactionEvent updated identically (three-site reconciliation F-P136-04)."
+  - "1.4 (F-P151-03, burst-252, 2026-07-24): ADR-019 v1.4 adjudicated canon applied. (1) PC1 JSON payload → flat wire shape: `compacted_turns: { start, end }` removed; replaced with `compacted_start: <usize>` + `compacted_end: <usize>` (flat inclusive bounds per interface-definitions.md §Compaction CompactionSummary). (2) `parent_ids: [\"<parent_run_id>\"]` added to PC1 JSON (BC-2.06.002 Inv-2 mandate — every StreamEvent variant carries parent_ids). (3) PC1 field descriptions updated: `compacted_turns`/`CompactionSummary.compacted_range` references replaced with `compacted_start`/`compacted_end` flat-field descriptions (inclusive bounds, slice note). (4) Invariants: add parent_ids mandatory note citing BC-2.06.002 Inv-2. (5) EC-005 + TV-001 + TV-004 updated to flat + parent_ids wire shape."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
+  - "1.2 (burst-236/F-P136-04/2026-07-23): PC1 JSON payload `tokens_remaining_after` type fixed: `<u64>` → `<i64 | null>`. Source is `RunContext.budget_info.tokens_remaining: Option<i64>` (interface-definitions.md §BudgetInfo v2.21). When no token ceiling is configured (OnMessageCount/OnTokenCount triggers fire), `tokens_remaining` is `None` → u64 has no representation; may also be negative (i64) on Deny. Invariants updated to note the `Option<i64>` source type. BC-2.10.006 Step 5 and interface-def §StreamEvent CompactionEvent updated identically (three-site reconciliation F-P136-04)."
   - "1.1 (burst-234/F-P134-05/2026-07-22): Remove spurious ADR-018 (per-tool-call approval hook) from traces_to and inputs. BC-2.06.006 is compaction_event (event 15); its sole architecture authority is ADR-019 Decision 4. ADR-018 was copy-paste residue from BC-2.06.004/005 (tool_approval streaming events which DO depend on ADR-018). input-hash recomputed after inputs list change: 9c3892a → ee8a02b."
   - "1.0 (D23/2026-07-22): Initial BC — D23 streaming event taxonomy extension, event 15 compaction_event."
 traces_to:
@@ -29,7 +30,7 @@ traces_to:
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
-input-hash: "910f5c7"
+input-hash: "28fd2bd"
 extracted_from: null
 modified: []
 deprecated: null
@@ -68,17 +69,23 @@ host to update context-window visualization without polling.
    `StreamEvent::CompactionEvent` with the following payload:
    ```json
    {
-     "run_id":               "<run-uuid>",
-     "trigger":              "OnWatermark" | "OnMessageCount" | "OnTokenCount",
-     "compacted_turns":      { "start": <usize>, "end": <usize> },
-     "summary_token_count":  <u64>,
+     "run_id":                 "<run-uuid>",
+     "parent_ids":             ["<parent_run_id>"],
+     "trigger":                "OnWatermark" | "OnMessageCount" | "OnTokenCount",
+     "compacted_start":        <usize>,
+     "compacted_end":          <usize>,
+     "summary_token_count":    <u64>,
      "tokens_remaining_after": <i64 | null>
    }
    ```
+   - `parent_ids`: ancestry chain per BC-2.06.002 Inv-2 (MANDATORY on every `StreamEvent`
+     variant); `[]` for a top-level run; `["<parent_run_id>"]` for a sub-agent run.
    - `trigger`: the `CompactionTrigger` variant that fired (string representation of the enum
      variant name that caused compaction; not the full variant with fields).
-   - `compacted_turns`: the `RangeInclusive<usize>` from `CompactionSummary.compacted_range`,
-     serialized as `{ start, end }`.
+   - `compacted_start`: inclusive start turn index replaced by the summary (from
+     `CompactionSummary.compacted_start`; see interface-definitions.md §Compaction).
+   - `compacted_end`: inclusive end turn index replaced by the summary (from
+     `CompactionSummary.compacted_end`); the replaced slice is `messages[compacted_start..=compacted_end]`.
    - `summary_token_count`: the token count of the injected `SystemMessage(summary_text)`.
    - `tokens_remaining_after`: `RunContext.budget_info.tokens_remaining` after the compacted
      context is active.
@@ -100,6 +107,10 @@ host to update context-window visualization without polling.
   (e.g., `OnMessageCount`/`OnTokenCount` triggers with neither `soft_limit` nor `hard_limit` set);
   negative `i64` when `accumulated > ceiling` (Deny path). Wire serializes as `null` when
   `None`. This is the meaningful value for capacity-management consumers.
+- **`parent_ids` is mandatory (BC-2.06.002 Inv-2):** Every `StreamEvent` variant, including
+  `CompactionEvent`, MUST carry `parent_ids: Vec<RunId>`. For a top-level run `parent_ids`
+  is empty (`[]`); for a sub-agent run it contains the parent `RunId` chain. This field
+  must not be omitted from the wire payload.
 - `StreamEvent` variants are typed enum members (BC-2.06.001 invariant).
 - **DI-014:** The event payload must not be silently dropped; fire-and-forget semantics apply.
 
@@ -111,16 +122,16 @@ host to update context-window visualization without polling.
 | EC-002 | `compact()` returns `Err(...)` (policy error) | No `compaction_event` emitted; engine logs error, continues without compaction |
 | EC-003 | Compaction fires twice in one run (trigger crosses watermark again after first compaction) | Two `compaction_event` events emitted in sequence; each reflects its respective compacted range |
 | EC-004 | Stream consumer disconnected before event | Event dropped; engine does not block; run continues normally |
-| EC-005 | `compacted_turns` spans the full conversation history (range 0..end) | Event emitted with `{ start: 0, end: <last_turn> }` |
+| EC-005 | `compacted_start..=compacted_end` spans the full conversation history | Event emitted with `compacted_start: 0, compacted_end: <last_turn>` |
 
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 | OnWatermark trigger fires after super-step 5; compact() succeeds; 10 turns compacted | Stream: `CompactionEvent { trigger: "OnWatermark", compacted_turns: {start: 0, end: 9}, summary_token_count: 250, tokens_remaining_after: 45000 }` | happy-path |
+| TV-001 | OnWatermark trigger fires after super-step 5; compact() succeeds; 10 turns compacted | Stream: `CompactionEvent { run_id: "<uuid>", parent_ids: [], trigger: "OnWatermark", compacted_start: 0, compacted_end: 9, summary_token_count: 250, tokens_remaining_after: 45000 }` | happy-path |
 | TV-002 | `CompactionTrigger::Disabled` | No `compaction_event` in stream across full run | no-emission (disabled) |
 | TV-003 | compact() returns Err | No `compaction_event`; run continues; error observable via EvidenceJournal only | error — no event |
-| TV-004 | OnMessageCount trigger fires; 5 turns compacted | `CompactionEvent { trigger: "OnMessageCount", compacted_turns: {start: 0, end: 4}, ... }` | message-count trigger |
+| TV-004 | OnMessageCount trigger fires; 5 turns compacted | `CompactionEvent { run_id: "<uuid>", parent_ids: [], trigger: "OnMessageCount", compacted_start: 0, compacted_end: 4, ... }` | message-count trigger |
 
 ## Verification Properties
 

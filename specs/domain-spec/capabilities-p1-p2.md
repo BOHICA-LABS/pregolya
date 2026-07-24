@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.13"
+version: "1.14"
 status: active
 producer: business-analyst
 timestamp: 2026-07-24T00:00:00Z
@@ -17,6 +17,7 @@ input-hash: "f2bf365"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.14 (2026-07-24): Fix burst 252 BA — ADR-019 v1.4 compaction type canon applied at CAP-035. (1) CompactionTrigger OnWatermark: `fraction: f32` → `f64`; predicate `<` → `<=` (non-strict; strict < cannot fire at fraction=1.0). (2) CompactionSummary: `compacted_range: RangeInclusive<usize>` → flat `compacted_start: usize, compacted_end: usize`; slice form `messages[compacted_start..=compacted_end]`. (3) BudgetEngine description: `messages[compacted_range]` → `messages[compacted_start..=compacted_end]`. TD-VSDD-060 sweep: zero compacted_range / RangeInclusive / fraction: f32 occurrences remain in this file's body text (CAP-035 sites only; changelog exempt)."
   - "1.13 (2026-07-24): Fix burst 251 F-P150-02 (MED) — remove stale completed-delegation residue at two sites. (1) CAP-029 §Zero-norm guard: '(ADR-authored code; PO to formalize in error taxonomy)' → '(registered in error-taxonomy §VS — VAL, zero-norm cosine guard, BC-2.21.003)'. (2) CAP-031 §Dimensionality contract: '(ADR-authored code; PO to formalize in error taxonomy)' → '(registered in error-taxonomy §EMBED — VAL, dimensionality contract violation, BC-2.22.001)'. Both E-VS-001 and E-EMBED-001 were registered in error-taxonomy v1.27 (2026-07-20). L-026 stale-delegation sweep across all domain-spec shards: zero additional hits — only these two sites required remediation."
   - "1.12 (2026-07-24): Fix burst 250 F-P149-01 + F-P149-02 (TD-VSDD-091) — de-pin ADR version citations in live body text. (1) CAP-029 §Zero-norm guard heading: 'ADR-014 v1.1 hardening' → 'ADR-014 Decision 2 §Hardening note'. (2) CAP-029 §Grounding: 'ADR-014 v1.1 §Hardening note' → 'ADR-014 Decision 2 §Hardening note'. (3) CAP-033 §Endpoint behavior heading: 'ADR-017 v1.1' → 'ADR-017 Decision 3'. (4) CAP-033 §Grounding near-miss (outside grep pattern; same violation): 'ADR-017 Decision 3 and v1.1 specify' → 'ADR-017 Decision 3 specifies'. TD-VSDD-060 sibling sweep: no other ADR version pins in live body text of this file."
   - "1.11 (2026-07-23): Fix burst 243 F-P143-01 (MED) — CAP-029 VP-009 mis-description corrected. Two sites: (1) Grounding §VP-009 connection — stale 'MMR cosine values ∈ [-1.0, 1.0] + no NaN in output scores for any valid non-zero query embedding' replaced with Zero-Norm Cosine Guard framing: `cosine_similarity` in `vectorstores::similarity`, fail-closed via E-VS-001 before division, `Ok(f32::NAN)` unreachable, BC-2.21.003, DI-014, harness `zero_norm_guard_fail_closed`. (2) Anchor justification — 'VP-009 (Kani MMR bounded proof)' replaced with 'VP-009 (Kani Zero-Norm Cosine Guard — `zero_norm_guard_fail_closed` on `cosine_similarity`, BC-2.21.003, DI-014)'. TD-VSDD-060 sibling sweep: no other MMR-proof or vectorstores-mmr VP-009 framing found in live body text of .factory/specs/."
@@ -593,21 +594,22 @@ Provide a first-class rolling compaction primitive in the budget engine. New typ
 `core::budget` (definitions-only, ADR-009 Option 3):
 
 - `CompactionTrigger` (`#[non_exhaustive]`): `Disabled` (default; backward compatible),
-  `OnWatermark { fraction: f32 }` (trigger when `tokens_remaining / ceiling < (1.0 - fraction)`;
+  `OnWatermark { fraction: f64 }` (trigger when `tokens_remaining / ceiling <= (1.0 - fraction)`;
+  non-strict `<=` — strict `<` cannot fire at fraction=1.0; f64 arithmetic;
   VP-012 Kani candidate — pure arithmetic), `OnMessageCount { count: usize }`,
   `OnTokenCount { tokens: u64 }`.
 - `CompactionPolicy` trait: `async fn compact(&self, snapshot: &ConversationSnapshot,
   run_ctx: &RunContext) → Result<CompactionSummary, FerrochainError>`.
 - `ConversationSnapshot`: ordered Vec<(turn_index, Message)> + token_estimate; assembled
   from checkpoint FTS (BC-2.04.008) by the BudgetEngine.
-- `CompactionSummary`: `summary_text: String` + `compacted_range: RangeInclusive<usize>`.
+- `CompactionSummary`: `summary_text: String` + `compacted_start: usize` + `compacted_end: usize` (flat; slice form `messages[compacted_start..=compacted_end]`).
 
 `BudgetConfig` gains `compaction_trigger: CompactionTrigger` (default `Disabled`) and
 `compaction_policy: Option<Arc<dyn CompactionPolicy>>` (None = `DefaultSummarizationPolicy`
 which prompts the model, same mechanism as `OnCeiling::Summarize`).
 
 `BudgetEngine` in `graph::budget` evaluates the trigger after each super-step; on trigger:
-assembles ConversationSnapshot → calls compact() → replaces messages[compacted_range] with
+assembles ConversationSnapshot → calls compact() → replaces messages[compacted_start..=compacted_end] with
 SystemMessage(summary_text) in the active window → appends CompactionEvent to EvidenceJournal
 → emits `compaction_event` streaming event (15th variant). Original checkpoint records are
 NOT deleted (BC-2.04.001 immutability). Custom CompactionPolicy impls MAY also write
