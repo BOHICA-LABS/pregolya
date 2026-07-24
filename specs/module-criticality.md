@@ -1,20 +1,21 @@
 ---
 document_type: module-criticality
 level: L3
-version: "1.5"
+version: "1.6"
 status: active
 producer: architect
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-23T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
-input-hash: "daa49ee"
+input-hash: "4bec93d"
 traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "1.6 (burst-244/2026-07-23): F-P144-02 adjudication — add core-budget (HIGH, VP-012 Kani P1, ferrochain-core SS-10) and tools-shell (HIGH, VP-013 Kani P1, ferrochain-tools SS-23) rows; removes deferred posture from v1.5. core-budget HIGH: VP-012 Kani P1 hosts check_watermark_trigger (pure-core arithmetic); established project pattern assigns HIGH to all Kani P1 VP hosts (injection_guard precedent); token watermark arithmetic is governance-correctness, not a security boundary — CRITICAL overclaims. tools-shell HIGH: VP-013 Kani P1 hosts check_risk_floor (pure-core enum comparison enforcing non-lowerable Medium risk floor per ADR-020 Decision 3 'framework safety invariant'); profile mirrors injection_guard (VP-006 Kani P1 HIGH — both are pure-core security invariants enforced by construction); CRITICAL requires direct security-boundary or durability role. Both assignments match pre-existing verification-coverage-matrix.md HIGH classification (F-P144-01 contradiction resolved). Classification Summary: HIGH 16→18, Total 41→43."
   - "1.5 (burst-229/2026-07-22): Input-hash cascade refresh — ARCH-INDEX.md v1.6 + module-decomposition.md v1.15 both changed in burst 229 (D23 architecture layer: ADR-018/019/020, SS-23 ferrochain-tools crate #21, Wave-1 promotions SS-15/SS-16). No content rows added (ferrochain-tools criticality rows deferred to architect D23 content authoring). Hash: ac2e35a → db6f656."
   - "1.4 (burst-224/2026-07-21): D21+burst-224 backfill — add 6 criticality rows missing since burst-223 (D21 module universe not propagated to this file). CRITICAL +2: serializable-reviver (VP-010 Kani P0 / SS-19), vectorstores-similarity (VP-009 Kani P0 / SS-21 / burst-224 final name after F-P129-11). HIGH +3: injection_guard (VP-006 Kani P1 / SS-18), serializable (VP-007 proptest P1 / SS-19), embeddings (VP-008 proptest P1 / SS-22). MEDIUM +1: vectorstores-mmr (SS-21; MMR-only after VP-009 relocated to vectorstores-similarity in burst-224). Summary 35→41. Definitions-only D21 artifacts (core::guardrail) excluded per no-row precedent (ADR-014 Decision 6 / ADR-009 Option 3). Input-hash refresh pending compute-input-hash (module-decomposition.md v1.12 changed in same burst)."
   - "1.3 (D20/CAP-021): add mcp-server MEDIUM row (+1 execution module; CAP-021 MCP server role, inbound tool-call dispatch). Summary 34→35: MEDIUM 10→11 total."
@@ -77,9 +78,13 @@ changelog:
 | injection_guard | ferrochain-prompts | SS-18 | HIGH | VP-006 | ≥ 90% | P3 per-story + P5 |
 | serializable | ferrochain-core | SS-19 | HIGH | VP-007 | ≥ 90% | P5 |
 | embeddings | ferrochain-core | SS-22 | HIGH | VP-008 | ≥ 90% | P5 |
+| core-budget | ferrochain-core | SS-10 | HIGH | VP-012 | ≥ 90% | P3 per-story + P5 |
+| tools-shell | ferrochain-tools | SS-23 | HIGH | VP-013 | ≥ 90% | P3 per-story + P5 |
 | vectorstores-mmr | ferrochain-vectorstores | SS-21 | MEDIUM | — | ≥ 80% | P5 |
 
 > **D21+burst-224 additions (v1.4):** serializable-reviver and vectorstores-similarity added as CRITICAL (Kani P0 proof obligations VP-010 and VP-009 respectively). injection_guard, serializable, embeddings added as HIGH (Kani P1 and proptest P1 proof obligations VP-006/007/008). vectorstores-mmr added as MEDIUM (MMR-only selection algorithm; VP-009 relocated to vectorstores-similarity by F-P129-11 in burst-224). Definitions-only D21 artifacts (core::guardrail per ADR-014 Decision 6) excluded per no-row precedent.
+
+> **F-P144-02 adjudication (burst-244/v1.6):** core-budget (ferrochain-core SS-10) and tools-shell (ferrochain-tools SS-23) added as HIGH. **core-budget HIGH:** VP-012 is a Kani P1 obligation for `check_watermark_trigger` — a pure-core arithmetic function computing the OnWatermark budget ceiling comparison. The established tier pattern assigns HIGH to all Kani P1 VP hosts (injection_guard precedent). Token watermark arithmetic is correctness-significant for budget governance but is not a security boundary (no cross-tenant isolation, no credential handling, no path traversal prevention) — CRITICAL would require one of those roles. **tools-shell HIGH:** VP-013 is a Kani P1 obligation for `check_risk_floor` — a pure-core enum comparison enforcing BashTool's non-lowerable Medium risk floor. ADR-020 Decision 3 names this a "framework safety invariant non-lowerable by application configuration." The property is security-relevant: bypassing the floor permits BashTool to execute shell commands without the minimum HITL risk-approval gate. This profile mirrors injection_guard (VP-006, Kani P1, HIGH): both are pure-core security checks enforced by construction that prevent a dangerous misconfiguration. CRITICAL would require a direct security-boundary role (credential handling, cross-tenant isolation, path traversal prevention) — tools-shell enforces a configuration gate, not a runtime isolation boundary. Phase Gate "P3 per-story + P5" for both: Kani P1 VP hosts inherit the injection_guard gate assignment.
 
 > **Exclusion criteria (F-P32-04, ADV-P1D-PASS-32):** Facade/re-export and codegen-thin
 > crates (`ferrochain` #1, `ferrochain-openai-sdk` #16, `ferrochain-anthropic-sdk` #17,
@@ -100,10 +105,10 @@ changelog:
 | Tier | Module Count |
 |------|-------------|
 | CRITICAL | 11 |
-| HIGH | 16 |
+| HIGH | 18 |
 | MEDIUM | 12 |
 | LOW | 2 |
-| **Total** | **41** |
+| **Total** | **43** |
 
 ## CRITICAL Module — Security Profile
 

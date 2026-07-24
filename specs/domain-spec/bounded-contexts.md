@@ -12,7 +12,7 @@ inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
-input-hash: "691fd4c"
+input-hash: "0524f26"
 traces_to: L2-INDEX.md
 decisions: [D1, D4, D6, D11, D13, D17, D19, D20, D21, D23]
 changelog:

@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.9"
+version: "1.10"
 status: active
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "0fb93c1"
+input-hash: "dcfda45"
 traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
@@ -38,7 +38,7 @@ changelog:
 | Section | File | Primary Consumer | Purpose |
 |---------|------|-----------------|---------|
 | System Overview | system-overview.md | orchestrator, all agents | Vision, principles, crate topology, constraints |
-| Module Decomposition | module-decomposition.md | story-writer, implementer | 18-crate catalog, responsibilities, wave alignment |
+| Module Decomposition | module-decomposition.md | story-writer, implementer | 21-crate catalog, responsibilities, wave alignment |
 | Dependency Graph | dependency-graph.md | story-writer, consistency-validator | Crate DAG, topological build order |
 | API Surface | api-surface.md | test-writer, implementer | Public Rust traits, ferrochain-server endpoints, Cargo features |
 | Verification Architecture | verification-architecture.md | formal-verifier, architect | Provable Properties Catalog, P0/P1 VP list, proof strategy |

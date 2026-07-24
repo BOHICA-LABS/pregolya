@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.21"
+version: "1.22"
 status: active
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "835c158"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.22 (burst-244/2026-07-23): F-P144-01/F-P144-02 — (1) ferrochain-tools section header MEDIUM → HIGH (tools-shell) / MEDIUM (tools-fs, tools-search); tools::shell module row MEDIUM → HIGH (VP-013 Kani P1; aligns with verification-coverage-matrix.md and module-criticality.md v1.6 adjudication). (2) Add core::budget module row to ferrochain-core base table (HIGH, VP-012 Kani P1, SS-10); update budget definitions note to remove stale no-row / no-execution-logic claim (core::budget now hosts check_watermark_trigger pure-core function, not only type definitions). Module universe 54→55 (+core::budget row)."
   - "1.21 (burst-240/2026-07-23): F-P140-01 layout-adjudication clarifications — expand four ferrochain-graph module row descriptions to make the canonical flat-layout file-path mapping unambiguous for BC sweep. (1) graph::bsp_engine: add WriteRecord/PregelTask types, reduce_super_step pure-function callout (VP-001 Kani target), apply_writes callout, ferrochain-graph/src/bsp_engine.rs path. (2) graph::scheduler: add orchestrator state-machine transition sequence, ExecutionContext {run_id, parent_ids} (propagated into nested invocations), CompiledGraph::run() entry point, ferrochain-graph/src/scheduler.rs path. (3) graph::event_emitter: explicitly name StreamEvent enum and tick/after_tick emission callsites, ferrochain-graph/src/event_emitter.rs path. (4) graph::hitl: add per-task interrupt bookkeeping (InterruptScratchpad, interrupt_counter) alongside interrupt queue, ferrochain-graph/src/hitl.rs path. Architecture-doc pregel Rust-path sweep: 0 stale pregel/ paths found in architecture/ layer; no architecture-doc changes required beyond this entry."
   - "1.20 (burst-238/2026-07-23): Stale-handoff sweep (continuation) — fix graph::scheduler description: remove stale '(decision pending ADR-001 D9 gate)' note; D9 gate passed 2026-07-14, Alternative B selected per D11.1 steering (ADR-001); update description to 'Outer orchestrator loop + actor-scheduler synthesis (ADR-001 Alternative B, D9 gate passed 2026-07-14)'."
   - "1.19 (burst-238/2026-07-23): Stale-handoff sweep — (1) Fix VP-010 label in core::serializable criticality note: 'VP-010 candidate' → 'VP-010 (Kani P0, seeded burst-223)'; VP-010 was seeded in burst-223 (D21, VP-INDEX v1.2). (2) Fix VP-006 label in prompts::injection_guard criticality note: 'VP-006 candidate' → 'VP-006 (Kani P1, seeded burst-223)'. (3) Fix stale BC-2.18.001–TBD anchor in prompts BC anchors note → BC-2.18.001–005 (BCs authored in D21 burst). (4) Fix stale BC-2.20.001–TBD / BC-2.21.001–TBD in vectorstores BC anchors note → BC-2.20.001–003 (Retriever) / BC-2.21.001–004 (VectorStore) (BCs authored in D21 burst)."
@@ -59,14 +60,14 @@ credential security primitives, streaming event types.
 | `core::events` | Streaming event taxonomy types (RunStart/Stream/End, NodeStart/Stream/End, etc.) | HIGH | SS-06 |
 | `core::config` | `RunnableConfig`, `ChatConfig` structs | MEDIUM | SS-01 |
 | `core::retry` | `ToolRetryPolicy` (keyed by tool_name; P-71 ADOPT), `CircuitBreaker` state machine, `RetryPolicy` with finite `global_limit: Option<NonZeroU32>`; shared combinator — provider crates and graph both route through this; **D23 item 4 (CAP-018): promoted from Wave 2 → Wave 1** | MEDIUM | SS-16 |
+| `core::budget` | VP-012 Kani P1 target: pure-core `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, fraction: f32) -> bool` (BC-2.10.005 watermark arithmetic — seeded burst-232); type definitions: `BudgetPolicy` trait, `PolicyDecision` enum, `OnCeiling` enum, `BudgetConfig` struct, `TokenUsage` struct, `RunContext` struct (SS-10/ADR-009), `CompactionTrigger` enum, `CompactionPolicy` trait, `ConversationSnapshot` struct, `CompactionSummary` struct (D23/ADR-019); dispatch engine lives in `graph::budget` (ferrochain-graph); module path: `ferrochain-core/src/budget.rs` | HIGH | SS-10 |
 
-> **Budget definitions (SS-10, trait-definitions-only — ADR-009 Option 3):** ferrochain-core hosts
+> **Budget definitions (SS-10 — VP-012 elevation — ADR-009 Option 3):** ferrochain-core hosts
 > the DEFINITIONS for budget governance: `BudgetPolicy` trait, `PolicyDecision` enum (Allow/Escalate/Deny),
 > `OnCeiling` enum (Halt/Escalate/Summarize — BC-2.10.003 v1.2 + BC-2.10.004), `BudgetConfig` struct
 > (soft_limit, hard_limit, on_ceiling — BC-2.10.001 TV-001–TV-003 + ADR-009), `TokenUsage` struct, and
 > `RunContext` struct (fields: thread_id, run_id, sub-agent identity, budget_info per BC-2.10.001
-> precondition 3). These are pure types with no execution logic — no criticality-counted module row
-> is added (module universe remains 33; tier counts unchanged). The DISPATCH engine (`BudgetEngine`,
+> precondition 3). **F-P144-02 adjudication (burst-244):** `core::budget` has been elevated from definitions-only to HIGH criticality — VP-012 (Kani P1, seeded burst-232) requires `check_watermark_trigger` to live here as an executable pure-core function, not only type definitions. A criticality-counted module row now appears in the table above. The DISPATCH engine (`BudgetEngine`,
 > `EvidenceJournal`) lives in ferrochain-graph::budget per the guardrail core-definitions/graph-dispatch
 > split precedent. Module path: `ferrochain-core/src/budget.rs` (module `core::budget`).
 > `RunnableConfig` (SS-01, `core::config`) gains `budget_config: Option<BudgetConfig>` — per-run
@@ -365,7 +366,7 @@ ferrochain-anthropic is EXCLUDED — Anthropic provides no public embeddings API
 > `OpenAiApiKey` newtype with redacted Debug); DI-014 (batch failures return Err, not Vec::new()).
 > xtask `deny-client-new` CI gate enforces the reqwest timeout requirement at the workspace level.
 
-## ferrochain-tools (SS-23) — MEDIUM
+## ferrochain-tools (SS-23) — HIGH (tools-shell) / MEDIUM (tools-fs, tools-search)
 
 Responsibilities: first-party file I/O, bash execution, and text-search tools;
 implements the `Tool` trait (ferrochain-core) with sandbox path-guard integration
@@ -375,7 +376,7 @@ Crate #21. **D23 item 5 / Wave 1.**
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
 | `tools::fs` | `ReadFileTool`, `WriteFileTool`, `EditFileTool`, `ListDirTool` — all path-guarded via `sandbox::path_guard`; `ReadFileTool` enforces `max_bytes` limit (default 1 MiB; E-TOOLS-002 on excess); `EditFileTool` exact-string replace (E-TOOLS-003 on old_string not found); opt-in fuzzy fallback via `EditConfig::fuzzy_threshold` with `similar` crate; `WriteFileTool`/`EditFileTool` default `ActionRisk::High`; `ReadFileTool`/`ListDirTool` default `ActionRisk::ReadOnly` (ADR-020 / SS-23) | MEDIUM | SS-23 |
-| `tools::shell` | `BashTool` — subprocess execution via ferrochain-sandbox backend (WASM or container); stdout/stderr/exit-code capture in `BashOutput`; `max_output_bytes` truncation with `BashOutput::truncated: bool` (E-TOOLS-005 advisory); 30s timeout default (E-TOOLS-004 on timeout); default `ActionRisk::High`; minimum risk floor `ActionRisk::Medium` — configuration error if caller attempts `ReadOnly` or `Low` (E-TOOLS-007) (ADR-020 / SS-23) | MEDIUM | SS-23 |
+| `tools::shell` | `BashTool` — subprocess execution via ferrochain-sandbox backend (WASM or container); stdout/stderr/exit-code capture in `BashOutput`; `max_output_bytes` truncation with `BashOutput::truncated: bool` (E-TOOLS-005 advisory); 30s timeout default (E-TOOLS-004 on timeout); default `ActionRisk::High`; minimum risk floor `ActionRisk::Medium` — configuration error if caller attempts `ReadOnly` or `Low` (E-TOOLS-007) (ADR-020 / SS-23) | HIGH | SS-23 |
 | `tools::search` | `GrepTool` — in-process regex search via `regex` crate; path-guarded directory traversal via `sandbox::path_guard`; `max_results` cap (E-TOOLS-006 advisory); default `ActionRisk::ReadOnly`; accepts `{pattern, path, recursive, case_insensitive, max_results}` (ADR-020 / SS-23) | MEDIUM | SS-23 |
 
 **ADR anchor:** ADR-020 governs crate placement (separate from ferrochain-sandbox), dependency

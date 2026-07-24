@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "17b6129"
+input-hash: "fe15c1c"
 traces_to: STATE.md
 ---
 
@@ -4652,3 +4652,33 @@ F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 
 ### Archived from STATE.md Current Phase Steps — Burst 238 (archived at burst-243)
 
 | Burst 238 — P1D-138 fix-burst ALL AGENTS COMPLETE (F-P138-01/02/03 closed + 12 proactive; stale-handoff-flag class corpus-wide sweep; error-taxonomy v1.32→v1.33; api-surface v1.8; 6 BC files VP satisfied; 7 ADRs stale-handoff cleared; module-decomposition v1.20; BC-INDEX v2.5 satisfied; hash sweep STALE=0; L-026 codified; burst-233 row archived); 0/3. NEXT: P1D-139. | architect + product-owner + state-manager | COMPLETE | F-P138-01 error-taxonomy v1.32→v1.33: stale ARCHITECT FLAG E-TOOLS-009 removed (HIGH). F-P138-02 api-surface v1.8: stale spec-authority annotation resolved. F-P138-03 BC-2.23.006 v1.2→v1.3: 'architect to append' → 'satisfied'. Proactive: BC-2.23.005 v1.3→v1.4, BC-2.18.004 v1.2→v1.3, BC-2.19.005 v1.3→v1.4, BC-2.21.003 v1.1→v1.2, BC-2.22.001 v1.1→v1.2 (all VP pending→assigned). BC-INDEX v2.5: VP-006..010 'pending architect authoring' → 'assigned+authored'. ADR-010 v1.5→v1.6, ADR-012 v1.3→v1.4, ADR-014 v1.5→v1.7, ADR-016 v1.3, ADR-017 v1.3, ADR-018 v1.2, ADR-020 v1.7→v1.8 (stale PO obligations/annotations → past-tense facts). module-decomposition v1.19→v1.20 ('D9 gate pending' → 'D9 gate passed'). ARCH-INDEX v1.9 stale markers removed. L-026 codified (handoff-flag closure scan guardrail). Hash sweep: 3 passes, ~57 files STALE=0. Burst 238. |
+
+---
+
+### Burst 244 — P1D-144 Fix-Burst COMPLETE (2026-07-23)
+
+**Agents:** architect (F-P144-01 tools-shell HIGH adjudication; F-P144-02 module-criticality v1.6; F-P144-03 ARCH-INDEX v1.10) + product-owner (F-P144-04 E-CRON-003 degraded→broken) + state-manager (hash sweep + STATE.md + commit)
+
+**Status:** ALL 4 FINDINGS CLOSED
+
+**Pass:** P1D-144 (twelfth pass on D21+D23 expanded perimeter; broad regression + fresh-hunt; NOT CLEAN strict, NOT CLEAN PR-merge: 0C/2H/2M; streak 0/3). All 8 Part-A regression axes PASS. Novelty MEDIUM.
+
+**Findings closed:**
+
+- F-P144-01 HIGH (architect): module-decomposition v1.21→v1.22 — tools-shell section header corrected MEDIUM→HIGH; tools::shell module row corrected MEDIUM→HIGH (VP-013 Kani P1 host; aligns with verification-coverage-matrix.md HIGH classification and module-criticality.md v1.6 adjudication). core::budget module row added to ferrochain-core base table (HIGH, VP-012 Kani P1, SS-10); budget definitions note updated to remove stale no-row/no-execution-logic claim. Module universe 54→55 (+core::budget row).
+
+- F-P144-02 HIGH (architect): module-criticality.md v1.5→v1.6 — add core-budget row (HIGH, VP-012 Kani P1, ferrochain-core SS-10) and tools-shell row (HIGH, VP-013 Kani P1, ferrochain-tools SS-23). core-budget HIGH: VP-012 Kani P1 hosts check_watermark_trigger (pure-core arithmetic); established project pattern assigns HIGH to all Kani P1 VP hosts (injection_guard precedent). tools-shell HIGH: VP-013 Kani P1 hosts check_risk_floor (pure-core enum comparison enforcing non-lowerable Medium risk floor per ADR-020 Decision 3); profile mirrors injection_guard (VP-006 Kani P1 HIGH). Both assigned P3 per-story + P5 phase gate. Classification Summary: HIGH 16→18, Total 41→43.
+
+- F-P144-03 MED (architect): ARCH-INDEX.md v1.9→v1.10 — Document Map row for module-decomposition updated: description '18-crate catalog'→'21-crate catalog'.
+
+- F-P144-04 MED (product-owner): error-taxonomy v1.34→v1.35 — E-CRON-003 severity reclassified degraded→broken. BC-2.12.004 EC-004 specifies the scheduled Run creation is FULLY SKIPPED with no partial payload — 'degraded' definition requires partial result; broken is the correct severity. Precedent: F-P140-05 applied identical degraded→broken reasoning to E-PROV-001. Cross-namespace severity sweep: all 108 live codes audited; E-CRON-003 was the sole surviving degraded code; post-fix severity census: broken=106, degraded=0, cosmetic=2. BC-2.12.004 verified consistent with broken, no BC amendment required.
+
+**Hash sweep (D18-P89-A/D18-P90-A):** 3 transitive passes; pass-1 TOTAL=177 MATCH=169 STALE=8 (updated: ARCH-INDEX.md, verification-coverage-matrix.md, BC-2.07.001.md, BC-2.14.001.md, BC-2.14.002.md, bounded-contexts.md, module-criticality.md); pass-2 TOTAL=176 MATCH=175 STALE=1 (updated: verification-coverage-matrix.md — transitive from module-criticality.md hash change); pass-3 TOTAL=176 MATCH=176 STALE=0 EXEMPT=1 (BC-INDEX.md [live-index] exempt). Full corpus settled.
+
+**Convergence:** 144 passes total, 144 fix bursts total (128 pre-D21 + 16 post-D21+D23); trajectory-tail →7→4→1→4; 0/3; NEXT: adversary cascade P1D-145 (broad regression + fresh-hunt) on new frozen HEAD (burst-244 commit SHA).
+
+---
+
+### Archived from STATE.md Current Phase Steps — Burst 239 (archived at burst-244)
+
+| Burst 239 — P1D-139 fix-burst ALL AGENTS COMPLETE (F-P139-01..07 all closed; BC-2.04.001 Inv-5 minted; tokens_remaining_after u64→Option<i64>; events.md v1.8; burst-238 date reconciled 2026-07-22→2026-07-23 BC-INDEX+; hash sweep STALE=0; burst-234 row archived); 0/3. NEXT: P1D-140. | PO + architect + BA + state-manager | COMPLETE | F-P139-01 HIGH BC-2.04.001 v1.3→v1.4: Inv-5 minted (checkpoint append-only — records never deleted/mutated in place, readable via search_history BC-2.04.008) + BC-2.10.006 v1.3→v1.4 citation fix (F-P139-01b). F-P139-02 HIGH BC-2.06.001 v1.5→v1.6: PC2 tokens_remaining_after u64→Option<i64>; also F-P139-04 LOW Description Step-has-no-Stream fix. F-P139-03 MED BC-2.07.003 v1.2→v1.3 (PC5 [""]→[]) + BC-2.07.001 v1.2→v1.3 (TV-005 [""]→[]). F-P139-05 LOW ADR-018 v1.2→v1.3 date reconciled 2026-07-22→2026-07-23 (architect); ADR-019 v1.2→v1.3 Decision 4 payload type; BC-INDEX burst-238 changelog date row 2026-07-22→2026-07-23 (state-manager F-P139-05 index-date half). F-P139-06 LOW BC-INDEX v2.8 BC-2.06.001 title sync to H1. F-P139-07 LOW BC-2.05.008 v1.0→v1.1 resume-routing PC-1..3 + EC-006 Resume(PendingHumanApproval)→Err. BA: events.md v1.7→v1.8 (BC-2.04.001 Inv-5 reference + tokens_remaining_after type fix). Hash sweep: pass 1 13 STALE→updated, pass 2 2 STALE→updated, pass 3 TOTAL=174 MATCH=174 STALE=0. Burst 239. |
