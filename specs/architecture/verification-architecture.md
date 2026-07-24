@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.7"
+version: "2.8"
 status: active
 producer: architect
 timestamp: 2026-07-24T00:00:00Z
@@ -282,14 +282,19 @@ the panic-shield from `Err(HookError)` — `route_pre_tool_decision` returns
 `DispatchOutcome::Reject(_)` and `pre_tool_dispatch` never calls `tool.invoke`.
 `DispatchOutcome::Proceed(_)` is reachable from `PreToolDecision::Approve` AND from
 `PreToolDecision::Edit { modified_args }` when `modified_args` is a valid JSON object
-(BC-2.05.007 PC-3). `PreToolDecision::PendingHumanApproval` routes to the BC-2.05.001
-suspend machinery (interrupt issued; run suspended; neither Proceed nor Reject returned;
-tool not invoked until resume decision is applied via BC-2.05.008).
+(BC-2.05.007 PC-3). `PreToolDecision::PendingHumanApproval` is handled by the async `pre_tool_dispatch`
+wrapper BEFORE `route_pre_tool_decision` is called — the wrapper issues
+`interrupt(ToolApprovalRequest{..})` and suspends the run (BC-2.05.001 machinery);
+`route_pre_tool_decision` is not invoked for this path. This variant is outside the Kani
+proof scope; non-invocation is covered by BC-2.05.008 integration tests. If
+`PendingHumanApproval` reaches `route_pre_tool_decision` unexpectedly, the
+`#[non_exhaustive]` wildcard arm returns `DispatchOutcome::Reject(_)` (fail-closed).
 
 Formal statement:
 ```
-// PreToolDecision is #[non_exhaustive] — 4 variants defined as of D23
-∀ decision: PreToolDecision:
+// route_pre_tool_decision: pure-sync routing over three routable variants + #[non_exhaustive] wildcard
+// NOTE: PendingHumanApproval is peeled off upstream in pre_tool_dispatch before this fn is called.
+∀ decision: PreToolDecision passed to route_pre_tool_decision:
   decision == Deny { .. }
     → route_pre_tool_decision(decision) == Reject(_)
   decision == Approve
@@ -299,9 +304,14 @@ Formal statement:
       → route_pre_tool_decision(decision) == Proceed(_)
     is_valid_json_object(modified_args) == false
       → route_pre_tool_decision(decision) == Reject(_)  // fallback Deny per BC-2.05.007 PC-3
-  decision == PendingHumanApproval { .. }
-    → interrupt(ToolApprovalRequest{..}) issued; run suspended;
-      neither Proceed nor Reject (delegates to BC-2.05.001 suspend machinery)
+  _ (wildcard — including PendingHumanApproval if it unexpectedly reaches this fn)
+    → route_pre_tool_decision(decision) == Reject(_)    // #[non_exhaustive] fail-closed
+
+// pre_tool_dispatch (async wrapper): PendingHumanApproval peeled off before route_pre_tool_decision
+// This path is outside Kani scope (async/effectful); covered by BC-2.05.008 integration tests:
+PreToolDecision::PendingHumanApproval { .. } received by pre_tool_dispatch
+  → interrupt(ToolApprovalRequest{..}) issued; run suspended;
+    route_pre_tool_decision NOT called; tool NOT invoked
 
 ∀ result: Result<PreToolDecision, HookError>:
   result == Err(_)  → shield_hook_result(result) == Deny { .. }  // fail-closed panic-shield
@@ -310,8 +320,11 @@ Formal statement:
 
 `#[non_exhaustive]` note: `PreToolDecision` is `#[non_exhaustive]`. The harness uses
 concrete variant construction rather than `kani::any::<PreToolDecision>()` (which cannot
-enumerate future variants). Each proof function below targets one variant; future variants
-require harness extension (VP-011.md §Proof Obligations).
+enumerate future variants). The four proof functions below target the three routable variants
+(Deny, Approve, Edit) and the hook-error path; `PendingHumanApproval` is peeled off upstream
+in `pre_tool_dispatch` and has no dedicated proof function. Future variants require
+specification of which layer handles them before a harness can be added
+(VP-011.md §Proof Obligations).
 
 Kani harness sketch (see VP-011.md §Proof Harness Skeleton for full target-file path):
 ```rust
@@ -358,10 +371,13 @@ fn edit_invalid_args_falls_back_to_deny() {
 ```
 
 Feasibility: HIGH. `PreToolDecision` is a 4-variant `#[non_exhaustive]` enum (D23-defined:
-Approve, Deny, Edit, PendingHumanApproval; BC-2.05.007 PC1–PC4). `route_pre_tool_decision`
+Approve, Deny, Edit, PendingHumanApproval; BC-2.05.007 PC1–PC4); the harness targets the
+three routable variants (Deny, Approve, Edit) plus hook-error path — `PendingHumanApproval`
+is peeled off upstream in `pre_tool_dispatch` (not a harness target). `route_pre_tool_decision`
 and `shield_hook_result` are pure sync functions extracted from the async `pre_tool_dispatch`
-per the sync-core mandate above. No I/O in harness; routing is a single `match` expression —
-CBMC solves branch reachability queries in seconds. Estimated proof time: < 2 min.
+per the sync-core mandate above. No I/O in harness; routing is a `match` over three routable
+variants plus `#[non_exhaustive]` wildcard — CBMC solves branch reachability queries in
+seconds. Estimated proof time: < 2 min.
 See VP-011.md §Feasibility Assessment for full factor table.
 
 ## Should Prove (P1 — Core Algorithms, Conformance Contracts)
@@ -632,6 +648,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.8 | 2026-07-24 | architect | FIX-BURST-255 / F-P154-01 | F-P154-01 (HIGH) VP-011 internal contradiction + totality gap: adjudicate PendingHumanApproval routing design — Option A peel-off. PendingHumanApproval is handled by async `pre_tool_dispatch` wrapper BEFORE `route_pre_tool_decision` is called (interrupt issued; run suspended; `route_pre_tool_decision` not invoked). Fix property prose from "neither Proceed nor Reject returned" (impossible given DispatchOutcome type) to peel-off design. Fix formal statement: remove PendingHumanApproval clause from `route_pre_tool_decision` quantifier block; add wildcard arm clause (fail-closed Reject); add separate `pre_tool_dispatch` peel-off block. Fix `#[non_exhaustive]` note: "each proof function targets one variant" → "four proof functions target three routable variants (Deny/Approve/Edit) + hook-error; `PendingHumanApproval` has no dedicated proof function". Corresponds to VP-011.md v1.2→v1.3. |
 | 2.7 | 2026-07-24 | architect | FIX-BURST-253 / F-P152-02 | VP-012 symbolic domain widening. Formal statement: `tokens_remaining ∈ (0, ceiling]` → `[0, ceiling]` (strict lower bound excluded the EC-002 boundary case that the burst-252 `<=` predicate change was meant to cover). Harness sketch: removed `tokens_remaining > 0` from multi-condition assume; u64 guarantees ≥ 0 by type. Added IN-domain comment. |
 | 2.6 | 2026-07-24 | architect | FIX-BURST-252 / F-P151-04+05 | VP-012 predicate + precision corrections. (1) F-P151-04: `<` → `<=` in VP-012 Property Statement, Formal Statement, harness expected expression, and core-budget sync-core line. Non-strict `<=` is required: with strict `<`, condition `tokens_remaining/ceiling < 0.0` can never be true (remaining≥0), so fraction=1.0/remaining=0 would never fire (contradicts BC-2.10.005 EC-002). (2) F-P151-05: `fraction: f32` → `fraction: f64` throughout VP-012 section (Property Statement, Formal Statement, harness). `f64` is the adjudicated type (interface-definitions §Compaction already used f64; f64 avoids precision issues for budgets >16M tokens). `watermark_boundary_does_not_fire` harness renamed `watermark_boundary_fires` (with `<=`, exactly-at-threshold now fires). Feasibility note updated: CBMC tractability bound 2^24 retained, rationale changed from f32-precision to state-space-only. |
 | 2.5 | 2026-07-24 | architect | FIX-BURST-250 / F-P149-01 | F-P149-01 (HIGH, architect half) de-pin volatile ADR version: VP-009 Feasibility note `ADR-014 v1.2 §Hardening note` → `ADR-014 Decision 2 §Hardening note` (TD-VSDD-091 per D18-P84-A: live-body citations use stable section anchors, not version pins). Sibling sweep (F-P149-03): VP-006 heading updated from `` `Kani P1 Phase 6` `` to `` `Kani P1 Phase 6` `red_gate: true` `` — parity with VP-009 and VP-010 headings (both carry `` `red_gate: true` ``). |

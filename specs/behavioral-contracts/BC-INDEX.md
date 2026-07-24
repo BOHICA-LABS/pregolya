@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.4"
+version: "3.5"
 status: active
 producer: state-manager
-timestamp: 2026-07-24T23:00:00Z
+timestamp: 2026-07-24T23:30:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.5 (burst-255/F-P154-02/2026-07-24): BC-2.17.001 v1.3→v1.4 — VP-011 bullet realigned to actual proven scope per Option-A dispatch-design adjudication (F-P154-01 architect): route_pre_tool_decision covers 3 routable variants (Approve/Deny/Edit) + hook-error with #[non_exhaustive] wildcard arm → fail-closed Reject; PendingHumanApproval peeled off upstream in async pre_tool_dispatch wrapper per BC-2.05.007 PC-4; DispatchOutcome stays 2-variant; PendingHumanApproval non-invocation covered by BC-2.05.008 integration tests. In-scope compliance fix: BC-2.17.001 changelog reordered desc→asc per gate #28 Rule 6 (drifted since burst-241). gate #35 extended to include BC-2.17.001 VP-bullet edits + VP-NNN internal consistency check (bc-authoring-plan v2.48→v2.49)."
   - "3.4 (burst-254/F-P153-01/2026-07-24): BC-2.17.001 v1.2→v1.3 — VP-012 bullet: strict strict-< predicate closed (non-strict <= + f64 arithmetic + domain 0<=tokens_remaining<=ceiling; load-bearing note: EC-002 fraction=1.0 boundary must fire); VP-011 bullet modernized from Deny-only to full 4-variant PreToolDecision fail-closed coverage (Approve/Deny/Edit/PendingHumanApproval per VP-011.md v1.2). No f32 residue in remaining VP bullets; full BC staleness scan CLEAN."
   - "3.3 (burst-253/F-P152-03/2026-07-24): BC-2.07.002 v1.5→v1.6 — GTV-010 (NFD combining sequence discriminator: 'abcéxyz' 8 code pts/7 graphemes, chunk_size=4; correct ['abce','́xyz'] vs wrong grapheme ['abcé','xyz']) + GTV-011 (ZWJ family emoji discriminator: '👨‍👩‍👧‍👦 hi' 10 code pts/4 graphemes; correct 3 chunks splitting ZWJ sequence vs wrong 2 chunks) added; 9→11 GTVs Python-verified against pinned in-tree langchain-text-splitters==1.1.2; test-vectors v2.6→v2.7 (671→674 TVs = 663 canonical + 11 GTV)."
   - "3.2 (burst-252/F-P151-01..07/2026-07-24): BC version sync fix-burst-252 ADR-019 compaction type canon: BC-2.10.005 v1.2 (CompactionTrigger count/tokens fields, f64 fraction, non-strict <= predicate; ADR-019 Decision authority), BC-2.10.006 v1.6 (CompactionSummary flat compacted_start/end fields, mandatory parent_ids, put mechanism), BC-2.06.006 v1.4 (compaction_event flat wire payload per ADR-019 Decision 4), BC-2.06.001 v1.9 (compaction_event 15th event variant in StreamEvent taxonomy; OnWatermark f64 fraction/budget_tokens_used), BC-2.05.001 v1.4 (generalized suspend invariant covering all 3 suspend classes: interrupt/Budget Escalation/HITL), BC-2.10.004 v1.8 (Budget Escalation compaction write via get_next_version+put). Hash-currency cascade sweep: 3-pass TOTAL=234 MATCH=234 STALE=0 (specs/174 planning/3 cycles/18 + index exemptions)."
@@ -228,6 +229,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.5 | 2026-07-24 | burst-255/F-P154-02: BC-2.17.001 v1.3→v1.4 — VP-011 bullet realigned to actual proven scope per Option-A peel-off adjudication (route_pre_tool_decision covers 3 routable variants + hook-error fail-closed Reject per #[non_exhaustive] wildcard arm; PendingHumanApproval peeled off upstream in pre_tool_dispatch per BC-2.05.007 PC-4; DispatchOutcome stays 2-variant; BC-2.05.008 integration tests cover non-invocation). In-scope fix: BC-2.17.001 changelog reordered desc→asc per gate #28 Rule 6. gate #35 extended (bc-authoring-plan v2.49). | burst-255 F-P154-02 |
 | 3.4 | 2026-07-24 | burst-254/F-P153-01: BC-2.17.001 v1.2→v1.3 — VP-012 bullet corrected: strict `<` → non-strict `<=` predicate; f64 arithmetic; domain 0<=tokens_remaining<=ceiling; load-bearing non-strict note (EC-002 fraction=1.0, tokens_remaining=0 boundary must fire). VP-011 bullet modernized: Deny-only → full 4-variant PreToolDecision fail-closed coverage (Approve/Deny/Edit/PendingHumanApproval per VP-011.md v1.2). Full BC staleness scan: no f32 residue in remaining VP bullets. | burst-254 F-P153-01 |
 | 3.3 | 2026-07-24 | burst-253/F-P152-03: BC-2.07.002 v1.5→v1.6 — GTV-010 (NFD combining discriminator: 'abcéxyz' 8 code pts/7 graphemes, chunk_size=4) + GTV-011 (ZWJ family emoji discriminator: '👨‍👩‍👧‍👦 hi' 10 code pts/4 graphemes) added; 9→11 GTVs Python-verified against pinned in-tree langchain-text-splitters==1.1.2; test-vectors v2.6→v2.7 (671→674 TVs = 663 canonical + 11 GTV). | burst-253 F-P152-03 |
 | 3.2 | 2026-07-24 | burst-252/F-P151-01..07: BC version sync — ADR-019 compaction type canon: BC-2.10.005 v1.2 (CompactionTrigger count/tokens fields, f64 fraction, non-strict <= predicate), BC-2.10.006 v1.6 (CompactionSummary flat compacted_start/end, mandatory parent_ids, put mechanism), BC-2.06.006 v1.4 (compaction_event flat wire payload per ADR-019), BC-2.06.001 v1.9 (compaction_event 15th variant; OnWatermark f64 fraction/budget_tokens_used), BC-2.05.001 v1.4 (generalized suspend invariant — all 3 suspend classes), BC-2.10.004 v1.8 (Budget Escalation write get_next_version+put). | burst-252 F-P151-01..07 |

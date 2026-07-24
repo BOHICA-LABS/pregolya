@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "1137940"
+input-hash: "891f262"
 traces_to: STATE.md
 ---
 
@@ -49,10 +49,11 @@ traces_to: STATE.md
 | P1D-105 | 2026-07-19 | 1 | 0 | 0 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (1 MED F-P105-01 SECURITY description omits 2/3 members + contradicts E-SBXD-002 POLICY; 2 OBS: OBS-P105-A adjudicated SECURITY/POLICY rule; OBS-P105-B Form-B self-correction process-gap; error-taxonomy v1.18→v1.19; bc-authoring-plan v2.32→v2.33) |
 | P1D-118 | 2026-07-19 | 3 | 0 | 2 | 1 | 0 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (F-P118-01 HIGH [process-gap] bc-authoring-plan §12 gate mandated 3-member terminal set — would actively revert F-P117-01; batch-table line 270 drifted; F-P118-02 HIGH sibling propagation: BC-2.12.004 lines 70+163 + BC-2.05.004 lines 99–100 + BC-2.05.005 line 137; F-P118-03 MED entities-server line 57 completed_at mis-cited BC-2.12.003 PC8(c)(d) → correct BC-2.12.003 PC13 + BC-2.10.003 PC8(c)(d)) |
 | P1D-153 | 2026-07-24 | 2 | 0 | 1 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (1H F-P153-01 BC-2.17.001 v1.3 strict-< residue + VP-011 4-variant modernization; 1 LOW/OBS F-P153-02 ADR-019 v1.5 wire-serialization annotation; burst-253 regressions all held; fix-burst 254 COMPLETE) |
+| P1D-154 | 2026-07-24 | 3 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (1H F-P154-01 VP-011.md v1.2 internal contradiction — PendingHumanApproval coverage gap; Option-A adjudication: peel-off upstream pre_tool_dispatch; VP-011 v1.2→v1.3; verification-architecture v2.7→v2.8; 1M F-P154-02 BC-2.17.001 v1.3 VP-011 bullet realigned + changelog asc-reorder; 1 OBS-P154-A gate #35 internal-consistency extension; fix-burst 255 COMPLETE) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN 1/3) →0 (P1D-127 CLEAN 2/3) →0 (P1D-128 CLEAN 3/3 CONVERGED pre-D21+D23) →12 (P1D-129, D21+D23 re-baseline) →9 (P1D-130) →7 (P1D-131) →8 (P1D-132) →10 (P1D-133) →7 (P1D-134) →6 (P1D-135) →6 (P1D-136) →3 (P1D-137) →3 (P1D-138) →7 (P1D-139) →8 (P1D-140) →7 (P1D-141) →4 (P1D-142) →1 (P1D-143) →4 (P1D-144) →5 (P1D-145) →4 (P1D-146) →3 (P1D-147) →5 (P1D-148) →4 (P1D-149) →2 (P1D-150) →7 (P1D-151, NOT CLEAN 0C/4H/3M) →3 (P1D-152, NOT CLEAN 0C/0H/3M) →2 (P1D-153, NOT CLEAN 0C/1H/0M/1OBS)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN 1/3) →0 (P1D-127 CLEAN 2/3) →0 (P1D-128 CLEAN 3/3 CONVERGED pre-D21+D23) →12 (P1D-129, D21+D23 re-baseline) →9 (P1D-130) →7 (P1D-131) →8 (P1D-132) →10 (P1D-133) →7 (P1D-134) →6 (P1D-135) →6 (P1D-136) →3 (P1D-137) →3 (P1D-138) →7 (P1D-139) →8 (P1D-140) →7 (P1D-141) →4 (P1D-142) →1 (P1D-143) →4 (P1D-144) →5 (P1D-145) →4 (P1D-146) →3 (P1D-147) →5 (P1D-148) →4 (P1D-149) →2 (P1D-150) →7 (P1D-151, NOT CLEAN 0C/4H/3M) →3 (P1D-152, NOT CLEAN 0C/0H/3M) →2 (P1D-153, NOT CLEAN 0C/1H/0M/1OBS) →2 (P1D-154, NOT CLEAN 0C/1H/1M/1OBS; F-P154-01/02+OBS-A; fix-burst 255 COMPLETE)`
 
 ## Per-Pass Details
 
@@ -1257,3 +1258,23 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 - **F-P153-02 LOW/OBS** (architect, closed): `ADR-019 v1.4→v1.5` — Decision 4 `trigger: CompactionTrigger` field carried a comment implying the variant name's wire serialization uses serde's default full-variant form. The BC-2.06.006 PC1 canon specifies that `CompactionTrigger` wire serialization is the bare variant-name string (NOT serde's full-variant form), requiring a custom `Serialize` implementation or a fieldless mirror enum. Decision 4 annotated to clarify: bare variant-name string per BC-2.06.006 PC1. Decision 4 field coherence check vs BC-2.06.006 PC1: all other fields match.
 
 **Hash sweep (D18-P89-A/D18-P90-A):** 2-pass transitive sweep; pass 1 UPDATED=22, pass 2 UPDATED=6; final TOTAL=235 MATCH=195 STALE=0. Burst-254 commit.
+
+### Pass P1D-154 (2026-07-24) — Expanded Perimeter Pass 26
+
+**Findings:** 3 (0 CRIT, 1 HIGH, 1 MED, 0 LOW; 1 OBS)
+**Streak:** 0/3 (NOT CLEAN strict)
+**Fix burst:** 255
+**Frozen HEAD:** burst-254 commit (764f541)
+**Novel attack angle:** VP-NNN.md internal consistency audit (Proof Method table claims vs harness-fn inventory vs Traceability scope vs Proof Obligations outcome types) — codified as gate #35 extension (OBS-P154-A).
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. Three items: 1 HIGH + 1 MED + 1 OBS (process-gap-adjacent). Novelty MEDIUM. Part-A regression canons (compaction type canon, VP-012 domain, GTV-010/011, ADR-019 wire-annotation) all held clean. Trajectory-tail →3→2→2.
+
+- **F-P154-01 HIGH** (architect, closed): `VP-011.md v1.2` — internal contradiction: the Proof Method table claimed "covers all four variants" while the harness skeleton had no `PendingHumanApproval` proof fn and §BC Traceability section stated "Deny branch only". The `route_pre_tool_decision` totality for `PendingHumanApproval` was unspecified, leaving the harness design ambiguous. ADJUDICATED Option A (peel-off): `PendingHumanApproval` is peeled off upstream in the async `pre_tool_dispatch` wrapper (interrupt-issuance is `pre_tool_dispatch`'s responsibility per BC-2.05.007 PC-4); `route_pre_tool_decision` covers 3 routable variants (`Approve`/`Deny`/`Edit`) + hook-error with `#[non_exhaustive]` wildcard arm → fail-closed `Reject`; `DispatchOutcome` stays 2-variant (`Proceed`/`Reject`); `PendingHumanApproval` non-invocation covered by BC-2.05.008 integration tests. Fixed: `VP-011 v1.2→v1.3` — all 5 sections reconciled (Proof Method table, harness skeleton, §BC Traceability, §Proof Obligations outcome types, summary). `verification-architecture v2.7→v2.8` — VP-011 catalog entry updated to v1.3 with Option-A adjudication note. No interface-definitions or BC-2.05.007 changes needed.
+
+- **F-P154-02 MED** (PO, closed): `BC-2.17.001 v1.3` VP-011 bullet used architect's burst-254 modernization text but did not reflect the Option-A adjudication outcome (still described `PendingHumanApproval` as a routable variant handled by `route_pre_tool_decision` rather than peeled off upstream). Fixed: VP-011 bullet realigned to architect's exact corrected text post-adjudication. `BC-2.17.001 v1.3→v1.4`. ALSO in-scope compliance fix: BC-2.17.001 changelog was ordered desc→asc (newest entries at bottom) in violation of gate #28 Rule 6; reordered to correct asc→desc (newest at top). BC-2.17.002 verified already ascending — no change needed.
+
+- **OBS-P154-A** (PO, codified): VP-NNN.md internal consistency check gap. The gate #35 trigger was VP-011 bullet edits in BCs; it did not extend to VP-NNN.md files themselves. A VP-NNN.md that claims coverage it does not implement in its harness skeleton will survive gate #35 unchanged. Fixed: gate #35 extended — trigger now includes BC-2.17.001 VP-bullet edits; action now includes the VP-NNN.md 4-point INTERNAL consistency check (Proof Method claims vs harness-fn inventory vs Traceability scope vs Proof Obligations outcome types; unbacked coverage claim = HIGH finding). `bc-authoring-plan v2.48→v2.49`.
+
+**Regression sweep (Part-A canons):** ADR-019 v1.5 wire-annotation, VP-012 v1.3 domain `0<=tokens_remaining<=ceiling`, BC-2.07.002 v1.6 GTV-010/011, test-vectors v2.7 674 TVs, BC-INDEX v3.4 all verified CLEAN.
+
+**Hash sweep (D18-P89-A/D18-P90-A):** Pre-commit: specs/0 STALE, planning/0 STALE, cycles/12 STALE→0 (12 files updated from burst-254 edits; STATE.md-referenced cycle files refreshed). Post-commit TOTAL STALE=0. Burst-255 commit.

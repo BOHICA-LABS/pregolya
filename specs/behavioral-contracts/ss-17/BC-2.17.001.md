@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.17.001
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,9 +15,10 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.3 (burst-254/F-P153-01/2026-07-24): VP-012 predicate corrected: strict `<` → non-strict `<=`; f64 arithmetic and domain (0 <= tokens_remaining <= ceiling) made explicit; load-bearing non-strict note added (EC-002 fraction=1.0, tokens_remaining=0 boundary must fire). VP-011 bullet modernized: Deny-only description replaced with full 4-variant PreToolDecision fail-closed coverage (Approve/Deny/Edit/PendingHumanApproval); Proceed reachable only from Approve and valid-Edit; Deny and invalid-Edit route to Reject; hook errors shielded to Deny; PendingHumanApproval suspends via BC-2.05.001 and never invokes the tool — per VP-011.md v1.2 L4 authority. No f32 arithmetic or old-bounds references found in remaining VP-001..013 bullets."
-  - "1.2 (burst-241/Wave-2/F-P141-02/2026-07-23): VP-gate expansion — architect-confirmed 6 P0 + 3 P1 Kani obligations. Title updated. Description 'exactly three' → 'six P0 (D17-Q7+D21+D23) + three P1'. OQR-3 note: invariants +DI-014; enforcing BCs +BC-2.21.003/2.19.005/2.05.007; 'harnesses'/'are Phase-6 artifacts'. Preconditions: +BC-2.21.003/2.19.005/2.05.007; 'nine VP obligations (6 P0 + 3 P1)'. Postconditions: +VP-009/010/011 (P0) + VP-006/012/013 (P1); P0 failures block Phase-7; P1 failures block Phase-6 only; 'nine'. Invariants: lock expanded to D17-Q7+D21+D23; six P0 + three P1. EC-002 title/content: 'Fewer than Six P0 VPs Pass'. EC-003: nine (6 P0 + 3 P1). TV-006..009 added. Verification Properties updated. Related BCs +3. Architecture Anchors +3. Traceability DI +DI-014. traces_to +DI-014 +3 BCs."
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to kani_proofs/ per module-decomposition.md v1.10."
+  - "1.2 (burst-241/Wave-2/F-P141-02/2026-07-23): VP-gate expansion — architect-confirmed 6 P0 + 3 P1 Kani obligations. Title updated. Description 'exactly three' → 'six P0 (D17-Q7+D21+D23) + three P1'. OQR-3 note: invariants +DI-014; enforcing BCs +BC-2.21.003/2.19.005/2.05.007; 'harnesses'/'are Phase-6 artifacts'. Preconditions: +BC-2.21.003/2.19.005/2.05.007; 'nine VP obligations (6 P0 + 3 P1)'. Postconditions: +VP-009/010/011 (P0) + VP-006/012/013 (P1); P0 failures block Phase-7; P1 failures block Phase-6 only; 'nine'. Invariants: lock expanded to D17-Q7+D21+D23; six P0 + three P1. EC-002 title/content: 'Fewer than Six P0 VPs Pass'. EC-003: nine (6 P0 + 3 P1). TV-006..009 added. Verification Properties updated. Related BCs +3. Architecture Anchors +3. Traceability DI +DI-014. traces_to +DI-014 +3 BCs."
+  - "1.3 (burst-254/F-P153-01/2026-07-24): VP-012 predicate corrected: strict `<` → non-strict `<=`; f64 arithmetic and domain (0 <= tokens_remaining <= ceiling) made explicit; load-bearing non-strict note added (EC-002 fraction=1.0, tokens_remaining=0 boundary must fire). VP-011 bullet modernized: Deny-only description replaced with full 4-variant PreToolDecision fail-closed coverage (Approve/Deny/Edit/PendingHumanApproval); Proceed reachable only from Approve and valid-Edit; Deny and invalid-Edit route to Reject; hook errors shielded to Deny; PendingHumanApproval suspends via BC-2.05.001 and never invokes the tool — per VP-011.md v1.2 L4 authority. No f32 arithmetic or old-bounds references found in remaining VP-001..013 bullets."
+  - "1.4 (burst-255/F-P154-02/2026-07-24): VP-011 bullet realigned per VP-011.md v1.3 architect adjudication (Option A): Kani harness covers three routable PreToolDecision variants (Approve/Deny/Edit) + hook-error path only; PendingHumanApproval peeled off upstream in async pre_tool_dispatch wrapper before route_pre_tool_decision is called — non-invocation covered by BC-2.05.008 integration tests, not Kani; #[non_exhaustive] wildcard arm returns Reject (fail-closed forward safety). Removed overclaim 'all four variants' from VP-011 bullet. Changelog reordered desc→asc per gate #28 Rule 6 (burst-255 in-scope compliance fix)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-019
   - domain-spec/invariants.md#DI-001
@@ -90,13 +91,16 @@ artifacts (OQR-3); this Phase-1 BC is the scope specification for that work.
      unregistered type id raises `E-SRLZ-001` (Fail-Closed) and never dispatches a
      constructor. Corresponds to BC-2.19.005 Verification Properties.
    - **VP-011 (DI-014 — PreToolCallHook Fail-Closed) [P0]:** Harness proves fail-closed
-     dispatch over all four variants of the `#[non_exhaustive]` `PreToolDecision` enum
-     (`Approve`, `Deny { reason }`, `Edit { modified_args }`, `PendingHumanApproval { prompt }`):
-     `DispatchOutcome::Proceed` (tool invocation) is reachable ONLY from `Approve` and
-     valid-`Edit` (non-null JSON-object `modified_args`); `Deny` and invalid-`Edit` route to
-     `DispatchOutcome::Reject`; hook panics/errors are shielded to `Deny { .. }` before
-     routing; `PendingHumanApproval` suspends via BC-2.05.001 interrupt machinery and never
-     invokes the tool. Corresponds to BC-2.05.007 Verification Properties.
+     routing over the three routable `PreToolDecision` variants (`Approve`, `Deny { reason }`,
+     `Edit { modified_args }`) and the hook-error path: `Deny` routes to
+     `DispatchOutcome::Reject`; `Approve` routes to `DispatchOutcome::Proceed`; invalid-`Edit`
+     (non-JSON-object `modified_args`) falls back to `Reject`; hook panics/errors are shielded
+     to `Deny { .. }` before routing; the `#[non_exhaustive]` wildcard arm returns `Reject` for
+     any variant that unexpectedly reaches `route_pre_tool_decision` (fail-closed forward
+     safety). `PendingHumanApproval` is peeled off upstream in the async `pre_tool_dispatch`
+     wrapper before `route_pre_tool_decision` is called — this path is covered by BC-2.05.008
+     integration tests, not the Kani harness. Corresponds to BC-2.05.007 Verification
+     Properties.
    - **VP-006 (DI-008, DI-014 — Injection Guard Fail-Closed) [P1]:** Harness proves that
      `injection_guard` raises `E-TMPL-001` for untrusted content in a `SystemMessage` slot
      at render time. Corresponds to BC-2.18.004 Verification Properties.

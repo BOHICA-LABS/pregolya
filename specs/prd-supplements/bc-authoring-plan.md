@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.48"
+version: "2.49"
 status: active
 producer: product-owner
 total_standing_gates: 36
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.49 (burst-255/OBS-P154-A/2026-07-24): Gate #35 VP PROPERTY-BODY COHERENCE extended — TRIGGER now also fires on edits to VP-scope bullets in BC-2.17.001.md (SS-17 Kani-harness-scope authority); ACTION extended with step 7: VP-NNN.md INTERNAL consistency check: §Proof Method table coverage claims, §Proof Harness Skeleton proof-fn inventory, §BC Traceability scope statements, and §Proof Obligations outcome-type claims must all agree internally AND with the citing BC-2.17.001 bullet; a coverage claim ('covers all N variants') must be backed by an actual harness fn per claimed variant or an explicit peel-off/out-of-scope statement. Root cause of F-P154-01/02: burst-254 VP-011 bullet modernization propagated to BC/index rows but not cross-checked against VP-011.md §Proof Method table and §Proof Harness Skeleton which contradicted each other internally."
   - "2.48 (F-P149-02/burst-250/2026-07-24): Three live-body version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P149-02). (1) Retired-identifiers table: 'ADR-009 v1.1 confirms same rename' → 'ADR-009 §Decision confirms same rename' (PolicyDecision type is listed in ADR-009 §Decision / §Consequences). (2) Gate #20 census rule: 'per ADR-010 v1.1)' → 'per ADR-010 §Component Axis Expansion (D21))' (D21 component-axis expansion is the named section in ADR-010). (3) Gate #27 ownership rule: 'ADR-009 v1.2 Option 3 places budget TRAIT/types' → 'ADR-009 §Decision (Option 3 split) places budget TRAIT/types' (Option 3 is the chosen option in ADR-009 §Decision)."
   - "2.47 (burst-248/F-P147-02+F-P147-03/2026-07-24): Gate #36 VP↔BC RED-GATE PARITY minted (standing gate [process-gap, F-P147-03]) — every VP-NNN.md must carry explicit red_gate: frontmatter field (true or false, never absent); red_gate: true requires three-way corroboration: anchor BC frontmatter red_gate: true + BC-INDEX Red Gate membership + verifiable red_gate_source citation (anti-fabrication clause: citation must be quote-verifiable in the cited document); on divergence BC frontmatter + BC-INDEX census win over VP (BC supersedes VP for contract-discipline designations per CLAUDE.md Source-of-Truth Precedence); VP-side corrections route to architect; BC-side corrections route to product-owner. Motivating instance: VP-011 carried red_gate: true with fabricated ADR-018 citation (ADR-018 contains no Red Gate mandate); anchor BC-2.05.007 adjudicated false by architect; six VP files lacked the field entirely. F-P147-02: error-taxonomy.md v1.37→v1.38 E-TOOLS-002 placeholder count Two→Three corrected; taxonomy-wide placeholder-count parity scan: 10 other count-stating rows all verified correct (E-MCP-006 Two ✓, E-TMPL-001 Two ✓, E-TMPL-003 One ✓, E-VS-003 Two ✓, E-TOOLS-003 One ✓, E-TOOLS-004 One ✓, E-TOOLS-007 One ✓, E-TOOLS-008 Three ✓, E-TOOLS-009 Two ✓). total_standing_gates 35→36."
   - "2.46 (burst-247/F-P146-02+OBS/2026-07-24): (1) Gate #35 VP PROPERTY-BODY COHERENCE minted — on any edit to a VP-NNN.md or verification-architecture.md VP catalog entry, diff property statement + variant/branch coverage + harness sketch between the two docs; VP-NNN.md wins on divergence (CLAUDE.md source-of-truth precedence rule 4). Routing: architect scope for verification-architecture.md fixes. (2) SS-23 BC title error-code enumeration policy added as a non-numbered policy note in Authoring Guidelines (between items 11 and 12): titles enumerate ALL and ONLY raised error codes; Ok-path payload flags (E-TOOLS-005 BashOutput.truncated, E-TOOLS-006 GrepResult.capped) excluded. (3) Batch 20 BC title rows synchronized to exact H1 titles per bc_h1_is_title_source_of_truth: all 6 SS-23 BC rows updated (001 separator normalized; 001/002/004 E-TOOLS-008 added; 003 E-TOOLS-001/003/008 added + EditConfig::fuzzy_threshold restored; 005 BashOutput added, E-TOOLS-005 removed, E-TOOLS-004/007; 006 Hermetic added, E-TOOLS-001/008/009). total_standing_gates 34→35."
@@ -2252,8 +2253,37 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     6. On coherence failure: correct `verification-architecture.md` to match `VP-NNN.md`.
        Do NOT modify `VP-NNN.md` to match `verification-architecture.md`.
 
+    **VP-NNN.md internal consistency check (added burst-255/OBS-P154-A):**
+
+    7. When the gate is triggered by a BC-2.17.001 VP-scope bullet edit, the diff MUST
+       additionally include a VP-NNN.md INTERNAL consistency check for the cited VP. The
+       following four elements must agree with each other AND with the citing BC-2.17.001
+       bullet:
+
+       a. **§Proof Method table coverage claims** — the "variants/cases covered" column must
+          enumerate the same variant set as the BC-2.17.001 postcondition bullet.
+       b. **§Proof Harness Skeleton actual proof-fn inventory** — the harness function names
+          and their argument types must cover exactly the variants and paths claimed in the
+          coverage column. A proof-fn claiming "covers all N variants" must have N distinct
+          callable branches or a parameterized loop over N cases.
+       c. **§BC Traceability scope statements** — the VP's cited BC scope (which BCs it
+          verifies) must not claim variants that are peeled off upstream (e.g.,
+          `PendingHumanApproval` handled by an async wrapper before the sync harness function
+          executes).
+       d. **§Proof Obligations outcome-type claims** — the expected outcome column for each
+          obligation row must match the actual routing postconditions in the citing
+          BC-2.17.001 bullet.
+
+       A coverage claim ("covers all N variants") must be backed by an actual harness fn per
+       claimed variant OR an explicit peel-off/out-of-scope statement explaining why the
+       variant is handled upstream and not by the harness. A coverage claim with no harness fn
+       and no peel-off statement is a HIGH-severity gap.
+
     **Trigger:** Any edit to a `VP-NNN.md` file (property statement, coverage, or harness
-    sketch) OR any edit to a VP catalog entry in `verification-architecture.md`.
+    sketch) OR any edit to a VP catalog entry in `verification-architecture.md` OR any edit
+    to a VP-scope bullet in `BC-2.17.001.md` (the SS-17 Kani-harness-scope authority for
+    VP-001/002/003/009/010/011 — the BC enumerates all VP postcondition bullets and is the
+    citing context for VP-NNN.md scope claims).
 
     **Scope:** All VP files under `.factory/specs/verification-properties/` and all VP
     catalog entries in `.factory/specs/architecture/verification-architecture.md`.
