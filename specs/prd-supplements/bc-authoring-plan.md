@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.46"
+version: "2.47"
 status: active
 producer: product-owner
-total_standing_gates: 35
+total_standing_gates: 36
 timestamp: 2026-07-24T00:00:00Z
 phase: 1a
 inputs:
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.47 (burst-248/F-P147-02+F-P147-03/2026-07-24): Gate #36 VP↔BC RED-GATE PARITY minted (standing gate [process-gap, F-P147-03]) — every VP-NNN.md must carry explicit red_gate: frontmatter field (true or false, never absent); red_gate: true requires three-way corroboration: anchor BC frontmatter red_gate: true + BC-INDEX Red Gate membership + verifiable red_gate_source citation (anti-fabrication clause: citation must be quote-verifiable in the cited document); on divergence BC frontmatter + BC-INDEX census win over VP (BC supersedes VP for contract-discipline designations per CLAUDE.md Source-of-Truth Precedence); VP-side corrections route to architect; BC-side corrections route to product-owner. Motivating instance: VP-011 carried red_gate: true with fabricated ADR-018 citation (ADR-018 contains no Red Gate mandate); anchor BC-2.05.007 adjudicated false by architect; six VP files lacked the field entirely. F-P147-02: error-taxonomy.md v1.37→v1.38 E-TOOLS-002 placeholder count Two→Three corrected; taxonomy-wide placeholder-count parity scan: 10 other count-stating rows all verified correct (E-MCP-006 Two ✓, E-TMPL-001 Two ✓, E-TMPL-003 One ✓, E-VS-003 Two ✓, E-TOOLS-003 One ✓, E-TOOLS-004 One ✓, E-TOOLS-007 One ✓, E-TOOLS-008 Three ✓, E-TOOLS-009 Two ✓). total_standing_gates 35→36."
   - "2.46 (burst-247/F-P146-02+OBS/2026-07-24): (1) Gate #35 VP PROPERTY-BODY COHERENCE minted — on any edit to a VP-NNN.md or verification-architecture.md VP catalog entry, diff property statement + variant/branch coverage + harness sketch between the two docs; VP-NNN.md wins on divergence (CLAUDE.md source-of-truth precedence rule 4). Routing: architect scope for verification-architecture.md fixes. (2) SS-23 BC title error-code enumeration policy added as a non-numbered policy note in Authoring Guidelines (between items 11 and 12): titles enumerate ALL and ONLY raised error codes; Ok-path payload flags (E-TOOLS-005 BashOutput.truncated, E-TOOLS-006 GrepResult.capped) excluded. (3) Batch 20 BC title rows synchronized to exact H1 titles per bc_h1_is_title_source_of_truth: all 6 SS-23 BC rows updated (001 separator normalized; 001/002/004 E-TOOLS-008 added; 003 E-TOOLS-001/003/008 added + EditConfig::fuzzy_threshold restored; 005 BashOutput added, E-TOOLS-005 removed, E-TOOLS-004/007; 006 Hermetic added, E-TOOLS-001/008/009). total_standing_gates 34→35."
   - "2.45 (F-P142-03, burst-242, 2026-07-23): BC-2.06.005 title in Batch 20 table updated — 'Emission on Command::Resume' → 'Emission on Command(resume=…)' per BC-2.05.004 struct kwarg authority and BC-2.06.005 H1 (bc_h1_is_title_source_of_truth)."
   - "2.44 (burst-237/F-P137-02+F-P137-03/2026-07-23): F-P137-02 DI table: add DI-015 row (Subprocess Execution Timeout) — enforcers BC-2.23.005 (primary) + BC-2.13.002 (co-enforcer, .kill_on_drop(true)); remove BC-2.23.005 from DI-009 row (re-anchored burst-234 F-P134-06); DI-009 row corrected to {BC-2.08.007, BC-2.08.014, BC-2.14.004, BC-2.22.002, BC-2.22.003}; coverage 14/14→15/15. F-P137-03 CAP-017 wave-1 promotion: SS.15 subsystem map CAP-017 (P2)→(P1), priority P1/P2→P1; Batch 11 header (P1/P2)→(P1); BC-2.15.001/002/003 Wave 2→Wave 1. TD-VSDD-060 sweep: Batch 20 BC-2.23.005 DI column DI-009,DI-014→DI-014,DI-015 (same burst-234 re-anchor not propagated to batch table)."
@@ -2268,12 +2269,82 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 
     Source: OBS-P146-C [process-gap]. `total_standing_gates` 34 → 35.
 
+36. **VP↔BC red-gate parity gate — VP↔BC RED-GATE PARITY
+    (added burst-248/F-P147-03 — standing gate [process-gap]):**
+
+    **Rule 1 — Mandatory `red_gate:` field on all VP files:**
+    Every `VP-NNN.md` file MUST carry an explicit `red_gate:` frontmatter field. The field
+    MUST be either `true` or `false` — the field may not be absent, `null`, or any other
+    value. A VP file without a `red_gate:` field is a process-gap finding.
+
+    **Rule 2 — `red_gate: true` requires three-way corroboration:**
+    A VP file with `red_gate: true` is valid ONLY when ALL THREE of the following hold:
+
+    1. **Anchor BC frontmatter:** The VP's anchor BC (identified by the VP's `anchor_bc:`
+       frontmatter field or equivalent) carries `red_gate: true` in its own frontmatter.
+    2. **BC-INDEX membership:** The anchor BC appears in the Red Gate table or Red Gate
+       column of `BC-INDEX.md`.
+    3. **Verifiable `red_gate_source:` citation (anti-fabrication clause):** The VP's
+       `red_gate_source:` frontmatter field cites a specific document and section (e.g.,
+       `"ADR-018 §Decision 3"`). The citation MUST be quote-verifiable — open the cited
+       document and section and confirm the Red Gate mandate is stated there in substance.
+       A citation to a document or section that does not contain a Red Gate mandate is a
+       fabricated citation and is a HIGH-severity finding.
+
+    **Rule 3 — BC supersedes VP for contract-discipline designations (divergence rule):**
+    On any divergence between a VP's `red_gate:` value and its anchor BC's `red_gate:`
+    value or BC-INDEX census:
+
+    - **BC frontmatter + BC-INDEX census WIN.** The VP-side value is corrected.
+    - **Routing:** VP-side corrections route to architect (architect owns VP files and
+      `verification-architecture.md`). BC-side corrections route to product-owner.
+    - The divergence is always resolved in favor of the BC contract — VP files record
+      the verification obligation; BCs define whether a contract carries Red Gate status.
+
+    **Census procedure:**
+
+    1. List all VP files: `ls .factory/specs/verification-properties/VP-*.md`
+    2. Check for missing `red_gate:` field across all VP files:
+       ```
+       grep -rL "^red_gate:" .factory/specs/verification-properties/VP-*.md
+       ```
+       Expected: empty output (zero files missing the field).
+    3. For each VP with `red_gate: true`, verify all three corroboration requirements:
+       a. Anchor BC frontmatter: `grep "red_gate:" .factory/specs/behavioral-contracts/ss-NN/BC-S.SS.NNN.md`
+          — must return `red_gate: true`.
+       b. BC-INDEX membership: `grep "BC-S.SS.NNN" .factory/specs/behavioral-contracts/BC-INDEX.md`
+          — confirm the row is in the Red Gate table or carries a Red Gate marker.
+       c. `red_gate_source:` citation: open the cited document + section and confirm
+          the Red Gate mandate is stated there in substance.
+
+    **Trigger:** Any edit to a `VP-NNN.md` frontmatter `red_gate:` field, any edit to a
+    BC frontmatter `red_gate:` field, any edit to the BC-INDEX Red Gate table or
+    Red Gate column.
+
+    **Pass threshold:** 100% of VP files carry `red_gate: true` or `red_gate: false`.
+    Zero VP files with `red_gate: true` whose anchor BC has `red_gate: false` or whose
+    anchor BC is absent from BC-INDEX Red Gate census. Zero `red_gate_source:` citations
+    that cannot be verified in the cited document.
+
+    **Motivating instance (F-P147-03, ADV-P1D-PASS-147):** VP-011 carried
+    `red_gate: true` with `red_gate_source: "ADR-018 §Mandate B"`. The anchor BC-2.05.007
+    carries `red_gate: false`. Architect adjudicated: BC-2.05.007 `false` is correct;
+    ADR-018 contains no such mandate — the citation was fabricated. Root cause: no gate
+    asserted that (a) VP `red_gate:` must agree with the anchor BC value, (b)
+    `red_gate_source:` must be quote-verifiable in the cited document, or (c) every VP
+    must carry the `red_gate:` field at all (six VP files lacked it entirely before
+    burst-248 architect side). Architect resolved VP-011 and the six missing fields;
+    this gate prevents recurrence.
+
+    Source: F-P147-03 [process-gap]. `total_standing_gates` 35 → 36.
+
 ---
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.47 | 2026-07-24 | FIX-BURST 248 (PO side): Gate #36 VP↔BC RED-GATE PARITY minted (standing gate — every VP-NNN.md must carry explicit red_gate: frontmatter (true or false, never absent); red_gate: true requires anchor BC frontmatter red_gate: true + BC-INDEX Red Gate membership + verifiable red_gate_source citation (anti-fabrication, quote-verifiable); on divergence BC frontmatter + BC-INDEX census win; VP-side corrections to architect, BC-side to product-owner). Motivating instance: VP-011 red_gate: true with fabricated ADR-018 citation; anchor BC-2.05.007 adjudicated false. F-P147-02: error-taxonomy.md v1.37→v1.38 E-TOOLS-002 placeholder count Two→Three corrected; taxonomy-wide scan PASS (10 other count-stating rows all correct). total_standing_gates 35→36. | burst-248, F-P147-02, F-P147-03 |
 | 2.46 | 2026-07-24 | FIX-BURST 247: Gate #35 VP PROPERTY-BODY COHERENCE minted (standing gate — on any edit to VP-NNN.md or verification-architecture.md catalog entry, diff property statement + variant/branch coverage + harness sketch between the two; VP-NNN.md wins on divergence per CLAUDE.md rule 4; routing: architect scope for verification-architecture.md fixes); SS-23 BC title error-code enumeration policy added as non-numbered policy note in Authoring Guidelines (titles enumerate ALL and ONLY raised codes; Ok-path payload flags excluded); Batch 20 6 BC title rows synced to exact H1 titles per bc_h1_is_title_source_of_truth (001: E-TOOLS-001/002/008; 002: E-TOOLS-001/008; 003: fuzzy_threshold token restored + E-TOOLS-001/003/008; 004: E-TOOLS-001/008; 005: BashOutput segment added + payload flag E-TOOLS-005 removed + E-TOOLS-004/007; 006: Hermetic segment added + E-TOOLS-001/008/009). input-hash updated bacf294→b2c6f44. total_standing_gates 34→35. | burst-247, F-P146-02, OBS-P146-C |
 | 2.45 | 2026-07-23 | BC-2.06.005 Batch 20 title updated: 'Emission on Command::Resume' → 'Emission on Command(resume=…)' per BC-2.05.004 struct kwarg authority and BC-2.06.005 H1 (bc_h1_is_title_source_of_truth). | burst-242, F-P142-03 |
 | 2.44 | 2026-07-23 | DI coverage table: DI-015 row added (BC-2.23.005 primary + BC-2.13.002 co-enforcer, .kill_on_drop(true)); BC-2.23.005 removed from DI-009 row (re-anchored F-P134-06); DI-009 corrected to {BC-2.08.007, BC-2.08.014, BC-2.14.004, BC-2.22.002, BC-2.22.003}; coverage 14/14→15/15. CAP-017 wave-1 promotion: SS.15 subsystem map CAP-017 P2→P1; Batch 11 header (P1/P2)→(P1); BC-2.15.001/002/003 Wave 2→Wave 1. Batch 20 BC-2.23.005 DI column DI-009,DI-014→DI-014,DI-015. | burst-237, F-P137-02, F-P137-03 |

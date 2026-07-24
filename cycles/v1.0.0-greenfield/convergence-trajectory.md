@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "5a130db"
+input-hash: "d24c62d"
 traces_to: STATE.md
 ---
 
@@ -1105,3 +1105,22 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 - **OBS naming** (process-gap): SS-23 title policy was not explicitly documented; it was inferred from the SS-23 BC bodies. Codified in gate #35 application guidance.
 
 **Hash sweep:** 6 passes, STALE=0 (specs/ 174 MATCH, planning/ 3 MATCH, cycles/ 18 MATCH). Burst-247 commit.
+
+| P1D-147 | 2026-07-24 | 3 | 0 | 1 | 0 | 1 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (F-P147-01 HIGH VP-011 red_gate frontmatter adjudicated FALSE — ADR-018 Decision-3 mandate cited by adversary as justification for red_gate=true was FABRICATED (not present in actual ADR-018 body); BC frontmatter red_gate=false [burst-231]+11-row BC-INDEX census consistent; VP-012/VP-013 D23 siblings both false confirmed; verification-architecture v2.3→v2.4 [VP-011 catalog entry updated, red_gate_source null, residual "(Red Gate)" labels removed]; verification-coverage-matrix v2.0→v2.1; ARCH-INDEX v1.10→v1.11; census stays 11; F-P147-02 LOW E-TOOLS-002 placeholder count "Two→Three placeholders" [error-taxonomy v1.37→v1.38; 108-code parity scan complete]; F-P147-03 OBS red_gate field now explicit on all 13 VPs (5 true: VP-004/005/006/009/010; 8 false); gate #36 VP↔BC RED-GATE PARITY minted [bc-authoring-plan v2.46→v2.47; total_standing_gates 35→36; three-way corroboration + anti-fabrication clause + BC-wins divergence rule]; VP-001/002/003/006/007/008 gained explicit red_gate=false fields) — ALL 3 CLOSED fix-burst 248; hash sweep specs/174 planning/3 cycles/18 STALE=0; streak 0/3 |
+
+### Pass P1D-147 (2026-07-24) — Expanded Perimeter Pass 19
+
+**Findings:** 3 (0 CRIT, 1 HIGH, 0 MED, 1 LOW, 1 OBS)
+**Streak:** 0/3 (NOT CLEAN strict)
+**Fix burst:** 248
+**Frozen HEAD:** burst-247 commit
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. Three findings, with the HIGH being a novel adjudication-class finding (fabricated ADR citation).
+
+- **F-P147-01 HIGH**: `VP-011.md` `red_gate:` frontmatter field was `true`, justified by the adversary's citation of "ADR-018 Decision-3" as mandating red-gate classification for the HITL fail-closed VP. Adjudication finding: **the cited ADR-018 Decision-3 mandate does not exist in the actual ADR-018 body**. The BC frontmatter already carried `red_gate: false` (set at burst-231) and the 11-row BC-INDEX census was consistent with red_gate=false. D23 siblings VP-012 (core-budget Kani P1) and VP-013 (tools-shell Kani P1) were both already false. Verdict: ADR-018 Decision-3 mandate was fabricated; VP-011 `red_gate` adjudicated FALSE. Fixed: `VP-011 v1.1→v1.2` (`red_gate: false`). `verification-architecture v2.3→v2.4` (VP-011 catalog entry updated: `red_gate_source: null`, residual "(Red Gate)" labels removed from section headers). `verification-coverage-matrix v2.0→v2.1` (red_gate census updated). `ARCH-INDEX v1.10→v1.11` (red-gate counting consistent). Red-gate census stays 11 (VP-004/005/006/009/010 = true; VP-001/002/003/007/008/011/012/013 = false).
+
+- **F-P147-02 LOW**: `error-taxonomy.md` E-TOOLS-002 description said "Two placeholders" when the actual BC-2.23.002 body had three placeholder tokens. Fixed: `error-taxonomy v1.37→v1.38` — description updated to "Three placeholders". Full 108-code parity scan confirmed no other such discrepancies.
+
+- **F-P147-03 OBS** (process-gap): Of the 13 VPs, 7 lacked an explicit `red_gate:` field (VP-001/002/003/006/007/008 + VP-011 prior to fix). Gate #36 VP↔BC RED-GATE PARITY minted in `bc-authoring-plan v2.46→v2.47` requiring: explicit `red_gate:` field on all VP frontmatters; three-way corroboration (VP frontmatter + verification-architecture catalog entry + BC-INDEX census); anti-fabrication clause (VP-INDEX red_gate sum must equal BC-INDEX red_gate sum); BC-wins on any divergence. All 13 VPs now carry explicit `red_gate:` fields: 5 true (VP-004/005/006/009/010), 8 false.
+
+**Hash sweep:** 3 passes, specs/ 174/174, planning/ 3/3, cycles/ 18/18, STALE=0. Burst-248 commit.

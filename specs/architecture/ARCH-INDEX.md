@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.10"
+version: "1.11"
 status: active
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
@@ -16,6 +16,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.11 (FIX-BURST-248/F-P147-01/2026-07-24): Remove stale 'red_gate' label from D23 VP seeding note (line 179) — VP-011 is NOT Red-Gated per BC-2.05.007 red_gate: false (product-owner authority). Note corrected from 'Kani P0 red_gate' to 'Kani P0'."
   - "1.10 (2026-07-23): F-P144-03 — Document Map module-decomposition descriptor corrected 18-crate→21-crate catalog (D21 +2, D23 +1 expansions)."
   - "1.9 (burst-238/2026-07-23): Stale-handoff sweep — resolve TBD BC ranges in Subsystem Registry (SS-18 001–005, SS-19 001–006, SS-20 001–003, SS-21 001–004, SS-22 001–003; BCs authored D21 burst per bc-authoring-plan); remove stale 'BC ranges TBD' trailing clauses from D21 and D23 Capability Addition notes; resolve stale VP section note (BC-2.23.005 CONFIGURATION→VAL contradiction — content change missed in v1.8; now marked RESOLVED)."
   - "1.8 (burst-233/2026-07-22): F-P133-06 — resolve stale BC-2.23.005 Category::CONFIGURATION contradiction note in VP section callout (~L176): update to RESOLVED (BC-2.23.005 v1.1 = VAL, burst-232, consistent with error-taxonomy v1.31 and VP-013 harness)."
@@ -176,4 +177,4 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | VP-012 | BC-2.10.005 (OnWatermark arithmetic) | ferrochain-core / core-budget | Kani | P1 | draft |
 | VP-013 | BC-2.23.005 (BashTool risk floor) | ferrochain-tools / tools-shell | Kani | P1 | draft |
 
-> **D23 VPs SEEDED (burst-232):** VP-011/012/013 minted with BC anchors, Kani harness skeletons, and input-hashes. VP-011 (graph::hitl / PreToolCallHook fail-closed — Kani P0 red_gate); VP-012 (core-budget / OnWatermark arithmetic — Kani P1); VP-013 (tools-shell / BashTool risk floor — Kani P1). BC-2.23.005 category RESOLVED: BC-2.23.005 v1.1 amended to category VAL in burst-232 (error-taxonomy v1.31; consistent with VP-013 harness).
+> **D23 VPs SEEDED (burst-232):** VP-011/012/013 minted with BC anchors, Kani harness skeletons, and input-hashes. VP-011 (graph::hitl / PreToolCallHook fail-closed — Kani P0); VP-012 (core-budget / OnWatermark arithmetic — Kani P1); VP-013 (tools-shell / BashTool risk floor — Kani P1). BC-2.23.005 category RESOLVED: BC-2.23.005 v1.1 amended to category VAL in burst-232 (error-taxonomy v1.31; consistent with VP-013 harness).

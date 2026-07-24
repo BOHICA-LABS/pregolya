@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "2.0"
+version: "2.1"
 status: active
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "fda5812"
+input-hash: "48bc688"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "2.1 (FIX-BURST-248/F-P147-01/2026-07-24): Remove stale 'red_gate' label from hitl row Notes — BC-2.05.007 is NOT Red-Gated (product-owner authority, burst-231; ADR-018 Decision 3 has no compile-and-fail mandate). Notes changed from 'Kani P0 red_gate (BC-2.05.007)' to 'Kani P0 (BC-2.05.007)'. No VP table, totals, or criticality tier changes."
   - "2.0 (burst-232/2026-07-22): D23 VP layer — add VP-011..013 to VP-to-Module table; update hitl row (VP-011 Kani P0); add core-budget row (VP-012 Kani P1); add tools-shell row (VP-013 Kani P1). Totals: 10→13 VPs, Kani 6→9. Coverage-by-Criticality-Tier: CRITICAL Kani VPs 5→6 (+VP-011; hitl is CRITICAL per module-criticality.md); HIGH Kani VPs 1→3 (+VP-012 core-budget, +VP-013 tools-shell; ferrochain-tools criticality tier deferred to module-criticality.md D23 content authoring burst). Per-module count 41→43 (+2 new rows). Input-hash refresh pending VP-INDEX.md v1.5."
   - "1.9 (burst-229/2026-07-22): Input-hash cascade refresh — module-decomposition.md v1.15 changed (D23: SS-23 ferrochain-tools + graph::hitl/budget D23 types) + module-criticality.md v1.5 cascade (ARCH-INDEX.md v1.6 + module-decomposition.md v1.15). Hash: 52d04b1 → 06eaf17. No VP table changes (D23 VP candidates not yet minted; pending PO BC authoring)."
   - "1.8 (burst-224/2026-07-21): Fix Coverage by Criticality Tier MEDIUM count: 11 → 12 (vectorstores-mmr reclassified CRITICAL → MEDIUM when VP-009 moved to vectorstores-similarity; F-P129-11 reclassification, not an addition). Fix tier membership description in header note. Refresh input-hash cascade: 8bc637f → 78d9c11 (module-decomposition.md v1.12) → c766473 final (module-criticality.md v1.4 D21+burst-224 backfill in same burst)."
@@ -63,7 +64,7 @@ changelog:
 |--------|-------|------|---------|------|-------------|-------|
 | bsp-engine | ferrochain-graph | VP-001 | yes (BC-2.03.003) | yes (BC-2.17.002) | yes | Core VP target |
 | channels | ferrochain-graph | — | yes (BC-2.02.002) | — | yes | Reducer invariants via proptest |
-| hitl | ferrochain-graph | VP-011 | — | — | yes | D23/SS-05; PreToolCallHook fail-closed; Kani P0 red_gate (BC-2.05.007) |
+| hitl | ferrochain-graph | VP-011 | — | — | yes | D23/SS-05; PreToolCallHook fail-closed; Kani P0 (BC-2.05.007) |
 | scheduler | ferrochain-graph | — | — | — | yes | Pending ADR-001 |
 | budget | ferrochain-graph | — | yes | — | yes | EvidenceJournal ordering |
 | provenance | ferrochain-graph | — | — | — | yes | Hook dispatch |

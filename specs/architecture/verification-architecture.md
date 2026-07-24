@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.3"
+version: "2.4"
 status: active
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
@@ -275,7 +275,7 @@ by Kani's CBMC backend. Red Gate: must compile-and-fail before Phase 3 story del
 
 ---
 
-**VP-011 — PreToolCallHook Fail-Closed** (ferrochain-graph / hitl) `Kani P0 red_gate: true`
+**VP-011 — PreToolCallHook Fail-Closed** (ferrochain-graph / hitl) `Kani P0`
 
 Property: For any `PreToolDecision::Deny` — whether returned by the hook or synthesized by
 the panic-shield from `Err(HookError)` — `route_pre_tool_decision` returns
@@ -630,6 +630,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.4 | 2026-07-24 | architect | FIX-BURST-248 / F-P147-01 | F-P147-01 (HIGH) red_gate adjudication: VP-011 entry heading corrected — remove stale `red_gate: true` label. BC-2.05.007 is NOT Red-Gated (product-owner authority: BC-2.05.007 red_gate: false, burst-231; ADR-018 Decision 3 contains no compile-and-fail mandate; fabricated red_gate_source removed in VP-011 v1.1). Heading updated from `` `Kani P0 red_gate: true` `` to `` `Kani P0` ``. Red Gate census: 11 (unchanged). |
 | 2.3 | 2026-07-24 | architect | burst-247 / F-P146-01 | F-P146-01 (HIGH) VP-011 catalog correction: rewrite formal statement, prose, and harness sketch to match authoritative 4-variant `#[non_exhaustive]` PreToolDecision model (Approve/Deny/Edit/PendingHumanApproval per BC-2.05.007 PC1–PC4 + VP-011.md + interface-definitions). Removes stale two-variant exhaustive claim and "(no other variant exists; enum is exhaustive)" line. Fixes wrong Proceed-reachability prose (Approve-only → Approve AND valid Edit per PC-3). Replaces non-compiling `kani::any()` two-arm match with four concrete proof functions (deny_excludes_tool_invocation, approve_reaches_tool_invocation, hook_error_resolves_to_deny_and_reject, edit_invalid_args_falls_back_to_deny) mirroring VP-011.md §Proof Harness Skeleton. Fixes feasibility "2-variant" → "4-variant #[non_exhaustive]". Coherence sweep of 12 remaining VP catalog entries (OBS-P146 process-gap follow-up) found 4 additional harness-target divergences fixed in same burst: VP-001 `reduce_deterministic`→`reduce_super_step` + `sort_and_reduce`→`reduce_super_step` in formal statement; VP-003 harness `canonicalize_beneath_root`→`canonicalize_beneath_root_pure`; VP-006 SlotVar `trust_policy`+`value` fields→`policy` (no value field, `is_some_and(t.is_untrusted())` predicate per VP-006.md); VP-007 `lc_serialize()`/`lc_deserialize()`→`serialize()`/`Reviver::new().revive()`. TD-VSDD-060 sibling sweep: all PreToolDecision claims in architect-owned files (module-decomposition, purity-boundary-map, api-surface) verified correct (4-variant model already present); domain-spec + PO-owned files not modified. Input-hash updated: fb6e588→fd27b6d. |
 | 2.2 | 2026-07-22 | architect | burst-233 / F-P133-06 | F-P133-06 sibling sweep: resolve stale BC-2.23.005 Category::CONFIGURATION contradiction note in §VP-013 property body. Note was "routed to PO for amendment"; BC-2.23.005 was amended to `VAL` in burst-232 (v1.1) — contradiction is now closed. Note updated to RESOLVED status, consistent with error-taxonomy v1.31 and VP harness. No VP catalog or coverage-matrix changes. |
 | 2.1 | 2026-07-22 | architect | burst-232 / D23 | D23 VP layer: add VP-011..013 (Kani P0/P1) to Committed VP Obligations table and Provable Properties Catalog. VP-011 (graph::hitl, P0): PreToolCallHook fail-closed dispatch. VP-012 (core-budget, P1): OnWatermark arithmetic. VP-013 (tools-shell, P1): BashTool risk floor. Total 10→13 VPs; P0 5→6; P1 5→7; Kani 6→9. Add BC-2.05.007/2.10.005/2.23.005 to inputs; decisions D17/D21 → D17/D21/D23. Input-hash refresh pending. |
