@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.9"
+version: "3.10"
 status: active
 producer: state-manager
-timestamp: 2026-07-24T00:26:00Z
+timestamp: 2026-07-25T00:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.10 (burst-260/F-P159-01/OBS-P159-A/2026-07-25): F-P159-01 HIGH: BC-2.15.001 v1.2→v1.3, BC-2.15.002 v1.2→v1.3, BC-2.15.003 v1.3→v1.4 — SS-15 trio body Traceability tables carried stale P2/Wave-2 post-D23 promotion; all 6 cells fixed to P1/Wave-1. OBS-P159-A adjudication: VP-MEM-01/02 (BC-2.15.001), VP-MEM-03/04 (BC-2.15.002), VP-MEM-05/06 (BC-2.15.003) all phases Post-v1→v1 — tenant isolation is v1 security-critical behavior; Wave-1 promotion applies; BC-2.15.004/005/006 reverse-contamination check clean."
   - "3.9 (burst-259/F-P158-01/02/2026-07-24): F-P158-01 MED: BC-2.16.003 v1.3→v1.4 — tool_name dropped from retry.circuit_breaker_disabled emission in EC-005; CircuitBreaker::always_closed() is a zero-argument constructor; tool-agnostic message template per sibling retry.unlimited_policy_constructed; observability v1.2→v1.3. F-P158-02 LOW: BC-2.12.004 v1.4→v1.5 — cron queue-full boundary adjudicated >= (ScheduleQueueFull fires when queue length meets or exceeds capacity; at-capacity semantics); error-taxonomy v1.39→v1.40; observability trigger-condition aligned."
   - "3.8 (burst-258/F-P157-02/2026-07-24): F-P157-02 MED: BC-INDEX frontmatter timestamp corrected 2026-07-25→2026-07-24 (future-dated). BC version sync from F-P157-01 observability catalog re-sweep (observability.md v1.1→v1.2; catalog 6→11 event_types): BC-2.08.008 v1.2 (eval.judge_infra_error), BC-2.12.004 v1.4 (server.cron_schedule_queue_full), BC-2.16.002 v1.4 (retry.unlimited_policy_constructed), BC-2.16.003 v1.3 (retry.circuit_breaker_disabled+retry.circuit_probe_failed)."
   - "3.7 (burst-257/F-P156-01/02/2026-07-24): F-P156-01 HIGH: 12 BC files (SS-11 ×6, SS-13 ×6) — nonexistent arch-file citations (ferrochain-core/graph/memory/sandbox.md, cargo-features.md, verification-properties.md) replaced with adjudicated real targets (interface-definitions §GuardrailHook, module-decomposition §rows, purity-boundary-map §rows, verification-architecture VP-003); corpus-complete audit zero other nonexistent citations; anchor-resolution validator minted (PASS=129 FAIL=0). BC versions: BC-2.11.001 v1.2, BC-2.11.002 v1.10, BC-2.11.003 v1.8, BC-2.11.004 v1.8, BC-2.11.005 v1.4, BC-2.11.006 v1.3, BC-2.13.001 v1.1, BC-2.13.002 v1.3, BC-2.13.003 v1.1, BC-2.13.004 v1.3, BC-2.13.005 v1.2, BC-2.13.006 v1.2. F-P156-02 MED: BC-INDEX body-table sync gap closed (3.6 row was absent; 3.6 + 3.7 rows added)."
@@ -233,6 +234,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.10 | 2026-07-25 | burst-260/F-P159-01/OBS-P159-A: F-P159-01 HIGH — BC-2.15.001 v1.2→v1.3, BC-2.15.002 v1.2→v1.3, BC-2.15.003 v1.3→v1.4 (SS-15 trio body Traceability P2/Wave-2→P1/Wave-1; residue from incomplete D23 body sweep). OBS-P159-A: all 6 VP-MEM phases Post-v1→v1 (tenant isolation v1 security-critical; Wave-1 promotion); BC-2.15.004/005/006 reverse-contamination check clean. | burst-260 F-P159-01+OBS-P159-A |
 | 3.9 | 2026-07-24 | burst-259/F-P158-01/02: F-P158-01 MED: BC-2.16.003 v1.3→v1.4 — tool_name dropped from retry.circuit_breaker_disabled emission in EC-005; zero-argument constructor; tool-agnostic message template per sibling retry.unlimited_policy_constructed; observability v1.2→v1.3. F-P158-02 LOW: BC-2.12.004 v1.4→v1.5 — cron queue-full boundary adjudicated >= (ScheduleQueueFull fires when queue meets or exceeds capacity; at-capacity semantics); error-taxonomy v1.39→v1.40; observability trigger-condition aligned. | burst-259 F-P158-01/02 |
 | 3.8 | 2026-07-24 | burst-258/F-P157-02: BC-INDEX frontmatter timestamp corrected 2026-07-25→2026-07-24 (future-dated per F-P157-02 MED). BC version sync from F-P157-01 observability catalog re-sweep (observability.md v1.1→v1.2; catalog 6→11 event_types): BC-2.08.008 v1.2 (eval.judge_infra_error), BC-2.12.004 v1.4 (server.cron_schedule_queue_full), BC-2.16.002 v1.4 (retry.unlimited_policy_constructed), BC-2.16.003 v1.3 (retry.circuit_breaker_disabled + retry.circuit_probe_failed). | burst-258 F-P157-02 |
 | 3.7 | 2026-07-24 | burst-257/F-P156-01/02: F-P156-01 HIGH — 12 BC files (SS-11 ×6, SS-13 ×6) anchor sweep: nonexistent arch-file citations replaced with adjudicated real targets; BC versions: BC-2.11.001 v1.2, BC-2.11.002 v1.10, BC-2.11.003 v1.8, BC-2.11.004 v1.8, BC-2.11.005 v1.4, BC-2.11.006 v1.3, BC-2.13.001 v1.1, BC-2.13.002 v1.3, BC-2.13.003 v1.1, BC-2.13.004 v1.3, BC-2.13.005 v1.2, BC-2.13.006 v1.2; anchor-resolution validator minted (PASS=129 FAIL=0). F-P156-02 MED: body-table sync gap closed (3.6 row was absent; 3.6 + 3.7 rows added). | burst-257 F-P156-01/02 |

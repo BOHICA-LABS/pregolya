@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "e14d101"
+input-hash: "4738b7a"
 traces_to: STATE.md
 ---
 
@@ -1368,3 +1368,23 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 **Regression sweep:** verify-form-a-changelog-direction.sh: PASS=129 WARN=0 FAIL=0. verify-arch-anchor-resolution.sh: PASS=129 FAIL=0.
 
 **Hash sweep (D18-P89-A/D18-P90-A):** observability.md v1.3 + BC-2.12.004 v1.5 + BC-INDEX v3.9 (via state-manager sync) staled downstream. Hash sweep TOTAL STALE=0. Burst-259 commit.
+
+---
+
+### Pass P1D-159 (2026-07-25) — Expanded Perimeter Pass 31
+
+**Findings:** 2 (0 CRIT, 1 HIGH, 0 MED, 1 OBS)
+**Streak:** 0/3 (NOT CLEAN strict)
+**Fix burst:** 260
+**Frozen HEAD:** burst-259 commit (7121902)
+**Novel attack angle:** Body-only drift invisible to index/frontmatter checks — adversary targeted BC body Traceability tables independently from frontmatter; found that D23 Wave-1 promotion had updated frontmatter + changelog + index but left body table cells at stale P2/Wave-2 values in the SS-15 trio.
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. Two items: 1H + 1OBS. Finding was body-only Traceability drift in BC-2.15.001/002/003; all prior burst-259 canon, rotated priors, config-inheritance chain, and error-taxonomy anchors audited CLEAN. F-P159-01 HIGH closed by PO with proactive SS-16 sibling sweep complete (SS-15 was the residue). OBS-P159-A adjudicated: tenant isolation is v1 security-critical behavior, VP-MEM phases corrected Post-v1→v1 for all six VP-MEM properties across the trio.
+
+- **F-P159-01 HIGH** (PO, closed): BC-2.15.001/002/003 (SS-15 trio) body Traceability tables still carried pre-D23-promotion P2/Wave-2 values — frontmatter, changelog, and BC-INDEX were all correct; the body §Traceability §Priority and §Wave cells were not swept during D23 body work. All 6 cells fixed to P1/Wave-1. BC-2.15.001 v1.2→v1.3, BC-2.15.002 v1.2→v1.3, BC-2.15.003 v1.3→v1.4.
+
+- **OBS-P159-A** (PO, adjudicated + closed): VP-MEM-03/04 (BC-2.15.002) Post-v1 phase contradicted the Wave-1 promotion — tenant isolation is v1 security-critical behavior, not a post-v1 enhancement. Proactively applied to VP-MEM-01/02 (BC-2.15.001) and VP-MEM-05/06 (BC-2.15.003) — all six VP-MEM properties across the trio now have "v1 phase" designation. Reverse-contamination check on BC-2.15.004/005/006: clean.
+
+**Regression sweep:** verify-form-a-changelog-direction.sh: PASS=129 WARN=0 FAIL=0. verify-arch-anchor-resolution.sh: PASS=129 FAIL=0.
+
+**Hash sweep (D18-P89-A/D18-P90-A):** BC-2.15.001/002/003 + BC-INDEX v3.10 + observability.md (BC-2.15.003 input) + 5 adversarial-review files staled downstream. Hash sweep TOTAL=235 MATCH=235 STALE=0. Burst-260 commit.

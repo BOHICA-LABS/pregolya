@@ -23,7 +23,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-16/BC-2.16.003.md
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.004.md
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.008.md
-input-hash: "1871378"
+input-hash: "a4de2d0"
 ---
 
 # Canonical Structured Event Catalog

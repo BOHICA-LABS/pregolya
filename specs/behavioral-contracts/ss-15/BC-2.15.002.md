@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.002
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-22T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-memory per module-decomposition.md v1.10."
   - "1.2 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
+  - "1.3 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-03/04 phases Post-v1→v1 phase (OBS-P159-A adjudication: tenant isolation is Wave-1 security-critical behavior; Post-v1 VP deferral contradicts promotion) — F-P159-01 post-promotion body sweep."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -151,8 +152,8 @@ operator's explicit privilege level.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-MEM-03 | Storage-layer isolation: SQL query for User("alice") contains WHERE predicate; no post-filter | Unit test (assert generated SQL includes `WHERE scope = 'user' AND user_id = 'alice'`) | Post-v1 |
-| VP-MEM-04 | User "bob" cannot read User("alice") entries via any standard API call | Integration test (cross-scope read attempt returns None, not alice's data) | Post-v1 |
+| VP-MEM-03 | Storage-layer isolation: SQL query for User("alice") contains WHERE predicate; no post-filter | Unit test (assert generated SQL includes `WHERE scope = 'user' AND user_id = 'alice'`) | v1 phase |
+| VP-MEM-04 | User "bob" cannot read User("alice") entries via any standard API call | Integration test (cross-scope read attempt returns None, not alice's data) | v1 phase |
 
 ## Related BCs
 
@@ -183,7 +184,7 @@ _[to be filled after story decomposition]_
 | L2 Domain Invariants | — (NE-12 tenancy partition principle applied analogously: scope fields flow from method signature to storage WHERE clause without collapsing) |
 | CONFLICT Reference | CONFLICT-7 — memory scope model: user/app/session partitioning + GDPR erasure (shapes the tier definitions in this contract) |
 | Domain C Forcing Function | domain-c-openclaw.md §4 — "Session identity as an authorization boundary (not merely routing) for multi-user gateways" aligns with the scope-as-isolation-boundary principle |
-| Priority | P2 |
-| Wave | Wave 2 |
+| Priority | P1 |
+| Wave | Wave 1 |
 | Test Types | I (integration), U (unit/SQL assertion) |
 | Module | ferrochain-memory |

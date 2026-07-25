@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "2b6c9c1"
+input-hash: "d55ae53"
 traces_to: STATE.md
 ---
 
@@ -1348,3 +1348,13 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 ### STANDING USER DIRECTIVE (verbatim, persistent): "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes."
 ### DECISION DELTA THIS SESSION: none uncommitted (D22 Domain-E directive + D23 Domain-E full-parity expansion recorded + committed earlier this session at burst 228; all subsequent work = P1D-129..147 adversarial cascade + fix bursts 224-248, no new D-rows).
 ### WRAP METADATA: Date 2026-07-24 | Cycle v1.0.0-greenfield | Burst 248 | Phase 1 IN PROGRESS — burst-248 COMMITTED; NEXT: adversary cascade P1D-148
+
+---
+
+### Burst 259 Session Checkpoint (archived from STATE.md burst-260)
+
+**RESUME IN ONE BREATH:** "ferrochain Phase 1 (Spec Crystallization) — Phase-1d adversarial re-convergence on the D21+D23 expanded perimeter. P1D-158 cascade NOT CLEAN (2 findings: 0C/0H/1M/1L; fix-burst 259 COMPLETE: F-P158-01 MED circuit_breaker_disabled tool_name dropped from circuit_breaker_disabled emission EC-005 [CircuitBreaker::always_closed() zero-arg constructor; tool_name unavailable at construction]; observability.md v1.2→v1.3; F-P158-02 LOW queue-full >= boundary adjudicated (ScheduleQueueFull fires when queue length meets or exceeds capacity; at-capacity); error-taxonomy v1.39→v1.40; BC-2.12.004 v1.5; BC-INDEX v3.9; hash sweep TOTAL STALE=0); 0/3. NEXT: dispatch adversary pass P1D-159 on burst-259 frozen HEAD."
+
+**HEADS:** develop (clean, pushed); factory-artifacts = burst-259 commit (pushed); no worktrees; no open PRs.
+
+**WRAP METADATA:** Date 2026-07-24 | Cycle v1.0.0-greenfield | Burst 259 | Phase 1 IN PROGRESS — burst-259 COMMITTED; NEXT: adversary cascade P1D-159

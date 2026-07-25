@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.001
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-22T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-memory per module-decomposition.md v1.10."
   - "1.2 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
+  - "1.3 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-01/02 phases Post-v1→v1 phase — residue from incomplete D23 body sweep (F-P159-01)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -149,8 +150,8 @@ configured"`. This is NOT an error; hybrid search degrades gracefully to keyword
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-MEM-01 | Memory entries survive checkpoint deletion on the same thread | Integration test (write memory, delete all checkpoints for thread, read memory) | Post-v1 |
-| VP-MEM-02 | Memory entries survive server restart with SQLite backend | Integration test (write, restart, read) | Post-v1 |
+| VP-MEM-01 | Memory entries survive checkpoint deletion on the same thread | Integration test (write memory, delete all checkpoints for thread, read memory) | v1 phase |
+| VP-MEM-02 | Memory entries survive server restart with SQLite backend | Integration test (write, restart, read) | v1 phase |
 
 ## Related BCs
 
@@ -180,7 +181,7 @@ _[to be filled after story decomposition]_
 | Capability Anchor Justification | CAP-017 ("Long-Horizon Cross-Session Memory Store (KV + Vector)") per capabilities-p1-p2.md §CAP-017 — this BC specifies the KV and vector persistence mechanics, the cross-thread durability guarantee, and the hybrid search surface that are the foundational behaviors named in CAP-017 |
 | L2 Domain Invariants | — (no DI directly applies; CONFLICT-7 memory scope model is the primary reference) |
 | Domain C Forcing Function | domain-c-openclaw.md §2.6 — "SQLite with optional vector embeddings" + hybrid retrieval; §7 memory checklist item "[PARTIAL] Long-horizon cross-session store (KV + vector) decoupled from checkpoints" |
-| Priority | P2 |
-| Wave | Wave 2 |
+| Priority | P1 |
+| Wave | Wave 1 |
 | Test Types | I (integration) |
 | Module | ferrochain-memory |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.003
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-memory per module-decomposition.md v1.10."
   - "1.2 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'memory.gdpr_unattributed_session_entries' to EC-004 WARN emission per observability census (SAP-1). EC-004 updated with structured event_type and fields."
   - "1.3 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
+  - "1.4 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-05/06 phases Post-v1→v1 phase — residue from incomplete D23 body sweep (F-P159-01)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -145,8 +146,8 @@ required: "AdminContext" })` before any deletion occurs.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-MEM-05 | Erasure is atomic: storage fault mid-transaction rolls back all deletions | Integration test with injected fault (mock SQLite error after first DELETE statement) | Post-v1 |
-| VP-MEM-06 | Erasure removes all user-scoped entries; zero entries remain after successful erasure | Integration test (write N entries; erase; assert memory_search returns empty) | Post-v1 |
+| VP-MEM-05 | Erasure is atomic: storage fault mid-transaction rolls back all deletions | Integration test with injected fault (mock SQLite error after first DELETE statement) | v1 phase |
+| VP-MEM-06 | Erasure removes all user-scoped entries; zero entries remain after successful erasure | Integration test (write N entries; erase; assert memory_search returns empty) | v1 phase |
 
 ## Related BCs
 
@@ -176,7 +177,7 @@ _[to be filled after story decomposition]_
 | L2 Domain Invariants | — (no DI directly applies; CONFLICT-7 memory scope model and GDPR requirement are the primary references) |
 | CONFLICT Reference | CONFLICT-7 — memory scope: user/app/session partitioning + GDPR erasure; erasure must cover all three tiers |
 | Domain C Forcing Function | domain-c-openclaw.md §2.6 — memory is per-agent; domain-c §4 — credential / data handling as operator responsibility; the absence of GDPR tooling in OpenClaw is a gap ferrochain addresses |
-| Priority | P2 |
-| Wave | Wave 2 |
+| Priority | P1 |
+| Wave | Wave 1 |
 | Test Types | I (integration) |
 | Module | ferrochain-memory |
