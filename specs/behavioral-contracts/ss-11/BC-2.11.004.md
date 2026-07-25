@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.004
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -29,6 +29,7 @@ changelog:
   - "1.5 (F-P100-02, 2026-07-17): Symmetric GuardrailDecision emission clauses added (ADR-006 rev-3). PC3 — added streaming notification clause: a `StreamEvent::GuardrailDecision { boundary: MemoryItem, decision: Fail, reason: Some(reason), severity: Some(severity_wire), ingress_id, tool_call_id: None }` is emitted within the enclosing NodeStart/NodeEnd window (BC-2.06.001 PC4); event carries metadata only; zero bytes of rejected memory item in any StreamEvent payload (BC-2.11.005 INV-5). PC4 — added streaming notification clause: a `StreamEvent::GuardrailDecision { boundary: MemoryItem, decision: Transform, reason: None, severity: None, ingress_id, tool_call_id: None }` is emitted within the enclosing NodeStart/NodeEnd window; reason and severity absent for Transform outcomes. Symmetric with BC-2.11.002 PC3/PC4 (ToolResult exemplar); boundary adapted to MemoryItem; window adapted to NodeStart/NodeEnd; tool_call_id is None."
   - "1.6 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-004 and TV panic row carry bare E-CORE-007 wrappers. Added inline context-source annotations naming `<boundary>` = `BoundaryType::MemoryIngress` from `provenance_tag.boundary_type` and `<content_type>` = `IngressContent::MemoryItem` from `content` variant discriminant — per gate #33 E-CORE-007 context-sourced registry (bc-authoring-plan.md v2.38)."
   - "1.7 (F-P112-01, 2026-07-18): <content_type> bare-form adjudication (symmetric with BC-2.11.002 exemplar). ADJUDICATED: BARE variant name per interface-definitions.md §IngressContent. EC-004 and TV panic row: rendered value changed from 'IngressContent::MemoryItem' to 'MemoryItem'; source description updated from 'content variant discriminant' to 'IngressContent variant discriminant'. bc-authoring-plan gate #33 registry updated to v2.39."
+  - "1.8 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -144,8 +145,9 @@ model context injection.
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-core.md` — memory read output boundary and hook call site (filled by architect)
-- `architecture/ferrochain-memory.md` — long-horizon memory store backends (filled by architect, if separate module)
+- `prd-supplements/interface-definitions.md §GuardrailHook` — `IngressContent::MemoryItem(Value)`; `BoundaryType::MemoryIngress`; payload type `Value` = `serde_json::Value`; memory-store-specific internal structure
+- `architecture/module-decomposition.md §ferrochain-graph` — `graph::provenance` row: dispatch at `MemoryIngress` boundary (HIGH, SS-11)
+- `architecture/module-decomposition.md §ferrochain-memory` — `memory::store` row: `MemoryStore` trait (KV + vector ops, GDPR erasure); storage layer items traverse BC-2.11.004 guardrail path before model-context injection (MEDIUM, SS-15)
 
 ## Story Anchor
 

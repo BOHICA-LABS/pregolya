@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.005
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -25,6 +25,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
   - "1.2 (ADV-P1D-PASS-59): F-P59-02 — EC-002 description and TV fixed to typecheck against Transform { new_content: IngressContent }. Bare ContentBlock::text('[REDACTED]') → IngressContent::ToolResult(ContentBlock::text('[REDACTED]')); EC-002 description updated to reflect IngressContent wrapper (same-boundary rule). ToolResult used as the concrete example boundary per BC-2.11.002 EC-003 authority."
   - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). PC1 — extended with streaming surface isolation clause: ToolEnd.data carries post-guardrail content; GuardrailDecision carries metadata only; zero rejected bytes in any StreamEvent payload. New INV-5 — streaming surface subject to same content isolation; GuardrailDecision carries metadata only; enforced structurally via ordering."
+  - "1.4 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -143,8 +144,9 @@ single synchronous operation in the current super-step.
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-core.md` — model input buffer construction and atomic rejection enforcement (filled by architect)
-- `architecture/ferrochain-graph.md` — pre-inference buffer finalization point (filled by architect)
+- `prd-supplements/interface-definitions.md §GuardrailHook` — `GuardrailResult::Fail{reason,severity}`; `GuardrailSeverity::Critical` triggers run-halt (PC4); non-Critical severity triggers error-block substitution and run continuation (PC5)
+- `architecture/module-decomposition.md §ferrochain-graph` — `graph::provenance` row: atomic rejection enforcement (HIGH, SS-11); `graph::scheduler` row: `CompiledGraph::run()` pre-inference buffer finalization (CRITICAL, SS-03)
+- `architecture/purity-boundary-map.md §Boundary Modules` — `graph::provenance` row: pure route decision / effectful `GuardrailHook` dispatch; rejection atomicity enforced via causal ordering before inference
 
 ## Story Anchor
 

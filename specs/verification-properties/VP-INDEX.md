@@ -1,13 +1,14 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.5"
+version: "1.6"
 status: active
 producer: architect
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-24T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.6 (FIX-BURST-257/2026-07-24): OBS-P156-B — add VP priority clarification note: VP priority is the VERIFICATION-priority axis (proof criticality), distinct from the anchor BC's implementation priority; a P0 VP may anchor a P1 BC (examples: VP-003 Kani P0 anchors P1 BC-2.13.004; VP-011 Kani P0 anchors P1 BC-2.05.007). Note added in preamble blockquote and Summary section. No VP catalog rows changed; arithmetic invariant unchanged."
   - "1.5 (burst-232/2026-07-22): D23 VP layer — add VP-011..013 (3 Kani P0/P1); total 10→13, P0 5→6, P1 5→7, Kani 6→9. VP-011 (Kani P0, BC-2.05.007, graph::hitl): PreToolCallHook fail-closed dispatch. VP-012 (Kani P1, BC-2.10.005, core-budget): OnWatermark arithmetic. VP-013 (Kani P1, BC-2.23.005, tools-shell): BashTool risk floor."
   - "1.4 (burst-225/2026-07-21): F-P130-05 (MED) — correct VP-006 DI column: DI-008 → DI-014. Rationale: VP-006 proves the fail-closed property (injection detected → Err returned, no PromptValue produced); the semantically correct invariant is DI-014 (Error Propagation / No Silent Swallowing), not DI-008 (Library Constructor Result Contract). Siblings VP-009 and VP-010 both anchor DI-014 for the same class of proof. Arithmetic invariant unchanged (10 VPs, same tool/phase/priority distribution)."
   - "1.3 (burst-224/2026-07-21): F-P129-11 — update VP-009 module from vectorstores-mmr to vectorstores-similarity; cosine_similarity is the shared primitive in the renamed module; MMR selection algorithm (vectorstores::mmr) is a separate caller of cosine_similarity."
@@ -24,14 +25,28 @@ changelog:
 > (VP-to-Module table + Totals row) in the same burst.
 >
 > Arithmetic invariant: total (13) = P0 (6) + P1 (7) = Kani (9) + proptest (2) + integration (2).
+>
+> **VP Priority vs BC Priority (OBS-P156-B):** The `Priority` column here is the
+> **verification-priority axis** — it reflects proof criticality (how urgently this property
+> needs formal verification) and determines Phase 6 Kani harness scheduling (P0 before P1).
+> It is **not** the same as the anchor BC's implementation priority. A P0 VP may anchor a
+> P1 BC when the underlying security or correctness property warrants early formal proof
+> regardless of wave ordering. Examples: VP-003 (Kani P0) anchors BC-2.13.004 (P1 BC —
+> workspace confinement must be formally proven even if the sandbox crate ships in Wave 1 P1
+> scope); VP-011 (Kani P0) anchors BC-2.05.007 (P1 BC — PreToolCallHook fail-closed dispatch
+> requires early Kani proof due to security significance). The mapping is VP priority → proof
+> schedule; BC priority → implementation wave.
 
 ## Summary
+
+> **Priority note:** P0/P1 below is verification-priority (proof criticality), not BC
+> implementation priority. See preamble for the VP-priority vs BC-priority distinction.
 
 | Metric | Count |
 |--------|-------|
 | Total VPs | 13 |
-| Priority P0 | 6 |
-| Priority P1 | 7 |
+| Priority P0 (verification-priority) | 6 |
+| Priority P1 (verification-priority) | 7 |
 | Kani | 9 |
 | proptest | 2 |
 | fuzz | 0 |

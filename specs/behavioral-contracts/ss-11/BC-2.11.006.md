@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.006
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-21T00:00:00Z
@@ -23,6 +23,7 @@ changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
   - "1.2 (burst-226/F-P131-02/2026-07-21): Canonical no-hook WARN emission adjudicated — unified event_type 'guardrail.unregistered_passthrough' replaces prose-specified-only WARN. Merged field schema: {boundary_type, ingress_id, item_count, timestamp} base + conditional {server_name, tool_name} when ToolResult from MCP. PC2, INV-2, test vectors updated. ONE log line per boundary crossing (no double-logging with BC-2.09.003)."
+  - "1.3 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -130,7 +131,8 @@ users who require guardrails must explicitly register a `GuardrailHook`.
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-core.md` — `InvocationContext` hook-slot check and structured WARN emission (filled by architect)
+- `architecture/module-decomposition.md §ferrochain-graph` — `graph::provenance` row: `InvocationContext` hook-slot `None` path; structured `WARN` `event_type = "guardrail.unregistered_passthrough"`; default-permit per OQR-5 (HIGH, SS-11)
+- `architecture/module-decomposition.md §ferrochain-core` — `core::guardrail` definitions-only note: optional registration seam; `None` hook-slot handled by `graph::provenance` WARN logic
 
 ## Story Anchor
 

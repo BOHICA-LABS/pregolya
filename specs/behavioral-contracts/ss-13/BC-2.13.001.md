@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.001
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -21,6 +21,8 @@ subsystem: SS-13
 capability: CAP-015
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.1 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -126,8 +128,8 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-sandbox.md` — `SandboxBackend` trait and default backend selection (filled by architect)
-- `architecture/cargo-features.md` — `sandbox-wasm` as default Cargo feature (filled by architect)
+- `architecture/module-decomposition.md §ferrochain-sandbox` — `sandbox::wasm` row (default `sandbox-wasm` Cargo feature, MEDIUM, SS-13); `sandbox::container` row (`sandbox-container` feature, MEDIUM, SS-13); `sandbox::process` row accessible only via `Sandbox::unsafe_process_no_isolation()`, never default (NE-01 / DI-006 enforcing-default posture)
+- `architecture/purity-boundary-map.md §Boundary Modules` — `sandbox::policy` row: pure compatibility check vs `BackendCapabilities`; `enforcing()` `true` for WASM/container backends, `false` for `ProcessBackend`
 
 ## Story Anchor
 

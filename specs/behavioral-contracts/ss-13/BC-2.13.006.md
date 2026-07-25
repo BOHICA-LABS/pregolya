@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.006
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -32,6 +32,7 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-11): F-P11-04 — E-SBXD-004 and E-SBXD-005 error codes added to PC6, EC-002, and EC-005 (error-taxonomy.md expansion; bc-authoring-plan.md E-code×variant gate)."
+  - "1.2 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -143,7 +144,8 @@ than silently running unsandboxed.
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-sandbox.md` — macOS Seatbelt backend and profile generation logic (filled by architect)
+- `architecture/module-decomposition.md §ferrochain-sandbox` — `sandbox::seatbelt` row: macOS Seatbelt deny-by-default profile (NE-16); profile generation for Darwin (MEDIUM, SS-13)
+- `architecture/purity-boundary-map.md §Effectful Shell` — `sandbox::seatbelt` row: macOS Seatbelt syscall OS integration; integration test strategy
 
 ## Story Anchor
 

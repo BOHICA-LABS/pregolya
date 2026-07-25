@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.005
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -31,6 +31,7 @@ removed: null
 removal_reason: null
 changelog:
   - "1.1 (CENSUS-P109, 2026-07-18): Fix TV-002 and TV-003 E-SBXD-001 WorkspaceEscape struct — both rows used `{ resolved: \"/etc/passwd\" }` (single field) missing `requested` and `root`. Canonical 3-field form `{ requested, resolved, root }` per PC4/Invariant-2/VP-2.13.005-C. TV-002 fix: add `requested: \"/workspace/link_a\"`; TV-003 fix: add `requested: \"/workspace/rel_escape\"`. Both rows also missing `root: \"/workspace\"`. TD-VSDD-060 sweep: no other E-SBXD-001 struct sites in file."
+  - "1.2 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
 priority: P1
 wave: 1
 ---
@@ -131,7 +132,7 @@ This BC directly covers domain edge case DEC-011.
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-sandbox.md` — `canonicalize_beneath_root` implementation and `E-SBXD-001: WorkspaceEscape` error type (filled by architect)
+- `architecture/module-decomposition.md §ferrochain-sandbox` — `sandbox::path_guard` row: `std::fs::canonicalize()` follows symlinks before prefix check; `Err E-SBXD-001`; symlink-escape detection as consequence of access-time canonicalization (CRITICAL, SS-13)
 
 ## Story Anchor
 

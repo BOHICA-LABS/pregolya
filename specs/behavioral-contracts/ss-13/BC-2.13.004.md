@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.004
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -25,6 +25,7 @@ changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-8): F-P8-01 title census — H1 updated to add '— Kani VP Seed' suffix (vp_seed designation codified in heading per title-authority convention)."
   - "1.2 (F-P110-02, 2026-07-18): Fix TV-002 E-SBXD-001 WorkspaceEscape struct — 2-field form `{ resolved, root }` missing `requested`. Canonical 3-field form `{ requested, resolved, root }` per BC-2.13.005 Invariant-2 (cross-anchor consistency under gate #33 v2.37). TV-002 fix: add `requested: \"/workspace/../etc/passwd\"`. TD-VSDD-060 file-wide sweep: only one E-SBXD-001 struct site in this file (line 108 in Canonical Test Vectors). The prior in-file sweep missed this because the secondary anchor BC-2.13.004 was not scoped by the TD-VSDD-060 sweep anchored 'in-file' rather than 'across ALL anchor BCs' — the systemic root cause corrected in bc-authoring-plan gate #33 v2.37."
+  - "1.3 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -139,8 +140,9 @@ formally prove that no file operation can observe content outside the declared w
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-sandbox.md` — `WorkspaceFs` facade and `canonicalize_beneath_root` function signature (filled by architect)
-- `architecture/verification-properties.md` — workspace-confinement VP (Phase 6 Kani target) (filled by architect)
+- `architecture/module-decomposition.md §ferrochain-sandbox` — `sandbox::path_guard` row: `canonicalize_beneath_root(base, path)`; `Err E-SBXD-001` on workspace escape; `WorkspaceFs` facade routes all workspace file ops (CRITICAL, SS-13)
+- `architecture/purity-boundary-map.md §Pure Core` — `sandbox::path_guard` row: VP-003 Kani P0 target; pure path arithmetic after OS resolution
+- `architecture/verification-architecture.md` — VP-003 workspace-confinement Kani harness (`workspace_confinement_harness`)
 
 ## Story Anchor
 

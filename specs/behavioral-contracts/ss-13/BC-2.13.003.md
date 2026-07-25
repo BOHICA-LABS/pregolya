@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.003
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -21,6 +21,8 @@ subsystem: SS-13
 capability: CAP-015
 lifecycle_status: active
 introduced: v1.0.0-greenfield
+changelog:
+  - "1.1 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -126,7 +128,8 @@ compared against backend capabilities at execute-time, before any tool code runs
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-sandbox.md` — `Sandbox::execute()` capability-check gate and `E-SBXD-002` error type (filled by architect)
+- `architecture/module-decomposition.md §ferrochain-sandbox` — `sandbox::policy` row: `SandboxPolicy` enforcement; `Err(PolicyNotEnforceable)` on policy-capability mismatch at execute-time (NE-01); capability check before any tool code runs (MEDIUM, SS-13)
+- `architecture/purity-boundary-map.md §Boundary Modules` — `sandbox::policy` row: pure check of `SandboxPolicy.enforce_*` vs `BackendCapabilities.*`; `Err(E-SBXD-002)` on mismatch; effectful backend enforcement when policy is satisfied
 
 ## Story Anchor
 

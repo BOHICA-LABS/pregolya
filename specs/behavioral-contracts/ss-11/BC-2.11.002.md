@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.002
-version: "1.9"
+version: "1.10"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -31,6 +31,7 @@ changelog:
   - "1.7 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-001 and TV panic row both carry `Err(FerrochainError { category: INTERNAL, code: E-CORE-007 })` bare wrappers. E-CORE-007 is now a registered context-sourced exception (bc-authoring-plan.md v2.38 gate #33 registry). Added inline context-source annotations naming `<boundary>` = `BoundaryType::ToolResult` from `ProvenanceTag.boundary_type` and `<content_type>` = `IngressContent::ToolResult` from `IngressContent` variant discriminant — both are deterministically available as arguments to `GuardrailHook::evaluate()` at the panic catch site."
   - "1.8 (F-P112-01, 2026-07-18): <content_type> bare-form adjudication. ADJUDICATED: BARE variant name per interface-definitions.md §IngressContent (pre-existing authoritative definition: renders 'ToolResult', not qualified 'IngressContent::ToolResult'). The qualified form was introduced incidentally by burst-115 annotation and contradicted the interface-definitions source of truth. EC-001 and TV panic row: rendered value changed from 'IngressContent::ToolResult' to 'ToolResult'; source description updated from 'content variant discriminant' to 'IngressContent variant discriminant'. bc-authoring-plan gate #33 registry updated to v2.39."
   - "1.9 (F-P122-01, 2026-07-19): image_url residue corrected to canonical ContentBlock variant vocabulary (CANON PC2: Image is a ContentBlock variant with type tag 'image', not an image_url type). EC-002: illustrative example 'text + image_url' → 'ContentBlock::Text + ContentBlock::Image'. EC-003: illustrative example 'image_url block → text error block' → 'ContentBlock::Image → ContentBlock::Text error block'. Semantics preserved: mixed Text+Image ingress (EC-002) and Image-to-Text Transform (EC-003) remain unchanged; only the type vocabulary is corrected."
+  - "1.10 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -148,8 +149,9 @@ substitute error block), or Transform (forward replacement content). This contra
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-core.md` — `GuardrailHook` trait definition and `InvocationContext` registration seam (filled by architect)
-- `architecture/ferrochain-graph.md` — tool-result ingress pipeline and hook call site (filled by architect)
+- `prd-supplements/interface-definitions.md §GuardrailHook` — trait signature `async fn evaluate(&self, content: IngressContent, provenance_tag: ProvenanceTag) -> GuardrailResult`; `IngressContent::ToolResult(ContentBlock)`; `GuardrailResult` variants `Pass` | `Fail{reason,severity}` | `Transform{new_content}`; `GuardrailSeverity` enum (`Critical`/`High`/`Medium`/`Low`)
+- `architecture/module-decomposition.md §ferrochain-graph` — `graph::provenance` row: dispatch at `ToolResult` ingress; `InvocationContext` hook-slot seam (HIGH, SS-11)
+- `architecture/module-decomposition.md §ferrochain-core` — `core::guardrail` definitions-only note: `GuardrailHook` trait promoted to core per ADR-014 Decision 6; definitions-only, no execution logic in trait body
 
 ## Story Anchor
 

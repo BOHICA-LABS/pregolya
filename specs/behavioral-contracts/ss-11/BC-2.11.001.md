@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.001
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -24,6 +24,7 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated to match (16-BC re-anchor sweep)."
+  - "1.2 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -129,8 +130,9 @@ downstream hook evaluation.
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-core.md` — InvocationContext seam and ProvenanceTag struct definition (filled by architect)
-- `architecture/ferrochain-graph.md` — ingress pipeline attachment points (filled by architect)
+- `prd-supplements/interface-definitions.md §GuardrailHook` — `ProvenanceTag` struct (fields: `boundary_type: BoundaryType`, `ingress_id: Uuid`, `sequence_position: usize`) + `BoundaryType` enum (`ToolResult` | `RAGRetrieval` | `MemoryIngress` — 3 variants, PASS-58 canon)
+- `architecture/module-decomposition.md §ferrochain-graph` — `graph::provenance` row: `ProvenanceTag` attachment at ingress boundaries, `GuardrailHook` dispatch (HIGH, SS-11)
+- `architecture/module-decomposition.md §ferrochain-core` — `core::guardrail` definitions-only note: `BoundaryType` enum + full trait set (`GuardrailHook`, `GuardrailResult`, `IngressContent`, `GuardrailSeverity`); no execution logic; promoted to core per ADR-014 Decision 6
 
 ## Story Anchor
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.002
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-21T00:00:00Z
@@ -25,6 +25,7 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.1 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'sandbox.process_no_isolation_execute' to the mandated WARN-level log emission per observability census (SAP-1). PC1 and VP-2.13.002-A updated to specify the structured event_type field."
   - "1.2 (burst-235/F-P135-05/2026-07-22): Add DI-015 (Subprocess Execution Timeout) to di_anchors and Traceability — ProcessBackend co-enforces DI-015 at the sandbox layer via .kill_on_drop(true); add PC-6 (kill-on-drop subprocess guarantee) and INV-6 (.kill_on_drop(true) mandate). Architect adjudication F-P135-05."
+  - "1.3 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -139,7 +140,8 @@ enforcement).
 
 ## Architecture Anchors
 
-- `architecture/ferrochain-sandbox.md` — `ProcessBackend` constructor naming and `execute()` warning emission (filled by architect)
+- `architecture/module-decomposition.md §ferrochain-sandbox` — `sandbox::process` row: explicit non-default; `unsafe_process_no_isolation()` only access path; WARN log on every `execute()`; `BackendCapabilities { filesystem_isolated: false, network_isolated: false, memory_bounded: false }`; DI-015 co-enforcer via `.kill_on_drop(true)` (MEDIUM, SS-13)
+- `architecture/purity-boundary-map.md §Effectful Shell` — `sandbox::process` row: OS subprocess spawning via `tokio::process::Command` with `.kill_on_drop(true)` (integration test)
 
 ## Story Anchor
 

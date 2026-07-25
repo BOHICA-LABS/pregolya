@@ -1,27 +1,44 @@
 #!/usr/bin/env bash
 # verify-form-a-changelog-direction.sh — ferrochain factory-artifacts wrap guard
 #
-# Validates Form-A frontmatter `changelog:` lists in BC files
-# (.factory/specs/behavioral-contracts/ss-*/BC-*.md):
+# Validates changelog ordering in BC files
+# (.factory/specs/behavioral-contracts/ss-*/BC-*.md).
 #
-#   Rule 1 (ASCENDING): Changelog entries must be in STRICTLY ASCENDING version
-#           order — oldest (lowest) entry at the top, newest (highest) at the
-#           bottom.  Equal consecutive versions also fail (must be strictly >).
-#   Rule 2 (VERSION-MATCH): The frontmatter `version:` field must equal the
-#           version of the LAST (newest, bottom) changelog entry.
+# Two changelog forms are supported — each has its own direction convention:
 #
-# NOTE: This check applies to BC files ONLY.  Architecture docs and prd-
-#       supplements use DESCENDING order (newest top) — do NOT pass those paths
-#       to this script.
+#   Form-A (frontmatter YAML `changelog:` list):
+#     Rule 1 (ASCENDING): Entries must be in STRICTLY ASCENDING version
+#             order — oldest (lowest) entry at the top, newest (highest) at the
+#             bottom.  Equal consecutive versions also fail (must be strictly >).
+#     Rule 2 (VERSION-MATCH): The frontmatter `version:` field must equal the
+#             version of the LAST (newest, bottom) changelog entry.
+#
+#   Form-B (body `## Changelog` markdown table, e.g. BC-2.07.002/011/012):
+#     Rule 3 (DESCENDING): Table rows must be in STRICTLY DESCENDING version
+#             order — newest (highest) version at the top, oldest (lowest) at
+#             the bottom.  Equal consecutive versions also fail.
+#     Rule 4 (VERSION-MATCH): The frontmatter `version:` field must equal the
+#             version of the FIRST (newest, top) table row.
+#     Single-row tables are trivially valid (monotonicity satisfied).
+#
+#   No changelog (version == "1.0", neither Form-A nor Form-B present):
+#     Treated as trivially valid — initial-authoring BC requires no history.
+#     Emits PASS.
+#
+# NOTE: This script covers BC files ONLY.  Architecture docs and prd-supplements
+#       use DESCENDING order for their body changelog tables; do NOT pass those
+#       paths to this script.
 #
 # Design notes:
 #   - Frontmatter extracted between the first and second '---' delimiter.
 #   - PyYAML (python3 -c "import yaml") used for robust YAML parsing; avoids
 #     fragile line-by-line awk that breaks on embedded colons, braces, etc.
 #   - Version numbers compared as integer tuples (so 1.10 > 1.9 correctly).
-#   - Files lacking a 'changelog:' key are SKIPped (WARN, non-blocking).
+#   - Files lacking both Form-A and Form-B changelog AND version == "1.0" are
+#     PASS (trivially valid, no prior version to record).
+#   - Files lacking both Form-A and Form-B changelog AND version > "1.0" are
+#     WARN (gate #28 concern — not this script's FAIL mode; caught separately).
 #   - Files lacking a 'version:' key are WARN (non-blocking).
-#   - Single-entry changelogs are always valid (trivially ascending).
 #
 # Usage:  bash .factory/hooks/verify-form-a-changelog-direction.sh
 # Exit:   0 if no FAIL lines; 1 if any FAIL.
@@ -66,10 +83,56 @@ pattern = sys.argv[1]
 files = sorted(glob.glob(pattern))
 
 VERSION_RE = re.compile(r'^(\d+\.\d+(?:\.\d+)*)[\s:(]')
+# Form-B body table: match version number in the first pipe-delimited column
+FORM_B_VERSION_RE = re.compile(r'^\|\s*(\d+\.\d+(?:\.\d+)*)\s*\|', re.MULTILINE)
 
 def parse_version(s):
     """Convert '1.3' or '1.10' to tuple of ints for numeric comparison."""
     return tuple(int(x) for x in s.split('.'))
+
+def check_form_b(filepath, fm, body):
+    """
+    Validate a Form-B body ## Changelog table (DESCENDING convention):
+      Rule 3: rows must be strictly descending (newest first, oldest last).
+      Rule 4: frontmatter version == first (top/newest) row version.
+    Returns a list of defect strings, or [] for PASS.
+    Special return value None means no ## Changelog section found.
+    """
+    bm = re.search(
+        r'(?:^|\n)## Changelog\n(.*?)(?=\n## |\Z)',
+        body,
+        re.DOTALL
+    )
+    if bm is None:
+        return None  # No Form-B section
+
+    table_text = bm.group(1)
+    versions = FORM_B_VERSION_RE.findall(table_text)
+
+    if len(versions) == 0:
+        return []  # Empty table — treat as trivially valid
+
+    defects = []
+
+    if len(versions) >= 2:
+        nums = [parse_version(v) for v in versions]
+        # Rule 3: strictly descending
+        for i in range(1, len(nums)):
+            prev, curr = nums[i - 1], nums[i]
+            if curr >= prev:
+                direction = 'ascending' if nums[-1] > nums[0] else 'non-monotonic'
+                defects.append(f"form-b-not-descending({direction}):{','.join(versions)}")
+                break
+
+    # Rule 4: frontmatter version == first (top/newest) row version
+    fm_version = str(fm.get('version', '')).strip()
+    first_version = versions[0]
+    if fm_version and fm_version != first_version:
+        defects.append(
+            f"form-b-version-mismatch:frontmatter={fm_version},first-entry={first_version}"
+        )
+
+    return defects
 
 for filepath in files:
     try:
@@ -86,6 +149,7 @@ for filepath in files:
         continue
 
     fm_text = parts[1]
+    body = parts[2]
 
     try:
         fm = yaml.safe_load(fm_text)
@@ -106,7 +170,25 @@ for filepath in files:
         continue
 
     if 'changelog' not in fm:
-        print(f"SKIP {filepath} no-changelog")
+        # ── Form-B branch: check body ## Changelog table ──────────────────
+        form_b_result = check_form_b(filepath, fm, body)
+
+        if form_b_result is not None:
+            # Form-B section found — report defects or PASS
+            if form_b_result:
+                print(f"FAIL {filepath} {'; '.join(form_b_result)}")
+            else:
+                print(f"PASS {filepath}")
+        else:
+            # Neither Form-A nor Form-B changelog present.
+            # A version == "1.0" BC has no prior version to record — PASS.
+            # A version > "1.0" BC without any changelog is a gate #28 concern
+            # (not this script's FAIL mode — emit WARN, non-blocking).
+            fm_version = str(fm.get('version', '')).strip()
+            if fm_version == '1.0' or fm_version == '':
+                print(f"PASS {filepath}")
+            else:
+                print(f"SKIP {filepath} no-changelog-version-gt-1.0")
         continue
 
     changelog = fm['changelog']
@@ -118,6 +200,7 @@ for filepath in files:
         print(f"SKIP {filepath} changelog-empty")
         continue
 
+    # ── Form-A validation ──────────────────────────────────────────────────
     # Extract version from each entry
     versions = []
     parse_errors = []
