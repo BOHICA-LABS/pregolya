@@ -28,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "c659187"
+input-hash: "96aeecf"
 extracted_from: null
 modified: []
 deprecated: null

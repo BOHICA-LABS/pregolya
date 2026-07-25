@@ -1,10 +1,10 @@
 ---
 document_type: product-brief
 level: L1
-version: "1.6"
+version: "1.7"
 status: approved
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 phase: 1a
 inputs:
   - .factory/planning/market-intel.md
@@ -16,8 +16,9 @@ inputs:
   - .factory/semport/reference-manifest.md
 input-hash: "83a8f7e"
 traces_to: ""
-decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21]
+decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21, D23]
 changelog:
+  - "v1.7 (FIX-BURST-267/F-P165-03/2026-07-25): Workspace topology + R6 risk: update 18→21 publishable crates per D21 (ferrochain-prompts #19, ferrochain-vectorstores #20) and D23 (ferrochain-tools #21). (1) §Constraints workspace-topology: '18 publishable crates' → '21 publishable crates'; enumeration extended with ferrochain-prompts, ferrochain-vectorstores, ferrochain-tools; derivation parenthetical updated. (2) R6 risk mitigation: '18 publishable crates' → '21 publishable crates'; added ferrochain-prompts (Wave 2), ferrochain-vectorstores (Wave 2), ferrochain-tools (Wave 1) to enumeration; corrected ferrochain-memory Wave 2→1 (burst-265 roster fix). Both sites are live actionable instructions — wrong count risked 3 unreserved namespace squatting targets. Sweep result: zero live '18 publishable|18 crates|18-crate' actionable sites remain (v1.3/v1.4 changelog historical references exempt). decisions[] updated to include D23."
   - "v1.6 (OBS-P164-A/burst-266/2026-07-25): Out-of-Scope disposition table — four stale count references corrected. (1) Para header 'traceable to the 18-crate roster' → 'original 18-crate roster (since expanded to 21 per D21/D23)' — disposition decisions were made in burst-215 (v1.3) against the 18-crate roster; roster has since grown but these subsystems remain excluded. (2) Callbacks section '12 variants' → '15 variants' — StreamEvent taxonomy grew 12→15 per D23/BC-2.06.001 v1.5 (ADR-018 +tool_approval_request #13 + tool_approval_resolved #14; ADR-019 +compaction_event #15); the StreamEvent description is a current-state claim and must reflect the live count. (3) Callbacks section 'not in the 18-crate roster' → 'not in the current 21-crate roster' — current-state assertion about what is included. (4) chat_history section 'in the 18-crate roster' → 'in the current 21-crate roster' — same. TD-VSDD-060 sibling sweep: all four '18-crate roster' occurrences within Out-of-Scope narrative fixed in one burst; Workspace Topology line (authoritative source deferred to ARCH-INDEX §Canonical Crate Roster) and risk-register R6 narrative (historical context) left unchanged as they are not current-state assertions or explicitly defer to the index. Changelog entries (v1.3/v1.4) referencing '18-crate roster' are historical and exempt from sweep."
   - "v1.5 (burst-241/Wave-2/F-P141-02/2026-07-23): VP-gate expansion — Success Criteria 'Formal verification coverage' row updated from 3 to 6 P0 Kani VP obligations (D17-Q7 + D21 + D23) to align with nfr-catalog NFR-003 and BC-2.17.001 v1.2."
   - "v1.4 (2026-07-20): D21 ecosystem-parity scope-move (burst 216) — 5 langchain-core subsystems moved from Out-of-Scope to In Scope: prompt templates (SS-18/CAP-022..023, ferrochain-prompts), LC serialization/lc-JSON (SS-19/CAP-024..025, ferrochain-core::serializable), retrievers (SS-20/CAP-026..027, ferrochain-vectorstores), vectorstores (SS-21/CAP-028..030, ferrochain-vectorstores), embeddings (SS-22/CAP-031..033, ferrochain-core + ferrochain-openai + ferrochain-ollama). Callbacks and output parsers remain excluded (superseded). chat_history remains excluded (superseded). Out-of-Scope 8-subsystem table condensed: 5 detailed entries replaced with IN-v1-per-D21 single-line pointers; 3 remain unchanged. CAP-002 clarification updated (PromptTemplate now in-scope per D21; only OutputParser remains post-v1). 4 new Wave 2 bullets added to §In Scope."
@@ -211,14 +212,15 @@ roster (since expanded to 21 per D21/D23), wave plan, and decision record.
 
 **Workspace topology**
 - Single Cargo workspace per D4; crates publish individually
-- ferrochain brand namespace (18 publishable crates — authoritative source: ARCH-INDEX §Canonical Crate Roster):
+- ferrochain brand namespace (21 publishable crates — authoritative source: ARCH-INDEX §Canonical Crate Roster):
   ferrochain (facade), ferrochain-core, ferrochain-graph, ferrochain-checkpoint,
   ferrochain-openai, ferrochain-anthropic, ferrochain-ollama, ferrochain-mcp, ferrochain-community,
   ferrochain-splitters, ferrochain-standard-tests, ferrochain-server, ferrochain-sandbox,
   ferrochain-memory, ferrochain-macros,
-  ferrochain-openai-sdk, ferrochain-anthropic-sdk, ferrochain-ollama-sdk
-  (D6 base 9 + D1 mcp/standard-tests + D13 server + P2-05 sandbox/memory + ADR-008 macros + D17-Q5 3×-sdk;
-  updated ADV-P1D-PASS-3 F-P3-04)
+  ferrochain-openai-sdk, ferrochain-anthropic-sdk, ferrochain-ollama-sdk,
+  ferrochain-prompts, ferrochain-vectorstores, ferrochain-tools
+  (D6 base 9 + D1 mcp/standard-tests + D13 server + P2-05 sandbox/memory + ADR-008 macros + D17-Q5 3×-sdk
+  + D21 prompts/vectorstores + D23 tools = 21; updated ADV-P1D-PASS-3 F-P3-04)
 - Partner crate architecture: standalone SDK crate split (HS-6/D17-Q5); ferrochain-openai-sdk,
   ferrochain-anthropic-sdk, ferrochain-ollama-sdk do NOT depend on ferrochain-core (per ADR-007)
 
@@ -288,7 +290,7 @@ Source: STATE.md Risk Register (binding)
 | Risk ID | Summary | Severity | Mitigation |
 |---------|---------|---------|------------|
 | R4 | Competing langgraph crate (Onelevenvy) velocity — may capture LangGraph identity in Rust | Medium | Lead with ferrochain-graph quality + checkpointing before rig/Onelevenvy match it |
-| R6 | Namespace reservation race — cargo login + publish-all.sh not yet run (PENDING HUMAN ACTION) | High | Human must run `cargo login` + .factory/namespace-reservation/publish-all.sh immediately. Reservation must cover all 18 publishable crates (see ARCH-INDEX §Canonical Crate Roster) including ferrochain-sandbox (Wave 1), ferrochain-memory (Wave 2), ferrochain-macros (Wave 1), and ferrochain-openai-sdk / ferrochain-anthropic-sdk / ferrochain-ollama-sdk (Wave 2) — updated ADV-P1D-PASS-3 F-P3-04. |
+| R6 | Namespace reservation race — cargo login + publish-all.sh not yet run (PENDING HUMAN ACTION) | High | Human must run `cargo login` + .factory/namespace-reservation/publish-all.sh immediately. Reservation must cover all 21 publishable crates (see ARCH-INDEX §Canonical Crate Roster) including ferrochain-sandbox (Wave 1), ferrochain-memory (Wave 1), ferrochain-macros (Wave 1), ferrochain-openai-sdk / ferrochain-anthropic-sdk / ferrochain-ollama-sdk (Wave 2), ferrochain-prompts (Wave 2), ferrochain-vectorstores (Wave 2), and ferrochain-tools (Wave 1) — updated D21/D23/burst-265. |
 | R7 | langchain-protocol version volatility (v0.0.17 no stable) | Low | Port rationale is version-volatility; not a conformance target |
 | R8 | Splitters code-point vs byte-length parity on non-ASCII — no upstream test coverage | High | Phase-1 BC + Red Gate test authored from behavior (D17-Q9) |
 | R10 | NamedBarrierValue/EphemeralValue have no upstream unit tests | Medium | Phase-1 BC backlog — product-owner authors BCs + Red Gate tests (D17-Q9) |

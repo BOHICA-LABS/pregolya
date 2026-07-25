@@ -1,20 +1,21 @@
 ---
 document_type: module-criticality
 level: L3
-version: "1.6"
+version: "1.7"
 status: active
 producer: architect
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
-input-hash: "70027da"
+input-hash: "2217335"
 traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "1.7 (FIX-BURST-267/F-P165-05/2026-07-25): Narrow CRITICAL tier definition — 'Kani VP targets' → 'Kani P0 VP targets'; the previous wording made every Kani VP host CRITICAL, contradicting the established HIGH classification for Kani P1 hosts (injection_guard VP-006, core-budget VP-012, tools-shell VP-013). Add Kani P1 VP hosts clause to HIGH tier definition: 'Core business logic, conformance contracts, server lifecycle; Kani P1 VP hosts'. No module row changes — all tier assignments already correctly reflect P0/P1 distinction; this fixes only the tier-definition prose."
   - "1.6 (burst-244/2026-07-23): F-P144-02 adjudication — add core-budget (HIGH, VP-012 Kani P1, ferrochain-core SS-10) and tools-shell (HIGH, VP-013 Kani P1, ferrochain-tools SS-23) rows; removes deferred posture from v1.5. core-budget HIGH: VP-012 Kani P1 hosts check_watermark_trigger (pure-core arithmetic); established project pattern assigns HIGH to all Kani P1 VP hosts (injection_guard precedent); token watermark arithmetic is governance-correctness, not a security boundary — CRITICAL overclaims. tools-shell HIGH: VP-013 Kani P1 hosts check_risk_floor (pure-core enum comparison enforcing non-lowerable Medium risk floor per ADR-020 Decision 3 'framework safety invariant'); profile mirrors injection_guard (VP-006 Kani P1 HIGH — both are pure-core security invariants enforced by construction); CRITICAL requires direct security-boundary or durability role. Both assignments match pre-existing verification-coverage-matrix.md HIGH classification (F-P144-01 contradiction resolved). Classification Summary: HIGH 16→18, Total 41→43."
   - "1.5 (burst-229/2026-07-22): Input-hash cascade refresh — ARCH-INDEX.md v1.6 + module-decomposition.md v1.15 both changed in burst 229 (D23 architecture layer: ADR-018/019/020, SS-23 ferrochain-tools crate #21, Wave-1 promotions SS-15/SS-16). No content rows added (ferrochain-tools criticality rows deferred to architect D23 content authoring). Hash: ac2e35a → db6f656."
   - "1.4 (burst-224/2026-07-21): D21+burst-224 backfill — add 6 criticality rows missing since burst-223 (D21 module universe not propagated to this file). CRITICAL +2: serializable-reviver (VP-010 Kani P0 / SS-19), vectorstores-similarity (VP-009 Kani P0 / SS-21 / burst-224 final name after F-P129-11). HIGH +3: injection_guard (VP-006 Kani P1 / SS-18), serializable (VP-007 proptest P1 / SS-19), embeddings (VP-008 proptest P1 / SS-22). MEDIUM +1: vectorstores-mmr (SS-21; MMR-only after VP-009 relocated to vectorstores-similarity in burst-224). Summary 35→41. Definitions-only D21 artifacts (core::guardrail) excluded per no-row precedent (ADR-014 Decision 6 / ADR-009 Option 3). Input-hash refresh pending compute-input-hash (module-decomposition.md v1.12 changed in same burst)."
@@ -29,8 +30,8 @@ changelog:
 
 | Tier | Kill Rate Target | Description |
 |------|-----------------|-------------|
-| CRITICAL | ≥ 95% | Kani VP targets, security boundaries, durability invariants |
-| HIGH | ≥ 90% | Core business logic, conformance contracts, server lifecycle |
+| CRITICAL | ≥ 95% | Kani P0 VP targets, security boundaries, durability invariants |
+| HIGH | ≥ 90% | Core business logic, conformance contracts, server lifecycle; Kani P1 VP hosts |
 | MEDIUM | ≥ 80% | Supporting functionality with correctness requirements |
 | LOW | ≥ 70% | Build tooling, infrastructure, boilerplate |
 

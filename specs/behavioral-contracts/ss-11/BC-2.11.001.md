@@ -14,7 +14,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "ce6131b"
+input-hash: "c554e90"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11

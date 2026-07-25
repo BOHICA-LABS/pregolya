@@ -25,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "32dc243"
+input-hash: "9f4f4d9"
 extracted_from: null
 modified: []
 deprecated: null

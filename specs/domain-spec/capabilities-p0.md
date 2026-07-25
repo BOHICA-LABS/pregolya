@@ -12,7 +12,7 @@ inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "238b114"
+input-hash: "45121ef"
 traces_to: L2-INDEX.md
 decisions: [D1, D7, D8, D11, D13, D17, D21]
 changelog:

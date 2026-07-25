@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "53ea5f5"
+input-hash: "15bbc5e"
 traces_to: STATE.md
 ---
 
@@ -1505,3 +1505,33 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 **Regression sweep:** verify-sha-currency.sh: PASS (post-commit clean). verify-form-a-changelog-direction.sh: PASS=192 WARN=6 FAIL=0. verify-arch-anchor-resolution.sh: PASS=129 FAIL=0. verify-no-version-pins.sh: PASS=198 WARN=0 FAIL=0. All four validators PASS FAIL=0.
 
 **Hash sweep (D18-P89-A/D18-P90-A):** BC-2.14.001 v1.3 + product-brief v1.6 + api-surface v1.10 + BC-INDEX v3.14 staled downstream files. Hash sweep: specs/174 TOTAL=174 MATCH=174 STALE=0 (3-pass convergence); planning/6 STALE=0 (1-pass); cycles/54 STALE=0 (2-pass). TOTAL STALE=0. Burst-266 commit.
+
+---
+
+### Pass P1D-165 (2026-07-25) — Expanded Perimeter Pass 37
+
+**Findings:** 7 (0 CRIT, 0 HIGH, 5 MED, 1 LOW, 1 OBS)
+**Streak:** 0/3 (NOT CLEAN strict)
+**Fix burst:** 267
+**Frozen HEAD:** burst-266 commit (4224682)
+**Novel attack angle:** ADR self-version-reference pins + multi-document 21-crate propagation gaps + module-criticality Kani tier definitions — fresh-context scan identified several ADR bodies that cited their own version numbers ("v1.6", "v1.7") rather than behavioral anchors, creating internal inconsistency as documents advanced. Additionally: product-brief.md still described an 18-crate workspace topology (missing the complete 21-name enumeration and correct R6 instruction) despite the D21+D23 expansion being long complete. Module-criticality tier definitions lacked explicit Kani VP anchor assignments. The prd-supplements/module-criticality.md was flagged as an orphaned superseded duplicate. The dependency-graph contained a spurious DI-012 edge attributed to the wrong subsystem. All 7 findings are second-order drift (no behavioral gaps); advisory validator #5 minted to machine-enforce the ADR self-version heuristic going forward.
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. Seven items: 5M + 1L + 1OBS. All seven findings closed in fix-burst 267. Root pattern: second-order drift from rapid D21+D23 scope expansion — no behavioral gaps, but multiple spec documents had become internally inconsistent with the expanded 21-crate canonical state. Advisory validator #5 (verify-adr-self-version-refs.sh) minted as a WARN-only heuristic to catch future ADR self-version pins. No BC changes this burst.
+
+- **F-P165-01 MED** (architect, closed): ADR-010 v1.6→v1.7 — 2 version mislabels de-labeled. Body text contained "v1.6" and "v1.7" version-self-references; both replaced with temporal anchors ("as of D23") per TD-VSDD-091 anti-volatile-pin rule. D21 gate-count narrative block (13→17→18 story) was inconsistent; restored to single consistent form per D21 decision authority.
+
+- **F-P165-02 MED** (architect, closed): ADR-005 v1.4→v1.5 — 2 self-version reference pins stripped. Body text referenced "v1.4" and "v1.3" by version number; both replaced with behavioral anchors per TD-VSDD-091.
+
+- **F-P165-03 MED** (PO, closed): product-brief.md v1.6→v1.7 — workspace topology updated 18→21 crates with complete 21-name enumeration (all 21 crate names explicitly listed per ARCH-INDEX §Canonical Crate Roster). R6 reservation instruction corrected from 18 to 21 crates. Memory Wave 1 bonus fix applied (ferrochain-memory Wave 2→Wave 1 per D23 promotion, consistent with ARCH-INDEX v1.12).
+
+- **F-P165-04 MED** (architect, closed): dependency-graph.md v1.2→v1.3 — spurious DI-012 edge removed. DI-012 applies to graph scheduling (not ferrochain-checkpoint); the edge was a mis-attribution. DI-009 (ferrochain-checkpoint → ferrochain-core) verified correct and retained.
+
+- **F-P165-05 MED** (architect, closed): module-criticality.md v1.6→v1.7 — CRITICAL tier definition updated to explicitly name "Kani P0 VP targets" (VP-001/002/003/009/010/011 anchors). HIGH tier definition gains "Kani P1 VP hosts" annotation. Both changes tie criticality tiers to the formal verification priority structure established at Phase 6 hardening.
+
+- **F-P165-06 LOW** (PO, closed): prd-supplements/module-criticality.md v1.5 — STALE/SUPERSEDED banner added at document top; `status: superseded` and `superseded_by: specs/module-criticality.md` set in frontmatter. Single-source-of-truth (option a): specs/module-criticality.md is canonical; prd-supplements copy is now a marked historical artifact.
+
+- **OBS-P165-A** (devops, closed): advisory validator #5 (verify-adr-self-version-refs.sh) minted — WARN-only heuristic, always exit 0; detects ADR body text that cites its own version number as a version pin. Three micro-fixes applied in-burst: (1) ADR-005 body de-labels (overlapping with F-P165-02); (2) ADR-014 v1.7→v1.8 "carried from v1.3" → "carried from Decision 5" (version-number reference replaced with decision-authority anchor); (3) ADR-013 cross-line pattern noted as structural false-positive (acceptable). Post-fix advisory WARNs: ADR-010 history-table rows (intentional historical record — not de-pinnable without erasing audit trail) + ADR-013 cross-line FP (single-line heuristic structural limitation). Allowlist: ADR-014 line numbers updated 699→700, 744→745, 768→769 (burst-267 ADR-014 changelog line addition shifted all subsequent lines +1).
+
+**Regression sweep:** verify-sha-currency.sh: PASS. verify-form-a-changelog-direction.sh: PASS=192 WARN=6 FAIL=0. verify-arch-anchor-resolution.sh: PASS=129 FAIL=0. verify-no-version-pins.sh: PASS=198 WARN=0 FAIL=0. All four blocking validators PASS FAIL=0. Advisory validator #5 (verify-adr-self-version-refs.sh): PASS=18 WARN=2 FAIL=0 (WARNs: ADR-010 history-table rows [intentional historical] + ADR-013 cross-line FP [acceptable]).
+
+**Hash sweep (D18-P89-A/D18-P90-A):** ADR-010 v1.7 + ADR-005 v1.5 + ADR-014 v1.8 + dependency-graph v1.3 + module-criticality v1.7 + product-brief v1.7 + prd-supplements/module-criticality v1.5 staled downstream files. Hash sweep: specs/174 TOTAL=174 MATCH=174 STALE=0 (4-pass convergence); planning/6 STALE=0 (2-pass); cycles/54 STALE=0 (2-pass). TOTAL STALE=0. Burst-267 commit.

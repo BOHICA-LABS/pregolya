@@ -14,8 +14,9 @@ timestamp: 2026-07-19T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D11]
-version: "1.4"
+version: "1.5"
 changelog:
+  - "1.5 (FIX-BURST-267/F-P165-stale-prose/2026-07-25): Strip two stale version pins from §Object-Safety of the 5-Method CheckpointSaver Trait: (1) table receiver cell '`&self` (corrected v1.3)' → '`&self`' — the surrounding table context and changelog already record the v1.3 provenance; (2) condition 3 prose '`&self` added in this revision (v1.3)' → '`&self` added in this revision' — 'in this revision' is the behavioral anchor; the redundant version pin decays if the section is ever moved."
   - "1.4 (burst 119 coordinator sweep, 2026-07-19): Extend §Object-Safety section with Runnable and BaseChatModel adjudications: (1) verification-architecture.md:43 'pure get_next_version(current) successor function' description confirmed accurate — Kani target is MonotonicClock::get_next_version (ZST associated function), not the CheckpointSaver trait method; no edit to verification-architecture.md. (2) Runnable<Input, Output> dyn-compat axis settled: zero dyn Runnable<...> uses in specs/; the separate DynRunnable<Value, Value> type-erased trait (BC-2.01.003/004) is the heterogeneous composition seam; impl Stream return and generic type params in Runnable are non-issues; no interface-definitions.md change required. (3) BaseChatModel same conclusion: zero dyn BaseChatModel uses in specs/; always monomorphic impl BaseChatModel for ChatOpenAI/Anthropic/Ollama; no interface-definitions.md change required. No PO routing for items 2 or 3."
   - "1.3 (F-P116-01, 2026-07-19): dyn-compat fix — add &self receiver to get_next_version provided method on CheckpointSaver trait (was receiver-less, causing E0038 on Arc<dyn CheckpointSaver>). Three-reason rationale: (1) dyn-compatibility requires a receiver on every non-Sized-bounded method; (2) virtual dispatch of backend overrides through the vtable requires &self; (3) langgraph BaseCheckpointSaver.get_next_version is an instance method — the parity claim required correction from 'static method' to 'instance method'. Purity preserved: default body delegates entirely to MonotonicClock::get_next_version (ZST, no self use). Add §Object-Safety of the 5-Method CheckpointSaver Trait subsection with explicit dyn-compatibility conclusion. API Surface Reconciliation rev-2 Signature row updated to include &self."
   - "1.2 (F-P115-02, 2026-07-19): Placement adjudication — add §CheckpointSaver Trait Placement subsection. BC-2.04.003 PC1 says 'A CheckpointSaver implementation provides a get_next_version(current, channel) method'; to satisfy this literally, get_next_version is now also a provided method on the CheckpointSaver trait with a default impl delegating to MonotonicClock::get_next_version. MonotonicClock remains the canonical pure-core algorithm implementation; the trait default is a thin delegation wrapper. Aligns with langgraph BaseCheckpointSaver reference corpus placement."
@@ -202,13 +203,13 @@ fn get_next_version(
 | `get_tuple` | `&self` | yes | `Result<Option<CheckpointTuple>, FerrochainError>` | Yes — with async-trait boxed-future desugaring |
 | `list` | `&self` | yes | `Result<impl Stream<...>, FerrochainError>` | **Residual concern** — `impl Stream` opaque return is NOT dyn-compatible even after async-trait desugaring; must become `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>` in the trait definition; this change belongs in interface-definitions.md §CheckpointSaver (PO-owned; out of ADR-005 scope) |
 | `put` | `&self` | yes | `Result<(), FerrochainError>` | Yes — with async-trait boxed-future desugaring |
-| `get_next_version` | `&self` (corrected v1.3) | no | `Result<CheckpointId, FerrochainError>` | Yes — synchronous; concrete return type; `&self` receiver added this revision |
+| `get_next_version` | `&self` | no | `Result<CheckpointId, FerrochainError>` | Yes — synchronous; concrete return type; `&self` receiver added this revision |
 
 **Conditions for complete dyn-compatibility:**
 
 1. **Async methods** (put_writes, get_tuple, list, put): desugared via the `#[async_trait]` crate attribute or explicit `-> Pin<Box<dyn Future<Output = ...> + Send + '_>>` return types — eliminating the implicit `impl Future` from the vtable. This is the established ferrochain effectful-shell seam strategy.
 2. **`list` opaque stream:** `impl Stream<...>` replaced with `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>` in the trait definition. Flagged to interface-definitions.md §CheckpointSaver owner (PO-owned).
-3. **`get_next_version` receiver:** `&self` added in this revision (v1.3). Condition satisfied.
+3. **`get_next_version` receiver:** `&self` added in this revision. Condition satisfied.
 
 **Conclusion:** With conditions 1 and 2 applied (async-trait desugaring + `list` return type correction in interface-definitions.md) and condition 3 satisfied by this revision, the 5-method `CheckpointSaver` trait is dyn-compatible and `Arc<dyn CheckpointSaver>` compiles without E0038.
 

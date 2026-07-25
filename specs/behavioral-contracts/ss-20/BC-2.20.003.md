@@ -28,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "4cc8470"
+input-hash: "46c445f"
 extracted_from: null
 modified: []
 deprecated: null

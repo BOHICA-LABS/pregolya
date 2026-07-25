@@ -20,7 +20,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "edf5fa6"
+input-hash: "920306b"
 extracted_from: null
 modified: []
 deprecated: null

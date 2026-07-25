@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-21"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.7"
+version: "1.8"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.8 (FIX-BURST-267/F-P165-stale-prose/2026-07-25): De-label §PO Obligations heading '### E-VS-004 (carried from v1.3)' → '### E-VS-004 (carried from Decision 5)' — Decision 5 (v1.2/F-P129-08) is the behavioral anchor that introduced the write-time zero-norm rejection obligation; v1.3 only corrected the error code number from E-VS-003 → E-VS-004. The version pin 'v1.3' decays with revision history; 'Decision 5' is stable and directly identifies the design decision this obligation traces to."
   - "1.7 (burst-238/2026-07-23): Stale-handoff sweep (continuation) — rewrite five 'Error taxonomy must mint' future-tense obligations to past-tense facts: (1) Consequences §E-VS-004 line: 'must mint' → 'minted'; (2) §PO Obligations E-VS-004 header: 'Error taxonomy must mint E-VS-004' → 'E-VS-004 minted (error-taxonomy v1.27/D21)'; (3) §PO Obligations E-CORE-008 header: 'Error taxonomy must mint E-CORE-008' → 'E-CORE-008 minted (error-taxonomy v1.30/burst-226)'; (4) §PO Obligations E-VS-005 header: 'Error taxonomy must mint E-VS-005' → 'E-VS-005 minted (error-taxonomy v1.30/burst-226)'."
   - "1.6 (burst-238/2026-07-23): Stale-handoff sweep — rewrite three 'PO must' future-tense obligations in §PO Obligations to past-tense facts: (1) BC-2.20.002 anchor corrections → 'BC-2.20.002 v1.2 applied'; (2) BC-2.20.002 PC2 severity-bifurcation update → 'BC-2.20.002 v1.3 updated PC2'; (3) BC-2.21.004 INV-3 fail-safe update → 'BC-2.21.004 v1.2 updated INV-3'."
   - "1.5 (burst-226/2026-07-21): F-P131-01 (HIGH) — GuardedDocuments::rag_ingress Fail arm severity-bifurcated per BC-2.11.005 PC4/PC5. Critical Fail → Err(E-CORE-008, GuardrailCriticalRejection, SECURITY) — batch aborts. Non-Critical Fail → error-entry Document substituted at position i, batch continues. Docstring updated. Consequences bullet updated (Fail arm description). PO Obligations: E-CORE-008 mint obligation added; BC-2.20.002 PC2 update obligation added. F-P131-07 (MED) — similarity_search_with_filter default implementation changed from lossy-fallback to fail-safe: non-empty filter on an adapter that has not overridden this method returns Err(E-VS-005, FilterUnsupported, VAL). Empty filter (vacuously true) still delegates to similarity_search. PO Obligations: E-VS-005 mint obligation added; BC-2.21.004 INV-3 update obligation added."
@@ -682,7 +683,7 @@ applicability. Two separate crates with a clear boundary is correct.
 
 ## PO Obligations
 
-### E-VS-004 (carried from v1.3)
+### E-VS-004 (carried from Decision 5)
 
 `E-VS-004` minted (error-taxonomy v1.27/D21) — write-time zero-norm rejection in the `VS` namespace
 (`ferrochain-vectorstores`); `add_texts` and `from_texts_sync` reject documents whose

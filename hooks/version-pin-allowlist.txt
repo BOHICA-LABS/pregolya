@@ -86,17 +86,17 @@ architecture/decisions/ADR-013-mcp-server-module-placement.md:153
 # records that BC-2.20.002 v1.2 applied three specific textual corrections to
 # replace ferrochain-guardrail crate references with the canonical
 # ferrochain-core: core::guardrail location.
-architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:699
+architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:700
 
 # Reason: HISTORICAL-RECORD — ADR-014 propagation-record narration (F-P131-01
 # burst-226) records that BC-2.20.002 v1.3 updated PC2 to reflect the Critical
 # vs Non-Critical Fail severity bifurcation for guardrail results.
-architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:744
+architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:745
 
 # Reason: HISTORICAL-RECORD — ADR-014 propagation-record narration (F-P131-07
 # burst-226) records that BC-2.21.004 v1.2 updated INV-3 to replace the lossy
 # fallback with a fail-safe Err(E-VS-005) when non-empty filters are passed.
-architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:768
+architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:769
 
 # Reason: HISTORICAL-RECORD — verification-architecture.md RESOLVED block
 # (burst-232, 2026-07-22) records that BC-2.23.005 reached VAL category at v1.1

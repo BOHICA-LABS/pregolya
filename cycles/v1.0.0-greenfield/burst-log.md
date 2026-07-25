@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "16c6a8a"
+input-hash: "f5d59d4"
 traces_to: STATE.md
 ---
 
@@ -4798,5 +4798,68 @@ F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 
 **Dim-7:** Finding trajectory tail →2→2→3L→3 (passes P1D-159/P1D-160/P1D-161/P1D-162); UNCHANGED (no adversary pass ran this burst). Novelty N/A — pre-emptive fix; no finding generated.
 
 **Closes:** Pre-emptive scheduler-label drift (architect+PO): BC-2.12.004 Architecture Anchors `src/scheduler/` vs module-decomp `server::cron` — naming-path drift neutralized before P1D-163. module-decomposition v1.25→v1.26 (canonical path locked). BC-2.12.004 v1.5→v1.6 (Architecture Anchors corrected). observability.md v1.4→v1.5 (server.cron_schedule_queue_full module corrected). BC-INDEX v3.12→v3.13.
+
+---
+
+## Burst 262 — P1D-161 Fix-Burst: BC-pin de-pin sweep + validator #4 minted (2026-07-25)
+
+**Parent-commit:** burst-261 commit
+**Adversary verdict:** NOT CLEAN strict / CLEAN PR-merge — 0C/0H/0M/2L/1OBS (F-P161-01 LOW + F-P161-02 OBS + F-P161-03 LOW; all closed). Counter 0/3 (unchanged). FIRST CLEAN(PR-merge) pass milestone achieved.
+**Frozen HEAD for P1D-161:** burst-260 commit.
+**Files touched (Dim-1):**
+- specs/architecture/decisions/ADR-018-hitl-per-tool-hook.md (v1.4→v1.5: F-P161-01 — body self-version pin stripped; behavioral anchor substituted per TD-VSDD-091)
+- specs/architecture/decisions/ADR-019-rolling-compaction-strategy.md (v1.5→v1.6: F-P161-01 — body self-version pin stripped; behavioral anchor substituted)
+- specs/architecture/module-decomposition.md (v1.24→v1.25: F-P161-01 — 2 body version pins stripped; behavioral anchors substituted)
+- specs/prd-supplements/purity-boundary-map.md (v1.16→v1.17: F-P161-01 — 1 body version pin stripped; behavioral anchor substituted)
+- specs/prd-supplements/interface-definitions.md (v2.53→v2.54: F-P161-01 — 3 body version pins stripped; behavioral anchors substituted)
+- specs/prd-supplements/bc-authoring-plan.md (v2.49→v2.50: F-P161-01 — 3 body version pins stripped; behavioral anchors substituted)
+- specs/domain-spec/entities-server.md (v1.13→v1.14: F-P161-01 — 1 body version pin stripped; behavioral anchor substituted)
+- specs/domain-spec/events.md (v1.10→v1.11: F-P161-01 — 1 body version pin stripped; behavioral anchor substituted)
+- hooks/verify-no-version-pins.sh (F-P161-02: validator #4 minted — blocking, exit-code-2 on FAIL; PASS=198 WARN=0 FAIL=0 on post-fix corpus run; version-pin-allowlist.txt created with 12 justified historical-record exemptions)
+- specs/behavioral-contracts/BC-INDEX.md (v3.11→v3.12: F-P161-03 — Notes entries #6 and #7 added as D23 clarifiers; timestamp updated)
+- specs/domain-spec/L2-INDEX.md (v1.15→v1.16: F-P161-03 — D23 clarifier note added; timestamp updated)
+- Hash-currency refreshes (D18-P89-A/D18-P90-A): specs/174 STALE=0 + planning/6 STALE=0 + cycles/54 STALE=0. TOTAL STALE=0.
+
+**Dim-2:** No new behavioral contracts authored. BC count unchanged at 129 (51P0/75P1/3P2). BC-INDEX v3.11→v3.12.
+**D18-P89-A sweep:** specs/174 STALE=0 + planning/6 STALE=0 + cycles/54 STALE=0. TOTAL STALE=0.
+
+**Codifications:** Validator #4 (verify-no-version-pins.sh) minted — covers body-version-pin violations (TD-VSDD-091 compliance) corpus-wide. version-pin-allowlist.txt created with 12 exemptions (5 bc-authoring-plan historical-record lines + 7 architecture historical-record entries). PASS=198 WARN=0 FAIL=0 on initial post-fix corpus run.
+
+**Dim-5:** counter 0/3 (P1D-161 NOT CLEAN strict; FIRST CLEAN(PR-merge)); next action: dispatch adversary pass P1D-162 on burst-262 frozen HEAD.
+**Dim-6:** ADR-018 v1.5/ADR-019 v1.6 body de-pin; module-decomp v1.25 ×2 de-pin; purity-boundary-map v1.17 de-pin; interface-definitions v2.54 ×3 de-pin; bc-authoring-plan v2.50 ×3 de-pin; entities-server v1.14 de-pin; events.md v1.11 de-pin; validator #4 (verify-no-version-pins.sh) minted; BC-INDEX v3.12 D23 clarifiers; L2-INDEX v1.16 D23 clarifier.
+**Dim-7:** Finding trajectory tail →2→2→2→3L (passes P1D-158/P1D-159/P1D-160/P1D-161; 3L = NOT CLEAN strict / CLEAN PR-merge). Novelty MEDIUM (body-pin class is a new finding type; validator #4 now machine-enforces it; FIRST CLEAN(PR-merge) milestone).
+
+**Closes:** F-P161-01 LOW (architect, closed): BC-pin de-pin sweep — 13 body version pins removed from 9 files per TD-VSDD-091 anti-volatile-pin rule (narrative spec content must cite behavioral anchors, NOT version numbers that decay on subsequent updates). Files: ADR-018 v1.4→v1.5, ADR-019 v1.5→v1.6, module-decomp v1.24→v1.25 (×2 sites), purity-boundary-map v1.16→v1.17, interface-definitions v2.53→v2.54 (×3 sites), bc-authoring-plan v2.49→v2.50 (×3 sites), entities-server v1.13→v1.14, events.md v1.10→v1.11. F-P161-02 OBS (devops, closed): verify-no-version-pins.sh minted as validator #4 (blocking, exit 2 on FAIL); version-pin-allowlist.txt established with 12 justified historical-record exemptions; initial corpus PASS=198 WARN=0 FAIL=0. F-P161-03 LOW (PO, closed): BC-INDEX v3.11→v3.12 Notes entries #6/#7 D23 clarifiers added; L2-INDEX v1.15→v1.16 D23 clarifier added.
+
+---
+
+## Burst 267 — P1D-165 Fix-Burst: ADR self-consistency + 21-crate final sweep + advisory validator #5 (2026-07-25)
+
+**Parent-commit:** burst-266 commit (4224682)
+**Adversary verdict:** NOT CLEAN strict — 0C/0H/5M/1L/1OBS (F-P165-01..06 + OBS-P165-A; all closed). Counter 0/3 (unchanged; streak 0/3 holds).
+**Frozen HEAD for P1D-165:** burst-266 commit (4224682).
+**Files touched (Dim-1):**
+- specs/architecture/decisions/ADR-010-error-taxonomy-anyhow-confinement.md (v1.6→v1.7: F-P165-01 — 2 version mislabels de-labeled to "as of D23"; D21 gate-count narrative block restored to consistent form)
+- specs/architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md (v1.4→v1.5: F-P165-02 + OBS-P165-A micro-fix — 2 self-version reference pins stripped; body references to "v1.4" and "v1.3" replaced with behavioral anchors per TD-VSDD-091)
+- specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md (v1.7→v1.8: OBS-P165-A micro-fix — "carried from v1.3" → "carried from Decision 5"; version-pin-allowlist.txt ADR-014 entries updated 699→700, 744→745, 768→769 to compensate for the new changelog line)
+- specs/architecture/dependency-graph.md (v1.2→v1.3: F-P165-04 — spurious DI-012 edge removed; DI-009 verified correct and retained)
+- specs/module-criticality.md (v1.6→v1.7: F-P165-05 — CRITICAL tier definition updated to "Kani P0 VP targets" with VP-001/002/003/009/010/011 anchors; HIGH tier definition gains "Kani P1 VP hosts" annotation)
+- specs/product-brief.md (v1.6→v1.7: F-P165-03 — workspace topology 18→21 crates with complete 21-name enumeration; R6 reservation instruction corrected 18→21; ferrochain-memory Wave 1 bonus fix)
+- specs/prd-supplements/module-criticality.md (new v1.5: F-P165-06 — STALE/SUPERSEDED banner added; status: superseded; superseded_by: specs/module-criticality.md; single-SoT option a)
+- hooks/verify-adr-self-version-refs.sh (OBS-P165-A — advisory validator #5 minted; WARN-only, always exit 0; ADR self-version-ref heuristic; PASS=18 WARN=2 FAIL=0 post-fix: WARNs are ADR-010 history-table rows [intentional] + ADR-013 cross-line FP [acceptable])
+- hooks/version-pin-allowlist.txt (updated: ADR-014 line numbers +1 each: 699→700, 744→745, 768→769)
+- sidecar-learning.md (devops: advisory validator provenance notes)
+- Hash-currency refreshes (D18-P89-A/D18-P90-A): specs/174 STALE=0 (4-pass); planning/6 STALE=0 (2-pass); cycles/54 STALE=0 (2-pass). TOTAL STALE=0.
+
+**Dim-2:** No behavioral contracts authored or revised this burst. BC count unchanged at 129 (51P0/75P1/3P2). BC-INDEX v3.14 unchanged.
+**D18-P89-A sweep:** specs/174 STALE=0 + planning/6 STALE=0 + cycles/54 STALE=0. TOTAL STALE=0 (4-pass transitive cascade for specs: ADR changes staled architecture indexes staled domain-spec files staled cycle files).
+
+**Codifications:** Advisory validator #5 (verify-adr-self-version-refs.sh) minted — WARN-only heuristic for ADR body self-version pins; always exit 0; does not block CI. Protocol now: 4 blocking validators (verify-sha-currency.sh, verify-form-a-changelog-direction.sh, verify-arch-anchor-resolution.sh, verify-no-version-pins.sh) + 1 advisory (verify-adr-self-version-refs.sh).
+
+**Dim-5:** counter 0/3 (P1D-165 NOT CLEAN strict); next action: dispatch adversary pass P1D-166 on burst-267 frozen HEAD.
+**Dim-6:** ADR-010 v1.7 version mislabels de-labeled + D21 gate-count block restored; ADR-005 v1.5 2 body de-pins; ADR-014 v1.8 carried-from de-pin; dependency-graph v1.3 DI-012 edge removed; module-criticality v1.7 Kani VP tier defns; product-brief v1.7 21-crate enumeration + R6 instruction; prd-supplements/module-criticality v1.5 superseded marker; validator #5 advisory minted.
+**Dim-7:** Finding trajectory tail →3→5→3→7 (passes P1D-162/P1D-163/P1D-164/P1D-165). Noisy (7 findings after a 3-finding pass) but root cause is narrow: all 7 findings are second-order drift, no behavioral gaps. Novelty LOW (established drift class; all remediations are de-pin/propagation corrections).
+
+**Closes:** F-P165-01 MED (architect, closed): ADR-010 v1.6→v1.7 — version mislabels de-labeled ("v1.6"→"as of D23"; "v1.7"→"as of D23"); D21 gate-count block (13→17→18 story) restored to consistent form. F-P165-02 MED (architect, closed): ADR-005 v1.4→v1.5 — 2 self-version pins stripped. F-P165-03 MED (PO, closed): product-brief v1.6→v1.7 — 21-crate workspace topology + complete enumeration + R6 21-crate instruction; ferrochain-memory Wave 1 bonus fix. F-P165-04 MED (architect, closed): dependency-graph v1.2→v1.3 — spurious DI-012 edge removed; DI-009 verified correct. F-P165-05 MED (architect, closed): module-criticality v1.6→v1.7 — CRITICAL = Kani P0 VP targets (VP-001/002/003/009/010/011); HIGH gains Kani P1 VP hosts. F-P165-06 LOW (PO, closed): prd-supplements/module-criticality v1.5 — STALE/SUPERSEDED banner + status: superseded + superseded_by: specs/module-criticality.md. OBS-P165-A (devops, closed): advisory validator #5 (verify-adr-self-version-refs.sh) minted + 3 micro-fixes: ADR-005 v1.5 (2 body de-labels, overlapping F-P165-02), ADR-014 v1.8 ("carried from v1.3"→"carried from Decision 5"), ADR-013 cross-line FP noted acceptable; allowlist line numbers updated for ADR-014.
 
 ---

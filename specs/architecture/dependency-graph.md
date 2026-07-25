@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: dependency-graph
-version: "1.2"
+version: "1.3"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
@@ -10,10 +10,11 @@ phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/prd.md
-input-hash: "898c00e"
+input-hash: "071f42b"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D21, D23]
 changelog:
+  - "1.3 (FIX-BURST-267/F-P165-04/2026-07-25): Remove spurious DI-012 anchor from §[Section Content] intro sentence — DI-012 is 'Guardrail Coverage at Ingress Boundaries' (unrelated to graph acyclicity). Correct cite to P-06 alone (system-overview §Architecture Principles). DI-NNN sweep: only remaining DI cite is DI-009 at reqwest row in Cross-Cutting Dependencies table, which correctly anchors the outbound HTTP timeout invariant."
   - "1.2 (FIX-BURST-265/F-P163-03/2026-07-25): Propagate D21+D23 21-crate roster. Crate DAG: add ferrochain-prompts (D21/ADR-015), ferrochain-vectorstores (D21/ADR-014), ferrochain-tools (D23/ADR-020) after ferrochain-memory. Edge Table: 4 new rows (prompts→core, vectorstores→core, tools→core, tools→sandbox). Topological Build Order: Wave 1 gains ferrochain-memory (D23 Wave 2→1, position 6) + ferrochain-tools (position 7), now 9 items; Wave 2 loses ferrochain-memory, gains ferrochain-prompts (position 13) + ferrochain-vectorstores (position 14), now 10 items. Add D21/D23 to decisions list."
   - "1.1 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst; add [Section Content] template compliance fix. No spec content changes."
   - "1.0 (initial): crate dependency DAG authored."
@@ -26,7 +27,7 @@ changelog:
 
 ## [Section Content]
 
-This file documents ferrochain's crate dependency DAG, external integration surfaces, and the acyclicity constraint (DI-012 / P-06). External crates (tokio, axum, reqwest, serde, etc.) are omitted for clarity; only workspace-internal dependency edges are shown.
+This file documents ferrochain's crate dependency DAG, external integration surfaces, and the acyclicity constraint (P-06). External crates (tokio, axum, reqwest, serde, etc.) are omitted for clarity; only workspace-internal dependency edges are shown.
 
 ## Crate DAG
 

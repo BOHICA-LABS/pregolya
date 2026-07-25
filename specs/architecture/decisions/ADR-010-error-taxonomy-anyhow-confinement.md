@@ -6,16 +6,17 @@ slug: error-taxonomy-anyhow-confinement
 title: "Error Taxonomy and anyhow Confinement (P-78 / NE-03 / DI-014)"
 status: accepted
 producer: architect
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
-date: "2026-07-23"
+date: "2026-07-25"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.6"
+version: "1.7"
 changelog:
+  - "1.7 (FIX-BURST-267/F-P165-01+02/2026-07-25): F-P165-01 — de-label two version-pinned D23 cites to decay-resistant 'as of D23' form: (1) FerrochainError struct component comment '(v1.2 — 17 components)' → '(as of D23 — 17 components)'; (2) Component count summary table row 'v1.2 (D23)' → 'as of D23'. F-P165-02 — restore D21 #[non_exhaustive] gate-count block to historically-correct 13→17 (16 named + Custom) with a forward note 'As of D23, the current value is 18 (17 named + Custom) — see §Component Axis Expansion (D23)'; previous text incorrectly stated 13→18 (skipping the D21-era intermediate), contradicting the D23 §gate update block which correctly shows 17→18."
   - "1.6 (burst-238/2026-07-23): Stale-handoff sweep — rewrite three future-tense PO obligations added in v1.1 (D21) to past-tense facts: (1) SRLZ 'PO must apply Category::Val when authoring BC-2.19.x' → 'PO applied Category::Val (error-taxonomy v1.27/D21)'; (2) VS E-CFG-001 resolution 'PO assigns next available VS sequence number when authoring BC-2.21.x' → 'PO assigned E-VS-003 (error-taxonomy v1.27/D21; anchor BC-2.20.003)'; (3) VS table row 'E-VS-NNN (was E-CFG-001)' → 'E-VS-003 (was E-CFG-001)'; remove 'PO assigns next sequence number' from table cell."
   - "1.5 (burst-234/2026-07-22): PO minted E-TOOLS-009 InvalidRegexPattern (VAL/Never; fields pattern: String + compile_error: String; anchor BC-2.23.006 PC-4/EC-002/TV-003 — invalid-regex path in GrepTool). Add E-TOOLS-009 row to TOOLS component table. Update Source/Origin cite range 001..007 → 001..009 (TD-VSDD-060 sibling sweep). TOOLS namespace is now 9 codes (001..009); component count and #[non_exhaustive] gate count unchanged."
   - "1.4 (burst-233/2026-07-22): F-P133-03 sibling sweep — add E-TOOLS-008 FileIoError to TOOLS component table (category TOOL, RetryHint Maybe); covers OS-level I/O errors during file tool execution; wraps std::io::ErrorKind; anchor BCs: BC-2.23.001–004, BC-2.23.006. Component count and #[non_exhaustive] gate count unchanged (TOOLS already registered as component 17 in v1.3; new code is within existing component)."
@@ -48,7 +49,7 @@ crate. All public functions return `Result<T, FerrochainError>`.
 ```rust
 #[derive(Debug, Clone)]
 pub struct FerrochainError {
-    pub component: Component,     // authoritative list lives in error-taxonomy.md §Components; enum reproduced here for the FerrochainError type definition (v1.2 — 17 components): CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS
+    pub component: Component,     // authoritative list lives in error-taxonomy.md §Components; enum reproduced here for the FerrochainError type definition (as of D23 — 17 components): CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS
     pub category: Category,       // canonical Category Codes (12 — unchanged): VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY
     pub retry_hint: RetryHint,    // canonical: Never | Maybe | Later(Duration)
     pub code: &'static str,       // "E-GRAPH-001", "E-CHKPT-002", "E-TMPL-001", "E-VS-001", etc.
@@ -174,8 +175,8 @@ when the non-exhaustive gate grows:
 
 1. **Gate crate** — `tests/external/<gate-name>/`: add `Component::Tmpl`, `Component::Srlz`,
    `Component::Vs`, `Component::Embed` to the expected symbol list.
-2. **Expected count constant** — update from 13 (12 named + `Custom`) to **18**
-   (17 named + `Custom`). As of D23, count is 18 (17 named + `Custom`).
+2. **Expected count constant** — update from 13 (12 named + `Custom`) to **17**
+   (16 named + `Custom`). As of D23, the current value is 18 (17 named + `Custom`) — see §Component Axis Expansion (D23).
 3. **Expected symbol list** — add the four new variant symbols.
 
 The implementer who creates `ferrochain-core/src/error.rs` (Wave 0) owns this gate update.
@@ -194,7 +195,7 @@ surfaced directly (SECURITY→403, VAL→400) but no per-endpoint overrides are 
 |---------|-------|-----------|
 | v1.0 (D17) | 12 | CORE GRAPH CHKPT SERVER PROV MCP SPLIT SBXD RETRY CRON MEMORY BUDGET |
 | v1.1 (D21) | **16** | + TMPL SRLZ VS EMBED |
-| v1.2 (D23) | **17** | + TOOLS |
+| as of D23 | **17** | + TOOLS |
 
 Category axis: **12 — unchanged** (VAL AUTH RATE TIMEOUT TRANSPORT INTERNAL DURABILITY POLICY TOOL CONCURRENCY SECURITY TENANCY). No new category is warranted.
 

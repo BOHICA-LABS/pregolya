@@ -19,7 +19,7 @@ traces_to:
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "486c0e0"
+input-hash: "6fd0580"
 extracted_from: null
 modified: []
 deprecated: null
