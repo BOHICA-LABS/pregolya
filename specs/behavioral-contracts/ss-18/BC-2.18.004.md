@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.004
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.2 (burst-226/F-P131-05/2026-07-21): TrustLevel migration — replace all ProvenanceTag::Untrusted/::UserInput/::Trusted/::Internal refs with TrustLevel::* per ADR-015 v1.3 Decision 3 adjudication. Internal variant does not exist — removed. TemplateVar field renamed trust_level (from tag). MessageProvenance field renamed highest_trust_level (from tag). INV-4, INV-5, PC2, PC5, EC-001..007, TV-001..005 updated accordingly."
   - "1.3 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-006 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-006' (VP-INDEX v1.2 burst-223 seeded VP-006 Kani P1; VP-006.md exists). Completed-handoff residue removal."
   - "1.4 (F-P148-03/burst-249/2026-07-24): red_gate_source and Red Gate body callout updated: 'ADR-015 Security Invariant 1' → 'ADR-015 Decision 3 §Security Invariant 1' per ADR-015 v1.5 labeled anchor. input-hash updated to fa92953 (ADR-015 v1.5 adds labeled anchors)."
+  - "1.5 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 4 sites: Component::TMPL → Component::Tmpl, Category::SECURITY → Category::Security. Sites: Description inline code block (×1 TMPL+SECURITY), PC-1 code block (×1 TMPL, ×1 SECURITY), Invariant 2 prose (×1 SECURITY)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -35,7 +36,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "f89a08a"
+input-hash: "352f3dd"
 extracted_from: null
 modified: []
 deprecated: null
@@ -58,7 +59,7 @@ removal_reason: null
 The `injection_guard` module fires inside `ChatPromptTemplate::format_messages` **at render
 time**, before any `PromptValue` is produced and before the guardrail boundary (DI-012). If
 any variable being substituted into a `TrustRequired` slot carries `trust_level: Some(TrustLevel::Untrusted)` (i.e., `var.trust_level.is_some_and(|t| t.is_untrusted()) == true`), `format_messages` immediately returns
-`Err(FerrochainError { component: Component::TMPL, category: Category::SECURITY, code: "E-TMPL-001", ... })`.
+`Err(FerrochainError { component: Component::Tmpl, category: Category::Security, code: "E-TMPL-001", ... })`.
 This is a **categorical hard block at the pure-core layer** — it is unconditional, not
 configurable via `GuardrailHook`, and does not produce a partial `PromptValue`. SystemMessage
 slots are always `TrustRequired` (enforced by BC-2.18.005); this BC specifies the render-time
@@ -77,8 +78,8 @@ enforcement of that invariant.
 1. `format_messages` returns:
    ```
    Err(FerrochainError {
-       component: Component::TMPL,
-       category: Category::SECURITY,
+       component: Component::Tmpl,
+       category: Category::Security,
        code: "E-TMPL-001",
        message: "InjectionAttempt: variable '{var_name}' carries untrusted provenance \
                  but slot '{slot_role}' requires TrustRequired policy",
@@ -98,7 +99,7 @@ enforcement of that invariant.
 
 1. The injection_guard check fires unconditionally for every `TrustRequired` slot on every
    call to `format_messages` — no bypass path exists (not even debug/test modes).
-2. `category: Category::SECURITY` distinguishes this error from validation errors; error
+2. `category: Category::Security` distinguishes this error from validation errors; error
    taxonomy places E-TMPL-001 in the SECURITY severity tier.
 3. The check is a **pure-core synchronous function** — no I/O, no async, no external
    dependencies. Kani VP-006 candidacy is grounded in this property.

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.8"
+version: "2.9"
 status: active
 producer: architect
 timestamp: 2026-07-24T00:00:00Z
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.007.md
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.005.md
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
-input-hash: "5cc4a8f"
+input-hash: "6573929"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -561,10 +561,10 @@ Formal statement:
   (r == Medium ∨ r == High ∨ r == Critical) → check_risk_floor(r) == Ok(())
 ```
 
-**RESOLVED (burst-232, 2026-07-22):** BC-2.23.005 was amended to `Category::VAL` in v1.1
+**RESOLVED (burst-232, 2026-07-22; casing corrected FIX-BURST-270):** BC-2.23.005 was amended to `Category::Val` in v1.1
 (same burst that seeded VP-013). The prior `Category::CONFIGURATION` label was non-canonical
-(not present in the 12-category axis per ADR-010). BC-2.23.005 v1.1 = VAL, consistent with
-error-taxonomy v1.31 and this VP harness. No active contradictions.
+(not present in the 12-category axis per ADR-010). BC-2.23.005 v1.1 = VAL (taxonomy code), Rust identifier = `Category::Val`, consistent with
+error-taxonomy §TOOLS and this VP harness. No active contradictions.
 
 Kani harness sketch:
 ```rust
@@ -648,6 +648,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.9 | 2026-07-25 | architect | FIX-BURST-270 / P1D-168-casing | PascalCase canon sweep — §VP-013 RESOLVED note: `` `Category::VAL` `` → `` `Category::Val` `` per ADR-010 v1.9 Direction B adjudication. |
 | 2.8 | 2026-07-24 | architect | FIX-BURST-255 / F-P154-01 | F-P154-01 (HIGH) VP-011 internal contradiction + totality gap: adjudicate PendingHumanApproval routing design — Option A peel-off. PendingHumanApproval is handled by async `pre_tool_dispatch` wrapper BEFORE `route_pre_tool_decision` is called (interrupt issued; run suspended; `route_pre_tool_decision` not invoked). Fix property prose from "neither Proceed nor Reject returned" (impossible given DispatchOutcome type) to peel-off design. Fix formal statement: remove PendingHumanApproval clause from `route_pre_tool_decision` quantifier block; add wildcard arm clause (fail-closed Reject); add separate `pre_tool_dispatch` peel-off block. Fix `#[non_exhaustive]` note: "each proof function targets one variant" → "four proof functions target three routable variants (Deny/Approve/Edit) + hook-error; `PendingHumanApproval` has no dedicated proof function". Corresponds to VP-011.md v1.2→v1.3. |
 | 2.7 | 2026-07-24 | architect | FIX-BURST-253 / F-P152-02 | VP-012 symbolic domain widening. Formal statement: `tokens_remaining ∈ (0, ceiling]` → `[0, ceiling]` (strict lower bound excluded the EC-002 boundary case that the burst-252 `<=` predicate change was meant to cover). Harness sketch: removed `tokens_remaining > 0` from multi-condition assume; u64 guarantees ≥ 0 by type. Added IN-domain comment. |
 | 2.6 | 2026-07-24 | architect | FIX-BURST-252 / F-P151-04+05 | VP-012 predicate + precision corrections. (1) F-P151-04: `<` → `<=` in VP-012 Property Statement, Formal Statement, harness expected expression, and core-budget sync-core line. Non-strict `<=` is required: with strict `<`, condition `tokens_remaining/ceiling < 0.0` can never be true (remaining≥0), so fraction=1.0/remaining=0 would never fire (contradicts BC-2.10.005 EC-002). (2) F-P151-05: `fraction: f32` → `fraction: f64` throughout VP-012 section (Property Statement, Formal Statement, harness). `f64` is the adjudicated type (interface-definitions §Compaction already used f64; f64 avoids precision issues for budgets >16M tokens). `watermark_boundary_does_not_fire` harness renamed `watermark_boundary_fires` (with `<=`, exactly-at-threshold now fires). Feasibility note updated: CBMC tractability bound 2^24 retained, rationale changed from f32-precision to state-space-only. |

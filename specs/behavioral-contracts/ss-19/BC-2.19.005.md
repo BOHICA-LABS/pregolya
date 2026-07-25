@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.005
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.2 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-010 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-010' (VP-INDEX v1.2 burst-223 seeded VP-010 Kani P0; VP-010.md exists). Completed-handoff residue removal."
   - "1.3 (F-P148-01/burst-249/2026-07-24): Architecture anchor de-pinned from 'Decision 6' to 'Decision 3 §Security Invariant' per ADR-016 v1.4 labeled anchor. Traceability Architecture Authority row: 'E-SRLZ-001 category SECURITY' corrected to 'E-SRLZ-001 category VAL' (already correct in Postconditions PC-1 and Invariant 3; Traceability row was the sole remaining SECURITY residue). red_gate_source and Red Gate body callout updated to Decision 3 §Security Invariant anchor form. input-hash updated to 5b4fe5e (ADR-016 v1.4 adds labeled anchors)."
   - "1.4 (FIX-BURST-268/F-P166-01/2026-07-25): TD-VSDD-091 de-pin — Invariant 3 cited 'error-taxonomy.md v1.28 (E-SRLZ-001 row: VAL)' as live normative authority; version pin violates TD-VSDD-091 (narrative body must not cite vN.N numbers that decay on subsequent taxonomy diffs). Adjudication: live normative citation, not historical record. De-pinned to stable section anchor: 'error-taxonomy.md §E-SRLZ-001 (row: VAL)'."
+  - "1.5 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::SRLZ → Component::Srlz (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + Invariant 3 prose backtick span)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -35,7 +36,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "47a5803"
+input-hash: "0daa69f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -79,8 +80,8 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
 1. `Reviver::revive(serialized)` returns:
    ```
    Err(FerrochainError {
-       component: Component::SRLZ,
-       category: Category::VAL,
+       component: Component::Srlz,
+       category: Category::Val,
        code: "E-SRLZ-001",
        message: "unknown-serializable: type id not in registry",
    })
@@ -100,7 +101,7 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
    below any other check or transformation.
 2. The check uses the same `HashMap` that was populated at startup (BC-2.19.003) —
    no secondary list, no `allow_all` flag, no runtime override.
-3. `category: Category::VAL` — the allowlist check validates the `id` field of the
+3. `category: Category::Val` — the allowlist check validates the `id` field of the
    deserialized input against the registry. An unregistered type id is a validation
    failure: the input does not conform to the allowed inventory. The `SECURITY` category
    is reserved for errors guarding concrete attack-vector boundaries per ADR-010 taxonomy

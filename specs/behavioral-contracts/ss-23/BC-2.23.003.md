@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.003
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.1 (Burst-232/2026-07-22): Fix Category::VALIDATION → Category::VAL in PC-2 (E-TOOLS-003 EditOldStringNotFound). VALIDATION is not in the canonical 12-member Category enum; E-TOOLS-003 is VAL per error-taxonomy v1.31. D23 straggler sweep."
   - "1.2 (burst-233/F-P133-03/2026-07-22): PC-5 — assign E-TOOLS-008 FileIoError to the OS-level I/O error path for file-not-found (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'EditFileTool', path: <file_path>, io_kind: <ErrorKind debug name>. Gate #33 forward+reverse clean."
   - "1.3 (burst-247/F-P146-02/2026-07-24): H1 title — append exhaustive raised-code enumeration 'E-TOOLS-001/003/008' per SS-23 title policy. Inline contextual reference 'E-TOOLS-003 on No-Match' is retained (describes trigger condition); trailing exhaustive enumeration is now also present for machine extractability. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
+  - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-5); Category::VAL → Category::Val (PC-2), Category::TOOL → Category::Tool (PC-5)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -73,7 +74,7 @@ controls whether all occurrences are replaced (default false — first occurrenc
    `ToolOutput::Text("edited: <path> (<n> replacements)")` when `replace_all: true`.
 2. **Exact-match not found (default mode, `fuzzy_threshold: None`):** `old_string` is not
    present in the file verbatim. The tool returns
-   `Err(FerrochainError { component: "TOOLS", category: Category::VAL,
+   `Err(FerrochainError { component: Component::Tools, category: Category::Val,
    code: "E-TOOLS-003", message: "EditOldStringNotFound: old_string not found in '<path>'" })`.
    The file is NOT modified.
 3. **Fuzzy fallback (opt-in, `fuzzy_threshold: Some(t)`):** If exact match fails, the tool
@@ -84,7 +85,7 @@ controls whether all occurrences are replaced (default false — first occurrenc
    always tried first.
 4. **Path confinement violation:** Returns `Err(E-TOOLS-001 PathConfinementViolation)`.
    No I/O performed.
-5. **File not found:** Returns `Err(FerrochainError { component: "TOOLS", category: Category::TOOL,
+5. **File not found:** Returns `Err(FerrochainError { component: Component::Tools, category: Category::Tool,
    code: "E-TOOLS-008", message: "EditFileTool I/O error on '<path>': <io_kind>",
    tool_type: "EditFileTool", path: <file_path>, io_kind: <std::io::ErrorKind debug name> })`.
 6. **Conditional retry safe:** `old_string` not found (E-TOOLS-003) is structurally a no-op

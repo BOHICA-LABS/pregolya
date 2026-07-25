@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.001
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
   - "1.1 (burst-227/F-P132-04/2026-07-21): Description ¶1: remove 'in strict-undefined mode (jinja2 engine or explicit f-string strict mode)' qualifier — E-TMPL-003 is unconditional and engine-neutral per INV-3/PC4/ADR-015 Decision 4; description now states the raise is unconditional in both f-string and jinja2 engines."
   - "1.2 (FIX-BURST-269/F-P167-01/2026-07-25): Fix Category::VALIDATION → Category::VAL in PC-4 code block (E-TMPL-003 Err struct). VALIDATION is not in the canonical 12-member Category enum; E-TMPL-003 is VAL per error-taxonomy.md §E-TMPL-003. D23 sibling-sweep."
+  - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B): Component::TMPL → Component::Tmpl, Category::VAL → Category::Val in PC-4 code block. Taxonomy code-string column stays SCREAMING as documentation shorthand; only typed Rust enum paths change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "f89a08a"
+input-hash: "352f3dd"
 extracted_from: null
 modified: []
 deprecated: null
@@ -72,7 +73,7 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
 3. `PromptTemplate::input_variables(&self) → &[String]` returns the complete set of variable
    names required at call time (partial-bound names excluded).
 4. An undefined variable (present in template but absent from merged var map) returns
-   `Err(FerrochainError { component: Component::TMPL, category: Category::VAL, code: "E-TMPL-003",
+   `Err(FerrochainError { component: Component::Tmpl, category: Category::Val, code: "E-TMPL-003",
    message: "UndefinedVariable: variable '{var_name}' is not defined in the template context" })`
    — no silent empty substitution under any rendering mode.
 5. `{{` and `}}` render as literal `{` and `}` respectively; they are NOT counted as substitution

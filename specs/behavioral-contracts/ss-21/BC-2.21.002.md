@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.002
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction"
   - "1.1 (F-P224/H-2/2026-07-21): Write-time zero-norm guard added per ADR-014 Decision 5. `add_texts` and `from_texts_sync` now return `Err(E-VS-004)` with `document_index` context (0-based) when any document's embedding vector has L2 norm == 0.0 at write time; no documents from the batch are persisted. Distinct from E-VS-001 (search-time cosine guard). Added: PC4 (write-time zero-norm precondition/postcondition), EC-007, TV-006. E-VS-004 minted in error-taxonomy.md v1.28."
+  - "1.2 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B): Component::VS → Component::Vs, Category::VAL → Category::Val in PC-1 zero-norm inline code (from_texts_sync postcondition)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-029
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "46c445f"
+input-hash: "89fca2d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -71,7 +72,7 @@ unconditionally before any cosine division.
    - Calls `arc_embeddings.embed_documents(texts.clone()).await` to pre-compute all document
      embeddings.
    - Checks each embedding vector's L2 norm before persisting: if any vector has norm == 0.0,
-     returns `Err(FerrochainError { component: Component::VS, category: Category::VAL,
+     returns `Err(FerrochainError { component: Component::Vs, category: Category::Val,
      code: "E-VS-004", message: "embedding vector has zero L2 norm; document rejected at write time",
      document_index: <i> })` where `<i>` is the 0-based index of the first zero-norm vector.
      No `InMemoryVectorStore` is constructed (ADR-014 Decision 5 — all-or-nothing).

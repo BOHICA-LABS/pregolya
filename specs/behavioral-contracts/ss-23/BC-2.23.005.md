@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.005
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.3 (burst-235/F-P135-05/2026-07-22): Fix four occurrences of wrong implementation phrasing 'tokio::time::timeout over/wrapping tokio::process::Command' (Description, PC-3, Invariants DI-015 bullet, Traceability) — implied BashTool calls tokio::process::Command directly, contradicting the sandbox-mandatory Invariant. Correct: tokio::time::timeout wraps the sandbox backend execute() call; tokio::process::Command is managed by sandbox::process internally. Architect adjudication F-P135-05."
   - "1.4 (burst-238/F-P138-03/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-013' (VP-INDEX v1.5 burst-232 seeded VP-013 Kani P1; ferrochain-tools risk_floor_rejects_below_medium). Both sites updated (VP Anchors section + Traceability VP Registration row). Gate #28 close F-P138-03."
   - "1.5 (burst-247/F-P146-02+OBS-naming/2026-07-24): (1) H1 title — remove payload flag E-TOOLS-005 from title error-code enumeration per SS-23 title policy (Ok-path payload flags excluded from raised-code enumeration). Before: 'E-TOOLS-004/005/007'. After: 'E-TOOLS-004/007'. E-TOOLS-005 is retained in the body as a payload annotation (BashOutput.truncated) — it is not removed from the contract, only from the raised-code title list. (2) PC-2 body — align truncation flag name from informal 'BashOutputTruncated'-style to canonical field-path notation 'BashOutput.truncated' per OBS naming-anchor (error-taxonomy v1.37 adds explicit canonical-field-path marker for E-TOOLS-005). TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
+  - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-3 + PC-4); Category::TIMEOUT → Category::Timeout (PC-3), Category::VAL → Category::Val (PC-4)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-037
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -93,13 +94,13 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
    wrapping the sandbox backend `execute()` call fires; the sandbox kills the subprocess
    (ProcessBackend via `.kill_on_drop(true)` async drop; WASM/container backends via runtime-level
    process termination). The tool returns
-   `Err(FerrochainError { component: "TOOLS", category: Category::TIMEOUT, code: "E-TOOLS-004",
+   `Err(FerrochainError { component: Component::Tools, category: Category::Timeout, code: "E-TOOLS-004",
    message: "BashTimeout: command exceeded max_duration of <seconds>s" })`. This raise-condition
    directly enacts DI-015 (Subprocess Execution Timeout): exceed `max_duration` → terminate
    process → structured `E-TOOLS-004` error.
 4. **Risk floor violation at startup:** `ToolConfig::override_risk(ActionRisk::ReadOnly)` or
    `override_risk(ActionRisk::Low)` called on a `BashTool` instance. At `ToolRegistry::register`
-   time the framework returns `Err(FerrochainError { component: "TOOLS", category: Category::VAL,
+   time the framework returns `Err(FerrochainError { component: Component::Tools, category: Category::Val,
    code: "E-TOOLS-007", message: "BashRiskTierViolation: BashTool risk tier cannot be lowered
    below Medium; attempted: '<tier>'" })`. The graph does not start.
 5. **Sandbox policy violation:** The command attempts an operation disallowed by the sandbox

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.001
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.1 (F-P130-07/2026-07-21): Fix E-EMBED-001 message prefix: `DimensionMismatch:` → `EmbeddingDimensionMismatch:` to match canonical PRD name and eliminate collision with E-VS-002 prefix. Gate #33 reverse: error-taxonomy.md v1.28→v1.29 updated in same burst."
   - "1.2 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-008 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-008' (VP-INDEX v1.2 burst-223 seeded VP-008 proptest P1; VP-008.md exists). Completed-handoff residue removal."
   - "1.3 (FIX-BURST-269/F-P167-01/2026-07-25): Fix Category::VALIDATION → Category::VAL in PC-2 E-EMBED-001 code block. VALIDATION is not in the canonical 12-member Category enum; E-EMBED-001 is VAL per error-taxonomy.md §E-EMBED-001. D23 sibling-sweep (Burst-232 fixed SS-23; this burst fixes SS-22/21/18 stragglers)."
+  - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B): Component::EMBED → Component::Embed, Category::VAL → Category::Val in PC-2 E-EMBED-001 inline code block."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-031
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -32,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "712c9a8"
+input-hash: "dc5b1d6"
 extracted_from: null
 modified: []
 deprecated: null
@@ -71,7 +72,7 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
    - All inner `Vec<f32>` have identical length `d` (the model's embedding dimension).
    - If `texts` is empty: `Ok(vec![])` — zero vectors; no error.
    - If the provider returns an inconsistent batch (inner vectors of different lengths):
-     `Err(FerrochainError { component: Component::EMBED, category: Category::VAL,
+     `Err(FerrochainError { component: Component::Embed, category: Category::Val,
      code: "E-EMBED-001", message: "EmbeddingDimensionMismatch: embedding batch returned inconsistent
      vector lengths" })`.
    - If the provider returns a partial batch error (e.g., rate limit, service error):

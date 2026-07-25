@@ -14,8 +14,9 @@ timestamp: 2026-07-19T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D11]
-version: "1.5"
+version: "1.6"
 changelog:
+  - "1.6 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — §MonotonicClock code sketch: Component::CHKPT → Component::Chkpt; Category::INTERNAL → Category::Internal per ADR-010 v1.9 Direction B adjudication."
   - "1.5 (FIX-BURST-267/F-P165-stale-prose/2026-07-25): Strip two stale version pins from §Object-Safety of the 5-Method CheckpointSaver Trait: (1) table receiver cell '`&self` (corrected v1.3)' → '`&self`' — the surrounding table context and changelog already record the v1.3 provenance; (2) condition 3 prose '`&self` added in this revision (v1.3)' → '`&self` added in this revision' — 'in this revision' is the behavioral anchor; the redundant version pin decays if the section is ever moved."
   - "1.4 (burst 119 coordinator sweep, 2026-07-19): Extend §Object-Safety section with Runnable and BaseChatModel adjudications: (1) verification-architecture.md:43 'pure get_next_version(current) successor function' description confirmed accurate — Kani target is MonotonicClock::get_next_version (ZST associated function), not the CheckpointSaver trait method; no edit to verification-architecture.md. (2) Runnable<Input, Output> dyn-compat axis settled: zero dyn Runnable<...> uses in specs/; the separate DynRunnable<Value, Value> type-erased trait (BC-2.01.003/004) is the heterogeneous composition seam; impl Stream return and generic type params in Runnable are non-issues; no interface-definitions.md change required. (3) BaseChatModel same conclusion: zero dyn BaseChatModel uses in specs/; always monomorphic impl BaseChatModel for ChatOpenAI/Anthropic/Ollama; no interface-definitions.md change required. No PO routing for items 2 or 3."
   - "1.3 (F-P116-01, 2026-07-19): dyn-compat fix — add &self receiver to get_next_version provided method on CheckpointSaver trait (was receiver-less, causing E0038 on Arc<dyn CheckpointSaver>). Three-reason rationale: (1) dyn-compatibility requires a receiver on every non-Sized-bounded method; (2) virtual dispatch of backend overrides through the vtable requires &self; (3) langgraph BaseCheckpointSaver.get_next_version is an instance method — the parity claim required correction from 'static method' to 'instance method'. Purity preserved: default body delegates entirely to MonotonicClock::get_next_version (ZST, no self use). Add §Object-Safety of the 5-Method CheckpointSaver Trait subsection with explicit dyn-compatibility conclusion. API Surface Reconciliation rev-2 Signature row updated to include &self."
@@ -94,8 +95,8 @@ impl MonotonicClock {
             Some(c) => c.0.checked_add(1)
                 .map(CheckpointId)
                 .ok_or_else(|| FerrochainError {
-                    component: Component::CHKPT,
-                    category: Category::INTERNAL,
+                    component: Component::Chkpt,
+                    category: Category::Internal,
                     code: "E-CHKPT-002",
                     message: "MonotonicClockRegression: checkpoint_id overflow — u64 exhausted",
                 }),

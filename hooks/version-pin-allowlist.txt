@@ -86,17 +86,17 @@ architecture/decisions/ADR-013-mcp-server-module-placement.md:153
 # records that BC-2.20.002 v1.2 applied three specific textual corrections to
 # replace ferrochain-guardrail crate references with the canonical
 # ferrochain-core: core::guardrail location.
-architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:700
+architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:701
 
 # Reason: HISTORICAL-RECORD — ADR-014 propagation-record narration (F-P131-01
 # burst-226) records that BC-2.20.002 v1.3 updated PC2 to reflect the Critical
 # vs Non-Critical Fail severity bifurcation for guardrail results.
-architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:745
+architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:746
 
 # Reason: HISTORICAL-RECORD — ADR-014 propagation-record narration (F-P131-07
 # burst-226) records that BC-2.21.004 v1.2 updated INV-3 to replace the lossy
 # fallback with a fail-safe Err(E-VS-005) when non-empty filters are passed.
-architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:769
+architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:770
 
 # Reason: HISTORICAL-RECORD — verification-architecture.md RESOLVED block
 # (burst-232, 2026-07-22) records that BC-2.23.005 reached VAL category at v1.1
@@ -110,8 +110,9 @@ architecture/verification-architecture.md:566
 # v1.1, closing the contradiction that existed in the VP's harness context.
 # Line number refreshed :258→:259 by FIX-BURST-268/OBS-P166-A (VP-013 v1.4
 # changelog entry added above); :259→:260 by FIX-BURST-269/F-P167-04 (VP-013
-# v1.5 §Source Contract title sync added one line above this block).
-verification-properties/VP-013.md:260
+# v1.5 §Source Contract title sync); :260→:261 by FIX-BURST-270/ADR-010-v1.9
+# (VP-013 v1.6 changelog entry added above this block).
+verification-properties/VP-013.md:261
 
 # ── FIX-BURST-268 entries (OBS-P166-B, 2026-07-25) — patterns 5 and 6 added ──
 # These entries cover historical-record hits uncovered when `<filename>.md (vN.N`

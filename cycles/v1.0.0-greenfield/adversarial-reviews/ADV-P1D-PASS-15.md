@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/adk-rust/patterns-observed.md
-input-hash: "8510486"
+input-hash: "3e1a987"
 findings:
   - id: F-P15-01
     severity: HIGH

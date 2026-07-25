@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.003
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.3 (F-P148-02/burst-249/2026-07-24): De-pinned all three 'ADR-014 v1.1 [§]Hardening Note' sites to 'ADR-014 Decision 2 §Hardening note' per ADR-014 v1.4 labeled anchor: (1) frontmatter red_gate_source, (2) Red Gate body callout, (3) Traceability Architecture Authority row."
   - "1.4 (OBS-P149-01/burst-250/2026-07-24): PC5 VP attribution corrected: 'VP-009's proptest harness' → 'BC-local proptest sub-property VP-2.21.003-B'. VP-009 is the Kani formal-proof VP for the NaN guard (VP-2.21.003-A); the [-1,1] range property is covered by the BC-local proptest VP-2.21.003-B. input-hash updated dda4aa1→1b115d2 (drift from burst-249 ADR-014 content changes)."
   - "1.5 (FIX-BURST-269/F-P167-01/2026-07-25): Fix Category::VALIDATION → Category::VAL at two sites: Description code block (E-VS-001 return inside if-guard) and PC-1 code block (E-VS-001 Err struct). VALIDATION is not in the canonical 12-member Category enum; E-VS-001 is VAL per error-taxonomy.md §E-VS-001. D23 sibling-sweep."
+  - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::VS → Component::Vs (Description code block + PC-1 code block), Category::VAL → Category::Val (Description code block + PC-1 code block, 2 occurrences)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-029
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -36,7 +37,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "46c445f"
+input-hash: "89fca2d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -67,7 +68,7 @@ L2 norm of each vector:
 ```rust
 let norm = v.iter().map(|x| x * x).sum::<f32>().sqrt();
 if norm == 0.0 {
-    return Err(FerrochainError { component: Component::VS, category: Category::VAL,
+    return Err(FerrochainError { component: Component::Vs, category: Category::Val,
                                  code: "E-VS-001", message: "zero-norm embedding vector" });
 }
 ```
@@ -88,8 +89,8 @@ two lines and has negligible performance overhead compared to the cosine computa
 1. When `norm_a == 0.0` OR `norm_b == 0.0`:
    ```
    Err(FerrochainError {
-       component: Component::VS,
-       category: Category::VAL,
+       component: Component::Vs,
+       category: Category::Val,
        code: "E-VS-001",
        message: "zero-norm embedding vector",
    })

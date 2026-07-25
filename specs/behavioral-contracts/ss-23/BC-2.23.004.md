@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.004
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 ListDirTool."
   - "1.1 (burst-233/F-P133-03/2026-07-22): PC-3 / PC-5 / EC-002 / EC-005 / TV-004 — assign E-TOOLS-008 FileIoError to the OS-level I/O error paths (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'ListDirTool', path: <dir_path>, io_kind: <ErrorKind debug name> ('NotADirectory' for PC-3/EC-002; 'NotFound' for PC-5/EC-005). Gate #33 forward+reverse clean."
   - "1.2 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded); reorder trailing section to 'E-TOOLS-001/008; DirEntry Struct' (DirEntry Struct is not an error code and is retained as a structural descriptor after the slash-separated error block). Before: 'E-TOOLS-001; DirEntry Struct'. After: 'E-TOOLS-001/008; DirEntry Struct'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
+  - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-3 + PC-5); Category::SECURITY → Category::Security (PC-2), Category::TOOL → Category::Tool (PC-3 + PC-5)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -76,16 +77,16 @@ filter at the application layer.
    Entries are sorted lexicographically by `name`. Hidden files (names starting with `.`)
    are included unless excluded by `PathGuard` policy.
 2. **Path confinement violation:** Returns
-   `Err(FerrochainError { component: "TOOLS", category: Category::SECURITY,
+   `Err(FerrochainError { component: Component::Tools, category: Category::Security,
    code: "E-TOOLS-001", message: "PathConfinementViolation: path '<path>' is outside the
    configured PathGuard scope" })`.
 3. **Path is a file, not a directory:** Returns
-   `Err(FerrochainError { component: "TOOLS", category: Category::TOOL, code: "E-TOOLS-008",
+   `Err(FerrochainError { component: Component::Tools, category: Category::Tool, code: "E-TOOLS-008",
    message: "ListDirTool I/O error on '<path>': NotADirectory",
    tool_type: "ListDirTool", path: <dir_path>, io_kind: "NotADirectory" })`.
 4. **Empty directory:** Returns `ToolOutput::Json([])` — zero entries, not an error.
 5. **Permission denied or not found:** Returns
-   `Err(FerrochainError { component: "TOOLS", category: Category::TOOL, code: "E-TOOLS-008",
+   `Err(FerrochainError { component: Component::Tools, category: Category::Tool, code: "E-TOOLS-008",
    message: "ListDirTool I/O error on '<path>': <io_kind>",
    tool_type: "ListDirTool", path: <dir_path>, io_kind: <std::io::ErrorKind debug name> })`.
 

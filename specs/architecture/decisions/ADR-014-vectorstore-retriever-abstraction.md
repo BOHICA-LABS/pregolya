@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-21"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.8"
+version: "1.9"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.9 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — all Rust code blocks: Component::VS → Component::Vs; Category::VAL → Category::Val; Component::CORE → Component::Core; Category::SECURITY → Category::Security per ADR-010 v1.9 Direction B adjudication."
   - "1.8 (FIX-BURST-267/F-P165-stale-prose/2026-07-25): De-label §PO Obligations heading '### E-VS-004 (carried from v1.3)' → '### E-VS-004 (carried from Decision 5)' — Decision 5 (v1.2/F-P129-08) is the behavioral anchor that introduced the write-time zero-norm rejection obligation; v1.3 only corrected the error code number from E-VS-003 → E-VS-004. The version pin 'v1.3' decays with revision history; 'Decision 5' is stable and directly identifies the design decision this obligation traces to."
   - "1.7 (burst-238/2026-07-23): Stale-handoff sweep (continuation) — rewrite five 'Error taxonomy must mint' future-tense obligations to past-tense facts: (1) Consequences §E-VS-004 line: 'must mint' → 'minted'; (2) §PO Obligations E-VS-004 header: 'Error taxonomy must mint E-VS-004' → 'E-VS-004 minted (error-taxonomy v1.27/D21)'; (3) §PO Obligations E-CORE-008 header: 'Error taxonomy must mint E-CORE-008' → 'E-CORE-008 minted (error-taxonomy v1.30/burst-226)'; (4) §PO Obligations E-VS-005 header: 'Error taxonomy must mint E-VS-005' → 'E-VS-005 minted (error-taxonomy v1.30/burst-226)'."
   - "1.6 (burst-238/2026-07-23): Stale-handoff sweep — rewrite three 'PO must' future-tense obligations in §PO Obligations to past-tense facts: (1) BC-2.20.002 anchor corrections → 'BC-2.20.002 v1.2 applied'; (2) BC-2.20.002 PC2 severity-bifurcation update → 'BC-2.20.002 v1.3 updated PC2'; (3) BC-2.21.004 INV-3 fail-safe update → 'BC-2.21.004 v1.2 updated INV-3'."
@@ -260,8 +261,8 @@ async fn similarity_search_with_filter(
         // Non-empty filter on an adapter that has not overridden this method.
         // Returning silently-unfiltered results would expose cross-tenant data.
         return Err(FerrochainError {
-            component: Component::VS,
-            category: Category::VAL,
+            component: Component::Vs,
+            category: Category::Val,
             code: "E-VS-005",
             message: "FilterUnsupported: this VectorStore backend does not support \
                       metadata filtering; override similarity_search_with_filter to \
@@ -286,7 +287,7 @@ two lines and requires no new dependency:
 
 ```rust
 let norm = v.iter().map(|x| x * x).sum::<f32>().sqrt();
-if norm == 0.0 { return Err(FerrochainError { component: Component::VS, category: Category::VAL, code: "E-VS-001", ... }); }
+if norm == 0.0 { return Err(FerrochainError { component: Component::Vs, category: Category::Val, code: "E-VS-001", ... }); }
 ```
 
 This check belongs in `vectorstores::similarity` (pure-core) — the shared cosine
@@ -368,8 +369,8 @@ message string (gate #33 / cross-cutting error-context convention):
 
 ```rust
 FerrochainError {
-    component: Component::VS,
-    category: Category::VAL,
+    component: Component::Vs,
+    category: Category::Val,
     code: "E-VS-004",
     message: "embedding vector has zero L2 norm; document rejected at write time",
     context: {
@@ -386,8 +387,8 @@ for (i, embedding) in embeddings.iter().enumerate() {
     let norm = embedding.iter().map(|x| x * x).sum::<f32>().sqrt();
     if norm == 0.0 {
         return Err(FerrochainError {
-            component: Component::VS,
-            category: Category::VAL,
+            component: Component::Vs,
+            category: Category::Val,
             code: "E-VS-004",
             message: "embedding vector has zero L2 norm; document rejected at write time",
             context: [("document_index", i)].into(),
@@ -466,8 +467,8 @@ impl GuardedDocuments {
                         GuardrailSeverity::Critical => {
                             // Critical rejection: abort the entire batch (BC-2.11.005 PC4).
                             return Err(FerrochainError {
-                                component: Component::CORE,
-                                category: Category::SECURITY,
+                                component: Component::Core,
+                                category: Category::Security,
                                 code: "E-CORE-008",
                                 message: format!(
                                     "GuardrailCriticalRejection: document at position {} \

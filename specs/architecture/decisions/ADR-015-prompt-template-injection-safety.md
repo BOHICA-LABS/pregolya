@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.6"
+version: "1.7"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.7 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — Decision 2 code sketch: Component::TMPL → Component::Tmpl; Category::VAL → Category::Val; Decision 4 InjectionAttempt code sketch: Component::TMPL → Component::Tmpl; Category::SECURITY → Category::Security per ADR-010 v1.9 Direction B adjudication."
   - "1.6 (FIX-BURST-269/F-P167-01/2026-07-25): Replace all non-canonical Category::VALIDATION residue with Category::VAL at four sites: (1) Decision 2 E-TMPL-002 code sketch (live code body); (2) Decision 4 strict-undefined note '(VALIDATION)' narrative label; (3) Consequences E-TMPL-002 '(VALIDATION/SystemSlotPolicy)' narrative label; (4) Consequences E-TMPL-003 '(VALIDATION/UndefinedVariable)' narrative label. VALIDATION is not a canonical Category variant; canonical abbreviated form per ADR-010 is VAL."
   - "1.5 (burst-249/2026-07-24): F-P148-02 — add Security Invariant 2 labeled subsection to Decision 2 and Security Invariant 1 labeled subsection to Decision 3. Adjudication option (b): stable anchors added to ADR rather than remapping 7+ citation sites across 4 documents. Resolves unresolvable 'ADR-015 Security Invariant N' citations in BC-2.18.004, BC-2.18.005, BC-INDEX Red Gate table, VP-006 changelog, prd.md, test-vectors.md."
   - "1.4 (burst-227/2026-07-21): F-P132-03 (coordinator flag 2) — Add 'MessagesPlaceholder trust derivation' subsection to Decision 3. ADR-015 v1.3 defined `TemplateVar` for scalar substitution but gave no counterpart type or derivation rule for `Vec<Message>` placeholder variables. BC-2.18.003 PC2 cited 'ADR-015 v1.3 semantics' but the rule was unanchored. Fix: introduce `MessageListVar { messages: Vec<Message>, trust_level: Option<TrustLevel> }` and state the uniform derivation rule: each expanded message's `MessageProvenance.highest_trust_level` = `MessageListVar.trust_level`; `None` → `None` (treated as Trusted). API shape (TemplateInput enum) deferred to story implementation."
@@ -96,8 +97,8 @@ impl ChatPromptTemplate {
         for (role, _, policy) in &messages {
             if *role == MessageRole::System && *policy != SlotTrustPolicy::TrustRequired {
                 return Err(FerrochainError {
-                    component: Component::TMPL,
-                    category: Category::VAL,
+                    component: Component::Tmpl,
+                    category: Category::Val,
                     code: "E-TMPL-002",
                     message: "SystemMessage slots must use TrustRequired policy; \
                               TrustAll is disallowed for system-position message slots",
@@ -237,8 +238,8 @@ impl ChatPromptTemplate {
                     if let Some(var) = vars.get(var_name) {
                         if var.trust_level.is_some_and(|t| t.is_untrusted()) {
                             return Err(FerrochainError {
-                                component: Component::TMPL,
-                                category: Category::SECURITY,
+                                component: Component::Tmpl,
+                                category: Category::Security,
                                 code: "E-TMPL-001",
                                 message: format!(
                                     "InjectionAttempt: variable '{}' carries untrusted provenance \

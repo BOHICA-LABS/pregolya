@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.005
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates; SECURITY-CRITICAL"
   - "1.1 (F-P148-03/burst-249/2026-07-24): red_gate_source and Red Gate body callout updated: 'ADR-015 Security Invariant 2' → 'ADR-015 Decision 2 §Security Invariant 2' per ADR-015 v1.5 labeled anchor. input-hash updated to fa92953 (ADR-015 v1.5 adds labeled anchors)."
   - "1.2 (FIX-BURST-269/F-P167-01/2026-07-25): Fix Category::VALIDATION → Category::VAL at two sites: PC-1 code block (E-TMPL-002 Err struct) and INV-3 prose. VALIDATION is not in the canonical 12-member Category enum; E-TMPL-002 is VAL per error-taxonomy.md §E-TMPL-002. D23 sibling-sweep."
+  - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::TMPL → Component::Tmpl (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + Invariant 3 prose)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "f89a08a"
+input-hash: "352f3dd"
 extracted_from: null
 modified: []
 deprecated: null
@@ -70,8 +71,8 @@ so the error is detected as early as possible regardless of whether the template
 1. `ChatPromptTemplate::from_messages` returns:
    ```
    Err(FerrochainError {
-       component: Component::TMPL,
-       category: Category::VAL,
+       component: Component::Tmpl,
+       category: Category::Val,
        code: "E-TMPL-002",
        message: "SystemMessage slots must use TrustRequired policy; \
                  TrustAll is disallowed for system-position message slots",
@@ -89,7 +90,7 @@ so the error is detected as early as possible regardless of whether the template
    runtime mutation path that changes it after construction.
 2. The construction-time check iterates over all declared message tuples before creating the
    template; the first System+TrustAll tuple triggers the error.
-3. `category: Category::VAL` (not SECURITY) — this is a programming error caught at
+3. `category: Category::Val` (not SECURITY) — this is a programming error caught at
    construction time, not a runtime injection attempt. The SECURITY-tier error is E-TMPL-001
    (render-time injection attempt). The taxonomy distinction is intentional.
 

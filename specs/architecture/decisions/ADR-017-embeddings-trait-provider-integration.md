@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-23"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.4"
+version: "1.5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-22, SS-08]
 changelog:
+  - "1.5 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — §Dimensionality contract FerrochainError sketch: Category::VAL → Category::Val per ADR-010 v1.9 Direction B adjudication."
   - "1.4 (burst-240/2026-07-23): F-P140-06 — fix §Dimensionality contract FerrochainError sketch: non-canonical `category: VALIDATION` → `category: Category::VAL` per ADR-016 v1.2 adjudication (VALIDATION is not a canonical Category variant; canonical abbreviated form is VAL per error-taxonomy). F-P140-08 — remove un-minted error code E-EMBED-003 from two sites: (1) §Provider explicitly excluded body: '`E-EMBED-003 UnsupportedOperation`' → 'an UnsupportedOperation error'; (2) §Alt B heading: 'returning E-EMBED-003' → 'returning an UnsupportedOperation error'. E-EMBED-003 was never minted (error-taxonomy EMBED namespace has exactly 1 code: E-EMBED-001). E-EMBED-002 implied gap also removed."
   - "1.3 (burst-238/2026-07-23): Stale-handoff sweep — remove stale 'VP-008 candidate' labels (two sites: §Dimensionality contract body paragraph, §Consequences bullets). VP-008 was seeded in burst-223 (D21, VP-INDEX v1.2, proptest P1). Replace with 'VP-008 (proptest P1, seeded burst-223)'."
   - "1.2 (burst-225/2026-07-21): F-P130-07 sibling sweep — correct stale E-EMBED-001 message prefix in §Dimensionality contract: `DimensionMismatch: ...` → `EmbeddingDimensionMismatch: ...` per error-taxonomy v1.29 (PO renamed prefix to distinguish from E-VS-002 which retains bare `DimensionMismatch:`)."
@@ -97,7 +98,7 @@ Every `Embeddings` implementation MUST guarantee:
 - All returned vectors have the same length (the model's embedding dimension)
 - `embed_query(text)` returns a vector of the same length as any `embed_documents` vector
 
-Violation of these invariants MUST return `Err(FerrochainError { category: Category::VAL,
+Violation of these invariants MUST return `Err(FerrochainError { category: Category::Val,
 code: "E-EMBED-001", message: "EmbeddingDimensionMismatch: ..." })`. Returning a ragged result
 silently (wrong-length vectors in the output) violates DI-014 (no silent failures).
 

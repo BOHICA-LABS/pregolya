@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.006
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.1 (F-P224/F-P129-02/2026-07-21): PC1 and PC5 corrected — Category::COMPATIBILITY → Category::VAL per ADR-010 adjudication (E-SRLZ-002 = VAL in error-taxonomy.md v1.27; COMPATIBILITY is a non-canonical variant absent from the 12-member category enum). PC5 rationale rewritten: monolith type id is a validation failure (type known but unsupported), not a compatibility domain concept per taxonomy membership rules."
   - "1.2 (FIX-BURST-268/F-P166-01/2026-07-25): (1) TD-VSDD-091 de-pin — PC5 cited 'error-taxonomy.md v1.27 E-SRLZ-002 row' as live normative authority; version pin violates TD-VSDD-091 (narrative body must not cite vN.N numbers that decay on subsequent taxonomy diffs). Adjudication: live normative citation, not historical record. De-pinned to stable section anchor: 'error-taxonomy.md §E-SRLZ-002 (row: VAL)'. (2) COMPATIBILITY residue purge — Architecture Anchors and Traceability Architecture Authority both read 'E-SRLZ-002 category COMPATIBILITY' despite PC5 being corrected to VAL at v1.1; both are live authority claims contradicting the BC's own postconditions. Corrected both to 'category VAL' to match PC5 and ADR-010 adjudication."
   - "1.3 (FIX-BURST-269/F-P167-02/2026-07-25): Fix dangling 'ADR-016 Decision 7' anchor at two sites (Architecture Anchors and Traceability Architecture Authority). ADR-016 has only Decisions 1–5; Decision 7 is nonexistent. Corrected to 'ADR-016 Decision 3 Property 4' — LANGCHAIN_MONOLITH_TYPES set, E-SRLZ-002 category VAL, and the deliberate-unregistered pattern are all specified in Decision 3 Property 4. Same anchor class as BC-2.19.005 F-P148-01 fix ('Decision 6' → 'Decision 3 §Security Invariant')."
+  - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::SRLZ → Component::Srlz (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + PC-5 prose backtick span)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "47a5803"
+input-hash: "0daa69f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -68,8 +69,8 @@ available in ferrochain." The error is propagated as `Err`; it is never a silent
 1. `Reviver::revive(serialized)` returns:
    ```
    Err(FerrochainError {
-       component: Component::SRLZ,
-       category: Category::VAL,
+       component: Component::Srlz,
+       category: Category::Val,
        code: "E-SRLZ-002",
        message: "unsupported-serializable: langchain-monolith type not ported to ferrochain",
    })
@@ -82,7 +83,7 @@ available in ferrochain." The error is propagated as `Err`; it is never a silent
    b. Legacy remap then retry (BC-2.19.004) — if found, dispatch;
    c. `LANGCHAIN_MONOLITH_TYPES` check (this BC) — if found, return E-SRLZ-002;
    d. Default fallthrough: return E-SRLZ-001.
-5. `category: Category::VAL` — a monolith type id in a serialized envelope is a validation
+5. `category: Category::Val` — a monolith type id in a serialized envelope is a validation
    failure: the type path is recognized as a known langchain-monolith namespace but is not
    supported in ferrochain. ADR-010 adjudicates E-SRLZ-002 as VAL (recorded in
    error-taxonomy.md §E-SRLZ-002 (row: VAL)). `COMPATIBILITY` is not a canonical member of
