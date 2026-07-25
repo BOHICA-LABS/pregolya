@@ -28,19 +28,19 @@
 #   # record of the exact version under test.
 #   behavioral-contracts/ss-05/BC-2.05.001.md:142
 #
-# ── FIX-BURST-262 entries (F-P161-01, 2026-07-25) ────────────────────────────
+# ── FIX-BURST-262 entries (F-P161-01, 2026-07-25) — line numbers refreshed FIX-BURST-265 ──
 # All five entries are HISTORICAL-RECORD prose in bc-authoring-plan.md — audit-
 # trail narrations of what specific BC versions did at the time of a fix burst or
 # motivating-instance record.  Removing the version pins would destroy the
 # historical precision of the audit trail without providing any normative benefit.
-# Line numbers are post-edit (after FIX-BURST-262 frontmatter+body changelog
-# insertions that shifted the pre-edit numbers by +1 each).
+# Line numbers refreshed +9 by FIX-BURST-265 (bc-authoring-plan.md +9 lines above
+# these positions from gate#27 v2.51 changelog + body table additions).
 
 # Reason: HISTORICAL-RECORD — ADV-P1D-PASS-56-COMPLETION RESOLVED note recording
 # that BC-2.08.004 was at v1.2 when E-PROV-008 was minted to close the deferred
 # TBD-E-PROV-HTTP placeholder.  Removing the pin would erase which version of the
 # BC closed the finding.
-prd-supplements/bc-authoring-plan.md:1677
+prd-supplements/bc-authoring-plan.md:1686
 
 # Reason: HISTORICAL-RECORD — F-P112-02 fix-burst record (2026-07-18 addendum)
 # listing the five BC versions that were bumped when E-CORE-005 non-canonical
@@ -48,22 +48,22 @@ prd-supplements/bc-authoring-plan.md:1677
 # error-taxonomy.md v1.26 as contemporaneous adjudication records.  All seven
 # version pins on this line are audit-trail data; the entire line is a closed
 # historical record.
-prd-supplements/bc-authoring-plan.md:1707
+prd-supplements/bc-authoring-plan.md:1716
 
 # Reason: HISTORICAL-RECORD — F-P108-04 motivating-instance block; records that
 # the E-PROV-010 combined-field defect (providers_attempted + last_error) was
 # fixed in BC-2.08.014 at v1.2.
-prd-supplements/bc-authoring-plan.md:2115
+prd-supplements/bc-authoring-plan.md:2124
 
 # Reason: HISTORICAL-RECORD — F-P108-04 motivating-instance block; records that
 # the E-CHKPT-004 source/message field inconsistency was fixed in BC-2.04.007
 # at v1.5.
-prd-supplements/bc-authoring-plan.md:2119
+prd-supplements/bc-authoring-plan.md:2128
 
 # Reason: HISTORICAL-RECORD — F-P108-04 motivating-instance block; records that
 # the E-PROV-009 under-specified struct (reason catch-all) was expanded in
 # BC-2.08.013 at v1.2.
-prd-supplements/bc-authoring-plan.md:2125
+prd-supplements/bc-authoring-plan.md:2134
 
 # ── FIX-BURST-262 entries (F-P161-01, architect share, 2026-07-25) ───────────
 # All seven entries are HISTORICAL-RECORD prose — audit-trail narrations of what
@@ -75,7 +75,7 @@ prd-supplements/bc-authoring-plan.md:2125
 # records that BC-2.23.005 was specifically at v1.1 when it was amended to
 # category VAL.  The version pin identifies the amendment event, not a current
 # normative authority.
-architecture/ARCH-INDEX.md:180
+architecture/ARCH-INDEX.md:181
 
 # Reason: HISTORICAL-RECORD — ADR-013 Attribution Note completion marker
 # records that the BC-2.09.006 attribution correction deferred to PO was

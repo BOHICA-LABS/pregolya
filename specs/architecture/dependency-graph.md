@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: dependency-graph
-version: "1.1"
+version: "1.2"
 status: active
 producer: architect
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/prd.md
 input-hash: "58c2731"
 traces_to: ARCH-INDEX.md
-decisions: [D4, D6, D7]
+decisions: [D4, D6, D7, D21, D23]
 changelog:
+  - "1.2 (FIX-BURST-265/F-P163-03/2026-07-25): Propagate D21+D23 21-crate roster. Crate DAG: add ferrochain-prompts (D21/ADR-015), ferrochain-vectorstores (D21/ADR-014), ferrochain-tools (D23/ADR-020) after ferrochain-memory. Edge Table: 4 new rows (prompts→core, vectorstores→core, tools→core, tools→sandbox). Topological Build Order: Wave 1 gains ferrochain-memory (D23 Wave 2→1, position 6) + ferrochain-tools (position 7), now 9 items; Wave 2 loses ferrochain-memory, gains ferrochain-prompts (position 13) + ferrochain-vectorstores (position 14), now 10 items. Add D21/D23 to decisions list."
   - "1.1 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst; add [Section Content] template compliance fix. No spec content changes."
   - "1.0 (initial): crate dependency DAG authored."
 ---
@@ -44,6 +45,13 @@ ferrochain-core
   │
   ├── ferrochain-memory         (uses core: FerrochainError; MemoryStore trait)
   │
+  ├── ferrochain-prompts        (uses core: Message, Runnable, FerrochainError; D21/ADR-015)
+  │
+  ├── ferrochain-vectorstores   (uses core: Document, Retriever, Embeddings, FerrochainError; D21/ADR-014)
+  │
+  ├── ferrochain-tools          (uses core + sandbox: Tool, PathGuard, SandboxPolicy; D23/ADR-020)
+  │   [depends on ferrochain-core + ferrochain-sandbox; no ferrochain-graph dep at compile time per ADR-020 Decision 1]
+  │
   ├── ferrochain-openai-sdk     (NO ferrochain-core dep; reqwest + serde only) [D17-Q5]
   │   └── ferrochain-openai     (uses core: BaseChatModel + openai-sdk)
   ├── ferrochain-anthropic-sdk  (NO ferrochain-core dep) [D17-Q5]
@@ -66,6 +74,10 @@ ferrochain-core
 | ferrochain-server | ferrochain-graph | runtime | Runs invoke the graph engine |
 | ferrochain-server | ferrochain-checkpoint | runtime | Threads/runs read/write checkpoints |
 | ferrochain-memory | ferrochain-core | runtime | FerrochainError; MemoryStore trait definition |
+| ferrochain-prompts | ferrochain-core | runtime | Message, Runnable, FerrochainError; template composition (ADR-015 Decision 1) |
+| ferrochain-vectorstores | ferrochain-core | runtime | Document, Retriever, Embeddings, FerrochainError (ADR-014 Decision 1) |
+| ferrochain-tools | ferrochain-core | runtime | Tool, ToolOutput, FerrochainError; #[tool] macro via core re-export (ADR-020 Decision 1) |
+| ferrochain-tools | ferrochain-sandbox | runtime | PathGuard, SandboxPolicy, sandbox execution (ADR-020 Decision 1) |
 | ferrochain-openai-sdk | (none) | — | Standalone: reqwest + serde only; no ferrochain-core [D17-Q5] |
 | ferrochain-openai | ferrochain-core | runtime | BaseChatModel + FerrochainError |
 | ferrochain-openai | ferrochain-openai-sdk | runtime | Wire client for SDK adapter pattern |
@@ -105,25 +117,29 @@ Wave 1:
   3. ferrochain-splitters        (parallel; depends only on core)
   4. ferrochain-sandbox          (parallel; depends only on core)
   5. ferrochain-checkpoint       (depends on core)
-  6. ferrochain-graph            (depends on core + sandbox)
-  7. ferrochain-server           (depends on graph + checkpoint)
+  6. ferrochain-memory           (parallel; depends only on core; promoted Wave 2→1 per D23 item 3)
+  7. ferrochain-tools            (depends on core + sandbox; D23/ADR-020)
+  8. ferrochain-graph            (depends on core + sandbox)
+  9. ferrochain-server           (depends on graph + checkpoint)
 
 Wave 2:
-  8.  ferrochain-openai-sdk      (standalone; no ferrochain-core dep) [D17-Q5]
-  9.  ferrochain-anthropic-sdk   (standalone) [D17-Q5]
-  10. ferrochain-ollama-sdk      (standalone) [D17-Q5]
-  11. ferrochain-openai          (depends on core + openai-sdk)
-  12. ferrochain-anthropic       (depends on core + anthropic-sdk)
-  13. ferrochain-ollama          (depends on core + ollama-sdk)
-  14. ferrochain-memory          (depends on core; MemoryStore trait)
-  15. ferrochain-standard-tests  (depends on core + all adapter crates)
-  16. ferrochain-mcp             (depends on core + optional providers)
+  10. ferrochain-openai-sdk      (standalone; no ferrochain-core dep) [D17-Q5]
+  11. ferrochain-anthropic-sdk   (standalone) [D17-Q5]
+  12. ferrochain-ollama-sdk      (standalone) [D17-Q5]
+  13. ferrochain-prompts         (depends on core; D21/ADR-015)
+  14. ferrochain-vectorstores    (depends on core; D21/ADR-014)
+  15. ferrochain-openai          (depends on core + openai-sdk)
+  16. ferrochain-anthropic       (depends on core + anthropic-sdk)
+  17. ferrochain-ollama          (depends on core + ollama-sdk)
+  18. ferrochain-standard-tests  (depends on core + all adapter crates)
+  19. ferrochain-mcp             (depends on core + optional providers)
 ```
 
 **Note:** ferrochain-graph depends on ferrochain-sandbox for tool dispatch. However,
 sandbox is in the same Wave 1 build. The dependency is via a trait object
 (`dyn SandboxBackend`), enabling ferrochain-sandbox to compile independently before
-ferrochain-graph binds it.
+ferrochain-graph binds it. ferrochain-tools also depends on ferrochain-sandbox
+(ADR-020 Decision 1) and builds after sandbox (position 7 after position 4).
 
 ## Invariant: No Circular Dependencies
 

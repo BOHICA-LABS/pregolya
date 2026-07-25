@@ -6,10 +6,14 @@ slug: crate-topology-sdk-split
 title: "Crate Topology and SDK Split for Provider Crates (D17-Q5)"
 status: accepted
 producer: architect
+date: "2026-07-14"
 timestamp: 2026-07-14T12:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
-decisions: [D1, D6, D13, D17]
+decisions: [D1, D6, D13, D17, D21, D23]
+subsystems_affected: [SS-01, SS-02, SS-03, SS-04, SS-05, SS-06, SS-07, SS-08, SS-09, SS-10, SS-11, SS-12, SS-13, SS-14, SS-15, SS-16, SS-17, SS-18, SS-19, SS-20, SS-21, SS-22, SS-23]
+supersedes: ~
+superseded_by: ~
 ---
 
 # ADR-007: Crate Topology and SDK Split
@@ -28,8 +32,19 @@ the dependency graph).
 ## Scope
 
 This ADR covers: how provider crates are structured, what the SDK vs adapter crate boundary
-is, and the full Cargo workspace crate roster (18 crates, derived from D6 + D1 + D13 +
-P2-05 + ADR-008 + D17-Q5). See also ARCH-INDEX.md §Canonical Crate Roster.
+is, and the full Cargo workspace crate roster (18 crates at original decision, derived from
+D6 + D1 + D13 + P2-05 + ADR-008 + D17-Q5; since expanded to 21 by D21+D23 — see
+ARCH-INDEX.md §Canonical Crate Roster as source of truth).
+
+## Rationale
+
+Three forces drive the two-crate SDK split:
+
+1. **BC-2.08.006 enforcement requirement.** The behavioral contract mandates `cargo check -p ferrochain-<provider>-sdk` succeeds without ferrochain-core appearing in the dependency graph. This postcondition cannot be satisfied by module-level feature-flag isolation: `cargo check` on a single crate resolves all features in its Cargo.toml workspace context, so a feature-gated `dep:ferrochain-core` would still appear in the lock file under default workspace resolution. Only a crate boundary creates the hard dependency exclusion that TV-001 requires.
+
+2. **Independent publishability and usability.** SDK crates (`ferrochain-openai-sdk`, etc.) are standalone wire clients publishable and usable without any ferrochain runtime. Users who only need a typed OpenAI API client should not pull the ferrochain-core + graph + checkpoint dependency tree.
+
+3. **Clean dependency direction.** The adapter crate (outer layer) depends on the core (inner layer), never the reverse. Embedding SDK code inside a core-dependent crate would invert this relationship and contaminate the standalone client with LangChain semantics.
 
 ## Decision: Two-Crate Architecture for Provider Providers (D17-Q5)
 
@@ -68,7 +83,7 @@ ferrochain-openai/            ← Runnable adapter (depends on core + sdk)
 succeeds without ferrochain-core. This separation cannot be enforced by Cargo at the module
 level — only the crate boundary creates the required dependency isolation. Module-level
 separation via feature flags cannot satisfy BC-2.08.006 TV-001 (Cargo.lock check). See
-Rejected Alternatives below.
+Alternatives Considered below.
 
 ## Full Crate Roster (18 published crates + xtask)
 
@@ -100,15 +115,22 @@ Rejected Alternatives below.
 **Not published:** `xtask` (workspace binary), `ferrochain-community` (post-v1, placeholder only).
 **Total in workspace:** 18 published + xtask.
 
+> **Forward Amendment (FIX-BURST-265, 2026-07-25):** The 18-crate table above reflects the
+> original D7 decision. The roster has since expanded to **21 published crates** by D21
+> (+ferrochain-prompts [#19], +ferrochain-vectorstores [#20]) and D23 (+ferrochain-tools
+> [#21]). The derivation formula is now: D6 (9) + D1 + D13 + P2-05 + ADR-008 + D17-Q5
+> (3×-sdk) + D21 (+prompts, +vectorstores) + D23 (+tools) = 21 published.
+> **See ARCH-INDEX.md §Canonical Crate Roster as the authoritative source of truth.**
+
 ## Consequences
 
 - `ferrochain-standard-tests` dev-depends on each adapter crate (ferrochain-openai etc.).
 - `ferrochain-macros` is re-exported from `ferrochain-core` via `pub use ferrochain_macros::*`.
 - The re-export facade `ferrochain` is optional; users can depend on individual crates.
 - Provider SDK crates (`*-sdk`) have no ferrochain-core dep and are standalone usable.
-- R6 namespace reservation: publish-all.sh must cover all 18 crates. Time-sensitive.
+- R6 namespace reservation: publish-all.sh must cover all 21 crates. Time-sensitive.
 
-## Rejected Alternatives
+## Alternatives Considered
 
 ### Alternative A: Modules-Not-Crates (feature-flag isolation)
 
@@ -127,9 +149,20 @@ is the only Cargo mechanism that enforces hard dependency exclusion. This altern
 violates BC-2.08.006 postcondition 1 and EC-003 (translation logic must not live in the
 SDK crate, but module colocation makes this harder to enforce).
 
+## Source / Origin
+
+| Source | Role |
+|--------|------|
+| D17-Q5 | Stakeholder decision mandating standalone SDK crate split for all provider pairs |
+| BC-2.08.006 | Behavioral contract defining the postcondition (`cargo check -p *-sdk` must succeed without ferrochain-core) and enforcement mechanism (TV-001 Cargo.lock check) |
+| ADV-P1D-PASS-3 F-P3-02 | Adversarial finding that identified the original modules-not-crates approach as insufficient to satisfy BC-2.08.006 TV-001; triggered revision to two-crate architecture |
+| D21 | Ecosystem-parity scope expansion (2026-07-20): added ferrochain-prompts (#19) and ferrochain-vectorstores (#20) to the workspace roster |
+| D23 | Scope expansion (2026-07-22): added ferrochain-tools (#21), promoted ferrochain-memory to Wave 1 |
+
 ## Changelog
 
 | Date | Change | Authority |
 |------|--------|-----------|
 | 2026-07-14 (burst 80) | Initial ADR — decision was modules-not-crates | architect |
-| 2026-07-14 (burst 81) | Revised: decision changed to standalone crates per ADV-P1D-PASS-3 F-P3-02; modules-not-crates moved to Rejected Alternatives. Roster expanded to full 18. | architect, ADV-P1D-PASS-3 F-P3-02 |
+| 2026-07-14 (burst 81) | Revised: decision changed to standalone crates per ADV-P1D-PASS-3 F-P3-02; modules-not-crates moved to Alternatives Considered. Roster expanded to full 18. | architect, ADV-P1D-PASS-3 F-P3-02 |
+| 2026-07-25 (FIX-BURST-265) | F-P163-05: Add forward-amendment note (18-crate table reflects original D7; expanded to 21 by D21+D23; ARCH-INDEX is SoT). Fix Consequences R6: 18→21 crates. Add template compliance sections (Rationale, Alternatives Considered, Source / Origin). Add D21/D23 to decisions list. | architect |

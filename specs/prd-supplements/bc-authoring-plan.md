@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.50"
+version: "2.51"
 status: active
 producer: product-owner
 total_standing_gates: 36
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.51 (F-P163-01/FIX-BURST-265/2026-07-25): Gate #27 ARCH-ANCHOR CRATE-RESOLUTION CENSUS updated for 21-crate roster (closes F-P163-01 [process-gap, HIGH]). (1) Rule 1 label: 'ADR-007 18-crate roster (+xtask)' → 'ARCH-INDEX §Canonical Crate Roster (21 published crates + xtask)' — ARCH-INDEX is the authoritative living source of truth, not ADR-007 (which documents the original 18-crate topology). (2) Embedded roster block relabeled 'ARCH-INDEX §Canonical Crate Roster (source of truth — 21 published crates)'; three new crates appended: ferrochain-prompts (D21/ADR-015), ferrochain-vectorstores (D21/ADR-014), ferrochain-tools (D23/ADR-020); disambiguation note added (ADR-007 is original 18; ARCH-INDEX is SoT). (3) Three ownership rules added: prompts::template/chat_template/few_shot/injection_guard → ferrochain-prompts (SS-18); vectorstores::store/retriever/memory/similarity/mmr → ferrochain-vectorstores (SS-20/SS-21); tools::fs/shell/search → ferrochain-tools (SS-23). (4) Census command prose: '18-crate roster' → '21-crate roster'. Sanity-check results: BC-2.21.003 (vectorstores::similarity) PASS rule 1 (ferrochain-vectorstores ∈ 21-crate roster) + PASS rule 2 (similarity owned by ferrochain-vectorstores per module-decomp SS-21); SS-18 BC (BC-2.18.004, ferrochain-prompts/injection_guard) PASS rule 1 + PASS rule 2 (injection_guard owned by ferrochain-prompts SS-18); SS-23 BC (BC-2.23.005, ferrochain-tools/tools-shell) PASS rule 1 + PASS rule 2 (tools::shell owned by ferrochain-tools SS-23). Sweep for other live '18-crate' or '18 crates' in bc-authoring-plan.md (changelog rows exempt): zero remaining hits."
   - "2.50 (F-P161-01/FIX-BURST-262/2026-07-25): Three NORMATIVE version pins de-pinned + five HISTORICAL pins allowlisted (TD-VSDD-091 stable-anchor enforcement, F-P161-01). De-pinned: (1) Gate #12 lifecycle-arrow census authority 'BC-2.12.003 v1.4 PC7-PC9' → 'BC-2.12.003 PC7-PC9'. (2) Gate #12 source citation 'F-P117-01 adjudication (fix burst 120, BC-2.12.003 v1.4)' → '(fix burst 120, BC-2.12.003)'. (3) Type-census table BudgetInfo authority 'BC-2.10.003 v1.2 PC5/INV/TV-007' → 'BC-2.10.003 PC5/INV/TV-007'. Allowlisted (HISTORICAL-RECORD prose, version-pin-allowlist.txt entries at post-edit line numbers): 1677 (BC-2.08.004 v1.2 in ADV-P1D-PASS-56-COMPLETION RESOLVED note), 1707 (BC-2.04.002 v1.3 / BC-2.04.007 v1.6 / BC-2.08.002 v1.4 / BC-2.08.006 v1.4 / BC-2.08.014 v1.3 in F-P112-02 fix-burst record), 2115 (BC-2.08.014 v1.2), 2119 (BC-2.04.007 v1.5), 2125 (BC-2.08.013 v1.2) in F-P108-04 motivating-instance records."
   - "2.49 (burst-255/OBS-P154-A/2026-07-24): Gate #35 VP PROPERTY-BODY COHERENCE extended — TRIGGER now also fires on edits to VP-scope bullets in BC-2.17.001.md (SS-17 Kani-harness-scope authority); ACTION extended with step 7: VP-NNN.md INTERNAL consistency check: §Proof Method table coverage claims, §Proof Harness Skeleton proof-fn inventory, §BC Traceability scope statements, and §Proof Obligations outcome-type claims must all agree internally AND with the citing BC-2.17.001 bullet; a coverage claim ('covers all N variants') must be backed by an actual harness fn per claimed variant or an explicit peel-off/out-of-scope statement. Root cause of F-P154-01/02: burst-254 VP-011 bullet modernization propagated to BC/index rows but not cross-checked against VP-011.md §Proof Method table and §Proof Harness Skeleton which contradicted each other internally."
   - "2.48 (F-P149-02/burst-250/2026-07-24): Three live-body version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P149-02). (1) Retired-identifiers table: 'ADR-009 v1.1 confirms same rename' → 'ADR-009 §Decision confirms same rename' (PolicyDecision type is listed in ADR-009 §Decision / §Consequences). (2) Gate #20 census rule: 'per ADR-010 v1.1)' → 'per ADR-010 §Component Axis Expansion (D21))' (D21 component-axis expansion is the named section in ADR-010). (3) Gate #27 ownership rule: 'ADR-009 v1.2 Option 3 places budget TRAIT/types' → 'ADR-009 §Decision (Option 3 split) places budget TRAIT/types' (Option 3 is the chosen option in ADR-009 §Decision)."
@@ -1116,18 +1117,23 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     Every `ferrochain-<crate>/src/...` path (and `xtask/` path) appearing in any BC's
     `## Architecture Anchors` section must satisfy two conditions:
 
-    1. **Roster membership:** The crate name must exist in the ADR-007 18-crate roster (+xtask).
-       Crate names not in the roster are invalid regardless of whether the file exists.
+    1. **Roster membership:** The crate name must exist in the ARCH-INDEX §Canonical Crate Roster
+       (21 published crates + xtask). Crate names not in the roster are invalid regardless of
+       whether the file exists.
     2. **Ownership correctness:** The module cited must be owned by the named crate per
        `module-decomposition.md` responsibilities and ADR-007 crate responsibility descriptions.
        A path that uses a VALID crate name but assigns a module owned by a DIFFERENT crate is a
        wrong-crate assignment and is a HIGH-severity error.
 
-    **ADR-007 18-crate roster (authoritative):** ferrochain, ferrochain-core, ferrochain-graph,
-    ferrochain-checkpoint, ferrochain-openai, ferrochain-anthropic, ferrochain-ollama,
-    ferrochain-community, ferrochain-splitters, ferrochain-mcp, ferrochain-standard-tests,
-    ferrochain-server, ferrochain-sandbox, ferrochain-memory, ferrochain-macros,
-    ferrochain-openai-sdk, ferrochain-anthropic-sdk, ferrochain-ollama-sdk. Plus: xtask.
+    **ARCH-INDEX §Canonical Crate Roster (source of truth — 21 published crates):** ferrochain,
+    ferrochain-core, ferrochain-graph, ferrochain-checkpoint, ferrochain-openai,
+    ferrochain-anthropic, ferrochain-ollama, ferrochain-community, ferrochain-splitters,
+    ferrochain-mcp, ferrochain-standard-tests, ferrochain-server, ferrochain-sandbox,
+    ferrochain-memory, ferrochain-macros, ferrochain-openai-sdk, ferrochain-anthropic-sdk,
+    ferrochain-ollama-sdk, ferrochain-prompts, ferrochain-vectorstores, ferrochain-tools.
+    Plus: xtask. (Note: ADR-007 documents the original 18-crate topology; D21 added
+    ferrochain-prompts and ferrochain-vectorstores; D23 added ferrochain-tools. ARCH-INDEX
+    §Canonical Crate Roster is the authoritative living source of truth, not ADR-007.)
 
     **Key ownership rules (from module-decomposition.md):**
     - StateGraph builder (`add_node`, `add_edge`, `compile`, `graph::definition`) → **ferrochain-graph**
@@ -1138,13 +1144,16 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     - Proc-macro implementations (`#[tool]`, `#[entrypoint]`, `#[task]`) → **ferrochain-macros**
     - Re-exported macro trait hooks (e.g., `Tool` re-export) → **ferrochain-core** (defensible re-export)
     - CheckpointSaver, session index, logical clock, lineage, encryption → **ferrochain-checkpoint**
+    - `prompts::template`, `prompts::chat_template`, `prompts::few_shot`, `prompts::injection_guard` → **ferrochain-prompts** (SS-18; D21/ADR-015)
+    - `vectorstores::store`, `vectorstores::retriever`, `vectorstores::memory`, `vectorstores::similarity`, `vectorstores::mmr` → **ferrochain-vectorstores** (SS-20/SS-21; D21/ADR-014)
+    - `tools::fs` (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool), `tools::shell` (BashTool), `tools::search` (GrepTool) → **ferrochain-tools** (SS-23; D23/ADR-020)
 
     **Census command:**
     ```
     grep -rh "## Architecture Anchors" --include="*.md" -A 10 .factory/specs/behavioral-contracts/ \
       | grep "ferrochain-" | grep -oE "ferrochain-[a-z-]+" | sort -u
     ```
-    Verify each extracted crate name against the 18-crate roster. Then for any path containing
+    Verify each extracted crate name against the 21-crate roster. Then for any path containing
     `/src/`, verify module ownership against module-decomposition.md.
 
     **Quick wrong-crate check (run after any BC anchor edit):**
@@ -2376,6 +2385,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.51 | 2026-07-25 | FIX-BURST 265 (PO share): Gate #27 ARCH-ANCHOR CRATE-RESOLUTION CENSUS updated — stale 18-crate roster replaced with 21-crate ARCH-INDEX §Canonical Crate Roster as source of truth (closes F-P163-01 [process-gap, HIGH]). Rule 1 label updated to cite ARCH-INDEX §Canonical Crate Roster (21 published crates + xtask). Embedded roster relabeled and extended with ferrochain-prompts (D21), ferrochain-vectorstores (D21), ferrochain-tools (D23); disambiguation note added (ADR-007 = original 18-crate topology; ARCH-INDEX = living SoT). Three ownership rules added: prompts::*/injection_guard → ferrochain-prompts (SS-18); vectorstores::store/retriever/memory/similarity/mmr → ferrochain-vectorstores (SS-20/21); tools::fs/shell/search → ferrochain-tools (SS-23). Census command prose updated: '18-crate' → '21-crate'. | FIX-BURST-265, F-P163-01 |
 | 2.50 | 2026-07-25 | FIX-BURST 262 (PO share): Three NORMATIVE version pins de-pinned + five HISTORICAL pins allowlisted (TD-VSDD-091 stable-anchor enforcement, F-P161-01). De-pinned: (1) Gate #12 lifecycle-arrow census authority 'BC-2.12.003 v1.4 PC7-PC9' → 'BC-2.12.003 PC7-PC9'; (2) Gate #12 source citation 'BC-2.12.003 v1.4' → 'BC-2.12.003'; (3) type-census BudgetInfo authority 'BC-2.10.003 v1.2 PC5/INV/TV-007' → 'BC-2.10.003 PC5/INV/TV-007'. Allowlisted HISTORICAL-RECORD prose (post-edit line numbers): 1677 (BC-2.08.004 v1.2 RESOLVED note), 1707 (five BC version pins in F-P112-02 fix-burst record), 2115/2119/2125 (BC-2.08.014 v1.2, BC-2.04.007 v1.5, BC-2.08.013 v1.2 in F-P108-04 motivating instances). | FIX-BURST-262, F-P161-01 |
 | 2.47 | 2026-07-24 | FIX-BURST 248 (PO side): Gate #36 VP↔BC RED-GATE PARITY minted (standing gate — every VP-NNN.md must carry explicit red_gate: frontmatter (true or false, never absent); red_gate: true requires anchor BC frontmatter red_gate: true + BC-INDEX Red Gate membership + verifiable red_gate_source citation (anti-fabrication, quote-verifiable); on divergence BC frontmatter + BC-INDEX census win; VP-side corrections to architect, BC-side to product-owner). Motivating instance: VP-011 red_gate: true with fabricated ADR-018 citation; anchor BC-2.05.007 adjudicated false. F-P147-02: error-taxonomy.md v1.37→v1.38 E-TOOLS-002 placeholder count Two→Three corrected; taxonomy-wide scan PASS (10 other count-stating rows all correct). total_standing_gates 35→36. | burst-248, F-P147-02, F-P147-03 |
 | 2.46 | 2026-07-24 | FIX-BURST 247: Gate #35 VP PROPERTY-BODY COHERENCE minted (standing gate — on any edit to VP-NNN.md or verification-architecture.md catalog entry, diff property statement + variant/branch coverage + harness sketch between the two; VP-NNN.md wins on divergence per CLAUDE.md rule 4; routing: architect scope for verification-architecture.md fixes); SS-23 BC title error-code enumeration policy added as non-numbered policy note in Authoring Guidelines (titles enumerate ALL and ONLY raised codes; Ok-path payload flags excluded); Batch 20 6 BC title rows synced to exact H1 titles per bc_h1_is_title_source_of_truth (001: E-TOOLS-001/002/008; 002: E-TOOLS-001/008; 003: fuzzy_threshold token restored + E-TOOLS-001/003/008; 004: E-TOOLS-001/008; 005: BashOutput segment added + payload flag E-TOOLS-005 removed + E-TOOLS-004/007; 006: Hermetic segment added + E-TOOLS-001/008/009). input-hash updated bacf294→b2c6f44. total_standing_gates 34→35. | burst-247, F-P146-02, OBS-P146-C |

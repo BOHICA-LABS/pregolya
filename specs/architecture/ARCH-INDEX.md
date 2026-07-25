@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.11"
+version: "1.12"
 status: active
 producer: architect
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -16,6 +16,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.12 (FIX-BURST-265/F-P163-04/2026-07-25): Fix Canonical Crate Roster row #14 ferrochain-memory Wave 2→1 (D23 item 3 promotion, consistent with Subsystem Registry SS-15 Wave 1 and module-decomposition). Per-row wave audit: all other 20 rows verified consistent with Subsystem Registry — sole mismatch was row #14. Also: frontmatter timestamp advanced to 2026-07-25."
   - "1.11 (FIX-BURST-248/F-P147-01/2026-07-24): Remove stale 'red_gate' label from D23 VP seeding note (line 179) — VP-011 is NOT Red-Gated per BC-2.05.007 red_gate: false (product-owner authority). Note corrected from 'Kani P0 red_gate' to 'Kani P0'."
   - "1.10 (2026-07-23): F-P144-03 — Document Map module-decomposition descriptor corrected 18-crate→21-crate catalog (D21 +2, D23 +1 expansions)."
   - "1.9 (burst-238/2026-07-23): Stale-handoff sweep — resolve TBD BC ranges in Subsystem Registry (SS-18 001–005, SS-19 001–006, SS-20 001–003, SS-21 001–004, SS-22 001–003; BCs authored D21 burst per bc-authoring-plan); remove stale 'BC ranges TBD' trailing clauses from D21 and D23 Capability Addition notes; resolve stale VP section note (BC-2.23.005 CONFIGURATION→VAL contradiction — content change missed in v1.8; now marked RESOLVED)."
@@ -120,7 +121,7 @@ changelog:
 | 11 | ferrochain-standard-tests | D1 | 2 | YES |
 | 12 | ferrochain-server | D13 | 1 | YES |
 | 13 | ferrochain-sandbox | P2-05 | 1 | YES |
-| 14 | ferrochain-memory | P2-05 | 2 | YES |
+| 14 | ferrochain-memory | P2-05 | 1 | YES |
 | 15 | ferrochain-macros | ADR-008 | 1 | YES |
 | 16 | ferrochain-openai-sdk | D17-Q5 | 2 | YES |
 | 17 | ferrochain-anthropic-sdk | D17-Q5 | 2 | YES |
