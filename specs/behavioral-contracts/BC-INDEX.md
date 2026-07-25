@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.11"
+version: "3.12"
 status: active
 producer: state-manager
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-25T17:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.12 (burst-262/F-P161-03/2026-07-25): F-P161-03 LOW: Carry-Forward Notes #6 and #7 annotated '(later promoted to Wave 1 per D23)' per D23 promotion — Notes #6/#7 previously stated 'assigned wave 2' for ferrochain-memory SS-15 and SS-16 respectively, without acknowledging subsequent D23 Wave-1 promotion; now reads 'assigned wave 2, later promoted to Wave 1 per D23' following the parenthetical-annotation convention of Note #5."
   - "3.11 (burst-261/F-P160-01/F-P160-02/2026-07-25): F-P160-01 MED: BC-2.03.001 v1.6→v1.7 — Description corrected from 'exceeds config.recursion_limit' to the precise ceiling formula (stop = step_at_invoke_start + config.recursion_limit + 1; limit=5 → 6 steps execute, limit=25 → 26 steps execute); TD-VSDD-060 sibling sweep — BC-2.08.002 v1.4→v1.5 (VP-BC208002-01 description had implied ≤25 steps; corrected to 'within recursion_limit + 1 super-steps per invocation segment'; normative authority is BC-2.03.001 PC5); 7 sites audited (BC-2.01.003, BC-2.03.002/003, BC-2.04.006, interface-definitions/BC-2.03.001/error-taxonomy) all correct. F-P160-02 LOW: BC-2.04.006 v1.5→v1.6 — reciprocal NE-12 Related-BC link added (BC-2.15.002 cites this BC but no reciprocal existed; bidirectional advisory-link default convention)."
   - "3.10 (burst-260/F-P159-01/OBS-P159-A/2026-07-25): F-P159-01 HIGH: BC-2.15.001 v1.2→v1.3, BC-2.15.002 v1.2→v1.3, BC-2.15.003 v1.3→v1.4 — SS-15 trio body Traceability tables carried stale P2/Wave-2 post-D23 promotion; all 6 cells fixed to P1/Wave-1. OBS-P159-A adjudication: VP-MEM-01/02 (BC-2.15.001), VP-MEM-03/04 (BC-2.15.002), VP-MEM-05/06 (BC-2.15.003) all phases Post-v1→v1 — tenant isolation is v1 security-critical behavior; Wave-1 promotion applies; BC-2.15.004/005/006 reverse-contamination check clean."
   - "3.9 (burst-259/F-P158-01/02/2026-07-24): F-P158-01 MED: BC-2.16.003 v1.3→v1.4 — tool_name dropped from retry.circuit_breaker_disabled emission in EC-005; CircuitBreaker::always_closed() is a zero-argument constructor; tool-agnostic message template per sibling retry.unlimited_policy_constructed; observability v1.2→v1.3. F-P158-02 LOW: BC-2.12.004 v1.4→v1.5 — cron queue-full boundary adjudicated >= (ScheduleQueueFull fires when queue length meets or exceeds capacity; at-capacity semantics); error-taxonomy v1.39→v1.40; observability trigger-condition aligned."
@@ -228,13 +229,14 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 3. **vp_seed frontmatter inconsistency** — RESOLVED. BC-2.03.001: `vp_seed: true, vp_id: VP-001`. BC-2.04.006: normalized `kani_vp_seed` → `vp_seed: true, vp_id: VP-002`. BC-2.13.004: `vp_seed: true, vp_id: VP-003`.
 4. **red_gate_required vs red_gate** — RESOLVED. BC-2.07.002: `red_gate_required: true` → `red_gate: true, red_gate_source: R8`.
 5. **Proc-macro BCs (Phase-1b)** — ADDED. BC-2.08.010/011/012 authored from ADR-004 + ADR-008 acceptance (D5 gate resolved). Batch 13 in bc-authoring-plan.md. Total: 83 → 86 BCs; P1 count: 27 → 30 (later grown to 95 via D20).
-6. **SS-15 wave drift (ADV-P1D-PASS-3 F-P3-06)** — RESOLVED. BC-2.15.001/002/003 frontmatter `wave: post-v1` → `wave: 2`; Traceability rows updated to `Wave 2`. Aligns with ARCH-INDEX §Canonical Crate Roster (ferrochain-memory assigned wave 2).
-7. **SS-16 wave drift (ADV-P1D-PASS-4 F-P4-03)** — RESOLVED. BC-2.16.001/002/003 frontmatter `wave: Post-v1` → `wave: 2`; Traceability rows updated to `Wave 2`. Stale Note rows (E-RETRY-001/002/003 "requires addition to error-taxonomy") removed — all three codes were already in RETRY component. Aligns with ARCH-INDEX §Canonical Crate Roster (SS-16 assigned wave 2).
+6. **SS-15 wave drift (ADV-P1D-PASS-3 F-P3-06)** — RESOLVED. BC-2.15.001/002/003 frontmatter `wave: post-v1` → `wave: 2`; Traceability rows updated to `Wave 2`. Aligns with ARCH-INDEX §Canonical Crate Roster (ferrochain-memory assigned wave 2, later promoted to Wave 1 per D23).
+7. **SS-16 wave drift (ADV-P1D-PASS-4 F-P4-03)** — RESOLVED. BC-2.16.001/002/003 frontmatter `wave: Post-v1` → `wave: 2`; Traceability rows updated to `Wave 2`. Stale Note rows (E-RETRY-001/002/003 "requires addition to error-taxonomy") removed — all three codes were already in RETRY component. Aligns with ARCH-INDEX §Canonical Crate Roster (SS-16 assigned wave 2, later promoted to Wave 1 per D23).
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.12 | 2026-07-25 | burst-262/F-P161-03: Carry-Forward Notes #6 and #7 annotated "(later promoted to Wave 1 per D23)" — Notes previously stated wave-2 assignment for SS-15/SS-16 without acknowledging D23 Wave-1 promotion; parenthetical clarifiers added following Note #5 convention. | burst-262 F-P161-03 |
 | 3.11 | 2026-07-25 | burst-261/F-P160-01/02: F-P160-01 MED — BC-2.03.001 v1.6→v1.7 (Description corrected from 'exceeds config.recursion_limit' to precise ceiling formula: stop = step_at_invoke_start + config.recursion_limit + 1; limit=25 → 26 steps execute before halt); TD-VSDD-060 sibling sweep — BC-2.08.002 v1.4→v1.5 (VP-BC208002-01 description corrected from implied ≤25 to 'within recursion_limit + 1 super-steps per invocation segment'; normative authority BC-2.03.001 PC5); 7 recursion-arithmetic corpus sites audited CLEAN. F-P160-02 LOW — BC-2.04.006 v1.5→v1.6 (reciprocal NE-12 Related-BC link to BC-2.15.002 added; bidirectional advisory-link default convention). | burst-261 F-P160-01/02 |
 | 3.10 | 2026-07-25 | burst-260/F-P159-01/OBS-P159-A: F-P159-01 HIGH — BC-2.15.001 v1.2→v1.3, BC-2.15.002 v1.2→v1.3, BC-2.15.003 v1.3→v1.4 (SS-15 trio body Traceability P2/Wave-2→P1/Wave-1; residue from incomplete D23 body sweep). OBS-P159-A: all 6 VP-MEM phases Post-v1→v1 (tenant isolation v1 security-critical; Wave-1 promotion); BC-2.15.004/005/006 reverse-contamination check clean. | burst-260 F-P159-01+OBS-P159-A |
 | 3.9 | 2026-07-24 | burst-259/F-P158-01/02: F-P158-01 MED: BC-2.16.003 v1.3→v1.4 — tool_name dropped from retry.circuit_breaker_disabled emission in EC-005; zero-argument constructor; tool-agnostic message template per sibling retry.unlimited_policy_constructed; observability v1.2→v1.3. F-P158-02 LOW: BC-2.12.004 v1.4→v1.5 — cron queue-full boundary adjudicated >= (ScheduleQueueFull fires when queue meets or exceeds capacity; at-capacity semantics); error-taxonomy v1.39→v1.40; observability trigger-condition aligned. | burst-259 F-P158-01/02 |

@@ -7,7 +7,7 @@ title: "MCP Server Module Placement in ferrochain-mcp (CAP-021)"
 status: accepted
 producer: architect
 timestamp: 2026-07-15T00:00:00Z
-version: "1.2"
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D19, D20]

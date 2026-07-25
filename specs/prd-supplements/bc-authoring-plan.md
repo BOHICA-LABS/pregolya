@@ -1,16 +1,16 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.49"
+version: "2.50"
 status: active
 producer: product-owner
 total_standing_gates: 36
-timestamp: 2026-07-24T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "8d701e6"
+input-hash: "1012f3c"
 traces_to: prd.md
 total_bcs: 129
 total_batches: 20
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.50 (F-P161-01/FIX-BURST-262/2026-07-25): Three NORMATIVE version pins de-pinned + five HISTORICAL pins allowlisted (TD-VSDD-091 stable-anchor enforcement, F-P161-01). De-pinned: (1) Gate #12 lifecycle-arrow census authority 'BC-2.12.003 v1.4 PC7-PC9' → 'BC-2.12.003 PC7-PC9'. (2) Gate #12 source citation 'F-P117-01 adjudication (fix burst 120, BC-2.12.003 v1.4)' → '(fix burst 120, BC-2.12.003)'. (3) Type-census table BudgetInfo authority 'BC-2.10.003 v1.2 PC5/INV/TV-007' → 'BC-2.10.003 PC5/INV/TV-007'. Allowlisted (HISTORICAL-RECORD prose, version-pin-allowlist.txt entries at post-edit line numbers): 1677 (BC-2.08.004 v1.2 in ADV-P1D-PASS-56-COMPLETION RESOLVED note), 1707 (BC-2.04.002 v1.3 / BC-2.04.007 v1.6 / BC-2.08.002 v1.4 / BC-2.08.006 v1.4 / BC-2.08.014 v1.3 in F-P112-02 fix-burst record), 2115 (BC-2.08.014 v1.2), 2119 (BC-2.04.007 v1.5), 2125 (BC-2.08.013 v1.2) in F-P108-04 motivating-instance records."
   - "2.49 (burst-255/OBS-P154-A/2026-07-24): Gate #35 VP PROPERTY-BODY COHERENCE extended — TRIGGER now also fires on edits to VP-scope bullets in BC-2.17.001.md (SS-17 Kani-harness-scope authority); ACTION extended with step 7: VP-NNN.md INTERNAL consistency check: §Proof Method table coverage claims, §Proof Harness Skeleton proof-fn inventory, §BC Traceability scope statements, and §Proof Obligations outcome-type claims must all agree internally AND with the citing BC-2.17.001 bullet; a coverage claim ('covers all N variants') must be backed by an actual harness fn per claimed variant or an explicit peel-off/out-of-scope statement. Root cause of F-P154-01/02: burst-254 VP-011 bullet modernization propagated to BC/index rows but not cross-checked against VP-011.md §Proof Method table and §Proof Harness Skeleton which contradicted each other internally."
   - "2.48 (F-P149-02/burst-250/2026-07-24): Three live-body version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P149-02). (1) Retired-identifiers table: 'ADR-009 v1.1 confirms same rename' → 'ADR-009 §Decision confirms same rename' (PolicyDecision type is listed in ADR-009 §Decision / §Consequences). (2) Gate #20 census rule: 'per ADR-010 v1.1)' → 'per ADR-010 §Component Axis Expansion (D21))' (D21 component-axis expansion is the named section in ADR-010). (3) Gate #27 ownership rule: 'ADR-009 v1.2 Option 3 places budget TRAIT/types' → 'ADR-009 §Decision (Option 3 split) places budget TRAIT/types' (Option 3 is the chosen option in ADR-009 §Decision)."
   - "2.47 (burst-248/F-P147-02+F-P147-03/2026-07-24): Gate #36 VP↔BC RED-GATE PARITY minted (standing gate [process-gap, F-P147-03]) — every VP-NNN.md must carry explicit red_gate: frontmatter field (true or false, never absent); red_gate: true requires three-way corroboration: anchor BC frontmatter red_gate: true + BC-INDEX Red Gate membership + verifiable red_gate_source citation (anti-fabrication clause: citation must be quote-verifiable in the cited document); on divergence BC frontmatter + BC-INDEX census win over VP (BC supersedes VP for contract-discipline designations per CLAUDE.md Source-of-Truth Precedence); VP-side corrections route to architect; BC-side corrections route to product-owner. Motivating instance: VP-011 carried red_gate: true with fabricated ADR-018 citation (ADR-018 contains no Red Gate mandate); anchor BC-2.05.007 adjudicated false by architect; six VP files lacked the field entirely. F-P147-02: error-taxonomy.md v1.37→v1.38 E-TOOLS-002 placeholder count Two→Three corrected; taxonomy-wide placeholder-count parity scan: 10 other count-stating rows all verified correct (E-MCP-006 Two ✓, E-TMPL-001 Two ✓, E-TMPL-003 One ✓, E-VS-003 Two ✓, E-TOOLS-003 One ✓, E-TOOLS-004 One ✓, E-TOOLS-007 One ✓, E-TOOLS-008 Three ✓, E-TOOLS-009 Two ✓). total_standing_gates 35→36."
@@ -472,13 +473,13 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     as output; `completed_at` is set; it is not cancellable (already terminal — HTTP 409 per
     BC-2.12.003 PC12); it is directly deletable without a prior cancel step; it emits `RunEnd`.
     `interrupted` MUST NOT appear as a terminal state in any lifecycle arrow. The single
-    authority for the state machine is BC-2.12.003 v1.4 PC7-PC9. Run
+    authority for the state machine is BC-2.12.003 PC7-PC9. Run
     `grep -rn "in_progress →\|in_progress→\|→ interrupted\|⇄" .factory/specs/`
     and verify every hit: (a) shows `interrupted` as pausable/resumable, and (b) lists all
     four terminal states `completed | failed | cancelled | summary_halt`. Additionally verify
     no hit enumerates only `completed | failed | cancelled` (three-member set) as the full
     terminal set — every such hit must gain `summary_halt`. Source of truth:
-    ADV-P1D-PASS-12.md §F-P12-01; F-P117-01 adjudication (fix burst 120, BC-2.12.003 v1.4);
+    ADV-P1D-PASS-12.md §F-P12-01; F-P117-01 adjudication (fix burst 120, BC-2.12.003);
     F-P118-01 four-member canonicalization (fix burst 121).
 13. **Anchor-matrix census gate (added P16 — standing gate, subsumes all prior per-axis checks; widened P40 — five-way):**
     After any BC authoring burst, run the full anchor-matrix census across all 95 BCs × 6 axes
@@ -1783,7 +1784,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     | `SkillDescriptor` | SkillStore | inline §SkillStore (interface-definitions.md v2.20 — DEFINED D20 sub-burst 2); fields: name: String, namespace: String, key: String, tags: Vec\<String\> | RESOLVED |
     | `MemoryWriteRequest` | MemoryWriteGuard | inline §MemoryWriteGuard (interface-definitions.md v2.20 — DEFINED D20 sub-burst 2); variants: Add\{namespace, key, value\}, Replace\{namespace, key, old\_value, new\_value\}, Remove\{namespace, key\} | RESOLVED |
     | `WriteGuardDecision` | MemoryWriteGuard | inline §MemoryWriteGuard (interface-definitions.md v2.20 — DEFINED D20 sub-burst 2); variants: Allow, Deny\{reason: String\}, Transform\{sanitized: Value\} | RESOLVED |
-    | `BudgetInfo` | BudgetPolicy (via RunContext.budget\_info) | inline §BudgetPolicy (interface-definitions.md v2.21 — DEFINED D20 TOUCH-UP); fields: tokens\_remaining: Option\<i64\>, steps\_remaining: Option\<u32\>; authority BC-2.10.003 v1.2 PC5/INV/TV-007; name-equality verified | RESOLVED |
+    | `BudgetInfo` | BudgetPolicy (via RunContext.budget\_info) | inline §BudgetPolicy (interface-definitions.md v2.21 — DEFINED D20 TOUCH-UP); fields: tokens\_remaining: Option\<i64\>, steps\_remaining: Option\<u32\>; authority BC-2.10.003 PC5/INV/TV-007; name-equality verified | RESOLVED |
     | `ProviderCredential` | ProviderFallbackPolicy | NOT IN CORPUS — implementer-scope (provider-specific credential shape differs per provider: API key, OAuth token, etc.); flagged for architect | UNRESOLVED |
     | `CredentialRefreshConfig` | ProviderFallbackPolicy | NOT IN CORPUS — implementer-scope (callback/config for automatic credential refresh on auth failure); flagged for architect | UNRESOLVED |
 
@@ -2375,6 +2376,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.50 | 2026-07-25 | FIX-BURST 262 (PO share): Three NORMATIVE version pins de-pinned + five HISTORICAL pins allowlisted (TD-VSDD-091 stable-anchor enforcement, F-P161-01). De-pinned: (1) Gate #12 lifecycle-arrow census authority 'BC-2.12.003 v1.4 PC7-PC9' → 'BC-2.12.003 PC7-PC9'; (2) Gate #12 source citation 'BC-2.12.003 v1.4' → 'BC-2.12.003'; (3) type-census BudgetInfo authority 'BC-2.10.003 v1.2 PC5/INV/TV-007' → 'BC-2.10.003 PC5/INV/TV-007'. Allowlisted HISTORICAL-RECORD prose (post-edit line numbers): 1677 (BC-2.08.004 v1.2 RESOLVED note), 1707 (five BC version pins in F-P112-02 fix-burst record), 2115/2119/2125 (BC-2.08.014 v1.2, BC-2.04.007 v1.5, BC-2.08.013 v1.2 in F-P108-04 motivating instances). | FIX-BURST-262, F-P161-01 |
 | 2.47 | 2026-07-24 | FIX-BURST 248 (PO side): Gate #36 VP↔BC RED-GATE PARITY minted (standing gate — every VP-NNN.md must carry explicit red_gate: frontmatter (true or false, never absent); red_gate: true requires anchor BC frontmatter red_gate: true + BC-INDEX Red Gate membership + verifiable red_gate_source citation (anti-fabrication, quote-verifiable); on divergence BC frontmatter + BC-INDEX census win; VP-side corrections to architect, BC-side to product-owner). Motivating instance: VP-011 red_gate: true with fabricated ADR-018 citation; anchor BC-2.05.007 adjudicated false. F-P147-02: error-taxonomy.md v1.37→v1.38 E-TOOLS-002 placeholder count Two→Three corrected; taxonomy-wide scan PASS (10 other count-stating rows all correct). total_standing_gates 35→36. | burst-248, F-P147-02, F-P147-03 |
 | 2.46 | 2026-07-24 | FIX-BURST 247: Gate #35 VP PROPERTY-BODY COHERENCE minted (standing gate — on any edit to VP-NNN.md or verification-architecture.md catalog entry, diff property statement + variant/branch coverage + harness sketch between the two; VP-NNN.md wins on divergence per CLAUDE.md rule 4; routing: architect scope for verification-architecture.md fixes); SS-23 BC title error-code enumeration policy added as non-numbered policy note in Authoring Guidelines (titles enumerate ALL and ONLY raised codes; Ok-path payload flags excluded); Batch 20 6 BC title rows synced to exact H1 titles per bc_h1_is_title_source_of_truth (001: E-TOOLS-001/002/008; 002: E-TOOLS-001/008; 003: fuzzy_threshold token restored + E-TOOLS-001/003/008; 004: E-TOOLS-001/008; 005: BashOutput segment added + payload flag E-TOOLS-005 removed + E-TOOLS-004/007; 006: Hermetic segment added + E-TOOLS-001/008/009). input-hash updated bacf294→b2c6f44. total_standing_gates 34→35. | burst-247, F-P146-02, OBS-P146-C |
 | 2.45 | 2026-07-23 | BC-2.06.005 Batch 20 title updated: 'Emission on Command::Resume' → 'Emission on Command(resume=…)' per BC-2.05.004 struct kwarg authority and BC-2.06.005 H1 (bc_h1_is_title_source_of_truth). | burst-242, F-P142-03 |

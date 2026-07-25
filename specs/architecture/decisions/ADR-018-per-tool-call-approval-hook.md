@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-23"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.4"
+version: "1.5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-05, SS-06, SS-16]
 changelog:
+  - "1.5 (FIX-BURST-262/F-P161-01/2026-07-25): De-pin 3 live-body BC version pins per TD-VSDD-091 BC-pin variant: (1) Decision 5 — BC-2.06.001 v1.4 → BC-2.06.001; (2) Decision 6 — BC-2.08.010 v1.1 amended → BC-2.08.010 amended; (3) Status section — BC-2.08.010 v1.1 → BC-2.08.010."
   - "1.4 (burst-242/2026-07-23): Fix-242 Command-notation sweep — convert 4 residual enum-variant form Command::Resume(...) occurrences (Decision 1 doc comment, Decision 3 step 6, Decision 3 on-resume paragraph, Decision 4 resume paragraph) to canonical struct kwarg form Command(resume=...). Canonical form per BC-2.05.004 v1.5 + F-P120-01 adjudication."
   - "1.3 (burst-239/2026-07-23): F-P139-05 — reconcile frontmatter date/timestamp mismatch: date corrected from 2026-07-22 to 2026-07-23, matching timestamp 2026-07-23T00:00:00Z (burst-238 canonical date per ARCH-INDEX v1.9)."
   - "1.2 (burst-238/2026-07-23): Stale-handoff sweep — resolve 4 stale PO-must obligations: (1) BC-2.05.008 authored (skip-hook-on-resume invariant, burst-229, active); (2) BC-2.06.004/005 authored (streaming event variants, burst-229, active); (3) BC-2.08.010 v1.1 amended (action_risk macro param, burst-229, active); (4) Status section updated to reflect all BCs delivered and VP-011 seeded."
@@ -153,7 +154,7 @@ engine emits a new streaming event variant `tool_approval_request` carrying
 `{ tool_name, tool_args, action_risk, run_id, prompt }`. A complementary
 `tool_approval_resolved` event is emitted when the resume decision arrives.
 
-The existing 12-variant streaming event taxonomy (BC-2.06.001 v1.4) grows to 14 variants.
+The existing 12-variant streaming event taxonomy (BC-2.06.001) grows to 14 variants.
 BC-2.06.004 and BC-2.06.005 author these two new variants (authored burst-229, active).
 
 ## Decision 6 — Retry / Approval Ordering (CAP-018 Wave Promotion Interaction)
@@ -175,7 +176,7 @@ Each retry attempt flows through `pre_tool_dispatch` independently:
 
 **`#[tool(action_risk = ...)]` macro extension (ADR-008):** The `#[tool]` proc-macro gains
 an optional `action_risk` parameter populating `ToolCallPreview.action_risk` at dispatch
-time. If absent, `action_risk = None`. BC-2.08.010 v1.1 amended to include the
+time. If absent, `action_risk = None`. BC-2.08.010 amended to include the
 `action_risk` attribute parameter (burst-229, active).
 
 ## Rationale
@@ -263,4 +264,4 @@ presenting a dialog for a tool the framework has already classified as persisten
 
 ### Status as of 2026-07-23
 
-Architecture decision accepted. No implementation yet (Phase 1). All BC obligations satisfied: BC-2.05.008 (skip-hook-on-resume invariant), BC-2.06.004/005 (streaming event variants), BC-2.08.010 v1.1 (`action_risk` macro param) — all authored burst-229. VP-011 seeded burst-232 (Kani P0). Implementation deferred to Phase 3.
+Architecture decision accepted. No implementation yet (Phase 1). All BC obligations satisfied: BC-2.05.008 (skip-hook-on-resume invariant), BC-2.06.004/005 (streaming event variants), BC-2.08.010 (`action_risk` macro param) — all authored burst-229. VP-011 seeded burst-232 (Kani P0). Implementation deferred to Phase 3.

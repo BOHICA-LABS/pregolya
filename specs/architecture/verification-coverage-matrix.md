@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "90a1a7f"
+input-hash: "7514587"
 traces_to: ARCH-INDEX.md
 changelog:
   - "2.3 (FIX-BURST-252/2026-07-24): Input-hash cascade refresh — module-decomposition.md v1.22→v1.23 (FIX-BURST-252 F-P151-02+05: fraction f32→f64 in core::budget, CompactionSummary flat fields). No VP-to-Module table or coverage-status changes (core-budget VP-012 mapping, tool, phase, priority, and Notes wording all unchanged — Notes 'OnWatermark arithmetic; Kani P1 (BC-2.10.005)' contains no predicate formula or type annotation requiring update)."

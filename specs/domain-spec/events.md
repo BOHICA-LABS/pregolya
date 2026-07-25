@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: events
-version: "1.10"
+version: "1.11"
 status: active
 producer: business-analyst
-timestamp: 2026-07-24T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -14,6 +14,7 @@ input-hash: "e978d8d"
 traces_to: L2-INDEX.md
 decisions: [D11, D13, D17, D18, D21, D23]
 changelog:
+  - "1.11 (2026-07-25): TD-VSDD-091 BC-pin sweep — de-pin live normative prose: ToolInvoked stream events 'BC-2.06.001 v1.3' → 'BC-2.06.001'. Version pins belong in changelog entries only; live body cites bare BC IDs."
   - "1.10 (2026-07-24): Fix burst 252 BA — ADR-019 v1.4 compaction type canon applied at §CompactionExecuted. (1) Outcome: `messages[compacted_range]` → `messages[compacted_start..=compacted_end]`; CompactionEvent struct → flat `{ compacted_start, compacted_end, … }`. (2) EvidenceJournal entry fields: `compacted_range (RangeInclusive<usize>)` → flat `compacted_start (usize), compacted_end (usize)`. (3) Stream event payload: `compacted_turns: { start, end }` → flat `compacted_start, compacted_end`; mandatory `parent_ids: Vec<RunId>` added. (4) Non-fatal failure paths: `put_writes failure` → `put failure`. TD-VSDD-060 sweep: zero compacted_range / compacted_turns / RangeInclusive occurrences remain in this file's body text (changelog exempt); `put_writes` mentions reviewed — checkpoint-task-write reference in §PregelTask/DI-002 context is legitimate; §CompactionExecuted was the only compaction-related site."
   - "1.9 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 3 enum-variant form occurrences of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Sites: §ToolApprovalResolved description (line 109), §ToolApprovalResolved Trigger (line 110), §StreamEventEmitted Trigger (line 149). TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text."
   - "1.8 (F-P139-01/02, fix burst 239, 2026-07-23): §CompactionExecuted Outcome: BC-2.04.001 immutability citation corrected to BC-2.04.001 Inv-5 (checkpoint append-only — records never deleted or mutated in place). §CompactionExecuted EvidenceJournal entry fields: tokens_remaining_after type corrected from u64 to Option<i64> to match BC-2.06.006 PC-1 / BC-2.06.001 PC2 / interface-definitions §BudgetInfo (None when no token ceiling; negative on Deny). TD-VSDD-060 sweep: no other stale BC-2.04.001 immutability citations or tokens_remaining_after: u64 renderings found in file."
@@ -130,7 +131,7 @@ A Tool Runnable was called by the execution engine in response to a `ContentBloc
 - **Trigger:** Model output contains a `ContentBlock::ToolCall` block; execution engine dispatches
 - **Preconditions:** Tool registered; policy allows invocation
 - **Outcome:** `ToolMessage` produced (BC-2.09.002); GuardrailHook fired on result content as `IngressContent::ToolResult` before model context entry (DI-012)
-- **Stream events:** `tool_start`, `tool_stream` (for streaming tools), `tool_end` (carries post-guardrail ToolResult — content is guardrail-filtered per BC-2.06.001 v1.3; Fail/Transform outcomes emit `guardrail_decision` before `tool_end`)
+- **Stream events:** `tool_start`, `tool_stream` (for streaming tools), `tool_end` (carries post-guardrail ToolResult — content is guardrail-filtered per BC-2.06.001; Fail/Transform outcomes emit `guardrail_decision` before `tool_end`)
 
 ### GuardrailChecked
 A GuardrailHook evaluated content at an ingress boundary.

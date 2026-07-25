@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.13"
+version: "1.14"
 status: active
 producer: business-analyst
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 changelog:
+  - "1.14 (2026-07-25): TD-VSDD-091 BC-pin sweep — de-pin live normative prose: OnCeiling variants annotation 'BC-2.10.003 v1.2 + BC-2.10.004' → 'BC-2.10.003 + BC-2.10.004'. Version pins belong in changelog entries only; live body cites bare BC IDs."
   - "1.13 (burst-241 F-P141-05, 2026-07-23): Run entity: add error: Option<FerrochainError> field (BC-2.12.003 PC13/PC16 + invariant 'Run error populated ONLY when status=failed'). The field was absent despite being a first-class Read-Run response field per PC13 and PC16. output/error symmetry documented: output is Some when status∈{completed, summary_halt}; error is Some when status=failed; all other states both are None. Wire representation of error exposes {code, message, component, category} subset of FerrochainError (RFC-7807 compatible, PC16)."
   - "1.12 (burst-226, 2026-07-21): F-P131-05 adjudication — §ProvenanceTag: disambiguation note added clarifying that ProvenanceTag (SS-11, 3-field ingress-boundary audit struct) has no trust-level dimension, and that template-composition trust is handled by TrustLevel in ferrochain-prompts: prompts::template (entities-graph.md §TrustLevel). The two axes must not be conflated (ADR-015 §Decision 3). TD-VSDD-060 sweep: no ProvenanceTag trust-variant residue in this file."
   - "1.11 (F-P121-01, fix burst 124, 2026-07-19): §Cross-Section Relationships: 'produces ToolResult → GuardrailHook fires → content enters Message' → 'produces ToolMessage (BC-2.09.002) → GuardrailHook fires on content as IngressContent::ToolResult → filtered content enters model context'. TD-VSDD-060 sweep: this was the only ToolResult-as-ContentBlock site in this file; fixed."
@@ -98,7 +99,7 @@ Configuration data for token-ceiling thresholds and ceiling-response behavior fo
   - `soft_limit: Option<u64>` — token count at which `PolicyDecision::Escalate` is returned; `None` = no soft ceiling
   - `hard_limit: Option<u64>` — token count at which `PolicyDecision::Deny` is returned; `None` = no hard ceiling
   - `on_ceiling: OnCeiling` — engine behavior when the hard ceiling is reached
-- **OnCeiling variants (verbatim — BC-2.10.003 v1.2 + BC-2.10.004):** `Halt` | `Escalate` | `Summarize { summarize_prompt: String }`
+- **OnCeiling variants (verbatim — BC-2.10.003 + BC-2.10.004):** `Halt` | `Escalate` | `Summarize { summarize_prompt: String }`
   - `Halt` — stop run immediately; transition to `failed` with E-BUDGET-001
   - `Escalate` — suspend via HITL interrupt; awaits `BudgetResume::Extend` or `BudgetResume::Halt`
   - `Summarize { summarize_prompt: String }` — one final LLM call using the prompt; transition to `summary_halt`

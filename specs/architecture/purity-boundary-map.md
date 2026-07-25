@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.16"
+version: "1.17"
 status: active
 producer: architect
 timestamp: 2026-07-24T00:00:00Z
@@ -10,10 +10,11 @@ phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
-input-hash: "e77e24e"
+input-hash: "208f641"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.17 (FIX-BURST-262/F-P161-01/2026-07-25): De-pin live-body BC version pin per TD-VSDD-091 BC-pin variant: core::budget Pure Core row — BC-2.10.003 v1.2 + BC-2.10.004 → BC-2.10.003 + BC-2.10.004."
   - "1.16 (FIX-BURST-250/F-P149-02/2026-07-24): De-pin volatile ADR version: prompts::injection_guard Pure Core row `ADR-015 v1.3 / SS-18` → `ADR-015 Decision 2/3 / SS-18` (Decision 2 §Template Slot Trust Model covers SlotTrustPolicy/TrustRequired; Decision 3 §TrustLevel Classification and Injection Prevention covers TrustLevel/injection-check behavior; both are live-body cites, so version pin removed per TD-VSDD-091/D18-P84-A)."
   - "1.15 (burst-241/2026-07-23): F-P141-02 — expand Purity Enforcement Rule 3 from VP-001/002/003 to all 9 Kani VPs (6 P0 + 3 P1). VP-009/010/011 confirmed P0; all 9 Kani harness targets must operate exclusively on pure-core sync functions."
   - "1.14 (burst-238/2026-07-23): Stale-handoff sweep — remove stale 'VP-006 candidate' label on prompts::injection_guard Pure Core row; VP-006 was seeded in burst-223 (D21, VP-INDEX v1.2, Kani P1). Replace with 'VP-006 (Kani P1, seeded burst-223)'."
@@ -80,7 +81,7 @@ side effects. Kani proofs operate here.
 | `splitters::parity` | ferrochain-splitters | deterministic equality check against golden reference vectors; no I/O (R8 / BC-2.07.002) | — |
 | `core::context_mutation` | ferrochain-core | definitions-only: `ContextSourceSpec`, `ContextMutationConfig` pure structs; no execution logic (ADR-012 Decision 1) | — |
 | `core::write_guard` | ferrochain-core | definitions-only: `MemoryWriteRequest`, `MemoryWriteGuard` trait (`validate()` synchronous, no I/O per ADR-012 Decision 1), `WriteGuardDecision` | — |
-| `core::budget` | ferrochain-core | definitions-only: `BudgetPolicy` trait (`evaluate()` pure, no async, no I/O per ADR-009 Option 3), `PolicyDecision` enum (Allow/Escalate/Deny), `OnCeiling` enum (Halt/Escalate/Summarize — BC-2.10.003 v1.2 + BC-2.10.004), `BudgetConfig` struct (soft_limit, hard_limit, on_ceiling — BC-2.10.001 + ADR-009), `TokenUsage` struct, `RunContext` struct; no execution logic (dispatch engine lives in `graph::budget`) (ADR-009 Option 3 / BC-2.10.001) | — |
+| `core::budget` | ferrochain-core | definitions-only: `BudgetPolicy` trait (`evaluate()` pure, no async, no I/O per ADR-009 Option 3), `PolicyDecision` enum (Allow/Escalate/Deny), `OnCeiling` enum (Halt/Escalate/Summarize — BC-2.10.003 + BC-2.10.004), `BudgetConfig` struct (soft_limit, hard_limit, on_ceiling — BC-2.10.001 + ADR-009), `TokenUsage` struct, `RunContext` struct; no execution logic (dispatch engine lives in `graph::budget`) (ADR-009 Option 3 / BC-2.10.001) | — |
 | `core::guardrail` | ferrochain-core | definitions-only: `GuardrailHook` trait (`async fn evaluate(&self, content: IngressContent, provenance_tag: ProvenanceTag) -> GuardrailResult` — `#[async_trait]` desugared; no execution logic in trait body per canonical definition in interface-definitions.md §GuardrailHook); `GuardrailResult` enum (Pass \| Fail{reason,severity} \| Transform{new_content}); `IngressContent` enum (ToolResult(ContentBlock) \| RagChunk(Value) \| MemoryItem(Value)); `GuardrailSeverity` enum (Critical/High/Medium/Low); `BoundaryType` enum (ToolResult \| RAGRetrieval \| MemoryIngress — 3 variants, PASS-58 canon; not `#[non_exhaustive]`; used in ProvenanceTag per BC-2.11.001); all definitions-only, no execution logic; promoted from graph::provenance/mcp::ingress per trait-in-core precedent matching ADR-009/ADR-012 pattern (ADR-014 Decision 6 / DI-012 / BC-2.20.002) | — |
 | `core::documents` | ferrochain-core | `Document { page_content, metadata, id }` pure data carrier; construction is pure type-system enforcement; no I/O (ADR-014 / SS-20) | — |
 | `core::embeddings` | ferrochain-core | `Embeddings` trait definition; definitions-only: trait body + dimensionality contract types; no execution logic (ADR-017 / SS-22) | — |

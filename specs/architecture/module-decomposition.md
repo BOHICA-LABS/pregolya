@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.24"
+version: "1.25"
 status: active
 producer: architect
 timestamp: 2026-07-24T00:00:00Z
@@ -10,10 +10,11 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "1f22e52"
+input-hash: "55bf217"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.25 (FIX-BURST-262/F-P161-01/2026-07-25): De-pin live-body BC version pin per TD-VSDD-091 BC-pin variant: Budget definitions blockquote — BC-2.10.003 v1.2 + BC-2.10.004 → BC-2.10.003 + BC-2.10.004."
   - "1.24 (FIX-BURST-258/2026-07-24): OBS-1 — sandbox::path_guard row gains WorkspaceFs facade clause: description extended to include '\`WorkspaceFs\` facade routes all workspace file ops — sole permitted path for \`std::fs\` calls within sandbox (BC-2.13.004 INV-2)'; BC-2.13.004 Architecture Anchor already cited this clause but the row lacked it. OBS-2 — core::guardrail definitions note heading corrected: SS-20 label was the promotion-trigger subsystem (ADR-014 lives in SS-20/SS-21 RAG context), not the owning subsystem; corrected to '(SS-11 owner; promoted via ADR-014 Decision 6 [SS-20 RAG context]; DI-012, definitions-only)' — SS-11 is the content-provenance subsystem that owns GuardrailHook/BoundaryType/IngressContent (BC-2.11.001–006 all carry subsystem: SS-11). Definitions-only note sweep: Budget definitions (SS-10, line 66) and Self-improvement definitions (SS-01/SS-15, line 89) carry correct owning-subsystem labels — no changes needed. No PO-side changes required."
   - "1.23 (FIX-BURST-252/2026-07-24): F-P151-01/02/05 compaction type-canon corrections. (1) core::budget row: `fraction: f32` → `fraction: f64` in check_watermark_trigger signature (F-P151-05). (2) D23 compaction additions note: `OnWatermark{fraction: f32}` → `OnWatermark{fraction: f64}` (F-P151-05); `CompactionSummary struct (summary_text: String, compacted_range: RangeInclusive<usize>)` → `(summary_text: String, compacted_start: usize, compacted_end: usize)` (F-P151-02 flat-fields adjudication). No module-universe count change."
   - "1.22 (burst-244/2026-07-23): F-P144-01/F-P144-02 — (1) ferrochain-tools section header MEDIUM → HIGH (tools-shell) / MEDIUM (tools-fs, tools-search); tools::shell module row MEDIUM → HIGH (VP-013 Kani P1; aligns with verification-coverage-matrix.md and module-criticality.md v1.6 adjudication). (2) Add core::budget module row to ferrochain-core base table (HIGH, VP-012 Kani P1, SS-10); update budget definitions note to remove stale no-row / no-execution-logic claim (core::budget now hosts check_watermark_trigger pure-core function, not only type definitions). Module universe 54→55 (+core::budget row)."
@@ -66,7 +67,7 @@ credential security primitives, streaming event types.
 
 > **Budget definitions (SS-10 — VP-012 elevation — ADR-009 Option 3):** ferrochain-core hosts
 > the DEFINITIONS for budget governance: `BudgetPolicy` trait, `PolicyDecision` enum (Allow/Escalate/Deny),
-> `OnCeiling` enum (Halt/Escalate/Summarize — BC-2.10.003 v1.2 + BC-2.10.004), `BudgetConfig` struct
+> `OnCeiling` enum (Halt/Escalate/Summarize — BC-2.10.003 + BC-2.10.004), `BudgetConfig` struct
 > (soft_limit, hard_limit, on_ceiling — BC-2.10.001 TV-001–TV-003 + ADR-009), `TokenUsage` struct, and
 > `RunContext` struct (fields: thread_id, run_id, sub-agent identity, budget_info per BC-2.10.001
 > precondition 3). **F-P144-02 adjudication (burst-244):** `core::budget` has been elevated from definitions-only to HIGH criticality — VP-012 (Kani P1, seeded burst-232) requires `check_watermark_trigger` to live here as an executable pure-core function, not only type definitions. A criticality-counted module row now appears in the table above. The DISPATCH engine (`BudgetEngine`,

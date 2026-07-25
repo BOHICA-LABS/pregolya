@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.53"
+version: "2.54"
 status: active
 producer: product-owner
-timestamp: 2026-07-24T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 phase: 1d
 changelog:
+  - "2.54 (F-P161-01/FIX-BURST-262/2026-07-25): Three BC-2.10.003 version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P161-01). All three sites were NORMATIVE authority citations in §OnCeiling and §BudgetInfo. (1) OnCeiling enum doc comment authority line: 'BC-2.10.003 v1.2 (Halt + Summarize variants for Deny)' → 'BC-2.10.003 (Halt + Summarize variants for Deny)'. (2) BudgetInfo RESOLVED block Authority line: 'BC-2.10.003 v1.2 PC5' → 'BC-2.10.003 PC5'. (3) BC anchor footer BudgetPolicy block: 'BC-2.10.003 v1.2 (OnCeiling Halt + Summarize variants; PC5/INV/TV-007 BudgetInfo shape and arithmetic)' → 'BC-2.10.003 (OnCeiling Halt + Summarize variants; PC5/INV/TV-007 BudgetInfo shape and arithmetic)'."
   - "2.53 (F-P151-01/03/burst-252/2026-07-24): Compaction type canon aligned to ADR-019 v1.4 (adjudicated authority). (1) §Compaction CompactionTrigger enum — F-P151-01: `OnMessageCount { threshold: usize }` → `OnMessageCount { count: usize }` (+doc comment 'reaches or exceeds `count`'); F-P151-01: `OnTokenCount { threshold: u64 }` → `OnTokenCount { tokens: u64 }` (+doc comment). (2) /stream endpoint row — F-P151-03: compaction_event SSE prose 'carries run_id, trigger, compacted_turns, summary_token_count, tokens_remaining_after' → 'carries run_id, trigger, parent_ids, compacted_start, compacted_end, summary_token_count, tokens_remaining_after' (flat wire shape, parent_ids mandatory per BC-2.06.002 Inv-2)."
   - "2.52 (F-P149-02/burst-250/2026-07-24): Two live-body version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P149-02). (1) §GuardedDocuments rag_ingress doc comment: 'ADR-014 v1.5' → 'ADR-014 Decision 6 §GuardedDocuments' (severity-bifurcated Fail behavior is defined in Decision 6 rag_ingress code). (2) similarity_search_with_filter default body comment: 'ADR-014 v1.5 F-P131-07 adjudication' → 'ADR-014 Decision 2 §Metadata filter surface F-P131-07 adjudication' (F-P131-07 adjudication is embedded in Decision 2 §Metadata filter surface subsection)."
   - "2.51 (F-P145-01+F-P145-04, burst-246, 2026-07-23): (1) F-P145-01: §First-Party Tools BashTool stub — default max_duration corrected 120s→30s to match canon (BC-2.23.005 H1/Description/PC1/EC-002/TV-004/DI-015 chain, ADR-020 Decision 2, ubiquitous-language-core). TD-VSDD-060 sweep: rg 'max_duration|120s|120 s' .factory/specs/ — sole 120s live-body site was this line; all other max_duration references already read 30s/30 seconds; zero further residue. (2) F-P145-04: §First-Party Tools opening sentence — over-generalization 'All tools use PathGuard' reworded to distinguish the five file-access tools (PathGuard-confined) from BashTool (ferrochain-sandbox-confined per BC-2.23.005); 'All tools implement the Tool trait' clause preserved."
@@ -69,7 +70,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "2cb7863"
+input-hash: "91b7bc7"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."
@@ -402,7 +403,7 @@ pub enum PolicyDecision {
 /// stays pure and data-free; the engine owns all dispatch (ADR-009 Option 3).
 ///
 /// Authority: BC-2.10.001 PC3 (Escalate decision → HITL unconditionally),
-/// BC-2.10.003 v1.2 (Halt + Summarize variants for Deny),
+/// BC-2.10.003 (Halt + Summarize variants for Deny),
 /// BC-2.10.004 (Escalate variant for Deny; also covers the soft-limit Escalate path).
 pub enum OnCeiling {
     /// Stop the run immediately when `PolicyDecision::Deny` (hard ceiling) is received;
@@ -475,7 +476,7 @@ pub struct BudgetConfig {
 > when a Deny has just been triggered because `accumulated > ceiling`; `None` if no token
 > ceiling is configured), `steps_remaining: Option<u32>` — `recursion_limit - current_step`
 > (`None` if no step limit is configured).
-> Authority: BC-2.10.003 v1.2 PC5 (remaining-budget exposure postcondition),
+> Authority: BC-2.10.003 PC5 (remaining-budget exposure postcondition),
 > BC-2.10.003 INV (signed arithmetic rationale for `Option<i64>`),
 > BC-2.10.003 TV-007 (canonical test vector: ceiling=10000, accumulated=3000,
 > recursion_limit=25, step=1 → tokens_remaining=Some(7000), steps_remaining=Some(24)).
@@ -486,7 +487,7 @@ pub struct BudgetConfig {
 BC-2.10.001 PC3 (PolicyDecision variants + purity invariant),
 BC-2.10.001 TV-001–TV-003 (soft_limit/hard_limit thresholds + variant payloads),
 BC-2.10.002 INV (journal writes are caller responsibility),
-BC-2.10.003 v1.2 (OnCeiling Halt + Summarize variants; PC5/INV/TV-007 BudgetInfo shape and arithmetic),
+BC-2.10.003 (OnCeiling Halt + Summarize variants; PC5/INV/TV-007 BudgetInfo shape and arithmetic),
 BC-2.10.004 (OnCeiling Escalate variant — HITL interrupt path),
 ADR-009 Option 3 (BudgetConfig placement in GraphConfig; pure/effectful boundary)
 

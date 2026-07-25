@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "9a47384"
+input-hash: "a2e02c5"
 extracted_from: null
 modified: []
 deprecated: null
