@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "2b3a81d"
+input-hash: "1a698b2"
 traces_to: STATE.md
 ---
 
@@ -4771,5 +4771,32 @@ F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 
 **Dim-7:** Finding trajectory tail →4→4→4→2 (passes P1D-155/P1D-156/P1D-157/P1D-158); trajectory appended →2 (pass P1D-158). Novelty LOW (defect-surface confinement to newest edits only; observability catalog entries added burst-258 contained the tool_name gap).
 
 **Closes:** F-P158-01 MED (PO): retry.circuit_breaker_disabled EC-005 emission — tool_name field dropped (CircuitBreaker::always_closed() is zero-arg constructor; tool_name unavailable at construction time; EC-005 message template updated to tool-agnostic form consistent with sibling retry.unlimited_policy_constructed). observability.md v1.2→v1.3. BC-2.16.003 v1.3→v1.4. F-P158-02 LOW (PO): cron queue-full boundary adjudicated >= (ScheduleQueueFull fires when queue length meets or exceeds capacity; at-capacity semantics). BC-2.12.004 v1.4→v1.5. error-taxonomy.md v1.39→v1.40. BC-INDEX v3.8→v3.9.
+
+---
+
+## Burst 264 — Pre-emptive server::cron Canon: module-decomp v1.26 + BC-2.12.004 v1.6 + observability v1.5 (2026-07-25)
+
+**Parent-commit:** ea381fa burst-263 commit (P1D-162 adversary + fix-burst 263 complete)
+**Adversary verdict:** N/A — pre-emptive micro-fix burst; NO adversary pass ran. Counter 0/3 (unchanged; streak 0/3 holds). Next adversary pass: P1D-163.
+**Trigger:** Burst 263 pre-triaged a scheduler-label drift: BC-2.12.004 Architecture Anchors cited `ferrochain-server/src/scheduler/` while module-decomposition v1.25 named the module `server::cron` (Rust path → `ferrochain-server/src/cron/`, not `src/scheduler/`). Architect adjudicated before P1D-163 to neutralize a predictable finding.
+**Files touched (Dim-1): 7 unique files**
+- specs/architecture/module-decomposition.md (v1.25→v1.26: architect adjudication — server::cron row description extended with canonical filesystem path `ferrochain-server/src/cron/`; changelog entry added; input-hash refreshed)
+- specs/behavioral-contracts/ss-12/BC-2.12.004.md (v1.5→v1.6: PO — Architecture Anchors corrected `ferrochain-server/src/scheduler/` → `ferrochain-server/src/cron/` per module-decomp v1.26 adjudication; changelog entry added)
+- specs/prd-supplements/observability.md (v1.4→v1.5: PO — server.cron_schedule_queue_full row Emitting Crate/Module corrected from `ferrochain-server / scheduler` to `ferrochain-server / server::cron`; changelog entry added; input-hash refreshed)
+- specs/behavioral-contracts/BC-INDEX.md (v3.12→v3.13: state-manager — frontmatter changelog entry + body Changelog table row added for BC-2.12.004 v1.6; timestamp updated)
+- STATE.md (v4.06→v4.07: state-manager — burst-264 pre-emptive complete; trajectory-tail →2→2→3L→3 unchanged; streak 0/3; session resume checkpoint updated; burst-259 row archived; burst-264 row added)
+- cycles/v1.0.0-greenfield/burst-log.md (this file; burst-264 entry added)
+- Hash-currency refreshes (D18-P89-A/D18-P90-A sweep): specs/architecture/verification-coverage-matrix.md, specs/domain-spec/bounded-contexts.md, specs/module-criticality.md, and ~17 cycle files refreshed (input-hash only; no content changes)
+
+**Dim-2:** No new behavioral contracts authored. One existing BC revised (BC-2.12.004 v1.5→v1.6: Architecture Anchors filesystem path corrected). BC count unchanged at 129 (51P0/75P1/3P2). BC-INDEX v3.12→v3.13.
+**D18-P89-A sweep:** specs/174 STALE=0 + planning/6 STALE=0 + cycles/54 STALE=0. module-decomposition.md edit staled verification-coverage-matrix.md, bounded-contexts.md, module-criticality.md, and ~17 cycle files; all refreshed in 2-pass sweep.
+
+**Codifications:** No new gates minted. Adjudication: SS-12 cron canonical module = `server::cron` (both module-decomp and purity-boundary-map converge; `scheduler` collides with `graph::scheduler`). Canonical filesystem path = `ferrochain-server/src/cron/`.
+
+**Dim-5:** counter 0/3 (pre-emptive burst; no adversary pass ran); next action: dispatch adversary pass P1D-163 on burst-264 frozen HEAD.
+**Dim-6:** module-decomposition v1.26 canonical path `ferrochain-server/src/cron/`; BC-2.12.004 v1.6 Architecture Anchors corrected; observability.md v1.5 server.cron_schedule_queue_full module corrected; BC-INDEX v3.13.
+**Dim-7:** Finding trajectory tail →2→2→3L→3 (passes P1D-159/P1D-160/P1D-161/P1D-162); UNCHANGED (no adversary pass ran this burst). Novelty N/A — pre-emptive fix; no finding generated.
+
+**Closes:** Pre-emptive scheduler-label drift (architect+PO): BC-2.12.004 Architecture Anchors `src/scheduler/` vs module-decomp `server::cron` — naming-path drift neutralized before P1D-163. module-decomposition v1.25→v1.26 (canonical path locked). BC-2.12.004 v1.5→v1.6 (Architecture Anchors corrected). observability.md v1.4→v1.5 (server.cron_schedule_queue_full module corrected). BC-INDEX v3.12→v3.13.
 
 ---

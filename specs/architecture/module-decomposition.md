@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.25"
+version: "1.26"
 status: active
 producer: architect
-timestamp: 2026-07-24T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -14,6 +14,7 @@ input-hash: "7d33869"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.26 (burst-264/F-P164-01/2026-07-25): Adjudicate canonical module name for SS-12 cron subsystem — server::cron is the canonical Rust module name (two authoritative architecture sources: module-decomp + purity-boundary-map; one BC-2.12.004 Architecture Anchors outlier used filesystem path `src/scheduler/` implying server::scheduler). Extend server::cron row description to cite canonical filesystem path `ferrochain-server/src/cron/`, locking out the drift-inducing `src/scheduler/` form. PO-owned downstream fixes listed in burst-264 report: BC-2.12.004 line 172 path and observability.md Module column."
   - "1.25 (FIX-BURST-262/F-P161-01/2026-07-25): De-pin live-body BC version pin per TD-VSDD-091 BC-pin variant: Budget definitions blockquote — BC-2.10.003 v1.2 + BC-2.10.004 → BC-2.10.003 + BC-2.10.004."
   - "1.24 (FIX-BURST-258/2026-07-24): OBS-1 — sandbox::path_guard row gains WorkspaceFs facade clause: description extended to include '`WorkspaceFs` facade routes all workspace file ops — sole permitted path for `std::fs` calls within sandbox (BC-2.13.004 INV-2)'; BC-2.13.004 Architecture Anchor already cited this clause but the row lacked it. OBS-2 — core::guardrail definitions note heading corrected: SS-20 label was the promotion-trigger subsystem (ADR-014 lives in SS-20/SS-21 RAG context), not the owning subsystem; corrected to '(SS-11 owner; promoted via ADR-014 Decision 6 [SS-20 RAG context]; DI-012, definitions-only)' — SS-11 is the content-provenance subsystem that owns GuardrailHook/BoundaryType/IngressContent (BC-2.11.001–006 all carry subsystem: SS-11). Definitions-only note sweep: Budget definitions (SS-10, line 66) and Self-improvement definitions (SS-01/SS-15, line 89) carry correct owning-subsystem labels — no changes needed. No PO-side changes required."
   - "1.23 (FIX-BURST-252/2026-07-24): F-P151-01/02/05 compaction type-canon corrections. (1) core::budget row: `fraction: f32` → `fraction: f64` in check_watermark_trigger signature (F-P151-05). (2) D23 compaction additions note: `OnWatermark{fraction: f32}` → `OnWatermark{fraction: f64}` (F-P151-05); `CompactionSummary struct (summary_text: String, compacted_range: RangeInclusive<usize>)` → `(summary_text: String, compacted_start: usize, compacted_end: usize)` (F-P151-02 flat-fields adjudication). No module-universe count change."
@@ -155,7 +156,7 @@ Responsibilities: Axum HTTP server, resource CRUD, cron scheduler, security defa
 | `server::security` | `SecurityConfig::default()` deny-CORS, debug route opt-in (DI-013) | HIGH | SS-12 |
 | `server::streaming` | SSE streaming endpoint; same engine as unary (DI-011) | HIGH | SS-12 |
 | `server::stores` | `IdempotencyStore` / `RateLimitStore` / `RunStore` trait seams (NE-08) | HIGH | SS-12 |
-| `server::cron` | CronSchedule parsing and proactive run triggering | MEDIUM | SS-12 |
+| `server::cron` | CronSchedule parsing and proactive run triggering (`ferrochain-server/src/cron/`) | MEDIUM | SS-12 |
 
 ## ferrochain-sandbox (SS-13) — CRITICAL (path-guard) / MEDIUM (backends)
 
