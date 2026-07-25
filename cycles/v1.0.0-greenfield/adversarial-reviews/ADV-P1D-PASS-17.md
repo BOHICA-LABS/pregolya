@@ -1,5 +1,9 @@
 ---
 document_type: adversarial-review
+level: ops
+version: "1.0"
+status: complete
+traces_to: STATE.md
 phase: 1d
 pass: 17
 verdict: NOT CLEAN
@@ -17,16 +21,21 @@ inputs:
   - .factory/specs/architecture/verification-architecture.md
   - .factory/specs/architecture/verification-coverage-matrix.md
   - .factory/specs/prd-supplements/bc-authoring-plan.md
-input-hash: "f6572ab"
+input-hash: "b50a52e"
 findings:
   - id: F-P17-01
     severity: MEDIUM
     status: FIXED
 trajectory: "...→1→1→1"
 clean_pass_counter: 0/3
+previous_review: ADV-P1D-PASS-16.md
 ---
 
 # ADV-P1D-PASS-17: Adversarial Review
+
+## Finding ID Convention
+
+Finding IDs for this pass use the format `F-P17-NN` (project convention; cycle prefix omitted per established ferrochain shorthand).
 
 ## Verdict: NOT CLEAN — 1 MEDIUM Finding (FIXED)
 
@@ -40,6 +49,8 @@ Sibling axes (NE full rebuild, CAP/VP census, 3 prior census reconfirmations): *
 no new findings on these axes this pass.
 
 ---
+
+## Part B — New Findings (or all findings for pass 1)
 
 ## F-P17-01 (MEDIUM) — Kani Harness Identifier: 5 Naming Variants, Nonexistent Names in Gate Commands
 
@@ -158,3 +169,28 @@ required at Phase 1.
 in all spec documents uses a name that exists in VP-INDEX.md `harness_fn` column. With the
 `harness_fn` column now established and the 10 failing sites fixed, this sweep produces zero
 inconsistencies. The standing gate (bc-authoring-plan #18) closes the surface permanently.
+
+## Summary
+
+| Severity | Count |
+|----------|-------|
+| CRITICAL | 0 |
+| HIGH | 0 |
+| MEDIUM | 1 |
+| LOW | 0 |
+
+**Overall Assessment:** pass-with-findings
+**Convergence:** FINDINGS_REMAIN — F-P17-01 fixed in this pass; counter 0/3
+**Readiness:** requires confirmation pass (pass 18) to verify fixes held
+
+## Novelty Assessment
+
+| Field | Value |
+|-------|-------|
+| **Pass** | 17 |
+| **New findings** | 1 |
+| **Duplicate/variant findings** | 0 |
+| **Novelty score** | 1.0 (1/1) |
+| **Median severity** | 3.0 (MED) |
+| **Trajectory** | →1→1→1 |
+| **Verdict** | FINDINGS_REMAIN |

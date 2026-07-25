@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "4366de4"
+input-hash: "e14d101"
 traces_to: STATE.md
 ---
 
@@ -53,10 +53,11 @@ traces_to: STATE.md
 | P1D-155 | 2026-07-24 | 4 | 0 | 2 | 0 | 1 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (2H F-P155-01/02 Form-A changelog direction systematic sweep ×41 BCs: 25 pure-descending reversed, 11 non-monotonic sorted asc, BC-2.16.001 sorted+v1.4→v1.5, 4 dup-1.1-entry merged; + BC-2.07.003 YAML parse fix invalid backslash+backtick at col 364; 1H-PG F-P155-03 verify-form-a-changelog-direction.sh validator minted (PASS=121 WARN=8 FAIL=0); 1L F-P155-04 all-13-VP §BC Traceability Title cells synced verbatim to canonical BC H1s (VP-001 v1.3, VP-002 v1.3, VP-003 v1.4, VP-004 v1.2, VP-005 v1.2, VP-006 v1.6, VP-007 v1.2, VP-008 v1.3, VP-009 v1.5, VP-010 v1.4, VP-011 v1.4, VP-012 v1.4, VP-013 v1.3); BC-INDEX v3.5→v3.6; fix-burst 256 COMPLETE) |
 | P1D-156 | 2026-07-24 | 4 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (1H F-P156-01 12 BC files (SS-11 ×6, SS-13 ×6) nonexistent arch-file citations replaced with adjudicated real targets; corpus-complete audit PASS=129 FAIL=0; verify-arch-anchor-resolution.sh validator minted; 1M F-P156-02 BC-INDEX body-table sync gap v3.6 row absent — 3.6+3.7 rows added; BC-INDEX v3.6→v3.7; OBS-P156-A verify-form-a-changelog-direction.sh extended to Form-B direction + v1.0-no-changelog tolerance (PASS=129 WARN=0 FAIL=0); OBS-P156-B VP-INDEX v1.5→v1.6 priority-axis clarification note; fix-burst 257 COMPLETE) |
 | P1D-157 | 2026-07-24 | 4 | 0 | 0 | 2 | 2 | LOW | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (2M: F-P157-01 MED [process-gap] observability catalog completeness re-sweep ×129 BCs — 5 new emission rows found (not 4); eval.judge_infra_error [BC-2.08.008 v1.2], server.cron_schedule_queue_full [BC-2.12.004 v1.4], retry.unlimited_policy_constructed [BC-2.16.002 v1.4], retry.circuit_breaker_disabled + retry.circuit_probe_failed [BC-2.16.003 v1.3]; catalog 6→11 active event_types; new "Scope and Non-Emission Exemptions" section; observability.md v1.1→v1.2; F-P157-02 MED BC-INDEX frontmatter timestamp future-dated 2026-07-25→2026-07-24; BC-INDEX v3.7→v3.8; 2L: OBS-1 LOW module-decomposition v1.24 sandbox::path_guard row gains WorkspaceFs facade clause; OBS-2 LOW module-decomposition core::guardrail definitions note heading corrected SS-20→SS-11 owner label; fix-burst 258 COMPLETE) |
+| P1D-158 | 2026-07-24 | 2 | 0 | 0 | 1 | 1 | LOW | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (1M F-P158-01 circuit-breaker schema: retry.circuit_breaker_disabled/retry.circuit_probe_failed precondition spec gap in observability.md v1.3; 1L F-P158-02 queue-full boundary: server.cron_schedule_queue_full precondition spec gap in BC-2.12.004 v1.5; defect-surface confined to burst-258 edit surface; fix-burst 259 COMPLETE) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN 1/3) →0 (P1D-127 CLEAN 2/3) →0 (P1D-128 CLEAN 3/3 CONVERGED pre-D21+D23) →12 (P1D-129, D21+D23 re-baseline) →9 (P1D-130) →7 (P1D-131) →8 (P1D-132) →10 (P1D-133) →7 (P1D-134) →6 (P1D-135) →6 (P1D-136) →3 (P1D-137) →3 (P1D-138) →7 (P1D-139) →8 (P1D-140) →7 (P1D-141) →4 (P1D-142) →1 (P1D-143) →4 (P1D-144) →5 (P1D-145) →4 (P1D-146) →3 (P1D-147) →5 (P1D-148) →4 (P1D-149) →2 (P1D-150) →7 (P1D-151, NOT CLEAN 0C/4H/3M) →3 (P1D-152, NOT CLEAN 0C/0H/3M) →2 (P1D-153, NOT CLEAN 0C/1H/0M/1OBS) →2 (P1D-154, NOT CLEAN 0C/1H/1M/1OBS; F-P154-01/02+OBS-A; fix-burst 255 COMPLETE) →4 (P1D-155, NOT CLEAN 0C/2H+1H-PG/0M/1L; Form-A systematic sweep ×41 + validator minting; fix-burst 256 COMPLETE) →4 (P1D-156, NOT CLEAN 0C/1H/1M/2OBS; 12-BC anchor sweep SS-11+SS-13 + anchor-resolution validator minted + BC-INDEX body-table sync; fix-burst 257 COMPLETE) →4 (P1D-157, NOT CLEAN 0C/0H/2M/2L; F-P157-01 catalog completeness 5 new rows 6→11 event_types + F-P157-02 BC-INDEX timestamp + OBS-1/2 module-decomposition v1.24; fix-burst 258 COMPLETE)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN 1/3) →0 (P1D-127 CLEAN 2/3) →0 (P1D-128 CLEAN 3/3 CONVERGED pre-D21+D23) →12 (P1D-129, D21+D23 re-baseline) →9 (P1D-130) →7 (P1D-131) →8 (P1D-132) →10 (P1D-133) →7 (P1D-134) →6 (P1D-135) →6 (P1D-136) →3 (P1D-137) →3 (P1D-138) →7 (P1D-139) →8 (P1D-140) →7 (P1D-141) →4 (P1D-142) →1 (P1D-143) →4 (P1D-144) →5 (P1D-145) →4 (P1D-146) →3 (P1D-147) →5 (P1D-148) →4 (P1D-149) →2 (P1D-150) →7 (P1D-151, NOT CLEAN 0C/4H/3M) →3 (P1D-152, NOT CLEAN 0C/0H/3M) →2 (P1D-153, NOT CLEAN 0C/1H/0M/1OBS) →2 (P1D-154, NOT CLEAN 0C/1H/1M/1OBS; F-P154-01/02+OBS-A; fix-burst 255 COMPLETE) →4 (P1D-155, NOT CLEAN 0C/2H+1H-PG/0M/1L; Form-A systematic sweep ×41 + validator minting; fix-burst 256 COMPLETE) →4 (P1D-156, NOT CLEAN 0C/1H/1M/2OBS; 12-BC anchor sweep SS-11+SS-13 + anchor-resolution validator minted + BC-INDEX body-table sync; fix-burst 257 COMPLETE) →4 (P1D-157, NOT CLEAN 0C/0H/2M/2L; F-P157-01 catalog completeness 5 new rows 6→11 event_types + F-P157-02 BC-INDEX timestamp + OBS-1/2 module-decomposition v1.24; fix-burst 258 COMPLETE) →2 (P1D-158, NOT CLEAN 0C/0H/1M/1L; F-P158-01 circuit-breaker schema + F-P158-02 queue-full boundary; defect-surface confined to burst-258 edits; fix-burst 259 COMPLETE)`
 
 ## Per-Pass Details
 
@@ -1323,3 +1324,47 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 **Regression sweep:** verify-arch-anchor-resolution.sh post-fix: PASS=129 FAIL=0. verify-form-a-changelog-direction.sh extended corpus: PASS=129 WARN=0 FAIL=0. BC-2.17.001 v1.4, VP-011 v1.4, ADR-019 v1.5, VP-012 v1.4, BC-2.07.002 v1.6 GTV-010/011 all verified CLEAN.
 
 **Hash sweep (D18-P89-A/D18-P90-A):** Pre-commit: 12 BC files (SS-11/SS-13) + VP-INDEX.md + verify-arch-anchor-resolution.sh + BC-INDEX.md staled. Hash sweep update TOTAL STALE=0. Burst-257 commit.
+
+---
+
+### Pass P1D-157 (2026-07-24) — Expanded Perimeter Pass 29
+
+**Findings:** 4 (0 CRIT, 0 HIGH, 2 MED, 2 LOW)
+**Streak:** 0/3 (NOT CLEAN strict)
+**Fix burst:** 258
+**Frozen HEAD:** burst-257 commit
+**Novel attack angle:** Observability catalog completeness re-sweep — full corpus audit discovered 5 new emission sites in burst-257 changes (not 4 as initially cataloged); BC-INDEX timestamp discipline; module-decomposition housekeeping.
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. Four items: 2M + 2L. MED-1 found 5 unreported observability catalog emission sites added in burst-257 edits. MED-2 found BC-INDEX frontmatter timestamp future-dated. Both LOWs were module-decomposition housekeeping items. All four closed in fix-burst 258.
+
+- **F-P157-01 MED** (PO+architect, closed): Observability catalog completeness re-sweep across 129 BCs found 5 new emission sites from burst-257 edits — not 4 as initially cataloged. Missing rows: eval.judge_infra_error [BC-2.08.008 v1.2], server.cron_schedule_queue_full [BC-2.12.004 v1.4], retry.unlimited_policy_constructed [BC-2.16.002 v1.4], retry.circuit_breaker_disabled [BC-2.16.003 v1.3], retry.circuit_probe_failed [BC-2.16.003 v1.3]. Catalog updated 6→11 active event_types; new "Scope and Non-Emission Exemptions" section added. observability.md v1.1→v1.2.
+
+- **F-P157-02 MED** (state-manager, closed): BC-INDEX frontmatter `timestamp:` field was future-dated 2026-07-25 instead of 2026-07-24. BC-INDEX v3.7→v3.8 with corrected timestamp.
+
+- **OBS-1 LOW** (architect, closed): module-decomposition.md v1.24 sandbox::path_guard row missing WorkspaceFs facade clause. Row updated.
+
+- **OBS-2 LOW** (architect, closed): module-decomposition.md core::guardrail definitions-note heading had incorrect SS-20 owner label; corrected to SS-11.
+
+**Regression sweep:** verify-form-a-changelog-direction.sh: PASS=129 WARN=0 FAIL=0. verify-arch-anchor-resolution.sh: PASS=129 FAIL=0.
+
+**Hash sweep (D18-P89-A/D18-P90-A):** observability.md + BC-2.08.008 + BC-2.12.004 + BC-2.16.002 + BC-2.16.003 + BC-INDEX staled downstream. Hash sweep TOTAL STALE=0. Burst-258 commit.
+
+---
+
+### Pass P1D-158 (2026-07-24) — Expanded Perimeter Pass 30
+
+**Findings:** 2 (0 CRIT, 0 HIGH, 1 MED, 1 LOW)
+**Streak:** 0/3 (NOT CLEAN strict)
+**Fix burst:** 259
+**Frozen HEAD:** burst-258 commit
+**Novel attack angle:** Defect-surface confinement — review targeted the burst-258 edit surface (observability.md v1.2 + BC-2.12.004 + BC-2.16 retry events) and found schema gap and boundary-condition gap confined to those newest edits. No systemic drift found elsewhere in the corpus.
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. Two items: 1M + 1L. Findings were confined to the burst-258 edit surface — no regression or new class found beyond the newest edits. Both closed in fix-burst 259.
+
+- **F-P158-01 MED** (PO, closed): observability.md §retry.circuit_breaker_disabled and §retry.circuit_probe_failed entries (added in burst-258) were missing precondition specification — entries described the emitting event but not the triggering state-transition boundary condition (open/half-open threshold). Precondition spec completed. observability.md v1.2→v1.3.
+
+- **F-P158-02 LOW** (PO, closed): BC-2.12.004 (ScheduledRun queue management) server.cron_schedule_queue_full event (added via observability catalog in burst-258) was missing a queue-capacity precondition boundary in the BC body. The observability catalog row described the event but the BC did not specify the full-queue condition that triggers it. Boundary condition spec added. BC-2.12.004 v1.4→v1.5.
+
+**Regression sweep:** verify-form-a-changelog-direction.sh: PASS=129 WARN=0 FAIL=0. verify-arch-anchor-resolution.sh: PASS=129 FAIL=0.
+
+**Hash sweep (D18-P89-A/D18-P90-A):** observability.md v1.3 + BC-2.12.004 v1.5 + BC-INDEX v3.9 (via state-manager sync) staled downstream. Hash sweep TOTAL STALE=0. Burst-259 commit.

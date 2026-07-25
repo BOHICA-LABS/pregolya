@@ -1,11 +1,12 @@
 ---
 document_type: prd-supplement-error-taxonomy
 level: L3
-version: "1.39"
+version: "1.40"
 status: active
 producer: product-owner
 timestamp: 2026-07-24T00:00:00Z
 changelog:
+  - "1.40 (burst-259/F-P158-02/2026-07-24): E-CRON-003 Message Format boundary predicate corrected: 'exceeds' → 'at or exceeds' (>= semantics). ScheduleQueueFull fires when queue_depth >= max_queue_depth (at capacity); 'exceeds' incorrectly implied strictly-greater-than (>). Consistent with observability.md catalog Recurrence column ('queue_depth >= max_queue_depth'), BC-2.12.004 EC-004 (updated same burst-259), and error code name (ScheduleQueueFull implies at-capacity). No category, severity, or RetryHint changes."
   - "1.39 (F-P149-02/burst-250/2026-07-24): Three live-body version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P149-02). (1) E-TMPL-003 row: 'ADR-015 v1.3 Decision 4' → 'ADR-015 Decision 4' (just the v1.3 pin dropped; Decision 4 is the stable anchor). (2) E-VS-003 row: 'per ADR-010 v1.1 §E-CFG-001 resolution' → 'per ADR-010 §E-CFG-001 resolution' (v1.1 pin dropped; §E-CFG-001 resolution is the stable bold header in ADR-010 §Component Axis Expansion (D21)). (3) E-TOOLS-009 row satisfied-note: 'ADR-010 v1.5 and ADR-020 v1.7 TOOLS component tables' → 'ADR-010 §Component Axis Expansion (D23) and ADR-020 Decision 5 §E-TOOLS-* table'."
   - "1.38 (burst-248/F-P147-02/2026-07-24): E-TOOLS-002 placeholder count corrected Two→Three. The E-TOOLS-002 Message Format template 'FileReadExceedsLimit: file '<path>' is <actual_bytes> bytes, exceeds configured limit of <max_bytes> bytes' contains THREE distinct placeholders (<path>, <actual_bytes>, <max_bytes>); the row annotation incorrectly stated 'Two placeholders'. Taxonomy-wide placeholder-count parity scan (gate #33 placeholder-parity axis): all other rows with explicit count statements verified — E-MCP-006 (Two: <tool>/<content_type> ✓), E-TMPL-001 (Two: <var_name>/<slot_role> ✓), E-TMPL-003 (One: <var_name> ✓), E-VS-003 (Two: <field>/<reason> ✓), E-TOOLS-003 (One: <path> ✓), E-TOOLS-004 (One: <seconds> ✓), E-TOOLS-007 (One: <tier> ✓), E-TOOLS-008 (Three structured fields: tool_type/path/io_kind ✓), E-TOOLS-009 (Two structured fields: pattern/compile_error ✓). E-TOOLS-002 was the sole discrepancy across all 108 live codes. No other placeholder-count mismatches found in any namespace."
   - "1.37 (burst-247/F-P146-02+OBS-naming/2026-07-24): OBS-naming — E-TOOLS-005/006 canonical payload field-path markers added to taxonomy Message Format cells. E-TOOLS-005 now reads '(Payload field — NOT a raised Err; canonical payload field path: BashOutput.truncated)'; E-TOOLS-006 now reads '(Payload field — NOT a raised Err; canonical payload field path: GrepResult.capped)'. BC bodies previously used informal variant-style names ('BashOutputTruncated', 'SearchResultsCapped') — all BC body occurrences corrected same burst (BC-2.23.005 PC-2, BC-2.23.006 Description and PC-2). Taxonomy rows are the authority for canonical dot-path field names. See bc-authoring-plan.md v2.46 SS-23 title-enumeration policy note and Gate #35 VP PROPERTY-BODY COHERENCE (burst-247/F-P146-02)."
@@ -247,7 +248,7 @@ primary_consumers: [implementer, test-writer]
 |-----------|----------|----------|-----------|-----------|---------------|
 | E-CRON-001 | VAL | broken | BC-2.12.004 | Never | `AssistantNotFoundAtFiring: cron schedule '<cron_id>' fired but assistant '<assistant_id>' no longer exists` |
 | E-CRON-002 | VAL | broken | BC-2.12.004 | Never | `InvalidCronExpression: field '<field>' value '<value>' is out of range — <reason>` |
-| E-CRON-003 | POLICY | broken | BC-2.12.004 | Later | `ScheduleQueueFull: cron schedule '<cron_id>' firing skipped; queue depth <queue_depth> exceeds max_queue_depth` |
+| E-CRON-003 | POLICY | broken | BC-2.12.004 | Later | `ScheduleQueueFull: cron schedule '<cron_id>' firing skipped; queue depth <queue_depth> at or exceeds max_queue_depth` |
 
 ### Component: MEMORY (ferrochain-memory)
 

@@ -1,5 +1,9 @@
 ---
 document_type: adversarial-review
+level: ops
+version: "1.0"
+status: complete
+traces_to: STATE.md
 phase: 1d
 pass: 16
 verdict: NOT CLEAN
@@ -22,16 +26,21 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-03/BC-2.03.003.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/prd-supplements/bc-authoring-plan.md
-input-hash: "d260160"
+input-hash: "5723f99"
 findings:
   - id: F-P16-01
     severity: HIGH
     status: FIXED
 trajectory: "...→2→1→1"
 clean_pass_counter: 0/3
+previous_review: ADV-P1D-PASS-15.md
 ---
 
 # ADV-P1D-PASS-16: Adversarial Review
+
+## Finding ID Convention
+
+Finding IDs for this pass use the format `F-P16-NN` (project convention; cycle prefix omitted per established ferrochain shorthand).
 
 ## Verdict: NOT CLEAN — 1 HIGH Finding (FIXED)
 
@@ -42,6 +51,8 @@ censused as a whole before. Prior passes addressed individual NE mis-anchors (AD
 is the first systematic BC-level NE census.
 
 ---
+
+## Part B — New Findings (or all findings for pass 1)
 
 ## F-P16-01 (HIGH) — NE-Anchor Four-Way Drift: BC-INDEX Internal Contradiction + 10 Under-Anchored Rows
 
@@ -233,3 +244,15 @@ CAP-019 but cites DI-001, DI-005, DI-007 from three different subsystems — ver
 Traceability agrees with RTM). The CAP axis is the one axis where a body-vs-index mismatch
 could have been introduced during the Phase 1b proc-macro amendment (Batch 13) without a
 full four-way re-audit.
+
+## Novelty Assessment
+
+| Field | Value |
+|-------|-------|
+| **Pass** | 16 |
+| **New findings** | 1 |
+| **Duplicate/variant findings** | 0 |
+| **Novelty score** | 1.0 (1/1) |
+| **Median severity** | 2.0 (HIGH) |
+| **Trajectory** | →2→1→1 |
+| **Verdict** | FINDINGS_REMAIN |

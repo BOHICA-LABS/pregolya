@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.004
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -37,6 +37,7 @@ changelog:
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
   - "1.3 (F-P118-02, fix burst 121, 2026-07-19): Propagate four-member terminal set from BC-2.12.003 v1.4 (F-P117-01 adjudication). PC2b: lifecycle arrow `completed | failed | cancelled` → `completed | failed | cancelled | summary_halt`. Related BCs §BC-2.12.003 description: same three-member form → four-member form. TD-VSDD-060 file-wide sweep: only these two sites enumerated the terminal set; all other status references are specific-value or query-result forms (exempt)."
   - "1.4 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'server.cron_schedule_queue_full' to EC-004 queue-full WARN emission per observability census (SAP-1). EC-004 updated with structured event_type and fields."
+  - "1.5 (burst-259/F-P158-02/2026-07-24): EC-004 queue-full boundary predicate corrected from 'exceeds' (>) to 'meets or exceeds' (>=). ScheduleQueueFull fires when queue_depth >= max_queue_depth (at capacity); 'exceeds' incorrectly implied strictly-greater-than. Consistent with observability.md Recurrence column and error-taxonomy.md E-CRON-003 (updated same burst-259)."
 ---
 
 # BC-2.12.004: CronSchedule Creation and Proactive Run Execution
@@ -132,7 +133,7 @@ are created for future firings. `GET /schedules/{cron_id}` returns `enabled: fal
 takes 10 seconds. Ten concurrent Runs have been enqueued.
 **Expected behavior:** New Runs are created and queued; the server's run concurrency
 limit determines how many execute simultaneously. Queued Runs are not cancelled; they
-execute in order. If the queue depth exceeds a configurable `max_queue_depth` threshold,
+execute in order. If the queue depth meets or exceeds `max_queue_depth`,
 new firings are skipped with a `tracing::warn!(event_type = "server.cron_schedule_queue_full", cron_id, queue_depth)` and `E-CRON-003 ScheduleQueueFull { cron_id,
 queue_depth }` error.
 

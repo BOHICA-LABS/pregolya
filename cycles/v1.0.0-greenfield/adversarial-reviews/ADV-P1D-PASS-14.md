@@ -1,5 +1,9 @@
 ---
 document_type: adversarial-review
+level: ops
+version: "1.0"
+status: complete
+traces_to: STATE.md
 phase: 1d
 pass: 14
 verdict: NOT CLEAN
@@ -12,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.004.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.005.md
   - .factory/specs/architecture/verification-coverage-matrix.md
-input-hash: "d372e0e"
+input-hash: "c665f20"
 findings:
   - id: F-P14-01
     severity: HIGH
@@ -22,13 +26,20 @@ findings:
     status: FIXED (pre-existing fix confirmed)
 trajectory: "...→1→1→2"
 clean_pass_counter: 0/3
+previous_review: ADV-P1D-PASS-13.md
 ---
 
 # ADV-P1D-PASS-14: Adversarial Review
 
+## Finding ID Convention
+
+Finding IDs for this pass use the format `F-P14-NN` (project convention; cycle prefix omitted per established ferrochain shorthand).
+
 ## Verdict: NOT CLEAN — 2 Findings
 
 ---
+
+## Part B — New Findings (or all findings for pass 1)
 
 ## F-P14-01 (HIGH) — L2-INDEX Key Anchors FM/DEC Mis-Anchors × 3
 
@@ -227,3 +238,28 @@ to confirm no residual double-use tells or orphan citations remain. Additionally
 CAP-013's anchor justification for explicit NE-06/HS-8 citation (currently only D17-Q8 is
 cited — the semantic chain is correct but explicit NE attribution would be stronger). Verify
 DEC-011 back-reference chain is complete in both edge-cases.md and L2-INDEX.
+
+## Summary
+
+| Severity | Count |
+|----------|-------|
+| CRITICAL | 0 |
+| HIGH | 1 |
+| MEDIUM | 1 |
+| LOW | 0 |
+
+**Overall Assessment:** pass-with-findings
+**Convergence:** FINDINGS_REMAIN — both findings fixed in this pass; counter 0/3
+**Readiness:** requires confirmation pass (pass 15) to verify fixes held
+
+## Novelty Assessment
+
+| Field | Value |
+|-------|-------|
+| **Pass** | 14 |
+| **New findings** | 2 |
+| **Duplicate/variant findings** | 0 |
+| **Novelty score** | 1.0 (2/2) |
+| **Median severity** | 2.5 (1H+1M) |
+| **Trajectory** | →1→1→2 |
+| **Verdict** | FINDINGS_REMAIN |

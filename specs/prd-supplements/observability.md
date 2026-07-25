@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-observability
 level: L3
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-24T00:00:00Z
 phase: 1d
 changelog:
+  - "1.3 (burst-259/F-P158-01+F-P158-02/2026-07-24): (1) F-P158-01: retry.circuit_breaker_disabled — drop tool_name from field schema. CircuitBreaker::always_closed() is a zero-argument constructor; tool association happens at ToolRetryPolicy bind time, after construction. Schema now matches sibling retry.unlimited_policy_constructed (event_type: &str only). Catalog table Audit Role updated to 'at construction time' (tool-agnostic). Field Schema Details: code snippet and table updated. Option (b) adjudicated over (a)/(c): construction-time WARN is the correct catch point; bind-time would require architectural plumbing through a constructor that accepts no arguments. (2) F-P158-02: server.cron_schedule_queue_full Trigger Condition aligned from 'exceeds' (>) to 'meets or exceeds' (>=) — consistent with Recurrence column which already stated '>= max_queue_depth'."
   - "1.2 (burst-258/F-P157-01/2026-07-24): Full prose-emission sweep across all 129 BCs. (1) Add 5 new catalog entries from 4 BCs: retry.unlimited_policy_constructed (BC-2.16.002), retry.circuit_breaker_disabled (BC-2.16.003), retry.circuit_probe_failed (BC-2.16.003), server.cron_schedule_queue_full (BC-2.12.004), eval.judge_infra_error (BC-2.08.008). (2) All 4 BCs updated with canonical event_type literals in emission prose (BC versions bumped per Form-A). (3) 6 sweep entries adjudicated as NOT-A-STRUCTURED-EMISSION with explicit exemption notes in scope section. (4) Active count 6 → 11."
   - "1.1 (burst-226/F-P131-02+F-P131-03/2026-07-21): (1) Retire ferrochain.mcp.guardrail.unregistered — replaced by canonical guardrail.unregistered_passthrough (item-4 adjudication; BC-2.09.003 v1.2 + BC-2.11.006 v1.2 unified). (2) Add 5 new catalog entries: guardrail.unregistered_passthrough (canonical no-hook passthrough), sandbox.process_no_isolation_execute (BC-2.13.002), server.rate_limit_store_in_memory (BC-2.12.006), memory.gdpr_unattributed_session_entries (BC-2.15.003), server.security_config_cors_wildcard (BC-2.12.005). (3) Census methodology upgraded: prose-emission sweep supplements token-grep; 6 active event_type values (1 retired). (4) Inputs expanded to include all emitting BC files."
   - "1.0 (F-P130-06/2026-07-21): Initial Canonical Structured Event Catalog created. Census: grep `event_type =` across all of .factory/specs/behavioral-contracts/ and .factory/specs/architecture/. Total: 2 distinct event_type values found. SAP-1 standing probe policy stated. New emission sites require a same-commit catalog row per SAP-1 (CLAUDE.md §Standing Adversary Probes)."
@@ -22,7 +23,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-16/BC-2.16.003.md
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.004.md
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.008.md
-input-hash: "1f1fc80"
+input-hash: "1871378"
 ---
 
 # Canonical Structured Event Catalog
@@ -70,9 +71,9 @@ grep -r "event_type" .factory/specs/behavioral-contracts/ .factory/specs/archite
 | `memory.gdpr_unattributed_session_entries` | active | `WARN` | `ferrochain-memory` / `gdpr.rs` | BC-2.15.003 EC-004 | GDPR erasure for a user finds session entries that predate `session_id → user_id` tracking (no attribution available) | `event_type: &str`, `user_id: &str`, `unattributed_session_count: usize` | Compliance observability: operator signal that some session entries could not be attributed to the erased user. Entries are NOT deleted (per documented limitation). Enables operator audit of data gaps. | Per GDPR erasure request where `unattributed_session_count > 0`. |
 | `server.security_config_cors_wildcard` | active | `WARN` | `ferrochain-server` / server init | BC-2.12.005 EC-003, Invariants | Server startup with `SecurityConfig { allowed_origins: [AllowOrigin::Any] }` (CORS wildcard) | `event_type: &str` | Security observability: CORS wildcard is acceptable for local development but is a misconfiguration in production. Fires on every startup to ensure the warning is visible across restarts and CI runs. | Once per server startup when CORS wildcard is configured. |
 | `retry.unlimited_policy_constructed` | active | `WARN` | `ferrochain-core` / `retry::policy` | BC-2.16.002 PC4, EC-003 | `RetryPolicy::unlimited()` constructed | `event_type: &str` | Warn developer/operator that a `RetryPolicy` with no global retry bound (`global_limit: None`) was constructed. `None` global limit provides no termination guarantee regardless of per-tool limits (NE-09). Motivates review: is the unlimited policy intentional or accidental? | Once per `RetryPolicy::unlimited()` construction — NOT once per run that uses the policy. |
-| `retry.circuit_breaker_disabled` | active | `WARN` | `ferrochain-core` / `retry::circuit_breaker` | BC-2.16.003 PC5, EC-005 | `CircuitBreaker::always_closed()` constructed | `event_type: &str`, `tool_name: &str` | Warn developer/operator that circuit protection was explicitly disabled for a specific tool. The circuit breaker provides a third independent termination layer preventing infinite retry (NE-09); `always_closed()` bypasses it. Motivates review: is disabling the circuit breaker intentional or a test-only construct leaked to production? | Once per `CircuitBreaker::always_closed()` construction. |
+| `retry.circuit_breaker_disabled` | active | `WARN` | `ferrochain-core` / `retry::circuit_breaker` | BC-2.16.003 PC5, EC-005 | `CircuitBreaker::always_closed()` constructed | `event_type: &str` | Warn developer/operator that circuit protection was explicitly disabled at construction time. The circuit breaker provides a third independent termination layer preventing infinite retry (NE-09); `always_closed()` bypasses it. Motivates review: is disabling the circuit breaker intentional or a test-only construct leaked to production? | Once per `CircuitBreaker::always_closed()` construction. |
 | `retry.circuit_probe_failed` | active | `DEBUG` | `ferrochain-core` / `retry::circuit_breaker` | BC-2.16.003 EC-003 | HALF-OPEN probe call for a tool fails; circuit returns to OPEN | `event_type: &str`, `tool_name: &str` | Diagnostic signal: the circuit breaker attempted to recover from OPEN state via a probe call, but the probe failed. Circuit re-enters OPEN with `reset_timeout` restarted. Supports tracing circuit state machine transitions during incident investigation and integration testing. | Per failed HALF-OPEN probe attempt — distinct from CLOSED→OPEN transitions (no event_type emitted on initial trip). |
-| `server.cron_schedule_queue_full` | active | `WARN` | `ferrochain-server` / `scheduler` | BC-2.12.004 EC-004 | Schedule fires when run queue depth exceeds `max_queue_depth` threshold | `event_type: &str`, `cron_id: Uuid`, `queue_depth: usize` | Operator signal that a scheduled run firing was skipped due to run queue saturation. Enables back-pressure monitoring and alerting on schedule overload. Repeated firing indicates the schedule interval is too short relative to run completion time; operator should increase interval or max_queue_depth. | Per schedule firing skip when `queue_depth >= max_queue_depth`. |
+| `server.cron_schedule_queue_full` | active | `WARN` | `ferrochain-server` / `scheduler` | BC-2.12.004 EC-004 | Schedule fires when run queue depth meets or exceeds `max_queue_depth` | `event_type: &str`, `cron_id: Uuid`, `queue_depth: usize` | Operator signal that a scheduled run firing was skipped due to run queue saturation. Enables back-pressure monitoring and alerting on schedule overload. Repeated firing indicates the schedule interval is too short relative to run completion time; operator should increase interval or max_queue_depth. | Per schedule firing skip when `queue_depth >= max_queue_depth`. |
 | `eval.judge_infra_error` | active | `WARN` | `ferrochain-standard-tests` / `eval::judge` | BC-2.08.008 PC3 | `JudgeResult::InfraError` returned for an eval case (judge LLM unavailable, timeout, or unparseable response) | `event_type: &str`, `reason: &str` | Signals judge infrastructure failure for a specific eval case, distinguishing it from a quality failure. Prevents false quality alarms when the judge LLM is degraded. `InfraError` cases are excluded from aggregate eval score per BC-2.08.008 PC3. | Per eval case where `JudgeResult::InfraError` is returned. |
 
 ---
@@ -197,15 +198,13 @@ tracing::warn!(
 ```rust
 tracing::warn!(
     event_type = "retry.circuit_breaker_disabled",
-    tool_name = %tool_name,
-    "CircuitBreaker::always_closed() — circuit protection disabled for tool '{}'; only use in tests", tool_name
+    "CircuitBreaker::always_closed() constructed — circuit protection disabled; only use in tests or controlled environments"
 );
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `event_type` | `&'static str` | Always `"retry.circuit_breaker_disabled"` |
-| `tool_name` | `&str` (Display) | The tool name for which circuit protection was disabled; sourced from the `ToolRetryPolicy` binding |
 
 ### `retry.circuit_probe_failed`
 

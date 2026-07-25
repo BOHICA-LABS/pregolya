@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.003
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
   - "1.2 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
   - "1.3 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'retry.circuit_breaker_disabled' to CircuitBreaker::always_closed() WARN emission (PC5 and EC-005) and 'retry.circuit_probe_failed' to half-open probe failure DEBUG emission (EC-003) per observability census (SAP-1)."
+  - "1.4 (burst-259/F-P158-01/2026-07-24): Drop tool_name from retry.circuit_breaker_disabled emission in EC-005. CircuitBreaker::always_closed() is a zero-argument constructor; tool_name is unavailable at construction time. EC-005 message template updated to tool-agnostic form consistent with sibling retry.unlimited_policy_constructed. Observability catalog and this BC aligned."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
   - domain-spec/failure-modes.md#FM-012
@@ -119,7 +120,7 @@ normally with a freshly reset failure counter.
 **Scenario:** A caller constructs `CircuitBreaker::always_closed()` to disable the breaker
 for a stub tool in testing.
 **Expected behavior:** The policy is constructed. A `tracing::warn!(event_type = "retry.circuit_breaker_disabled")` is emitted:
-`"CircuitBreaker::always_closed() — circuit protection disabled for tool '<tool_name>'; only use in tests"`.
+`"CircuitBreaker::always_closed() constructed — circuit protection disabled; only use in tests or controlled environments"`.
 The tool is always invoked regardless of failure count.
 
 ## Canonical Test Vectors

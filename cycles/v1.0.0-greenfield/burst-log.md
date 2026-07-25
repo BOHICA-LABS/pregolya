@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "24628f2"
+input-hash: "2b6c9c1"
 traces_to: STATE.md
 ---
 
@@ -4710,5 +4710,34 @@ F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 
 ### Archived from STATE.md Current Phase Steps — Burst 251 (archived at burst-256)
 
 | Burst 251 — P1D-150 adversary + fix-burst COMPLETE (2 findings 0C/0H/2M; F-P150-01/02 closed; nfr-catalog v1.6→v1.7 [NFR-013 map-row contradiction + proactive NFR-014 jinja2/minijinja engine obligation; 14/14 consistent]; capabilities-p1-p2 v1.12→v1.13 [CAP-029/031 stale-delegation residue; L-026 sweep 6 hits/2 fixed]; FIVE closure axes ALL PASS: CAP 38/38, DI 15/15, FM 19/19, NFR 14/14, observability↔BC; L2-INDEX v1.13→v1.14; hash sweep 2-pass TOTAL=174 MATCH=174 STALE=0; burst-246 row archived); 0/3. NEXT: P1D-151. | product-owner + business-analyst + state-manager | COMPLETE | F-P150-01 MED (PO): nfr-catalog v1.6→v1.7 NFR-013 module-map row directly contradicted v1.4-adjudicated requirement row (EC-002 adjudication: no pre-send batch-size cap; provider rejection = structured Err passthrough per BC-2.22.001 EC-002); map row rewritten to align. Proactive: 14-NFR consistency sweep — NFR-014 map row also stale (omitted jinja2/minijinja engine obligation present in requirement since v1.4); extended to add jinja2/minijinja bounded-traversal. 14/14 consistent post-fix. F-P150-02 MED (BA): capabilities-p1-p2 v1.12→v1.13 — CAP-029 §Zero-norm guard and CAP-031 §Dimensionality contract each carried stale 'PO to formalize in error taxonomy' imperative; both E-VS-001 and E-EMBED-001 registered since error-taxonomy v1.27; replaced with past-tense citations. L-026 stale-delegation sweep: 6 hits in domain-spec, 2 fixed (CAP-029/031), 4 verified structural/legitimate (BC-to-CAP traceability fields, all referenced BCs exist). Hash sweep: 2 passes TOTAL=174 MATCH=174 STALE=0. Burst 251. |
+
+---
+
+## Burst 259 — P1D-158 Fix-Burst: F-P158-01 MED circuit_breaker_disabled tool_name + F-P158-02 LOW queue-full >= boundary (2026-07-24)
+
+**Parent-commit:** e6042ba burst-258 commit (P1D-157 record + fix burst 258 complete)
+**Adversary verdict:** NOT CLEAN strict+PR-merge — 0C/0H/1M/1L (F-P158-01 MED circuit_breaker_disabled tool_name dropped from EC-005; F-P158-02 LOW queue-full >= boundary adjudicated). Counter 0/3 (unchanged; streak 0/3 holds).
+**Files touched (Dim-1): 25 unique files**
+- specs/prd-supplements/observability.md (v1.2→v1.3: F-P158-01 — tool_name dropped from retry.circuit_breaker_disabled EC-005 emission; CircuitBreaker::always_closed() is zero-arg constructor; tool_name unavailable at construction time; EC-005 message template updated to tool-agnostic form consistent with sibling retry.unlimited_policy_constructed)
+- specs/behavioral-contracts/ss-16/BC-2.16.003.md (v1.3→v1.4: F-P158-01 — EC-005 tool_name field dropped; emission field list updated to match observability.md v1.3 EC-005 record; BC body consistent with catalog)
+- specs/behavioral-contracts/ss-12/BC-2.12.004.md (v1.4→v1.5: F-P158-02 — queue-full boundary adjudicated >= (ScheduleQueueFull fires when queue length MEETS OR EXCEEDS capacity; at-capacity semantics); EC-001 boundary condition updated; observability.md trigger-condition aligned)
+- specs/prd-supplements/error-taxonomy.md (v1.39→v1.40: F-P158-02 — E-CRON-003 ScheduleQueueFull boundary annotation updated >= consistent with BC-2.12.004 v1.5 adjudication)
+- specs/behavioral-contracts/BC-INDEX.md (v3.8→v3.9: F-P158-01/02 — frontmatter changelog entry + body table row added for BC-2.16.003 v1.4 and BC-2.12.004 v1.5)
+- specs/architecture/ARCH-INDEX.md (v1.11 prose: VP-INDEX v1.5→v1.6 stale citation corrected on lines 24+162; input-hash 839384d unchanged)
+- STATE.md (v4.01→v4.02: P1D-158 complete; convergence 0/3; trajectory-tail →4→4→4→2; burst-259 Current Phase Steps row added; burst-254 archived)
+- cycles/v1.0.0-greenfield/convergence-trajectory.md (P1D-158 row added: 2 findings 0C/0H/1M/1L; trajectory shorthand appended →2; per-pass detail section added)
+- cycles/v1.0.0-greenfield/burst-log.md (this file; burst-259 entry added)
+- Hash-currency refreshes (D18-P89-A/D18-P90-A, 16 files hash-only): cycles/v0.0.0-pre-pipeline/blocking-issues-resolved.md (24628f2→2b6c9c1), cycles/v0.0.0-pre-pipeline/burst-log.md (24628f2→2b6c9c1), cycles/v0.0.0-pre-pipeline/lessons.md (24628f2→2b6c9c1), cycles/v0.0.0-pre-pipeline/session-checkpoints.md (24628f2→2b6c9c1), cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-16.md (d260160→5723f99), cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-18.md (803ee1f→1e793ed), cycles/v1.0.0-greenfield/adversarial-reviews/pass-92.md (5caa622→04c60bd), cycles/v1.0.0-greenfield/adversarial-reviews/pass-93.md (5caa622→04c60bd), cycles/v1.0.0-greenfield/adversarial-reviews/pass-94.md (5caa622→04c60bd), cycles/v1.0.0-greenfield/blocking-issues-resolved.md (24628f2→2b6c9c1), cycles/v1.0.0-greenfield/lessons.md (24628f2→2b6c9c1), cycles/v1.0.0-greenfield/session-checkpoints.md (24628f2→2b6c9c1), specs/behavioral-contracts/ss-14/BC-2.14.002.md (b8a9bd2→77c2954), planning/dtu-assessment.md (ec92108→3d3766c), specs/domain-spec/bounded-contexts.md (b957652→ed8d714), specs/module-criticality.md (c238312→ed9debb)
+
+**Dim-2:** No new behavioral contracts authored this burst. Two existing BCs revised (BC-2.16.003 v1.3→v1.4: tool_name dropped from EC-005 emission; BC-2.12.004 v1.4→v1.5: >= boundary adjudicated). BC count unchanged at 129 (51P0/75P1/3P2). BC-INDEX v3.8→v3.9.
+**D18-P89-A sweep:** Full corpus sweep; ARCH-INDEX.md VP-INDEX prose fix created 3 new stale files (dtu-assessment.md ec92108→3d3766c; bounded-contexts.md b957652→ed8d714; module-criticality.md c238312→ed9debb); 1 pass TOTAL STALE=0.
+
+**Codifications:** No new gates minted. observability.md v1.3: tool_name adjudication for retry.circuit_breaker_disabled EC-005 (CircuitBreaker::always_closed() zero-arg constructor; tool_name unavailable at construction time; tool-agnostic message form). error-taxonomy.md v1.40: E-CRON-003 boundary >= annotated (at-capacity semantics).
+
+**Dim-5:** counter 0/3 (unchanged; P1D-158 NOT CLEAN strict); next action: dispatch adversary pass P1D-159 on burst-259 frozen HEAD.
+**Dim-6:** observability.md v1.3 tool_name adjudication; error-taxonomy.md v1.40 >= boundary; BC-2.12.004 v1.5 at-capacity semantics; BC-2.16.003 v1.4 tool_name drop; ARCH-INDEX.md VP-INDEX v1.6 prose.
+**Dim-7:** Finding trajectory tail →4→4→4→2 (passes P1D-155/P1D-156/P1D-157/P1D-158); trajectory appended →2 (pass P1D-158). Novelty LOW (defect-surface confinement to newest edits only; observability catalog entries added burst-258 contained the tool_name gap).
+
+**Closes:** F-P158-01 MED (PO): retry.circuit_breaker_disabled EC-005 emission — tool_name field dropped (CircuitBreaker::always_closed() is zero-arg constructor; tool_name unavailable at construction time; EC-005 message template updated to tool-agnostic form consistent with sibling retry.unlimited_policy_constructed). observability.md v1.2→v1.3. BC-2.16.003 v1.3→v1.4. F-P158-02 LOW (PO): cron queue-full boundary adjudicated >= (ScheduleQueueFull fires when queue length meets or exceeds capacity; at-capacity semantics). BC-2.12.004 v1.4→v1.5. error-taxonomy.md v1.39→v1.40. BC-INDEX v3.8→v3.9.
 
 ---

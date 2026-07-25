@@ -1,5 +1,9 @@
 ---
 document_type: adversarial-review
+level: ops
+version: "1.0"
+status: complete
+traces_to: STATE.md
 phase: 1d
 pass: 18
 verdict: NOT CLEAN
@@ -24,7 +28,7 @@ inputs:
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/specs/prd-supplements/bc-authoring-plan.md
   - .factory/specs/domain-spec/ubiquitous-language-server.md
-input-hash: "803ee1f"
+input-hash: "1e793ed"
 findings:
   - id: F-P18-01
     severity: HIGH
@@ -45,9 +49,14 @@ findings:
 trajectory: "...→1→1→1→4"
 clean_pass_counter: 0/3
 canon_decision: "CheckpointSaver (not CheckpointStore) + RunnableConfig (not RunConfig) — implementer-facing norm, LangChain/LangGraph upstream name fidelity per D17"
+previous_review: ADV-P1D-PASS-17.md
 ---
 
 # ADV-P1D-PASS-18: Adversarial Review
+
+## Finding ID Convention
+
+Finding IDs for this pass use the format `F-P18-NN` (project convention; cycle prefix omitted per established ferrochain shorthand).
 
 ## Verdict: NOT CLEAN — 4 Findings (2 FIXED in product-owner scope; 2 OPEN in architect/BA scope)
 
@@ -60,6 +69,8 @@ Sibling axes (NE anchor matrix reconfirmation, CAP/VP census, executable-string 
 no new findings on these axes this pass.
 
 ---
+
+## Part B — New Findings (or all findings for pass 1)
 
 ## F-P18-01 (HIGH) — Shared-Type Name Split: CheckpointStore/CheckpointSaver + RunConfig/RunnableConfig
 
@@ -231,3 +242,28 @@ cross-references), and canonical type list are documented in the guideline.
 Clean pass counter: **0/3** — pass is not clean (2 open findings remain in architect/BA scope).
 Next: architect must fix F-P18-02 (interface-definitions AIMessage casing) and BA/architect
 must resolve F-P18-03 (ContentBlock::ToolUse/ToolResult variant existence decision).
+
+## Summary
+
+| Severity | Count |
+|----------|-------|
+| CRITICAL | 0 |
+| HIGH | 1 |
+| MEDIUM | 3 |
+| LOW | 0 |
+
+**Overall Assessment:** pass-with-findings
+**Convergence:** FINDINGS_REMAIN — 2 findings open in architect/BA scope; counter stays 0/3
+**Readiness:** requires fix pass for F-P18-02 (architect) and F-P18-03 resolution (BA/architect)
+
+## Novelty Assessment
+
+| Field | Value |
+|-------|-------|
+| **Pass** | 18 |
+| **New findings** | 4 |
+| **Duplicate/variant findings** | 0 |
+| **Novelty score** | 1.0 (4/4) |
+| **Median severity** | 3.0 (MED — 1H+3M, median position = MED) |
+| **Trajectory** | →1→1→1→4 |
+| **Verdict** | FINDINGS_REMAIN |
