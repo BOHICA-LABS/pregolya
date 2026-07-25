@@ -14,8 +14,9 @@ date: "2026-07-25"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.7"
+version: "1.8"
 changelog:
+  - "1.8 (FIX-BURST-269/F-P167-05/2026-07-25): Add Category casing canon note after FerrochainError struct definition. Category enum variants use SCREAMING_CASE (Category::VAL, Category::AUTH, etc.) — not PascalCase (Category::Val). The canonical codes list at the category comment already used uppercase (VAL | AUTH | …); this note makes the Rust variant casing explicit to prevent future Category::Val drift. Closing adjudication from F-P167-05."
   - "1.7 (FIX-BURST-267/F-P165-01+02/2026-07-25): F-P165-01 — de-label two version-pinned D23 cites to decay-resistant 'as of D23' form: (1) FerrochainError struct component comment '(v1.2 — 17 components)' → '(as of D23 — 17 components)'; (2) Component count summary table row 'v1.2 (D23)' → 'as of D23'. F-P165-02 — restore D21 #[non_exhaustive] gate-count block to historically-correct 13→17 (16 named + Custom) with a forward note 'As of D23, the current value is 18 (17 named + Custom) — see §Component Axis Expansion (D23)'; previous text incorrectly stated 13→18 (skipping the D21-era intermediate), contradicting the D23 §gate update block which correctly shows 17→18."
   - "1.6 (burst-238/2026-07-23): Stale-handoff sweep — rewrite three future-tense PO obligations added in v1.1 (D21) to past-tense facts: (1) SRLZ 'PO must apply Category::Val when authoring BC-2.19.x' → 'PO applied Category::Val (error-taxonomy v1.27/D21)'; (2) VS E-CFG-001 resolution 'PO assigns next available VS sequence number when authoring BC-2.21.x' → 'PO assigned E-VS-003 (error-taxonomy v1.27/D21; anchor BC-2.20.003)'; (3) VS table row 'E-VS-NNN (was E-CFG-001)' → 'E-VS-003 (was E-CFG-001)'; remove 'PO assigns next sequence number' from table cell."
   - "1.5 (burst-234/2026-07-22): PO minted E-TOOLS-009 InvalidRegexPattern (VAL/Never; fields pattern: String + compile_error: String; anchor BC-2.23.006 PC-4/EC-002/TV-003 — invalid-regex path in GrepTool). Add E-TOOLS-009 row to TOOLS component table. Update Source/Origin cite range 001..007 → 001..009 (TD-VSDD-060 sibling sweep). TOOLS namespace is now 9 codes (001..009); component count and #[non_exhaustive] gate count unchanged."
@@ -57,6 +58,8 @@ pub struct FerrochainError {
     pub source: Option<Box<dyn std::error::Error + Send + Sync>>,
 }
 ```
+
+**Category casing canon (F-P167-05, FIX-BURST-269):** `Category` enum variants use SCREAMING_CASE — `Category::VAL`, `Category::AUTH`, `Category::SECURITY`, etc. PascalCase forms such as `Category::Val` are NON-CANONICAL and must not appear in any spec, harness, or code artifact. The codes list above (`VAL | AUTH | RATE | …`) is intentionally uppercase; the Rust variant identifiers match exactly.
 
 **anyhow confinement rules:**
 1. Library crates (`ferrochain-*`): `anyhow` is NOT a dependency. ZERO uses.

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.006
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
   - "1.1 (F-P224/F-P129-02/2026-07-21): PC1 and PC5 corrected — Category::COMPATIBILITY → Category::VAL per ADR-010 adjudication (E-SRLZ-002 = VAL in error-taxonomy.md v1.27; COMPATIBILITY is a non-canonical variant absent from the 12-member category enum). PC5 rationale rewritten: monolith type id is a validation failure (type known but unsupported), not a compatibility domain concept per taxonomy membership rules."
   - "1.2 (FIX-BURST-268/F-P166-01/2026-07-25): (1) TD-VSDD-091 de-pin — PC5 cited 'error-taxonomy.md v1.27 E-SRLZ-002 row' as live normative authority; version pin violates TD-VSDD-091 (narrative body must not cite vN.N numbers that decay on subsequent taxonomy diffs). Adjudication: live normative citation, not historical record. De-pinned to stable section anchor: 'error-taxonomy.md §E-SRLZ-002 (row: VAL)'. (2) COMPATIBILITY residue purge — Architecture Anchors and Traceability Architecture Authority both read 'E-SRLZ-002 category COMPATIBILITY' despite PC5 being corrected to VAL at v1.1; both are live authority claims contradicting the BC's own postconditions. Corrected both to 'category VAL' to match PC5 and ADR-010 adjudication."
+  - "1.3 (FIX-BURST-269/F-P167-02/2026-07-25): Fix dangling 'ADR-016 Decision 7' anchor at two sites (Architecture Anchors and Traceability Architecture Authority). ADR-016 has only Decisions 1–5; Decision 7 is nonexistent. Corrected to 'ADR-016 Decision 3 Property 4' — LANGCHAIN_MONOLITH_TYPES set, E-SRLZ-002 category VAL, and the deliberate-unregistered pattern are all specified in Decision 3 Property 4. Same anchor class as BC-2.19.005 F-P148-01 fix ('Decision 6' → 'Decision 3 §Security Invariant')."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -131,7 +132,7 @@ available in ferrochain." The error is propagated as `Err`; it is never a silent
 ## Architecture Anchors
 
 - `architecture/module-decomposition.md` — SS-19, `core::serializable::reviver`
-- `architecture/decisions/ADR-016-lc-json-deserialization-safety.md` — Decision 7 (LANGCHAIN_MONOLITH_TYPES set, E-SRLZ-002 category VAL, disjoint-set invariant, check-ordering)
+- `architecture/decisions/ADR-016-lc-json-deserialization-safety.md` — Decision 3 Property 4 (LANGCHAIN_MONOLITH_TYPES set, E-SRLZ-002 category VAL, disjoint-set invariant, check-ordering)
 
 ## Story Anchor
 
@@ -148,7 +149,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 story]_
 | Source L2 Capability | CAP-025 |
 | Capability Anchor Justification | CAP-025 ("Reviver and Type Registry (Inventory-Based; Allowlist Containment; Legacy-Namespace Remap)") per capabilities-p1-p2.md §CAP-025 — this BC specifies the structured E-SRLZ-002 diagnostic for langchain-monolith types, which CAP-025 identifies as a required distinction between "unknown" and "known-but-not-ported" deserialization failures |
 | L2 Domain Invariants | DI-008 (revive returns Result; no panic or silent unwrap), DI-014 (E-SRLZ-002 propagates as Err; no silent None or default object construction for a monolith type) |
-| Architecture Authority | ADR-016 Decision 7 (LANGCHAIN_MONOLITH_TYPES set, E-SRLZ-002, category VAL, disjoint-set invariant, check ordering within revive) |
+| Architecture Authority | ADR-016 Decision 3 Property 4 (LANGCHAIN_MONOLITH_TYPES set, E-SRLZ-002, category VAL, disjoint-set invariant, check ordering within revive) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | ferrochain-core / core::serializable::reviver |
 | Priority | P1 |

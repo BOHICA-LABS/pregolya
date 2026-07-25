@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "f5d59d4"
+input-hash: "4f145b7"
 traces_to: STATE.md
 ---
 
@@ -1366,5 +1366,21 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **RESUME IN ONE BREATH:** "ferrochain Phase 1 (Spec Crystallization) — Phase-1d adversarial re-convergence on the D21+D23 expanded perimeter. P1D-158 cascade NOT CLEAN (2 findings: 0C/0H/1M/1L; fix-burst 259 COMPLETE: F-P158-01 MED circuit_breaker_disabled tool_name dropped from circuit_breaker_disabled emission EC-005 [CircuitBreaker::always_closed() zero-arg constructor; tool_name unavailable at construction]; observability.md v1.2→v1.3; F-P158-02 LOW queue-full >= boundary adjudicated (ScheduleQueueFull fires when queue length meets or exceeds capacity; at-capacity); error-taxonomy v1.39→v1.40; BC-2.12.004 v1.5; BC-INDEX v3.9; hash sweep TOTAL STALE=0); 0/3. NEXT: dispatch adversary pass P1D-159 on burst-259 frozen HEAD."
 
 **HEADS:** develop (clean, pushed); factory-artifacts = burst-259 commit (pushed); no worktrees; no open PRs.
+
+---
+
+### Burst 268 Session Checkpoint (archived from STATE.md burst-269)
+
+**RESUME IN ONE BREATH:** "ferrochain Phase 1 (Spec Crystallization) — Phase-1d adversarial re-convergence on the D21+D23 expanded perimeter. P1D-166 NOT CLEAN strict (3 items 0C/0H/1M/1L/1OBS; F-P166-01+OBS-P166-A+OBS-P166-B; fix-burst 268 COMPLETE: prd-supplements/module-criticality v1.6/VP-013 v1.4/validator #4 extended/ADR-012 v1.5/BC-2.19.005 v1.4/BC-2.19.006 v1.2/BC-INDEX v3.15); hash sweep TOTAL STALE=0; 0/3. NEXT: dispatch adversary pass P1D-167 on burst-268 frozen HEAD."
+
+**HEADS:** develop (clean, pushed); factory-artifacts = THIS burst-268 commit (pushed); no worktrees; no open PRs.
+
+**PERIMETER SNAPSHOT (verified P1D-166):** 129 BCs (51 P0/75 P1/3 P2); 108 error codes; 43 modules (HIGH 18); 38 CAPs; 15 DIs; 13 VPs (6 P0 Kani gate); 21 ADRs; 21 crates; 23 subsystem groups; 674 TVs (11 GTVs Python-verified); 15 StreamEvents; FM-001..019; 14 bounded contexts; 36 gates; 11 Red Gate BCs.
+
+**NEXT-ACTION:** dispatch vsdd-factory:adversary fresh-context on burst-268 frozen HEAD; pre-run all FIVE validators; broad regression + fresh-hunt (leads: ADR-001..006 full bodies, VP-001..008 bodies).
+
+**CASCADE TRAJECTORY:** P1D-129→166 finding counts 12,9,7,8,10,7,6,6,3,3,7,8,7,4,1,4,5,4,3,5,4,2,7,3,2,2,4,4,4,2,2,2,3,3,5,3,7,3 — noisy but decaying; FIRST CLEAN(PR-merge) at P1D-161.
+
+**WRAP METADATA:** Date 2026-07-25 | Cycle v1.0.0-greenfield | Burst 268 | Phase 1 IN PROGRESS — burst-268 COMMITTED; NEXT: adversary cascade P1D-167
 
 **WRAP METADATA:** Date 2026-07-24 | Cycle v1.0.0-greenfield | Burst 259 | Phase 1 IN PROGRESS — burst-259 COMMITTED; NEXT: adversary cascade P1D-159

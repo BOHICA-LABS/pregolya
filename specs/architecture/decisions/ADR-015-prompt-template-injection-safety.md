@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.5"
+version: "1.6"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.6 (FIX-BURST-269/F-P167-01/2026-07-25): Replace all non-canonical Category::VALIDATION residue with Category::VAL at four sites: (1) Decision 2 E-TMPL-002 code sketch (live code body); (2) Decision 4 strict-undefined note '(VALIDATION)' narrative label; (3) Consequences E-TMPL-002 '(VALIDATION/SystemSlotPolicy)' narrative label; (4) Consequences E-TMPL-003 '(VALIDATION/UndefinedVariable)' narrative label. VALIDATION is not a canonical Category variant; canonical abbreviated form per ADR-010 is VAL."
   - "1.5 (burst-249/2026-07-24): F-P148-02 — add Security Invariant 2 labeled subsection to Decision 2 and Security Invariant 1 labeled subsection to Decision 3. Adjudication option (b): stable anchors added to ADR rather than remapping 7+ citation sites across 4 documents. Resolves unresolvable 'ADR-015 Security Invariant N' citations in BC-2.18.004, BC-2.18.005, BC-INDEX Red Gate table, VP-006 changelog, prd.md, test-vectors.md."
   - "1.4 (burst-227/2026-07-21): F-P132-03 (coordinator flag 2) — Add 'MessagesPlaceholder trust derivation' subsection to Decision 3. ADR-015 v1.3 defined `TemplateVar` for scalar substitution but gave no counterpart type or derivation rule for `Vec<Message>` placeholder variables. BC-2.18.003 PC2 cited 'ADR-015 v1.3 semantics' but the rule was unanchored. Fix: introduce `MessageListVar { messages: Vec<Message>, trust_level: Option<TrustLevel> }` and state the uniform derivation rule: each expanded message's `MessageProvenance.highest_trust_level` = `MessageListVar.trust_level`; `None` → `None` (treated as Trusted). API shape (TemplateInput enum) deferred to story implementation."
   - "1.3 (burst-226/2026-07-21): F-P131-05 (CRITICAL) — ProvenanceTag shape adjudication. `ProvenanceTag` (SS-11 ingress-boundary struct) and template-composition trust level are TWO DISTINCT CONCERNS. Introduce `TrustLevel` enum (Untrusted|UserInput|Trusted) in `ferrochain-prompts: prompts::template` as the SS-18-local trust classifier. `TemplateVar.trust_level: Option<TrustLevel>` replaces the former implicit `Option<ProvenanceTag>` coupling. `MessageProvenance.highest_trust_level: Option<TrustLevel>` replaces `tag: Option<ProvenanceTag>`. Injection check updated: `var.trust_level.is_some_and(|t| t.is_untrusted())`. `ProvenanceTag` remains the SS-11 canonical 3-field struct (boundary_type/ingress_id/sequence_position) — no trust dimension added. BC-2.09.003 `ProvenanceTag::McpToolResult { server_name, tool_name }` is an outdated pre-PASS-58 variant; PO handoff: update PC1 to canonical struct form (`boundary_type: BoundaryType::ToolResult`). F-P131-04 (MED) — strict-undefined is a UNIVERSAL template-engine contract. Both f-string (default) and jinja2 (optional) engines raise E-TMPL-003 for undefined variables. E-TMPL-003 is engine-neutral. Decision 4 updated to state universal obligation."
@@ -96,7 +97,7 @@ impl ChatPromptTemplate {
             if *role == MessageRole::System && *policy != SlotTrustPolicy::TrustRequired {
                 return Err(FerrochainError {
                     component: Component::TMPL,
-                    category: Category::VALIDATION,
+                    category: Category::VAL,
                     code: "E-TMPL-002",
                     message: "SystemMessage slots must use TrustRequired policy; \
                               TrustAll is disallowed for system-position message slots",
@@ -354,7 +355,7 @@ provides three mechanisms directly relevant to the slot trust model:
   to an explicit allowlist; ferrochain-prompts enables sandboxed mode for all jinja2
   template rendering, preventing template authors from calling arbitrary methods on
   substituted values.
-- **Strict-undefined mode**: raises `E-TMPL-003` (VALIDATION) on any undefined variable
+- **Strict-undefined mode**: raises `E-TMPL-003` (VAL) on any undefined variable
   reference rather than silently substituting an empty string — prevents accidental
   information hiding during template development. This behavior is UNIVERSAL across both
   template engines (see "Universal strict-undefined contract" below).
@@ -464,14 +465,14 @@ matters (and prompt injection to system position matters), it must be enforced.
   produces `Err(E-TMPL-001)` — harness uses `kani::Arbitrary` on `TrustLevel`).
 - `PromptValue` carries `MessageProvenance` — callers that previously assumed raw `Vec<Message>`
   from a template must unwrap or use the helper `.into_messages()` method.
-- `E-TMPL-001` (SECURITY/InjectionAttempt) and `E-TMPL-002` (VALIDATION/SystemSlotPolicy)
+- `E-TMPL-001` (SECURITY/InjectionAttempt) and `E-TMPL-002` (VAL/SystemSlotPolicy)
   are new error codes; they belong in the error taxonomy (ferrochain-core `core::error`).
 - ferrochain-prompts depends on ferrochain-core. No new deps on ferrochain-graph or
   ferrochain-memory — prompt templates are lower in the dependency graph than execution.
 - The jinja2 engine has an external dep (`minijinja = "2"`, 2.21.0, `default-features = false`)
   and is opt-in via `feature = "jinja2"`. Default dependency tree: ferrochain-prompts →
   ferrochain-core only (no minijinja unless the `jinja2` feature is enabled).
-- `E-TMPL-003` (VALIDATION/UndefinedVariable) is engine-neutral — raised by BOTH the
+- `E-TMPL-003` (VAL/UndefinedVariable) is engine-neutral — raised by BOTH the
   f-string (default) and jinja2 (optional) engines. The error-taxonomy description MUST NOT
   attribute it to minijinja only (PO handoff; see below).
 - `TrustLevel` enum (`Untrusted | UserInput | Trusted`) is a new type in

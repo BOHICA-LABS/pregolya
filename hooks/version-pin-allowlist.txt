@@ -109,8 +109,9 @@ architecture/verification-architecture.md:566
 # architecture.md §566; records that BC-2.23.005 established category VAL at
 # v1.1, closing the contradiction that existed in the VP's harness context.
 # Line number refreshed :258→:259 by FIX-BURST-268/OBS-P166-A (VP-013 v1.4
-# changelog entry added above, shifting body content down one line).
-verification-properties/VP-013.md:259
+# changelog entry added above); :259→:260 by FIX-BURST-269/F-P167-04 (VP-013
+# v1.5 §Source Contract title sync added one line above this block).
+verification-properties/VP-013.md:260
 
 # ── FIX-BURST-268 entries (OBS-P166-B, 2026-07-25) — patterns 5 and 6 added ──
 # These entries cover historical-record hits uncovered when `<filename>.md (vN.N`
