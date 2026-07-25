@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.005
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.1 (F-P224/F-P129-01+F-P129-04/2026-07-21): (1) F-P129-01: PC1 and Invariant 3 corrected — Category::SECURITY → Category::VAL per ADR-010 §SRLZ adjudication (error-taxonomy.md line 279 already recorded E-SRLZ-001 as VAL; this BC was out of sync). Invariant 3 rationale rewritten: deserialization containment is input validation against the registry, not an attack-vector boundary event. (2) F-P129-04: VP-2.19.005-A restated to scope non-monolith unregistered ids only and add joint coverage note with BC-2.19.006/VP-010."
   - "1.2 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-010 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-010' (VP-INDEX v1.2 burst-223 seeded VP-010 Kani P0; VP-010.md exists). Completed-handoff residue removal."
   - "1.3 (F-P148-01/burst-249/2026-07-24): Architecture anchor de-pinned from 'Decision 6' to 'Decision 3 §Security Invariant' per ADR-016 v1.4 labeled anchor. Traceability Architecture Authority row: 'E-SRLZ-001 category SECURITY' corrected to 'E-SRLZ-001 category VAL' (already correct in Postconditions PC-1 and Invariant 3; Traceability row was the sole remaining SECURITY residue). red_gate_source and Red Gate body callout updated to Decision 3 §Security Invariant anchor form. input-hash updated to 5b4fe5e (ADR-016 v1.4 adds labeled anchors)."
+  - "1.4 (FIX-BURST-268/F-P166-01/2026-07-25): TD-VSDD-091 de-pin — Invariant 3 cited 'error-taxonomy.md v1.28 (E-SRLZ-001 row: VAL)' as live normative authority; version pin violates TD-VSDD-091 (narrative body must not cite vN.N numbers that decay on subsequent taxonomy diffs). Adjudication: live normative citation, not historical record. De-pinned to stable section anchor: 'error-taxonomy.md §E-SRLZ-001 (row: VAL)'."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -106,7 +107,7 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
    membership rules (E-SBXD-001 workspace escape, E-GRAPH-013 approver-role gate,
    E-MEMORY-007 write injection, E-TMPL-001 prompt injection). Deserialization containment
    enforced by registry lookup is input validation, not a boundary-crossing attack-vector
-   event. This adjudication is recorded in error-taxonomy.md v1.28 (E-SRLZ-001 row: VAL).
+   event. This adjudication is recorded in error-taxonomy.md §E-SRLZ-001 (row: VAL).
 4. The `E-SRLZ-001` message text is fixed (`"unknown-serializable: type id not in registry"`);
    it does NOT include the received id in the message to avoid leaking attacker-controlled
    data into structured logs (gate #33 STRUCT-PLACEHOLDER PARITY: the message format has

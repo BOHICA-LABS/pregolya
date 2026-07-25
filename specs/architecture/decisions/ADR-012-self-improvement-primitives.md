@@ -8,7 +8,7 @@ status: accepted
 date: 2026-07-15
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.4"
+version: "1.5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D20]
@@ -49,7 +49,7 @@ This ADR decides four questions:
 **Chosen:** Definitions in ferrochain-core / routing + enforcement in ferrochain-memory.
 Follows the ADR-009 Option 3 split (BudgetPolicy trait in core, BudgetEngine in graph)
 and the guardrail placement canon (GuardrailHook trait in ferrochain-core, invocation
-pipeline in ferrochain-graph per bc-authoring-plan.md v2.10).
+pipeline in ferrochain-graph per bc-authoring-plan.md §Gate #27 §Key ownership rules).
 
 ### Primitive A — Skill Registry
 
@@ -335,6 +335,7 @@ seam that does not interact with `ProvenanceTag`, `GuardrailHook`, or `BoundaryT
 
 | Version | Date | Author | References | Summary |
 |---------|------|--------|------------|---------|
+| 1.5 | 2026-07-25 | architect | FIX-BURST-268/OBS-P166-A | De-pin live-body version pin per TD-VSDD-091: Decision 1 body 'bc-authoring-plan.md v2.10' → 'bc-authoring-plan.md §Gate #27 §Key ownership rules' (stable section anchor; guardrail placement canon resides in Gate #27 Key ownership rules table). |
 | 1.4 | 2026-07-23 | architect | burst-238 | Stale-handoff sweep — consolidate Error Codes section: remove stale 'PO must mint E-MEM-NNN' obligation and advisory correction blockquote; rewrite as single past-tense statement (E-MEMORY-007 MemoryWriteGuardDenied already minted per F-P72-02 OBS). |
 | 1.3 | 2026-07-17 | architect | F-P95-01, D18-P84-A | Reconcile two stale 'budget policy evaluation between super-steps' analogies with BC canon. (1) Primitive B description: 'analogously to how graph::budget evaluates BudgetPolicy between super-steps' → 'analogously to how graph::budget_engine populates RunContext.budget_info at each super-step boundary before task dispatch (BC-2.10.003 PC9) — both are phase-boundary operations, not per-call evaluations'. (2) Decision 3 rationale bullet: 'analogous to budget policy evaluation between super-steps' → 'analogous to graph::budget_engine populating RunContext.budget_info at super-step boundaries before task dispatch — BC-2.10.003 PC9'. Template structure: add date, subsystems_affected, superseded_by, supersedes frontmatter fields; add Rationale, Alternatives Considered, Source / Origin sections. |
 | 1.2 | 2026-07-15 | architect | OBS-P77-C, D18-P77-A | Rename ADR-012 DI-001 → ADR-012 INV-1 (Decision 3 body). DI-NNN is the reserved domain-invariant namespace (DI-001..DI-014); local ADR invariants must use non-DI identifiers. Adjudication D18-P77-A recorded. PO to propagate rename to BC-2.15.006 (lines ~69, ~150) and capabilities-p1-p2.md (~line 111). |

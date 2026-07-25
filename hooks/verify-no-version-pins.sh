@@ -4,10 +4,18 @@
 # Scans all .md files under .factory/specs/ for LIVE-BODY volatile version
 # pins of the following forms:
 #
-#   ADR-\d+\s+v\d+\.\d+           e.g. "ADR-018 v1.3"
+#   ADR-\d+\s+v\d+\.\d+             e.g. "ADR-018 v1.3"
 #   BC-2\.\d{2}\.\d{3}\s+v\d+\.\d+  e.g. "BC-2.06.001 v1.4"
 #   VP-\d{3}\s+v\d+\.\d+            e.g. "VP-011 v1.2"
 #   CAP-\d{3}\s+v\d+\.\d+           e.g. "CAP-018 v1.2"
+#   [a-z0-9][a-z0-9_-]*\.md\s+\(v\d+\.\d+   e.g. "error-taxonomy.md (v1.31, D23)"
+#   [a-z0-9][a-z0-9_-]*\.md\s+v\d+\.\d+     e.g. "bc-authoring-plan.md v2.10"
+#
+# Patterns 5 and 6 were added in FIX-BURST-268 (OBS-P166-B) to catch supplement
+# self-referential pins of the form `<filename>.md (vN.N` and `<filename>.md vN.N`.
+# Both patterns use a negative lookbehind `(?<![A-Za-z0-9_-])` to avoid false
+# positives on paths like `VP-010.md v1.1` where the `0` is immediately preceded
+# by a hyphen (a word-boundary char) that anchors the token to an ID namespace.
 #
 # EXEMPTIONS — the following locations are NOT scanned:
 #
@@ -41,12 +49,23 @@
 #   that reliable heading detection would miss; the ## Changelog detection covers
 #   the high-volume case.
 #
-# KNOWN EXPECTED FAILURES: none — corpus is all-clean as of FIX-BURST-263.
+# KNOWN EXPECTED FAILURES: 3 live-normative supplement pins (FIX-BURST-268, OBS-P166-B).
+#   These were uncovered when patterns 5 and 6 were added; they are outside devops
+#   scope and must be closed by the owning specialist before the next burst gate.
 #   (Historical: FIX-BURST-262 closed 4 volatile-pin sites in ADR-018 ~line 156,
 #    module-decomposition ~line 69, purity-boundary-map ~line 83, ADR-019 ~line 33.
-#    Architect parallel fixes landed; verify-no-version-pins now exits PASS=198
-#    WARN=0 FAIL=0 against the full corpus.)
-#   Any FAIL shown here is a NEW finding requiring a fix-burst.
+#    FIX-BURST-268 patterns-1..4 parallel work fixed VP-013 ~line 236 and
+#    prd-supplements/module-criticality.md superseded-banner.)
+#
+#   OPEN (FAIL=3 expected until owners close):
+#     architecture/decisions/ADR-012-self-improvement-primitives.md:52
+#       match: "bc-authoring-plan.md v2.10"  owner: architect
+#     behavioral-contracts/ss-19/BC-2.19.005.md:109
+#       match: "error-taxonomy.md v1.28"     owner: product-owner
+#     behavioral-contracts/ss-19/BC-2.19.006.md:86
+#       match: "error-taxonomy.md v1.27"     owner: product-owner
+#
+#   Any FAIL beyond these three is a NEW finding requiring a fix-burst.
 #
 # Usage:   bash .factory/hooks/verify-no-version-pins.sh
 # Exit:    0 if no FAIL lines; 1 if any FAIL.
@@ -103,14 +122,25 @@ allowlist_f = sys.argv[2]
 #   2. BC-2\.\d{2}\.\d{3} v\d+\.\d+
 #   3. VP-\d{3} v\d+\.\d+
 #   4. CAP-\d{3} v\d+\.\d+
+#   5. <filename>.md (vX.Y   — paren-form supplement self-referential pin
+#   6. <filename>.md vX.Y    — noparen-form supplement self-referential pin
+#
+# Patterns 5 and 6 (added FIX-BURST-268 OBS-P166-B): catch F-P166-01 class hits
+# such as "error-taxonomy.md (v1.31, D23)" and "bc-authoring-plan.md v2.10".
+# The same negative lookbehind prevents false positives on identifier-prefixed
+# paths like VP-010.md v1.1 (the "-" before "010" is in [A-Za-z0-9_-] and blocks
+# the match) or upper-case-prefixed paths like ARCH-INDEX.md v1.6 (the "A" does
+# not match [a-z0-9] at the start of the alternation arm).
 
 PIN_RE = re.compile(
-    r'(?<![A-Za-z0-9_-])'          # negative lookbehind: not preceded by word char
+    r'(?<![A-Za-z0-9_-])'                      # negative lookbehind: not preceded by word char
     r'(?:'
-    r'ADR-\d+\s+v\d+\.\d+'          # ADR-NNN vX.Y
-    r'|BC-2\.\d{2}\.\d{3}\s+v\d+\.\d+'  # BC-2.SS.NNN vX.Y
-    r'|VP-\d{3}\s+v\d+\.\d+'        # VP-NNN vX.Y
-    r'|CAP-\d{3}\s+v\d+\.\d+'       # CAP-NNN vX.Y
+    r'ADR-\d+\s+v\d+\.\d+'                      # 1. ADR-NNN vX.Y
+    r'|BC-2\.\d{2}\.\d{3}\s+v\d+\.\d+'          # 2. BC-2.SS.NNN vX.Y
+    r'|VP-\d{3}\s+v\d+\.\d+'                    # 3. VP-NNN vX.Y
+    r'|CAP-\d{3}\s+v\d+\.\d+'                   # 4. CAP-NNN vX.Y
+    r'|[a-z0-9][a-z0-9_-]*\.md\s+\(v\d+\.\d+'  # 5. filename.md (vX.Y  [paren form]
+    r'|[a-z0-9][a-z0-9_-]*\.md\s+v\d+\.\d+'    # 6. filename.md vX.Y   [noparen form]
     r')'
 )
 

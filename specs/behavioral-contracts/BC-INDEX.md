@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.14"
+version: "3.15"
 status: active
 producer: state-manager
-timestamp: 2026-07-25T23:30:00Z
+timestamp: 2026-07-25T23:45:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.15 (burst-268/F-P166-01/OBS-P166-A+OBS-P166-B/2026-07-25): F-P166-01 MED: BC-2.19.005 v1.3→v1.4 (TD-VSDD-091 de-pin — Invariant 3 'error-taxonomy.md v1.28 §E-SRLZ-001' version pin removed; stable anchor 'error-taxonomy.md §E-SRLZ-001 (row: VAL)'); BC-2.19.006 v1.1→v1.2 (TD-VSDD-091 de-pin PC5 'error-taxonomy.md v1.27 §E-SRLZ-002' + COMPATIBILITY residue purge: Architecture Anchors + Traceability Architecture Authority both corrected category COMPATIBILITY → VAL per PC5+ADR-010). H1s unchanged."
   - "3.14 (burst-266/F-P164-01/2026-07-25): F-P164-01 HIGH: BC-2.14.001 v1.2→v1.3 — Component enum updated 16→17 (+TOOLS, ferrochain-tools SS-23); counter '16 components as of D21' → '17 components as of D23'; ADR-010 v1.6 D23 authority. TD-VSDD-060 sole-site confirmed: rg '16 components|sixteen components' .factory/specs/ — sole occurrence was BC-2.14.001 line 49; no other live-body references require amendment."
   - "3.13 (burst-264/2026-07-25): BC-2.12.004 v1.5→v1.6 — Architecture Anchors filesystem path corrected src/scheduler/ → src/cron/ per module-decomposition v1.26 adjudication (canonical module server::cron); pre-emptive micro-fix applied before adversary pass P1D-163."
   - "3.12 (burst-262/F-P161-03/2026-07-25): F-P161-03 LOW: Carry-Forward Notes #6 and #7 annotated '(later promoted to Wave 1 per D23)' per D23 promotion — Notes #6/#7 previously stated 'assigned wave 2' for ferrochain-memory SS-15 and SS-16 respectively, without acknowledging subsequent D23 Wave-1 promotion; now reads 'assigned wave 2, later promoted to Wave 1 per D23' following the parenthetical-annotation convention of Note #5."
@@ -238,6 +239,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.15 | 2026-07-25 | burst-268/F-P166-01+OBS×2: BC-2.19.005 v1.3→v1.4 — TD-VSDD-091 de-pin Invariant 3 'error-taxonomy.md v1.28 §E-SRLZ-001' version pin replaced with stable anchor 'error-taxonomy.md §E-SRLZ-001 (row: VAL)'; BC-2.19.006 v1.1→v1.2 — TD-VSDD-091 de-pin PC5 'error-taxonomy.md v1.27 §E-SRLZ-002' → '§E-SRLZ-002 (row: VAL)' + COMPATIBILITY residue purge in Architecture Anchors + Traceability Authority (category COMPATIBILITY → VAL per PC5+ADR-010). H1s unchanged. | burst-268 F-P166-01+OBS-P166-A+OBS-P166-B |
 | 3.14 | 2026-07-25 | burst-266/F-P164-01: BC-2.14.001 v1.2→v1.3 — Component enum updated 16→17 (+TOOLS, ferrochain-tools SS-23; "16 components as of D21" → "17 components as of D23"). ADR-010 v1.6 D23 authority. TD-VSDD-060 sole-site confirmed. | burst-266 F-P164-01 |
 | 3.13 | 2026-07-25 | burst-264: BC-2.12.004 v1.5→v1.6 — Architecture Anchors filesystem path corrected src/scheduler/ → src/cron/ per module-decomposition v1.26 adjudication (canonical module server::cron); pre-emptive micro-fix before adversary pass P1D-163. | burst-264 |
 | 3.12 | 2026-07-25 | burst-262/F-P161-03: Carry-Forward Notes #6 and #7 annotated "(later promoted to Wave 1 per D23)" — Notes previously stated wave-2 assignment for SS-15/SS-16 without acknowledging D23 Wave-1 promotion; parenthetical clarifiers added following Note #5 convention. | burst-262 F-P161-03 |

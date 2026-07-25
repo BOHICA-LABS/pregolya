@@ -108,4 +108,56 @@ architecture/verification-architecture.md:566
 # (burst-232, 2026-07-22) — identical resolution text to verification-
 # architecture.md §566; records that BC-2.23.005 established category VAL at
 # v1.1, closing the contradiction that existed in the VP's harness context.
-verification-properties/VP-013.md:258
+# Line number refreshed :258→:259 by FIX-BURST-268/OBS-P166-A (VP-013 v1.4
+# changelog entry added above, shifting body content down one line).
+verification-properties/VP-013.md:259
+
+# ── FIX-BURST-268 entries (OBS-P166-B, 2026-07-25) — patterns 5 and 6 added ──
+# These entries cover historical-record hits uncovered when `<filename>.md (vN.N`
+# and `<filename>.md vN.N` patterns were added to the validator.  All entries are
+# genuine historical-record prose; removing the version pins would destroy audit-
+# trail precision without providing any normative benefit.
+
+# Reason: HISTORICAL-RECORD — ADR-013 §Attribution Note (F-P72-04) records that the
+# "Prior attribution of `mcp::server` to ADR-012 in module-decomposition.md (v1.6)"
+# was incorrect; the pin anchors which version of module-decomposition carried the
+# wrong attribution before the correction was made.  The word "Prior" marks this as a
+# before/after historical record, not a live normative authority.
+architecture/decisions/ADR-013-mcp-server-module-placement.md:150
+
+# Reason: HISTORICAL-RECORD — bc-authoring-plan.md gate #28 motivating-instances block;
+# records that bc-authoring-plan.md v1.1 and test-vectors.md v1.1 each contained rows
+# dated 2026-07-16 — two days future relative to their superseding v1.2 rows — as the
+# canonical example of the date-validity gap that Gate #28 Rule 6 was added to close.
+# Both version pins identify the defective document state, not a live authority.
+prd-supplements/bc-authoring-plan.md:1357
+
+# Reason: HISTORICAL-RECORD — P56-COMPLETION resolved block; "see error-taxonomy.md v1.8"
+# cites the specific supplement version where E-PROV-008, E-CORE-007, and E-CHKPT-007
+# were first minted.  This is a closed audit record of which supplement version
+# introduced the codes; the error taxonomy is now at a later version.
+prd-supplements/bc-authoring-plan.md:1718
+
+# Reason: HISTORICAL-RECORD — Gate #32 Trait-Signature Type-Resolution Census table;
+# nine consecutive rows (lines 1783–1796) record the specific version of interface-
+# definitions.md in which each type was first formally defined (e.g., v2.13 = P58,
+# v2.20 = D20 sub-burst 2).  These are authoring provenance records, not live normative
+# authorities; the census was completed and the RESOLVED status of each row is
+# definitive.  Line numbers may shift; state-manager must re-verify at commit time.
+prd-supplements/bc-authoring-plan.md:1783
+prd-supplements/bc-authoring-plan.md:1788
+prd-supplements/bc-authoring-plan.md:1790
+prd-supplements/bc-authoring-plan.md:1791
+prd-supplements/bc-authoring-plan.md:1793
+prd-supplements/bc-authoring-plan.md:1794
+prd-supplements/bc-authoring-plan.md:1795
+prd-supplements/bc-authoring-plan.md:1796
+
+# Reason: HISTORICAL-RECORD — product-brief.md §Constraints & Integration Points and
+# §Reference Corpus Pins; both lines cite "reference-manifest.md v1.4.0" as a
+# provenance attribution for the semport analysis corpus (the analysis was performed
+# against the corpus described in reference-manifest v1.4.0).  This is a source-of-
+# data citation, not a live normative mandate; the reference manifest is a read-only
+# pinned corpus that does not evolve post-semport.
+product-brief.md:210
+product-brief.md:300
