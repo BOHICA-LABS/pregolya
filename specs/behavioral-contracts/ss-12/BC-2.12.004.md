@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.004
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -36,6 +36,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-31): F-P31-01 add PC7 for GET /runs?schedule_id aggregate query endpoint — limit default 10, max 100 (clamped), offset default 0, created_at DESC ordering declared as canon; update TV-002 notes to cite F-P31-01 pagination."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
   - "1.3 (F-P118-02, fix burst 121, 2026-07-19): Propagate four-member terminal set from BC-2.12.003 v1.4 (F-P117-01 adjudication). PC2b: lifecycle arrow `completed | failed | cancelled` → `completed | failed | cancelled | summary_halt`. Related BCs §BC-2.12.003 description: same three-member form → four-member form. TD-VSDD-060 file-wide sweep: only these two sites enumerated the terminal set; all other status references are specific-value or query-result forms (exempt)."
+  - "1.4 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'server.cron_schedule_queue_full' to EC-004 queue-full WARN emission per observability census (SAP-1). EC-004 updated with structured event_type and fields."
 ---
 
 # BC-2.12.004: CronSchedule Creation and Proactive Run Execution
@@ -132,8 +133,8 @@ takes 10 seconds. Ten concurrent Runs have been enqueued.
 **Expected behavior:** New Runs are created and queued; the server's run concurrency
 limit determines how many execute simultaneously. Queued Runs are not cancelled; they
 execute in order. If the queue depth exceeds a configurable `max_queue_depth` threshold,
-new firings are skipped with `WARN` log and `E-CRON-003 ScheduleQueueFull { cron_id,
-queue_depth }`.
+new firings are skipped with a `tracing::warn!(event_type = "server.cron_schedule_queue_full", cron_id, queue_depth)` and `E-CRON-003 ScheduleQueueFull { cron_id,
+queue_depth }` error.
 
 ### EC-005: `DELETE /schedules/{cron_id}` for non-existent schedule
 **Scenario:** `DELETE /schedules/unknown-id` where `unknown-id` is not a valid cron_id.

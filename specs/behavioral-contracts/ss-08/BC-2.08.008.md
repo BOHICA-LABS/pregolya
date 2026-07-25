@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.008
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-standard-tests per module-decomposition.md v1.10."
+  - "1.2 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'eval.judge_infra_error' to PC3 InfraError WARN emission per observability census (SAP-1). PC3 updated with structured event_type field."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-011
 inputs:
@@ -66,8 +67,9 @@ concurrency from making scores order-dependent.
    - `JudgeResult::InfraError { reason: String }` — the judge infrastructure failed
      (judge LLM returned an error, timed out, or returned an unparseable response).
 3. **InfraError isolation:** `JudgeResult::InfraError` on a case does NOT decrement
-   the aggregate score. It does NOT count as a `Fail`. The infra error is logged at
-   WARN level with the `reason` field, and the eval suite continues.
+   the aggregate score. It does NOT count as a `Fail`. The infra error is emitted as
+   `tracing::warn!(event_type = "eval.judge_infra_error", reason)` with the `reason` field
+   from `JudgeResult::InfraError { reason }`, and the eval suite continues.
 4. **Single agent run per eval case:** Each eval case is executed once, in sequence.
    No parallel fan-out per case. This prevents non-determinism from concurrent
    execution from producing order-dependent score merges (P-64 counter-example).

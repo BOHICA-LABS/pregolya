@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.003
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
   - "1.2 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
+  - "1.3 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'retry.circuit_breaker_disabled' to CircuitBreaker::always_closed() WARN emission (PC5 and EC-005) and 'retry.circuit_probe_failed' to half-open probe failure DEBUG emission (EC-003) per observability census (SAP-1)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
   - domain-spec/failure-modes.md#FM-012
@@ -71,7 +72,7 @@ retries in the global limit pool.
    `reset_timeout: Duration::from_secs(30)`. Both values are overridable.
 5. There is no constructor `CircuitBreaker::disabled()` or `CircuitBreaker::off()`. To
    exclude circuit breaking for a specific tool, the caller must use
-   `CircuitBreaker::always_closed()`, which emits a `tracing::warn!` at construction time.
+   `CircuitBreaker::always_closed()`, which emits a `tracing::warn!(event_type = "retry.circuit_breaker_disabled")` at construction time.
 6. Circuit state is per-tool-name and scoped to the current run; it does not persist across
    checkpoint boundaries or cross-run restores.
 7. A successful tool invocation resets the consecutive-failure counter for that tool
@@ -106,7 +107,7 @@ failures (total = 2, not 4), the counter is at 2 and the circuit is still CLOSED
 **Scenario:** Circuit is OPEN for tool `T`. `reset_timeout` elapses. Probe call is made
 and fails.
 **Expected behavior:** Circuit returns to OPEN with `reset_timeout` restarted from the
-failed probe time. A `tracing::debug!` event is emitted: `"circuit probe for tool '<T>'
+failed probe time. A `tracing::debug!(event_type = "retry.circuit_probe_failed")` event is emitted: `"circuit probe for tool '<T>'
 failed; returning to OPEN"`.
 
 ### EC-004: Half-Open Probe Succeeds
@@ -117,7 +118,7 @@ normally with a freshly reset failure counter.
 ### EC-005: always_closed() Warning
 **Scenario:** A caller constructs `CircuitBreaker::always_closed()` to disable the breaker
 for a stub tool in testing.
-**Expected behavior:** The policy is constructed. A `tracing::warn!` is emitted:
+**Expected behavior:** The policy is constructed. A `tracing::warn!(event_type = "retry.circuit_breaker_disabled")` is emitted:
 `"CircuitBreaker::always_closed() — circuit protection disabled for tool '<tool_name>'; only use in tests"`.
 The tool is always invoked regardless of failure count.
 

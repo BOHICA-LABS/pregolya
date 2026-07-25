@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.002
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5 had `Err(FerrochainError { component: RETRY, category: POLICY, code: E-RETRY-002, retry_hint: Never })` — bare wrapper missing message field for E-RETRY-002 which has `<global_limit>` placeholder. Added `message:` template inline; `<global_limit>` sourced from `RetryPolicy.global_limit` (type `NonZeroU32`, deterministically available at raise site). Pattern matches BC-2.16.003 PC2 (CircuitBreakerOpen inline message precedent)."
   - "1.3 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
+  - "1.4 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'retry.unlimited_policy_constructed' to the mandated WARN-level construction warning per observability census (SAP-1). PC4 and EC-003 updated with structured event_type field."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
 inputs:
@@ -63,7 +64,7 @@ an explicit `RetryPolicy::unlimited()` method that emits a diagnostic warning.
 3. `RetryPolicy::new(global_limit: NonZeroU32)` accepts only non-zero values by construction;
    the type system enforces this without runtime checks.
 4. `RetryPolicy::unlimited()` is the only constructor that produces `global_limit: None`.
-   It emits a `tracing::warn!` at construction time with the message:
+   It emits a `tracing::warn!(event_type = "retry.unlimited_policy_constructed")` at construction time with the message:
    `"RetryPolicy::unlimited() constructed — no global retry bound; only use in tests or controlled environments"`.
 5. When the global limit across all tool calls in a single run is exhausted,
    the combinator returns `Err(FerrochainError { component: RETRY, category: POLICY,
@@ -103,7 +104,7 @@ The caller is protected from infinite retry without any extra configuration.
 ### EC-003: RetryPolicy::unlimited() Warning
 **Scenario:** Test code calls `RetryPolicy::unlimited()`.
 **Expected behavior:** The policy is constructed successfully with `global_limit: None`. A
-`tracing::warn!` is emitted. Tests that capture tracing output should expect the warning
+`tracing::warn!(event_type = "retry.unlimited_policy_constructed")` is emitted. Tests that capture tracing output should expect the warning
 message to appear.
 
 ### EC-004: Builder Override to Lower Limit
