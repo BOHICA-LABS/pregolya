@@ -18,7 +18,7 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
-input-hash: "a534b58"
+input-hash: "30e0482"
 changelog:
   - "1.2.0 (crates.io/2026-07-21): Add §7 D23 ADR-020 dependency validation — `similar` 3.1.1 GREEN (pin `\"3\"`, owner mitsuhiko not dtolnay, Apache-2.0 single, MSRV 1.85, TextDiff::ratio() confirmed); `regex` 1.13.1 GREEN (pin `\"1\"`, MIT OR Apache-2.0, MSRV 1.65, linear-time guarantee, net-new workspace dep); fuzzy-matcher REJECTED (stale 2020); strsim deferred."
   - "1.1.0 (crates.io/2026-07-20): Add §6 D21 ADR technology validation — inventory 0.3.24 GREEN, minijinja 2.21.0 GREEN, mustache REJECTED (abandoned 2018-02), embeddings no-crate GREEN, vector-math no-crate GREEN."

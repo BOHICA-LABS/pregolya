@@ -4713,6 +4713,38 @@ F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 
 
 ---
 
+## Burst 258 — P1D-157 Fix-Burst: observability catalog 6→11 + module-decomposition OBS fixes (2026-07-24) [archived from STATE.md burst-263]
+
+**Adversary verdict:** NOT CLEAN strict+PR-merge — 0C/0H/2M/2L (F-P157-01/02+OBS-1/2 all closed). Counter 0/3.
+**Files touched:** specs/prd-supplements/observability.md (v1.1→v1.2: F-P157-01 MED — full prose-emission sweep across 129 BCs; 5 new catalog entries added: retry.unlimited_policy_constructed [BC-2.16.002], retry.circuit_breaker_disabled [BC-2.16.003], retry.circuit_probe_failed [BC-2.16.003], server.cron_schedule_queue_full [BC-2.12.004], eval.judge_infra_error [BC-2.08.008]; 4 BCs updated with canonical event_type literals; 6 sweep entries adjudicated NOT-A-STRUCTURED-EMISSION; active count 6→11); specs/behavioral-contracts/BC-INDEX.md (v3.10→v3.11: F-P157-02 MED — frontmatter timestamp future-dated corrected to 2026-07-24); specs/architecture/module-decomposition.md (v1.23→v1.24: OBS-1 sandbox::path_guard WorkspaceFs facade clause; OBS-2 core::guardrail definitions note SS-20→SS-11 heading correction); hash refreshes for staled downstreams.
+**D18-P89-A sweep:** specs TOTAL=174 MATCH=174 STALE=0. Burst 258. **Dim-5:** counter 0/3; next: P1D-158.
+
+---
+
+## Burst 263 — P1D-162 Fix-Burst: observability crate anchors + changelog-direction non-BC class (2026-07-25)
+
+**Adversary verdict:** NOT CLEAN strict — 0C/0H/1M/1L/1OBS (F-P162-02 MED + F-P162-01 LOW + OBS-P162-A; all closed). Counter 0/3 (streak remains 0/3).
+**Frozen HEAD for P1D-162:** burst-262 commit (71c3af5).
+**Files touched (spec content):**
+- specs/prd-supplements/observability.md (v1.3→v1.4: F-P162-02 — TD-VSDD-060 full 12-row anchor audit; 2 mis-anchors corrected: guardrail.unregistered_passthrough ferrochain-core/guardrail dispatch layer → ferrochain-graph/graph::provenance per BC-2.11.006 Architecture Anchors; sandbox.process_no_isolation_execute ferrochain-sandbox/process_backend.rs → ferrochain-sandbox/sandbox::process per BC-2.13.002 anchor + module-decomp; 9 rows CLEAN; retired row tombstone unchanged)
+- specs/domain-spec/capabilities-p0.md (changelog v1.3/v1.4 entries reordered descending; no version bump — pure metadata reorder per F-P162-01 extended validator)
+- specs/domain-spec/edge-cases.md (changelog ascending pair reordered descending per F-P162-01)
+- specs/domain-spec/events.md (changelog 7-entry ascending tail reordered descending per F-P162-01)
+- specs/prd.md (v1.16: triple-v1.0 changelog tail collapsed to one entry per extended-validator catch; option a — all three v1.0 texts preserved verbatim combined)
+- specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md (v1.8→v1.7: erroneous burst-262 version bump reverted; zero content delta; no changelog entry added per adjudication)
+- specs/architecture/module-decomposition.md (YAML backtick escape fix in v1.24 changelog entry: \` → `; only such occurrence corpus-wide; no version bump)
+**Files touched (validators):**
+- hooks/verify-form-a-changelog-direction.sh (extended: now covers non-BC form-A files with per-class direction rules; captures domain-spec/supplement files; PASS=192 WARN=6 FAIL=0)
+- hooks/verify-no-version-pins.sh (OBS-P162-A: stale comment updated to reflect 4-validator protocol)
+**Hash-currency refreshes (D18-P89-A/D18-P90-A):** 3-pass convergence — pass-1 updated 111 stale files; pass-2 updated 10 transitive cascades; pass-3 STALE=0. specs/174 MATCH=174 STALE=0; planning/6 STALE=0; cycles/54 STALE=0. TOTAL STALE=0.
+**Scheduler-label triage note (pre-triaged for architect, NEXT burst):** BC-2.12.004 Architecture Anchors (line 172) cites `ferrochain-server/src/scheduler/` as the cron subsystem file path, but module-decomposition names the module `server::cron` (per Rust path conventions → `ferrochain-server/src/cron.rs` or `ferrochain-server/src/cron/`, NOT `scheduler/`). This is a file-path vs module-name drift: BC path implies `server::scheduler` while module-decomp says `server::cron`. Adjudication options: (A) rename module-decomp row to `server::scheduler` (align to BC file-path); (B) correct BC Architecture Anchor to `ferrochain-server/src/cron/` (align to module-decomp). Given `server::cron` is a cleaner crate-semantics name for a cron subsystem in a server crate, option B is likely correct — but architect must confirm. Expected finding class if not fixed: F-P163-NN LOW anchor drift. State-manager cannot author architecture changes; routing to architect in NEXT burst.
+**Dim-2:** No new behavioral contracts authored. No BC count change (stays 129; 51P0/75P1/3P2). BC-INDEX v3.12 unchanged.
+**Dim-5:** counter 0/3 (P1D-162 NOT CLEAN strict); next action: dispatch adversary pass P1D-163 on burst-263 frozen HEAD.
+**Dim-7:** Finding trajectory tail →3L→3 (passes P1D-161/P1D-162); trajectory shorthand →3 appended (P1D-162). Novelty MEDIUM (catalog anchor precision + validator scope extension catching in-flight issues; latent since burst-226 for guardrail anchor).
+**Closes:** F-P162-02 MED (PO): observability emitting-crate anchors ×2 corrected [v1.4; 12-row audit]. F-P162-01 LOW (BA+devops): changelog-direction non-BC class closed corpus-wide [3 shards + extended validator + 3 more in-burst catches]. OBS-P162-A (devops): stale comment updated.
+
+---
+
 ## Burst 259 — P1D-158 Fix-Burst: F-P158-01 MED circuit_breaker_disabled tool_name + F-P158-02 LOW queue-full >= boundary (2026-07-24)
 
 **Parent-commit:** e6042ba burst-258 commit (P1D-157 record + fix burst 258 complete)

@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-21"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.8"
+version: "1.7"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]

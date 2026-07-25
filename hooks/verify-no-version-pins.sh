@@ -41,13 +41,12 @@
 #   that reliable heading detection would miss; the ## Changelog detection covers
 #   the high-volume case.
 #
-# KNOWN EXPECTED FAILURES (as of FIX-BURST-262, before architect parallel fixes):
-#   4 sites targeted by the architect in this burst:
-#     architecture/decisions/ADR-018-per-tool-call-approval-hook.md  ~line 156
-#     architecture/module-decomposition.md                            ~line 69
-#     architecture/purity-boundary-map.md                             ~line 83
-#     architecture/decisions/ADR-019-rolling-context-compaction.md    ~line 33
-#   Any ADDITIONAL failures shown here are NEW findings separate from those 4.
+# KNOWN EXPECTED FAILURES: none — corpus is all-clean as of FIX-BURST-263.
+#   (Historical: FIX-BURST-262 closed 4 volatile-pin sites in ADR-018 ~line 156,
+#    module-decomposition ~line 69, purity-boundary-map ~line 83, ADR-019 ~line 33.
+#    Architect parallel fixes landed; verify-no-version-pins now exits PASS=198
+#    WARN=0 FAIL=0 against the full corpus.)
+#   Any FAIL shown here is a NEW finding requiring a fix-burst.
 #
 # Usage:   bash .factory/hooks/verify-no-version-pins.sh
 # Exit:    0 if no FAIL lines; 1 if any FAIL.

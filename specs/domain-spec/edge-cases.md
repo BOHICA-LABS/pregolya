@@ -17,8 +17,8 @@ input-hash: "3d23b67"
 traces_to: L2-INDEX.md
 decisions: [D17]
 changelog:
-  - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D17/NE-* sources baked at authoring time from COMPARATIVE-ASSESSMENT.md); domain-a-soc-analyst.md added (DEC-010 prompt-injection edge case); domain-b-dark-factory.md added (DEC-009 crash-recovery fan-out edge case); domain-c-openclaw.md added (DEC-011 workspace symlink escape, NE-02/DI-007); input-hash recomputed."
   - "v1.2 (F-P121-01, fix burst 124, 2026-07-19): DEC-010 scenario: 'ToolResult ContentBlock contains text' → 'ToolMessage content block contains text' per BC-2.09.002 authority. TD-VSDD-060 sweep: DEC-010 was the only ContentBlock-vocabulary site in this file; fixed."
+  - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D17/NE-* sources baked at authoring time from COMPARATIVE-ASSESSMENT.md); domain-a-soc-analyst.md added (DEC-010 prompt-injection edge case); domain-b-dark-factory.md added (DEC-009 crash-recovery fan-out edge case); domain-c-openclaw.md added (DEC-011 workspace symlink escape, NE-02/DI-007); input-hash recomputed."
 ---
 
 # Domain Edge Cases

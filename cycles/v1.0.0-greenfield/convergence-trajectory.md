@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "81c2d61"
+input-hash: "6886b6e"
 traces_to: STATE.md
 ---
 
@@ -1433,3 +1433,25 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 **Regression sweep:** verify-sha-currency.sh: PASS. verify-form-a-changelog-direction.sh: PASS. verify-arch-anchor-resolution.sh: PASS. verify-no-version-pins.sh: PASS. All 4 validators passed.
 
 **Hash sweep (D18-P89-A/D18-P90-A):** entities-server.md v1.14 + events.md v1.11 + BC-INDEX v3.12 + L2-INDEX v1.16 + downstream staled files. Hash sweep TOTAL STALE=0. Burst-262 commit.
+
+---
+
+### Pass P1D-162 (2026-07-25) — Expanded Perimeter Pass 34
+
+**Findings:** 3 (0 CRIT, 0 HIGH, 1 MED, 1 LOW, 1 OBS [process-gap])
+**Streak:** 0/3 (NOT CLEAN strict)
+**Fix burst:** 263
+**Frozen HEAD:** burst-262 commit (71c3af5)
+**Novel attack angle:** Observability catalog emitting-crate fidelity (TD-VSDD-060 full anchor audit on all 11 active + 1 retired rows) + changelog direction class extension to non-BC form-A files (previously unchecked domain-spec/supplement shards) + validator coverage gap (verify-form-a-changelog-direction.sh scope was BC-only; extended mid-burst and immediately caught 3 additional correctness issues).
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. Three items: 1M + 1L + 1OBS [process-gap]. F-P162-02 corrected two emitting-crate anchors in observability v1.3→v1.4 via full 12-row TD-VSDD-060 anchor audit (guardrail.unregistered_passthrough core::guardrail→graph::provenance; sandbox.process_no_isolation_execute process_backend.rs→sandbox::process). F-P162-01 fixed changelog direction for non-BC files corpus-wide (13-shard scan: capabilities-p0 ascending pair + edge-cases ascending pair + events.md 7-entry ascending tail reordered; validator extended to cover non-BC form-A files). Extended validator immediately caught 3 more in-burst: ADR-014 erroneous 1.8 version bump reverted to 1.7; prd.md triple-v1.0 changelog tail collapsed to one entry; module-decomposition YAML backtick escapes normalized. OBS-P162-A updated a stale comment in verify-no-version-pins.sh.
+
+- **F-P162-02 MED** (PO, closed): observability catalog emitting-crate TD-VSDD-060 full anchor audit (all 11 active + 1 retired rows). Two mis-anchors found: (1) guardrail.unregistered_passthrough Emitting Crate/Module was 'ferrochain-core / guardrail dispatch layer' — BC-2.11.006 Architecture Anchors explicitly name graph::provenance (ferrochain-graph, SS-11) as the WARN dispatch site and mark core::guardrail as definitions-only ('None hook-slot handled by graph::provenance WARN logic'); corrected to 'ferrochain-graph / graph::provenance'; ferrochain-mcp / tools.rs conditional MCP branch unchanged. (2) sandbox.process_no_isolation_execute Emitting Crate/Module was 'ferrochain-sandbox / process_backend.rs' — 'process_backend.rs' appears in no authority source; BC-2.13.002 Architecture Anchor cites 'sandbox::process row' in module-decomposition; corrected to 'ferrochain-sandbox / sandbox::process'. All other 9 active rows verified CLEAN. Retired row (historical tombstone) not corrected. observability.md v1.3→v1.4. NOTE (pre-triaged, architect NEXT burst): BC-2.12.004 Architecture Anchors line 172 cites `ferrochain-server/src/scheduler/` as the cron subsystem path, but module-decomposition names the module `server::cron` (which canonically maps to `ferrochain-server/src/cron.rs` or `ferrochain-server/src/cron/`). This is a naming-path drift. Adversary should probe this; architect to adjudicate canonical file-system path.
+
+- **F-P162-01 LOW** (BA + devops, closed): changelog direction class closed for non-BC form-A files. 13-shard corpus scan found 3 files with ascending-order violations (per-class convention: supplements/domain-spec = descending): capabilities-p0.md v1.3/v1.4 ascending pair reordered; edge-cases.md ascending pair reordered; events.md 7-entry ascending tail reordered. Validator #3 (verify-form-a-changelog-direction.sh) extended to cover non-BC form-A files with per-class direction rules. Immediate re-run with extended validator caught 3 additional correctness issues closed in-burst: (1) ADR-014 v1.8→v1.7 — erroneous version bump from burst-262 had zero content delta; adjudicated revert, no misleading changelog entry. (2) prd.md triple-v1.0 changelog tail (three separate v1.0 entries) collapsed to one combined entry (option a, all three texts preserved verbatim). (3) module-decomposition v1.24 changelog entry contained invalid YAML backtick escapes (\` → `); only such occurrence corpus-wide.
+
+- **OBS-P162-A** (devops, closed): verify-no-version-pins.sh stale comment updated — referenced old validator count before the 4-validator protocol was established; corrected to accurate description.
+
+**Regression sweep:** verify-form-a-changelog-direction.sh: PASS=192 WARN=6 FAIL=0 (WARNs: rev-N ADR entries + no-changelog ADRs — acceptable). verify-arch-anchor-resolution.sh: PASS=129 WARN=0 FAIL=0. verify-no-version-pins.sh: PASS=198 WARN=0 FAIL=0. All four validators PASS FAIL=0.
+
+**Hash sweep (D18-P89-A/D18-P90-A):** specs/174 TOTAL=174 MATCH=174 STALE=0 (3-pass convergence: pass-1 updated 111, pass-2 updated 10, pass-3 STALE=0); planning/6 STALE=0; cycles/54 STALE=0. TOTAL STALE=0. Burst-263 commit.

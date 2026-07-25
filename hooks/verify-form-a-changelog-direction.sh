@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # verify-form-a-changelog-direction.sh — ferrochain factory-artifacts wrap guard
 #
-# Validates changelog ordering in BC files
-# (.factory/specs/behavioral-contracts/ss-*/BC-*.md).
-#
+# SECTION 1 — BC files (.factory/specs/behavioral-contracts/ss-*/BC-*.md):
+# ─────────────────────────────────────────────────────────────────────────
 # Two changelog forms are supported — each has its own direction convention:
 #
 #   Form-A (frontmatter YAML `changelog:` list):
@@ -25,20 +24,48 @@
 #     Treated as trivially valid — initial-authoring BC requires no history.
 #     Emits PASS.
 #
-# NOTE: This script covers BC files ONLY.  Architecture docs and prd-supplements
-#       use DESCENDING order for their body changelog tables; do NOT pass those
-#       paths to this script.
+# SECTION 2 — All other spec files under .factory/specs/ (non-BC):
+# ─────────────────────────────────────────────────────────────────
+# Covers: domain-spec/, architecture/ (incl. decisions/), prd-supplements/,
+#         verification-properties/, BC-INDEX.md, L2-INDEX.md, ARCH-INDEX.md,
+#         VP-INDEX.md, prd.md, product-brief.md, and any other .md with a
+#         frontmatter `changelog:` list that is NOT a behavioral-contract.
 #
-# Design notes:
+#   Rule 5 (DESCENDING): Entries must be in STRICTLY DESCENDING version order —
+#           newest (highest) entry at the top, oldest (lowest) at the bottom.
+#           Equal consecutive versions also fail (must be strictly >).
+#   Rule 6 (VERSION-MATCH): The frontmatter `version:` field must equal the
+#           version of the FIRST (newest, top) changelog entry.
+#   Entries with optional "v" prefix (e.g. "v1.8 (...)") are accepted; the "v"
+#   is stripped before numeric comparison.
+#   Entries using a non-version-number prefix (e.g. "rev-2 (...)") cannot be
+#   validated — the file is emitted as WARN (non-blocking) for that format.
+#
+# Empirical verification (FIX-BURST-263):
+#   Convention confirmed DESCENDING/FIRST across 4+ files per non-BC class:
+#   domain-spec (entities-server v1.14, capabilities-p1-p2 v1.14, ARCH-INDEX
+#   v1.11, entities-graph v1.10), architecture/decisions (ADR-019 v1.6,
+#   ADR-018 v1.5, ADR-020 v1.8), prd-supplements (error-taxonomy v1.40,
+#   nfr-catalog v1.7), verification-properties (VP-001 v1.3, VP-011 v1.4,
+#   VP-INDEX v1.6).  BC files confirmed ASCENDING/LAST (Form-A).
+#
+# Per-class direction summary (canonical reference):
+#   behavioral-contract (ss-*/BC-*.md) : Form-A ASCENDING, version == LAST entry
+#   domain-spec/*.md                    : DESCENDING, version == FIRST entry
+#   architecture/**/*.md                : DESCENDING, version == FIRST entry
+#   prd-supplements/*.md                : DESCENDING, version == FIRST entry
+#   verification-properties/*.md        : DESCENDING, version == FIRST entry
+#   indexes (BC-INDEX, L2-INDEX, etc.)  : DESCENDING, version == FIRST entry
+#   prd.md, product-brief.md            : DESCENDING, version == FIRST entry
+#
+# Common notes (both sections):
 #   - Frontmatter extracted between the first and second '---' delimiter.
 #   - PyYAML (python3 -c "import yaml") used for robust YAML parsing; avoids
 #     fragile line-by-line awk that breaks on embedded colons, braces, etc.
 #   - Version numbers compared as integer tuples (so 1.10 > 1.9 correctly).
-#   - Files lacking both Form-A and Form-B changelog AND version == "1.0" are
-#     PASS (trivially valid, no prior version to record).
-#   - Files lacking both Form-A and Form-B changelog AND version > "1.0" are
-#     WARN (gate #28 concern — not this script's FAIL mode; caught separately).
 #   - Files lacking a 'version:' key are WARN (non-blocking).
+#   - Files lacking a changelog AND version == "1.0": PASS (trivially valid).
+#   - Files lacking a changelog AND version > "1.0": WARN (non-blocking).
 #
 # Usage:  bash .factory/hooks/verify-form-a-changelog-direction.sh
 # Exit:   0 if no FAIL lines; 1 if any FAIL.
@@ -274,6 +301,189 @@ while IFS= read -r line; do
       ;;
   esac
 done <<< "$PYTHON_OUTPUT"
+
+# ── SECTION 2 — Non-BC spec files (DESCENDING convention) ────────────────────
+#
+# Validates frontmatter `changelog:` list direction for ALL .md files under
+# .factory/specs/ that are NOT behavioral-contract documents (BC files are
+# handled by Section 1 above).
+
+PYTHON_OUTPUT_NONBC="$(python3 - "$FACTORY_DIR/specs" "$BC_GLOB" <<'PYEOF'
+import sys, os, glob, re, yaml
+
+specs_root    = sys.argv[1]
+bc_glob_pat   = sys.argv[2]
+
+# Build exclusion set: BC files handled by Section 1 above
+bc_files = set(glob.glob(bc_glob_pat))
+
+# Version entry RE: optional leading 'v', then X.Y or X.Y.Z, then whitespace/colon/paren
+VERSION_RE = re.compile(r'^v?(\d+\.\d+(?:\.\d+)*)[\s:(]')
+# Non-version prefix RE: entries like "rev-2 (...)" that cannot be version-compared
+REV_RE = re.compile(r'^rev-\d+[\s:(]')
+
+def parse_version(s):
+    """Convert '1.3' or '1.10' to tuple of ints for numeric comparison."""
+    return tuple(int(x) for x in s.split('.'))
+
+all_files = sorted(glob.glob(os.path.join(specs_root, '**', '*.md'), recursive=True))
+
+for filepath in all_files:
+    if filepath in bc_files:
+        continue   # Handled by Section 1
+
+    try:
+        with open(filepath, 'r', encoding='utf-8') as fh:
+            content = fh.read()
+    except OSError as e:
+        print(f"SKIP {filepath} read-error:{e}")
+        continue
+
+    parts = content.split('---', 2)
+    if len(parts) < 3:
+        print(f"SKIP {filepath} no-frontmatter")
+        continue
+
+    fm_text = parts[1]
+
+    try:
+        fm = yaml.safe_load(fm_text)
+    except yaml.YAMLError as e:
+        single_line = str(e).replace('\n', ' | ')
+        print(f"SKIP {filepath} yaml-parse-error:{single_line}")
+        continue
+
+    if not isinstance(fm, dict):
+        print(f"SKIP {filepath} frontmatter-not-dict")
+        continue
+
+    # Skip actual BC files (document_type == 'behavioral-contract')
+    doc_type = str(fm.get('document_type', '')).strip()
+    if doc_type == 'behavioral-contract':
+        continue   # Handled by Section 1
+
+    if 'changelog' not in fm:
+        # No frontmatter changelog list.
+        # version == "1.0": trivially valid (no prior version to record) — PASS.
+        # version > "1.0": gate-28-style concern — WARN (non-blocking).
+        fm_version = str(fm.get('version', '')).strip()
+        try:
+            is_gt_1_0 = (parse_version(fm_version) > (1, 0)) if fm_version else False
+        except (ValueError, TypeError):
+            is_gt_1_0 = False
+        if is_gt_1_0:
+            print(f"SKIP {filepath} no-changelog-version-gt-1.0")
+        else:
+            print(f"PASS {filepath}")
+        continue
+
+    changelog = fm['changelog']
+    if not isinstance(changelog, list):
+        print(f"SKIP {filepath} changelog-not-list")
+        continue
+
+    if len(changelog) == 0:
+        print(f"SKIP {filepath} changelog-empty")
+        continue
+
+    # Classify entries: parseable version, rev-N format, or other unparseable
+    versions   = []
+    rev_format = []
+    other_errs = []
+    for entry in changelog:
+        entry_str = str(entry).strip()
+        m = VERSION_RE.match(entry_str)
+        if m:
+            versions.append(m.group(1))
+        elif REV_RE.match(entry_str):
+            rev_format.append(entry_str[:40])
+        else:
+            other_errs.append(entry_str[:60])
+
+    # All entries are rev-N format: non-standard naming, cannot validate — WARN
+    if rev_format and not versions:
+        print(f"WARN {filepath} non-standard-rev-format:{rev_format[0]!r}")
+        continue
+
+    # Any unparseable entries (neither version nor rev-N): WARN, skip validation
+    if other_errs:
+        print(f"WARN {filepath} could-not-parse-version:{other_errs[0]!r}")
+        continue
+
+    if not versions:
+        print(f"SKIP {filepath} no-parseable-versions")
+        continue
+
+    # Single-entry changelog: trivially valid (no pair to check direction on)
+    if len(versions) == 1:
+        fm_version = str(fm.get('version', '')).strip()
+        version_mismatch = (fm_version != versions[0]) if fm_version else None
+        if version_mismatch:
+            print(f"FAIL {filepath} version-mismatch:frontmatter={fm_version},first-entry={versions[0]}")
+        else:
+            print(f"PASS {filepath}")
+        continue
+
+    # Rule 5 (DESCENDING): strictly decreasing — each entry's version must be
+    # strictly less than the one before it (first = newest, last = oldest).
+    nums = [parse_version(v) for v in versions]
+    descending_fail = None
+    for i in range(1, len(nums)):
+        prev, curr = nums[i - 1], nums[i]
+        if curr >= prev:
+            direction = 'ascending' if nums[-1] > nums[0] else 'non-monotonic'
+            descending_fail = (versions[i - 1], versions[i], direction)
+            break
+
+    # Rule 6 (VERSION-MATCH): frontmatter version == FIRST (top/newest) entry
+    fm_version   = str(fm.get('version', '')).strip()
+    first_version = versions[0]
+    version_mismatch = (fm_version != first_version) if fm_version else None
+
+    defects = []
+    if descending_fail:
+        v_prev, v_curr, direction = descending_fail
+        defects.append(f"{direction}:{','.join(versions)}")
+    if version_mismatch:
+        defects.append(
+            f"version-mismatch:frontmatter={fm_version},first-entry={first_version}"
+        )
+
+    if defects:
+        print(f"FAIL {filepath} {'; '.join(defects)}")
+    else:
+        print(f"PASS {filepath}")
+
+PYEOF
+)"
+
+# ── Process Section 2 output ──────────────────────────────────────────────────
+
+while IFS= read -r line; do
+  level="${line%% *}"
+  rest="${line#* }"
+  filepath="${rest%% *}"
+  detail="${rest#* }"
+  short="${filepath#"$FACTORY_DIR"/}"
+
+  case "$level" in
+    PASS)
+      emit PASS "$short"
+      ;;
+    FAIL)
+      emit FAIL "$short — $detail"
+      ;;
+    SKIP)
+      emit WARN "$short (skipped: $detail)"
+      ;;
+    WARN)
+      emit WARN "$short — $detail"
+      ;;
+    *)
+      emit WARN "unexpected parser output: $line"
+      ;;
+  esac
+done <<< "$PYTHON_OUTPUT_NONBC"
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 
