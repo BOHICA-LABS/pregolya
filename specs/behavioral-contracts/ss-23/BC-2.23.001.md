@@ -19,10 +19,10 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
-  - "1.3 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded); normalize separator from ' / ' to '/'. Before: 'E-TOOLS-001 / E-TOOLS-002'. After: 'E-TOOLS-001/002/008'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX)."
-  - "1.2 (burst-233/F-P133-03/2026-07-22): PC-4 / EC-005 / TV-004 — assign E-TOOLS-008 FileIoError to the OS-level I/O error path (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'ReadFileTool', path: <file_path>, io_kind: <ErrorKind debug name>. Gate #33 forward+reverse: E-TOOLS-008 now covers this raise site; error-taxonomy.md v1.32 anchors BC-2.23.001 in E-TOOLS-008 row."
-  - "1.1 (Burst-232/2026-07-22): Fix Category::VALIDATION → Category::VAL in PC-3 (E-TOOLS-002 FileReadExceedsLimit). VALIDATION is not in the canonical 12-member Category enum; E-TOOLS-002 is VAL per error-taxonomy v1.31. D23 straggler sweep."
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 ReadFileTool."
+  - "1.1 (Burst-232/2026-07-22): Fix Category::VALIDATION → Category::VAL in PC-3 (E-TOOLS-002 FileReadExceedsLimit). VALIDATION is not in the canonical 12-member Category enum; E-TOOLS-002 is VAL per error-taxonomy v1.31. D23 straggler sweep."
+  - "1.2 (burst-233/F-P133-03/2026-07-22): PC-4 / EC-005 / TV-004 — assign E-TOOLS-008 FileIoError to the OS-level I/O error path (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'ReadFileTool', path: <file_path>, io_kind: <ErrorKind debug name>. Gate #33 forward+reverse: E-TOOLS-008 now covers this raise site; error-taxonomy.md v1.32 anchors BC-2.23.001 in E-TOOLS-008 row."
+  - "1.3 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded); normalize separator from ' / ' to '/'. Before: 'E-TOOLS-001 / E-TOOLS-002'. After: 'E-TOOLS-001/002/008'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md

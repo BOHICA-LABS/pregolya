@@ -15,8 +15,8 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-20T00:00:00Z
 changelog:
-  - "1.2 (D21/Batch-3b-i/2026-07-20): Component enum expanded 12→16 per ADR-010 v1.1. Added TMPL (ferrochain-prompts, SS-18), SRLZ (ferrochain-core::serializable, SS-19), VS (ferrochain-vectorstores, SS-21), EMBED (ferrochain-core::embeddings, SS-22) to Description and Postcondition 2 component list. Category axis unchanged at 12."
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
+  - "1.2 (D21/Batch-3b-i/2026-07-20): Component enum expanded 12→16 per ADR-010 v1.1. Added TMPL (ferrochain-prompts, SS-18), SRLZ (ferrochain-core::serializable, SS-19), VS (ferrochain-vectorstores, SS-21), EMBED (ferrochain-core::embeddings, SS-22) to Description and Postcondition 2 component list. Category axis unchanged at 12."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008

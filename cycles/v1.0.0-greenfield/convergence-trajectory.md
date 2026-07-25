@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "891f262"
+input-hash: "67192a2"
 traces_to: STATE.md
 ---
 
@@ -50,10 +50,11 @@ traces_to: STATE.md
 | P1D-118 | 2026-07-19 | 3 | 0 | 2 | 1 | 0 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict; NOT CLEAN PR-merge (F-P118-01 HIGH [process-gap] bc-authoring-plan §12 gate mandated 3-member terminal set — would actively revert F-P117-01; batch-table line 270 drifted; F-P118-02 HIGH sibling propagation: BC-2.12.004 lines 70+163 + BC-2.05.004 lines 99–100 + BC-2.05.005 line 137; F-P118-03 MED entities-server line 57 completed_at mis-cited BC-2.12.003 PC8(c)(d) → correct BC-2.12.003 PC13 + BC-2.10.003 PC8(c)(d)) |
 | P1D-153 | 2026-07-24 | 2 | 0 | 1 | 0 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (1H F-P153-01 BC-2.17.001 v1.3 strict-< residue + VP-011 4-variant modernization; 1 LOW/OBS F-P153-02 ADR-019 v1.5 wire-serialization annotation; burst-253 regressions all held; fix-burst 254 COMPLETE) |
 | P1D-154 | 2026-07-24 | 3 | 0 | 1 | 1 | 0 | MEDIUM | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (1H F-P154-01 VP-011.md v1.2 internal contradiction — PendingHumanApproval coverage gap; Option-A adjudication: peel-off upstream pre_tool_dispatch; VP-011 v1.2→v1.3; verification-architecture v2.7→v2.8; 1M F-P154-02 BC-2.17.001 v1.3 VP-011 bullet realigned + changelog asc-reorder; 1 OBS-P154-A gate #35 internal-consistency extension; fix-burst 255 COMPLETE) |
+| P1D-155 | 2026-07-24 | 4 | 0 | 2 | 0 | 1 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (2H F-P155-01/02 Form-A changelog direction systematic sweep ×41 BCs: 25 pure-descending reversed, 11 non-monotonic sorted asc, BC-2.16.001 sorted+v1.4→v1.5, 4 dup-1.1-entry merged; + BC-2.07.003 YAML parse fix invalid backslash+backtick at col 364; 1H-PG F-P155-03 verify-form-a-changelog-direction.sh validator minted (PASS=121 WARN=8 FAIL=0); 1L F-P155-04 all-13-VP §BC Traceability Title cells synced verbatim to canonical BC H1s (VP-001 v1.3, VP-002 v1.3, VP-003 v1.4, VP-004 v1.2, VP-005 v1.2, VP-006 v1.6, VP-007 v1.2, VP-008 v1.3, VP-009 v1.5, VP-010 v1.4, VP-011 v1.4, VP-012 v1.4, VP-013 v1.3); BC-INDEX v3.5→v3.6; fix-burst 256 COMPLETE) |
 
 ## Trajectory Shorthand
 
-`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN 1/3) →0 (P1D-127 CLEAN 2/3) →0 (P1D-128 CLEAN 3/3 CONVERGED pre-D21+D23) →12 (P1D-129, D21+D23 re-baseline) →9 (P1D-130) →7 (P1D-131) →8 (P1D-132) →10 (P1D-133) →7 (P1D-134) →6 (P1D-135) →6 (P1D-136) →3 (P1D-137) →3 (P1D-138) →7 (P1D-139) →8 (P1D-140) →7 (P1D-141) →4 (P1D-142) →1 (P1D-143) →4 (P1D-144) →5 (P1D-145) →4 (P1D-146) →3 (P1D-147) →5 (P1D-148) →4 (P1D-149) →2 (P1D-150) →7 (P1D-151, NOT CLEAN 0C/4H/3M) →3 (P1D-152, NOT CLEAN 0C/0H/3M) →2 (P1D-153, NOT CLEAN 0C/1H/0M/1OBS) →2 (P1D-154, NOT CLEAN 0C/1H/1M/1OBS; F-P154-01/02+OBS-A; fix-burst 255 COMPLETE)`
+`→14 (P1D-1) →5 (P1D-2) →7 (P1D-3) →13 (P1D-4, re-baseline) →3 (P1D-5, decaying) →3 (P1D-6) →3 (P1D-7) →5 (P1D-8) →2 (P1D-9) →4 (P1D-10) →4 (P1D-11) →1 (P1D-12) →1 (P1D-13) →2 (P1D-14) →1 (P1D-15) →1 (P1D-16) →1 (P1D-17) →4 (P1D-18) →2 (P1D-19) →3 (P1D-20) →1 (P1D-21) →1 (P1D-22) →1 (P1D-23) →2 (P1D-24) →2 (P1D-86) →2 (P1D-87) →4 (P1D-88) →4 (P1D-89) →1 (P1D-90, census-closure) →4 (P1D-91) →2 (P1D-92) →5 (P1D-93) →3 (P1D-94) →4 (P1D-95) →1 (P1D-96) →5 (P1D-97) →1 (P1D-98) →1 (P1D-99) →3 (P1D-100) →2 (P1D-101) →2 (P1D-102) →2 (P1D-103) →1 (P1D-104) →1 (P1D-105) →2 (P1D-112) →0 (P1D-113 CLEAN) →1 (P1D-114 CRIT) →2 (P1D-115) →1 (P1D-116) →1 (P1D-117) →3 (P1D-118) →1 (P1D-119) →1 (P1D-120) →3 (P1D-121) →5 (P1D-122) →3 (P1D-123) →2 (P1D-124) →1 (P1D-125) →0 (P1D-126 CLEAN 1/3) →0 (P1D-127 CLEAN 2/3) →0 (P1D-128 CLEAN 3/3 CONVERGED pre-D21+D23) →12 (P1D-129, D21+D23 re-baseline) →9 (P1D-130) →7 (P1D-131) →8 (P1D-132) →10 (P1D-133) →7 (P1D-134) →6 (P1D-135) →6 (P1D-136) →3 (P1D-137) →3 (P1D-138) →7 (P1D-139) →8 (P1D-140) →7 (P1D-141) →4 (P1D-142) →1 (P1D-143) →4 (P1D-144) →5 (P1D-145) →4 (P1D-146) →3 (P1D-147) →5 (P1D-148) →4 (P1D-149) →2 (P1D-150) →7 (P1D-151, NOT CLEAN 0C/4H/3M) →3 (P1D-152, NOT CLEAN 0C/0H/3M) →2 (P1D-153, NOT CLEAN 0C/1H/0M/1OBS) →2 (P1D-154, NOT CLEAN 0C/1H/1M/1OBS; F-P154-01/02+OBS-A; fix-burst 255 COMPLETE) →4 (P1D-155, NOT CLEAN 0C/2H+1H-PG/0M/1L; Form-A systematic sweep ×41 + validator minting; fix-burst 256 COMPLETE)`
 
 ## Per-Pass Details
 
@@ -1278,3 +1279,23 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 **Regression sweep (Part-A canons):** ADR-019 v1.5 wire-annotation, VP-012 v1.3 domain `0<=tokens_remaining<=ceiling`, BC-2.07.002 v1.6 GTV-010/011, test-vectors v2.7 674 TVs, BC-INDEX v3.4 all verified CLEAN.
 
 **Hash sweep (D18-P89-A/D18-P90-A):** Pre-commit: specs/0 STALE, planning/0 STALE, cycles/12 STALE→0 (12 files updated from burst-254 edits; STATE.md-referenced cycle files refreshed). Post-commit TOTAL STALE=0. Burst-255 commit.
+
+### Pass P1D-155 (2026-07-24) — Expanded Perimeter Pass 27
+
+**Findings:** 4 (0 CRIT, 2 HIGH + 1 HIGH/PG, 0 MED, 1 LOW)
+**Streak:** 0/3 (NOT CLEAN strict)
+**Fix burst:** 256
+**Frozen HEAD:** burst-255 commit
+**Novel attack angle:** Form-A changelog direction systematic corpus sweep — gate #28 Rule 6 applied as a machine-verifiable invariant across the entire BC corpus (129 files); minting of verify-form-a-changelog-direction.sh as the standing enforcement tool.
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. Four items: 2H + 1H-PG + 1L. Two high-severity findings covered a systematic corpus-wide Form-A direction defect class that had persisted across multiple prior passes (41 BC files in violation), plus one process-gap finding for the absence of automated enforcement, plus one low-severity VP traceability title sync. All closed in fix-burst 256.
+
+- **F-P155-01/02 HIGH** (state-manager, closed): Form-A changelog direction sweep ×41 BC files. Gate #28 Rule 6 (VERSION-MONOTONICITY) requires Form-A BC files to have changelogs in ascending order (oldest-at-top, newest-at-bottom). Corpus-wide audit found 41 violations in four categories: (a) 25 pure-descending files (newest-at-top — reversed to ascending); (b) 11 non-monotonic files (version order non-strictly ascending — sorted ascending); (c) BC-2.16.001 sorted ascending + frontmatter `version: "1.4"→"1.5"` (frontmatter version was not aligned to newest changelog entry per gate #28 Rule 6); (d) 4 files with duplicate `1.1` entries (BC-2.04.001, BC-2.11.002, BC-2.11.003, BC-2.11.004 — merged with `"; also: "` separator). Additionally: BC-2.07.003 YAML parse fix — invalid `\`` escape sequence (backslash+backtick) at column 364 inside a double-quoted YAML string removed; file was previously silently parsed incorrectly.
+
+- **F-P155-03 HIGH/PG** (devops, closed): Process-gap finding — no automated enforcement existed for gate #28 Rule 6 Form-A direction invariant. Despite Rule 6 being defined since burst-184 (D18-P103-A), enforcement was manual-only, relying on adversarial spotchecks. Closed by minting `verify-form-a-changelog-direction.sh` validator. Post-fix corpus run: PASS=121 WARN=8 (Form-B/supplement-type files use valid direction=desc; treated as warning) FAIL=0.
+
+- **F-P155-04 LOW** (architect, closed): All 13 VP files (VP-001..013) §BC Traceability Title cells were not verbatim-matched to canonical BC H1 headings. Each VP's §BC Traceability table contains a Title cell referencing the source BC; these titles drifted from BC H1 text over multiple versioning rounds. Synced all 13 VP files to canonical BC H1s. VP versions after sync: VP-001 v1.3, VP-002 v1.3, VP-003 v1.4, VP-004 v1.2, VP-005 v1.2, VP-006 v1.6, VP-007 v1.2, VP-008 v1.3, VP-009 v1.5, VP-010 v1.4, VP-011 v1.4, VP-012 v1.4, VP-013 v1.3.
+
+**Regression sweep:** verify-form-a-changelog-direction.sh post-fix corpus: PASS=121 WARN=8 FAIL=0. BC-2.17.001 v1.4, VP-011 v1.4 internal consistency, ADR-019 v1.5 wire-annotation, VP-012 v1.4 domain `0<=tokens_remaining<=ceiling`, BC-2.07.002 v1.6 GTV-010/011 all verified CLEAN.
+
+**Hash sweep (D18-P89-A/D18-P90-A):** 2-pass transitive sweep. Pass 1: 10 stale files updated (41 BC files + 13 VP files changed → their input-hash downstreams). Pass 2: TOTAL=174 MATCH=174 STALE=0. Burst-256 commit.

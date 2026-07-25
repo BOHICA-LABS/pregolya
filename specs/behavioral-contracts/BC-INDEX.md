@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.5"
+version: "3.6"
 status: active
 producer: state-manager
-timestamp: 2026-07-24T23:30:00Z
+timestamp: 2026-07-24T23:55:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.6 (burst-256/F-P155-01/02/2026-07-24): Form-A changelog direction sweep ×41 BC files: 25 pure-descending reversed (BC-2.05.001, BC-2.05.007, BC-2.05.008, BC-2.06.001, BC-2.06.005, BC-2.06.006, BC-2.08.007, BC-2.08.010, BC-2.09.002, BC-2.09.003, BC-2.10.005, BC-2.10.006, BC-2.13.002, BC-2.14.001, BC-2.14.004, BC-2.16.003, BC-2.18.001, BC-2.18.005, BC-2.19.001, BC-2.19.002, BC-2.23.001, BC-2.23.002, BC-2.23.003, BC-2.23.004, BC-2.23.005); 11 non-monotonic sorted ascending (BC-2.10.004, BC-2.15.006, BC-2.16.002, BC-2.18.002, BC-2.18.003, BC-2.18.004, BC-2.19.005, BC-2.20.003, BC-2.21.003, BC-2.22.001, BC-2.23.006); BC-2.16.001 sorted ascending + v1.4→v1.5 (frontmatter version aligned to newest changelog entry per gate #28 Rule 6); 4 duplicate-1.1-entry merged with '; also:' separator (BC-2.04.001, BC-2.11.002, BC-2.11.003, BC-2.11.004); BC-2.07.003 YAML parse fix (invalid backslash+backtick escape at col 364 removed). F-P155-03: verify-form-a-changelog-direction.sh validator minted (post-fix: PASS=121 WARN=8 FAIL=0). F-P155-04: all 13 VP files §BC Traceability Title cells synced verbatim to canonical BC H1s."
   - "3.5 (burst-255/F-P154-02/2026-07-24): BC-2.17.001 v1.3→v1.4 — VP-011 bullet realigned to actual proven scope per Option-A dispatch-design adjudication (F-P154-01 architect): route_pre_tool_decision covers 3 routable variants (Approve/Deny/Edit) + hook-error with #[non_exhaustive] wildcard arm → fail-closed Reject; PendingHumanApproval peeled off upstream in async pre_tool_dispatch wrapper per BC-2.05.007 PC-4; DispatchOutcome stays 2-variant; PendingHumanApproval non-invocation covered by BC-2.05.008 integration tests. In-scope compliance fix: BC-2.17.001 changelog reordered desc→asc per gate #28 Rule 6 (drifted since burst-241). gate #35 extended to include BC-2.17.001 VP-bullet edits + VP-NNN internal consistency check (bc-authoring-plan v2.48→v2.49)."
   - "3.4 (burst-254/F-P153-01/2026-07-24): BC-2.17.001 v1.2→v1.3 — VP-012 bullet: strict strict-< predicate closed (non-strict <= + f64 arithmetic + domain 0<=tokens_remaining<=ceiling; load-bearing note: EC-002 fraction=1.0 boundary must fire); VP-011 bullet modernized from Deny-only to full 4-variant PreToolDecision fail-closed coverage (Approve/Deny/Edit/PendingHumanApproval per VP-011.md v1.2). No f32 residue in remaining VP bullets; full BC staleness scan CLEAN."
   - "3.3 (burst-253/F-P152-03/2026-07-24): BC-2.07.002 v1.5→v1.6 — GTV-010 (NFD combining sequence discriminator: 'abcéxyz' 8 code pts/7 graphemes, chunk_size=4; correct ['abce','́xyz'] vs wrong grapheme ['abcé','xyz']) + GTV-011 (ZWJ family emoji discriminator: '👨‍👩‍👧‍👦 hi' 10 code pts/4 graphemes; correct 3 chunks splitting ZWJ sequence vs wrong 2 chunks) added; 9→11 GTVs Python-verified against pinned in-tree langchain-text-splitters==1.1.2; test-vectors v2.6→v2.7 (671→674 TVs = 663 canonical + 11 GTV)."

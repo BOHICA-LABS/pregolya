@@ -19,9 +19,9 @@ di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
 changelog:
-  - "1.2 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded). Before: trailing 'E-TOOLS-001'. After: 'E-TOOLS-001/008'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
-  - "1.1 (burst-233/F-P133-03/2026-07-22): PC-5 / EC-003 / EC-004 / EC-006 / TV-004 — assign E-TOOLS-008 FileIoError to the OS-level I/O error paths (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'WriteFileTool', path: <file_path>, io_kind: <ErrorKind debug name>. Gate #33 forward+reverse: E-TOOLS-008 now covers these raise sites; error-taxonomy.md v1.32 anchors BC-2.23.002 in E-TOOLS-008 row."
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 WriteFileTool."
+  - "1.1 (burst-233/F-P133-03/2026-07-22): PC-5 / EC-003 / EC-004 / EC-006 / TV-004 — assign E-TOOLS-008 FileIoError to the OS-level I/O error paths (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'WriteFileTool', path: <file_path>, io_kind: <ErrorKind debug name>. Gate #33 forward+reverse: E-TOOLS-008 now covers these raise sites; error-taxonomy.md v1.32 anchors BC-2.23.002 in E-TOOLS-008 row."
+  - "1.2 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded). Before: trailing 'E-TOOLS-001'. After: 'E-TOOLS-001/008'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md

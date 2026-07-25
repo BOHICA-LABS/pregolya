@@ -6,7 +6,7 @@ version: "1.3"
 changelog:
   - "1.1 (OBS-P95-A, 2026-07-17): VP-SPLIT-06..008 renumbered to VP-SPLIT-06..08 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — renumber is the production-grade call). No VP-INDEX registration affected (SPLIT VPs are BC-local)."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-splitters per module-decomposition.md v1.10."
-  - "1.3 (2026-07-22, F-P139-03, burst-239): PC5 tightened to mandate `[]` only for empty-string input. Previous PC5 allowed either `[]` OR `['']', citing 'either acceptable if consistent with Python reference.' This is incorrect and internally contradictory: EC-005 already says 'must not return [\"\"]' and TV-004 shows `[]`. PC5 now explicitly prohibits `[\"\"]\` and mandates `[]` as the required behavior. Sibling BC-2.07.001 TV-005 corrected from `[\"\"]` or `[]` to `[]` in the same burst (F-P139-03)."
+  - "1.3 (2026-07-22, F-P139-03, burst-239): PC5 tightened to mandate `[]` only for empty-string input. Previous PC5 allowed either `[]` OR `['']', citing 'either acceptable if consistent with Python reference.' This is incorrect and internally contradictory: EC-005 already says 'must not return [\"\"]' and TV-004 shows `[]`. PC5 now explicitly prohibits `[\"\"]` and mandates `[]` as the required behavior. Sibling BC-2.07.001 TV-005 corrected from `[\"\"]` or `[]` to `[]` in the same burst (F-P139-03)."
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield

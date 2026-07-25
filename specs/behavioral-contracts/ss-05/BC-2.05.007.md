@@ -20,10 +20,10 @@ vp_seed: true
 vp_id: VP-011
 red_gate: false
 changelog:
-  - "1.3 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. PC-4 updated. Zero Command:: enum-variant residue remains in live body text."
-  - "1.2 (burst-236/OBS-P136-A/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-011' (VP-INDEX v1.5 burst-232 seeded VP-011 Kani P0)."
-  - "1.1 (burst-234/F-P134-03/2026-07-22): Add reciprocal Related BCs entry for BC-2.08.010 — the `#[tool]` proc-macro sets `action_risk` which is consumed by this BC's `pre_tool_dispatch` via `ToolCallPreview.action_risk`. BC-2.08.010 v1.2 corrected its mis-anchor (BC-2.05.004 → this BC); reciprocal link added here per anchor-back rule."
   - "1.0 (D23/2026-07-22): Initial BC — D23 per-tool-call approval hook, SS-05 extension. VP-011 Kani P0 seed."
+  - "1.1 (burst-234/F-P134-03/2026-07-22): Add reciprocal Related BCs entry for BC-2.08.010 — the `#[tool]` proc-macro sets `action_risk` which is consumed by this BC's `pre_tool_dispatch` via `ToolCallPreview.action_risk`. BC-2.08.010 v1.2 corrected its mis-anchor (BC-2.05.004 → this BC); reciprocal link added here per anchor-back rule."
+  - "1.2 (burst-236/OBS-P136-A/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-011' (VP-INDEX v1.5 burst-232 seeded VP-011 Kani P0)."
+  - "1.3 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. PC-4 updated. Zero Command:: enum-variant residue remains in live body text."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md

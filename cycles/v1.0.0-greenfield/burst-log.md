@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "744d37f"
+input-hash: "17628cd"
 traces_to: STATE.md
 ---
 
@@ -4704,5 +4704,11 @@ F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 
 ### Archived from STATE.md Current Phase Steps — Burst 244/245 (archived at burst-250)
 
 | Burst 244/245 — P1D-144 adversary + fix-burst ALL AGENTS COMPLETE; burst-245 defect-closure COMPLETE (F-P144-01..04 all closed; VP-host criticality adjudicated HIGH [module-criticality v1.6 43/HIGH 18; module-decomposition v1.22]; ARCH-INDEX v1.10 21-crate; E-CRON-003 degraded→broken [error-taxonomy v1.35; degraded=0]; hash sweep 3 passes STALE=0; burst-239 row archived); burst-245: ARCH-INDEX v1.10 changelog entry added (burst-244 gap; validate-index-cite-refresh cite normalized); hash sweep TOTAL=234 MATCH=234 STALE=0; 0/3. NEXT: P1D-145. | architect + PO + state-manager | COMPLETE | F-P144-01 HIGH: tools-shell criticality contradiction (module-decomposition v1.21 MEDIUM vs verification-coverage-matrix HIGH). Adjudicated HIGH per VP-013 Kani P1 host precedent. module-decomposition v1.21→v1.22 (tools-shell row updated to HIGH). F-P144-02 HIGH: module-criticality.md missing core-budget + tools-shell rows (both HIGH per VP-012/VP-013 Kani P1 hosts). module-criticality v1.5→v1.6 (core-budget HIGH + tools-shell HIGH added; total 41→43; HIGH 16→18). F-P144-03 MED: ARCH-INDEX Document Map '18-crate catalog'→'21-crate catalog'. ARCH-INDEX v1.10. F-P144-04 MED: E-CRON-003 degraded→broken. error-taxonomy v1.34→v1.35 (degraded class 0 members; broken=106/degraded=0/cosmetic=2). Hash sweep: 3 passes STALE=0. Burst 244. Burst 245: ARCH-INDEX v1.10 changelog entry added (burst-244 gap closed — entry was missing from frontmatter changelog despite version increment having been applied). Hash sweep: TOTAL=234 MATCH=234 STALE=0 (specs/ + planning/ + cycles/; 4 hash updates: module-criticality, bounded-contexts, dtu-assessment, verification-coverage-matrix). Burst 245. |
+
+---
+
+### Archived from STATE.md Current Phase Steps — Burst 251 (archived at burst-256)
+
+| Burst 251 — P1D-150 adversary + fix-burst COMPLETE (2 findings 0C/0H/2M; F-P150-01/02 closed; nfr-catalog v1.6→v1.7 [NFR-013 map-row contradiction + proactive NFR-014 jinja2/minijinja engine obligation; 14/14 consistent]; capabilities-p1-p2 v1.12→v1.13 [CAP-029/031 stale-delegation residue; L-026 sweep 6 hits/2 fixed]; FIVE closure axes ALL PASS: CAP 38/38, DI 15/15, FM 19/19, NFR 14/14, observability↔BC; L2-INDEX v1.13→v1.14; hash sweep 2-pass TOTAL=174 MATCH=174 STALE=0; burst-246 row archived); 0/3. NEXT: P1D-151. | product-owner + business-analyst + state-manager | COMPLETE | F-P150-01 MED (PO): nfr-catalog v1.6→v1.7 NFR-013 module-map row directly contradicted v1.4-adjudicated requirement row (EC-002 adjudication: no pre-send batch-size cap; provider rejection = structured Err passthrough per BC-2.22.001 EC-002); map row rewritten to align. Proactive: 14-NFR consistency sweep — NFR-014 map row also stale (omitted jinja2/minijinja engine obligation present in requirement since v1.4); extended to add jinja2/minijinja bounded-traversal. 14/14 consistent post-fix. F-P150-02 MED (BA): capabilities-p1-p2 v1.12→v1.13 — CAP-029 §Zero-norm guard and CAP-031 §Dimensionality contract each carried stale 'PO to formalize in error taxonomy' imperative; both E-VS-001 and E-EMBED-001 registered since error-taxonomy v1.27; replaced with past-tense citations. L-026 stale-delegation sweep: 6 hits in domain-spec, 2 fixed (CAP-029/031), 4 verified structural/legitimate (BC-to-CAP traceability fields, all referenced BCs exist). Hash sweep: 2 passes TOTAL=174 MATCH=174 STALE=0. Burst 251. |
 
 ---

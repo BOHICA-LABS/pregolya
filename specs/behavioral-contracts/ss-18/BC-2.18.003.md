@@ -17,9 +17,9 @@ producer: product-owner
 timestamp: 2026-07-20T00:00:00Z
 di_anchors: [DI-008]
 changelog:
+  - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
   - "1.1 (burst-227/F-P132-03/2026-07-21): PC2 MessagesPlaceholder trust derivation: replace broken 'ProvenanceTag (if any); each expanded message inherits the same tag' with explicit ADR-015-conformant trust derivation — each expanded message's MessageProvenance.highest_trust_level is derived from the Vec<Message> variable's declared trust_level: Option<TrustLevel>; None if unset."
   - "1.2 (F-P149-02/burst-250/2026-07-24): PC2 version pin de-pinned: 'per ADR-015 v1.3 semantics' → 'per ADR-015 Decision 3 §MessagesPlaceholder trust derivation' (TD-VSDD-091 stable-anchor enforcement, F-P149-02). input-hash updated to d2cc4f4 (drift from burst-227 ADR-015 content changes)."
-  - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-023
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md

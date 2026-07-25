@@ -19,9 +19,9 @@ di_anchors: [DI-008, DI-014]
 vp_seed: true
 vp_id: VP-008
 changelog:
-  - "1.2 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-008 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-008' (VP-INDEX v1.2 burst-223 seeded VP-008 proptest P1; VP-008.md exists). Completed-handoff residue removal."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-22 Embeddings"
   - "1.1 (F-P130-07/2026-07-21): Fix E-EMBED-001 message prefix: `DimensionMismatch:` → `EmbeddingDimensionMismatch:` to match canonical PRD name and eliminate collision with E-VS-002 prefix. Gate #33 reverse: error-taxonomy.md v1.28→v1.29 updated in same burst."
+  - "1.2 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-008 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-008' (VP-INDEX v1.2 burst-223 seeded VP-008 proptest P1; VP-008.md exists). Completed-handoff residue removal."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-031
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md

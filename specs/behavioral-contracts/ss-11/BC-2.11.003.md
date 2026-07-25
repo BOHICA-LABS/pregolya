@@ -22,8 +22,7 @@ lifecycle_status: active
 introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
-  - "1.1 (ADV-P1D-PASS-4): category canon — EC-004 and test vector error category corrected from `GuardrailError` to `INTERNAL` (13-category canon sweep)."
-  - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
+  - "1.1 (ADV-P1D-PASS-4): category canon — EC-004 and test vector error category corrected from `GuardrailError` to `INTERNAL` (13-category canon sweep).; also: (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-004 and the TV panic row had `Err(FerrochainError { category: INTERNAL })` with no code. Added code: E-CORE-007 (GuardrailHookPanic) — same code as BC-2.11.002 (RAG chunk ingress boundary shares identical panic-and-fail-closed pattern with tool-result ingress)."
   - "1.3 (ADV-P1D-PASS-58): F-P58-02 type-name linkage — `chunk` in PC1 is typed as `IngressContent::RagChunk(Value)` in the GuardrailHook trait signature (interface-definitions.md v2.13 §IngressContent). Payload type `Value` = serde_json::Value; internal structure is retrieval-backend-specific."
   - "1.4 (F-P84-OBS-B/D18-P84-A): body version pin removed from PC1 — `interface-definitions.md v2.13 §GuardrailHook §IngressContent` → `interface-definitions.md §GuardrailHook §IngressContent` (section anchors retained; version pins on living supplements dropped per D18-P84-A adjudication; changelog entries are exempt audit trail)."

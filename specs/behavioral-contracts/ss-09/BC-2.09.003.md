@@ -16,9 +16,9 @@ red_gate: false
 producer: product-owner
 timestamp: 2026-07-21T00:00:00Z
 changelog:
-  - "1.3 (burst-227/F-P132-06/2026-07-21): Architecture Anchors: correct ProvenanceTag type-kind label from 'enum' to 'struct' (ProvenanceTag is a struct in ferrochain-core/src/guardrail.rs)."
-  - "1.2 (burst-226/F-P131-05+F-P131-02/2026-07-21): (1) PC1: ProvenanceTag::McpToolResult{server_name, tool_name} replaced with canonical SS-11 struct form ProvenanceTag { boundary_type: BoundaryType::ToolResult, ingress_id: <uuid>, sequence_position: <n> } per ADR-015 v1.3 adjudication. Server/tool identity moves to guardrail audit log. (2) PC4/EC-002/TV-003: canonical guardrail.unregistered_passthrough emission per item-4 adjudication — unified event_type with BC-2.11.006; merged field schema {boundary_type, ingress_id, item_count, timestamp} + MCP conditional {server_name, tool_name}. Invariants updated accordingly."
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp / ferrochain-core (guardrail hook traits) per module-decomposition.md v1.10."
+  - "1.2 (burst-226/F-P131-05+F-P131-02/2026-07-21): (1) PC1: ProvenanceTag::McpToolResult{server_name, tool_name} replaced with canonical SS-11 struct form ProvenanceTag { boundary_type: BoundaryType::ToolResult, ingress_id: <uuid>, sequence_position: <n> } per ADR-015 v1.3 adjudication. Server/tool identity moves to guardrail audit log. (2) PC4/EC-002/TV-003: canonical guardrail.unregistered_passthrough emission per item-4 adjudication — unified event_type with BC-2.11.006; merged field schema {boundary_type, ingress_id, item_count, timestamp} + MCP conditional {server_name, tool_name}. Invariants updated accordingly."
+  - "1.3 (burst-227/F-P132-06/2026-07-21): Architecture Anchors: correct ProvenanceTag type-kind label from 'enum' to 'struct' (ProvenanceTag is a struct in ferrochain-core/src/guardrail.rs)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:

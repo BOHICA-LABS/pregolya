@@ -19,8 +19,8 @@ di_anchors: [DI-008]
 vp_seed: true
 vp_id: VP-007
 changelog:
-  - "1.1 (burst-222/2026-07-21): VP-007 proptest seed assigned. BC-2.19.001 is the round-trip contract (serialize→Serialized::Constructor→Reviver::revive→semantically-equivalent value) that VP-007 will verify via property-based testing. Assignment rationale: H1 title contains 'Round-Trip' explicitly and postcondition 3 specifies the semantic equivalence invariant that proptest exercises. Architect to author VP-007 body in Phase 6."
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
+  - "1.1 (burst-222/2026-07-21): VP-007 proptest seed assigned. BC-2.19.001 is the round-trip contract (serialize→Serialized::Constructor→Reviver::revive→semantically-equivalent value) that VP-007 will verify via property-based testing. Assignment rationale: H1 title contains 'Round-Trip' explicitly and postcondition 3 specifies the semantic equivalence invariant that proptest exercises. Architect to author VP-007 body in Phase 6."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-024
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
