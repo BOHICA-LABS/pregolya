@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "427222f"
+input-hash: "412c654"
 traces_to: STATE.md
 ---
 
@@ -1616,3 +1616,28 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 **Regression sweep:** verify-sha-currency.sh: PASS. verify-form-a-changelog-direction.sh: PASS=192 WARN=6 FAIL=0. verify-arch-anchor-resolution.sh: PASS=129 FAIL=0. verify-no-version-pins.sh: PASS=198 WARN=0 FAIL=0. verify-enum-variant-casing.sh: PASS=198 FAIL=0 (new blocking validator #5). All five blocking validators PASS FAIL=0. Advisory validator (verify-adr-self-version-refs.sh): PASS=18 WARN=2 FAIL=0.
 
 **Hash sweep (D18-P89-A/D18-P90-A):** 14 BC files + 10 architect files + BC-INDEX v3.17 staled downstream files. All transitive dependents swept. Hash sweep: specs/174 STALE=0; planning/6 STALE=0; cycles/54 STALE=0. TOTAL STALE=0. Burst-270 commit.
+
+---
+
+### Pass P1D-169 (2026-07-25)
+
+**Findings:** 1 (1 HIGH)
+
+**Adversary:** fresh-context on frozen HEAD (burst-270 commit)
+**Streak:** 0/3 (reset by F-P169-01 HIGH finding)
+**CLEAN (strict):** no — 1 item present (1H)
+**CLEAN (PR-merge):** no — 1 HIGH finding present
+
+**Fix burst:** 271
+**Frozen HEAD:** burst-270 commit
+**Novel attack angle:** Single-mis-cite pass — F-P169-01 is the narrowest finding class possible: one incorrect Decision number in one Invariant heading cite in one BC. The body sequence text in BC-2.16.001 §Retry-Approval Ordering was already correct (describing the right behavior); only the authority pointer "(ADR-018 Decision 3)" was wrong. Decision 3 in ADR-018 governs "Dispatch in graph::hitl::pre_tool_dispatch" — an unrelated node — while Decision 6 governs "Retry / Approval Ordering", which is exactly the ordering behavior the invariant describes. The new blocking validator #6 (verify-adr-decision-refs.sh, minted as part of this fix) performs an existence-only check (confirms every cited "Decision N" exists as a heading in the referenced ADR) but cannot detect semantically correct but wrong-context citations of the F-P169-01 class; semantic-correctness review remains the adversary's responsibility.
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. One item: 1H. Finding closed in fix-burst 271. F-P169-01 (HIGH) corrected the authority pointer in BC-2.16.001 Invariants §Retry-Approval Ordering from '(ADR-018 Decision 3)' to '(Decision 6)'. Decision 6 is "Retry / Approval Ordering" — the correct anchor for the ordering constraint. Decision 3 is "Dispatch in graph::hitl::pre_tool_dispatch" — an unrelated HITL dispatch invariant. The body sequence text (circuit_breaker.check → pre_tool_dispatch → tool.invoke → retry_policy.record) was already correct and required no change. As a process-gap closure, devops minted blocking validator #6 (verify-adr-decision-refs.sh, PASS=204 WARN=0 FAIL=0) which checks that every "Decision N" reference in spec files resolves to an actual decision heading in the cited ADR. BC-INDEX v3.18 synced by state-manager.
+
+- **F-P169-01 HIGH** (PO, closed): BC-2.16.001 v1.5→v1.6 — Invariants §Retry-Approval Ordering: authority pointer corrected from '(ADR-018 Decision 3)' to '(Decision 6)'. ADR-018 Decision 3 is "Dispatch in graph::hitl::pre_tool_dispatch"; ADR-018 Decision 6 is "Retry / Approval Ordering" (the correct authority for this ordering invariant). Body sequence text — `circuit_breaker.check(tool_name)` → `pre_tool_dispatch(hook, preview)` → `tool.invoke(args)` → `retry_policy.record(result)` — was already correct and unchanged. Single-file, single-site fix. BC-2.16.001 v1.5→v1.6.
+
+- **Process-gap closure** (devops, closed): blocking validator #6 verify-adr-decision-refs.sh minted (PASS=204 WARN=0 FAIL=0). Scans all "Decision N" references across .factory/specs/ and verifies each cited decision number exists as a heading in the referenced ADR. Existence-only check; semantic-correctness review (wrong-but-existing decision) remains adversary scope. NOTE: ADR-018 Decision 6 citation added by this burst to BC-INDEX.md changelog body row 3.18 adds 1 reference — PASS count may reach 205 on next validator run; both are passing states.
+
+**Regression sweep:** verify-sha-currency.sh: PASS. verify-form-a-changelog-direction.sh: PASS=192 WARN=6 FAIL=0. verify-arch-anchor-resolution.sh: PASS=129 FAIL=0. verify-no-version-pins.sh: PASS=198 WARN=0 FAIL=0. verify-enum-variant-casing.sh: PASS=198 FAIL=0. verify-adr-decision-refs.sh: PASS=204 WARN=0 FAIL=0 (new blocking validator #6). All six blocking validators PASS FAIL=0. Advisory validator (verify-adr-self-version-refs.sh): PASS=18 WARN=2 FAIL=0.
+
+**Hash sweep (D18-P89-A/D18-P90-A):** BC-2.16.001 v1.6 + BC-INDEX v3.18 staled downstream files. All transitive dependents swept. Hash sweep: TOTAL STALE=0. Burst-271 commit.

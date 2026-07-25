@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.001
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5 had `Err(FerrochainError { component: RETRY, category: POLICY, code: E-RETRY-001, retry_hint: Never })` — bare wrapper missing message field for E-RETRY-001 which has `<tool_name>` and `<attempt_limit>` placeholders. Added `message:` template inline; `<tool_name>` from `ToolRetryPolicy.tool_name`; `<attempt_limit>` from `ToolRetryPolicy.attempt_limit` — both deterministically available at raise site."
   - "1.4 (D23/2026-07-22): Add retry-approval ordering invariant per ADR-018 Decision 3. Specifies the fixed dispatch sequence: circuit_breaker.check → pre_tool_dispatch → tool.invoke → retry_policy.record(result); record(result) fires unconditionally after invoke regardless of approval path."
   - "1.5 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
+  - "1.6 (burst-271/F-P169-01/2026-07-25): Fix mis-anchor in Invariants — Retry-Approval Ordering section cited ADR-018 Decision 3 (Dispatch in graph::hitl::pre_tool_dispatch) instead of the correct Decision 6 (Retry / Approval Ordering). Authority pointer corrected; in-body sequence text was already correct and unchanged."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -87,7 +88,7 @@ different arguments must share the same retry counter.
   ferrochain. Partner provider crates route through it; they do not implement their own loops.
 - Counter state is per-invocation scope (one graph run) — it does not persist across
   checkpoint boundaries or runs.
-- **Retry-Approval Ordering (ADR-018 Decision 3):** When a tool has both a `ToolRetryPolicy`
+- **Retry-Approval Ordering (ADR-018 Decision 6):** When a tool has both a `ToolRetryPolicy`
   and a `PreToolCallHook` configured, each dispatch attempt observes this fixed sequence:
   `circuit_breaker.check(tool_name)` → `pre_tool_dispatch(hook, preview)` →
   `tool.invoke(args)` → `retry_policy.record(result)`. The `record(result)` call fires

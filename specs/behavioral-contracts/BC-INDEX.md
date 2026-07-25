@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.17"
+version: "3.18"
 status: active
 producer: state-manager
-timestamp: 2026-07-25T23:59:00Z
+timestamp: 2026-07-25T12:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.18 (burst-271/F-P169-01/2026-07-25): F-P169-01 HIGH closed: BC-2.16.001 v1.5→v1.6 — Retry-Approval Ordering invariant mis-anchor corrected; '(ADR-018 Decision 3)' → '(Decision 6)'; ADR-018 Decision 6 is the correct authority for retry/approval ordering. Blocking validator #6 (verify-adr-decision-refs.sh) minted (PASS=204 WARN=0 FAIL=0). H1 unchanged."
   - "3.17 (burst-270/F-P168-01/2026-07-25): F-P168-01 HIGH closed: PascalCase casing re-adjudication (ADR-010 v1.9 Direction B; Category::VALIDATION → Category::Val, Component::TOOLS → Component::Tools etc.; SCREAMING_CASE retracted). 14 BC version bumps (15 component: TOOLS string-literals → Component::Tools typed form per ~45 sites): BC-2.18.001 v1.2→v1.3, BC-2.18.004 v1.4→v1.5, BC-2.18.005 v1.2→v1.3, BC-2.19.005 v1.4→v1.5, BC-2.19.006 v1.3→v1.4, BC-2.21.002 v1.1→v1.2, BC-2.21.003 v1.5→v1.6, BC-2.22.001 v1.3→v1.4, BC-2.23.001 v1.3→v1.4, BC-2.23.002 v1.2→v1.3, BC-2.23.003 v1.3→v1.4, BC-2.23.004 v1.2→v1.3, BC-2.23.005 v1.5→v1.6, BC-2.23.006 v1.5→v1.6. H1s unchanged."
   - "3.16 (burst-269/F-P167-01+F-P167-02/2026-07-25): F-P167-01 HIGH: Category::VALIDATION purge (non-member of 12-category enum; canonical VAL per ADR-010 Decision 23) — BC-2.18.001 v1.1→v1.2, BC-2.18.005 v1.1→v1.2, BC-2.21.003 v1.4→v1.5, BC-2.22.001 v1.2→v1.3 (4 BCs, 6 sites purged; ADR-015 v1.6 + VP-008 v1.4 non-BC co-lateral fixes). F-P167-02 HIGH: BC-2.19.006 v1.2→v1.3 — 'ADR-016 Decision 7' dangling anchor re-anchored to 'Decision 3 Property 4' ×2 sites. H1s unchanged."
   - "3.15 (burst-268/F-P166-01/OBS-P166-A+OBS-P166-B/2026-07-25): F-P166-01 MED: BC-2.19.005 v1.3→v1.4 (TD-VSDD-091 de-pin — Invariant 3 'error-taxonomy.md v1.28 §E-SRLZ-001' version pin removed; stable anchor 'error-taxonomy.md §E-SRLZ-001 (row: VAL)'); BC-2.19.006 v1.1→v1.2 (TD-VSDD-091 de-pin PC5 'error-taxonomy.md v1.27 §E-SRLZ-002' + COMPATIBILITY residue purge: Architecture Anchors + Traceability Architecture Authority both corrected category COMPATIBILITY → VAL per PC5+ADR-010). H1s unchanged."
@@ -241,6 +242,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.18 | 2026-07-25 | burst-271/F-P169-01: BC-2.16.001 v1.5→v1.6 — Invariants §Retry-Approval Ordering mis-anchor corrected: '(ADR-018 Decision 3)' → '(Decision 6)'; ADR-018 Decision 6 is the correct authority for Retry / Approval Ordering (Decision 3 covers Dispatch in graph::hitl::pre_tool_dispatch). Body sequence text was already correct and unchanged. Blocking validator #6 (verify-adr-decision-refs.sh) minted (PASS=204 WARN=0 FAIL=0). H1 unchanged. | burst-271 F-P169-01 |
 | 3.17 | 2026-07-25 | burst-270/F-P168-01: PascalCase re-adjudication (ADR-010 v1.9 Direction B; SCREAMING_CASE retracted). 14 BC version bumps — Component::Tools typed-form across ~45 sites: BC-2.18.001 v1.2→v1.3, BC-2.18.004 v1.4→v1.5, BC-2.18.005 v1.2→v1.3, BC-2.19.005 v1.4→v1.5, BC-2.19.006 v1.3→v1.4, BC-2.21.002 v1.1→v1.2, BC-2.21.003 v1.5→v1.6, BC-2.22.001 v1.3→v1.4, BC-2.23.001 v1.3→v1.4, BC-2.23.002 v1.2→v1.3, BC-2.23.003 v1.3→v1.4, BC-2.23.004 v1.2→v1.3, BC-2.23.005 v1.5→v1.6, BC-2.23.006 v1.5→v1.6. H1s unchanged. | burst-270 F-P168-01 |
 | 3.16 | 2026-07-25 | burst-269/F-P167-01+F-P167-02: Category::VALIDATION purge (canonical VAL per ADR-010 Decision 23; non-member of 12-category enum) — BC-2.18.001 v1.1→v1.2, BC-2.18.005 v1.1→v1.2, BC-2.21.003 v1.4→v1.5, BC-2.22.001 v1.2→v1.3 (4 BCs, 6 sites; ADR-015 v1.6 + VP-008 v1.4 non-BC co-lateral). BC-2.19.006 v1.2→v1.3 — 'ADR-016 Decision 7' re-anchored → 'Decision 3 Property 4' ×2 sites. H1s unchanged. | burst-269 F-P167-01+F-P167-02 |
 | 3.15 | 2026-07-25 | burst-268/F-P166-01+OBS×2: BC-2.19.005 v1.3→v1.4 — TD-VSDD-091 de-pin Invariant 3 'error-taxonomy.md v1.28 §E-SRLZ-001' version pin replaced with stable anchor 'error-taxonomy.md §E-SRLZ-001 (row: VAL)'; BC-2.19.006 v1.1→v1.2 — TD-VSDD-091 de-pin PC5 'error-taxonomy.md v1.27 §E-SRLZ-002' → '§E-SRLZ-002 (row: VAL)' + COMPATIBILITY residue purge in Architecture Anchors + Traceability Authority (category COMPATIBILITY → VAL per PC5+ADR-010). H1s unchanged. | burst-268 F-P166-01+OBS-P166-A+OBS-P166-B |
