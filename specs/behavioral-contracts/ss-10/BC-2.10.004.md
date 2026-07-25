@@ -34,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "4dc9aa9"
+input-hash: "2964c9a"
 extracted_from: null
 modified: []
 deprecated: null

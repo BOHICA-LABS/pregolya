@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.9"
+version: "1.10"
 status: active
 producer: architect
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 changelog:
+  - "1.10 (FIX-BURST-266/OBS-P164-B/2026-07-25): Adjudicate and fix Tool trait row mixed anchoring. `Tool | ferrochain-core | SS-09 | BC-2.09.002` was wrong on both anchors: SS-09 is ferrochain-mcp (the CONSUMER crate — BC-2.09.002 PC1 takes `Arc<dyn ferrochain_core::Tool>` as input); BC-2.09.002 is 'ToolInvocation Routing to Correct MCP Server Transport' (MCP routing, not trait definition). Adjudicated: Tool trait is DEFINED in `ferrochain-core/src/tool.rs` (BC-2.08.010 Architecture Anchors), owned by SS-08 (macros::tool module is SS-08 per module-decomposition.md; BC-2.08.010 lives in ss-08/). Correct row: `Tool | ferrochain-core | SS-08 | BC-2.08.010`. Parallel to BaseChatModel | ferrochain-core | SS-08 pattern. Trait-row audit: all other 6 ferrochain-core trait rows (Runnable/SS-01, BaseChatModel/SS-08, GuardrailHook/SS-11, BudgetPolicy/SS-10, PreToolCallHook/SS-05, CompactionPolicy/SS-10) are correctly definition-anchored — no further mixing found."
   - "1.9 (burst-242/2026-07-23): Fix-242 Command-notation sweep — convert residual enum-style notation Command::resume(value) in §ferrochain-graph Public Types table to canonical struct kwarg form Command(resume=value). Canonical form per BC-2.05.004 v1.5 + F-P120-01 adjudication."
   - "1.8 (burst-238/2026-07-23): F-P138-02 stale-handoff sweep — remove stale Note on api-surface.md §Error Type: 'ADR-010 amendment required to add TOOLS variant — architect task per error-taxonomy.md §TOOLS delegation note.' ADR-010 v1.3 (burst-232) already registered TOOLS as component 17; error-taxonomy.md §TOOLS delegation note was removed in v1.32 (burst-233 F-P133-09); TOOLS already listed as 17th component in the enum. Dangling cross-reference to removed delegation note deleted."
   - "1.7 (D23/2026-07-22): Add D23 API surfaces. (1) ferrochain-core Public Traits: +PreToolCallHook (SS-05, BC-2.05.007), +CompactionPolicy (SS-10, BC-2.10.005/006). (2) ferrochain-graph Public Types: StreamEvent BC range 001–002→001–006 + 15-variant count noted; +CompactionTrigger (SS-10, BC-2.10.005), +CompactionEvent (SS-10, BC-2.10.006/BC-2.06.006). (3) §Public Traits and Types (ferrochain-tools) added: ActionRisk, PreToolDecision, ToolCallPreview, PathGuard, ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool (VP-013), GrepTool. (4) Component enum 16→17 (+TOOLS); #[non_exhaustive] gate count 17→18. ADR-010 amendment delegated to architect."
@@ -21,7 +22,7 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "c847536"
+input-hash: "796fbeb"
 traces_to: ARCH-INDEX.md
 decisions: [D13, D17]
 ---
@@ -44,7 +45,7 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 | `BaseChatModel` | ferrochain-core | SS-08 | BC-2.08.001–005 |
 | `GuardrailHook` | ferrochain-core | SS-11 | BC-2.11.002–004 |
 | `BudgetPolicy` | ferrochain-core | SS-10 | BC-2.10.001 |
-| `Tool` | ferrochain-core | SS-09 | BC-2.09.002 |
+| `Tool` | ferrochain-core | SS-08 | BC-2.08.010 |
 | `PreToolCallHook` | ferrochain-core | SS-05 | BC-2.05.007 |
 | `CompactionPolicy` | ferrochain-core | SS-10 | BC-2.10.005, BC-2.10.006 |
 

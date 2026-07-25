@@ -1,7 +1,7 @@
 ---
 document_type: product-brief
 level: L1
-version: "1.5"
+version: "1.6"
 status: approved
 producer: product-owner
 timestamp: 2026-07-20T00:00:00Z
@@ -18,6 +18,7 @@ input-hash: "83a8f7e"
 traces_to: ""
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21]
 changelog:
+  - "v1.6 (OBS-P164-A/burst-266/2026-07-25): Out-of-Scope disposition table — four stale count references corrected. (1) Para header 'traceable to the 18-crate roster' → 'original 18-crate roster (since expanded to 21 per D21/D23)' — disposition decisions were made in burst-215 (v1.3) against the 18-crate roster; roster has since grown but these subsystems remain excluded. (2) Callbacks section '12 variants' → '15 variants' — StreamEvent taxonomy grew 12→15 per D23/BC-2.06.001 v1.5 (ADR-018 +tool_approval_request #13 + tool_approval_resolved #14; ADR-019 +compaction_event #15); the StreamEvent description is a current-state claim and must reflect the live count. (3) Callbacks section 'not in the 18-crate roster' → 'not in the current 21-crate roster' — current-state assertion about what is included. (4) chat_history section 'in the 18-crate roster' → 'in the current 21-crate roster' — same. TD-VSDD-060 sibling sweep: all four '18-crate roster' occurrences within Out-of-Scope narrative fixed in one burst; Workspace Topology line (authoritative source deferred to ARCH-INDEX §Canonical Crate Roster) and risk-register R6 narrative (historical context) left unchanged as they are not current-state assertions or explicitly defer to the index. Changelog entries (v1.3/v1.4) referencing '18-crate roster' are historical and exempt from sweep."
   - "v1.5 (burst-241/Wave-2/F-P141-02/2026-07-23): VP-gate expansion — Success Criteria 'Formal verification coverage' row updated from 3 to 6 P0 Kani VP obligations (D17-Q7 + D21 + D23) to align with nfr-catalog NFR-003 and BC-2.17.001 v1.2."
   - "v1.4 (2026-07-20): D21 ecosystem-parity scope-move (burst 216) — 5 langchain-core subsystems moved from Out-of-Scope to In Scope: prompt templates (SS-18/CAP-022..023, ferrochain-prompts), LC serialization/lc-JSON (SS-19/CAP-024..025, ferrochain-core::serializable), retrievers (SS-20/CAP-026..027, ferrochain-vectorstores), vectorstores (SS-21/CAP-028..030, ferrochain-vectorstores), embeddings (SS-22/CAP-031..033, ferrochain-core + ferrochain-openai + ferrochain-ollama). Callbacks and output parsers remain excluded (superseded). chat_history remains excluded (superseded). Out-of-Scope 8-subsystem table condensed: 5 detailed entries replaced with IN-v1-per-D21 single-line pointers; 3 remain unchanged. CAP-002 clarification updated (PromptTemplate now in-scope per D21; only OutputParser remains post-v1). 4 new Wave 2 bullets added to §In Scope."
   - "v1.3 (2026-07-20): Q1-GAP fix (burst 215) — explicit exclusion record for 8 langchain-core subsystems present in semport/core/rust-translation-strategy.md but absent from all BCs, SSes, and crate roster. Prevents Phase-2 story-writer scope ambiguity. Eight dispositions added to Out of Scope with rationale traceable to wave plan, 18-crate roster, and D1/D7/D13. CAP-002 clarification wording provided for BA routing."
@@ -146,14 +147,14 @@ The following langchain-core subsystems have detailed port strategies in
 `semport/core/rust-translation-strategy.md`. Their dispositions are made explicit here to prevent
 Phase-2 scope ambiguity. **5 of the original 8 exclusions were moved IN-SCOPE per D21** (prompt
 templates, LC serialization/lc-JSON, retrievers, vectorstores, embeddings — SS-18..22). **3 remain
-excluded** (callbacks, output parsers, chat_history). Every disposition is traceable to the 18-crate
-roster, wave plan, and decision record.
+excluded** (callbacks, output parsers, chat_history). Every disposition is traceable to the original 18-crate
+roster (since expanded to 21 per D21/D23), wave plan, and decision record.
 
 - `callbacks` (~4,850 LOC) — SUPERSEDED; no 1:1 port: ferrochain's observer surface is the
   typed `astream_events` v2 event taxonomy (SS-06/CAP-007, BC-2.06.001–003). The 20+ lifecycle
   `CallbackHandler` hooks are replaced by structured `StreamEvent` typed events (run/step/node/
-  tool start-stream-end, 12 variants) with type-safe run_id + parent_ids correlation. LangSmith
-  tracer and other `CallbackHandler` impls are not in the 18-crate roster; they target the
+  tool start-stream-end, 15 variants) with type-safe run_id + parent_ids correlation. LangSmith
+  tracer and other `CallbackHandler` impls are not in the current 21-crate roster; they target the
   community wave. No `callbacks/` module ships in v1.
 
 - `prompt templates` (~4,495 LOC) — **IN v1 per D21** → SS-18 (ferrochain-prompts), CAP-022..023; see §In Scope Wave 2.
@@ -181,7 +182,7 @@ roster, wave plan, and decision record.
   mechanisms: (a) typed state channels (SS-02/CAP-003) using Append-reducer message lists for
   within-graph message accumulation, and (b) `Thread` (SS-12/CAP-014) for durable cross-session
   conversation persistence in ferrochain-server. These jointly cover the `chat_history` use case
-  without a dedicated class. No `ChatMessageHistory` trait or crate is in the 18-crate roster.
+  without a dedicated class. No `ChatMessageHistory` trait or crate is in the current 21-crate roster.
 
 > **CAP-002 clarification for BA** (BA must propagate to capabilities-p0.md per BA domain ownership;
 > updated D21 — PromptTemplate moved in-scope):

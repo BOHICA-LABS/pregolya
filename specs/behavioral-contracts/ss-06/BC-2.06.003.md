@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "117f4d0"
+input-hash: "c8ad073"
 extracted_from: null
 modified: []
 deprecated: null

@@ -10,7 +10,7 @@ phase: 1a
 inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/specs/product-brief.md
-input-hash: "734af31"
+input-hash: "7634e89"
 traces_to: L2-INDEX.md
 decisions: [D17, D20, D21, D23]
 changelog:

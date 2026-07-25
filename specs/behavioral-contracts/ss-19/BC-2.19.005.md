@@ -34,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "e6a7bd8"
+input-hash: "b839a1f"
 extracted_from: null
 modified: []
 deprecated: null

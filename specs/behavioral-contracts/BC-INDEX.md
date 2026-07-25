@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.13"
+version: "3.14"
 status: active
 producer: state-manager
-timestamp: 2026-07-25T22:00:00Z
+timestamp: 2026-07-25T23:30:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.14 (burst-266/F-P164-01/2026-07-25): F-P164-01 HIGH: BC-2.14.001 v1.2→v1.3 — Component enum updated 16→17 (+TOOLS, ferrochain-tools SS-23); counter '16 components as of D21' → '17 components as of D23'; ADR-010 v1.6 D23 authority. TD-VSDD-060 sole-site confirmed: rg '16 components|sixteen components' .factory/specs/ — sole occurrence was BC-2.14.001 line 49; no other live-body references require amendment."
   - "3.13 (burst-264/2026-07-25): BC-2.12.004 v1.5→v1.6 — Architecture Anchors filesystem path corrected src/scheduler/ → src/cron/ per module-decomposition v1.26 adjudication (canonical module server::cron); pre-emptive micro-fix applied before adversary pass P1D-163."
   - "3.12 (burst-262/F-P161-03/2026-07-25): F-P161-03 LOW: Carry-Forward Notes #6 and #7 annotated '(later promoted to Wave 1 per D23)' per D23 promotion — Notes #6/#7 previously stated 'assigned wave 2' for ferrochain-memory SS-15 and SS-16 respectively, without acknowledging subsequent D23 Wave-1 promotion; now reads 'assigned wave 2, later promoted to Wave 1 per D23' following the parenthetical-annotation convention of Note #5."
   - "3.11 (burst-261/F-P160-01/F-P160-02/2026-07-25): F-P160-01 MED: BC-2.03.001 v1.6→v1.7 — Description corrected from 'exceeds config.recursion_limit' to the precise ceiling formula (stop = step_at_invoke_start + config.recursion_limit + 1; limit=5 → 6 steps execute, limit=25 → 26 steps execute); TD-VSDD-060 sibling sweep — BC-2.08.002 v1.4→v1.5 (VP-BC208002-01 description had implied ≤25 steps; corrected to 'within recursion_limit + 1 super-steps per invocation segment'; normative authority is BC-2.03.001 PC5); 7 sites audited (BC-2.01.003, BC-2.03.002/003, BC-2.04.006, interface-definitions/BC-2.03.001/error-taxonomy) all correct. F-P160-02 LOW: BC-2.04.006 v1.5→v1.6 — reciprocal NE-12 Related-BC link added (BC-2.15.002 cites this BC but no reciprocal existed; bidirectional advisory-link default convention)."
@@ -237,6 +238,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.14 | 2026-07-25 | burst-266/F-P164-01: BC-2.14.001 v1.2→v1.3 — Component enum updated 16→17 (+TOOLS, ferrochain-tools SS-23; "16 components as of D21" → "17 components as of D23"). ADR-010 v1.6 D23 authority. TD-VSDD-060 sole-site confirmed. | burst-266 F-P164-01 |
 | 3.13 | 2026-07-25 | burst-264: BC-2.12.004 v1.5→v1.6 — Architecture Anchors filesystem path corrected src/scheduler/ → src/cron/ per module-decomposition v1.26 adjudication (canonical module server::cron); pre-emptive micro-fix before adversary pass P1D-163. | burst-264 |
 | 3.12 | 2026-07-25 | burst-262/F-P161-03: Carry-Forward Notes #6 and #7 annotated "(later promoted to Wave 1 per D23)" — Notes previously stated wave-2 assignment for SS-15/SS-16 without acknowledging D23 Wave-1 promotion; parenthetical clarifiers added following Note #5 convention. | burst-262 F-P161-03 |
 | 3.11 | 2026-07-25 | burst-261/F-P160-01/02: F-P160-01 MED — BC-2.03.001 v1.6→v1.7 (Description corrected from 'exceeds config.recursion_limit' to precise ceiling formula: stop = step_at_invoke_start + config.recursion_limit + 1; limit=25 → 26 steps execute before halt); TD-VSDD-060 sibling sweep — BC-2.08.002 v1.4→v1.5 (VP-BC208002-01 description corrected from implied ≤25 to 'within recursion_limit + 1 super-steps per invocation segment'; normative authority BC-2.03.001 PC5); 7 recursion-arithmetic corpus sites audited CLEAN. F-P160-02 LOW — BC-2.04.006 v1.5→v1.6 (reciprocal NE-12 Related-BC link to BC-2.15.002 added; bidirectional advisory-link default convention). | burst-261 F-P160-01/02 |

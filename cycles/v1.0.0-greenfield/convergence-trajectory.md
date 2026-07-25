@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "c96a2f4"
+input-hash: "53ea5f5"
 traces_to: STATE.md
 ---
 
@@ -1483,3 +1483,25 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 **Regression sweep:** verify-sha-currency.sh: PASS. verify-form-a-changelog-direction.sh: PASS=192 WARN=6 FAIL=0 (WARNs: rev-N ADR entries + no-changelog ADRs — acceptable). verify-arch-anchor-resolution.sh: PASS=129 FAIL=0. verify-no-version-pins.sh: PASS=198 WARN=0 FAIL=0. All four validators PASS FAIL=0.
 
 **Hash sweep (D18-P89-A/D18-P90-A):** ARCH-INDEX v1.12 + system-overview v1.3 + dependency-graph v1.2 + ADR-007 (forward-amended) + bc-authoring-plan v2.51 staled downstream files. Hash sweep: specs/174 TOTAL=174 MATCH=174 STALE=0; planning/6 STALE=0; cycles/54 STALE=0. TOTAL STALE=0. Burst-265 commit.
+
+---
+
+### Pass P1D-164 (2026-07-25) — Expanded Perimeter Pass 36
+
+**Findings:** 3 (0 CRIT, 1 HIGH, 0 MED, 0 LOW, 2 OBS)
+**Streak:** 0/3 (NOT CLEAN strict)
+**Fix burst:** 266
+**Frozen HEAD:** burst-265 commit (98780dd)
+**Novel attack angle:** Component enum completeness post-D23 — BC-2.14.001 had been updated at D21 (12→16 components, adding TMPL/SRLZ/VS/EMBED) but the D23 +ferrochain-tools SS-23 addition was never propagated to the enum or its prose counter ("16 components as of D21"). Additionally: api-surface subsystem-column anchor granularity (the Tool trait row cited SS-09/BC-2.09.002 as definition authority, but BC-2.09.002 is a *consumer* of the Tool trait; the trait is DEFINED in ferrochain-core/src/tool.rs per BC-2.08.010/SS-08). Product-brief currency (variant and roster counts still reflected D21 era data, not D23 expansion).
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter. Three items: 1H + 2OBS. F-P164-01 HIGH closed BC-2.14.001 Component enum residue from the D23 scope expansion (17th component TOOLS added). OBS-P164-A closed four stale sites in product-brief.md (exclusion-decision annotation, current-state variant count 12→15, two roster-count sites 18→21). OBS-P164-B closed an api-surface.md Tool trait row anchor that conflated definition-site with consumer-site. BC-INDEX v3.14 sync applied by state-manager.
+
+- **F-P164-01 HIGH** (PO, closed): BC-2.14.001 v1.2→v1.3 — Component enum updated 16→17 (+TOOLS, ferrochain-tools SS-23). Description body corrected: prose component list now includes "TOOLS" as the 17th entry; counter updated from "16 components as of D21" to "17 components as of D23". ADR-010 v1.6 (D23 authority) cited. TD-VSDD-060 sole-site confirmed: `rg -n '16 components|sixteen components' .factory/specs/` returned only BC-2.14.001 line 49 as the sole live-body reference — no other spec documents required amendment. BC-INDEX v3.13→v3.14 synced by state-manager (frontmatter changelog entry + body Changelog-table row).
+
+- **OBS-P164-A** (PO, closed): product-brief.md v1.5→v1.6 — Four sites updated to reflect D21/D23 era state: (1) exclusion-decision annotation added "(18 original count; since expanded to 21 per D21/D23)" to the 18-package baseline reference; (2) current-state crate variant claim updated 12→15 (original 12 + D20 +1 + D21 +2 = 15 at brief-authoring closure); (3)+(4) two roster-count references updated 18→21 to match the post-D21/D23 canonical roster per ARCH-INDEX §Canonical Crate Roster.
+
+- **OBS-P164-B** (architect, closed): api-surface.md v1.9→v1.10 — Tool trait row subsystem/BC anchor corrected: "SS-09 / BC-2.09.002" changed to "SS-08 / BC-2.08.010". The Tool trait is DEFINED in ferrochain-core/src/tool.rs per BC-2.08.010 (SS-08 core tool dispatch); BC-2.09.002 (SS-09 MCP adapter) is a consumer of the Tool trait, not its definition site. Full api-surface trait-row audit confirmed this was the sole mixed-anchor row; all other trait rows were CLEAN.
+
+**Regression sweep:** verify-sha-currency.sh: PASS (post-commit clean). verify-form-a-changelog-direction.sh: PASS=192 WARN=6 FAIL=0. verify-arch-anchor-resolution.sh: PASS=129 FAIL=0. verify-no-version-pins.sh: PASS=198 WARN=0 FAIL=0. All four validators PASS FAIL=0.
+
+**Hash sweep (D18-P89-A/D18-P90-A):** BC-2.14.001 v1.3 + product-brief v1.6 + api-surface v1.10 + BC-INDEX v3.14 staled downstream files. Hash sweep: specs/174 TOTAL=174 MATCH=174 STALE=0 (3-pass convergence); planning/6 STALE=0 (1-pass); cycles/54 STALE=0 (2-pass). TOTAL STALE=0. Burst-266 commit.

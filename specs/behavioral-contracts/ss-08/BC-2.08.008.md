@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "97964b6"
+input-hash: "8285e42"
 extracted_from: null
 modified: []
 deprecated: null

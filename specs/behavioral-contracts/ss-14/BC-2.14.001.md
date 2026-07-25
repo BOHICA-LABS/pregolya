@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-20T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
   - "1.2 (D21/Batch-3b-i/2026-07-20): Component enum expanded 12→16 per ADR-010 v1.1. Added TMPL (ferrochain-prompts, SS-18), SRLZ (ferrochain-core::serializable, SS-19), VS (ferrochain-vectorstores, SS-21), EMBED (ferrochain-core::embeddings, SS-22) to Description and Postcondition 2 component list. Category axis unchanged at 12."
+  - "1.3 (F-P164-01/burst-266/2026-07-25): Component enum updated 16→17 per ADR-010 v1.6 (D23). Added TOOLS (ferrochain-tools, SS-23) to Description component list. Counter updated '16 components as of D21' → '17 components as of D23'. TD-VSDD-060 sole-site confirmed: rg -n '16 components|sixteen components' /Users/jmagady/Dev/ferrochain/.factory/specs/ returns only BC-2.14.001 — no other live-body references require amendment. BC-INDEX sync required (v1.2→v1.3)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "b92d47e"
+input-hash: "82ea79e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -44,8 +45,8 @@ removal_reason: null
 
 Every error emitted by the ferrochain library crate family is an instance of `FerrochainError`,
 a struct with two orthogonal dimensions: `component` (which crate emitted the error: CORE, GRAPH,
-CHKPT, SERVER, PROV, MCP, SPLIT, SBXD, RETRY, CRON, MEMORY, BUDGET, TMPL, SRLZ, VS, EMBED —
-16 components as of D21) and `category` (the error class: VAL, AUTH, RATE, TIMEOUT, TRANSPORT,
+CHKPT, SERVER, PROV, MCP, SPLIT, SBXD, RETRY, CRON, MEMORY, BUDGET, TMPL, SRLZ, VS, EMBED, TOOLS —
+17 components as of D23) and `category` (the error class: VAL, AUTH, RATE, TIMEOUT, TRANSPORT,
 INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY, SECURITY, TENANCY — 12 categories, unchanged). Each error also carries a `retry_hint` (Never / Maybe / Later(Duration)),
 a machine-readable `code` string (e.g. `E-CORE-001`), and a human-readable `message`. This
 contract adopts the adk-rust P-01/P-04 pattern (CONFLICT-6) and applies it uniformly across

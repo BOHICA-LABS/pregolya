@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "c13c2b8"
+input-hash: "4e9168c"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21, D23]
 supplements:
