@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.002
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-005 had `Err(FerrochainError { category: VAL, message: ... })` and TV-005 had `Err(FerrochainError { category: VAL })` with no code. Added code: E-CORE-005 (ValidationFailed) to EC-005 description and TV-005 — VAL construction-time validation for `bind_tools` called on a model with `has_tool_calling = false`."
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-standard-tests per module-decomposition.md v1.10."
   - "1.4 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-005 message reworded from 'model <name> does not support tool calling' to 'Validation failed for 'model': model '<name>' does not support tool calling' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV-005 bare form unchanged — PASS-ABBREV via EC-005."
+  - "1.5 (F-P160-01 TD-VSDD-060 sweep, 2026-07-25): Fix burst 261 — VP-BC208002-01 description had 'without exceeding config.recursion_limit (default 25) super-steps' which implies ≤25 steps execute before halt; corrected to 'within recursion_limit + 1 super-steps per invocation segment' (stop = step_at_invoke_start + recursion_limit + 1; default limit=25 → up to 26 steps execute before halt). Normative authority is BC-2.03.001 PC5; this VP description now agrees."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -149,7 +150,7 @@ a model that ignores the tools at inference time.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-BC208002-01 | agent_loop terminates without exceeding `config.recursion_limit` (default 25) super-steps; if the loop does not route to END within the ceiling, the run fails with `Err(E-GRAPH-017 GraphRecursionLimitExceeded)` per BC-2.03.001 PC5 | Integration test (standard-tests battery) | Wave 2 |
+| VP-BC208002-01 | agent_loop terminates within `recursion_limit + 1` super-steps per invocation segment (`stop = step_at_invoke_start + recursion_limit + 1`; default limit=25 → up to 26 steps execute before halt); if the loop does not route to END within the ceiling, the run fails with `Err(E-GRAPH-017 GraphRecursionLimitExceeded)` per BC-2.03.001 PC5 | Integration test (standard-tests battery) | Wave 2 |
 | VP-BC208002-02 | Tool argument zero-argument case produces `{}` not None | Unit test (argument normalisation) | Wave 2 |
 | VP-BC208002-03 | Unicode arguments survive round-trip without corruption | Integration test (unicode_tool_call) | Wave 2 |
 

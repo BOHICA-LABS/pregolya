@@ -28,7 +28,7 @@ inputs:
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/specs/prd-supplements/bc-authoring-plan.md
   - .factory/specs/domain-spec/ubiquitous-language-server.md
-input-hash: "187de67"
+input-hash: "79b0c56"
 findings:
   - id: F-P18-01
     severity: HIGH

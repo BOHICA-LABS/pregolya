@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.006
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
 timestamp: 2026-07-14T00:00:00Z
@@ -13,6 +13,7 @@ changelog:
   - "1.3 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(FerrochainError { category: VAL })` with no code for the case where both `checkpoint_ns` and `thread_id` are missing. Added code: E-CORE-005 (ValidationFailed) — missing required field `thread_id` is a VAL construction-time validation failure."
   - "1.4 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. (1) EC-003 had bare `Err(FerrochainError { category: VAL, code: E-CORE-005 })` without message; E-CORE-005 has <field> and <detail> placeholders. Added inline message template for the missing thread_id case. (2) EC-005 had `Err(FerrochainError { category: TENANCY, code: \"E-CHKPT-005\" })` without message; E-CHKPT-005 has <t> (thread_id) and <ns> (checkpoint_ns) placeholders. Added inline message template; both are available from config at raise site."
   - "1.5 (2026-07-19, F-P114-01 fix burst 117): Anchor correction — Architecture Anchors updated from single nonexistent 'architecture/ferrochain-checkpoint.md' to two adjudicated targets: (1) 'prd-supplements/interface-definitions.md §CheckpointSaver' for trait signatures; (2) 'architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md §Consequences' for composite PK cross-restart uniqueness guarantee. Per architect adjudication (burst 117). No BC body content changed."
+  - "1.6 (F-P160-02, 2026-07-25): Fix burst 261 — add reciprocal Related BCs entry for BC-2.15.002; BC-2.15.002 already cites this BC in its Related BCs as the NE-12 tenancy partition principle counterpart in the checkpoint subsystem, but this BC did not reciprocate. Bidirectional advisory links are the default convention per corpus navigability policy; no documented unidirectional-only exception applies to cross-subsystem principle links."
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -127,6 +128,7 @@ the adk-rust identity-triple collapse is the explicit counter-example.
 
 - BC-2.04.001 — composes with: put_writes uses the full triple as the write key
 - BC-2.04.003 — depends on: monotonic checkpoint_id is the third field of the triple
+- BC-2.15.002 — related to: NE-12 tenancy partition principle applied to memory scope addressing there and checkpoint addressing here
 
 ## Architecture Anchors
 

@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/architecture/verification-architecture.md
   - .factory/specs/architecture/verification-coverage-matrix.md
   - .factory/specs/prd-supplements/bc-authoring-plan.md
-input-hash: "b50a52e"
+input-hash: "075d2f0"
 findings:
   - id: F-P17-01
     severity: MEDIUM

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.001
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
   - "1.5 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. (1) PC5 had E-GRAPH-017 message `\"GraphRecursionLimitExceeded: ...\"` with Unicode-ellipsis abbreviation; expanded to full template with <run_id>, <step>, <limit> placeholders (all available at raise site). (2) EC-005 had bare `Err(FerrochainError { code: E-GRAPH-006, ... })` with Unicode-ellipsis; added inline message template for E-GRAPH-006 BspDeterminismViolation. (3) EC-006 had `Err(FerrochainError { category: POLICY, code: E-GRAPH-017 })` without message; added full message template as authoritative site. TV-006 PASS-ABBREV via EC-006."
   - "1.6 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
+  - "1.7 (F-P160-01, 2026-07-25): Fix burst 261 — correct Description super-step ceiling prose from 'exceeds config.recursion_limit' to the precise formula 'step_at_invoke_start + config.recursion_limit + 1' (recursion_limit + 1 super-steps execute within the invocation segment before the guard fires). Concrete examples added (limit=5 → 6 steps execute then halt; limit=25 → 26 steps execute then halt). PC5/PC6/EC-006/TV-006 are the authoritative normative sites; Description now agrees with them in spirit. TD-VSDD-060 sweep: VP-BC208002-01 in BC-2.08.002 also fixed in same burst (same off-by-one in VP description; no other normative prose sites found with the stale formula)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -57,11 +58,15 @@ the behavioral invariant to be proved). NE-17 names adk-rust's `buffer_unordered
 counter-example that this contract explicitly rejects.
 
 This BC also specifies the **graph-engine super-step ceiling**: the BSP loop must halt with
-`E-GRAPH-017 GraphRecursionLimitExceeded` when the super-step count for the current
-invocation segment exceeds `config.recursion_limit` (default 25, from `RunnableConfig` —
-the same key that BC-2.01.003 uses for the Runnable-layer nested-call-depth guard). This is
-ferrochain's port of LangGraph's primary infinite-loop guard (`GraphRecursionError`,
-`graph/behavioral-intent.md §1.3`: `stop = step + recursion_limit + 1`).
+`E-GRAPH-017 GraphRecursionLimitExceeded` when the step count for the current invocation
+segment would exceed `step_at_invoke_start + config.recursion_limit + 1` — i.e.,
+`recursion_limit + 1` super-steps execute within the invocation segment before the guard
+fires (limit=5 → 6 steps execute then halt; limit=25 → 26 steps execute then halt).
+`config.recursion_limit` defaults to 25 (from `RunnableConfig` — the same key that
+BC-2.01.003 uses for the Runnable-layer nested-call-depth guard; the enforcement arithmetic
+and error code differ per layer). This is ferrochain's port of LangGraph's primary
+infinite-loop guard (`GraphRecursionError`, `graph/behavioral-intent.md §1.3`:
+`stop = step + recursion_limit + 1`).
 
 ## Preconditions
 
