@@ -1427,4 +1427,30 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 
 **PENDING HUMAN ACTIONS:** B1 direnv allow; R6 publish-all.sh regenerate for 21 crates.
 
+---
+
+### Checkpoint archived: burst-274 / post-P1D-172a state-record (archived during P1D-172b state-record, 2026-07-26)
+
+**RESUME IN ONE BREATH:**
+ferrochain Phase 1 (Spec Crystallization) — burst 274 COMPLETE (F-P172a-01..19 all CLOSED; criticality registry 44→66; 18 missing modules found; ADR-010 timestamp open item CLOSED); streak 0/3. NEXT: adversary P1D-172 axes 2–4 (three mandatory directed axes).
+
+**HEADS:** develop d018d3f (clean, pushed); factory-artifacts = run `git -C .factory log -1 --format='%H'`; no worktrees; no open PRs.
+
+**PERIMETER SNAPSHOT (verified burst-274):** 129 BCs (51/75/3); 108 codes; 674 TVs (663+11 GTV); 38 CAPs; 15 DIs; 13 VPs (6 P0 Kani); 21 ADRs; 21 crates; SS-01..23; 81 purity-boundary-map rows (33 Pure Core / 36 Effectful Shell / 12 Boundary); 66 modules in criticality registry (12 CRITICAL / 22 HIGH / 30 MEDIUM / 2 LOW) + 2 definitions-only exempt; 56 module universe [NOTE: this figure was incorrect — actual is 70 per F-P172b-02]; 14 bounded contexts; 15 StreamEvents; 17 Components (PascalCase); 11 event_types; 36 gates; 11 Red Gate BCs; ActionRisk ferrochain-core::core::action_risk (#[non_exhaustive], 4 variants); 7 blocking validators + 1 advisory; records-lint.sh PASS; allowlist 24 entries keyed by path::pin-text.
+
+**NEXT-ACTION:** dispatch adversary P1D-172 continuation with THREE remaining MANDATORY AXES.
+
+**P1D-172 REMAINING AXES (ALL MANDATORY — axis 1 was P1D-172a):**
+1. Axis 2: ADR semantic citation: ADR-018, ADR-019, ADR-020, ADR-014, ADR-012, ADR-017, ADR-010 families; validator #6 blind spots. Citation coverage 287.
+2. Axis 3: Deep read: `specs/architecture/api-surface.md`, `prd-supplements/interface-definitions.md`, `specs/architecture/verification-coverage-matrix.md`, `specs/architecture/system-overview.md`.
+3. Axis 4: Broad regression + FREE HUNT [NOTE: this was completed as P1D-172b — 20 findings; fix-burst 275 PENDING].
+
+**CONVERGENCE-INTEGRITY RULE:** 3-CLEAN streak requires FULL-PERIMETER passes only.
+
+**CASCADE TRAJECTORY (P1D-143..172a):** 1,4,5,4,3,5,4,2,7,3,2,3,2,4,4,4,2,2,2,3L,3,5,3,7,3,5,1,1,20,19,19 — lessons L-036..L-055 (all codified).
+
+**PENDING HUMAN ACTIONS:** B1 direnv allow; R6 publish-all.sh regenerate for 21 crates.
+
+**WRAP METADATA:** Date 2026-07-26 | Cycle v1.0.0-greenfield | burst-274 COMPLETE | Phase 1 IN PROGRESS — F-P172a all closed; P1D-172 axes 2–4 pending
+
 **WRAP METADATA:** Date 2026-07-25 | Cycle v1.0.0-greenfield | burst-273 | Phase 1 IN PROGRESS — P1D-171 cascade CLOSED; fix-burst 273 COMPLETE

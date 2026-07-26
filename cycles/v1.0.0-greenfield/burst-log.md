@@ -5138,3 +5138,11 @@ Corpus-wide criticality sweep (triggered by repaired census gates):
 **Dim-5:** Counter 0/3 (streak unchanged; fix-burst only; no adversary pass). Next: adversary P1D-172 axes 2–4 (three mandatory directed axes).
 **Dim-7:** Trajectory tail →20→19→19. All 19 P1D-172a findings closed. Lessons L-046..L-050 codified; L-051..L-055 appended. ADR-010 timestamp open item CLOSED.
 
+---
+
+### Archived Current Phase Steps Row (archived during P1D-172b state-record, 2026-07-26)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Burst 272 — P1D-170 adversary + fix-burst COMPLETE (20 items 0C/8H/10M/2L/2OBS; all closed; ActionRisk→ferrochain-core::core::action_risk; api-surface re-anchors; phantom ActionRisk::Critical purged; gate-registry repairs; validator widened PASS=267; allowlist re-keyed path::pin-text; BC-INDEX v3.19; hash sweep TOTAL STALE=0; burst-267 row archived); 0/3. NEXT: P1D-171. | product-owner + architect + devops-engineer + business-analyst + state-manager | COMPLETE | 5 DEFECT-class pre-commit catches (TD-VSDD-059). BC-INDEX v3.19. Hash sweep: TOTAL STALE=0. Burst 272. |
+

@@ -67,7 +67,8 @@ traces_to: STATE.md
 | P1D-169 | 2026-07-25 | 1 | 0 | 1 | 0 | 0 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (0C/1H; F-P169-01 HIGH BC-2.16.001 v1.5→v1.6 Decision-6 re-anchor [Retry-Approval Ordering]; validator #6 verify-adr-decision-refs.sh minted PASS=204; BC-INDEX v3.18; fix-burst 271 COMPLETE) |
 | P1D-170 | 2026-07-25 | 20 | 0 | 8 | 10 | 2 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (0C/8H/10M/2L/2OBS; ActionRisk relocation/api-surface/gate-registry/validator widened PASS=267/allowlist re-keyed; BC-INDEX v3.19; fix-burst 272 COMPLETE) |
 | P1D-171a | 2026-07-25 | 19 | 0 | 5 | 8 | 4 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (0C/5H/8M/4L/2OBS; NARROW scope — burst-272 ActionRisk relocation audit; F-P171a-01..19 all CLOSED; fix-burst 273 COMPLETE) |
-| P1D-172a | 2026-07-25 | 19 | 0 | 4 | 10 | 5 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (0C/4H/10M/5L; NARROW scope — axis 1 only: governance-gate registry bc-authoring-plan v2.53; F-P172a-01..19 all OPEN; fix-burst 274 PENDING) |
+| P1D-172a | 2026-07-25 | 19 | 0 | 4 | 10 | 5 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (0C/4H/10M/5L; NARROW scope — axis 1 only: governance-gate registry bc-authoring-plan v2.53; F-P172a-01..19 all CLOSED by fix-burst 274) |
+| P1D-172b | 2026-07-26 | 20 | 0 | 6 | 8 | 4 | HIGH | 0/3 | FINDINGS_REMAIN; NOT CLEAN strict (0C/6H/8M/4L/2OBS; NARROW scope — axis 4 only: broad regression + free hunt; HEADLINE: phantom "56-module universe" (actual 70); 7 registry gaps; gate-inversion defect F-P172b-05; fix-burst 275 PENDING) |
 
 ## Trajectory Shorthand
 
@@ -1818,5 +1819,75 @@ verify-adr-decision-refs: PASS=267
 verify-changelog-date-monotonicity: PASS
 verify-adr-self-version-refs: PASS (advisory)
 records-lint: PASS
+
+**Hash sweep:** N/A — record-only state commit; no spec content changed.
+
+---
+
+### Pass P1D-172 sub-pass P1D-172b (2026-07-26)
+
+**Findings:** 20 (0 CRIT / 6 HIGH / 8 MED / 4 LOW / 2 OBS)
+
+**Adversary:** fresh-context on frozen HEAD (burst-274 commit, SHA `554dfd6bf3f0cfcaff0e67c48efcc68e32bf9b29`)
+**Streak:** 0/3 (remains 0/3 — HIGH findings present; sub-pass cannot advance streak per convergence-integrity rule)
+**CLEAN (strict):** no — 20 items present (0C/6H/8M/4L/2OBS)
+**CLEAN (PR-merge):** no — 6 HIGH findings present
+**Realized scope:** NARROW — axis 4 only (broad regression + free hunt: criticality-registry expansion audit, derived-count/consistency regression, free hunt). Axes 2 and 3 of P1D-172 NOT RUN; carried forward as mandatory axes.
+**Convergence-integrity rule:** FULL-PERIMETER passes only advance the 3-CLEAN streak.
+
+**Fix burst:** 275 PENDING
+**Frozen HEAD:** burst-274 commit (`554dfd6bf3f0cfcaff0e67c48efcc68e32bf9b29`)
+**Novel attack angle:** Phantom baseline figure (F-P172b-02) — "56-module universe" has been mirroring the criticality registry total since v1.2, never equaling the decomposition count (actual 70). Arithmetic was impossible on its face: a 48-row registry cannot yield 18 gaps against a 56-row universe. Gate-inversion defect (F-P172b-05) introduced by the burst that claimed to close the gap class. VP-002 target three-way divergence (F-P172b-09/10) introduced by fix-burst 273. Missing graph→checkpoint DAG edge (F-P172b-07) survived sibling-sweep of burst-273 F-P171a-06.
+
+**Summary:** 20 findings (0C/6H/8M/4L/2OBS). Novelty HIGH. Headline: phantom "56-module universe" baseline (F-P172b-02) invalidates burst-274's entire census — actual count is 70 (68 tiered + 2 exempt), yielding 7 tiered modules with no registry row and no exemption (F-P172b-01). Gate #25 Part B exemption clause inverted the check direction (F-P172b-05 HIGH process-gap, introduced by the same burst). Two tier divergences between registry and decomposition (F-P172b-03). Three H2 headings understating max tier (F-P172b-04). Phantom VP-002 target symbol (F-P172b-09), VP-002 module mis-anchor (F-P172b-10). Missing graph→checkpoint Edge Table row (F-P172b-07). Kani/proptest crate lists understated (F-P172b-08). Stale counts at 2 sites (F-P172b-11). 6 of 11 observability module anchors non-resolving (F-P172b-12). BC-INDEX VP footnote stale (F-P172b-13). Three timestamps not advanced (F-P172b-14). Architectural sibling tier asymmetry (F-P172b-15). Facade crate absent from DAG (F-P172b-16). CheckpointSaver mis-attributed (F-P172b-17). Cargo-mutants exclusion vs kill-rate target mismatch (F-P172b-18). Stale unsatisfiable architect obligation (F-P172b-19). Two process-gaps as OBS (F-P172b-05 promoted HIGH, OBS-P172b-B).
+
+**Verified-clean surfaces (do not re-check in P1D-173 or next perimeter pass):**
+1. Criticality registry arithmetic: 66 rows = 12+22+30+2; matches §Classification Summary and `verification-coverage-matrix.md` §Coverage by Criticality Tier exactly.
+2. Row-for-row set equality between `module-criticality.md` and `verification-coverage-matrix.md`: all 66 rows 1:1; ZERO tier divergences between these two files; gate #25 Part C crate-ownership diff CLEAN.
+3. All 18 burst-274 new rows: tier defensibility confirmed against `module-decomposition.md` pre-existing Criticality column; explicitly adjudicated DEFENSIBLE for all except `mcp::ingress` (F-P172b-15).
+4. Exemption-annotation integrity: `core::documents` and `memory::skills` both annotated `—`; exempt lists in gate #25 Part B and gate #32 carrier-4 agree verbatim.
+5. Purity-boundary Iron Law completeness: 33+36+12=81 recounted; all 70 decomposition rows in exactly one column; 11 extra rows fully accounted for.
+6. BC census: 129 files; per-subsystem counts match ARCH-INDEX BC ranges; priority P0 51 / P1 75 / P2 3; Red Gate 11 == 11 `**RG**` marks; VP Seed 11 == 11 `**VP**` marks.
+7. VP arithmetic: 13 = P0 6 + P1 7; Kani 9 + proptest 2 + integration 2 = 13; all cross-document VP fields agree row-for-row; `red_gate` uniformity: 5 true (VP-004/005/006/009/010), 8 false.
+8. Observability catalog census: 11 active event_types; bidirectional BC↔catalog completeness holds; only module anchors defective (F-P172b-12).
+9. Enum/canon hygiene: ZERO live-body occurrences of `ActionRisk::Critical`, `set_risk`, `Category::VALIDATION`, `Category::COMPATIBILITY`; all four hold corpus-wide.
+10. Domain-spec counts: 15 DIs, 38 CAPs, 19 FMs, 21 crates, 20 ADR files — all correct.
+11. DI orphan detection: all 15 DIs carry ≥1 BC citation; 564 DI references; ZERO orphan invariants.
+
+**Findings (all OPEN — fix-burst 275 pending):**
+- F-P172b-01 HIGH (architect): 7 tiered modules (`vectorstores::store`, `vectorstores::retriever`, `vectorstores::memory`, `openai::embeddings`, `ollama::embeddings`, `tools::fs`, `tools::search`) with no criticality row and no exemption; registry 66→73 pending fix
+- F-P172b-02 HIGH (architect): phantom "56" module-universe baseline in `module-criticality.md` §Module-universe sweep and `purity-boundary-map.md` §[Section Content]; actual 70 (68 tiered + 2 exempt); per-section derivation available; been mirroring registry total since v1.2
+- F-P172b-03 HIGH (architect): two tier divergences: `core::embeddings` registry HIGH vs decomposition MEDIUM; `vectorstores::similarity` registry CRITICAL vs decomposition MEDIUM; introduced by v1.4 D21+burst-224 backfill non-propagation
+- F-P172b-04 MED (architect): three H2 headings understate crate max tier: ferrochain-memory MEDIUM (contains write_guard HIGH), ferrochain-prompts MEDIUM (contains injection_guard HIGH), ferrochain-vectorstores MEDIUM (contains similarity CRITICAL)
+- F-P172b-05 HIGH [process-gap] (product-owner): gate #25 Part B exemption clause "Only check modules present in arch-registry" inverts check direction; introduced by fix-burst 274 orchestrator routing; makes the census structurally incapable of detecting the gap class it guards
+- F-P172b-06 MED [process-gap] (architect): ~30 of 66 registry rows use prose naming vs `crate::module` from burst-274; gate #25 Part C exact-string census mechanically unrunnable; mixed conventions produce census output indistinguishable from real drift
+- F-P172b-07 HIGH (architect): `dependency-graph.md` §Edge Table missing `ferrochain-graph → ferrochain-checkpoint` edge; contradicts §Invariant, §Topological Build Order, bounded-contexts, system-overview P-06, and graph::budget BC-2.04.008; sibling-sweep failure of burst-273 F-P171a-06
+- F-P172b-08 MED (architect): Kani crate list 3 vs VP-INDEX-derived 7; proptest `ferrochain-core` absent from both dependency-graph and tooling-selection proptest rows
+- F-P172b-09 HIGH (architect): `tooling-selection.md` §Kani async constraint mandates phantom `checkpoint::session_index::derive_key`; VP-002.md authoritative target is `storage_address`
+- F-P172b-10 HIGH (architect): `purity-boundary-map.md` Rule 3 anchors VP-002 to `get_next_version` in `checkpoint::clock`; VP-002.md, VP-INDEX.md, verification-architecture.md all say `checkpoint::session_index` / `storage_address`; introduced by fix-burst 273
+- F-P172b-11 MED (product-owner): "43 modules" stale in `prd.md` §10 and `prd-supplements/module-criticality.md` §SUPERSEDED banner; registry reached 66 in burst-274 without sweeping either site
+- F-P172b-12 MED (product-owner): 6 of 11 `observability.md` module anchors non-resolving to `module-decomposition.md`; sibling-sweep failure of v1.26 `server::cron` fix
+- F-P172b-13 MED (product-owner/state-manager): `BC-INDEX.md` §VP Seed BCs footnote "architect to author VP body files in Phase 6" stale — all 13 VP files exist; 6 Proof-Method cells read `Kani (candidate)` vs `VP-INDEX.md` plain `Kani`
+- F-P172b-14 MED (architect): three documents bumped in burst-274 without advancing frontmatter timestamp: `module-criticality.md` (2026-07-25 vs v2.0 dated 2026-07-26), `verification-coverage-matrix.md` (2026-07-24 vs v2.6 dated 2026-07-26), `module-decomposition.md` (2026-07-25 vs v1.31 dated 2026-07-26)
+- F-P172b-15 MED (architect): `mcp::ingress` MEDIUM contradicts architectural sibling `graph::provenance` HIGH — both DI-012 guardrail-dispatch modules per purity-boundary-map §Boundary; `mcp::ingress` is the EXTERNAL untrusted-input side (BC-2.09.003)
+- F-P172b-16 LOW (architect): `ferrochain` facade crate (#1) absent from `dependency-graph.md` Crate DAG, Edge Table, and Topological Build Order; highest fan-in node undocumented
+- F-P172b-17 LOW (architect): `dependency-graph.md` mis-attributes `CheckpointSaver` to `ferrochain-core`; it is DEFINED in `ferrochain-checkpoint` per module-decomposition
+- F-P172b-18 LOW pending-intent (architect): `tooling-selection.md` excludes `xtask/` and `ferrochain-community/` from cargo-mutants while both carry ≥70% LOW kill-rate target in `module-criticality.md` and `verification-coverage-matrix.md`
+- F-P172b-19 LOW (product-owner): `prd-supplements/module-criticality.md` frontmatter carries stale unsatisfiable `architect_note`; `ARCH-INDEX.md` exists since 2026-07-13; no "Architecture Module" column exists in the file
+- OBS-P172b-A: `ARCH-INDEX.md`, `module-decomposition.md`, `dependency-graph.md` declare superseded PO draft in `inputs:` but not live `specs/module-criticality.md`; plausible mechanism behind F-P172b-03 tier drift
+- OBS-P172b-B [process-gap]: no census gate requires positive-coverage assertion; prose completeness claims ("sweep complete", "full module-universe coverage") are unfalsifiable without a countable artifact triple
+
+**Validator status at dispatch (all PASS):**
+verify-sha-currency: PASS
+verify-form-a-changelog-direction: PASS
+verify-arch-anchor-resolution: PASS
+verify-no-version-pins: PASS
+verify-enum-variant-casing: PASS
+verify-adr-decision-refs: PASS=287
+verify-changelog-date-monotonicity: PASS
+verify-adr-self-version-refs: PASS (advisory)
+records-lint: PASS
+
+**Hash sweep:** N/A — record-only state commit; no spec content changed.
 
 **Hash sweep:** N/A — record-only state commit; no spec content changed.
