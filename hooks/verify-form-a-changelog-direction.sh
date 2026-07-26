@@ -24,6 +24,11 @@
 #     Treated as trivially valid — initial-authoring BC requires no history.
 #     Emits PASS.
 #
+#   Both forms present (both Form-A and Form-B in the same file):
+#     Gate convention requires one form per file.  Each form is validated
+#     independently against its own direction rule.  Co-existence emits a WARN
+#     (non-blocking) so the product-owner can decide on remediation.
+#
 # SECTION 2 — All other spec files under .factory/specs/ (non-BC):
 # ─────────────────────────────────────────────────────────────────
 # Covers: domain-spec/, architecture/ (incl. decisions/), prd-supplements/,
@@ -40,6 +45,11 @@
 #   is stripped before numeric comparison.
 #   Entries using a non-version-number prefix (e.g. "rev-2 (...)") cannot be
 #   validated — the file is emitted as WARN (non-blocking) for that format.
+#
+#   Both-forms detection (WARN, non-blocking):
+#     Non-BC files that carry both a frontmatter `changelog:` list AND a body
+#     `## Changelog` table are emitted as WARN (same co-existence policy as
+#     Section 1 above).  Each form is validated independently.
 #
 # Empirical verification (FIX-BURST-263):
 #   Convention confirmed DESCENDING/FIRST across 4+ files per non-BC class:
@@ -94,14 +104,16 @@ emit() {
   esac
 }
 
-# ── Python3 inline parser ─────────────────────────────────────────────────────
+# ── Python3 inline parser — Section 1 (BC files) ─────────────────────────────
 #
-# Produces one output line per BC file in the format:
+# Produces one or more output lines per BC file in the format:
 #   PASS <filepath>
 #   FAIL <filepath> <defect-description>
 #   SKIP <filepath> <reason>
+#   WARN <filepath> <reason>
 #
-# The bash loop below reads these and calls emit() accordingly.
+# Multiple output lines per file are possible when both forms are present:
+# the WARN for co-existence precedes the Form-A and Form-B validation results.
 
 PYTHON_OUTPUT="$(python3 - "$BC_GLOB" <<'PYEOF'
 import sys, glob, re, yaml
@@ -161,6 +173,17 @@ def check_form_b(filepath, fm, body):
 
     return defects
 
+def get_form_b_first_version(body):
+    """Return the first (newest) version from the body ## Changelog table, or None."""
+    bm = re.search(
+        r'(?:^|\n)## Changelog\n(.*?)(?=\n## |\Z)',
+        body, re.DOTALL
+    )
+    if bm is None:
+        return None
+    versions = FORM_B_VERSION_RE.findall(bm.group(1))
+    return versions[0] if versions else None
+
 for filepath in files:
     try:
         with open(filepath, 'r', encoding='utf-8') as fh:
@@ -196,11 +219,17 @@ for filepath in files:
         print(f"SKIP {filepath} document_type={doc_type}")
         continue
 
-    if 'changelog' not in fm:
-        # ── Form-B branch: check body ## Changelog table ──────────────────
-        form_b_result = check_form_b(filepath, fm, body)
+    # Probe both forms unconditionally — short-circuit fix: Form-B is now
+    # always examined regardless of whether Form-A (frontmatter changelog)
+    # is present.  Previously, a both-forms BC file had Form-B silently
+    # skipped when the frontmatter list was non-empty.
+    form_b_result = check_form_b(filepath, fm, body)
+    has_form_b    = form_b_result is not None
+    has_form_a    = 'changelog' in fm
 
-        if form_b_result is not None:
+    # ── Form-B only (or neither) ──────────────────────────────────────────
+    if not has_form_a:
+        if has_form_b:
             # Form-B section found — report defects or PASS
             if form_b_result:
                 print(f"FAIL {filepath} {'; '.join(form_b_result)}")
@@ -208,9 +237,6 @@ for filepath in files:
                 print(f"PASS {filepath}")
         else:
             # Neither Form-A nor Form-B changelog present.
-            # A version == "1.0" BC has no prior version to record — PASS.
-            # A version > "1.0" BC without any changelog is a gate #28 concern
-            # (not this script's FAIL mode — emit WARN, non-blocking).
             fm_version = str(fm.get('version', '')).strip()
             if fm_version == '1.0' or fm_version == '':
                 print(f"PASS {filepath}")
@@ -218,16 +244,26 @@ for filepath in files:
                 print(f"SKIP {filepath} no-changelog-version-gt-1.0")
         continue
 
+    # ── Form-A validation ──────────────────────────────────────────────────
     changelog = fm['changelog']
     if not isinstance(changelog, list):
         print(f"SKIP {filepath} changelog-not-list")
+        if has_form_b:
+            fb_newest = get_form_b_first_version(body) or '?'
+            print(f"WARN {filepath} both-changelog-forms:frontmatter=?(invalid-type),body-table={fb_newest}")
+            if form_b_result:
+                print(f"FAIL {filepath} {'; '.join(form_b_result)}")
         continue
 
     if len(changelog) == 0:
         print(f"SKIP {filepath} changelog-empty")
+        if has_form_b:
+            fb_newest = get_form_b_first_version(body) or '?'
+            print(f"WARN {filepath} both-changelog-forms:frontmatter=?(empty),body-table={fb_newest}")
+            if form_b_result:
+                print(f"FAIL {filepath} {'; '.join(form_b_result)}")
         continue
 
-    # ── Form-A validation ──────────────────────────────────────────────────
     # Extract version from each entry
     versions = []
     parse_errors = []
@@ -241,6 +277,11 @@ for filepath in files:
 
     if parse_errors:
         print(f"WARN {filepath} could-not-parse-version-in:{parse_errors[0]!r}")
+        if has_form_b:
+            fb_newest = get_form_b_first_version(body) or '?'
+            print(f"WARN {filepath} both-changelog-forms:frontmatter=?(parse-error),body-table={fb_newest}")
+            if form_b_result:
+                print(f"FAIL {filepath} {'; '.join(form_b_result)}")
         continue
 
     # Rule 1: strictly ascending (oldest first, newest last)
@@ -263,6 +304,22 @@ for filepath in files:
         defects.append(f"{direction}:{','.join(versions)}")
     if version_mismatch:
         defects.append(f"version-mismatch:frontmatter={fm_version},last-entry={last_version}")
+
+    # ── Both-forms co-existence WARN and Form-B direction check ──────────
+    # Emitted before the Form-A result so the both-forms context precedes
+    # any FAIL line.  This was previously invisible when Form-A existed
+    # (short-circuit fix).
+    # Rule 4 (Form-B version-match) is NOT emitted as FAIL here: when Form-A
+    # is present it is the authoritative version source, so the frontmatter
+    # version legitimately differs from the Form-B first row while the body
+    # table backfill is pending.  Only direction violations (Rule 3) are FAIL.
+    if has_form_b:
+        fa_newest = versions[-1]  # BC ASCENDING: last entry is newest
+        fb_newest = get_form_b_first_version(body) or '?'
+        print(f"WARN {filepath} both-changelog-forms:frontmatter={fa_newest},body-table={fb_newest}")
+        dir_defects = [d for d in (form_b_result or []) if 'version-mismatch' not in d]
+        if dir_defects:
+            print(f"FAIL {filepath} form-b:{'; '.join(dir_defects)}")
 
     if defects:
         print(f"FAIL {filepath} {'; '.join(defects)}")
@@ -306,7 +363,8 @@ done <<< "$PYTHON_OUTPUT"
 #
 # Validates frontmatter `changelog:` list direction for ALL .md files under
 # .factory/specs/ that are NOT behavioral-contract documents (BC files are
-# handled by Section 1 above).
+# handled by Section 1 above).  Also detects Form-B body tables in non-BC
+# files and emits WARN when both forms co-exist in the same file.
 
 PYTHON_OUTPUT_NONBC="$(python3 - "$FACTORY_DIR/specs" "$BC_GLOB" <<'PYEOF'
 import sys, os, glob, re, yaml
@@ -321,10 +379,31 @@ bc_files = set(glob.glob(bc_glob_pat))
 VERSION_RE = re.compile(r'^v?(\d+\.\d+(?:\.\d+)*)[\s:(]')
 # Non-version prefix RE: entries like "rev-2 (...)" that cannot be version-compared
 REV_RE = re.compile(r'^rev-\d+[\s:(]')
+# Form-B body table version: first pipe-delimited column
+FORM_B_VERSION_RE = re.compile(r'^\|\s*(\d+\.\d+(?:\.\d+)*)\s*\|', re.MULTILINE)
 
 def parse_version(s):
     """Convert '1.3' or '1.10' to tuple of ints for numeric comparison."""
     return tuple(int(x) for x in s.split('.'))
+
+def check_form_b_direction_only(fb_versions):
+    """
+    Check Form-B body table direction (Rule 3 only — no version-match Rule 4).
+    Used for both-forms files where Form-A is the authoritative version source.
+    Rule 3: rows must be strictly descending (newest first, oldest last).
+    Returns list of direction defect strings or [].
+    """
+    if len(fb_versions) < 2:
+        return []
+    defects = []
+    nums = [parse_version(v) for v in fb_versions]
+    for i in range(1, len(nums)):
+        prev, curr = nums[i - 1], nums[i]
+        if curr >= prev:
+            direction = 'ascending' if nums[-1] > nums[0] else 'non-monotonic'
+            defects.append(f"form-b-not-descending({direction}):{','.join(fb_versions)}")
+            break
+    return defects
 
 all_files = sorted(glob.glob(os.path.join(specs_root, '**', '*.md'), recursive=True))
 
@@ -345,6 +424,7 @@ for filepath in all_files:
         continue
 
     fm_text = parts[1]
+    body    = parts[2]
 
     try:
         fm = yaml.safe_load(fm_text)
@@ -362,10 +442,20 @@ for filepath in all_files:
     if doc_type == 'behavioral-contract':
         continue   # Handled by Section 1
 
-    if 'changelog' not in fm:
-        # No frontmatter changelog list.
-        # version == "1.0": trivially valid (no prior version to record) — PASS.
-        # version > "1.0": gate-28-style concern — WARN (non-blocking).
+    # Probe for Form-B presence — needed to detect both-forms files
+    fb_bm = re.search(
+        r'(?:^|\n)## Changelog\n(.*?)(?=\n## |\Z)',
+        body, re.DOTALL
+    )
+    fb_vers    = FORM_B_VERSION_RE.findall(fb_bm.group(1)) if fb_bm else []
+    has_form_b = bool(fb_vers)
+    has_form_a = 'changelog' in fm
+
+    # ── No Form-A (Form-B-only or neither) ───────────────────────────────
+    # Keep the original behavior: Form-B-only non-BC files are handled
+    # by the "no-changelog" path — direction-only Form-B validation is
+    # scoped exclusively to both-forms files where Form-A is authoritative.
+    if not has_form_a:
         fm_version = str(fm.get('version', '')).strip()
         try:
             is_gt_1_0 = (parse_version(fm_version) > (1, 0)) if fm_version else False
@@ -377,6 +467,7 @@ for filepath in all_files:
             print(f"PASS {filepath}")
         continue
 
+    # ── Form-A present (+ maybe Form-B) ───────────────────────────────────
     changelog = fm['changelog']
     if not isinstance(changelog, list):
         print(f"SKIP {filepath} changelog-not-list")
@@ -418,6 +509,10 @@ for filepath in all_files:
     if len(versions) == 1:
         fm_version = str(fm.get('version', '')).strip()
         version_mismatch = (fm_version != versions[0]) if fm_version else None
+        # Both-forms co-existence WARN (Rule 3 direction check on single-row Form-B
+        # is trivially valid — no pair exists to be out of order).
+        if has_form_b:
+            print(f"WARN {filepath} both-changelog-forms:frontmatter={versions[0]},body-table={fb_vers[0]}")
         if version_mismatch:
             print(f"FAIL {filepath} version-mismatch:frontmatter={fm_version},first-entry={versions[0]}")
         else:
@@ -448,6 +543,18 @@ for filepath in all_files:
         defects.append(
             f"version-mismatch:frontmatter={fm_version},first-entry={first_version}"
         )
+
+    # ── Both-forms co-existence WARN and Form-B direction check ──────────
+    # Emitted before the Form-A result so context precedes any FAIL line.
+    # This was previously invisible when Form-A existed (short-circuit fix).
+    # Rule 4 (Form-B version-match) is NOT checked: Form-A is the authoritative
+    # version source when both forms co-exist; the body table may legitimately
+    # lag behind while backfilling is pending.  Only direction (Rule 3) is FAIL.
+    if has_form_b:
+        print(f"WARN {filepath} both-changelog-forms:frontmatter={first_version},body-table={fb_vers[0]}")
+        dir_defects = check_form_b_direction_only(fb_vers)
+        if dir_defects:
+            print(f"FAIL {filepath} {'; '.join(dir_defects)}")
 
     if defects:
         print(f"FAIL {filepath} {'; '.join(defects)}")

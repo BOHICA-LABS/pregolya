@@ -6,16 +6,17 @@ slug: error-taxonomy-anyhow-confinement
 title: "Error Taxonomy and anyhow Confinement (P-78 / NE-03 / DI-014)"
 status: accepted
 producer: architect
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-14T12:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
-date: "2026-07-25"
+date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.10"
+version: "1.11"
 changelog:
+  - "1.11 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp and date per ADR decision-date convention (Gate #28 Rule 5): `timestamp` → `2026-07-14T12:00:00Z`; `date` → `2026-07-14`. Original D17 decision date evidenced by v1.0 changelog. Fields were incorrectly bumped across multiple fix bursts (62672f9, 317b144, f4819b2, 75b0c8a)."
   - "1.10 (FIX-BURST-272/F-P170-07+09+10/2026-07-25): Three targeted fixes. (1) F-P170-07 — E-TMPL-003 description de-minijinjaed: replace 'UndefinedVariable: minijinja strict-undefined mode raises this when a template variable is not in the input map.' with engine-neutral form matching error-taxonomy.md §E-TMPL-003 and ADR-015 Decision 4 universal strict-undefined contract (F-P131-04, burst-226). (2) F-P170-09 — Axis-alignment rationale: replace phantom 'Python REPL' tool with actual ADR-020 Decision 2 inventory (ReadFileTool/WriteFileTool/EditFileTool/ListDirTool — tools::fs; BashTool — tools::shell; GrepTool — tools::search). (3) F-P170-10 — Informational payload fields: off-by-two BC mis-anchor corrected; 'BC-2.23.003/004' → 'BC-2.23.005 PC-2 / BC-2.23.006 PC-2' per error-taxonomy.md §TOOLS E-TOOLS-005/006 anchors."
   - "1.9 (FIX-BURST-270/P1D-168-adjudication/2026-07-25): Retract v1.8 casing canon (F-P167-05) and replace with Direction B (PascalCase). Category enum variants use PascalCase — Category::Val, Category::Auth, Category::Security, etc. The v1.8 note incorrectly mandated SCREAMING_CASE Rust identifiers by conflating the taxonomy code-string column (legitimately ALL-CAPS: VAL, AUTH, etc.) with the Rust variant identifier. Evidence for Direction B: (1) BC-2.14.001 §Rendering Convention explicitly mandates PascalCase for Rust paths; (2) clippy::upper_case_acronyms with -D warnings makes Category::VAL a compile error without a lint exemption; (3) Component variants are uniformly PascalCase (Component::Tmpl, Component::Chkpt) — Category must follow the same convention; (4) wire form uses humanized titles ('Validation', not 'VAL') so no serde rename is needed. Rewrite casing canon note in live body. Downstream architect-owned sites updated in same burst."
   - "1.8 (FIX-BURST-269/F-P167-05/2026-07-25): Add Category casing canon note after FerrochainError struct definition. Category enum variants use SCREAMING_CASE (Category::VAL, Category::AUTH, etc.) — not PascalCase (Category::Val). The canonical codes list at the category comment already used uppercase (VAL | AUTH | …); this note makes the Rust variant casing explicit to prevent future Category::Val drift. Closing adjudication from F-P167-05."

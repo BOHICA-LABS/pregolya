@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "2.4"
+version: "2.6"
 status: active
 producer: architect
 timestamp: 2026-07-24T00:00:00Z
@@ -14,6 +14,8 @@ inputs:
 input-hash: "0203a7e"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "2.6 (FIX-BURST-274/module-universe-sweep/2026-07-26): Module-universe sweep mirror — add 18 Per-Module Coverage Status rows matching module-criticality.md v2.0 additions. CRITICAL +1: checkpoint::saver. HIGH +4: core::events, graph::definition, server::streaming, server::stores. MEDIUM +13: core::config, checkpoint::memory, checkpoint::postgres, server::cron, sandbox::container, sandbox::seatbelt, sandbox::process, splitters::parity, mcp::discovery, mcp::ingress, memory::sqlite, memory::in_memory, memory::search. Coverage-by-Criticality-Tier: CRITICAL 11→12, HIGH 18→22, MEDIUM 17→30. Per-module count 48→66. VP-to-Module table and VP totals unchanged (no new VPs)."
+  - "2.5 (FIX-BURST-274/D21-definitions-sweep/2026-07-26): D21 Pure Core sweep — add 4 missing MEDIUM rows to match module-criticality.md v1.9 additions (core::retriever, prompts::template, prompts::chat_template, prompts::few_shot). Per-module count 44→48; Coverage-by-Criticality-Tier MEDIUM 13→17. Per-Module Coverage Status header updated."
   - "2.4 (FIX-BURST-273/gate-25-32/2026-07-25): Add tools::config MEDIUM row (ferrochain-tools SS-23) — gate #25 Part B/C sibling propagation; no Kani VP (VP-013 Kani P1 targets check_risk_floor in tools::shell); Integration: yes (construction-time validation tests for override_risk / ADR-020 Decision 3 / BC-2.23.005). Per-module count 43→44; Coverage-by-Criticality-Tier MEDIUM 12→13. Header note updated."
   - "2.3 (FIX-BURST-252/2026-07-24): Input-hash cascade refresh — module-decomposition.md v1.22→v1.23 (FIX-BURST-252 F-P151-02+05: fraction f32→f64 in core::budget, CompactionSummary flat fields). No VP-to-Module table or coverage-status changes (core-budget VP-012 mapping, tool, phase, priority, and Notes wording all unchanged — Notes 'OnWatermark arithmetic; Kani P1 (BC-2.10.005)' contains no predicate formula or type annotation requiring update)."
   - "2.2 (FIX-BURST-250/F-P149-03/2026-07-24): Add missing red_gate label to three Per-Module rows where VP is red_gate:true (VP-004/005/006) for parity with VP-009/VP-010 rows. injection_guard Notes: 'Kani P1 (BC-2.18.004)' → 'Kani P1 red_gate (BC-2.18.004)'. mcp-adapter Notes: 'ToolException fidelity' → 'ToolException type-identity; integration red_gate (BC-2.09.004)'. mcp-client Notes: 'Red Gate BCs' → 'integration red_gate (BC-2.09.005); no-live-connections'. Verified: VP-009 'Kani P0 red_gate (BC-2.21.003)' and VP-010 'Kani P0 red_gate (BC-2.19.005)' already correct. All 8 red_gate:false VP rows confirmed clean (no red_gate label)."
@@ -60,8 +62,8 @@ changelog:
 
 ## Per-Module Coverage Status
 
-> This table covers all 44 architecture modules (35 pre-D21 + 5 added by D21 VP layer + 1 from F-P129-11 split + 2 new D23 rows: core-budget and tools-shell + 1 gate-25-32 row: tools::config).
-> Tier groupings: CRITICAL 11 / HIGH 18 / MEDIUM 13 / LOW 2 (D21 established CRITICAL 11 / HIGH 16 / MEDIUM 11, with vectorstores-mmr classified CRITICAL as the VP-009 host; F-P129-11 burst-224 adds vectorstores-similarity as the new CRITICAL VP-009 host and reclassifies vectorstores-mmr CRITICAL → MEDIUM — net CRITICAL unchanged at 11, MEDIUM +1 = 12; D23 burst-232 adds 2 HIGH rows: core-budget and tools-shell — HIGH +2 = 18; FIX-BURST-273 gate-25-32 adds tools::config MEDIUM — MEDIUM +1 = 13).
+> This table covers all 66 architecture modules (48 from prior sweeps + 18 module-universe-sweep rows: CRITICAL +1 checkpoint::saver; HIGH +4 core::events, graph::definition, server::streaming, server::stores; MEDIUM +13 core::config, checkpoint::memory, checkpoint::postgres, server::cron, sandbox::container, sandbox::seatbelt, sandbox::process, splitters::parity, mcp::discovery, mcp::ingress, memory::sqlite, memory::in_memory, memory::search).
+> Tier groupings: CRITICAL 12 / HIGH 22 / MEDIUM 30 / LOW 2 (prior 48-row state: CRITICAL 11 / HIGH 18 / MEDIUM 17 / LOW 2; module-universe sweep adds CRITICAL +1, HIGH +4, MEDIUM +13).
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
@@ -109,14 +111,36 @@ changelog:
 | core-budget | ferrochain-core | VP-012 | — | — | yes | D23/SS-10; OnWatermark arithmetic; Kani P1 (BC-2.10.005) |
 | tools-shell | ferrochain-tools | VP-013 | — | — | yes | D23/SS-23; BashTool risk floor; Kani P1 (BC-2.23.005) |
 | tools::config | ferrochain-tools | — | — | — | yes | D23/SS-23; ToolConfig risk-floor validator; pure construction-time validation (ADR-020 Decision 3 / BC-2.23.005) |
+| core::retriever | ferrochain-core | — | — | — | yes | D21/SS-20; `rag_ingress` async guardrail routing gate; DI-012 RAGRetrieval boundary enforcement (ADR-014 Decision 6) |
+| prompts::template | ferrochain-prompts | — | — | — | yes | D21/SS-18; f-string rendering engine; variable extraction and substitution (ADR-015) |
+| prompts::chat_template | ferrochain-prompts | — | — | — | yes | D21/SS-18; multi-message template construction with MessageProvenance (ADR-015) |
+| prompts::few_shot | ferrochain-prompts | — | — | — | yes | D21/SS-18; FewShotPromptTemplate assembly; snapshot-frozen golden fixture tests (ADR-015) |
+| checkpoint::saver | ferrochain-checkpoint | — | — | — | yes | CheckpointSaver `put_writes` durability contract; integration-tested via backend implementations (sqlite/postgres/memory) |
+| core::events | ferrochain-core | — | — | — | yes | StreamEvent taxonomy; BC-2.06.001; event construction tested in graph scheduler integration suite |
+| graph::definition | ferrochain-graph | — | yes | — | yes | StateGraph builder; node/edge registration; property tests for topology invariants |
+| server::streaming | ferrochain-server | — | — | — | yes | SSE streaming endpoint; same engine as unary (NE-13); integration + soak |
+| server::stores | ferrochain-server | — | — | — | yes | IdempotencyStore/RateLimitStore/RunStore trait seams (NE-08); integration via server handler tests |
+| core::config | ferrochain-core | — | — | — | yes | RunnableConfig/ChatConfig construction; env var reads; unit tests |
+| checkpoint::memory | ferrochain-checkpoint | — | — | — | yes | In-memory checkpoint backend; deterministic HashMap; unit tests |
+| checkpoint::postgres | ferrochain-checkpoint | — | — | — | yes | PostgreSQL checkpoint backend; integration tests (stretch feature) |
+| server::cron | ferrochain-server | — | — | — | yes | CronSchedule parsing and proactive run triggering; integration tests |
+| sandbox::container | ferrochain-sandbox | — | — | — | yes | Container execution backend (sandbox-container feature); integration tests |
+| sandbox::seatbelt | ferrochain-sandbox | — | — | — | yes | macOS Seatbelt deny-by-default profile (NE-16); integration tests |
+| sandbox::process | ferrochain-sandbox | — | — | — | yes | ProcessBackend OS subprocess execution; integration tests (BC-2.13.002) |
+| splitters::parity | ferrochain-splitters | — | — | — | yes | Golden-vector parity tests vs Python reference (R8/BC-2.07.002); unit tests |
+| mcp::discovery | ferrochain-mcp | — | — | — | yes | Tool discovery from MCP server at runtime (BC-2.09.001); integration tests |
+| mcp::ingress | ferrochain-mcp | — | — | — | yes | Untrusted-ingress routing; DI-012 guardrail seam; unit + integration tests |
+| memory::sqlite | ferrochain-memory | — | — | — | yes | SQLite durable backend for long-horizon memory; integration tests |
+| memory::in_memory | ferrochain-memory | — | — | — | yes | Ephemeral in-memory backend for test/dev; unit tests |
+| memory::search | ferrochain-memory | — | — | — | yes | Keyword, vector, and hybrid search; integration tests |
 
 ## Coverage by Criticality Tier
 
 | Tier | Modules | Kani VPs | proptest | fuzz | Kill Rate Target |
 |------|---------|---------|---------|------|-----------------|
-| CRITICAL | 11 | 6 (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) | all | subset | ≥ 95% |
-| HIGH | 18 | 3 (VP-006, VP-012, VP-013) | most + VP-007, VP-008 | subset | ≥ 90% |
-| MEDIUM | 13 | 0 | some | — | ≥ 80% |
+| CRITICAL | 12 | 6 (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) | all | subset | ≥ 95% |
+| HIGH | 22 | 3 (VP-006, VP-012, VP-013) | most + VP-007, VP-008 | subset | ≥ 90% |
+| MEDIUM | 30 | 0 | some | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | ≥ 70% |
 
 ## Mutation Kill Rate Gates (cargo-mutants)

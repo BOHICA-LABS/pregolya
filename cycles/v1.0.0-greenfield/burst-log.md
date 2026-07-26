@@ -5042,3 +5042,99 @@ Streak: 0/3. NEXT: P1D-169.
 
 Agents: architect + product-owner + devops-engineer + state-manager.
 
+---
+
+## Burst 271 — P1D-169 adversary + fix-burst (archived from STATE.md Current Phase Steps by burst-274)
+
+**Date:** 2026-07-25
+**Agents:** product-owner + devops-engineer + state-manager
+**Summary:** P1D-169 adversary + fix-burst COMPLETE (1 item 0C/1H; F-P169-01 HIGH BC-2.16.001 §Retry-Approval Ordering Decision-6 re-anchor; BC-2.16.001 v1.5→v1.6; BC-INDEX v3.18; validator #6 minted; hash sweep TOTAL STALE=0; burst-266 row archived); 0/3. NEXT: P1D-170.
+
+F-P169-01 HIGH (PO, closed): BC-2.16.001 v1.5→v1.6 — corrected mis-anchor '(ADR-018 Decision 3)' → '(Decision 6)'. Validator #6 verify-adr-decision-refs.sh minted (PASS=204). Hash sweep: TOTAL STALE=0. Burst 271.
+
+---
+
+## Burst 274 — P1D-172a Fix-Burst COMPLETE (19 findings all closed; criticality registry 44→66 rows)
+
+**Date:** 2026-07-26
+**Agents:** product-owner (parts A+B) + devops-engineer (parts A+C) + architect (wave C) + state-manager
+**Findings closed:** F-P172a-01..19 (0C/4H/10M/5L) — all CLOSED
+
+### Summary
+
+All 19 findings from adversary sub-pass P1D-172a (axis 1 — governance-gate registry bc-authoring-plan v2.53) closed. HEADLINE: repairing the broken census commands (gate #33 column-map, gate #25 Part C awk pipeline) made a latent perimeter gap findable for the first time. The architect's follow-on corpus-wide criticality sweep found 18 modules with no criticality row. The criticality registry grew from 43/44 → 66 rows (12 CRITICAL / 22 HIGH / 30 MEDIUM / 2 LOW), mirrored exactly in `verification-coverage-matrix.md`. Root cause: the D21+burst-224 backfill was scoped to VP-bearing modules only, so execution-logic modules without a VP were systematically overlooked across ALL backfill generations, not just D21. No adversary pass had caught it because the gates that would have detected it could not execute.
+
+The 18 previously-missing modules: `core::events` (HIGH), `core::config` (MEDIUM), `graph::definition` (HIGH), `checkpoint::saver` (CRITICAL — durability contract for all backends), `checkpoint::memory`, `checkpoint::postgres`, `server::streaming` (HIGH), `server::stores` (HIGH), `server::cron`, `sandbox::container`, `sandbox::seatbelt`, `sandbox::process`, `splitters::parity`, `mcp::discovery`, `mcp::ingress`, `memory::sqlite`, `memory::in_memory`, `memory::search` (remainder MEDIUM).
+
+`core::documents` and `memory::skills` adjudicated definitions-only EXEMPT — annotated explicitly in `module-decomposition.md` so "intentionally exempt" is distinguishable from "forgotten." Silent absence was the defect class.
+
+### Part A — broken census commands + devops (F-P172a-01/09/10/11/13/14/15/18)
+
+- **F-P172a-01 HIGH [PG]:** gate #33 taxonomy reverse-anchor census `anchor=$4` → `anchor=$5`; inline column-map note added; grep patched off globstar to `find`/`ss-*/`. Dry-run: 107/108 codes resolve (E-TOOLS-008 multi-BC anchor cell manually verified). No genuine orphans.
+- **F-P172a-09 MED:** gate #13 VP-uniqueness regex widened to all three corpus ID forms; `BC-INDEX.md` excluded; DEFINITION vs CITATION distinguished.
+- **F-P172a-10 MED:** gate #25 Part C: `grep -n` prefix + unscoped sweep replaced with section-scoped `awk` pipeline. Dry-run: exactly 44 clean (module, crate) pairs.
+- **F-P172a-11 MED:** gate #25 Part B: "Module Inventory table (arch)" → "Module Classification table (arch)".
+- **F-P172a-13 MED:** gate #36 glob `VP-*.md` → `VP-[0-9][0-9][0-9].md`, excluding `VP-INDEX.md`. Dry-run: step 2 now empty; all 13 VPs carry `red_gate:`.
+- **F-P172a-15 LOW:** gate #25 Part B heading check given full path.
+- **F-P172a-18 LOW:** gate #28 Step 1 converted from `wc -l` count to filename-emitting list.
+- **F-P172a-14 MED — DECISION:** Form A (frontmatter list) authoritative for `bc-authoring-plan.md`; Form-B body table retained as banner-marked historical record.
+
+**Devops — F-P172a-14 mechanical half:** both-forms coverage added to `verify-changelog-date-monotonicity.sh` and `verify-form-a-changelog-direction.sh`; per-file loop fixed to evaluate both forms independently; two new non-blocking WARNs: `both-changelog-forms:` and `both-forms-version-divergence:`. Four both-forms files identified corpus-wide. New test harness `hooks/tests/test-form-b-both-checks.sh` — 6 scenarios, 25 assertions, all passing.
+
+### Part B — structural/propagation findings (F-P172a-02/03/04/05/06/07/08/12/16/17/19) — bc-authoring-plan v2.53→v2.55
+
+- **F-P172a-02 HIGH [PG]:** gate #32 carrier 5 "THREE" → "FOUR"; carrier-4 (arch registry) step 4a added with exception classes; numbering disambiguated.
+- **F-P172a-03 HIGH [PG]:** ALL FOUR → ALL THREE: 5 live sites swept; Part B reconciling row DELETED; Part C command comment PO-registry clause deleted. §Source line historical audit trail retained.
+- **F-P172a-04 HIGH [PG]:** `memory::skills` REMOVED from definitions-only carve-out; re-registered under routing-overlay exception class (Effectful Shell async I/O per purity-boundary-map; BC-2.15.004/DI-012 untrusted-document ingress). Invalid ADR-009 Option 3 precedent citation removed. Note: defect was introduced by fix-burst 273 and fixed in-scope.
+- **F-P172a-12 MED [PG]:** gate #25 Part B: `memory::skills` false HIGH exempted as routing-overlay non-violation.
+- **F-P172a-05 MED [PG]:** DEFER-002 narrowed: `verify-changelog-date-monotonicity.sh` (Rules 2+3) and `verify-form-a-changelog-direction.sh` (Rule 6 Form A) marked LIVE (blocking). Phase-3 items remaining: Rule 1, Rule 4 temporal-neighbor, Rule 5 machine check, Rule 6 Form B.
+- **F-P172a-06 MED [PG]:** validator #7 established as authoritative corpus-wide date sweep; manual fallback widened 5 → 11 files (adding ADR-007, ADR-009, ADR-012, ADR-013, BC-INDEX.md, verification-architecture.md).
+- **F-P172a-07 MED:** gate #28 Rule 5 supplement enumeration 6 → 7 (`observability.md` added — SAP-1 catalog host).
+- **F-P172a-08 MED:** six live "95 BCs" sites de-pinned to recurrence-proof phrasing at `subsystem_note`, Batch-13 scope note, Authoring Guidelines #1 and #8, gate #13 census prose, gate #28 Rule 6 census header.
+- **F-P172a-16 LOW:** gate #25 Part B heading example marked explicitly hypothetical.
+- **F-P172a-17 LOW:** Authoring Guidelines items 16/17 source order corrected; CommonMark auto-renumbering fixed.
+- **F-P172a-19 LOW — DECISION:** bare `"VP-NNN candidate"` = proposed ID (rule (3) applies); `"VP-NNN (Kani P1 candidate)"` = assigned VP + tier descriptor (rule (3) does NOT apply). BC-2.23.005 "VP-013 (Kani P1 candidate)" is COMPLIANT — no 40-site sweep required.
+
+### Wave C — architect (ADR repairs + corpus criticality sweep)
+
+ADR-013: burst-262 body change completed (TD-VSDD-091 de-pin applied; missing 1.3 changelog row added). Version stays 1.3.
+
+Four ADR `timestamp` violations from burst-238 stale-handoff blind-reset:
+- `ADR-005` → 2026-07-14 (v1.6→v1.7)
+- `ADR-010` → 2026-07-14 (v1.10→v1.11) — **closes ADR-010 open item from P1D-171/burst-273**
+- `ADR-012` → 2026-07-15 (v1.5→v1.6)
+- `ADR-014` → 2026-07-21 (v1.9→v1.10)
+
+Sixteen other ADRs verified clean. Version-parity sweep across ADR-007/009/012 and `verification-architecture.md` found no further mismatches.
+
+Corpus-wide criticality sweep (triggered by repaired census gates):
+- 18 modules with no criticality row found and added
+- Registry: 43/44 → 66 rows (12 CRITICAL / 22 HIGH / 30 MEDIUM / 2 LOW); `module-criticality.md` version 1.7→2.0 (major bump)
+- `verification-coverage-matrix.md` mirrored exactly: 66 rows; v2.3→v2.6
+- `module-decomposition.md` v1.29→v1.31: `core::documents` and `memory::skills` exemption annotations
+
+### Wave C — product-owner (pending-note resolution)
+
+- `core::documents` adjudicated EXEMPT (ADR-014 Decision 2: pure data carrier, no I/O); Criticality column MEDIUM → `—` with annotation.
+- `memory::skills` annotated MEDIUM → `—` with "routing-overlay — no criticality-counted module row per ADR-012 Decision 4".
+- "architect to confirm" note replaced with resolved adjudication.
+- Exempt list in gate #32 carrier 4 and gate #25 Part B extended to include `core::documents`.
+- Hardcoded "Expected: exactly 44 pairs" in gate #25 Part C de-pinned to "recompute from §Classification Summary" per F-P170-14 precedent.
+- All remaining pending/TODO notes verified as already-resolved or gate-detection patterns.
+
+### Perimeter deltas
+
+- `module-criticality.md` v1.7→v2.0: 43/44→66 rows (12/22/30/2 CRIT/HIGH/MED/LOW)
+- `verification-coverage-matrix.md` v2.3→v2.6: 44→66 rows per-tier matching exactly
+- `module-decomposition.md` v1.28→v1.31: exemption annotations for `core::documents` and `memory::skills`
+- `bc-authoring-plan.md` v2.53→v2.55
+- ADRs: ADR-005 v1.7, ADR-010 v1.11, ADR-012 v1.6, ADR-013 (body completed at 1.3), ADR-014 v1.10
+- `verify-changelog-date-monotonicity.sh`: PASS=130 WARN=73 (elevated WARNs = both-forms co-existence signals, non-blocking)
+- `verify-form-a-changelog-direction.sh`: PASS=191 WARN=10 (elevated WARNs = both-forms version-divergence signals, non-blocking)
+- `verify-adr-decision-refs.sh`: PASS 267→287
+- New: `hooks/tests/test-form-b-both-checks.sh` (6 scenarios, 25 assertions)
+- BC census UNCHANGED: 129 (51/75/3); BC-INDEX.md not bumped
+
+**Dim-5:** Counter 0/3 (streak unchanged; fix-burst only; no adversary pass). Next: adversary P1D-172 axes 2–4 (three mandatory directed axes).
+**Dim-7:** Trajectory tail →20→19→19. All 19 P1D-172a findings closed. Lessons L-046..L-050 codified; L-051..L-055 appended. ADR-010 timestamp open item CLOSED.
+

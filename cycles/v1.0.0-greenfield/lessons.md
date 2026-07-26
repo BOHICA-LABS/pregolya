@@ -367,45 +367,85 @@ This is an extension of the post-burst sweep discipline (D18-P89-A / gate #28). 
 **Codified fix:** Cross-agent precedence disputes must be resolved by quoting the EXACT text of the relevant CLAUDE.md rule, identifying the scope clause, and testing whether the disputed case falls within that scope. If two rules conflict or a rule's scope is unclear, escalate to product-owner (for BC semantics) or orchestrator (for routing). Agent seniority (architect vs PO vs BA) does not determine outcome — the written rules do.
 **Applicable to:** All spec governance disputes. The precedence table (CLAUDE.md §Source-of-Truth Precedence) must be read literally, including scope qualifiers. Disputes that cannot be resolved by the written rules must be escalated to the human.
 
-### L-046 [OPEN — fix-burst 274 pending]: WHEN A DEFECT CLASS IS FIXED IN ONE INSTANCE, SWEEP THE CLASS
+### L-046 [codified]: WHEN A DEFECT CLASS IS FIXED IN ONE INSTANCE, SWEEP THE CLASS
 
 **Discovered:** P1D-172a / F-P172a-01 (gate #33 census field-index, 2026-07-25)
 **Symptom:** The gate #25 Part C `awk` field-index fix (F-P170-15, burst-272) corrected `{print $2, $4}` to extract BC Anchor instead of Severity. Gate #33 has a structurally identical census command with the same error-taxonomy table and the same field-mapping requirement. Two passes later, gate #33's census still emits `(code, severity)` pairs, causing all 78+ live codes to fail path resolution while the gate declares "Zero orphans permitted."
 **Root cause:** TD-VSDD-060 sibling-sweep mandate requires grepping for ALL structurally identical usages when a field-index is corrected. The burst-272 fix was scoped to the single reported instance without a structural-twin search.
-**Codified fix (pending):** After any fix to a census command (awk field index, grep pattern, path glob), the responsible specialist MUST grep the entire gate registry for structurally identical commands and apply the same correction to each. The sweep must be committed in the same burst.
+**Codified fix:** After any fix to a census command (awk field index, grep pattern, path glob), the responsible specialist MUST grep the entire gate registry for structurally identical commands and apply the same correction to each. The sweep must be committed in the same burst.
 **Applicable to:** All gate-registry census commands. TD-VSDD-060 applies to gate prose as much as to source symbols.
 
-### L-047 [OPEN — fix-burst 274 pending]: A COUNT REDUCTION IS A MULTI-SITE EDIT
+### L-047 [codified]: A COUNT REDUCTION IS A MULTI-SITE EDIT
 
 **Discovered:** P1D-172a / F-P172a-03 (gate #25 "ALL FOUR" residue, 2026-07-25)
 **Symptom:** Burst-272's F-P170-08 fix reduced "ALL FOUR documents" to "ALL THREE documents" in one gate #25 location and logged the fix as complete (v2.52 changelog). Six live non-changelog sites inside gate #25 still read "all four" / "four docs" after the fix. The v2.52 changelog's claim of closure is a TD-VSDD-059 incomplete closure compounded by a TD-VSDD-060 sibling-sweep failure occurring INSIDE the same gate being fixed.
 **Root cause:** Count reductions ("ALL FOUR"→"ALL THREE") are treated as single-site text replacements rather than multi-site string replacements. The literal string "four" appears in prose, examples, and procedure steps and must all be updated.
-**Codified fix (pending):** A count change in a gate document requires a corpus-wide grep for the old count literal (in context) before declaring the fix complete. The Defensive Sweep Discipline (S-7.02) applies to gate-internal prose as much as to cross-document count fields.
+**Codified fix:** A count change in a gate document requires a corpus-wide grep for the old count literal (in context) before declaring the fix complete. The Defensive Sweep Discipline (S-7.02) applies to gate-internal prose as much as to cross-document count fields.
 **Applicable to:** All gate-authoring bursts that modify a count or enumeration.
 
-### L-048 [OPEN — fix-burst 274 pending]: AN EXEMPTION LIST MUST BE VALIDATED AGAINST ARCHITECTURE DOCS FOR EVERY NAMED MEMBER
+### L-048 [codified]: AN EXEMPTION LIST MUST BE VALIDATED AGAINST ARCHITECTURE DOCS FOR EVERY NAMED MEMBER
 
 **Discovered:** P1D-172a / F-P172a-04 (`memory::skills` definitions-only exemption, 2026-07-25)
 **Symptom:** Burst-273 granted `memory::skills` a definitions-only carve-out from criticality-registry requirements, stating the criterion "hosts ONLY type/trait definitions, no I/O." `purity-boundary-map.md` §Effectful Shell places `memory::skills` with the description "async `SkillStore` I/O: reads skill KV entries via `MemoryStore` backend." The exemption's own prerequisite is refuted by the authoritative purity map. The defect was introduced in fix-burst 273 under orchestrator routing.
 **Root cause:** The specialist authoring the exemption list did not cross-check each named member against `purity-boundary-map.md`. Exemption eligibility requires verifying all three sources: `module-decomposition.md` (definitions note), `purity-boundary-map.md` (tier row), and the module's BCs (I/O obligations).
-**Codified fix (pending):** Any exemption list granting a module a "definitions-only" or "no-row" status MUST include a cross-check of that module's `purity-boundary-map.md` tier row and its BCs for I/O obligations, in the same authoring burst.
+**Codified fix:** Any exemption list granting a module a "definitions-only" or "no-row" status MUST include a cross-check of that module's `purity-boundary-map.md` tier row and its BCs for I/O obligations, in the same authoring burst.
 **Applicable to:** All gate #32 exemption authoring. Extend to any future "carve-out" or "non-violation" class creation.
 
-### L-049 [OPEN — fix-burst 274 pending]: A CENSUS WITH A PERMANENT FALSE FAILURE IS WORSE THAN NO CENSUS
+### L-049 [codified]: A CENSUS WITH A PERMANENT FALSE FAILURE IS WORSE THAN NO CENSUS
 
 **Discovered:** P1D-172a / F-P172a-13 (gate #36 VP-INDEX false failure, 2026-07-25)
 **Symptom:** Gate #36's census `grep -rL "^red_gate:" specs/verification-properties/VP-*.md` matches `VP-INDEX.md` (an index file with no `red_gate:` field), so the command can NEVER return the expected "empty" output. The gate perpetually reports an apparent violation even when the corpus is clean. Operators who see this persistent apparent failure will discard the gate as broken — which is worse than not having the gate at all.
 **Root cause:** Gate authoring did not verify that the glob pattern excludes co-located index and template files.
-**Codified fix (pending):** When a gate uses a glob (`VP-*.md`, `BC-*.md`, etc.), verify that the glob excludes co-located index files. Use `VP-[0-9][0-9][0-9].md` patterns or add `| grep -v INDEX` filters. Any "expected: empty" assertion must be verifiable in a clean corpus BEFORE the gate is committed.
+**Codified fix:** When a gate uses a glob (`VP-*.md`, `BC-*.md`, etc.), verify that the glob excludes co-located index files. Use `VP-[0-9][0-9][0-9].md` patterns or add `| grep -v INDEX` filters. Any "expected: empty" assertion must be verifiable in a clean corpus BEFORE the gate is committed.
 **Applicable to:** All gate census commands with "expected: empty" assertions and glob file selectors.
 
-### L-050 [OPEN — fix-burst 274 pending]: REGISTRY/ENUMERATION LISTS INSIDE GATES DECAY SILENTLY
+### L-050 [codified]: REGISTRY/ENUMERATION LISTS INSIDE GATES DECAY SILENTLY
 
 **Discovered:** P1D-172a / F-P172a-07/08 (stale supplement enumeration + stale "95 BCs" at six sites, 2026-07-25)
 **Symptom:** Gate #28 Rule 5's supplement enumeration hardcodes five files while seven live supplements exist — `observability.md` was added in burst-258 without updating gate #28. Six authoring-guideline sites still read "95 BCs" against a corpus of 129; the same three sites swept 86→95 by v2.13 were not re-swept 95→129 by v2.42.
 **Root cause:** Hardcoded enumerations inside gates are not protected by any invariant. When the corpus changes, the gate does not fail — it silently becomes inaccurate.
-**Codified fix (pending):** Prefer corpus-derived census commands over hardcoded file lists. When a new document is added to any enumerated category, a MANDATORY sibling-sweep step must check all gates that enumerate that category.
+**Codified fix:** Prefer corpus-derived census commands over hardcoded file lists. When a new document is added to any enumerated category, a MANDATORY sibling-sweep step must check all gates that enumerate that category.
 **Applicable to:** All gate enumerations. Treat hardcoded file lists in gate text as technical debt that will become a false-negative.
+
+### L-051 [codified]: A BROKEN GATE HIDES EVERYTHING IT WAS BUILT TO FIND
+
+**Discovered:** burst-274 (P1D-172a census repairs → 18-module criticality gap discovered, 2026-07-26)
+**Symptom:** Repairing gate #33's column-map (field-index `$4`→`$5`) and gate #25 Part C's `awk` pipeline immediately made 18 missing criticality rows visible for the first time. No adversarial pass in 172 passes had reported the gap — because the census commands that would have detected it could not execute. A broken gate does not produce false negatives; it produces no signal at all, which is indistinguishable from "all clear."
+**Root cause:** Enforcement mechanisms were trusted as silent validators. Gate health was never independently audited. When a gate's census command is structurally broken, its output is meaningless regardless of how many adversarial passes invoke it.
+**Codified fix:** Before trusting any gate's "no violations" output, verify the gate's census commands execute correctly by dry-running them against the current corpus. A gate that cannot enumerate its target population cannot certify it. Gate health audits belong on the adversary's standing probe list.
+**Applicable to:** All factory gates with census commands. Priority on gates that declare "expected: empty" or "Zero X permitted" — these are the easiest to produce a false pass from.
+
+### L-052 [codified]: BACKFILLS SCOPED BY ONE ATTRIBUTE SILENTLY OMIT EVERYTHING LACKING IT
+
+**Discovered:** burst-274 (root cause of 18-module criticality gap, 2026-07-26)
+**Symptom:** The D21+burst-224 criticality backfill was scoped to modules that had a VP. Every execution-logic module without a VP was systematically skipped — not just D21, but in every backfill generation that used the same scoping criterion. The scoping error propagated silently across multiple bursts because no adversary could check for missing rows in a registry it did not know was incomplete.
+**Root cause:** "Scope the backfill to entities that have property X" is a heuristic, not a correctness criterion. Modules without a VP are not exempt from criticality classification; they were simply not enumerated by the scoping criterion. Completeness of the registry was never verified independently of the backfill's internal logic.
+**Codified fix:** After any bulk backfill, the completeness criterion must be derived from the AUTHORITATIVE ROSTER (module-decomposition.md), not from a property of the entities being backfilled. Verify: every module in the roster either has a criticality row OR has an explicit definitions-only annotation. Missing entries are defects, not acceptable gaps.
+**Applicable to:** All bulk backfill operations for any registry. The completeness check must enumerate from the source roster, not from the populated registry.
+
+### L-053 [codified]: INTENTIONAL ABSENCE MUST BE ANNOTATED
+
+**Discovered:** burst-274 (exempt modules indistinguishable from forgotten modules, 2026-07-26)
+**Symptom:** `core::documents` and `memory::skills` were legitimately exempt from the criticality registry (one is a pure data carrier, one is a routing-overlay). But they were listed without any annotation in `module-decomposition.md`, making them visually indistinguishable from the 18 modules that were genuinely missing. An adversary reviewing `module-criticality.md` could not distinguish "intentionally omitted per ADR decision" from "accidentally omitted."
+**Root cause:** Exemptions were applied silently. The absence of a row was the only signal, and absence is ambiguous. Without an annotation, every future reviewer must re-adjudicate the question "is this missing by design or by oversight?"
+**Codified fix:** Every module in `module-decomposition.md` must have either: (a) a criticality row in `module-criticality.md`, or (b) an explicit exemption annotation in `module-decomposition.md`'s Criticality column (e.g., `—` with a parenthetical reason citing the governing ADR decision). Silent absence is a defect. Verify at every module-addition burst.
+**Applicable to:** All modules in the registry. The annotation discipline extends to any future registry where intentional absence needs to be distinguished from error.
+
+### L-054 [codified]: A MECHANICAL GATE'S SHORT-CIRCUIT IS A SILENT COVERAGE HOLE
+
+**Discovered:** burst-274 (F-P172a-14, both-forms validator gap, 2026-07-26)
+**Symptom:** Both changelog validators (`verify-changelog-date-monotonicity.sh` and `verify-form-a-changelog-direction.sh`) checked for Form A (frontmatter changelog list) first and returned early if it was found. The per-file loop never reached the Form-B body-table branch. Four both-forms files (`BC-INDEX.md`, `ubiquitous-language-server.md`, `bc-authoring-plan.md`, `test-vectors.md`) had Form-B content that was never validated — and Form-B version rows in those files went unmonitored across all prior bursts.
+**Root cause:** Early-return logic in validators is a coverage hazard. When a file can have multiple valid forms of the same content (frontmatter AND body table), checking one and returning prevents the other from being checked. The validator appeared to PASS for these files while silently skipping half the validation.
+**Codified fix:** Validators that check multiple forms of the same artifact must evaluate ALL applicable forms independently before moving to the next file. Early-return on "found Form A" is a coverage gap, not a success signal. When minting or extending a validator, explicitly test it against files that have BOTH forms to verify both branches run.
+**Applicable to:** All multi-form validators. Test harness entries for both-forms files are now required at minting time.
+
+### L-055 [codified]: "OUTSIDE THIS BURST'S SCOPE" IS NOT A VALID DEFERRAL WHEN THE DEFECT IS IN THE SAME FILES BEING EDITED
+
+**Discovered:** burst-274 (18-module criticality sweep initially deferred, 2026-07-26)
+**Symptom:** During burst-274's Wave C, the corpus-wide criticality sweep was initially proposed as a separate future burst ("out of scope for this burst"). The gap was identified while the architect was already editing `module-criticality.md` and `module-decomposition.md`. The production-grade default was applied: if you find a defect while editing a file, fix it now; "future burst" is a defer-pattern when the work is already in scope.
+**Root cause:** Scope boundaries feel like a safety mechanism but become an evasion mechanism when the gap is in the same files being edited. "Out of scope" requires that the fix genuinely requires new specs or new architecture decisions — not merely more rows in a file already open.
+**Codified fix:** When a specialist is already editing a file and finds additional defects of the same class in that file, the default is to fix them in the current burst. A deferral requires: (a) the fix genuinely requires work in a different domain (new BC, new ADR), AND (b) explicit human direction or orchestrator approval. "It would take more time" is not a valid deferral reason.
+**Applicable to:** All fix-bursts. The production-grade default §Rule 4 applies: AI-found defects in AI-authored content default to in-scope fix.
 
 | Lesson | Proposed Policy | Scope | Status |
 |--------|----------------|-------|--------|
@@ -419,8 +459,13 @@ This is an extension of the post-burst sweep discipline (D18-P89-A / gate #28). 
 | L-043 | A newly-minted mechanical gate should be expected to find MORE violations than the motivating findings — treat its first full run as a discovery pass, not a coverage confirmation | Factory infrastructure + gate management | Codified (validator #7, burst-273) |
 | L-044 | Specialist self-reported sweep completeness is unreliable in BOTH directions — false "zero remaining" and false "complete propagation" claims have both occurred; orchestrator-side independent verification before commit is load-bearing, not ceremonial | Orchestrator protocol | Codified (burst-272 false-zero claim + burst-273 incomplete propagation, burst-273) |
 | L-045 | Cross-agent precedence disputes must be adjudicated against the written precedence rules (CLAUDE.md Source-of-Truth Precedence), not by seniority of the asserting agent — the architect's VP-wins-over-BC claim was outside CLAUDE.md rule 4's scope; re-adjudication produced a third and more precise answer | Agent routing + spec governance | Codified (F-P171a-02b VP vs BC precedence, burst-273) |
-| L-046 | When a defect class is fixed in one instance, sweep the CLASS, not the instance — gate #25 Part C `awk` field fix (F-P170-15) was never applied to gate #33's structurally identical census, which sat broken for two more passes | Sibling-sweep discipline (TD-VSDD-060) | OPEN — fix-burst 274 pending (F-P172a-01) |
-| L-047 | A count reduction ("ALL FOUR"→"ALL THREE") is a multi-site edit — six live sites survived inside the very gate whose changelog declared the fix complete; the TD-VSDD-060 sibling-sweep obligation applies to prose strings and count literals as much as to symbol names | Gate authoring + count propagation | OPEN — fix-burst 274 pending (F-P172a-03) |
-| L-048 | An exemption list must be validated against the architecture docs for EVERY named member — `memory::skills` was granted a definitions-only exemption while `purity-boundary-map.md` §Effectful Shell placement refutes the stated prerequisite; the exemption's own criterion ("no I/O") was not verified against the purity map | Gate #32 exemption authoring | OPEN — fix-burst 274 pending (F-P172a-04) |
-| L-049 | A census that returns a permanent false failure is worse than no census — it trains operators to ignore the gate; gate #36's `VP-*.md` glob catching `VP-INDEX.md` is a permanent false failure; any census whose "expected: empty" assertion is structurally unsatisfiable must be fixed immediately | Gate quality | OPEN — fix-burst 274 pending (F-P172a-13) |
-| L-050 | Registry/enumeration lists inside gates (Form-B file set, supplement set, BC count) decay silently; prefer deriving them from the corpus or mechanizing them rather than hardcoding; stale "95 BCs" at six sites all stem from earlier sweeps that updated some but not all instances | Gate maintenance + count propagation | OPEN — fix-burst 274 pending (F-P172a-07/08) |
+| L-046 | When a defect class is fixed in one instance, sweep the CLASS, not the instance — gate #25 Part C `awk` field fix (F-P170-15) was never applied to gate #33's structurally identical census, which sat broken for two more passes | Sibling-sweep discipline (TD-VSDD-060) | Codified (F-P172a-01, burst-274) |
+| L-047 | A count reduction ("ALL FOUR"→"ALL THREE") is a multi-site edit — six live sites survived inside the very gate whose changelog declared the fix complete; the TD-VSDD-060 sibling-sweep obligation applies to prose strings and count literals as much as to symbol names | Gate authoring + count propagation | Codified (F-P172a-03, burst-274) |
+| L-048 | An exemption list must be validated against the architecture docs for EVERY named member — `memory::skills` was granted a definitions-only exemption while `purity-boundary-map.md` §Effectful Shell placement refutes the stated prerequisite; the exemption's own criterion ("no I/O") was not verified against the purity map | Gate #32 exemption authoring | Codified (F-P172a-04, burst-274) |
+| L-049 | A census that returns a permanent false failure is worse than no census — it trains operators to ignore the gate; gate #36's `VP-*.md` glob catching `VP-INDEX.md` is a permanent false failure; any census whose "expected: empty" assertion is structurally unsatisfiable must be fixed immediately | Gate quality | Codified (F-P172a-13, burst-274) |
+| L-050 | Registry/enumeration lists inside gates (Form-B file set, supplement set, BC count) decay silently; prefer deriving them from the corpus or mechanizing them rather than hardcoding; stale "95 BCs" at six sites all stem from earlier sweeps that updated some but not all instances | Gate maintenance + count propagation | Codified (F-P172a-07/08, burst-274) |
+| L-051 | A broken gate hides everything it was built to find — repairing the census commands (gate #33 field-index, gate #25 awk pipeline) immediately exposed 18 missing criticality rows that 172 adversarial passes had not caught, because the gates that would have detected the gap could not execute | Gate quality + enforcement mechanisms | Codified (F-P172a-01 census repair → 18-module discovery, burst-274) |
+| L-052 | Backfills scoped by one attribute silently omit everything lacking it — the criticality backfill was scoped to VP-bearing modules, so every execution-logic module without a VP was skipped across all backfill generations, not just D21 | Backfill completeness discipline | Codified (18-module criticality gap, burst-274) |
+| L-053 | Intentional absence must be annotated — exempt modules were indistinguishable from forgotten ones, which is why the gap survived 172 passes; every exemption now carries an explicit in-place annotation so the distinction is permanent and machine-readable | Exemption annotation discipline | Codified (core::documents / memory::skills exemptions, burst-274) |
+| L-054 | A mechanical gate's short-circuit is a silent coverage hole — both changelog validators checked Form A first and returned early, so Form-B body tables were never validated; four version rows in both-forms files were lost undetected across all prior bursts | Validator implementation discipline | Codified (F-P172a-14 both-forms gap, burst-274) |
+| L-055 | "Outside this burst's scope" is not a valid deferral when the defect is the same class in the same files already being edited — the corpus-wide criticality sweep was initially proposed as a separate future burst; that boundary was correctly rejected under the production-grade default | Scope-boundary discipline (production-grade default §Rule 4) | Codified (18-module sweep initially deferred, burst-274) |

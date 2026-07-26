@@ -150,7 +150,7 @@ Module universe 34 → **35**:
 Prior attribution of `mcp::server` to ADR-012 in module-decomposition.md (v1.6) and
 BC-2.09.006 was incorrect — ADR-012 contains no MCP server content. The correct
 authority is this ADR (ADR-013). Attribution in module-decomposition.md is corrected
-in v1.7. BC-2.09.006 attribution correction is deferred to PO (spec-owner of BC files). [completed — BC-2.09.006 v1.1]
+in v1.7. BC-2.09.006 attribution correction is deferred to PO (spec-owner of BC files). [completed — BC-2.09.006]
 
 ---
 
@@ -158,6 +158,7 @@ in v1.7. BC-2.09.006 attribution correction is deferred to PO (spec-owner of BC 
 
 | Version | Date | Author | References | Summary |
 |---------|------|--------|------------|---------|
+| 1.3 | 2026-07-26 | architect | FIX-BURST-274, TD-VSDD-091 | De-pin BC version citation in Attribution Note: `BC-2.09.006 v1.1` → `BC-2.09.006` per TD-VSDD-091 BC-pin variant. Completes the intended burst-262 de-pin fix where only the frontmatter version was bumped (1.2→1.3) without applying the body change. |
 | 1.2 | 2026-07-15 | architect | F-P83-03, OBS-P83-B | Correct BC-2.09.006/007 responsibility swap: BC-2.09.006 = tools/list advertisement (discovery only, exposes tool definitions); BC-2.09.007 = tools/call invocation (accept + dispatch + serialize). Fix Context description and BC Anchors table. Annotate Attribution Note: BC-2.09.006 v1.1 completed. Widen behavioral authority note to name both BC-2.09.006 and BC-2.09.007 as authoritative signature carriers; update inline comment to BC-2.09.006/007. |
 | 1.1 | 2026-07-15 | architect | OBS-P77-A, BC-2.09.006 | Reconcile Module Interface sketch to BC-2.09.006 canonical shapes: rename McpTransport→McpServerTransport; serve(&self, transport, registry)→start(config: McpServerConfig); return type ()→McpServerHandle; Sse { port, path }→Sse { bind_addr: SocketAddr }. Add behavioral authority note (BC wins over ADR sketch). |
 | 1.0 | 2026-07-15 | architect | D19, D20, CAP-021, F-P72-04 | Initial decision: mcp::server module in ferrochain-mcp (not a new crate); MEDIUM tier; stdio+SSE transports; universe 34→35; corrects false ADR-012 attribution in module-decomposition.md. |

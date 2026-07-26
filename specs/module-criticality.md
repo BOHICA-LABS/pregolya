@@ -1,7 +1,7 @@
 ---
 document_type: module-criticality
 level: L3
-version: "1.8"
+version: "2.0"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
@@ -15,6 +15,8 @@ traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "2.0 (FIX-BURST-274/module-universe-sweep/2026-07-26): Full module-universe coverage sweep — 18 execution-logic modules lacking criticality rows identified by diffing the 56-row module-decomposition universe against the prior 48-row registry. The v1.0 base was scoped to the most prominent modules; v1.4 D21+burst-224 backfill covered only VP-bearing modules; neither pass covered checkpoint backends, server secondary modules, sandbox backends, or per-crate secondary modules. CRITICAL +1: checkpoint::saver (ferrochain-checkpoint SS-04) — CheckpointSaver `put_writes` durability invariant; CRITICAL per tier definition 'durability invariants' criterion. HIGH +4: core::events (ferrochain-core SS-06) BC-2.06.001 streaming event taxonomy parallel to core::message HIGH; graph::definition (ferrochain-graph SS-02) StateGraph builder node/edge registration and conditional routing; server::streaming (ferrochain-server SS-12) SSE streaming endpoint NE-13 same-engine constraint; server::stores (ferrochain-server SS-12) IdempotencyStore/RateLimitStore/RunStore trait seams NE-08 constraint. MEDIUM +13: core::config (SS-01), checkpoint::memory (SS-04), checkpoint::postgres (SS-04), server::cron (SS-12), sandbox::container (SS-13), sandbox::seatbelt (SS-13), sandbox::process (SS-13), splitters::parity (SS-07), mcp::discovery (SS-09), mcp::ingress (SS-09), memory::sqlite (SS-15), memory::in_memory (SS-15), memory::search (SS-15). Classification Summary: CRITICAL 11→12, HIGH 18→22, MEDIUM 17→30, Total 48→66."
+  - "1.9 (FIX-BURST-274/D21-definitions-sweep/2026-07-26): D21 Pure Core sweep — add 4 missing MEDIUM execution-logic rows excluded from the D21+burst-224 backfill (that backfill added only VP-bearing modules; execution modules without VPs were overlooked): (1) core::retriever (ferrochain-core SS-20): Boundary Module with rag_ingress async execution logic and DI-012 RAGRetrieval enforcement; no standalone VP; MEDIUM consistent with sandbox-policy and core::retry precedent. (2) prompts::template (ferrochain-prompts SS-18): Pure Core f-string rendering engine; variable substitution and .partial() builder; no VP. (3) prompts::chat_template (ferrochain-prompts SS-18): Pure Core multi-message template construction with MessageProvenance output; no VP. (4) prompts::few_shot (ferrochain-prompts SS-18): Pure Core FewShotPromptTemplate assembly with snapshot-frozen golden fixture tests; no VP. Classification Summary: MEDIUM 13→17, Total 44→48."
   - "1.8 (FIX-BURST-273/gate-25-32/2026-07-25): Add `tools::config` MEDIUM row (ferrochain-tools SS-23) — gate #25 Part B sibling propagation completing burst-273 module-universe +1; MEDIUM tier: `override_risk` builder-consuming validator enforces per-tool risk-floor rules (ADR-020 Decision 3 / BC-2.23.005) but does not host a Kani VP (`check_risk_floor` Kani P1 target lives in tools::shell per VP-013); MEDIUM consistent with sandbox-policy precedent (supporting policy-enforcement module, not primary VP host). Classification Summary: MEDIUM 12→13, Total 43→44."
   - "1.7 (FIX-BURST-267/F-P165-05/2026-07-25): Narrow CRITICAL tier definition — 'Kani VP targets' → 'Kani P0 VP targets'; the previous wording made every Kani VP host CRITICAL, contradicting the established HIGH classification for Kani P1 hosts (injection_guard VP-006, core-budget VP-012, tools-shell VP-013). Add Kani P1 VP hosts clause to HIGH tier definition: 'Core business logic, conformance contracts, server lifecycle; Kani P1 VP hosts'. No module row changes — all tier assignments already correctly reflect P0/P1 distinction; this fixes only the tier-definition prose."
   - "1.6 (burst-244/2026-07-23): F-P144-02 adjudication — add core-budget (HIGH, VP-012 Kani P1, ferrochain-core SS-10) and tools-shell (HIGH, VP-013 Kani P1, ferrochain-tools SS-23) rows; removes deferred posture from v1.5. core-budget HIGH: VP-012 Kani P1 hosts check_watermark_trigger (pure-core arithmetic); established project pattern assigns HIGH to all Kani P1 VP hosts (injection_guard precedent); token watermark arithmetic is governance-correctness, not a security boundary — CRITICAL overclaims. tools-shell HIGH: VP-013 Kani P1 hosts check_risk_floor (pure-core enum comparison enforcing non-lowerable Medium risk floor per ADR-020 Decision 3 'framework safety invariant'); profile mirrors injection_guard (VP-006 Kani P1 HIGH — both are pure-core security invariants enforced by construction); CRITICAL requires direct security-boundary or durability role. Both assignments match pre-existing verification-coverage-matrix.md HIGH classification (F-P144-01 contradiction resolved). Classification Summary: HIGH 16→18, Total 41→43."
@@ -84,6 +86,28 @@ changelog:
 | tools-shell | ferrochain-tools | SS-23 | HIGH | VP-013 | ≥ 90% | P3 per-story + P5 |
 | vectorstores-mmr | ferrochain-vectorstores | SS-21 | MEDIUM | — | ≥ 80% | P5 |
 | tools::config | ferrochain-tools | SS-23 | MEDIUM | — | ≥ 80% | P5 |
+| core::retriever | ferrochain-core | SS-20 | MEDIUM | — | ≥ 80% | P5 |
+| prompts::template | ferrochain-prompts | SS-18 | MEDIUM | — | ≥ 80% | P5 |
+| prompts::chat_template | ferrochain-prompts | SS-18 | MEDIUM | — | ≥ 80% | P5 |
+| prompts::few_shot | ferrochain-prompts | SS-18 | MEDIUM | — | ≥ 80% | P5 |
+| checkpoint::saver | ferrochain-checkpoint | SS-04 | CRITICAL | — | ≥ 95% | P3 per-story + P5 |
+| core::events | ferrochain-core | SS-06 | HIGH | — | ≥ 90% | P5 |
+| graph::definition | ferrochain-graph | SS-02 | HIGH | — | ≥ 90% | P5 |
+| server::streaming | ferrochain-server | SS-12 | HIGH | — | ≥ 90% | P5 |
+| server::stores | ferrochain-server | SS-12 | HIGH | — | ≥ 90% | P5 |
+| core::config | ferrochain-core | SS-01 | MEDIUM | — | ≥ 80% | P5 |
+| checkpoint::memory | ferrochain-checkpoint | SS-04 | MEDIUM | — | ≥ 80% | P5 |
+| checkpoint::postgres | ferrochain-checkpoint | SS-04 | MEDIUM | — | ≥ 80% | P5 |
+| server::cron | ferrochain-server | SS-12 | MEDIUM | — | ≥ 80% | P5 |
+| sandbox::container | ferrochain-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
+| sandbox::seatbelt | ferrochain-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
+| sandbox::process | ferrochain-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
+| splitters::parity | ferrochain-splitters | SS-07 | MEDIUM | — | ≥ 80% | P5 |
+| mcp::discovery | ferrochain-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
+| mcp::ingress | ferrochain-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
+| memory::sqlite | ferrochain-memory | SS-15 | MEDIUM | — | ≥ 80% | P5 |
+| memory::in_memory | ferrochain-memory | SS-15 | MEDIUM | — | ≥ 80% | P5 |
+| memory::search | ferrochain-memory | SS-15 | MEDIUM | — | ≥ 80% | P5 |
 
 > **D21+burst-224 additions (v1.4):** serializable-reviver and vectorstores-similarity added as CRITICAL (Kani P0 proof obligations VP-010 and VP-009 respectively). injection_guard, serializable, embeddings added as HIGH (Kani P1 and proptest P1 proof obligations VP-006/007/008). vectorstores-mmr added as MEDIUM (MMR-only selection algorithm; VP-009 relocated to vectorstores-similarity by F-P129-11 in burst-224). Definitions-only D21 artifacts (core::guardrail per ADR-014 Decision 6) excluded per no-row precedent.
 
@@ -103,15 +127,30 @@ changelog:
 > `ferrochain-community` retains a LOW row as a placeholder for post-v1 third-party
 > contributions; it is not in-tree at v1.
 
+> **D21 Pure Core sweep (v1.9):** The D21+burst-224 backfill (v1.4) added only VP-bearing
+> modules; execution-logic modules without VPs were not added then. Four gaps closed here.
+> **core::retriever** (Boundary Module, ferrochain-core SS-20): `rag_ingress` async function
+> dispatches per-document through an injected `&dyn GuardrailHook`; DI-012 RAGRetrieval
+> boundary enforced at type level via `GuardedDocuments` newtype (ADR-014 Decision 6); no
+> standalone VP-INDEX entry. MEDIUM tier consistent with sandbox-policy and core::retry
+> precedent (Boundary Modules with enforcement logic but no Kani VP).
+> **prompts::template** (Pure Core, SS-18): f-string variable-substitution rendering engine;
+> `.partial()` builder returns a new pure value; no VP.
+> **prompts::chat_template** (Pure Core, SS-18): `ChatPromptTemplate` multi-message
+> construction producing `PromptValue` with per-message `MessageProvenance`; no VP.
+> **prompts::few_shot** (Pure Core, SS-18): `FewShotPromptTemplate` example assembly and
+> template rendering with snapshot-frozen golden fixture tests; no VP.
+> All four are MEDIUM: correctness-required execution modules with no security-boundary role.
+
 ## Classification Summary
 
 | Tier | Module Count |
 |------|-------------|
-| CRITICAL | 11 |
-| HIGH | 18 |
-| MEDIUM | 13 |
+| CRITICAL | 12 |
+| HIGH | 22 |
+| MEDIUM | 30 |
 | LOW | 2 |
-| **Total** | **44** |
+| **Total** | **66** |
 
 ## CRITICAL Module — Security Profile
 
@@ -128,6 +167,7 @@ changelog:
 | error | API contract | HIGH (leaks in Debug output) | — |
 | serializable-reviver | all lc-JSON deserialization paths | HIGH (unknown type deserialization bypasses allowlist → arbitrary constructor execution) | VP-010 |
 | vectorstores-similarity | all similarity/MMR search paths | MEDIUM (IEEE-754 NaN corruption of ranking; data integrity, not direct auth bypass) | VP-009 |
+| checkpoint::saver | all checkpoint write paths | HIGH (durability failure: `put_writes` contract violation corrupts durable session record; multi-tenant session integrity depends on correct write ordering and cross-backend consistency) | — |
 
 ## Anti-Patterns Enforced by Architecture (NE Catalog)
 
@@ -144,3 +184,7 @@ All 17 NE patterns from COMPARATIVE-ASSESSMENT are anchored. Architecture-specif
 | NE-13 | server::streaming | Same engine for streaming + unary; SSE tap only |
 | NE-14 | server::security | `SecurityConfig::default()` deny-CORS; debug route opt-in |
 | NE-17 | bsp-engine | Task-identity sort + VP-001 Kani proof |
+
+> **Module-universe sweep (v2.0):** Closing all execution-logic gaps found by diffing the 56-row module-decomposition universe against the prior 48-row criticality registry. Four structural patterns explain the 18 gaps: (1) v1.0 base was scoped to the most prominent modules only; (2) checkpoint backends and storage-tier modules (checkpoint::memory/postgres, memory::sqlite/in_memory/search) were systematically omitted alongside their primary modules; (3) server layer secondary modules (streaming, stores, cron) were omitted alongside handlers and security; (4) per-crate secondary modules (sandbox::container/seatbelt/process, mcp::discovery/ingress, splitters::parity) were omitted alongside their primaries.
+>
+> Tier adjudications: **checkpoint::saver CRITICAL** — tier definition includes 'durability invariants'; `put_writes` is the durability contract that all checkpoint backends (sqlite, postgres, memory) implement; module-decomposition CRITICAL classification. **core::events HIGH** — BC-2.06.001 behavioral contract governs StreamEvent variant set and field schema; parallel to core::message (HIGH) as a central data-model contract for its protocol. **graph::definition HIGH** — StateGraph builder (node/edge registration, conditional routing) is core business logic foundational to all graph execution; SS-02 scope. **server::streaming HIGH** — SSE streaming endpoint, NE-13 same-engine constraint, consistent with server::handlers and server::security HIGH tier. **server::stores HIGH** — IdempotencyStore/RateLimitStore/RunStore Boundary trait seams, NE-08 constraint, consistent with server layer HIGH profile. **MEDIUM ×13** — all are supporting correctness-required execution-logic modules with no security-boundary role and no Kani VP; tier consistent with sandbox-policy, core::retry, mcp::client, event_emitter, recursive splitter precedents.

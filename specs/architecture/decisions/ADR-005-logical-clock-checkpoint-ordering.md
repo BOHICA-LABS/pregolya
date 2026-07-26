@@ -5,17 +5,18 @@ adr_id: "005"
 slug: logical-clock-checkpoint-ordering
 title: "Logical Clock and Checkpoint Ordering (CONFLICT-4: monotonic vs wall-clock)"
 status: accepted
-date: "2026-07-19"
+date: "2026-07-14"
 subsystems_affected: ["SS-04"]
 supersedes: null
 superseded_by: null
 producer: architect
-timestamp: 2026-07-19T00:00:00Z
+timestamp: 2026-07-14T12:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D11]
-version: "1.6"
+version: "1.7"
 changelog:
+  - "1.7 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp and date per ADR decision-date convention (Gate #28 Rule 5): `timestamp` → `2026-07-14T12:00:00Z`; `date` → `2026-07-14`. Original decision date evidenced by v1.0 changelog (2026-07-14, initial). Fields were incorrectly set to 2026-07-19 in commit 2100b8e (pass-114 fix burst)."
   - "1.6 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — §MonotonicClock code sketch: Component::CHKPT → Component::Chkpt; Category::INTERNAL → Category::Internal per ADR-010 v1.9 Direction B adjudication."
   - "1.5 (FIX-BURST-267/F-P165-stale-prose/2026-07-25): Strip two stale version pins from §Object-Safety of the 5-Method CheckpointSaver Trait: (1) table receiver cell '`&self` (corrected v1.3)' → '`&self`' — the surrounding table context and changelog already record the v1.3 provenance; (2) condition 3 prose '`&self` added in this revision (v1.3)' → '`&self` added in this revision' — 'in this revision' is the behavioral anchor; the redundant version pin decays if the section is ever moved."
   - "1.4 (burst 119 coordinator sweep, 2026-07-19): Extend §Object-Safety section with Runnable and BaseChatModel adjudications: (1) verification-architecture.md:43 'pure get_next_version(current) successor function' description confirmed accurate — Kani target is MonotonicClock::get_next_version (ZST associated function), not the CheckpointSaver trait method; no edit to verification-architecture.md. (2) Runnable<Input, Output> dyn-compat axis settled: zero dyn Runnable<...> uses in specs/; the separate DynRunnable<Value, Value> type-erased trait (BC-2.01.003/004) is the heterogeneous composition seam; impl Stream return and generic type params in Runnable are non-issues; no interface-definitions.md change required. (3) BaseChatModel same conclusion: zero dyn BaseChatModel uses in specs/; always monomorphic impl BaseChatModel for ChatOpenAI/Anthropic/Ollama; no interface-definitions.md change required. No PO routing for items 2 or 3."

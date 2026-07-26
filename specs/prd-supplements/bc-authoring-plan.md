@@ -1,11 +1,11 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.53"
+version: "2.55"
 status: active
 producer: product-owner
 total_standing_gates: 36
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-26T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -18,6 +18,8 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.55 (F-P172a-02+F-P172a-03+F-P172a-04+F-P172a-05+F-P172a-06+F-P172a-07+F-P172a-08+F-P172a-12+F-P172a-14+F-P172a-16+F-P172a-17+F-P172a-19/burst-274-B/2026-07-26): Twelve structural/propagation findings closed. (1) F-P172a-02 HIGH: Gate #32 preamble 'three BC-layer carriers' → 'four BC-layer carriers'; carrier 5 'THREE live documents (items 1–3)' → 'FOUR live documents (items 1–4)'; census procedure gained step 4a: check arch-registry (module-criticality.md) for new or re-placed modules, applying definitions-only or routing-overlay exception as appropriate. (2) F-P172a-03 HIGH: Gate #25 Part B/C — 5 live 'four docs / all four' sites → 'three docs / all three'; Part B Census commands: PO-registry row deleted ('Count rows per tier in Module Classification table (PO)' — file is superseded/frozen); historical source citation '(widening — all four criticality-bearing docs added)' preserved as-is (historical record). (3) F-P172a-04 HIGH: Gate #32 carrier 4 definitions-only exception rewritten: (a) memory::skills removed from exempt list — it is Effectful Shell with async I/O (load_skill / list_skills / skill_exists bound to MemoryStore backend per purity-boundary-map.md; not Pure Core); (b) invalid ADR-009 Option 3 precedent citation removed — core::budget HAS a criticality row (SS-10/HIGH/VP-012) and is not a precedent for no-row; direct rationale substituted (modules hosting ONLY type/trait definitions have no algorithmic failure modes to tier-classify); (c) routing-overlay exception class added for memory::skills: structural decomp row exists in module-decomposition.md but no criticality row required — routing/discovery overlay over MemoryStore KV backend with no execution-business-logic; (d) core::documents definitions-only exemption resolved — architect adjudication confirmed (FIX-BURST-274): ADR-014 Decision 2 states "No I/O. Pure data carrier. Pure Core classification."; struct has only page_content/metadata/id fields with derived impls; no execution methods; no VP target; Criticality column changed from MEDIUM to — in module-decomposition.md; no criticality row required; core::documents added to definitions-only exempt case lists (gate #25 Part B exemption clause + gate #32 carrier 4 established-cases list). (4) F-P172a-12 MED: Gate #25 Part B derived-doc check — exemption clause added for definitions-only modules (core::context_mutation, core::write_guard, core::guardrail, core::action_risk) and routing-overlay modules (memory::skills); their absence from module-criticality.md is intentional, not a mismatch; census checks only modules present in the arch registry. (5) F-P172a-05 MED: Gate #28 DEFER-002 narrowed — verify-changelog-date-monotonicity.sh (Rules 2+3) and verify-form-a-changelog-direction.sh (Rule 6 Form A direction) are now LIVE blocking pre-commit hooks; remaining deferred to Phase 3: Rule 1 (date ≤ timestamp supplement branch), Rule 4 (temporal-neighbor sweep), Rule 5 (frontmatter-currency machine check), Rule 6 Form B (body-table direction machine check); both-forms co-existence WARNs emitted by verify-changelog-date-monotonicity.sh noted as non-blocking. (6) F-P172a-06 MED: Gate #28 date-validity census upgraded — verify-changelog-date-monotonicity.sh is now the authoritative corpus-wide date sweep (replaces manual file enumeration as primary); manual fallback widened from 5 to 11 files by adding ADR-007, ADR-009, ADR-012, ADR-013, BC-INDEX.md, verification-architecture.md; verification-architecture.md classified as architecture/ (not supplement). (7) F-P172a-07 MED: Gate #28 Rule 5 supplement enumeration extended 6→7: observability.md added (status: active, version 1.5). (8) F-P172a-08 MED: Six 'all 95 BCs' / '95-BC plan total' staleness sites de-pinned — subsystem_note, Batch 13 scope note, guideline #1, guideline #8, guideline #13 census prose, gate #28 Rule 6 census header — all now read 'all BCs in BC-INDEX' or 'BC-INDEX plan total'. TD-VSDD-060 sibling sweep: six sites confirmed, no others (changelog rows exempt per TD-VSDD-091). (9) F-P172a-14 MED: FORM CHOICE — Form A (frontmatter changelog: YAML list) is the single authoritative form for bc-authoring-plan.md; Form B (## Changelog body table) retained as historical audit trail with explicit 'historical record — superseded by frontmatter changelog' banner; bc-authoring-plan.md reclassified from 'Form-B-only' to 'BOTH forms (Form A authoritative)' in gate #28 known-file list. (10) F-P172a-16 LOW: Gate #25 Part B after-editing bullet — heading example '## ferrochain-macros — MEDIUM' marked explicitly hypothetical to prevent backward correction against a module that has a different tier in the registry. (11) F-P172a-17 LOW: Authoring Guidelines source order corrected — item 16 (E-code↔variant-name census gate) now precedes item 17 (HTTP endpoint census gate) in source; rendered positions now match numbering; gate #21 reference 'guideline #17 above' (HTTP endpoint census) is now correct by rendered position. (12) F-P172a-19 LOW: VP-NNN candidate policy disambiguation added — bare 'VP-NNN candidate' label means proposed VP ID not yet assigned in VP-INDEX (rule (3) drop-the-qualifier applies when assigned); 'VP-NNN (Kani P1 candidate)' or 'VP-NNN (<tier> qualifier)' label means VP IS assigned in VP-INDEX and the parenthetical is a tier/priority descriptor — rule (3) does NOT apply to tier-descriptor qualifiers; BC-2.23.005 row 'VP-013 (Kani P1 candidate)' is COMPLIANT (VP-013 is assigned in VP-INDEX per gate #13 census). (13) FIX-BURST-274 amendments: core::documents added to definitions-only exempt case lists (gate #25 Part B exemption clause + gate #32 carrier 4 established-cases list); gate #25 Part C census comment de-pinned (hardcoded 'exactly 44' count replaced with instruction to recompute from arch-registry §Classification Summary — registry is actively growing per architect's corpus-wide sweep; de-pinned per F-P170-14 precedent)."
+  - "2.54 (F-P172a-01+F-P172a-09+F-P172a-10+F-P172a-11+F-P172a-13+F-P172a-15+F-P172a-18/burst-274/2026-07-25): Seven broken-census-command findings closed. (1) F-P172a-01 HIGH: Gate #33 census anchor field index corrected from column 4 (Severity) to column 5 (BC-Anchor); inline column-map note added; follow-on grep patched to use find or ss-*/ glob instead of globstar; dry-run: 107/108 live codes resolve, E-TOOLS-008 multi-anchor cell verified across all 5 listed BCs. (2) F-P172a-09 MED: Gate #13 VP-uniqueness regex widened to cover all three VP-ID forms (numeric VP-001..013, dotted VP-2.04.001-A, alpha-domain VP-BSP-DET-01); BC-INDEX.md excluded; census now extracts only primary first-column VP ID to distinguish DEFINITION from CITATION; DEFINITION vs CITATION disambiguated in rule text; dry-run: no collisions. (3) F-P172a-10 MED: Gate #25 Part C census replaced bare grep-n pipeline (broken: -n prefix defeats header filter; unsectioned sweep produces junk rows from security-profile section) with section-scoped awk+grep pipeline; dry-run: exactly 44 module-crate pairs, no junk rows. (4) F-P172a-11 MED: Gate #25 Part B changed 'Module Inventory table (arch)' to 'Module Classification table (arch)' — the arch registry section is named Module Classification, not Module Inventory (that name belongs to the superseded PO file). (5) F-P172a-13 MED: Gate #36 steps 1 and 2 glob narrowed from VP-star.md to VP-[0-9][0-9][0-9].md to exclude VP-INDEX.md; explicit note added that VP-INDEX.md lacks red_gate: by design; dry-run step 2: empty output confirmed. (6) F-P172a-15 LOW: Gate #25 Part B heading-check command bare filename 'module-decomposition.md' given full path '.factory/specs/architecture/module-decomposition.md'. (7) F-P172a-18 LOW: Gate #28 Step 1 converted from count-only (wc -l, includes BC-INDEX.md) to filename-emitting list (cut -d: -f1, BC-INDEX.md excluded via --exclude); Step 2 prose clarified that Form A and Form B union is computed independently of Step 1 output. TD-VSDD-060 class sweep: gate #25 Part C was the sole broken-command site of the grep-n header-filter class; no other awk anchor-column sites found."
   - "2.53 (F-P171a-08+F-P171a-16+F-P171a-17/burst-273/2026-07-25): Three process-gap findings closed. (1) F-P171a-08 MED: Gate #32 step 4 — add definitions-only carve-out: modules hosting ONLY type/trait definitions with no execution logic are exempt from the arch-registry criticality table requirement (ADR-009 Option 3 precedent); five established exempt cases listed (core::context_mutation, core::write_guard, core::guardrail, memory::skills, core::action_risk); tools::config is NOT exempt (has validation logic). Exempt modules must appear in purity-boundary-map.md §Pure Core and module-decomposition.md definitions note. (2) F-P171a-16 LOW: §Authoring Guidelines VP-NNN candidate label adjudication documented — 'VP-NNN candidate' is acceptable PO/BA shorthand for a seeded VP that has not yet received a permanent VP-INDEX entry; it signals intent to the architect without implying the VP is assigned or active. (3) F-P171a-17 LOW: Gate #28 Rule 5 FRONTMATTER-CURRENCY — add ADR branch: ADR document timestamp:/date: fields = original decision date (frozen at first acceptance); currency tracked via version: + changelog; amendment does not update the original decision date."
   - "2.52 (F-P170-08/F-P170-13/F-P170-14/F-P170-15/burst-272/2026-07-25): Four process-gap findings closed. (1) F-P170-08 HIGH: Gate #25 Part B 'ALL FOUR' → 'ALL THREE' — prd-supplements/module-criticality.md (PO registry) is superseded/frozen; removed from live sibling set; added explicit frozen/do-not-sync note for item 5; corresponding Gate #32 step 5 restated as frozen. Gate #32 step 5 now reads: 'status: superseded — DO NOT SYNC; any new ADR module addition need only appear in the three live documents.' Never-update-all-four clause updated to never-update-all-three. (2) F-P170-13 MED: Gate #32 step 4 wrong path '.factory/specs/architecture/module-criticality.md' → '.factory/specs/module-criticality.md' (only one instance in whole document — confirmed by grep). (3) F-P170-14 MED: Gate #25 Part B census tier-summary row check de-pinned — removed hardcoded 'Example correct value: 9/12/10/2=33' (pre-D21/D23 stale value); replaced with instruction to recompute from arch-registry §Classification Summary. Historical motivating-instance text (OBS-P37-1) preserved untouched. (4) F-P170-15 MED: Gate #25 Part C awk census command corrected from '{print $2, $4}' to '{print $2, $3}' — table header 'Module | Crate | SS | Tier | VP | Kill Rate | Phase Gate' puts Crate at $3 not $4; previous command printed (Module, SS) not (Module, Crate), causing guaranteed false mismatches on every module row."
   - "2.51 (F-P163-01/FIX-BURST-265/2026-07-25): Gate #27 ARCH-ANCHOR CRATE-RESOLUTION CENSUS updated for 21-crate roster (closes F-P163-01 [process-gap, HIGH]). (1) Rule 1 label: 'ADR-007 18-crate roster (+xtask)' → 'ARCH-INDEX §Canonical Crate Roster (21 published crates + xtask)' — ARCH-INDEX is the authoritative living source of truth, not ADR-007 (which documents the original 18-crate topology). (2) Embedded roster block relabeled 'ARCH-INDEX §Canonical Crate Roster (source of truth — 21 published crates)'; three new crates appended: ferrochain-prompts (D21/ADR-015), ferrochain-vectorstores (D21/ADR-014), ferrochain-tools (D23/ADR-020); disambiguation note added (ADR-007 is original 18; ARCH-INDEX is SoT). (3) Three ownership rules added: prompts::template/chat_template/few_shot/injection_guard → ferrochain-prompts (SS-18); vectorstores::store/retriever/memory/similarity/mmr → ferrochain-vectorstores (SS-20/SS-21); tools::fs/shell/search → ferrochain-tools (SS-23). (4) Census command prose: '18-crate roster' → '21-crate roster'. Sanity-check results: BC-2.21.003 (vectorstores::similarity) PASS rule 1 (ferrochain-vectorstores ∈ 21-crate roster) + PASS rule 2 (similarity owned by ferrochain-vectorstores per module-decomp SS-21); SS-18 BC (BC-2.18.004, ferrochain-prompts/injection_guard) PASS rule 1 + PASS rule 2 (injection_guard owned by ferrochain-prompts SS-18); SS-23 BC (BC-2.23.005, ferrochain-tools/tools-shell) PASS rule 1 + PASS rule 2 (tools::shell owned by ferrochain-tools SS-23). Sweep for other live '18-crate' or '18 crates' in bc-authoring-plan.md (changelog rows exempt): zero remaining hits."
@@ -31,7 +33,7 @@ changelog:
   - "2.43 (burst-233/F-P133-02/2026-07-22): BC-2.16.001/002/003 Wave-1 promotion per D23 — SS.16 priority P2→P1; frontmatter p1_count 72→75, p2_count 6→3; Summary table P1 72→75, P2 6→3; Full BC table rows P2→Post-v1→P1/Wave 1."
   - "2.42 (D23/2026-07-22): D21 retroactive registration (Batches 16-18, +21 BCs); D23 Integration (Batches 19-20, +13 BCs); BC-2.15.001/002/003 promoted P2→P1; SS.18..23 added to subsystem map; counts 95→129."
   - "2.41 (D21/2026-07-20): D21 ADR-010 v1.1 error-model integration."
-subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs assigned at Phase 1b — RESOLVED 2026-07-14, see BC-INDEX. All 95 BCs carry real SS-NN subsystem IDs."
+subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs assigned at Phase 1b — RESOLVED 2026-07-14, see BC-INDEX. All BCs in BC-INDEX carry real SS-NN subsystem IDs."
 ---
 
 # BC Authoring Plan: ferrochain
@@ -319,7 +321,7 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 ## Proc-Macro BCs (UNBLOCKED — ADR-004 + ADR-008 accepted)
 
 ADR-004 (D5 gate) and ADR-008 are both accepted. The following BCs have been authored
-as Phase-1b additions (Batch 13). They are included in the 95-BC plan total.
+as Phase-1b additions (Batch 13). They are included in the BC-INDEX plan total.
 
 ### Batch 13 — Proc-Macro Developer Ergonomics (P1, Phase-1b, ADR-004/ADR-008)
 *3 BCs — SS.08 extension (ferrochain-macros re-exported from ferrochain-core)*
@@ -444,7 +446,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 
 ## Authoring Guidelines for Sub-Burst Agents
 
-1. **Subsystem ID (RESOLVED):** BCs were authored with `subsystem: SS-TBD`; ARCH-INDEX SS-NN IDs were assigned by architect at Phase 1b (2026-07-14) and backfilled into all 95 BC files — see BC-INDEX. New BCs must use a real SS-NN ID from ARCH-INDEX Subsystem Registry, not SS-TBD.
+1. **Subsystem ID (RESOLVED):** BCs were authored with `subsystem: SS-TBD`; ARCH-INDEX SS-NN IDs were assigned by architect at Phase 1b (2026-07-14) and backfilled into all BC files — see BC-INDEX. New BCs must use a real SS-NN ID from ARCH-INDEX Subsystem Registry, not SS-TBD.
 2. **Capability Anchor Justification:** Each BC Traceability section must include:
    `| Capability Anchor Justification | CAP-NNN ("<exact title>") per capabilities.md §CAP-NNN |`
 3. **DI citations:** Every BC that enforces a domain invariant must list it in the Traceability
@@ -455,7 +457,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
    a Verification Properties table with the VP description and method (Kani).
 7. **Red Gate tests:** BCs for R8/R10/R11 (BC-2.07.002, BC-2.02.003-004, BC-2.09.004-005)
    must note "Red Gate test required — must compile and FAIL before implementation begins."
-8. **Origin:** `origin: greenfield` for all 95 BCs (no brownfield extraction).
+8. **Origin:** `origin: greenfield` for all BCs in BC-INDEX (no brownfield extraction).
 9. **Lifecycle:** `lifecycle_status: active`, `introduced: v1.0.0-greenfield`. **Status:** `status: active` — a BC is `active` once integrated into BC-INDEX; version bumps do NOT reset this field to `draft`.
 10. **File path:** `.factory/specs/behavioral-contracts/ss-NN/BC-S.SS.NNN.md` (SS-NN from ARCH-INDEX Subsystem Registry)
 11. **Governance: integrated-into-index ⇒ `status: active` (all spec artifacts).**
@@ -466,8 +468,12 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 > **SS-23 BC Title Error-Code Enumeration Policy (F-P146-02, burst-247, 2026-07-24):**
 > For BC titles in subsystem SS-23 (ferrochain-tools), error codes in the title enumerate ALL and ONLY *raised* error codes — codes that appear as `Err(FerrochainError{code: "E-TOOLS-NNN"})` returns. Ok-path payload flags (E-TOOLS-005 `BashOutput.truncated`, E-TOOLS-006 `GrepResult.capped`) are NOT raised errors and MUST NOT appear in title enumerations. The trailing error-code section uses slash-separated format without spaces: `E-TOOLS-NNN/NNN/NNN`. Inline contextual error-code references (e.g., "E-TOOLS-003 on No-Match") are permitted where they describe the trigger condition; a complete trailing enumeration of all raised codes must also be present for machine extractability. Policy adjudication rationale: (1) listing a payload flag while omitting a real raised error is semantically inverted; (2) exhaustive enumeration of raised codes enables grepping BC titles to find all BCs that raise a given code; (3) consistent with BC-2.23.005 pre-existing exhaustive-enumeration pattern extended to all 6 SS-23 BCs. Applied burst-247: BC-2.23.001→`E-TOOLS-001/002/008`, BC-2.23.002→`E-TOOLS-001/008`, BC-2.23.003→`E-TOOLS-001/003/008`, BC-2.23.004→`E-TOOLS-001/008`, BC-2.23.005→`E-TOOLS-004/007` (E-TOOLS-005 payload flag removed from title), BC-2.23.006→`E-TOOLS-001/008/009` (E-TOOLS-006 payload flag removed, E-TOOLS-008/009 added).
 
-> **"VP-NNN candidate" Label Policy (F-P171a-16, burst-273, 2026-07-25):**
-> `"VP-NNN candidate"` is acceptable PO/BA shorthand for a seeded Verification Property that has not yet received a permanent VP-INDEX entry. It signals authoring intent to the architect without implying the VP is formally assigned or active. Usage rules: (1) In the BC §Verification Properties table, `"VP-NNN candidate"` (e.g., `"VP-013 candidate"`, `"VP-HITL-13 candidate"`) indicates that this BC is the intended source for a VP to be minted at architect phase. (2) In the BC frontmatter `vp_seed: true` field, the companion `vp_id` field MAY be set to the candidate ID. (3) Once the architect assigns the VP in VP-INDEX, the "candidate" qualifier is dropped — the BC §Verification Properties table and `vp_id` frontmatter field are updated to the confirmed VP-NNN ID. (4) A "VP-NNN candidate" label does NOT grant gate #36 VP↔BC RED-GATE PARITY exemption — the candidate label is a precursor, not a substitute for a VP-INDEX entry. Source: F-P171a-16 adjudication (process-gap — option (a) "acceptable shorthand"); 40-site cosmetic removal would be disproportionate to the lack of any correctness issue.
+> **"VP-NNN candidate" Label Policy (F-P171a-16, burst-273, 2026-07-25; F-P172a-19 disambiguation, burst-274-B, 2026-07-26):**
+> `"VP-NNN candidate"` is acceptable PO/BA shorthand for a seeded Verification Property that has not yet received a permanent VP-INDEX entry. It signals authoring intent to the architect without implying the VP is formally assigned or active. Usage rules: (1) In the BC §Verification Properties table, `"VP-NNN candidate"` (e.g., `"VP-013 candidate"`, `"VP-HITL-13 candidate"`) indicates that this BC is the intended source for a VP to be minted at architect phase. (2) In the BC frontmatter `vp_seed: true` field, the companion `vp_id` field MAY be set to the candidate ID. (3) Once the architect assigns the VP in VP-INDEX, the "candidate" qualifier is dropped — the BC §Verification Properties table and `vp_id` frontmatter field are updated to the confirmed VP-NNN ID. (4) A "VP-NNN candidate" label does NOT grant gate #36 VP↔BC RED-GATE PARITY exemption — the candidate label is a precursor, not a substitute for a VP-INDEX entry.
+>
+> **Disambiguation — tier-descriptor qualifiers (F-P172a-19):** Rule (3) above applies ONLY when the full label form is `"VP-NNN candidate"` (bare) — i.e., the entire parenthetical conveys "ID not yet in VP-INDEX." When the parenthetical instead describes a **verification tier or priority** — e.g., `"VP-013 (Kani P1 candidate)"` or `"VP-NNN (<tier> qualifier)"` — the VP-NNN ID IS already assigned in VP-INDEX and the qualifier is informative tier metadata, NOT an ID-candidate signal. In that case: (a) rule (3) does NOT apply — the qualifier is retained as useful tier context, not dropped; (b) the gate #36 VP↔BC RED-GATE PARITY check applies normally (VP-NNN is an assigned VP with a VP-INDEX entry). Example: BC-2.23.005 row `"VP-013 (Kani P1 candidate)"` is COMPLIANT — VP-013 is assigned in VP-INDEX (gate #13 census) and the parenthetical conveys Kani P1 priority tier, not ID-candidate status. If unsure whether a parenthetical is a tier descriptor or ID-candidate signal, check VP-INDEX: if the ID exists, it is tier metadata; if it does not exist, it is ID-candidate shorthand and rule (3) applies on assignment.
+>
+> Source: F-P171a-16 adjudication (process-gap — option (a) "acceptable shorthand"); 40-site cosmetic removal would be disproportionate to the lack of any correctness issue. F-P172a-19 disambiguation (burst-274-B).
 
 12. **Lifecycle-arrow census gate (added P12):** Any BC or supplement that contains a Run
     state-machine lifecycle arrow MUST use one of the two canonical forms:
@@ -488,7 +494,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     ADV-P1D-PASS-12.md §F-P12-01; F-P117-01 adjudication (fix burst 120, BC-2.12.003);
     F-P118-01 four-member canonicalization (fix burst 121).
 13. **Anchor-matrix census gate (added P16 — standing gate, subsumes all prior per-axis checks; widened P40 — five-way):**
-    After any BC authoring burst, run the full anchor-matrix census across all 95 BCs × 6 axes
+    After any BC authoring burst, run the full anchor-matrix census across all BCs in BC-INDEX × 6 axes
     {CAP, DI, NE, R (R-NNN/R8-10-11 aliases), ADR, registered-VP}. For each axis, perform a
     **five-way consistency check**: BC body Traceability tables ↔ BC-INDEX columns (NE Anchors,
     DI Anchors, Cap, VP, RG) ↔ PRD §2 tables + §7 RTM Source column + §9 NE Disposition Table ↔
@@ -505,19 +511,37 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     must match BC-INDEX on every anchor-affecting burst to prevent forward propagation of drift.
     Source of truth: ADV-P1D-PASS-16.md §F-P16-01 + anchor-matrix reconciliation;
     ADV-P1D-PASS-40 §OBS-P40-1 (widening).
-    **VP uniqueness sub-check (added P93 — OBS-P93-01):** The registered-VP axis above checks
-    BC VP Anchors ↔ VP-INDEX, but does NOT detect the same `VP-<DOMAIN>-NNN` ID being defined
+    **VP uniqueness sub-check (added P93 — OBS-P93-01; regex widened P172a — F-P172a-09):** The registered-VP axis above checks
+    BC VP Anchors ↔ VP-INDEX, but does NOT detect the same per-BC VP ID being defined
     in two different BC bodies with different semantics (a cross-BC collision). After any BC
     authoring or VP assignment burst, run the following census across all BC bodies:
     ```
     grep -rh "^| VP-" .factory/specs/behavioral-contracts/ --include="*.md" \
-      | grep -oE "VP-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]+" | sort | uniq -d
+      --exclude="BC-INDEX.md" \
+      | sed 's/^| //' \
+      | grep -oE "^VP-([0-9]{3}\b|[A-Z0-9.]+(-[A-Z0-9]+)*-[0-9A-Z]+)" \
+      | sort | uniq -d
     ```
-    Expected output: **empty** (zero duplicate VP IDs). Any non-empty output is a collision
-    — each VP ID must be defined in exactly one BC body. Resolution: keep the older (lower
-    phase) definition as canonical; renumber the newer definition to the next free sequential
-    ID in the same domain (e.g., VP-BUDGET-07 if VP-BUDGET-06 is already used). Update both
-    the VP table row and the VP Anchors section in the affected BC, then re-run the census.
+    **Semantics (DEFINITION vs CITATION — critical disambiguation):**
+    - This census extracts only the **primary (first-column) VP ID** from each `^| VP-` row.
+      That first-column ID is the VP being DEFINED in that BC.
+    - Registered VPs (VP-001..VP-013) are legitimately CO-CITED by multiple BCs — they
+      appear in secondary positions of rows like `| VP-2.23.001-A (VP-003 reuse) | ...` and
+      in BC-INDEX.md (excluded by `--exclude`). These are NOT collisions.
+    - A TRUE collision is when the SAME per-BC VP ID appears as the primary (first-column)
+      ID in two different BC bodies with different Property text.
+    Expected output: **empty** (zero primary per-BC VP ID is the primary definition in two
+    different BC bodies). Any non-empty output is a collision — resolution: keep the older
+    (lower phase) definition as canonical; renumber the newer definition to the next free
+    sequential ID in the same domain (e.g., VP-BUDGET-07 if VP-BUDGET-06 is already used).
+    Update both the VP table row and the VP Anchors section in the affected BC, then re-run
+    the census.
+    **Regex coverage (three forms):**
+    - `[0-9]{3}\b` → `VP-001` through `VP-013` (numeric registered form)
+    - `[A-Z0-9.]+(-[A-Z0-9]+)*-[0-9A-Z]+` → `VP-2.04.001-A` (per-BC dotted form) AND
+      `VP-BSP-DET-01`, `VP-BUDGET-05`, `VP-BC201001-01` (alpha-domain and BC-keyed forms)
+    **Prior regex** `VP-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]+` missed `VP-001..VP-013` (numeric)
+    and `VP-S.SS.NNN-X` (dots in segment), making the census blind to those two forms.
     Motivating instance: F-P93-04 — BC-2.10.003 and BC-2.10.004 both defined VP-BUDGET-05
     with different semantics (Summarize path vs HITL interrupt path). Resolved 2026-07-17:
     BC-2.10.004's VP-BUDGET-05 (Phase 1) kept canonical; BC-2.10.003's VP-BUDGET-05
@@ -553,6 +577,38 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     Source of truth: ADV-P1D-PASS-19.md §F-P19-02 (scope widened from BC+prd-supplements to full
     .factory/specs/); ADV-P1D-PASS-18.md §F-P18-01 + shared-type identifier census.
     `\bCheckpointer\b` widened: ADV-P1D-PASS-20.md §F-P20-03.
+
+16. **E-code↔variant-name consistency census gate (added P20 — standing gate; widened P34 — F-P34-03):**
+    After any BC authoring or fix burst that introduces, renames, or retires an error code,
+    run the variant-name consistency census. For every `E-<COMP>-NNN <VariantName>` or
+    `E-<COMP>-NNN: <VariantName>` pairing found in any BC body, assert that `<VariantName>`
+    is the canonical variant name for `E-<COMP>-NNN` in error-taxonomy.md. A code referenced
+    with the wrong variant name is a high-severity drift that misleads implementers.
+
+    **Census commands (BOTH forms required — F-P34-03):**
+
+    Form 1 (space-delimited: `E-XXX-NNN VariantName`):
+    `grep -hrn "E-[A-Z]*-[0-9]\{3\} [A-Z][A-Za-z]*" .factory/specs/behavioral-contracts/ | grep -v "~~" | grep -oE "E-[A-Z]+-[0-9]{3} [A-Z][A-Za-z]+" | sort -u`
+
+    Form 2 (colon-delimited: `E-XXX-NNN: VariantName`):
+    `grep -hrn "E-[A-Z]*-[0-9]\{3\}: [A-Z][A-Za-z]*" .factory/specs/behavioral-contracts/ | grep -v "~~" | grep -oE "E-[A-Z]+-[0-9]{3}: [A-Z][A-Za-z]+" | sort -u`
+
+    **Cross-check requirement (collision detection):** For each extracted pairing (either form),
+    look up the code in error-taxonomy.md and verify (a) the variant name matches the taxonomy
+    row exactly, AND (b) the code is not already assigned a DIFFERENT variant name elsewhere in
+    the taxonomy (collision detection, not just name drift). A code appearing in a BC with a
+    variant name that differs from the taxonomy's canonical variant is a HIGH-severity finding.
+    Category names (POLICY, VAL, TIMEOUT, DURABILITY, TOOL, etc.) appearing after a code in a
+    markdown table row are false positives — filter these out by confirming the word is not a
+    known category code from the Error Categories table.
+
+    Codes used without a variant name (e.g., bare `E-CHKPT-001`) are permitted — only named
+    pairings are checked. Retired codes (~~strikethrough~~ in taxonomy) must not appear in
+    non-~~strikethrough~~ BC text.
+
+    Source of truth: ADV-P1D-PASS-20.md §F-P20-03. Widening rationale: ADV-P1D-PASS-34
+    §F-P34-03 — the original space-only regex missed `E-RETRY-003: InvalidRetryLimit` in
+    BC-2.16.001.md for 33 passes, allowing a live collision to persist undetected.
 
 17. **HTTP endpoint census gate (added P23 — standing gate):**
     After any BC authoring or fix burst that adds, moves, or renames an HTTP endpoint path,
@@ -623,38 +679,6 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     | 503 | E-SERVER-016 IdempotencyLockTimeout | BC-2.12.006 EC-002 | PASS (503 row added to iface-def P25; per-endpoint override over Timeout→504) |
 
     Source of truth: ADV-P1D-PASS-23.md §F-P23-01; ADV-P1D-PASS-25 §F-P25-07; interface-definitions.md §HTTP Status Codes.
-
-16. **E-code↔variant-name consistency census gate (added P20 — standing gate; widened P34 — F-P34-03):**
-    After any BC authoring or fix burst that introduces, renames, or retires an error code,
-    run the variant-name consistency census. For every `E-<COMP>-NNN <VariantName>` or
-    `E-<COMP>-NNN: <VariantName>` pairing found in any BC body, assert that `<VariantName>`
-    is the canonical variant name for `E-<COMP>-NNN` in error-taxonomy.md. A code referenced
-    with the wrong variant name is a high-severity drift that misleads implementers.
-
-    **Census commands (BOTH forms required — F-P34-03):**
-
-    Form 1 (space-delimited: `E-XXX-NNN VariantName`):
-    `grep -hrn "E-[A-Z]*-[0-9]\{3\} [A-Z][A-Za-z]*" .factory/specs/behavioral-contracts/ | grep -v "~~" | grep -oE "E-[A-Z]+-[0-9]{3} [A-Z][A-Za-z]+" | sort -u`
-
-    Form 2 (colon-delimited: `E-XXX-NNN: VariantName`):
-    `grep -hrn "E-[A-Z]*-[0-9]\{3\}: [A-Z][A-Za-z]*" .factory/specs/behavioral-contracts/ | grep -v "~~" | grep -oE "E-[A-Z]+-[0-9]{3}: [A-Z][A-Za-z]+" | sort -u`
-
-    **Cross-check requirement (collision detection):** For each extracted pairing (either form),
-    look up the code in error-taxonomy.md and verify (a) the variant name matches the taxonomy
-    row exactly, AND (b) the code is not already assigned a DIFFERENT variant name elsewhere in
-    the taxonomy (collision detection, not just name drift). A code appearing in a BC with a
-    variant name that differs from the taxonomy's canonical variant is a HIGH-severity finding.
-    Category names (POLICY, VAL, TIMEOUT, DURABILITY, TOOL, etc.) appearing after a code in a
-    markdown table row are false positives — filter these out by confirming the word is not a
-    known category code from the Error Categories table.
-
-    Codes used without a variant name (e.g., bare `E-CHKPT-001`) are permitted — only named
-    pairings are checked. Retired codes (~~strikethrough~~ in taxonomy) must not appear in
-    non-~~strikethrough~~ BC text.
-
-    Source of truth: ADV-P1D-PASS-20.md §F-P20-03. Widening rationale: ADV-P1D-PASS-34
-    §F-P34-03 — the original space-only regex missed `E-RETRY-003: InvalidRetryLimit` in
-    BC-2.16.001.md for 33 passes, allowing a live collision to persist undetected.
 
 18. **Wire-object field-set coherence census gate (added P24 — standing gate):**
     After any BC authoring or fix burst that introduces, modifies, or removes a field on a
@@ -1016,23 +1040,30 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     - Apply **Part A** (table/summary reconciliation) to every document you touch.
     - Apply **Gate #26** (Structurally-Privileged-Line Canon Check) to catch stale tier claims
       in H1/H2/H3 headings (e.g., `## ferrochain-macros — MEDIUM` heading in
-      module-decomposition.md — the heading is structurally privileged and must match the registry).
-    - Run the **Tier agreement census** below across all four documents.
+      module-decomposition.md is a **hypothetical example** — the heading is structurally
+      privileged and must match the actual tier in the arch registry for that module).
+    - Run the **Tier agreement census** below across all three documents.
 
     **Census commands:**
-    - Registry rows: count rows per tier in Module Inventory table (arch) → must equal arch
-      Summary cells. Count rows per tier in Module Classification table (PO) → must equal PO
-      Classification Summary cells; cell self-sum must equal stated Total.
+    - Registry rows: count rows per tier in Module Classification table (arch) → must equal arch
+      Summary cells.
     - Derived-doc module check: for each module in the Criticality column of
       module-decomposition.md and verification-coverage-matrix.md per-module table, verify the
       tier matches module-criticality.md (arch registry). Any mismatch is a HIGH-severity finding.
+      **Exemption (F-P172a-12, extended FIX-BURST-274):** Definitions-only modules
+      (`core::context_mutation`, `core::write_guard`, `core::guardrail`, `core::action_risk`,
+      `core::documents`) and routing-overlay modules (`memory::skills`) have structural
+      decomposition rows in module-decomposition.md but NO criticality row in
+      module-criticality.md — this is intentional (see gate #32 carrier 4 exceptions). Their
+      absence from module-criticality.md is NOT a mismatch. Only check modules that are present
+      as rows in the arch-registry (module-criticality.md) table.
     - Tier-summary row check: recount rows per tier in verification-coverage-matrix.md per-module
       table → must equal the §Coverage by Criticality Tier summary row (CRITICAL/HIGH/MEDIUM/LOW
       counts and total). Must equal the arch-registry (`.factory/specs/module-criticality.md`)
       §Classification Summary — recompute; do not trust a hardcoded example.
     - Structurally-privileged heading check: grep `^##` in module-decomposition.md for
       tier-bearing headings; verify each named module's tier matches module-criticality.md.
-      Command: `grep -n "^## " module-decomposition.md | grep -E "CRITICAL|HIGH|MEDIUM|LOW"`
+      Command: `grep -n "^## " .factory/specs/architecture/module-decomposition.md | grep -E "CRITICAL|HIGH|MEDIUM|LOW"`
 
     **Motivating instance (OBS-P37-1):** F-P37-01 and F-P37-02 survived passes 31–36 because
     the original Part B named only the two registry docs — leaving module-decomposition.md and
@@ -1045,25 +1076,30 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     ADV-P1D-PASS-37 §OBS-P37-1 [process-gap] (widening — all four criticality-bearing docs added).
 
     **Part C — Per-row crate ownership diff (added pass-45 — F-P45-01):**
-    In addition to comparing tier values across the four docs, each burst that runs the Part B
-    census MUST also diff each module's **owning crate** per-row across the four docs, using
+    In addition to comparing tier values across the three docs, each burst that runs the Part B
+    census MUST also diff each module's **owning crate** per-row across the three docs, using
     `module-criticality.md` (arch registry) as the authoritative crate-ownership source.
 
-    **Rule:** A module row that is tier-identical across all four docs but crate-divergent is a
+    **Rule:** A module row that is tier-identical across all three docs but crate-divergent is a
     HIGH-severity finding — it will pass every tier-diff check while silently routing
     implementation and verification work to the wrong crate.
 
     **Census command (run after every Part B census):**
     ```
-    # For each module in module-criticality.md, extract (module, owning_crate) and diff against
-    # the owning-crate column in module-decomposition.md, verification-coverage-matrix.md,
-    # and the PO module-criticality.md registry.
-    grep -n "| " .factory/specs/module-criticality.md | grep -v "^| Module\|^|---" \
+    # For each module in module-criticality.md §Module Classification, extract (module, owning_crate).
+    # Section-scoped to avoid sweeping §Tier Definitions, §CRITICAL Module Security Profile,
+    # and §Anti-Patterns rows (which have different headers and produce junk pairs).
+    # Note: do NOT use 'grep -n' here — the NN: prefix breaks the header filter.
+    awk '/^## Module Classification/{f=1;next} /^## /{f=0} f' .factory/specs/module-criticality.md \
+      | grep '^| ' | grep -v '^| Module\|^|---' \
       | awk -F'|' '{print $2, $3}' | sort
-    # Compare each module's crate column against module-decomposition.md Crate column and
-    # verification-coverage-matrix.md Crate/Owner column. Any mismatch is a HIGH-severity finding.
+    # Expected count: recompute from arch-registry §Classification Summary (module-criticality.md).
+    # Do NOT hardcode a fixed number here — the registry grows as ADRs add modules.
+    # Compare each module's crate column
+    # against module-decomposition.md Crate column and verification-coverage-matrix.md
+    # Crate/Owner column. Any mismatch is a HIGH-severity finding.
     ```
-    All four docs must agree on crate ownership for every module row. Tier agreement alone is
+    All three docs must agree on crate ownership for every module row. Tier agreement alone is
     insufficient — crate-divergent rows survive all tier-only diff checks.
 
     **Motivating instance (F-P45-01):** The `retry` module row in verification-coverage-matrix.md
@@ -1271,8 +1307,11 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     Known Form-B-only files (FAIL Form A but are COMPLIANT — always check Form B before filing a finding):
     - BCs: `BC-2.07.002`, `BC-2.08.011`, `BC-2.08.012`
     - Indexes: `BC-INDEX.md`
-    - Supplements: `bc-authoring-plan.md`, `test-vectors.md`, `verification-architecture.md`
+    - Supplements: `test-vectors.md`, `verification-architecture.md`
     - Any index, ADR, or supplement that uses a `## Changelog` body section rather than a frontmatter `changelog:` YAML list
+
+    **BOTH forms (special classification — F-P172a-14, burst-274-B):**
+    - `bc-authoring-plan.md` carries BOTH Form A (frontmatter `changelog:` list) AND Form B (`## Changelog` body table). **Form A is the authoritative form.** The Form B body table is preserved as a historical audit trail only, with an explicit "historical record — superseded by frontmatter changelog" banner at the head of the body table. Agents: do NOT add new entries to the Form B table; add to the Form A frontmatter list only. When checking bc-authoring-plan.md for changelog presence, Form A check passes — finding is INVALID regardless of Form B state.
 
     Rationale: the existing CRITICAL note and Union coverage rule text (below) were insufficient to
     prevent this pattern — F-P49-01 (pass-49) and OBS-P105-B (pass-105) both reproduced because the
@@ -1281,12 +1320,17 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 
     **Census command (two-form check required — F-P49-01 false-positive fix):**
 
-    Step 1 — Identify all BCs with version > "1.0":
+    Step 1 — Identify all BC files with version > "1.0" (BC-INDEX.md excluded — it is a
+    state-manager rolling index whose `version:` tracks index schema, not BC revision):
     ```
-    grep -rh "^version:" .factory/specs/behavioral-contracts/ \
+    grep -rn "^version:" .factory/specs/behavioral-contracts/ \
+      --exclude="BC-INDEX.md" \
       | grep -v '"1\.0"' \
-      | wc -l
+      | cut -d: -f1 | sort -u
     ```
+    This emits the filenames of BCs that require a changelog entry.
+    (Step 1 is a LIST; Step 2 operates on the Form A / Form B union independently of Step 1's
+    output — the union check does not require iterating the Step 1 list file-by-file.)
 
     Step 2 — For each BC identified in Step 1, check BOTH forms of changelog:
 
@@ -1339,21 +1383,47 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
        reading bottom-to-top. A v1.1 row dated AFTER the superseding v1.2 row is a violation.
        (Applies to ALL document types.)
 
-    **Form-B set (must be enumerated alongside prd-supplements in every date sweep):**
-    Three BCs carry Form-B (`## Changelog`) body tables:
-    `BC-2.07.002`, `BC-2.08.011`, `BC-2.08.012`.
-    A date sweep that checks prd-supplement body changelogs (bc-authoring-plan, test-vectors)
-    but skips these Form-B BCs is INCOMPLETE and will miss the class of defect described in
-    F-P65-01.
+    **Form-B date-validity sweep — authoritative tool (F-P172a-06):**
+    `verify-changelog-date-monotonicity.sh` is the **authoritative corpus-wide** date sweep.
+    It covers ALL `.factory/specs/` changelog-bearing files — both Form A (frontmatter list)
+    and Form B (body table) — without requiring manual file enumeration. Run it as the
+    primary date-validity check on every adversary rotation:
+    ```
+    bash .factory/hooks/verify-changelog-date-monotonicity.sh
+    ```
+    Expected: PASS (no date-order violations). Non-blocking WARNs for both-forms co-existence
+    are informational only (see DEFER-002 note above).
 
-    **Census command (date-validity sub-check — run on every adversary rotation):**
+    **Manual fallback (when hook is unavailable — run on every adversary rotation):**
+    All files carrying Form-B (`## Changelog`) body tables — BCs, supplements, indexes, and
+    architecture docs — must be included in every body-table date sweep. Known Form-B files:
+
+    *BC files (body-table form):*
+    `BC-2.07.002`, `BC-2.08.011`, `BC-2.08.012`
+
+    *Supplement files (body-table form):*
+    `bc-authoring-plan.md` (BOTH forms — Form A authoritative; Form B historical audit trail),
+    `test-vectors.md`
+
+    *Indexes:*
+    `BC-INDEX.md`
+
+    *Architecture files (body-table form — classified as `architecture/`, not supplement):*
+    `verification-architecture.md`, `ADR-007`, `ADR-009`, `ADR-012`, `ADR-013`
+
     ```
     grep -n "| [0-9]\+\.[0-9]\+ | 20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]" \
       .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md \
       .factory/specs/behavioral-contracts/ss-08/BC-2.08.011.md \
       .factory/specs/behavioral-contracts/ss-08/BC-2.08.012.md \
       .factory/specs/prd-supplements/bc-authoring-plan.md \
-      .factory/specs/prd-supplements/test-vectors.md
+      .factory/specs/prd-supplements/test-vectors.md \
+      .factory/specs/behavioral-contracts/BC-INDEX.md \
+      .factory/specs/architecture/verification-architecture.md \
+      .factory/specs/architecture/decisions/ADR-007-*.md \
+      .factory/specs/architecture/decisions/ADR-009-*.md \
+      .factory/specs/architecture/decisions/ADR-012-*.md \
+      .factory/specs/architecture/decisions/ADR-013-*.md
     ```
     For each extracted date, assert: (a) `date ≤` current burst date, and (b) dates within each
     file decrease monotonically reading top-to-bottom (newest-at-top convention). For
@@ -1378,7 +1448,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     4. **TEMPORAL-NEIGHBOR SWEEP:** When any file is edited in a fix burst, ALL neighboring changelog rows in that file — not only the newly added row — must be date-audited in the same burst. Pass N's changelog dates may not exceed pass N+1's artifact dates, nor precede pass N-1's beyond same-day. A row whose date exceeds an adjacent pass's canonical date is a gate failure even if the row was authored in an earlier burst.
 
     5. **FRONTMATTER-CURRENCY (scoped by document type — adjudication D18-P86-A, 2026-07-16):**
-       - **Supplement documents** (`introduced:` frontmatter field absent — bc-authoring-plan, test-vectors, error-taxonomy, interface-definitions, nfr-catalog, module-criticality): `timestamp:` must equal the date of the file's newest changelog entry. A supplement `timestamp:` that exceeds the current burst date, or that does not match the newest changelog entry's date, is a self-contradiction.
+       - **Supplement documents** (`introduced:` frontmatter field absent — bc-authoring-plan, test-vectors, error-taxonomy, interface-definitions, nfr-catalog, module-criticality, observability [7 total]): `timestamp:` must equal the date of the file's newest changelog entry. A supplement `timestamp:` that exceeds the current burst date, or that does not match the newest changelog entry's date, is a self-contradiction.
        - **BC files** (`introduced:` frontmatter field present): `timestamp:` is the authoring date (stable, never updated after initial v1.0 authoring). BC currency is tracked via `version:` + `## Changelog` + `introduced:`. A BC `timestamp:` that does not match the v1.0 changelog row's date is a self-contradiction.
 
        **ADR documents** (`.factory/specs/architecture/decisions/ADR-NNN-*.md`):
@@ -1459,7 +1529,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 
        **Census command (copy-paste runnable; direction-aware (v2.32+); section-scoped to avoid
        false positives from example YAML in gate prose; covers all changelog-bearing files
-       corpus-wide — 95 BCs + prd-supplements + architecture changelogs):**
+       corpus-wide — all BCs + prd-supplements + architecture changelogs):**
        ```bash
        python3 << 'CENSUS'
        import re, glob
@@ -1539,7 +1609,16 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
        **Trigger:** Every burst that creates new BCs, bumps any version, or edits any
        changelog entry + every adversary rotation.
 
-    **Machine enforcement deferral (OBS-P75-A / DEFER-002):** Pre-commit hook and CI lint enforcement of rules 1–6 is DEFERRED to Phase 3 CI hardening. Deferral logged by state-manager as a STATE.md drift/deferral entry. Until machine enforcement, burst discipline governs — every PO burst that touches a changelog file must manually run the date-validity and version-monotonicity sub-checks.
+    **Machine enforcement status (OBS-P75-A / DEFER-002; revised F-P172a-05, burst-274-B):**
+    - **LIVE (blocking pre-commit hooks):**
+      - `verify-changelog-date-monotonicity.sh` — enforces **Rules 2+3** (date ≤ burst date; monotonic ordering within file). This hook also emits non-blocking WARNs for both-forms co-existence (`both-changelog-forms:frontmatter=X.X,body-table=Y.Y`) and version-parity divergence between forms.
+      - `verify-form-a-changelog-direction.sh` — enforces **Rule 6 Form A** (prd-supplements/architecture Form A descending direction; behavioral-contracts Form A ascending direction).
+    - **DEFERRED to Phase 3 CI hardening (DEFER-002 residual):**
+      - Rule 1 (`date ≤ frontmatter timestamp:` — supplement branch only): requires CI branch on `introduced:` field presence.
+      - Rule 4 (temporal-neighbor sweep): requires multi-file context; not yet mechanized.
+      - Rule 5 (frontmatter-currency machine check: `timestamp:` == newest changelog date for supplements; `timestamp:` == v1.0 date for BCs): requires CI branch on `introduced:` field presence per D18-P86-A / D18-P87-A.
+      - Rule 6 Form B (body-table direction machine check for architecture/ and behavioral-contracts/ Form B): `validate-changelog-monotonicity` hook covers body tables but not Form A direction on those paths.
+    Deferral logged by state-manager as a STATE.md drift/deferral entry. Until full machine enforcement, burst discipline governs — every PO burst that touches a changelog file must manually run the date-validity and version-monotonicity sub-checks for the still-deferred rules.
 
     The Phase 3 linter MUST implement the following decision tree, branching on `introduced:`
     field presence (D18-P86-A for Rule 5 scoping; D18-P87-A for Rule 1 scoping):
@@ -1852,7 +1931,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 
     Any burst that accepts or amends an ADR that makes a **crate-placement or type-home decision**
     (i.e., declares which workspace crate owns a trait, type, module, or file) MUST reconcile
-    that placement decision against the three BC-layer carriers IN THE SAME BURST:
+    that placement decision against the four BC-layer carriers IN THE SAME BURST:
 
     **Five required carriers:**
 
@@ -1874,24 +1953,51 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
        criticality table must reflect the module with its correct crate and tier. A module added
        by an ADR that does not appear in the arch registry is a gate #32 + gate #25 violation.
 
-       **Definitions-only exception (F-P171a-08, burst-273):** A module that hosts ONLY
-       type/trait definitions with no execution logic — no algorithmic computation, no I/O, no
-       method bodies beyond trivial derives — does NOT require a criticality row in the arch
-       registry. The rationale follows ADR-009 Option 3 precedent (pure-core pure-types split).
-       Established exempt cases: `core::context_mutation`, `core::write_guard`,
-       `core::guardrail`, `memory::skills`, `core::action_risk`. For an exempt module, the
+       **Definitions-only exception (F-P171a-08, burst-273; revised F-P172a-04, burst-274-B):**
+       A module that hosts ONLY type/trait definitions with no execution logic — no algorithmic
+       computation, no I/O, no method bodies beyond trivial derives — does NOT require a
+       criticality row in the arch registry. **Rationale:** modules hosting ONLY type/trait
+       definitions have no algorithmic failure modes to tier-classify; a criticality tier is
+       meaningful only when there are runtime code paths whose failure would propagate to users.
+       (Note: `core::budget` holds the `BudgetPolicy` trait and associated types AND has a
+       criticality row — `core::budget` is NOT a precedent for no-row; it is a properly-tiered
+       module with algorithmic execution paths in the budget engine.)
+       Established definitions-only exempt cases: `core::context_mutation`, `core::write_guard`,
+       `core::guardrail`, `core::action_risk`, `core::documents`. For each exempt module, the
        authoritative placement record is `purity-boundary-map.md` §Pure Core AND a definitions
        note in the corresponding `module-decomposition.md` subsystem row.
-       **Narrow scope — this exception does NOT apply to:** `tools::config` (contains
+
+       **Routing-overlay exception (F-P172a-04, burst-274-B):** A module whose architectural
+       role is routing/discovery overlay over another module's storage or execution backend —
+       with no execution-business-logic of its own — also does NOT require a criticality row.
+       Established routing-overlay exempt case: `memory::skills`. This module provides
+       routing/discovery over the MemoryStore KV backend (load_skill, list_skills, skill_exists
+       I/O bound to MemoryStore) but owns no algorithmic business logic; it is classified as
+       Effectful Shell in `purity-boundary-map.md` (async SkillStore I/O), NOT Pure Core — so
+       it fails the definitions-only criterion. The routing-overlay exception applies instead.
+       For a routing-overlay exempt module: a structural decomposition row in
+       `module-decomposition.md` is required; a criticality row in `module-criticality.md` is
+       NOT required.
+
+       **Architect adjudication confirmed (F-P172a-04 — resolved FIX-BURST-274):** `core::documents`
+       is definitions-only exempt. Classification evidence: ADR-014 Decision 2 explicitly states
+       "No I/O. Pure data carrier. Pure Core classification." — the struct has only `page_content`,
+       `metadata`, and `id` fields with derived impls; no execution methods; no VP target. Pattern
+       matches `core::guardrail`, `core::action_risk`, and `core::write_guard` (definitions-only
+       precedent). Definitions note added to the `core::documents` row in `module-decomposition.md`;
+       Criticality column changed from MEDIUM to `—`. No criticality row required.
+
+       **Narrow scope — neither exception applies to:** `tools::config` (contains
        `ToolConfig::override_risk` validation logic — MEDIUM criticality tier), and any other
        module with non-trivial method bodies, side effects, or algorithmic logic. When in doubt,
-       create the criticality row; the exception is for obvious pure-definitions modules only.
+       create the criticality row; the exceptions are for obvious pure-definitions or pure-routing
+       modules only.
 
     5. **`.factory/specs/prd-supplements/module-criticality.md` (PO registry — SUPERSEDED, FROZEN)**
        — this file is `status: superseded` (22-module pre-D21/D23 view, audit trail only).
        Do NOT sync it. Routing ADR placement changes to this file is prohibited — it is permanently
-       frozen. Any new ADR module addition need only appear in the THREE live documents listed above
-       (items 1–3). (OBS-P72 historical context: D20 ADR-012/ADR-013 modules were the motivating
+       frozen. Any new ADR module addition need only appear in the FOUR live documents listed above
+       (items 1–4). (OBS-P72 historical context: D20 ADR-012/ADR-013 modules were the motivating
        instance; the PO registry was superseded at Phase 1b under F-P165-06 adjudication.)
 
     **Census procedure:**
@@ -1902,6 +2008,15 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
        anchor-drift finding.
     4. Check module-decomposition.md rows for the affected subsystem — verify crate assignment
        matches the ADR decision.
+    4a. Check `.factory/specs/module-criticality.md` (arch registry, carrier 4) — if the ADR
+       introduces a NEW module or re-places an EXISTING module, verify or add the module row
+       with the correct crate and tier. Apply the definitions-only exception (modules hosting
+       ONLY type/trait definitions with no execution logic) or the routing-overlay exception
+       (modules whose role is routing/discovery overlay over another module's backend with no
+       execution-business-logic) if appropriate — see carrier 4 exceptions above. If the module
+       qualifies for an exception, no criticality row is required; document the exception in
+       module-decomposition.md instead. If no exception applies, a missing row is a HIGH-severity
+       gate #32 + gate #25 violation.
     5. Check interface-definitions.md §Public Rust Trait Signatures for any section header or
        doc-comment citing the old crate — update to the new placement.
 
@@ -1949,9 +2064,15 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     ```
     # For each live taxonomy row, check that the BC Anchor body contains the code or variant name.
     # Run from repo root. Outputs: code, anchor BC, grep result (non-empty = PASS).
+    # Column map (awk -F'|'): $1=leading-empty $2=Error-Code $3=Category $4=Severity $5=BC-Anchor $6=Message-Format
     grep -h "^| E-" .factory/specs/prd-supplements/error-taxonomy.md | grep -v "~~" | \
-      awk -F'|' '{code=$2; anchor=$4; gsub(/ /,"",code); gsub(/ /,"",anchor); print code, anchor}'
-    # Then for each (code, anchor) pair: grep -l "$code" .factory/specs/behavioral-contracts/**/$anchor.md
+      awk -F'|' '{code=$2; anchor=$5; gsub(/ /,"",code); gsub(/ /,"",anchor); print code, anchor}'
+    # Then for each (code, anchor) pair, resolve the primary anchor (strip secondary annotations)
+    # and use find or ss-*/ glob to locate the BC file:
+    #   find .factory/specs/behavioral-contracts -name "${primary_anchor}.md" | xargs grep -l "$code"
+    # OR: ls .factory/specs/behavioral-contracts/ss-*/${primary_anchor}.md 2>/dev/null | xargs grep -l "$code"
+    # shopt -s globstar is NOT required when using the ss-*/ single-directory wildcard.
+    # Multi-anchor cells (comma-separated BCs) require checking each primary anchor independently.
     ```
 
     **Scope:** All live taxonomy codes (non-tombstone rows). Tombstone rows (~~strikethrough~~) are
@@ -2375,12 +2496,17 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 
     **Census procedure:**
 
-    1. List all VP files: `ls .factory/specs/verification-properties/VP-*.md`
-    2. Check for missing `red_gate:` field across all VP files:
+    1. List all VP files (individual VP files only; excludes VP-INDEX.md which is an index,
+       not a VP, and carries no `red_gate:` obligation):
+       `ls .factory/specs/verification-properties/VP-[0-9][0-9][0-9].md`
+    2. Check for missing `red_gate:` field across all VP files (index excluded):
        ```
-       grep -rL "^red_gate:" .factory/specs/verification-properties/VP-*.md
+       grep -rL "^red_gate:" .factory/specs/verification-properties/VP-[0-9][0-9][0-9].md
        ```
-       Expected: empty output (zero files missing the field).
+       Expected: empty output (zero individual VP files missing the field).
+       Note: `VP-*.md` glob MUST NOT be used here — it matches `VP-INDEX.md`, which lacks
+       `red_gate:` by design (it is a catalog, not a VP). Using `VP-*.md` produces a permanent
+       false failure that trains operators to ignore the gate result.
     3. For each VP with `red_gate: true`, verify all three corroboration requirements:
        a. Anchor BC frontmatter: `grep "red_gate:" .factory/specs/behavioral-contracts/ss-NN/BC-S.SS.NNN.md`
           — must return `red_gate: true`.
@@ -2413,6 +2539,14 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 ---
 
 ## Changelog
+
+> **Historical record — superseded by frontmatter `changelog:` (Form A).**
+> The frontmatter `changelog:` YAML list above is the **authoritative** changelog for this file.
+> This body table is preserved as an audit trail only and is intentionally incomplete
+> (rows for v2.48, v2.49, v2.52, v2.53, v2.54, v2.55 are absent from this table).
+> Do NOT add new entries here. For new changelog entries, use the frontmatter `changelog:` list.
+> Form choice adjudicated by F-P172a-14 (burst-274-B, 2026-07-26): Form A preferred because
+> it is hook-enforced (`verify-form-a-changelog-direction.sh`) and avoids reconstructing missing rows.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|

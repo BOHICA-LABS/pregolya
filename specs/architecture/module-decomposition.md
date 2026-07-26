@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.29"
+version: "1.31"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
@@ -14,6 +14,8 @@ input-hash: "44938a8"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.31 (FIX-BURST-274/module-universe-sweep/2026-07-26): Fix memory::skills Criticality column MEDIUM → '—' — the routing-overlay exemption (ADR-012 Decision 4; structural decomposition row only, no criticality-counted row) was declared in the surrounding block note but not reflected in the table Criticality column, creating a silent inconsistency with the established pattern (see core::documents v1.30 for precedent). Annotation added in table row. No module-universe count change (56 rows unchanged)."
+  - "1.30 (FIX-BURST-274/D21-definitions-sweep/2026-07-26): core::documents definitions-only adjudication (F-P172a-04) — Criticality column MEDIUM → — (definitions-only); description extended to note definitions-only exemption per ADR-009 definitions-only precedent (ADR-014 Decision 2: pure data carrier; no execution methods; no VP target). Module universe count unchanged at 56."
   - "1.29 (FIX-BURST-273/F-P171a-02/2026-07-25): Add `tools::config` module row to ferrochain-tools (SS-23) — ToolConfig adjudication: shared per-tool framework configuration type; `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>` builder-consuming validator enforces per-tool risk-floor rules (E-TOOLS-007 on below-floor tier for BashTool); `#[non_exhaustive]`; construction-time validation per VP-013 postcondition (VP-013 §Source Contract PC-4 wins over BC-2.23.005 §PC-4 'register time' on lifecycle — VP-013 postcondition states `override_risk` returns `Err(E-TOOLS-007)`; BC §PC-4 needs PO correction to align); zero I/O, no async (ADR-020 Decision 3 / BC-2.23.005). Module universe 55→56 (+tools::config MEDIUM row)."
   - "1.28 (F-P170-16/burst-272/2026-07-25): Fix retired symbol name in VP-013 anchor paragraph — `BashTool::set_risk(ReadOnly)` and `set_risk(Low)` → `ToolConfig::override_risk(ActionRisk::ReadOnly)` and `ToolConfig::override_risk(ActionRisk::Low)` on a `BashTool` instance, per ADR-020 Decision 3 canonical form."
   - "1.27 (FIX-BURST-272/F-P170-06/2026-07-25): ActionRisk dependency adjudication propagation. (a) ferrochain-tools description: 'ferrochain-graph::hitl::ActionRisk' → 'ferrochain-core::ActionRisk (core::action_risk)'. (b) ferrochain-tools ADR anchor dep list: 'ferrochain-sandbox/core/graph/macros' → 'ferrochain-sandbox/core/macros' (ferrochain-graph is not a compile-time dep; ActionRisk now sourced from ferrochain-core). (c) Add core::action_risk definitions-only note to ferrochain-core D21 additions section, following core::guardrail precedent."
@@ -224,7 +226,7 @@ search (keyword / vector / hybrid). Canonical trait: `MemoryStore`.
 | `memory::sqlite` | SQLite durable backend implementation | MEDIUM | SS-15 |
 | `memory::in_memory` | Ephemeral in-memory backend (test/dev) | MEDIUM | SS-15 |
 | `memory::search` | Keyword, vector, and hybrid search implementations | MEDIUM | SS-15 |
-| `memory::skills` | `SkillStore` trait + `SkillDescriptor`; routing/discovery overlay over `MemoryStore` KV; load-on-demand skill documents by name/tags (D20/ADR-012) | MEDIUM | SS-15 |
+| `memory::skills` | `SkillStore` trait + `SkillDescriptor`; routing/discovery overlay over `MemoryStore` KV; load-on-demand skill documents by name/tags; **routing-overlay — no criticality-counted module row per ADR-012 Decision 4** (structural decomposition row only; all execution dispatch delegated to `MemoryStore` backend) (D20/ADR-012) | — | SS-15 |
 | `memory::write_guard` | Guarded write enforcement engine: calls `MemoryWriteGuard::validate()` (from `core::write_guard`) before committing writes; injection scanning dispatch; blocks or sanitizes writes per `WriteGuardDecision`; security-significant write-path seam (D20/ADR-012) | HIGH | SS-15 |
 
 **BC anchors:** BC-2.15.001–006 (CAP-020: BCs 004–006 cover self-improvement primitives — `SkillStore` routing overlay, `MemoryWriteGuard` execution enforcement, and `ContextMutationConfig` assembly). Canonical trait name: `MemoryStore` per BC-2.15.001 Architecture Anchors.
@@ -279,7 +281,7 @@ Re-exported from ferrochain-core.
 
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
-| `core::documents` | `Document { page_content, metadata, id }` type — carrier for all retrieval output; derives Serialize/Deserialize/JsonSchema; #[non_exhaustive] | MEDIUM | SS-20 |
+| `core::documents` | `Document { page_content, metadata, id }` type — carrier for all retrieval output; derives Serialize/Deserialize/JsonSchema; `#[non_exhaustive]`; **definitions-only — no criticality-counted module row per ADR-009 definitions-only precedent** (ADR-014 Decision 2: pure data carrier; no execution methods; no VP target) | — | SS-20 |
 | `core::retriever` | `Retriever` trait: async dyn-compatible `get_relevant_documents(&self, query: &str)`; `Arc<dyn Retriever>` seam for graph RAG nodes; `GuardedDocuments` newtype (no public constructor) + `GuardedDocuments::rag_ingress(docs, guardrail)` sole constructor enforcing DI-012 RAGRetrieval guardrail at call time (ADR-014 Decision 6) | MEDIUM | SS-20 |
 | `core::embeddings` | `Embeddings` trait: async dyn-compatible `embed_documents` + `embed_query`; dimensionality contract (E-EMBED-001 on mismatch); no `ndarray` dep | MEDIUM | SS-22 |
 | `core::serializable` | `LcSerializable` trait + `Serialized` wire enum + `Reviver` + `inventory`-based static registry (141 core entries); valid-namespace `OnceLock<HashSet>` derived from registry; E-SRLZ-001/002 error codes | HIGH | SS-19 |

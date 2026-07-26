@@ -7,8 +7,8 @@ title: "Self-Improvement Primitives: Skill Registry, Runtime Context Mutation, G
 status: accepted
 date: 2026-07-15
 producer: architect
-timestamp: 2026-07-23T00:00:00Z
-version: "1.5"
+timestamp: 2026-07-15T00:00:00Z
+version: "1.6"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D20]
@@ -335,6 +335,7 @@ seam that does not interact with `ProvenanceTag`, `GuardrailHook`, or `BoundaryT
 
 | Version | Date | Author | References | Summary |
 |---------|------|--------|------------|---------|
+| 1.6 | 2026-07-26 | architect | FIX-BURST-274/timestamp-convention | Restore frozen original-acceptance timestamp per ADR decision-date convention (Gate #28 Rule 5): `timestamp: 2026-07-23T00:00:00Z` → `2026-07-15T00:00:00Z`. Date field already correct at 2026-07-15 (original ADR-012 acceptance date, D20). Timestamp was incorrectly bumped to 2026-07-23 in burst-238/f4819b2. |
 | 1.5 | 2026-07-25 | architect | FIX-BURST-268/OBS-P166-A | De-pin live-body version pin per TD-VSDD-091: Decision 1 body 'bc-authoring-plan.md v2.10' → 'bc-authoring-plan.md §Gate #27 §Key ownership rules' (stable section anchor; guardrail placement canon resides in Gate #27 Key ownership rules table). |
 | 1.4 | 2026-07-23 | architect | burst-238 | Stale-handoff sweep — consolidate Error Codes section: remove stale 'PO must mint E-MEM-NNN' obligation and advisory correction blockquote; rewrite as single past-tense statement (E-MEMORY-007 MemoryWriteGuardDenied already minted per F-P72-02 OBS). |
 | 1.3 | 2026-07-17 | architect | F-P95-01, D18-P84-A | Reconcile two stale 'budget policy evaluation between super-steps' analogies with BC canon. (1) Primitive B description: 'analogously to how graph::budget evaluates BudgetPolicy between super-steps' → 'analogously to how graph::budget_engine populates RunContext.budget_info at each super-step boundary before task dispatch (BC-2.10.003 PC9) — both are phase-boundary operations, not per-call evaluations'. (2) Decision 3 rationale bullet: 'analogous to budget policy evaluation between super-steps' → 'analogous to graph::budget_engine populating RunContext.budget_info at super-step boundaries before task dispatch — BC-2.10.003 PC9'. Template structure: add date, subsystems_affected, superseded_by, supersedes frontmatter fields; add Rationale, Alternatives Considered, Source / Origin sections. |
