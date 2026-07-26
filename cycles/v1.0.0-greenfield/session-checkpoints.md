@@ -1454,3 +1454,32 @@ ferrochain Phase 1 (Spec Crystallization) — burst 274 COMPLETE (F-P172a-01..19
 **WRAP METADATA:** Date 2026-07-26 | Cycle v1.0.0-greenfield | burst-274 COMPLETE | Phase 1 IN PROGRESS — F-P172a all closed; P1D-172 axes 2–4 pending
 
 **WRAP METADATA:** Date 2026-07-25 | Cycle v1.0.0-greenfield | burst-273 | Phase 1 IN PROGRESS — P1D-171 cascade CLOSED; fix-burst 273 COMPLETE
+
+---
+
+### Checkpoint archived: post-P1D-172b / session wrap 2026-07-26 (archived during session wrap commit, 2026-07-26)
+
+**RESUME IN ONE BREATH:**
+ferrochain Phase 1 (Spec Crystallization) — P1D-172b CLOSED (20 findings 0C/6H/8M/4L/2OBS; axis 4 of 4; HEADLINE: phantom "56-module universe" never equaled decomposition count, actual 70 [68 tiered + 2 exempt]; 7 tiered modules without registry rows remain per F-P172b-01); fix-burst 275 PENDING; streak 0/3. NEXT: fix-burst 275 (mostly architect, some product-owner), then P1D-172 axes 2 and 3.
+
+**HEADS:** develop d018d3f (clean, pushed) [NOTE: STALE — actual HEAD was 46725ad; corrected in replacement checkpoint]; factory-artifacts = `git -C .factory log -1 --format='%H'`; no worktrees; no open PRs.
+
+**PERIMETER SNAPSHOT (post-P1D-172b; registry pending fix-burst 275):** 129 BCs (51/75/3); 108 codes; 674 TVs (663+11 GTV); 38 CAPs; 15 DIs; 13 VPs (6 P0 Kani); 20 ADR files; 21 crates; SS-01..23; 81 purity-boundary-map rows (33 Pure Core / 36 Effectful Shell / 12 Boundary); module-decomposition universe 70 rows (68 tiered + 2 exempt); criticality registry 66 modules (12 CRITICAL / 22 HIGH / 30 MEDIUM / 2 LOW) PENDING 73 (7 gaps per F-P172b-01); 14 bounded contexts; 15 StreamEvents; 17 Components (PascalCase); 11 event_types; 36 gates; 11 Red Gate BCs; 7 blocking validators + 1 advisory; records-lint.sh PASS; allowlist 24 entries keyed path::pin-text; citation coverage 287.
+
+**NEXT-ACTION:** dispatch fix-burst 275 routing F-P172b-01..19 (architect PRIMARY: F-P172b-01/02/03/04/06/07/08/09/10/14/15/16/17/18; product-owner: F-P172b-05/11/12/13/19; registry 66→73 after F-P172b-01 lands).
+
+**P1D-172 REMAINING AXES (axes 1 and 4 complete):**
+- Axis 2: ADR semantic citation (not existence): ADR-018/019/020/014/012/017/010 families; validator #6 blind spots: `+`-separated (`Decisions 1+4`) and paren-interleaved (`Decisions 3 (foo) and 4`). Citation coverage 287.
+- Axis 3: Deep read `specs/architecture/api-surface.md` (only 3 sites corrected burst-272; rest unaudited), `prd-supplements/interface-definitions.md`, `specs/architecture/verification-coverage-matrix.md`, `specs/architecture/system-overview.md`.
+
+**CONVERGENCE-INTEGRITY RULE:** BC-5.39.001 3-CLEAN streak requires FULL-PERIMETER passes only; sub-passes may NEVER advance the streak. After fix-burst 275, the next full-perimeter pass begins a new numbered pass.
+
+**CASCADE TRAJECTORY (P1D-143..172b):** 1,4,5,4,3,5,4,2,7,3,2,3,2,4,4,4,2,2,2,3L,3,5,3,7,3,5,1,1,20,19,19,20 — sibling-sweep failures at gate level; 7 validators; lessons L-036..L-060 (L-056..L-059 open process-gaps, L-060 codified).
+
+**PENDING HUMAN ACTIONS:** B1 direnv allow; R6 publish-all.sh regenerate for 21 crates.
+
+**SESSION LOG NOTE:** This session completed bursts 272, 273, 274 and recorded passes P1D-170, P1D-171, P1D-172a, P1D-172b. Several agent dispatches died on transient API errors (Connection closed mid-response, Stream idle timeout) — mitigation: bounded sub-passes with fresh context, run sequentially rather than in parallel.
+
+**STANDING USER DIRECTIVE:** "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13).
+
+**WRAP METADATA:** Date 2026-07-26 | Cycle v1.0.0-greenfield | P1D-172b CLOSED | Phase 1 IN PROGRESS — fix-burst 275 PENDING; P1D-172 axes 2 and 3 pending
