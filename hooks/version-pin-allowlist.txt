@@ -10,12 +10,16 @@
 # internal whitespace normalized to single spaces — i.e., what
 # re.sub(r'\s+', ' ', m.strip()) produces from the regex match object.
 #
-# Purpose: Exempt specific live-body version pin matches that are genuinely
-# justified historical records that cannot be de-pinned without losing meaning.
-# Permitted uses:
-#   - Red Gate test tables where the version anchors a specific test vector
-#   - AC source-of-truth tables recording authoring-provenance versions
-#   - Historical before-state quotes that explicitly record an old value
+# Purpose: Exempt specific live-body version pin matches that are grandfathered
+# pre-existing historical records written before TD-VSDD-091 was in force.
+# These entries exist ONLY for content authored before the rule applied.
+# Newly-authored text may NEVER be allowlisted regardless of its content type.
+# The retired "justified citations" categories (Red Gate test tables, AC
+# source-of-truth tables, historical before-state quotes) were removed as
+# permitted bases on 2026-07-24: six consecutive adversarial passes minted
+# findings exclusively from that family (CLIP email-notifications Stage-3
+# cascade, trend-gate structural intervention).  There are no ongoing permitted
+# use categories — grandfathering is the sole remaining basis for any entry.
 #
 # Each entry MUST have a reason comment on the immediately preceding line.
 # Format of reason comment: "# Reason: <justification>"
@@ -160,13 +164,6 @@ architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md :: BC-2.20.0
 # records that BC-2.21.004 v1.2 updated INV-3 to replace the lossy fallback with
 # a fail-safe Err(E-VS-005) when non-empty filters are passed.
 architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md :: BC-2.21.004 v1.2
-
-# Reason: HISTORICAL-RECORD — verification-architecture.md §RESOLVED block
-# (burst-232, 2026-07-22); records that BC-2.23.005 reached VAL category at v1.1
-# and that the prior Category::CONFIGURATION label was non-canonical.  The
-# "v1.1 = VAL" phrasing anchors the resolution event to the specific BC version;
-# the BC is now at a later version.
-architecture/verification-architecture.md :: BC-2.23.005 v1.1
 
 # Reason: HISTORICAL-RECORD — product-brief.md §Constraints & Integration Points
 # and §Reference Corpus Pins; both lines cite reference-manifest.md v1.4.0 as a

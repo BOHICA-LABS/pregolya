@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-23"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.6"
+version: "1.7"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-05, SS-06, SS-16]
 changelog:
+  - "1.7 (FIX-BURST-273/F-P171a-01+09/2026-07-25): F-P171a-01 — fix §Rationale stale co-location claim: remove `ActionRisk` from 'trait alongside ActionRisk, RiskGatePolicy, and GraphConfig' (ActionRisk relocated to ferrochain-core per Decision 1 body / F-P170-06); scope the 'no dependency inversion exists' statement to `PreToolCallHook` specifically. F-P171a-09 — update §Decision 6 ADR-008 citation: 'ADR-008' → 'ADR-008 Decision 2' (new Decision 2 added to ADR-008 in this burst records the `action_risk` attribute emitted-path contract and hygiene rule; ADR-008 previously had no `action_risk` content)."
   - "1.6 (FIX-BURST-272/F-P170-06/2026-07-25): Amend Decision 1 trait-placement rationale: the 'no relocation is needed' statement for ActionRisk was adjudicated before ADR-020 introduced ferrochain-tools as a cross-crate compile-time consumer of ActionRisk. F-P170-06 option (b) adjudication: ActionRisk IS relocated to ferrochain-core (core::action_risk) per the dependency-inversion precedent — same pattern as BudgetPolicy/GuardrailHook/MemoryWriteGuard. PreToolCallHook and all other graph::hitl types remain in ferrochain-graph::hitl."
   - "1.5 (FIX-BURST-262/F-P161-01/2026-07-25): De-pin 3 live-body BC version pins per TD-VSDD-091 BC-pin variant: (1) Decision 5 — BC-2.06.001 v1.4 → BC-2.06.001; (2) Decision 6 — BC-2.08.010 v1.1 amended → BC-2.08.010 amended; (3) Status section — BC-2.08.010 v1.1 → BC-2.08.010."
   - "1.4 (burst-242/2026-07-23): Fix-242 Command-notation sweep — convert 4 residual enum-variant form Command::Resume(...) occurrences (Decision 1 doc comment, Decision 3 step 6, Decision 3 on-resume paragraph, Decision 4 resume paragraph) to canonical struct kwarg form Command(resume=...). Canonical form per BC-2.05.004 v1.5 + F-P120-01 adjudication."
@@ -182,7 +183,7 @@ Each retry attempt flows through `pre_tool_dispatch` independently:
 - Interactive policies re-prompt on each retry — giving the human the ability to deny after
   observing the first failure's error output.
 
-**`#[tool(action_risk = ...)]` macro extension (ADR-008):** The `#[tool]` proc-macro gains
+**`#[tool(action_risk = ...)]` macro extension (ADR-008 Decision 2):** The `#[tool]` proc-macro gains
 an optional `action_risk` parameter populating `ToolCallPreview.action_risk` at dispatch
 time. If absent, `action_risk = None`. BC-2.08.010 amended to include the
 `action_risk` attribute parameter (burst-229, active).
@@ -195,10 +196,14 @@ built on ferrochain would independently re-implement the same boilerplate. First
 support eliminates this friction and ensures the fail-closed Deny property is provable
 at the framework level rather than repeated in each application.
 
-Placing the hook in `ferrochain-graph::hitl` (Decision 1) keeps the trait alongside
-`ActionRisk`, `RiskGatePolicy`, and `GraphConfig` where it belongs architecturally.
-`ferrochain-core` definitions-only modules are justified only by dependency inversion
-(ADR-009 Option 3 precedent); no such inversion exists here.
+Placing `PreToolCallHook` in `ferrochain-graph::hitl` (Decision 1) keeps the trait alongside
+`RiskGatePolicy` and `GraphConfig` where it belongs architecturally. `ActionRisk` is the
+exception: it was relocated to `ferrochain-core` (module `core::action_risk`) because
+`ferrochain-tools` requires it at compile time without a `ferrochain-graph` dependency —
+exactly the dependency-inversion motive that ADR-009 Option 3 establishes. No equivalent
+cross-crate inversion exists for `PreToolCallHook` itself; it has no consumer that requires
+it without already depending on `ferrochain-graph`, so the `ferrochain-core` definitions-only
+placement is not justified for this trait.
 
 Reusing `interrupt()` internally (Decision 4) is the correct choice over a new suspension
 primitive: the existing checkpoint, FIFO delivery, and resume machinery (BC-2.05.001

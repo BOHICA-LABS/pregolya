@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.006
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -12,6 +12,7 @@ changelog:
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
   - "1.4 (F-P110-CENSUS, 2026-07-18): Fix EC-005 E-GRAPH-014 InterruptApprovalTimeout struct — 2-field form `{ tier, deadline_utc }` missing `run_id`. Taxonomy message format `interrupt for run '<run_id>' (tier '<tier>') expired at deadline '<deadline_utc>'` has 3 distinct placeholders; struct must be a SUPERSET of all taxonomy placeholders (gate #33 Step B check 2). Added `run_id: \"<run_id>\"` as first field. TD-VSDD-060 sweep: only one E-GRAPH-014 struct site in this file (EC-005 line ~148); TV-006 uses bare-variant form (no struct fields — not subject to parity check)."
   - "1.5 (F-P170-propagation/burst-272/2026-07-25): Architecture Anchors update — ActionRisk enum source path corrected from ferrochain-graph/src/hitl/action_risk.rs to ferrochain-core/src/action_risk.rs per F-P170-06 architect adjudication (ActionRisk relocates to ferrochain-core as core::action_risk; ferrochain-graph::hitl re-exports it). PreToolCallHook itself stays in ferrochain-graph::hitl per ADR-018 Decision 1."
+  - "1.6 (F-P171a-04+F-P171a-13/burst-273/2026-07-25): (1) F-P171a-04: ActionRisk is #[non_exhaustive]; §Preconditions-3, §Invariants 'closed exhaustive' claim, and VP-HITL-13 all incorrectly stated no-wildcard-arm requirement. CLAUDE.md mandates wildcard arm for all cross-crate #[non_exhaustive] matches. Fixed: PC-3 updated to note #[non_exhaustive] + cross-crate wildcard arm requirement; Invariants updated to #[non_exhaustive] framing + wildcard-arm-fails-closed-to-High policy; VP-HITL-13 updated to verify wildcard arm IS present (compile check). (2) F-P171a-13: Module Traceability row missing ferrochain-core (ActionRisk source per F-P170-06 adjudication). Added: 'ferrochain-core (ActionRisk enum) / ferrochain-graph (RiskGatePolicy, policy eval) / ferrochain-server (resume endpoint)'."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -63,8 +64,11 @@ SOC analyst forcing function: tiered autonomy with human approval before contain
    context: Option<Value> }` and passes it to `interrupt(payload)`.
 2. The graph run has a `CheckpointSaver` attached (BC-2.05.001 precondition).
 3. The `ActionRisk` value is one of the four defined tiers: `ReadOnly`, `Low`, `Medium`,
-   `High`. Any other value is a type error at compile time (the type is an exhaustive
-   enum with no wildcard variant).
+   `High`. `ActionRisk` is `#[non_exhaustive]` — code in `ferrochain-core` (the defining
+   crate) may match it exhaustively, but cross-crate code (e.g., `ferrochain-graph`) MUST
+   include a `_ => {}` wildcard arm; the compiler enforces this at compile time
+   (CLAUDE.md non-exhaustive mandate). The wildcard arm should fail-closed to `High`-tier
+   authorization when an unknown future variant is encountered.
 4. If a `RiskGatePolicy` is configured on the graph (optional), it specifies per-tier
    behavior: `AutoApprove`, `RequireApprover(role: ApproverRole)`, or
    `RequireApprover(role: ApproverRole) + timeout(Duration)`.
@@ -98,8 +102,12 @@ SOC analyst forcing function: tiered autonomy with human approval before contain
 - **DI-003 (HITL FIFO Resume-Value Delivery):** Risk-tiered interrupts are FIFO with
   respect to other interrupts in the same task scratchpad. Tier classification does not
   change delivery order; it only governs who is authorized to deliver the resume value.
-- `ActionRisk` is a closed, exhaustive enum; no runtime tier value outside the four
-  defined variants is possible.
+- `ActionRisk` is `#[non_exhaustive]`; at v1 authoring it has four defined variants
+  (`ReadOnly`, `Low`, `Medium`, `High`). No runtime tier value outside these four variants is
+  possible in the v1 build. Cross-crate matches (e.g., in `ferrochain-graph`) MUST carry a
+  `_ => {}` wildcard arm (CLAUDE.md non-exhaustive mandate); the wildcard should fail-closed
+  to `High`-tier authorization — treating an unknown future variant as requiring the highest
+  approval level is the safe default.
 - A `High`-tier interrupt MUST NOT be auto-approved by any `RiskGatePolicy` unless a
   `SeniorAnalyst`-or-higher role supplies the `Command(resume=...)`. Automated approval
   of `High`-tier actions is a hard policy violation (returns
@@ -179,7 +187,7 @@ distributed clock source or accept ±process-clock-drift tolerances in the timeo
 |-------|-------------|--------|-------|
 | VP-HITL-11 | High-tier interrupt is never auto-approved regardless of RiskGatePolicy config | Unit test (assert Err(InsufficientApproverRole) when policy attempts auto-approve for High) | Phase 1 |
 | VP-HITL-12 | ReadOnly interrupt with AutoApprove policy does not surface to external caller | Integration test (assert no `__interrupt__` emitted in stream) | Phase 1 |
-| VP-HITL-13 | ActionRisk enum is exhaustive; compile-time rejection of unknown variants | Cargo check (exhaustive match in policy evaluation code, no wildcard arm) | Wave 1 CI |
+| VP-HITL-13 | Cross-crate `ActionRisk` matches in `ferrochain-graph` carry `_ => {}` wildcard arm per CLAUDE.md non-exhaustive mandate; wildcard fails closed to `High`-tier authorization | Cargo check (cross-crate match on `ActionRisk` must have wildcard arm — compiler error if absent because `ActionRisk` is `#[non_exhaustive]`; test asserts wildcard arm routes to `High` tier) | Wave 1 CI |
 
 ## Related BCs
 
@@ -219,4 +227,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-graph / ferrochain-server |
+| Module | ferrochain-core (ActionRisk enum — core::action_risk) / ferrochain-graph (RiskGatePolicy, HitlInterruptPayload, policy eval — graph::hitl) / ferrochain-server (POST .../resume endpoint) |

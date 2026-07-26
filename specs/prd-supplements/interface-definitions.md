@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.56"
+version: "2.57"
 status: active
 producer: product-owner
 timestamp: 2026-07-25T00:00:00Z
 phase: 1d
 changelog:
+  - "2.57 (F-P171a-02a+F-P171a-02b+F-P171a-03+date-mono/burst-273/2026-07-25): (1) F-P171a-02a Gate #32 carrier-3: Add §ToolConfig subsection to §First-Party Tools — ToolConfig struct in ferrochain-tools::tools::config; override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError> builder-consuming validator; BashTool risk < Medium → Err(E-TOOLS-007); #[non_exhaustive]; distinct from BashConfig (per-tool impl config). (2) F-P171a-02b lifecycle adjudication: §PreToolCallHook ActionRisk doc-comment — 'BashTool construction time' → 'ToolConfig::override_risk call time'; §First-Party Tools BashTool doc-comment updated to same lifecycle language. (3) F-P171a-03: BashTool canonical annotation corrected ActionRisk::Medium → ActionRisk::High (default declared annotation; Medium is the non-lowerable floor, not the default); BC anchor and doc-comment updated to match. (4) Date-monotonicity (Gate #28 Rule 4 TEMPORAL-NEIGHBOR SWEEP): entry 2.49 date 2026-07-22 → 2026-07-23 (burst-240 ran on 2026-07-23)."
   - "2.56 (sibling-sweep-ADR-016/burst-272/2026-07-25): §LcSerializable and Reviver Surface BC anchor footer — corrected three ADR-016 Decision mis-attributions found during mandatory sibling sweep (TD-VSDD-060). (1) Decision 1 description expanded from bare '(LcSerializable trait)' to '(crate placement — ferrochain-core module, no new crate)'; LcSerializable trait definition is in Decision 2, not Decision 1. (2) Decision 2 description corrected from '(Serialized enum)' to '(LcSerializable trait, Serialized enum, LcEntry; inventory-backed OnceLock type registry)'; Decision 2 is the registry/inventory Decision covering all three types plus OnceLock initialization. (3) Decision 4 description corrected from '(inventory crate 0.3.24, dtolnay; OnceLock initialization)' to '(OLD_CORE_NAMESPACES_MAPPING legacy namespace remapping)'; inventory/OnceLock is Decision 2; version pin '0.3.24' removed (TD-VSDD-091). (4) Decision 5 removed from citation; this section covers crate placement, trait/enum/registry definition, secrets/allowlist safety, and legacy remapping (Decisions 1–4) but contains no Python checkpoint import compatibility surface — Decision 5's domain. (5) Decision 3 description expanded to include Reviver allowlist containment and E-SRLZ-002 per §Security Invariant Properties 1–5, which is the correct Decision for those behaviors (previously mis-attributed to Decision 5)."
   - "2.55 (F-P170-17+F-P170-propagation/burst-272/2026-07-25): (1) F-P170-17 MED: §Prompt Templates BC anchor footer — split Decision 3 and Decision 4 attributions. Before: 'Decision 3 (injection_guard fail-closed semantics), Decision 4 (TrustLevel enum — engine-neutral; both f-string and jinja2 raise E-TMPL-003 on undefined variable)'. After: 'Decision 3 (injection_guard fail-closed semantics; TrustLevel enum), Decision 4 (engine-neutral E-TMPL-003 — both f-string and jinja2 raise on undefined variable)'. TrustLevel is defined in ADR-015 Decision 3; E-TMPL-003 engine-neutral clause is Decision 4. (2) F-P170-propagation: §PreToolCallHook — ActionRisk enum crate/module corrected to ferrochain-core: core::action_risk per F-P170-06 architect adjudication. Source line updated to cite ferrochain-core (ActionRisk) + ferrochain-graph::hitl (PreToolCallHook + re-export). Code block split: ActionRisk in ferrochain-core block, PreToolCallHook/ToolCallPreview/PreToolDecision in ferrochain-graph block with re-export note."
   - "2.54 (F-P161-01/FIX-BURST-262/2026-07-25): Three BC-2.10.003 version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P161-01). All three sites were NORMATIVE authority citations in §OnCeiling and §BudgetInfo. (1) OnCeiling enum doc comment authority line: 'BC-2.10.003 v1.2 (Halt + Summarize variants for Deny)' → 'BC-2.10.003 (Halt + Summarize variants for Deny)'. (2) BudgetInfo RESOLVED block Authority line: 'BC-2.10.003 v1.2 PC5' → 'BC-2.10.003 PC5'. (3) BC anchor footer BudgetPolicy block: 'BC-2.10.003 v1.2 (OnCeiling Halt + Summarize variants; PC5/INV/TV-007 BudgetInfo shape and arithmetic)' → 'BC-2.10.003 (OnCeiling Halt + Summarize variants; PC5/INV/TV-007 BudgetInfo shape and arithmetic)'."
@@ -14,7 +15,7 @@ changelog:
   - "2.52 (F-P149-02/burst-250/2026-07-24): Two live-body version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P149-02). (1) §GuardedDocuments rag_ingress doc comment: 'ADR-014 v1.5' → 'ADR-014 Decision 6 §GuardedDocuments' (severity-bifurcated Fail behavior is defined in Decision 6 rag_ingress code). (2) similarity_search_with_filter default body comment: 'ADR-014 v1.5 F-P131-07 adjudication' → 'ADR-014 Decision 2 §Metadata filter surface F-P131-07 adjudication' (F-P131-07 adjudication is embedded in Decision 2 §Metadata filter surface subsection)."
   - "2.51 (F-P145-01+F-P145-04, burst-246, 2026-07-23): (1) F-P145-01: §First-Party Tools BashTool stub — default max_duration corrected 120s→30s to match canon (BC-2.23.005 H1/Description/PC1/EC-002/TV-004/DI-015 chain, ADR-020 Decision 2, ubiquitous-language-core). TD-VSDD-060 sweep: rg 'max_duration|120s|120 s' .factory/specs/ — sole 120s live-body site was this line; all other max_duration references already read 30s/30 seconds; zero further residue. (2) F-P145-04: §First-Party Tools opening sentence — over-generalization 'All tools use PathGuard' reworded to distinguish the five file-access tools (PathGuard-confined) from BashTool (ferrochain-sandbox-confined per BC-2.23.005); 'All tools implement the Tool trait' clause preserved."
   - "2.50 (F-P142-01+F-P142-03, burst-242, 2026-07-23): (1) F-P142-01: §First-Party Tools — three CreateFileTool phantom sites replaced with ListDirTool per BC-2.23.004 H1: BC anchor BC-2.23.004 label, PathGuard shared-list doc comment, and tool stub comment+description. (2) F-P142-03: Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form at 6 sites (L835 ToolApprovalResolved emission comment, L881 causal ordering diagram, L921 BC-2.06.005 StreamEvent BC anchor, L931 §PreToolCallHook BC anchor BC-2.05.004 citation, L969 PendingHumanApproval doc comment, L1631 /stream endpoint row). Zero Command:: enum-variant and CreateFileTool residue remains."
-  - "2.49 (burst-240/F-P140-04/2026-07-22): Blanket omission annotation updated — E-MCP-006 McpContentUnsupported (VAL/Never, minted burst-240) added to E-MCP-* namespace (5→6 codes). E-MCP-006 confirmed library-layer only: raised by _convert_mcp_content_to_block in ferrochain-mcp when a CallToolResult contains an unsupported content block type (e.g., AudioContent); surfaces as library Err(FerrochainError) return, never as a direct HTTP terminal response in v1 (propagates embedded in Run.error if it reaches ferrochain-server). Disposition census 107→108: 43 HTTP + 17 individual + 48 blanket. Blanket group breakdown: E-MCP-* 6 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 48."
+  - "2.49 (burst-240/F-P140-04/2026-07-23): Blanket omission annotation updated — E-MCP-006 McpContentUnsupported (VAL/Never, minted burst-240) added to E-MCP-* namespace (5→6 codes). E-MCP-006 confirmed library-layer only: raised by _convert_mcp_content_to_block in ferrochain-mcp when a CallToolResult contains an unsupported content block type (e.g., AudioContent); surfaces as library Err(FerrochainError) return, never as a direct HTTP terminal response in v1 (propagates embedded in Run.error if it reaches ferrochain-server). Disposition census 107→108: 43 HTTP + 17 individual + 48 blanket. Blanket group breakdown: E-MCP-* 6 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 48."
   - "2.48 (burst-236/F-P136/2026-07-23): Fix burst 236 placement-marker corrections (five findings + sweep). (1) F-P136-01: §Retriever Trait/GuardedDocuments placement marker `core::guardrail` → `core::retriever` (ADR-014 Decision 6; GuardedDocuments struct and rag_ingress are in core::retriever, not core::guardrail); §-source line drops `, core::guardrail`. (2) F-P136-02: §PreToolCallHook three co-located fixes per ADR-018 Decision 1 + BC-2.05.007: (a) module `graph::approval` → `graph::hitl` in both §-source and code-block marker; (b) trait method `pre_tool_dispatch` → `pre_invoke`; (c) restore dropped second parameter `run_ctx: &RunContext`. (3) F-P136-03: §Compaction type-definition marker `ferrochain-graph: graph::budget` → `ferrochain-core: core::budget` for CompactionTrigger/ConversationSnapshot/CompactionSummary/CompactionPolicy (ADR-019 Decision 1); §-source extended to note execution engine in graph::budget. (4) F-P136-04: StreamEvent::CompactionEvent.tokens_remaining_after type `u64` → `Option<i64>` (source is RunContext.budget_info.tokens_remaining: Option<i64>; three-site reconciliation with BC-2.06.006 v1.2 and BC-2.10.006 v1.3). (5) F-P136-05: §PreToolCallHook BC anchors re-attributed — BC-2.05.004 (Command(resume=value) API) removed from trait/ToolCallPreview/PreToolDecision/fail-closed description; BC-2.05.007 is the authoritative contract; BC-2.05.004 retained only for Command::Resume(PreToolDecision) resume-API role. Sweep also corrects PreToolDecision variant shapes to ADR-018 Decision 1 / BC-2.05.007: Deny { reason: String }, Edit { modified_args: serde_json::Value }, PendingHumanApproval { prompt: Option<String> }."
   - "2.47 (burst-233/F-P133-03/2026-07-22): E-TOOLS-* blanket annotation updated — 7→9 codes (+E-TOOLS-008 FileIoError TOOL/Maybe, +E-TOOLS-009 InvalidRegexPattern VAL/Never, minted burst-233). Disposition census 105→107 (43 HTTP + 17 individual + 47 blanket). Blanket group breakdown: E-MCP-* 5 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 47."
   - "2.46 (D23/2026-07-22): Add D23 API surfaces. (1) StreamEvent enum 12→15 variants: +ToolApprovalRequest (event 13, PendingHumanApproval interrupt signal per ADR-018 Decision 5), +ToolApprovalResolved (event 14, resume decision applied), +CompactionEvent (event 15, post-compaction durable write per ADR-019 Decision 4) — causal ordering diagram updated. BC-2.06.004/005/006 anchor refs added to §StreamEvent. (2) §PreToolCallHook section added: ActionRisk enum (4 tiers: ReadOnly/Low/Medium/High), ToolCallPreview struct (tool_name, tool_args, action_risk: Option<ActionRisk>), PreToolDecision enum (4 variants: Approve/Deny/Edit/PendingHumanApproval), PreToolCallHook trait; source ADR-018 Decision 2–6. (3) §Compaction section added: CompactionTrigger enum (4 variants: Disabled/OnWatermark/OnMessageCount/OnTokenCount), ConversationSnapshot struct, CompactionSummary struct, CompactionPolicy trait; source ADR-019 Decision 1–5. (4) §First-Party Tools section added: PathGuard struct (E-TOOLS-001 sandbox confinement); ReadFileTool/WriteFileTool/EditFileTool/CreateFileTool/BashTool/GrepTool comment anchors. (5) /stream endpoint row: added tool_approval_request, tool_approval_resolved, compaction_event event mentions (D23/ADR-018/ADR-019). (6) Blanket omission annotation: E-TOOLS-* 7 new codes added; census 98→105 (43 HTTP + 17 individual + 45 blanket)."
@@ -944,9 +945,10 @@ BC anchor: BC-2.05.007 (PreToolCallHook trait — pre_invoke contract; ToolCallP
 // type-in-core precedent). ferrochain-graph::hitl re-exports ActionRisk for graph-layer consumers.
 
 /// Risk tier declared by a tool via the `action_risk` attribute.
-/// BashTool enforces a floor of `Medium`; `ReadOnly` and `Low` are
-/// rejected at BashTool construction time (E-TOOLS-007).
-/// BC anchor: BC-2.05.006 (risk-tiered HITL interrupt classification), BC-2.23.005 PC3 (BashTool risk floor), BC-2.08.010 PC1 (action_risk() method).
+/// BashTool enforces a non-lowerable floor of `Medium`; `ReadOnly` and `Low` are
+/// rejected at `ToolConfig::override_risk` call time (E-TOOLS-007 — the builder-consuming
+/// validator returns Err immediately; the registry never receives an invalid ToolConfig).
+/// BC anchor: BC-2.05.006 (risk-tiered HITL interrupt classification), BC-2.23.005 PC-3 (BashTool risk floor via ToolConfig::override_risk), BC-2.08.010 PC-1 (action_risk() method — ADR-008 Decision 2 emitted-path).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum ActionRisk { ReadOnly, Low, Medium, High }
@@ -1078,7 +1080,7 @@ pub trait CompactionPolicy: Send + Sync {
 
 **Source:** ADR-020 (ferrochain-tools crate); ferrochain-tools crate. All file-access tools (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, GrepTool) use `PathGuard` for workspace confinement (E-TOOLS-001 on escape); BashTool is confined via the ferrochain-sandbox backend (BC-2.23.005). All tools implement the `Tool` trait via `#[ferrochain::tool]` proc-macro.
 
-BC anchor: BC-2.23.001 (ReadFileTool), BC-2.23.002 (WriteFileTool), BC-2.23.003 (EditFileTool), BC-2.23.004 (ListDirTool), BC-2.23.005 (BashTool — ActionRisk::Medium floor, EC-005 timeout, EC-006 output truncation), BC-2.23.006 (GrepTool — match cap, E-TOOLS-006 capped flag).
+BC anchor: BC-2.23.001 (ReadFileTool), BC-2.23.002 (WriteFileTool), BC-2.23.003 (EditFileTool), BC-2.23.004 (ListDirTool), BC-2.23.005 (BashTool — ActionRisk::High default annotation; non-lowerable Medium floor via ToolConfig::override_risk; EC-005 timeout; EC-006 output truncation), BC-2.23.006 (GrepTool — match cap, E-TOOLS-006 capped flag), ToolConfig (BC-2.23.005 PC-3, BC-2.08.010 PC-1).
 
 ```rust
 // ferrochain-tools crate
@@ -1092,6 +1094,37 @@ impl PathGuard {
     pub fn new(root: impl Into<PathBuf>) -> Result<Self, FerrochainError>;
     /// Returns Err(E-TOOLS-001) if resolved path escapes root.
     pub fn check(&self, path: &Path) -> Result<PathBuf, FerrochainError>;
+}
+
+// ferrochain-tools: tools::config (Gate #32 carrier-3 — crate placement: ADR-020 Decision 3)
+
+/// Shared per-tool framework configuration.
+/// DISTINCT from per-tool implementation config (e.g., `BashConfig` holds
+/// `max_output_bytes`/`max_duration` for BashTool only).
+/// `ToolConfig` is the framework-level config that applies to all first-party tools:
+/// risk-tier override and future cross-cutting framework settings.
+///
+/// BC anchor: BC-2.23.005 PC-3 (BashTool risk floor via override_risk),
+/// BC-2.08.010 PC-1 (action_risk attribute emits fully-qualified ActionRisk path).
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub struct ToolConfig { /* framework-internal fields */ }
+
+impl ToolConfig {
+    /// Builder-consuming validator for overriding the tool's declared risk tier.
+    ///
+    /// Takes `self` by value — validation occurs immediately at call time.
+    /// The caller receives `Err` directly from this method; the registry only ever
+    /// receives a successfully-built `ToolConfig` (it never performs risk validation itself).
+    ///
+    /// # Errors (BashTool)
+    /// `Err(E-TOOLS-007 BashRiskTierViolation)` when `risk < ActionRisk::Medium`
+    /// (i.e., `ActionRisk::ReadOnly` or `ActionRisk::Low`). The `Medium` floor is
+    /// non-lowerable — this is a framework safety invariant provable by Kani (VP-013):
+    /// `risk < ActionRisk::Medium → Err` with no code path to `Ok`.
+    ///
+    /// BC anchor: BC-2.23.005 PC-3 (risk floor check); VP-013 (Kani P1 seed: exhaustive proof).
+    pub fn override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>;
 }
 
 // ReadFileTool — BC-2.23.001
@@ -1112,11 +1145,12 @@ impl PathGuard {
 // #[ferrochain::tool(name = "list_dir", description = "...")]
 
 /// BashTool — BC-2.23.005.
-/// action_risk floor: ActionRisk::Medium — construction fails with E-TOOLS-007
-/// if action_risk < Medium is requested.
+/// action_risk default annotation: ActionRisk::High (declared via #[ferrochain::tool(action_risk = ActionRisk::High)]).
+/// Non-lowerable floor: ActionRisk::Medium — ToolConfig::override_risk returns Err(E-TOOLS-007)
+/// if risk < Medium is requested at override_risk call time (see ToolConfig above).
 /// Timeout: configurable max_duration (default 30s); E-TOOLS-004 on exceed.
 /// Output cap: stdout+stderr combined truncated to max_output_bytes; BashOutput.truncated = true (E-TOOLS-005 payload field).
-// #[ferrochain::tool(name = "bash", description = "...", action_risk = ActionRisk::Medium)]
+// #[ferrochain::tool(name = "bash", description = "...", action_risk = ActionRisk::High)]
 
 /// GrepTool — BC-2.23.006.
 /// Match cap: max_matches (default 100); GrepResult.capped = true when exceeded (E-TOOLS-006 payload field).

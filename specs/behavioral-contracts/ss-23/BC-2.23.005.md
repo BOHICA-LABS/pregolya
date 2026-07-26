@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.005
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ changelog:
   - "1.5 (burst-247/F-P146-02+OBS-naming/2026-07-24): (1) H1 title — remove payload flag E-TOOLS-005 from title error-code enumeration per SS-23 title policy (Ok-path payload flags excluded from raised-code enumeration). Before: 'E-TOOLS-004/005/007'. After: 'E-TOOLS-004/007'. E-TOOLS-005 is retained in the body as a payload annotation (BashOutput.truncated) — it is not removed from the contract, only from the raised-code title list. (2) PC-2 body — align truncation flag name from informal 'BashOutputTruncated'-style to canonical field-path notation 'BashOutput.truncated' per OBS naming-anchor (error-taxonomy v1.37 adds explicit canonical-field-path marker for E-TOOLS-005). TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
   - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-3 + PC-4); Category::TIMEOUT → Category::Timeout (PC-3), Category::VAL → Category::Val (PC-4)."
   - "1.7 (F-P170-16/burst-272/2026-07-25): Adjudication — canonical method name is ToolConfig::override_risk (ADR-020 Decision 3 introduction form; majority usage in PC3/ECs/TVs; VP-013 capabilities-p1-p2.md). Fix three set_risk sites: (1) §Invariants 'Risk floor' paragraph — two occurrences BashTool::set_risk(ReadOnly) and BashTool::set_risk(Low) → ToolConfig::override_risk(ActionRisk::ReadOnly) and ToolConfig::override_risk(ActionRisk::Low). (2) §Verification Properties VP-013 row — same fix. set_risk appeared only in prose/invariant/anchor sentences; ToolConfig::override_risk is the architectural name per ADR-020 Decision 3."
+  - "1.8 (F-P171a-02b/burst-273/2026-07-25): Lifecycle adjudication — ToolConfig::override_risk is a builder-consuming validator (signature: override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>); it returns Err immediately at call time; the registry never receives an invalid ToolConfig. Deliberate spec amendment per CLAUDE.md precedence rule 1 (BC supersedes for contract semantics). (1) PC-4 header: 'Risk floor violation at startup' → 'Risk floor violation at ToolConfig::override_risk call time'. (2) PC-4 body: 'At ToolRegistry::register time' → 'At ToolConfig::override_risk call time'. (3) EC-004 Description: 'at registry time' → 'at ToolConfig::override_risk call time'. TD-VSDD-060 sibling sweep: VP-013.md §BC Traceability EC-004/EC-005 and §Proof Harness cite 'registry time' and 'registration logic' — routed to architect for VP-013 body update (architect scope)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-037
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -99,11 +100,11 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
    message: "BashTimeout: command exceeded max_duration of <seconds>s" })`. This raise-condition
    directly enacts DI-015 (Subprocess Execution Timeout): exceed `max_duration` → terminate
    process → structured `E-TOOLS-004` error.
-4. **Risk floor violation at startup:** `ToolConfig::override_risk(ActionRisk::ReadOnly)` or
-   `override_risk(ActionRisk::Low)` called on a `BashTool` instance. At `ToolRegistry::register`
-   time the framework returns `Err(FerrochainError { component: Component::Tools, category: Category::Val,
+4. **Risk floor violation at `ToolConfig::override_risk` call time:** `ToolConfig::override_risk(ActionRisk::ReadOnly)` or
+   `override_risk(ActionRisk::Low)` called on a `BashTool` instance. At `ToolConfig::override_risk`
+   call time the builder-consuming validator returns `Err(FerrochainError { component: Component::Tools, category: Category::Val,
    code: "E-TOOLS-007", message: "BashRiskTierViolation: BashTool risk tier cannot be lowered
-   below Medium; attempted: '<tier>'" })`. The graph does not start.
+   below Medium; attempted: '<tier>'" })`. The registry never receives an invalid ToolConfig; the graph does not start.
 5. **Sandbox policy violation:** The command attempts an operation disallowed by the sandbox
    policy (ferrochain-sandbox BC-2.13.002). The sandbox returns an error before the command
    executes; this propagates as `Err(FerrochainError)` from the sandbox namespace.
@@ -141,7 +142,7 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 | EC-001 | Command produces 300 KiB of output (exceeds 256 KiB default) | `ToolOutput::Json({ ..., "truncated": true })` — first 262,144 bytes returned; command allowed to complete |
 | EC-002 | Command runs for 31 seconds (exceeds 30s default) | `Err(E-TOOLS-004 BashTimeout: command exceeded max_duration of 30s)` — process killed |
 | EC-003 | Command exits with non-zero exit code (e.g., `exit 1`) | `ToolOutput::Json({ "exit_code": 1, "truncated": false })` — Ok, not Err; caller handles |
-| EC-004 | `ToolConfig::override_risk(ActionRisk::ReadOnly)` on BashTool at registry time | `Err(E-TOOLS-007 BashRiskTierViolation: attempted: 'ReadOnly')` — graph does not start |
+| EC-004 | `ToolConfig::override_risk(ActionRisk::ReadOnly)` on BashTool at `ToolConfig::override_risk` call time | `Err(E-TOOLS-007 BashRiskTierViolation: attempted: 'ReadOnly')` — registry never sees the invalid config; graph does not start |
 | EC-005 | `ToolConfig::override_risk(ActionRisk::Medium)` on BashTool | Accepted — Medium is the floor; graph starts normally |
 | EC-006 | Command output is exactly 262,144 bytes | `ToolOutput::Json({ ..., "truncated": false })` — at limit, not over; no truncation |
 | EC-007 | Sandbox policy blocks the command before execution | `Err(FerrochainError)` — sandbox namespace error, NOT E-TOOLS-004 or E-TOOLS-005 |

@@ -4967,3 +4967,67 @@ DEFECT-5 (root cause): version-pin allowlist re-keyed path::pin-text; line-shift
 **Dim-7:** Finding trajectory tail →1→1→20→19. 19 findings (relocation-residue class: burst-272 token-based sweeps invisible to non-symbol prose). Novelty HIGH. Lessons L-036..L-040 codified.
 
 ---
+
+## Burst 269 — P1D-167 adversary + fix-burst (archived from Current Phase Steps by burst-273)
+
+**Date:** 2026-07-25
+**Agents:** product-owner + architect + state-manager
+**Summary:** P1D-167 adversary + fix-burst COMPLETE (5 items 0C/2H/2M/1OBS; F-P167-01..05 all closed; Category::VALIDATION purge ×11 sites/6 files [BC-2.18.001 v1.2/BC-2.18.005 v1.2/BC-2.19.006 v1.3/BC-2.21.003 v1.5/BC-2.22.001 v1.3/ADR-015 v1.6/VP-008 v1.4]; ADR-016 Decision-7 re-anchor [BC-2.19.006]; ADR-006 rev-5; VP-013 v1.5/VP-002 v1.4 [Source Contract syncs]; ADR-010 v1.8 [VAL SCREAMING_CASE canon]; BC-INDEX v3.16; VP-013 allowlist :259→:260; hash sweep specs/174+planning/6+cycles/54 TOTAL STALE=0); 0/3. NEXT was P1D-168.
+
+**F-P167-01 HIGH (PO+architect, closed):** Category::VALIDATION purge — 11 sites across 6 files: BC-2.18.001 v1.1→v1.2, BC-2.18.005 v1.1→v1.2, BC-2.21.003 v1.4→v1.5, BC-2.22.001 v1.2→v1.3, ADR-015 v1.5→v1.6, VP-008 v1.3→v1.4. Category::VALIDATION is not a member of the 12-category enum; VAL is canonical per ADR-010 Decision 23.
+**F-P167-02 HIGH (PO, closed):** BC-2.19.006 v1.2→v1.3 — 'ADR-016 Decision 7' dangling anchor re-anchored to 'Decision 3 Property 4' ×2 sites.
+**F-P167-03 MED (architect, closed):** ADR-006 rev-4→rev-5 — forward-amendment note: StreamEvent variant count 12→15 via ADR-018/019 (GuardrailDecision+2 D23 variants); BC-2.06.001 canonical 15-variant authority.
+**F-P167-04 MED (architect, closed):** VP-013 v1.4→v1.5 — §Source Contract title synced; all-13-VP audit found VP-002 v1.3→v1.4 title drift fixed.
+**F-P167-05 OBS (architect, closed):** ADR-010 v1.7→v1.8 — Category::VAL SCREAMING_CASE canon documented; VP-013 Category::Val outlier ×2 fixed.
+BC-INDEX v3.15→v3.16. Hash sweep: TOTAL STALE=0. Burst 269.
+
+---
+
+## Burst 273 — P1D-171 Fix-Burst COMPLETE (19 findings all closed)
+
+**Date:** 2026-07-25
+**Agents:** architect (Wave A+C) + product-owner (Wave B+C) + business-analyst (Wave B) + devops-engineer (Wave A+B+C) + state-manager
+**Findings closed:** F-P171a-01..19 (0C/5H/8M/4L/2OBS) — all CLOSED
+
+### Summary
+
+All 19 findings from adversary pass P1D-171 (sub-pass P1D-171a) closed in three routing waves plus validator #7 discovery sweep. Key adjudications: `ToolConfig` defined (home ferrochain-tools, module tools::config, MEDIUM criticality), E-TOOLS-007 lifecycle = call time, ActionRisk `#[non_exhaustive]` wildcard-arm mandate, ADR-008 Decision 2 minted, VP-013 harness pointer replaces divergent 2-harness sketch, gate #28 Rule 5 ADR branch added, definitions-only carve-out written into gate #32 step 4, Purity Rule 3 corrected. Streak remains 0/3. NEXT: adversary P1D-172.
+
+### Files touched (architect)
+
+`ADR-008` v1.0→v1.1, `ADR-018` v1.6→v1.7, `api-surface.md` v1.11→v1.12, `dependency-graph.md` v1.4→v1.5, `module-decomposition.md` v1.28→v1.29 (+tools::config row), `purity-boundary-map.md` v1.19→v1.20 (Rule 3 corrected + tools::config Pure Core row + intro counts 53→56), `verification-architecture.md` v2.10→v2.11 (harness pointer + 2 de-pins), `VP-013.md` v1.9→v1.11 (doc-comment + feasibility de-pin + 5 lifecycle sites), `module-criticality.md` v1.7→v1.8 (43→44; MEDIUM 12→13), `verification-coverage-matrix.md` v2.3→v2.4 (43→44 rows)
+
+### Files touched (product-owner)
+
+`BC-2.23.005` v1.7→v1.8, `BC-2.05.006` v1.5→v1.6, `BC-2.08.010` v1.2→v1.3, `BC-2.10.006` v1.6→v1.7, `interface-definitions.md` v2.56→v2.57, `error-taxonomy.md` v1.40→v1.42, `bc-authoring-plan.md` v2.52→v2.53
+
+### Files touched (business-analyst)
+
+`entities-graph.md` v1.11→v1.12, `capabilities-p1-p2.md` v1.15→v1.16, `events.md` v1.11→v1.12
+
+### Files touched (devops-engineer)
+
+New: `hooks/verify-changelog-date-monotonicity.sh` (validator #7); updated: `hooks/version-pin-allowlist.txt` (25→24 entries; dead entry removed; header reconciled to TD-VSDD-091 current policy)
+
+### Perimeter deltas
+
+- Module universe: 55 → 56 (tools::config added to ferrochain-tools)
+- Purity-boundary-map: 80 → 81 rows (Pure Core 32→33; Effectful Shell 36; Boundary 12)
+- Module criticality: 43 → 44 (MEDIUM 12→13; CRITICAL 11 / HIGH 18 / LOW 2)
+- Verification-coverage-matrix: 43 → 44 rows
+- Blocking validators: 6 → 7 (validator #7 verify-changelog-date-monotonicity.sh)
+- Allowlist: 25 → 24 entries
+- Validator #7 first-run discovery: 7 date-inversion violations found and corrected (5 previously unknown)
+
+### Open item recorded
+
+ADR-010's `timestamp` diverges from gate #28 Rule 5 ADR convention (timestamp = original acceptance date, frozen). Architect follow-up required.
+
+### Date-monotonicity corrections (validator #7 first catch)
+
+All corrected to 2026-07-23: `interface-definitions.md` entry 2.49, `error-taxonomy.md` entry 1.34, `BC-2.10.006` entry 1.4, `entities-graph.md` v1.9, `capabilities-p1-p2.md` v1.10, `events.md` v1.9. Plus this burst: `BC-INDEX.md` entry 2.6. Corroborating carrier: `api-surface.md` v1.9 `burst-242/2026-07-23`.
+
+**Dim-5:** Counter 0/3 (P1D-171 NOT CLEAN strict, 19 items all CLOSED by fix-burst 273). Next: adversary P1D-172 with four mandatory directed axes.
+**Dim-7:** Trajectory tail →1→20→19. Burst-273 fix of 19 items. Lessons L-041..L-045 codified. BC-INDEX v3.20.
+
+---

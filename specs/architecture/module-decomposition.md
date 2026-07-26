@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.28"
+version: "1.29"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "44938a8"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.29 (FIX-BURST-273/F-P171a-02/2026-07-25): Add `tools::config` module row to ferrochain-tools (SS-23) — ToolConfig adjudication: shared per-tool framework configuration type; `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>` builder-consuming validator enforces per-tool risk-floor rules (E-TOOLS-007 on below-floor tier for BashTool); `#[non_exhaustive]`; construction-time validation per VP-013 postcondition (VP-013 §Source Contract PC-4 wins over BC-2.23.005 §PC-4 'register time' on lifecycle — VP-013 postcondition states `override_risk` returns `Err(E-TOOLS-007)`; BC §PC-4 needs PO correction to align); zero I/O, no async (ADR-020 Decision 3 / BC-2.23.005). Module universe 55→56 (+tools::config MEDIUM row)."
   - "1.28 (F-P170-16/burst-272/2026-07-25): Fix retired symbol name in VP-013 anchor paragraph — `BashTool::set_risk(ReadOnly)` and `set_risk(Low)` → `ToolConfig::override_risk(ActionRisk::ReadOnly)` and `ToolConfig::override_risk(ActionRisk::Low)` on a `BashTool` instance, per ADR-020 Decision 3 canonical form."
   - "1.27 (FIX-BURST-272/F-P170-06/2026-07-25): ActionRisk dependency adjudication propagation. (a) ferrochain-tools description: 'ferrochain-graph::hitl::ActionRisk' → 'ferrochain-core::ActionRisk (core::action_risk)'. (b) ferrochain-tools ADR anchor dep list: 'ferrochain-sandbox/core/graph/macros' → 'ferrochain-sandbox/core/macros' (ferrochain-graph is not a compile-time dep; ActionRisk now sourced from ferrochain-core). (c) Add core::action_risk definitions-only note to ferrochain-core D21 additions section, following core::guardrail precedent."
   - "1.26 (burst-264/F-P164-01/2026-07-25): Adjudicate canonical module name for SS-12 cron subsystem — server::cron is the canonical Rust module name (two authoritative architecture sources: module-decomp + purity-boundary-map; one BC-2.12.004 Architecture Anchors outlier used filesystem path `src/scheduler/` implying server::scheduler). Extend server::cron row description to cite canonical filesystem path `ferrochain-server/src/cron/`, locking out the drift-inducing `src/scheduler/` form. PO-owned downstream fixes listed in burst-264 report: BC-2.12.004 line 172 path and observability.md Module column."
@@ -395,6 +396,7 @@ Crate #21. **D23 item 5 / Wave 1.**
 
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
+| `tools::config` | `ToolConfig` — shared per-tool framework configuration; `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>` builder-consuming validator that enforces per-tool risk-floor rules (E-TOOLS-007 on below-floor tier for BashTool); `#[non_exhaustive]`; zero I/O, no async; construction-time validation per VP-013 §Source Contract (ADR-020 Decision 3 / BC-2.23.005 / SS-23) | MEDIUM | SS-23 |
 | `tools::fs` | `ReadFileTool`, `WriteFileTool`, `EditFileTool`, `ListDirTool` — all path-guarded via `sandbox::path_guard`; `ReadFileTool` enforces `max_bytes` limit (default 1 MiB; E-TOOLS-002 on excess); `EditFileTool` exact-string replace (E-TOOLS-003 on old_string not found); opt-in fuzzy fallback via `EditConfig::fuzzy_threshold` with `similar` crate; `WriteFileTool`/`EditFileTool` default `ActionRisk::High`; `ReadFileTool`/`ListDirTool` default `ActionRisk::ReadOnly` (ADR-020 / SS-23) | MEDIUM | SS-23 |
 | `tools::shell` | `BashTool` — subprocess execution via ferrochain-sandbox backend (WASM or container); stdout/stderr/exit-code capture in `BashOutput`; `max_output_bytes` truncation with `BashOutput::truncated: bool` (E-TOOLS-005 advisory); 30s timeout default (E-TOOLS-004 on timeout); default `ActionRisk::High`; minimum risk floor `ActionRisk::Medium` — configuration error if caller attempts `ReadOnly` or `Low` (E-TOOLS-007) (ADR-020 / SS-23) | HIGH | SS-23 |
 | `tools::search` | `GrepTool` — in-process regex search via `regex` crate; path-guarded directory traversal via `sandbox::path_guard`; `max_results` cap (E-TOOLS-006 advisory); default `ActionRisk::ReadOnly`; accepts `{pattern, path, recursive, case_insensitive, max_results}` (ADR-020 / SS-23) | MEDIUM | SS-23 |

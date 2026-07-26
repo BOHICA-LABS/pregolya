@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.52"
+version: "2.53"
 status: active
 producer: product-owner
 total_standing_gates: 36
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.53 (F-P171a-08+F-P171a-16+F-P171a-17/burst-273/2026-07-25): Three process-gap findings closed. (1) F-P171a-08 MED: Gate #32 step 4 — add definitions-only carve-out: modules hosting ONLY type/trait definitions with no execution logic are exempt from the arch-registry criticality table requirement (ADR-009 Option 3 precedent); five established exempt cases listed (core::context_mutation, core::write_guard, core::guardrail, memory::skills, core::action_risk); tools::config is NOT exempt (has validation logic). Exempt modules must appear in purity-boundary-map.md §Pure Core and module-decomposition.md definitions note. (2) F-P171a-16 LOW: §Authoring Guidelines VP-NNN candidate label adjudication documented — 'VP-NNN candidate' is acceptable PO/BA shorthand for a seeded VP that has not yet received a permanent VP-INDEX entry; it signals intent to the architect without implying the VP is assigned or active. (3) F-P171a-17 LOW: Gate #28 Rule 5 FRONTMATTER-CURRENCY — add ADR branch: ADR document timestamp:/date: fields = original decision date (frozen at first acceptance); currency tracked via version: + changelog; amendment does not update the original decision date."
   - "2.52 (F-P170-08/F-P170-13/F-P170-14/F-P170-15/burst-272/2026-07-25): Four process-gap findings closed. (1) F-P170-08 HIGH: Gate #25 Part B 'ALL FOUR' → 'ALL THREE' — prd-supplements/module-criticality.md (PO registry) is superseded/frozen; removed from live sibling set; added explicit frozen/do-not-sync note for item 5; corresponding Gate #32 step 5 restated as frozen. Gate #32 step 5 now reads: 'status: superseded — DO NOT SYNC; any new ADR module addition need only appear in the three live documents.' Never-update-all-four clause updated to never-update-all-three. (2) F-P170-13 MED: Gate #32 step 4 wrong path '.factory/specs/architecture/module-criticality.md' → '.factory/specs/module-criticality.md' (only one instance in whole document — confirmed by grep). (3) F-P170-14 MED: Gate #25 Part B census tier-summary row check de-pinned — removed hardcoded 'Example correct value: 9/12/10/2=33' (pre-D21/D23 stale value); replaced with instruction to recompute from arch-registry §Classification Summary. Historical motivating-instance text (OBS-P37-1) preserved untouched. (4) F-P170-15 MED: Gate #25 Part C awk census command corrected from '{print $2, $4}' to '{print $2, $3}' — table header 'Module | Crate | SS | Tier | VP | Kill Rate | Phase Gate' puts Crate at $3 not $4; previous command printed (Module, SS) not (Module, Crate), causing guaranteed false mismatches on every module row."
   - "2.51 (F-P163-01/FIX-BURST-265/2026-07-25): Gate #27 ARCH-ANCHOR CRATE-RESOLUTION CENSUS updated for 21-crate roster (closes F-P163-01 [process-gap, HIGH]). (1) Rule 1 label: 'ADR-007 18-crate roster (+xtask)' → 'ARCH-INDEX §Canonical Crate Roster (21 published crates + xtask)' — ARCH-INDEX is the authoritative living source of truth, not ADR-007 (which documents the original 18-crate topology). (2) Embedded roster block relabeled 'ARCH-INDEX §Canonical Crate Roster (source of truth — 21 published crates)'; three new crates appended: ferrochain-prompts (D21/ADR-015), ferrochain-vectorstores (D21/ADR-014), ferrochain-tools (D23/ADR-020); disambiguation note added (ADR-007 is original 18; ARCH-INDEX is SoT). (3) Three ownership rules added: prompts::template/chat_template/few_shot/injection_guard → ferrochain-prompts (SS-18); vectorstores::store/retriever/memory/similarity/mmr → ferrochain-vectorstores (SS-20/SS-21); tools::fs/shell/search → ferrochain-tools (SS-23). (4) Census command prose: '18-crate roster' → '21-crate roster'. Sanity-check results: BC-2.21.003 (vectorstores::similarity) PASS rule 1 (ferrochain-vectorstores ∈ 21-crate roster) + PASS rule 2 (similarity owned by ferrochain-vectorstores per module-decomp SS-21); SS-18 BC (BC-2.18.004, ferrochain-prompts/injection_guard) PASS rule 1 + PASS rule 2 (injection_guard owned by ferrochain-prompts SS-18); SS-23 BC (BC-2.23.005, ferrochain-tools/tools-shell) PASS rule 1 + PASS rule 2 (tools::shell owned by ferrochain-tools SS-23). Sweep for other live '18-crate' or '18 crates' in bc-authoring-plan.md (changelog rows exempt): zero remaining hits."
   - "2.50 (F-P161-01/FIX-BURST-262/2026-07-25): Three NORMATIVE version pins de-pinned + five HISTORICAL pins allowlisted (TD-VSDD-091 stable-anchor enforcement, F-P161-01). De-pinned: (1) Gate #12 lifecycle-arrow census authority 'BC-2.12.003 v1.4 PC7-PC9' → 'BC-2.12.003 PC7-PC9'. (2) Gate #12 source citation 'F-P117-01 adjudication (fix burst 120, BC-2.12.003 v1.4)' → '(fix burst 120, BC-2.12.003)'. (3) Type-census table BudgetInfo authority 'BC-2.10.003 v1.2 PC5/INV/TV-007' → 'BC-2.10.003 PC5/INV/TV-007'. Allowlisted (HISTORICAL-RECORD prose, version-pin-allowlist.txt entries at post-edit line numbers): 1677 (BC-2.08.004 v1.2 in ADV-P1D-PASS-56-COMPLETION RESOLVED note), 1707 (BC-2.04.002 v1.3 / BC-2.04.007 v1.6 / BC-2.08.002 v1.4 / BC-2.08.006 v1.4 / BC-2.08.014 v1.3 in F-P112-02 fix-burst record), 2115 (BC-2.08.014 v1.2), 2119 (BC-2.04.007 v1.5), 2125 (BC-2.08.013 v1.2) in F-P108-04 motivating-instance records."
@@ -464,6 +465,9 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 
 > **SS-23 BC Title Error-Code Enumeration Policy (F-P146-02, burst-247, 2026-07-24):**
 > For BC titles in subsystem SS-23 (ferrochain-tools), error codes in the title enumerate ALL and ONLY *raised* error codes — codes that appear as `Err(FerrochainError{code: "E-TOOLS-NNN"})` returns. Ok-path payload flags (E-TOOLS-005 `BashOutput.truncated`, E-TOOLS-006 `GrepResult.capped`) are NOT raised errors and MUST NOT appear in title enumerations. The trailing error-code section uses slash-separated format without spaces: `E-TOOLS-NNN/NNN/NNN`. Inline contextual error-code references (e.g., "E-TOOLS-003 on No-Match") are permitted where they describe the trigger condition; a complete trailing enumeration of all raised codes must also be present for machine extractability. Policy adjudication rationale: (1) listing a payload flag while omitting a real raised error is semantically inverted; (2) exhaustive enumeration of raised codes enables grepping BC titles to find all BCs that raise a given code; (3) consistent with BC-2.23.005 pre-existing exhaustive-enumeration pattern extended to all 6 SS-23 BCs. Applied burst-247: BC-2.23.001→`E-TOOLS-001/002/008`, BC-2.23.002→`E-TOOLS-001/008`, BC-2.23.003→`E-TOOLS-001/003/008`, BC-2.23.004→`E-TOOLS-001/008`, BC-2.23.005→`E-TOOLS-004/007` (E-TOOLS-005 payload flag removed from title), BC-2.23.006→`E-TOOLS-001/008/009` (E-TOOLS-006 payload flag removed, E-TOOLS-008/009 added).
+
+> **"VP-NNN candidate" Label Policy (F-P171a-16, burst-273, 2026-07-25):**
+> `"VP-NNN candidate"` is acceptable PO/BA shorthand for a seeded Verification Property that has not yet received a permanent VP-INDEX entry. It signals authoring intent to the architect without implying the VP is formally assigned or active. Usage rules: (1) In the BC §Verification Properties table, `"VP-NNN candidate"` (e.g., `"VP-013 candidate"`, `"VP-HITL-13 candidate"`) indicates that this BC is the intended source for a VP to be minted at architect phase. (2) In the BC frontmatter `vp_seed: true` field, the companion `vp_id` field MAY be set to the candidate ID. (3) Once the architect assigns the VP in VP-INDEX, the "candidate" qualifier is dropped — the BC §Verification Properties table and `vp_id` frontmatter field are updated to the confirmed VP-NNN ID. (4) A "VP-NNN candidate" label does NOT grant gate #36 VP↔BC RED-GATE PARITY exemption — the candidate label is a precursor, not a substitute for a VP-INDEX entry. Source: F-P171a-16 adjudication (process-gap — option (a) "acceptable shorthand"); 40-site cosmetic removal would be disproportionate to the lack of any correctness issue.
 
 12. **Lifecycle-arrow census gate (added P12):** Any BC or supplement that contains a Run
     state-machine lifecycle arrow MUST use one of the two canonical forms:
@@ -1377,6 +1381,15 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
        - **Supplement documents** (`introduced:` frontmatter field absent — bc-authoring-plan, test-vectors, error-taxonomy, interface-definitions, nfr-catalog, module-criticality): `timestamp:` must equal the date of the file's newest changelog entry. A supplement `timestamp:` that exceeds the current burst date, or that does not match the newest changelog entry's date, is a self-contradiction.
        - **BC files** (`introduced:` frontmatter field present): `timestamp:` is the authoring date (stable, never updated after initial v1.0 authoring). BC currency is tracked via `version:` + `## Changelog` + `introduced:`. A BC `timestamp:` that does not match the v1.0 changelog row's date is a self-contradiction.
 
+       **ADR documents** (`.factory/specs/architecture/decisions/ADR-NNN-*.md`):
+       `timestamp:` or `date:` field = the original ADR acceptance date (frozen at first
+       acceptance; never updated when the ADR is amended). ADR currency is tracked via
+       `version:` + changelog (newest-at-top per architecture/ descending direction rule).
+       An ADR `timestamp:` that does not match the original first-accepted date is a
+       self-contradiction. Amendments to an ADR do NOT change its `timestamp:` or `date:` —
+       they add a changelog entry and bump `version:`. Source: F-P171a-17 adjudication
+       (process-gap — Gate #28 Rule 5 scoped only Supplement + BC; ADR branch was absent).
+
        **Convention note:** BC-2.07.002 (ts 2026-07-13, newest changelog 2026-07-15), BC-2.08.011 (ts 2026-07-13, newest changelog 2026-07-14), and BC-2.08.012 (ts 2026-07-13, newest changelog 2026-07-14) are COMPLIANT under the scoped rule — each timestamp equals its v1.0 initial authoring date. DEFER-002 machine enforcement at Phase 3 must branch on `introduced:` field presence: `if has_introduced: assert timestamp == v1.0_changelog_date; else: assert timestamp == max_changelog_date`.
 
     6. **VERSION-MONOTONICITY (CHANGELOG-MONOTONICITY — added 2026-07-17; codified at 3rd
@@ -1860,6 +1873,19 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
        introduces a new module or changes crate placement for a module, the arch-registry
        criticality table must reflect the module with its correct crate and tier. A module added
        by an ADR that does not appear in the arch registry is a gate #32 + gate #25 violation.
+
+       **Definitions-only exception (F-P171a-08, burst-273):** A module that hosts ONLY
+       type/trait definitions with no execution logic — no algorithmic computation, no I/O, no
+       method bodies beyond trivial derives — does NOT require a criticality row in the arch
+       registry. The rationale follows ADR-009 Option 3 precedent (pure-core pure-types split).
+       Established exempt cases: `core::context_mutation`, `core::write_guard`,
+       `core::guardrail`, `memory::skills`, `core::action_risk`. For an exempt module, the
+       authoritative placement record is `purity-boundary-map.md` §Pure Core AND a definitions
+       note in the corresponding `module-decomposition.md` subsystem row.
+       **Narrow scope — this exception does NOT apply to:** `tools::config` (contains
+       `ToolConfig::override_risk` validation logic — MEDIUM criticality tier), and any other
+       module with non-trivial method bodies, side effects, or algorithmic logic. When in doubt,
+       create the criticality row; the exception is for obvious pure-definitions modules only.
 
     5. **`.factory/specs/prd-supplements/module-criticality.md` (PO registry — SUPERSEDED, FROZEN)**
        — this file is `status: superseded` (22-module pre-D21/D23 view, audit trail only).

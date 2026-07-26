@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: dependency-graph
-version: "1.4"
+version: "1.5"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "63f8fe2"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D21, D23]
 changelog:
+  - "1.5 (FIX-BURST-273/F-P171a-06/2026-07-25): Add two missing Edge Table rows: (1) ferrochain-tools → ferrochain-macros (build; #[tool] proc-macro used directly in ferrochain-tools implementations per ADR-020 Decision 1 / ADR-008); (2) ferrochain-core → ferrochain-macros (build; re-exports proc-macro items from ferrochain-macros per ADR-008 Decision 2). The Crate DAG annotation and Topological Build Order already documented both edges; the Edge Table was inconsistent. Amend §Invariant: 'ferrochain-core MUST NOT depend on any other ferrochain crate' to add the proc-macro exception (build-time only, no runtime circular dependency)."
   - "1.4 (FIX-BURST-272/F-P170-06/2026-07-25): ActionRisk dependency adjudication propagation. Crate DAG: update ferrochain-tools annotation — ActionRisk is now sourced from ferrochain-core (core::action_risk), not ferrochain-graph; annotation rewritten to reflect this. Edge Table: update ferrochain-tools→ferrochain-core rationale to include ActionRisk."
   - "1.3 (FIX-BURST-267/F-P165-04/2026-07-25): Remove spurious DI-012 anchor from §[Section Content] intro sentence — DI-012 is 'Guardrail Coverage at Ingress Boundaries' (unrelated to graph acyclicity). Correct cite to P-06 alone (system-overview §Architecture Principles). DI-NNN sweep: only remaining DI cite is DI-009 at reqwest row in Cross-Cutting Dependencies table, which correctly anchors the outbound HTTP timeout invariant."
   - "1.2 (FIX-BURST-265/F-P163-03/2026-07-25): Propagate D21+D23 21-crate roster. Crate DAG: add ferrochain-prompts (D21/ADR-015), ferrochain-vectorstores (D21/ADR-014), ferrochain-tools (D23/ADR-020) after ferrochain-memory. Edge Table: 4 new rows (prompts→core, vectorstores→core, tools→core, tools→sandbox). Topological Build Order: Wave 1 gains ferrochain-memory (D23 Wave 2→1, position 6) + ferrochain-tools (position 7), now 9 items; Wave 2 loses ferrochain-memory, gains ferrochain-prompts (position 13) + ferrochain-vectorstores (position 14), now 10 items. Add D21/D23 to decisions list."
@@ -78,8 +79,10 @@ ferrochain-core
 | ferrochain-memory | ferrochain-core | runtime | FerrochainError; MemoryStore trait definition |
 | ferrochain-prompts | ferrochain-core | runtime | Message, Runnable, FerrochainError; template composition (ADR-015 Decision 1) |
 | ferrochain-vectorstores | ferrochain-core | runtime | Document, Retriever, Embeddings, FerrochainError (ADR-014 Decision 1) |
-| ferrochain-tools | ferrochain-core | runtime | Tool, ToolOutput, FerrochainError, ActionRisk (core::action_risk, relocated from graph::hitl per F-P170-06); #[tool] macro via core re-export (ADR-020 Decision 1) |
+| ferrochain-tools | ferrochain-core | runtime | Tool, ToolOutput, FerrochainError, ActionRisk (core::action_risk, relocated from graph::hitl per F-P170-06) (ADR-020 Decision 1) |
 | ferrochain-tools | ferrochain-sandbox | runtime | PathGuard, SandboxPolicy, sandbox execution (ADR-020 Decision 1) |
+| ferrochain-tools | ferrochain-macros | build | `#[tool]` proc-macro attribute used directly in ferrochain-tools tool implementations; direct Cargo dependency required for proc-macro attribute resolution (ADR-020 Decision 1 / ADR-008 Decision 2) |
+| ferrochain-core | ferrochain-macros | build | Re-exports `#[tool]` and related proc-macro items from ferrochain-macros for user-facing API; compile-time only — proc-macro crates do not create runtime circular dependencies (ADR-008 Decision 2) |
 | ferrochain-openai-sdk | (none) | — | Standalone: reqwest + serde only; no ferrochain-core [D17-Q5] |
 | ferrochain-openai | ferrochain-core | runtime | BaseChatModel + FerrochainError |
 | ferrochain-openai | ferrochain-openai-sdk | runtime | Wire client for SDK adapter pattern |
@@ -149,7 +152,7 @@ The crate DAG is strictly acyclic. Enforced by Cargo's compiler. Any proposal to
 edge that would create a cycle requires an ADR and architectural review. Key cycles to
 prevent:
 
-- ferrochain-core MUST NOT depend on any other ferrochain crate
+- ferrochain-core MUST NOT depend on any other ferrochain crate. Exception: `ferrochain-macros` is a `proc-macro = true` crate; its compilation model is compile-time only (it produces no runtime code in dependents) and does not create circular runtime dependencies. Build order: ferrochain-macros(1) → ferrochain-core(2) (ADR-008 Decision 2).
 - ferrochain-checkpoint MUST NOT depend on ferrochain-graph (graph depends on checkpoint, not vice versa)
 - Provider crates MUST NOT depend on each other
 

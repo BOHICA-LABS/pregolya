@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.10"
+version: "2.11"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
@@ -561,53 +561,20 @@ Formal statement:
   (r == Medium ∨ r == High) → check_risk_floor(r) == Ok(())
 ```
 
-**RESOLVED (burst-232, 2026-07-22; casing corrected FIX-BURST-270):** BC-2.23.005 was amended to `Category::Val` in v1.1
+**RESOLVED (burst-232, 2026-07-22; casing corrected FIX-BURST-270):** BC-2.23.005 §Category was corrected to `Category::Val`
 (same burst that seeded VP-013). The prior `Category::CONFIGURATION` label was non-canonical
-(not present in the 12-category axis per ADR-010). BC-2.23.005 v1.1 = VAL (taxonomy code), Rust identifier = `Category::Val`, consistent with
+(not present in the 12-category axis per ADR-010). BC-2.23.005 §Category = VAL (taxonomy code), Rust identifier = `Category::Val`, consistent with
 error-taxonomy §TOOLS and this VP harness. No active contradictions.
 
-Kani harness sketch:
-```rust
-#[kani::proof]
-fn risk_floor_rejects_below_medium() {
-    // ReadOnly path
-    let result_ro = check_risk_floor(ActionRisk::ReadOnly);
-    kani::assert(
-        matches!(result_ro, Err(FerrochainError { code: "E-TOOLS-007", .. })),
-        "ReadOnly must be rejected with E-TOOLS-007",
-    );
-    // Low path
-    let result_low = check_risk_floor(ActionRisk::Low);
-    kani::assert(
-        matches!(result_low, Err(FerrochainError { code: "E-TOOLS-007", .. })),
-        "Low must be rejected with E-TOOLS-007",
-    );
-}
-
-#[kani::proof]
-fn risk_floor_exhaustive_coverage() {
-    let idx: u8 = kani::any();
-    kani::assume(idx <= 3);
-    let risk = match idx {
-        0 => ActionRisk::ReadOnly,
-        1 => ActionRisk::Low,
-        2 => ActionRisk::Medium,
-        _ => ActionRisk::High,
-    };
-    let result = check_risk_floor(risk);
-    if idx < 2 {
-        kani::assert(
-            matches!(result, Err(FerrochainError { code: "E-TOOLS-007", .. })),
-            "ReadOnly/Low must return E-TOOLS-007",
-        );
-    } else {
-        kani::assert(result.is_ok(), "Medium/High must pass floor check");
-    }
-}
-```
+**Kani harness:** See `VP-013.md` §Proof Harness Skeleton for the complete three-harness set
+(`risk_floor_rejects_below_medium`, `risk_floor_accepts_at_or_above_medium`,
+`risk_floor_exhaustive_coverage`). `VP-013.md` is the authoritative source per
+Source-of-Truth Precedence rule 4 (VP files supersede architecture prose for the property they
+cover); harness bodies are not duplicated here to eliminate drift.
 
 Feasibility: HIGH. `ActionRisk` is a 4-variant enum; `check_risk_floor` is a pure sync match.
-State-space is trivially finite for Kani. Estimated proof time: < 1 min.
+State-space is trivially finite for Kani. Estimated proof time: < 1 min. See `VP-013.md`
+§Feasibility Assessment for the complete feasibility analysis.
 
 ## Test-Sufficient (No Kani)
 
@@ -647,6 +614,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.11 | 2026-07-25 | architect | FIX-BURST-273 / F-P171a-10+11 | F-P171a-10 — replace §VP-013 Kani harness sketch (2 harnesses, missing `risk_floor_accepts_at_or_above_medium`) with pointer to `VP-013.md` §Proof Harness Skeleton; VP-013.md is authoritative per Source-of-Truth Precedence rule 4; pointer names all three canonical harnesses to eliminate drift surface. F-P171a-11 — de-pin two live-body version pins in §VP-013 RESOLVED block: 'BC-2.23.005 was amended to `Category::Val` in v1.1' → 'BC-2.23.005 §Category was corrected to `Category::Val`'; 'BC-2.23.005 v1.1 = VAL' → 'BC-2.23.005 §Category = VAL'. Allowlist entry `architecture/verification-architecture.md :: BC-2.23.005 v1.1` is now dead — devops to remove. |
 | 2.10 | 2026-07-25 | architect | FIX-BURST-272 / F-P170-05 sibling + DEFECT-2 | Purge phantom `ActionRisk::Critical` from §VP-013 body — sibling of VP-013.md F-P170-05 purge that verification-architecture.md missed. (1) Formal statement: remove `∨ r == Critical` disjunct. (2) `risk_floor_exhaustive_coverage` harness: `kani::assume(idx <= 4)` → `kani::assume(idx <= 3)`; `_ => ActionRisk::Critical` → `_ => ActionRisk::High`; assert message `"Medium/High/Critical must pass floor check"` → `"Medium/High must pass floor check"`. (3) Feasibility line: `5-variant enum` → `4-variant enum`. |
 | 2.9 | 2026-07-25 | architect | FIX-BURST-270 / P1D-168-casing | PascalCase canon sweep — §VP-013 RESOLVED note: `` `Category::VAL` `` → `` `Category::Val` `` per ADR-010 v1.9 Direction B adjudication. |
 | 2.8 | 2026-07-24 | architect | FIX-BURST-255 / F-P154-01 | F-P154-01 (HIGH) VP-011 internal contradiction + totality gap: adjudicate PendingHumanApproval routing design — Option A peel-off. PendingHumanApproval is handled by async `pre_tool_dispatch` wrapper BEFORE `route_pre_tool_decision` is called (interrupt issued; run suspended; `route_pre_tool_decision` not invoked). Fix property prose from "neither Proceed nor Reject returned" (impossible given DispatchOutcome type) to peel-off design. Fix formal statement: remove PendingHumanApproval clause from `route_pre_tool_decision` quantifier block; add wildcard arm clause (fail-closed Reject); add separate `pre_tool_dispatch` peel-off block. Fix `#[non_exhaustive]` note: "each proof function targets one variant" → "four proof functions target three routable variants (Deny/Approve/Edit) + hook-error; `PendingHumanApproval` has no dedicated proof function". Corresponds to VP-011.md v1.2→v1.3. |

@@ -1,7 +1,7 @@
 ---
 document_type: module-criticality
 level: L3
-version: "1.7"
+version: "1.8"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
@@ -15,6 +15,7 @@ traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "1.8 (FIX-BURST-273/gate-25-32/2026-07-25): Add `tools::config` MEDIUM row (ferrochain-tools SS-23) — gate #25 Part B sibling propagation completing burst-273 module-universe +1; MEDIUM tier: `override_risk` builder-consuming validator enforces per-tool risk-floor rules (ADR-020 Decision 3 / BC-2.23.005) but does not host a Kani VP (`check_risk_floor` Kani P1 target lives in tools::shell per VP-013); MEDIUM consistent with sandbox-policy precedent (supporting policy-enforcement module, not primary VP host). Classification Summary: MEDIUM 12→13, Total 43→44."
   - "1.7 (FIX-BURST-267/F-P165-05/2026-07-25): Narrow CRITICAL tier definition — 'Kani VP targets' → 'Kani P0 VP targets'; the previous wording made every Kani VP host CRITICAL, contradicting the established HIGH classification for Kani P1 hosts (injection_guard VP-006, core-budget VP-012, tools-shell VP-013). Add Kani P1 VP hosts clause to HIGH tier definition: 'Core business logic, conformance contracts, server lifecycle; Kani P1 VP hosts'. No module row changes — all tier assignments already correctly reflect P0/P1 distinction; this fixes only the tier-definition prose."
   - "1.6 (burst-244/2026-07-23): F-P144-02 adjudication — add core-budget (HIGH, VP-012 Kani P1, ferrochain-core SS-10) and tools-shell (HIGH, VP-013 Kani P1, ferrochain-tools SS-23) rows; removes deferred posture from v1.5. core-budget HIGH: VP-012 Kani P1 hosts check_watermark_trigger (pure-core arithmetic); established project pattern assigns HIGH to all Kani P1 VP hosts (injection_guard precedent); token watermark arithmetic is governance-correctness, not a security boundary — CRITICAL overclaims. tools-shell HIGH: VP-013 Kani P1 hosts check_risk_floor (pure-core enum comparison enforcing non-lowerable Medium risk floor per ADR-020 Decision 3 'framework safety invariant'); profile mirrors injection_guard (VP-006 Kani P1 HIGH — both are pure-core security invariants enforced by construction); CRITICAL requires direct security-boundary or durability role. Both assignments match pre-existing verification-coverage-matrix.md HIGH classification (F-P144-01 contradiction resolved). Classification Summary: HIGH 16→18, Total 41→43."
   - "1.5 (burst-229/2026-07-22): Input-hash cascade refresh — ARCH-INDEX.md v1.6 + module-decomposition.md v1.15 both changed in burst 229 (D23 architecture layer: ADR-018/019/020, SS-23 ferrochain-tools crate #21, Wave-1 promotions SS-15/SS-16). No content rows added (ferrochain-tools criticality rows deferred to architect D23 content authoring). Hash: ac2e35a → db6f656."
@@ -82,6 +83,7 @@ changelog:
 | core-budget | ferrochain-core | SS-10 | HIGH | VP-012 | ≥ 90% | P3 per-story + P5 |
 | tools-shell | ferrochain-tools | SS-23 | HIGH | VP-013 | ≥ 90% | P3 per-story + P5 |
 | vectorstores-mmr | ferrochain-vectorstores | SS-21 | MEDIUM | — | ≥ 80% | P5 |
+| tools::config | ferrochain-tools | SS-23 | MEDIUM | — | ≥ 80% | P5 |
 
 > **D21+burst-224 additions (v1.4):** serializable-reviver and vectorstores-similarity added as CRITICAL (Kani P0 proof obligations VP-010 and VP-009 respectively). injection_guard, serializable, embeddings added as HIGH (Kani P1 and proptest P1 proof obligations VP-006/007/008). vectorstores-mmr added as MEDIUM (MMR-only selection algorithm; VP-009 relocated to vectorstores-similarity by F-P129-11 in burst-224). Definitions-only D21 artifacts (core::guardrail per ADR-014 Decision 6) excluded per no-row precedent.
 
@@ -107,9 +109,9 @@ changelog:
 |------|-------------|
 | CRITICAL | 11 |
 | HIGH | 18 |
-| MEDIUM | 12 |
+| MEDIUM | 13 |
 | LOW | 2 |
-| **Total** | **43** |
+| **Total** | **44** |
 
 ## CRITICAL Module — Security Profile
 

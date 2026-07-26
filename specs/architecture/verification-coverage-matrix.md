@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "2.3"
+version: "2.4"
 status: active
 producer: architect
 timestamp: 2026-07-24T00:00:00Z
@@ -14,6 +14,7 @@ inputs:
 input-hash: "0203a7e"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "2.4 (FIX-BURST-273/gate-25-32/2026-07-25): Add tools::config MEDIUM row (ferrochain-tools SS-23) — gate #25 Part B/C sibling propagation; no Kani VP (VP-013 Kani P1 targets check_risk_floor in tools::shell); Integration: yes (construction-time validation tests for override_risk / ADR-020 Decision 3 / BC-2.23.005). Per-module count 43→44; Coverage-by-Criticality-Tier MEDIUM 12→13. Header note updated."
   - "2.3 (FIX-BURST-252/2026-07-24): Input-hash cascade refresh — module-decomposition.md v1.22→v1.23 (FIX-BURST-252 F-P151-02+05: fraction f32→f64 in core::budget, CompactionSummary flat fields). No VP-to-Module table or coverage-status changes (core-budget VP-012 mapping, tool, phase, priority, and Notes wording all unchanged — Notes 'OnWatermark arithmetic; Kani P1 (BC-2.10.005)' contains no predicate formula or type annotation requiring update)."
   - "2.2 (FIX-BURST-250/F-P149-03/2026-07-24): Add missing red_gate label to three Per-Module rows where VP is red_gate:true (VP-004/005/006) for parity with VP-009/VP-010 rows. injection_guard Notes: 'Kani P1 (BC-2.18.004)' → 'Kani P1 red_gate (BC-2.18.004)'. mcp-adapter Notes: 'ToolException fidelity' → 'ToolException type-identity; integration red_gate (BC-2.09.004)'. mcp-client Notes: 'Red Gate BCs' → 'integration red_gate (BC-2.09.005); no-live-connections'. Verified: VP-009 'Kani P0 red_gate (BC-2.21.003)' and VP-010 'Kani P0 red_gate (BC-2.19.005)' already correct. All 8 red_gate:false VP rows confirmed clean (no red_gate label)."
   - "2.1 (FIX-BURST-248/F-P147-01/2026-07-24): Remove stale 'red_gate' label from hitl row Notes — BC-2.05.007 is NOT Red-Gated (product-owner authority, burst-231; ADR-018 Decision 3 has no compile-and-fail mandate). Notes changed from 'Kani P0 red_gate (BC-2.05.007)' to 'Kani P0 (BC-2.05.007)'. No VP table, totals, or criticality tier changes."
@@ -59,8 +60,8 @@ changelog:
 
 ## Per-Module Coverage Status
 
-> This table covers all 43 architecture modules (35 pre-D21 + 5 added by D21 VP layer + 1 from F-P129-11 split + 2 new D23 rows: core-budget and tools-shell).
-> Tier groupings: CRITICAL 11 / HIGH 18 / MEDIUM 12 / LOW 2 (D21 established CRITICAL 11 / HIGH 16 / MEDIUM 11, with vectorstores-mmr classified CRITICAL as the VP-009 host; F-P129-11 burst-224 adds vectorstores-similarity as the new CRITICAL VP-009 host and reclassifies vectorstores-mmr CRITICAL → MEDIUM — net CRITICAL unchanged at 11, MEDIUM +1 = 12; D23 burst-232 adds 2 HIGH rows: core-budget and tools-shell — HIGH +2 = 18).
+> This table covers all 44 architecture modules (35 pre-D21 + 5 added by D21 VP layer + 1 from F-P129-11 split + 2 new D23 rows: core-budget and tools-shell + 1 gate-25-32 row: tools::config).
+> Tier groupings: CRITICAL 11 / HIGH 18 / MEDIUM 13 / LOW 2 (D21 established CRITICAL 11 / HIGH 16 / MEDIUM 11, with vectorstores-mmr classified CRITICAL as the VP-009 host; F-P129-11 burst-224 adds vectorstores-similarity as the new CRITICAL VP-009 host and reclassifies vectorstores-mmr CRITICAL → MEDIUM — net CRITICAL unchanged at 11, MEDIUM +1 = 12; D23 burst-232 adds 2 HIGH rows: core-budget and tools-shell — HIGH +2 = 18; FIX-BURST-273 gate-25-32 adds tools::config MEDIUM — MEDIUM +1 = 13).
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
@@ -107,6 +108,7 @@ changelog:
 | embeddings | ferrochain-core | — | VP-008 | — | yes | D21/SS-22; dimensionality contract; proptest P1 (BC-2.22.001) |
 | core-budget | ferrochain-core | VP-012 | — | — | yes | D23/SS-10; OnWatermark arithmetic; Kani P1 (BC-2.10.005) |
 | tools-shell | ferrochain-tools | VP-013 | — | — | yes | D23/SS-23; BashTool risk floor; Kani P1 (BC-2.23.005) |
+| tools::config | ferrochain-tools | — | — | — | yes | D23/SS-23; ToolConfig risk-floor validator; pure construction-time validation (ADR-020 Decision 3 / BC-2.23.005) |
 
 ## Coverage by Criticality Tier
 
@@ -114,7 +116,7 @@ changelog:
 |------|---------|---------|---------|------|-----------------|
 | CRITICAL | 11 | 6 (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) | all | subset | ≥ 95% |
 | HIGH | 18 | 3 (VP-006, VP-012, VP-013) | most + VP-007, VP-008 | subset | ≥ 90% |
-| MEDIUM | 12 | 0 | some | — | ≥ 80% |
+| MEDIUM | 13 | 0 | some | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | ≥ 70% |
 
 ## Mutation Kill Rate Gates (cargo-mutants)

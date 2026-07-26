@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.19"
+version: "1.20"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "2135c95"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.20 (FIX-BURST-273/F-P171a-05+07+02/2026-07-25): F-P171a-07 — fix stale intro count: '53 criticality-universe modules' → '56 module-decomposition modules' (module-decomposition universe was 55 before this burst; adding tools::config makes it 56); rename 'criticality-universe modules' to 'module-decomposition modules' to avoid collision with module-criticality.md authoritative count of 43. Update totals: '80 total rows after FIX-BURST-272: 32 Pure Core + 36 Effectful Shell + 12 Boundary' → '81 total rows after FIX-BURST-273: 33 Pure Core + 36 Effectful Shell + 12 Boundary'. F-P171a-02 (Iron Law) — add tools::config Pure Core row (ToolConfig struct: `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>` builder-consuming validator; pure enum comparison; no I/O; ADR-020 Decision 3 / BC-2.23.005); Iron Law requires every module in module-decomposition to appear in exactly one column. Pure Core 32→33; total 80→81. F-P171a-05 — amend Purity Enforcement Rule 3 to accurately state that VP-010/011/013 harness targets are named extractable pure functions from Boundary or Effectful Shell modules (not bare Pure Core rows): VP-010 → `allowlist_check` from core::serializable (Boundary); VP-011 → `route_pre_tool_decision`+`shield_hook_result` from graph::hitl (Boundary); VP-013 → `check_risk_floor` from tools::shell (Effectful Shell)."
   - "1.19 (FIX-BURST-272/DEFECT-3/2026-07-25): Normalize separator in graph::hitl Boundary row citation from 'ADR-018 Decisions 1+4' → 'ADR-018 Decisions 1 and 4' so the continuation scanner can see both Decision numbers. Manual verification: ADR-018 Decision 1 (PreToolCallHook placement) and Decision 4 (PendingHumanApproval reuses interrupt machinery) both exist and are semantically relevant — Decision 1 governs the hook trait placement; Decision 4 governs the PendingHumanApproval path cited at that Boundary row."
   - "1.18 (FIX-BURST-272/F-P170-06/2026-07-25): Add core::action_risk Pure Core row per Iron Law — ActionRisk enum relocated from ferrochain-graph::hitl to ferrochain-core (module core::action_risk) per F-P170-06 adjudication (dependency-inversion precedent: BudgetPolicy/GuardrailHook/MemoryWriteGuard pattern). 4-variant enum: ReadOnly, Low, Medium, High; definitions-only; SS-05 owner; no execution logic. Pure Core 31→32; total 79→80. Update intro count sentence."
   - "1.17 (FIX-BURST-262/F-P161-01/2026-07-25): De-pin live-body BC version pin per TD-VSDD-091 BC-pin variant: core::budget Pure Core row — BC-2.10.003 v1.2 + BC-2.10.004 → BC-2.10.003 + BC-2.10.004."
@@ -48,9 +49,9 @@ changelog:
 Every ferrochain module appears in exactly one of three columns: **Pure Core** (deterministic,
 no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not Kani-provable),
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
-effectful dependency). All 53 criticality-universe modules plus structural and definitions-only
-modules are enumerated in `## Purity Classification` below (80 total rows after FIX-BURST-272:
-32 Pure Core + 36 Effectful Shell + 12 Boundary). Enforcement invariants follow
+effectful dependency). All 56 module-decomposition modules plus structural and definitions-only
+modules are enumerated in `## Purity Classification` below (81 total rows after FIX-BURST-273:
+33 Pure Core + 36 Effectful Shell + 12 Boundary). Enforcement invariants follow
 in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -94,6 +95,7 @@ side effects. Kani proofs operate here.
 | `prompts::injection_guard` | ferrochain-prompts | `SlotTrustPolicy` enforcement: pure synchronous check — for each TrustRequired slot, checks substituted variable's `TrustLevel` (`var.trust_level.is_some_and(\|t\| t.is_untrusted())`); returns `Err(E-TMPL-001)` or `Ok(())`; no async, no I/O (ADR-015 Decision 2/3 / SS-18); `TrustLevel` is SS-18-local type in `prompts::template`, distinct from `core::guardrail::ProvenanceTag` (SS-11) | VP-006 (Kani P1, seeded burst-223) |
 | `vectorstores::mmr` | ferrochain-vectorstores | Maximal Marginal Relevance selection: calls `vectorstores::similarity::cosine_similarity` for pairwise distances; pure diversity-penalty scoring pass; no network, no I/O; inputs: query embedding + candidate embeddings + params; output: ranked document indices (ADR-014 / SS-21; F-P129-11 burst-224) | — |
 | `vectorstores::similarity` | ferrochain-vectorstores | Shared cosine similarity primitive: `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, FerrochainError>`; IEEE-754 zero-norm L2-guard (checks `a.iter().map(\|x\| x*x).sum::<f32>().sqrt() == 0.0 \|\| b…`); returns `Err(E-VS-001)` on zero-norm; pure `Vec<f32>` inner product; no `ndarray`, no I/O; called by vectorstores::memory, vectorstores::mmr, and any future VectorStore backend (ADR-014 / SS-21; F-P129-11 burst-224) | VP-009 |
+| `tools::config` | ferrochain-tools | `ToolConfig` — shared per-tool framework configuration; `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>` builder-consuming validator: compares `risk` against the tool's floor (for BashTool, `risk < ActionRisk::Medium` → `Err(E-TOOLS-007)`); `#[non_exhaustive]`; zero I/O, no async, no state — pure enum comparison at construction time per VP-013 §Source Contract (ADR-020 Decision 3 / BC-2.23.005 / SS-23) | — |
 
 **Kani constraint:** Kani model checking operates on finite, bounded loops. `graph::channels`
 reducer loop must be bounded by the number of tasks per super-step. `sandbox::path_guard`
@@ -175,5 +177,5 @@ dispatch is integration-tested.
 
 1. Pure modules MUST NOT import `tokio`, `reqwest`, `axum`, or any I/O crate at the module level.
 2. Pure modules MUST NOT call any function that returns `impl Future` unless the future itself is pure (e.g., a test double).
-3. The Kani harness for all 9 Kani VPs (P0: VP-001/002/003/009/010/011; P1: VP-006/012/013) operates ONLY on pure-core sync functions listed above; each harness target must be extractable as a side-effect-free sync function before the Phase 6 harness can be written.
+3. The Kani harness for all 9 Kani VPs (P0: VP-001/002/003/009/010/011; P1: VP-006/012/013) operates exclusively on side-effect-free sync functions. For six VPs the harness target is the Pure Core function itself: VP-001 (`reduce_super_step`, graph::bsp_engine), VP-002 (`get_next_version`, checkpoint::clock), VP-003 (`canonicalize_beneath_root_pure`, sandbox::path_guard), VP-006 (`injection_guard_check`, prompts::injection_guard), VP-009 (`cosine_similarity`, vectorstores::similarity), VP-012 (`check_watermark_trigger`, core::budget). For three VPs the harness target is a named extractable pure sync function from a Boundary or Effectful Shell module — the extraction must be a standalone side-effect-free function before Phase 6 can proceed: VP-010 → `allowlist_check` from `core::serializable` (Boundary); VP-011 → `route_pre_tool_decision` + `shield_hook_result` from `graph::hitl` (Boundary); VP-013 → `check_risk_floor` from `tools::shell` (Effectful Shell).
 4. Any refactor that moves I/O into a currently-pure module requires an architectural review and ADR update.
