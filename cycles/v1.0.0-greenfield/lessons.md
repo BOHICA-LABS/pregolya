@@ -367,6 +367,46 @@ This is an extension of the post-burst sweep discipline (D18-P89-A / gate #28). 
 **Codified fix:** Cross-agent precedence disputes must be resolved by quoting the EXACT text of the relevant CLAUDE.md rule, identifying the scope clause, and testing whether the disputed case falls within that scope. If two rules conflict or a rule's scope is unclear, escalate to product-owner (for BC semantics) or orchestrator (for routing). Agent seniority (architect vs PO vs BA) does not determine outcome — the written rules do.
 **Applicable to:** All spec governance disputes. The precedence table (CLAUDE.md §Source-of-Truth Precedence) must be read literally, including scope qualifiers. Disputes that cannot be resolved by the written rules must be escalated to the human.
 
+### L-046 [OPEN — fix-burst 274 pending]: WHEN A DEFECT CLASS IS FIXED IN ONE INSTANCE, SWEEP THE CLASS
+
+**Discovered:** P1D-172a / F-P172a-01 (gate #33 census field-index, 2026-07-25)
+**Symptom:** The gate #25 Part C `awk` field-index fix (F-P170-15, burst-272) corrected `{print $2, $4}` to extract BC Anchor instead of Severity. Gate #33 has a structurally identical census command with the same error-taxonomy table and the same field-mapping requirement. Two passes later, gate #33's census still emits `(code, severity)` pairs, causing all 78+ live codes to fail path resolution while the gate declares "Zero orphans permitted."
+**Root cause:** TD-VSDD-060 sibling-sweep mandate requires grepping for ALL structurally identical usages when a field-index is corrected. The burst-272 fix was scoped to the single reported instance without a structural-twin search.
+**Codified fix (pending):** After any fix to a census command (awk field index, grep pattern, path glob), the responsible specialist MUST grep the entire gate registry for structurally identical commands and apply the same correction to each. The sweep must be committed in the same burst.
+**Applicable to:** All gate-registry census commands. TD-VSDD-060 applies to gate prose as much as to source symbols.
+
+### L-047 [OPEN — fix-burst 274 pending]: A COUNT REDUCTION IS A MULTI-SITE EDIT
+
+**Discovered:** P1D-172a / F-P172a-03 (gate #25 "ALL FOUR" residue, 2026-07-25)
+**Symptom:** Burst-272's F-P170-08 fix reduced "ALL FOUR documents" to "ALL THREE documents" in one gate #25 location and logged the fix as complete (v2.52 changelog). Six live non-changelog sites inside gate #25 still read "all four" / "four docs" after the fix. The v2.52 changelog's claim of closure is a TD-VSDD-059 incomplete closure compounded by a TD-VSDD-060 sibling-sweep failure occurring INSIDE the same gate being fixed.
+**Root cause:** Count reductions ("ALL FOUR"→"ALL THREE") are treated as single-site text replacements rather than multi-site string replacements. The literal string "four" appears in prose, examples, and procedure steps and must all be updated.
+**Codified fix (pending):** A count change in a gate document requires a corpus-wide grep for the old count literal (in context) before declaring the fix complete. The Defensive Sweep Discipline (S-7.02) applies to gate-internal prose as much as to cross-document count fields.
+**Applicable to:** All gate-authoring bursts that modify a count or enumeration.
+
+### L-048 [OPEN — fix-burst 274 pending]: AN EXEMPTION LIST MUST BE VALIDATED AGAINST ARCHITECTURE DOCS FOR EVERY NAMED MEMBER
+
+**Discovered:** P1D-172a / F-P172a-04 (`memory::skills` definitions-only exemption, 2026-07-25)
+**Symptom:** Burst-273 granted `memory::skills` a definitions-only carve-out from criticality-registry requirements, stating the criterion "hosts ONLY type/trait definitions, no I/O." `purity-boundary-map.md` §Effectful Shell places `memory::skills` with the description "async `SkillStore` I/O: reads skill KV entries via `MemoryStore` backend." The exemption's own prerequisite is refuted by the authoritative purity map. The defect was introduced in fix-burst 273 under orchestrator routing.
+**Root cause:** The specialist authoring the exemption list did not cross-check each named member against `purity-boundary-map.md`. Exemption eligibility requires verifying all three sources: `module-decomposition.md` (definitions note), `purity-boundary-map.md` (tier row), and the module's BCs (I/O obligations).
+**Codified fix (pending):** Any exemption list granting a module a "definitions-only" or "no-row" status MUST include a cross-check of that module's `purity-boundary-map.md` tier row and its BCs for I/O obligations, in the same authoring burst.
+**Applicable to:** All gate #32 exemption authoring. Extend to any future "carve-out" or "non-violation" class creation.
+
+### L-049 [OPEN — fix-burst 274 pending]: A CENSUS WITH A PERMANENT FALSE FAILURE IS WORSE THAN NO CENSUS
+
+**Discovered:** P1D-172a / F-P172a-13 (gate #36 VP-INDEX false failure, 2026-07-25)
+**Symptom:** Gate #36's census `grep -rL "^red_gate:" specs/verification-properties/VP-*.md` matches `VP-INDEX.md` (an index file with no `red_gate:` field), so the command can NEVER return the expected "empty" output. The gate perpetually reports an apparent violation even when the corpus is clean. Operators who see this persistent apparent failure will discard the gate as broken — which is worse than not having the gate at all.
+**Root cause:** Gate authoring did not verify that the glob pattern excludes co-located index and template files.
+**Codified fix (pending):** When a gate uses a glob (`VP-*.md`, `BC-*.md`, etc.), verify that the glob excludes co-located index files. Use `VP-[0-9][0-9][0-9].md` patterns or add `| grep -v INDEX` filters. Any "expected: empty" assertion must be verifiable in a clean corpus BEFORE the gate is committed.
+**Applicable to:** All gate census commands with "expected: empty" assertions and glob file selectors.
+
+### L-050 [OPEN — fix-burst 274 pending]: REGISTRY/ENUMERATION LISTS INSIDE GATES DECAY SILENTLY
+
+**Discovered:** P1D-172a / F-P172a-07/08 (stale supplement enumeration + stale "95 BCs" at six sites, 2026-07-25)
+**Symptom:** Gate #28 Rule 5's supplement enumeration hardcodes five files while seven live supplements exist — `observability.md` was added in burst-258 without updating gate #28. Six authoring-guideline sites still read "95 BCs" against a corpus of 129; the same three sites swept 86→95 by v2.13 were not re-swept 95→129 by v2.42.
+**Root cause:** Hardcoded enumerations inside gates are not protected by any invariant. When the corpus changes, the gate does not fail — it silently becomes inaccurate.
+**Codified fix (pending):** Prefer corpus-derived census commands over hardcoded file lists. When a new document is added to any enumerated category, a MANDATORY sibling-sweep step must check all gates that enumerate that category.
+**Applicable to:** All gate enumerations. Treat hardcoded file lists in gate text as technical debt that will become a false-negative.
+
 | Lesson | Proposed Policy | Scope | Status |
 |--------|----------------|-------|--------|
 | L-036 | After relocation/rename: sweep JUSTIFICATION prose and INVARIANT SATISFIABILITY narratives, not just symbol occurrences | Relocation checklist | Codified (F-P171a-01, burst-272 relocation residue) |
@@ -379,3 +419,8 @@ This is an extension of the post-burst sweep discipline (D18-P89-A / gate #28). 
 | L-043 | A newly-minted mechanical gate should be expected to find MORE violations than the motivating findings — treat its first full run as a discovery pass, not a coverage confirmation | Factory infrastructure + gate management | Codified (validator #7, burst-273) |
 | L-044 | Specialist self-reported sweep completeness is unreliable in BOTH directions — false "zero remaining" and false "complete propagation" claims have both occurred; orchestrator-side independent verification before commit is load-bearing, not ceremonial | Orchestrator protocol | Codified (burst-272 false-zero claim + burst-273 incomplete propagation, burst-273) |
 | L-045 | Cross-agent precedence disputes must be adjudicated against the written precedence rules (CLAUDE.md Source-of-Truth Precedence), not by seniority of the asserting agent — the architect's VP-wins-over-BC claim was outside CLAUDE.md rule 4's scope; re-adjudication produced a third and more precise answer | Agent routing + spec governance | Codified (F-P171a-02b VP vs BC precedence, burst-273) |
+| L-046 | When a defect class is fixed in one instance, sweep the CLASS, not the instance — gate #25 Part C `awk` field fix (F-P170-15) was never applied to gate #33's structurally identical census, which sat broken for two more passes | Sibling-sweep discipline (TD-VSDD-060) | OPEN — fix-burst 274 pending (F-P172a-01) |
+| L-047 | A count reduction ("ALL FOUR"→"ALL THREE") is a multi-site edit — six live sites survived inside the very gate whose changelog declared the fix complete; the TD-VSDD-060 sibling-sweep obligation applies to prose strings and count literals as much as to symbol names | Gate authoring + count propagation | OPEN — fix-burst 274 pending (F-P172a-03) |
+| L-048 | An exemption list must be validated against the architecture docs for EVERY named member — `memory::skills` was granted a definitions-only exemption while `purity-boundary-map.md` §Effectful Shell placement refutes the stated prerequisite; the exemption's own criterion ("no I/O") was not verified against the purity map | Gate #32 exemption authoring | OPEN — fix-burst 274 pending (F-P172a-04) |
+| L-049 | A census that returns a permanent false failure is worse than no census — it trains operators to ignore the gate; gate #36's `VP-*.md` glob catching `VP-INDEX.md` is a permanent false failure; any census whose "expected: empty" assertion is structurally unsatisfiable must be fixed immediately | Gate quality | OPEN — fix-burst 274 pending (F-P172a-13) |
+| L-050 | Registry/enumeration lists inside gates (Form-B file set, supplement set, BC count) decay silently; prefer deriving them from the corpus or mechanizing them rather than hardcoding; stale "95 BCs" at six sites all stem from earlier sweeps that updated some but not all instances | Gate maintenance + count propagation | OPEN — fix-burst 274 pending (F-P172a-07/08) |

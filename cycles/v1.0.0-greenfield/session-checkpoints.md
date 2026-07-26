@@ -1400,3 +1400,31 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **CASCADE TRAJECTORY (P1D-143..170):** 1,4,5,4,3,5,4,2,7,3,2,3,2,4,4,4,2,2,2,3L,3,5,3,7,3,5,1,1,20 — single-finding streak broken by semantic-citation axis.
 
 **WRAP METADATA:** Date 2026-07-25 | Cycle v1.0.0-greenfield | Burst 272 | Phase 1 IN PROGRESS — burst-272 COMMITTED; NEXT: adversary cascade P1D-171
+
+---
+
+## Checkpoint archived from STATE.md at P1D-172a state-record (burst-273 session)
+
+**Date archived:** 2026-07-25 (replaced by P1D-172a session wrap)
+
+**RESUME IN ONE BREATH:** ferrochain Phase 1 (Spec Crystallization) — fix-burst 273 COMPLETE (P1D-171 cascade done; all 19 findings F-P171a-01..19 CLOSED; ToolConfig defined, call-time lifecycle, #[non_exhaustive] ActionRisk wildcard-arm, ADR-008 Decision 2, validator #7 minted); streak 0/3; NEXT: adversary P1D-172.
+
+**HEADS:** develop d018d3f (clean, pushed); factory-artifacts = burst-273 commit (pushed); no worktrees; no open PRs.
+
+**PERIMETER SNAPSHOT (verified P1D-171 burst-273):** 129 BCs (51/75/3); 108 codes; 674 TVs (663+11 GTV); 38 CAPs; 15 DIs; 13 VPs (6 P0 Kani); 21 ADRs; 21 crates; SS-01..23; 81 purity-boundary-map rows (33 Pure Core / 36 Effectful Shell / 12 Boundary); 44 modules (11/18/13/2); 36 gates; 17 Components (PascalCase ADR-010 v1.10); ActionRisk ferrochain-core::core::action_risk (#[non_exhaustive], 4 variants); 7 blocking validators + 1 advisory (validator #7 verify-changelog-date-monotonicity.sh PASS; verify-adr-decision-refs.sh PASS=267).
+
+**NEXT-ACTION:** dispatch adversary P1D-172 with FOUR MANDATORY DIRECTED AXES.
+
+**P1D-172 DIRECTED AXES (all four MANDATORY — carried from P1D-171 narrow scope):**
+1. Governance-gate executable content: census/grep/awk commands in gates #19/#20/#21/#25/#27/#28/#29/#30/#32/#33/#35/#36 verified against current headers/paths; gate #25 Part B renumbering dangling-ref check; 36-gate count verification.
+2. ADR semantic citation: ADR-018, ADR-019, ADR-020, ADR-014, ADR-012, ADR-017, ADR-010 families; two validator blind spots: `+`-separated and paren-interleaved multi-Decision citations. Open item: ADR-010 timestamp divergence (architect).
+3. Deep read: `specs/architecture/api-surface.md`, `prd-supplements/interface-definitions.md`, `specs/architecture/verification-coverage-matrix.md`, `specs/architecture/system-overview.md`.
+4. Broad regression + FREE HUNT: derived-count parity both directions; enum membership; error-taxonomy anchoring; wave/phase/priority propagation; observability catalog; VP red_gate uniformity; supersession blast radius; open future-imperative ADR handoffs.
+
+**CONVERGENCE-INTEGRITY RULE:** 3-CLEAN streak requires FULL-PERIMETER passes only.
+
+**CASCADE TRAJECTORY (P1D-143..171):** 1,4,5,4,3,5,4,2,7,3,2,3,2,4,4,4,2,2,2,3L,3,5,3,7,3,5,1,1,20,19 — lessons L-036..L-045.
+
+**PENDING HUMAN ACTIONS:** B1 direnv allow; R6 publish-all.sh regenerate for 21 crates.
+
+**WRAP METADATA:** Date 2026-07-25 | Cycle v1.0.0-greenfield | burst-273 | Phase 1 IN PROGRESS — P1D-171 cascade CLOSED; fix-burst 273 COMPLETE

@@ -5031,3 +5031,14 @@ All corrected to 2026-07-23: `interface-definitions.md` entry 2.49, `error-taxon
 **Dim-7:** Trajectory tail →1→20→19. Burst-273 fix of 19 items. Lessons L-041..L-045 codified. BC-INDEX v3.20.
 
 ---
+
+## Burst 270 (archived from STATE.md Current Phase Steps at burst-274 state-record)
+
+**Burst 270 — P1D-168 adversary + fix-burst COMPLETE**
+
+1 finding (0C/1H). F-P168-01 HIGH: TOOLS-literal typing — `component: "TOOLS"` string-literal → `Component::Tools` typed-form ×14 BC files ~45 sites. PascalCase RE-ADJUDICATED: ADR-010 v1.9 Direction B; F-P167-05 SCREAMING_CASE OBS RETRACTED. 24 files swept (10 architect + 14 BC files); blocking validator #5 `verify-enum-variant-casing.sh` minted (PASS=198 FAIL=0); BC-INDEX v3.17; hash sweep specs/174+planning/6+cycles/54 TOTAL STALE=0; burst-265 row archived.
+
+Streak: 0/3. NEXT: P1D-169.
+
+Agents: architect + product-owner + devops-engineer + state-manager.
+
