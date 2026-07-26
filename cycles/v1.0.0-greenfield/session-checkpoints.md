@@ -1384,3 +1384,19 @@ ferrochain Phase 1d adversarial spec convergence: Pass 23 REMEDIATED — NOT CLE
 **WRAP METADATA:** Date 2026-07-25 | Cycle v1.0.0-greenfield | Burst 268 | Phase 1 IN PROGRESS — burst-268 COMMITTED; NEXT: adversary cascade P1D-167
 
 **WRAP METADATA:** Date 2026-07-24 | Cycle v1.0.0-greenfield | Burst 259 | Phase 1 IN PROGRESS — burst-259 COMMITTED; NEXT: adversary cascade P1D-159
+
+---
+
+### Burst 272 Session Checkpoint (archived from STATE.md P1D-171-state-record)
+
+**RESUME IN ONE BREATH:** ferrochain Phase 1 (Spec Crystallization) — Phase-1d adversarial re-convergence on D21+D23 expanded perimeter; P1D-170 NOT CLEAN strict (20 findings 0C/8H/10M/2L/2OBS; F-P170-01..20 all closed by fix-burst 272: ActionRisk→ferrochain-core, api-surface re-anchors, gate-registry repairs, validator widened PASS=267, allowlist re-keyed); streak 0/3; NEXT: dispatch adversary pass P1D-171 on THIS burst-272 commit's SHA as frozen HEAD.
+
+**HEADS:** develop d018d3f (clean, pushed); factory-artifacts = THIS burst-272 commit (pushed); no worktrees; no open PRs.
+
+**PERIMETER SNAPSHOT (verified P1D-170):** 129 BCs (51/75/3); 108 codes (106 broken/0 degraded/2 cosmetic); 674 TVs (663+11 GTV); 38 CAPs; 15 DIs; 13 VPs (6 P0 Kani); 21 ADRs (20 ADR files); 21 crates; SS-01..23; 15 StreamEvents; FM-001..019; 14 bounded contexts; 43 modules in criticality registry (11/18/12/2); purity-boundary-map 80 module rows (32 Pure Core / 36 Effectful Shell / 12 Boundary); 36 gates; 11 Red Gate BCs; 11 active event_types; 17 Components (PascalCase canon ADR-010 v1.10). ActionRisk now ferrochain-core::core::action_risk (4 variants: ReadOnly/Low/Medium/High, #[non_exhaustive]); ferrochain-graph::hitl re-exports it. 6-validator protocol (6 blocking): PASS=267; all PASS required.
+
+**NEXT-ACTION:** pre-run all SIX blocking validators; embed outputs in the adversary dispatch; fresh-context P1D-171, broad regression + free hunt with SEMANTIC-CITATION axis continuing; findings → route by owner → fix-burst 273 → state-manager commit; if CLEAN(strict), streak 1/3 begins.
+
+**CASCADE TRAJECTORY (P1D-143..170):** 1,4,5,4,3,5,4,2,7,3,2,3,2,4,4,4,2,2,2,3L,3,5,3,7,3,5,1,1,20 — single-finding streak broken by semantic-citation axis.
+
+**WRAP METADATA:** Date 2026-07-25 | Cycle v1.0.0-greenfield | Burst 272 | Phase 1 IN PROGRESS — burst-272 COMMITTED; NEXT: adversary cascade P1D-171

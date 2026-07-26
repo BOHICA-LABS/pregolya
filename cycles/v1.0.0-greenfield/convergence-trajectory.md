@@ -1702,3 +1702,60 @@ records-lint: PASS=3 WARN=0 FAIL=0
 verify-sha-currency: PASS (resolved by burst-272 commit)
 
 **Hash sweep (D18-P89-A/D18-P90-A):** All modified files + transitive dependents swept. TOTAL STALE=0. Burst-272 commit.
+
+---
+
+### Pass P1D-171 sub-pass P1D-171a (2026-07-25)
+
+**Findings:** 19 (0 CRIT / 5 HIGH / 8 MED / 4 LOW / 2 OBS)
+
+**Adversary:** fresh-context on frozen HEAD (burst-272 commit, SHA `67468a5477dc69fb17a09522c8c17eb5eb3f39f7`)
+**Streak:** 0/3 (reset by HIGH findings)
+**CLEAN (strict):** no — 19 items present (0C/5H/8M/4L/2OBS)
+**CLEAN (PR-merge):** no — 5 HIGH findings present
+**Realized scope:** NARROW — burst-272 ActionRisk relocation audit (sub-pass P1D-171a only). Four axes NOT run; carried to P1D-172.
+**Convergence-integrity rule recorded:** the three consecutive CLEAN(strict) passes required by BC-5.39.001 must each be FULL-PERIMETER passes. A narrowed sub-pass may never advance the 3-CLEAN streak.
+
+**Fix burst:** 273 (PENDING)
+**Frozen HEAD:** burst-272 commit (`67468a5477dc69fb17a09522c8c17eb5eb3f39f7`)
+**Novel attack angle:** Token-based sweep limitation — burst-272 verification greps could not see prose asserting the pre-relocation world without naming the moved symbol's path. The burst also verified retirement of the old identifier without verifying the replacement identifier resolves to a defined type (`ToolConfig` canonical across 11 sites while undefined). A `#[non_exhaustive]` cross-crate boundary transition silently invalidated all "closed/exhaustive match, no wildcard" invariants in BCs and VPs.
+
+**Orchestration note:** Full-perimeter dispatch died twice on API errors after ~316k tokens. Pass split into bounded sub-passes. P1D-171a is the only executed sub-pass. Remaining 4 axes mandatory for P1D-172.
+
+**Summary:** Sub-pass P1D-171a on frozen HEAD burst-272. 19 findings (0C/5H/8M/4L/2OBS). All OPEN — fix-burst 273 pending. Novelty HIGH. Dominant class: relocation-residue prose invisible to token-based sweeps (L-036). Secondary: undefined canonical type propagated 11 sites (L-037). Tertiary: `#[non_exhaustive]` cross-crate invalidation of exhaustive-match invariants (L-038). Additional: attribute VALUES invisible to symbol greps, weakening security gates (L-039). Two retracted near-misses (stale VP-NNN candidate label; non-compiling `matches!`).
+
+**Verified-clean surfaces (P1D-171a, do not re-check in P1D-172):**
+- Zero stale `ActionRisk` definition-home claims; zero live-body `set_risk`; zero surviving `ActionRisk::Critical`
+- Purity per-class counts 32/36/12=80 correct; criticality 43 (11/18/12/2) consistent with `verification-coverage-matrix.md`
+- Build order acyclic and feasible; three cited type-in-core precedents consistent; all 10 burst-272 carriers changelog parity and direction correct
+
+**Carried-forward directed axes for P1D-172 (MANDATORY):**
+1. Governance-gate registry as executable content: gates #19/#20/#21/#25/#27/#28/#29/#30/#32/#33/#35/#36 census/grep/awk commands verified against current headers and paths; gate #25 Part B renumbering dangling-reference check; 36-gate count verification.
+2. Semantic citation sweep: ADR-018, ADR-019, ADR-020, ADR-014, ADR-012, ADR-017, ADR-010 families; two validator blind spots: `+`-separated and paren-interleaved multi-Decision citations.
+3. Deep read: `specs/architecture/api-surface.md`, `prd-supplements/interface-definitions.md`, `specs/architecture/verification-coverage-matrix.md`, `specs/architecture/system-overview.md`.
+4. Broad regression: derived-count parity both directions; enum membership; error-taxonomy anchoring; wave/phase/priority propagation; observability catalog; VP red_gate uniformity; supersession blast radius; open future-imperative ADR handoffs; FREE HUNT.
+
+**Findings (all OPEN — fix-burst 273 pending):**
+- F-P171a-01 HIGH (architect): ADR-018 §Rationale still co-location justification contradicts §Decision 1 dependency inversion
+- F-P171a-02 HIGH (PO+architect): ToolConfig canonical 11 sites but DEFINED NOWHERE; BC-2.23.005 defines BashConfig not ToolConfig; lifecycle contradiction BC-2.23.005 §PC-4 vs interface-definitions §PreToolCallHook
+- F-P171a-03 HIGH (PO): interface-definitions BashTool annotation `action_risk = ActionRisk::Medium` security-downgrade defect; canon is High default/Medium floor
+- F-P171a-04 HIGH (PO): BC-2.05.006 "closed/exhaustive, no wildcard" invariants contradicted by `#[non_exhaustive]` + cross-crate; VP-HITL-13 cannot pass as written
+- F-P171a-05 HIGH (architect): purity-boundary-map §Purity Enforcement Rules item 3 false claim re all 9 Kani harnesses; 3 contradict (VP-010/011/013)
+- F-P171a-06 MED (architect): dependency-graph self-contradiction: DAG annotation vs Edge Table re ferrochain-tools/ferrochain-macros; build order feasibility VERIFIED CLEAN
+- F-P171a-07 MED (architect): purity-boundary-map "All 53" stale (universe=55; Pure Core=32); "criticality-universe" naming collision
+- F-P171a-08 MED [process-gap] (PO): gate #32 step 4 text makes legitimate definitions-only modules violations; carve-out applied 5 times but unwritten
+- F-P171a-09 MED (architect+PO): ADR-018 §Decision 6 attributes macro extension to ADR-008 (zero ActionRisk content); emitted absolute path form undocumented anywhere
+- F-P171a-10 MED (architect): VP-013 §Proof Harness Skeleton 3 proofs vs verification-architecture §VP-013 2 proofs; Gate #35 unsatisfied
+- F-P171a-11 MED (architect+devops): same "v1.1 = VAL" claim three different TD-VSDD-091 treatments; allowlist header enumerates retired exception categories (TD-VSDD-091 2026-07-24)
+- F-P171a-12 MED [process-gap] (BA+PO+devops): gate #28 date-monotonicity violations in 2 burst-272 carriers; temporal-neighbor sweep not executed; gate census only 5 files (misses architecture/domain-spec/prd-supplements)
+- F-P171a-13 MED (PO): BC-2.05.006 §Traceability Module row still ferrochain-graph/ferrochain-server; architecture anchor is now ferrochain-core
+- F-P171a-14 LOW (BA): entities-graph §HITL Approval Hook Domain "runtime dep" should be "compile-time dep"
+- F-P171a-15 LOW (architect): VP-013 risk_floor_exhaustive_coverage doc-comment "Requires kani::Arbitrary" contradicted by u8-index body; no Arbitrary in derive list
+- F-P171a-16 LOW [process-gap] (PO): F-P133-07 adjudication applied architect-only; ~40 PO/BA sites retain "VP-NNN candidate" including 2 canonical BC H1 titles
+- F-P171a-17 LOW [process-gap] (PO): gate #28 Rule 5 FRONTMATTER-CURRENCY two-branch logic applies supplement rule to ADRs; 11 amended ADRs would fail; convention unadjudicated
+- F-P171a-18 OBS (PO): interface-definitions rust code fences with single-slash comment syntax errors
+- F-P171a-19 OBS (architect): api-surface ActionRisk row added but precedent types lack Public-Types rows; deferred to P1D-172 api-surface deep-read axis
+
+**Regression sweep (at burst-272 HEAD):** All 6 blocking validators PASS (inherited from burst-272 commit). records-lint: PASS. verify-sha-currency: PASS.
+
+**Hash sweep:** N/A — record-only state commit; no spec content changed.

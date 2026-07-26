@@ -4938,3 +4938,32 @@ DEFECT-1..4: wave regressions remediated pre-commit (version-pin, ActionRisk::Cr
 DEFECT-5 (root cause): version-pin allowlist re-keyed path::pin-text; line-shift immune.
 
 ---
+
+## Burst 268 — P1D-166 Fix-Burst: prd-supplements/module-criticality de-pin, VP-013 v1.4, validator #4 extended (2026-07-25) [archived from STATE.md P1D-171-state-record]
+
+**Summary:** P1D-166 adversary + fix-burst COMPLETE. 3 items (0C/0H/1M/1L/1OBS). All closed. F-P166-01 MED: prd-supplements/module-criticality v1.5→v1.6 — SUPERSEDED banner version pin stripped per TD-VSDD-091 ('v1.6' forward-reference pin to living module-criticality.md; de-pinned to bare '(43 modules, Phase 1b)'). OBS-P166-A LOW: VP-013 v1.3→v1.4 — §Feasibility Assessment and §Proof Obligations 'error-taxonomy.md (v1.31, D23)' → 'error-taxonomy.md §Component: TOOLS (registered at D23)'. OBS-P166-B [process-gap]: verify-no-version-pins.sh extended with filename.md-(vN.N/vN.N) patterns; 11 historical records allowlisted. Extended pattern caught 3 more live-normative pins: ADR-012 v1.4→v1.5 (bc-authoring-plan §Gate #27 §Key ownership rules); BC-2.19.005 v1.3→v1.4 (§E-SRLZ-001 row: VAL); BC-2.19.006 v1.1→v1.2 (§E-SRLZ-002 row: VAL + COMPATIBILITY purge). BC-INDEX v3.14→v3.15. Hash sweep: specs/174 STALE=0; planning/6 STALE=0; cycles/54 STALE=0. Burst 268. 0/3.
+
+---
+
+## P1D-171 State Record — Adversary Pass P1D-171a Recorded; Fix-Burst 273 Pending (2026-07-25)
+
+**Summary:** Record-only state commit. No spec content changed. Sub-pass P1D-171a executed on frozen HEAD burst-272 (`67468a5477dc69fb17a09522c8c17eb5eb3f39f7`). 19 findings (0C/5H/8M/4L/2OBS). All OPEN — fix-burst 273 pending. Streak 0/3. Trajectory tail →1→1→20→19.
+
+**Orchestration deviation:** Full-perimeter adversary dispatch died twice on API errors (`Connection closed mid-response`, `Stream idle timeout`) after ~316k tokens. Pass split into bounded sub-passes. P1D-171a scope: burst-272 ActionRisk relocation audit. Four axes carried to P1D-172 (mandatory directed axes — see Session Resume Checkpoint).
+
+**Convergence-integrity rule recorded:** The three consecutive CLEAN(strict) passes required by BC-5.39.001 must each be FULL-PERIMETER passes. A narrowed sub-pass may never advance the streak.
+
+**Orchestrator self-correction:** Pre-adjudicated `ToolConfig::override_risk` as canonical on usage-majority evidence without verifying type definition — direct cause of F-P171a-02. Usage consensus does not substitute for definition verification.
+
+**Files written this state record:**
+- `.factory/cycles/v1.0.0-greenfield/adversarial-reviews/ADV-P1D-PASS-171.md` (new)
+- `.factory/cycles/v1.0.0-greenfield/convergence-trajectory.md` (P1D-171 entry appended)
+- `.factory/cycles/v1.0.0-greenfield/lessons.md` (L-036..L-040 appended)
+- `.factory/cycles/v1.0.0-greenfield/session-checkpoints.md` (burst-272 checkpoint archived)
+- `.factory/cycles/v1.0.0-greenfield/burst-log.md` (burst-268 archived + this entry)
+- `.factory/STATE.md` (v4.15→v4.16: P1D-171 recorded, checkpoint updated, burst-268 archived)
+
+**Dim-5:** Counter 0/3 (P1D-171 NOT CLEAN strict; sub-pass scope narrow). Next: fix-burst 273 (route F-P171a-01..19 by owner), then adversary pass P1D-172 with four mandatory directed axes.
+**Dim-7:** Finding trajectory tail →1→1→20→19. 19 findings (relocation-residue class: burst-272 token-based sweeps invisible to non-symbol prose). Novelty HIGH. Lessons L-036..L-040 codified.
+
+---
