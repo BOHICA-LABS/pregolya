@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.10"
+version: "1.11"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
 changelog:
+  - "1.11 (FIX-BURST-272/F-P170-03+04+06/2026-07-25): Three api-surface fixes in one burst. (1) F-P170-03 — Remove `PreToolCallHook` from §Public Rust Traits (ferrochain-core); ADR-018 Decision 1 places it in `ferrochain-graph::hitl`, not core; putting it in core was exactly the 'orphan definitions module' alternative ADR-018 rejected by name. Fix ferrochain-tools section note: 'trait is defined in core, tools crate provides impls' → 'trait defined in ferrochain-graph::hitl per ADR-018 Decision 1'. (2) F-P170-04 — Correct PathGuard SS-23 → SS-13 with amended BC anchor; PathGuard is owned by ferrochain-sandbox/SS-13/BC-2.13.004 and is the CRITICAL path-guard module with VP-003 Kani P0. (3) F-P170-06 adjudication (option b) — ActionRisk relocates to ferrochain-core (core::action_risk) per dependency-inversion precedent; ferrochain-tools needs ActionRisk at compile time without depending on ferrochain-graph. Move ActionRisk row from ferrochain-tools section to ferrochain-core Public Types section; SS-23 → SS-05 (HITL risk tiering); add BC-2.05.006 anchor."
   - "1.10 (FIX-BURST-266/OBS-P164-B/2026-07-25): Adjudicate and fix Tool trait row mixed anchoring. `Tool | ferrochain-core | SS-09 | BC-2.09.002` was wrong on both anchors: SS-09 is ferrochain-mcp (the CONSUMER crate — BC-2.09.002 PC1 takes `Arc<dyn ferrochain_core::Tool>` as input); BC-2.09.002 is 'ToolInvocation Routing to Correct MCP Server Transport' (MCP routing, not trait definition). Adjudicated: Tool trait is DEFINED in `ferrochain-core/src/tool.rs` (BC-2.08.010 Architecture Anchors), owned by SS-08 (macros::tool module is SS-08 per module-decomposition.md; BC-2.08.010 lives in ss-08/). Correct row: `Tool | ferrochain-core | SS-08 | BC-2.08.010`. Parallel to BaseChatModel | ferrochain-core | SS-08 pattern. Trait-row audit: all other 6 ferrochain-core trait rows (Runnable/SS-01, BaseChatModel/SS-08, GuardrailHook/SS-11, BudgetPolicy/SS-10, PreToolCallHook/SS-05, CompactionPolicy/SS-10) are correctly definition-anchored — no further mixing found."
   - "1.9 (burst-242/2026-07-23): Fix-242 Command-notation sweep — convert residual enum-style notation Command::resume(value) in §ferrochain-graph Public Types table to canonical struct kwarg form Command(resume=value). Canonical form per BC-2.05.004 v1.5 + F-P120-01 adjudication."
   - "1.8 (burst-238/2026-07-23): F-P138-02 stale-handoff sweep — remove stale Note on api-surface.md §Error Type: 'ADR-010 amendment required to add TOOLS variant — architect task per error-taxonomy.md §TOOLS delegation note.' ADR-010 v1.3 (burst-232) already registered TOOLS as component 17; error-taxonomy.md §TOOLS delegation note was removed in v1.32 (burst-233 F-P133-09); TOOLS already listed as 17th component in the enum. Dangling cross-reference to removed delegation note deleted."
@@ -46,7 +47,6 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 | `GuardrailHook` | ferrochain-core | SS-11 | BC-2.11.002–004 |
 | `BudgetPolicy` | ferrochain-core | SS-10 | BC-2.10.001 |
 | `Tool` | ferrochain-core | SS-08 | BC-2.08.010 |
-| `PreToolCallHook` | ferrochain-core | SS-05 | BC-2.05.007 |
 | `CompactionPolicy` | ferrochain-core | SS-10 | BC-2.10.005, BC-2.10.006 |
 
 ## ferrochain-core Public Types
@@ -54,6 +54,7 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 | Type | Role | SS | BC Anchors |
 |------|------|----|-----------|
 | `RunnableConfig` | Per-invocation config: `recursion_limit` (default 25), `thread_id`, `budget_config: Option<BudgetConfig>` (per-run budget override — `None` inherits `GraphConfig::budget_config`; `Some` overrides for that run; used by `BudgetResume::Extend`), `context_mutations: Option<ContextMutationConfig>` | SS-01 | BC-2.01.003 PC5, BC-2.10.003 PC7/TV-004, BC-2.10.004 PC6, BC-2.15.006 PC1 |
+| `ActionRisk` | Risk classification enum for tool dispatch; 4 variants: `ReadOnly`/`Low`/`Medium`/`High` (`#[non_exhaustive]`); relocated from `ferrochain-graph::hitl` to `ferrochain-core` (`core::action_risk`) per dependency-inversion precedent — `ferrochain-tools` consumes it at compile time without a `ferrochain-graph` dep (F-P170-06/ADR-020 adjudication) | SS-05 | BC-2.05.006, BC-2.23.005 |
 
 ## Public Traits (ferrochain-memory)
 
@@ -92,11 +93,10 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 
 | Symbol | Kind | SS | BC Anchors |
 |--------|------|----|-----------|
-| `PreToolCallHook` | trait | SS-05 | BC-2.05.007 (see also ferrochain-core — trait is defined in core, tools crate provides impls) |
-| `ActionRisk` | enum (4 variants: ReadOnly/Low/Medium/High) | SS-23 | BC-2.23.005 |
+| `PreToolCallHook` | trait (defined in `ferrochain-graph::hitl` per ADR-018 Decision 1; ferrochain-tools registers tools that interact with this hook via `ActionRisk` risk-tier defaults — ADR-020 Decision 3) | SS-05 | BC-2.05.007 |
 | `PreToolDecision` | enum (4 variants: Approve/Deny/Edit/PendingHumanApproval) | SS-05 | BC-2.05.007 |
 | `ToolCallPreview` | struct (tool_name, tool_args, action_risk: Option\<ActionRisk\>) | SS-05 | BC-2.05.007 |
-| `PathGuard` | struct (workspace-root-confined path validator; E-TOOLS-001 on escape) | SS-23 | BC-2.23.001–006 |
+| `PathGuard` | struct (workspace-root-confined path validator; E-TOOLS-001 on escape) — owned by ferrochain-sandbox/SS-13 (VP-003 Kani P0); re-exported / consumed by SS-23 tools | SS-13 | BC-2.13.004 |
 | `ReadFileTool` | first-party tool | SS-23 | BC-2.23.001 |
 | `WriteFileTool` | first-party tool (High ActionRisk) | SS-23 | BC-2.23.002 |
 | `EditFileTool` | first-party tool | SS-23 | BC-2.23.003 |

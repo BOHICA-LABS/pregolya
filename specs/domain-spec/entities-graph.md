@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: entities-graph
-version: "1.10"
+version: "1.11"
 status: active
 producer: business-analyst
-timestamp: 2026-07-24T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -14,6 +14,7 @@ input-hash: "148b6a2"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D21, D23]
 changelog:
+  - "v1.11 (F-P170-16/burst-272/2026-07-25): Fix HITL Approval Hook Domain intro — retire stale ActionRisk location claim 'ferrochain-graph::hitl alongside ActionRisk'. ActionRisk relocated to ferrochain-core (core::action_risk); ferrochain-graph::hitl re-exports it. HITL hook entities and RiskGatePolicy remain in ferrochain-graph::hitl. Placement rationale narrowed to hook types only. TD-VSDD-060 sweep: sole ActionRisk location claim in this file."
   - "v1.10 (2026-07-24): Fix burst 252 BA — ADR-019 v1.4 compaction type canon applied. CompactionTrigger: `OnWatermark { fraction: f32 }` → `f64`; predicate `<` → `<=` (non-strict; strict < cannot fire at fraction=1.0); OnMessageCount/OnTokenCount descriptors → 'reaches or exceeds' phrasing. CompactionSummary fields: `compacted_range: RangeInclusive<usize>` → flat `compacted_start: usize, compacted_end: usize`; Application: `messages[compacted_range]` → `messages[compacted_start..=compacted_end]`; CompactionEvent struct updated to flat fields. Relationships Summary updated to flat-field form. TD-VSDD-060 sweep: zero compacted_range / RangeInclusive / fraction: f32 occurrences remain in this file's body text (changelog historical entries exempt)."
   - "v1.9 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 3 enum-variant form occurrences of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Sites: §PreToolDecision PendingHumanApproval bullet (line 298), §ToolApprovalRequest Note (line 312), Relationships Summary (line 371). TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text."
   - "v1.8 (2026-07-23): Fix burst-241 F-P141-01 (false-closure) — CompactionSummary §Application: genuinely apply the rename trigger_tokens_remaining → tokens_remaining_after. The v1.7 changelog entry claimed this rename was already applied ('sole occurrence') but the body retained the stale field name `trigger_tokens_remaining`. v1.7 was a false-closure; this entry is the genuine fix. TD-VSDD-060 sibling sweep: zero trigger_tokens_remaining occurrences remain in domain-spec/ body text (changelog historical entries and out-of-scope BC/ADR files exempted)."
@@ -279,9 +280,12 @@ fires when `get_relevant_documents` is called.
 
 ## HITL Approval Hook Domain
 
-> D23 additions (ADR-018). Entities live in `ferrochain-graph::hitl` alongside `ActionRisk`
-> and `RiskGatePolicy`. Placement rationale: no dependency-inversion need — no crate requires
-> these types without depending on ferrochain-graph (ADR-018 Decision 1).
+> D23 additions (ADR-018). HITL hook entities (`PreToolCallHook`, `PreToolDecision`,
+> `ToolCallPreview`, `ToolApprovalRequest`) and `RiskGatePolicy` live in
+> `ferrochain-graph::hitl`. Placement rationale: no dependency-inversion need — no crate
+> requires these hook types without depending on ferrochain-graph (ADR-018 Decision 1).
+> `ActionRisk` lives in `ferrochain-core` (`core::action_risk`); `ferrochain-graph::hitl`
+> re-exports it (ferrochain-tools needs `ActionRisk` without a ferrochain-graph runtime dep).
 
 ### PreToolCallHook
 Async hook invoked by the graph engine immediately before every tool dispatch.

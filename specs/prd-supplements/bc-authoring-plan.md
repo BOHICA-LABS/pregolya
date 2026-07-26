@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.51"
+version: "2.52"
 status: active
 producer: product-owner
 total_standing_gates: 36
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.52 (F-P170-08/F-P170-13/F-P170-14/F-P170-15/burst-272/2026-07-25): Four process-gap findings closed. (1) F-P170-08 HIGH: Gate #25 Part B 'ALL FOUR' → 'ALL THREE' — prd-supplements/module-criticality.md (PO registry) is superseded/frozen; removed from live sibling set; added explicit frozen/do-not-sync note for item 5; corresponding Gate #32 step 5 restated as frozen. Gate #32 step 5 now reads: 'status: superseded — DO NOT SYNC; any new ADR module addition need only appear in the three live documents.' Never-update-all-four clause updated to never-update-all-three. (2) F-P170-13 MED: Gate #32 step 4 wrong path '.factory/specs/architecture/module-criticality.md' → '.factory/specs/module-criticality.md' (only one instance in whole document — confirmed by grep). (3) F-P170-14 MED: Gate #25 Part B census tier-summary row check de-pinned — removed hardcoded 'Example correct value: 9/12/10/2=33' (pre-D21/D23 stale value); replaced with instruction to recompute from arch-registry §Classification Summary. Historical motivating-instance text (OBS-P37-1) preserved untouched. (4) F-P170-15 MED: Gate #25 Part C awk census command corrected from '{print $2, $4}' to '{print $2, $3}' — table header 'Module | Crate | SS | Tier | VP | Kill Rate | Phase Gate' puts Crate at $3 not $4; previous command printed (Module, SS) not (Module, Crate), causing guaranteed false mismatches on every module row."
   - "2.51 (F-P163-01/FIX-BURST-265/2026-07-25): Gate #27 ARCH-ANCHOR CRATE-RESOLUTION CENSUS updated for 21-crate roster (closes F-P163-01 [process-gap, HIGH]). (1) Rule 1 label: 'ADR-007 18-crate roster (+xtask)' → 'ARCH-INDEX §Canonical Crate Roster (21 published crates + xtask)' — ARCH-INDEX is the authoritative living source of truth, not ADR-007 (which documents the original 18-crate topology). (2) Embedded roster block relabeled 'ARCH-INDEX §Canonical Crate Roster (source of truth — 21 published crates)'; three new crates appended: ferrochain-prompts (D21/ADR-015), ferrochain-vectorstores (D21/ADR-014), ferrochain-tools (D23/ADR-020); disambiguation note added (ADR-007 is original 18; ARCH-INDEX is SoT). (3) Three ownership rules added: prompts::template/chat_template/few_shot/injection_guard → ferrochain-prompts (SS-18); vectorstores::store/retriever/memory/similarity/mmr → ferrochain-vectorstores (SS-20/SS-21); tools::fs/shell/search → ferrochain-tools (SS-23). (4) Census command prose: '18-crate roster' → '21-crate roster'. Sanity-check results: BC-2.21.003 (vectorstores::similarity) PASS rule 1 (ferrochain-vectorstores ∈ 21-crate roster) + PASS rule 2 (similarity owned by ferrochain-vectorstores per module-decomp SS-21); SS-18 BC (BC-2.18.004, ferrochain-prompts/injection_guard) PASS rule 1 + PASS rule 2 (injection_guard owned by ferrochain-prompts SS-18); SS-23 BC (BC-2.23.005, ferrochain-tools/tools-shell) PASS rule 1 + PASS rule 2 (tools::shell owned by ferrochain-tools SS-23). Sweep for other live '18-crate' or '18 crates' in bc-authoring-plan.md (changelog rows exempt): zero remaining hits."
   - "2.50 (F-P161-01/FIX-BURST-262/2026-07-25): Three NORMATIVE version pins de-pinned + five HISTORICAL pins allowlisted (TD-VSDD-091 stable-anchor enforcement, F-P161-01). De-pinned: (1) Gate #12 lifecycle-arrow census authority 'BC-2.12.003 v1.4 PC7-PC9' → 'BC-2.12.003 PC7-PC9'. (2) Gate #12 source citation 'F-P117-01 adjudication (fix burst 120, BC-2.12.003 v1.4)' → '(fix burst 120, BC-2.12.003)'. (3) Type-census table BudgetInfo authority 'BC-2.10.003 v1.2 PC5/INV/TV-007' → 'BC-2.10.003 PC5/INV/TV-007'. Allowlisted (HISTORICAL-RECORD prose, version-pin-allowlist.txt entries at post-edit line numbers): 1677 (BC-2.08.004 v1.2 in ADV-P1D-PASS-56-COMPLETION RESOLVED note), 1707 (BC-2.04.002 v1.3 / BC-2.04.007 v1.6 / BC-2.08.002 v1.4 / BC-2.08.006 v1.4 / BC-2.08.014 v1.3 in F-P112-02 fix-burst record), 2115 (BC-2.08.014 v1.2), 2119 (BC-2.04.007 v1.5), 2125 (BC-2.08.013 v1.2) in F-P108-04 motivating-instance records."
   - "2.49 (burst-255/OBS-P154-A/2026-07-24): Gate #35 VP PROPERTY-BODY COHERENCE extended — TRIGGER now also fires on edits to VP-scope bullets in BC-2.17.001.md (SS-17 Kani-harness-scope authority); ACTION extended with step 7: VP-NNN.md INTERNAL consistency check: §Proof Method table coverage claims, §Proof Harness Skeleton proof-fn inventory, §BC Traceability scope statements, and §Proof Obligations outcome-type claims must all agree internally AND with the citing BC-2.17.001 bullet; a coverage claim ('covers all N variants') must be backed by an actual harness fn per claimed variant or an explicit peel-off/out-of-scope statement. Root cause of F-P154-01/02: burst-254 VP-011 bullet modernization propagated to BC/index rows but not cross-checked against VP-011.md §Proof Method table and §Proof Harness Skeleton which contradicted each other internally."
@@ -994,15 +995,18 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 
     **Part B — Criticality-sibling coherence (widened P37 — OBS-P37-1 [process-gap]):**
     Any burst that adds, removes, or re-tiers a module in ANY criticality-bearing document MUST
-    propagate the change to ALL FOUR sibling documents in the same burst:
+    propagate the change to ALL THREE sibling documents in the same burst:
     1. `.factory/specs/module-criticality.md` (arch registry — authoritative source of truth post-1b)
-    2. `.factory/specs/prd-supplements/module-criticality.md` (PO registry)
-    3. `.factory/specs/architecture/module-decomposition.md` (derived — per-module Criticality column
+    2. `.factory/specs/architecture/module-decomposition.md` (derived — per-module Criticality column
        AND structurally-privileged module-tier headings, e.g., `## <module-name> — <TIER>`)
-    4. `.factory/specs/architecture/verification-coverage-matrix.md` (derived — per-tier summary row
+    3. `.factory/specs/architecture/verification-coverage-matrix.md` (derived — per-tier summary row
        AND per-module table Criticality column)
 
-    Never update any one of these four without verifying all four in the same burst.
+    Note: `.factory/specs/prd-supplements/module-criticality.md` (PO registry) is **superseded**
+    (status: superseded; 22-module pre-D21/D23 view; frozen — do not sync). Routing implementation
+    decisions to it is prohibited per its SUPERSEDED banner. It is excluded from this gate.
+
+    Never update any one of these three without verifying all three in the same burst.
 
     After editing:
     - Apply **Part A** (table/summary reconciliation) to every document you touch.
@@ -1020,7 +1024,8 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
       tier matches module-criticality.md (arch registry). Any mismatch is a HIGH-severity finding.
     - Tier-summary row check: recount rows per tier in verification-coverage-matrix.md per-module
       table → must equal the §Coverage by Criticality Tier summary row (CRITICAL/HIGH/MEDIUM/LOW
-      counts and total). Example correct value: 9/12/10/2=33.
+      counts and total). Must equal the arch-registry (`.factory/specs/module-criticality.md`)
+      §Classification Summary — recompute; do not trust a hardcoded example.
     - Structurally-privileged heading check: grep `^##` in module-decomposition.md for
       tier-bearing headings; verify each named module's tier matches module-criticality.md.
       Command: `grep -n "^## " module-decomposition.md | grep -E "CRITICAL|HIGH|MEDIUM|LOW"`
@@ -1050,7 +1055,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     # the owning-crate column in module-decomposition.md, verification-coverage-matrix.md,
     # and the PO module-criticality.md registry.
     grep -n "| " .factory/specs/module-criticality.md | grep -v "^| Module\|^|---" \
-      | awk -F'|' '{print $2, $4}' | sort
+      | awk -F'|' '{print $2, $3}' | sort
     # Compare each module's crate column against module-decomposition.md Crate column and
     # verification-coverage-matrix.md Crate/Owner column. Any mismatch is a HIGH-severity finding.
     ```
@@ -1851,17 +1856,17 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
        that names a trait or type whose home crate was decided by the ADR must have its
        implementation note, crate reference, or doc-comment updated to reflect the ADR placement.
 
-    4. **`.factory/specs/architecture/module-criticality.md` (arch registry)** — if the ADR
+    4. **`.factory/specs/module-criticality.md` (arch registry)** — if the ADR
        introduces a new module or changes crate placement for a module, the arch-registry
        criticality table must reflect the module with its correct crate and tier. A module added
        by an ADR that does not appear in the arch registry is a gate #32 + gate #25 violation.
 
-    5. **`.factory/specs/prd-supplements/module-criticality.md` (PO registry)** — the PO-scope
-       criticality registry (22-module subset; behavioral-contract-relevant modules only) must
-       also reflect any new module that meets the PO inclusion criteria (see scope note in that
-       file). Both criticality views must agree on tier and crate for modules that appear in both.
-       (OBS-P72 process-gap addition; motivating instance: D20 ADR-012/ADR-013 modules not
-       reconciled against PO registry in same burst.)
+    5. **`.factory/specs/prd-supplements/module-criticality.md` (PO registry — SUPERSEDED, FROZEN)**
+       — this file is `status: superseded` (22-module pre-D21/D23 view, audit trail only).
+       Do NOT sync it. Routing ADR placement changes to this file is prohibited — it is permanently
+       frozen. Any new ADR module addition need only appear in the THREE live documents listed above
+       (items 1–3). (OBS-P72 historical context: D20 ADR-012/ADR-013 modules were the motivating
+       instance; the PO registry was superseded at Phase 1b under F-P165-06 adjudication.)
 
     **Census procedure:**
     1. Read the ADR's placement statement(s) (e.g., "X lives in ferrochain-core/src/budget.rs").

@@ -1,165 +1,177 @@
 # version-pin-allowlist.txt — ferrochain factory-artifacts
 #
-# Per-line exemptions for verify-no-version-pins.sh
+# Per-match exemptions for verify-no-version-pins.sh
 #
 # Format (one entry per non-comment line):
-#   <path-relative-to-.factory/specs>:<1-indexed-line-number>
+#   <path-relative-to-.factory/specs> :: <normalized-pin-text>
+#
+# The separator is ' :: ' (space, double-colon, space).
+# <normalized-pin-text> is the exact match string produced by PIN_RE with
+# internal whitespace normalized to single spaces — i.e., what
+# re.sub(r'\s+', ' ', m.strip()) produces from the regex match object.
 #
 # Purpose: Exempt specific live-body version pin matches that are genuinely
-# justified and cannot be de-pinned without losing meaning.  Permitted uses:
+# justified historical records that cannot be de-pinned without losing meaning.
+# Permitted uses:
 #   - Red Gate test tables where the version anchors a specific test vector
-#   - AC source-of-truth tables that cite a pinned canonical version
+#   - AC source-of-truth tables recording authoring-provenance versions
 #   - Historical before-state quotes that explicitly record an old value
 #
 # Each entry MUST have a reason comment on the immediately preceding line.
 # Format of reason comment: "# Reason: <justification>"
 #
-# The script checks: if the file's 1-indexed line number appears in this
-# allowlist for that relative path, the line is skipped.
+# DESIGN: This scheme is LINE-NUMBER-INDEPENDENT.  Entries survive file edits
+# (line additions/deletions above the allowlisted content) because matching is
+# keyed on (file, pin-text), not (file, line-number).  A new pin with different
+# text still FAILS even if the file has other allowlisted entries.  The same
+# historical pin text appearing at multiple locations in the same file is
+# covered by a single entry.
 #
-# WARNING: Line numbers are 1-indexed and shift when the file gains or loses
-# lines above the exempted line.  Update this file whenever the target document
-# is edited to add or remove lines above the exempted entry.
+# Migration note (FIX-BURST-272): migrated from the prior line-number-keyed
+# scheme (path:NNN format).  That scheme required manual refresh whenever an
+# unrelated edit shifted line numbers; it was patched in bursts 267, 269, and
+# 272 for exactly this reason.  Pin-text keying eliminates the drift entirely.
 #
-# Example (do not uncomment — illustrative only):
-#
-#   # Reason: Red Gate test table anchor — BC-2.05.001 v1.0 is the source-of-
-#   # truth for TV-001/TV-002 at the time this gate was authored; historical
-#   # record of the exact version under test.
-#   behavioral-contracts/ss-05/BC-2.05.001.md:142
-#
-# ── FIX-BURST-262 entries (F-P161-01, 2026-07-25) — line numbers refreshed FIX-BURST-265 ──
-# All five entries are HISTORICAL-RECORD prose in bc-authoring-plan.md — audit-
-# trail narrations of what specific BC versions did at the time of a fix burst or
-# motivating-instance record.  Removing the version pins would destroy the
-# historical precision of the audit trail without providing any normative benefit.
-# Line numbers refreshed +9 by FIX-BURST-265 (bc-authoring-plan.md +9 lines above
-# these positions from gate#27 v2.51 changelog + body table additions).
+# ── FIX-BURST-262 entries (F-P161-01, 2026-07-25) ────────────────────────────
+# All bc-authoring-plan.md entries below are HISTORICAL-RECORD prose —
+# audit-trail narrations of what specific document versions did at the time of
+# a fix burst or motivating-instance record.  Removing the version pins would
+# destroy the historical precision of the audit trail without providing any
+# normative benefit.
 
-# Reason: HISTORICAL-RECORD — ADV-P1D-PASS-56-COMPLETION RESOLVED note recording
-# that BC-2.08.004 was at v1.2 when E-PROV-008 was minted to close the deferred
-# TBD-E-PROV-HTTP placeholder.  Removing the pin would erase which version of the
-# BC closed the finding.
-prd-supplements/bc-authoring-plan.md:1686
+# Reason: HISTORICAL-RECORD — bc-authoring-plan.md §Gate 28 motivating-instances
+# block; records that bc-authoring-plan.md v1.1 contained rows dated 2026-07-16
+# (two days future relative to their superseding v1.2 rows) — the canonical
+# example of the date-validity gap that Gate #28 Rule 6 was added to close.
+# Version pin identifies the defective document state, not a live authority.
+prd-supplements/bc-authoring-plan.md :: bc-authoring-plan.md v1.1
 
-# Reason: HISTORICAL-RECORD — F-P112-02 fix-burst record (2026-07-18 addendum)
-# listing the five BC versions that were bumped when E-CORE-005 non-canonical
-# message text was corrected corpus-wide.  Also cites bc-authoring-plan v2.39 and
-# error-taxonomy.md v1.26 as contemporaneous adjudication records.  All seven
-# version pins on this line are audit-trail data; the entire line is a closed
-# historical record.
-prd-supplements/bc-authoring-plan.md:1716
+# Reason: HISTORICAL-RECORD — same §Gate 28 motivating-instance block; records
+# that test-vectors.md v1.1 contained the same future-date defect.
+prd-supplements/bc-authoring-plan.md :: test-vectors.md v1.1
 
-# Reason: HISTORICAL-RECORD — F-P108-04 motivating-instance block; records that
-# the E-PROV-010 combined-field defect (providers_attempted + last_error) was
-# fixed in BC-2.08.014 at v1.2.
-prd-supplements/bc-authoring-plan.md:2124
+# Reason: HISTORICAL-RECORD — bc-authoring-plan.md §ADV-P1D-PASS-56-COMPLETION
+# RESOLVED note and §F-P112-02 addendum; records that E-PROV-008, E-CORE-007,
+# and E-CHKPT-007 were first minted in error-taxonomy.md v1.8.  Closed audit
+# record of which supplement version introduced those codes; the taxonomy is
+# now at a later version.
+prd-supplements/bc-authoring-plan.md :: error-taxonomy.md v1.8
 
-# Reason: HISTORICAL-RECORD — F-P108-04 motivating-instance block; records that
-# the E-CHKPT-004 source/message field inconsistency was fixed in BC-2.04.007
+# Reason: HISTORICAL-RECORD — bc-authoring-plan.md §ADV-P1D-PASS-56-COMPLETION
+# RESOLVED note; records that the TBD-E-PROV-HTTP placeholder was replaced
+# (E-PROV-008 assigned) when BC-2.08.004 reached v1.2.  Version pin anchors the
+# closure event to the specific BC version.
+prd-supplements/bc-authoring-plan.md :: BC-2.08.004 v1.2
+
+# Reason: HISTORICAL-RECORD — bc-authoring-plan.md §F-P112-02 fix-burst record
+# (2026-07-18 addendum); records that BC-2.04.002 EC-003 non-canonical message
+# text was corrected when the BC was bumped to v1.3.  All five BC-version pins
+# in this addendum record a closed corpus-wide correction event.
+prd-supplements/bc-authoring-plan.md :: BC-2.04.002 v1.3
+
+# Reason: HISTORICAL-RECORD — same §F-P112-02 addendum; records that
+# BC-2.04.007 EC-003 non-canonical message text was corrected at v1.6.
+prd-supplements/bc-authoring-plan.md :: BC-2.04.007 v1.6
+
+# Reason: HISTORICAL-RECORD — same §F-P112-02 addendum; records that
+# BC-2.08.002 EC-005 non-canonical message text was corrected at v1.4.
+prd-supplements/bc-authoring-plan.md :: BC-2.08.002 v1.4
+
+# Reason: HISTORICAL-RECORD — same §F-P112-02 addendum; records that
+# BC-2.08.006 EC-002 non-canonical message text was corrected at v1.4.
+prd-supplements/bc-authoring-plan.md :: BC-2.08.006 v1.4
+
+# Reason: HISTORICAL-RECORD — same §F-P112-02 addendum; records that
+# BC-2.08.014 EC-006 non-canonical message text was corrected at v1.3.
+prd-supplements/bc-authoring-plan.md :: BC-2.08.014 v1.3
+
+# Reason: HISTORICAL-RECORD — same §F-P112-02 addendum; cites
+# error-taxonomy.md v1.26 as the contemporaneous adjudication record for the
+# E-CORE-005 corpus-wide message-text correction.
+prd-supplements/bc-authoring-plan.md :: error-taxonomy.md v1.26
+
+# Reason: HISTORICAL-RECORD — bc-authoring-plan.md §Gate 32 Trait-Signature
+# Type-Resolution Census table; records the authoring-provenance version of
+# interface-definitions.md in which IngressContent and GuardrailSeverity were
+# formally defined (v2.13 = DEFINED P58).  These are provenance records, not
+# live normative authorities; all rows in the census are RESOLVED.
+prd-supplements/bc-authoring-plan.md :: interface-definitions.md v2.13
+
+# Reason: HISTORICAL-RECORD — same census table; records that PolicyDecision was
+# defined in interface-definitions.md v2.15 (DEFINED P60).
+prd-supplements/bc-authoring-plan.md :: interface-definitions.md v2.15
+
+# Reason: HISTORICAL-RECORD — same census table; records that RunContext was
+# defined in interface-definitions.md v2.16 (DEFINED P61).
+prd-supplements/bc-authoring-plan.md :: interface-definitions.md v2.16
+
+# Reason: HISTORICAL-RECORD — same census table; records the authoring-provenance
+# version of interface-definitions.md in which SkillDescriptor, MemoryWriteRequest,
+# and WriteGuardDecision were formally defined (v2.20 = D20 sub-burst 2).
+prd-supplements/bc-authoring-plan.md :: interface-definitions.md v2.20
+
+# Reason: HISTORICAL-RECORD — same census table; records that BudgetInfo was
+# defined in interface-definitions.md v2.21 (D20 TOUCH-UP).
+prd-supplements/bc-authoring-plan.md :: interface-definitions.md v2.21
+
+# Reason: HISTORICAL-RECORD — bc-authoring-plan.md §F-P108-04 motivating-instance
+# block; records that the E-PROV-010 combined-field defect (providers_attempted +
+# last_error) was fixed in BC-2.08.014 at v1.2.
+prd-supplements/bc-authoring-plan.md :: BC-2.08.014 v1.2
+
+# Reason: HISTORICAL-RECORD — same §F-P108-04 motivating-instance block; records
+# that the E-CHKPT-004 source/message field inconsistency was fixed in BC-2.04.007
 # at v1.5.
-prd-supplements/bc-authoring-plan.md:2128
+prd-supplements/bc-authoring-plan.md :: BC-2.04.007 v1.5
 
-# Reason: HISTORICAL-RECORD — F-P108-04 motivating-instance block; records that
-# the E-PROV-009 under-specified struct (reason catch-all) was expanded in
+# Reason: HISTORICAL-RECORD — same §F-P108-04 motivating-instance block; records
+# that the E-PROV-009 under-specified struct (reason catch-all) was expanded in
 # BC-2.08.013 at v1.2.
-prd-supplements/bc-authoring-plan.md:2134
+prd-supplements/bc-authoring-plan.md :: BC-2.08.013 v1.2
 
 # ── FIX-BURST-262 entries (F-P161-01, architect share, 2026-07-25) ───────────
-# All seven entries are HISTORICAL-RECORD prose — audit-trail narrations of what
+# All entries are HISTORICAL-RECORD prose — audit-trail narrations of what
 # specific BC versions did at the time of burst-232/burst-226 fix operations.
-# Removing the version pins would destroy the historical precision of these
-# records without providing any normative benefit.
 
-# Reason: HISTORICAL-RECORD — burst-232 decisions blockquote (D23 VPs SEEDED)
-# records that BC-2.23.005 was specifically at v1.1 when it was amended to
-# category VAL.  The version pin identifies the amendment event, not a current
-# normative authority.
-architecture/ARCH-INDEX.md:181
+# Reason: HISTORICAL-RECORD — ADR-013 §Attribution Note (F-P72-04); records that
+# the prior attribution of mcp::server to ADR-012 in module-decomposition.md
+# (v1.6) was incorrect.  Pin anchors which version of module-decomposition.md
+# carried the wrong attribution before correction.  The word "Prior" marks this
+# as a before/after historical record, not a live normative authority.
+architecture/decisions/ADR-013-mcp-server-module-placement.md :: module-decomposition.md (v1.6
 
-# Reason: HISTORICAL-RECORD — ADR-013 Attribution Note completion marker
-# records that the BC-2.09.006 attribution correction deferred to PO was
-# closed when the BC reached v1.1.  The version pin records the closure event.
-architecture/decisions/ADR-013-mcp-server-module-placement.md:153
+# Reason: HISTORICAL-RECORD — ADR-013 §Attribution Note completion marker;
+# records that the BC-2.09.006 attribution correction deferred to PO was closed
+# when the BC reached v1.1.  Pin records the closure event.
+architecture/decisions/ADR-013-mcp-server-module-placement.md :: BC-2.09.006 v1.1
 
-# Reason: HISTORICAL-RECORD — ADR-014 propagation-record narration (burst-226)
-# records that BC-2.20.002 v1.2 applied three specific textual corrections to
-# replace ferrochain-guardrail crate references with the canonical
-# ferrochain-core: core::guardrail location.
-architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:701
+# Reason: HISTORICAL-RECORD — ADR-014 §Propagation record (burst-226); records
+# that BC-2.20.002 v1.2 applied three specific textual corrections replacing
+# ferrochain-guardrail crate references with the canonical ferrochain-core
+# core::guardrail location.
+architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md :: BC-2.20.002 v1.2
 
-# Reason: HISTORICAL-RECORD — ADR-014 propagation-record narration (F-P131-01
-# burst-226) records that BC-2.20.002 v1.3 updated PC2 to reflect the Critical
-# vs Non-Critical Fail severity bifurcation for guardrail results.
-architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:746
+# Reason: HISTORICAL-RECORD — ADR-014 §Propagation record (F-P131-01 burst-226);
+# records that BC-2.20.002 v1.3 updated PC2 to reflect the Critical vs
+# Non-Critical Fail severity bifurcation for guardrail results.
+architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md :: BC-2.20.002 v1.3
 
-# Reason: HISTORICAL-RECORD — ADR-014 propagation-record narration (F-P131-07
-# burst-226) records that BC-2.21.004 v1.2 updated INV-3 to replace the lossy
-# fallback with a fail-safe Err(E-VS-005) when non-empty filters are passed.
-architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md:770
+# Reason: HISTORICAL-RECORD — ADR-014 §Propagation record (F-P131-07 burst-226);
+# records that BC-2.21.004 v1.2 updated INV-3 to replace the lossy fallback with
+# a fail-safe Err(E-VS-005) when non-empty filters are passed.
+architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md :: BC-2.21.004 v1.2
 
-# Reason: HISTORICAL-RECORD — verification-architecture.md RESOLVED block
-# (burst-232, 2026-07-22) records that BC-2.23.005 reached VAL category at v1.1
-# and that prior Category::CONFIGURATION label was non-canonical.  The "v1.1 =
-# VAL" phrasing anchors the resolution event to the specific BC version.
-architecture/verification-architecture.md:566
+# Reason: HISTORICAL-RECORD — verification-architecture.md §RESOLVED block
+# (burst-232, 2026-07-22); records that BC-2.23.005 reached VAL category at v1.1
+# and that the prior Category::CONFIGURATION label was non-canonical.  The
+# "v1.1 = VAL" phrasing anchors the resolution event to the specific BC version;
+# the BC is now at a later version.
+architecture/verification-architecture.md :: BC-2.23.005 v1.1
 
-# Reason: HISTORICAL-RECORD — VP-013.md BC Contradictions Flagged RESOLVED block
-# (burst-232, 2026-07-22) — identical resolution text to verification-
-# architecture.md §566; records that BC-2.23.005 established category VAL at
-# v1.1, closing the contradiction that existed in the VP's harness context.
-# Line number refreshed :258→:259 by FIX-BURST-268/OBS-P166-A (VP-013 v1.4
-# changelog entry added above); :259→:260 by FIX-BURST-269/F-P167-04 (VP-013
-# v1.5 §Source Contract title sync); :260→:261 by FIX-BURST-270/ADR-010-v1.9
-# (VP-013 v1.6 changelog entry added above this block).
-verification-properties/VP-013.md:261
-
-# ── FIX-BURST-268 entries (OBS-P166-B, 2026-07-25) — patterns 5 and 6 added ──
-# These entries cover historical-record hits uncovered when `<filename>.md (vN.N`
-# and `<filename>.md vN.N` patterns were added to the validator.  All entries are
-# genuine historical-record prose; removing the version pins would destroy audit-
-# trail precision without providing any normative benefit.
-
-# Reason: HISTORICAL-RECORD — ADR-013 §Attribution Note (F-P72-04) records that the
-# "Prior attribution of `mcp::server` to ADR-012 in module-decomposition.md (v1.6)"
-# was incorrect; the pin anchors which version of module-decomposition carried the
-# wrong attribution before the correction was made.  The word "Prior" marks this as a
-# before/after historical record, not a live normative authority.
-architecture/decisions/ADR-013-mcp-server-module-placement.md:150
-
-# Reason: HISTORICAL-RECORD — bc-authoring-plan.md gate #28 motivating-instances block;
-# records that bc-authoring-plan.md v1.1 and test-vectors.md v1.1 each contained rows
-# dated 2026-07-16 — two days future relative to their superseding v1.2 rows — as the
-# canonical example of the date-validity gap that Gate #28 Rule 6 was added to close.
-# Both version pins identify the defective document state, not a live authority.
-prd-supplements/bc-authoring-plan.md:1357
-
-# Reason: HISTORICAL-RECORD — P56-COMPLETION resolved block; "see error-taxonomy.md v1.8"
-# cites the specific supplement version where E-PROV-008, E-CORE-007, and E-CHKPT-007
-# were first minted.  This is a closed audit record of which supplement version
-# introduced the codes; the error taxonomy is now at a later version.
-prd-supplements/bc-authoring-plan.md:1718
-
-# Reason: HISTORICAL-RECORD — Gate #32 Trait-Signature Type-Resolution Census table;
-# nine consecutive rows (lines 1783–1796) record the specific version of interface-
-# definitions.md in which each type was first formally defined (e.g., v2.13 = P58,
-# v2.20 = D20 sub-burst 2).  These are authoring provenance records, not live normative
-# authorities; the census was completed and the RESOLVED status of each row is
-# definitive.  Line numbers may shift; state-manager must re-verify at commit time.
-prd-supplements/bc-authoring-plan.md:1783
-prd-supplements/bc-authoring-plan.md:1788
-prd-supplements/bc-authoring-plan.md:1790
-prd-supplements/bc-authoring-plan.md:1791
-prd-supplements/bc-authoring-plan.md:1793
-prd-supplements/bc-authoring-plan.md:1794
-prd-supplements/bc-authoring-plan.md:1795
-prd-supplements/bc-authoring-plan.md:1796
-
-# Reason: HISTORICAL-RECORD — product-brief.md §Constraints & Integration Points and
-# §Reference Corpus Pins; both lines cite "reference-manifest.md v1.4.0" as a
-# provenance attribution for the semport analysis corpus (the analysis was performed
-# against the corpus described in reference-manifest v1.4.0).  This is a source-of-
-# data citation, not a live normative mandate; the reference manifest is a read-only
-# pinned corpus that does not evolve post-semport.
-product-brief.md:210
-product-brief.md:300
+# Reason: HISTORICAL-RECORD — product-brief.md §Constraints & Integration Points
+# and §Reference Corpus Pins; both lines cite reference-manifest.md v1.4.0 as a
+# provenance attribution for the semport analysis corpus (the analysis was
+# performed against the corpus described in that manifest version).  This is a
+# source-of-data citation, not a live normative mandate; the reference manifest
+# is a read-only pinned corpus that does not evolve post-semport.
+product-brief.md :: reference-manifest.md v1.4

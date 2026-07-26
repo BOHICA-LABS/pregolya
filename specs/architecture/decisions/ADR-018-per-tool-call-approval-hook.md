@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-23"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.5"
+version: "1.6"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-05, SS-06, SS-16]
 changelog:
+  - "1.6 (FIX-BURST-272/F-P170-06/2026-07-25): Amend Decision 1 trait-placement rationale: the 'no relocation is needed' statement for ActionRisk was adjudicated before ADR-020 introduced ferrochain-tools as a cross-crate compile-time consumer of ActionRisk. F-P170-06 option (b) adjudication: ActionRisk IS relocated to ferrochain-core (core::action_risk) per the dependency-inversion precedent — same pattern as BudgetPolicy/GuardrailHook/MemoryWriteGuard. PreToolCallHook and all other graph::hitl types remain in ferrochain-graph::hitl."
   - "1.5 (FIX-BURST-262/F-P161-01/2026-07-25): De-pin 3 live-body BC version pins per TD-VSDD-091 BC-pin variant: (1) Decision 5 — BC-2.06.001 v1.4 → BC-2.06.001; (2) Decision 6 — BC-2.08.010 v1.1 amended → BC-2.08.010 amended; (3) Status section — BC-2.08.010 v1.1 → BC-2.08.010."
   - "1.4 (burst-242/2026-07-23): Fix-242 Command-notation sweep — convert 4 residual enum-variant form Command::Resume(...) occurrences (Decision 1 doc comment, Decision 3 step 6, Decision 3 on-resume paragraph, Decision 4 resume paragraph) to canonical struct kwarg form Command(resume=...). Canonical form per BC-2.05.004 v1.5 + F-P120-01 adjudication."
   - "1.3 (burst-239/2026-07-23): F-P139-05 — reconcile frontmatter date/timestamp mismatch: date corrected from 2026-07-22 to 2026-07-23, matching timestamp 2026-07-23T00:00:00Z (burst-238 canonical date per ARCH-INDEX v1.9)."
@@ -96,8 +97,15 @@ ADR-012, ADR-014) is driven by dependency inversion — a downstream crate needs
 without depending on ferrochain-graph. `PreToolCallHook` has no such consumer: it is
 exclusively a graph-configuration concern. Putting it in ferrochain-core would add an
 orphan definitions module with no dependency-inversion benefit, violating the "put it
-where it is used" principle. `ActionRisk` (used in `ToolCallPreview`) already lives in
-`ferrochain-graph::hitl::action_risk`; no relocation is needed.
+where it is used" principle. `PreToolCallHook`, `PreToolDecision`, `ToolCallPreview`,
+`ToolApprovalRequest`, and `AlwaysApprovePolicy` all remain in `ferrochain-graph::hitl`.
+
+**ActionRisk relocation (F-P170-06 adjudication, FIX-BURST-272):** At the time this ADR
+was written, no external consumer of `ActionRisk` existed outside `ferrochain-graph`. The
+statement "no relocation is needed" was correct at that point. ADR-020 subsequently
+introduced `ferrochain-tools` as a cross-crate compile-time consumer: `ToolConfig::override_risk(ActionRisk)` is a public `ferrochain-tools` signature, the risk-floor check (`risk < ActionRisk::Medium`) runs in `ferrochain-tools::tools::shell`, and VP-013's Kani harness constructs concrete `ActionRisk` variants in `ferrochain-tools` scope. This creates exactly the dependency-inversion motive for trait-in-core.
+
+`ActionRisk` is therefore relocated to `ferrochain-core` as `core::action_risk` (`ferrochain-core/src/action_risk.rs`), following the `BudgetPolicy` (ADR-009), `GuardrailHook`/`BoundaryType` (ADR-014 Decision 6), and `MemoryWriteGuard` (ADR-012) precedents. `ferrochain-graph::hitl` re-exports `ActionRisk` from `ferrochain-core` for backward compatibility within graph code. All other `ferrochain-graph::hitl` types stay in graph.
 
 ## Decision 2 — Hook Registration in `GraphConfig`
 

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.26"
+version: "1.28"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
@@ -14,6 +14,8 @@ input-hash: "44938a8"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.28 (F-P170-16/burst-272/2026-07-25): Fix retired symbol name in VP-013 anchor paragraph — `BashTool::set_risk(ReadOnly)` and `set_risk(Low)` → `ToolConfig::override_risk(ActionRisk::ReadOnly)` and `ToolConfig::override_risk(ActionRisk::Low)` on a `BashTool` instance, per ADR-020 Decision 3 canonical form."
+  - "1.27 (FIX-BURST-272/F-P170-06/2026-07-25): ActionRisk dependency adjudication propagation. (a) ferrochain-tools description: 'ferrochain-graph::hitl::ActionRisk' → 'ferrochain-core::ActionRisk (core::action_risk)'. (b) ferrochain-tools ADR anchor dep list: 'ferrochain-sandbox/core/graph/macros' → 'ferrochain-sandbox/core/macros' (ferrochain-graph is not a compile-time dep; ActionRisk now sourced from ferrochain-core). (c) Add core::action_risk definitions-only note to ferrochain-core D21 additions section, following core::guardrail precedent."
   - "1.26 (burst-264/F-P164-01/2026-07-25): Adjudicate canonical module name for SS-12 cron subsystem — server::cron is the canonical Rust module name (two authoritative architecture sources: module-decomp + purity-boundary-map; one BC-2.12.004 Architecture Anchors outlier used filesystem path `src/scheduler/` implying server::scheduler). Extend server::cron row description to cite canonical filesystem path `ferrochain-server/src/cron/`, locking out the drift-inducing `src/scheduler/` form. PO-owned downstream fixes listed in burst-264 report: BC-2.12.004 line 172 path and observability.md Module column."
   - "1.25 (FIX-BURST-262/F-P161-01/2026-07-25): De-pin live-body BC version pin per TD-VSDD-091 BC-pin variant: Budget definitions blockquote — BC-2.10.003 v1.2 + BC-2.10.004 → BC-2.10.003 + BC-2.10.004."
   - "1.24 (FIX-BURST-258/2026-07-24): OBS-1 — sandbox::path_guard row gains WorkspaceFs facade clause: description extended to include '`WorkspaceFs` facade routes all workspace file ops — sole permitted path for `std::fs` calls within sandbox (BC-2.13.004 INV-2)'; BC-2.13.004 Architecture Anchor already cited this clause but the row lacked it. OBS-2 — core::guardrail definitions note heading corrected: SS-20 label was the promotion-trigger subsystem (ADR-014 lives in SS-20/SS-21 RAG context), not the owning subsystem; corrected to '(SS-11 owner; promoted via ADR-014 Decision 6 [SS-20 RAG context]; DI-012, definitions-only)' — SS-11 is the content-provenance subsystem that owns GuardrailHook/BoundaryType/IngressContent (BC-2.11.001–006 all carry subsystem: SS-11). Definitions-only note sweep: Budget definitions (SS-10, line 66) and Self-improvement definitions (SS-01/SS-15, line 89) carry correct owning-subsystem labels — no changes needed. No PO-side changes required."
@@ -314,6 +316,19 @@ Re-exported from ferrochain-core.
 > accept `&GuardedDocuments`, making bypass a compile-time type error
 > (ADR-014 Decision 6 / BC-2.20.002 VP upgrade).
 
+> **ActionRisk definitions (SS-05 owner; relocated from graph::hitl per F-P170-06 adjudication; definitions-only):** ferrochain-core
+> hosts DEFINITIONS for the ActionRisk risk-classification enum, relocated from `ferrochain-graph::hitl`
+> following the dependency-inversion precedent established by BudgetPolicy (ADR-009 Option 3),
+> GuardrailHook/BoundaryType (ADR-014 Decision 6), and MemoryWriteGuard (ADR-012). This relocation
+> is required so that `ferrochain-tools` (Wave 1 position 7) can use ActionRisk at compile time
+> without taking a `ferrochain-graph` dependency (Wave 1 position 8). No execution logic; no
+> criticality-counted module row per ADR-009 definitions-only precedent.
+>
+> - `core::action_risk` (`ferrochain-core/src/action_risk.rs`): `ActionRisk` enum — 4 variants:
+>   `ReadOnly`, `Low`, `Medium`, `High`. `#[non_exhaustive]` per workspace convention. BC-2.05.006
+>   anchor preserved. `ferrochain-graph` re-exports `core::action_risk::ActionRisk` as
+>   `ferrochain_graph::hitl::ActionRisk` for existing graph-layer consumers (zero BC changes required).
+
 ## ferrochain-prompts (SS-18) — MEDIUM
 
 Responsibilities: prompt template construction (PromptTemplate, ChatPromptTemplate,
@@ -374,7 +389,8 @@ ferrochain-anthropic is EXCLUDED — Anthropic provides no public embeddings API
 
 Responsibilities: first-party file I/O, bash execution, and text-search tools;
 implements the `Tool` trait (ferrochain-core) with sandbox path-guard integration
-(ferrochain-sandbox) and risk-tier defaults (ferrochain-graph::hitl::ActionRisk).
+(ferrochain-sandbox) and risk-tier defaults (ferrochain-core::ActionRisk via
+`core::action_risk`; relocated from `ferrochain-graph::hitl` per F-P170-06 adjudication).
 Crate #21. **D23 item 5 / Wave 1.**
 
 | Module | Responsibility | Criticality | SS |
@@ -384,7 +400,8 @@ Crate #21. **D23 item 5 / Wave 1.**
 | `tools::search` | `GrepTool` — in-process regex search via `regex` crate; path-guarded directory traversal via `sandbox::path_guard`; `max_results` cap (E-TOOLS-006 advisory); default `ActionRisk::ReadOnly`; accepts `{pattern, path, recursive, case_insensitive, max_results}` (ADR-020 / SS-23) | MEDIUM | SS-23 |
 
 **ADR anchor:** ADR-020 governs crate placement (separate from ferrochain-sandbox), dependency
-graph (ferrochain-tools → ferrochain-sandbox/core/graph/macros, one-way; no reverse dep),
+graph (ferrochain-tools → ferrochain-sandbox/core/macros, one-way; no ferrochain-graph
+compile-time dep; ActionRisk sourced from ferrochain-core per F-P170-06),
 risk tier defaults, retry classification, and `E-TOOLS-*` error namespace.
 
 **VP anchors:**
@@ -393,8 +410,8 @@ risk tier defaults, retry classification, and `E-TOOLS-*` error namespace.
 - VP-012 (Kani P1, seeded burst-232) — OnWatermark arithmetic: `on_watermark` never produces
   a token count exceeding the hard limit; no overflow; BC-2.10.005, ferrochain-core,
   core::budget (ADR-019 Decision 2).
-- VP-013 (Kani P1, seeded burst-232) — `BashTool::set_risk(ReadOnly)` and `set_risk(Low)`
-  always return `Err(E-TOOLS-007)`, never succeed (ADR-020 Decision 3 / BashTool risk floor /
+- VP-013 (Kani P1, seeded burst-232) — `ToolConfig::override_risk(ActionRisk::ReadOnly)` and `ToolConfig::override_risk(ActionRisk::Low)`
+  on a `BashTool` instance always return `Err(E-TOOLS-007)`, never succeed (ADR-020 Decision 3 / BashTool risk floor /
   BC-2.23.005).
 
 **Validated external dependencies (ADR-020 Decision 7):**

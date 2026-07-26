@@ -11,12 +11,31 @@
 #   F-P167-02 — "ADR-016 Decision 7" on a 5-decision ADR (existence violation)
 #   F-P169-01 — existing-but-semantically-wrong number (out of scope; see below)
 #
+# F-P170-20 coverage widening (fix-burst 272):
+#   Added two previously-invisible citation forms to the scanner:
+#   (a) §Decision N form  — e.g. "ADR-015 §Decision 3"
+#   (b) Decisions N, M form — e.g. "ADR-020 Decisions 2, 3, and 5"
+#       Continuation items (", N" and " and N" forms) are validated via
+#       CONTINUATION_RE scanning after each initial match.
+#
+# Known scanner limitations (documented, not defects):
+#   L1 — "Decisions N+M" separator form (e.g. "Decisions 1+4" in
+#        purity-boundary-map §graph::hitl): only N is validated; M is skipped.
+#   L2 — paren-interleaved form (e.g. "Decisions 3 (label) and 4"):
+#        text between the first number and "and" prevents CONTINUATION_RE from
+#        reaching the second number; only the first is validated.
+#   L3 — §Decision (no number) form (e.g. "ADR-009 §Decision (Option 3 split)"):
+#        no digit follows §Decision so CITE_RE does not match; this is correct
+#        behaviour — these are unnumbered section references, not decision cites.
+#
 # ─────────────────────────────────────────────────────────────────────────────
 # WHAT THIS SCRIPT CHECKS (EXISTENCE AXIS)
 # ─────────────────────────────────────────────────────────────────────────────
 #
-#   For each citation matching the pattern `ADR-(\d{3}) Decision (\d+)` found
-#   in the LIVE BODY of any .md file under .factory/specs/:
+#   For each citation matching the pattern
+#     `ADR-(\d{3}) §?Decisions? (\d+)` (plus optional `, N` / ` and N`
+#     continuation items) found in the LIVE BODY of any .md file under
+#     .factory/specs/:
 #
 #   1. FAIL — ADR file exists but has NO numbered decisions (only the unnumbered
 #             "## Decision: ..." or "## Decision — ..." heading form).  The cited
@@ -223,8 +242,25 @@ for filepath in sorted(glob.glob(adr_glob)):
 
 # ── Phase 2: Scan spec files for citations ────────────────────────────────────
 #
-# Pattern: ADR-NNN Decision N  (ADR-NNN must be exactly 3 digits)
-CITE_RE = re.compile(r'\bADR-(\d{3})\s+Decision\s+(\d+)\b')
+# CITE_RE matches the initial citation token in three forms:
+#   (1) "ADR-NNN Decision N"   — original singular form
+#   (2) "ADR-NNN §Decision N"  — section-symbol form (F-P170-20 addition)
+#   (3) "ADR-NNN Decisions N"  — plural form; first number captured here;
+#                                 continuation items captured by CONTINUATION_RE
+# ADR-NNN must be exactly 3 digits.  The §? makes the section symbol optional.
+# The s? makes the plural suffix optional to cover both singular and plural.
+CITE_RE = re.compile(r'\bADR-(\d{3})\s+§?Decisions?\s+(\d+)\b')
+
+# CONTINUATION_RE scans list-continuation items after an initial CITE_RE match.
+# Two forms handled:
+#   Form A: ", N" or ", and N"  (comma-separated, with optional "and")
+#   Form B: " and N"            (and-only, space-prefixed)
+# Usage: CONTINUATION_RE.match(line, pos) anchors at position pos; stops
+# advancing when neither form matches the next characters, bounding the scan
+# to the current citation list and preventing runoff into unrelated numbers.
+# Known limitations L1 and L2 (see header): "+" separator and paren-interleaved
+# forms are NOT matched by either continuation form and are documented there.
+CONTINUATION_RE = re.compile(r'(?:\s*,\s*(?:and\s+)?|\s+and\s+)(\d+)\b')
 
 # Gather all .md files under specs_root
 all_md_files = []
@@ -255,43 +291,58 @@ for filepath in all_md_files:
 
         for m in CITE_RE.finditer(line):
             adr_num_str = m.group(1)        # e.g. "016"
-            dec_num     = int(m.group(2))   # e.g. 6
             adr_id      = f"ADR-{adr_num_str}"
             lineno      = i + 1             # 1-indexed
 
-            cite_label  = f"{adr_id} Decision {dec_num}"
+            # Collect all decision numbers cited: initial match + continuations.
+            # CONTINUATION_RE.match anchors at pos so the scan stops as soon as
+            # neither Form A (", N" / ", and N") nor Form B (" and N") starts at
+            # the current position — bounding the scan to the current citation.
+            dec_nums = [int(m.group(2))]
+            pos = m.end()
+            while pos < len(line):
+                cont = CONTINUATION_RE.match(line, pos)
+                if cont:
+                    dec_nums.append(int(cont.group(1)))
+                    pos = cont.end()
+                else:
+                    break
 
-            if adr_id not in decision_map:
-                # No ADR file found — warn (file-existence is another validator's job)
-                file_findings.append(
-                    f"WARN {filepath}:{lineno} {cite_label} "
-                    f"adr-file-not-found:{adr_id} not in decisions directory"
-                )
-            elif decision_map[adr_id] is None:
-                # ADR file was unreadable
-                file_findings.append(
-                    f"WARN {filepath}:{lineno} {cite_label} "
-                    f"adr-unreadable:{adr_id}"
-                )
-            elif len(decision_map[adr_id]) == 0:
-                # ADR exists but has NO numbered decisions — fabricated cite
-                file_findings.append(
-                    f"FAIL {filepath}:{lineno} {cite_label} "
-                    f"no-numbered-decisions:{adr_id} uses unnumbered-only "
-                    f"Decision heading format; numbered citation is fabricated"
-                )
-            elif dec_num not in decision_map[adr_id]:
-                # ADR has numbered decisions but this number is out-of-range
-                max_dec = max(decision_map[adr_id])
-                file_findings.append(
-                    f"FAIL {filepath}:{lineno} {cite_label} "
-                    f"out-of-range:ADR has Decisions 1-{max_dec}; {dec_num} does not exist"
-                )
-            else:
-                # Citation is existence-valid
-                file_findings.append(
-                    f"PASS {filepath}:{lineno} {cite_label}"
-                )
+            # Validate each decision number in this citation group
+            for dec_num in dec_nums:
+                cite_label = f"{adr_id} Decision {dec_num}"
+
+                if adr_id not in decision_map:
+                    # No ADR file found — warn (file-existence is another validator's job)
+                    file_findings.append(
+                        f"WARN {filepath}:{lineno} {cite_label} "
+                        f"adr-file-not-found:{adr_id} not in decisions directory"
+                    )
+                elif decision_map[adr_id] is None:
+                    # ADR file was unreadable
+                    file_findings.append(
+                        f"WARN {filepath}:{lineno} {cite_label} "
+                        f"adr-unreadable:{adr_id}"
+                    )
+                elif len(decision_map[adr_id]) == 0:
+                    # ADR exists but has NO numbered decisions — fabricated cite
+                    file_findings.append(
+                        f"FAIL {filepath}:{lineno} {cite_label} "
+                        f"no-numbered-decisions:{adr_id} uses unnumbered-only "
+                        f"Decision heading format; numbered citation is fabricated"
+                    )
+                elif dec_num not in decision_map[adr_id]:
+                    # ADR has numbered decisions but this number is out-of-range
+                    max_dec = max(decision_map[adr_id])
+                    file_findings.append(
+                        f"FAIL {filepath}:{lineno} {cite_label} "
+                        f"out-of-range:ADR has Decisions 1-{max_dec}; {dec_num} does not exist"
+                    )
+                else:
+                    # Citation is existence-valid
+                    file_findings.append(
+                        f"PASS {filepath}:{lineno} {cite_label}"
+                    )
 
     for finding in file_findings:
         print(finding)

@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.12"
+version: "1.14"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
@@ -16,6 +16,8 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.14 (FIX-BURST-272/DEFECT-1/2026-07-25): De-pin live-body BC version pin per TD-VSDD-091 BC-pin variant: D23 VP seeding blockquote — 'BC-2.23.005 v1.1 amended to category VAL in burst-232' → 'BC-2.23.005 §Category amended to VAL in burst-232'. Newly-authored text (v1.8 RESOLVED note), not grandfathered."
+  - "1.13 (FIX-BURST-272/F-P170-19/2026-07-25): De-pin stale BC count in Subsystem Registry blockquote note: '95 BC files' → annotated historical record '(95 at the time of the D20 backfill; 129 as of D23)' to preserve context while accurately reflecting the current corpus."
   - "1.12 (FIX-BURST-265/F-P163-04/2026-07-25): Fix Canonical Crate Roster row #14 ferrochain-memory Wave 2→1 (D23 item 3 promotion, consistent with Subsystem Registry SS-15 Wave 1 and module-decomposition). Per-row wave audit: all other 20 rows verified consistent with Subsystem Registry — sole mismatch was row #14. Also: frontmatter timestamp advanced to 2026-07-25."
   - "1.11 (FIX-BURST-248/F-P147-01/2026-07-24): Remove stale 'red_gate' label from D23 VP seeding note (line 179) — VP-011 is NOT Red-Gated per BC-2.05.007 red_gate: false (product-owner authority). Note corrected from 'Kani P0 red_gate' to 'Kani P0'."
   - "1.10 (2026-07-23): F-P144-03 — Document Map module-decomposition descriptor corrected 18-crate→21-crate catalog (D21 +2, D23 +1 expansions)."
@@ -66,7 +68,8 @@ changelog:
 
 > **Source of truth** for subsystem names and SS-NN IDs. BC frontmatter `subsystem:`,
 > BC-INDEX subsystem column, story `subsystems:`, and PRD references MUST use exact Name.
-> State-manager backfills all 95 BC files with SS-NN after this index is committed.
+> State-manager backfills all BC files with SS-NN after this index is committed.
+> (95 at the time of the D20 backfill; 129 as of D23)
 
 | SS ID | Name | PRD Section | Primary Crate(s) | BCs | Wave |
 |-------|------|-------------|------------------|-----|------|
@@ -178,4 +181,4 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | VP-012 | BC-2.10.005 (OnWatermark arithmetic) | ferrochain-core / core-budget | Kani | P1 | draft |
 | VP-013 | BC-2.23.005 (BashTool risk floor) | ferrochain-tools / tools-shell | Kani | P1 | draft |
 
-> **D23 VPs SEEDED (burst-232):** VP-011/012/013 minted with BC anchors, Kani harness skeletons, and input-hashes. VP-011 (graph::hitl / PreToolCallHook fail-closed — Kani P0); VP-012 (core-budget / OnWatermark arithmetic — Kani P1); VP-013 (tools-shell / BashTool risk floor — Kani P1). BC-2.23.005 category RESOLVED: BC-2.23.005 v1.1 amended to category VAL in burst-232 (error-taxonomy v1.31; consistent with VP-013 harness).
+> **D23 VPs SEEDED (burst-232):** VP-011/012/013 minted with BC anchors, Kani harness skeletons, and input-hashes. VP-011 (graph::hitl / PreToolCallHook fail-closed — Kani P0); VP-012 (core-budget / OnWatermark arithmetic — Kani P1); VP-013 (tools-shell / BashTool risk floor — Kani P1). BC-2.23.005 category RESOLVED: BC-2.23.005 §Category amended to VAL in burst-232 (error-taxonomy §TOOLS; consistent with VP-013 harness).

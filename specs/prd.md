@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.16"
+version: "1.17"
 status: active
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.17 (F-P170-12/burst-272/2026-07-25): §10 Module Criticality — re-route supplement pointer from superseded prd-supplements/module-criticality.md to authoritative .factory/specs/module-criticality.md (F-P170-12). Added explicit superseded note for PO-draft supplement (audit trail only, do not use for implementation decisions)."
   - "v1.16 (F-P148-03/burst-249/2026-07-24): §2.18 Red Gate callout: 'ADR-015 Security Invariants 1 and 2' → 'ADR-015 Decision 3 §Security Invariant 1 and Decision 2 §Security Invariant 2' per ADR-015 v1.5 labeled anchors."
   - "v1.15 (F-P142-03, burst-242, 2026-07-23): §2.05 BC-2.05.008 title and §2.06 BC-2.06.005 title updated to match new H1s (bc_h1_is_title_source_of_truth): Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority."
   - "v1.14 (burst-241/Wave-2/F-P141-02/2026-07-23): VP-gate expansion — 6 P0 Kani proof obligations. §4 NFR-003 target updated '3 committed VP' → '6 P0 Kani VP obligations pass before v1 convergence'. §2.17 OQR-3 note expanded: invariants +DI-014; enforcing BCs +BC-2.21.003/2.19.005/2.05.007; plural 'harnesses'/'are Phase-6 artifacts'. BC-2.17.001 row retitled to '6 P0 VP obligations (VP-001/002/003/009/010/011) + 3 P1 VP obligations (VP-006/012/013)', DI column +DI-014. §6.3 KD-003 table: BC-2.03.001/2.04.006/2.13.004 retitled with VP-00N Kani P0 harness target label; +BC-2.21.003 (VP-009)/BC-2.19.005 (VP-010)/BC-2.05.007 (VP-011) Kani P0 rows; BC-2.17.001 updated to '6 P0 + 3 P1'."
@@ -782,7 +783,7 @@ to BCs, CI lint gates, or ADRs.
 
 ## 10. Module Criticality
 
-> **Supplement:** Full classification is in `prd-supplements/module-criticality.md`.
+> **Supplement:** Full classification is in `.factory/specs/module-criticality.md` (authoritative, 43-module Phase 1b registry). The PO-draft at `prd-supplements/module-criticality.md` is **superseded** (22-module pre-D21/D23 subset, audit trail only — do not route implementation decisions there).
 
 Summary:
 

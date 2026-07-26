@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: dependency-graph
-version: "1.3"
+version: "1.4"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "63f8fe2"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D21, D23]
 changelog:
+  - "1.4 (FIX-BURST-272/F-P170-06/2026-07-25): ActionRisk dependency adjudication propagation. Crate DAG: update ferrochain-tools annotation — ActionRisk is now sourced from ferrochain-core (core::action_risk), not ferrochain-graph; annotation rewritten to reflect this. Edge Table: update ferrochain-tools→ferrochain-core rationale to include ActionRisk."
   - "1.3 (FIX-BURST-267/F-P165-04/2026-07-25): Remove spurious DI-012 anchor from §[Section Content] intro sentence — DI-012 is 'Guardrail Coverage at Ingress Boundaries' (unrelated to graph acyclicity). Correct cite to P-06 alone (system-overview §Architecture Principles). DI-NNN sweep: only remaining DI cite is DI-009 at reqwest row in Cross-Cutting Dependencies table, which correctly anchors the outbound HTTP timeout invariant."
   - "1.2 (FIX-BURST-265/F-P163-03/2026-07-25): Propagate D21+D23 21-crate roster. Crate DAG: add ferrochain-prompts (D21/ADR-015), ferrochain-vectorstores (D21/ADR-014), ferrochain-tools (D23/ADR-020) after ferrochain-memory. Edge Table: 4 new rows (prompts→core, vectorstores→core, tools→core, tools→sandbox). Topological Build Order: Wave 1 gains ferrochain-memory (D23 Wave 2→1, position 6) + ferrochain-tools (position 7), now 9 items; Wave 2 loses ferrochain-memory, gains ferrochain-prompts (position 13) + ferrochain-vectorstores (position 14), now 10 items. Add D21/D23 to decisions list."
   - "1.1 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst; add [Section Content] template compliance fix. No spec content changes."
@@ -50,8 +51,8 @@ ferrochain-core
   │
   ├── ferrochain-vectorstores   (uses core: Document, Retriever, Embeddings, FerrochainError; D21/ADR-014)
   │
-  ├── ferrochain-tools          (uses core + sandbox: Tool, PathGuard, SandboxPolicy; D23/ADR-020)
-  │   [depends on ferrochain-core + ferrochain-sandbox; no ferrochain-graph dep at compile time per ADR-020 Decision 1]
+  ├── ferrochain-tools          (uses core + sandbox: Tool, ActionRisk, PathGuard, SandboxPolicy; D23/ADR-020)
+  │   [depends on ferrochain-core + ferrochain-sandbox + ferrochain-macros; ActionRisk sourced from core::action_risk (relocated per F-P170-06); no ferrochain-graph compile-time dep]
   │
   ├── ferrochain-openai-sdk     (NO ferrochain-core dep; reqwest + serde only) [D17-Q5]
   │   └── ferrochain-openai     (uses core: BaseChatModel + openai-sdk)
@@ -77,7 +78,7 @@ ferrochain-core
 | ferrochain-memory | ferrochain-core | runtime | FerrochainError; MemoryStore trait definition |
 | ferrochain-prompts | ferrochain-core | runtime | Message, Runnable, FerrochainError; template composition (ADR-015 Decision 1) |
 | ferrochain-vectorstores | ferrochain-core | runtime | Document, Retriever, Embeddings, FerrochainError (ADR-014 Decision 1) |
-| ferrochain-tools | ferrochain-core | runtime | Tool, ToolOutput, FerrochainError; #[tool] macro via core re-export (ADR-020 Decision 1) |
+| ferrochain-tools | ferrochain-core | runtime | Tool, ToolOutput, FerrochainError, ActionRisk (core::action_risk, relocated from graph::hitl per F-P170-06); #[tool] macro via core re-export (ADR-020 Decision 1) |
 | ferrochain-tools | ferrochain-sandbox | runtime | PathGuard, SandboxPolicy, sandbox execution (ADR-020 Decision 1) |
 | ferrochain-openai-sdk | (none) | — | Standalone: reqwest + serde only; no ferrochain-core [D17-Q5] |
 | ferrochain-openai | ferrochain-core | runtime | BaseChatModel + FerrochainError |

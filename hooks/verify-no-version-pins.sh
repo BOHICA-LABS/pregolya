@@ -31,15 +31,21 @@
 #       historical change state and are explicitly excepted by TD-VSDD-091
 #       ("pass-report changelogs").
 #
-#   (c) Lines listed in .factory/hooks/version-pin-allowlist.txt.
+#   (c) Entries listed in .factory/hooks/version-pin-allowlist.txt.
 #       Format (one entry per non-comment line):
-#         <path-relative-to-.factory/specs>:<1-indexed-line-number>
-#       Allowlist entries are for Red Gate test tables, AC source-of-truth
-#       tables, and quoted historical before-state that cannot be de-pinned
-#       without losing meaning.  Each entry MUST be accompanied by a reason
-#       comment on the preceding line:
+#         <path-relative-to-.factory/specs> :: <normalized-pin-text>
+#       The separator is ' :: ' (space, double-colon, space).
+#       <normalized-pin-text> is the exact match string produced by PIN_RE with
+#       internal whitespace normalized to single spaces.
+#       This scheme is LINE-NUMBER-INDEPENDENT: entries survive file edits
+#       (line additions/deletions above the allowlisted content) because
+#       matching is keyed on (file, pin-text), not (file, line-number).
+#       The same historical pin text appearing at multiple locations in the
+#       same file is covered by a single allowlist entry.
+#       Each entry MUST be accompanied by a reason comment on the preceding
+#       line:
 #         # Reason: Red Gate test table — audit-trail pin
-#         architecture/decisions/ADR-018-per-tool-call-approval-hook.md:142
+#         architecture/decisions/ADR-018-per-tool-call-approval-hook.md :: ADR-018 v1.0
 #
 # DESIGN NOTE — section detection vs. allowlist trade-off:
 #   Section heading context detection (e.g., inferring that a line is inside a
@@ -49,23 +55,18 @@
 #   that reliable heading detection would miss; the ## Changelog detection covers
 #   the high-volume case.
 #
-# KNOWN EXPECTED FAILURES: 3 live-normative supplement pins (FIX-BURST-268, OBS-P166-B).
-#   These were uncovered when patterns 5 and 6 were added; they are outside devops
-#   scope and must be closed by the owning specialist before the next burst gate.
-#   (Historical: FIX-BURST-262 closed 4 volatile-pin sites in ADR-018 ~line 156,
-#    module-decomposition ~line 69, purity-boundary-map ~line 83, ADR-019 ~line 33.
-#    FIX-BURST-268 patterns-1..4 parallel work fixed VP-013 ~line 236 and
-#    prd-supplements/module-criticality.md superseded-banner.)
+# KNOWN EXPECTED FAILURES: 0.  (Historical record: FIX-BURST-268/OBS-P166-B
+#   uncovered 3 live-normative pins that were open until FIX-BURST-268 closed
+#   all three in-burst: ADR-012 §Decision 1 body de-pinned to §Gate #27 anchor;
+#   BC-2.19.005 §Invariant 3 de-pinned to §E-SRLZ-001 anchor; BC-2.19.006 §PC5
+#   de-pinned to §E-SRLZ-002 anchor.  FIX-BURST-262 closed 4 prior sites in
+#   ADR-018 §Decision body, module-decomposition §tier-table, purity-boundary-map
+#   §module-boundary, and ADR-019 §Decision body.  FIX-BURST-268 patterns-1..4
+#   parallel work closed VP-013 §Contradiction block and module-criticality.md
+#   §superseded-banner.  FIX-BURST-272 migrated allowlist from line-number-keyed
+#   to pin-text-keyed scheme — no more line-shift drift.)
 #
-#   OPEN (FAIL=3 expected until owners close):
-#     architecture/decisions/ADR-012-self-improvement-primitives.md:52
-#       match: "bc-authoring-plan.md v2.10"  owner: architect
-#     behavioral-contracts/ss-19/BC-2.19.005.md:109
-#       match: "error-taxonomy.md v1.28"     owner: product-owner
-#     behavioral-contracts/ss-19/BC-2.19.006.md:86
-#       match: "error-taxonomy.md v1.27"     owner: product-owner
-#
-#   Any FAIL beyond these three is a NEW finding requiring a fix-burst.
+#   Any FAIL is a NEW finding requiring a fix-burst.
 #
 # Usage:   bash .factory/hooks/verify-no-version-pins.sh
 # Exit:    0 if no FAIL lines; 1 if any FAIL.
@@ -145,22 +146,24 @@ PIN_RE = re.compile(
 )
 
 # ── Load allowlist ────────────────────────────────────────────────────────────
-# Allowlist: {relative_path: set(1-indexed line numbers)}
-allowlist = {}
+# Allowlist: {relative_path: set(normalized-pin-texts)}
+# Format: <rel_path> :: <normalized-pin-text>
+# Line-number-independent: matching is keyed on (file, pin-text), not on line
+# numbers, so entries survive edits that shift line positions.
+allowlist_pins = {}
 if os.path.isfile(allowlist_f):
     with open(allowlist_f, 'r', encoding='utf-8') as fh:
         for raw in fh:
-            line = raw.strip()
-            if not line or line.startswith('#'):
+            entry = raw.strip()
+            if not entry or entry.startswith('#'):
                 continue
-            if ':' not in line:
-                continue
-            try:
-                rel_path, lineno_str = line.rsplit(':', 1)
-                lineno = int(lineno_str)
-                allowlist.setdefault(rel_path, set()).add(lineno)
-            except ValueError:
-                pass   # malformed entry — ignore silently
+            if ' :: ' not in entry:
+                continue  # malformed entry — ignore silently
+            rel_path, pin_text = entry.split(' :: ', 1)
+            rel_path = rel_path.strip()
+            # Normalize internal whitespace to match scanner's dedup key
+            pin_text = re.sub(r'\s+', ' ', pin_text.strip())
+            allowlist_pins.setdefault(rel_path, set()).add(pin_text)
 
 # ── Collect markdown files ────────────────────────────────────────────────────
 md_files = sorted(glob.glob(os.path.join(specs_root, '**', '*.md'), recursive=True))
@@ -234,25 +237,26 @@ for filepath in md_files:
         if not matches:
             continue
 
-        # 1-indexed line number
+        # 1-indexed line number (retained for failure reporting only; not used for
+        # allowlist matching — the allowlist is keyed on pin-text, not line number)
         lineno = line_0idx + 1
-
-        # Check allowlist
-        allowed_lines = allowlist.get(rel_path, set())
-        if lineno in allowed_lines:
-            continue
 
         # Deduplicate matches on this line (same text may appear multiple times)
         seen = set()
         unique_matches = []
         for m in matches:
-            # Normalise internal whitespace for dedup
+            # Normalise internal whitespace for dedup and allowlist matching
             key = re.sub(r'\s+', ' ', m.strip())
             if key not in seen:
                 seen.add(key)
                 unique_matches.append(key)
 
+        # Check each match individually against the pin-text allowlist
+        # (keyed on file + normalized pin-text; line-number-independent)
+        allowed_pins = allowlist_pins.get(rel_path, set())
         for m in unique_matches:
+            if m in allowed_pins:
+                continue  # this specific pin text is allowlisted for this file
             failures.append(f"live-body-pin:line={lineno},text={m!r}")
 
     if failures:

@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.9"
+version: "2.10"
 status: active
 producer: architect
-timestamp: 2026-07-24T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -558,7 +558,7 @@ Formal statement:
 ```
 ∀ r: ActionRisk:
   (r == ReadOnly ∨ r == Low) → check_risk_floor(r) == Err(E-TOOLS-007, category: VAL)
-  (r == Medium ∨ r == High ∨ r == Critical) → check_risk_floor(r) == Ok(())
+  (r == Medium ∨ r == High) → check_risk_floor(r) == Ok(())
 ```
 
 **RESOLVED (burst-232, 2026-07-22; casing corrected FIX-BURST-270):** BC-2.23.005 was amended to `Category::Val` in v1.1
@@ -587,13 +587,12 @@ fn risk_floor_rejects_below_medium() {
 #[kani::proof]
 fn risk_floor_exhaustive_coverage() {
     let idx: u8 = kani::any();
-    kani::assume(idx <= 4);
+    kani::assume(idx <= 3);
     let risk = match idx {
         0 => ActionRisk::ReadOnly,
         1 => ActionRisk::Low,
         2 => ActionRisk::Medium,
-        3 => ActionRisk::High,
-        _ => ActionRisk::Critical,
+        _ => ActionRisk::High,
     };
     let result = check_risk_floor(risk);
     if idx < 2 {
@@ -602,12 +601,12 @@ fn risk_floor_exhaustive_coverage() {
             "ReadOnly/Low must return E-TOOLS-007",
         );
     } else {
-        kani::assert(result.is_ok(), "Medium/High/Critical must pass floor check");
+        kani::assert(result.is_ok(), "Medium/High must pass floor check");
     }
 }
 ```
 
-Feasibility: HIGH. `ActionRisk` is a 5-variant enum; `check_risk_floor` is a pure sync match.
+Feasibility: HIGH. `ActionRisk` is a 4-variant enum; `check_risk_floor` is a pure sync match.
 State-space is trivially finite for Kani. Estimated proof time: < 1 min.
 
 ## Test-Sufficient (No Kani)
@@ -648,6 +647,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.10 | 2026-07-25 | architect | FIX-BURST-272 / F-P170-05 sibling + DEFECT-2 | Purge phantom `ActionRisk::Critical` from §VP-013 body — sibling of VP-013.md F-P170-05 purge that verification-architecture.md missed. (1) Formal statement: remove `∨ r == Critical` disjunct. (2) `risk_floor_exhaustive_coverage` harness: `kani::assume(idx <= 4)` → `kani::assume(idx <= 3)`; `_ => ActionRisk::Critical` → `_ => ActionRisk::High`; assert message `"Medium/High/Critical must pass floor check"` → `"Medium/High must pass floor check"`. (3) Feasibility line: `5-variant enum` → `4-variant enum`. |
 | 2.9 | 2026-07-25 | architect | FIX-BURST-270 / P1D-168-casing | PascalCase canon sweep — §VP-013 RESOLVED note: `` `Category::VAL` `` → `` `Category::Val` `` per ADR-010 v1.9 Direction B adjudication. |
 | 2.8 | 2026-07-24 | architect | FIX-BURST-255 / F-P154-01 | F-P154-01 (HIGH) VP-011 internal contradiction + totality gap: adjudicate PendingHumanApproval routing design — Option A peel-off. PendingHumanApproval is handled by async `pre_tool_dispatch` wrapper BEFORE `route_pre_tool_decision` is called (interrupt issued; run suspended; `route_pre_tool_decision` not invoked). Fix property prose from "neither Proceed nor Reject returned" (impossible given DispatchOutcome type) to peel-off design. Fix formal statement: remove PendingHumanApproval clause from `route_pre_tool_decision` quantifier block; add wildcard arm clause (fail-closed Reject); add separate `pre_tool_dispatch` peel-off block. Fix `#[non_exhaustive]` note: "each proof function targets one variant" → "four proof functions target three routable variants (Deny/Approve/Edit) + hook-error; `PendingHumanApproval` has no dedicated proof function". Corresponds to VP-011.md v1.2→v1.3. |
 | 2.7 | 2026-07-24 | architect | FIX-BURST-253 / F-P152-02 | VP-012 symbolic domain widening. Formal statement: `tokens_remaining ∈ (0, ceiling]` → `[0, ceiling]` (strict lower bound excluded the EC-002 boundary case that the burst-252 `<=` predicate change was meant to cover). Harness sketch: removed `tokens_remaining > 0` from multi-condition assume; u64 guarantees ≥ 0 by type. Added IN-domain comment. |

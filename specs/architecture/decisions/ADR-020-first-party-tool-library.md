@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-23"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.8"
+version: "1.10"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,8 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-23]
 changelog:
+  - "1.10 (F-P170-16/burst-272/2026-07-25): Fix retired symbol name in §Consequences Positive Properties VP-013 sentence — `BashTool::set_risk(ReadOnly)` and `set_risk(Low)` → `ToolConfig::override_risk(ActionRisk::ReadOnly)` and `ToolConfig::override_risk(ActionRisk::Low)` on a `BashTool` instance. Makes ADR internally self-consistent with Decision 3 canonical form."
+  - "1.9 (FIX-BURST-272/F-P170-06/2026-07-25): ActionRisk dependency adjudication. Relocate ActionRisk from ferrochain-graph::hitl to ferrochain-core (module core::action_risk) per F-P170-06 option-b decision, following BudgetPolicy/GuardrailHook/MemoryWriteGuard dependency-inversion precedent. (1) Context section: update ActionRisk location from ferrochain-graph::hitl to ferrochain-core::action_risk. (2) Decision 1 dependency graph: remove ferrochain-graph row; add ActionRisk to ferrochain-core line; replace unsound macro-binding escape hatch paragraph with correct dependency-inversion explanation. The macro-binding claim was incorrect: proc-macro expansions resolve in the annotated crate's namespace and cannot supply crate-level dependency edges; ferrochain-macros has no ferrochain-graph dependency and cannot re-export ActionRisk. No circular dependency concern: ferrochain-graph already depends on ferrochain-core and re-exports core::action_risk as ActionRisk."
   - "1.8 (burst-238/2026-07-23): Stale-handoff sweep (OBS + proactive). (1) Remove '(PO to verify at error-taxonomy authoring)' from Decision 5 E-TOOLS-008 gate #33 sentence — E-TOOLS-008 was minted in error-taxonomy v1.32 (burst-233) with gate #33 forward+reverse verification confirmed in that burst. (2) Remove completed 'PO obligation (error-taxonomy.md)' paragraph — E-TOOLS-* 9-code section was added by PO in error-taxonomy v1.32 (burst-233); BC-2.23.001-004 and BC-2.23.006 OS-error path amendments also completed in burst-233."
   - "1.7 (burst-235/F-P135-05/2026-07-22): Decision 2 `tools::shell` section — add implementation note clarifying that `tokio::time::timeout` wraps the sandbox backend `execute()` call, NOT `tokio::process::Command` directly; BashTool never calls `tokio::process::Command` directly (would violate BC-2.23.005 sandbox-mandatory invariant); ProcessBackend uses `tokio::process::Command` with `.kill_on_drop(true)` internally (ensures async cancellation kills the OS subprocess). Architect adjudication of F-P135-05: DI-015 split-enforcement decision documented; BC-2.13.002 PO handoff and BA invariants.md handoff issued in same burst."
   - "1.6 (burst-234/2026-07-22): F-P134-02 label format normalization — Decision 5 anchor list: normalize BC-2.23.006 label to prescribed canonical form `(GrepTool — tools::search traversal I/O error)`. Prior v1.5 intermediate form `(GrepTool traversal I/O error paths — tools::search)` was substantively correct but did not match prescribed format. TD-VSDD-060 sweep: sole occurrence in body text at Decision 5 adjudication paragraph; ADR-010 TOOLS table unaffected (no per-BC labels in that table)."
@@ -47,9 +49,11 @@ a set of first-party `Tool`-implementing types that wrap these operations and ar
 to be registered in a `ToolRegistry` for graph execution.
 
 The `Tool` trait is defined in `ferrochain-core` (ADR-009). `ActionRisk` is in
-`ferrochain-graph::hitl` (BC-2.05.006). The sandbox path-guard is in
-`ferrochain-sandbox`. A tool library crate sits above all three in the dependency graph:
-it instantiates tools with a sandbox policy and registers them for graph use.
+`ferrochain-core` (module `core::action_risk`, relocated from `ferrochain-graph::hitl` per
+F-P170-06 adjudication; BC-2.05.006 anchor preserved; ferrochain-graph re-exports it).
+The sandbox path-guard is in `ferrochain-sandbox`. A tool library crate sits above all
+three in the dependency graph: it instantiates tools with a sandbox policy and registers
+them for graph use.
 
 ## Decision 1 — New Crate `ferrochain-tools` (Crate #21) under New Subsystem SS-23
 
@@ -66,16 +70,21 @@ crate makes the dependency direction explicit: `ferrochain-tools` depends on
 **Dependency graph for `ferrochain-tools`:**
 
 ```
-ferrochain-core        (Tool trait, ToolOutput, FerrochainError)
-ferrochain-graph       (ActionRisk, PreToolCallHook — integration only)
+ferrochain-core        (Tool trait, ToolOutput, FerrochainError, ActionRisk)
 ferrochain-sandbox     (PathGuard, SandboxPolicy, sandbox execution)
 ferrochain-macros      (#[tool] attribute macro, risk tier annotation)
 ```
 
-`ferrochain-tools` does NOT depend on `ferrochain-graph` at compile time; ActionRisk is
-used only through the `#[tool(action_risk = ...)]` macro annotation path, which binds at
-registration time via the macro expansion, not at crate import. This avoids a circular
-dependency.
+`ferrochain-tools` does NOT depend on `ferrochain-graph` at compile time. `ActionRisk`
+is defined in `ferrochain-core` (module `core::action_risk`) following the established
+dependency-inversion pattern used by `BudgetPolicy` (ADR-009), `GuardrailHook` /
+`BoundaryType` (ADR-014 Decision 6), and `MemoryWriteGuard` (ADR-012): when a downstream
+crate needs a type that was originally in `ferrochain-graph`, the type relocates to
+`ferrochain-core` so that crates earlier in the topological build order can reference it
+without taking a `ferrochain-graph` dependency. `ferrochain-graph` re-exports
+`core::action_risk::ActionRisk` for existing `hitl` consumers. `PreToolCallHook` and all
+other `graph::hitl` types remain in `ferrochain-graph::hitl` (ADR-018 Decision 1
+unchanged).
 
 ## Decision 2 — Three Modules: `tools::fs`, `tools::shell`, `tools::search`
 
@@ -357,12 +366,12 @@ application authors to reason about risk tiers for every use case.
 - Agentic coding CLI applications can use `ReadFileTool`, `WriteFileTool`, `EditFileTool`,
   `ListDirTool`, `BashTool`, `GrepTool` out of the box without writing wrapper code.
 - All tools automatically integrate with PathGuard (ferrochain-sandbox), ActionRisk
-  (ferrochain-graph::hitl), PreToolCallHook (ADR-018), and retry policy (BC-2.16.001).
+  (ferrochain-core::action_risk per F-P170-06), PreToolCallHook (ADR-018), and retry policy (BC-2.16.001).
 - VP-003 (path-confinement Kani proof) is reused by `tools::fs` without modification;
   path-confinement correctness proof coverage extends to first-party tools.
 - `BashTool` risk floor invariant (`Medium` minimum) is formally captured as VP-013
-  (Kani P1, seeded burst-232): `BashTool::set_risk(ReadOnly)` and `set_risk(Low)` return error,
-  never succeed.
+  (Kani P1, seeded burst-232): `ToolConfig::override_risk(ActionRisk::ReadOnly)` and
+  `ToolConfig::override_risk(ActionRisk::Low)` on a `BashTool` instance return error, never succeed.
 
 ### Negative / Trade-offs
 

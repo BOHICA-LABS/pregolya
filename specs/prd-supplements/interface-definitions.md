@@ -1,12 +1,14 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.54"
+version: "2.56"
 status: active
 producer: product-owner
 timestamp: 2026-07-25T00:00:00Z
 phase: 1d
 changelog:
+  - "2.56 (sibling-sweep-ADR-016/burst-272/2026-07-25): §LcSerializable and Reviver Surface BC anchor footer — corrected three ADR-016 Decision mis-attributions found during mandatory sibling sweep (TD-VSDD-060). (1) Decision 1 description expanded from bare '(LcSerializable trait)' to '(crate placement — ferrochain-core module, no new crate)'; LcSerializable trait definition is in Decision 2, not Decision 1. (2) Decision 2 description corrected from '(Serialized enum)' to '(LcSerializable trait, Serialized enum, LcEntry; inventory-backed OnceLock type registry)'; Decision 2 is the registry/inventory Decision covering all three types plus OnceLock initialization. (3) Decision 4 description corrected from '(inventory crate 0.3.24, dtolnay; OnceLock initialization)' to '(OLD_CORE_NAMESPACES_MAPPING legacy namespace remapping)'; inventory/OnceLock is Decision 2; version pin '0.3.24' removed (TD-VSDD-091). (4) Decision 5 removed from citation; this section covers crate placement, trait/enum/registry definition, secrets/allowlist safety, and legacy remapping (Decisions 1–4) but contains no Python checkpoint import compatibility surface — Decision 5's domain. (5) Decision 3 description expanded to include Reviver allowlist containment and E-SRLZ-002 per §Security Invariant Properties 1–5, which is the correct Decision for those behaviors (previously mis-attributed to Decision 5)."
+  - "2.55 (F-P170-17+F-P170-propagation/burst-272/2026-07-25): (1) F-P170-17 MED: §Prompt Templates BC anchor footer — split Decision 3 and Decision 4 attributions. Before: 'Decision 3 (injection_guard fail-closed semantics), Decision 4 (TrustLevel enum — engine-neutral; both f-string and jinja2 raise E-TMPL-003 on undefined variable)'. After: 'Decision 3 (injection_guard fail-closed semantics; TrustLevel enum), Decision 4 (engine-neutral E-TMPL-003 — both f-string and jinja2 raise on undefined variable)'. TrustLevel is defined in ADR-015 Decision 3; E-TMPL-003 engine-neutral clause is Decision 4. (2) F-P170-propagation: §PreToolCallHook — ActionRisk enum crate/module corrected to ferrochain-core: core::action_risk per F-P170-06 architect adjudication. Source line updated to cite ferrochain-core (ActionRisk) + ferrochain-graph::hitl (PreToolCallHook + re-export). Code block split: ActionRisk in ferrochain-core block, PreToolCallHook/ToolCallPreview/PreToolDecision in ferrochain-graph block with re-export note."
   - "2.54 (F-P161-01/FIX-BURST-262/2026-07-25): Three BC-2.10.003 version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P161-01). All three sites were NORMATIVE authority citations in §OnCeiling and §BudgetInfo. (1) OnCeiling enum doc comment authority line: 'BC-2.10.003 v1.2 (Halt + Summarize variants for Deny)' → 'BC-2.10.003 (Halt + Summarize variants for Deny)'. (2) BudgetInfo RESOLVED block Authority line: 'BC-2.10.003 v1.2 PC5' → 'BC-2.10.003 PC5'. (3) BC anchor footer BudgetPolicy block: 'BC-2.10.003 v1.2 (OnCeiling Halt + Summarize variants; PC5/INV/TV-007 BudgetInfo shape and arithmetic)' → 'BC-2.10.003 (OnCeiling Halt + Summarize variants; PC5/INV/TV-007 BudgetInfo shape and arithmetic)'."
   - "2.53 (F-P151-01/03/burst-252/2026-07-24): Compaction type canon aligned to ADR-019 v1.4 (adjudicated authority). (1) §Compaction CompactionTrigger enum — F-P151-01: `OnMessageCount { threshold: usize }` → `OnMessageCount { count: usize }` (+doc comment 'reaches or exceeds `count`'); F-P151-01: `OnTokenCount { threshold: u64 }` → `OnTokenCount { tokens: u64 }` (+doc comment). (2) /stream endpoint row — F-P151-03: compaction_event SSE prose 'carries run_id, trigger, compacted_turns, summary_token_count, tokens_remaining_after' → 'carries run_id, trigger, parent_ids, compacted_start, compacted_end, summary_token_count, tokens_remaining_after' (flat wire shape, parent_ids mandatory per BC-2.06.002 Inv-2)."
   - "2.52 (F-P149-02/burst-250/2026-07-24): Two live-body version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P149-02). (1) §GuardedDocuments rag_ingress doc comment: 'ADR-014 v1.5' → 'ADR-014 Decision 6 §GuardedDocuments' (severity-bifurcated Fail behavior is defined in Decision 6 rag_ingress code). (2) similarity_search_with_filter default body comment: 'ADR-014 v1.5 F-P131-07 adjudication' → 'ADR-014 Decision 2 §Metadata filter surface F-P131-07 adjudication' (F-P131-07 adjudication is embedded in Decision 2 §Metadata filter surface subsection)."
@@ -931,20 +933,28 @@ ADR-006 rev-3 (guardrail design authority), ADR-018 (per-tool-call approval hook
 
 ### PreToolCallHook
 
-**Source:** ADR-018 Decision 2 (trait shape) + Decision 3 (dispatch ordering) + Decision 4 (fail-closed Deny) + Decision 5 (streaming events) + Decision 6 (action_risk attribute); ferrochain-graph: graph::hitl.
+**Source:** ADR-018 Decision 2 (trait shape) + Decision 3 (dispatch ordering) + Decision 4 (fail-closed Deny) + Decision 5 (streaming events) + Decision 6 (action_risk attribute); ferrochain-core: core::action_risk (ActionRisk enum — F-P170-06 adjudication: relocated from graph::hitl); ferrochain-graph: graph::hitl (PreToolCallHook trait + ToolCallPreview + PreToolDecision — re-exports ActionRisk from ferrochain-core).
 
 BC anchor: BC-2.05.007 (PreToolCallHook trait — pre_invoke contract; ToolCallPreview shape; PreToolDecision variants Approve/Deny/Edit/PendingHumanApproval; AlwaysApprovePolicy default; fail-closed Deny; hook failure = Deny; VP-011 Kani P0 seed), BC-2.05.004 (Command(resume=PreToolDecision) resume-API: delivers PreToolDecision to engine when PendingHumanApproval interrupt is resolved), BC-2.06.004 (ToolApprovalRequest event), BC-2.06.005 (ToolApprovalResolved event), BC-2.08.010 PC1 (action_risk() method on Tool), BC-2.16.001 Invariant (retry-approval dispatch ordering).
 
 ```rust
-// ferrochain-graph: graph::hitl
+// ferrochain-core: core::action_risk
+// NOTE: ActionRisk relocated from ferrochain-graph::hitl to ferrochain-core per F-P170-06
+// adjudication (BudgetPolicy/ADR-009, GuardrailHook+BoundaryType/ADR-014, MemoryWriteGuard/ADR-012
+// type-in-core precedent). ferrochain-graph::hitl re-exports ActionRisk for graph-layer consumers.
 
 /// Risk tier declared by a tool via the `action_risk` attribute.
 /// BashTool enforces a floor of `Medium`; `ReadOnly` and `Low` are
 /// rejected at BashTool construction time (E-TOOLS-007).
-/// BC anchor: BC-2.23.005 PC3 (BashTool risk floor), BC-2.08.010 PC1 (action_risk() method).
+/// BC anchor: BC-2.05.006 (risk-tiered HITL interrupt classification), BC-2.23.005 PC3 (BashTool risk floor), BC-2.08.010 PC1 (action_risk() method).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum ActionRisk { ReadOnly, Low, Medium, High }
+```
+
+```rust
+// ferrochain-graph: graph::hitl
+// (ActionRisk is defined in ferrochain-core::core::action_risk and re-exported here)
 
 /// The tool call preview presented to the hook before invocation.
 /// BC anchor: BC-2.05.007 PC3 (ToolCallPreview constructed read-only before pre_invoke call; action_risk populated from #[tool(action_risk = ...)] annotation).
@@ -1465,7 +1475,7 @@ BC-2.18.002 (ChatPromptTemplate — from_messages construction, format_messages 
 BC-2.18.003 (MessagesPlaceholder Vec<Message> in-place expansion; FewShotPromptTemplate few-shot composition),
 BC-2.18.004 (injection_guard — TrustLevel::Untrusted on TrustRequired slot → E-TMPL-001 fail-closed; VP-006 Kani candidate),
 BC-2.18.005 (SlotTrustPolicy::TrustAll on SystemMessage slot → E-TMPL-002 at construction time; fail-closed construction guard).
-ADR-015 Decision 1 (ChatPromptTemplate surface), Decision 2 (SlotTrustPolicy enum), Decision 3 (injection_guard fail-closed semantics), Decision 4 (TrustLevel enum — engine-neutral; both f-string and jinja2 raise E-TMPL-003 on undefined variable).
+ADR-015 Decision 1 (ChatPromptTemplate surface), Decision 2 (SlotTrustPolicy enum), Decision 3 (injection_guard fail-closed semantics; TrustLevel enum), Decision 4 (engine-neutral E-TMPL-003 — both f-string and jinja2 raise on undefined variable).
 
 ---
 
@@ -1574,7 +1584,7 @@ BC-2.19.003 (inventory-based type registry — LcEntry, link-time submit!, featu
 BC-2.19.004 (legacy namespace remapping — alias entries added to same registry at startup),
 BC-2.19.005 (Reviver allowlist containment — unregistered id → E-SRLZ-001, fail-closed; VP-010 Kani candidate),
 BC-2.19.006 (langchain-monolith type ids → E-SRLZ-002, structured error — not silent None or E-SRLZ-001).
-ADR-016 Decision 1 (LcSerializable trait), Decision 2 (Serialized enum), Decision 3 (lc_secrets), Decision 4 (inventory crate 0.3.24, dtolnay; OnceLock initialization), Decision 5 (Reviver allowlist containment).
+ADR-016 Decision 1 (crate placement — ferrochain-core module, no new crate), Decision 2 (LcSerializable trait, Serialized enum, LcEntry; inventory-backed OnceLock type registry), Decision 3 (lc_secrets exclusion, JSON-safe output, Reviver allowlist containment and E-SRLZ-002 — §Security Invariant Properties 1–5), Decision 4 (OLD_CORE_NAMESPACES_MAPPING legacy namespace remapping).
 
 ---
 

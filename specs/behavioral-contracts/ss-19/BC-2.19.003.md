@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.003
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
   - "1.1 (F-P130-08/2026-07-21): TV-001/TV-002 made falsifiable. Removed hedged magic-number assertion `registry_size() == 141 (or the current count…)`. TV-001 now asserts relational equality to `LANGCHAIN_CORE_REGISTRY.len()` named constant; TV-002 asserts feature-gated delta `registry_size() >= core_count + 1`. The literal 141 is retained as informative prose only."
+  - "1.2 (F-P170-01/burst-272/2026-07-25): Re-anchor Architecture Anchors and Traceability Architecture Authority from ADR-016 Decision 4 to Decision 2 — the inventory crate, feature-gated partner registration, and OnceLock initialization are all defined in Decision 2 (Registry Mechanism); Decision 4 is Legacy Namespace Remapping and Version Tolerance (OLD_CORE_NAMESPACES_MAPPING). Drop fabricated 'duplicate detection' clause (not attributed in ADR-016). De-pin 'version 0.3.24' in PC1 per TD-VSDD-091 (version pins in normative body text decay on patch bumps)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -53,7 +54,7 @@ registry — it is never a hand-edited list.
 
 ## Preconditions
 
-1. The `inventory` crate (version 0.3.24, dtolnay) is a dependency of `ferrochain-core`.
+1. The `inventory` crate (dtolnay) is a dependency of `ferrochain-core`.
 2. Each type `T` that must participate in serialization declares its `LcEntry` via
    `inventory::submit! { LcEntry { lc_id: &["..."], constructor: |kwargs| { ... } } }`.
 3. For partner crate entries: the `inventory::submit!` is inside a
@@ -121,7 +122,7 @@ registry — it is never a hand-edited list.
 ## Architecture Anchors
 
 - `architecture/module-decomposition.md` — SS-19, `core::serializable::registry` sub-module
-- `architecture/decisions/ADR-016-lc-json-deserialization-safety.md` — Decision 4 (inventory crate choice, feature-gated partner registration, OnceLock initialization, duplicate detection)
+- `architecture/decisions/ADR-016-lc-json-deserialization-safety.md` — Decision 2 (inventory crate choice, feature-gated partner registration, OnceLock initialization)
 - `architecture/purity-boundary-map.md` — `ferrochain-core / core::serializable` Pure Core (initialization is pure; no I/O)
 
 ## Story Anchor
@@ -139,7 +140,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 story]_
 | Source L2 Capability | CAP-025 |
 | Capability Anchor Justification | CAP-025 ("Reviver and Type Registry (Inventory-Based; Allowlist Containment; Legacy-Namespace Remap)") per capabilities-p1-p2.md §CAP-025 — this BC specifies the inventory-based link-time registration mechanism, feature-gated partner entries, and OnceLock allowlist derivation, which CAP-025 identifies as the registry substrate for the Reviver's allowlist-containment model |
 | L2 Domain Invariants | DI-008 (Reviver::new() returns Result; no panic on registry initialization except duplicate detection) |
-| Architecture Authority | ADR-016 Decision 4 (inventory crate 0.3.24, feature-gated partner registration, OnceLock initialization, duplicate detection panic) |
+| Architecture Authority | ADR-016 Decision 2 (inventory crate, feature-gated partner registration, OnceLock initialization) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | ferrochain-core / core::serializable::registry |
 | Priority | P1 |

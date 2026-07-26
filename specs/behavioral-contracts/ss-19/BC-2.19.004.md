@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.004
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ timestamp: 2026-07-20T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
+  - "1.1 (F-P170-02/burst-272/2026-07-25): Re-anchor Architecture Anchors and Traceability Architecture Authority from ADR-016 Decision 5 to Decision 4 — OLD_CORE_NAMESPACES_MAPPING, remap-before-lookup, and remap-then-registry-lookup ordering are specified in Decision 4 (Legacy Namespace Remapping); Decision 5 is One-Way Python Checkpoint Import Tool Compatibility (unrelated). Drop 'remap-chain validation' from ADR attribution — not stated in ADR-016 Decision 4; retained in Invariant 3 as a BC-local design decision. This is the uniform +1 off-by-one shift as F-P170-01 (BC-2.19.003 Decision 4→2)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -118,7 +119,7 @@ succeeds without requiring the caller to pre-process the id.
 ## Architecture Anchors
 
 - `architecture/module-decomposition.md` — SS-19, `core::serializable::legacy_remap` sub-module
-- `architecture/decisions/ADR-016-lc-json-deserialization-safety.md` — Decision 5 (OLD_CORE_NAMESPACES_MAPPING, remap-before-lookup, remap-chain validation)
+- `architecture/decisions/ADR-016-lc-json-deserialization-safety.md` — Decision 4 (OLD_CORE_NAMESPACES_MAPPING, remap-before-lookup, remap-then-registry-lookup ordering)
 
 ## Story Anchor
 
@@ -135,7 +136,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 story]_
 | Source L2 Capability | CAP-025 |
 | Capability Anchor Justification | CAP-025 ("Reviver and Type Registry (Inventory-Based; Allowlist Containment; Legacy-Namespace Remap)") per capabilities-p1-p2.md §CAP-025 — this BC specifies the Legacy-Namespace Remap behavior that CAP-025 names explicitly as one of the three defining capabilities of the Reviver subsystem |
 | L2 Domain Invariants | DI-008 (revive returns Result; no panic on remap lookup) |
-| Architecture Authority | ADR-016 Decision 5 (OLD_CORE_NAMESPACES_MAPPING, compile-time-constant remap, remap-chain validation, remap-then-registry-lookup ordering) |
+| Architecture Authority | ADR-016 Decision 4 (OLD_CORE_NAMESPACES_MAPPING, compile-time-constant remap, remap-then-registry-lookup ordering). Note: remap-chain validation (Invariant 3) is a BC-local design decision not explicitly attributed in ADR-016 Decision 4. |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | ferrochain-core / core::serializable::legacy_remap |
 | Priority | P2 |

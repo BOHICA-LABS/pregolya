@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: bounded-contexts
-version: "1.3"
+version: "1.4"
 status: active
 producer: business-analyst
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-07-25T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -16,6 +16,7 @@ input-hash: "deff7f1"
 traces_to: L2-INDEX.md
 decisions: [D1, D4, D6, D11, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.4 (F-P170-16/burst-272/2026-07-25): Fix Context 13 'What it owns' — retire set_risk(ReadOnly)/set_risk(Low) spellings; replace with canonical ToolConfig::override_risk(ActionRisk::ReadOnly) and ToolConfig::override_risk(ActionRisk::Low) per BC-2.23.005 v1.7 §Invariants adjudication (ADR-020 Decision 3). TD-VSDD-060 sweep: sole set_risk occurrence in this file."
   - "1.3 (fix burst 242 F-P142-04, 2026-07-23): Map 6 orphaned crates into DDD model: Context 9 (ferrochain-sandbox, P2-05/DI-006/DI-007/DI-015), Context 10 (ferrochain-memory, D20/CAP-020/SS-15), Context 11 (ferrochain-prompts, D21/SS-18/CAP-022/023), Context 12 (ferrochain-vectorstores, D21/SS-20/SS-21/FM-017), Context 13 (ferrochain-tools, D23/SS-23/FM-019), Context 14 (ferrochain-macros, ADR-008). Context 5 updated: D21 embedding modules (openai::embeddings, ollama::embeddings) noted per ADR-017. Context 6 updated: D19/D20 mcp::server capability (CAP-021/ADR-013) added to model and ownership. Context Dependency Order updated: ferrochain-macros as proc-macro root (no ferrochain-* runtime deps); 6 new crate entries with correct acyclic edges; ferrochain-tools multi-dep edges (core+sandbox+graph+macros per ADR-020); all 21 canonical crates from ARCH-INDEX accounted for. Decisions [D1,D4,D6,D11,D13,D17] -> [D1,D4,D6,D11,D13,D17,D19,D20,D21,D23]. input-hash recomputed to ff4eb49 (new inputs ARCH-INDEX.md + module-decomposition.md added)."
   - "1.2 (F-P122-01, fix burst 125, 2026-07-19): Context 8 Splitters translation seam: 'Splitters accept and return ContentBlocks (Document variant)' -> 'Splitters accept plain UTF-8 String inputs and return Vec<String> chunk strings' per BC-2.07.001/002/003 preconditions. Document is not a canonical ContentBlock variant (BC-2.01.001 PC2 14-variant list). ContentBlock wrapping is caller responsibility."
   - "1.1 (F-P121-01, fix burst 124, 2026-07-19): Context 6 MCP Adapter: 'conversion from MCP tool result to ToolResult ContentBlock' -> 'ToolMessage (BC-2.09.002)'; translation seam: 'ToolResult from MCPTool' / 'ToolResult -> GuardrailHook boundary' -> canonical ToolMessage/IngressContent::ToolResult phrasing. TD-VSDD-060 sweep: only Context 6 had ToolResult ContentBlock vocabulary; fixed."
@@ -254,8 +255,7 @@ ActionRisk risk-tier enum; BashOutput; E-TOOLS-* error namespace (9 codes).
 **What it owns:** First-party file I/O, shell execution, and text search tools; default
 risk-tier annotations (ActionRisk — ReadOnly/Low/Medium/High); path-guard integration for
 all filesystem access; BashTool subprocess execution via sandbox backend with minimum risk
-floor Medium (VP-013 Kani P1 proof — `set_risk(ReadOnly)` and `set_risk(Low)` always
-return Err(E-TOOLS-007)).
+floor Medium (VP-013 Kani P1 proof — `ToolConfig::override_risk(ActionRisk::ReadOnly)` and `ToolConfig::override_risk(ActionRisk::Low)` on a `BashTool` instance ALWAYS return `Err(E-TOOLS-007)`).
 **What it does NOT own:** Sandbox policy evaluation (Context 9); HITL approval decisions
 (Context 2/Graph); MCP tool discovery or protocol (Context 6).
 **Translation seam with Core:** All tools implement the `Tool` trait from ferrochain-core;

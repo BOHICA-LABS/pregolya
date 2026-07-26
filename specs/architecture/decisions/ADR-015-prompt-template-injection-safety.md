@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.7"
+version: "1.8"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.8 (FIX-BURST-272/F-P170-18/2026-07-25): Rewrite §PO Handoffs and §BA Handoffs in past-tense RESOLVED form following the burst-238 stale-handoff sweep pattern. All listed changes were applied in burst-226 and subsequent bursts; the future-tense obligation tables were live open instructions in an accepted ADR, a Production-Grade Default violation. Rotted line-number pointers (L1110, L1128-1129, L1155-1156) replaced with section/symbol anchors per TD-VSDD-091."
   - "1.7 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — Decision 2 code sketch: Component::TMPL → Component::Tmpl; Category::VAL → Category::Val; Decision 4 InjectionAttempt code sketch: Component::TMPL → Component::Tmpl; Category::SECURITY → Category::Security per ADR-010 v1.9 Direction B adjudication."
   - "1.6 (FIX-BURST-269/F-P167-01/2026-07-25): Replace all non-canonical Category::VALIDATION residue with Category::VAL at four sites: (1) Decision 2 E-TMPL-002 code sketch (live code body); (2) Decision 4 strict-undefined note '(VALIDATION)' narrative label; (3) Consequences E-TMPL-002 '(VALIDATION/SystemSlotPolicy)' narrative label; (4) Consequences E-TMPL-003 '(VALIDATION/UndefinedVariable)' narrative label. VALIDATION is not a canonical Category variant; canonical abbreviated form per ADR-010 is VAL."
   - "1.5 (burst-249/2026-07-24): F-P148-02 — add Security Invariant 2 labeled subsection to Decision 2 and Security Invariant 1 labeled subsection to Decision 3. Adjudication option (b): stable anchors added to ADR rather than remapping 7+ citation sites across 4 documents. Resolves unresolvable 'ADR-015 Security Invariant N' citations in BC-2.18.004, BC-2.18.005, BC-INDEX Red Gate table, VP-006 changelog, prd.md, test-vectors.md."
@@ -486,30 +487,25 @@ matters (and prompt injection to system position matters), it must be enforced.
 - `MessageProvenance.highest_trust_level: Option<TrustLevel>` replaces the former `tag:
   Option<ProvenanceTag>` field reference in SS-18 artifacts.
 
-## PO Handoffs (burst-226 adjudications)
+## PO Handoffs (burst-226 adjudications) — RESOLVED
 
-### F-P131-05: ProvenanceTag shape adjudication
+### F-P131-05: ProvenanceTag shape adjudication — RESOLVED (burst-226)
 
-| File | Change required |
-|------|----------------|
-| BC-2.18.004 | Replace all `ProvenanceTag::Untrusted/::UserInput/::Trusted/::Internal` references with `TrustLevel::Untrusted/::UserInput/::Trusted`. Variant `Internal` does not exist — remove. Update PC5, EC-001..EC-007, TV-001..TV-005 as applicable. |
-| BC-2.18.002 INV-2 | Replace `ProvenanceTag severity ordering: Untrusted > UserInput > Trusted` with `TrustLevel severity ordering: Untrusted > UserInput > Trusted`. |
-| BC-2.09.003 PC1 | Replace `ProvenanceTag::McpToolResult { server_name, tool_name }` (outdated pre-PASS-58 form) with the canonical SS-11 struct form: `ProvenanceTag { boundary_type: BoundaryType::ToolResult, ingress_id: <uuid>, sequence_position: <n> }`. Server name and tool name belong in the guardrail audit log entry at ingress time, not in ProvenanceTag. |
-| interface-definitions | (a) L1110: replace `ProvenanceTag::Trusted or ProvenanceTag::Internal` with `TrustLevel::Trusted or None (absent trust_level treated as Trusted)`. (b) Update `TemplateVar` struct: `trust_level: Option<TrustLevel>` replaces any `provenance_tag: Option<ProvenanceTag>`. (c) Update `MessageProvenance`: `highest_trust_level: Option<TrustLevel>` replaces `tag: Option<ProvenanceTag>`. (d) Fix BC assignment swap at L1128-1129 and L1155-1156 (see F-P131-04 below). |
-| error-taxonomy E-TMPL-001 | Update raise-condition: replace `ProvenanceTag::Untrusted` with `TrustLevel::Untrusted`. |
+All `ProvenanceTag`-for-trust replacements in the SS-18 BC layer and interface-definitions were applied in burst-226:
 
-### F-P131-04: Universal strict-undefined contract
+- **BC-2.18.004:** All `ProvenanceTag::Untrusted/::UserInput/::Trusted/::Internal` references replaced with `TrustLevel::Untrusted/::UserInput/::Trusted`; phantom `Internal` variant removed; PC5, EC-001–EC-007, TV-001–TV-005 updated.
+- **BC-2.18.002 INV-2:** `ProvenanceTag` severity ordering replaced with `TrustLevel` severity ordering.
+- **BC-2.09.003 PC1:** Outdated `ProvenanceTag::McpToolResult { server_name, tool_name }` (pre-PASS-58) replaced with canonical SS-11 struct form `ProvenanceTag { boundary_type: BoundaryType::ToolResult, ingress_id, sequence_position }`.
+- **interface-definitions §Prompt Templates:** `TemplateVar.trust_level: Option<TrustLevel>` and `MessageProvenance.highest_trust_level: Option<TrustLevel>` are the canonical shapes. The `None → Trusted` rule for absent `trust_level` is documented. Crossed BC-assignment references in the §Prompt Templates section corrected: `ChatPromptTemplate` multi-message formatting traces to BC-2.18.002; strict-undefined / `E-TMPL-003` behavior traces to BC-2.18.001.
+- **error-taxonomy §E-TMPL-001:** Raise-condition updated: `TrustLevel::Untrusted` is the trigger (not `ProvenanceTag::Untrusted`).
 
-| File | Change required |
-|------|----------------|
-| error-taxonomy E-TMPL-003 | Remove "Uses minijinja strict-undefined mode." from description. New description: "Engine-neutral: raised by both the f-string (default) and jinja2 engines when a template variable `{name}` is referenced but the name is absent from the input variable map." Anchor: BC-2.18.001 (not BC-2.18.002). |
-| interface-definitions L1128-1129 | BC assignment is swapped. The `ChatPromptTemplate` multi-message formatting behavior traces to BC-2.18.002; the strict-undefined / `E-TMPL-003` / `UndefinedVariable` behavior traces to BC-2.18.001. Fix the crossed references. |
-| interface-definitions L1155-1156 | Same swap — correct to match the assignments above. |
+### F-P131-04: Universal strict-undefined contract — RESOLVED (burst-226)
 
-## BA Handoffs (burst-226 adjudications)
+- **error-taxonomy §E-TMPL-003:** Description is engine-neutral: "raised by both the f-string (default) and jinja2 engines when a template variable is referenced but absent from the input variable map." BC anchor: BC-2.18.001 (not BC-2.18.002).
+- **interface-definitions §Prompt Templates:** Crossed BC-assignment for strict-undefined behavior corrected (see F-P131-05 above).
 
-### F-P131-04: Universal strict-undefined contract
+## BA Handoffs (burst-226 adjudications) — RESOLVED
 
-| File | Change required |
-|------|----------------|
-| capabilities-p1-p2.md CAP-022 | Update wording: strict-undefined is a universal engine obligation (both f-string and jinja2 engines raise E-TMPL-003 on undefined variables), not a minijinja-only feature. |
+### F-P131-04: Universal strict-undefined contract — RESOLVED (burst-226)
+
+- **capabilities-p1-p2.md §CAP-022:** Updated to state that strict-undefined is a universal engine obligation (both f-string and jinja2 engines raise E-TMPL-003 on undefined variables).

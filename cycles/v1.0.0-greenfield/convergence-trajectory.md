@@ -1641,3 +1641,64 @@ None currently active as of burst 220 WRAP. D21 scope expansion APPROVED (burst 
 **Regression sweep:** verify-sha-currency.sh: PASS. verify-form-a-changelog-direction.sh: PASS=192 WARN=6 FAIL=0. verify-arch-anchor-resolution.sh: PASS=129 FAIL=0. verify-no-version-pins.sh: PASS=198 WARN=0 FAIL=0. verify-enum-variant-casing.sh: PASS=198 FAIL=0. verify-adr-decision-refs.sh: PASS=204 WARN=0 FAIL=0 (new blocking validator #6). All six blocking validators PASS FAIL=0. Advisory validator (verify-adr-self-version-refs.sh): PASS=18 WARN=2 FAIL=0.
 
 **Hash sweep (D18-P89-A/D18-P90-A):** BC-2.16.001 v1.6 + BC-INDEX v3.18 staled downstream files. All transitive dependents swept. Hash sweep: TOTAL STALE=0. Burst-271 commit.
+
+---
+
+### Pass P1D-170 (2026-07-25)
+
+**Findings:** 20 (8 HIGH / 10 MED / 2 LOW / 2 OBS)
+
+**Adversary:** fresh-context on frozen HEAD (burst-271 commit, SHA `4bcef4e5790e7f8352c28d6ae3b3697572939ef3`)
+**Streak:** 0/3 (reset by HIGH findings)
+**CLEAN (strict):** no — 20 items present (0C/8H/10M/2L/2OBS)
+**CLEAN (PR-merge):** no — 8 HIGH findings present
+
+**Fix burst:** 272
+**Frozen HEAD:** burst-271 commit (`4bcef4e5790e7f8352c28d6ae3b3697572939ef3`)
+**Novel attack angle:** Semantic citation verification — the orchestrator directed the adversary at the `verify-adr-decision-refs.sh` existence-only blind spot (the validator proves a cited `ADR-NNN Decision N` heading exists but cannot detect whether it is the semantically correct decision for the citing context). Targeting this axis against `api-surface.md` and `bc-authoring-plan.md` (low-audit-frequency surfaces) produced all 8 HIGH findings: three ADR-016 anchor off-by-ones (F-P170-01/02 in SS-19 BCs; three additional bonus hits in interface-definitions during mandatory TD-VSDD-060 corpus-wide audit), one phantom `PreToolCallHook` row in `api-surface.md` attributed to wrong crate, one mis-anchored `PathGuard` (wrong SS), one phantom `ActionRisk::Critical` variant, one `ActionRisk` relocation from `graph::hitl` to `ferrochain-core`, and one gate-registry process-gap in `bc-authoring-plan.md`.
+
+**Summary:** Fresh-context adversarial review on expanded D21+D23 perimeter, targeting the EXISTENCE-ONLY validator blind spot and low-frequency audit surfaces. Twenty items (0 CRIT / 8 HIGH / 10 MED / 2 LOW / 2 OBS). All closed in fix-burst 272. Novelty HIGH — the semantic-citation axis (wrong-but-existing ADR Decision numbers) was a new attack angle. The `ActionRisk` findings (F-P170-05/06) produced an architecture-grade adjudication: phantom fifth variant purged, and the type relocated from `ferrochain-graph::hitl` to `ferrochain-core::core::action_risk` per the dependency-inversion precedent (BudgetPolicy/ADR-009, GuardrailHook+BoundaryType/ADR-014 Decision 6, MemoryWriteGuard/ADR-012). Five process-gap findings (F-P170-08/13/14/15/20) were repaired in-scope: gate registry corrected, census commands fixed, and `verify-adr-decision-refs.sh` widened from citation coverage 204→256. Five orchestrator-caught defects (DEFECT-1..5) were also remediated pre-commit; DEFECT-5 is the root-cause fix re-keying the version-pin allowlist from volatile line-numbers to stable `path :: pin-text` tuples — the third such manual repair of the same failure class, now permanently resolved.
+
+- **F-P170-01 HIGH** (PO, closed): BC-2.19.003 v1.1→v1.2 — ADR-016 `Decision 4`→`Decision 2` re-anchor ×2 sites; fabricated "duplicate detection" clause dropped; `inventory` crate-version pin removed from PC1.
+- **F-P170-02 HIGH** (PO, closed): BC-2.19.004 v1.0→v1.1 — ADR-016 `Decision 5`→`Decision 4` re-anchor ×2 sites; "remap-chain validation" retained as BC-local Invariant 3, not ADR-attributed. Uniform +1 off-by-one class with F-P170-01 across SS-19 anchor pair.
+- **F-P170-03 HIGH** (architect, closed): api-surface.md v1.10→v1.11 — `PreToolCallHook` row removed from §Public Rust Traits (ferrochain-core); ADR-018 Decision 1 places it in `ferrochain-graph::hitl`; "tools crate provides impls" note corrected.
+- **F-P170-04 HIGH** (architect, closed): api-surface.md v1.11 — `PathGuard` re-anchored SS-23→SS-13 / BC-2.13.004; critical `path-guard` module (VP-003 Kani P0); prevents duplicate unproven workspace-confinement implementation.
+- **F-P170-05 HIGH** (architect, closed): phantom `ActionRisk::Critical` PURGED — canonical `ActionRisk` is 4 variants (`ReadOnly`/`Low`/`Medium`/`High`, `#[non_exhaustive]`). VP-013 v1.6→v1.9 and verification-architecture v2.9→v2.10 corrected (Kani harness `kani::assume(idx <= 3)`, `_ => ActionRisk::High`, 4-variant feasibility assertions).
+- **F-P170-06 HIGH** (architect, closed): `ActionRisk` relocated from `ferrochain-graph::hitl` to `ferrochain-core::core::action_risk` per Option (b) adjudication — dependency-inversion precedent (BudgetPolicy/ADR-009, GuardrailHook+BoundaryType/ADR-014 Decision 6, MemoryWriteGuard/ADR-012); `ferrochain-graph::hitl` re-exports it; `ferrochain-tools` (build position 7) needs no `ferrochain-graph` (position 8) compile-time edge. Files: ADR-018 v1.5→v1.6, ADR-020 v1.8→v1.9, api-surface v1.11 (F-P170-03/04 already applied), dependency-graph v1.3→v1.4, module-decomposition v1.26→v1.27, purity-boundary-map v1.17→v1.18 (new `core::action_risk` Pure Core row; intro counts 79→80, 31→32), BC-2.05.006 v1.4→v1.5, interface-definitions v2.55, entities-graph v1.10→v1.11.
+- **F-P170-07 HIGH** (architect, closed): ADR-010 v1.9→v1.10 — E-TMPL-003 description made engine-neutral per ADR-015 Decision 4; last unswept sibling in the ADR-015 Decision-4 anchor family.
+- **F-P170-08 HIGH [process-gap]** (PO, closed): bc-authoring-plan v2.51→v2.52 — gate #25 Part B "ALL FOUR"→"ALL THREE" and gate #32 step 5 restated as frozen/do-not-sync; gates had mandated syncing the superseded file burst-267 superseded, making the tier census permanently un-passable.
+- **F-P170-09 MED** (architect, closed): ADR-010 v1.10 — phantom "Python REPL" replaced with ADR-020 Decision 2's actual six-type inventory.
+- **F-P170-10 MED** (architect, closed): ADR-010 v1.10 — E-TOOLS-005/006 anchors corrected `BC-2.23.003/004`→`BC-2.23.005 PC-2 / BC-2.23.006 PC-2`.
+- **F-P170-11 MED** (PO, closed): module-criticality v1.7→v1.8 — wrong tier parenthetical (9/18/14/2) deleted; pointer to authoritative §Classification Summary (11/18/12/2).
+- **F-P170-12 MED** (PO, closed): prd.md v1.16→v1.17 — §10 supplement pointer re-routed from superseded PO draft to `.factory/specs/module-criticality.md`.
+- **F-P170-13 MED [process-gap]** (PO, closed): bc-authoring-plan v2.52 — gate #32 step 4 nonexistent path corrected to `.factory/specs/module-criticality.md`.
+- **F-P170-14 MED [process-gap]** (PO, closed): bc-authoring-plan v2.52 — gate #25 Part B census "Example correct value: 9/12/10/2=33" de-pinned to recompute-from-registry; adjacent OBS-P37-1 historical narrative intact.
+- **F-P170-15 MED [process-gap]** (PO, closed): bc-authoring-plan v2.52 — gate #25 Part C census `awk` field `{print $2, $4}`→`{print $2, $3}`; had printed (Module, SS) while claiming (Module, Crate), silently disabling the F-P45-01 crate mis-ownership check.
+- **F-P170-16 MED** (PO + architect + BA sweep, closed): canonical risk-floor API is `ToolConfig::override_risk(ActionRisk::…)` (ADR-020 Decision 3; majority normative usage); `BashTool::set_risk` RETIRED. Swept: BC-2.23.005 v1.6→v1.7, VP-013 v1.9, module-decomposition v1.27→v1.28, ADR-020 v1.9→v1.10, bounded-contexts v1.3→v1.4, capabilities-p1-p2 v1.14→v1.15. Zero live-body `set_risk` remains corpus-wide.
+- **F-P170-17 MED** (PO, closed): interface-definitions v2.54→v2.55 — `TrustLevel` enum re-attributed from ADR-015 Decision 4 to Decision 3; Decision 4 retains only engine-neutral E-TMPL-003 clause.
+- **F-P170-18 MED** (architect, closed): ADR-015 v1.7→v1.8 — §PO Handoffs / §BA Handoffs rewritten past-tense resolved; rotted line-number pointers replaced with section/symbol anchors per TD-VSDD-091.
+- **F-P170-19 LOW** (architect, closed): ARCH-INDEX v1.12→v1.13 — stale "95 BC files" backfill note de-pinned.
+- **F-P170-20 LOW [process-gap]** (devops, closed): `verify-adr-decision-refs.sh` widened to `\bADR-(\d{3})\s+§?Decisions?\s+(\d+)\b` + plural-list continuation scanner; citation coverage 204→256; TD-VSDD-059 catch-proof performed with synthetic out-of-range citation. EXISTENCE-ONLY limitation note preserved; two residual documented blind spots remain (see F-P170-20 notes).
+- **OBS-P170-A** — two `verify-adr-self-version-refs.sh` advisory WARNs classified: ADR-010 §Component count history-table rows = stale-in-history-table by design (no action); ADR-010 §Category casing retraction provenance = legitimate audit trail (no action).
+- **OBS-P170-B** — surfaces audited CLEAN this pass: BC/VP `red_gate` three-way corroboration; 43-module crate-ownership diff; SS-18 ADR-015 Decision-anchor family; ADR-020 Decision anchors across SS-23/VP-013/arch; observability catalog bidirectional completeness; zero SCREAMING_CASE stragglers; error-taxonomy severity census 106+2=108.
+
+**Orchestrator-caught defects (pre-commit, TD-VSDD-059 verification):**
+- DEFECT-1: Wave A regressed verify-no-version-pins.sh to FAIL=2 (BC-2.23.005 v1.1 live-body pins); de-pinned to §Category anchors (VP-013 →v1.8, ARCH-INDEX →v1.14).
+- DEFECT-2: architect report "zero remaining ActionRisk::Critical" was FALSE; un-purged twin survived in verification-architecture.md §Kani harness. Closed at verification-architecture v2.10.
+- DEFECT-3: purity-boundary-map.md §graph::hitl citation "ADR-018 Decisions 1+4" used `+` separator (validator-opaque); normalized to "Decisions 1 and 4" and both verified semantically (→v1.19).
+- DEFECT-4: Wave B regressed verify-form-a-changelog-direction.sh to FAIL=1 (module-criticality v1.7 changelog entry in second position); reordered newest-first.
+- DEFECT-5 (root cause fixed): version-pin allowlist was keyed by LINE NUMBER — 35-line shift from bc-authoring-plan.md edit broke all 18 grandfathered entries (third such manual repair; bursts 267, 269, 272). devops re-keyed allowlist to `path :: pin-text` tuples in `hooks/version-pin-allowlist.txt` + loader changes in `verify-no-version-pins.sh`; 2 obsolete entries dropped; PASS restoration, synthetic-new-pin FAIL, and line-shift immunity proofs supplied.
+
+**Bonus sweep:** mandatory TD-VSDD-060 corpus-wide ADR-016 Decision audit (PO) found 3 further mis-attributions in interface-definitions §LcSerializable and Reviver Surface; closed at v2.56. ADR-016 anchor family closed corpus-wide.
+
+**Regression sweep (pre-commit, burst-272):**
+verify-form-a-changelog-direction: PASS=192 WARN=6 FAIL=0
+verify-arch-anchor-resolution: PASS=129 WARN=0 FAIL=0
+verify-no-version-pins: PASS=198 WARN=0 FAIL=0
+verify-enum-variant-casing: PASS=198 WARN=0 FAIL=0
+verify-adr-decision-refs: PASS=267 WARN=0 FAIL=0 (widened from 204; plural-list continuation scanner added)
+verify-adr-self-version-refs: PASS=18 WARN=2 FAIL=0 (advisory)
+records-lint: PASS=3 WARN=0 FAIL=0
+verify-sha-currency: PASS (resolved by burst-272 commit)
+
+**Hash sweep (D18-P89-A/D18-P90-A):** All modified files + transitive dependents swept. TOTAL STALE=0. Burst-272 commit.

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.005
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.4 (burst-238/F-P138-03/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-013' (VP-INDEX v1.5 burst-232 seeded VP-013 Kani P1; ferrochain-tools risk_floor_rejects_below_medium). Both sites updated (VP Anchors section + Traceability VP Registration row). Gate #28 close F-P138-03."
   - "1.5 (burst-247/F-P146-02+OBS-naming/2026-07-24): (1) H1 title — remove payload flag E-TOOLS-005 from title error-code enumeration per SS-23 title policy (Ok-path payload flags excluded from raised-code enumeration). Before: 'E-TOOLS-004/005/007'. After: 'E-TOOLS-004/007'. E-TOOLS-005 is retained in the body as a payload annotation (BashOutput.truncated) — it is not removed from the contract, only from the raised-code title list. (2) PC-2 body — align truncation flag name from informal 'BashOutputTruncated'-style to canonical field-path notation 'BashOutput.truncated' per OBS naming-anchor (error-taxonomy v1.37 adds explicit canonical-field-path marker for E-TOOLS-005). TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
   - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-3 + PC-4); Category::TIMEOUT → Category::Timeout (PC-3), Category::VAL → Category::Val (PC-4)."
+  - "1.7 (F-P170-16/burst-272/2026-07-25): Adjudication — canonical method name is ToolConfig::override_risk (ADR-020 Decision 3 introduction form; majority usage in PC3/ECs/TVs; VP-013 capabilities-p1-p2.md). Fix three set_risk sites: (1) §Invariants 'Risk floor' paragraph — two occurrences BashTool::set_risk(ReadOnly) and BashTool::set_risk(Low) → ToolConfig::override_risk(ActionRisk::ReadOnly) and ToolConfig::override_risk(ActionRisk::Low). (2) §Verification Properties VP-013 row — same fix. set_risk appeared only in prose/invariant/anchor sentences; ToolConfig::override_risk is the architectural name per ADR-020 Decision 3."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-037
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -109,8 +110,8 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 
 ## Invariants
 
-- **Risk floor (VP-013 Kani seed):** `BashTool::set_risk(ReadOnly)` and
-  `BashTool::set_risk(Low)` ALWAYS return `Err(E-TOOLS-007)`. No code path allows these
+- **Risk floor (VP-013 Kani seed):** `ToolConfig::override_risk(ActionRisk::ReadOnly)` and
+  `ToolConfig::override_risk(ActionRisk::Low)` on a `BashTool` instance ALWAYS return `Err(E-TOOLS-007)`. No code path allows these
   tiers on BashTool. This is a framework safety invariant provable by Kani: the risk floor
   check is a pure enum comparison (`risk < ActionRisk::Medium` → error) with no side effects.
 - All sandbox execution is via ferrochain-sandbox (BC-2.13.001–003). There is no fallback
@@ -160,7 +161,7 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
-| VP-013 (Kani P1 candidate) | `BashTool::set_risk(ReadOnly)` and `set_risk(Low)` ALWAYS return Err; never succeed | Kani exhaustive proof: enum comparison `risk < Medium` → Err branch; no code path to Ok |
+| VP-013 (Kani P1 candidate) | `ToolConfig::override_risk(ActionRisk::ReadOnly)` and `ToolConfig::override_risk(ActionRisk::Low)` on BashTool ALWAYS return Err; never succeed | Kani exhaustive proof: enum comparison `risk < Medium` → Err branch; no code path to Ok |
 | VP-2.23.005-B | Timeout fires at max_duration; no indefinite hang | Integration test: command `sleep 120`, assert Err(E-TOOLS-004) within 32s |
 | VP-2.23.005-C | Output truncation: first 262,144 bytes returned, truncated=true for oversized output | Unit test with mock sandbox returning 300 KiB; assert truncated=true and len==262144 |
 

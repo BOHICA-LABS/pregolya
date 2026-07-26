@@ -4863,3 +4863,78 @@ F-P140-07 discovered that burst-238 had been recorded with date 2026-07-22 in 7 
 **Closes:** F-P165-01 MED (architect, closed): ADR-010 v1.6→v1.7 — version mislabels de-labeled ("v1.6"→"as of D23"; "v1.7"→"as of D23"); D21 gate-count block (13→17→18 story) restored to consistent form. F-P165-02 MED (architect, closed): ADR-005 v1.4→v1.5 — 2 self-version pins stripped. F-P165-03 MED (PO, closed): product-brief v1.6→v1.7 — 21-crate workspace topology + complete enumeration + R6 21-crate instruction; ferrochain-memory Wave 1 bonus fix. F-P165-04 MED (architect, closed): dependency-graph v1.2→v1.3 — spurious DI-012 edge removed; DI-009 verified correct. F-P165-05 MED (architect, closed): module-criticality v1.6→v1.7 — CRITICAL = Kani P0 VP targets (VP-001/002/003/009/010/011); HIGH gains Kani P1 VP hosts. F-P165-06 LOW (PO, closed): prd-supplements/module-criticality v1.5 — STALE/SUPERSEDED banner + status: superseded + superseded_by: specs/module-criticality.md. OBS-P165-A (devops, closed): advisory validator #5 (verify-adr-self-version-refs.sh) minted + 3 micro-fixes: ADR-005 v1.5 (2 body de-labels, overlapping F-P165-02), ADR-014 v1.8 ("carried from v1.3"→"carried from Decision 5"), ADR-013 cross-line FP noted acceptable; allowlist line numbers updated for ADR-014.
 
 ---
+
+---
+
+## Burst 272 — P1D-170 Fix-Burst: ActionRisk relocation, api-surface re-anchors, gate-registry repairs, validator widened (2026-07-25)
+
+**Parent-commit:** burst-271 commit
+**Adversary verdict:** NOT CLEAN strict — 0C/8H/10M/2L/2OBS (F-P170-01..20 + OBS-P170-A/B; all 20 findings closed). Counter 0/3 (reset; streak 0/3 holds). NOVELTY: HIGH.
+**Frozen HEAD for P1D-170:** burst-271 commit (`4bcef4e5790e7f8352c28d6ae3b3697572939ef3`).
+**Files touched (Dim-1):**
+- specs/behavioral-contracts/ss-19/BC-2.19.003.md (v1.1→v1.2: F-P170-01 — ADR-016 Decision re-anchor ×2 sites; fabricated duplicate-detection clause dropped; inventory crate-version pin removed from PC1)
+- specs/behavioral-contracts/ss-19/BC-2.19.004.md (v1.0→v1.1: F-P170-02 — ADR-016 Decision re-anchor ×2 sites; remap-chain validation retained as BC-local Invariant 3)
+- specs/architecture/api-surface.md (v1.10→v1.11: F-P170-03/04/06 — PreToolCallHook row removed from ferrochain-core §Traits; PathGuard re-anchored SS-23→SS-13; ActionRisk placement updated per F-P170-06 adjudication)
+- specs/architecture/decisions/ADR-018-hitl-per-tool-hook.md (v1.5→v1.6: F-P170-06 — ADR-018 updated to reflect ActionRisk relocation to ferrochain-core::core::action_risk; re-export note added for graph::hitl; ADR-018 Decision 1 substance unchanged)
+- specs/architecture/decisions/ADR-020-first-party-tool-suite.md (v1.8→v1.10: F-P170-06 ActionRisk relocation + F-P170-16 BashTool::set_risk→ToolConfig::override_risk; unsound macro-binding and spurious circular-dep rationale deleted; canonical risk-floor API established as ToolConfig::override_risk(ActionRisk::…))
+- specs/architecture/decisions/ADR-010-error-taxonomy-anyhow-confinement.md (v1.9→v1.10: F-P170-07/09/10 — E-TMPL-003 engine-neutral; phantom "Python REPL" replaced with actual ADR-020 Decision 2 six-type inventory; E-TOOLS-005/006 anchors corrected)
+- specs/architecture/decisions/ADR-015-vectorstore-security-invariants.md (v1.7→v1.8: F-P170-18 — §PO Handoffs / §BA Handoffs rewritten past-tense; rotted line-number pointers replaced with section/symbol anchors per TD-VSDD-091)
+- specs/architecture/dependency-graph.md (v1.3→v1.4: F-P170-06 — ActionRisk dependency edges updated; ferrochain-tools→ferrochain-core edge formalized)
+- specs/architecture/module-decomposition.md (v1.26→v1.28: F-P170-06 ActionRisk module row + F-P170-16 ToolConfig::override_risk API update; two-step bump)
+- specs/prd-supplements/purity-boundary-map.md (v1.17→v1.19: F-P170-06 core::action_risk Pure Core row added [intro counts 79→80, 31→32] + DEFECT-3 §graph::hitl citation "Decisions 1+4"→"Decisions 1 and 4")
+- specs/behavioral-contracts/ss-05/BC-2.05.006.md (v1.4→v1.5: F-P170-06 — ActionRisk anchor updated from graph::hitl to ferrochain-core::core::action_risk; SS-05 ownership preserved)
+- specs/prd-supplements/interface-definitions.md (v2.54→v2.56: F-P170-17 TrustLevel re-attributed Decision 4→3 + bonus-sweep 3 ADR-016 mis-attributions in §LcSerializable / Reviver Surface)
+- specs/domain-spec/entities-graph.md (v1.10→v1.11: F-P170-06 — ActionRisk type reference updated; import paths corrected)
+- specs/prd-supplements/bc-authoring-plan.md (v2.51→v2.52: F-P170-08/13/14/15 — gate #25 Part B "ALL FOUR"→"ALL THREE"; gate #32 step 4 path corrected; gate #25 Part B census example de-pinned; gate #25 Part C awk field corrected; gate #32 step 5 frozen/do-not-sync)
+- specs/module-criticality.md (v1.7→v1.8: F-P170-11 — wrong tier parenthetical (9/18/14/2) deleted; pointer to authoritative §Classification Summary)
+- specs/prd.md (v1.16→v1.17: F-P170-12 — §10 supplement pointer re-routed from superseded PO draft to specs/module-criticality.md)
+- specs/architecture/ARCH-INDEX.md (v1.12→v1.14: F-P170-19 stale "95 BC files" de-pinned + DEFECT-1 BC-2.23.005 version pin corrected to §Category anchor)
+- specs/architecture/verification-architecture.md (v2.9→v2.10: F-P170-05/DEFECT-2 — phantom ActionRisk::Critical purged from Kani harness; `kani::assume(idx <= 3)`, `_ => ActionRisk::High`, 4-variant feasibility assertions)
+- specs/verification-properties/VP-013.md (v1.6→v1.9: F-P170-05/DEFECT-1/F-P170-16 — three-step bump: phantom Critical removed, live-body pin de-pinned, set_risk→ToolConfig::override_risk)
+- specs/prd-supplements/bounded-contexts.md (v1.3→v1.4: F-P170-16 — ToolConfig::override_risk canonical risk-floor API in tool-execution bounded context)
+- specs/prd-supplements/capabilities-p1-p2.md (v1.14→v1.15: F-P170-16 — BashTool::set_risk RETIRED; ToolConfig::override_risk canonical)
+- hooks/verify-adr-decision-refs.sh (widened: `\bADR-(\d{3})\s+§?Decisions?\s+(\d+)\b` + plural-list continuation scanner; PASS=267 from 204; F-P170-20 + TD-VSDD-059 catch-proof performed)
+- hooks/version-pin-allowlist.txt (DEFECT-5 root-cause fix: re-keyed from line-number to `path :: pin-text` tuples; 2 obsolete entries dropped; line-shift immune)
+- hooks/verify-no-version-pins.sh (DEFECT-5: loader updated to parse new path::pin-text tuple format)
+- specs/behavioral-contracts/BC-INDEX.md (v3.18→v3.19: state-manager — burst-272 BC changes: BC-2.05.006 v1.5 [F-P170-06], BC-2.19.003 v1.2 [F-P170-01], BC-2.19.004 v1.1 [F-P170-02], BC-2.23.005 v1.7 [F-P170-16]; BC census unchanged 129 (51P0/75P1/3P2))
+- cycles/v1.0.0-greenfield/convergence-trajectory.md (P1D-170 entry appended)
+- cycles/v1.0.0-greenfield/burst-log.md (this entry)
+- cycles/v1.0.0-greenfield/lessons.md (L-031..L-035 appended)
+- STATE.md (v4.14→v4.15: state-manager)
+
+**Dim-2:** Four behavioral contracts revised (no new BCs authored). BC-2.05.006 v1.4→v1.5, BC-2.19.003 v1.1→v1.2, BC-2.19.004 v1.0→v1.1, BC-2.23.005 v1.6→v1.7. BC count unchanged at 129 (51P0/75P1/3P2). BC-INDEX v3.18→v3.19.
+**D18-P89-A sweep:** All modified files + transitive dependents swept. TOTAL STALE=0.
+
+**Codifications:** validator #6 widened (verify-adr-decision-refs.sh: PASS=267; plural-list continuation scanner; TD-VSDD-059 catch-proof); version-pin allowlist re-keyed to path::pin-text (DEFECT-5 root-cause fix; line-shift immune). New canonical: `ToolConfig::override_risk(ActionRisk::…)` as risk-floor API; `BashTool::set_risk` retired corpus-wide.
+
+**Dim-5:** counter 0/3 (P1D-170 NOT CLEAN strict); next action: dispatch adversary pass P1D-171 on burst-272 frozen HEAD.
+**Dim-6:** ActionRisk relocated to ferrochain-core::core::action_risk (4 variants); api-surface v1.11 re-anchored; bc-authoring-plan v2.52 gate-registry repaired; prd.md v1.17; verification-architecture v2.10; VP-013 v1.9; ADR-015 v1.8/ADR-018 v1.6/ADR-020 v1.10; dependency-graph v1.4; module-decomposition v1.28; purity-boundary-map v1.19 (80 rows; 32 Pure Core); BC-INDEX v3.19.
+**Dim-7:** Finding trajectory tail →5→1→1→20 (passes P1D-167/P1D-168/P1D-169/P1D-170). 20 findings after two single-finding passes — reflects the semantic-citation axis as a fundamentally new attack surface the validator cannot cover. All 20 findings closed in fix-burst 272. Novelty HIGH (semantic-citation class was novel; ActionRisk adjudication was architecture-grade; gate-registry defects required non-trivial repair).
+
+**Closes:**
+F-P170-01 HIGH (PO, closed): BC-2.19.003 v1.1→v1.2 — ADR-016 Decision anchor corrected; duplicate-detection fabrication dropped; inventory crate-version pin removed.
+F-P170-02 HIGH (PO, closed): BC-2.19.004 v1.0→v1.1 — ADR-016 Decision anchor corrected; remap-chain validation retained BC-local.
+F-P170-03 HIGH (architect, closed): api-surface v1.10→v1.11 — PreToolCallHook wrong-crate placement removed.
+F-P170-04 HIGH (architect, closed): api-surface v1.11 — PathGuard re-anchored to SS-13/BC-2.13.004.
+F-P170-05 HIGH (architect, closed): phantom ActionRisk::Critical purged; verification-architecture v2.10 Kani harness corrected (4-variant).
+F-P170-06 HIGH (architect, closed): ActionRisk relocated from graph::hitl to ferrochain-core::core::action_risk; dependency-inversion precedent applied; 9 files updated.
+F-P170-07 HIGH (architect, closed): ADR-010 v1.10 E-TMPL-003 engine-neutral per ADR-015 Decision 4.
+F-P170-08 HIGH [process-gap] (PO, closed): bc-authoring-plan v2.52 gates #25/#32 repaired; tier census now passable.
+F-P170-09 MED (architect, closed): ADR-010 v1.10 phantom Python REPL replaced with ADR-020 Decision 2 inventory.
+F-P170-10 MED (architect, closed): ADR-010 v1.10 E-TOOLS-005/006 anchors corrected to BC-2.23.005/006 PC-2.
+F-P170-11 MED (PO, closed): module-criticality v1.8 wrong parenthetical deleted.
+F-P170-12 MED (PO, closed): prd.md v1.17 §10 pointer corrected.
+F-P170-13 MED [process-gap] (PO, closed): bc-authoring-plan v2.52 gate #32 step 4 path corrected.
+F-P170-14 MED [process-gap] (PO, closed): bc-authoring-plan v2.52 gate #25 Part B example de-pinned.
+F-P170-15 MED [process-gap] (PO, closed): bc-authoring-plan v2.52 gate #25 Part C awk field corrected.
+F-P170-16 MED (PO+architect+BA, closed): BashTool::set_risk RETIRED; ToolConfig::override_risk canonical; 6 files swept.
+F-P170-17 MED (PO, closed): interface-definitions v2.56 TrustLevel re-attributed Decision 4→3.
+F-P170-18 MED (architect, closed): ADR-015 v1.8 §Handoffs past-tense; line-number pointers replaced.
+F-P170-19 LOW (architect, closed): ARCH-INDEX v1.13 stale backfill note de-pinned.
+F-P170-20 LOW [process-gap] (devops, closed): verify-adr-decision-refs.sh widened; PASS=267; catch-proof performed.
+OBS-P170-A: two advisory WARNs classified — both by design or legitimate audit trail; no action.
+OBS-P170-B: eight surfaces audited CLEAN.
+DEFECT-1..4: wave regressions remediated pre-commit (version-pin, ActionRisk::Critical twin, §hitl separator, changelog direction).
+DEFECT-5 (root cause): version-pin allowlist re-keyed path::pin-text; line-shift immune.
+
+---

@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.18"
+version: "3.19"
 status: active
 producer: state-manager
-timestamp: 2026-07-25T12:00:00Z
+timestamp: 2026-07-25T13:30:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.19 (burst-272/F-P170-01+F-P170-02+F-P170-06+F-P170-16/2026-07-25): Four BC version bumps — F-P170-01 HIGH: BC-2.19.003 v1.1→v1.2 (ADR-016 Decision re-anchor ×2 sites; fabricated duplicate-detection clause dropped; inventory crate-version pin removed from PC1); F-P170-02 HIGH: BC-2.19.004 v1.0→v1.1 (ADR-016 Decision re-anchor ×2 sites; remap-chain validation retained as BC-local Invariant 3); F-P170-06 HIGH: BC-2.05.006 v1.4→v1.5 (ActionRisk anchor updated from graph::hitl to ferrochain-core::core::action_risk; dependency-inversion precedent per ADR-009/ADR-014 Decision 6/ADR-012; SS-05 ownership preserved); F-P170-16 MED: BC-2.23.005 v1.6→v1.7 (BashTool::set_risk RETIRED; canonical risk-floor API is ToolConfig::override_risk(ActionRisk::…) per ADR-020 Decision 3). BC census UNCHANGED: 129 total = 51 P0 / 75 P1 / 3 P2. H1s unchanged."
   - "3.18 (burst-271/F-P169-01/2026-07-25): F-P169-01 HIGH closed: BC-2.16.001 v1.5→v1.6 — Retry-Approval Ordering invariant mis-anchor corrected; '(ADR-018 Decision 3)' → '(Decision 6)'; ADR-018 Decision 6 is the correct authority for retry/approval ordering. Blocking validator #6 (verify-adr-decision-refs.sh) minted (PASS=204 WARN=0 FAIL=0). H1 unchanged."
   - "3.17 (burst-270/F-P168-01/2026-07-25): F-P168-01 HIGH closed: PascalCase casing re-adjudication (ADR-010 v1.9 Direction B; Category::VALIDATION → Category::Val, Component::TOOLS → Component::Tools etc.; SCREAMING_CASE retracted). 14 BC version bumps (15 component: TOOLS string-literals → Component::Tools typed form per ~45 sites): BC-2.18.001 v1.2→v1.3, BC-2.18.004 v1.4→v1.5, BC-2.18.005 v1.2→v1.3, BC-2.19.005 v1.4→v1.5, BC-2.19.006 v1.3→v1.4, BC-2.21.002 v1.1→v1.2, BC-2.21.003 v1.5→v1.6, BC-2.22.001 v1.3→v1.4, BC-2.23.001 v1.3→v1.4, BC-2.23.002 v1.2→v1.3, BC-2.23.003 v1.3→v1.4, BC-2.23.004 v1.2→v1.3, BC-2.23.005 v1.5→v1.6, BC-2.23.006 v1.5→v1.6. H1s unchanged."
   - "3.16 (burst-269/F-P167-01+F-P167-02/2026-07-25): F-P167-01 HIGH: Category::VALIDATION purge (non-member of 12-category enum; canonical VAL per ADR-010 Decision 23) — BC-2.18.001 v1.1→v1.2, BC-2.18.005 v1.1→v1.2, BC-2.21.003 v1.4→v1.5, BC-2.22.001 v1.2→v1.3 (4 BCs, 6 sites purged; ADR-015 v1.6 + VP-008 v1.4 non-BC co-lateral fixes). F-P167-02 HIGH: BC-2.19.006 v1.2→v1.3 — 'ADR-016 Decision 7' dangling anchor re-anchored to 'Decision 3 Property 4' ×2 sites. H1s unchanged."
@@ -242,6 +243,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.19 | 2026-07-25 | burst-272/F-P170-01+02+06+16: Four BC version bumps — F-P170-01 HIGH: BC-2.19.003 v1.1→v1.2 (ADR-016 Decision re-anchor ×2 sites; fabricated duplicate-detection clause dropped; inventory crate-version pin removed); F-P170-02 HIGH: BC-2.19.004 v1.0→v1.1 (ADR-016 Decision re-anchor ×2 sites; remap-chain validation retained BC-local Invariant 3); F-P170-06 HIGH: BC-2.05.006 v1.4→v1.5 (ActionRisk anchor updated to ferrochain-core::core::action_risk; dependency-inversion precedent ADR-009/ADR-014/ADR-012; SS-05 ownership preserved); F-P170-16 MED: BC-2.23.005 v1.6→v1.7 (BashTool::set_risk RETIRED; ToolConfig::override_risk(ActionRisk::…) canonical per ADR-020 Decision 3). BC census unchanged: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged. | burst-272 F-P170-01/02/06/16 |
 | 3.18 | 2026-07-25 | burst-271/F-P169-01: BC-2.16.001 v1.5→v1.6 — Invariants §Retry-Approval Ordering mis-anchor corrected: '(ADR-018 Decision 3)' → '(Decision 6)'; ADR-018 Decision 6 is the correct authority for Retry / Approval Ordering (Decision 3 covers Dispatch in graph::hitl::pre_tool_dispatch). Body sequence text was already correct and unchanged. Blocking validator #6 (verify-adr-decision-refs.sh) minted (PASS=204 WARN=0 FAIL=0). H1 unchanged. | burst-271 F-P169-01 |
 | 3.17 | 2026-07-25 | burst-270/F-P168-01: PascalCase re-adjudication (ADR-010 v1.9 Direction B; SCREAMING_CASE retracted). 14 BC version bumps — Component::Tools typed-form across ~45 sites: BC-2.18.001 v1.2→v1.3, BC-2.18.004 v1.4→v1.5, BC-2.18.005 v1.2→v1.3, BC-2.19.005 v1.4→v1.5, BC-2.19.006 v1.3→v1.4, BC-2.21.002 v1.1→v1.2, BC-2.21.003 v1.5→v1.6, BC-2.22.001 v1.3→v1.4, BC-2.23.001 v1.3→v1.4, BC-2.23.002 v1.2→v1.3, BC-2.23.003 v1.3→v1.4, BC-2.23.004 v1.2→v1.3, BC-2.23.005 v1.5→v1.6, BC-2.23.006 v1.5→v1.6. H1s unchanged. | burst-270 F-P168-01 |
 | 3.16 | 2026-07-25 | burst-269/F-P167-01+F-P167-02: Category::VALIDATION purge (canonical VAL per ADR-010 Decision 23; non-member of 12-category enum) — BC-2.18.001 v1.1→v1.2, BC-2.18.005 v1.1→v1.2, BC-2.21.003 v1.4→v1.5, BC-2.22.001 v1.2→v1.3 (4 BCs, 6 sites; ADR-015 v1.6 + VP-008 v1.4 non-BC co-lateral). BC-2.19.006 v1.2→v1.3 — 'ADR-016 Decision 7' re-anchored → 'Decision 3 Property 4' ×2 sites. H1s unchanged. | burst-269 F-P167-01+F-P167-02 |

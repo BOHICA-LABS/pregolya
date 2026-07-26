@@ -1,13 +1,14 @@
 ---
 document_type: prd-supplement-module-criticality
 level: L3
-version: "1.6"
+version: "1.7"
 status: superseded
 producer: product-owner
 timestamp: 2026-07-25T00:00:00Z
 phase: 1a
 superseded_by: .factory/specs/module-criticality.md
 changelog:
+  - "1.7 (F-P170-11/burst-272/2026-07-25): Deleted wrong parenthetical tier count from SUPERSEDED banner per F-P170-11. Banner stated 'CRITICAL 9 / HIGH 18 / MEDIUM 14 / LOW 2 = 43 total' — carried pre-D21/D23 CRITICAL count (9 vs authoritative 11) and wrong MEDIUM (14 vs authoritative 12) while summing to the correct total of 43, making it invisible to self-sum arithmetic checks. Deletion preferred over correction per TD-VSDD-091 spirit — the authoritative file owns the count."
   - "1.6 (FIX-BURST-268/F-P166-01/2026-07-25): TD-VSDD-091 compliance — removed stale version pin from SUPERSEDED banner. Banner line previously read '.factory/specs/module-criticality.md (v1.6, 43 modules, Phase 1b)'; vN.N pin violates TD-VSDD-091 (narrative body must not cite version numbers that decay on subsequent diffs). Fixed to '(43 modules, Phase 1b)'. Full body scan confirmed no other <file>.md (vN.N instances."
   - "1.5 (FIX-BURST-267/F-P165-06/2026-07-25): Adjudication — option (a) applied per single-source-of-truth discipline. This PO-draft (22 modules, pre-D21/D23) is superseded by the arch-view at .factory/specs/module-criticality.md (43 modules, v1.6, authoritative post-Phase 1b). Added STALE/SUPERSEDED banner at top of body. No content rows added — option (b) sync to 43 would duplicate authority. Downstream consumers (architect, test-writer, formal-verifier) must read .factory/specs/module-criticality.md. Status changed active→superseded."
   - "1.4 (2026-07-17): Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file; input-hash drifts on every state write with zero spec-content signal for this supplement. Added three ADR files as genuine derivation inputs: ADR-008 (proc-macro #[tool]/#[entrypoint] tier-HIGH justification), ADR-012 (memory::write_guard tier-HIGH decision), ADR-013 (mcp::server tier-MEDIUM decision). D20/D17 decision references cited inline are stable baked-in facts, not live dependencies. Input-hash recomputed."
@@ -38,7 +39,7 @@ architect_note: "Architect must confirm crate-to-subsystem mapping and fill Arch
 > The authoritative file incorporates all D21 (prompts, vectorstores, embeddings, serialization,
 > retrieval) and D23 (first-party tools, budget compaction, per-tool-call HITL) module additions,
 > as well as the full VP host assignments (VP-001 through VP-013), correct wave assignments,
-> and Classification Summary (CRITICAL 9 / HIGH 18 / MEDIUM 14 / LOW 2 = 43 total).
+> (see `.factory/specs/module-criticality.md` §Classification Summary for the authoritative tier counts).
 >
 > This file is preserved for audit trail purposes only. Do not route implementation,
 > test-writer, or formal-verifier work to this file.

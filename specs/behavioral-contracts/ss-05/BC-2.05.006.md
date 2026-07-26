@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.006
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -11,6 +11,7 @@ changelog:
   - "1.2 (pass-45): F-P45-02 — corrected BC-2.10.004 relationship in Related BCs: budget escalation reuses base interrupt mechanism (BC-2.05.001) with BudgetEscalation payload and BudgetResume::Extend|Halt resume; it is NOT a risk-tiered High interrupt and is NOT subject to RiskGatePolicy or High-tier approver gating."
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
   - "1.4 (F-P110-CENSUS, 2026-07-18): Fix EC-005 E-GRAPH-014 InterruptApprovalTimeout struct — 2-field form `{ tier, deadline_utc }` missing `run_id`. Taxonomy message format `interrupt for run '<run_id>' (tier '<tier>') expired at deadline '<deadline_utc>'` has 3 distinct placeholders; struct must be a SUPERSET of all taxonomy placeholders (gate #33 Step B check 2). Added `run_id: \"<run_id>\"` as first field. TD-VSDD-060 sweep: only one E-GRAPH-014 struct site in this file (EC-005 line ~148); TV-006 uses bare-variant form (no struct fields — not subject to parity check)."
+  - "1.5 (F-P170-propagation/burst-272/2026-07-25): Architecture Anchors update — ActionRisk enum source path corrected from ferrochain-graph/src/hitl/action_risk.rs to ferrochain-core/src/action_risk.rs per F-P170-06 architect adjudication (ActionRisk relocates to ferrochain-core as core::action_risk; ferrochain-graph::hitl re-exports it). PreToolCallHook itself stays in ferrochain-graph::hitl per ADR-018 Decision 1."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -191,8 +192,8 @@ distributed clock source or accept ±process-clock-drift tolerances in the timeo
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/hitl/action_risk.rs` — `ActionRisk` enum, `HitlInterruptPayload`, `RiskGatePolicy` (F-P27-06: renamed from `risk_tier.rs` for consistency with the `action_risk` wire-field canon; `risk_tier.rs` is a retired source path)
-- `ferrochain-graph/src/hitl/policy.rs` — `ApproverRole`, role-check logic, auto-approve evaluation
+- `ferrochain-core/src/action_risk.rs` — `ActionRisk` enum (F-P170-06 adjudication: relocated from ferrochain-graph::hitl to ferrochain-core as core::action_risk; ferrochain-graph::hitl re-exports it. File formerly known as `ferrochain-graph/src/hitl/action_risk.rs` — renamed F-P27-06 from `risk_tier.rs`; now in ferrochain-core.)
+- `ferrochain-graph/src/hitl/policy.rs` — `ApproverRole`, `RiskGatePolicy`, `HitlInterruptPayload`, role-check logic, auto-approve evaluation
 - `ferrochain-server/src/routes/runs.rs` — `POST /threads/{thread_id}/runs/{run_id}/resume` with role-credential validation
 
 ## Story Anchor

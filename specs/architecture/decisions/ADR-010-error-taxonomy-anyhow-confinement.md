@@ -14,8 +14,9 @@ date: "2026-07-25"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.9"
+version: "1.10"
 changelog:
+  - "1.10 (FIX-BURST-272/F-P170-07+09+10/2026-07-25): Three targeted fixes. (1) F-P170-07 — E-TMPL-003 description de-minijinjaed: replace 'UndefinedVariable: minijinja strict-undefined mode raises this when a template variable is not in the input map.' with engine-neutral form matching error-taxonomy.md §E-TMPL-003 and ADR-015 Decision 4 universal strict-undefined contract (F-P131-04, burst-226). (2) F-P170-09 — Axis-alignment rationale: replace phantom 'Python REPL' tool with actual ADR-020 Decision 2 inventory (ReadFileTool/WriteFileTool/EditFileTool/ListDirTool — tools::fs; BashTool — tools::shell; GrepTool — tools::search). (3) F-P170-10 — Informational payload fields: off-by-two BC mis-anchor corrected; 'BC-2.23.003/004' → 'BC-2.23.005 PC-2 / BC-2.23.006 PC-2' per error-taxonomy.md §TOOLS E-TOOLS-005/006 anchors."
   - "1.9 (FIX-BURST-270/P1D-168-adjudication/2026-07-25): Retract v1.8 casing canon (F-P167-05) and replace with Direction B (PascalCase). Category enum variants use PascalCase — Category::Val, Category::Auth, Category::Security, etc. The v1.8 note incorrectly mandated SCREAMING_CASE Rust identifiers by conflating the taxonomy code-string column (legitimately ALL-CAPS: VAL, AUTH, etc.) with the Rust variant identifier. Evidence for Direction B: (1) BC-2.14.001 §Rendering Convention explicitly mandates PascalCase for Rust paths; (2) clippy::upper_case_acronyms with -D warnings makes Category::VAL a compile error without a lint exemption; (3) Component variants are uniformly PascalCase (Component::Tmpl, Component::Chkpt) — Category must follow the same convention; (4) wire form uses humanized titles ('Validation', not 'VAL') so no serde rename is needed. Rewrite casing canon note in live body. Downstream architect-owned sites updated in same burst."
   - "1.8 (FIX-BURST-269/F-P167-05/2026-07-25): Add Category casing canon note after FerrochainError struct definition. Category enum variants use SCREAMING_CASE (Category::VAL, Category::AUTH, etc.) — not PascalCase (Category::Val). The canonical codes list at the category comment already used uppercase (VAL | AUTH | …); this note makes the Rust variant casing explicit to prevent future Category::Val drift. Closing adjudication from F-P167-05."
   - "1.7 (FIX-BURST-267/F-P165-01+02/2026-07-25): F-P165-01 — de-label two version-pinned D23 cites to decay-resistant 'as of D23' form: (1) FerrochainError struct component comment '(v1.2 — 17 components)' → '(as of D23 — 17 components)'; (2) Component count summary table row 'v1.2 (D23)' → 'as of D23'. F-P165-02 — restore D21 #[non_exhaustive] gate-count block to historically-correct 13→17 (16 named + Custom) with a forward note 'As of D23, the current value is 18 (17 named + Custom) — see §Component Axis Expansion (D23)'; previous text incorrectly stated 13→18 (skipping the D21-era intermediate), contradicting the D23 §gate update block which correctly shows 17→18."
@@ -110,7 +111,7 @@ component. Canonical abbreviation: **TMPL** (as coined by ADR-015).
 |------|----------|-----------|
 | E-TMPL-001 | SECURITY | InjectionAttempt: untrusted variable substituted into TrustRequired (SystemMessage) slot — prompt injection attack vector, not a policy violation. SECURITY per authorization-failure categorization rule: bypass enables concrete attack. |
 | E-TMPL-002 | VAL | SystemSlotPolicy: construction-time rejection of TrustAll policy on a SystemMessage slot. Input constraint violation at template-build time. |
-| E-TMPL-003 | VAL | UndefinedVariable: minijinja strict-undefined mode raises this when a template variable is not in the input map. Input constraint violation at render time. |
+| E-TMPL-003 | VAL | UndefinedVariable: engine-neutral — raised by both the f-string (default) and jinja2 engines when a template variable is referenced in the template string but absent from the input variable map. Input constraint violation at render time. Anchor: BC-2.18.001 (ADR-015 Decision 4 universal strict-undefined contract). |
 
 `Component::Tmpl` ↔ `TMPL` in prose/code.
 
@@ -212,7 +213,9 @@ TOOLS error code prefix. The component axis grows from 16 to 17. The category ax
 ### Axis-alignment rationale
 
 `ferrochain-tools` is a new crate (ADR-020 Decision 1: `ferrochain-tools` is the published
-crate housing BashTool, Python REPL, file-edit tools, and grep utilities). New crate → new
+crate housing first-party file I/O tools (`ReadFileTool`, `WriteFileTool`, `EditFileTool`,
+`ListDirTool` — `tools::fs`), bash execution (`BashTool` — `tools::shell`), and text search
+(`GrepTool` — `tools::search`), per ADR-020 Decision 2 exhaustive module inventory). New crate → new
 component, following the same rule as GRAPH, CHKPT, MCP, SPLIT, SBXD, MEMORY.
 
 #### TOOLS — ferrochain-tools (SS-23, new crate)
@@ -243,7 +246,8 @@ boolean/numeric fields on success payload structs, not `Err(FerrochainError)` re
 
 These identifiers appear in error-taxonomy v1.31 for completeness; they are NOT
 FerrochainError codes and do NOT add to the component count or the #[non_exhaustive]
-gate. The PO confirmed their non-Err nature in the D23 BC layer (BC-2.23.003/004).
+gate. The PO confirmed their non-Err nature in the D23 BC layer (BC-2.23.005 PC-2 /
+BC-2.23.006 PC-2).
 
 #### #[non_exhaustive] gate update requirement (D23)
 
