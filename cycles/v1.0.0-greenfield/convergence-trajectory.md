@@ -1890,4 +1890,93 @@ records-lint: PASS
 
 **Hash sweep:** N/A — record-only state commit; no spec content changed.
 
-**Hash sweep:** N/A — record-only state commit; no spec content changed.
+---
+
+## Fix-Burst 275 — P1D-172b Remediation COMPLETE (2026-07-26)
+
+**Type:** Fix burst — NOT an adversary pass. Does NOT advance the 3-CLEAN streak.
+**Streak:** 0/3 (unchanged — fix bursts never advance BC-5.39.001)
+**Trajectory tail:** →19→19→20 (unchanged; next adversary pass P1D-173 will extend the trajectory)
+**Convergence-integrity rule:** the three consecutive CLEAN(strict) passes required by BC-5.39.001 must each be FULL-PERIMETER passes; sub-passes and fix bursts may NOT advance the streak.
+
+**Findings closed:** all 20 (F-P172b-01..19 + OBS-P172b-A + OBS-P172b-B)
+**Severity breakdown:** 0C/6H/8M/4L/2OBS — all closed
+
+### Wave A — product-owner (F-P172b-05/11/12/13/19 + OBS-P172b-B)
+
+- F-P172b-05 HIGH [process-gap]: gate #25 Part B rebuilt as bidirectional — iterates decomposition domain, not registry domain; exempt list split into Class A (non-row, prose-only, inverse assertion: must NOT gain a row; never counted toward exempt_count) and Class B (exempt table rows, sole source of exempt_count = 2). Coverage-assertion gate minted: every census must emit the sextuple and gate the burst on arithmetic Identity 2.
+- F-P172b-11 MED: prd §10 module count corrected to 77; §11 observability active-count corrected to 11.
+- F-P172b-12 MED: 6 stale module anchors in observability.md corrected to canonical module-decomposition §Module anchors.
+- F-P172b-13 MED: BC-INDEX §VP Seed BCs footnote de-staled; 6 Proof-Method cells updated from `Kani (candidate)` to `Kani`.
+- F-P172b-19 LOW: prd-supplements/module-criticality.md frontmatter `architect_note` removed; stale reference cleared.
+- OBS-P172b-B [process-gap]: census coverage triple obligation codified as standing gate condition.
+- Pre-existing YAML parse error in bc-authoring-plan v2.55 frontmatter (unescaped inner double quotes, unparseable since burst-274) also fixed in Wave A scope.
+
+**Wave A reopening #1:** orchestrator rejected first gate revision — it flattened Class A and Class B into one 6-entry list, making exempt_count ambiguous (2 vs 6) and causing Identity 1 check to misfire (68 − 6 = 62 ≠ 68). Also: `—` reciprocal assertion unevaluable for modules with no table row. Fixed by splitting Class A/B. → bc-authoring-plan v2.57.
+
+### Wave B — architect (F-P172b-01/02/03/04/06/07/08/09/10/14/15/16/17/18 + OBS-P172b-A + self-initiated VP-006 Rule 3 fix)
+
+- F-P172b-01 HIGH: 7 tiered modules added to registry (vectorstores::store, vectorstores::retriever, vectorstores::memory, openai::embeddings, ollama::embeddings, tools::fs, tools::search). Registry 66→73. eval::judge also added (universe 70→71). Final registry 77 (12/28/35/2).
+- F-P172b-02 HIGH: phantom "56-module universe" removed from all prose; per-section derivation written; actual universe is 71 (69 tiered + 2 exempt).
+- F-P172b-03 HIGH: core::embeddings tier corrected to MEDIUM (registry had HIGH vs decomposition MEDIUM); vectorstores::similarity tier left CRITICAL (registry CRITICAL is correct; decomposition row updated).
+- F-P172b-04 MED: three H2 headings corrected to reflect actual max tier per crate.
+- F-P172b-06 MED [process-gap]: all ~30 prose-named Module cells normalized to canonical `crate::module` format; gate #25 Part C now mechanically executable.
+- F-P172b-07 HIGH: `ferrochain-graph → ferrochain-checkpoint` edge added to dependency-graph §Edge Table and §Topological Build Order.
+- F-P172b-08 MED: Kani crate list expanded to 7 crates per VP-INDEX; proptest ferrochain-core row added to both dependency-graph and tooling-selection proptest rows.
+- F-P172b-09 HIGH: `tooling-selection.md` §Kani async constraint updated — phantom `checkpoint::session_index::derive_key` replaced with VP-002 authoritative target `storage_address`.
+- F-P172b-10 HIGH: `purity-boundary-map.md` VP-002 Rule 3 anchor corrected from `get_next_version` / `checkpoint::clock` to `storage_address` / `checkpoint::session_index`.
+- F-P172b-14 MED: three frontmatter timestamps advanced to 2026-07-26 for module-criticality, verification-coverage-matrix, module-decomposition.
+- F-P172b-15 MED: `mcp::ingress` tier corrected from MEDIUM to HIGH (external untrusted-input, DI-012 guardrail-dispatch).
+- F-P172b-16 LOW: `ferrochain` facade crate added to dependency-graph Crate DAG, Edge Table, and Topological Build Order.
+- F-P172b-17 LOW: `CheckpointSaver` attribution corrected to ferrochain-checkpoint.
+- F-P172b-18 LOW: xtask/ and ferrochain-community/ added to cargo-mutants inclusion scope in tooling-selection.
+- OBS-P172b-A: inputs: fields updated in ARCH-INDEX, module-decomposition, dependency-graph to include live module-criticality.md.
+- Self-initiated: VP-006 Rule 3 `injection_guard_check` → `check_slot_trust` not in my dispatch; fixed in-scope.
+
+**Wave B reopening #2:** orchestrator rejected first census. Architect reported `matched_rows = 69`; independent set computation returned 66. Difference set `{macros::tool, macros::entrypoint, macros::task}` — three HIGH-tiered modules with no registry row, the exact F-P172b-01 class surviving the burst that claimed to close it. Masking mechanism: ferrochain-macros crate-level annotation "no 1:1 decomposition module" while Qualifier cell enumerated the three modules that do exist. Also found: F-P172b-06 normalization had collapsed `serializable-reviver`/`serializable` into two rows with byte-identical `core::serializable` Module cell (ambiguous census match); composite-key uniqueness added (Module + Qualifier is the census key). All fixed; → v2.58.
+
+### Verified census sextuple (orchestrator set operations, not accepted from specialist report)
+
+```
+decomposition_total_rows    = 71
+decomposition_tiered_rows   = 69
+exempt_count                = 2   (core::documents, memory::skills)
+registry_rows               = 77
+registry_distinct_modules   = 76
+matched_rows                = 69
+difference set (tiered − registry) = EMPTY
+```
+
+Identity 1 (universe total): 71 == 69 + 2 ✓
+Identity 2 (matching completeness): 69 == 69, difference set empty ✓
+Identity 3 (composite-key uniqueness): sole duplicate Module cell is `core::serializable`, disambiguated by distinct Qualifiers (`Reviver — allowlist containment` / `LcSerializable round-trip`) ✓
+
+Registry Classification Summary: CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77.
+
+**12 files bumped (versions as committed):**
+- `specs/architecture/ARCH-INDEX.md` v1.14 → v1.15
+- `specs/architecture/dependency-graph.md` v1.4 → v1.6
+- `specs/architecture/module-decomposition.md` v1.31 → v1.33
+- `specs/architecture/purity-boundary-map.md` v1.20 → v1.22
+- `specs/architecture/tooling-selection.md` v1.2 → v1.3
+- `specs/architecture/verification-coverage-matrix.md` v2.6 → v2.8
+- `specs/behavioral-contracts/BC-INDEX.md` v3.20 → v3.21
+- `specs/module-criticality.md` v2.0 → v2.2
+- `specs/prd-supplements/bc-authoring-plan.md` v2.55 → v2.58
+- `specs/prd-supplements/module-criticality.md` v1.5 → v1.8
+- `specs/prd-supplements/observability.md` v1.5 → v1.6
+- `specs/prd.md` v1.17 → v1.18
+
+**Validator status (post-commit):**
+verify-sha-currency: PASS (dirty-tree check clean after commit)
+verify-form-a-changelog-direction: carried forward as PASS
+verify-arch-anchor-resolution: carried forward as PASS
+verify-no-version-pins: carried forward as PASS
+verify-enum-variant-casing: carried forward as PASS
+verify-adr-decision-refs: carried forward as PASS=287
+verify-changelog-date-monotonicity: carried forward as PASS
+verify-adr-self-version-refs: carried forward as PASS (advisory)
+records-lint: PASS
+
+**Convergence dim-5:** Counter 0/3 (unchanged — fix burst). Next: adversary P1D-173 FULL-PERIMETER pass (carries P1D-172 axes 2+3 forward).
+**Convergence dim-7:** Trajectory tail →19→19→20 (unchanged). P1D-173 will extend. Lessons L-056..L-059 promoted to codified; L-061..L-064 minted.

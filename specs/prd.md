@@ -1,10 +1,10 @@
 ---
 document_type: prd
 level: L3
-version: "1.17"
+version: "1.18"
 status: active
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-26T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.18 (F-P172b-11/burst-275/2026-07-26): Two stale count pins corrected. (1) F-P172b-11 MED: §10 Module Criticality supplement pointer '(authoritative, 43-module Phase 1b registry)' → '(authoritative, Phase 1b registry — see §Classification Summary for current tier counts)'; registry has grown past 43 and the count was stale. (2) §11 Observability active count '6' → '11' and date '2026-07-21' → '2026-07-26'; count was not updated when observability.md v1.2 (burst-258) added 5 new entries to reach 11 active event_type values."
   - "v1.17 (F-P170-12/burst-272/2026-07-25): §10 Module Criticality — re-route supplement pointer from superseded prd-supplements/module-criticality.md to authoritative .factory/specs/module-criticality.md (F-P170-12). Added explicit superseded note for PO-draft supplement (audit trail only, do not use for implementation decisions)."
   - "v1.16 (F-P148-03/burst-249/2026-07-24): §2.18 Red Gate callout: 'ADR-015 Security Invariants 1 and 2' → 'ADR-015 Decision 3 §Security Invariant 1 and Decision 2 §Security Invariant 2' per ADR-015 v1.5 labeled anchors."
   - "v1.15 (F-P142-03, burst-242, 2026-07-23): §2.05 BC-2.05.008 title and §2.06 BC-2.06.005 title updated to match new H1s (bc_h1_is_title_source_of_truth): Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority."
@@ -783,7 +784,7 @@ to BCs, CI lint gates, or ADRs.
 
 ## 10. Module Criticality
 
-> **Supplement:** Full classification is in `.factory/specs/module-criticality.md` (authoritative, 43-module Phase 1b registry). The PO-draft at `prd-supplements/module-criticality.md` is **superseded** (22-module pre-D21/D23 subset, audit trail only — do not route implementation decisions there).
+> **Supplement:** Full classification is in `.factory/specs/module-criticality.md` (authoritative, Phase 1b registry — see §Classification Summary for current tier counts). The PO-draft at `prd-supplements/module-criticality.md` is **superseded** (22-module pre-D21/D23 subset, audit trail only — do not route implementation decisions there).
 
 Summary:
 
@@ -815,7 +816,7 @@ recurrence policy.
 `observability.md` for the full row-by-row schema, field definitions, audit roles, and recurrence
 policies.
 
-**Current active count (2026-07-21):** **6** distinct `event_type` values active, 1 retired.
+**Current active count (2026-07-26):** **11** distinct `event_type` values active, 1 retired.
 Full catalog: `prd-supplements/observability.md`.
 
 **SAP-1 obligation:** implementers adding a new `event_type` emission in any `crates/` file must add a

@@ -1,21 +1,23 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.14"
+version: "1.15"
 status: active
 producer: architect
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-26T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "839384d"
+  - .factory/specs/module-criticality.md
+input-hash: "pending-FIX-BURST-275"
 traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.15 (FIX-BURST-275/OBS-P172b-A/2026-07-26): OBS-P172b-A — add `specs/module-criticality.md` to inputs (live architecture-view criticality registry, authoritative post-Phase 1b; the prd-supplements entry is the superseded PO draft and is retained for historical traceability). F-P172b-14 — advance timestamp to 2026-07-26."
   - "1.14 (FIX-BURST-272/DEFECT-1/2026-07-25): De-pin live-body BC version pin per TD-VSDD-091 BC-pin variant: D23 VP seeding blockquote — 'BC-2.23.005 v1.1 amended to category VAL in burst-232' → 'BC-2.23.005 §Category amended to VAL in burst-232'. Newly-authored text (v1.8 RESOLVED note), not grandfathered."
   - "1.13 (FIX-BURST-272/F-P170-19/2026-07-25): De-pin stale BC count in Subsystem Registry blockquote note: '95 BC files' → annotated historical record '(95 at the time of the D20 backfill; 129 as of D23)' to preserve context while accurately reflecting the current corpus."
   - "1.12 (FIX-BURST-265/F-P163-04/2026-07-25): Fix Canonical Crate Roster row #14 ferrochain-memory Wave 2→1 (D23 item 3 promotion, consistent with Subsystem Registry SS-15 Wave 1 and module-decomposition). Per-row wave audit: all other 20 rows verified consistent with Subsystem Registry — sole mismatch was row #14. Also: frontmatter timestamp advanced to 2026-07-25."

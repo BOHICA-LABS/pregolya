@@ -447,7 +447,7 @@ This is an extension of the post-burst sweep discipline (D18-P89-A / gate #28). 
 **Codified fix:** When a specialist is already editing a file and finds additional defects of the same class in that file, the default is to fix them in the current burst. A deferral requires: (a) the fix genuinely requires work in a different domain (new BC, new ADR), AND (b) explicit human direction or orchestrator approval. "It would take more time" is not a valid deferral reason.
 **Applicable to:** All fix-bursts. The production-grade default §Rule 4 applies: AI-found defects in AI-authored content default to in-scope fix.
 
-### L-056 [OPEN — process-gap; fix-burst 275 pending]: NEVER DIFF AGAINST A DERIVED FIGURE YOU HAVE NOT RECOUNTED
+### L-056 [codified]: NEVER DIFF AGAINST A DERIVED FIGURE YOU HAVE NOT RECOUNTED
 
 **Discovered:** P1D-172b / F-P172b-02 (phantom "56-module universe" baseline, 2026-07-26)
 **Symptom:** Burst-274's entire criticality sweep was gated on a "56-module universe" that had never equaled the artifact it named. An independent recount yields 70 rows (68 tiered + 2 exempt). The figure had been mirroring the criticality registry total since v1.2, not the decomposition row count — at v1.11 it recorded 35 while the actual table already held 48 tiered rows. The arithmetic was impossible on its face: a 48-row registry cannot yield 18 gaps against a 56-row universe.
@@ -455,7 +455,7 @@ This is an extension of the post-burst sweep discipline (D18-P89-A / gate #28). 
 **Proposed fix:** Any sweep that computes a delta (registry_count vs universe_count) must recount the universe from the authoritative source in the same burst, not from a cached prose claim. The coverage triple (decomposition_tiered_rows, registry_rows, matched_rows) must be recorded in the burst changelog and the arithmetic must check out before the sweep is declared complete.
 **Applicable to:** All census operations with a "universe" or "baseline" figure.
 
-### L-057 [OPEN — process-gap; fix-burst 275 pending]: AN EXEMPTION CLAUSE CAN INVERT THE CHECK IT GUARDS
+### L-057 [codified]: AN EXEMPTION CLAUSE CAN INVERT THE CHECK IT GUARDS
 
 **Discovered:** P1D-172b / F-P172b-05 (gate #25 Part B exemption clause inversion, 2026-07-26)
 **Symptom:** The gate #25 Part B exemption added in fix-burst 274 ended "Only check modules that are present as rows in the arch-registry (module-criticality.md) table." This inverted the check direction: a module with a tier in `module-decomposition.md` but no registry row was silently skipped without being flagged, exempt-listed, or noted. This is exactly the class the same burst was closing. The clause was introduced by orchestrator routing within the burst.
@@ -463,7 +463,7 @@ This is an extension of the post-burst sweep discipline (D18-P89-A / gate #28). 
 **Proposed fix:** Exemptions must always name WHAT is exempt (specific named members), never narrow the iteration universe. The correct form is: "Iterate all modules in `module-decomposition.md` with a non-`—` Criticality value. For each: a registry row MUST exist, UNLESS the module is in this explicit exempt list." The iteration domain is always the authoritative roster; exemptions are exceptions to the rule, not filters on the population.
 **Applicable to:** All gate exemption clauses that might affect iteration domain. Review at minting and after every exemption-list edit.
 
-### L-058 [OPEN — process-gap; fix-burst 275 pending]: A CENSUS THAT COMPARES STRINGS REQUIRES ONE NAMING CONVENTION
+### L-058 [codified]: A CENSUS THAT COMPARES STRINGS REQUIRES ONE NAMING CONVENTION
 
 **Discovered:** P1D-172b / F-P172b-06 (mixed naming conventions, 2026-07-26)
 **Symptom:** Burst-274 introduced `crate::module` naming into a registry that was ~45% prose-named, leaving ~30 of 66 rows unmatchable by gate #25 Part C's exact-string census. The table now holds `sqlite backend` alongside `checkpoint::memory`, `checkpoint::postgres`, and `memory::sqlite` — sibling backends in two conventions, one ambiguous about its owning crate. The census output is indistinguishable from real drift.
@@ -471,7 +471,7 @@ This is an extension of the post-burst sweep discipline (D18-P89-A / gate #28). 
 **Proposed fix:** When adding rows that introduce a new naming convention to a registry, normalize ALL existing rows to the new convention in the same burst. Document the convention choice in the registry header. Naming conventions are not optional for mechanically-checked tables.
 **Applicable to:** All registry tables with mechanical census commands. Convention changes require full-corpus normalization.
 
-### L-059 [OPEN — process-gap; fix-burst 275 pending]: PROSE CLAIMS OF COMPLETENESS ARE UNFALSIFIABLE
+### L-059 [codified]: PROSE CLAIMS OF COMPLETENESS ARE UNFALSIFIABLE
 
 **Discovered:** P1D-172b / OBS-P172b-B (no positive-coverage assertion in any census gate, 2026-07-26)
 **Symptom:** Every criticality census has been a prose claim ("sweep complete", "full module-universe coverage") with no countable artifact. No gate requires a recorded triple (decomposition_tiered_rows, registry_rows, matched_rows). This is why F-P172b-01/02/03/04 all survived — they were unfalsifiable given the information recorded in the changelog.
@@ -486,6 +486,38 @@ This is an extension of the post-burst sweep discipline (D18-P89-A / gate #28). 
 **Root cause:** Specialists and orchestrators treat "fix the cited location" as completing the obligation. The TD-VSDD-060 sibling-sweep requirement is understood as applying to symbol names and function signatures but is not consistently applied to prose strings, count literals, heading annotations, and downstream document references.
 **Codified fix:** Every defect closure must be followed by a CLASS sweep, not an INSTANCE fix. Before declaring a defect closed: (1) identify every OTHER location where the same defect class could manifest; (2) verify each is either correct or now fixed; (3) record the sweep result in the burst changelog. The sibling-sweep obligation (TD-VSDD-060) applies to ALL artifact types: code, prose, tables, headings, and downstream document references.
 **Applicable to:** All fix-bursts. This is a standing discipline, not a one-time fix.
+
+### L-061 [codified]: A SUPPRESSION CLAUSE MUST BE SELF-FALSIFYING
+
+**Discovered:** burst-275 (three-generation defect chain, 2026-07-26)
+**Symptom:** One defect class produced three consecutive generations in a single burst: (1) F-P172b-05 gate #25 Part B exemption inverted the check direction; (2) Wave A fix flattened Class A (non-row) and Class B (exempt-row) into one 6-entry list, making `exempt_count` ambiguous and the blocking identity structurally misfiring; (3) Wave B crate-level annotation "no 1:1 decomposition module" asserted an untruth while the Qualifier cell enumerated the three modules that do exist.
+**Root cause:** Each "fix" introduced a new suppression clause that caused a downstream check to be skipped. A suppression clause without its own verification obligation becomes the next hiding place for the same defect class.
+**Codified fix:** Any clause that causes a gate or check to be skipped must itself carry an explicit verification obligation (a test, an assertion, or a falsifiable condition). "I declare this exempt" without "here is how you verify the exemption is still correct" is a suppression-without-verification and must be rejected at authoring time.
+**Applicable to:** All gate authoring and exemption specification. Extends L-053 (exemptions must be annotated) to require the annotation also state the verification criterion.
+
+### L-062 [codified]: CENSUS FIGURES MUST BE COMPUTED SET OPERATIONS, NOT PROSE ASSERTIONS
+
+**Discovered:** burst-275 Wave B reopening #2 (2026-07-26)
+**Symptom:** Architect reported `matched_rows = 69` with all validators PASS. Independent set computation by orchestrator returned 66. The difference was a concrete set: {macros::tool, macros::entrypoint, macros::task} — three HIGH-tiered modules surviving the burst that claimed to close their class.
+**Root cause:** The census compared a count (69) to an expectation (69) without printing the difference set. A count comparison can be satisfied by compensating errors; a difference set cannot.
+**Codified fix:** Census closures must print the difference set inline: `tiered_modules − registry_modules = {empty}`. If the set is empty, print `EMPTY`. If not, every element must be resolved before the burst can close. The sextuple format (decomposition_total_rows, decomposition_tiered_rows, exempt_count, registry_rows, registry_distinct_modules, matched_rows, difference_set) is the canonical census record.
+**Applicable to:** All criticality registry censuses. Extends L-059 (require coverage triple) to require the full sextuple including the difference set.
+
+### L-063 [codified]: SPECIALIST VALIDATOR SELF-REPORTS ARE NOT AUTHORITATIVE
+
+**Discovered:** burst-275 Wave A reopening #1 and Wave B reopening #2 (2026-07-26)
+**Symptom:** Both waves reported "all validators PASS" while the census identity had failed (Wave B: difference set non-empty) and the gate itself was structurally misfiring (Wave A: ambiguous exempt_count). Validator scripts passing does not imply the logical conditions the validators were written to enforce are actually satisfied — it implies the scripts executed without error.
+**Root cause:** The orchestrator accepted specialist self-disclosure of "PASS" without independently verifying the key logical identity. This is the validator equivalent of the "implementer claims MVP scope is sufficient" anti-pattern blocked by TD-VSDD-059.
+**Codified fix:** The orchestrator must independently verify the sextuple arithmetic and print the difference set before accepting census closure. This is not a check against the specialist — it is the orchestrator's own closing obligation. Extends TD-VSDD-059 (implementer self-disclosure not authoritative) to all specialist self-reports on enumerable properties.
+**Applicable to:** All census-based gate closures. The orchestrator's independent verification is load-bearing, not ceremonial.
+
+### L-064 [codified]: STATE THE COUNTING METHOD WITH ANY COUNT
+
+**Discovered:** burst-275 Wave B reopening #2 (2026-07-26)
+**Symptom:** Orchestrator's first recount of tiered modules returned 67 where the truth was 69. A naive pipe-field extraction silently dropped two rows carrying an extra column. The incorrect count looked plausible and was nearly accepted.
+**Root cause:** A bare number with no accompanying derivation is not reproducible. Two people counting the same table can get different answers if they use different counting methods; neither number is traceable to a specific extraction procedure.
+**Codified fix:** Every count in a census record must travel with its derivation method: the column extracted, the filter applied, whether header rows were excluded, and whether any rows required special handling. "matched_rows = 69" must accompany "counted by: inner join on Module+Qualifier key, excluding header row, including all crate-level annotation rows only when Qualifier cell enumerates distinct modules". The derivation is what makes the count reproducible.
+**Applicable to:** All census operations, count records, and enumeration claims across the entire corpus.
 
 | Lesson | Proposed Policy | Scope | Status |
 |--------|----------------|-------|--------|
@@ -509,8 +541,12 @@ This is an extension of the post-burst sweep discipline (D18-P89-A / gate #28). 
 | L-053 | Intentional absence must be annotated — exempt modules were indistinguishable from forgotten ones, which is why the gap survived 172 passes; every exemption now carries an explicit in-place annotation so the distinction is permanent and machine-readable | Exemption annotation discipline | Codified (core::documents / memory::skills exemptions, burst-274) |
 | L-054 | A mechanical gate's short-circuit is a silent coverage hole — both changelog validators checked Form A first and returned early, so Form-B body tables were never validated; four version rows in both-forms files were lost undetected across all prior bursts | Validator implementation discipline | Codified (F-P172a-14 both-forms gap, burst-274) |
 | L-055 | "Outside this burst's scope" is not a valid deferral when the defect is the same class in the same files already being edited — the corpus-wide criticality sweep was initially proposed as a separate future burst; that boundary was correctly rejected under the production-grade default | Scope-boundary discipline (production-grade default §Rule 4) | Codified (18-module sweep initially deferred, burst-274) |
-| L-056 | Never diff against a derived figure you have not recounted — burst-274's entire sweep was gated on a "56-module universe" that had never equaled the artifact it named (actual 70); the arithmetic was impossible on its face (a 48-row registry cannot yield 18 gaps against a 56-row universe); recount the baseline before trusting the delta | Census baseline discipline | OPEN — process-gap F-P172b-02; fix-burst 275 pending |
-| L-057 | An exemption clause that narrows the iteration domain can invert the check it guards — the gate #25 Part B exemption added in burst-274 ended "only check modules present in the arch-registry", which suppressed the very absence class the burst was closing; exemptions must name what is exempt, never narrow the iteration universe | Gate #25 exemption authoring | OPEN — process-gap F-P172b-05; fix-burst 275 pending |
-| L-058 | A census that compares strings requires ONE naming convention — burst-274 added `crate::module` rows to a registry that was ~45% prose-named, leaving ~30 of 66 rows unmatchable; the census output becomes indistinguishable from real drift when conventions are mixed in the same column | Naming-convention discipline | OPEN — process-gap F-P172b-06; fix-burst 275 pending |
-| L-059 | Prose claims of completeness ("sweep complete", "full coverage") are unfalsifiable without a countable artifact — every criticality census has been a prose claim with no recorded triple; require every census to emit a coverage triple (decomposition_tiered_rows, registry_rows, matched_rows) and gate the burst on the arithmetic | Census completeness discipline | OPEN — process-gap OBS-P172b-B; fix-burst 275 pending |
+| L-056 | Never diff against a derived figure you have not recounted — burst-274's entire sweep was gated on a "56-module universe" that had never equaled the artifact it named (actual 70); the arithmetic was impossible on its face (a 48-row registry cannot yield 18 gaps against a 56-row universe); recount the baseline before trusting the delta | Census baseline discipline | Codified (F-P172b-02, burst-275) |
+| L-057 | An exemption clause that narrows the iteration domain can invert the check it guards — the gate #25 Part B exemption added in burst-274 ended "only check modules present in the arch-registry", which suppressed the very absence class the burst was closing; exemptions must name what is exempt, never narrow the iteration universe | Gate #25 exemption authoring | Codified (F-P172b-05, burst-275) |
+| L-058 | A census that compares strings requires ONE naming convention — burst-274 added `crate::module` rows to a registry that was ~45% prose-named, leaving ~30 of 66 rows unmatchable; the census output becomes indistinguishable from real drift when conventions are mixed in the same column | Naming-convention discipline | Codified (F-P172b-06, burst-275) |
+| L-059 | Prose claims of completeness ("sweep complete", "full coverage") are unfalsifiable without a countable artifact — every criticality census has been a prose claim with no recorded triple; require every census to emit a coverage triple (decomposition_tiered_rows, registry_rows, matched_rows) and gate the burst on the arithmetic | Census completeness discipline | Codified (OBS-P172b-B, burst-275) |
 | L-060 | Fixing the primary site of a defect and not sweeping downstream prose is the dominant recurrence pattern in this cascade — F-P172b-01/03/04/11/12/13 are each a burst-273/274 fix whose siblings or downstream text were left stale; every defect-class fix must sweep ALL sites of the same class before declaring closed | Sibling-sweep discipline (TD-VSDD-060 extension) | Codified (multiple findings P1D-172b, 2026-07-26) |
+| L-061 | A suppression clause must be self-falsifying — this burst produced three consecutive generations of one defect class, each introduced by the fix for the previous: F-P172b-05 inverted check direction; Wave A fix flattened Class A/B and made exempt_count ambiguous; crate-level annotation asserted an untruth enabling three HIGH-tiered modules to hide; any clause that causes a check to be skipped must itself carry a verification obligation or it becomes the next hiding place | Gate authoring + suppression discipline | Codified (reopening chain burst-275, 2026-07-26) |
+| L-062 | Census figures must be computed set operations, not prose assertions — matched_rows was reported as 69 where the computed intersection was 66; the fix is structural: require the difference set be printed inline and be empty; a count can be asserted, a difference set cannot | Census discipline | Codified (Wave B reopening #2, burst-275, 2026-07-26) |
+| L-063 | Specialist validator self-reports are not authoritative — both waves reported all validators PASS while the census identity had failed; the orchestrator must independently recompute set operations before accepting closure; this extends TD-VSDD-059 logic beyond the implementer to every specialist | Orchestrator protocol + independent verification | Codified (both reopenings burst-275, 2026-07-26) |
+| L-064 | State the counting method with any count — first recount returned 67 tiered where truth was 69 because a naive pipe-field extraction silently dropped two rows carrying an extra column; a bare number is not reproducible; the derivation must travel with the count | Census reproducibility discipline | Codified (Wave B reopening #2, burst-275, 2026-07-26) |

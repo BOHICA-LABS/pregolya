@@ -5146,3 +5146,102 @@ Corpus-wide criticality sweep (triggered by repaired census gates):
 |------|-------|--------|--------|
 | Burst 272 — P1D-170 adversary + fix-burst COMPLETE (20 items 0C/8H/10M/2L/2OBS; all closed; ActionRisk→ferrochain-core::core::action_risk; api-surface re-anchors; phantom ActionRisk::Critical purged; gate-registry repairs; validator widened PASS=267; allowlist re-keyed path::pin-text; BC-INDEX v3.19; hash sweep TOTAL STALE=0; burst-267 row archived); 0/3. NEXT: P1D-171. | product-owner + architect + devops-engineer + business-analyst + state-manager | COMPLETE | 5 DEFECT-class pre-commit catches (TD-VSDD-059). BC-INDEX v3.19. Hash sweep: TOTAL STALE=0. Burst 272. |
 
+---
+
+### Archived Current Phase Steps Row (archived during burst-275 state-commit, 2026-07-26)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| P1D-171 state-record — adversary sub-pass P1D-171a CLOSED (19 findings 0C/5H/8M/4L/2OBS; all OPEN; scope: burst-272 ActionRisk relocation audit; 4 axes CARRIED to P1D-172; lessons L-036..L-040 codified; no spec content changed; burst-268 archived); 0/3. NEXT: fix-burst 273 (route by owner), then adversary P1D-172. | adversary + state-manager | COMPLETE (pass recorded); fix-burst 273 COMPLETE | 19 findings open — all CLOSED by fix-burst 273. |
+
+---
+
+## Burst 275 — P1D-172b Fix-Burst COMPLETE (2026-07-26)
+
+**Agents:** product-owner + architect + state-manager
+**Status:** COMPLETE
+**Findings closed:** all 20 (F-P172b-01..19 + OBS-P172b-A + OBS-P172b-B)
+**Orchestrator reopenings:** 2 (both caught in-burst, did not escape)
+**Streak:** 0/3 (unchanged — fix burst; convergence-integrity rule)
+
+### Wave A — product-owner
+
+**Scope:** F-P172b-05, -11, -12, -13, -19, OBS-P172b-B.
+
+Gate #25 Part B rebuilt as bidirectional: iterate decomposition domain to find registry gaps; exempt list split into Class A (non-row, prose-only modules — must NOT gain a row; never counted toward exempt_count: core::context_mutation, core::write_guard, core::guardrail, core::action_risk, core::documents) and Class B (exempt table rows, sole source of exempt_count = 2: core::documents and memory::skills — noting core::documents appears in both classes for different gate conditions). Coverage-assertion gate minted: every census must emit the sextuple and block if `decomposition_tiered_rows − exempt_count ≠ matched_rows`.
+
+Also fixed in Wave A scope: pre-existing YAML parse error in bc-authoring-plan v2.55 frontmatter changelog (unescaped inner double quotes introduced by burst-274 — frontmatter had been unparseable since then). Fixed in bc-authoring-plan v2.56.
+
+Also fixed: prd §11 observability active-count stale at 6 while catalog had reached 11 (prd v1.18).
+
+**Wave A reopening #1:** orchestrator rejected first gate revision (bc-authoring-plan v2.56 → rejected). First attempt flattened Class A and Class B into one 6-entry list. Problems: (a) `exempt_count` became ambiguous — should it be 2 (Class B only) or 6 (all non-tiered)? (b) Identity 1 check `71 == 69 + 6` fails (correct form is `71 == 69 + 2`). (c) `—` reciprocal assertion unevaluable for Class A modules which have no table row to check. Fixed by splitting into Class A (never-row assertion, `—` reciprocal unevaluable by design) and Class B (exempt-row, sole source of exempt_count). → bc-authoring-plan v2.57.
+
+**Perimeter deltas (Wave A):**
+- `prd.md` v1.17 → v1.18
+- `specs/prd-supplements/module-criticality.md` v1.5 → v1.8
+- `specs/prd-supplements/observability.md` v1.5 → v1.6
+- `specs/behavioral-contracts/BC-INDEX.md` v3.20 → v3.21
+- `specs/prd-supplements/bc-authoring-plan.md` v2.55 → v2.57 (reopening #1) → v2.58
+
+### Wave B — architect
+
+**Scope:** F-P172b-01, -02, -03, -04, -06, -07, -08, -09, -10, -14, -15, -16, -17, -18, OBS-P172b-A, plus self-initiated VP-006 Rule 3 symbol correction (`injection_guard_check` → `check_slot_trust`) not in original dispatch.
+
+Seven tiered modules added to criticality registry: vectorstores::store, vectorstores::retriever, vectorstores::memory, openai::embeddings, ollama::embeddings, tools::fs, tools::search. Registry 66→73. eval::judge module also added (not in F-P172b-01; universe 70→71). Final registry 77 (12/28/35/2). Two tier corrections: core::embeddings registry HIGH→MEDIUM; mcp::ingress registry MEDIUM→HIGH (F-P172b-15).
+
+Phantom "56-module universe" removed from all prose. Actual universe is 71 (69 tiered + 2 exempt). Per-section derivation written with explicit arithmetic.
+
+Registry normalized: all ~30 prose-named Module cells converted to canonical `crate::module` format; gate #25 Part C now mechanically executable.
+
+graph→checkpoint DAG edge added to dependency-graph §Edge Table and §Topological Build Order. ferrochain facade crate (#1) added. CheckpointSaver attribution corrected to ferrochain-checkpoint.
+
+Kani crate list expanded to 7 per VP-INDEX. proptest ferrochain-core row added.
+
+VP-002 target corrected in two separate documents: tooling-selection `derive_key` → `storage_address`; purity-boundary-map VP-002 Rule 3 anchor `get_next_version` / `checkpoint::clock` → `storage_address` / `checkpoint::session_index`.
+
+Three frontmatter timestamps advanced for module-criticality, verification-coverage-matrix, module-decomposition (all had stale dates from burst-274 same-day edits).
+
+inputs: fields updated in ARCH-INDEX, module-decomposition, dependency-graph to include live module-criticality.md (OBS-P172b-A).
+
+**Wave B reopening #2:** orchestrator rejected first census. Architect reported `matched_rows = 69` (all validators PASS); independent set computation returned 66. Difference set: {macros::tool, macros::entrypoint, macros::task} — three HIGH-tiered modules (ferrochain-macros crate). Masking mechanism: crate-level annotation "no 1:1 decomposition module" was written while the Qualifier cell in that same row enumerated the three modules that do exist. Also: F-P172b-06 normalization had collapsed `serializable-reviver` and `serializable` into two rows with byte-identical `core::serializable` Module cell, making composite-key uniqueness fail. Fixed: crate-level annotation truth condition added to gate; composite-key uniqueness gate added (census key is Module+Qualifier pair). → v2.58.
+
+**Perimeter deltas (Wave B):**
+- `specs/architecture/ARCH-INDEX.md` v1.14 → v1.15
+- `specs/architecture/dependency-graph.md` v1.4 → v1.6
+- `specs/architecture/module-decomposition.md` v1.31 → v1.33
+- `specs/architecture/purity-boundary-map.md` v1.20 → v1.22
+- `specs/architecture/tooling-selection.md` v1.2 → v1.3
+- `specs/architecture/verification-coverage-matrix.md` v2.6 → v2.8
+- `specs/module-criticality.md` v2.0 → v2.2
+- `specs/prd-supplements/bc-authoring-plan.md` v2.57 → v2.58 (reopening #2 fix)
+
+### Verified Census Sextuple (burst-275 closing state)
+
+Orchestrator computed set operations independently; not accepted from specialist self-report.
+
+```
+decomposition_total_rows    = 71
+decomposition_tiered_rows   = 69
+exempt_count                = 2   (core::documents, memory::skills)
+registry_rows               = 77
+registry_distinct_modules   = 76
+matched_rows                = 69
+difference set (tiered − registry) = EMPTY
+```
+
+Identity 1: 71 == 69 + 2 ✓
+Identity 2: 69 == 69, difference set empty ✓
+Identity 3: sole duplicate Module cell `core::serializable` disambiguated by Qualifiers (`Reviver — allowlist containment` / `LcSerializable round-trip`) ✓
+Registry Classification Summary: CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77.
+
+### Lessons and state changes
+
+- L-056..L-059 promoted from OPEN to codified (all four process-gaps now have structural fixes in gate #25).
+- L-061..L-064 minted (suppression-clause self-falsification; census must be set operations; specialist self-reports not authoritative; state the counting method with any count).
+- STATE.md v4.21 → v4.22.
+- Convergence counter: 0/3 unchanged (fix burst).
+- Trajectory tail: →19→19→20 (unchanged; P1D-173 will extend).
+
+**Dim-5:** Counter 0/3 (unchanged). Next: adversary P1D-173 FULL-PERIMETER pass. Note: policies.yaml does NOT exist — adversary runs on baked-in baseline policies only; flag as open gap before P1D-173 dispatch.
+**Dim-7:** Trajectory unchanged. 12 spec files bumped. BC count 129 (unchanged). Lessons L-061..L-064 minted.
+

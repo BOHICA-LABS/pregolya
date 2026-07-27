@@ -2,18 +2,20 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "2.6"
+version: "2.8"
 status: active
 producer: architect
-timestamp: 2026-07-24T00:00:00Z
+timestamp: 2026-07-26T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "0203a7e"
+input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "2.8 (FIX-BURST-275-REOPENED/Defect-2-mirror/2026-07-26): Mirror module-criticality.md v2.2 additions — add 3 Per-Module Coverage Status rows: `macros::tool` HIGH (ferrochain-macros; compile-time TokenStream→TokenStream proc-macro; no Kani VP; BC-2.08.010), `macros::entrypoint` HIGH (ferrochain-macros; compile-time proc-macro; no Kani VP; BC-2.08.011), `macros::task` HIGH (ferrochain-macros; compile-time proc-macro; no Kani VP; BC-2.08.012). Coverage-by-Criticality-Tier: HIGH 25 → 28. Per-module count 74 → 77. VP-to-Module table and VP totals unchanged (no new VPs; macros proc-macro modules have no Kani VP targets — compile-time code generation is integration-tested via expansion correctness tests)."
+  - "2.7 (FIX-BURST-275/F-P172b-01+15+Iron-Law/2026-07-26): Mirror module-criticality.md v2.1 additions. F-P172b-01 mirror — add 7 Per-Module Coverage Status rows: `openai::embeddings` HIGH (ferrochain-openai, DI-009/DI-010, Integration DTU), `ollama::embeddings` HIGH (ferrochain-ollama, DI-009, Integration), `vectorstores::store` MEDIUM (ferrochain-vectorstores, Integration), `vectorstores::retriever` MEDIUM (ferrochain-vectorstores, Integration), `vectorstores::memory` MEDIUM (ferrochain-vectorstores, Unit+Integration), `tools::fs` MEDIUM (ferrochain-tools, Integration), `tools::search` MEDIUM (ferrochain-tools, Integration). F-P172b-15 mirror — update mcp::ingress Notes to reflect HIGH tier elevation (untrusted-ingress; BC-2.09.003; parity with graph::provenance HIGH). Iron Law mirror — add `eval::judge` MEDIUM row (ferrochain-standard-tests; async LLM judge; Integration DTU; BC-2.08.013/014). Coverage-by-Criticality-Tier: HIGH 22 → 25 (+openai::embeddings, +ollama::embeddings, mcp::ingress elevation); MEDIUM 30 → 35 (+vectorstores::store/retriever/memory, +tools::fs/search, +eval::judge, -mcp::ingress). Per-module count 66 → 74. VP-to-Module table and VP totals unchanged (no new VPs)."
   - "2.6 (FIX-BURST-274/module-universe-sweep/2026-07-26): Module-universe sweep mirror — add 18 Per-Module Coverage Status rows matching module-criticality.md v2.0 additions. CRITICAL +1: checkpoint::saver. HIGH +4: core::events, graph::definition, server::streaming, server::stores. MEDIUM +13: core::config, checkpoint::memory, checkpoint::postgres, server::cron, sandbox::container, sandbox::seatbelt, sandbox::process, splitters::parity, mcp::discovery, mcp::ingress, memory::sqlite, memory::in_memory, memory::search. Coverage-by-Criticality-Tier: CRITICAL 11→12, HIGH 18→22, MEDIUM 17→30. Per-module count 48→66. VP-to-Module table and VP totals unchanged (no new VPs)."
   - "2.5 (FIX-BURST-274/D21-definitions-sweep/2026-07-26): D21 Pure Core sweep — add 4 missing MEDIUM rows to match module-criticality.md v1.9 additions (core::retriever, prompts::template, prompts::chat_template, prompts::few_shot). Per-module count 44→48; Coverage-by-Criticality-Tier MEDIUM 13→17. Per-Module Coverage Status header updated."
   - "2.4 (FIX-BURST-273/gate-25-32/2026-07-25): Add tools::config MEDIUM row (ferrochain-tools SS-23) — gate #25 Part B/C sibling propagation; no Kani VP (VP-013 Kani P1 targets check_risk_floor in tools::shell); Integration: yes (construction-time validation tests for override_risk / ADR-020 Decision 3 / BC-2.23.005). Per-module count 43→44; Coverage-by-Criticality-Tier MEDIUM 12→13. Header note updated."
@@ -62,8 +64,8 @@ changelog:
 
 ## Per-Module Coverage Status
 
-> This table covers all 66 architecture modules (48 from prior sweeps + 18 module-universe-sweep rows: CRITICAL +1 checkpoint::saver; HIGH +4 core::events, graph::definition, server::streaming, server::stores; MEDIUM +13 core::config, checkpoint::memory, checkpoint::postgres, server::cron, sandbox::container, sandbox::seatbelt, sandbox::process, splitters::parity, mcp::discovery, mcp::ingress, memory::sqlite, memory::in_memory, memory::search).
-> Tier groupings: CRITICAL 12 / HIGH 22 / MEDIUM 30 / LOW 2 (prior 48-row state: CRITICAL 11 / HIGH 18 / MEDIUM 17 / LOW 2; module-universe sweep adds CRITICAL +1, HIGH +4, MEDIUM +13).
+> This table covers all 77 architecture modules (74 from FIX-BURST-275 Wave B + 3 FIX-BURST-275-Reopened additions: macros::tool, macros::entrypoint, macros::task — all HIGH, ferrochain-macros).
+> Tier groupings: CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2.
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
@@ -95,7 +97,10 @@ changelog:
 | mcp client | ferrochain-mcp | — | — | — | yes | integration red_gate (BC-2.09.005); no-live-connections |
 | mcp adapter | ferrochain-mcp | — | — | — | yes | ToolException type-identity; integration red_gate (BC-2.09.004) |
 | mcp server | ferrochain-mcp | — | — | — | yes | Server-side tool exposure + inbound dispatch (CAP-021) |
-| ferrochain-macros | ferrochain-macros | — | — | — | yes | `#[tool]`/`#[entrypoint]`/`#[task]` expansion correctness |
+| ferrochain-macros | ferrochain-macros | — | — | — | yes | crate-level roll-up; `#[tool]`/`#[entrypoint]`/`#[task]` expansion correctness |
+| macros::tool | ferrochain-macros | — | — | — | yes | HIGH; `#[tool]` proc-macro ToolDefinition generation; compile-time TokenStream expansion; integration-tested via expansion correctness; BC-2.08.010 |
+| macros::entrypoint | ferrochain-macros | — | — | — | yes | HIGH; `#[entrypoint]` proc-macro START-edge wiring; compile-time TokenStream expansion; integration-tested; BC-2.08.011 |
+| macros::task | ferrochain-macros | — | — | — | yes | HIGH; `#[task]` proc-macro task-registration boilerplate; compile-time TokenStream expansion; integration-tested; BC-2.08.012 |
 | sandbox-wasm | ferrochain-sandbox | — | — | — | yes | WASM execution backend |
 | ferrochain-standard-tests | ferrochain-standard-tests | — | — | — | yes | Shared conformance harness; exercised via provider integrations |
 | memory-store | ferrochain-memory | — | yes | — | yes | KV + vector ops; GDPR erasure protocol |
@@ -129,19 +134,27 @@ changelog:
 | sandbox::process | ferrochain-sandbox | — | — | — | yes | ProcessBackend OS subprocess execution; integration tests (BC-2.13.002) |
 | splitters::parity | ferrochain-splitters | — | — | — | yes | Golden-vector parity tests vs Python reference (R8/BC-2.07.002); unit tests |
 | mcp::discovery | ferrochain-mcp | — | — | — | yes | Tool discovery from MCP server at runtime (BC-2.09.001); integration tests |
-| mcp::ingress | ferrochain-mcp | — | — | — | yes | Untrusted-ingress routing; DI-012 guardrail seam; unit + integration tests |
+| mcp::ingress | ferrochain-mcp | — | — | — | yes | HIGH tier (F-P172b-15 elevation); untrusted-ingress routing; DI-012 guardrail seam; external-input boundary (BC-2.09.003); parity with graph::provenance HIGH; unit + integration tests |
 | memory::sqlite | ferrochain-memory | — | — | — | yes | SQLite durable backend for long-horizon memory; integration tests |
 | memory::in_memory | ferrochain-memory | — | — | — | yes | Ephemeral in-memory backend for test/dev; unit tests |
 | memory::search | ferrochain-memory | — | — | — | yes | Keyword, vector, and hybrid search; integration tests |
+| openai::embeddings | ferrochain-openai | — | — | — | yes | HIGH tier; credential-bearing HTTP surface (DI-009/DI-010); EmbeddingsOpenAI impl; integration (DTU) |
+| ollama::embeddings | ferrochain-ollama | — | — | — | yes | HIGH tier; Embeddings conformance contract; EmbeddingsOllama impl; integration |
+| vectorstores::store | ferrochain-vectorstores | — | — | — | yes | VectorStore trait dispatch; VectorStoreFactory; integration |
+| vectorstores::retriever | ferrochain-vectorstores | — | — | — | yes | VectorStoreRetriever bridge; Retriever impl; integration |
+| vectorstores::memory | ferrochain-vectorstores | — | yes | — | yes | In-memory VectorStore backend; RwLock interior mutability; unit + integration |
+| tools::fs | ferrochain-tools | — | — | — | yes | OS filesystem I/O tools; path-guard consumer; integration |
+| tools::search | ferrochain-tools | — | — | — | yes | In-process regex search; directory traversal; path-guard consumer; integration |
+| eval::judge | ferrochain-standard-tests | — | — | — | yes | LLM judge execution; emits eval.judge_infra_error event (observability.md); BC-2.08.013/014; integration (DTU) |
 
 ## Coverage by Criticality Tier
 
 | Tier | Modules | Kani VPs | proptest | fuzz | Kill Rate Target |
 |------|---------|---------|---------|------|-----------------|
 | CRITICAL | 12 | 6 (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) | all | subset | ≥ 95% |
-| HIGH | 22 | 3 (VP-006, VP-012, VP-013) | most + VP-007, VP-008 | subset | ≥ 90% |
-| MEDIUM | 30 | 0 | some | — | ≥ 80% |
-| LOW | 2 | 0 | — | — | ≥ 70% |
+| HIGH | 28 | 3 (VP-006, VP-012, VP-013) | most + VP-007, VP-008 | subset | ≥ 90% |
+| MEDIUM | 35 | 0 | some | — | ≥ 80% |
+| LOW | 2 | 0 | — | — | n/a (xtask and ferrochain-community excluded from cargo-mutants per tooling-selection.md; advisory only) |
 
 ## Mutation Kill Rate Gates (cargo-mutants)
 

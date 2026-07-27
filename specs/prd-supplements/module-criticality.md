@@ -1,13 +1,14 @@
 ---
 document_type: prd-supplement-module-criticality
 level: L3
-version: "1.7"
+version: "1.8"
 status: superseded
 producer: product-owner
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-26T00:00:00Z
 phase: 1a
 superseded_by: .factory/specs/module-criticality.md
 changelog:
+  - "1.8 (F-P172b-19+F-P172b-11/burst-275/2026-07-26): Two stale-metadata findings closed. (1) F-P172b-19 LOW: frontmatter `architect_note` field carried unsatisfiable obligation 'Architect must confirm crate-to-subsystem mapping and fill Architecture Module column after producing ARCH-INDEX.md' — ARCH-INDEX.md has existed since 2026-07-13 and this file was superseded at Phase 1b; replaced with discharged-obligation note. (2) F-P172b-11 MED (partial): SUPERSEDED banner hardcoded '(43 modules, Phase 1b)' count — registry has grown past 43 since the file was superseded; count pin removed and routed to §Classification Summary per de-pin discipline. Historical '43 modules' mentions in changelog rows 1.5 and 1.6 are not corrected (immutable audit trail per TD-VSDD-091)."
   - "1.7 (F-P170-11/burst-272/2026-07-25): Deleted wrong parenthetical tier count from SUPERSEDED banner per F-P170-11. Banner stated 'CRITICAL 9 / HIGH 18 / MEDIUM 14 / LOW 2 = 43 total' — carried pre-D21/D23 CRITICAL count (9 vs authoritative 11) and wrong MEDIUM (14 vs authoritative 12) while summing to the correct total of 43, making it invisible to self-sum arithmetic checks. Deletion preferred over correction per TD-VSDD-091 spirit — the authoritative file owns the count."
   - "1.6 (FIX-BURST-268/F-P166-01/2026-07-25): TD-VSDD-091 compliance — removed stale version pin from SUPERSEDED banner. Banner line previously read '.factory/specs/module-criticality.md (v1.6, 43 modules, Phase 1b)'; vN.N pin violates TD-VSDD-091 (narrative body must not cite version numbers that decay on subsequent diffs). Fixed to '(43 modules, Phase 1b)'. Full body scan confirmed no other <file>.md (vN.N instances."
   - "1.5 (FIX-BURST-267/F-P165-06/2026-07-25): Adjudication — option (a) applied per single-source-of-truth discipline. This PO-draft (22 modules, pre-D21/D23) is superseded by the arch-view at .factory/specs/module-criticality.md (43 modules, v1.6, authoritative post-Phase 1b). Added STALE/SUPERSEDED banner at top of body. No content rows added — option (b) sync to 43 would duplicate authority. Downstream consumers (architect, test-writer, formal-verifier) must read .factory/specs/module-criticality.md. Status changed active→superseded."
@@ -24,7 +25,7 @@ inputs:
 input-hash: "f43e67a"
 traces_to: prd.md
 primary_consumers: [architect, test-writer, formal-verifier]
-architect_note: "Architect must confirm crate-to-subsystem mapping and fill Architecture Module column after producing ARCH-INDEX.md"
+architect_note: "Obligation discharged — ARCH-INDEX.md produced 2026-07-13 at Phase 1b; crate-to-subsystem mapping and Architecture Module column populated by architect in authoritative file .factory/specs/module-criticality.md. This PO-draft is superseded and frozen."
 ---
 
 # Module Criticality Classification: ferrochain
@@ -34,7 +35,7 @@ architect_note: "Architect must confirm crate-to-subsystem mapping and fill Arch
 > This is the PO-draft module criticality file (22 modules, pre-D21/D23 scope, Phase 1a).
 > It was superseded at Phase 1b by the architecture-view file produced by the architect:
 >
-> **Authoritative file:** `.factory/specs/module-criticality.md` (43 modules, Phase 1b)
+> **Authoritative file:** `.factory/specs/module-criticality.md` (Phase 1b — see §Classification Summary for current tier counts)
 >
 > The authoritative file incorporates all D21 (prompts, vectorstores, embeddings, serialization,
 > retrieval) and D23 (first-party tools, budget compaction, per-tool-call HITL) module additions,

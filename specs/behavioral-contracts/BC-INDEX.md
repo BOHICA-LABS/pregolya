@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.20"
+version: "3.21"
 status: active
 producer: state-manager
-timestamp: 2026-07-25T16:00:00Z
+timestamp: 2026-07-26T00:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.21 (F-P172b-13/burst-275/2026-07-26): VP Seed BCs section — two stale residues removed. (1) F-P172b-13 MED: VP footnote claimed 'architect to author VP body files in Phase 6' — all 13 VP body files already exist (VP-001 through VP-013); stale obligation clause removed; remaining footnote text preserved. (2) F-P172b-13 MED: 6 VP rows showed Proof Method 'Kani' instead of 'Kani' — '(candidate)' qualifier meant VP body not yet authored; since all VP body files now exist, qualifier dropped for VP-006/VP-009/VP-010/VP-011/VP-012/VP-013. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.20 (burst-273/F-P171a-02+03+04+09/2026-07-25): Four BC version bumps — F-P171a-09 (architect+PO, ADR-008 Decision 2): BC-2.08.010 v1.2→v1.3 (#[tool] action_risk expansion MUST emit fully-qualified ::ferrochain_core::action_risk::ActionRisk::<Variant>; absent attribute yields ToolCallPreview.action_risk = None with no default variant; §PC-1 updated). F-P171a-02+03+08 (PO, call-time lifecycle): BC-2.23.005 v1.7→v1.8 (E-TOOLS-007 raised at ToolConfig::override_risk CALL TIME, not at ToolRegistry::register time; lifecycle = call time per adjudication #2; zero I/O, no async, no state). F-P171a-04 (PO, #[non_exhaustive]): BC-2.05.006 v1.5→v1.6 (ActionRisk #[non_exhaustive] cross-crate — all matches MUST carry wildcard arm failing closed to High-tier authorization requirement; closed/exhaustive claims removed from §PC-3, §Invariants, VP-HITL-13; VP-HITL-13 restated as satisfiable Cargo-check gate). Validator-#7-date-fix (PO): BC-2.10.006 v1.6→v1.7 (changelog entry 1.4 date corrected 2026-07-22→2026-07-23 per corroborating burst-239 carrier). BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.19 (burst-272/F-P170-01+F-P170-02+F-P170-06+F-P170-16/2026-07-25): Four BC version bumps — F-P170-01 HIGH: BC-2.19.003 v1.1→v1.2 (ADR-016 Decision re-anchor ×2 sites; fabricated duplicate-detection clause dropped; inventory crate-version pin removed from PC1); F-P170-02 HIGH: BC-2.19.004 v1.0→v1.1 (ADR-016 Decision re-anchor ×2 sites; remap-chain validation retained as BC-local Invariant 3); F-P170-06 HIGH: BC-2.05.006 v1.4→v1.5 (ActionRisk anchor updated from graph::hitl to ferrochain-core::core::action_risk; dependency-inversion precedent per ADR-009/ADR-014 Decision 6/ADR-012; SS-05 ownership preserved); F-P170-16 MED: BC-2.23.005 v1.6→v1.7 (BashTool::set_risk RETIRED; canonical risk-floor API is ToolConfig::override_risk(ActionRisk::…) per ADR-020 Decision 3). BC census UNCHANGED: 129 total = 51 P0 / 75 P1 / 3 P2. H1s unchanged."
   - "3.18 (burst-271/F-P169-01/2026-07-25): F-P169-01 HIGH closed: BC-2.16.001 v1.5→v1.6 — Retry-Approval Ordering invariant mis-anchor corrected; '(ADR-018 Decision 3)' → '(Decision 6)'; ADR-018 Decision 6 is the correct authority for retry/approval ordering. Blocking validator #6 (verify-adr-decision-refs.sh) minted (PASS=204 WARN=0 FAIL=0). H1 unchanged."
@@ -85,16 +86,16 @@ changelog:
 | VP-001 | BC-2.03.001 | BSP Super-Step Execution Determinism | Kani | NE-17 |
 | VP-002 | BC-2.04.006 | Session Triple-Address Uniqueness | Kani | NE-12 |
 | VP-003 | BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root | Kani | NE-02 |
-| VP-006 | BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 | Kani (candidate) | ADR-015 Decision 3 §Security Invariant 1 |
+| VP-006 | BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 | Kani | ADR-015 Decision 3 §Security Invariant 1 |
 | VP-007 | BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | Proptest | CAP-024 round-trip invariant |
 | VP-008 | BC-2.22.001 | Embeddings Trait — Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err | Proptest | CAP-031 dimensionality invariant |
-| VP-009 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division | Kani (candidate) | ADR-014 Decision 2 §Hardening note |
-| VP-010 | BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed) | Kani (candidate) | ADR-016 Decision 3 §Security Invariant |
-| VP-011 | BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny | Kani (candidate) | ADR-018 Decision 1 |
-| VP-012 | BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; Watermark Arithmetic | Kani (candidate) | ADR-019 Decision 3 |
-| VP-013 | BC-2.23.005 | BashTool — Non-Lowerable Medium Risk Floor; Sandboxed Shell Execution | Kani (candidate) | ADR-020 Decision 3 |
+| VP-009 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division | Kani | ADR-014 Decision 2 §Hardening note |
+| VP-010 | BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed) | Kani | ADR-016 Decision 3 §Security Invariant |
+| VP-011 | BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny | Kani | ADR-018 Decision 1 |
+| VP-012 | BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; Watermark Arithmetic | Kani | ADR-019 Decision 3 |
+| VP-013 | BC-2.23.005 | BashTool — Non-Lowerable Medium Risk Floor; Sandboxed Shell Execution | Kani | ADR-020 Decision 3 |
 
-_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-011/012/013 seeds assigned burst-231 (2026-07-22); architect to author VP body files in Phase 6._
+_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-011/012/013 seeds assigned burst-231 (2026-07-22). All 13 VP body files (VP-001 through VP-013) exist as of burst-250+._
 
 ## Full BC Catalog
 
@@ -244,6 +245,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.21 | 2026-07-26 | burst-275/F-P172b-13: VP Seed BCs section — Proof Method 'Kani (candidate)' → 'Kani' for VP-006/009/010/011/012/013 (qualifier stale: all 13 VP body files now exist; '(candidate)' meant VP body not yet authored); VP footnote 'architect to author VP body files in Phase 6' removed (obligation discharged); footnote updated to note all 13 VP body files exist as of burst-250+. BC census 129 unchanged; H1s unchanged. | burst-275 F-P172b-13 |
 | 3.20 | 2026-07-25 | burst-273/F-P171a-02+03+04+09: Four BC bumps — BC-2.08.010 v1.2→v1.3 (ADR-008 Decision 2: #[tool] action_risk attr MUST emit fully-qualified ::ferrochain_core::action_risk::ActionRisk::<Variant>; absent→ToolCallPreview.action_risk=None, no default); BC-2.23.005 v1.7→v1.8 (E-TOOLS-007 lifecycle = ToolConfig::override_risk call time, not register time); BC-2.05.006 v1.5→v1.6 (#[non_exhaustive] ActionRisk cross-crate: wildcard arm mandatory, fails closed to High-tier; closed/exhaustive claims removed); BC-2.10.006 v1.6→v1.7 (changelog entry 1.4 date 2026-07-22→2026-07-23). BC census 129 unchanged; H1s unchanged. | burst-273 F-P171a-02/03/04/08/09 |
 | 3.19 | 2026-07-25 | burst-272/F-P170-01+02+06+16: Four BC version bumps — F-P170-01 HIGH: BC-2.19.003 v1.1→v1.2 (ADR-016 Decision re-anchor ×2 sites; fabricated duplicate-detection clause dropped; inventory crate-version pin removed); F-P170-02 HIGH: BC-2.19.004 v1.0→v1.1 (ADR-016 Decision re-anchor ×2 sites; remap-chain validation retained BC-local Invariant 3); F-P170-06 HIGH: BC-2.05.006 v1.4→v1.5 (ActionRisk anchor updated to ferrochain-core::core::action_risk; dependency-inversion precedent ADR-009/ADR-014/ADR-012; SS-05 ownership preserved); F-P170-16 MED: BC-2.23.005 v1.6→v1.7 (BashTool::set_risk RETIRED; ToolConfig::override_risk(ActionRisk::…) canonical per ADR-020 Decision 3). BC census unchanged: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged. | burst-272 F-P170-01/02/06/16 |
 | 3.18 | 2026-07-25 | burst-271/F-P169-01: BC-2.16.001 v1.5→v1.6 — Invariants §Retry-Approval Ordering mis-anchor corrected: '(ADR-018 Decision 3)' → '(Decision 6)'; ADR-018 Decision 6 is the correct authority for Retry / Approval Ordering (Decision 3 covers Dispatch in graph::hitl::pre_tool_dispatch). Body sequence text was already correct and unchanged. Blocking validator #6 (verify-adr-decision-refs.sh) minted (PASS=204 WARN=0 FAIL=0). H1 unchanged. | burst-271 F-P169-01 |

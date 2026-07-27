@@ -2,18 +2,21 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.31"
+version: "1.33"
 status: active
 producer: architect
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-26T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
-input-hash: "44938a8"
+  - .factory/specs/module-criticality.md
+input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.33 (FIX-BURST-275-REOPENED/Defect-4/2026-07-26): Defect 4 — fix `core::serializable` Criticality HIGH → CRITICAL in D21 additions table. Rationale: module-criticality.md is the authoritative registry; registry has CRITICAL row for Reviver aspect (VP-010 Kani P0; allowlist containment security boundary per R12) and HIGH row for LcSerializable round-trip aspect (VP-007 proptest P1). Decomp takes max tier (CRITICAL); dual-aspect nature documented in description and criticality note. Registry→decomposition sweep (all 69 tiered modules): 1 divergence found and fixed (`core::serializable`: decomp=HIGH, registry-max=CRITICAL); all remaining 68 tiered modules have matching registry tiers confirmed post Wave-B fixes."
+  - "1.32 (FIX-BURST-275/F-P172b-03+04+15+Iron-Law/2026-07-26): F-P172b-03 — fix tier divergences: `core::embeddings` MEDIUM → HIGH in D21 additions table (credential-bearing HTTP surface; DI-009/DI-010; VP-008 proptest P1; HIGH in module-criticality.md since v1.4 — decomp was stale); `vectorstores::similarity` MEDIUM → CRITICAL in vectorstores table (VP-009 Kani P0 target; CRITICAL in module-criticality.md since v1.4 — decomp was stale). F-P172b-03 sibling sweep (TD-VSDD-060) — raise `openai::embeddings` and `ollama::embeddings` MEDIUM → HIGH in Provider Embeddings table (both raised to HIGH in module-criticality.md as new rows in same burst; openai::embeddings is credential-bearing HTTP surface per DI-009/DI-010; ollama::embeddings has same conformance contract tier as ollama crate-level HIGH). F-P172b-04 — fix three H2 crate headings that understate max tier: `ferrochain-memory (SS-15) — MEDIUM` → `HIGH (write_guard) / MEDIUM (store, sqlite, in_memory, search, skills)`; `ferrochain-prompts (SS-18) — MEDIUM` → `HIGH (injection_guard) / MEDIUM (template, chat_template, few_shot)`; `ferrochain-vectorstores (SS-20, SS-21) — MEDIUM` → `CRITICAL (similarity) / MEDIUM (store, retriever, memory, mmr)`. F-P172b-15 sibling sweep (TD-VSDD-060) — raise `mcp::ingress` MEDIUM → HIGH in mcp table and fix section heading `ferrochain-mcp (SS-09) — MEDIUM` → `HIGH (ingress) / MEDIUM (client, discovery, adapter, server)`. F-P172b-03 sibling sweep — fix `Provider Embeddings Modules (SS-22) — MEDIUM` → `HIGH` heading (both modules raised). Iron Law gap — add `eval::judge` MEDIUM module row to Provider Crates section; add Standard Test Modules subsection; this clears observability.md pending note. OBS-P172b-A — add `specs/module-criticality.md` to inputs (live authoritative architecture-view registry; prd-supplements entry is historical PO draft). Module universe 56 → 57 (+eval::judge MEDIUM)."
   - "1.31 (FIX-BURST-274/module-universe-sweep/2026-07-26): Fix memory::skills Criticality column MEDIUM → '—' — the routing-overlay exemption (ADR-012 Decision 4; structural decomposition row only, no criticality-counted row) was declared in the surrounding block note but not reflected in the table Criticality column, creating a silent inconsistency with the established pattern (see core::documents v1.30 for precedent). Annotation added in table row. No module-universe count change (56 rows unchanged)."
   - "1.30 (FIX-BURST-274/D21-definitions-sweep/2026-07-26): core::documents definitions-only adjudication (F-P172a-04) — Criticality column MEDIUM → — (definitions-only); description extended to note definitions-only exemption per ADR-009 definitions-only precedent (ADR-014 Decision 2: pure data carrier; no execution methods; no VP target). Module universe count unchanged at 56."
   - "1.29 (FIX-BURST-273/F-P171a-02/2026-07-25): Add `tools::config` module row to ferrochain-tools (SS-23) — ToolConfig adjudication: shared per-tool framework configuration type; `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>` builder-consuming validator enforces per-tool risk-floor rules (E-TOOLS-007 on below-floor tier for BashTool); `#[non_exhaustive]`; construction-time validation per VP-013 postcondition (VP-013 §Source Contract PC-4 wins over BC-2.23.005 §PC-4 'register time' on lifecycle — VP-013 postcondition states `override_risk` returns `Err(E-TOOLS-007)`; BC §PC-4 needs PO correction to align); zero I/O, no async (ADR-020 Decision 3 / BC-2.23.005). Module universe 55→56 (+tools::config MEDIUM row)."
@@ -200,21 +203,36 @@ Each provider is split into **two separate Cargo crates** per D17-Q5 / ADR-007 /
 The SDK crates have no ferrochain-core dep and are publishable standalone. Enforced by CI:
 `cargo check -p ferrochain-<provider>-sdk` must succeed without ferrochain-core in Cargo.lock.
 
-## ferrochain-mcp (SS-09) — MEDIUM
+### Standard Test Modules
+
+| Module | Responsibility | Criticality | SS |
+|--------|---------------|-------------|-----|
+| `eval::judge` | LLM judge execution for conformance evaluation; invokes a configurable judge LLM to score implementation outputs against golden answers; emits `eval.judge_infra_error` structured event on judge call failure (observability.md); `JudgeError` propagated as `FerrochainError`; async / Effectful Shell (BC-2.08.013/BC-2.08.014 scope) | MEDIUM | SS-08 |
+
+> **Iron Law — eval::judge (FIX-BURST-275):** `ferrochain-standard-tests` provides `eval::judge`
+> as the LLM judge execution module for conformance scoring. The `eval.judge_infra_error` event
+> type in observability.md names this module explicitly as the emitter. Behavioral contracts
+> BC-2.08.013/BC-2.08.014 scope the judge LLM behavior. The module has observable behavior
+> (structured event emission, error propagation) and BC coverage — it therefore satisfies Iron
+> Law criteria requiring a module-level row. The pre-existing `ferrochain-standard-tests`
+> crate-level row in module-criticality.md remains as a crate-level annotation; `eval::judge`
+> is the module-level row that satisfies Iron Law. Module universe 56 → 57.
+
+## ferrochain-mcp (SS-09) — HIGH (ingress) / MEDIUM (client, discovery, adapter, server)
 
 | Module | Responsibility | Criticality |
 |--------|---------------|-------------|
 | `mcp::client` | `MultiServerMcpClient`; no live connections until invoke (R11) | MEDIUM |
 | `mcp::discovery` | Tool discovery and registration from MCP server at runtime | MEDIUM |
 | `mcp::adapter` | `ToolInvocation` routing; ToolException re-raise with type identity (R11) | MEDIUM |
-| `mcp::ingress` | Untrusted-ingress routing; DI-012 guardrail seam | MEDIUM |
+| `mcp::ingress` | Untrusted-ingress routing; DI-012 guardrail seam; external untrusted-input entry point for tool invocations arriving from MCP clients (BC-2.09.003) | HIGH |
 | `mcp::server` | MCP server endpoint: exposes registered tools to external MCP clients; accepts inbound tool-call requests, dispatches to registered tools, and returns serialized responses (CAP-021/D20/ADR-013) | MEDIUM |
 
 **BC anchors:** BC-2.09.001–007 (CAP-021: BCs 006–007 cover server-side tool exposure and response serialization contracts).
 
 **VP anchors:** `mcp::adapter` is VP-004 target; `mcp::client` is VP-005 target (both integration-tier, Phase 3).
 
-## ferrochain-memory (SS-15) — MEDIUM
+## ferrochain-memory (SS-15) — HIGH (write_guard) / MEDIUM (store, sqlite, in_memory, search, skills)
 
 Responsibilities: long-horizon memory persistence (KV + vector), GDPR erasure protocol,
 search (keyword / vector / hybrid). Canonical trait: `MemoryStore`.
@@ -283,13 +301,18 @@ Re-exported from ferrochain-core.
 |--------|---------------|-------------|-----|
 | `core::documents` | `Document { page_content, metadata, id }` type — carrier for all retrieval output; derives Serialize/Deserialize/JsonSchema; `#[non_exhaustive]`; **definitions-only — no criticality-counted module row per ADR-009 definitions-only precedent** (ADR-014 Decision 2: pure data carrier; no execution methods; no VP target) | — | SS-20 |
 | `core::retriever` | `Retriever` trait: async dyn-compatible `get_relevant_documents(&self, query: &str)`; `Arc<dyn Retriever>` seam for graph RAG nodes; `GuardedDocuments` newtype (no public constructor) + `GuardedDocuments::rag_ingress(docs, guardrail)` sole constructor enforcing DI-012 RAGRetrieval guardrail at call time (ADR-014 Decision 6) | MEDIUM | SS-20 |
-| `core::embeddings` | `Embeddings` trait: async dyn-compatible `embed_documents` + `embed_query`; dimensionality contract (E-EMBED-001 on mismatch); no `ndarray` dep | MEDIUM | SS-22 |
-| `core::serializable` | `LcSerializable` trait + `Serialized` wire enum + `Reviver` + `inventory`-based static registry (141 core entries); valid-namespace `OnceLock<HashSet>` derived from registry; E-SRLZ-001/002 error codes | HIGH | SS-19 |
+| `core::embeddings` | `Embeddings` trait: async dyn-compatible `embed_documents` + `embed_query`; dimensionality contract (E-EMBED-001 on mismatch); no `ndarray` dep; credential-bearing HTTP surface (DI-009 timeout + DI-010 key opacity apply to all impls); VP-008 proptest P1 | HIGH | SS-22 |
+| `core::serializable` | `LcSerializable` trait + `Serialized` wire enum + `Reviver` + `inventory`-based static registry (141 core entries); valid-namespace `OnceLock<HashSet>` derived from registry; E-SRLZ-001/002 error codes; dual-aspect: Reviver (CRITICAL/VP-010 Kani P0 — allowlist containment security boundary) + LcSerializable round-trip (HIGH/VP-007 proptest P1) | CRITICAL | SS-19 |
 
-> **core::serializable criticality (HIGH):** deserialization of external lc-JSON blobs is a
-> security-sensitive surface (R12). The Reviver enforces an allowlist-by-registration safety
-> property and must be formally tested for allowlist containment (VP-010 (Kani P0, seeded burst-223)). HIGH tier
-> matches the security significance and cross-cutting nature of lc-JSON round-trip support.
+> **core::serializable criticality (CRITICAL/HIGH dual-aspect):** this module hosts two
+> verification properties with different tiers. **Reviver aspect (CRITICAL):** deserialization of
+> external lc-JSON blobs is a security-sensitive surface (R12); the Reviver enforces an
+> allowlist-by-registration safety property; VP-010 (Kani P0, seeded burst-223) proves allowlist
+> containment. CRITICAL: Kani P0 VP target + security boundary (external deserialization allowlist).
+> **LcSerializable round-trip aspect (HIGH):** VP-007 (proptest P1) tests round-trip fidelity of
+> lc-JSON serialization. HIGH: proptest P1 VP host. Decomp table takes max tier (CRITICAL); both
+> aspects are tracked as separate registry rows in module-criticality.md (Reviver / LcSerializable
+> round-trip). Tier corrected from HIGH → CRITICAL in FIX-BURST-275-reopened per registry authority.
 
 > **NE anchors:** `core::documents` — #[non_exhaustive] required (public API type per workspace
 > convention). `core::embeddings` — DI-009 timeout applies to provider impls; DI-014 no silent
@@ -332,7 +355,7 @@ Re-exported from ferrochain-core.
 >   anchor preserved. `ferrochain-graph` re-exports `core::action_risk::ActionRisk` as
 >   `ferrochain_graph::hitl::ActionRisk` for existing graph-layer consumers (zero BC changes required).
 
-## ferrochain-prompts (SS-18) — MEDIUM
+## ferrochain-prompts (SS-18) — HIGH (injection_guard) / MEDIUM (template, chat_template, few_shot)
 
 Responsibilities: prompt template construction (PromptTemplate, ChatPromptTemplate,
 MessagesPlaceholder, FewShot*), f-string rendering engine, optional mustache/jinja2,
@@ -353,7 +376,7 @@ injection safety guard (pure-core blocker for untrusted content in system-positi
 
 > **BC anchors:** BC-2.18.001–005. ADR-015 governs the trust model and engine selection.
 
-## ferrochain-vectorstores (SS-20, SS-21) — MEDIUM
+## ferrochain-vectorstores (SS-20, SS-21) — CRITICAL (similarity) / MEDIUM (store, retriever, memory, mmr)
 
 Responsibilities: `VectorStore` trait (async dyn-compatible), `VectorStoreFactory` (Sized-bounded
 constructor pattern), in-memory VectorStore backend, MMR selection algorithm, `VectorStoreRetriever`.
@@ -363,7 +386,7 @@ constructor pattern), in-memory VectorStore backend, MMR selection algorithm, `V
 | `vectorstores::store` | `VectorStore` trait (`add_texts`, `similarity_search`, `similarity_search_with_score`, `max_marginal_relevance_search`, `delete`, `as_retriever`); `VectorStoreFactory` trait; `MetadataFilter` type | MEDIUM | SS-21 |
 | `vectorstores::retriever` | `VectorStoreRetriever<'_>` wrapping `&dyn VectorStore`; impl `Retriever`; `SearchType` enum (Similarity / SimilarityScoreThreshold / Mmr) | MEDIUM | SS-20 |
 | `vectorstores::memory` | In-memory VectorStore backend; `Arc<dyn Embeddings>` injection via constructor; interior mutability via `RwLock`; `Vec<f32>` cosine similarity; no `ndarray` dep | MEDIUM | SS-21 |
-| `vectorstores::similarity` | Shared cosine similarity primitive: `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, FerrochainError>`; zero-norm IEEE-754 guard (E-VS-001) before division; pure `Vec<f32>` inner product, no `ndarray`, no I/O; called by `vectorstores::memory`, `vectorstores::mmr`, and any future VectorStore backend | MEDIUM | SS-21 |
+| `vectorstores::similarity` | Shared cosine similarity primitive: `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, FerrochainError>`; zero-norm IEEE-754 guard (E-VS-001) before division; pure `Vec<f32>` inner product, no `ndarray`, no I/O; called by `vectorstores::memory`, `vectorstores::mmr`, and any future VectorStore backend | CRITICAL | SS-21 |
 | `vectorstores::mmr` | Maximal Marginal Relevance selection algorithm; calls `vectorstores::similarity::cosine_similarity` for pairwise similarity + diversity penalty; `lambda_mult` ∈ [0.0, 1.0] parameter; pure math, no I/O | MEDIUM | SS-21 |
 
 > **VP anchors:** `vectorstores::similarity` is VP-009 target (Kani P0 proof that `cosine_similarity`
@@ -374,15 +397,15 @@ constructor pattern), in-memory VectorStore backend, MMR selection algorithm, `V
 > **BC anchors:** BC-2.20.001–003 (Retriever), BC-2.21.001–004 (VectorStore). ADR-014 governs
 > trait shapes, factory pattern, SS-15 boundary, and inventory extension seam.
 
-## Provider Embeddings Modules (SS-22) — MEDIUM
+## Provider Embeddings Modules (SS-22) — HIGH
 
 Each embedding-capable provider crate gains a new `<provider>::embeddings` module.
 ferrochain-anthropic is EXCLUDED — Anthropic provides no public embeddings API (ADR-017).
 
 | Module | Crate | Responsibility | Criticality | SS |
 |--------|-------|---------------|-------------|-----|
-| `openai::embeddings` | ferrochain-openai | `EmbeddingsOpenAI` impl of `Embeddings` trait; `/v1/embeddings` endpoint; models: text-embedding-3-small/large, text-embedding-ada-002; `OpenAiApiKey` newtype; reqwest rustls-tls; 30s timeout | MEDIUM | SS-22 |
-| `ollama::embeddings` | ferrochain-ollama | `EmbeddingsOllama` impl of `Embeddings` trait; `/api/embeddings` endpoint; model-configurable (nomic-embed-text, mxbai-embed-large, etc.); no API key; reqwest rustls-tls; 30s timeout | MEDIUM | SS-22 |
+| `openai::embeddings` | ferrochain-openai | `EmbeddingsOpenAI` impl of `Embeddings` trait; `/v1/embeddings` endpoint; models: text-embedding-3-small/large, text-embedding-ada-002; `OpenAiApiKey` newtype (DI-009/DI-010 credential-bearing HTTP surface); reqwest rustls-tls; 30s timeout | HIGH | SS-22 |
+| `ollama::embeddings` | ferrochain-ollama | `EmbeddingsOllama` impl of `Embeddings` trait; `/api/embeddings` endpoint; model-configurable (nomic-embed-text, mxbai-embed-large, etc.); no API key; reqwest rustls-tls; 30s timeout; same conformance contract tier as ollama BaseChatModel crate-level | HIGH | SS-22 |
 
 > **NE anchors (both embedding modules):** DI-009 (mandatory timeout); DI-010 (OpenAI key is
 > `OpenAiApiKey` newtype with redacted Debug); DI-014 (batch failures return Err, not Vec::new()).

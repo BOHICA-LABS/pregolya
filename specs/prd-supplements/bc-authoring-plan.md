@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.55"
+version: "2.58"
 status: active
 producer: product-owner
 total_standing_gates: 36
@@ -18,7 +18,10 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
-  - "2.55 (F-P172a-02+F-P172a-03+F-P172a-04+F-P172a-05+F-P172a-06+F-P172a-07+F-P172a-08+F-P172a-12+F-P172a-14+F-P172a-16+F-P172a-17+F-P172a-19/burst-274-B/2026-07-26): Twelve structural/propagation findings closed. (1) F-P172a-02 HIGH: Gate #32 preamble 'three BC-layer carriers' → 'four BC-layer carriers'; carrier 5 'THREE live documents (items 1–3)' → 'FOUR live documents (items 1–4)'; census procedure gained step 4a: check arch-registry (module-criticality.md) for new or re-placed modules, applying definitions-only or routing-overlay exception as appropriate. (2) F-P172a-03 HIGH: Gate #25 Part B/C — 5 live 'four docs / all four' sites → 'three docs / all three'; Part B Census commands: PO-registry row deleted ('Count rows per tier in Module Classification table (PO)' — file is superseded/frozen); historical source citation '(widening — all four criticality-bearing docs added)' preserved as-is (historical record). (3) F-P172a-04 HIGH: Gate #32 carrier 4 definitions-only exception rewritten: (a) memory::skills removed from exempt list — it is Effectful Shell with async I/O (load_skill / list_skills / skill_exists bound to MemoryStore backend per purity-boundary-map.md; not Pure Core); (b) invalid ADR-009 Option 3 precedent citation removed — core::budget HAS a criticality row (SS-10/HIGH/VP-012) and is not a precedent for no-row; direct rationale substituted (modules hosting ONLY type/trait definitions have no algorithmic failure modes to tier-classify); (c) routing-overlay exception class added for memory::skills: structural decomp row exists in module-decomposition.md but no criticality row required — routing/discovery overlay over MemoryStore KV backend with no execution-business-logic; (d) core::documents definitions-only exemption resolved — architect adjudication confirmed (FIX-BURST-274): ADR-014 Decision 2 states "No I/O. Pure data carrier. Pure Core classification."; struct has only page_content/metadata/id fields with derived impls; no execution methods; no VP target; Criticality column changed from MEDIUM to — in module-decomposition.md; no criticality row required; core::documents added to definitions-only exempt case lists (gate #25 Part B exemption clause + gate #32 carrier 4 established-cases list). (4) F-P172a-12 MED: Gate #25 Part B derived-doc check — exemption clause added for definitions-only modules (core::context_mutation, core::write_guard, core::guardrail, core::action_risk) and routing-overlay modules (memory::skills); their absence from module-criticality.md is intentional, not a mismatch; census checks only modules present in the arch registry. (5) F-P172a-05 MED: Gate #28 DEFER-002 narrowed — verify-changelog-date-monotonicity.sh (Rules 2+3) and verify-form-a-changelog-direction.sh (Rule 6 Form A direction) are now LIVE blocking pre-commit hooks; remaining deferred to Phase 3: Rule 1 (date ≤ timestamp supplement branch), Rule 4 (temporal-neighbor sweep), Rule 5 (frontmatter-currency machine check), Rule 6 Form B (body-table direction machine check); both-forms co-existence WARNs emitted by verify-changelog-date-monotonicity.sh noted as non-blocking. (6) F-P172a-06 MED: Gate #28 date-validity census upgraded — verify-changelog-date-monotonicity.sh is now the authoritative corpus-wide date sweep (replaces manual file enumeration as primary); manual fallback widened from 5 to 11 files by adding ADR-007, ADR-009, ADR-012, ADR-013, BC-INDEX.md, verification-architecture.md; verification-architecture.md classified as architecture/ (not supplement). (7) F-P172a-07 MED: Gate #28 Rule 5 supplement enumeration extended 6→7: observability.md added (status: active, version 1.5). (8) F-P172a-08 MED: Six 'all 95 BCs' / '95-BC plan total' staleness sites de-pinned — subsystem_note, Batch 13 scope note, guideline #1, guideline #8, guideline #13 census prose, gate #28 Rule 6 census header — all now read 'all BCs in BC-INDEX' or 'BC-INDEX plan total'. TD-VSDD-060 sibling sweep: six sites confirmed, no others (changelog rows exempt per TD-VSDD-091). (9) F-P172a-14 MED: FORM CHOICE — Form A (frontmatter changelog: YAML list) is the single authoritative form for bc-authoring-plan.md; Form B (## Changelog body table) retained as historical audit trail with explicit 'historical record — superseded by frontmatter changelog' banner; bc-authoring-plan.md reclassified from 'Form-B-only' to 'BOTH forms (Form A authoritative)' in gate #28 known-file list. (10) F-P172a-16 LOW: Gate #25 Part B after-editing bullet — heading example '## ferrochain-macros — MEDIUM' marked explicitly hypothetical to prevent backward correction against a module that has a different tier in the registry. (11) F-P172a-17 LOW: Authoring Guidelines source order corrected — item 16 (E-code↔variant-name census gate) now precedes item 17 (HTTP endpoint census gate) in source; rendered positions now match numbering; gate #21 reference 'guideline #17 above' (HTTP endpoint census) is now correct by rendered position. (12) F-P172a-19 LOW: VP-NNN candidate policy disambiguation added — bare 'VP-NNN candidate' label means proposed VP ID not yet assigned in VP-INDEX (rule (3) drop-the-qualifier applies when assigned); 'VP-NNN (Kani P1 candidate)' or 'VP-NNN (<tier> qualifier)' label means VP IS assigned in VP-INDEX and the parenthetical is a tier/priority descriptor — rule (3) does NOT apply to tier-descriptor qualifiers; BC-2.23.005 row 'VP-013 (Kani P1 candidate)' is COMPLIANT (VP-013 is assigned in VP-INDEX per gate #13 census). (13) FIX-BURST-274 amendments: core::documents added to definitions-only exempt case lists (gate #25 Part B exemption clause + gate #32 carrier 4 established-cases list); gate #25 Part C census comment de-pinned (hardcoded 'exactly 44' count replaced with instruction to recompute from arch-registry §Classification Summary — registry is actively growing per architect's corpus-wide sweep; de-pinned per F-P170-14 precedent)."
+  - "2.58 (burst-275C/2026-07-26): TWO DEFINITIONAL GAPS — exposed by first real census run on v2.57 gate. Gap 1 (same structural class as F-P172b-05): Gate #25 Part C directed that crate-level registry rows be annotated 'no 1:1 decomposition module' so the census skips them — but no clause required the annotation to be TRUE. An annotation that suppresses a check must itself be falsified; this is exactly the F-P172b-05 defect (unfalsifiable clause that silently suppresses a check) one layer down. Motivating instance: the ferrochain-macros registry row was annotated crate-level while its Qualifier text enumerated #[tool] #[entrypoint] #[task] — and module-decomposition.md carried macros::tool, macros::entrypoint, macros::task as three separate HIGH tiered rows. The annotation asserted 'no 1:1 decomposition module' about a row with three of them; the census skipped three real gaps. Fix: Part C now requires per-row verification of every crate-level annotation against module-decomposition.md (grep for module rows belonging to the crate; if any exist, annotation is INVALID → HIGH-severity finding); verification must be recorded per-row, not as a summary; a crate-level row may coexist with module rows only as an explicitly-labeled roll-up (which must be excluded from registry_rows for matched_rows computation). Gap 2: registry_rows was undefined as table-ROWS vs distinct-module-names, and the core::serializable duplicate (two rows, same Module cell, distinct Qualifiers for reviver-allowlist CRITICAL and round-trip HIGH) made the distinction load-bearing. Fix: quintuple expanded to sextuple by introducing registry_distinct_modules (count of distinct Module cell values); registry_rows redefined explicitly as total table ROWS; blocking identity 3 added: for any two rows where row_i.Module == row_j.Module, (row_i.Module, row_i.Qualifier) != (row_j.Module, row_j.Qualifier) must hold (duplicate (Module, Qualifier) pair = HIGH-severity finding); matched_rows redefined as explicit SET INTERSECTION {decomposition_tiered_module_names} ∩ {registry_Module_cell_values} with the difference set required to be reported inline and empty — prose-asserting the value is PROHIBITED. Motivating instance: coordinator independently computed matched_rows = 66 against decomposition_tiered_rows = 69 (3 macros module gaps); the prose-asserted value had been accepted without the difference set. Gate #32 step 4b updated to same sextuple + three-identity form."
+  - "2.57 (burst-275B/2026-07-26): LOAD-BEARING ARITHMETIC FIX — gate #25 Part B exempt list flattening (v2.56) caused blocking identity misfire. Root cause: v2.56 combined two structurally distinct exempt classes into a flat list of 6, making exempt_count = 6 and decomposition_tiered_rows (68) − exempt_count (6) = 62 ≠ matched_rows (68) — gate would block on a correct census. Separately, the — reciprocal assertion was unevaluable for the four no-row modules (no Criticality cell to check). Fix: split into Class A and Class B with distinct arithmetic roles. Class A — non-row definitions-only (core::context_mutation, core::write_guard, core::guardrail, core::action_risk): NO table row in module-decomposition.md; appear only as prose definitions notes; NOT in row universe; NOT in any count; — reciprocal assertion does NOT apply; INVERSE assertion added (Class A MUST NOT gain a table row — HIGH-severity finding if one appears, requiring architect re-classification). Class B — exempt table rows (core::documents, memory::skills): ARE table rows with Criticality —; ARE in row universe; exempt_count := |Class B| = 2; — reciprocal assertion applies; exempt_count MUST be derived by counting — Criticality rows (not list length); cross-check required (count ≠ list length = HIGH-severity finding). Arithmetic corrected: universe-total identity added: decomposition_total_rows == decomposition_tiered_rows + exempt_count (currently 70 == 68 + 2). Census output changed from triple (decomposition_tiered_rows, registry_rows, matched_rows) to quintuple (decomposition_total_rows, decomposition_tiered_rows, exempt_count, registry_rows, matched_rows). Two blocking identities: identity 1 (universe): decomposition_total_rows == decomposition_tiered_rows + exempt_count; identity 2 (matching completeness): matched_rows == decomposition_tiered_rows. Gate #32 carrier 4 step 4b updated to same quintuple + dual-identity form. Class A / Class B split recorded here to prevent re-flattening."
+  - "2.56 (F-P172b-05+OBS-P172b-B/burst-275/2026-07-26): Two process-gap findings closed. (1) F-P172b-05 HIGH [process-gap]: Gate #25 Part B census direction was INVERTED by burst-274 exemption clause ending 'Only check modules that are present as rows in the arch-registry (module-criticality.md) table' — this silently skipped any tiered decomposition module absent from the registry, exactly the gap class to detect. Rewritten BIDIRECTIONAL: Decomposition→Registry direction (absence class): for each module in module-decomposition.md with non-`—` Criticality value, a registry row MUST exist unless the module appears verbatim in the gate #32 carrier-4 exempt list; exempt module carrying a tier value is a reciprocal consistency violation (HIGH); Registry→Decomposition direction (tier-divergence class) retained. Exempt list converted from implicit skip clause to positive allowlist with verbatim-match required; definitions-only and routing-overlay rationale preserved. (2) OBS-P172b-B [process-gap]: No census gate required a positive-coverage assertion — prose completeness claims were unfalsifiable, enabling phantom baselines (F-P172b-02 motivating instance: '56' mirrored registry total across ~170 passes while naming decomposition table, concealing 7 baseline gaps). Gate #25 Part B now REQUIRES a coverage triple (decomposition_tiered_rows, registry_rows, matched_rows) recorded in the burst changelog; blocking assertion: decomposition_tiered_rows − exempt_count == matched_rows; all three numbers independently recomputed from named artifacts in this burst; anti-phantom clause: census figure naming an artifact must be derived by counting that artifact's rows in the burst. Same positive-coverage triple added to gate #32 carrier 4 step 4b."
+  - "2.55 (F-P172a-02+F-P172a-03+F-P172a-04+F-P172a-05+F-P172a-06+F-P172a-07+F-P172a-08+F-P172a-12+F-P172a-14+F-P172a-16+F-P172a-17+F-P172a-19/burst-274-B/2026-07-26): Twelve structural/propagation findings closed. (1) F-P172a-02 HIGH: Gate #32 preamble 'three BC-layer carriers' → 'four BC-layer carriers'; carrier 5 'THREE live documents (items 1–3)' → 'FOUR live documents (items 1–4)'; census procedure gained step 4a: check arch-registry (module-criticality.md) for new or re-placed modules, applying definitions-only or routing-overlay exception as appropriate. (2) F-P172a-03 HIGH: Gate #25 Part B/C — 5 live 'four docs / all four' sites → 'three docs / all three'; Part B Census commands: PO-registry row deleted ('Count rows per tier in Module Classification table (PO)' — file is superseded/frozen); historical source citation '(widening — all four criticality-bearing docs added)' preserved as-is (historical record). (3) F-P172a-04 HIGH: Gate #32 carrier 4 definitions-only exception rewritten: (a) memory::skills removed from exempt list — it is Effectful Shell with async I/O (load_skill / list_skills / skill_exists bound to MemoryStore backend per purity-boundary-map.md; not Pure Core); (b) invalid ADR-009 Option 3 precedent citation removed — core::budget HAS a criticality row (SS-10/HIGH/VP-012) and is not a precedent for no-row; direct rationale substituted (modules hosting ONLY type/trait definitions have no algorithmic failure modes to tier-classify); (c) routing-overlay exception class added for memory::skills: structural decomp row exists in module-decomposition.md but no criticality row required — routing/discovery overlay over MemoryStore KV backend with no execution-business-logic; (d) core::documents definitions-only exemption resolved — architect adjudication confirmed (FIX-BURST-274): ADR-014 Decision 2 states 'No I/O. Pure data carrier. Pure Core classification.'; struct has only page_content/metadata/id fields with derived impls; no execution methods; no VP target; Criticality column changed from MEDIUM to — in module-decomposition.md; no criticality row required; core::documents added to definitions-only exempt case lists (gate #25 Part B exemption clause + gate #32 carrier 4 established-cases list). (4) F-P172a-12 MED: Gate #25 Part B derived-doc check — exemption clause added for definitions-only modules (core::context_mutation, core::write_guard, core::guardrail, core::action_risk) and routing-overlay modules (memory::skills); their absence from module-criticality.md is intentional, not a mismatch; census checks only modules present in the arch registry. (5) F-P172a-05 MED: Gate #28 DEFER-002 narrowed — verify-changelog-date-monotonicity.sh (Rules 2+3) and verify-form-a-changelog-direction.sh (Rule 6 Form A direction) are now LIVE blocking pre-commit hooks; remaining deferred to Phase 3: Rule 1 (date ≤ timestamp supplement branch), Rule 4 (temporal-neighbor sweep), Rule 5 (frontmatter-currency machine check), Rule 6 Form B (body-table direction machine check); both-forms co-existence WARNs emitted by verify-changelog-date-monotonicity.sh noted as non-blocking. (6) F-P172a-06 MED: Gate #28 date-validity census upgraded — verify-changelog-date-monotonicity.sh is now the authoritative corpus-wide date sweep (replaces manual file enumeration as primary); manual fallback widened from 5 to 11 files by adding ADR-007, ADR-009, ADR-012, ADR-013, BC-INDEX.md, verification-architecture.md; verification-architecture.md classified as architecture/ (not supplement). (7) F-P172a-07 MED: Gate #28 Rule 5 supplement enumeration extended 6→7: observability.md added (status: active, version 1.5). (8) F-P172a-08 MED: Six 'all 95 BCs' / '95-BC plan total' staleness sites de-pinned — subsystem_note, Batch 13 scope note, guideline #1, guideline #8, guideline #13 census prose, gate #28 Rule 6 census header — all now read 'all BCs in BC-INDEX' or 'BC-INDEX plan total'. TD-VSDD-060 sibling sweep: six sites confirmed, no others (changelog rows exempt per TD-VSDD-091). (9) F-P172a-14 MED: FORM CHOICE — Form A (frontmatter changelog: YAML list) is the single authoritative form for bc-authoring-plan.md; Form B (## Changelog body table) retained as historical audit trail with explicit 'historical record — superseded by frontmatter changelog' banner; bc-authoring-plan.md reclassified from 'Form-B-only' to 'BOTH forms (Form A authoritative)' in gate #28 known-file list. (10) F-P172a-16 LOW: Gate #25 Part B after-editing bullet — heading example '## ferrochain-macros — MEDIUM' marked explicitly hypothetical to prevent backward correction against a module that has a different tier in the registry. (11) F-P172a-17 LOW: Authoring Guidelines source order corrected — item 16 (E-code↔variant-name census gate) now precedes item 17 (HTTP endpoint census gate) in source; rendered positions now match numbering; gate #21 reference 'guideline #17 above' (HTTP endpoint census) is now correct by rendered position. (12) F-P172a-19 LOW: VP-NNN candidate policy disambiguation added — bare 'VP-NNN candidate' label means proposed VP ID not yet assigned in VP-INDEX (rule (3) drop-the-qualifier applies when assigned); 'VP-NNN (Kani P1 candidate)' or 'VP-NNN (<tier> qualifier)' label means VP IS assigned in VP-INDEX and the parenthetical is a tier/priority descriptor — rule (3) does NOT apply to tier-descriptor qualifiers; BC-2.23.005 row 'VP-013 (Kani P1 candidate)' is COMPLIANT (VP-013 is assigned in VP-INDEX per gate #13 census). (13) FIX-BURST-274 amendments: core::documents added to definitions-only exempt case lists (gate #25 Part B exemption clause + gate #32 carrier 4 established-cases list); gate #25 Part C census comment de-pinned (hardcoded 'exactly 44' count replaced with instruction to recompute from arch-registry §Classification Summary — registry is actively growing per architect's corpus-wide sweep; de-pinned per F-P170-14 precedent)."
   - "2.54 (F-P172a-01+F-P172a-09+F-P172a-10+F-P172a-11+F-P172a-13+F-P172a-15+F-P172a-18/burst-274/2026-07-25): Seven broken-census-command findings closed. (1) F-P172a-01 HIGH: Gate #33 census anchor field index corrected from column 4 (Severity) to column 5 (BC-Anchor); inline column-map note added; follow-on grep patched to use find or ss-*/ glob instead of globstar; dry-run: 107/108 live codes resolve, E-TOOLS-008 multi-anchor cell verified across all 5 listed BCs. (2) F-P172a-09 MED: Gate #13 VP-uniqueness regex widened to cover all three VP-ID forms (numeric VP-001..013, dotted VP-2.04.001-A, alpha-domain VP-BSP-DET-01); BC-INDEX.md excluded; census now extracts only primary first-column VP ID to distinguish DEFINITION from CITATION; DEFINITION vs CITATION disambiguated in rule text; dry-run: no collisions. (3) F-P172a-10 MED: Gate #25 Part C census replaced bare grep-n pipeline (broken: -n prefix defeats header filter; unsectioned sweep produces junk rows from security-profile section) with section-scoped awk+grep pipeline; dry-run: exactly 44 module-crate pairs, no junk rows. (4) F-P172a-11 MED: Gate #25 Part B changed 'Module Inventory table (arch)' to 'Module Classification table (arch)' — the arch registry section is named Module Classification, not Module Inventory (that name belongs to the superseded PO file). (5) F-P172a-13 MED: Gate #36 steps 1 and 2 glob narrowed from VP-star.md to VP-[0-9][0-9][0-9].md to exclude VP-INDEX.md; explicit note added that VP-INDEX.md lacks red_gate: by design; dry-run step 2: empty output confirmed. (6) F-P172a-15 LOW: Gate #25 Part B heading-check command bare filename 'module-decomposition.md' given full path '.factory/specs/architecture/module-decomposition.md'. (7) F-P172a-18 LOW: Gate #28 Step 1 converted from count-only (wc -l, includes BC-INDEX.md) to filename-emitting list (cut -d: -f1, BC-INDEX.md excluded via --exclude); Step 2 prose clarified that Form A and Form B union is computed independently of Step 1 output. TD-VSDD-060 class sweep: gate #25 Part C was the sole broken-command site of the grep-n header-filter class; no other awk anchor-column sites found."
   - "2.53 (F-P171a-08+F-P171a-16+F-P171a-17/burst-273/2026-07-25): Three process-gap findings closed. (1) F-P171a-08 MED: Gate #32 step 4 — add definitions-only carve-out: modules hosting ONLY type/trait definitions with no execution logic are exempt from the arch-registry criticality table requirement (ADR-009 Option 3 precedent); five established exempt cases listed (core::context_mutation, core::write_guard, core::guardrail, memory::skills, core::action_risk); tools::config is NOT exempt (has validation logic). Exempt modules must appear in purity-boundary-map.md §Pure Core and module-decomposition.md definitions note. (2) F-P171a-16 LOW: §Authoring Guidelines VP-NNN candidate label adjudication documented — 'VP-NNN candidate' is acceptable PO/BA shorthand for a seeded VP that has not yet received a permanent VP-INDEX entry; it signals intent to the architect without implying the VP is assigned or active. (3) F-P171a-17 LOW: Gate #28 Rule 5 FRONTMATTER-CURRENCY — add ADR branch: ADR document timestamp:/date: fields = original decision date (frozen at first acceptance); currency tracked via version: + changelog; amendment does not update the original decision date."
   - "2.52 (F-P170-08/F-P170-13/F-P170-14/F-P170-15/burst-272/2026-07-25): Four process-gap findings closed. (1) F-P170-08 HIGH: Gate #25 Part B 'ALL FOUR' → 'ALL THREE' — prd-supplements/module-criticality.md (PO registry) is superseded/frozen; removed from live sibling set; added explicit frozen/do-not-sync note for item 5; corresponding Gate #32 step 5 restated as frozen. Gate #32 step 5 now reads: 'status: superseded — DO NOT SYNC; any new ADR module addition need only appear in the three live documents.' Never-update-all-four clause updated to never-update-all-three. (2) F-P170-13 MED: Gate #32 step 4 wrong path '.factory/specs/architecture/module-criticality.md' → '.factory/specs/module-criticality.md' (only one instance in whole document — confirmed by grep). (3) F-P170-14 MED: Gate #25 Part B census tier-summary row check de-pinned — removed hardcoded 'Example correct value: 9/12/10/2=33' (pre-D21/D23 stale value); replaced with instruction to recompute from arch-registry §Classification Summary. Historical motivating-instance text (OBS-P37-1) preserved untouched. (4) F-P170-15 MED: Gate #25 Part C awk census command corrected from '{print $2, $4}' to '{print $2, $3}' — table header 'Module | Crate | SS | Tier | VP | Kill Rate | Phase Gate' puts Crate at $3 not $4; previous command printed (Module, SS) not (Module, Crate), causing guaranteed false mismatches on every module row."
@@ -1047,20 +1050,121 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     **Census commands:**
     - Registry rows: count rows per tier in Module Classification table (arch) → must equal arch
       Summary cells.
-    - Derived-doc module check: for each module in the Criticality column of
-      module-decomposition.md and verification-coverage-matrix.md per-module table, verify the
-      tier matches module-criticality.md (arch registry). Any mismatch is a HIGH-severity finding.
-      **Exemption (F-P172a-12, extended FIX-BURST-274):** Definitions-only modules
-      (`core::context_mutation`, `core::write_guard`, `core::guardrail`, `core::action_risk`,
-      `core::documents`) and routing-overlay modules (`memory::skills`) have structural
-      decomposition rows in module-decomposition.md but NO criticality row in
-      module-criticality.md — this is intentional (see gate #32 carrier 4 exceptions). Their
-      absence from module-criticality.md is NOT a mismatch. Only check modules that are present
-      as rows in the arch-registry (module-criticality.md) table.
+    - **Derived-doc module check — BIDIRECTIONAL (F-P172b-05/burst-275; Class A/B
+      split/burst-275B):** The census iterates the DECOMPOSITION domain, not the registry domain.
+      The exempt set is split into two named classes with distinct arithmetic roles.
+
+      **Exempt Class A — non-row definitions-only (NOT in universe; not in any count):**
+      `core::context_mutation`, `core::write_guard`, `core::guardrail`, `core::action_risk`
+
+      These four modules have NO table row in `module-decomposition.md` — they appear only as
+      prose definitions notes inside the ferrochain-core crate sections. They are NOT members of
+      the row universe and NEVER enter any row count or the exempt_count arithmetic. The `—`
+      reciprocal assertion does NOT apply (no Criticality cell exists to check). The INVERSE
+      assertion applies instead: a Class A module MUST NOT appear as a table row in
+      `module-decomposition.md`; if one gains a row, that is a HIGH-severity finding requiring
+      architect re-classification into Class B or into the tiered set.
+
+      **Exempt Class B — exempt table rows (`exempt_count` source; counted in universe):**
+      `core::documents`, `memory::skills`
+
+      These two modules ARE table rows in `module-decomposition.md` with Criticality `—`. They
+      ARE members of the row universe and counted in `decomposition_total_rows`. The `—`
+      reciprocal assertion applies to exactly these: each MUST carry Criticality `—`; a Class B
+      module carrying any tier value is a HIGH-severity finding. `exempt_count` is defined as
+      `|Class B|` and MUST be obtained by COUNTING rows with Criticality `—` in
+      `module-decomposition.md`, NOT by taking the length of the Class B name list. The count and
+      the list must be independently derived and then cross-checked; if they disagree (count ≠
+      list length, or a counted `—` row is not in the list), that disagreement is itself a
+      HIGH-severity finding.
+
+      (Class A / Class B split rationale: definitions-only modules have no algorithmic failure
+      modes AND no table row — the `—` reciprocal assertion cannot apply. Routing-overlay modules
+      also lack execution-business-logic but DO have a structural decomposition row. Flattening
+      these two classes into one exempt list made exempt_count = 6, causing the blocking identity
+      to give 68 − 6 = 62 ≠ 68 on a correct census — the motivating defect for burst-275B. See
+      gate #32 carrier 4 for full rationale and adjudication records.)
+
+      **Decomposition→Registry (absence class):** For each module in `module-decomposition.md`
+      with a non-`—` Criticality value (these are `decomposition_tiered_rows`), a row MUST exist
+      in `module-criticality.md` (arch registry). If absent, that is a HIGH-severity finding.
+      Class A modules never appear in this domain (no table row); Class B modules carry `—`
+      Criticality and are also not in this domain.
+
+      **Registry→Decomposition (tier-divergence class):** For each module row in
+      `module-criticality.md`, verify the assigned tier matches the Criticality column in
+      `module-decomposition.md`. Any mismatch is a HIGH-severity finding regardless of class.
     - Tier-summary row check: recount rows per tier in verification-coverage-matrix.md per-module
       table → must equal the §Coverage by Criticality Tier summary row (CRITICAL/HIGH/MEDIUM/LOW
       counts and total). Must equal the arch-registry (`.factory/specs/module-criticality.md`)
       §Classification Summary — recompute; do not trust a hardcoded example.
+    - **Positive-Coverage Assertion (OBS-P172b-B/burst-275; Class A/B fix/burst-275B;
+      registry-rows-vs-distinct-modules/burst-275C) — BLOCKING:** Every burst that runs this
+      census MUST record the following sextuple in the burst's Form A frontmatter changelog entry
+      for this file:
+
+      `(decomposition_total_rows, decomposition_tiered_rows, exempt_count, registry_rows, registry_distinct_modules, matched_rows)`
+
+      Where (all six numbers independently recomputed from named artifacts in THIS burst):
+      - `decomposition_total_rows`: ALL table rows in `module-decomposition.md` (Class B rows are
+        included; Class A rows are NOT — they have no table rows)
+      - `decomposition_tiered_rows`: rows with non-`—` Criticality (Class B `—` rows excluded)
+      - `exempt_count`: rows with `—` Criticality = |Class B|; MUST be obtained by COUNTING rows
+        whose Criticality cell is `—`, not by taking the Class B name list length; cross-check
+        count against Class B list — if they disagree, that is a HIGH-severity finding
+      - `registry_rows`: total table ROWS in `module-criticality.md` §Module Classification,
+        counting ALL rows including crate-level roll-up rows and multi-aspect rows for the same
+        module canonical name (one module may legitimately appear on multiple rows with distinct
+        Qualifiers)
+      - `registry_distinct_modules`: count of DISTINCT Module cell values in §Module
+        Classification; a module appearing on multiple rows (multi-aspect pattern) is counted once
+      - `matched_rows`: cardinality of the SET INTERSECTION
+        `{decomposition_tiered_module_names} ∩ {registry_Module_cell_values}`.
+        MUST be computed by enumerating each tiered decomposition module name and testing whether
+        it appears in the set of registry Module cell values. The DIFFERENCE SET
+        `{decomposition_tiered_module_names} \ {registry_Module_cell_values}` MUST be reported
+        inline and MUST be empty. Prose-asserting the count without the difference set is
+        PROHIBITED — see rule 5 below.
+
+      **Blocking identity 1 (universe total):**
+      `decomposition_total_rows == decomposition_tiered_rows + exempt_count`
+      (Fails if Class A gains a table row, Class B Criticality changes from `—`, or row count
+      drifts undetected. Recompute fresh each burst — never copy forward prior values.)
+
+      **Blocking identity 2 (matching completeness):**
+      `matched_rows == decomposition_tiered_rows`
+      (Every tiered decomposition module must appear as a registry Module cell — zero gaps
+      tolerated. The difference set must be explicitly reported and empty.)
+
+      **Blocking identity 3 (registry uniqueness over composite key):**
+      For every pair of rows `(row_i, row_j)` where `row_i.Module == row_j.Module`, the composite
+      key MUST differ: `(row_i.Module, row_i.Qualifier) != (row_j.Module, row_j.Qualifier)`.
+      A duplicate `(Module, Qualifier)` pair is a HIGH-severity finding. `matched_rows` is
+      computed against the Module cell (not the composite key), so one decomposition module
+      correctly covers multiple registry rows when they carry the same Module name with distinct
+      Qualifiers (multi-aspect pattern, e.g., `core::serializable` with a CRITICAL reviver-
+      allowlist row and a HIGH round-trip row).
+
+      If any identity does not hold, the burst is BLOCKED and the gate fails. Rules:
+      1. All six numbers MUST be independently recomputed from the named artifacts in THIS burst
+         — never copied forward from a prior burst or mirrored from a sibling document.
+      2. `exempt_count` MUST be derived by counting `—` Criticality rows, not by list length.
+         Cross-check against Class B list; disagreement = HIGH-severity finding.
+      3. Per-section derivation: state the per-section breakdown inline (e.g., `core:8 graph:8 …`)
+         so the total is reproducible by a reader.
+      4. Anti-phantom clause (F-P172b-02 motivating instance): a census figure that names an
+         artifact MUST be derived by counting that artifact's rows in this burst. The "56" figure
+         mirrored the registry total across ~170 passes while naming the decomposition table,
+         concealing 7 module-universe baseline gaps.
+      5. Set-intersection motivating instance (burst-275C): The coordinator independently computed
+         `matched_rows = 66` against `decomposition_tiered_rows = 69`. Three tiered HIGH modules
+         (`macros::tool`, `macros::entrypoint`, `macros::task`) had no registry Module cell. A
+         prose claim that each module "has a corresponding row" had been accepted without computing
+         the difference set. Identity 2 would have blocked at 66 ≠ 69 if `matched_rows` had been
+         computed as a set intersection and the difference set reported; instead, the identity was
+         evaluated against a prose-asserted value. Reporting the difference set inline makes the
+         gap self-revealing: the difference set `{macros::tool, macros::entrypoint, macros::task}`
+         would have been the finding.
     - Structurally-privileged heading check: grep `^##` in module-decomposition.md for
       tier-bearing headings; verify each named module's tier matches module-criticality.md.
       Command: `grep -n "^## " .factory/specs/architecture/module-decomposition.md | grep -E "CRITICAL|HIGH|MEDIUM|LOW"`
@@ -1108,6 +1212,49 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     bc-authoring-plan.md) all assign retry to `ferrochain-core`. The tier was HIGH in both docs
     (tier-identical), so Part B passed. No crate-ownership diff existed to catch the divergence.
     Source: ADV-P1D-PASS-45 §F-P45-01.
+
+    **Crate-level annotation verification — BLOCKING (burst-275C; same structural class as
+    F-P172b-05):**
+    Some registry rows carry a "crate-level row, no 1:1 decomposition module" annotation (or
+    equivalent) in their Qualifier column, signaling that the row covers the crate as a whole and
+    the census should not expect a decomposition module match. An annotation that suppresses a
+    check MUST itself be verified — this is the same structural defect as F-P172b-05 (an
+    unfalsifiable clause that silently suppresses a check), one layer down in the gate hierarchy.
+
+    For every registry row carrying a crate-level or "no 1:1 decomposition module" annotation:
+
+    1. **Verify the annotation is TRUE in this burst.** Grep `module-decomposition.md` for module
+       rows whose canonical `crate::module` name belongs to that crate:
+       ```
+       grep "^| <crate_stem>::" .factory/specs/architecture/module-decomposition.md \
+         | grep -v "^| Module\|^|---"
+       ```
+       If ANY module row for that crate exists, the "no 1:1 decomposition module" annotation is
+       INVALID and is a HIGH-severity finding. The registry row must be re-classified (see
+       roll-up rule below or as a regular module row).
+
+    2. **Record per-row, not as a summary assertion.** State the result for each crate-level
+       row individually — e.g., "`ferrochain-macros` crate-level row: INVALID — grep returned
+       `macros::tool`, `macros::entrypoint`, `macros::task`" or "`ferrochain-xtask` crate-level
+       row: VERIFIED — grep returned 0 module rows." A single "all crate-level rows verified"
+       sentence is NOT sufficient. Record the pair `(crate_level_row_count, verified_count)` in
+       the burst's changelog sextuple commentary.
+
+    3. **Roll-up coexistence rule.** A registry row MAY coexist with module rows for the same
+       crate ONLY if it is explicitly labeled as a roll-up (e.g., Qualifier contains "ROLL-UP —
+       module rows exist; this row aggregates crate-wide properties"). In that case:
+       - The row MUST NOT carry "no 1:1 decomposition module" language.
+       - The row MUST be excluded from `registry_rows` for `matched_rows` set-intersection
+         purposes — a roll-up row cannot absorb a module gap; each module must have its own row.
+
+    **Motivating instance (burst-275C):** The `ferrochain-macros` registry row was annotated
+    "crate-level, no 1:1 decomposition module" while its Qualifier text enumerated
+    `#[tool] #[entrypoint] #[task]`. `module-decomposition.md` carried `macros::tool`,
+    `macros::entrypoint`, and `macros::task` as three separate HIGH tiered rows. The "no 1:1
+    decomposition module" annotation asserted a falsehood; the census skipped three real gaps on
+    the strength of the un-verified annotation. Had the annotation been verified in-burst, the
+    grep would have returned three rows and the annotation would have been flagged as INVALID
+    immediately, surfacing the gap before the census was accepted.
 
 26. **Structurally-Privileged-Line Canon Check — STRUCTURALLY-PRIVILEGED-LINE CANON CHECK
     (added P36 — standing gate [process-gap]):**
@@ -2017,6 +2164,32 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
        qualifies for an exception, no criticality row is required; document the exception in
        module-decomposition.md instead. If no exception applies, a missing row is a HIGH-severity
        gate #32 + gate #25 violation.
+    4b. **Positive-Coverage Assertion (OBS-P172b-B/burst-275; Class A/B fix/burst-275B;
+       registry-rows-vs-distinct-modules/burst-275C) — BLOCKING:** After completing step 4a for
+       this ADR's modules, record the following sextuple in the burst's Form A frontmatter
+       changelog entry. Exempt classes, crate-level annotation verification, and uniqueness rules
+       all follow gate #25 Part B/C definitions exactly.
+
+       `(decomposition_total_rows, decomposition_tiered_rows, exempt_count, registry_rows, registry_distinct_modules, matched_rows)`
+
+       **Blocking identity 1 (universe total):**
+       `decomposition_total_rows == decomposition_tiered_rows + exempt_count`
+
+       **Blocking identity 2 (matching completeness — SET INTERSECTION required):**
+       `matched_rows == decomposition_tiered_rows`
+       The difference set `{decomposition_tiered_module_names} \ {registry_Module_cell_values}`
+       MUST be reported inline and MUST be empty. Prose-asserting the count without the
+       difference set is PROHIBITED.
+
+       **Blocking identity 3 (registry uniqueness over composite key):**
+       For every pair of rows where `row_i.Module == row_j.Module`, the pair
+       `(row_i.Module, row_i.Qualifier) != (row_j.Module, row_j.Qualifier)` MUST hold.
+
+       All six numbers MUST be independently derived from the named artifacts in THIS burst —
+       never copied from a prior burst or mirrored from a sibling document. `exempt_count` MUST
+       be obtained by counting `—` Criticality rows, not by list length; cross-check against
+       Class B name list — disagreement is a HIGH-severity finding. Per-section derivation
+       required for totals.
     5. Check interface-definitions.md §Public Rust Trait Signatures for any section header or
        doc-comment citing the old crate — update to the new placement.
 

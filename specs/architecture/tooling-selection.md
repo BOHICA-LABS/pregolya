@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: tooling-selection
-version: "1.2"
+version: "1.3"
 status: active
 producer: architect
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-07-26T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "9bfa7ac"
+input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.3 (FIX-BURST-275/F-P172b-08+09/2026-07-26): F-P172b-09 — replace phantom symbol `checkpoint::session_index::derive_key` with correct `checkpoint::session_index::storage_address` in §Kani async constraint paragraph. Rationale: `storage_address` is the sync Kani harness target per verification-architecture.md VP-002 harness (`session_tenancy_harness`); `derive_key` is not a real symbol in the checkpoint module surface (phantom); VP-002 anchors to `checkpoint::session_index`, not `checkpoint::clock`. F-P172b-08 — add `ferrochain-core` and `ferrochain-memory` to proptest Cargo integration row (proptest P1 obligations VP-007 LcSerializable round-trip [ferrochain-core SS-19] and VP-008 dimensionality contract [ferrochain-core SS-22] and memory write-guard invariants [ferrochain-memory SS-15] require proptest in those crates); add SS-19 (LC Serialization VP-007) and SS-22 (Embeddings VP-008) to proptest §Target."
   - "1.2 (burst-241/2026-07-23): F-P141-02 — expand Kani §Target from D17-Q7 3-VP set to full 9-VP catalog (6 P0 + 3 P1); expand Cargo integration row to all 7 Kani-hosting crates; update [Section Content] intro sentence. VP-009/010/011 confirmed P0 (fail-closed security/safety proofs). Add D21/D23 to decisions."
   - "1.1 (provenance-fix-169/2026-07-17): hash-currency refresh — prd.md updated to v1.2 in same burst; add [Section Content] template compliance fix. No spec content changes."
   - "1.0 (initial): tooling selection authored."
@@ -55,7 +56,7 @@ ferrochain-core), VP-013 (BashTool risk floor / ferrochain-tools)
 Harnesses must target the synchronous pure core of each module. The async orchestration
 layer (ADR-001 Alt-B Tokio runtime) is not Kani-verifiable; the sync reducer cores it
 calls ARE. This drives the sync-core mandate: `graph::bsp_engine::reduce_super_step`,
-`checkpoint::session_index::derive_key`, and `checkpoint::clock::get_next_version` MUST be
+`checkpoint::session_index::storage_address`, and `checkpoint::clock::get_next_version` MUST be
 extractable as sync functions. See verification-architecture.md § Kani Async Constraint.
 
 **Constraint — purity:** Any harness that reaches I/O code will produce a verification
@@ -64,13 +65,14 @@ failure. The purity-boundary-map.md classifications are the prerequisite for Kan
 ## Property-Based Testing: proptest
 
 **Target:** Channel reducers (SS-02/SS-03), checkpoint logical clock (SS-04), splitter
-boundaries (SS-07), budget evaluation (SS-10)
+boundaries (SS-07), budget evaluation (SS-10), LC Serialization round-trip (SS-19 / VP-007),
+Embeddings dimensionality contract (SS-22 / VP-008)
 
 | Property | Value |
 |----------|-------|
 | Crate | `proptest` |
 | Version target | ≥ 1.4.0 |
-| Cargo integration | `[dev-dependencies]` in ferrochain-graph, ferrochain-checkpoint, ferrochain-splitters |
+| Cargo integration | `[dev-dependencies]` in ferrochain-graph, ferrochain-checkpoint, ferrochain-splitters, ferrochain-core, ferrochain-memory |
 | Invocation | Standard `cargo test` |
 | Regression corpus | Proptest stores failures in `proptest-regressions/` (committed) |
 
