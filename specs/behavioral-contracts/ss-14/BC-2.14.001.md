@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,11 +13,12 @@ capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
   - "1.2 (D21/Batch-3b-i/2026-07-20): Component enum expanded 12→16 per ADR-010 v1.1. Added TMPL (ferrochain-prompts, SS-18), SRLZ (ferrochain-core::serializable, SS-19), VS (ferrochain-vectorstores, SS-21), EMBED (ferrochain-core::embeddings, SS-22) to Description and Postcondition 2 component list. Category axis unchanged at 12."
   - "1.3 (F-P164-01/burst-266/2026-07-25): Component enum updated 16→17 per ADR-010 v1.6 (D23). Added TOOLS (ferrochain-tools, SS-23) to Description component list. Counter updated '16 components as of D21' → '17 components as of D23'. TD-VSDD-060 sole-site confirmed: rg -n '16 components|sixteen components' /Users/jmagady/Dev/ferrochain/.factory/specs/ returns only BC-2.14.001 — no other live-body references require amendment. BC-INDEX sync required (v1.2→v1.3)."
+  - "1.4 (F-P173-211+F-P173-619/FIX-BURST-276/2026-07-27): F-P173-211 — propagate ADR-010 v1.12 Arc adjudication: update EC-001 source field from `Option<Box<dyn Error + Send + Sync>>` to `Option<Arc<dyn std::error::Error + Send + Sync>>`; add source field to Description six-field enumeration (partial reproduction was the root cause of the 173-pass detection lag). F-P173-619 — add PC8 for `#[non_exhaustive]` attribute per CLAUDE.md Code Conventions (all public API surface error types carry it; FerrochainError was the sole missing instance). TD-VSDD-060 sweep: sole product-owner-owned Box site was EC-001 (fixed here); `entities-server.md §FerrochainError` entity definition `source: Option<Box<dyn StdError>>` is business-analyst scope — routed for separate fix; ADR-010 changelog text preserving old Box form is intentional historical record, no action."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -48,7 +49,10 @@ a struct with two orthogonal dimensions: `component` (which crate emitted the er
 CHKPT, SERVER, PROV, MCP, SPLIT, SBXD, RETRY, CRON, MEMORY, BUDGET, TMPL, SRLZ, VS, EMBED, TOOLS —
 17 components as of D23) and `category` (the error class: VAL, AUTH, RATE, TIMEOUT, TRANSPORT,
 INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY, SECURITY, TENANCY — 12 categories, unchanged). Each error also carries a `retry_hint` (Never / Maybe / Later(Duration)),
-a machine-readable `code` string (e.g. `E-CORE-001`), and a human-readable `message`. This
+a machine-readable `code` string (e.g. `E-CORE-001`), a human-readable `message` (MUST NOT
+contain credentials per DI-010), and a causal `source: Option<Arc<dyn std::error::Error + Send + Sync>>`
+(MUST NOT be exposed in HTTP responses; `Arc` not `Box` — `Arc::clone` increments the refcount
+without requiring `T: Clone`, which is what makes `#[derive(Clone)]` on the struct compile). This
 contract adopts the adk-rust P-01/P-04 pattern (CONFLICT-6) and applies it uniformly across
 all ferrochain crates.
 
@@ -86,6 +90,11 @@ one-to-one; `DURABILITY` in prose ↔ `Category::Durability` in Rust, `CHKPT` �
    `anyhow` / `thiserror` compatibility in application code).
 7. `FerrochainError` does NOT implement `Default` — errors must be constructed explicitly with
    all required fields.
+8. `FerrochainError` is `#[non_exhaustive]` — external code cannot construct it via a struct
+   literal or exhaustively pattern-match its fields without a `..` wildcard arm. This is
+   required by CLAUDE.md Code Conventions for all public API surface types. The struct is
+   defined as `#[non_exhaustive] #[derive(Debug, Clone)] pub struct FerrochainError { … }`
+   in `ferrochain-core/src/error.rs` (canonical form per ADR-010 v1.12).
 
 ## Invariants
 
@@ -106,9 +115,13 @@ one-to-one; `DURABILITY` in prose ↔ `Category::Durability` in Rust, `CHKPT` �
 **Scenario:** `ferrochain-graph` catches a `FerrochainError { component: CHKPT, category: DURABILITY }`
 from `ferrochain-checkpoint` and re-emits it. Should the outer error be Graph or Chkpt?
 **Expected behavior:** The originating component (Chkpt) is preserved in the re-emitted error via
-a `source: Option<Box<dyn Error + Send + Sync>>` chain field. The outer error's `component` field
-reflects the crate that added context; the source chain retains the root cause. Alternatively,
-the Chkpt error is propagated unchanged if the graph crate adds no new context.
+a `source: Option<Arc<dyn std::error::Error + Send + Sync>>` chain field. The outer error's
+`component` field reflects the crate that added context; the source chain retains the root cause.
+Alternatively, the Chkpt error is propagated unchanged if the graph crate adds no new context.
+The `Arc` wrapper (not `Box`) is load-bearing: it is what allows `#[derive(Clone)]` to compile on
+`FerrochainError` — `Arc::clone` increments a refcount without requiring the inner error to be
+`Clone`. Dropping to `Box` would produce `error[E0277]` at the first build of `ferrochain-core/src/error.rs`
+(F-P173-211 root cause).
 
 ### EC-002: Constructing FerrochainError with an unknown component–category pair
 **Scenario:** A new ferrochain crate introduces a component abbreviation not in the current taxonomy.

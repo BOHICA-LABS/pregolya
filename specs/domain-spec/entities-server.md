@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.14"
+version: "1.15"
 status: active
 producer: business-analyst
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 changelog:
+  - "1.15 (2026-07-27): F-P173-211 — source field corrected from Box<dyn StdError> to Arc<dyn std::error::Error + Send + Sync> (Box does not implement Clone, causing E0277 on #[derive(Clone)] in ferrochain-core error type; Arc refcount-clone resolves this without requiring inner error to be Clone). message constraint added: MUST NOT contain credentials (DI-010). source constraint added: MUST NOT be exposed in HTTP responses. Naming adjudications: (1) component field retains L2 domain name FerrochainComponent with explicit Rust cross-ref to Component; (2) category variants aligned from PascalCase English (third-rendering) to taxonomy codes per casing canon, type name corrected from ErrorCategory to Category."
   - "1.14 (2026-07-25): TD-VSDD-091 BC-pin sweep — de-pin live normative prose: OnCeiling variants annotation 'BC-2.10.003 v1.2 + BC-2.10.004' → 'BC-2.10.003 + BC-2.10.004'. Version pins belong in changelog entries only; live body cites bare BC IDs."
   - "1.13 (burst-241 F-P141-05, 2026-07-23): Run entity: add error: Option<FerrochainError> field (BC-2.12.003 PC13/PC16 + invariant 'Run error populated ONLY when status=failed'). The field was absent despite being a first-class Read-Run response field per PC13 and PC16. output/error symmetry documented: output is Some when status∈{completed, summary_halt}; error is Some when status=failed; all other states both are None. Wire representation of error exposes {code, message, component, category} subset of FerrochainError (RFC-7807 compatible, PC16)."
   - "1.12 (burst-226, 2026-07-21): F-P131-05 adjudication — §ProvenanceTag: disambiguation note added clarifying that ProvenanceTag (SS-11, 3-field ingress-boundary audit struct) has no trust-level dimension, and that template-composition trust is handled by TrustLevel in ferrochain-prompts: prompts::template (entities-graph.md §TrustLevel). The two axes must not be conflated (ADR-015 §Decision 3). TD-VSDD-060 sweep: no ProvenanceTag trust-variant residue in this file."
@@ -162,7 +163,7 @@ A connection to a model provider implementing the ChatModel Runnable interface.
 
 ### FerrochainError
 The 2D error type for all ferrochain crates.
-- **Fields:** component: FerrochainComponent (enum covering all ferrochain crate names), category: ErrorCategory (Authentication | Validation | RateLimit | Timeout | Transport | Internal | Durability | Policy | Tool | Concurrency | Security | Tenancy), retry_hint: RetryHint (Never | Maybe | Later(Duration)), code: String (wire representation; Rust: `&'static str` per api-surface.md — e.g. `"E-CORE-001"`; fixed F-P25-03 from incorrect `u32`), message: String, source: Option<Box<dyn StdError>>
+- **Fields:** component: FerrochainComponent (L2 domain name; Rust: `Component` — enum covering all ferrochain crate names, 17 variants as of D23), category: Category (taxonomy codes: VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY), retry_hint: RetryHint (Never | Maybe | Later(Duration)), code: String (wire representation; Rust: `&'static str` per api-surface.md — e.g. `"E-CORE-001"`; fixed F-P25-03 from incorrect `u32`), message: String (MUST NOT contain credentials — DI-010), source: Option<Arc<dyn std::error::Error + Send + Sync>> (causal error chain; MUST NOT be exposed in HTTP responses; Arc preserves Clone — fixed F-P173-211 from non-cloneable `Box<dyn StdError>`)
 - **Source:** CONFLICT-6 — adk-rust P-01/P-04 adopted; Python exception hierarchy does not translate to Rust.
 - **RFC-7807:** FerrochainError supports serialization to RFC-7807 Problem Details JSON for HTTP error responses.
 

@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.33"
+version: "1.34"
 status: active
 producer: architect
-timestamp: 2026-07-26T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -15,6 +15,7 @@ input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.34 (FIX-BURST-276-WAVE-B1/F-P173-301+402/2026-07-27): F-P173-301/402 — fix eval::judge BC anchor mis-anchoring. (1) eval::judge module row in Standard Test Modules table: `(BC-2.08.013/BC-2.08.014 scope)` → `(BC-2.08.008 scope)`. Correct anchor: BC-2.08.008 = Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15); BC-2.08.013 = Pluggable Tool-Call Dialect Seam; BC-2.08.014 = Provider Failover Chain — both are provider-behavior BCs, not eval-scoring BCs. (2) Iron Law blockquote: `BC-2.08.013/BC-2.08.014 scope the judge LLM behavior` → `BC-2.08.008 scopes the judge score aggregation behavior`; false closure claim corrected per TD-VSDD-059: the observability.md emitter linkage was restored by FIX-BURST-276-WAVE-C1 (a concurrent PO fix to observability.md v1.7), not by the Iron Law row addition in v1.32; v1.32 changelog claim 'this clears observability.md pending note' was erroneous (historical record preserved; correction is in Iron Law blockquote body text). TD-VSDD-060 sibling sweep: eval::judge BC anchor also corrected in module-criticality.md (v2.3), purity-boundary-map.md (v1.23), verification-coverage-matrix.md (v2.9) in same burst."
   - "1.33 (FIX-BURST-275-REOPENED/Defect-4/2026-07-26): Defect 4 — fix `core::serializable` Criticality HIGH → CRITICAL in D21 additions table. Rationale: module-criticality.md is the authoritative registry; registry has CRITICAL row for Reviver aspect (VP-010 Kani P0; allowlist containment security boundary per R12) and HIGH row for LcSerializable round-trip aspect (VP-007 proptest P1). Decomp takes max tier (CRITICAL); dual-aspect nature documented in description and criticality note. Registry→decomposition sweep (all 69 tiered modules): 1 divergence found and fixed (`core::serializable`: decomp=HIGH, registry-max=CRITICAL); all remaining 68 tiered modules have matching registry tiers confirmed post Wave-B fixes."
   - "1.32 (FIX-BURST-275/F-P172b-03+04+15+Iron-Law/2026-07-26): F-P172b-03 — fix tier divergences: `core::embeddings` MEDIUM → HIGH in D21 additions table (credential-bearing HTTP surface; DI-009/DI-010; VP-008 proptest P1; HIGH in module-criticality.md since v1.4 — decomp was stale); `vectorstores::similarity` MEDIUM → CRITICAL in vectorstores table (VP-009 Kani P0 target; CRITICAL in module-criticality.md since v1.4 — decomp was stale). F-P172b-03 sibling sweep (TD-VSDD-060) — raise `openai::embeddings` and `ollama::embeddings` MEDIUM → HIGH in Provider Embeddings table (both raised to HIGH in module-criticality.md as new rows in same burst; openai::embeddings is credential-bearing HTTP surface per DI-009/DI-010; ollama::embeddings has same conformance contract tier as ollama crate-level HIGH). F-P172b-04 — fix three H2 crate headings that understate max tier: `ferrochain-memory (SS-15) — MEDIUM` → `HIGH (write_guard) / MEDIUM (store, sqlite, in_memory, search, skills)`; `ferrochain-prompts (SS-18) — MEDIUM` → `HIGH (injection_guard) / MEDIUM (template, chat_template, few_shot)`; `ferrochain-vectorstores (SS-20, SS-21) — MEDIUM` → `CRITICAL (similarity) / MEDIUM (store, retriever, memory, mmr)`. F-P172b-15 sibling sweep (TD-VSDD-060) — raise `mcp::ingress` MEDIUM → HIGH in mcp table and fix section heading `ferrochain-mcp (SS-09) — MEDIUM` → `HIGH (ingress) / MEDIUM (client, discovery, adapter, server)`. F-P172b-03 sibling sweep — fix `Provider Embeddings Modules (SS-22) — MEDIUM` → `HIGH` heading (both modules raised). Iron Law gap — add `eval::judge` MEDIUM module row to Provider Crates section; add Standard Test Modules subsection; this clears observability.md pending note. OBS-P172b-A — add `specs/module-criticality.md` to inputs (live authoritative architecture-view registry; prd-supplements entry is historical PO draft). Module universe 56 → 57 (+eval::judge MEDIUM)."
   - "1.31 (FIX-BURST-274/module-universe-sweep/2026-07-26): Fix memory::skills Criticality column MEDIUM → '—' — the routing-overlay exemption (ADR-012 Decision 4; structural decomposition row only, no criticality-counted row) was declared in the surrounding block note but not reflected in the table Criticality column, creating a silent inconsistency with the established pattern (see core::documents v1.30 for precedent). Annotation added in table row. No module-universe count change (56 rows unchanged)."
@@ -207,16 +208,19 @@ The SDK crates have no ferrochain-core dep and are publishable standalone. Enfor
 
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
-| `eval::judge` | LLM judge execution for conformance evaluation; invokes a configurable judge LLM to score implementation outputs against golden answers; emits `eval.judge_infra_error` structured event on judge call failure (observability.md); `JudgeError` propagated as `FerrochainError`; async / Effectful Shell (BC-2.08.013/BC-2.08.014 scope) | MEDIUM | SS-08 |
+| `eval::judge` | LLM judge execution for conformance evaluation; invokes a configurable judge LLM to score implementation outputs against golden answers; emits `eval.judge_infra_error` structured event on judge call failure (observability.md); `JudgeError` propagated as `FerrochainError`; async / Effectful Shell (BC-2.08.008 scope) | MEDIUM | SS-08 |
 
 > **Iron Law — eval::judge (FIX-BURST-275):** `ferrochain-standard-tests` provides `eval::judge`
 > as the LLM judge execution module for conformance scoring. The `eval.judge_infra_error` event
-> type in observability.md names this module explicitly as the emitter. Behavioral contracts
-> BC-2.08.013/BC-2.08.014 scope the judge LLM behavior. The module has observable behavior
-> (structured event emission, error propagation) and BC coverage — it therefore satisfies Iron
-> Law criteria requiring a module-level row. The pre-existing `ferrochain-standard-tests`
-> crate-level row in module-criticality.md remains as a crate-level annotation; `eval::judge`
-> is the module-level row that satisfies Iron Law. Module universe 56 → 57.
+> type in observability.md names this module as the emitter (restored in observability.md v1.7
+> via FIX-BURST-276-WAVE-C1, a concurrent PO fix; the emitter linkage was not yet present in
+> observability.md when this Iron Law row was added in v1.32 — see v1.32 changelog correction
+> in v1.34). Behavioral contract BC-2.08.008 scopes the judge score aggregation behavior.
+> The module has observable behavior (structured event emission, error propagation) and BC
+> coverage — it therefore satisfies Iron Law criteria requiring a module-level row. The
+> pre-existing `ferrochain-standard-tests` crate-level row in module-criticality.md remains
+> as a crate-level annotation; `eval::judge` is the module-level row that satisfies Iron Law.
+> Module universe 56 → 57.
 
 ## ferrochain-mcp (SS-09) — HIGH (ingress) / MEDIUM (client, discovery, adapter, server)
 

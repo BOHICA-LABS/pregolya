@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.12"
+version: "1.13"
 status: active
 producer: architect
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 changelog:
+  - "1.13 (FIX-BURST-276-WAVE-B1/F-P173-202+210+619+214/2026-07-27): F-P173-202 (HIGH) — add missing `message` and `source` fields to §Error Type `FerrochainError` struct display: `message: String` (Human-readable; MUST NOT contain credentials per DI-010) and `source: Option<Arc<dyn std::error::Error + Send + Sync>>` (causal error chain; MUST NOT be exposed in HTTP responses; `Arc` not `Box` — Arc preserves Clone per F-P173-211 adjudication in ADR-010 v1.12). F-P173-210/619 — add `#[non_exhaustive]` attribute to FerrochainError in §Error Type; all sibling public API surface types carry `#[non_exhaustive]` per CLAUDE.md Code Conventions. F-P173-214 (LOW) — fix stale `17→18` transition delta: `gate count 17→18` → `gate count 18` (transition completed in v1.7/D23; delta notation no longer meaningful)."
   - "1.12 (FIX-BURST-273/F-P171a-19/2026-07-25): Adjudicate `ActionRisk` row inclusion criterion in §ferrochain-core Public Types. `ActionRisk` has a row because: (a) it is consumed cross-crate by ferrochain-tools as a standalone API input (`ToolConfig::override_risk(risk: ActionRisk)`) and must be addressable without a ferrochain-graph dependency; (b) no other ferrochain-core type currently meets criterion (a) — BoundaryType/IngressContent/GuardrailResult are only consumed through `GuardrailHook::evaluate` trait method signatures, not as standalone parameters in cross-crate public APIs. Inclusion criterion documented in §ferrochain-core Public Types note."
   - "1.11 (FIX-BURST-272/F-P170-03+04+06/2026-07-25): Three api-surface fixes in one burst. (1) F-P170-03 — Remove `PreToolCallHook` from §Public Rust Traits (ferrochain-core); ADR-018 Decision 1 places it in `ferrochain-graph::hitl`, not core; putting it in core was exactly the 'orphan definitions module' alternative ADR-018 rejected by name. Fix ferrochain-tools section note: 'trait is defined in core, tools crate provides impls' → 'trait defined in ferrochain-graph::hitl per ADR-018 Decision 1'. (2) F-P170-04 — Correct PathGuard SS-23 → SS-13 with amended BC anchor; PathGuard is owned by ferrochain-sandbox/SS-13/BC-2.13.004 and is the CRITICAL path-guard module with VP-003 Kani P0. (3) F-P170-06 adjudication (option b) — ActionRisk relocates to ferrochain-core (core::action_risk) per dependency-inversion precedent; ferrochain-tools needs ActionRisk at compile time without depending on ferrochain-graph. Move ActionRisk row from ferrochain-tools section to ferrochain-core Public Types section; SS-23 → SS-05 (HITL risk tiering); add BC-2.05.006 anchor."
   - "1.10 (FIX-BURST-266/OBS-P164-B/2026-07-25): Adjudicate and fix Tool trait row mixed anchoring. `Tool | ferrochain-core | SS-09 | BC-2.09.002` was wrong on both anchors: SS-09 is ferrochain-mcp (the CONSUMER crate — BC-2.09.002 PC1 takes `Arc<dyn ferrochain_core::Tool>` as input); BC-2.09.002 is 'ToolInvocation Routing to Correct MCP Server Transport' (MCP routing, not trait definition). Adjudicated: Tool trait is DEFINED in `ferrochain-core/src/tool.rs` (BC-2.08.010 Architecture Anchors), owned by SS-08 (macros::tool module is SS-08 per module-decomposition.md; BC-2.08.010 lives in ss-08/). Correct row: `Tool | ferrochain-core | SS-08 | BC-2.08.010`. Parallel to BaseChatModel | ferrochain-core | SS-08 pattern. Trait-row audit: all other 6 ferrochain-core trait rows (Runnable/SS-01, BaseChatModel/SS-08, GuardrailHook/SS-11, BudgetPolicy/SS-10, PreToolCallHook/SS-05, CompactionPolicy/SS-10) are correctly definition-anchored — no further mixing found."
@@ -172,9 +173,9 @@ cross-thread aggregate query for schedule-fired runs only.
 
 ## Error Type
 
-`FerrochainError { component: Component, category: Category, retry_hint: RetryHint, code: &'static str }`
+`#[non_exhaustive] FerrochainError { component: Component, category: Category, retry_hint: RetryHint, code: &'static str, message: String /* Human-readable; MUST NOT contain credentials */, source: Option<Arc<dyn std::error::Error + Send + Sync>> /* Causal chain; MUST NOT appear in HTTP responses (DI-010); Arc not Box — Arc preserves Clone (F-P173-211/ADR-010 v1.12) */ }`
 
 Authoritative list lives in `error-taxonomy.md` §Components; enum reproduced here for the FerrochainError type definition:
-`Component` = CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS (17 components as of D23; `#[non_exhaustive]` gate count 17→18: 17 named + `Custom`).
+`Component` = CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS (17 components as of D23; `#[non_exhaustive]` gate count 18: 17 named + `Custom`).
 Full catalog: `prd-supplements/error-taxonomy.md`.
 RFC-7807 serialization: `FerrochainError::to_problem()` (BC-2.14.002). Note: corrected from `to_problem_detail()` (F-P25-04; BC-2.14.002 is authoritative for method name).

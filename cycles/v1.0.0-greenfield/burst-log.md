@@ -5395,3 +5395,79 @@ See lessons.md for full narrative.
 P1D-172a state-record row archived from STATE.md v4.23 Current Phase Steps table (oldest row; replaced by this burst entry).
 
 
+
+---
+
+## Burst 276 — content wave 1 — fix-burst COMPLETE
+
+**Date:** 2026-07-27
+**Cycle:** v1.0.0-greenfield
+**Theme:** `fix(phase-1): burst-276-content-1`
+**Agent sequence:** architect → product-owner → business-analyst → state-manager
+
+### Summary
+
+Two CRITICALs and one three-document reference deadlock closed. Canonicality validator filter gap resolved.
+
+| Finding | Severity | Status |
+|---------|----------|--------|
+| F-P173-211 | CRITICAL | CLOSED — 4 sites: ADR-010 v1.12, api-surface.md v1.13, BC-2.14.001 v1.4, entities-server.md v1.15 |
+| F-P173-202 | HIGH | CLOSED — api-surface.md now reproduces all 6 FerrochainError fields |
+| F-P173-210 | HIGH | CLOSED — FerrochainError gains `#[non_exhaustive]` per CLAUDE.md §Code Conventions |
+| F-P173-214 | LOW | CLOSED — stale 17→18 gate-count delta replaced with constant 18 in api-surface.md |
+| F-P173-619 | LOW | CLOSED — stale gate-count delta closed as corollary of F-P173-214 |
+| F-P173-301 | CRITICAL | CLOSED — eval::judge re-anchored to BC-2.08.008 at 4 live sites |
+| F-P173-402 | CRITICAL | CLOSED — eval::judge crate-level row in purity-boundary-map.md re-anchored |
+| F-P173-401 | HIGH | CLOSED — 3-document observability/decomp/criticality deadlock broken; 11/11 catalog rows resolve emitting module |
+
+### F-P173-211 — FerrochainError non-compilable `Clone` (CRITICAL, 4 sites)
+
+ADR-010 declared `#[derive(Debug, Clone)]` over `source: Option<Box<dyn std::error::Error + Send + Sync>>`. `Box<dyn Error>` is not `Clone` — this was `error[E0277]` at Wave-0 on the error type every crate returns. Architect adjudicated `Arc` (two cheaper options rejected on record: dropping `Clone` forces `Arc<FerrochainError>` wrappers at every sharing site; hand-implementing to drop `source` silently loses the causal chain and breaks `retry_hint` inspection and RFC-7807 emission per BC-2.14.002). `#[non_exhaustive]` added per CLAUDE.md §Code Conventions.
+
+The defect had FOUR sites. Gate #37 (layer-scoped-sweep ban) forced corpus-wide sweeps; each specialist found the next site:
+
+1. `ADR-010` v1.12 — primary site (architect)
+2. `api-surface.md` v1.13 — was reproducing only 4 of 6 fields; the two omitted fields were exactly where the compile break and the credential-safety constraint lived (closes F-P173-202 HIGH, F-P173-214/619 LOW)
+3. `BC-2.14.001` v1.4 — found by architect's sweep, routed to product-owner
+4. `entities-server.md` v1.15 — found by product-owner's sweep, routed to business-analyst
+
+Business-analyst additionally adjudicated two naming divergences: `FerrochainComponent` retained with a `Rust: Component` cross-reference (divergence visible rather than silent); `ErrorCategory` corrected to `Category` with variant list changed from PascalCase English words to taxonomy codes per ADR-010 §Category casing canon — the prior form matched neither prescribed register. Both `message` and `source` gained their missing constraints; `message`'s was the only credential-safety obligation on the error type and had been omitted.
+
+### F-P173-301/402 — `eval::judge` mis-anchored (CRITICAL, 4 live sites)
+
+Was anchored to BC-2.08.013 ("Pluggable Tool-Call Dialect Seam") and BC-2.08.014 ("Provider Failover Chain") — provider-dispatch contracts with no relation to judge scoring. Correct anchor: BC-2.08.008 ("Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome, NE-15"), which `observability.md` and BC-INDEX already carried correctly. Corrected at 5 architect-owned sites plus the crate-level `ferrochain-standard-tests` row in `purity-boundary-map.md` (the likely copy-source; re-anchored to conformance battery BC-2.08.001–005 + BC-2.08.008). Orchestrator-verified: zero live-body BC-2.08.013/014 anchors remain on any `eval::judge` line; all 4 live sites cite BC-2.08.008. Remaining corpus hits are exclusively Form A changelog audit trail.
+
+### F-P173-401 — three-document reference deadlock broken (HIGH)
+
+`observability.md`, `module-decomposition.md`, and `module-criticality.md` formed a citation cycle where every leg was false; two changelogs claimed a closure never effected (TD-VSDD-059). `observability.md` v1.7 reverts the burst-275 F-P172b-12 downgrade — that fix stripped the `eval::judge` module anchor citing an Iron Law gap, while the sibling fix in the same burst added exactly that row, making the deferral false on delivery. CLAUDE.md Rule 6 and Rule 3 violations both closed. All three legs landed in this single commit; a partial landing would have reproduced the deadlock in a new configuration. Post-fix: 11 of 11 active catalog rows resolve their Emitting Module.
+
+### Canonicality filter gap — 70 vs 71 resolved
+
+`verify-module-canonicality.sh` reported 70 canonical Module cells against a verified census of 71. Cause: `exclude_sections` blanket-excluded `## Provider Crates and Standard Tests` H2, which swallowed a nested `### Standard Test Modules` H3 carrying `eval::judge`. Fixed generically (H3 tables inside excluded H2s are included when they carry a `| Module |` header). Now reports 71. Orchestrator proved the specific row is captured: the H3 contains exactly one row, `eval::judge`, and the count moved by exactly one. Other documents unchanged: purity-boundary-map 1/82, verification-coverage-matrix 52/90.
+
+### Files changed
+
+| File | Version |
+|------|---------|
+| `.factory/hooks/verify-module-canonicality.sh` | filter gap fixed (70→71) |
+| `.factory/specs/architecture/decisions/ADR-010-...md` | v1.12 |
+| `.factory/specs/architecture/api-surface.md` | v1.13 |
+| `.factory/specs/architecture/module-decomposition.md` | v1.34 |
+| `.factory/specs/architecture/purity-boundary-map.md` | v1.23 |
+| `.factory/specs/architecture/verification-coverage-matrix.md` | v2.9 |
+| `.factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md` | v1.4 |
+| `.factory/specs/domain-spec/entities-server.md` | v1.15 |
+| `.factory/specs/module-criticality.md` | v2.3 |
+| `.factory/specs/prd-supplements/observability.md` | v1.7 |
+
+### Convergence / streak
+
+0/3 unchanged. A fix burst does not advance the streak. 174 adversary passes (no new pass this burst).
+
+### Lessons minted: L-075..L-078
+
+See lessons.md for full narrative.
+
+### Archived from Current Phase Steps
+
+Burst 274 (P1D-172a fix-burst) row archived from STATE.md v4.24 Current Phase Steps table (oldest row; replaced by this burst entry).

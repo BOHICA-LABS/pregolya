@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.11"
+version: "1.12"
 changelog:
+  - "1.12 (FIX-BURST-276/F-P173-211+F-P173-619/2026-07-27): F-P173-211 — fix FerrochainError compilability: change `source` field from `Option<Box<dyn std::error::Error + Send + Sync>>` to `Option<Arc<dyn std::error::Error + Send + Sync>>`. Adjudication: option (a) selected over (b) drop-Clone and (c) clone-drops-source. `Arc<dyn Trait>` implements `Clone` (reference-count increment, independent of whether T: Clone), preserving both the derive and the error chain. Option (b) propagates `Arc<FerrochainError>` wrappers to every sharing site, invasively changing call-site API. Option (c) silently drops `source` on clone, violating the production-grade no-silent-failure rule (CLAUDE.md: no silent empty returns where partial-failure should propagate); `retry_hint` and `to_problem()` (BC-2.14.002 RFC-7807 emission) both depend on Clone without losing the causal chain; option (c) breaks both. Propagated to api-surface.md §Error Type (F-P173-202). BC-2.14.001 propagation form (product-owner-owned): `source: Option<Arc<dyn std::error::Error + Send + Sync>>,` with comment `// Causal error chain; MUST NOT be exposed in HTTP responses`. F-P173-619 — add `#[non_exhaustive]` to FerrochainError struct. CLAUDE.md Code Conventions requires `#[non_exhaustive]` on all public API surface types; sibling D21/D23 types all carry it; `FerrochainError` was the sole public error type without it."
   - "1.11 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp and date per ADR decision-date convention (Gate #28 Rule 5): `timestamp` → `2026-07-14T12:00:00Z`; `date` → `2026-07-14`. Original D17 decision date evidenced by v1.0 changelog. Fields were incorrectly bumped across multiple fix bursts (62672f9, 317b144, f4819b2, 75b0c8a)."
   - "1.10 (FIX-BURST-272/F-P170-07+09+10/2026-07-25): Three targeted fixes. (1) F-P170-07 — E-TMPL-003 description de-minijinjaed: replace 'UndefinedVariable: minijinja strict-undefined mode raises this when a template variable is not in the input map.' with engine-neutral form matching error-taxonomy.md §E-TMPL-003 and ADR-015 Decision 4 universal strict-undefined contract (F-P131-04, burst-226). (2) F-P170-09 — Axis-alignment rationale: replace phantom 'Python REPL' tool with actual ADR-020 Decision 2 inventory (ReadFileTool/WriteFileTool/EditFileTool/ListDirTool — tools::fs; BashTool — tools::shell; GrepTool — tools::search). (3) F-P170-10 — Informational payload fields: off-by-two BC mis-anchor corrected; 'BC-2.23.003/004' → 'BC-2.23.005 PC-2 / BC-2.23.006 PC-2' per error-taxonomy.md §TOOLS E-TOOLS-005/006 anchors."
   - "1.9 (FIX-BURST-270/P1D-168-adjudication/2026-07-25): Retract v1.8 casing canon (F-P167-05) and replace with Direction B (PascalCase). Category enum variants use PascalCase — Category::Val, Category::Auth, Category::Security, etc. The v1.8 note incorrectly mandated SCREAMING_CASE Rust identifiers by conflating the taxonomy code-string column (legitimately ALL-CAPS: VAL, AUTH, etc.) with the Rust variant identifier. Evidence for Direction B: (1) BC-2.14.001 §Rendering Convention explicitly mandates PascalCase for Rust paths; (2) clippy::upper_case_acronyms with -D warnings makes Category::VAL a compile error without a lint exemption; (3) Component variants are uniformly PascalCase (Component::Tmpl, Component::Chkpt) — Category must follow the same convention; (4) wire form uses humanized titles ('Validation', not 'VAL') so no serde rename is needed. Rewrite casing canon note in live body. Downstream architect-owned sites updated in same burst."
@@ -51,6 +52,7 @@ crate. All public functions return `Result<T, FerrochainError>`.
 **FerrochainError structure (BC-2.14.001):**
 
 ```rust
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct FerrochainError {
     pub component: Component,     // authoritative list lives in error-taxonomy.md §Components; enum reproduced here for the FerrochainError type definition (as of D23 — 17 components): CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS
@@ -58,7 +60,7 @@ pub struct FerrochainError {
     pub retry_hint: RetryHint,    // canonical: Never | Maybe | Later(Duration)
     pub code: &'static str,       // "E-GRAPH-001", "E-CHKPT-002", "E-TMPL-001", "E-VS-001", etc.
     pub message: String,          // Human-readable; MUST NOT contain credentials
-    pub source: Option<Box<dyn std::error::Error + Send + Sync>>,
+    pub source: Option<Arc<dyn std::error::Error + Send + Sync>>,  // Causal error chain; MUST NOT be exposed in HTTP responses; Arc (not Box) preserves Clone
 }
 ```
 

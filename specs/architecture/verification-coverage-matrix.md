@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "2.8"
+version: "2.9"
 status: active
 producer: architect
-timestamp: 2026-07-26T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
@@ -14,6 +14,7 @@ inputs:
 input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "2.9 (FIX-BURST-276-WAVE-B1/F-P173-301+402/2026-07-27): F-P173-301/402 sibling sweep — fix eval::judge row Notes BC anchor: `BC-2.08.013/014` → `BC-2.08.008`. Correct anchor: BC-2.08.008 = Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15); BC-2.08.013 = Pluggable Tool-Call Dialect Seam; BC-2.08.014 = Provider Failover Chain — both are provider-behavior BCs, not eval-scoring BCs. TD-VSDD-060 sibling sweep: same BC anchor corrected in module-decomposition.md (v1.34), module-criticality.md (v2.3), purity-boundary-map.md (v1.23) in same burst. No VP-to-Module table changes; no coverage count changes."
   - "2.8 (FIX-BURST-275-REOPENED/Defect-2-mirror/2026-07-26): Mirror module-criticality.md v2.2 additions — add 3 Per-Module Coverage Status rows: `macros::tool` HIGH (ferrochain-macros; compile-time TokenStream→TokenStream proc-macro; no Kani VP; BC-2.08.010), `macros::entrypoint` HIGH (ferrochain-macros; compile-time proc-macro; no Kani VP; BC-2.08.011), `macros::task` HIGH (ferrochain-macros; compile-time proc-macro; no Kani VP; BC-2.08.012). Coverage-by-Criticality-Tier: HIGH 25 → 28. Per-module count 74 → 77. VP-to-Module table and VP totals unchanged (no new VPs; macros proc-macro modules have no Kani VP targets — compile-time code generation is integration-tested via expansion correctness tests)."
   - "2.7 (FIX-BURST-275/F-P172b-01+15+Iron-Law/2026-07-26): Mirror module-criticality.md v2.1 additions. F-P172b-01 mirror — add 7 Per-Module Coverage Status rows: `openai::embeddings` HIGH (ferrochain-openai, DI-009/DI-010, Integration DTU), `ollama::embeddings` HIGH (ferrochain-ollama, DI-009, Integration), `vectorstores::store` MEDIUM (ferrochain-vectorstores, Integration), `vectorstores::retriever` MEDIUM (ferrochain-vectorstores, Integration), `vectorstores::memory` MEDIUM (ferrochain-vectorstores, Unit+Integration), `tools::fs` MEDIUM (ferrochain-tools, Integration), `tools::search` MEDIUM (ferrochain-tools, Integration). F-P172b-15 mirror — update mcp::ingress Notes to reflect HIGH tier elevation (untrusted-ingress; BC-2.09.003; parity with graph::provenance HIGH). Iron Law mirror — add `eval::judge` MEDIUM row (ferrochain-standard-tests; async LLM judge; Integration DTU; BC-2.08.013/014). Coverage-by-Criticality-Tier: HIGH 22 → 25 (+openai::embeddings, +ollama::embeddings, mcp::ingress elevation); MEDIUM 30 → 35 (+vectorstores::store/retriever/memory, +tools::fs/search, +eval::judge, -mcp::ingress). Per-module count 66 → 74. VP-to-Module table and VP totals unchanged (no new VPs)."
   - "2.6 (FIX-BURST-274/module-universe-sweep/2026-07-26): Module-universe sweep mirror — add 18 Per-Module Coverage Status rows matching module-criticality.md v2.0 additions. CRITICAL +1: checkpoint::saver. HIGH +4: core::events, graph::definition, server::streaming, server::stores. MEDIUM +13: core::config, checkpoint::memory, checkpoint::postgres, server::cron, sandbox::container, sandbox::seatbelt, sandbox::process, splitters::parity, mcp::discovery, mcp::ingress, memory::sqlite, memory::in_memory, memory::search. Coverage-by-Criticality-Tier: CRITICAL 11→12, HIGH 18→22, MEDIUM 17→30. Per-module count 48→66. VP-to-Module table and VP totals unchanged (no new VPs)."
@@ -145,7 +146,7 @@ changelog:
 | vectorstores::memory | ferrochain-vectorstores | — | yes | — | yes | In-memory VectorStore backend; RwLock interior mutability; unit + integration |
 | tools::fs | ferrochain-tools | — | — | — | yes | OS filesystem I/O tools; path-guard consumer; integration |
 | tools::search | ferrochain-tools | — | — | — | yes | In-process regex search; directory traversal; path-guard consumer; integration |
-| eval::judge | ferrochain-standard-tests | — | — | — | yes | LLM judge execution; emits eval.judge_infra_error event (observability.md); BC-2.08.013/014; integration (DTU) |
+| eval::judge | ferrochain-standard-tests | — | — | — | yes | LLM judge execution; emits eval.judge_infra_error event (observability.md); BC-2.08.008; integration (DTU) |
 
 ## Coverage by Criticality Tier
 

@@ -158,7 +158,8 @@ def extract_modules_from_file(filepath, exclude_sections=None, exclude_header_pa
     fm_end = parse_frontmatter_end(lines)
     results = []
     current_section = ''
-    in_excluded_section = False
+    in_excluded_h2 = False      # True while the enclosing H2 is in exclude_sections
+    in_excluded_section = False  # effective exclusion state (can be overridden by H3)
     module_col_idx = None
     table_header_cols = None
     in_table = False
@@ -169,13 +170,29 @@ def extract_modules_from_file(filepath, exclude_sections=None, exclude_header_pa
         # Track section headings (H2 level)
         if raw.startswith('## '):
             current_section = raw.strip()
+            in_excluded_h2 = False
             in_excluded_section = False
             if exclude_sections:
                 for excl in exclude_sections:
                     if excl in current_section:
+                        in_excluded_h2 = True
                         in_excluded_section = True
                         break
             # Reset table state when entering a new section
+            module_col_idx = None
+            table_header_cols = None
+            in_table = False
+            continue
+
+        # An H3 nested inside an excluded H2 re-enables table extraction for
+        # that subsection's scope.  Tables without a Module column are already
+        # ignored by the natural header-row branch below, so clearing
+        # in_excluded_section here is sufficient — only tables whose header row
+        # contains a "Module" column will be extracted.  This is the general
+        # rule: H3 sections carrying a Module table should never be silently
+        # dropped because their parent H2 happens to be excluded.
+        if raw.startswith('### ') and in_excluded_h2:
+            in_excluded_section = False
             module_col_idx = None
             table_header_cols = None
             in_table = False
