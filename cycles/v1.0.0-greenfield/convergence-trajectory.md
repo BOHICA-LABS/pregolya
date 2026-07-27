@@ -1980,3 +1980,44 @@ records-lint: PASS
 
 **Convergence dim-5:** Counter 0/3 (unchanged — fix burst). Next: adversary P1D-173 FULL-PERIMETER pass (carries P1D-172 axes 2+3 forward).
 **Convergence dim-7:** Trajectory tail →19→19→20 (unchanged). P1D-173 will extend. Lessons L-056..L-059 promoted to codified; L-061..L-064 minted.
+
+---
+
+## P1D-173 — FULL-PERIMETER Pass (2026-07-27)
+
+**Status:** NOT CLEAN (strict) / NOT CLEAN (PR-merge)
+**Frozen HEAD:** `8954a11`
+**Method:** 8 fresh-context slices; read-only adversary tool profile; orchestrator ran validators
+**Raw findings:** 130 | **After merges:** ~122 unique
+**Severity breakdown:** 4 CRIT / ~22 HIGH / ~50 MED / ~46 LOW-OBS / 7 process-gap class
+
+**Trajectory update:** →19→20→130 (tail of last 3 passes: P1D-171a=19, P1D-172a/172b combined axis=20 equivalent, P1D-173=130)
+
+**Note on jump:** The 130-finding count is a coverage-expansion artifact. `api-surface.md`, `interface-definitions.md` (1917 lines), and all 13 VP body files were read at method granularity for the first time in 173 passes. Prior ~20/pass plateau was re-auditing already-audited surfaces. The census/BC/VP/taxonomy arithmetic layer remains clean (no count errors found in census layer).
+
+**New surfaces audited at method granularity (first time):**
+- `api-surface.md` — never previously audited at method level
+- `interface-definitions.md` — first line-granularity read
+- `verification-coverage-matrix.md` — first full read
+- `system-overview.md` — first full read
+- All 13 VP body files (VP-001..VP-013)
+
+**CRIT findings (4):**
+- F-P173-601: `PathGuard` declared in `ferrochain-tools` (`interface-definitions.md`); canonical location is `ferrochain-sandbox`; VP-003 Kani P0 loses proof target
+- F-P173-211: `FerrochainError` non-compilable `Clone` derive (`source: Option<Box<dyn Error+Send+Sync>>` is not Clone); Wave 0 build-blocker
+- F-P173-104: `bounded-contexts.md` §Context Dependency Order asserts `ferrochain-tools→ferrochain-graph` dep; ADR-020 Decision 1 explicitly forbids it
+- F-P173-301/402 (merged): `eval::judge` mis-anchored to BC-2.08.013/014; correct anchor BC-2.08.008; 7+2 sites across 5 artifacts
+
+**Process-gap class (fix FIRST in burst-276):**
+- F-P173-303: blocking identity 1 tautology (4th generation of unfalsifiable-suppression defect)
+- F-P173-306: crate-level annotation verification false PASS (module-name-prefix mismatch)
+- F-P173-319: gate #25 Part C `awk` field extraction re-broken by Qualifier column (2nd break)
+- F-P173-308/309/310: gate self-consistency failures (nonexistent column, self-contradictory count, absence claim without falsifiability)
+- F-P173-115/OBS-1b: ADR citation validator existence-only; 3 mechanical check recommendations
+- F-P173-505: hash-digest literals in VP changelog prose (TD-VSDD-091 family)
+
+**Validators (post-burst-275 state, before fix-burst 276):**
+All 9 validators PASS. Headline observation: existence-checking validators pass at 130 findings — semantic defects are invisible to them.
+
+**Convergence dim-5:** Counter 0/3 unchanged. Pass 174 total. Next: fix-burst 276 (process-gap gates first), then P1D-174.
+**Convergence dim-7:** Trajectory tail →19→20→130. Lessons L-065..L-069 minted. D-35 added.

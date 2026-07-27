@@ -5245,3 +5245,62 @@ Registry Classification Summary: CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77.
 **Dim-5:** Counter 0/3 (unchanged). Next: adversary P1D-173 FULL-PERIMETER pass. Note: policies.yaml does NOT exist — adversary runs on baked-in baseline policies only; flag as open gap before P1D-173 dispatch.
 **Dim-7:** Trajectory unchanged. 12 spec files bumped. BC count 129 (unchanged). Lessons L-061..L-064 minted.
 
+---
+
+## P1D-173 State Record (2026-07-27)
+
+**Type:** Adversary pass state record (not a fix burst)
+**Cycle:** v1.0.0-greenfield
+**Date:** 2026-07-27
+**Agent:** adversary (8 fresh-context slices) + state-manager (this record)
+
+### What happened
+
+P1D-173 was a FULL-PERIMETER adversarial pass executed as 8 bounded fresh-context slices at frozen HEAD `8954a11`. The full-perimeter single-agent dispatch failed three times with API connection errors ("connection closed mid-response") before the root cause was diagnosed: the adversary tool profile is read-only (Read/Grep/Glob — no Write, no Bash), so its entire output must arrive in one final message. Long runs lose everything. Slicing was the mitigation.
+
+Five surfaces were read at method granularity for the first time in 173 passes: `api-surface.md`, `interface-definitions.md` (1917 lines), `verification-coverage-matrix.md`, `system-overview.md`, and all 13 VP body files. The orchestrator ran all validators (adversary has no Bash access).
+
+### Findings summary
+
+- Raw: 130 | Unique after merges: ~122
+- CRIT: 4 | HIGH: ~22 | MED: ~50 | LOW/OBS: ~46 | Process-gap: 7
+- All 9 validators: PASS (existence-checking only — semantic defects invisible to them)
+- CLEAN (strict): no | CLEAN (PR-merge): no | Streak: 0/3 unchanged
+
+**4 CRIT findings:**
+1. F-P173-601 — `PathGuard` declared in wrong crate (`interface-definitions.md` §ferrochain-tools); VP-003 Kani P0 loses proof target
+2. F-P173-211 — `FerrochainError` non-compilable `Clone` derive; Wave 0 build-blocker
+3. F-P173-104 — `bounded-contexts.md` asserts forbidden `ferrochain-tools→ferrochain-graph` dep (violates ADR-020 Decision 1)
+4. F-P173-301/402 — `eval::judge` mis-anchored to BC-2.08.013/014; correct BC-2.08.008; confirmed by two independent slices
+
+**Process-gap class (fix FIRST):** F-P173-303 (tautology identity — 4th generation), F-P173-306 (false PASS in crate annotation check), F-P173-319 (awk re-broken — 2nd break of same command), F-P173-308/309/310 (gate self-consistency), F-P173-115 (existence-only citation validator), F-P173-505 (hash-digest prose).
+
+### Ownership routing
+
+- ARCHITECT: 4 CRIT-level items + ~17 HIGH + ~44 MED/LOW
+- PRODUCT-OWNER: ~12 HIGH + ~23 MED/LOW
+- BUSINESS-ANALYST: 1 CRIT + 2 HIGH + ~4 MED/LOW
+- FORMAL-VERIFIER: 1 MED
+- STATE-MANAGER: 2 (F-P173-410 self-repaired, F-P173-505 flagged)
+
+### D-35 added
+
+Canonical xtask subcommand convention frozen: `check-<subject>` form, grounded in CLAUDE.md's mandated `cargo xtask check-file-size`. DI-009/NE-04 gate = `check-client-timeout`; NE-07 = `check-no-panic`. Supersedes `deny-client-new` / `lint-no-timeout` / `deny-expect-in-lib` / `lint-no-panic`. Closes F-P173-405.
+
+### Orchestrator self-attributed defects (appended)
+
+Two new entries added to the self-attributed defects record:
+1. Instructed adversary to write incrementally to a report file; three dispatches lost before diagnosis (read-only profile makes this impossible).
+2. F-P172b-05 fix produced blocking identity 1 (tautology, F-P173-303) — 4th generation of the suppression-clause self-falsification shape.
+
+### State changes
+
+- `pass-173.md` created in `adversarial-reviews/`
+- `convergence-trajectory.md` appended with P1D-173 record
+- `lessons.md` appended L-065..L-069
+- STATE.md v4.22 → v4.23; convergence_status updated; D-35 added; checkpoint replaced
+- 174 adversary passes total; trajectory tail →19→20→130; 0/3 streak unchanged
+
+**Next:** fix-burst 276, staged in ownership waves. Process-gap gates (F-P173-303/306/319/308/309/310) dispatched FIRST to prevent recurrence of the burst-274→275 inverted-gate ordering error.
+
+

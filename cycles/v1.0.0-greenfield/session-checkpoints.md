@@ -1483,3 +1483,28 @@ ferrochain Phase 1 (Spec Crystallization) — P1D-172b CLOSED (20 findings 0C/6H
 **STANDING USER DIRECTIVE:** "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13).
 
 **WRAP METADATA:** Date 2026-07-26 | Cycle v1.0.0-greenfield | P1D-172b CLOSED | Phase 1 IN PROGRESS — fix-burst 275 PENDING; P1D-172 axes 2 and 3 pending
+
+---
+
+## Archived Checkpoint — Post-Burst-275 (superseded by P1D-173 state record)
+
+*Archived from STATE.md v4.22 at P1D-173 state-record burst. 2026-07-27.*
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1 (Spec Crystallization) in-progress — 0/3 streak; fix-burst 275 COMPLETE (all 20 P1D-172b findings closed; census sextuple verified). NEXT: adversary P1D-173 FULL-PERIMETER pass (carries P1D-172 axes 2+3 forward).
+
+### HEADS: develop 46725ad (clean, pushed); factory-artifacts = `git -C .factory log -1 --format='%H'`; no worktrees; no open PRs.
+
+### PERIMETER SNAPSHOT (post-burst-275; 2026-07-26): decomp 71/69+2; criticality registry 77 (12/28/35/2); purity 82 rows (33/37/12); 129 BCs (51/75/3); 108 error codes; 674 TVs; 38 CAPs; 15 DIs; 13 VPs; 20 ADR files; 21 crates; 14 bounded contexts; 15 StreamEvents; 17 Components; 11 event_types; 36 gates; 11 Red Gate BCs; 7 blocking validators + 1 advisory + records-lint; allowlist 24 entries; citation coverage 287.
+
+### CENSUS SEXTUPLE (burst-275 verified): decomp_total=71; tiered=69; exempt=2; registry=77; distinct_modules=76; matched=69; diff-set EMPTY.
+
+### NEXT-ACTION: dispatch adversary P1D-173 FULL-PERIMETER pass.
+
+### CONVERGENCE-INTEGRITY RULE: 3-CLEAN streak requires FULL-PERIMETER passes only.
+
+### ORCHESTRATOR SELF-ATTRIBUTED DEFECTS: F-P171a-02; F-P172a-04; F-P172b-05 (CLOSED burst-275); Wave A reopening #1 (CLOSED burst-275).
+
+### PENDING HUMAN ACTIONS: B1 `direnv allow`; R6 regenerate publish-all.sh for 21 crates; policies.yaml (open gap).
+
+### BURST-275 METADATA: Date 2026-07-26 | Burst 275 closes P1D-172b (all 20 findings) | 3 waves; D-34 added; L-061..064 minted.
