@@ -244,12 +244,16 @@ assert_scenario_nonbc_both_forms_rule4_suppressed() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────
-# Scenario 4 — Non-BC Form-B-only file: reverts to old SKIP behavior
+# Scenario 4 — Non-BC Form-B-only file: now validated (F-B276-02 fix)
 #
-# A non-BC file with a Form-B body table but NO Form-A `changelog:` entry
-# must produce SKIP (version > 1.0) — NOT a FAIL for Form-B direction.
-# This is a regression guard: the fix must not over-validate Form-B-only
-# non-BC files, which are out of scope for direction validation.
+# A non-BC file with a Form-B body table, no Form-A `changelog:` entry,
+# and version > 1.0 is now direction-checked rather than silently skipped.
+# This is the Mode 2 fix from F-B276-02: Form-B-only non-BC files must
+# reach PASS (correctly ordered) or FAIL (direction/version defect), never
+# a silent SKIP counted as a benign WARN.
+#
+# Fixture has version: "1.3" with a correctly-descending Form-B table
+# whose first row is also "1.3" — must emit PASS, not SKIP.
 # ─────────────────────────────────────────────────────────────────────────
 write_fixture_nonbc_form_b_only_regression_guard() {
     local d="$1"
@@ -266,23 +270,27 @@ Content.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3 | 2025-12-01 | tester | latest |
 | 1.2 | 2025-06-01 | tester | update |
 | 1.1 | 2025-01-01 | tester | initial |
 MDEOF
 }
 
 assert_scenario_nonbc_form_b_only_regression_guard() {
-    # Should SKIP this file (no Form-A, version > 1.0) — old behavior preserved.
-    # SKIP lines are reformatted by the bash output wrapper as:
-    #   [WARN] <path> (skipped: no-changelog-version-gt-1.0)
+    # F-B276-02 fix: Form-B-only non-BC files are now parsed and validated.
+    # A correctly-descending table with matching frontmatter version must PASS.
     assert_contains \
-        "dir: Form-B-only non-BC — skipped via no-changelog path" \
+        "dir: Form-B-only non-BC — PASS (now validated, not skipped)" \
+        "$DIR_OUT" "[PASS] specs/architecture/decisions/ADR-TEST-002.md"
+    # Must NOT emit the old skip signal
+    assert_not_contains \
+        "dir: Form-B-only non-BC — no skipped-WARN emitted" \
         "$DIR_OUT" "skipped: no-changelog-version-gt-1.0"
-    # Must NOT generate a FAIL for the Form-B table entries
+    # Must NOT generate a FAIL (table is correctly ordered + version-match OK)
     assert_not_contains \
         "dir: Form-B-only non-BC — no FAIL emitted" \
         "$DIR_OUT" "FAIL specs/"
-    # Overall RESULT: PASS (SKIP is non-blocking)
+    # Overall RESULT: PASS
     assert_result_pass \
         "dir: Form-B-only non-BC — RESULT: PASS" \
         "$DIR_OUT"

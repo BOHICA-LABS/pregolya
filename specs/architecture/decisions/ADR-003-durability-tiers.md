@@ -7,10 +7,13 @@ title: "Checkpoint Durability Tiers: Sync Default, Async and Exit-Only Opt-In"
 status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
+version: "1.0"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D11]
 supersedes: []
+changelog:
+  - "1.0 (D11/2026-07-14): Initial ADR — three-tier checkpoint durability model (Sync default, Async opt-in, ExitOnly opt-in) per D11.3."
 ---
 
 # ADR-003: Checkpoint Durability Tiers

@@ -5536,3 +5536,111 @@ See lessons.md for full narrative.
 ### Archived from Current Phase Steps
 
 P1D-172b state-record row archived from STATE.md v4.25 Current Phase Steps table (oldest row; replaced by this burst entry).
+
+---
+
+## Burst 276 content wave 3 — P1D-173 Fix-Burst COMPLETE (1 CRIT + 33 HIGH + 5 MED)
+
+**Date:** 2026-07-27
+**Agents:** architect + product-owner + state-manager
+**Findings closed:** 1 CRIT + 33 HIGH + 5 MED = 39 findings; plus F-B276-01/F-B276-02 (orchestrator-minted)
+
+### Summary
+
+Final content wave of fix-burst 276. Completed the full remediation of P1D-173 findings. All four CRITs from P1D-173 are now closed (F-P173-601 in content-2; F-P173-211 and F-P173-301/402 in content-1; F-P173-104 in this wave).
+
+**CRITICAL (1):**
+- F-P173-104: `bounded-contexts.md` §Context Dependency Order declared `ferrochain-tools → ferrochain-graph`, forbidden verbatim by ADR-020 Decision 1 and contradicting D-24. Fixed with inline defense naming both the ADR decision and D-24 rationale so the forbidden dependency cannot be re-added without overturning them explicitly.
+
+**HIGH (33 total, including orchestrator-minted and regression fixes):**
+- F-P173-101/102/105/106 — bounded-contexts + domain-spec layer defects.
+- F-P173-201/203/204/205/206/207 — api-surface.md residue: crate attributions, missing D21 trait layer, feature flags, type completeness (GraphConfig fields).
+- F-P173-304/305 — coverage-matrix identity honesty: identity-3 now explicitly states its detection scope (duplicate composite key) and names failure modes (b)/(c)/(d) it cannot detect; breaks the four-generation lineage of unfalsifiable-suppression defects.
+- F-P173-307/801 (merged) — coverage-matrix + system-overview cross-check.
+- F-P173-501/503/504 — VP harness defects: VP-001 called non-existent `kani::any_permutation` and modeled `TaskId` as `u64` where BC-2.01.001 mandates lexicographic string sort; VP-009 Invariant 3 unsatisfiable by zero-norm guard alone. VP-001 rewritten; VP-009 guard extended to `!norm.is_finite()`.
+- F-P173-606/607/608/609/610 — BC-2.08.007, BC-2.08.014, BC-2.14.001, BC-2.07.003 defects.
+- F-P173-701/702/706 — ADR reverse-coverage defects; ADR-002/003/004/011 brought under version governance.
+- F-P173-802/803 — system-overview + coverage-matrix high findings.
+- BC-2.08.004 (routed from content wave 2): architect anchored to `has_tool_calling` method declaration; per-method precision confirmed.
+- F-B276-01 (orchestrator-minted, HIGH): ADR-007 §Full Crate Roster reading-position trap — heading, blockquote labeled "Authoritative.", and total line all asserted 18 crates; the 21-crate forward amendment appeared only after all three. A mitigation after the hazard does not mitigate. Fixed from both ends: all reading positions now self-correct; ARCH-INDEX named as SoT throughout.
+- F-B276-02 (orchestrator-minted, HIGH): 7 of 20 ADRs outside changelog/version governance. ADR-002/003/004/011 had no `version:` and no changelog; validator's `version-gt-1.0` guard was vacuous (nothing checked). ADR-009/012/013 carried body-table changelogs that the validator silently skipped as WARN (including the 18→21 crate amendments from this very session). Fixed from both ends: all 7 now governed; validator UNVERIFIED counter added; Form-B parsing extended.
+- 3 blocking-validator regressions from committed prior bursts (burst-276-content-1 introduced TD-VSDD-091 version pins with `verify-no-version-pins` failing; burst-276-signatures introduced out-of-order BC-2.23.* changelog entries with `verify-form-a-changelog-direction` failing; plus one direction regression in this burst). All three resolved.
+
+**MED (5):**
+- F-P173-406/407 — error taxonomy MED findings.
+- F-P173-505 (both halves) — hash-digest literals in VP changelog prose (TD-VSDD-091 family).
+- E-PROV-011 / BC-2.08.014 desync: `FallbackChainEmpty` minted as E-PROV-011 (error codes 108→109); BC-2.08.014 desync resolved.
+- E-VS-001 semantic gap: D-37 applied — `ZeroNormEmbedding` → `DegenerateNormEmbedding`; BC-2.21.003 Invariant 3 guard extended; EC-006 + TV-006 added (TVs 674→675); census unchanged at 109.
+
+### Process-gap class (most important record of this burst)
+
+1. **Two blocking-validator regressions were committed by prior sessions.** burst-276-content-1 introduced 4 TD-VSDD-091 live-body version pins with `verify-no-version-pins` already failing; burst-276-signatures inserted changelog entries out of order in 5 BC-2.23.* files with `verify-form-a-changelog-direction` failing. Both blocking. The validators worked correctly — nothing consulted them before commit. A third direction regression occurred in this burst from orchestrator misdirection. Recommend: full blocking validator suite MUST run before declaring a fix-burst commit-ready.
+2. **~60 P1D-173 findings are unrecoverable.** The ~50 MED and ~46 LOW/OBS findings exist as bare IDs only; the adversarial pass report pointed to "orchestrator dispatch notes" that were never persisted to a file. They lived in a prior session's context window and are gone. Only findings with written detail were actionable this burst. P1D-174 full-perimeter must re-mint any that are real. Codify: adversarial pass reports MUST persist per-finding detail as committed prose.
+3. **Validator false-confidence is the dominant defect family of this pass.** Every validator that returned PASS or WARN on a corpus with known defects — vacuous `version-gt-1.0` guard, silent Form-B skips, `non-standard-rev-format` WARNs masking unverified direction, `1e20f32` literal triggering L10 as a hash, tautological census identity — manufactured false confidence. Countermeasure: every validator must name its own blind spots explicitly.
+
+### Decision recorded — D-37
+
+`E-VS-001` renamed `ZeroNormEmbedding` → `DegenerateNormEmbedding`; message widened to cover zero-norm AND non-finite-norm. Single code retained; census unchanged at 109. Rationale: CLAUDE.md Rule 5 forbids defaulting to cheap path; identifier names must not diverge from semantics; rename + widen achieves semantic correctness at zero census churn.
+
+### Files changed (50 total)
+
+| File | New Version |
+|------|-------------|
+| `specs/architecture/api-surface.md` | v1.15 |
+| `specs/architecture/system-overview.md` | v1.4 |
+| `specs/architecture/verification-coverage-matrix.md` | v3.2 |
+| `specs/architecture/module-decomposition.md` | v1.37 |
+| `specs/architecture/purity-boundary-map.md` | (bumped) |
+| `specs/architecture/verification-architecture.md` | (bumped) |
+| `specs/architecture/tooling-selection.md` | (bumped) |
+| `specs/architecture/decisions/ADR-001` through `ADR-004`, `ADR-006`, `ADR-007`, `ADR-009`, `ADR-011`, `ADR-012`, `ADR-013` | governed/bumped |
+| `specs/behavioral-contracts/BC-INDEX.md` | v3.22 |
+| `specs/behavioral-contracts/ss-07/BC-2.07.003.md` | (bumped) |
+| `specs/behavioral-contracts/ss-08/BC-2.08.007.md`, `BC-2.08.014.md` | (bumped) |
+| `specs/behavioral-contracts/ss-14/BC-2.14.001.md` | (bumped) |
+| `specs/behavioral-contracts/ss-21/BC-2.21.003.md` | v1.8 |
+| `specs/behavioral-contracts/ss-23/BC-2.23.001..006.md` | regression fixes |
+| `specs/domain-spec/bounded-contexts.md` | v1.5 |
+| `specs/domain-spec/capabilities-p1-p2.md`, `edge-cases.md`, `ubiquitous-language-server.md`, `L2-INDEX.md` | (bumped) |
+| `specs/module-criticality.md` | (bumped) |
+| `specs/prd-supplements/bc-authoring-plan.md` | v2.60 |
+| `specs/prd-supplements/error-taxonomy.md` | v1.45 |
+| `specs/prd-supplements/interface-definitions.md` | (residue) |
+| `specs/prd-supplements/test-vectors.md` | v2.8 |
+| `specs/verification-properties/VP-001.md` | v1.4 |
+| `specs/verification-properties/VP-008.md`, `VP-009.md`, `VP-010.md`, `VP-012.md`, `VP-013.md` | (bumped) |
+| `specs/verification-properties/VP-INDEX.md` | (bumped) |
+| `hooks/records-lint.sh` | (updated) |
+| `hooks/verify-form-a-changelog-direction.sh` | (updated) |
+| `hooks/tests/test-form-b-both-checks.sh` | (updated) |
+| `hooks/tests/test-f-b276-02-validator-false-confidence.sh` | NEW |
+| `hooks/tests/test-l11-content-hash-digest-ban.sh` | NEW |
+
+### Validator status (pre-commit, from orchestrator-run suite)
+
+```
+records-lint:                        PASS=5   WARN=0  FAIL=0
+verify-form-a-changelog-direction:   PASS=198 WARN=4  FAIL=0  UNVERIFIED=0
+verify-no-version-pins:              PASS=198 WARN=0  FAIL=0
+verify-arch-anchor-resolution:       PASS=129 WARN=0  FAIL=0
+verify-enum-variant-casing:          PASS=198 WARN=0  FAIL=0
+verify-adr-decision-refs:            PASS=308 WARN=0  FAIL=0
+verify-module-canonicality:          PASS=6 of 6 targets  FAIL=0  (0 non-canonical cells)
+verify-changelog-date-monotonicity:  PASS=131 WARN=75 FAIL=0
+```
+
+4 residual Form-A WARNs: D-28-sanctioned both-changelog-forms co-existence (BC-INDEX, ubiquitous-language-server, bc-authoring-plan, test-vectors) — all banner-marked, correct by decision.
+
+### Convergence / streak
+
+0/3 unchanged. A fix burst does not advance the streak. 174 adversary passes total (no new pass this burst). NEXT: P1D-174 FULL-PERIMETER against frozen HEAD.
+
+### Lessons minted: L-082..L-086
+
+See lessons.md for full narrative.
+
+### Archived from Current Phase Steps
+
+Burst 275 (P1D-172b fix-burst) row archived from STATE.md v4.28 Current Phase Steps table (oldest row; replaced by this burst entry).
+
+**Burst 275 STATE.md row summary:** P1D-172b fix-burst COMPLETE (20 items 0C/6H/8M/4L/2OBS; all CLOSED; 3 waves; 2 orchestrator reopenings; Wave A: gate #25 Part B bidirectional + Class A/B split, bc-authoring-plan YAML fix, prd §11 6→11; Wave B: 18-module criticality gap + all F-P172b architect findings; census sextuple verified: decomp 71/69+2, registry 77 [12/28/35/2], matched 69, diff-set EMPTY; L-056..L-059 promoted; L-061..L-064 minted); 0/3.

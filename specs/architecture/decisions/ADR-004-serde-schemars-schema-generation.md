@@ -7,12 +7,15 @@ title: "Schema Generation: serde + schemars (pydantic→serde/schemars port deci
 status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
+version: "1.0"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D5, D17]
 gate: D5
 gate_note: "D5 mandates this ADR before any proc-macro BCs (#[tool], #[entrypoint]) can unblock. ADR-004 is the D5 gate resolution for the pydantic→serde/schemars dependency disposition."
 supersedes: []
+changelog:
+  - "1.0 (D5/D17/2026-07-14): Initial ADR — adopt serde + schemars 1.x for JSON Schema generation; resolves D5 gate (pydantic→serde/schemars disposition)."
 ---
 
 # ADR-004: Schema Generation (serde + schemars)

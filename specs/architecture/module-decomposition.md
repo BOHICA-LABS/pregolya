@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.34"
+version: "1.37"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -15,6 +15,9 @@ input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.37 (FIX-BURST-276-TD091/2026-07-27): TD-VSDD-091 anti-volatile-pin repair — Iron Law blockquote (§Standard Test Modules): replace live-body sibling-artifact version pin with stable section anchor. observability.md §Catalog (the Catalog table section that contains the eval.judge_infra_error row and its emitter attribution) replaces a specific version number. Sibling-sweep of this file live body: no additional version pins found."
+  - "1.36 (FIX-BURST-276/F-P173-coordinator-addendum/2026-07-27): Fix phantom symbol `on_watermark` in VP anchors block (SS-23 section). Correct symbol: `check_watermark_trigger` (the real pure-core function in core::budget; `on_watermark` does not exist). Correct ADR anchor: ADR-019 Decision 3 step 1 (watermark arithmetic trigger threshold formula), not Decision 2 as previously stated. One site corrected: VP-012 anchor paragraph in §VP anchors. Sibling check: `on_watermark` does not appear in any other location in this file. VP-012 body (v1.5) and verification-architecture.md §VP-012 (v2.12) corrected to same canon by parallel VP-bodies agent in same burst."
+  - "1.35 (FIX-BURST-276/F-P173-305/2026-07-27): F-P173-305 — replace stale phantom count 'Module universe 56 → 57' in Iron Law blockquote. Derivation: module-decomposition.md tables contain 69 tiered module rows (12 CRITICAL: core::error, core::credentials, core::serializable, graph::bsp_engine, graph::hitl, graph::scheduler, checkpoint::saver, checkpoint::session_index, checkpoint::clock, checkpoint::encryption, sandbox::path_guard, vectorstores::similarity; 23+ HIGH; 34+ MEDIUM; 2 LOW: xtask, ferrochain-community) + 2 exempt (core::documents definitions-only, memory::skills routing-overlay) = 71 total. The module-criticality.md canonical registry records 71 total (69 tiered / 2 exempt). Surrounding Iron Law blockquote audited: no other stale count references found in the live body. The '56 → 57' was the module-decomp's own incremental running count from the D20 gate-25 baseline — accurate at v1.32 time of writing but stale as subsequent additions in module-criticality.md (tracked in matrix v2.5/v2.6) were not reflected in the running count here."
   - "1.34 (FIX-BURST-276-WAVE-B1/F-P173-301+402/2026-07-27): F-P173-301/402 — fix eval::judge BC anchor mis-anchoring. (1) eval::judge module row in Standard Test Modules table: `(BC-2.08.013/BC-2.08.014 scope)` → `(BC-2.08.008 scope)`. Correct anchor: BC-2.08.008 = Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15); BC-2.08.013 = Pluggable Tool-Call Dialect Seam; BC-2.08.014 = Provider Failover Chain — both are provider-behavior BCs, not eval-scoring BCs. (2) Iron Law blockquote: `BC-2.08.013/BC-2.08.014 scope the judge LLM behavior` → `BC-2.08.008 scopes the judge score aggregation behavior`; false closure claim corrected per TD-VSDD-059: the observability.md emitter linkage was restored by FIX-BURST-276-WAVE-C1 (a concurrent PO fix to observability.md v1.7), not by the Iron Law row addition in v1.32; v1.32 changelog claim 'this clears observability.md pending note' was erroneous (historical record preserved; correction is in Iron Law blockquote body text). TD-VSDD-060 sibling sweep: eval::judge BC anchor also corrected in module-criticality.md (v2.3), purity-boundary-map.md (v1.23), verification-coverage-matrix.md (v2.9) in same burst."
   - "1.33 (FIX-BURST-275-REOPENED/Defect-4/2026-07-26): Defect 4 — fix `core::serializable` Criticality HIGH → CRITICAL in D21 additions table. Rationale: module-criticality.md is the authoritative registry; registry has CRITICAL row for Reviver aspect (VP-010 Kani P0; allowlist containment security boundary per R12) and HIGH row for LcSerializable round-trip aspect (VP-007 proptest P1). Decomp takes max tier (CRITICAL); dual-aspect nature documented in description and criticality note. Registry→decomposition sweep (all 69 tiered modules): 1 divergence found and fixed (`core::serializable`: decomp=HIGH, registry-max=CRITICAL); all remaining 68 tiered modules have matching registry tiers confirmed post Wave-B fixes."
   - "1.32 (FIX-BURST-275/F-P172b-03+04+15+Iron-Law/2026-07-26): F-P172b-03 — fix tier divergences: `core::embeddings` MEDIUM → HIGH in D21 additions table (credential-bearing HTTP surface; DI-009/DI-010; VP-008 proptest P1; HIGH in module-criticality.md since v1.4 — decomp was stale); `vectorstores::similarity` MEDIUM → CRITICAL in vectorstores table (VP-009 Kani P0 target; CRITICAL in module-criticality.md since v1.4 — decomp was stale). F-P172b-03 sibling sweep (TD-VSDD-060) — raise `openai::embeddings` and `ollama::embeddings` MEDIUM → HIGH in Provider Embeddings table (both raised to HIGH in module-criticality.md as new rows in same burst; openai::embeddings is credential-bearing HTTP surface per DI-009/DI-010; ollama::embeddings has same conformance contract tier as ollama crate-level HIGH). F-P172b-04 — fix three H2 crate headings that understate max tier: `ferrochain-memory (SS-15) — MEDIUM` → `HIGH (write_guard) / MEDIUM (store, sqlite, in_memory, search, skills)`; `ferrochain-prompts (SS-18) — MEDIUM` → `HIGH (injection_guard) / MEDIUM (template, chat_template, few_shot)`; `ferrochain-vectorstores (SS-20, SS-21) — MEDIUM` → `CRITICAL (similarity) / MEDIUM (store, retriever, memory, mmr)`. F-P172b-15 sibling sweep (TD-VSDD-060) — raise `mcp::ingress` MEDIUM → HIGH in mcp table and fix section heading `ferrochain-mcp (SS-09) — MEDIUM` → `HIGH (ingress) / MEDIUM (client, discovery, adapter, server)`. F-P172b-03 sibling sweep — fix `Provider Embeddings Modules (SS-22) — MEDIUM` → `HIGH` heading (both modules raised). Iron Law gap — add `eval::judge` MEDIUM module row to Provider Crates section; add Standard Test Modules subsection; this clears observability.md pending note. OBS-P172b-A — add `specs/module-criticality.md` to inputs (live authoritative architecture-view registry; prd-supplements entry is historical PO draft). Module universe 56 → 57 (+eval::judge MEDIUM)."
@@ -212,7 +215,7 @@ The SDK crates have no ferrochain-core dep and are publishable standalone. Enfor
 
 > **Iron Law — eval::judge (FIX-BURST-275):** `ferrochain-standard-tests` provides `eval::judge`
 > as the LLM judge execution module for conformance scoring. The `eval.judge_infra_error` event
-> type in observability.md names this module as the emitter (restored in observability.md v1.7
+> type in observability.md names this module as the emitter (restored in observability.md §Catalog
 > via FIX-BURST-276-WAVE-C1, a concurrent PO fix; the emitter linkage was not yet present in
 > observability.md when this Iron Law row was added in v1.32 — see v1.32 changelog correction
 > in v1.34). Behavioral contract BC-2.08.008 scopes the judge score aggregation behavior.
@@ -220,7 +223,7 @@ The SDK crates have no ferrochain-core dep and are publishable standalone. Enfor
 > coverage — it therefore satisfies Iron Law criteria requiring a module-level row. The
 > pre-existing `ferrochain-standard-tests` crate-level row in module-criticality.md remains
 > as a crate-level annotation; `eval::judge` is the module-level row that satisfies Iron Law.
-> Module universe 56 → 57.
+> Current module universe: 71 total (69 tiered / 2 exempt: `core::documents`, `memory::skills`) per module-criticality.md canonical registry. `eval::judge` was the 57th module when added in v1.32 by the module-decomp's own running count from gate-25 baseline; the canonical registry subsequently recorded additional modules (tracked in matrix v2.5/v2.6) bringing the total to 71.
 
 ## ferrochain-mcp (SS-09) — HIGH (ingress) / MEDIUM (client, discovery, adapter, server)
 
@@ -438,9 +441,9 @@ risk tier defaults, retry classification, and `E-TOOLS-*` error namespace.
 **VP anchors:**
 - VP-011 (Kani P0, seeded burst-232) — `graph::hitl::pre_tool_dispatch`: fail-closed Deny;
   Deny never allows tool invocation (ADR-018 Decision 3 / BC-2.05.007).
-- VP-012 (Kani P1, seeded burst-232) — OnWatermark arithmetic: `on_watermark` never produces
+- VP-012 (Kani P1, seeded burst-232) — OnWatermark arithmetic: `check_watermark_trigger` never produces
   a token count exceeding the hard limit; no overflow; BC-2.10.005, ferrochain-core,
-  core::budget (ADR-019 Decision 2).
+  core::budget (ADR-019 Decision 3 step 1).
 - VP-013 (Kani P1, seeded burst-232) — `ToolConfig::override_risk(ActionRisk::ReadOnly)` and `ToolConfig::override_risk(ActionRisk::Low)`
   on a `BashTool` instance always return `Err(E-TOOLS-007)`, never succeed (ADR-020 Decision 3 / BashTool risk floor /
   BC-2.23.005).

@@ -27,7 +27,36 @@
 #        artifact and section: `input-hash refreshed (ADR-014 §Decision 2 edited)`.
 #        ADVISORY: non-blocking WARN in FIX-BURST-276 (Wave A). Promotion to blocking
 #        after Wave B closes finding IDs P1D-173-L10-class in verification-properties/.
+#        Exclusion: YAML hash-field assignments (HASH_FIELD_EXCLUSION); Rust numeric
+#        literal type-suffix tokens (CE5/RUST_LITERAL_EXCL — e.g. `1e20f32` in VP prose
+#        documents floating-point overflow behavior, not a content hash).
 #        Routing: finding author (replace 7-hex SHA with artifact+section anchor cite).
+#
+#   L11 — Content-Hash Digest Ban (BLOCKING): newly-authored record/changelog/spec prose
+#        must not contain standalone 8+ character lowercase hex digest literals. These are
+#        the TD-VSDD-091 volatile-pin family at the content-hash level — citing a raw
+#        hash value (SHA-1, SHA-256, MD5, or longer partial digest) as evidence of
+#        input-file identity creates a reference that goes stale the moment the input
+#        changes, with no behavioral anchor a future pass can verify against. Closes
+#        F-P173-505 (FIX-BURST-276 Wave B). Existing text in HEAD is grandfathered via
+#        the same `git diff HEAD` scoping as L9. Corpus-wide grandfathered count: ~75
+#        lines across ~22 files; state-manager owns the cleanup schedule.
+#        Exclusions (lines matching ANY of CE1–CE4 are exempt):
+#          CE1 — YAML frontmatter hash-field assignments (`input-hash:`, `develop_head:`,
+#                `frozen_head:`, etc.); the field VALUE is legitimate structured metadata.
+#          CE2 — Frozen-HEAD citation lines (`**Frozen HEAD:**`, etc.); validated by
+#                verify-sha-currency.sh — the only sanctioned prose SHA citations.
+#          CE3 — `[live-state]` sentinel lines; ephemeral wrap-state markers replaced
+#                each session, validated by verify-sha-currency.sh.
+#          CE4 — Rust toolchain build-hash format `(HEX YYYY-MM-DD)` from `rustc -V`.
+#        Known scope boundary: uppercase hex (`ABC123...`) is out of scope — all hash
+#        outputs in this project are lowercase; uppercase appears only in Rust code
+#        literals (`0xDEADBEEF`) where the `x` prefix prevents `\b` word-boundary match.
+#        CE5/RUST_LITERAL_EXCL applies to L11 as well: Rust float literals (`1e200f64`,
+#        `3e38f128`) and binary literals (`0b10101010`) that produce 8+ hex-looking char
+#        sequences are excluded; they document numeric ranges in VP bodies, not hash pins.
+#        Routing: finding author (replace hex digest literal with artifact+section anchor
+#                 cite, e.g. `input-hash refreshed (ADR-014 §Decision 2 edited)`).
 #
 # SELF-PROBE: Each check self-probes against a synthetic violation before running on
 #             the real corpus. A self-probe failure means the check would be false-green —
@@ -94,6 +123,62 @@ HASH_DIGEST_PATTERN='\b[0-9a-f]{7}\b'
 # YAML hash-field exclusion: lines of the form `  key: "7hex"` or `  key: 7hex`
 # These are structured frontmatter fields, not prose — exempt from L10.
 HASH_FIELD_EXCLUSION='^\+[[:space:]]*(input.hash|proof_file_hash|commit.hash|content.hash)[[:space:]]*:[[:space:]]*"?[0-9a-f]'
+
+# L11 content-hash digest pattern.
+# Matches standalone 8+ character lowercase-hex strings (content-hash digest literals).
+# 8-char minimum is the complement of L10's 7-char scope: captures SHA-1 (40 chars),
+# SHA-256 (64 chars), MD5 (32 chars), and any partial digest used as a content pin.
+# Does NOT match inline code hex literals where the `0x` prefix or embedding in a
+# longer word-char sequence prevents `\b` matching.
+CONTENT_HASH_PATTERN='\b[0-9a-f]{8,}\b'
+
+# L11 EXCLUSIONS — lines matching ANY of CE1-CE4 are exempt from L11.
+#
+# CE1: YAML frontmatter hash-field assignments. The field VALUE is legitimate structured
+#      metadata; what is forbidden is restating that value as prose evidence. Covers all
+#      hash-bearing YAML keys used in factory artifact frontmatter, including STATE.md
+#      develop_head and adversarial-pass-record frozen_head fields.
+CONTENT_HASH_CE1='^\+[[:space:]]*(input.hash|input_hash|proof_file_hash|commit.hash|content.hash|develop_head|frozen_head)[[:space:]]*:[[:space:]]*"?[0-9a-f]'
+
+# CE2: Frozen-HEAD citation lines — sanctioned by verify-sha-currency.sh. These are the
+#      only prose SHA citations the project allows; verify-sha-currency.sh validates each
+#      one against the actual git ref. Covers: `**Frozen HEAD:** commit (...)`, `frozen
+#      HEAD burst-NNN`, `Frozen HEAD (burst-NNN commit, SHA ...)`. Case-insensitive on
+#      all letters via explicit character classes; accepts `-` or space as separator.
+#      Note: "HEAD" in git parlance is always uppercase; "head" (lowercase) is less common.
+#      The full `[Hh][Ee][Aa][Dd]` expansion covers both forms without requiring `-i` flag.
+CONTENT_HASH_CE2='[Ff]rozen[-[:space:]][Hh][Ee][Aa][Dd]'
+
+# CE3: [live-state] sentinel lines. These are ephemeral wrap-state markers that record
+#      current git SHA during a session. They are replaced each session wrap and validated
+#      by verify-sha-currency.sh. Matched as a literal string (brackets are not regex here).
+# Note: grep -F is used for CE3 in check_l11 (literal bracket-string match).
+
+# CE4: Rust toolchain build-hash format. `rustc -V` emits `X.Y.Z (NNNNNNNN YYYY-MM-DD)`;
+#      this appears in preflight reports and toolchain verification tables. The
+#      `(HEX YYYY-MM-DD)` parenthesized form is unambiguous toolchain identity metadata.
+CONTENT_HASH_CE4='\([0-9a-f]{6,12}[[:space:]]+[0-9]{4}-[0-9]{2}-[0-9]{2}\)'
+
+# CE5 / RUST_LITERAL_EXCL — Rust numeric literals that produce hex-shaped tokens.
+# Applied to BOTH L10 and L11. Two sub-cases:
+#
+#   (a) Float literals with Rust type suffixes where all suffix chars are lowercase hex:
+#       `f32`, `f64`, `f16`, `f128`. Examples: `1e20f32` (7 chars, L10 scope),
+#       `1e200f64` (8 chars, L11 scope), `3e38f128` (8 chars, L11 scope).
+#       Token must start with a digit (distinguishing from hash strings starting a-f).
+#       These appear in VP changelogs documenting IEEE-754 overflow behavior — the HIGHEST
+#       density co-location of legitimate Rust float literals AND potential hash digests.
+#
+#   (b) Binary integer literals: `0b[01]+` sequences. Binary digits (0 and 1) are
+#       both valid hex chars, so `0b10101010` (10 chars) matches `[0-9a-f]{8,}`.
+#       The `0b` prefix unambiguously identifies these as binary literals, not content pins.
+#       Hex literals (`0x...`) do NOT need exclusion: the `x` char is not in `[0-9a-f]`,
+#       so the `0x` prefix breaks the match before the hex digits begin.
+#
+# Trade-off: CE5 is applied at the LINE level. A line containing BOTH a Rust float literal
+# AND a real hash digest would be skipped (false negative). This is an accepted trade-off:
+# changelog entries mixing numeric Rust literals with hash citations should be split.
+RUST_LITERAL_EXCL='\b[0-9][0-9a-f]*(f32|f64|f16|f128)\b|\b0b[01]+\b'
 
 # ── Counters ─────────────────────────────────────────────────────────────────
 
@@ -235,6 +320,34 @@ EOF
     fi
   fi
   probe_must_fail "L10" "changelog addition containing 7-hex SHA transition 5fc3abe → baaf36d"
+
+  # ── L11 self-probe: 8+ char content-hash digest in a synthetic diff addition ──
+  # Synthetic violation: a changelog entry citing a 40-char SHA-1 digest literal as
+  # evidence of input-file identity. This line does NOT match CE1-CE4 exclusions:
+  #   - Not a YAML hash-field assignment (CE1).
+  #   - Does not contain "Frozen HEAD" or "frozen HEAD" (CE2).
+  #   - Does not contain "[live-state]" (CE3).
+  #   - Does not match Rust toolchain format `(HEX YYYY-MM-DD)` (CE4).
+  PROBE_L11_DIFF='  - "1.5 (burst-999/2026-07-27): input-hash refreshed: 4bcef4e5790e7f8352c28d6ae3b3697572939ef3 (ADR-014 edited)"'
+  PROBE_EXIT=0
+  PROBE_L11_LINE="+${PROBE_L11_DIFF}"
+  # Apply CE1 first (same two-condition structure as L10 self-probe)
+  if ! echo "$PROBE_L11_LINE" | grep -qE "${CONTENT_HASH_CE1}"; then
+    # Apply CE2
+    if ! echo "$PROBE_L11_LINE" | grep -qE "${CONTENT_HASH_CE2}"; then
+      # Apply CE3 (literal bracket match)
+      if ! echo "$PROBE_L11_LINE" | grep -qF "[live-state]"; then
+        # Apply CE4
+        if ! echo "$PROBE_L11_LINE" | grep -qE "${CONTENT_HASH_CE4}"; then
+          # Check for 8+ char hex pattern
+          if echo "$PROBE_L11_LINE" | grep -qE "${CONTENT_HASH_PATTERN}"; then
+            PROBE_EXIT=1
+          fi
+        fi
+      fi
+    fi
+  fi
+  probe_must_fail "L11" "addition line containing 40-char SHA-1 content-hash digest in changelog prose"
 
   rm -rf "$PROBE_TMP"
   trap - EXIT
@@ -395,6 +508,13 @@ check_l10() {
       continue
     fi
 
+    # CE5: exclude lines containing Rust numeric literal type-suffix tokens (float literals
+    # like `1e20f32`, `1e200f64` and binary literals like `0b10101010` produce hex-shaped
+    # tokens that are not content-hash digests). Same exclusion applied to L10 and L11.
+    if echo "$diffline" | grep -qE "${RUST_LITERAL_EXCL}"; then
+      continue
+    fi
+
     # Check for standalone 7-hex string
     if echo "$diffline" | grep -qE "${HASH_DIGEST_PATTERN}"; then
       L10_COUNT=$((L10_COUNT + 1))
@@ -410,6 +530,85 @@ check_l10() {
     echo "  Affected lines:${L10_LINES}"
   else
     emit PASS "L10 [ADVISORY]: hash-digest ban — no 7-hex SHA literals in newly-authored changelog prose"
+  fi
+}
+
+# ── Check L11 — Content-Hash Digest Ban ──────────────────────────────────────
+# Newly-authored lines (additions since HEAD in .factory/) must not contain
+# standalone 8+ character lowercase hex digest literals in record/changelog prose.
+# These are volatile content-pin identifiers in the TD-VSDD-091 family: they go
+# stale the moment the referenced file changes, with nothing left to detect the
+# stale reference. Closes F-P173-505 (FIX-BURST-276 Wave B).
+# Existing text in HEAD is grandfathered (same scoping as L9/L10).
+#
+# Exclusions CE1-CE4 (see Config section above for full rationale):
+#   CE1 — YAML frontmatter hash-field assignments
+#   CE2 — Frozen-HEAD citation lines (validated by verify-sha-currency.sh)
+#   CE3 — [live-state] sentinel lines (validated by verify-sha-currency.sh)
+#   CE4 — Rust toolchain build-hash format `(HEX YYYY-MM-DD)`
+#
+# Known scope boundary: uppercase hex is out of scope (see Config section).
+
+check_l11() {
+  DIFF_OUTPUT="$(git -C "$FACTORY_DIR" diff HEAD -- '*.md' 2>/dev/null || true)"
+
+  if [ -z "$DIFF_OUTPUT" ]; then
+    emit WARN "L11: no diff relative to HEAD — nothing to check (acceptable if running on a clean tree)"
+    return
+  fi
+
+  L11_COUNT=0
+  L11_LINES=""
+
+  while IFS= read -r diffline; do
+    # Only check + additions (not +++ diff headers, not -- removals)
+    case "$diffline" in
+      "+++"*) continue ;;
+      "+"*)   : ;;
+      *)      continue ;;
+    esac
+
+    # CE1: exclude YAML frontmatter hash-field assignments
+    if echo "$diffline" | grep -qE "${CONTENT_HASH_CE1}"; then
+      continue
+    fi
+
+    # CE2: exclude frozen-HEAD citation lines (sanctioned by verify-sha-currency.sh)
+    if echo "$diffline" | grep -qE "${CONTENT_HASH_CE2}"; then
+      continue
+    fi
+
+    # CE3: exclude [live-state] sentinel lines (literal bracket-string match)
+    if echo "$diffline" | grep -qF "[live-state]"; then
+      continue
+    fi
+
+    # CE4: exclude Rust toolchain build-hash format `(HEX YYYY-MM-DD)`
+    if echo "$diffline" | grep -qE "${CONTENT_HASH_CE4}"; then
+      continue
+    fi
+
+    # CE5: exclude lines containing Rust numeric literal type-suffix tokens (same
+    # exclusion as applied to L10; see RUST_LITERAL_EXCL in Config section for rationale)
+    if echo "$diffline" | grep -qE "${RUST_LITERAL_EXCL}"; then
+      continue
+    fi
+
+    # Check for standalone 8+ char lowercase hex sequence
+    if echo "$diffline" | grep -qE "${CONTENT_HASH_PATTERN}"; then
+      L11_COUNT=$((L11_COUNT + 1))
+      # Capture a short representation (first 120 chars) for the report
+      L11_LINES="${L11_LINES}
+       $(echo "$diffline" | cut -c1-120)"
+    fi
+  done <<< "$DIFF_OUTPUT"
+
+  if [ "$L11_COUNT" -gt 0 ]; then
+    emit FAIL "L11: content-hash digest ban — $L11_COUNT newly-added line(s) contain standalone 8+ char hex digest literals in record/changelog prose"
+    echo "  Replace hex digest literals with artifact+section anchor cites, e.g. 'input-hash refreshed (ADR-014 §Decision 2 edited)'"
+    echo "  Affected lines:${L11_LINES}"
+  else
+    emit PASS "L11: content-hash digest ban — no 8+ char hex digest literals in newly-authored record/changelog prose"
   fi
 }
 
@@ -442,6 +641,10 @@ echo "--- L10: Hash-Digest Ban (ADVISORY — newly-authored changelog prose) ---
 check_l10
 
 echo ""
+echo "--- L11: Content-Hash Digest Ban (newly-authored record/changelog/spec prose) ---"
+check_l11
+
+echo ""
 echo "records-lint: PASS=$PASS WARN=$WARN FAIL=$FAIL"
 
 if [ "$FAIL" -gt 0 ]; then
@@ -452,6 +655,7 @@ if [ "$FAIL" -gt 0 ]; then
   echo "  L7 violations → spec owner (reorder changelog entries, newest first)"
   echo "  L9 violations → finding author (replace file:NNN with symbol/anchor cite)"
   echo "  L10 violations → finding author (replace 7-hex SHA with artifact+section anchor cite) [ADVISORY]"
+  echo "  L11 violations → finding author (replace 8+ char hex digest with artifact+section anchor cite)"
   exit 1
 else
   echo "RESULT: PASS"

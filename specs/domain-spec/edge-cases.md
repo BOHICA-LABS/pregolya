@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: edge-cases
-version: "1.2"
+version: "1.3"
 status: active
 producer: business-analyst
 timestamp: 2026-07-19T00:00:00Z
@@ -17,6 +17,7 @@ input-hash: "6b61b95"
 traces_to: L2-INDEX.md
 decisions: [D17]
 changelog:
+  - "v1.3 (FIX-BURST-276-WAVE-C/F-P173-407/2026-07-27): DEC-013 orphan resolved. Adversarial pass-42 recorded '13/13 CLEAN' for the domain edge-case register (all 13 DECs anchored to a BC), but DEC-013 (Provider Streaming Interrupted by Transport Error) was a one-directional reference: DEC-013's trailing prose named BC-2.08.007 as its anchor but BC-2.08.007 carried no reciprocal DEC-013 citation. Fix: DEC-013 anchor text restructured from trailing prose into a labelled 'BC anchor' line for consistency with DEC-001 through DEC-012 anchor style; BC-2.08.007 updated to cite DEC-013 in traces_to frontmatter and Traceability DEC References row (bidirectional anchor now closed). Canonical DEC count: 13 = count of ### DEC-NNN: H3 headings in this file (DEC-001 through DEC-013, sequential, no gaps, all in domain-spec/edge-cases.md)."
   - "v1.2 (F-P121-01, fix burst 124, 2026-07-19): DEC-010 scenario: 'ToolResult ContentBlock contains text' → 'ToolMessage content block contains text' per BC-2.09.002 authority. TD-VSDD-060 sweep: DEC-010 was the only ContentBlock-vocabulary site in this file; fixed."
   - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D17/NE-* sources baked at authoring time from COMPARATIVE-ASSESSMENT.md); domain-a-soc-analyst.md added (DEC-010 prompt-injection edge case); domain-b-dark-factory.md added (DEC-009 crash-recovery fan-out edge case); domain-c-openclaw.md added (DEC-011 workspace symlink escape, NE-02/DI-007); input-hash recomputed."
 ---
@@ -139,4 +140,5 @@ the error propagates to the caller.
 `Err(FerrochainError { category: TIMEOUT })`; accumulated partial tokens are discarded;
 the error propagates to the caller.
 In both cases the caller never receives a truncated `Ok(AiMessage)` as if the response
-were complete. (BC-2.08.007 PC1/PC2; F-05 alignment.)
+were complete.
+**BC anchor:** BC-2.08.007 (PC1 = TIMEOUT shape; PC2 = TRANSPORT shape); F-05 alignment.

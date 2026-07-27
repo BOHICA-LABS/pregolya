@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.16"
+version: "1.17"
 status: active
 producer: business-analyst
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/product-brief.md
@@ -17,6 +17,7 @@ input-hash: "b40ee23"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.17 (F-P173-106/F-P173-702/burst-276/2026-07-27): Two CAP body corrections. (1) F-P173-106 CAP-038: remove stale 'confirm regex is already a workspace dependency' open instruction; ADR-020 Decision 7 already resolved that regex is NOT an existing workspace dep — it will be a net-new [workspace.dependencies] entry at workspace init; replace with confirmed fact per ADR-020 Decision 7. (2) F-P173-702 CAP-029: correct mis-citation ADR-014 Decision 4 → ADR-017 Decision 4 for InMemoryVectorStore struct and Arc-DI wiring. ADR-014 Decision 4 is the External Adapter Extension Seam (inventory crate for community adapters); ADR-017 Decision 4 explicitly defines the InMemoryVectorStore struct with Arc<dyn Embeddings> + RwLock<Vec<(Document, Vec<f32>)>> and the Arc-DI wiring contract. ADR-014 Decision 2 §Hardening note attribution for zero-norm guard unchanged (correct). TD-VSDD-060 sweep: no other ADR-014 Decision 4 mis-citations for InMemoryVectorStore in this file."
   - "1.16 (burst-273/2026-07-25): Date-monotonicity repair: v1.10 changelog date 2026-07-22 → 2026-07-23 (burst-242; corroborating carrier: api-surface.md v1.9 burst-242/2026-07-23). TD-VSDD-060 temporal-neighbor sweep: no additional inversions found in this file."
   - "1.15 (F-P170-16/burst-272/2026-07-25): Fix CAP-037 risk floor — retire unqualified ToolConfig::override_risk(ReadOnly)/override_risk(Low) spellings; replace with canonical ToolConfig::override_risk(ActionRisk::ReadOnly) and ToolConfig::override_risk(ActionRisk::Low) per BC-2.23.005 v1.7 §Invariants adjudication (ADR-020 Decision 3). TD-VSDD-060 sweep: sole unqualified override_risk occurrence in this file."
   - "1.14 (2026-07-24): Fix burst 252 BA — ADR-019 v1.4 compaction type canon applied at CAP-035. (1) CompactionTrigger OnWatermark: `fraction: f32` → `f64`; predicate `<` → `<=` (non-strict; strict < cannot fire at fraction=1.0). (2) CompactionSummary: `compacted_range: RangeInclusive<usize>` → flat `compacted_start: usize, compacted_end: usize`; slice form `messages[compacted_start..=compacted_end]`. (3) BudgetEngine description: `messages[compacted_range]` → `messages[compacted_start..=compacted_end]`. TD-VSDD-060 sweep: zero compacted_range / RangeInclusive / fraction: f32 occurrences remain in this file's body text (CAP-035 sites only; changelog exempt)."
@@ -381,7 +382,7 @@ checks `norm = vec.iter().map(|x| x*x).sum::<f32>().sqrt()`. If `norm == 0.0`:
 VAL, zero-norm cosine guard, BC-2.21.003). A zero-length embedding produces NaN that silently corrupts ranking — this guard
 is two lines and is unconditional. Implements `VectorStoreFactory` for `from_texts_sync`.
 
-**Grounding:** D21/SS-21. ADR-014 Decision 4 specifies the InMemoryVectorStore struct
+**Grounding:** D21/SS-21. ADR-017 Decision 4 specifies the InMemoryVectorStore struct
 (`Arc<dyn Embeddings>` + `RwLock<Vec<(Document, Vec<f32>)>>`), the Arc-DI wiring contract,
 and the `Vec<f32>` cosine approach (semport §8 avoidance of ndarray in core). ADR-014 Decision 2 §Hardening note specifies the zero-norm guard and its VP-009 connection (Zero-Norm Cosine Guard
 on `cosine_similarity` in `vectorstores::similarity`: fail-closed via E-VS-001 before division;
@@ -711,9 +712,9 @@ No retry enrollment needed (pure read, idempotent).
 
 Performance note: in-process `regex` is sufficient for typical coding-assistant search
 radius; a ripgrep-backed variant is deferred to a future `ferrochain-tools-rg` extension
-(ADR-020 Decision 2 §Alternative D). Dependency flag: confirm `regex` crate is already a
-workspace dependency in `[workspace.dependencies]` before Cargo.toml write (ADR-020
-Decision 7).
+(ADR-020 Decision 2 §Alternative D). Dependency: `regex` is a net-new `[workspace.dependencies]`
+entry — confirmed NOT an existing workspace dep per ADR-020 Decision 7; devops-engineer adds
+`regex = "1"` when initializing the workspace.
 
 **Grounding:** D23 authority — ADR-020 Decision 2, SS-23. domain-e-agentic-coding-assistant.md
 §3 item 1 / §6 "File/bash tool substrate" first-party search closure.

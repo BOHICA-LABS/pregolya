@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.59"
+version: "2.60"
 status: active
 producer: product-owner
 total_standing_gates: 37
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.60 (FIX-BURST-276-WAVE-C/F-P173-304+F-P173-407/2026-07-27): TWO FINDINGS CLOSED. (1) F-P173-304 HIGH [process-gap]: Gate #25 Part C blocking identity 3 (composite-key uniqueness) lacked a census command and recorded evaluation — burst-275 recorded a quintuple census but identity 3 was never evaluated with inline derivation. Fix: census command added to identity 3 block (awk header-derived extraction of all (Module, Qualifier) composite key pairs piped through sort|uniq -d; any duplicate pair prints inline — self-revealing failure, not an assertion). Evaluation recorded for burst-276-Wave-C: sextuple (decomposition_total_rows=71, decomposition_tiered_rows=69, exempt_count=2, registry_rows=77, registry_distinct_modules=76, matched_rows=69); both difference sets empty; command output empty (zero duplicate (Module, Qualifier) pairs). The 1-row gap (registry_rows=77 vs registry_distinct_modules=76) is the single multi-aspect row: core::serializable appears twice with Qualifiers 'reviver-allowlist CRITICAL' vs 'round-trip HIGH' — DISTINCT Qualifiers, identity 3 PASSES. Four-failure-mode falsifiability argument (F-P173-304 requirement, THE TRAP AVOIDED — no fifth-generation tautology): (a) same (Module, Qualifier) duplicate on two rows — DETECTED: sort|uniq -d prints the duplicate key inline; identity 3 FAILS LOUDLY. (b) module present in decomposition but absent from registry — NOT DETECTED by identity 3: command output is empty regardless; this is identity 2's domain (difference set in matched_rows). (c) module with wrong tier in registry — NOT DETECTED by identity 3: unique composite key, no duplicate output; tier-diff check (Registry→Decomposition direction) covers this. (d) extra module in one list but not the other — NOT DETECTED by identity 3: same reasoning as (b); identity 2 in both directions covers this. Assessment: identity 3 covers failure mode (a) only; modes (b)–(d) require identity 2 and the tier-diff check. Together identities 0–3 plus tier-diff form a complete sensor over the four failure modes; no single identity need cover all four. (2) F-P173-407 MED: DEC-013 orphan corrected. Pass-42 adversarial probe recorded '13/13 CLEAN' (all 13 domain edge cases anchored to a BC with explicit DEC citation) but DEC-013 (Provider Streaming Interrupted by Transport Error) was a one-directional reference: edge-cases.md cited BC-2.08.007 as anchor but BC-2.08.007 carried no reciprocal DEC-013 citation. Fix: BC-2.08.007 updated to cite DEC-013 in traces_to frontmatter and Traceability DEC References row; edge-cases.md anchor text strengthened to a labelled BC-anchor line. Canonical DEC count derivation: 13 = count of ###-DEC-NNN headings in domain-spec/edge-cases.md (DEC-001 through DEC-013, sequential, no gaps). The pass-42 '13/13 CLEAN' probe claim is now accurate."
   - "2.59 (FIX-BURST-276-WAVE-A/F-P173-303+F-P173-306+F-P173-308+F-P173-309+F-P173-310+F-P173-319+L-065/2026-07-27): SIX PROCESS-GAP FINDINGS CLOSED + GATE #37 MINTED (gate-semantics wave — fourth-generation unfalsifiable-suppression remediation). (1) F-P173-303 HIGH [process-gap] — Blocking identity 1 tautology (fourth generation; orchestrator self-attributed; lineage: F-P172b-05 inverted-census-direction → Class A/B flattening ambiguous exempt_count → crate-level annotation asserting an untruth → this tautological parenthetical): false parenthetical claiming identity 1 detects Class A row gains, Class B Criticality drift, or row-count drift deleted; identity 1 annotated to state exactly what it detects (arithmetic slips and malformed Criticality cells ONLY); per-section row vector added as required census member with sum-identity; class_a_row_count added as explicit census member with blocking identity class_a_row_count == 0; Class B membership assertion added (set equality: set of — Criticality rows must equal {core::documents, memory::skills} exactly, not just equal in count). (2) F-P173-306 HIGH [process-gap] — crate-level annotation verification grep unsound: name-prefix heuristic (^| <crate_stem>::) replaced with section-scoped procedure (locate crate's H2/H3 section in module-decomposition.md, enumerate that section's table rows; for Provider Embeddings Modules and Standard Test Modules, additionally match the Crate column); live false PASS route documented (ferrochain-standard-tests / eval::judge); enumerated row names recorded per crate; blocking identity verified_count == crate_level_row_count added. (3) F-P173-308 MED — gate #25 Part B Tier-summary row check named a Criticality column that does not exist in verification-coverage-matrix.md (columns are Module|Crate|Kani|proptest|fuzz|Integration|Notes); per-row recount instruction BLOCKED with explicit precondition until architect adds Tier column per F-P173-812 (Wave B); gate now honest about its dependency: until that column exists, tier cross-check uses arch-registry §Classification Summary only (mirroring from sibling document is prohibited by Part B gate rule). (4) F-P173-309 MED — registry_rows self-contradiction (77 in definition, 76 in adjacent roll-up coexistence rule sentence): registry_rows is now unconditionally the total row count (all rows including roll-ups, always 77); registry_census_rows = registry_rows − roll_up_row_count introduced as explicit census member and the intersection denominator; roll_up_row_count added as census member; 'excluded from registry_rows for matched_rows purposes' phrasing deleted from roll-up coexistence rule. (5) F-P173-310 MED [process-gap] — Class A inverse assertion stated with no census command, no recorded value, no covering identity; census command added (grep all four Class A names against decomposition table rows); class_a_row_count member and class_a_row_count == 0 blocking identity added (shared with F-P173-303 item 3 — same identity, single definition). (6) F-P173-319 MED [process-gap] — gate #25 Part C awk field index second break (F-P170-15 fixed $4→$3 one burst earlier; Qualifier column insertion in burst-275 moved Crate from $3 to $4, silently emitting (Module, Qualifier) pairs instead of (Module, Crate) on every row); hardcoded index replaced with header-derived column extraction (awk NR==1 locates Module and Crate columns by name from live header; no future column insertion can break the command without first changing the column name); inline header comment updated to show current Module|Qualifier|Crate|… form; TD-VSDD-060 gate-corpus awk/cut audit: gate #33 census (awk $2/$5 with documented column map) verified against error-taxonomy.md header Error-Code|Category|Severity|BC-Anchor|Message-Format — PASS (column map is accurate); no other hardcoded awk column indices found. (7) Gate #37 LAYER-SCOPED SWEEP BAN minted (standing gate — L-065): three independent P1D-173 slices converged on same root cause (every sweep in this corpus that declared a layer scope left survivors in excluded layers — 'in this file', 'in architecture-layer docs', 'Zero live-body ADR version pins remain in domain-spec/ corpus' each left real survivors in behavioral-contracts/, verification-properties/, prd-supplements/); a sweep or de-pin closure statement may not be layer-scoped; either the sweep is corpus-wide or the closure statement MUST enumerate the excluded layers as named follow-up obligations with a target burst ID; the sweep predicate (what pattern was searched, corpus-wide) must be recorded in the closure statement, not the layer that happened to be searched. total_standing_gates 36→37."
   - "2.58 (burst-275C/2026-07-26): TWO DEFINITIONAL GAPS — exposed by first real census run on v2.57 gate. Gap 1 (same structural class as F-P172b-05): Gate #25 Part C directed that crate-level registry rows be annotated 'no 1:1 decomposition module' so the census skips them — but no clause required the annotation to be TRUE. An annotation that suppresses a check must itself be falsified; this is exactly the F-P172b-05 defect (unfalsifiable clause that silently suppresses a check) one layer down. Motivating instance: the ferrochain-macros registry row was annotated crate-level while its Qualifier text enumerated #[tool] #[entrypoint] #[task] — and module-decomposition.md carried macros::tool, macros::entrypoint, macros::task as three separate HIGH tiered rows. The annotation asserted 'no 1:1 decomposition module' about a row with three of them; the census skipped three real gaps. Fix: Part C now requires per-row verification of every crate-level annotation against module-decomposition.md (grep for module rows belonging to the crate; if any exist, annotation is INVALID → HIGH-severity finding); verification must be recorded per-row, not as a summary; a crate-level row may coexist with module rows only as an explicitly-labeled roll-up (which must be excluded from registry_rows for matched_rows computation). Gap 2: registry_rows was undefined as table-ROWS vs distinct-module-names, and the core::serializable duplicate (two rows, same Module cell, distinct Qualifiers for reviver-allowlist CRITICAL and round-trip HIGH) made the distinction load-bearing. Fix: quintuple expanded to sextuple by introducing registry_distinct_modules (count of distinct Module cell values); registry_rows redefined explicitly as total table ROWS; blocking identity 3 added: for any two rows where row_i.Module == row_j.Module, (row_i.Module, row_i.Qualifier) != (row_j.Module, row_j.Qualifier) must hold (duplicate (Module, Qualifier) pair = HIGH-severity finding); matched_rows redefined as explicit SET INTERSECTION {decomposition_tiered_module_names} ∩ {registry_Module_cell_values} with the difference set required to be reported inline and empty — prose-asserting the value is PROHIBITED. Motivating instance: coordinator independently computed matched_rows = 66 against decomposition_tiered_rows = 69 (3 macros module gaps); the prose-asserted value had been accepted without the difference set. Gate #32 step 4b updated to same sextuple + three-identity form."
   - "2.57 (burst-275B/2026-07-26): LOAD-BEARING ARITHMETIC FIX — gate #25 Part B exempt list flattening (v2.56) caused blocking identity misfire. Root cause: v2.56 combined two structurally distinct exempt classes into a flat list of 6, making exempt_count = 6 and decomposition_tiered_rows (68) − exempt_count (6) = 62 ≠ matched_rows (68) — gate would block on a correct census. Separately, the — reciprocal assertion was unevaluable for the four no-row modules (no Criticality cell to check). Fix: split into Class A and Class B with distinct arithmetic roles. Class A — non-row definitions-only (core::context_mutation, core::write_guard, core::guardrail, core::action_risk): NO table row in module-decomposition.md; appear only as prose definitions notes; NOT in row universe; NOT in any count; — reciprocal assertion does NOT apply; INVERSE assertion added (Class A MUST NOT gain a table row — HIGH-severity finding if one appears, requiring architect re-classification). Class B — exempt table rows (core::documents, memory::skills): ARE table rows with Criticality —; ARE in row universe; exempt_count := |Class B| = 2; — reciprocal assertion applies; exempt_count MUST be derived by counting — Criticality rows (not list length); cross-check required (count ≠ list length = HIGH-severity finding). Arithmetic corrected: universe-total identity added: decomposition_total_rows == decomposition_tiered_rows + exempt_count (currently 70 == 68 + 2). Census output changed from triple (decomposition_tiered_rows, registry_rows, matched_rows) to quintuple (decomposition_total_rows, decomposition_tiered_rows, exempt_count, registry_rows, matched_rows). Two blocking identities: identity 1 (universe): decomposition_total_rows == decomposition_tiered_rows + exempt_count; identity 2 (matching completeness): matched_rows == decomposition_tiered_rows. Gate #32 carrier 4 step 4b updated to same quintuple + dual-identity form. Class A / Class B split recorded here to prevent re-flattening."
@@ -1197,6 +1198,70 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
       correctly covers multiple registry rows when they carry the same Module name with distinct
       Qualifiers (multi-aspect pattern, e.g., `core::serializable` with a CRITICAL reviver-
       allowlist row and a HIGH round-trip row).
+
+      **Identity 3 census command — genuinely falsifiable (F-P173-304; required derivation,
+      not assertion):**
+      Extract all `(Module, Qualifier)` composite key pairs from `§Module Classification`,
+      then pipe through `sort | uniq -d`. Any duplicate pair is printed inline — the output
+      is self-revealing. Empty output = PASSES; non-empty output = duplicate printed = FAILS LOUDLY.
+      ```bash
+      awk '/^## Module Classification/{f=1;next} /^## /{f=0} f' .factory/specs/module-criticality.md \
+        | grep '^| ' | grep -v '^|---' \
+        | awk -F'|' '
+          NR==1 {
+            for (i=2; i<=NF; i++) {
+              h=$i; gsub(/^[[:space:]]+|[[:space:]]+$/, "", h)
+              if (h == "Module")    mc=i
+              if (h == "Qualifier") qc=i
+            }
+            next
+          }
+          { m=$mc; q=$qc
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", m)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", q)
+            print m "|" q
+          }' | sort | uniq -d
+      # Expected: empty output (zero duplicate (Module, Qualifier) pairs).
+      # Non-empty output prints the offending pair inline — identity 3 FAILS.
+      ```
+
+      **Identity 3 evaluation (burst-276-Wave-C):** census sextuple
+      `(decomposition_total_rows=71, decomposition_tiered_rows=69, exempt_count=2,
+      registry_rows=77, registry_distinct_modules=76, matched_rows=69)`;
+      both difference sets empty. Command output: empty — zero duplicate (Module, Qualifier)
+      pairs found. The 1-row gap (registry_rows=77 vs registry_distinct_modules=76) is the
+      single multi-aspect row: `core::serializable` appears twice — once with Qualifier
+      `reviver-allowlist CRITICAL` and once with Qualifier `round-trip HIGH`. These are
+      DISTINCT Qualifier strings; identity 3 PASSES.
+
+      **Four-failure-mode falsifiability argument (F-P173-304):**
+
+      (a) **A module counted in both tiers — same (Module, Qualifier) pair on two rows:**
+      Identity 3 DETECTS this. `sort | uniq -d` prints the duplicate composite key inline.
+      Trigger example: two rows each with `core::serializable | reviver-allowlist CRITICAL`
+      — command outputs `core::serializable|reviver-allowlist CRITICAL`; identity 3 FAILS LOUDLY.
+
+      (b) **A module counted in neither — present in decomposition, absent from registry:**
+      Identity 3 CANNOT detect this. A missing module has no composite key to duplicate; the
+      command output stays empty regardless. This failure mode belongs to identity 2: the
+      required difference set `{decomposition_tiered_module_names} \ {registry_Module_cell_values}`
+      exposes absent modules. Additional check needed: identity 2.
+
+      (c) **A misclassified module — wrong tier in registry vs decomposition:**
+      Identity 3 CANNOT detect this. A wrong-tier module still has a unique (Module, Qualifier)
+      pair — no duplicate output. Tier drift is the Registry→Decomposition direction's job
+      (Part B census tier-diff check). Additional check needed: tier-diff check.
+
+      (d) **An extra module in one list but not the other:**
+      Identity 3 CANNOT detect this. An extra registry module has a unique composite key; an
+      extra decomposition module has no registry entry to duplicate. Both cases leave the
+      `sort | uniq -d` output empty. Additional check needed: identity 2 in both directions.
+
+      **Assessment:** Identity 3 detects ONLY duplicate (Module, Qualifier) composite-key
+      entries — failure mode (a) only. Modes (b)–(d) are covered by identity 2 (matching
+      completeness, both directions) and the tier-diff check. Together, identities 0–3 plus
+      the tier-diff check form a complete sensor over the full four-mode failure space; no
+      single identity covers all four modes. This is an honest partial, not a tautology.
 
       If any identity does not hold, the burst is BLOCKED and the gate fails. Rules:
       1. All members MUST be independently recomputed from the named artifacts in THIS burst

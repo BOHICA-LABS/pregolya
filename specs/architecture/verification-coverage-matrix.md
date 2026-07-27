@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "2.9"
+version: "3.2"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -14,6 +14,9 @@ inputs:
 input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.2 (FIX-BURST-276-CHECK4/2026-07-27): CHECK4 canonicality closure — rename three crate-level BaseChatModel provider rows to full canonical crate names: `openai` → `ferrochain-openai`, `anthropic` → `ferrochain-anthropic`, `ollama` → `ferrochain-ollama`. Aligns with established pattern: ferrochain-macros and ferrochain-standard-tests already use full crate names in this file; purity-boundary-map.md already uses these names generating the same expected SET-DIFF in-here-not-decomp WARNs (crate-level rows are not in module-decomp canonical set because the Provider Crates section is excluded from decomp scanning). Row Notes updated to remove stale 'no canonical crate::module name' wording; full crate names ARE canonical via ARCH-INDEX.md roster. No VP or coverage count changes; census sextuple unchanged."
+  - "3.1 (FIX-BURST-276/F-P173-803/2026-07-27): F-P173-803 — correct Coverage by Criticality Tier proptest column. Actual proptest coverage is 3 of 12 CRITICAL (graph::bsp_engine, checkpoint::session_index, checkpoint::clock — derivation: counted proptest=yes/VP-NNN rows from per-module table, CRITICAL tier) and 7 of 28 HIGH (core::runnable, core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels, graph::budget). Replace 'all' → '3 of 12 (explicit list)' and 'most + VP-007, VP-008' → '7 of 28 (explicit list)'. Add coverage-gap stated-obligation note. Update tooling-selection.md proptest gate from aspirational to actual (v1.4). No VP-to-Module count changes."
+  - "3.0 (FIX-BURST-276/F-P173-307-801/2026-07-27): F-P173-307/801 — canonicalize all non-canonical Module cells. VP-to-Module table: 13 cells updated (bsp-engine (reducer stage)→graph::bsp_engine, session-index→checkpoint::session_index, path-guard→sandbox::path_guard, mcp-adapter→mcp::adapter, mcp-client→mcp::client, injection_guard→prompts::injection_guard, serializable→core::serializable, embeddings→core::embeddings, vectorstores-similarity→vectorstores::similarity, serializable-reviver→core::serializable, hitl→graph::hitl, core-budget→core::budget, tools-shell→tools::shell). Per-Module table: 36 cells updated (full list: bsp-engine→graph::bsp_engine, channels→graph::channels, hitl→graph::hitl, scheduler→graph::scheduler, budget→graph::budget, provenance→graph::provenance, event_emitter→graph::event_emitter, session-index→checkpoint::session_index, clock→checkpoint::clock, lineage→checkpoint::lineage, encryption→checkpoint::encryption, sqlite→checkpoint::sqlite, path-guard→sandbox::path_guard, sandbox-policy→sandbox::policy, message→core::message, error→core::error, credentials→core::credentials, runnable→core::runnable, retry→core::retry, server handlers→server::handlers, server security→server::security, recursive splitter→splitters::recursive, mcp client→mcp::client, mcp adapter→mcp::adapter, mcp server→mcp::server, sandbox-wasm→sandbox::wasm, memory-store→memory::store, write-guard enforcement→memory::write_guard, injection_guard→prompts::injection_guard, serializable→core::serializable, serializable-reviver→core::serializable, vectorstores-similarity→vectorstores::similarity, vectorstores-mmr→vectorstores::mmr, embeddings→core::embeddings, core-budget→core::budget, tools-shell→tools::shell). Total cells changed: 49 (13 VP table + 36 per-module table). No-canonical-counterpart entries (reported, not renamed): openai, anthropic, ollama (crate-level conformance; no explicit module name in module-decomp), ferrochain-macros roll-up (superseded by macros::tool/entrypoint/task rows), ferrochain-standard-tests roll-up (superseded by eval::judge row). Notes added to those 5 entries clarifying their status. Canonical source: module-decomposition.md module universe 71 total (69 tiered / 2 exempt: core::documents, memory::skills)."
   - "2.9 (FIX-BURST-276-WAVE-B1/F-P173-301+402/2026-07-27): F-P173-301/402 sibling sweep — fix eval::judge row Notes BC anchor: `BC-2.08.013/014` → `BC-2.08.008`. Correct anchor: BC-2.08.008 = Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15); BC-2.08.013 = Pluggable Tool-Call Dialect Seam; BC-2.08.014 = Provider Failover Chain — both are provider-behavior BCs, not eval-scoring BCs. TD-VSDD-060 sibling sweep: same BC anchor corrected in module-decomposition.md (v1.34), module-criticality.md (v2.3), purity-boundary-map.md (v1.23) in same burst. No VP-to-Module table changes; no coverage count changes."
   - "2.8 (FIX-BURST-275-REOPENED/Defect-2-mirror/2026-07-26): Mirror module-criticality.md v2.2 additions — add 3 Per-Module Coverage Status rows: `macros::tool` HIGH (ferrochain-macros; compile-time TokenStream→TokenStream proc-macro; no Kani VP; BC-2.08.010), `macros::entrypoint` HIGH (ferrochain-macros; compile-time proc-macro; no Kani VP; BC-2.08.011), `macros::task` HIGH (ferrochain-macros; compile-time proc-macro; no Kani VP; BC-2.08.012). Coverage-by-Criticality-Tier: HIGH 25 → 28. Per-module count 74 → 77. VP-to-Module table and VP totals unchanged (no new VPs; macros proc-macro modules have no Kani VP targets — compile-time code generation is integration-tested via expansion correctness tests)."
   - "2.7 (FIX-BURST-275/F-P172b-01+15+Iron-Law/2026-07-26): Mirror module-criticality.md v2.1 additions. F-P172b-01 mirror — add 7 Per-Module Coverage Status rows: `openai::embeddings` HIGH (ferrochain-openai, DI-009/DI-010, Integration DTU), `ollama::embeddings` HIGH (ferrochain-ollama, DI-009, Integration), `vectorstores::store` MEDIUM (ferrochain-vectorstores, Integration), `vectorstores::retriever` MEDIUM (ferrochain-vectorstores, Integration), `vectorstores::memory` MEDIUM (ferrochain-vectorstores, Unit+Integration), `tools::fs` MEDIUM (ferrochain-tools, Integration), `tools::search` MEDIUM (ferrochain-tools, Integration). F-P172b-15 mirror — update mcp::ingress Notes to reflect HIGH tier elevation (untrusted-ingress; BC-2.09.003; parity with graph::provenance HIGH). Iron Law mirror — add `eval::judge` MEDIUM row (ferrochain-standard-tests; async LLM judge; Integration DTU; BC-2.08.013/014). Coverage-by-Criticality-Tier: HIGH 22 → 25 (+openai::embeddings, +ollama::embeddings, mcp::ingress elevation); MEDIUM 30 → 35 (+vectorstores::store/retriever/memory, +tools::fs/search, +eval::judge, -mcp::ingress). Per-module count 66 → 74. VP-to-Module table and VP totals unchanged (no new VPs)."
@@ -47,19 +50,19 @@ changelog:
 
 | VP | Title | Module | Crate | Tool | BC Anchor | Phase | Status |
 |----|-------|--------|-------|------|-----------|-------|--------|
-| VP-001 | BSP Super-Step Determinism | bsp-engine (reducer stage) | ferrochain-graph | Kani | BC-2.03.001 | 6 | draft |
-| VP-002 | Session Triple-Address Uniqueness | session-index | ferrochain-checkpoint | Kani | BC-2.04.006 | 6 | draft |
-| VP-003 | Workspace Path Confinement | path-guard | ferrochain-sandbox | Kani | BC-2.13.004 | 6 | draft |
-| VP-004 | MCP ToolException Type-Identity Preservation | mcp-adapter | ferrochain-mcp | integration | BC-2.09.004 | 3 | draft |
-| VP-005 | MultiServerMcpClient Holds No Live Connections | mcp-client | ferrochain-mcp | integration | BC-2.09.005 | 3 | draft |
-| VP-006 | injection_guard Fail-Closed | injection_guard | ferrochain-prompts | Kani | BC-2.18.004 | 6 | draft |
-| VP-007 | LcSerializable Round-Trip | serializable | ferrochain-core | proptest | BC-2.19.001 | 3 | draft |
-| VP-008 | Embeddings Dimensionality Contract | embeddings | ferrochain-core | proptest | BC-2.22.001 | 3 | draft |
-| VP-009 | Zero-Norm Cosine Guard | vectorstores-similarity | ferrochain-vectorstores | Kani | BC-2.21.003 | 6 | draft |
-| VP-010 | Reviver Allowlist Containment | serializable-reviver | ferrochain-core | Kani | BC-2.19.005 | 6 | draft |
-| VP-011 | PreToolCallHook Fail-Closed | hitl | ferrochain-graph | Kani | BC-2.05.007 | 6 | draft |
-| VP-012 | OnWatermark Arithmetic | core-budget | ferrochain-core | Kani | BC-2.10.005 | 6 | draft |
-| VP-013 | BashTool Risk Floor | tools-shell | ferrochain-tools | Kani | BC-2.23.005 | 6 | draft |
+| VP-001 | BSP Super-Step Determinism | graph::bsp_engine | ferrochain-graph | Kani | BC-2.03.001 | 6 | draft |
+| VP-002 | Session Triple-Address Uniqueness | checkpoint::session_index | ferrochain-checkpoint | Kani | BC-2.04.006 | 6 | draft |
+| VP-003 | Workspace Path Confinement | sandbox::path_guard | ferrochain-sandbox | Kani | BC-2.13.004 | 6 | draft |
+| VP-004 | MCP ToolException Type-Identity Preservation | mcp::adapter | ferrochain-mcp | integration | BC-2.09.004 | 3 | draft |
+| VP-005 | MultiServerMcpClient Holds No Live Connections | mcp::client | ferrochain-mcp | integration | BC-2.09.005 | 3 | draft |
+| VP-006 | injection_guard Fail-Closed | prompts::injection_guard | ferrochain-prompts | Kani | BC-2.18.004 | 6 | draft |
+| VP-007 | LcSerializable Round-Trip | core::serializable | ferrochain-core | proptest | BC-2.19.001 | 3 | draft |
+| VP-008 | Embeddings Dimensionality Contract | core::embeddings | ferrochain-core | proptest | BC-2.22.001 | 3 | draft |
+| VP-009 | Zero-Norm Cosine Guard | vectorstores::similarity | ferrochain-vectorstores | Kani | BC-2.21.003 | 6 | draft |
+| VP-010 | Reviver Allowlist Containment | core::serializable | ferrochain-core | Kani | BC-2.19.005 | 6 | draft |
+| VP-011 | PreToolCallHook Fail-Closed | graph::hitl | ferrochain-graph | Kani | BC-2.05.007 | 6 | draft |
+| VP-012 | OnWatermark Arithmetic | core::budget | ferrochain-core | Kani | BC-2.10.005 | 6 | draft |
+| VP-013 | BashTool Risk Floor | tools::shell | ferrochain-tools | Kani | BC-2.23.005 | 6 | draft |
 
 **Totals: 13 VPs | Kani: 9 | proptest: 2 | fuzz: 0 | integration: 2**
 
@@ -70,52 +73,52 @@ changelog:
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
-| bsp-engine | ferrochain-graph | VP-001 | yes (BC-2.03.003) | yes (BC-2.17.002) | yes | Core VP target |
-| channels | ferrochain-graph | — | yes (BC-2.02.002) | — | yes | Reducer invariants via proptest |
-| hitl | ferrochain-graph | VP-011 | — | — | yes | D23/SS-05; PreToolCallHook fail-closed; Kani P0 (BC-2.05.007) |
-| scheduler | ferrochain-graph | — | — | — | yes | Pending ADR-001 |
-| budget | ferrochain-graph | — | yes | — | yes | EvidenceJournal ordering |
-| provenance | ferrochain-graph | — | — | — | yes | Hook dispatch |
-| event_emitter | ferrochain-graph | — | — | — | yes | Streaming/unary equivalence |
-| session-index | ferrochain-checkpoint | VP-002 | yes | — | yes | Core VP target |
-| clock | ferrochain-checkpoint | — | yes | — | yes | Monotonic property |
-| lineage | ferrochain-checkpoint | — | — | — | yes | Fork pointer |
-| encryption | ferrochain-checkpoint | — | — | — | yes | Payload coverage |
-| sqlite | ferrochain-checkpoint | — | — | yes (BC-2.17.002) | yes | Round-trip fuzz |
-| path-guard | ferrochain-sandbox | VP-003 | — | — | yes | Core VP target |
-| sandbox-policy | ferrochain-sandbox | — | — | — | yes | Err(PolicyNotEnforceable) |
-| message | ferrochain-core | — | yes | — | yes | ContentBlock invariants |
-| error | ferrochain-core | — | — | — | yes | RFC-7807 emission |
-| credentials | ferrochain-core | — | — | — | yes | Redacted Debug |
-| runnable | ferrochain-core | — | yes | — | yes | Pipe associativity |
-| retry | ferrochain-core | — | yes | — | yes | Policy termination |
-| server handlers | ferrochain-server | — | — | — | yes | CRUD lifecycle |
-| server security | ferrochain-server | — | — | — | yes | SecurityConfig defaults |
-| recursive splitter | ferrochain-splitters | — | yes | — | yes | Code-point boundaries |
-| openai | ferrochain-openai | — | — | — | yes | Conformance suite |
-| anthropic | ferrochain-anthropic | — | — | — | yes | Conformance suite |
-| ollama | ferrochain-ollama | — | — | — | yes | Conformance suite |
-| mcp client | ferrochain-mcp | — | — | — | yes | integration red_gate (BC-2.09.005); no-live-connections |
-| mcp adapter | ferrochain-mcp | — | — | — | yes | ToolException type-identity; integration red_gate (BC-2.09.004) |
-| mcp server | ferrochain-mcp | — | — | — | yes | Server-side tool exposure + inbound dispatch (CAP-021) |
-| ferrochain-macros | ferrochain-macros | — | — | — | yes | crate-level roll-up; `#[tool]`/`#[entrypoint]`/`#[task]` expansion correctness |
+| graph::bsp_engine | ferrochain-graph | VP-001 | yes (BC-2.03.003) | yes (BC-2.17.002) | yes | Core VP target |
+| graph::channels | ferrochain-graph | — | yes (BC-2.02.002) | — | yes | Reducer invariants via proptest |
+| graph::hitl | ferrochain-graph | VP-011 | — | — | yes | D23/SS-05; PreToolCallHook fail-closed; Kani P0 (BC-2.05.007) |
+| graph::scheduler | ferrochain-graph | — | — | — | yes | Pending ADR-001 |
+| graph::budget | ferrochain-graph | — | yes | — | yes | EvidenceJournal ordering |
+| graph::provenance | ferrochain-graph | — | — | — | yes | Hook dispatch |
+| graph::event_emitter | ferrochain-graph | — | — | — | yes | Streaming/unary equivalence |
+| checkpoint::session_index | ferrochain-checkpoint | VP-002 | yes | — | yes | Core VP target |
+| checkpoint::clock | ferrochain-checkpoint | — | yes | — | yes | Monotonic property |
+| checkpoint::lineage | ferrochain-checkpoint | — | — | — | yes | Fork pointer |
+| checkpoint::encryption | ferrochain-checkpoint | — | — | — | yes | Payload coverage |
+| checkpoint::sqlite | ferrochain-checkpoint | — | — | yes (BC-2.17.002) | yes | Round-trip fuzz |
+| sandbox::path_guard | ferrochain-sandbox | VP-003 | — | — | yes | Core VP target |
+| sandbox::policy | ferrochain-sandbox | — | — | — | yes | Err(PolicyNotEnforceable) |
+| core::message | ferrochain-core | — | yes | — | yes | ContentBlock invariants |
+| core::error | ferrochain-core | — | — | — | yes | RFC-7807 emission |
+| core::credentials | ferrochain-core | — | — | — | yes | Redacted Debug |
+| core::runnable | ferrochain-core | — | yes | — | yes | Pipe associativity |
+| core::retry | ferrochain-core | — | yes | — | yes | Policy termination |
+| server::handlers | ferrochain-server | — | — | — | yes | CRUD lifecycle |
+| server::security | ferrochain-server | — | — | — | yes | SecurityConfig defaults |
+| splitters::recursive | ferrochain-splitters | — | yes | — | yes | Code-point boundaries |
+| ferrochain-openai | ferrochain-openai | — | — | — | yes | Conformance suite (crate-level BaseChatModel impl; canonical crate name per ARCH-INDEX.md roster; Provider Crates section excluded from module-decomp canonical set) |
+| ferrochain-anthropic | ferrochain-anthropic | — | — | — | yes | Conformance suite (crate-level BaseChatModel impl; canonical crate name per ARCH-INDEX.md roster; Provider Crates section excluded from module-decomp canonical set) |
+| ferrochain-ollama | ferrochain-ollama | — | — | — | yes | Conformance suite (crate-level BaseChatModel impl; canonical crate name per ARCH-INDEX.md roster; Provider Crates section excluded from module-decomp canonical set) |
+| mcp::client | ferrochain-mcp | — | — | — | yes | integration red_gate (BC-2.09.005); no-live-connections |
+| mcp::adapter | ferrochain-mcp | — | — | — | yes | ToolException type-identity; integration red_gate (BC-2.09.004) |
+| mcp::server | ferrochain-mcp | — | — | — | yes | Server-side tool exposure + inbound dispatch (CAP-021) |
+| ferrochain-macros | ferrochain-macros | — | — | — | yes | crate-level roll-up; `#[tool]`/`#[entrypoint]`/`#[task]` expansion correctness (no canonical crate::module name for this roll-up — macros::tool/entrypoint/task are the canonical rows) |
 | macros::tool | ferrochain-macros | — | — | — | yes | HIGH; `#[tool]` proc-macro ToolDefinition generation; compile-time TokenStream expansion; integration-tested via expansion correctness; BC-2.08.010 |
 | macros::entrypoint | ferrochain-macros | — | — | — | yes | HIGH; `#[entrypoint]` proc-macro START-edge wiring; compile-time TokenStream expansion; integration-tested; BC-2.08.011 |
 | macros::task | ferrochain-macros | — | — | — | yes | HIGH; `#[task]` proc-macro task-registration boilerplate; compile-time TokenStream expansion; integration-tested; BC-2.08.012 |
-| sandbox-wasm | ferrochain-sandbox | — | — | — | yes | WASM execution backend |
-| ferrochain-standard-tests | ferrochain-standard-tests | — | — | — | yes | Shared conformance harness; exercised via provider integrations |
-| memory-store | ferrochain-memory | — | yes | — | yes | KV + vector ops; GDPR erasure protocol |
-| write-guard enforcement | ferrochain-memory | — | — | — | yes | `WriteGuardDecision` enforcement; injection scanning dispatch (D20/ADR-012) |
+| sandbox::wasm | ferrochain-sandbox | — | — | — | yes | WASM execution backend |
+| ferrochain-standard-tests | ferrochain-standard-tests | — | — | — | yes | Shared conformance harness; exercised via provider integrations (no canonical crate::module name for this roll-up — eval::judge is the canonical module row) |
+| memory::store | ferrochain-memory | — | yes | — | yes | KV + vector ops; GDPR erasure protocol |
+| memory::write_guard | ferrochain-memory | — | — | — | yes | `WriteGuardDecision` enforcement; injection scanning dispatch (D20/ADR-012) |
 | xtask | xtask | — | — | — | — | CI lint gates only; advisory ≥70% |
 | ferrochain-community | ferrochain-community | — | — | — | — | Post-v1 placeholder; not in-tree at v1 |
-| injection_guard | ferrochain-prompts | VP-006 | — | — | yes | D21/SS-18; prompt injection safety; Kani P1 red_gate (BC-2.18.004) |
-| serializable | ferrochain-core | — | VP-007 | — | yes | D21/SS-19; LcSerializable round-trip; proptest P1 (BC-2.19.001) |
-| serializable-reviver | ferrochain-core | VP-010 | — | — | yes | D21/SS-19; allowlist containment; Kani P0 red_gate (BC-2.19.005) |
-| vectorstores-similarity | ferrochain-vectorstores | VP-009 | — | — | yes | D21/SS-21; shared cosine_similarity primitive; zero-norm guard; Kani P0 red_gate (BC-2.21.003) |
-| vectorstores-mmr | ferrochain-vectorstores | — | — | — | yes | D21/SS-21; MMR selection algorithm; calls vectorstores::similarity::cosine_similarity |
-| embeddings | ferrochain-core | — | VP-008 | — | yes | D21/SS-22; dimensionality contract; proptest P1 (BC-2.22.001) |
-| core-budget | ferrochain-core | VP-012 | — | — | yes | D23/SS-10; OnWatermark arithmetic; Kani P1 (BC-2.10.005) |
-| tools-shell | ferrochain-tools | VP-013 | — | — | yes | D23/SS-23; BashTool risk floor; Kani P1 (BC-2.23.005) |
+| prompts::injection_guard | ferrochain-prompts | VP-006 | — | — | yes | D21/SS-18; prompt injection safety; Kani P1 red_gate (BC-2.18.004) |
+| core::serializable | ferrochain-core | — | VP-007 | — | yes | D21/SS-19; LcSerializable round-trip aspect; proptest P1 (BC-2.19.001) |
+| core::serializable | ferrochain-core | VP-010 | — | — | yes | D21/SS-19; Reviver allowlist containment aspect; Kani P0 red_gate (BC-2.19.005) |
+| vectorstores::similarity | ferrochain-vectorstores | VP-009 | — | — | yes | D21/SS-21; shared cosine_similarity primitive; zero-norm guard; Kani P0 red_gate (BC-2.21.003) |
+| vectorstores::mmr | ferrochain-vectorstores | — | — | — | yes | D21/SS-21; MMR selection algorithm; calls vectorstores::similarity::cosine_similarity |
+| core::embeddings | ferrochain-core | — | VP-008 | — | yes | D21/SS-22; dimensionality contract; proptest P1 (BC-2.22.001) |
+| core::budget | ferrochain-core | VP-012 | — | — | yes | D23/SS-10; OnWatermark arithmetic; Kani P1 (BC-2.10.005) |
+| tools::shell | ferrochain-tools | VP-013 | — | — | yes | D23/SS-23; BashTool risk floor; Kani P1 (BC-2.23.005) |
 | tools::config | ferrochain-tools | — | — | — | yes | D23/SS-23; ToolConfig risk-floor validator; pure construction-time validation (ADR-020 Decision 3 / BC-2.23.005) |
 | core::retriever | ferrochain-core | — | — | — | yes | D21/SS-20; `rag_ingress` async guardrail routing gate; DI-012 RAGRetrieval boundary enforcement (ADR-014 Decision 6) |
 | prompts::template | ferrochain-prompts | — | — | — | yes | D21/SS-18; f-string rendering engine; variable extraction and substitution (ADR-015) |
@@ -150,12 +153,14 @@ changelog:
 
 ## Coverage by Criticality Tier
 
-| Tier | Modules | Kani VPs | proptest | fuzz | Kill Rate Target |
+| Tier | Modules | Kani VPs | proptest (actual current) | fuzz | Kill Rate Target |
 |------|---------|---------|---------|------|-----------------|
-| CRITICAL | 12 | 6 (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) | all | subset | ≥ 95% |
-| HIGH | 28 | 3 (VP-006, VP-012, VP-013) | most + VP-007, VP-008 | subset | ≥ 90% |
+| CRITICAL | 12 | 6 (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) | 3 of 12: graph::bsp_engine, checkpoint::session_index, checkpoint::clock | subset | ≥ 95% |
+| HIGH | 28 | 3 (VP-006, VP-012, VP-013) | 7 of 28: core::runnable, core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels, graph::budget | subset | ≥ 90% |
 | MEDIUM | 35 | 0 | some | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | n/a (xtask and ferrochain-community excluded from cargo-mutants per tooling-selection.md; advisory only) |
+
+> **Coverage gap — stated obligation:** Actual proptest coverage is 3 of 12 CRITICAL and 7 of 28 HIGH (derivation: counted proptest column = yes/VP-NNN from per-module table above, grouped by tier). Modules with Kani VPs have formal verification coverage at the proof level, which is stronger than proptest. Modules with only integration tests and no Kani VP are proptest coverage gaps. **Coverage obligation:** expand proptest to all 12 CRITICAL and 28 HIGH modules is a Phase 5/6 obligation; the gate in tooling-selection.md reflects current 10-module coverage (3 CRITICAL + 7 HIGH) with the obligation stated explicitly.
 
 ## Mutation Kill Rate Gates (cargo-mutants)
 

@@ -7,10 +7,13 @@ title: "Checkpoint Wire Format: msgpack (Rust-native, non-Python-compatible)"
 status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
+version: "1.0"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D11]
 supersedes: []
+changelog:
+  - "1.0 (D11/2026-07-14): Initial ADR — checkpoint wire format: msgpack via rmp-serde for ferrochain-checkpoint."
 ---
 
 # ADR-002: Checkpoint Wire Format

@@ -1674,3 +1674,19 @@ L-065..L-069 (P1D-173), L-070..L-074 (Wave A gates/validators), L-075..L-078 (co
 
 ### SESSION WRAP METADATA
 Date: 2026-07-27 | Cycle: v1.0.0-greenfield | STATE.md: v4.27 | 4 commits this session (84a52a0, 2c9b4e7, 265082e, 8d10372 — chronological; all pushed to origin)
+
+---
+
+## Archived Checkpoint — Burst 276 content wave 3 (supersedes STATE.md v4.27 Session Resume Checkpoint)
+
+*The comprehensive session wrap for 2026-07-27 is in the "Session Wrap — 2026-07-27" section above. The compact STATE.md v4.27 Session Resume Checkpoint is shown below for audit trail purposes. Superseded by STATE.md v4.28.*
+
+### STATE.md v4.27 Session Resume Checkpoint (verbatim)
+
+RESUME IN ONE BREATH: ferrochain Phase 1 (Spec Crystallization), greenfield+semport. Adversarial streak 0/3 after 174 passes; P1D-173 FULL-PERIMETER found 130 raw / ~122 unique findings including 4 CRITICAL-class, of which 3 are now CLOSED. All work is pushed and clean: factory-artifacts post-session-wrap, develop 46725ad, no worktrees, no open PRs, verify-sha-currency exit 0. NEXT ACTION was: route BC-2.08.004 to architect, then dispatch fix-burst 276 content wave 3 — api-surface.md 8 HIGH, verification-coverage-matrix + system-overview 3 HIGH, VP bodies 4 HIGH, ~30 ADR semantic citations, interface-definitions residue.
+
+PERIMETER SNAPSHOT (as of v4.27): decomp 71/69+2; criticality registry 77 (12/28/35/2); purity 82 rows; 129 BCs (51/75/3); 108 error codes; 674 TVs; 37 gates; 13 VPs; 20 ADR files; 21 crates; eval::judge 11/11.
+
+NEXT-ACTION was: fix-burst 276 content wave 3. STATUS: COMPLETE (burst-276-content-3). All burst-276 waves done. P1D-174 FULL-PERIMETER queued.
+
+ORCHESTRATOR SELF-ATTRIBUTED DEFECTS (as of v4.27): F-P171a-02; F-P172a-04; [Wave A reopening #1]; [P1D-173 dispatch — adversary tool profile read-only; 3 dispatches lost]; [P1D-173 gate — F-P172b-05 fix tautological identity F-P173-303, 4th gen]; [burst-275 dispatch — F-P172b-12 stripped eval::judge anchor].

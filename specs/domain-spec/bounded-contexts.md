@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: bounded-contexts
-version: "1.4"
+version: "1.5"
 status: active
 producer: business-analyst
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -16,6 +16,7 @@ input-hash: "deff7f1"
 traces_to: L2-INDEX.md
 decisions: [D1, D4, D6, D11, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.5 (F-P173-104/burst-276/2026-07-27): Fix Context Dependency Order — remove ferrochain-graph from ferrochain-tools direct-dep list. ADR-020 Decision 1 explicitly states ferrochain-tools does NOT depend on ferrochain-graph at compile time; ActionRisk is in ferrochain-core::action_risk per D-24/ADR-020 Decision 1 adjudication. The v1.3 changelog entry recorded 'ferrochain-tools multi-dep edges (core+sandbox+graph+macros per ADR-020)' — that history entry is preserved per TD-VSDD-091 but is incorrect; live body now reflects ADR-020 Decision 1 canon. TD-VSDD-060 sibling sweep of domain-spec/: entities-graph.md correctly confirms no ferrochain-graph compile-time dep for ferrochain-tools; sole live-body defect in domain-spec/ was this Context Dependency Order line."
   - "1.4 (F-P170-16/burst-272/2026-07-25): Fix Context 13 'What it owns' — retire set_risk(ReadOnly)/set_risk(Low) spellings; replace with canonical ToolConfig::override_risk(ActionRisk::ReadOnly) and ToolConfig::override_risk(ActionRisk::Low) per BC-2.23.005 v1.7 §Invariants adjudication (ADR-020 Decision 3). TD-VSDD-060 sweep: sole set_risk occurrence in this file."
   - "1.3 (fix burst 242 F-P142-04, 2026-07-23): Map 6 orphaned crates into DDD model: Context 9 (ferrochain-sandbox, P2-05/DI-006/DI-007/DI-015), Context 10 (ferrochain-memory, D20/CAP-020/SS-15), Context 11 (ferrochain-prompts, D21/SS-18/CAP-022/023), Context 12 (ferrochain-vectorstores, D21/SS-20/SS-21/FM-017), Context 13 (ferrochain-tools, D23/SS-23/FM-019), Context 14 (ferrochain-macros, ADR-008). Context 5 updated: D21 embedding modules (openai::embeddings, ollama::embeddings) noted per ADR-017. Context 6 updated: D19/D20 mcp::server capability (CAP-021/ADR-013) added to model and ownership. Context Dependency Order updated: ferrochain-macros as proc-macro root (no ferrochain-* runtime deps); 6 new crate entries with correct acyclic edges; ferrochain-tools multi-dep edges (core+sandbox+graph+macros per ADR-020); all 21 canonical crates from ARCH-INDEX accounted for. Decisions [D1,D4,D6,D11,D13,D17] -> [D1,D4,D6,D11,D13,D17,D19,D20,D21,D23]. input-hash recomputed to ff4eb49 (new inputs ARCH-INDEX.md + module-decomposition.md added)."
   - "1.2 (F-P122-01, fix burst 125, 2026-07-19): Context 8 Splitters translation seam: 'Splitters accept and return ContentBlocks (Document variant)' -> 'Splitters accept plain UTF-8 String inputs and return Vec<String> chunk strings' per BC-2.07.001/002/003 preconditions. Document is not a canonical ContentBlock variant (BC-2.01.001 PC2 14-variant list). ContentBlock wrapping is caller responsibility."
@@ -312,7 +313,7 @@ ferrochain-core (zero ferrochain-* runtime deps)
   <- ferrochain-vectorstores
   <- ferrochain-graph            (direct deps: ferrochain-core + ferrochain-checkpoint)
   <- ferrochain-server           (direct deps: ferrochain-graph + ferrochain-checkpoint)
-  <- ferrochain-tools            (direct deps: ferrochain-core + ferrochain-sandbox + ferrochain-graph + ferrochain-macros [ADR-020])
+  <- ferrochain-tools            (direct deps: ferrochain-core + ferrochain-sandbox + ferrochain-macros [ADR-020 Decision 1]; NOT ferrochain-graph — ActionRisk is in ferrochain-core::action_risk per D-24/ADR-020 Decision 1; adding this edge violates build-position ordering and was the explicit motivation for relocating ActionRisk to core)
   <- ferrochain-<provider>       (direct deps: ferrochain-core + ferrochain-<provider>-sdk)
   <- ferrochain-mcp
   <- ferrochain-standard-tests   (dev-dep)

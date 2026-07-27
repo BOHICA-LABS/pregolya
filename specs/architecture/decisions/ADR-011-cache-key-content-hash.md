@@ -7,11 +7,14 @@ title: "Cache-Key Content-Hash Contract (NE-05)"
 status: accepted
 producer: architect
 timestamp: 2026-07-13T00:00:00Z
+version: "1.0"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17]
 ne_anchors: [NE-05]
 supersedes: []
+changelog:
+  - "1.0 (D17/2026-07-13): Initial ADR — content-hash cache-key contract anchoring NE-05; prohibits description-proxy and partial-content cache keys."
 ---
 
 # ADR-011: Cache-Key Content-Hash Contract

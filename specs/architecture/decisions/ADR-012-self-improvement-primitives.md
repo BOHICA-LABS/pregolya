@@ -8,13 +8,23 @@ status: accepted
 date: 2026-07-15
 producer: architect
 timestamp: 2026-07-15T00:00:00Z
-version: "1.6"
+version: "1.8"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D20]
 supersedes: null
 superseded_by: null
 subsystems_affected: [SS-15]
+changelog:
+  - "1.8 (fix-burst-276/F-P173-505/2026-07-27): Records hygiene — remove bare commit SHA from v1.6 changelog entry; burst-238 alone is the stable citable anchor (TD-VSDD-091). No semantic change."
+  - "1.7 (FIX-BURST-276/F-P173-706/2026-07-27): Forward-amend all three 18-crate roster references to 21-crate: (1) Alternatives Considered Decision 1 table rationale; (2) Decision 4 crate roster count; (3) Rationale closing parenthetical. Add forward-amendment blockquote after Decision 4 crate roster statement. The \"no new crate\" decision holds unchanged under the 21-crate roster; ADR-012 adds no new crate. Roster expanded from 18 to 21 by D21 (+ferrochain-prompts, +ferrochain-vectorstores) and D23 (+ferrochain-tools) — see ARCH-INDEX.md §Canonical Crate Roster."
+  - "1.6 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp per ADR decision-date convention (Gate #28 Rule 5): `timestamp: 2026-07-23T00:00:00Z` → `2026-07-15T00:00:00Z`. Date field already correct at 2026-07-15 (original ADR-012 acceptance date, D20). Timestamp was incorrectly bumped to 2026-07-23 in burst-238."
+  - "1.5 (FIX-BURST-268/OBS-P166-A/2026-07-25): De-pin live-body version pin per TD-VSDD-091: Decision 1 body 'bc-authoring-plan.md v2.10' → 'bc-authoring-plan.md §Gate #27 §Key ownership rules' (stable section anchor; guardrail placement canon resides in Gate #27 Key ownership rules table)."
+  - "1.4 (burst-238/2026-07-23): Stale-handoff sweep — consolidate Error Codes section: remove stale 'PO must mint E-MEM-NNN' obligation and advisory correction blockquote; rewrite as single past-tense statement (E-MEMORY-007 MemoryWriteGuardDenied already minted per F-P72-02 OBS)."
+  - "1.3 (F-P95-01/D18-P84-A/2026-07-17): Reconcile two stale 'budget policy evaluation between super-steps' analogies with BC canon. (1) Primitive B description: 'analogously to how graph::budget evaluates BudgetPolicy between super-steps' → 'analogously to how graph::budget_engine populates RunContext.budget_info at each super-step boundary before task dispatch (BC-2.10.003 PC9) — both are phase-boundary operations, not per-call evaluations'. (2) Decision 3 rationale bullet: 'analogous to budget policy evaluation between super-steps' → 'analogous to graph::budget_engine populating RunContext.budget_info at super-step boundaries before task dispatch — BC-2.10.003 PC9'. Template structure: add date, subsystems_affected, superseded_by, supersedes frontmatter fields; add Rationale, Alternatives Considered, Source / Origin sections."
+  - "1.2 (OBS-P77-C/D18-P77-A/2026-07-15): Rename ADR-012 DI-001 → ADR-012 INV-1 (Decision 3 body). DI-NNN is the reserved domain-invariant namespace (DI-001..DI-014); local ADR invariants must use non-DI identifiers. Adjudication D18-P77-A recorded. PO to propagate rename to BC-2.15.006 (lines ~69, ~150) and capabilities-p1-p2.md (~line 111)."
+  - "1.1 (F-P72-02/ADR-013/2026-07-15): Reconcile Decision 4 to actual downstream state: headline clarified as ADR-012 scope (33→34); gate #25 updated to note final universe = 35 post-ADR-013 (mcp::server MEDIUM); memory::skills cell corrected from \"No new row\" to \"No new criticality row\" distinguishing structural decomposition row from criticality-counted row; Consequences item 2 clarified \"structural module rows\" to distinguish from criticality rows; Error Codes advisory annotated with actually-minted E-MEMORY-007 (namespace MEMORY, number 007)."
+  - "1.0 (D20/2026-07-15): Initial decision: placement of three self-improvement primitives; injection-scanning seam (new MemoryWriteGuard, no BoundaryType amendment); frozen-snapshot semantics; universe 33→34 (+memory::write_guard HIGH row)."
 ---
 
 # ADR-012: Self-Improvement Primitives
@@ -162,7 +172,7 @@ ferrochain-memory's built-in scanner.
 
 | Alternative | Disposition | Rationale |
 |-------------|-------------|-----------|
-| New crate for self-improvement primitives | REJECT | 18-crate roster is frozen (ARCH-INDEX canonical roster, ADR-007). No cross-cutting concern warrants a new crate. |
+| New crate for self-improvement primitives | REJECT | 21-crate roster is current (ARCH-INDEX canonical roster, ADR-007; expanded from 18 to 21 by D21+D23 — see forward-amendment note in Decision 4). No cross-cutting concern warrants a new crate. |
 | All primitive types in ferrochain-core (incl. SkillStore) | REJECT | SkillStore is a storage trait (async, I/O-bound, backed by MemoryStore). Storage traits live with their backing layer (MemoryStore → ferrochain-memory, CheckpointSaver → ferrochain-checkpoint). |
 | All primitive traits/types in ferrochain-memory | REJECT | MemoryWriteGuard is a pure validation trait. Following guardrail placement canon (GuardrailHook → ferrochain-core), pure validation contracts belong in ferrochain-core so non-memory consumers can wire guards without a ferrochain-memory dep. |
 | Definitions in ferrochain-core / routing + enforcement in ferrochain-memory | **ADOPT** | Consistent with ADR-009 Option 3 and GuardrailHook placement canon. |
@@ -260,8 +270,15 @@ adds `mcp::server` MEDIUM (+1 execution row); see ADR-013-mcp-server-module-plac
 (9 CRITICAL + 13 HIGH + 11 MEDIUM + 2 LOW) — `mcp::server` MEDIUM (+1 execution row)
 attributed to ADR-013-mcp-server-module-placement.md.
 
-**Crate roster:** 18 published crates — **unchanged confirmed**. All D20 primitives
+**Crate roster:** 21 published crates — **unchanged by ADR-012**. All D20 primitives
 reside in existing crates (ferrochain-core, ferrochain-memory). No new crate.
+
+> **Forward Amendment (FIX-BURST-276, 2026-07-27):** The roster at ADR-012 acceptance
+> time was 18 published crates. The roster has since expanded to **21 published crates**
+> by D21 (+ferrochain-prompts, +ferrochain-vectorstores) and D23 (+ferrochain-tools). The
+> "no new crate" decision holds under the current 21-crate roster — ADR-012 adds no new
+> crate regardless of the roster count. **See ARCH-INDEX.md §Canonical Crate Roster as
+> the authoritative source of truth.**
 
 ### Alternatives Considered (Decision 4)
 
@@ -279,7 +296,7 @@ D20 promotes self-improvement primitives to framework scope. The ADR-009 Option 
 
 ## Alternatives Considered
 
-See `### Alternatives Considered (Decision N)` subsections in each Decision section above for full per-decision alternative analysis. At the top level: the key rejected paths were (a) placing everything in a new crate (rejected — 18-crate roster frozen), (b) live context mutation (rejected — cache-invalidation), and (c) extending BoundaryType for write-path guards (rejected — conflates ingress and write paths).
+See `### Alternatives Considered (Decision N)` subsections in each Decision section above for full per-decision alternative analysis. At the top level: the key rejected paths were (a) placing everything in a new crate (rejected — 21-crate roster; no cross-cutting concern warrants addition), (b) live context mutation (rejected — cache-invalidation), and (c) extending BoundaryType for write-path guards (rejected — conflates ingress and write paths).
 
 ## Consequences
 
@@ -330,15 +347,3 @@ seam that does not interact with `ProvenanceTag`, `GuardrailHook`, or `BoundaryT
 - **BC-2.15.001–006** — behavioral contracts for SS-15 Long-Horizon Memory; write-guard enforcement and skill-registry loading are contractual obligations specified there.
 - **BC-2.10.003 PC9** — `RunContext.budget_info` population at super-step boundaries (analogy for frozen-snapshot load-at-run-start model).
 - **ADR-011** — cache-key contract that frozen-snapshot semantics must respect.
-
-## Changelog
-
-| Version | Date | Author | References | Summary |
-|---------|------|--------|------------|---------|
-| 1.6 | 2026-07-26 | architect | FIX-BURST-274/timestamp-convention | Restore frozen original-acceptance timestamp per ADR decision-date convention (Gate #28 Rule 5): `timestamp: 2026-07-23T00:00:00Z` → `2026-07-15T00:00:00Z`. Date field already correct at 2026-07-15 (original ADR-012 acceptance date, D20). Timestamp was incorrectly bumped to 2026-07-23 in burst-238/f4819b2. |
-| 1.5 | 2026-07-25 | architect | FIX-BURST-268/OBS-P166-A | De-pin live-body version pin per TD-VSDD-091: Decision 1 body 'bc-authoring-plan.md v2.10' → 'bc-authoring-plan.md §Gate #27 §Key ownership rules' (stable section anchor; guardrail placement canon resides in Gate #27 Key ownership rules table). |
-| 1.4 | 2026-07-23 | architect | burst-238 | Stale-handoff sweep — consolidate Error Codes section: remove stale 'PO must mint E-MEM-NNN' obligation and advisory correction blockquote; rewrite as single past-tense statement (E-MEMORY-007 MemoryWriteGuardDenied already minted per F-P72-02 OBS). |
-| 1.3 | 2026-07-17 | architect | F-P95-01, D18-P84-A | Reconcile two stale 'budget policy evaluation between super-steps' analogies with BC canon. (1) Primitive B description: 'analogously to how graph::budget evaluates BudgetPolicy between super-steps' → 'analogously to how graph::budget_engine populates RunContext.budget_info at each super-step boundary before task dispatch (BC-2.10.003 PC9) — both are phase-boundary operations, not per-call evaluations'. (2) Decision 3 rationale bullet: 'analogous to budget policy evaluation between super-steps' → 'analogous to graph::budget_engine populating RunContext.budget_info at super-step boundaries before task dispatch — BC-2.10.003 PC9'. Template structure: add date, subsystems_affected, superseded_by, supersedes frontmatter fields; add Rationale, Alternatives Considered, Source / Origin sections. |
-| 1.2 | 2026-07-15 | architect | OBS-P77-C, D18-P77-A | Rename ADR-012 DI-001 → ADR-012 INV-1 (Decision 3 body). DI-NNN is the reserved domain-invariant namespace (DI-001..DI-014); local ADR invariants must use non-DI identifiers. Adjudication D18-P77-A recorded. PO to propagate rename to BC-2.15.006 (lines ~69, ~150) and capabilities-p1-p2.md (~line 111). |
-| 1.1 | 2026-07-15 | architect | F-P72-02, ADR-013 | Reconcile Decision 4 to actual downstream state: headline clarified as ADR-012 scope (33→34); gate #25 updated to note final universe = 35 post-ADR-013 (mcp::server MEDIUM); memory::skills cell corrected from "No new row" to "No new criticality row" distinguishing structural decomposition row from criticality-counted row; Consequences item 2 clarified "structural module rows" to distinguish from criticality rows; Error Codes advisory annotated with actually-minted E-MEMORY-007 (namespace MEMORY, number 007). |
-| 1.0 | 2026-07-15 | architect | D20 | Initial decision: placement of three self-improvement primitives; injection-scanning seam (new MemoryWriteGuard, no BoundaryType amendment); frozen-snapshot semantics; universe 33→34 (+memory::write_guard HIGH row). |

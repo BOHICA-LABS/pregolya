@@ -14,6 +14,12 @@ decisions: [D1, D6, D13, D17, D21, D23]
 subsystems_affected: [SS-01, SS-02, SS-03, SS-04, SS-05, SS-06, SS-07, SS-08, SS-09, SS-10, SS-11, SS-12, SS-13, SS-14, SS-15, SS-16, SS-17, SS-18, SS-19, SS-20, SS-21, SS-22, SS-23]
 supersedes: ~
 superseded_by: ~
+version: "1.3"
+changelog:
+  - "1.3 (FIX-BURST-276/2026-07-27): F-B276-01: Fix live-body roster trap — section heading, derivation blockquote, and total line now state 21 published as current count at every reading position. Authoritative label relocated to point at ARCH-INDEX.md §Canonical Crate Roster as source of truth; D7 original 18-crate derivation preserved as historical record under D7 original derivation label. No table rows changed; Forward Amendment blockquote unchanged."
+  - "1.2 (FIX-BURST-265/2026-07-25): F-P163-05: Add forward-amendment note (18-crate table reflects original D7; expanded to 21 by D21+D23; ARCH-INDEX is SoT). Fix Consequences R6: 18→21 crates. Add template compliance sections (Rationale, Alternatives Considered, Source / Origin). Add D21/D23 to decisions list."
+  - "1.1 (burst-81/2026-07-14): Revised: decision changed to standalone crates per ADV-P1D-PASS-3 F-P3-02; modules-not-crates moved to Alternatives Considered. Roster expanded to full 18."
+  - "1.0 (burst-80/2026-07-14): Initial ADR — decision was modules-not-crates."
 ---
 
 # ADR-007: Crate Topology and SDK Split
@@ -85,11 +91,12 @@ level — only the crate boundary creates the required dependency isolation. Mod
 separation via feature flags cannot satisfy BC-2.08.006 TV-001 (Cargo.lock check). See
 Alternatives Considered below.
 
-## Full Crate Roster (18 published crates + xtask)
+## Full Crate Roster (D7 original: 18 published; current: 21 published — ARCH-INDEX.md §Canonical Crate Roster is source of truth)
 
-> **Authoritative.** Derivation: D6 base (9) + D1 (mcp, standard-tests) + D13 (server)
-> + P2-05 (sandbox, memory) + ADR-008 (macros) + D17-Q5 (3 × -sdk) = 18 published.
-> See also ARCH-INDEX.md §Canonical Crate Roster (source of truth).
+> **D7 original derivation (18 published at initial decision):** D6 base (9) + D1 (mcp, standard-tests) + D13 (server)
+> + P2-05 (sandbox, memory) + ADR-008 (macros) + D17-Q5 (3 × -sdk) = 18 published at original decision.
+> **Authoritative current count: 21 published + xtask (D21 +2, D23 +1). Source of truth: ARCH-INDEX.md §Canonical Crate Roster.**
+> (See Forward Amendment below for expanded roster derivation.)
 
 | # | Crate | Origin | Description |
 |---|-------|--------|-------------|
@@ -113,7 +120,7 @@ Alternatives Considered below.
 | 18 | ferrochain-ollama-sdk | D17-Q5 | Ollama standalone wire client |
 
 **Not published:** `xtask` (workspace binary), `ferrochain-community` (post-v1, placeholder only).
-**Total in workspace:** 18 published + xtask.
+**Total at D7 decision:** 18 published + xtask. **Current total: 21 published + xtask** — see Forward Amendment below and ARCH-INDEX.md §Canonical Crate Roster (source of truth).
 
 > **Forward Amendment (FIX-BURST-265, 2026-07-25):** The 18-crate table above reflects the
 > original D7 decision. The roster has since expanded to **21 published crates** by D21
@@ -159,10 +166,3 @@ SDK crate, but module colocation makes this harder to enforce).
 | D21 | Ecosystem-parity scope expansion (2026-07-20): added ferrochain-prompts (#19) and ferrochain-vectorstores (#20) to the workspace roster |
 | D23 | Scope expansion (2026-07-22): added ferrochain-tools (#21), promoted ferrochain-memory to Wave 1 |
 
-## Changelog
-
-| Date | Change | Authority |
-|------|--------|-----------|
-| 2026-07-14 (burst 80) | Initial ADR — decision was modules-not-crates | architect |
-| 2026-07-14 (burst 81) | Revised: decision changed to standalone crates per ADV-P1D-PASS-3 F-P3-02; modules-not-crates moved to Alternatives Considered. Roster expanded to full 18. | architect, ADV-P1D-PASS-3 F-P3-02 |
-| 2026-07-25 (FIX-BURST-265) | F-P163-05: Add forward-amendment note (18-crate table reflects original D7; expanded to 21 by D21+D23; ARCH-INDEX is SoT). Fix Consequences R6: 18→21 crates. Add template compliance sections (Rationale, Alternatives Considered, Source / Origin). Add D21/D23 to decisions list. | architect |

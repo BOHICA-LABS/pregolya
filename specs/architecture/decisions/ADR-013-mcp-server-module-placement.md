@@ -7,10 +7,16 @@ title: "MCP Server Module Placement in ferrochain-mcp (CAP-021)"
 status: accepted
 producer: architect
 timestamp: 2026-07-15T00:00:00Z
-version: "1.3"
+version: "1.4"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D19, D20]
+changelog:
+  - "1.4 (FIX-BURST-276/F-P173-706/2026-07-27): Forward-amend all three 18-crate roster references to 21-crate: (1) Decision crate-roster count; (2) Rationale item 2 roster-freeze statement; (3) Alternatives Considered table reject rationale. Update \"19th crate\" references to \"22nd crate\" (current roster is 21; a new mcp-server crate would be #22). Add forward-amendment blockquote after Decision crate-roster statement. The \"no new crate\" decision holds unchanged; mcp::server remains in ferrochain-mcp. Roster expanded from 18 to 21 by D21+D23 — see ARCH-INDEX.md §Canonical Crate Roster."
+  - "1.3 (FIX-BURST-274/TD-VSDD-091/2026-07-26): De-pin BC version citation in Attribution Note: `BC-2.09.006 v1.1` → `BC-2.09.006` per TD-VSDD-091 BC-pin variant. Completes the intended burst-262 de-pin fix where only the frontmatter version was bumped (1.2→1.3) without applying the body change."
+  - "1.2 (F-P83-03/OBS-P83-B/2026-07-15): Correct BC-2.09.006/007 responsibility swap: BC-2.09.006 = tools/list advertisement (discovery only, exposes tool definitions); BC-2.09.007 = tools/call invocation (accept + dispatch + serialize). Fix Context description and BC Anchors table. Annotate Attribution Note: BC-2.09.006 v1.1 completed. Widen behavioral authority note to name both BC-2.09.006 and BC-2.09.007 as authoritative signature carriers; update inline comment to BC-2.09.006/007."
+  - "1.1 (OBS-P77-A/BC-2.09.006/2026-07-15): Reconcile Module Interface sketch to BC-2.09.006 canonical shapes: rename McpTransport→McpServerTransport; serve(&self, transport, registry)→start(config: McpServerConfig); return type ()→McpServerHandle; Sse { port, path }→Sse { bind_addr: SocketAddr }. Add behavioral authority note (BC wins over ADR sketch)."
+  - "1.0 (D19/D20/CAP-021/F-P72-04/2026-07-15): Initial decision: mcp::server module in ferrochain-mcp (not a new crate); MEDIUM tier; stdio+SSE transports; universe 34→35; corrects false ADR-012 attribution in module-decomposition.md."
 ---
 
 # ADR-013: MCP Server Module Placement in ferrochain-mcp
@@ -51,8 +57,15 @@ Supported transports (from BC-2.09.006/007): stdio (standard MCP transport) and 
 `mcp::client` and `mcp::adapter` classification — server-side inbound dispatch is
 correctness-important but not a Kani VP target at v1).
 
-**Crate roster:** 18 published crates — **unchanged**. `mcp::server` is a new module
-within the existing `ferrochain-mcp` crate; no new crate is introduced.
+**Crate roster:** 21 published crates — **unchanged by ADR-013**. `mcp::server` is a
+new module within the existing `ferrochain-mcp` crate; no new crate is introduced.
+
+> **Forward Amendment (FIX-BURST-276, 2026-07-27):** The roster at ADR-013 acceptance
+> time was 18 published crates. The roster has since expanded to **21 published crates**
+> by D21 (+ferrochain-prompts [#19], +ferrochain-vectorstores [#20]) and D23
+> (+ferrochain-tools [#21]). If a new `ferrochain-mcp-server` crate were added today, it
+> would be crate #22 (not #19). The "no new crate" decision holds under the 21-crate
+> roster. **See ARCH-INDEX.md §Canonical Crate Roster as the authoritative source of truth.**
 
 **Transport support:** stdio + SSE, consistent with BC-2.09.006/007.
 
@@ -64,10 +77,11 @@ within the existing `ferrochain-mcp` crate; no new crate is introduced.
    a shared MCP types crate or duplicating protocol types — neither of which is warranted
    for the v1 scope.
 
-2. **Roster freeze:** ADR-007 establishes the canonical 18-crate roster. Adding a 19th
-   crate for a single server endpoint module would require a roster amendment with
-   broad downstream impact (cargo workspace, CI, publish-all.sh, dependency-graph.md,
-   system-overview.md). The benefit does not justify the churn.
+2. **Roster currency:** ADR-007 establishes the canonical crate roster (currently 21 crates;
+   expanded from 18 by D21+D23). Adding a 22nd crate for a single server endpoint module
+   would require a roster amendment with broad downstream impact (cargo workspace, CI,
+   publish-all.sh, dependency-graph.md, system-overview.md). The benefit does not justify
+   the churn.
 
 3. **Precedent:** `ferrochain-server` (SS-12) hosts both `server::handlers` and
    `server::security` in the same crate. Similarly, `ferrochain-mcp` hosts both
@@ -118,7 +132,7 @@ options; `McpServerHandle` provides a handle for graceful shutdown and health qu
 
 | Alternative | Disposition | Rationale |
 |-------------|-------------|-----------|
-| New `ferrochain-mcp-server` crate (#19) | **REJECT** | 18-crate roster is frozen per ADR-007; adding a 19th crate requires a roster amendment. Server module is cohesive with ferrochain-mcp — no technical reason to split. |
+| New `ferrochain-mcp-server` crate (#22 under current 21-crate roster) | **REJECT** | 21-crate roster is current per ADR-007 (expanded from 18 by D21+D23); adding a 22nd crate requires a roster amendment. Server module is cohesive with ferrochain-mcp — no technical reason to split. |
 | `mcp::server` module in existing `ferrochain-mcp` crate | **ADOPT** | Roster unchanged; MCP protocol cohesion maintained; consistent with ADR-007 topology decisions. |
 
 ---
@@ -154,11 +168,3 @@ in v1.7. BC-2.09.006 attribution correction is deferred to PO (spec-owner of BC 
 
 ---
 
-## Changelog
-
-| Version | Date | Author | References | Summary |
-|---------|------|--------|------------|---------|
-| 1.3 | 2026-07-26 | architect | FIX-BURST-274, TD-VSDD-091 | De-pin BC version citation in Attribution Note: `BC-2.09.006 v1.1` → `BC-2.09.006` per TD-VSDD-091 BC-pin variant. Completes the intended burst-262 de-pin fix where only the frontmatter version was bumped (1.2→1.3) without applying the body change. |
-| 1.2 | 2026-07-15 | architect | F-P83-03, OBS-P83-B | Correct BC-2.09.006/007 responsibility swap: BC-2.09.006 = tools/list advertisement (discovery only, exposes tool definitions); BC-2.09.007 = tools/call invocation (accept + dispatch + serialize). Fix Context description and BC Anchors table. Annotate Attribution Note: BC-2.09.006 v1.1 completed. Widen behavioral authority note to name both BC-2.09.006 and BC-2.09.007 as authoritative signature carriers; update inline comment to BC-2.09.006/007. |
-| 1.1 | 2026-07-15 | architect | OBS-P77-A, BC-2.09.006 | Reconcile Module Interface sketch to BC-2.09.006 canonical shapes: rename McpTransport→McpServerTransport; serve(&self, transport, registry)→start(config: McpServerConfig); return type ()→McpServerHandle; Sse { port, path }→Sse { bind_addr: SocketAddr }. Add behavioral authority note (BC wins over ADR sketch). |
-| 1.0 | 2026-07-15 | architect | D19, D20, CAP-021, F-P72-04 | Initial decision: mcp::server module in ferrochain-mcp (not a new crate); MEDIUM tier; stdio+SSE transports; universe 34→35; corrects false ADR-012 attribution in module-decomposition.md. |

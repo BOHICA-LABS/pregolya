@@ -8,6 +8,7 @@ status: accepted
 date: 2026-07-14
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
+version: "rev-5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17, D23]

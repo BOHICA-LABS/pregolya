@@ -2021,3 +2021,39 @@ All 9 validators PASS. Headline observation: existence-checking validators pass 
 
 **Convergence dim-5:** Counter 0/3 unchanged. Pass 174 total. Next: fix-burst 276 (process-gap gates first), then P1D-174.
 **Convergence dim-7:** Trajectory tail →19→20→130. Lessons L-065..L-069 minted. D-35 added.
+
+---
+
+## Fix-Burst 276 (content wave 3) — P1D-173 Remediation COMPLETE (2026-07-27)
+
+**Type:** Fix burst — NOT an adversary pass. Does NOT advance the 3-CLEAN streak.
+**Streak:** 0/3 (unchanged — fix bursts never advance BC-5.39.001)
+**Trajectory tail:** →19→20→130 (unchanged; next adversary pass P1D-174 will extend the trajectory)
+**Convergence-integrity rule (D-32):** three consecutive CLEAN(strict) passes required by BC-5.39.001 must each be FULL-PERIMETER passes; sub-passes and fix bursts may NOT advance the streak.
+
+**Findings closed this wave:** 1 CRIT + 33 HIGH + 5 MED
+**All 4 P1D-173 CRIT findings now closed:** F-P173-601 (content-2), F-P173-211 (content-1), F-P173-301/402 (content-1), F-P173-104 (this wave)
+
+**Notable closures:**
+- F-P173-104 CRIT: bounded-contexts.md §Context Dependency Order forbidden dep removed; ADR-020 Decision 1 + D-24 inline defense added
+- VP-001 harness: non-existent `kani::any_permutation` replaced; `TaskId` corrected from `u64` to string-sort model
+- VP-009 / BC-2.21.003 Invariant 3: guard extended to `!norm.is_finite()`; EC-006 + TV-006 overflow vector added (TVs 674→675)
+- coverage-matrix canonicality: 52/90 → 0/90 non-canonical (all 6 CHECK4 targets CLEAN)
+- E-PROV-011 minted: `FallbackChainEmpty` (error codes 108→109); D-37 applied
+- D-37: `E-VS-001` renamed `ZeroNormEmbedding` → `DegenerateNormEmbedding`; message widened; census unchanged at 109
+- ADR governance gap: 7 ADRs governed (ADR-002/003/004/011 + ADR-009/012/013 migrated to frontmatter changelog)
+- 3 blocking-validator regressions from committed prior bursts resolved
+
+**Validator status (post-commit):**
+records-lint: PASS=5 WARN=0 FAIL=0
+verify-form-a-changelog-direction: PASS=198 WARN=4 FAIL=0
+verify-arch-anchor-resolution: PASS=129 WARN=0 FAIL=0
+verify-no-version-pins: PASS=198 WARN=0 FAIL=0
+verify-enum-variant-casing: PASS=198 WARN=0 FAIL=0
+verify-adr-decision-refs: PASS=308 WARN=0 FAIL=0
+verify-module-canonicality: PASS=6 of 6 targets FAIL=0 (0 non-canonical cells)
+verify-changelog-date-monotonicity: PASS=131 WARN=75 FAIL=0
+verify-sha-currency: PASS (clean after commit)
+
+**Convergence dim-5:** Counter 0/3 (unchanged — fix burst). Next: adversary P1D-174 FULL-PERIMETER pass.
+**Convergence dim-7:** Trajectory tail →19→20→130 (unchanged). Lessons L-082..L-086 minted. D-37 added.

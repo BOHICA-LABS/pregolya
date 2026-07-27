@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "2.7"
+version: "2.8"
 status: active
 producer: product-owner
-timestamp: 2026-07-24T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -14,6 +14,7 @@ input-hash: "3719755"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "2.8 (fix-burst-276/F-P173-505/2026-07-27): D-28 banner added to body ## Changelog section, declaring Form A (frontmatter changelog:) authoritative; body table preserved as historical record."
   - "2.7 (F-P152-01/F-P152-03/burst-253/2026-07-24): BC-2.10.005 TV count 5→6 (+TV-006 v1.2 add). BC-2.07.002 GTV count 9→11 (+GTV-010/011 grapheme-cluster discriminators, Python-verified). Group 4 added to §GTV. Grand total 671→674 (663 canonical + 11 GTV)."
   - "2.6 (F-P148-03/F-P148-05/burst-249/2026-07-24): Red Gate Vector Summary — de-pin ADR anchor labels: BC-2.18.004 'ADR-015 Security Invariant 1' → 'ADR-015 Decision 3 §Security Invariant 1'; BC-2.18.005 'ADR-015 Security Invariant 2' → 'ADR-015 Decision 2 §Security Invariant 2'; BC-2.19.005 'ADR-016 Security Invariant' → 'ADR-016 Decision 3 §Security Invariant'; BC-2.21.003 'ADR-014 v1.1 Hardening' → 'ADR-014 Decision 2 §Hardening note' (TD-VSDD-060 sibling sweep). Usage Notes §2: splitter version updated langchain-text-splitters==0.3.8 → langchain-text-splitters==1.1.2 (in-tree at langchain==1.3.13 SHA 42f8f79). Body changelog synced: backfill v2.5 row (was frontmatter-only)."
   - "2.5 (F-P142-03, burst-242, 2026-07-23): BC-2.06.005 Notes column updated — 'payload on Command::Resume' → 'payload on Command(resume=…)' per BC-2.05.004 struct kwarg authority."
@@ -316,6 +317,9 @@ delivery; no integration vectors exist at Phase 1a by design.
 ---
 
 ## Changelog
+
+> **Historical record — superseded by frontmatter `changelog:` (Form A).**
+> The frontmatter `changelog:` YAML list above is the **authoritative** changelog for this file.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|

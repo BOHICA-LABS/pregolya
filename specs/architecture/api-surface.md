@@ -2,11 +2,13 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.13"
+version: "1.15"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
 changelog:
+  - "1.15 (FIX-BURST-276-TD091/2026-07-27): TD-VSDD-091 anti-volatile-pin repair — §Error Type source field inline comment: replace live-body sibling-artifact version pin with stable section anchor. ADR-010 §Decision (the section containing the FerrochainError struct definition and the Arc-not-Box source field rationale) replaces a specific version number. Sibling-sweep of this file live body: no additional version pins found."
+  - "1.14 (FIX-BURST-276-WAVE-B3/F-P173-201+203+204+205+206+207/2026-07-27): Six HIGH findings from P1D-173. F-P173-201 — move BudgetConfig (SS-10/core::budget), CompactionTrigger (SS-10/core::budget), and ProvenanceTag (SS-11/core::guardrail) from §ferrochain-graph Public Types to §ferrochain-core Public Types; all three are ferrochain-core types — cataloguing them under graph implied a circular core→graph dependency (D-24/BudgetPolicy/ADR-009, GuardrailHook/ADR-014 Decision 6, MemoryWriteGuard/ADR-012 relocation precedents confirm pattern; ProvenanceTag must be in ferrochain-core because GuardrailHook::evaluate in core takes it as a parameter); inclusion criterion note updated. F-P173-203 — remove standalone §ferrochain-graph Public Types row for CompactionEvent; CompactionEvent is a StreamEvent enum variant, not a top-level type; StreamEvent row already reads '15 variants ... CompactionEvent'; variant count 15 confirmed intact after deletion. F-P173-204 — PathGuard row in §Public Traits and Types (ferrochain-tools): E-TOOLS-001 → E-SBXD-001 on workspace escape; BC-2.13.004 PC4 raises E-SBXD-001 at the sandbox layer (module-decomposition.md sandbox::path_guard row confirms); E-TOOLS-001 is the tool-layer translation per interface-definitions.md F-P173-601; crate attribution ferrochain-sandbox/SS-13 and VP-003 anchor unchanged. F-P173-205 — add five missing D21 ferrochain-core traits to §Public Rust Traits (ferrochain-core): Retriever (SS-20/core::retriever, ADR-014 Decision 1, BC-2.20.001-003), Embeddings (SS-22/core::embeddings, ADR-017 Decision 2, BC-2.22.001-003), LcSerializable (SS-19/core::serializable, ADR-016 Decision 1+2, BC-2.19.001-006), MemoryWriteGuard (SS-15/core::write_guard, ADR-012 D20, BC-2.15.005), ToolCallDialect (SS-08/ferrochain-core, ADR-018, BC-2.08.013; interface-definitions.md §ToolCallDialect source confirms ferrochain-core placement); add SkillStore (SS-15/memory::skills, ADR-012 Decision 1, BC-2.15.004) to §Public Traits (ferrochain-memory); add §Public Traits (ferrochain-graph) with PreToolCallHook (SS-05/graph::hitl, ADR-018 Decision 1, BC-2.05.007); add §Public Traits (ferrochain-vectorstores) with VectorStore (SS-21, ADR-014 Decision 2, BC-2.21.001-004) and VectorStoreFactory (SS-21, ADR-014 Decision 2, BC-2.21.001); add explicit no-public-traits notes for ferrochain-prompts, ferrochain-mcp, ferrochain-sandbox, ferrochain-splitters, ferrochain-macros, SDK crates, provider impl crates, and ferrochain-standard-tests. TD-VSDD-060 sibling sweep: other architecture files do not enumerate per-crate trait sections — no further changes required outside this file. F-P173-206 — add 4 missing Cargo Feature Flags (total 6→10): sandbox-process (off; security: NOT enforcing — no filesystem/network/memory isolation; accessible ONLY via Sandbox::unsafe_process_no_isolation(); BC-2.13.001/BC-2.13.002), mcp (off; BC-2.09.001), budget (on; BC-2.10.001), guardrail (on; BC-2.11.001). Derivation: cross-checked against interface-definitions.md §Cargo Feature Flags (authoritative 10-flag list: checkpoint-sqlite, checkpoint-memory, checkpoint-postgres, sandbox-wasm, sandbox-container, sandbox-process, server, mcp, budget, guardrail); total confirmed 10. F-P173-207 — apply F-P170-03 crate qualification to sibling types PreToolDecision and ToolCallPreview in §Public Traits and Types (ferrochain-tools): both defined in ferrochain-graph::hitl per ADR-018 Decision 1; D-24 relocated ActionRisk to ferrochain-core but the three HITL types (PreToolCallHook/PreToolDecision/ToolCallPreview) remained in graph::hitl."
   - "1.13 (FIX-BURST-276-WAVE-B1/F-P173-202+210+619+214/2026-07-27): F-P173-202 (HIGH) — add missing `message` and `source` fields to §Error Type `FerrochainError` struct display: `message: String` (Human-readable; MUST NOT contain credentials per DI-010) and `source: Option<Arc<dyn std::error::Error + Send + Sync>>` (causal error chain; MUST NOT be exposed in HTTP responses; `Arc` not `Box` — Arc preserves Clone per F-P173-211 adjudication in ADR-010 v1.12). F-P173-210/619 — add `#[non_exhaustive]` attribute to FerrochainError in §Error Type; all sibling public API surface types carry `#[non_exhaustive]` per CLAUDE.md Code Conventions. F-P173-214 (LOW) — fix stale `17→18` transition delta: `gate count 17→18` → `gate count 18` (transition completed in v1.7/D23; delta notation no longer meaningful)."
   - "1.12 (FIX-BURST-273/F-P171a-19/2026-07-25): Adjudicate `ActionRisk` row inclusion criterion in §ferrochain-core Public Types. `ActionRisk` has a row because: (a) it is consumed cross-crate by ferrochain-tools as a standalone API input (`ToolConfig::override_risk(risk: ActionRisk)`) and must be addressable without a ferrochain-graph dependency; (b) no other ferrochain-core type currently meets criterion (a) — BoundaryType/IngressContent/GuardrailResult are only consumed through `GuardrailHook::evaluate` trait method signatures, not as standalone parameters in cross-crate public APIs. Inclusion criterion documented in §ferrochain-core Public Types note."
   - "1.11 (FIX-BURST-272/F-P170-03+04+06/2026-07-25): Three api-surface fixes in one burst. (1) F-P170-03 — Remove `PreToolCallHook` from §Public Rust Traits (ferrochain-core); ADR-018 Decision 1 places it in `ferrochain-graph::hitl`, not core; putting it in core was exactly the 'orphan definitions module' alternative ADR-018 rejected by name. Fix ferrochain-tools section note: 'trait is defined in core, tools crate provides impls' → 'trait defined in ferrochain-graph::hitl per ADR-018 Decision 1'. (2) F-P170-04 — Correct PathGuard SS-23 → SS-13 with amended BC anchor; PathGuard is owned by ferrochain-sandbox/SS-13/BC-2.13.004 and is the CRITICAL path-guard module with VP-003 Kani P0. (3) F-P170-06 adjudication (option b) — ActionRisk relocates to ferrochain-core (core::action_risk) per dependency-inversion precedent; ferrochain-tools needs ActionRisk at compile time without depending on ferrochain-graph. Move ActionRisk row from ferrochain-tools section to ferrochain-core Public Types section; SS-23 → SS-05 (HITL risk tiering); add BC-2.05.006 anchor."
@@ -50,6 +52,11 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 | `BudgetPolicy` | ferrochain-core | SS-10 | BC-2.10.001 |
 | `Tool` | ferrochain-core | SS-08 | BC-2.08.010 |
 | `CompactionPolicy` | ferrochain-core | SS-10 | BC-2.10.005, BC-2.10.006 |
+| `Retriever` | ferrochain-core | SS-20 | BC-2.20.001–003 |
+| `Embeddings` | ferrochain-core | SS-22 | BC-2.22.001–003 |
+| `LcSerializable` | ferrochain-core | SS-19 | BC-2.19.001–006 |
+| `MemoryWriteGuard` | ferrochain-core | SS-15 | BC-2.15.005 |
+| `ToolCallDialect` | ferrochain-core | SS-08 | BC-2.08.013 |
 
 ## ferrochain-core Public Types
 
@@ -57,24 +64,35 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 |------|------|----|-----------|
 | `RunnableConfig` | Per-invocation config: `recursion_limit` (default 25), `thread_id`, `budget_config: Option<BudgetConfig>` (per-run budget override — `None` inherits `GraphConfig::budget_config`; `Some` overrides for that run; used by `BudgetResume::Extend`), `context_mutations: Option<ContextMutationConfig>` | SS-01 | BC-2.01.003 PC5, BC-2.10.003 PC7/TV-004, BC-2.10.004 PC6, BC-2.15.006 PC1 |
 | `ActionRisk` | Risk classification enum for tool dispatch; 4 variants: `ReadOnly`/`Low`/`Medium`/`High` (`#[non_exhaustive]`); relocated from `ferrochain-graph::hitl` to `ferrochain-core` (`core::action_risk`) per dependency-inversion precedent — `ferrochain-tools` consumes it at compile time without a `ferrochain-graph` dep (F-P170-06/ADR-020 adjudication) | SS-05 | BC-2.05.006, BC-2.23.005 |
+| `BudgetConfig` | Budget ceiling + on_ceiling policy; embedded in `RunnableConfig.budget_config` (per-run override) and `GraphConfig.budget_config` (graph-level default); defined in `core::budget` (ferrochain-core — ADR-009 Option 3) | SS-10 | BC-2.10.001 |
+| `CompactionTrigger` | `Disabled \| OnWatermark{fraction: f64} \| OnMessageCount{count: usize} \| OnTokenCount{tokens: u64}`; field in `BudgetConfig.compaction_trigger`; defined in `core::budget` (ferrochain-core — ADR-019 Decision 1) | SS-10 | BC-2.10.005 |
+| `ProvenanceTag` | Content source tag attached at every ingress boundary; parameter to `GuardrailHook::evaluate` in ferrochain-core; defined in ferrochain-core (`core::guardrail` area — cannot be in ferrochain-graph without creating a circular core→graph dependency) | SS-11 | BC-2.11.001 |
 
-> **Public Types inclusion criterion (F-P171a-19 adjudication):** A type earns a row in
-> §ferrochain-core Public Types when it is consumed by a downstream crate as a
+> **Public Types inclusion criterion (F-P171a-19 adjudication, extended F-P173-201):** A type earns a row in
+> §ferrochain-core Public Types when (a) it is consumed by a downstream crate as a
 > standalone API input or output independent of any trait method signature — i.e., the
 > downstream crate passes it directly as a function argument or struct field without
-> going through a trait. `ActionRisk` meets this criterion because `ferrochain-tools`
-> passes it directly to `ToolConfig::override_risk(risk: ActionRisk)`. Types such as
-> `GuardrailResult`, `IngressContent`, `BoundaryType`, `WriteGuardDecision`,
-> `MemoryWriteRequest`, `PolicyDecision`, and `OnCeiling` do not currently meet this
-> criterion — they appear in trait method signatures (`GuardrailHook::evaluate`,
-> `BudgetPolicy::evaluate`, etc.) but are not standalone cross-crate function inputs.
-> When a new type becomes a standalone cross-crate API input, add it here.
+> going through a trait; OR (b) it is defined in ferrochain-core but was previously
+> misattributed to ferrochain-graph, implying a circular core→graph dependency.
+> `ActionRisk` meets criterion (a): `ferrochain-tools` passes it directly to
+> `ToolConfig::override_risk(risk: ActionRisk)`. `BudgetConfig` meets criterion (a):
+> embedded as `RunnableConfig.budget_config` (struct field consumed cross-crate).
+> `CompactionTrigger` meets criterion (a): embedded in `BudgetConfig.compaction_trigger`.
+> `ProvenanceTag` meets criterion (b): it is a ferrochain-core type (parameter to
+> `GuardrailHook::evaluate`; GuardrailHook is defined in ferrochain-core) — cataloguing
+> it under ferrochain-graph would imply core depends on graph, which is forbidden.
+> Types such as `GuardrailResult`, `IngressContent`, `BoundaryType`, `WriteGuardDecision`,
+> `MemoryWriteRequest`, `PolicyDecision`, and `OnCeiling` do not currently meet either
+> criterion — they appear only in trait method signatures and are not standalone
+> cross-crate function inputs or misattributed graph types.
+> When a new type meets criterion (a) or (b), add it here.
 
 ## Public Traits (ferrochain-memory)
 
 | Trait | Crate | SS | BC Anchors |
 |-------|-------|----|-----------|
 | `MemoryStore` | ferrochain-memory | SS-15 | BC-2.15.001–003 |
+| `SkillStore` | ferrochain-memory | SS-15 | BC-2.15.004 |
 
 ## Public Traits (ferrochain-checkpoint)
 
@@ -90,6 +108,50 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 | `RateLimitStore` | ferrochain-server | SS-12 | BC-2.12.006 |
 | `RunStore` | ferrochain-server | SS-12 | BC-2.12.006 |
 
+## Public Traits (ferrochain-graph)
+
+| Trait | Crate | SS | BC Anchors |
+|-------|-------|----|-----------|
+| `PreToolCallHook` | ferrochain-graph (`graph::hitl`, ADR-018 Decision 1) | SS-05 | BC-2.05.007 |
+
+> `PreToolCallHook` is defined in `ferrochain-graph::hitl` per ADR-018 Decision 1.
+> The alternative of placing it in ferrochain-core was explicitly rejected by ADR-018
+> (the "orphan definitions module" option). `ferrochain-tools` interacts with it via
+> `ActionRisk` risk-tier defaults (sourced from `ferrochain-core::ActionRisk`) without
+> taking a compile-time ferrochain-graph dependency (ADR-020 Decision 3).
+
+## Public Traits (ferrochain-vectorstores)
+
+| Trait | Crate | SS | BC Anchors |
+|-------|-------|----|-----------|
+| `VectorStore` | ferrochain-vectorstores (`vectorstores::store`) | SS-21 | BC-2.21.001–004 |
+| `VectorStoreFactory` | ferrochain-vectorstores (`vectorstores::store`; `Sized`-bounded for `Arc<dyn VectorStore>` dyn-safety) | SS-21 | BC-2.21.001 |
+
+> `VectorStore` and `VectorStoreFactory` are both defined in `ferrochain-vectorstores`.
+> `VectorStoreFactory: VectorStore + Sized` — the `Sized` bound preserves `Arc<dyn VectorStore>`
+> object-safety (ADR-014 Decision 2). `Retriever` (the trait) is defined in ferrochain-core;
+> `VectorStoreRetriever<'_>` is the adapter struct returned by `VectorStore::as_retriever()`.
+
+## Crates with No Public Traits
+
+The following crates define no public Rust traits. Each is listed with its reason to make
+omissions falsifiable rather than silent.
+
+| Crate | Reason |
+|-------|--------|
+| `ferrochain-prompts` | Concrete types only (`PromptTemplate`, `ChatPromptTemplate`, `FewShotPromptTemplate`, `MessagesPlaceholder`, `SlotTrustPolicy` enum, `TrustLevel` enum); no trait definitions |
+| `ferrochain-mcp` | Struct-and-impl surface only (`MultiServerMcpClient`, tool discovery, `ToolInvocation` routing); no public trait definitions; consumes `Tool` from ferrochain-core |
+| `ferrochain-sandbox` | `SandboxPolicy` and `ProcessBackend` are structs/enums, not public trait definitions; `WorkspaceFs` facade is a struct; `sandbox::path_guard` exposes free functions (`canonicalize_beneath_root`, `canonicalize_beneath_root_pure`) |
+| `ferrochain-splitters` | Free-function splitter implementations; no public trait definitions |
+| `ferrochain-macros` | Proc-macro crate (`#[tool]`, `#[entrypoint]`, `#[task]`); proc-macros are attribute macros, not Rust trait definitions |
+| `ferrochain-openai` | Implements `BaseChatModel` and `Embeddings` from ferrochain-core; defines no new public traits |
+| `ferrochain-anthropic` | Implements `BaseChatModel` from ferrochain-core; defines no new public traits |
+| `ferrochain-ollama` | Implements `BaseChatModel` and `Embeddings` from ferrochain-core; defines no new public traits |
+| `ferrochain-openai-sdk` | Wire client; no ferrochain-core dependency; no public trait definitions |
+| `ferrochain-anthropic-sdk` | Wire client; no ferrochain-core dependency; no public trait definitions |
+| `ferrochain-ollama-sdk` | Wire client; no ferrochain-core dependency; no public trait definitions |
+| `ferrochain-standard-tests` | Shared conformance test suite and `eval::judge` module; test-only crate; no public trait definitions shipped to consumers |
+
 ## ferrochain-graph Public Types
 
 | Type | Role | SS | BC Anchors |
@@ -97,20 +159,16 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 | `StateGraph<State>` | Graph builder: nodes, edges, channels | SS-02 | BC-2.02.001–006 |
 | `GraphConfig` | Execution config: checkpoint_saver, interrupt_before/after | SS-03 | BC-2.03.001 |
 | `Command` | HITL resume carrier: `Command(resume=value)` | SS-05 | BC-2.05.004 |
-| `StreamEvent` | Streaming event enum; run_id + parent_ids; 15 variants (D23 adds ToolApprovalRequest/Resolved/CompactionEvent) | SS-06 | BC-2.06.001–006 |
-| `BudgetConfig` | Budget ceiling + on_ceiling policy | SS-10 | BC-2.10.001 |
-| `CompactionTrigger` | Disabled \| OnWatermark \| OnMessageCount \| OnTokenCount | SS-10 | BC-2.10.005 |
-| `CompactionEvent` | Streaming notification emitted after compaction completes | SS-10 | BC-2.10.006, BC-2.06.006 |
-| `ProvenanceTag` | Content source tag; attached at every ingress | SS-11 | BC-2.11.001 |
+| `StreamEvent` | Streaming event enum; run_id + parent_ids; 15 variants (D23 adds ToolApprovalRequest/Resolved/CompactionEvent as variants 13–15) | SS-06 | BC-2.06.001–006 |
 
 ## Public Traits and Types (ferrochain-tools)
 
 | Symbol | Kind | SS | BC Anchors |
 |--------|------|----|-----------|
 | `PreToolCallHook` | trait (defined in `ferrochain-graph::hitl` per ADR-018 Decision 1; ferrochain-tools registers tools that interact with this hook via `ActionRisk` risk-tier defaults — ADR-020 Decision 3) | SS-05 | BC-2.05.007 |
-| `PreToolDecision` | enum (4 variants: Approve/Deny/Edit/PendingHumanApproval) | SS-05 | BC-2.05.007 |
-| `ToolCallPreview` | struct (tool_name, tool_args, action_risk: Option\<ActionRisk\>) | SS-05 | BC-2.05.007 |
-| `PathGuard` | struct (workspace-root-confined path validator; E-TOOLS-001 on escape) — owned by ferrochain-sandbox/SS-13 (VP-003 Kani P0); re-exported / consumed by SS-23 tools | SS-13 | BC-2.13.004 |
+| `PreToolDecision` | enum (4 variants: Approve/Deny/Edit/PendingHumanApproval) (defined in `ferrochain-graph::hitl` per ADR-018 Decision 1; D-24 relocated `ActionRisk` to ferrochain-core but these three HITL types remained in graph::hitl) | SS-05 | BC-2.05.007 |
+| `ToolCallPreview` | struct (tool_name, tool_args, action_risk: Option\<ActionRisk\>) (defined in `ferrochain-graph::hitl` per ADR-018 Decision 1) | SS-05 | BC-2.05.007 |
+| `PathGuard` | struct (workspace-root-confined path validator; `E-SBXD-001` on workspace escape at sandbox layer — entry points: `canonicalize_beneath_root` / `canonicalize_beneath_root_pure`; tool layer translates to `E-TOOLS-001` per interface-definitions.md §First-Party Tools error layer split) — owned by ferrochain-sandbox/SS-13 (VP-003 Kani P0); consumed by SS-23 tools | SS-13 | BC-2.13.004 |
 | `ToolConfig` | shared per-tool framework configuration; `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>` builder-consuming validator (`#[non_exhaustive]`); ADR-020 Decision 3 | SS-23 | BC-2.23.005 |
 | `ReadFileTool` | first-party tool | SS-23 | BC-2.23.001 |
 | `WriteFileTool` | first-party tool (High ActionRisk) | SS-23 | BC-2.23.002 |
@@ -169,11 +227,15 @@ cross-thread aggregate query for schedule-fired runs only.
 | `checkpoint-postgres` | NO | PostgreSQL backend (stretch) | — |
 | `sandbox-wasm` | YES | WASM execution backend (enforcing default) | BC-2.13.001 |
 | `sandbox-container` | NO | Container execution backend | BC-2.13.001 |
+| `sandbox-process` | NO | **Security-annotated.** Process backend — NOT enforcing (no filesystem/network/memory isolation); compiles `ProcessBackend` but does NOT make it a default; accessible ONLY via `Sandbox::unsafe_process_no_isolation()`; `SandboxBackend::default()` returns `Err(E-SBXD-003)` when no enforcing backend is compiled (BC-2.13.001 PC3/PC4) | BC-2.13.001, BC-2.13.002 |
 | `server` | NO | Include ferrochain-server in binary | BC-2.12.001 |
+| `mcp` | NO | ferrochain-mcp adapter | BC-2.09.001 |
+| `budget` | YES | Budget governance policy primitive | BC-2.10.001 |
+| `guardrail` | YES | Content provenance + guardrail hook | BC-2.11.001 |
 
 ## Error Type
 
-`#[non_exhaustive] FerrochainError { component: Component, category: Category, retry_hint: RetryHint, code: &'static str, message: String /* Human-readable; MUST NOT contain credentials */, source: Option<Arc<dyn std::error::Error + Send + Sync>> /* Causal chain; MUST NOT appear in HTTP responses (DI-010); Arc not Box — Arc preserves Clone (F-P173-211/ADR-010 v1.12) */ }`
+`#[non_exhaustive] FerrochainError { component: Component, category: Category, retry_hint: RetryHint, code: &'static str, message: String /* Human-readable; MUST NOT contain credentials */, source: Option<Arc<dyn std::error::Error + Send + Sync>> /* Causal chain; MUST NOT appear in HTTP responses (DI-010); Arc not Box — Arc preserves Clone (F-P173-211 adjudication, ADR-010 §Decision) */ }`
 
 Authoritative list lives in `error-taxonomy.md` §Components; enum reproduced here for the FerrochainError type definition:
 `Component` = CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS (17 components as of D23; `#[non_exhaustive]` gate count 18: 17 named + `Custom`).

@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.11"
+version: "2.13"
 status: active
 producer: architect
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -72,19 +72,19 @@ Thirteen VPs committed before v1.0 release — VP-001..005 (original five) plus 
 
 | VP | BC Anchor | DI | Module | Tool | Phase | Priority |
 |----|-----------|-----|--------|------|-------|---------|
-| VP-001 | BC-2.03.001 | DI-001 | ferrochain-graph / bsp-engine | Kani | 6 | P0 |
-| VP-002 | BC-2.04.006 | DI-005 | ferrochain-checkpoint / session-index | Kani | 6 | P0 |
-| VP-003 | BC-2.13.004 | DI-007 | ferrochain-sandbox / path-guard | Kani | 6 | P0 |
-| VP-004 | BC-2.09.004 | DI-014 | ferrochain-mcp / mcp-adapter | integration | 3 | P1 |
-| VP-005 | BC-2.09.005 | DI-014 | ferrochain-mcp / mcp-client | integration | 3 | P1 |
-| VP-006 | BC-2.18.004 | DI-014 | ferrochain-prompts / injection_guard | Kani | 6 | P1 |
-| VP-007 | BC-2.19.001 | DI-008 | ferrochain-core / serializable | proptest | 3 | P1 |
-| VP-008 | BC-2.22.001 | DI-014 | ferrochain-core / embeddings | proptest | 3 | P1 |
-| VP-009 | BC-2.21.003 | DI-014 | ferrochain-vectorstores / vectorstores-similarity | Kani | 6 | P0 |
-| VP-010 | BC-2.19.005 | DI-014 | ferrochain-core / serializable-reviver | Kani | 6 | P0 |
-| VP-011 | BC-2.05.007 | DI-014 | ferrochain-graph / hitl | Kani | 6 | P0 |
-| VP-012 | BC-2.10.005 | DI-014 | ferrochain-core / core-budget | Kani | 6 | P1 |
-| VP-013 | BC-2.23.005 | DI-014 | ferrochain-tools / tools-shell | Kani | 6 | P1 |
+| VP-001 | BC-2.03.001 | DI-001 | `graph::bsp_engine` | Kani | 6 | P0 |
+| VP-002 | BC-2.04.006 | DI-005 | `checkpoint::session_index` | Kani | 6 | P0 |
+| VP-003 | BC-2.13.004 | DI-007 | `sandbox::path_guard` | Kani | 6 | P0 |
+| VP-004 | BC-2.09.004 | DI-014 | `mcp::adapter` | integration | 3 | P1 |
+| VP-005 | BC-2.09.005 | DI-014 | `mcp::client` | integration | 3 | P1 |
+| VP-006 | BC-2.18.004 | DI-014 | `prompts::injection_guard` | Kani | 6 | P1 |
+| VP-007 | BC-2.19.001 | DI-008 | `core::serializable` | proptest | 3 | P1 |
+| VP-008 | BC-2.22.001 | DI-014 | `core::embeddings` | proptest | 3 | P1 |
+| VP-009 | BC-2.21.003 | DI-014 | `vectorstores::similarity` | Kani | 6 | P0 |
+| VP-010 | BC-2.19.005 | DI-014 | `core::serializable` | Kani | 6 | P0 |
+| VP-011 | BC-2.05.007 | DI-014 | `graph::hitl` | Kani | 6 | P0 |
+| VP-012 | BC-2.10.005 | DI-014 | `core::budget` | Kani | 6 | P1 |
+| VP-013 | BC-2.23.005 | DI-014 | `tools::shell` | Kani | 6 | P1 |
 
 **Total: 13 VPs — 6 P0 / 7 P1 | Tool breakdown: Kani ×9, proptest ×2, integration ×2**
 
@@ -92,7 +92,7 @@ Thirteen VPs committed before v1.0 release — VP-001..005 (original five) plus 
 
 ### P0: Must Prove (CRITICAL / security / durability)
 
-**VP-001 — BSP Super-Step Determinism** (ferrochain-graph / bsp-engine)
+**VP-001 — BSP Super-Step Determinism** (`graph::bsp_engine`)
 
 Property: For any fixed set of super-step task outputs, the reduced channel state is
 identical regardless of the order in which tasks complete.
@@ -126,7 +126,7 @@ Bounded by n ≤ 4 to keep state-space finite. Key verification target per NE-17
 
 ---
 
-**VP-002 — Session Triple-Address Uniqueness** (ferrochain-checkpoint / session-index)
+**VP-002 — Session Triple-Address Uniqueness** (`checkpoint::session_index`)
 
 Property: No two distinct sessions (thread_id, checkpoint_ns, checkpoint_id) map to the
 same storage row. The triple (thread_id, checkpoint_ns, checkpoint_id) is a composite key.
@@ -149,7 +149,7 @@ function over its fields. No I/O in the harness.
 
 ---
 
-**VP-003 — Workspace Path Confinement** (ferrochain-sandbox / path-guard)
+**VP-003 — Workspace Path Confinement** (`sandbox::path_guard`)
 
 Property: For any symbolic path under a workspace root, `canonicalize_beneath_root`
 either returns a path within the root or returns `Err(FerrochainError { code: "E-SBXD-001", .. })`.
@@ -186,7 +186,7 @@ components). Bounded: base ≤ 3 components; path ≤ 6 components per VP-003.md
 
 ---
 
-**VP-009 — Zero-Norm Cosine Guard** (ferrochain-vectorstores / vectorstores-similarity) `red_gate: true`
+**VP-009 — Zero-Norm Cosine Guard** (`vectorstores::similarity`) `red_gate: true`
 
 Property: For any symbolic pair of finite `f32` vectors where either L2 norm is `0.0`
 (IEEE-754 exact equality), `cosine_similarity` returns `Err(E-VS-001)` and never
@@ -194,14 +194,19 @@ produces `Ok(f32::NAN)`. Division is unreachable when either norm is zero.
 
 Formal statement:
 ```
-∀ a: &[f32], b: &[f32], 1 ≤ |a| = |b| ≤ 8, all elements finite:
+∀ a: &[f32], b: &[f32], 1 ≤ |a| = |b| ≤ 8, all elements finite (is_finite()):
   let norm_a = sqrt(Σ aᵢ²);  let norm_b = sqrt(Σ bᵢ²)
-  (norm_a == 0.0 ∨ norm_b == 0.0) →
+  (norm_a == 0.0 ∨ !norm_a.is_finite() ∨ norm_b == 0.0 ∨ !norm_b.is_finite()) →
     cosine_similarity(a, b) == Err(E-VS-001)
     ∧ cosine_similarity(a, b) ≠ Ok(NaN)
 ```
 
-Kani harness sketch:
+Overflow note (F-P173-503): finite elements can produce norm = +Inf via Σ xᵢ² overflow;
+`sqrt(+Inf) = +Inf`; `Inf/Inf = NaN`. Guard must check `!norm.is_finite()` in addition to
+`norm == 0.0`. BC-2.21.003 Invariant 3 BC amendment required (routed to product-owner).
+See VP-009.md §Property Statement for full specification.
+
+Kani harness sketch (see VP-009.md §Proof Harness Skeleton for complete three-harness set):
 ```rust
 #[kani::proof]
 #[kani::unwind(9)]
@@ -213,11 +218,12 @@ fn zero_norm_guard_fail_closed() {
     let norm_a = a.iter().map(|x| x * x).sum::<f32>().sqrt();
     let norm_b = b.iter().map(|x| x * x).sum::<f32>().sqrt();
     let result = cosine_similarity(&a, &b);
-    if norm_a == 0.0 || norm_b == 0.0 {
-        kani::assert(matches!(result, Err(FerrochainError { code: "E-VS-001", .. })), "guard must fire");
+    // Covers both zero-norm and overflow (norm = +Inf from Σ xᵢ² overflow)
+    if norm_a == 0.0 || !norm_a.is_finite() || norm_b == 0.0 || !norm_b.is_finite() {
+        kani::assert(matches!(result, Err(FerrochainError { code: "E-VS-001", .. })), "guard must fire (zero or overflow)");
         kani::assert(!matches!(result, Ok(v) if v.is_nan()), "Ok(NaN) unreachable");
     } else {
-        kani::assert(result.is_ok(), "non-zero norm must produce Ok");
+        kani::assert(result.is_ok(), "finite non-zero norm must produce Ok");
     }
 }
 ```
@@ -230,7 +236,7 @@ before Phase 3 story delivery for SS-21.
 
 ---
 
-**VP-010 — Reviver Allowlist Containment** (ferrochain-core / serializable-reviver) `red_gate: true`
+**VP-010 — Reviver Allowlist Containment** (`core::serializable` — Reviver aspect) `red_gate: true`
 
 Property: For any type-ID path that is (a) not present in the registered allowlist AND
 (b) not a LangChain monolith passthrough type (`LANGCHAIN_MONOLITH_TYPES`), `allowlist_check`
@@ -275,7 +281,7 @@ by Kani's CBMC backend. Red Gate: must compile-and-fail before Phase 3 story del
 
 ---
 
-**VP-011 — PreToolCallHook Fail-Closed** (ferrochain-graph / hitl) `Kani P0`
+**VP-011 — PreToolCallHook Fail-Closed** (`graph::hitl`) `Kani P0`
 
 Property: For any `PreToolDecision::Deny` — whether returned by the hook or synthesized by
 the panic-shield from `Err(HookError)` — `route_pre_tool_decision` returns
@@ -382,7 +388,7 @@ See VP-011.md §Feasibility Assessment for full factor table.
 
 ## Should Prove (P1 — Core Algorithms, Conformance Contracts)
 
-**VP-006 — injection_guard Fail-Closed** (ferrochain-prompts / injection_guard) `Kani P1 Phase 6` `red_gate: true`
+**VP-006 — injection_guard Fail-Closed** (`prompts::injection_guard`) `Kani P1 Phase 6` `red_gate: true`
 
 Property: For any slot variable with `TrustLevel::Untrusted` where the slot policy is
 `TrustRequired`, `check_slot_trust` returns `Err(E-TMPL-001)` and never returns
@@ -434,7 +440,7 @@ Estimated proof time: 1–3 min.
 
 ---
 
-**VP-007 — LcSerializable Round-Trip** (ferrochain-core / serializable) `proptest P1 Phase 3`
+**VP-007 — LcSerializable Round-Trip** (`core::serializable`) `proptest P1 Phase 3`
 
 Property: For all types implementing `LcSerializable`, `deserialize(serialize(x)) ≡ x`.
 Serialization is deterministic and lossless for registered types (excluding fields listed
@@ -467,7 +473,7 @@ is explicit in the equivalence check, not a gap.
 
 ---
 
-**VP-008 — Embeddings Dimensionality Contract** (ferrochain-core / embeddings) `proptest P1 Phase 3`
+**VP-008 — Embeddings Dimensionality Contract** (`core::embeddings`) `proptest P1 Phase 3`
 
 Property: For any batch of non-empty strings, all vectors returned by `embed_documents`
 have equal length, and `embed_query` returns a vector of the same length as any vector
@@ -502,7 +508,7 @@ requires a concrete `MockEmbeddings` struct implementing `Embeddings` with fixed
 
 ---
 
-**VP-012 — OnWatermark Arithmetic** (ferrochain-core / core-budget) `Kani P1 Phase 6`
+**VP-012 — OnWatermark Arithmetic** (`core::budget`) `Kani P1 Phase 6`
 
 Property: `check_watermark_trigger(tokens_remaining, ceiling, fraction)` returns `true` if and
 only if `(tokens_remaining as f64) / (ceiling as f64) <= (1.0 - fraction)` for all valid inputs
@@ -548,7 +554,7 @@ which is rejected at BudgetConfig construction (EC-001 in BC-2.10.005).
 
 ---
 
-**VP-013 — BashTool Risk Floor** (ferrochain-tools / tools-shell) `Kani P1 Phase 6`
+**VP-013 — BashTool Risk Floor** (`tools::shell`) `Kani P1 Phase 6`
 
 Property: For all `ActionRisk r ∈ {ReadOnly, Low}`, `check_risk_floor(r)` returns
 `Err(FerrochainError { code: "E-TOOLS-007", category: VAL })` and never returns `Ok(())`.
@@ -582,13 +588,15 @@ Modules where behavioral testing is the primary verification method:
 
 | Module | Reason | Tools |
 |--------|--------|-------|
-| ferrochain-server handlers | I/O-bound; Kani not applicable | Integration, PropTest for request schema |
-| Provider crates | Network I/O; testing via DTU fakes | Integration |
+| ferrochain-server | I/O-bound; Kani not applicable | Integration, PropTest for request schema |
+| ferrochain-openai | Network I/O; testing via DTU fakes | Integration |
+| ferrochain-anthropic | Network I/O; testing via DTU fakes | Integration |
+| ferrochain-ollama | Network I/O; testing via DTU fakes | Integration |
 | ferrochain-mcp | Transport I/O + Red Gate behavioral tests | Integration, Red Gate |
 | ferrochain-splitters | Pure but no formal invariant; golden-vector parity sufficient | Unit, PropTest |
-| ferrochain-sandbox backends | OS-level execution; not Kani-tractable | Integration |
-| Budget governance (journal) | Append-only ordering; soak tests cover most cases | Unit, Soak |
-| Content provenance/guardrail | DI-012 RAGRetrieval boundary enforced via GuardedDocuments compile_fail (ADR-014 Decision 6; VP-2.20.002-A); hook dispatch coverage is behavioral; not state-machine | compile_fail, Unit, Integration |
+| ferrochain-sandbox | OS-level execution; not Kani-tractable (path_guard excluded — covered by VP-003 Kani P0 above) | Integration |
+| `graph::budget` | Append-only ordering (EvidenceJournal); soak tests cover most cases | Unit, Soak |
+| `graph::provenance` | DI-012 RAGRetrieval boundary enforced via GuardedDocuments compile_fail (ADR-014 Decision 6; VP-2.20.002-A); hook dispatch coverage is behavioral; not state-machine | compile_fail, Unit, Integration |
 
 ## Fuzzing Targets (BC-2.17.002)
 
@@ -614,6 +622,8 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.13 | 2026-07-27 | architect | CHECK4-vparch closure | Canonicalize all Module cells in §Committed VP Obligations table (13 rows) and §Test-Sufficient table (7 rows → 9 rows) to `crate::module` or ARCH-INDEX canonical crate-name form. VP table: replace all `ferrochain-X / y-name` two-part notation — graph::bsp_engine, checkpoint::session_index, sandbox::path_guard, mcp::adapter, mcp::client, prompts::injection_guard, core::serializable (×2: VP-007 LcSerializable + VP-010 Reviver aspect), core::embeddings, vectorstores::similarity, graph::hitl, core::budget, tools::shell. VP-007 and VP-010 both map to core::serializable; aspect distinction preserved via BC Anchor (BC-2.19.001 vs BC-2.19.005), Tool (proptest vs Kani), Phase (3 vs 6), and Priority (P1 vs P0) columns — rows not merged. Test-Sufficient table: ferrochain-server handlers → ferrochain-server; Provider crates (unresolvable single mapping) → split into ferrochain-openai + ferrochain-anthropic + ferrochain-ollama (3 rows); ferrochain-sandbox backends → ferrochain-sandbox with path_guard exclusion note; Budget governance (journal) → graph::budget; Content provenance/guardrail → graph::provenance. ferrochain-mcp and ferrochain-splitters already canonical — left unchanged. Section headings (VP-001..013 prose entries) updated to canonical form for consistency; VP-010 heading uses `core::serializable — Reviver aspect` to distinguish from VP-007. Total Module cells: 22 (was 20; +2 from Provider crates split into 3 rows). |
+| 2.12 | 2026-07-27 | architect | FIX-BURST-276 / F-P173-501+503 | F-P173-501 — §VP-001 section: update formal statement from `sorts by task_id` to `sorts by (task_id: &str, channel_name: &str) lexicographic ascending`; add channel_name tiebreaker note and lexicographic hazard explanation; update harness sketch to use string TaskId and (TaskId, String, ChannelUpdate) tuple, replacing TaskId(i as u64) with bounded-string construction per VP-001.md §Proof Harness Skeleton. F-P173-503 — §VP-009 section: update formal statement to add overflow path (!norm.is_finite() covers +Inf from sum-of-squares overflow); update harness sketch conditional from (norm == 0.0) to (norm == 0.0 OR !norm.is_finite()); add overflow note. Source of truth for both: VP-001.md and VP-009.md §Proof Harness Skeleton respectively. |
 | 2.11 | 2026-07-25 | architect | FIX-BURST-273 / F-P171a-10+11 | F-P171a-10 — replace §VP-013 Kani harness sketch (2 harnesses, missing `risk_floor_accepts_at_or_above_medium`) with pointer to `VP-013.md` §Proof Harness Skeleton; VP-013.md is authoritative per Source-of-Truth Precedence rule 4; pointer names all three canonical harnesses to eliminate drift surface. F-P171a-11 — de-pin two live-body version pins in §VP-013 RESOLVED block: 'BC-2.23.005 was amended to `Category::Val` in v1.1' → 'BC-2.23.005 §Category was corrected to `Category::Val`'; 'BC-2.23.005 v1.1 = VAL' → 'BC-2.23.005 §Category = VAL'. Allowlist entry `architecture/verification-architecture.md :: BC-2.23.005 v1.1` is now dead — devops to remove. |
 | 2.10 | 2026-07-25 | architect | FIX-BURST-272 / F-P170-05 sibling + DEFECT-2 | Purge phantom `ActionRisk::Critical` from §VP-013 body — sibling of VP-013.md F-P170-05 purge that verification-architecture.md missed. (1) Formal statement: remove `∨ r == Critical` disjunct. (2) `risk_floor_exhaustive_coverage` harness: `kani::assume(idx <= 4)` → `kani::assume(idx <= 3)`; `_ => ActionRisk::Critical` → `_ => ActionRisk::High`; assert message `"Medium/High/Critical must pass floor check"` → `"Medium/High must pass floor check"`. (3) Feasibility line: `5-variant enum` → `4-variant enum`. |
 | 2.9 | 2026-07-25 | architect | FIX-BURST-270 / P1D-168-casing | PascalCase canon sweep — §VP-013 RESOLVED note: `` `Category::VAL` `` → `` `Category::Val` `` per ADR-010 v1.9 Direction B adjudication. |

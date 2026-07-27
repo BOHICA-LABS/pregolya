@@ -9,6 +9,7 @@ gate: D9-PASSED
 gate_note: "D9 human gate passed 2026-07-14. Alternative B (Hybrid orchestrator-loop + actor-scheduler) selected per D11.1 steering."
 producer: architect
 timestamp: 2026-07-14T14:00:00Z
+version: "rev-2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D9, D11, D17, D18]

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: system-overview
-version: "1.3"
+version: "1.4"
 status: active
 producer: architect
 timestamp: 2026-07-25T00:00:00Z
@@ -15,6 +15,7 @@ input-hash: "6906b43"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D9, D11, D13, D17, D21, D23]
 changelog:
+  - "1.4 (FIX-BURST-276/F-P173-802/2026-07-27): F-P173-802 — fix P-06 principle. (1) Remove forbidden edge: original `ferrochain-core ← ferrochain-graph ← ferrochain-checkpoint ← ferrochain-server` asserted `ferrochain-graph ← ferrochain-checkpoint` which, under the `←`=depended-upon-by convention, means checkpoint depends on graph — explicitly forbidden by dependency-graph.md §Invariant. (2) Correct topology: swap checkpoint and graph in the chain so `ferrochain-checkpoint ← ferrochain-graph` now reads as graph depends on checkpoint (correct; graph::budget uses CheckpointSaver::search_history per BC-2.04.008 / ADR-019, added in dependency-graph.md v1.6). (3) Add explicit `←` arrow convention note inline so no future reader must guess direction. (4) Note ferrochain-server's direct checkpoint dependency. Corrected chain: `ferrochain-core ← ferrochain-checkpoint ← ferrochain-graph ← ferrochain-server` (ferrochain-server also depends directly on ferrochain-checkpoint). Verified against dependency-graph.md §Invariant and Edge Table."
   - "1.3 (FIX-BURST-265/F-P163-02/2026-07-25): Propagate D21+D23 21-crate roster. [Section Content] heading 18-crate→21-crate. Crate Topology heading 18→21. Code block: add ferrochain-tools (Wave 1, D23/ADR-020) after ferrochain-memory; add ferrochain-prompts (Wave 2, D21/ADR-015) and ferrochain-vectorstores (Wave 2, D21/ADR-014) after ferrochain-mcp. Wave Alignment table: Wave 1 gains ferrochain-memory (D23 Wave 2→1 promotion) + ferrochain-tools; Wave 2 loses ferrochain-memory, gains ferrochain-prompts + ferrochain-vectorstores."
   - "1.2 (burst-241/2026-07-23): F-P141-02 — expand NFR-003 Key Constraints gate from 3 P0 Kani VPs (VP-001/002/003, D17-Q7 only) to 6 P0 Kani VPs (VP-001/002/003/009/010/011, D17-Q7 + D21 + D23); add note on 3 P1 Kani VPs (VP-006/012/013). VP-009 (zero-norm cosine guard, SAFETY), VP-010 (reviver allowlist containment, SECURITY), VP-011 (PreToolCallHook fail-closed, SECURITY/SAFETY) confirmed P0 under production-grade default — fail-closed security/safety proofs are must-pass-before-v1. Add D21/D23 to decisions list."
   - "1.1 (provenance-fix-169/2026-07-17): remove .factory/STATE.md from inputs (not a genuine spec-content input; D-NNN decisions are baked-in stable facts); add domain-spec/invariants.md (genuine: DI-001, DI-008, DI-010 cited in Principles table)."
@@ -55,7 +56,7 @@ built in-workspace. No wire-compatibility with LangGraph Platform.
 | P-03 | No panics in library code | All public constructors return `Result`; no `.unwrap()`/`.expect()` outside tests (DI-008) |
 | P-04 | Credential opacity | API key newtypes with redacted Debug; no Serialize; no Deref<Target=str> (DI-010) |
 | P-05 | Deterministic execution | BSP super-step produces identical output for identical input regardless of task order (DI-001) |
-| P-06 | Dependency direction is acyclic | ferrochain-core ← ferrochain-graph ← ferrochain-checkpoint ← ferrochain-server; no cycles |
+| P-06 | Dependency direction is acyclic | `ferrochain-core ← ferrochain-checkpoint ← ferrochain-graph ← ferrochain-server` (`←` = "is depended upon by"; ferrochain-server also depends directly on ferrochain-checkpoint); no cycles. Verified against dependency-graph.md §Invariant. |
 | P-07 | File size gate | ≤500 lines soft / ≤750 hard per production file; CI-enforced via `cargo xtask check-file-size` (D12) |
 
 ## Crate Topology (21 published crates; see ARCH-INDEX.md §Canonical Crate Roster)

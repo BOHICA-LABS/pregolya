@@ -1,10 +1,10 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.16"
+version: "1.17"
 status: active
 producer: business-analyst
-timestamp: 2026-07-25T17:00:00Z
+timestamp: 2026-07-27T17:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -33,6 +33,7 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "v1.17 (F-P173-104/F-P173-106/F-P173-702/burst-276/2026-07-27): bounded-contexts.md v1.4→v1.5 (F-P173-104: remove ferrochain-graph from ferrochain-tools dep list per ADR-020 Decision 1; inline note added citing D-24 ActionRisk-from-core rationale); capabilities-p1-p2.md v1.16→v1.17 (F-P173-106: CAP-038 regex dependency confirmed net-new per ADR-020 Decision 7, stale confirm-instruction removed; F-P173-702: CAP-029 ADR-014 Decision 4 → ADR-017 Decision 4 for InMemoryVectorStore/Arc-DI)."
   - "v1.16 (2026-07-25): Burst-262 F-P161-01 BC-pin de-pin sweep — entities-server v1.13→v1.14 (live-body BC-NNN vN.N version pins removed per D18-P84-A); events.md v1.10→v1.11 (live-body BC-NNN vN.N version pins removed per D18-P84-A)."
   - "v1.15 (2026-07-24): Burst 252 F-P151-01..07 ADR-019 compaction type canon — capabilities-p1-p2 v1.13→v1.14 (CompactionTrigger count/tokens field names, OnWatermark non-strict <= predicate, f64 fraction/budget_tokens_used); entities-graph v1.9→v1.10 (CompactionTrigger/CompactionSummary entity type canon: flat compacted_start/end fields, f64, put mechanism); events v1.9→v1.10 (compaction_event wire payload flat fields per ADR-019 Decision 4; mandatory parent_ids per BC-2.06.002 Inv-2); ubiquitous-language-core v1.7→v1.8 (CompactionTrigger term: count/tokens variant fields, f64 fraction; CompactionSummary term: flat compacted_start/end, no RangeInclusive). Document Map line counts updated: capabilities-p1-p2 ~530→~750, entities-graph ~315→~390, ubiquitous-language-core ~330→~420."
   - "v1.14 (2026-07-24): Burst 251 F-P150-02 (MED) — capabilities-p1-p2 v1.12→v1.13 stale-delegation residue removed at CAP-029 (§Zero-norm guard) and CAP-031 (§Dimensionality contract); both 'PO to formalize in error taxonomy' imperatives replaced with past-tense factual citations (E-VS-001 and E-EMBED-001 registered since error-taxonomy v1.27). L-026 sweep: 6 hits in domain-spec, 2 fixed, 4 verified structural/legitimate (BC-to-CAP traceability fields)."

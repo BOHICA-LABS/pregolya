@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.007
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,10 +20,12 @@ changelog:
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-<provider>-sdk per module-decomposition.md v1.10."
   - "1.4 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-004 and TV-003 carried `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003 })` bare wrappers; E-PROV-003 has `<provider>` and `<tokens>` placeholders. Added inline `message:` template to both; EC-004 is the authoritative full-form site; TV-003 PASS-ABBREV via EC-004."
   - "1.5 (burst-240/F-P140-02/2026-07-22): E-PROV-002 message generalized. PC1 message was 'ProviderTimeout: stream chunk timeout after <duration>' (stream-specific); generalized to 'ProviderTimeout: request timed out after <duration>' to align with taxonomy E-PROV-002 v1.34, which covers both per-chunk streaming stalls (this BC) and unary HTTP request timeouts (BC-2.14.004). The 'stream chunk' qualifier was a BC-level artifact; the generalized form remains accurate for the streaming stall case because the stall IS a request timeout on the per-chunk level. EC-001 description updated to remove the unsupported claim about the message containing the number of chunks (the message format has only <duration>; no chunk count placeholder exists). PASS-ABBREV sites (EC-001/EC-003/TV-001/TV-005) unchanged — all are bare wrapper form citing code: E-PROV-002 without inline message, abbreviated via PC1 as authoritative full-form site."
+  - "1.6 (FIX-BURST-276-WAVE-C/F-P173-407/2026-07-27): DEC-013 anchor added bidirectionally. DEC-013 (Provider Streaming Interrupted by Transport Error in domain-spec/edge-cases.md) named this BC as its anchor but this BC carried no reciprocal DEC-013 citation, making DEC-013 an orphan per F-P173-407. Fix: domain-spec/edge-cases.md#DEC-013 added to traces_to frontmatter; DEC References row added to Traceability table. DEC-013's scenario (TCP reset yields Err(Transport); per-chunk stall yields Err(Timeout); no truncated Ok(AiMessage)) is exactly the contract in PC1 and PC2 — the anchor is semantically correct."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-014
   - domain-spec/invariants.md#DI-009
+  - domain-spec/edge-cases.md#DEC-013
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -173,6 +175,7 @@ _[to be filled after story decomposition]_
 | Source L2 Capability | CAP-009 |
 | Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies the streaming timeout and transport error propagation requirement for every provider implementation, closing the adk-rust P-77 must-not-inherit pattern |
 | L2 Domain Invariants | DI-009 (Outbound Connection Timeout (Mandatory)), DI-014 (Error Propagation (No Silent Swallowing)) |
+| DEC References | DEC-013 (Provider Streaming Interrupted by Transport Error) |
 | NE References | NE-04 (mandatory HTTP timeout; P-77 counter-example — streaming clients without per-chunk timeout; primary BC anchor is BC-2.14.004; this BC adds the streaming-specific per-chunk dimension) |
 | Priority | P1 |
 | Wave | Wave 2 |

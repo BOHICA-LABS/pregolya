@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-server
-version: "1.4"
+version: "1.5"
 status: active
 producer: business-analyst
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -15,6 +15,7 @@ input-hash: "6e070bb"
 traces_to: L2-INDEX.md
 decisions: [D2, D13, D17]
 changelog:
+  - "1.5 (fix-burst-276/F-P173-505/2026-07-27): D-28 banner added to body ## Changelog section, declaring Form A (frontmatter changelog:) authoritative; body table preserved as historical record."
   - "1.4 (2026-07-21): F-P131-05 adjudication (burst-226) — §ProvenanceTag: disambiguation note added clarifying that ProvenanceTag (SS-11, no trust-level dimension) is distinct from TrustLevel (SS-18, ferrochain-prompts: prompts::template; ADR-015 §Decision 3). Changelog table updated. TD-VSDD-060 sweep: no ProvenanceTag trust-variant residue in this file."
   - "1.3 (2026-07-19): F-P117-01 — add summary_halt to Run status lifecycle. Terminal set now: completed | failed | cancelled | summary_halt. summary_halt reached via in_progress to summary_halt on the OnCeiling::Summarize path (BC-2.12.003 PC7/PC8); first-class terminal state per product-owner adjudication. Body changelog table row added. Whole-file sweep: no other terminal-set enumerations found."
   - "1.2 (ADV-P1D-PASS-58): F-P58-03 — update ProvenanceTag and GuardrailHook to BC-authoritative terminology. ProvenanceTag: source_type/tool_name/invocation_id/timestamp to boundary_type (ToolResult|RAGRetrieval|MemoryIngress), ingress_id, sequence_position; removed User/Model per BC-2.11.001 EC-004. GuardrailHook: Accept/Reject/Redact retired to Pass/Fail{reason,severity}/Transform{new_content}; callable signature updated to match interface-definitions.md v2.13."
@@ -151,6 +152,9 @@ not retriable.
 ---
 
 ## Changelog
+
+> **Historical record — superseded by frontmatter `changelog:` (Form A).**
+> The frontmatter `changelog:` YAML list above is the **authoritative** changelog for this file.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|

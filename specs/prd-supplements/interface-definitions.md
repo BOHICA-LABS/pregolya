@@ -1,12 +1,14 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.58"
+version: "2.60"
 status: active
 producer: product-owner
 timestamp: 2026-07-27T00:00:00Z
 phase: 1d
 changelog:
+  - "2.60 (F-P173-606+F-P173-607+F-P173-608+F-P173-609+F-P173-610+BC-2.08.004-anchor/fix-burst-276/2026-07-27): Six HIGH findings from adversarial pass P1D-173 content wave 3. (1) F-P173-606: §BaseChatModel Gate #31 type note — retired 'corpus-unresolved / implementer defines' for ChatConfig; replaced with spec-anchored partial definition: mandatory field `fallback_policy: Option<ProviderFallbackPolicy>` sourced from BC-2.08.014 Description and BC-2.08.014 PC1; module placement module-decomposition.md §core::config SS-01; provider-specific parameters documented as per-provider extensions. (2) F-P173-607: §ProviderFallbackPolicy — replaced 'UNRESOLVED (implementer-scope) / flagged for architect' notes on ProviderCredential and CredentialRefreshConfig with unconditional DI-010 obligations: both types MUST implement `Debug` rendering only '<redacted>'; canonical impl form documented; per-provider shape acknowledged as implementation-defined but DI-010 is unconditional. (3) F-P173-609: added new §Tool subsection (before §First-Party Tools) declaring `pub trait Tool` in ferrochain-core: core::tools — methods name/description/schema/action_risk from BC-2.08.010 PC1; `ToolInput(serde_json::Value)` struct; `#[non_exhaustive] ToolOutput` enum with Text/Json/Error variants from BC-2.23.001-006 and BC-2.05.007 PC2 (Deny → Error); PathGuard::check phantom NOT reintroduced; ADR-020 Decision 1 source cited. (4) F-P173-608: §First-Party Tools ToolConfig — added private `minimum_risk: ActionRisk` field note as the per-tool identity discriminator that makes VP-013 provable (BashTool sets minimum_risk=Medium at construction; override_risk validates risk >= minimum_risk; exhaustive Kani proof over 4 D-25 variants); doc comment updated from 'Errors (BashTool)' to general 'Errors: when risk < self.minimum_risk'; D-25/D-26/D-27/D-30 all preserved. (5) F-P173-610: §ProviderFallbackPolicy — made `chain` field private (prevents struct-literal bypass of non-empty invariant); added `impl ProviderFallbackPolicy` with `new(chain: Vec<ProviderCredential>) -> Result<Self, FerrochainError>` constructor returning E-PROV-011 when empty (BC-2.08.014 EC-006/TV-007); #[non_exhaustive] added to struct. (6) BC-2.08.004 anchor (routed from content wave 2): replaced cross-check note 'orphaned BC until architect adjudicates' with correct anchoring — `has_tool_calling(&self) -> bool` method added to BaseChatModel trait (BC-2.08.002 EC-005/TV-005 guard); BC-2.08.004 anchored at stream_chat per-method as cross-cutting error-fidelity conformance (all provider HTTP 4xx/5xx must map to typed FerrochainError); trait-level anchor block added documenting cross-cutting scope covering both invoke and stream_chat paths."
+  - "2.59 (F-P173-101+F-P173-102+F-P173-701/fix-burst-276/2026-07-27): Three HIGH source-attribution findings from adversarial pass P1D-173. (1) F-P173-101: §PreToolCallHook Source — added ADR-020 Decision 1 as primary source (ActionRisk relocation to ferrochain-core: core::action_risk; ferrochain-tools cross-crate compile-time consumer motivation; sole authority for ToolCallPreview.action_risk type placement); corrected fail-closed Deny anchor from 'Decision 4' to 'Decision 3 step 4' — ADR-018 Decision 3 step 4 verbatim: Deny { reason } → ToolOutput::Error; tool never invoked; VP-011 Kani P0. (2) F-P173-102: §Compaction Source — corrected CompactionPolicy trait attribution from Decision 2 to Decision 1 (ADR-019 Decision 1 defines all core::budget type definitions: CompactionTrigger, ConversationSnapshot, CompactionSummary, and CompactionPolicy trait; Decision 2 is BudgetConfig extensions: compaction_trigger + compaction_policy fields); corrected mid-run/next-run distinction attribution from Decision 5 to Decision 3 (ADR-019 Decision 3 canonical: 'mid-run state mutation — applies immediately to current run's message window, not next-run'; Decision 5 is CAP-017 Wave Promotion Interaction within-session vs cross-session additive design); BC anchor aligned to ADR-019 Decision 3 canonical language: 'mid-run REPLACEMENT' → 'mid-run state mutation per ADR-019 Decision 3'; BC-2.15.006 NEXT-run description updated with ADR-019 Decision 3 anchor. No phantom on_watermark symbol present or introduced. (3) F-P173-701 (mis-citation class): §VectorStore BC anchor footer — all ADR-014 citations enumerated; per-site corrections: (a) 'Decision 3 (InMemoryVectorStore)' WRONG — ADR-014 Decision 3 is SS-15 Boundary Definition MemoryStore vs VectorStore, zero InMemoryVectorStore content → removed; replaced with ADR-017 Decision 4 (InMemoryVectorStore — Arc<dyn Embeddings> DI + RwLock interior mutability; Arc-DI wiring at construction time; ADR-017 Decision 4 verbatim 'no placeholder construction' invariant); (b) 'Decision 4 (zero-norm guard E-VS-001)' WRONG — ADR-014 Decision 4 is External Adapter Extension Seam via inventory crate → corrected to 'ADR-014 Decision 2 §Hardening note (search-time zero-norm guard E-VS-001)'; (c) 'Decision 5 (write-time zero-norm guard E-VS-004)' CORRECT — kept unchanged. Two correct citations left unchanged: Source line (ADR-014 Decision 2) and similarity_search_with_filter comment (ADR-014 Decision 2 §Metadata filter surface F-P131-07 adjudication). Summary: 2 wrong citations corrected, 1 new ADR-017 Decision 4 citation added, 2 correct citations preserved."
   - "2.58 (F-P173-601+F-P173-602+F-P173-603+F-P173-604+F-P173-605+F-P173-614/2026-07-27): Five signature findings from adversarial pass P1D-173. (1) F-P173-601 CRITICAL: §First-Party Tools — deleted erroneous PathGuard struct/impl block that declared PathGuard in ferrochain-tools with a non-canonical check() method. Replaced with a consumption note citing the authoritative owner (ferrochain-sandbox, sandbox::path_guard, SS-13, BC-2.13.004, VP-003 Kani P0) and the two confinement entry points (canonicalize_beneath_root_pure/canonicalize_beneath_root); error layer split documented (E-SBXD-001 sandbox layer → E-TOOLS-001 tool layer). BC anchor in §First-Party Tools corrected: 'BC-2.23.001-006 shared PathGuard invariant' → 'consumes BC-2.13.004 PathGuard' per tool; PathGuard ownership row added. (2) F-P173-602 HIGH: §BaseChatModel bind_tools — removed async (construction-time validation, no I/O per BC-2.08.002 EC-005); corrected return type from bare 'impl BaseChatModel' to 'Result<impl BaseChatModel, FerrochainError>'; added # Errors doc block citing Err(E-CORE-005) when has_tool_calling=false (BC-2.08.002 EC-005/TV-005). (3) F-P173-603 HIGH: §BaseChatModel with_structured_output — added required schema: serde_json::Value parameter per BC-2.08.003 PC/EC-002/EC-003; added schemars::JsonSchema bound to T per BC-2.08.009; added per-method anchor citation. (4) F-P173-604 HIGH: §Runnable pipe — corrected return type from opaque 'impl Runnable<Input, NextOutput>' to concrete 'RunnableSequence<Input, NextOutput>' per BC-2.01.004 PC1/PC4/TV-002; added doc comment citing flattening invariant. (5) F-P173-605 HIGH: added new §DynRunnable and RunnableSequence section to §Public Rust Trait Signatures (ferrochain-core: core::runnable) — DynRunnable object-safe trait with async invoke and boxed-stream stream method (ADR-005 dyn-compat pattern; BC-2.01.003 EC-001 + BC-2.01.004 PC5/EC-001/TV-004); RunnableSequence<I,O> struct with first/middle/last/PhantomData fields (BC-2.01.004 PC1/PC4/TV-002). (6) F-P173-614 HIGH: expanded bare BC-ID anchors in §Runnable and §BaseChatModel to per-method precision; per-method cross-check run — §Runnable PASS (all 4 methods anchored, no orphan BCs); §BaseChatModel PASS with one flag: BC-2.08.004 unmapped to a declared method (flagged for architect adjudication in cross-check note). TD-VSDD-060 sibling sweep results: see report in this burst."
   - "2.57 (F-P171a-02a+F-P171a-02b+F-P171a-03+date-mono/burst-273/2026-07-25): (1) F-P171a-02a Gate #32 carrier-3: Add §ToolConfig subsection to §First-Party Tools — ToolConfig struct in ferrochain-tools::tools::config; override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError> builder-consuming validator; BashTool risk < Medium → Err(E-TOOLS-007); #[non_exhaustive]; distinct from BashConfig (per-tool impl config). (2) F-P171a-02b lifecycle adjudication: §PreToolCallHook ActionRisk doc-comment — 'BashTool construction time' → 'ToolConfig::override_risk call time'; §First-Party Tools BashTool doc-comment updated to same lifecycle language. (3) F-P171a-03: BashTool canonical annotation corrected ActionRisk::Medium → ActionRisk::High (default declared annotation; Medium is the non-lowerable floor, not the default); BC anchor and doc-comment updated to match. (4) Date-monotonicity (Gate #28 Rule 4 TEMPORAL-NEIGHBOR SWEEP): entry 2.49 date 2026-07-22 → 2026-07-23 (burst-240 ran on 2026-07-23)."
   - "2.56 (sibling-sweep-ADR-016/burst-272/2026-07-25): §LcSerializable and Reviver Surface BC anchor footer — corrected three ADR-016 Decision mis-attributions found during mandatory sibling sweep (TD-VSDD-060). (1) Decision 1 description expanded from bare '(LcSerializable trait)' to '(crate placement — ferrochain-core module, no new crate)'; LcSerializable trait definition is in Decision 2, not Decision 1. (2) Decision 2 description corrected from '(Serialized enum)' to '(LcSerializable trait, Serialized enum, LcEntry; inventory-backed OnceLock type registry)'; Decision 2 is the registry/inventory Decision covering all three types plus OnceLock initialization. (3) Decision 4 description corrected from '(inventory crate 0.3.24, dtolnay; OnceLock initialization)' to '(OLD_CORE_NAMESPACES_MAPPING legacy namespace remapping)'; inventory/OnceLock is Decision 2; version pin '0.3.24' removed (TD-VSDD-091). (4) Decision 5 removed from citation; this section covers crate placement, trait/enum/registry definition, secrets/allowlist safety, and legacy remapping (Decisions 1–4) but contains no Python checkpoint import compatibility surface — Decision 5's domain. (5) Decision 3 description expanded to include Reviver allowlist containment and E-SRLZ-002 per §Security Invariant Properties 1–5, which is the correct Decision for those behaviors (previously mis-attributed to Decision 5)."
@@ -276,8 +278,16 @@ pub trait BaseChatModel: Runnable<Vec<Message>, AiMessage> + Send + Sync {
     /// Returns the provider model identifier string (BC-2.08.001).
     fn model_name(&self) -> &str;
 
+    /// Returns `true` if this provider model supports tool calling.
+    /// Used by `bind_tools` to guard against attaching tools to models that cannot invoke them.
+    /// BC anchor: BC-2.08.002 EC-005/TV-005 (guard: `bind_tools` returns `Err(E-CORE-005)` when false).
+    fn has_tool_calling(&self) -> bool;
+
     /// Stream a chat completion, yielding per-token `AiMessageChunk`s
     /// (BC-2.08.001, BC-2.08.005 TV).
+    ///
+    /// Error fidelity: all provider HTTP 4xx/5xx responses MUST map to typed `FerrochainError`
+    /// with the correct `category` field (BC-2.08.004 cross-cutting conformance).
     async fn stream_chat(&self, messages: Vec<Message>, config: Option<ChatConfig>)
         -> Result<impl Stream<Item = Result<AiMessageChunk, FerrochainError>>, FerrochainError>;
 
@@ -286,7 +296,8 @@ pub trait BaseChatModel: Runnable<Vec<Message>, AiMessage> + Send + Sync {
     /// Construction-time validation only — no I/O performed.
     ///
     /// # Errors
-    /// `Err(FerrochainError { component: PROV, category: VAL, code: "E-CORE-005", … })`
+    /// `Err(FerrochainError { component: PROV, category: VAL, code: "E-CORE-005",
+    /// message: "Validation failed for 'model': model '<name>' does not support tool calling" })`
     /// when `self.has_tool_calling() == false` (BC-2.08.002 EC-005/TV-005).
     fn bind_tools(&self, tools: Vec<ToolDefinition>) -> Result<impl BaseChatModel, FerrochainError>;
 
@@ -305,13 +316,14 @@ pub trait BaseChatModel: Runnable<Vec<Message>, AiMessage> + Send + Sync {
 
 **BC anchor (per-method):**
 - `model_name`: BC-2.08.001 (model identity)
-- `stream_chat`: BC-2.08.001 (streaming completions), BC-2.08.005 TV (`AiMessageChunk` shape)
+- `has_tool_calling`: BC-2.08.002 EC-005/TV-005 (capability guard — `bind_tools` precondition check)
+- `stream_chat`: BC-2.08.001 (streaming completions), BC-2.08.004 (error-type fidelity conformance — all provider HTTP errors must map to typed `FerrochainError`), BC-2.08.005 TV (`AiMessageChunk` shape)
 - `bind_tools`: BC-2.08.002 PC (tool binding), BC-2.08.002 EC-005/TV-005 (`Err(E-CORE-005)` when `has_tool_calling = false`)
 - `with_structured_output`: BC-2.08.003 PC/EC-002/EC-003 (schema-driven structured output), BC-2.08.009 (`schemars::JsonSchema` bound on `T`)
 
-> **Cross-check note (F-P173-614):** BC-2.08.004 from the prior range "BC-2.08.001 through BC-2.08.005" is not yet anchored to a declared trait method. If BC-2.08.004 covers a method not declared here (e.g., `has_tool_calling`), architect must add it; if it covers a cross-cutting contract (e.g., non-exhaustive message shape), cite it at the appropriate struct declaration. Flag: orphaned BC until architect adjudicates.
+> **BC-2.08.004 anchor (trait-level cross-cutting):** BC-2.08.004 ("Chat Model Error-Type Fidelity Conformance") is a cross-cutting conformance contract: every call path that makes a provider HTTP request — `invoke` (via `Runnable`) and `stream_chat` — MUST map provider HTTP 4xx/5xx responses to typed `FerrochainError` with the correct `category` field. Anchored at `stream_chat` per-method above; also applies to the inherited `Runnable::invoke` path. No `has_tool_calling` method is introduced by BC-2.08.004; `has_tool_calling` is added here from BC-2.08.002 EC-005.
 
-> **Gate #31 type note — `ChatConfig`, `AiMessageChunk`, `ToolDefinition`:** `ChatConfig` is a provider-specific streaming-configuration struct (temperature, max_tokens, etc.); not formally enumerated in the spec corpus — implementer defines as a provider-specific struct; flagged corpus-unresolved. `AiMessageChunk` is the per-token streaming output type; defined via BC-2.08.001 PC1 + BC-2.08.005 TV (streaming completions BC). `ToolDefinition` is the public tool-schema type; defined via BC-2.08.009 (tool schema naming stability BC).
+> **Gate #31 type note — `ChatConfig`, `AiMessageChunk`, `ToolDefinition`:** `ChatConfig` is the per-call provider configuration struct in `ferrochain-core: core::config` (module-decomposition.md §core::config; SS-01 MEDIUM). The spec corpus mandates one field: `fallback_policy: Option<ProviderFallbackPolicy>` — source: BC-2.08.014 Description ("ChatConfig.fallback_policy: Option<ProviderFallbackPolicy>") and BC-2.08.014 PC1 ("ChatConfig is constructed with a non-empty fallback_policy"). Provider-specific per-call parameters (temperature, max_tokens, stop sequences, and other provider extensions) are not enumerated in the spec corpus; implementations add them as additional fields alongside the mandatory field above. The "corpus-unresolved / implementer defines" marker is retired: the mandatory field is spec-anchored. `AiMessageChunk` is the per-token streaming output type; defined via BC-2.08.001 PC1 + BC-2.08.005 TV (streaming completions BC). `ToolDefinition` is the public tool-schema type; defined via BC-2.08.009 (tool schema naming stability BC).
 
 ### CheckpointSaver
 
@@ -623,19 +635,36 @@ pub trait ToolCallDialect: Send + Sync {
 /// Ordered fallback chain for provider-level resilience.
 /// Tries each provider in `chain` in order; falls over on 429, 5xx, or auth failure.
 ///
+/// The `chain` field is PRIVATE — use `ProviderFallbackPolicy::new()` to construct.
+/// Direct struct literal construction `ProviderFallbackPolicy { chain: vec![] }` is
+/// not possible; this enforces the non-empty invariant (BC-2.08.014 Invariant / DI-008).
+///
 /// Authority: BC-2.08.014 (Provider Failover Chain).
 /// Module: ferrochain-core (struct definition); ferrochain-<provider> (dispatch).
+#[non_exhaustive]
 pub struct ProviderFallbackPolicy {
-    /// Ordered list of provider credentials to try; first entry is primary.
-    pub chain: Vec<ProviderCredential>,
+    /// Ordered list of provider credentials to try; first entry is primary. PRIVATE — non-empty invariant.
+    chain: Vec<ProviderCredential>,
     /// Optional configuration for automatic credential refresh on auth failure.
     pub credential_refresh: Option<CredentialRefreshConfig>,
 }
+
+impl ProviderFallbackPolicy {
+    /// Construct a fallback policy from an ordered provider chain.
+    ///
+    /// Validates that `chain` is non-empty at construction time (DI-008; BC-2.08.014 Invariant).
+    ///
+    /// # Errors
+    /// `Err(FerrochainError { category: VAL, code: E-PROV-011,
+    /// message: "FallbackChainEmpty: ProviderFallbackPolicy.chain must not be empty" })`
+    /// when `chain` is empty (BC-2.08.014 EC-006/TV-007).
+    pub fn new(chain: Vec<ProviderCredential>) -> Result<Self, FerrochainError>;
+}
 ```
 
-> **`ProviderCredential`** — UNRESOLVED (implementer-scope). Provider-specific credential shape differs per provider (API key, OAuth token, custom header). Not formally enumerated in spec corpus; flagged for architect. (gate #31 UNRESOLVED)
+> **`ProviderCredential`** — Opaque credential type; per-provider shape (API key newtype, OAuth bearer token, custom auth header, etc.) varies by implementation. **DI-010 (Credential Opacity) is unconditional:** every `ProviderCredential` implementation MUST declare `impl fmt::Debug for ProviderCredential { fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("<redacted>") } }` — key material must never appear in `Debug`, `Display`, or any log output. No `#[derive(Debug)]` is permitted on any type that holds secret values (BC-2.08.004 EC-001: auth error must not reveal the API key; BC-2.14.005 credential opacity invariant). Gate #31: per-provider shape is implementation-defined; the DI-010 redacted-Debug obligation is unconditional and is now the only open item.
 >
-> **`CredentialRefreshConfig`** — UNRESOLVED (implementer-scope). Configuration for automatic credential refresh callback on auth failure. Not formally enumerated in spec corpus; flagged for architect. (gate #31 UNRESOLVED)
+> **`CredentialRefreshConfig`** — Opaque configuration for automatic credential refresh on auth failure (BC-2.08.014 PC3). May contain callback closures, token endpoints, or refresh secrets. **DI-010 (Credential Opacity) is unconditional:** every `CredentialRefreshConfig` implementation MUST declare `impl fmt::Debug for CredentialRefreshConfig { fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("<redacted>") } }` — any embedded credentials or token material must never transit AI context. Gate #31: per-provider shape is implementation-defined; the DI-010 redacted-Debug obligation is unconditional and is now the only open item.
 
 **BC anchor:** BC-2.08.014 PC1–PC4 (ordered fallback semantics) + PC5 (E-PROV-010 on chain exhaustion)
 
@@ -1037,7 +1066,7 @@ ADR-006 rev-3 (guardrail design authority), ADR-018 (per-tool-call approval hook
 
 ### PreToolCallHook
 
-**Source:** ADR-018 Decision 2 (trait shape) + Decision 3 (dispatch ordering) + Decision 4 (fail-closed Deny) + Decision 5 (streaming events) + Decision 6 (action_risk attribute); ferrochain-core: core::action_risk (ActionRisk enum — F-P170-06 adjudication: relocated from graph::hitl); ferrochain-graph: graph::hitl (PreToolCallHook trait + ToolCallPreview + PreToolDecision — re-exports ActionRisk from ferrochain-core).
+**Source:** ADR-020 Decision 1 (ActionRisk relocation to ferrochain-core: core::action_risk — defines ToolCallPreview.action_risk type placement; ferrochain-tools as cross-crate compile-time ActionRisk consumer motivates dependency-inversion pattern; sole authority for the ActionRisk element of the trait signature); ADR-018 Decision 2 (trait shape) + Decision 3 (dispatch ordering; step 4 = fail-closed Deny — tool is NEVER invoked on Deny; VP-011 Kani P0) + Decision 5 (streaming events) + Decision 6 (action_risk attribute — ADR-008 Decision 2); ferrochain-core: core::action_risk (ActionRisk enum — F-P170-06 adjudication: relocated from graph::hitl); ferrochain-graph: graph::hitl (PreToolCallHook trait + ToolCallPreview + PreToolDecision — re-exports ActionRisk from ferrochain-core).
 
 BC anchor: BC-2.05.007 (PreToolCallHook trait — pre_invoke contract; ToolCallPreview shape; PreToolDecision variants Approve/Deny/Edit/PendingHumanApproval; AlwaysApprovePolicy default; fail-closed Deny; hook failure = Deny; VP-011 Kani P0 seed), BC-2.05.004 (Command(resume=PreToolDecision) resume-API: delivers PreToolDecision to engine when PendingHumanApproval interrupt is resolved), BC-2.06.004 (ToolApprovalRequest event), BC-2.06.005 (ToolApprovalResolved event), BC-2.08.010 PC1 (action_risk() method on Tool), BC-2.16.001 Invariant (retry-approval dispatch ordering).
 
@@ -1115,9 +1144,9 @@ pub trait PreToolCallHook: Send + Sync {
 
 ### Compaction
 
-**Source:** ADR-019 Decision 1 (CompactionTrigger enum) + Decision 2 (CompactionPolicy trait) + Decision 3 (7-step execution sequence) + Decision 4 (streaming event) + Decision 5 (mid-run vs next-run distinction); ferrochain-core: core::budget (type definitions — Decision 1); ferrochain-graph: graph::budget (BudgetEngine execution — Decision 3).
+**Source:** ADR-019 Decision 1 (type definitions in core::budget — CompactionTrigger, ConversationSnapshot, CompactionSummary, CompactionPolicy trait; all four types) + Decision 2 (BudgetConfig extensions: compaction_trigger and compaction_policy fields) + Decision 3 (7-step execution sequence in graph::budget; mid-run state mutation — applies immediately to current run's message window, not next-run; contrast: BC-2.15.006 frozen-snapshot = next-run per ADR-019 Decision 3 canonical definition) + Decision 4 (streaming event compaction_event) + Decision 5 (CAP-017 Wave Promotion Interaction — within-session vs cross-session additive design); ferrochain-core: core::budget (type definitions — Decision 1); ferrochain-graph: graph::budget (BudgetEngine execution — Decision 3).
 
-BC anchor: BC-2.10.005 (CompactionTrigger evaluation — VP-012 Kani candidate for OnWatermark arithmetic), BC-2.10.006 (compaction execution — 7-step cycle, ConversationSnapshot assembly, mid-run REPLACEMENT, EvidenceJournal, streaming event, checkpoint immutability), BC-2.06.006 (CompactionEvent StreamEvent), BC-2.15.006 (frozen-snapshot — NEXT-run context mutation, explicitly distinct from BC-2.10.006 CURRENT-run mid-run mutation).
+BC anchor: BC-2.10.005 (CompactionTrigger evaluation — VP-012 Kani candidate for OnWatermark arithmetic), BC-2.10.006 (compaction execution — 7-step cycle, ConversationSnapshot assembly, mid-run state mutation per ADR-019 Decision 3, EvidenceJournal, streaming event, checkpoint immutability), BC-2.06.006 (CompactionEvent StreamEvent), BC-2.15.006 (frozen-snapshot — NEXT-run context mutation per ADR-019 Decision 3, explicitly distinct from BC-2.10.006 CURRENT-run mid-run state mutation).
 
 ```rust
 // ferrochain-core: core::budget
@@ -1179,6 +1208,55 @@ pub trait CompactionPolicy: Send + Sync {
 }
 ```
 
+### Tool
+
+**Source:** ADR-020 Decision 1 dependency graph: `ferrochain-core (Tool trait, ToolOutput, FerrochainError, ActionRisk)` — the `Tool` trait and `ToolOutput` enum are defined in `ferrochain-core`, NOT in `ferrochain-tools`. `ferrochain-tools` depends on `ferrochain-core` for this trait. BC-2.08.010 PC1 specifies the generated method set; BC-2.23.001–BC-2.23.006 are the first-party implementations.
+
+**BC anchor:** BC-2.08.010 PC1 (method set: name/description/schema/action_risk/invoke); BC-2.23.001–BC-2.23.006 (first-party `Tool` implementations); BC-2.05.007 PC2 (`ToolOutput::Error` on Deny).
+
+```rust
+// ferrochain-core: core::tools  (Tool trait, ToolOutput enum, ToolInput struct)
+
+/// Framework contract every tool must satisfy.
+/// Implemented via `#[ferrochain::tool]` proc-macro (BC-2.08.010) or manually.
+///
+/// BC anchor: BC-2.08.010 PC1 (generated method set); BC-2.23.001–BC-2.23.006 (first-party impls).
+pub trait Tool: Runnable<ToolInput, ToolOutput> + Send + Sync {
+    /// Machine-readable tool name used in ToolCall serialization (stable public API surface per BC-2.08.009).
+    fn name(&self) -> &str;
+
+    /// Human-readable description surfaced to the model in tool listings.
+    fn description(&self) -> &str;
+
+    /// JSON Schema of the tool's argument struct, derived by `schemars::schema_for!`.
+    /// BC anchor: BC-2.08.010 PC1 + BC-2.08.009 (schema naming stability snapshot obligation).
+    fn schema(&self) -> schemars::Schema;
+
+    /// Declared risk tier for HITL approval-hook integration; `None` if `action_risk` not annotated.
+    /// When present, emitted as `::ferrochain_core::action_risk::ActionRisk::<Variant>`
+    /// (ADR-008 Decision 2 emitted-path contract — fully-qualified path in proc-macro expansion).
+    /// BC anchor: BC-2.08.010 PC1 (action_risk attribute); BC-2.05.007 (ToolCallPreview.action_risk).
+    fn action_risk(&self) -> Option<ActionRisk>;
+}
+
+/// Serialized JSON tool invocation arguments; proc-macro deserializes into the generated args struct.
+/// BC anchor: BC-2.08.010 PC1 (Runnable<ToolInput, ToolOutput>).
+pub struct ToolInput(pub serde_json::Value);
+
+/// Tool execution result; returned from `Tool::invoke` (via Runnable).
+/// BC anchor: BC-2.23.001–BC-2.23.006 (variant usage per first-party tool); BC-2.05.007 PC2 (Error on Deny).
+#[non_exhaustive]
+pub enum ToolOutput {
+    /// Free-form text output (ReadFileTool, WriteFileTool, EditFileTool — BC-2.23.001/002/003).
+    Text(String),
+    /// Structured JSON output (BashTool, ListDirTool, GrepTool — BC-2.23.004/005/006).
+    Json(serde_json::Value),
+    /// Error string; surfaced when a tool call is denied by PreToolCallHook or fails internally.
+    /// BC anchor: BC-2.05.007 PC2 (Deny { reason } → ToolOutput::Error; tool is NEVER invoked on Deny).
+    Error(String),
+}
+```
+
 ### First-Party Tools
 
 **Source:** ADR-020 (ferrochain-tools crate); ferrochain-tools crate. All file-access tools (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, GrepTool) use `PathGuard` for workspace confinement (E-TOOLS-001 on escape); BashTool is confined via the ferrochain-sandbox backend (BC-2.23.005). All tools implement the `Tool` trait via `#[ferrochain::tool]` proc-macro.
@@ -1218,24 +1296,42 @@ BC anchor: BC-2.23.001 (ReadFileTool — consumes BC-2.13.004 PathGuard), BC-2.2
 /// `ToolConfig` is the framework-level config that applies to all first-party tools:
 /// risk-tier override and future cross-cutting framework settings.
 ///
+/// The private `minimum_risk: ActionRisk` field is set at tool construction time
+/// and serves as the per-tool identity discriminator for `override_risk` validation.
+/// Example: `BashTool` sets `minimum_risk = ActionRisk::Medium` (non-lowerable floor
+/// per BC-2.23.005 PC-3); file-access tools set `minimum_risk = ActionRisk::ReadOnly`
+/// (any tier accepted). This field is what makes VP-013 provable by Kani: for BashTool,
+/// exhaustive case analysis over all 4 `ActionRisk` variants (D-25) shows that
+/// `ReadOnly` and `Low` always satisfy `risk < minimum_risk` → `Err`.
+///
 /// BC anchor: BC-2.23.005 PC-3 (BashTool risk floor via override_risk),
 /// BC-2.08.010 PC-1 (action_risk attribute emits fully-qualified ActionRisk path).
 #[derive(Debug, Clone)]
 #[non_exhaustive]
-pub struct ToolConfig { /* framework-internal fields */ }
+pub struct ToolConfig {
+    // minimum_risk: ActionRisk  — private; set at tool construction; discriminates per-tool floor
+    // (other framework-internal fields reserved under #[non_exhaustive])
+}
 
 impl ToolConfig {
     /// Builder-consuming validator for overriding the tool's declared risk tier.
     ///
-    /// Takes `self` by value — validation occurs immediately at call time.
+    /// Takes `self` by value — validation occurs immediately at call time (D-27).
     /// The caller receives `Err` directly from this method; the registry only ever
     /// receives a successfully-built `ToolConfig` (it never performs risk validation itself).
     ///
-    /// # Errors (BashTool)
-    /// `Err(E-TOOLS-007 BashRiskTierViolation)` when `risk < ActionRisk::Medium`
-    /// (i.e., `ActionRisk::ReadOnly` or `ActionRisk::Low`). The `Medium` floor is
-    /// non-lowerable — this is a framework safety invariant provable by Kani (VP-013):
-    /// `risk < ActionRisk::Medium → Err` with no code path to `Ok`.
+    /// Validates `risk >= self.minimum_risk`. The `minimum_risk` field is set per tool:
+    /// - `BashTool`: `minimum_risk = ActionRisk::Medium` — `ReadOnly` and `Low` are rejected.
+    /// - File-access tools: `minimum_risk = ActionRisk::ReadOnly` — any tier accepted.
+    ///
+    /// # Errors
+    /// `Err(E-TOOLS-007 BashRiskTierViolation)` when `risk < self.minimum_risk`
+    /// (e.g., `ActionRisk::ReadOnly` or `ActionRisk::Low` on a BashTool where minimum is `Medium`).
+    /// VP-013 (Kani P1 seed — D-30: tools::config is NOT gate-exempt): exhaustive proof that for
+    /// any `ToolConfig` constructed by `BashTool`, all `ActionRisk` variants satisfying
+    /// `risk < ActionRisk::Medium` produce `Err` with no reachable `Ok` code path.
+    /// D-25 (4 variants only: ReadOnly/Low/Medium/High, #[non_exhaustive]) is the variant bound.
+    /// D-26 signature preserved: `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>`.
     ///
     /// BC anchor: BC-2.23.005 PC-3 (risk floor check); VP-013 (Kani P1 seed: exhaustive proof).
     pub fn override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>;
@@ -1482,7 +1578,7 @@ BC-2.21.001 (VectorStore trait surface, VectorStoreFactory Sized-bounded separat
 BC-2.21.002 (InMemoryVectorStore — Arc\<dyn Embeddings\> DI, RwLock interior mutability, Vec\<f32\> cosine, VectorStoreFactory constructor),
 BC-2.21.003 (zero-norm vector guard → E-VS-001 before cosine division; VP-009 Kani candidate),
 BC-2.21.004 (MetadataFilter — Eq/Ne/In FilterClause; additive similarity_search_with_filter; pre vs post filter; #[non_exhaustive]).
-ADR-014 Decision 2 (all method signatures, VectorStoreRetriever, SearchType, MetadataFilter), Decision 3 (InMemoryVectorStore), Decision 4 (zero-norm guard E-VS-001), Decision 5 (write-time zero-norm guard E-VS-004).
+ADR-014 Decision 2 (all method signatures, VectorStoreRetriever, SearchType, MetadataFilter; §Hardening note = search-time zero-norm guard E-VS-001), ADR-014 Decision 5 (write-time zero-norm guard E-VS-004), ADR-017 Decision 4 (InMemoryVectorStore — Arc\<dyn Embeddings\> DI + RwLock\<Vec\<(Document, Vec\<f32\>)\>\> interior mutability; Arc-DI wiring at construction time; "no placeholder construction" invariant).
 
 ---
 
