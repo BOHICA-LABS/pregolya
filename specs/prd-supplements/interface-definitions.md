@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.57"
+version: "2.58"
 status: active
 producer: product-owner
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 phase: 1d
 changelog:
+  - "2.58 (F-P173-601+F-P173-602+F-P173-603+F-P173-604+F-P173-605+F-P173-614/2026-07-27): Five signature findings from adversarial pass P1D-173. (1) F-P173-601 CRITICAL: §First-Party Tools — deleted erroneous PathGuard struct/impl block that declared PathGuard in ferrochain-tools with a non-canonical check() method. Replaced with a consumption note citing the authoritative owner (ferrochain-sandbox, sandbox::path_guard, SS-13, BC-2.13.004, VP-003 Kani P0) and the two confinement entry points (canonicalize_beneath_root_pure/canonicalize_beneath_root); error layer split documented (E-SBXD-001 sandbox layer → E-TOOLS-001 tool layer). BC anchor in §First-Party Tools corrected: 'BC-2.23.001-006 shared PathGuard invariant' → 'consumes BC-2.13.004 PathGuard' per tool; PathGuard ownership row added. (2) F-P173-602 HIGH: §BaseChatModel bind_tools — removed async (construction-time validation, no I/O per BC-2.08.002 EC-005); corrected return type from bare 'impl BaseChatModel' to 'Result<impl BaseChatModel, FerrochainError>'; added # Errors doc block citing Err(E-CORE-005) when has_tool_calling=false (BC-2.08.002 EC-005/TV-005). (3) F-P173-603 HIGH: §BaseChatModel with_structured_output — added required schema: serde_json::Value parameter per BC-2.08.003 PC/EC-002/EC-003; added schemars::JsonSchema bound to T per BC-2.08.009; added per-method anchor citation. (4) F-P173-604 HIGH: §Runnable pipe — corrected return type from opaque 'impl Runnable<Input, NextOutput>' to concrete 'RunnableSequence<Input, NextOutput>' per BC-2.01.004 PC1/PC4/TV-002; added doc comment citing flattening invariant. (5) F-P173-605 HIGH: added new §DynRunnable and RunnableSequence section to §Public Rust Trait Signatures (ferrochain-core: core::runnable) — DynRunnable object-safe trait with async invoke and boxed-stream stream method (ADR-005 dyn-compat pattern; BC-2.01.003 EC-001 + BC-2.01.004 PC5/EC-001/TV-004); RunnableSequence<I,O> struct with first/middle/last/PhantomData fields (BC-2.01.004 PC1/PC4/TV-002). (6) F-P173-614 HIGH: expanded bare BC-ID anchors in §Runnable and §BaseChatModel to per-method precision; per-method cross-check run — §Runnable PASS (all 4 methods anchored, no orphan BCs); §BaseChatModel PASS with one flag: BC-2.08.004 unmapped to a declared method (flagged for architect adjudication in cross-check note). TD-VSDD-060 sibling sweep results: see report in this burst."
   - "2.57 (F-P171a-02a+F-P171a-02b+F-P171a-03+date-mono/burst-273/2026-07-25): (1) F-P171a-02a Gate #32 carrier-3: Add §ToolConfig subsection to §First-Party Tools — ToolConfig struct in ferrochain-tools::tools::config; override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError> builder-consuming validator; BashTool risk < Medium → Err(E-TOOLS-007); #[non_exhaustive]; distinct from BashConfig (per-tool impl config). (2) F-P171a-02b lifecycle adjudication: §PreToolCallHook ActionRisk doc-comment — 'BashTool construction time' → 'ToolConfig::override_risk call time'; §First-Party Tools BashTool doc-comment updated to same lifecycle language. (3) F-P171a-03: BashTool canonical annotation corrected ActionRisk::Medium → ActionRisk::High (default declared annotation; Medium is the non-lowerable floor, not the default); BC anchor and doc-comment updated to match. (4) Date-monotonicity (Gate #28 Rule 4 TEMPORAL-NEIGHBOR SWEEP): entry 2.49 date 2026-07-22 → 2026-07-23 (burst-240 ran on 2026-07-23)."
   - "2.56 (sibling-sweep-ADR-016/burst-272/2026-07-25): §LcSerializable and Reviver Surface BC anchor footer — corrected three ADR-016 Decision mis-attributions found during mandatory sibling sweep (TD-VSDD-060). (1) Decision 1 description expanded from bare '(LcSerializable trait)' to '(crate placement — ferrochain-core module, no new crate)'; LcSerializable trait definition is in Decision 2, not Decision 1. (2) Decision 2 description corrected from '(Serialized enum)' to '(LcSerializable trait, Serialized enum, LcEntry; inventory-backed OnceLock type registry)'; Decision 2 is the registry/inventory Decision covering all three types plus OnceLock initialization. (3) Decision 4 description corrected from '(inventory crate 0.3.24, dtolnay; OnceLock initialization)' to '(OLD_CORE_NAMESPACES_MAPPING legacy namespace remapping)'; inventory/OnceLock is Decision 2; version pin '0.3.24' removed (TD-VSDD-091). (4) Decision 5 removed from citation; this section covers crate placement, trait/enum/registry definition, secrets/allowlist safety, and legacy remapping (Decisions 1–4) but contains no Python checkpoint import compatibility surface — Decision 5's domain. (5) Decision 3 description expanded to include Reviver allowlist containment and E-SRLZ-002 per §Security Invariant Properties 1–5, which is the correct Decision for those behaviors (previously mis-attributed to Decision 5)."
   - "2.55 (F-P170-17+F-P170-propagation/burst-272/2026-07-25): (1) F-P170-17 MED: §Prompt Templates BC anchor footer — split Decision 3 and Decision 4 attributions. Before: 'Decision 3 (injection_guard fail-closed semantics), Decision 4 (TrustLevel enum — engine-neutral; both f-string and jinja2 raise E-TMPL-003 on undefined variable)'. After: 'Decision 3 (injection_guard fail-closed semantics; TrustLevel enum), Decision 4 (engine-neutral E-TMPL-003 — both f-string and jinja2 raise on undefined variable)'. TrustLevel is defined in ADR-015 Decision 3; E-TMPL-003 engine-neutral clause is Decision 4. (2) F-P170-propagation: §PreToolCallHook — ActionRisk enum crate/module corrected to ferrochain-core: core::action_risk per F-P170-06 architect adjudication. Source line updated to cite ferrochain-core (ActionRisk) + ferrochain-graph::hitl (PreToolCallHook + re-export). Code block split: ActionRisk in ferrochain-core block, PreToolCallHook/ToolCallPreview/PreToolDecision in ferrochain-graph block with re-export note."
@@ -109,14 +110,88 @@ pub trait Runnable<Input, Output>: Send + Sync {
         -> Result<Vec<Result<Output, FerrochainError>>, FerrochainError>;
 
     /// Pipe this runnable into another: self | other.
+    ///
+    /// Returns a concrete `RunnableSequence<Input, NextOutput>` (BC-2.01.004 PC1).
+    /// Flattening: `a.pipe(b).pipe(c)` produces one flat `RunnableSequence` with
+    /// `first=a, middle=[b], last=c` — NOT nested sequences (BC-2.01.004 PC4, TV-002).
     fn pipe<NextOutput>(self, next: impl Runnable<Output, NextOutput>)
-        -> impl Runnable<Input, NextOutput>
+        -> RunnableSequence<Input, NextOutput>
     where
         Self: Sized;
 }
 ```
 
-**BC anchor:** BC-2.01.003, BC-2.01.004
+**BC anchor (per-method):**
+- `invoke`: BC-2.01.003 PC1 (invocation semantics), BC-2.01.003 PC5 (recursion limit → `E-CORE-006`)
+- `stream`: BC-2.01.003 PC2 (streaming semantics)
+- `batch`: BC-2.01.003 PC3 (batch semantics, results in input order)
+- `pipe`: BC-2.01.004 PC1 (returns concrete `RunnableSequence`), BC-2.01.004 PC4 (sequence flattening), BC-2.01.004 TV-002 (structure inspectable)
+
+### DynRunnable and RunnableSequence
+
+Type-erased composition path and the concrete sequence type returned by `pipe`.
+**Module:** `ferrochain-core: core::runnable`.
+
+```rust
+// ferrochain-core: core::runnable
+
+/// Object-safe, type-erased handle for heterogeneous pipeline composition.
+///
+/// Used when the concrete `Runnable<I, O>` types differ (e.g. mixing model, retriever,
+/// and tool nodes in a single `Vec`). `DynRunnable` erases both `Input` and `Output`
+/// to `serde_json::Value`; callers are responsible for JSON round-tripping at the boundary.
+///
+/// **Dyn-compatibility:** every method takes an explicit receiver so the type is
+/// object-safe and can be placed behind `Arc<dyn DynRunnable>` (ADR-005 §Adjacent
+/// Trait Object-Safety Adjudications — BC-2.01.003 EC-001, BC-2.01.004 EC-001).
+///
+/// # Errors
+/// `Err(FerrochainError { category: INTERNAL, code: "E-CORE-004", … })` when a
+/// type boundary mismatch between adjacent stages is detected at the first `invoke`
+/// call (BC-2.01.004 PC5/EC-001/TV-004).
+pub trait DynRunnable: Send + Sync {
+    /// Invoke with JSON input; return JSON output.
+    async fn invoke(
+        &self,
+        input: serde_json::Value,
+        config: Option<RunnableConfig>,
+    ) -> Result<serde_json::Value, FerrochainError>;
+
+    /// Stream JSON output chunks. Boxed stream for dyn-compatibility following the
+    /// `CheckpointSaver::list` pattern (ADR-005 §Object-Safety).
+    async fn stream(
+        &self,
+        input: serde_json::Value,
+        config: Option<RunnableConfig>,
+    ) -> Pin<Box<dyn Stream<Item = Result<serde_json::Value, FerrochainError>> + Send>>;
+}
+
+/// Concrete return type of `Runnable::pipe`.
+///
+/// Holds the composed pipeline as `first → middle* → last` in a flat, non-nested
+/// structure. Each stage holds an erased `Box<dyn DynRunnable>` so heterogeneous
+/// types can participate in the sequence.
+///
+/// Authority: BC-2.01.004 PC1 (concrete return type for `pipe`),
+///            BC-2.01.004 PC4 (flattening — `a.pipe(b).pipe(c)` yields `first=a,
+///            middle=[b], last=c`, NOT nested sequences),
+///            BC-2.01.004 TV-002 (structure must be inspectable: `RunnableSequence
+///            { first, middle, last }`).
+/// Module: `ferrochain-core/src/runnables/sequence.rs`.
+pub struct RunnableSequence<I, O> {
+    /// The first stage in the pipeline.
+    pub first: Box<dyn DynRunnable>,
+    /// Zero or more intermediate stages (empty when `pipe` was called exactly once).
+    pub middle: Vec<Box<dyn DynRunnable>>,
+    /// The final stage whose output type is `O`.
+    pub last: Box<dyn DynRunnable>,
+    pub _phantom: std::marker::PhantomData<(I, O)>,
+}
+```
+
+**BC anchor:** BC-2.01.003 EC-001 (`DynRunnable` object-safe composition path),
+BC-2.01.004 PC5/EC-001/TV-004 (`E-CORE-004` on type-boundary mismatch at `DynRunnable::invoke`),
+BC-2.01.004 PC1/PC4/TV-002 (`RunnableSequence` concrete type, flattening invariant, inspectable structure)
 
 #### RunnableConfig Key Reference — `recursion_limit` Dual-Layer Interpretation (F-P49-02, ADV-P1D-PASS-49)
 
@@ -198,15 +273,43 @@ pub struct RunnableConfig {
 
 ```rust
 pub trait BaseChatModel: Runnable<Vec<Message>, AiMessage> + Send + Sync {
+    /// Returns the provider model identifier string (BC-2.08.001).
     fn model_name(&self) -> &str;
+
+    /// Stream a chat completion, yielding per-token `AiMessageChunk`s
+    /// (BC-2.08.001, BC-2.08.005 TV).
     async fn stream_chat(&self, messages: Vec<Message>, config: Option<ChatConfig>)
         -> Result<impl Stream<Item = Result<AiMessageChunk, FerrochainError>>, FerrochainError>;
-    async fn bind_tools(&self, tools: Vec<ToolDefinition>) -> impl BaseChatModel;
-    fn with_structured_output<T: DeserializeOwned>(&self) -> impl Runnable<Vec<Message>, T>;
+
+    /// Bind tools to this model, enabling tool-call generation.
+    ///
+    /// Construction-time validation only — no I/O performed.
+    ///
+    /// # Errors
+    /// `Err(FerrochainError { component: PROV, category: VAL, code: "E-CORE-005", … })`
+    /// when `self.has_tool_calling() == false` (BC-2.08.002 EC-005/TV-005).
+    fn bind_tools(&self, tools: Vec<ToolDefinition>) -> Result<impl BaseChatModel, FerrochainError>;
+
+    /// Wrap this model to produce structured output deserialized into `T`.
+    ///
+    /// `schema` is a `serde_json::Value` JSON Schema passed to the provider's
+    /// structured-output API (BC-2.08.003 PC: `model.with_structured_output::<T>(schema)`).
+    /// `T` must implement both `serde::de::DeserializeOwned` and `schemars::JsonSchema`
+    /// (BC-2.08.009). Per-method anchors: BC-2.08.003 PC/EC-002/EC-003, BC-2.08.009.
+    fn with_structured_output<T: DeserializeOwned + schemars::JsonSchema>(
+        &self,
+        schema: serde_json::Value,
+    ) -> impl Runnable<Vec<Message>, T>;
 }
 ```
 
-**BC anchor:** BC-2.08.001 through BC-2.08.005
+**BC anchor (per-method):**
+- `model_name`: BC-2.08.001 (model identity)
+- `stream_chat`: BC-2.08.001 (streaming completions), BC-2.08.005 TV (`AiMessageChunk` shape)
+- `bind_tools`: BC-2.08.002 PC (tool binding), BC-2.08.002 EC-005/TV-005 (`Err(E-CORE-005)` when `has_tool_calling = false`)
+- `with_structured_output`: BC-2.08.003 PC/EC-002/EC-003 (schema-driven structured output), BC-2.08.009 (`schemars::JsonSchema` bound on `T`)
+
+> **Cross-check note (F-P173-614):** BC-2.08.004 from the prior range "BC-2.08.001 through BC-2.08.005" is not yet anchored to a declared trait method. If BC-2.08.004 covers a method not declared here (e.g., `has_tool_calling`), architect must add it; if it covers a cross-cutting contract (e.g., non-exhaustive message shape), cite it at the appropriate struct declaration. Flag: orphaned BC until architect adjudicates.
 
 > **Gate #31 type note — `ChatConfig`, `AiMessageChunk`, `ToolDefinition`:** `ChatConfig` is a provider-specific streaming-configuration struct (temperature, max_tokens, etc.); not formally enumerated in the spec corpus — implementer defines as a provider-specific struct; flagged corpus-unresolved. `AiMessageChunk` is the per-token streaming output type; defined via BC-2.08.001 PC1 + BC-2.08.005 TV (streaming completions BC). `ToolDefinition` is the public tool-schema type; defined via BC-2.08.009 (tool schema naming stability BC).
 
@@ -1080,21 +1183,32 @@ pub trait CompactionPolicy: Send + Sync {
 
 **Source:** ADR-020 (ferrochain-tools crate); ferrochain-tools crate. All file-access tools (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, GrepTool) use `PathGuard` for workspace confinement (E-TOOLS-001 on escape); BashTool is confined via the ferrochain-sandbox backend (BC-2.23.005). All tools implement the `Tool` trait via `#[ferrochain::tool]` proc-macro.
 
-BC anchor: BC-2.23.001 (ReadFileTool), BC-2.23.002 (WriteFileTool), BC-2.23.003 (EditFileTool), BC-2.23.004 (ListDirTool), BC-2.23.005 (BashTool — ActionRisk::High default annotation; non-lowerable Medium floor via ToolConfig::override_risk; EC-005 timeout; EC-006 output truncation), BC-2.23.006 (GrepTool — match cap, E-TOOLS-006 capped flag), ToolConfig (BC-2.23.005 PC-3, BC-2.08.010 PC-1).
+BC anchor: BC-2.23.001 (ReadFileTool — consumes BC-2.13.004 PathGuard), BC-2.23.002 (WriteFileTool — consumes BC-2.13.004 PathGuard), BC-2.23.003 (EditFileTool — consumes BC-2.13.004 PathGuard), BC-2.23.004 (ListDirTool — consumes BC-2.13.004 PathGuard), BC-2.23.005 (BashTool — ActionRisk::High default annotation; non-lowerable Medium floor via ToolConfig::override_risk; EC-005 timeout; EC-006 output truncation), BC-2.23.006 (GrepTool — match cap, E-TOOLS-006 capped flag; consumes BC-2.13.004 PathGuard), PathGuard ownership: BC-2.13.004 (ferrochain-sandbox SS-13 VP-003 Kani P0), ToolConfig (BC-2.23.005 PC-3, BC-2.08.010 PC-1).
 
 ```rust
 // ferrochain-tools crate
 
-/// Workspace confinement guard.
-/// Resolves the path via `canonicalize` and verifies it falls under `root`.
-/// Shared by ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, GrepTool.
-/// BC anchor: BC-2.23.001–006 shared PathGuard invariant; E-TOOLS-001 on escape.
-pub struct PathGuard { root: PathBuf }
-impl PathGuard {
-    pub fn new(root: impl Into<PathBuf>) -> Result<Self, FerrochainError>;
-    /// Returns Err(E-TOOLS-001) if resolved path escapes root.
-    pub fn check(&self, path: &Path) -> Result<PathBuf, FerrochainError>;
-}
+// PathGuard is OWNED BY ferrochain-sandbox (sandbox::path_guard, SS-13, BC-2.13.004,
+// VP-003 Kani P0). It is NOT declared or owned by ferrochain-tools.
+//
+// ferrochain-tools CONSUMES PathGuard via the ADR-020 Decision 1 dependency edge
+// (ferrochain-tools → ferrochain-sandbox). The five file-access tools call
+// canonicalize_beneath_root on every path argument at access time (NE-02 invariant).
+//
+// Confinement entry points (ferrochain-sandbox API surface):
+//   /// Pure inner function: no I/O; takes already-resolved base + candidate path.
+//   pub fn canonicalize_beneath_root_pure(base: &Path, path: &Path)
+//       -> Result<PathBuf, FerrochainError>;
+//   /// I/O-performing outer function: calls std::fs::canonicalize before delegating.
+//   pub fn canonicalize_beneath_root(base: &Path, path: &Path)
+//       -> Result<PathBuf, FerrochainError>;
+//
+// Error layer split:
+//   - Escape detected inside ferrochain-sandbox → Err(E-SBXD-001 PathEscapeViolation)
+//   - ferrochain-tools wraps/surfaces escape as Err(E-TOOLS-001 PathConfinementViolation)
+//
+// BC anchor (owner): BC-2.13.004 (PathGuard invariant, VP-003 Kani P0, SS-13)
+// BC anchor (consumer, these tools): BC-2.23.001–005 share the confinement pre-condition
 
 // ferrochain-tools: tools::config (Gate #32 carrier-3 — crate placement: ADR-020 Decision 3)
 

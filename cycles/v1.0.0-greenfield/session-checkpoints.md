@@ -1535,3 +1535,19 @@ ferrochain Phase 1 (Spec Crystallization) in-progress — 0/3 streak; P1D-173 FU
 ### STANDING USER DIRECTIVE: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13).
 
 ### P1D-173 METADATA: Date 2026-07-27 | Cycle v1.0.0-greenfield | 8 slices at frozen HEAD 8954a11 | D-35 added | 5 lessons L-065..L-069 minted | trajectory →19→20→130.
+
+---
+
+### ARCHIVED CHECKPOINT — STATE.md v4.25 (burst-276-content-1, 2026-07-27)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1 (Spec Crystallization) in-progress — 0/3 streak; fix-burst 276 content wave 1 COMPLETE (2 CRIT closed: F-P173-211 4-site FerrochainError Arc-clone; F-P173-301/402 eval::judge mis-anchor; F-P173-401 3-doc deadlock broken; F-P173-202/210/214/619 closed; canonicality filter 70→71 fixed; 4 lessons L-075..L-078). NEXT: content wave 2 — interface-definitions.md (CRIT F-P173-601 + 9 HIGH), api-surface.md residue (8 HIGH), coverage-matrix + system-overview (3 HIGH), VP bodies (4 HIGH), ~30 ADR semantic citations.
+### HEADS: develop 46725ad (clean, pushed); factory-artifacts = `git -C .factory log -1 --format='%H'`; no worktrees; no open PRs.
+### PERIMETER SNAPSHOT (post-burst-276-content-1): decomp 71/69+2; criticality registry 77 (12/28/35/2); purity 82 rows (33/37/12); 129 BCs (51/75/3); 108 error codes; 674 TVs; 38 CAPs; 15 DIs; 13 VPs; 20 ADR files; 21 crates; 14 bounded contexts; 15 StreamEvents; 17 Components; 11 event_types; 37 gates; 11 Red Gate BCs; 7 blocking + 4 advisory + records-lint; allowlist 24 entries; citation coverage 287; eval::judge 11/11.
+### ADVISORY-VALIDATOR BASELINES (Wave B/C targets): CHECK1=17; CHECK2=4; CHECK3=live (ADR-017 Decision 4); CHECK4: decomp 0/71 (filter fixed burst-276-content-1), purity 1/82, vcm 52/90; CHECK6-D1=3 labels/2 files; CHECK6-D2=0; CHECK6-D3=3 files.
+### CENSUS SEXTUPLE (burst-275 verified; unchanged by content wave 1): decomp_total=71; tiered=69; exempt=2; registry=77; distinct_modules=76; matched=69; diff-set EMPTY. Registry: CRIT 12 / HIGH 28 / MED 35 / LOW 2 = 77.
+### NEXT-ACTION: fix-burst 276 content wave 2 — CRIT F-P173-601 (PathGuard wrong crate, product-owner) + F-P173-104 (bounded-contexts forbidden dep, architect) + interface-definitions.md (9 HIGH), api-surface.md residue (8 HIGH), coverage-matrix + system-overview (3 HIGH), VP bodies (4 HIGH), ~30 ADR semantic citations. Then P1D-174 FULL-PERIMETER.
+### CONVERGENCE-INTEGRITY RULE: BC-5.39.001 3-CLEAN streak requires FULL-PERIMETER passes only. P1D-174 is the next numbered FULL-PERIMETER pass; streak resets fresh from 0/3 after all waves of fix-burst 276.
+### PENDING HUMAN ACTIONS: B1 `direnv allow`; R6 regenerate publish-all.sh for 21 crates; policies.yaml (still no file).
+### STANDING USER DIRECTIVE: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13).
+### BURST-276-CONTENT-1 METADATA: Date 2026-07-27 | Cycle v1.0.0-greenfield | 2 CRIT + 6 other findings closed | 10 spec files bumped | 4 lessons L-075..L-078 minted.

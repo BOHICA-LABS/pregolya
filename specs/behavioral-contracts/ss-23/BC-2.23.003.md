@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.003
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: ferrochain-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -23,6 +23,7 @@ changelog:
   - "1.1 (Burst-232/2026-07-22): Fix Category::VALIDATION → Category::VAL in PC-2 (E-TOOLS-003 EditOldStringNotFound). VALIDATION is not in the canonical 12-member Category enum; E-TOOLS-003 is VAL per error-taxonomy v1.31. D23 straggler sweep."
   - "1.2 (burst-233/F-P133-03/2026-07-22): PC-5 — assign E-TOOLS-008 FileIoError to the OS-level I/O error path for file-not-found (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'EditFileTool', path: <file_path>, io_kind: <ErrorKind debug name>. Gate #33 forward+reverse clean."
   - "1.3 (burst-247/F-P146-02/2026-07-24): H1 title — append exhaustive raised-code enumeration 'E-TOOLS-001/003/008' per SS-23 title policy. Inline contextual reference 'E-TOOLS-003 on No-Match' is retained (describes trigger condition); trailing exhaustive enumeration is now also present for machine extractability. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
+  - "1.5 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check with canonical canonicalize_beneath_root at 1 site: VP-2.23.003-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout."
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-5); Category::VAL → Category::Val (PC-2), Category::TOOL → Category::Tool (PC-5)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
@@ -132,7 +133,7 @@ controls whether all occurrences are replaced (default false — first occurrenc
 
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
-| VP-2.23.003-A (VP-003 reuse) | PathGuard::check before any filesystem open | Kani proof reused from VP-003 |
+| VP-2.23.003-A (VP-003 reuse) | canonicalize_beneath_root called before any filesystem open | Kani proof reused from VP-003 |
 | VP-2.23.003-B | E-TOOLS-003 returned when exact match absent and no fuzzy threshold set | Unit test: file without old_string; assert Err(E-TOOLS-003) |
 | VP-2.23.003-C | Conditional retry safety: E-TOOLS-003 path leaves file unchanged | Unit test: call EditFileTool twice with same args on a file without old_string; file bytes identical after both calls |
 

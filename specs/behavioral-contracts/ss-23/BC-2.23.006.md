@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.006
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: ferrochain-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -25,6 +25,7 @@ changelog:
   - "1.3 (burst-238/F-P138-01/2026-07-23): Architecture Anchors Decision 5 annotation updated: stale 'architect to append E-TOOLS-008/009 to ADR-020 TOOLS table' replaced with 'appended to ADR-020 TOOLS table in ADR-020 v1.7 (burst-238 sweep: satisfied)'. Completed-handoff residue removal. Gate #28 close F-P138-01."
   - "1.4 (burst-247/F-P146-02+OBS-naming/2026-07-24): (1) H1 title — replace payload flag E-TOOLS-006 with the correct raised codes E-TOOLS-008 and E-TOOLS-009 per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded). Before: 'E-TOOLS-001/006'. After: 'E-TOOLS-001/008/009'. E-TOOLS-006 is retained in the body as a payload annotation (GrepResult.capped). (2) Description and PC-2 body — align capped-flag name from informal 'SearchResultsCapped'-style to canonical field-path notation 'GrepResult.capped' per OBS naming-anchor (error-taxonomy v1.37 adds explicit canonical-field-path marker for E-TOOLS-006). (3) Traceability Capability Anchor Justification — update error-code citation from 'E-TOOLS-001/006' to 'E-TOOLS-001/008/009 (E-TOOLS-006 is a non-raised payload flag)'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
   - "1.5 (F-P149-02/burst-250/2026-07-24): Architecture Anchors version pin de-pinned: 'ADR-020 TOOLS table in ADR-020 v1.7' → 'ADR-020 Decision 5 §E-TOOLS-* table' (TD-VSDD-091 stable-anchor enforcement, F-P149-02). input-hash updated 64d7571→0b1f1b3 (drift from prior burst)."
+  - "1.7 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check with canonical canonicalize_beneath_root at 3 sites: PC-6 inline reference (guard pass described as 'canonicalize_beneath_root succeeds — the confinement check and fs::open are distinct steps'), Invariants call-obligation bullet (root path argument), VP-2.23.006-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout; error-layer distinction (E-SBXD-001 sandbox vs E-TOOLS-001 tool layer) preserved in PC-6 final sentence."
   - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 5 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-3 + PC-4 + PC-6); Category::SECURITY → Category::Security (PC-3), Category::VAL → Category::Val (PC-3 prose backtick + PC-4 code), Category::TOOL → Category::Tool (PC-6), edge-case table cell Category::VAL → Category::Val (EC-002)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-038
@@ -113,7 +114,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    Partial results accumulated before the error are NOT returned; the caller receives only
    the `Err` so that the incomplete search is never silently treated as a complete result
    (DI-014). This also applies to I/O errors on the root `path` argument after it passes
-   `PathGuard::check` — the guard pass and the subsequent `fs::open` are distinct steps;
+   `canonicalize_beneath_root` succeeds — the confinement check and the subsequent `fs::open` are distinct steps;
    an I/O error at open time is E-TOOLS-008, not E-TOOLS-001.
 
 ## Invariants
@@ -123,7 +124,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 - **Linear-time guarantee:** The `regex` crate uses a finite-automata engine. No regex
   pattern can cause catastrophic backtracking. This is a correctness property for accepting
   untrusted user-supplied patterns.
-- `PathGuard::check` is called for the root `path` argument. For recursive traversal,
+- `canonicalize_beneath_root` is called for the root `path` argument. For recursive traversal,
   each visited path is also verified against the guard before the file is opened.
 - **DI-014 (No Silent Swallowing):** Path violations, invalid patterns, and OS-level I/O
   errors during traversal all propagate as `Err`. Zero matches return `Ok` with an empty
@@ -163,7 +164,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
-| VP-2.23.006-A (VP-003 partial reuse) | PathGuard::check called for every accessed path (root + each recursive subpath) | Unit test: mock PathGuard that records calls; assert called for each file path visited |
+| VP-2.23.006-A (VP-003 partial reuse) | canonicalize_beneath_root called for every accessed path (root + each recursive subpath) | Unit test: mock PathGuard that records calls; assert called for each file path visited |
 | VP-2.23.006-B | max_results capping: first 100 matches returned with capped=true when > 100 exist | Unit test: directory with 150 matching files; assert matches.len() == 100 and capped == true |
 | VP-2.23.006-C | Hermetic: no subprocess spawned during GrepTool invocation | Integration test: run with a system-command tracer; assert zero subprocess spawns |
 

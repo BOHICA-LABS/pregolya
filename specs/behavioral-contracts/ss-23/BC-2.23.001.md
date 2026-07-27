@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.001
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: ferrochain-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -23,6 +23,7 @@ changelog:
   - "1.1 (Burst-232/2026-07-22): Fix Category::VALIDATION → Category::VAL in PC-3 (E-TOOLS-002 FileReadExceedsLimit). VALIDATION is not in the canonical 12-member Category enum; E-TOOLS-002 is VAL per error-taxonomy v1.31. D23 straggler sweep."
   - "1.2 (burst-233/F-P133-03/2026-07-22): PC-4 / EC-005 / TV-004 — assign E-TOOLS-008 FileIoError to the OS-level I/O error path (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'ReadFileTool', path: <file_path>, io_kind: <ErrorKind debug name>. Gate #33 forward+reverse: E-TOOLS-008 now covers this raise site; error-taxonomy.md v1.32 anchors BC-2.23.001 in E-TOOLS-008 row."
   - "1.3 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded); normalize separator from ' / ' to '/'. Before: 'E-TOOLS-001 / E-TOOLS-002'. After: 'E-TOOLS-001/002/008'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX)."
+  - "1.5 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check(path) with canonical entry point canonicalize_beneath_root at 4 sites: PC-2 raise condition (returns Err not false), EC-002 symlink-target note (canonicalize_beneath_root resolves symlinks before confinement check), Invariants call-obligation bullet, VP-2.23.001-A property description. VP annotation updated: '(PathGuard type is unchanged)' to '(canonicalize_beneath_root_pure is the proof target)'. No error-layer-split issues — E-TOOLS-001 correctly used as tool-layer code throughout; E-SBXD-001 not conflated."
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: component: \"TOOLS\" string literal → component: Component::Tools (Rust struct-literal sketches in PC-2/PC-3/PC-4); Category::SECURITY → Category::Security (PC-2), Category::VAL → Category::Val (PC-3), Category::TOOL → Category::Tool (PC-4)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
@@ -72,7 +73,7 @@ limit.
    `contents` is the full UTF-8 file contents. If the file contains non-UTF-8 bytes, the
    implementation returns them lossily decoded (replacement character U+FFFD) rather than
    erroring — consumers that need strict UTF-8 validation must do so on the returned text.
-2. **Path confinement violation:** `PathGuard::check(path)` returns false for any reason
+2. **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns `Err` for any reason
    (path is outside scope, is a symlink escaping scope, is an absolute path not under the
    guard root). The tool returns
    `Err(FerrochainError { component: Component::Tools, category: Category::Security,
@@ -96,7 +97,7 @@ limit.
 
 ## Invariants
 
-- `PathGuard::check` is called for EVERY invocation before any filesystem open. There is no
+- `canonicalize_beneath_root` is called for EVERY invocation before any filesystem open. There is no
   bypass, no trust-caller shortcut.
 - `max_bytes` is checked against file metadata size BEFORE reading file contents into memory.
   The implementation must not read up to `max_bytes` and then truncate; it must reject first.
@@ -114,7 +115,7 @@ limit.
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | Path is outside PathGuard scope (e.g., `"/etc/passwd"` when guard root is `"/workspace"`) | `Err(E-TOOLS-001 PathConfinementViolation)` — no I/O performed |
-| EC-002 | Path is a symlink that resolves to a target outside PathGuard scope | `Err(E-TOOLS-001 PathConfinementViolation)` — symlink target must also pass `PathGuard::check` |
+| EC-002 | Path is a symlink that resolves to a target outside PathGuard scope | `Err(E-TOOLS-001 PathConfinementViolation)` — `canonicalize_beneath_root` resolves symlinks before the confinement check; the resolved canonical path must be beneath the workspace root |
 | EC-003 | File exists, is within scope, but size is 1,048,577 bytes (1 byte over 1 MiB default) | `Err(E-TOOLS-002 FileReadExceedsLimit)` — file not read; error message includes actual size and limit |
 | EC-004 | File exists, within scope, size ≤ max_bytes, but contains binary (non-UTF-8) bytes | `ToolOutput::Text(contents)` with U+FFFD replacement for non-UTF-8 bytes — not an error; caller annotated |
 | EC-005 | File does not exist | `Err(E-TOOLS-008 FileIoError)` — `{ tool_type: "ReadFileTool", path: "<path>", io_kind: "NotFound" }` |
@@ -135,7 +136,7 @@ limit.
 
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
-| VP-2.23.001-A (VP-003 reuse) | PathGuard::check is called before any filesystem open for every ReadFileTool invocation | Kani proof reused from VP-003 (PathGuard type is unchanged) |
+| VP-2.23.001-A (VP-003 reuse) | canonicalize_beneath_root is called before any filesystem open for every ReadFileTool invocation | Kani proof reused from VP-003 (canonicalize_beneath_root_pure is the proof target) |
 | VP-2.23.001-B | max_bytes check uses metadata size, not post-read truncation | Unit test: mock filesystem with file size = max_bytes + 1; assert Err before read |
 | VP-2.23.001-C | DI-014 compliance: Err propagates for all failure conditions; no empty ToolOutput fallback | Unit tests for each failure path (EC-001 through EC-005) |
 

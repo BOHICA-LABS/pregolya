@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.004
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: ferrochain-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -22,6 +22,7 @@ changelog:
   - "1.0 (D23/2026-07-22): Initial BC — D23 first-party tool library, SS-23 ListDirTool."
   - "1.1 (burst-233/F-P133-03/2026-07-22): PC-3 / PC-5 / EC-002 / EC-005 / TV-004 — assign E-TOOLS-008 FileIoError to the OS-level I/O error paths (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'ListDirTool', path: <dir_path>, io_kind: <ErrorKind debug name> ('NotADirectory' for PC-3/EC-002; 'NotFound' for PC-5/EC-005). Gate #33 forward+reverse clean."
   - "1.2 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded); reorder trailing section to 'E-TOOLS-001/008; DirEntry Struct' (DirEntry Struct is not an error code and is retained as a structural descriptor after the slash-separated error block). Before: 'E-TOOLS-001; DirEntry Struct'. After: 'E-TOOLS-001/008; DirEntry Struct'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
+  - "1.4 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check(path) with canonical canonicalize_beneath_root at 3 sites: PC-1 happy-path ('passes' to 'succeeds'), Invariants call-obligation bullet, VP-2.23.004-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout."
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-3 + PC-5); Category::SECURITY → Category::Security (PC-2), Category::TOOL → Category::Tool (PC-3 + PC-5)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
@@ -64,7 +65,7 @@ filter at the application layer.
 
 ## Postconditions
 
-1. **Happy path:** `PathGuard::check(path)` passes and `path` is a readable directory.
+1. **Happy path:** `canonicalize_beneath_root(workspace_root, path)` succeeds and `path` is a readable directory.
    The tool returns `ToolOutput::Json(entries)` where `entries` is a JSON array of
    `DirEntry` objects:
    ```json
@@ -92,7 +93,7 @@ filter at the application layer.
 
 ## Invariants
 
-- `PathGuard::check` is called for EVERY invocation before any filesystem open.
+- `canonicalize_beneath_root` is called for EVERY invocation before any filesystem open.
 - Listing is non-recursive (depth 1). The tool returns only the direct children of `path`;
   it does not descend into subdirectories.
 - `DirEntry::size_bytes` is the file's metadata size (same as `std::fs::metadata().len()`).
@@ -125,7 +126,7 @@ filter at the application layer.
 
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
-| VP-2.23.004-A (VP-003 reuse) | PathGuard::check called before any filesystem open | Kani proof reused from VP-003 |
+| VP-2.23.004-A (VP-003 reuse) | canonicalize_beneath_root called before any filesystem open | Kani proof reused from VP-003 |
 | VP-2.23.004-B | Empty directory returns Ok([]), not Err | Unit test: create empty dir, assert ToolOutput::Json([]) |
 | VP-2.23.004-C | Entries sorted lexicographically by name | Unit test: dir with unsorted entries; assert sorted output |
 

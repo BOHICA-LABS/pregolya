@@ -5471,3 +5471,68 @@ See lessons.md for full narrative.
 ### Archived from Current Phase Steps
 
 Burst 274 (P1D-172a fix-burst) row archived from STATE.md v4.24 Current Phase Steps table (oldest row; replaced by this burst entry).
+
+---
+
+## Burst 276 content wave 2 — PathGuard phantom purge (F-P173-601) + signature defects (F-P173-602/603/604/605) + per-method anchors (F-P173-614) COMPLETE
+
+**Date:** 2026-07-27
+**Specialists:** architect + product-owner + state-manager
+**Scope:** interface-definitions.md (F-P173-601 CRIT + F-P173-602/603/604/605/614 HIGH); BC-2.23.001/002/003/004/006 (16-site phantom sweep); error-taxonomy.md (E-TOOLS-001 sweep)
+**Frozen HEAD:** 8954a11 (unchanged — fix-burst only; no adversary pass this burst)
+**Streak:** 0/3 (unchanged)
+
+### F-P173-601 — PathGuard declared in wrong crate with invented method name (CRITICAL)
+
+`interface-definitions.md` §First-Party Tools declared `pub struct PathGuard { root: PathBuf }` with `pub fn check(&self, path: &Path)` inside a `// ferrochain-tools crate` block. Five artifacts unanimously refuted this: `api-surface.md`, ADR-020 Decision 2, `dependency-graph.md`, `module-criticality.md` (sandbox::path_guard, ferrochain-sandbox, SS-13, CRITICAL, VP-003), and `VP-003.md` (target `ferrochain-sandbox/src/path_guard.rs`, function `canonicalize_beneath_root`). Struct/impl deleted; §PathGuard now carries a consumption note naming the real owner, both canonical entry points (`canonicalize_beneath_root` / `canonicalize_beneath_root_pure`), and the two-layer error split; BC anchor corrected to BC-2.13.004.
+
+**Phantom propagation — 16 sites across 6 files:** The invented name `PathGuard::check` was created by that declaration and spread to: `error-taxonomy.md` (1 site), `BC-2.23.001.md` (4 sites), `BC-2.23.002.md` (4 sites), `BC-2.23.003.md` (1 site), `BC-2.23.004.md` (3 sites), `BC-2.23.006.md` (3 sites). All 16 swept to canonical form with judgement: call sites became `canonicalize_beneath_root(workspace_root, path)`, the provable layer became `canonicalize_beneath_root_pure`, genuine concept references (`PathGuard is the same type already proven`, `(PathGuard scope)` precondition phrases) were correctly left as prose. Error-layer split verified correct at every site — `E-TOOLS-001` at the tool layer throughout, no conflation with sandbox-layer `E-SBXD-001`. Orchestrator-verified: zero live-body `PathGuard::check` occurrences remain corpus-wide; remaining hits are Form A changelog audit trail only.
+
+### F-P173-602 — `bind_tools` wrong return type and missing `Result` (HIGH)
+
+`async fn bind_tools(...) -> impl BaseChatModel` carried two defects: (1) nested `impl Trait` in return position does not compile; (2) no `Result` wrapper makes BC-2.08.002's mandated `E-CORE-005` unreachable — only `panic!` remains, CLAUDE.md-forbidden outside tests. Fixed to `fn bind_tools(...) -> Result<impl BaseChatModel, FerrochainError>` with `# Errors` block; `async` dropped (EC-005 is construction-time validation, not async).
+
+### F-P173-603 — `with_structured_output` missing `schema` parameter and bound (HIGH)
+
+Every BC-2.08.003 postcondition, edge case, and test vector passes a `schema` argument; the declaration lacked both the parameter and the `schemars::JsonSchema` bound needed to generate it. Both added.
+
+### F-P173-604 — `pipe` returned opaque `impl Runnable` (HIGH)
+
+`impl Runnable` return made BC-2.01.004 PC4 (flattening) and TV-002 (structural assertion) literally unassertable. Now returns concrete `RunnableSequence<Input, NextOutput>`.
+
+### F-P173-605 — `DynRunnable` and `RunnableSequence` undeclared (HIGH)
+
+Both named load-bearing by ADR-005; `RunnableSequence::invoke` cited as E-CORE-004's raise site. Both now declared under `core::runnable`. `DynRunnable::stream` uses boxed-stream form per `CheckpointSaver::list` precedent.
+
+### F-P173-614 — Per-method anchors missing from §Runnable and §BaseChatModel (HIGH, structural cause)
+
+§Runnable and §BaseChatModel were the only two sections still carrying bare BC-ID range anchors with no per-method precision, despite the v2.43 changelog recording per-method anchoring as deliberate discipline. Three of the four signature defects lived in exactly those two sections. Both sections now carry per-method anchors. Cross-check: §Runnable CLEAN (4 methods, no orphans); §BaseChatModel PASS with one gap surfaced (BC-2.08.004 — route to architect).
+
+### Open items routed to architect
+
+- **BC-2.08.004 unanchored** — concealed inside old bare range; likely needs `has_tool_calling` method declaration or type-contract anchor
+- **F-P173-204** — `api-surface.md` PathGuard row: BC-2.13.004 PC4 raises `E-SBXD-001`; column shows `E-TOOLS-001`; interface-definitions.md fixed, api-surface.md residue remains
+
+### Files changed
+
+| File | Version |
+|------|---------|
+| `.factory/specs/prd-supplements/interface-definitions.md` | v2.58 |
+| `.factory/specs/prd-supplements/error-taxonomy.md` | v1.43 |
+| `.factory/specs/behavioral-contracts/ss-23/BC-2.23.001.md` | v1.5 |
+| `.factory/specs/behavioral-contracts/ss-23/BC-2.23.002.md` | v1.4 |
+| `.factory/specs/behavioral-contracts/ss-23/BC-2.23.003.md` | v1.5 |
+| `.factory/specs/behavioral-contracts/ss-23/BC-2.23.004.md` | v1.4 |
+| `.factory/specs/behavioral-contracts/ss-23/BC-2.23.006.md` | v1.7 |
+
+### Convergence / streak
+
+0/3 unchanged. A fix burst does not advance the streak. 174 adversary passes (no new pass this burst).
+
+### Lessons minted: L-079..L-081
+
+See lessons.md for full narrative.
+
+### Archived from Current Phase Steps
+
+P1D-172b state-record row archived from STATE.md v4.25 Current Phase Steps table (oldest row; replaced by this burst entry).
