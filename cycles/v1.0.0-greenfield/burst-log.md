@@ -5303,4 +5303,95 @@ Two new entries added to the self-attributed defects record:
 
 **Next:** fix-burst 276, staged in ownership waves. Process-gap gates (F-P173-303/306/319/308/309/310) dispatched FIRST to prevent recurrence of the burst-274→275 inverted-gate ordering error.
 
+---
+
+## Burst 276 Wave A — fix-burst: process-gap gates + advisory validators (2026-07-27)
+
+**Type:** Fix burst (infrastructure wave — gates and validators only; no content fixes)
+**Cycle:** v1.0.0-greenfield
+**Date:** 2026-07-27
+**Agents:** product-owner (bc-authoring-plan gate revisions) + devops-engineer (hook authoring) + state-manager (this record)
+**Closes:** 6 process-gap findings from P1D-173 (F-P173-303/306/319/308/309/310)
+**Does NOT close:** Content findings (F-P173-211/301/402/601/104 and all HIGH/MED/LOW) — those are Wave B (architect ~70) and Wave C (product-owner ~35).
+
+### Commit-theme note
+
+`harden(gates)` prefix — chosen to be clearly distinct from upcoming Wave B (`fix(arch-content)`) and Wave C (`fix(po-content)`) to keep TD-VSDD-053 chain-detector clean.
+
+### Gate track (bc-authoring-plan v2.58 → v2.59)
+
+**F-P173-303 HIGH (4th generation of unfalsifiable-suppression defect):** Blocking identity 1 `total == tiered + exempt` was a tautology — all four failure modes (section added, section dropped, count changed, class conflation) still satisfied it. Fix: replaced with a recorded per-section row vector that fails if a section is added or dropped; `class_a_row_count` as explicit member with blocking identity `class_a_row_count == 0`; Class B set equality rather than count equality. Lineage: F-P172b-05 inverted census direction → Class A/B flattening → crate-level annotation untruth → tautological identity. Orchestrator commissioned each generation; lineage recorded.
+
+**F-P173-306 HIGH:** Crate-level annotation verification used module-name-prefix grep → false PASS for `ferrochain-standard-tests` (owns `eval::judge`; prefix `standard_tests::` matches nothing in the registry). Fix: section-scoped enumeration + blocking identity `verified_count == crate_level_row_count`.
+
+**F-P173-319 MED (2nd break of same command; F-P170-15 fixed `$4`→`$3` one burst earlier):** Gate #25 Part C `awk` field index re-broken by Qualifier column insertion. Fix: derives column index from header row at runtime; no hardcoded field index. L-072 codified.
+
+**F-P173-309 MED:** `registry_rows` was self-contradictory (claimed 77 in one place, 76 in another). Fix: split into `registry_rows` (unconditional total) and `registry_census_rows` (intersection denominator).
+
+**F-P173-310 MED:** Class A inverse assertion had no verification obligation; any value would satisfy it. Fix: added a census command + blocking identity `class_a_row_count == 0` (true iff no Class A rows exist).
+
+**F-P173-308 MED:** Gate referenced a "Criticality column" in `verification-coverage-matrix.md` that does not exist, making the recount unexecutable and degenerating into prohibited sibling-mirroring. Fix: gate now references the `Tier` column the architect adds in Wave B, with an explicit precondition that blocks the recount until that column exists.
+
+**L-065 layer-scoped-sweep prohibition (codified in bc-authoring-plan v2.59):** A sweep or de-pin closure statement may not be layer-scoped unless it enumerates excluded layers as named follow-up obligations. Record the sweep predicate, not the layer.
+
+**Gates: 36 → 37.**
+
+### Validator track (devops-engineer)
+
+All 6 new checks land as ADVISORY / non-blocking. Advisory-first was deliberate: all of CHECK1/2/3/4/6 would legitimately FAIL on the current corpus because the content defects are real and unfixed. Landing them as blocking would block this burst's own commit and every commit until Wave B completes. Advisory + documented promotion path + runtime-computed counts turns each check into a countable Wave B target instead of a roadblock.
+
+| Check | File | Type | Notes |
+|-------|------|------|-------|
+| L10 hash-digest ban | records-lint.sh | Advisory | Bans 7-hex SHA literal in newly-authored changelog prose; grandfathers existing VP-008/009/010 pins which predate this rule |
+| CHECK1 sub-anchor nesting | verify-adr-decision-refs.sh | Advisory | ADR `§SubAnchor` not nested under claimed decision section |
+| CHECK2 label-noun presence | verify-adr-decision-refs.sh | Advisory | Parenthetical label absent from cited decision span |
+| CHECK3 reverse coverage | verify-adr-decision-refs.sh | Advisory | Accepted-ADR decision with zero inbound citations |
+| CHECK4 module canonicality | verify-module-canonicality.sh (NEW) | Advisory | Non-canonical Module cells in arch tables |
+| CHECK6 red gate consistency | verify-red-gate-consistency.sh (NEW) | Advisory | Inconsistencies between `red_gate:` frontmatter and body content |
+
+### Measured baselines (runtime-computed; Wave B countable targets)
+
+These were computed by the new checks at the current corpus state, not hand-asserted. They supersede the adversary's hand counts.
+
+| Check | Finding | Measured |
+|-------|---------|----------|
+| CHECK1 sub-anchor nesting | ADR `§SubAnchor` not nested under claimed decision | **17 citations** (adversary found 4 — 13 more, incl. ADR-015 Decision 3 §Decision at 6 domain-spec sites) |
+| CHECK2 label-noun presence | Parenthetical label absent from cited decision span | **4 citations** |
+| CHECK3 reverse coverage | Accepted-ADR decision with zero inbound citations | **live** (found ADR-017 Decision 4) |
+| CHECK4 module canonicality | Non-canonical Module cells | module-decomposition **70/70 canonical**; purity-boundary-map **1/82** (`graph::hitl (pre-tool dispatch)`); verification-coverage-matrix **52/90** (adversary found 36/77 — CHECK4 additionally covers §VP-to-Module section) |
+| CHECK6-D1 | `red_gate:false` + live-body `(Red Gate)` label | **2 files, 3 labels** (VP-012 ×1, VP-013 ×2) |
+| CHECK6-D2 | `red_gate:true` + no marking | **0** |
+| CHECK6-D3 | `red_gate:false` + §Lifecycle Red Gate rows | **3 files** (VP-011, VP-012, VP-013 — 2 rows each) |
+| L10 hash-digest ban | 7-hex SHA literal in newly-authored changelog prose | **0** (grandfathers existing pins) |
+
+**Open reconciliation for Wave B:** CHECK4 reports 70/70 canonical in `module-decomposition.md` while the verified census records 71 rows. The 70-vs-71 discrepancy must be adjudicated in Wave B — either the check's row filter excludes a legitimately-shaped row, or the census total is off by one. Do not leave it ambiguous.
+
+### Validator false-negative found and fixed IN this burst
+
+`verify-red-gate-consistency.sh` initially reported `Direction-1: 0 / Direction-2: 0` while ground truth was 3 live-body label violations. Root cause: bash parameter-expansion bug — `${detail%%:*}` stripped from the first colon, which sat inside `red_gate:false` rather than after the direction key, so `direction` resolved to `false-has-label red_gate` and fell through the catch-all arm. WARN lines were emitted but counters never incremented; summary contradicted evidence above it. Fixed by isolating the `direction=<key>` token. Re-verified against both the live corpus and seven synthetic known-positive inputs.
+
+Structural note: this is the same shape as F-P173-303 (a check that cannot fail) — caught inside the burst minted to eliminate that class. L-070 codified.
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `.factory/specs/prd-supplements/bc-authoring-plan.md` | v2.58 → v2.59 (6 gate revisions; gates 36→37; L-065 layer-sweep prohibition codified) |
+| `.factory/hooks/records-lint.sh` | + L10 hash-digest ban (advisory; baseline: 0 violations in new text) |
+| `.factory/hooks/verify-adr-decision-refs.sh` | + CHECK1/2/3 advisory sub-checks (baselines: 17/4/live) |
+| `.factory/hooks/verify-module-canonicality.sh` | NEW — CHECK4 advisory (baselines: 52 non-canonical in verification-coverage-matrix; 1 in purity-boundary-map) |
+| `.factory/hooks/verify-red-gate-consistency.sh` | NEW — CHECK6 advisory (baseline: 5 findings; false-neg found+fixed in-burst) |
+
+### Convergence / streak
+
+0/3 unchanged. A fix burst does not advance the streak. 174 adversary passes (no new pass this burst).
+
+### Lessons minted: L-070..L-074
+
+See lessons.md for full narrative.
+
+### Archived from Current Phase Steps
+
+P1D-172a state-record row archived from STATE.md v4.23 Current Phase Steps table (oldest row; replaced by this burst entry).
+
 

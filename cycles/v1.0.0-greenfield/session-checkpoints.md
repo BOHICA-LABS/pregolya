@@ -1508,3 +1508,30 @@ ferrochain Phase 1 (Spec Crystallization) in-progress — 0/3 streak; fix-burst 
 ### PENDING HUMAN ACTIONS: B1 `direnv allow`; R6 regenerate publish-all.sh for 21 crates; policies.yaml (open gap).
 
 ### BURST-275 METADATA: Date 2026-07-26 | Burst 275 closes P1D-172b (all 20 findings) | 3 waves; D-34 added; L-061..064 minted.
+
+---
+
+## Archived Checkpoint — Post-P1D-173 state record (superseded by burst-276-wave-A)
+
+*Archived from STATE.md v4.23 at burst-276-wave-A commit. 2026-07-27.*
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1 (Spec Crystallization) in-progress — 0/3 streak; P1D-173 FULL-PERIMETER CLOSED (130 raw / ~122 unique; 4 CRIT; 8 slices; NOT CLEAN). NEXT: fix-burst 276 — process-gap gates FIRST (F-P173-303/306/319), then content by ownership wave.
+
+### HEADS: develop 46725ad (clean, pushed); factory-artifacts = `git -C .factory log -1 --format='%H'`; no worktrees; no open PRs.
+
+### PERIMETER SNAPSHOT (unchanged from burst-275; P1D-173 found no count errors in census layer): decomp 71/69+2; criticality registry 77 (12/28/35/2); purity 82 rows (33/37/12); 129 BCs (51/75/3); 108 error codes; 674 TVs; 38 CAPs; 15 DIs; 13 VPs; 20 ADR files; 21 crates; 14 bounded contexts; 15 StreamEvents; 17 Components; 11 event_types; 36 gates; 11 Red Gate BCs; 7 blocking validators + 1 advisory + records-lint; allowlist 24 entries; citation coverage 287.
+
+### CENSUS SEXTUPLE (burst-275 verified; unchanged): decomp_total=71; tiered=69; exempt=2 (core::documents, memory::skills); registry=77; distinct_modules=76; matched=69; diff-set EMPTY. Registry: CRIT 12 / HIGH 28 / MED 35 / LOW 2 = 77.
+
+### NEXT-ACTION (exact): fix-burst 276 in ownership waves. FIRST: process-gap gates (architect) — F-P173-303 (identity-1 tautology), F-P173-306 (crate-annotation false PASS), F-P173-319 (awk re-broken), F-P173-308/309/310 (gate self-consistency). SECOND: CRIT content — F-P173-601/211/104/301. THIRD: HIGH content by owner.
+
+### CONVERGENCE-INTEGRITY RULE: BC-5.39.001 3-CLEAN streak requires FULL-PERIMETER passes only; a narrowed sub-pass may NEVER advance the streak. P1D-174 is the next numbered FULL-PERIMETER pass; streak resets fresh from 0/3 after fix-burst 276.
+
+### ORCHESTRATOR SELF-ATTRIBUTED DEFECTS: F-P171a-02 — approved ToolConfig::override_risk without verifying receiver type existed; F-P172a-04 — commissioned definitions-only carve-out that exempted memory::skills; [Wave A reopening #1] — flat exempt list conflated Class A/Class B; [P1D-173 dispatch] — instructed adversary to write incrementally; adversary is read-only; three dispatches lost; [P1D-173 gate] — F-P172b-05 fix produced tautological identity (F-P173-303, 4th generation).
+
+### PENDING HUMAN ACTIONS: B1 `direnv allow`; R6 regenerate publish-all.sh for 21 crates; policies.yaml (still no file).
+
+### STANDING USER DIRECTIVE: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13).
+
+### P1D-173 METADATA: Date 2026-07-27 | Cycle v1.0.0-greenfield | 8 slices at frozen HEAD 8954a11 | D-35 added | 5 lessons L-065..L-069 minted | trajectory →19→20→130.

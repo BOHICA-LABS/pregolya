@@ -20,6 +20,15 @@
 #        additions are caught. Only lines starting with `+` (additions) are checked.
 #        Routing: finding author (replace `path/file.ext:NNN` with symbol/anchor cite).
 #
+#   L10 — Hash-Digest Ban (ADVISORY): newly-authored changelog prose must not contain
+#        standalone 7-hex-literal git SHA fragments (e.g. `5fc3abe → baaf36d`). These
+#        are volatile pins of the TD-VSDD-091 family — they decay on the next refresh
+#        with nothing to detect the stale reference. The compliant form names the upstream
+#        artifact and section: `input-hash refreshed (ADR-014 §Decision 2 edited)`.
+#        ADVISORY: non-blocking WARN in FIX-BURST-276 (Wave A). Promotion to blocking
+#        after Wave B closes finding IDs P1D-173-L10-class in verification-properties/.
+#        Routing: finding author (replace 7-hex SHA with artifact+section anchor cite).
+#
 # SELF-PROBE: Each check self-probes against a synthetic violation before running on
 #             the real corpus. A self-probe failure means the check would be false-green —
 #             the script exits 2 immediately (script bug, not lint violation).
@@ -76,6 +85,15 @@ RECORDS_PATTERNS=(
 # Does NOT catch: version strings (v1.2.3), URLs without line-number suffix,
 #   or colon-delimited identifiers without a leading file extension.
 LINE_CITE_PATTERN='\b[a-zA-Z0-9_.-]+\.(rs|md|toml|yaml|yml|ts|js|py|json|sh|txt):[0-9]{1,6}\b'
+
+# L10 hash-digest pattern.
+# Matches standalone 7-character lowercase-hex strings (git SHA fragments).
+# Catches: `5fc3abe → baaf36d`, `c745d15 → c504e82`, etc. in changelog prose.
+# Does NOT match lines that are YAML hash-field assignments like `input-hash: "abc1234"`.
+HASH_DIGEST_PATTERN='\b[0-9a-f]{7}\b'
+# YAML hash-field exclusion: lines of the form `  key: "7hex"` or `  key: 7hex`
+# These are structured frontmatter fields, not prose — exempt from L10.
+HASH_FIELD_EXCLUSION='^\+[[:space:]]*(input.hash|proof_file_hash|commit.hash|content.hash)[[:space:]]*:[[:space:]]*"?[0-9a-f]'
 
 # ── Counters ─────────────────────────────────────────────────────────────────
 
@@ -201,6 +219,23 @@ EOF
   fi
   probe_must_fail "L9" "addition line containing src/lib.rs:42"
 
+  # ── L10 self-probe: hash-digest pattern in a synthetic diff addition ───────
+  # Synthetic violation: a changelog entry containing a 7-hex SHA transition.
+  # The probe uses two forms that should both be caught:
+  #   (a) The right-arrow form (the dominant violation shape in the corpus)
+  #   (b) A bare 7-hex standalone word in changelog prose
+  PROBE_L10_DIFF='  - "1.9 (burst-123/2026-07-01): Input-hash refreshed: 5fc3abe → baaf36d (ADR-017 bumped)"'
+  PROBE_EXIT=0
+  # Simulate: echo "+$PROBE_L10_DIFF" (prefixed with + as it would appear in git diff)
+  PROBE_L10_LINE="+${PROBE_L10_DIFF}"
+  # Check: not a hash-field exclusion line, and contains a 7-hex pattern
+  if ! echo "$PROBE_L10_LINE" | grep -qE "${HASH_FIELD_EXCLUSION}"; then
+    if echo "$PROBE_L10_LINE" | grep -qE "${HASH_DIGEST_PATTERN}"; then
+      PROBE_EXIT=1
+    fi
+  fi
+  probe_must_fail "L10" "changelog addition containing 7-hex SHA transition 5fc3abe → baaf36d"
+
   rm -rf "$PROBE_TMP"
   trap - EXIT
 }
@@ -325,6 +360,59 @@ check_l9() {
   fi
 }
 
+# ── Check L10 — Hash-Digest Ban (ADVISORY) ───────────────────────────────────
+# Newly-authored lines (additions since HEAD in .factory/) must not contain
+# standalone 7-hex-literal hash values in changelog prose. These decay on the
+# next refresh because they reference mutable intermediate SHA state.
+# ADVISORY: emits WARN (not FAIL); exits 0 regardless of WARN count.
+# Existing text in HEAD is grandfathered (same scoping as L9).
+# Promotion to blocking: after Wave B closes P1D-173-L10-class findings.
+#
+# Exclusion: lines that are YAML hash-field assignments (input-hash:,
+# proof_file_hash:, etc.) are exempt — those are structured fields, not prose.
+
+check_l10() {
+  DIFF_OUTPUT="$(git -C "$FACTORY_DIR" diff HEAD -- '*.md' 2>/dev/null || true)"
+
+  if [ -z "$DIFF_OUTPUT" ]; then
+    emit WARN "L10 [ADVISORY]: no diff relative to HEAD — nothing to check (acceptable if running on a clean tree)"
+    return
+  fi
+
+  L10_COUNT=0
+  L10_LINES=""
+
+  while IFS= read -r diffline; do
+    # Only check + additions (not +++ diff header, not -- removal)
+    case "$diffline" in
+      "+++"*) continue ;;
+      "+"*)   : ;;
+      *)      continue ;;
+    esac
+
+    # Exclude YAML hash-field assignment lines (structured fields, not prose)
+    if echo "$diffline" | grep -qE "${HASH_FIELD_EXCLUSION}"; then
+      continue
+    fi
+
+    # Check for standalone 7-hex string
+    if echo "$diffline" | grep -qE "${HASH_DIGEST_PATTERN}"; then
+      L10_COUNT=$((L10_COUNT + 1))
+      # Capture a short representation (first 120 chars) for the report
+      L10_LINES="${L10_LINES}
+       $(echo "$diffline" | cut -c1-120)"
+    fi
+  done <<< "$DIFF_OUTPUT"
+
+  if [ "$L10_COUNT" -gt 0 ]; then
+    emit WARN "L10 [ADVISORY]: hash-digest ban — $L10_COUNT newly-added line(s) contain standalone 7-hex SHA literals in changelog prose (ADVISORY: non-blocking in Wave A; promote to blocking after Wave B)"
+    echo "  Replace 7-hex literals with artifact+section anchor cites, e.g. 'input-hash refreshed (ADR-014 §Decision 2 edited)'"
+    echo "  Affected lines:${L10_LINES}"
+  else
+    emit PASS "L10 [ADVISORY]: hash-digest ban — no 7-hex SHA literals in newly-authored changelog prose"
+  fi
+}
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 echo "records-lint: ferrochain factory records discipline"
@@ -350,6 +438,10 @@ echo "--- L9: Line-Cite Ban (newly-authored additions) ---"
 check_l9
 
 echo ""
+echo "--- L10: Hash-Digest Ban (ADVISORY — newly-authored changelog prose) ---"
+check_l10
+
+echo ""
 echo "records-lint: PASS=$PASS WARN=$WARN FAIL=$FAIL"
 
 if [ "$FAIL" -gt 0 ]; then
@@ -359,6 +451,7 @@ if [ "$FAIL" -gt 0 ]; then
   echo "  L1 violations → state-manager (frontmatter) or spec owner (changelog body)"
   echo "  L7 violations → spec owner (reorder changelog entries, newest first)"
   echo "  L9 violations → finding author (replace file:NNN with symbol/anchor cite)"
+  echo "  L10 violations → finding author (replace 7-hex SHA with artifact+section anchor cite) [ADVISORY]"
   exit 1
 else
   echo "RESULT: PASS"
