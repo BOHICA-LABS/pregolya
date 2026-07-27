@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "4.26"
+version: "4.27"
 status: in-progress
 producer: state-manager
-timestamp: "2026-07-27T18:00:00Z"
+timestamp: "2026-07-27T23:00:00Z"
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "fix-burst 276 content wave 2 COMPLETE 2026-07-27 (CRIT F-P173-601 closed incl. 16-site PathGuard::check phantom sweep; HIGH F-P173-602/603/604/605 closed — 4 Rust-fatal signatures fixed; F-P173-614 per-method anchors restored; 3 lessons L-079..L-081). NEXT: fix-burst 276 content wave 3 — api-surface.md 8 HIGH (F-P173-201/203/205/206/207/209/213/215), coverage-matrix + system-overview 3 HIGH, VP bodies 4 HIGH, ~30 ADR semantic citations."
+current_step: "SESSION WRAP 2026-07-27 — D-36 recorded; session-checkpoints.md updated; factory-artifacts pushed. NEXT: fix-burst 276 content wave 3 — BC-2.08.004 → architect (unanchored BaseChatModel method); api-surface.md 8 HIGH (F-P173-201/203/205/206/207/209/213/215); coverage-matrix + system-overview 3 HIGH; VP bodies 4 HIGH; ~30 ADR semantic citations. Then P1D-174 FULL-PERIMETER."
 current_cycle: v1.0.0-greenfield
 convergence_status: "0/3 — P1D-173 FULL-PERIMETER NOT CLEAN (4 CRIT / ~22 HIGH; streak stays 0/3); 174 adversary passes total; trajectory-tail →19→20→130 (jump = coverage expansion artifact: api-surface.md + interface-definitions.md + 13 VP bodies read for first time). Full metrics: cycles/v1.0.0-greenfield/convergence-trajectory.md."
 pipeline: IN_PROGRESS
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. v4.26: fix-burst 276 content wave 2 COMPLETE 2026-07-27 (CRIT F-P173-601 + 16-site phantom sweep; HIGH F-P173-602/603/604/605 + F-P173-614; 3 lessons L-079..L-081); 0/3. -->
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. v4.27: session wrap 2026-07-27 — D-36 recorded; fix-burst 276 content wave 3 PENDING; 0/3. -->
 
 # Pipeline State: ferrochain
 
@@ -37,7 +37,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-27 — fix-burst 276 content wave 2 COMPLETE (CRIT F-P173-601 closed incl. 16-site PathGuard::check phantom sweep; HIGH F-P173-602/603/604/605 — 4 Rust-fatal signatures fixed; F-P173-614 per-method anchors restored; 3 lessons L-079..L-081). |
+| **Last Updated** | 2026-07-27 — session wrap; D-36 recorded; 4 session commits (84a52a0→8d10372) all pushed; fix-burst 276 content wave 3 PENDING; P1D-174 queued. |
 
 ## Phase Progress
 
@@ -90,6 +90,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | D-33 | Session wrap 2026-07-26 — bursts 272-274 and passes P1D-170..172b recorded; D-24..D-32 added; D18-P61-B..D18-P93-B archived to decisions-archive-pre-p1d.md; Session Resume Checkpoint replaced with wrap snapshot; session-checkpoints.md updated; factory-artifacts pushed; develop HEAD corrected to 46725ad. | Operational record | ops | 2026-07-26 | state-manager |
 | D-34 | adversarial-reviews/ naming convention frozen: `pass-NNN.md` is the forward-going standard for all new adversarial review files. The `ADV-P1D-PASS-NNN.md` files (passes 1–30 range and the two outliers ADV-P1D-PASS-171.md / ADV-P1D-PASS-172a.md) are grandfathered in place — renaming would break inbound citations in burst-log.md. No corpus churn. | Naming convention adjudication. Two outliers created during context-transition (passes 171/172a) predate the convention; both cited in burst-log; frozen in place to preserve citation integrity. | ops | 2026-07-26 | state-manager |
 | D-35 | Canonical xtask subcommand convention: `check-<subject>` form, grounded in CLAUDE.md-mandated `cargo xtask check-file-size` (the only xtask name with a human-ratified anchor). DI-009/NE-04 gate canonical name = `check-client-timeout`; NE-07 resolves to `check-no-panic`. Supersedes variant forms `deny-client-new`, `lint-no-timeout`, `deny-expect-in-lib`, `lint-no-panic`. | P1D-173 F-P173-405 — four inconsistent xtask naming conventions found across bc-authoring-plan and architecture specs; resolved by anchoring to the one name that has explicit human ratification. | Phase 1 | 2026-07-27 | orchestrator |
+| D-36 | Session wrap 2026-07-27 — bursts 276-wave-A/content-1/content-2/signatures (84a52a0→8d10372) and P1D-173 FULL-PERIMETER recorded; D-35 + gate #37 + 6 advisory validators (CHECK1..CHECK6) codified; xtask check-<subject> convention frozen; 17 lessons L-065..L-081 minted; BC-2.08.004 unanchored routed to architect; Session Resume Checkpoint replaced; session-checkpoints.md updated; factory-artifacts pushed; develop HEAD 46725ad. | Operational record | ops | 2026-07-27 | state-manager |
 
 ## Risk Register
 
@@ -133,17 +134,17 @@ Counter: 0/3 — P1D-173 FULL-PERIMETER NOT CLEAN (4 CRIT; streak stays 0/3); 17
 
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 ### RESUME IN ONE BREATH
-ferrochain Phase 1 (Spec Crystallization) in-progress — 0/3 streak; fix-burst 276 content wave 2 COMPLETE (CRIT F-P173-601 closed incl. 16-site PathGuard::check phantom sweep; HIGH F-P173-602/603/604/605 closed — 4 Rust-fatal signatures fixed; F-P173-614 per-method anchors restored; 3 lessons L-079..L-081). OPEN ITEMS: BC-2.08.004 unanchored → architect; F-P173-204 api-surface PathGuard error-code split → architect. NEXT: content wave 3.
+ferrochain Phase 1 (Spec Crystallization), greenfield+semport. Adversarial streak 0/3 after 174 passes; P1D-173 FULL-PERIMETER found 130 raw / ~122 unique findings including 4 CRITICAL-class, of which 3 are now CLOSED. All work is pushed and clean: factory-artifacts 8d10372, develop 46725ad, no worktrees, no open PRs, verify-sha-currency exit 0. NEXT ACTION: route BC-2.08.004 (unanchored to any BaseChatModel method) to architect, then dispatch fix-burst 276 content wave 3 — api-surface.md 8 HIGH, verification-coverage-matrix + system-overview 3 HIGH, VP bodies 4 HIGH, ~30 ADR semantic citations, interface-definitions residue.
 ### HEADS: develop 46725ad (clean, pushed); factory-artifacts = `git -C .factory log -1 --format='%H'`; no worktrees; no open PRs.
-### PERIMETER SNAPSHOT (post-burst-276-content-2): decomp 71/69+2; criticality registry 77 (12/28/35/2); purity 82 rows (33/37/12); 129 BCs (51/75/3); 108 error codes; 674 TVs; 38 CAPs; 15 DIs; 13 VPs; 20 ADR files; 21 crates; 14 bounded contexts; 15 StreamEvents; 17 Components; 11 event_types; 37 gates; 11 Red Gate BCs; 7 blocking + 4 advisory + records-lint(L9+L10); allowlist 24 entries; citation coverage 287; eval::judge 11/11.
-### ADVISORY-VALIDATOR BASELINES (Wave C targets, unchanged from wave 2): CHECK1=17; CHECK2=4; CHECK3=live (ADR-017 Decision 4); CHECK4: decomp 0/71, purity 1/82, vcm 52/90; CHECK6-D1=3 labels/2 files; CHECK6-D2=0; CHECK6-D3=3 files.
+### PERIMETER SNAPSHOT (post-burst-276-content-2; unchanged through wrap): decomp 71/69+2; criticality registry 77 (12/28/35/2); purity 82 rows (33/37/12); 129 BCs (51/75/3); 108 error codes; 674 TVs; 38 CAPs; 15 DIs; 13 VPs; 20 ADR files; 21 crates; 14 bounded contexts; 15 StreamEvents; 17 Components; 11 event_types; 37 gates; 11 Red Gate BCs; 7 blocking + 4 advisory + records-lint(L9+L10); allowlist 24 entries; citation coverage 287; eval::judge 11/11.
+### ADVISORY-VALIDATOR BASELINES (Wave C targets): CHECK1=17; CHECK2=4; CHECK3=live (ADR-017 Decision 4 cited by nothing); CHECK4: decomp 0/71, purity 1/82, vcm 52/90; CHECK6-D1=3 labels/2 files; CHECK6-D2=0; CHECK6-D3=3 files.
 ### CENSUS SEXTUPLE (burst-275 verified; unchanged through content waves 1-2): decomp_total=71; tiered=69; exempt=2 (core::documents, memory::skills); registry=77; distinct_modules=76; matched=69; diff-set EMPTY. Registry: CRIT 12 / HIGH 28 / MED 35 / LOW 2 = 77.
-### NEXT-ACTION: fix-burst 276 content wave 3 — api-surface.md 8 HIGH (F-P173-201/203/205/206/207/209/213/215); coverage-matrix + system-overview 3 HIGH (F-P173-801..817); VP bodies 4 HIGH (F-P173-501..516); ADR semantic citations ~30 (F-P173-101..115/-701..-715). BC-2.08.004 → architect (unanchored BaseChatModel method). Then P1D-174 FULL-PERIMETER.
-### CONVERGENCE-INTEGRITY RULE: BC-5.39.001 3-CLEAN streak requires FULL-PERIMETER passes only. P1D-174 is the next numbered FULL-PERIMETER pass; streak resets fresh from 0/3 after all waves of fix-burst 276.
-### ORCHESTRATOR SELF-ATTRIBUTED DEFECTS (open record): F-P171a-02 — approved ToolConfig::override_risk without verifying receiver type; F-P172a-04 — commissioned definitions-only carve-out that exempted memory::skills; [Wave A reopening #1] — flat exempt list conflated Class A/Class B; [P1D-173 dispatch] — instructed adversary to write incrementally; adversary is read-only; [P1D-173 gate] — F-P172b-05 fix produced tautological identity (F-P173-303, 4th generation); [burst-275 dispatch] — F-P172b-12 fix stripped eval::judge anchor citing sibling fix's own context; sibling fix added exactly that row; self-inflicted regression.
-### PENDING HUMAN ACTIONS: B1 `direnv allow`; R6 regenerate publish-all.sh for 21 crates; policies.yaml (still no file).
-### STANDING USER DIRECTIVE: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13).
-### BURST-276-CONTENT-2 METADATA: Date 2026-07-27 | Cycle v1.0.0-greenfield | CRIT F-P173-601 + 4 HIGH F-P173-602/603/604/605 + F-P173-614 closed | 7 spec files bumped | 3 lessons L-079..L-081 minted.
+### NEXT-ACTION: fix-burst 276 content wave 3 — BC-2.08.004 → architect (unanchored BaseChatModel method); api-surface.md 8 HIGH (F-P173-201/203/205/206/207/209/213/215); coverage-matrix + system-overview 3 HIGH; VP bodies 4 HIGH; ADR semantic citations ~30. Then P1D-174 FULL-PERIMETER.
+### CONVERGENCE-INTEGRITY RULE: 3-CLEAN streak requires FULL-PERIMETER passes only. P1D-174 is next; streak fresh 0/3 after all fix-burst 276 waves.
+### ORCHESTRATOR SELF-ATTRIBUTED DEFECTS: F-P171a-02; F-P172a-04; [Wave A reopening #1]; [P1D-173 dispatch — adversary tool profile read-only; 3 dispatches lost]; [P1D-173 gate — F-P172b-05 fix tautological identity F-P173-303, 4th gen]; [burst-275 dispatch — F-P172b-12 stripped eval::judge anchor].
+### PENDING HUMAN ACTIONS: B1 `direnv allow`; R6 regenerate publish-all.sh for 21 crates; policies.yaml; D-35 xtask rename sweep (10 sites).
+### STANDING USER DIRECTIVE: "Keep going until you hit convergence protocol." (verbatim, 2026-07-13).
+### SESSION WRAP: 2026-07-27 | 4 commits (84a52a0→8d10372) all pushed | D-36 recorded.
 
 ## Historical Content
 

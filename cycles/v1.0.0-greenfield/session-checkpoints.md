@@ -1551,3 +1551,126 @@ ferrochain Phase 1 (Spec Crystallization) in-progress — 0/3 streak; fix-burst 
 ### PENDING HUMAN ACTIONS: B1 `direnv allow`; R6 regenerate publish-all.sh for 21 crates; policies.yaml (still no file).
 ### STANDING USER DIRECTIVE: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13).
 ### BURST-276-CONTENT-1 METADATA: Date 2026-07-27 | Cycle v1.0.0-greenfield | 2 CRIT + 6 other findings closed | 10 spec files bumped | 4 lessons L-075..L-078 minted.
+
+---
+
+### ARCHIVED CHECKPOINT — STATE.md v4.26 (burst-276-content-2, 2026-07-27) — SUPERSEDED by session wrap 2026-07-27
+
+*Archived from STATE.md v4.26 at session wrap commit (STATE.md v4.27). 2026-07-27.*
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1 (Spec Crystallization) in-progress — 0/3 streak; fix-burst 276 content wave 2 COMPLETE (CRIT F-P173-601 closed incl. 16-site PathGuard::check phantom sweep; HIGH F-P173-602/603/604/605 closed — 4 Rust-fatal signatures fixed; F-P173-614 per-method anchors restored; 3 lessons L-079..L-081). OPEN ITEMS: BC-2.08.004 unanchored → architect; F-P173-204 api-surface PathGuard error-code split → architect. NEXT: content wave 3.
+### HEADS: develop 46725ad (clean, pushed); factory-artifacts = `git -C .factory log -1 --format='%H'`; no worktrees; no open PRs.
+### PERIMETER SNAPSHOT (post-burst-276-content-2): decomp 71/69+2; criticality registry 77 (12/28/35/2); purity 82 rows (33/37/12); 129 BCs (51/75/3); 108 error codes; 674 TVs; 38 CAPs; 15 DIs; 13 VPs; 20 ADR files; 21 crates; 14 bounded contexts; 15 StreamEvents; 17 Components; 11 event_types; 37 gates; 11 Red Gate BCs; 7 blocking + 4 advisory + records-lint(L9+L10); allowlist 24 entries; citation coverage 287; eval::judge 11/11.
+### ADVISORY-VALIDATOR BASELINES (Wave C targets, unchanged from wave 2): CHECK1=17; CHECK2=4; CHECK3=live (ADR-017 Decision 4); CHECK4: decomp 0/71, purity 1/82, vcm 52/90; CHECK6-D1=3 labels/2 files; CHECK6-D2=0; CHECK6-D3=3 files.
+### CENSUS SEXTUPLE (burst-275 verified; unchanged through content waves 1-2): decomp_total=71; tiered=69; exempt=2 (core::documents, memory::skills); registry=77; distinct_modules=76; matched=69; diff-set EMPTY. Registry: CRIT 12 / HIGH 28 / MED 35 / LOW 2 = 77.
+### NEXT-ACTION: fix-burst 276 content wave 3 — api-surface.md 8 HIGH (F-P173-201/203/205/206/207/209/213/215); coverage-matrix + system-overview 3 HIGH (F-P173-801..817); VP bodies 4 HIGH (F-P173-501..516); ADR semantic citations ~30 (F-P173-101..115/-701..-715). BC-2.08.004 → architect (unanchored BaseChatModel method). Then P1D-174 FULL-PERIMETER.
+### CONVERGENCE-INTEGRITY RULE: BC-5.39.001 3-CLEAN streak requires FULL-PERIMETER passes only. P1D-174 is the next numbered FULL-PERIMETER pass; streak resets fresh from 0/3 after all waves of fix-burst 276.
+### ORCHESTRATOR SELF-ATTRIBUTED DEFECTS (open record): F-P171a-02 — approved ToolConfig::override_risk without verifying receiver type; F-P172a-04 — commissioned definitions-only carve-out that exempted memory::skills; [Wave A reopening #1] — flat exempt list conflated Class A/Class B; [P1D-173 dispatch] — instructed adversary to write incrementally; adversary is read-only; three dispatches lost; [P1D-173 gate] — F-P172b-05 fix produced tautological identity (F-P173-303, 4th generation); [burst-275 dispatch] — F-P172b-12 fix stripped eval::judge anchor; sibling fix added exactly that row; self-inflicted regression.
+### PENDING HUMAN ACTIONS: B1 `direnv allow`; R6 regenerate publish-all.sh for 21 crates; policies.yaml (still no file).
+### STANDING USER DIRECTIVE: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13).
+### BURST-276-CONTENT-2 METADATA: Date 2026-07-27 | Cycle v1.0.0-greenfield | CRIT F-P173-601 + 4 HIGH F-P173-602/603/604/605 + F-P173-614 closed | 7 spec files bumped | 3 lessons L-079..L-081 minted.
+
+---
+
+## Session Wrap — 2026-07-27 (STATE.md v4.27)
+
+*This is the full resume snapshot for the 2026-07-27 session. The one-breath summary lives in STATE.md §Session Resume Checkpoint.*
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1 (Spec Crystallization), greenfield+semport. Adversarial streak 0/3 after 174 passes; P1D-173 FULL-PERIMETER found 130 raw / ~122 unique findings including 4 CRITICAL-class, of which 3 are now CLOSED.
+All work is pushed and clean: factory-artifacts 8d10372, develop 46725ad, no worktrees, no open PRs, verify-sha-currency exit 0.
+NEXT ACTION: route BC-2.08.004 (unanchored to any BaseChatModel method) to architect, then dispatch fix-burst 276 content wave 3 — api-surface.md 8 HIGH, verification-coverage-matrix + system-overview 3 HIGH, VP bodies 4 HIGH, ~30 ADR semantic citations, interface-definitions residue.
+
+### HEADS
+| Repo / worktree | Branch | Short HEAD | Clean? | Pushed? |
+|---|---|---|---|---|
+| `/Users/jmagady/Dev/ferrochain` | `develop` | `46725ad` | clean | yes — matches `origin/develop` |
+| `/Users/jmagady/Dev/ferrochain/.factory` | `factory-artifacts` | `8d10372` (pre-wrap HEAD) | clean (0 dirty) | yes — 0 ahead / 0 behind `origin/factory-artifacts` |
+
+- `.worktrees/` — absent; no story worktrees active
+- Open PRs — none
+- `crates/` — does not exist yet (Phase 1, pre-implementation)
+- `verify-sha-currency.sh` — PASS=2 WARN=1 FAIL=0, exit 0 (WARN = standing no-SHA-citation condition, correct per TD-VSDD-053)
+- Background agents — none in flight; all agent results this session captured and committed
+
+### THIS SESSION'S COMMITS (4, all pushed)
+```
+8d10372 fix(phase-1): burst-276-signatures — PathGuard phantom purge + 4 Rust-fatal signature fixes
+265082e fix(phase-1): burst-276-content-1 — FerrochainError Arc-clone + eval::judge re-anchor + deadlock
+2c9b4e7 harden(gates): burst-276-wave-A — process-gap gates + 6 advisory validators COMPLETE
+84a52a0 state(phase-1d): persist P1D-173 FULL-PERIMETER — NOT CLEAN awaiting fix-burst 276
+```
+(Session began with fix-burst 275 landing at `8954a11`.)
+
+### ADVERSARIAL STREAK
+0/3 under BC-5.39.001. 174 adversary passes total. P1D-173 was NOT CLEAN (both criteria), so no streak is carried and there is no frozen-HEAD to preserve. P1D-174 starts a fresh count against whatever HEAD it freezes on.
+
+### PERIMETER SNAPSHOT (post-burst-276-content-2; unchanged through wrap)
+decomp 71/69+2; criticality registry 77 (12/28/35/2); purity 82 rows (33/37/12); 129 BCs (51/75/3); 108 error codes; 674 TVs; 38 CAPs; 15 DIs; 13 VPs; 20 ADR files; 21 crates; 14 bounded contexts; 15 StreamEvents; 17 Components; 11 event_types; 37 gates; 11 Red Gate BCs; 7 blocking + 4 advisory + records-lint(L9+L10); allowlist 24 entries; citation coverage 287; eval::judge 11/11.
+
+### ADVISORY-VALIDATOR BASELINES (Wave C targets; treat as runtime-computed — re-run checks rather than trusting closure reports)
+| Check | Count | Promotion gate |
+|---|---|---|
+| CHECK1 ADR sub-anchor nesting | 17 | advisory → blocking after class closes |
+| CHECK2 ADR label-noun presence | 4 | same |
+| CHECK3 ADR reverse coverage | live (ADR-017 Decision 4 cited by nothing) | same |
+| CHECK4 non-canonical Module cells | 52 (verification-coverage-matrix.md) + 1 (purity-boundary-map.md `graph::hitl (pre-tool dispatch)`) | same |
+| CHECK6-D1 `red_gate:false` + label | 3 labels / 2 files (VP-012, VP-013) | same |
+| CHECK6-D3 `red_gate:false` + lifecycle rows | 3 files (VP-011/012/013) | same |
+| records-lint L10 hash-digest ban | 0 new | grandfathers VP-008/009/010 existing pins |
+
+### CENSUS SEXTUPLE (burst-275 verified; unchanged through content waves 1-2)
+decomp_total=71; tiered=69; exempt=2 (core::documents, memory::skills); registry=77; distinct_modules=76; matched=69; diff-set EMPTY. Registry: CRIT 12 / HIGH 28 / MED 35 / LOW 2 = 77.
+
+### WORKSTREAM FROZEN STATE + NEXT-ACTIONS
+
+**WS-1 — fix-burst 276 content wave 3 (PRIMARY, NOT STARTED)**
+RESUME NEXT-ACTION: dispatch architect for `api-surface.md` residue. F-P173-201 (BudgetConfig/CompactionTrigger/ProvenanceTag catalogued under ferrochain-graph but are ferrochain-core; BudgetConfig in graph makes core depend on graph — non-compilable). F-P173-203 (CompactionEvent given a standalone Public Types row; it is a StreamEvent variant). F-P173-204 (PathGuard row pairs BC-2.13.004 with E-TOOLS-001; PC4 raises E-SBXD-001). F-P173-205 (§Public Rust Traits omits entire D21 trait layer: Retriever, Embeddings, LcSerializable, MemoryWriteGuard, ToolCallDialect; plus no trait section for 5 crates). F-P173-206 (§Cargo Feature Flags 6 of 10; omits security-relevant `sandbox-process`). F-P173-207 (PreToolDecision/ToolCallPreview crate attribution unqualified — siblings of closed F-P170-03 fix). F-P173-209 (GraphConfig lists 2 of 4 fields, omitting budget_config which the same table's RunnableConfig row references). F-P173-213, F-P173-215. Keep dispatches small — large dispatches died repeatedly this session.
+
+**WS-2 — BC-2.08.004 unanchored (BLOCKS wave-3 anchor cross-check)**
+RESUME NEXT-ACTION: route to architect. BC-2.08.004 is anchored to no declared BaseChatModel trait method. Per-method precision (added in burst-276-signatures) disproved the retired bare range's implied coverage. Architect must adjudicate: add a trait method (likely `has_tool_calling`, which `bind_tools` EC-005 already depends on) or anchor BC-2.08.004 to a type contract.
+
+**WS-3 — remaining P1D-173 findings by owner (after WS-1 + WS-2)**
+- Architect: F-P173-105/303-residue/304/305/306-residue/308..318, VP bodies F-P173-501..516, coverage-matrix + system-overview F-P173-801..817, ADR citations F-P173-105/108/109/701/706/707/709/714
+- Product-owner: F-P173-606..613/-615..-623/-103/107/114/406/407/703/704/705/708/710/713/715
+- Business-analyst: F-P173-104 (CRIT — `bounded-contexts.md` asserts `ferrochain-tools → ferrochain-graph`, which ADR-020 Decision 1 explicitly forbids; devops would write wrong `Cargo.toml` at workspace init), -106/110/111/112/113/702/712
+- Formal-verifier: F-P173-709
+
+**WS-4 — advisory backlog (wave-3 countable targets)**
+Re-run advisory checks rather than trusting prior closure reports. Baselines in ADVISORY-VALIDATOR BASELINES table above.
+
+### DECISIONS DELTA THIS SESSION (D-35 + gate #37)
+- **D-35** — xtask `check-<subject>` naming convention. Corpus-wide rename sweep at ~10 sites NOT YET DONE — open carry-forward item.
+- **Gate #37** — layer-scoped-sweep ban (from L-065): a sweep or de-pin closure statement may not be layer-scoped unless it enumerates excluded layers as named follow-ups; record the sweep predicate, not the layer.
+- Six advisory validators added and promoted to the standing suite: CHECK1/2/3 in `verify-adr-decision-refs.sh`, `verify-module-canonicality.sh` (CHECK4), `verify-red-gate-consistency.sh` (CHECK6), records-lint L10.
+- `FerrochainError.source` adjudicated to `Arc<dyn Error + Send + Sync>` (ADR-010 v1.12). Propagated to `api-surface.md`, `BC-2.14.001`, `entities-server.md`.
+- `eval::judge` canonical BC anchor = BC-2.08.008 (was BC-2.08.013/014).
+- `PathGuard` canonical entry points: `canonicalize_beneath_root` / `canonicalize_beneath_root_pure`. Invented `PathGuard::check` retired corpus-wide (16-site sweep).
+
+### LESSONS CODIFIED THIS SESSION (already committed)
+L-065..L-069 (P1D-173), L-070..L-074 (Wave A gates/validators), L-075..L-078 (content wave 1), L-079..L-081 (content wave 2). Headline items: convergence cannot be inferred from a finding-rate trend without a coverage ledger; hand counts run systematically low (three instances, same direction — 4→17, 36→52, 10→16); a phantom identifier propagates outward and deleting its source fixes nothing downstream; every new validator must demonstrate a failure against known-positive input, not just report a count; bare ID-range anchors assert coverage that per-member precision disproves.
+
+### ORCHESTRATOR SELF-ATTRIBUTED DEFECTS (open record — append-only)
+- F-P171a-02: approved ToolConfig::override_risk without verifying receiver type existed
+- F-P172a-04: commissioned definitions-only carve-out that exempted memory::skills
+- [Wave A reopening #1]: flat exempt list conflated Class A/Class B
+- [P1D-173 dispatch]: instructed adversary to write incrementally; adversary tool profile is read-only (Read/Grep/Glob); three dispatches lost before diagnosis
+- [P1D-173 gate]: F-P172b-05 fix produced tautological identity (F-P173-303, 4th generation of that class)
+- [burst-275 dispatch]: F-P172b-12 stripped eval::judge module anchor; sibling burst-275 fix added exactly that row; self-inflicted regression
+
+### TWO OPEN QUESTIONS FOR THE HUMAN (recorded; non-blocking)
+1. `.factory/policies.yaml` does not exist. All 174 passes ran on the adversary's baked-in baseline policies. Orchestrator assessment: minting it now would add noise rather than signal, since the bottleneck is sweep discipline not discovery. Recommend deferring until the content waves close.
+2. VP proof-harness soundness (F-P173-501/503/506/507/509/510/511/512) — Phase-1 vs Phase-6 scope. The spec-level consequence should be fixed now: BC-2.21.003 Invariant 3 ("No NaN in any output path") is unsatisfiable by a zero-norm-only guard, since finite `f32` inputs can overflow the intermediate norm to `+Inf` and yield `Inf/Inf = NaN` (concrete counterexample: `a = b = [1e30f32]`). That is a contract defect, not a harness defect, and routes to product-owner.
+
+### PENDING HUMAN ACTIONS
+- B1: `direnv allow .`
+- R6: regenerate publish-all.sh for 21 crates + run (crates.io name reservation)
+- policies.yaml: still no file
+- D-35: xtask `check-<subject>` corpus-wide rename sweep (~10 sites across bc-authoring-plan and architecture specs)
+
+### STANDING USER DIRECTIVE (verbatim, 2026-07-13, still in force)
+"Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes."
+
+### SESSION WRAP METADATA
+Date: 2026-07-27 | Cycle: v1.0.0-greenfield | STATE.md: v4.27 | 4 commits this session (84a52a0, 2c9b4e7, 265082e, 8d10372 — chronological; all pushed to origin)
