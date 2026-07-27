@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "4.28"
+version: "4.29"
 status: in-progress
 producer: state-manager
-timestamp: "2026-07-27T23:45:00Z"
+timestamp: "2026-07-28T00:15:00Z"
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "fix-burst 276 content wave 3 COMPLETE — 1 CRIT + 33 HIGH + 5 MED closed; D-37 recorded; L-082..L-086 minted; all burst-276 waves DONE; error codes 109; TVs 675; CHECK4 6/6 CLEAN. NEXT: P1D-174 FULL-PERIMETER against frozen HEAD."
+current_step: "session wrap COMPLETE — D-38 recorded; RESUME SNAPSHOT v4.29 written; Session Resume Checkpoint replaced; session-checkpoints.md updated; factory-artifacts 423c01a pushed; develop 46725ad. NEXT: P1D-174 FULL-PERIMETER against frozen HEAD 423c01a."
 current_cycle: v1.0.0-greenfield
 convergence_status: "0/3 — P1D-173 FULL-PERIMETER NOT CLEAN (4 CRIT / ~22 HIGH; streak stays 0/3); 174 adversary passes total; trajectory-tail →19→20→130 (jump = coverage expansion artifact: api-surface.md + interface-definitions.md + 13 VP bodies read for first time). Full metrics: cycles/v1.0.0-greenfield/convergence-trajectory.md."
 pipeline: IN_PROGRESS
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. v4.28: burst-276 content wave 3 COMPLETE — D-37 recorded; error codes 109; TVs 675; CHECK4 6/6 CLEAN; all burst-276 waves DONE; 0/3. -->
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. v4.29: session wrap D-38 — RESUME SNAPSHOT v4.29 written; P1D-174 FULL-PERIMETER queued; 0/3. -->
 
 # Pipeline State: ferrochain
 
@@ -37,7 +37,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-27 — fix-burst 276 content wave 3 COMPLETE; D-37 recorded; L-082..L-086 minted; error codes 109; TVs 675; all burst-276 waves DONE; P1D-174 queued. |
+| **Last Updated** | 2026-07-27 — session wrap v4.29; D-38 recorded; RESUME SNAPSHOT written; Session Resume Checkpoint replaced; P1D-174 FULL-PERIMETER queued. |
 
 ## Phase Progress
 
@@ -92,6 +92,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | D-35 | Canonical xtask subcommand convention: `check-<subject>` form, grounded in CLAUDE.md-mandated `cargo xtask check-file-size` (the only xtask name with a human-ratified anchor). DI-009/NE-04 gate canonical name = `check-client-timeout`; NE-07 resolves to `check-no-panic`. Supersedes variant forms `deny-client-new`, `lint-no-timeout`, `deny-expect-in-lib`, `lint-no-panic`. | P1D-173 F-P173-405 — four inconsistent xtask naming conventions found across bc-authoring-plan and architecture specs; resolved by anchoring to the one name that has explicit human ratification. | Phase 1 | 2026-07-27 | orchestrator |
 | D-36 | Session wrap 2026-07-27 — bursts 276-wave-A/content-1/content-2/signatures (84a52a0→8d10372) and P1D-173 FULL-PERIMETER recorded; D-35 + gate #37 + 6 advisory validators (CHECK1..CHECK6) codified; xtask check-<subject> convention frozen; 17 lessons L-065..L-081 minted; BC-2.08.004 unanchored routed to architect; Session Resume Checkpoint replaced; session-checkpoints.md updated; factory-artifacts pushed; develop HEAD 46725ad. | Operational record | ops | 2026-07-27 | state-manager |
 | D-37 | `E-VS-001` renamed `ZeroNormEmbedding` → `DegenerateNormEmbedding`; message widened to cover zero-norm AND non-finite-norm; BC-2.21.003 Invariant 3 guard extended to `!norm.is_finite()` tested post-norm-computation; EC-006 + TV-006 added; error-code census unchanged at 109. | CLAUDE.md Rule 5 forbids defaulting to cheap path; identifier names must not diverge from semantics (pattern: purged `PathGuard::check`, phantom `ActionRisk::Critical`); rename + widen achieves semantic correctness at zero census churn. | Phase 1 | 2026-07-27 | orchestrator |
+| D-38 | Session wrap 2026-07-27 — burst-276-content-3 committed as `423c01a` and pushed; P1D-173 fully remediated (all 4 CRITs closed); D-37 recorded; 2 orchestrator-minted findings (F-B276-01/02) closed; 4 session self-attributed defects logged; Session Resume Checkpoint replaced with RESUME SNAPSHOT v4.29; session-checkpoints.md updated; lessons count updated to 86 (L-082..L-086 minted); develop `46725ad`; streak 0/3 carried forward; next action P1D-174 FULL-PERIMETER. | Operational record. | ops | 2026-07-27 | state-manager |
 
 ## Risk Register
 
@@ -135,17 +136,23 @@ Counter: 0/3 — P1D-173 FULL-PERIMETER NOT CLEAN (4 CRIT; streak stays 0/3); 17
 
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 ### RESUME IN ONE BREATH
-ferrochain Phase 1 (Spec Crystallization), greenfield+semport. Adversarial streak 0/3 after 174 passes; all fix-burst 276 waves COMPLETE (all 4 P1D-173 CRITs closed). Factory-artifacts clean and pushed; develop 46725ad; no worktrees; no open PRs; verify-sha-currency exit 0. NEXT ACTION: P1D-174 FULL-PERIMETER against frozen HEAD (per D-32, only full-perimeter passes advance the 3-CLEAN streak).
-### HEADS: develop 46725ad (clean, pushed); factory-artifacts = `git -C .factory log -1 --format='%H'`; no worktrees; no open PRs.
-### PERIMETER SNAPSHOT (post-burst-276-content-3): decomp 71/69+2; criticality registry 77 (12/28/35/2); purity 82 rows (33/37/12); 129 BCs (51/75/3); 109 error codes (E-PROV-011 minted); 675 TVs (TV-006 added); 38 CAPs; 15 DIs; 13 VPs; 20 ADR files; 21 crates; 14 bounded contexts; 15 StreamEvents; 17 Components; 11 event_types; 37 gates; 11 Red Gate BCs; 7 blocking + 4 advisory + records-lint(L9+L10+L11); allowlist 24 entries; citation coverage 308; eval::judge 11/11.
-### ADVISORY-VALIDATOR BASELINES (post-content-3): CHECK1=17 (sub-anchor violations, pending fix); CHECK2=4; CHECK3=live; CHECK4: CLEAN (6/6 PASS; 0 non-canonical cells; vcm 52→0, purity 1→0, VP/vparch/mcrit all → 0); CHECK6-D1=3 labels/2 files; CHECK6-D2=0; CHECK6-D3=3 files.
-### CENSUS SEXTUPLE (unchanged through all burst-276 waves): decomp_total=71; tiered=69; exempt=2 (core::documents, memory::skills); registry=77; distinct_modules=76; matched=69; diff-set EMPTY. Registry: CRIT 12 / HIGH 28 / MED 35 / LOW 2 = 77.
-### NEXT-ACTION: P1D-174 FULL-PERIMETER against frozen HEAD. Per D-32, only full-perimeter passes advance the 3-CLEAN streak. All burst-276 waves complete; corpus ready for re-audit.
-### CONVERGENCE-INTEGRITY RULE: 3-CLEAN streak requires FULL-PERIMETER passes only (D-32). P1D-174 is next; streak 0/3.
-### ORCHESTRATOR SELF-ATTRIBUTED DEFECTS: F-P171a-02; F-P172a-04; [Wave A reopening #1]; [P1D-173 dispatch — adversary tool profile read-only; 3 dispatches lost]; [P1D-173 gate — F-P172b-05 fix tautological identity F-P173-303, 4th gen]; [burst-275 dispatch — F-P172b-12 stripped eval::judge anchor]; [burst-276-content-3 — git stash on .factory worktree mid-burst; immediate stash pop, no work lost]; [burst-276-content-3 — told product-owner agents prd-supplements/ direction is ASCENDING; correct is DESCENDING; caused blocking FAIL in interface-definitions.md]; [burst-276-content-3 — oversized dispatch stalled on watchdog (9 HIGH + 3 MED in most-cited file); re-dispatched as 3 bounded units]; [burst-276-content-3 — worked from truncated verify-module-canonicality output; believed CHECK4 had 5 targets; found 6th (verification-architecture.md 18/20 cells) after re-run].
-### PENDING HUMAN ACTIONS: B1 `direnv allow`; R6 regenerate publish-all.sh for 21 crates; policies.yaml; D-35 xtask rename sweep (10 sites).
-### STANDING USER DIRECTIVE: "Keep going until you hit convergence protocol." (verbatim, 2026-07-13).
-### BURST-276-CONTENT-3 WRAP: 2026-07-27 | all fix-burst 276 waves DONE | D-37 recorded | L-082..L-086 minted.
+ferrochain Phase 1 (Spec Crystallization), greenfield+semport mode. Adversarial streak 0/3 after 174 passes; all four P1D-173 CRITICALs closed and every blocking validator green. Next action: P1D-174 FULL-PERIMETER against frozen HEAD `423c01a`.
+### HEADS
+develop `46725ad` — PUSHED (local == origin/develop, clean). factory-artifacts `423c01a` — PUSHED (local == origin/factory-artifacts, clean). No worktrees. No open PRs. NOTHING is local-only.
+### NEXT-ACTION
+Dispatch P1D-174 FULL-PERIMETER adversarial pass against frozen HEAD `423c01a`. Hard constraints: (a) per D-32, only FULL-PERIMETER passes may advance the 3-CLEAN streak — a narrowed sub-pass may never count; (b) per BC-5.39.001 frozen-HEAD rule, pushing any new commit mid-cascade resets streak to 0/3. ADVERSARY TOOL PROFILE IS READ-ONLY (Read/Grep/Glob only — no Write, no Bash). Do NOT instruct it to write a report file; use bounded slices with orchestrator recording results. Three dispatches were lost to this error during P1D-173.
+### PERIMETER SNAPSHOT (post-burst-276-content-3)
+decomp 71/69+2; criticality registry 77 (12/28/35/2); purity 82 rows (33/37/12); 129 BCs (51/75/3); 109 error codes (E-PROV-011 FallbackChainEmpty minted this burst); 675 TVs (TV-006 overflow vector added this burst); 38 CAPs; 15 DIs; 13 VPs; 20 ADR files (all under version+changelog governance as of this burst); 21 crates; 14 bounded contexts; 15 StreamEvents; 17 Components; 11 event_types; 37 gates; 11 Red Gate BCs; allowlist 24 entries; citation coverage 308; eval::judge 11/11. Census sextuple (71, 69, 2, 77, 76, 69) — both diff-sets EMPTY. CHECK4 module-canonicality: 6/6 targets CLEAN.
+### VALIDATOR BASELINES (post-burst-276-content-3, for regression detection)
+records-lint: PASS=5 WARN=0 FAIL=0 dirty tree; clean tree shows WARN=3 "no diff relative to HEAD" for L9/L10/L11 (diff-based gates — expected). verify-form-a-changelog-direction: PASS=198 WARN=4 FAIL=0 UNVERIFIED=0 (4 WARNs = D-28 both-forms; banner-marked; correct). verify-no-version-pins: PASS=198 WARN=0 FAIL=0. verify-arch-anchor-resolution: PASS=129 WARN=0 FAIL=0. verify-enum-variant-casing: PASS=198 WARN=0 FAIL=0. verify-adr-decision-refs: PASS=308 WARN=0 FAIL=0 (blocking). verify-module-canonicality: PASS=6/6 FAIL=0. verify-changelog-date-monotonicity: PASS=131 WARN=75 FAIL=0. verify-sha-currency: PASS=2 WARN=1 FAIL=0.
+### PENDING HUMAN ACTIONS
+B1: `direnv allow .`; R6: regenerate publish-all.sh for 21 crates + `cargo login` + run; create `.factory/policies.yaml`; D-35: xtask `check-<subject>` rename sweep (~10 sites).
+### RESIDUAL ADVISORY ITEMS (non-blocking, for next hooks pass)
+(1) records-lint L9/L10/L11 are diff-based: clean-tree shows WARN not UNVERIFIED — same false-confidence family eliminated elsewhere this burst; recommend renaming that state to UNVERIFIED or documenting it. (2) No pre-commit validator gate exists: burst-276-content-1 shipped with verify-no-version-pins failing; burst-276-signatures shipped with verify-form-a-changelog-direction failing — neither was consulted; recommend adding a pre-commit hook.
+### ORCHESTRATOR SELF-ATTRIBUTED DEFECTS
+F-P171a-02; F-P172a-04; [Wave A reopening #1]; [P1D-173 dispatch — adversary tool profile read-only; 3 dispatches lost]; [P1D-173 gate — F-P172b-05 fix tautological identity F-P173-303, 4th gen]; [burst-275 dispatch — F-P172b-12 stripped eval::judge anchor]; [burst-276-content-3 — git stash on .factory worktree mid-burst; stash pop immediate, no work lost]; [burst-276-content-3 — told product-owner agents prd-supplements/ direction is ASCENDING; correct is DESCENDING; caused blocking FAIL in interface-definitions.md]; [burst-276-content-3 — oversized dispatch stalled on watchdog; re-dispatched as 3 bounded units]; [burst-276-content-3 — worked from truncated verify-module-canonicality output; believed CHECK4 had 5 targets; found 6th after re-run].
+### STANDING USER DIRECTIVE
+"Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (2026-07-13).
 
 ## Historical Content
 
@@ -158,7 +165,7 @@ ferrochain Phase 1 (Spec Crystallization), greenfield+semport. Adversarial strea
 | L2 domain spec (15-shard) — L2-INDEX v1.16 (38 CAPs; DI-015 minted, 15 invariants; FM-001..019); capabilities-p0 v1.8; entities-graph v1.11 (burst-272 F-P170-06: ActionRisk import paths corrected); entities-server v1.15 (burst-276-content-1: FerrochainComponent cross-ref Rust:Component; ErrorCategory→Category taxonomy codes; message+source constraints added); failure-modes v1.1; events.md v1.11; ubiquitous-language-core v1.8; bounded-contexts v1.4 (burst-272 F-P170-16: ToolConfig::override_risk in tool-execution context) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
 | Session checkpoints bursts 5–78, bursts 176–270 pre-commit (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
-| Lessons learned (81 lessons; burst-276-content-2: L-079 phantom-sweep discipline; L-080 hand counts run low; L-081 range anchors unfalsifiable at member granularity; burst-276-wave-A: L-070..L-074; burst-276-content-1: L-075..L-078) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
+| Lessons learned (86 lessons; burst-276-content-3: L-082..L-086; burst-276-content-2: L-079..L-081; burst-276-wave-A: L-070..L-074; burst-276-content-1: L-075..L-078) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Holdout domain briefs A–E | `.factory/planning/holdout-domains/domain-{a,b,c,d,e}-*.md` |
 | Reference corpus manifest (v1.4.0) | `.factory/semport/reference-manifest.md` |
 | Semport pass 1 analysis state | `.factory/semport/core/ANALYSIS-STATE.md` |

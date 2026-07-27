@@ -1690,3 +1690,24 @@ PERIMETER SNAPSHOT (as of v4.27): decomp 71/69+2; criticality registry 77 (12/28
 NEXT-ACTION was: fix-burst 276 content wave 3. STATUS: COMPLETE (burst-276-content-3). All burst-276 waves done. P1D-174 FULL-PERIMETER queued.
 
 ORCHESTRATOR SELF-ATTRIBUTED DEFECTS (as of v4.27): F-P171a-02; F-P172a-04; [Wave A reopening #1]; [P1D-173 dispatch — adversary tool profile read-only; 3 dispatches lost]; [P1D-173 gate — F-P172b-05 fix tautological identity F-P173-303, 4th gen]; [burst-275 dispatch — F-P172b-12 stripped eval::judge anchor].
+
+---
+
+## Archived Checkpoint — STATE.md v4.28 (session wrap 2026-07-27 D-38)
+
+*Archived from STATE.md v4.28 at session wrap commit (STATE.md v4.29). 2026-07-27.*
+
+### STATE.md v4.28 Session Resume Checkpoint (verbatim)
+
+RESUME IN ONE BREATH: ferrochain Phase 1 (Spec Crystallization), greenfield+semport. Adversarial streak 0/3 after 174 passes; all fix-burst 276 waves COMPLETE (all 4 P1D-173 CRITs closed). Factory-artifacts clean and pushed; develop 46725ad; no worktrees; no open PRs; verify-sha-currency exit 0. NEXT ACTION: P1D-174 FULL-PERIMETER against frozen HEAD `423c01a` (per D-32, only full-perimeter passes advance the 3-CLEAN streak).
+
+HEADS (v4.28): develop `46725ad` (clean, pushed — local == origin); factory-artifacts `423c01a` (clean, pushed — local == origin); no worktrees; no open PRs. NOTHING was local-only.
+
+PERIMETER SNAPSHOT (post-burst-276-content-3): decomp 71/69+2; criticality registry 77 (12/28/35/2); purity 82 rows (33/37/12); 129 BCs (51/75/3); 109 error codes (E-PROV-011 minted); 675 TVs (TV-006 added); 38 CAPs; 15 DIs; 13 VPs; 20 ADR files; 21 crates; 14 bounded contexts; 15 StreamEvents; 17 Components; 11 event_types; 37 gates; 11 Red Gate BCs; 7 blocking + 4 advisory + records-lint(L9+L10+L11); allowlist 24 entries; citation coverage 308; eval::judge 11/11. Census sextuple (71, 69, 2, 77, 76, 69) — both diff-sets EMPTY. CHECK4 6/6 CLEAN.
+
+ADVISORY-VALIDATOR BASELINES (v4.28): CHECK1=17; CHECK2=4; CHECK3=live; CHECK4: CLEAN (6/6); CHECK6-D1=3 labels/2 files; CHECK6-D2=0; CHECK6-D3=3 files.
+
+NEXT-ACTION was: P1D-174 FULL-PERIMETER against frozen HEAD `423c01a`. Status: queued; D-38 wrap commit is the next commit.
+
+### SESSION WRAP METADATA
+Date: 2026-07-27 | STATE.md: v4.28 → v4.29 | burst-276-content-3 `423c01a` | 4 session self-attributed defects logged | D-37 recorded | L-082..L-086 minted (86 lessons total) | streak 0/3
