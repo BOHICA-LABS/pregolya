@@ -7,12 +7,19 @@
 # body of the same file still reflects the pre-change state. Four heuristics:
 #
 #   (a) REMOVAL CLAIMS — changelog entry contains "remove[d]/drop[ped]/eliminat[ed]/
-#       delet[ed]" + a quoted or backtick-wrapped term; checks if that term still
-#       appears verbatim in the body.
+#       delet[ed]/replac[ed/ing]" + a quoted or backtick-wrapped term; checks if that
+#       term still appears verbatim in the body (Form-B section excluded from search).
 #
 #   (b) RENAME CLAIMS — changelog entry contains "OLD → NEW" (U+2192) or "OLD -> NEW"
-#       (ASCII arrow); checks if the old form OLD still appears verbatim in the body.
+#       (ASCII arrow); checks if the old form OLD still appears verbatim in the body
+#       (Form-B section excluded from search).
 #       OLD is the token immediately before the arrow; NEW is the token immediately after.
+#
+#   (e) FROM-X CLAIMS — changelog entry contains "from `X` to" where X is a
+#       backtick-quoted term; checks if X (backtick-normalized) still appears in the
+#       body (Form-B section excluded). Backtick normalization: both the search term
+#       and body are stripped of backtick characters before comparison, so
+#       "from `sorts by task_id` to" catches a surviving "`sorts by `task_id`" in body.
 #
 #   (c) INPUT-HASH CLAIMS — changelog entry (Form-A frontmatter list or Form-B body
 #       table) claims "input-hash [updated/refreshed/bumped/set] to HASH" or
@@ -37,14 +44,19 @@
 # will be promoted to blocking after a corpus-wide false-closure sweep.
 #
 # MOTIVATING FALSE CLOSURES (per adversarial pass P1D-174 at frozen-HEAD cd0a2c7)
-#   FC-1: verification-architecture.md changelog claimed "replacing TaskId(i as u64)"
-#         but body still contained TaskId(i as u64). Caught by heuristic (a)/(b).
-#   FC-2: BC-2.19.003 changelog claimed "Drop fabricated 'duplicate detection' clause"
-#         but body still contained "duplicate detection". Caught by heuristic (a).
-#   FC-3: VP-013.md changelog claimed "Remove stale '(Red Gate)' labels" but
-#         (Red Gate) still appeared in the Lifecycle table. Caught by heuristic (a).
-#   FC-4: BC-2.07.002 Form-B changelog row claimed "input-hash updated to ea9cf4b"
-#         but frontmatter input-hash was a different value. Caught by heuristic (c).
+#   FC-1: verification-architecture.md v2.12 claimed "update formal statement from
+#         `sorts by task_id`" but body still contains "sorts by `task_id`" (old key).
+#         CAUGHT by heuristic (e) [from-X, backtick-normalized].
+#   FC-2: BC-2.19.003 v1.2 claimed "Drop fabricated 'duplicate detection' clause"
+#         but body still contained "duplicate detection". CAUGHT by heuristic (a).
+#   FC-3: VP-013.md v1.13 STATE.md record claimed "all 13 VP bodies checked" —
+#         review-process completeness claim; NOT catchable by in-file heuristics.
+#         Structural limitation: this validator checks file body only.
+#   FC-4: capabilities-p1-p2.md v1.13 claimed "zero additional hits" — count claim
+#         with no quoted term; NOT catchable by in-file heuristics.
+#         Structural limitation: count claims require external grep verification.
+#   FC-5: BC-2.07.002 v1.5 Form-B claimed "input-hash updated to ea9cf4b" but
+#         frontmatter input-hash was a different value. CAUGHT by heuristic (c).
 #
 # EXIT CONTRACT
 # ─────────────
@@ -126,10 +138,10 @@ def get_form_b_entries(body):
 
 # ── Heuristic (a): Removal claims ─────────────────────────────────────────────
 
-# Patterns that introduce a term claimed to be removed
+# Patterns that introduce a term claimed to be removed or replaced
 REMOVAL_VERB_RE = re.compile(
     r'\b(?:remove[sd]?|remov(?:ing|al)|drop(?:ped)?|drop(?:ping)?|'
-    r'eliminat(?:ed?|ing)|delet(?:ed?|ing))\b',
+    r'eliminat(?:ed?|ing)|delet(?:ed?|ing)|replac(?:ed?|ing|ement))\b',
     re.IGNORECASE
 )
 
@@ -138,8 +150,9 @@ QUOTED_TERM_RE = re.compile(r"[`'\"]([^`'\"]{1,80})[`'\"]")
 # Code token in backticks
 BACKTICK_TERM_RE = re.compile(r'`([^`]{1,60})`')
 
-def check_removal_claims(filepath, fm, body, changelog_entries):
-    """Return list of (entry_text, term, reason) for each removal claim not applied."""
+def check_removal_claims(filepath, fm, body_no_cl, changelog_entries):
+    """Return list of (entry_text, term, reason) for each removal claim not applied.
+    body_no_cl: body text with Form-B ## Changelog section stripped."""
     findings = []
     for entry in changelog_entries:
         if not REMOVAL_VERB_RE.search(entry):
@@ -153,8 +166,8 @@ def check_removal_claims(filepath, fm, body, changelog_entries):
             # Skip terms that look like version numbers
             if re.match(r'^\d+\.\d+', term_stripped):
                 continue
-            # Check if term still appears in body
-            if term_stripped in body:
+            # Check if term still appears in body (Form-B section excluded)
+            if term_stripped in body_no_cl:
                 findings.append((entry[:120], term_stripped,
                     f"removal claim for '{term_stripped}' but term still in body"))
     return findings
@@ -165,23 +178,74 @@ def check_removal_claims(filepath, fm, body, changelog_entries):
 # We capture the token(s) immediately before and after the arrow
 ARROW_RE = re.compile(r'([^\s→>|,;:]{2,60})\s*(?:→|->)\s*([^\s→>|,;:]{2,60})')
 
-def check_rename_claims(filepath, fm, body, changelog_entries):
-    """Return list of (entry_text, old_term, reason) for rename claims not applied."""
+# CODE_ID_RE: old_term must look like a code symbol, not a generic word or value.
+# True renames involve: snake_case (_), module paths (::), method calls (),
+# camelCase ([a-z][A-Z]), or CAPS-CAPS-NNN error-code format.
+# Generic words (MEDIUM, CRITICAL, failure, update), tier labels, boolean values,
+# date strings, and version strings are FPs in heuristic (b) and are excluded here.
+CODE_ID_RE = re.compile(r'[_:()]|[a-z][A-Z]|^[A-Z]+-[A-Z]+-\d')
+
+def check_rename_claims(filepath, fm, body_no_cl, changelog_entries):
+    """Return list of (entry_text, old_term, reason) for rename claims not applied.
+    body_no_cl: body text with Form-B ## Changelog section stripped."""
     findings = []
     for entry in changelog_entries:
         for m in ARROW_RE.finditer(entry):
             old_term = m.group(1).strip().strip('`\'"')
             new_term = m.group(2).strip().strip('`\'"')
-            # Skip pure version transitions (e.g. "1.3 → 1.4")
-            if re.match(r'^\d+[\.\d]*$', old_term):
+            # Skip pure version transitions (e.g. "1.3 → 1.4", "v1.2 → v1.3")
+            if re.match(r'^v?\d+[\.\d]*$', old_term):
+                continue
+            # Skip date strings (YYYY-MM-DD)
+            if re.match(r'^\d{4}-\d{2}-\d{2}', old_term):
+                continue
+            # Skip terms starting with a digit (count/numeric transitions)
+            if old_term and old_term[0].isdigit():
                 continue
             # Skip very short terms (noise)
             if len(old_term) < 4:
                 continue
+            # Skip non-identifier terms — arrow must involve a code symbol.
+            # Generic words (MEDIUM, failure, update), tier labels (CRITICAL),
+            # boolean values (false/true), and bare ALL-CAPS words without the
+            # CAPS-CAPS-NNN error-code format are FPs here.
+            if not CODE_ID_RE.search(old_term):
+                continue
             # If the old form still appears in body, the rename wasn't applied
-            if old_term in body:
+            if old_term in body_no_cl:
                 findings.append((entry[:120], old_term,
                     f"rename claim '{old_term} → {new_term}' but old form still in body"))
+    return findings
+
+# ── Heuristic (e): From-X-to-Y claims ────────────────────────────────────────
+# Catches: "update X from `OLD` to `NEW`" — verifies OLD (backtick-normalized)
+# is absent from body. Backtick normalization: strip backticks from both the
+# extracted term and the body before comparison, so "from `sorts by task_id`"
+# catches a surviving "sorts by `task_id`" in body.
+
+FROM_BACKTICK_RE = re.compile(r'\bfrom\s+`([^`]{4,80})`')
+
+def _strip_backticks(s):
+    return s.replace('`', '')
+
+def check_from_x_claims(filepath, fm, body_no_cl, changelog_entries):
+    """Return list of (entry_text, term, reason) for from-X claims not applied.
+    body_no_cl: body text with Form-B ## Changelog section stripped."""
+    findings = []
+    body_normalized = _strip_backticks(body_no_cl)
+    for entry in changelog_entries:
+        for m in FROM_BACKTICK_RE.finditer(entry):
+            old_term = m.group(1).strip()
+            if len(old_term) < 4:
+                continue
+            # Skip pure version transitions (e.g. "from `1.3` to")
+            if re.match(r'^\d+[\.\d]*$', old_term):
+                continue
+            # Normalize: strip backticks from both term and body for comparison
+            old_normalized = _strip_backticks(old_term)
+            if old_normalized in body_normalized:
+                findings.append((entry[:120], old_term,
+                    f"'from `{old_term}`' claim but normalized term still in body"))
     return findings
 
 # ── Heuristic (c): Input-hash claims ──────────────────────────────────────────
@@ -281,15 +345,24 @@ for filepath in all_md_files:
     if not all_entries:
         continue
 
+    # Strip Form-B ## Changelog section from body before string-presence checks.
+    # This prevents false positives where the claimed-removed term only appears
+    # inside the changelog table itself (not in actual document content).
+    body_no_changelog = re.sub(r'\n## Changelog\n.*', '', body, flags=re.DOTALL)
+
     ffindings = []
 
-    # Heuristic (a): removal claims
-    for (entry, term, reason) in check_removal_claims(filepath, fm, body, all_entries):
+    # Heuristic (a): removal claims (body search excludes Form-B changelog section)
+    for (entry, term, reason) in check_removal_claims(filepath, fm, body_no_changelog, all_entries):
         ffindings.append(('a-removal', entry, term, reason))
 
-    # Heuristic (b): rename/replacement claims
-    for (entry, old_term, reason) in check_rename_claims(filepath, fm, body, all_entries):
+    # Heuristic (b): rename/replacement claims (body search excludes Form-B section)
+    for (entry, old_term, reason) in check_rename_claims(filepath, fm, body_no_changelog, all_entries):
         ffindings.append(('b-rename', entry, old_term, reason))
+
+    # Heuristic (e): from-X-to-Y claims (body search excludes Form-B section)
+    for (entry, old_term, reason) in check_from_x_claims(filepath, fm, body_no_changelog, all_entries):
+        ffindings.append(('e-from-x', entry, old_term, reason))
 
     # Heuristic (c): input-hash claims
     for (entry, claimed, reason) in check_input_hash_claims(filepath, fm, body, all_entries):
@@ -361,10 +434,12 @@ echo "verify-changelog-claim-applied: PASS=$PASS WARN=$WARN FAIL=$FAIL"
 echo "  Advisory findings: $FINDINGS_COUNT false-closure candidate(s)"
 echo ""
 echo "Heuristics (all advisory — non-blocking):"
-echo "  (a) removal claims: changelog 'remove/drop/eliminate X' but X still in body"
+echo "  (a) removal claims: changelog 'remove/drop/replace X' but X still in body"
 echo "  (b) rename claims:  changelog 'X → Y' but old form X still in body"
 echo "  (c) input-hash:     changelog 'input-hash updated to HASH' but FM hash differs"
 echo "  (d) version claims: Form-A last/first entry version != frontmatter version"
+echo "  (e) from-X claims:  changelog 'from \`X\` to' but X (backtick-normalized) still in body"
+echo "  Body checks for (a),(b),(e) exclude the Form-B ## Changelog table section."
 echo ""
 echo "RESULT: PASS (advisory — non-blocking)"
 # Always exit 0 — advisory check

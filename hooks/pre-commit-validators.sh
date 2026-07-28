@@ -15,6 +15,8 @@
 #   verify-no-version-pins.sh              — pinned pypi/npm versions block
 #   verify-adr-decision-refs.sh            — missing ADR decision refs block
 #   records-lint.sh                        — line-cite citations in new content block
+#   verify-changelog-date-monotonicity.sh  — non-monotone changelog dates block
+#   verify-enum-variant-casing.sh          — non-canonical enum casing block
 #
 # ADVISORY VALIDATORS (exit 0; WARN/FAIL output shown but commit not blocked)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -94,6 +96,8 @@ echo "================================================================"
 run_blocking "verify-no-version-pins.sh"
 run_blocking "verify-adr-decision-refs.sh"
 run_blocking "records-lint.sh"
+run_blocking "verify-changelog-date-monotonicity.sh"
+run_blocking "verify-enum-variant-casing.sh"
 
 # ── Advisory validators (run but do not block; see promotion paths in header) ─
 echo ""

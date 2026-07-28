@@ -1,7 +1,7 @@
 ---
 document_type: module-criticality
 level: L3
-version: "2.5"
+version: "2.6"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -15,6 +15,7 @@ traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "2.6 (FIX-BURST-277-WAVE-B/2026-07-28): Item 6 module census — add 6 definitions-only/exempt module rows: core::documents (definitions-only, D21/SS-20, ADR-014 Decision 2: pure data carrier, no execution methods), memory::skills (routing-overlay/exempt, D20/SS-15, ADR-012 Decision 4: structural decomposition row only), core::guardrail (definitions-only, SS-11, ADR-009/ADR-014 Decision 6), core::action_risk (definitions-only, SS-05, ADR-009/F-P170-06/ADR-020 Decision 3), core::context_mutation (definitions-only, D20/SS-01, ADR-009/ADR-012), core::write_guard (definitions-only, D20/SS-15, ADR-009/ADR-012). All have Tier=— (no kill rate obligation; not subject to Phase 5 gates). Total 77→83. Tiered count (CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77) unchanged. GATE-25 arithmetic check: 83 − 76 = 7 (crate-level rows; 6 new rows are module-level, now matched in decomp after FIX-BURST-277 module-decomposition additions)."
   - "2.5 (FIX-BURST-276-CHECK4/2026-07-27): CHECK4 canonicality closure — rename three crate-level BaseChatModel provider rows to full canonical crate names: `openai` → `ferrochain-openai`, `anthropic` → `ferrochain-anthropic`, `ollama` → `ferrochain-ollama`. Aligns with established pattern: ferrochain-macros, ferrochain-standard-tests, xtask, ferrochain-community all use the full crate name form recognized by ARCH-INDEX.md canonical-roster; purity-boundary-map.md already uses these full names (confirmed via verify-module-canonicality.sh SET-DIFF baseline). NE Catalog NE-04 and NE-07: replace aggregate-scope Module cells with `—` and append scope description to Enforcement Mechanism column (aggregate policy scope is not a module identifier; checker skips `—` cells per design). Column guide and Classification Summary updated to use full crate names. Census sextuple unchanged: (71, 69, 2, 77, 76, 69) — no rows added or removed from Module Classification table; all tier assignments unchanged."
   - "2.4 (FIX-BURST-276-TD091/2026-07-27): TD-VSDD-091 anti-volatile-pin repair — Iron Law gap note (eval::judge): replace live-body sibling-artifact version pin with stable section anchor. observability.md §Catalog (the Catalog table section that contains the eval.judge_infra_error row and its emitter attribution) replaces a specific version number. Sibling-sweep of this file live body: no additional version pins found."
   - "2.3 (FIX-BURST-276-WAVE-B1/F-P173-301+402/2026-07-27): F-P173-301/402 sibling sweep — fix eval::judge BC anchor in Iron Law gap note: `BC-2.08.013/014 scope the LLM judge conformance behavior` → `BC-2.08.008 scopes the judge score aggregation behavior`. Correct anchor: BC-2.08.008 = Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15); BC-2.08.013/014 are provider-behavior BCs, not eval-scoring BCs. False closure claim corrected per TD-VSDD-059: the observability.md emitter linkage was restored by FIX-BURST-276-WAVE-C1 (concurrent PO fix to observability.md v1.7), not by the Iron Law entry addition in v2.1; v2.1 changelog claim 'this clears the observability.md pending note' was erroneous (historical record preserved; correction is in Iron Law gap note body text). TD-VSDD-060 sibling sweep: BC anchor also corrected in module-decomposition.md (v1.34), purity-boundary-map.md (v1.23), verification-coverage-matrix.md (v2.9) in same burst."
@@ -126,6 +127,12 @@ changelog:
 | `tools::fs` | — | ferrochain-tools | SS-23 | MEDIUM | — | ≥ 80% | P5 |
 | `tools::search` | — | ferrochain-tools | SS-23 | MEDIUM | — | ≥ 80% | P5 |
 | `eval::judge` | — | ferrochain-standard-tests | SS-08 | MEDIUM | — | ≥ 80% | P5 |
+| `core::documents` | definitions-only | ferrochain-core | SS-20 | — | — | — (no kill rate obligation) | — |
+| `memory::skills` | routing-overlay/exempt | ferrochain-memory | SS-15 | — | — | — (no kill rate obligation) | — |
+| `core::guardrail` | definitions-only | ferrochain-core | SS-11 | — | — | — (no kill rate obligation) | — |
+| `core::action_risk` | definitions-only | ferrochain-core | SS-05 | — | — | — (no kill rate obligation) | — |
+| `core::context_mutation` | definitions-only | ferrochain-core | SS-01 | — | — | — (no kill rate obligation) | — |
+| `core::write_guard` | definitions-only | ferrochain-core | SS-15 | — | — | — (no kill rate obligation) | — |
 
 > **D21+burst-224 additions (v1.4):** `core::serializable` (Reviver) and `vectorstores::similarity` added as CRITICAL (Kani P0 proof obligations VP-010 and VP-009 respectively). `prompts::injection_guard`, `core::serializable` (LcSerializable), `core::embeddings` added as HIGH (Kani P1 and proptest P1 proof obligations VP-006/007/008). `vectorstores::mmr` added as MEDIUM (MMR-only selection algorithm; VP-009 relocated to vectorstores::similarity in burst-224). Definitions-only D21 artifacts (core::guardrail per ADR-014 Decision 6) excluded per no-row precedent.
 
@@ -173,7 +180,8 @@ changelog:
 | HIGH | 28 |
 | MEDIUM | 35 |
 | LOW | 2 |
-| **Total** | **77** |
+| — (definitions-only/exempt) | 6 |
+| **Total** | **83** |
 
 > Module/crate breakdown: 12 CRITICAL module-level + 24 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened) + 4 HIGH crate-level (ferrochain-openai/ferrochain-anthropic/ferrochain-ollama BaseChatModel + ferrochain-macros crate-level roll-up) + 34 MEDIUM module-level + 1 MEDIUM crate-level (ferrochain-standard-tests) + 2 LOW crate-level (xtask + ferrochain-community) = 77 rows total.
 

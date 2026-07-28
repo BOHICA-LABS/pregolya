@@ -126,7 +126,7 @@ Object-safety is achieved via `&self` receiver and `#[async_trait]` desugaring
 
 - `architecture/module-decomposition.md` — SS-20, `core::retriever` and `core::documents` modules in ferrochain-core
 - `architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md` — Decision 1 (crate placement: Retriever + Document in ferrochain-core), Decision 2 (async dyn-compatible trait shape, `&self` receiver, `#[async_trait]`, Document struct)
-- `architecture/decisions/ADR-005-*.md` — §Object-Safety precedent for `#[async_trait]` + `Arc<dyn Trait>`
+- `architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md` — §Object-Safety precedent for `#[async_trait]` + `Arc<dyn Trait>`
 
 ## Story Anchor
 

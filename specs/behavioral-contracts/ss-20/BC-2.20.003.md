@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.003
-version: "1.2"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,8 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-20 Document Retrieval"
   - "1.1 (D21/Batch-3b-i/2026-07-20): E-CFG-001 → E-VS-003 reassignment per ADR-010 v1.1 (no CFG component; VS component owns all VectorStoreRetriever config validation errors). Updated: Invariant 2 (error code + added full struct form with E-CORE-005 message pattern), TV-004 (full struct form for lambda_mult violation), TV-005 (full struct form for fetch_k < k violation). TD-VSDD-060 E-CFG residue: zero (grep confirmed below)."
   - "1.2 (F-P224/F-P129-07/2026-07-21): Invariant 2 corrected — 'clamped to [0.0, 1.0]' → 'validated against [0.0, 1.0]'. The clamping language contradicted TV-004 which shows rejection semantics (Err, not silently clamped value). Validation with rejection is the correct behavior."
+  - "1.3 (FIX-BURST-277-WAVE-B/2026-07-28): VP-2.20.003-A verification property text corrected (architect scope — verification strategy, not behavioral contract). Old text incorrectly described the property as preventing E0038 (object safety). Actual property: VectorStoreRetriever (no lifetime parameter; store: Arc<dyn VectorStore>) satisfies Retriever + 'static; Arc<dyn Retriever> coercion succeeds without a lifetime-bound error. Wave C PO routing required for BC body + PC-2 corrections (see fix-burst 277 Wave C routing spec)."
+  - "1.4 (FIX-BURST-277-WAVE-C/ADR-014-Decision-2-body/2026-07-28): BC body aligned with ADR-014 Decision 2 VectorStoreRetriever lifetime removal. (1) Description: VectorStoreRetriever<'a>/&'a dyn VectorStore removed; as_retriever fallible fn as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>; Err(E-VS-003) on invalid config. (2) PC2: as_retriever(&self) -> as_retriever(self: &Arc<Self>); infallible -> fallible. (3) PC3: VectorStoreRetriever<'_> -> VectorStoreRetriever. (4) PC4: coercion succeeds because Retriever + 'static. (5) PC5: updated to fallible signature; E0038-safe framing removed (issue was lifetime, not object safety). (6) Invariant 5: lifetime-borrow language -> Arc ownership language; 'static coercion documented. (7) EC-006: Ok(VectorStoreRetriever) return; Arc clone semantics."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-027
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -43,21 +45,27 @@ removal_reason: null
 
 ## Description
 
-`VectorStoreRetriever<'a>` is a concrete `Retriever` implementation in
-`ferrochain-vectorstores: vectorstores::retriever` that wraps a `&'a dyn VectorStore` and
+`VectorStoreRetriever` is a concrete `Retriever` implementation in
+`ferrochain-vectorstores: vectorstores::retriever` that owns an `Arc<dyn VectorStore>` and
 dispatches `get_relevant_documents` to the appropriate VectorStore search method based on
-`SearchType`. It is constructed via `VectorStore::as_retriever(&self) → VectorStoreRetriever<'_>`,
-a concrete (non-opaque) return type that preserves `VectorStore`'s dyn-compatibility (E0038-safe
-per ADR-014). The retriever is configured with `k` (final result count), `fetch_k` (MMR
-candidate pool size), and `lambda_mult` (MMR diversity weight).
+`SearchType`. It is constructed via `VectorStore::as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>`,
+a concrete (non-opaque) fallible constructor that validates configuration before constructing
+and returns `Err(E-VS-003)` on invalid config (ADR-014 Decision 2). The retriever is configured
+with `k` (final result count), `fetch_k` (MMR candidate pool size), and `lambda_mult` (MMR
+diversity weight). `VectorStoreRetriever` has no lifetime parameter; the `Arc<dyn VectorStore>`
+internal field allows `VectorStoreRetriever` to satisfy `Retriever + 'static`, enabling
+`Arc<dyn Retriever>` coercion.
 
 ## Preconditions
 
 1. A `&dyn VectorStore` value is available (the store has been initialized).
-2. `VectorStore::as_retriever(&self)` is called on the store, returning a `VectorStoreRetriever<'_>`.
+2. `VectorStore::as_retriever(self: &Arc<Self>)` is called on an `Arc<dyn VectorStore>`,
+   returning `Ok(VectorStoreRetriever)` on valid config or `Err(E-VS-003)` on invalid config
+   (ADR-014 Decision 2).
 3. The caller configures `search_type`, `k`, `fetch_k`, and `lambda_mult` (defaults apply
    if not explicitly set: `SearchType::Similarity`, `k=4`, `fetch_k=20`, `lambda_mult=0.5`).
-4. The `VectorStoreRetriever<'_>` is coerced to `Arc<dyn Retriever>` by wrapping in `Arc::new`.
+4. The `VectorStoreRetriever` (no lifetime parameter) is coerced to `Arc<dyn Retriever>` by
+   wrapping in `Arc::new`; this coercion succeeds because `VectorStoreRetriever: Retriever + 'static`.
 
 ## Postconditions
 
@@ -70,9 +78,12 @@ candidate pool size), and `lambda_mult` (MMR diversity weight).
    Returns `k` documents from the `fetch_k` candidate pool, selected for both relevance and diversity.
 4. In all three search types, the returned `Vec<Document>` satisfies DI-012 (each document that
    enters graph context must pass `BoundaryType::RAGRetrieval` — coverage obligation per BC-2.20.002).
-5. `VectorStore::as_retriever(&self) → VectorStoreRetriever<'_>` is a concrete (non-opaque) return.
-   This is NOT `async fn`, NOT `impl Retriever` — it returns the concrete named type, preserving
-   `VectorStore`'s dyn-compatibility (E0038-safe).
+5. `VectorStore::as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>`
+   is a concrete (non-opaque) fallible return — NOT `async fn`, NOT `impl Retriever`. Returns the
+   concrete named type `VectorStoreRetriever` (no lifetime parameter). `VectorStore` trait remains
+   object-safe; `as_retriever` takes `self: &Arc<Self>` to provide access to the `Arc` needed for
+   internal `Arc<dyn VectorStore>` storage (ADR-014 Decision 2). Returns `Err(E-VS-003)` on invalid
+   config.
 
 ## Invariants
 
@@ -83,8 +94,10 @@ candidate pool size), and `lambda_mult` (MMR diversity weight).
 3. `k ≥ 1` is enforced at construction time; `k = 0` is rejected.
 4. `fetch_k ≥ k` is enforced at construction time for `SearchType::Mmr` (the candidate pool must
    be at least as large as the final result count); `fetch_k < k` is rejected.
-5. `VectorStoreRetriever<'_>` borrows the store with lifetime `'a`; it CANNOT outlive the store it
-   wraps (lifetime-safe — the borrow checker enforces this statically).
+5. `VectorStoreRetriever` owns its store via `Arc<dyn VectorStore>`; it is `'static` (no lifetime
+   parameter). The `Arc` reference count keeps the store alive for the retriever's lifetime — no
+   borrow-checker lifetime constraint applies (ADR-014 Decision 2). `Arc<dyn Retriever>` coercion
+   succeeds without a lifetime-bound error.
 
 ## Edge Cases
 
@@ -95,7 +108,7 @@ candidate pool size), and `lambda_mult` (MMR diversity weight).
 | EC-003 | `SearchType::Mmr` with `fetch_k = k` | MMR runs with a candidate pool of exactly k; minimal diversity effect (degenerate to similarity search) — valid |
 | EC-004 | `lambda_mult = 0.0` (maximum diversity) | MMR returns maximally diverse documents; may include low-relevance but high-diversity documents |
 | EC-005 | `lambda_mult = 1.0` (pure relevance) | MMR degenerates to similarity search; diversity penalty is zero |
-| EC-006 | `as_retriever()` called on a store via `Arc<dyn VectorStore>` | Returns `VectorStoreRetriever<'_>` with lifetime tied to the deref of the Arc; caller holds the Arc for the retriever's lifetime |
+| EC-006 | `as_retriever(self: &Arc<Self>)` called on an `Arc<dyn VectorStore>` with valid config | Returns `Ok(VectorStoreRetriever)` (no lifetime parameter); retriever owns a clone of the `Arc<dyn VectorStore>`; caller may drop the original `Arc` after construction |
 
 ## Canonical Test Vectors
 
@@ -111,7 +124,7 @@ candidate pool size), and `lambda_mult` (MMR diversity weight).
 
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
-| VP-2.20.003-A | `as_retriever()` returns a concrete `VectorStoreRetriever<'_>` that can be stored as `Arc<dyn Retriever>` (E0038 does not fire) | compile-time test |
+| VP-2.20.003-A | `VectorStoreRetriever` (no lifetime parameter; `store: Arc<dyn VectorStore>`) satisfies `Retriever + 'static`; `Arc<dyn Retriever>` coercion succeeds without a lifetime-bound error; `as_retriever(self: &Arc<Self>)` is fallible: validates config before constructing | compile-time test + unit test (invalid config → `Err(E-VS-003)`) |
 | VP-2.20.003-B | Each SearchType variant dispatches to the correct VectorStore method | unit test with mock VectorStore — assert method call dispatch per SearchType |
 
 ## Related BCs

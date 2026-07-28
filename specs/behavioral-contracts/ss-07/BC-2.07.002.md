@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.002
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,15 @@ red_gate: true
 red_gate_source: R8
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
+changelog:
+  - "1.0 (2026-07-13): initial authoring — Greenfield batch 2"
+  - "1.1 (2026-07-14): GTV-008 expected value explicitly marked PROVISIONAL; values marked PROVISIONAL must be Python-verified before Red Gate test is written (F-P36-03)"
+  - "1.2 (2026-07-15): Changelog date metadata correction: v1.1 row date corrected from 2026-07-16 to 2026-07-14 (F-P65-01)"
+  - "1.3 (2026-07-17): VP-SPLIT-04..005 renumbered to VP-SPLIT-04..05 for corpus digit-width uniformity (OBS-P95-A)"
+  - "1.4 (2026-07-17): Module field resolved from placeholder to ferrochain-splitters per module-decomposition.md (F-P96-01)"
+  - "1.5 (OBS-P148-04/OBS-P148-05/burst-249/2026-07-24): GTV-008 PROVISIONAL resolved (corrected expected value); GTV-003 separator-logic resolved (corrected expected value); Invariant splitter reference reconciled to in-tree langchain-text-splitters==1.1.2 per reference-manifest.md. Note: Form-B v1.5 row contained a false input-hash claim (the claimed value was never written to the frontmatter at any commit) — corrected in v1.7 (FC-5)."
+  - "1.6 (F-P152-03/burst-253/2026-07-24): GTV-010 and GTV-011 grapheme-cluster discriminators added; 9 to 11 GTVs Python-verified against pinned in-tree langchain-text-splitters==1.1.2; VP-SPLIT-04 range extended to GTV-001..011"
+  - "1.7 (FIX-BURST-277-WAVE-C/FC-5-genuine-fix/2026-07-28): False closure FC-5 resolved. Form-B v1.5 row contained a false input-hash claim; git history confirms the claimed hash value was never written to the frontmatter — the burst-249 commit held a different value, and the dispatcher log from 2026-07-24 recorded a computed-vs-stored mismatch at burst time (the commit landed with a value different from what was computed during the burst). Form-B v1.5 false hash claim removed. input-hash updated to current computed value per frontmatter. Form-A changelog added (migrated from Form-B historical record)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-008
   - domain-spec/edge-cases.md#DEC-001
@@ -24,7 +33,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
-input-hash: "6a04860"
+input-hash: "d836c3a"
 extracted_from: null
 modified: []
 deprecated: null
@@ -220,8 +229,9 @@ _[to be filled after story decomposition]_
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.7 | 2026-07-28 | FIX-BURST-277-WAVE-C/FC-5: False closure FC-5 resolved. Form-B v1.5 row contained a false input-hash claim; git history (burst-249 commit) confirms the claimed value was never written to the frontmatter — the commit held a different hash value. Dispatcher log from 2026-07-24 corroborates: a computed-vs-stored mismatch was recorded at burst time, but the landed commit wrote yet another different value. False hash claim removed from v1.5 row. input-hash updated to current computed value per frontmatter. Form-A changelog added (migrated from Form-B). | FIX-BURST-277-WAVE-C |
 | 1.6 | 2026-07-24 | F-P152-03/burst-253: ADD GTV-010 and GTV-011 as grapheme-cluster discriminators. GTV-010: input "abcéxyz" (NFD é = e+U+0301, 8 code pts, 7 graphemes), chunk_size=4 → ["abce", "́xyz"]; wrong grapheme output: ["abcé", "xyz"] — grapheme-aware impl keeps é intact, shifting boundary. GTV-011: input "👨‍👩‍👧‍👦 hi" (ZWJ family 7 code pts + " hi", total 10 code pts), chunk_size=4 → ["👨‍👩‍", "👧‍👦", "hi"] (3 chunks); wrong grapheme output: ["👨‍👩‍👧‍👦", "hi"] (2 chunks — ZWJ treated as 1 grapheme ≤ 4). Both Python-verified against pinned corpus (langchain-text-splitters==1.1.2 in-tree at langchain==1.3.13 SHA 42f8f79). VP-SPLIT-04 range GTV-001..009 → GTV-001..011. GTV count 9→11. | F-P152-03 |
-| 1.5 | 2026-07-24 | OBS-P148-04/OBS-P148-05/burst-249: (1) GTV-008 PROVISIONAL resolved — corrected expected value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` → `["abc🎉🎉", "🎉🎉🎉xy", "z"]`; PROVISIONAL marker removed; Python-verified against pinned corpus. (2) GTV-003 separator-logic dependency resolved — corrected expected value `["hello", "😀 world"]` → `["hello 😀", "world"]`; Python-verified. (3) Invariant splitter reference reconciled: `langchain-text-splitters==0.3.8` → in-tree `langchain-text-splitters==1.1.2` at `langchain==1.3.13` SHA `42f8f79293cfb7589e5bc1d74a8ae4dfd0bf15e3` per reference-manifest.md (no standalone splitters pin exists in the manifest). input-hash updated to ea9cf4b (prd.md v1.16 input). | OBS-P148-04, OBS-P148-05 |
+| 1.5 | 2026-07-24 | OBS-P148-04/OBS-P148-05/burst-249: (1) GTV-008 PROVISIONAL resolved — corrected expected value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` → `["abc🎉🎉", "🎉🎉🎉xy", "z"]`; PROVISIONAL marker removed; Python-verified against pinned corpus. (2) GTV-003 separator-logic dependency resolved — corrected expected value `["hello", "😀 world"]` → `["hello 😀", "world"]`; Python-verified. (3) Invariant splitter reference reconciled: `langchain-text-splitters==0.3.8` → in-tree `langchain-text-splitters==1.1.2` at `langchain==1.3.13` SHA per reference-manifest.md §langchain==1.3.13 (no standalone splitters pin exists in the manifest). _(Note: this row originally contained a false input-hash claim; git history confirms the claimed value was never written to the frontmatter — the burst-249 commit held a different hash value. False claim removed; see v1.7 for full FC-5 correction.)_ | OBS-P148-04, OBS-P148-05 |
 | 1.4 | 2026-07-17 | F-P96-01: Module field resolved from placeholder to ferrochain-splitters per module-decomposition.md v1.10. | F-P96-01 |
 | 1.3 | 2026-07-17 | VP-SPLIT-04..005 renumbered to VP-SPLIT-04..05 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — renumber is the production-grade call). No VP-INDEX registration affected (SPLIT VPs are BC-local). | OBS-P95-A |
 | 1.2 | 2026-07-15 | Changelog date metadata correction: v1.1 row date corrected from 2026-07-16 → 2026-07-14 (PASS-36 occurred on 2026-07-14; prior date was a future-date typo sharing the same root cause as F-P64-02 in bc-authoring-plan.md and test-vectors.md). (F-P65-01, pass-65) | F-P65-01 |

@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.22"
+version: "3.23"
 status: active
 producer: state-manager
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-07-28T00:00:00Z
 project: ferrochain
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.23 (fix-burst-277-wave-c/2026-07-28): 7 BC version bumps + 2 Form-A additions. Task 1 (routing spec Groups A1-A5/B1-B2/C1): BC-2.20.003 v1.3→v1.4 (VectorStoreRetriever no lifetime, Arc<dyn VectorStore> ownership, as_retriever fallible per ADR-014 Decision 2); BC-2.09.001 v1.3→v1.4 (Arc<dyn DynTool> per ADR-005 §Adjacent in Description + PC2); BC-2.09.002 v1.3→v1.4 (Arc<dyn DynTool> per ADR-005 §Adjacent in PC1). Task 2: BC-2.21.001 v1.0→v1.1 (as_retriever infallibility contradiction resolved — 5 sites updated to fallible signature with no lifetime, Arc<dyn VectorStore> ownership per ADR-014 Decision 2). Task 3/FC-5: BC-2.07.002 v1.6→v1.7 (false closure FC-5 resolved — Form-B v1.5 false input-hash claim removed; input-hash updated to current computed value; Form-A changelog added). Task 4/FC-2: BC-2.19.003 v1.2→v1.3 (false closure FC-2 genuinely completed — duplicate-detection language removed from Invariant 2, EC-003, and DI-008 Traceability; last-write-wins HashMap semantics documented per actual inventory crate behavior). Form-A additions (no version bump): BC-2.08.011 and BC-2.08.012 (transcribed from Form-B; BC_UNVERIFIED=3→0). BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.22 (fix-burst-276/F-P173-505/2026-07-27): D-28 banner added to body ## Changelog section, declaring Form A (frontmatter changelog:) authoritative; body table preserved as historical record. Version bump only; BC census and H1s unchanged."
   - "3.21 (F-P172b-13/burst-275/2026-07-26): VP Seed BCs section — two stale residues removed. (1) F-P172b-13 MED: VP footnote claimed 'architect to author VP body files in Phase 6' — all 13 VP body files already exist (VP-001 through VP-013); stale obligation clause removed; remaining footnote text preserved. (2) F-P172b-13 MED: 6 VP rows showed Proof Method 'Kani' instead of 'Kani' — '(candidate)' qualifier meant VP body not yet authored; since all VP body files now exist, qualifier dropped for VP-006/VP-009/VP-010/VP-011/VP-012/VP-013. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.20 (burst-273/F-P171a-02+03+04+09/2026-07-25): Four BC version bumps — F-P171a-09 (architect+PO, ADR-008 Decision 2): BC-2.08.010 v1.2→v1.3 (#[tool] action_risk expansion MUST emit fully-qualified ::ferrochain_core::action_risk::ActionRisk::<Variant>; absent attribute yields ToolCallPreview.action_risk = None with no default variant; §PC-1 updated). F-P171a-02+03+08 (PO, call-time lifecycle): BC-2.23.005 v1.7→v1.8 (E-TOOLS-007 raised at ToolConfig::override_risk CALL TIME, not at ToolRegistry::register time; lifecycle = call time per adjudication #2; zero I/O, no async, no state). F-P171a-04 (PO, #[non_exhaustive]): BC-2.05.006 v1.5→v1.6 (ActionRisk #[non_exhaustive] cross-crate — all matches MUST carry wildcard arm failing closed to High-tier authorization requirement; closed/exhaustive claims removed from §PC-3, §Invariants, VP-HITL-13; VP-HITL-13 restated as satisfiable Cargo-check gate). Validator-#7-date-fix (PO): BC-2.10.006 v1.6→v1.7 (changelog entry 1.4 date corrected 2026-07-22→2026-07-23 per corroborating burst-239 carrier). BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."

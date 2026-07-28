@@ -136,7 +136,7 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
 
 - `architecture/module-decomposition.md` — SS-22, `core::embeddings` module in ferrochain-core
 - `architecture/decisions/ADR-017-embeddings-trait-provider-integration.md` — Decision 1 (trait placement in ferrochain-core), Decision 2 (async dyn-compatible shape, dimensionality contract, batch error semantics)
-- `architecture/decisions/ADR-005-*.md` — §Object-Safety precedent for `#[async_trait]` + `Arc<dyn Trait>`
+- `architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md` — §Object-Safety precedent for `#[async_trait]` + `Arc<dyn Trait>`
 
 ## Story Anchor
 

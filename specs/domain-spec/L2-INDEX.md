@@ -1,7 +1,7 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.17"
+version: "1.18"
 status: active
 producer: business-analyst
 timestamp: 2026-07-27T17:00:00Z
@@ -33,6 +33,7 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "v1.18 (FC-4/burst-277/2026-07-28): False-closure FC-4 correction — 'PO BC obligations' stale-completed-delegation residue removed from 3 shards. capabilities-p1-p2.md v1.17→v1.18 (3 instances at CAP-034 x2, CAP-035 x1; all converted to past-tense 'Authored BCs' citations). entities-graph.md v1.12→v1.13 (1 instance: §PreToolDecision PendingHumanApproval). ubiquitous-language-core.md v1.8→v1.9 (1 instance: §PreToolDecision definition). All 5 instances confirmed stale-completed: BC-2.05.008, BC-2.06.004, BC-2.06.005, BC-2.08.010, BC-2.10.005, BC-2.10.006, BC-2.06.006 all exist. The v1.14 '4 verified structural/legitimate' count was inaccurate — those hits included these now-corrected stale-delegation instances."
   - "v1.17 (F-P173-104/F-P173-106/F-P173-702/burst-276/2026-07-27): bounded-contexts.md v1.4→v1.5 (F-P173-104: remove ferrochain-graph from ferrochain-tools dep list per ADR-020 Decision 1; inline note added citing D-24 ActionRisk-from-core rationale); capabilities-p1-p2.md v1.16→v1.17 (F-P173-106: CAP-038 regex dependency confirmed net-new per ADR-020 Decision 7, stale confirm-instruction removed; F-P173-702: CAP-029 ADR-014 Decision 4 → ADR-017 Decision 4 for InMemoryVectorStore/Arc-DI)."
   - "v1.16 (2026-07-25): Burst-262 F-P161-01 BC-pin de-pin sweep — entities-server v1.13→v1.14 (live-body BC-NNN vN.N version pins removed per D18-P84-A); events.md v1.10→v1.11 (live-body BC-NNN vN.N version pins removed per D18-P84-A)."
   - "v1.15 (2026-07-24): Burst 252 F-P151-01..07 ADR-019 compaction type canon — capabilities-p1-p2 v1.13→v1.14 (CompactionTrigger count/tokens field names, OnWatermark non-strict <= predicate, f64 fraction/budget_tokens_used); entities-graph v1.9→v1.10 (CompactionTrigger/CompactionSummary entity type canon: flat compacted_start/end fields, f64, put mechanism); events v1.9→v1.10 (compaction_event wire payload flat fields per ADR-019 Decision 4; mandatory parent_ids per BC-2.06.002 Inv-2); ubiquitous-language-core v1.7→v1.8 (CompactionTrigger term: count/tokens variant fields, f64 fraction; CompactionSummary term: flat compacted_start/end, no RangeInclusive). Document Map line counts updated: capabilities-p1-p2 ~530→~750, entities-graph ~315→~390, ubiquitous-language-core ~330→~420."

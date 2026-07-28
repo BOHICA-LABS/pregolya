@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.001
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -11,6 +11,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-66): F-P66-01 — EC-006 and TV-008 added: JSON-RPC -32601 MethodNotFound when server does not implement tools/list → Err(E-MCP-003 McpNotImplemented). Re-anchor for E-MCP-003 from BC-2.09.005 (lifecycle scope) to this BC (discovery path — first MCP method invoked). (OBS-P28-2 class; gate #33 reverse-verification finding.)"
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
   - "1.3 (CENSUS-P109, 2026-07-18): Expand TV-004 E-MCP-002 McpTransportError struct from `{ server: \"math\", ... }` to `{ server: \"math\", transport_error: \"connection refused\" }` — `...` abbreviation failed PASS-ABBREV rule (no defining full-struct PC/EC site in BC; TV-004 was the sole struct site). TD-VSDD-060 sweep: no other E-MCP-002 struct sites in file."
+  - "1.4 (FIX-BURST-277-WAVE-C/ADR-005-DynTool/2026-07-28): Description + PC2: migrate Arc<dyn ferrochain_core::Tool> -> Arc<dyn DynTool> per ADR-005 §Adjacent Trait Object-Safety Adjudications (dyn Tool is non-object-safe; DynTool is the object-safe seam; blanket impl auto-implements DynTool for T: Tool + Send + Sync + 'static; definition in interface-definitions.md §DynTool)."
 origin: greenfield
 priority: P1
 subsystem: SS-09
@@ -46,8 +47,10 @@ removal_reason: null
 `MultiServerMcpClient` discovers the tool manifest from one or more MCP servers at
 runtime by calling `list_tools()` on each server's session, following pagination cursors
 until all tools are retrieved. Each discovered MCP `Tool` is converted into a
-`Arc<dyn ferrochain_core::Tool>` whose `args_schema` carries the raw JSON-Schema
-`Value` from `tool.inputSchema` verbatim — no schema synthesis. If multiple servers
+`Arc<dyn DynTool>` whose `args_schema` carries the raw JSON-Schema `Value` from
+`tool.inputSchema` verbatim — no schema synthesis. (`DynTool` is the object-safe dispatch
+seam for tool collections; direct `dyn Tool` is non-object-safe per ADR-005 §Adjacent
+Trait Object-Safety Adjudications.) If multiple servers
 are queried simultaneously (no `server_name` filter), the fan-out runs concurrently
 via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
 
@@ -63,7 +66,9 @@ via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
 1. For each targeted server, `list_tools()` is called with cursor following
    (`MAX_ITERATIONS=1000` pagination bound per upstream); all pages are consumed.
 2. Each `rmcp::model::Tool` from the server is converted into
-   `Arc<dyn ferrochain_core::Tool>` via `convert_mcp_tool`.
+   `Arc<dyn DynTool>` via `convert_mcp_tool`. (`DynTool` is the object-safe dispatch
+   seam per ADR-005 §Adjacent Trait Object-Safety Adjudications; `convert_mcp_tool`
+   returns `Arc<dyn DynTool>`.)
 3. The tool's `args_schema` field is the raw `serde_json::Value` from
    `tool.inputSchema` — no pydantic/schemars model is synthesized.
 4. When `server_name = Some("srv")`, only that server's tools are returned;

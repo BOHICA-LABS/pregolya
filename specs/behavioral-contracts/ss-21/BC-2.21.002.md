@@ -154,7 +154,7 @@ unconditionally before any cosine division.
 
 - `architecture/module-decomposition.md` — SS-21, `vectorstores::memory` module
 - `architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md` — Decision 2 (InMemoryVectorStore struct, Arc<dyn Embeddings> DI, RwLock interior mutability, Vec<f32> cosine, no ndarray)
-- `architecture/decisions/ADR-017-*.md` — Embeddings trait shape (Arc<dyn Embeddings> at injection point)
+- `architecture/decisions/ADR-017-embeddings-trait-provider-integration.md` — Embeddings trait shape (Arc<dyn Embeddings> at injection point)
 
 ## Story Anchor
 

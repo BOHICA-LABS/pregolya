@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.001
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ timestamp: 2026-07-20T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction"
+  - "1.1 (FIX-BURST-277-WAVE-C/ADR-014-Decision-2-infallibility/2026-07-28): as_retriever infallibility contradiction resolved. PC-2 contradicted BC-2.20.003 Inv-2, TV-004/TV-005, and DI-008 by declaring as_retriever infallible. ADR-014 Decision 2 is authority: fallible signature with no lifetime parameter. Changes: (1) Description: as_retriever(&self) -> VectorStoreRetriever<'_> -> as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>; VectorStoreRetriever owns Arc<dyn VectorStore>. (2) PC2 method entry: updated to fallible signature. (3) Invariant 4: VectorStoreRetriever<'_>/&'_ dyn VectorStore -> Ok(VectorStoreRetriever) owns Arc<dyn VectorStore>; Result return noted. (4) EC-005: &dyn VectorStore receiver -> Arc<dyn VectorStore>; VectorStoreRetriever<'_> -> Ok(VectorStoreRetriever). (5) Related BCs: VectorStoreRetriever wraps &dyn VectorStore -> owns Arc<dyn VectorStore>."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-028
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -46,8 +47,10 @@ providing the document-index contract. All instance methods use `&self` receiver
 and are desugared by `#[async_trait]` to `Pin<Box<dyn Future>>` for dyn-compatibility. Static
 constructors (`from_texts_sync`) are placed on a separate `VectorStoreFactory` trait with a
 `Sized` bound — E0038-safe split required by Rust's dyn-compatibility rules. `Arc<dyn VectorStore>`
-compiles without E0038. The `as_retriever(&self) → VectorStoreRetriever<'_>` method returns a
-concrete named type (non-opaque) to preserve trait-object safety.
+compiles without E0038. The `as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>`
+method returns a concrete (non-opaque) fallible result, validating configuration before constructing;
+`VectorStoreRetriever` has no lifetime parameter and owns `Arc<dyn VectorStore>` internally
+(ADR-014 Decision 2).
 
 ## Preconditions
 
@@ -71,7 +74,7 @@ concrete named type (non-opaque) to preserve trait-object safety.
    - `max_marginal_relevance_search(&self, query, k, fetch_k, lambda_mult) → Result<Vec<Document>, FerrochainError>`
      — MMR retrieval.
    - `delete(&self, ids: &[&str]) → Result<(), FerrochainError>` — removes documents by ID.
-   - `as_retriever(&self) → VectorStoreRetriever<'_>` — concrete return type (BC-2.20.003).
+   - `as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>` — concrete (non-opaque) fallible return (BC-2.20.003); validates config before constructing; `VectorStoreRetriever` owns `Arc<dyn VectorStore>`, no lifetime parameter.
 3. `VectorStoreFactory` trait (separate, `Sized`-bounded):
    - `from_texts_sync(texts, embedding: Arc<dyn Embeddings>, config: Self::Config) → impl Future<Output = Result<Self, FerrochainError>> + Send`
    - Can only be called on a concrete type (not through `dyn VectorStore`).
@@ -88,8 +91,9 @@ concrete named type (non-opaque) to preserve trait-object safety.
    be mapped (e.g., `(score + 1.0) / 2.0` or by backend convention).
 3. `VectorStore: Send + Sync` — all impls must be `Send + Sync` for use in multi-threaded
    Tokio tasks.
-4. `as_retriever` is a synchronous, non-async method (no `.await`) — it constructs a
-   `VectorStoreRetriever<'_>` struct that holds a `&'_ dyn VectorStore` reference. No I/O.
+4. `as_retriever` is a synchronous, non-async method (no `.await`) — it validates config and
+   constructs `Ok(VectorStoreRetriever)` that owns an `Arc<dyn VectorStore>` clone, or returns
+   `Err(E-VS-003)` on invalid config. No I/O.
 
 ## Edge Cases
 
@@ -99,7 +103,7 @@ concrete named type (non-opaque) to preserve trait-object safety.
 | EC-002 | `similarity_search` with `k` larger than the number of indexed documents | `Ok(all_docs)` — returns all available documents (fewer than k); not an error |
 | EC-003 | `delete` with an ID that does not exist | Implementation-defined: either `Ok(())` (idempotent delete) or `Err(...)` (strict delete). The BC does NOT mandate one behavior — implementors must document which semantics they apply. |
 | EC-004 | `Arc<dyn VectorStore>` called across threads concurrently | `VectorStore: Send + Sync` ensures safety; interior mutability via `RwLock` serializes writes in the in-memory impl |
-| EC-005 | `as_retriever()` called on a `&dyn VectorStore` (trait object) | Compiles; returns `VectorStoreRetriever<'_>` with lifetime tied to the trait object borrow |
+| EC-005 | `as_retriever(self: &Arc<Self>)` called via `Arc<dyn VectorStore>` with valid config | Compiles; returns `Ok(VectorStoreRetriever)` that owns a clone of the `Arc<dyn VectorStore>`; no lifetime constraint |
 
 ## Canonical Test Vectors
 
@@ -120,7 +124,7 @@ concrete named type (non-opaque) to preserve trait-object safety.
 
 ## Related BCs
 
-- BC-2.20.003 — composes with: VectorStoreRetriever wraps a &dyn VectorStore; as_retriever() produces it
+- BC-2.20.003 — composes with: VectorStoreRetriever owns Arc<dyn VectorStore>; as_retriever() is the fallible constructor
 - BC-2.21.002 — depends on: InMemoryVectorStore is the reference VectorStore impl of this trait
 - BC-2.21.004 — composes with: MetadataFilter is an optional extension on this trait via similarity_search_with_filter
 

@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.15"
+version: "1.16"
 status: active
 producer: architect
 timestamp: 2026-07-26T00:00:00Z
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.16 (FIX-BURST-277-WAVE-B/2026-07-28): CHECK4 closure propagation — canonicalize all 13 Module cells in §Verification Properties VP table to crate::module form (matching VP-INDEX v1.7 which closed CHECK4). VP-INDEX v1.6 reference in preamble updated to v1.7."
   - "1.15 (FIX-BURST-275/OBS-P172b-A/2026-07-26): OBS-P172b-A — add `specs/module-criticality.md` to inputs (live architecture-view criticality registry, authoritative post-Phase 1b; the prd-supplements entry is the superseded PO draft and is retained for historical traceability). F-P172b-14 — advance timestamp to 2026-07-26."
   - "1.14 (FIX-BURST-272/DEFECT-1/2026-07-25): De-pin live-body BC version pin per TD-VSDD-091 BC-pin variant: D23 VP seeding blockquote — 'BC-2.23.005 v1.1 amended to category VAL in burst-232' → 'BC-2.23.005 §Category amended to VAL in burst-232'. Newly-authored text (v1.8 RESOLVED note), not grandfathered."
   - "1.13 (FIX-BURST-272/F-P170-19/2026-07-25): De-pin stale BC count in Subsystem Registry blockquote note: '95 BC files' → annotated historical record '(95 at the time of the D20 backfill; 129 as of D23)' to preserve context while accurately reflecting the current corpus."
@@ -165,22 +166,22 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 
 ## Verification Properties (VP-INDEX)
 
-13 VPs total (6 Kani P0 + 3 Kani P1 + 2 proptest P1 + 2 integration P1 — see VP-INDEX v1.6):
+13 VPs total (6 Kani P0 + 3 Kani P1 + 2 proptest P1 + 2 integration P1 — see VP-INDEX v1.7):
 
 | VP | BC Anchor | Module | Tool | Priority | Status |
 |----|-----------|--------|------|----------|--------|
-| VP-001 | BC-2.03.001 (BSP determinism) | ferrochain-graph / bsp-engine | Kani | P0 | draft |
-| VP-002 | BC-2.04.006 (session tenancy) | ferrochain-checkpoint / session-index | Kani | P0 | draft |
-| VP-003 | BC-2.13.004 (workspace confinement) | ferrochain-sandbox / path-guard | Kani | P0 | draft |
-| VP-004 | BC-2.09.004 (MCP ToolException) | ferrochain-mcp / mcp-adapter | integration | P1 | draft |
-| VP-005 | BC-2.09.005 (MCP no live connections) | ferrochain-mcp / mcp-client | integration | P1 | draft |
-| VP-006 | BC-2.18.004 (injection_guard fail-closed) | ferrochain-prompts / injection_guard | Kani | P1 | draft |
-| VP-007 | BC-2.19.001 (serializable round-trip) | ferrochain-core / serializable | proptest | P1 | draft |
-| VP-008 | BC-2.22.001 (embeddings dimension parity) | ferrochain-core / embeddings | proptest | P1 | draft |
-| VP-009 | BC-2.21.003 (zero-norm guard fail-closed) | ferrochain-vectorstores / vectorstores-similarity | Kani | P0 | draft |
-| VP-010 | BC-2.19.005 (allowlist rejects unregistered) | ferrochain-core / serializable-reviver | Kani | P0 | draft |
-| VP-011 | BC-2.05.007 (PreToolCallHook fail-closed) | ferrochain-graph / hitl | Kani | P0 | draft |
-| VP-012 | BC-2.10.005 (OnWatermark arithmetic) | ferrochain-core / core-budget | Kani | P1 | draft |
-| VP-013 | BC-2.23.005 (BashTool risk floor) | ferrochain-tools / tools-shell | Kani | P1 | draft |
+| VP-001 | BC-2.03.001 (BSP determinism) | `graph::bsp_engine` | Kani | P0 | draft |
+| VP-002 | BC-2.04.006 (session tenancy) | `checkpoint::session_index` | Kani | P0 | draft |
+| VP-003 | BC-2.13.004 (workspace confinement) | `sandbox::path_guard` | Kani | P0 | draft |
+| VP-004 | BC-2.09.004 (MCP ToolException) | `mcp::adapter` | integration | P1 | draft |
+| VP-005 | BC-2.09.005 (MCP no live connections) | `mcp::client` | integration | P1 | draft |
+| VP-006 | BC-2.18.004 (injection_guard fail-closed) | `prompts::injection_guard` | Kani | P1 | draft |
+| VP-007 | BC-2.19.001 (serializable round-trip) | `core::serializable` | proptest | P1 | draft |
+| VP-008 | BC-2.22.001 (embeddings dimension parity) | `core::embeddings` | proptest | P1 | draft |
+| VP-009 | BC-2.21.003 (zero-norm guard fail-closed) | `vectorstores::similarity` | Kani | P0 | draft |
+| VP-010 | BC-2.19.005 (allowlist rejects unregistered) | `core::serializable` | Kani | P0 | draft |
+| VP-011 | BC-2.05.007 (PreToolCallHook fail-closed) | `graph::hitl` | Kani | P0 | draft |
+| VP-012 | BC-2.10.005 (OnWatermark arithmetic) | `core::budget` | Kani | P1 | draft |
+| VP-013 | BC-2.23.005 (BashTool risk floor) | `tools::shell` | Kani | P1 | draft |
 
 > **D23 VPs SEEDED (burst-232):** VP-011/012/013 minted with BC anchors, Kani harness skeletons, and input-hashes. VP-011 (graph::hitl / PreToolCallHook fail-closed — Kani P0); VP-012 (core-budget / OnWatermark arithmetic — Kani P1); VP-013 (tools-shell / BashTool risk floor — Kani P1). BC-2.23.005 category RESOLVED: BC-2.23.005 §Category amended to VAL in burst-232 (error-taxonomy §TOOLS; consistent with VP-013 harness).

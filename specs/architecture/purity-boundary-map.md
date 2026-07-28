@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.24"
+version: "1.25"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.25 (FIX-BURST-277-WAVE-B/2026-07-28): Item 6 module census — add ferrochain-macros crate-level row to Effectful Shell table. ferrochain-macros is a proc-macro crate (#[tool], #[entrypoint], #[task] attribute macros); macros::tool/entrypoint/task are Pure Core (added v1.1), but the ferrochain-macros crate-level census entry was absent from this table while present in verification-coverage-matrix.md and module-criticality.md, causing a CHECK4 set-diff. Row added after ferrochain-community; total 82→83 rows; Effectful Shell 37→38."
   - "1.24 (FIX-BURST-276/2026-07-27): CHECK4 closure — fix one non-canonical Module cell in Boundary Modules table. Row `graph::hitl (pre-tool dispatch)`: parenthetical qualifier was inside the backtick span, making the cell value `graph::hitl (pre-tool dispatch)` (fails `^[a-z_]+::[a-z_]+$` regex). Fixed to `graph::hitl` (pre-tool dispatch) — qualifier now outside backticks, consistent with Pure Core table pattern (graph::bsp_engine (reducer stage), graph::hitl (queue logic) both use the same outside-backticks convention). Row count (82) and purity column splits (33 Pure Core + 37 Effectful Shell + 12 Boundary) unchanged."
   - "1.23 (FIX-BURST-276-WAVE-B1/F-P173-301+402/2026-07-27): F-P173-301/402 sibling sweep — two BC anchor fixes. (1) eval::judge Effectful Shell row: `(BC-2.08.013/BC-2.08.014 / SS-08)` → `(BC-2.08.008 / SS-08)`. Correct anchor: BC-2.08.008 = Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15); BC-2.08.013/014 are provider-behavior BCs. (2) ferrochain-standard-tests crate-level Effectful Shell row: `(BC-2.08.013–014)` → `(BC-2.08.001–005, BC-2.08.008)`. Rationale: the standard-tests crate verifies the core chat-model conformance battery (BC-2.08.001–005) and eval scoring (BC-2.08.008); BC-2.08.013 (Pluggable Tool-Call Dialect Seam) and BC-2.08.014 (Provider Failover Chain) are provider-graph BCs assigned to graph/provider crates in prd.md, not to the conformance-test crate. TD-VSDD-060 sibling sweep: same BC anchor corrected in module-decomposition.md (v1.34), module-criticality.md (v2.3), verification-coverage-matrix.md (v2.9) in same burst."
   - "1.22 (FIX-BURST-275-REOPENED/intro-count-correction/2026-07-26): Fix stale intro count: '70 module-decomposition modules (68 tiered + 2 exempt)' → '71 module-decomposition modules (69 tiered + 2 exempt)'. The eval::judge module row was added to module-decomposition.md in FIX-BURST-275 Wave B (v1.32), advancing the tiered count 68→69, but the purity-boundary-map intro was not updated in the same burst. Total row count (82) and per-column counts (33 Pure Core + 37 Effectful Shell + 12 Boundary) are correct and unchanged — macros::tool/entrypoint/task were already in the Pure Core column since v1.1."
@@ -55,7 +56,7 @@ no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
 effectful dependency). All 71 module-decomposition modules (69 tiered + 2 exempt) plus
 structural and definitions-only modules are enumerated in `## Purity Classification` below
-(82 total rows after FIX-BURST-275: 33 Pure Core + 37 Effectful Shell + 12 Boundary).
+(83 total rows after FIX-BURST-277: 33 Pure Core + 38 Effectful Shell + 12 Boundary).
 Enforcement invariants follow in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -142,6 +143,7 @@ Kani is not applicable here.
 | `ferrochain-standard-tests` | ferrochain-standard-tests | shared conformance suite; invokes provider HTTP stacks via DTU doubles (BC-2.08.001–005, BC-2.08.008) | Integration (DTU) |
 | `xtask` | xtask | filesystem reads (file-size gate) + subprocess spawning (lint CI gates); CI enforcement binary (SS-17) | CI/Unit |
 | `ferrochain-community` | ferrochain-community | post-v1 placeholder; expected effectful shell when populated (LOW-tier, community contributions) | advisory (post-v1) |
+| `ferrochain-macros` | ferrochain-macros | proc-macro crate (#[tool], #[entrypoint], #[task]); compile-time only — no runtime I/O; individual module rows (macros::tool/entrypoint/task) are Pure Core (added v1.1); crate-level annotation for census completeness (ADR-008) | compile-time |
 | `openai::embeddings` | ferrochain-openai | reqwest HTTP call to `api.openai.com/v1/embeddings`; `OpenAiApiKey` credential; 30s timeout; SSE not used (blocking JSON response) (ADR-017 / DI-009) | Integration (DTU) |
 | `ollama::embeddings` | ferrochain-ollama | reqwest HTTP call to `localhost:<port>/api/embeddings`; no API key; 30s timeout (ADR-017 / DI-009) | Integration |
 | `vectorstores::memory` | ferrochain-vectorstores | In-memory VectorStore backend; `RwLock<Vec<(Document, Vec<f32>)>>` interior mutability; `Arc<dyn Embeddings>` injection for embed calls (which are async I/O); async `add_texts` + `similarity_search` (ADR-014 / SS-21) | Unit + Integration |

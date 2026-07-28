@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.002
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC8 had bare `Err(FerrochainError { code: E-MCP-004 ToolNotFound })` without message; E-MCP-004 has <tool_name> placeholder. Added inline message template; <tool_name> is available from the ToolInvocation at the raise site."
   - "1.3 (burst-240/F-P140-03/F-P140-04/2026-07-22): Two defect fixes. (1) F-P140-03: PC5/EC-004/TV-004 restated public error type as FerrochainError — previously surfaced raw McpError::Transport as the public type, contradicting error-taxonomy.md ('All errors are FerrochainError{...}'), BC-2.09.001 PC7 (transport failure → FerrochainError E-MCP-002), and BC-2.09.004 PC1 (McpError in .source only). Transport failures now return FerrochainError{component:MCP, category:TRANSPORT, code:E-MCP-002} with McpError::Transport preserved in .source(). EC-004 is the authoritative full-form site; TV-004 PASS-ABBREV via EC-004. (2) F-P140-04: PC6/TV-005 restated public error type — previously surfaced raw McpError::ContentConversion('audio content not supported'), with no E-MCP code and no FerrochainError wrapper. Minted E-MCP-006 McpContentUnsupported (VAL, broken) in error-taxonomy.md v1.34 same burst. Content-conversion errors now return FerrochainError{component:MCP, category:VAL, code:E-MCP-006} with McpError::ContentConversion in .source(). PC6 is the authoritative full-form site; TV-005 PASS-ABBREV via PC6. Gate #33 forward (E-MCP-006): both placeholders covered — <tool> = ToolInvocation.tool_name, <content_type> = content block variant name; both available at the raise site."
+  - "1.4 (FIX-BURST-277-WAVE-C/ADR-005-DynTool/2026-07-28): PC1: migrate Arc<dyn ferrochain_core::Tool> -> Arc<dyn DynTool> per ADR-005 §Adjacent Trait Object-Safety Adjudications. Authority: ADR-005 §Adjacent Adjudications, interface-definitions.md §DynTool."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -52,8 +53,11 @@ Transport failures and content-conversion errors always propagate regardless of 
 
 ## Preconditions
 
-1. A `Arc<dyn ferrochain_core::Tool>` was produced by `convert_mcp_tool`
-   (see BC-2.09.001), carrying a `SessionSource` referencing the target MCP server.
+1. A `Arc<dyn DynTool>` was produced by `convert_mcp_tool` (see BC-2.09.001),
+   carrying a `SessionSource` referencing the target MCP server. (`DynTool` is the
+   object-safe dispatch seam per ADR-005 §Adjacent Trait Object-Safety Adjudications;
+   direct `dyn ferrochain_core::Tool` is non-object-safe and may not be used as a
+   trait object.)
 2. A `ToolInvocation` with a valid args payload conforming to `tool.inputSchema` is submitted.
 3. The interceptor chain (possibly empty) is configured on the tool.
 

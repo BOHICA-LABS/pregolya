@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.2"
+version: "3.3"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -14,6 +14,7 @@ inputs:
 input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.3 (FIX-BURST-277-WAVE-B/2026-07-28): Item 6 module census — add 6 definitions-only/exempt rows to Per-Module Coverage Status table: core::documents (definitions-only, D21/SS-20, ADR-014 Decision 2), memory::skills (routing-overlay/exempt, D20/SS-15, ADR-012 Decision 4), core::guardrail (definitions-only, SS-11, ADR-014 Decision 6), core::action_risk (definitions-only, SS-05, F-P170-06/ADR-020), core::context_mutation (definitions-only, D20/SS-01, ADR-012), core::write_guard (definitions-only, D20/SS-15, ADR-012). All have Tier=— (no kill rate obligation), no VP targets, no Kani/proptest/fuzz. Preamble updated 77→83. Tiered count (CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77) unchanged — definitions-only/exempt rows are outside the tiered universe."
   - "3.2 (FIX-BURST-276-CHECK4/2026-07-27): CHECK4 canonicality closure — rename three crate-level BaseChatModel provider rows to full canonical crate names: `openai` → `ferrochain-openai`, `anthropic` → `ferrochain-anthropic`, `ollama` → `ferrochain-ollama`. Aligns with established pattern: ferrochain-macros and ferrochain-standard-tests already use full crate names in this file; purity-boundary-map.md already uses these names generating the same expected SET-DIFF in-here-not-decomp WARNs (crate-level rows are not in module-decomp canonical set because the Provider Crates section is excluded from decomp scanning). Row Notes updated to remove stale 'no canonical crate::module name' wording; full crate names ARE canonical via ARCH-INDEX.md roster. No VP or coverage count changes; census sextuple unchanged."
   - "3.1 (FIX-BURST-276/F-P173-803/2026-07-27): F-P173-803 — correct Coverage by Criticality Tier proptest column. Actual proptest coverage is 3 of 12 CRITICAL (graph::bsp_engine, checkpoint::session_index, checkpoint::clock — derivation: counted proptest=yes/VP-NNN rows from per-module table, CRITICAL tier) and 7 of 28 HIGH (core::runnable, core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels, graph::budget). Replace 'all' → '3 of 12 (explicit list)' and 'most + VP-007, VP-008' → '7 of 28 (explicit list)'. Add coverage-gap stated-obligation note. Update tooling-selection.md proptest gate from aspirational to actual (v1.4). No VP-to-Module count changes."
   - "3.0 (FIX-BURST-276/F-P173-307-801/2026-07-27): F-P173-307/801 — canonicalize all non-canonical Module cells. VP-to-Module table: 13 cells updated (bsp-engine (reducer stage)→graph::bsp_engine, session-index→checkpoint::session_index, path-guard→sandbox::path_guard, mcp-adapter→mcp::adapter, mcp-client→mcp::client, injection_guard→prompts::injection_guard, serializable→core::serializable, embeddings→core::embeddings, vectorstores-similarity→vectorstores::similarity, serializable-reviver→core::serializable, hitl→graph::hitl, core-budget→core::budget, tools-shell→tools::shell). Per-Module table: 36 cells updated (full list: bsp-engine→graph::bsp_engine, channels→graph::channels, hitl→graph::hitl, scheduler→graph::scheduler, budget→graph::budget, provenance→graph::provenance, event_emitter→graph::event_emitter, session-index→checkpoint::session_index, clock→checkpoint::clock, lineage→checkpoint::lineage, encryption→checkpoint::encryption, sqlite→checkpoint::sqlite, path-guard→sandbox::path_guard, sandbox-policy→sandbox::policy, message→core::message, error→core::error, credentials→core::credentials, runnable→core::runnable, retry→core::retry, server handlers→server::handlers, server security→server::security, recursive splitter→splitters::recursive, mcp client→mcp::client, mcp adapter→mcp::adapter, mcp server→mcp::server, sandbox-wasm→sandbox::wasm, memory-store→memory::store, write-guard enforcement→memory::write_guard, injection_guard→prompts::injection_guard, serializable→core::serializable, serializable-reviver→core::serializable, vectorstores-similarity→vectorstores::similarity, vectorstores-mmr→vectorstores::mmr, embeddings→core::embeddings, core-budget→core::budget, tools-shell→tools::shell). Total cells changed: 49 (13 VP table + 36 per-module table). No-canonical-counterpart entries (reported, not renamed): openai, anthropic, ollama (crate-level conformance; no explicit module name in module-decomp), ferrochain-macros roll-up (superseded by macros::tool/entrypoint/task rows), ferrochain-standard-tests roll-up (superseded by eval::judge row). Notes added to those 5 entries clarifying their status. Canonical source: module-decomposition.md module universe 71 total (69 tiered / 2 exempt: core::documents, memory::skills)."
@@ -68,8 +69,8 @@ changelog:
 
 ## Per-Module Coverage Status
 
-> This table covers all 77 architecture modules (74 from FIX-BURST-275 Wave B + 3 FIX-BURST-275-Reopened additions: macros::tool, macros::entrypoint, macros::task — all HIGH, ferrochain-macros).
-> Tier groupings: CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2.
+> This table covers 83 architecture entries (77 tiered/crate-level from prior bursts + 6 definitions-only/exempt additions from FIX-BURST-277: core::documents, memory::skills, core::guardrail, core::action_risk, core::context_mutation, core::write_guard — all Tier=—).
+> Tiered groupings: CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77 tiered. Definitions-only/exempt: 6 (Tier=—; no kill rate obligation).
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
@@ -150,6 +151,12 @@ changelog:
 | tools::fs | ferrochain-tools | — | — | — | yes | OS filesystem I/O tools; path-guard consumer; integration |
 | tools::search | ferrochain-tools | — | — | — | yes | In-process regex search; directory traversal; path-guard consumer; integration |
 | eval::judge | ferrochain-standard-tests | — | — | — | yes | LLM judge execution; emits eval.judge_infra_error event (observability.md); BC-2.08.008; integration (DTU) |
+| core::documents | ferrochain-core | — | — | — | — | Definitions-only; Tier=— (ADR-009/ADR-014 Decision 2): pure data carrier, no execution methods, no VP target; D21/SS-20 |
+| memory::skills | ferrochain-memory | — | — | — | — | Routing-overlay/exempt; Tier=— (ADR-012 Decision 4): structural decomposition row only; execution in memory::store/memory::search; D20/SS-15 |
+| core::guardrail | ferrochain-core | — | — | — | — | Definitions-only; Tier=— (ADR-009/ADR-014 Decision 6): GuardrailHook trait + supporting types, no execution logic; SS-11 |
+| core::action_risk | ferrochain-core | — | — | — | — | Definitions-only; Tier=— (ADR-009/ADR-020 Decision 3): ActionRisk enum definitions only; SS-05 |
+| core::context_mutation | ferrochain-core | — | — | — | — | Definitions-only; Tier=— (ADR-009/ADR-012 D20): ContextSourceSpec + ContextMutationConfig type definitions only; SS-01 |
+| core::write_guard | ferrochain-core | — | — | — | — | Definitions-only; Tier=— (ADR-009/ADR-012 D20): MemoryWriteRequest enum + MemoryWriteGuard trait definitions only; SS-15 |
 
 ## Coverage by Criticality Tier
 

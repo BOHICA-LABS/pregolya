@@ -14,6 +14,9 @@ wave: 1
 phase: 1b
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
+changelog:
+  - "1.0 (2026-07-13): initial authoring — Greenfield batch 13"
+  - "1.1 (2026-07-14): Architecture Anchor ferrochain-core/src/graph/builder.rs corrected to ferrochain-graph/src/graph/state.rs — StateGraph builder is owned by ferrochain-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42)"
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - architecture/decisions/ADR-008-proc-macro-attributes.md

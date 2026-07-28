@@ -1,12 +1,14 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.60"
+version: "2.62"
 status: active
 producer: product-owner
 timestamp: 2026-07-27T00:00:00Z
 phase: 1d
 changelog:
+  - "2.62 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Add §DynTool trait definition (ferrochain-core: core::tool) — fulfills ADR-005 v1.8 promise 'DynTool definition added to interface-definitions.md'; omitted from v2.61. DynTool: object-safe façade for Arc<dyn Tool> dispatch; exposes invoke_dyn + 4 metadata accessors; blanket impl for T: Tool + Send + Sync + 'static; mirrors DynRunnable pattern. Inserted after ToolOutput enum in §Tool subsection. ADR-005 v1.9 carries the corrected Wave C migration list (BC-2.09.001 Description+PC2 + BC-2.09.002 PC1; prior v1.8 list citing BC-2.05.003/BC-2.05.004/BC-2.08.010 was incorrect)."
+  - "2.61 (FIX-BURST-277-WAVE-B/F-P174-constructor+F-P174-retriever-lifetime+F-P174-as-retriever-fallible+F-P174-303/2026-07-27): (1) F-P174-constructor: add §FerrochainError Constructor (before §BaseChatModel) — `FerrochainError::new(component, category, retry_hint, code, message: impl Into<String>) -> Self` and `with_source(self, Arc<dyn Error+Send+Sync>) -> Self` per ADR-010 v1.13; `#[non_exhaustive]` bars struct-literal from external crates; these are the sole construction paths. (2) F-P174-retriever-lifetime: `VectorStoreRetriever<'a>` → `VectorStoreRetriever` (no lifetime); `store: &'a dyn VectorStore` → `store: Arc<dyn VectorStore>`; `VectorStoreRetriever` is now `'static` for `Arc<dyn Retriever + 'static>` coercion. (3) F-P174-as-retriever-fallible: `fn as_retriever(&self) -> VectorStoreRetriever<'_>` → `fn as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>`; returns `Err(E-VS-003)` on invalid config. Impl Retriever updated accordingly. (4) F-P174-303: purge phantom 2-arg `FerrochainError::new(\"E-VS-005\", \"...\")` call in `similarity_search_with_filter` default — replace with canonical 5-arg constructor `FerrochainError::new(Component::Vs, Category::Val, RetryHint::Never, \"E-VS-005\", \"...\")` per ADR-010 v1.13."
   - "2.60 (F-P173-606+F-P173-607+F-P173-608+F-P173-609+F-P173-610+BC-2.08.004-anchor/fix-burst-276/2026-07-27): Six HIGH findings from adversarial pass P1D-173 content wave 3. (1) F-P173-606: §BaseChatModel Gate #31 type note — retired 'corpus-unresolved / implementer defines' for ChatConfig; replaced with spec-anchored partial definition: mandatory field `fallback_policy: Option<ProviderFallbackPolicy>` sourced from BC-2.08.014 Description and BC-2.08.014 PC1; module placement module-decomposition.md §core::config SS-01; provider-specific parameters documented as per-provider extensions. (2) F-P173-607: §ProviderFallbackPolicy — replaced 'UNRESOLVED (implementer-scope) / flagged for architect' notes on ProviderCredential and CredentialRefreshConfig with unconditional DI-010 obligations: both types MUST implement `Debug` rendering only '<redacted>'; canonical impl form documented; per-provider shape acknowledged as implementation-defined but DI-010 is unconditional. (3) F-P173-609: added new §Tool subsection (before §First-Party Tools) declaring `pub trait Tool` in ferrochain-core: core::tools — methods name/description/schema/action_risk from BC-2.08.010 PC1; `ToolInput(serde_json::Value)` struct; `#[non_exhaustive] ToolOutput` enum with Text/Json/Error variants from BC-2.23.001-006 and BC-2.05.007 PC2 (Deny → Error); PathGuard::check phantom NOT reintroduced; ADR-020 Decision 1 source cited. (4) F-P173-608: §First-Party Tools ToolConfig — added private `minimum_risk: ActionRisk` field note as the per-tool identity discriminator that makes VP-013 provable (BashTool sets minimum_risk=Medium at construction; override_risk validates risk >= minimum_risk; exhaustive Kani proof over 4 D-25 variants); doc comment updated from 'Errors (BashTool)' to general 'Errors: when risk < self.minimum_risk'; D-25/D-26/D-27/D-30 all preserved. (5) F-P173-610: §ProviderFallbackPolicy — made `chain` field private (prevents struct-literal bypass of non-empty invariant); added `impl ProviderFallbackPolicy` with `new(chain: Vec<ProviderCredential>) -> Result<Self, FerrochainError>` constructor returning E-PROV-011 when empty (BC-2.08.014 EC-006/TV-007); #[non_exhaustive] added to struct. (6) BC-2.08.004 anchor (routed from content wave 2): replaced cross-check note 'orphaned BC until architect adjudicates' with correct anchoring — `has_tool_calling(&self) -> bool` method added to BaseChatModel trait (BC-2.08.002 EC-005/TV-005 guard); BC-2.08.004 anchored at stream_chat per-method as cross-cutting error-fidelity conformance (all provider HTTP 4xx/5xx must map to typed FerrochainError); trait-level anchor block added documenting cross-cutting scope covering both invoke and stream_chat paths."
   - "2.59 (F-P173-101+F-P173-102+F-P173-701/fix-burst-276/2026-07-27): Three HIGH source-attribution findings from adversarial pass P1D-173. (1) F-P173-101: §PreToolCallHook Source — added ADR-020 Decision 1 as primary source (ActionRisk relocation to ferrochain-core: core::action_risk; ferrochain-tools cross-crate compile-time consumer motivation; sole authority for ToolCallPreview.action_risk type placement); corrected fail-closed Deny anchor from 'Decision 4' to 'Decision 3 step 4' — ADR-018 Decision 3 step 4 verbatim: Deny { reason } → ToolOutput::Error; tool never invoked; VP-011 Kani P0. (2) F-P173-102: §Compaction Source — corrected CompactionPolicy trait attribution from Decision 2 to Decision 1 (ADR-019 Decision 1 defines all core::budget type definitions: CompactionTrigger, ConversationSnapshot, CompactionSummary, and CompactionPolicy trait; Decision 2 is BudgetConfig extensions: compaction_trigger + compaction_policy fields); corrected mid-run/next-run distinction attribution from Decision 5 to Decision 3 (ADR-019 Decision 3 canonical: 'mid-run state mutation — applies immediately to current run's message window, not next-run'; Decision 5 is CAP-017 Wave Promotion Interaction within-session vs cross-session additive design); BC anchor aligned to ADR-019 Decision 3 canonical language: 'mid-run REPLACEMENT' → 'mid-run state mutation per ADR-019 Decision 3'; BC-2.15.006 NEXT-run description updated with ADR-019 Decision 3 anchor. No phantom on_watermark symbol present or introduced. (3) F-P173-701 (mis-citation class): §VectorStore BC anchor footer — all ADR-014 citations enumerated; per-site corrections: (a) 'Decision 3 (InMemoryVectorStore)' WRONG — ADR-014 Decision 3 is SS-15 Boundary Definition MemoryStore vs VectorStore, zero InMemoryVectorStore content → removed; replaced with ADR-017 Decision 4 (InMemoryVectorStore — Arc<dyn Embeddings> DI + RwLock interior mutability; Arc-DI wiring at construction time; ADR-017 Decision 4 verbatim 'no placeholder construction' invariant); (b) 'Decision 4 (zero-norm guard E-VS-001)' WRONG — ADR-014 Decision 4 is External Adapter Extension Seam via inventory crate → corrected to 'ADR-014 Decision 2 §Hardening note (search-time zero-norm guard E-VS-001)'; (c) 'Decision 5 (write-time zero-norm guard E-VS-004)' CORRECT — kept unchanged. Two correct citations left unchanged: Source line (ADR-014 Decision 2) and similarity_search_with_filter comment (ADR-014 Decision 2 §Metadata filter surface F-P131-07 adjudication). Summary: 2 wrong citations corrected, 1 new ADR-017 Decision 4 citation added, 2 correct citations preserved."
   - "2.58 (F-P173-601+F-P173-602+F-P173-603+F-P173-604+F-P173-605+F-P173-614/2026-07-27): Five signature findings from adversarial pass P1D-173. (1) F-P173-601 CRITICAL: §First-Party Tools — deleted erroneous PathGuard struct/impl block that declared PathGuard in ferrochain-tools with a non-canonical check() method. Replaced with a consumption note citing the authoritative owner (ferrochain-sandbox, sandbox::path_guard, SS-13, BC-2.13.004, VP-003 Kani P0) and the two confinement entry points (canonicalize_beneath_root_pure/canonicalize_beneath_root); error layer split documented (E-SBXD-001 sandbox layer → E-TOOLS-001 tool layer). BC anchor in §First-Party Tools corrected: 'BC-2.23.001-006 shared PathGuard invariant' → 'consumes BC-2.13.004 PathGuard' per tool; PathGuard ownership row added. (2) F-P173-602 HIGH: §BaseChatModel bind_tools — removed async (construction-time validation, no I/O per BC-2.08.002 EC-005); corrected return type from bare 'impl BaseChatModel' to 'Result<impl BaseChatModel, FerrochainError>'; added # Errors doc block citing Err(E-CORE-005) when has_tool_calling=false (BC-2.08.002 EC-005/TV-005). (3) F-P173-603 HIGH: §BaseChatModel with_structured_output — added required schema: serde_json::Value parameter per BC-2.08.003 PC/EC-002/EC-003; added schemars::JsonSchema bound to T per BC-2.08.009; added per-method anchor citation. (4) F-P173-604 HIGH: §Runnable pipe — corrected return type from opaque 'impl Runnable<Input, NextOutput>' to concrete 'RunnableSequence<Input, NextOutput>' per BC-2.01.004 PC1/PC4/TV-002; added doc comment citing flattening invariant. (5) F-P173-605 HIGH: added new §DynRunnable and RunnableSequence section to §Public Rust Trait Signatures (ferrochain-core: core::runnable) — DynRunnable object-safe trait with async invoke and boxed-stream stream method (ADR-005 dyn-compat pattern; BC-2.01.003 EC-001 + BC-2.01.004 PC5/EC-001/TV-004); RunnableSequence<I,O> struct with first/middle/last/PhantomData fields (BC-2.01.004 PC1/PC4/TV-002). (6) F-P173-614 HIGH: expanded bare BC-ID anchors in §Runnable and §BaseChatModel to per-method precision; per-method cross-check run — §Runnable PASS (all 4 methods anchored, no orphan BCs); §BaseChatModel PASS with one flag: BC-2.08.004 unmapped to a declared method (flagged for architect adjudication in cross-check note). TD-VSDD-060 sibling sweep results: see report in this burst."
@@ -270,6 +272,41 @@ pub struct RunnableConfig {
 ```
 
 **BC anchor:** BC-2.01.003 PC5 (`recursion_limit` Runnable-layer), BC-2.03.001 PC5 (`recursion_limit` graph-layer), BC-2.12.004 PC1 (`thread_id`), BC-2.10.003 PC7/TV-004 (`budget_config` resume path), BC-2.10.004 PC6 (`budget_config` BudgetResume::Extend), BC-2.15.006 PC1 (`context_mutations`)
+
+### FerrochainError Constructor
+
+**Source:** ADR-010 §Decision (F-P174-constructor). `#[non_exhaustive]` on `FerrochainError` (ADR-010/F-P173-619) bars struct-literal construction from external crates (E0639). The following `impl FerrochainError` block defines the sole sanctioned construction paths.
+
+```rust
+// ferrochain-core: core::error
+impl FerrochainError {
+    /// Primary constructor. `source` defaults to `None`; chain a cause with `.with_source(arc)`.
+    ///
+    /// This is the ONLY construction path available to code outside ferrochain-core.
+    /// Direct struct-literal `FerrochainError { component: ..., ... }` is barred by
+    /// `#[non_exhaustive]` on external crates.
+    ///
+    /// BC anchor: BC-2.14.001 (FerrochainError 2D model).
+    pub fn new(
+        component: Component,
+        category: Category,
+        retry_hint: RetryHint,
+        code: &'static str,
+        message: impl Into<String>,
+    ) -> Self {
+        Self { component, category, retry_hint, code, message: message.into(), source: None }
+    }
+
+    /// Builder: attach a causal error chain. Consumes `self`; returns updated instance.
+    /// The causal chain is accessible via `std::error::Error::source()` for logging.
+    /// MUST NOT be exposed in HTTP responses (DI-010 credential-leak risk).
+    pub fn with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self {
+        Self { source: Some(source), ..self }
+    }
+}
+```
+
+**Wave C BC routing note:** BC-2.14.001 must be amended to reflect that `FerrochainError` is `#[non_exhaustive]` and that `new()` + `with_source()` are the sole construction paths. The existing BC body describes the struct fields but not the construction API.
 
 ### BaseChatModel
 
@@ -1255,6 +1292,49 @@ pub enum ToolOutput {
     /// BC anchor: BC-2.05.007 PC2 (Deny { reason } → ToolOutput::Error; tool is NEVER invoked on Deny).
     Error(String),
 }
+
+/// Object-safe façade for heterogeneous tool dispatch.
+/// Mirrors DynRunnable: `Arc<dyn DynTool>` is the concrete composition seam
+/// wherever `Arc<dyn Tool>` was specified (migrated per ADR-005 §Adjacent Adjudications Wave C PO routing).
+///
+/// `Tool: Runnable<ToolInput, ToolOutput>` inherits `Runnable::stream()` (`impl Stream`
+/// return) which makes `dyn Tool` non-trivially non-object-safe (E0038).
+/// `DynTool` exposes only the object-safe subset: `invoke_dyn` (async, no opaque returns),
+/// plus the four metadata accessors.
+///
+/// A blanket impl auto-implements `DynTool` for every `T: Tool + Send + Sync + 'static`.
+/// Callers perform JSON round-tripping at the `Arc<dyn DynTool>` boundary.
+///
+/// BC anchor: ADR-005 §Adjacent Trait Object-Safety Adjudications (Tool adjudication —
+/// option b). Wave C PO routing: BC-2.09.001 Description+PC2 and BC-2.09.002 PC1 migrate
+/// `Arc<dyn ferrochain_core::Tool>` → `Arc<dyn DynTool>`.
+/// **Module:** `ferrochain-core: core::tool` (alongside `Tool`).
+#[async_trait]
+pub trait DynTool: Send + Sync {
+    /// Machine-readable tool name (stable public API surface per BC-2.08.009).
+    fn name(&self) -> &str;
+
+    /// Human-readable description surfaced to the model in tool listings.
+    fn description(&self) -> &str;
+
+    /// JSON Schema of the tool's argument struct, derived by `schemars::schema_for!`.
+    /// BC anchor: BC-2.08.010 PC1 + BC-2.08.009 (schema naming stability snapshot obligation).
+    fn schema(&self) -> schemars::Schema;
+
+    /// Declared risk tier for HITL approval-hook integration; `None` if `action_risk` not annotated.
+    /// BC anchor: BC-2.08.010 PC1 (action_risk attribute); BC-2.05.007 (ToolCallPreview.action_risk).
+    fn action_risk(&self) -> Option<ActionRisk>;
+
+    /// Object-safe invocation path; input/output are JSON Values (no opaque `impl Stream` return).
+    /// Callers are responsible for JSON round-tripping at the `Arc<dyn DynTool>` boundary.
+    async fn invoke_dyn(
+        &self,
+        input: serde_json::Value,
+    ) -> Result<serde_json::Value, FerrochainError>;
+}
+
+// Blanket impl: any T: Tool + Send + Sync + 'static auto-implements DynTool.
+// impl<T: Tool + Send + Sync + 'static> DynTool for T { ... }
 ```
 
 ### First-Party Tools
@@ -1487,10 +1567,22 @@ pub trait VectorStore: Send + Sync {
     /// BC anchor: BC-2.21.001 PC5
     async fn delete(&self, ids: &[&str]) -> Result<(), FerrochainError>;
 
-    /// Construct a VectorStoreRetriever adapter over this store.
-    /// Raises E-VS-003 (VAL) if config is invalid (lambda_mult outside [0,1], k < 1, etc.).
-    /// BC anchor: BC-2.20.003 PC1 (as_retriever() construction), BC-2.20.003 INV-2 (E-VS-003 on invalid config)
-    fn as_retriever(&self) -> VectorStoreRetriever<'_>;
+    /// Construct a `VectorStoreRetriever` over this store.
+    ///
+    /// # Receiver
+    /// `self: &Arc<Self>` — required so the impl can `Arc::clone(self)` and store the
+    /// resulting `Arc<dyn VectorStore>` in `VectorStoreRetriever.store`, giving the retriever
+    /// a `'static` lifetime for `Arc<dyn Retriever + 'static>` coercion (required by graph
+    /// nodes and `tokio::spawn` boundaries).
+    ///
+    /// # Errors
+    /// `Err(E-VS-003, VAL, RetryHint::Never)` when config is invalid:
+    /// - `lambda_mult` outside [0.0, 1.0]
+    /// - `fetch_k < k` when `SearchType::Mmr`
+    ///
+    /// BC anchor: BC-2.20.003 INV-2 (E-VS-003 on invalid config), BC-2.20.003 TV-004/TV-005.
+    /// Note: BC-2.20.003 PC-2 currently states infallible — Wave C PO correction pending.
+    fn as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>;
 
     /// Metadata-filter similarity search. Default returns `Err(E-VS-005 FilterUnsupported)` when
     /// `filter.filters` is non-empty — fail-safe (not lossy). An empty `MetadataFilter` (vacuously
@@ -1507,7 +1599,14 @@ pub trait VectorStore: Send + Sync {
         // Default: fail-safe on non-empty filter — returning unfiltered results would be lossy
         // and a potential cross-tenant-exposure hazard (ADR-014 Decision 2 §Metadata filter surface F-P131-07 adjudication).
         if !filter.filters.is_empty() {
-            return Err(FerrochainError::new("E-VS-005", "FilterUnsupported: metadata filter is not supported by this VectorStore implementation"));
+            return Err(FerrochainError::new(
+                Component::Vs,
+                Category::Val,
+                RetryHint::Never,
+                "E-VS-005",
+                "FilterUnsupported: this VectorStore backend does not support metadata filtering; \
+                 override similarity_search_with_filter to provide native filter support",
+            ));
         }
         self.similarity_search(query, k).await
     }
@@ -1529,11 +1628,16 @@ pub trait VectorStoreFactory: VectorStore + Sized {
     ) -> impl std::future::Future<Output = Result<Self, FerrochainError>> + Send;
 }
 
-/// Adapter returned by VectorStore::as_retriever(). Implements Retriever.
+/// Adapter returned by `VectorStore::as_retriever()`. Implements `Retriever + 'static`.
+///
+/// Holds `Arc<dyn VectorStore>` rather than a borrowed reference — removing the
+/// lifetime parameter that previously prevented coercion to `Arc<dyn Retriever + 'static>`.
+/// Graph nodes and `tokio::spawn` require `'static`; the Arc clone in `as_retriever` is O(1).
+///
 /// BC anchor: BC-2.20.003 PC1–PC3 (SearchType dispatch: Similarity, SimilarityScoreThreshold, Mmr),
 /// BC-2.20.003 INV-1 (#[non_exhaustive] on SearchType)
-pub struct VectorStoreRetriever<'a> {
-    store: &'a dyn VectorStore,
+pub struct VectorStoreRetriever {
+    store: Arc<dyn VectorStore>,
     search_type: SearchType,
     k: usize,
     fetch_k: usize,

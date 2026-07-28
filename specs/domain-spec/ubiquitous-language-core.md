@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.8"
+version: "1.9"
 status: active
 producer: business-analyst
 timestamp: 2026-07-24T00:00:00Z
 changelog:
+  - "1.9 (FC-4/burst-277/2026-07-28): Sibling-sweep fix — same 'PO BC obligations' stale-completed-delegation class as capabilities-p1-p2.md v1.18. §PreToolDecision definition: '\"skip-hook-on-resume\" invariant, PO BC obligation)' → '\"skip-hook-on-resume\" invariant, BC-2.05.008)'. BC-2.05.008 covers the invariant. TD-VSDD-060 sweep: sole 'PO BC obligation' occurrence in this file (grep 'PO BC obligation' ubiquitous-language-core.md returns zero hits after this fix)."
   - "1.8 (2026-07-24): Fix burst 252 BA — ADR-019 v1.4 compaction type canon applied. CompactionTrigger: `OnWatermark { fraction: f32 }` → `f64`; predicate `<` → `<=` (non-strict; strict < cannot fire at fraction=1.0); added f64-arithmetic and non-strict rationale. CompactionSummary fields: `compacted_range: RangeInclusive<usize>` → flat `compacted_start: usize, compacted_end: usize`; slice form `messages[compacted_start..=compacted_end]`; CompactionEvent reference updated to flat fields. TD-VSDD-060 sweep: zero compacted_range / RangeInclusive / fraction: f32 occurrences remain in this file's body text (changelog exempt)."
   - "1.7 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 1 enum-variant form occurrence of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Site: §PreToolDecision definition block. TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text (changelog history exempt)."
   - "1.6 (2026-07-22): D23 ubiquitous-language additions (burst-230) — new section 'D23 Additions (HITL Approval Hook, Context Compaction, and First-Party Tools)': PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary (ADR-018/ADR-019); ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool (ADR-020 / SS-23). 13 new terms; total D23 + prior: 16 (D21) + 13 (D23) = 29 terms in this file. D23 added to decisions list."
@@ -341,7 +342,7 @@ The four-variant decision type returned by `PreToolCallHook::pre_invoke` (`#[non
 Kani candidate), `Edit { modified_args }` (proceed with modified arguments), and
 `PendingHumanApproval { prompt }` (suspend via `interrupt()`, reusing BC-2.05.001 machinery;
 resumed via `Command(resume=PreToolDecision)`; hook NOT re-called on resume —
-"skip-hook-on-resume" invariant, PO BC obligation). Crate: ferrochain-graph, `graph::hitl`.
+"skip-hook-on-resume" invariant, BC-2.05.008). Crate: ferrochain-graph, `graph::hitl`.
 Authority: ADR-018 / CAP-034.
 
 **CompactionTrigger**

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.007
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,9 @@ wave: 2
 phase: 1b
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
+changelog:
+  - "1.0 (2026-07-15, initial): base BC authored — MCP server tool call dispatch via ToolRegistry."
+  - "1.1 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Architecture Anchors — ToolRegistry type corrected: `Option<Arc<dyn Tool>>` → `Option<Arc<dyn DynTool>>` (architect scope — planned implementation signature; dyn Tool is non-object-safe per ADR-005 v1.9; ToolRegistry must use DynTool for vtable dispatch)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -155,7 +158,7 @@ semantics as BC-2.09.006 PC-3 for `tools/list`).
 ## Architecture Anchors
 
 - `ferrochain-mcp/src/server.rs` (`mcp::server`) — `tools/call` request handler: parse arguments, look up tool in `ToolRegistry`, call `Tool::invoke`, serialize `ToolOutput` to `CallToolResult`, format JSON-RPC responses for success / tool-error / protocol-error cases
-- `ferrochain-mcp/src/registry.rs` — `ToolRegistry::get(name: &str) -> Option<Arc<dyn Tool>>` used by the invocation handler
+- `ferrochain-mcp/src/registry.rs` — `ToolRegistry::get(name: &str) -> Option<Arc<dyn DynTool>>` used by the invocation handler (DynTool is the object-safe dispatch seam; ADR-005 §Adjacent Trait Object-Safety Adjudications)
 
 ## Story Anchor
 

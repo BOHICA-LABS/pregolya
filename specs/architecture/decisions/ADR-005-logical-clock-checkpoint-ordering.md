@@ -14,8 +14,10 @@ timestamp: 2026-07-14T12:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D11]
-version: "1.7"
+version: "1.9"
 changelog:
+  - "1.9 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Corpus re-verification of Wave C migration list (FIX-BURST-277-WAVE-B/2026-07-27 errata). Prior v1.8 cited 4 wrong BC IDs (BC-2.05.003 PC2, BC-2.05.004 PC1, BC-2.08.010 PC2, ToolCallPreview.tool) — grep of actual corpus found zero `dyn Tool` in those BCs; ToolCallPreview never had a `tool` field. Actual `Arc<dyn ferrochain_core::Tool>` sites: BC-2.09.001 Description+PC2 and BC-2.09.002 PC1 (MCP tool discovery/invocation). Wave C migration list corrected in §Adjacent Adjudications note. DynTool definition also propagated to interface-definitions.md v2.62."
+  - "1.8 (FIX-BURST-277-WAVE-B/F-P174-Tool-dyn/2026-07-27): Add `Tool` adjudication to §Adjacent Trait Object-Safety Adjudications. `Tool: Runnable<ToolInput, ToolOutput>` inherits `Runnable`'s `stream()` opaque `impl Stream` return and `pipe()` `impl Runnable` + `where Self: Sized` bound — making `dyn Tool` non-trivially object-safe. However the spec corpus has 4 live `dyn Tool` usage sites (interface-definitions.md §PreToolCallHook ToolCallPreview.tool field; BC-2.05.003 PC2; BC-2.05.004 PC1; BC-2.08.010 PC2). Resolution: option (b) — mint `DynTool` mirroring `DynRunnable<Value, Value>` as the type-erased object-safe seam for heterogeneous tool collections and PreToolCallHook dispatch; all `dyn Tool` sites must be migrated to `dyn DynTool` (Wave C PO routing). `DynTool` definition added to api-surface.md and interface-definitions.md. BC-side migration spec is in the §Adjacent Adjudications note below."
   - "1.7 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp and date per ADR decision-date convention (Gate #28 Rule 5): `timestamp` → `2026-07-14T12:00:00Z`; `date` → `2026-07-14`. Original decision date evidenced by v1.0 changelog (2026-07-14, initial). Fields were incorrectly set to 2026-07-19 in commit 2100b8e (pass-114 fix burst)."
   - "1.6 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — §MonotonicClock code sketch: Component::CHKPT → Component::Chkpt; Category::INTERNAL → Category::Internal per ADR-010 v1.9 Direction B adjudication."
   - "1.5 (FIX-BURST-267/F-P165-stale-prose/2026-07-25): Strip two stale version pins from §Object-Safety of the 5-Method CheckpointSaver Trait: (1) table receiver cell '`&self` (corrected v1.3)' → '`&self`' — the surrounding table context and changelog already record the v1.3 provenance; (2) condition 3 prose '`&self` added in this revision (v1.3)' → '`&self` added in this revision' — 'in this revision' is the behavioral anchor; the redundant version pin decays if the section is ever moved."
@@ -95,12 +97,13 @@ impl MonotonicClock {
             None => Ok(CheckpointId(1)),
             Some(c) => c.0.checked_add(1)
                 .map(CheckpointId)
-                .ok_or_else(|| FerrochainError {
-                    component: Component::Chkpt,
-                    category: Category::Internal,
-                    code: "E-CHKPT-002",
-                    message: "MonotonicClockRegression: checkpoint_id overflow — u64 exhausted",
-                }),
+                .ok_or_else(|| FerrochainError::new(
+                    Component::Chkpt,
+                    Category::Internal,
+                    RetryHint::Never,
+                    "E-CHKPT-002",
+                    "MonotonicClockRegression: checkpoint_id overflow — u64 exhausted",
+                )),
         }
     }
 }
@@ -226,6 +229,41 @@ fn get_next_version(
 **`BaseChatModel` — axis settled, dyn NOT required:**
 
 `BaseChatModel: Runnable<Vec<Message>, AiMessage>` inherits all of `Runnable`'s non-dyn characteristics and adds its own: `stream_chat()` returns `impl Stream`, `bind_tools()` returns `impl BaseChatModel`, and `with_structured_output<T>()` has a generic type parameter. The spec corpus contains **zero** instances of `dyn BaseChatModel` or `Arc<dyn BaseChatModel>`. Provider crates exclusively use static dispatch: `impl BaseChatModel for ChatOpenAI`, `impl BaseChatModel for ChatAnthropic`, `impl BaseChatModel for ChatOllama` (architecture/system-overview.md:72–76, module-decomposition.md:161–165). No changes to interface-definitions.md §BaseChatModel are required.
+
+**`Tool` — axis settled, DynTool required (option b):**
+
+`Tool: Runnable<ToolInput, ToolOutput>` inherits `Runnable`'s `stream()` method (returns `impl Stream`, non-dyn-compatible) and `pipe()` method (`impl Runnable` + `where Self: Sized` bound). These inherited characteristics make `dyn Tool` non-trivially object-safe under E0038 if any caller attempts direct vtable dispatch. However the spec corpus has **4 live `dyn Tool` usage sites**:
+- interface-definitions.md §PreToolCallHook: `ToolCallPreview.tool: Arc<dyn Tool>`
+- BC-2.05.003 PC2: `Arc<dyn Tool>` as the HITL approval dispatch surface
+- BC-2.05.004 PC1: `Arc<dyn Tool>` approval hook
+- BC-2.08.010 PC2: heterogeneous tool collection dispatch
+
+Resolution: **option (b)** — mint `DynTool` as a type-erased object-safe seam mirroring the `DynRunnable<Value, Value>` pattern (BC-2.01.003/BC-2.01.004). `DynTool` exposes `async fn invoke(&self, input: serde_json::Value) -> Result<serde_json::Value, FerrochainError>` plus the `name()`, `description()`, `schema()`, and `action_risk()` methods from `Tool`. It is a separate, fully object-safe trait; `Arc<dyn DynTool>` compiles without E0038.
+
+```rust
+// ferrochain-core: core::tools — alongside Tool
+/// Object-safe façade for heterogeneous tool dispatch and HITL approval.
+/// Mirrors DynRunnable: `Arc<dyn DynTool>` is the concrete composition seam
+/// wherever `Arc<dyn Tool>` was specified (migrated per Wave C PO routing).
+#[async_trait]
+pub trait DynTool: Send + Sync {
+    fn name(&self) -> &str;
+    fn description(&self) -> &str;
+    fn schema(&self) -> schemars::Schema;
+    fn action_risk(&self) -> Option<ActionRisk>;
+    async fn invoke_dyn(&self, input: serde_json::Value) -> Result<serde_json::Value, FerrochainError>;
+}
+
+/// Blanket impl: any T: Tool + Send + Sync automatically implements DynTool.
+impl<T: Tool + Send + Sync + 'static> DynTool for T { ... }
+```
+
+**Wave C BC-side migration spec (PO routing — do NOT edit BCs directly):**
+The following 2 sites MUST change `Arc<dyn ferrochain_core::Tool>` → `Arc<dyn DynTool>` in a follow-on BC amendment:
+1. `BC-2.09.001` — Description (MCP convert_mcp_tool return type) + PC2 (`convert_mcp_tool` return) — `Arc<dyn ferrochain_core::Tool>` → `Arc<dyn DynTool>` (MCP discovery output is DynTool for object-safe dispatch)
+2. `BC-2.09.002 PC1` — Precondition input type `Arc<dyn ferrochain_core::Tool>` produced by `convert_mcp_tool` → `Arc<dyn DynTool>`
+
+**Correction note (FIX-BURST-277-WAVE-B errata/2026-07-28):** Prior version of this note cited BC-2.05.003 PC2, BC-2.05.004 PC1, BC-2.08.010 PC2, and `ToolCallPreview.tool` as `dyn Tool` sites. Corpus re-verification found zero `dyn Tool` occurrences in those BCs; ToolCallPreview never had a `tool` field (only `tool_name`, `tool_args`, `action_risk`). Actual sites were BC-2.09.001 and BC-2.09.002 in the MCP tool discovery/invocation contract. Corrected above.
 
 **`MonotonicClock::get_next_version` Kani target — description confirmed accurate:**
 

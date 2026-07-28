@@ -135,7 +135,7 @@ context MUST pass those documents through the guardrail before use. The DI-012 i
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md` — Decision 2 Consequences §DI-012 (RAGRetrieval guardrail coverage confirmation)
-- `architecture/decisions/ADR-012-*.md` / BC-2.11.001 — BoundaryType::RAGRetrieval origin and definition (DO NOT modify)
+- `architecture/decisions/ADR-012-self-improvement-primitives.md` / BC-2.11.001 — BoundaryType::RAGRetrieval origin and definition (DO NOT modify)
 - `architecture/purity-boundary-map.md` — `ferrochain-core: core::guardrail` guardrail boundary enforcement
 
 ## Story Anchor

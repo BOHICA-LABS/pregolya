@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.003
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
   - "1.1 (F-P130-08/2026-07-21): TV-001/TV-002 made falsifiable. Removed hedged magic-number assertion `registry_size() == 141 (or the current count…)`. TV-001 now asserts relational equality to `LANGCHAIN_CORE_REGISTRY.len()` named constant; TV-002 asserts feature-gated delta `registry_size() >= core_count + 1`. The literal 141 is retained as informative prose only."
   - "1.2 (F-P170-01/burst-272/2026-07-25): Re-anchor Architecture Anchors and Traceability Architecture Authority from ADR-016 Decision 4 to Decision 2 — the inventory crate, feature-gated partner registration, and OnceLock initialization are all defined in Decision 2 (Registry Mechanism); Decision 4 is Legacy Namespace Remapping and Version Tolerance (OLD_CORE_NAMESPACES_MAPPING). Drop fabricated 'duplicate detection' clause (not attributed in ADR-016). De-pin 'version 0.3.24' in PC1 per TD-VSDD-091 (version pins in normative body text decay on patch bumps)."
+  - "1.3 (FIX-BURST-277-WAVE-C/FC-2-genuine-removal/2026-07-28): Genuine completion of v1.2 false-closure FC-2. v1.2 claimed 'Drop fabricated duplicate detection clause' but the term survived in Invariant 2 ('duplicate registration detection') and EC-003 ('DuplicateRegistration'). Decision on merits: ADR-016 Decision 2 specifies inventory::iter for registry construction with no duplicate-detection semantics; the inventory crate does not natively panic on duplicate submissions; the DuplicateRegistration panic behavior was fabricated without specification backing. Removal: (1) Invariant 2: panic-on-duplicate language replaced with last-write-wins HashMap semantics. (2) EC-003: DuplicateRegistration panic removed; replaced with last-write-wins HashMap behavior and a CI assertion recommendation. (3) DI-008 Traceability: 'except duplicate detection' exception removed. TD-VSDD-060 sibling sweep: no other SS-19 BCs contain duplicate-detection language."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -81,7 +82,10 @@ registry — it is never a hand-edited list.
 1. The registry is **append-only at link time** — no runtime API adds or removes entries.
    This property is what makes `OnceLock` initialization safe.
 2. If two `inventory::submit!` calls register the same `lc_id` (a programming error), the
-   second entry panics at startup with a descriptive error (duplicate registration detection).
+   `inventory` crate does not natively detect duplicates; both entries are collected by
+   `inventory::iter::<LcEntry>()` and when the `HashMap` is constructed, the second entry
+   overwrites the first for the same key (last-write-wins). This is not a production runtime
+   error — it is a programming error that CI should catch via a registry size assertion.
 3. The registry is the sole source of the allowlist — BC-2.19.005's Reviver checks against
    this `HashMap`, not against a separate hard-coded list.
 4. Feature-gated entries follow the same `LcEntry` struct as unconditional entries — there
@@ -93,7 +97,7 @@ registry — it is never a hand-edited list.
 |----|-------------|-------------------|
 | EC-001 | Binary compiled with `--no-default-features` (no partner features) | Registry contains only core ferrochain types; partner type ids are absent; `Reviver::revive()` on a partner type id returns `Err(E-SRLZ-001)` |
 | EC-002 | Binary compiled with `features = ["openai", "anthropic"]` | Registry contains core + OpenAI + Anthropic entries; Ollama entries absent if `"ollama"` feature not enabled |
-| EC-003 | Duplicate `inventory::submit!` for the same `lc_id` | Panics at startup with `DuplicateRegistration` error — caught in CI; not a production runtime path |
+| EC-003 | Duplicate `inventory::submit!` for the same `lc_id` | The `inventory` crate collects both entries; HashMap construction silently overwrites the first with the second (last-write-wins). The correct detection strategy is a CI assertion that `registry_size() == EXPECTED_COUNT`; a count mismatch indicates a duplicate or a missing entry |
 | EC-004 | `inventory::iter::<LcEntry>()` called before `Reviver::new()` | Valid — iter is lazy; it does not require Reviver to be initialized |
 | EC-005 | Multiple threads call `Reviver::new()` concurrently at program startup | `OnceLock` ensures initialization runs exactly once; all callers receive the same `Reviver` after initialization |
 
@@ -139,7 +143,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 story]_
 |-------|-------|
 | Source L2 Capability | CAP-025 |
 | Capability Anchor Justification | CAP-025 ("Reviver and Type Registry (Inventory-Based; Allowlist Containment; Legacy-Namespace Remap)") per capabilities-p1-p2.md §CAP-025 — this BC specifies the inventory-based link-time registration mechanism, feature-gated partner entries, and OnceLock allowlist derivation, which CAP-025 identifies as the registry substrate for the Reviver's allowlist-containment model |
-| L2 Domain Invariants | DI-008 (Reviver::new() returns Result; no panic on registry initialization except duplicate detection) |
+| L2 Domain Invariants | DI-008 (Reviver::new() returns Result; no panic on registry initialization) |
 | Architecture Authority | ADR-016 Decision 2 (inventory crate, feature-gated partner registration, OnceLock initialization) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | ferrochain-core / core::serializable::registry |

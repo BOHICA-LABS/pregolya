@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.12"
+version: "1.13"
 changelog:
+  - "1.13 (FIX-BURST-277-WAVE-B/F-P174-303+F-P174-constructor/2026-07-27): F-P174-303 — adjudicate `context` field (referenced in ADR-014 Decision 5 write-time zero-norm sketch): REJECTED. No `context` field is added to `FerrochainError`. Structured diagnostics such as `document_index` MUST be interpolated into the `message` field using key=value format (e.g., `format!(\"embedding vector has zero L2 norm at write time; document_index={}\", i)`). Rationale: adding `context: Option<serde_json::Map<String, serde_json::Value>>` would pull `serde_json` into the hot path of every `FerrochainError` construction site and bloat the struct; the `message: String` field already carries structured diagnostics in the VSDD corpus via key=value interpolation. ADR-014 Decision 5 pseudocode must be corrected in ADR-014 v1.11 to use `message` interpolation instead of a phantom `context:` field. F-P174-constructor — add `impl FerrochainError` with `pub fn new(component, category, retry_hint, code, message: impl Into<String>) -> Self` primary constructor (all six fields; `source: None` by default) and `pub fn with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self` builder (consumes self, returns updated instance). These are the sole sanctioned construction paths; direct struct-literal construction from external crates is barred by `#[non_exhaustive]` (ADR-010 v1.12/v1.12+F-P173-619). All spec pseudocode blocks in ADR-010/014/005 that showed struct literals must use `FerrochainError::new(...)` + optional `.with_source(...)` going forward."
   - "1.12 (FIX-BURST-276/F-P173-211+F-P173-619/2026-07-27): F-P173-211 — fix FerrochainError compilability: change `source` field from `Option<Box<dyn std::error::Error + Send + Sync>>` to `Option<Arc<dyn std::error::Error + Send + Sync>>`. Adjudication: option (a) selected over (b) drop-Clone and (c) clone-drops-source. `Arc<dyn Trait>` implements `Clone` (reference-count increment, independent of whether T: Clone), preserving both the derive and the error chain. Option (b) propagates `Arc<FerrochainError>` wrappers to every sharing site, invasively changing call-site API. Option (c) silently drops `source` on clone, violating the production-grade no-silent-failure rule (CLAUDE.md: no silent empty returns where partial-failure should propagate); `retry_hint` and `to_problem()` (BC-2.14.002 RFC-7807 emission) both depend on Clone without losing the causal chain; option (c) breaks both. Propagated to api-surface.md §Error Type (F-P173-202). BC-2.14.001 propagation form (product-owner-owned): `source: Option<Arc<dyn std::error::Error + Send + Sync>>,` with comment `// Causal error chain; MUST NOT be exposed in HTTP responses`. F-P173-619 — add `#[non_exhaustive]` to FerrochainError struct. CLAUDE.md Code Conventions requires `#[non_exhaustive]` on all public API surface types; sibling D21/D23 types all carry it; `FerrochainError` was the sole public error type without it."
   - "1.11 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp and date per ADR decision-date convention (Gate #28 Rule 5): `timestamp` → `2026-07-14T12:00:00Z`; `date` → `2026-07-14`. Original D17 decision date evidenced by v1.0 changelog. Fields were incorrectly bumped across multiple fix bursts (62672f9, 317b144, f4819b2, 75b0c8a)."
   - "1.10 (FIX-BURST-272/F-P170-07+09+10/2026-07-25): Three targeted fixes. (1) F-P170-07 — E-TMPL-003 description de-minijinjaed: replace 'UndefinedVariable: minijinja strict-undefined mode raises this when a template variable is not in the input map.' with engine-neutral form matching error-taxonomy.md §E-TMPL-003 and ADR-015 Decision 4 universal strict-undefined contract (F-P131-04, burst-226). (2) F-P170-09 — Axis-alignment rationale: replace phantom 'Python REPL' tool with actual ADR-020 Decision 2 inventory (ReadFileTool/WriteFileTool/EditFileTool/ListDirTool — tools::fs; BashTool — tools::shell; GrepTool — tools::search). (3) F-P170-10 — Informational payload fields: off-by-two BC mis-anchor corrected; 'BC-2.23.003/004' → 'BC-2.23.005 PC-2 / BC-2.23.006 PC-2' per error-taxonomy.md §TOOLS E-TOOLS-005/006 anchors."
@@ -62,7 +63,33 @@ pub struct FerrochainError {
     pub message: String,          // Human-readable; MUST NOT contain credentials
     pub source: Option<Arc<dyn std::error::Error + Send + Sync>>,  // Causal error chain; MUST NOT be exposed in HTTP responses; Arc (not Box) preserves Clone
 }
+
+impl FerrochainError {
+    /// Primary constructor. All fields required; `source` defaults to `None`.
+    /// Use `.with_source(arc)` to chain a causal error.
+    ///
+    /// This is the ONLY sanctioned construction path from external crates.
+    /// `#[non_exhaustive]` bars struct-literal construction (E0639) outside ferrochain-core.
+    pub fn new(
+        component: Component,
+        category: Category,
+        retry_hint: RetryHint,
+        code: &'static str,
+        message: impl Into<String>,
+    ) -> Self {
+        Self { component, category, retry_hint, code, message: message.into(), source: None }
+    }
+
+    /// Builder: attach a causal error chain. Consumes `self`; returns updated instance.
+    /// The causal chain is available via `std::error::Error::source()` for logging.
+    /// MUST NOT be exposed in HTTP responses (DI-010 credential-leak risk).
+    pub fn with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self {
+        Self { source: Some(source), ..self }
+    }
+}
 ```
+
+**F-P174-303 adjudication — no `context` field:** A phantom `context: { "document_index": N }` field appeared in ADR-014 Decision 5 pseudocode but does not exist on `FerrochainError`. The resolution is REJECTION of a new `context` field. Structured diagnostics such as `document_index` MUST be interpolated into the `message` field using key=value notation: `format!("embedding vector has zero L2 norm at write time; document_index={}", i)`. No `serde_json::Map` dependency is incurred; the 6-field struct is final. ADR-014 Decision 5 is corrected per the ADR-014 F-P174-303 adjudication.
 
 **Category casing canon (FIX-BURST-270 adjudication, retracted v1.8/F-P167-05):** `Category` enum variants use **PascalCase** — `Category::Val`, `Category::Auth`, `Category::Security`, `Category::Internal`, etc. The taxonomy code-string column (`VAL | AUTH | RATE | …`) is ALL-CAPS documentation shorthand and is **distinct** from the Rust variant identifier. Rendering rule: in BC/spec prose and table cells use the taxonomy codes (`VAL`, `AUTH`, `category: DURABILITY`); in Rust code blocks and formal postconditions use the PascalCase enum path (`Category::Val`, `Category::Auth`, `Category::Durability`). The v1.8 note incorrectly conflated these two representations; it is hereby retracted. The `Component` variants follow the same PascalCase rule (`Component::Chkpt`, `Component::Tmpl`, `Component::Core`). No serde rename is needed because the RFC-7807 wire form uses humanized titles (`"Validation"`, `"Authentication"`) not taxonomy codes.
 

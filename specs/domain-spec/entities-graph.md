@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: entities-graph
-version: "1.12"
+version: "1.13"
 status: active
 producer: business-analyst
 timestamp: 2026-07-25T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "148b6a2"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D21, D23]
 changelog:
+  - "v1.13 (FC-4/burst-277/2026-07-28): Sibling-sweep fix — same 'PO BC obligations' stale-completed-delegation class as capabilities-p1-p2.md v1.18. §PreToolDecision PendingHumanApproval bullet: 'PO BC obligation for SS-05 extension' → 'BC-2.05.008'. BC-2.05.008 exists and covers the skip-hook-on-resume invariant. TD-VSDD-060 sweep: sole 'PO BC obligation' occurrence in this file (grep 'PO BC obligation' entities-graph.md returns zero hits after this fix)."
   - "v1.12 (F-P171a-14/burst-273/2026-07-25): Fix HITL Approval Hook Domain intro — dependency-kind word corrected 'runtime' → 'compile-time' (corroborating carriers: ADR-018 §Decision 1 'cross-crate compile-time consumer', ADR-020 §Decision 1 'does NOT depend on ferrochain-graph at compile time', dependency-graph.md crate-DAG annotation 'no ferrochain-graph compile-time dep'). Date-monotonicity repair: v1.9 changelog date 2026-07-22 → 2026-07-23 (burst-242; corroborating carrier: api-surface.md v1.9 burst-242/2026-07-23). TD-VSDD-060 temporal-neighbor sweep: no additional inversions found in this file."
   - "v1.11 (F-P170-16/burst-272/2026-07-25): Fix HITL Approval Hook Domain intro — retire stale ActionRisk location claim 'ferrochain-graph::hitl alongside ActionRisk'. ActionRisk relocated to ferrochain-core (core::action_risk); ferrochain-graph::hitl re-exports it. HITL hook entities and RiskGatePolicy remain in ferrochain-graph::hitl. Placement rationale narrowed to hook types only. TD-VSDD-060 sweep: sole ActionRisk location claim in this file."
   - "v1.10 (2026-07-24): Fix burst 252 BA — ADR-019 v1.4 compaction type canon applied. CompactionTrigger: `OnWatermark { fraction: f32 }` → `f64`; predicate `<` → `<=` (non-strict; strict < cannot fire at fraction=1.0); OnMessageCount/OnTokenCount descriptors → 'reaches or exceeds' phrasing. CompactionSummary fields: `compacted_range: RangeInclusive<usize>` → flat `compacted_start: usize, compacted_end: usize`; Application: `messages[compacted_range]` → `messages[compacted_start..=compacted_end]`; CompactionEvent struct updated to flat fields. Relationships Summary updated to flat-field form. TD-VSDD-060 sweep: zero compacted_range / RangeInclusive / fraction: f32 occurrences remain in this file's body text (changelog historical entries exempt)."
@@ -302,7 +303,7 @@ The decision type returned by `PreToolCallHook::pre_invoke`; determines the tool
   - `Approve` — proceed to tool execution unchanged
   - `Deny { reason: String }` — construct `ToolOutput::Error(reason)`; tool is NOT invoked (fail-closed; VP-011 Kani candidate)
   - `Edit { modified_args: serde_json::Value }` — replace tool_args with modified_args; proceed (engine validates modified_args is a valid JSON object before invocation)
-  - `PendingHumanApproval { prompt: Option<String> }` — suspend via `interrupt()` (BC-2.05.001 machinery reused); on `Command(resume=PreToolDecision)` the decision is applied; hook is NOT re-called on the resumed dispatch ("skip-hook-on-resume" invariant — PO BC obligation for SS-05 extension)
+  - `PendingHumanApproval { prompt: Option<String> }` — suspend via `interrupt()` (BC-2.05.001 machinery reused); on `Command(resume=PreToolDecision)` the decision is applied; hook is NOT re-called on the resumed dispatch ("skip-hook-on-resume" invariant — BC-2.05.008)
 - **Crate:** ferrochain-graph, module `graph::hitl`
 - **Invariant:** `Deny` is fail-closed — the tool is never invoked when Deny is returned, regardless of code path. VP-011 Kani candidate.
 

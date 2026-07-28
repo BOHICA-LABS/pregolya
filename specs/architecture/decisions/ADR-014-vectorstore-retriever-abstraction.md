@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-21"
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
-version: "1.10"
+version: "1.11"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.11 (FIX-BURST-277-WAVE-B/F-P174-retriever-lifetime+F-P174-303+F-P174-as-retriever-fallible/2026-07-27): Three related fixes. (1) F-P174-retriever-lifetime — `VectorStoreRetriever<'a>` held `store: &'a dyn VectorStore`, making `VectorStoreRetriever<'_>` a non-`'static` type. Coercing it to `Arc<dyn Retriever + 'static>` (required for graph node injection and `tokio::spawn`) fails with a lifetime bound error. Fix: `VectorStoreRetriever` drops the lifetime parameter; `store` field becomes `Arc<dyn VectorStore>` (owned Arc, `'static`). `VectorStoreRetriever` is now `'static` and coerces cleanly to `Arc<dyn Retriever>`. (2) F-P174-as-retriever-fallible — `as_retriever` was infallible (`fn as_retriever(&self) -> VectorStoreRetriever<'_>`) but BC-2.20.003 INV-2 and TV-004/TV-005 require `Err(E-VS-003)` on invalid config (lambda_mult outside [0,1], fetch_k < k for MMR). Fix: signature becomes `fn as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>`. The `self: &Arc<Self>` receiver allows the implementation to `Arc::clone(self)` and store the resulting `Arc<dyn VectorStore>` in `VectorStoreRetriever.store`. BC-2.20.003 PC-2 (infallible) is therefore incorrect and requires a Wave C PO correction; the architecture source of truth is this ADR and interface-definitions.md. (3) F-P174-303 — remove phantom `context:` field from Decision 5 write-time zero-norm code sketch; `document_index` is carried in `message` via key=value interpolation per ADR-010 v1.13 adjudication. Propagate to interface-definitions.md and api-surface.md."
   - "1.10 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp per ADR decision-date convention (Gate #28 Rule 5): `timestamp: 2026-07-23T00:00:00Z` → `2026-07-21T00:00:00Z`. Date field already correct at 2026-07-21. Timestamp was incorrectly bumped to 2026-07-23 in burst-238/f4819b2."
   - "1.9 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — all Rust code blocks: Component::VS → Component::Vs; Category::VAL → Category::Val; Component::CORE → Component::Core; Category::SECURITY → Category::Security per ADR-010 v1.9 Direction B adjudication."
   - "1.8 (FIX-BURST-267/F-P165-stale-prose/2026-07-25): De-label §PO Obligations heading '### E-VS-004 (carried from v1.3)' → '### E-VS-004 (carried from Decision 5)' — Decision 5 (v1.2/F-P129-08) is the behavioral anchor that introduced the write-time zero-norm rejection obligation; v1.3 only corrected the error code number from E-VS-003 → E-VS-004. The version pin 'v1.3' decays with revision history; 'Decision 5' is stable and directly identifies the design decision this obligation traces to."
@@ -169,9 +170,23 @@ pub trait VectorStore: Send + Sync {
     /// Delete documents by ID.
     async fn delete(&self, ids: &[&str]) -> Result<(), FerrochainError>;
 
-    /// Return a Retriever view over this store. Concrete return type — not a method
-    /// with opaque return, preserving dyn-compatibility.
-    fn as_retriever(&self) -> VectorStoreRetriever<'_>;
+    /// Construct a `VectorStoreRetriever` over this store.
+    ///
+    /// # Receiver
+    /// `self: &Arc<Self>` — required so the impl can clone the Arc and store it in
+    /// `VectorStoreRetriever.store: Arc<dyn VectorStore>`, giving the retriever a
+    /// `'static` lifetime that satisfies `Arc<dyn Retriever + 'static>` (graph nodes
+    /// and `tokio::spawn` require `'static`).
+    ///
+    /// # Errors
+    /// Returns `Err(E-VS-003, VAL)` when config is invalid:
+    /// - `lambda_mult` outside [0.0, 1.0]
+    /// - `fetch_k < k` when `SearchType::Mmr`
+    ///
+    /// BC anchor: BC-2.20.003 INV-2 (E-VS-003 on invalid config), BC-2.20.003 TV-004/TV-005.
+    /// Note: BC-2.20.003 PC-2 currently states infallible `-> VectorStoreRetriever<'_>`;
+    /// that is incorrect — Wave C PO correction required.
+    fn as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>;
 }
 
 /// Factory trait: static constructors for VectorStore implementors. NOT part of the
@@ -188,8 +203,12 @@ pub trait VectorStoreFactory: VectorStore + Sized {
 }
 
 /// Concrete retriever wrapper over any VectorStore.
-pub struct VectorStoreRetriever<'a> {
-    store: &'a dyn VectorStore,
+///
+/// Holds `Arc<dyn VectorStore>` (not a borrowed reference) — making `VectorStoreRetriever`
+/// a `'static` type that can be coerced to `Arc<dyn Retriever + 'static>` for graph
+/// node injection and `tokio::spawn` boundaries. `Arc::clone` in `as_retriever` is O(1).
+pub struct VectorStoreRetriever {
+    store: Arc<dyn VectorStore>,
     search_type: SearchType,
     k: usize,
     fetch_k: usize,
@@ -204,13 +223,13 @@ pub enum SearchType {
     Mmr,
 }
 
-// VectorStoreRetriever implements Retriever
+// VectorStoreRetriever implements Retriever — 'static because store is Arc-owned
 #[async_trait]
-impl Retriever for VectorStoreRetriever<'_> {
+impl Retriever for VectorStoreRetriever {
     async fn get_relevant_documents(
         &self,
         query: &str,
-    ) -> Result<Vec<Document>, FerrochainError> { /* dispatch to store */ }
+    ) -> Result<Vec<Document>, FerrochainError> { /* dispatch to store via Arc */ }
 }
 ```
 
@@ -261,14 +280,15 @@ async fn similarity_search_with_filter(
     if !filter.filters.is_empty() {
         // Non-empty filter on an adapter that has not overridden this method.
         // Returning silently-unfiltered results would expose cross-tenant data.
-        return Err(FerrochainError {
-            component: Component::Vs,
-            category: Category::Val,
-            code: "E-VS-005",
-            message: "FilterUnsupported: this VectorStore backend does not support \
-                      metadata filtering; override similarity_search_with_filter to \
-                      provide native filter support".to_string(),
-        });
+        return Err(FerrochainError::new(
+            Component::Vs,
+            Category::Val,
+            RetryHint::Never,
+            "E-VS-005",
+            "FilterUnsupported: this VectorStore backend does not support \
+             metadata filtering; override similarity_search_with_filter to \
+             provide native filter support",
+        ));
     }
     // Empty filter = vacuously true (BC-2.21.004 EC-004) — delegate to unfiltered search.
     self.similarity_search(query, k).await
@@ -288,7 +308,12 @@ two lines and requires no new dependency:
 
 ```rust
 let norm = v.iter().map(|x| x * x).sum::<f32>().sqrt();
-if norm == 0.0 { return Err(FerrochainError { component: Component::Vs, category: Category::Val, code: "E-VS-001", ... }); }
+if norm == 0.0 {
+    return Err(FerrochainError::new(
+        Component::Vs, Category::Val, RetryHint::Never, "E-VS-001",
+        "ZeroNormVector: zero L2 norm embedding; cosine similarity undefined",
+    ));
+}
 ```
 
 This check belongs in `vectorstores::similarity` (pure-core) — the shared cosine
@@ -360,25 +385,14 @@ L2 norm == 0.0 at write time, before the document is persisted to the index.
 | Code | Trigger | Context |
 |------|---------|---------|
 | `E-VS-001` | Search-time cosine guard; zero-norm query or stored embedding encountered during similarity computation | — |
-| `E-VS-004` | Write-time zero-norm rejection; embedding rejected before storage | `document_index` (0-based index of the offending document) |
+| `E-VS-004` | Write-time zero-norm rejection; embedding rejected before storage | `document_index` in `message` (key=value interpolation) |
 
 Both codes are in the `VS` namespace (`ferrochain-vectorstores`). `E-VS-004` minted in
 error-taxonomy v1.27/D21 (see §PO Obligations for mint record).
 
-**`document_index` placement:** structured context field, NOT interpolated in the
-message string (gate #33 / cross-cutting error-context convention):
-
-```rust
-FerrochainError {
-    component: Component::Vs,
-    category: Category::Val,
-    code: "E-VS-004",
-    message: "embedding vector has zero L2 norm; document rejected at write time",
-    context: {
-        "document_index": <0-based usize index of rejected document>,
-    },
-}
-```
+**`document_index` placement:** interpolated into the `message` field via key=value format
+per ADR-010 §impl FerrochainError adjudication (F-P174-303 — `context` field rejected; no `serde_json::Map`
+added to `FerrochainError`). The `message` string carries all structured diagnostics.
 
 ### Write-time check sketch
 
@@ -387,13 +401,13 @@ FerrochainError {
 for (i, embedding) in embeddings.iter().enumerate() {
     let norm = embedding.iter().map(|x| x * x).sum::<f32>().sqrt();
     if norm == 0.0 {
-        return Err(FerrochainError {
-            component: Component::Vs,
-            category: Category::Val,
-            code: "E-VS-004",
-            message: "embedding vector has zero L2 norm; document rejected at write time",
-            context: [("document_index", i)].into(),
-        });
+        return Err(FerrochainError::new(
+            Component::Vs,
+            Category::Val,
+            RetryHint::Never,
+            "E-VS-004",
+            format!("embedding vector has zero L2 norm; document rejected at write time; document_index={}", i),
+        ));
     }
 }
 ```
@@ -467,16 +481,17 @@ impl GuardedDocuments {
                     match severity {
                         GuardrailSeverity::Critical => {
                             // Critical rejection: abort the entire batch (BC-2.11.005 PC4).
-                            return Err(FerrochainError {
-                                component: Component::Core,
-                                category: Category::Security,
-                                code: "E-CORE-008",
-                                message: format!(
+                            return Err(FerrochainError::new(
+                                Component::Core,
+                                Category::Security,
+                                RetryHint::Never,
+                                "E-CORE-008",
+                                format!(
                                     "GuardrailCriticalRejection: document at position {} \
                                      critically rejected at RAGRetrieval boundary — {}",
                                     i, reason
                                 ),
-                            });
+                            ));
                         }
                         _ => {
                             // Non-Critical: substitute an error-entry Document at

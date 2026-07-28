@@ -3,35 +3,62 @@
 #
 # PURPOSE
 # ───────
-# Validates that every BC (behavioral-contract) file has a complete, well-formed
-# frontmatter schema. Required fields:
+# Validates BC (behavioral-contract) frontmatter against the rules ratified in
+# bc-authoring-plan.md. Every assertion below is grounded in a named rule or gate.
 #
-#   red_gate       boolean (true/false)  — mandatory on every BC
-#   vp_seed        boolean (true/false)  — mandatory on every BC
-#   red_gate_source  non-null string     — mandatory when red_gate: true
-#   vp_id            non-null string     — mandatory when vp_seed: true
+# RATIONALE-TO-RULE MAP
+# ─────────────────────
+# Each check is grounded in a specific rule from bc-authoring-plan.md.
+# (Symbol/section citations only — TD-VSDD-091 forbids file:NNN line citations.)
 #
-# Additionally detects common typo'd key names:
-#   "redgate", "red-gate", "vpSeed", "vp-seed", "vpseed",
-#   "red_gate_src", "rg_source", "vp_source" — these are wrong key names
-#   and indicate a spec authoring error.
+#   CHECK 1 — bc_id: present AND value == file stem
+#     Rule: bc-authoring-plan §Authoring Guidelines item 10 ("File path:
+#     BC-S.SS.NNN.md") establishes the canonical BC identifier format.
+#     §version-bump rules ("bc_id addition") names bc_id as the canonical
+#     frontmatter field. Value MUST equal the file stem exactly (identity
+#     check, not presence-only — a label-not-value check is the defect class
+#     P1D-174 named).
 #
-# VERSION
-# ───────
-# Checks that every BC file has:
-#   version: X.Y   — required present (any semver-like value accepted)
-#   changelog:     — required present (any value; content format enforced elsewhere)
-#   document_type: behavioral-contract
-#   id:            — present and matching filename pattern BC-S.SS.NNN
+#   CHECK 2 — changelog: required for version > "1.0" (BOTH forms checked)
+#     Rule: bc-authoring-plan gate #28 §VERSION-CHANGELOG INTEGRITY:
+#     "Any BC file with version > '1.0' MUST carry a changelog: frontmatter key
+#     (or a ## Changelog body table) with at least one entry per version bump."
+#     "A 'missing changelog' finding is ONLY valid when BOTH Form A AND Form B
+#     return empty output for the target file."
+#     v1.0 BCs are explicitly exempt ("version: '1.0': no changelog required").
+#
+#   CHECK 3 — red_gate: true → red_gate_source: required
+#     Rule: bc-authoring-plan gate #36 §VP↔BC RED-GATE PARITY:
+#     "red_gate: true requires three-way corroboration: anchor BC frontmatter
+#     red_gate: true + BC-INDEX Red Gate membership + verifiable red_gate_source
+#     citation." The red_gate_source key is mandatory when red_gate: true.
+#     Note: red_gate: itself is OPTIONAL on BCs — gate #36 mandates it on all
+#     VP files; on BCs it is CONDITIONAL (present only when the BC is a red-gate
+#     anchor per VP-side red_gate: true).
+#
+#   CHECK 4 — vp_seed: true → vp_id format validation (if vp_id is present)
+#     Rule: bc-authoring-plan §VP-NNN candidate label policy: "In the BC
+#     frontmatter vp_seed: true field, the companion vp_id field MAY be set to
+#     the candidate ID." vp_seed: itself is OPTIONAL; absence correctly means
+#     the BC seeds no VP. When vp_seed: true and vp_id is explicitly set,
+#     validate its format.
+#
+#   TYPO DETECTION (gate-critical fields only)
+#     Misnamed variants of red_gate: and vp_seed: would silently bypass
+#     CHECK 3 and CHECK 4 above. Detecting them preserves gate integrity.
+#     Grounded in gate #36 canonical key name (red_gate) and §VP-NNN candidate
+#     policy canonical key name (vp_seed).
 #
 # SCOPE
 # ─────
-# All files matching .factory/specs/behavioral-contracts/ss-*/BC-*.md
+# All .factory/specs/behavioral-contracts/ss-*/BC-*.md files.
+# BC-INDEX.md is EXCLUDED — it is a catalog file, not a behavioral contract
+# (analogous to VP-INDEX.md exclusion in gate #36 step 2).
 #
 # ADVISORY STATUS
 # ───────────────
-# All findings are WARN (non-blocking). Will be promoted to blocking after
-# a corpus-wide schema sweep confirms zero false-positives.
+# All findings are WARN (non-blocking). This validator will be promoted to
+# blocking after a corpus-wide sweep confirms zero false-positives.
 #
 # EXIT CONTRACT
 # ─────────────
@@ -43,6 +70,7 @@
 set -euo pipefail
 
 FACTORY_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+# BC-INDEX.md excluded — catalog file, not a behavioral contract
 BC_GLOB="$FACTORY_DIR/specs/behavioral-contracts/ss-*/BC-*.md"
 
 PASS=0
@@ -66,31 +94,30 @@ PYTHON_OUTPUT="$(python3 - "$BC_GLOB" <<'PYEOF'
 import sys, glob as globmod, os, re, yaml
 
 bc_pattern = sys.argv[1]
-files = sorted(globmod.glob(bc_pattern))
+# BC-INDEX.md matches BC-*.md glob — exclude it explicitly (catalog, not contract)
+all_files = sorted(globmod.glob(bc_pattern))
+files = [f for f in all_files if os.path.basename(f) != 'BC-INDEX.md']
 
-# Typo'd key names that indicate mis-authored frontmatter
-TYPO_KEYS = {
-    'redgate': 'red_gate',
-    'red-gate': 'red_gate',
-    'red_gate_src': 'red_gate_source',
-    'rg_source': 'red_gate_source',
-    'vpseed': 'vp_seed',
-    'vpSeed': 'vp_seed',
-    'vp-seed': 'vp_seed',
-    'vp_source': 'vp_id',
-    'vp-id': 'vp_id',
-    'vpId': 'vp_id',
-}
-
-# BC ID pattern: BC-D.DD.DDD or BC-D.D.DDD
+# CHECK 1: bc_id value must match BC-D.DD.DDD pattern exactly
+# (bc-authoring-plan §Authoring Guidelines item 10, §version-bump rules)
 BC_ID_RE = re.compile(r'^BC-\d+\.\d+\.\d+$')
 
-def parse_frontmatter_raw(content):
-    """
-    Return (fm_dict, raw_fm_keys_list, parse_error).
-    fm_dict may be None on parse failure.
-    raw_fm_keys_list is the list of top-level key names found (order-preserved).
-    """
+# CHECK 4: vp_id format (when present) — VP-NNN or VP-NNN.NNN.NNN-A or VP-DOMAIN-SUB-NN
+# (bc-authoring-plan §VP-NNN candidate label policy)
+VP_ID_RE = re.compile(r'^VP-\d{3}$|^VP-\d+\.\d+\.\d+-[A-Z]+$|^VP-[A-Z]+-[A-Z]+-\d+$')
+
+# TYPO DETECTION: misnamed variants of gate-critical keys that would silently
+# bypass CHECK 3 (red_gate) and CHECK 4 (vp_seed).
+# Grounded in gate #36 (red_gate canonical name) and §VP-NNN candidate policy (vp_seed).
+TYPO_KEYS = {
+    'redgate':  'red_gate',   # gate #36 canonical: red_gate
+    'red-gate': 'red_gate',   # gate #36 canonical: red_gate
+    'vp-seed':  'vp_seed',    # VP-NNN candidate policy canonical: vp_seed
+    'vpseed':   'vp_seed',    # VP-NNN candidate policy canonical: vp_seed
+}
+
+def parse_frontmatter(content):
+    """Return (fm_dict, raw_fm_keys, parse_error_string_or_None)."""
     parts = content.split('---', 2)
     if len(parts) < 3:
         return None, [], 'no-frontmatter-delimiters'
@@ -98,117 +125,101 @@ def parse_frontmatter_raw(content):
     try:
         fm = yaml.safe_load(raw_yaml)
     except yaml.YAMLError as exc:
-        return None, [], f'yaml-parse-error:{exc}'
+        return None, [], f'yaml-parse-error: {exc}'
     if not isinstance(fm, dict):
         return None, [], 'frontmatter-not-a-mapping'
-    # Extract raw key names for typo detection
-    raw_keys = list(yaml.safe_load(raw_yaml).keys()) if fm else []
+    raw_keys = list(fm.keys())
     return fm, raw_keys, None
 
 def check_bc(filepath):
-    """
-    Return (status, list_of_findings) where status is 'PASS' or 'WARN'.
-    Each finding is a string.
-    """
+    """Return (status, findings_list)."""
     try:
         with open(filepath, 'r', encoding='utf-8') as fh:
             content = fh.read()
     except OSError as exc:
         return 'WARN', [f'read-error: {exc}']
 
-    fm, raw_keys, error = parse_frontmatter_raw(content)
+    fm, raw_keys, error = parse_frontmatter(content)
     if error:
         return 'WARN', [f'frontmatter-parse-failure: {error}']
 
     findings = []
-    filename = os.path.basename(filepath)
+    stem = os.path.basename(filepath)[:-3]  # e.g. BC-2.01.001
 
-    # ── Typo key detection ────────────────────────────────────────────────────
-    for key in raw_keys:
-        if key in TYPO_KEYS:
-            findings.append(f"typo'd key '{key}' — should be '{TYPO_KEYS[key]}'")
-
-    # ── Required boolean: red_gate ────────────────────────────────────────────
-    if 'red_gate' not in fm:
-        findings.append("missing required key 'red_gate' (boolean)")
+    # ── CHECK 1: bc_id present and value == file stem ─────────────────────────
+    # Rule: bc-authoring-plan §Authoring Guidelines item 10 + §version-bump rules
+    if 'bc_id' not in fm:
+        findings.append("missing required key 'bc_id'")
     else:
-        val = fm['red_gate']
-        if not isinstance(val, bool):
-            findings.append(f"'red_gate' must be boolean true/false, got {type(val).__name__}:{val!r}")
+        bc_id_val = str(fm['bc_id']).strip().strip('"\'')
+        if not BC_ID_RE.match(bc_id_val):
+            findings.append(
+                f"'bc_id' value {bc_id_val!r} does not match BC-D.DD.DDD pattern "
+                f"(bc-authoring-plan §Authoring Guidelines item 10)")
+        elif bc_id_val != stem:
+            findings.append(
+                f"'bc_id' {bc_id_val!r} does not match file stem {stem!r} "
+                f"(bc-authoring-plan §Authoring Guidelines item 10)")
 
-    # ── Required boolean: vp_seed ─────────────────────────────────────────────
-    if 'vp_seed' not in fm:
-        findings.append("missing required key 'vp_seed' (boolean)")
-    else:
-        val = fm['vp_seed']
-        if not isinstance(val, bool):
-            findings.append(f"'vp_seed' must be boolean true/false, got {type(val).__name__}:{val!r}")
+    # ── CHECK 2: changelog for version > "1.0" (both forms) ──────────────────
+    # Rule: bc-authoring-plan gate #28 §VERSION-CHANGELOG INTEGRITY
+    version_str = str(fm.get('version', '')).strip().strip('"\'')
+    if version_str and version_str != '1.0':
+        has_form_a = 'changelog' in fm and fm['changelog'] is not None
+        has_form_b = '\n## Changelog\n' in content or content.startswith('## Changelog\n')
+        if not has_form_a and not has_form_b:
+            findings.append(
+                f"version {version_str!r} > '1.0' but neither Form A (frontmatter "
+                f"'changelog:' list) nor Form B ('## Changelog' body table) is present "
+                f"(gate #28 §VERSION-CHANGELOG INTEGRITY)")
 
-    # ── Conditional: red_gate_source ──────────────────────────────────────────
+    # ── CHECK 3: red_gate: true → red_gate_source required ───────────────────
+    # Rule: bc-authoring-plan gate #36 §VP↔BC RED-GATE PARITY
+    # Note: red_gate: is NOT universally required on BCs — only gate #36 VPs must
+    # carry it universally; BC-side obligation is conditional per gate #36 Rule 2.
     if fm.get('red_gate') is True:
         rgs = fm.get('red_gate_source')
         if rgs is None:
-            findings.append("'red_gate: true' requires non-null 'red_gate_source' key")
+            findings.append(
+                "'red_gate: true' requires non-null 'red_gate_source' "
+                "(gate #36 §VP↔BC RED-GATE PARITY)")
         elif not str(rgs).strip():
-            findings.append("'red_gate_source' is present but empty — required non-null when red_gate is true")
+            findings.append(
+                "'red_gate_source' is empty; must be non-null when red_gate: true "
+                "(gate #36 §VP↔BC RED-GATE PARITY)")
 
-    # ── Conditional: vp_id ───────────────────────────────────────────────────
+    # ── CHECK 4: vp_seed: true → validate vp_id format if set ────────────────
+    # Rule: bc-authoring-plan §VP-NNN candidate label policy
+    # Note: vp_seed: is OPTIONAL; absence correctly means the BC seeds no VP.
+    # When vp_seed: true, vp_id MAY be absent (candidate VP, not yet assigned).
+    # When vp_seed: true AND vp_id is present, validate its format.
     if fm.get('vp_seed') is True:
         vpid = fm.get('vp_id')
-        if vpid is None:
-            findings.append("'vp_seed: true' requires non-null 'vp_id' key")
-        elif not str(vpid).strip():
-            findings.append("'vp_id' is present but empty — required non-null when vp_seed is true")
+        if vpid is not None:
+            vpid_str = str(vpid).strip().strip('"\'')
+            if vpid_str and not VP_ID_RE.match(vpid_str):
+                findings.append(
+                    f"'vp_id' value {vpid_str!r} does not match VP-NNN or VP-NNN.NNN.NNN-A "
+                    f"pattern (bc-authoring-plan §VP-NNN candidate label policy)")
 
-    # ── Required: version ────────────────────────────────────────────────────
-    if 'version' not in fm:
-        findings.append("missing required key 'version'")
-    else:
-        v = str(fm['version']).strip()
-        if not re.match(r'^\d+\.\d+', v):
-            findings.append(f"'version' does not look like a semver value: {v!r}")
+    # ── TYPO DETECTION: gate-critical field misspellings ─────────────────────
+    # Grounded in gate #36 canonical key (red_gate) and §VP-NNN candidate policy (vp_seed)
+    for key in raw_keys:
+        if key in TYPO_KEYS:
+            findings.append(
+                f"typo'd key '{key}': use '{TYPO_KEYS[key]}' instead — "
+                f"misspelling bypasses gate-integrity checks")
 
-    # ── Required: changelog ──────────────────────────────────────────────────
-    if 'changelog' not in fm:
-        findings.append("missing required key 'changelog' (Form-A list)")
-
-    # ── Required: document_type ──────────────────────────────────────────────
-    if 'document_type' not in fm:
-        findings.append("missing required key 'document_type'")
-    else:
-        dt = str(fm['document_type']).strip()
-        if dt != 'behavioral-contract':
-            findings.append(f"'document_type' must be 'behavioral-contract', got {dt!r}")
-
-    # ── Required: id — must be present and match BC-S.SS.NNN pattern ─────────
-    if 'id' not in fm:
-        findings.append("missing required key 'id'")
-    else:
-        id_val = str(fm['id']).strip()
-        if not BC_ID_RE.match(id_val):
-            findings.append(f"'id' value {id_val!r} does not match expected BC-D.DD.DDD pattern")
-        # Cross-check: id should match the filename stem
-        # filename is like BC-2.01.001.md → id should be BC-2.01.001
-        filename_stem = filename[:-3]  # strip .md
-        if BC_ID_RE.match(id_val) and id_val != filename_stem:
-            findings.append(f"'id' {id_val!r} does not match filename stem {filename_stem!r}")
-
-    if findings:
-        return 'WARN', findings
-    return 'PASS', []
+    return ('WARN', findings) if findings else ('PASS', [])
 
 for filepath in files:
     status, findings = check_bc(filepath)
-    # Emit a structured line per file
+    short = filepath.split('/specs/')[-1] if '/specs/' in filepath else filepath
     if findings:
-        # Join findings with '; ' for single-line output; individual items on next lines
-        short = filepath.split('/specs/')[-1] if '/specs/' in filepath else filepath
         print(f"WARN {short} findings={len(findings)}")
         for f in findings:
-            f_safe = f.replace('\n', ' ')
-            print(f"  DETAIL: {f_safe}")
+            print(f"  DETAIL: {f.replace(chr(10), ' ')}")
     else:
-        short = filepath.split('/specs/')[-1] if '/specs/' in filepath else filepath
         print(f"PASS {short}")
 
 PYEOF
@@ -232,12 +243,13 @@ while IFS= read -r line; do
       emit WARN "[ADVISORY] schema findings in $short ($count issue(s))"
       FILE_WARN=$((FILE_WARN + 1))
       ;;
-    "  DETAIL:")
-      detail="${line#*DETAIL: }"
-      echo "  $detail"
-      ;;
     *)
-      : # space-indented detail lines — printed directly
+      # DETAIL lines start with two spaces — tag extraction strips leading spaces
+      # to a bare space, so they fall through to this handler.
+      if [[ "$line" == "  DETAIL: "* ]]; then
+        detail="${line#  DETAIL: }"
+        echo "  $detail"
+      fi
       ;;
   esac
 done <<< "$PYTHON_OUTPUT"
@@ -248,12 +260,17 @@ echo ""
 echo "verify-bc-frontmatter-schema: PASS=$PASS WARN=$WARN FAIL=$FAIL"
 echo "  Files with schema advisory findings: $FILE_WARN"
 echo ""
-echo "Advisory checks (all non-blocking):"
-echo "  required booleans: red_gate, vp_seed"
-echo "  conditional non-null: red_gate_source (when red_gate: true)"
-echo "  conditional non-null: vp_id (when vp_seed: true)"
-echo "  required: version, changelog, document_type, id"
-echo "  typo key detection: redgate, red-gate, vpSeed, vp-seed, etc."
+echo "Advisory checks (all non-blocking, each grounded in a ratified rule):"
+echo "  CHECK 1: bc_id: present AND value == file stem"
+echo "           Rule: bc-authoring-plan §Authoring Guidelines item 10, §version-bump rules"
+echo "  CHECK 2: changelog: for version > 1.0 (Form A OR Form B)"
+echo "           Rule: bc-authoring-plan gate #28 §VERSION-CHANGELOG INTEGRITY"
+echo "  CHECK 3: red_gate: true → red_gate_source: required"
+echo "           Rule: bc-authoring-plan gate #36 §VP↔BC RED-GATE PARITY"
+echo "  CHECK 4: vp_seed: true AND vp_id present → vp_id format valid"
+echo "           Rule: bc-authoring-plan §VP-NNN candidate label policy"
+echo "  TYPO:    redgate/red-gate/vp-seed/vpseed key-name detection"
+echo "           Rule: gate-critical canonical names from gate #36 and §VP-NNN candidate policy"
 echo ""
 echo "RESULT: PASS (advisory — non-blocking)"
 # Always exit 0 — advisory check

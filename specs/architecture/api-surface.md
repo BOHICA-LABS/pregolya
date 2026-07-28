@@ -2,11 +2,13 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.15"
+version: "1.17"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
 changelog:
+  - "1.17 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Correct Wave C DynTool migration list blockquote — prior v1.16 cited BC-2.05.003/BC-2.05.004/BC-2.08.010/BC-2.09.001 as `dyn Tool` sites; corpus re-verification found zero `dyn Tool` in BC-2.05.003/BC-2.05.004/BC-2.08.010 and ToolCallPreview never had a `tool` field. Corrected list: BC-2.09.001 (Description+PC2) and BC-2.09.002 (PC1) — both cite `Arc<dyn ferrochain_core::Tool>` in MCP tool discovery/invocation context. ADR-005 v1.9 carries the same correction."
+  - "1.16 (FIX-BURST-277-WAVE-B/2026-07-28): Three api-surface propagations from fix-burst 277. (1) DynTool — add DynTool row to §Public Rust Traits (ferrochain-core): DynTool is the type-erased object-safety seam for Arc<dyn Tool> dispatch; Tool inherits Runnable::stream (opaque impl Stream return) and Runnable::pipe (impl Runnable + where Self: Sized), making direct dyn Tool non-trivially non-object-safe (E0038 fires on direct dyn Tool); blanket impl: T: Tool + Send + Sync + 'static auto-implements DynTool; SS-08, BC-2.08.010 (ADR-005 v1.8 §Adjacent Trait Object-Safety Adjudications). (2) VectorStoreRetriever lifetime + as_retriever fallibility — fix stale blockquote in §Public Traits (ferrochain-vectorstores): remove VectorStoreRetriever<'_> lifetime annotation; document store: Arc<dyn VectorStore> field enabling Retriever + 'static coercion so Arc<dyn Retriever> compiles; document fallible signature as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError> with Err(E-VS-003) on invalid config (ADR-014 v1.11 Decision 2). (3) FerrochainError constructor — add construction note to §Error Type: FerrochainError::new(component, category, retry_hint, code, message: impl Into<String>) and .with_source(Arc<dyn Error + Send + Sync>) are sole sanctioned construction paths; struct literal construction barred by #[non_exhaustive] from external crates (ADR-010 v1.13 §impl FerrochainError)."
   - "1.15 (FIX-BURST-276-TD091/2026-07-27): TD-VSDD-091 anti-volatile-pin repair — §Error Type source field inline comment: replace live-body sibling-artifact version pin with stable section anchor. ADR-010 §Decision (the section containing the FerrochainError struct definition and the Arc-not-Box source field rationale) replaces a specific version number. Sibling-sweep of this file live body: no additional version pins found."
   - "1.14 (FIX-BURST-276-WAVE-B3/F-P173-201+203+204+205+206+207/2026-07-27): Six HIGH findings from P1D-173. F-P173-201 — move BudgetConfig (SS-10/core::budget), CompactionTrigger (SS-10/core::budget), and ProvenanceTag (SS-11/core::guardrail) from §ferrochain-graph Public Types to §ferrochain-core Public Types; all three are ferrochain-core types — cataloguing them under graph implied a circular core→graph dependency (D-24/BudgetPolicy/ADR-009, GuardrailHook/ADR-014 Decision 6, MemoryWriteGuard/ADR-012 relocation precedents confirm pattern; ProvenanceTag must be in ferrochain-core because GuardrailHook::evaluate in core takes it as a parameter); inclusion criterion note updated. F-P173-203 — remove standalone §ferrochain-graph Public Types row for CompactionEvent; CompactionEvent is a StreamEvent enum variant, not a top-level type; StreamEvent row already reads '15 variants ... CompactionEvent'; variant count 15 confirmed intact after deletion. F-P173-204 — PathGuard row in §Public Traits and Types (ferrochain-tools): E-TOOLS-001 → E-SBXD-001 on workspace escape; BC-2.13.004 PC4 raises E-SBXD-001 at the sandbox layer (module-decomposition.md sandbox::path_guard row confirms); E-TOOLS-001 is the tool-layer translation per interface-definitions.md F-P173-601; crate attribution ferrochain-sandbox/SS-13 and VP-003 anchor unchanged. F-P173-205 — add five missing D21 ferrochain-core traits to §Public Rust Traits (ferrochain-core): Retriever (SS-20/core::retriever, ADR-014 Decision 1, BC-2.20.001-003), Embeddings (SS-22/core::embeddings, ADR-017 Decision 2, BC-2.22.001-003), LcSerializable (SS-19/core::serializable, ADR-016 Decision 1+2, BC-2.19.001-006), MemoryWriteGuard (SS-15/core::write_guard, ADR-012 D20, BC-2.15.005), ToolCallDialect (SS-08/ferrochain-core, ADR-018, BC-2.08.013; interface-definitions.md §ToolCallDialect source confirms ferrochain-core placement); add SkillStore (SS-15/memory::skills, ADR-012 Decision 1, BC-2.15.004) to §Public Traits (ferrochain-memory); add §Public Traits (ferrochain-graph) with PreToolCallHook (SS-05/graph::hitl, ADR-018 Decision 1, BC-2.05.007); add §Public Traits (ferrochain-vectorstores) with VectorStore (SS-21, ADR-014 Decision 2, BC-2.21.001-004) and VectorStoreFactory (SS-21, ADR-014 Decision 2, BC-2.21.001); add explicit no-public-traits notes for ferrochain-prompts, ferrochain-mcp, ferrochain-sandbox, ferrochain-splitters, ferrochain-macros, SDK crates, provider impl crates, and ferrochain-standard-tests. TD-VSDD-060 sibling sweep: other architecture files do not enumerate per-crate trait sections — no further changes required outside this file. F-P173-206 — add 4 missing Cargo Feature Flags (total 6→10): sandbox-process (off; security: NOT enforcing — no filesystem/network/memory isolation; accessible ONLY via Sandbox::unsafe_process_no_isolation(); BC-2.13.001/BC-2.13.002), mcp (off; BC-2.09.001), budget (on; BC-2.10.001), guardrail (on; BC-2.11.001). Derivation: cross-checked against interface-definitions.md §Cargo Feature Flags (authoritative 10-flag list: checkpoint-sqlite, checkpoint-memory, checkpoint-postgres, sandbox-wasm, sandbox-container, sandbox-process, server, mcp, budget, guardrail); total confirmed 10. F-P173-207 — apply F-P170-03 crate qualification to sibling types PreToolDecision and ToolCallPreview in §Public Traits and Types (ferrochain-tools): both defined in ferrochain-graph::hitl per ADR-018 Decision 1; D-24 relocated ActionRisk to ferrochain-core but the three HITL types (PreToolCallHook/PreToolDecision/ToolCallPreview) remained in graph::hitl."
   - "1.13 (FIX-BURST-276-WAVE-B1/F-P173-202+210+619+214/2026-07-27): F-P173-202 (HIGH) — add missing `message` and `source` fields to §Error Type `FerrochainError` struct display: `message: String` (Human-readable; MUST NOT contain credentials per DI-010) and `source: Option<Arc<dyn std::error::Error + Send + Sync>>` (causal error chain; MUST NOT be exposed in HTTP responses; `Arc` not `Box` — Arc preserves Clone per F-P173-211 adjudication in ADR-010 v1.12). F-P173-210/619 — add `#[non_exhaustive]` attribute to FerrochainError in §Error Type; all sibling public API surface types carry `#[non_exhaustive]` per CLAUDE.md Code Conventions. F-P173-214 (LOW) — fix stale `17→18` transition delta: `gate count 17→18` → `gate count 18` (transition completed in v1.7/D23; delta notation no longer meaningful)."
@@ -51,12 +53,25 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 | `GuardrailHook` | ferrochain-core | SS-11 | BC-2.11.002–004 |
 | `BudgetPolicy` | ferrochain-core | SS-10 | BC-2.10.001 |
 | `Tool` | ferrochain-core | SS-08 | BC-2.08.010 |
+| `DynTool` | ferrochain-core (`core::tool`) | SS-08 | BC-2.08.010 |
 | `CompactionPolicy` | ferrochain-core | SS-10 | BC-2.10.005, BC-2.10.006 |
 | `Retriever` | ferrochain-core | SS-20 | BC-2.20.001–003 |
 | `Embeddings` | ferrochain-core | SS-22 | BC-2.22.001–003 |
 | `LcSerializable` | ferrochain-core | SS-19 | BC-2.19.001–006 |
 | `MemoryWriteGuard` | ferrochain-core | SS-15 | BC-2.15.005 |
 | `ToolCallDialect` | ferrochain-core | SS-08 | BC-2.08.013 |
+
+> `DynTool` is the type-erased object-safety seam per ADR-005
+> §Adjacent Trait Object-Safety Adjudications (option b). `Tool` inherits from `Runnable`,
+> which exposes `stream()` (opaque `impl Stream` return) and `pipe()` (`impl Runnable` +
+> `where Self: Sized`), making `dyn Tool` non-trivially non-object-safe (E0038). `DynTool`
+> re-exposes the tool API via object-safe `invoke_dyn(&self, Value) -> Result<Value, FerrochainError>`.
+> A blanket impl provides `T: Tool + Send + Sync + 'static → DynTool` automatically.
+> `Arc<dyn DynTool>` is the composition seam for all dynamic dispatch sites.
+> Wave C BC-side migration (ADR-005 §Adjacent Adjudications corrected list — 2 sites):
+> `BC-2.09.001` (Description + PC2) and `BC-2.09.002 PC1` — `Arc<dyn ferrochain_core::Tool>`
+> → `Arc<dyn DynTool>` (MCP tool discovery/invocation BCs; these are the actual corpus
+> occurrences; prior v1.8 list citing BC-2.05.003/BC-2.05.004/BC-2.08.010 was incorrect).
 
 ## ferrochain-core Public Types
 
@@ -129,8 +144,13 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 
 > `VectorStore` and `VectorStoreFactory` are both defined in `ferrochain-vectorstores`.
 > `VectorStoreFactory: VectorStore + Sized` — the `Sized` bound preserves `Arc<dyn VectorStore>`
-> object-safety (ADR-014 Decision 2). `Retriever` (the trait) is defined in ferrochain-core;
-> `VectorStoreRetriever<'_>` is the adapter struct returned by `VectorStore::as_retriever()`.
+> object-safety (ADR-014 Decision 2). `Retriever` (the trait) is defined in ferrochain-core.
+> `VectorStoreRetriever` (no lifetime parameter; `store: Arc<dyn VectorStore>`) is the adapter
+> struct. `Arc<dyn VectorStore>` ownership (not a borrow) allows `VectorStoreRetriever` to satisfy
+> `Retriever + 'static`, enabling `Arc<dyn Retriever>` coercion without a lifetime bound error.
+> `VectorStore::as_retriever` signature: `fn as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>` —
+> fallible; returns `Err(E-VS-003)` when store configuration is invalid for retrieval
+> (ADR-014 Decision 2).
 
 ## Crates with No Public Traits
 
@@ -236,6 +256,11 @@ cross-thread aggregate query for schedule-fired runs only.
 ## Error Type
 
 `#[non_exhaustive] FerrochainError { component: Component, category: Category, retry_hint: RetryHint, code: &'static str, message: String /* Human-readable; MUST NOT contain credentials */, source: Option<Arc<dyn std::error::Error + Send + Sync>> /* Causal chain; MUST NOT appear in HTTP responses (DI-010); Arc not Box — Arc preserves Clone (F-P173-211 adjudication, ADR-010 §Decision) */ }`
+
+Construction (ADR-010 §impl FerrochainError — sole sanctioned paths):
+- `FerrochainError::new(component: Component, category: Category, retry_hint: RetryHint, code: &'static str, message: impl Into<String>) -> Self` — `source` defaults to `None`.
+- `.with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self` — builder; threads a causal error into the chain. Chain as needed: `FerrochainError::new(...).with_source(Arc::new(e))`.
+- Struct literal construction is barred by `#[non_exhaustive]` (E0639) from external crates.
 
 Authoritative list lives in `error-taxonomy.md` §Components; enum reproduced here for the FerrochainError type definition:
 `Component` = CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS (17 components as of D23; `#[non_exhaustive]` gate count 18: 17 named + `Custom`).

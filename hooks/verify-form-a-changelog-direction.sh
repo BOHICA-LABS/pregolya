@@ -284,10 +284,15 @@ for filepath in files:
                 # Cannot verify VERSION-MATCH without it; must not silently PASS.
                 print(f"UNVERIFIED {filepath} no-version-field")
             else:
-                # BC requires Form-A changelog: regardless of version level.
-                # The "trivially valid" v1.0 exception does not apply to BCs —
-                # every BC must carry Form-A for machine-readable version provenance.
-                print(f"BC_UNVERIFIED {filepath} no-form-a-changelog-key:no-changelog-form")
+                # Gate #28 §VERSION-CHANGELOG INTEGRITY: "version: '1.0': no changelog
+                # required (initial authoring; no prior version exists)." This exemption
+                # applies to BC files — there is no separate rule overriding it for BCs.
+                # BC files with version > 1.0 and no changelog form cannot be direction-
+                # checked; BC_UNVERIFIED (blocking) is the correct status for those.
+                if fm_version == '1.0':
+                    print(f"PASS {filepath}")
+                else:
+                    print(f"BC_UNVERIFIED {filepath} no-form-a-changelog-key:no-changelog-form")
         continue
 
     # ── Form-A validation ──────────────────────────────────────────────────

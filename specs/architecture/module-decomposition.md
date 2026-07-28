@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.37"
+version: "1.38"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -15,6 +15,7 @@ input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.38 (FIX-BURST-277-WAVE-B/2026-07-28): Item 6 module census — add 4 definitions-only module rows (core::guardrail SS-11, core::action_risk SS-05, core::context_mutation SS-01, core::write_guard SS-15) to the D21 additions table with Criticality `—` (matching core::documents precedent; these modules contain type/trait definitions only, no execution logic, no VP targets per ADR-009 Option 3 precedent). Add §Crate-Level Roll-Up section with 7 crate-level entries (ferrochain-anthropic, ferrochain-community, ferrochain-macros, ferrochain-ollama, ferrochain-openai, ferrochain-standard-tests, xtask) so the module census validator can resolve 4-way set equality across purity-boundary-map, verification-coverage-matrix, and module-criticality."
   - "1.37 (FIX-BURST-276-TD091/2026-07-27): TD-VSDD-091 anti-volatile-pin repair — Iron Law blockquote (§Standard Test Modules): replace live-body sibling-artifact version pin with stable section anchor. observability.md §Catalog (the Catalog table section that contains the eval.judge_infra_error row and its emitter attribution) replaces a specific version number. Sibling-sweep of this file live body: no additional version pins found."
   - "1.36 (FIX-BURST-276/F-P173-coordinator-addendum/2026-07-27): Fix phantom symbol `on_watermark` in VP anchors block (SS-23 section). Correct symbol: `check_watermark_trigger` (the real pure-core function in core::budget; `on_watermark` does not exist). Correct ADR anchor: ADR-019 Decision 3 step 1 (watermark arithmetic trigger threshold formula), not Decision 2 as previously stated. One site corrected: VP-012 anchor paragraph in §VP anchors. Sibling check: `on_watermark` does not appear in any other location in this file. VP-012 body (v1.5) and verification-architecture.md §VP-012 (v2.12) corrected to same canon by parallel VP-bodies agent in same burst."
   - "1.35 (FIX-BURST-276/F-P173-305/2026-07-27): F-P173-305 — replace stale phantom count 'Module universe 56 → 57' in Iron Law blockquote. Derivation: module-decomposition.md tables contain 69 tiered module rows (12 CRITICAL: core::error, core::credentials, core::serializable, graph::bsp_engine, graph::hitl, graph::scheduler, checkpoint::saver, checkpoint::session_index, checkpoint::clock, checkpoint::encryption, sandbox::path_guard, vectorstores::similarity; 23+ HIGH; 34+ MEDIUM; 2 LOW: xtask, ferrochain-community) + 2 exempt (core::documents definitions-only, memory::skills routing-overlay) = 71 total. The module-criticality.md canonical registry records 71 total (69 tiered / 2 exempt). Surrounding Iron Law blockquote audited: no other stale count references found in the live body. The '56 → 57' was the module-decomp's own incremental running count from the D20 gate-25 baseline — accurate at v1.32 time of writing but stale as subsequent additions in module-criticality.md (tracked in matrix v2.5/v2.6) were not reflected in the running count here."
@@ -307,6 +308,10 @@ Re-exported from ferrochain-core.
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
 | `core::documents` | `Document { page_content, metadata, id }` type — carrier for all retrieval output; derives Serialize/Deserialize/JsonSchema; `#[non_exhaustive]`; **definitions-only — no criticality-counted module row per ADR-009 definitions-only precedent** (ADR-014 Decision 2: pure data carrier; no execution methods; no VP target) | — | SS-20 |
+| `core::guardrail` | Definitions-only: `GuardrailHook` trait (`async fn evaluate`), `GuardrailResult` enum, `IngressContent` enum, `GuardrailSeverity` enum, `BoundaryType` enum (3 variants: ToolResult/RAGRetrieval/MemoryIngress); promoted to ferrochain-core per trait-in-core precedent (ADR-014 Decision 6 / DI-012); no execution logic; dispatch in `graph::provenance` and `mcp::ingress` | — | SS-11 |
+| `core::action_risk` | Definitions-only: `ActionRisk` enum (4 variants: ReadOnly/Low/Medium/High); `#[non_exhaustive]`; relocated from `graph::hitl` per dependency-inversion precedent enabling ferrochain-tools compile-time access without ferrochain-graph dep (F-P170-06 / ADR-020 Decision 3) | — | SS-05 |
+| `core::context_mutation` | Definitions-only: `ContextSourceSpec` (namespace + key), `ContextMutationConfig` (`Vec<ContextSourceSpec>`); enables `RunnableConfig.context_mutations`; loaded by `graph::scheduler` at run start; no execution logic (ADR-012 D20) | — | SS-01 |
+| `core::write_guard` | Definitions-only: `MemoryWriteRequest` enum (Add/Replace/Remove), `MemoryWriteGuard` trait (sync validation: `fn validate -> WriteGuardDecision`), `WriteGuardDecision` (Allow/Deny/Transform); write-path safety seam definitions; enforcement execution in `memory::write_guard` (ADR-012 D20) | — | SS-15 |
 | `core::retriever` | `Retriever` trait: async dyn-compatible `get_relevant_documents(&self, query: &str)`; `Arc<dyn Retriever>` seam for graph RAG nodes; `GuardedDocuments` newtype (no public constructor) + `GuardedDocuments::rag_ingress(docs, guardrail)` sole constructor enforcing DI-012 RAGRetrieval guardrail at call time (ADR-014 Decision 6) | MEDIUM | SS-20 |
 | `core::embeddings` | `Embeddings` trait: async dyn-compatible `embed_documents` + `embed_query`; dimensionality contract (E-EMBED-001 on mismatch); no `ndarray` dep; credential-bearing HTTP surface (DI-009 timeout + DI-010 key opacity apply to all impls); VP-008 proptest P1 | HIGH | SS-22 |
 | `core::serializable` | `LcSerializable` trait + `Serialized` wire enum + `Reviver` + `inventory`-based static registry (141 core entries); valid-namespace `OnceLock<HashSet>` derived from registry; E-SRLZ-001/002 error codes; dual-aspect: Reviver (CRITICAL/VP-010 Kani P0 — allowlist containment security boundary) + LcSerializable round-trip (HIGH/VP-007 proptest P1) | CRITICAL | SS-19 |
@@ -458,3 +463,22 @@ risk tier defaults, retry classification, and `E-TOOLS-*` error namespace.
 (EditFileTool), BC-2.23.004 (ListDirTool), BC-2.23.005 (BashTool, VP-013 seed),
 BC-2.23.006 (GrepTool). `E-TOOLS-*` error namespace: 9 codes post-burst-234
 (E-TOOLS-008 FileIoError added burst-233; E-TOOLS-009 InvalidRegexPattern added burst-234).
+
+## Crate-Level Roll-Up (Cross-Subsystem Annotation)
+
+> The following crates do not decompose into subsystem-owned modules in this file.
+> They are provider impl crates, a proc-macro crate, a shared test suite, and a
+> workspace build-tool. They appear as crate-level annotation rows (Qualifier prefix
+> "crate-level") in verification-coverage-matrix.md, module-criticality.md, and
+> purity-boundary-map.md. This table ensures 4-way set equality in the module census
+> validator (verify-module-canonicality.sh).
+
+| Module | Role |
+|--------|------|
+| `ferrochain-anthropic` | Provider impl crate — `BaseChatModel` for Claude API; implements ferrochain-core traits; crate-level annotation only |
+| `ferrochain-community` | Community extensions crate — third-party integrations; crate-level annotation only |
+| `ferrochain-macros` | Proc-macro crate — `#[tool]`, `#[entrypoint]`, `#[task]` attribute macros; no public traits; crate-level annotation only |
+| `ferrochain-ollama` | Provider impl crate — `BaseChatModel` + `Embeddings` for Ollama; crate-level annotation only |
+| `ferrochain-openai` | Provider impl crate — `BaseChatModel` + `Embeddings` for OpenAI; crate-level annotation only |
+| `ferrochain-standard-tests` | Shared conformance test suite + `eval::judge` module; test-only crate; crate-level annotation only |
+| `xtask` | Workspace task runner — `check-file-size`, lint gate subcommands (SS-17 support); crate-level annotation only |

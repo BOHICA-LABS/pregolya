@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.17"
+version: "1.18"
 status: active
 producer: business-analyst
 timestamp: 2026-07-27T00:00:00Z
@@ -17,6 +17,7 @@ input-hash: "b40ee23"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.18 (FC-4/burst-277/2026-07-28): False-closure FC-4 correction — v1.13 claim 'L-026 stale-delegation sweep: zero additional hits' was false. Sweep term: 'PO BC obligations' (verifiable: grep 'PO BC obligations' capabilities-p1-p2.md returns zero hits after this fix). Three surviving stale-completed-delegation instances corrected: (1) CAP-034 §PendingHumanApproval: '(PO BC obligation, SS-05 extension)' → '(BC-2.05.008)' — BC-2.05.008 exists, covers skip-hook-on-resume invariant. (2) CAP-034 §streaming events: '**PO BC obligations:** BC-2.06.004 / BC-2.06.005 (SS-06); amend BC-2.08.010 ...' → '**Authored BCs:** BC-2.06.004 / BC-2.06.005 (SS-06); BC-2.08.010 amended ...' — all three BCs exist. (3) CAP-035 §PO BC obligations: '**PO BC obligations:** new BCs for SS-10 ...; amend BC-2.06.001 or author BC-2.06.006 ...' → '**Authored BCs:** BC-2.10.005 / BC-2.10.006 (SS-10); BC-2.06.006 authored ...' — BC-2.10.005, BC-2.10.006, BC-2.06.006 all exist. TD-VSDD-060 sibling sweep: same 'PO BC obligations' class also found and fixed in entities-graph.md (v1.12→v1.13) and ubiquitous-language-core.md (v1.8→v1.9) this burst."
   - "1.17 (F-P173-106/F-P173-702/burst-276/2026-07-27): Two CAP body corrections. (1) F-P173-106 CAP-038: remove stale 'confirm regex is already a workspace dependency' open instruction; ADR-020 Decision 7 already resolved that regex is NOT an existing workspace dep — it will be a net-new [workspace.dependencies] entry at workspace init; replace with confirmed fact per ADR-020 Decision 7. (2) F-P173-702 CAP-029: correct mis-citation ADR-014 Decision 4 → ADR-017 Decision 4 for InMemoryVectorStore struct and Arc-DI wiring. ADR-014 Decision 4 is the External Adapter Extension Seam (inventory crate for community adapters); ADR-017 Decision 4 explicitly defines the InMemoryVectorStore struct with Arc<dyn Embeddings> + RwLock<Vec<(Document, Vec<f32>)>> and the Arc-DI wiring contract. ADR-014 Decision 2 §Hardening note attribution for zero-norm guard unchanged (correct). TD-VSDD-060 sweep: no other ADR-014 Decision 4 mis-citations for InMemoryVectorStore in this file."
   - "1.16 (burst-273/2026-07-25): Date-monotonicity repair: v1.10 changelog date 2026-07-22 → 2026-07-23 (burst-242; corroborating carrier: api-surface.md v1.9 burst-242/2026-07-23). TD-VSDD-060 temporal-neighbor sweep: no additional inversions found in this file."
   - "1.15 (F-P170-16/burst-272/2026-07-25): Fix CAP-037 risk floor — retire unqualified ToolConfig::override_risk(ReadOnly)/override_risk(Low) spellings; replace with canonical ToolConfig::override_risk(ActionRisk::ReadOnly) and ToolConfig::override_risk(ActionRisk::Low) per BC-2.23.005 v1.7 §Invariants adjudication (ADR-020 Decision 3). TD-VSDD-060 sweep: sole unqualified override_risk occurrence in this file."
@@ -572,12 +573,11 @@ workaround. `GraphConfig.pre_tool_hook: Option<Arc<dyn PreToolCallHook>>`. Defau
 - **Edit { modified_args }** — replace tool_args with modified_args; proceed.
 - **PendingHumanApproval { prompt }** — suspend via `interrupt()` (BC-2.05.001 machinery
   reused); resume delivers `Command(resume=PreToolDecision)`. Survives process restart.
-  "Skip-hook-on-resume" invariant: hook is NOT re-called on the resumed dispatch (PO BC
-  obligation, SS-05 extension).
+  "Skip-hook-on-resume" invariant: hook is NOT re-called on the resumed dispatch (BC-2.05.008).
 
 Two new streaming events: `tool_approval_request` (before internal interrupt) and
 `tool_approval_resolved` (on resume decision). BC-2.06.001 12-variant taxonomy grows to
-14. **PO BC obligations:** BC-2.06.004 / BC-2.06.005 (SS-06); amend BC-2.08.010 for
+14. **Authored BCs:** BC-2.06.004 / BC-2.06.005 (SS-06); BC-2.08.010 amended for
 `#[tool(action_risk = ...)]` macro parameter (SS-08).
 
 **Grounding:** D23 authority — domain-e-agentic-coding-assistant.md §3 item 5 / §6
@@ -619,8 +619,9 @@ NOT deleted (BC-2.04.001 immutability). Custom CompactionPolicy impls MAY also w
 CompactionSummary to MemoryStore (CAP-017) as project knowledge — the framework imposes no
 constraint on compact() beyond returning CompactionSummary (ADR-019 Decision 5 additive).
 
-**PO BC obligations:** new BCs for SS-10 (compaction trigger semantics, watermark arithmetic,
-journal entry); amend BC-2.06.001 or author BC-2.06.006 for `compaction_event` (SS-06).
+**Authored BCs:** BC-2.10.005 (SS-10 compaction trigger semantics, watermark arithmetic),
+BC-2.10.006 (SS-10 compaction execution, journal entry); BC-2.06.006 authored for
+`compaction_event` (SS-06).
 
 **Grounding:** D23 authority — domain-e-agentic-coding-assistant.md §3 item 10 / §6 "Rolling
 proactive context compaction" DEGRADED → closure "first-class rolling-compaction primitive."

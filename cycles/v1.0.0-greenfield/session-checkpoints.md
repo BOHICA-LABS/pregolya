@@ -1755,3 +1755,27 @@ VP-002/003/004/005/007/008 bodies not read line-by-line (slice 5 pattern probe o
 
 ### ARCHIVE METADATA
 Date: 2026-07-28 | Archived at: STATE.md v4.31 session wrap D-41 | STATE.md: v4.30 → v4.31 | fix-burst 277 Wave A COMPLETE (`984fbfe`) | D-41 added | RESUME SNAPSHOT D-41 written | streak 0/3
+
+---
+
+## Checkpoint v4.31 (archived — replaced by v4.32)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1 (Spec Crystallization), greenfield+semport. Adversarial streak 0/3 after 175 passes; P1D-174 FULL-PERIMETER found ~256 findings (9 CRIT); primary conclusion: validator suite certifying unmeasured state. Fix-burst 277 Wave A repaired the gates (`984fbfe`); Waves B/C/D + Wave-A follow-up audit had NOT started at this checkpoint. Three open questions from Wave A carried forward unanswered.
+
+### HEADS (v4.31)
+develop `46725ad` — PUSHED. factory-artifacts `984fbfe` — PUSHED. No worktrees. No open PRs.
+
+### NEXT-ACTION WAS
+Dispatch fix-burst 277 Wave B (architect): FerrochainError constructor, Tool object-safety via DynTool, as_retriever signature (fallible), Arc<dyn Retriever> lifetime (no lifetime parameter). STATUS: COMPLETE. Waves C/D + Wave-A follow-up audit also COMPLETE. All recorded in STATE.md v4.32.
+
+### OPEN QUESTIONS (all answered; recorded in burst-log and D-42..D-47)
+1. Why test-f-b276-02-validator-false-confidence.sh passed while defect was live — sequencing: scenarios 15/16 authored simultaneously with fix; test never ran RED. Verified sound.
+2. verify-changelog-claim-applied coverage vs 5 known false closures — 3/5 now caught (FC-1 via from-X heuristic; FC-2/FC-5 already caught); FC-3/FC-4 are structural limitations (process claims in external burst records).
+3. BCs failing verify-bc-frontmatter-schema — PASS=129 WARN=0 FAIL=0; corpus was correctly authored all along.
+
+### COVERAGE DEBTS (carried forward to v4.32)
+VP-002/003/004/005/007/008 bodies not read line-by-line; BC-2.15.004/006/16.002/17.002/18.001/002/003/005 targeted-grep only; BC-2.12.001/002/005/007 grep only; product-brief.md not reviewed; 36 of 37 gates not audited body-deep. capabilities-p1-p2.md: NOW REVIEWED (Wave D corrected v1.17→v1.18).
+
+### ARCHIVE METADATA
+Date: 2026-07-28 | Archived at: STATE.md v4.32 session wrap D-47 | STATE.md: v4.31 → v4.32 | fix-burst 277 Waves B/C/D + Wave-A follow-up audit COMPLETE | D-42..D-47 added | 6 lessons L-094..L-099 minted | BC_UNVERIFIED resolved 6→0 | streak 0/3

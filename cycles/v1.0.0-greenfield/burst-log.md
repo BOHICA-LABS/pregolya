@@ -5708,3 +5708,108 @@ Fix-burst 277 Wave A repaired the validator false-confidence family identified a
 Burst 276 Wave A row archived from STATE.md v4.30 Current Phase Steps table (oldest row; replaced by fix-burst 277 Wave A entry).
 
 **Burst 276 Wave A STATE.md row content (verbatim):** Burst 276 Wave A — fix-burst COMPLETE (6 process-gap findings F-P173-303/306/319/308/309/310 closed; bc-authoring-plan v2.59; gates 36→37; 2 new advisory hooks CHECK4/CHECK6; records-lint L10+CHECK1/2/3 in verify-adr-decision-refs; CHECK1=17/CHECK4=52/CHECK6=5 baselines; validator false-neg found+fixed in-burst; 5 lessons L-070..L-074; P1D-172a-state-record archived); 0/3. NEXT: Waves B+C. | product-owner + devops-engineer + state-manager | COMPLETE | 6 process-gap findings closed. Gates 36→37. 2 new advisory hooks.
+
+---
+
+## Fix-burst 277 Wave A follow-up audit — COMPLETE
+
+**Date:** 2026-07-28
+**Agent:** devops-engineer
+**Files touched:** hooks/verify-bc-frontmatter-schema.sh (complete rewrite — false-positive family eliminated; now validates field values not labels; PASS=129 WARN=0 FAIL=0); hooks/verify-changelog-claim-applied.sh (from-X heuristic added; FC-1 now caught; coverage 2/5→3/5; FC-3/FC-4 structural limitations documented in header; script header false-coverage claim corrected); hooks/verify-form-a-changelog-direction.sh (invented v1.0-BC carve-out removed; behavior unchanged for all existing files); hooks/verify-adr-decision-refs.sh (Check 4 semantic-review attempt deleted — not downgraded; header updated); hooks/pre-commit-validators.sh (complete rewrite — verify-changelog-date-monotonicity and verify-enum-variant-casing wired; all BLOCKING validators now actually run).
+**Versions bumped:** all 5 hook files (no semantic version per hooks convention)
+
+### Summary
+
+Devops-engineer audit of the Wave A gates found 5 defects and closed all: (1) verify-bc-frontmatter-schema had invented requirements producing 336/342 false positives; (2) verify-form-a-changelog-direction carried an invented BC carve-out; (3) verify-adr-decision-refs Check 4 attempted unreachable semantic review; (4) pre-commit-validators.sh omitted 2 blocking validators; (5) verify-changelog-claim-applied header falsely claimed FC-1/FC-3 coverage (FC-1 now caught; FC-3/FC-4 are structural limitations).
+
+Three Wave A open questions answered:
+- test-f-b276-02-validator-false-confidence.sh passed while defect was live: sequencing — scenarios 15/16 authored simultaneously with fix; test never ran RED against the live defect. Verified sound: reintroducing defect fails 10 assertions; fixed validator passes 74/74.
+- verify-changelog-claim-applied vs 5 known false closures: 3/5 now caught. FC-3 and FC-4 are structural limitations (process claims in external burst records, not in-file changelog↔body mismatches).
+- BCs failing verify-bc-frontmatter-schema: PASS=129 WARN=0 FAIL=0 — corpus was correctly authored all along.
+
+**BC_UNVERIFIED resolved 6→0.** Form-A changelogs added to BC-2.07.002, BC-2.08.011, BC-2.08.012, BC-2.09.007, BC-2.13.007, BC-2.15.005. Form-B history retained as banner-marked historical record per D-28. FC-5 (BC-2.07.002): git history confirmed `input-hash` value never written to frontmatter; hash refreshed, all hash literals replaced with descriptive anchors per records-lint L10/L11 discipline.
+
+FC-2 (BC-2.19.003) evidence: `DuplicateRegistration` panic was FABRICATED — ADR-016 Decision 2 specifies `inventory::iter`; actual behavior is last-write-wins HashMap semantics. Removed from Invariant 2, EC-003, and DI-008 traceability. TD-VSDD-060 sibling sweep across SS-19 found no other instances.
+
+### Validator baselines (post-Wave-A follow-up audit)
+records-lint: PASS=5 WARN=0 FAIL=0 UNVERIFIED=0; verify-no-version-pins: PASS=198 FAIL=0; verify-form-a-changelog-direction: PASS=198 WARN=7 FAIL=0 BC_UNVERIFIED=0; verify-bc-frontmatter-schema: PASS=129 WARN=0 FAIL=0; verify-adr-decision-refs: PASS=322 WARN=0 FAIL=0; verify-arch-anchor-resolution: PASS=129 WARN=0 FAIL=0; verify-module-canonicality: FAIL=0; verify-enum-variant-casing: PASS=198; verify-changelog-date-monotonicity: PASS=131 WARN=78; verify-changelog-claim-applied: WARN=491 (advisory).
+
+### Artifact-path-registry gap
+`cycles/v1.0.0-greenfield/wave-c-po-routing-spec.md` (relocated from non-canonical `.factory/po-obligations.md` root path) has no coverage in `artifact-path-registry.yaml`. No legitimate pattern covers per-cycle supplementary spec/routing documents. PROCESS-GAP recorded; no entry invented.
+
+---
+
+## Fix-burst 277 Wave B — architect adjudications — COMPLETE
+
+**Date:** 2026-07-28
+**Agent:** architect
+**Files touched:** ADR-010 v1.13 (FerrochainError constructor 5-arg; with_source Arc); ADR-005 v1.9 (DynTool peer trait; blanket impl); ADR-014 v1.11 (as_retriever fallible; VectorStoreRetriever no lifetime; Arc<dyn VectorStore>); interface-definitions.md v2.62 (constructor signatures; DynTool; VectorStoreRetriever); api-surface.md v1.17 (public constructor; DynTool type alias); ARCH-INDEX.md v1.16 (ADR version rows); module-decomposition.md v1.38 (DynTool module placement); purity-boundary-map.md v1.25 (VectorStoreRetriever boundary); verification-coverage-matrix.md v3.3 (SS-20 RAG seam unblocked); module-criticality.md v2.6; BC-2.20.001/002/003/BC-2.21.001/002/BC-2.22.001 (wildcard ADR anchor fixes — verify-arch-anchor-resolution now PASS=129); BC-2.20.003 v1.3 (VP-2.20.003-A verification text corrected); BC-2.09.007 v1.1 (Architecture Anchors). Also created cycles/v1.0.0-greenfield/wave-c-po-routing-spec.md (relocated from non-canonical root path).
+**Versions bumped:** ADR-010 v1.12→v1.13; ADR-005 v1.8→v1.9; ADR-014 v1.10→v1.11; interface-definitions.md v2.61→v2.62; api-surface.md v1.16→v1.17; ARCH-INDEX.md v1.15→v1.16; module-decomposition.md v1.37→v1.38; purity-boundary-map.md v1.24→v1.25; verification-coverage-matrix.md v3.2→v3.3; module-criticality.md v2.5→v2.6; BC-2.20.003 v1.2→v1.3; BC-2.09.007 v1.0→v1.1; plus BC-2.20.001/002/BC-2.21.002/BC-2.22.001 (wildcard anchor fixes)
+
+### Summary
+
+Four adjudications from P1D-174 resolved and propagated corpus-wide:
+1. **FerrochainError public constructor (D-42)**: `FerrochainError::new(component, category, retry_hint, code, message: impl Into<String>) -> Self` + `with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self`. Arc not Box — preserves Clone for broadcast channels. 2-arg phantom `FerrochainError::new("E-VS-005", "…")` purged corpus-wide. Resolves CRIT triangulated by 3 P1D-174 slices; 109-code error taxonomy now implementable across all 21 crates.
+2. **Tool object-safety via DynTool (D-43)**: Direction (b) adopted — separate object-safe `DynTool` peer trait with `invoke_dyn`/`name`/`description`/`schema`/`action_risk`; blanket `impl<T: Tool + Send + Sync + 'static> DynTool for T`. `Arc<dyn Tool>` → `Arc<dyn DynTool>`. 4 E0038 sites fixed (BC-2.09.001 x2, BC-2.09.002 PC1, BC-2.09.007). Errata: prior ADR-005 v1.8 cited ToolCallPreview.tool as an E0038 site — incorrect; corrected.
+3. **as_retriever is fallible (D-44)**: `fn as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>` returning `Err(E-VS-003 InvalidConfig)` on negative k, fetch_k < k, lambda_mult outside [0.0,1.0]. Rejection not clamping. Resolves direct contradiction between BC-2.21.001 PC-2 (infallible) and BC-2.20.003 Inv-2/TV-004/TV-005 + E-VS-003 row (fallible). Per CLAUDE.md precedence: invariant + test-vector evidence supersedes postcondition claim.
+4. **VectorStoreRetriever has no lifetime parameter (D-45)**: Owns `store: Arc<dyn VectorStore>` not `&'a dyn VectorStore`. `&Arc<Self>` receiver required so Arc::clone can be done. `VectorStoreRetriever<'_>` form is GONE — must not be reintroduced. VP-2.20.003-A failure mode corrected (was wrong: E0038; is: lifetime-bound error). Unblocks SS-20 RAG seam and BC-2.20.002 (P0 Red Gate).
+
+**Orchestrator self-defect 1 (recorded):** Wave B declared DONE while verify-no-version-pins was FAILING at PASS=193 FAIL=5 on 11 volatile ADR-NNN vN.N body pins across 5 files (TD-VSDD-091 violation). Reported only 3 validators, omitted the failing one. Caught by orchestrator independent verification; resolved to PASS=198 FAIL=0.
+**Orchestrator self-defect 2 (recorded):** Wave B created `.factory/po-obligations.md` at non-canonical unregistered root path; relocated to `cycles/v1.0.0-greenfield/wave-c-po-routing-spec.md` at orchestrator direction.
+
+---
+
+## Fix-burst 277 Wave C — product-owner content — COMPLETE
+
+**Date:** 2026-07-28
+**Agent:** product-owner
+**Files touched:** BC-2.20.003 v1.3→v1.4; BC-2.09.001 v1.3→v1.4; BC-2.09.002 v1.3→v1.4; BC-2.21.001 v1.0→v1.1 (5 sites updated per D-44/D-45 adjudications); BC-2.19.003 v1.2→v1.3 (FC-2 DuplicateRegistration phantom purged; inventory::iter last-write-wins semantics documented); BC-2.07.002 v1.6→v1.7 (Form-A changelog; FC-5 hash refreshed; all hash literals → descriptive anchors per records-lint L10/L11); BC-2.08.011 and BC-2.08.012 (Form-A changelog added, no version bump — metadata-only touch per gate #28 revert rule); BC-INDEX.md v3.22→v3.23.
+**Versions bumped:** BC-2.20.003 v1.4; BC-2.09.001 v1.4; BC-2.09.002 v1.4; BC-2.21.001 v1.1; BC-2.19.003 v1.3; BC-2.07.002 v1.7; BC-INDEX.md v3.23; BC-2.08.011 and BC-2.08.012 no version bump (metadata-only).
+
+### Summary
+
+BC count unchanged at 129 (51 P0 / 75 P1 / 3 P2). BC_UNVERIFIED resolved 6→0. All 6 previously-unverifiable BCs (BC-2.07.002, BC-2.08.011, BC-2.08.012, BC-2.09.007, BC-2.13.007, BC-2.15.005) now carry Form-A changelogs. Form-B historical records retained per D-28. Such BCs remain UNMEASURED (not clean) under D-32 — Form-B alone satisfies gate #28 schema but leaves ascending direction invariant machine-unverifiable; they may not count toward a CLEAN claim.
+
+---
+
+## Fix-burst 277 Wave D — business-analyst domain-spec — COMPLETE
+
+**Date:** 2026-07-28
+**Agent:** business-analyst
+**Files touched:** capabilities-p1-p2.md v1.17→v1.18; entities-graph.md v1.12→v1.13; ubiquitous-language-core.md v1.8→v1.9; L2-INDEX.md v1.17→v1.18.
+**Versions bumped:** all 4 files above.
+
+### Summary
+
+Root cause of v1.13 "zero additional hits" false claim: author searched one label string form and missed structurally different `**PO BC obligations:**` label at 5 instances across 3 shards. Replacement entries quote the searched terms so each claim is now machine-verifiable. The other 11 shards swept clean.
+
+---
+
+## Session wrap — fix-burst 277 Waves B/C/D + Wave-A follow-up COMPLETE (D-47)
+
+**Date:** 2026-07-28
+**Agent:** state-manager
+**Decisions added:** D-42 (FerrochainError constructor); D-43 (Tool object-safety DynTool); D-44 (as_retriever fallible); D-45 (VectorStoreRetriever no lifetime); D-46 (gate-provenance discipline); D-47 (session wrap operational record).
+**Lessons minted:** L-094..L-099 (6 lessons; gate provenance, delete-vs-downgrade, values-not-labels, enforcement-gate audit, single-form grep, declare-done validator discipline).
+**STATE.md:** v4.31 → v4.32.
+**Convergence:** streak 0/3 unchanged; no adversary pass this session; 175 passes total.
+**NEXT ACTION:** P1D-175 FULL-PERIMETER adversarial pass, gated on factory-artifacts HEAD of this commit.
+
+### Validator baselines (final, post all waves)
+records-lint: PASS=5 WARN=0 FAIL=0 UNVERIFIED=0; verify-no-version-pins: PASS=198 FAIL=0; verify-form-a-changelog-direction: PASS=198 WARN=7 FAIL=0 BC_UNVERIFIED=0; verify-bc-frontmatter-schema: PASS=129 WARN=0 FAIL=0; verify-adr-decision-refs: PASS=322 WARN=0 FAIL=0; verify-module-canonicality: FAIL=0 (non-canonical cells 0); verify-arch-anchor-resolution: PASS=129 WARN=0 FAIL=0; verify-enum-variant-casing: PASS=198 FAIL=0; verify-changelog-date-monotonicity: PASS=131 WARN=78 FAIL=0; verify-changelog-claim-applied: WARN=491 (advisory; down from 991; precision ~55-65%).
+
+---
+
+### Archived from Current Phase Steps (STATE.md v4.31 → v4.32)
+
+Five rows archived from STATE.md v4.31 Current Phase Steps table.
+
+**Row 1 (Fix-burst 277 Wave A — COMPLETE):** Fix-burst 277 Wave A — COMPLETE (CRIT F-ORCH-174-04 validator false-confidence family repaired; verify-form-a-changelog-direction three vacuous-PASS paths now emit BC_UNVERIFIED; UNVERIFIED counter added to records-lint; verify-module-canonicality promoted to blocking (exit 1 on FAIL) + wildcard citations now FAIL + gate #25 reverse equation implemented; NEW verify-changelog-claim-applied.sh advisory (4 heuristics); NEW verify-bc-frontmatter-schema.sh advisory (boolean fields + conditional keys); verify-arch-anchor-resolution wildcard rejection (4 BCs now FAIL); verify-adr-decision-refs Check 4 added; factory-artifacts pre-commit runner wired; post-Wave-A baselines: form-a PASS=192 BC_UNVERIFIED=6; arch-anchor PASS=125 FAIL=4; `984fbfe`); 0/3.
+
+**Row 2 (P1D-174 state record):** P1D-174 state record — FULL-PERIMETER pass CLOSED (pass-174.md created; ~256 findings, 9 CRIT / 96 HIGH / 106 MED / 30 LOW / 11 OBS / 17 PG; 13 slices; frozen HEAD cd0a2c7; NOT CLEAN strict/PR-merge; PRIMARY CONCLUSION: gates scoped by label not value; 6 false closures; 7-control security cluster; 4 ratified-decision sweeps incomplete; D-39+D-40 added; R14 added; 7 lessons L-087..L-093 minted; P1D-173-state-record archived); 0/3.
+
+**Row 3 (Burst 276 content wave 3):** Burst 276 content wave 3 — fix-burst COMPLETE (1 CRIT F-P173-104 bounded-contexts forbidden dep + 33 HIGH + 5 MED closed; F-B276-01/02 orchestrator-minted HIGH; D-37 ZeroNorm→DegenerateNorm; E-PROV-011 FallbackChainEmpty minted (error codes 109); TV-006 overflow vector (TVs 675); VP-001 harness `kani::any_permutation` replaced; VP-009 Invariant 3 guard extended to `!norm.is_finite()`; coverage-matrix 52→0 non-canonical; 7 ADRs governed; 3 blocking-validator regressions resolved; records-lint PASS=5; validators PASS=198/129/308; 5 lessons L-082..L-086; burst-275 archived); 0/3.
+
+**Row 4 (Burst 276 content wave 2):** Burst 276 content wave 2 — fix-burst COMPLETE (CRIT F-P173-601: PathGuard phantom purge + 16-site PathGuard::check→canonicalize_beneath_root sweep; F-P173-602/603/604/605 HIGH signature defects fixed; F-P173-614 per-method anchors restored; BC-2.08.004 gap → architect; 3 lessons L-079..L-081; P1D-172b-state-record archived); 0/3.
+
+**Row 5 (Burst 276 content wave 1):** Burst 276 content wave 1 — fix-burst COMPLETE (2 CRIT closed: F-P173-211 4-site FerrochainError Arc-clone; F-P173-301/402 eval::judge mis-anchor; F-P173-401 3-doc deadlock broken; F-P173-202/210/214/619 closed; canonicality filter 70→71; 4 lessons L-075..L-078; burst-274 archived); 0/3.
