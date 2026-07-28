@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.006
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.5 (F-P149-02/burst-250/2026-07-24): Architecture Anchors version pin de-pinned: 'ADR-020 TOOLS table in ADR-020 v1.7' → 'ADR-020 Decision 5 §E-TOOLS-* table' (TD-VSDD-091 stable-anchor enforcement, F-P149-02). input-hash updated 64d7571→0b1f1b3 (drift from prior burst)."
   - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 5 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-3 + PC-4 + PC-6); Category::SECURITY → Category::Security (PC-3), Category::VAL → Category::Val (PC-3 prose backtick + PC-4 code), Category::TOOL → Category::Tool (PC-6), edge-case table cell Category::VAL → Category::Val (EC-002)."
   - "1.7 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check with canonical canonicalize_beneath_root at 3 sites: PC-6 inline reference (guard pass described as 'canonicalize_beneath_root succeeds — the confinement check and fs::open are distinct steps'), Invariants call-obligation bullet (root path argument), VP-2.23.006-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout; error-layer distinction (E-SBXD-001 sandbox vs E-TOOLS-001 tool layer) preserved in PC-6 final sentence."
+  - "1.8 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to FerrochainError::new() form. PC3 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC4 E-TOOLS-009 InvalidRegexPattern: ::new(Component::Tools, Category::Val, RetryHint::Never, ...); phantom pattern/compile_error fields removed (message-embedded placeholders). PC6 E-TOOLS-008 traversal I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed. TD-VSDD-060 sibling sweep: EC-002/EC-008/TV-003/TV-006 use abbreviated code + JSON-like shorthand — classified (c) message-component descriptions; left as-is."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-038
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -92,13 +93,11 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    informational code E-TOOLS-006 (`GrepResult.capped` payload flag) appears in the structured output
    annotations, not as a thrown error. Callers can detect the cap via `capped: true`.
 3. **Path confinement violation:** Returns
-   `Err(FerrochainError { component: Component::Tools, category: Category::Security,
-   code: "E-TOOLS-001", message: "PathConfinementViolation: path '<path>' is outside the
-   configured PathGuard scope" })`.
+   `Err(FerrochainError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
+   "PathConfinementViolation: path '<path>' is outside the configured PathGuard scope"))`.
 4. **Invalid regex:** Returns
-   `Err(FerrochainError { component: Component::Tools, category: Category::Val, code: "E-TOOLS-009",
-   message: "InvalidRegexPattern: pattern '<pattern>' failed to compile: <compile_error>",
-   pattern: <pattern string from args>, compile_error: <error from regex crate> })`.
+   `Err(FerrochainError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-009",
+   "InvalidRegexPattern: pattern '<pattern>' failed to compile: <compile_error>"))`.
 5. **No matches found:** Returns `ToolOutput::Json({ "matches": [], "capped": false })` —
    not an error.
 6. **OS-level I/O error during traversal (fail-the-whole-search):** If an OS-level I/O
@@ -107,10 +106,8 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    directory listing and open, `NotADirectory` for a path whose type changed mid-traversal,
    or any other `std::io::Error` from the filesystem — the search is aborted immediately.
    The tool returns:
-   `Err(FerrochainError { component: Component::Tools, category: Category::Tool,
-   code: "E-TOOLS-008", message: "GrepTool I/O error on '<path>': <io_kind>",
-   tool_type: "GrepTool", path: <offending_path_string>,
-   io_kind: <std::io::ErrorKind debug name e.g. "PermissionDenied"> })`.
+   `Err(FerrochainError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
+   "GrepTool I/O error on '<path>': <io_kind>"))`.
    Partial results accumulated before the error are NOT returned; the caller receives only
    the `Err` so that the incomplete search is never silently treated as a complete result
    (DI-014). This also applies to I/O errors on the root `path` argument after it passes

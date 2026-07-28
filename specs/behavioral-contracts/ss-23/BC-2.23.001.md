@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.001
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.3 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded); normalize separator from ' / ' to '/'. Before: 'E-TOOLS-001 / E-TOOLS-002'. After: 'E-TOOLS-001/002/008'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX)."
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: component: \"TOOLS\" string literal → component: Component::Tools (Rust struct-literal sketches in PC-2/PC-3/PC-4); Category::SECURITY → Category::Security (PC-2), Category::VAL → Category::Val (PC-3), Category::TOOL → Category::Tool (PC-4)."
   - "1.5 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check(path) with canonical entry point canonicalize_beneath_root at 4 sites: PC-2 raise condition (returns Err not false), EC-002 symlink-target note (canonicalize_beneath_root resolves symlinks before confinement check), Invariants call-obligation bullet, VP-2.23.001-A property description. VP annotation updated: '(PathGuard type is unchanged)' to '(canonicalize_beneath_root_pure is the proof target)'. No error-layer-split issues — E-TOOLS-001 correctly used as tool-layer code throughout; E-SBXD-001 not conflated."
+  - "1.6 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to FerrochainError::new() form (#[non_exhaustive] bars external callers from struct literals). PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC3 E-TOOLS-002 FileReadExceedsLimit: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). PC4 E-TOOLS-008 I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed (these are message-embedded placeholders, not struct fields). TD-VSDD-060 sibling sweep: EC-005/TV-004 use JSON-like {tool_type, path, io_kind} notation — classified (c) message-component descriptions, not construction examples; left as-is."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -76,21 +77,18 @@ limit.
 2. **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns `Err` for any reason
    (path is outside scope, is a symlink escaping scope, is an absolute path not under the
    guard root). The tool returns
-   `Err(FerrochainError { component: Component::Tools, category: Category::Security,
-   code: "E-TOOLS-001", message: "PathConfinementViolation: path '<path>' is outside the
-   configured PathGuard scope" })`.
+   `Err(FerrochainError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
+   "PathConfinementViolation: path '<path>' is outside the configured PathGuard scope"))`.
    No I/O is performed; no side effect occurs.
 3. **File size exceeds limit:** `PathGuard` passes but the file's metadata size exceeds
    `max_bytes`. The tool returns
-   `Err(FerrochainError { component: Component::Tools, category: Category::Val,
-   code: "E-TOOLS-002", message: "FileReadExceedsLimit: file '<path>' is <actual_bytes> bytes,
-   exceeds configured limit of <max_bytes> bytes" })`.
+   `Err(FerrochainError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-002",
+   "FileReadExceedsLimit: file '<path>' is <actual_bytes> bytes, exceeds configured limit of <max_bytes> bytes"))`.
    The file is NOT read into memory before this check; the implementation uses
    `std::fs::metadata()` to obtain the size before opening the file.
 4. **File not found or permission denied:** The tool propagates the OS I/O error as
-   `Err(FerrochainError { component: Component::Tools, category: Category::Tool, code: "E-TOOLS-008",
-   message: "ReadFileTool I/O error on '<path>': <io_kind>", tool_type: "ReadFileTool",
-   path: <file_path>, io_kind: <std::io::ErrorKind debug name> })`.
+   `Err(FerrochainError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
+   "ReadFileTool I/O error on '<path>': <io_kind>"))`.
    This is not a path-confinement violation; it is a runtime filesystem error.
 5. VP-003 (workspace confinement Kani proof) coverage extends to `ReadFileTool` without
    modification: `PathGuard` is the same type already proven; no new Kani proof is required.

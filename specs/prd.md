@@ -1,10 +1,10 @@
 ---
 document_type: prd
 level: L3
-version: "1.18"
+version: "1.20"
 status: active
 producer: product-owner
-timestamp: 2026-07-26T00:00:00Z
+timestamp: 2026-07-28T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -19,7 +19,7 @@ inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
 input-hash: "83449f0"
 traces_to: domain-spec/L2-INDEX.md
-decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D21, D23]
+decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D19, D20, D21, D22, D23]
 supplements:
   - prd-supplements/interface-definitions.md
   - prd-supplements/error-taxonomy.md
@@ -29,6 +29,8 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.20 (fix-burst-280-corr/F-P175-C207-prd/F-P175-C208/2026-07-28): C207 prd-side and C208 residue cleared. (1) C207: §1.5 Python runtime bullet corrected — 'one-way Python-checkpoint import tool is in scope' removed; disposition is out of v1 scope per ADR-002 (post-v1 stretch; no roster slot, no SS, no capability in closed Phase 1b architecture). (2) C208: §1.5 OCSF telemetry normalization and SEC/SOC 2 compliance semantics pending-qualifier language removed; both are definitively out of v1 scope (no SS, ADR, or capability in closed Phase 1b architecture; OCSF rationale anchored to domain-a §5 and SS-06/CAP-007 astream_events v2 taxonomy; SEC/SOC 2 rationale anchored to domain-a §4)."
+  - "v1.19 (fix-burst-280/F-P175-C201/C202/2026-07-28): Sibling sweep from product-brief.md fixes. (1) C202 §1.2 Solution Vision: 'Three design-forcing holdout domains' → 'Five design-forcing holdout domains'; Domain D (Hermes Agent, CAP-020/CAP-021) and Domain E (Agentic Coding CLI, CAP-017/CAP-018/CAP-034..038) bullets added. (2) §1.4 Target Users: Domain D and Domain E persona rows added. (3) Frontmatter `decisions:` extended with D19/D20/D22 (previously absent; L2-INDEX decisions had included them since D19/D20 authoring)."
   - "v1.18 (F-P172b-11/burst-275/2026-07-26): Two stale count pins corrected. (1) F-P172b-11 MED: §10 Module Criticality supplement pointer '(authoritative, 43-module Phase 1b registry)' → '(authoritative, Phase 1b registry — see §Classification Summary for current tier counts)'; registry has grown past 43 and the count was stale. (2) §11 Observability active count '6' → '11' and date '2026-07-21' → '2026-07-26'; count was not updated when observability.md v1.2 (burst-258) added 5 new entries to reach 11 active event_type values."
   - "v1.17 (F-P170-12/burst-272/2026-07-25): §10 Module Criticality — re-route supplement pointer from superseded prd-supplements/module-criticality.md to authoritative .factory/specs/module-criticality.md (F-P170-12). Added explicit superseded note for PO-draft supplement (audit trail only, do not use for implementation decisions)."
   - "v1.16 (F-P148-03/burst-249/2026-07-24): §2.18 Red Gate callout: 'ADR-015 Security Invariants 1 and 2' → 'ADR-015 Decision 3 §Security Invariant 1 and Decision 2 §Security Invariant 2' per ADR-015 v1.5 labeled anchors."
@@ -100,13 +102,18 @@ implementation adopts 43 ADOPT/ADAPT patterns from adk-rust v1.0.0 where they ar
 to the Python reference (COMPARATIVE-ASSESSMENT.md). The 17 NE must-not-inherit patterns
 become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
-**Three design-forcing holdout domains (D8):**
+**Five design-forcing holdout domains (D8, D22):**
 - Domain A (SOC analyst): risk-tiered HITL auth gates, forensic audit trail, prompt-injection
   isolation at tool-result boundaries
 - Domain B (dark factory): multi-day graph runs surviving process restarts, budget governance,
   convergence-loop support, per-task durability
 - Domain C (OpenClaw): persistent sessions, pluggable multi-channel ingress, local-first
   single-binary deployment
+- Domain D (Hermes Agent): inbound MCP server role — expose registered tools as MCP server
+  endpoint; self-improvement via SkillStore (CAP-020/CAP-021/D19/D20)
+- Domain E (Agentic Coding CLI): fine-grained per-tool-call HITL, rolling context compaction,
+  multi-session project memory, tool retry, first-party file/bash/search tools
+  (CAP-017/CAP-018/CAP-034..038/D22/D23)
 
 ### 1.3 Key Differentiators
 
@@ -125,6 +132,8 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | Security/platform engineer | Building SOC-analyst agents; needs risk-tiered HITL, forensic audit, prompt-injection isolation | Critical | Domain A |
 | Autonomous software team | Building dark-factory pipelines; needs multi-day durable runs, budget governance, convergence loops | Critical | Domain B |
 | Personal AI assistant builder | Building OpenClaw-like systems; needs persistent sessions, local-first single binary | High | Domain C |
+| Autonomous agent builder (Hermes-like) | Exposing registered tools as an inbound MCP server endpoint; self-improvement via SkillStore; consuming remote MCP tool results | High | Domain D |
+| Agentic coding CLI / IDE extension builder | Needs fine-grained per-tool-call HITL, rolling context compaction, multi-session project memory, first-party file/bash/search tools (D22/D23) | High | Domain E |
 | Rust developer (LLM applications) | Needs LangChain/LangGraph semantics without Python; cobbling together 3+ crates today | High | General |
 | Provider / tool vendor | Wants conformance-tested integrations via ferrochain-standard-tests | Medium | Secondary |
 
@@ -139,12 +148,16 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 - LangGraph kafka scheduler (removed from LangGraph v1.x; not a port target)
 - Voice/audio/canvas/device-node bridges
 - Managed hosting / LangGraph Platform-equivalent SaaS
-- OCSF-style telemetry normalization at core layer (integration-layer concern; explicit
-  in/out decision required in architecture phase — domain-a §5)
-- SEC disclosure / SOC 2 compliance semantics as in-product features (low-confidence;
-  explicit architect decision required — domain-a §4)
-- Python runtime or PyO3 interop (one-way Python-checkpoint import tool is in scope;
-  general Py bridge is not)
+- OCSF-style telemetry normalization at core layer (integration-layer concern per
+  domain-a §5; definitively out of v1 scope — no SS, ADR, or capability in closed Phase
+  1b architecture; ferrochain event surface is typed astream_events v2 taxonomy per
+  SS-06/CAP-007)
+- SEC disclosure / SOC 2 compliance semantics as in-product features (definitively out of
+  v1 scope per domain-a §4; compliance reporting is operator-layer concern; no SS, ADR,
+  or capability in closed Phase 1b architecture)
+- Python runtime or PyO3 interop, including one-way Python-checkpoint import tool (out of
+  v1 scope per ADR-002; post-v1 stretch; no roster slot, no SS, no capability in closed
+  Phase 1b architecture)
 - langchain-community v1.0.0a1 API tracking (alpha churn risk; community wave targets
   demand-ranked surface post-v1)
 

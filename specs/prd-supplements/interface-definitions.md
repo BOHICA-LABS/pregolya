@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.67"
+version: "2.68"
 status: active
 producer: product-owner
 timestamp: 2026-07-28T00:00:00Z
 phase: 1d
 changelog:
+  - "2.68 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Add `validate_embedding_batch` free function spec to §Embeddings Trait (core::embeddings, ferrochain-core). Function is `pub`; cross-crate callers are ferrochain-openai and ferrochain-ollama provider embeddings impls. BC anchors: BC-2.22.001 PC-2 (batch dimensionality contract → E-EMBED-001), INV-2 (consistent inner length), EC-003 (count mismatch), EC-004 (zero-length vector). Error anchor: E-EMBED-001. VP anchor: VP-008 (proptest P1; test harnesses call this function directly per FIX-BURST-280 structural redesign — F-P175-A24 self-proving mock fix). TD-VSDD-060 sibling sweep for unregistered VP-body symbols: see FIX-BURST-280-corr report."
   - "2.67 (fix-burst-279/gap-2-TemplateInput+format_messages/2026-07-28): Gap 2 (BLOCKING) TD-VSDD-060 sweep — format_messages signature and TemplateInput enum. (1) Added `TemplateInput` enum definition (§Prompt Templates, before SlotTrustPolicy): three arms — Scalar(TemplateVar), Messages(MessageListVar), FewShotExamples(Vec<(TemplateVar, TemplateVar)>); #[non_exhaustive]; replaces former bare HashMap<String, TemplateVar> parameter. (2) `format_messages` signature corrected: parameter type `HashMap<String, TemplateVar>` → `HashMap<String, TemplateInput>` (breaking change per ADR-015 §Decision 3 Amendment — TemplateInput Enum Concretized). This is the architect-owned portion of the TD-VSDD-060 sweep; BC-2.18.002/004 PO routing in wave-b-po-routing-spec-279.md item 6 and item 7."
   - "2.66 (fix-burst-279/F-P175-B101+F-P175-B102+F-P175-B208/2026-07-28): Three architect security adjudications applied. (1) B101/B102: SkillStore scope-encapsulation note added (SkillStore impls bind MemoryScope::App(app_id) at construction; trait methods scopeless; E-MEMORY-004 NoScopeContext on missing app_id). RunContext gains app_id: String field (system-derived, not RunnableConfig-overridable; empty = no-scope sentinel). ContextMutationConfig loading note: spec.namespace is a key-namespace prefix within MemoryScope::App(run_context.app_id), not the tenant app_id; composite key = {namespace}/{key}. (2) B208: TrustLevel updated — add #[non_exhaustive]; add #[cfg_attr(kani, derive(kani::Arbitrary))]; add Copy derive; add severity() -> u8 method (Untrusted=2, UserInput=1, Trusted=0); explicit Ord-derivation prohibition added."
   - "2.65 (FIX-BURST-278/L9b-de-pin/2026-07-28): L9b de-pin: two version-pin-to-section-anchor conversions in the FIX-BURST-277-WAVE-B-errata changelog entry. Both pins cited ADR-005 by version number; replaced with ADR-005 §Adjacent Trait Object-Safety Adjudications in both positions (DynTool promise cross-reference and Wave C migration list cross-reference)."
@@ -1741,11 +1742,38 @@ pub trait Embeddings: Send + Sync {
 }
 ```
 
+```rust
+// ferrochain-core: core::embeddings — production free function (NOT test-only)
+
+/// Validates a batch of embedding vectors against the dimensionality contract.
+/// All `Embeddings` implementations must call this before returning `Ok` from
+/// `embed_documents`. This function is the PRODUCTION gate for the contract;
+/// validation logic must not be embedded inside mock impls (self-proving mock defect class).
+///
+/// # Returns
+/// - `Ok(())` — batch is dimensionally valid (or empty input, EC-001).
+/// - `Err(E-EMBED-001)` — one of:
+///   - `vecs.len() != texts.len()` (EC-003: count mismatch)
+///   - any `vecs[i].len() == 0` (EC-004: zero-length embedding vector)
+///   - inconsistent inner lengths across `vecs` (Invariant 2)
+///
+/// BC anchor: BC-2.22.001 PC-2 (batch dimensionality contract → E-EMBED-001),
+/// BC-2.22.001 INV-2 (consistent inner length), EC-003 (count mismatch), EC-004
+/// (zero-length vector). Error anchor: E-EMBED-001. VP anchor: VP-008 (proptest P1;
+/// VP-008-A/B/C/D/E harnesses call this function directly — deletion or regression
+/// causes all five harnesses to fail immediately).
+pub fn validate_embedding_batch(
+    texts: &[String],
+    vecs: &[Vec<f32>],
+) -> Result<(), FerrochainError>;
+```
+
 **BC anchor:**
 BC-2.22.001 (Embeddings trait — embed_documents batch, embed_query, dimensionality contract → E-EMBED-001, batch partial-failure as Err, Arc\<dyn Embeddings\> dyn-safe; VP-008 proptest seed),
 BC-2.22.002 (EmbeddingsOpenAI — text-embedding-3-small/large/ada-002-legacy; OpenAiApiKey DI-010 credential opacity; reqwest/rustls-tls/.timeout(30s); DI-009 per BC-2.14.004),
 BC-2.22.003 (EmbeddingsOllama — no API key; /api/embed preferred; use_legacy_endpoint toggle; 30s unconditional per DI-009 / BC-2.14.004).
 ADR-017 Decision 2 (Embeddings trait surface, dyn-safety via #[async_trait] + &self, dimensionality contract, E-EMBED-001 authority).
+`validate_embedding_batch`: `pub` free function; visibility `pub` because `ferrochain-openai::openai::embeddings` and `ferrochain-ollama::ollama::embeddings` call it cross-crate. `#[non_exhaustive]` does not apply (free function, no associated types). Placement: `ferrochain-core/src/embeddings.rs` (or `ferrochain-core/src/embeddings/mod.rs` if the module splits past 500-line soft target).
 
 ---
 

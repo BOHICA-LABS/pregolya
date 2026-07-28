@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,7 @@ changelog:
   - "1.2 (ADV-P1D-PASS-26): F-P26-01 PC3 Known-overrides enumeration expanded to all 8 per-endpoint override classes; E-SERVER-004 removed from invariant divergence-example list (POLICY→403 is the categorical default, not a divergence)."
   - "1.3 (ADV-P1D-PASS-27): F-P27-01 add 9th Known-override: E-GRAPH-002 POLICY→422 on resume endpoint; canon: pass-23 deliberately set 422 (semantic state validation failure — no active interrupt slot); POLICY→403 categorical default does not apply because 'no active interrupt' is an unprocessable-entity condition, not a policy rejection."
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core / ferrochain-server per module-decomposition.md v1.10."
+  - "1.5 (FIX-BURST-280-WAVE-C/F-P175-A25-T2/2026-07-28): Task 2 — explicit annotation added above TV table. TV-001/TV-002/TV-005 use ALL-CAPS prose shorthand notation (`component: CORE, category: VAL`, etc.) which is BC-2.14.001 rendering convention for table cells — NOT compilable Rust. Actual test construction uses FerrochainError::new(...). No behavioral change."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -178,6 +179,8 @@ standard set.
 from the code string. The HTTP status code falls back to 500 for unknown categories.
 
 ## Canonical Test Vectors
+
+_TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy codes for component/category, e.g., `CORE`, `VAL`, `Never`) in table cells — this is prose shorthand, not compilable Rust. The actual test code constructs errors via `FerrochainError::new(...)` per BC-2.14.001 PC8. This notation is intentional and should not be converted to `::new()` form._
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|

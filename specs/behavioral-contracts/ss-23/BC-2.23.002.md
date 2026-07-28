@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.002
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.2 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded). Before: trailing 'E-TOOLS-001'. After: 'E-TOOLS-001/008'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-5); Category::SECURITY → Category::Security (PC-2), Category::TOOL → Category::Tool (PC-5)."
   - "1.4 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name `PathGuard::check(path)` with canonical entry point `canonicalize_beneath_root` at 4 sites: PC-1 happy-path ('passes' → 'succeeds'), PC-2 raise condition ('returns false' → 'returns `Err`'), Invariants call-obligation bullet, VP-2.23.002-A property description. No error-layer-split issues found — E-TOOLS-001 correctly used as tool-layer code throughout."
+  - "1.5 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to FerrochainError::new() form. PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC5 E-TOOLS-008 I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed (message-embedded placeholders). TD-VSDD-060 sibling sweep: EC-003/EC-004/EC-006/TV-004 JSON-like {tool_type, ...} notation classified (c) message-component descriptions; left as-is."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -73,9 +74,8 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
    parent directory exists. If the parent directory does not exist, the tool returns an I/O error.
 2. **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns `Err` for any reason.
    The tool returns
-   `Err(FerrochainError { component: Component::Tools, category: Category::Security,
-   code: "E-TOOLS-001", message: "PathConfinementViolation: path '<path>' is outside the
-   configured PathGuard scope" })`.
+   `Err(FerrochainError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
+   "PathConfinementViolation: path '<path>' is outside the configured PathGuard scope"))`.
    No I/O is performed; no temporary file is created.
 3. **Atomic write semantics:** The implementation writes content to `<path>.ferroctmp_<random>`
    in the same directory, then performs a rename to `<path>`. If the rename fails, the
@@ -84,9 +84,8 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
 4. **Overwrite existing file:** If `path` already exists, it is replaced atomically. No backup
    is created. The caller is responsible for any desired backup semantics.
 5. **I/O error:** OS-level I/O failure (disk full, permission denied) propagates as
-   `Err(FerrochainError { component: Component::Tools, category: Category::Tool, code: "E-TOOLS-008",
-   message: "WriteFileTool I/O error on '<path>': <io_kind>", tool_type: "WriteFileTool",
-   path: <file_path>, io_kind: <std::io::ErrorKind debug name> })`.
+   `Err(FerrochainError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
+   "WriteFileTool I/O error on '<path>': <io_kind>"))`.
    The temporary file is removed on error.
 
 ## Invariants

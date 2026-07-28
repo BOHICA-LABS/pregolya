@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (F-P164-01/burst-266/2026-07-25): Component enum updated 16→17 per ADR-010 v1.6 (D23). Added TOOLS (ferrochain-tools, SS-23) to Description component list. Counter updated '16 components as of D21' → '17 components as of D23'. TD-VSDD-060 sole-site confirmed: rg -n '16 components|sixteen components' /Users/jmagady/Dev/ferrochain/.factory/specs/ returns only BC-2.14.001 — no other live-body references require amendment. BC-INDEX sync required (v1.2→v1.3)."
   - "1.4 (F-P173-211+F-P173-619/FIX-BURST-276/2026-07-27): F-P173-211 — propagate ADR-010 v1.12 Arc adjudication: update EC-001 source field from `Option<Box<dyn Error + Send + Sync>>` to `Option<Arc<dyn std::error::Error + Send + Sync>>`; add source field to Description six-field enumeration (partial reproduction was the root cause of the 173-pass detection lag). F-P173-619 — add PC8 for `#[non_exhaustive]` attribute per CLAUDE.md Code Conventions (all public API surface error types carry it; FerrochainError was the sole missing instance). TD-VSDD-060 sweep: sole product-owner-owned Box site was EC-001 (fixed here); `entities-server.md §FerrochainError` entity definition `source: Option<Box<dyn StdError>>` is business-analyst scope — routed for separate fix; ADR-010 changelog text preserving old Box form is intentional historical record, no action."
   - "1.5 (FIX-BURST-276-TD091/2026-07-27): TD-VSDD-091 anti-volatile-pin repair — PC8 last sentence: replace live-body sibling-artifact version pin with stable section anchor. ADR-010 §Decision (the section containing the FerrochainError struct definition and canonical #[non_exhaustive] #[derive(Debug, Clone)] form) replaces a specific version number. Sibling-sweep of this file live body: no additional version pins found. BC-INDEX split unchanged (BC-2.14.001 remains P0)."
+  - "1.6 (FIX-BURST-280-WAVE-C/F-P175-A25-T2/2026-07-28): Task 2 — explicit annotation added to PC1, TV-001 Notes, and TV-002 Notes. These three sites use struct-literal construction `FerrochainError { ... }` intentionally: (a) this BC defines the FerrochainError struct itself, not a usage BC; (b) the tests run within ferrochain-core where #[non_exhaustive] does NOT bar struct-literal construction from the defining crate; (c) external callers use FerrochainError::new(...) per PC8/ADR-010 §Decision. No behavioral change. TD-VSDD-060 sibling-sweep confirmed: all other FerrochainError { ... } sites in BC-2.14.001 body are prose shorthand (ALL-CAPS) or the struct definition in PC8 — no additional in-crate construction forms present."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -76,6 +77,9 @@ one-to-one; `DURABILITY` in prose ↔ `Category::Durability` in Rust, `CHKPT` �
 
 1. `FerrochainError { component: Component::Core, category: Category::Val, retry_hint: RetryHint::Never,
    code: "E-CORE-001".into(), message: "Invalid ContentBlock type...".into() }` constructs without error.
+   _(Struct-literal form is **intentional** in this BC: this test runs within `ferrochain-core` where
+   `#[non_exhaustive]` does not bar struct-literal construction by the defining crate. External callers
+   must use `FerrochainError::new(...)` per PC8 and ADR-010 §Decision. Do not convert this notation.)_
 2. The `component` field identifies the originating crate (e.g. `Component::Graph` for graph
    errors, `Component::Chkpt` for checkpoint errors).
 3. The `category` field identifies the error class independently of the component; a
@@ -151,8 +155,8 @@ chain preserves the original `FerrochainError`'s fields when downcast with `anyh
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | Construct `FerrochainError { component: Component::Core, category: Category::Val, retry_hint: RetryHint::Never, code: "E-CORE-001", message: "..." }` | Struct fields readable as specified; `err.to_string()` contains message | Happy path — basic construction |
-| TV-002 | `FerrochainError { component: Component::Prov, category: Category::Rate, retry_hint: RetryHint::Later(Duration::from_secs(30)), ... }` | `retry_hint == RetryHint::Later(30s)` | Rate-limit error with backoff |
+| TV-001 | Construct `FerrochainError { component: Component::Core, category: Category::Val, retry_hint: RetryHint::Never, code: "E-CORE-001", message: "..." }` | Struct fields readable as specified; `err.to_string()` contains message | Happy path — in-crate construction (struct literal valid within `ferrochain-core`; external API is `FerrochainError::new(...)`; notation intentional — do not convert) |
+| TV-002 | `FerrochainError { component: Component::Prov, category: Category::Rate, retry_hint: RetryHint::Later(Duration::from_secs(30)), ... }` | `retry_hint == RetryHint::Later(30s)` | Rate-limit error with backoff — in-crate field verification (notation intentional; see PC1 note) |
 | TV-003 | `std::error::Error::source(&err)` when `source` field is `Some(inner)` | Returns `Some(&inner)` | Error chaining works |
 | TV-004 | `anyhow::Context::context(Err::<(), _>(ferrochain_err), "ctx")` | `anyhow::Error` wraps `ferrochain_err`; `downcast_ref::<FerrochainError>()` succeeds | anyhow compatibility |
 | TV-005 | `FerrochainError::default()` | Compile error — `Default` not implemented | No default construction |

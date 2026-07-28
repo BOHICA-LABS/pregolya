@@ -1860,3 +1860,25 @@ BC-2.18.004 body unread; 36/37 standing gates body-unaudited; 105 hyphenated-mod
 
 ### ARCHIVE METADATA
 Date: 2026-07-28 | Archived at: STATE.md v4.36 session wrap D-70 | STATE.md: v4.35 → v4.36 | fix-burst 279 COMPLETE (~40/189 P1D-175 findings closed) | D-61..D-69 in v4.35 | L-116..L-121 in v4.35 | streak 0/3
+
+---
+
+## Checkpoint v4.36 (archived — replaced by v4.37)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1, greenfield+semport. Streak **0/3 after 176 passes**. P1D-175 FULL-PERIMETER: 189 findings (10 CRIT / ~69 HIGH). Fix-burst 279 closed ~40/189 (SS-15 tenancy bridge CRIT, SS-18 injection guard CRIT, `TrustLevel::severity()` ordinal HIGH, `E-TMPL-004` minted, B221 corrected). **NEXT ACTION WAS: fix-burst 280** — self-proving VP harnesses (A24/A17/A10) + `product-brief.md` CRITs (C201/C202). STATUS: fix-burst 280 COMPLETE (see v4.37).
+
+### HEADS (v4.36)
+develop `46725ad` — clean, `== origin/develop`, PUSHED. factory-artifacts `c2249e7` — clean (pre-fix-burst-280), PUSHED. No worktrees. No open PRs.
+
+### NEXT-ACTION WAS
+Dispatch `vsdd-factory:architect` for fix-burst 280 Wave A: self-proving VP harnesses (A24 VP-008; A17 VP-007; A10 VP-004). Then `vsdd-factory:product-owner` Waves B+C. Per D-32: only FULL-PERIMETER passes advance streak.
+
+**Validator baselines (post-fix-burst-279, pre-fix-burst-280):**
+verify-signature-canon PASS=5 FAIL=0; records-lint PASS=5 FAIL=0; verify-no-version-pins PASS=198 FAIL=0; verify-arch-anchor-resolution PASS=129 FAIL=0; verify-adr-decision-refs PASS=348 FAIL=0; verify-enum-variant-casing PASS=198 FAIL=0; verify-form-a-changelog-direction PASS=198 WARN=7 FAIL=0 BC_UNVERIFIED=0; verify-module-canonicality PASS=8 FAIL=0; verify-changelog-date-monotonicity PASS=131 FAIL=0; verify-bc-frontmatter-schema PASS=129 FAIL=0.
+
+### COVERAGE DEBTS (carried to v4.37 — unchanged)
+BC-2.18.004 body unread; 36/37 standing gates body-unaudited; 105 hyphenated-module + 131 version-pin occurrences untriaged; 129 TV Count cells never hand-summed; ADR-010 canon-note site unopened; per-VP frontmatter `tool`/`priority`/`bc_anchor`/`crate` unverified.
+
+### ARCHIVE METADATA
+Date: 2026-07-28 | Archived at: STATE.md v4.37 fix-burst 280 close (D-74) | STATE.md: v4.36 → v4.37 | fix-burst 280 COMPLETE (~54/189 total P1D-175 closed; 2C+11H+D-52 this burst) | D-71..D-74 added | L-123..L-130 minted | TDIV-008 registered | streak 0/3

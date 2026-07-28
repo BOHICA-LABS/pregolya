@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.13"
+version: "2.14"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -477,34 +477,46 @@ is explicit in the equivalence check, not a gap.
 
 Property: For any batch of non-empty strings, all vectors returned by `embed_documents`
 have equal length, and `embed_query` returns a vector of the same length as any vector
-in the batch result. An empty input batch returns `Ok(vec![])`.
+in the batch result. An empty input batch returns `Ok(vec![])`. Count mismatches and
+zero-length vectors are caught and returned as `Err(E-EMBED-001)`.
 
-Why proptest (not Kani): `embed_documents` and `embed_query` are `#[async_trait]` methods.
-Kani 0.67.0 has no native async support; the proptest harness uses a synchronous mock
-embeddings implementation that enforces the dimensionality contract structurally.
+**Production function under test:** `validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), FerrochainError>`.
+This function lives in `core::embeddings` production code (not test-only). All `Embeddings`
+impls must call it before returning. The proptest harness calls this function DIRECTLY —
+the mock impls supply raw valid or invalid outputs as inputs; no validation logic lives
+inside any mock.
 
-proptest strategy sketch:
+**Why production-function targeting (not mock-based assertion):**
+Prior design (pre-v2.14) asserted `batch.iter().all(|v| v.len() == dim)` on a mock that
+returns `vec![0.1; dim]` by construction — trivially true regardless of whether production
+validation code exists. A deleted production validator would leave every assertion green.
+The redesign targets `validate_embedding_batch` directly so deletion or regression of the
+production gate causes immediate test failure.
+
+proptest strategy sketch (calls production function directly):
 ```rust
 proptest! {
     #[test]
-    fn prop_dimensionality_contract_holds(texts in vec(any::<String>().prop_filter("non-empty", |s| !s.is_empty()), 1..=32)) {
-        let rt = tokio::runtime::Builder::new_current_thread().build().unwrap();
-        rt.block_on(async {
-            let embedder = MockEmbeddings::new_fixed_dim(128);
-            let batch = embedder.embed_documents(texts).await.expect("embed_documents");
-            let dim = batch[0].len();
-            prop_assert!(batch.iter().all(|v| v.len() == dim), "ragged batch");
-            let q = embedder.embed_query("query".into()).await.expect("embed_query");
-            prop_assert_eq!(q.len(), dim, "query/batch dim mismatch");
-            Ok(())
-        })?;
+    fn prop_validate_embedding_batch_accepts_valid(
+        dim in 1usize..=4096usize,
+        n_texts in 1usize..=64usize,
+    ) {
+        let texts: Vec<String> = (0..n_texts).map(|i| format!("text {i}")).collect();
+        let vecs: Vec<Vec<f32>> = (0..n_texts).map(|_| vec![0.1f32; dim]).collect();
+        // PRODUCTION CODE UNDER TEST
+        let result = validate_embedding_batch(&texts, &vecs);
+        prop_assert!(result.is_ok());
     }
 }
 ```
 
-Feasibility: HIGH. Mock embeddings implementation makes the contract hold by construction;
-the test validates that a ragged-returning implementation would be caught. Phase 3 delivery
-requires a concrete `MockEmbeddings` struct implementing `Embeddings` with fixed-dim output.
+Negative harnesses (VP-008-C/D/E) pass raw violating vectors to `validate_embedding_batch`
+and assert `Err(E-EMBED-001)`. See VP-008.md §Proof Harness Skeleton for all five harnesses.
+
+Feasibility: HIGH. `validate_embedding_batch` is a pure sync function (no async, no I/O).
+Proptest exercises it directly; no Tokio runtime needed for VP-008-A/B. EC-003 (count
+mismatch) and EC-004 (zero-length vector) now have dedicated concrete harnesses VP-008-D
+and VP-008-E (previously falsely claimed as covered by ragged_batch harness).
 
 ---
 
@@ -622,6 +634,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.14 | 2026-07-28 | architect | FIX-BURST-280 / F-P175-A24 companion | VP-008 section redesign to remove self-proving mock rationale. Prior §VP-008 stated "Mock embeddings implementation makes the contract hold by construction" — this perpetuated the F-P175-A24 defect (harnesses certifying mock internals, not production code). Replaced with description of `validate_embedding_batch` production function approach: mocks supply raw inputs only; production validator is the assertion target. Proptest sketch updated to call `validate_embedding_batch` directly. EC-003 and EC-004 negative harnesses (VP-008-D/E) noted. MockEmbeddings::new_fixed_dim(128) self-proving sketch removed. |
 | 2.13 | 2026-07-27 | architect | CHECK4-vparch closure | Canonicalize all Module cells in §Committed VP Obligations table (13 rows) and §Test-Sufficient table (7 rows → 9 rows) to `crate::module` or ARCH-INDEX canonical crate-name form. VP table: replace all `ferrochain-X / y-name` two-part notation — graph::bsp_engine, checkpoint::session_index, sandbox::path_guard, mcp::adapter, mcp::client, prompts::injection_guard, core::serializable (×2: VP-007 LcSerializable + VP-010 Reviver aspect), core::embeddings, vectorstores::similarity, graph::hitl, core::budget, tools::shell. VP-007 and VP-010 both map to core::serializable; aspect distinction preserved via BC Anchor (BC-2.19.001 vs BC-2.19.005), Tool (proptest vs Kani), Phase (3 vs 6), and Priority (P1 vs P0) columns — rows not merged. Test-Sufficient table: ferrochain-server handlers → ferrochain-server; Provider crates (unresolvable single mapping) → split into ferrochain-openai + ferrochain-anthropic + ferrochain-ollama (3 rows); ferrochain-sandbox backends → ferrochain-sandbox with path_guard exclusion note; Budget governance (journal) → graph::budget; Content provenance/guardrail → graph::provenance. ferrochain-mcp and ferrochain-splitters already canonical — left unchanged. Section headings (VP-001..013 prose entries) updated to canonical form for consistency; VP-010 heading uses `core::serializable — Reviver aspect` to distinguish from VP-007. Total Module cells: 22 (was 20; +2 from Provider crates split into 3 rows). |
 | 2.12 | 2026-07-27 | architect | FIX-BURST-276 / F-P173-501+503 | F-P173-501 — §VP-001 section: update formal statement from `sorts by task_id` to `sorts by (task_id: &str, channel_name: &str) lexicographic ascending`; add channel_name tiebreaker note and lexicographic hazard explanation; update harness sketch to use string TaskId and (TaskId, String, ChannelUpdate) tuple, replacing TaskId(i as u64) with bounded-string construction per VP-001.md §Proof Harness Skeleton. F-P173-503 — §VP-009 section: update formal statement to add overflow path (!norm.is_finite() covers +Inf from sum-of-squares overflow); update harness sketch conditional from (norm == 0.0) to (norm == 0.0 OR !norm.is_finite()); add overflow note. Source of truth for both: VP-001.md and VP-009.md §Proof Harness Skeleton respectively. |
 | 2.11 | 2026-07-25 | architect | FIX-BURST-273 / F-P171a-10+11 | F-P171a-10 — replace §VP-013 Kani harness sketch (2 harnesses, missing `risk_floor_accepts_at_or_above_medium`) with pointer to `VP-013.md` §Proof Harness Skeleton; VP-013.md is authoritative per Source-of-Truth Precedence rule 4; pointer names all three canonical harnesses to eliminate drift surface. F-P171a-11 — de-pin two live-body version pins in §VP-013 RESOLVED block: 'BC-2.23.005 was amended to `Category::Val` in v1.1' → 'BC-2.23.005 §Category was corrected to `Category::Val`'; 'BC-2.23.005 v1.1 = VAL' → 'BC-2.23.005 §Category = VAL'. Allowlist entry `architecture/verification-architecture.md :: BC-2.23.005 v1.1` is now dead — devops to remove. |

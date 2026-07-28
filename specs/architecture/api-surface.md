@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.20"
+version: "1.21"
 status: active
 producer: architect
 timestamp: 2026-07-28T00:00:00Z
 changelog:
+  - "1.21 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Add §Public Functions (ferrochain-core) section registering `validate_embedding_batch` as a `pub` free function in `core::embeddings`. Visibility `pub` — cross-crate callers are ferrochain-openai and ferrochain-ollama provider embeddings impls. BC anchors: BC-2.22.001 PC-2, INV-2, EC-003, EC-004. Error anchor: E-EMBED-001. VP anchor: VP-008 (proptest P1). Resolves F-P175-A24-followup: the function was introduced by VP-008 redesign in FIX-BURST-280 but was absent from api-surface.md, making a VP body its sole signature authority (the F-P175-B117 phantom-signature defect class). TD-VSDD-060 sibling sweep included in burst report."
   - "1.20 (FIX-BURST-278/L9b-de-pin/2026-07-28): L9b de-pin: one version-pin-to-section-anchor conversion in the FIX-BURST-277-WAVE-B-errata changelog entry. ADR-005 version pin replaced with ADR-005 §Adjacent Trait Object-Safety Adjudications (Wave C migration list cross-reference)."
   - "1.19 (FIX-BURST-278/Wave-C-S4/2026-07-28): S4 canon — three changelog/body lines citing Arc<dyn ferrochain_core::Tool> or Arc<dyn Tool> as migration origins annotated with non-object-safe (E0038) qualifier to satisfy verify-signature-canon.sh S4 gate exemption. All three sites are classification (b): hazard-describing prose and migration routing notes, not live signatures requiring DynTool conversion. The live DynTool migration blockquote already reads DynTool in the canonical final form; the non-object-safe annotations clarify the prohibited origin type in context."
   - "1.18 (FIX-BURST-278/F-P175-D48+D202/2026-07-28): Two findings closed. (1) F-P175-D48 — §Public Traits (ferrochain-vectorstores) blockquote: `as_retriever` signature receiver corrected to `self: Arc<Self>` per ADR-014 §Decision 2 (dyn-compatible receiver; the reference-to-Arc form causes E0038). (2) F-P175-D202 — DynTool migration blockquote count corrected from 2→3 sites: add `BC-2.09.007 ToolRegistry` as the third migration site (per ADR-005 §Wave C migration list)."
@@ -104,6 +105,22 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 > criterion — they appear only in trait method signatures and are not standalone
 > cross-crate function inputs or misattributed graph types.
 > When a new type meets criterion (a) or (b), add it here.
+
+## Public Functions (ferrochain-core)
+
+| Function Signature | Module | SS | BC Anchors |
+|--------------------|--------|----|-----------|
+| `pub fn validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), FerrochainError>` | `core::embeddings` (ferrochain-core) | SS-22 | BC-2.22.001 PC-2, INV-2, EC-003, EC-004 |
+
+> `validate_embedding_batch` is a `pub` free function in `ferrochain-core: core::embeddings`.
+> Visibility: `pub` — `ferrochain-openai::openai::embeddings` and `ferrochain-ollama::ollama::embeddings`
+> call it cross-crate before returning `Ok` from `embed_documents`. `#[non_exhaustive]` does not
+> apply (free function; no associated struct or enum). Error anchor: `E-EMBED-001`.
+> VP anchor: VP-008 (proptest P1; VP-008-A/B/C/D/E harnesses call this function directly,
+> gating against the self-proving mock defect — deletion or regression fails all five
+> harnesses immediately; F-P175-A24 structural fix, FIX-BURST-280).
+> Placement: `ferrochain-core/src/embeddings.rs`; if the module splits past the 500-line
+> soft target, placement is `ferrochain-core/src/embeddings/mod.rs`.
 
 ## Public Traits (ferrochain-memory)
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.005
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -29,6 +29,7 @@ changelog:
   - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-3 + PC-4); Category::TIMEOUT → Category::Timeout (PC-3), Category::VAL → Category::Val (PC-4)."
   - "1.7 (F-P170-16/burst-272/2026-07-25): Adjudication — canonical method name is ToolConfig::override_risk (ADR-020 Decision 3 introduction form; majority usage in PC3/ECs/TVs; VP-013 capabilities-p1-p2.md). Fix three set_risk sites: (1) §Invariants 'Risk floor' paragraph — two occurrences BashTool::set_risk(ReadOnly) and BashTool::set_risk(Low) → ToolConfig::override_risk(ActionRisk::ReadOnly) and ToolConfig::override_risk(ActionRisk::Low). (2) §Verification Properties VP-013 row — same fix. set_risk appeared only in prose/invariant/anchor sentences; ToolConfig::override_risk is the architectural name per ADR-020 Decision 3."
   - "1.8 (F-P171a-02b/burst-273/2026-07-25): Lifecycle adjudication — ToolConfig::override_risk is a builder-consuming validator (signature: override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>); it returns Err immediately at call time; the registry never receives an invalid ToolConfig. Deliberate spec amendment per CLAUDE.md precedence rule 1 (BC supersedes for contract semantics). (1) PC-4 header: 'Risk floor violation at startup' → 'Risk floor violation at ToolConfig::override_risk call time'. (2) PC-4 body: 'At ToolRegistry::register time' → 'At ToolConfig::override_risk call time'. (3) EC-004 Description: 'at registry time' → 'at ToolConfig::override_risk call time'. TD-VSDD-060 sibling sweep: VP-013.md §BC Traceability EC-004/EC-005 and §Proof Harness cite 'registry time' and 'registration logic' — routed to architect for VP-013 body update (architect scope)."
+  - "1.9 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to FerrochainError::new() form. PC3 E-TOOLS-004 BashTimeout: ::new(Component::Tools, Category::Timeout, RetryHint::Never, ...). PC4 E-TOOLS-007 BashRiskTierViolation: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). TD-VSDD-060 sibling sweep: no other struct-literal construction examples found in this BC."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-037
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -96,15 +97,16 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
    wrapping the sandbox backend `execute()` call fires; the sandbox kills the subprocess
    (ProcessBackend via `.kill_on_drop(true)` async drop; WASM/container backends via runtime-level
    process termination). The tool returns
-   `Err(FerrochainError { component: Component::Tools, category: Category::Timeout, code: "E-TOOLS-004",
-   message: "BashTimeout: command exceeded max_duration of <seconds>s" })`. This raise-condition
+   `Err(FerrochainError::new(Component::Tools, Category::Timeout, RetryHint::Never, "E-TOOLS-004",
+   "BashTimeout: command exceeded max_duration of <seconds>s"))`. This raise-condition
    directly enacts DI-015 (Subprocess Execution Timeout): exceed `max_duration` → terminate
    process → structured `E-TOOLS-004` error.
 4. **Risk floor violation at `ToolConfig::override_risk` call time:** `ToolConfig::override_risk(ActionRisk::ReadOnly)` or
    `override_risk(ActionRisk::Low)` called on a `BashTool` instance. At `ToolConfig::override_risk`
-   call time the builder-consuming validator returns `Err(FerrochainError { component: Component::Tools, category: Category::Val,
-   code: "E-TOOLS-007", message: "BashRiskTierViolation: BashTool risk tier cannot be lowered
-   below Medium; attempted: '<tier>'" })`. The registry never receives an invalid ToolConfig; the graph does not start.
+   call time the builder-consuming validator returns
+   `Err(FerrochainError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-007",
+   "BashRiskTierViolation: BashTool risk tier cannot be lowered below Medium; attempted: '<tier>'"))`.
+   The registry never receives an invalid ToolConfig; the graph does not start.
 5. **Sandbox policy violation:** The command attempts an operation disallowed by the sandbox
    policy (ferrochain-sandbox BC-2.13.002). The sandbox returns an error before the command
    executes; this propagates as `Err(FerrochainError)` from the sandbox namespace.

@@ -1,10 +1,10 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.19"
+version: "1.24"
 status: active
 producer: business-analyst
-timestamp: 2026-07-27T17:00:00Z
+timestamp: 2026-07-28T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -33,6 +33,11 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "v1.24 (fix-burst-280/wave-c/2026-07-28): Document Map Lines→Size column replacement. Rationale: a precise numeric line-count estimate held in a separate index file decays silently on every shard edit — no gate detects the drift; this burst found four cells stale by +64 to +174 lines (capabilities-p0.md, entities-server.md, ubiquitous-language-server.md, bounded-contexts.md). This is the same structural-decay class TD-VSDD-091 addresses for file:NNN citations — not a pinned cite, but the same unbounded-drift property with no detection gate. S/M/L/XL bands update only when a shard crosses a tier boundary, which coincides with the DF-021 split review; maintenance cost is already paid at that trigger. Column name diverges from the upstream template's Tokens column by orchestrator authorization (Path 2, fix-burst-280); spec-steward holds the governance record — this divergence is intentional, not accidental drift. Band assignments (all 14 rows): XL: capabilities-p1-p2.md; L: entities-graph.md, ubiquitous-language-core.md, bounded-contexts.md; S: assumptions.md, risks.md, differentiators.md; M: all remaining."
+  - "v1.23 (fix-burst-280/wave-c/2026-07-28): Document Map full line-count correction — all 14 rows verified against source shards. Four stale entries corrected: capabilities-p0.md ~140→~228, entities-server.md ~95→~201, ubiquitous-language-server.md ~100→~164, bounded-contexts.md ~155→~329."
+  - "v1.22 (fix-burst-280/wave-c/2026-07-28): Count-desync correction — Document Map risks.md row: (8 risks)→(9 risks) and line estimate ~51→~79; assumptions.md line estimate ~48→~54. Full ID count sweep: CAP 38, DI 15, DEC 13, ASM 9, R 9, FM 19 all verified correct against source shards."
+  - "v1.21 (fix-burst-280/wave-c/2026-07-28): R-009 added to risks.md (no v1 migration path for Python LangGraph checkpoints; orchestrator-approved gap coverage). ID Registry R-NNN count 8→9. ASM-007 Validation Method and Dependency Map updated with R-009 bidirectional link; assumptions.md D11 added to decisions list."
+  - "v1.20 (fix-burst-280/wave-c/2026-07-28): assumptions.md — ASM-007 impact re-derivation (F-P175-C207). Impact if Wrong corrected Low→Medium; stale 'import tool in scope' citation replaced with ADR-002 §Consequences anchor; ASM-007 added to Assumption Dependency Map tracing to CAP-005."
   - "v1.19 (fix-burst-278/wave-b/2026-07-28): VectorStore retriever seam — three shards updated per D-48/D-44/D-45. capabilities-p1-p2.md §CAP-027/§CAP-028: VectorStoreRetriever lifetime annotation removed (verify-signature-canon S2 zero hits), as_retriever receiver corrected to self: Arc<Self> (S1b zero hits), backing-store borrow form corrected to Arc<dyn VectorStore>, k/fetch_k/lambda_mult rejection semantics added per D-44. entities-graph.md §VectorStore/§Relationships-Summary: VectorStore entity as_retriever receiver and Relationships Summary borrow-backed form corrected. ubiquitous-language-core.md §VectorStoreRetriever/§VectorStore: term borrow-based forms corrected. Post-fix: verify-signature-canon S1b=0, S2=0; borrow-backed VectorStoreRetriever form absent from all domain-spec shards."
   - "v1.18 (FC-4/burst-277/2026-07-28): False-closure FC-4 correction — 'PO BC obligations' stale-completed-delegation residue removed from 3 shards. capabilities-p1-p2.md v1.17→v1.18 (3 instances at CAP-034 x2, CAP-035 x1; all converted to past-tense 'Authored BCs' citations). entities-graph.md v1.12→v1.13 (1 instance: §PreToolDecision PendingHumanApproval). ubiquitous-language-core.md v1.8→v1.9 (1 instance: §PreToolDecision definition). All 5 instances confirmed stale-completed: BC-2.05.008, BC-2.06.004, BC-2.06.005, BC-2.08.010, BC-2.10.005, BC-2.10.006, BC-2.06.006 all exist. The v1.14 '4 verified structural/legitimate' count was inaccurate — those hits included these now-corrected stale-delegation instances."
   - "v1.17 (F-P173-104/F-P173-106/F-P173-702/burst-276/2026-07-27): bounded-contexts.md v1.4→v1.5 (F-P173-104: remove ferrochain-graph from ferrochain-tools dep list per ADR-020 Decision 1; inline note added citing D-24 ActionRisk-from-core rationale); capabilities-p1-p2.md v1.16→v1.17 (F-P173-106: CAP-038 regex dependency confirmed net-new per ADR-020 Decision 7, stale confirm-instruction removed; F-P173-702: CAP-029 ADR-014 Decision 4 → ADR-017 Decision 4 for InMemoryVectorStore/Arc-DI)."
@@ -69,22 +74,28 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 
 ## Document Map
 
-| Section | File | Lines | Primary Consumer | Purpose |
-|---------|------|-------|-----------------|---------|
-| Capabilities — P0 | capabilities-p0.md | ~140 | product-owner, architect, story-writer | CAP-001–008 (Wave 0/1) + CAP-012, CAP-013, CAP-016 (D17-elevated to P0; cross-cutting Wave 0/1); CAP-002 revised v1.7 (D21 reversal) |
-| Capabilities — P1/P2 | capabilities-p1-p2.md | ~750 | product-owner, architect, story-writer | P1: CAP-009–011, CAP-014–015, CAP-017–018 (D23 Wave 1 promotions), CAP-020–038 (D21 + D23 additions); P2: CAP-019 only |
-| Entities — Core/Graph/Checkpoint/Retrieval/Serialization/VectorStore/Embeddings/HITL/Compaction | entities-graph.md | ~390 | architect, product-owner | Core primitives, graph, checkpoint + D21: Document, PromptValue, TrustLevel, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType + D23: PreToolCallHook, PreToolDecision, ToolCallPreview, ToolApprovalRequest, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary |
-| Entities — Server/Policy/Provider | entities-server.md | ~95 | architect, product-owner | Server, governance, and provider entities |
-| Domain Invariants | invariants.md | ~175 | product-owner, architect | DI-NNN business rules (15 invariants) |
-| Domain Events | events.md | ~175 | architect | Processing stages, triggers, preconditions; StreamEvent taxonomy 15 variants (D23); ToolApprovalRaised/Resolved + CompactionExecuted domain events (D23) |
-| Edge Cases | edge-cases.md | ~133 | story-writer, test-writer | DEC-NNN domain-level edge cases (13 cases) |
-| Assumptions | assumptions.md | ~48 | product-owner, test-writer | ASM-NNN with validation methods (9 assumptions) |
-| Risks | risks.md | ~51 | product-owner, architect | R-NNN risk register (8 risks) |
-| Failure Modes | failure-modes.md | ~257 | architect, test-writer | FM-NNN runtime failure catalog (19 modes) |
-| Differentiators | differentiators.md | ~62 | product-owner | Competitive differentiator → CAP-NNN traceability |
-| Ubiquitous Language — Core/Graph/D21/D23 | ubiquitous-language-core.md | ~420 | all agents | Core and graph term definitions + D21 (16 terms) + D23 (13 terms: PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary, ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool) |
-| Ubiquitous Language — Server/Policy | ubiquitous-language-server.md | ~100 | all agents | Server, policy/safety, error terms + reconciliation table |
-| Bounded Contexts | bounded-contexts.md | ~155 | architect | Crate-level subsystem boundaries |
+> **Size bands (S/M/L/XL):** S = <100 lines · M = 100–300 · L = 300–600 · XL = >600.
+> Update a band only when a shard crosses a tier boundary — which coincides with the DF-021
+> split review, so the maintenance cost is already paid at that point. This column is an
+> orchestrator-authorized project-local divergence from the upstream template's `Tokens`
+> column; spec-steward holds the governance record.
+
+| Section | File | Size | Primary Consumer | Purpose |
+|---------|------|------|-----------------|---------|
+| Capabilities — P0 | capabilities-p0.md | M | product-owner, architect, story-writer | CAP-001–008 (Wave 0/1) + CAP-012, CAP-013, CAP-016 (D17-elevated to P0; cross-cutting Wave 0/1); CAP-002 revised v1.7 (D21 reversal) |
+| Capabilities — P1/P2 | capabilities-p1-p2.md | XL | product-owner, architect, story-writer | P1: CAP-009–011, CAP-014–015, CAP-017–018 (D23 Wave 1 promotions), CAP-020–038 (D21 + D23 additions); P2: CAP-019 only |
+| Entities — Core/Graph/Checkpoint/Retrieval/Serialization/VectorStore/Embeddings/HITL/Compaction | entities-graph.md | L | architect, product-owner | Core primitives, graph, checkpoint + D21: Document, PromptValue, TrustLevel, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType + D23: PreToolCallHook, PreToolDecision, ToolCallPreview, ToolApprovalRequest, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary |
+| Entities — Server/Policy/Provider | entities-server.md | M | architect, product-owner | Server, governance, and provider entities |
+| Domain Invariants | invariants.md | M | product-owner, architect | DI-NNN business rules (15 invariants) |
+| Domain Events | events.md | M | architect | Processing stages, triggers, preconditions; StreamEvent taxonomy 15 variants (D23); ToolApprovalRaised/Resolved + CompactionExecuted domain events (D23) |
+| Edge Cases | edge-cases.md | M | story-writer, test-writer | DEC-NNN domain-level edge cases (13 cases) |
+| Assumptions | assumptions.md | S | product-owner, test-writer | ASM-NNN with validation methods (9 assumptions) |
+| Risks | risks.md | S | product-owner, architect | R-NNN risk register (9 risks) |
+| Failure Modes | failure-modes.md | M | architect, test-writer | FM-NNN runtime failure catalog (19 modes) |
+| Differentiators | differentiators.md | S | product-owner | Competitive differentiator → CAP-NNN traceability |
+| Ubiquitous Language — Core/Graph/D21/D23 | ubiquitous-language-core.md | L | all agents | Core and graph term definitions + D21 (16 terms) + D23 (13 terms: PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary, ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool) |
+| Ubiquitous Language — Server/Policy | ubiquitous-language-server.md | M | all agents | Server, policy/safety, error terms + reconciliation table |
+| Bounded Contexts | bounded-contexts.md | L | architect | Crate-level subsystem boundaries |
 
 ## Cross-References
 
@@ -106,7 +117,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | DI-NNN | 15 | invariants.md |
 | DEC-NNN | 13 | edge-cases.md |
 | ASM-NNN | 9 | assumptions.md |
-| R-NNN | 8 | risks.md |
+| R-NNN | 9 | risks.md |
 | FM-NNN | 19 | failure-modes.md |
 
 > **Risk ID scheme note (F-10):** The R-NNN scheme in domain-spec/risks.md is canonical for all spec artifacts (PRD RTM, BC Traced-To, NFR catalog). STATE.md uses a separate R-N numeric alias (R8, R10, R11 map to R-004, R-005, R-006 respectively) retained for decision-log continuity only — see risks.md §Dual Risk ID Reconciliation for the full cross-walk table.

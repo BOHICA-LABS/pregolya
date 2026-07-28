@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-23"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.6"
+version: "1.7"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-19]
 changelog:
+  - "1.7 (FIX-BURST-280-corr/F-P175-C207/2026-07-28): Correct §Decision 5 phantom-existence claim (F-P175-C207). 'The existing one-way Python-checkpoint import tool...' — the tool does not exist; no v1 roster slot, no SS, no capability in the closed Phase 1b architecture; ADR-002 §Consequences correctly says 'post-v1 stretch'. Reworded §Decision 5 and §Consequences bullet to describe the DESIGN INTENT for a future post-v1 tool, not an existing deliverable. ADR-002 Rationale corrected in the same burst (removes 'in scope' qualifier)."
   - "1.6 (FIX-BURST-278/Wave-C-S5/2026-07-28): S5 canon — two FerrochainError struct literals in unlabelled Rust fences converted to FerrochainError::new(component, category, RetryHint::Never, code, message) canonical constructor form per D-42/D-49. (1) Decision 3 Property 1 Reviver unknown-type error: E-SRLZ-001 struct literal → FerrochainError::new(Component::Srlz, Category::Val, RetryHint::Never, ...). (2) Decision 3 Property 4 monolith-unregistered error: E-SRLZ-002 struct literal → FerrochainError::new(Component::Srlz, Category::Val, RetryHint::Never, ...). RetryHint::Never confirmed for both codes (VAL/broken subcategory; deserialization errors are non-retriable by construction)."
   - "1.5 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — Decision 3 Property 1 and Property 4 code sketches: Component::SRLZ → Component::Srlz; Category::VAL → Category::Val per ADR-010 v1.9 Direction B adjudication."
   - "1.4 (burst-249/2026-07-24): F-P148-02 — add Security Invariant labeled subsection to Decision 3. Adjudication option (b): stable anchor added to ADR rather than remapping citation sites. Resolves unresolvable 'ADR-016 Security Invariant' citations in BC-2.19.005, BC-INDEX Red Gate table, VP-010.md. F-P148-01 context: BC-2.19.005 Architecture Authority cites 'ADR-016 Decision 6' (nonexistent; ADR-016 has only Decisions 1–5) — PO handoff to fix to 'ADR-016 Decision 3 Property 1'."
@@ -248,16 +249,20 @@ Version tolerance: lc-JSON blobs from older langchain versions may carry older n
 prefixes. The legacy remap handles this transparently — callers do not need to know which
 version serialized the blob.
 
-## Decision 5 — One-Way Python Checkpoint Import Tool Compatibility
+## Decision 5 — One-Way Python Checkpoint Import Tool Compatibility (Post-v1 Design Intent)
 
-The existing one-way Python-checkpoint import tool (noted in the D21 task context) reads
-Python-serialized checkpoints and converts them to ferrochain format. It uses the `Reviver`
-to deserialize checkpoint payloads. This is read-only: the Reviver is called with the same
-allowlist and the same safety properties. The import tool does NOT bypass the registry.
+A future one-way Python-checkpoint import tool (post-v1 scope; no v1 roster slot, no SS,
+no capability in the closed Phase 1b architecture — see ADR-002 §Consequences) would read
+Python-serialized checkpoints and convert them to ferrochain format. By design, it would use
+the `Reviver` to deserialize checkpoint payloads with the same allowlist and the same safety
+properties enforced by Decisions 1–4. The import tool would NOT bypass the registry.
 
 If a Python checkpoint contains a `langchain`-monolith type (E-SRLZ-002) or an unregistered
-type (E-SRLZ-001), the import returns a structured error identifying the unloadable entry
-so the user can handle it (skip, partial import, etc.). No silent data loss.
+type (E-SRLZ-001), the import would return a structured error identifying the unloadable entry
+so the caller can handle it (skip, partial import, etc.). No silent data loss.
+
+**v1 scope note:** This decision documents the Reviver's compatibility design for a future
+tool. No implementation of this tool exists in v1.
 
 ## Rationale
 
@@ -335,6 +340,7 @@ security posture is strictly better than the reference.
   optional `lc-serializable` Cargo feature that activates their `inventory::submit!` calls.
 - The valid-namespace `HashSet<String>` is computed once at startup in a `OnceLock`
   populated from `inventory::iter::<LcEntry>()`. This adds ~1ms to binary startup.
-- The one-way Python checkpoint import tool uses the Reviver with full safety properties.
-  E-SRLZ-001 / E-SRLZ-002 propagate as structured errors to the import caller.
+- A future one-way Python checkpoint import tool (post-v1 scope; no v1 roster slot) would
+  use the Reviver with full safety properties. E-SRLZ-001 / E-SRLZ-002 would propagate as
+  structured errors to the import caller. No v1 implementation exists.
 - VP-010 (Kani P0, seeded burst-223): prove that a type NOT in the registry NEVER successfully deserializes.

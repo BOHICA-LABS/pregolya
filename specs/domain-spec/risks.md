@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: risks
-version: "1.1"
+version: "1.2"
 status: active
 producer: business-analyst
-timestamp: 2026-07-17T00:00:00Z
+timestamp: 2026-07-28T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -13,8 +13,9 @@ inputs:
   - .factory/planning/market-intel.md
 input-hash: "f4db835"
 traces_to: L2-INDEX.md
-decisions: [D1, D2, D7, D17]
+decisions: [D1, D2, D7, D11, D17]
 changelog:
+  - "v1.2 (fix-burst-280/wave-c/2026-07-28): R-009 added — no v1 migration path for Python LangGraph checkpoint stores (gap identified during ASM-007 impact re-derivation; F-P175-C207). Traced to CAP-005, ASM-007, ADR-002 §Consequences. D11 added to decisions list. Dual Risk ID Reconciliation and Risk-to-Capability Traceability sections updated."
   - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (content was stable D-NNN/R-NNN facts baked at authoring time, not live state); COMPARATIVE-ASSESSMENT.md added (R-004/R-005/R-006 sourced from D17-Q9 analysis); market-intel.md added (R-001 competitor intelligence source); input-hash recomputed."
 ---
 
@@ -37,6 +38,7 @@ Each R-NNN has `Status: open` and a `Category` tag. NFR and security candidates 
 | R-006 | MCP test voids: bare ToolException re-raise path untested upstream; `__aenter__` NotImplementedError contract untested | Medium | Medium | open | reliability | CAP-010, DEC-012 | Phase-1 BC backlog (D17-Q9). Explicit Red Gate tests for both paths. If MCP adapter behavior differs from langchain-mcp-adapters==0.3.0 on these paths, treat as a conformance defect. NFR candidate: no. |
 | R-007 | langchain-community v1.0.0a1 API churn: alpha tag indicates instability; community integration wave targets demand-ranked surface, not the archived module manifest | Low | Medium | open | business | Post-v1 community scope (D1) | Community integrations are post-v1, third-party contributed, conformance-validated via ferrochain-standard-tests. Not a v1 blocker. Monitor for alpha-to-stable promotion. NFR candidate: no. |
 | R-008 | D9 graph execution ADR requires ≥2 alternatives presented to human before lock; if architect presents only one option, the gate does not close and Phase-2 story decomp blocks | Medium | HIGH | open | reliability | CAP-003, CAP-004, all Wave 1 | D9 gate is explicit: architect must present ≥2 alternatives with production trade-offs. D11 steers apply (BSP, msgpack, 3-tier durability, sync default). Human approval required before architecture lock. NFR candidate: no. |
+| R-009 | No v1 migration path for Python LangGraph checkpoint stores — the post-v1 one-way import tool is the only planned migration route (ADR-002 §Consequences); v1 GA ships with no in-v1 path for teams carrying existing Python LangGraph checkpoint stores | Low | Medium | open | business | CAP-005, ASM-007, ADR-002 §Consequences | Publish "Coming from LangChain?" docs at v1 GA explicitly stating "start fresh" as the checkpoint migration story for v1. Post-v1 import tool crate (ADR-002 §Consequences; separate crate, post-v1 stretch) is the planned long-term mitigation. NFR candidate: no. Security focus: no. |
 
 ---
 
@@ -53,7 +55,7 @@ only; do not use them in new spec or BC authoring.
 | R-005 | R10 | NamedBarrierValue / EphemeralValue — no upstream unit tests for boundary behavior |
 | R-006 | R11 | MCP test voids: bare ToolException re-raise path + `__aenter__` NotImplementedError contract untested |
 
-All other domain-spec risks (R-001–R-003, R-007–R-008) have no direct STATE.md alias; they
+All other domain-spec risks (R-001–R-003, R-007–R-009) have no direct STATE.md alias; they
 were introduced during Phase-1 domain modeling. BC frontmatter `red_gate_source` fields in
 BC-INDEX Red Gate table cite STATE.md R-N form (R8/R10/R11) because the BCs were authored
 before the domain-spec mapping was established. Use this table to cross-walk the two schemes.
@@ -72,3 +74,6 @@ before the domain-spec mapping was established. Use this table to cross-walk the
   of that capability.
 - R-008 affects CAP-003 and CAP-004 because without an approved graph ADR, no graph BC
   can be authored.
+- R-009 affects CAP-005 because durable checkpointing is the capability whose wire format
+  creates the migration gap; ASM-007 is the grounding assumption whose stale mitigation
+  (import tool) was removed by ADR-002 §Consequences.

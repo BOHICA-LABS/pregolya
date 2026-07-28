@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.004
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.2 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded); reorder trailing section to 'E-TOOLS-001/008; DirEntry Struct' (DirEntry Struct is not an error code and is retained as a structural descriptor after the slash-separated error block). Before: 'E-TOOLS-001; DirEntry Struct'. After: 'E-TOOLS-001/008; DirEntry Struct'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-3 + PC-5); Category::SECURITY → Category::Security (PC-2), Category::TOOL → Category::Tool (PC-3 + PC-5)."
   - "1.4 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check(path) with canonical canonicalize_beneath_root at 3 sites: PC-1 happy-path ('passes' to 'succeeds'), Invariants call-obligation bullet, VP-2.23.004-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout."
+  - "1.5 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to FerrochainError::new() form. PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC3 E-TOOLS-008 NotADirectory: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed. PC5 E-TOOLS-008 generic I/O: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); same phantom-field removal. TD-VSDD-060 sibling sweep: EC-002/EC-005/TV-004 JSON-like notation classified (c) message-component descriptions; left as-is."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -78,18 +79,15 @@ filter at the application layer.
    Entries are sorted lexicographically by `name`. Hidden files (names starting with `.`)
    are included unless excluded by `PathGuard` policy.
 2. **Path confinement violation:** Returns
-   `Err(FerrochainError { component: Component::Tools, category: Category::Security,
-   code: "E-TOOLS-001", message: "PathConfinementViolation: path '<path>' is outside the
-   configured PathGuard scope" })`.
+   `Err(FerrochainError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
+   "PathConfinementViolation: path '<path>' is outside the configured PathGuard scope"))`.
 3. **Path is a file, not a directory:** Returns
-   `Err(FerrochainError { component: Component::Tools, category: Category::Tool, code: "E-TOOLS-008",
-   message: "ListDirTool I/O error on '<path>': NotADirectory",
-   tool_type: "ListDirTool", path: <dir_path>, io_kind: "NotADirectory" })`.
+   `Err(FerrochainError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
+   "ListDirTool I/O error on '<path>': NotADirectory"))`.
 4. **Empty directory:** Returns `ToolOutput::Json([])` — zero entries, not an error.
 5. **Permission denied or not found:** Returns
-   `Err(FerrochainError { component: Component::Tools, category: Category::Tool, code: "E-TOOLS-008",
-   message: "ListDirTool I/O error on '<path>': <io_kind>",
-   tool_type: "ListDirTool", path: <dir_path>, io_kind: <std::io::ErrorKind debug name> })`.
+   `Err(FerrochainError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
+   "ListDirTool I/O error on '<path>': <io_kind>"))`.
 
 ## Invariants
 
