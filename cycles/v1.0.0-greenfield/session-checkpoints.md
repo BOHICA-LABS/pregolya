@@ -1727,3 +1727,31 @@ P1D-174 FULL-PERIMETER — now COMPLETE (recorded pass-174.md). STATE.md v4.30 i
 
 ### ARCHIVE METADATA
 Date: 2026-07-27 | Archived at: STATE.md v4.30 P1D-174 pass record commit | STATE.md: v4.29 → v4.30 | P1D-174 recorded | D-39+D-40 added | R14 added | L-087..L-093 minted (93 lessons total) | streak 0/3
+
+---
+
+## Checkpoint v4.30 (archived — replaced by v4.31)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1 (Spec Crystallization), greenfield+semport mode. Adversarial streak 0/3 after 175 passes; P1D-174 FULL-PERIMETER recorded (pass-174.md, ~256 findings, 9 CRIT). Primary conclusion: gates scoped by label are blind to dialect variants — validator suite certifies unmeasured state. Next action: fix-burst 277 — process-gap gates FIRST, then FerrochainError constructor + Tool object-safety adjudications, then content.
+
+### FROZEN HEAD NOTE
+STATE.md v4.29 cited `423c01a` as the frozen HEAD for P1D-174, but the actual factory-artifacts HEAD was `cd0a2c7` (the D-38 wrap commit itself — a self-referential citation artifact; a wrap commit cannot cite its own SHA). P1D-174 was correctly gated against `cd0a2c7`. The frozen HEAD for P1D-175 = `git -C .factory log -1 --format='%h'` at session start (this commit cannot self-cite; run the git command).
+
+### HEADS
+develop `46725ad` — PUSHED (local == origin/develop, clean). factory-artifacts — push this commit (P1D-174 pass record). No worktrees. No open PRs.
+
+### NEXT-ACTION WAS
+Dispatch fix-burst 277 for P1D-174 remediation. Hard constraints: (a) process-gap gates FIRST — validator false-confidence family (verify-form-a-changelog-direction UNVERIFIED=0 for 6 unverifiable files), gate #25 re-keying from `ROLL-UP` to `crate-level` dialect, changelog-vs-body diff check gate; (b) THEN FerrochainError constructor (F-P174-601/901) + Tool E0038 adjudication (F-P174-801/615) — many content fixes depend on these structural resolutions; (c) per D-40, record EACH burst as a state-manager commit immediately before dispatching the next fix agent; (d) adversary tool profile is Read/Grep/Glob ONLY — never instruct it to write files; dispatch slices at ~40 BC files max per slice. STATUS: fix-burst 277 Wave A COMPLETE (`984fbfe`).
+
+### PERIMETER SNAPSHOT (post-burst-276-content-3)
+decomp 71/69+2; criticality registry 77 (12/28/35/2); purity 82 rows (33/37/12); 129 BCs (51/75/3); 109 error codes; 675 TVs; 38 CAPs; 15 DIs; 13 VPs; 20 ADR files; 21 crates; 14 bounded contexts; 15 StreamEvents; 17 Components; 11 event_types; 37 gates; 11 Red Gate BCs; allowlist 24 entries; citation coverage 308; eval::judge 11/11. Census sextuple (71, 69, 2, 77, 76, 69) — both diff-sets EMPTY. CHECK4 module-canonicality: 6/6 CLEAN.
+
+### VALIDATOR BASELINES (frozen HEAD cd0a2c7, P1D-174 pass report)
+records-lint: PASS=2 WARN=3 (clean tree — diff-based gates expected). verify-form-a-changelog-direction: PASS=198 WARN=4 FAIL=0 UNVERIFIED=0 (6 vacuous PASSes — CRIT 9; fix-burst 277 Wave A addressed). verify-no-version-pins: PASS=198. verify-arch-anchor-resolution: PASS=129. verify-enum-variant-casing: PASS=198. verify-adr-decision-refs: PASS=308 (blocking). verify-module-canonicality: PASS=6/6 (promotion trigger met but not yet promoted). verify-changelog-date-monotonicity: PASS=131 WARN=75. verify-sha-currency: PASS=2 WARN=1. verify-red-gate-consistency: PASS=40 WARN=3 (VP-011/012/013 Direction-3).
+
+### COVERAGE DEBTS (carried forward to v4.31)
+VP-002/003/004/005/007/008 bodies not read line-by-line (slice 5 pattern probe only); BC-2.15.004/006/16.002/17.002/18.001/002/003/005 targeted-grep only (slice 9a); BC-2.12.001/002/005/007 grep only (slice 8b); product-brief.md + capabilities-p1-p2.md not reviewed (slice 6b dispatch error); 36 of 37 gates not audited body-deep (slice 6b).
+
+### ARCHIVE METADATA
+Date: 2026-07-28 | Archived at: STATE.md v4.31 session wrap D-41 | STATE.md: v4.30 → v4.31 | fix-burst 277 Wave A COMPLETE (`984fbfe`) | D-41 added | RESUME SNAPSHOT D-41 written | streak 0/3

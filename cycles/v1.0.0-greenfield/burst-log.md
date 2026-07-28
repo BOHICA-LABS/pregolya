@@ -5652,3 +5652,59 @@ Burst 275 (P1D-172b fix-burst) row archived from STATE.md v4.28 Current Phase St
 **Archived row:** P1D-173 state record (oldest row, displaced by P1D-174 entry)
 
 **STATE.md row content (verbatim):** P1D-173 state record — FULL-PERIMETER pass CLOSED (130 raw / ~122 unique; 4 CRIT / ~22 HIGH; 8 slices; frozen HEAD 8954a11; NOT CLEAN strict/PR-merge; all validators PASS existence-only; D-35 added; 5 lessons L-065..L-069 minted; burst-273 archived); 0/3. NEXT: fix-burst 276 — process-gap gates FIRST (F-P173-303/306/319). | adversary (8 slices) + state-manager | COMPLETE (pass recorded); fix-burst 276 Wave A COMPLETE | 130 raw / ~122 unique findings. 4 CRIT, ~22 HIGH. All validators PASS. Jump = coverage expansion.
+
+---
+
+## Fix-burst 277 Wave A (archived from STATE.md v4.31 Current Phase Steps)
+
+**Date:** 2026-07-28
+**Agents:** devops-engineer + state-manager
+**Commit:** `984fbfe` — harden(gates): fix-burst 277 Wave A — validator false-confidence family
+**Archived from:** STATE.md v4.31 Current Phase Steps (oldest row displaced = Burst 276 Wave A)
+
+### Summary
+
+Fix-burst 277 Wave A repaired the validator false-confidence family identified as the PRIMARY CONCLUSION of P1D-174 FULL-PERIMETER: the gate suite was certifying state it never measured (6 confirmed false closures; vacuous-PASS paths in verify-form-a-changelog-direction). All 8 tasks delivered in one commit.
+
+**8 tasks delivered:**
+
+- **Task 1 (CRIT F-ORCH-174-04)** — `verify-form-a-changelog-direction.sh`: three vacuous-PASS paths (BC+Form-B-only, BC+v1.0+no-changelog, BC+no-changelog) now emit `BC_UNVERIFIED`; `BC_UNVERIFIED > 0` exits 1. Test file gained scenarios 15–16; 74/74 pass.
+- **Task 2** — `records-lint.sh`: L9/L10/L11 clean-tree state changed from `WARN` to `UNVERIFIED`; UNVERIFIED counter added to summary.
+- **Tasks 3+5** — `verify-module-canonicality.sh`: promoted advisory to **blocking** (exit 1 on FAIL); stale hardcoded promotion counts removed; `ARCH-INDEX.md` §Verification Properties added as a 7th scanned document; gate #25 reverse equation implemented and passing at runtime (77 registry rows − 70 matched = 7 crate-level rows).
+- **Task 4** — NEW `hooks/verify-changelog-claim-applied.sh` (advisory): four heuristics — removal claims, rename/arrow-notation claims, input-hash frontmatter cross-check, Form-A version vs frontmatter version.
+- **Task 6** — NEW `hooks/verify-bc-frontmatter-schema.sh` (advisory): validates boolean `red_gate` / `vp_seed`, conditional `red_gate_source` / `vp_id`, required fields, and typo'd-key detection.
+- **Task 7a** — `verify-arch-anchor-resolution.sh`: `citation_exists()` now returns False for wildcard paths; 4 BCs correctly FAIL.
+- **Task 7b** — `verify-adr-decision-refs.sh`: Check 4 added — advisory WARN when citing-sentence keywords have no overlap with the cited ADR Decision heading (stopword filtering, 4+ char tokens).
+- **Task 8** — NEW `hooks/pre-commit-validators.sh` + `.git/hooks/pre-commit` wired for factory-artifacts. Blocking gates: `verify-no-version-pins`, `verify-adr-decision-refs`, `records-lint`. Advisory with documented promotion paths: `verify-form-a-changelog-direction`, `verify-arch-anchor-resolution`, `verify-module-canonicality`, plus the 2 new gates.
+
+### Post-Wave-A validator baselines (regression baseline)
+
+| Validator | P1D-174 baseline (`cd0a2c7`) | Post-Wave-A (`984fbfe`) | Note |
+|---|---|---|---|
+| verify-no-version-pins | PASS=198 | PASS=198 | unchanged |
+| verify-enum-variant-casing | PASS=198 | PASS=198 | unchanged |
+| verify-adr-decision-refs | PASS=308 | PASS=308 | unchanged |
+| verify-form-a-changelog-direction | PASS=198 UNVERIFIED=0 | PASS=192 BC_UNVERIFIED=6 | 6 vacuous PASSes unmasked |
+| verify-arch-anchor-resolution | PASS=129 | PASS=125 FAIL=4 | 4 wildcard citations now rejected |
+
+### Three Wave A follow-up routings (not done in Wave A)
+- **product-owner**: add Form-A frontmatter `changelog:` to 6 BCs flagged BC_UNVERIFIED — BC-2.07.002, BC-2.08.011, BC-2.08.012, BC-2.09.007, BC-2.13.007, BC-2.15.005.
+- **architect**: replace wildcard `architecture/decisions/ADR-NNN-*.md` citations in BC-2.20.001, BC-2.20.002, BC-2.21.002, BC-2.22.001 (now correctly FAILing).
+- **architect**: reconcile `purity-boundary-map` / `verification-coverage-matrix` set-diff mismatches so `verify-module-canonicality` can go fully blocking.
+
+### Three open questions from Wave A (unanswered in the devops-engineer report)
+- Why `hooks/test-f-b276-02-validator-false-confidence.sh` passed while the defect it was minted to catch was live.
+- Acceptance-test results for the new `verify-changelog-claim-applied.sh` against the five known false closures (verification-architecture v2.12 §VP-001; BC-2.19.003 v1.2 duplicate-detection; VP-013 v1.13 §Lifecycle; BC-2.07.002 v1.5 input-hash; test-vectors.md v2.7-vs-claimed-v2.8).
+- How many BCs currently fail the new `verify-bc-frontmatter-schema.sh`.
+
+### Convergence / streak
+
+0/3 unchanged. A fix burst does not advance the streak. 175 adversary passes total. NEXT: fix-burst 277 Wave B — architect adjudications.
+
+---
+
+### Archived from Current Phase Steps
+
+Burst 276 Wave A row archived from STATE.md v4.30 Current Phase Steps table (oldest row; replaced by fix-burst 277 Wave A entry).
+
+**Burst 276 Wave A STATE.md row content (verbatim):** Burst 276 Wave A — fix-burst COMPLETE (6 process-gap findings F-P173-303/306/319/308/309/310 closed; bc-authoring-plan v2.59; gates 36→37; 2 new advisory hooks CHECK4/CHECK6; records-lint L10+CHECK1/2/3 in verify-adr-decision-refs; CHECK1=17/CHECK4=52/CHECK6=5 baselines; validator false-neg found+fixed in-burst; 5 lessons L-070..L-074; P1D-172a-state-record archived); 0/3. NEXT: Waves B+C. | product-owner + devops-engineer + state-manager | COMPLETE | 6 process-gap findings closed. Gates 36→37. 2 new advisory hooks.
