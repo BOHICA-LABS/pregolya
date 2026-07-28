@@ -5813,3 +5813,11 @@ Five rows archived from STATE.md v4.31 Current Phase Steps table.
 **Row 4 (Burst 276 content wave 2):** Burst 276 content wave 2 — fix-burst COMPLETE (CRIT F-P173-601: PathGuard phantom purge + 16-site PathGuard::check→canonicalize_beneath_root sweep; F-P173-602/603/604/605 HIGH signature defects fixed; F-P173-614 per-method anchors restored; BC-2.08.004 gap → architect; 3 lessons L-079..L-081; P1D-172b-state-record archived); 0/3.
 
 **Row 5 (Burst 276 content wave 1):** Burst 276 content wave 1 — fix-burst COMPLETE (2 CRIT closed: F-P173-211 4-site FerrochainError Arc-clone; F-P173-301/402 eval::judge mis-anchor; F-P173-401 3-doc deadlock broken; F-P173-202/210/214/619 closed; canonicality filter 70→71; 4 lessons L-075..L-078; burst-274 archived); 0/3.
+
+---
+
+### Archived from Current Phase Steps (STATE.md v4.32 → v4.33)
+
+One row archived from STATE.md v4.32 Current Phase Steps table.
+
+**Row (Fix-burst 277 Wave A follow-up audit — COMPLETE):** Fix-burst 277 Wave A follow-up audit — devops-engineer COMPLETE (verify-bc-frontmatter-schema complete rewrite PASS=129/0/0; verify-changelog-claim-applied FC-1 now caught/FC-3/FC-4 structural limits documented; verify-form-a-changelog-direction invented carve-out removed; verify-adr-decision-refs Check 4 deleted; pre-commit-validators.sh wired all BLOCKING validators; 3 Wave A open questions answered; BC_UNVERIFIED 6→0; FC-2 DuplicateRegistration phantom documented as fabricated; FC-5 hash refreshed); 0/3. Validator suite corrected. Gate provenance discipline codified D-46.

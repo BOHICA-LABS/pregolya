@@ -1779,3 +1779,22 @@ VP-002/003/004/005/007/008 bodies not read line-by-line; BC-2.15.004/006/16.002/
 
 ### ARCHIVE METADATA
 Date: 2026-07-28 | Archived at: STATE.md v4.32 session wrap D-47 | STATE.md: v4.31 → v4.32 | fix-burst 277 Waves B/C/D + Wave-A follow-up audit COMPLETE | D-42..D-47 added | 6 lessons L-094..L-099 minted | BC_UNVERIFIED resolved 6→0 | streak 0/3
+
+---
+
+## Checkpoint v4.32 (archived — replaced by v4.33)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1 (Spec Crystallization), greenfield+semport. Adversarial streak **0/3 after 175 passes**; P1D-174 FULL-PERIMETER found 256 findings (9 CRIT); fix-burst 277 Waves A/B/C/D + Wave-A follow-up audit ALL COMPLETE. Validator baselines: records-lint PASS=5; verify-no-version-pins PASS=198; verify-form-a-changelog-direction PASS=198 WARN=7 BC_UNVERIFIED=0; verify-bc-frontmatter-schema PASS=129; verify-adr-decision-refs PASS=322; verify-arch-anchor-resolution PASS=129. **NEXT ACTION: P1D-175 FULL-PERIMETER** adversarial pass.
+
+### HEADS (v4.32)
+develop `46725ad` — clean, `== origin/develop`, PUSHED. factory-artifacts `2d36282` — PUSHED. No worktrees. No open PRs.
+
+### NEXT-ACTION WAS
+Dispatch `vsdd-factory:adversary` for **P1D-175 FULL-PERIMETER** against frozen HEAD 2d36282. STATUS: COMPLETE (189 findings; 10 CRIT; 7 slices; NOT convergence evidence — debt-first perimeter).
+
+### COVERAGE DEBTS (carried forward to v4.33 — partially discharged by P1D-175)
+VP-002/003/004/005/007/008 bodies: frontmatter + harness-name + red_gate axis only (DISCHARGED by P1D-175); BC-2.15.004/006/16.002/17.002/18.001/002/003/005 pattern-probe only (DISCHARGED by P1D-175); BC-2.12.001/002/005/007 grep only (DISCHARGED by P1D-175); specs/product-brief.md not reviewed (DISCHARGED by P1D-175); 36 of 37 gates body-deep (PARTIALLY; gate #25 only); OPEN: BC-2.18.004 not read; 105 hyphenated-module occurrences + 131 version pins not triaged; 129 TV Count cells not hand-summed; ADR-010 canon-note unopened; per-VP frontmatter module: only.
+
+### ARCHIVE METADATA
+Date: 2026-07-28 | Archived at: STATE.md v4.33 session wrap D-53 | STATE.md: v4.32 → v4.33 | P1D-175 FULL-PERIMETER recorded (189 findings; 10 CRIT; 7 slices; frozen HEAD 2d36282; NOT convergence evidence) | D-48..D-53 added | 8 lessons L-100..L-107 minted | publish-all.sh regenerated to 21-crate roster | 12 stub crates created | streak 0/3
