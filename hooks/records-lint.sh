@@ -185,15 +185,17 @@ RUST_LITERAL_EXCL='\b[0-9][0-9a-f]*(f32|f64|f16|f128)\b|\b0b[01]+\b'
 PASS=0
 WARN=0
 FAIL=0
+UNVERIFIED=0
 
 emit() {
   local level="$1"
   local msg="$2"
   echo "[$level] $msg"
   case "$level" in
-    PASS) PASS=$((PASS + 1)) ;;
-    WARN) WARN=$((WARN + 1)) ;;
-    FAIL) FAIL=$((FAIL + 1)) ;;
+    PASS)       PASS=$((PASS + 1)) ;;
+    WARN)       WARN=$((WARN + 1)) ;;
+    FAIL)       FAIL=$((FAIL + 1)) ;;
+    UNVERIFIED) UNVERIFIED=$((UNVERIFIED + 1)) ;;
   esac
 }
 
@@ -449,7 +451,7 @@ check_l9() {
   DIFF_OUTPUT="$(git -C "$FACTORY_DIR" diff HEAD -- '*.md' 2>/dev/null || true)"
 
   if [ -z "$DIFF_OUTPUT" ]; then
-    emit WARN "L9: no diff relative to HEAD — nothing to check (acceptable if running on a clean tree)"
+    emit UNVERIFIED "L9: no diff relative to HEAD — checks are UNVERIFIED on a clean tree (not checked, not passed)"
     return
   fi
 
@@ -488,7 +490,7 @@ check_l10() {
   DIFF_OUTPUT="$(git -C "$FACTORY_DIR" diff HEAD -- '*.md' 2>/dev/null || true)"
 
   if [ -z "$DIFF_OUTPUT" ]; then
-    emit WARN "L10 [ADVISORY]: no diff relative to HEAD — nothing to check (acceptable if running on a clean tree)"
+    emit UNVERIFIED "L10 [ADVISORY]: no diff relative to HEAD — checks are UNVERIFIED on a clean tree (not checked, not passed)"
     return
   fi
 
@@ -553,7 +555,7 @@ check_l11() {
   DIFF_OUTPUT="$(git -C "$FACTORY_DIR" diff HEAD -- '*.md' 2>/dev/null || true)"
 
   if [ -z "$DIFF_OUTPUT" ]; then
-    emit WARN "L11: no diff relative to HEAD — nothing to check (acceptable if running on a clean tree)"
+    emit UNVERIFIED "L11: no diff relative to HEAD — checks are UNVERIFIED on a clean tree (not checked, not passed)"
     return
   fi
 
@@ -645,7 +647,7 @@ echo "--- L11: Content-Hash Digest Ban (newly-authored record/changelog/spec pro
 check_l11
 
 echo ""
-echo "records-lint: PASS=$PASS WARN=$WARN FAIL=$FAIL"
+echo "records-lint: PASS=$PASS WARN=$WARN FAIL=$FAIL UNVERIFIED=$UNVERIFIED"
 
 if [ "$FAIL" -gt 0 ]; then
   echo "RESULT: FAIL — resolve violations before committing"

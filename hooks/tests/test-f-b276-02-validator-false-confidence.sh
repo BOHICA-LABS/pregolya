@@ -924,6 +924,106 @@ assert_scenario_rev_n_descending_with_version() {
         "$DIR_OUT"
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario 15 — BC + Form-B + no Form-A → BC_UNVERIFIED (blocking)
+#
+# A BC file that has a Form-B body `## Changelog` table (direction valid) but
+# NO frontmatter `changelog:` key (Form-A) must emit BC_UNVERIFIED and cause
+# RESULT: FAIL. BC files require Form-A for machine-readable version provenance.
+# This is the exact false-confidence gap identified in F-ORCH-174-04.
+# ─────────────────────────────────────────────────────────────────────────────
+write_fixture_bc_form_b_only_no_form_a() {
+    local d="$1"
+    # BC file: has Form-B body changelog (valid, descending) but NO Form-A
+    cat > "$d/specs/behavioral-contracts/ss-00/BC-TEST-FORM-B-ONLY.md" <<'MDEOF'
+---
+title: Test BC Form-B only (no Form-A) — must be BC_UNVERIFIED
+document_type: behavioral-contract
+version: "1.3"
+status: active
+---
+## Overview
+
+Some behavioral contract content.
+
+## Changelog
+
+| Version | Date | Summary |
+|---------|------|---------|
+| 1.3 | 2026-07-27 | third revision |
+| 1.2 | 2026-07-25 | second revision |
+| 1.1 | 2026-07-20 | initial |
+MDEOF
+}
+
+assert_scenario_bc_form_b_only_no_form_a() {
+    # Must emit [BC_UNVERIFIED] — BC without Form-A is a version-provenance gap
+    assert_contains \
+        "bc-form-b-only: [BC_UNVERIFIED] emitted" \
+        "$DIR_OUT" "[BC_UNVERIFIED]"
+    assert_contains \
+        "bc-form-b-only: no-form-a-changelog-key reason present" \
+        "$DIR_OUT" "no-form-a-changelog-key"
+    # Must NOT emit [PASS] for this file — that was the vacuous-pass defect
+    assert_not_contains \
+        "bc-form-b-only: must not emit [PASS] for this BC" \
+        "$DIR_OUT" "[PASS] specs/behavioral-contracts/ss-00/BC-TEST-FORM-B-ONLY.md"
+    # BC_UNVERIFIED is blocking — RESULT must be FAIL
+    assert_result_fail \
+        "bc-form-b-only: RESULT: FAIL (BC_UNVERIFIED is blocking)" \
+        "$DIR_OUT"
+    # Summary must show BC_UNVERIFIED=1
+    assert_contains \
+        "bc-form-b-only: summary shows BC_UNVERIFIED=1" \
+        "$DIR_OUT" "BC_UNVERIFIED=1"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario 16 — BC v1.0 + no Form-A + no Form-B → BC_UNVERIFIED (blocking)
+#
+# A BC file at version 1.0 with no changelog of either form must emit
+# BC_UNVERIFIED and cause RESULT: FAIL. The "trivially valid" v1.0 exception
+# does not apply to BC files — every BC needs Form-A for version provenance.
+# This is the second vacuous-pass path closed by F-ORCH-174-04.
+# ─────────────────────────────────────────────────────────────────────────────
+write_fixture_bc_v1_no_changelog() {
+    local d="$1"
+    # BC file at v1.0, no Form-A and no Form-B
+    cat > "$d/specs/behavioral-contracts/ss-00/BC-TEST-V1-NO-CL.md" <<'MDEOF'
+---
+title: Test BC version 1.0 no changelog — must be BC_UNVERIFIED
+document_type: behavioral-contract
+version: "1.0"
+status: active
+---
+## Overview
+
+Initial authoring with no changelog entries.
+MDEOF
+}
+
+assert_scenario_bc_v1_no_changelog() {
+    # Must emit [BC_UNVERIFIED] — v1.0 BC without Form-A is still a provenance gap
+    assert_contains \
+        "bc-v1-no-changelog: [BC_UNVERIFIED] emitted" \
+        "$DIR_OUT" "[BC_UNVERIFIED]"
+    assert_contains \
+        "bc-v1-no-changelog: no-form-a-changelog-key reason present" \
+        "$DIR_OUT" "no-form-a-changelog-key"
+    # Must NOT emit [PASS] — that was the vacuous-pass defect being fixed
+    assert_not_contains \
+        "bc-v1-no-changelog: must not emit [PASS] for this BC" \
+        "$DIR_OUT" "[PASS] specs/behavioral-contracts/ss-00/BC-TEST-V1-NO-CL.md"
+    # BC_UNVERIFIED is blocking — RESULT must be FAIL
+    assert_result_fail \
+        "bc-v1-no-changelog: RESULT: FAIL (BC_UNVERIFIED is blocking)" \
+        "$DIR_OUT"
+    # Summary must show BC_UNVERIFIED=1
+    assert_contains \
+        "bc-v1-no-changelog: summary shows BC_UNVERIFIED=1" \
+        "$DIR_OUT" "BC_UNVERIFIED=1"
+}
+
 # ── Run all scenarios ─────────────────────────────────────────────────────────
 
 echo "TAP version 13"
@@ -944,6 +1044,8 @@ run_scenario "form_b_numeric_version_compare"
 run_scenario "rev_n_descending_no_version"
 run_scenario "rev_n_ascending_fail"
 run_scenario "rev_n_descending_with_version"
+run_scenario "bc_form_b_only_no_form_a"
+run_scenario "bc_v1_no_changelog"
 
 echo ""
 echo "# Results: $PASS_COUNT passed, $FAIL_COUNT failed"

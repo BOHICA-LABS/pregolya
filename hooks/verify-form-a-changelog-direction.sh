@@ -20,9 +20,10 @@
 #             version of the FIRST (newest, top) table row.
 #     Single-row tables are trivially valid (monotonicity satisfied).
 #
-#   No changelog (version == "1.0", neither Form-A nor Form-B present):
-#     Treated as trivially valid — initial-authoring BC requires no history.
-#     Emits PASS.
+#   No changelog (any version, neither Form-A nor Form-B present):
+#     BC requires Form-A changelog: for machine-readable version provenance.
+#     Emits BC_UNVERIFIED (blocking). The "trivially valid" v1.0 exception
+#     does not apply to behavioral contracts — every BC must carry Form-A.
 #
 #   Both forms present (both Form-A and Form-B in the same file):
 #     Gate convention requires one form per file.  Each form is validated
@@ -96,8 +97,11 @@
 #   - Version numbers compared as integer tuples (so 1.10 > 1.9 correctly).
 #   - Files lacking a 'version:' key are UNVERIFIED (non-blocking, counted
 #     separately).  They must not reach PASS without having been checked.
-#   - Files lacking a changelog AND version == "1.0": PASS (trivially valid).
-#   - Files lacking a changelog AND version > "1.0" AND no Form-B: UNVERIFIED.
+#   - BC files lacking Form-A changelog: (any version, with or without Form-B):
+#     BC_UNVERIFIED (blocking). BC requires Form-A for machine-readable version
+#     provenance — the "trivially valid" v1.0 exception does not apply here.
+#   - Non-BC files lacking a changelog AND version == "1.0": PASS (trivially valid).
+#   - Non-BC files lacking a changelog AND version > "1.0" AND no Form-B: UNVERIFIED.
 #   - Known scope boundary: Form-B version cells with a 'v' prefix (e.g.
 #     '| v1.3 |') are not matched by FORM_B_VERSION_RE; the corpus uses bare
 #     numeric cells ('| 1.3 |') so this is not a current false-negative risk.
@@ -119,16 +123,18 @@ PASS=0
 WARN=0
 FAIL=0
 UNVERIFIED=0
+BC_UNVERIFIED=0
 
 emit() {
   local level="$1"
   local msg="$2"
   echo "[$level] $msg"
   case "$level" in
-    PASS)       PASS=$((PASS + 1)) ;;
-    WARN)       WARN=$((WARN + 1)) ;;
-    FAIL)       FAIL=$((FAIL + 1)) ;;
-    UNVERIFIED) UNVERIFIED=$((UNVERIFIED + 1)) ;;
+    PASS)          PASS=$((PASS + 1)) ;;
+    WARN)          WARN=$((WARN + 1)) ;;
+    FAIL)          FAIL=$((FAIL + 1)) ;;
+    UNVERIFIED)    UNVERIFIED=$((UNVERIFIED + 1)) ;;
+    BC_UNVERIFIED) BC_UNVERIFIED=$((BC_UNVERIFIED + 1)) ;;
   esac
 }
 
@@ -268,19 +274,20 @@ for filepath in files:
             if fm_version == '':
                 print(f"UNVERIFIED {filepath} no-version-field")
             elif not form_b_result:
-                print(f"PASS {filepath}")
+                # Form-B direction is valid but BC requires Form-A for machine-readable
+                # version provenance. Form-B-only is BC_UNVERIFIED (blocking for BC files).
+                print(f"BC_UNVERIFIED {filepath} no-form-a-changelog-key:has-form-b-only")
         else:
             # Neither Form-A nor Form-B changelog present.
             if fm_version == '':
                 # Governance defect: version: field is required for all spec artifacts.
                 # Cannot verify VERSION-MATCH without it; must not silently PASS.
                 print(f"UNVERIFIED {filepath} no-version-field")
-            elif fm_version == '1.0':
-                # Initial authoring: no changelog required — trivially valid.
-                print(f"PASS {filepath}")
             else:
-                # version > 1.0 but no changelog form present.
-                print(f"SKIP {filepath} no-changelog-version-gt-1.0")
+                # BC requires Form-A changelog: regardless of version level.
+                # The "trivially valid" v1.0 exception does not apply to BCs —
+                # every BC must carry Form-A for machine-readable version provenance.
+                print(f"BC_UNVERIFIED {filepath} no-form-a-changelog-key:no-changelog-form")
         continue
 
     # ── Form-A validation ──────────────────────────────────────────────────
@@ -395,6 +402,11 @@ while IFS= read -r line; do
       ;;
     UNVERIFIED)
       emit UNVERIFIED "$short (unverified: $detail)"
+      ;;
+    BC_UNVERIFIED)
+      # BC_UNVERIFIED: BC file lacks Form-A changelog: key. Blocking for BC files
+      # since Form-A is the required machine-readable version provenance format.
+      emit BC_UNVERIFIED "$short (bc-unverified: $detail)"
       ;;
     *)
       emit WARN "unexpected parser output: $line"
@@ -732,10 +744,13 @@ done <<< "$PYTHON_OUTPUT_NONBC"
 # non-standard-format issues.
 
 echo ""
-echo "verify-form-a-changelog-direction: PASS=$PASS WARN=$WARN FAIL=$FAIL UNVERIFIED=$UNVERIFIED"
+echo "verify-form-a-changelog-direction: PASS=$PASS WARN=$WARN FAIL=$FAIL UNVERIFIED=$UNVERIFIED BC_UNVERIFIED=$BC_UNVERIFIED"
 
-if [ "$FAIL" -gt 0 ]; then
+if [ "$FAIL" -gt 0 ] || [ "$BC_UNVERIFIED" -gt 0 ]; then
   echo "RESULT: FAIL"
+  echo "  NOTE: BC_UNVERIFIED=$BC_UNVERIFIED — BC files without frontmatter changelog: key."
+  echo "  BC files require Form-A (frontmatter changelog: list) for machine-readable"
+  echo "  version provenance. Add Form-A changelog: entries to each flagged BC file."
   exit 1
 else
   echo "RESULT: PASS"

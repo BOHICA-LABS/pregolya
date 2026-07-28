@@ -767,6 +767,92 @@ print(f"ADV-C3-SUMMARY count={len(c3_findings)}")
 for (adr_id, dec_num, title) in c3_findings:
     print(f"ADV-C3 {adr_id} Decision {dec_num} '{title}' — zero inbound citations in .factory/specs/")
 
+# ── Check 4: Citing-sentence keyword vs Decision-heading overlap ──────────────
+#
+# For each ADR-NNN Decision N citation, extract keywords from the citing sentence
+# and verify at least one keyword overlaps with the Decision N heading title.
+# This detects citations that point to a valid decision number but whose surrounding
+# context has zero conceptual connection to that decision's subject matter.
+#
+# Meaningful keyword: alpha-only, len >= 4, not a generic stopword.
+
+STOPWORDS = frozenset({
+    'this', 'that', 'with', 'from', 'for', 'and', 'the', 'each', 'have',
+    'been', 'also', 'must', 'will', 'when', 'where', 'which', 'their',
+    'they', 'into', 'over', 'upon', 'uses', 'used', 'using', 'after',
+    'before', 'only', 'such', 'both', 'same', 'type', 'call', 'code',
+    'file', 'path', 'name', 'note', 'see', 'above', 'below', 'following',
+    'field', 'value', 'data', 'form', 'list', 'item', 'return', 'result',
+    'error', 'impl', 'trait', 'struct', 'enum', 'crate', 'module',
+    'section', 'decision', 'behavior', 'behaviour', 'defines', 'defined',
+    'provides', 'specifies', 'specified', 'ensure', 'ensures', 'require',
+    'requires', 'required',
+})
+
+def extract_keywords(text):
+    """Return lowercase alpha tokens of len >= 4 that are not stopwords."""
+    words = re.findall(r'[a-zA-Z]{4,}', text)
+    return {w.lower() for w in words if w.lower() not in STOPWORDS}
+
+c4_findings = []
+
+for filepath in all_md_files:
+    try:
+        with open(filepath, 'r', encoding='utf-8') as fh:
+            lines = fh.readlines()
+    except OSError:
+        continue
+
+    fm_end = parse_frontmatter_end(lines)
+    cl_ranges = build_changelog_ranges(lines, fm_end)
+
+    for i, line in enumerate(lines):
+        if in_exempt_region(i, fm_end, cl_ranges):
+            continue
+        lineno = i + 1
+
+        for m in CITE_RE.finditer(line):
+            adr_num_str = m.group(1)
+            adr_id      = f"ADR-{adr_num_str}"
+            dec_num     = int(m.group(2))
+            cite_label  = f"{adr_id} Decision {dec_num}"
+
+            # Only check citations for ADRs with known numbered decisions
+            if adr_id not in decision_numbers:
+                continue
+            if len(decision_numbers[adr_id]) == 0:
+                continue
+            if dec_num not in decision_numbers[adr_id]:
+                continue
+
+            dec_title = decision_title.get(adr_id, {}).get(dec_num, '')
+            if not dec_title:
+                continue  # No title to compare against — skip
+
+            # Keywords from the citing line (excluding the ADR-NNN citation token itself)
+            line_without_cite = line[:m.start()] + line[m.end():]
+            line_keywords = extract_keywords(line_without_cite)
+
+            # Keywords from the decision heading title
+            title_keywords = extract_keywords(dec_title)
+
+            if not title_keywords:
+                continue  # No meaningful title keywords — skip
+
+            overlap = line_keywords & title_keywords
+            if not overlap:
+                c4_findings.append((
+                    filepath, lineno, cite_label,
+                    f"citing line has no keyword overlap with Decision {dec_num} "
+                    f"heading title '{dec_title}' (line-keywords={sorted(line_keywords)[:5]}, "
+                    f"title-keywords={sorted(title_keywords)[:5]})"
+                ))
+
+print(f"ADV-C4-SUMMARY count={len(c4_findings)}")
+for (fp, ln, cite, reason) in c4_findings:
+    short = fp.split('/specs/')[-1] if '/specs/' in fp else fp
+    print(f"ADV-C4 {short}:{ln} [{cite}] — {reason}")
+
 ADVRPY
 )"
 
@@ -775,6 +861,7 @@ ADVRPY
 C1_COUNT=0
 C2_COUNT=0
 C3_COUNT=0
+C4_COUNT=0
 
 while IFS= read -r line; do
   tag="${line%% *}"
@@ -814,6 +901,17 @@ while IFS= read -r line; do
     ADV-C3)
       echo "  [ADVISORY] CHECK3: $rest"
       ;;
+    ADV-C4-SUMMARY)
+      C4_COUNT="$(echo "$rest" | grep -oE 'count=[^ ]+' | cut -d= -f2)"
+      if [ "$C4_COUNT" -gt 0 ]; then
+        emit_advisory WARN "[ADVISORY] CHECK4 (citing-sentence keyword overlap): $C4_COUNT citation(s) where the citing line has no keyword overlap with the cited Decision heading title"
+      else
+        emit_advisory PASS "CHECK4 (citing-sentence keyword overlap): all citations have at least one keyword overlap with the cited Decision heading"
+      fi
+      ;;
+    ADV-C4)
+      echo "  [ADVISORY] CHECK4: $rest"
+      ;;
     *)
       : # Ignore other lines
       ;;
@@ -828,11 +926,13 @@ echo "  advisory: PASS=$ADVISORY_PASS WARN=$ADVISORY_WARN"
 echo "  Check 1 (sub-anchor nesting): $C1_COUNT advisory findings"
 echo "  Check 2 (label-noun presence): $C2_COUNT advisory findings"
 echo "  Check 3 (reverse coverage): $C3_COUNT advisory findings"
+echo "  Check 4 (citing-sentence keyword overlap): $C4_COUNT advisory findings"
 echo ""
 echo "Promotion path (advisory → blocking):"
 echo "  CHECK1: after F-P173-ADVISORY-C1 class closes; target burst: Wave B"
 echo "  CHECK2: after F-P173-ADVISORY-C2 class closes; target burst: Wave B"
 echo "  CHECK3: after F-P173-ADVISORY-C3 class closes; target burst: Wave B"
+echo "  CHECK4: after P1D-174-advisory-C4 class closes; target burst: Wave B"
 echo ""
 echo "NOTE: Blocking checks are EXISTENCE-ONLY. Semantically wrong but numerically"
 echo "      valid Decision citations (F-P169-01 class) are the adversary's job."

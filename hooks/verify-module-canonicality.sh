@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# verify-module-canonicality.sh — ferrochain factory-artifacts ADVISORY validator
+# verify-module-canonicality.sh — ferrochain factory-artifacts BLOCKING validator
 #
 # PURPOSE
 # ───────
 # Verifies that every Module cell in every module-keyed table across four primary
-# documents (plus the VP family) follows the canonical `crate_component::module_name`
-# form (`^[a-z_]+::[a-z_]+$`) OR is an ARCH-INDEX canonical-roster crate name
-# (for crate-level roll-up rows such as `ferrochain-macros`).
+# documents (plus the VP family and ARCH-INDEX VP section) follows the canonical
+# `crate_component::module_name` form (`^[a-z_]+::[a-z_]+$`) OR is an ARCH-INDEX
+# canonical-roster crate name (for crate-level roll-up rows such as `ferrochain-macros`).
 #
 # Four primary documents for module-census and set-equality:
 #   1. specs/architecture/module-decomposition.md  (canonical reference)
@@ -14,17 +14,16 @@
 #   3. specs/architecture/verification-coverage-matrix.md
 #   4. specs/module-criticality.md
 #
-# VP family (module column check only — not included in 4-way set equality):
+# VP family + ARCH-INDEX VP section (module column check only — not 4-way set equality):
 #   5. specs/verification-properties/VP-INDEX.md
 #   6. specs/architecture/verification-architecture.md
+#   7. specs/architecture/ARCH-INDEX.md §Verification Properties section
 #
-# Known current non-canonical counts (FIX-BURST-276 WARN baseline):
-#   verification-coverage-matrix.md: 36 of 77 non-canonical Module cells
-#   VP-INDEX.md: 13 of 13 VP catalog rows use short-form dialect
-#   verification-architecture.md Committed VP Obligations: 13 of 13 rows
-#   module-decomposition.md: 0 (already canonical)
-#   purity-boundary-map.md: 0 (already canonical)
-#   module-criticality.md: see runtime output
+# Gate #25 — crate-level census reverse equation:
+#   registry_total_rows − module_level_matched_rows == crate_level_qualifier_rows
+#   Where crate-level rows are identified by the Qualifier column prefix "crate-level".
+#   A mismatch indicates census drift (a row is missing from the decomposition set or
+#   is misclassified as crate-level).
 #
 # PARSER CAUTION
 # ──────────────
@@ -36,22 +35,13 @@
 # never hardcoded. The Provider Crates crate-role table (header: "| Crate | Role |...")
 # has no "Module" column and is naturally excluded.
 #
-# ADVISORY STATUS
-# ───────────────
-# All findings are WARN (non-blocking) in Wave A of FIX-BURST-276.
-# Promotion to blocking after Wave B closes finding IDs:
-#   P1D-173-CHECK4-vcm (36 non-canonical in verification-coverage-matrix.md)
-#   P1D-173-CHECK4-vp-index (13 non-canonical in VP-INDEX.md)
-#   P1D-173-CHECK4-vp-arch (13 non-canonical in verification-architecture.md)
-#   P1D-173-CHECK4-mcrit (non-canonical in module-criticality.md)
-# Target burst for promotion: Wave B (module name canonicalization burst).
-#
 # EXIT CONTRACT
 # ─────────────
-# Always exits 0 (advisory — non-blocking). WARN count reflects violations.
+# Exits 1 if any FAIL lines are emitted; exits 0 otherwise.
+# Non-canonical cells emit FAIL (blocking). Gate #25 mismatch emits FAIL (blocking).
 #
 # Usage:  bash .factory/hooks/verify-module-canonicality.sh
-# Exit:   0 always (advisory)
+# Exit:   1 if FAIL > 0; 0 if FAIL == 0
 
 set -euo pipefail
 
@@ -320,6 +310,14 @@ DOCS = [
         'in_4way_join': False,
         'label': 'verification-architecture.md (Committed VP Obligations)',
     },
+    {
+        'key': 'arch-index-vp',
+        'path': os.path.join(factory_dir, 'specs/architecture/ARCH-INDEX.md'),
+        'exclude_sections': set(),
+        'exclude_header_patterns': [],
+        'in_4way_join': False,
+        'label': 'ARCH-INDEX.md §Verification Properties',
+    },
 ]
 
 doc_results = {}  # key → list of (module_name, lineno, col_header)
@@ -386,12 +384,144 @@ for key in join_keys:
                   f"count={len(in_other_not_decomp)} names={names}{trunc}")
 
 # Emit the required runtime-computed census line
-diff_label = 'empty' if not differences_found else 'NON-EMPTY (see WARN lines)'
+diff_label = 'empty' if not differences_found else 'NON-EMPTY (see FAIL lines)'
 print(f"CENSUS 4-documents={len(join_keys)} "
       f"decomposition-modules={decomp_total} "
       f"registry-rows={reg_total} "
       f"canonical-in-decomposition={len(decomp_set)} "
       f"difference-set={diff_label}")
+
+# ── Step 5: Gate #25 — crate-level census reverse equation ────────────────────
+#
+# module-criticality.md uses two row classes:
+#   (a) Module-level rows: Qualifier column is "—" or a non-"crate-level" qualifier.
+#       These rows must appear in the module-decomposition canonical set.
+#   (b) Crate-level rows: Qualifier column starts with "crate-level" prefix.
+#       These are roll-up annotations and are NOT expected in module-decomposition.
+#
+# Reverse equation (Gate #25):
+#   registry_total_rows − module_level_matched_rows == crate_level_qualifier_rows
+#
+# A mismatch means census drift: either a module-level row is missing from
+# decomposition, or a row is misclassified as crate-level.
+
+mcrit_path = os.path.join(factory_dir, 'specs/module-criticality.md')
+try:
+    with open(mcrit_path, 'r', encoding='utf-8') as fh:
+        mcrit_lines = fh.readlines()
+except OSError as e:
+    print(f"G25-ERROR cannot read module-criticality.md: {e}")
+    mcrit_lines = []
+
+# Scan module-criticality.md for Qualifier column presence
+# Identify "crate-level" rows by Qualifier column content
+CRATE_LEVEL_QUALIFIER_RE = re.compile(r'^crate-level\b', re.IGNORECASE)
+
+crate_level_rows = []   # (module_name, qualifier_text)
+module_level_rows = []  # (module_name, qualifier_text) — non-crate-level
+
+if mcrit_lines:
+    fm_end_mcrit = parse_frontmatter_end(mcrit_lines)
+    qualifier_col_idx = None
+    module_col_idx_g25 = None
+    in_table_g25 = False
+
+    for lineno, line in enumerate(mcrit_lines, 1):
+        raw = line.rstrip('\n')
+
+        # Track section transitions — reset table state
+        if raw.startswith('## ') or raw.startswith('### '):
+            qualifier_col_idx = None
+            module_col_idx_g25 = None
+            in_table_g25 = False
+            continue
+
+        # Skip frontmatter
+        if fm_end_mcrit >= 0 and lineno <= fm_end_mcrit + 1:
+            continue
+
+        if not raw.strip().startswith('|'):
+            if in_table_g25 and raw.strip() == '':
+                pass
+            else:
+                qualifier_col_idx = None
+                module_col_idx_g25 = None
+                in_table_g25 = False
+            continue
+
+        parts_g25 = raw.split('|')
+        if len(parts_g25) < 3:
+            continue
+        cells_g25 = [c.strip() for c in parts_g25[1:-1]]
+        if not cells_g25:
+            continue
+
+        # Separator row
+        if is_separator_row(cells_g25):
+            continue
+
+        header_clean = [c.strip('`').strip() for c in cells_g25]
+
+        if not in_table_g25:
+            # Check for a table with both Module and Qualifier columns
+            if 'Module' in header_clean and 'Qualifier' in header_clean:
+                module_col_idx_g25 = header_clean.index('Module')
+                qualifier_col_idx = header_clean.index('Qualifier')
+                in_table_g25 = True
+                continue
+            else:
+                continue
+
+        # Data row
+        if module_col_idx_g25 is not None and qualifier_col_idx is not None:
+            if module_col_idx_g25 < len(cells_g25) and qualifier_col_idx < len(cells_g25):
+                raw_mod = cells_g25[module_col_idx_g25]
+                raw_qual = cells_g25[qualifier_col_idx]
+                mod_name = extract_module_from_cell(raw_mod)
+                qual_text = raw_qual.strip()
+
+                # Skip empty, tier-summary, or header-reappearance rows
+                if not mod_name or mod_name in ('—', '', 'Module'):
+                    continue
+                if mod_name in ('CRITICAL', 'HIGH', 'MEDIUM', 'LOW'):
+                    continue
+
+                if CRATE_LEVEL_QUALIFIER_RE.match(qual_text):
+                    crate_level_rows.append((mod_name, qual_text))
+                else:
+                    module_level_rows.append((mod_name, qual_text))
+
+crate_level_count = len(crate_level_rows)
+module_level_count = len(module_level_rows)
+total_g25_rows = crate_level_count + module_level_count
+
+# Matched module-level rows: module-level rows whose Module name is in decomp_set
+matched_module_level = [
+    (m, q) for (m, q) in module_level_rows
+    if m in decomp_set or (CANONICAL_RE.match(m) and m in decomp_set)
+]
+unmatched_module_level = [
+    (m, q) for (m, q) in module_level_rows
+    if m not in decomp_set
+]
+
+# Reverse equation check
+equation_holds = (total_g25_rows - len(matched_module_level) == crate_level_count)
+equation_result = (
+    f"{total_g25_rows} − {len(matched_module_level)} == {crate_level_count}: "
+    + ("PASS" if equation_holds else "FAIL")
+)
+
+# Enumerate crate-level row names for audit
+crate_level_names = sorted(m for (m, q) in crate_level_rows)
+unmatched_names = sorted(m for (m, q) in unmatched_module_level)
+
+print(f"G25-CENSUS total={total_g25_rows} crate-level={crate_level_count} "
+      f"module-level={module_level_count} matched={len(matched_module_level)} "
+      f"unmatched={len(unmatched_module_level)} equation={equation_result}")
+print(f"G25-CRATE-LEVEL names={crate_level_names}")
+if unmatched_module_level:
+    print(f"G25-UNMATCHED names={unmatched_names}")
 
 PYEOF
 )"
@@ -400,6 +530,9 @@ PYEOF
 
 TOTAL_NON_CANONICAL=0
 CENSUS_LINE=""
+G25_CENSUS_LINE=""
+G25_CRATE_LEVEL_LINE=""
+G25_UNMATCHED_LINE=""
 
 while IFS= read -r line; do
   tag="${line%% *}"
@@ -414,7 +547,7 @@ while IFS= read -r line; do
       label="$(echo "$rest" | sed 's/.*label=//')"
       TOTAL_NON_CANONICAL=$((TOTAL_NON_CANONICAL + nc))
       if [ "$nc" -gt 0 ]; then
-        emit WARN "[ADVISORY] CHECK4: $label — $nc of $total Module cells non-canonical (should match ^[a-z_]+::[a-z_]+\$ or be a canonical crate name)"
+        emit FAIL "CHECK4: $label — $nc of $total Module cells non-canonical (must match ^[a-z_]+::[a-z_]+\$ or be a canonical crate name)"
       else
         emit PASS "CHECK4: $label — all $total Module cells canonical"
       fi
@@ -423,25 +556,52 @@ while IFS= read -r line; do
       key="$(echo "$rest" | grep -oE 'key=[^ ]+' | cut -d= -f2)"
       lineno="$(echo "$rest" | grep -oE 'line=[^ ]+' | cut -d= -f2)"
       name="$(echo "$rest" | sed "s/.*name=//" | tr -d "'")"
-      echo "  [ADVISORY] CHECK4: $key line $lineno — non-canonical module name $name"
+      echo "  CHECK4: $key row near line $lineno — non-canonical module name $name"
       ;;
     NON-CANONICAL-TRUNCATED)
       key="$(echo "$rest" | grep -oE 'key=[^ ]+' | cut -d= -f2)"
       additional="$(echo "$rest" | grep -oE 'additional=[^ ]+' | cut -d= -f2)"
-      echo "  [ADVISORY] CHECK4: $key — ($additional more non-canonical names not shown)"
+      echo "  CHECK4: $key — ($additional more non-canonical names not shown)"
       ;;
     SET-DIFF)
       direction="$(echo "$rest" | grep -oE 'direction=[^ ]+' | cut -d= -f2)"
       key="$(echo "$rest" | grep -oE 'key=[^ ]+' | cut -d= -f2)"
       count="$(echo "$rest" | grep -oE 'count=[^ ]+' | cut -d= -f2)"
       names="$(echo "$rest" | sed 's/.*names=//')"
-      emit WARN "[ADVISORY] CHECK4 set-diff: $key $direction ($count modules) — $names"
+      emit FAIL "CHECK4 set-diff: $key $direction ($count modules) — $names"
       ;;
     CENSUS)
       CENSUS_LINE="$rest"
       ;;
+    G25-CENSUS)
+      G25_CENSUS_LINE="$rest"
+      # Parse equation result to decide PASS/FAIL
+      if echo "$rest" | grep -q 'equation=.*FAIL'; then
+        total_g25="$(echo "$rest" | grep -oE 'total=[^ ]+' | cut -d= -f2)"
+        matched_g25="$(echo "$rest" | grep -oE 'matched=[^ ]+' | cut -d= -f2)"
+        crate_g25="$(echo "$rest" | grep -oE 'crate-level=[^ ]+' | cut -d= -f2)"
+        unmatched_g25="$(echo "$rest" | grep -oE 'unmatched=[^ ]+' | cut -d= -f2)"
+        emit FAIL "GATE-25: crate-level census equation FAIL — total=$total_g25 matched=$matched_g25 crate-level=$crate_g25 unmatched=$unmatched_g25 (expected: total − matched == crate-level)"
+      else
+        total_g25="$(echo "$rest" | grep -oE 'total=[^ ]+' | cut -d= -f2)"
+        crate_g25="$(echo "$rest" | grep -oE 'crate-level=[^ ]+' | cut -d= -f2)"
+        matched_g25="$(echo "$rest" | grep -oE 'matched=[^ ]+' | cut -d= -f2)"
+        emit PASS "GATE-25: crate-level census equation PASS — total=$total_g25 crate-level=$crate_g25 matched=$matched_g25"
+      fi
+      ;;
+    G25-CRATE-LEVEL)
+      G25_CRATE_LEVEL_LINE="$rest"
+      echo "  GATE-25 crate-level rows: $rest"
+      ;;
+    G25-UNMATCHED)
+      G25_UNMATCHED_LINE="$rest"
+      emit FAIL "GATE-25: module-level rows in module-criticality not found in module-decomposition — $rest"
+      ;;
+    G25-ERROR)
+      emit FAIL "GATE-25 internal error: $rest"
+      ;;
     ERROR)
-      emit WARN "CHECK4 internal error: $rest"
+      emit FAIL "CHECK4 internal error: $rest"
       ;;
     *)
       # Unexpected output — ignore silently (may be Python traceback lines)
@@ -453,20 +613,18 @@ done <<< "$PYTHON_OUTPUT"
 
 echo ""
 echo "  Module census: $CENSUS_LINE"
+echo "  Gate #25 census: $G25_CENSUS_LINE"
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 
 echo ""
 echo "verify-module-canonicality: PASS=$PASS WARN=$WARN FAIL=$FAIL"
 echo "  Total non-canonical Module cells detected: $TOTAL_NON_CANONICAL"
-echo ""
-echo "Promotion path (advisory → blocking):"
-echo "  P1D-173-CHECK4-vcm:    fix 36 non-canonical cells in verification-coverage-matrix.md"
-echo "  P1D-173-CHECK4-vp:     fix 13 non-canonical cells in VP-INDEX.md"
-echo "  P1D-173-CHECK4-vparch: fix 13 non-canonical cells in verification-architecture.md"
-echo "  P1D-173-CHECK4-mcrit:  fix non-canonical cells in module-criticality.md"
-echo "  All four must close before promotion to blocking. Target burst: Wave B."
-echo ""
-echo "RESULT: PASS (advisory — non-blocking)"
-# Always exit 0 — advisory check
-exit 0
+
+if [ "$FAIL" -gt 0 ]; then
+  echo "RESULT: FAIL"
+  exit 1
+else
+  echo "RESULT: PASS"
+  exit 0
+fi

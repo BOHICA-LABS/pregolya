@@ -7,11 +7,11 @@
 #   Rule 1 (PATH-RESOLUTION): Every path-style architecture citation
 #           (pattern `architecture/<path>.md`) found in the BODY of a BC
 #           file (post-frontmatter) must resolve to an existing file under
-#           .factory/specs/architecture/.  Glob-style citations
-#           (containing `*`) are resolved via glob expansion — FAIL if no
-#           matching file exists.  Bare "ADR-NNN" prose references that
-#           contain no `architecture/` path prefix are NOT validated (to
-#           keep false positives at zero).
+#           .factory/specs/architecture/.  Glob-style citations containing
+#           `*` wildcards are REJECTED — a wildcard path is not a specific
+#           file reference and cannot be verified against a real artifact.
+#           Bare "ADR-NNN" prose references that contain no `architecture/`
+#           path prefix are NOT validated (to keep false positives at zero).
 #
 #   Rule 2 (NO-PLACEHOLDER): The ## Architecture Anchors section of each
 #           BC file must not contain the literal substring "(filled by"
@@ -23,16 +23,18 @@
 # reference historical non-existent paths as audit-trail are therefore
 # not flagged.
 #
-# Expected failures (worklist as of burst-257):
+# Expected failures (worklist as of fix-burst-277):
 #   12 SS-11/SS-13 BCs — BC-2.11.001 through BC-2.11.006 and
 #   BC-2.13.001 through BC-2.13.006.  These carry nonexistent citations
 #   (architecture/ferrochain-core.md, architecture/ferrochain-graph.md,
 #   architecture/ferrochain-memory.md, architecture/ferrochain-sandbox.md,
 #   architecture/cargo-features.md, architecture/verification-properties.md)
-#   and "(filled by architect)" placeholder text.  BC-2.13.007 PASSES
-#   (its Architecture Anchors section cites code file paths only, no
-#   architecture/*.md citations and no placeholder text).
-#   Any FAIL outside these 12 is an ADDITIONAL UNEXPECTED FAILURE.
+#   and "(filled by architect)" placeholder text.
+#   4 glob-wildcard citations — BC-2.20.001, BC-2.22.001, BC-2.20.002,
+#   BC-2.21.002 use architecture/*.md wildcard citations which are now
+#   rejected (wildcard paths are non-specific and cannot be verified).
+#   Total expected: 16. BC-2.13.007 PASSES (cites only code paths).
+#   Any FAIL outside these 16 is an ADDITIONAL UNEXPECTED FAILURE.
 #
 # Usage:  bash .factory/hooks/verify-arch-anchor-resolution.sh
 # Exit:   0 if no FAIL lines; 1 if any FAIL.
@@ -88,13 +90,16 @@ PATH_CITATION_RE = re.compile(
 def citation_exists(citation, arch_root):
     """
     Resolve 'architecture/<relative>' against arch_root.
-    Returns True if the target file (or any glob match) exists.
+    Returns True only if the exact file exists.
+    Paths containing glob wildcards ('*') are REJECTED (return False) —
+    a wildcard is not a specific file reference and cannot be verified.
     """
     relative = citation[len('architecture/'):]
     if '*' in relative:
-        return len(globmod.glob(os.path.join(arch_root, relative))) > 0
-    else:
-        return os.path.exists(os.path.join(arch_root, relative))
+        # Wildcard citations are non-specific — reject unconditionally.
+        # The caller will treat False as unresolved → FAIL.
+        return False
+    return os.path.exists(os.path.join(arch_root, relative))
 
 for filepath in files:
     try:
