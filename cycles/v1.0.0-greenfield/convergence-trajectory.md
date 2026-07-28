@@ -2057,3 +2057,50 @@ verify-sha-currency: PASS (clean after commit)
 
 **Convergence dim-5:** Counter 0/3 (unchanged — fix burst). Next: adversary P1D-174 FULL-PERIMETER pass.
 **Convergence dim-7:** Trajectory tail →19→20→130 (unchanged). Lessons L-082..L-086 minted. D-37 added.
+
+---
+
+## P1D-174 FULL-PERIMETER — 2026-07-27
+
+**Pass:** P1D-174 FULL-PERIMETER | **Frozen HEAD:** `cd0a2c7` | **Date:** 2026-07-27
+**Method:** 13 bounded read-only slices; 5 initial slices died on transient API `Connection closed mid-response` and were re-dispatched as smaller segments (D-32 transient-failure class).
+
+### Finding Counts
+
+| Severity | Count |
+|----------|-------|
+| CRIT | 9 |
+| HIGH | 96 |
+| MED | 106 |
+| LOW | 30 |
+| OBS | 11 |
+| Process-gap | 17 |
+| **TOTAL** | **~256** |
+
+### Verdict
+
+CLEAN (strict): **NO** | CLEAN (PR-merge): **NO** | Streak: **0/3 unchanged**
+
+### Trajectory Explanation: 130 → 256
+
+The 130→256 jump is a **coverage-depth artifact, not a regression.** This pass was the first to read BC file bodies at low version numbers (BC-2.21.001 v1.0, BC-2.19.002 v1.1, BC-2.20.001 v1.1, BC-2.20.003 v1.2) and the first to conduct a type-coherence audit across the full spec (phantom constructors, E0038-incompatible traits, field-set completeness). Prior passes concentrated on frequently-amended files and left the lowest-version files un-audited. The jump reflects coverage expansion, not spec deterioration.
+
+### Primary Conclusion
+
+**Gates scoped by label are blind to dialect variants — the validator suite certifies state it never measures.** Confirmed at 6 independent sites: `verify-form-a-changelog-direction` PASSes 6 unverifiable files; gate #25 keys on `ROLL-UP` (0× occurrence) vs actual `crate-level` dialect; `verify-module-canonicality` emits a promotion narrative while reporting 0 non-canonical cells; `records-lint` L9/L10/L11 emit WARN on a clean tree; the F-P96-01 Traceability sweep was blind to the `Architecture Module` dialect; the observability emission census greps only WARN/WARNING terms and missed every DEBUG-level emission corpus-wide.
+
+### Convergence Trajectory (cumulative, pass-by-pass)
+
+| Pass | Findings | Delta | Streak | Note |
+|------|----------|-------|--------|------|
+| P1D-173 | 130 | +110 | 0/3 | Coverage expansion: api-surface.md + interface-definitions.md + 13 VP bodies first audit |
+| P1D-174 | 256 | +126 | 0/3 | Coverage depth: first BC-body line-by-line at low versions + first type-coherence audit; NOT CLEAN strict/PR-merge |
+
+**Trajectory tail:** →19→20→130→256
+
+### Fix-Burst 277 Sequencing
+
+Process-gap gates FIRST, then `FerrochainError` constructor + `Tool` object-safety adjudications, then content fixes by severity. Full sequencing mandate in adversarial-reviews/pass-174.md.
+
+**Convergence dim-5:** Counter 0/3 (unchanged — pass found findings). Next: fix-burst 277 then P1D-175 FULL-PERIMETER.
+**Convergence dim-7:** Trajectory tail →20→130→256. Lessons L-087..L-093 minted. D-39, D-40 added. R14 added.

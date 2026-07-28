@@ -5644,3 +5644,11 @@ See lessons.md for full narrative.
 Burst 275 (P1D-172b fix-burst) row archived from STATE.md v4.28 Current Phase Steps table (oldest row; replaced by this burst entry).
 
 **Burst 275 STATE.md row summary:** P1D-172b fix-burst COMPLETE (20 items 0C/6H/8M/4L/2OBS; all CLOSED; 3 waves; 2 orchestrator reopenings; Wave A: gate #25 Part B bidirectional + Class A/B split, bc-authoring-plan YAML fix, prd §11 6→11; Wave B: 18-module criticality gap + all F-P172b architect findings; census sextuple verified: decomp 71/69+2, registry 77 [12/28/35/2], matched 69, diff-set EMPTY; L-056..L-059 promoted; L-061..L-064 minted); 0/3.
+
+---
+
+## P1D-174 Pass Record (archived from STATE.md v4.30 Current Phase Steps)
+
+**Archived row:** P1D-173 state record (oldest row, displaced by P1D-174 entry)
+
+**STATE.md row content (verbatim):** P1D-173 state record — FULL-PERIMETER pass CLOSED (130 raw / ~122 unique; 4 CRIT / ~22 HIGH; 8 slices; frozen HEAD 8954a11; NOT CLEAN strict/PR-merge; all validators PASS existence-only; D-35 added; 5 lessons L-065..L-069 minted; burst-273 archived); 0/3. NEXT: fix-burst 276 — process-gap gates FIRST (F-P173-303/306/319). | adversary (8 slices) + state-manager | COMPLETE (pass recorded); fix-burst 276 Wave A COMPLETE | 130 raw / ~122 unique findings. 4 CRIT, ~22 HIGH. All validators PASS. Jump = coverage expansion.

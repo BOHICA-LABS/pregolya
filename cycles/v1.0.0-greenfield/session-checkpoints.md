@@ -1711,3 +1711,19 @@ NEXT-ACTION was: P1D-174 FULL-PERIMETER against frozen HEAD `423c01a`. Status: q
 
 ### SESSION WRAP METADATA
 Date: 2026-07-27 | STATE.md: v4.28 → v4.29 | burst-276-content-3 `423c01a` | 4 session self-attributed defects logged | D-37 recorded | L-082..L-086 minted (86 lessons total) | streak 0/3
+
+---
+
+## Checkpoint v4.29 (archived — replaced by v4.30)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1 (Spec Crystallization), greenfield+semport mode. Adversarial streak 0/3 after 174 passes; all four P1D-173 CRITICALs closed and every blocking validator green. Next action: P1D-174 FULL-PERIMETER against frozen HEAD `423c01a`.
+
+### HEADS
+develop `46725ad` — PUSHED. factory-artifacts `423c01a` — PUSHED (NOTE: actual HEAD was `cd0a2c7`; `423c01a` was the prior commit; the checkpoint self-cited incorrectly per the self-referential citation artifact pattern documented in D-38/D-40).
+
+### NEXT-ACTION WAS
+P1D-174 FULL-PERIMETER — now COMPLETE (recorded pass-174.md). STATE.md v4.30 is the current checkpoint.
+
+### ARCHIVE METADATA
+Date: 2026-07-27 | Archived at: STATE.md v4.30 P1D-174 pass record commit | STATE.md: v4.29 → v4.30 | P1D-174 recorded | D-39+D-40 added | R14 added | L-087..L-093 minted (93 lessons total) | streak 0/3
