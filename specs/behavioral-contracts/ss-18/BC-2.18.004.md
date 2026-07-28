@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.004
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ changelog:
   - "1.4 (F-P148-03/burst-249/2026-07-24): red_gate_source and Red Gate body callout updated: 'ADR-015 Security Invariant 1' → 'ADR-015 Decision 3 §Security Invariant 1' per ADR-015 v1.5 labeled anchor. input-hash updated to fa92953 (ADR-015 v1.5 adds labeled anchors)."
   - "1.5 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 4 sites: Component::TMPL → Component::Tmpl, Category::SECURITY → Category::Security. Sites: Description inline code block (×1 TMPL+SECURITY), PC-1 code block (×1 TMPL, ×1 SECURITY), Invariant 2 prose (×1 SECURITY)."
   - "1.6 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: FerrochainError struct literal (missing retry_hint, source fields) → FerrochainError::new(Component::Tmpl, Category::Security, RetryHint::Never, \"E-TMPL-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: SECURITY category default per error-taxonomy.md §E-TMPL-001. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-18/BC-2.18.004.md returns zero fence-scoped literal occurrences after this edit."
+  - "1.7 (fix-burst-279/F-P175-B201+B202+B208/ADR-015-D3-Amendment/2026-07-28): THREE changes. (1) §Related BCs: removed false claim that injection_guard fires during the PromptTemplate::format render path (B201 CRIT — PromptTemplate::format is explicitly unguarded; guard fires ONLY in format_messages); replaced with explicit prohibition note on system-position use of PromptTemplate::format output. (2) PC2: updated from HashMap<String, TemplateVar> to HashMap<String, TemplateInput>; injection_guard now covers Scalar(TemplateVar), Messages(MessageListVar), and FewShotExamples arms (B202 CRIT — TemplateInput enum concretized per ADR-015 Decision 3 Amendment). (3) PC5: updated to cover both TemplateInput::Scalar(var) and TemplateInput::Messages(msg_var) trust_level checks against TrustRequired slots; VP-006 Kani proof covers both input arms exhaustively (B202; B208 — MessageListVar guard)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -69,9 +70,16 @@ enforcement of that invariant.
 ## Preconditions
 
 1. A `ChatPromptTemplate` has been validly constructed (all policy checks passed per BC-2.18.005).
-2. `format_messages` is called with a `HashMap<String, TemplateVar>` where at least one
-   `TemplateVar` intended for a `TrustRequired` slot carries `trust_level: Some(TrustLevel::Untrusted)`
-   (i.e., `var.trust_level.is_some_and(|t| t.is_untrusted())`).
+2. `format_messages` is called with a `HashMap<String, TemplateInput>` where at least
+   one input binding — in a `TrustRequired` slot — has a `TrustLevel::Untrusted` component.
+   The input may be any arm of `TemplateInput`:
+   - `TemplateInput::Scalar(v)` with `v.trust_level == Some(TrustLevel::Untrusted)`
+   - `TemplateInput::Messages(m)` with `m.trust_level == Some(TrustLevel::Untrusted)`
+   - `TemplateInput::FewShotExamples(pairs)` where any `(iv, ov)` has
+     `iv.trust_level == Some(TrustLevel::Untrusted)` or
+     `ov.trust_level == Some(TrustLevel::Untrusted)`
+   (Breaking type change from `HashMap<String, TemplateVar>` per ADR-015 §Decision 3
+   Amendment — TemplateInput Enum Concretized, burst-279.)
 3. The `TrustRequired` slot's variable name is present in the vars map (variable is not undefined).
 
 ## Postconditions
@@ -94,8 +102,18 @@ enforcement of that invariant.
    layer within `ferrochain-prompts`.
 4. The check fires **before** the guardrail boundary (DI-012 / BC-2.11.001); the guardrail
    is a second, independent layer and does not substitute for this check.
-5. Variables with `TrustLevel::UserInput` or `TrustLevel::Trusted` substituted into a
-   `TrustRequired` slot do NOT trigger E-TMPL-001 (only `TrustLevel::Untrusted` triggers it).
+5. `injection_guard` checks BOTH scalar `TemplateVar.trust_level` AND
+   `MessageListVar.trust_level` against `TrustRequired` slots:
+   - If `TemplateInput::Scalar(var)` and `var.trust_level == Some(TrustLevel::Untrusted)` →
+     raises `E-TMPL-001` (InjectionAttempt, SECURITY, never-retry).
+   - If `TemplateInput::Messages(msg_var)` and
+     `msg_var.trust_level == Some(TrustLevel::Untrusted)` →
+     raises `E-TMPL-001` (same error code and category).
+   Both input types are guarded equally. There is no path through `format_messages` that
+   delivers an `Ok(PromptValue)` when either a scalar or message-list variable carries
+   `TrustLevel::Untrusted` in a `TrustRequired` slot. (VP-006 Kani proof covers this
+   invariant exhaustively for both input arms.)
+   Variables with `TrustLevel::UserInput` or `TrustLevel::Trusted` do NOT trigger E-TMPL-001.
 
 ## Invariants
 
@@ -149,6 +167,11 @@ enforcement of that invariant.
 - BC-2.18.002 — composes with: injection_guard fires inside `format_messages`, which is the rendering path BC-2.18.002 specifies
 - BC-2.18.005 — depends on: TrustAll on SystemMessage is prohibited at construction time (BC-2.18.005), ensuring all SystemMessage slots are TrustRequired and subject to this check
 - BC-2.11.001 — referenced-for-context: DI-012 guardrail is a SEPARATE, post-render ingress mechanism; injection_guard fires pre-render and does NOT replace DI-012
+- NOTE: `PromptTemplate::format` (BC-2.18.001 surface) is NOT guarded by injection_guard.
+  The injection guard (E-TMPL-001) fires ONLY in `ChatPromptTemplate::format_messages`
+  (this contract). Output of `PromptTemplate::format` MUST NOT be placed in a system-role
+  position without an explicit re-check through `ChatPromptTemplate::format_messages`.
+  (ADR-015 Decision 3 Amendment — PromptTemplate::format explicitly unguarded; B201 CRIT.)
 
 ## Architecture Anchors
 

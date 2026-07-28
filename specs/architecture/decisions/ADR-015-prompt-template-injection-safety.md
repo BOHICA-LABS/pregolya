@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.9"
+version: "1.11"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,8 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.11 (fix-burst-279/gap-corrections/2026-07-28): Three gap corrections to v1.10. (1) Gap 1 (BLOCKING): FewShotPromptTemplate adjudication body added to §Decision 3 Amendment — FewShotPromptTemplate Example Trust Check: pre-expansion trust check over Vec<(TemplateVar,TemplateVar)> examples; FewShotExamples arm in TemplateInput injection guard code sketch; security argument (fail-closed, fires before inner example_template.format()); example trust level convention table. (2) Gap 1 (continued): §Decision 3 Amendment — TemplateInput Enum Concretized added before B201 section; TemplateInput enum definition with Scalar/Messages/FewShotExamples arms; #[non_exhaustive]; format_messages signature declared as HashMap<String, TemplateInput>. (3) Gap 1 (continued): §Decision 3 Amendment — B201 Type-Level Enforcement Assessment added: type-level wrapper feasibility assessed (feasible but API friction disproportionate); prohibition-as-invariant retained for v1; v2 trigger condition documented. v1.10 was missing all three bodies."
+  - "1.10 (fix-burst-279/F-P175-B201+F-P175-B202+F-P175-B208+B202-fewshot/2026-07-28): Decision 3 Amendment — four injection-safety gaps closed. (1) B201: PromptTemplate::format explicitly declared unguarded; system-position output from the single-message surface is prohibited; callers MUST use ChatPromptTemplate::format_messages for any system-role content; type-level enforcement assessed and deferred — see §B201 type-level question. (2) B202 MessageListVar: injection check extended to cover MessageListVar.trust_level for MessagesPlaceholder slots in TrustRequired position. (3) B202 FewShot: FewShotPromptTemplate example inputs promoted from Vec<(String,String)> to Vec<(TemplateVar,TemplateVar)>; pre-expansion trust check added for TrustRequired outer slots; inner PromptTemplate::format never called when outer guard fires. (4) B208: TrustLevel severity inversion fixed — add severity() -> u8 (Untrusted=2, UserInput=1, Trusted=0); #[non_exhaustive] added; #[derive(Ord)] explicitly prohibited. format_messages signature corrected to HashMap<String, TemplateInput>; TemplateInput enum concretized. Sweeps: ADR-015 prose at §Iteration determinism invariant and §Security Invariant 1 updated; interface-definitions.md format_messages signature and TemplateInput enum added; VP-006 formal invariant updated."
   - "1.9 (FIX-BURST-278/Wave-C-S5/2026-07-28): S5 canon — two FerrochainError struct literals in Rust fences converted to FerrochainError::new(component, category, RetryHint::Never, code, message) canonical constructor form per D-42/D-49. (1) Decision 2 from_messages guard: E-TMPL-002 struct literal → FerrochainError::new(Component::Tmpl, Category::Val, RetryHint::Never, ...). (2) Decision 3 injection check: E-TMPL-001 struct literal → FerrochainError::new(Component::Tmpl, Category::Security, RetryHint::Never, ...). RetryHint::Never confirmed for both codes (SECURITY/InjectionAttempt and VAL/SystemSlotPolicy are non-retriable by construction per error-taxonomy)."
   - "1.8 (FIX-BURST-272/F-P170-18/2026-07-25): Rewrite §PO Handoffs and §BA Handoffs in past-tense RESOLVED form following the burst-238 stale-handoff sweep pattern. All listed changes were applied in burst-226 and subsequent bursts; the future-tense obligation tables were live open instructions in an accepted ADR, a Production-Grade Default violation. Rotted line-number pointers (L1110, L1128-1129, L1155-1156) replaced with section/symbol anchors per TD-VSDD-091."
   - "1.7 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — Decision 2 code sketch: Component::TMPL → Component::Tmpl; Category::VAL → Category::Val; Decision 4 InjectionAttempt code sketch: Component::TMPL → Component::Tmpl; Category::SECURITY → Category::Security per ADR-010 v1.9 Direction B adjudication."
@@ -151,7 +153,13 @@ trust classifier, **distinct from and independent of** `ProvenanceTag`.
 /// Trust classification for a template variable's value.
 /// Distinct from `core::guardrail::ProvenanceTag` (SS-11 ingress-boundary audit struct).
 /// Used ONLY within the SS-18 template composition layer.
-/// Severity ordering: Untrusted > UserInput > Trusted.
+///
+/// SEVERITY ORDERING: Untrusted (highest) > UserInput > Trusted (lowest).
+/// Use `severity()` for aggregate comparisons — NEVER `#[derive(Ord)]`.
+/// Declaration order (Untrusted < UserInput < Trusted in derived Ord) is the INVERSE
+/// of security severity. Deriving Ord and calling `.max()` would silently return
+/// `Trusted` as the aggregate of any set containing `Untrusted` — a fail-open error.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(kani, derive(kani::Arbitrary))]
 pub enum TrustLevel {
@@ -170,6 +178,24 @@ impl TrustLevel {
     /// Returns `true` only for `Untrusted` — the sole trigger for E-TMPL-001.
     pub fn is_untrusted(&self) -> bool {
         matches!(self, Self::Untrusted)
+    }
+
+    /// Numeric severity for aggregate computation.
+    /// Untrusted = 2 (highest risk), UserInput = 1, Trusted = 0 (lowest risk).
+    ///
+    /// **INVARIANT:** When combining TrustLevels across multiple variables, use
+    /// `.max_by_key(|t| t.severity())` — NEVER `Iterator::max()` or `Ord::max()`.
+    /// Derived `Ord` on this enum is the INVERSE of severity order (Untrusted < Trusted
+    /// in declaration order); calling `max()` on a mixed set returns `Trusted`,
+    /// which is a silent fail-open injection bypass.
+    ///
+    /// BC anchor: BC-2.18.002 INV-2 (severity ordering used for highest_trust_level aggregation)
+    pub fn severity(&self) -> u8 {
+        match self {
+            Self::Untrusted => 2,
+            Self::UserInput => 1,
+            Self::Trusted   => 0,
+        }
     }
 }
 ```
@@ -226,7 +252,7 @@ The injection check fires **at render time** (inside `format_messages`), before 
 impl ChatPromptTemplate {
     pub fn format_messages(
         &self,
-        vars: HashMap<String, TemplateVar>,
+        vars: HashMap<String, TemplateInput>,
     ) -> Result<PromptValue, FerrochainError> {
         for slot in &self.slots {
             if slot.policy == SlotTrustPolicy::TrustRequired {
@@ -238,20 +264,45 @@ impl ChatPromptTemplate {
                 // another insertion-order structure — HashSet/HashMap iteration is
                 // PROHIBITED here. (BC-2.18.004 Invariant 5 / EC-007 / TV-005)
                 for var_name in slot.variable_names() {
-                    if let Some(var) = vars.get(var_name) {
-                        if var.trust_level.is_some_and(|t| t.is_untrusted()) {
-                            return Err(FerrochainError::new(
-                                Component::Tmpl,
-                                Category::Security,
-                                RetryHint::Never,
-                                "E-TMPL-001",
-                                format!(
-                                    "InjectionAttempt: variable '{}' carries untrusted provenance \
-                                     but slot '{}' requires TrustRequired policy",
-                                    var_name, slot.message_role
-                                ),
-                            ));
+                    match vars.get(var_name) {
+                        Some(TemplateInput::Scalar(var)) => {
+                            // Scalar TemplateVar — check trust_level directly.
+                            if var.trust_level.is_some_and(|t| t.is_untrusted()) {
+                                return Err(FerrochainError::new(
+                                    Component::Tmpl,
+                                    Category::Security,
+                                    RetryHint::Never,
+                                    "E-TMPL-001",
+                                    format!(
+                                        "InjectionAttempt: variable '{}' carries untrusted \
+                                         provenance but slot '{}' requires TrustRequired policy",
+                                        var_name, slot.message_role
+                                    ),
+                                ));
+                            }
                         }
+                        Some(TemplateInput::Messages(msg_var)) => {
+                            // MessageListVar — check the declared trust_level for the
+                            // entire expansion. This is the fix for F-P175-B202: prior
+                            // code iterated only scalar variable_names() and never
+                            // inspected MessageListVar.trust_level, leaving MessagesPlaceholder
+                            // slots silently unguarded in TrustRequired position.
+                            if msg_var.trust_level.is_some_and(|t| t.is_untrusted()) {
+                                return Err(FerrochainError::new(
+                                    Component::Tmpl,
+                                    Category::Security,
+                                    RetryHint::Never,
+                                    "E-TMPL-001",
+                                    format!(
+                                        "InjectionAttempt: message list variable '{}' carries \
+                                         untrusted provenance but slot '{}' requires TrustRequired \
+                                         policy",
+                                        var_name, slot.message_role
+                                    ),
+                                ));
+                            }
+                        }
+                        None => {} // strict-undefined raises E-TMPL-003 at render time
                     }
                 }
             }
@@ -271,7 +322,7 @@ template string. Consequences:
 - Implementers MUST store slot variable names in a `Vec<String>` (or `IndexMap`), NOT a
   `HashSet<String>` or unordered structure. HashMap iteration order is undefined and
   produces non-deterministic errors under EC-007 (multiple-untrusted-vars scenario).
-- The `vars: HashMap<String, TemplateVar>` parameter is used only for **O(1) lookup**
+- The `vars: HashMap<String, TemplateInput>` parameter is used only for **O(1) lookup**
   (`vars.get(var_name)`); its iteration order is irrelevant to the check correctness.
 
 This is a **hard block at the pure-core layer**, not a guardrail advisory. The error is
@@ -290,8 +341,212 @@ fires: rendering aborts at the first failing slot variable.
 This is the Red Gate anchor for **BC-2.18.004**: the injection_guard test must compile and
 fail before `ChatPromptTemplate::format_messages` is implemented. Kani VP-006 proves this
 invariant formally: the `Ok` arm of `format_messages` is unreachable for any symbolic
-`(ChatPromptTemplate, HashMap<String, TemplateVar>)` pair where any `TrustRequired` slot
+`(ChatPromptTemplate, HashMap<String, TemplateInput>)` pair where any `TrustRequired` slot
 receives a variable with `is_untrusted() == true`.
+
+### Decision 3 Amendment — TemplateInput Enum Concretized (F-P175-B202 prerequisite)
+
+The prior code sketch used `HashMap<String, TemplateVar>` as the `format_messages` parameter
+type. This obscured the MessageListVar arm and prevented the injection guard from inspecting
+it. The concrete unifying enum is established here (previously deferred to story implementation):
+
+```rust
+// ferrochain-prompts: prompts::template
+/// Unified input type for `ChatPromptTemplate::format_messages`.
+/// Replaces the former `HashMap<String, TemplateVar>` parameter type.
+#[non_exhaustive]
+pub enum TemplateInput {
+    /// A scalar string substitution with optional trust classification.
+    Scalar(TemplateVar),
+    /// A message-list expansion for MessagesPlaceholder slots.
+    Messages(MessageListVar),
+    /// A few-shot example pair for FewShotPromptTemplate slots.
+    /// Both components carry trust classification.
+    /// Authority: ADR-015 Decision 3 Amendment — FewShotPromptTemplate trust check.
+    FewShotExamples(Vec<(TemplateVar, TemplateVar)>),
+}
+```
+
+**`format_messages` signature (corrected):**
+
+```rust
+pub fn format_messages(
+    &self,
+    vars: HashMap<String, TemplateInput>,
+) -> Result<PromptValue, FerrochainError>
+```
+
+This is a **breaking change** from the prior sketch form `HashMap<String, TemplateVar>`.
+All spec citations of `HashMap<String, TemplateVar>` as the `format_messages` parameter type
+must be updated (see TD-VSDD-060 sweep in burst-279 sweep manifest for enumeration by owner).
+
+### Decision 3 Amendment — FewShotPromptTemplate Example Trust Check (F-P175-B202)
+
+**Finding:** `FewShotPromptTemplate` example rendering is a second unguarded path in B202.
+BC-2.18.003 PC5 renders examples via `example_template: PromptTemplate` — the explicitly
+unguarded surface per B201. BC-2.18.003 PC2 supplies examples as bare `Vec<(String, String)>`
+with no trust level. An attacker supplying retrieved/user-supplied content as example
+pairs routes it through the unguarded `PromptTemplate::format` into the expanded messages
+with no injection check at any layer.
+
+**Adjudication — pre-expansion trust check, example inputs typed as TemplateVar:**
+
+`FewShotPromptTemplate` example inputs are promoted from bare `(String, String)` pairs to
+`(TemplateVar, TemplateVar)` pairs. This makes the trust level of example content explicit
+and checkable.
+
+**Corrected FewShot injection guard logic:**
+
+```rust
+// In ChatPromptTemplate::format_messages injection guard loop:
+// (FewShotExamples arm in TemplateInput)
+Some(TemplateInput::FewShotExamples(examples)) => {
+    if slot.policy == SlotTrustPolicy::TrustRequired {
+        for (input_var, output_var) in examples {
+            if input_var.trust_level.is_some_and(|t| t.is_untrusted()) {
+                return Err(FerrochainError::new(
+                    Component::Tmpl, Category::Security, RetryHint::Never,
+                    "E-TMPL-001",
+                    format!("InjectionAttempt: few-shot example input carries untrusted \
+                             provenance in TrustRequired position (slot '{}')",
+                             slot.message_role),
+                ));
+            }
+            if output_var.trust_level.is_some_and(|t| t.is_untrusted()) {
+                return Err(FerrochainError::new(
+                    Component::Tmpl, Category::Security, RetryHint::Never,
+                    "E-TMPL-001",
+                    format!("InjectionAttempt: few-shot example output carries untrusted \
+                             provenance in TrustRequired position (slot '{}')",
+                             slot.message_role),
+                ));
+            }
+        }
+    }
+}
+```
+
+**Security argument (fail-closed):** The pre-expansion check fires BEFORE the inner
+`example_template.format()` call. If any example variable carries `TrustLevel::Untrusted`
+in a TrustRequired outer slot, E-TMPL-001 fires and the inner `PromptTemplate::format` is
+never invoked. The unguarded `PromptTemplate::format` surface (B201) is never reached for
+content that fails the outer trust check.
+
+**Example trust level convention:**
+- Developer-authored examples (hard-coded in source code): `trust_level: None` (treated as Trusted)
+- Examples loaded from a trusted dataset: `trust_level: Some(TrustLevel::Trusted)` or `None`
+- Examples retrieved from a vector store or external source: `trust_level: Some(TrustLevel::Untrusted)`
+- Examples from user input: `trust_level: Some(TrustLevel::UserInput)`
+
+**BC-side update (PO-routed):** BC-2.18.003 PC2 must change from `Vec<(example_input:
+String, example_output: String)>` to `Vec<(example_input: TemplateVar, example_output:
+TemplateVar)>`. See routing spec burst-279 item 5.
+
+### Decision 3 Amendment — B201 Type-Level Enforcement Assessment
+
+**Question from orchestrator:** Is a type-level distinction feasible — e.g. `format`
+returning a wrapper type that system-position APIs will not accept, so the invariant holds
+by construction rather than convention?
+
+**Assessment:**
+
+The mechanism is feasible. The chain would be:
+1. `PromptTemplate::format` returns `PlainString` (newtype over `String`) instead of `String`
+2. `SystemMessage::new` changes from `fn new(text: String)` to `fn new(text: SystemTrustedContent)` where `SystemTrustedContent` is a separate type
+3. `PlainString` cannot coerce into `SystemTrustedContent` — the type system prevents placement in system position
+
+**Why deferred for v1:**
+
+The API friction is disproportionate to the risk profile:
+- Changing `SystemMessage::new(String)` to `SystemMessage::new(SystemTrustedContent)` breaks every caller that passes a string literal for system messages (the dominant use case for developer-authored prompts)
+- Every developer-authored system message string would need explicit type conversion: `SystemTrustedContent::developer_literal("You are a helpful assistant.")` — adds ceremony to the common case to protect against the rare misuse case
+- The actual risk pattern requires a developer to: (a) use `TemplateVar { value: retrieved_content, trust_level: Some(TrustLevel::Untrusted) }` with `PromptTemplate::format`, AND (b) manually place the `String` output into a system message — two independent developer errors at two separate call sites
+- Post-v1 audits can detect violations mechanically via lint rules (grep for `SystemMessage::new(template.format(...)`)
+
+**Decision:** Keep the prohibition-as-invariant for v1. If post-v1 audits detect violations of the prohibition in downstream crate code, introduce the type-level wrapper as a v2 hardening with a deprecation path for the `String`-accepting API. This reasoning is recorded here as the architectural rationale — it is NOT a defer-and-forget; it is a deliberate v1 decision with a concrete v2 trigger condition.
+
+### Decision 3 Amendment — PromptTemplate::format Explicitly Unguarded (F-P175-B201)
+
+`PromptTemplate::format` (the single-message surface) is **explicitly unguarded**. The
+injection check defined above fires only inside `ChatPromptTemplate::format_messages`.
+`PromptTemplate::format` returns a bare `String` with no `MessageProvenance` metadata —
+there is no slot trust policy check, no `TrustLevel` inspection, and no `E-TMPL-001`
+path within that method.
+
+**Prohibition:** The output of `PromptTemplate::format` MUST NOT be placed directly into
+a system-role position (SystemMessage) of any LLM call or ChatPromptTemplate without an
+explicit re-check through `ChatPromptTemplate::format_messages` or an equivalent guard.
+
+This prohibition is an architectural invariant, not a runtime check. It binds callers,
+not implementors: `PromptTemplate` itself cannot enforce what position its output is used in.
+The contract is declared here to ensure the BC layer reflects this gap correctly.
+
+**BC correction (PO-routed):** Any BC that claims "injection_guard fires during the render
+path that `PromptTemplate::format` exercises" is incorrect. The injection guard fires ONLY
+in `ChatPromptTemplate::format_messages`. PO must remove or correct any such claim. See
+routing spec burst-279.
+
+### Decision 3 Amendment — MessageListVar Guard in TrustRequired Slots (F-P175-B202)
+
+The injection check code sketch in earlier versions of this ADR iterated only
+`slot.variable_names()` and inspected only `TemplateVar` (scalar) entries. `MessageListVar`
+(the input type for `MessagesPlaceholder` slots) was never inspected — a `MessagesPlaceholder`
+slot carrying `trust_level: Some(TrustLevel::Untrusted)` in a `TrustRequired` position
+would have silently passed the guard.
+
+The corrected injection check (updated in the code sketch above) handles both input arms:
+
+| Input type | Guard action |
+|------------|-------------|
+| `TemplateInput::Scalar(TemplateVar)` | Check `var.trust_level.is_some_and(|t| t.is_untrusted())` |
+| `TemplateInput::Messages(MessageListVar)` | Check `msg_var.trust_level.is_some_and(|t| t.is_untrusted())` |
+
+The `MessageListVar` path was unguarded in prior code; this amendment closes the gap.
+The `format_messages` signature now takes `HashMap<String, TemplateInput>` (the enum
+unifying both input types); the `vars: HashMap<String, TemplateVar>` form in prior
+versions was a sketch placeholder that obscured this gap.
+
+### Decision 3 Amendment — TrustLevel Severity Inversion (F-P175-B208)
+
+The `TrustLevel` enum has a latent severity-inversion hazard: Rust derives `Ord` in
+declaration order, making `Untrusted < UserInput < Trusted`. Any implementor who adds
+`#[derive(Ord)]` and calls `Iterator::max()` or `Ord::max()` on a set of `TrustLevel`
+values will silently receive `Trusted` as the aggregate even if `Untrusted` is present —
+a fail-open injection bypass.
+
+**Three-part fix (applied in this amendment):**
+
+1. `#[non_exhaustive]` added to `TrustLevel` — prevents exhaustive match arms in
+   downstream code; callers must handle `_ =>` arm, making future variants safe to add
+   without breaking existing match guards.
+
+2. `severity() -> u8` method added (Untrusted=2, UserInput=1, Trusted=0) — provides the
+   only safe path for aggregate severity computation.
+
+3. Explicit prohibition: `#[derive(Ord)]` and `#[derive(PartialOrd)]` MUST NOT be added
+   to `TrustLevel`. Every aggregate trust computation MUST use
+   `.max_by_key(|t| t.severity())`, not `Iterator::max()` or `Ord::max()`.
+
+**Canonical aggregate pattern:**
+
+```rust
+// CORRECT — uses severity() for ordering
+let highest = vars.values()
+    .filter_map(|v| match v {
+        TemplateInput::Scalar(tv) => tv.trust_level,
+        TemplateInput::Messages(mv) => mv.trust_level,
+    })
+    .max_by_key(|t| t.severity());
+
+// WRONG — Ord declaration order is inverse of severity
+// let highest = trust_levels.iter().copied().max();  // DO NOT USE
+```
+
+**VP-006 impact:** The Kani proof harness for VP-006 exercises
+`TrustLevel::Untrusted` in a `TrustRequired` slot via `kani::Arbitrary`. The
+`#[non_exhaustive]` + `#[cfg_attr(kani, derive(kani::Arbitrary))]` combination is
+required for the harness to enumerate all variants. The `kani::Arbitrary` derive is
+load-bearing — see VP-006.
 
 ### Relationship to existing DI-012 / BC-2.11.001 guardrail model
 

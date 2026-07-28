@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.004
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (F-P91-04, 2026-07-17): EC-004 adjudication — E-MEMORY-002 StorageFull is a write-capacity code (wrong semantic for a backend read I/O failure). No existing MEMORY code covers read I/O failure. Minted E-MEMORY-008 (MemoryStoreReadFailed, DURABILITY, broken, Maybe) as the correct code. EC-004 updated: removed E-MEMORY-002 and hedge 'or equivalent propagated storage error'; now cites E-MEMORY-008 MemoryStoreReadFailed. Added TV-008 to satisfy gate #33 raise-condition anchor for E-MEMORY-008. error-taxonomy.md v1.18 adds E-MEMORY-008 row (MEMORY namespace); census 85→86 (blanket 26→27: E-MEMORY-* 7→8)."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-004 carried bare `Err(FerrochainError { category: DURABILITY, code: E-MEMORY-008 MemoryStoreReadFailed })` without message; E-MEMORY-008 taxonomy has <backend_error> placeholder (SQLite I/O error detail, available at raise site). Added inline message template to EC-004."
+  - "1.3 (fix-burst-279/F-P175-B102/ADR-012-D1-Amendment/2026-07-28): PC3 updated with SCOPE NOTE — SkillStore implementations bind MemoryScope::App(app_id) at construction time per ADR-012 Decision 1 Amendment. Callers do not supply scope at call time; app_id comes from RunContext.app_id (system-derived, same source as ContextMutationConfig loading in BC-2.15.006). If the SkillStore was constructed without a valid app_id, all load_skill/list_skills/skill_exists calls return Err(E-MEMORY-004 NoScopeContext). EC-006 added for the empty-app_id construction case (unenumerated in prior versions; finding B102 noted this gap)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -51,8 +52,15 @@ the read path only; writes to skill entries are governed by BC-2.15.005 (guarded
 1. A `SkillStore` implementation is configured and backed by an initialized `MemoryStore`.
 2. Skill documents exist in the backing `MemoryStore` as KV entries in skill-designated
    namespaces, each associated with a `SkillDescriptor` (name, namespace, key, tags).
-3. The caller has read access to the relevant `MemoryStore` namespace (scope checks per
-   BC-2.15.002 apply at the storage layer).
+3. The caller has read access to the relevant `MemoryStore` namespace.
+   SCOPE NOTE: `SkillStore` implementations bind `MemoryScope::App(app_id)` at
+   construction time. Callers do not supply scope at call time. The `app_id` is
+   supplied to the `SkillStore` constructor and comes from `RunContext.app_id`
+   (system-derived, same as used by `ContextMutationConfig` loading in BC-2.15.006).
+   If the `SkillStore` was constructed without a valid `app_id`, all `load_skill`,
+   `list_skills`, and `skill_exists` calls return `Err(E-MEMORY-004 NoScopeContext)`
+   (ADR-012 Decision 1 Amendment — scope encapsulated at service boundary; callers
+   cannot influence which tenant partition is read).
 
 ## Postconditions
 
@@ -117,6 +125,19 @@ Does NOT return `Ok(None)` to mask the error (DI-014).
 `load_skill` are separate storage reads; a concurrent delete between them could
 produce `Ok(None)` — this is correct and not a contract violation (no TOCTOU
 guarantee is required).
+
+### EC-006: SkillStore constructed without a valid app_id — fail-loud at call time
+**Scenario:** A `SkillStore` implementation was constructed with an empty `app_id`
+(e.g., `SkillStore::new(store, "")` where the construction-time app_id was empty).
+A caller then invokes `load_skill("py_helpers")`.
+**Expected behavior:** Returns `Err(FerrochainError::new(
+    Component::Memory, Category::Security, RetryHint::Never, "E-MEMORY-004",
+    "NoScopeContext: SkillStore requires a valid app_id at construction; \
+     app_id is empty — cannot derive tenant scope",
+))`. All three methods (`load_skill`, `list_skills`, `skill_exists`) return the same
+error when the bound `app_id` is empty. The operation fails closed — no data is
+returned, no fallback scope used (ADR-012 Decision 1 Amendment — scope encapsulation
+at service boundary; B102 CRIT correction).
 
 ## Canonical Test Vectors
 

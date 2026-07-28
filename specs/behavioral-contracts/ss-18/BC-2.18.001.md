@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.001
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.1 (burst-227/F-P132-04/2026-07-21): Description ¶1: remove 'in strict-undefined mode (jinja2 engine or explicit f-string strict mode)' qualifier — E-TMPL-003 is unconditional and engine-neutral per INV-3/PC4/ADR-015 Decision 4; description now states the raise is unconditional in both f-string and jinja2 engines."
   - "1.2 (FIX-BURST-269/F-P167-01/2026-07-25): Fix Category::VALIDATION → Category::VAL in PC-4 code block (E-TMPL-003 Err struct). VALIDATION is not in the canonical 12-member Category enum; E-TMPL-003 is VAL per error-taxonomy.md §E-TMPL-003. D23 sibling-sweep."
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B): Component::TMPL → Component::Tmpl, Category::VAL → Category::Val in PC-4 code block. Taxonomy code-string column stays SCREAMING as documentation shorthand; only typed Rust enum paths change."
+  - "1.4 (fix-burst-279/F-P175-B201+B204/ADR-015-D3-Amendment/2026-07-28): THREE changes. (1) INV-5 (new): PromptTemplate::format is explicitly unguarded — output is a bare String with no MessageProvenance; callers MUST NOT place this output in a system-role position without routing through ChatPromptTemplate::format_messages (B201 CRIT; ADR-015 Decision 3 Amendment). (2) INV-1 fix (B204): was self-contradictory ('infallible only if ... returns Err'); corrected to proper fallible statement — construction is fallible, unparseable templates return Err(E-TMPL-004) at construction time. (3) E-TMPL-004 MalformedTemplate: minted for construction-time parse failures; EC-007/EC-008/EC-009 added for unbalanced-brace and empty-brace inputs (highest-risk input class for the in-house f-string parser); TV-007 added. E-TMPL-* census 3→4; total census 110→111."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -83,8 +84,11 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
 
 ## Invariants
 
-1. `PromptTemplate` construction is infallible only if the template string parses without error;
-   unparseable templates return `Err` at construction time per DI-008.
+1. `PromptTemplate` construction is fallible — templates with unbalanced braces, stray close
+   braces, empty variable slots (`{}`), or other parse errors return
+   `Err(FerrochainError::new(Component::Tmpl, Category::Val, RetryHint::Never, "E-TMPL-004",
+   "MalformedTemplate: <parse_error>"))` at construction time per DI-008. The same malformed
+   template string always fails; the error is deterministic given the input.
 2. `input_variables()` returns identical results on every call regardless of how many times
    `format()` has been invoked (pure, idempotent computation).
 3. E-TMPL-003 is unconditional — the f-string engine does NOT substitute an empty string for
@@ -92,6 +96,13 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
    configured (default behavior is strict).
 4. Partial bindings are immutable once set at construction; they are not modifiable after the
    template is built (builder returns a new `PromptTemplate` value, not mutation in place).
+5. The output of `PromptTemplate::format` is a bare `String` with no `MessageProvenance` and
+   no injection guard. Callers MUST NOT use this output directly as system-role content in any
+   LLM call or `ChatPromptTemplate` without routing it through
+   `ChatPromptTemplate::format_messages` for a `TrustLevel` check.
+   (ADR-015 Decision 3 Amendment — `PromptTemplate::format` explicitly unguarded; the injection
+   guard (E-TMPL-001) fires ONLY in `format_messages`. Placing raw `format()` output in a
+   system position is an injection risk with no automatic backstop.)
 
 ## Edge Cases
 
@@ -103,6 +114,9 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
 | EC-004 | Template has `{x}` but `x` is absent from merged vars | Returns `Err(E-TMPL-003 UndefinedVariable)` for `x`; does NOT return `""` for `x` |
 | EC-005 | Call-time `vars` contains a key matching a partial binding | Call-time value wins; partial binding is shadowed for this render call |
 | EC-006 | Template has `{x.y}` (apparent nested access) | `x.y` is treated as a single flat variable name; `input_variables()` includes `"x.y"`; caller must supply `"x.y"` as a key |
+| EC-007 | Template string `"Hello, {name"` — unbalanced open brace | `PromptTemplate::from_template("Hello, {name")` returns `Err(FerrochainError::new(Component::Tmpl, Category::Val, RetryHint::Never, "E-TMPL-004", "MalformedTemplate: unclosed variable brace starting near 'name'"))` — construction fails; no render |
+| EC-008 | Template string `"a } b"` — stray close brace | `PromptTemplate::from_template("a } b")` returns `Err(E-TMPL-004 MalformedTemplate)` — stray `}` without matching `{{` is a parse error; construction fails |
+| EC-009 | Template string `"{}"` — empty variable slot | `PromptTemplate::from_template("{}")` returns `Err(E-TMPL-004 MalformedTemplate)` — `{}` has no variable name and is not a valid `{variable}` placeholder; construction fails |
 
 ## Canonical Test Vectors
 
@@ -114,6 +128,7 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
 | TV-004 | `template = "Hello, {name}!"`, `vars = {}` (name absent) | `Err(FerrochainError { code: "E-TMPL-003", message: "UndefinedVariable: variable 'name' is not defined in the template context" })` | error-case (undefined variable) |
 | TV-005 | `template = "Hi {name}"`, partial `name = "Charlie"`, call-time `vars = {"name": "Dave"}` | `Ok("Hi Dave")` — call-time overrides partial | edge-case (partial override) |
 | TV-006 | `PromptTemplate::from_template("Hello, {name}!")` → call `input_variables()` | `["name"]` | happy-path (variable detection) |
+| TV-007 | `PromptTemplate::from_template("Hello, {name")` (unbalanced open brace) | `Err(FerrochainError { code: "E-TMPL-004", message: "MalformedTemplate: ..." })` — construction fails at parse time | error-case (malformed template; EC-007) |
 
 ## Verification Properties
 
@@ -125,7 +140,7 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
 ## Related BCs
 
 - BC-2.18.002 — composes with: ChatPromptTemplate builds on the same f-string engine and partial-binding semantics
-- BC-2.18.004 — depends on: injection_guard fires during the render path that BC-2.18.001 exercises
+- BC-2.18.004 — NOTE: injection_guard does NOT fire during the `PromptTemplate::format` path this BC specifies. The guard fires ONLY in `ChatPromptTemplate::format_messages` (BC-2.18.004). Output of `PromptTemplate::format` is unguarded; see INV-5 for the prohibition on system-position use without re-routing through `format_messages`. (ADR-015 Decision 3 Amendment, B201 CRIT.)
 - BC-2.18.005 — depends on: construction-time policy check (E-TMPL-002) is a precondition for BC-2.18.001's construction postconditions
 
 ## Architecture Anchors

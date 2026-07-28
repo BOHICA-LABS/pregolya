@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
   - "1.1 (burst-226/F-P131-05/2026-07-21): TrustLevel migration — INV-2 'ProvenanceTag severity ordering' → 'TrustLevel severity ordering'. PC3: MessageProvenance.tag → MessageProvenance.highest_trust_level; ProvenanceTag → TrustLevel in provenance aggregation context. EC-001, EC-002 updated: ProvenanceTag → TrustLevel; tag field → highest_trust_level. TV-001, TV-002: Provenance.tag → Provenance.highest_trust_level; ProvenanceTag variants → TrustLevel variants."
   - "1.2 (burst-227/F-P132-03/2026-07-21): Complete TrustLevel migration residue from v1.1 partial propagation. PC2: 'ProvenanceTag' → 'trust_level: Option<TrustLevel>'. EC-003: 'MessageProvenance.tag = None' → 'highest_trust_level = None'. TV-001: 'tag: None' → 'trust_level: None'. VP-2.18.002-A: 'MessageProvenance.tag' → 'MessageProvenance.highest_trust_level' and 'tag' → 'TrustLevel'."
+  - "1.3 (fix-burst-279/F-P175-B202+B208+B221/ADR-015-D3-Amendment/2026-07-28): FOUR changes. (1) PC1 signature: format_messages parameter updated from HashMap<String, TemplateVar> to HashMap<String, TemplateInput> (TemplateInput enum concretized: Scalar/Messages/FewShotExamples arms; ADR-015 Decision 3 Amendment). (2) PC2: updated to HashMap<String, TemplateInput> with per-arm trust classification (B202 CRIT; breaking type change). (3) INV-2: updated to reference TrustLevel::severity() method for aggregate computation; Ord::max() and derived Ord on TrustLevel explicitly prohibited — declaration order is inverse of security severity (B208 HIGH fail-open fix; ADR-015 Decision 3 Amendment). (4) PC3 + INV-3: None case broadened from 'template-literal slots' to 'no variables substituted OR all substituted variables carried trust_level: None' — TV-001 showed non-literal slot yielding None when trust_level: None (B221 semantic correction; ADR-015 correct disjunction)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -55,20 +56,30 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 
 1. A `ChatPromptTemplate` has been constructed via `ChatPromptTemplate::from_messages(messages)`
    returning `Result<Self, FerrochainError>` per DI-008 — construction validates all slot policies.
-2. For rendering, a `HashMap<String, TemplateVar>` is provided where every `TemplateVar`
-   optionally carries a `trust_level: Option<TrustLevel>`.
+2. For rendering, a `HashMap<String, TemplateInput>` is provided. Each `TemplateInput`
+   is one of:
+   - `TemplateInput::Scalar(TemplateVar)` — scalar string binding for human/AI/system slots
+   - `TemplateInput::Messages(MessageListVar)` — message-list expansion for MessagesPlaceholder
+   - `TemplateInput::FewShotExamples(Vec<(TemplateVar, TemplateVar)>)` — for FewShot slots
+   For each `TemplateInput` that binds to a `TrustRequired` slot, the trust level of the
+   input's components is checked before rendering (injection_guard, BC-2.18.004).
+   (Breaking change from prior `HashMap<String, TemplateVar>` per ADR-015 §Decision 3
+   Amendment — TemplateInput Enum Concretized, burst-279.)
 3. All variables referenced in the template are present in the var map (else see BC-2.18.001
    EC-004 for E-TMPL-003), OR the caller has bound them via partial binding.
 
 ## Postconditions
 
-1. `ChatPromptTemplate::format_messages(&self, vars: HashMap<String, TemplateVar>)
+1. `ChatPromptTemplate::format_messages(&self, vars: HashMap<String, TemplateInput>)
    → Result<PromptValue, FerrochainError>` returns `Ok(prompt_value)` on success.
 2. `PromptValue.messages` is a `Vec<(Message, MessageProvenance)>` with one entry per slot,
    in the order slots were declared at construction.
 3. For each slot: `MessageProvenance.highest_trust_level` is `Some(trust_level)` where `trust_level` is the highest-severity
-   `TrustLevel` across all variables substituted into that slot; `None` if no variable carried
-   a trust level (template-literal slots).
+   `TrustLevel` across all variables substituted into that slot; `None` if no variables were
+   substituted (template-literal slots) OR if all substituted variables carried
+   `trust_level: None` (ADR-015 §Decision 3 correct disjunction — a non-literal slot with all
+   `None` trust levels yields `highest_trust_level: None`, matching the template-literal case;
+   see TV-001 for canonical example: `trust_level: None` variable → `highest_trust_level: None`).
 4. `MessageProvenance.slot_trust_policy` reflects the slot's policy as declared at construction.
 5. `PromptValue.into_messages()` extracts `Vec<Message>` by discarding provenance metadata;
    the original `PromptValue` is consumed.
@@ -79,11 +90,17 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 
 1. Slot order in the rendered `PromptValue` matches the order slots were declared at
    construction — no reordering occurs.
-2. TrustLevel severity ordering for provenance aggregation: `Untrusted > UserInput > Trusted`.
-   When multiple variables with different TrustLevel values are substituted into one slot, the
-   highest-severity TrustLevel wins.
-3. A slot that is a template literal (no variable substitutions) always has
-   `MessageProvenance.highest_trust_level = None`.
+2. TrustLevel severity ordering: `Untrusted` (severity=2) > `UserInput` (severity=1) >
+   `Trusted` (severity=0). The highest-severity TrustLevel wins. Aggregate computation MUST
+   use `TrustLevel::severity()` comparisons (`.max_by_key(|t| t.severity())`); `Ord::max()`
+   or derived `Ord` on `TrustLevel` MUST NOT be used — declaration order is the INVERSE of
+   security severity (ADR-015 Decision 3 Amendment, F-P175-B208). A derived `Ord` on
+   `TrustLevel { Untrusted, UserInput, Trusted }` makes `Untrusted < Trusted`, so `.max()`
+   returns `Trusted` for a set containing `Untrusted` — silent fail-open on the injection guard.
+3. A slot has `MessageProvenance.highest_trust_level = None` when either: (a) no variables
+   are substituted (template-literal slot), or (b) all substituted variables carry
+   `trust_level: None`. These two cases are semantically equivalent for provenance purposes —
+   in both, no trust classification was propagated into the slot (ADR-015 §Decision 3).
 4. `ChatPromptTemplate` construction is pure (no I/O, no async); it returns `Result`.
 
 ## Edge Cases

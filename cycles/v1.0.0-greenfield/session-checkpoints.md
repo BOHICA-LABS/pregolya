@@ -1820,3 +1820,22 @@ BC-2.18.004: targeted grep only (not read); 36 of 37 standing gates: count/conti
 
 ### ARCHIVE METADATA
 Date: 2026-07-28 | Archived at: STATE.md v4.34 session wrap D-60 | STATE.md: v4.33 → v4.34 | fix-burst 278 COMPLETE (~30/189 P1D-175 findings closed) | D-54..D-60 added | 8 lessons L-108..L-115 minted | streak 0/3
+
+---
+
+## Checkpoint v4.34 (archived — replaced by v4.35)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1 (Spec Crystallization), greenfield+semport. Streak 0/3 after 176 passes; P1D-175 FULL-PERIMETER recorded — 189 findings (10 CRIT); fix-burst 278 COMPLETE (~30/189 closed). Closed families: receiver/E0038 corpus-wide (D-48), FerrochainError fence literals, `Arc<dyn Tool>` residue, ADR-005 false-closure cluster, domain-spec CAP-027/028, `McpError` public-boundary leak (E-MCP-007; census 109→110). Still open: SS-15 tenancy (B101/B102), SS-18 injection (B201/B202), `TrustLevel` inversion (B208), self-proving VPs (A24/A17/A10), `product-brief.md` CRITs (C201/C202). NEXT ACTION was: P1D-176 FULL-PERIMETER — CORRECTED by D-69: with ~149 findings open, P1D-176 was premature; correct next action is fix-burst 280.
+
+### HEADS (v4.34)
+develop `46725ad` — clean, `== origin/develop`, PUSHED. factory-artifacts — v4.34 commit, PUSHED. No worktrees. No open PRs.
+
+### NEXT-ACTION WAS
+P1D-176 FULL-PERIMETER adversarial pass (INCORRECT — see D-69 correction). Actual next action: fix-burst 280 targeting self-proving VP harnesses (A24/A17/A10) and `product-brief.md` scope/holdout CRITs (C201/C202).
+
+### COVERAGE DEBTS (carried to v4.35)
+BC-2.18.004: targeted grep only (not read); 36 of 37 standing gates: count/continuity only; 105 hyphenated-module occurrences + 131 version pins: counted per-file not triaged; 129 TV Count cells: never hand-summed; ADR-010 canon-note site: unopened; per-VP frontmatter: `module:` only.
+
+### ARCHIVE METADATA
+Date: 2026-07-28 | Archived at: STATE.md v4.35 session wrap D-69 | STATE.md: v4.34 → v4.35 | fix-burst 279 COMPLETE (~40/189 P1D-175 findings closed) | D-61..D-69 added | 6 lessons L-116..L-121 minted | streak 0/3

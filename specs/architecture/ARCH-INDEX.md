@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.20"
+version: "1.22"
 status: active
 producer: architect
 timestamp: 2026-07-28T00:00:00Z
@@ -17,6 +17,8 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.22 (fix-burst-279/gap-corrections/2026-07-28): Gap-fix wave (three corrections to initial wave). (1) ADR-012 §Decision 1 Amendment — Gap 3: empty app_id B101 path corrected from Ok(None) to Err(E-MEMORY-004 NoScopeContext); fail-loud symmetric with B102 (SkillStore). (2) ADR-015 §Decision 3 Amendment — Gap 1: FewShotPromptTemplate adjudication body added (pre-expansion trust check; examples typed as Vec<(TemplateVar, TemplateVar)>); TemplateInput enum concretized (Scalar/Messages/FewShotExamples arms); B201 type-level enforcement design question answered (prohibition retained for v1; API friction outweighs benefit; v2 trigger condition documented). (3) interface-definitions.md §Prompt Templates — Gap 2 (TD-VSDD-060 sweep): TemplateInput enum defined; format_messages signature corrected to HashMap<String, TemplateInput>. (4) VP-006 §Formal invariant + §Kani harness — formal invariant updated to HashMap<String, TemplateInput>; harness extended to cover Scalar, Messages, and FewShotExamples arms."
+  - "1.21 (fix-burst-279/F-P175-B101+B102+B201+B202+B208/2026-07-28): Architect security adjudication wave — three architecture files bumped. ADR-012 §Decision 1 Amendment: ContextMutationConfig scope bridge (B101: spec.namespace is key-prefix not app_id; loading uses RunContext.app_id) and SkillStore scope encapsulation (B102: bind MemoryScope::App(app_id) at construction; E-MEMORY-004 on missing app_id). ADR-015 §Decision 3 Amendment: PromptTemplate::format explicitly unguarded (B201); MessageListVar guard added to injection check (B202); TrustLevel severity inversion fixed with severity() method + #[non_exhaustive] + Ord prohibition (B208). interface-definitions.md §Prompt Templates + §RunContext + §SkillStore: TrustLevel enum updated (Copy+non_exhaustive+kani::Arbitrary+severity()); RunContext.app_id field added; SkillStore scope note added; context_mutations doc updated with scope bridge."
   - "1.20 (FIX-BURST-278/L9b-de-pin/2026-07-28): L9b de-pin: api-surface.md §FIX-BURST-277-WAVE-B-errata changelog entry and interface-definitions.md §FIX-BURST-277-WAVE-B-errata changelog entry — ADR-005 version pins replaced with ADR-005 §Adjacent Trait Object-Safety Adjudications section anchors. records-lint FAIL=0 achieved. api-surface.md bumped to v1.20; interface-definitions.md bumped to v2.65."
   - "1.19 (FIX-BURST-278/Wave-C-S4-complete/2026-07-28): ADR-005 §Wave C BC-side migration spec: four non-object-safe (E0038) notation lines annotated to satisfy S4 gate exemption (all four classification (b) hazard-naming prose). ADR-005 §Failure Mode: SCREAMING-CASE struct literal replaced with prose error-code reference."
   - "1.18 (FIX-BURST-278-WAVE-A/F-P175-D212-propagation/2026-07-28): Iron Law propagation for core::tool (triggered by module-decomposition.md §core::tool row addition) — add core::tool Pure Core row to purity-boundary-map.md (83→84 total rows); add core::tool HIGH row to verification-coverage-matrix.md (HIGH count 28→29); add core::tool HIGH row to module-criticality.md (Classification Summary HIGH 28→29, Total 83→84)."

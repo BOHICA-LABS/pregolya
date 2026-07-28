@@ -1,12 +1,14 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.65"
+version: "2.67"
 status: active
 producer: product-owner
 timestamp: 2026-07-28T00:00:00Z
 phase: 1d
 changelog:
+  - "2.67 (fix-burst-279/gap-2-TemplateInput+format_messages/2026-07-28): Gap 2 (BLOCKING) TD-VSDD-060 sweep — format_messages signature and TemplateInput enum. (1) Added `TemplateInput` enum definition (§Prompt Templates, before SlotTrustPolicy): three arms — Scalar(TemplateVar), Messages(MessageListVar), FewShotExamples(Vec<(TemplateVar, TemplateVar)>); #[non_exhaustive]; replaces former bare HashMap<String, TemplateVar> parameter. (2) `format_messages` signature corrected: parameter type `HashMap<String, TemplateVar>` → `HashMap<String, TemplateInput>` (breaking change per ADR-015 §Decision 3 Amendment — TemplateInput Enum Concretized). This is the architect-owned portion of the TD-VSDD-060 sweep; BC-2.18.002/004 PO routing in wave-b-po-routing-spec-279.md item 6 and item 7."
+  - "2.66 (fix-burst-279/F-P175-B101+F-P175-B102+F-P175-B208/2026-07-28): Three architect security adjudications applied. (1) B101/B102: SkillStore scope-encapsulation note added (SkillStore impls bind MemoryScope::App(app_id) at construction; trait methods scopeless; E-MEMORY-004 NoScopeContext on missing app_id). RunContext gains app_id: String field (system-derived, not RunnableConfig-overridable; empty = no-scope sentinel). ContextMutationConfig loading note: spec.namespace is a key-namespace prefix within MemoryScope::App(run_context.app_id), not the tenant app_id; composite key = {namespace}/{key}. (2) B208: TrustLevel updated — add #[non_exhaustive]; add #[cfg_attr(kani, derive(kani::Arbitrary))]; add Copy derive; add severity() -> u8 method (Untrusted=2, UserInput=1, Trusted=0); explicit Ord-derivation prohibition added."
   - "2.65 (FIX-BURST-278/L9b-de-pin/2026-07-28): L9b de-pin: two version-pin-to-section-anchor conversions in the FIX-BURST-277-WAVE-B-errata changelog entry. Both pins cited ADR-005 by version number; replaced with ADR-005 §Adjacent Trait Object-Safety Adjudications in both positions (DynTool promise cross-reference and Wave C migration list cross-reference)."
   - "2.64 (FIX-BURST-278/Wave-C-S4+S5/2026-07-28): S4 canon — three lines citing Arc<dyn Tool> (non-object-safe E0038) as a migration origin annotated with non-object-safe qualifier to satisfy verify-signature-canon.sh S4 gate exemption. S5 canon — five FerrochainError doc-comment examples in Rust fences collapsed to abbreviated FerrochainError { code: \"E-XXX\", .. } form per D-42/D-49: (1) DynRunnable # Errors E-CORE-004 (Unicode ellipsis → ASCII ..); (2) BaseChatModel bind_tools E-CORE-005 (two-line multifield doc → single-line abbreviated); (3) CheckpointSaver put E-CHKPT-005 (two-field abbreviated → single-field abbreviated with ..); (4) GuardrailHook evaluate E-CORE-007 (unquoted code string quoted, two-field → abbreviated with ..); (5) ProviderFallbackPolicy new E-PROV-011 (two-line multifield doc → single-line abbreviated, unquoted code string quoted)."
   - "2.63 (FIX-BURST-278/F-P175-D48+D208+D212/2026-07-28): Three findings closed. (1) F-P175-D48 — `as_retriever` receiver corrected to `self: Arc<Self>` (dyn-compatible; see ADR-014 §Decision 2); stale 'Wave C PO correction pending' note removed. (2) F-P175-D208 — add `#[derive(Serialize)]` to `ToolOutput` enum (required for blanket `DynTool` impl to convert `ToolOutput` to `serde_json::Value`); blanket impl comment updated to document that `ToolOutput::Error(String)` maps to `Err(FerrochainError)` — not `Ok(json)` — to prevent silent-error-swallow violation per DI-014 / BC-5.39.001. (3) F-P175-D212 — `core::tools` → `core::tool` (singular) in §Tool subsection module comment per BC-2.08.010 Architecture Anchors canonical form."
@@ -268,8 +270,15 @@ pub struct RunnableConfig {
     /// Per-run memory context mutation spec. Declares which memory keys are loaded as a
     /// frozen-snapshot prompt prefix at run start (`graph::scheduler`). `None` = no memory
     /// context loaded for this run. Writes during the run are visible at next run start only.
+    ///
+    /// Scope bridge (F-P175-B101 / ADR-012 Decision 1 Amendment): `ContextSourceSpec.namespace`
+    /// is a key-namespace PREFIX within the tenant partition, NOT the `app_id`. Loading uses
+    /// `MemoryScope::App(run_context.app_id)` with composite key `"{namespace}/{key}"`.
+    /// The caller controls WHICH keys to load; the tenant scope comes exclusively from
+    /// `RunContext.app_id` (system-derived, not settable via `RunnableConfig`).
+    ///
     /// Authority: BC-2.15.006 PC1 (frozen-snapshot context mutation at run start),
-    /// ADR-012 Decision 1 Primitive B.
+    /// ADR-012 Decision 1 Primitive B and Decision 1 Amendment.
     pub context_mutations: Option<ContextMutationConfig>,
 }
 ```
@@ -621,9 +630,13 @@ pub struct BudgetConfig {
 > **`RunContext`** — RESOLVED. Defined by BC-2.10.001 precondition 3: "The execution engine
 > has access to the `RunContext` (thread_id, run_id, sub-agent identity if applicable) for
 > policy evaluation calls." Fields: `thread_id`, `run_id`, `sub_agent_id: Option<SubAgentId>`,
-> `budget_info: Option<BudgetInfo>` (v1.2 addition — BC-2.10.003 PC5/INV; populated by
-> `graph::budget_engine` at each super-step boundary before task dispatch; `None` when no
-> `BudgetPolicy` is active).
+> `budget_info: Option<BudgetInfo>` (BC-2.10.003 PC5/INV; populated by `graph::budget_engine`
+> at each super-step boundary before task dispatch; `None` when no `BudgetPolicy` is active),
+> `app_id: String` (F-P175-B101 / ADR-012 Decision 1 Amendment — system-derived application
+> identity for memory tenancy; set by `graph::scheduler` before the first super-step; NOT
+> overridable via `RunnableConfig`; used as the `app_id` for `MemoryScope::App(app_id)` in
+> all `ContextMutationConfig` reads and `SkillStore` construction; empty string = no-scope
+> sentinel — all `MemoryScope::App` reads return `Ok(None)`).
 > Concrete struct definition lives in `ferrochain-core/src/budget.rs` per ADR-009 Option 3.
 > (gate #31 RESOLVED via BC-2.10.001 precondition 3 — name-equality verified)
 
@@ -740,6 +753,13 @@ pub struct SkillDescriptor {
 ```
 
 > **`SkillDescriptor`** — RESOLVED. Defined inline above; fields match BC-2.15.004 postconditions (name, namespace, key, tags). (gate #31 RESOLVED)
+
+> **SkillStore scope encapsulation (F-P175-B102 / ADR-012 Decision 1 Amendment):** `SkillStore`
+> trait methods carry NO scope parameter. Scope is encapsulated at construction time:
+> `SkillStore::new(store: Arc<dyn MemoryStore>, app_id: String)`. All `load_skill` /
+> `list_skills` / `skill_exists` calls resolve within `MemoryScope::App(app_id)`. If
+> `app_id` is empty at construction, the implementation returns `Err(E-MEMORY-004
+> NoScopeContext)` — fail-closed. External callers do not supply or observe the scope.
 
 **BC anchor:** BC-2.15.004 PC1–PC4 (load-on-demand, list, exists; None on missing is Ok not Err)
 
@@ -1739,9 +1759,18 @@ ADR-017 Decision 2 (Embeddings trait surface, dyn-safety via #[async_trait] + &s
 /// Trust classification of a template variable at injection time.
 /// Distinct from `ProvenanceTag` (SS-11 ingress boundary struct).
 /// `None` trust_level in a TemplateVar is treated as `Trusted` by injection_guard.
+///
+/// SEVERITY ORDERING: Untrusted (highest) > UserInput > Trusted (lowest).
+/// Use `severity()` for aggregate comparisons — `#[derive(Ord)]` MUST NOT be added:
+/// Rust declaration order makes `Untrusted < Trusted` in derived `Ord`, which is the
+/// INVERSE of security severity. Calling `Iterator::max()` on a mixed set silently
+/// returns `Trusted` — a fail-open injection bypass (ADR-015 Decision 3 Amendment).
+///
 /// BC anchor: BC-2.18.004 PC2 (TrustLevel::Untrusted triggers E-TMPL-001),
 /// BC-2.18.002 INV-2 (TrustLevel severity ordering: Untrusted > UserInput > Trusted)
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(kani, derive(kani::Arbitrary))]
 pub enum TrustLevel {
     /// Content from an untrusted external source (e.g., MCP tool result, RAG chunk without guardrail).
     Untrusted,
@@ -1757,6 +1786,19 @@ impl TrustLevel {
     pub fn is_untrusted(&self) -> bool {
         matches!(self, Self::Untrusted)
     }
+
+    /// Numeric severity for aggregate trust computation.
+    /// Untrusted = 2 (highest risk), UserInput = 1, Trusted = 0 (lowest risk).
+    ///
+    /// Use `.max_by_key(|t| t.severity())` — NEVER `Iterator::max()` or derived Ord.
+    /// BC anchor: BC-2.18.002 INV-2 (severity ordering for highest_trust_level aggregation)
+    pub fn severity(&self) -> u8 {
+        match self {
+            Self::Untrusted => 2,
+            Self::UserInput => 1,
+            Self::Trusted   => 0,
+        }
+    }
 }
 
 /// A template variable value with its trust classification.
@@ -1768,6 +1810,32 @@ pub struct TemplateVar {
     pub value: String,
     /// Trust classification. `None` is treated as `TrustLevel::Trusted`.
     pub trust_level: Option<TrustLevel>,
+}
+
+/// Unified input type for `ChatPromptTemplate::format_messages` and `injection_guard`.
+/// Replaces the former `HashMap<String, TemplateVar>` parameter — that type could not
+/// represent `MessagesPlaceholder` or `FewShotPromptTemplate` inputs with trust classification.
+///
+/// BC anchor: BC-2.18.002 PC1–PC2 (format_messages parameter type),
+/// BC-2.18.003 PC5 (FewShot example inputs; both components carry trust classification),
+/// BC-2.18.004 PC3–PC5 (injection_guard dispatches over all arms),
+/// ADR-015 §Decision 3 Amendment — TemplateInput Enum Concretized
+///
+/// See also: VP-006 Kani harness (covers Scalar and Messages arms; formal invariant
+/// updated to `HashMap<String, TemplateInput>`).
+#[non_exhaustive]
+pub enum TemplateInput {
+    /// A scalar string substitution with optional trust classification.
+    /// Used for: `HumanMessagePromptTemplate`, `AIMessagePromptTemplate`, `SystemMessagePromptTemplate`.
+    Scalar(TemplateVar),
+    /// A message-list expansion for `MessagesPlaceholder` slots.
+    /// The `Vec<Message>` is expanded in-place at the placeholder position.
+    /// Trust level applies uniformly to all expanded messages.
+    Messages(MessageListVar),
+    /// Few-shot example pairs for `FewShotPromptTemplate` slots.
+    /// Both `(input, output)` components carry independent trust classifications.
+    /// Injection guard checks both before calling inner `example_template` render.
+    FewShotExamples(Vec<(TemplateVar, TemplateVar)>),
 }
 
 /// Controls whether a named template slot may receive untrusted input.
@@ -1795,12 +1863,17 @@ impl ChatPromptTemplate {
     /// Render the template with the provided variable bindings.
     /// Runs injection_guard on each slot. Raises E-TMPL-001 (fail-closed) if an untrusted
     /// var is bound to a TrustRequired slot. Raises E-TMPL-003 if a required slot has no binding.
+    ///
+    /// **Breaking change from prior sketch form:** parameter type is `HashMap<String, TemplateInput>`
+    /// (not `HashMap<String, TemplateVar>`). Covers Scalar, Messages, and FewShotExamples arms.
+    /// See ADR-015 §Decision 3 Amendment — TemplateInput Enum Concretized and VP-006 §Kani harness.
+    ///
     /// BC anchor: BC-2.18.002 PC1–PC2 (format_messages multi-message rendering semantics, PromptValue output),
     /// BC-2.18.004 PC3–PC5 (injection_guard call site; fail-closed; TrustLevel drives decision),
     /// BC-2.18.001 PC2 (strict-undefined variable reference → E-TMPL-003)
     pub fn format_messages(
         &self,
-        vars: HashMap<String, TemplateVar>,
+        vars: HashMap<String, TemplateInput>,
     ) -> Result<PromptValue, FerrochainError> { ... }
 }
 

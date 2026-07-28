@@ -8,7 +8,7 @@ status: accepted
 date: 2026-07-15
 producer: architect
 timestamp: 2026-07-15T00:00:00Z
-version: "1.8"
+version: "1.10"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D20]
@@ -16,6 +16,8 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-15]
 changelog:
+  - "1.10 (fix-burst-279/gap-3-B101-empty-app_id/2026-07-28): Correct B101 empty-app_id failure mode: `run_context.app_id` empty MUST return `Err(E-MEMORY-004 NoScopeContext)` — NOT `Ok(None)`. v1.9 incorrectly stated the empty-app_id case silently returns `Ok(None)`. Changed §Decision 1 Amendment F-P175-B101 §Security argument and RunContext `app_id` doc-comment. Fail-loud policy is now symmetric with B102 (SkillStore construction fail-loud). NO-SILENT-EMPTY enforced on both B101 and B102 paths."
+  - "1.9 (fix-burst-279/F-P175-B101+F-P175-B102/2026-07-28): Decision 1 Amendment — ContextMutationConfig scope bridge and SkillStore scope encapsulation. B101: `spec.namespace` is a key-namespace prefix, NOT the tenant `app_id`; loading uses `MemoryScope::App(run_context.app_id)` with composite key `{namespace}/{key}` (system-derived tenant identity, not caller-supplied). B102: SkillStore binds `MemoryScope::App(app_id)` at construction time; trait methods remain scopeless; E-MEMORY-004 NoScopeContext raised when no app_id derivable. RunContext gains `app_id: String` field (system-derived, set before first super-step, not overridable via RunnableConfig). E-MEMORY-004 NoScopeContext minted by PO — see routing spec burst-279."
   - "1.8 (fix-burst-276/F-P173-505/2026-07-27): Records hygiene — remove bare commit SHA from v1.6 changelog entry; burst-238 alone is the stable citable anchor (TD-VSDD-091). No semantic change."
   - "1.7 (FIX-BURST-276/F-P173-706/2026-07-27): Forward-amend all three 18-crate roster references to 21-crate: (1) Alternatives Considered Decision 1 table rationale; (2) Decision 4 crate roster count; (3) Rationale closing parenthetical. Add forward-amendment blockquote after Decision 4 crate roster statement. The \"no new crate\" decision holds unchanged under the 21-crate roster; ADR-012 adds no new crate. Roster expanded from 18 to 21 by D21 (+ferrochain-prompts, +ferrochain-vectorstores) and D23 (+ferrochain-tools) — see ARCH-INDEX.md §Canonical Crate Roster."
   - "1.6 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp per ADR decision-date convention (Gate #28 Rule 5): `timestamp: 2026-07-23T00:00:00Z` → `2026-07-15T00:00:00Z`. Date field already correct at 2026-07-15 (original ADR-012 acceptance date, D20). Timestamp was incorrectly bumped to 2026-07-23 in burst-238."
@@ -177,6 +179,99 @@ ferrochain-memory's built-in scanner.
 | All primitive traits/types in ferrochain-memory | REJECT | MemoryWriteGuard is a pure validation trait. Following guardrail placement canon (GuardrailHook → ferrochain-core), pure validation contracts belong in ferrochain-core so non-memory consumers can wire guards without a ferrochain-memory dep. |
 | Definitions in ferrochain-core / routing + enforcement in ferrochain-memory | **ADOPT** | Consistent with ADR-009 Option 3 and GuardrailHook placement canon. |
 
+### Decision 1 Amendment — ContextMutationConfig Scope Bridge and SkillStore Scope Encapsulation (fix-burst-279)
+
+#### F-P175-B101 — ContextMutationConfig: `spec.namespace` is NOT the tenant identity
+
+**Finding:** The original v1.0 decision text for Primitive B specified that `graph::scheduler`
+calls `MemoryStore::memory_get(MemoryScope::App(spec.namespace), &spec.key)`. This places a
+caller-supplied content namespace (e.g., "agent", "SOUL.md") into the `app_id` tenancy
+partition key, enabling any caller with `ContextMutationConfig` to read from any
+application's memory namespace by crafting `spec.namespace`.
+
+**Adjudication — fail-closed redesign:**
+
+`ContextSourceSpec.namespace` is a **key-namespace prefix** — a content classifier scoped
+WITHIN a single application's memory space. It is NOT an application identity. The
+tenant scope MUST be derived from the system, not from caller-supplied data.
+
+**Corrected loading contract:**
+
+```
+MemoryStore::memory_get(
+    MemoryScope::App(run_context.app_id),   // system-derived tenant identity
+    &format!("{}/{}", spec.namespace, spec.key),  // composite key: namespace prefix + key
+)
+```
+
+`run_context.app_id` is set by the execution engine before the first super-step. It
+cannot be overridden by `RunnableConfig::context_mutations` — the caller controls WHICH
+keys to load (via `ContextSourceSpec`), but NOT which application's partition is read from.
+
+**Security argument (fail-closed):** If `run_context.app_id` is empty, the load returns
+`Err(E-MEMORY-004 NoScopeContext)` — the call site does NOT silently collapse to
+`Ok(None)`. This is a deliberate fail-loud policy: an empty `app_id` means the execution
+engine failed to establish a tenant identity before the super-step, which is an engine
+error that must be surfaced, not silently ignored by returning no context. If `app_id` is
+non-empty but does not match any partition in the MemoryStore, the read returns `Ok(None)`
+(no content found in that partition — normal miss, not an error). There is no fallback to
+a global or default scope.
+
+**RunContext gains `app_id: String`:**
+
+```rust
+pub struct RunContext {
+    pub thread_id: Option<Uuid>,
+    pub run_id: Uuid,
+    pub sub_agent_id: Option<SubAgentId>,
+    pub budget_info: Option<BudgetInfo>,
+    /// System-derived application identity for memory tenancy.
+    /// Set by the execution engine before the first super-step; NOT settable via
+    /// `RunnableConfig`. Used as the `app_id` parameter for `MemoryScope::App(app_id)`
+    /// in all ContextMutationConfig reads.
+    /// Empty string means no application scope — all MemoryScope::App reads return
+    /// `Err(E-MEMORY-004 NoScopeContext)`. Do NOT silently return Ok(None).
+    pub app_id: String,
+}
+```
+
+`app_id` is derived from the application's registered identity in the execution
+environment (e.g., the API client ID, deployment namespace, or operator-configured
+application key). The execution engine sets it; it is opaque to graph nodes and tool calls.
+
+#### F-P175-B102 — SkillStore: scope must be encapsulated at construction, not absent
+
+**Finding:** The original `SkillStore` trait definition has no scope parameter on any
+method (`load_skill`, `list_skills`, `skill_exists`). Under BC-2.15.002 EC-001, the
+default scope for unscoped MemoryStore reads is Session. A cross-session read of a skill
+with no scope context therefore resolves into a session-local partition, returning
+`Ok(None)` for all non-current-session skills.
+
+**Adjudication — construction-time scope binding:**
+
+`SkillStore` implementations bind `MemoryScope::App(app_id)` **at construction time**.
+The trait methods remain scopeless (callers do not supply scope). The `app_id` is
+threaded through the construction path — not exposed in the method surface.
+
+**Corrected SkillStore scope contract:**
+
+```
+SkillStore::new(store: Arc<dyn MemoryStore>, app_id: String) -> Result<Self, FerrochainError>
+```
+
+If `app_id` is empty or the implementation cannot derive an application scope, it returns
+`Err(E-MEMORY-004 NoScopeContext)`. Once constructed with a valid `app_id`, all
+`load_skill` / `list_skills` / `skill_exists` calls resolve within
+`MemoryScope::App(app_id)`.
+
+**Trait surface is unchanged** — no new scope parameter is added to trait methods. This
+preserves the existing trait contract: method callers do not need to know about tenancy.
+
+**E-MEMORY-004 NoScopeContext** (MEMORY namespace, number 004, category SECURITY,
+retry_hint Never): minted by PO in the error taxonomy. Used when a SkillStore or
+ContextMutationConfig load cannot derive a valid application scope at construction time
+or load time respectively. See routing spec burst-279 for the PO mint obligation.
+
 ---
 
 ## Decision 2 — Injection-Scanning Guard Seam
@@ -323,6 +418,19 @@ See `### Alternatives Considered (Decision N)` subsections in each Decision sect
 ### Error Codes
 
 `E-MEMORY-007 MemoryWriteGuardDenied` is the authoritative error code for `MemoryWriteGuard::Deny` (category: SECURITY, retry_hint: Never; minted by PO per bc-authoring-plan.md error-taxonomy ownership, F-P72-02 OBS). Namespace prefix `MEMORY`, number `007`.
+
+### RunContext Field Addition (fix-burst-279)
+
+`RunContext` gains a new `app_id: String` field per the Decision 1 Amendment above
+(F-P175-B101). This field is set by the execution engine (`graph::scheduler`) before the
+first super-step and is not accessible to `RunnableConfig` callers. Its presence in
+`RunContext` is required for correct `MemoryScope::App(app_id)` resolution during
+`ContextMutationConfig` loading and `SkillStore` construction.
+
+**Downstream propagation obligation:** All code that constructs `RunContext` must supply
+`app_id`. The field has no default — an empty `String` is the explicit "no-scope" sentinel.
+PO must update BC-2.15.006 to reflect the corrected loading contract (namespace as
+key-prefix, not as `app_id`). See routing spec burst-279.
 
 ### Cache-Key Obligation (ADR-011)
 

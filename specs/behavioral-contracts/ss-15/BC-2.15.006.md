@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.006
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,7 @@ changelog:
   - "1.1 (OBS-P77-C, 2026-07-15): ADR-012 DI-001 renamed to ADR-012 INV-1 per architect adjudication D18-P77-A (ADR-012 v1.2 local-invariant rename). Updated in Invariants (cache-coherence invariant label) and Architecture Anchors (§Decision 3 reference)."
   - "1.2 (OBS-P123-b cross-fix, fix burst 126, 2026-07-19): PC1 and Architecture Anchors corrected to use the canonical MemoryStore trait API per interface-definitions.md v2.39 §MemoryStore. (A) Method name: MemoryStore::get → MemoryStore::memory_get (BC-2.15.001 PC3 is the authoritative method name). (B) Scope parameter: spec.namespace is now explicitly typed as MemoryScope::App(spec.namespace) — context mutation sources are operator-managed, app-level content (BC-2.15.002 PC3); this matches test vector TV-001 namespace 'agent' which is an app-level concept. (C) Architecture Anchors scheduler call updated to reflect correct method signature. No behavioral change — the resolution of which MemoryScope tier applies to ContextSourceSpec.namespace was implicit in the prior text; this entry makes it explicit."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
+  - "1.4 (fix-burst-279/F-P175-B101/ADR-012-D1-Amendment/2026-07-28): PC1 scope bridge corrected per architect ADR-012 Decision 1 Amendment (B101 CRIT). ContextSourceSpec.namespace is a key-namespace PREFIX within the tenant partition, NOT the app_id. Corrected call uses MemoryScope::App(run_context.app_id) with composite key format!(\"{}/{}\", spec.namespace, spec.key). run_context.app_id is the system-derived tenant identity (set by execution engine before first super-step; NOT overridable via RunnableConfig caller input). Empty app_id fails loud: all reads return Err(E-MEMORY-004 NoScopeContext) — no silent empty return. EC-006 added for empty app_id at run start. Architecture Anchors scheduler call updated to reflect corrected signature."
 wave: 2
 phase: 1b
 producer: product-owner
@@ -62,12 +63,23 @@ frozen-tier semantics of Hermes SOUL.md / MEMORY.md.
 
 1. Before the first super-step executes, `graph::scheduler` loads each `ContextSourceSpec`
    from `MemoryStore` in declaration order:
-   `MemoryStore::memory_get(MemoryScope::App(spec.namespace), &spec.key)`.
-   `ContextSourceSpec.namespace` is treated as an app-scoped namespace — context mutation
-   sources are operator-managed, app-level content (BC-2.15.002 PC3).
+   ```
+   MemoryStore::memory_get(
+       MemoryScope::App(run_context.app_id),
+       &format!("{}/{}", spec.namespace, spec.key),
+   )
+   ```
+   `run_context.app_id` is the system-derived application tenant identity (set by the
+   execution engine before the first super-step; NOT supplied by the caller via
+   `RunnableConfig`). `spec.namespace` is a key-namespace prefix scoped WITHIN the
+   tenant partition — it is NOT an application identity.
+   If `run_context.app_id` is empty, all reads return `Err(E-MEMORY-004 NoScopeContext)`
+   — fail-loud; no content is silently skipped (ADR-012 Decision 1 Amendment,
+   §Gap 3 correction: empty app_id must fail loud, not silently return Ok(None)).
 2. The loaded content is prepended to the initial system instruction that is passed to the
    first super-step's model context. Sources that return `None` (key absent) are silently
-   skipped — their absence is not an error.
+   skipped — their absence is not an error. This silently-skipped path applies only when
+   `run_context.app_id` is non-empty and the specific key does not exist in the store.
 3. The assembled context (including all successfully loaded sources) is held as an immutable
    snapshot for the duration of the run. **No super-step** in the current run sees a
    different assembled context, even if a memory write occurs mid-run via BC-2.15.005.
@@ -134,6 +146,19 @@ same `ContextMutationConfig`.
 "Fact A; Fact B" (the value written during run 1) and that content is prepended to run 2's
 context.
 
+### EC-006: Empty app_id at run start — fail-loud (ADR-012 Decision 1 Amendment)
+**Scenario:** `graph::scheduler` attempts to load `ContextMutationConfig` sources but
+`run_context.app_id` is empty at the start of the super-step.
+**Expected behavior:** `graph::scheduler` returns `Err(FerrochainError::new(
+    Component::Memory, Category::Security, RetryHint::Never, "E-MEMORY-004",
+    "NoScopeContext: application tenant identity (app_id) is empty; \
+     ContextMutationConfig load requires a valid app_id",
+))` for the ContextMutationConfig load. The run does NOT proceed silently with no memory
+context — it surfaces the missing scope as an error. The execution engine is responsible
+for ensuring `run_context.app_id` is set before the first super-step. Fail-loud: symmetric
+with `SkillStore` construction (BC-2.15.004 PC3), per ADR-012 Decision 1 Amendment §Gap 3
+correction — NO-SILENT-EMPTY enforced on both B101 and B102 paths.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -161,7 +186,7 @@ context.
 ## Architecture Anchors
 
 - `ferrochain-core/src/context_mutation.rs` (`core::context_mutation`) — `ContextSourceSpec` struct `{ namespace: String, key: String }`; `ContextMutationConfig` struct `{ sources: Vec<ContextSourceSpec> }`; `RunnableConfig.context_mutations: Option<ContextMutationConfig>` (per ADR-012 Decision 1, Primitive B)
-- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — pre-first-super-step load: iterates `ContextMutationConfig.sources`, calls `MemoryStore::memory_get(MemoryScope::App(spec.namespace), &spec.key)` per source, prepends loaded content to initial context; no new module row (added behavior of existing scheduler module per ADR-012 Decision 4)
+- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — pre-first-super-step load: iterates `ContextMutationConfig.sources`, calls `MemoryStore::memory_get(MemoryScope::App(run_context.app_id), &format!("{}/{}", spec.namespace, spec.key))` per source; empty `run_context.app_id` returns `Err(E-MEMORY-004)` fail-loud; prepends loaded content to initial context; no new module row (added behavior of existing scheduler module per ADR-012 Decision 1 Amendment + Decision 4)
 - ADR-012 §Decision 3 — frozen-snapshot semantics adopted; live mutation rejected; ADR-012 INV-1 (cache-coherence invariant)
 - ADR-011 — cache-key obligation: loaded context bytes must be included in system-instruction hash input
 
