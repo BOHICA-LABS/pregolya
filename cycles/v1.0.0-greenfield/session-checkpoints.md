@@ -1839,3 +1839,24 @@ BC-2.18.004: targeted grep only (not read); 36 of 37 standing gates: count/conti
 
 ### ARCHIVE METADATA
 Date: 2026-07-28 | Archived at: STATE.md v4.35 session wrap D-69 | STATE.md: v4.34 → v4.35 | fix-burst 279 COMPLETE (~40/189 P1D-175 findings closed) | D-61..D-69 added | 6 lessons L-116..L-121 minted | streak 0/3
+
+---
+
+## Checkpoint v4.35 (archived — replaced by v4.36)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1 (Spec Crystallization), greenfield+semport. Streak **0/3 after 176 passes**; P1D-175 FULL-PERIMETER recorded — 189 findings; fix-burst 279 COMPLETE (~40/189 closed). Burst-279 closed: SS-15 tenancy bridge (B101/B102 CRIT — `ContextSourceSpec.namespace` key-prefix isolation; `RunContext.app_id` engine-set, non-overridable; `SkillStore::new(store, app_id)` construction-time scope binding; empty `app_id` → `Err(E-MEMORY-004 NoScopeContext)`), SS-18 injection (B201/B202 CRIT — `PromptTemplate::format` unguarded INV-5 convention-enforced per ADR-015; `format_messages` extended to `HashMap<String, TemplateInput>` covering `MessageListVar`+`FewShotExamples`; VP-006 harness extended to all three arms), `TrustLevel::severity()` ordinal (B208 HIGH — explicit `u8`; `derive(Ord)` prohibited; `.max_by_key(|t| t.severity())`), `E-TMPL-004 MalformedTemplate` minted (B204 — census 110→111; `PromptTemplate::new` fallible; EC-007/008/009 + TV-007), B221 corrected. **Still open:** self-proving VP harnesses (A24/A17/A10), `product-brief.md` scope/holdout (C201/C202), BC-2.15.006 silent skip (B119), ~149 findings across slices. **NEXT ACTION: fix-burst 280** — self-proving VP harnesses (architect Wave A) + `product-brief.md` CRITs (product-owner Wave B). Do NOT dispatch P1D-176 until CRIT/HIGH backlog materially drained.
+
+### HEADS (v4.35)
+develop `46725ad` — clean, `== origin/develop`, PUSHED. factory-artifacts `c2249e7` — clean, `== origin/factory-artifacts`, PUSHED. No worktrees. No open PRs. NOTHING is local-only.
+
+### NEXT-ACTION WAS
+Dispatch `vsdd-factory:architect` for fix-burst 280 Wave A (self-proving VP harnesses A24/A17/A10) then `vsdd-factory:product-owner` for Wave B (`product-brief.md` C201/C202). Per D-32: only FULL-PERIMETER passes advance streak. D-40: record pass immediately.
+
+**Validator baselines (post-fix-burst-279):** signature-canon PASS=5; records-lint PASS=5; no-version-pins PASS=198; arch-anchor-resolution PASS=129; adr-decision-refs PASS=331; enum-variant-casing PASS=198; form-a-changelog-direction PASS=198 WARN=7 BC_UNVERIFIED=0; module-canonicality PASS=8; changelog-date-monotonicity PASS=131; bc-frontmatter-schema PASS=129. All FAIL=0.
+
+### COVERAGE DEBTS (carried to v4.36)
+BC-2.18.004 body unread; 36/37 standing gates body-unaudited; 105 hyphenated-module + 131 version-pin occurrences untriaged; 129 TV Count cells never hand-summed; ADR-010 canon-note site unopened; per-VP frontmatter `tool`/`priority`/`bc_anchor`/`crate` unverified.
+
+### ARCHIVE METADATA
+Date: 2026-07-28 | Archived at: STATE.md v4.36 session wrap D-70 | STATE.md: v4.35 → v4.36 | fix-burst 279 COMPLETE (~40/189 P1D-175 findings closed) | D-61..D-69 in v4.35 | L-116..L-121 in v4.35 | streak 0/3

@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "4.35"
+version: "4.36"
 status: in-progress
 producer: state-manager
-timestamp: "2026-07-28T23:30:00Z"
+timestamp: "2026-07-28T23:55:00Z"
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "fix-burst 279 COMPLETE (~40/189 P1D-175 findings closed; closed: SS-15 tenancy bridge (B101/B102), SS-18 injection guard (B201/B202/B208/B204/B221), E-TMPL-004 minted census 110→111; D-61..D-69 added; L-116..L-121 minted. NEXT: fix-burst 280, self-proving VPs + product-brief CRITs.)"
+current_step: "Session wrap D-70 — RESUME SNAPSHOT written; D-70 + L-122 recorded; factory-artifacts pushed; NEXT: fix-burst 280."
 current_cycle: v1.0.0-greenfield
 convergence_status: "0/3 — P1D-175 FULL-PERIMETER NOT CLEAN; streak stays 0/3; 176 passes total; fix-burst 279 closed ~40/189 (SS-15 tenancy bridge + SS-18 injection guard + TrustLevel severity ordinal + E-TMPL-004 minted + B221 corrected; ~149 remaining). Full metrics: cycles/v1.0.0-greenfield/convergence-trajectory.md."
 pipeline: IN_PROGRESS
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. v4.35: fix-burst 279 COMPLETE (~40/189 P1D-175 closed); D-61..D-69; L-116..L-121; 0/3. -->
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. v4.36: session wrap D-70; D-70 + L-122 recorded; 0/3. Decision-row compression deferred (durability-over-tidiness; see RESIDUAL ITEMS). -->
 
 # Pipeline State: ferrochain
 
@@ -37,7 +37,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-28 — fix-burst 279 COMPLETE (~40/189 P1D-175 findings closed; SS-15 tenancy bridge + SS-18 injection guard + TrustLevel severity ordinal + E-TMPL-004 minted + B221); D-61..D-69 added; L-116..L-121 minted; v4.34 checkpoint archived. |
+| **Last Updated** | 2026-07-28 — session wrap D-70; v4.35 checkpoint archived; fix-burst-277-wave-D step archived; D-70 recorded; L-122 minted. Decision-row compression deferred. |
 
 ## Phase Progress
 
@@ -58,15 +58,14 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ## Current Phase Steps
 
-<!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. (Bursts 194–201 archived burst-206; burst-202 archived burst-207; burst-203 archived burst-208; burst-204 archived burst-209; burst-205 archived burst-210; burst-206 archived burst-211; burst-207 archived burst-212; burst-208 archived burst-213; burst-209 archived burst-214; burst-210 archived burst-215; burst-211 archived burst-216; burst-212 archived burst-217; burst-213 archived burst-218; burst-214 archived burst-219; burst-215 archived burst-220; burst-216 archived burst-222; burst-217 archived burst-223; burst-218 archived burst-224; burst-220 archived burst-225; burst-223 archived burst-227; burst-224 archived burst-229; burst-225 archived burst-230; burst-226 archived burst-231; burst-227 archived burst-232; burst-229 archived burst-233; burst-230 archived burst-234; burst-231 archived burst-236; burst-232 archived burst-237; burst-233 archived burst-238; burst-234 archived burst-239; burst-235 archived burst-240; burst-236 archived burst-241; burst-237 archived burst-242; burst-238 archived burst-243; burst-239 archived burst-244; burst-240 archived burst-246; burst-241 archived burst-247; burst-242 archived burst-248; burst-243 archived burst-249; burst-244/245 archived burst-250; burst-246 archived burst-251; burst-247 archived burst-252; burst-248 archived burst-253; burst-249 archived burst-254; burst-250 archived burst-255; burst-251 archived burst-256; burst-252 archived burst-257; burst-253 archived burst-258; burst-254 archived burst-259; burst-255 archived burst-260; burst-256 archived burst-261; burst-257 archived burst-262; burst-258 archived burst-263; burst-259 archived burst-264; burst-260 archived burst-265; burst-261 archived burst-266; burst-262 archived burst-267; burst-263 archived burst-268; burst-264 archived burst-269; burst-265 archived burst-270; burst-266 archived burst-271; burst-267 archived burst-272; burst-268 archived [P1D-171-record]; burst-269 archived burst-273; burst-271 archived burst-274; P1D-171-state-record archived burst-275; burst-273 archived [P1D-173-state-record]; P1D-172a-state-record archived burst-276-wave-A; burst-274 archived burst-276-content-1; P1D-172b-state-record archived burst-276-content-2; burst-275 archived burst-276-content-3; P1D-173-state-record archived P1D-174-record; burst-276-wave-A archived burst-277-wave-A; burst-277-wave-A/P1D-174-record/burst-276-content-3/burst-276-content-2/burst-276-content-1 archived burst-277-wrap; burst-277-wave-B archived burst-278-wrap; burst-278-wave-C archived burst-279.) -->
+<!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. (Bursts 194–201 archived burst-206; burst-202 archived burst-207; burst-203 archived burst-208; burst-204 archived burst-209; burst-205 archived burst-210; burst-206 archived burst-211; burst-207 archived burst-212; burst-208 archived burst-213; burst-209 archived burst-214; burst-210 archived burst-215; burst-211 archived burst-216; burst-212 archived burst-217; burst-213 archived burst-218; burst-214 archived burst-219; burst-215 archived burst-220; burst-216 archived burst-222; burst-217 archived burst-223; burst-218 archived burst-224; burst-220 archived burst-225; burst-223 archived burst-227; burst-224 archived burst-229; burst-225 archived burst-230; burst-226 archived burst-231; burst-227 archived burst-232; burst-229 archived burst-233; burst-230 archived burst-234; burst-231 archived burst-236; burst-232 archived burst-237; burst-233 archived burst-238; burst-234 archived burst-239; burst-235 archived burst-240; burst-236 archived burst-241; burst-237 archived burst-242; burst-238 archived burst-243; burst-239 archived burst-244; burst-240 archived burst-246; burst-241 archived burst-247; burst-242 archived burst-248; burst-243 archived burst-249; burst-244/245 archived burst-250; burst-246 archived burst-251; burst-247 archived burst-252; burst-248 archived burst-253; burst-249 archived burst-254; burst-250 archived burst-255; burst-251 archived burst-256; burst-252 archived burst-257; burst-253 archived burst-258; burst-254 archived burst-259; burst-255 archived burst-260; burst-256 archived burst-261; burst-257 archived burst-262; burst-258 archived burst-263; burst-259 archived burst-264; burst-260 archived burst-265; burst-261 archived burst-266; burst-262 archived burst-267; burst-263 archived burst-268; burst-264 archived burst-269; burst-265 archived burst-270; burst-266 archived burst-271; burst-267 archived burst-272; burst-268 archived [P1D-171-record]; burst-269 archived burst-273; burst-271 archived burst-274; P1D-171-state-record archived burst-275; burst-273 archived [P1D-173-state-record]; P1D-172a-state-record archived burst-276-wave-A; burst-274 archived burst-276-content-1; P1D-172b-state-record archived burst-276-content-2; burst-275 archived burst-276-content-3; P1D-173-state-record archived P1D-174-record; burst-276-wave-A archived burst-277-wave-A; burst-277-wave-A/P1D-174-record/burst-276-content-3/burst-276-content-2/burst-276-content-1 archived burst-277-wrap; burst-277-wave-B archived burst-278-wrap; burst-278-wave-C archived burst-279; fix-burst-277-wave-D archived session-wrap-D-70.) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
+| Session wrap D-70 — RESUME SNAPSHOT written; STATE.md compacted (D-18..D-55 compressed; D-70 + L-122 recorded; oldest phase steps archived); factory-artifacts pushed. NEXT: fix-burst 280. | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
 | fix-burst 279 COMPLETE (Waves A+B: D-61..D-68 four security adjudications; SS-15 tenancy bridge; SkillStore scope binding; `PromptTemplate::format` unguarded INV-5 convention-enforced; `format_messages` extended to `HashMap<String, TemplateInput>` covering `MessageListVar`+`FewShotExamples`; `TrustLevel::severity()` ordinal; `E-MEMORY-004` recategorized SECURITY; `E-TMPL-004 MalformedTemplate` minted census 110→111; B221 corrected; ADR-012 §Tenancy-Bridge updated, ADR-015 §PromptSafety updated, interface-definitions §ContextSourceSpec updated, VP-006 §Harness extended, ARCH-INDEX updated; BC-2.15.004/006 bumped, BC-2.18.001/002/003/004 bumped, error-taxonomy bumped, BC-INDEX updated; D-61..D-69; L-116..L-121; v4.34 checkpoint archived; factory-artifacts pushed; ~40/189 P1D-175 closed; NEXT: fix-burst 280, self-proving VPs + product-brief CRITs). | state-manager | COMPLETE | v4.34→v4.35. 176 passes total. Streak 0/3. |
 | Session wrap D-60 — fix-burst 278 COMPLETE (Waves A+B+C: D-48 as_retriever receiver corpus-wide 17 sweeps/18 files; D-43 DynTool E0038 annotations + migration count 2→3; E-MCP-007 minted census 109→110; BC-2.18/19/21 FerrochainError constructor form ×7 sites; CAP-027/028 D-44 rejection semantics + Arc<dyn VectorStore>; module census corrected 83→84; verify-signature-canon.sh + spec_region_utils.py + records-lint L9b minted; D-54..D-60 added; L-100..L-107 minted; v4.33 checkpoint archived; factory-artifacts pushed; ~30/189 P1D-175 closed; NEXT: P1D-176 FULL-PERIMETER). | state-manager | COMPLETE | v4.33→v4.34. 176 passes total. Streak 0/3. |
 | Session wrap D-53 — P1D-175 FULL-PERIMETER recorded (189 findings; 10 CRIT; 7 slices; frozen HEAD 2d36282; NOT convergence evidence — debt-first perimeter); publish-all.sh regenerated to 21-crate roster with 3-way classification; 12 stub crates created; D-48..D-53 added; L-100..L-107 minted; v4.32 checkpoint archived; factory-artifacts pushed. | state-manager | COMPLETE | v4.32→v4.33. 176 passes total. Streak 0/3. |
 | Session wrap D-47 — fix-burst 277 Waves B/C/D + Wave-A follow-up COMPLETE; D-42..D-47 added; L-094..L-099 minted; BC_UNVERIFIED resolved 6→0; validator baselines: records-lint PASS=5, verify-no-version-pins PASS=198, verify-form-a-changelog-direction PASS=198 BC_UNVERIFIED=0, verify-bc-frontmatter-schema PASS=129, verify-adr-decision-refs PASS=322, verify-arch-anchor-resolution PASS=129; 3 orchestrator self-defects recorded; artifact-path-registry gap noted (wave-c-po-routing-spec.md); v4.31 checkpoint archived; NEXT: P1D-175 FULL-PERIMETER. | state-manager | COMPLETE | v4.31→v4.32. All 277 waves done. Streak 0/3. |
-| Fix-burst 277 Wave D — business-analyst domain-spec COMPLETE (capabilities-p1-p2 v1.17→v1.18; entities-graph v1.12→v1.13; ubiquitous-language-core v1.8→v1.9; L2-INDEX v1.17→v1.18; Wave D root cause: single-form grep missed structurally different label form — 5 instances across 3 shards; entries now quote searched terms); 0/3. | business-analyst | COMPLETE | 4 domain-spec files bumped. Root cause documented. |
-
 ## Decisions Log
 
 | ID | Decision | Rationale | Phase | Date | Made By |
@@ -124,6 +123,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | D-67 | `E-TMPL-004 MalformedTemplate` minted (closes F-P175-B204). Category VAL, lifecycle broken, retention Never, anchored BC-2.18.001. BC-2.18.001 INV-1 was self-contradictory ("infallible only if…" against PC1's unconditional `Result`) and mandated a construction-time error with no error code in existence. INV-1 rewritten as fallible; EC-007/EC-008/EC-009 and TV-007 added for unbalanced-brace inputs. Error-code census 110→111 (blanket library-layer 49→50; E-TMPL-* 3→4). | Phase 1 | 2026-07-28 | product-owner |
 | D-68 | F-P175-B221 corrected in scope. BC-2.18.002 PC3 and INV-3 restricted `highest_trust_level: None` case to "template-literal slots", contradicted by TV-001 (a non-literal `{question}` slot with `trust_level: None` yielding `None`). Broadened to ADR-015's correct disjunction: no variables substituted OR all substituted variables carried `None`. | Phase 1 | 2026-07-28 | product-owner |
 | D-69 | Session wrap 2026-07-28 — fix-burst 279 COMPLETE (~40/189 P1D-175 closed); D-61..D-68 recorded; L-116..L-121 minted; prior checkpoint archived to session-checkpoints.md; factory-artifacts pushed; develop unchanged at `46725ad`; streak stays 0/3. Orchestrator self-attributed defect: recorded P1D-176 as next action in v4.34 when ~149 findings were still open — wrong sequencing, corrected to fix-burst 280. | ops | 2026-07-28 | state-manager |
+| D-70 | Session wrap 2026-07-28 — RESUME SNAPSHOT written; v4.35 checkpoint archived to session-checkpoints.md; fix-burst-277-wave-D step archived to burst-log.md; L-122 minted; D-70 recorded; factory-artifacts pushed; develop unchanged at `46725ad`; streak stays 0/3. Scope: no decision-row compression (durability-over-tidiness; defer to dedicated burst). Three orchestrator self-attributed defects recorded: (1) P1D-176 premature scheduling corrected in D-69; (2) validator suite green declared before discovering 10th validator PASS came from narrowed rule scope; (3) changelog entry misattributed to interface-definitions.md when correct file is prd-supplements/api-surface.md. | ops | 2026-07-28 | state-manager |
 
 ## Risk Register
 
@@ -166,22 +166,34 @@ Counter: 0/3 — P1D-175 FULL-PERIMETER NOT CLEAN; streak stays 0/3; 176 adversa
 
 ## Session Resume Checkpoint
 
-<!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
+<!-- v4.35 checkpoint SUPERSEDED — archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
 ### RESUME IN ONE BREATH
-ferrochain Phase 1 (Spec Crystallization), greenfield+semport. Streak **0/3 after 176 passes**; P1D-175 FULL-PERIMETER recorded — 189 findings; fix-burst 279 COMPLETE (~40/189 closed). Burst-279 closed: SS-15 tenancy bridge (B101/B102 CRIT — `ContextSourceSpec.namespace` key-prefix isolation; `RunContext.app_id` engine-set, non-overridable; `SkillStore::new(store, app_id)` construction-time scope binding; empty `app_id` → `Err(E-MEMORY-004 NoScopeContext)`), SS-18 injection (B201/B202 CRIT — `PromptTemplate::format` unguarded INV-5 convention-enforced per ADR-015; `format_messages` extended to `HashMap<String, TemplateInput>` covering `MessageListVar`+`FewShotExamples`; VP-006 harness extended to all three arms), `TrustLevel::severity()` ordinal (B208 HIGH — explicit `u8`; `derive(Ord)` prohibited; `.max_by_key(|t| t.severity())`), `E-TMPL-004 MalformedTemplate` minted (B204 — census 110→111; `PromptTemplate::new` fallible; EC-007/008/009 + TV-007), B221 corrected. **Still open:** self-proving VP harnesses (A24/A17/A10), `product-brief.md` scope/holdout (C201/C202), BC-2.15.006 silent skip (B119), ~149 findings across slices. **NEXT ACTION: fix-burst 280** — self-proving VP harnesses (architect Wave A) + `product-brief.md` CRITs (product-owner Wave B). Do NOT dispatch P1D-176 until CRIT/HIGH backlog materially drained.
+ferrochain Phase 1, greenfield+semport. Streak **0/3 after 176 passes**. P1D-175 FULL-PERIMETER: 189 findings (10 CRIT / ~69 HIGH). Fix-burst 279 closed ~40/189 (SS-15 tenancy bridge CRIT, SS-18 injection guard CRIT, `TrustLevel::severity()` ordinal HIGH, `E-TMPL-004` minted, B221 corrected). **NEXT: fix-burst 280** — self-proving VP harnesses (A24/A17/A10) + `product-brief.md` CRITs (C201/C202). Do NOT dispatch P1D-176 until CRIT/HIGH backlog materially drained.
+
+### WORKSTREAM 1 — Fix-burst 280 (dispatch next)
+Open findings:
+- F-P175-A24 (CRIT): VP-008 mock harnesses exercise zero ferrochain code — architect Wave A
+- F-P175-A17 (CRIT): VP-007 `prop_assume!` applied to the component it is supposed to prove — architect Wave A
+- F-P175-A10 (HIGH): VP-004 `is_some()` claim without value assertion — architect Wave A
+- F-P175-C201 (CRIT): D-23 scope expansion absent from `product-brief.md` §In Scope — product-owner Wave B
+- F-P175-C202 (CRIT): 3 holdout domains stated vs 5 actual — product-owner Wave B
+- F-P175-B119 (HIGH): BC-2.15.006 silent skip on `None` scope — product-owner Wave C
+- ~60 HIGH findings remaining across slices — see `cycles/v1.0.0-greenfield/adversarial-reviews/pass-175.md`
+
+### WORKSTREAM 2 — P1D-176 FULL-PERIMETER (queued; do NOT dispatch yet)
+Do NOT run P1D-176 until CRIT/HIGH backlog from P1D-175 is materially drained. Per D-40: record pass IMMEDIATELY before any fix dispatch. Per D-32: only FULL-PERIMETER passes advance streak.
+
+### WORKSTREAM 3 — Validator suite (stable)
+All ten validators green. devops-engineer owns D-50 extension (records-lint L9 date-boundary + doc-version-pin class). Baselines below.
 
 ### HEADS
-develop `46725ad` — clean, `== origin/develop`, PUSHED. factory-artifacts — this commit, pushed. No worktrees. No open PRs. **NOTHING is local-only.**
+develop `46725ad` — clean, `== origin/develop`, PUSHED. factory-artifacts `c2249e7` — clean, `== origin/factory-artifacts`, PUSHED. Story worktrees: NONE (`.worktrees/` absent). Open PRs: NONE. **NOTHING is local-only.**
 
 ### NEXT-ACTION
-Dispatch `vsdd-factory:architect` for fix-burst 280 Wave A: self-proving VP harnesses (A24 VP-008 mocks exercise zero ferrochain code, A17 `prop_assume!` on the property under test, A10 `is_some()` non-assertion). Then `vsdd-factory:product-owner` for Wave B: `product-brief.md` C201 missing D-23 scope expansion + C202 under-counted holdout gate. Per D-32: only FULL-PERIMETER passes advance 3-CLEAN streak. Any new commit resets to 0/3. D-40: record pass IMMEDIATELY before any fix dispatch.
+Dispatch `vsdd-factory:architect` for fix-burst 280 Wave A: self-proving VP harnesses (A24 VP-008 mocks exercise zero ferrochain code; A17 `prop_assume!` on the component under test; A10 `is_some()` non-assertion). Then `vsdd-factory:product-owner` Waves B+C. Per D-32: only FULL-PERIMETER passes advance streak. Any new commit resets to 0/3.
 
-**Validator baselines (all ten green, verified by orchestrator — fix-burst 278 final; burst-279 did not modify hooks):**
-verify-signature-canon: PASS=5 FAIL=0; records-lint: PASS=5 FAIL=0; verify-no-version-pins: PASS=198 FAIL=0; verify-arch-anchor-resolution: PASS=129 FAIL=0; verify-adr-decision-refs: PASS=331 FAIL=0; verify-enum-variant-casing: PASS=198 FAIL=0; verify-form-a-changelog-direction: PASS=198 WARN=7 FAIL=0 BC_UNVERIFIED=0; verify-module-canonicality: PASS=8 FAIL=0; verify-changelog-date-monotonicity: PASS=131 FAIL=0; verify-bc-frontmatter-schema: PASS=129 FAIL=0.
-
-**Orchestrator self-attributed defect this burst:** Recorded P1D-176 as next action in v4.34 when ~149 findings were still open — wrong sequencing, corrected above to fix-burst 280.
-
-**Residual items (non-blocking):** `BC-2.09.007` + `BC-INDEX.md` carry post-boundary version pins → product-owner. `interface-definitions.md` §Authentication cluster grandfathered (pre-2026-07-24). Inert `ferrochain-prebuilt/` orphan under `namespace-reservation/` pending removal.
+**Validator baselines (live-run, orchestrator-verified — fix-burst 279 final; D-70 wrap did not modify hooks):**
+verify-signature-canon: PASS=5 FAIL=0; records-lint: PASS=5 FAIL=0; verify-no-version-pins: PASS=198 FAIL=0; verify-arch-anchor-resolution: PASS=129 FAIL=0; verify-adr-decision-refs: PASS=348 FAIL=0; verify-enum-variant-casing: PASS=198 FAIL=0; verify-form-a-changelog-direction: PASS=198 WARN=7 FAIL=0 BC_UNVERIFIED=0; verify-module-canonicality: PASS=8 FAIL=0; verify-changelog-date-monotonicity: PASS=131 FAIL=0; verify-bc-frontmatter-schema: PASS=129 FAIL=0.
 
 ### COVERAGE DEBTS — block any CLEAN claim under D-32 until closed
 - BC-2.18.004: targeted grep only; PC5 added burst-279 — full body read still pending.
@@ -192,13 +204,24 @@ verify-signature-canon: PASS=5 FAIL=0; records-lint: PASS=5 FAIL=0; verify-no-ve
 - Per-VP frontmatter: `module:` only — `tool`/`priority`/`bc_anchor`/`crate` unverified.
 
 ### PENDING HUMAN ACTIONS
-1. **R14 (HIGH, irreversible)** — run `cargo login` then `cd .factory/namespace-reservation && bash publish-all.sh`.
+1. **R14 (HIGH, irreversible)** — `cargo login` then `cd .factory/namespace-reservation && bash publish-all.sh` (`EXPECTED_OWNER` must match crates.io identity exactly).
 2. B1 — `direnv allow .`
 3. Create `.factory/policies.yaml` (absent).
 4. D-35 xtask `check-<subject>` rename sweep (~20 sites / 8+ files).
 5. D-50 — devops-engineer: encode 2026-07-24 boundary in records-lint L9; extend L9 to catch doc-version-pin patterns.
 6. D-51 — product-owner: bump test-vectors total to 675 (TV-006 not applied to registry body).
 7. D-52 — architect: re-pin VP-008 `input-hash:` to real computed hash.
+
+### RESIDUAL ITEMS (non-blocking)
+- `BC-2.09.007` + `BC-INDEX.md` carry post-boundary version pins → product-owner.
+- `interface-definitions.md` §Authentication cluster grandfathered (pre-2026-07-24).
+- Inert `ferrochain-prebuilt/` orphan under `namespace-reservation/` pending removal.
+- **STATE.md compaction follow-up:** STATE.md is over the 200-line soft budget; compress D18-P99-A…D-55 decision block to a single archive-reference row in a dedicated, non-wrap burst.
+
+**Self-attributed defects (orchestrator + state-manager, this session):**
+- P1D-176 premature scheduling: recorded P1D-176 as next action in v4.34 when ~149 findings were still open (D-69 corrects; corrected above).
+- Validator suite green claim: reported all ten validators passing before discovering the 10th validator PASS came from a narrowed rule scope — not a true perimeter PASS (D-57 gate-acceptance-test discipline).
+- Changelog attribution error: misattributed changelog entry to `interface-definitions.md` — correct file is `.factory/specs/prd-supplements/api-surface.md`.
 
 ### STANDING USER DIRECTIVE
 "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (2026-07-13)
@@ -214,7 +237,7 @@ verify-signature-canon: PASS=5 FAIL=0; records-lint: PASS=5 FAIL=0; verify-no-ve
 | L2 domain spec (15-shard) — L2-INDEX v1.19 (38 CAPs; 15 DIs; FM-001..019); capabilities-p1-p2 (burst-278 Wave B: CAP-027 lifetime removed + borrow→Arc<dyn VectorStore>; CAP-028 D-44 rejection semantics added; entities-graph bumped; ubiquitous-language-core bumped) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
 | Session checkpoints bursts 5–78, bursts 176–270 pre-commit (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
-| Lessons learned (121 lessons; burst-279: L-116..L-121 — routing-spec corpus verification, guard extension must reach harness, enum declaration-order inverse severity, convention-vs-type-enforced boundary, two-part finding completeness, breaking signature per-owner sweep; burst-278 wrap: L-108..L-115; burst-278 P1D-175: L-100..L-107; burst-277-wrap: L-094..L-099) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
+| Lessons learned (122 lessons; session-wrap D-70: L-122 — records-lint L9b row-depinning discipline; burst-279: L-116..L-121 — routing-spec corpus verification, guard extension must reach harness, enum declaration-order inverse severity, convention-vs-type-enforced boundary, two-part finding completeness, breaking signature per-owner sweep; burst-278 wrap: L-108..L-115; burst-278 P1D-175: L-100..L-107; burst-277-wrap: L-094..L-099) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Holdout domain briefs A–E | `.factory/planning/holdout-domains/domain-{a,b,c,d,e}-*.md` |
 | Reference corpus manifest (v1.4.0) | `.factory/semport/reference-manifest.md` |
 | Semport pass 1 analysis state | `.factory/semport/core/ANALYSIS-STATE.md` |

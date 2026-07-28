@@ -5837,3 +5837,11 @@ One row archived from STATE.md v4.33 Current Phase Steps table.
 One row archived from STATE.md v4.34 Current Phase Steps table.
 
 **Row (Fix-burst 277 Wave C — product-owner COMPLETE):** Fix-burst 277 Wave C — product-owner content COMPLETE (BC-2.20.003 bumped; BC-2.09.001 bumped; BC-2.09.002 bumped; BC-2.21.001 bumped; BC-2.19.003 bumped; BC-2.07.002 bumped; BC-2.08.011/012 Form-A changelog NO version bump; BC-INDEX updated; BC count 129 unchanged; BC_UNVERIFIED 6→0); 0/3.
+
+---
+
+### Archived from Current Phase Steps (session wrap D-70)
+
+One row archived from STATE.md v4.35 Current Phase Steps table.
+
+**Row (Fix-burst 277 Wave D — business-analyst COMPLETE):** Fix-burst 277 Wave D — business-analyst domain-spec COMPLETE (capabilities-p1-p2 bumped; entities-graph bumped; ubiquitous-language-core bumped; L2-INDEX bumped; Wave D root cause: single-form grep missed structurally different label form — 5 instances across 3 shards; entries now quote searched terms); 0/3.
