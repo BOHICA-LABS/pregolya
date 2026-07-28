@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.005
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.3 (F-P148-01/burst-249/2026-07-24): Architecture anchor de-pinned from 'Decision 6' to 'Decision 3 §Security Invariant' per ADR-016 v1.4 labeled anchor. Traceability Architecture Authority row: 'E-SRLZ-001 category SECURITY' corrected to 'E-SRLZ-001 category VAL' (already correct in Postconditions PC-1 and Invariant 3; Traceability row was the sole remaining SECURITY residue). red_gate_source and Red Gate body callout updated to Decision 3 §Security Invariant anchor form. input-hash updated to 5b4fe5e (ADR-016 v1.4 adds labeled anchors)."
   - "1.4 (FIX-BURST-268/F-P166-01/2026-07-25): TD-VSDD-091 de-pin — Invariant 3 cited 'error-taxonomy.md v1.28 (E-SRLZ-001 row: VAL)' as live normative authority; version pin violates TD-VSDD-091 (narrative body must not cite vN.N numbers that decay on subsequent taxonomy diffs). Adjudication: live normative citation, not historical record. De-pinned to stable section anchor: 'error-taxonomy.md §E-SRLZ-001 (row: VAL)'."
   - "1.5 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::SRLZ → Component::Srlz (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + Invariant 3 prose backtick span)."
+  - "1.6 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: FerrochainError struct literal (missing retry_hint, source fields) → FerrochainError::new(Component::Srlz, Category::Val, RetryHint::Never, \"E-SRLZ-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-SRLZ-001. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-19/BC-2.19.005.md returns zero fence-scoped literal occurrences after this edit."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -79,12 +80,13 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
 
 1. `Reviver::revive(serialized)` returns:
    ```
-   Err(FerrochainError {
-       component: Component::Srlz,
-       category: Category::Val,
-       code: "E-SRLZ-001",
-       message: "unknown-serializable: type id not in registry",
-   })
+   Err(FerrochainError::new(
+       Component::Srlz,
+       Category::Val,
+       RetryHint::Never,
+       "E-SRLZ-001",
+       "unknown-serializable: type id not in registry",
+   ))
    ```
 2. No constructor is called; no `kwargs` map is parsed; no heap allocation occurs on the
    failure path beyond the error struct itself.

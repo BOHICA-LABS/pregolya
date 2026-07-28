@@ -5821,3 +5821,11 @@ Five rows archived from STATE.md v4.31 Current Phase Steps table.
 One row archived from STATE.md v4.32 Current Phase Steps table.
 
 **Row (Fix-burst 277 Wave A follow-up audit — COMPLETE):** Fix-burst 277 Wave A follow-up audit — devops-engineer COMPLETE (verify-bc-frontmatter-schema complete rewrite PASS=129/0/0; verify-changelog-claim-applied FC-1 now caught/FC-3/FC-4 structural limits documented; verify-form-a-changelog-direction invented carve-out removed; verify-adr-decision-refs Check 4 deleted; pre-commit-validators.sh wired all BLOCKING validators; 3 Wave A open questions answered; BC_UNVERIFIED 6→0; FC-2 DuplicateRegistration phantom documented as fabricated; FC-5 hash refreshed); 0/3. Validator suite corrected. Gate provenance discipline codified D-46.
+
+---
+
+### Archived from Current Phase Steps (STATE.md v4.33 → v4.34)
+
+One row archived from STATE.md v4.33 Current Phase Steps table.
+
+**Row (Fix-burst 277 Wave B — architect COMPLETE):** Fix-burst 277 Wave B — architect COMPLETE (4 adjudications D-42..D-45: FerrochainError 5-arg constructor+with_source; DynTool peer trait; as_retriever fallible Result+E-VS-003; VectorStoreRetriever owns Arc<dyn VectorStore> no lifetime; ADR-010/ADR-005/ADR-014 bumped; interface-definitions bumped; api-surface bumped; ARCH-INDEX bumped; 6 wildcard BC citations fixed; verify-arch-anchor-resolution PASS=129; verify-no-version-pins PASS=198); 0/3.

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.003
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -30,6 +30,7 @@ changelog:
   - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::VS → Component::Vs (Description code block + PC-1 code block), Category::VAL → Category::Val (Description code block + PC-1 code block, 2 occurrences)."
   - "1.7 (FIX-BURST-276/F-P173-503/2026-07-27): Amend Invariant 3 and Invariant 5 to specify the two-part NaN guard covering both the zero-norm path and the overflow-to-infinity path. Guard condition: `norm == 0.0 || !norm.is_finite()` — zero-norm guard alone is unsatisfiable: individually finite elements (e.g., magnitude ~1e20f32) produce `Σ xᵢ² = +Inf`; `sqrt(+Inf) = +Inf`; `Inf/Inf = NaN`; the zero-norm guard does not fire because norm is +Inf, not 0.0. `kani::assume(x.is_finite())` does NOT prevent this. Aligns BC with VP-009 v1.6 formal invariant and `overflow_norm_triggers_guard` harness. Coherence sweep: Description code block (`if norm == 0.0` → `if norm == 0.0 || !norm.is_finite()`), Red Gate VP callout last sentence, PC-2 (added overflow precondition arm), PostC-1 (full guard condition), PostC-2 (zero OR infinite), PostC-4 (finite and non-zero), PostC-5 (finite non-zero), EC-003 (finite and non-zero), EC-006 added (overflow case), TV-006 added (f32::MAX overflow vector). TV census: 6 canonical (was 5) + 0 GTV = 6 BC-local TVs; project total 675 (664 canonical + 11 GTV)."
   - "1.8 (fix-burst-276/2026-07-27): Propagate E-VS-001 message widening (error-taxonomy.md v1.45, same burst). Human decision: rename conceptual variant ZeroNormEmbedding → DegenerateNormEmbedding; widen STATIC message from 'zero-norm embedding vector' → 'degenerate-norm embedding vector: norm is zero or non-finite'. Three live message-text sites updated: (1) Description code block `message:` field, (2) PC-1 code block `message:` field, (3) Invariant 4 message-text citation. The old message implied zero-norm-only and misdescribed the overflow arm now covered by the v1.7 guard. No guard condition, BC title, BC code, or BC priority changed; Invariant 4 semantics (STATIC, no placeholder) unchanged — only the quoted message string updated."
+  - "1.9 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — two fence-scoped FerrochainError struct literals (Description rust fence + PC-1 postcondition fence, both missing retry_hint, source fields) → FerrochainError::new(Component::Vs, Category::Val, RetryHint::Never, \"E-VS-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-VS-001. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-21/BC-2.21.003.md returns zero fence-scoped literal occurrences after this edit."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-029
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -71,8 +72,13 @@ L2 norm of each vector:
 ```rust
 let norm = v.iter().map(|x| x * x).sum::<f32>().sqrt();
 if norm == 0.0 || !norm.is_finite() {
-    return Err(FerrochainError { component: Component::Vs, category: Category::Val,
-                                 code: "E-VS-001", message: "degenerate-norm embedding vector: norm is zero or non-finite" });
+    return Err(FerrochainError::new(
+        Component::Vs,
+        Category::Val,
+        RetryHint::Never,
+        "E-VS-001",
+        "degenerate-norm embedding vector: norm is zero or non-finite",
+    ));
 }
 ```
 
@@ -94,12 +100,13 @@ two lines and has negligible performance overhead compared to the cosine computa
 1. When `norm_a == 0.0 || !norm_a.is_finite()` OR `norm_b == 0.0 || !norm_b.is_finite()`
    (covers both the all-zero path and the sum-of-squares overflow-to-infinity path):
    ```
-   Err(FerrochainError {
-       component: Component::Vs,
-       category: Category::Val,
-       code: "E-VS-001",
-       message: "degenerate-norm embedding vector: norm is zero or non-finite",
-   })
+   Err(FerrochainError::new(
+       Component::Vs,
+       Category::Val,
+       RetryHint::Never,
+       "E-VS-001",
+       "degenerate-norm embedding vector: norm is zero or non-finite",
+   ))
    ```
 2. The division `dot_product / (norm_a * norm_b)` is NEVER reached when either norm is
    degenerate (zero or infinite). The guard fires before division; `f32::NAN` is never

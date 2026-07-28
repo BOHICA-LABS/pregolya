@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.16"
+version: "1.20"
 status: active
 producer: architect
-timestamp: 2026-07-26T00:00:00Z
+timestamp: 2026-07-28T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -12,12 +12,16 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/module-criticality.md
-input-hash: "pending-FIX-BURST-275"
+input-hash: "pending"
 traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
-  - "1.16 (FIX-BURST-277-WAVE-B/2026-07-28): CHECK4 closure propagation — canonicalize all 13 Module cells in §Verification Properties VP table to crate::module form (matching VP-INDEX v1.7 which closed CHECK4). VP-INDEX v1.6 reference in preamble updated to v1.7."
+  - "1.20 (FIX-BURST-278/L9b-de-pin/2026-07-28): L9b de-pin: api-surface.md §FIX-BURST-277-WAVE-B-errata changelog entry and interface-definitions.md §FIX-BURST-277-WAVE-B-errata changelog entry — ADR-005 version pins replaced with ADR-005 §Adjacent Trait Object-Safety Adjudications section anchors. records-lint FAIL=0 achieved. api-surface.md bumped to v1.20; interface-definitions.md bumped to v2.65."
+  - "1.19 (FIX-BURST-278/Wave-C-S4-complete/2026-07-28): ADR-005 §Wave C BC-side migration spec: four non-object-safe (E0038) notation lines annotated to satisfy S4 gate exemption (all four classification (b) hazard-naming prose). ADR-005 §Failure Mode: SCREAMING-CASE struct literal replaced with prose error-code reference."
+  - "1.18 (FIX-BURST-278-WAVE-A/F-P175-D212-propagation/2026-07-28): Iron Law propagation for core::tool (triggered by module-decomposition.md §core::tool row addition) — add core::tool Pure Core row to purity-boundary-map.md (83→84 total rows); add core::tool HIGH row to verification-coverage-matrix.md (HIGH count 28→29); add core::tool HIGH row to module-criticality.md (Classification Summary HIGH 28→29, Total 83→84)."
+  - "1.17 (FIX-BURST-278/F-P175-D215+D220+D223/2026-07-28): Three findings closed. (1) F-P175-D215 — §Verification Properties preamble: `see VP-INDEX v1.7` version pin removed; replaced with stable `see VP-INDEX` (no version number per TD-VSDD-091). (2) F-P175-D220 — `input-hash: \"pending-FIX-BURST-275\"` stale burst reference removed; now `\"pending\"` (state-manager routes hash computation). (3) F-P175-D223 — `timestamp: 2026-07-26T00:00:00Z` corrected to `2026-07-28T00:00:00Z` (ARCH-INDEX is not an ADR; D-31 frozen-timestamp exemption does not apply; latest changelog entry v1.16 is dated 2026-07-28)."
+  - "1.16 (FIX-BURST-277-WAVE-B/2026-07-28): CHECK4 closure propagation — canonicalize all 13 Module cells in §Verification Properties VP table to crate::module form (matching VP-INDEX which closed CHECK4). VP-INDEX reference in preamble updated."
   - "1.15 (FIX-BURST-275/OBS-P172b-A/2026-07-26): OBS-P172b-A — add `specs/module-criticality.md` to inputs (live architecture-view criticality registry, authoritative post-Phase 1b; the prd-supplements entry is the superseded PO draft and is retained for historical traceability). F-P172b-14 — advance timestamp to 2026-07-26."
   - "1.14 (FIX-BURST-272/DEFECT-1/2026-07-25): De-pin live-body BC version pin per TD-VSDD-091 BC-pin variant: D23 VP seeding blockquote — 'BC-2.23.005 v1.1 amended to category VAL in burst-232' → 'BC-2.23.005 §Category amended to VAL in burst-232'. Newly-authored text (v1.8 RESOLVED note), not grandfathered."
   - "1.13 (FIX-BURST-272/F-P170-19/2026-07-25): De-pin stale BC count in Subsystem Registry blockquote note: '95 BC files' → annotated historical record '(95 at the time of the D20 backfill; 129 as of D23)' to preserve context while accurately reflecting the current corpus."
@@ -166,7 +170,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 
 ## Verification Properties (VP-INDEX)
 
-13 VPs total (6 Kani P0 + 3 Kani P1 + 2 proptest P1 + 2 integration P1 — see VP-INDEX v1.7):
+13 VPs total (6 Kani P0 + 3 Kani P1 + 2 proptest P1 + 2 integration P1 — see VP-INDEX):
 
 | VP | BC Anchor | Module | Tool | Priority | Status |
 |----|-----------|--------|------|----------|--------|

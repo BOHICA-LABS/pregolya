@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.006
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.2 (FIX-BURST-268/F-P166-01/2026-07-25): (1) TD-VSDD-091 de-pin — PC5 cited 'error-taxonomy.md v1.27 E-SRLZ-002 row' as live normative authority; version pin violates TD-VSDD-091 (narrative body must not cite vN.N numbers that decay on subsequent taxonomy diffs). Adjudication: live normative citation, not historical record. De-pinned to stable section anchor: 'error-taxonomy.md §E-SRLZ-002 (row: VAL)'. (2) COMPATIBILITY residue purge — Architecture Anchors and Traceability Architecture Authority both read 'E-SRLZ-002 category COMPATIBILITY' despite PC5 being corrected to VAL at v1.1; both are live authority claims contradicting the BC's own postconditions. Corrected both to 'category VAL' to match PC5 and ADR-010 adjudication."
   - "1.3 (FIX-BURST-269/F-P167-02/2026-07-25): Fix dangling 'ADR-016 Decision 7' anchor at two sites (Architecture Anchors and Traceability Architecture Authority). ADR-016 has only Decisions 1–5; Decision 7 is nonexistent. Corrected to 'ADR-016 Decision 3 Property 4' — LANGCHAIN_MONOLITH_TYPES set, E-SRLZ-002 category VAL, and the deliberate-unregistered pattern are all specified in Decision 3 Property 4. Same anchor class as BC-2.19.005 F-P148-01 fix ('Decision 6' → 'Decision 3 §Security Invariant')."
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::SRLZ → Component::Srlz (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + PC-5 prose backtick span)."
+  - "1.5 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: FerrochainError struct literal (missing retry_hint, source fields) → FerrochainError::new(Component::Srlz, Category::Val, RetryHint::Never, \"E-SRLZ-002\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-SRLZ-002. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-19/BC-2.19.006.md returns zero fence-scoped literal occurrences after this edit."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -68,12 +69,13 @@ available in ferrochain." The error is propagated as `Err`; it is never a silent
 
 1. `Reviver::revive(serialized)` returns:
    ```
-   Err(FerrochainError {
-       component: Component::Srlz,
-       category: Category::Val,
-       code: "E-SRLZ-002",
-       message: "unsupported-serializable: langchain-monolith type not ported to ferrochain",
-   })
+   Err(FerrochainError::new(
+       Component::Srlz,
+       Category::Val,
+       RetryHint::Never,
+       "E-SRLZ-002",
+       "unsupported-serializable: langchain-monolith type not ported to ferrochain",
+   ))
    ```
 2. No constructor is called; no kwargs is parsed.
 3. The error propagates via `?` to the caller (DI-014 — no silent None).

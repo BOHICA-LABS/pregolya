@@ -1,5 +1,8 @@
 # Large generated files — do not track in factory-artifacts
 logs/*.jsonl
 
+# Python bytecode cache
+__pycache__/
+
 # Rust build artifacts from namespace-reservation crates
 namespace-reservation/*/target/

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.004
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.3 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-006 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-006' (VP-INDEX v1.2 burst-223 seeded VP-006 Kani P1; VP-006.md exists). Completed-handoff residue removal."
   - "1.4 (F-P148-03/burst-249/2026-07-24): red_gate_source and Red Gate body callout updated: 'ADR-015 Security Invariant 1' → 'ADR-015 Decision 3 §Security Invariant 1' per ADR-015 v1.5 labeled anchor. input-hash updated to fa92953 (ADR-015 v1.5 adds labeled anchors)."
   - "1.5 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 4 sites: Component::TMPL → Component::Tmpl, Category::SECURITY → Category::Security. Sites: Description inline code block (×1 TMPL+SECURITY), PC-1 code block (×1 TMPL, ×1 SECURITY), Invariant 2 prose (×1 SECURITY)."
+  - "1.6 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: FerrochainError struct literal (missing retry_hint, source fields) → FerrochainError::new(Component::Tmpl, Category::Security, RetryHint::Never, \"E-TMPL-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: SECURITY category default per error-taxonomy.md §E-TMPL-001. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-18/BC-2.18.004.md returns zero fence-scoped literal occurrences after this edit."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -77,13 +78,14 @@ enforcement of that invariant.
 
 1. `format_messages` returns:
    ```
-   Err(FerrochainError {
-       component: Component::Tmpl,
-       category: Category::Security,
-       code: "E-TMPL-001",
-       message: "InjectionAttempt: variable '{var_name}' carries untrusted provenance \
-                 but slot '{slot_role}' requires TrustRequired policy",
-   })
+   Err(FerrochainError::new(
+       Component::Tmpl,
+       Category::Security,
+       RetryHint::Never,
+       "E-TMPL-001",
+       "InjectionAttempt: variable '{var_name}' carries untrusted provenance \
+        but slot '{slot_role}' requires TrustRequired policy",
+   ))
    ```
    where `{var_name}` is the name of the variable and `{slot_role}` is the `MessageRole`
    (e.g., `"system"`) of the refusing slot. Both placeholders are rendered dynamically.

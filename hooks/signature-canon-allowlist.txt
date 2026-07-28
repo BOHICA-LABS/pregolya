@@ -1,0 +1,32 @@
+# signature-canon-allowlist.txt — ferrochain factory-artifacts
+#
+# Per-match exemptions for verify-signature-canon.sh rule S3 (&Arc<Self>).
+#
+# Format (one entry per non-comment line):
+#   <path-relative-to-.factory/specs> :: <symbol>
+#
+# The separator is ' :: ' (space, double-colon, space).
+# <symbol> is the method or type name that legitimately uses &Arc<Self>
+# because it is explicitly NON-dyn API (e.g. a Sized-bounded factory method
+# where dyn-compatibility is neither required nor desired).
+#
+# Purpose: Exempt specific &Arc<Self> occurrences that are genuinely correct
+# non-dyn API surfaces — not accidentally-compiled concrete-impl patterns.
+# The &Arc<Self> receiver compiles on a concrete type but makes the trait
+# non-dyn-compatible (E0038); only use this allowlist when dyn-compatibility
+# is provably never needed for the site.
+#
+# Each entry MUST have a reason comment on the immediately preceding line.
+# Format of reason comment: "# Reason: <justification citing decision or architecture>"
+#
+# The allowlist is keyed on (file, symbol) — LINE-NUMBER-INDEPENDENT.
+# A file may have multiple entries for different symbols.
+# A new &Arc<Self> use at an unenumerated site still FAILS even if the file
+# has other allowlisted entries.
+#
+# Ground rule (D-46): any allowlist entry must cite a ratified Decision ID or
+# an architecture anchor that makes the non-dyn nature explicit.
+# An entry without a traceable rationale is itself a gate-provenance violation.
+#
+# Current entries: NONE
+# (All &Arc<Self> occurrences in the corpus are violations per D-48.)

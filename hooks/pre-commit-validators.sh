@@ -9,14 +9,22 @@
 #
 # BLOCKING VALIDATORS (exit 1 on failure)
 # ────────────────────────────────────────
-# These validators are currently CLEAN on the full corpus (zero FAIL findings)
-# and are wired to block factory-artifacts commits.
+# Blocking validators prevent factory-artifacts commits when any FAIL fires.
+# Validators marked (CLEAN) have zero current FAIL findings.
+# Validators marked (FAILING) have pre-existing violations tracked to closure
+# via in-flight fix-bursts; they block commits until those violations are cleared.
 #
-#   verify-no-version-pins.sh              — pinned pypi/npm versions block
-#   verify-adr-decision-refs.sh            — missing ADR decision refs block
-#   records-lint.sh                        — line-cite citations in new content block
-#   verify-changelog-date-monotonicity.sh  — non-monotone changelog dates block
-#   verify-enum-variant-casing.sh          — non-canonical enum casing block
+#   verify-no-version-pins.sh              — (CLEAN) pinned doc-id vN.N versions block
+#   verify-adr-decision-refs.sh            — (CLEAN) missing ADR decision refs block
+#   records-lint.sh                        — (CLEAN) line-cite and version-pin (D-50) in new content block
+#   verify-changelog-date-monotonicity.sh  — (CLEAN) non-monotone changelog dates block
+#   verify-enum-variant-casing.sh          — (CLEAN) non-canonical enum casing block
+#   verify-signature-canon.sh             — (FAILING) adjudicated type-signature canon
+#       D-42 FerrochainError ctor | D-43 DynTool | D-45/D-48 as_retriever receiver
+#       Pre-existing violations: S1b (capabilities-p1-p2.md as_retriever(&self)),
+#       S2 (capabilities-p1-p2.md VectorStoreRetriever<), S4 (4 files Arc<dyn Tool>),
+#       S5 (80 files FerrochainError full-form literals). In-flight: architect fix-burst
+#       closes S1/S2/S3; product-owner fix-burst closes S4/S5. Wire date: 2026-07-28.
 #
 # ADVISORY VALIDATORS (exit 0; WARN/FAIL output shown but commit not blocked)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -92,12 +100,13 @@ run_advisory() {
 echo "factory-artifacts pre-commit gate — running blocking validators"
 echo "================================================================"
 
-# ── Blocking validators (currently clean on full corpus) ─────────────────────
+# ── Blocking validators ───────────────────────────────────────────────────────
 run_blocking "verify-no-version-pins.sh"
 run_blocking "verify-adr-decision-refs.sh"
 run_blocking "records-lint.sh"
 run_blocking "verify-changelog-date-monotonicity.sh"
 run_blocking "verify-enum-variant-casing.sh"
+run_blocking "verify-signature-canon.sh"
 
 # ── Advisory validators (run but do not block; see promotion paths in header) ─
 echo ""

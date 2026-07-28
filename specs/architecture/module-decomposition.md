@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.38"
+version: "1.39"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -15,6 +15,7 @@ input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.39 (FIX-BURST-278/F-P175-D102+D110+D111+D212/2026-07-28): Four findings closed. (1) F-P175-D102 — `vectorstores::retriever` row: the lifetime-parameterized VectorStoreRetriever wrapping `&dyn VectorStore` → `VectorStoreRetriever` owning `Arc<dyn VectorStore>` (no lifetime; `'static`; per ADR-014 D-48 fix). (2) F-P175-D110+D111 — Iron Law blockquote census: `71 total (69 tiered / 2 exempt) per module-criticality.md canonical registry` clarified to attribute 71 to this file's own universe (module-decomposition.md table rows); registry total is 83 (77 tiered + 6 definitions-only/exempt). Also fix `= 77 rows total` in module-criticality.md is `= 77 tiered rows` (propagated there separately). (3) F-P175-D212 — add missing `core::tool` row (Tool trait + DynTool + ToolInput + ToolOutput; HIGH; SS-08) to ferrochain-core section; module was present in api-surface.md but absent from module-decomposition.md."
   - "1.38 (FIX-BURST-277-WAVE-B/2026-07-28): Item 6 module census — add 4 definitions-only module rows (core::guardrail SS-11, core::action_risk SS-05, core::context_mutation SS-01, core::write_guard SS-15) to the D21 additions table with Criticality `—` (matching core::documents precedent; these modules contain type/trait definitions only, no execution logic, no VP targets per ADR-009 Option 3 precedent). Add §Crate-Level Roll-Up section with 7 crate-level entries (ferrochain-anthropic, ferrochain-community, ferrochain-macros, ferrochain-ollama, ferrochain-openai, ferrochain-standard-tests, xtask) so the module census validator can resolve 4-way set equality across purity-boundary-map, verification-coverage-matrix, and module-criticality."
   - "1.37 (FIX-BURST-276-TD091/2026-07-27): TD-VSDD-091 anti-volatile-pin repair — Iron Law blockquote (§Standard Test Modules): replace live-body sibling-artifact version pin with stable section anchor. observability.md §Catalog (the Catalog table section that contains the eval.judge_infra_error row and its emitter attribution) replaces a specific version number. Sibling-sweep of this file live body: no additional version pins found."
   - "1.36 (FIX-BURST-276/F-P173-coordinator-addendum/2026-07-27): Fix phantom symbol `on_watermark` in VP anchors block (SS-23 section). Correct symbol: `check_watermark_trigger` (the real pure-core function in core::budget; `on_watermark` does not exist). Correct ADR anchor: ADR-019 Decision 3 step 1 (watermark arithmetic trigger threshold formula), not Decision 2 as previously stated. One site corrected: VP-012 anchor paragraph in §VP anchors. Sibling check: `on_watermark` does not appear in any other location in this file. VP-012 body (v1.5) and verification-architecture.md §VP-012 (v2.12) corrected to same canon by parallel VP-bodies agent in same burst."
@@ -78,6 +79,7 @@ credential security primitives, streaming event types.
 | `core::config` | `RunnableConfig`, `ChatConfig` structs | MEDIUM | SS-01 |
 | `core::retry` | `ToolRetryPolicy` (keyed by tool_name; P-71 ADOPT), `CircuitBreaker` state machine, `RetryPolicy` with finite `global_limit: Option<NonZeroU32>`; shared combinator — provider crates and graph both route through this; **D23 item 4 (CAP-018): promoted from Wave 2 → Wave 1** | MEDIUM | SS-16 |
 | `core::budget` | VP-012 Kani P1 target: pure-core `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, fraction: f64) -> bool` (BC-2.10.005 watermark arithmetic — seeded burst-232; f64 precision per FIX-BURST-252 adjudication); type definitions: `BudgetPolicy` trait, `PolicyDecision` enum, `OnCeiling` enum, `BudgetConfig` struct, `TokenUsage` struct, `RunContext` struct (SS-10/ADR-009), `CompactionTrigger` enum, `CompactionPolicy` trait, `ConversationSnapshot` struct, `CompactionSummary` struct (D23/ADR-019); dispatch engine lives in `graph::budget` (ferrochain-graph); module path: `ferrochain-core/src/budget.rs` | HIGH | SS-10 |
+| `core::tool` | `Tool` trait (Runnable-based; methods: `name`, `description`, `schema`, `action_risk`; `ToolInput(serde_json::Value)` newtype; `#[non_exhaustive] #[derive(Serialize)] ToolOutput` enum (Text/Json/Error)); `DynTool` object-safe façade trait (`invoke_dyn`; blanket impl for `T: Tool + Send + Sync + 'static`; `ToolOutput::Error` → `Err(FerrochainError)` per DI-014); `Arc<dyn DynTool>` is the composition seam for all dynamic tool dispatch (ADR-005 §Adjacent Adjudications; BC-2.08.010) | HIGH | SS-08 |
 
 > **Budget definitions (SS-10 — VP-012 elevation — ADR-009 Option 3):** ferrochain-core hosts
 > the DEFINITIONS for budget governance: `BudgetPolicy` trait, `PolicyDecision` enum (Allow/Escalate/Deny),
@@ -224,7 +226,7 @@ The SDK crates have no ferrochain-core dep and are publishable standalone. Enfor
 > coverage — it therefore satisfies Iron Law criteria requiring a module-level row. The
 > pre-existing `ferrochain-standard-tests` crate-level row in module-criticality.md remains
 > as a crate-level annotation; `eval::judge` is the module-level row that satisfies Iron Law.
-> Current module universe: 71 total (69 tiered / 2 exempt: `core::documents`, `memory::skills`) per module-criticality.md canonical registry. `eval::judge` was the 57th module when added in v1.32 by the module-decomp's own running count from gate-25 baseline; the canonical registry subsequently recorded additional modules (tracked in matrix v2.5/v2.6) bringing the total to 71.
+> Current module universe: 71 total (69 tiered / 2 exempt: `core::documents`, `memory::skills`) by this file's own table rows. The module-criticality.md registry total is 83 (77 tiered + 6 definitions-only/exempt rows added in FIX-BURST-277) — the difference is the 6 definitions-only/exempt module rows and the 6 crate-level roll-up rows that appear in the registry but are not in this file's tiered table. `eval::judge` was the 57th module when added in v1.32 by the module-decomp's own running count from gate-25 baseline; the canonical registry subsequently recorded additional modules (tracked in matrix v2.5/v2.6) bringing the total to 71.
 
 ## ferrochain-mcp (SS-09) — HIGH (ingress) / MEDIUM (client, discovery, adapter, server)
 
@@ -396,7 +398,7 @@ constructor pattern), in-memory VectorStore backend, MMR selection algorithm, `V
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
 | `vectorstores::store` | `VectorStore` trait (`add_texts`, `similarity_search`, `similarity_search_with_score`, `max_marginal_relevance_search`, `delete`, `as_retriever`); `VectorStoreFactory` trait; `MetadataFilter` type | MEDIUM | SS-21 |
-| `vectorstores::retriever` | `VectorStoreRetriever<'_>` wrapping `&dyn VectorStore`; impl `Retriever`; `SearchType` enum (Similarity / SimilarityScoreThreshold / Mmr) | MEDIUM | SS-20 |
+| `vectorstores::retriever` | `VectorStoreRetriever` owning `Arc<dyn VectorStore>` (no lifetime; `'static`; satisfies `Arc<dyn Retriever + 'static>`); impl `Retriever`; `SearchType` enum (`#[non_exhaustive]`; Similarity / SimilarityScoreThreshold / Mmr) | MEDIUM | SS-20 |
 | `vectorstores::memory` | In-memory VectorStore backend; `Arc<dyn Embeddings>` injection via constructor; interior mutability via `RwLock`; `Vec<f32>` cosine similarity; no `ndarray` dep | MEDIUM | SS-21 |
 | `vectorstores::similarity` | Shared cosine similarity primitive: `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, FerrochainError>`; zero-norm IEEE-754 guard (E-VS-001) before division; pure `Vec<f32>` inner product, no `ndarray`, no I/O; called by `vectorstores::memory`, `vectorstores::mmr`, and any future VectorStore backend | CRITICAL | SS-21 |
 | `vectorstores::mmr` | Maximal Marginal Relevance selection algorithm; calls `vectorstores::similarity::cosine_similarity` for pairwise similarity + diversity penalty; `lambda_mult` ∈ [0.0, 1.0] parameter; pure math, no I/O | MEDIUM | SS-21 |

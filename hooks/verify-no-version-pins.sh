@@ -78,8 +78,9 @@
 set -euo pipefail
 
 FACTORY_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+HOOKS_DIR="$FACTORY_DIR/hooks"
 SPECS_ROOT="$FACTORY_DIR/specs"
-ALLOWLIST="$FACTORY_DIR/hooks/version-pin-allowlist.txt"
+ALLOWLIST="$HOOKS_DIR/version-pin-allowlist.txt"
 
 PASS=0
 WARN=0
@@ -106,11 +107,17 @@ emit() {
 # Each finding has the form:
 #   live-body-pin:line=<N>,text=<matched-text>
 
-PYTHON_OUTPUT="$(python3 - "$SPECS_ROOT" "$ALLOWLIST" <<'PYEOF'
+PYTHON_OUTPUT="$(python3 - "$HOOKS_DIR" "$SPECS_ROOT" "$ALLOWLIST" <<'PYEOF'
 import sys, os, glob, re
 
-specs_root  = sys.argv[1]
-allowlist_f = sys.argv[2]
+# Region detection is imported from the canonical shared module.
+# spec_region_utils.py is the single source of truth for "what counts as a
+# changelog region"; verify-signature-canon.sh imports the same module.
+hooks_dir   = sys.argv[1]
+specs_root  = sys.argv[2]
+allowlist_f = sys.argv[3]
+sys.path.insert(0, hooks_dir)
+from spec_region_utils import changelog_exempt_lines
 
 # ── Pin patterns ──────────────────────────────────────────────────────────────
 #
@@ -178,58 +185,19 @@ for filepath in md_files:
 
     content = ''.join(raw_lines)
 
-    # ── Locate frontmatter boundaries ─────────────────────────────────────
-    # Split on '---' delimiters. We expect the file to optionally begin with
-    # a YAML block enclosed in '---\n' ... '---\n'.
-    # Strategy: find the line index of the first and second '---' lines.
-    fm_end_line = None   # 0-indexed line index of the closing '---'
-    if raw_lines and raw_lines[0].rstrip() == '---':
-        for i in range(1, len(raw_lines)):
-            if raw_lines[i].rstrip() == '---':
-                fm_end_line = i
-                break
-
-    # fm_end_line == None means no frontmatter (or unclosed frontmatter —
-    # treat as no frontmatter in either case).
-    # Lines 0..fm_end_line (inclusive) are FRONTMATTER; skip them entirely.
-    fm_end = fm_end_line if fm_end_line is not None else -1
-
-    # ── Locate ## Changelog sections in body ──────────────────────────────
-    # A ## Changelog section runs from the '## Changelog' heading line through
-    # (but not including) the next '## ' heading line or EOF.
-    # There may be multiple such sections per file (e.g., a versioned doc with
-    # a primary ## Changelog and a supplementary one).
-    CHANGELOG_HEADING_RE = re.compile(r'^## Changelog\s*$')
-    SECTION_HEADING_RE   = re.compile(r'^## ')
-
-    changelog_line_ranges = []   # list of (start_0idx, end_0idx_exclusive)
-    i = fm_end + 1
-    while i < len(raw_lines):
-        if CHANGELOG_HEADING_RE.match(raw_lines[i]):
-            start = i
-            j = i + 1
-            while j < len(raw_lines):
-                if SECTION_HEADING_RE.match(raw_lines[j]):
-                    break
-                j += 1
-            changelog_line_ranges.append((start, j))
-            i = j
-        else:
-            i += 1
-
-    def in_changelog(line_0idx):
-        for (s, e) in changelog_line_ranges:
-            if s <= line_0idx < e:
-                return True
-        return False
+    # ── Identify exempt regions via shared module ──────────────────────────
+    # changelog_exempt_lines() returns a frozenset of 0-indexed line numbers
+    # covering (a) YAML frontmatter and (b) body ## Changelog sections.
+    # See spec_region_utils.py for the canonical definition and rationale.
+    exempt = changelog_exempt_lines(raw_lines)
 
     # ── Compute relative path for allowlist lookup ─────────────────────────
     rel_path = os.path.relpath(filepath, specs_root)
 
-    # ── Scan non-exempt body lines ─────────────────────────────────────────
+    # ── Scan non-exempt lines ──────────────────────────────────────────────
     failures = []
-    for line_0idx in range(fm_end + 1, len(raw_lines)):
-        if in_changelog(line_0idx):
+    for line_0idx in range(len(raw_lines)):
+        if line_0idx in exempt:
             continue
 
         line_text = raw_lines[line_0idx]

@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.18"
+version: "1.19"
 status: active
 producer: business-analyst
 timestamp: 2026-07-27T00:00:00Z
@@ -17,6 +17,7 @@ input-hash: "b40ee23"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.19 (fix-burst-278/wave-b/2026-07-28): Sites 8a and 8b per wave-b-po-routing-spec §Item-8. (1) CAP-027 Site 8a: VectorStoreRetriever lifetime annotation removed — type is 'static, owns Arc<dyn VectorStore>; verifiable: verify-signature-canon S2 returns zero hits. (2) CAP-027 adjacent to Site 8a: backing-store form corrected from borrow-ref to Arc<dyn VectorStore> (same paragraph); verifiable: borrow-backed VectorStoreRetriever form absent from this file. (3) CAP-028 Site 8b: as_retriever receiver corrected from bare self-ref to self: Arc<Self>; return-type lifetime annotation removed; verifiable: verify-signature-canon S1b returns zero hits. (4) CAP-027 config bullets k, fetch_k, lambda_mult: Err(E-VS-003 InvalidConfig) rejection semantics added per D-44 — rejected not clamped (verifiable: grep 'E-VS-003 InvalidConfig' capabilities-p1-p2.md returns three hits, one per config bullet). TD-VSDD-060 sibling sweep: same borrow-backed class found and corrected in entities-graph.md §VectorStore/§Relationships-Summary and ubiquitous-language-core.md §VectorStoreRetriever/§VectorStore this burst."
   - "1.18 (FC-4/burst-277/2026-07-28): False-closure FC-4 correction — v1.13 claim 'L-026 stale-delegation sweep: zero additional hits' was false. Sweep term: 'PO BC obligations' (verifiable: grep 'PO BC obligations' capabilities-p1-p2.md returns zero hits after this fix). Three surviving stale-completed-delegation instances corrected: (1) CAP-034 §PendingHumanApproval: '(PO BC obligation, SS-05 extension)' → '(BC-2.05.008)' — BC-2.05.008 exists, covers skip-hook-on-resume invariant. (2) CAP-034 §streaming events: '**PO BC obligations:** BC-2.06.004 / BC-2.06.005 (SS-06); amend BC-2.08.010 ...' → '**Authored BCs:** BC-2.06.004 / BC-2.06.005 (SS-06); BC-2.08.010 amended ...' — all three BCs exist. (3) CAP-035 §PO BC obligations: '**PO BC obligations:** new BCs for SS-10 ...; amend BC-2.06.001 or author BC-2.06.006 ...' → '**Authored BCs:** BC-2.10.005 / BC-2.10.006 (SS-10); BC-2.06.006 authored ...' — BC-2.10.005, BC-2.10.006, BC-2.06.006 all exist. TD-VSDD-060 sibling sweep: same 'PO BC obligations' class also found and fixed in entities-graph.md (v1.12→v1.13) and ubiquitous-language-core.md (v1.8→v1.9) this burst."
   - "1.17 (F-P173-106/F-P173-702/burst-276/2026-07-27): Two CAP body corrections. (1) F-P173-106 CAP-038: remove stale 'confirm regex is already a workspace dependency' open instruction; ADR-020 Decision 7 already resolved that regex is NOT an existing workspace dep — it will be a net-new [workspace.dependencies] entry at workspace init; replace with confirmed fact per ADR-020 Decision 7. (2) F-P173-702 CAP-029: correct mis-citation ADR-014 Decision 4 → ADR-017 Decision 4 for InMemoryVectorStore struct and Arc-DI wiring. ADR-014 Decision 4 is the External Adapter Extension Seam (inventory crate for community adapters); ADR-017 Decision 4 explicitly defines the InMemoryVectorStore struct with Arc<dyn Embeddings> + RwLock<Vec<(Document, Vec<f32>)>> and the Arc-DI wiring contract. ADR-014 Decision 2 §Hardening note attribution for zero-norm guard unchanged (correct). TD-VSDD-060 sweep: no other ADR-014 Decision 4 mis-citations for InMemoryVectorStore in this file."
   - "1.16 (burst-273/2026-07-25): Date-monotonicity repair: v1.10 changelog date 2026-07-22 → 2026-07-23 (burst-242; corroborating carrier: api-surface.md v1.9 burst-242/2026-07-23). TD-VSDD-060 temporal-neighbor sweep: no additional inversions found in this file."
@@ -309,13 +310,13 @@ extend BC-2.11.001, which remains the BC authority for the guardrail invariant.
 
 ### CAP-027: VectorStoreRetriever — SearchType Enum; k / fetch_k / lambda_mult Configuration
 
-Provide a concrete `Retriever` implementation (`VectorStoreRetriever<'a>` in
-`ferrochain-vectorstores: vectorstores::retriever`) backed by a `&dyn VectorStore`,
+Provide a concrete `Retriever` implementation (`VectorStoreRetriever` in
+`ferrochain-vectorstores: vectorstores::retriever`) backed by `Arc<dyn VectorStore>`,
 configurable via:
 - **SearchType enum:** `Similarity` (default) | `SimilarityScoreThreshold { score_threshold: f32 }` | `Mmr`
-- **k:** number of final documents to return
-- **fetch_k:** candidate pool size fetched before MMR re-ranking (applicable to SearchType::Mmr only)
-- **lambda_mult ∈ [0.0, 1.0]:** MMR diversity parameter (0.0 = maximum diversity, 1.0 = pure relevance)
+- **k:** number of final documents to return; negative `k` returns `Err(E-VS-003 InvalidConfig)` — rejected, not clamped (D-44)
+- **fetch_k:** candidate pool size fetched before MMR re-ranking (applicable to SearchType::Mmr only); `fetch_k < k` returns `Err(E-VS-003 InvalidConfig)` — rejected, not clamped (D-44)
+- **lambda_mult ∈ [0.0, 1.0]:** MMR diversity parameter (0.0 = maximum diversity, 1.0 = pure relevance); values outside [0.0, 1.0] return `Err(E-VS-003 InvalidConfig)` — rejected, not clamped (D-44)
 
 Constructed via `VectorStore::as_retriever()` — a concrete (non-opaque) return type that
 preserves VectorStore dyn-compatibility (ADR-014 Decision 2 §Object-safety). Implements
@@ -350,7 +351,7 @@ instance methods only — all `&self` receivers, dyn-compatible via `#[async_tra
 `similarity_search(query, k)` (k-nearest documents),
 `similarity_search_with_score(query, k)` (returns Vec<(Document, f32)> with scores ∈ [0.0, 1.0]),
 `max_marginal_relevance_search(query, k, fetch_k, lambda_mult)` (diversity-aware MMR retrieval),
-`delete(ids)`, and `as_retriever(&self) → VectorStoreRetriever<'_>` (concrete, non-opaque return
+`delete(ids)`, and `as_retriever(self: Arc<Self>) → VectorStoreRetriever` (concrete, non-opaque return
 type — required to preserve VectorStore dyn-compatibility, ADR-014 Decision 2 §Object-safety).
 Static constructors (`from_texts`) live on the separate `VectorStoreFactory` trait (Sized-bounded,
 NOT on the VectorStore vtable) — this split is required for E0038-safe `Arc<dyn VectorStore>`.

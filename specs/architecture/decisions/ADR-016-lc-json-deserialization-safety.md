@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-23"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.5"
+version: "1.6"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-19]
 changelog:
+  - "1.6 (FIX-BURST-278/Wave-C-S5/2026-07-28): S5 canon — two FerrochainError struct literals in unlabelled Rust fences converted to FerrochainError::new(component, category, RetryHint::Never, code, message) canonical constructor form per D-42/D-49. (1) Decision 3 Property 1 Reviver unknown-type error: E-SRLZ-001 struct literal → FerrochainError::new(Component::Srlz, Category::Val, RetryHint::Never, ...). (2) Decision 3 Property 4 monolith-unregistered error: E-SRLZ-002 struct literal → FerrochainError::new(Component::Srlz, Category::Val, RetryHint::Never, ...). RetryHint::Never confirmed for both codes (VAL/broken subcategory; deserialization errors are non-retriable by construction)."
   - "1.5 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — Decision 3 Property 1 and Property 4 code sketches: Component::SRLZ → Component::Srlz; Category::VAL → Category::Val per ADR-010 v1.9 Direction B adjudication."
   - "1.4 (burst-249/2026-07-24): F-P148-02 — add Security Invariant labeled subsection to Decision 3. Adjudication option (b): stable anchor added to ADR rather than remapping citation sites. Resolves unresolvable 'ADR-016 Security Invariant' citations in BC-2.19.005, BC-INDEX Red Gate table, VP-010.md. F-P148-01 context: BC-2.19.005 Architecture Authority cites 'ADR-016 Decision 6' (nonexistent; ADR-016 has only Decisions 1–5) — PO handoff to fix to 'ADR-016 Decision 3 Property 1'."
   - "1.3 (burst-238/2026-07-23): Stale-handoff sweep — remove stale 'VP-010 candidate' label in §Consequences bullets. VP-010 was seeded in burst-223 (D21, VP-INDEX v1.2, Kani P0). Replace with 'VP-010 (Kani P0, seeded burst-223)'."
@@ -162,8 +163,13 @@ Five safety properties, each enforced by construction:
 The `Reviver` checks `inventory::iter::<LcEntry>()` at startup and builds a `HashMap<Vec<String>, &LcEntry>`.
 Any `id` NOT in this map returns:
 ```
-Err(FerrochainError { component: Component::Srlz, category: Category::Val, code: "E-SRLZ-001",
-    message: "unknown-serializable: type id not in registry" })
+Err(FerrochainError::new(
+    Component::Srlz,
+    Category::Val,
+    RetryHint::Never,
+    "E-SRLZ-001",
+    "unknown-serializable: type id not in registry",
+))
 ```
 No fallback, no silent `None`. Consistent with DI-014 (no silent empty returns on validation failure).
 
@@ -197,8 +203,13 @@ via the `kwargs` map. Constructors that need credentials receive them via normal
 `LLMChain`, `ToolAgentAction`, `OutputFixingParser`, and the other 9 entries that resolve
 to the `langchain` aggregation package (which ferrochain does not port) return:
 ```
-Err(FerrochainError { component: Component::Srlz, category: Category::Val, code: "E-SRLZ-002",
-    message: "unsupported-serializable: langchain-monolith type not ported to ferrochain" })
+Err(FerrochainError::new(
+    Component::Srlz,
+    Category::Val,
+    RetryHint::Never,
+    "E-SRLZ-002",
+    "unsupported-serializable: langchain-monolith type not ported to ferrochain",
+))
 ```
 This is a structured error with a clear message — not a panic, not a silent `None`.
 

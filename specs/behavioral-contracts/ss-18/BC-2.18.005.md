@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.005
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.1 (F-P148-03/burst-249/2026-07-24): red_gate_source and Red Gate body callout updated: 'ADR-015 Security Invariant 2' → 'ADR-015 Decision 2 §Security Invariant 2' per ADR-015 v1.5 labeled anchor. input-hash updated to fa92953 (ADR-015 v1.5 adds labeled anchors)."
   - "1.2 (FIX-BURST-269/F-P167-01/2026-07-25): Fix Category::VALIDATION → Category::VAL at two sites: PC-1 code block (E-TMPL-002 Err struct) and INV-3 prose. VALIDATION is not in the canonical 12-member Category enum; E-TMPL-002 is VAL per error-taxonomy.md §E-TMPL-002. D23 sibling-sweep."
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::TMPL → Component::Tmpl (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + Invariant 3 prose)."
+  - "1.4 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: FerrochainError struct literal (missing retry_hint, source fields) → FerrochainError::new(Component::Tmpl, Category::Val, RetryHint::Never, \"E-TMPL-002\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-TMPL-002. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-18/BC-2.18.005.md returns zero fence-scoped literal occurrences after this edit."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -70,13 +71,14 @@ so the error is detected as early as possible regardless of whether the template
 
 1. `ChatPromptTemplate::from_messages` returns:
    ```
-   Err(FerrochainError {
-       component: Component::Tmpl,
-       category: Category::Val,
-       code: "E-TMPL-002",
-       message: "SystemMessage slots must use TrustRequired policy; \
-                 TrustAll is disallowed for system-position message slots",
-   })
+   Err(FerrochainError::new(
+       Component::Tmpl,
+       Category::Val,
+       RetryHint::Never,
+       "E-TMPL-002",
+       "SystemMessage slots must use TrustRequired policy; \
+        TrustAll is disallowed for system-position message slots",
+   ))
    ```
 2. No `ChatPromptTemplate` is created — the construction fails atomically.
 3. There is no partial construction state; no slots from the input list are registered before

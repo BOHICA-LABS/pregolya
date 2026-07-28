@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: entities-graph
-version: "1.13"
+version: "1.14"
 status: active
 producer: business-analyst
 timestamp: 2026-07-25T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "148b6a2"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D21, D23]
 changelog:
+  - "v1.14 (fix-burst-278/wave-b/2026-07-28): TD-VSDD-060 sibling sweep — two borrow-based stale forms corrected. (1) VectorStore entity §Instance methods: receiver qualifier corrected from 'all-&self, dyn-compatible' to '&self-unless-noted, all dyn-compatible'; as_retriever method updated to show self: Arc<Self> receiver (verifiable: verify-signature-canon S1b returns zero hits for this file). (2) Relationships Summary: VectorStoreRetriever backed-by form corrected from borrow-ref to Arc-ownership (verifiable: borrow-backed VectorStoreRetriever form absent from this file). Both ground in D-48: VectorStoreRetriever owns Arc<dyn VectorStore>; Arc<Self> receiver is dyn-compatible."
   - "v1.13 (FC-4/burst-277/2026-07-28): Sibling-sweep fix — same 'PO BC obligations' stale-completed-delegation class as capabilities-p1-p2.md v1.18. §PreToolDecision PendingHumanApproval bullet: 'PO BC obligation for SS-05 extension' → 'BC-2.05.008'. BC-2.05.008 exists and covers the skip-hook-on-resume invariant. TD-VSDD-060 sweep: sole 'PO BC obligation' occurrence in this file (grep 'PO BC obligation' entities-graph.md returns zero hits after this fix)."
   - "v1.12 (F-P171a-14/burst-273/2026-07-25): Fix HITL Approval Hook Domain intro — dependency-kind word corrected 'runtime' → 'compile-time' (corroborating carriers: ADR-018 §Decision 1 'cross-crate compile-time consumer', ADR-020 §Decision 1 'does NOT depend on ferrochain-graph at compile time', dependency-graph.md crate-DAG annotation 'no ferrochain-graph compile-time dep'). Date-monotonicity repair: v1.9 changelog date 2026-07-22 → 2026-07-23 (burst-242; corroborating carrier: api-surface.md v1.9 burst-242/2026-07-23). TD-VSDD-060 temporal-neighbor sweep: no additional inversions found in this file."
   - "v1.11 (F-P170-16/burst-272/2026-07-25): Fix HITL Approval Hook Domain intro — retire stale ActionRisk location claim 'ferrochain-graph::hitl alongside ActionRisk'. ActionRisk relocated to ferrochain-core (core::action_risk); ferrochain-graph::hitl re-exports it. HITL hook entities and RiskGatePolicy remain in ferrochain-graph::hitl. Placement rationale narrowed to hook types only. TD-VSDD-060 sweep: sole ActionRisk location claim in this file."
@@ -222,10 +223,10 @@ represents a value in lc-JSON format.
 ### VectorStore
 The abstract document-index trait; the dyn-compatible contract for all embedding-backed
 document stores (ADR-014 Decision 2).
-- **Instance methods (all &self, dyn-compatible):** add_texts (returns Vec<String> IDs),
+- **Instance methods (`&self` unless noted, all dyn-compatible):** add_texts (returns Vec<String> IDs),
   similarity_search(query, k), similarity_search_with_score(query, k), max_marginal_relevance_search
-  (query, k, fetch_k, lambda_mult), delete(ids), as_retriever() → VectorStoreRetriever (concrete,
-  non-opaque return — required for VectorStore dyn-compat)
+  (query, k, fetch_k, lambda_mult), delete(ids), as_retriever(self: Arc<Self>) → VectorStoreRetriever (concrete,
+  non-opaque return — required for VectorStore dyn-compat; `Arc<Self>` receiver is dyn-compatible)
 - **Static constructors:** NOT on VectorStore trait. Live on `VectorStoreFactory` (separate
   Sized-bounded trait) to preserve E0038-safe `Arc<dyn VectorStore>`.
 - **Crate:** ferrochain-vectorstores, module `vectorstores::store`
@@ -380,7 +381,7 @@ ToolApprovalRequest persisted to checkpoint on PendingHumanApproval; Command(res
 CompactionTrigger evaluated by BudgetEngine after each super-step; on trigger → ConversationSnapshot assembled from FTS → CompactionPolicy::compact() → CompactionSummary applied to active window
 CompactionSummary applied: messages[compacted_start..=compacted_end] replaced by SystemMessage(summary_text); CompactionEvent { compacted_start, compacted_end, … } appended to EvidenceJournal; compaction_event emitted (15th streaming variant)
 Retriever::get_relevant_documents returns Vec<Document>; Documents entering graph context pass BoundaryType::RAGRetrieval guardrail (DI-012)
-VectorStoreRetriever implements Retriever; backed by &dyn VectorStore; SearchType selects similarity vs MMR
+VectorStoreRetriever implements Retriever; backed by Arc<dyn VectorStore>; SearchType selects similarity vs MMR
 VectorStore 1——N Document (stores/indexes); VectorStoreRetriever wraps VectorStore
 InMemoryVectorStore holds Arc<dyn Embeddings> + RwLock<Vec<(Document, Vec<f32>)>>
 MetadataFilter optional on similarity_search_with_filter; FilterClause::Eq/Ne/In

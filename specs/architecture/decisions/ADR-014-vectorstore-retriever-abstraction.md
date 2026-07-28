@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-21"
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
-version: "1.11"
+version: "1.12"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,7 +16,8 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
-  - "1.11 (FIX-BURST-277-WAVE-B/F-P174-retriever-lifetime+F-P174-303+F-P174-as-retriever-fallible/2026-07-27): Three related fixes. (1) F-P174-retriever-lifetime — `VectorStoreRetriever<'a>` held `store: &'a dyn VectorStore`, making `VectorStoreRetriever<'_>` a non-`'static` type. Coercing it to `Arc<dyn Retriever + 'static>` (required for graph node injection and `tokio::spawn`) fails with a lifetime bound error. Fix: `VectorStoreRetriever` drops the lifetime parameter; `store` field becomes `Arc<dyn VectorStore>` (owned Arc, `'static`). `VectorStoreRetriever` is now `'static` and coerces cleanly to `Arc<dyn Retriever>`. (2) F-P174-as-retriever-fallible — `as_retriever` was infallible (`fn as_retriever(&self) -> VectorStoreRetriever<'_>`) but BC-2.20.003 INV-2 and TV-004/TV-005 require `Err(E-VS-003)` on invalid config (lambda_mult outside [0,1], fetch_k < k for MMR). Fix: signature becomes `fn as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>`. The `self: &Arc<Self>` receiver allows the implementation to `Arc::clone(self)` and store the resulting `Arc<dyn VectorStore>` in `VectorStoreRetriever.store`. BC-2.20.003 PC-2 (infallible) is therefore incorrect and requires a Wave C PO correction; the architecture source of truth is this ADR and interface-definitions.md. (3) F-P174-303 — remove phantom `context:` field from Decision 5 write-time zero-norm code sketch; `document_index` is carried in `message` via key=value interpolation per ADR-010 v1.13 adjudication. Propagate to interface-definitions.md and api-surface.md."
+  - "1.12 (FIX-BURST-278/F-P175-D48-receiver+D217-SearchType/2026-07-28): D-48 overturn of D-45 (two items). (1) F-P175-D48 — `as_retriever` receiver corrected to `self: Arc<Self>`. The prior reference-to-Arc receiver form is NOT a dyn-compatible receiver (it is not one of the standard vtable-dispatchable receiver types: `self`, `&self`, `&mut self`, `Box<Self>`, `Rc<Self>`, `Arc<Self>`, `Pin<P>`); using a reference-to-Arc receiver makes `VectorStore` non-object-safe under E0038, destroying `Arc<dyn VectorStore>` and blocking the SS-20 RAG seam. `Arc<Self>` IS a dyn-compatible receiver — `Arc<dyn VectorStore>` can dispatch through it. This is the second E0038 object-safety failure in the project (first: `Tool` via `DynTool` in ADR-005). The stale 'Wave C PO correction required' note removed from doc comment (BC-2.20.003 PC-2 amendment is routed to product-owner via FIX-BURST-278 Wave B routing spec). (2) F-P175-D217 — `SearchType` enum missing `#[non_exhaustive]` per BC-2.20.003 INV-1; added. Object-safety comment updated: `as_retriever` uses `Arc<Self>` receiver (dyn-compatible), not `&self`."
+  - "1.11 (FIX-BURST-277-WAVE-B/F-P174-retriever-lifetime+F-P174-303+F-P174-as-retriever-fallible/2026-07-27): Three related fixes. (1) F-P174-retriever-lifetime — the lifetime-parameterized `VectorStoreRetriever` held `store: &'a dyn VectorStore`, making it a non-`'static` type. Coercing it to `Arc<dyn Retriever + 'static>` (required for graph node injection and `tokio::spawn`) fails with a lifetime bound error. Fix: `VectorStoreRetriever` drops the lifetime parameter; `store` field becomes `Arc<dyn VectorStore>` (owned Arc, `'static`). `VectorStoreRetriever` is now `'static` and coerces cleanly to `Arc<dyn Retriever>`. (2) F-P174-as-retriever-fallible — `as_retriever` was infallible (returning the now-removed lifetime-parameterized type via `&self` receiver) but BC-2.20.003 INV-2 and TV-004/TV-005 require `Err(E-VS-003)` on invalid config (lambda_mult outside [0,1], fetch_k < k for MMR). Fix: signature becomes `fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>` (D-48 further corrected the intermediate receiver form in v1.12). The receiver allows the implementation to `Arc::clone` and store the `Arc<dyn VectorStore>` in `VectorStoreRetriever.store`. BC-2.20.003 PC-2 (infallible) is therefore incorrect and requires a Wave C PO correction; the architecture source of truth is this ADR and interface-definitions.md. (3) F-P174-303 — remove phantom `context:` field from Decision 5 write-time zero-norm code sketch; `document_index` is carried in `message` via key=value interpolation per ADR-010 adjudication. Propagate to interface-definitions.md and api-surface.md."
   - "1.10 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp per ADR decision-date convention (Gate #28 Rule 5): `timestamp: 2026-07-23T00:00:00Z` → `2026-07-21T00:00:00Z`. Date field already correct at 2026-07-21. Timestamp was incorrectly bumped to 2026-07-23 in burst-238/f4819b2."
   - "1.9 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — all Rust code blocks: Component::VS → Component::Vs; Category::VAL → Category::Val; Component::CORE → Component::Core; Category::SECURITY → Category::Security per ADR-010 v1.9 Direction B adjudication."
   - "1.8 (FIX-BURST-267/F-P165-stale-prose/2026-07-25): De-label §PO Obligations heading '### E-VS-004 (carried from v1.3)' → '### E-VS-004 (carried from Decision 5)' — Decision 5 (v1.2/F-P129-08) is the behavioral anchor that introduced the write-time zero-norm rejection obligation; v1.3 only corrected the error code number from E-VS-003 → E-VS-004. The version pin 'v1.3' decays with revision history; 'Decision 5' is stable and directly identifies the design decision this obligation traces to."
@@ -173,10 +174,12 @@ pub trait VectorStore: Send + Sync {
     /// Construct a `VectorStoreRetriever` over this store.
     ///
     /// # Receiver
-    /// `self: &Arc<Self>` — required so the impl can clone the Arc and store it in
-    /// `VectorStoreRetriever.store: Arc<dyn VectorStore>`, giving the retriever a
-    /// `'static` lifetime that satisfies `Arc<dyn Retriever + 'static>` (graph nodes
-    /// and `tokio::spawn` require `'static`).
+    /// `self: Arc<Self>` — `Arc<Self>` is a dyn-compatible receiver (valid for vtable
+    /// dispatch through `Arc<dyn VectorStore>`). A reference-to-Arc receiver is NOT dyn-compatible
+    /// and would make `VectorStore` non-object-safe under E0038, destroying `Arc<dyn VectorStore>`.
+    /// The impl moves `self` (or clones before calling) to store the `Arc<dyn VectorStore>`
+    /// in `VectorStoreRetriever.store`, giving the retriever a `'static` lifetime for
+    /// `Arc<dyn Retriever + 'static>` coercion (required by graph nodes and `tokio::spawn`).
     ///
     /// # Errors
     /// Returns `Err(E-VS-003, VAL)` when config is invalid:
@@ -184,9 +187,7 @@ pub trait VectorStore: Send + Sync {
     /// - `fetch_k < k` when `SearchType::Mmr`
     ///
     /// BC anchor: BC-2.20.003 INV-2 (E-VS-003 on invalid config), BC-2.20.003 TV-004/TV-005.
-    /// Note: BC-2.20.003 PC-2 currently states infallible `-> VectorStoreRetriever<'_>`;
-    /// that is incorrect — Wave C PO correction required.
-    fn as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>;
+    fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>;
 }
 
 /// Factory trait: static constructors for VectorStore implementors. NOT part of the
@@ -216,6 +217,7 @@ pub struct VectorStoreRetriever {
 }
 
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub enum SearchType {
     #[default]
     Similarity,
@@ -233,9 +235,10 @@ impl Retriever for VectorStoreRetriever {
 }
 ```
 
-Object-safety of `VectorStore`: all instance methods have `&self` receivers; all async
-methods are desugared via `#[async_trait]`; `as_retriever` returns a concrete struct (not
-an opaque type). `Arc<dyn VectorStore>` compiles without E0038.
+Object-safety of `VectorStore`: all instance methods use dyn-compatible receivers (`&self`
+for async methods; `Arc<Self>` for `as_retriever`); all async methods are desugared via
+`#[async_trait]`; `as_retriever` returns a concrete struct (not an opaque type).
+`Arc<dyn VectorStore>` compiles without E0038.
 
 `add_texts` uses `&self` (not `&mut self`) because external VectorStore backends (Qdrant,
 Chroma, pgvector) are fundamentally stateless from the client perspective — mutations go

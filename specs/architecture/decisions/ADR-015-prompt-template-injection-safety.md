@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-07-20T00:00:00Z
-version: "1.8"
+version: "1.9"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.9 (FIX-BURST-278/Wave-C-S5/2026-07-28): S5 canon — two FerrochainError struct literals in Rust fences converted to FerrochainError::new(component, category, RetryHint::Never, code, message) canonical constructor form per D-42/D-49. (1) Decision 2 from_messages guard: E-TMPL-002 struct literal → FerrochainError::new(Component::Tmpl, Category::Val, RetryHint::Never, ...). (2) Decision 3 injection check: E-TMPL-001 struct literal → FerrochainError::new(Component::Tmpl, Category::Security, RetryHint::Never, ...). RetryHint::Never confirmed for both codes (SECURITY/InjectionAttempt and VAL/SystemSlotPolicy are non-retriable by construction per error-taxonomy)."
   - "1.8 (FIX-BURST-272/F-P170-18/2026-07-25): Rewrite §PO Handoffs and §BA Handoffs in past-tense RESOLVED form following the burst-238 stale-handoff sweep pattern. All listed changes were applied in burst-226 and subsequent bursts; the future-tense obligation tables were live open instructions in an accepted ADR, a Production-Grade Default violation. Rotted line-number pointers (L1110, L1128-1129, L1155-1156) replaced with section/symbol anchors per TD-VSDD-091."
   - "1.7 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — Decision 2 code sketch: Component::TMPL → Component::Tmpl; Category::VAL → Category::Val; Decision 4 InjectionAttempt code sketch: Component::TMPL → Component::Tmpl; Category::SECURITY → Category::Security per ADR-010 v1.9 Direction B adjudication."
   - "1.6 (FIX-BURST-269/F-P167-01/2026-07-25): Replace all non-canonical Category::VALIDATION residue with Category::VAL at four sites: (1) Decision 2 E-TMPL-002 code sketch (live code body); (2) Decision 4 strict-undefined note '(VALIDATION)' narrative label; (3) Consequences E-TMPL-002 '(VALIDATION/SystemSlotPolicy)' narrative label; (4) Consequences E-TMPL-003 '(VALIDATION/UndefinedVariable)' narrative label. VALIDATION is not a canonical Category variant; canonical abbreviated form per ADR-010 is VAL."
@@ -97,13 +98,14 @@ impl ChatPromptTemplate {
     ) -> Result<Self, FerrochainError> {
         for (role, _, policy) in &messages {
             if *role == MessageRole::System && *policy != SlotTrustPolicy::TrustRequired {
-                return Err(FerrochainError {
-                    component: Component::Tmpl,
-                    category: Category::Val,
-                    code: "E-TMPL-002",
-                    message: "SystemMessage slots must use TrustRequired policy; \
+                return Err(FerrochainError::new(
+                    Component::Tmpl,
+                    Category::Val,
+                    RetryHint::Never,
+                    "E-TMPL-002",
+                    "SystemMessage slots must use TrustRequired policy; \
                               TrustAll is disallowed for system-position message slots",
-                });
+                ));
             }
         }
         // ...
@@ -238,16 +240,17 @@ impl ChatPromptTemplate {
                 for var_name in slot.variable_names() {
                     if let Some(var) = vars.get(var_name) {
                         if var.trust_level.is_some_and(|t| t.is_untrusted()) {
-                            return Err(FerrochainError {
-                                component: Component::Tmpl,
-                                category: Category::Security,
-                                code: "E-TMPL-001",
-                                message: format!(
+                            return Err(FerrochainError::new(
+                                Component::Tmpl,
+                                Category::Security,
+                                RetryHint::Never,
+                                "E-TMPL-001",
+                                format!(
                                     "InjectionAttempt: variable '{}' carries untrusted provenance \
                                      but slot '{}' requires TrustRequired policy",
                                     var_name, slot.message_role
                                 ),
-                            });
+                            ));
                         }
                     }
                 }

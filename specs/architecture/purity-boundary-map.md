@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.25"
+version: "1.26"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.26 (FIX-BURST-278-WAVE-A/F-P175-D212/2026-07-28): Iron Law — add missing `core::tool` Pure Core row (Tool/DynTool trait definitions; ToolInput/ToolOutput types; blanket DynTool impl maps ToolOutput variants to Result, no I/O; concrete Tool impls are Effectful Shell; ADR-005 / SS-08 / BC-2.08.010). Required by module-decomposition.md §core::tool row addition. Pure Core 33→34; total 83→84."
   - "1.25 (FIX-BURST-277-WAVE-B/2026-07-28): Item 6 module census — add ferrochain-macros crate-level row to Effectful Shell table. ferrochain-macros is a proc-macro crate (#[tool], #[entrypoint], #[task] attribute macros); macros::tool/entrypoint/task are Pure Core (added v1.1), but the ferrochain-macros crate-level census entry was absent from this table while present in verification-coverage-matrix.md and module-criticality.md, causing a CHECK4 set-diff. Row added after ferrochain-community; total 82→83 rows; Effectful Shell 37→38."
   - "1.24 (FIX-BURST-276/2026-07-27): CHECK4 closure — fix one non-canonical Module cell in Boundary Modules table. Row `graph::hitl (pre-tool dispatch)`: parenthetical qualifier was inside the backtick span, making the cell value `graph::hitl (pre-tool dispatch)` (fails `^[a-z_]+::[a-z_]+$` regex). Fixed to `graph::hitl` (pre-tool dispatch) — qualifier now outside backticks, consistent with Pure Core table pattern (graph::bsp_engine (reducer stage), graph::hitl (queue logic) both use the same outside-backticks convention). Row count (82) and purity column splits (33 Pure Core + 37 Effectful Shell + 12 Boundary) unchanged."
   - "1.23 (FIX-BURST-276-WAVE-B1/F-P173-301+402/2026-07-27): F-P173-301/402 sibling sweep — two BC anchor fixes. (1) eval::judge Effectful Shell row: `(BC-2.08.013/BC-2.08.014 / SS-08)` → `(BC-2.08.008 / SS-08)`. Correct anchor: BC-2.08.008 = Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15); BC-2.08.013/014 are provider-behavior BCs. (2) ferrochain-standard-tests crate-level Effectful Shell row: `(BC-2.08.013–014)` → `(BC-2.08.001–005, BC-2.08.008)`. Rationale: the standard-tests crate verifies the core chat-model conformance battery (BC-2.08.001–005) and eval scoring (BC-2.08.008); BC-2.08.013 (Pluggable Tool-Call Dialect Seam) and BC-2.08.014 (Provider Failover Chain) are provider-graph BCs assigned to graph/provider crates in prd.md, not to the conformance-test crate. TD-VSDD-060 sibling sweep: same BC anchor corrected in module-decomposition.md (v1.34), module-criticality.md (v2.3), verification-coverage-matrix.md (v2.9) in same burst."
@@ -56,7 +57,7 @@ no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
 effectful dependency). All 71 module-decomposition modules (69 tiered + 2 exempt) plus
 structural and definitions-only modules are enumerated in `## Purity Classification` below
-(83 total rows after FIX-BURST-277: 33 Pure Core + 38 Effectful Shell + 12 Boundary).
+(84 total rows after FIX-BURST-278: 34 Pure Core + 38 Effectful Shell + 12 Boundary).
 Enforcement invariants follow in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -94,6 +95,7 @@ side effects. Kani proofs operate here.
 | `core::action_risk` | ferrochain-core | definitions-only: `ActionRisk` enum — 4 variants: `ReadOnly`, `Low`, `Medium`, `High` (`#[non_exhaustive]`); no execution logic; relocated from `ferrochain-graph::hitl` per F-P170-06 adjudication (dependency-inversion precedent: BudgetPolicy → core::budget per ADR-009, GuardrailHook/BoundaryType → core::guardrail per ADR-014 Decision 6, MemoryWriteGuard → core::write_guard per ADR-012); required so `ferrochain-tools` (Wave 1 position 7) can reference ActionRisk without a `ferrochain-graph` compile-time dep (Wave 1 position 8); `ferrochain-graph` re-exports `core::action_risk::ActionRisk` as `ferrochain_graph::hitl::ActionRisk` for existing graph-layer consumers; BC-2.05.006 anchor preserved; SS-05 owner (ADR-018 / ADR-020 Decision 1) | — |
 | `core::documents` | ferrochain-core | `Document { page_content, metadata, id }` pure data carrier; construction is pure type-system enforcement; no I/O (ADR-014 / SS-20) | — |
 | `core::embeddings` | ferrochain-core | `Embeddings` trait definition; definitions-only: trait body + dimensionality contract types; no execution logic (ADR-017 / SS-22) | — |
+| `core::tool` | ferrochain-core | definitions-only: `Tool` trait (`name`, `description`, `schema`, `action_risk` — synchronous getters; abstract async `tool_run` — execution logic in concrete impls in ferrochain-tools); `ToolInput(serde_json::Value)` newtype; `#[non_exhaustive] #[derive(Serialize)] ToolOutput` enum (Text/Json/Error); `DynTool` object-safe façade trait (`invoke_dyn`); blanket impl maps `ToolOutput` variants to `Result<Value, FerrochainError>` (synchronous match; `Error(String)` → `Err(FerrochainError)` per DI-014; no silent-empty); no I/O in module; concrete `Tool` impls are Effectful Shell (ADR-005 / SS-08 / BC-2.08.010) | — |
 | `prompts::template` | ferrochain-prompts | f-string engine: variable substitution is pure string iteration + format; `{var}` extraction at construction; `.partial()` builder returns new pure value (ADR-015 / SS-18) | — |
 | `prompts::chat_template` | ferrochain-prompts | `ChatPromptTemplate` message construction: given substituted variables, produces `PromptValue` with per-message `MessageProvenance`; pure data transform with no I/O (ADR-015 / SS-18) | — |
 | `prompts::few_shot` | ferrochain-prompts | `FewShotPromptTemplate`: pure assembly of example messages + template rendering; no I/O; snapshot-fixture parity tests (ADR-015 / SS-18) | — |

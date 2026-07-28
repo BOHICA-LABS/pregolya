@@ -1,7 +1,7 @@
 ---
 document_type: module-criticality
 level: L3
-version: "2.6"
+version: "2.8"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -15,6 +15,8 @@ traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "2.8 (FIX-BURST-278-WAVE-A/F-P175-D212/2026-07-28): Iron Law — add `core::tool` HIGH row (ferrochain-core SS-08; Tool/DynTool trait seam; DynTool blanket impl; ToolOutput variant mapping; no Kani VP; BC-2.08.010; no kill rate exception). Required by module-decomposition.md §core::tool row addition. Classification Summary: HIGH 28→29; Total 83→84. GATE-25 arithmetic post-fix: 84(total) − 77(module-level) = 7(crate-level) ✓."
+  - "2.7 (FIX-BURST-278/F-P175-D111/2026-07-28): Ambiguity fix — `= 77 rows total` → `= 77 tiered rows` in Module/crate breakdown blockquote. The `| Total | 83 |` table row counts all rows; the `77` in the breakdown counts only tiered rows (CRITICAL/HIGH/MEDIUM/LOW); the prior phrasing was ambiguous. Aligned with verification-coverage-matrix.md wording."
   - "2.6 (FIX-BURST-277-WAVE-B/2026-07-28): Item 6 module census — add 6 definitions-only/exempt module rows: core::documents (definitions-only, D21/SS-20, ADR-014 Decision 2: pure data carrier, no execution methods), memory::skills (routing-overlay/exempt, D20/SS-15, ADR-012 Decision 4: structural decomposition row only), core::guardrail (definitions-only, SS-11, ADR-009/ADR-014 Decision 6), core::action_risk (definitions-only, SS-05, ADR-009/F-P170-06/ADR-020 Decision 3), core::context_mutation (definitions-only, D20/SS-01, ADR-009/ADR-012), core::write_guard (definitions-only, D20/SS-15, ADR-009/ADR-012). All have Tier=— (no kill rate obligation; not subject to Phase 5 gates). Total 77→83. Tiered count (CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77) unchanged. GATE-25 arithmetic check: 83 − 76 = 7 (crate-level rows; 6 new rows are module-level, now matched in decomp after FIX-BURST-277 module-decomposition additions)."
   - "2.5 (FIX-BURST-276-CHECK4/2026-07-27): CHECK4 canonicality closure — rename three crate-level BaseChatModel provider rows to full canonical crate names: `openai` → `ferrochain-openai`, `anthropic` → `ferrochain-anthropic`, `ollama` → `ferrochain-ollama`. Aligns with established pattern: ferrochain-macros, ferrochain-standard-tests, xtask, ferrochain-community all use the full crate name form recognized by ARCH-INDEX.md canonical-roster; purity-boundary-map.md already uses these full names (confirmed via verify-module-canonicality.sh SET-DIFF baseline). NE Catalog NE-04 and NE-07: replace aggregate-scope Module cells with `—` and append scope description to Enforcement Mechanism column (aggregate policy scope is not a module identifier; checker skips `—` cells per design). Column guide and Classification Summary updated to use full crate names. Census sextuple unchanged: (71, 69, 2, 77, 76, 69) — no rows added or removed from Module Classification table; all tier assignments unchanged."
   - "2.4 (FIX-BURST-276-TD091/2026-07-27): TD-VSDD-091 anti-volatile-pin repair — Iron Law gap note (eval::judge): replace live-body sibling-artifact version pin with stable section anchor. observability.md §Catalog (the Catalog table section that contains the eval.judge_infra_error row and its emitter attribution) replaces a specific version number. Sibling-sweep of this file live body: no additional version pins found."
@@ -94,6 +96,7 @@ changelog:
 | `core::serializable` | LcSerializable round-trip | ferrochain-core | SS-19 | HIGH | VP-007 | ≥ 90% | P5 |
 | `core::embeddings` | — | ferrochain-core | SS-22 | HIGH | VP-008 | ≥ 90% | P5 |
 | `core::budget` | — | ferrochain-core | SS-10 | HIGH | VP-012 | ≥ 90% | P3 per-story + P5 |
+| `core::tool` | — | ferrochain-core | SS-08 | HIGH | — | ≥ 90% | P5 |
 | `tools::shell` | — | ferrochain-tools | SS-23 | HIGH | VP-013 | ≥ 90% | P3 per-story + P5 |
 | `vectorstores::mmr` | — | ferrochain-vectorstores | SS-21 | MEDIUM | — | ≥ 80% | P5 |
 | `tools::config` | — | ferrochain-tools | SS-23 | MEDIUM | — | ≥ 80% | P5 |
@@ -177,13 +180,13 @@ changelog:
 | Tier | Module Count |
 |------|-------------|
 | CRITICAL | 12 |
-| HIGH | 28 |
+| HIGH | 29 |
 | MEDIUM | 35 |
 | LOW | 2 |
 | — (definitions-only/exempt) | 6 |
-| **Total** | **83** |
+| **Total** | **84** |
 
-> Module/crate breakdown: 12 CRITICAL module-level + 24 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened) + 4 HIGH crate-level (ferrochain-openai/ferrochain-anthropic/ferrochain-ollama BaseChatModel + ferrochain-macros crate-level roll-up) + 34 MEDIUM module-level + 1 MEDIUM crate-level (ferrochain-standard-tests) + 2 LOW crate-level (xtask + ferrochain-community) = 77 rows total.
+> Module/crate breakdown: 12 CRITICAL module-level + 25 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened; core::tool added FIX-BURST-278) + 4 HIGH crate-level (ferrochain-openai/ferrochain-anthropic/ferrochain-ollama BaseChatModel + ferrochain-macros crate-level roll-up) + 34 MEDIUM module-level + 1 MEDIUM crate-level (ferrochain-standard-tests) + 2 LOW crate-level (xtask + ferrochain-community) = 78 tiered rows.
 
 ## CRITICAL Module — Security Profile
 

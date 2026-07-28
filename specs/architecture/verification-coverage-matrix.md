@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.3"
+version: "3.4"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -14,6 +14,7 @@ inputs:
 input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.4 (FIX-BURST-278-WAVE-A/F-P175-D212/2026-07-28): Iron Law — add `core::tool` HIGH row (ferrochain-core SS-08; Tool/DynTool trait seam; Arc<dyn DynTool> composition; BC-2.08.010; no Kani VP; Integration=yes). Required by module-decomposition.md §core::tool row addition. Coverage-by-Criticality-Tier: HIGH 28→29. Preamble updated 83→84, tiered 77→78. Coverage gap note updated 28→29 HIGH modules."
   - "3.3 (FIX-BURST-277-WAVE-B/2026-07-28): Item 6 module census — add 6 definitions-only/exempt rows to Per-Module Coverage Status table: core::documents (definitions-only, D21/SS-20, ADR-014 Decision 2), memory::skills (routing-overlay/exempt, D20/SS-15, ADR-012 Decision 4), core::guardrail (definitions-only, SS-11, ADR-014 Decision 6), core::action_risk (definitions-only, SS-05, F-P170-06/ADR-020), core::context_mutation (definitions-only, D20/SS-01, ADR-012), core::write_guard (definitions-only, D20/SS-15, ADR-012). All have Tier=— (no kill rate obligation), no VP targets, no Kani/proptest/fuzz. Preamble updated 77→83. Tiered count (CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77) unchanged — definitions-only/exempt rows are outside the tiered universe."
   - "3.2 (FIX-BURST-276-CHECK4/2026-07-27): CHECK4 canonicality closure — rename three crate-level BaseChatModel provider rows to full canonical crate names: `openai` → `ferrochain-openai`, `anthropic` → `ferrochain-anthropic`, `ollama` → `ferrochain-ollama`. Aligns with established pattern: ferrochain-macros and ferrochain-standard-tests already use full crate names in this file; purity-boundary-map.md already uses these names generating the same expected SET-DIFF in-here-not-decomp WARNs (crate-level rows are not in module-decomp canonical set because the Provider Crates section is excluded from decomp scanning). Row Notes updated to remove stale 'no canonical crate::module name' wording; full crate names ARE canonical via ARCH-INDEX.md roster. No VP or coverage count changes; census sextuple unchanged."
   - "3.1 (FIX-BURST-276/F-P173-803/2026-07-27): F-P173-803 — correct Coverage by Criticality Tier proptest column. Actual proptest coverage is 3 of 12 CRITICAL (graph::bsp_engine, checkpoint::session_index, checkpoint::clock — derivation: counted proptest=yes/VP-NNN rows from per-module table, CRITICAL tier) and 7 of 28 HIGH (core::runnable, core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels, graph::budget). Replace 'all' → '3 of 12 (explicit list)' and 'most + VP-007, VP-008' → '7 of 28 (explicit list)'. Add coverage-gap stated-obligation note. Update tooling-selection.md proptest gate from aspirational to actual (v1.4). No VP-to-Module count changes."
@@ -69,8 +70,8 @@ changelog:
 
 ## Per-Module Coverage Status
 
-> This table covers 83 architecture entries (77 tiered/crate-level from prior bursts + 6 definitions-only/exempt additions from FIX-BURST-277: core::documents, memory::skills, core::guardrail, core::action_risk, core::context_mutation, core::write_guard — all Tier=—).
-> Tiered groupings: CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77 tiered. Definitions-only/exempt: 6 (Tier=—; no kill rate obligation).
+> This table covers 84 architecture entries (78 tiered/crate-level from prior bursts + FIX-BURST-278 core::tool addition + 6 definitions-only/exempt additions from FIX-BURST-277: core::documents, memory::skills, core::guardrail, core::action_risk, core::context_mutation, core::write_guard — all Tier=—).
+> Tiered groupings: CRITICAL 12 / HIGH 29 / MEDIUM 35 / LOW 2 = 78 tiered. Definitions-only/exempt: 6 (Tier=—; no kill rate obligation).
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
@@ -119,6 +120,7 @@ changelog:
 | vectorstores::mmr | ferrochain-vectorstores | — | — | — | yes | D21/SS-21; MMR selection algorithm; calls vectorstores::similarity::cosine_similarity |
 | core::embeddings | ferrochain-core | — | VP-008 | — | yes | D21/SS-22; dimensionality contract; proptest P1 (BC-2.22.001) |
 | core::budget | ferrochain-core | VP-012 | — | — | yes | D23/SS-10; OnWatermark arithmetic; Kani P1 (BC-2.10.005) |
+| core::tool | ferrochain-core | — | — | — | yes | SS-08; Tool/DynTool trait seam; Arc<dyn DynTool> composition; BC-2.08.010; ToolOutput::Error→Err(FerrochainError) per DI-014 |
 | tools::shell | ferrochain-tools | VP-013 | — | — | yes | D23/SS-23; BashTool risk floor; Kani P1 (BC-2.23.005) |
 | tools::config | ferrochain-tools | — | — | — | yes | D23/SS-23; ToolConfig risk-floor validator; pure construction-time validation (ADR-020 Decision 3 / BC-2.23.005) |
 | core::retriever | ferrochain-core | — | — | — | yes | D21/SS-20; `rag_ingress` async guardrail routing gate; DI-012 RAGRetrieval boundary enforcement (ADR-014 Decision 6) |
@@ -163,11 +165,11 @@ changelog:
 | Tier | Modules | Kani VPs | proptest (actual current) | fuzz | Kill Rate Target |
 |------|---------|---------|---------|------|-----------------|
 | CRITICAL | 12 | 6 (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) | 3 of 12: graph::bsp_engine, checkpoint::session_index, checkpoint::clock | subset | ≥ 95% |
-| HIGH | 28 | 3 (VP-006, VP-012, VP-013) | 7 of 28: core::runnable, core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels, graph::budget | subset | ≥ 90% |
+| HIGH | 29 | 3 (VP-006, VP-012, VP-013) | 7 of 29: core::runnable, core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels, graph::budget | subset | ≥ 90% |
 | MEDIUM | 35 | 0 | some | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | n/a (xtask and ferrochain-community excluded from cargo-mutants per tooling-selection.md; advisory only) |
 
-> **Coverage gap — stated obligation:** Actual proptest coverage is 3 of 12 CRITICAL and 7 of 28 HIGH (derivation: counted proptest column = yes/VP-NNN from per-module table above, grouped by tier). Modules with Kani VPs have formal verification coverage at the proof level, which is stronger than proptest. Modules with only integration tests and no Kani VP are proptest coverage gaps. **Coverage obligation:** expand proptest to all 12 CRITICAL and 28 HIGH modules is a Phase 5/6 obligation; the gate in tooling-selection.md reflects current 10-module coverage (3 CRITICAL + 7 HIGH) with the obligation stated explicitly.
+> **Coverage gap — stated obligation:** Actual proptest coverage is 3 of 12 CRITICAL and 7 of 28 HIGH (derivation: counted proptest column = yes/VP-NNN from per-module table above, grouped by tier). Modules with Kani VPs have formal verification coverage at the proof level, which is stronger than proptest. Modules with only integration tests and no Kani VP are proptest coverage gaps. **Coverage obligation:** expand proptest to all 12 CRITICAL and 29 HIGH modules is a Phase 5/6 obligation; the gate in tooling-selection.md reflects current 10-module coverage (3 CRITICAL + 7 HIGH) with the obligation stated explicitly.
 
 ## Mutation Kill Rate Gates (cargo-mutants)
 

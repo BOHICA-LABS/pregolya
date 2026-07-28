@@ -1798,3 +1798,25 @@ VP-002/003/004/005/007/008 bodies: frontmatter + harness-name + red_gate axis on
 
 ### ARCHIVE METADATA
 Date: 2026-07-28 | Archived at: STATE.md v4.33 session wrap D-53 | STATE.md: v4.32 → v4.33 | P1D-175 FULL-PERIMETER recorded (189 findings; 10 CRIT; 7 slices; frozen HEAD 2d36282; NOT convergence evidence) | D-48..D-53 added | 8 lessons L-100..L-107 minted | publish-all.sh regenerated to 21-crate roster | 12 stub crates created | streak 0/3
+
+---
+
+## Checkpoint v4.33 (archived — replaced by v4.34)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1 (Spec Crystallization), greenfield+semport. Streak **0/3 after 176 passes**; P1D-175 FULL-PERIMETER recorded — 189 findings (10 CRIT / ~69 HIGH / ~76 MED); 7 slices A/B1/B2/C1/C2/D1/D2; frozen HEAD 2d36282. **NOT convergence evidence** — debt-first perimeter (6 coverage debts discharged; different perimeter from P1D-174). Key CRITs: D-48 `as_retriever` receiver OVERTURNED to `self: Arc<Self>` (dyn-compat; D-45 &Arc<Self> destroyed `Arc<dyn VectorStore>`); D-51 `test-vectors.md` FALSE CLOSURE in our own records (needs 675 applied to body). **NEXT ACTION: fix-burst 278 Wave A** — architect sweeps as_retriever (D-48).
+
+### HEADS (v4.33)
+develop `46725ad` — clean, `== origin/develop`, PUSHED. factory-artifacts — pushed (v4.33 commit). No worktrees. No open PRs.
+
+### NEXT-ACTION WAS
+Dispatch `vsdd-factory:architect` for fix-burst 278 Wave A: sweep `as_retriever` receiver to `self: Arc<Self>` across ADR-014, interface-definitions §VectorStore, api-surface, BC-2.20.003 (×5), BC-2.21.001 (×3), VP-2.20.003-A compile-test spec (11+ sites). Construct sweep-boundary manifest first per L-103. STATUS: COMPLETE.
+
+### ORCHESTRATOR SELF-ATTRIBUTED DEFECTS (recorded plainly)
+(1) Endorsed `&Arc<Self>` as "the better call" without compile-testing dyn-compatibility — propagated to 4 documents, 11+ sites, and a Red Gate compile test. (2) Dispatch brief carried unsupported test-vector census `675=664+11` as corpus-attested — corpus says 674/663 everywhere. (3) Instructed slice B1 to corroborate against `L2-INDEX.md` (no SS-NN tokens; registry is in `ARCH-INDEX.md`). (4) `product-brief.md` mis-filed under `prd-supplements/` in dispatch, skipped two further passes. (5) D-42 rationale cited "Arc preserves Clone for broadcast channels" — not in corpus; real rationale is `#[derive(Clone)]` compilability and `to_problem()`/`retry_hint` dependence. (6) D221 CONFIRMED: BC-2.20.001, BC-2.20.002, BC-2.21.002, BC-2.22.001 modified in 2d36282 with no version bump, no changelog, no BC-INDEX entry — open finding for fix cascade.
+
+### COVERAGE DEBTS (carried from v4.33 — unchanged by fix-burst 278)
+BC-2.18.004: targeted grep only (not read); 36 of 37 standing gates: count/continuity only; 105 hyphenated-module occurrences + 131 version pins: counted per-file not triaged live-body vs changelog; 129 TV Count cells: never hand-summed; ADR-010 canon-note site: unopened; per-VP frontmatter: `module:` only — `tool`/`priority`/`bc_anchor`/`crate` unverified.
+
+### ARCHIVE METADATA
+Date: 2026-07-28 | Archived at: STATE.md v4.34 session wrap D-60 | STATE.md: v4.33 → v4.34 | fix-burst 278 COMPLETE (~30/189 P1D-175 findings closed) | D-54..D-60 added | 8 lessons L-108..L-115 minted | streak 0/3
