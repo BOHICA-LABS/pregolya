@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "2.8"
+version: "2.9"
 status: active
 producer: product-owner
 timestamp: 2026-07-27T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "3719755"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "2.9 (D-51-census/2026-07-28): BC-2.21.003 TV count 5→6 (+TV-006 overflow-norm guard; EC-006 overflow complement per BC-2.21.003 §Canonical Test Vectors v1.7 add). Grand total 674→675 (663→664 canonical + 11 GTV). Gate #28 resolved: v2.8 body ## Changelog row backfilled."
   - "2.8 (fix-burst-276/F-P173-505/2026-07-27): D-28 banner added to body ## Changelog section, declaring Form A (frontmatter changelog:) authoritative; body table preserved as historical record."
   - "2.7 (F-P152-01/F-P152-03/burst-253/2026-07-24): BC-2.10.005 TV count 5→6 (+TV-006 v1.2 add). BC-2.07.002 GTV count 9→11 (+GTV-010/011 grapheme-cluster discriminators, Python-verified). Group 4 added to §GTV. Grand total 671→674 (663 canonical + 11 GTV)."
   - "2.6 (F-P148-03/F-P148-05/burst-249/2026-07-24): Red Gate Vector Summary — de-pin ADR anchor labels: BC-2.18.004 'ADR-015 Security Invariant 1' → 'ADR-015 Decision 3 §Security Invariant 1'; BC-2.18.005 'ADR-015 Security Invariant 2' → 'ADR-015 Decision 2 §Security Invariant 2'; BC-2.19.005 'ADR-016 Security Invariant' → 'ADR-016 Decision 3 §Security Invariant'; BC-2.21.003 'ADR-014 v1.1 Hardening' → 'ADR-014 Decision 2 §Hardening note' (TD-VSDD-060 sibling sweep). Usage Notes §2: splitter version updated langchain-text-splitters==0.3.8 → langchain-text-splitters==1.1.2 (in-tree at langchain==1.3.13 SHA 42f8f79). Body changelog synced: backfill v2.5 row (was frontmatter-only)."
@@ -162,7 +163,7 @@ changelog:
 | BC-2.20.003 | SS-20 | 5 | — | `TV-NNN` | | VectorStoreRetriever; SearchType; k/fetch_k/lambda_mult config; as_retriever() |
 | BC-2.21.001 | SS-21 | 5 | — | `TV-NNN` | | VectorStore trait; VectorStoreFactory; Arc<dyn VectorStore> dyn-safety |
 | BC-2.21.002 | SS-21 | 6 | — | `TV-NNN` | (v1.1 adds TV-006) | InMemoryVectorStore; Arc<dyn Embeddings> DI; cosine similarity; write-time zero-norm guard E-VS-004 |
-| BC-2.21.003 | SS-21 | 5 | — | `TV-NNN` | **RG** | Zero-norm guard — cosine denominator → E-VS-001 before division (VP-009) |
+| BC-2.21.003 | SS-21 | 6 | — | `TV-NNN` | **RG** | Zero-norm guard — cosine denominator → E-VS-001 before division (VP-009); (v1.7 adds TV-006 overflow-norm guard) |
 | BC-2.21.004 | SS-21 | 5 | — | `TV-NNN` | | MetadataFilter Eq/Ne/In; similarity_search_with_filter; #[non_exhaustive] |
 | BC-2.22.001 | SS-22 | 5 | — | `TV-NNN` | | Embeddings trait; embed_documents batch; dimensionality contract → E-EMBED-001 (VP-008) |
 | BC-2.22.002 | SS-22 | 5 | — | `TV-NNN` | **RG** | EmbeddingsOpenAI; OpenAiApiKey redacted-Debug credential opacity (DI-010) |
@@ -174,7 +175,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (129 authored BCs):** 663 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **674 total vectors** across 129 BC files.
+**Total vectors (129 authored BCs):** 664 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **675 total vectors** across 129 BC files.
 
 > **GTV convention:** The TV Count column counts standard canonical vectors; the GTV Count column counts golden test vectors (Red Gate acceptance data reproduced in §GTV). Grand totals are expressed as `<TV Count> + <GTV Count> = <total>` to prevent ambiguity.
 
@@ -323,6 +324,8 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.9 | 2026-07-28 | D-51-census: BC-2.21.003 TV count 5→6 (+TV-006 overflow-norm guard; EC-006 overflow case; BC-2.21.003 §Canonical Test Vectors v1.7 add). Grand total 674→675 (663→664 canonical + 11 GTV). Gate #28 resolved: v2.8 body table row backfilled. | D-51 |
+| 2.8 | 2026-07-27 | fix-burst-276/F-P173-505: D-28 banner added to body ## Changelog section, declaring Form A (frontmatter changelog:) authoritative; body table preserved as historical record. | fix-burst-276/F-P173-505 |
 | 2.7 | 2026-07-24 | F-P152-01/F-P152-03/burst-253: (1) F-P152-01: BC-2.10.005 TV count 5→6 (+TV-006 OnWatermark fraction=1.0 boundary, burst-252 add; v1.2 annotation). (2) F-P152-03: BC-2.07.002 GTV count 9→11 (+GTV-010 NFD combining discriminator, +GTV-011 ZWJ emoji discriminator; both Python-verified against pinned corpus). Group 4 added to §Golden Test Vectors. Grand total 671→674 (663 canonical + 11 GTV). | F-P152-01/F-P152-03 |
 | 2.6 | 2026-07-24 | F-P148-03/F-P148-05/burst-249: Red Gate Vector Summary — de-pin ADR anchor labels: BC-2.18.004 'ADR-015 Security Invariant 1' → 'ADR-015 Decision 3 §Security Invariant 1'; BC-2.18.005 'ADR-015 Security Invariant 2' → 'ADR-015 Decision 2 §Security Invariant 2'; BC-2.19.005 'ADR-016 Security Invariant' → 'ADR-016 Decision 3 §Security Invariant'; BC-2.21.003 'ADR-014 v1.1 Hardening' → 'ADR-014 Decision 2 §Hardening note' (TD-VSDD-060 sibling sweep). Usage Notes §2 GTV discipline: splitter version langchain-text-splitters==0.3.8 → langchain-text-splitters==1.1.2 (in-tree at langchain==1.3.13 SHA 42f8f79). | F-P148-03 |
 | 2.5 | 2026-07-23 | F-P142-03/burst-242: BC-2.06.005 Notes column — 'payload on Command::Resume' → 'payload on Command(resume=…)' per BC-2.05.004 struct kwarg authority. (Backfill: this row was recorded in frontmatter changelog only; body table now synced.) | F-P142-03 |

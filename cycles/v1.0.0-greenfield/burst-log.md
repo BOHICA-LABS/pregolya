@@ -5853,3 +5853,33 @@ One row archived from STATE.md v4.35 Current Phase Steps table.
 One row archived from STATE.md v4.37 Current Phase Steps table.
 
 **Row (Session wrap D-53 — P1D-175 FULL-PERIMETER recorded):** Session wrap D-53 — P1D-175 FULL-PERIMETER recorded (189 findings; 10 CRIT; 7 slices; frozen HEAD 2d36282; NOT convergence evidence — debt-first perimeter); publish-all.sh regenerated to 21-crate roster with 3-way classification; 12 stub crates created; D-48..D-53 added; L-100..L-107 minted; prior checkpoint archived; factory-artifacts pushed. NEXT: fix-burst 280.
+
+---
+
+### Archived from Current Phase Steps (burst-281 Wave A-corr — D-81)
+
+One row archived from STATE.md v4.38 Current Phase Steps table.
+
+**Row (Session wrap D-60 — fix-burst 278 COMPLETE):** Session wrap D-60 — fix-burst 278 COMPLETE (~30/189 P1D-175 findings closed); verify-signature-canon.sh + spec_region_utils.py + records-lint L9b version-pin class minted; signature-canon-allowlist.txt created; pre-commit-validators.sh extended with verify-signature-canon blocking; D-54..D-59 recorded; L-100..L-107 minted; v4.33 checkpoint archived; factory-artifacts pushed; develop unchanged at `46725ad`; streak stays 0/3.
+
+### Burst-281 Wave A-corr Narrative
+
+**Burst:** 281 Wave A-corr | **Date:** 2026-07-29 | **Agent:** architect (1 rejection cycle) + product-owner (test-vectors) + devops-engineer (D-35 partial sweep)
+
+**Work completed:**
+
+- `specs/architecture/decisions/ADR-010-error-taxonomy-anyhow-confinement.md` §Mechanical Discriminator fully rewritten (4 defects fixed): (1) multiline span blindspot resolved via `rg -U`/`spec_region_utils.py` region-detection; (2) canon self-flagging resolved via `<!-- discriminator:illustration-start/end -->` exclusion markers + `illustration_exempt_lines` in shared module; (3) declaration/impl forms not excluded — explicit exclusions encoded in canon; (4) NEW `grep -v` false-negative class on `BC-2.11.003` — named in changelog. §Classification Procedure count updated to 170.
+- `hooks/spec_region_utils.py` `illustration_exempt_lines` added/fixed: frontmatter skip, same-line start+end marker case (both defects in prior version).
+- 4 `<!-- discriminator:illustration-start/end -->` marker pairs added in ADR-010 body so the canon self-reports ZERO violations.
+- `specs/prd-supplements/test-vectors.md` §grand-total: `BC-2.21.003` TV Count 5→6; grand total 674→675; gate #28 resolved by backfilling missing §grand-total body-table row.
+- `specs/module-criticality.md`, `specs/architecture/tooling-selection.md`, `specs/architecture/module-decomposition.md`, `specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md`, `comparative/COMPARATIVE-ASSESSMENT.md`, `comparative/assessment-parts/part-3-conflicts-negative-evidence.md` — D-35 xtask rename sweep (12 sites closed, canonical form `check-<subject>`).
+
+**Rejection cycle (TD-VSDD-059):** Architect first submission claimed 4 passing self-tests while Defect 1 (multiline blindspot) was unfixed (5 of 48 spans detected, not 43) and Defect 2 (canon self-flagging) was partial. Orchestrator-verified discrepancy: specialist self-disclosure is NOT authoritative (TD-VSDD-059). One rejection cycle before acceptance.
+
+**Validator suite (orchestrator-verified, all at baseline, no regression):**
+verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signature-canon PASS=5 FAIL=0; verify-form-a-changelog-direction PASS=198 WARN=7 FAIL=0 BC_UNVERIFIED=0; verify-arch-anchor-resolution PASS=129 FAIL=0; verify-enum-variant-casing PASS=198 FAIL=0; verify-module-canonicality PASS=8 FAIL=0; verify-changelog-date-monotonicity PASS=131 FAIL=0; verify-bc-frontmatter-schema PASS=129 FAIL=0.
+
+**Authoritative corpus census (orchestrator-verified):**
+217 total `FerrochainError {` occurrences = 170 violations + 33 exempt/excluded + 14 valid-complete. Multiline: 48 openers = 43 normative spans + 5 excluded-no-close. Same-line-closed: 169 = 123 no-elision + 45 forbidden three-dot + 1 genuine `..`. Effect A (multiline blindspot) = 0; Effect B (`grep -v` false negative, `BC-2.11.003`) = +1; 169 + 1 − 0 = 170. Supersedes BOTH 144 (discriminator with 4 defects) and 158 (unbounded field-bearing-literal pattern).
+
+**Self-attributed orchestrator defect:** Orchestrator instructed architect to write changelog entries "ascending order, newest last." Corpus convention (enforced by `verify-form-a-changelog-direction`) is descending (newest first). Architect correctly followed the file over the instruction. Codified as L-135.

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.40"
+version: "1.41"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -15,6 +15,7 @@ input-hash: "pending-FIX-BURST-275"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.41 (D-35-rename-sweep/2026-07-28): D-35 canonical xtask naming sweep — §xtask subcommands blockquote and list: `deny-client-new` → `check-client-timeout` (NE-04, 2 sites); `deny-expect-in-lib` → `check-no-panic` (NE-07, 2 sites); `lint-no-panic` removed from NE-07 blockquote example (was variant name, now `check-no-panic` canonical); blockquote resolution note updated from 'resolved at implementation time' to D-35 canonical-form declaration. §Provider Embeddings NE anchors: `deny-client-new` → `check-client-timeout` (1 site). Canonical `check-<subject>` form per D-35."
   - "1.40 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Update `core::embeddings` description to register `validate_embedding_batch` as a `pub` free function in the module's function surface. Function is the production dimensionality validation gate for all Embeddings impls; VP-008 proptest harnesses call it directly. Visibility `pub` — cross-crate callers: ferrochain-openai and ferrochain-ollama provider embeddings impls. Criticality unchanged (HIGH; VP-008 proptest P1 drives the tier independently of function count)."
   - "1.39 (FIX-BURST-278/F-P175-D102+D110+D111+D212/2026-07-28): Four findings closed. (1) F-P175-D102 — `vectorstores::retriever` row: the lifetime-parameterized VectorStoreRetriever wrapping `&dyn VectorStore` → `VectorStoreRetriever` owning `Arc<dyn VectorStore>` (no lifetime; `'static`; per ADR-014 D-48 fix). (2) F-P175-D110+D111 — Iron Law blockquote census: `71 total (69 tiered / 2 exempt) per module-criticality.md canonical registry` clarified to attribute 71 to this file's own universe (module-decomposition.md table rows); registry total is 83 (77 tiered + 6 definitions-only/exempt). Also fix `= 77 rows total` in module-criticality.md is `= 77 tiered rows` (propagated there separately). (3) F-P175-D212 — add missing `core::tool` row (Tool trait + DynTool + ToolInput + ToolOutput; HIGH; SS-08) to ferrochain-core section; module was present in api-surface.md but absent from module-decomposition.md."
   - "1.38 (FIX-BURST-277-WAVE-B/2026-07-28): Item 6 module census — add 4 definitions-only module rows (core::guardrail SS-11, core::action_risk SS-05, core::context_mutation SS-01, core::write_guard SS-15) to the D21 additions table with Criticality `—` (matching core::documents precedent; these modules contain type/trait definitions only, no execution logic, no VP targets per ADR-009 Option 3 precedent). Add §Crate-Level Roll-Up section with 7 crate-level entries (ferrochain-anthropic, ferrochain-community, ferrochain-macros, ferrochain-ollama, ferrochain-openai, ferrochain-standard-tests, xtask) so the module census validator can resolve 4-way set equality across purity-boundary-map, verification-coverage-matrix, and module-criticality."
@@ -292,13 +293,13 @@ Re-exported from ferrochain-core.
 > architecture/ ADRs and the NE Disposition Table (PRD §9) as sole enforcement mechanisms.
 > The authoritative registry for all CI lint gate contracts — including exact subcommand
 > names and their acceptance criteria — is the behavioral-contracts/ directory
-> (BC-2.14.003–006, BC-2.08.007) and individual ADRs. Naming variants across sources
-> (e.g. `deny-expect-in-lib` / `lint-no-panic` for the same NE-07 gate) are resolved at
-> implementation time against the governing BC or ADR, not this inventory.
+> (BC-2.14.003–006, BC-2.08.007) and individual ADRs. Subcommand names are canonical per
+> D-35 (`check-<subject>` form); pre-D-35 variants (`deny-client-new`, `lint-no-timeout`,
+> `deny-expect-in-lib`, `lint-no-panic`) are superseded and must not be used.
 
 - `check-file-size`: file line-count gate (D12); reads allowlist.toml
-- `deny-client-new`: CI lint gate; rejects `Client::new()` outside tests (NE-04)
-- `deny-expect-in-lib`: CI lint gate; rejects `.expect()` and `.unwrap()` in library code (NE-07)
+- `check-client-timeout`: CI lint gate; rejects `Client::new()` outside tests (NE-04)
+- `check-no-panic`: CI lint gate; rejects `.expect()` and `.unwrap()` in library code (NE-07)
 - `deny-anyhow-in-lib`: CI lint gate; scans library crate `src/` for `anyhow` imports; sole enforcement of NE-03 / DI-014 anyhow confinement — `anyhow` is banned from all `ferrochain-*` library crates (ADR-010)
 - `deny-description-cache-key`: CI lint gate; scans `cache_key` / `CacheKey` / `cache_key_for` call sites in `ferrochain-*` library crates for description-proxy usage; sole enforcement of NE-05 content-hash cache-key contract (ADR-011)
 
@@ -424,7 +425,7 @@ ferrochain-anthropic is EXCLUDED — Anthropic provides no public embeddings API
 
 > **NE anchors (both embedding modules):** DI-009 (mandatory timeout); DI-010 (OpenAI key is
 > `OpenAiApiKey` newtype with redacted Debug); DI-014 (batch failures return Err, not Vec::new()).
-> xtask `deny-client-new` CI gate enforces the reqwest timeout requirement at the workspace level.
+> xtask `check-client-timeout` CI gate enforces the reqwest timeout requirement at the workspace level.
 
 ## ferrochain-tools (SS-23) — HIGH (tools-shell) / MEDIUM (tools-fs, tools-search)
 

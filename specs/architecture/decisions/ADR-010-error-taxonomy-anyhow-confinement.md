@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.14"
+version: "1.15"
 changelog:
+  - "1.15 (FIX-BURST-281-WAVE-A-CORR/D-72/2026-07-29): Correct §Mechanical Discriminator — fix four verified defects in the v1.14 discriminator algorithm. (1) Defect 1 — Multiline span blindspot: the v1.14 grep checked for `..` on the SAME LINE as `FerrochainError {`, failing to detect spans where `..` is on a continuation line. Fix: discriminator now brace-counts the ENTIRE `{ ... }` span (up to 15-line lookahead) using spec_region_utils.py for region context; all classification checks (including the `..` test) operate on the full span, not just the opening line. Confirmed: 43 normative multiline spans in BC corpus, all correctly classified; raw rg count 48 includes 5 `FerrochainError {` pattern-mentions in changelog text that lack a matching `}` in scope (EXCLUDED_NO_CLOSE). (2) Defect 2 — Canon flags its own illustration regions: the discriminator previously flagged 10 lines inside ADR-010's FORBIDDEN-examples block and worked-examples table, making the canon self-flag and forcing a standing WARN on every CI run. Fix: (a) bash/sh fenced blocks that QUOTE the pattern are EXCLUDED_BASH; (b) pattern-name references (bare `FerrochainError {` immediately followed by `` ` ``) are EXCLUDED_PATTERN_REF; (c) doc-comment lines (`///`) inside rust fences are EXCLUDED_DOC_COMMENT; (d) intentional illustration regions marked with `<!-- discriminator:illustration-start -->` / `<!-- discriminator:illustration-end -->` HTML comment pairs are EXCLUDED_ILLUSTRATION per spec_region_utils.py `illustration_exempt_lines()`. Self-test B post-fix: ADR-010 reports ZERO violations. (3) Defect 3 — Declaration/impl forms not excluded: `pub struct FerrochainError {` and `impl FerrochainError {` are now EXCLUDED_DECL in Step 0. (4) Defect 4 (named) — grep-v false-negative class: old `grep -v '\\.\\.'` matched `..` ANYWHERE on the opening line, not just in the FerrochainError span, causing false exclusions when `..` appeared in adjacent fix-instruction text. New discriminator checks `..` in the EXTRACTED SPAN only. Delta decomposition (current corpus): old-style grep gives 169; new discriminator gives 170; delta +1 is entirely Defect 4 (1 BC site where `..` appeared on the opening line outside the span). Effect A (multiline span has `..`, old grep would over-count): 0 — no normative multiline span contains `..` in this corpus. Authoritative BC corpus count: 170 violations (133 Class 3 missing-`..`, 37 Class 3 three-dot ASCII) across 51 files; 14 CLASS3_VALID_COMPLETE; 33 EXEMPT/excluded. Wave B sweep (product-owner) proceeds from the authoritative count of 170."
   - "1.14 (FIX-BURST-281/D-72/2026-07-28): Extend error-construction notation canon — adjudicate all four notation classes and add §Error-Construction Notation Canon section. (1) Class 1 Construction Form: in ```rust fenced blocks, value-expression position, MUST use FerrochainError::new(...); struct literal without `..` is FORBIDDEN (already implicit in v1.13; now a named class with mechanical discriminator). (2) Class 2 Pattern Form: in ```rust blocks, match-arm / matches!() / let-destructuring position, MUST include `..` rest pattern (required by #[non_exhaustive] for external-crate patterns). (3) Class 3 Value-Observation Form: prose, table cells, non-rust fenced formal-statement blocks, doc-comment annotation text — MUST include `..` when any field is elided; `...` (three-dot English prose ellipsis) is FORBIDDEN as field-elision marker in these contexts; FerrochainError::new(...) is NOT used here (it implies construction, not observation). (4) Class 4 Defining-Crate Exception: BC-2.14.001 and BC-2.14.002 ONLY — struct-literal construction permitted inside ferrochain-core tests; annotation required per §Canon rule. Defining-crate exception (fix-burst-280-wave-C annotation) RATIFIED: #[non_exhaustive] does not restrict the defining crate; exception is strictly bounded to BC-2.14.001/002. Mechanical discriminator specified for devops-engineer validator. Architecture corpus swept: 19 Class 3 violations corrected (added `..` or replaced `...` with `..`) across ADR-015, ADR-017, verification-architecture, module-decomposition, interface-definitions, VP-003, VP-004, VP-006, VP-009, VP-010, VP-013. Residue: 5 out-of-scope domain-spec/prd sites (business-analyst/product-owner remediation in Wave B); BC corpus 158-site sweep handed to product-owner per §Classification Procedure."
   - "1.13 (FIX-BURST-277-WAVE-B/F-P174-303+F-P174-constructor/2026-07-27): F-P174-303 — adjudicate `context` field (referenced in ADR-014 Decision 5 write-time zero-norm sketch): REJECTED. No `context` field is added to `FerrochainError`. Structured diagnostics such as `document_index` MUST be interpolated into the `message` field using key=value format (e.g., `format!(\"embedding vector has zero L2 norm at write time; document_index={}\", i)`). Rationale: adding `context: Option<serde_json::Map<String, serde_json::Value>>` would pull `serde_json` into the hot path of every `FerrochainError` construction site and bloat the struct; the `message: String` field already carries structured diagnostics in the VSDD corpus via key=value interpolation. ADR-014 Decision 5 pseudocode must be corrected in ADR-014 v1.11 to use `message` interpolation instead of a phantom `context:` field. F-P174-constructor — add `impl FerrochainError` with `pub fn new(component, category, retry_hint, code, message: impl Into<String>) -> Self` primary constructor (all six fields; `source: None` by default) and `pub fn with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self` builder (consumes self, returns updated instance). These are the sole sanctioned construction paths; direct struct-literal construction from external crates is barred by `#[non_exhaustive]` (ADR-010 v1.12/v1.12+F-P173-619). All spec pseudocode blocks in ADR-010/014/005 that showed struct literals must use `FerrochainError::new(...)` + optional `.with_source(...)` going forward."
   - "1.12 (FIX-BURST-276/F-P173-211+F-P173-619/2026-07-27): F-P173-211 — fix FerrochainError compilability: change `source` field from `Option<Box<dyn std::error::Error + Send + Sync>>` to `Option<Arc<dyn std::error::Error + Send + Sync>>`. Adjudication: option (a) selected over (b) drop-Clone and (c) clone-drops-source. `Arc<dyn Trait>` implements `Clone` (reference-count increment, independent of whether T: Clone), preserving both the derive and the error chain. Option (b) propagates `Arc<FerrochainError>` wrappers to every sharing site, invasively changing call-site API. Option (c) silently drops `source` on clone, violating the production-grade no-silent-failure rule (CLAUDE.md: no silent empty returns where partial-failure should propagate); `retry_hint` and `to_problem()` (BC-2.14.002 RFC-7807 emission) both depend on Clone without losing the causal chain; option (c) breaks both. Propagated to api-surface.md §Error Type (F-P173-202). BC-2.14.001 propagation form (product-owner-owned): `source: Option<Arc<dyn std::error::Error + Send + Sync>>,` with comment `// Causal error chain; MUST NOT be exposed in HTTP responses`. F-P173-619 — add `#[non_exhaustive]` to FerrochainError struct. CLAUDE.md Code Conventions requires `#[non_exhaustive]` on all public API surface types; sibling D21/D23 types all carry it; `FerrochainError` was the sole public error type without it."
@@ -106,7 +107,10 @@ A field-and-type listing showing the struct's shape: `FerrochainError { componen
 
 **Where:** Inside a ` ```rust ` fenced code block, in a VALUE EXPRESSION position — after `return Err(`, used as a function return, after `let x =`, or any position where the code is meant to PRODUCE a FerrochainError value.
 
-**Rule:** MUST use `FerrochainError::new(component, category, retry_hint, code, message)` + optional `.with_source(arc)`. Struct literal `FerrochainError { field: val, … }` without `..` in a value-expression position is FORBIDDEN.
+**Rule:** MUST use `FerrochainError::new(component, category, retry_hint, code, message)` + optional `.with_source(arc)`.
+<!-- discriminator:illustration-start -->
+Struct literal `FerrochainError { field: val, … }` without `..` in a value-expression position is FORBIDDEN.
+<!-- discriminator:illustration-end -->
 
 **Rationale:** This is compilable code targeting external crates. `#[non_exhaustive]` bars struct-literal construction (E0639) outside `ferrochain-core`. Spec must match production requirements.
 
@@ -143,10 +147,12 @@ matches!(result, Err(FerrochainError { code: "E-TMPL-001", category: Category::S
 | Full-field (no `..` needed) | `Err(FerrochainError { component: MCP, category: TOOL, retry_hint: Never, code: "E-MCP-001", message: "…" })` | all 5 fields |
 | Formal statement block | `cosine(a, b) == Err(FerrochainError { code: "E-VS-001", .. })` | inside non-rust fence |
 
+<!-- discriminator:illustration-start -->
 **FORBIDDEN examples:**
 - `Err(FerrochainError { code: "E-X" })` — missing `..` (partial fields)
 - `Err(FerrochainError { code: "E-X", ... })` — `...` three-dot form
 - `Err(FerrochainError { category: INTERNAL, code: E-CORE-006, message: "…" })` — no `..`, partial fields
+<!-- discriminator:illustration-end -->
 
 ### Class 4 — Defining-Crate Exception (RATIFIED, D-72)
 
@@ -160,59 +166,112 @@ matches!(result, Err(FerrochainError { code: "E-TMPL-001", category: Category::S
 
 ### Mechanical Discriminator
 
-A validator script can classify any `FerrochainError {` occurrence:
+The discriminator classifies every `FerrochainError {` occurrence in a VSDD artifact file.
+Uses `spec_region_utils.py` `changelog_exempt_lines()` and `illustration_exempt_lines()` for region-exempt logic.
+
+**Step 0 — Pre-filter: excluded forms (skip all further classification)**
+
+| Excluded Form | Tag | Reason |
+|---------------|-----|--------|
+| Lines in YAML frontmatter or `## Changelog` body sections | `EXEMPT` | Historical record per `spec_region_utils.py` `changelog_exempt_lines()` |
+| Lines inside `<!-- discriminator:illustration-start -->` … `<!-- discriminator:illustration-end -->` regions | `EXCLUDED_ILLUSTRATION` | Intentional FORBIDDEN-form examples in canon documents; documentation illustrations, not normative assertions. Detected via `spec_region_utils.py` `illustration_exempt_lines()` (Defect 2 complete fix) |
+| `pub struct FerrochainError {` | `EXCLUDED_DECL` | Struct declaration — defining form, not a value expression (Defect 3 fix) |
+| `impl FerrochainError {` | `EXCLUDED_DECL` | Impl block opening — not a value expression (Defect 3 fix) |
+| `FerrochainError { component: Component,` | `CLASS0_EXEMPT` | Type Schema Form — field-type listing, not a value expression |
+| Lines inside a ` ```bash ` or ` ```sh ` fence | `EXCLUDED_BASH` | Bash/sh fences quote the pattern (grep command examples); they do not assert it (Defect 2 fix) |
+| `FerrochainError {` immediately followed by `` ` `` (no closing `}` in scope) | `EXCLUDED_PATTERN_REF` | Pattern-name reference — names the occurrence pattern with no value (Defect 2 fix) |
+| Lines starting with `///` inside a ` ```rust ` fence | `EXCLUDED_DOC_COMMENT` | Doc comment lines are documentation text, not normative Rust code |
+
+**Step 1 — Identify fence context**
+
+At the line of the `FerrochainError {` occurrence (after Step 0 filtering):
+- Inside a ` ```rust ` fence? → `rust_fence = true`
+- Inside a non-rust, non-bash fence? → `formal_stmt = true`
+- Otherwise (prose, table cell, inline backtick, doc comment outside fence): `prose = true`
+
+**Step 1b — Determine the occurrence span (Defect 1 fix: multiline-aware)**
+
+The occurrence span begins at `FerrochainError {` and ends at the matching `}`, found by
+brace-counting. The span may span multiple lines. All subsequent checks operate on the FULL
+span text, not just the first line. Implementation: use `spec_region_utils.py`
+`changelog_exempt_lines()` and `illustration_exempt_lines()` for region context; count `{`
+and `}` characters (up to 15-line lookahead) to determine the end of the span.
+
+**Step 2 — Classify and gate**
 
 ```
-Step 1: Identify context
-  - Inside a ```rust fence? → rust_fence = true
-  - Inside a non-rust fence (``` without 'rust')? → formal_stmt = true
-  - Otherwise (prose, table cell, inline backtick, doc comment outside fence): prose = true
-
-Step 2: Classify and gate
-  IF rust_fence AND occurrence has `..`:
+IF rust_fence:
+  IF occurrence span contains `..` (two-dot rest pattern, not part of `...`):
     → Class 2 VALID
-  IF rust_fence AND no `..` AND file is BC-2.14.001 or BC-2.14.002:
-    → Class 4 VALID (verify annotation present)
-  IF rust_fence AND no `..` AND file is NOT BC-2.14.001/002:
+  IF span does NOT contain `..` AND file is BC-2.14.001 or BC-2.14.002:
+    → Class 4 VALID (verify // defining-crate annotation present)
+  IF span does NOT contain `..` AND file is NOT BC-2.14.001/002:
     → Class 1 VIOLATION: must use FerrochainError::new(...)
-  IF formal_stmt OR prose:
-    IF has `..` → Class 3 VALID
-    IF has `...` (three dots) → Class 3 VIOLATION: replace `...` with `..`
-    IF no `..` AND partial fields → Class 3 VIOLATION: add `..`
-    IF no `..` AND all 5 non-source fields present → Class 3 VALID (complete observation)
+
+IF formal_stmt OR prose:
+  IF span contains `..` (two-dot rest pattern, not part of `...`):
+    → Class 3 VALID
+  IF span contains `...` (three ASCII dots, no `..` present):
+    → Class 3 VIOLATION: replace `...` with `..`
+  IF span contains neither `..` nor `...` AND partial fields (not all 5: component, category,
+    retry_hint, code, message):
+    → Class 3 VIOLATION: add `..`
+  IF span contains neither `..` nor `...` AND all 5 non-source fields present:
+    → Class 3 VALID (complete observation)
 ```
 
-**Primary grep for Class 3 violations (prose/non-rust-fence, missing `..`):**
+**Quick sweep commands (reference only — full discriminator requires span-based check):**
+
+For a fast scan of Class 3 missing-`..` violations (excludes declaration/impl/bash forms):
 ```bash
-grep -n 'FerrochainError {' <file> | grep -v '\.\.' | grep -v 'component: Component'
-# | grep -v 'component: Component' excludes Type Schema Form (Class 0)
+rg -n 'FerrochainError \{' <file> \
+  | grep -v 'pub struct FerrochainError' \
+  | grep -v 'impl FerrochainError' \
+  | grep -v 'component: Component'
+# Then apply Step 1b span check: inspect each result's full span for `..`
+# (single-line results without `..` are violations; multiline spans require manual inspection)
 ```
 
-**Primary grep for Class 3 violations (three-dot form):**
+For three-dot violations (full-file scan):
 ```bash
-grep -n 'FerrochainError {' <file> | grep '\.\.\.'
+rg -U --multiline -n 'FerrochainError \{[^}]*\.\.\.[^}]*\}' <file>
 ```
+
+For the authoritative corpus-wide count use the Python discriminator that imports
+`spec_region_utils.py` and performs proper span extraction (see FIX-BURST-281-WAVE-A-CORR
+discriminator script). The quick-sweep grep is not authoritative because `..` may appear
+elsewhere on a violation's line (in fix-instruction text like "add `..`"), causing false
+exclusions.
 
 ### Classification Procedure for Product-Owner BC Sweep (Wave B)
 
-For each of the 158 `FerrochainError {` sites across 53 BC files:
+**Authoritative count (FIX-BURST-281-WAVE-A-CORR, multiline-aware discriminator):** 170 violations
+across 51 of 60 BC files — 133 Class 3 missing-`..` and 37 Class 3 three-dot ASCII.
+The prior counts (158 and 144) both undercounted due to false negatives in the same-line
+grep discriminator.
+
+For each of the 170 `FerrochainError {` violation sites across 51 BC files:
 
 1. **Determine context** (prose / formal-statement block / rust fence / defining-crate).
 2. **Apply Step 2 rules above.**
 3. **For Class 3 violations** (the expected majority): add `..` before the closing `}`.
+<!-- discriminator:illustration-start -->
    - `FerrochainError { code: "E-X" }` → `FerrochainError { code: "E-X", .. }`
    - `FerrochainError { component: MCP, category: TOOL, code: "E-X", message: "…" }` → add `, ..` before `}`
    - `FerrochainError { code: "E-X", ... }` → `FerrochainError { code: "E-X", .. }`
+<!-- discriminator:illustration-end -->
 4. **For Class 1 violations** in rust fences (construction without `..`): convert to `FerrochainError::new(...)`.
 5. **For Class 4 sites** (BC-2.14.001/002, already annotated by fix-burst-280): no change required.
 
 **Worked examples from the corpus:**
 
+<!-- discriminator:illustration-start -->
 | BC Site Pattern | Context | Classification | Fix |
 |----------------|---------|---------------|-----|
 | `Err(FerrochainError { component: MCP, category: TOOL, code: E-MCP-001, message: "..." })` | Prose bullet | Class 3 VIOLATION | Add `..`; fix `...` → `..` in message; quote code string |
 | `FerrochainError { code: "E-SBXD-001" }` | Table cell | Class 3 VIOLATION | Add `..` |
 | `Err(FerrochainError { code: "E-VS-001" })` | Source Contract bullet | Class 3 VIOLATION | Add `..` |
+<!-- discriminator:illustration-end -->
 | `matches!(result, Err(FerrochainError { code: "E-X", .. }))` | ```rust fence, matches! | Class 2 VALID | No change |
 | `Err(FerrochainError { code: "E-X", .. }) => {}` | ```rust fence, match arm | Class 2 VALID | No change |
 | `FerrochainError { component: …, category: …, retry_hint: …, code: "E-X", message: "…" }` | ```rust fence, construction | Class 1 VIOLATION | Use `::new(...)` |

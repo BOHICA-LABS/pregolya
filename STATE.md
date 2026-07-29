@@ -1,19 +1,19 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "4.38"
+version: "4.39"
 status: in-progress
 producer: state-manager
-timestamp: "2026-07-29T00:00:00Z"
+timestamp: "2026-07-29T06:00:00Z"
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "session-wrap burst-281-wave-A COMPLETE — ADR-010 §Error-Construction Notation Canon; 19 architecture-owned Class 3 sites fixed; Wave A-corr DEFERRED (3 discriminator defects; architect stalled 600s); D-75 allocated; prior checkpoint archived; factory-artifacts pushed. NEXT: Wave A-corr (architect, narrow scope)."
+current_step: "burst-281 Wave A-corr COMPLETE — ADR-010 §Mechanical Discriminator discriminator corrected (4 defects); spec_region_utils.py fixed; authoritative BC violation count = 170; D-51 CLOSED (test-vectors 675); D-35 PARTIAL (14 Wave-B residue sites); D-76..D-81 allocated; L-131..L-135 minted; Wave B UNBLOCKED. NEXT: Wave B (product-owner, 170 violations + 5 residue + 14 D-35 sites)."
 current_cycle: v1.0.0-greenfield
-convergence_status: "0/3 — P1D-175 FULL-PERIMETER NOT CLEAN; streak stays 0/3; 176 passes total; fix-burst 280 closed ~54/189 total (burst-279 ~40 + burst-280 14: 2C+11H+D-52+phantom retractions NF-280-B-01/B-02). A25 PARTIAL — VP-body complete; BC-body INCOMPLETE: 158 FerrochainError literals in 53 BC files, blocked on ADR-010 adjudication. Full metrics: cycles/v1.0.0-greenfield/convergence-trajectory.md."
+convergence_status: "0/3 — P1D-175 FULL-PERIMETER NOT CLEAN; streak stays 0/3; 176 passes total; burst-281 Wave A-corr COMPLETE: authoritative BC violation count = 170 (133 missing-.. + 37 three-dot); D-51 CLOSED (675 confirmed); D-35 PARTIAL (14 Wave-B residue). ~135 P1D-175 findings open. NEXT: Wave B. Full metrics: cycles/v1.0.0-greenfield/convergence-trajectory.md."
 pipeline: IN_PROGRESS
 dtu_required: true
 dtu_assessment: 2026-07-14
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (verbatim, 2026-07-13)
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. v4.38: session-wrap burst-281-wave-A; D-75 allocated; Wave A-corr deferred (3 discriminator defects); 0/3. Decision-row compression deferred (durability-over-tidiness; see RESIDUAL ITEMS). -->
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. v4.39: burst-281 Wave A-corr COMPLETE; D-76..D-81 allocated; authoritative count 170; D-51 CLOSED; Wave B UNBLOCKED; 0/3. Decision-row compression deferred (durability-over-tidiness; see RESIDUAL ITEMS). -->
 
 # Pipeline State: ferrochain
 
@@ -37,7 +37,7 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-28 — session-wrap burst-281-wave-A: ADR-010 §Error-Construction Notation Canon + 19 architecture-owned Class 3 sites fixed; Wave A-corr deferred (3 discriminator defects recorded; stalled 600s); D-75 allocated; prior checkpoint archived; factory-artifacts pushed. |
+| **Last Updated** | 2026-07-29 — burst-281 Wave A-corr: ADR-010 §Mechanical Discriminator discriminator corrected (4 defects); spec_region_utils.py fixed; authoritative BC count = 170; D-51 CLOSED (test-vectors §grand-total); D-35 PARTIAL (14-site Wave-B residue); D-76..D-81 allocated; L-131..L-135 minted; Wave B UNBLOCKED; prior checkpoint archived; factory-artifacts pushed. |
 
 ## Phase Progress
 
@@ -61,11 +61,11 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 <!-- Keep last 5 rows only. Archive older rows to cycles/v1.0.0-greenfield/burst-log.md. (Bursts 194–201 archived burst-206; burst-202 archived burst-207; burst-203 archived burst-208; burst-204 archived burst-209; burst-205 archived burst-210; burst-206 archived burst-211; burst-207 archived burst-212; burst-208 archived burst-213; burst-209 archived burst-214; burst-210 archived burst-215; burst-211 archived burst-216; burst-212 archived burst-217; burst-213 archived burst-218; burst-214 archived burst-219; burst-215 archived burst-220; burst-216 archived burst-222; burst-217 archived burst-223; burst-218 archived burst-224; burst-220 archived burst-225; burst-223 archived burst-227; burst-224 archived burst-229; burst-225 archived burst-230; burst-226 archived burst-231; burst-227 archived burst-232; burst-229 archived burst-233; burst-230 archived burst-234; burst-231 archived burst-236; burst-232 archived burst-237; burst-233 archived burst-238; burst-234 archived burst-239; burst-235 archived burst-240; burst-236 archived burst-241; burst-237 archived burst-242; burst-238 archived burst-243; burst-239 archived burst-244; burst-240 archived burst-246; burst-241 archived burst-247; burst-242 archived burst-248; burst-243 archived burst-249; burst-244/245 archived burst-250; burst-246 archived burst-251; burst-247 archived burst-252; burst-248 archived burst-253; burst-249 archived burst-254; burst-250 archived burst-255; burst-251 archived burst-256; burst-252 archived burst-257; burst-253 archived burst-258; burst-254 archived burst-259; burst-255 archived burst-260; burst-256 archived burst-261; burst-257 archived burst-262; burst-258 archived burst-263; burst-259 archived burst-264; burst-260 archived burst-265; burst-261 archived burst-266; burst-262 archived burst-267; burst-263 archived burst-268; burst-264 archived burst-269; burst-265 archived burst-270; burst-266 archived burst-271; burst-267 archived burst-272; burst-268 archived [P1D-171-record]; burst-269 archived burst-273; burst-271 archived burst-274; P1D-171-state-record archived burst-275; burst-273 archived [P1D-173-state-record]; P1D-172a-state-record archived burst-276-wave-A; burst-274 archived burst-276-content-1; P1D-172b-state-record archived burst-276-content-2; burst-275 archived burst-276-content-3; P1D-173-state-record archived P1D-174-record; burst-276-wave-A archived burst-277-wave-A; burst-277-wave-A/P1D-174-record/burst-276-content-3/burst-276-content-2/burst-276-content-1 archived burst-277-wrap; burst-277-wave-B archived burst-278-wrap; burst-278-wave-C archived burst-279; fix-burst-277-wave-D archived session-wrap-D-70.) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Session wrap D-75 — burst-281 Wave A committed (ADR-010 §Error-Construction Notation Canon; 19 architecture-owned Class 3 sites fixed across ADR-015/ADR-017/module-decomposition/verification-architecture/interface-definitions/VP-003/004/006/009/010/013); Wave A-corr DEFERRED (architect stalled 600s with no edits; 3 discriminator defects recorded; authoritative BC violation count unresolved 144 vs 158); D-75 allocated; prior checkpoint archived; factory-artifacts pushed. NEXT: Wave A-corr (architect, narrow scope). | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
+| Burst-281 Wave A-corr COMPLETE — ADR-010 §Mechanical Discriminator corrected (4 defects: multiline blindspot, canon self-flagging, declaration/impl exclusion, `grep -v` false-negative); `spec_region_utils.py` `illustration_exempt_lines` fixed; 4 exclusion marker pairs added; test-vectors §grand-total D-51 CLOSED; D-35 PARTIAL 14-site residue recorded (D-79); D-76..D-81 allocated; L-131..L-135 minted; Wave B UNBLOCKED; prior checkpoint archived; factory-artifacts pushed. NEXT: Wave B (product-owner). | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
+| Session wrap D-75 — burst-281 Wave A committed (ADR-010 §Error-Construction Notation Canon; 19 architecture-owned Class 3 sites fixed across ADR-015/ADR-017/module-decomposition/verification-architecture/interface-definitions/VP-003/004/006/009/010/013); Wave A-corr DEFERRED (architect stalled 600s with no edits; 3 discriminator defects recorded; authoritative BC violation count unresolved 144 vs 158); D-75 allocated; prior checkpoint archived; factory-artifacts pushed. NEXT: Wave A-corr. | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
 | fix-burst 280 COMPLETE — 2C+11H closed (C201/C202 product-brief/holdout; C203-C209 prd/architecture; A10/A17/A24/A26 VP harnesses); A25 PARTIAL (VP-body done, BC-body blocked on ADR-010 adjudication; 158 sites/53 files); D-71..D-74 recorded; L-123..L-130 minted; TDIV-008 blocking issue registered; R-009 risk registered; D-50 discharged; D-52 closed; prior checkpoint archived; factory-artifacts pushed. | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
 | Session wrap D-70 — RESUME SNAPSHOT written; STATE.md compacted (D-18..D-55 compressed; D-70 + L-122 recorded; oldest phase steps archived); factory-artifacts pushed. NEXT: fix-burst 280. | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
-| fix-burst 279 COMPLETE (Waves A+B: D-61..D-68 four security adjudications; SS-15 tenancy bridge; SkillStore scope binding; `PromptTemplate::format` unguarded INV-5 convention-enforced; `format_messages` extended to `HashMap<String, TemplateInput>` covering `MessageListVar`+`FewShotExamples`; `TrustLevel::severity()` ordinal; `E-MEMORY-004` recategorized SECURITY; `E-TMPL-004 MalformedTemplate` minted census 110→111; B221 corrected; ADR-012 §Tenancy-Bridge updated, ADR-015 §PromptSafety updated, interface-definitions §ContextSourceSpec updated, VP-006 §Harness extended, ARCH-INDEX updated; BC-2.15.004/006 bumped, BC-2.18.001/002/003/004 bumped, error-taxonomy bumped, BC-INDEX updated; D-61..D-69; L-116..L-121; prior checkpoint archived; factory-artifacts pushed; ~40/189 P1D-175 closed; NEXT: fix-burst 280). | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
-| Session wrap D-60 — fix-burst 278 COMPLETE (Waves A+B+C: D-48 as_retriever receiver corpus-wide 17 sweeps/18 files; D-43 DynTool E0038 annotations + migration count 2→3; E-MCP-007 minted census 109→110; BC-2.18/19/21 FerrochainError constructor form ×7 sites; CAP-027/028 D-44 rejection semantics + Arc<dyn VectorStore>; module census corrected 83→84; verify-signature-canon.sh + spec_region_utils.py + records-lint L9b minted; D-54..D-60 added; L-100..L-107 minted; prior checkpoint archived; factory-artifacts pushed; ~30/189 P1D-175 closed; NEXT: P1D-176 FULL-PERIMETER). | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
+| fix-burst 279 COMPLETE (Waves A+B: D-61..D-68 four security adjudications; SS-15 tenancy bridge; SkillStore scope binding; `PromptTemplate::format` unguarded INV-5 convention-enforced; `format_messages` extended to `HashMap<String, TemplateInput>`; `TrustLevel::severity()` ordinal; `E-MEMORY-004` recategorized SECURITY; `E-TMPL-004 MalformedTemplate` minted census 110→111; B221 corrected; prior checkpoint archived; factory-artifacts pushed; ~40/189 P1D-175 closed; NEXT: fix-burst 280). | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
 ## Decisions Log
 
 | ID | Decision | Rationale | Phase | Date | Made By |
@@ -128,7 +128,13 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 | D-72 | A25 BC-body sweep BLOCKED on ADR-010 canon extension. VP-body sweep is COMPLETE (zero remaining `FerrochainError` struct-literal construction sites across all 13 VP bodies). BC-body sweep is INCOMPLETE: 11 of 53 files swept; 158 field-bearing `FerrochainError { component:/category:/code: … }` literals remain across 53 BC files. Sweep is blocked on architect adjudicating ADR-010 to distinguish *construction-example* form (must use `::new()`) from *value-observation* prose (caller observes `Err(FerrochainError { … })`). ADR-010 governs spec pseudocode blocks but does not make this distinction; sweeping 53 files without the rule would produce inconsistency. Owner sequence: architect extends ADR-010 → product-owner sweeps corpus-wide (fix-burst 281). | Phase 1 | 2026-07-28 | orchestrator+architect |
 | D-73 | R-009 registered in canonical `risks.md` — no v1 migration path for Python LangGraph checkpoint stores (Low likelihood / Medium impact; traced to CAP-005, ASM-007, ADR-002 §Consequences). Bidirectional ASM-007 ↔ R-009 links added. ASM-007 `Impact if Wrong` re-derived Low→Medium because C207 removed its stated mitigation (phantom-existence claim corrected). Per C205 resolution: STATE.md R-N operational shorthand tracks canonical `risks.md` R-NNN; R-009 added to open risk register below. | Phase 1 | 2026-07-28 | architect |
 | D-74 | fix-burst 280 COMPLETE — D-71..D-73 recorded; L-123..L-130 minted; TDIV-008 blocking issue registered (engine-level deadlock in spec-steward artifact path registry; interim workaround `proposals/`); R-009 risk registered; A25 recorded as PARTIAL (VP-body complete; BC-body blocked on ADR-010 extension); D-50 DISCHARGED (records-lint reports L9 (D-50 extended) covering both date-boundary enforcement and doc-version-pin class); D-52 CLOSED (VP-008 input-hash re-pinned to real computed hash by architect); prior checkpoint archived to session-checkpoints.md; factory-artifacts pushed; develop unchanged at `46725ad`; streak stays 0/3. | ops | 2026-07-28 | state-manager |
-| D-75 | Session wrap 2026-07-28 — burst-281 Wave A committed (ADR-010 §Error-Construction Notation Canon: 5-class taxonomy resolving D-72; 19 architecture-owned Class 3 sites fixed across ADR-015/ADR-017/module-decomposition/verification-architecture/interface-definitions/VP-003/004/006/009/010/013); Wave A-corr DEFERRED (architect stalled 600s before any edits; 3 discriminator defects recorded: multi-line grep blindspot, canon flags itself, declaration/impl forms not excluded; authoritative BC violation count unresolved: 144 by discriminator vs 158 by field-bearing-literal pattern); 5 Wave-A residue sites for Wave B (domain-spec/bounded-contexts.md, domain-spec/edge-cases.md, domain-spec/entities-server.md, prd.md — product-owner / business-analyst owned); prior checkpoint archived to session-checkpoints.md; factory-artifacts pushed; develop unchanged at `46725ad`; streak stays 0/3. | ops | 2026-07-28 | state-manager |
+| D-75 | Session wrap 2026-07-28 — burst-281 Wave A committed (ADR-010 §Error-Construction Notation Canon: 5-class taxonomy resolving D-72; 19 architecture-owned Class 3 sites fixed across ADR-015/ADR-017/module-decomposition/verification-architecture/interface-definitions/VP-003/004/006/009/010/013); Wave A-corr DEFERRED (architect stalled 600s before any edits; 3 discriminator defects recorded: multi-line grep blindspot, canon flags itself, declaration/impl forms not excluded; authoritative BC violation count unresolved: 144 by discriminator vs 158 by field-bearing-literal pattern); 5 Wave-A residue sites for Wave B; prior checkpoint archived to session-checkpoints.md; factory-artifacts pushed; develop unchanged at `46725ad`; streak stays 0/3. | ops | 2026-07-28 | state-manager |
+| D-76 | Authoritative BC error-notation violation count = **170** (133 missing-`..` + 37 three-dot), class-decomposed, superseding BOTH prior figures 144 and 158. Corpus census: 217 total `FerrochainError {` occurrences = 170 violations + 33 exempt/excluded + 14 valid-complete. Same-line-closed: 169 = 123 no-elision + 45 forbidden three-dot + 1 genuine `..`. Multiline openers: 48 = 43 normative spans + 5 excluded-no-close. Delta decomposition: Effect A (multiline blindspot) = 0; Effect B (`grep -v` false negative on `BC-2.11.003`) = +1; 169 + 1 − 0 = 170. Prior count 144 came from a discriminator with 4 defects; prior count 158 came from an unbounded field-bearing-literal pattern — neither is correct. | Phase 1 | 2026-07-29 | orchestrator |
+| D-77 | Corpus-adoption reframing: only 1 of 217 occurrences uses the correct `..` rest-pattern; 45 use forbidden `...`; 123 have no marker. The error-notation convention was never adopted corpus-wide — it was authored into ADR-010 as a canonical standard but not applied to the BC corpus at time of BC authoring. Wave B is therefore a first-time convention application, not a drift repair. Scope and review posture should reflect a baseline authoring event: 170 new applications, not 170 corrections. | Phase 1 | 2026-07-29 | orchestrator |
+| D-78 | `policies.yaml` root-cause merge. `.factory/policies.yaml` is absent AND its path is unregistered in `artifact-path-registry.yaml`, creating the same `ARTIFACT_PATH_UNREGISTERED` deadlock as TDIV-008. PENDING HUMAN ACTION #3 (Create `policies.yaml`) is merged into TDIV-008 as one engine-level root cause — both require the same engine-level path registry fix. Consequence recorded: all 176 adversarial passes ran without project-policy rubric injection, relying only on the adversary's baked-in baseline. The `policies.yaml` absence item is removed from PENDING HUMAN ACTIONS and subsumed by TDIV-008. | Phase 1 / ops | 2026-07-29 | orchestrator |
+| D-79 | D-35 xtask `check-<subject>` rename sweep status: PARTIAL. Closed this burst (12 sites in 6 architect/comparative files): `specs/module-criticality.md`, `specs/architecture/tooling-selection.md`, `specs/architecture/module-decomposition.md`, `specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md`, `comparative/COMPARATIVE-ASSESSMENT.md`, `comparative/assessment-parts/part-3-conflicts-negative-evidence.md`. 14 live residue sites remain in 7 product-owner-owned files anchored to Wave B: `BC-2.14.003` (×5), `BC-2.14.004` (×3), `specs/prd.md` (×2), `specs/prd-supplements/capabilities-p1-p2.md` (×1), `BC-2.22.002` (×1), `BC-2.08.007` (×1), `BC-2.08.006` (×1). 10 historical occurrences in `cycles/` deliberately retained (adversary pass reports and archived decisions must state what was true when written). `module-decomposition` §xtask blockquote intentionally names superseded variants in a "must not be used" guardrail — retained by design. | Phase 1 | 2026-07-29 | orchestrator |
+| D-80 | D-51 CLOSED. test-vectors §grand-total confirmed by orchestrator hand-sum: grand total = 675 (664 canonical + 11 GTV). `BC-2.21.003` TV Count 5→6; missing §grand-total body-table row backfilled (gate #28 resolved). No stale rollup: no live per-subsystem subtotal row exists in the registry. D-39 reconfirmed as correct; prior STATE.md records claiming test-vectors was bumped to 675 were false closures — only the BC was correct; the registry body was off-by-one until this burst. | Phase 1 | 2026-07-29 | orchestrator |
+| D-81 | Burst-281 Wave A-corr COMPLETE — D-76..D-80 recorded; L-131..L-135 minted; D-35 PARTIAL with 14-site Wave-B residue (D-79); D-51 CLOSED (D-80); `policies.yaml` merged into TDIV-008 (D-78); ADR-010 §Mechanical Discriminator discriminator corrected (4 defects, 1 rejection cycle per TD-VSDD-059); Wave B UNBLOCKED; prior checkpoint archived to session-checkpoints.md; factory-artifacts pushed; develop unchanged at `46725ad`; streak stays 0/3. | ops | 2026-07-29 | state-manager |
 
 ## Risk Register
 
@@ -165,57 +171,45 @@ user_directive_persistent: "Keep going until you hit convergence protocol. Conve
 
 ## Concurrent Cycles
 
-None active (P1D-175 COMPLETE; fix-burst 280 COMPLETE; fix-burst 281 NEXT; 0/3; D-32 FULL-PERIMETER only). Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md.
+None active (P1D-175 COMPLETE; fix-burst 281 Wave A+A-corr COMPLETE; Wave B QUEUED; 0/3; D-32 FULL-PERIMETER only). Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md.
 
 ## Convergence Status
 
-Counter: 0/3 — P1D-175 FULL-PERIMETER NOT CLEAN; streak stays 0/3; 176 adversary passes total; trajectory-tail →130→256→189. Fix-burst 280 closed ~54/189 total: burst-279 ~40 (SS-15 tenancy, SS-18 injection, `TrustLevel::severity()`, `E-TMPL-004`, B221); burst-280 ~14 (C201/C202 CRIT product-brief/holdout; C203-C209 HIGH prd/architecture/ADR; A10/A17/A24/A26 HIGH VP harnesses; D-52 VP-008 input-hash; NF-280-B-01/B-02 retracted). A25 PARTIAL: VP-body complete; BC-body INCOMPLETE (158 sites/53 files, blocked on ADR-010). ~135 still open. **NEXT: fix-burst 281** — ADR-010 extension → A25 BC-body sweep → TDIV-002..TDIV-007. Full metrics: cycles/v1.0.0-greenfield/convergence-trajectory.md.
+Counter: 0/3 — P1D-175 FULL-PERIMETER NOT CLEAN; streak stays 0/3; 176 adversary passes total; trajectory-tail →130→256→189. Burst-281 Wave A-corr COMPLETE: ADR-010 §Mechanical Discriminator corrected; **authoritative BC violation count = 170** (133 missing-`..` + 37 three-dot; supersedes 144 and 158; D-76); D-51 CLOSED (test-vectors 675 confirmed; D-80); D-35 PARTIAL (14-site Wave-B residue; D-79). A25 BC-body sweep UNBLOCKED. ~135 P1D-175 findings open. **NEXT: Wave B (product-owner)** — 170 violations + 5 residue sites + 14 D-35 sites. Full metrics: cycles/v1.0.0-greenfield/convergence-trajectory.md.
 
 ## Session Resume Checkpoint
 
-<!-- v4.37 checkpoint SUPERSEDED — archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
+<!-- v4.38 checkpoint SUPERSEDED — archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
 ### RESUME IN ONE BREATH
-ferrochain Phase 1, greenfield+semport. Streak **0/3 after 176 passes**. Burst-281 Wave A committed: ADR-010 §Error-Construction Notation Canon (5-class taxonomy) + 19 architecture-owned Class 3 sites fixed. **Wave A-corr NEXT** — architect must fix 3 discriminator defects and establish authoritative BC violation count (144 vs 158 unresolved) before product-owner sweeps ~53 BC files. Do NOT dispatch P1D-176 until CRIT/HIGH backlog materially drained (~135 of 189 P1D-175 findings open).
+ferrochain Phase 1, greenfield+semport. Streak **0/3 after 176 passes**. Burst-281 Wave A-corr COMPLETE: ADR-010 §Mechanical Discriminator discriminator corrected (4 defects fixed); authoritative BC violation count = **170** (133 missing-`..` + 37 three-dot; D-76). D-51 CLOSED (test-vectors 675; D-80). D-35 PARTIAL (14-site Wave-B residue; D-79). **Wave B NEXT** — product-owner sweeps 170 violations + 5 residue sites + 14 D-35 sites. D-32 and D-69 in force (~135 of 189 P1D-175 open; do NOT dispatch P1D-176 yet).
 
-### WORKSTREAM 1 — Burst 281 Wave A-corr (dispatch next)
-`NEXT-ACTION` = dispatch `vsdd-factory:architect` for Wave A-corr. Keep scope **narrow** — prior dispatch stalled after 600s with no edits.
+### WORKSTREAM 1 — Wave B (dispatch next)
+`NEXT-ACTION` = dispatch `vsdd-factory:product-owner` for Wave B.
 
-**Three verified discriminator defects (orchestrator-confirmed; must all be fixed):**
-1. **Multi-line grep blindspot (serious).** Discriminator tests `..` on the same line as opening brace; 43 BC-corpus sites open `FerrochainError {` across multiple lines, making valid `..` on later lines invisible — roughly 30% of corpus mis-classified. Fix: use `rg -U` / `--multiline` or reuse `spec_region_utils.py` region-detection module (do NOT invent a new mechanism).
-2. **Canon flags itself.** ADR-010 contains 29 occurrences of the pattern; discriminator flags 5, including its own grep-command documentation lines and `bc-authoring-plan.md` validator recipes. Fix: exclude bash/sh fenced blocks and inline-code spans quoting the pattern.
-3. **Declaration and impl forms not excluded.** `pub struct FerrochainError {` and `impl FerrochainError {` match the pattern; Class 0 exemption does not catch them. Fix: encode explicit exclusions in the canon.
+**Scope (unblocked — discriminator tested, count authoritative at 170):**
+- 170 error-notation violations across 51 BC files (corrected discriminator in ADR-010 §Mechanical Discriminator)
+- 5 domain-spec/prd residue sites: `domain-spec/bounded-contexts.md`, `domain-spec/edge-cases.md`, `domain-spec/entities-server.md`, `specs/prd.md` (×2)
+- 14 D-35 xtask residue sites (7 files): `BC-2.14.003` (×5), `BC-2.14.004` (×3), `specs/prd.md` (×2), `specs/prd-supplements/capabilities-p1-p2.md` (×1), `BC-2.22.002` (×1), `BC-2.08.007` (×1), `BC-2.08.006` (×1)
 
-**Architect self-test requirement (mandatory before declaring done):** corrected discriminator must report zero violations on the 12 files fixed in Wave A AND correctly classify at least 2 known multi-line sites. Deliver ONE authoritative BC violation count with class breakdown.
+**D-77 reframe:** Wave B is a first-time convention application (only 1 of 217 occurrences was correct pre-Wave A). Review posture reflects a baseline authoring event, not a remediation sweep.
 
-**Authoritative count UNRESOLVED:** architect's discriminator = 144; field-bearing-literal pattern = 158. Largest concentrations: `BC-2.08.004` (15), `BC-2.09.004` (8), `BC-2.09.002` (8), `BC-2.08.007` (8), `BC-2.04.007` (8), `BC-2.14.006` (7), `BC-2.01.003` (6), `BC-2.14.004` (5) across ~53 files (SS-01/03/04/07/08/09/10/11/13/14/15/16/17/19/20/21/22/23).
+### WORKSTREAM 2 — TDIV governance records (after Wave B)
+Batch through a SINGLE spec-steward dispatch to prevent concurrent-write ghost findings: TDIV-002..TDIV-007.
 
-### WORKSTREAM 2 — Burst 281 Wave B (blocked on Wave A-corr)
-Product-owner sweeps ~53 BC files per corrected canon. Also includes 5 Wave-A residue sites (architect correctly declined — out-of-ownership): `domain-spec/bounded-contexts.md`, `domain-spec/edge-cases.md`, `domain-spec/entities-server.md`, and `prd.md`. **Do NOT dispatch before Wave A-corr delivers tested discriminator and authoritative count.** Sweeping without a tested rule reproduces the inconsistency the canon exists to eliminate.
-
-### WORKSTREAM 3 — TDIV governance records (queued; batch via single spec-steward dispatch)
-- TDIV-002 `ARCH-INDEX` dropped `Tokens` column → architect
-- TDIV-003 Form-A `changelog:` frontmatter absent from template → state-manager
-- TDIV-004 VP extended frontmatter → architect
-- TDIV-005 ADR extended frontmatter + numeric-string `adr_id` → architect
-- TDIV-006 BC added `bc_id`/`priority`/`wave` + `traces_to` as list → product-owner
-- TDIV-007 prd-supplements missing template-prescribed `traces_to: prd.md` → product-owner
-
-**Sequencing:** batch through a SINGLE spec-steward dispatch. Burst 280 produced a ghost finding from an agent reading `proposals/template-divergence-register.md` mid-write — concurrent appends forbidden.
-
-### P1D-176 FROZEN-HEAD WARNING (must be explicit in every resume)
-P1D-175's frozen HEAD was `2d36282`. Commits `34cf2d5` (fix-burst 280) and the burst-281-wave-A wrap commit both land after it. When P1D-176 eventually runs it MUST gate on the then-current factory-artifacts HEAD. Per BC-5.39.001 frozen-HEAD rule: **no pass taken before a push may be counted toward a streak completed after it**. Streak is 0/3 so nothing resets now, but a cold session must not miscount. D-32 (FULL-PERIMETER only advances streak) and D-69 (do not dispatch P1D-176 until ~135 open CRIT/HIGH findings are materially drained) both remain in force.
+### P1D-176 FROZEN-HEAD WARNING
+P1D-175's frozen HEAD was `2d36282`. This commit lands after it. P1D-176 MUST gate on the then-current factory-artifacts HEAD (`git -C .factory log -1 --format=%h`). D-32 (FULL-PERIMETER only) and D-69 (~135 open findings; do not dispatch yet) both in force. Streak is 0/3 — nothing resets now, but cold sessions must not miscount.
 
 ### HEADS
-develop `46725ad` — clean, `== origin/develop`, PUSHED. factory-artifacts — clean, `== origin/factory-artifacts`, PUSHED (run `git -C .factory log -1 --format=%h` for current SHA). Story worktrees: NONE. Open PRs: NONE. **NOTHING is local-only after burst-281-wave-A wrap commit.**
+develop `46725ad` — clean, `== origin/develop`, PUSHED. factory-artifacts — clean, PUSHED (run `git -C .factory log -1 --format=%h` for current SHA). Story worktrees: NONE. Open PRs: NONE.
 
 ### NEXT-ACTION
-Dispatch `vsdd-factory:architect` for Wave A-corr: fix 3 discriminator defects, self-test against 12 known-good Wave-A files + 2 multi-line sites, deliver authoritative BC violation count by class and file. Keep dispatch narrow — prior stalled 600s.
+Dispatch `vsdd-factory:product-owner` for Wave B. Scope: 170 error-notation violations across 51 BC files using ADR-010 §Mechanical Discriminator §Mechanical Discriminator, PLUS 5 domain-spec/prd residue sites, PLUS 14 D-35 xtask residue sites. Do NOT dispatch P1D-176 first.
 
-**Validator baselines (live-run, orchestrator-verified — fix-burst 280 final; unchanged by Wave A):**
-verify-signature-canon: PASS=5 FAIL=0; records-lint: PASS=5 FAIL=0; verify-no-version-pins: PASS=198 FAIL=0; verify-arch-anchor-resolution: PASS=129 FAIL=0; verify-adr-decision-refs: PASS=348 FAIL=0; verify-enum-variant-casing: PASS=198 FAIL=0; verify-form-a-changelog-direction: PASS=198 WARN=7 FAIL=0 BC_UNVERIFIED=0; verify-module-canonicality: PASS=8 FAIL=0; verify-changelog-date-monotonicity: PASS=131 FAIL=0; verify-bc-frontmatter-schema: PASS=129 FAIL=0.
+**Validator baselines (orchestrator-verified — burst-281 Wave A-corr final):**
+verify-no-version-pins: PASS=198 FAIL=0; records-lint: PASS=5 FAIL=0; verify-signature-canon: PASS=5 FAIL=0; verify-form-a-changelog-direction: PASS=198 WARN=7 FAIL=0 BC_UNVERIFIED=0; verify-arch-anchor-resolution: PASS=129 FAIL=0; verify-enum-variant-casing: PASS=198 FAIL=0; verify-module-canonicality: PASS=8 FAIL=0; verify-changelog-date-monotonicity: PASS=131 FAIL=0; verify-bc-frontmatter-schema: PASS=129 FAIL=0.
 
 ### COVERAGE DEBTS — block any CLEAN claim under D-32 until closed
-- BC-2.18.004: targeted grep only; PC5 added burst-279 — full body read still pending.
+- BC-2.18.004: targeted grep only; PC5 added burst-279 — full body read pending.
 - 36 of 37 standing gates: count/continuity only (gate #25 sole body-deep audit).
 - 105 hyphenated-module occurrences + 131 version pins: counted per-file, NOT triaged live-body vs changelog.
 - 129 TV Count cells: never hand-summed.
@@ -225,21 +219,20 @@ verify-signature-canon: PASS=5 FAIL=0; records-lint: PASS=5 FAIL=0; verify-no-ve
 ### PENDING HUMAN ACTIONS
 1. **R14 (HIGH, irreversible)** — `cargo login` then `cd .factory/namespace-reservation && bash publish-all.sh` (`EXPECTED_OWNER` must match crates.io identity exactly). 12 of 21 roster crates currently unreserved.
 2. B1 — `direnv allow .`
-3. Create `.factory/policies.yaml` (absent).
-4. **TDIV-008 (HIGH, engine-level deadlock)** — spec-steward output paths (`spec-versions.md`, `traceability-matrix.md`, `spec-changelog.md`, `drift-reports/`) unregistered in engine artifact path registry; spec-steward cannot write governance artifacts without `ARTIFACT_PATH_UNREGISTERED` deadlock. Interim: `proposals/`. Fix requires engine-level change outside this project.
+3. **TDIV-008 (HIGH, engine-level deadlock; see D-78)** — spec-steward output paths unregistered in engine artifact path registry; `policies.yaml` absence merged into this root cause (D-78). Engine-level fix required; interim: `proposals/`.
 
 ### RESIDUAL ITEMS (non-blocking)
 - `BC-2.09.007` + `BC-INDEX.md` carry post-boundary version pins → product-owner.
 - `interface-definitions.md` §Authentication cluster grandfathered (pre-2026-07-24).
-- Inert `ferrochain-prebuilt/` orphan under `namespace-reservation/` pending removal.
-- D-35 xtask `check-<subject>` rename sweep (~20 sites / 8+ files) — devops-engineer.
-- D-51 test-vectors registry body must reach 675 (TV-006 not applied) — product-owner.
-- **STATE.md compaction follow-up:** compress D18-P99-A…D-55 decision block in dedicated burst.
+- Inert `ferrochain-prebuilt/` orphan pending removal.
+- D-35 xtask Wave-B residue: 14 sites in 7 files anchored to Wave B (product-owner).
+- **STATE.md compaction follow-up:** compress D18-P99-A…D-55 in dedicated burst.
 
 **Self-attributed defects (carried forward):**
-- P1D-176 premature scheduling: recorded P1D-176 as next action in v4.34 when ~149 findings were still open (D-69 corrects).
-- Validator suite green claim: reported all ten validators passing before discovering the 10th PASS came from narrowed rule scope (D-57 gate-acceptance-test discipline).
-- Changelog attribution error: misattributed to `interface-definitions.md` — correct file is `.factory/specs/prd-supplements/api-surface.md`.
+- P1D-176 premature scheduling (D-69 corrects).
+- Validator suite green claim (D-57).
+- Changelog attribution error (api-surface.md, not interface-definitions.md).
+- Orchestrator changelog-direction dispatch error (L-135 codified).
 
 ### STANDING USER DIRECTIVE
 "Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (2026-07-13)
@@ -255,7 +248,7 @@ verify-signature-canon: PASS=5 FAIL=0; records-lint: PASS=5 FAIL=0; verify-no-ve
 | L2 domain spec (15-shard) — L2-INDEX v1.19 (38 CAPs; 15 DIs; FM-001..019); capabilities-p1-p2 (burst-278 Wave B: CAP-027 lifetime removed + borrow→Arc<dyn VectorStore>; CAP-028 D-44 rejection semantics added; entities-graph bumped; ubiquitous-language-core bumped) | `.factory/specs/domain-spec/L2-INDEX.md` (+ 14 section shards) |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
 | Session checkpoints bursts 5–78, bursts 176–270 pre-commit (archived) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
-| Lessons learned (130 lessons; fix-burst 280: L-123..L-130 — corpus-sweep falsifiability, assertion-correctness, finding-fidelity, count-propagation, production-symbol-registration, scope-avoidance, concurrent-write, template-divergence-governance; session-wrap D-70: L-122 — records-lint row-depinning discipline; burst-279: L-116..L-121) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
+| Lessons learned (135 lessons; burst-281 Wave A-corr: L-131..L-135 — scope-fence residue enumeration, self-test reconciliation-target, validator self-flagging, count-delta decomposition, orchestrator convention-citation; fix-burst 280: L-123..L-130; session-wrap D-70: L-122; burst-279: L-116..L-121) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Holdout domain briefs A–E | `.factory/planning/holdout-domains/domain-{a,b,c,d,e}-*.md` |
 | Reference corpus manifest (v1.4.0) | `.factory/semport/reference-manifest.md` |
 | Semport pass 1 analysis state | `.factory/semport/core/ANALYSIS-STATE.md` |

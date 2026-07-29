@@ -1906,3 +1906,28 @@ BC-2.18.004 body unread; 36/37 standing gates body-unaudited; 105 hyphenated-mod
 
 ### ARCHIVE METADATA
 Date: 2026-07-28 | Archived at: session-wrap D-75 | STATE.md: 4.37→4.38 | burst-281 Wave A COMPLETE (ADR-010 §Error-Construction Notation Canon; 19 architecture sites) | Wave A-corr DEFERRED (3 discriminator defects; stalled 600s) | D-75 allocated | streak 0/3
+
+---
+
+## Checkpoint v4.38 (archived — replaced by v4.39)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1, greenfield+semport. Streak **0/3 after 176 passes**. Burst-281 Wave A committed: ADR-010 §Error-Construction Notation Canon (5-class taxonomy) + 19 architecture-owned Class 3 sites fixed. **Wave A-corr NEXT** — architect must fix 3 discriminator defects and establish authoritative BC violation count (144 vs 158 unresolved) before product-owner sweeps ~53 BC files. Do NOT dispatch P1D-176 until CRIT/HIGH backlog materially drained (~135 of 189 P1D-175 findings open).
+
+### WORKSTREAM 1 (v4.38)
+Wave A-corr: architect fixes 3 discriminator defects, self-tests against 12 Wave-A files + 2 multi-line sites, delivers authoritative count by class and file.
+
+### WORKSTREAM 2 (v4.38)
+Wave B: product-owner sweeps ~53 BC files. Blocked on Wave A-corr.
+
+### WORKSTREAM 3 (v4.38)
+TDIV governance records: TDIV-002..TDIV-007. Queued after Wave B. Batch through single spec-steward dispatch.
+
+### HEADS (v4.38)
+develop `46725ad` — clean, PUSHED. factory-artifacts — clean, PUSHED (run `git -C .factory log -1 --format=%h` for current SHA). No worktrees. No open PRs.
+
+### COVERAGE DEBTS (carried to v4.39 — unchanged)
+BC-2.18.004 body unread; 36/37 standing gates body-unaudited; 105 hyphenated-module + 131 version-pin occurrences untriaged; 129 TV Count cells never hand-summed; ADR-010 canon-note site unopened; per-VP frontmatter `tool`/`priority`/`bc_anchor`/`crate` unverified.
+
+### ARCHIVE METADATA
+Date: 2026-07-29 | Archived at: burst-281 Wave A-corr wrap (D-81) | STATE.md: 4.38→4.39 | burst-281 Wave A-corr COMPLETE (ADR-010 §Mechanical Discriminator corrected; 4 defects fixed; authoritative count 170; D-51 CLOSED; D-35 PARTIAL recorded) | D-76..D-81 allocated | L-131..L-135 minted | streak 0/3

@@ -1,7 +1,7 @@
 ---
 document_type: module-criticality
 level: L3
-version: "2.8"
+version: "2.9"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -15,6 +15,7 @@ traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "2.9 (D-35-rename-sweep/2026-07-28): D-35 canonical xtask naming sweep — NE Catalog Enforcement Mechanism cells: `cargo xtask deny-client-new` → `cargo xtask check-client-timeout` (NE-04); `cargo xtask deny-expect-in-lib` → `cargo xtask check-no-panic` (NE-07). Superseded variant names forbidden; canonical `check-<subject>` form per D-35."
   - "2.8 (FIX-BURST-278-WAVE-A/F-P175-D212/2026-07-28): Iron Law — add `core::tool` HIGH row (ferrochain-core SS-08; Tool/DynTool trait seam; DynTool blanket impl; ToolOutput variant mapping; no Kani VP; BC-2.08.010; no kill rate exception). Required by module-decomposition.md §core::tool row addition. Classification Summary: HIGH 28→29; Total 83→84. GATE-25 arithmetic post-fix: 84(total) − 77(module-level) = 7(crate-level) ✓."
   - "2.7 (FIX-BURST-278/F-P175-D111/2026-07-28): Ambiguity fix — `= 77 rows total` → `= 77 tiered rows` in Module/crate breakdown blockquote. The `| Total | 83 |` table row counts all rows; the `77` in the breakdown counts only tiered rows (CRITICAL/HIGH/MEDIUM/LOW); the prior phrasing was ambiguous. Aligned with verification-coverage-matrix.md wording."
   - "2.6 (FIX-BURST-277-WAVE-B/2026-07-28): Item 6 module census — add 6 definitions-only/exempt module rows: core::documents (definitions-only, D21/SS-20, ADR-014 Decision 2: pure data carrier, no execution methods), memory::skills (routing-overlay/exempt, D20/SS-15, ADR-012 Decision 4: structural decomposition row only), core::guardrail (definitions-only, SS-11, ADR-009/ADR-014 Decision 6), core::action_risk (definitions-only, SS-05, ADR-009/F-P170-06/ADR-020 Decision 3), core::context_mutation (definitions-only, D20/SS-01, ADR-009/ADR-012), core::write_guard (definitions-only, D20/SS-15, ADR-009/ADR-012). All have Tier=— (no kill rate obligation; not subject to Phase 5 gates). Total 77→83. Tiered count (CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77) unchanged. GATE-25 arithmetic check: 83 − 76 = 7 (crate-level rows; 6 new rows are module-level, now matched in decomp after FIX-BURST-277 module-decomposition additions)."
@@ -213,8 +214,8 @@ All 17 NE patterns from COMPARATIVE-ASSESSMENT are anchored. Architecture-specif
 |----|--------|-----------------------|
 | NE-01 | `sandbox::policy` | Enforcing backend default; `Err(PolicyNotEnforceable)` on mismatch |
 | NE-02 | `sandbox::path_guard` | `canonicalize_beneath_root` mandatory; VP-003 Kani proof |
-| NE-04 | — | `cargo xtask deny-client-new` CI gate (scope: all provider + MCP modules) |
-| NE-07 | — | `cargo xtask deny-expect-in-lib` CI gate (scope: workspace-wide, all crates) |
+| NE-04 | — | `cargo xtask check-client-timeout` CI gate (scope: all provider + MCP modules) |
+| NE-07 | — | `cargo xtask check-no-panic` CI gate (scope: workspace-wide, all crates) |
 | NE-10 | `core::credentials` | Newtype enforcement; `cargo xtask` custom lint |
 | NE-12 | `checkpoint::session_index` | Triple-address composite key; VP-002 Kani proof |
 | NE-13 | `server::streaming` | Same engine for streaming + unary; SSE tap only |

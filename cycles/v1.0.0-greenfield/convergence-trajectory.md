@@ -2104,3 +2104,27 @@ Process-gap gates FIRST, then `FerrochainError` constructor + `Tool` object-safe
 
 **Convergence dim-5:** Counter 0/3 (unchanged — pass found findings). Next: fix-burst 277 then P1D-175 FULL-PERIMETER.
 **Convergence dim-7:** Trajectory tail →20→130→256. Lessons L-087..L-093 minted. D-39, D-40 added. R14 added.
+
+---
+
+## Fix-Burst 281 Wave A + Wave A-corr Closure Record
+
+**Date:** 2026-07-29 | **Pass:** P1D-175 (frozen HEAD `2d36282`) | **Burst:** 281 Wave A + A-corr
+
+### What Wave A + A-corr Closed (not an adversary pass — no trajectory row)
+
+Wave A (committed burst-281-wave-A, 2026-07-28): ADR-010 §Error-Construction Notation Canon (5-class taxonomy); 19 architecture-owned Class 3 `FerrochainError` construction sites fixed across ADR-015, ADR-017, module-decomposition, verification-architecture, interface-definitions, VP-003/004/006/009/010/013.
+
+Wave A-corr (committed this burst, 2026-07-29): ADR-010 §Mechanical Discriminator rewritten with all 4 defects fixed; `spec_region_utils.py` `illustration_exempt_lines` corrected; test-vectors §grand-total D-51 CLOSED; D-35 xtask rename partial sweep (12 sites).
+
+### Authoritative BC Violation Count Established
+
+**170 violations** (133 missing-`..` + 37 three-dot) across 51 BC files. Class-decomposition closes the 144/158 discrepancy: Effect A (multiline blindspot fixed) = 0; Effect B (`grep -v` false negative on `BC-2.11.003`) = +1; 169 + 1 − 0 = 170. This is a first-time convention application (only 1 of 217 occurrences was correct pre-Wave A), not a drift repair.
+
+### Remaining Open from P1D-175
+
+~135 of 189 findings open. D-32 (FULL-PERIMETER only) and D-69 (no P1D-176 until materially drained) both in force. P1D-176 must gate on then-current factory-artifacts HEAD (not `2d36282` which was P1D-175 frozen HEAD).
+
+### Next Gate
+
+Wave B — product-owner sweeps 170 violations + 5 domain-spec/prd residue + 14 D-35 residue, then P1D-176 FULL-PERIMETER when backlog is materially drained.

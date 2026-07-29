@@ -553,7 +553,7 @@ platform-incompatible WASM engine panics the process rather than returning a `Re
 **Ferrochain requirement (CLAUDE.md no-unwrap/expect in non-test code):**
 All ferrochain library constructors must return `Result`. `WasmBackend::new() -> Result<Self,
 SandboxError>`. The `Default` impl must NOT delegate to a fallible constructor. This is a CI-
-enforceable rule (clippy `manual_unwrap_or_default` + custom deny-expect-in-lib lint).
+enforceable rule (clippy `manual_unwrap_or_default` + custom `check-no-panic` xtask lint).
 
 ---
 
