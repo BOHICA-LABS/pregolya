@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "4.42"
+version: "4.43"
 status: in-progress
 producer: state-manager
-timestamp: "2026-07-29T18:00:00Z"
+timestamp: "2026-07-29T19:00:00Z"
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: ferrochain
 mode: greenfield+semport
-current_step: "session-wrap D-88 COMPLETE — D-88/D-89/D-90 allocated; D18-P99-A..D-55 compressed (38 rows to archive pointer); §BACKLOG minted; TDIV-008 reclassified actionable-pending-verification (D-90); standing directive D-89 recorded; prior checkpoint v4.41 archived; factory-artifacts pushed. NEXT: verify TDIV-008 registry (D-90), work backlog top-down, assess D-69 gate for P1D-176."
+current_step: "D-90 path-correction COMPLETE (records-only micro-burst 2026-07-29) — artifact-path-registry.yaml corrected from erroneous specs/architecture/ to .factory/ top-level; registry structure facts recorded; L-142 minted; factory-artifacts pushed. NEXT: verify TDIV-008 guard reads project-local registry, work backlog top-down, assess D-69 gate for P1D-176."
 current_cycle: v1.0.0-greenfield
 convergence_status: "0/3 — P1D-175 FULL-PERIMETER NOT CLEAN; streak stays 0/3; 176 passes total; Wave B COMPLETE: 180 notation corrections corpus-wide; 0 violations (verify-error-notation-canon.sh; 351 openers); D-35 CLOSED 26/26; A25 BC-body notation sweep complete. ~35-40 P1D-175 findings estimated open; CRIT 0 remaining; HIGH materially drained. D-69 gate: assess before dispatching P1D-176. Full metrics: cycles/v1.0.0-greenfield/convergence-trajectory.md."
 pipeline: IN_PROGRESS
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes. DIRECTIVE 2 (2026-07-29): fix-in-scope is the DEFAULT posture; deferral requires explicit per-case human permission; CLAUDE.md Canonical Principle Rule 3 UNCHANGED. Agents may NOT self-authorize deferrals. Orchestrator may PROPOSE deferrals but default action is to fix."
 ---
 
-<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. v4.42: session-wrap D-88 (2026-07-29); D18-P99-A..D-55 compressed (38 rows → archive pointer); §BACKLOG added; D-89 standing directive; D-90 TDIV-008 reclassification. Prior: v4.41 records-only micro-burst D-83; burst-282 Wave B COMPLETE. -->
+<!-- STATE.md SIZE BUDGET: 200-line soft limit / 500-line hard limit. v4.43: records-only micro-burst D-90 path correction (2026-07-29); L-142 minted. Prior: v4.42 session-wrap D-88; v4.41 records-only micro-burst D-83; burst-282 Wave B COMPLETE. -->
 
 # Pipeline State: ferrochain
 
@@ -37,7 +37,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-07-29 — session-wrap D-88: D-88/D-89/D-90 allocated; D18-P99-A..D-55 compressed; §BACKLOG minted; TDIV-008 reclassified actionable-pending-verification; standing directive D-89 recorded; checkpoint v4.41 archived; factory-artifacts pushed. Prior: burst-282 Wave B (180 notation corrections; 0 violations; D-35 CLOSED 26/26); D-83 records-only micro-burst (blocking-validator count corrected 8→7). |
+| **Last Updated** | 2026-07-29 — records-only micro-burst D-90 path correction: artifact-path-registry.yaml path corrected (erroneous `specs/architecture/` → `.factory/` top-level); registry structure facts recorded; L-142 minted. Prior: session-wrap D-88 (D-88/D-89/D-90 allocated; §BACKLOG minted; TDIV-008 reclassified); D-83 records-only micro-burst (blocking-validator count corrected 8→7). |
 
 ## Phase Progress
 
@@ -106,7 +106,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | D-87 | Wave B self-attributed orchestrator defects (four; do not soften): (1) Instructed architect to write ADR changelogs ascending — wrong; ADRs are descending; architect correctly overrode by trusting the file (recurrence of L-135 class). (2) Instructed B1 that BC changelogs were descending — wrong; broke `verify-form-a-changelog-direction` to FAIL=7 across 7 files; repaired pre-commit. (3) Named the canon "ADR-010 §Mechanical Discriminator" throughout six dispatches using a version-pinned form that violated L9b in two batches; corrected mid-flight by broadcast. (4) Built the batch partition from `specs/behavioral-contracts/` omitting `prd-supplements/` entirely; five real violations in `bc-authoring-plan.md` survived seven batches and were caught only by the new validator. Defects 1-3 share root cause with L-136 (lesson 2). Defect 4 shares root cause with L-138 (lesson 1). | ops | 2026-07-29 | orchestrator |
 | D-88 | Session wrap 2026-07-29 — D18-P99-A..D-55 compressed (38 rows → 1 archive pointer; 34-line savings); §BACKLOG minted; TDIV-008 reclassified actionable-pending-verification (D-90); DIRECTIVE 2 codified (D-89); DEFER-002 surfaced for human decision with fix-now recommendation; checkpoint v4.41 archived to session-checkpoints.md; factory-artifacts pushed; develop unchanged at `46725ad`; streak stays 0/3. | ops | 2026-07-29 | state-manager |
 | D-89 | DIRECTIVE 2 codified (2026-07-29) — fix-in-scope is the DEFAULT posture; deferral requires explicit per-case human permission. CLAUDE.md Canonical Principle Rule 3 UNCHANGED. Agents may NOT self-authorize deferrals. Orchestrator may PROPOSE deferrals but default action is to fix. RESIDUAL ITEMS in the checkpoint are actionable (unfinished work governed by production-grade default; not human-approved deferrals). Existing Drift/Deferrals entries require per-case human re-authorization to remain deferred. | ops | 2026-07-29 | human+orchestrator |
-| D-90 | TDIV-008 reclassified actionable-pending-verification. Per orchestrator verification, `artifact-path-registry.yaml` exists at `.factory/specs/architecture/artifact-path-registry.yaml` and is project-local (not engine-bundled). Fix is within project scope: devops-engineer registers spec-steward output paths in the project-local registry. Reclassification: from "engine-level deadlock requiring human direction" to "project-local fix — pending confirmation that the artifact-path-registry guard reads from the project-local file." If confirmed, route to devops-engineer. Blocking issue severity retained at High until confirmed. `policies.yaml` merge (D-78) inherits same reclassification. | Phase 1 / ops | 2026-07-29 | orchestrator |
+| D-90 | TDIV-008 reclassified actionable-pending-verification. `artifact-path-registry.yaml` is at `.factory/artifact-path-registry.yaml` (top-level of `.factory/`; NOT `specs/architecture/`) — project-local plain YAML, not engine-bundled. File structure: single flat `artifact_types:` list; each entry carries `artifact_type`, `description`, `pattern`, `singleton`; header comment "Used by state-manager and orchestrator for path validation and routing." Five paths currently unregistered in this file: `spec-versions.md`, `traceability-matrix.md`, `spec-changelog.md`, `drift-reports/`, `policies.yaml`. Open verification (blocks final routing): confirm whether the `ARTIFACT_PATH_UNREGISTERED` guard reads this project-local file or an engine-bundled copy; if project-local, route to devops-engineer to register the five unregistered paths. Blocking issue severity retained at High until confirmed. `policies.yaml` merge (D-78) inherits same reclassification. — Path corrected records-only micro-burst 2026-07-29: original stated `.factory/specs/architecture/artifact-path-registry.yaml` — that path does not exist; self-attributed (path restated from recollection rather than copied from command output; second consecutive factual error in a decision row after D-83 count error; both errors caught only by post-commit orchestrator verification; L-142 minted). | Phase 1 / ops | 2026-07-29 | orchestrator |
 
 ## Risk Register
 
