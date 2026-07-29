@@ -83,7 +83,7 @@ pub enum SlotTrustPolicy {
     /// Appropriate for HumanMessage slots receiving user-supplied text.
     TrustAll,
     /// This slot requires trusted input only. Untrusted content triggers
-    /// Err(FerrochainError { code: "E-TMPL-001", ... }).
+    /// Err(FerrochainError { code: "E-TMPL-001", .. }).
     /// SystemMessage slots are ALWAYS TrustRequired — not configurable.
     TrustRequired,
 }
@@ -124,7 +124,7 @@ them to `TrustRequired` for additional hardening in pipelines that have tighter 
 **The `TrustAll` policy on a SystemMessage slot is rejected at template construction time,
 before any rendering occurs.** Calling `ChatPromptTemplate::from_messages` with a
 `(MessageRole::System, _, SlotTrustPolicy::TrustAll)` tuple immediately returns
-`Err(FerrochainError { code: "E-TMPL-002" })`. There is no bypass: no caller-supplied
+`Err(FerrochainError { code: "E-TMPL-002", .. })`. There is no bypass: no caller-supplied
 override, no feature flag, no runtime configuration disables this check. Any
 `ChatPromptTemplate` that successfully constructs has all SystemMessage slots in the
 `TrustRequired` posture — rendering never executes without this guarantee.

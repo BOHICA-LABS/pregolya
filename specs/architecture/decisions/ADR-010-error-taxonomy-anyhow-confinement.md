@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.13"
+version: "1.14"
 changelog:
+  - "1.14 (FIX-BURST-281/D-72/2026-07-28): Extend error-construction notation canon — adjudicate all four notation classes and add §Error-Construction Notation Canon section. (1) Class 1 Construction Form: in ```rust fenced blocks, value-expression position, MUST use FerrochainError::new(...); struct literal without `..` is FORBIDDEN (already implicit in v1.13; now a named class with mechanical discriminator). (2) Class 2 Pattern Form: in ```rust blocks, match-arm / matches!() / let-destructuring position, MUST include `..` rest pattern (required by #[non_exhaustive] for external-crate patterns). (3) Class 3 Value-Observation Form: prose, table cells, non-rust fenced formal-statement blocks, doc-comment annotation text — MUST include `..` when any field is elided; `...` (three-dot English prose ellipsis) is FORBIDDEN as field-elision marker in these contexts; FerrochainError::new(...) is NOT used here (it implies construction, not observation). (4) Class 4 Defining-Crate Exception: BC-2.14.001 and BC-2.14.002 ONLY — struct-literal construction permitted inside ferrochain-core tests; annotation required per §Canon rule. Defining-crate exception (fix-burst-280-wave-C annotation) RATIFIED: #[non_exhaustive] does not restrict the defining crate; exception is strictly bounded to BC-2.14.001/002. Mechanical discriminator specified for devops-engineer validator. Architecture corpus swept: 19 Class 3 violations corrected (added `..` or replaced `...` with `..`) across ADR-015, ADR-017, verification-architecture, module-decomposition, interface-definitions, VP-003, VP-004, VP-006, VP-009, VP-010, VP-013. Residue: 5 out-of-scope domain-spec/prd sites (business-analyst/product-owner remediation in Wave B); BC corpus 158-site sweep handed to product-owner per §Classification Procedure."
   - "1.13 (FIX-BURST-277-WAVE-B/F-P174-303+F-P174-constructor/2026-07-27): F-P174-303 — adjudicate `context` field (referenced in ADR-014 Decision 5 write-time zero-norm sketch): REJECTED. No `context` field is added to `FerrochainError`. Structured diagnostics such as `document_index` MUST be interpolated into the `message` field using key=value format (e.g., `format!(\"embedding vector has zero L2 norm at write time; document_index={}\", i)`). Rationale: adding `context: Option<serde_json::Map<String, serde_json::Value>>` would pull `serde_json` into the hot path of every `FerrochainError` construction site and bloat the struct; the `message: String` field already carries structured diagnostics in the VSDD corpus via key=value interpolation. ADR-014 Decision 5 pseudocode must be corrected in ADR-014 v1.11 to use `message` interpolation instead of a phantom `context:` field. F-P174-constructor — add `impl FerrochainError` with `pub fn new(component, category, retry_hint, code, message: impl Into<String>) -> Self` primary constructor (all six fields; `source: None` by default) and `pub fn with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self` builder (consumes self, returns updated instance). These are the sole sanctioned construction paths; direct struct-literal construction from external crates is barred by `#[non_exhaustive]` (ADR-010 v1.12/v1.12+F-P173-619). All spec pseudocode blocks in ADR-010/014/005 that showed struct literals must use `FerrochainError::new(...)` + optional `.with_source(...)` going forward."
   - "1.12 (FIX-BURST-276/F-P173-211+F-P173-619/2026-07-27): F-P173-211 — fix FerrochainError compilability: change `source` field from `Option<Box<dyn std::error::Error + Send + Sync>>` to `Option<Arc<dyn std::error::Error + Send + Sync>>`. Adjudication: option (a) selected over (b) drop-Clone and (c) clone-drops-source. `Arc<dyn Trait>` implements `Clone` (reference-count increment, independent of whether T: Clone), preserving both the derive and the error chain. Option (b) propagates `Arc<FerrochainError>` wrappers to every sharing site, invasively changing call-site API. Option (c) silently drops `source` on clone, violating the production-grade no-silent-failure rule (CLAUDE.md: no silent empty returns where partial-failure should propagate); `retry_hint` and `to_problem()` (BC-2.14.002 RFC-7807 emission) both depend on Clone without losing the causal chain; option (c) breaks both. Propagated to api-surface.md §Error Type (F-P173-202). BC-2.14.001 propagation form (product-owner-owned): `source: Option<Arc<dyn std::error::Error + Send + Sync>>,` with comment `// Causal error chain; MUST NOT be exposed in HTTP responses`. F-P173-619 — add `#[non_exhaustive]` to FerrochainError struct. CLAUDE.md Code Conventions requires `#[non_exhaustive]` on all public API surface types; sibling D21/D23 types all carry it; `FerrochainError` was the sole public error type without it."
   - "1.11 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp and date per ADR decision-date convention (Gate #28 Rule 5): `timestamp` → `2026-07-14T12:00:00Z`; `date` → `2026-07-14`. Original D17 decision date evidenced by v1.0 changelog. Fields were incorrectly bumped across multiple fix bursts (62672f9, 317b144, f4819b2, 75b0c8a)."
@@ -92,6 +93,130 @@ impl FerrochainError {
 **F-P174-303 adjudication — no `context` field:** A phantom `context: { "document_index": N }` field appeared in ADR-014 Decision 5 pseudocode but does not exist on `FerrochainError`. The resolution is REJECTION of a new `context` field. Structured diagnostics such as `document_index` MUST be interpolated into the `message` field using key=value notation: `format!("embedding vector has zero L2 norm at write time; document_index={}", i)`. No `serde_json::Map` dependency is incurred; the 6-field struct is final. ADR-014 Decision 5 is corrected per the ADR-014 F-P174-303 adjudication.
 
 **Category casing canon (FIX-BURST-270 adjudication, retracted v1.8/F-P167-05):** `Category` enum variants use **PascalCase** — `Category::Val`, `Category::Auth`, `Category::Security`, `Category::Internal`, etc. The taxonomy code-string column (`VAL | AUTH | RATE | …`) is ALL-CAPS documentation shorthand and is **distinct** from the Rust variant identifier. Rendering rule: in BC/spec prose and table cells use the taxonomy codes (`VAL`, `AUTH`, `category: DURABILITY`); in Rust code blocks and formal postconditions use the PascalCase enum path (`Category::Val`, `Category::Auth`, `Category::Durability`). The v1.8 note incorrectly conflated these two representations; it is hereby retracted. The `Component` variants follow the same PascalCase rule (`Component::Chkpt`, `Component::Tmpl`, `Component::Core`). No serde rename is needed because the RFC-7807 wire form uses humanized titles (`"Validation"`, `"Authentication"`) not taxonomy codes.
+
+## Error-Construction Notation Canon (D-72 extension, v1.14)
+
+This section governs how `FerrochainError` values are expressed across all VSDD artifacts. The canon covers four notation classes. A fifth special case (Type Schema Form) is exempt.
+
+### Class 0 — Type Schema Form (exempt)
+
+A field-and-type listing showing the struct's shape: `FerrochainError { component: Component, category: Category, … }`. Not a value expression, pattern, or observation. No restriction applies. Mechanical exclusion: matches `FerrochainError { component: Component,` (field types, not field values).
+
+### Class 1 — Construction Form (MUST use `::new()`)
+
+**Where:** Inside a ` ```rust ` fenced code block, in a VALUE EXPRESSION position — after `return Err(`, used as a function return, after `let x =`, or any position where the code is meant to PRODUCE a FerrochainError value.
+
+**Rule:** MUST use `FerrochainError::new(component, category, retry_hint, code, message)` + optional `.with_source(arc)`. Struct literal `FerrochainError { field: val, … }` without `..` in a value-expression position is FORBIDDEN.
+
+**Rationale:** This is compilable code targeting external crates. `#[non_exhaustive]` bars struct-literal construction (E0639) outside `ferrochain-core`. Spec must match production requirements.
+
+### Class 2 — Pattern Form (MUST include `..`)
+
+**Where:** Inside a ` ```rust ` fenced code block, in a PATTERN EXPRESSION position — in `match` arms (after `=>`), inside `matches!()`, in `let … =` destructuring, or equivalent.
+
+**Rule:** MUST include `..` rest pattern. Minimum form: `FerrochainError { code: "E-XXX", .. }`. Additional fields (category, component) before `..` are permitted for documentation clarity. The `..` is REQUIRED because `#[non_exhaustive]` bars exhaustive patterns from external crates (E0008 without `..`).
+
+**Compliant examples:**
+```rust
+Err(FerrochainError { code: "E-SBXD-001", .. }) => {}                          // match arm
+matches!(result, Err(FerrochainError { code: "E-VS-001", .. }))                 // matches! arg
+matches!(result, Err(FerrochainError { code: "E-TMPL-001", category: Category::Security, .. }))  // with extra field
+```
+
+### Class 3 — Value-Observation Form (MUST include `..` when eliding fields)
+
+**Where:** Prose, Markdown table cells, non-rust fenced blocks (formal statements, mathematical notation), doc-comment annotation text, inline backtick-quoted expressions in prose that are NOT inside a ` ```rust ` fence.
+
+**Rule:**
+- MUST include `..` when any of the 5 non-source fields (component, category, retry_hint, code, message) is omitted.
+- Full-field observations (all 5 fields present) need not add `..` but may.
+- Field names use taxonomy codes (ALL-CAPS: `TOOL`, `INTERNAL`, `MCP`) per rendering convention; PascalCase Rust identifiers (`Category::Val`) are also permitted.
+- `...` (three ASCII dots — English prose ellipsis) is FORBIDDEN as a field-elision marker in value-observation contexts. Use `..` (two dots, Rust rest-pattern notation) instead.
+- `FerrochainError::new(...)` is NOT used in Class 3 contexts — it implies construction, not observation.
+
+**Compliant examples (prose / table cell / formal-statement):**
+
+| Form | Example | Notes |
+|------|---------|-------|
+| Single-field code | `Err(FerrochainError { code: "E-MCP-001", .. })` | `..` required |
+| Two-field code+category | `Err(FerrochainError { code: "E-TOOLS-007", category: VAL, .. })` | `..` required |
+| Full-field (no `..` needed) | `Err(FerrochainError { component: MCP, category: TOOL, retry_hint: Never, code: "E-MCP-001", message: "…" })` | all 5 fields |
+| Formal statement block | `cosine(a, b) == Err(FerrochainError { code: "E-VS-001", .. })` | inside non-rust fence |
+
+**FORBIDDEN examples:**
+- `Err(FerrochainError { code: "E-X" })` — missing `..` (partial fields)
+- `Err(FerrochainError { code: "E-X", ... })` — `...` three-dot form
+- `Err(FerrochainError { category: INTERNAL, code: E-CORE-006, message: "…" })` — no `..`, partial fields
+
+### Class 4 — Defining-Crate Exception (RATIFIED, D-72)
+
+**Where:** Rust code blocks in artifacts that DEFINE `FerrochainError` itself. **Scope: BC-2.14.001 and BC-2.14.002 ONLY.**
+
+**Rule:** Struct-literal construction with all 5 non-source fields is PERMITTED because `#[non_exhaustive]` does not restrict the defining crate's own code. The Rust Reference: "Outside of the crate in which a non-exhaustive type is defined, construction of that type is not possible."
+
+**RATIFICATION of fix-burst-280-wave-C annotation:** The annotation applied to BC-2.14.001 PC1, TV-001 Notes, TV-002 Notes, and BC-2.14.002 TV table in fix-burst-280-wave-C is hereby ADR-backed. The exception is strictly bounded — no other BC or ADR defines `FerrochainError`, so no other "defining-crate exception" exists.
+
+**Required annotation at each site:** `// defining-crate: struct-literal permitted (tests run inside ferrochain-core; #[non_exhaustive] does not bar same-crate construction)`
+
+### Mechanical Discriminator
+
+A validator script can classify any `FerrochainError {` occurrence:
+
+```
+Step 1: Identify context
+  - Inside a ```rust fence? → rust_fence = true
+  - Inside a non-rust fence (``` without 'rust')? → formal_stmt = true
+  - Otherwise (prose, table cell, inline backtick, doc comment outside fence): prose = true
+
+Step 2: Classify and gate
+  IF rust_fence AND occurrence has `..`:
+    → Class 2 VALID
+  IF rust_fence AND no `..` AND file is BC-2.14.001 or BC-2.14.002:
+    → Class 4 VALID (verify annotation present)
+  IF rust_fence AND no `..` AND file is NOT BC-2.14.001/002:
+    → Class 1 VIOLATION: must use FerrochainError::new(...)
+  IF formal_stmt OR prose:
+    IF has `..` → Class 3 VALID
+    IF has `...` (three dots) → Class 3 VIOLATION: replace `...` with `..`
+    IF no `..` AND partial fields → Class 3 VIOLATION: add `..`
+    IF no `..` AND all 5 non-source fields present → Class 3 VALID (complete observation)
+```
+
+**Primary grep for Class 3 violations (prose/non-rust-fence, missing `..`):**
+```bash
+grep -n 'FerrochainError {' <file> | grep -v '\.\.' | grep -v 'component: Component'
+# | grep -v 'component: Component' excludes Type Schema Form (Class 0)
+```
+
+**Primary grep for Class 3 violations (three-dot form):**
+```bash
+grep -n 'FerrochainError {' <file> | grep '\.\.\.'
+```
+
+### Classification Procedure for Product-Owner BC Sweep (Wave B)
+
+For each of the 158 `FerrochainError {` sites across 53 BC files:
+
+1. **Determine context** (prose / formal-statement block / rust fence / defining-crate).
+2. **Apply Step 2 rules above.**
+3. **For Class 3 violations** (the expected majority): add `..` before the closing `}`.
+   - `FerrochainError { code: "E-X" }` → `FerrochainError { code: "E-X", .. }`
+   - `FerrochainError { component: MCP, category: TOOL, code: "E-X", message: "…" }` → add `, ..` before `}`
+   - `FerrochainError { code: "E-X", ... }` → `FerrochainError { code: "E-X", .. }`
+4. **For Class 1 violations** in rust fences (construction without `..`): convert to `FerrochainError::new(...)`.
+5. **For Class 4 sites** (BC-2.14.001/002, already annotated by fix-burst-280): no change required.
+
+**Worked examples from the corpus:**
+
+| BC Site Pattern | Context | Classification | Fix |
+|----------------|---------|---------------|-----|
+| `Err(FerrochainError { component: MCP, category: TOOL, code: E-MCP-001, message: "..." })` | Prose bullet | Class 3 VIOLATION | Add `..`; fix `...` → `..` in message; quote code string |
+| `FerrochainError { code: "E-SBXD-001" }` | Table cell | Class 3 VIOLATION | Add `..` |
+| `Err(FerrochainError { code: "E-VS-001" })` | Source Contract bullet | Class 3 VIOLATION | Add `..` |
+| `matches!(result, Err(FerrochainError { code: "E-X", .. }))` | ```rust fence, matches! | Class 2 VALID | No change |
+| `Err(FerrochainError { code: "E-X", .. }) => {}` | ```rust fence, match arm | Class 2 VALID | No change |
+| `FerrochainError { component: …, category: …, retry_hint: …, code: "E-X", message: "…" }` | ```rust fence, construction | Class 1 VIOLATION | Use `::new(...)` |
+| (BC-2.14.001 TV-001) `FerrochainError { component: Component::Core, category: Category::Val, retry_hint: RetryHint::Never, code: "E-X", message: "…", source: None }` | ```rust fence, construction, with annotation | Class 4 VALID | No change |
 
 **anyhow confinement rules:**
 1. Library crates (`ferrochain-*`): `anyhow` is NOT a dependency. ZERO uses.

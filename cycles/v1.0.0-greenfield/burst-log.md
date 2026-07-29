@@ -5845,3 +5845,11 @@ One row archived from STATE.md v4.34 Current Phase Steps table.
 One row archived from STATE.md v4.35 Current Phase Steps table.
 
 **Row (Fix-burst 277 Wave D — business-analyst COMPLETE):** Fix-burst 277 Wave D — business-analyst domain-spec COMPLETE (capabilities-p1-p2 bumped; entities-graph bumped; ubiquitous-language-core bumped; L2-INDEX bumped; Wave D root cause: single-form grep missed structurally different label form — 5 instances across 3 shards; entries now quote searched terms); 0/3.
+
+---
+
+### Archived from Current Phase Steps (session-wrap D-75)
+
+One row archived from STATE.md v4.37 Current Phase Steps table.
+
+**Row (Session wrap D-53 — P1D-175 FULL-PERIMETER recorded):** Session wrap D-53 — P1D-175 FULL-PERIMETER recorded (189 findings; 10 CRIT; 7 slices; frozen HEAD 2d36282; NOT convergence evidence — debt-first perimeter); publish-all.sh regenerated to 21-crate roster with 3-way classification; 12 stub crates created; D-48..D-53 added; L-100..L-107 minted; prior checkpoint archived; factory-artifacts pushed. NEXT: fix-burst 280.

@@ -98,8 +98,7 @@ Every `Embeddings` implementation MUST guarantee:
 - All returned vectors have the same length (the model's embedding dimension)
 - `embed_query(text)` returns a vector of the same length as any `embed_documents` vector
 
-Violation of these invariants MUST return `Err(FerrochainError { category: Category::Val,
-code: "E-EMBED-001", message: "EmbeddingDimensionMismatch: ..." })`. Returning a ragged result
+Violation of these invariants MUST return `Err(FerrochainError { code: "E-EMBED-001", category: Category::Val, .. })`. Returning a ragged result
 silently (wrong-length vectors in the output) violates DI-014 (no silent failures).
 
 VP-008 (proptest P1, seeded burst-223): proptest property test that for any valid `Embeddings` impl, all

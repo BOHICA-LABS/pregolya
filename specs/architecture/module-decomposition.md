@@ -178,7 +178,7 @@ Responsibilities: Axum HTTP server, resource CRUD, cron scheduler, security defa
 
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
-| `sandbox::path_guard` | `canonicalize_beneath_root(base, path)`; `Err(FerrochainError { code: "E-SBXD-001" })` on workspace escape; `WorkspaceFs` facade routes all workspace file ops — sole permitted path for `std::fs` calls within sandbox (BC-2.13.004 INV-2) | CRITICAL | SS-13 |
+| `sandbox::path_guard` | `canonicalize_beneath_root(base, path)`; `Err(FerrochainError { code: "E-SBXD-001", .. })` on workspace escape; `WorkspaceFs` facade routes all workspace file ops — sole permitted path for `std::fs` calls within sandbox (BC-2.13.004 INV-2) | CRITICAL | SS-13 |
 | `sandbox::wasm` | WASM execution backend (default `sandbox-wasm` feature) | MEDIUM | SS-13 |
 | `sandbox::container` | Container execution backend (`sandbox-container` feature) | MEDIUM | SS-13 |
 | `sandbox::seatbelt` | macOS Seatbelt deny-by-default profile (NE-16) | MEDIUM | SS-13 |

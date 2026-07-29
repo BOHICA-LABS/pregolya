@@ -1882,3 +1882,27 @@ BC-2.18.004 body unread; 36/37 standing gates body-unaudited; 105 hyphenated-mod
 
 ### ARCHIVE METADATA
 Date: 2026-07-28 | Archived at: STATE.md v4.37 fix-burst 280 close (D-74) | STATE.md: v4.36 → v4.37 | fix-burst 280 COMPLETE (~54/189 total P1D-175 closed; 2C+11H+D-52 this burst) | D-71..D-74 added | L-123..L-130 minted | TDIV-008 registered | streak 0/3
+
+---
+
+## Checkpoint v4.37 (archived — replaced by v4.38)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1, greenfield+semport. Streak **0/3 after 176 passes**. P1D-175 FULL-PERIMETER: 189 findings (10 CRIT / ~69 HIGH). Fix-burst 280 closed ~54/189 total (2C+11H this burst; ~40 from burst-279). **A25 PARTIAL**: VP-body sweep complete; BC-body INCOMPLETE — 158 `FerrochainError { component:/category:/code: … }` literals in 53 BC files, blocked on ADR-010 adjudication. **NEXT WAS: fix-burst 281** — architect extends ADR-010 (construction-example vs value-observation rule), then product-owner sweeps 53 BC files.
+
+### HEADS (v4.37)
+develop `46725ad` — clean, `== origin/develop`, PUSHED. factory-artifacts `34cf2d5` (fix-burst 280) — clean, PUSHED. No worktrees. No open PRs. NOTHING was local-only at the time this checkpoint was written.
+
+### NEXT-ACTION WAS
+Dispatch `vsdd-factory:architect` for fix-burst 281 Wave A: extend ADR-010 with construction-example vs value-observation rule. Then `vsdd-factory:product-owner` for A25 completion (53 files / 158 sites). Then TDIV-002..TDIV-007 governance records.
+
+### WORKSTREAM STATE (v4.37)
+- WORKSTREAM 1: A25 completion — BLOCKED on ADR-010 extension. Architect must distinguish construction-example form (must use `::new()`) from value-observation prose. Largest concentrations: BC-2.08.004 (15), BC-2.14.006 (9), BC-2.09.004 (9), BC-2.09.002 (9), BC-2.08.007 (8).
+- WORKSTREAM 2: P1D-176 FULL-PERIMETER — QUEUED. Do NOT dispatch until CRIT/HIGH backlog materially drained (~135 findings open). D-32: FULL-PERIMETER only. D-69: threshold ~135 remaining.
+- WORKSTREAM 3: TDIV-002..TDIV-007 governance records — queued after A25.
+
+### COVERAGE DEBTS (carried to v4.38 — unchanged)
+BC-2.18.004 body unread; 36/37 standing gates body-unaudited; 105 hyphenated-module + 131 version-pin occurrences untriaged; 129 TV Count cells never hand-summed; ADR-010 canon-note site unopened; per-VP frontmatter `tool`/`priority`/`bc_anchor`/`crate` unverified.
+
+### ARCHIVE METADATA
+Date: 2026-07-28 | Archived at: session-wrap D-75 | STATE.md: 4.37→4.38 | burst-281 Wave A COMPLETE (ADR-010 §Error-Construction Notation Canon; 19 architecture sites) | Wave A-corr DEFERRED (3 discriminator defects; stalled 600s) | D-75 allocated | streak 0/3

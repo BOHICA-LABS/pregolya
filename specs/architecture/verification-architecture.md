@@ -405,7 +405,7 @@ Formal statement:
 ∀ slots: Vec<SlotVar>, |slots| ≤ 4:
   ∃ slot ∈ slots: slot.policy == SlotTrustPolicy::TrustRequired
                   ∧ slot.trust_level.is_some_and(|t| t.is_untrusted()) →
-    check_slot_trust(slots) == Err(FerrochainError { code: "E-TMPL-001", category: SECURITY })
+    check_slot_trust(slots) == Err(FerrochainError { code: "E-TMPL-001", category: SECURITY, .. })
 ```
 
 Kani harness sketch:
@@ -569,7 +569,7 @@ which is rejected at BudgetConfig construction (EC-001 in BC-2.10.005).
 **VP-013 — BashTool Risk Floor** (`tools::shell`) `Kani P1 Phase 6`
 
 Property: For all `ActionRisk r ∈ {ReadOnly, Low}`, `check_risk_floor(r)` returns
-`Err(FerrochainError { code: "E-TOOLS-007", category: VAL })` and never returns `Ok(())`.
+`Err(FerrochainError { code: "E-TOOLS-007", category: VAL, .. })` and never returns `Ok(())`.
 The Low/ReadOnly risk tiers are unconditionally below the minimum allowed floor.
 
 Formal statement:
