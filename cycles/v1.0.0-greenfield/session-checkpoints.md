@@ -1976,3 +1976,44 @@ BC-2.18.004 body unread; 36/37 standing gates body-unaudited; 105 hyphenated-mod
 
 ### ARCHIVE METADATA
 Date: 2026-07-29 | Archived at: burst-282 Wave B COMPLETE (D-82) | STATE.md: 4.39 → 4.40 | burst-282 Wave B COMPLETE (180 notation corrections; 51 BC files + domain-spec + 14 D-35 xtask sites; D-35 CLOSED 26/26; verify-error-notation-canon.sh minted; D-82..D-87 added; L-136..L-141 minted) | streak 0/3
+
+---
+
+### Archived Checkpoint — v4.41 (archived at session-wrap D-88, 2026-07-29)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1, greenfield+semport. Streak **0/3 after 176 passes**. Burst-282 Wave B COMPLETE: ADR-010 §Error-Construction Notation Canon adopted corpus-wide for the first time (D-77 reframe: baseline authoring event, not drift repair); 180 notation corrections across 51 BC files + 5 domain-spec/prd sites + 14 D-35 xtask sites; verify-error-notation-canon.sh measures 0 violations (351 openers; bucket sum 351); D-35 CLOSED 26/26 (D-84). **~35-40 P1D-175 findings estimated open; CRIT 0 remaining; HIGH materially drained.** D-69 gate: assess remaining CRIT/HIGH count before dispatching P1D-176. D-32 and D-69 in force.
+
+### WORKSTREAM 1 — TDIV governance records + P1D-176 (dispatch next)
+`NEXT-ACTION` = assess D-69 gate (orchestrator: verify remaining CRIT/HIGH count against threshold). If D-69 passed: batch TDIV-002..TDIV-007 through SINGLE spec-steward dispatch, then dispatch P1D-176 FULL-PERIMETER on then-current factory-artifacts HEAD. Do NOT dispatch P1D-176 without D-69 assessment.
+
+### P1D-176 FROZEN-HEAD WARNING
+P1D-175's frozen HEAD was `2d36282`. Burst-282 Wave B lands after it. P1D-176 MUST gate on the then-current factory-artifacts HEAD (`git -C .factory log -1 --format=%h`). D-32 (FULL-PERIMETER only) and D-69 (~35-40 findings estimated open; assess threshold before dispatching) both in force. Streak is 0/3 — nothing resets now, but cold sessions must not miscount.
+
+### HEADS
+develop `46725ad` — clean, `== origin/develop`, PUSHED. factory-artifacts — clean, PUSHED (run `git -C .factory log -1 --format=%h` for current SHA). Story worktrees: NONE. Open PRs: NONE.
+
+### NEXT-ACTION
+Assess D-69 gate. If passed: batch TDIV-002..TDIV-007 through single spec-steward dispatch (prevent concurrent-write ghost findings), then dispatch P1D-176 FULL-PERIMETER on then-current factory-artifacts HEAD.
+
+**Validator baselines (orchestrator-verified — burst-282 Wave B final):**
+verify-no-version-pins: PASS=198 FAIL=0; records-lint: PASS=5 FAIL=0; verify-signature-canon: PASS=5 FAIL=0; verify-form-a-changelog-direction: PASS=198 WARN=7 FAIL=0 BC_UNVERIFIED=0; verify-arch-anchor-resolution: PASS=129 FAIL=0; verify-enum-variant-casing: PASS=198 FAIL=0; verify-module-canonicality: PASS=8 FAIL=0; verify-changelog-date-monotonicity: PASS=131 FAIL=0; verify-bc-frontmatter-schema: PASS=129 FAIL=0; **verify-error-notation-canon: PASS=1 FAIL=0 (351 openers; 0 violations; bucket sum 351)**.
+
+### COVERAGE DEBTS — block any CLEAN claim under D-32 until closed
+- BC-2.18.004: targeted grep only; PC5 added burst-279 — full body read pending.
+- 36 of 37 standing gates: count/continuity only (gate #25 sole body-deep audit).
+- 105 hyphenated-module occurrences + 131 version pins: counted per-file, NOT triaged live-body vs changelog.
+- 129 TV Count cells: never hand-summed.
+- ADR-010 canon-note site: unopened (F-P175-D115 severity contingent).
+- Per-VP frontmatter: `module:` only — `tool`/`priority`/`bc_anchor`/`crate` unverified.
+
+### PENDING HUMAN ACTIONS
+1. **R14 (HIGH, irreversible)** — `cargo login` then `cd .factory/namespace-reservation && bash publish-all.sh` (`EXPECTED_OWNER` must match crates.io identity exactly). 12 of 21 roster crates currently unreserved.
+2. B1 — `direnv allow .`
+3. **TDIV-008 (HIGH, engine-level deadlock; see D-78)** — spec-steward output paths unregistered in engine artifact path registry; `policies.yaml` absence merged into this root cause (D-78). Engine-level fix required; interim: `proposals/`.
+
+### STANDING USER DIRECTIVE
+"Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes." (2026-07-13)
+
+### ARCHIVE METADATA
+Date: 2026-07-29 | Archived at: session-wrap D-88 | STATE.md: 4.41 → 4.42 | records-only micro-burst D-83 count corrected (8→7 blocking validators); Wave B notation sweep COMPLETE (ADR-010 §Error-Construction Notation Canon corpus-wide; 0 violations) | streak 0/3
