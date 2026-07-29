@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.004
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
+  - "1.2 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — nine violations corrected: Description (3/5 fields), PC1 (4/5), Invariants `{ category: TOOL }` (1/5), EC-001 (3/5), EC-002 (2/5), EC-003 (1/5), TV-001 (2/5), TV-002 CLASS3_ASCII_ELLIPSIS_VIOLATION (`...` → `..`), Architecture Anchors (3/5). All receive `..` per ADR-010 §Error-Construction Notation Canon Class 3."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -60,7 +61,7 @@ a bare `ToolException` raised by the tool machinery outside the `isError` path
 (e.g., by the rmcp SDK itself, or by an interceptor). When a bare `ToolException`
 is raised, its error type identity MUST be preserved in the propagated
 `FerrochainError` — the caller receives `FerrochainError { component: MCP,
-category: TOOL, code: E-MCP-001 }`, not a generic `McpError::Internal` or opaque
+category: TOOL, code: E-MCP-001, .. }`, not a generic `McpError::Internal` or opaque
 error. This preserves the Python contract where a bare `ToolException`'s type
 identity is retained when re-raised through `_handle_mcp_tool_error`.
 
@@ -79,7 +80,7 @@ identity is retained when re-raised through `_handle_mcp_tool_error`.
 1. The `ToolException` type identity is preserved in the propagated error.
    The caller observes `Err(FerrochainError { component: MCP, category: TOOL,
    code: E-MCP-001, message: "ToolException: MCP server '<server>' raised
-   ToolException for tool '<tool>': <message>" })`.
+   ToolException for tool '<tool>': <message>", .. })`.
 2. The error is NOT wrapped in `McpError::Transport` or `McpError::Internal`.
 3. The `handle_tool_errors` flag does NOT suppress this path; the error always
    propagates as `Err(...)`.
@@ -93,7 +94,7 @@ identity is retained when re-raised through `_handle_mcp_tool_error`.
 - The bare `ToolException` path and the `isError=true` path are mutually exclusive:
   the `isError=true` path produces either a `ToolMessage{status: Error}` or
   `Err(McpError::ToolExecution)` depending on the flag; the bare path always produces
-  `Err(FerrochainError { category: TOOL })`.
+  `Err(FerrochainError { category: TOOL, .. })`.
 - Error type identity preservation is testable: a test can assert that
   `err.code() == "E-MCP-001"` and `err.category() == Category::Tool`.
 
@@ -102,20 +103,20 @@ identity is retained when re-raised through `_handle_mcp_tool_error`.
 ### EC-001: Bare ToolException with non-empty message (Red Gate vector)
 **Scenario:** The rmcp session raises a `ToolException("unauthorized: tool requires auth")`.
 **Expected behavior:** The caller receives
-`Err(FerrochainError { code: E-MCP-001, category: TOOL, message: "ToolException: MCP server 'fs' raised ToolException for tool 'read_file': unauthorized: tool requires auth" })`.
+`Err(FerrochainError { code: E-MCP-001, category: TOOL, message: "ToolException: MCP server 'fs' raised ToolException for tool 'read_file': unauthorized: tool requires auth", .. })`.
 **This is the Red Gate vector** — this test must compile and FAIL (i.e., the error
 is either swallowed, mapped to INTERNAL, or the code is not E-MCP-001) before implementation.
 
 ### EC-002: Bare ToolException with empty message
 **Scenario:** `ToolException("")` is raised.
-**Expected behavior:** `Err(FerrochainError { code: E-MCP-001, message: "ToolException: MCP server '<srv>' raised ToolException for tool '<tool>': (no message)" })`.
+**Expected behavior:** `Err(FerrochainError { code: E-MCP-001, message: "ToolException: MCP server '<srv>' raised ToolException for tool '<tool>': (no message)", .. })`.
 The empty message is replaced with the sentinel string `"(no message)"` — no panic,
 no empty message in the error struct.
 
 ### EC-003: handle_tool_errors=false, bare ToolException
 **Scenario:** `handle_tool_errors = false`; bare `ToolException` raised.
 **Expected behavior:** Identical to EC-001 — the bare ToolException path ignores the
-flag and always propagates as `Err(FerrochainError { code: E-MCP-001 })`.
+flag and always propagates as `Err(FerrochainError { code: E-MCP-001, .. })`.
 
 ### EC-004: Distinction from isError=true path
 **Scenario:** `isError = true` result returned from MCP server (not a bare exception).
@@ -128,8 +129,8 @@ the isError path.
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | rmcp raises `ToolException("auth failure")`, handle_tool_errors=true | `Err(FerrochainError { code: "E-MCP-001", category: TOOL })` | **Red Gate vector — must FAIL before implementation** |
-| TV-002 | Same, handle_tool_errors=false | Identical `Err(FerrochainError { code: "E-MCP-001", ... })` — flag ignored | Flag irrelevance |
+| TV-001 | rmcp raises `ToolException("auth failure")`, handle_tool_errors=true | `Err(FerrochainError { code: "E-MCP-001", category: TOOL, .. })` | **Red Gate vector — must FAIL before implementation** |
+| TV-002 | Same, handle_tool_errors=false | Identical `Err(FerrochainError { code: "E-MCP-001", .. })` — flag ignored | Flag irrelevance |
 | TV-003 | `ToolException("")` | `Err(...)` with message `"...: (no message)"` | Empty message sentinel |
 | TV-004 | `isError=true` (not bare ToolException) | `Ok(ToolMessage{status:Error,...})` or `Err(McpError::ToolExecution)` per BC-2.09.002 | Distinct path — not this BC |
 | TV-005 | FerrochainError source chain | `err.source()` == `McpError::ToolExecution { ... }` | Type identity in source chain |
@@ -148,7 +149,7 @@ the isError path.
 ## Architecture Anchors
 
 - `ferrochain-mcp/src/tools.rs` — `_handle_mcp_tool_error` (bare ToolException arm)
-- `ferrochain-core/src/error.rs` — `FerrochainError { component: MCP, category: TOOL, code: E-MCP-001 }`
+- `ferrochain-core/src/error.rs` — `FerrochainError { component: MCP, category: TOOL, code: E-MCP-001, .. }`
 
 ## Story Anchor
 

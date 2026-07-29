@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.002
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
+  - "1.2 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Three sites corrected: PC5 single-line span (E-CORE-002, bare wrapper missing `, ..`); EC-002 multiline span continuation line (E-CORE-002, `, ..` added before closing `})`); TV-004 table-cell span (E-CORE-002, `, ..` added). All spans have category/code but lack component and retry_hint."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-001
   - domain-spec/invariants.md#DI-008
@@ -64,7 +65,7 @@ typed `Err(FerrochainError)` — it never panics.
    and fails compilation without it — the field is NOT `Option<String>` but `String`.
 5. Deserialization of `{"type":"ai","content":"hello"}` produces `Message::Ai(...)` with the
    correct variant; deserialization of `{"type":"unknown_role","content":"x"}` returns
-   `Err(FerrochainError { category: VAL, code: E-CORE-002 })` — not a panic.
+   `Err(FerrochainError { category: VAL, code: E-CORE-002, .. })` — not a panic.
 6. `Message` is `Serialize + DeserializeOwned`; round-trip serialization preserves all fields
    including `additional_kwargs` (captured via `#[serde(flatten)]` extras map).
 7. Legacy role string `"function"` deserializes as the `Function(FunctionMessage)` legacy variant
@@ -91,7 +92,7 @@ typed `Err(FerrochainError)` — it never panics.
 ### EC-002: Deserialization of unknown message role
 **Scenario:** A checkpoint stores a message with `{"type":"deprecated_agent","content":"x"}`.
 **Expected behavior:** Deserialization returns `Err(FerrochainError { category: VAL, code: E-CORE-002,
-message: "Message role 'deprecated_agent' is not a recognized message type" })`. The message is
+message: "Message role 'deprecated_agent' is not a recognized message type", .. })`. The message is
 not silently dropped or converted to a garbage variant.
 
 ### EC-003: AiMessage with both content string and tool_calls
@@ -119,7 +120,7 @@ code interprets it as a control signal, not as a content-bearing message.
 | TV-001 | `Message::Human(HumanMessage { content: MessageContent::Text("hi".into()), .. })` | Serializes as `{"type":"human","content":"hi"}` | Happy path — human message |
 | TV-002 | `Message::Ai(AiMessage { content: ..., tool_calls: vec![tc], usage_metadata: Some(um), .. })` | All fields present in serialized form; `usage_metadata.input_tokens`, `.output_tokens`, `.total_tokens` numeric | AiMessage with tool call and usage |
 | TV-003 | `Message::Tool(ToolMessage { content: MessageContent::Text("result".into()), tool_call_id: "call_abc".into(), .. })` | Serializes as `{"type":"tool","content":"result","tool_call_id":"call_abc"}` | ToolMessage with required id |
-| TV-004 | Deserialize `{"type":"invalid_role","content":"x"}` | `Err(FerrochainError { category: VAL, code: E-CORE-002 })` | Unknown role → error |
+| TV-004 | Deserialize `{"type":"invalid_role","content":"x"}` | `Err(FerrochainError { category: VAL, code: E-CORE-002, .. })` | Unknown role → error |
 | TV-005 | Deserialize `{"type":"function","content":"x","name":"fn_name"}` | `Message::Function(FunctionMessage { content: "x", name: "fn_name" })` | Legacy function role passes |
 
 ## Verification Properties

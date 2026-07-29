@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (ADV-P1D-PASS-56): F-P56-01 — added code: E-CORE-006 to PC5, invariant §layer-disambiguation, EC-004, and TV-004. The Runnable-layer recursion halt was codeless while its graph-engine counterpart (E-GRAPH-017) carried a code. E-CORE-006 (RecursionLimitExceeded, INTERNAL, broken) minted in error-taxonomy.md v1.7."
   - "1.3 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-CORE-006 message-prefix correction at all three BC sites. (1) PC5: was 'recursion limit exceeded' (no prefix, no depth); corrected to 'RecursionLimitExceeded: recursion limit exceeded at depth <depth>' (adds universal <ErrorName>: prefix and harmonizes with EC-004/invariant which already specified depth). (2) Invariant §layer-disambiguation: added 'RecursionLimitExceeded:' prefix to message string. (3) EC-004: added 'RecursionLimitExceeded:' prefix. All three sites now produce the canonical template 'RecursionLimitExceeded: recursion limit exceeded at depth <depth>'. Corresponding taxonomy E-CORE-006 detail corrected from 'nested invoke/stream call depth <depth> exceeded recursion_limit <limit>' to 'recursion limit exceeded at depth <depth>' (BC wins on content). interface-definitions.md dual-layer table row for Runnable-layer also updated to add prefix."
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
+  - "1.5 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Six sites corrected: PC1 single-line (E-CORE-003, `, ..` added); PC5 single-line (E-CORE-006, `, ..` added before closing `})`); invariant §layer-disambiguation multiline continuation line (E-CORE-006, `, ..` added before closing `})`); EC-001 multiline continuation line (E-CORE-003, `, ..` added); EC-004 multiline continuation line (E-CORE-006, `, ..` added); TV-004 table-cell (E-CORE-006, `, ..` added). All spans have category/code (plus message where present) but lack component and retry_hint."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -59,7 +60,7 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
 ## Postconditions
 
 1. `runnable.invoke(input, &config).await` returns `Ok(output)` for a valid input, or
-   `Err(FerrochainError { category: VAL, code: E-CORE-003 })` on input-type mismatch.
+   `Err(FerrochainError { category: VAL, code: E-CORE-003, .. })` on input-type mismatch.
 2. `runnable.stream(input, &config)` returns a `BoxStream` that yields exactly one chunk equal to
    the `invoke` result when the implementor does not override `stream` (non-streaming fallback).
    A streaming-native implementor may yield multiple chunks.
@@ -69,7 +70,7 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
 4. `runnable.batch_as_completed(inputs, &config)` yields `(usize, Result<Output, _>)` tuples
    out of insertion order but with the index from the original input slice.
 5. `recursion_limit` in `RunnableConfig` defaults to 25. Exceeding it in nested Runnable calls
-   returns `Err(FerrochainError { category: INTERNAL, code: E-CORE-006, message: "RecursionLimitExceeded: recursion limit exceeded at depth <depth>" })`.
+   returns `Err(FerrochainError { category: INTERNAL, code: E-CORE-006, message: "RecursionLimitExceeded: recursion limit exceeded at depth <depth>", .. })`.
 6. A child run inherits `tags` and `metadata` (accumulated) and `callbacks` from the parent
    `RunnableConfig`; `run_name` and `run_id` are consumed by the immediate run and not inherited.
 
@@ -85,7 +86,7 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
   is read by TWO independent enforcement layers that share the same `RunnableConfig` key:
   (1) **This BC (Runnable-layer):** counts nested `invoke`/`stream` call depth across chained
   Runnables; exceeding it returns `Err(FerrochainError { category: INTERNAL, code: E-CORE-006,
-  message: "RecursionLimitExceeded: recursion limit exceeded at depth N" })` — no run-level halt, just a Runnable call error.
+  message: "RecursionLimitExceeded: recursion limit exceeded at depth N", .. })` — no run-level halt, just a Runnable call error.
   (2) **BC-2.03.001 PC5 (graph-engine-layer):** counts BSP super-steps per invocation segment;
   exceeding it transitions the entire run to `failed` with `Err(E-GRAPH-017
   GraphRecursionLimitExceeded)`. Both layers enforce `recursion_limit = 25` by default; the
@@ -97,7 +98,7 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
 **Scenario:** A `DynRunnable<Value, Value>` receives an input that does not conform to the
 expected schema at runtime.
 **Expected behavior:** Returns `Err(FerrochainError { category: VAL, code: E-CORE-003,
-message: "Runnable input type mismatch: expected '<expected>', got '<actual>'" })`.
+message: "Runnable input type mismatch: expected '<expected>', got '<actual>'", .. })`.
 **Reference:** error-taxonomy.md E-CORE-003.
 
 ### EC-002: batch with max_concurrency=1 (sequential fallback)
@@ -114,7 +115,7 @@ then terminates. No buffering delay beyond the `invoke` call itself.
 **Scenario:** A `RunnableLambda` wraps another `RunnableLambda` which wraps another, reaching
 depth 26 (recursion_limit=25).
 **Expected behavior:** The 26th nesting depth returns `Err(FerrochainError { category: INTERNAL,
-code: E-CORE-006, message: "RecursionLimitExceeded: recursion limit exceeded at depth 26" })`. No stack overflow occurs.
+code: E-CORE-006, message: "RecursionLimitExceeded: recursion limit exceeded at depth 26", .. })`. No stack overflow occurs.
 
 ### EC-005: batch with empty input slice
 **Scenario:** `runnable.batch(vec![], &config).await`
@@ -127,7 +128,7 @@ code: E-CORE-006, message: "RecursionLimitExceeded: recursion limit exceeded at 
 | TV-001 | `lambda.invoke("hello", &RunnableConfig::default()).await` where lambda returns `input.to_uppercase()` | `Ok("HELLO")` | Happy path — synchronous invoke |
 | TV-002 | `lambda.batch(vec!["a","b","c"], &config).await` | `[Ok("A"), Ok("B"), Ok("C")]` — insertion order preserved | Batch ordering invariant |
 | TV-003 | `lambda.stream("hello", &config)` (non-streaming) | yields one chunk `"HELLO"`, then terminates | Default stream yields single chunk |
-| TV-004 | `lambda.invoke(input, &config)` where config has `recursion_limit: 25` and call depth = 26 | `Err(FerrochainError { category: INTERNAL, code: E-CORE-006 })` | Recursion guard |
+| TV-004 | `lambda.invoke(input, &config)` where config has `recursion_limit: 25` and call depth = 26 | `Err(FerrochainError { category: INTERNAL, code: E-CORE-006, .. })` | Recursion guard |
 | TV-005 | `lambda.batch(vec![], &config).await` | `Ok(vec![])` | Empty batch returns empty vec |
 
 ## Verification Properties

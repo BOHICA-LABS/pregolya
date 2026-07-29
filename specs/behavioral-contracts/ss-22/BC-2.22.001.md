@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.001
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.3 (FIX-BURST-269/F-P167-01/2026-07-25): Fix Category::VALIDATION → Category::VAL in PC-2 E-EMBED-001 code block. VALIDATION is not in the canonical 12-member Category enum; E-EMBED-001 is VAL per error-taxonomy.md §E-EMBED-001. D23 sibling-sweep (Burst-232 fixed SS-23; this burst fixes SS-22/21/18 stragglers)."
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B): Component::EMBED → Component::Embed, Category::VAL → Category::Val in PC-2 E-EMBED-001 inline code block."
   - "1.5 (FIX-BURST-280-WAVE-C/F-P175-A25/2026-07-28): Task 1 — PC-2 construction form alignment. Replace struct-literal `FerrochainError { component: Component::Embed, category: Category::Val, code: ..., message: ... }` (missing `retry_hint` and `source`; barred by `#[non_exhaustive]` for external callers) with canonical `FerrochainError::new(Component::Embed, Category::Val, RetryHint::Never, \"E-EMBED-001\", \"EmbeddingDimensionMismatch: embedding batch returned inconsistent vector lengths\")` form. Architect proposal verified: 5-arg order (component, category, retry_hint, code, message) matches ADR-010 §Decision pub fn new signature exactly; message matches error-taxonomy E-EMBED-001 canonical prefix `EmbeddingDimensionMismatch:` (distinct from E-VS-002 prefix `DimensionMismatch:` per v1.29 collision fix). No BC semantic change — PC2/PC3 contract preserved; validate_embedding_batch function spec (interface-definitions §core::embeddings) consistent with dimensionality invariants here."
+  - "1.6 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). One CLASS3_ASCII_ELLIPSIS_VIOLATION corrected: PC2 partial-batch-error sentence `Err(FerrochainError { ... })` — replaced `...` with `..`. No behavioral change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-031
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -76,7 +77,7 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
      `Err(FerrochainError::new(Component::Embed, Category::Val, RetryHint::Never, "E-EMBED-001",
      "EmbeddingDimensionMismatch: embedding batch returned inconsistent vector lengths"))`.
    - If the provider returns a partial batch error (e.g., rate limit, service error):
-     `Err(FerrochainError { ... })` for the whole call — NO silent truncation to a partial
+     `Err(FerrochainError { .. })` for the whole call — NO silent truncation to a partial
      result set, NO `Vec::new()` fallback (DI-014).
 3. `embed_query(&self, text) → Result<Vec<f32>, FerrochainError>`:
    - `Ok(vec)` where `vec.len() == d` — same dimension as `embed_documents` inner vectors.

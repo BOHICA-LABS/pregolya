@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.007
-version: "1.6"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,8 @@ changelog:
   - "1.4 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-004 and TV-003 carried `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003 })` bare wrappers; E-PROV-003 has `<provider>` and `<tokens>` placeholders. Added inline `message:` template to both; EC-004 is the authoritative full-form site; TV-003 PASS-ABBREV via EC-004."
   - "1.5 (burst-240/F-P140-02/2026-07-22): E-PROV-002 message generalized. PC1 message was 'ProviderTimeout: stream chunk timeout after <duration>' (stream-specific); generalized to 'ProviderTimeout: request timed out after <duration>' to align with taxonomy E-PROV-002 v1.34, which covers both per-chunk streaming stalls (this BC) and unary HTTP request timeouts (BC-2.14.004). The 'stream chunk' qualifier was a BC-level artifact; the generalized form remains accurate for the streaming stall case because the stall IS a request timeout on the per-chunk level. EC-001 description updated to remove the unsupported claim about the message containing the number of chunks (the message format has only <duration>; no chunk count placeholder exists). PASS-ABBREV sites (EC-001/EC-003/TV-001/TV-005) unchanged — all are bare wrapper form citing code: E-PROV-002 without inline message, abbreviated via PC1 as authoritative full-form site."
   - "1.6 (FIX-BURST-276-WAVE-C/F-P173-407/2026-07-27): DEC-013 anchor added bidirectionally. DEC-013 (Provider Streaming Interrupted by Transport Error in domain-spec/edge-cases.md) named this BC as its anchor but this BC carried no reciprocal DEC-013 citation, making DEC-013 an orphan per F-P173-407. Fix: domain-spec/edge-cases.md#DEC-013 added to traces_to frontmatter; DEC References row added to Traceability table. DEC-013's scenario (TCP reset yields Err(Transport); per-chunk stall yields Err(Timeout); no truncated Ok(AiMessage)) is exactly the contract in PC1 and PC2 — the anchor is semantically correct."
+  - "1.7 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/D-80/2026-07-29): (1) Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon): 8 Class 3 violations corrected — §Description category-union observation (added `, ..`); §Postconditions PC1 Unicode `…` replaced with `..` after message field; §EC-001, §EC-003 bare two-field observations (added `, ..`); §EC-004 three-field observation (added `, ..`); §Canonical Test Vectors TV-001, TV-003, TV-005 bare two- and three-field observations (added `, ..`). All occurrences reconciled: 8 corrected (Class 3), 1 exempt (changelog). (2) D-35/D-80 xtask rename: §Traceability Test Types cell — `deny-client-new` → `check-client-timeout`."
+  - "1.8 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/D-80/2026-07-29): §Postconditions PC2 split-line form: FerrochainError on preceding line, `{ category: TRANSPORT, … }` on continuation — Unicode `…` replaced with `..` (only `category` present; `component`, `code`, `message`, `retry_hint` absent; rest pattern required per Class 3 normative rule; split-line form does not exempt from the rule)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-014
@@ -49,7 +51,7 @@ removal_reason: null
 
 When an SSE stream from a provider is interrupted mid-response — by a per-chunk stall
 timeout, a TCP reset, or any other transport-layer error — the streaming call must
-return `Err(FerrochainError { category: TIMEOUT | TRANSPORT })`. It must never return
+return `Err(FerrochainError { category: TIMEOUT | TRANSPORT, .. })`. It must never return
 `Ok(AiMessage)` with a partial or truncated content as if the response were complete.
 This contract closes the adk-rust P-77 pattern (NE-04) where streaming clients had no
 per-chunk timeout, allowing indefinitely hung streams to silently produce incomplete
@@ -70,11 +72,11 @@ results.
 1. **Per-chunk stall → `Err(Timeout)`:** When an SSE stream stalls (no bytes received)
    for longer than the configured per-chunk timeout, the streaming call terminates and
    returns `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002, message: "ProviderTimeout: request timed out
-   after <duration>", … })` (where `<duration>` is the configured per-chunk timeout, e.g., "30s").
+   after <duration>", .. })` (where `<duration>` is the configured per-chunk timeout, e.g., "30s").
    No partial `AiMessage` is returned as `Ok`.
 2. **TCP reset / connection drop → `Err(Transport)`:** When the underlying TCP
    connection is reset mid-stream, the streaming call returns `Err(FerrochainError
-   { category: TRANSPORT, … })`. No partial content is surfaced as success.
+   { category: TRANSPORT, .. })`. No partial content is surfaced as success.
 3. **Chunks received before interrupt are NOT returned as `Ok`:** There is no API shape
    that returns both accumulated partial content AND an error. The caller receives
    either a complete `Ok(AiMessage)` or a typed `Err`.
@@ -102,7 +104,7 @@ results.
 ### EC-001: Stream stalls after first chunk
 **Scenario:** The fixture delivers `message-start` + one `text` delta, then goes silent
 for 31 seconds.
-**Expected behavior:** `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002 })`. The partial text
+**Expected behavior:** `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002, .. })`. The partial text
 delta is discarded. The error message includes the configured timeout duration (PASS-ABBREV via PC1).
 
 ### EC-002: Stream completes normally with slow final chunk
@@ -115,14 +117,14 @@ total response took 28 seconds.
 ### EC-003: Stream stalls before message-start
 **Scenario:** The HTTP connection is established but no SSE bytes arrive within the
 chunk timeout.
-**Expected behavior:** `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002 })`. The error fires
+**Expected behavior:** `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002, .. })`. The error fires
 on the first chunk wait, not only after partial content is received.
 
 ### EC-004: TCP RST during deltaable block accumulation
 **Scenario:** The stream has delivered `message-start`, `content-block-start{text,0}`,
 and 5 text delta events. The TCP connection is then reset.
 **Expected behavior:** `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003,
-message: "StreamInterrupted: TCP connection to '<provider>' reset mid-stream after <tokens> tokens" })`
+message: "StreamInterrupted: TCP connection to '<provider>' reset mid-stream after <tokens> tokens", .. })`
 (where `<provider>` = the provider adapter name, e.g., "openai"; `<tokens>` = approximate token count
 at time of reset; both available at the raise site from the stream context). The 5 accumulated text deltas are not returned to the caller.
 
@@ -135,11 +137,11 @@ and fails the build. No runtime behavior change — this is a static enforcement
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | Stream fixture stalls after chunk 1, per-chunk timeout = 100ms | `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002 })` — no partial Ok | Per-chunk timeout |
+| TV-001 | Stream fixture stalls after chunk 1, per-chunk timeout = 100ms | `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002, .. })` — no partial Ok | Per-chunk timeout |
 | TV-002 | Stream fixture delivers all chunks within 29s, timeout = 30s | `Ok(AiMessage)` — complete response | Normal slow stream |
-| TV-003 | Stream fixture delivers 0 chunks then TCP RST | `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003, message: "StreamInterrupted: TCP connection to 'openai' reset mid-stream after 0 tokens" })` | Connection drop |
+| TV-003 | Stream fixture delivers 0 chunks then TCP RST | `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003, message: "StreamInterrupted: TCP connection to 'openai' reset mid-stream after 0 tokens", .. })` | Connection drop |
 | TV-004 | `reqwest::Client::new()` in production src/ | CI lint reports violation; build fails | EC-005 |
-| TV-005 | Stream stalls before message-start event | `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002 })` | EC-003 — early stall |
+| TV-005 | Stream stalls before message-start event | `Err(FerrochainError { category: TIMEOUT, code: E-PROV-002, .. })` | EC-003 — early stall |
 
 ## Verification Properties
 
@@ -179,5 +181,5 @@ _[to be filled after story decomposition]_
 | NE References | NE-04 (mandatory HTTP timeout; P-77 counter-example — streaming clients without per-chunk timeout; primary BC anchor is BC-2.14.004; this BC adds the streaming-specific per-chunk dimension) |
 | Priority | P1 |
 | Wave | Wave 2 |
-| Test Types | I (integration — stalled/dropped stream fixtures), CI (lint — deny-client-new) |
+| Test Types | I (integration — stalled/dropped stream fixtures), CI (lint — check-client-timeout) |
 | Module | ferrochain-<provider> / ferrochain-<provider>-sdk |

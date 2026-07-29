@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.001
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC6 had `Err(FerrochainError { category: VAL, code: E-CORE-001 })` bare wrapper; E-CORE-001 has `<n>` (block position) and `<type>` (type tag) placeholders. Added inline `message:` template to PC6; added EC-006 with concrete placeholder values as the authoritative full-form site."
+  - "1.3 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). PC6 multiline span: added `, ..` before closing `})` on continuation line (fields category/code/message present; component and retry_hint absent — elision marker required). EC-006 multiline span: same correction on its continuation line."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-001
   - domain-spec/invariants.md#DI-008
@@ -69,7 +70,7 @@ content from satisfying a typed-content parameter. This contract encodes the Lan
    rather than causing a deserialization error.
 6. Construction succeeds and returns `Ok(message)` when all content block types are valid;
    construction returns `Err(FerrochainError { category: VAL, code: E-CORE-001,
-   message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough" })`
+   message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`
    (where `<n>` is the block's 0-based position index; `<type>` is the unrecognized type tag string;
    both are available at the deserialization call site)
    when an unrecognized block type is encountered and the API contract requires strict validation.
@@ -116,7 +117,7 @@ insertion order. Each block is independently accessible by variant match.
 (0-based) in a message, and the caller requests strict validation (non-lenient mode; `NonStandard`
 passthrough disabled).
 **Expected behavior:** `Err(FerrochainError { category: VAL, code: E-CORE-001,
-message: "StrictContentBlockValidation: block at position 2 has unrecognized type tag 'provider_v2_block'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough" })`.
+message: "StrictContentBlockValidation: block at position 2 has unrecognized type tag 'provider_v2_block'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`.
 Deserialization does not fall through to a `NonStandard` block; the error propagates to the caller.
 
 ### EC-005: Serde round-trip with extras field

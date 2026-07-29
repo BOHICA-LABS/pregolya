@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.007
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -33,6 +33,7 @@ changelog:
   - "1.5 (F-P108-02, 2026-07-18): PC4 struct field name corrected from `source` to `message` for intra-BC consistency. PC4 used `{ source: <reason> }` while PC5, EC-002, and the key-v2 TV all use `{ message: \"EncryptionKeyRotationFailed: ...<detail>...\" }`. Root cause: v1.4 (F-P78-SWEEP) added the 'EncryptionKeyRotationFailed:' prefix to 4 sites but missed PC4 — the struct in PC4 still used the old `source` field name from the pre-v1.4 era. Fix: PC4 now reads `{ message: \"EncryptionKeyRotationFailed: <reason>\" }` consistent with all other struct sites in this BC and with the taxonomy 'EncryptionKeyRotationFailed: <reason>' message format."
   - "1.6 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-003 message reworded from 'EncryptedSerializer: key material must be non-empty' to 'Validation failed for 'key_material': must be non-empty' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV bare form unchanged — PASS-ABBREV via EC-003."
   - "1.7 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/ferrochain-checkpoint.md' to 'architecture/module-decomposition.md §ferrochain-checkpoint' — checkpoint::encryption row (at-rest encryption covering state AND event payloads; rotation error propagation). No BC body content changed."
+  - "1.8 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 8 FerrochainError observations with elided fields: Description inline (E-CHKPT-004 cite), PC4 inline, PC5 inline, EC-001 table cell, EC-002 table cell, EC-003 table cell, EC-004 table cell, and test-vector empty-key row (ADR-010 §Error-Construction Notation Canon, Class 3)."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -53,7 +54,7 @@ When an `EncryptedSerializer` (or equivalent encryption layer) is configured on 
 intermediate write payloads (written via `put_writes`) are encrypted before reaching
 persistent storage. There is no code path where `put` encrypts but `put_writes` does not.
 Key rotation failures surface as `Err(E-CHKPT-004 EncryptionKeyRotationFailed)` (i.e.,
-`FerrochainError { category: INTERNAL, code: "E-CHKPT-004" }`) and are never silently
+`FerrochainError { category: INTERNAL, code: "E-CHKPT-004", .. }`) and are never silently
 swallowed or logged-only. This satisfies NE-11.
 
 ## Preconditions
@@ -74,11 +75,11 @@ swallowed or logged-only. This satisfies NE-11.
    unencrypted serialization
 4. If key rotation fails (new key is invalid, or old key is invalidated before rotation
    completes), `Err(E-CHKPT-004 EncryptionKeyRotationFailed { message: "EncryptionKeyRotationFailed: <reason>" })`
-   (i.e., `FerrochainError { category: INTERNAL, code: "E-CHKPT-004" }`) is returned
+   (i.e., `FerrochainError { category: INTERNAL, code: "E-CHKPT-004", .. }`) is returned
    from the failing `put` or `put_writes` call; the write is NOT committed
 5. Decrypting with a key that is no longer in the active keyring returns
    `Err(E-CHKPT-004 EncryptionKeyRotationFailed { message: "EncryptionKeyRotationFailed: key not found: <key_id>" })`
-   (i.e., `FerrochainError { category: INTERNAL, code: "E-CHKPT-004" }`)
+   (i.e., `FerrochainError { category: INTERNAL, code: "E-CHKPT-004", .. }`)
 
 ## Invariants
 
@@ -95,10 +96,10 @@ swallowed or logged-only. This satisfies NE-11.
 
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
-| EC-001 | Key rotation mid-run: old key invalidated before new key is propagated to all active write paths | `put_writes` calls that acquire the old key after invalidation return `Err(E-CHKPT-004 EncryptionKeyRotationFailed)` (`FerrochainError { category: INTERNAL }`); the graph surfaces this to the caller; no partial plaintext write occurs |
-| EC-002 | Read of a blob encrypted with a retired key that is no longer in the keyring | `Err(E-CHKPT-004 EncryptionKeyRotationFailed { message: "EncryptionKeyRotationFailed: key not found: <key_id>" })` (`FerrochainError { category: INTERNAL }`) returned from `get_tuple`; no partial decryption |
-| EC-003 | `EncryptedSerializer` constructed with null or zero-length key material | `Err(FerrochainError { category: VAL, code: E-CORE-005, message: "Validation failed for 'key_material': must be non-empty" })` at construction time; no writes proceed |
-| EC-004 | Backend storage contains a mix of encrypted and unencrypted blobs (migration scenario) | Unencrypted blobs that lack the cipher header return `Err(FerrochainError { category: INTERNAL, code: E-CHKPT-007, message: "CipherHeaderMissing: missing cipher header: blob may be unencrypted" })`; reads of unencrypted legacy data do not silently succeed |
+| EC-001 | Key rotation mid-run: old key invalidated before new key is propagated to all active write paths | `put_writes` calls that acquire the old key after invalidation return `Err(E-CHKPT-004 EncryptionKeyRotationFailed)` (`FerrochainError { category: INTERNAL, .. }`); the graph surfaces this to the caller; no partial plaintext write occurs |
+| EC-002 | Read of a blob encrypted with a retired key that is no longer in the keyring | `Err(E-CHKPT-004 EncryptionKeyRotationFailed { message: "EncryptionKeyRotationFailed: key not found: <key_id>" })` (`FerrochainError { category: INTERNAL, .. }`) returned from `get_tuple`; no partial decryption |
+| EC-003 | `EncryptedSerializer` constructed with null or zero-length key material | `Err(FerrochainError { category: VAL, code: E-CORE-005, message: "Validation failed for 'key_material': must be non-empty", .. })` at construction time; no writes proceed |
+| EC-004 | Backend storage contains a mix of encrypted and unencrypted blobs (migration scenario) | Unencrypted blobs that lack the cipher header return `Err(FerrochainError { category: INTERNAL, code: E-CHKPT-007, message: "CipherHeaderMissing: missing cipher header: blob may be unencrypted", .. })`; reads of unencrypted legacy data do not silently succeed |
 
 ## Canonical Test Vectors
 
@@ -107,7 +108,7 @@ swallowed or logged-only. This satisfies NE-11.
 | Write a checkpoint via `put` with `EncryptedSerializer`; read raw bytes from storage backend | Raw bytes are NOT valid msgpack plaintext; after decryption with the active key, bytes are valid msgpack and deserialize to the original state | happy-path |
 | Write per-task writes via `put_writes` with `EncryptedSerializer`; read raw bytes from storage | Raw bytes are ciphertext; after decryption, writes match the original task write payloads exactly | happy-path |
 | Key rotation: active key set to `key-v2`; `put_writes` called; then `key-v2` is invalidated and `get_tuple` called | `get_tuple` returns `Err(E-CHKPT-004 EncryptionKeyRotationFailed { message: "EncryptionKeyRotationFailed: key not found: key-v2" })`; no partial data returned | error |
-| `EncryptedSerializer::new(key: &[])` with empty key | `Err(FerrochainError { category: VAL, code: E-CORE-005 })` at construction time; no serializer created | error |
+| `EncryptedSerializer::new(key: &[])` with empty key | `Err(FerrochainError { category: VAL, code: E-CORE-005, .. })` at construction time; no serializer created | error |
 
 ## Verification Properties
 

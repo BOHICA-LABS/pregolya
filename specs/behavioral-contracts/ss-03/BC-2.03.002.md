@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.002
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
+  - "1.3 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). TV-001 table-cell span (E-GRAPH-001) corrected: has code/category/message but lacks component and retry_hint; added `, ..`. PC3 span (E-GRAPH-001) already carries all five non-source fields (component/category/code/retry_hint/message) — CLASS3_VALID_COMPLETE, no change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -108,7 +109,7 @@ This is the enforcement mechanism for DI-001's concurrent-write prohibition.
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | Graph: 2 nodes, both write `state.x = "value"` to same `LastValue` channel in same super-step | `Err(FerrochainError { code: E-GRAPH-001, category: CONCURRENCY, message: "InvalidUpdateError: concurrent writes to LastValue channel 'x' from tasks [node_a, node_b] in super-step 1" })` | Happy-path for error case |
+| TV-001 | Graph: 2 nodes, both write `state.x = "value"` to same `LastValue` channel in same super-step | `Err(FerrochainError { code: E-GRAPH-001, category: CONCURRENCY, message: "InvalidUpdateError: concurrent writes to LastValue channel 'x' from tasks [node_a, node_b] in super-step 1", .. })` | Happy-path for error case |
 | TV-002 | Graph: 2 nodes, node_a writes `state.x`, node_b writes `state.y` (different channels) | `Ok(GraphState { x: node_a_value, y: node_b_value })` | No conflict — different channels |
 | TV-003 | Graph: 1 node writes `state.x` once | `Ok(GraphState { x: node_value })` | Single writer — no conflict |
 | TV-004 | Graph: 2 nodes both append to `Append` channel | `Ok(GraphState { items: [node_a_item, node_b_item] })` | Append channels allow concurrent writes |

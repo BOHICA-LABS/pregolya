@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.15"
+version: "1.16"
 status: active
 producer: business-analyst
 timestamp: 2026-07-27T00:00:00Z
 changelog:
+  - "1.16 (2026-07-29): Error-construction notation correction per ADR-010 §Error-Construction Notation Canon. 1 CLASS3_UNICODE_ELLIPSIS_VIOLATION corrected: replaced `…` (U+2026) in field-elision position with `..` in FerrochainError { category: TOOL, … } (MCPTool §Error, DEC-012 reference). The `…` appeared after `, ` (comma-whitespace), placing it in field-elision position per the discriminator."
   - "1.15 (2026-07-27): F-P173-211 — source field corrected from Box<dyn StdError> to Arc<dyn std::error::Error + Send + Sync> (Box does not implement Clone, causing E0277 on #[derive(Clone)] in ferrochain-core error type; Arc refcount-clone resolves this without requiring inner error to be Clone). message constraint added: MUST NOT contain credentials (DI-010). source constraint added: MUST NOT be exposed in HTTP responses. Naming adjudications: (1) component field retains L2 domain name FerrochainComponent with explicit Rust cross-ref to Component; (2) category variants aligned from PascalCase English (third-rendering) to taxonomy codes per casing canon, type name corrected from ErrorCategory to Category."
   - "1.14 (2026-07-25): TD-VSDD-091 BC-pin sweep — de-pin live normative prose: OnCeiling variants annotation 'BC-2.10.003 v1.2 + BC-2.10.004' → 'BC-2.10.003 + BC-2.10.004'. Version pins belong in changelog entries only; live body cites bare BC IDs."
   - "1.13 (burst-241 F-P141-05, 2026-07-23): Run entity: add error: Option<FerrochainError> field (BC-2.12.003 PC13/PC16 + invariant 'Run error populated ONLY when status=failed'). The field was absent despite being a first-class Read-Run response field per PC13 and PC16. output/error symmetry documented: output is Some when status∈{completed, summary_halt}; error is Some when status=failed; all other states both are None. Wire representation of error exposes {code, message, component, category} subset of FerrochainError (RFC-7807 compatible, PC16)."
@@ -171,7 +172,7 @@ The 2D error type for all ferrochain crates.
 A Tool whose schema and invocation semantics are discovered from an external MCP server.
 - **Fields:** server_id: String, tool_name: String, description: String, input_schema: JsonSchema, transport: MCPTransport (Stdio | HTTP | WebSocket)
 - **Behavior:** MCPTool implements the Tool Runnable interface. ToolResult produced by MCPTool is always tagged as untrusted ingress.
-- **Error:** Bare ToolException from MCP server must be preserved and wrapped as `FerrochainError { category: TOOL, … }` (DEC-012).
+- **Error:** Bare ToolException from MCP server must be preserved and wrapped as `FerrochainError { category: TOOL, .. }` (DEC-012).
 
 ---
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.003
-version: "1.6"
+version: "1.7"
 status: active
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
@@ -36,6 +36,7 @@ changelog:
   - "1.4 (2026-07-19, F-P114-01 fix burst 117): Anchor correction — Architecture Anchors updated from nonexistent 'architecture/ferrochain-checkpoint.md' to 'architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md' per architect adjudication (burst 117). Coherence check against ADR-005 rev-2: PC1 get_next_version(current, channel) signature correct; EC-003 E-CHKPT-002 return path correct; no rev-1 residue (next_id / per saver instance) found in body. No BC body content changed."
   - "1.5 (2026-07-19, F-P115-02 fix burst 118): PC1 sharpened to architect-adjudicated wording — full typed signature + provided-method semantics stated explicitly. Old: 'A `CheckpointSaver` implementation provides a `get_next_version(current, channel)` method'. New: full typed signature with MAY-override note. Adoption rationale: the original wording was ambiguous about whether `get_next_version` is a required method or a provided default; this exact ambiguity caused F-P115-02's secondary note; production-grade lens favors precision. No other body content changed."
   - "1.6 (F-P116-01): PC1 signature updated to include `&self` receiver — dyn-compatibility fix per ADR-005 v1.3 §Object-Safety. Old PC1 quoted `get_next_version(current: Option<CheckpointId>, channel: &ChannelName)`; new PC1 quotes `get_next_version(&self, current: Option<CheckpointId>, channel: &ChannelName)`. Rationale: dyn-compatibility (E0038) requires an instance-method receiver on every non-Sized-bounded trait method; virtual dispatch of backend overrides through Arc<dyn CheckpointSaver> requires &self; langgraph BaseCheckpointSaver.get_next_version is an instance method (F-P116-01). Architecture Anchors signature reference updated to include `&self` to match ADR-005 v1.3 corrected signature."
+  - "1.7 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 FerrochainError observations with elided fields: EC-003 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -92,7 +93,7 @@ NTP adjustment, or under clock skew in distributed deployments must have unambig
 |----|-------------|-------------------|
 | EC-001 | Two concurrent forks from the same parent checkpoint `P` | Both new checkpoints receive IDs > P; sibling ordering between the two forks is deterministic (e.g., first-writer wins the next counter value); both are valid branch heads |
 | EC-002 | System wall clock rolls backward (NTP adjustment) during an active run | Logical counter is unaffected; next checkpoint_id is still monotonically greater than the previous one; no ordering anomaly |
-| EC-003 | A caller attempts to construct a checkpoint with a random UUID (`Uuid::new_v4()`) as the ID | Compile-time type mismatch or runtime `Err(FerrochainError { category: INTERNAL, code: E-CHKPT-002, message: "MonotonicClockRegression: checkpoint_id must be monotonic: random UUID rejected" })` |
+| EC-003 | A caller attempts to construct a checkpoint with a random UUID (`Uuid::new_v4()`) as the ID | Compile-time type mismatch or runtime `Err(FerrochainError { category: INTERNAL, code: E-CHKPT-002, message: "MonotonicClockRegression: checkpoint_id must be monotonic: random UUID rejected", .. })` |
 | EC-004 | Checkpoint storage is queried with `ORDER BY created_at DESC` | This is a lint-detected anti-pattern; the canonical query MUST use `ORDER BY checkpoint_id DESC`; any storage backend that only exposes wall-clock ordering is non-conformant |
 
 ## Canonical Test Vectors
@@ -101,7 +102,7 @@ NTP adjustment, or under clock skew in distributed deployments must have unambig
 |-------|----------------|----------|
 | Create 5 sequential checkpoints on thread `"t1"`, namespace `"root"` | `id_1 < id_2 < id_3 < id_4 < id_5`; `ORDER BY checkpoint_id DESC` returns C5, C4, C3, C2, C1; `get_latest` returns C5 | happy-path |
 | Simulate wall-clock rollback: create C1 at t=100, then force clock to t=50, create C2 | `C2.checkpoint_id > C1.checkpoint_id` (logical counter unaffected); `C2.metadata.ts` may appear earlier than C1 but ordering is correct | edge-case |
-| Attempt `CheckpointSaver::put` with checkpoint whose ID is `Uuid::new_v4().to_string()` | `Err(FerrochainError { category: INTERNAL, code: E-CHKPT-002 })` — non-monotonic ID rejected | error |
+| Attempt `CheckpointSaver::put` with checkpoint whose ID is `Uuid::new_v4().to_string()` | `Err(FerrochainError { category: INTERNAL, code: E-CHKPT-002, .. })` — non-monotonic ID rejected | error |
 | Two concurrent writers race to create the next checkpoint on thread `"t1"` | One writer wins the counter; the other retries with a higher ID; final storage contains two distinct monotonic IDs with no ordering tie | edge-case |
 
 ## Verification Properties

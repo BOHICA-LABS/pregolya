@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.001
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-008, DI-012, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-20 Document Retrieval"
   - "1.1 (F-P130-04/2026-07-21): Add DI-014 to di_anchors — EC-002 already cited DI-014 in body ('error propagated, not swallowed; no Vec::new() fallback on partial failure'); frontmatter anchor was missing."
+  - "1.2 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 CLASS3_ASCII_ELLIPSIS_VIOLATION violations corrected. PC-2 failure arm, EC-002 expected-output, and TV-003 expected-output: `FerrochainError { ... }` → `FerrochainError { .. }` (replace `...` with `..` field-elision marker). No security semantics or VP anchors altered."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-026
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -70,7 +71,7 @@ Object-safety is achieved via `&self` receiver and `#[async_trait]` desugaring
    - On success: returns `Ok(docs)` where `docs` is a `Vec<Document>` (possibly empty) ranked
      by relevance to the query. The ordering is implementation-defined; the invariant is that
      the vector is deterministic for a given `(self-state, query)` pair.
-   - On failure: returns `Err(FerrochainError { ... })` propagated via `?` (DI-008 — no
+   - On failure: returns `Err(FerrochainError { .. })` propagated via `?` (DI-008 — no
      `unwrap()` in non-test code).
 3. `Document { page_content, metadata, id }` carries:
    - `page_content`: the retrieved text content — MUST be non-empty for content-bearing documents;
@@ -96,7 +97,7 @@ Object-safety is achieved via `&self` receiver and `#[async_trait]` desugaring
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | Query is empty string `""` | `Ok(vec![])` or implementation-specific ranked result; never a panic |
-| EC-002 | Underlying backend is unavailable (network error, file not found) | `Err(FerrochainError { ... })` — error propagated, not swallowed; no `Vec::new()` fallback on partial failure (DI-014) |
+| EC-002 | Underlying backend is unavailable (network error, file not found) | `Err(FerrochainError { .. })` — error propagated, not swallowed; no `Vec::new()` fallback on partial failure (DI-014) |
 | EC-003 | `get_relevant_documents` returns a large result set (e.g., 10,000 docs) | `Ok(docs)` with all 10,000 docs — no silent truncation at the trait level; truncation is the caller's responsibility |
 | EC-004 | Two `Arc<dyn Retriever>` clones call `get_relevant_documents` concurrently | Both calls proceed without data race; `Retriever: Send + Sync` enforces this |
 | EC-005 | Document with `id: None` received from a backend that doesn't assign IDs | Caller handles `None` gracefully; no `unwrap()` on `doc.id` without a prior `is_some()` guard |
@@ -107,7 +108,7 @@ Object-safety is achieved via `&self` receiver and `#[async_trait]` desugaring
 |---|-------|-----------------|----------|
 | TV-001 | `Arc<TestRetriever> as Arc<dyn Retriever>` → `get_relevant_documents("hello")` | Compiles; returns `Ok(vec![Document { page_content: "test doc", metadata: {}, id: None }])` | happy-path (dyn-compat compile check) |
 | TV-002 | `get_relevant_documents("")` on a retriever with 0 indexed docs | `Ok(vec![])` | edge-case (empty query, empty index) |
-| TV-003 | `get_relevant_documents("query")` on a retriever whose backend returns an I/O error | `Err(FerrochainError { ... })` — error propagated | error-case (backend failure) |
+| TV-003 | `get_relevant_documents("query")` on a retriever whose backend returns an I/O error | `Err(FerrochainError { .. })` — error propagated | error-case (backend failure) |
 
 ## Verification Properties
 

@@ -25,6 +25,11 @@
 #       S2 (capabilities-p1-p2.md VectorStoreRetriever<), S4 (4 files Arc<dyn Tool>),
 #       S5 (80 files FerrochainError full-form literals). In-flight: architect fix-burst
 #       closes S1/S2/S3; product-owner fix-burst closes S4/S5. Wire date: 2026-07-28.
+#   verify-error-notation-canon.sh        — (FAILING) ADR-010 error-construction notation
+#       D-72 error-construction notation canon | 5 violations in prd-supplements/bc-authoring-plan.md
+#       Pre-existing: 3 × CLASS3_ASCII_ELLIPSIS_VIOLATION, 2 × CLASS3_MISSING_DOTS_VIOLATION.
+#       Routing: product-owner fix-burst replaces '...' with '..' and adds '..' to partial-field
+#       forms in bc-authoring-plan.md. Wire date: 2026-07-29.
 #
 # ADVISORY VALIDATORS (exit 0; WARN/FAIL output shown but commit not blocked)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -107,6 +112,7 @@ run_blocking "records-lint.sh"
 run_blocking "verify-changelog-date-monotonicity.sh"
 run_blocking "verify-enum-variant-casing.sh"
 run_blocking "verify-signature-canon.sh"
+run_blocking "verify-error-notation-canon.sh"
 
 # ── Advisory validators (run but do not block; see promotion paths in header) ─
 echo ""

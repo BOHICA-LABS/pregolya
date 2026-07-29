@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.20"
+version: "1.21"
 status: active
 producer: product-owner
 timestamp: 2026-07-28T00:00:00Z
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.21 (wave-b-tail/D-35-xtask-rename/2026-07-29): §9 NE rollup table xtask name corrections (D-80 residue). (1) NE-04 Anchor column: 'cargo xtask deny-client-new' → 'cargo xtask check-client-timeout' (canonical check-<subject> form; NE-04/DI-009 gate). (2) NE-07 Anchor column: 'deny-expect-in-lib lint' → 'check-no-panic lint' (NE-07/check-no-panic gate). TD-VSDD-060 sweep: zero additional superseded names (lint-no-timeout, lint-no-panic, deny-expect-in-lib, deny-client-new) found in live body text. Error-construction notation: sole FerrochainError { in body text (§3 Interface Definition) is CLASS0_EXEMPT (Type Schema Form — component: Component field-type listing) per ADR-010 §Error-Construction Notation Canon; zero notation violations."
   - "v1.20 (fix-burst-280-corr/F-P175-C207-prd/F-P175-C208/2026-07-28): C207 prd-side and C208 residue cleared. (1) C207: §1.5 Python runtime bullet corrected — 'one-way Python-checkpoint import tool is in scope' removed; disposition is out of v1 scope per ADR-002 (post-v1 stretch; no roster slot, no SS, no capability in closed Phase 1b architecture). (2) C208: §1.5 OCSF telemetry normalization and SEC/SOC 2 compliance semantics pending-qualifier language removed; both are definitively out of v1 scope (no SS, ADR, or capability in closed Phase 1b architecture; OCSF rationale anchored to domain-a §5 and SS-06/CAP-007 astream_events v2 taxonomy; SEC/SOC 2 rationale anchored to domain-a §4)."
   - "v1.19 (fix-burst-280/F-P175-C201/C202/2026-07-28): Sibling sweep from product-brief.md fixes. (1) C202 §1.2 Solution Vision: 'Three design-forcing holdout domains' → 'Five design-forcing holdout domains'; Domain D (Hermes Agent, CAP-020/CAP-021) and Domain E (Agentic Coding CLI, CAP-017/CAP-018/CAP-034..038) bullets added. (2) §1.4 Target Users: Domain D and Domain E persona rows added. (3) Frontmatter `decisions:` extended with D19/D20/D22 (previously absent; L2-INDEX decisions had included them since D19/D20 authoring)."
   - "v1.18 (F-P172b-11/burst-275/2026-07-26): Two stale count pins corrected. (1) F-P172b-11 MED: §10 Module Criticality supplement pointer '(authoritative, 43-module Phase 1b registry)' → '(authoritative, Phase 1b registry — see §Classification Summary for current tier counts)'; registry has grown past 43 and the count was stale. (2) §11 Observability active count '6' → '11' and date '2026-07-21' → '2026-07-26'; count was not updated when observability.md v1.2 (burst-258) added 5 new entries to reach 11 active event_type values."
@@ -776,10 +777,10 @@ to BCs, CI lint gates, or ADRs.
 | NE-01 | BC | BC-2.13.001 (enforcing sandbox default) |
 | NE-02 | BC + VP seed | BC-2.13.004, BC-2.13.005 (workspace confinement) |
 | NE-03 | BC | BC-2.14.006 (no silent None for validation failures) |
-| NE-04 | BC + CI lint gate | BC-2.14.004 (mandatory 30s timeout; cargo xtask deny-client-new) |
+| NE-04 | BC + CI lint gate | BC-2.14.004 (mandatory 30s timeout; cargo xtask check-client-timeout) |
 | NE-05 | CI lint gate (ADR) | ADR-011 (cache-key-content-hash): cache keys must be content hash of (resolved instruction bytes + sorted tool declarations) |
 | NE-06 | BC | BC-2.11.002 (tool-result ingress), BC-2.11.003 (RAG), BC-2.11.004 (memory) |
-| NE-07 | BC + CI lint gate | BC-2.14.003 (constructor Result; deny-expect-in-lib lint) |
+| NE-07 | BC + CI lint gate | BC-2.14.003 (constructor Result; check-no-panic lint) |
 | NE-08 | BC | BC-2.12.006 (IdempotencyStore/RateLimitStore/RunStore trait seams) |
 | NE-09 | BC | BC-2.16.001, BC-2.16.002, BC-2.16.003 (retry termination contract) |
 | NE-10 | BC + CI lint gate | BC-2.14.005 (credential newtypes + redacted Debug) |

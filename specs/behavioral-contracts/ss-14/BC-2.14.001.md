@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (F-P173-211+F-P173-619/FIX-BURST-276/2026-07-27): F-P173-211 — propagate ADR-010 v1.12 Arc adjudication: update EC-001 source field from `Option<Box<dyn Error + Send + Sync>>` to `Option<Arc<dyn std::error::Error + Send + Sync>>`; add source field to Description six-field enumeration (partial reproduction was the root cause of the 173-pass detection lag). F-P173-619 — add PC8 for `#[non_exhaustive]` attribute per CLAUDE.md Code Conventions (all public API surface error types carry it; FerrochainError was the sole missing instance). TD-VSDD-060 sweep: sole product-owner-owned Box site was EC-001 (fixed here); `entities-server.md §FerrochainError` entity definition `source: Option<Box<dyn StdError>>` is business-analyst scope — routed for separate fix; ADR-010 changelog text preserving old Box form is intentional historical record, no action."
   - "1.5 (FIX-BURST-276-TD091/2026-07-27): TD-VSDD-091 anti-volatile-pin repair — PC8 last sentence: replace live-body sibling-artifact version pin with stable section anchor. ADR-010 §Decision (the section containing the FerrochainError struct definition and canonical #[non_exhaustive] #[derive(Debug, Clone)] form) replaces a specific version number. Sibling-sweep of this file live body: no additional version pins found. BC-INDEX split unchanged (BC-2.14.001 remains P0)."
   - "1.6 (FIX-BURST-280-WAVE-C/F-P175-A25-T2/2026-07-28): Task 2 — explicit annotation added to PC1, TV-001 Notes, and TV-002 Notes. These three sites use struct-literal construction `FerrochainError { ... }` intentionally: (a) this BC defines the FerrochainError struct itself, not a usage BC; (b) the tests run within ferrochain-core where #[non_exhaustive] does NOT bar struct-literal construction from the defining crate; (c) external callers use FerrochainError::new(...) per PC8/ADR-010 §Decision. No behavioral change. TD-VSDD-060 sibling-sweep confirmed: all other FerrochainError { ... } sites in BC-2.14.001 body are prose shorthand (ALL-CAPS) or the struct definition in PC8 — no additional in-crate construction forms present."
+  - "1.7 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). Three Class 3 violations corrected: EC-001 `FerrochainError { component: CHKPT, category: DURABILITY }` — added `, ..` (CLASS3 VIOLATION, 2/5 fields); Related BCs `FerrochainError { category: VAL }` — added `, ..` (CLASS3 VIOLATION, 1/5 fields); TV-002 Input `...` field-elision marker — replaced with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION). PC1, TV-001, and PC8 unchanged: PC1 and TV-001 are Class 3 VALID (all 5 non-source fields present; Class 4 defining-crate annotations from v1.6 remain accurate); PC8 `pub struct FerrochainError { … }` is EXCLUDED_DECL. No behavioral change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -117,7 +118,7 @@ one-to-one; `DURABILITY` in prose ↔ `Category::Durability` in Rust, `CHKPT` �
 ## Edge Cases
 
 ### EC-001: Error from crate A wraps error from crate B
-**Scenario:** `ferrochain-graph` catches a `FerrochainError { component: CHKPT, category: DURABILITY }`
+**Scenario:** `ferrochain-graph` catches a `FerrochainError { component: CHKPT, category: DURABILITY, .. }`
 from `ferrochain-checkpoint` and re-emits it. Should the outer error be Graph or Chkpt?
 **Expected behavior:** The originating component (Chkpt) is preserved in the re-emitted error via
 a `source: Option<Arc<dyn std::error::Error + Send + Sync>>` chain field. The outer error's
@@ -156,7 +157,7 @@ chain preserves the original `FerrochainError`'s fields when downcast with `anyh
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | Construct `FerrochainError { component: Component::Core, category: Category::Val, retry_hint: RetryHint::Never, code: "E-CORE-001", message: "..." }` | Struct fields readable as specified; `err.to_string()` contains message | Happy path — in-crate construction (struct literal valid within `ferrochain-core`; external API is `FerrochainError::new(...)`; notation intentional — do not convert) |
-| TV-002 | `FerrochainError { component: Component::Prov, category: Category::Rate, retry_hint: RetryHint::Later(Duration::from_secs(30)), ... }` | `retry_hint == RetryHint::Later(30s)` | Rate-limit error with backoff — in-crate field verification (notation intentional; see PC1 note) |
+| TV-002 | `FerrochainError { component: Component::Prov, category: Category::Rate, retry_hint: RetryHint::Later(Duration::from_secs(30)), .. }` | `retry_hint == RetryHint::Later(30s)` | Rate-limit error with backoff — in-crate field verification (notation intentional; see PC1 note) |
 | TV-003 | `std::error::Error::source(&err)` when `source` field is `Some(inner)` | Returns `Some(&inner)` | Error chaining works |
 | TV-004 | `anyhow::Context::context(Err::<(), _>(ferrochain_err), "ctx")` | `anyhow::Error` wraps `ferrochain_err`; `downcast_ref::<FerrochainError>()` succeeds | anyhow compatibility |
 | TV-005 | `FerrochainError::default()` | Compile error — `Default` not implemented | No default construction |
@@ -173,7 +174,7 @@ chain preserves the original `FerrochainError`'s fields when downcast with `anyh
 - BC-2.14.002 — RFC-7807 emission (composes with: FerrochainError is the source for RFC-7807 problem+json output)
 - BC-2.14.003 — Constructor Result contract (depends on: all crate constructors propagate errors as FerrochainError)
 - BC-2.14.005 — API key newtype (composes with: credential errors must also use FerrochainError)
-- BC-2.14.006 — Validation failure propagation (composes with: validation errors are FerrochainError { category: VAL })
+- BC-2.14.006 — Validation failure propagation (composes with: validation errors are FerrochainError { category: VAL, .. })
 - BC-2.01.001 — Typed ContentBlock construction (depends on: content block errors propagate as FerrochainError)
 
 ## Architecture Anchors

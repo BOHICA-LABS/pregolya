@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.008
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -12,6 +12,7 @@ changelog:
   - "1.2 (2026-07-15, F-P74-01): Description fix — CheckpointStore::fts_search → CheckpointSaver::fts_search; retired identifier per gate #19 shared-type canon (P18 census). No other retired spellings found in full-file scan (RunConfig, BaseCheckpointSaver, AIMessage-Rust-context, Checkpointer)."
   - "1.3 (2026-07-15, F-P78-04/D18-P78-A): PC6 message string corrected — added 'FtsLimitZero: ' prefix per universal <Name>: <detail> convention (D18-P78-A adjudication). Updated 'got 0' to 'got <limit>' for parametric template consistency with taxonomy row E-CHKPT-008. No change to EC-004 or TV-004 (those use variant name only, no message string)."
   - "1.4 (2026-07-15, F-P82-01): PC3 corrected — `query: &str` was incorrectly listed as a field of `FtsSearchConfig`. Fixed: `query` is the standalone first parameter of `fts_search` (not a config field); `FtsSearchConfig` fields are `thread_id: Option<&str>` and `limit: usize` only. Signature (Description block), PC1, EC-002, TV-001 all agree with this fix; only PC3 carried the contradiction. No other content changed."
+  - "1.5 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). PC6 multiline observation confirmed Class 3 VALID (all 5 non-source fields present — no change). EC-002 body: replaced forbidden `...` (three-dot ASCII) with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION). EC-006 multiline body: added `..` rest-pattern marker (4 of 5 fields present, missing retry_hint; ADR-010 §Error-Construction Notation Canon, Class 3)."
 origin: greenfield
 priority: P1
 subsystem: SS-04
@@ -109,7 +110,7 @@ concurrent reads). The search capability is also registered as a callable `Tool`
 **Scenario:** `fts_search("\"Paris weather\"", config)` (FTS5 phrase search).
 **Expected behavior:** Returns results where "Paris" and "weather" appear adjacent. FTS5
 phrase syntax is passed directly to SQLite. Malformed FTS5 syntax (e.g., unclosed quote)
-returns `Err(FerrochainError { component: CHKPT, category: VAL, code: E-CHKPT-008, ... })`
+returns `Err(FerrochainError { component: CHKPT, category: VAL, code: E-CHKPT-008, .. })`
 propagating the SQLite FTS5 parse error.
 
 ### EC-003: Thread-scoped search
@@ -133,7 +134,7 @@ budget (BC-2.10.001) and checkpoint-logged (BC-2.04.001).
 **Scenario:** SQLite is compiled without the FTS5 extension.
 **Expected behavior:** `CheckpointSaver::new(…)` with FTS enabled returns
 `Err(FerrochainError { component: CHKPT, category: INTERNAL, code: "E-CHKPT-009",
-message: "Fts5Unavailable: FTS5 extension not available in this SQLite build — recompile SQLite with FTS5 support or use a pre-built distribution that includes it" })` at construction time.
+message: "Fts5Unavailable: FTS5 extension not available in this SQLite build — recompile SQLite with FTS5 support or use a pre-built distribution that includes it", .. })` at construction time.
 (DI-008: fail at construction, not at first search call.)
 
 > **Resolution (D20 sub-burst 2):** The ambiguity between `limit = 0` (VAL) and FTS5-unavailable (INTERNAL) is resolved by splitting into two codes: `E-CHKPT-008` (VAL) for caller-input errors (limit=0, malformed FTS5 query syntax) and `E-CHKPT-009` (INTERNAL) for deployment/environment errors (FTS5 not compiled in). Different categories → different codes per taxonomy governance. EC-006 uses `E-CHKPT-009` exclusively.

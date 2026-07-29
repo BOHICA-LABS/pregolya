@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.003
-version: "1.9"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.7 (F-P93-04, 2026-07-17): VP ID collision resolved. BC-2.10.003 and BC-2.10.004 both defined VP-BUDGET-05 with different semantics. Resolution per append-only-numbering policy: BC-2.10.004's VP-BUDGET-05 (Phase 1, older) is canonical; BC-2.10.003's Summarize-path VP-BUDGET-05 renumbered → VP-BUDGET-07 (next free after VP-BUDGET-06). VP Anchors updated: VP-BUDGET-04, VP-BUDGET-05, VP-BUDGET-06 → VP-BUDGET-04, VP-BUDGET-06, VP-BUDGET-07. Zero VP-BUDGET-NN collisions across SS-10 after this change."
   - "1.8 (F-P97-05, 2026-07-17): VP table Phase-column axis normalized. VP-BUDGET-06 and VP-BUDGET-07 'Wave 1' corrected to 'Phase 1' to match the SS-10 convention established by VP-BUDGET-01/02/04/05 (all Phase 1). The v1.2 additions used the wave axis; the column carries the VSDD pipeline phase, not the wave. No behavioral change."
   - "1.9 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
+  - "1.10 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — Description: `FerrochainError { component: BUDGET, category: POLICY, code: \"E-BUDGET-001\" }` had 3/5 fields (missing retry_hint, message); added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3. PC5 full-field observation (all 5 fields present) already valid — no change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -49,7 +50,7 @@ When a `BudgetPolicy::evaluate` call returns `PolicyDecision::Deny` and the conf
 `BudgetConfig::on_ceiling` is `OnCeiling::Halt`, the execution engine completes all in-flight
 tasks for the current super-step, writes their outputs to the checkpoint via `put_writes`, then stops
 the run — making no further LLM calls or tool invocations. The run transitions to `failed`
-with a structured `FerrochainError { component: BUDGET, category: POLICY, code: "E-BUDGET-001" }`.
+with a structured `FerrochainError { component: BUDGET, category: POLICY, code: "E-BUDGET-001", .. }`.
 The checkpoint at the last completed super-step is preserved and retrievable. The Domain B
 dark-factory holdout evaluation shape 6 ("budget-bounded run") directly exercises this BC.
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.003
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-* (all crates) / xtask (lint gate) per module-decomposition.md v1.10."
+  - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: EC-002 `FerrochainError { ... }` — replaced `...` with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION); TV-002 Expected Output — added `, ..` (CLASS3 VIOLATION, 2/5 fields). Xtask rename (D-35/D-80): 5 occurrences of `cargo xtask lint-no-panic` → `cargo xtask check-no-panic` in PC4, TV-003, TV-004, VP-DI008-01, Architecture Anchors. No behavioral change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -64,7 +65,7 @@ implements DI-008 (Library Constructor Result Contract) uniformly.
 3. `impl Default for T` does NOT call a fallible constructor. If `Default` is needed on a type
    whose construction can fail, it is explicitly NOT derived and a comment explains the deviation.
 4. The codebase contains zero occurrences of `.unwrap()` or `.expect(...)` in non-test library
-   source files. CI `cargo xtask lint-no-panic` (or equivalent custom clippy lint) causes the
+   source files. CI `cargo xtask check-no-panic` (or equivalent custom clippy lint) causes the
    build to fail on any violation.
 5. Bare `assert!` and `assert_eq!` macros are absent from non-test library code. `debug_assert!`
    is permitted (it compiles out in release mode).
@@ -96,7 +97,7 @@ caught by the CI lint. The developer must either (a) not derive `Default`, (b) p
 ### EC-002: Third-party crate used inside ferrochain returns panicking code
 **Scenario:** A dependency's function panics on invalid input (e.g. `url::Url::parse` panics on
 certain inputs in some crate versions).
-**Expected behavior:** The ferrochain wrapper code calls the dependency via `.map_err(|e| FerrochainError { ... })?`
+**Expected behavior:** The ferrochain wrapper code calls the dependency via `.map_err(|e| FerrochainError { .. })?`
 and does NOT call `.unwrap()` on the result. The dependency's internal panics are a dependency
 upgrade concern, not a ferrochain code violation.
 
@@ -124,16 +125,16 @@ is in `#[cfg(test)]` scope.
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | `Config::new("valid_input")` | `Ok(Config { ... })` | Happy path — fallible constructor returns Ok |
-| TV-002 | `Config::new("")` where empty string is invalid | `Err(FerrochainError { category: VAL, code: "E-CORE-005" })` | Invalid input → Err, not panic |
-| TV-003 | `cargo xtask lint-no-panic` on a crate with `.unwrap()` in `src/` | Exit code non-zero; error message names the file/function | CI lint gate enforcement |
-| TV-004 | `cargo xtask lint-no-panic` on a crate with `.unwrap()` only in `tests/` | Exit code zero — test files are exempt | Test exemption |
+| TV-002 | `Config::new("")` where empty string is invalid | `Err(FerrochainError { category: VAL, code: "E-CORE-005", .. })` | Invalid input → Err, not panic |
+| TV-003 | `cargo xtask check-no-panic` on a crate with `.unwrap()` in `src/` | Exit code non-zero; error message names the file/function | CI lint gate enforcement |
+| TV-004 | `cargo xtask check-no-panic` on a crate with `.unwrap()` only in `tests/` | Exit code zero — test files are exempt | Test exemption |
 | TV-005 | `Config::default()` on a type that cannot safely produce a zero-value | Compile error (`Default` not derived or implemented) | No-default enforcement |
 
 ## Verification Properties
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-DI008-01 | Zero `.unwrap()` / `.expect()` occurrences in non-test `src/` files across all crates | CI `cargo xtask lint-no-panic` | Wave 0 CI |
+| VP-DI008-01 | Zero `.unwrap()` / `.expect()` occurrences in non-test `src/` files across all crates | CI `cargo xtask check-no-panic` | Wave 0 CI |
 | VP-DI008-02 | All fallible public constructors return `Result<T, FerrochainError>` (not `T`) | CI `cargo xtask audit-constructors` or custom clippy lint | Wave 0 CI |
 
 ## Related BCs
@@ -147,7 +148,7 @@ is in `#[cfg(test)]` scope.
 ## Architecture Anchors
 
 - All `ferrochain-*/src/**/*.rs` non-test source files — `.unwrap()` / `.expect()` prohibition
-- CI: `cargo xtask lint-no-panic` target (to be created)
+- CI: `cargo xtask check-no-panic` target (to be created)
 
 ## Story Anchor
 

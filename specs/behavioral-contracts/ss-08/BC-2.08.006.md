@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.006
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (2026-07-17, F-P89-04): Precondition 3 — removed stale live-prose clause '(or SS-TBD is used as a placeholder)'. SS-TBD is corpus-wide resolved as of Phase 1b (2026-07-14); all 95 BCs carry real SS-NN IDs. No behavioral change. Input-hash corrected from legacy 8095694 (computed against prior input state) to 412902d (current). BC changelog timestamp stays at v1.0 authoring date per Rule 5 BC branch."
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider>-sdk / ferrochain-<provider> per module-decomposition.md v1.10."
   - "1.4 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-002 message reworded from 'timeout must be set; use .timeout(Duration::from_secs(30))' to 'Validation failed for 'timeout': must be set; use .timeout(Duration::from_secs(30))' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV-002 bare form unchanged — PASS-ABBREV via EC-002."
+  - "1.5 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/D-80/2026-07-29): (1) Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon): §EC-002 and §Canonical Test Vectors TV-002 — FerrochainError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-002; category, code at TV-002); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 2 exempt (changelog, 1 line). (2) D-35/D-80 xtask rename: §Verification Properties VP-BC208006-02 table cell — `deny-expect-in-lib` → `check-no-panic`."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-008
@@ -109,7 +110,7 @@ that inspects `Cargo.lock` for the SDK package's transitive deps).
 **Scenario:** `<Provider>Client::new()` or `<Provider>ClientBuilder::build()` is called
 without `.timeout(Duration)`.
 **Expected behavior:** The build method returns `Err(FerrochainError { category: VAL, code: E-CORE-005,
-message: "Validation failed for 'timeout': must be set; use .timeout(Duration::from_secs(30))" })`.
+message: "Validation failed for 'timeout': must be set; use .timeout(Duration::from_secs(30))", .. })`.
 No default zero-timeout client is constructed. (Enforced via DI-009 / BC-2.14.004.)
 
 ### EC-003: Translation function in SDK crate (misplaced responsibility)
@@ -129,7 +130,7 @@ only that dependency compiles. No graph-runtime types leak into the SDK public A
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | `cargo check -p ferrochain-openai-sdk` | Exits 0; `ferrochain-core` NOT in Cargo.lock for this package | Dependency separation |
-| TV-002 | `ferrochain-openai-sdk::OpenAiClient::builder().build()` (no timeout) | `Err(FerrochainError { category: VAL, code: E-CORE-005 })` | EC-002 timeout guard |
+| TV-002 | `ferrochain-openai-sdk::OpenAiClient::builder().build()` (no timeout) | `Err(FerrochainError { category: VAL, code: E-CORE-005, .. })` | EC-002 timeout guard |
 | TV-003 | `ferrochain-openai-sdk::OpenAiClient::builder().timeout(30s).api_key(key).build()` | `Ok(OpenAiClient { … })` | Happy path SDK construction |
 | TV-004 | `ferrochain-openai::ChatOpenAI::new(config)` (adapter) | `Ok(ChatOpenAI { … })` — implements `ChatModel` trait | Adapter construction |
 
@@ -138,7 +139,7 @@ only that dependency compiles. No graph-runtime types leak into the SDK public A
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
 | VP-BC208006-01 | ferrochain-<provider>-sdk has no ferrochain-core transitive dependency | CI check (cargo metadata + dep graph analysis) | Wave 2 |
-| VP-BC208006-02 | All SDK + adapter constructors return Result, no .expect() in non-test code | CI lint (deny-expect-in-lib; DI-008) | Wave 2 |
+| VP-BC208006-02 | All SDK + adapter constructors return Result, no .expect() in non-test code | CI lint (check-no-panic; DI-008) | Wave 2 |
 
 ## Related BCs
 

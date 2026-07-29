@@ -57,6 +57,25 @@ _SECTION_HEADING_RE   = re.compile(r'^## ')
 _ILLUS_START_RE = re.compile(r'<!--\s*discriminator:illustration-start\s*-->')
 _ILLUS_END_RE   = re.compile(r'<!--\s*discriminator:illustration-end\s*-->')
 
+# ── FerrochainError opener detection ─────────────────────────────────────────
+# Used by find_ferrochain_error_openers() to locate both single-line and
+# split-line FerrochainError { ... } openers.
+#
+# Single-line form: identifier and opening brace on the same line.
+#   e.g. `FerrochainError { code: "E-X", .. }`
+#
+# Split-line form: identifier at end of line N, opening brace at start of N+1.
+#   e.g. line N  → `Err(FerrochainError`
+#        line N+1 → `{ category: VAL, .. })`
+#
+# _FERROCHAIN_SPLIT_END_RE matches a line that ends with the FerrochainError
+# identifier (optional trailing whitespace/backtick/parenthesis but NO `{`).
+# _SPLIT_BRACE_START_RE matches a continuation line whose first non-whitespace
+# character is `{`.
+_FERROCHAIN_SINGLE_LINE_RE = re.compile(r'\bFerrochainError\s+\{')
+_FERROCHAIN_SPLIT_END_RE   = re.compile(r'\bFerrochainError\s*$')
+_SPLIT_BRACE_START_RE      = re.compile(r'^\s*\{')
+
 
 def changelog_exempt_lines(raw_lines):
     """
@@ -174,3 +193,63 @@ def illustration_exempt_lines(raw_lines):
             exempt.add(i)
 
     return frozenset(exempt)
+
+
+def find_ferrochain_error_openers(raw_lines):
+    """
+    Locate all FerrochainError { opener positions, including split-line forms
+    where the identifier and the opening brace appear on adjacent lines.
+
+    Single-line form
+    ----------------
+    ``FerrochainError {`` on one line.  opener_line == brace_line.
+
+    Split-line form (Gap 2 — NOTATION-GAP-FIX)
+    -------------------------------------------
+    ``FerrochainError`` at the end of line N (nothing after it on that line
+    except optional whitespace); ``{`` as the first non-whitespace character
+    on line N+1.  opener_line = N, brace_line = N+1.
+
+    Step 0 EXCLUDED_DECL applies to the OPENER LINE
+    -------------------------------------------------
+    Callers check whether the line at ``opener_line`` contains
+    ``pub struct FerrochainError`` or ``impl FerrochainError``.  This rule
+    applies equally to single-line and split-line forms — a split-line
+    ``pub struct FerrochainError`` / ``{`` is still EXCLUDED_DECL.
+
+    This function does NOT apply any Step 0 exclusions.  Callers are
+    responsible for filtering with ``changelog_exempt_lines()`` and
+    ``illustration_exempt_lines()`` and for applying all EXCLUDED_* rules.
+
+    Parameters
+    ----------
+    raw_lines : list[str]
+        File content as a list of raw lines (with or without trailing newline).
+
+    Returns
+    -------
+    list[dict]
+        Each dict has three keys:
+            ``opener_line`` : int — 0-indexed line where FerrochainError appears
+            ``brace_line``  : int — 0-indexed line where { appears
+                                    (== opener_line for single-line form;
+                                     opener_line + 1 for split-line form)
+            ``form``        : str — ``"single"`` | ``"split"``
+    """
+    results = []
+    i = 0
+    while i < len(raw_lines):
+        line = raw_lines[i].rstrip('\n')
+        if _FERROCHAIN_SINGLE_LINE_RE.search(line):
+            # Single-line form: FerrochainError { on the same line.
+            results.append({"opener_line": i, "brace_line": i, "form": "single"})
+        elif _FERROCHAIN_SPLIT_END_RE.search(line):
+            # FerrochainError at end of line — check if the next line opens with {.
+            if i + 1 < len(raw_lines):
+                next_line = raw_lines[i + 1].rstrip('\n')
+                if _SPLIT_BRACE_START_RE.match(next_line):
+                    results.append(
+                        {"opener_line": i, "brace_line": i + 1, "form": "split"}
+                    )
+        i += 1
+    return results

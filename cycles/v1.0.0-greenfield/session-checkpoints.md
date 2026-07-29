@@ -1931,3 +1931,48 @@ BC-2.18.004 body unread; 36/37 standing gates body-unaudited; 105 hyphenated-mod
 
 ### ARCHIVE METADATA
 Date: 2026-07-29 | Archived at: burst-281 Wave A-corr wrap (D-81) | STATE.md: 4.38→4.39 | burst-281 Wave A-corr COMPLETE (ADR-010 §Mechanical Discriminator corrected; 4 defects fixed; authoritative count 170; D-51 CLOSED; D-35 PARTIAL recorded) | D-76..D-81 allocated | L-131..L-135 minted | streak 0/3
+
+---
+
+## Checkpoint v4.39 (archived — replaced by v4.40)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1, greenfield+semport. Streak **0/3 after 176 passes**. Burst-281 Wave A-corr COMPLETE: ADR-010 §Mechanical Discriminator discriminator corrected (4 defects fixed); authoritative BC violation count = **170** (133 missing-`..` + 37 three-dot; D-76). D-51 CLOSED (test-vectors 675; D-80). D-35 PARTIAL (14-site Wave-B residue; D-79). **Wave B NEXT** — product-owner sweeps 170 violations + 5 residue sites + 14 D-35 sites. D-32 and D-69 in force (~135 of 189 P1D-175 open; do NOT dispatch P1D-176 yet).
+
+### WORKSTREAM 1 — Wave B (dispatch next)
+`NEXT-ACTION` = dispatch `vsdd-factory:product-owner` for Wave B.
+
+**Scope (unblocked — discriminator tested, count authoritative at 170):**
+- 170 error-notation violations across 51 BC files (corrected discriminator in ADR-010 §Mechanical Discriminator)
+- 5 domain-spec/prd residue sites: `domain-spec/bounded-contexts.md`, `domain-spec/edge-cases.md`, `domain-spec/entities-server.md`, `specs/prd.md` (×2)
+- 14 D-35 xtask residue sites (7 files): `BC-2.14.003` (×5), `BC-2.14.004` (×3), `specs/prd.md` (×2), `specs/prd-supplements/capabilities-p1-p2.md` (×1), `BC-2.22.002` (×1), `BC-2.08.007` (×1), `BC-2.08.006` (×1)
+
+**D-77 reframe:** Wave B is a first-time convention application (only 1 of 217 occurrences was correct pre-Wave A). Review posture reflects a baseline authoring event, not a remediation sweep.
+
+### WORKSTREAM 2 — TDIV governance records (after Wave B)
+Batch through a SINGLE spec-steward dispatch to prevent concurrent-write ghost findings: TDIV-002..TDIV-007.
+
+### P1D-176 FROZEN-HEAD WARNING
+P1D-175's frozen HEAD was `2d36282`. This commit lands after it. P1D-176 MUST gate on the then-current factory-artifacts HEAD (`git -C .factory log -1 --format=%h`). D-32 (FULL-PERIMETER only) and D-69 (~135 open findings; do not dispatch yet) both in force. Streak is 0/3 — nothing resets now, but cold sessions must not miscount.
+
+### HEADS (v4.39)
+develop `46725ad` — clean, `== origin/develop`, PUSHED. factory-artifacts — clean, PUSHED (run `git -C .factory log -1 --format=%h` for current SHA). Story worktrees: NONE. Open PRs: NONE.
+
+### NEXT-ACTION WAS
+Dispatch `vsdd-factory:product-owner` for Wave B. Scope: 170 error-notation violations across 51 BC files using ADR-010 §Mechanical Discriminator, PLUS 5 domain-spec/prd residue sites, PLUS 14 D-35 xtask residue sites. Do NOT dispatch P1D-176 first.
+
+**Validator baselines (orchestrator-verified — burst-281 Wave A-corr final):**
+verify-no-version-pins: PASS=198 FAIL=0; records-lint: PASS=5 FAIL=0; verify-signature-canon: PASS=5 FAIL=0; verify-form-a-changelog-direction: PASS=198 WARN=7 FAIL=0 BC_UNVERIFIED=0; verify-arch-anchor-resolution: PASS=129 FAIL=0; verify-enum-variant-casing: PASS=198 FAIL=0; verify-module-canonicality: PASS=8 FAIL=0; verify-changelog-date-monotonicity: PASS=131 FAIL=0; verify-bc-frontmatter-schema: PASS=129 FAIL=0.
+
+### COVERAGE DEBTS (carried to v4.40 — unchanged)
+BC-2.18.004 body unread; 36/37 standing gates body-unaudited; 105 hyphenated-module + 131 version-pin occurrences untriaged; 129 TV Count cells never hand-summed; ADR-010 canon-note site unopened; per-VP frontmatter `tool`/`priority`/`bc_anchor`/`crate` unverified.
+
+### RESIDUAL ITEMS (v4.39)
+- `BC-2.09.007` + `BC-INDEX.md` carry post-boundary version pins → product-owner.
+- `interface-definitions.md` §Authentication cluster grandfathered (pre-2026-07-24).
+- Inert `ferrochain-prebuilt/` orphan pending removal.
+- D-35 xtask Wave-B residue: 14 sites in 7 files anchored to Wave B (product-owner).
+- **STATE.md compaction follow-up:** compress D18-P99-A…D-55 in dedicated burst.
+
+### ARCHIVE METADATA
+Date: 2026-07-29 | Archived at: burst-282 Wave B COMPLETE (D-82) | STATE.md: 4.39 → 4.40 | burst-282 Wave B COMPLETE (180 notation corrections; 51 BC files + domain-spec + 14 D-35 xtask sites; D-35 CLOSED 26/26; verify-error-notation-canon.sh minted; D-82..D-87 added; L-136..L-141 minted) | streak 0/3

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.002
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ red_gate_source: "DI-010 Credential Opacity — OpenAiApiKey must implement reda
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-22 Embeddings; SECURITY: OpenAiApiKey credential opacity"
   - "1.1 (F-P130-09/2026-07-21): Add DI-009 to di_anchors — PC2/INV-5 specify the mandatory 30s timeout but did not cite DI-009; add BC-2.14.004 cross-reference in PC2 and INV-5 prose."
+  - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: 6 CLASS3_ASCII_ELLIPSIS_VIOLATION corrected — PC6, INV-4, EC-003, EC-004, EC-005, TV-004 each had `Err(FerrochainError { ... })` — replaced `...` with `..` in all six. Xtask rename: VP-2.22.002-C `deny-client-new` → `check-client-timeout`. No behavioral change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-032
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -95,7 +96,7 @@ returns `Err` for the whole call, never a truncated vector (DI-014).
    - The `native-tls` / `default-tls` / `native-tls-alpn` / `native-tls-vendored` features are ABSENT.
 6. **Batch partial failure (DI-014):** if the OpenAI API returns a rate-limit error (HTTP 429),
    service error (5xx), or malformed response mid-stream, the entire `embed_documents` call
-   returns `Err(FerrochainError { ... })`. No partial vector list is returned.
+   returns `Err(FerrochainError { .. })`. No partial vector list is returned.
 
 ## Invariants
 
@@ -105,7 +106,7 @@ returns `Err` for the whole call, never a truncated vector (DI-014).
 2. `EmbeddingsOpenAI` is `Send + Sync` — the `reqwest::Client` is `Clone + Send + Sync`.
 3. The legacy `ada-002` warning is emitted once at construction — not on every API call.
 4. Model name validation is NOT enforced at construction (the field is a free `String`) —
-   an invalid model name fails at the first API call with an `Err(FerrochainError { ... })`
+   an invalid model name fails at the first API call with an `Err(FerrochainError { .. })`
    from the HTTP response.
 5. The 30-second timeout applies to each individual HTTP request (not the total batch session),
    per DI-009 / BC-2.14.004 (workspace-wide 30s HTTP timeout invariant). A provider that
@@ -117,9 +118,9 @@ returns `Err` for the whole call, never a truncated vector (DI-014).
 |----|-------------|-------------------|
 | EC-001 | `OpenAiApiKey` printed via `{:?}` format | Output is exactly `"<redacted>"` — key value never appears |
 | EC-002 | `EmbeddingsOpenAI` constructed with `"text-embedding-ada-002"` | `Ok(impl)` constructed; `tracing::warn!(event_type = "embeddings.legacy_model_warning")` emitted at construction |
-| EC-003 | OpenAI API returns HTTP 429 (rate limit) | `Err(FerrochainError { ... })` — whole call fails; no partial result |
-| EC-004 | OpenAI API returns 5xx on second text in a batch of 10 | `Err(FerrochainError { ... })` — the already-received vectors are discarded; Err for whole call |
-| EC-005 | `embed_documents` request times out (> 30 seconds) | `Err(FerrochainError { ... })` wrapping the reqwest timeout error |
+| EC-003 | OpenAI API returns HTTP 429 (rate limit) | `Err(FerrochainError { .. })` — whole call fails; no partial result |
+| EC-004 | OpenAI API returns 5xx on second text in a batch of 10 | `Err(FerrochainError { .. })` — the already-received vectors are discarded; Err for whole call |
+| EC-005 | `embed_documents` request times out (> 30 seconds) | `Err(FerrochainError { .. })` wrapping the reqwest timeout error |
 | EC-006 | `EmbeddingsOpenAI` used from multiple Tokio tasks concurrently | Safe — `reqwest::Client` is `Clone + Send + Sync`; `EmbeddingsOpenAI` is `Send + Sync` |
 
 ## Canonical Test Vectors
@@ -129,7 +130,7 @@ returns `Err` for the whole call, never a truncated vector (DI-014).
 | TV-001 (Red Gate) | `format!("{:?}", OpenAiApiKey("sk-test-123".to_string()))` | `"<redacted>"` — NOT `OpenAiApiKey("sk-test-123")` | security (credential opacity Red Gate) |
 | TV-002 | `embed_documents(vec!["hello", "world"])` with `text-embedding-3-small` mock | `Ok(vec![[f32; 1536], [f32; 1536]])` — 1536-dim vectors | happy-path |
 | TV-003 | `embed_query("hello")` with `text-embedding-3-small` mock | `Ok([f32; 1536])` | happy-path (single query) |
-| TV-004 | `embed_documents(vec!["a"; 3])` when mock returns HTTP 429 | `Err(FerrochainError { ... })` | error-case (rate limit) |
+| TV-004 | `embed_documents(vec!["a"; 3])` when mock returns HTTP 429 | `Err(FerrochainError { .. })` | error-case (rate limit) |
 | TV-005 | Cargo.toml: `reqwest` has `default-features = false, features = ["rustls-tls"]` | Compiles; no `native-tls` dep in dependency tree | compile-time / cargo check |
 
 ## Verification Properties
@@ -138,7 +139,7 @@ returns `Err` for the whole call, never a truncated vector (DI-014).
 |-------|----------|-------------|
 | VP-2.22.002-A | `format!("{:?}", OpenAiApiKey(any_key_value))` always produces `"<redacted>"` | unit test — assert format output == "<redacted>" for multiple key values |
 | VP-2.22.002-B | `reqwest` dep in `ferrochain-openai` uses `default-features = false, features = ["rustls-tls"]` | `cargo tree` CI check; xtask `deny-native-tls` gate |
-| VP-2.22.002-C | HTTP client is constructed with `.timeout(Duration::from_secs(30))` | unit test — assert client has timeout set (via reqwest `ClientBuilder` inspection); CI `deny-client-new` gate |
+| VP-2.22.002-C | HTTP client is constructed with `.timeout(Duration::from_secs(30))` | unit test — assert client has timeout set (via reqwest `ClientBuilder` inspection); CI `check-client-timeout` gate |
 
 ## Related BCs
 

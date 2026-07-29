@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.19"
+version: "1.20"
 status: active
 producer: business-analyst
 timestamp: 2026-07-27T00:00:00Z
@@ -17,6 +17,7 @@ input-hash: "b40ee23"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.20 (wave-b-tail/D-35-xtask-rename-notation/2026-07-29): Two Class 3 notation violations and one xtask rename. (1) CAP-029 zero-norm guard prose: FerrochainError { code: \"E-VS-001\" } → FerrochainError { code: \"E-VS-001\", .. } — Class 3 VIOLATION (partial fields, missing ..) per ADR-010 §Error-Construction Notation Canon. (2) CAP-031 dimensionality contract prose: FerrochainError { code: \"E-EMBED-001\" } → FerrochainError { code: \"E-EMBED-001\", .. } — Class 3 VIOLATION (same class). (3) CAP-032 DI-009 CI-gate prose: workspace CI gate `deny-client-new` → `check-client-timeout` (D-80 canonical check-<subject> form). TD-VSDD-060 sweep: zero additional superseded names (lint-no-timeout, lint-no-panic, deny-expect-in-lib) found in live body text."
   - "1.19 (fix-burst-278/wave-b/2026-07-28): Sites 8a and 8b per wave-b-po-routing-spec §Item-8. (1) CAP-027 Site 8a: VectorStoreRetriever lifetime annotation removed — type is 'static, owns Arc<dyn VectorStore>; verifiable: verify-signature-canon S2 returns zero hits. (2) CAP-027 adjacent to Site 8a: backing-store form corrected from borrow-ref to Arc<dyn VectorStore> (same paragraph); verifiable: borrow-backed VectorStoreRetriever form absent from this file. (3) CAP-028 Site 8b: as_retriever receiver corrected from bare self-ref to self: Arc<Self>; return-type lifetime annotation removed; verifiable: verify-signature-canon S1b returns zero hits. (4) CAP-027 config bullets k, fetch_k, lambda_mult: Err(E-VS-003 InvalidConfig) rejection semantics added per D-44 — rejected not clamped (verifiable: grep 'E-VS-003 InvalidConfig' capabilities-p1-p2.md returns three hits, one per config bullet). TD-VSDD-060 sibling sweep: same borrow-backed class found and corrected in entities-graph.md §VectorStore/§Relationships-Summary and ubiquitous-language-core.md §VectorStoreRetriever/§VectorStore this burst."
   - "1.18 (FC-4/burst-277/2026-07-28): False-closure FC-4 correction — v1.13 claim 'L-026 stale-delegation sweep: zero additional hits' was false. Sweep term: 'PO BC obligations' (verifiable: grep 'PO BC obligations' capabilities-p1-p2.md returns zero hits after this fix). Three surviving stale-completed-delegation instances corrected: (1) CAP-034 §PendingHumanApproval: '(PO BC obligation, SS-05 extension)' → '(BC-2.05.008)' — BC-2.05.008 exists, covers skip-hook-on-resume invariant. (2) CAP-034 §streaming events: '**PO BC obligations:** BC-2.06.004 / BC-2.06.005 (SS-06); amend BC-2.08.010 ...' → '**Authored BCs:** BC-2.06.004 / BC-2.06.005 (SS-06); BC-2.08.010 amended ...' — all three BCs exist. (3) CAP-035 §PO BC obligations: '**PO BC obligations:** new BCs for SS-10 ...; amend BC-2.06.001 or author BC-2.06.006 ...' → '**Authored BCs:** BC-2.10.005 / BC-2.10.006 (SS-10); BC-2.06.006 authored ...' — BC-2.10.005, BC-2.10.006, BC-2.06.006 all exist. TD-VSDD-060 sibling sweep: same 'PO BC obligations' class also found and fixed in entities-graph.md (v1.12→v1.13) and ubiquitous-language-core.md (v1.8→v1.9) this burst."
   - "1.17 (F-P173-106/F-P173-702/burst-276/2026-07-27): Two CAP body corrections. (1) F-P173-106 CAP-038: remove stale 'confirm regex is already a workspace dependency' open instruction; ADR-020 Decision 7 already resolved that regex is NOT an existing workspace dep — it will be a net-new [workspace.dependencies] entry at workspace init; replace with confirmed fact per ADR-020 Decision 7. (2) F-P173-702 CAP-029: correct mis-citation ADR-014 Decision 4 → ADR-017 Decision 4 for InMemoryVectorStore struct and Arc-DI wiring. ADR-014 Decision 4 is the External Adapter Extension Seam (inventory crate for community adapters); ADR-017 Decision 4 explicitly defines the InMemoryVectorStore struct with Arc<dyn Embeddings> + RwLock<Vec<(Document, Vec<f32>)>> and the Arc-DI wiring contract. ADR-014 Decision 2 §Hardening note attribution for zero-norm guard unchanged (correct). TD-VSDD-060 sweep: no other ADR-014 Decision 4 mis-citations for InMemoryVectorStore in this file."
@@ -380,7 +381,7 @@ placeholder construction is permitted. Text queries are converted to query vecto
 Cosine similarity is computed from `Vec<f32>` inner products (no ndarray — semport §8 avoidance).
 **Zero-norm guard (ADR-014 Decision 2 §Hardening note):** before any cosine division, the implementation
 checks `norm = vec.iter().map(|x| x*x).sum::<f32>().sqrt()`. If `norm == 0.0`:
-`return Err(FerrochainError { code: "E-VS-001" })` (registered in error-taxonomy §VS —
+`return Err(FerrochainError { code: "E-VS-001", .. })` (registered in error-taxonomy §VS —
 VAL, zero-norm cosine guard, BC-2.21.003). A zero-length embedding produces NaN that silently corrupts ranking — this guard
 is two lines and is unconditional. Implements `VectorStoreFactory` for `from_texts_sync`.
 
@@ -428,7 +429,7 @@ Embeddings>` compiles without E0038. **Dimensionality contract** (MUST hold for 
 (1) `embed_documents(texts).len() == texts.len()` — one vector per input; (2) all returned
 vectors have identical length (the model's embedding dimension); (3) `embed_query` returns a
 vector of the same length as any `embed_documents` vector for the same model. Contract violation
-→ `Err(FerrochainError { code: "E-EMBED-001" })` (registered in error-taxonomy §EMBED —
+→ `Err(FerrochainError { code: "E-EMBED-001", .. })` (registered in error-taxonomy §EMBED —
 VAL, dimensionality contract violation, BC-2.22.001). Batch failure (e.g., provider rate limit mid-batch) → entire call returns `Err` —
 no silent partial-batch degradation to a truncated or empty Vec (DI-014). VP-008 proptest
 candidate (any valid Embeddings impl returns vectors with consistent length across embed_documents
@@ -465,7 +466,7 @@ never appear in AI context, logs, or lc-JSON serialized output (DI-010). **Batch
 if the provider returns a partial batch error (e.g., rate limit), the entire call returns `Err`
 — no silent partial-batch degradation (DI-014). **HTTP client:** reqwest MUST use
 `default-features = false, features = ["rustls-tls"]` and `.timeout(Duration::from_secs(30))`
-(DI-009); workspace CI gate `deny-client-new` enforces the timeout constraint.
+(DI-009); workspace CI gate `check-client-timeout` enforces the timeout constraint.
 
 **Grounding:** D21/SS-22. ADR-017 Decision 3 specifies ferrochain-openai gaining
 `openai::embeddings`, model currency (verified crates.io/2026-07-20), OpenAiApiKey

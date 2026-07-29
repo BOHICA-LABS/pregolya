@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.001
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.5 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. (1) PC5 had E-GRAPH-017 message `\"GraphRecursionLimitExceeded: ...\"` with Unicode-ellipsis abbreviation; expanded to full template with <run_id>, <step>, <limit> placeholders (all available at raise site). (2) EC-005 had bare `Err(FerrochainError { code: E-GRAPH-006, ... })` with Unicode-ellipsis; added inline message template for E-GRAPH-006 BspDeterminismViolation. (3) EC-006 had `Err(FerrochainError { category: POLICY, code: E-GRAPH-017 })` without message; added full message template as authoritative site. TV-006 PASS-ABBREV via EC-006."
   - "1.6 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.7 (F-P160-01, 2026-07-25): Fix burst 261 — correct Description super-step ceiling prose from 'exceeds config.recursion_limit' to the precise formula 'step_at_invoke_start + config.recursion_limit + 1' (recursion_limit + 1 super-steps execute within the invocation segment before the guard fires). Concrete examples added (limit=5 → 6 steps execute then halt; limit=25 → 26 steps execute then halt). PC5/PC6/EC-006/TV-006 are the authoritative normative sites; Description now agrees with them in spirit. TD-VSDD-060 sweep: VP-BC208002-01 in BC-2.08.002 also fixed in same burst (same off-by-one in VP description; no other normative prose sites found with the stale formula)."
+  - "1.8 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Four sites corrected: PC5 single-line (E-GRAPH-017, `, ..` added before closing `})`); EC-005 multiline continuation line (E-GRAPH-006, `, ..` added); EC-006 multiline continuation line (E-GRAPH-017, `, ..` added); TV-006 table-cell (E-GRAPH-017, `, ..` added). All spans have category/code/message but lack component and retry_hint (or lack category in the E-GRAPH-006 span)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -82,7 +83,7 @@ infinite-loop guard (`GraphRecursionError`, `graph/behavioral-intent.md §1.3`:
 2. Channel reducer application order is determined by a deterministic sort of `(task_id, channel_name)` — not by task completion arrival order.
 3. Identical `(graph_definition, initial_state, inputs)` always produces identical `final_state` regardless of OS scheduler, thread pool, or tokio runtime interleaving.
 4. If any determinism violation is detected at runtime (reducer order constraint broken by a bug), the run transitions to `failed` with `E-GRAPH-006: BspDeterminismViolation`.
-5. **Super-step ceiling:** The BSP loop tracks a super-step counter per invocation segment. Before dispatching the next super-step, the engine checks whether the current step count would exceed `step_at_invoke_start + config.recursion_limit + 1`. If exceeded, the run transitions to `failed` with `Err(FerrochainError { category: POLICY, code: E-GRAPH-017, message: "GraphRecursionLimitExceeded: run '<run_id>' halted after super-step <step>; step count exceeded recursion_limit <limit> — check graph for unintended cycles" })`. `config.recursion_limit` defaults to 25 (from `RunnableConfig` — same key as BC-2.01.003; graph-engine interpretation = super-step ceiling). Upstream parity: LangGraph computes `stop = step + recursion_limit + 1` in `PregelLoop.__init__` / `PregelLoop.astart`, sets status `out_of_steps` in `tick()`, and raises `GraphRecursionError` in the outer invoke loop (`graph/behavioral-intent.md §1.3`).
+5. **Super-step ceiling:** The BSP loop tracks a super-step counter per invocation segment. Before dispatching the next super-step, the engine checks whether the current step count would exceed `step_at_invoke_start + config.recursion_limit + 1`. If exceeded, the run transitions to `failed` with `Err(FerrochainError { category: POLICY, code: E-GRAPH-017, message: "GraphRecursionLimitExceeded: run '<run_id>' halted after super-step <step>; step count exceeded recursion_limit <limit> — check graph for unintended cycles", .. })`. `config.recursion_limit` defaults to 25 (from `RunnableConfig` — same key as BC-2.01.003; graph-engine interpretation = super-step ceiling). Upstream parity: LangGraph computes `stop = step + recursion_limit + 1` in `PregelLoop.__init__` / `PregelLoop.astart`, sets status `out_of_steps` in `tick()`, and raises `GraphRecursionError` in the outer invoke loop (`graph/behavioral-intent.md §1.3`).
 6. **Resume semantics for interrupted runs:** Upon resume from an interrupt checkpoint, `step_at_invoke_start` is set to the step index of the resume point (the checkpoint's current `step`). Each invocation segment (fresh invoke or resume) independently receives `recursion_limit` additional super-steps from its start point. A run that is interrupted and resumed N times can execute at most N × (`recursion_limit` + 1) total post-resume super-steps without triggering E-GRAPH-017 per segment (each segment executes up to `recursion_limit` + 1 super-steps before the ceiling triggers; TV-006 arithmetic: limit=3 → 4 steps execute before halt at step 5; limit=5 → 6 steps execute before halt at step 7). The count does NOT reset to zero on resume — it continues from the checkpoint step and the ceiling window shifts accordingly. Adjudicated rule: ceiling is per-invocation-segment (upstream parity: LangGraph recomputes `stop` at each `invoke`/`ainvoke` entry point).
 
 ## Invariants
@@ -143,13 +144,13 @@ infinite-loop guard (`GraphRecursionError`, `graph/behavioral-intent.md §1.3`:
 ### EC-005: Runtime determinism violation detection
 **Scenario:** A bug in the scheduler (e.g., a hash map iteration that leaks non-determinism) causes a reducer to be applied out of order.
 **Expected behavior:** The runtime guard (enabled in debug builds, optional in release) detects the ordering violation and returns `Err(FerrochainError { code: E-GRAPH-006,
-message: "BspDeterminismViolation: reducer order constraint violated — contact maintainers with run_id '<run_id>'" })`
+message: "BspDeterminismViolation: reducer order constraint violated — contact maintainers with run_id '<run_id>'", .. })`
 (where `<run_id>` is the current run identifier, available at the raise site).
 
 ### EC-006: Super-step ceiling exceeded — cyclic graph without termination
 **Scenario:** A conditional-edge graph (e.g., a model→tools→model loop) has no termination condition and `config.recursion_limit = 5`. The graph loops: super-step 1 completes (step = 1 ≤ stop = 6) → super-step 2 completes (step = 2 ≤ stop = 6) → ... → super-step 6 completes (step = 6 ≤ stop = 6; ceiling not yet exceeded); before dispatching super-step 7, step would become 7 > stop = 0 + 5 + 1 = 6 → halt.
 **Expected behavior:** Before dispatching super-step 7, the engine detects `current_step > step_at_invoke_start + recursion_limit + 1` and transitions the run to `failed` with `Err(FerrochainError { category: POLICY, code: E-GRAPH-017,
-message: "GraphRecursionLimitExceeded: run '<run_id>' halted after super-step <step>; step count exceeded recursion_limit <limit> — check graph for unintended cycles" })`
+message: "GraphRecursionLimitExceeded: run '<run_id>' halted after super-step <step>; step count exceeded recursion_limit <limit> — check graph for unintended cycles", .. })`
 (where `<run_id>`, `<step>`, and `<limit>` are all available at the raise site from the BSP loop state). The run does not hang indefinitely. The run's `error` field is populated with the RFC-7807 representation of E-GRAPH-017.
 **Reference:** E-GRAPH-017; upstream LangGraph `GraphRecursionError` (`graph/behavioral-intent.md §1.3`). Also see BC-2.02.005 (conditional edges), BC-2.08.002 PC/invariant (agent loop step limit).
 
@@ -162,7 +163,7 @@ message: "GraphRecursionLimitExceeded: run '<run_id>' halted after super-step <s
 | TV-003 | Fan-out of 10 tasks, each appending to same `Append` channel | Append channel final value has items in sorted task_id order across all runs | Reducer sort order |
 | TV-004 | Identical graph + inputs executed by two separate tokio runtimes with different thread counts | Both produce identical final `GraphState` | Thread-count independence |
 | TV-005 | Kani harness: 2 tasks, 2 channels, non-det completion order | Kani verifies `state1 == state2` for all orderings (Phase 6 VP) | Formal verification seed |
-| TV-006 | Cyclic graph (A→B→A→...) with no termination condition; `config.recursion_limit = 3`; fresh invocation (`step_at_invoke_start = 0`) | Run fails with `Err(FerrochainError { category: POLICY, code: E-GRAPH-017 })` before dispatching super-step 5 (`stop = 0 + 3 + 1 = 4`; halt when `step > 4`) | Super-step ceiling (EC-006). PASS-ABBREV via EC-006 (full-form authoritative site). |
+| TV-006 | Cyclic graph (A→B→A→...) with no termination condition; `config.recursion_limit = 3`; fresh invocation (`step_at_invoke_start = 0`) | Run fails with `Err(FerrochainError { category: POLICY, code: E-GRAPH-017, .. })` before dispatching super-step 5 (`stop = 0 + 3 + 1 = 4`; halt when `step > 4`) | Super-step ceiling (EC-006). PASS-ABBREV via EC-006 (full-form authoritative site). |
 
 ## Verification Properties
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.005
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.2 (FIX-BURST-269/F-P167-01/2026-07-25): Fix Category::VALIDATION → Category::VAL at two sites: PC-1 code block (E-TMPL-002 Err struct) and INV-3 prose. VALIDATION is not in the canonical 12-member Category enum; E-TMPL-002 is VAL per error-taxonomy.md §E-TMPL-002. D23 sibling-sweep."
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::TMPL → Component::Tmpl (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + Invariant 3 prose)."
   - "1.4 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: FerrochainError struct literal (missing retry_hint, source fields) → FerrochainError::new(Component::Tmpl, Category::Val, RetryHint::Never, \"E-TMPL-002\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-TMPL-002. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-18/BC-2.18.005.md returns zero fence-scoped literal occurrences after this edit."
+  - "1.5 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 2 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-TMPL-002 inline cite: add `, ..` field-elision marker. (2) TV-001 expected-output cell: add `, ..` field-elision marker. No security semantics, Red Gate invariants, or VP anchors altered."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -53,7 +54,7 @@ removal_reason: null
 
 `ChatPromptTemplate::from_messages` validates slot policies at construction time. Any
 attempt to declare a `SystemMessage` slot with `SlotTrustPolicy::TrustAll` is rejected with
-`Err(FerrochainError { code: "E-TMPL-002" })` — the template is never created. This is a
+`Err(FerrochainError { code: "E-TMPL-002", .. })` — the template is never created. This is a
 **compile-time architectural invariant enforced at construction** (ADR-015 Decision 2): there
 is no method, configuration flag, or runtime override that permits `TrustAll` on a
 SystemMessage slot. The rationale is that "warn-but-allow" is a deferred-security anti-pattern
@@ -110,7 +111,7 @@ so the error is detected as early as possible regardless of whether the template
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 (Red Gate) | `ChatPromptTemplate::from_messages(vec![(MessageRole::System, "You are {role}.", SlotTrustPolicy::TrustAll)])` | `Err(FerrochainError { code: "E-TMPL-002", message: "SystemMessage slots must use TrustRequired policy; TrustAll is disallowed for system-position message slots" })` | error-case (policy violation) |
+| TV-001 (Red Gate) | `ChatPromptTemplate::from_messages(vec![(MessageRole::System, "You are {role}.", SlotTrustPolicy::TrustAll)])` | `Err(FerrochainError { code: "E-TMPL-002", message: "SystemMessage slots must use TrustRequired policy; TrustAll is disallowed for system-position message slots", .. })` | error-case (policy violation) |
 | TV-002 | `ChatPromptTemplate::from_messages(vec![(MessageRole::System, "You are helpful.", SlotTrustPolicy::TrustRequired), (MessageRole::Human, "{question}", SlotTrustPolicy::TrustAll)])` | `Ok(ChatPromptTemplate { ... })` | happy-path (correct policies) |
 | TV-003 | `ChatPromptTemplate::from_messages(vec![(MessageRole::Human, "{q}", SlotTrustPolicy::TrustAll)])` | `Ok(ChatPromptTemplate { ... })` — only Human slot, no System slot | happy-path (no System slot) |
 | TV-004 | Template with two System slots: first TrustRequired, second TrustAll | `Err(E-TMPL-002)` — second slot triggers the error | error-case (second System slot fails) |

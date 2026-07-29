@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.001
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B): Component::TMPL → Component::Tmpl, Category::VAL → Category::Val in PC-4 code block. Taxonomy code-string column stays SCREAMING as documentation shorthand; only typed Rust enum paths change."
   - "1.4 (fix-burst-279/F-P175-B201+B204/ADR-015-D3-Amendment/2026-07-28): THREE changes. (1) INV-5 (new): PromptTemplate::format is explicitly unguarded — output is a bare String with no MessageProvenance; callers MUST NOT place this output in a system-role position without routing through ChatPromptTemplate::format_messages (B201 CRIT; ADR-015 Decision 3 Amendment). (2) INV-1 fix (B204): was self-contradictory ('infallible only if ... returns Err'); corrected to proper fallible statement — construction is fallible, unparseable templates return Err(E-TMPL-004) at construction time. (3) E-TMPL-004 MalformedTemplate: minted for construction-time parse failures; EC-007/EC-008/EC-009 added for unbalanced-brace and empty-brace inputs (highest-risk input class for the in-house f-string parser); TV-007 added. E-TMPL-* census 3→4; total census 110→111."
   - "1.5 (fix-burst-280/F-P175-A25/2026-07-28): PC4 E-TMPL-003 construction example converted from struct-literal form to canonical FerrochainError::new(Component::Tmpl, Category::Val, RetryHint::Never, ...) form. Struct-literal is barred for external-crate callers by #[non_exhaustive]; test-writers outside ferrochain-core must use ::new(). TD-VSDD-060 sibling sweep: TV-004 and TV-007 use abbreviated {code, message}-only shorthand — those are verification-field descriptions, not compilable construction expressions; classified (c) and left as-is."
+  - "1.6 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-TMPL-003 inline cite: add `, ..` field-elision marker. (2) TV-004 expected-output cell: add `, ..` field-elision marker. (3) TV-007 expected-output cell: add `, ..` field-elision marker; `...` inside message-string value is inside a quoted string (not field-elision position) and is left as-is. No security semantics or VP anchors altered."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -53,7 +54,7 @@ f-string template using Python `str.format` semantics: `{variable}` substitution
 pre-fills a subset of variables at template-construction time; call-time variables are merged
 in and override partial bindings on key collision. Required variable names are detected at
 construction time (static introspection, before any render call). An undefined variable raises
-`Err(FerrochainError { code: "E-TMPL-003" })` unconditionally — in both the f-string engine and
+`Err(FerrochainError { code: "E-TMPL-003", .. })` unconditionally — in both the f-string engine and
 the jinja2 engine — rather than silently substituting an empty string. There is no lenient mode;
 E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 Decision 4).
 
@@ -126,10 +127,10 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
 | TV-001 | `template = "Hello, {name}! You have {count} messages."`, `vars = {"name": "Alice", "count": "3"}` | `Ok("Hello, Alice! You have 3 messages.")` | happy-path |
 | TV-002 | `template = "Hello, {name}!"`, partial `name = "Bob"`, call-time `vars = {}` | `Ok("Hello, Bob!")` | happy-path (partial binding) |
 | TV-003 | `template = "Curly: {{not_a_var}}"`, `vars = {}` | `Ok("Curly: {not_a_var}")` — literal braces | edge-case (brace escaping) |
-| TV-004 | `template = "Hello, {name}!"`, `vars = {}` (name absent) | `Err(FerrochainError { code: "E-TMPL-003", message: "UndefinedVariable: variable 'name' is not defined in the template context" })` | error-case (undefined variable) |
+| TV-004 | `template = "Hello, {name}!"`, `vars = {}` (name absent) | `Err(FerrochainError { code: "E-TMPL-003", message: "UndefinedVariable: variable 'name' is not defined in the template context", .. })` | error-case (undefined variable) |
 | TV-005 | `template = "Hi {name}"`, partial `name = "Charlie"`, call-time `vars = {"name": "Dave"}` | `Ok("Hi Dave")` — call-time overrides partial | edge-case (partial override) |
 | TV-006 | `PromptTemplate::from_template("Hello, {name}!")` → call `input_variables()` | `["name"]` | happy-path (variable detection) |
-| TV-007 | `PromptTemplate::from_template("Hello, {name")` (unbalanced open brace) | `Err(FerrochainError { code: "E-TMPL-004", message: "MalformedTemplate: ..." })` — construction fails at parse time | error-case (malformed template; EC-007) |
+| TV-007 | `PromptTemplate::from_template("Hello, {name")` (unbalanced open brace) | `Err(FerrochainError { code: "E-TMPL-004", message: "MalformedTemplate: ...", .. })` — construction fails at parse time | error-case (malformed template; EC-007) |
 
 ## Verification Properties
 

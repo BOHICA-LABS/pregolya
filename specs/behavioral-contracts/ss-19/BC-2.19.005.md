@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.005
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ changelog:
   - "1.4 (FIX-BURST-268/F-P166-01/2026-07-25): TD-VSDD-091 de-pin — Invariant 3 cited 'error-taxonomy.md v1.28 (E-SRLZ-001 row: VAL)' as live normative authority; version pin violates TD-VSDD-091 (narrative body must not cite vN.N numbers that decay on subsequent taxonomy diffs). Adjudication: live normative citation, not historical record. De-pinned to stable section anchor: 'error-taxonomy.md §E-SRLZ-001 (row: VAL)'."
   - "1.5 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::SRLZ → Component::Srlz (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + Invariant 3 prose backtick span)."
   - "1.6 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: FerrochainError struct literal (missing retry_hint, source fields) → FerrochainError::new(Component::Srlz, Category::Val, RetryHint::Never, \"E-SRLZ-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-SRLZ-001. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-19/BC-2.19.005.md returns zero fence-scoped literal occurrences after this edit."
+  - "1.7 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 2 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-SRLZ-001 allowlist cite: add `, ..` field-elision marker. (2) TV-001 expected-output cell: add `, ..` field-elision marker. No security semantics, VP anchors, or Red Gate invariants altered."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -62,7 +63,7 @@ removal_reason: null
 before any constructor dispatch, kwargs parsing, or type coercion. If the `id` field of
 the `Serialized::Constructor` does not appear in the registry (after legacy-namespace remap
 per BC-2.19.004), `revive()` immediately returns
-`Err(FerrochainError { code: "E-SRLZ-001" })`. There is no fallback, no partial construction,
+`Err(FerrochainError { code: "E-SRLZ-001", .. })`. There is no fallback, no partial construction,
 and no type coercion that can bypass this check. This is the primary defense against
 deserialization of arbitrary user-controlled type ids. The property is Kani-verifiable
 because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is a
@@ -131,7 +132,7 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 (Red Gate) | `Reviver::revive(Serialized::Constructor { id: ["attacker_custom", "Exploit"], kwargs: {"cmd": "rm -rf /"} })` | `Err(FerrochainError { code: "E-SRLZ-001", message: "unknown-serializable: type id not in registry" })` | error-case (unknown id) |
+| TV-001 (Red Gate) | `Reviver::revive(Serialized::Constructor { id: ["attacker_custom", "Exploit"], kwargs: {"cmd": "rm -rf /"} })` | `Err(FerrochainError { code: "E-SRLZ-001", message: "unknown-serializable: type id not in registry", .. })` | error-case (unknown id) |
 | TV-002 (Red Gate) | `Reviver::revive(Serialized::Constructor { id: [], kwargs: {} })` | `Err(E-SRLZ-001)` — empty id | error-case (empty id) |
 | TV-003 | `Reviver::revive(Serialized::Constructor { id: ["langchain_core", "prompts", "prompt", "PromptTemplate"], kwargs: {"template": "Hi"} })` | `Ok(PromptTemplate { ... })` — registered type | happy-path (registered type passes) |
 | TV-004 | `Reviver::revive(Serialized::NotImplemented { id: ["unknown", "Type"] })` | `Err(E-SRLZ-001)` — NotImplemented variant also gated | error-case (NotImplemented with unknown id) |

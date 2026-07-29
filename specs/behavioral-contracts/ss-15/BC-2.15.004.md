@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.004
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P91-04, 2026-07-17): EC-004 adjudication — E-MEMORY-002 StorageFull is a write-capacity code (wrong semantic for a backend read I/O failure). No existing MEMORY code covers read I/O failure. Minted E-MEMORY-008 (MemoryStoreReadFailed, DURABILITY, broken, Maybe) as the correct code. EC-004 updated: removed E-MEMORY-002 and hedge 'or equivalent propagated storage error'; now cites E-MEMORY-008 MemoryStoreReadFailed. Added TV-008 to satisfy gate #33 raise-condition anchor for E-MEMORY-008. error-taxonomy.md v1.18 adds E-MEMORY-008 row (MEMORY namespace); census 85→86 (blanket 26→27: E-MEMORY-* 7→8)."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-004 carried bare `Err(FerrochainError { category: DURABILITY, code: E-MEMORY-008 MemoryStoreReadFailed })` without message; E-MEMORY-008 taxonomy has <backend_error> placeholder (SQLite I/O error detail, available at raise site). Added inline message template to EC-004."
   - "1.3 (fix-burst-279/F-P175-B102/ADR-012-D1-Amendment/2026-07-28): PC3 updated with SCOPE NOTE — SkillStore implementations bind MemoryScope::App(app_id) at construction time per ADR-012 Decision 1 Amendment. Callers do not supply scope at call time; app_id comes from RunContext.app_id (system-derived, same source as ContextMutationConfig loading in BC-2.15.006). If the SkillStore was constructed without a valid app_id, all load_skill/list_skills/skill_exists calls return Err(E-MEMORY-004 NoScopeContext). EC-006 added for the empty-app_id construction case (unenumerated in prior versions; finding B102 noted this gap)."
+  - "1.4 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-004: added `, ..` before closing brace in partial FerrochainError observation `FerrochainError { category: DURABILITY, code: E-MEMORY-008, message: \"...\" }` — Class 3 VIOLATION (component and retry_hint fields omitted with no elision marker; canonical form requires `..` per ADR-010 §Error-Construction Notation Canon)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -114,7 +115,7 @@ is implementation-defined but stable across calls with no writes in between.
 ### EC-004: MemoryStore storage error during load_skill
 **Scenario:** The backing SQLite file returns an I/O error on read.
 **Expected behavior:** Returns `Err(FerrochainError { category: DURABILITY, code: E-MEMORY-008 MemoryStoreReadFailed,
-message: "MemoryStoreReadFailed: backend read failed: <backend_error>" })`
+message: "MemoryStoreReadFailed: backend read failed: <backend_error>", .. })`
 (where `<backend_error>` is the SQLite I/O error detail, available at the raise site). Does NOT panic.
 Does NOT return `Ok(None)` to mask the error (DI-014).
 

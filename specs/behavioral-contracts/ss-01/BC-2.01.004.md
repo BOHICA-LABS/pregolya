@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.004
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
+  - "1.2 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Three sites corrected: PC5 single-line (E-CORE-004, `, ..` added); EC-001 3-line multiline span closure (E-CORE-004, `, ..` added before closing `})`); TV-004 table-cell (E-CORE-004, `, ..` added). All spans have category/code/message but lack component and retry_hint."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -64,7 +65,7 @@ assembled via `.pipe()` satisfies the full `Runnable` surface itself, enabling f
 4. Sequence flattening: `a.pipe(b).pipe(c)` produces one `RunnableSequence` with
    `first=a, middle=[b], last=c` — NOT `RunnableSequence { first: RunnableSequence{a,b}, last: c }`.
 5. A type-boundary mismatch in a type-erased `DynRunnable` pipeline is detected at the sequence's
-   first `invoke` call and returns `Err(FerrochainError { category: INTERNAL, code: E-CORE-004 })`.
+   first `invoke` call and returns `Err(FerrochainError { category: INTERNAL, code: E-CORE-004, .. })`.
 6. The composed sequence inherits config (tags, metadata, callbacks) from the caller's
    `RunnableConfig`; each step receives a child config tagged with its sequential position
    (`seq:step:1`, `seq:step:2`, etc.).
@@ -88,7 +89,7 @@ assembled via `.pipe()` satisfies the full `Runnable` surface itself, enabling f
 but `b` expects `serde_json::Value::String`. Detected only at invocation.
 **Expected behavior:** `seq.invoke(input).await` returns `Err(FerrochainError { category: INTERNAL,
 code: E-CORE-004, message: "Pipe composition failed: type boundary mismatch between stage 1 output
-and stage 2 input" })`. No panic, no silent wrong-type coercion.
+and stage 2 input", .. })`. No panic, no silent wrong-type coercion.
 **Reference:** error-taxonomy.md E-CORE-004.
 
 ### EC-002: Three-stage pipeline with streaming-native middle step
@@ -123,7 +124,7 @@ No error unless the output type of `a` does not match the input type of `a`.
 | TV-001 | `to_upper.pipe(add_exclamation).invoke("hello", &cfg)` | `Ok("HELLO!")` | Happy path — two-stage typed pipeline |
 | TV-002 | `a.pipe(b).pipe(c)` — check structure | `RunnableSequence { first: a, middle: [b], last: c }` — flattened | Sequence flattening |
 | TV-003 | Streaming chain: `a.pipe(b).stream("input")` where both are streaming-native | Emits chunks incrementally, not one final chunk | Token streaming through sequence |
-| TV-004 | Type-erased `a.pipe(b)` with type mismatch, `invoke` | `Err(FerrochainError { category: INTERNAL, code: E-CORE-004 })` | DynRunnable type mismatch |
+| TV-004 | Type-erased `a.pipe(b)` with type mismatch, `invoke` | `Err(FerrochainError { category: INTERNAL, code: E-CORE-004, .. })` | DynRunnable type mismatch |
 | TV-005 | `seq.batch(vec!["x","y","z"], &cfg)` on a two-stage pipeline | `[Ok("X!"), Ok("Y!"), Ok("Z!")]` in input order | Batch through sequence respects order |
 
 ## Verification Properties

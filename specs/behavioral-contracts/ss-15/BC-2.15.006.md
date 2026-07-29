@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.006
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ changelog:
   - "1.2 (OBS-P123-b cross-fix, fix burst 126, 2026-07-19): PC1 and Architecture Anchors corrected to use the canonical MemoryStore trait API per interface-definitions.md v2.39 §MemoryStore. (A) Method name: MemoryStore::get → MemoryStore::memory_get (BC-2.15.001 PC3 is the authoritative method name). (B) Scope parameter: spec.namespace is now explicitly typed as MemoryScope::App(spec.namespace) — context mutation sources are operator-managed, app-level content (BC-2.15.002 PC3); this matches test vector TV-001 namespace 'agent' which is an app-level concept. (C) Architecture Anchors scheduler call updated to reflect correct method signature. No behavioral change — the resolution of which MemoryScope tier applies to ContextSourceSpec.namespace was implicit in the prior text; this entry makes it explicit."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (fix-burst-279/F-P175-B101/ADR-012-D1-Amendment/2026-07-28): PC1 scope bridge corrected per architect ADR-012 Decision 1 Amendment (B101 CRIT). ContextSourceSpec.namespace is a key-namespace PREFIX within the tenant partition, NOT the app_id. Corrected call uses MemoryScope::App(run_context.app_id) with composite key format!(\"{}/{}\", spec.namespace, spec.key). run_context.app_id is the system-derived tenant identity (set by execution engine before first super-step; NOT overridable via RunnableConfig caller input). Empty app_id fails loud: all reads return Err(E-MEMORY-004 NoScopeContext) — no silent empty return. EC-006 added for empty app_id at run start. Architecture Anchors scheduler call updated to reflect corrected signature."
+  - "1.5 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep — 3 corrections. (1) EC-003 Scenario: `FerrochainError { ... }` → `FerrochainError { .. }` (CLASS3_ASCII_ELLIPSIS_VIOLATION). (2) EC-003 Expected: `FerrochainError { category: DURABILITY, ... }` → `FerrochainError { category: DURABILITY, .. }` (CLASS3_ASCII_ELLIPSIS_VIOLATION). (3) TV-006: `FerrochainError { category: DURABILITY }` → `FerrochainError { category: DURABILITY, .. }` (Class 3 VIOLATION — no elision marker). All three per ADR-010 §Error-Construction Notation Canon."
 wave: 2
 phase: 1b
 producer: product-owner
@@ -127,9 +128,9 @@ next run's `ContextMutationConfig` load.
 
 ### EC-003: MemoryStore load failure at run start
 **Scenario:** During the `graph::scheduler` pre-first-super-step load, a `ContextSourceSpec`
-load returns `Err(FerrochainError { ... })` due to a storage I/O failure.
+load returns `Err(FerrochainError { .. })` due to a storage I/O failure.
 **Expected behavior:** The error propagates from `graph::scheduler` to the caller; the run
-does NOT start. `Err(FerrochainError { category: DURABILITY, ... })` (the propagated storage
+does NOT start. `Err(FerrochainError { category: DURABILITY, .. })` (the propagated storage
 error) is returned. No partial run or partial context injection occurs. (DI-008.)
 
 ### EC-004: context_mutations = None (opt-out path)
@@ -168,7 +169,7 @@ correction — NO-SILENT-EMPTY enforced on both B101 and B102 paths.
 | TV-003 | "MEMORY.md" = "Fact A"; run starts; super-step 1 writes "Fact A; Fact B" to MEMORY.md; super-step 2 executes | Super-step 2 context still has "Fact A" (frozen at run start) | Frozen snapshot: mid-run write invisible |
 | TV-004 | Run 1 writes "Fact B" to MEMORY.md; Run 2 starts with same config | Run 2 context prepend includes "Fact B" | Next-run visibility |
 | TV-005 | `context_mutations = None` | No prepend; run executes as before | Opt-out path |
-| TV-006 | Storage I/O error during pre-run load | `Err(FerrochainError { category: DURABILITY })` from `invoke`; run does not start | Storage failure halts run before first super-step |
+| TV-006 | Storage I/O error during pre-run load | `Err(FerrochainError { category: DURABILITY, .. })` from `invoke`; run does not start | Storage failure halts run before first super-step |
 
 ## Verification Properties
 

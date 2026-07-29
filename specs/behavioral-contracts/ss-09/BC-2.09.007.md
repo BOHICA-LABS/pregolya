@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.007
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,7 +16,8 @@ producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.0 (2026-07-15, initial): base BC authored — MCP server tool call dispatch via ToolRegistry."
-  - "1.1 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Architecture Anchors — ToolRegistry type corrected: `Option<Arc<dyn Tool>>` → `Option<Arc<dyn DynTool>>` (architect scope — planned implementation signature; dyn Tool is non-object-safe per ADR-005 v1.9; ToolRegistry must use DynTool for vtable dispatch)."
+  - "1.1 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Architecture Anchors — ToolRegistry type corrected: `Option<Arc<dyn Tool>>` → `Option<Arc<dyn DynTool>>` (architect scope — planned implementation signature; dyn Tool is non-object-safe per ADR-005 §Adjacent Trait Object-Safety Adjudications; ToolRegistry must use DynTool for vtable dispatch)."
+  - "1.2 (WAVE-B-NOTATION-SWEEP/2026-07-29): (1) EC-002 §Scenario: CLASS3_UNICODE_ELLIPSIS_VIOLATION — `FerrochainError { … }` corrected to `FerrochainError { .. }` per ADR-010 §Error-Construction Notation Canon Class 3 (discriminator sub-class CLASS3_UNICODE_ELLIPSIS_VIOLATION: U+2026 in brace-whitespace field-elision position). (2) v1.1 frontmatter entry: de-pinned volatile ADR-005 version pin to section anchor `ADR-005 §Adjacent Trait Object-Safety Adjudications` per TD-VSDD-091."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -101,7 +102,7 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
 found: nonexistent_tool" }`. No tool execution attempted.
 
 ### EC-002: Tool returns an error (Err result)
-**Scenario:** The ferrochain `Tool::invoke` returns `Err(FerrochainError { … })` (e.g., the
+**Scenario:** The ferrochain `Tool::invoke` returns `Err(FerrochainError { .. })` (e.g., the
 tool made a failing HTTP request).
 **Expected behavior:** MCP response: `{ "content": [{ "type": "text", "text":
 "<FerrochainError message>" }], "isError": true }`. JSON-RPC result is a success (the MCP

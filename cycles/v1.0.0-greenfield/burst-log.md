@@ -5883,3 +5883,39 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 217 total `FerrochainError {` occurrences = 170 violations + 33 exempt/excluded + 14 valid-complete. Multiline: 48 openers = 43 normative spans + 5 excluded-no-close. Same-line-closed: 169 = 123 no-elision + 45 forbidden three-dot + 1 genuine `..`. Effect A (multiline blindspot) = 0; Effect B (`grep -v` false negative, `BC-2.11.003`) = +1; 169 + 1 − 0 = 170. Supersedes BOTH 144 (discriminator with 4 defects) and 158 (unbounded field-bearing-literal pattern).
 
 **Self-attributed orchestrator defect:** Orchestrator instructed architect to write changelog entries "ascending order, newest last." Corpus convention (enforced by `verify-form-a-changelog-direction`) is descending (newest first). Architect correctly followed the file over the instruction. Codified as L-135.
+
+---
+
+### Archived from Current Phase Steps (burst-282 Wave B — D-82)
+
+One row archived from STATE.md v4.39 Current Phase Steps table.
+
+**Row (fix-burst 279 COMPLETE — D-69):** fix-burst 279 COMPLETE — ~40/189 P1D-175 closed (4 CRITs: D-61 SS-15 tenancy-bridge + D-62 SS-16 SkillStore scope-binding + D-63 PromptTemplate::format explicitly unguarded + D-64 TemplateInput injection guard extended; D-65 TrustLevel severity() ordering; D-66 E-MEMORY-004 recategorized VAL→SECURITY; D-67 E-TMPL-004 minted; D-68 BC-2.18.002 PC3/INV-3 broadened); D-61..D-68 recorded; L-116..L-121 minted; prior checkpoint archived; factory-artifacts pushed. NEXT: fix-burst 280.
+
+---
+
+### Burst-282 Wave B Narrative
+
+**Burst:** 282 Wave B | **Date:** 2026-07-29 | **Agents:** product-owner (batches B1–B7, domain-spec, bc-authoring-plan) + devops-engineer (verify-error-notation-canon.sh + spec_region_utils.py) + architect (ADR-010 §Classification Procedure count chain update)
+
+**Work completed:**
+
+- 51 BC files (all subsystems SS-01/03/04/07/08/09/10/11/12/14/15/17/18/19/20/21/22): 180 error-notation corrections (170 missing-`..` rest-pattern + 10 `...` three-dot → `..`) applied via 7 product-owner batches (B1 SS-08 pilot; B2 SS-01/03/04/07; B3 SS-14/22; B4 SS-09/10; B5 SS-11/12/15; B6 SS-17/18/19; B7 SS-20/21) using ADR-010 §Mechanical Discriminator corrected discriminator. Pilot (B1) surfaced two canon gaps before fan-out: (a) class-dependent changelog conventions (D-85); (b) validator self-flag class resolved by illustration exclusion markers.
+- `specs/domain-spec/bounded-contexts.md`, `specs/domain-spec/edge-cases.md`, `specs/domain-spec/entities-server.md`: 5 domain-spec residue sites corrected (ADR-010 §Error-Construction Notation Canon).
+- `specs/prd.md` (×2), `specs/prd-supplements/capabilities-p1-p2.md` (×1): D-35 xtask `check-<subject>` residue sites corrected. D-35 CLOSED 26/26 (D-84).
+- `specs/prd-supplements/bc-authoring-plan.md` (×5): ADR-010 §Error-Construction Notation Canon sites corrected — D-87 defect 4 closure (batch partition omitted `prd-supplements/`; caught only by new validator).
+- `specs/architecture/decisions/ADR-010-error-taxonomy-anyhow-confinement.md`: §Classification Procedure count chain updated to show 144→158→170→172→0 residual (D-86).
+- `hooks/verify-error-notation-canon.sh`: New blocking validator minted implementing ADR-010 §Mechanical Discriminator. Final census: 351 openers, 0 violations, bucket sum 351 (CLASS3_VALID 213 / CLASS3_VALID_COMPLETE 19 / CLASS2_VALID 20 / exclusions 99). Wired as blocking (#8) in `hooks/pre-commit-validators.sh`.
+- `hooks/spec_region_utils.py`: `find_ferrochain_error_openers()` added; `illustration_exempt_lines()` frontmatter-skip and same-line-marker bugs fixed (from burst-281 Wave A-corr partial).
+- `specs/behavioral-contracts/BC-INDEX.md`: v3.27 — 51 BC version rows synced (frontmatter changelog entry + body table row added).
+
+**Self-attributed orchestrator defects (4; D-87):**
+1. Instructed architect to write ADR changelogs ascending — wrong; ADRs are descending; architect correctly trusted the file (recurrence of L-135).
+2. Instructed B1 that BC changelogs were descending — wrong; broke verify-form-a-changelog-direction to FAIL=7 across 7 files; repaired pre-commit.
+3. Named the canon with a version-pinned form that violated L9b in two batches; corrected mid-flight by broadcast.
+4. Built batch partition from `specs/behavioral-contracts/` omitting `prd-supplements/`; 5 real violations survived seven batches and were caught only by the new validator.
+
+**Validator suite (orchestrator-verified, all at baseline, no regression):**
+verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signature-canon PASS=5 FAIL=0; verify-form-a-changelog-direction PASS=198 WARN=7 FAIL=0 BC_UNVERIFIED=0; verify-arch-anchor-resolution PASS=129 FAIL=0; verify-enum-variant-casing PASS=198 FAIL=0; verify-module-canonicality PASS=8 FAIL=0; verify-changelog-date-monotonicity PASS=131 FAIL=0; verify-bc-frontmatter-schema PASS=129 FAIL=0; verify-error-notation-canon PASS=1 FAIL=0 (351 openers; 0 violations; bucket sum 351).
+
+**Decisions allocated:** D-82..D-87. **Lessons minted:** L-136..L-141. **Streak:** 0/3 (unchanged; Wave B is a fix-burst, not an adversary pass).

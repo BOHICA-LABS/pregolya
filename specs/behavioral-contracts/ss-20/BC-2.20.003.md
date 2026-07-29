@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.003
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.4 (FIX-BURST-277-WAVE-C/ADR-014-Decision-2-body/2026-07-28): BC body aligned with ADR-014 Decision 2 VectorStoreRetriever lifetime removal. (1) Description: lifetime-parameterized VectorStoreRetriever and borrowed `&'a dyn VectorStore` removed; as_retriever made fallible with Arc<Self>-receiver returning Result<VectorStoreRetriever, FerrochainError>; Err(E-VS-003) on invalid config. (2) PC2: infallible `&self`-receiver form -> fallible Arc<Self>-receiver form. (3) PC3: lifetime-annotated VectorStoreRetriever -> VectorStoreRetriever. (4) PC4: coercion succeeds because Retriever + 'static. (5) PC5: updated to fallible signature; E0038-safe framing removed (issue was lifetime, not object safety). (6) Invariant 5: lifetime-borrow language -> Arc ownership language; 'static coercion documented. (7) EC-006: Ok(VectorStoreRetriever) return; Arc clone semantics."
   - "1.5 (FIX-BURST-278-WAVE-B/D-48-receiver-sweep/2026-07-28): D-48 receiver sweep — all non-dyn-compatible receiver forms corrected to `Arc<Self>` in Description, Precondition PC-2, Postcondition PC-5, Edge Case EC-006, and VP-2.20.003-A inline spec. Related BCs stale description fixed: 'wraps a &dyn VectorStore' → 'owns Arc<dyn VectorStore>'. See wave-b-po-routing-spec.md Routing Items 6/6g."
   - "1.6 (FIX-BURST-278-WAVE-C/D-48-ratification/2026-07-28): PO ratification of D-48 receiver sweep (wave-b-po-routing-spec.md Routing Items 6a–6g). Substantive verification: (1) Inv-2 states 'validated against [0.0, 1.0]; rejected with Err(FerrochainError{code:E-VS-003})' — matches error-taxonomy.md §E-VS-003 and PC-5 fallible semantics; COHERENT. (2) TV-004/TV-005 show FerrochainError{code:E-VS-003} in table cells (S5-exempt prose); error semantics correct. (3) PC-5 reads 'as_retriever(self: Arc<Self>)' — dyn-compatible per D-48; CORRECT. (4) No non-dyn-compatible borrowed-Arc receiver residue: file confirmed zero occurrences. (5) No lifetime-parameterized VectorStoreRetriever residue: file confirmed zero occurrences. Ratification: COHERENT."
+  - "1.7 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 CLASS3_MISSING_DOTDOT violations corrected. (1) Invariant 2 inline E-VS-003 reject cite: add `, ..` field-elision marker. (2) TV-004 expected-output cell: add `, ..` field-elision marker. (3) TV-005 expected-output cell: add `, ..` field-elision marker. Zero-space `FerrochainError{code:E-VS-003}` in frontmatter changelog entry 1.6 (historical record, no space before brace) is EXEMPT — not modified per append-only record protocol."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-027
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -92,7 +93,7 @@ internal field allows `VectorStoreRetriever` to satisfy `Retriever + 'static`, e
 1. `SearchType` is `#[non_exhaustive]` — match arms in callers must include `_` wildcard to guard
    against future variants.
 2. `lambda_mult` is **validated against** `[0.0, 1.0]` at construction time; values outside this range are
-   rejected with `Err(FerrochainError { code: "E-VS-003", message: "Validation failed for 'lambda_mult': must be in [0.0, 1.0]" })` at `as_retriever()` call.
+   rejected with `Err(FerrochainError { code: "E-VS-003", message: "Validation failed for 'lambda_mult': must be in [0.0, 1.0]", .. })` at `as_retriever()` call.
 3. `k ≥ 1` is enforced at construction time; `k = 0` is rejected.
 4. `fetch_k ≥ k` is enforced at construction time for `SearchType::Mmr` (the candidate pool must
    be at least as large as the final result count); `fetch_k < k` is rejected.
@@ -119,8 +120,8 @@ internal field allows `VectorStoreRetriever` to satisfy `Retriever + 'static`, e
 | TV-001 | `store.as_retriever()` with default config → `get_relevant_documents("test")` | Dispatches to `similarity_search("test", 4)`; returns `Ok(docs)` | happy-path (default Similarity) |
 | TV-002 | `as_retriever()` with `SearchType::SimilarityScoreThreshold { score_threshold: 0.8 }` → query → only 1 of 5 docs scores ≥ 0.8 | `Ok(vec![<1 doc>])` — 4 docs filtered out | happy-path (score threshold) |
 | TV-003 | `as_retriever()` with `SearchType::Mmr`, `k=3`, `fetch_k=10`, `lambda_mult=0.5` → query | Dispatches to `max_marginal_relevance_search("query", 3, 10, 0.5)`; returns `Ok(3 diverse docs)` | happy-path (MMR) |
-| TV-004 | `as_retriever()` with `lambda_mult = 1.5` | `Err(FerrochainError { code: "E-VS-003", message: "Validation failed for 'lambda_mult': must be in [0.0, 1.0]" })` | error-case (invalid config) |
-| TV-005 | `as_retriever()` with `SearchType::Mmr`, `fetch_k = 2`, `k = 5` | `Err(FerrochainError { code: "E-VS-003", message: "Validation failed for 'fetch_k': must be ≥ k (5) for MMR search" })` | error-case (invalid MMR config) |
+| TV-004 | `as_retriever()` with `lambda_mult = 1.5` | `Err(FerrochainError { code: "E-VS-003", message: "Validation failed for 'lambda_mult': must be in [0.0, 1.0]", .. })` | error-case (invalid config) |
+| TV-005 | `as_retriever()` with `SearchType::Mmr`, `fetch_k = 2`, `k = 5` | `Err(FerrochainError { code: "E-VS-003", message: "Validation failed for 'fetch_k': must be ≥ k (5) for MMR search", .. })` | error-case (invalid MMR config) |
 
 ## Verification Properties
 

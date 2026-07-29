@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.002
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-standard-tests per module-decomposition.md v1.10."
   - "1.4 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-005 message reworded from 'model <name> does not support tool calling' to 'Validation failed for 'model': model '<name>' does not support tool calling' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV-005 bare form unchanged — PASS-ABBREV via EC-005."
   - "1.5 (F-P160-01 TD-VSDD-060 sweep, 2026-07-25): Fix burst 261 — VP-BC208002-01 description had 'without exceeding config.recursion_limit (default 25) super-steps' which implies ≤25 steps execute before halt; corrected to 'within recursion_limit + 1 super-steps per invocation segment' (stop = step_at_invoke_start + recursion_limit + 1; default limit=25 → up to 26 steps execute before halt). Normative authority is BC-2.03.001 PC5; this VP description now agrees."
+  - "1.6 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-005 and §Canonical Test Vectors TV-005: FerrochainError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-005; category, code at TV-005); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 2 exempt (changelog, 1 line)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -133,7 +134,7 @@ unhandled deserialization error.
 ### EC-005: bind_tools on model that does not support tool calling
 **Scenario:** `.bind_tools([tool])` is called on a model with `has_tool_calling = false`.
 **Expected behavior:** `bind_tools` returns `Err(FerrochainError { category: VAL, code: E-CORE-005,
-message: "Validation failed for 'model': model '<name>' does not support tool calling" })` — it does not silently return
+message: "Validation failed for 'model': model '<name>' does not support tool calling", .. })` — it does not silently return
 a model that ignores the tools at inference time.
 
 ## Canonical Test Vectors
@@ -144,7 +145,7 @@ a model that ignores the tools at inference time.
 | TV-002 | agent loop: tool returns "22°C"; model follow-up | Final `AiMessage` text mentions "22" or "Paris"; loop terminates | test_agent_loop |
 | TV-003 | Zero-argument tool called with `tool_choice = ToolName` | `ToolCall { args: {} }` (empty object, not None) | No-argument tool |
 | TV-004 | `ToolMessage { status: Error, content: "timeout" }` fed back | Non-error `AiMessage` acknowledging failure | Error status ToolMessage |
-| TV-005 | `bind_tools([tool])` on model with `has_tool_calling = false` | `Err(FerrochainError { category: VAL, code: E-CORE-005 })` | EC-005 guard |
+| TV-005 | `bind_tools([tool])` on model with `has_tool_calling = false` | `Err(FerrochainError { category: VAL, code: E-CORE-005, .. })` | EC-005 guard |
 
 ## Verification Properties
 

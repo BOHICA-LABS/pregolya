@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.17.002
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P80-01, 2026-07-15): EC-002 error code corrected E-GRAPH-007→E-GRAPH-008. E-GRAPH-007 is UnknownChannelKey (runtime unregistered-write-key error); the correct code for a zero-node degenerate topology is E-GRAPH-008 UnreachableGraph (no path from START). Message aligned to taxonomy form: UnreachableGraph: <reason>. 'or similar' hedge removed from code assertion — exact E-GRAPH-008 is now required; message-detail flexibility preserved per fuzz-oracle semantics (oracle tests code discriminant, not message text)."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to fuzz/ per module-decomposition.md v1.10."
   - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-002 had `Err(FerrochainError { code: E-GRAPH-008 })` with message only in prose (not in the struct); E-GRAPH-008 has <reason> placeholder. Inlined the example message from the prose into the struct as the authoritative concrete form; fuzz oracle semantics note retained (oracle tests code discriminant, not message text)."
+  - "1.4 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-002: added `, ..` before closing brace in partial FerrochainError observation `FerrochainError { code: E-GRAPH-008, message: \"...\" }` — Class 3 VIOLATION (component, category, and retry_hint fields omitted with no elision marker; canonical form requires `..` per ADR-010 §Error-Construction Notation Canon)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-019
 inputs:
@@ -115,7 +116,7 @@ The error propagates to the caller. The fuzz target counts this as a non-crash h
 ### EC-002: Graph with Zero Nodes
 **Scenario:** The graph execution fuzzer generates a `GraphDefinition` with no nodes.
 **Expected behavior:** Execution returns `Err(FerrochainError { code: E-GRAPH-008,
-message: "UnreachableGraph: empty graph — no entry edge from START" })`.
+message: "UnreachableGraph: empty graph — no entry edge from START", .. })`.
 No panic. The graph executor must handle degenerate topologies gracefully.
 The fuzz oracle asserts exact code E-GRAPH-008; message-detail text may vary by implementation
 (the message above is the canonical example; implementations may substitute a semantically equivalent `<reason>`).

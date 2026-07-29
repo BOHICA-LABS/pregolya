@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.004
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -29,6 +29,7 @@ changelog:
   - "1.5 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 4 sites: Component::TMPL → Component::Tmpl, Category::SECURITY → Category::Security. Sites: Description inline code block (×1 TMPL+SECURITY), PC-1 code block (×1 TMPL, ×1 SECURITY), Invariant 2 prose (×1 SECURITY)."
   - "1.6 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: FerrochainError struct literal (missing retry_hint, source fields) → FerrochainError::new(Component::Tmpl, Category::Security, RetryHint::Never, \"E-TMPL-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: SECURITY category default per error-taxonomy.md §E-TMPL-001. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-18/BC-2.18.004.md returns zero fence-scoped literal occurrences after this edit."
   - "1.7 (fix-burst-279/F-P175-B201+B202+B208/ADR-015-D3-Amendment/2026-07-28): THREE changes. (1) §Related BCs: removed false claim that injection_guard fires during the PromptTemplate::format render path (B201 CRIT — PromptTemplate::format is explicitly unguarded; guard fires ONLY in format_messages); replaced with explicit prohibition note on system-position use of PromptTemplate::format output. (2) PC2: updated from HashMap<String, TemplateVar> to HashMap<String, TemplateInput>; injection_guard now covers Scalar(TemplateVar), Messages(MessageListVar), and FewShotExamples arms (B202 CRIT — TemplateInput enum concretized per ADR-015 Decision 3 Amendment). (3) PC5: updated to cover both TemplateInput::Scalar(var) and TemplateInput::Messages(msg_var) trust_level checks against TrustRequired slots; VP-006 Kani proof covers both input arms exhaustively (B202; B208 — MessageListVar guard)."
+  - "1.8 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 violations corrected. (1) Description ¶1 E-TMPL-001 cite: CLASS3_ASCII_ELLIPSIS_VIOLATION — replace trailing `...` with `..` field-elision marker. (2) TV-001 expected-output cell: CLASS3_MISSING_DOTDOT — add `, ..` field-elision marker. (3) TV-005 expected-output cell: CLASS3_MISSING_DOTDOT — add `, ..` field-elision marker. No security semantics, Red Gate invariants, or VP anchors altered."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -61,7 +62,7 @@ removal_reason: null
 The `injection_guard` module fires inside `ChatPromptTemplate::format_messages` **at render
 time**, before any `PromptValue` is produced and before the guardrail boundary (DI-012). If
 any variable being substituted into a `TrustRequired` slot carries `trust_level: Some(TrustLevel::Untrusted)` (i.e., `var.trust_level.is_some_and(|t| t.is_untrusted()) == true`), `format_messages` immediately returns
-`Err(FerrochainError { component: Component::Tmpl, category: Category::Security, code: "E-TMPL-001", ... })`.
+`Err(FerrochainError { component: Component::Tmpl, category: Category::Security, code: "E-TMPL-001", .. })`.
 This is a **categorical hard block at the pure-core layer** — it is unconditional, not
 configurable via `GuardrailHook`, and does not produce a partial `PromptValue`. SystemMessage
 slots are always `TrustRequired` (enforced by BC-2.18.005); this BC specifies the render-time
@@ -149,11 +150,11 @@ enforcement of that invariant.
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 (Red Gate) | `template = [System("{sys_prompt}"), Human("{question}")]`, `vars = {"sys_prompt": TemplateVar { value: "DROP TABLE users;--", trust_level: Some(TrustLevel::Untrusted) }, "question": TemplateVar { value: "hi", trust_level: None }}` | `Err(FerrochainError { code: "E-TMPL-001", message: "InjectionAttempt: variable 'sys_prompt' carries untrusted provenance but slot 'system' requires TrustRequired policy" })` | error-case (injection attempt) |
+| TV-001 (Red Gate) | `template = [System("{sys_prompt}"), Human("{question}")]`, `vars = {"sys_prompt": TemplateVar { value: "DROP TABLE users;--", trust_level: Some(TrustLevel::Untrusted) }, "question": TemplateVar { value: "hi", trust_level: None }}` | `Err(FerrochainError { code: "E-TMPL-001", message: "InjectionAttempt: variable 'sys_prompt' carries untrusted provenance but slot 'system' requires TrustRequired policy", .. })` | error-case (injection attempt) |
 | TV-002 | Same template, `vars = {"sys_prompt": TemplateVar { value: "Be helpful.", trust_level: Some(TrustLevel::UserInput) }, "question": TemplateVar { value: "hi", trust_level: None }}` | `Ok(PromptValue { ... })` — UserInput is not Untrusted | happy-path (UserInput trusted enough) |
 | TV-003 | `template = [System("Constant."), Human("{q}")]`, `vars = {"q": TemplateVar { value: "...", trust_level: Some(TrustLevel::Untrusted) }}` | `Ok(PromptValue { ... })` — Untrusted only in HumanMessage slot (TrustAll) | happy-path (untrusted in TrustAll slot) |
 | TV-004 | `template = [System("{s}"), Human("{h}")]`, both vars `trust_level: Some(TrustLevel::Untrusted)` | `Err(E-TMPL-001)` with `var_name = "s"` (first TrustRequired slot fails first) | error-case (fail-first semantics) |
-| TV-005 | `template = [System("{a}: {b}")]`, `vars = {"a": TemplateVar { value: "inject", trust_level: Some(TrustLevel::Untrusted) }, "b": TemplateVar { value: "also inject", trust_level: Some(TrustLevel::Untrusted) }}` | `Err(FerrochainError { code: "E-TMPL-001", message: "InjectionAttempt: variable 'a' carries untrusted provenance but slot 'system' requires TrustRequired policy" })` — `a` appears first in template source order | error-case (intra-slot multi-var determinism) |
+| TV-005 | `template = [System("{a}: {b}")]`, `vars = {"a": TemplateVar { value: "inject", trust_level: Some(TrustLevel::Untrusted) }, "b": TemplateVar { value: "also inject", trust_level: Some(TrustLevel::Untrusted) }}` | `Err(FerrochainError { code: "E-TMPL-001", message: "InjectionAttempt: variable 'a' carries untrusted provenance but slot 'system' requires TrustRequired policy", .. })` — `a` appears first in template source order | error-case (intra-slot multi-var determinism) |
 
 ## Verification Properties
 

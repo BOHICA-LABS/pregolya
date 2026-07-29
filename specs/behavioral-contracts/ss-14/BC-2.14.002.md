@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ changelog:
   - "1.3 (ADV-P1D-PASS-27): F-P27-01 add 9th Known-override: E-GRAPH-002 POLICY→422 on resume endpoint; canon: pass-23 deliberately set 422 (semantic state validation failure — no active interrupt slot); POLICY→403 categorical default does not apply because 'no active interrupt' is an unprocessable-entity condition, not a policy rejection."
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core / ferrochain-server per module-decomposition.md v1.10."
   - "1.5 (FIX-BURST-280-WAVE-C/F-P175-A25-T2/2026-07-28): Task 2 — explicit annotation added above TV table. TV-001/TV-002/TV-005 use ALL-CAPS prose shorthand notation (`component: CORE, category: VAL`, etc.) which is BC-2.14.001 rendering convention for table cells — NOT compilable Rust. Actual test construction uses FerrochainError::new(...). No behavioral change."
+  - "1.6 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). One CLASS3_ASCII_ELLIPSIS_VIOLATION corrected: TV-005 Input `FerrochainError { category: INTERNAL, ... }` — replaced `...` with `..`. TV-001 and TV-002 are Class 3 VALID (all 5 non-source fields present; Class 4 defining-crate annotations from v1.5 remain accurate). No behavioral change."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -188,7 +189,7 @@ _TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy co
 | TV-002 | `FerrochainError { component: PROV, category: RATE, code: "E-PROV-001", retry_hint: Later(30s), message: "RateLimited" }.to_problem()` | HTTP status 429; `extensions.retry_hint: "later:30"` | Rate-limit with backoff |
 | TV-003 | `ProblemDetail` serialized via `serde_json::to_string` | Valid JSON, no `null` fields except optional ones | RFC-7807 conformance |
 | TV-004 | Response `Content-Type` header | `"application/problem+json"` | Correct MIME type |
-| TV-005 | `FerrochainError { category: INTERNAL, ... }.to_problem()` HTTP status | 500 | Internal error → 500 |
+| TV-005 | `FerrochainError { category: INTERNAL, .. }.to_problem()` HTTP status | 500 | Internal error → 500 |
 
 ## Verification Properties
 

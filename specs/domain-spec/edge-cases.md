@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: edge-cases
-version: "1.3"
+version: "1.4"
 status: active
 producer: business-analyst
 timestamp: 2026-07-19T00:00:00Z
@@ -17,6 +17,7 @@ input-hash: "6b61b95"
 traces_to: L2-INDEX.md
 decisions: [D17]
 changelog:
+  - "v1.4 (NOTATION-SWEEP-DOMAIN-SPEC/2026-07-29): Error-construction notation corrections per ADR-010 §Error-Construction Notation Canon. 3 CLASS3_MISSING_DOTDOT violations corrected: added `, ..` before `}` in FerrochainError { category: TOOL, source: ToolException } (DEC-012), Err(FerrochainError { category: TRANSPORT }) (DEC-013 TCP-reset branch), and Err(FerrochainError { category: TIMEOUT }) (DEC-013 stall-timeout branch); all three were partial-field observations with no elision marker."
   - "v1.3 (FIX-BURST-276-WAVE-C/F-P173-407/2026-07-27): DEC-013 orphan resolved. Adversarial pass-42 recorded '13/13 CLEAN' for the domain edge-case register (all 13 DECs anchored to a BC), but DEC-013 (Provider Streaming Interrupted by Transport Error) was a one-directional reference: DEC-013's trailing prose named BC-2.08.007 as its anchor but BC-2.08.007 carried no reciprocal DEC-013 citation. Fix: DEC-013 anchor text restructured from trailing prose into a labelled 'BC anchor' line for consistency with DEC-001 through DEC-012 anchor style; BC-2.08.007 updated to cite DEC-013 in traces_to frontmatter and Traceability DEC References row (bidirectional anchor now closed). Canonical DEC count: 13 = count of ### DEC-NNN: H3 headings in this file (DEC-001 through DEC-013, sequential, no gaps, all in domain-spec/edge-cases.md)."
   - "v1.2 (F-P121-01, fix burst 124, 2026-07-19): DEC-010 scenario: 'ToolResult ContentBlock contains text' → 'ToolMessage content block contains text' per BC-2.09.002 authority. TD-VSDD-060 sweep: DEC-010 was the only ContentBlock-vocabulary site in this file; fixed."
   - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (D17/NE-* sources baked at authoring time from COMPARATIVE-ASSESSMENT.md); domain-a-soc-analyst.md added (DEC-010 prompt-injection edge case); domain-b-dark-factory.md added (DEC-009 crash-recovery fan-out edge case); domain-c-openclaw.md added (DEC-011 workspace symlink escape, NE-02/DI-007); input-hash recomputed."
@@ -127,17 +128,17 @@ points outside the declared workspace root.
 **Scenario:** An MCP server raises a bare ToolException (not wrapped in a higher-level
 exception type). The MCP adapter re-raises it.
 **Expected behavior:** The error type identity is preserved; the caller receives a
-`FerrochainError { category: TOOL, source: ToolException }`, not a generic opaque error.
+`FerrochainError { category: TOOL, source: ToolException, .. }`, not a generic opaque error.
 **Source:** R11; upstream MCP test void.
 
 ### DEC-013: Provider Streaming Interrupted by Transport Error
 **Scenario:** A streaming completion from an OpenAI-compatible provider is cut off
 mid-stream by a TCP reset or a per-chunk stall timeout.
 **Expected behavior (TCP reset / connection drop):** The stream yields
-`Err(FerrochainError { category: TRANSPORT })`; accumulated partial tokens are discarded;
+`Err(FerrochainError { category: TRANSPORT, .. })`; accumulated partial tokens are discarded;
 the error propagates to the caller.
 **Expected behavior (per-chunk stall timeout):** The stream yields
-`Err(FerrochainError { category: TIMEOUT })`; accumulated partial tokens are discarded;
+`Err(FerrochainError { category: TIMEOUT, .. })`; accumulated partial tokens are discarded;
 the error propagates to the caller.
 In both cases the caller never receives a truncated `Ok(AiMessage)` as if the response
 were complete.

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.003
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-008, DI-009, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-22 Embeddings"
   - "1.1 (F-P130-09/2026-07-21): Add DI-009 to di_anchors — PC4/INV-2 specify the mandatory 30s timeout (including localhost) but did not cite DI-009; add BC-2.14.004 cross-reference in PC4 and INV-2 prose."
+  - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). 9 CLASS3_ASCII_ELLIPSIS_VIOLATION corrected — PC2, PC5, EC-001, EC-002, EC-003, EC-004, EC-005, TV-004, TV-005 each had `Err(FerrochainError { ... })` — replaced `...` with `..` in all nine. No behavioral change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-033
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -74,7 +75,7 @@ unconditional and applies even for `localhost` targets.
    - `embed_documents(texts)`: sends one `POST <base_url>/api/embeddings` request per text
      (serial), with body `{ "model": "<model>", "prompt": "<text>" }`. Returns `Ok(vecs)` with
      one vector per text. If any single-text call fails, the whole `embed_documents` call
-     returns `Err(FerrochainError { ... })` — no partial result (DI-014).
+     returns `Err(FerrochainError { .. })` — no partial result (DI-014).
    - `embed_query(text)`: sends `POST <base_url>/api/embeddings` with
      `{ "model": "<model>", "prompt": "<text>" }`. Returns `Ok(vec)`.
 3. **No API key:** `EmbeddingsOllama` has no `api_key` field. No `Authorization` header is set.
@@ -83,7 +84,7 @@ unconditional and applies even for `localhost` targets.
    see BC-2.14.004). This applies for `localhost` targets — the timeout is unconditional and
    not disabled for local connections.
 5. **Model validation:** not enforced at construction — invalid or unpulled model names fail
-   at the first API call with `Err(FerrochainError { ... })` from the HTTP response body.
+   at the first API call with `Err(FerrochainError { .. })` from the HTTP response body.
 
 ## Invariants
 
@@ -108,11 +109,11 @@ unconditional and applies even for `localhost` targets.
 
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
-| EC-001 | `use_legacy_endpoint: false`, Ollama binary predates `/api/embed` (returns 404) | `Err(FerrochainError { ... })` — 404 propagates; no silent fallback to `/api/embeddings` |
-| EC-002 | `use_legacy_endpoint: true`, batch of 5 texts; 3rd request returns 500 | `Err(FerrochainError { ... })` — first 2 embeddings discarded; Err for whole call |
-| EC-003 | Ollama process not running (connection refused) | `Err(FerrochainError { ... })` wrapping the reqwest connection error; no retry |
-| EC-004 | Model not pulled locally (Ollama returns 404 with body `"model not found"`) | `Err(FerrochainError { ... })` — error message includes model name if safe to include |
-| EC-005 | Request takes > 30 seconds (slow local model) | `Err(FerrochainError { ... })` wrapping the reqwest timeout; 30s applies even for localhost |
+| EC-001 | `use_legacy_endpoint: false`, Ollama binary predates `/api/embed` (returns 404) | `Err(FerrochainError { .. })` — 404 propagates; no silent fallback to `/api/embeddings` |
+| EC-002 | `use_legacy_endpoint: true`, batch of 5 texts; 3rd request returns 500 | `Err(FerrochainError { .. })` — first 2 embeddings discarded; Err for whole call |
+| EC-003 | Ollama process not running (connection refused) | `Err(FerrochainError { .. })` wrapping the reqwest connection error; no retry |
+| EC-004 | Model not pulled locally (Ollama returns 404 with body `"model not found"`) | `Err(FerrochainError { .. })` — error message includes model name if safe to include |
+| EC-005 | Request takes > 30 seconds (slow local model) | `Err(FerrochainError { .. })` wrapping the reqwest timeout; 30s applies even for localhost |
 | EC-006 | `embed_documents(vec![])` with legacy endpoint | `Ok(vec![])` — zero requests sent; not an error |
 
 ## Canonical Test Vectors
@@ -122,8 +123,8 @@ unconditional and applies even for `localhost` targets.
 | TV-001 | `embed_documents(vec!["hello"])` with `use_legacy_endpoint: false`, mock `/api/embed` returning 768-dim vector | `Ok(vec![[f32; 768]])` | happy-path (default endpoint) |
 | TV-002 | `embed_query("hello")` with `use_legacy_endpoint: false` | `Ok([f32; 768])` | happy-path (default endpoint, single query) |
 | TV-003 | `embed_documents(vec!["hello"])` with `use_legacy_endpoint: true`, mock `/api/embeddings` | `Ok(vec![[f32; 768]])` | happy-path (legacy endpoint) |
-| TV-004 | `use_legacy_endpoint: false`; Ollama returns 404 for `/api/embed` | `Err(FerrochainError { ... })` — no fallback to `/api/embeddings` | error-case (no auto-fallback) |
-| TV-005 | `use_legacy_endpoint: true`; 2-text batch; second request returns 500 | `Err(FerrochainError { ... })` — first embedding discarded | error-case (DI-014 partial-failure) |
+| TV-004 | `use_legacy_endpoint: false`; Ollama returns 404 for `/api/embed` | `Err(FerrochainError { .. })` — no fallback to `/api/embeddings` | error-case (no auto-fallback) |
+| TV-005 | `use_legacy_endpoint: true`; 2-text batch; second request returns 500 | `Err(FerrochainError { .. })` — first embedding discarded | error-case (DI-014 partial-failure) |
 
 ## Verification Properties
 

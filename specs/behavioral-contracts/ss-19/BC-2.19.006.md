@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.006
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.3 (FIX-BURST-269/F-P167-02/2026-07-25): Fix dangling 'ADR-016 Decision 7' anchor at two sites (Architecture Anchors and Traceability Architecture Authority). ADR-016 has only Decisions 1–5; Decision 7 is nonexistent. Corrected to 'ADR-016 Decision 3 Property 4' — LANGCHAIN_MONOLITH_TYPES set, E-SRLZ-002 category VAL, and the deliberate-unregistered pattern are all specified in Decision 3 Property 4. Same anchor class as BC-2.19.005 F-P148-01 fix ('Decision 6' → 'Decision 3 §Security Invariant')."
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::SRLZ → Component::Srlz (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + PC-5 prose backtick span)."
   - "1.5 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: FerrochainError struct literal (missing retry_hint, source fields) → FerrochainError::new(Component::Srlz, Category::Val, RetryHint::Never, \"E-SRLZ-002\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-SRLZ-002. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-19/BC-2.19.006.md returns zero fence-scoped literal occurrences after this edit."
+  - "1.6 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 1 CLASS3_MISSING_DOTDOT violation corrected. TV-001 expected-output cell: `FerrochainError { code: \"E-SRLZ-002\", message: \"...\" }` → add `, ..` field-elision marker. No security semantics or VP anchors altered."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -115,7 +116,7 @@ available in ferrochain." The error is propagated as `Err`; it is never a silent
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 | `Reviver::revive(Serialized::Constructor { id: ["langchain", "chains", "llm", "LLMChain"], kwargs: {} })` | `Err(FerrochainError { code: "E-SRLZ-002", message: "unsupported-serializable: langchain-monolith type not ported to ferrochain" })` | error-case (monolith type) |
+| TV-001 | `Reviver::revive(Serialized::Constructor { id: ["langchain", "chains", "llm", "LLMChain"], kwargs: {} })` | `Err(FerrochainError { code: "E-SRLZ-002", message: "unsupported-serializable: langchain-monolith type not ported to ferrochain", .. })` | error-case (monolith type) |
 | TV-002 | `Reviver::revive(Serialized::Constructor { id: ["langchain", "agents", "mrkl", "ZeroShotAgent"], kwargs: {} })` | `Err(E-SRLZ-002)` — another monolith type | error-case (monolith type) |
 | TV-003 | `Reviver::revive(Serialized::Constructor { id: ["completely_unknown", "Type"], kwargs: {} })` | `Err(E-SRLZ-001)` — not in monolith set, not in registry | error-case (generic unknown) |
 | TV-004 | `Reviver::revive(Serialized::Constructor { id: ["langchain_core", "prompts", "prompt", "PromptTemplate"], kwargs: {"template": "Hi"} })` | `Ok(PromptTemplate { ... })` — langchain_core type (registered; not monolith) | happy-path |

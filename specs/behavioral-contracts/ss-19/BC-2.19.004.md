@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.004
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
   - "1.1 (F-P170-02/burst-272/2026-07-25): Re-anchor Architecture Anchors and Traceability Architecture Authority from ADR-016 Decision 5 to Decision 4 — OLD_CORE_NAMESPACES_MAPPING, remap-before-lookup, and remap-then-registry-lookup ordering are specified in Decision 4 (Legacy Namespace Remapping); Decision 5 is One-Way Python Checkpoint Import Tool Compatibility (unrelated). Drop 'remap-chain validation' from ADR attribution — not stated in ADR-016 Decision 4; retained in Invariant 3 as a BC-local design decision. This is the uniform +1 off-by-one shift as F-P170-01 (BC-2.19.003 Decision 4→2)."
+  - "1.2 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 1 CLASS3_MISSING_DOTDOT violation corrected. TV-003 expected-output cell: `FerrochainError { code: \"E-SRLZ-001\" }` → add `, ..` field-elision marker. No security semantics or VP anchors altered."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -100,7 +101,7 @@ succeeds without requiring the caller to pre-process the id.
 |---|-------|-----------------|----------|
 | TV-001 | `Serialized::Constructor { id: ["langchain", "prompts", "prompt", "PromptTemplate"], kwargs: {"template": "Hello {name}"} }` → `revive()` | `Ok(PromptTemplate { template: "Hello {name}" })` — legacy id remapped to canonical | happy-path (legacy alias) |
 | TV-002 | `Serialized::Constructor { id: ["langchain_core", "prompts", "prompt", "PromptTemplate"], kwargs: {"template": "Hi {x}"} }` → `revive()` | `Ok(PromptTemplate { template: "Hi {x}" })` — canonical id, no remap | happy-path (canonical, no remap) |
-| TV-003 | `Serialized::Constructor { id: ["langchain", "nonexistent", "Type"], kwargs: {} }` → `revive()` | `Err(FerrochainError { code: "E-SRLZ-001" })` — not in remap table and not in registry | error-case (unknown legacy id) |
+| TV-003 | `Serialized::Constructor { id: ["langchain", "nonexistent", "Type"], kwargs: {} }` → `revive()` | `Err(FerrochainError { code: "E-SRLZ-001", .. })` — not in remap table and not in registry | error-case (unknown legacy id) |
 | TV-004 | `Serialized::Constructor { id: ["langchain", "schema", "messages", "SystemMessage"], kwargs: {"content": "Be helpful."} }` → `revive()` | `Ok(SystemMessage { content: "Be helpful." })` — legacy SystemMessage namespace remapped | happy-path (message type legacy alias) |
 
 ## Verification Properties

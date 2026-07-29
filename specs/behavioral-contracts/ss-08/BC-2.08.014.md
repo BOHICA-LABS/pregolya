@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.014
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (F-P108-01, 2026-07-18): EC-004 and TV-005 expanded to use two separate fields `last_error_code` and `last_provider` instead of single `last_error` field. Root cause: the taxonomy Message Format for E-PROV-010 uses two distinct placeholders `<last_error_code>/<last_provider>` that cannot be rendered from a single combined field; BC-wins rule applies. EC-004: `{ providers_attempted: 3, last_error: \"E-PROV-008/provider-b\" }` → `{ providers_attempted: 3, last_error_code: \"E-PROV-008\", last_provider: \"provider-b\" }`. TV-005: expanded from bare form with inline `providers_attempted: 3` annotation to full struct with all three fields. Sibling sweep (all E-PROV-010 sites in this BC): PC5 uses message-template form with `<last_error_code>/<last_provider>` placeholders (already correctly separated); Description and TV-006 use bare form (no struct fields; not subject to parity check). PASS after fix."
   - "1.3 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-006 message reworded from 'ProviderFallbackPolicy.chain must not be empty' to 'Validation failed for 'ProviderFallbackPolicy.chain': must not be empty' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV-007 bare form unchanged — PASS-ABBREV via EC-006. Note: EC-006 was added after the ADV-P1D-PASS-56 census and was not in that census; discovered by F-P112-02 corpus-wide sweep."
   - "1.4 (fix-burst-276/2026-07-27): Update EC-006 and TV-007 to cite E-PROV-011 FallbackChainEmpty instead of E-CORE-005. E-PROV-011 was minted in error-taxonomy.md in the same burst specifically to back ProviderFallbackPolicy::new() empty-chain validation; E-CORE-005 (CORE component) would misattribute the component — PROV namespace is the correct home per ADR-010 §E-CFG-001 convention. EC-006: code E-CORE-005 → E-PROV-011; message updated from E-CORE-005 canonical format ('Validation failed for ...') to E-PROV-011 STATIC message ('FallbackChainEmpty: ProviderFallbackPolicy.chain must not be empty'). TV-007: code E-CORE-005 → E-PROV-011; bare form remains PASS-ABBREV via EC-006. All other E-CORE-005 citations in this BC (none — verified by sweep) are unaffected."
+  - "1.5 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-006 and §Canonical Test Vectors TV-007: FerrochainError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-006; category, code at TV-007); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 1 already-valid (Class 3 complete observation at §Postconditions PC5 — all 5 non-source fields present), 1 exempt (changelog)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
 inputs:
@@ -148,7 +149,7 @@ Fallback chain is NOT attempted. TIMEOUT is not a failover trigger condition.
 ### EC-006: Empty fallback chain at config construction
 **Scenario:** `ProviderFallbackPolicy { chain: vec![] }` passed to `ChatConfig`.
 **Expected behavior:** `Err(FerrochainError { category: VAL, code: E-PROV-011,
-message: "FallbackChainEmpty: ProviderFallbackPolicy.chain must not be empty" })` at config construction time.
+message: "FallbackChainEmpty: ProviderFallbackPolicy.chain must not be empty", .. })` at config construction time.
 No runtime failover attempt occurs. (DI-008.)
 
 ## Canonical Test Vectors
@@ -161,7 +162,7 @@ No runtime failover attempt occurs. (DI-008.)
 | TV-004 | Primary 5xx; fallback-A 5xx; fallback-B 200 | Graph receives fallback-B 200 | Chain depth 2 |
 | TV-005 | Primary 5xx; fallback-A 5xx; fallback-B 5xx | `Err(E-PROV-010 ProviderChainExhausted { providers_attempted: 3, last_error_code: "E-PROV-008", last_provider: "provider-b" })` | All exhausted |
 | TV-006 | Primary TIMEOUT; failover configured | `Err(E-PROV-002 ProviderTimeout)` — no failover | TIMEOUT is not a trigger |
-| TV-007 | `ProviderFallbackPolicy { chain: [] }` | `Err(FerrochainError { category: VAL, code: E-PROV-011 })` at construction | Empty chain is VAL error |
+| TV-007 | `ProviderFallbackPolicy { chain: [] }` | `Err(FerrochainError { category: VAL, code: E-PROV-011, .. })` at construction | Empty chain is VAL error |
 
 ## Verification Properties
 

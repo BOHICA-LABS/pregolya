@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.001
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -26,6 +26,7 @@ changelog:
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-002 and the corresponding TV row carried bare `Err(FerrochainError { category: DURABILITY, code: E-CHKPT-001 })` without message; E-CHKPT-001 has <task_id> and <backend_error> placeholders. Added inline message template to EC-002; TV row PASS-ABBREV via EC-002."
   - "1.3 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/ferrochain-checkpoint.md' to two adjudicated targets: (1) 'prd-supplements/interface-definitions.md §CheckpointSaver' for trait signatures (put_writes, get_tuple, list); (2) 'architecture/module-decomposition.md §ferrochain-checkpoint' for checkpoint::saver row. No BC body content changed."
   - "1.4 (2026-07-22, F-P139-01a, burst-239): Add Invariant 5 — checkpoint append-only / records-never-deleted general invariant. This invariant was absent from all SS-04 BCs: BC-2.10.006 cited 'BC-2.04.001 immutability' for original-record preservation but BC-2.04.001 contained only four write-timing invariants with no explicit never-deleted property. BC-2.04.004 Inv-2 covers only fork-scoped immutability. Inv-5 here covers the general case (any in-run operation, including compaction). BC-2.10.006 Description, Invariants, and Related BCs updated to cite BC-2.04.001 Inv-5 (F-P139-01b, same burst)."
+  - "1.5 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 FerrochainError observations with elided fields: EC-002 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -89,7 +90,7 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | Task produces no writes (zero-output node) | `put_writes(config, [], task_id)` is called; task is recorded as committed; super-step boundary proceeds normally |
-| EC-002 | `put_writes` storage backend returns an error | Error surfaces as `Err(FerrochainError { category: DURABILITY, code: E-CHKPT-001, message: "CheckpointWriteFailed: put_writes for task '<task_id>' failed — backend error: <backend_error>" })` (where `<task_id>` is the current task ID; `<backend_error>` is the storage I/O error detail; both available at the raise site); super-step does NOT advance; the run transitions to `failed` |
+| EC-002 | `put_writes` storage backend returns an error | Error surfaces as `Err(FerrochainError { category: DURABILITY, code: E-CHKPT-001, message: "CheckpointWriteFailed: put_writes for task '<task_id>' failed — backend error: <backend_error>", .. })` (where `<task_id>` is the current task ID; `<backend_error>` is the storage I/O error detail; both available at the raise site); super-step does NOT advance; the run transitions to `failed` |
 | EC-003 | Durability tier is `Exit` | `put_writes` is NOT called mid-run; writes accumulate in memory; only the full checkpoint is written on graph exit |
 | EC-004 | Task writes to ERROR special channel | Written with negative index (-1); does not collide with regular writes; recorded separately for error-handler re-routing on crash-resume |
 
@@ -99,7 +100,7 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
 |-------|----------------|----------|
 | 3-task super-step with `sync` durability; all 3 tasks complete | All 3 `put_writes` calls confirmed in storage BEFORE `apply_writes` executes for super-step N+1; verified by querying `pending_writes` table before advancing | happy-path |
 | 3-task super-step; task 2 produces an empty write list | `put_writes(config, [], task2_id)` called successfully; no error; super-step boundary proceeds; task 2 is committed | edge-case |
-| `put_writes` storage call fails with I/O error on task 1 completion | `Err(FerrochainError { category: DURABILITY, code: E-CHKPT-001 })` returned to caller; `apply_writes` not executed; graph halts without advancing to super-step N+1 (PASS-ABBREV via EC-002) | error |
+| `put_writes` storage call fails with I/O error on task 1 completion | `Err(FerrochainError { category: DURABILITY, code: E-CHKPT-001, .. })` returned to caller; `apply_writes` not executed; graph halts without advancing to super-step N+1 (PASS-ABBREV via EC-002) | error |
 | 3-task super-step with `exit` durability | Zero `put_writes` calls mid-run; only one full `put` call on graph exit; crash mid-run loses all task writes from the current run | edge-case |
 
 ## Verification Properties

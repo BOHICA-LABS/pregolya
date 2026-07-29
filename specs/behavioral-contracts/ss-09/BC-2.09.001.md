@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.001
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -12,6 +12,7 @@ changelog:
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
   - "1.3 (CENSUS-P109, 2026-07-18): Expand TV-004 E-MCP-002 McpTransportError struct from `{ server: \"math\", ... }` to `{ server: \"math\", transport_error: \"connection refused\" }` — `...` abbreviation failed PASS-ABBREV rule (no defining full-struct PC/EC site in BC; TV-004 was the sole struct site). TD-VSDD-060 sweep: no other E-MCP-002 struct sites in file."
   - "1.4 (FIX-BURST-277-WAVE-C/ADR-005-DynTool/2026-07-28): Description + PC2: migrate Arc<dyn ferrochain_core::Tool> -> Arc<dyn DynTool> per ADR-005 §Adjacent Trait Object-Safety Adjudications (dyn Tool is non-object-safe; DynTool is the object-safe seam; blanket impl auto-implements DynTool for T: Tool + Send + Sync + 'static; definition in interface-definitions.md §DynTool)."
+  - "1.5 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — two violations corrected: (1) PC7 `FerrochainError { component: MCP, category: TRANSPORT, code: E-MCP-002 }` had 3/5 fields; added `, ..`. (2) EC-006 §Expected behavior multiline span (4/5 fields, missing retry_hint); added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3."
 origin: greenfield
 priority: P1
 subsystem: SS-09
@@ -78,7 +79,7 @@ via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
 6. When `tool_name_prefix = true`, each tool name is prefixed `"{server_name}_{tool_name}"`.
    When `false`, tool names are used verbatim (name conflicts are caller's responsibility).
 7. Transport failure connecting to any targeted server returns
-   `Err(FerrochainError { component: MCP, category: TRANSPORT, code: E-MCP-002 })`.
+   `Err(FerrochainError { component: MCP, category: TRANSPORT, code: E-MCP-002, .. })`.
 8. A server that returns an empty tool list (`[]`) is not an error; an empty `Vec`
    is returned for that server.
 
@@ -128,7 +129,7 @@ method (e.g., a legacy MCP server exposing only resources, or a JSON-RPC endpoin
 is not an MCP tools server at all).
 **Expected behavior:** Returns `Err(FerrochainError { component: MCP, category: VAL,
 code: E-MCP-003, message: "McpNotImplemented: MCP server '<server>' does not implement
-'tools/list'" })`. The server contributes no tools to the registry. Treated as a fatal
+'tools/list'", .. })`. The server contributes no tools to the registry. Treated as a fatal
 failure for that server — same propagation pattern as EC-004 transport failure
 (`JoinSet` aborts on first error in multi-server fan-out). The caller must reconfigure
 or remove the non-implementing server.

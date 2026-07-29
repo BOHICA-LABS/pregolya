@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.001
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(FerrochainError { category: TRANSPORT, … })` (Unicode-ellipsis form) without specifying a code in this BC. Added code: E-PROV-003 (StreamInterrupted) explicitly to EC-003 per gate #30 rule: ellipsis forms are exempt only if the BC itself specifies the code for that path. Code confirmed from cross-referenced BC-2.08.007 EC-001/TV-001."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-standard-tests per module-decomposition.md v1.10."
   - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-003 carried `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003, … })` with Unicode-ellipsis abbreviation; cross-BC reference to BC-2.08.007 does not satisfy PASS-ABBREV (same-BC requirement). Expanded `…` to explicit inline message template with `<provider>` and `<tokens>` placeholders; cross-BC reference retained as informational note."
+  - "1.4 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-003: FerrochainError value-observation in prose missing required `..` rest pattern (partial fields: category, code, message; missing component, retry_hint); added `, ..` before closing `}`. All occurrences reconciled: 1 corrected (Class 3), 2 exempt (changelog)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -113,7 +114,7 @@ contains `[ContentBlock::Text(...), ContentBlock::ToolCall(...)]` in index order
 ### EC-003: Stream terminated mid-block (transport error)
 **Scenario:** The SSE stream is closed by the provider mid-delta for block index 0.
 **Expected behavior:** The stream yields `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003,
-message: "StreamInterrupted: TCP connection to '<provider>' reset mid-stream after <tokens> tokens" })`
+message: "StreamInterrupted: TCP connection to '<provider>' reset mid-stream after <tokens> tokens", .. })`
 (where `<provider>` is the provider adapter name; `<tokens>` is the approximate token count at reset;
 both available at the raise site). No partial `AiMessage` is returned as a success value. (See also BC-2.08.007 EC-004 for the authoritative full-form site.)
 
