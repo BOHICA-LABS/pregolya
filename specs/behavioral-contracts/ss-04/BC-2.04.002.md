@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "767bd41"
+input-hash: "de174ac"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04
@@ -23,10 +23,10 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-4): category canon sweep — EC-003 and test vector error category corrected from `ConfigError` to `VAL` (13-category sweep, F-P4-xx)."
-  - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(FerrochainError { category: VAL, message: ... })` and the durability-string-turbo TV row had `Err(FerrochainError { category: VAL })` with no code. Added code: E-CORE-005 (ValidationFailed) — unknown durability tier string is a VAL construction-time failure at run start."
+  - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(PregolyaError { category: VAL, message: ... })` and the durability-string-turbo TV row had `Err(PregolyaError { category: VAL })` with no code. Added code: E-CORE-005 (ValidationFailed) — unknown durability tier string is a VAL construction-time failure at run start."
   - "1.3 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-003 message reworded from 'unknown durability tier: \"<value>\"' to 'Validation failed for 'durability': unknown tier \"<value>\"' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV bare form unchanged — PASS-ABBREV via EC-003."
-  - "1.4 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/ferrochain-checkpoint.md' to 'architecture/decisions/ADR-003-durability-tiers.md' — DurabilityTier enum, CheckpointSaverConfig::default(), Sync-default rationale. No BC body content changed."
-  - "1.5 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 FerrochainError observations with elided fields: EC-003 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
+  - "1.4 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/pregolya-checkpoint.md' to 'architecture/decisions/ADR-003-durability-tiers.md' — DurabilityTier enum, CheckpointSaverConfig::default(), Sync-default rationale. No BC body content changed."
+  - "1.5 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-003 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -71,7 +71,7 @@ developer ceremony — the unsafe faster modes require a deliberate choice.
 1. `DurabilityTier::Sync` is the default variant; it requires no explicit configuration
 2. The default cannot be overridden by an environment variable alone — it requires explicit
    code at the call site
-3. No internal ferrochain code path changes the effective durability tier without passing
+3. No internal pregolya code path changes the effective durability tier without passing
    it through the `RunnableConfig` channel
 4. The `DurabilityTier` type is not `Default`-derivable to some other variant; the only
    place a default is injected is at `RunnableConfig` resolution
@@ -82,7 +82,7 @@ developer ceremony — the unsafe faster modes require a deliberate choice.
 |----|-------------|-------------------|
 | EC-001 | Caller passes `DurabilityTier::Async` explicitly | Accepted; `put_writes` submitted as futures; loop does not block on each task's write; futures joined on run exit |
 | EC-002 | Caller passes `DurabilityTier::Exit` explicitly | Accepted; zero `put_writes` mid-run; single `put` on graph exit; fastest, no crash recovery within a run |
-| EC-003 | `durability` field present in config but set to an unrecognized string | `Err(FerrochainError { category: VAL, code: E-CORE-005, message: "Validation failed for 'durability': unknown tier \"<value>\"", .. })` at run start |
+| EC-003 | `durability` field present in config but set to an unrecognized string | `Err(PregolyaError { category: VAL, code: E-CORE-005, message: "Validation failed for 'durability': unknown tier \"<value>\"", .. })` at run start |
 | EC-004 | Subgraph nested inside a root graph; no explicit durability on subgraph | Subgraph inherits parent's effective durability tier via `RunnableConfig` propagation |
 
 ## Canonical Test Vectors
@@ -92,7 +92,7 @@ developer ceremony — the unsafe faster modes require a deliberate choice.
 | `graph.invoke(input, RunnableConfig::default())` | Effective tier = `Sync`; each task's `put_writes` awaited to storage before next super-step; verified by timing storage queries | happy-path |
 | `graph.invoke(input, config.with_durability(DurabilityTier::Async))` | Effective tier = `Async`; background futures dispatched; throughput higher than Sync; all futures confirmed on run exit | edge-case |
 | `graph.invoke(input, config.with_durability(DurabilityTier::Exit))` | Effective tier = `Exit`; no `put_writes` during run; storage shows zero pending-writes records mid-run; one `put` record on exit | edge-case |
-| `graph.invoke(input, config.with_durability_str("turbo"))` | `Err(FerrochainError { category: VAL, code: E-CORE-005, .. })` at run start; no execution | error |
+| `graph.invoke(input, config.with_durability_str("turbo"))` | `Err(PregolyaError { category: VAL, code: E-CORE-005, .. })` at run start; no execution | error |
 
 ## Verification Properties
 
@@ -109,8 +109,8 @@ developer ceremony — the unsafe faster modes require a deliberate choice.
 | Capability Anchor Justification | CAP-005 ("Durable Three-Tier Checkpointing (Sync Default; Per-Task put_writes)") per capabilities-p0.md §CAP-005 |
 | L2 Domain Invariants | DI-002 (Per-Task Durability (Sync Default)) |
 | Source Analysis | semport/graph/behavioral-intent.md §5.1 (three durability modes); CONFLICT-2 recommendation (sync as crash-safe default) |
-| Binding Decisions | D11.3 (all three durability tiers; ferrochain defaults to sync), D17-Q3 (Phase-1 BC commitment) |
-| Architecture Module | ferrochain-checkpoint (filled by architect) |
+| Binding Decisions | D11.3 (all three durability tiers; pregolya defaults to sync), D17-Q3 (Phase-1 BC commitment) |
+| Architecture Module | pregolya-checkpoint (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 
 ## Related BCs

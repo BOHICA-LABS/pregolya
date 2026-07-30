@@ -11,10 +11,10 @@ inputs:
   - .factory/semport/langchain-research.md
   - .factory/planning/naming-decision-study.md
   - .factory/semport/reference-manifest.md
-input-hash: "f72e008"
+input-hash: "a5c199b"
 ---
 
-# Market Intelligence Assessment — ferrochain
+# Market Intelligence Assessment — pregolya
 
 ## Executive Summary
 
@@ -28,9 +28,9 @@ prove the ecosystem is responding to genuine demand. However, one critical
 scoping assumption must be corrected before this project can be declared GO: the
 1,051-module langchain-community port target is dead. LangChain Inc. archived the
 langchain-community package in the v1 transition — it has no future releases. A
-ferrochain scoped around ferrochain-core + ferrograph + 15 first-party partner
+pregolya scoped around pregolya-core + ferrograph + 15 first-party partner
 crates + ported standard-tests + Kani/fuzzing pipeline is a **CAUTION with clear
-GO conditions**. A ferrochain scoped around 1,051 community modules is misaligned
+GO conditions**. A pregolya scoped around 1,051 community modules is misaligned
 with LangChain's own roadmap and represents extremely high scope risk.
 
 **Recommendation: CAUTION.** See Section 6 for the specific conditions that flip
@@ -54,15 +54,15 @@ this to GO.
 | Competitor | Approach | Traction | Strengths | Weaknesses |
 |---|---|---|---|---|
 | **langgraph-rust** (Onelevenvy) | Full-suite Rust LangGraph port; surfaced through Flock desktop harness; subgraphs, HITL nodes, conditional branching | v0.2.x; ~599 downloads; created 2026-06-06; owns `langgraph` and `langgraph-checkpoint-rs` crates on crates.io | First mover on the LangGraph identity in Rust; MIT license; actively maintained | Very early-stage; no documented durable checkpointing; only surfaced through Flock; owns the `langgraph-checkpoint-rs` namespace (blocker if using langchain-*-rs naming) |
-| **genai** (jeremychone) | Unified multi-provider client (OpenAI, Anthropic, Gemini, xAI, Ollama, Groq) | Active; excellent ergonomics | Best multi-provider client layer; would be ferrochain's backend, not a competitor | Not a framework — no orchestration, chains, or agents |
+| **genai** (jeremychone) | Unified multi-provider client (OpenAI, Anthropic, Gemini, xAI, Ollama, Groq) | Active; excellent ergonomics | Best multi-provider client layer; would be pregolya's backend, not a competitor | Not a framework — no orchestration, chains, or agents |
 | **kalosm** (Floneum) | Local model inference via Candle (language/audio/image) | Active; tens of thousands downloads under `nlp` keyword | Local model execution substrate | Not orchestration — an inference layer, not a competitor at the framework level |
 
 ### Emerging Threats
 
 | Threat | Nature | Risk Level |
 |---|---|---|
-| **LangChain Inc. official Rust SDK** | LangChain Inc. has LangChain.js as its only official non-Python port; Python-first strategy confirmed; no public signals of a Rust SDK in 2026-2027 | LOW-MEDIUM. Non-zero but not imminent. If it ships, ferrochain competes as `rig`/`swiftide` do — on quality and idiom. |
-| **rig reaching v1.0 with graph runtime** | rig is pre-1.0 with rapid iteration; if 0xPlaygrounds adds durable checkpointing and a conformance suite before ferrochain launches, the white space closes | MEDIUM. Time-to-market matters. |
+| **LangChain Inc. official Rust SDK** | LangChain Inc. has LangChain.js as its only official non-Python port; Python-first strategy confirmed; no public signals of a Rust SDK in 2026-2027 | LOW-MEDIUM. Non-zero but not imminent. If it ships, pregolya competes as `rig`/`swiftide` do — on quality and idiom. |
+| **rig reaching v1.0 with graph runtime** | rig is pre-1.0 with rapid iteration; if 0xPlaygrounds adds durable checkpointing and a conformance suite before pregolya launches, the white space closes | MEDIUM. Time-to-market matters. |
 | **langchain-ai-rust hardening** | If langchain-ai-rust's opaque maintainer ships a verified LangGraph runtime, it captures the namespace and the white space simultaneously | MEDIUM. Governance opacity cuts both ways — it may also mean the project stalls. |
 
 ### Competitive Density Score: **MEDIUM**
@@ -84,8 +84,8 @@ but the window is not infinite.
   compute; Qdrant, Hugging Face Candle, Milvus Rust SDK, and candle-vllm validate
   the trend. Rust's SAM is expanding. Estimated 2026 SAM: low tens of millions;
   5-year growth trajectory is steep.
-- **SOM (ferrochain):** Early-mover capture of the LangGraph-runtime white space
-  would establish ferrochain as the de facto graph/agent substrate in Rust before
+- **SOM (pregolya):** Early-mover capture of the LangGraph-runtime white space
+  would establish pregolya as the de facto graph/agent substrate in Rust before
   consolidation. Realistic SOM at 2-year horizon: community adoption comparable
   to langchain-rust (~4k downloads/month) to rig (~6k stars) within 12-18 months
   if launched with quality and differentiation.
@@ -149,14 +149,14 @@ but the window is not infinite.
    durable execution, checkpointing backends (SQLite/Postgres equivalents), HITL,
    and memory/persistence primitives equivalent to LangGraph v1.2.9. langgraph-rust
    (Onelevenvy) is the nearest attempt but is very early-stage (v0.2.x, 599
-   downloads) with no documented checkpointing. This is ferrochain's strongest
+   downloads) with no documented checkpointing. This is pregolya's strongest
    differentiator — ship it first, ship it with quality checkpointing.
 
 2. **Standard-tests conformance suite ported to Rust — no competitor has this.**
    LangChain's `langchain-tests` package defines the provider conformance contract:
    streaming semantics, tool-calling behavior, structured output, error propagation,
    token accounting. No Rust framework has an equivalent. A Rust conformance test
-   harness would make ferrochain the quality bar-setter for Rust LLM providers —
+   harness would make pregolya the quality bar-setter for Rust LLM providers —
    a moat that compounds over time as providers target it.
 
 3. **Formally-verified core (Kani/fuzzing pipeline) — no competitor has this.**
@@ -169,7 +169,7 @@ but the window is not infinite.
 
 4. **Idiomatic async-first, trait-based design with typed content blocks.**
    langchain-rust's serde_json-centric design is widely identified as its primary
-   weakness. A ferrochain-core built around properly typed `Message`/`ContentBlock`
+   weakness. A pregolya-core built around properly typed `Message`/`ContentBlock`
    enums, tower::Service-shaped `Runnable`, and compile-time-safe tool schemas
    exploits Rust's strengths in a way no existing crate does.
 
@@ -177,7 +177,7 @@ but the window is not infinite.
    with the tagline "a Rust implementation of the LangChain v1 architecture" and
    a docs page "Coming from LangChain/LangGraph?" captures developers who know
    LangChain and want to bring their mental model to Rust — without using the
-   mark in the crate name (ferrochain is legally clean, langchain-rs is blocked).
+   mark in the crate name (pregolya is legally clean, langchain-rs is blocked).
 
 ---
 
@@ -185,15 +185,15 @@ but the window is not infinite.
 
 | Risk | Category | Severity | Likelihood | Mitigation |
 |---|---|---|---|---|
-| **langchain-community archived — 1,051 module scope is a dead target** | Scope | HIGH | CONFIRMED | Do not port langchain-community as an in-tree monorepo. Adopt LangChain's own v1 direction: one-provider-one-package. Community integration crates are third-party contributed, not ferrochain-maintained. |
-| **Scope magnitude: ferrochain-core + ferrograph + 15 partners is a multi-year effort even scoped down** | Scope | HIGH | HIGH | Phase the roadmap: P0 = ferrochain-core + 5 key partners (openai, anthropic, ollama, openrouter, qdrant); P1 = ferrograph (LangGraph runtime); P2 = remaining partners + standard-tests; P3 = community contributed crates. Never sprint to 1,051 modules. |
+| **langchain-community archived — 1,051 module scope is a dead target** | Scope | HIGH | CONFIRMED | Do not port langchain-community as an in-tree monorepo. Adopt LangChain's own v1 direction: one-provider-one-package. Community integration crates are third-party contributed, not pregolya-maintained. |
+| **Scope magnitude: pregolya-core + ferrograph + 15 partners is a multi-year effort even scoped down** | Scope | HIGH | HIGH | Phase the roadmap: P0 = pregolya-core + 5 key partners (openai, anthropic, ollama, openrouter, qdrant); P1 = ferrograph (LangGraph runtime); P2 = remaining partners + standard-tests; P3 = community contributed crates. Never sprint to 1,051 modules. |
 | **Competitor velocity: rig v0.40+, langchain-ai-rust v5.0+ both advancing rapidly** | Business | HIGH | HIGH | Lead with the one thing they don't have: LangGraph runtime + checkpointing. Ship ferrograph as the first headline feature, not parity with langchain-rust. |
 | **Upstream API churn: langchain-community approaching v1.0.0a1, LangGraph iterating at 1.2.x** | Technical | MEDIUM | HIGH | Target langchain-core (stable v1.4.9) and LangGraph stable v1.2.9 as the port baseline. Community is already archived — ignore its churn. LangGraph semantic versioning provides predictability. |
-| **Single-workspace maintenance burden for a large Cargo workspace** | Technical | HIGH | MEDIUM | Adopt modular packaging from day 1: ferrochain-core + ferrograph as separate crates; partner crates versioned independently. Lessons from LangChain Python monorepo explicitly validate this approach. Never replicate langchain-community's monolith pattern in Rust. |
-| **Official LangChain Inc. Rust SDK** | Business | MEDIUM | LOW | Current evidence: Python-first strategy, no public Rust SDK signals. Window is open. If they ship, ferrochain competes on quality + idiom (rig/swiftide model), not name (ferrochain is legally clean). |
+| **Single-workspace maintenance burden for a large Cargo workspace** | Technical | HIGH | MEDIUM | Adopt modular packaging from day 1: pregolya-core + ferrograph as separate crates; partner crates versioned independently. Lessons from LangChain Python monorepo explicitly validate this approach. Never replicate langchain-community's monolith pattern in Rust. |
+| **Official LangChain Inc. Rust SDK** | Business | MEDIUM | LOW | Current evidence: Python-first strategy, no public Rust SDK signals. Window is open. If they ship, pregolya competes on quality + idiom (rig/swiftide model), not name (pregolya is legally clean). |
 | **Business model / sustainability** | Business | HIGH | MEDIUM | Do not attempt to monetize early. Build community first around a constrained, high-quality core. Viable monetization paths: managed ferrograph platform (LangGraph Platform analog), enterprise conformance support, consulting. |
-| **langchain-ai-rust name-capture** | Business | MEDIUM | LOW | The name is already taken for the `langchain` identity in crates.io. ferrochain (verified-clean namespace) sidesteps this entirely. |
-| **Kani/formal verification pipeline maintenance overhead** | Technical | LOW | MEDIUM | Scope formal verification to ferrochain-core primitives only (state machine, message types, tool-call invariants). Do not attempt to formally verify all 1,051 community integrations — that would be prohibitive. NFR candidate: yes (Security focus: yes). |
+| **langchain-ai-rust name-capture** | Business | MEDIUM | LOW | The name is already taken for the `langchain` identity in crates.io. pregolya (verified-clean namespace) sidesteps this entirely. |
+| **Kani/formal verification pipeline maintenance overhead** | Technical | LOW | MEDIUM | Scope formal verification to pregolya-core primitives only (state machine, message types, tool-call invariants). Do not attempt to formally verify all 1,051 community integrations — that would be prohibitive. NFR candidate: yes (Security focus: yes). |
 
 **NFR candidate flags:**
 - R: Competitor velocity HIGH + formally-verified core → NFR candidate: yes (performance + reliability)
@@ -206,9 +206,9 @@ but the window is not infinite.
 ### Conditions for GO (what would flip this CAUTION to GO)
 
 The following conditions, if accepted by the human, convert this assessment to
-GO for a scoped ferrochain:
+GO for a scoped pregolya:
 
-1. **Scope reduction accepted**: ferrochain's deliverable is ferrochain-core +
+1. **Scope reduction accepted**: pregolya's deliverable is pregolya-core +
    ferrograph + 15 first-party partner crates + standard-tests port + Kani/fuzzing
    pipeline. The 1,051 langchain-community modules are explicitly out of scope for
    the in-tree workspace; community integration crates are third-party contributed.
@@ -216,17 +216,17 @@ GO for a scoped ferrochain:
    target.
 
 2. **ferrograph (LangGraph runtime) is the lead differentiator**: The LangGraph
-   runtime with durable checkpointing is ferrochain's primary value proposition
-   and #1 priority after ferrochain-core. Scope without ferrograph = STOP (rig
+   runtime with durable checkpointing is pregolya's primary value proposition
+   and #1 priority after pregolya-core. Scope without ferrograph = STOP (rig
    and langchain-rust already cover that ground reasonably well).
 
-3. **Phased roadmap with quality gates**: P0 = ferrochain-core + 5 essential
+3. **Phased roadmap with quality gates**: P0 = pregolya-core + 5 essential
    partners; P1 = ferrograph; P2 = remaining 10 partners + standard-tests; P3 =
    open ecosystem (community contributes integration crates). No sprint to
    "complete parity."
 
-4. **ferrochain brand confirmed**: The `langchain-rs` naming path is blocked (crate
-   taken) and legally higher-risk. `ferrochain` is the recommended brand (clean
+4. **pregolya brand confirmed**: The `langchain-rs` naming path is blocked (crate
+   taken) and legally higher-risk. `pregolya` is the recommended brand (clean
    namespace confirmed 2026-07-12 per naming-decision-study.md).
 
 ### If CAUTION is kept (concerns to address in spec work)
@@ -237,13 +237,13 @@ GO for a scoped ferrochain:
 - Spec must define ferrograph's checkpointing contract (SQLite + in-memory
   backends minimum; Postgres stretch) before implementation begins.
 - Competitive timeline must be acknowledged: rig is near 6k stars and advancing
-  rapidly; ferrochain must ship ferrograph before rig adds checkpointing.
+  rapidly; pregolya must ship ferrograph before rig adds checkpointing.
 
 ### If STOP were warranted (it is not, but these would trigger it)
 
 - If the human insists on full 1,051 module parity as a hard requirement.
 - If no capacity exists to ship ferrograph — without the LangGraph runtime,
-  ferrochain adds little that rig + swiftide don't already provide.
+  pregolya adds little that rig + swiftide don't already provide.
 - If LangChain Inc. announces an official Rust SDK before spec work completes
   (monitor this signal).
 
@@ -268,7 +268,7 @@ GO for a scoped ferrochain:
   langchain-ai-rust feature matrices against LangGraph v1 BaseCheckpointSaver
   interface. Confidence: High (research explicitly confirms absence). Status: unvalidated.
 
-- ASM-004: ferrochain's Kani/fuzzing pipeline is a genuine differentiator with no
+- ASM-004: pregolya's Kani/fuzzing pipeline is a genuine differentiator with no
   current competition. **Validation method:** Search all Rust LLM framework
   documentation and repos for mentions of Kani, cargo-fuzz, or structured fuzzing
   applied to orchestration primitives. Confidence: High (research found zero mentions).

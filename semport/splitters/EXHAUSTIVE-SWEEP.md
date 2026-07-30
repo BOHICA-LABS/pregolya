@@ -1,6 +1,6 @@
 ---
 artifact: semport/splitters/EXHAUSTIVE-SWEEP
-project: ferrochain
+project: pregolya
 scope: .factory/semport/splitters/*.md (5 files)
 reference: .reference/langchain/libs/text-splitters (langchain-text-splitters 1.1.2, tag langchain==1.3.13)
 sweep_date: 2026-07-12

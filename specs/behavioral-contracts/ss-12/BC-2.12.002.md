@@ -18,7 +18,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-32): F-P32-03 add PC20 — GET /assistants/{id}/versions pagination (limit default 10 max 100 clamped / offset 0 / ordering exemption: version ASC) matching interface-definitions.md §Assistants /versions row."
   - "1.2 (ADV-P1D-PASS-33): F-P33-01 add PC21-PC23 — GET /assistants list-collection postcondition block (response shape { assistants: [Assistant], total_count: u64 }, limit default 10 max 100 clamped / offset 0 / created_at DESC); interface-definitions.md §Canonical Pagination Convention BC anchors updated. F-P33-02 add cross-reference to run-config merge precedence canon in Description."
-  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
+  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.4 (fix-burst-283/F-P175-C113/2026-07-30): §Description corrected — replace fabricated 'model, tools, system prompt overrides, checkpointer config' clause with accurate RunnableConfig field inventory per ADR-021 Decision 2 (configurable map added; LangGraph parity). Add EC-006 and TV-008 for configurable-key collision merge precedence (run-level key wins per BC-2.12.003 §Run-Config Merge Precedence Invariant and interface-definitions.md §RunnableConfig configurable field doc)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "388eb9b"
+input-hash: "62186cc"
 extracted_from: null
 modified: []
 deprecated: null
@@ -52,7 +52,7 @@ any existing version. No wire-compatibility with LangGraph Platform (D13).
 
 ## Preconditions
 
-1. `ferrochain-server` is running with a configured `RunStore` backend.
+1. `pregolya-server` is running with a configured `RunStore` backend.
 2. The caller holds a valid authentication credential (or the server is in unauthenticated dev mode).
 
 ## Postconditions
@@ -162,7 +162,7 @@ callers must use the versions list.
 
 ## Verification Properties
 
-_No Kani VP seed required. Integration tests against in-process ferrochain-server are sufficient._
+_No Kani VP seed required. Integration tests against in-process pregolya-server are sufficient._
 
 ## Related BCs
 
@@ -171,8 +171,8 @@ _No Kani VP seed required. Integration tests against in-process ferrochain-serve
 
 ## Architecture Anchors
 
-- `ferrochain-server/src/api/assistants.rs` — Assistant CRUD handlers
-- `ferrochain-server/src/store/run_store.rs` — `AssistantRecord` and `AssistantVersion` persistence
+- `pregolya-server/src/api/assistants.rs` — Assistant CRUD handlers
+- `pregolya-server/src/store/run_store.rs` — `AssistantRecord` and `AssistantVersion` persistence
 
 ## Story Anchor
 
@@ -194,4 +194,4 @@ _[to be filled after verification-architecture phase]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | I (integration), E2E (end-to-end) |
-| Module | ferrochain-server |
+| Module | pregolya-server |

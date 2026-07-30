@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-changelog-date-monotonicity.sh — ferrochain factory-artifacts wrap guard
+# verify-changelog-date-monotonicity.sh — pregolya factory-artifacts wrap guard
 #
 # Validates that YYYY-MM-DD dates embedded in changelog entries are consistent
 # with version ordering.  In a DESCENDING (newest-first) changelog the date of

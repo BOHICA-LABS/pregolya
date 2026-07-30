@@ -23,7 +23,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "cbd833e"
+input-hash: "874d10b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -34,7 +34,7 @@ removed: null
 removal_reason: null
 changelog:
   - "1.1 (ADV-P1D-PASS-31): F-P31-01 add PC7 for GET /runs?schedule_id aggregate query endpoint — limit default 10, max 100 (clamped), offset default 0, created_at DESC ordering declared as canon; update TV-002 notes to cite F-P31-01 pagination."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.3 (F-P118-02, fix burst 121, 2026-07-19): Propagate four-member terminal set from BC-2.12.003 v1.4 (F-P117-01 adjudication). PC2b: lifecycle arrow `completed | failed | cancelled` → `completed | failed | cancelled | summary_halt`. Related BCs §BC-2.12.003 description: same three-member form → four-member form. TD-VSDD-060 file-wide sweep: only these two sites enumerated the terminal set; all other status references are specific-value or query-result forms (exempt)."
   - "1.4 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'server.cron_schedule_queue_full' to EC-004 queue-full WARN emission per observability census (SAP-1). EC-004 updated with structured event_type and fields."
   - "1.5 (burst-259/F-P158-02/2026-07-24): EC-004 queue-full boundary predicate corrected from 'exceeds' (>) to 'meets or exceeds' (>=). ScheduleQueueFull fires when queue_depth >= max_queue_depth (at capacity); 'exceeds' incorrectly implied strictly-greater-than. Consistent with observability.md Recurrence column and error-taxonomy.md E-CRON-003 (updated same burst-259)."
@@ -46,7 +46,7 @@ changelog:
 
 ## Description
 
-`ferrochain-server` exposes a `CronSchedule` resource that registers a recurring,
+`pregolya-server` exposes a `CronSchedule` resource that registers a recurring,
 proactive run trigger on a named Assistant. On each schedule firing, the server
 creates a new Run with a **fresh, isolated session** — no prior thread context is
 shared across firings unless the operator explicitly wires a persistent thread via
@@ -60,7 +60,7 @@ interactive runs.
    creation request.
 2. The `schedule` field is a syntactically valid cron expression (five or six fields,
    standard quartz-compatible or POSIX cron syntax).
-3. The ferrochain-server scheduler subsystem is running (not shut down).
+3. The pregolya-server scheduler subsystem is running (not shut down).
 4. `RunnableConfig` supplied in the schedule creation request is valid per `Assistant`
    configuration (no unknown fields, no contradicting overrides).
 
@@ -170,9 +170,9 @@ queue_depth }` error.
 
 ## Architecture Anchors
 
-- `ferrochain-server/src/cron/` — cron scheduler subsystem
-- `ferrochain-server/src/routes/schedules.rs` — `POST /schedules`, `GET /schedules/{id}`, `PATCH /schedules/{id}`, `DELETE /schedules/{id}` handlers
-- `ferrochain-server/src/store/run_store.rs` — `RunStore` trait (durable Run records per BC-2.12.006)
+- `pregolya-server/src/cron/` — cron scheduler subsystem
+- `pregolya-server/src/routes/schedules.rs` — `POST /schedules`, `GET /schedules/{id}`, `PATCH /schedules/{id}`, `DELETE /schedules/{id}` handlers
+- `pregolya-server/src/store/run_store.rs` — `RunStore` trait (durable Run records per BC-2.12.006)
 
 ## Story Anchor
 
@@ -193,4 +193,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | I (integration) |
-| Module | ferrochain-server |
+| Module | pregolya-server |

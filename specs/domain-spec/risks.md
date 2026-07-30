@@ -2,19 +2,20 @@
 document_type: domain-spec-section
 level: L2
 section: risks
-version: "1.2"
+version: "1.3"
 status: active
 producer: business-analyst
-timestamp: 2026-07-28T00:00:00Z
+timestamp: 2026-07-30T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/planning/market-intel.md
-input-hash: "f4db835"
+input-hash: "84e4792"
 traces_to: L2-INDEX.md
 decisions: [D1, D2, D7, D11, D17]
 changelog:
+  - "v1.3 (burst-284/2026-07-30): Paper-fix repair — R-003 mitigation: fabricated section anchor 'reference-manifest.md §langchain-pin' replaced with 'reference-manifest.md §langchain — Package Layout' (real heading; documents langchain corpus pin langchain==1.3.13). Underlying fact (langchain==1.3.13 semport pin per D2) unchanged. TD-VSDD-059 closure: citation now resolves to an existing heading."
   - "v1.2 (fix-burst-280/wave-c/2026-07-28): R-009 added — no v1 migration path for Python LangGraph checkpoint stores (gap identified during ASM-007 impact re-derivation; F-P175-C207). Traced to CAP-005, ASM-007, ADR-002 §Consequences. D11 added to decisions list. Dual Risk ID Reconciliation and Risk-to-Capability Traceability sections updated."
   - "v1.1 (2026-07-17): Provenance-integrity fix — STATE.md removed from inputs (content was stable D-NNN/R-NNN facts baked at authoring time, not live state); COMPARATIVE-ASSESSMENT.md added (R-004/R-005/R-006 sourced from D17-Q9 analysis); market-intel.md added (R-001 competitor intelligence source); input-hash recomputed."
 ---
@@ -30,13 +31,13 @@ Each R-NNN has `Status: open` and a `Category` tag. NFR and security candidates 
 
 | ID | Risk | Likelihood | Impact | Status | Category | Traced To | Mitigation |
 |----|------|-----------|--------|--------|----------|-----------|------------|
-| R-001 | Competing `langgraph` crate (Onelevenvy) captures the LangGraph identity in Rust before ferrochain-graph ships. v0.2.x active; 599 downloads but updated 2026-07-01. | Medium | HIGH | open | business | CAP-004, CAP-005, success metric #2 | Lead with ferrochain-graph quality + durable checkpointing + HITL before competitor matches it (D7 P0 wave priority). Binary: ship ferrochain-graph GA with durable checkpointing before competitor announces equivalent. NFR candidate: no (velocity risk, not performance). |
-| R-002 | crates.io namespace race: ferrochain-* names verified available but not yet reserved; `cargo login` + `publish-all.sh` not yet run | High | HIGH | open | business | All CAPs | Human must run `cargo login` + `.factory/namespace-reservation/publish-all.sh` immediately (R6 in STATE.md; PENDING HUMAN ACTION). Security focus: no — namespace squatting, not security vulnerability. |
-| R-003 | LangChain Python v1 API semantic changes between semport pin (1.3.13) and ferrochain v1 release invalidate authored BCs | Medium | HIGH | open | reliability | CAP-001 to CAP-007, ASM-006 | Lock to SHA 42f8f79293 (D2). Monitor 1.3.x changelog. Delta-assess against new minor versions before Phase-2 story decomp. If breaking change detected, trigger re-scope gate. Holdout candidate: yes (ASM-006). NFR candidate: no. |
+| R-001 | Competing `langgraph` crate (Onelevenvy) captures the LangGraph identity in Rust before pregolya-graph ships. v0.2.x active; 599 downloads but updated 2026-07-01. | Medium | HIGH | open | business | CAP-004, CAP-005, success metric #2 | Lead with pregolya-graph quality + durable checkpointing + HITL before competitor matches it (D7 P0 wave priority). Binary: ship pregolya-graph GA with durable checkpointing before competitor announces equivalent. NFR candidate: no (velocity risk, not performance). |
+| R-002 | crates.io namespace race: pregolya-* names verified available but not yet reserved; `cargo login` + `publish-all.sh` not yet run | High | HIGH | open | business | All CAPs | Human must run `cargo login` + `.factory/namespace-reservation/publish-all.sh` immediately (R6 in STATE.md; PENDING HUMAN ACTION). Security focus: no — namespace squatting, not security vulnerability. |
+| R-003 | LangChain Python v1 API semantic changes between semport pin (1.3.13) and pregolya v1 release invalidate authored BCs | Medium | HIGH | open | reliability | CAP-001 to CAP-007, ASM-006 | Lock to semport reference-manifest.md §langchain — Package Layout (langchain==1.3.13, D2). Monitor 1.3.x changelog. Delta-assess against new minor versions before Phase-2 story decomp. If breaking change detected, trigger re-scope gate. Holdout candidate: yes (ASM-006). NFR candidate: no. |
 | R-004 | Splitters code-point vs byte-length parity on non-ASCII input — no upstream test coverage; wrong behavior is silent and hard to detect | High | High | open | correctness | CAP-008, DEC-001 | Phase-1 BC + Red Gate test authored from behavior (D17-Q9). Explicit test vectors for emoji and CJK input. Holdout scenario. NFR candidate: no (correctness risk). Security focus: no. |
 | R-005 | NamedBarrierValue and EphemeralValue — no upstream unit tests for boundary behavior; product-owner must author BCs without reference tests | Medium | Medium | open | correctness | DEC-003, DEC-004 | Product-owner authors BCs from behavioral analysis (D17-Q9). Red Gate tests must compile and fail before any implementation. Reference: semport Corpus 1 source code as behavioral oracle. NFR candidate: no. |
 | R-006 | MCP test voids: bare ToolException re-raise path untested upstream; `__aenter__` NotImplementedError contract untested | Medium | Medium | open | reliability | CAP-010, DEC-012 | Phase-1 BC backlog (D17-Q9). Explicit Red Gate tests for both paths. If MCP adapter behavior differs from langchain-mcp-adapters==0.3.0 on these paths, treat as a conformance defect. NFR candidate: no. |
-| R-007 | langchain-community v1.0.0a1 API churn: alpha tag indicates instability; community integration wave targets demand-ranked surface, not the archived module manifest | Low | Medium | open | business | Post-v1 community scope (D1) | Community integrations are post-v1, third-party contributed, conformance-validated via ferrochain-standard-tests. Not a v1 blocker. Monitor for alpha-to-stable promotion. NFR candidate: no. |
+| R-007 | langchain-community v1.0.0a1 API churn: alpha tag indicates instability; community integration wave targets demand-ranked surface, not the archived module manifest | Low | Medium | open | business | Post-v1 community scope (D1) | Community integrations are post-v1, third-party contributed, conformance-validated via pregolya-standard-tests. Not a v1 blocker. Monitor for alpha-to-stable promotion. NFR candidate: no. |
 | R-008 | D9 graph execution ADR requires ≥2 alternatives presented to human before lock; if architect presents only one option, the gate does not close and Phase-2 story decomp blocks | Medium | HIGH | open | reliability | CAP-003, CAP-004, all Wave 1 | D9 gate is explicit: architect must present ≥2 alternatives with production trade-offs. D11 steers apply (BSP, msgpack, 3-tier durability, sync default). Human approval required before architecture lock. NFR candidate: no. |
 | R-009 | No v1 migration path for Python LangGraph checkpoint stores — the post-v1 one-way import tool is the only planned migration route (ADR-002 §Consequences); v1 GA ships with no in-v1 path for teams carrying existing Python LangGraph checkpoint stores | Low | Medium | open | business | CAP-005, ASM-007, ADR-002 §Consequences | Publish "Coming from LangChain?" docs at v1 GA explicitly stating "start fresh" as the checkpoint migration story for v1. Post-v1 import tool crate (ADR-002 §Consequences; separate crate, post-v1 stretch) is the planned long-term mitigation. NFR candidate: no. Security focus: no. |
 
@@ -66,7 +67,7 @@ before the domain-spec mapping was established. Use this table to cross-walk the
 
 - R-001 affects CAP-004 and CAP-005 because the competitor's gap is precisely the BSP
   runtime + durable checkpointing that CAP-004/005 provide.
-- R-002 affects all CAPs because without namespace reservation, ferrochain crates cannot
+- R-002 affects all CAPs because without namespace reservation, pregolya crates cannot
   publish; all capabilities are undeliverable.
 - R-003 affects CAP-001 through CAP-007 because LangChain API surface is the semantic
   authority for those capabilities (ASM-001).

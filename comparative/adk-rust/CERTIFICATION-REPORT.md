@@ -227,10 +227,10 @@ None. Zero hallucinations detected across all 10 behavioral samples.
 enables uniform, centrally-tunable policy rather than per-provider ad-hoc reimplementation." This
 holds for 9/12 providers and the 3 exceptions each have sound architectural justification (external
 SDK ownership; WebSocket semantics requiring different retry structure). The pattern demonstrates a
-production-grade discipline that ferrochain should replicate — the corrected framing is "dominant
+production-grade discipline that pregolya should replicate — the corrected framing is "dominant
 path is centralized" rather than "every provider." NEUTRAL would require the combinator to be
 fragile, the exceptions to be ad-hoc, or the majority not to use it. None of these apply.
-ws_transport's manual loop is the weakest point (a ferrochain port should route even WebSocket
+ws_transport's manual loop is the weakest point (a pregolya port should route even WebSocket
 transports through the combinator), but it does not change the rating of the pattern as documented.
 
 ---
@@ -359,7 +359,7 @@ All findings resolved in first pass. Three corrections applied. No items require
 |---|----------|------|---------------|-----------------|------|--------|
 | C2-01 | LOW | P-96 SSRF validation timing | "calls `validate_webhook_url(url)` **before every attempt**" | Called once per delivery call, before the retry loop begins (line 100 is outside the `for attempt` loop at line 102); URL does not change between retries | patterns-observed.md | `[comparative-cert-2]` |
 | C2-02 | LOW | P-92 livekit proptest count | "7 property tests on the non-audio callbacks" | 6 property tests (6 fn prop_* matching 6 non-audio EventHandler callbacks: on_text, on_transcript, on_speech_started, on_speech_stopped, on_response_done, on_error) | patterns-observed.md | `[comparative-cert-2]` |
-| C2-03 | LOW | ANALYSIS-STATE.md A1 Compliance Flag: adk-realtime HARD CONFLICT | "`adk-realtime` pulls `native-tls` via `livekit` — HARD CONFLICT with ferrochain rustls-only rule" (flat, unconditional) | adk-realtime CAN pull native-tls via the OPTIONAL `livekit` feature; default builds use rustls; conflict is conditional (feature-gated) not unconditional; "livekit-only, feature-gated, first-party-sole" qualifier required per A6/A7 C2 sections | ANALYSIS-STATE.md | `[comparative-cert-2]` |
+| C2-03 | LOW | ANALYSIS-STATE.md A1 Compliance Flag: adk-realtime HARD CONFLICT | "`adk-realtime` pulls `native-tls` via `livekit` — HARD CONFLICT with pregolya rustls-only rule" (flat, unconditional) | adk-realtime CAN pull native-tls via the OPTIONAL `livekit` feature; default builds use rustls; conflict is conditional (feature-gated) not unconditional; "livekit-only, feature-gated, first-party-sole" qualifier required per A6/A7 C2 sections | ANALYSIS-STATE.md | `[comparative-cert-2]` |
 
 ---
 
@@ -387,7 +387,7 @@ None. Zero hallucinations detected across all behavioral samples.
 - Overall extraction accuracy: **97%** (8/11 behavioral claims confirmed; 3 inaccuracies corrected; 0 hallucinations)
 - Metric accuracy: **97%** (8/9 numeric claims Delta=0; 1 off-by-one corrected)
 - Hallucination rate: **0%**
-- Recommendation: **TRUST WITH CAVEATS** — corpus is highly accurate overall. The three corrections are LOW severity nuances (SSRF timing placement, off-by-one proptest count, stale "HARD CONFLICT" label). None affect the behavioral model, architectural conclusions, or ferrochain spec decisions. The four UNVERIFIABLE-without-runtime a2a-v1 items are correctly labeled and require only a mock-server harness to validate.
+- Recommendation: **TRUST WITH CAVEATS** — corpus is highly accurate overall. The three corrections are LOW severity nuances (SSRF timing placement, off-by-one proptest count, stale "HARD CONFLICT" label). None affect the behavioral model, architectural conclusions, or pregolya spec decisions. The four UNVERIFIABLE-without-runtime a2a-v1 items are correctly labeled and require only a mock-server harness to validate.
 
 ---
 
@@ -897,7 +897,7 @@ Independent recount of every numeric claim from the propagation sweep and rotati
   error.
 - `reqwest ~10 vs 4 (delta −6)`: The "~10" is a 2.5× overcount. However the "~" prefix was used
   intentionally and the spec-relevant conclusion — "~69 timeout-less" = systemic — is confirmed
-  exactly at 69. Over-estimate of `carry .timeout()` has zero impact on ferrochain design decisions
+  exactly at 69. Over-estimate of `carry .timeout()` has zero impact on pregolya design decisions
   (the MAP is "adopt workspace-wide mandatory timeout"). Treatment consistent with C2's handling of
   livekit `~600 LOC` vs 750 wc-l: delta reported, no correction applied. Primary conclusion: CONFIRMED.
 - `reqwest ~69 timeout-less (delta 0)`: CONFIRMED exact.
@@ -947,7 +947,7 @@ None. Zero hallucinations detected.
 - Overall extraction accuracy: **99%** (11/11 behavioral+citation claims confirmed; 2 low-severity stale siblings corrected; 0 hallucinations; zero MEDIUM or higher errors across any pass C1–C5)
 - Metric accuracy: **100%** on non-approximation claims (10/10 Delta = 0); approximation rows within stated "~" bounds; systemic timeout-absence conclusion confirmed exact
 - Hallucination rate: **0%** (maintained across all passes C1–C5)
-- Recommendation: **TRUST WITH CAVEATS** — the corpus is highly accurate. Both C5 corrections are low-severity count errors in body-text descriptions that do not affect quality tags, pattern classifications, or any ferrochain spec decision. The two persistent caveat classes are: (1) LOC figures across documents use inconsistent methodologies (scc Code vs wc-l); (2) four UNVERIFIABLE-without-runtime a2a-v1 items correctly labeled as Phase-4 validation obligations.
+- Recommendation: **TRUST WITH CAVEATS** — the corpus is highly accurate. Both C5 corrections are low-severity count errors in body-text descriptions that do not affect quality tags, pattern classifications, or any pregolya spec decision. The two persistent caveat classes are: (1) LOC figures across documents use inconsistent methodologies (scc Code vs wc-l); (2) four UNVERIFIABLE-without-runtime a2a-v1 items correctly labeled as Phase-4 validation obligations.
 
 ---
 
@@ -1111,7 +1111,7 @@ None. Zero hallucinations detected across all passes C1–C6.
 - Overall extraction accuracy: **99%** (6/7 behavioral+citation claims confirmed; 1 low-severity off-by-one corrected; 0 hallucinations; zero MEDIUM or higher errors across any pass C1–C6)
 - Metric accuracy: **86%** on new metric claims (6/7 Delta=0; 1 off-by-one corrected — same root cause as behavioral finding); non-approximation claims with confirmed counts: 6/6 pass
 - Hallucination rate: **0%** (maintained across all passes C1–C6)
-- Recommendation: **TRUST WITH CAVEATS** — the corpus is highly accurate. The C6 correction is a low-severity off-by-one in a parenthetical sub-file count that has no effect on any behavioral model, quality tag, or ferrochain spec decision. Both persistent caveat classes from prior passes remain: (1) LOC figures across documents use inconsistent methodologies (scc Code vs wc-l); (2) four UNVERIFIABLE-without-runtime a2a-v1 items correctly labeled as Phase-4 validation obligations.
+- Recommendation: **TRUST WITH CAVEATS** — the corpus is highly accurate. The C6 correction is a low-severity off-by-one in a parenthetical sub-file count that has no effect on any behavioral model, quality tag, or pregolya spec decision. Both persistent caveat classes from prior passes remain: (1) LOC figures across documents use inconsistent methodologies (scc Code vs wc-l); (2) four UNVERIFIABLE-without-runtime a2a-v1 items correctly labeled as Phase-4 validation obligations.
 
 ---
 
@@ -1803,7 +1803,7 @@ While verifying the "11 ops" claim for A2aV1Client in P-86, the observation body
 | Interrupt enum variants | patterns-observed.md P-30 | 3 | 3 | 0 | `grep "pub enum Interrupt" -A10 .reference/adk-rust/adk-graph/src/interrupt.rs` → Before, After, Dynamic |
 | auth_middleware error variants | patterns-observed.md P-38 | 3 (to 401/401/500) | 3 | 0 | `grep "pub enum RequestContextError" .reference/adk-rust/adk-server/src/auth_bridge.rs` → 3 variants confirmed; `grep -n "MissingAuth\|InvalidToken\|ExtractionFailed" .reference/adk-rust/adk-server/src/rest/mod.rs` → 401/401/500 mapping confirmed |
 
-**Approximation note:** Runner::run "~800 lines" has delta +22 (actual = 822). The "~" prefix was present in the document text. Per C5/C7 precedent for "~"-prefixed approximations: delta reported, no correction applied. Primary conclusion (monolithic function, ferrochain's 750-line hard gate would be violated by it) is unaffected.
+**Approximation note:** Runner::run "~800 lines" has delta +22 (actual = 822). The "~" prefix was present in the document text. Per C5/C7 precedent for "~"-prefixed approximations: delta reported, no correction applied. Primary conclusion (monolithic function, pregolya's 750-line hard gate would be violated by it) is unaffected.
 
 **Non-approximation rows: 5/5 pass (Delta = 0). Approximation row: 1 (delta reported; no correction per precedent).**
 

@@ -13,12 +13,12 @@ inputs:
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
   - .factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md
-input-hash: "b40ee23"
+input-hash: "8f508e0"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
-  - "1.21 (F-P175-D101/fix-burst-283/2026-07-30): Close F-P175-D101 (CRIT) — as_retriever fallibility and receiver form omitted from two CAP bodies. (1) CAP-027: 'Constructed via VectorStore::as_retriever()' corrected to show self: Arc<Self> receiver and Result<VectorStoreRetriever, FerrochainError> fallible return with Err(E-VS-003 InvalidConfig) on invalid config. (2) CAP-028: 'as_retriever(self: Arc<Self>) → VectorStoreRetriever' corrected to '→ Result<VectorStoreRetriever, FerrochainError>'; fallibility note added (Err(E-VS-003 InvalidConfig) on invalid config). Grounds: interface-definitions.md §VectorStore Trait (as_retriever fallible return, F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 §Decision 2. TD-VSDD-060 sibling sweep: entities-graph.md §VectorStore §Instance methods and ubiquitous-language-core.md §VectorStore/§VectorStoreRetriever terms corrected in this burst."
-  - "1.20 (wave-b-tail/D-35-xtask-rename-notation/2026-07-29): Two Class 3 notation violations and one xtask rename. (1) CAP-029 zero-norm guard prose: FerrochainError { code: \"E-VS-001\" } → FerrochainError { code: \"E-VS-001\", .. } — Class 3 VIOLATION (partial fields, missing ..) per ADR-010 §Error-Construction Notation Canon. (2) CAP-031 dimensionality contract prose: FerrochainError { code: \"E-EMBED-001\" } → FerrochainError { code: \"E-EMBED-001\", .. } — Class 3 VIOLATION (same class). (3) CAP-032 DI-009 CI-gate prose: workspace CI gate `deny-client-new` → `check-client-timeout` (D-80 canonical check-<subject> form). TD-VSDD-060 sweep: zero additional superseded names (lint-no-timeout, lint-no-panic, deny-expect-in-lib) found in live body text."
+  - "1.21 (F-P175-D101/fix-burst-283/2026-07-30): Close F-P175-D101 (CRIT) — as_retriever fallibility and receiver form omitted from two CAP bodies. (1) CAP-027: 'Constructed via VectorStore::as_retriever()' corrected to show self: Arc<Self> receiver and Result<VectorStoreRetriever, PregolyaError> fallible return with Err(E-VS-003 InvalidConfig) on invalid config. (2) CAP-028: 'as_retriever(self: Arc<Self>) → VectorStoreRetriever' corrected to '→ Result<VectorStoreRetriever, PregolyaError>'; fallibility note added (Err(E-VS-003 InvalidConfig) on invalid config). Grounds: interface-definitions.md §VectorStore Trait (as_retriever fallible return, F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 §Decision 2. TD-VSDD-060 sibling sweep: entities-graph.md §VectorStore §Instance methods and ubiquitous-language-core.md §VectorStore/§VectorStoreRetriever terms corrected in this burst."
+  - "1.20 (wave-b-tail/D-35-xtask-rename-notation/2026-07-29): Two Class 3 notation violations and one xtask rename. (1) CAP-029 zero-norm guard prose: PregolyaError { code: \"E-VS-001\" } → PregolyaError { code: \"E-VS-001\", .. } — Class 3 VIOLATION (partial fields, missing ..) per ADR-010 §Error-Construction Notation Canon. (2) CAP-031 dimensionality contract prose: PregolyaError { code: \"E-EMBED-001\" } → PregolyaError { code: \"E-EMBED-001\", .. } — Class 3 VIOLATION (same class). (3) CAP-032 DI-009 CI-gate prose: workspace CI gate `deny-client-new` → `check-client-timeout` (D-80 canonical check-<subject> form). TD-VSDD-060 sweep: zero additional superseded names (lint-no-timeout, lint-no-panic, deny-expect-in-lib) found in live body text."
   - "1.19 (fix-burst-278/wave-b/2026-07-28): Sites 8a and 8b per wave-b-po-routing-spec §Item-8. (1) CAP-027 Site 8a: VectorStoreRetriever lifetime annotation removed — type is 'static, owns Arc<dyn VectorStore>; verifiable: verify-signature-canon S2 returns zero hits. (2) CAP-027 adjacent to Site 8a: backing-store form corrected from borrow-ref to Arc<dyn VectorStore> (same paragraph); verifiable: borrow-backed VectorStoreRetriever form absent from this file. (3) CAP-028 Site 8b: as_retriever receiver corrected from bare self-ref to self: Arc<Self>; return-type lifetime annotation removed; verifiable: verify-signature-canon S1b returns zero hits. (4) CAP-027 config bullets k, fetch_k, lambda_mult: Err(E-VS-003 InvalidConfig) rejection semantics added per D-44 — rejected not clamped (verifiable: grep 'E-VS-003 InvalidConfig' capabilities-p1-p2.md returns three hits, one per config bullet). TD-VSDD-060 sibling sweep: same borrow-backed class found and corrected in entities-graph.md §VectorStore/§Relationships-Summary and ubiquitous-language-core.md §VectorStoreRetriever/§VectorStore this burst."
   - "1.18 (FC-4/burst-277/2026-07-28): False-closure FC-4 correction — v1.13 claim 'L-026 stale-delegation sweep: zero additional hits' was false. Sweep term: 'PO BC obligations' (verifiable: grep 'PO BC obligations' capabilities-p1-p2.md returns zero hits after this fix). Three surviving stale-completed-delegation instances corrected: (1) CAP-034 §PendingHumanApproval: '(PO BC obligation, SS-05 extension)' → '(BC-2.05.008)' — BC-2.05.008 exists, covers skip-hook-on-resume invariant. (2) CAP-034 §streaming events: '**PO BC obligations:** BC-2.06.004 / BC-2.06.005 (SS-06); amend BC-2.08.010 ...' → '**Authored BCs:** BC-2.06.004 / BC-2.06.005 (SS-06); BC-2.08.010 amended ...' — all three BCs exist. (3) CAP-035 §PO BC obligations: '**PO BC obligations:** new BCs for SS-10 ...; amend BC-2.06.001 or author BC-2.06.006 ...' → '**Authored BCs:** BC-2.10.005 / BC-2.10.006 (SS-10); BC-2.06.006 authored ...' — BC-2.10.005, BC-2.10.006, BC-2.06.006 all exist. TD-VSDD-060 sibling sweep: same 'PO BC obligations' class also found and fixed in entities-graph.md (v1.12→v1.13) and ubiquitous-language-core.md (v1.8→v1.9) this burst."
   - "1.17 (F-P173-106/F-P173-702/burst-276/2026-07-27): Two CAP body corrections. (1) F-P173-106 CAP-038: remove stale 'confirm regex is already a workspace dependency' open instruction; ADR-020 Decision 7 already resolved that regex is NOT an existing workspace dep — it will be a net-new [workspace.dependencies] entry at workspace init; replace with confirmed fact per ADR-020 Decision 7. (2) F-P173-702 CAP-029: correct mis-citation ADR-014 Decision 4 → ADR-017 Decision 4 for InMemoryVectorStore struct and Arc-DI wiring. ADR-014 Decision 4 is the External Adapter Extension Seam (inventory crate for community adapters); ADR-017 Decision 4 explicitly defines the InMemoryVectorStore struct with Arc<dyn Embeddings> + RwLock<Vec<(Document, Vec<f32>)>> and the Arc-DI wiring contract. ADR-014 Decision 2 §Hardening note attribution for zero-norm guard unchanged (correct). TD-VSDD-060 sweep: no other ADR-014 Decision 4 mis-citations for InMemoryVectorStore in this file."
@@ -62,13 +62,13 @@ changelog:
 
 ### CAP-009: Provider-Conformant Chat Model Interface
 
-Expose a chat model trait that passes ferrochain-standard-tests for streaming, tool calling,
+Expose a chat model trait that passes pregolya-standard-tests for streaming, tool calling,
 structured output, error propagation, and token accounting. First-party implementations for
 OpenAI, Anthropic, Ollama. Architecture uses standalone SDK crate split (HS-6/D17-Q5):
-`ferrochain-<provider>-sdk` (wire client) + `ferrochain-<provider>` (Runnable adapter).
+`pregolya-<provider>-sdk` (wire client) + `pregolya-<provider>` (Runnable adapter).
 
-**Grounding:** product-brief.md §Scope Wave 2 — `ferrochain-openai`, `ferrochain-anthropic`,
-`ferrochain-ollama` first-party provider crates (D3 early-integration priority); standalone
+**Grounding:** product-brief.md §Scope Wave 2 — `pregolya-openai`, `pregolya-anthropic`,
+`pregolya-ollama` first-party provider crates (D3 early-integration priority); standalone
 SDK crate split architecture (HS-6/D17-Q5).
 **Anchor justification:** CAP-009 covers provider conformance because the brief names the three
 provider crates explicitly in Wave 2 scope and market differentiator #5 requires a
@@ -76,26 +76,26 @@ LangChain-semantic migration story.
 
 ### CAP-010: MCP Tool Adapter
 
-Discover tools from MCP servers at runtime, present them to a graph as standard ferrochain
+Discover tools from MCP servers at runtime, present them to a graph as standard pregolya
 Tools, and route ToolInvocation requests to the correct MCP server transport. Treat all
 tool-result content as untrusted ingress (DI-012). Target semantic surface:
 langchain-mcp-adapters==0.3.0 (D1/D2).
 
-**Grounding:** product-brief.md §Scope Wave 2 — `ferrochain-mcp` port of
+**Grounding:** product-brief.md §Scope Wave 2 — `pregolya-mcp` port of
 langchain-mcp-adapters==0.3.0 (D2); MCP client adapter for security, productivity, and
 custom server integration.
-**Anchor justification:** CAP-010 covers MCP adapter because D1 mandates ferrochain-mcp as
+**Anchor justification:** CAP-010 covers MCP adapter because D1 mandates pregolya-mcp as
 the primary integration surface after langchain-community was archived. Overflow §MCP-Surface
 lists verified active MCP servers that must be supported.
 
 ### CAP-011: Provider Conformance Suite (Standard Tests)
 
-Provide a test crate (`ferrochain-standard-tests`) that every ferrochain provider crate must
+Provide a test crate (`pregolya-standard-tests`) that every pregolya provider crate must
 pass before v1 release. Tests exercise: streaming completions, tool-call round-trips,
 structured output, error-type fidelity, and token-usage accounting. Port of LangChain's
 `langchain-tests` conformance suite.
 
-**Grounding:** product-brief.md §Scope Wave 2 — `ferrochain-standard-tests` port of
+**Grounding:** product-brief.md §Scope Wave 2 — `pregolya-standard-tests` port of
 LangChain's langchain-tests conformance suite; "all Wave 2 provider crates must pass before
 v1 release."
 **Anchor justification:** CAP-011 covers the conformance suite because it is an explicit Wave 2
@@ -108,9 +108,9 @@ Assistant (named agent config), Run (single execution), and CronSchedule (recurr
 proactive runs). Streaming and unary run endpoints drive the same graph execution engine.
 No wire-compatibility with LangGraph Platform (D13).
 
-**Grounding:** product-brief.md §Scope Wave 1 — `ferrochain-server`: threads, assistants,
+**Grounding:** product-brief.md §Scope Wave 1 — `pregolya-server`: threads, assistants,
 cron scheduler, streaming and unary run equivalence (NE-13/D17); first-party per D13.
-**Anchor justification:** CAP-014 covers ferrochain-server because D13 names it as first-party
+**Anchor justification:** CAP-014 covers pregolya-server because D13 names it as first-party
 and the brief lists its required resource types (threads, assistants, cron, streaming/unary
 equivalence) explicitly.
 
@@ -145,28 +145,28 @@ during the run take effect on the NEXT run (cache-coherence invariant, per ADR-0
 framework-scope. domain-d-hermes-agent.md req 4 (runtime-mutable procedural skills) and req 3
 (frozen-snapshot system-prompt semantics) are the forcing functions.
 **Anchor justification:** CAP-020 is a net-new capability with no prior CAP ID. It covers the
-three primitives ADR-012 Decision 1 adopts: skill registry in `ferrochain-memory`, write guard
-split between `ferrochain-core` (types/trait) and `ferrochain-memory` (enforcement), and
-context mutation config in `ferrochain-core` loaded by `ferrochain-graph`.
+three primitives ADR-012 Decision 1 adopts: skill registry in `pregolya-memory`, write guard
+split between `pregolya-core` (types/trait) and `pregolya-memory` (enforcement), and
+context mutation config in `pregolya-core` loaded by `pregolya-graph`.
 **Architecture authority:** ADR-012 (`decisions/ADR-012-self-improvement-primitives.md`).
 
 ### CAP-021: MCP Server Role (Expose Registered Tools as MCP Server Endpoint)
 
-Expose ferrochain's registered tools and resources as an MCP server so that external LLM
-applications can connect as MCP clients and invoke ferrochain tools via the MCP protocol.
-`mcp::server` module in `ferrochain-mcp` provides: server startup with a configured transport
+Expose pregolya's registered tools and resources as an MCP server so that external LLM
+applications can connect as MCP clients and invoke pregolya tools via the MCP protocol.
+`mcp::server` module in `pregolya-mcp` provides: server startup with a configured transport
 (stdio or SSE), `tools/list` advertisement of all tools registered in the tool registry,
-`tools/call` dispatch to the underlying ferrochain `Tool` implementation and return of the
+`tools/call` dispatch to the underlying pregolya `Tool` implementation and return of the
 result via MCP response format. This is the **server** role complementing the existing MCP
 **client** role (CAP-010 / SS-09 / BC-2.09.001–005).
 
 **Grounding:** D19 forcing function — domain-d-hermes-agent.md req 11 ([NEW framework-scope]):
-"ferrochain exposes its own tools and resources via the MCP protocol so that other LLM
+"pregolya exposes its own tools and resources via the MCP protocol so that other LLM
 applications can connect as clients — entirely absent from all BCs and capabilities." D20
 adoption decision includes MCP server role in Phase-1 scope.
 **Anchor justification:** CAP-021 is a net-new capability. MCP client role (CAP-010) covers the
 client direction; CAP-021 covers the server direction. These are architecturally independent
-surfaces in `ferrochain-mcp`: client code (`mcp::client`) and server code (`mcp::server`) are
+surfaces in `pregolya-mcp`: client code (`mcp::client`) and server code (`mcp::server`) are
 separate modules. CAP-010 cannot cover server-role behavior without creating a
 client-vs-server semantic collision.
 
@@ -196,9 +196,9 @@ Support partial variable binding: pre-bound variables are merged with call-time 
 call-time wins on key collision. Detect required variable names at template-construction time
 (static introspection, not deferred to render).
 
-**Grounding:** D21 human authority (burst 216) — SS-18 (ferrochain-prompts) promoted from
+**Grounding:** D21 human authority (burst 216) — SS-18 (pregolya-prompts) promoted from
 post-v1/community to full v1 scope, superseding the product-brief §Out-of-Scope entry for
-PromptTemplate. ADR-015 Decision 1 establishes ferrochain-prompts as crate #19. Burst-217
+PromptTemplate. ADR-015 Decision 1 establishes pregolya-prompts as crate #19. Burst-217
 handoff table names "template construction, rendering, injection guard, FewShot" as SS-18 CAP
 targets.
 **Anchor justification:** CAP-022 covers PromptTemplate and ChatPromptTemplate as Runnable
@@ -251,7 +251,7 @@ is attempted for opt-out types.
 **Grounding:** D21/SS-19. The lc-JSON round-trip protocol is a first-class LangChain v1
 serialization contract characterized in semport Pass 7 + Pass 8 ADR-3
 (rust-translation-strategy §9). ADR-016 Decision 1 places `core::serializable` in
-ferrochain-core with 141 core registrations. Decision 3 Property 3 defines the lc_secrets
+pregolya-core with 141 core registrations. Decision 3 Property 3 defines the lc_secrets
 stripping invariant grounded in DI-010.
 **Anchor justification:** CAP-024 covers the serialize→deserialize lifecycle including secret
 stripping because ADR-016 Decisions 2 and 3 together specify these behaviors as the core
@@ -289,18 +289,18 @@ deserializes) is anchored to this CAP.
 
 ### CAP-026: Retriever Trait — get_relevant_documents; Arc<dyn Retriever> Seam; DI-012 RAGRetrieval Guardrail Coverage
 
-Provide the `Retriever` dyn-compatible async trait (`ferrochain-core: core::retriever`):
-`async fn get_relevant_documents(&self, query: &str) → Result<Vec<Document>, FerrochainError>`.
+Provide the `Retriever` dyn-compatible async trait (`pregolya-core: core::retriever`):
+`async fn get_relevant_documents(&self, query: &str) → Result<Vec<Document>, PregolyaError>`.
 Object-safe via `#[async_trait]` desugaring and `&self` receiver, consistent with ADR-005
 precedent. Graph nodes hold `Arc<dyn Retriever>` for RAG operations without depending on
-ferrochain-vectorstores. All `Document` values returned by any `Retriever` implementation and
+pregolya-vectorstores. All `Document` values returned by any `Retriever` implementation and
 entering graph context pass the `BoundaryType::RAGRetrieval` guardrail (DI-012 / BC-2.11.001)
 — the existing `BoundaryType::RAGRetrieval` variant already covers this seam; no BoundaryType
 extension is required (ADR-014 §Consequences confirms this explicitly).
 
-**Grounding:** D21/SS-20. ADR-014 Decision 1 places `Retriever` in ferrochain-core for the
+**Grounding:** D21/SS-20. ADR-014 Decision 1 places `Retriever` in pregolya-core for the
 same gravity reason as `Runnable` and `BaseChatModel` — graph nodes performing RAG need
-`Arc<dyn Retriever>` without pulling in ferrochain-vectorstores. DI-012 / BC-2.11.001's
+`Arc<dyn Retriever>` without pulling in pregolya-vectorstores. DI-012 / BC-2.11.001's
 `BoundaryType::RAGRetrieval` variant was authored before D21 and already covers RAG retrieval
 ingress; ADR-014 §Consequences confirms no extension is needed.
 **Anchor justification:** CAP-026 covers the Retriever trait seam because it is the dyn-dispatch
@@ -313,14 +313,14 @@ extend BC-2.11.001, which remains the BC authority for the guardrail invariant.
 ### CAP-027: VectorStoreRetriever — SearchType Enum; k / fetch_k / lambda_mult Configuration
 
 Provide a concrete `Retriever` implementation (`VectorStoreRetriever` in
-`ferrochain-vectorstores: vectorstores::retriever`) backed by `Arc<dyn VectorStore>`,
+`pregolya-vectorstores: vectorstores::retriever`) backed by `Arc<dyn VectorStore>`,
 configurable via:
 - **SearchType enum:** `Similarity` (default) | `SimilarityScoreThreshold { score_threshold: f32 }` | `Mmr`
 - **k:** number of final documents to return; negative `k` returns `Err(E-VS-003 InvalidConfig)` — rejected, not clamped (D-44)
 - **fetch_k:** candidate pool size fetched before MMR re-ranking (applicable to SearchType::Mmr only); `fetch_k < k` returns `Err(E-VS-003 InvalidConfig)` — rejected, not clamped (D-44)
 - **lambda_mult ∈ [0.0, 1.0]:** MMR diversity parameter (0.0 = maximum diversity, 1.0 = pure relevance); values outside [0.0, 1.0] return `Err(E-VS-003 InvalidConfig)` — rejected, not clamped (D-44)
 
-Constructed via `VectorStore::as_retriever(self: Arc<Self>) → Result<VectorStoreRetriever, FerrochainError>` — a concrete (non-opaque) fallible constructor: returns `Err(E-VS-003 InvalidConfig)` when config is invalid (lambda_mult outside [0.0, 1.0]; fetch_k < k for SearchType::Mmr). Preserves VectorStore dyn-compatibility (ADR-014 Decision 2 §Object-safety). Implements
+Constructed via `VectorStore::as_retriever(self: Arc<Self>) → Result<VectorStoreRetriever, PregolyaError>` — a concrete (non-opaque) fallible constructor: returns `Err(E-VS-003 InvalidConfig)` when config is invalid (lambda_mult outside [0.0, 1.0]; fetch_k < k for SearchType::Mmr). Preserves VectorStore dyn-compatibility (ADR-014 Decision 2 §Object-safety). Implements
 `Retriever` and can be type-erased to `Arc<dyn Retriever>` for use in graph nodes via the
 CAP-026 seam. DI-012 RAGRetrieval guardrail applies to all returned Documents via CAP-026.
 
@@ -329,8 +329,8 @@ and fields, the `SearchType` enum variants and behavioral semantics, and the `as
 concrete-return-type pattern required for E0038-safe VectorStore dyn-compatibility.
 **Anchor justification:** CAP-027 is separated from CAP-026 because VectorStoreRetriever is a
 specific, configurable VectorStore-backed implementation with its own BC surface (SearchType,
-k, fetch_k, lambda_mult). CAP-026 is the abstract `Arc<dyn Retriever>` seam in ferrochain-core;
-CAP-027 is the concrete VectorStore-backed implementation in ferrochain-vectorstores. The two
+k, fetch_k, lambda_mult). CAP-026 is the abstract `Arc<dyn Retriever>` seam in pregolya-core;
+CAP-027 is the concrete VectorStore-backed implementation in pregolya-vectorstores. The two
 have independent acceptance shapes. The `as_retriever()` concrete-return-type design is a load-
 bearing object-safety choice documented in ADR-014 (dyn-compatible via non-opaque return).
 **Architecture authority:** ADR-014.
@@ -339,20 +339,20 @@ bearing object-safety choice documented in ADR-014 (dyn-compatible via non-opaqu
 
 ## P1 — VectorStore Abstraction and Embeddings (Wave 2 / SS-21..22)
 
-> D21 second-half expansion. SS-21 (VectorStore Abstraction) lives in ferrochain-vectorstores
-> (crate #20). SS-22 (Embeddings) lives in ferrochain-core (core::embeddings) plus provider
-> modules in ferrochain-openai and ferrochain-ollama. ferrochain-anthropic has NO embedding
+> D21 second-half expansion. SS-21 (VectorStore Abstraction) lives in pregolya-vectorstores
+> (crate #20). SS-22 (Embeddings) lives in pregolya-core (core::embeddings) plus provider
+> modules in pregolya-openai and pregolya-ollama. pregolya-anthropic has NO embedding
 > impl (Anthropic has no public embedding API — ADR-017 Decision 3).
 
 ### CAP-028: VectorStore Trait — add_texts; Similarity Search; MMR; delete; as_retriever (Concrete Return for Dyn-Compat)
 
-Provide the `VectorStore` async trait (`ferrochain-vectorstores: vectorstores::store`) with
+Provide the `VectorStore` async trait (`pregolya-vectorstores: vectorstores::store`) with
 instance methods only — all `&self` receivers, dyn-compatible via `#[async_trait]` desugaring:
 `add_texts(texts, metadatas)` (returns Vec<String> of assigned document IDs),
 `similarity_search(query, k)` (k-nearest documents),
 `similarity_search_with_score(query, k)` (returns Vec<(Document, f32)> with scores ∈ [0.0, 1.0]),
 `max_marginal_relevance_search(query, k, fetch_k, lambda_mult)` (diversity-aware MMR retrieval),
-`delete(ids)`, and `as_retriever(self: Arc<Self>) → Result<VectorStoreRetriever, FerrochainError>` (concrete, non-opaque fallible return — `Err(E-VS-003 InvalidConfig)` on invalid config; required to preserve VectorStore dyn-compatibility, ADR-014 Decision 2 §Object-safety).
+`delete(ids)`, and `as_retriever(self: Arc<Self>) → Result<VectorStoreRetriever, PregolyaError>` (concrete, non-opaque fallible return — `Err(E-VS-003 InvalidConfig)` on invalid config; required to preserve VectorStore dyn-compatibility, ADR-014 Decision 2 §Object-safety).
 Static constructors (`from_texts`) live on the separate `VectorStoreFactory` trait (Sized-bounded,
 NOT on the VectorStore vtable) — this split is required for E0038-safe `Arc<dyn VectorStore>`.
 `add_texts` uses `&self` (not `&mut self`) because external backends are stateless from the
@@ -371,7 +371,7 @@ must express the `as_retriever()` concrete-return-type invariant in the BC accep
 
 ### CAP-029: InMemoryVectorStore — Arc<dyn Embeddings> DI; RwLock Interior Mutability; Vec<f32> Cosine; E-VS-001 Zero-Norm Guard
 
-Provide the reference `VectorStore` implementation (`ferrochain-vectorstores: vectorstores::memory`,
+Provide the reference `VectorStore` implementation (`pregolya-vectorstores: vectorstores::memory`,
 struct `InMemoryVectorStore`) backed by `RwLock<Vec<(Document, Vec<f32>)>>` (document +
 pre-computed embedding vector). Constructed with `Arc<dyn Embeddings>` injected at creation
 time via `VectorStoreFactory::from_texts_sync` — Arc-DI wiring per workspace convention; no
@@ -380,7 +380,7 @@ placeholder construction is permitted. Text queries are converted to query vecto
 Cosine similarity is computed from `Vec<f32>` inner products (no ndarray — semport §8 avoidance).
 **Zero-norm guard (ADR-014 Decision 2 §Hardening note):** before any cosine division, the implementation
 checks `norm = vec.iter().map(|x| x*x).sum::<f32>().sqrt()`. If `norm == 0.0`:
-`return Err(FerrochainError { code: "E-VS-001", .. })` (registered in error-taxonomy §VS —
+`return Err(PregolyaError { code: "E-VS-001", .. })` (registered in error-taxonomy §VS —
 VAL, zero-norm cosine guard, BC-2.21.003). A zero-length embedding produces NaN that silently corrupts ranking — this guard
 is two lines and is unconditional. Implements `VectorStoreFactory` for `from_texts_sync`.
 
@@ -420,29 +420,29 @@ evaluation order, and the native-vs-post-filter distinction.
 
 ### CAP-031: Embeddings Trait — embed_documents (Batch); embed_query; Dimensionality Contract; Arc<dyn Embeddings> Seam
 
-Provide the `Embeddings` dyn-compatible async trait (`ferrochain-core: core::embeddings`):
-`async fn embed_documents(&self, texts: Vec<String>) → Result<Vec<Vec<f32>>, FerrochainError>`
-and `async fn embed_query(&self, text: String) → Result<Vec<f32>, FerrochainError>`.
+Provide the `Embeddings` dyn-compatible async trait (`pregolya-core: core::embeddings`):
+`async fn embed_documents(&self, texts: Vec<String>) → Result<Vec<Vec<f32>>, PregolyaError>`
+and `async fn embed_query(&self, text: String) → Result<Vec<f32>, PregolyaError>`.
 Object-safe via `&self` receivers and `#[async_trait]` desugaring (ADR-005 precedent). `Arc<dyn
 Embeddings>` compiles without E0038. **Dimensionality contract** (MUST hold for every impl):
 (1) `embed_documents(texts).len() == texts.len()` — one vector per input; (2) all returned
 vectors have identical length (the model's embedding dimension); (3) `embed_query` returns a
 vector of the same length as any `embed_documents` vector for the same model. Contract violation
-→ `Err(FerrochainError { code: "E-EMBED-001", .. })` (registered in error-taxonomy §EMBED —
+→ `Err(PregolyaError { code: "E-EMBED-001", .. })` (registered in error-taxonomy §EMBED —
 VAL, dimensionality contract violation, BC-2.22.001). Batch failure (e.g., provider rate limit mid-batch) → entire call returns `Err` —
 no silent partial-batch degradation to a truncated or empty Vec (DI-014). VP-008 proptest
 candidate (any valid Embeddings impl returns vectors with consistent length across embed_documents
 and embed_query).
 
-**Grounding:** D21/SS-22. ADR-017 Decisions 1 and 2 place `Embeddings` in ferrochain-core
+**Grounding:** D21/SS-22. ADR-017 Decisions 1 and 2 place `Embeddings` in pregolya-core
 (same gravity as Retriever, BudgetPolicy, GuardrailHook — avoiding dependency inversion with
-ferrochain-memory), define the `&self`/`#[async_trait]` dyn-compatible shape, the three
+pregolya-memory), define the `&self`/`#[async_trait]` dyn-compatible shape, the three
 dimensionality invariants, and the DI-014-aligned batch error semantics.
 **Anchor justification:** CAP-031 covers the Embeddings trait seam because it is the dyn-dispatch
-boundary used by InMemoryVectorStore (CAP-029 via Arc<dyn Embeddings>), ferrochain-memory
+boundary used by InMemoryVectorStore (CAP-029 via Arc<dyn Embeddings>), pregolya-memory
 (semantic search), and all first-party and community embedding providers. Placement in
-ferrochain-core is required — if the trait lived in ferrochain-vectorstores, ferrochain-memory
-would depend on ferrochain-vectorstores (inverted dependency direction).
+pregolya-core is required — if the trait lived in pregolya-vectorstores, pregolya-memory
+would depend on pregolya-vectorstores (inverted dependency direction).
 **Forcing-function linkage (Domain C — OpenClaw):** Domain C requires pluggable embedding
 backends as a [NEW] forcing-function requirement. CAP-017's vector retrieval path (long-horizon
 memory with vector similarity) is only executable with a concrete `Embeddings` impl at runtime.
@@ -454,7 +454,7 @@ complete the vector retrieval branch.
 
 ### CAP-032: EmbeddingsOpenAI — text-embedding-3-small/large; OpenAiApiKey Newtype; Batch Semantics; reqwest/rustls-tls
 
-Provide a first-party `Embeddings` impl (`ferrochain-openai: openai::embeddings`, struct
+Provide a first-party `Embeddings` impl (`pregolya-openai: openai::embeddings`, struct
 `EmbeddingsOpenAI`) targeting the OpenAI `/v1/embeddings` endpoint. **Model currency
 (crates.io/2026-07-20):** `text-embedding-3-small` (default — cost/performance balance),
 `text-embedding-3-large` (higher quality), `text-embedding-ada-002` (legacy — still supported
@@ -467,7 +467,7 @@ if the provider returns a partial batch error (e.g., rate limit), the entire cal
 `default-features = false, features = ["rustls-tls"]` and `.timeout(Duration::from_secs(30))`
 (DI-009); workspace CI gate `check-client-timeout` enforces the timeout constraint.
 
-**Grounding:** D21/SS-22. ADR-017 Decision 3 specifies ferrochain-openai gaining
+**Grounding:** D21/SS-22. ADR-017 Decision 3 specifies pregolya-openai gaining
 `openai::embeddings`, model currency (verified crates.io/2026-07-20), OpenAiApiKey
 newtype credential handling (DI-010), batch-failure Err semantics (DI-014), and the
 reqwest/rustls-tls/timeout constraints (DI-009).
@@ -479,7 +479,7 @@ the provider boundary.
 
 ### CAP-033: EmbeddingsOllama — Model-Configurable; /api/embed (Default); use_legacy_endpoint Toggle; No API Key
 
-Provide a first-party `Embeddings` impl (`ferrochain-ollama: ollama::embeddings`, struct
+Provide a first-party `Embeddings` impl (`pregolya-ollama: ollama::embeddings`, struct
 `EmbeddingsOllama`) for local Ollama deployments. No model default — callers configure a
 locally-pulled model name (e.g., `nomic-embed-text`, `mxbai-embed-large`). No API key
 required (Ollama is a local service; uses the existing Ollama base URL config). **Endpoint
@@ -491,7 +491,7 @@ or feature sniffing. **HTTP client:** reqwest MUST use `default-features = false
 ["rustls-tls"]` and `.timeout(Duration::from_secs(30))` (DI-009) — the 30-second timeout
 applies even for localhost targets; the workspace CI gate enforces this unconditionally.
 
-**Grounding:** D21/SS-22. ADR-017 Decision 3 specifies ferrochain-ollama gaining
+**Grounding:** D21/SS-22. ADR-017 Decision 3 specifies pregolya-ollama gaining
 `ollama::embeddings`, the `/api/embed` preferred endpoint with `use_legacy_endpoint` toggle
 for `/api/embeddings`, the no-API-key characteristic, and the reqwest/rustls-tls/timeout
 constraints.
@@ -553,15 +553,15 @@ hole REJECT): "Retry bound keyed on (tool_name) not args; finite global_limit no
 default; circuit-breaker on by default." domain-e-agentic-coding-assistant.md §3 item 16 /
 §6 "Tool retry for transient failures" DEGRADED — D23 Wave 1 promotion authority.
 **Anchor justification:** CAP-018 covers tool retry because NE-09 is listed in the NE catalog
-as a ferrochain requirement derived from the adk-rust counter-example. **D23 promotion
+as a pregolya requirement derived from the adk-rust counter-example. **D23 promotion
 (2026-07-22):** elevated P2/Wave 2 → P1/Wave 1; transient bash/network failures in
 coding-agent loops require circuit-breaker protection for Domain E holdout reliability.
 Retry-approval ordering (ADR-018 Decision 6) is a new v1 constraint added at promotion time.
 
 ### CAP-034: Per-Tool-Call Interactive Approval Hook (PreToolCallHook / PreToolDecision)
 
-Provide a first-class `PreToolCallHook` trait in `ferrochain-graph::hitl` (NOT
-ferrochain-core — no dependency-inversion motivation exists; ADR-018 Decision 1 rationale)
+Provide a first-class `PreToolCallHook` trait in `pregolya-graph::hitl` (NOT
+pregolya-core — no dependency-inversion motivation exists; ADR-018 Decision 1 rationale)
 that the graph engine invokes before every tool dispatch, eliminating the 2-node-per-tool
 workaround. `GraphConfig.pre_tool_hook: Option<Arc<dyn PreToolCallHook>>`. Default:
 `AlwaysApprovePolicy` (backward compatible — existing graphs see no behaviour change).
@@ -603,7 +603,7 @@ Provide a first-class rolling compaction primitive in the budget engine. New typ
   VP-012 Kani candidate — pure arithmetic), `OnMessageCount { count: usize }`,
   `OnTokenCount { tokens: u64 }`.
 - `CompactionPolicy` trait: `async fn compact(&self, snapshot: &ConversationSnapshot,
-  run_ctx: &RunContext) → Result<CompactionSummary, FerrochainError>`.
+  run_ctx: &RunContext) → Result<CompactionSummary, PregolyaError>`.
 - `ConversationSnapshot`: ordered Vec<(turn_index, Message)> + token_estimate; assembled
   from checkpoint FTS (BC-2.04.008) by the BudgetEngine.
 - `CompactionSummary`: `summary_text: String` + `compacted_start: usize` + `compacted_end: usize` (flat; slice form `messages[compacted_start..=compacted_end]`).
@@ -637,7 +637,7 @@ opt-in at the application layer — not a mandatory coupling).
 
 ### CAP-036: First-Party Filesystem Tools (tools::fs — ReadFileTool, WriteFileTool, EditFileTool, ListDirTool)
 
-Provide four `Tool`-implementing types in `ferrochain-tools::tools::fs` (SS-23, crate #21):
+Provide four `Tool`-implementing types in `pregolya-tools::tools::fs` (SS-23, crate #21):
 
 | Tool | ActionRisk | Key constraints |
 |------|-----------|-----------------|
@@ -646,7 +646,7 @@ Provide four `Tool`-implementing types in `ferrochain-tools::tools::fs` (SS-23, 
 | `EditFileTool` | High | exact-match old_string → new_string; E-TOOLS-003 if absent; conditional retry safe (old_string mismatch is structural no-op) |
 | `ListDirTool` | ReadOnly | PathGuard-confined; no size limit |
 
-All four validate path arguments against `PathGuard` (ferrochain-sandbox) at invocation time;
+All four validate path arguments against `PathGuard` (pregolya-sandbox) at invocation time;
 out-of-guard paths return `Err(E-TOOLS-001 PathConfinementViolation)`. VP-003 (workspace
 path-confinement Kani proof) coverage extends to all four tools without modification —
 PathGuard is the same type already proven. `EditFileTool` exact-match only by default; opt-in
@@ -666,14 +666,14 @@ shapes → three CAPs, following the D21 module-granularity convention.
 **Grounding:** D23 authority — ADR-020 Decision 2, SS-23. domain-e-agentic-coding-assistant.md
 §3 items 2–3 / §6 "File/bash tool substrate" + "Workspace confinement" first-party closure.
 **Anchor justification:** CAP-036 covers tools::fs because D23 mandates first-party Tool
-implementations on the ferrochain-sandbox substrate (Domain E holdout requires file read/write
+implementations on the pregolya-sandbox substrate (Domain E holdout requires file read/write
 without application-authored wrapper code). ADR-020 is the architecture authority.
-**Architecture authority:** ADR-020. **Subsystem:** SS-23 (ferrochain-tools, crate #21).
+**Architecture authority:** ADR-020. **Subsystem:** SS-23 (pregolya-tools, crate #21).
 
 ### CAP-037: First-Party Shell Execution Tool (tools::shell — BashTool)
 
-Provide `BashTool` in `ferrochain-tools::tools::shell` (SS-23, crate #21): executes shell
-commands via the ferrochain-sandbox WASM/container backend (BC-2.13.001–003; enforcing sandbox
+Provide `BashTool` in `pregolya-tools::tools::shell` (SS-23, crate #21): executes shell
+commands via the pregolya-sandbox WASM/container backend (BC-2.13.001–003; enforcing sandbox
 mandatory — no direct OS process execution outside the sandbox policy).
 
 **ActionRisk and risk floor invariant:** `BashTool` default `ActionRisk::High`. Risk tier
@@ -697,11 +697,11 @@ ADR-020 Decision 4). E-TOOLS-007 if risk floor violated at startup.
 BashTool carries a uniquely important framework safety invariant (non-lowerable risk floor +
 VP-013 Kani proof candidate) requiring its own BC band. Conflating BashTool with filesystem
 tools would obscure this invariant and its acceptance shape.
-**Architecture authority:** ADR-020. **Subsystem:** SS-23 (ferrochain-tools, crate #21).
+**Architecture authority:** ADR-020. **Subsystem:** SS-23 (pregolya-tools, crate #21).
 
 ### CAP-038: First-Party Search Tool (tools::search — GrepTool)
 
-Provide `GrepTool` in `ferrochain-tools::tools::search` (SS-23, crate #21): in-process regex
+Provide `GrepTool` in `pregolya-tools::tools::search` (SS-23, crate #21): in-process regex
 pattern matching using the `regex` crate (NOT shelling out to system grep or ripgrep —
 hermetic and unit-testable without system tool availability). `ActionRisk::ReadOnly`.
 
@@ -713,7 +713,7 @@ scoping (E-TOOLS-001 on out-of-guard paths). No sandbox execution — in-process
 No retry enrollment needed (pure read, idempotent).
 
 Performance note: in-process `regex` is sufficient for typical coding-assistant search
-radius; a ripgrep-backed variant is deferred to a future `ferrochain-tools-rg` extension
+radius; a ripgrep-backed variant is deferred to a future `pregolya-tools-rg` extension
 (ADR-020 Decision 2 §Alternative D). Dependency: `regex` is a net-new `[workspace.dependencies]`
 entry — confirmed NOT an existing workspace dep per ADR-020 Decision 7; devops-engineer adds
 `regex = "1"` when initializing the workspace.
@@ -725,7 +725,7 @@ entry — confirmed NOT an existing workspace dep per ADR-020 Decision 7; devops
 system tool dependency). Its BC acceptance shape covers regex semantics, max_results capping,
 and hermeticity — distinct from the filesystem tools' PathGuard-confinement + mixed-risk
 surface.
-**Architecture authority:** ADR-020. **Subsystem:** SS-23 (ferrochain-tools, crate #21).
+**Architecture authority:** ADR-020. **Subsystem:** SS-23 (pregolya-tools, crate #21).
 
 ---
 

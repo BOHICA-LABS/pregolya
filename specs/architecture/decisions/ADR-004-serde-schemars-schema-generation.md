@@ -59,10 +59,10 @@ This is required for:
 ## Consequences
 
 - All tool definition types and structured output types derive `schemars::JsonSchema`.
-- `ToolDefinition` in ferrochain-core contains a `schema: schemars::Schema` field
+- `ToolDefinition` in pregolya-core contains a `schema: schemars::Schema` field
   (NOT `schemars::schema::RootSchema` — that is the deprecated 0.8 path).
 - The `BaseChatModel::with_structured_output<T>()` bound requires `T: schemars::JsonSchema + serde::DeserializeOwned`.
-- schemars becomes a direct dependency of ferrochain-core (not just a dev-dep).
+- schemars becomes a direct dependency of pregolya-core (not just a dev-dep).
 - BC-2.08.003 (structured output conformance) can now be authored: it is gated on this ADR.
 - ADR-008 (proc-macros) can proceed: `#[tool]` derives `schemars::JsonSchema` on the annotated struct.
 - **Schema naming stability (snapshot test obligation):** Tool schemas are public API —
@@ -75,7 +75,7 @@ This is required for:
 ## D5 Gate Resolution
 
 This ADR constitutes the D5 gate resolution for pydantic→serde/schemars.
-numpy→ndarray and pandas→polars decisions are NOT in scope for ferrochain (no ML data pipeline; those are python-only concerns). D5 disposition for all dependencies:
+numpy→ndarray and pandas→polars decisions are NOT in scope for pregolya (no ML data pipeline; those are python-only concerns). D5 disposition for all dependencies:
 
 | Python dep | Rust analog | Disposition | ADR |
 |-----------|-------------|-------------|-----|

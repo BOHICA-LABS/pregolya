@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
-  - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 propagation. Module field resolved from stale placeholder. All Architecture Anchor crate references already correct per ADR-009 split (BudgetEscalation/BudgetResume types + journal stay in ferrochain-graph as dispatch/escalation artifacts, not policy definitions)."
+  - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 propagation. Module field resolved from stale placeholder. All Architecture Anchor crate references already correct per ADR-009 split (BudgetEscalation/BudgetResume types + journal stay in pregolya-graph as dispatch/escalation artifacts, not policy definitions)."
   - "1.2 (F-P91-01, 2026-07-17): Attribute on_ceiling to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. Description: 'policy\\'s on_ceiling mode is escalate' → 'BudgetConfig::on_ceiling is OnCeiling::Escalate'. PC1: 'BudgetPolicy with on_ceiling = escalate ... in RunnableConfig' → 'BudgetConfig with on_ceiling = OnCeiling::Escalate ... in GraphConfig.budget_config'. TV-001: same BudgetConfig attribution + OnCeiling::Escalate enum form. EC-001: 'on_ceiling = escalate' → 'BudgetConfig::on_ceiling = OnCeiling::Escalate'. on_ceiling is a data field on BudgetConfig; BudgetPolicy::evaluate is pure and data-free (interface-definitions v2.29 §Engine branching note + ADR-009 Option 3)."
   - "1.3 (F-P92-01, 2026-07-17): PC6 BudgetResume::Extend ceiling-application mechanism corrected per interface-definitions v2.31 §RunnableConfig struct definition and architect adjudication D18-P92-A. Old: 'The new_ceiling replaces the policy\\'s current ceiling in the RunnableConfig for the resumed execution.' New: 'The new_ceiling is applied by patching RunnableConfig::budget_config with BudgetConfig { hard_limit: Some(new_ceiling), ..original } for the resumed execution.' Ceiling is applied via the budget_config field on RunnableConfig — not by mutating BudgetPolicy. GraphConfig::budget_config is shared across concurrent runs and must not be mutated per-resume."
   - "1.4 (F-P93-02/F-P93-03, 2026-07-17): F-P93-02 (HIGH) — BC corrected to reflect Model A canon (interface-definitions.md v2.33 §PolicyDecision×on_ceiling decision table): `PolicyDecision::Escalate` (soft-limit) ALWAYS triggers HITL interrupt unconditionally, `on_ceiling` NOT consulted; `PolicyDecision::Deny` + `on_ceiling=OnCeiling::Escalate` (hard-ceiling) ALSO routes to this same HITL interrupt mechanism. (a) H1 title updated to name both paths. (b) Description first sentence revised: soft-path Escalate → unconditional HITL; additionally Deny+OnCeiling::Escalate → same HITL path. (c) PC1 renamed PC1a (hard-ceiling config path) + PC1b added (OR: Deny returned + on_ceiling=Escalate). (d) PC2 labeled '(Soft-ceiling path)' + PC2b added '(Hard-ceiling path)' for Deny+on_ceiling=Escalate trigger. (e) TV-001b added: on_ceiling=Halt + soft_limit crossed → Escalate → HITL fires (proves on_ceiling not consulted for the Escalate path). F-P93-03 (MED) — Capability Anchor Justification verbatim CAP-012 quote updated to v1.2 text: old 'the policy\\'s `on_ceiling` setting' → new 'the budget configuration\\'s `on_ceiling` setting (`BudgetConfig::on_ceiling`)' per capabilities-p0.md v1.2."
@@ -34,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "8d5364e"
+input-hash: "96f4bcd"
 extracted_from: null
 modified: []
 deprecated: null
@@ -177,9 +177,9 @@ block the parent — it surfaces as an explicit result.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — Escalate path: call `interrupt(BudgetEscalation {...})` using the same interrupt entry point as standard HITL interrupts
-- `ferrochain-graph/src/budget/types.rs` — `BudgetEscalation` struct (interrupt payload), `BudgetResume` enum (resume value variants)
-- `ferrochain-graph/src/budget/journal.rs` — journal entry for Escalate and for resume decisions (Extend / Halt)
+- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — Escalate path: call `interrupt(BudgetEscalation {...})` using the same interrupt entry point as standard HITL interrupts
+- `pregolya-graph/src/budget/types.rs` — `BudgetEscalation` struct (interrupt payload), `BudgetResume` enum (resume value variants)
+- `pregolya-graph/src/budget/journal.rs` — journal entry for Escalate and for resume decisions (Extend / Halt)
 
 ## Story Anchor
 
@@ -198,8 +198,8 @@ _[to be filled after story decomposition]_
 | Secondary Capability | CAP-006 ("HITL Interrupt / Resume with FIFO Resume-Value Delivery") per capabilities-p0.md §CAP-006 — this BC reuses the interrupt/resume mechanism of CAP-006 for budget escalation |
 | L2 Domain Invariants | DI-003 (HITL FIFO Resume-Value Delivery) — budget escalation participates in the same FIFO resume-value queue as all other interrupts |
 | D17 Commitment | D17-Q4 — budget governance escalate mode; D17-Q2 — HITL interrupt reuse |
-| ADAPT Reference | adk-rust P-73 `escalate(human-review)` variant of `PaymentPolicyGuardrail` as structural analog; ferrochain adapts this to HITL interrupt mechanism |
+| ADAPT Reference | adk-rust P-73 `escalate(human-review)` variant of `PaymentPolicyGuardrail` as structural analog; pregolya adapts this to HITL interrupt mechanism |
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | I (integration) |
-| Module | ferrochain-graph (graph::scheduler escalation path, BudgetEscalation/BudgetResume types, journal) |
+| Module | pregolya-graph (graph::scheduler escalation path, BudgetEscalation/BudgetResume types, journal) |

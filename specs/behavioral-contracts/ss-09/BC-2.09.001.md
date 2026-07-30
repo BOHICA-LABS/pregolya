@@ -9,10 +9,10 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-66): F-P66-01 — EC-006 and TV-008 added: JSON-RPC -32601 MethodNotFound when server does not implement tools/list → Err(E-MCP-003 McpNotImplemented). Re-anchor for E-MCP-003 from BC-2.09.005 (lifecycle scope) to this BC (discovery path — first MCP method invoked). (OBS-P28-2 class; gate #33 reverse-verification finding.)"
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-mcp per module-decomposition.md v1.10."
   - "1.3 (CENSUS-P109, 2026-07-18): Expand TV-004 E-MCP-002 McpTransportError struct from `{ server: \"math\", ... }` to `{ server: \"math\", transport_error: \"connection refused\" }` — `...` abbreviation failed PASS-ABBREV rule (no defining full-struct PC/EC site in BC; TV-004 was the sole struct site). TD-VSDD-060 sweep: no other E-MCP-002 struct sites in file."
-  - "1.4 (FIX-BURST-277-WAVE-C/ADR-005-DynTool/2026-07-28): Description + PC2: migrate Arc<dyn ferrochain_core::Tool> -> Arc<dyn DynTool> per ADR-005 §Adjacent Trait Object-Safety Adjudications (dyn Tool is non-object-safe; DynTool is the object-safe seam; blanket impl auto-implements DynTool for T: Tool + Send + Sync + 'static; definition in interface-definitions.md §DynTool)."
-  - "1.5 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — two violations corrected: (1) PC7 `FerrochainError { component: MCP, category: TRANSPORT, code: E-MCP-002 }` had 3/5 fields; added `, ..`. (2) EC-006 §Expected behavior multiline span (4/5 fields, missing retry_hint); added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3."
+  - "1.4 (FIX-BURST-277-WAVE-C/ADR-005-DynTool/2026-07-28): Description + PC2: migrate Arc<dyn pregolya_core::Tool> -> Arc<dyn DynTool> per ADR-005 §Adjacent Trait Object-Safety Adjudications (dyn Tool is non-object-safe; DynTool is the object-safe seam; blanket impl auto-implements DynTool for T: Tool + Send + Sync + 'static; definition in interface-definitions.md §DynTool)."
+  - "1.5 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — two violations corrected: (1) PC7 `PregolyaError { component: MCP, category: TRANSPORT, code: E-MCP-002 }` had 3/5 fields; added `, ..`. (2) EC-006 §Expected behavior multiline span (4/5 fields, missing retry_hint); added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3."
 origin: greenfield
 priority: P1
 subsystem: SS-09
@@ -30,7 +30,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "f3c8295"
+input-hash: "d7ab11f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -79,14 +79,14 @@ via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
 6. When `tool_name_prefix = true`, each tool name is prefixed `"{server_name}_{tool_name}"`.
    When `false`, tool names are used verbatim (name conflicts are caller's responsibility).
 7. Transport failure connecting to any targeted server returns
-   `Err(FerrochainError { component: MCP, category: TRANSPORT, code: E-MCP-002, .. })`.
+   `Err(PregolyaError { component: MCP, category: TRANSPORT, code: E-MCP-002, .. })`.
 8. A server that returns an empty tool list (`[]`) is not an error; an empty `Vec`
    is returned for that server.
 
 ## Invariants
 
 - `args_schema` on any converted tool is the verbatim JSON-Schema `Value` from the
-  MCP server; it is never synthesized, transformed, or validated by ferrochain-mcp.
+  MCP server; it is never synthesized, transformed, or validated by pregolya-mcp.
 - The session used for `list_tools` is created on-demand (RAII `OnDemand` session
   source) and torn down after the listing completes; no session is retained.
 - `MAX_ITERATIONS=1000` is the hard pagination bound; if a server returns more than
@@ -127,7 +127,7 @@ discovery proceeds normally with the 30 s timeout default.
 error code `-32601 MethodNotFound` — the server does not implement the `tools/list`
 method (e.g., a legacy MCP server exposing only resources, or a JSON-RPC endpoint that
 is not an MCP tools server at all).
-**Expected behavior:** Returns `Err(FerrochainError { component: MCP, category: VAL,
+**Expected behavior:** Returns `Err(PregolyaError { component: MCP, category: VAL,
 code: E-MCP-003, message: "McpNotImplemented: MCP server '<server>' does not implement
 'tools/list'", .. })`. The server contributes no tools to the registry. Treated as a fatal
 failure for that server — same propagation pattern as EC-004 transport failure
@@ -159,9 +159,9 @@ _No Kani VP seed required for this BC. Unit tests and integration tests are suff
 
 ## Architecture Anchors
 
-- `ferrochain-mcp/src/client.rs` — `MultiServerMcpClient::get_tools`
-- `ferrochain-mcp/src/tools.rs` — `convert_mcp_tool`, `_list_all_tools`
-- `ferrochain-mcp/src/sessions.rs` — `create_session`, `Connection` enum
+- `pregolya-mcp/src/client.rs` — `MultiServerMcpClient::get_tools`
+- `pregolya-mcp/src/tools.rs` — `convert_mcp_tool`, `_list_all_tools`
+- `pregolya-mcp/src/sessions.rs` — `create_session`, `Connection` enum
 
 ## Story Anchor
 
@@ -176,11 +176,11 @@ _[to be filled after verification-architecture phase]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-010 |
-| Capability Anchor Justification | CAP-010 ("MCP Tool Adapter") per capabilities-p1-p2.md §CAP-010 — this BC specifies the runtime discovery and registration of MCP tools, which is the first behavioral surface of the adapter: "Discover tools from MCP servers at runtime, present them to a graph as standard ferrochain Tools" |
+| Capability Anchor Justification | CAP-010 ("MCP Tool Adapter") per capabilities-p1-p2.md §CAP-010 — this BC specifies the runtime discovery and registration of MCP tools, which is the first behavioral surface of the adapter: "Discover tools from MCP servers at runtime, present them to a graph as standard pregolya Tools" |
 | L2 Domain Invariants | — |
 | DEC Reference | — |
 | Risk Source | — |
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | U (unit), I (integration, using in-process rmcp test servers) |
-| Module | ferrochain-mcp |
+| Module | pregolya-mcp |

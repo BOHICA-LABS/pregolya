@@ -1,6 +1,6 @@
 ---
 artifact: semport/partners/test-inventory
-project: ferrochain
+project: pregolya
 port_target: langchain partner packages + standard-tests
 analyzer_pass: 4
 date: 2026-07-12
@@ -43,11 +43,11 @@ Cloud providers use `vcrpy` to record HTTP interactions into gzip+YAML cassettes
 serializer in `standard-tests/conftest.py`) so integration tests replay without live keys or
 network. `pytest-socket` blocks network in unit tests. `enable_vcr_tests` flag opts a provider in.
 
-**Rust implication:** ferrochain needs an equivalent record/replay HTTP fixture layer. Options:
+**Rust implication:** pregolya needs an equivalent record/replay HTTP fixture layer. Options:
 `wiremock` (Rust mock server), a `vcr`-style cassette crate (`rvcr`, `vcr-cassette`), or a
 custom `reqwest` middleware that serves recorded responses. This is the mechanism that lets
 the conformance suite run in CI without provider secrets — **it is a prerequisite for
-`ferrochain-standard-tests` being useful.**
+`pregolya-standard-tests` being useful.**
 
 ## 3. standard-tests — full conformance test matrix
 
@@ -109,7 +109,7 @@ bulk-delete / delete-no-args / delete-missing-content / get-with-missing-ids / g
 ### SandboxIntegrationTests (86 tests, deepagents-gated) <!-- [validation-exhaustive]: ~110 was inaccurate; grep -c "def test_" sandboxes.py = 86 confirmed -->
 File ops (write/read/edit/ls/glob/grep with unicode, offsets, limits, binary, large-file,
 pagination, error cases), upload/download roundtrips, exec stdout offload. **DEFER — deepagents
-is out of ferrochain v1 scope.**
+is out of pregolya v1 scope.**
 
 ### The v3 stream-lifecycle validator (`utils/stream_lifecycle.py`)
 Standalone validator asserting content-block protocol conformance:

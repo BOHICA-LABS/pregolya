@@ -14,7 +14,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "c554e90"
+input-hash: "6c2f7d0"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11
@@ -117,7 +117,7 @@ downstream hook evaluation.
 | Reference Evidence | No upstream LangChain/adk-rust equivalent for ProvenanceTag — greenfield design. P-59 is the counter-example driving this; no positive reference implementation. D17-Q8 is the mandate. |
 | Binding Decisions | D17-Q8 (content provenance-tag seam is Phase-1 BC), DI-012 |
 | Forcing Functions | Domain A SOC analyst §5 ("Prompt-injection isolation of untrusted tool output" marked NEW); Domain C OpenClaw §4 SEC (documented stance on indirect prompt injection + memory-poisoning) |
-| Architecture Module | ferrochain-core / ferrochain-graph (InvocationContext seam; filled by architect) |
+| Architecture Module | pregolya-core / pregolya-graph (InvocationContext seam; filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 
 ## Related BCs
@@ -131,8 +131,8 @@ downstream hook evaluation.
 ## Architecture Anchors
 
 - `prd-supplements/interface-definitions.md §GuardrailHook` — `ProvenanceTag` struct (fields: `boundary_type: BoundaryType`, `ingress_id: Uuid`, `sequence_position: usize`) + `BoundaryType` enum (`ToolResult` | `RAGRetrieval` | `MemoryIngress` — 3 variants, PASS-58 canon)
-- `architecture/module-decomposition.md §ferrochain-graph` — `graph::provenance` row: `ProvenanceTag` attachment at ingress boundaries, `GuardrailHook` dispatch (HIGH, SS-11)
-- `architecture/module-decomposition.md §ferrochain-core` — `core::guardrail` definitions-only note: `BoundaryType` enum + full trait set (`GuardrailHook`, `GuardrailResult`, `IngressContent`, `GuardrailSeverity`); no execution logic; promoted to core per ADR-014 Decision 6
+- `architecture/module-decomposition.md §pregolya-graph` — `graph::provenance` row: `ProvenanceTag` attachment at ingress boundaries, `GuardrailHook` dispatch (HIGH, SS-11)
+- `architecture/module-decomposition.md §pregolya-core` — `core::guardrail` definitions-only note: `BoundaryType` enum + full trait set (`GuardrailHook`, `GuardrailResult`, `IngressContent`, `GuardrailSeverity`); no execution logic; promoted to core per ADR-014 Decision 6
 
 ## Story Anchor
 

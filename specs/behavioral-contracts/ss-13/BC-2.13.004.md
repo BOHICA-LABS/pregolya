@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "b1cbefd"
+input-hash: "af2d76a"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -52,7 +52,7 @@ at access time before performing any OS-level file call. The function calls
 components, then verifies the canonical path starts with the canonical workspace root.
 The adk-rust counter-example (P-65) uses string depth-counting of `..` segments
 (`validate_relative_path`) without touching the filesystem — a symlink inside the workspace
-pointing outside passes cleanly. ferrochain's access-time canonicalization closes this gap.
+pointing outside passes cleanly. pregolya's access-time canonicalization closes this gap.
 This BC is a VP seed: the workspace-confinement Kani harness (Phase 6, BC-2.17.001) will
 formally prove that no file operation can observe content outside the declared workspace root.
 
@@ -126,11 +126,11 @@ formally prove that no file operation can observe content outside the declared w
 | L2 Capability | CAP-015 |
 | Capability Anchor Justification | CAP-015 ("Sandboxed Tool Execution (Enforcing Backend Default)") per capabilities-p1-p2.md §CAP-015 |
 | L2 Domain Invariants | DI-007 (Workspace Path Confinement) |
-| Source Analysis | P-65 NOT-APPLICABLE (must-not-inherit: string-only path safety without symlink resolution); NE-02 (ferrochain requirement: canonicalize_beneath_root at access time); assessment-parts/part-2 §6 Sandbox Cluster; assessment-parts/part-3 §NE-02 |
-| Reference Evidence | adk-rust `validate_relative_path` (P-65) counts `..` segments without filesystem contact — ferrochain INVERTS this. No upstream LangChain equivalent for canonicalize-based path confinement. greenfield design. |
+| Source Analysis | P-65 NOT-APPLICABLE (must-not-inherit: string-only path safety without symlink resolution); NE-02 (pregolya requirement: canonicalize_beneath_root at access time); assessment-parts/part-2 §6 Sandbox Cluster; assessment-parts/part-3 §NE-02 |
+| Reference Evidence | adk-rust `validate_relative_path` (P-65) counts `..` segments without filesystem contact — pregolya INVERTS this. No upstream LangChain equivalent for canonicalize-based path confinement. greenfield design. |
 | Binding Decisions | NE-02, DI-007 |
 | Forcing Functions | product-brief.md §NE catalog NE-02 ("All workspace file operations must call canonicalize_beneath_root(base, path) at access time"); DEC-011 (Domain edge case: Workspace Symlink Escape) |
-| Architecture Module | ferrochain-sandbox / WorkspaceFs facade (filled by architect) |
+| Architecture Module | pregolya-sandbox / WorkspaceFs facade (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 
 ## Related BCs
@@ -140,7 +140,7 @@ formally prove that no file operation can observe content outside the declared w
 
 ## Architecture Anchors
 
-- `architecture/module-decomposition.md §ferrochain-sandbox` — `sandbox::path_guard` row: `canonicalize_beneath_root(base, path)`; `Err E-SBXD-001` on workspace escape; `WorkspaceFs` facade routes all workspace file ops (CRITICAL, SS-13)
+- `architecture/module-decomposition.md §pregolya-sandbox` — `sandbox::path_guard` row: `canonicalize_beneath_root(base, path)`; `Err E-SBXD-001` on workspace escape; `WorkspaceFs` facade routes all workspace file ops (CRITICAL, SS-13)
 - `architecture/purity-boundary-map.md §Pure Core` — `sandbox::path_guard` row: VP-003 Kani P0 target; pure path arithmetic after OS resolution
 - `architecture/verification-architecture.md` — VP-003 workspace-confinement Kani harness (`workspace_confinement_harness`)
 

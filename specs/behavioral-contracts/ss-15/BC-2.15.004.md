@@ -16,9 +16,9 @@ producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (F-P91-04, 2026-07-17): EC-004 adjudication — E-MEMORY-002 StorageFull is a write-capacity code (wrong semantic for a backend read I/O failure). No existing MEMORY code covers read I/O failure. Minted E-MEMORY-008 (MemoryStoreReadFailed, DURABILITY, broken, Maybe) as the correct code. EC-004 updated: removed E-MEMORY-002 and hedge 'or equivalent propagated storage error'; now cites E-MEMORY-008 MemoryStoreReadFailed. Added TV-008 to satisfy gate #33 raise-condition anchor for E-MEMORY-008. error-taxonomy.md v1.18 adds E-MEMORY-008 row (MEMORY namespace); census 85→86 (blanket 26→27: E-MEMORY-* 7→8)."
-  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-004 carried bare `Err(FerrochainError { category: DURABILITY, code: E-MEMORY-008 MemoryStoreReadFailed })` without message; E-MEMORY-008 taxonomy has <backend_error> placeholder (SQLite I/O error detail, available at raise site). Added inline message template to EC-004."
+  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-004 carried bare `Err(PregolyaError { category: DURABILITY, code: E-MEMORY-008 MemoryStoreReadFailed })` without message; E-MEMORY-008 taxonomy has <backend_error> placeholder (SQLite I/O error detail, available at raise site). Added inline message template to EC-004."
   - "1.3 (fix-burst-279/F-P175-B102/ADR-012-D1-Amendment/2026-07-28): PC3 updated with SCOPE NOTE — SkillStore implementations bind MemoryScope::App(app_id) at construction time per ADR-012 Decision 1 Amendment. Callers do not supply scope at call time; app_id comes from RunContext.app_id (system-derived, same source as ContextMutationConfig loading in BC-2.15.006). If the SkillStore was constructed without a valid app_id, all load_skill/list_skills/skill_exists calls return Err(E-MEMORY-004 NoScopeContext). EC-006 added for the empty-app_id construction case (unenumerated in prior versions; finding B102 noted this gap)."
-  - "1.4 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-004: added `, ..` before closing brace in partial FerrochainError observation `FerrochainError { category: DURABILITY, code: E-MEMORY-008, message: \"...\" }` — Class 3 VIOLATION (component and retry_hint fields omitted with no elision marker; canonical form requires `..` per ADR-010 §Error-Construction Notation Canon)."
+  - "1.4 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-004: added `, ..` before closing brace in partial PregolyaError observation `PregolyaError { category: DURABILITY, code: E-MEMORY-008, message: \"...\" }` — Class 3 VIOLATION (component and retry_hint fields omitted with no elision marker; canonical form requires `..` per ADR-010 §Error-Construction Notation Canon)."
   - "1.5 (fix-burst-283/TV-gap-EC-006/2026-07-30): TV-009 added for EC-006 (SkillStore constructed with empty app_id → E-MEMORY-004 NoScopeContext fail-closed). EC-006 was introduced in v1.3 but had no corresponding test vector; a decision with no vector is unenforceable per project discipline. TV-009 exercises `SkillStore::new(store, \"\")` and verifies all three trait methods (`load_skill`, `list_skills`, `skill_exists`) return `Err(E-MEMORY-004)` with `category: SECURITY` — fail-closed per ADR-012 Decision 1 Amendment."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "870127a"
+input-hash: "d42a460"
 extracted_from: null
 modified: []
 deprecated: null
@@ -42,7 +42,7 @@ removal_reason: null
 
 ## Description
 
-`ferrochain-memory` provides a `SkillStore` trait that acts as a naming, tagging, and
+`pregolya-memory` provides a `SkillStore` trait that acts as a naming, tagging, and
 load-on-demand routing overlay over `MemoryStore`. Skill documents (agentskills.io SKILL.md
 pattern) are stored as ordinary KV entries in the underlying `MemoryStore`; `SkillStore`
 adds semantic operations: load by name, list by tag, and existence check. Skills are
@@ -66,20 +66,20 @@ the read path only; writes to skill entries are governed by BC-2.15.005 (guarded
 
 ## Postconditions
 
-1. `load_skill(name: &str) -> Result<Option<String>, FerrochainError>` returns the skill
+1. `load_skill(name: &str) -> Result<Option<String>, PregolyaError>` returns the skill
    document text (`Some(content)`) if a skill with the given name exists in the registry;
    returns `None` if no skill with that name is registered. Never returns an empty string
    to represent "not found."
-2. `list_skills(tags: &[String]) -> Result<Vec<SkillDescriptor>, FerrochainError>` returns
+2. `list_skills(tags: &[String]) -> Result<Vec<SkillDescriptor>, PregolyaError>` returns
    all registered `SkillDescriptor` entries whose tag list contains at least one of the
    requested tags. Passing an empty `tags` slice returns ALL registered descriptors.
-3. `skill_exists(name: &str) -> Result<bool, FerrochainError>` returns `true` if a skill
+3. `skill_exists(name: &str) -> Result<bool, PregolyaError>` returns `true` if a skill
    with the given name is registered, `false` otherwise. This call does NOT load the
    skill document; it is a cheap existence check only.
 4. Each `load_skill` call issues a fresh read to `MemoryStore` — there is no in-process
    cache in `SkillStore`. If the underlying storage was updated (e.g., by BC-2.15.005's
    write path), subsequent `load_skill` calls return the updated content.
-5. All three methods return `Err(FerrochainError)` on storage-layer failures (propagated
+5. All three methods return `Err(PregolyaError)` on storage-layer failures (propagated
    from `MemoryStore`); they do NOT panic or return empty results to mask storage errors
    (DI-014).
 
@@ -115,7 +115,7 @@ is implementation-defined but stable across calls with no writes in between.
 
 ### EC-004: MemoryStore storage error during load_skill
 **Scenario:** The backing SQLite file returns an I/O error on read.
-**Expected behavior:** Returns `Err(FerrochainError { category: DURABILITY, code: E-MEMORY-008 MemoryStoreReadFailed,
+**Expected behavior:** Returns `Err(PregolyaError { category: DURABILITY, code: E-MEMORY-008 MemoryStoreReadFailed,
 message: "MemoryStoreReadFailed: backend read failed: <backend_error>", .. })`
 (where `<backend_error>` is the SQLite I/O error detail, available at the raise site). Does NOT panic.
 Does NOT return `Ok(None)` to mask the error (DI-014).
@@ -132,7 +132,7 @@ guarantee is required).
 **Scenario:** A `SkillStore` implementation was constructed with an empty `app_id`
 (e.g., `SkillStore::new(store, "")` where the construction-time app_id was empty).
 A caller then invokes `load_skill("py_helpers")`.
-**Expected behavior:** Returns `Err(FerrochainError::new(
+**Expected behavior:** Returns `Err(PregolyaError::new(
     Component::Memory, Category::Security, RetryHint::Never, "E-MEMORY-004",
     "NoScopeContext: SkillStore requires a valid app_id at construction; \
      app_id is empty — cannot derive tenant scope",
@@ -153,7 +153,7 @@ at service boundary; B102 CRIT correction).
 | TV-006 | `skill_exists("nope")` with no such skill | `Ok(false)` | Existence check absent |
 | TV-007 | Overwrite skill "py_helpers" via guarded write; `load_skill("py_helpers")` | Returns updated content | Load-on-demand; no stale cache |
 | TV-008 | Backend `MemoryStore` returns an I/O error during `load_skill("py_helpers")` (e.g., SQLite file read failure) | `Err(E-MEMORY-008 MemoryStoreReadFailed)`; does not panic; does not return `Ok(None)` | EC-004 — read I/O failure propagates as structured error (DI-014) |
-| TV-009 | `SkillStore::new(store, "")` constructed with empty `app_id`; caller invokes `load_skill("py_helpers")` | `Err(FerrochainError { category: SECURITY, code: "E-MEMORY-004", message: "NoScopeContext: SkillStore requires a valid app_id at construction; app_id is empty — cannot derive tenant scope", .. })`; does NOT return `Ok(None)` or panic; same error is returned by all three methods (`load_skill`, `list_skills`, `skill_exists`) | EC-006 — SkillStore empty-app_id fail-closed; ADR-012 Decision 1 Amendment |
+| TV-009 | `SkillStore::new(store, "")` constructed with empty `app_id`; caller invokes `load_skill("py_helpers")` | `Err(PregolyaError { category: SECURITY, code: "E-MEMORY-004", message: "NoScopeContext: SkillStore requires a valid app_id at construction; app_id is empty — cannot derive tenant scope", .. })`; does NOT return `Ok(None)` or panic; same error is returned by all three methods (`load_skill`, `list_skills`, `skill_exists`) | EC-006 — SkillStore empty-app_id fail-closed; ADR-012 Decision 1 Amendment |
 
 ## Verification Properties
 
@@ -170,9 +170,9 @@ at service boundary; B102 CRIT correction).
 
 ## Architecture Anchors
 
-- `ferrochain-memory/src/skills.rs` (`memory::skills`) — `SkillStore` trait + `SkillDescriptor` struct; routing overlay over `MemoryStore` (per ADR-012 Decision 1, Primitive A)
-- `ferrochain-memory/src/store.rs` — `MemoryStore` backing trait; KV reads are delegated here
-- ADR-012 §Decision 1 — Primitive A (SkillStore placement: ferrochain-memory as storage trait, not ferrochain-core)
+- `pregolya-memory/src/skills.rs` (`memory::skills`) — `SkillStore` trait + `SkillDescriptor` struct; routing overlay over `MemoryStore` (per ADR-012 Decision 1, Primitive A)
+- `pregolya-memory/src/store.rs` — `MemoryStore` backing trait; KV reads are delegated here
+- ADR-012 §Decision 1 — Primitive A (SkillStore placement: pregolya-memory as storage trait, not pregolya-core)
 
 ## Story Anchor
 
@@ -194,4 +194,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-memory (`memory::skills`) |
+| Module | pregolya-memory (`memory::skills`) |

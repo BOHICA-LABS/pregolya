@@ -16,8 +16,8 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-05, SS-06, SS-16]
 changelog:
-  - "1.7 (FIX-BURST-273/F-P171a-01+09/2026-07-25): F-P171a-01 — fix §Rationale stale co-location claim: remove `ActionRisk` from 'trait alongside ActionRisk, RiskGatePolicy, and GraphConfig' (ActionRisk relocated to ferrochain-core per Decision 1 body / F-P170-06); scope the 'no dependency inversion exists' statement to `PreToolCallHook` specifically. F-P171a-09 — update §Decision 6 ADR-008 citation: 'ADR-008' → 'ADR-008 Decision 2' (new Decision 2 added to ADR-008 in this burst records the `action_risk` attribute emitted-path contract and hygiene rule; ADR-008 previously had no `action_risk` content)."
-  - "1.6 (FIX-BURST-272/F-P170-06/2026-07-25): Amend Decision 1 trait-placement rationale: the 'no relocation is needed' statement for ActionRisk was adjudicated before ADR-020 introduced ferrochain-tools as a cross-crate compile-time consumer of ActionRisk. F-P170-06 option (b) adjudication: ActionRisk IS relocated to ferrochain-core (core::action_risk) per the dependency-inversion precedent — same pattern as BudgetPolicy/GuardrailHook/MemoryWriteGuard. PreToolCallHook and all other graph::hitl types remain in ferrochain-graph::hitl."
+  - "1.7 (FIX-BURST-273/F-P171a-01+09/2026-07-25): F-P171a-01 — fix §Rationale stale co-location claim: remove `ActionRisk` from 'trait alongside ActionRisk, RiskGatePolicy, and GraphConfig' (ActionRisk relocated to pregolya-core per Decision 1 body / F-P170-06); scope the 'no dependency inversion exists' statement to `PreToolCallHook` specifically. F-P171a-09 — update §Decision 6 ADR-008 citation: 'ADR-008' → 'ADR-008 Decision 2' (new Decision 2 added to ADR-008 in this burst records the `action_risk` attribute emitted-path contract and hygiene rule; ADR-008 previously had no `action_risk` content)."
+  - "1.6 (FIX-BURST-272/F-P170-06/2026-07-25): Amend Decision 1 trait-placement rationale: the 'no relocation is needed' statement for ActionRisk was adjudicated before ADR-020 introduced pregolya-tools as a cross-crate compile-time consumer of ActionRisk. F-P170-06 option (b) adjudication: ActionRisk IS relocated to pregolya-core (core::action_risk) per the dependency-inversion precedent — same pattern as BudgetPolicy/GuardrailHook/MemoryWriteGuard. PreToolCallHook and all other graph::hitl types remain in pregolya-graph::hitl."
   - "1.5 (FIX-BURST-262/F-P161-01/2026-07-25): De-pin 3 live-body BC version pins per TD-VSDD-091 BC-pin variant: (1) Decision 5 — BC-2.06.001 v1.4 → BC-2.06.001; (2) Decision 6 — BC-2.08.010 v1.1 amended → BC-2.08.010 amended; (3) Status section — BC-2.08.010 v1.1 → BC-2.08.010."
   - "1.4 (burst-242/2026-07-23): Fix-242 Command-notation sweep — convert 4 residual enum-variant form Command::Resume(...) occurrences (Decision 1 doc comment, Decision 3 step 6, Decision 3 on-resume paragraph, Decision 4 resume paragraph) to canonical struct kwarg form Command(resume=...). Canonical form per BC-2.05.004 v1.5 + F-P120-01 adjudication."
   - "1.3 (burst-239/2026-07-23): F-P139-05 — reconcile frontmatter date/timestamp mismatch: date corrected from 2026-07-22 to 2026-07-23, matching timestamp 2026-07-23T00:00:00Z (burst-238 canonical date per ARCH-INDEX v1.9)."
@@ -48,9 +48,9 @@ The existing risk-tiered interrupt surface (BC-2.05.006 / SS-05) governs who may
 a parked run, but operates at node granularity, not tool-dispatch granularity. CAP-006
 carries no tool-dispatch hook mechanism.
 
-## Decision 1 — `PreToolCallHook` Trait in `ferrochain-graph::hitl`
+## Decision 1 — `PreToolCallHook` Trait in `pregolya-graph::hitl`
 
-A new trait `PreToolCallHook` is added to `ferrochain-graph::hitl` (NOT `ferrochain-core`):
+A new trait `PreToolCallHook` is added to `pregolya-graph::hitl` (NOT `pregolya-core`):
 
 ```rust
 /// Read-only preview of a tool invocation about to be dispatched.
@@ -95,22 +95,22 @@ without I/O. Existing graphs that do not configure a hook see identical behaviou
 
 **Trait placement rationale (graph not core):** The trait-in-core pattern (ADR-009,
 ADR-012, ADR-014) is driven by dependency inversion — a downstream crate needs the trait
-without depending on ferrochain-graph. `PreToolCallHook` has no such consumer: it is
-exclusively a graph-configuration concern. Putting it in ferrochain-core would add an
+without depending on pregolya-graph. `PreToolCallHook` has no such consumer: it is
+exclusively a graph-configuration concern. Putting it in pregolya-core would add an
 orphan definitions module with no dependency-inversion benefit, violating the "put it
 where it is used" principle. `PreToolCallHook`, `PreToolDecision`, `ToolCallPreview`,
-`ToolApprovalRequest`, and `AlwaysApprovePolicy` all remain in `ferrochain-graph::hitl`.
+`ToolApprovalRequest`, and `AlwaysApprovePolicy` all remain in `pregolya-graph::hitl`.
 
 **ActionRisk relocation (F-P170-06 adjudication, FIX-BURST-272):** At the time this ADR
-was written, no external consumer of `ActionRisk` existed outside `ferrochain-graph`. The
+was written, no external consumer of `ActionRisk` existed outside `pregolya-graph`. The
 statement "no relocation is needed" was correct at that point. ADR-020 subsequently
-introduced `ferrochain-tools` as a cross-crate compile-time consumer: `ToolConfig::override_risk(ActionRisk)` is a public `ferrochain-tools` signature, the risk-floor check (`risk < ActionRisk::Medium`) runs in `ferrochain-tools::tools::shell`, and VP-013's Kani harness constructs concrete `ActionRisk` variants in `ferrochain-tools` scope. This creates exactly the dependency-inversion motive for trait-in-core.
+introduced `pregolya-tools` as a cross-crate compile-time consumer: `ToolConfig::override_risk(ActionRisk)` is a public `pregolya-tools` signature, the risk-floor check (`risk < ActionRisk::Medium`) runs in `pregolya-tools::tools::shell`, and VP-013's Kani harness constructs concrete `ActionRisk` variants in `pregolya-tools` scope. This creates exactly the dependency-inversion motive for trait-in-core.
 
-`ActionRisk` is therefore relocated to `ferrochain-core` as `core::action_risk` (`ferrochain-core/src/action_risk.rs`), following the `BudgetPolicy` (ADR-009), `GuardrailHook`/`BoundaryType` (ADR-014 Decision 6), and `MemoryWriteGuard` (ADR-012) precedents. `ferrochain-graph::hitl` re-exports `ActionRisk` from `ferrochain-core` for backward compatibility within graph code. All other `ferrochain-graph::hitl` types stay in graph.
+`ActionRisk` is therefore relocated to `pregolya-core` as `core::action_risk` (`pregolya-core/src/action_risk.rs`), following the `BudgetPolicy` (ADR-009), `GuardrailHook`/`BoundaryType` (ADR-014 Decision 6), and `MemoryWriteGuard` (ADR-012) precedents. `pregolya-graph::hitl` re-exports `ActionRisk` from `pregolya-core` for backward compatibility within graph code. All other `pregolya-graph::hitl` types stay in graph.
 
 ## Decision 2 — Hook Registration in `GraphConfig`
 
-`GraphConfig` (in `ferrochain-graph`) gains one new optional field:
+`GraphConfig` (in `pregolya-graph`) gains one new optional field:
 
 ```rust
 pub struct GraphConfig {
@@ -192,17 +192,17 @@ time. If absent, `action_risk = None`. BC-2.08.010 amended to include the
 
 The 2-node-per-tool workaround is O(N) in graph node count and requires application
 authors to know and implement an advanced LangGraph structural pattern. Every coding agent
-built on ferrochain would independently re-implement the same boilerplate. First-class
+built on pregolya would independently re-implement the same boilerplate. First-class
 support eliminates this friction and ensures the fail-closed Deny property is provable
 at the framework level rather than repeated in each application.
 
-Placing `PreToolCallHook` in `ferrochain-graph::hitl` (Decision 1) keeps the trait alongside
+Placing `PreToolCallHook` in `pregolya-graph::hitl` (Decision 1) keeps the trait alongside
 `RiskGatePolicy` and `GraphConfig` where it belongs architecturally. `ActionRisk` is the
-exception: it was relocated to `ferrochain-core` (module `core::action_risk`) because
-`ferrochain-tools` requires it at compile time without a `ferrochain-graph` dependency —
+exception: it was relocated to `pregolya-core` (module `core::action_risk`) because
+`pregolya-tools` requires it at compile time without a `pregolya-graph` dependency —
 exactly the dependency-inversion motive that ADR-009 Option 3 establishes. No equivalent
 cross-crate inversion exists for `PreToolCallHook` itself; it has no consumer that requires
-it without already depending on `ferrochain-graph`, so the `ferrochain-core` definitions-only
+it without already depending on `pregolya-graph`, so the `pregolya-core` definitions-only
 placement is not justified for this trait.
 
 Reusing `interrupt()` internally (Decision 4) is the correct choice over a new suspension
@@ -220,17 +220,17 @@ presenting a dialog for a tool the framework has already classified as persisten
 
 - **Option A — Document the 2-node pattern (status quo):** Each application implements
   two-node tool dispatch manually. Rejected: scales poorly (40-node graph for a 20-tool
-  loop), error-prone, duplicates boilerplate across every ferrochain-based coding agent.
+  loop), error-prone, duplicates boilerplate across every pregolya-based coding agent.
 
 - **Option B — New streaming event only, no hook:** Emit `tool_approval_request` and let
   the application issue its own interrupt. Rejected: application still re-implements the
   interrupt plumbing; no reduction in structural verbosity; fail-closed Deny becomes an
   application-layer responsibility that is not provable at the framework level.
 
-- **Option C — `PreToolCallHook` in `ferrochain-core`:** Trait in core following the
+- **Option C — `PreToolCallHook` in `pregolya-core`:** Trait in core following the
   ADR-009/ADR-012/ADR-014 precedent. Rejected: the dependency-inversion motivation for
   trait-in-core does not apply here — no crate needs `PreToolCallHook` without already
-  depending on `ferrochain-graph`. Putting it in core creates an orphan definitions module
+  depending on `pregolya-graph`. Putting it in core creates an orphan definitions module
   with no benefit.
 
 - **Option D — Risk-tiered interrupt at node boundary (BC-2.05.006):** Extend BC-2.05.006
@@ -269,7 +269,7 @@ presenting a dialog for a tool the framework has already classified as persisten
 - Two new streaming event variants (14 total) require PO BC amendments to BC-2.06.001
   or new SS-06 BCs.
 - The `#[tool(action_risk = ...)]` macro extension requires amending BC-2.08.010 and the
-  `ferrochain-macros` implementation.
+  `pregolya-macros` implementation.
 - "Skip-hook-on-resume" is a novel invariant differing from standard BC-2.05.003
   node-re-execute semantics; BC-2.05.008 authors it explicitly (authored burst-229, active).
 - `PreToolDecision::Edit` allows argument modification by humans — the engine must

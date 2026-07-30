@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-21
 capability: CAP-030
-crate: ferrochain-vectorstores
+crate: pregolya-vectorstores
 wave: 2
 phase: 1b
 producer: product-owner
@@ -29,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "89fca2d"
+input-hash: "d4c75fa"
 extracted_from: null
 modified: []
 deprecated: null
@@ -157,7 +157,7 @@ _[to be filled after story decomposition — Wave 2 SS-21 story]_
 | L2 Domain Invariants | DI-008 (similarity_search_with_filter returns Result; no .unwrap()), DI-014 (empty filter result `Ok(vec![])` is valid; NOT silently replaced with unfiltered results — per PC8 and EC-006) |
 | Architecture Authority | ADR-014 Decision 2 §Metadata filter surface (MetadataFilter struct, FilterClause variants, additive method, pre vs post filter, #[non_exhaustive]) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| Module | ferrochain-vectorstores / vectorstores::filter |
+| Module | pregolya-vectorstores / vectorstores::filter |
 | Priority | P1 |
 | Wave | 2 |
 | Test Types | unit + compile-fail (#[non_exhaustive] gate) |

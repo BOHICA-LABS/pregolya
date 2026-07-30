@@ -18,7 +18,7 @@ traces_to: "semport/reference-manifest.md"
 gate_verdict: PASS-WITH-CORRECTIONS
 ---
 
-# Extraction Validation Report: ferrochain
+# Extraction Validation Report: pregolya
 
 Reference corpus: `.reference/langchain` (langchain==1.3.13), `.reference/langgraph` (1.2.9),
 `.reference/langchain-mcp-adapters` (0.3.0). Validated 2026-07-12.
@@ -1241,7 +1241,7 @@ Streak: 3/3 (advances from 2/3 → 3/3 → GATE CONVERGED)
 
 **Three consecutive CLEAN(strict) passes achieved: passes 15, 16, 17.**
 
-The BC-5.39.001 3-CLEAN convergence gate for the ferrochain semport extraction validation is now CLOSED.
+The BC-5.39.001 3-CLEAN convergence gate for the pregolya semport extraction validation is now CLOSED.
 
 **Cumulative cascade statistics:**
 

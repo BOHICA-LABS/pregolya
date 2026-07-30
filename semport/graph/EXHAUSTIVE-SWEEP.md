@@ -1,6 +1,6 @@
 ---
 artifact: semport/graph/EXHAUSTIVE-SWEEP
-project: ferrochain
+project: pregolya
 sweep_type: exhaustive-verification
 port_target: langgraph @ 1.2.9
 reference_root: .reference/langgraph (tag 1.2.9; libs/langgraph, libs/checkpoint, checkpoint-postgres, checkpoint-sqlite, libs/prebuilt)

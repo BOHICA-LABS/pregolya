@@ -1,6 +1,6 @@
 ---
 artifact: semport/langchain/EXHAUSTIVE-SWEEP
-project: ferrochain
+project: pregolya
 area: langchain
 scope: D14.1 exhaustive coverage sweep (pre-3-CLEAN certification)
 date: 2026-07-12

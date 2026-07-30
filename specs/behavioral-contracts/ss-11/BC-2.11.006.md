@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
-input-hash: "03430d8"
+input-hash: "ee9dd99"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11
@@ -118,7 +118,7 @@ users who require guardrails must explicitly register a `GuardrailHook`.
 | Reference Evidence | Greenfield. No upstream reference. OQR-5 rationale: "A missing guardrail is valid for most non-SOC use cases. Domain A users must explicitly register a GuardrailHook. default-deny would break every RAG and MCP use case that doesn't need content filtering." |
 | Binding Decisions | D17-Q8 (defines the subsystem); OQR-5 (resolves default posture) |
 | Forcing Functions | Domain A SOC analyst §5 (forces explicit hook registration by Domain A users; the default-permit posture is justified because the framework must not break general-purpose RAG/MCP use cases) |
-| Architecture Module | ferrochain-core / ferrochain-graph (InvocationContext hook-slot check and WARN emission; filled by architect) |
+| Architecture Module | pregolya-core / pregolya-graph (InvocationContext hook-slot check and WARN emission; filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 
 ## Related BCs
@@ -131,8 +131,8 @@ users who require guardrails must explicitly register a `GuardrailHook`.
 
 ## Architecture Anchors
 
-- `architecture/module-decomposition.md §ferrochain-graph` — `graph::provenance` row: `InvocationContext` hook-slot `None` path; structured `WARN` `event_type = "guardrail.unregistered_passthrough"`; default-permit per OQR-5 (HIGH, SS-11)
-- `architecture/module-decomposition.md §ferrochain-core` — `core::guardrail` definitions-only note: optional registration seam; `None` hook-slot handled by `graph::provenance` WARN logic
+- `architecture/module-decomposition.md §pregolya-graph` — `graph::provenance` row: `InvocationContext` hook-slot `None` path; structured `WARN` `event_type = "guardrail.unregistered_passthrough"`; default-permit per OQR-5 (HIGH, SS-11)
+- `architecture/module-decomposition.md §pregolya-core` — `core::guardrail` definitions-only note: optional registration seam; `None` hook-slot handled by `graph::provenance` WARN logic
 
 ## Story Anchor
 

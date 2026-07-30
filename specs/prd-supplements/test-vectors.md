@@ -10,7 +10,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "3719755"
+input-hash: "db110eb"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
@@ -25,7 +25,7 @@ changelog:
   - "2.1 (D21/2026-07-21): Initial supplement created from prd.md §7 RTM inventory. 116 BCs catalogued; 600 canonical TV + 9 GTV = 609 total. RG BCs: 11. GTV source: BC-2.07.002 §Golden Test Vectors."
 ---
 
-# Test Vector Catalog: ferrochain
+# Test Vector Catalog: pregolya
 
 > **Index model:** This supplement is an index — it does NOT duplicate the canonical
 > test vectors that live inside individual BC files. Each row below points to the
@@ -130,7 +130,7 @@ changelog:
 | BC-2.13.005 | SS-13 | 5 | — | table (unlabelled) | | Symlink escape → Err(WorkspaceEscape) |
 | BC-2.13.006 | SS-13 | 5 | — | table (unlabelled) | | macOS Seatbelt deny-by-default |
 | BC-2.13.007 | SS-13 | 6 | — | `TV-NNN` | | Env var sanitization at sandbox execution boundary |
-| BC-2.14.001 | SS-14 | 5 | — | `TV-NNN` | | FerrochainError 2D struct |
+| BC-2.14.001 | SS-14 | 5 | — | `TV-NNN` | | PregolyaError 2D struct |
 | BC-2.14.002 | SS-14 | 5 | — | `TV-NNN` | | RFC-7807 emission |
 | BC-2.14.003 | SS-14 | 5 | — | `TV-NNN` | | Constructor Result; no unwrap |
 | BC-2.14.004 | SS-14 | 5 | — | `TV-NNN` | | HTTP timeout 30s enforced |
@@ -286,15 +286,15 @@ delivery; no integration vectors exist at Phase 1a by design.
 |-------|-------------------|-----------|----------------------|
 | BC-2.02.003 | `tests/red_gate/test_BC_2_02_003_named_barrier.rs` | R10 | NamedBarrierValue implementation |
 | BC-2.02.004 | `tests/red_gate/test_BC_2_02_004_ephemeral_value.rs` | R10 | EphemeralValue implementation |
-| BC-2.07.002 | `tests/red_gate/test_BC_2_07_002_python_parity.rs` | R8 | ferrochain-splitters implementation |
-| BC-2.09.004 | `tests/red_gate/test_BC_2_09_004_tool_exception.rs` | R11 | ferrochain-mcp ToolException impl |
+| BC-2.07.002 | `tests/red_gate/test_BC_2_07_002_python_parity.rs` | R8 | pregolya-splitters implementation |
+| BC-2.09.004 | `tests/red_gate/test_BC_2_09_004_tool_exception.rs` | R11 | pregolya-mcp ToolException impl |
 | BC-2.09.005 | `tests/red_gate/test_BC_2_09_005_no_live_connections.rs` | R11 | MultiServerMcpClient impl |
-| BC-2.18.004 | `tests/red_gate/test_BC_2_18_004_injection_guard.rs` | ADR-015 Decision 3 §Security Invariant 1 | injection_guard impl in ferrochain-prompts |
-| BC-2.18.005 | `tests/red_gate/test_BC_2_18_005_trustall_rejection.rs` | ADR-015 Decision 2 §Security Invariant 2 | from_messages() SlotTrustPolicy guard in ferrochain-prompts |
-| BC-2.19.005 | `tests/red_gate/test_BC_2_19_005_reviver_allowlist.rs` | ADR-016 Decision 3 §Security Invariant | Reviver::revive() in ferrochain-core |
-| BC-2.20.002 | `tests/red_gate/test_BC_2_20_002_rag_guardrail.rs` | ADR-014 §DI-012 | Retriever guardrail wiring in ferrochain-graph |
-| BC-2.21.003 | `tests/red_gate/test_BC_2_21_003_zero_norm_guard.rs` | ADR-014 Decision 2 §Hardening note | cosine similarity impl in ferrochain-vectorstores |
-| BC-2.22.002 | `tests/red_gate/test_BC_2_22_002_credential_opacity.rs` | DI-010 Credential Opacity | EmbeddingsOpenAI::new() credential impl in ferrochain-openai |
+| BC-2.18.004 | `tests/red_gate/test_BC_2_18_004_injection_guard.rs` | ADR-015 Decision 3 §Security Invariant 1 | injection_guard impl in pregolya-prompts |
+| BC-2.18.005 | `tests/red_gate/test_BC_2_18_005_trustall_rejection.rs` | ADR-015 Decision 2 §Security Invariant 2 | from_messages() SlotTrustPolicy guard in pregolya-prompts |
+| BC-2.19.005 | `tests/red_gate/test_BC_2_19_005_reviver_allowlist.rs` | ADR-016 Decision 3 §Security Invariant | Reviver::revive() in pregolya-core |
+| BC-2.20.002 | `tests/red_gate/test_BC_2_20_002_rag_guardrail.rs` | ADR-014 §DI-012 | Retriever guardrail wiring in pregolya-graph |
+| BC-2.21.003 | `tests/red_gate/test_BC_2_21_003_zero_norm_guard.rs` | ADR-014 Decision 2 §Hardening note | cosine similarity impl in pregolya-vectorstores |
+| BC-2.22.002 | `tests/red_gate/test_BC_2_22_002_credential_opacity.rs` | DI-010 Credential Opacity | EmbeddingsOpenAI::new() credential impl in pregolya-openai |
 
 ---
 
@@ -311,7 +311,7 @@ delivery; no integration vectors exist at Phase 1a by design.
    above counts data rows only. Translate each data row into a test scenario following
    the naming convention: `test_BC_S_SS_NNN_<short_description>`.
 4. **Integration tests:** BCs marked `I` in the PRD RTM Test Types column require a
-   running ferrochain instance or mock. Structure these under `tests/integration/`.
+   running pregolya instance or mock. Structure these under `tests/integration/`.
 5. **Soak tests:** BCs marked `S` (BC-2.04.001, BC-2.04.005, BC-2.06.003, BC-2.12.007)
    require sustained execution; put them under a `#[ignore]` soak feature flag.
 

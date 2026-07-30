@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "b1cbefd"
+input-hash: "af2d76a"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -44,7 +44,7 @@ When `Sandbox::execute()` is called with a `SandboxPolicy` that requires enforce
 that requirement as `false`, the call returns `Err(E-SBXD-002: PolicyNotEnforceable)` without
 executing the tool. This is the direct inversion of adk-rust P-62 (`RustSandboxExecutor`
 declares a strict policy but silently proceeds without enforcement) and P-83 (Docker backend
-ignores per-request policy). ferrochain hard-gates on the mismatch: policy requirements are
+ignores per-request policy). pregolya hard-gates on the mismatch: policy requirements are
 compared against backend capabilities at execute-time, before any tool code runs.
 
 ## Preconditions
@@ -77,7 +77,7 @@ compared against backend capabilities at execute-time, before any tool code runs
    is upgraded between construction and execution, the check runs on the capabilities at the
    moment of the call
 5. adk-rust reference sparsity: neither P-62 nor P-83 enforces this gate; it is greenfield
-   behavior derived from NE-01 ferrochain requirement and DI-006
+   behavior derived from NE-01 pregolya requirement and DI-006
 
 ## Edge Cases
 
@@ -114,11 +114,11 @@ compared against backend capabilities at execute-time, before any tool code runs
 | L2 Capability | CAP-015 |
 | Capability Anchor Justification | CAP-015 ("Sandboxed Tool Execution (Enforcing Backend Default)") per capabilities-p1-p2.md §CAP-015 |
 | L2 Domain Invariants | DI-006 (Enforcing Sandbox Backend is Default) |
-| Source Analysis | P-62 NOT-APPLICABLE (must-not-inherit: strict policy silently decoupled from enforcement); P-83 NOT-APPLICABLE (must-not-inherit: Docker backend ignores per-request policy); P-49 ADOPT (BackendCapabilities truthful flags drive this gate); P-57 NOT-APPLICABLE but correct reference posture; NE-01 ferrochain requirement; assessment-parts/part-3 §NE-01 |
-| Reference Evidence | adk-rust P-62 `RustSandboxExecutor` declares strict policy but executes without enforcement — ferrochain explicitly inverts this. P-83 Docker backend ignores per-request SandboxPolicy — second counter-example. No upstream reference for this gate — greenfield. |
+| Source Analysis | P-62 NOT-APPLICABLE (must-not-inherit: strict policy silently decoupled from enforcement); P-83 NOT-APPLICABLE (must-not-inherit: Docker backend ignores per-request policy); P-49 ADOPT (BackendCapabilities truthful flags drive this gate); P-57 NOT-APPLICABLE but correct reference posture; NE-01 pregolya requirement; assessment-parts/part-3 §NE-01 |
+| Reference Evidence | adk-rust P-62 `RustSandboxExecutor` declares strict policy but executes without enforcement — pregolya explicitly inverts this. P-83 Docker backend ignores per-request SandboxPolicy — second counter-example. No upstream reference for this gate — greenfield. |
 | Binding Decisions | NE-01, DI-006 |
 | Forcing Functions | product-brief.md §NE catalog NE-01 ("Sandbox::execute on strict policy against non-enforcing backend returns Err(PolicyNotEnforceable)"); Domain C OpenClaw §4 |
-| Architecture Module | ferrochain-sandbox (filled by architect) |
+| Architecture Module | pregolya-sandbox (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 
 ## Related BCs
@@ -128,7 +128,7 @@ compared against backend capabilities at execute-time, before any tool code runs
 
 ## Architecture Anchors
 
-- `architecture/module-decomposition.md §ferrochain-sandbox` — `sandbox::policy` row: `SandboxPolicy` enforcement; `Err(PolicyNotEnforceable)` on policy-capability mismatch at execute-time (NE-01); capability check before any tool code runs (MEDIUM, SS-13)
+- `architecture/module-decomposition.md §pregolya-sandbox` — `sandbox::policy` row: `SandboxPolicy` enforcement; `Err(PolicyNotEnforceable)` on policy-capability mismatch at execute-time (NE-01); capability check before any tool code runs (MEDIUM, SS-13)
 - `architecture/purity-boundary-map.md §Boundary Modules` — `sandbox::policy` row: pure check of `SandboxPolicy.enforce_*` vs `BackendCapabilities.*`; `Err(E-SBXD-002)` on mismatch; effectful backend enforcement when policy is satisfied
 
 ## Story Anchor

@@ -15,7 +15,7 @@ phase: 1b
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P97-01, 2026-07-17): Module field resolved from variant-phrasing placeholder 'ferrochain-macros, ferrochain-core [architect to confirm crate→subsystem in Phase 1b]' to sibling-canonical 'ferrochain-macros (re-exported ferrochain-core)' per BC-2.08.010/011/012 and module-decomposition.md v1.10 §ferrochain-macros. Phase 1b closed 2026-07-14; placeholder class no longer accepted (F-P96-01)."
+  - "1.1 (F-P97-01, 2026-07-17): Module field resolved from variant-phrasing placeholder 'pregolya-macros, pregolya-core [architect to confirm crate→subsystem in Phase 1b]' to sibling-canonical 'pregolya-macros (re-exported pregolya-core)' per BC-2.08.010/011/012 and module-decomposition.md v1.10 §pregolya-macros. Phase 1b closed 2026-07-14; placeholder class no longer accepted (F-P96-01)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - architecture/decisions/ADR-004-serde-schemars-schema-generation.md
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "e7a24d9"
+input-hash: "d2b6920"
 extracted_from: null
 modified: []
 deprecated: null
@@ -41,7 +41,7 @@ removal_reason: null
 
 ## Description
 
-Every public Rust type that derives `schemars::JsonSchema` as part of the ferrochain tool
+Every public Rust type that derives `schemars::JsonSchema` as part of the pregolya tool
 definition surface (i.e., any type whose generated JSON Schema is embedded in a
 `ToolDefinition` passed to an LLM provider) must have a committed insta snapshot test. The
 snapshot asserts that `schemars::schema_for!(T)` serialized to canonicalized JSON has not
@@ -53,14 +53,14 @@ required field, type change, `additionalProperties` addition/removal) DO break t
 
 ## Preconditions
 
-1. A public Rust type `T` in a ferrochain crate derives `schemars::JsonSchema` and is used
+1. A public Rust type `T` in a pregolya crate derives `schemars::JsonSchema` and is used
    as the argument schema for a tool definition (directly or via `#[tool]` proc-macro
    expansion per ADR-008).
 2. schemars ≥ 1.x (version-pinned per ADR-004 §Version pin: schemars 1.x, verified 1.2.1,
-   2026-02) is a direct dependency of ferrochain-core. The 1.x `schemars::Schema` type is
+   2026-02) is a direct dependency of pregolya-core. The 1.x `schemars::Schema` type is
    used — NOT the deprecated 0.8-era `schemars::schema::RootSchema`.
 3. An insta snapshot file for `T` exists at the expected path (e.g.,
-   `ferrochain-macros/tests/snapshots/schema__<type_name>.snap` or equivalent). If no
+   `pregolya-macros/tests/snapshots/schema__<type_name>.snap` or equivalent). If no
    snapshot file exists, the snapshot test fails with an "unreviewed snapshot" error on
    first run and is not silently skipped.
 4. The snapshot comparison function serializes `schemars::schema_for!(T)` to a JSON string
@@ -68,13 +68,13 @@ required field, type change, `additionalProperties` addition/removal) DO break t
 
 ## Postconditions
 
-1. For any ferrochain release tagged as patch (`x.y.Z+1`) or minor (`x.Y+1.0`), executing
+1. For any pregolya release tagged as patch (`x.y.Z+1`) or minor (`x.Y+1.0`), executing
    the snapshot test suite produces zero snapshot diffs for all registered public tool
    types. The CI build fails if any snapshot diff is detected.
 2. Any PR that would change a committed snapshot file MUST be accompanied by a semver-major
    version bump (`X+1.0.0`) merged before or together with the schema-changing PR. A PR
    that changes a snapshot without a semver-major bump is rejected by CI.
-3. A public tool type added to any ferrochain crate without a corresponding committed
+3. A public tool type added to any pregolya crate without a corresponding committed
    snapshot file causes the snapshot CI step to fail (insta's `--force-update-snapshots`
    is not enabled in CI; snapshots must be reviewed locally and committed).
 4. Rust struct field reorder (declaration order in source) alone does NOT produce a
@@ -129,13 +129,13 @@ false` to appear in (or disappear from) the generated schema.
 This is a behavioral change for downstream tools that used the schema for validation.
 
 ### EC-004: schemars Version Bump Changing Output Format
-**Scenario:** ferrochain-core upgrades schemars from 1.2.1 to a future 1.x.y release that
+**Scenario:** pregolya-core upgrades schemars from 1.2.1 to a future 1.x.y release that
 changes the generated JSON Schema format (e.g., emits `"type": ["string", "null"]` instead
 of `{"anyOf": [{"type": "string"}, {"type": "null"}]}` for `Option<String>`).
 **Expected behavior:** All snapshot files whose types include `Option<T>` fields now
 produce diffs. The CI snapshot step fails across multiple types simultaneously. The correct
 resolution is: (a) update all snapshots locally after reviewing the schemars changelog to
-confirm the change is intentional, (b) bump ferrochain-core semver-major if the project is
+confirm the change is intentional, (b) bump pregolya-core semver-major if the project is
 already at v1+, (c) commit updated snapshots, (d) merge. Pre-v1 projects may treat this as
 a minor bump with a changelog entry.
 
@@ -174,8 +174,8 @@ semver-major bump. Downstream callers that previously called the tool without pr
 
 - `architecture/decisions/ADR-004-serde-schemars-schema-generation.md` §Schema naming stability (snapshot test obligation)
 - `architecture/decisions/ADR-008-proc-macro-attributes.md` §`#[tool]` expansion (the proc-macro that triggers snapshot obligation)
-- `ferrochain-macros/tests/snapshots/` — snapshot directory (to be created in Phase 3)
-- `ferrochain-core/src/tool.rs` — `ToolDefinition { schema: schemars::Schema, ... }` field (per ADR-004 Consequences)
+- `pregolya-macros/tests/snapshots/` — snapshot directory (to be created in Phase 3)
+- `pregolya-core/src/tool.rs` — `ToolDefinition { schema: schemars::Schema, ... }` field (per ADR-004 Consequences)
 
 ## Story Anchor
 
@@ -198,4 +198,4 @@ _[to be filled after story decomposition — anchored to the `#[tool]` proc-macr
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | U (unit — snapshot diff detection, canonicalized comparison, missing-snapshot CI failure) |
-| Module | ferrochain-macros (re-exported ferrochain-core) |
+| Module | pregolya-macros (re-exported pregolya-core) |

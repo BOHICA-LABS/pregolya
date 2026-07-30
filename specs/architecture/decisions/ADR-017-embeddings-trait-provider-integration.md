@@ -17,12 +17,12 @@ superseded_by: null
 subsystems_affected: [SS-22, SS-08]
 changelog:
   - "1.6 (D-35-rename-sweep/2026-07-28): D-35 canonical xtask naming sweep — §Consequences DI-009 enforcement note: `deny-client-new` → `check-client-timeout`. Canonical `check-<subject>` form per D-35."
-  - "1.5 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — §Dimensionality contract FerrochainError sketch: Category::VAL → Category::Val per ADR-010 v1.9 Direction B adjudication."
-  - "1.4 (burst-240/2026-07-23): F-P140-06 — fix §Dimensionality contract FerrochainError sketch: non-canonical `category: VALIDATION` → `category: Category::VAL` per ADR-016 v1.2 adjudication (VALIDATION is not a canonical Category variant; canonical abbreviated form is VAL per error-taxonomy). F-P140-08 — remove un-minted error code E-EMBED-003 from two sites: (1) §Provider explicitly excluded body: '`E-EMBED-003 UnsupportedOperation`' → 'an UnsupportedOperation error'; (2) §Alt B heading: 'returning E-EMBED-003' → 'returning an UnsupportedOperation error'. E-EMBED-003 was never minted (error-taxonomy EMBED namespace has exactly 1 code: E-EMBED-001). E-EMBED-002 implied gap also removed."
+  - "1.5 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — §Dimensionality contract PregolyaError sketch: Category::VAL → Category::Val per ADR-010 §Direction-B-PascalCase adjudication."
+  - "1.4 (burst-240/2026-07-23): F-P140-06 — fix §Dimensionality contract PregolyaError sketch: non-canonical `category: VALIDATION` → `category: Category::VAL` per ADR-016 v1.2 adjudication (VALIDATION is not a canonical Category variant; canonical abbreviated form is VAL per error-taxonomy). F-P140-08 — remove un-minted error code E-EMBED-003 from two sites: (1) §Provider explicitly excluded body: '`E-EMBED-003 UnsupportedOperation`' → 'an UnsupportedOperation error'; (2) §Alt B heading: 'returning E-EMBED-003' → 'returning an UnsupportedOperation error'. E-EMBED-003 was never minted (error-taxonomy EMBED namespace has exactly 1 code: E-EMBED-001). E-EMBED-002 implied gap also removed."
   - "1.3 (burst-238/2026-07-23): Stale-handoff sweep — remove stale 'VP-008 candidate' labels (two sites: §Dimensionality contract body paragraph, §Consequences bullets). VP-008 was seeded in burst-223 (D21, VP-INDEX v1.2, proptest P1). Replace with 'VP-008 (proptest P1, seeded burst-223)'."
   - "1.2 (burst-225/2026-07-21): F-P130-07 sibling sweep — correct stale E-EMBED-001 message prefix in §Dimensionality contract: `DimensionMismatch: ...` → `EmbeddingDimensionMismatch: ...` per error-taxonomy v1.29 (PO renamed prefix to distinguish from E-VS-002 which retains bare `DimensionMismatch:`)."
   - "1.1 (crates.io/2026-07-20): Add Ollama endpoint preference (prefer POST /api/embed, `input` field; /api/embeddings legacy fallback with `use_legacy_endpoint` toggle); note OpenAI model currency (text-embedding-3-small/large current, ada-002 legacy)."
-  - "1.0 (D21/2026-07-20): Initial ADR — Embeddings trait in ferrochain-core (core::embeddings), async dyn-compatible shape, dimensionality contract, ferrochain-openai + ferrochain-ollama gain embeddings modules, ferrochain-anthropic excluded (no embedding API), ferrochain-vectorstores uses Embeddings for in-memory backend."
+  - "1.0 (D21/2026-07-20): Initial ADR — Embeddings trait in pregolya-core (core::embeddings), async dyn-compatible shape, dimensionality contract, pregolya-openai + pregolya-ollama gain embeddings modules, pregolya-anthropic excluded (no embedding API), pregolya-vectorstores uses Embeddings for in-memory backend."
 ---
 
 # ADR-017: Embeddings Trait and Provider Integration
@@ -37,31 +37,31 @@ with two core methods: `embed_documents` (batch) and `embed_query` (single query
 
 Three questions must be resolved:
 
-1. **Trait placement:** ferrochain-core vs ferrochain-vectorstores vs a new crate?
+1. **Trait placement:** pregolya-core vs pregolya-vectorstores vs a new crate?
 2. **Async dyn-compatible shape:** following ADR-005 object-safety precedent.
 3. **Provider scope:** which of the three existing provider crates get embedding impls,
    and which do not (based on what APIs actually exist)?
 
-## Decision 1 — Trait Placement: `core::embeddings` in ferrochain-core
+## Decision 1 — Trait Placement: `core::embeddings` in pregolya-core
 
 `Embeddings` is a foundational abstraction used by:
-- `ferrochain-vectorstores` (VectorStoreFactory takes `Arc<dyn Embeddings>`)
-- `ferrochain-memory` (memory::search may drive semantic search via embeddings)
+- `pregolya-vectorstores` (VectorStoreFactory takes `Arc<dyn Embeddings>`)
+- `pregolya-memory` (memory::search may drive semantic search via embeddings)
 - Any Runnable pipeline node that generates embeddings
 
-Placing `Embeddings` in ferrochain-core makes it available to all of these without
+Placing `Embeddings` in pregolya-core makes it available to all of these without
 creating a circular dependency. The trait itself carries no additional deps beyond
-`ferrochain-core`'s existing imports (serde, thiserror). This is the same placement
+`pregolya-core`'s existing imports (serde, thiserror). This is the same placement
 decision made for `Retriever` (ADR-014) and `BudgetPolicy` (ADR-009).
 
-The `Document` type (ADR-014, `core::documents`) is already in ferrochain-core and is
+The `Document` type (ADR-014, `core::documents`) is already in pregolya-core and is
 the natural output type of retrieval pipelines that use `Embeddings`.
 
 ## Decision 2 — Async Dyn-Compatible Trait Shape
 
 ```rust
-// ferrochain-core: core::embeddings
-use ferrochain_core::error::FerrochainError;
+// pregolya-core: core::embeddings
+use pregolya_core::error::PregolyaError;
 
 #[async_trait]
 pub trait Embeddings: Send + Sync {
@@ -77,14 +77,14 @@ pub trait Embeddings: Send + Sync {
     async fn embed_documents(
         &self,
         texts: Vec<String>,
-    ) -> Result<Vec<Vec<f32>>, FerrochainError>;
+    ) -> Result<Vec<Vec<f32>>, PregolyaError>;
 
     /// Embed a single query string. Semantically equivalent to embed_documents([text])[0]
     /// but may use a different tokenization or prefix depending on the provider model.
     async fn embed_query(
         &self,
         text: String,
-    ) -> Result<Vec<f32>, FerrochainError>;
+    ) -> Result<Vec<f32>, PregolyaError>;
 }
 ```
 
@@ -99,7 +99,7 @@ Every `Embeddings` implementation MUST guarantee:
 - All returned vectors have the same length (the model's embedding dimension)
 - `embed_query(text)` returns a vector of the same length as any `embed_documents` vector
 
-Violation of these invariants MUST return `Err(FerrochainError { code: "E-EMBED-001", category: Category::Val, .. })`. Returning a ragged result
+Violation of these invariants MUST return `Err(PregolyaError { code: "E-EMBED-001", category: Category::Val, .. })`. Returning a ragged result
 silently (wrong-length vectors in the output) violates DI-014 (no silent failures).
 
 VP-008 (proptest P1, seeded burst-223): proptest property test that for any valid `Embeddings` impl, all
@@ -115,19 +115,19 @@ degradation to `Vec::new()` (DI-014 / Code Conventions: no silent empty returns)
 
 ### Providers that gain embedding impls in v1
 
-**ferrochain-openai** → gains `openai::embeddings` module
+**pregolya-openai** → gains `openai::embeddings` module
 
 OpenAI provides the `/v1/embeddings` endpoint supporting multiple text embedding models.
 **Model currency (crates.io/2026-07-20):** `text-embedding-3-small` and
 `text-embedding-3-large` are the current recommended models; `text-embedding-ada-002`
 is legacy (still supported by OpenAI but superseded by the 3-series — prefer 3-small for
-cost/performance balance). `ferrochain-openai` gains an `EmbeddingsOpenAI` struct
+cost/performance balance). `pregolya-openai` gains an `EmbeddingsOpenAI` struct
 configurable to any model name string, defaulting to `text-embedding-3-small`. These are
 the dominant embedding models in the Python langchain ecosystem (~4 of the 23 partner
 registry entries relate to OpenAI). reqwest client with `rustls-tls` mandatory per
 workspace convention; 30-second timeout per DI-009.
 
-**ferrochain-ollama** → gains `ollama::embeddings` module
+**pregolya-ollama** → gains `ollama::embeddings` module
 
 Ollama exposes two embedding endpoints: `POST /api/embed` (newer, uses `input` field,
 **preferred**) and `POST /api/embeddings` (legacy, uses `prompt` field, fallback). Both
@@ -139,25 +139,25 @@ local); uses the existing Ollama base URL config.
 
 ### Provider explicitly excluded from v1
 
-**ferrochain-anthropic** → NO embedding module
+**pregolya-anthropic** → NO embedding module
 
 Anthropic does not provide a public embeddings API. As of the D21 scope cut, Anthropic's
 Claude models do not expose an embedding endpoint. Adding a stub module that returns
 an UnsupportedOperation error would violate the production-grade default (no phantom
-functionality). ferrochain-anthropic ships with no `Embeddings` impl in v1.
+functionality). pregolya-anthropic ships with no `Embeddings` impl in v1.
 
 If Anthropic adds an embeddings API post-v1, a new module can be added without any
-architectural change — the `Embeddings` trait in ferrochain-core is already in place.
+architectural change — the `Embeddings` trait in pregolya-core is already in place.
 
 ### Community embedding providers
 
-~77 embedding providers exist in `langchain-community`. These land in `ferrochain-community`
+~77 embedding providers exist in `langchain-community`. These land in `pregolya-community`
 (post-v1), consistent with the broader community strategy. The `Embeddings` trait in
-ferrochain-core is the extension point.
+pregolya-core is the extension point.
 
-## Decision 4 — ferrochain-vectorstores Dependency on Embeddings
+## Decision 4 — pregolya-vectorstores Dependency on Embeddings
 
-`ferrochain-vectorstores` depends on ferrochain-core (and therefore on `core::embeddings`).
+`pregolya-vectorstores` depends on pregolya-core (and therefore on `core::embeddings`).
 The in-memory VectorStore backend (`vectorstores::memory`) accepts `Arc<dyn Embeddings>`
 at construction time to convert query strings to vectors for cosine search. The in-memory
 backend stores raw `Vec<f32>` vectors internally; embedding generation is delegated to the
@@ -175,32 +175,32 @@ is wired at construction time and held for the lifetime of the store.
 
 ## Rationale
 
-**Why `core::embeddings` in ferrochain-core and not ferrochain-vectorstores?**
-`ferrochain-memory` may also use embeddings for semantic search (`memory::search`). If the
-trait lived in ferrochain-vectorstores, ferrochain-memory would depend on ferrochain-vectorstores
+**Why `core::embeddings` in pregolya-core and not pregolya-vectorstores?**
+`pregolya-memory` may also use embeddings for semantic search (`memory::search`). If the
+trait lived in pregolya-vectorstores, pregolya-memory would depend on pregolya-vectorstores
 just to accept `Arc<dyn Embeddings>` — an inversion of the correct dependency direction.
 Core is the right home for shared abstraction traits (same reasoning as `Retriever`,
 `BudgetPolicy`, `GuardrailHook`).
 
-**Why exclude ferrochain-anthropic?** Shipping a stub that always errors is not
+**Why exclude pregolya-anthropic?** Shipping a stub that always errors is not
 production-grade. An `Embeddings` impl must be callable without silently failing —
 if there is no API endpoint, there is no impl. Anthropic's provider crate ships without
 an `Embeddings` impl and gains one when the API exists.
 
 **Why `Vec<f32>` and not `ndarray::Array1<f32>`?** Semport analysis (§8) explicitly
 recommends "plain `Vec<f32>` cosine, avoid `ndarray` in core." `ndarray` is a large,
-compile-heavy crate that would become a transitive dep of ferrochain-core for all users.
+compile-heavy crate that would become a transitive dep of pregolya-core for all users.
 `Vec<f32>` is zero-overhead for the memory backend and sufficient for cosine similarity.
 Performance-critical backends (e.g., a Faiss-backed community adapter) can convert
 internally.
 
 ## Alternatives Considered
 
-### Alt A: Embeddings trait in ferrochain-vectorstores
+### Alt A: Embeddings trait in pregolya-vectorstores
 
 Arguments for: tighter co-location with VectorStore.
-Rejected: ferrochain-memory would need to depend on ferrochain-vectorstores (wrong
-direction). ferrochain-core already depends on neither, so the trait must live there.
+Rejected: pregolya-memory would need to depend on pregolya-vectorstores (wrong
+direction). pregolya-core already depends on neither, so the trait must live there.
 
 ### Alt B: Add Anthropic embedding stub returning an UnsupportedOperation error
 
@@ -215,7 +215,7 @@ Arguments for: richer linear algebra API; performance.
 Rejected: `ndarray` is too heavy for core (semport §8 explicit recommendation). `Vec<f32>`
 is interoperable with every linear algebra library and adds zero deps.
 
-### Alt D: New `ferrochain-embeddings` crate
+### Alt D: New `pregolya-embeddings` crate
 
 Arguments for: isolates embedding providers from the VectorStore/Retriever abstraction.
 Rejected: trait only (no heavy deps) belongs in core; provider impls belong in their
@@ -235,12 +235,12 @@ respective provider crates. An intermediary crate adds complexity with no benefi
 
 ## Consequences
 
-- `core::embeddings` is a new module in ferrochain-core. `Embeddings` trait and
-  `EmbeddingError` (E-EMBED-NNN codes) are new public surface in ferrochain-core.
-- ferrochain-openai gains `openai::embeddings` (new module, new struct `EmbeddingsOpenAI`).
-- ferrochain-ollama gains `ollama::embeddings` (new module, new struct `EmbeddingsOllama`).
-- ferrochain-anthropic gains NO embeddings module in v1.
-- ferrochain-vectorstores depends on ferrochain-core for `Arc<dyn Embeddings>` in its
+- `core::embeddings` is a new module in pregolya-core. `Embeddings` trait and
+  `EmbeddingError` (E-EMBED-NNN codes) are new public surface in pregolya-core.
+- pregolya-openai gains `openai::embeddings` (new module, new struct `EmbeddingsOpenAI`).
+- pregolya-ollama gains `ollama::embeddings` (new module, new struct `EmbeddingsOllama`).
+- pregolya-anthropic gains NO embeddings module in v1.
+- pregolya-vectorstores depends on pregolya-core for `Arc<dyn Embeddings>` in its
   in-memory VectorStore backend constructor.
 - VP-008 (proptest P1, seeded burst-223): proptest dimensionality invariant for any Embeddings impl.
 - Both `EmbeddingsOpenAI` and `EmbeddingsOllama` require `reqwest` with `rustls-tls`.

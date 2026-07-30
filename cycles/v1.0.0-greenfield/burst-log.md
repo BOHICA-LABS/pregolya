@@ -5930,6 +5930,30 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 
 ---
 
+### Burst-284 — ferrochain → pregolya rename (2026-07-30)
+
+**Scope:** Product rename. 353 files / ~6,300 identifier occurrences replaced across `specs/`, `semport/`, `comparative/`, `planning/`, `proposals/`, `hooks/`, `namespace-reservation/`. Canonical record: `.factory/planning/naming-decision-pregolya.md`. Work order: `.factory/planning/rename-sweep-manifest.md`.
+
+**Verified end state (orchestrator-confirmed):** `ferrochain` in `specs/` = 0; in `comparative/` = 3 (intended frozen filesystem-path references); `pregolya` in `comparative/` = 488; `cycles/` changes = 0; error-notation gate = 353 openers (anti-vacuous); 12 blocking validators PASS.
+
+**Agents:** scripted rename sweep (devops-engineer, one-time D-104 exception); three fabricated-anchor remediation passes (product-owner, business-analyst, architect); input-hash re-pin pass.
+
+**Incidents recorded:** D-104 boundary unachievable (records-lint L9b un-grandfathering); D-105 lost-write (concurrent writers on shared worktree; 11 comparative files reverted by devops verification generalization; architect work redone); D-106 paper-fix (8 fabricated section anchors reported as 3; TD-VSDD-059 validated twice); D-107 input-hash mutual-cycle limitation (5-node cycle; STALE=0 unreachable by construction); D-108 pre-existing citation imprecision (scoped out to P1D-176).
+
+**Validation suite (all 12 blocking validators PASS):** verify-no-version-pins PASS=198; records-lint PASS=5; verify-adr-decision-refs PASS; verify-changelog-date-monotonicity PASS=131; verify-changelog-date-validity PASS; verify-enum-variant-casing PASS=198; verify-signature-canon PASS=5; verify-error-notation-canon PASS=1 (353 openers; 0 violations); verify-form-a-changelog-direction PASS=198 WARN=7; verify-arch-anchor-resolution PASS=129; verify-module-canonicality PASS=8; verify-bc-frontmatter-schema PASS=129. Advisory verify-changelog-claim-applied: 631 findings + 3 rename-claim advisories (LOW/OBS only). Input-hash: TOTAL=240 MATCH=173 STALE=23 (18 frozen cycles + 5 mutual-cycle nodes per D-107) NOINPUT=44.
+
+**Decisions allocated:** D-103..D-108. **Lessons minted:** L-148..L-152. **Streak:** 0/3 (unchanged; rename is not an adversary pass).
+
+---
+
+### Archived Phase Step — Session wrap D-75 (archived at burst-284)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Session wrap D-75 — burst-281 Wave A committed (ADR-010 §Error-Construction Notation Canon; 19 architecture-owned Class 3 sites fixed across ADR-015/ADR-017/module-decomposition/verification-architecture/interface-definitions/VP-003/004/006/009/010/013); Wave A-corr DEFERRED (architect stalled 600s with no edits; 3 discriminator defects recorded; authoritative BC violation count unresolved 144 vs 158); D-75 allocated; prior checkpoint archived; factory-artifacts pushed. NEXT: Wave A-corr. | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
+
+---
+
 ### Archived Phase Step — Session wrap D-70 (archived at session-wrap D-88)
 
 | Step | Agent | Status | Output |

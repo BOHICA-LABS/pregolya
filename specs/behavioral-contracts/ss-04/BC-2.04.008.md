@@ -26,7 +26,7 @@ traces_to:
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "6c1fe81"
+input-hash: "bc7d17b"
 modified: []
 extracted_from: null
 deprecated: null
@@ -41,8 +41,8 @@ removal_reason: null
 
 ## Description
 
-`ferrochain-checkpoint` exposes `CheckpointSaver::fts_search(query: &str, config:
-FtsSearchConfig) -> Result<Vec<FtsSearchResult>, FerrochainError>` — a full-text search
+`pregolya-checkpoint` exposes `CheckpointSaver::fts_search(query: &str, config:
+FtsSearchConfig) -> Result<Vec<FtsSearchResult>, PregolyaError>` — a full-text search
 interface over conversation history stored in the checkpoint SQLite database. The FTS5
 index covers checkpoint bodies: conversation messages (human, AI, tool), tool call arguments,
 and tool results. This is a **single-process v1** implementation: multi-process WAL-safe
@@ -73,12 +73,12 @@ concurrent reads). The search capability is also registered as a callable `Tool`
 3. If `config.thread_id = Some(tid)`, only checkpoints for that thread are searched.
    If `None`, all threads in the store are searched.
 4. If no matches are found, `Ok(vec![])` is returned — not an error.
-5. The `search_history` `Tool` wraps `fts_search` and is registerable in any ferrochain
+5. The `search_history` `Tool` wraps `fts_search` and is registerable in any pregolya
    graph via `graph.add_tool(search_history_tool())`. Calling it from a graph node
    invokes `fts_search` on the run's configured `CheckpointSaver` and returns the
    results as a `ToolMessage`.
 6. `FtsSearchConfig.limit` of 0 returns
-   `Err(FerrochainError { component: CHKPT, category: VAL, code: "E-CHKPT-008",
+   `Err(PregolyaError { component: CHKPT, category: VAL, code: "E-CHKPT-008",
    message: "FtsLimitZero: FtsSearchConfig.limit must be > 0; got <limit>", retry_hint: Never })`.
 
 > **Error codes minted here (E-CHKPT-008, E-CHKPT-009).**
@@ -110,7 +110,7 @@ concurrent reads). The search capability is also registered as a callable `Tool`
 **Scenario:** `fts_search("\"Paris weather\"", config)` (FTS5 phrase search).
 **Expected behavior:** Returns results where "Paris" and "weather" appear adjacent. FTS5
 phrase syntax is passed directly to SQLite. Malformed FTS5 syntax (e.g., unclosed quote)
-returns `Err(FerrochainError { component: CHKPT, category: VAL, code: E-CHKPT-008, .. })`
+returns `Err(PregolyaError { component: CHKPT, category: VAL, code: E-CHKPT-008, .. })`
 propagating the SQLite FTS5 parse error.
 
 ### EC-003: Thread-scoped search
@@ -133,7 +133,7 @@ budget (BC-2.10.001) and checkpoint-logged (BC-2.04.001).
 ### EC-006: SQLite FTS5 extension not available
 **Scenario:** SQLite is compiled without the FTS5 extension.
 **Expected behavior:** `CheckpointSaver::new(…)` with FTS enabled returns
-`Err(FerrochainError { component: CHKPT, category: INTERNAL, code: "E-CHKPT-009",
+`Err(PregolyaError { component: CHKPT, category: INTERNAL, code: "E-CHKPT-009",
 message: "Fts5Unavailable: FTS5 extension not available in this SQLite build — recompile SQLite with FTS5 support or use a pre-built distribution that includes it", .. })` at construction time.
 (DI-008: fail at construction, not at first search call.)
 
@@ -165,8 +165,8 @@ message: "Fts5Unavailable: FTS5 extension not available in this SQLite build —
 
 ## Architecture Anchors
 
-- `ferrochain-checkpoint/src/fts.rs` — `FtsSearchConfig`, `FtsSearchResult`, `fts_search` implementation; FTS5 virtual table `fts_checkpoint_bodies` co-created with the main checkpoints table; `search_history_tool()` constructor
-- `ferrochain-checkpoint/src/sqlite.rs` — FTS5 index update in the same SQLite transaction as `put` / `put_writes`
+- `pregolya-checkpoint/src/fts.rs` — `FtsSearchConfig`, `FtsSearchResult`, `fts_search` implementation; FTS5 virtual table `fts_checkpoint_bodies` co-created with the main checkpoints table; `search_history_tool()` constructor
+- `pregolya-checkpoint/src/sqlite.rs` — FTS5 index update in the same SQLite transaction as `put` / `put_writes`
 
 ## Story Anchor
 
@@ -188,4 +188,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | I (integration) |
-| Module | ferrochain-checkpoint |
+| Module | pregolya-checkpoint |

@@ -3,7 +3,7 @@ document_type: adr
 level: L3
 adr_id: "020"
 slug: first-party-tool-library
-title: "First-Party Tool Library: ferrochain-tools Crate, tools::fs / tools::shell / tools::search Modules, SS-23 Subsystem"
+title: "First-Party Tool Library: pregolya-tools Crate, tools::fs / tools::shell / tools::search Modules, SS-23 Subsystem"
 status: accepted
 date: "2026-07-23"
 producer: architect
@@ -17,16 +17,16 @@ superseded_by: null
 subsystems_affected: [SS-23]
 changelog:
   - "1.10 (F-P170-16/burst-272/2026-07-25): Fix retired symbol name in §Consequences Positive Properties VP-013 sentence — `BashTool::set_risk(ReadOnly)` and `set_risk(Low)` → `ToolConfig::override_risk(ActionRisk::ReadOnly)` and `ToolConfig::override_risk(ActionRisk::Low)` on a `BashTool` instance. Makes ADR internally self-consistent with Decision 3 canonical form."
-  - "1.9 (FIX-BURST-272/F-P170-06/2026-07-25): ActionRisk dependency adjudication. Relocate ActionRisk from ferrochain-graph::hitl to ferrochain-core (module core::action_risk) per F-P170-06 option-b decision, following BudgetPolicy/GuardrailHook/MemoryWriteGuard dependency-inversion precedent. (1) Context section: update ActionRisk location from ferrochain-graph::hitl to ferrochain-core::action_risk. (2) Decision 1 dependency graph: remove ferrochain-graph row; add ActionRisk to ferrochain-core line; replace unsound macro-binding escape hatch paragraph with correct dependency-inversion explanation. The macro-binding claim was incorrect: proc-macro expansions resolve in the annotated crate's namespace and cannot supply crate-level dependency edges; ferrochain-macros has no ferrochain-graph dependency and cannot re-export ActionRisk. No circular dependency concern: ferrochain-graph already depends on ferrochain-core and re-exports core::action_risk as ActionRisk."
+  - "1.9 (FIX-BURST-272/F-P170-06/2026-07-25): ActionRisk dependency adjudication. Relocate ActionRisk from pregolya-graph::hitl to pregolya-core (module core::action_risk) per F-P170-06 option-b decision, following BudgetPolicy/GuardrailHook/MemoryWriteGuard dependency-inversion precedent. (1) Context section: update ActionRisk location from pregolya-graph::hitl to pregolya-core::action_risk. (2) Decision 1 dependency graph: remove pregolya-graph row; add ActionRisk to pregolya-core line; replace unsound macro-binding escape hatch paragraph with correct dependency-inversion explanation. The macro-binding claim was incorrect: proc-macro expansions resolve in the annotated crate's namespace and cannot supply crate-level dependency edges; pregolya-macros has no pregolya-graph dependency and cannot re-export ActionRisk. No circular dependency concern: pregolya-graph already depends on pregolya-core and re-exports core::action_risk as ActionRisk."
   - "1.8 (burst-238/2026-07-23): Stale-handoff sweep (OBS + proactive). (1) Remove '(PO to verify at error-taxonomy authoring)' from Decision 5 E-TOOLS-008 gate #33 sentence — E-TOOLS-008 was minted in error-taxonomy v1.32 (burst-233) with gate #33 forward+reverse verification confirmed in that burst. (2) Remove completed 'PO obligation (error-taxonomy.md)' paragraph — E-TOOLS-* 9-code section was added by PO in error-taxonomy v1.32 (burst-233); BC-2.23.001-004 and BC-2.23.006 OS-error path amendments also completed in burst-233."
   - "1.7 (burst-235/F-P135-05/2026-07-22): Decision 2 `tools::shell` section — add implementation note clarifying that `tokio::time::timeout` wraps the sandbox backend `execute()` call, NOT `tokio::process::Command` directly; BashTool never calls `tokio::process::Command` directly (would violate BC-2.23.005 sandbox-mandatory invariant); ProcessBackend uses `tokio::process::Command` with `.kill_on_drop(true)` internally (ensures async cancellation kills the OS subprocess). Architect adjudication of F-P135-05: DI-015 split-enforcement decision documented; BC-2.13.002 PO handoff and BA invariants.md handoff issued in same burst."
   - "1.6 (burst-234/2026-07-22): F-P134-02 label format normalization — Decision 5 anchor list: normalize BC-2.23.006 label to prescribed canonical form `(GrepTool — tools::search traversal I/O error)`. Prior v1.5 intermediate form `(GrepTool traversal I/O error paths — tools::search)` was substantively correct but did not match prescribed format. TD-VSDD-060 sweep: sole occurrence in body text at Decision 5 adjudication paragraph; ADR-010 TOOLS table unaffected (no per-BC labels in that table)."
   - "1.5 (burst-234/2026-07-22): F-P134-02 — Decision 5 anchor list (E-TOOLS-008 adjudication paragraph, line ~224): fix BC-2.23.006 label from `(WriteFileTool missing parent dir)` to `(GrepTool traversal I/O error paths — tools::search)`. BC-2.23.006 is GrepTool / tools::search; the missing-parent-dir scenario belongs to BC-2.23.002 EC-003. ADR-010 TOOLS table label for BC-2.23.006 verified correct (no change required)."
   - "1.4 (burst-234/2026-07-22): PO minted E-TOOLS-009 InvalidRegexPattern (VAL/Never; fields pattern: String + compile_error: String; anchor BC-2.23.006 PC-4/EC-002/TV-003). Add E-TOOLS-009 row to Decision 5 table. Update PO obligation to 9 codes (TD-VSDD-060 sweep: '8 codes' → '9 codes'). TOOLS namespace is now 9 codes (001..009)."
   - "1.3 (burst-233/2026-07-22): F-P133-07 sibling sweep (TD-VSDD-060) — remove stale 'VP-013 Kani P0 candidate' label in §Positive Properties / Rationale (VP-013 seeded burst-232, Kani P1; also correct Kani P0 → Kani P1)."
-  - "1.2 (burst-233/2026-07-22): F-P133-01 — fix fabricated E-SANDBOX namespace in Decision 2: tools::fs out-of-guard return corrected from `FerrochainError::sandbox(E-SANDBOX-xxx)` to `Err(E-TOOLS-001 PathConfinementViolation)`; tools::shell timeout return corrected from `FerrochainError::sandbox(E-SANDBOX-timeout)` to `Err(E-TOOLS-004 BashTimeout)`. F-P133-03 adjudication — add E-TOOLS-008 FileIoError to Decision 5 table; category TOOL (OS-level file execution failure; confirmed via ADR-010 12-category axis); RetryHint Maybe; PO obligation extended to 8 codes (anchor BCs 2.23.001–004 and 2.23.006)."
+  - "1.2 (burst-233/2026-07-22): F-P133-01 — fix fabricated E-SANDBOX namespace in Decision 2: tools::fs out-of-guard return corrected from `PregolyaError::sandbox(E-SANDBOX-xxx)` to `Err(E-TOOLS-001 PathConfinementViolation)`; tools::shell timeout return corrected from `PregolyaError::sandbox(E-SANDBOX-timeout)` to `Err(E-TOOLS-004 BashTimeout)`. F-P133-03 adjudication — add E-TOOLS-008 FileIoError to Decision 5 table; category TOOL (OS-level file execution failure; confirmed via ADR-010 12-category axis); RetryHint Maybe; PO obligation extended to 8 codes (anchor BCs 2.23.001–004 and 2.23.006)."
   - "1.1 (dep-validation/2026-07-22): Decision 7 updated with validated pin results (research-agent crates.io/2026-07-21): `similar` 3.1.1 → pin `\"3\"`, owner corrected to mitsuhiko (Armin Ronacher, NOT dtolnay), Apache-2.0 single-licensed (cargo-deny allowlist note added), MSRV 1.85 (consequence flagged); `regex` 1.13.1 → pin `\"1\"`, MIT OR Apache-2.0, MSRV 1.65, both net-new [workspace.dependencies] (workspace uninitialized); linear-time matching guarantee rationale added; in-body research-flag language resolved."
-  - "1.0 (D23/2026-07-22): Initial ADR — introduces ferrochain-tools as crate #21. Closes the DEGRADED gap for first-party file/bash/search tools in domain-e-agentic-coding-assistant.md §3 items 1-5."
+  - "1.0 (D23/2026-07-22): Initial ADR — introduces pregolya-tools as crate #21. Closes the DEGRADED gap for first-party file/bash/search tools in domain-e-agentic-coding-assistant.md §3 items 1-5."
 ---
 
 # ADR-020: First-Party Tool Library
@@ -38,57 +38,57 @@ changelog:
 Domain E (agentic coding CLI, §3 items 1-5, §6 table) classifies file I/O, bash, and
 search as DEGRADED:
 
-> "MCP exposes these capabilities but ferrochain ships no first-party implementations.
+> "MCP exposes these capabilities but pregolya ships no first-party implementations.
 > An agentic coding assistant needs file read/write/edit, directory listing, bash
-> execution, and grep as first-class ferrochain tools — not framework-external wrappers."
+> execution, and grep as first-class pregolya tools — not framework-external wrappers."
 
-The current state: `ferrochain-sandbox` (SS-13, crate #12) provides a policy enforcement
+The current state: `pregolya-sandbox` (SS-13, crate #12) provides a policy enforcement
 substrate — path-confinement guards, WASM sandbox backend, process isolation primitives.
 BC-2.13.001–BC-2.13.005 establish the sandbox enforcement layer. What does NOT exist is
 a set of first-party `Tool`-implementing types that wrap these operations and are ready
 to be registered in a `ToolRegistry` for graph execution.
 
-The `Tool` trait is defined in `ferrochain-core` (ADR-009). `ActionRisk` is in
-`ferrochain-core` (module `core::action_risk`, relocated from `ferrochain-graph::hitl` per
-F-P170-06 adjudication; BC-2.05.006 anchor preserved; ferrochain-graph re-exports it).
-The sandbox path-guard is in `ferrochain-sandbox`. A tool library crate sits above all
+The `Tool` trait is defined in `pregolya-core` (ADR-009). `ActionRisk` is in
+`pregolya-core` (module `core::action_risk`, relocated from `pregolya-graph::hitl` per
+F-P170-06 adjudication; BC-2.05.006 anchor preserved; pregolya-graph re-exports it).
+The sandbox path-guard is in `pregolya-sandbox`. A tool library crate sits above all
 three in the dependency graph: it instantiates tools with a sandbox policy and registers
 them for graph use.
 
-## Decision 1 — New Crate `ferrochain-tools` (Crate #21) under New Subsystem SS-23
+## Decision 1 — New Crate `pregolya-tools` (Crate #21) under New Subsystem SS-23
 
-`ferrochain-tools` is introduced as crate #21 in the workspace canonical roster.
+`pregolya-tools` is introduced as crate #21 in the workspace canonical roster.
 It forms a new subsystem SS-23 "First-Party Tool Library."
 
-**Placement rationale:** `ferrochain-sandbox` is an enforcement substrate, not a
-user-facing tool API. Placing first-party tools in `ferrochain-sandbox` would conflate
+**Placement rationale:** `pregolya-sandbox` is an enforcement substrate, not a
+user-facing tool API. Placing first-party tools in `pregolya-sandbox` would conflate
 "execution policy enforcement" with "tool API surface" — two concerns with different
 consumers, different abstraction levels, and likely different release cadences. A new
-crate makes the dependency direction explicit: `ferrochain-tools` depends on
-`ferrochain-sandbox`; the sandbox has no awareness of `ferrochain-tools`.
+crate makes the dependency direction explicit: `pregolya-tools` depends on
+`pregolya-sandbox`; the sandbox has no awareness of `pregolya-tools`.
 
-**Dependency graph for `ferrochain-tools`:**
+**Dependency graph for `pregolya-tools`:**
 
 ```
-ferrochain-core        (Tool trait, ToolOutput, FerrochainError, ActionRisk)
-ferrochain-sandbox     (PathGuard, SandboxPolicy, sandbox execution)
-ferrochain-macros      (#[tool] attribute macro, risk tier annotation)
+pregolya-core        (Tool trait, ToolOutput, PregolyaError, ActionRisk)
+pregolya-sandbox     (PathGuard, SandboxPolicy, sandbox execution)
+pregolya-macros      (#[tool] attribute macro, risk tier annotation)
 ```
 
-`ferrochain-tools` does NOT depend on `ferrochain-graph` at compile time. `ActionRisk`
-is defined in `ferrochain-core` (module `core::action_risk`) following the established
+`pregolya-tools` does NOT depend on `pregolya-graph` at compile time. `ActionRisk`
+is defined in `pregolya-core` (module `core::action_risk`) following the established
 dependency-inversion pattern used by `BudgetPolicy` (ADR-009), `GuardrailHook` /
 `BoundaryType` (ADR-014 Decision 6), and `MemoryWriteGuard` (ADR-012): when a downstream
-crate needs a type that was originally in `ferrochain-graph`, the type relocates to
-`ferrochain-core` so that crates earlier in the topological build order can reference it
-without taking a `ferrochain-graph` dependency. `ferrochain-graph` re-exports
+crate needs a type that was originally in `pregolya-graph`, the type relocates to
+`pregolya-core` so that crates earlier in the topological build order can reference it
+without taking a `pregolya-graph` dependency. `pregolya-graph` re-exports
 `core::action_risk::ActionRisk` for existing `hitl` consumers. `PreToolCallHook` and all
-other `graph::hitl` types remain in `ferrochain-graph::hitl` (ADR-018 Decision 1
+other `graph::hitl` types remain in `pregolya-graph::hitl` (ADR-018 Decision 1
 unchanged).
 
 ## Decision 2 — Three Modules: `tools::fs`, `tools::shell`, `tools::search`
 
-All three modules in `ferrochain-tools` are **Effectful Shell** (see Decision 6).
+All three modules in `pregolya-tools` are **Effectful Shell** (see Decision 6).
 
 ### `tools::fs` — File System Operations
 
@@ -101,7 +101,7 @@ Implements `Tool` for:
 | `EditFileTool` | Apply a string-replace edit to an existing file | `High` |
 | `ListDirTool` | List directory entries at path | `ReadOnly` |
 
-Path arguments are validated against `PathGuard` (ferrochain-sandbox) before any I/O.
+Path arguments are validated against `PathGuard` (pregolya-sandbox) before any I/O.
 Out-of-guard paths return `Err(E-TOOLS-001 PathConfinementViolation)`.
 
 `EditFileTool` receives:
@@ -122,7 +122,7 @@ error with the file size and the configured limit.
 |------|-----------|-------------------|
 | `BashTool` | Execute a shell command; capture stdout/stderr/exit code | `High` |
 
-`BashTool` runs via `ferrochain-sandbox` WASM or process isolation backend (per
+`BashTool` runs via `pregolya-sandbox` WASM or process isolation backend (per
 BC-2.13.001–003). It never runs commands outside the sandbox policy.
 
 Output capture:
@@ -146,7 +146,7 @@ client policy). Timeout returns `Err(E-TOOLS-004 BashTimeout)`.
 > is the correct implementation — the timeout wraps the **sandbox backend `execute()` call**,
 > NOT `tokio::process::Command` directly. BashTool must not call `tokio::process::Command`
 > directly; doing so would violate BC-2.23.005 Invariant ("All sandbox execution is via
-> ferrochain-sandbox — there is no fallback direct OS execution path"). The `tokio::process::Command`
+> pregolya-sandbox — there is no fallback direct OS execution path"). The `tokio::process::Command`
 > lives inside `sandbox::process` (ProcessBackend); when `tokio::time::timeout` fires and drops
 > the Future, ProcessBackend's `.kill_on_drop(true)` setting causes Tokio to kill the OS subprocess
 > on Drop. For WASM and container backends, the backend runtime handles process termination.
@@ -173,7 +173,7 @@ added in a future crate extension (not v1 scope).
 
 ## Decision 3 — Risk Tier Defaults and HITL Integration
 
-`ferrochain-tools` tools register with `ActionRisk` defaults as shown in Decision 2.
+`pregolya-tools` tools register with `ActionRisk` defaults as shown in Decision 2.
 These defaults interact with `PreToolCallHook` (ADR-018) and `RiskGatePolicy` (BC-2.05.006):
 
 | Tool | Default risk | `RiskGatePolicy` trigger | Typical prompt |
@@ -219,7 +219,7 @@ the first attempt.
 ## Decision 5 — Error Namespace `E-TOOLS-*`
 
 A new error component namespace `E-TOOLS-*` is established for errors originating in
-`ferrochain-tools`. Initial codes (populated at Phase 1 in `error-taxonomy.md` by PO):
+`pregolya-tools`. Initial codes (populated at Phase 1 in `error-taxonomy.md` by PO):
 
 | Code | Name | Description |
 |------|------|-------------|
@@ -248,7 +248,7 @@ Anchor BCs: BC-2.23.001 (ReadFileTool), BC-2.23.002 (WriteFileTool), BC-2.23.003
 
 ## Decision 6 — Purity Boundary Classification
 
-All three modules in `ferrochain-tools` are **Effectful Shell**:
+All three modules in `pregolya-tools` are **Effectful Shell**:
 
 | Module | Classification | Rationale |
 |--------|---------------|-----------|
@@ -272,14 +272,14 @@ Research-agent validation completed 2026-07-21 (crates.io registry, live). All o
 | Edit fuzzy-match fallback (`EditFileTool`) | `similar` (mitsuhiko) | `"3"` (3.1.1) | Apache-2.0 (single) | 1.85 | See notes below |
 | Regex engine (`GrepTool`) | `regex` (rust-lang) | `"1"` (1.13.1) | MIT OR Apache-2.0 | 1.65 | Net-new workspace dep; linear-time |
 | File metadata in `ListDirTool` | stdlib only (`std::fs`) | — | — | — | No external dep needed |
-| Path guard integration | `ferrochain-sandbox` internal | — | — | — | No new external dep |
+| Path guard integration | `pregolya-sandbox` internal | — | — | — | No new external dep |
 
 **`similar` attribution correction:** crate owner is mitsuhiko (Armin Ronacher — also
 author of `minijinja` and `insta`), NOT dtolnay. Pin as `similar = "3"` (caret — tracks
 3.x patch releases; latest 3.1.1 as of 2026-07-21).
 
 **`similar` license note:** Apache-2.0 single-licensed (NOT dual MIT/Apache-2.0).
-Acceptable for ferrochain's license posture. `cargo-deny` license policy config MUST
+Acceptable for pregolya's license posture. `cargo-deny` license policy config MUST
 include an explicit `"Apache-2.0"` entry in `[licenses.allow]` at workspace
 initialization — this is a devops-engineer obligation, not a blocker, but must not be
 omitted (omission causes `cargo-deny` to reject the license silently).
@@ -299,10 +299,10 @@ important safety property for `GrepTool`, which accepts arbitrary user-supplied 
 
 ## Rationale
 
-Keeping `ferrochain-tools` as a separate crate (not folded into `ferrochain-sandbox`) is
+Keeping `pregolya-tools` as a separate crate (not folded into `pregolya-sandbox`) is
 correct because:
-1. Consumers of `ferrochain-sandbox` are framework-internal enforcement logic; consumers
-   of `ferrochain-tools` are end-user graph applications.
+1. Consumers of `pregolya-sandbox` are framework-internal enforcement logic; consumers
+   of `pregolya-tools` are end-user graph applications.
 2. Release cadence differs: sandbox policy primitives are stable; tool APIs evolve with
    Claude Code/Codex conventions.
 3. The dependency direction is clear and one-way: tools → sandbox, not sandbox → tools.
@@ -320,7 +320,7 @@ application authors to reason about risk tiers for every use case.
 
 ## Alternatives Considered
 
-- **Option A — Ship tools inside `ferrochain-sandbox`:** Rejected (see Decision 1 rationale).
+- **Option A — Ship tools inside `pregolya-sandbox`:** Rejected (see Decision 1 rationale).
   Conflates enforcement substrate with user-facing API surface.
 
 - **Option B — MCP-only, no first-party tools:** Status quo DEGRADED classification.
@@ -328,16 +328,16 @@ application authors to reason about risk tiers for every use case.
   implementations without path-guard integration, HITL ActionRisk defaults, or retry
   classification. Framework-level consistency is lost.
 
-- **Option C — Tools as macros / codegen inside `ferrochain-macros`:** Rejected:
-  `ferrochain-macros` provides procedural macros, not runtime Tool implementations.
+- **Option C — Tools as macros / codegen inside `pregolya-macros`:** Rejected:
+  `pregolya-macros` provides procedural macros, not runtime Tool implementations.
   A generated `ReadFileTool` would still require a runtime library home.
 
 - **Option D — Shell-out to `ripgrep` for `GrepTool`:** Considered and deferred to a
-  future `ferrochain-tools-rg` crate. For v1, in-process `regex` is hermetic and
+  future `pregolya-tools-rg` crate. For v1, in-process `regex` is hermetic and
   sufficient. Ripgrep adds significant performance for large repos and is a natural
   extension point when real-world benchmarks demand it.
 
-- **Option E — Fold tools into `ferrochain-community`:** `ferrochain-community`
+- **Option E — Fold tools into `pregolya-community`:** `pregolya-community`
   is intended for third-party contributed tool integrations (HTTP clients, databases,
   external APIs). First-party filesystem/shell tools belong in a maintained first-party
   crate with a stable API guarantee — not in the community catch-all crate.
@@ -348,9 +348,9 @@ application authors to reason about risk tiers for every use case.
   file/bash/search tool contracts."
 - **Domain E forcing function:** domain-e-agentic-coding-assistant.md §3 items 1-5 and
   §6 table rows for `read_file`, `write_file`, `edit_file`, `list_dir`, `bash`, `grep` —
-  all DEGRADED, closure path "first-party ferrochain-tools crate implementing the Tool
+  all DEGRADED, closure path "first-party pregolya-tools crate implementing the Tool
   trait with sandbox path-guard integration."
-- **BC-2.13.001–003:** ferrochain-sandbox enforcement contracts — the policy substrate
+- **BC-2.13.001–003:** pregolya-sandbox enforcement contracts — the policy substrate
   reused by `tools::fs` and `tools::shell`.
 - **BC-2.05.006:** ActionRisk enum and RiskGatePolicy — referenced for risk tier defaults
   in Decision 3.
@@ -365,8 +365,8 @@ application authors to reason about risk tiers for every use case.
 
 - Agentic coding CLI applications can use `ReadFileTool`, `WriteFileTool`, `EditFileTool`,
   `ListDirTool`, `BashTool`, `GrepTool` out of the box without writing wrapper code.
-- All tools automatically integrate with PathGuard (ferrochain-sandbox), ActionRisk
-  (ferrochain-core::action_risk per F-P170-06), PreToolCallHook (ADR-018), and retry policy (BC-2.16.001).
+- All tools automatically integrate with PathGuard (pregolya-sandbox), ActionRisk
+  (pregolya-core::action_risk per F-P170-06), PreToolCallHook (ADR-018), and retry policy (BC-2.16.001).
 - VP-003 (path-confinement Kani proof) is reused by `tools::fs` without modification;
   path-confinement correctness proof coverage extends to first-party tools.
 - `BashTool` risk floor invariant (`Medium` minimum) is formally captured as VP-013
@@ -375,7 +375,7 @@ application authors to reason about risk tiers for every use case.
 
 ### Negative / Trade-offs
 
-- Crate #21 increases workspace build time slightly. Mitigated: `ferrochain-tools` is
+- Crate #21 increases workspace build time slightly. Mitigated: `pregolya-tools` is
   an optional dependency for applications that don't need it (tool registration is
   explicit; not auto-loaded by graph runtime).
 - `EditFileTool` exact-match semantics may frustrate users expecting fuzzy replacement.
@@ -387,7 +387,7 @@ application authors to reason about risk tiers for every use case.
 - A new `E-TOOLS-*` error namespace requires a PO supplement amendment to
   `error-taxonomy.md` before Phase 2 story decomposition.
 - `similar` (dep pin `"3"`) has MSRV 1.85. This sets the effective MSRV floor for
-  `ferrochain-tools`. The pinned stable channel in `rust-toolchain.toml` (set by
+  `pregolya-tools`. The pinned stable channel in `rust-toolchain.toml` (set by
   devops-engineer at workspace init) MUST be ≥ 1.85. Above the 1.65 MSRV of `regex`
   and the 1.62 MSRV of `inventory` (ADR-016) — toolchain channel selection must satisfy
   the highest MSRV across the workspace, which is 1.85 as of D23.

@@ -1,11 +1,11 @@
 ---
 artifact: semport/graph/dependency-disposition
-project: ferrochain
+project: pregolya
 port_target: langgraph @ 1.2.9
 analyzer_pass: 2
 date: 2026-07-12
 legend: PORT = reimplement in Rust; REPLACE = idiomatic Rust crate substitute;
-        REUSE = existing ferrochain crate; DROP = out of scope; DEFER = later phase.
+        REUSE = existing pregolya crate; DROP = out of scope; DEFER = later phase.
 ---
 
 # LangGraph Dependency Disposition
@@ -15,19 +15,19 @@ legend: PORT = reimplement in Rust; REPLACE = idiomatic Rust crate substitute;
 ### 1.1 `langgraph` (core runtime) deps
 | Python dep | Version | Role | Disposition |
 |---|---|---|---|
-| `langchain-core` | >=1.4.7,<2 | `Runnable`, `RunnableConfig`, messages, callbacks — pervasive | **REUSE** ferrochain-core (pass 1). HARD prerequisite. Every node is a Runnable; config threads everywhere. |
-| `langgraph-checkpoint` | >=4.1,<5 | BaseCheckpointSaver + serde + store | **PORT** as `ferrochain-checkpoint` crate (this pass, P0). |
+| `langchain-core` | >=1.4.7,<2 | `Runnable`, `RunnableConfig`, messages, callbacks — pervasive | **REUSE** pregolya-core (pass 1). HARD prerequisite. Every node is a Runnable; config threads everywhere. |
+| `langgraph-checkpoint` | >=4.1,<5 | BaseCheckpointSaver + serde + store | **PORT** as `pregolya-checkpoint` crate (this pass, P0). |
 | `langgraph-sdk` | >=0.4.2,<0.5 | Platform HTTP client (used by RemotePregel) | **DEFER** — needed only for `RemotePregel`; the core engine doesn't require it. |
-| `langgraph-prebuilt` | >=1.1,<1.2 | react agent / ToolNode | **PORT** as `ferrochain-prebuilt` (P1); note most agent logic migrated to `langchain` v1 pkg. |
+| `langgraph-prebuilt` | >=1.1,<1.2 | react agent / ToolNode | **PORT** as `pregolya-prebuilt` (P1); note most agent logic migrated to `langchain` v1 pkg. |
 | `xxhash` | >=3.5 | xxh3_128 for task-id + interrupt-id hashing | **REPLACE** with `xxhash-rust` (xxh3). MUST match hash output — task IDs are content-addressed and drive replay/idempotency. Byte-faithful requirement. |
 | `pydantic` | >=2.7.4 | state-schema reflection, config models | **REPLACE** with `serde` + `schemars` (state-schema → channel derivation becomes a derive macro / builder, not runtime reflection). See rust-translation-strategy. |
 
 ### 1.2 `langgraph-checkpoint` (base) deps
 | Python dep | Role | Disposition |
 |---|---|---|
-| `langchain-core` | serde reviver, messages | **REUSE** ferrochain-core. |
-| `ormsgpack` | primary checkpoint serialization | **REPLACE** with `rmp-serde` (msgpack). CRITICAL: must round-trip identically to ormsgpack for cross-impl checkpoint compatibility IF wire-compat with Python is a goal (D9 question). If ferrochain checkpoints are Rust-only, a native serde format is acceptable but the conformance suite still pins the semantics. |
-| `langchain_core.load.Reviver` | jsonplus (lc-JSON) fallback | **REUSE/PORT** the lc-JSON registry from ferrochain-core pass-1 (§9 of core strategy). |
+| `langchain-core` | serde reviver, messages | **REUSE** pregolya-core. |
+| `ormsgpack` | primary checkpoint serialization | **REPLACE** with `rmp-serde` (msgpack). CRITICAL: must round-trip identically to ormsgpack for cross-impl checkpoint compatibility IF wire-compat with Python is a goal (D9 question). If pregolya checkpoints are Rust-only, a native serde format is acceptable but the conformance suite still pins the semantics. |
+| `langchain_core.load.Reviver` | jsonplus (lc-JSON) fallback | **REUSE/PORT** the lc-JSON registry from pregolya-core pass-1 (§9 of core strategy). |
 
 ### 1.3 `langgraph-checkpoint-postgres` deps
 | Python dep | Role | Disposition |
@@ -44,8 +44,8 @@ legend: PORT = reimplement in Rust; REPLACE = idiomatic Rust crate substitute;
 ### 1.5 `langgraph-prebuilt` deps
 | Python dep | Role | Disposition |
 |---|---|---|
-| `langchain-core` | ChatModel, tools, messages | **REUSE** ferrochain-core. |
-| `langgraph-checkpoint` | agent state persistence | **REUSE** ferrochain-checkpoint. |
+| `langchain-core` | ChatModel, tools, messages | **REUSE** pregolya-core. |
+| `langgraph-checkpoint` | agent state persistence | **REUSE** pregolya-checkpoint. |
 
 ## 2. Standard-library / runtime primitive mappings
 
@@ -69,7 +69,7 @@ legend: PORT = reimplement in Rust; REPLACE = idiomatic Rust crate substitute;
 | `pregel/` engine (loop/algo/runner/retry) | **PORT** | P0 | The differentiator. Execution-model shape is D9. |
 | `channels/` | **PORT** | P0 | Reducer algebra; small, well-specified, golden-tested. |
 | `graph/state.py` StateGraph builder | **PORT** | P0 | State-schema→channel derivation via macro/builder (no pydantic reflection). |
-| `graph/message.py` add_messages | **PORT** | P0 | Reuse ferrochain-core message merge. |
+| `graph/message.py` add_messages | **PORT** | P0 | Reuse pregolya-core message merge. |
 | `checkpoint/base` + serde | **PORT** | P0 | Trait + InMemory + serde. |
 | `checkpoint-sqlite` / `-postgres` | **PORT** | P1 | Behind the trait; sqlx/rusqlite. |
 | `checkpoint-conformance` | **PORT FIRST** | P0 | Acceptance harness for the saver trait. |
@@ -86,14 +86,14 @@ legend: PORT = reimplement in Rust; REPLACE = idiomatic Rust crate substitute;
 
 ## 4. Cross-crate structure proposal (feeds workspace layout)
 ```
-ferrochain-core            (pass 1: Runnable, messages, RunnableConfig, callbacks, tools)
-ferrochain-checkpoint      (BaseCheckpointSaver trait, Checkpoint types, serde, InMemory, store)
-  └─ ferrochain-checkpoint-sqlite
-  └─ ferrochain-checkpoint-postgres
-ferrochain-graph           (channels, pregel engine, StateGraph, streaming, runtime, func)
-ferrochain-prebuilt        (react agent, ToolNode, HITL schema)
-ferrochain-conformance     (ported checkpoint-conformance harness; dev-dep)
-[deferred] ferrochain-sdk  (Platform client)
+pregolya-core            (pass 1: Runnable, messages, RunnableConfig, callbacks, tools)
+pregolya-checkpoint      (BaseCheckpointSaver trait, Checkpoint types, serde, InMemory, store)
+  └─ pregolya-checkpoint-sqlite
+  └─ pregolya-checkpoint-postgres
+pregolya-graph           (channels, pregel engine, StateGraph, streaming, runtime, func)
+pregolya-prebuilt        (react agent, ToolNode, HITL schema)
+pregolya-conformance     (ported checkpoint-conformance harness; dev-dep)
+[deferred] pregolya-sdk  (Platform client)
 ```
 Dependency direction: graph → checkpoint → core; prebuilt → graph. Matches Python and
 keeps the checkpointer trait storage-shape-agnostic.

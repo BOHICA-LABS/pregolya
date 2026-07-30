@@ -15,8 +15,8 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
-  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC6 had `Err(FerrochainError { category: VAL, code: E-CORE-001 })` bare wrapper; E-CORE-001 has `<n>` (block position) and `<type>` (type tag) placeholders. Added inline `message:` template to PC6; added EC-006 with concrete placeholder values as the authoritative full-form site."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
+  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC6 had `Err(PregolyaError { category: VAL, code: E-CORE-001 })` bare wrapper; E-CORE-001 has `<n>` (block position) and `<type>` (type tag) placeholders. Added inline `message:` template to PC6; added EC-006 with concrete placeholder values as the authoritative full-form site."
   - "1.3 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). PC6 multiline span: added `, ..` before closing `})` on continuation line (fields category/code/message present; component and retry_hint absent — elision marker required). EC-006 multiline span: same correction on its continuation line."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-001
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "1bf3881"
+input-hash: "2912cbf"
 extracted_from: null
 modified: []
 deprecated: null
@@ -42,7 +42,7 @@ removal_reason: null
 
 ## Description
 
-ferrochain-core must represent every message content value as a closed-variant typed `ContentBlock`
+pregolya-core must represent every message content value as a closed-variant typed `ContentBlock`
 enum rather than an untyped `String` or `Map<String, Value>`. When a caller constructs a typed
 message, the content sequence must be `Vec<ContentBlock>` and the compiler must prevent raw-string
 content from satisfying a typed-content parameter. This contract encodes the LangChain v1
@@ -51,14 +51,14 @@ content from satisfying a typed-content parameter. This contract encodes the Lan
 ## Preconditions
 
 1. The caller is constructing a message with one or more content blocks.
-2. The ferrochain-core crate defines the `ContentBlock` enum with all standard variants
+2. The pregolya-core crate defines the `ContentBlock` enum with all standard variants
    (Text, Reasoning, ToolCall, ToolCallChunk, InvalidToolCall, Image, Video, Audio,
    PlainText, File, ServerToolCall, ServerToolCallChunk, ServerToolResult, NonStandard).
 3. The construction call is in non-test code.
 
 ## Postconditions
 
-1. Every message-content parameter in ferrochain-core's public API that represents typed
+1. Every message-content parameter in pregolya-core's public API that represents typed
    content accepts `Vec<ContentBlock>` (not `Vec<serde_json::Value>` or `Vec<String>`).
 2. A `ContentBlock::Text(TextContentBlock { text, annotations })` construction compiles and
    carries the exact text passed.
@@ -69,7 +69,7 @@ content from satisfying a typed-content parameter. This contract encodes the Lan
 5. An unknown provider-specific block maps to `ContentBlock::NonStandard { value: serde_json::Value }`
    rather than causing a deserialization error.
 6. Construction succeeds and returns `Ok(message)` when all content block types are valid;
-   construction returns `Err(FerrochainError { category: VAL, code: E-CORE-001,
+   construction returns `Err(PregolyaError { category: VAL, code: E-CORE-001,
    message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`
    (where `<n>` is the block's 0-based position index; `<type>` is the unrecognized type tag string;
    both are available at the deserialization call site)
@@ -78,7 +78,7 @@ content from satisfying a typed-content parameter. This contract encodes the Lan
 ## Invariants
 
 - **DI-008 (Library Constructor Result Contract):** All content block construction functions
-  that can fail return `Result<T, FerrochainError>` — never panic.
+  that can fail return `Result<T, PregolyaError>` — never panic.
 - The `KNOWN_BLOCK_TYPES` set governs standard-vs-provider dispatch; a variant not in the set
   maps to `NonStandard` rather than being rejected.
 - `ContentBlock` is a closed serde-tagged enum; serde deserialization from `{"type": "text", ...}`
@@ -116,7 +116,7 @@ insertion order. Each block is independently accessible by variant match.
 **Scenario:** A provider response contains a block with `"type": "provider_v2_block"` at position 2
 (0-based) in a message, and the caller requests strict validation (non-lenient mode; `NonStandard`
 passthrough disabled).
-**Expected behavior:** `Err(FerrochainError { category: VAL, code: E-CORE-001,
+**Expected behavior:** `Err(PregolyaError { category: VAL, code: E-CORE-001,
 message: "StrictContentBlockValidation: block at position 2 has unrecognized type tag 'provider_v2_block'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`.
 Deserialization does not fall through to a `NonStandard` block; the error propagates to the caller.
 
@@ -147,13 +147,13 @@ faithfully; no extras data is silently dropped.
 
 - BC-2.01.002 — Message type-safety (depends on: typed content blocks are the content payload of typed messages)
 - BC-2.01.003 — Runnable trait invocation (composes with: messages are the primary Input/Output types of chat model Runnables)
-- BC-2.14.001 — FerrochainError 2D struct (depends on: construction errors propagate via FerrochainError)
+- BC-2.14.001 — PregolyaError 2D struct (depends on: construction errors propagate via PregolyaError)
 - BC-2.14.003 — Constructor Result contract (depends on: content block construction must return Result, not panic)
 
 ## Architecture Anchors
 
-- `ferrochain-core/src/messages/content.rs` — `ContentBlock` enum definition (to be created)
-- `ferrochain-core/src/messages/base.rs` — `MessageContent` enum and normalization (to be created)
+- `pregolya-core/src/messages/content.rs` — `ContentBlock` enum definition (to be created)
+- `pregolya-core/src/messages/base.rs` — `MessageContent` enum and normalization (to be created)
 
 ## Story Anchor
 
@@ -174,4 +174,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 0 |
 | Test Types | U (unit), CT (compile-time type check), ST (serde round-trip) |
-| Module | ferrochain-core |
+| Module | pregolya-core |

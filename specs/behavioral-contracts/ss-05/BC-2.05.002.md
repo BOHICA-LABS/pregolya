@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-006
@@ -28,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "96aeecf"
+input-hash: "03338ae"
 extracted_from: null
 modified: []
 deprecated: null
@@ -144,8 +144,8 @@ The FIFO order is per-task (A's scratchpad and B's scratchpad are disjoint).
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/hitl.rs` (`graph::hitl`) — `_scratchpad`, `interrupt_counter()` per-task state
-- `ferrochain-graph/src/types.rs` — `InterruptScratchpad`, FIFO slot indexing
+- `pregolya-graph/src/hitl.rs` (`graph::hitl`) — `_scratchpad`, `interrupt_counter()` per-task state
+- `pregolya-graph/src/types.rs` — `InterruptScratchpad`, FIFO slot indexing
 
 ## Story Anchor
 
@@ -168,4 +168,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-graph |
+| Module | pregolya-graph |

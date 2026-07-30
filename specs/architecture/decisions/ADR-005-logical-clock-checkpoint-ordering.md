@@ -16,10 +16,10 @@ traces_to: ARCH-INDEX.md
 decisions: [D11]
 version: "1.12"
 changelog:
-  - "1.12 (FIX-BURST-278/Wave-C-S4-complete/2026-07-28): S4 body annotations applied and §Failure Mode struct literal corrected. (1) S4 body: four Wave C migration routing lines annotated with (non-object-safe, E0038) qualifier — all four are classification (b) hazard-naming prose (migration origin notation), not live normative signatures. The preceding changelog entry described these edits but the prior dispatch died before applying the body changes. (2) §Failure Mode: `Err(FerrochainError { category: DURABILITY, code: E-CHKPT-003, ... })` struct literal replaced with prose error-code reference per ADR-010 Direction B PascalCase canon."
-  - "1.11 (FIX-BURST-278/Wave-C-S4/2026-07-28): S4 canon — five lines in changelog and body citing Arc<dyn ferrochain_core::Tool> or Option<Arc<dyn Tool>> as migration origins annotated with non-object-safe (E0038) qualifier to satisfy verify-signature-canon.sh S4 gate exemption. All five sites are classification (b): hazard-describing prose and migration routing notes (Wave C PO-routing spec and v1.9 correction changelog). The actual DynTool body definitions already use DynTool; these annotations clarify the prohibited origin type in the migration routing context."
-  - "1.10 (FIX-BURST-278/F-P175-D201+D202+D211+D212+D213+D216/2026-07-28): Six findings closed. (1) F-P175-D201 — delete fabricated 4-site `dyn Tool` list still in body; body now accurately shows 0 sites after corpus re-verification (errata that claimed correction 'above' has been completed directly). (2) F-P175-D202 — Wave C migration list count corrected from 2→3: add `BC-2.09.007 ToolRegistry` as the third migration site (`Option<Arc<dyn Tool>>` → `Option<Arc<dyn DynTool>>`). (3) F-P175-D211 — `invoke` → `invoke_dyn` in prose description of DynTool method. (4) F-P175-D212 — module path `core::tools` → `core::tool` (singular) in code sketch comment per BC-2.08.010 Architecture Anchors canonical form. (5) F-P175-D213 — object-safety sentence inverted: `dyn Tool` is NOT object-safe (dyn-incompatible under E0038); prior text incorrectly stated it IS object-safe. (6) F-P175-D216 — doc comment `Err(FerrochainError { category: INTERNAL, code: E-CHKPT-002, ... })` abbreviated struct literal replaced with `FerrochainError::new(...)` full-form named-argument call per D-49."
-  - "1.9 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Corpus re-verification of Wave C migration list (FIX-BURST-277-WAVE-B/2026-07-27 errata). Prior v1.8 cited 4 wrong BC IDs (BC-2.05.003 PC2, BC-2.05.004 PC1, BC-2.08.010 PC2, ToolCallPreview.tool) — grep of actual corpus found zero `dyn Tool` in those BCs; ToolCallPreview never had a `tool` field. Actual non-object-safe (E0038) `Arc<dyn ferrochain_core::Tool>` sites: BC-2.09.001 Description+PC2 and BC-2.09.002 PC1 (MCP tool discovery/invocation). Wave C migration list corrected in §Adjacent Adjudications note. DynTool definition also propagated to interface-definitions.md §DynTool trait definition."
+  - "1.12 (FIX-BURST-278/Wave-C-S4-complete/2026-07-28): S4 body annotations applied and §Failure Mode struct literal corrected. (1) S4 body: four Wave C migration routing lines annotated with (non-object-safe, E0038) qualifier — all four are classification (b) hazard-naming prose (migration origin notation), not live normative signatures. The preceding changelog entry described these edits but the prior dispatch died before applying the body changes. (2) §Failure Mode: `Err(PregolyaError { category: DURABILITY, code: E-CHKPT-003, ... })` struct literal replaced with prose error-code reference per ADR-010 Direction B PascalCase canon."
+  - "1.11 (FIX-BURST-278/Wave-C-S4/2026-07-28): S4 canon — five lines in changelog and body citing Arc<dyn pregolya_core::Tool> or Option<Arc<dyn Tool>> as migration origins annotated with non-object-safe (E0038) qualifier to satisfy verify-signature-canon.sh S4 gate exemption. All five sites are classification (b): hazard-describing prose and migration routing notes (Wave C PO-routing spec and v1.9 correction changelog). The actual DynTool body definitions already use DynTool; these annotations clarify the prohibited origin type in the migration routing context."
+  - "1.10 (FIX-BURST-278/F-P175-D201+D202+D211+D212+D213+D216/2026-07-28): Six findings closed. (1) F-P175-D201 — delete fabricated 4-site `dyn Tool` list still in body; body now accurately shows 0 sites after corpus re-verification (errata that claimed correction 'above' has been completed directly). (2) F-P175-D202 — Wave C migration list count corrected from 2→3: add `BC-2.09.007 ToolRegistry` as the third migration site (`Option<Arc<dyn Tool>>` → `Option<Arc<dyn DynTool>>`). (3) F-P175-D211 — `invoke` → `invoke_dyn` in prose description of DynTool method. (4) F-P175-D212 — module path `core::tools` → `core::tool` (singular) in code sketch comment per BC-2.08.010 Architecture Anchors canonical form. (5) F-P175-D213 — object-safety sentence inverted: `dyn Tool` is NOT object-safe (dyn-incompatible under E0038); prior text incorrectly stated it IS object-safe. (6) F-P175-D216 — doc comment `Err(PregolyaError { category: INTERNAL, code: E-CHKPT-002, ... })` abbreviated struct literal replaced with `PregolyaError::new(...)` full-form named-argument call per D-49."
+  - "1.9 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Corpus re-verification of Wave C migration list (FIX-BURST-277-WAVE-B/2026-07-27 errata). Prior v1.8 cited 4 wrong BC IDs (BC-2.05.003 PC2, BC-2.05.004 PC1, BC-2.08.010 PC2, ToolCallPreview.tool) — grep of actual corpus found zero `dyn Tool` in those BCs; ToolCallPreview never had a `tool` field. Actual non-object-safe (E0038) `Arc<dyn pregolya_core::Tool>` sites: BC-2.09.001 Description+PC2 and BC-2.09.002 PC1 (MCP tool discovery/invocation). Wave C migration list corrected in §Adjacent Adjudications note. DynTool definition also propagated to interface-definitions.md §DynTool trait definition."
   - "1.8 (FIX-BURST-277-WAVE-B/F-P174-Tool-dyn/2026-07-27): Add `Tool` adjudication to §Adjacent Trait Object-Safety Adjudications. `Tool: Runnable<ToolInput, ToolOutput>` inherits `Runnable`'s `stream()` opaque `impl Stream` return and `pipe()` `impl Runnable` + `where Self: Sized` bound — making `dyn Tool` non-trivially object-safe. However the spec corpus has 4 live `dyn Tool` usage sites (interface-definitions.md §PreToolCallHook ToolCallPreview.tool field; BC-2.05.003 PC2; BC-2.05.004 PC1; BC-2.08.010 PC2). Resolution: option (b) — mint `DynTool` mirroring `DynRunnable<Value, Value>` as the type-erased object-safe seam for heterogeneous tool collections and PreToolCallHook dispatch; all `dyn Tool` sites must be migrated to `dyn DynTool` (Wave C PO routing). `DynTool` definition added to api-surface.md and interface-definitions.md. BC-side migration spec is in the §Adjacent Adjudications note below."
   - "1.7 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp and date per ADR decision-date convention (Gate #28 Rule 5): `timestamp` → `2026-07-14T12:00:00Z`; `date` → `2026-07-14`. Original decision date evidenced by v1.0 changelog (2026-07-14, initial). Fields were incorrectly set to 2026-07-19 in commit 2100b8e (pass-114 fix burst)."
   - "1.6 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — §MonotonicClock code sketch: Component::CHKPT → Component::Chkpt; Category::INTERNAL → Category::Internal per ADR-010 v1.9 Direction B adjudication."
@@ -55,7 +55,7 @@ persisted maximum and producing PK collisions or ordering violations.
 
 ## Scope
 
-This ADR covers: `checkpoint_id` generation and ordering in ferrochain-checkpoint.
+This ADR covers: `checkpoint_id` generation and ordering in pregolya-checkpoint.
 Not covered: `thread_id` (user-supplied string, not clock-derived), `checkpoint_ns` (user-supplied namespace).
 
 ## Decision: Stateless Monotonic Logical Clock per (thread_id, checkpoint_ns) Pair
@@ -89,18 +89,18 @@ impl MonotonicClock {
     /// - `current = Some(c)` → `Ok(CheckpointId(c.0 + 1))`
     ///
     /// # Errors
-    /// - `c.0 == u64::MAX`: `Err(FerrochainError::new(Component::Chkpt, Category::Internal,
+    /// - `c.0 == u64::MAX`: `Err(PregolyaError::new(Component::Chkpt, Category::Internal,
     ///   RetryHint::Never, "E-CHKPT-002", "MonotonicClockRegression: checkpoint_id overflow — u64 exhausted"))`.
     ///   Unreachable in practice (requires 2^64 checkpoints per thread/namespace).
     pub fn get_next_version(
         current: Option<CheckpointId>,
         _channel: &ChannelName,
-    ) -> Result<CheckpointId, FerrochainError> {
+    ) -> Result<CheckpointId, PregolyaError> {
         match current {
             None => Ok(CheckpointId(1)),
             Some(c) => c.0.checked_add(1)
                 .map(CheckpointId)
-                .ok_or_else(|| FerrochainError::new(
+                .ok_or_else(|| PregolyaError::new(
                     Component::Chkpt,
                     Category::Internal,
                     RetryHint::Never,
@@ -138,7 +138,7 @@ BC-2.04.003 PC1 specifies `get_next_version(current, channel)` as the required m
 
 | Dimension | rev-1 (retracted) | rev-2 (this ADR) |
 |-----------|-------------------|-------------------|
-| Signature | `next_id(&self) -> CheckpointId` | `get_next_version(&self, current: Option<CheckpointId>, _channel: &ChannelName) -> Result<CheckpointId, FerrochainError>` |
+| Signature | `next_id(&self) -> CheckpointId` | `get_next_version(&self, current: Option<CheckpointId>, _channel: &ChannelName) -> Result<CheckpointId, PregolyaError>` |
 | State | AtomicU64 counter in instance | Stateless; all state in `current` parameter |
 | Seeding | None (starts at 0) | Sourced from persisted `CheckpointTuple` by caller |
 | Cross-restart | Resets to 0 (PK collision risk) | Monotonicity preserved via persisted-max seed |
@@ -180,7 +180,7 @@ fn get_next_version(
     &self,
     current: Option<CheckpointId>,
     channel: &ChannelName,
-) -> Result<CheckpointId, FerrochainError> {
+) -> Result<CheckpointId, PregolyaError> {
     MonotonicClock::get_next_version(current, channel)
 }
 ```
@@ -207,16 +207,16 @@ fn get_next_version(
 
 | Method | Receiver | Async | Return type | dyn-compatible? |
 |--------|----------|-------|-------------|-----------------|
-| `put_writes` | `&self` | yes | `Result<(), FerrochainError>` | Yes — with async-trait boxed-future desugaring per ferrochain effectful-shell seam strategy |
-| `get_tuple` | `&self` | yes | `Result<Option<CheckpointTuple>, FerrochainError>` | Yes — with async-trait boxed-future desugaring |
-| `list` | `&self` | yes | `Result<impl Stream<...>, FerrochainError>` | **Residual concern** — `impl Stream` opaque return is NOT dyn-compatible even after async-trait desugaring; must become `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>` in the trait definition; this change belongs in interface-definitions.md §CheckpointSaver (PO-owned; out of ADR-005 scope) |
-| `put` | `&self` | yes | `Result<(), FerrochainError>` | Yes — with async-trait boxed-future desugaring |
-| `get_next_version` | `&self` | no | `Result<CheckpointId, FerrochainError>` | Yes — synchronous; concrete return type; `&self` receiver added this revision |
+| `put_writes` | `&self` | yes | `Result<(), PregolyaError>` | Yes — with async-trait boxed-future desugaring per pregolya effectful-shell seam strategy |
+| `get_tuple` | `&self` | yes | `Result<Option<CheckpointTuple>, PregolyaError>` | Yes — with async-trait boxed-future desugaring |
+| `list` | `&self` | yes | `Result<impl Stream<...>, PregolyaError>` | **Residual concern** — `impl Stream` opaque return is NOT dyn-compatible even after async-trait desugaring; must become `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, PregolyaError>> + Send>>` in the trait definition; this change belongs in interface-definitions.md §CheckpointSaver (PO-owned; out of ADR-005 scope) |
+| `put` | `&self` | yes | `Result<(), PregolyaError>` | Yes — with async-trait boxed-future desugaring |
+| `get_next_version` | `&self` | no | `Result<CheckpointId, PregolyaError>` | Yes — synchronous; concrete return type; `&self` receiver added this revision |
 
 **Conditions for complete dyn-compatibility:**
 
-1. **Async methods** (put_writes, get_tuple, list, put): desugared via the `#[async_trait]` crate attribute or explicit `-> Pin<Box<dyn Future<Output = ...> + Send + '_>>` return types — eliminating the implicit `impl Future` from the vtable. This is the established ferrochain effectful-shell seam strategy.
-2. **`list` opaque stream:** `impl Stream<...>` replaced with `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>` in the trait definition. Flagged to interface-definitions.md §CheckpointSaver owner (PO-owned).
+1. **Async methods** (put_writes, get_tuple, list, put): desugared via the `#[async_trait]` crate attribute or explicit `-> Pin<Box<dyn Future<Output = ...> + Send + '_>>` return types — eliminating the implicit `impl Future` from the vtable. This is the established pregolya effectful-shell seam strategy.
+2. **`list` opaque stream:** `impl Stream<...>` replaced with `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, PregolyaError>> + Send>>` in the trait definition. Flagged to interface-definitions.md §CheckpointSaver owner (PO-owned).
 3. **`get_next_version` receiver:** `&self` added in this revision. Condition satisfied.
 
 **Conclusion:** With conditions 1 and 2 applied (async-trait desugaring + `list` return type correction in interface-definitions.md) and condition 3 satisfied by this revision, the 5-method `CheckpointSaver` trait is dyn-compatible and `Arc<dyn CheckpointSaver>` compiles without E0038.
@@ -235,12 +235,12 @@ fn get_next_version(
 
 **`Tool` — axis settled, DynTool required (option b):**
 
-`Tool: Runnable<ToolInput, ToolOutput>` inherits `Runnable`'s `stream()` method (returns `impl Stream`, non-dyn-compatible) and `pipe()` method (`impl Runnable` + `where Self: Sized` bound). These inherited characteristics make `dyn Tool` non-trivially NOT object-safe (dyn-incompatible under E0038); any caller that attempts direct vtable dispatch via `Arc<dyn Tool>` will fail to compile. Corpus re-verification (FIX-BURST-277-WAVE-B errata) found **2 live `Arc<dyn ferrochain_core::Tool>` usage sites** in MCP BCs (BC-2.09.001 and BC-2.09.002).
+`Tool: Runnable<ToolInput, ToolOutput>` inherits `Runnable`'s `stream()` method (returns `impl Stream`, non-dyn-compatible) and `pipe()` method (`impl Runnable` + `where Self: Sized` bound). These inherited characteristics make `dyn Tool` non-trivially NOT object-safe (dyn-incompatible under E0038); any caller that attempts direct vtable dispatch via `Arc<dyn Tool>` will fail to compile. Corpus re-verification (FIX-BURST-277-WAVE-B errata) found **2 live `Arc<dyn pregolya_core::Tool>` usage sites** in MCP BCs (BC-2.09.001 and BC-2.09.002).
 
-Resolution: **option (b)** — mint `DynTool` as a type-erased object-safe seam mirroring the `DynRunnable<Value, Value>` pattern (BC-2.01.003/BC-2.01.004). `DynTool` exposes `async fn invoke_dyn(&self, input: serde_json::Value) -> Result<serde_json::Value, FerrochainError>` plus the `name()`, `description()`, `schema()`, and `action_risk()` methods from `Tool`. It is a separate, fully object-safe trait; `Arc<dyn DynTool>` compiles without E0038.
+Resolution: **option (b)** — mint `DynTool` as a type-erased object-safe seam mirroring the `DynRunnable<Value, Value>` pattern (BC-2.01.003/BC-2.01.004). `DynTool` exposes `async fn invoke_dyn(&self, input: serde_json::Value) -> Result<serde_json::Value, PregolyaError>` plus the `name()`, `description()`, `schema()`, and `action_risk()` methods from `Tool`. It is a separate, fully object-safe trait; `Arc<dyn DynTool>` compiles without E0038.
 
 ```rust
-// ferrochain-core: core::tool — alongside Tool
+// pregolya-core: core::tool — alongside Tool
 /// Object-safe façade for heterogeneous tool dispatch.
 /// Mirrors DynRunnable: `Arc<dyn DynTool>` is the concrete composition seam.
 #[async_trait]
@@ -249,7 +249,7 @@ pub trait DynTool: Send + Sync {
     fn description(&self) -> &str;
     fn schema(&self) -> schemars::Schema;
     fn action_risk(&self) -> Option<ActionRisk>;
-    async fn invoke_dyn(&self, input: serde_json::Value) -> Result<serde_json::Value, FerrochainError>;
+    async fn invoke_dyn(&self, input: serde_json::Value) -> Result<serde_json::Value, PregolyaError>;
 }
 
 /// Blanket impl: any T: Tool + Send + Sync automatically implements DynTool.
@@ -257,9 +257,9 @@ impl<T: Tool + Send + Sync + 'static> DynTool for T { ... }
 ```
 
 **Wave C BC-side migration spec (PO routing — do NOT edit BCs directly):**
-The following 3 sites — all non-object-safe (E0038) — MUST change `Arc<dyn ferrochain_core::Tool>` (or `Option<Arc<dyn Tool>>`) → `Arc<dyn DynTool>` (or `Option<Arc<dyn DynTool>>`) in a follow-on BC amendment:
-1. `BC-2.09.001` — Description (MCP convert_mcp_tool return type) + PC2 (`convert_mcp_tool` return) — `Arc<dyn ferrochain_core::Tool>` (non-object-safe, E0038) → `Arc<dyn DynTool>` (MCP discovery output is DynTool for object-safe dispatch)
-2. `BC-2.09.002 PC1` — Precondition input type `Arc<dyn ferrochain_core::Tool>` (non-object-safe, E0038) produced by `convert_mcp_tool` → `Arc<dyn DynTool>`
+The following 3 sites — all non-object-safe (E0038) — MUST change `Arc<dyn pregolya_core::Tool>` (or `Option<Arc<dyn Tool>>`) → `Arc<dyn DynTool>` (or `Option<Arc<dyn DynTool>>`) in a follow-on BC amendment:
+1. `BC-2.09.001` — Description (MCP convert_mcp_tool return type) + PC2 (`convert_mcp_tool` return) — `Arc<dyn pregolya_core::Tool>` (non-object-safe, E0038) → `Arc<dyn DynTool>` (MCP discovery output is DynTool for object-safe dispatch)
+2. `BC-2.09.002 PC1` — Precondition input type `Arc<dyn pregolya_core::Tool>` (non-object-safe, E0038) produced by `convert_mcp_tool` → `Arc<dyn DynTool>`
 3. `BC-2.09.007` — ToolRegistry: `Option<Arc<dyn Tool>>` (non-object-safe, E0038) → `Option<Arc<dyn DynTool>>`
 
 **`MonotonicClock::get_next_version` Kani target — description confirmed accurate:**
@@ -292,13 +292,13 @@ The per-`(thread_id, checkpoint_ns)` seeding scope is chosen over a store-global
 ### Negative / Trade-offs
 
 - Callers bear the responsibility of loading the latest `CheckpointTuple` before calling `get_next_version`. The saver implementation must not skip or cache-bypass this load at the start of each super-step.
-- Return type is `Result<CheckpointId, FerrochainError>` rather than a plain `CheckpointId` — callers must propagate the overflow error even though it is unreachable in practice. This is the production-grade default (no silent panic for arithmetic).
+- Return type is `Result<CheckpointId, PregolyaError>` rather than a plain `CheckpointId` — callers must propagate the overflow error even though it is unreachable in practice. This is the production-grade default (no silent panic for arithmetic).
 - `CheckpointId` is `u64`, not `String` or `Uuid`. Downstream systems that expect UUID-format IDs must adapt.
 
 ### Status as of rev-4 (2026-07-19)
 
 In-effect per this ADR revision. Implementation of `checkpoint::clock::get_next_version` is
-pending Phase 3 (Wave 1, ferrochain-checkpoint story). The retired `checkpoint::clock::next_id`
+pending Phase 3 (Wave 1, pregolya-checkpoint story). The retired `checkpoint::clock::next_id`
 symbol MUST NOT appear in any Phase 3 implementation.
 
 ## Alternatives Considered

@@ -1,6 +1,6 @@
 ---
 artifact: semport/splitters/dependency-disposition
-project: ferrochain
+project: pregolya
 port_target: langchain-text-splitters (1.1.2)
 analyzer_pass: 5
 date: 2026-07-12
@@ -11,13 +11,13 @@ d5_alignment: text-splitters is PORT-class; dependency dispositions below classi
 
 Disposition vocabulary: **PORT** (reimplement behavior in Rust) · **MAP** (adopt
 an existing Rust crate as the behavioral substitute, with parity tests) ·
-**DEFER** (feature-gate; not in first ferrochain wave) · **DROP** (not ported).
+**DEFER** (feature-gate; not in first pregolya wave) · **DROP** (not ported).
 
 ## Runtime dependencies (base import path)
 
 | Python dep | Version pin | Used for | Disposition | Rust target | Evidence / risk |
 |---|---|---|---|---|---|
-| `langchain-core` | >=1.4.7,<2 | `Document`, `BaseDocumentTransformer`, `_api.beta/deprecated`, `_security._transport.ssrf_safe_client` (html url fetch, deprecated) | PORT (internal) | `ferrochain-core::Document` | Already in scope of core semport; splitters depend only on `Document` struct + transformer trait. `ssrf_safe_client` used only by the deprecated `split_text_from_url` → DROP that method. |
+| `langchain-core` | >=1.4.7,<2 | `Document`, `BaseDocumentTransformer`, `_api.beta/deprecated`, `_security._transport.ssrf_safe_client` (html url fetch, deprecated) | PORT (internal) | `pregolya-core::Document` | Already in scope of core semport; splitters depend only on `Document` struct + transformer trait. `ssrf_safe_client` used only by the deprecated `split_text_from_url` → DROP that method. |
 | Python `re` | stdlib | separator regex, keep-separator split, markdown header patterns | MAP + PARTIAL PORT | `regex` crate + `fancy-regex` | `regex` crate lacks lookaround/backreferences. Lookaround IS used: VB6 separators (`\n(?!End\s)...`), and `MarkdownHeaderTextSplitter._is_custom_header` builds `^{sep}(?!{sep})(.+?)(?<!{sep}){sep}$`. **Must use `fancy-regex` (backtracking, supports lookaround) or hand-roll these few patterns.** Character-splitter separators are lookaround-free → plain `regex` is fine there. |
 | Python `json` | stdlib | `RecursiveJsonSplitter` size via `len(json.dumps(data))` | MAP (careful) | `serde_json` | **Parity hazard:** `json.dumps` default separators are `", "` and `": "` (spaces) and `ensure_ascii=True` escapes non-ASCII as `\uXXXX`. `serde_json::to_string` uses NO spaces and emits raw UTF-8. Size measurements will diverge unless a Python-compatible serializer (with `", "`/`": "` separators and ascii-escaping) is used. This directly changes chunk boundaries → PORT the serialization shape, do not use default serde_json. |
 
@@ -60,7 +60,7 @@ an existing Rust crate as the behavioral substitute, with parity tests) ·
 - **DEFER (feature-gated, later):** sentence-transformers, nltk, spacy, konlpy,
   HTMLSectionSplitter (lxml/XSLT).
 - **DROP:** `split_text_from_url` (deprecated in Python since 1.1.2, removal
-  2.0.0 — do not port; ferrochain callers fetch HTML themselves).
+  2.0.0 — do not port; pregolya callers fetch HTML themselves).
 
 ## State Checkpoint
 ```yaml

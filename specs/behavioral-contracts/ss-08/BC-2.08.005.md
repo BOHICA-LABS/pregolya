@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-standard-tests per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-<provider> / pregolya-standard-tests per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -25,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "9867a29"
+input-hash: "37aee5b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -40,7 +40,7 @@ removal_reason: null
 
 ## Description
 
-Every ferrochain provider chat model must populate a `UsageMetadata` struct in the
+Every pregolya provider chat model must populate a `UsageMetadata` struct in the
 returned `AiMessage` when `returns_usage_metadata = true` (the default). The struct
 must carry at minimum `input_tokens`, `output_tokens`, and `total_tokens`. Providers
 that surface sub-detail counts (reasoning tokens, cache read/creation tokens, audio
@@ -51,11 +51,11 @@ supports it.
 
 ## Preconditions
 
-1. A ferrochain provider chat model is constructed with valid credentials and
+1. A pregolya provider chat model is constructed with valid credentials and
    `returns_usage_metadata = true` (default).
 2. The provider capability profile declares `supported_usage_metadata_details` as a
    set of sub-detail keys that this provider/model combination populates.
-3. `ferrochain-standard-tests` is registered as a dev-dependency.
+3. `pregolya-standard-tests` is registered as a dev-dependency.
 4. A record/replay HTTP fixture layer with pre-recorded usage metadata responses is
    available for CI.
 
@@ -153,8 +153,8 @@ No error is returned; the field is simply absent.
 
 ## Architecture Anchors
 
-- `ferrochain-<provider>/src/usage_metadata.rs` — usage extraction and normalization (to be created)
-- `ferrochain-standard-tests/src/chat_models/usage_metadata.rs` — usage accounting battery (to be created)
+- `pregolya-<provider>/src/usage_metadata.rs` — usage extraction and normalization (to be created)
+- `pregolya-standard-tests/src/chat_models/usage_metadata.rs` — usage accounting battery (to be created)
 
 ## Story Anchor
 
@@ -169,10 +169,10 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-009, CAP-011 |
-| Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies the token-usage extraction and normalization requirement that every provider implementation must satisfy; CAP-011 ("Provider Conformance Suite (Standard Tests)") per capabilities-p1-p2.md §CAP-011 — this BC expresses the usage-accounting subset of ferrochain-standard-tests |
+| Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies the token-usage extraction and normalization requirement that every provider implementation must satisfy; CAP-011 ("Provider Conformance Suite (Standard Tests)") per capabilities-p1-p2.md §CAP-011 — this BC expresses the usage-accounting subset of pregolya-standard-tests |
 | L2 Domain Invariants | — |
 | NE References | — |
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | I (integration, standard-tests usage battery), U (unit — serde round-trip, constructor invariant) |
-| Module | ferrochain-<provider> / ferrochain-standard-tests |
+| Module | pregolya-<provider> / pregolya-standard-tests |

@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "388eb9b"
+input-hash: "62186cc"
 extracted_from: null
 modified: []
 deprecated: null
@@ -34,23 +34,23 @@ changelog:
   - "1.1 (ADV-P1D-PASS-31): F-P31-01 PC17 history endpoint — declare limit default 10, max 100, values > 100 clamped to 100, offset default 0 (pagination coherence canon; clamp out-of-range semantics)."
   - "1.2 (ADV-P1D-PASS-34): F-P34-01 PC8 — add clamp semantics (values > 100 silently clamped to 100) and offset default 0 (partial-fix propagation gap from pass-31). PC9 — declare created_at DESC ordering (canonical; F-P31-01). interface-definitions.md §Canonical Pagination Convention cites BC-2.12.001 PC8 as threads-list clamp+ordering anchor; PC8 now matches."
   - "1.3 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-SERVER-007 message-prefix correction at two BC sites. (1) PC3 (Create Thread): added 'ThreadAlreadyExists:' prefix and lowercased 'Thread' to 'thread' in message string (was 'Thread'; now 'thread'). (2) EC-001: same corrections applied. Taxonomy already carried the prefix and lowercase; BC was the lagging artifact. Both sites now produce the canonical form 'ThreadAlreadyExists: thread <id> already exists'."
-  - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
+  - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
 ---
 
 # BC-2.12.001: Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History)
 
 ## Description
 
-A Thread is ferrochain-server's durable conversation history container: it is the
+A Thread is pregolya-server's durable conversation history container: it is the
 persistent identity that binds a sequence of Runs to a shared checkpoint lineage.
 This BC specifies the CRUD operations on Thread resources (no wire-compatibility with
-LangGraph Platform per D13 — the ferrochain-server API is first-party). Threads are
+LangGraph Platform per D13 — the pregolya-server API is first-party). Threads are
 the lowest-level persistence unit; their checkpoint state is managed by the
-ferrochain-checkpoint subsystem. Thread-not-found returns `E-SERVER-003`.
+pregolya-checkpoint subsystem. Thread-not-found returns `E-SERVER-003`.
 
 ## Preconditions
 
-1. `ferrochain-server` is running with a configured `RunStore` and `CheckpointSaver` backend.
+1. `pregolya-server` is running with a configured `RunStore` and `CheckpointSaver` backend.
 2. The caller holds a valid authentication credential (or the server is in unauthenticated
    dev mode).
 
@@ -145,7 +145,7 @@ calls `POST /threads/{thread_id}/state`.
 
 ## Verification Properties
 
-_No Kani VP seed required. Integration tests against in-process ferrochain-server are sufficient._
+_No Kani VP seed required. Integration tests against in-process pregolya-server are sufficient._
 
 ## Related BCs
 
@@ -154,9 +154,9 @@ _No Kani VP seed required. Integration tests against in-process ferrochain-serve
 
 ## Architecture Anchors
 
-- `ferrochain-server/src/api/threads.rs` — Thread CRUD handlers
-- `ferrochain-server/src/store/run_store.rs` — Thread persistence (durable backend seam)
-- `ferrochain-checkpoint/src/store.rs` — Checkpoint cascade-delete on thread delete
+- `pregolya-server/src/api/threads.rs` — Thread CRUD handlers
+- `pregolya-server/src/store/run_store.rs` — Thread persistence (durable backend seam)
+- `pregolya-checkpoint/src/store.rs` — Checkpoint cascade-delete on thread delete
 
 ## Story Anchor
 
@@ -178,4 +178,4 @@ _[to be filled after verification-architecture phase]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | I (integration), E2E (end-to-end) |
-| Module | ferrochain-server |
+| Module | pregolya-server |

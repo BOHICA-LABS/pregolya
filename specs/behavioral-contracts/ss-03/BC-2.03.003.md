@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
-input-hash: "de561d9"
+input-hash: "9f8dd5b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -130,8 +130,8 @@ reducer application order.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — sort-before-reduce logic
-- `ferrochain-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — `WriteRecord { task_id: String, channel_name: String, value: ChannelValue }`
+- `pregolya-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — sort-before-reduce logic
+- `pregolya-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — `WriteRecord { task_id: String, channel_name: String, value: ChannelValue }`
 
 ## Story Anchor
 
@@ -152,4 +152,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | P (property), K (Kani — Phase 6) |
-| Module | ferrochain-graph |
+| Module | pregolya-graph |

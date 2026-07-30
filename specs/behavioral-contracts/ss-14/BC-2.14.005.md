@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-010
@@ -25,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "9f4f4d9"
+input-hash: "63d4b18"
 extracted_from: null
 modified: []
 deprecated: null
@@ -40,7 +40,7 @@ removal_reason: null
 
 ## Description
 
-Every API key or secret credential type in ferrochain must be a newtype struct (not a bare
+Every API key or secret credential type in pregolya must be a newtype struct (not a bare
 `String` or `&str`). The `Debug` implementation must emit the literal `"<redacted>"` and
 never expose the key value. The type must not `#[derive(Serialize)]` and must not
 `impl Deref<Target = str>`. CI lint enforces this. This contract addresses NE-10
@@ -48,7 +48,7 @@ never expose the key value. The type must not `#[derive(Serialize)]` and must no
 
 ## Preconditions
 
-1. A ferrochain crate defines a type intended to carry an API key or secret credential value.
+1. A pregolya crate defines a type intended to carry an API key or secret credential value.
 2. The type is declared in non-test code (`!#[cfg(test)]` scope).
 3. The implementing engineer is writing or modifying the key type definition.
 
@@ -64,7 +64,7 @@ never expose the key value. The type must not `#[derive(Serialize)]` and must no
 ## Invariants
 
 - **DI-010 (Credential Opacity):** Credentials never appear in log output, error messages, serialized artifacts, or formatted strings under any execution path.
-- The redacted string literal must be exactly `"<redacted>"` (matching the ferrochain-standard log-scrubber pattern so automated log scanning tools can detect accidental exposures).
+- The redacted string literal must be exactly `"<redacted>"` (matching the pregolya-standard log-scrubber pattern so automated log scanning tools can detect accidental exposures).
 - Inner value is only accessible via an explicit `expose_secret()` / `inner()` call — never via trait auto-deref.
 
 ## Edge Cases
@@ -75,7 +75,7 @@ never expose the key value. The type must not `#[derive(Serialize)]` and must no
 **Reference:** NE-10; DI-010.
 
 ### EC-002: Debug format in error context
-**Scenario:** `anyhow::Error` or `FerrochainError` wraps a value containing a `FooApiKey` and is formatted via `{:?}`.
+**Scenario:** `anyhow::Error` or `PregolyaError` wraps a value containing a `FooApiKey` and is formatted via `{:?}`.
 **Expected behavior:** The formatted output contains `"<redacted>"` for the key field, never the actual key bytes.
 
 ### EC-003: Log macro with API key struct
@@ -110,13 +110,13 @@ never expose the key value. The type must not `#[derive(Serialize)]` and must no
 
 ## Related BCs
 
-- BC-2.14.001 — FerrochainError 2D struct (composes with: error type that wraps credentials must also redact)
-- BC-2.14.003 — Constructor Result contract (depends on: key construction returns `Result<FooApiKey, FerrochainError>`, not panic)
+- BC-2.14.001 — PregolyaError 2D struct (composes with: error type that wraps credentials must also redact)
+- BC-2.14.003 — Constructor Result contract (depends on: key construction returns `Result<FooApiKey, PregolyaError>`, not panic)
 - BC-2.14.006 — Validation failure propagation (depends on: empty/malformed key string → `Err`, not `None`)
 
 ## Architecture Anchors
 
-- `ferrochain-core/src/credentials.rs` (to be created)
+- `pregolya-core/src/credentials.rs` (to be created)
 - CI: `cargo xtask deny-bare-api-key` lint target
 
 ## Story Anchor
@@ -132,10 +132,10 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-016 |
-| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p0.md §CAP-016 — credential opacity is a direct sub-requirement of the error taxonomy surface; specifically the NE-10 counter-example (adk-rust bare-String API keys) is explicitly listed under CAP-016's grounding |
+| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (PregolyaError 2D Struct)") per capabilities-p0.md §CAP-016 — credential opacity is a direct sub-requirement of the error taxonomy surface; specifically the NE-10 counter-example (adk-rust bare-String API keys) is explicitly listed under CAP-016's grounding |
 | L2 Domain Invariants | DI-010 (Credential Opacity) |
 | NE References | NE-10 |
 | Priority | P0 |
 | Wave | Wave 0 |
 | Test Types | U (unit), CI lint |
-| Module | ferrochain-core |
+| Module | pregolya-core |

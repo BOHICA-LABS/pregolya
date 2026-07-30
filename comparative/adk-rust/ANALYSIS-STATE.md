@@ -33,7 +33,7 @@ See patterns-observed.md for full catalogue.
 
 ### WEAK Patterns (5)
 
-1. 2,712-line `llm_agent.rs` + ~800-line stream closure — FAILS ferrochain D12 750-line hard gate
+1. 2,712-line `llm_agent.rs` + ~800-line stream closure — FAILS pregolya D12 750-line hard gate
 2. Duplicated Anthropic/Gemini provider surfaces: in-tree module AND standalone crates (drift risk)
 3. Cache-key-by-agent-description proxy (brittle; description mutation = silent cache invalidation)
 4. `anyhow` alongside `AdkError` leak risk — unverified in deep passes; OPEN ITEM
@@ -41,8 +41,8 @@ See patterns-observed.md for full catalogue.
 
 ### Compliance Flags
 
-- `adk-realtime` CAN pull `native-tls` via the OPTIONAL `livekit` feature (default builds use rustls; native-tls is feature-gated, not unconditional) — **conditional conflict** with ferrochain rustls-only rule if `livekit` feature is enabled; adk-realtime is otherwise rustls by default <!-- [comparative-cert-2] CORRECTION (C2 propagation): A6 C2 + A7 C2 both explicitly stated "the flat flag should carry the 'livekit-only, feature-gated, first-party-sole' qualifier"; correction was noted in A6/A7 but not applied; applied here; see P-93 and ANALYSIS-STATE C2/C4 -->
-- `reqwest` uses `rustls-tls-native-roots` (different root store from ferrochain default) — deliberate MAP consideration
+- `adk-realtime` CAN pull `native-tls` via the OPTIONAL `livekit` feature (default builds use rustls; native-tls is feature-gated, not unconditional) — **conditional conflict** with pregolya rustls-only rule if `livekit` feature is enabled; adk-realtime is otherwise rustls by default <!-- [comparative-cert-2] CORRECTION (C2 propagation): A6 C2 + A7 C2 both explicitly stated "the flat flag should carry the 'livekit-only, feature-gated, first-party-sole' qualifier"; correction was noted in A6/A7 but not applied; applied here; see P-93 and ANALYSIS-STATE C2/C4 -->
+- `reqwest` uses `rustls-tls-native-roots` (different root store from pregolya default) — deliberate MAP consideration
 
 ## Open Items (queued for deep passes)
 
@@ -55,7 +55,7 @@ See patterns-observed.md for full catalogue.
 | `anyhow`/`reqwest` in safety-cluster | A4 | RESOLVED — anyhow = 1 doc-example (browser), no leak; reqwest absent in cluster (browser uses thirtyfour) |
 | Guardrail untrusted-content ingress (Domain A) | A4 | RESOLVED (as GAP) — P-59: guardrails see only initial input + final output, never tool/RAG/memory content |
 | Sandbox default posture (Domain C) | A4 | RESOLVED (as GAP) — default ProcessBackend no isolation (P-61); macOS reads unrestricted (P-60); adk-code Rust exec unenforced (P-62) |
-| ADR question: unify graph-checkpoint + session persistence on one store | NEW (raised A2) | OPEN — ferrochain design decision at Phase 1 |
+| ADR question: unify graph-checkpoint + session persistence on one store | NEW (raised A2) | OPEN — pregolya design decision at Phase 1 |
 
 ## Deep Pass Status
 
@@ -93,7 +93,7 @@ Full detail in patterns-observed.md "Pass A6 deepening" (P-80..P-87).
 | 4 | adk-rag vector-store contracts + thin-test claim | **MED** | P-84 | Thin-test VERIFIED: qdrant/pgvector/lancedb have ZERO tests (3/5 VectorStore backends untested <!-- [comparative-cert-4] CORRECTION: 5 VectorStore implementations exist (inmemory/lancedb/pgvector/qdrant/surrealdb); chunking is a storage-infrastructure module, not a VectorStore; qdrant/pgvector/lancedb = 3 untested of 5, not "4 of 6" -->); only chunking/inmemory/surrealdb tested. NEW: `InMemoryVectorStore` discards declared `dimensions` and never dim-checks; `cosine_similarity` truncate-zips → silent garbage scores on mismatch, diverging from DB backends that enforce dims engine-side. |
 | 5 | Skill ContextCoordinator negative path | **MED** | P-87 | Phantom-tool prevention is real + well-tested (instruction built only from resolved `active_tools`). Strict mode: validation error swallowed (`Err => continue`), caller can't distinguish no-match from tools-missing. Permissive: missing tools silently omitted (comment concedes embedder must monitor). Both modes HIGH-confidence tested. |
 | 6 | a2a client (RemoteA2aAgent / A2aClient) behavioral read | **HIGH** | P-85, P-86 | UPGRADES A3 signature-depth. All transport/RPC failures surfaced as error EVENTS (`turn_complete`, `error_message`), never stream `Err` — remote failure looks like a completed turn (P-85). Dual client generations: legacy `A2aClient` (no retry/version) + feature-gated `A2aV1Client` (11 ops, JSON-RPC+REST, exp-backoff retry on 429/5xx/timeout, version negotiation -32009, ETag card caching); SSE parser duplicated <!-- [comparative-cert-4] CORRECTION: C3 stale sibling — only TWO SSE parse implementations exist; see P-86 correction [comparative-cert-3] and CERTIFICATION-REPORT C3-01 -->; transport paths untested (P-86). |
-| 7 | Residual open items (ADR unify graph-checkpoint+session) | **LOW** | — | The "unify graph-checkpoint + session persistence on one store" item is a **ferrochain Phase-1 design decision**, not an adk-rust analysis gap — remains OPEN as a ferrochain-side decision (see below). No other ANALYSIS-STATE item left open. |
+| 7 | Residual open items (ADR unify graph-checkpoint+session) | **LOW** | — | The "unify graph-checkpoint + session persistence on one store" item is a **pregolya Phase-1 design decision**, not an adk-rust analysis gap — remains OPEN as a pregolya-side decision (see below). No other ANALYSIS-STATE item left open. |
 
 ### Open Items (post-A6 status)
 
@@ -104,7 +104,7 @@ Full detail in patterns-observed.md "Pass A6 deepening" (P-80..P-87).
 | Locate all `reqwest` timeout construction sites | **CORRECTED (A6)** — see Contradiction C1: workspace-wide ~79 client-construction sites in production `src`, only ~10 carry `.timeout()` (~69 timeout-less). A3 P-42's "7 sites" was cluster-scoped (server/auth/awp/acp/managed/enterprise) and under-counted; timeout-absence is systemic (providers, rag, payments, a2a clients all affected). |
 | Classify ignored-vs-runnable integration tests | **RESOLVED (A6)** — census above (126 `#[ignore]`, ≈2.6%). |
 | Sandbox default posture (Domain C) | RESOLVED (A4 P-60/61/62) + EXTENDED (A6 P-82 Windows, P-83 Docker). |
-| ADR: unify graph-checkpoint + session persistence | **OPEN — ferrochain Phase-1 design decision** (not an adk-rust novelty gap; carry to architecture phase). |
+| ADR: unify graph-checkpoint + session persistence | **OPEN — pregolya Phase-1 design decision** (not an adk-rust novelty gap; carry to architecture phase). |
 
 ### Contradictions vs prior passes (for the certification cascade — known-corrections)
 
@@ -112,7 +112,7 @@ Full detail in patterns-observed.md "Pass A6 deepening" (P-80..P-87).
   confined to server/auth/awp/acp/managed/enterprise." A6 workspace-wide: ~79 `reqwest::Client::new()`/
   `builder()` sites in production `src`, only ~10 with `.timeout()` → ~69 timeout-less, spanning
   providers (anthropic/gemini/model), rag, payments, and BOTH a2a clients. P-42's count is a subset,
-  not the total. Timeout-absence is a **systemic** counter-example to ferrochain's mandatory-30s rule,
+  not the total. Timeout-absence is a **systemic** counter-example to pregolya's mandatory-30s rule,
   not a 7-site cluster. (Spec impact: NFR/error-taxonomy should assume workspace-wide timeout MAP, not a
   localized fix.)
 - **C2 (REFINEMENT) — adk-realtime native-tls "HARD CONFLICT".** The ANALYSIS-STATE A5 compliance flag
@@ -212,7 +212,7 @@ across A1–A7: 97 patterns.)
 | livekit bridge delegation/isolation | **RESOLVED (A7)** — P-92/P-93 |
 | a2a-v1 retry/caching dynamic behavior | **SOURCE-RESOLVED (A7)** — P-94/P-95/P-96; four dynamic behaviors flagged UNVERIFIABLE-without-runtime (carry to validation, NOT an analysis gap) |
 | openai/webrtc.rs SDP transport | **RESOLVED (A7)** — P-97 |
-| ADR: unify graph-checkpoint + session persistence | **OPEN — ferrochain Phase-1 design decision** (not an adk-rust novelty gap) |
+| ADR: unify graph-checkpoint + session persistence | **OPEN — pregolya Phase-1 design decision** (not an adk-rust novelty gap) |
 
 ## Overall Analysis-Convergence Verdict (post-A7)
 

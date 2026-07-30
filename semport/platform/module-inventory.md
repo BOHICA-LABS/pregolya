@@ -1,6 +1,6 @@
 ---
 artifact: semport/platform/module-inventory
-project: ferrochain
+project: pregolya
 port_target: langgraph-sdk @ 1.2.9 + langgraph-cli @ 1.2.9
 analyzer_pass: 6
 date: 2026-07-12
@@ -17,7 +17,7 @@ note: module + endpoint inventory. The §2 endpoint catalog is the DTU-clone spe
 | Module | LOC | Priority | Purpose |
 |---|---|---|---|
 | `_async/stream.py` | 1,993 | HIGH | v3 thread-stream projections (values/messages/tool_calls/subgraphs) |
-| `_sync/stream.py` | 1,629 | MED | sync mirror of above (collapses to async in ferrochain) |
+| `_sync/stream.py` | 1,629 | MED | sync mirror of above (collapses to async in pregolya) |
 | `_async/runs.py` | 1,190 | HIGH | Runs client: stream/create/wait/list/get/cancel/join/batch |
 | `_sync/runs.py` | 1,171 | MED | sync mirror |
 | `auth/types.py` | 1,162 | DROP | server-side auth type protocols (BaseUser, AuthContext, ...) |
@@ -228,7 +228,7 @@ holdout testing — with three named caveats.**
   are behavioral contracts carried in headers, easy to miss in a naive clone. Cataloged
   above; must be in the DTU spec.
 
-Net: a DTU clone built from §2 + §3 will exercise the ferrochain client correctly for
+Net: a DTU clone built from §2 + §3 will exercise the pregolya client correctly for
 **request/response conformance**; it will NOT validate engine semantics (that's the local
 engine's holdout scope). Recommend the DTU clone be a **stateful fake** seeded with the
 local engine, not a pure request-echo, so run/thread/checkpoint lifecycles are realistic.

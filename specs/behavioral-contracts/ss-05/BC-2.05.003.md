@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-006
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "510c26c"
+input-hash: "cc7bfdc"
 extracted_from: null
 modified: []
 deprecated: null
@@ -97,7 +97,7 @@ notification-only interrupt (CONFLICT-3).
 **Scenario:** Node calls `external_api_call()` then `interrupt("approve?")`. On resume,
 `external_api_call()` is called again before `interrupt("approve?")` returns the value.
 **Expected behavior:** `external_api_call()` executes again. The node implementer must
-ensure the call is idempotent (or guarded by a flag in node state). ferrochain does not
+ensure the call is idempotent (or guarded by a flag in node state). pregolya does not
 automatically deduplicate side effects. This is a documented contract footgun.
 **Reference:** semport §5.3 (idempotency expectations).
 
@@ -152,9 +152,9 @@ preserved via parent_checkpoint_id.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — `_suppress_interrupt` / resume path; node re-invocation
-- `ferrochain-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — `_reapply_writes_to_succeeded_nodes` (skip INTERRUPT/RESUME markers)
-- `ferrochain-graph/src/types.rs` — `NodeInterrupt`, `Command`, `InterruptScratchpad`
+- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — `_suppress_interrupt` / resume path; node re-invocation
+- `pregolya-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — `_reapply_writes_to_succeeded_nodes` (skip INTERRUPT/RESUME markers)
+- `pregolya-graph/src/types.rs` — `NodeInterrupt`, `Command`, `InterruptScratchpad`
 
 ## Story Anchor
 
@@ -176,4 +176,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | I (integration) |
-| Module | ferrochain-graph |
+| Module | pregolya-graph |

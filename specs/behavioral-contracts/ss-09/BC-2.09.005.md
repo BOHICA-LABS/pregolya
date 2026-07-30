@@ -26,11 +26,11 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "7be43e4"
+input-hash: "58a6ecf"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-46): OBS-P46-1 — align VP-005 phrasing to sibling BC-2.09.004 VP-004 convention. 'compile+pass but network assertion fails' → 'compile+fail — test compiles and runs but the network-I/O assertion inside it fails'. Same semantic; consistent phrasing across both R11 Red Gate BCs."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-mcp per module-decomposition.md v1.10."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-mcp per module-decomposition.md v1.10."
 extracted_from: null
 modified: []
 deprecated: null
@@ -150,8 +150,8 @@ Note: callers are better served by cloning (which is cheap) than by Arc-wrapping
 
 ## Architecture Anchors
 
-- `ferrochain-mcp/src/client.rs` — `MultiServerMcpClient` struct definition (no `Drop` impl)
-- `ferrochain-mcp/src/sessions.rs` — `McpSessionGuard` RAII type (the scoped resource, NOT the client)
+- `pregolya-mcp/src/client.rs` — `MultiServerMcpClient` struct definition (no `Drop` impl)
+- `pregolya-mcp/src/sessions.rs` — `McpSessionGuard` RAII type (the scoped resource, NOT the client)
 
 ## Story Anchor
 
@@ -174,4 +174,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | U (unit), Red Gate |
-| Module | ferrochain-mcp |
+| Module | pregolya-mcp |

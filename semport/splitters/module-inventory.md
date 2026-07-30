@@ -1,6 +1,6 @@
 ---
 artifact: semport/splitters/module-inventory
-project: ferrochain
+project: pregolya
 port_target: langchain-text-splitters (1.1.2)
 analyzer_pass: 5
 date: 2026-07-12

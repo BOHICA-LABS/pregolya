@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
   - "1.3 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'retry.circuit_breaker_disabled' to CircuitBreaker::always_closed() WARN emission (PC5 and EC-005) and 'retry.circuit_probe_failed' to half-open probe failure DEBUG emission (EC-003) per observability census (SAP-1)."
   - "1.4 (burst-259/F-P158-01/2026-07-24): Drop tool_name from retry.circuit_breaker_disabled emission in EC-005. CircuitBreaker::always_closed() is a zero-argument constructor; tool_name is unavailable at construction time. EC-005 message template updated to tool-agnostic form consistent with sibling retry.unlimited_policy_constructed. Observability catalog and this BC aligned."
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/failure-modes.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "ed4f4e7"
+input-hash: "ac5747e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -42,7 +42,7 @@ removal_reason: null
 
 ## Description
 
-The ferrochain tool-retry combinator must include a per-tool circuit breaker that trips to
+The pregolya tool-retry combinator must include a per-tool circuit breaker that trips to
 OPEN after a configurable number of consecutive failures for a given tool, immediately
 returning an error without invoking the tool. The circuit breaker is ON by default — it
 cannot be silently omitted or defaulted to disabled. Combined with BC-2.16.001 (tool_name
@@ -62,7 +62,7 @@ retries in the global limit pool.
 1. After `failure_threshold` consecutive failures for tool `T`, the circuit breaker for
    `T` transitions from CLOSED to OPEN state.
 2. In OPEN state, any further call to tool `T` returns
-   `Err(FerrochainError { component: RETRY, category: POLICY, code: E-RETRY-003,
+   `Err(PregolyaError { component: RETRY, category: POLICY, code: E-RETRY-003,
    retry_hint: Later(reset_timeout), message: "CircuitBreakerOpen: tool '<tool_name>'
    circuit tripped after <failure_threshold> consecutive failures" })` without
    invoking the tool's underlying implementation.
@@ -149,9 +149,9 @@ The tool is always invoked regardless of failure count.
 
 ## Architecture Anchors
 
-- `ferrochain-core/src/retry/circuit_breaker.rs` — `CircuitBreaker` state machine (to be created)
-- `ferrochain-core/src/retry/policy.rs` — `ToolRetryPolicy` embeds `CircuitBreaker` (to be created)
-- `ferrochain-core/src/retry/combinator.rs` — invokes circuit check before tool call (to be created)
+- `pregolya-core/src/retry/circuit_breaker.rs` — `CircuitBreaker` state machine (to be created)
+- `pregolya-core/src/retry/policy.rs` — `ToolRetryPolicy` embeds `CircuitBreaker` (to be created)
+- `pregolya-core/src/retry/combinator.rs` — invokes circuit check before tool call (to be created)
 
 ## Story Anchor
 
@@ -173,4 +173,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-core |
+| Module | pregolya-core |

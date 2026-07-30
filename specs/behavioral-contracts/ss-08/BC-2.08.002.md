@@ -16,11 +16,11 @@ producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — wired 'configurable step limit' invariant to explicit contract: config.recursion_limit (default 25, RunnableConfig) + BC-2.03.001 PC5 + E-GRAPH-017 GraphRecursionLimitExceeded. VP-BC208002-01 description updated to cite E-GRAPH-017 and BC-2.03.001 PC5."
-  - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-005 had `Err(FerrochainError { category: VAL, message: ... })` and TV-005 had `Err(FerrochainError { category: VAL })` with no code. Added code: E-CORE-005 (ValidationFailed) to EC-005 description and TV-005 — VAL construction-time validation for `bind_tools` called on a model with `has_tool_calling = false`."
-  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-standard-tests per module-decomposition.md v1.10."
+  - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-005 had `Err(PregolyaError { category: VAL, message: ... })` and TV-005 had `Err(PregolyaError { category: VAL })` with no code. Added code: E-CORE-005 (ValidationFailed) to EC-005 description and TV-005 — VAL construction-time validation for `bind_tools` called on a model with `has_tool_calling = false`."
+  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-<provider> / pregolya-standard-tests per module-decomposition.md v1.10."
   - "1.4 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-005 message reworded from 'model <name> does not support tool calling' to 'Validation failed for 'model': model '<name>' does not support tool calling' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV-005 bare form unchanged — PASS-ABBREV via EC-005."
   - "1.5 (F-P160-01 TD-VSDD-060 sweep, 2026-07-25): Fix burst 261 — VP-BC208002-01 description had 'without exceeding config.recursion_limit (default 25) super-steps' which implies ≤25 steps execute before halt; corrected to 'within recursion_limit + 1 super-steps per invocation segment' (stop = step_at_invoke_start + recursion_limit + 1; default limit=25 → up to 26 steps execute before halt). Normative authority is BC-2.03.001 PC5; this VP description now agrees."
-  - "1.6 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-005 and §Canonical Test Vectors TV-005: FerrochainError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-005; category, code at TV-005); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 2 exempt (changelog, 1 line)."
+  - "1.6 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-005 and §Canonical Test Vectors TV-005: PregolyaError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-005; category, code at TV-005); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 2 exempt (changelog, 1 line)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -30,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "9867a29"
+input-hash: "37aee5b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -45,7 +45,7 @@ removal_reason: null
 
 ## Description
 
-Every ferrochain provider chat model must pass the `ferrochain-standard-tests` tool-calling
+Every pregolya provider chat model must pass the `pregolya-standard-tests` tool-calling
 battery: binding tools, invoking them, receiving `ToolCall` content blocks in the response,
 and completing the round-trip by supplying `ToolMessage` results back to the model.
 The mandatory ungated test `test_agent_loop` verifies that a tool-calling agent loop
@@ -54,11 +54,11 @@ capability flag. Gated tool-call tests require the `has_tool_calling` capability
 
 ## Preconditions
 
-1. A ferrochain provider chat model is constructed with valid credentials and a model
+1. A pregolya provider chat model is constructed with valid credentials and a model
    that supports function/tool calling (e.g., `gpt-4o`, `claude-3-5-sonnet`, or a
    local Ollama model with tool support).
 2. At least one `Tool` definition with a JSON Schema input spec is available to bind.
-3. `ferrochain-standard-tests` is registered as a dev-dependency and the provider
+3. `pregolya-standard-tests` is registered as a dev-dependency and the provider
    implements the standard conformance trait.
 4. The provider crate sets `has_tool_calling: bool = true` in its capability profile
    for models that support tool calling; `has_tool_choice: bool` is set per model.
@@ -133,7 +133,7 @@ unhandled deserialization error.
 
 ### EC-005: bind_tools on model that does not support tool calling
 **Scenario:** `.bind_tools([tool])` is called on a model with `has_tool_calling = false`.
-**Expected behavior:** `bind_tools` returns `Err(FerrochainError { category: VAL, code: E-CORE-005,
+**Expected behavior:** `bind_tools` returns `Err(PregolyaError { category: VAL, code: E-CORE-005,
 message: "Validation failed for 'model': model '<name>' does not support tool calling", .. })` — it does not silently return
 a model that ignores the tools at inference time.
 
@@ -145,7 +145,7 @@ a model that ignores the tools at inference time.
 | TV-002 | agent loop: tool returns "22°C"; model follow-up | Final `AiMessage` text mentions "22" or "Paris"; loop terminates | test_agent_loop |
 | TV-003 | Zero-argument tool called with `tool_choice = ToolName` | `ToolCall { args: {} }` (empty object, not None) | No-argument tool |
 | TV-004 | `ToolMessage { status: Error, content: "timeout" }` fed back | Non-error `AiMessage` acknowledging failure | Error status ToolMessage |
-| TV-005 | `bind_tools([tool])` on model with `has_tool_calling = false` | `Err(FerrochainError { category: VAL, code: E-CORE-005, .. })` | EC-005 guard |
+| TV-005 | `bind_tools([tool])` on model with `has_tool_calling = false` | `Err(PregolyaError { category: VAL, code: E-CORE-005, .. })` | EC-005 guard |
 
 ## Verification Properties
 
@@ -164,9 +164,9 @@ a model that ignores the tools at inference time.
 
 ## Architecture Anchors
 
-- `ferrochain-<provider>/src/chat_model.rs` — `bind_tools()` implementation (to be created)
-- `ferrochain-<provider>/src/tool_translation.rs` — tool call serialise/deserialise (to be created)
-- `ferrochain-standard-tests/src/chat_models/tool_calling.rs` — tool-calling battery (to be created)
+- `pregolya-<provider>/src/chat_model.rs` — `bind_tools()` implementation (to be created)
+- `pregolya-<provider>/src/tool_translation.rs` — tool call serialise/deserialise (to be created)
+- `pregolya-standard-tests/src/chat_models/tool_calling.rs` — tool-calling battery (to be created)
 
 ## Story Anchor
 
@@ -181,10 +181,10 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-009, CAP-011 |
-| Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies the tool-calling translation fidelity requirement every conforming provider must satisfy; CAP-011 ("Provider Conformance Suite (Standard Tests)") per capabilities-p1-p2.md §CAP-011 — this BC expresses the tool-calling subset of ferrochain-standard-tests including the mandatory `test_agent_loop` |
+| Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies the tool-calling translation fidelity requirement every conforming provider must satisfy; CAP-011 ("Provider Conformance Suite (Standard Tests)") per capabilities-p1-p2.md §CAP-011 — this BC expresses the tool-calling subset of pregolya-standard-tests including the mandatory `test_agent_loop` |
 | L2 Domain Invariants | — |
 | NE References | — |
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | I (integration, standard-tests tool-calling battery), U (unit — argument normalisation) |
-| Module | ferrochain-<provider> / ferrochain-standard-tests |
+| Module | pregolya-<provider> / pregolya-standard-tests |

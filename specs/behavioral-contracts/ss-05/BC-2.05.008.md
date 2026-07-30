@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-05
 capability: CAP-034
-crate: ferrochain-graph
+crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
@@ -30,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "60290b6"
+input-hash: "a73959f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -110,7 +110,7 @@ decision out-of-band.
 | EC-003 | Resume with Edit after process restart | modified_args validated; if valid, tool invoked with modified_args; if invalid, Deny fallback |
 | EC-004 | Multiple PendingHumanApproval interrupts queued (N sequential tool calls each needing approval) | FIFO: first ToolApprovalRequest resumed first; N separate Command(resume=…) deliveries required; hook not re-called for any |
 | EC-005 | A second tool invocation during the node's re-execution after the first approval is resumed | The second tool invocation goes through pre_tool_dispatch (BC-2.05.007) normally — pre_invoke is called for the SECOND dispatch (only skipped for the specific dispatch that was in PendingHumanApproval) |
-| EC-006 | `Command(resume=PreToolDecision::PendingHumanApproval { .. })` delivered as the resume payload | `PendingHumanApproval` is a hook RETURN value that triggers interrupt issuance (BC-2.05.007 PC-4); it is not a valid decision payload for `Command(resume=…)`. The engine returns `Err(FerrochainError)` per BC-2.05.004 invalid-payload contract. No tool invocation, no state mutation, run remains in `interrupted` state. |
+| EC-006 | `Command(resume=PreToolDecision::PendingHumanApproval { .. })` delivered as the resume payload | `PendingHumanApproval` is a hook RETURN value that triggers interrupt issuance (BC-2.05.007 PC-4); it is not a valid decision payload for `Command(resume=…)`. The engine returns `Err(PregolyaError)` per BC-2.05.004 invalid-payload contract. No tool invocation, no state mutation, run remains in `interrupted` state. |
 
 ## Canonical Test Vectors
 
@@ -142,7 +142,7 @@ decision out-of-band.
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-018-per-tool-call-approval-hook.md` — Decision 3 step 6 ("On resume semantics: hook is skipped for the resumed dispatch"), Decision 4 (PendingHumanApproval reuses interrupt() machinery; ToolApprovalRequest serialized to msgpack via ADR-002)
-- `architecture/module-decomposition.md` — SS-05, `ferrochain-graph / hitl` and `graph::scheduler` modules
+- `architecture/module-decomposition.md` — SS-05, `pregolya-graph / hitl` and `graph::scheduler` modules
 
 ## Story Anchor
 
@@ -164,7 +164,7 @@ _[to be filled after story decomposition — Wave 1 SS-05 extension story]_
 | Architecture Authority | ADR-018 Decisions 3 (skip-hook-on-resume) and 4 (ToolApprovalRequest checkpoint durability, msgpack serialization) |
 | Binding Decisions | D23 (per-tool-call approval hook mandate, SS-05 extension) |
 | VP Registration | VP-2.05.008-A/B/C (unit/integration tests) |
-| Module | ferrochain-graph / hitl + scheduler |
+| Module | pregolya-graph / hitl + scheduler |
 | Priority | P1 |
 | Wave | 1 |
 | Test Types | unit + integration |

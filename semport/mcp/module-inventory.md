@@ -1,6 +1,6 @@
 ---
 artifact: semport/mcp/module-inventory
-project: ferrochain
+project: pregolya
 port_target: langchain-mcp-adapters (0.3.0)
 analyzer_pass: 5
 date: 2026-07-12
@@ -43,7 +43,7 @@ graph TD
 ```
 
 The `mcp` Python SDK is the **load-bearing external dependency** (transports,
-`ClientSession`, all wire types). In ferrochain this node becomes **`rmcp`**.
+`ClientSession`, all wire types). In pregolya this node becomes **`rmcp`**.
 
 ## Key symbol catalog
 
@@ -86,7 +86,7 @@ The `mcp` Python SDK is the **load-bearing external dependency** (transports,
 pass: 5
 artifact: module-inventory
 package: langchain-mcp-adapters
-crate: ferrochain-mcp
+crate: pregolya-mcp
 modules: 8
 prod_loc: 1914
 status: complete

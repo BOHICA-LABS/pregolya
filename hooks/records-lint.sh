@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# records-lint.sh — ferrochain factory records discipline lint
+# records-lint.sh — pregolya factory records discipline lint
 #
 # Runs before every factory commit (.factory/ worktree). exit 0 = PASS, exit 1 = FAIL.
 #
@@ -782,7 +782,7 @@ check_l11() {
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-echo "records-lint: ferrochain factory records discipline"
+echo "records-lint: pregolya factory records discipline"
 echo "  FACTORY_DIR: $FACTORY_DIR"
 echo ""
 

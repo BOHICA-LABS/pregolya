@@ -10,7 +10,7 @@ phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "148b6a2"
+input-hash: "eb2c18b"
 traces_to: L2-INDEX.md
 decisions: [D11, D17]
 changelog:
@@ -95,7 +95,7 @@ that escapes the root returns `Err(WorkspaceEscape)`.
 - **Invariant class:** security, integrity
 
 ### DI-008: Library Constructor Result Contract
-All public library constructors return `Result<T, FerrochainError>`. `Default` must not
+All public library constructors return `Result<T, PregolyaError>`. `Default` must not
 delegate to a fallible constructor. `.expect()`, `.unwrap()`, and `assert!` are disallowed
 in non-test library code. CI lint gate enforces this.
 
@@ -151,7 +151,7 @@ returns 403, not 200 or 404.
 ## Error and Validation Invariants
 
 ### DI-014: Error Propagation (No Silent Swallowing)
-Validation failures propagate as `Err(FerrochainError)`. No public API returns `None` or
+Validation failures propagate as `Err(PregolyaError)`. No public API returns `None` or
 an empty result to represent a validation failure. Skill-coordinator and plugin-coordinator
 validation errors are not silently discarded.
 

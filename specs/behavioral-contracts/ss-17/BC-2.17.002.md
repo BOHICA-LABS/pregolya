@@ -17,15 +17,15 @@ timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (F-P80-01, 2026-07-15): EC-002 error code corrected E-GRAPH-007→E-GRAPH-008. E-GRAPH-007 is UnknownChannelKey (runtime unregistered-write-key error); the correct code for a zero-node degenerate topology is E-GRAPH-008 UnreachableGraph (no path from START). Message aligned to taxonomy form: UnreachableGraph: <reason>. 'or similar' hedge removed from code assertion — exact E-GRAPH-008 is now required; message-detail flexibility preserved per fuzz-oracle semantics (oracle tests code discriminant, not message text)."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to fuzz/ per module-decomposition.md v1.10."
-  - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-002 had `Err(FerrochainError { code: E-GRAPH-008 })` with message only in prose (not in the struct); E-GRAPH-008 has <reason> placeholder. Inlined the example message from the prose into the struct as the authoritative concrete form; fuzz oracle semantics note retained (oracle tests code discriminant, not message text)."
-  - "1.4 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-002: added `, ..` before closing brace in partial FerrochainError observation `FerrochainError { code: E-GRAPH-008, message: \"...\" }` — Class 3 VIOLATION (component, category, and retry_hint fields omitted with no elision marker; canonical form requires `..` per ADR-010 §Error-Construction Notation Canon)."
+  - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-002 had `Err(PregolyaError { code: E-GRAPH-008 })` with message only in prose (not in the struct); E-GRAPH-008 has <reason> placeholder. Inlined the example message from the prose into the struct as the authoritative concrete form; fuzz oracle semantics note retained (oracle tests code discriminant, not message text)."
+  - "1.4 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-002: added `, ..` before closing brace in partial PregolyaError observation `PregolyaError { code: E-GRAPH-008, message: \"...\" }` — Class 3 VIOLATION (component, category, and retry_hint fields omitted with no elision marker; canonical form requires `..` per ADR-010 §Error-Construction Notation Canon)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-019
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "a864d25"
+input-hash: "6af602f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -40,7 +40,7 @@ removal_reason: null
 
 ## Description
 
-The ferrochain Phase-6 formal hardening must include two cargo-fuzz targets covering the
+The pregolya Phase-6 formal hardening must include two cargo-fuzz targets covering the
 highest-complexity code paths: checkpoint state serialization (msgpack round-trip) and
 graph-execution path variation (node topology and concurrent writer patterns). Fuzzing
 is complementary to Kani — Kani proves invariants over a bounded state space; fuzzing
@@ -54,7 +54,7 @@ for v1 convergence per CAP-019.
 
 ## Preconditions
 
-1. Phase-3 implementation of ferrochain-checkpoint and ferrochain-graph is complete.
+1. Phase-3 implementation of pregolya-checkpoint and pregolya-graph is complete.
 2. `cargo-fuzz` is available in the CI toolchain (the devops-engineer provisions this in
    Phase-0 toolchain setup).
 3. The msgpack serialization layer for `GraphState` and checkpoint structures is
@@ -78,7 +78,7 @@ for v1 convergence per CAP-019.
    - Input: arbitrary fuzzer-generated `GraphDefinition` (node count, edge topology, channel
      assignments, concurrent write patterns)
    - Contract: executing an arbitrary `GraphDefinition` MUST NOT panic or produce undefined
-     behavior; it must either complete or return `Err(FerrochainError)`. Any panic, memory
+     behavior; it must either complete or return `Err(PregolyaError)`. Any panic, memory
      safety violation, or silent data corruption is a crash finding.
    - The fuzzer must reach all three BSP super-step paths: normal completion, interrupt
      injection, and empty-super-step no-op.
@@ -115,7 +115,7 @@ The error propagates to the caller. The fuzz target counts this as a non-crash h
 
 ### EC-002: Graph with Zero Nodes
 **Scenario:** The graph execution fuzzer generates a `GraphDefinition` with no nodes.
-**Expected behavior:** Execution returns `Err(FerrochainError { code: E-GRAPH-008,
+**Expected behavior:** Execution returns `Err(PregolyaError { code: E-GRAPH-008,
 message: "UnreachableGraph: empty graph — no entry edge from START", .. })`.
 No panic. The graph executor must handle degenerate topologies gracefully.
 The fuzz oracle asserts exact code E-GRAPH-008; message-detail text may vary by implementation
@@ -124,7 +124,7 @@ The fuzz oracle asserts exact code E-GRAPH-008; message-detail text may vary by 
 ### EC-003: Circular Edge in Graph Topology
 **Scenario:** The fuzzer generates a graph with a cycle (`A → B → A`).
 **Expected behavior:** The executor must detect the cycle and return
-`Err(FerrochainError)` rather than looping forever or panicking. Cycle detection must be
+`Err(PregolyaError)` rather than looping forever or panicking. Cycle detection must be
 bounded (not a live-lock).
 
 ### EC-004: Fuzz Target Finds Crash in Phase-6
@@ -142,8 +142,8 @@ the fuzzer.
 | TV-001 | `cargo +nightly fuzz build` | Compilation succeeds for both targets | Toolchain health check |
 | TV-002 | Fuzz target `fuzz_checkpoint_serde` with valid serialized `GraphState` | Round-trip: `deser(ser(s)) == s` | Happy-path serde invariant |
 | TV-003 | Fuzz target `fuzz_checkpoint_serde` with 0x00 bytes | `Err(DeserializationError)` — no panic | Malformed input safety |
-| TV-004 | Fuzz target `fuzz_graph_execution` with 0-node graph | `Err(FerrochainError)` — no panic | Degenerate topology |
-| TV-005 | Fuzz target `fuzz_graph_execution` with cyclic graph | `Err(FerrochainError)` — no panic, no live-lock | Cycle detection |
+| TV-004 | Fuzz target `fuzz_graph_execution` with 0-node graph | `Err(PregolyaError)` — no panic | Degenerate topology |
+| TV-005 | Fuzz target `fuzz_graph_execution` with cyclic graph | `Err(PregolyaError)` — no panic, no live-lock | Cycle detection |
 
 ## Verification Properties
 

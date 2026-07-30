@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-form-a-changelog-direction.sh — ferrochain factory-artifacts wrap guard
+# verify-form-a-changelog-direction.sh — pregolya factory-artifacts wrap guard
 #
 # SECTION 1 — BC files (.factory/specs/behavioral-contracts/ss-*/BC-*.md):
 # ─────────────────────────────────────────────────────────────────────────

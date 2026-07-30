@@ -21,7 +21,7 @@ traces_to:
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "6fd0580"
+input-hash: "5a688d9"
 extracted_from: null
 modified: []
 deprecated: null
@@ -36,8 +36,8 @@ removal_reason: null
 
 ## Description
 
-`ferrochain-mcp` provides an MCP server role (`mcp::server` module) that starts a server
-endpoint and advertises all tools registered in the ferrochain tool registry to external
+`pregolya-mcp` provides an MCP server role (`mcp::server` module) that starts a server
+endpoint and advertises all tools registered in the pregolya tool registry to external
 MCP clients via the `tools/list` JSON-RPC method. This is the server-direction complement to
 the existing MCP client (CAP-010 / SS-09 / BC-2.09.001–005). The server supports at minimum
 two transports: stdio (for local subprocess MCP usage) and SSE (for HTTP-based MCP clients).
@@ -49,11 +49,11 @@ This BC covers the advertisement path only; invocation is specified in BC-2.09.0
 
 ## Preconditions
 
-1. A ferrochain `ToolRegistry` is initialized and contains at least one registered `Tool`.
+1. A pregolya `ToolRegistry` is initialized and contains at least one registered `Tool`.
 2. `McpServerConfig` is provided with `transport: McpServerTransport` (either
    `McpServerTransport::Stdio` or `McpServerTransport::Sse { bind_addr: SocketAddr }`) and
    `tool_registry: Arc<ToolRegistry>`.
-3. `McpServer::start(config: McpServerConfig) -> Result<McpServerHandle, FerrochainError>`
+3. `McpServer::start(config: McpServerConfig) -> Result<McpServerHandle, PregolyaError>`
    is called to start the server.
 
 ## Postconditions
@@ -61,7 +61,7 @@ This BC covers the advertisement path only; invocation is specified in BC-2.09.0
 1. `McpServer::start` binds to the configured transport endpoint:
    - Stdio: begins reading JSON-RPC messages from stdin and writing to stdout.
    - SSE: binds to `bind_addr` and begins accepting HTTP SSE connections.
-   If binding fails, `Err(FerrochainError { component: MCP, category: TRANSPORT,
+   If binding fails, `Err(PregolyaError { component: MCP, category: TRANSPORT,
    code: "E-MCP-005", message: "McpServerBindFailed: cannot bind to <transport>: <reason>",
    retry_hint: Never })` is returned. (DI-008.)
 2. On receiving a `tools/list` JSON-RPC request from any connected MCP client:
@@ -91,7 +91,7 @@ This BC covers the advertisement path only; invocation is specified in BC-2.09.0
 - **Transport independence:** the tool advertisement behavior is identical on stdio and SSE
   transports. Transport selection affects only the connection mechanism, not the MCP
   message semantics.
-- The MCP server module is `mcp::server` in `ferrochain-mcp` — distinct from the MCP client
+- The MCP server module is `mcp::server` in `pregolya-mcp` — distinct from the MCP client
   (`mcp::client` / `MultiServerMcpClient`). The two modules do not share state.
 
 ## Edge Cases
@@ -113,7 +113,7 @@ client sends `tools/list`.
 **Expected behavior:** Response includes all 3 tools. The registry is read on each request.
 
 ### EC-004: Client sends unrecognized JSON-RPC method (e.g., resources/list)
-**Scenario:** Connected MCP client sends a method that is not implemented by ferrochain's
+**Scenario:** Connected MCP client sends a method that is not implemented by pregolya's
 MCP server in v1 (e.g., `resources/list`).
 **Expected behavior:** Server responds with a JSON-RPC error: `{ "code": -32601,
 "message": "Method not found" }`. This reuses the same JSON-RPC -32601 semantics as
@@ -141,7 +141,7 @@ in-flight; no new requests are accepted after shutdown begins.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-MCPSRV-01 | MCP client can discover all registered ferrochain tools via tools/list | Integration test: start server; connect real MCP client; assert tool count and names | Wave 2 |
+| VP-MCPSRV-01 | MCP client can discover all registered pregolya tools via tools/list | Integration test: start server; connect real MCP client; assert tool count and names | Wave 2 |
 | VP-MCPSRV-02 | tools/list response is valid MCP protocol JSON (tools array, each with name/description/inputSchema) | Schema validation test against MCP spec | Wave 2 |
 
 ## Related BCs
@@ -152,8 +152,8 @@ in-flight; no new requests are accepted after shutdown begins.
 
 ## Architecture Anchors
 
-- `ferrochain-mcp/src/server.rs` (`mcp::server`) — `McpServer`, `McpServerConfig`, `McpServerHandle`, `McpServerTransport` definitions; `tools/list` handler; transport binding (per ADR-013 §Consequences — MCP server role placement in ferrochain-mcp, mcp::server module; ADR-012 has no MCP content and is not the governing ADR for CAP-021)
-- `ferrochain-mcp/src/registry.rs` (or shared with client) — `ToolRegistry` read by `tools/list` handler
+- `pregolya-mcp/src/server.rs` (`mcp::server`) — `McpServer`, `McpServerConfig`, `McpServerHandle`, `McpServerTransport` definitions; `tools/list` handler; transport binding (per ADR-013 §Consequences — MCP server role placement in pregolya-mcp, mcp::server module; ADR-012 has no MCP content and is not the governing ADR for CAP-021)
+- `pregolya-mcp/src/registry.rs` (or shared with client) — `ToolRegistry` read by `tools/list` handler
 
 ## Story Anchor
 
@@ -171,8 +171,8 @@ _[to be filled after story decomposition]_
 | Capability Anchor Justification | CAP-021 ("MCP Server Role (Expose Registered Tools as MCP Server Endpoint)") per capabilities-p1-p2.md §CAP-021 — this BC specifies the `tools/list` advertisement path of the MCP server role: server startup, transport binding, and responding to client discovery requests, which is the foundational "expose registered tools" surface CAP-021 defines |
 | L2 Domain Invariants | DI-008 (Library Constructor Result Contract — McpServer::start returns Err on bind failure; E-MCP-005 not panic), DI-014 (Error Propagation — bind errors propagate as Err; empty tool list is Ok not error) |
 | Error Code Minted | E-MCP-005 McpServerBindFailed — TRANSPORT, broken, Never. MCP namespace had 4 live codes (E-MCP-001 through E-MCP-004); E-MCP-005 is next. Taxonomy row: sub-burst 2. |
-| Domain D Forcing Function | domain-d-hermes-agent.md req 11 — "[NEW framework-scope] MCP server role — ferrochain exposing its tools and resources via the MCP protocol so that other LLM applications can connect as clients — entirely absent from all BCs and capabilities" |
+| Domain D Forcing Function | domain-d-hermes-agent.md req 11 — "[NEW framework-scope] MCP server role — pregolya exposing its tools and resources via the MCP protocol so that other LLM applications can connect as clients — entirely absent from all BCs and capabilities" |
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | I (integration) |
-| Module | ferrochain-mcp (`mcp::server`) |
+| Module | pregolya-mcp (`mcp::server`) |

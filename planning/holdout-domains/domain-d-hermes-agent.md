@@ -7,7 +7,7 @@ producer: product-owner
 timestamp: 2026-07-15
 traces_to: D19
 source_decision: D8 (amended 2026-07-15 via D19)
-project: ferrochain
+project: pregolya
 purpose: Phase-1 forcing function + Phase-2 holdout authoring input (product-owner authors hidden scenarios; only this domain is public)
 assessor: product-owner (disposition analysis against BC-INDEX + capability shards; research summary from research-agent 2026-07-14)
 confidence: medium-high (architecture documented at docs/API level; numeric thresholds unverified — see §Research Caveats)
@@ -20,7 +20,7 @@ changelog:
 
 # Holdout Domain D — Hermes-style Agentic Assistant
 
-> **Scope note.** This brief characterizes the *problem space* and maps it to ferrochain's
+> **Scope note.** This brief characterizes the *problem space* and maps it to pregolya's
 > planned primitive surface. It deliberately does NOT author acceptance scenarios — those are
 > written hidden, later, by the product-owner (per D8). Everything here is a forcing function
 > for Phase 1 (PRD/architecture must demonstrate these workloads are supportable) and a
@@ -70,7 +70,7 @@ changelog:
    incoming interrupt message. [R]
 9. **MCP is implemented in both directions**: the agent can connect to external MCP servers as a
    client AND expose its own tools as an MCP server for other LLM applications to consume. [R]
-10. For ferrochain, this domain validates that the core graph/server surface supports the complete
+10. For pregolya, this domain validates that the core graph/server surface supports the complete
     Hermes-style agentic pattern; it forces **one net-new framework-scope surface** (MCP server
     role) and **seven partial gaps** in existing capabilities, and distinguishes two application-layer
     concerns (layered system prompt, runtime skills) that intentionally live above the framework.
@@ -167,13 +167,13 @@ agent pattern:
 | **agentskills.io / SKILL.md** | Procedural skill library pattern | Skill format standard, not a full framework |
 
 The key forcing-function distinction from Domains A/B/C: Domain D exercises the **ChatML XML
-tool-call dialect** (Hermes-specific), **MCP server role** (exporting ferrochain tools to
+tool-call dialect** (Hermes-specific), **MCP server role** (exporting pregolya tools to
 external LLM apps), and **code-execution RPC callback** (generated code calling tools mid-run).
 These three surfaces are not forced by any other domain.
 
 ---
 
-## 3. Framework Demands — Mapping to ferrochain's Planned Surface
+## 3. Framework Demands — Mapping to pregolya's Planned Surface
 
 Legend: **[COVERED]** = in-scope BC verified as semantically matching.
 **[PARTIAL]** = foundation exists, gap identified (historic; all PARTIALs resolved or deferred in v1.1).
@@ -181,30 +181,30 @@ Legend: **[COVERED]** = in-scope BC verified as semantically matching.
 **[NEW application-layer]** = intentionally above the framework; no BC needed.
 **[v2-DEFERRED]** = gap acknowledged; framework work scoped to v2, not v1.
 
-| # | Hermes requirement | ferrochain primitive | Disposition | Gap statement (if PARTIAL/NEW) |
+| # | Hermes requirement | pregolya primitive | Disposition | Gap statement (if PARTIAL/NEW) |
 |---|-------------------|---------------------|------------|-------------------------------|
 | 1 | Multi-provider tool-calling with **pluggable parsers** — Hermes ChatML XML dialect selectable per model alongside native OpenAI JSON + Anthropic | SS-08 / CAP-009 / BC-2.08.002 (provider conformant tool-call round-trip); **BC-2.08.013 (ToolCallDialect — pluggable per-model serialize/deserialize seam)** D20 sub-burst 1 | **[COVERED CAP-009/BC-2.08.013]** | Gap closed D20 sub-burst 1: BC-2.08.013 (ToolCallDialect) provides the pluggable seam; Hermes ChatML XML is the `HermesChatMlXml` built-in dialect. E-PROV-009 covers dialect parse failures. |
 | 2 | **ReAct loop** with bounded iteration budget + **graceful stop-and-summarize** on exhaustion; budget exposed to model mid-run | BSP engine CAP-003/SS-02 + CAP-004/SS-03; `recursion_limit` / E-GRAPH-017 (BC-2.08.002); budget governance CAP-012/SS-10 (**BC-2.10.003 v1.2: OnCeiling::Summarize + RunContext.budget\_info / BudgetInfo**) D20 sub-burst 1 | **[COVERED CAP-003/CAP-004/CAP-012/BC-2.10.003 v1.2]** | Both gaps closed by BC-2.10.003 v1.2 (D20 sub-burst 1): (a) OnCeiling::Summarize variant injects a stop-and-summarize prompt to the model on ceiling; (b) RunContext.budget\_info / BudgetInfo struct exposes remaining token/cost budget to the model mid-run. |
-| 3 | **Layered/cached system-prompt composition** (SOUL.md identity → MEMORY.md → volatile overlays; ephemeral per-turn overlays that do not invalidate cached prefix; frozen-snapshot semantics) | CAP-001/SS-01 (typed messages); CAP-017/SS-15 (memory store P2); CAP-005/SS-04 (checkpoint per super-step); CAP-020/SS-15 (BC-2.15.006 frozen-snapshot context mutation) D20 sub-burst 1 | **[NEW application-layer]** | ferrochain provides the building blocks (message types, memory store, runnable config) but no framework primitive governs tiered system-prompt construction or volatile overlay sequencing. This is a concern for the Hermes-layer application built on top. _(D20 note: BC-2.15.006 adds frozen-snapshot context mutation as a framework primitive — CAP-020; the composition orchestration policy (SOUL.md → MEMORY.md → per-turn overlay) remains application-layer.)_ |
+| 3 | **Layered/cached system-prompt composition** (SOUL.md identity → MEMORY.md → volatile overlays; ephemeral per-turn overlays that do not invalidate cached prefix; frozen-snapshot semantics) | CAP-001/SS-01 (typed messages); CAP-017/SS-15 (memory store P2); CAP-005/SS-04 (checkpoint per super-step); CAP-020/SS-15 (BC-2.15.006 frozen-snapshot context mutation) D20 sub-burst 1 | **[NEW application-layer]** | pregolya provides the building blocks (message types, memory store, runnable config) but no framework primitive governs tiered system-prompt construction or volatile overlay sequencing. This is a concern for the Hermes-layer application built on top. _(D20 note: BC-2.15.006 adds frozen-snapshot context mutation as a framework primitive — CAP-020; the composition orchestration policy (SOUL.md → MEMORY.md → per-turn overlay) remains application-layer.)_ |
 | 4 | **Runtime-mutable procedural skills** (agent loads SKILL.md on demand AND writes/updates at runtime — self-improvement loop) | CAP-020/SS-15 / BC-2.15.004 (SkillStore — load-on-demand skill documents); BC-2.15.005 (MemoryWriteGuard — guarded skill writes) D20 sub-burst 1 | **[NEW application-layer]** | "Skill" as a routing concept (which skill to load and when) is not modeled at the framework level. _(D20 note: CAP-020/BC-2.15.004 adds SkillStore for load-on-demand skill documents; BC-2.15.005 adds MemoryWriteGuard for guarded skill writes — these are framework primitives. The routing and self-improvement loop orchestration remains application-layer.)_ |
-| 5 | **Programmatic tool execution** ("tools-callable-from-code"): generated code invokes registered tools via IPC/RPC socket during execution; only final output returns to context; per-script call limits, timeout, interrupt | SS-13 / CAP-015 / BC-2.13.001–007 (sandboxed execution, enforcing backend default, workspace confinement, env-var allowlist) | **[v2-DEFERRED CAP-015/SS-13]** | Sandboxed execution with pluggable backends, confinement, env-var allowlist, and seatbelt covered (BC-2.13.001–007). The "execute_code RPC gateway" — generated code calling back into the registered tool registry via an IPC socket during execution — is not in v1 scope. Deferred to v2: the reverse-callback pattern (code→ferrochain-tools) requires a new IPC/RPC seam in the sandbox backend. D20 sub-burst 2 explicit deferral. |
+| 5 | **Programmatic tool execution** ("tools-callable-from-code"): generated code invokes registered tools via IPC/RPC socket during execution; only final output returns to context; per-script call limits, timeout, interrupt | SS-13 / CAP-015 / BC-2.13.001–007 (sandboxed execution, enforcing backend default, workspace confinement, env-var allowlist) | **[v2-DEFERRED CAP-015/SS-13]** | Sandboxed execution with pluggable backends, confinement, env-var allowlist, and seatbelt covered (BC-2.13.001–007). The "execute_code RPC gateway" — generated code calling back into the registered tool registry via an IPC socket during execution — is not in v1 scope. Deferred to v2: the reverse-callback pattern (code→pregolya-tools) requires a new IPC/RPC seam in the sandbox backend. D20 sub-burst 2 explicit deferral. |
 | 6 | **Sandboxed execution** across pluggable backends (local + container min.) with **env-secret stripping** | SS-13 / CAP-015 / BC-2.13.001–006; **BC-2.13.007 (SandboxConfig.env\_allowlist — env-var allowlist pattern filter, fail-closed)** D20 sub-burst 1 | **[COVERED CAP-015/BC-2.13.007]** | Gap closed D20 sub-burst 1: BC-2.13.007 specifies SandboxConfig.env\_allowlist regex pattern filter; E-SBXD-006 for invalid allowlist patterns. Fail-closed: no env-var inherits unless explicitly allowed; DI-006 enforced. |
 | 7 | **Sub-agent spawning** — isolated child loops, own conversation/tools/budget/identity, parent/child lineage | Subgraphs CAP-003/SS-02; per-sub-agent budget CAP-012/BC-2.10.001 EC-004; streaming parent_ids correlation CAP-007/BC-2.06.002; thread isolation CAP-014/SS-12/BC-2.12.003 | **[COVERED CAP-003/CAP-012/CAP-007/CAP-014]** | Isolated subgraph contexts, independent budget policies, parent_ids lineage in events, and thread isolation all covered. "Own identity" (each sub-agent gets its own SOUL.md) is an application-layer concern — the framework provides no concept of agent identity, by design. |
 | 8 | **Durable searchable concurrent conversation store** (full history incl. tool calls + reasoning traces; multi-process safe; **FTS exposed as a tool**) | SS-04 / CAP-005 / BC-2.04.001–BC-2.04.007 (checkpoint history); **BC-2.04.008 (FTS over checkpoint history — search\_history callable tool, SQLite FTS5)** D20 sub-burst 1; SS-15 / CAP-017 / BC-2.15.001 (hybrid KV+vector memory P2) | **[COVERED CAP-005/BC-2.04.008 — single-process v1]** | Gap closed D20 sub-burst 1: BC-2.04.008 adds search\_history(FtsSearchConfig) backed by SQLite FTS5, co-transactional with checkpoint writes (DI-002); E-CHKPT-008/009. Single-process SQLite WAL semantics; multi-process WAL-safe write concurrency deferred to v2. |
-| 9 | **Interrupt/HITL cancellation mid-run** — in-flight model call or in-flight tool/code execution cancellable by incoming message; structured interruption | SS-05 / CAP-006 / BC-2.05.001–BC-2.05.006 (node-boundary interrupt + risk-tiered classification) | **[v2-DEFERRED CAP-006/SS-05]** | Node-boundary HITL interrupt/resume with risk tiers fully specified (BC-2.05.001–006). In-flight cancellation — ferrochain's `interrupt()` fires at node boundaries (between super-steps), not within a running model inference call or a running tool execution — is not in v1 scope; deferred to v2. See BC-2.05.001 Related BCs v2-deferral note (D20 sub-burst 2). Domain A brief also flagged this. |
+| 9 | **Interrupt/HITL cancellation mid-run** — in-flight model call or in-flight tool/code execution cancellable by incoming message; structured interruption | SS-05 / CAP-006 / BC-2.05.001–BC-2.05.006 (node-boundary interrupt + risk-tiered classification) | **[v2-DEFERRED CAP-006/SS-05]** | Node-boundary HITL interrupt/resume with risk tiers fully specified (BC-2.05.001–006). In-flight cancellation — pregolya's `interrupt()` fires at node boundaries (between super-steps), not within a running model inference call or a running tool execution — is not in v1 scope; deferred to v2. See BC-2.05.001 Related BCs v2-deferral note (D20 sub-burst 2). Domain A brief also flagged this. |
 | 10 | **Provider failover + retry policy** — ordered fallback chain on 429/5xx/auth; credential-refresh-then-failover | SS-16 / CAP-018 / BC-2.16.001–BC-2.16.003 (per-tool retry, circuit breaker); SS-08 / CAP-009 (provider abstraction); **BC-2.08.014 (ProviderFallbackPolicy — ordered chain on 429/5xx/auth + credential-refresh-before-failover)** D20 sub-burst 1 | **[COVERED CAP-009/BC-2.08.014]** | Gap closed D20 sub-burst 1: BC-2.08.014 (ProviderFallbackPolicy) specifies ordered fallback chain on 429/5xx/auth with optional credential-refresh-before-failover. E-PROV-010 covers chain exhaustion. |
-| 11 | **MCP as BOTH client AND server** — ferrochain connects to MCP servers (client) AND exposes its own tools/resources as an MCP server for other LLM apps | SS-09 / CAP-010 / BC-2.09.001–BC-2.09.005 (MCP client: discovery, routing, untrusted ingress); **CAP-021/BC-2.09.006-007 (MCP server role: tools/list advertisement + tools/call invocation; stdio + SSE transports)** D20 sub-burst 1 | **[COVERED CAP-021/BC-2.09.006-007]** | Gap closed D20 sub-burst 1: CAP-021 (MCP Server Role) added. BC-2.09.006 specifies MCP server tool advertisement (tools/list); BC-2.09.007 specifies MCP server tool invocation (tools/call). Both stdio and SSE transports. E-MCP-005 covers bind failure. |
-| 12 | **Scheduled autonomous runs** — cron-style, **natural-language definitions**, unattended normal loop, output to external channel | SS-12 / CAP-014 / BC-2.12.004 (CronSchedule with standard cron expressions, isolated session per firing) | **[COVERED SS-12/CAP-014/BC-2.12.004]** + **[NEW application-layer]** for NL definitions | Standard cron expression scheduling with fresh isolated session per firing fully covered. NL → cron synthesis (e.g., "every Monday at 9am" → `0 9 * * 1`) is application-layer; ferrochain accepts the resulting expression, not the NL input. Output to external channel (Slack/WhatsApp routing) is application-layer routing. |
+| 11 | **MCP as BOTH client AND server** — pregolya connects to MCP servers (client) AND exposes its own tools/resources as an MCP server for other LLM apps | SS-09 / CAP-010 / BC-2.09.001–BC-2.09.005 (MCP client: discovery, routing, untrusted ingress); **CAP-021/BC-2.09.006-007 (MCP server role: tools/list advertisement + tools/call invocation; stdio + SSE transports)** D20 sub-burst 1 | **[COVERED CAP-021/BC-2.09.006-007]** | Gap closed D20 sub-burst 1: CAP-021 (MCP Server Role) added. BC-2.09.006 specifies MCP server tool advertisement (tools/list); BC-2.09.007 specifies MCP server tool invocation (tools/call). Both stdio and SSE transports. E-MCP-005 covers bind failure. |
+| 12 | **Scheduled autonomous runs** — cron-style, **natural-language definitions**, unattended normal loop, output to external channel | SS-12 / CAP-014 / BC-2.12.004 (CronSchedule with standard cron expressions, isolated session per firing) | **[COVERED SS-12/CAP-014/BC-2.12.004]** + **[NEW application-layer]** for NL definitions | Standard cron expression scheduling with fresh isolated session per firing fully covered. NL → cron synthesis (e.g., "every Monday at 9am" → `0 9 * * 1`) is application-layer; pregolya accepts the resulting expression, not the NL input. Output to external channel (Slack/WhatsApp routing) is application-layer routing. |
 
 ---
 
 ## 4. Realistic Evaluation Shapes (General — NOT Holdout Scenarios)
 
-These are *categories* of scenario that would credibly stress a Hermes-style agent on ferrochain,
+These are *categories* of scenario that would credibly stress a Hermes-style agent on pregolya,
 provided to guide the product-owner's hidden authoring — deliberately generic:
 
 - **Hermes XML tool-call parse and execution.** Issue a prompt to a Hermes-configured model
-  that emits a `<tool_call>{json}</tool_call>` response; verify ferrochain correctly parses the
+  that emits a `<tool_call>{json}</tool_call>` response; verify pregolya correctly parses the
   XML dialect, routes the tool invocation, and completes the round-trip — exercising the
   pluggable parser gap (req 1).
 
@@ -217,9 +217,9 @@ provided to guide the product-owner's hidden authoring — deliberately generic:
   configs, each hitting a different tool, then synthesize their results in the parent — exercising
   sub-agent spawning primitives (req 7) and per-sub-agent budget isolation (CAP-012).
 
-- **MCP server role: external consumer.** Start a ferrochain-server process that exposes its
+- **MCP server role: external consumer.** Start a pregolya-server process that exposes its
   registered tools as an MCP server endpoint; connect an external MCP client (or a second
-  ferrochain instance) and invoke a tool via the MCP protocol — exercising the NEW MCP server
+  pregolya instance) and invoke a tool via the MCP protocol — exercising the NEW MCP server
   surface (req 11). This test is expected to reveal the gap.
 
 - **Provider failover on 429.** Configure a primary provider that returns 429; a fallback
@@ -227,7 +227,7 @@ provided to guide the product-owner's hidden authoring — deliberately generic:
   surfacing the 429 to the graph — exercising the provider failover gap (req 10).
 
 - **Code-calls-tools RPC callback.** Execute a code block that, during execution, calls back
-  into a registered ferrochain tool via the IPC socket; verify only the final code output
+  into a registered pregolya tool via the IPC socket; verify only the final code output
   enters the model context, not the intermediate tool call/result — exercising the
   execute_code RPC gateway gap (req 5).
 
@@ -275,7 +275,7 @@ require a positive adoption/defer/out-of-scope decision in an ADR.
 - [ ] **[v2-DEFERRED]** In-flight cancellation of model calls and tool executions — cancel signal arrives
       mid-inference or mid-tool, not just at node boundaries. See BC-2.05.001 Related BCs v2-deferral note.
 - [ ] **[v2-DEFERRED]** Execute_code → tool-registry IPC/RPC callback gateway — running sandbox code can
-      invoke registered ferrochain tools via a local socket during execution. Not in v1 scope.
+      invoke registered pregolya tools via a local socket during execution. Not in v1 scope.
 - [ ] **[COVERED D20 — BC-2.13.007]** Env-secret stripping at sandbox execution boundary — SandboxConfig.env\_allowlist
       regex pattern filter; E-SBXD-006 for invalid patterns; fail-closed. (Moved to "Covered" above.)
 - [ ] **[COVERED D20 — BC-2.08.014]** Provider-level ordered failover chain on 429/5xx/auth — ProviderFallbackPolicy
@@ -285,7 +285,7 @@ require a positive adoption/defer/out-of-scope decision in an ADR.
       WAL-safe write concurrency deferred to v2. (Moved above.)
 
 **[NEW — framework-scope] resolved in D20:**
-- [ ] **[COVERED D20 — CAP-021/BC-2.09.006-007]** MCP server role — `ferrochain-server` or `ferrochain-mcp`
+- [ ] **[COVERED D20 — CAP-021/BC-2.09.006-007]** MCP server role — `pregolya-server` or `pregolya-mcp`
       exposes registered tools and resources via the MCP protocol so external LLM applications
       can connect as MCP clients. Adopted in Wave 2: CAP-021 added; BC-2.09.006 (tools/list) and
       BC-2.09.007 (tools/call) specify behavior for stdio and SSE transports. E-MCP-005 covers
@@ -293,16 +293,16 @@ require a positive adoption/defer/out-of-scope decision in an ADR.
 
 **Application-layer (intentionally above the framework — no BC needed):**
 - [ ] Layered/cached system-prompt composition (SOUL.md → MEMORY.md → per-turn overlay).
-      ferrochain provides message primitives + memory store; the composition policy is the
+      pregolya provides message primitives + memory store; the composition policy is the
       Hermes application layer.
-- [ ] Runtime-mutable procedural skills (SKILL.md load, route, write-back). No ferrochain
+- [ ] Runtime-mutable procedural skills (SKILL.md load, route, write-back). No pregolya
       primitive is required; the memory store is the persistence surface.
-- [ ] Natural-language cron definitions (NL → cron expression synthesis). ferrochain accepts
+- [ ] Natural-language cron definitions (NL → cron expression synthesis). pregolya accepts
       the resulting cron expression; parsing is application-layer.
 - [ ] Sub-agent identity / SOUL.md per child. Agent identity (persona, values) is application-layer
       system prompt content.
 - [ ] External channel output (Slack/WhatsApp routing from cron runs). Application-layer
-      integration built on top of ferrochain-server run results.
+      integration built on top of pregolya-server run results.
 
 ---
 
@@ -335,7 +335,7 @@ tool call parsing) not internal parameter values.
 | Research-agent summary (pre-ingested) | N/A | Condensed 12-requirement analysis of hermes-agent architecture, verified at documentation level |
 | **Local file reads (Read tool)** | 15 | BC-INDEX.md, capabilities-p0.md, capabilities-p1-p2.md, BC-2.10.001, BC-2.05.006, BC-2.08.002, BC-2.09.001, BC-2.16.001, BC-2.12.004, BC-2.15.001, domain-a-soc-analyst.md, domain-b-dark-factory.md, domain-c-openclaw.md | Disposition verification against actual BCs and capability shards |
 | Perplexity / Tavily | 0 | Research-agent output was pre-provided; no additional external queries made |
-| Training data | 0 | All factual claims about ferrochain surface verified against local spec files |
+| Training data | 0 | All factual claims about pregolya surface verified against local spec files |
 
 **Total new MCP tool calls this burst:** 0 (all evidence from local files + pre-provided research summary)
 **Numeric parameters:** all flagged as UNVERIFIED — see §6 Research Caveats.

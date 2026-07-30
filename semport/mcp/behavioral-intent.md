@@ -1,10 +1,10 @@
 ---
 artifact: semport/mcp/behavioral-intent
-project: ferrochain
-port_target: langchain-mcp-adapters (0.3.0) → ferrochain-mcp
+project: pregolya
+port_target: langchain-mcp-adapters (0.3.0) → pregolya-mcp
 analyzer_pass: 5
 date: 2026-07-12
-disposition_note: elevated to first-class by D1 amendment (was a thin adapter, now a ferrochain-mcp crate)
+disposition_note: elevated to first-class by D1 amendment (was a thin adapter, now a pregolya-mcp crate)
 note: analysis only — NO Rust code committed; signatures are illustrative sketches
 ---
 
@@ -20,7 +20,7 @@ Python `mcp` SDK: the SDK owns transports, sessions, and wire types; this
 package owns the **translation layer** (MCP types ⇄ LangChain types) and a
 **multi-server convenience client**.
 
-For ferrochain (`ferrochain-mcp`, first-class per D1 amendment), the port
+For pregolya (`pregolya-mcp`, first-class per D1 amendment), the port
 target is the same adapter behavior, but sitting on top of the **official Rust
 MCP SDK `rmcp`** instead of the Python `mcp` SDK (see dependency-disposition).
 
@@ -69,7 +69,7 @@ session and converts the result. Key contracts:
 - **Metadata:** MCP `tool.annotations` (+ `_meta`) → LC tool `metadata`.
 - **Reverse direction:** `to_fastmcp(lc_tool)` converts a LangChain tool INTO a
   FastMCP server tool (requires pydantic BaseModel args_schema; rejects injected
-  args). Server-side; likely out-of-scope for ferrochain wave 1.
+  args). Server-side; likely out-of-scope for pregolya wave 1.
 
 ### 2. Multi-server client (`client.py`, 302 LOC)
 
@@ -148,7 +148,7 @@ interceptors 141, callbacks 141, resources 103, prompts 59). Tests **3,056 LOC**
 pass: 5
 artifact: behavioral-intent
 package: langchain-mcp-adapters
-crate: ferrochain-mcp
+crate: pregolya-mcp
 status: complete
 timestamp: 2026-07-12
 ```

@@ -1,6 +1,6 @@
 ---
 artifact: semport/platform/EXHAUSTIVE-SWEEP
-project: ferrochain
+project: pregolya
 scope: platform (langgraph-sdk @ 1.2.9 + langgraph-cli @ 1.2.9)
 validator: validate-extraction
 date: 2026-07-12
@@ -392,9 +392,9 @@ wave sizing based on platform package scope would get wrong inputs. The correct 
 CLI *source* is 8,383 LOC; full package (source + tests) is 15,591 LOC; total package
 including examples is 17,205 LOC.
 
-Fix #2 (LOW, but design-relevant for ferrochain): The `langchain-core` role correction
+Fix #2 (LOW, but design-relevant for pregolya): The `langchain-core` role correction
 clarifies that the SDK uses langchain-core for chat model stream types in the v3 message
-projections, NOT for RemoteGraph. This matters for ferrochain's DEFER decision on v3:
+projections, NOT for RemoteGraph. This matters for pregolya's DEFER decision on v3:
 the langchain-core dependency IS in the v3 DEFER scope, meaning when (if) v3 is
-implemented in ferrochain, the ferrochain-core types for chat model streams must be
+implemented in pregolya, the pregolya-core types for chat model streams must be
 considered alongside the v3 subsystem, not only when implementing RemoteGraph.

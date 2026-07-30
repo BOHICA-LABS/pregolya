@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-red-gate-consistency.sh — ferrochain factory-artifacts ADVISORY validator
+# verify-red-gate-consistency.sh — pregolya factory-artifacts ADVISORY validator
 #
 # PURPOSE
 # ───────

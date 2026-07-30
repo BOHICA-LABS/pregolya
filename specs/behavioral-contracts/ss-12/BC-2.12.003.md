@@ -21,13 +21,13 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "388eb9b"
+input-hash: "62186cc"
 changelog:
   - "1.1 (ADV-P1D-PASS-31): F-P31-01 PC18 list-runs endpoint — add limit (default 10, max 100; values > 100 clamped) and offset pagination params + declare created_at DESC ordering (pagination coherence canon)."
   - "1.2 (ADV-P1D-PASS-33): F-P33-02 add Run-Config Merge Precedence invariant — run-supplied config/metadata/context deep-merge over Assistant's stored values, run wins at leaf key. Upstream-check result: no contradicting semantics in BC-2.01.003 or semport behavioral-intent §2.3; leaf-level deep-merge adopted as spec canon."
-  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
+  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.4 (F-P117-01, fix burst 120, 2026-07-19): summary_halt promoted to first-class terminal Run status throughout (Option 1 adjudication: BC-2.10.003 PC8(d) explicitly asserts the Run status IS summary_halt '(not failed)'; entities-server.md §91 agrees). H1 title and Description: add summary_halt to state machine enumeration. PC7: add in_progress → summary_halt arc (OnCeiling::Summarize path per BC-2.10.003 PC8(c)(d)). PC8: terminal set {completed, failed, cancelled} → {completed, failed, cancelled, summary_halt}. PC13: completed_at terminal set gains summary_halt. PC18: status filter enum gains 'summary_halt'. PC19: deletable terminal states gain summary_halt. Output invariant: output populated when status ∈ {completed, summary_halt} (summary_halt output = summarize model response per BC-2.10.003 PC8(c)); null in all other states. Traceability state machine description updated."
-  - "1.5 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-003: replaced `FerrochainError { ... }` with `FerrochainError { .. }` — CLASS3_ASCII_ELLIPSIS_VIOLATION (three-dot ASCII form forbidden in prose/observation context; canonical elision marker is two dots per ADR-010 §Error-Construction Notation Canon)."
+  - "1.5 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-003: replaced `PregolyaError { ... }` with `PregolyaError { .. }` — CLASS3_ASCII_ELLIPSIS_VIOLATION (three-dot ASCII form forbidden in prose/observation context; canonical elision marker is two dots per ADR-010 §Error-Construction Notation Canon)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -42,8 +42,8 @@ removal_reason: null
 
 ## Description
 
-A Run is a single execution of a ferrochain graph against a Thread, dispatched by
-ferrochain-server. This BC specifies the Run creation endpoint, its lifecycle state
+A Run is a single execution of a pregolya graph against a Thread, dispatched by
+pregolya-server. This BC specifies the Run creation endpoint, its lifecycle state
 machine (`queued → in_progress → completed | failed | cancelled | summary_halt`, with `interrupted` as a pausable/resumable state; `summary_halt` is a budget-summarize terminal state per BC-2.10.003 PC8(d)), and the
 failure modes including the `E-SERVER-002 RunNotFound` error. Runs are created synchronously
 via `POST /threads/{thread_id}/runs`; execution begins asynchronously. Status can be
@@ -52,8 +52,8 @@ LangGraph Platform (D13).
 
 ## Preconditions
 
-1. `ferrochain-server` is running with configured `RunStore`, `CheckpointSaver`, and
-   an executor connected to the `ferrochain-graph` engine.
+1. `pregolya-server` is running with configured `RunStore`, `CheckpointSaver`, and
+   an executor connected to the `pregolya-graph` engine.
 2. A Thread identified by `thread_id` exists (see BC-2.12.001).
 3. The caller holds a valid authentication credential (or server is in dev mode).
 
@@ -119,7 +119,7 @@ LangGraph Platform (D13).
 14. Returns HTTP 404 with `{ code: "E-SERVER-002", message: "RunNotFound: run '<run_id>' does not exist in thread '<thread_id>'" }` if not found.
 15. A completed Run carries `output: GraphOutput` (the final state values).
 16. A failed Run carries `error: { code, message, component, category }` from the
-    propagated `FerrochainError`.
+    propagated `PregolyaError`.
 
 ### List Runs (`GET /threads/{thread_id}/runs`)
 
@@ -171,9 +171,9 @@ default `multitask_strategy`.
 **Expected behavior:** HTTP 409 `{ code: "E-SERVER-012", message: "ConcurrentRun: thread 't1' already has an active run; use multitask_strategy to override" }`.
 
 ### EC-003: Run fails due to unhandled graph error
-**Scenario:** A node in the graph panics or returns `Err(FerrochainError { .. })`.
+**Scenario:** A node in the graph panics or returns `Err(PregolyaError { .. })`.
 **Expected behavior:** Run transitions to `failed` with `error` field populated from the
-`FerrochainError`. DI-014 ensures the error is not silently swallowed. The thread's
+`PregolyaError`. DI-014 ensures the error is not silently swallowed. The thread's
 checkpoint state reverts to the last successful checkpoint before the failed Run.
 
 ### EC-004: Get run with wrong thread_id
@@ -200,8 +200,8 @@ scoped to a different thread — cross-thread run access is not permitted.
 
 ## Verification Properties
 
-_No Kani VP seed required. Integration tests against in-process ferrochain-server and
-ferrochain-graph engine are sufficient._
+_No Kani VP seed required. Integration tests against in-process pregolya-server and
+pregolya-graph engine are sufficient._
 
 ## Related BCs
 
@@ -211,9 +211,9 @@ ferrochain-graph engine are sufficient._
 
 ## Architecture Anchors
 
-- `ferrochain-server/src/api/runs.rs` — Run CRUD handlers
-- `ferrochain-server/src/executor.rs` — Async executor dispatching pending runs to graph engine
-- `ferrochain-server/src/store/run_store.rs` — `RunRecord` and lifecycle state persistence
+- `pregolya-server/src/api/runs.rs` — Run CRUD handlers
+- `pregolya-server/src/executor.rs` — Async executor dispatching pending runs to graph engine
+- `pregolya-server/src/store/run_store.rs` — `RunRecord` and lifecycle state persistence
 
 ## Story Anchor
 
@@ -235,4 +235,4 @@ _[to be filled after verification-architecture phase]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | I (integration), E2E (end-to-end) |
-| Module | ferrochain-server |
+| Module | pregolya-server |

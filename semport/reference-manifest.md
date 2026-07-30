@@ -4,7 +4,7 @@ version: 1.4.0
 created: 2026-07-12
 updated: 2026-07-13
 purpose: >
-  Pinned reference corpus for the ferrochain semport analysis.
+  Pinned reference corpus for the pregolya semport analysis.
   All repos are shallow-cloned at their latest stable release tags
   so the codebase-analyzer has a stable, reproducible source of truth.
 ---
@@ -391,7 +391,7 @@ Predominantly Rust. Minor non-Rust content:
 
 5. **adk-retry-reflect.** Name suggests a retry-with-self-reflection loop pattern.
    No direct LangChain equivalent (closest: LangGraph's re-try edges). May be a
-   ferrochain-relevant pattern.
+   pregolya-relevant pattern.
 
 6. **81 example crates.** Large example surface area; excluded from workspace to
    avoid build-time cost. Rich pattern source if analysis gate opens.

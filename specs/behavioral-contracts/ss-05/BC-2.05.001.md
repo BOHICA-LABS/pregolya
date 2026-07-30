@@ -24,10 +24,10 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "96aeecf"
+input-hash: "03338ae"
 changelog:
   - "1.1 (ADV-P1D-PASS-26): F-P26-03 TV-005 field name risk_tier→action_risk (propagation of F-P25-06 action_risk canon; retired field name drained per RETIRED-IDENTIFIER RESIDUE GREP gate)."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (F-P151-06, burst-252, 2026-07-24): Related BCs — add BC-2.10.006 cross-reference (compaction × suspend non-interaction). A run parked by generic interrupt() (PC5: super-step boundary has not advanced) is not at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during any interrupt() park window."
 extracted_from: null
@@ -149,9 +149,9 @@ is returned. The graph does not proceed and does not leave a partial checkpoint.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — interrupt handling inside `tick()`
-- `ferrochain-graph/src/types.rs` — `NodeInterrupt`, `InterruptPayload`, `Command` types
-- `ferrochain-checkpoint/src/base.rs` — `put_writes` with INTERRUPT channel index
+- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — interrupt handling inside `tick()`
+- `pregolya-graph/src/types.rs` — `NodeInterrupt`, `InterruptPayload`, `Command` types
+- `pregolya-checkpoint/src/base.rs` — `put_writes` with INTERRUPT channel index
 
 ## Story Anchor
 
@@ -173,4 +173,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | I (integration) |
-| Module | ferrochain-graph |
+| Module | pregolya-graph |

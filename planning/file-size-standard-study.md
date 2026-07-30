@@ -4,13 +4,13 @@ research_type: general
 topic: Rust source-file size norms and module-splitting standards
 producer: research-agent
 timestamp: 2026-07-13
-project: ferrochain
+project: pregolya
 status: complete
 ---
 
 # Rust Source-File Size Norms & Module-Splitting Standards — Evidence Study
 
-**Purpose:** establish a binding, evidence-backed project convention for ferrochain on lines-of-code (LOC) per Rust source file, when to split modules, how to treat test files, and how to enforce the limit in CI.
+**Purpose:** establish a binding, evidence-backed project convention for pregolya on lines-of-code (LOC) per Rust source file, when to split modules, how to treat test files, and how to enforce the limit in CI.
 
 **Bottom line up front:** The human's working hypothesis (500 soft / 750 hard for production, 1,500 for test files) is **well-aligned with observed practice and is CONFIRMED with minor refinements.** 500 soft matches the only widely-cited off-the-shelf file-length tool default (`cargo-lint-extra`) and sits at the top of the empirically-cited "optimal" band (400–800 non-test LOC). 750 hard is defensibly tighter than rustc's deliberately-arbitrary 3,000-line ceiling — appropriate for a **greenfield** codebase where no legacy monoliths force leniency. The two material corrections: (1) **count code lines only** (exclude blanks, comments/doc-comments, `#[cfg(test)]` modules, and generated code) rather than raw `wc -l`; (2) enforce via a **tokei-driven `xtask` check**, because Clippy has **no** file-level lint (its `too_many_lines` is function-scoped only).
 
@@ -53,12 +53,12 @@ A parallel StackExchange answer independently proposes **"the perfect Rust modul
 
 Across all sources, the *categories* of legitimately-large files are consistent [1][3][5 (research synthesis)]:
 
-| Category | Why tolerated | ferrochain relevance |
+| Category | Why tolerated | pregolya relevance |
 |----------|---------------|----------------------|
 | **Generated code** (bindings, prost/tonic output, parser tables) | Not hand-edited; splitting is meaningless | HIGH — msgpack/protobuf codegen likely for checkpoint wire format (D11.2) |
 | **Large match-based state machines / lookup tables** | Splitting scatters one logical artifact; hurts comprehension | MEDIUM — graph runtime scheduler, channel reducers |
 | **Documentation-dense modules** | Doc comments inflate line count without code complexity (rustc explicitly notes this) [1][3] | MEDIUM — public API crates with thorough rustdoc |
-| **Single-file crates** | "5000 lines may be acceptable" when the crate *is* one file [3] | LOW — ferrochain is multi-crate (D4) |
+| **Single-file crates** | "5000 lines may be acceptable" when the crate *is* one file [3] | LOW — pregolya is multi-crate (D4) |
 | **Serializable message-type dumps** | "dozens of types... lots of pure data... barely any methods" belong together [forum] | MEDIUM — graph message/channel type families |
 
 **Finding:** production Rust keeps hand-written logic files in the low-to-mid hundreds of lines; large files are the *documented exception*, gated behind an explicit opt-out, not the norm.
@@ -80,7 +80,7 @@ Across all sources, the *categories* of legitimately-large files are consistent 
 
 **Consistent theme across all authoritative sources:** file size is a **proxy for conceptual cohesion**, never a goal. None prescribe a number. This is *why* a numeric CI gate must be framed as a **review trigger** ("does this file still do one thing?") rather than a quality metric — and why an exception path is mandatory.
 
-**matklad's directly load-bearing pattern for ferrochain:** use module-level files as *re-export aggregators only* (`pub use`), keeping the public surface separate from implementation files [9]. This is confirmed by the standard StackExchange idiom (`math.rs` does `mod matrix; pub use matrix::Matrix;`) [web].
+**matklad's directly load-bearing pattern for pregolya:** use module-level files as *re-export aggregators only* (`pub use`), keeping the public surface separate from implementation files [9]. This is confirmed by the standard StackExchange idiom (`math.rs` does `mod matrix; pub use matrix::Matrix;`) [web].
 
 ---
 
@@ -100,7 +100,7 @@ Across all sources, the *categories* of legitimately-large files are consistent 
 - **500 soft is directly corroborated** — it is `cargo-lint-extra`'s out-of-the-box warn threshold and the top of the forum's 400–800 "optimal" band [3][research pass 1].
 - **750 hard sits in the empirically-defensible zone** — above the ~700 "perfect module" ceiling [7] and the 400–800 optimal band, at the ~1,000 personal-refactor-trigger level [3], but well under rustc's arbitrary 3,000 backstop [1]. For a *new* codebase there is no legacy-monolith pressure, so a tighter hard gate than rustc's is not only viable but preferable — it prevents monoliths from ever forming.
 - **Not too tight:** 750 code-lines comfortably holds a cohesive type family + impls + a few helpers. It only bites when a file is doing several things — exactly when a split is warranted.
-- **Not too loose:** it is a quarter of rustc's ceiling, keeping ferrochain firmly in "review-in-one-sitting" territory and dodging the superlinear static-analysis slowdown [3].
+- **Not too loose:** it is a quarter of rustc's ceiling, keeping pregolya firmly in "review-in-one-sitting" territory and dodging the superlinear static-analysis slowdown [3].
 
 **Counting-only-production-LOC pattern — confirmed as real practice:** `purple-ssh` explicitly exempts test builds from its function-length gate [research pass 1]; ESLint offers `skipComments`; rustc contributors note doc comments legitimately inflate files [1][3]. **Counting code lines only (excluding comments, blanks, `#[cfg(test)]`, generated) is the correct, evidence-backed counting rule** — and it removes the perverse incentive to under-document to fit a raw-line budget.
 
@@ -120,7 +120,7 @@ Across all sources, the *categories* of legitimately-large files are consistent 
   - **Shared setup → `tests/common/mod.rs`** re-exporting per-domain helpers (`tests/common/db.rs`, `tests/common/http.rs`).
   - **Success vs. error case grouping** — `tests/protocol/success_cases.rs` / `error_cases.rs` with a thin `mod.rs`.
 
-**Recommendation:** 1,500 hard for test files is confirmed, but pair it with a **1,000 soft** warning and a documented preference to (a) externalize bulk data to `tests/fixtures/`, and (b) split by behavior once a suite crosses the soft line. ferrochain's **conformance suite** (`ferrochain-standard-tests`, D1) is precisely the table-driven case that justifies the higher test ceiling.
+**Recommendation:** 1,500 hard for test files is confirmed, but pair it with a **1,000 soft** warning and a documented preference to (a) externalize bulk data to `tests/fixtures/`, and (b) split by behavior once a suite crosses the soft line. pregolya's **conformance suite** (`pregolya-standard-tests`, D1) is precisely the table-driven case that justifies the higher test ceiling.
 
 ---
 
@@ -130,7 +130,7 @@ Across all sources, the *categories* of legitimately-large files are consistent 
 
 Options, ranked by friction/reliability:
 
-| Mechanism | Reliability | Friction | Verdict for ferrochain |
+| Mechanism | Reliability | Friction | Verdict for pregolya |
 |-----------|-------------|----------|------------------------|
 | **`tokei` (JSON) + `xtask` check** | High — language-aware, separates Code/Comments/Blanks, fast | Low — one small Rust binary in the existing xtask crate | **RECOMMENDED** — gives correct code-line counting, per-category thresholds, allowlist, clear errors, cross-platform |
 | `loc` + shell script | High (>100× faster than cloc; 2–10× faster than tokei) [research pass 2] | Low, but less structured output than tokei JSON | Viable alternative if build speed dominates |
@@ -162,16 +162,16 @@ Options, ranked by friction/reliability:
 
 ---
 
-## 7. Scored recommendation for ferrochain
+## 7. Scored recommendation for pregolya
 
-Context: greenfield multi-crate Cargo workspace (D4), Python→Rust semport, production-grade constitution (D10), with a dedicated conformance-test crate (`ferrochain-standard-tests`, D1) and codegen-likely checkpoint wire format (D11.2). This profile *favors discipline over leniency*: there is no legacy monolith to grandfather, so set the bar where you want it to stay.
+Context: greenfield multi-crate Cargo workspace (D4), Python→Rust semport, production-grade constitution (D10), with a dedicated conformance-test crate (`pregolya-standard-tests`, D1) and codegen-likely checkpoint wire format (D11.2). This profile *favors discipline over leniency*: there is no legacy monolith to grandfather, so set the bar where you want it to stay.
 
 | Dimension | Recommendation | Score* | Rationale (evidence) |
 |-----------|---------------|:------:|----------------------|
 | **Production soft target** | **500 code-lines** (warn) | 5/5 | Matches `cargo-lint-extra` default [pass 1] and top of forum's 400–800 optimal band [3]. Directly corroborated. |
 | **Production hard CI gate** | **750 code-lines** (fail) | 4/5 | In the ~700–1,000 defensible zone [3][7]; a deliberate greenfield-tighten vs rustc's arbitrary 3,000 [1]. Slight judgment call — 800 (exact top of the "optimal" band) is an equally-defensible alternative if 750 proves to bite cohesive files; do NOT go below 700. |
 | **Counting rule** | **Code lines only** — exclude blanks, comments, doc-comments, `#[cfg(test)]` modules, and generated code (`OUT_DIR`, `*.gen.rs`, prost/tonic output) | 5/5 | Confirmed practice: purple-ssh exempts tests [pass 1]; rustc notes docs legitimately inflate [1][3]; ESLint `skipComments`. Use tokei's `Code` metric. Removes the anti-documentation incentive. |
-| **Test-file limit** | **1,000 soft / 1,500 hard** for test files (`tests/**`, `#[cfg(test)]`-dominant files) | 4/5 | 1,500 is "reasonable but monitor" for table-driven/conformance suites [pass 2][3]; justified for `ferrochain-standard-tests`. Pair with fixture-externalization + split-by-behavior guidance. Soft gate prevents silent sprawl. |
+| **Test-file limit** | **1,000 soft / 1,500 hard** for test files (`tests/**`, `#[cfg(test)]`-dominant files) | 4/5 | 1,500 is "reasonable but monitor" for table-driven/conformance suites [pass 2][3]; justified for `pregolya-standard-tests`. Pair with fixture-externalization + split-by-behavior guidance. Soft gate prevents silent sprawl. |
 | **Enforcement mechanism** | **`cargo xtask check-file-size`** reading `tokei --output json`; required CI job. Complement with `clippy::too_many_lines = 150` (function-level). | 5/5 | Clippy has NO file-level lint [11]; proposal #16674 not shipped. tokei+xtask is the least-friction reliable path, matklad-endorsed pattern [9], gives correct code-line counting + allowlist + clear errors. |
 | **Exception / allowlist procedure** | Central **`xtask/file-size-allowlist.toml`**: `path` + `reason` + `approver` + `date`. Generated + `tests/fixtures/` auto-excluded by glob (no entry needed). Any hard-gate override requires a PR-reviewed allowlist entry with justification. Periodically audit to shrink the list (mirror rustc's `ignore-tidy-filelength` removal effort [2]). | 5/5 | rustc's per-file opt-out proves an escape hatch is mandatory for unsplittable artifacts [1]; centralizing it (vs scattered comments) makes exceptions *visible and reviewable* — better than rustc's inline directive. Aligns with D10 production-grade discipline. |
 

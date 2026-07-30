@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "b1cbefd"
+input-hash: "af2d76a"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -60,7 +60,7 @@ enforcement).
 
 1. Before code execution begins, a log message is emitted at `WARN` level with the text:
    `"ProcessBackend: no filesystem isolation, no network isolation, no memory bounds —
-   untrusted code runs with OS-level privileges of the ferrochain process"`
+   untrusted code runs with OS-level privileges of the pregolya process"`
    The log entry MUST include `event_type = "sandbox.process_no_isolation_execute"` as a structured field alongside the message.
 2. The warning is emitted once per `execute()` invocation, not only at construction time
 3. The process backend executes the tool function and returns its result
@@ -99,7 +99,7 @@ enforcement).
 | EC-001 | `unsafe_process_no_isolation()` is called in a test (`#[cfg(test)]`) context | Warning is still emitted at WARN level; no test-only override suppresses it |
 | EC-002 | `ProcessBackend` is constructed but `execute()` is never called | No warning emitted — warning fires at execute-time, not at construct-time |
 | EC-003 | `execute()` is called 5 times in a loop | Warning emitted 5 times (once per execute call); no deduplication |
-| EC-004 | Calling code attempts to intercept the warning by setting a custom log subscriber | Warning is emitted into the standard `tracing` subscriber; custom subscriber receives it; ferrochain does not suppress it |
+| EC-004 | Calling code attempts to intercept the warning by setting a custom log subscriber | Warning is emitted into the standard `tracing` subscriber; custom subscriber receives it; pregolya does not suppress it |
 
 ## Canonical Test Vectors
 
@@ -107,7 +107,7 @@ enforcement).
 |-------|----------------|----------|
 | `Sandbox::unsafe_process_no_isolation().execute(no_op_tool, args)` | WARN log emitted containing "no filesystem isolation" and "no network isolation"; `Ok(result)` returned | happy-path (explicit opt-in) |
 | `SandboxBackend::default().execute(tool, args)` (WASM backend) | No ProcessBackend WARN log emitted; `Ok(result)` | contrast (no spurious warning on enforcing backend) |
-| Scan `ferrochain_sandbox` public API for any method returning `ProcessBackend` without "unsafe" or "no_isolation" in its name | Zero methods found | structural test |
+| Scan `pregolya_sandbox` public API for any method returning `ProcessBackend` without "unsafe" or "no_isolation" in its name | Zero methods found | structural test |
 | `unsafe_process_no_isolation()` called; `execute()` called twice | Two WARN log lines — one per execute call | edge-case (per-execute frequency) |
 | `unsafe_process_no_isolation()` + `execute()` started; executing `Future` is dropped mid-execution (e.g., by `tokio::time::timeout` at the BashTool layer timing out) | OS subprocess killed via `.kill_on_drop(true)` Tokio drop machinery; no orphan subprocess survives the dropped `Future` | kill-on-drop (DI-015 co-enforcement) |
 
@@ -116,7 +116,7 @@ enforcement).
 | VP-ID | Property | Proof Method |
 |-------|----------|--------------|
 | VP-2.13.002-A | Every `execute()` call on `ProcessBackend` emits at least one WARN-level log entry with `event_type = "sandbox.process_no_isolation_execute"` containing the words "no filesystem isolation" | unit test — tracing subscriber capture |
-| VP-2.13.002-B | No public API of `ferrochain-sandbox` returns a `ProcessBackend` without "unsafe" and "no_isolation" in the function name | structural test — API surface scan |
+| VP-2.13.002-B | No public API of `pregolya-sandbox` returns a `ProcessBackend` without "unsafe" and "no_isolation" in the function name | structural test — API surface scan |
 | VP-2.13.002-C | `ProcessBackend::capabilities().enforcing()` is `false` | unit test |
 
 ## Traceability
@@ -126,11 +126,11 @@ enforcement).
 | L2 Capability | CAP-015 |
 | Capability Anchor Justification | CAP-015 ("Sandboxed Tool Execution (Enforcing Backend Default)") per capabilities-p1-p2.md §CAP-015 |
 | L2 Domain Invariants | DI-006 (Enforcing Sandbox Backend is Default), DI-015 (Subprocess Execution Timeout — ProcessBackend co-enforces via `.kill_on_drop(true)` at sandbox layer; primary enforcer is BC-2.23.005 / BashTool) |
-| Source Analysis | P-61 NOT-APPLICABLE (must-not-inherit: process backend as Cargo default); P-62 NOT-APPLICABLE (must-not-inherit: silent policy-strictness decoupling); P-49 ADOPT (truthful BackendCapabilities — honest false values drive loud warning); NE-01 (ferrochain requirement: loud opt-in); assessment-parts/part-3 §NE-01 |
-| Reference Evidence | No upstream LangChain or adk-rust equivalent for loud-warning on process backend — greenfield behavior. adk-rust P-49 ADOPT provides the honest-capabilities shape but no warning mechanism; ferrochain adds the warning layer on top. |
+| Source Analysis | P-61 NOT-APPLICABLE (must-not-inherit: process backend as Cargo default); P-62 NOT-APPLICABLE (must-not-inherit: silent policy-strictness decoupling); P-49 ADOPT (truthful BackendCapabilities — honest false values drive loud warning); NE-01 (pregolya requirement: loud opt-in); assessment-parts/part-3 §NE-01 |
+| Reference Evidence | No upstream LangChain or adk-rust equivalent for loud-warning on process backend — greenfield behavior. adk-rust P-49 ADOPT provides the honest-capabilities shape but no warning mechanism; pregolya adds the warning layer on top. |
 | Binding Decisions | NE-01, DI-006 |
-| Forcing Functions | Domain C OpenClaw §4 (host-first execution default is §4 design lesson contra ferrochain; ferrochain inverts); product-brief.md §NE catalog NE-01 |
-| Architecture Module | ferrochain-sandbox (filled by architect) |
+| Forcing Functions | Domain C OpenClaw §4 (host-first execution default is §4 design lesson contra pregolya; pregolya inverts); product-brief.md §NE catalog NE-01 |
+| Architecture Module | pregolya-sandbox (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 
 ## Related BCs
@@ -140,7 +140,7 @@ enforcement).
 
 ## Architecture Anchors
 
-- `architecture/module-decomposition.md §ferrochain-sandbox` — `sandbox::process` row: explicit non-default; `unsafe_process_no_isolation()` only access path; WARN log on every `execute()`; `BackendCapabilities { filesystem_isolated: false, network_isolated: false, memory_bounded: false }`; DI-015 co-enforcer via `.kill_on_drop(true)` (MEDIUM, SS-13)
+- `architecture/module-decomposition.md §pregolya-sandbox` — `sandbox::process` row: explicit non-default; `unsafe_process_no_isolation()` only access path; WARN log on every `execute()`; `BackendCapabilities { filesystem_isolated: false, network_isolated: false, memory_bounded: false }`; DI-015 co-enforcer via `.kill_on_drop(true)` (MEDIUM, SS-13)
 - `architecture/purity-boundary-map.md §Effectful Shell` — `sandbox::process` row: OS subprocess spawning via `tokio::process::Command` with `.kill_on_drop(true)` (integration test)
 
 ## Story Anchor

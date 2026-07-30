@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-06
 capability: CAP-034
-crate: ferrochain-graph
+crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
@@ -30,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
-input-hash: "1a58f10"
+input-hash: "47be1bd"
 extracted_from: null
 modified: []
 deprecated: null
@@ -131,7 +131,7 @@ event always pairs with a prior `BC-2.06.004 tool_approval_request` event for th
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-018-per-tool-call-approval-hook.md` — Decision 5 (tool_approval_resolved event, complementary to tool_approval_request)
-- `architecture/module-decomposition.md` — SS-06, `graph::event_emitter (ferrochain-graph/src/event_emitter.rs)`
+- `architecture/module-decomposition.md` — SS-06, `graph::event_emitter (pregolya-graph/src/event_emitter.rs)`
 
 ## Story Anchor
 
@@ -152,7 +152,7 @@ _[to be filled after story decomposition — Wave 1 SS-06 extension story]_
 | Architecture Authority | ADR-018 Decision 5 (complementary tool_approval_resolved event) |
 | Binding Decisions | D23 (per-tool-call approval hook mandate; streaming taxonomy 12→14) |
 | VP Registration | VP-2.06.005-A/B (integration tests) |
-| Module | ferrochain-graph / streaming |
+| Module | pregolya-graph / streaming |
 | Priority | P1 |
 | Wave | 1 |
 | Test Types | integration |

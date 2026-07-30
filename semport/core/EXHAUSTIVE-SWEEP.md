@@ -1,6 +1,6 @@
 ---
 artifact: semport/core/EXHAUSTIVE-SWEEP
-project: ferrochain
+project: pregolya
 scope: .factory/semport/core/*.md (all 5 area files)
 reference: .reference/langchain/libs/core (langchain==1.3.13, langchain-core==1.4.9)
 date: 2026-07-12

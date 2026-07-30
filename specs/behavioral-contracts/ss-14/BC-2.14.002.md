@@ -13,9 +13,9 @@ changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-01 PC3 add per-endpoint override block (E-SERVER-016→503); OBS-1 invariant precedence carve-out added."
   - "1.2 (ADV-P1D-PASS-26): F-P26-01 PC3 Known-overrides enumeration expanded to all 8 per-endpoint override classes; E-SERVER-004 removed from invariant divergence-example list (POLICY→403 is the categorical default, not a divergence)."
   - "1.3 (ADV-P1D-PASS-27): F-P27-01 add 9th Known-override: E-GRAPH-002 POLICY→422 on resume endpoint; canon: pass-23 deliberately set 422 (semantic state validation failure — no active interrupt slot); POLICY→403 categorical default does not apply because 'no active interrupt' is an unprocessable-entity condition, not a policy rejection."
-  - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core / ferrochain-server per module-decomposition.md v1.10."
-  - "1.5 (FIX-BURST-280-WAVE-C/F-P175-A25-T2/2026-07-28): Task 2 — explicit annotation added above TV table. TV-001/TV-002/TV-005 use ALL-CAPS prose shorthand notation (`component: CORE, category: VAL`, etc.) which is BC-2.14.001 rendering convention for table cells — NOT compilable Rust. Actual test construction uses FerrochainError::new(...). No behavioral change."
-  - "1.6 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). One CLASS3_ASCII_ELLIPSIS_VIOLATION corrected: TV-005 Input `FerrochainError { category: INTERNAL, ... }` — replaced `...` with `..`. TV-001 and TV-002 are Class 3 VALID (all 5 non-source fields present; Class 4 defining-crate annotations from v1.5 remain accurate). No behavioral change."
+  - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core / pregolya-server per module-decomposition.md v1.10."
+  - "1.5 (FIX-BURST-280-WAVE-C/F-P175-A25-T2/2026-07-28): Task 2 — explicit annotation added above TV table. TV-001/TV-002/TV-005 use ALL-CAPS prose shorthand notation (`component: CORE, category: VAL`, etc.) which is BC-2.14.001 rendering convention for table cells — NOT compilable Rust. Actual test construction uses PregolyaError::new(...). No behavioral change."
+  - "1.6 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). One CLASS3_ASCII_ELLIPSIS_VIOLATION corrected: TV-005 Input `PregolyaError { category: INTERNAL, ... }` — replaced `...` with `..`. TV-001 and TV-002 are Class 3 VALID (all 5 non-source fields present; Class 4 defining-crate annotations from v1.5 remain accurate). No behavioral change."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -29,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "ec6ca44"
+input-hash: "d9b0a8f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -40,30 +40,30 @@ removed: null
 removal_reason: null
 ---
 
-# BC-2.14.002: RFC-7807 Compatible Problem Emission from FerrochainError
+# BC-2.14.002: RFC-7807 Compatible Problem Emission from PregolyaError
 
 ## Description
 
-When `FerrochainError` values are surfaced via HTTP through `ferrochain-server`, they must be
+When `PregolyaError` values are surfaced via HTTP through `pregolya-server`, they must be
 serializable to an RFC-7807 (Problem Details for HTTP APIs) `application/problem+json` response.
-The mapping from `FerrochainError` struct fields to RFC-7807 fields is fixed and documented in
-error-taxonomy.md. Additionally, `FerrochainError` must provide a `to_problem()` method (or
-`impl From<FerrochainError> for ProblemDetail`) that produces the RFC-7807 payload without
+The mapping from `PregolyaError` struct fields to RFC-7807 fields is fixed and documented in
+error-taxonomy.md. Additionally, `PregolyaError` must provide a `to_problem()` method (or
+`impl From<PregolyaError> for ProblemDetail`) that produces the RFC-7807 payload without
 requiring the HTTP layer to reach into the error's internal fields directly.
 
 ## Preconditions
 
-1. `ferrochain-core` defines `FerrochainError` (see BC-2.14.001).
-2. `ferrochain-server` is handling an HTTP request that results in a `FerrochainError`.
+1. `pregolya-core` defines `PregolyaError` (see BC-2.14.001).
+2. `pregolya-server` is handling an HTTP request that results in a `PregolyaError`.
 3. The HTTP response will carry `Content-Type: application/problem+json` and a status code
    derived from the error's category.
 
 ## Postconditions
 
-1. `ferrochain_err.to_problem()` returns a `ProblemDetail` struct with these fields:
-   - `type_uri: "urn:ferrochain:error:<code>"` (e.g. `"urn:ferrochain:error:E-GRAPH-001"`)
+1. `pregolya_err.to_problem()` returns a `ProblemDetail` struct with these fields:
+   - `type_uri: "urn:pregolya:error:<code>"` (e.g. `"urn:pregolya:error:E-GRAPH-001"`)
    - `title: <humanized category name>` (e.g. `"Concurrency"` for `Category::Concurrency`)
-   - `detail: <err.message>` — the human-readable message from `FerrochainError`
+   - `detail: <err.message>` — the human-readable message from `PregolyaError`
    - `extensions.retry_hint: "never" | "maybe" | "later:<seconds>"` — derived from `RetryHint`
    - `extensions.component: <lowercase component code>` (e.g. `"graph"`)
 2. The `ProblemDetail` serializes to valid JSON conforming to RFC-7807 §3.
@@ -122,19 +122,19 @@ requiring the HTTP layer to reach into the error's internal fields directly.
      interface-definitions.md §HTTP Status Codes 422 row; F-P27-01.
 4. The `Content-Type` header of the response is `application/problem+json` (not
    `application/json`) when a `ProblemDetail` is emitted.
-5. A `FerrochainError` without an HTTP context (e.g. raised in a CLI tool) can still call
+5. A `PregolyaError` without an HTTP context (e.g. raised in a CLI tool) can still call
    `to_problem()` — the method does not require an HTTP runtime to produce the payload.
 
 ## Invariants
 
-- The `type_uri` format `urn:ferrochain:error:<code>` is the stable machine-readable identifier;
+- The `type_uri` format `urn:pregolya:error:<code>` is the stable machine-readable identifier;
   monitoring rules and API clients must use `type_uri`, not `title` or `detail`, for error
   classification.
 - `detail` may contain dynamic content (e.g. the invalid field name), but `type_uri` must not
   (it is always the static code like `E-CORE-001`).
 - `retry_hint` in the extensions block uses the canonical string representation
   (`"never"`, `"maybe"`, `"later:<seconds>"`) for client machine readability.
-- The HTTP status code mapping is defined once in ferrochain-server. A per-endpoint status
+- The HTTP status code mapping is defined once in pregolya-server. A per-endpoint status
   specified in a resource BC overrides the categorical default; the categorical map is the
   fallback for errors with no per-endpoint specification. Legitimate per-endpoint divergences
   (e.g., E-SERVER-016 TIMEOUT→503, E-SERVER-009 VAL→404 for direct lookup,
@@ -147,7 +147,7 @@ requiring the HTTP layer to reach into the error's internal fields directly.
 
 ## Edge Cases
 
-### EC-001: FerrochainError with RetryHint::Later in problem extension
+### EC-001: PregolyaError with RetryHint::Later in problem extension
 **Scenario:** A rate-limited error `(Component::Prov, Category::Rate, retry_hint: Later(60s))` is
 serialized to RFC-7807.
 **Expected behavior:** `extensions.retry_hint` is `"later:60"` (seconds as integer string).
@@ -158,8 +158,8 @@ The HTTP response may additionally include a `Retry-After: 60` header.
 **Expected behavior:** `to_problem()` returns a `ProblemDetail` struct without panicking or
 requiring a `tokio::Runtime`. The struct can be serialized to JSON with `serde_json::to_string`.
 
-### EC-003: Nested FerrochainError source in problem detail
-**Scenario:** A `FerrochainError` with a `source: Some(inner_err)` is converted to RFC-7807.
+### EC-003: Nested PregolyaError source in problem detail
+**Scenario:** A `PregolyaError` with a `source: Some(inner_err)` is converted to RFC-7807.
 **Expected behavior:** The outer error's fields populate the top-level RFC-7807 fields. The inner
 error is NOT recursively expanded in the problem detail (RFC-7807 does not specify a chain format).
 If detailed debugging is needed, it is in the `extensions.detail_chain` field (optional, internal
@@ -181,15 +181,15 @@ from the code string. The HTTP status code falls back to 500 for unknown categor
 
 ## Canonical Test Vectors
 
-_TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy codes for component/category, e.g., `CORE`, `VAL`, `Never`) in table cells — this is prose shorthand, not compilable Rust. The actual test code constructs errors via `FerrochainError::new(...)` per BC-2.14.001 PC8. This notation is intentional and should not be converted to `::new()` form._
+_TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy codes for component/category, e.g., `CORE`, `VAL`, `Never`) in table cells — this is prose shorthand, not compilable Rust. The actual test code constructs errors via `PregolyaError::new(...)` per BC-2.14.001 PC8. This notation is intentional and should not be converted to `::new()` form._
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `FerrochainError { component: CORE, category: VAL, code: "E-CORE-001", retry_hint: Never, message: "Invalid ContentBlock type 'x'" }.to_problem()` | `{ "type": "urn:ferrochain:error:E-CORE-001", "title": "Validation", "detail": "Invalid ContentBlock type 'x'", "extensions": { "retry_hint": "never", "component": "core" } }` | Happy path — VAL error |
-| TV-002 | `FerrochainError { component: PROV, category: RATE, code: "E-PROV-001", retry_hint: Later(30s), message: "RateLimited" }.to_problem()` | HTTP status 429; `extensions.retry_hint: "later:30"` | Rate-limit with backoff |
+| TV-001 | `PregolyaError { component: CORE, category: VAL, code: "E-CORE-001", retry_hint: Never, message: "Invalid ContentBlock type 'x'" }.to_problem()` | `{ "type": "urn:pregolya:error:E-CORE-001", "title": "Validation", "detail": "Invalid ContentBlock type 'x'", "extensions": { "retry_hint": "never", "component": "core" } }` | Happy path — VAL error |
+| TV-002 | `PregolyaError { component: PROV, category: RATE, code: "E-PROV-001", retry_hint: Later(30s), message: "RateLimited" }.to_problem()` | HTTP status 429; `extensions.retry_hint: "later:30"` | Rate-limit with backoff |
 | TV-003 | `ProblemDetail` serialized via `serde_json::to_string` | Valid JSON, no `null` fields except optional ones | RFC-7807 conformance |
 | TV-004 | Response `Content-Type` header | `"application/problem+json"` | Correct MIME type |
-| TV-005 | `FerrochainError { category: INTERNAL, .. }.to_problem()` HTTP status | 500 | Internal error → 500 |
+| TV-005 | `PregolyaError { category: INTERNAL, .. }.to_problem()` HTTP status | 500 | Internal error → 500 |
 
 ## Verification Properties
 
@@ -200,13 +200,13 @@ _TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy co
 
 ## Related BCs
 
-- BC-2.14.001 — FerrochainError 2D struct (depends on: ProblemDetail is derived from FerrochainError fields)
+- BC-2.14.001 — PregolyaError 2D struct (depends on: ProblemDetail is derived from PregolyaError fields)
 - BC-2.12.003 — Run creation lifecycle (composes with: server run errors are emitted as RFC-7807 responses)
 
 ## Architecture Anchors
 
-- `ferrochain-core/src/error.rs` — `ProblemDetail` struct and `FerrochainError::to_problem()` method (to be created)
-- `ferrochain-server/src/error_response.rs` — HTTP status code mapping and response serialization (to be created)
+- `pregolya-core/src/error.rs` — `ProblemDetail` struct and `PregolyaError::to_problem()` method (to be created)
+- `pregolya-server/src/error_response.rs` — HTTP status code mapping and response serialization (to be created)
 
 ## Story Anchor
 
@@ -221,10 +221,10 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-016 |
-| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p0.md §CAP-016 — CAP-016 explicitly includes "RFC-7807-compatible emission" as a required property of the error taxonomy surface; this BC implements that emission contract |
+| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (PregolyaError 2D Struct)") per capabilities-p0.md §CAP-016 — CAP-016 explicitly includes "RFC-7807-compatible emission" as a required property of the error taxonomy surface; this BC implements that emission contract |
 | L2 Domain Invariants | — |
 | NE References | — |
 | Priority | P0 |
 | Wave | Wave 0 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-core / ferrochain-server |
+| Module | pregolya-core / pregolya-server |

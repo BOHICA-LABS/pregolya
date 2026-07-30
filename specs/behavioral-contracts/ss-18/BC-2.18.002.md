@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-18
 capability: CAP-022
-crate: ferrochain-prompts
+crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
@@ -29,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "352f3dd"
+input-hash: "5af97cb"
 extracted_from: null
 modified: []
 deprecated: null
@@ -55,7 +55,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 ## Preconditions
 
 1. A `ChatPromptTemplate` has been constructed via `ChatPromptTemplate::from_messages(messages)`
-   returning `Result<Self, FerrochainError>` per DI-008 — construction validates all slot policies.
+   returning `Result<Self, PregolyaError>` per DI-008 — construction validates all slot policies.
 2. For rendering, a `HashMap<String, TemplateInput>` is provided. Each `TemplateInput`
    is one of:
    - `TemplateInput::Scalar(TemplateVar)` — scalar string binding for human/AI/system slots
@@ -71,7 +71,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 ## Postconditions
 
 1. `ChatPromptTemplate::format_messages(&self, vars: HashMap<String, TemplateInput>)
-   → Result<PromptValue, FerrochainError>` returns `Ok(prompt_value)` on success.
+   → Result<PromptValue, PregolyaError>` returns `Ok(prompt_value)` on success.
 2. `PromptValue.messages` is a `Vec<(Message, MessageProvenance)>` with one entry per slot,
    in the order slots were declared at construction.
 3. For each slot: `MessageProvenance.highest_trust_level` is `Some(trust_level)` where `trust_level` is the highest-severity
@@ -140,7 +140,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 
 - `architecture/module-decomposition.md` — SS-18 module, `prompts::chat_template` + `prompts::prompt_value`
 - `architecture/decisions/ADR-015-prompt-template-injection-safety.md` — Decision 3 (PromptValue, MessageProvenance, ProvenanceTag pass-through)
-- `architecture/purity-boundary-map.md` — `ferrochain-prompts / prompts::chat_template` Pure Core
+- `architecture/purity-boundary-map.md` — `pregolya-prompts / prompts::chat_template` Pure Core
 
 ## Story Anchor
 
@@ -155,11 +155,11 @@ _[to be filled after story decomposition — Wave 2 SS-18 story]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-022 |
-| Capability Anchor Justification | CAP-022 ("PromptTemplate and ChatPromptTemplate as Runnable (f-string Default, Jinja2 Optional)") per capabilities-p1-p2.md §CAP-022 — this BC specifies the ChatPromptTemplate multi-message rendering contract and the PromptValue output type carrying per-message MessageProvenance, which CAP-022 identifies as the multi-message rendering surface of ferrochain-prompts |
+| Capability Anchor Justification | CAP-022 ("PromptTemplate and ChatPromptTemplate as Runnable (f-string Default, Jinja2 Optional)") per capabilities-p1-p2.md §CAP-022 — this BC specifies the ChatPromptTemplate multi-message rendering contract and the PromptValue output type carrying per-message MessageProvenance, which CAP-022 identifies as the multi-message rendering surface of pregolya-prompts |
 | L2 Domain Invariants | DI-008 (ChatPromptTemplate construction returns Result; no unwrap/expect in non-test code) |
 | Architecture Authority | ADR-015 Decision 3 (PromptValue structure, MessageProvenance, ProvenanceTag pass-through and severity ordering) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| Module | ferrochain-prompts / prompts::chat_template, prompts::prompt_value |
+| Module | pregolya-prompts / prompts::chat_template, prompts::prompt_value |
 | Priority | P1 |
 | Wave | 2 |
 | Test Types | unit (pure-core, no I/O) |

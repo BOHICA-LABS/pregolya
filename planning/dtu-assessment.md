@@ -17,17 +17,17 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.006.md
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.007.md
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.008.md
-input-hash: "d9ebc37"
+input-hash: "39f6421"
 traces_to: .factory/specs/architecture/ARCH-INDEX.md
 decisions: [D3, D13]
 dtu_required: true
 ---
 
-# DTU Assessment: ferrochain
+# DTU Assessment: pregolya
 
 ## Scope Decision (D13)
 
-**D13 (human directive, 2026-07-13):** ferrochain-server is FIRST-PARTY — built
+**D13 (human directive, 2026-07-13):** pregolya-server is FIRST-PARTY — built
 in-workspace, no wire-compatibility target against LangGraph Platform. The Pass-6
 "stateful fake" pattern is retired. DTU scope is limited to **genuine third-party
 HTTP surfaces only**: OpenAI API, Anthropic API, and Ollama (local inference, keyless CI).
@@ -42,7 +42,7 @@ cassette-based behavioral clones for keyless CI and Phase 4 holdout evaluation.
 
 The BC-2.08 conformance suite design uses a **record/replay HTTP fixture layer**
 (wiremock or equivalent cassette middleware) running in-process. This is the
-ferrochain-specific DTU mechanism for providers: pre-recorded HTTP cassettes stored
+pregolya-specific DTU mechanism for providers: pre-recorded HTTP cassettes stored
 as fixture files, not standalone Docker clone servers. This approach is mandated
 directly in BC-2.08.001 Precondition 4:
 
@@ -69,19 +69,19 @@ logic. This is a Behavioral (L3) fidelity requirement on the cassette content.
 
 ### Inbound Data Sources (External → Product)
 
-None identified — ferrochain is a library/framework. It does not poll external
+None identified — pregolya is a library/framework. It does not poll external
 sources or receive webhooks. All data flows from user-supplied inputs through
 Runnable pipelines.
 
 ### Outbound Operations (Product → External)
 
-These are the DTU-in-scope surfaces. ferrochain makes outbound HTTP calls to provider
+These are the DTU-in-scope surfaces. pregolya makes outbound HTTP calls to provider
 chat completion APIs on behalf of user code.
 
 | # | Service | Protocol | Fidelity | DTU? | Justification |
 |---|---------|----------|----------|------|---------------|
 | 1 | OpenAI Chat Completions API | HTTPS / SSE | L3 (Behavioral) | YES | BCs 2.08.001-007 exercise streaming chunk framing, tool-call round-trip, error taxonomy (401/400-context/429/500), and per-chunk timeout. Cassette must capture SSE framing faithfully (EC-004 constraint). Phase 4 holdout runs without live keys. **API MIGRATION FLAG:** OpenAI is mid Responses-API migration (Assistants API sunset announced; Realtime beta removed from openai-openapi spec). Cassettes MUST target Chat Completions endpoint (`/v1/chat/completions`) — NOT the Responses or Assistants APIs. If OpenAI completes the migration and deprecates Chat Completions before Phase 3, cassettes require a full re-record; this migration is a re-record trigger. Monitor openai-openapi changelog before cassette capture. |
-| 2 | Anthropic Messages API | HTTPS / SSE | L3 (Behavioral) | YES | Same conformance battery as OpenAI via ferrochain-standard-tests. Distinct SSE envelope format (content-block-start/delta/stop events). Error JSON schema differs from OpenAI. 429 rate-limit semantics differ. |
+| 2 | Anthropic Messages API | HTTPS / SSE | L3 (Behavioral) | YES | Same conformance battery as OpenAI via pregolya-standard-tests. Distinct SSE envelope format (content-block-start/delta/stop events). Error JSON schema differs from OpenAI. 429 rate-limit semantics differ. |
 | 3 | Ollama REST API | HTTP (local) | L2 (Stateful) | YES (cassette) | D3 early integration; keyless by design (no auth errors). Ollama can run locally in CI with a small model, but cassette fallback required for environments without GPU/Ollama install. Simpler API surface — no content-block index protocol. |
 
 ### Identity & Access (Bidirectional)
@@ -92,20 +92,20 @@ or OAuth flow. Keys are injected from environment variables; no external identit
 
 ### Persistence & State (Product ↔ Storage)
 
-None identified — ferrochain-checkpoint uses SQLite (bundled, first-party) as the
+None identified — pregolya-checkpoint uses SQLite (bundled, first-party) as the
 default durable backend. No external managed database, cache, or message queue is
 required for v1.0.0. PostgreSQL is a stretch `[dev-feature]` flag that is
 out-of-scope for Phase 4 holdout.
 
 ### Observability & Export (Product → Monitoring)
 
-None identified — ferrochain emits no telemetry to external aggregators by default.
+None identified — pregolya emits no telemetry to external aggregators by default.
 Streaming events (BC-2.06) are consumed by the caller. Log output is to stderr via the
 `tracing` crate. No OpenTelemetry exporter or metrics push is mandated for v1.0.0.
 
 ### Enrichment & Lookup (External → Product)
 
-None identified — ferrochain does not call external enrichment services. It is a
+None identified — pregolya does not call external enrichment services. It is a
 general-purpose agent framework; domain-specific enrichment (threat intel, geocoding,
 etc.) is the responsibility of user-defined tools.
 
@@ -114,7 +114,7 @@ etc.) is the responsibility of user-defined tools.
 | # | Service | Category | Fidelity | DTU? | Justification |
 |---|---------|----------|----------|------|---------------|
 | 1 | OpenAI Chat Completions API | Outbound/LLM | L3 (Behavioral) | YES | SSE streaming conformance, tool-call round-trip, error taxonomy, transport-error scenarios per BC-2.08.001-007 |
-| 2 | Anthropic Messages API | Outbound/LLM | L3 (Behavioral) | YES | Same conformance battery as OpenAI via ferrochain-standard-tests; distinct SSE envelope + error shapes |
+| 2 | Anthropic Messages API | Outbound/LLM | L3 (Behavioral) | YES | Same conformance battery as OpenAI via pregolya-standard-tests; distinct SSE envelope + error shapes |
 | 3 | Ollama REST API | Outbound/LLM | L2 (Stateful) | YES (cassette) | D3 early integration; keyless; simpler NDJSON format; GPU-free CI fallback required |
 
 ## Per-Surface Clone Specification
@@ -142,17 +142,17 @@ etc.) is the responsibility of user-defined tools.
 3. **Structured output** (BC-2.08.003): `response_format: {type: json_schema}`
    path; JSON response validates against schema.
 4. **Error taxonomy** (BC-2.08.004 TV-001..005):
-   - HTTP 401 → `FerrochainError { category: Auth }` (key not in message)
-   - HTTP 400 "context length exceeded" → `FerrochainError { category: ContextOverflow }`
-   - HTTP 429 with `Retry-After: 60` → `FerrochainError { category: RateLimit, retry_hint: RetryAfter(60s) }`
-   - HTTP 500 → `FerrochainError { category: Provider }`
-   - HTTP 400 unknown JSON → `FerrochainError { category: Provider }` (no panic)
+   - HTTP 401 → `PregolyaError { category: Auth }` (key not in message)
+   - HTTP 400 "context length exceeded" → `PregolyaError { category: ContextOverflow }`
+   - HTTP 429 with `Retry-After: 60` → `PregolyaError { category: RateLimit, retry_hint: RetryAfter(60s) }`
+   - HTTP 500 → `PregolyaError { category: Provider }`
+   - HTTP 400 unknown JSON → `PregolyaError { category: Provider }` (no panic)
 5. **Transport interruption** (BC-2.08.007 TV-001..003):
    - Stream stalls after first chunk (wiremock: delay after chunk 1 exceeds per-chunk timeout)
    - TCP RST mid-stream (wiremock: connection drop)
    - Stall before first chunk
 6. **Token usage** (BC-2.08.005): `usage: {prompt_tokens, completion_tokens, total_tokens}`
-   present in response; ferrochain exposes as `TokenUsage` in the returned `AiMessage`.
+   present in response; pregolya exposes as `TokenUsage` in the returned `AiMessage`.
 
 **API migration note (2026-07):** OpenAI is mid Responses-API migration. Assistants API
 sunset is announced; Realtime beta is removed from the openai-openapi spec. Cassettes
@@ -240,13 +240,13 @@ round-trip testing. The cassette remains the CI baseline for keyless environment
 
 | # | Service | Reason |
 |---|---------|--------|
-| 1 | ferrochain-server | First-party per D13. Full BCs + holdout scenarios assigned. No DTU. Pass-6 "stateful fake" retired. |
+| 1 | pregolya-server | First-party per D13. Full BCs + holdout scenarios assigned. No DTU. Pass-6 "stateful fake" retired. |
 | 2 | SQLite (checkpoint) | Bundled first-party dependency; not an external service. |
-| 3 | WASM runtime (sandbox) | First-party; ferrochain-sandbox implements the execution contract. |
+| 3 | WASM runtime (sandbox) | First-party; pregolya-sandbox implements the execution contract. |
 
 ## DTU Architecture
 
-ferrochain uses a **cassette-based** clone mechanism rather than Docker Compose
+pregolya uses a **cassette-based** clone mechanism rather than Docker Compose
 clone servers. The "DTU" here is an in-process wiremock record/replay layer:
 cassette files stored under `.factory/dtu-clones/` are loaded by test harnesses
 at suite start, eliminating live provider keys in CI without running separate
@@ -308,9 +308,9 @@ Before any Wave 2 integration test story begins (Phase 3), the following gate mu
 - [ ] `.factory/dtu-clones/anthropic-cassettes/` directory exists and contains ≥7 cassette files
 - [ ] `.factory/dtu-clones/ollama-cassettes/` directory exists and contains ≥3 cassette files
 - [ ] Each cassette captures SSE framing chunk-by-chunk (not buffered single response)
-- [ ] `ferrochain-openai/tests/` wires wiremock to load from `../../../.factory/dtu-clones/openai-cassettes/`
-- [ ] `ferrochain-anthropic/tests/` wires wiremock from `anthropic-cassettes/`
-- [ ] `ferrochain-ollama/tests/` wires wiremock from `ollama-cassettes/`
+- [ ] `pregolya-openai/tests/` wires wiremock to load from `../../../.factory/dtu-clones/openai-cassettes/`
+- [ ] `pregolya-anthropic/tests/` wires wiremock from `anthropic-cassettes/`
+- [ ] `pregolya-ollama/tests/` wires wiremock from `ollama-cassettes/`
 
 Cassette capture is a Wave 2 story (story decomposition Phase 2). Cassette wiring
 stories are prerequisites to all BC-2.08 conformance stories.
@@ -330,7 +330,7 @@ stories are prerequisites to all BC-2.08 conformance stories.
 
 ## Risk Annotation
 
-**R3 (Low, resolved by D13):** DTU scope revised per D13. ferrochain-server
+**R3 (Low, resolved by D13):** DTU scope revised per D13. pregolya-server
 first-party treatment eliminates the Pass-6 stateful fake obligation. Residual
 risk: cassette fidelity for streaming error scenarios (BC-2.08.007 stall/RST)
 requires careful wiremock configuration — standard chunk-delivery cassettes

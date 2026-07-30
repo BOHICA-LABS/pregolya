@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# verify-error-notation-canon.sh — ferrochain error-construction notation gate
+# verify-error-notation-canon.sh — pregolya error-construction notation gate
 #
 # PURPOSE
 # ───────
 # Enforces the ADR-010 §Error-Construction Notation Canon across all .md files
-# under .factory/specs/.  Classifies every FerrochainError { occurrence per the
+# under .factory/specs/.  Classifies every PregolyaError { occurrence per the
 # Mechanical Discriminator (Steps 0–2) and blocks on any FAIL-class finding.
 #
 # BLOCKING: exits 1 on any FAIL.  Wired into pre-commit-validators.sh.
@@ -27,7 +27,7 @@
 # EXCLUSION BUCKETS (Step 0 — skipped from further classification)
 #   EXEMPT                       frontmatter + ## Changelog regions (changelog_exempt_lines)
 #   EXCLUDED_ILLUSTRATION        <!-- discriminator:illustration-start/end --> regions
-#   EXCLUDED_DECL                pub struct FerrochainError / impl FerrochainError openers
+#   EXCLUDED_DECL                pub struct PregolyaError / impl PregolyaError openers
 #   CLASS0_EXEMPT                type-schema form: component: Component, immediately after {
 #   EXCLUDED_BASH                inside ```bash or ```sh fence
 #   EXCLUDED_PATTERN_REF         { immediately followed by ` (backtick pattern-name cite)
@@ -45,14 +45,14 @@
 # Functions consumed (no parallel reimplementation):
 #   changelog_exempt_lines()      frontmatter + ## Changelog detection
 #   illustration_exempt_lines()   <!-- discriminator:illustration-start/end --> detection
-#   find_ferrochain_error_openers() single-line and split-line opener detection
+#   find_pregolya_error_openers() single-line and split-line opener detection
 #
 # SELF-PROBES (6 mandatory)
 # ─────────────────────────
 #   1. Each violation sub-class (CLASS1, ASCII_ELLIPSIS, UNICODE_ELLIPSIS, MISSING_DOTS) detected
 #   2. CLASS3_VALID_COMPLETE NOT flagged
 #   3. Changelog line quoting `...` → `..` NOT flagged
-#   4. pub struct / impl FerrochainError NOT flagged
+#   4. pub struct / impl PregolyaError NOT flagged
 #   5. Split-line opener correctly classified
 #   6. ADR-010 itself reports ZERO violations
 #
@@ -90,7 +90,7 @@ emit() {
 # ── Core Python scanner ───────────────────────────────────────────────────────
 # Arguments: <hooks_dir> <scan_dir>
 # Output lines:
-#   TOTAL <n>                     total FerrochainError { openers found
+#   TOTAL <n>                     total PregolyaError { openers found
 #   BUCKET <name> <n>             bucket count
 #   VIOLATION <class> <rel_path>  one line per violation occurrence
 run_notation_scanner() {
@@ -104,7 +104,7 @@ sys.path.insert(0, hooks_dir)
 from spec_region_utils import (
     changelog_exempt_lines,
     illustration_exempt_lines,
-    find_ferrochain_error_openers,
+    find_pregolya_error_openers,
 )
 
 # ── Compiled patterns ─────────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ UNICODE_ELISION_RE  = re.compile(r'[,{]\s*…')
 # CLASS0_EXEMPT: type-schema form — { component: Component, (TYPE name, not VALUE)
 CLASS0_RE           = re.compile(r'\{\s*component\s*:\s*Component\s*,')
 # EXCLUDED_DECL: struct declaration or impl block — check opener_line text
-DECL_RE             = re.compile(r'\b(?:pub\s+struct|impl)\s+FerrochainError\b')
+DECL_RE             = re.compile(r'\b(?:pub\s+struct|impl)\s+PregolyaError\b')
 # CLASS4 defining-crate file detection (word-boundary on the BC number)
 CLASS4_FILE_RE      = re.compile(r'BC-2\.14\.00[12]\b')
 # Five non-source observable fields
@@ -153,7 +153,7 @@ def build_fence_context(lines):
 # ── Span extractor ────────────────────────────────────────────────────────────
 def extract_span(lines, opener):
     """
-    Extract text from the FerrochainError { opening brace to its matching },
+    Extract text from the PregolyaError { opening brace to its matching },
     using up to 15-line lookahead.  Returns (span_text, closed).
     span_text begins at the { character on brace_line.
     """
@@ -162,7 +162,7 @@ def extract_span(lines, opener):
     bl         = lines[brace_line]
 
     if form == 'single':
-        m = re.search(r'FerrochainError\s+\{', bl)
+        m = re.search(r'PregolyaError\s+\{', bl)
         if not m:
             return '', False
         start = m.end() - 1          # index of '{' in bl
@@ -239,7 +239,7 @@ for f in files:
     except OSError:
         continue
 
-    if 'FerrochainError' not in ''.join(lines):
+    if 'PregolyaError' not in ''.join(lines):
         continue
 
     rel            = f.replace(scan_dir.rstrip('/') + '/', '')
@@ -250,7 +250,7 @@ for f in files:
     ill_exempt = illustration_exempt_lines(lines)
     fence_ctx  = build_fence_context(lines)
 
-    for opr in find_ferrochain_error_openers(lines):
+    for opr in find_pregolya_error_openers(lines):
         total_openers += 1
         ol = opr['opener_line']
 
@@ -355,8 +355,8 @@ probe_class1_violation() {
 ## Description
 
 ```rust
-fn example() -> Result<(), FerrochainError> {
-    return Err(FerrochainError { code: "E-CORE-001", category: VAL });
+fn example() -> Result<(), PregolyaError> {
+    return Err(PregolyaError { code: "E-CORE-001", category: VAL });
 }
 ```
 PROBEOF
@@ -376,7 +376,7 @@ probe_class3_ascii_ellipsis() {
   cat > "$PROBE_TMP/p2/probe.md" <<'PROBEOF'
 ## Description
 
-Returns `Err(FerrochainError { code: "E-CORE-001", ... })` on bad input.
+Returns `Err(PregolyaError { code: "E-CORE-001", ... })` on bad input.
 PROBEOF
   local out
   out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/p2")"
@@ -392,7 +392,7 @@ probe_class3_unicode_ellipsis() {
   init_probe_tmp
   mkdir -p "$PROBE_TMP/p3"
   # U+2026 in field-elision position (after ,)
-  printf '## Description\n\nReturns `Err(FerrochainError { code: "E-CORE-001", … })` on bad input.\n' \
+  printf '## Description\n\nReturns `Err(PregolyaError { code: "E-CORE-001", … })` on bad input.\n' \
     > "$PROBE_TMP/p3/probe.md"
   local out
   out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/p3")"
@@ -410,7 +410,7 @@ probe_class3_missing_dots() {
   cat > "$PROBE_TMP/p4/probe.md" <<'PROBEOF'
 ## Description
 
-Returns `Err(FerrochainError { code: "E-CORE-001" })` on bad input.
+Returns `Err(PregolyaError { code: "E-CORE-001" })` on bad input.
 PROBEOF
   local out
   out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/p4")"
@@ -430,7 +430,7 @@ probe_class3_valid_complete() {
   cat > "$PROBE_TMP/p5/probe.md" <<'PROBEOF'
 ## Description
 
-The full-field form `FerrochainError { component: MCP, category: TOOL, retry_hint: Never, code: "E-MCP-001", message: "connection lost" }` is CLASS3_VALID_COMPLETE.
+The full-field form `PregolyaError { component: MCP, category: TOOL, retry_hint: Never, code: "E-MCP-001", message: "connection lost" }` is CLASS3_VALID_COMPLETE.
 PROBEOF
   local out
   out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/p5")"
@@ -460,7 +460,7 @@ document_type: bc
 version: "1.1"
 changelog:
   - "1.0 (2026-07-28): initial."
-  - "1.1 (2026-07-29): replaced `FerrochainError { code: \"E-X\", ... }` with `FerrochainError { code: \"E-X\", .. }` (CLASS3_ASCII_ELLIPSIS_VIOLATION fix)."
+  - "1.1 (2026-07-29): replaced `PregolyaError { code: \"E-X\", ... }` with `PregolyaError { code: \"E-X\", .. }` (CLASS3_ASCII_ELLIPSIS_VIOLATION fix)."
 ---
 
 ## Description
@@ -485,12 +485,12 @@ probe_decl_not_flagged() {
   mkdir -p "$PROBE_TMP/p7"
   cat > "$PROBE_TMP/p7/probe.md" <<'PROBEOF'
 ```rust
-pub struct FerrochainError {
+pub struct PregolyaError {
     pub component: Component,
     pub code: &'static str,
 }
 
-impl FerrochainError {
+impl PregolyaError {
     pub fn new() -> Self { todo!() }
 }
 ```
@@ -498,12 +498,12 @@ PROBEOF
   local out
   out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/p7")"
   if echo "$out" | grep -qE '^VIOLATION '; then
-    echo "[SELF-PROBE FAIL] Probe 4: pub struct FerrochainError { or impl FerrochainError { was incorrectly flagged."
+    echo "[SELF-PROBE FAIL] Probe 4: pub struct PregolyaError { or impl PregolyaError { was incorrectly flagged."
     echo "  Output: $out"
     clean_probe_tmp; exit 2
   fi
   clean_probe_tmp
-  echo "[SELF-PROBE PASS] Probe 4: pub struct FerrochainError / impl FerrochainError not flagged (EXCLUDED_DECL)."
+  echo "[SELF-PROBE PASS] Probe 4: pub struct PregolyaError / impl PregolyaError not flagged (EXCLUDED_DECL)."
 }
 
 # ── Probe 5: Split-line opener correctly classified ───────────────────────────
@@ -511,11 +511,11 @@ PROBEOF
 probe_split_line() {
   init_probe_tmp
   mkdir -p "$PROBE_TMP/p8"
-  # Split-line opener: FerrochainError at end of line, { on next line with ..
+  # Split-line opener: PregolyaError at end of line, { on next line with ..
   cat > "$PROBE_TMP/p8/probe.md" <<'PROBEOF'
 ## Description
 
-Returns `Err(FerrochainError
+Returns `Err(PregolyaError
 { code: "E-CORE-001", .. })` when validation fails.
 PROBEOF
   local out
@@ -536,7 +536,7 @@ PROBEOF
   cat > "$PROBE_TMP/p8v/probe.md" <<'PROBEOF'
 ## Description
 
-Returns `Err(FerrochainError
+Returns `Err(PregolyaError
 { code: "E-CORE-001" })` when validation fails.
 PROBEOF
   out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/p8v")"
@@ -668,7 +668,7 @@ check_notation() {
     for vpath in "${!vfile_counts[@]}"; do
       local cnt="${vfile_counts[$vpath]}"
       local classes="${vfile_classes[$vpath]}"
-      echo "    $vpath :: FerrochainError — ${cnt} violation(s) [${classes}]"
+      echo "    $vpath :: PregolyaError — ${cnt} violation(s) [${classes}]"
     done
   fi
 
@@ -678,7 +678,7 @@ check_notation() {
     emit FAIL "N1 (ADR-010): error-construction notation — ${total_violations} violation(s) across ${n_files} file(s)"
     echo "  Routing guide (TD-VSDD-091: symbol/section cites; no line numbers):"
     echo "    CLASS1_VIOLATION           → product-owner/architect: replace struct literal with"
-    echo "                                 FerrochainError::new(...) inside rust fences"
+    echo "                                 PregolyaError::new(...) inside rust fences"
     echo "    CLASS3_ASCII_ELLIPSIS      → product-owner: replace '...' with '..' in observation"
     echo "    CLASS3_UNICODE_ELLIPSIS    → product-owner: replace '…' (U+2026) with '..' in observation"
     echo "    CLASS3_MISSING_DOTS        → product-owner: add '..' before closing '}'"

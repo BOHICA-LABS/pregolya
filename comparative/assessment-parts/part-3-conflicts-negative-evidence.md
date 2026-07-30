@@ -22,7 +22,7 @@ status: complete
 Parts 1 and 2 extracted the strongest patterns from each corpus independently under the
 D16 Rust-blindness constraint. This part answers the harder question: where the two corpora
 materially disagree on design, which body of evidence wins, and which adk-rust patterns
-ferrochain must actively reject regardless of their Rust fluency.
+pregolya must actively reject regardless of their Rust fluency.
 
 Evidence is cited by pattern ID (P-NNN from patterns-observed.md / behavioral-intent.md)
 and semport section (§N from behavioral-intent.md graph/).
@@ -116,7 +116,7 @@ The wall-clock "latest" ordering is a latent correctness bug: two checkpoints wr
 same millisecond under any concurrent writer pattern have ambiguous order.
 
 **D-decision constraint.** D11.2 mandates RUST-NATIVE msgpack checkpoint format. D11.3 mandates
-ALL THREE durability tiers ported; ferrochain DEFAULTS to sync (crash-safe). These D11 steers
+ALL THREE durability tiers ported; pregolya DEFAULTS to sync (crash-safe). These D11 steers
 are binding and confirm the LangGraph model is the reference.
 
 **Recommendation.**
@@ -160,7 +160,7 @@ resume-value scratchpad use case. adk-rust's notification-only model fails both 
 
 **Recommendation.**
 Implement the full LangGraph HITL contract: per-task scratchpad, FIFO resume-value delivery,
-node-re-executes-from-start replay contract, `Command(resume=value)` API. This is a ferrochain-
+node-re-executes-from-start replay contract, `Command(resume=value)` API. This is a pregolya-
 original implementation; there is no adk-rust reference to adapt.
 
 ---
@@ -233,15 +233,15 @@ for turn-level lifecycle, but inadequate for phase-level tracing across nested a
 For Domain A (SOC analyst) the astream_events style enables real-time audit of each reasoning
 step; for Domain B (dark factory) it enables per-step cost attribution.
 
-**D-decision constraint.** D13 (no LangGraph Platform wire compat) means ferrochain's event
+**D-decision constraint.** D13 (no LangGraph Platform wire compat) means pregolya's event
 schema does not need to mirror astream_events v2 exactly. But the TAXONOMY (typed per-phase
 events with run_id correlation and parent_ids) is a production-grade design independent of
 the specific wire format.
 
 **Recommendation.**
-Design ferrochain's streaming event model around a typed per-phase taxonomy (start/stream/end
+Design pregolya's streaming event model around a typed per-phase taxonomy (start/stream/end
 per operation type, with a run_id correlation tree and parent_ids). The wire format is
-ferrochain-native (not langchain wire compat). Do not adopt adk-rust's flattened Event envelope
+pregolya-native (not langchain wire compat). Do not adopt adk-rust's flattened Event envelope
 as the observation model for external consumers; retain it only as an internal persistence unit.
 
 ---
@@ -272,11 +272,11 @@ The 2D struct model is unambiguously stronger than a Python exception hierarchy 
 The Python hierarchy does not translate to Rust structurally.
 
 **D-decision constraint.** D5 (pydantic→serde/schemars ADR required). No decision yet on error
-taxonomy structure, but ferrochain CLAUDE.md mandates structured errors.
+taxonomy structure, but pregolya CLAUDE.md mandates structured errors.
 
 **Recommendation.**
-Adopt the adk-rust 2D component×category architecture for ferrochain's `FerrochainError`.
-Rename components to ferrochain crate names (Core/Graph/Checkpoint/Provider/Server/etc.).
+Adopt the adk-rust 2D component×category architecture for pregolya's `PregolyaError`.
+Rename components to pregolya crate names (Core/Graph/Checkpoint/Provider/Server/etc.).
 Carry a machine code, RetryHint, and an HTTP-status total mapping. This is the one conflict
 where Corpus 5 is DECISIVELY STRONGER and should take priority.
 
@@ -340,7 +340,7 @@ Evidence: behavioral-intent.md §4 (adk-agent); patterns-observed.md P-15.
 abstraction. The composite-tree approach is more ergonomic for building simple sequences but
 requires a separate API surface for complex routing (branching, fan-out, fan-in). LangGraph's
 approach is harder to learn but avoids the proliferation of special-purpose agent types
-(SequentialAgent, LoopAgent, ConditionalAgent). For ferrochain targeting LangGraph semantics
+(SequentialAgent, LoopAgent, ConditionalAgent). For pregolya targeting LangGraph semantics
 (D7), the graph-as-agent model is structurally required.
 
 **D-decision constraint.** D7 (core → graph → partners priority; LangGraph runtime is the P0
@@ -409,14 +409,14 @@ The LangGraph Platform resource model (thread, run, assistant, cron as first-cla
 resources with lifecycle management) serves Domain B (multi-day durable runs surviving
 restarts). adk-rust's HTTP hygiene layer (SSRF gate, security headers, input size bounds,
 auth-as-trait) is production-grade and directly portable. adk-rust's streaming stub and
-placeholder run execution are explicit gaps — counter-examples ferrochain must not inherit.
+placeholder run execution are explicit gaps — counter-examples pregolya must not inherit.
 
-**D-decision constraint.** D13 (ferrochain-server first-party; no LangGraph Platform wire compat).
-ferrochain-server's resource model is independently designed but the LangGraph endpoint catalog
+**D-decision constraint.** D13 (pregolya-server first-party; no LangGraph Platform wire compat).
+pregolya-server's resource model is independently designed but the LangGraph endpoint catalog
 is the design reference for thread/run semantics.
 
 **Recommendation.**
-Build ferrochain-server's HTTP boundary with adk-rust's defensive middleware stack (borrow
+Build pregolya-server's HTTP boundary with adk-rust's defensive middleware stack (borrow
 P-35/P-36/P-37/P-38 patterns directly). Design the resource model (thread, run) from the
 LangGraph Platform endpoint catalog as the semantic reference, not the wire format. Streaming
 and unary runs must be behaviorally equivalent from day 1 — no stubs.
@@ -425,8 +425,8 @@ and unary runs must be behaviorally equivalent from day 1 — no stubs.
 
 ## Section B — Negative Evidence Catalog
 
-Seventeen adk-rust patterns that ferrochain must actively NOT inherit. Each entry: verified
-source (P-NNN), description, and the ferrochain requirement it implies.
+Seventeen adk-rust patterns that pregolya must actively NOT inherit. Each entry: verified
+source (P-NNN), description, and the pregolya requirement it implies.
 
 ---
 
@@ -441,8 +441,8 @@ but nothing FORCES a caller to check before running untrusted code. The phase-1 
 (`RustSandboxExecutor`) has a strict policy declaration but no enforcement; the Docker backend
 advertises per-request policy enforcement that it silently ignores (P-83).
 
-**Ferrochain requirement (Domain C / BC candidate):**
-`ferrochain-sandbox` MUST default to an ENFORCING backend (WASM or container). The
+**Pregolya requirement (Domain C / BC candidate):**
+`pregolya-sandbox` MUST default to an ENFORCING backend (WASM or container). The
 non-isolating process backend must be an explicit, loud opt-in (`Sandbox::unsafe_process_no_isolation()`).
 Policy strictness must be bound to backend capability by a hard precondition: a `Sandbox::execute`
 call under a strict policy on a non-enforcing backend must return `Err(SandboxError::PolicyNotEnforceable)`,
@@ -457,7 +457,7 @@ not proceed silently. This is a BC candidate for Phase-2.
 Never touches the filesystem; no `canonicalize`, no symlink resolution, no `openat2 RESOLVE_BENEATH`.
 A symlink that lives inside the workspace but resolves outside it passes validation cleanly.
 
-**Ferrochain requirement (Domain C / VP candidate):**
+**Pregolya requirement (Domain C / VP candidate):**
 All workspace file operations must resolve the real path (canonicalize, verify beneath root)
 at access time, not only string-validate the requested path. A VP should assert that no
 file operation can observe content outside the declared workspace root regardless of symlink
@@ -476,7 +476,7 @@ A caller receives `None` and cannot distinguish "no skill matched the query" fro
 ranked skill matched but its required tools are not registered." Permissive mode silently omits
 missing tools from `active_tools` without surfacing which tools were dropped.
 
-**Ferrochain requirement:**
+**Pregolya requirement:**
 Skill/context resolution failures must propagate with structured cause. No `Err(_) => continue`
 swallowing on a validation error. Strict mode must return `Err(SkillError::ValidationFailed { skill,
 missing_tools })` — callable code that detects the gap and can surface it upstream (e.g. as a
@@ -496,12 +496,12 @@ is effectively dormant because no client-side read timeout fires (P-94). A hung 
 (webhook receiver, JWKS server, remote A2A agent, LLM provider) blocks the calling task
 indefinitely.
 
-**Ferrochain requirement (CLAUDE.md mandatory convention):**
-Every outbound `reqwest::ClientBuilder` in ferrochain MUST call `.timeout(Duration::from_secs(30))`
+**Pregolya requirement (CLAUDE.md mandatory convention):**
+Every outbound `reqwest::ClientBuilder` in pregolya MUST call `.timeout(Duration::from_secs(30))`
 (or an NFR-documented override). This applies to: provider HTTP clients, server-side push/JWKS/
 OIDC/remote-agent clients, and any future webhook senders. Use the `adk-anthropic` main client
 (timeout + pool_max_idle + pool_idle_timeout + tcp_keepalive) as the positive reference.
-This is a lint/CI gate candidate: `grep -rn "Client::new()" --include="*.rs" ferrochain-*/src/`
+This is a lint/CI gate candidate: `grep -rn "Client::new()" --include="*.rs" pregolya-*/src/`
 should produce zero results outside test files.
 
 ---
@@ -515,7 +515,7 @@ The full instruction is computed inside the agent and is not available at the ru
 boundary. Two agents with identical descriptions but different resolved instructions/tools can
 collide. A changed instruction under a stable description serves a stale cache.
 
-**Ferrochain requirement:**
+**Pregolya requirement:**
 Prompt cache keys must be computed from a hash of the RESOLVED (instruction bytes, sorted tools
 set). If the instruction is not available at the cache-key site, compute it eagerly or derive
 the key from the canonical inputs that would produce the same instruction. No description-proxy
@@ -533,12 +533,12 @@ results, RAG/retrieval output, and memory content entering the model context are
 through any guardrail. The built-in `ContentFilter` is a six-word keyword blocklist (trivially
 bypassed by synonyms/encoding). No prompt-injection detection, no semantic classification.
 
-**Ferrochain requirement (Domain A — BC/holdout candidate):**
+**Pregolya requirement (Domain A — BC/holdout candidate):**
 Content entering the model context from UNTRUSTED sources (tool results, RAG output, external
-memory entries) must be tagged by provenance and validated at INGRESS. Ferrochain's content-
+memory entries) must be tagged by provenance and validated at INGRESS. Pregolya's content-
 validation hook must fire on tool-result ingress, not only on user-input + model-output. Keyword
 blocklists are not a security control; they are a UX convenience. Domain A holdout scenario
-must assert that indirect prompt injection via a tool result does not bypass ferrochain's
+must assert that indirect prompt injection via a tool result does not bypass pregolya's
 content validation.
 
 ---
@@ -550,8 +550,8 @@ content validation.
 engine …")` and implements `Default` via `WasmBackend::new()`. A bad configuration or
 platform-incompatible WASM engine panics the process rather than returning a `Result`.
 
-**Ferrochain requirement (CLAUDE.md no-unwrap/expect in non-test code):**
-All ferrochain library constructors must return `Result`. `WasmBackend::new() -> Result<Self,
+**Pregolya requirement (CLAUDE.md no-unwrap/expect in non-test code):**
+All pregolya library constructors must return `Result`. `WasmBackend::new() -> Result<Self,
 SandboxError>`. The `Default` impl must NOT delegate to a fallible constructor. This is a CI-
 enforceable rule (clippy `manual_unwrap_or_default` + custom `check-no-panic` xtask lint).
 
@@ -566,10 +566,10 @@ Idempotency and INPUT_REQUIRED resume break silently on process restart (no dura
 the same `messageId` creates a NEW task after restart). Rate-limit buckets never evict → slow
 O(unique callers) memory leak in long-running servers.
 
-**Ferrochain requirement (Domain B — multi-day durable runs):**
+**Pregolya requirement (Domain B — multi-day durable runs):**
 Idempotency state, rate-limit state, and run/task state must each be backed by a durable
 trait (e.g. `IdempotencyStore`, `RateLimitStore`, `RunStore`) with in-memory as one
-implementation. The durable-backed implementations must be first-class in ferrochain-server
+implementation. The durable-backed implementations must be first-class in pregolya-server
 v1, not optional extensions. LRU eviction with a TTL must be the default for in-memory
 idempotency and rate-limit stores. adk-rust's hard-wired maps are a direct counter-example.
 
@@ -584,7 +584,7 @@ changes args each attempt produces a new hash → counter resets to 0 → `effec
 is never reached. `global_limit: None` default means no fallback global bound. The per-tool
 limit is effectively unbounded under the plugin's own intended usage pattern.
 
-**Ferrochain requirement:**
+**Pregolya requirement:**
 Tool-retry/reflection bounds must be keyed on `(tool_name)` or `(tool_name, call_site)` — NOT
 on argument content. A finite `global_limit` must be a non-None default (recommended: 15 or
 configurable via TOML). A runaway-protection circuit-breaker must be ON by default with a
@@ -602,8 +602,8 @@ uses `#[derive(Debug, Clone, Serialize, Deserialize)] pub api_key: String`. Seve
 `{:?}` formatting prints the key in full. Any span/error/log capture that includes the config
 struct leaks the credential.
 
-**Ferrochain requirement (CLAUDE.md "Newtype + redacted Debug for credentials"):**
-Every API key type in ferrochain MUST be a newtype with:
+**Pregolya requirement (CLAUDE.md "Newtype + redacted Debug for credentials"):**
+Every API key type in pregolya MUST be a newtype with:
 - `impl Debug for AnthropicApiKey { fn fmt(&self, f: &mut Formatter) -> Result { write!(f, "<redacted>") } }`
 - NO `#[derive(Serialize)]` on the newtype (keys are NEVER serialized to wire/log/span).
 - `impl From<String>` for construction; `impl Deref<Target=str>` blocked (prevents accidental use
@@ -620,8 +620,8 @@ and `list` delegate straight through — event payloads (LLM responses, tool cal
 content) are stored PLAINTEXT. Lazy re-encryption on read is `let _ = self.inner.create(update_req).await`
 — errors silently discarded.
 
-**Ferrochain requirement (security/NFR):**
-Ferrochain's at-rest encryption wrapper must encrypt BOTH state AND event payloads. "Encryption
+**Pregolya requirement (security/NFR):**
+Pregolya's at-rest encryption wrapper must encrypt BOTH state AND event payloads. "Encryption
 at rest" that leaves conversation content cleartext is a partial guarantee that violates the
 spirit of the control. Key-rotation re-encryption errors must propagate (never `let _ = ...`);
 a rotation failure is a storage-integrity signal that must be surfaced. Both boundaries are VP
@@ -638,7 +638,7 @@ Backends that do not override receive a single-key lookup; SQL backends rely on 
 "ambiguous session_id" error check as the cross-tenant guard. The typed-identity investment
 (P-06, STRONG) is undercut at the most critical write boundary.
 
-**Ferrochain requirement (session tenancy invariant):**
+**Pregolya requirement (session tenancy invariant):**
 Triple-addressed session operations (app_name × user_id × session_id) must be the ONLY path
 for append, get, and delete. No default-to-bare-session_id fallback. The triple must flow from
 the trait method signature to the SQL `WHERE` clause; the tenancy invariant must be a VP with
@@ -655,7 +655,7 @@ NOT invoke the agent runner; the streaming transport produces zero model output.
 `message_send` path (which DOES invoke the runner) and the streaming path are behaviorally
 non-equivalent — a split that makes the A2A streaming contract untrustworthy.
 
-**Ferrochain requirement (ferrochain-server BC / Domain B holdout):**
+**Pregolya requirement (pregolya-server BC / Domain B holdout):**
 Streaming and unary run endpoints MUST be behaviorally equivalent from day 1 — both drive the
 same engine, both produce real model output. This is a non-negotiable BC; a placeholder-then-
 wire-later pattern would break the holdout evaluation. A holdout scenario must assert that the
@@ -671,12 +671,12 @@ maps to `AllowOrigin::any()`. Debug-trace route is exposed when `request_context
 (no auth configured) OR `expose_admin_debug` is set. The `default()` constructor is dev-shaped;
 `::production(...)` exists but is not the default.
 
-**Ferrochain requirement (ferrochain-server security posture):**
+**Pregolya requirement (pregolya-server security posture):**
 `SecurityConfig::default()` must be secure: `allowed_origins` empty → CORS DENIED (not any).
 Debug/trace/admin endpoints must NEVER be exposed by default; they require an explicit boolean
 opt-in. The `::development()` preset can be permissive but must be visibly distinct from the
 production default. A security-review gate at Phase 3 must assert that a default-configured
-`ferrochain-server` returns 403 on debug routes and has no wildcard CORS.
+`pregolya-server` returns 403 on debug routes and has no wildcard CORS.
 
 ---
 
@@ -689,7 +689,7 @@ the correct mean of 0.667. When the LLM judge call fails (API outage), code inse
 and `Verdict::Fail` — infrastructure failure is indistinguishable from agent-produced zero
 quality.
 
-**Ferrochain requirement (holdout harness / Domain B quality gates):**
+**Pregolya requirement (holdout harness / Domain B quality gates):**
 (a) Multi-turn score aggregation must use arithmetic mean (Σscores / n), not a pairwise running
 average. (b) Judge infrastructure failure (HTTP error, timeout, parse error) must produce a
 third outcome `JudgeResult::InfraError { reason }` that is counted separately from
@@ -707,10 +707,10 @@ selectively denies `network*`, `file-write*` (re-allowing policy paths), and `pr
 It never adds `(deny file-read*)`. Sandboxed untrusted code on macOS can read any file the
 process user can access — SSH keys, `~/.aws/credentials`, browser cookies, `/etc/hosts`.
 
-**Ferrochain requirement (Domain C macOS sandboxing):**
+**Pregolya requirement (Domain C macOS sandboxing):**
 macOS sandbox profile must be deny-by-default (remove `(allow default)`, rely on `(deny default)`
 as base, enumerate `(allow file-read* (subpath <allowed>))` for each permitted read path).
-If the required allow-list is too large to be practical, ferrochain must document macOS as a
+If the required allow-list is too large to be practical, pregolya must document macOS as a
 "no-isolation" platform for untrusted code execution and refuse to run untrusted code there
 without an explicit override flag (`--allow-no-sandbox`). The asymmetry (Linux deny-by-default
 reads via bubblewrap, macOS allow-all reads) must not exist silently.
@@ -727,8 +727,8 @@ reads via bubblewrap, macOS allow-all reads) must not exist silently.
 durations can produce different output lists. No task-path sort, no `InvalidUpdateError`
 on concurrent LastValue writes.
 
-**Ferrochain requirement (VP candidate — determinism invariant):**
-ferrochain-graph MUST apply writes in deterministic sorted order keyed on task identity (e.g.
+**Pregolya requirement (VP candidate — determinism invariant):**
+pregolya-graph MUST apply writes in deterministic sorted order keyed on task identity (e.g.
 `task_path_str` analog or a stable sort key derived from node name + trigger). This must be a
 Kani/proptest VP: "for any set of concurrent node outputs, the final reduced state is identical
 regardless of the order those outputs arrived." adk-rust's completion-order folding is the
@@ -754,7 +754,7 @@ One meta-pattern emerges from both sections: **adk-rust systematically separates
 enforcement** (honest capabilities that don't force compliance, per-tool limits that don't bound,
 strict policies on non-enforcing backends, truthful-disclaimer vs mandatory-precondition). This
 is a coherent design philosophy — never fail silently, but also never refuse in advance. For
-ferrochain's VSDD verification approach, the opposite choice is correct: declarations MUST be
+pregolya's VSDD verification approach, the opposite choice is correct: declarations MUST be
 enforced by construction (typestate builders, compile-time policy-backend binding, required trait
 methods with no safe default). The positive patterns from Part 3 (P-01/P-04 error taxonomy,
 P-23 write isolation, P-35–P-38 HTTP hygiene, P-50 reflection-injection, P-51 phantom-tool

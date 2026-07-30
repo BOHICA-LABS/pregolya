@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-05
 capability: CAP-034
-crate: ferrochain-graph
+crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
@@ -32,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "60290b6"
+input-hash: "a73959f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -150,8 +150,8 @@ under no code path does a `Deny` decision allow the tool to execute.
 
 ## Architecture Anchors
 
-- `architecture/decisions/ADR-018-per-tool-call-approval-hook.md` — Decision 1 (PreToolCallHook trait in ferrochain-graph::hitl), Decision 2 (GraphConfig.pre_tool_hook), Decision 3 (pre_tool_dispatch dispatch logic — 6-step sequence), Decision 6 (retry-approval ordering)
-- `architecture/module-decomposition.md` — SS-05, `ferrochain-graph / hitl` module
+- `architecture/decisions/ADR-018-per-tool-call-approval-hook.md` — Decision 1 (PreToolCallHook trait in pregolya-graph::hitl), Decision 2 (GraphConfig.pre_tool_hook), Decision 3 (pre_tool_dispatch dispatch logic — 6-step sequence), Decision 6 (retry-approval ordering)
+- `architecture/module-decomposition.md` — SS-05, `pregolya-graph / hitl` module
 - `architecture/verification-architecture.md` — VP-011 (D23 candidate)
 
 ## Story Anchor
@@ -160,7 +160,7 @@ _[to be filled after story decomposition — Wave 1 SS-05 extension story]_
 
 ## VP Anchors
 
-- VP-011 (assigned in VP-INDEX v1.5 as VP-011 — Kani P0; ferrochain-graph `deny_excludes_tool_invocation`)
+- VP-011 (assigned in VP-INDEX v1.5 as VP-011 — Kani P0; pregolya-graph `deny_excludes_tool_invocation`)
 - VP-2.05.007-B
 - VP-2.05.007-C
 
@@ -173,8 +173,8 @@ _[to be filled after story decomposition — Wave 1 SS-05 extension story]_
 | L2 Domain Invariants | DI-014 (Error Propagation — Deny reason surfaced in ToolOutput::Error; never silently discarded) |
 | Architecture Authority | ADR-018 Decisions 1, 2, 3, and 6 (trait placement, GraphConfig registration, dispatch logic, retry ordering) |
 | Binding Decisions | D23 (per-tool-call approval hook mandate, SS-05 extension) |
-| VP Registration | VP-011 (assigned in VP-INDEX v1.5 as VP-011 — Kani P0; ferrochain-graph `deny_excludes_tool_invocation`) |
-| Module | ferrochain-graph / hitl |
+| VP Registration | VP-011 (assigned in VP-INDEX v1.5 as VP-011 — Kani P0; pregolya-graph `deny_excludes_tool_invocation`) |
+| Module | pregolya-graph / hitl |
 | Priority | P1 |
 | Wave | 1 |
 | Test Types | unit + Kani (VP-011) |

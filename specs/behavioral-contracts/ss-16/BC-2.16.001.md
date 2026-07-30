@@ -16,8 +16,8 @@ producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-34): F-P34-02 EC-003 + TV-004 — replace E-RETRY-003 with E-RETRY-004 (InvalidRetryLimit). E-RETRY-003 is CircuitBreakerOpen (BC-2.16.003, POLICY/Later); zero-limit construction rejection is a misconfiguration → VAL, RetryHint Never. New code E-RETRY-004 minted in error-taxonomy.md 1.5."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
-  - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5 had `Err(FerrochainError { component: RETRY, category: POLICY, code: E-RETRY-001, retry_hint: Never })` — bare wrapper missing message field for E-RETRY-001 which has `<tool_name>` and `<attempt_limit>` placeholders. Added `message:` template inline; `<tool_name>` from `ToolRetryPolicy.tool_name`; `<attempt_limit>` from `ToolRetryPolicy.attempt_limit` — both deterministically available at raise site."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
+  - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5 had `Err(PregolyaError { component: RETRY, category: POLICY, code: E-RETRY-001, retry_hint: Never })` — bare wrapper missing message field for E-RETRY-001 which has `<tool_name>` and `<attempt_limit>` placeholders. Added `message:` template inline; `<tool_name>` from `ToolRetryPolicy.tool_name`; `<attempt_limit>` from `ToolRetryPolicy.attempt_limit` — both deterministically available at raise site."
   - "1.4 (D23/2026-07-22): Add retry-approval ordering invariant per ADR-018 Decision 3. Specifies the fixed dispatch sequence: circuit_breaker.check → pre_tool_dispatch → tool.invoke → retry_policy.record(result); record(result) fires unconditionally after invoke regardless of approval path."
   - "1.5 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
   - "1.6 (burst-271/F-P169-01/2026-07-25): Fix mis-anchor in Invariants — Retry-Approval Ordering section cited ADR-018 Decision 3 (Dispatch in graph::hitl::pre_tool_dispatch) instead of the correct Decision 6 (Retry / Approval Ordering). Authority pointer corrected; in-body sequence text was already correct and unchanged."
@@ -29,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "ea7109a"
+input-hash: "cc3b6ec"
 extracted_from: null
 modified: []
 deprecated: null
@@ -44,7 +44,7 @@ removal_reason: null
 
 ## Description
 
-The ferrochain retry combinator (adopted from adk-rust P-71) must key per-tool retry
+The pregolya retry combinator (adopted from adk-rust P-71) must key per-tool retry
 counters on `(tool_name)` alone — never on `(tool_name, hash(args))`. The args-hash
 keying pattern in adk-rust P-63 is explicitly REJECTed because it resets the counter
 every time the model changes arguments (which the reflection prompt encourages), making
@@ -54,7 +54,7 @@ different arguments must share the same retry counter.
 ## Preconditions
 
 1. The caller is constructing a `ToolRetryPolicy` for a named tool `T`.
-2. The ferrochain-core crate provides a single shared retry combinator (P-71 ADOPT); no
+2. The pregolya-core crate provides a single shared retry combinator (P-71 ADOPT); no
    per-crate retry loop exists outside this combinator.
 3. The tool name is a non-empty ASCII-printable string (e.g., `"web_search"`).
 
@@ -67,11 +67,11 @@ different arguments must share the same retry counter.
 3. Invocations of two distinct tools `T1` and `T2` maintain fully independent retry
    counters even when `T1.name == T2.name` is false; the counter namespace is flat and
    keyed by name string.
-4. The ferrochain-core API exposes no constructor that accepts an args-hash as a retry key;
+4. The pregolya-core API exposes no constructor that accepts an args-hash as a retry key;
    such a constructor does not exist in the public surface — the REJECT is structural, not
    just policy.
 5. When the per-tool retry limit for `T` is reached, the combinator returns
-   `Err(FerrochainError { component: RETRY, category: POLICY, code: E-RETRY-001,
+   `Err(PregolyaError { component: RETRY, category: POLICY, code: E-RETRY-001,
    retry_hint: Never,
    message: "RetryExhausted: per-tool retry limit for tool '<tool_name>' exhausted after <attempt_limit> attempts" })`
    (where `<tool_name>` from `ToolRetryPolicy.tool_name`; `<attempt_limit>` from `ToolRetryPolicy.attempt_limit`)
@@ -85,7 +85,7 @@ different arguments must share the same retry counter.
   any derivative of the tool's argument values. A type-checked enforcement (distinct key type
   that cannot be constructed with args) is preferred over a runtime check.
 - The shared retry combinator (P-71 ADOPT) is the **only** retry implementation in
-  ferrochain. Partner provider crates route through it; they do not implement their own loops.
+  pregolya. Partner provider crates route through it; they do not implement their own loops.
 - Counter state is per-invocation scope (one graph run) — it does not persist across
   checkpoint boundaries or runs.
 - **Retry-Approval Ordering (ADR-018 Decision 6):** When a tool has both a `ToolRetryPolicy`
@@ -155,8 +155,8 @@ after a success.
 
 ## Architecture Anchors
 
-- `ferrochain-core/src/retry/combinator.rs` — shared retry combinator (to be created; P-71 ADOPT)
-- `ferrochain-core/src/retry/policy.rs` — `ToolRetryPolicy` struct definition (to be created)
+- `pregolya-core/src/retry/combinator.rs` — shared retry combinator (to be created; P-71 ADOPT)
+- `pregolya-core/src/retry/policy.rs` — `ToolRetryPolicy` struct definition (to be created)
 
 ## Story Anchor
 
@@ -178,4 +178,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | U (unit), P (property) |
-| Module | ferrochain-core |
+| Module | pregolya-core |

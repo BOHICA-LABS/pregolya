@@ -10,7 +10,7 @@ origin: greenfield
 priority: P0
 subsystem: SS-21
 capability: CAP-029
-crate: ferrochain-vectorstores
+crate: pregolya-vectorstores
 wave: 2
 phase: 1b
 producer: product-owner
@@ -22,7 +22,7 @@ vp_seed: true
 vp_id: VP-009
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction; SECURITY-CRITICAL hardening per ADR-014 v1.1"
-  - "1.1 (F-P224/H-4/2026-07-21): Module references corrected — `vectorstores::mmr` → `vectorstores::similarity` for cosine primitive (4 sites: Description, Architecture Anchors ×2, Traceability Module row). The `mmr` module implements the MMR selection algorithm; `cosine_similarity` lives in the dedicated `vectorstores::similarity` module with harness file `ferrochain-vectorstores/src/similarity.rs`. Genuine MMR-algorithm references in other BCs/docs are unaffected."
+  - "1.1 (F-P224/H-4/2026-07-21): Module references corrected — `vectorstores::mmr` → `vectorstores::similarity` for cosine primitive (4 sites: Description, Architecture Anchors ×2, Traceability Module row). The `mmr` module implements the MMR selection algorithm; `cosine_similarity` lives in the dedicated `vectorstores::similarity` module with harness file `pregolya-vectorstores/src/similarity.rs`. Genuine MMR-algorithm references in other BCs/docs are unaffected."
   - "1.2 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-009 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-009' (VP-INDEX v1.2 burst-223 seeded VP-009 Kani P0; VP-009.md exists). Completed-handoff residue removal."
   - "1.3 (F-P148-02/burst-249/2026-07-24): De-pinned all three 'ADR-014 v1.1 [§]Hardening Note' sites to 'ADR-014 Decision 2 §Hardening note' per ADR-014 v1.4 labeled anchor: (1) frontmatter red_gate_source, (2) Red Gate body callout, (3) Traceability Architecture Authority row."
   - "1.4 (OBS-P149-01/burst-250/2026-07-24): PC5 VP attribution corrected: 'VP-009's proptest harness' → 'BC-local proptest sub-property VP-2.21.003-B'. VP-009 is the Kani formal-proof VP for the NaN guard (VP-2.21.003-A); the [-1,1] range property is covered by the BC-local proptest VP-2.21.003-B. input-hash updated dda4aa1→1b115d2 (drift from burst-249 ADR-014 content changes)."
@@ -30,7 +30,7 @@ changelog:
   - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::VS → Component::Vs (Description code block + PC-1 code block), Category::VAL → Category::Val (Description code block + PC-1 code block, 2 occurrences)."
   - "1.7 (FIX-BURST-276/F-P173-503/2026-07-27): Amend Invariant 3 and Invariant 5 to specify the two-part NaN guard covering both the zero-norm path and the overflow-to-infinity path. Guard condition: `norm == 0.0 || !norm.is_finite()` — zero-norm guard alone is unsatisfiable: individually finite elements (e.g., magnitude ~1e20f32) produce `Σ xᵢ² = +Inf`; `sqrt(+Inf) = +Inf`; `Inf/Inf = NaN`; the zero-norm guard does not fire because norm is +Inf, not 0.0. `kani::assume(x.is_finite())` does NOT prevent this. Aligns BC with VP-009 v1.6 formal invariant and `overflow_norm_triggers_guard` harness. Coherence sweep: Description code block (`if norm == 0.0` → `if norm == 0.0 || !norm.is_finite()`), Red Gate VP callout last sentence, PC-2 (added overflow precondition arm), PostC-1 (full guard condition), PostC-2 (zero OR infinite), PostC-4 (finite and non-zero), PostC-5 (finite non-zero), EC-003 (finite and non-zero), EC-006 added (overflow case), TV-006 added (f32::MAX overflow vector). TV census: 6 canonical (was 5) + 0 GTV = 6 BC-local TVs; project total 675 (664 canonical + 11 GTV)."
   - "1.8 (fix-burst-276/2026-07-27): Propagate E-VS-001 message widening (error-taxonomy.md v1.45, same burst). Human decision: rename conceptual variant ZeroNormEmbedding → DegenerateNormEmbedding; widen STATIC message from 'zero-norm embedding vector' → 'degenerate-norm embedding vector: norm is zero or non-finite'. Three live message-text sites updated: (1) Description code block `message:` field, (2) PC-1 code block `message:` field, (3) Invariant 4 message-text citation. The old message implied zero-norm-only and misdescribed the overflow arm now covered by the v1.7 guard. No guard condition, BC title, BC code, or BC priority changed; Invariant 4 semantics (STATIC, no placeholder) unchanged — only the quoted message string updated."
-  - "1.9 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — two fence-scoped FerrochainError struct literals (Description rust fence + PC-1 postcondition fence, both missing retry_hint, source fields) → FerrochainError::new(Component::Vs, Category::Val, RetryHint::Never, \"E-VS-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-VS-001. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-21/BC-2.21.003.md returns zero fence-scoped literal occurrences after this edit."
+  - "1.9 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — two fence-scoped PregolyaError struct literals (Description rust fence + PC-1 postcondition fence, both missing retry_hint, source fields) → PregolyaError::new(Component::Vs, Category::Val, RetryHint::Never, \"E-VS-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-VS-001. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-21/BC-2.21.003.md returns zero fence-scoped literal occurrences after this edit."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-029
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -40,7 +40,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "89fca2d"
+input-hash: "d4c75fa"
 extracted_from: null
 modified: []
 deprecated: null
@@ -66,13 +66,13 @@ removal_reason: null
 ## Description
 
 Before computing cosine similarity between two `Vec<f32>` vectors in `vectorstores::similarity`
-(or any cosine call site in `ferrochain-vectorstores`), the implementation computes the
+(or any cosine call site in `pregolya-vectorstores`), the implementation computes the
 L2 norm of each vector:
 
 ```rust
 let norm = v.iter().map(|x| x * x).sum::<f32>().sqrt();
 if norm == 0.0 || !norm.is_finite() {
-    return Err(FerrochainError::new(
+    return Err(PregolyaError::new(
         Component::Vs,
         Category::Val,
         RetryHint::Never,
@@ -88,7 +88,7 @@ two lines and has negligible performance overhead compared to the cosine computa
 
 ## Preconditions
 
-1. The `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, FerrochainError>` function
+1. The `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, PregolyaError>` function
    (or equivalent) is called with vectors `a` and `b`.
 2. At least one of `a` or `b` has a degenerate L2 norm: either `norm == 0.0` (all elements
    are `0.0`, or the vector is effectively all-zero due to floating-point underflow to zero)
@@ -100,7 +100,7 @@ two lines and has negligible performance overhead compared to the cosine computa
 1. When `norm_a == 0.0 || !norm_a.is_finite()` OR `norm_b == 0.0 || !norm_b.is_finite()`
    (covers both the all-zero path and the sum-of-squares overflow-to-infinity path):
    ```
-   Err(FerrochainError::new(
+   Err(PregolyaError::new(
        Component::Vs,
        Category::Val,
        RetryHint::Never,
@@ -182,7 +182,7 @@ two lines and has negligible performance overhead compared to the cosine computa
 
 ## Architecture Anchors
 
-- `architecture/module-decomposition.md` — SS-21, `vectorstores::similarity` module (cosine_similarity pure-core function; harness file `ferrochain-vectorstores/src/similarity.rs`)
+- `architecture/module-decomposition.md` — SS-21, `vectorstores::similarity` module (cosine_similarity pure-core function; harness file `pregolya-vectorstores/src/similarity.rs`)
 - `architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md` — Decision 2 §Hardening note (zero-norm guard specification, E-VS-001 error, VP-009 candidacy note)
 - `architecture/purity-boundary-map.md` — `vectorstores::similarity` Pure Core; Kani VP-009 candidacy noted
 
@@ -205,8 +205,8 @@ _[to be filled after story decomposition — Wave 2 SS-21 security-hardening sto
 | L2 Domain Invariants | DI-008 (cosine_similarity returns Result; no .unwrap() on cosine computation), DI-014 (E-VS-001 propagates as Err; no silent NaN or 0.0 fallthrough — cosine_similarity never returns Ok(f32::NAN)) |
 | Architecture Authority | ADR-014 Decision 2 §Hardening note (zero-norm guard specification, E-VS-001, VP-009 candidacy) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| VP Registration | VP-009 (assigned in VP-INDEX v1.2 as VP-009 — Kani P0; ferrochain-vectorstores zero_norm_guard_fail_closed) |
-| Module | ferrochain-vectorstores / vectorstores::similarity |
+| VP Registration | VP-009 (assigned in VP-INDEX v1.2 as VP-009 — Kani P0; pregolya-vectorstores zero_norm_guard_fail_closed) |
+| Module | pregolya-vectorstores / vectorstores::similarity |
 | Priority | P0 |
 | Wave | 2 |
 | Test Types | unit (Red Gate) + proptest + Kani (VP-009 candidate) |

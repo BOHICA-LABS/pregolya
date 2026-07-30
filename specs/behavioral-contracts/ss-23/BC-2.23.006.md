@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-23
 capability: CAP-038
-crate: ferrochain-tools
+crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
@@ -27,7 +27,7 @@ changelog:
   - "1.5 (F-P149-02/burst-250/2026-07-24): Architecture Anchors version pin de-pinned: 'ADR-020 TOOLS table in ADR-020 v1.7' → 'ADR-020 Decision 5 §E-TOOLS-* table' (TD-VSDD-091 stable-anchor enforcement, F-P149-02). input-hash updated 64d7571→0b1f1b3 (drift from prior burst)."
   - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 5 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-3 + PC-4 + PC-6); Category::SECURITY → Category::Security (PC-3), Category::VAL → Category::Val (PC-3 prose backtick + PC-4 code), Category::TOOL → Category::Tool (PC-6), edge-case table cell Category::VAL → Category::Val (EC-002)."
   - "1.7 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check with canonical canonicalize_beneath_root at 3 sites: PC-6 inline reference (guard pass described as 'canonicalize_beneath_root succeeds — the confinement check and fs::open are distinct steps'), Invariants call-obligation bullet (root path argument), VP-2.23.006-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout; error-layer distinction (E-SBXD-001 sandbox vs E-TOOLS-001 tool layer) preserved in PC-6 final sentence."
-  - "1.8 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to FerrochainError::new() form. PC3 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC4 E-TOOLS-009 InvalidRegexPattern: ::new(Component::Tools, Category::Val, RetryHint::Never, ...); phantom pattern/compile_error fields removed (message-embedded placeholders). PC6 E-TOOLS-008 traversal I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed. TD-VSDD-060 sibling sweep: EC-002/EC-008/TV-003/TV-006 use abbreviated code + JSON-like shorthand — classified (c) message-component descriptions; left as-is."
+  - "1.8 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to PregolyaError::new() form. PC3 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC4 E-TOOLS-009 InvalidRegexPattern: ::new(Component::Tools, Category::Val, RetryHint::Never, ...); phantom pattern/compile_error fields removed (message-embedded placeholders). PC6 E-TOOLS-008 traversal I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed. TD-VSDD-060 sibling sweep: EC-002/EC-008/TV-003/TV-006 use abbreviated code + JSON-like shorthand — classified (c) message-component descriptions; left as-is."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-038
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -36,7 +36,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "8f61371"
+input-hash: "b407795"
 extracted_from: null
 modified: []
 deprecated: null
@@ -51,7 +51,7 @@ removal_reason: null
 
 ## Description
 
-`GrepTool` in `ferrochain-tools::tools::search` implements the `Tool` trait with
+`GrepTool` in `pregolya-tools::tools::search` implements the `Tool` trait with
 `ActionRisk::ReadOnly`. It performs regex pattern matching across a file or directory tree
 using the `regex` crate (pin `"1"`, linear-time finite-automata engine — no catastrophic
 backtracking on adversarial inputs). `GrepTool` does NOT shell out to system `grep` or
@@ -93,10 +93,10 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    informational code E-TOOLS-006 (`GrepResult.capped` payload flag) appears in the structured output
    annotations, not as a thrown error. Callers can detect the cap via `capped: true`.
 3. **Path confinement violation:** Returns
-   `Err(FerrochainError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
+   `Err(PregolyaError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
    "PathConfinementViolation: path '<path>' is outside the configured PathGuard scope"))`.
 4. **Invalid regex:** Returns
-   `Err(FerrochainError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-009",
+   `Err(PregolyaError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-009",
    "InvalidRegexPattern: pattern '<pattern>' failed to compile: <compile_error>"))`.
 5. **No matches found:** Returns `ToolOutput::Json({ "matches": [], "capped": false })` —
    not an error.
@@ -106,7 +106,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    directory listing and open, `NotADirectory` for a path whose type changed mid-traversal,
    or any other `std::io::Error` from the filesystem — the search is aborted immediately.
    The tool returns:
-   `Err(FerrochainError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
+   `Err(PregolyaError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
    "GrepTool I/O error on '<path>': <io_kind>"))`.
    Partial results accumulated before the error are NOT returned; the caller receives only
    the `Err` so that the incomplete search is never silently treated as a complete result
@@ -175,7 +175,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (GrepTool, in-process regex, no subprocess, max_results 100), Decision 3 (ReadOnly ActionRisk), Decision 5 (E-TOOLS-001/006; E-TOOLS-008 OS-error paths minted burst-234; E-TOOLS-009 minted burst-233 — appended to ADR-020 Decision 5 §E-TOOLS-* table (burst-238 sweep: satisfied)), Decision 7 (`regex = "1"` pin, linear-time guarantee, MSRV 1.65)
-- `architecture/module-decomposition.md` — SS-23, `tools::search` module in ferrochain-tools
+- `architecture/module-decomposition.md` — SS-23, `tools::search` module in pregolya-tools
 - `architecture/purity-boundary-map.md` — SS-23 Effectful Shell (filesystem traversal)
 
 ## Story Anchor
@@ -198,7 +198,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 | Architecture Authority | ADR-020 Decisions 2, 3, 5, and 7 (GrepTool contract, regex dep pin, ReadOnly ActionRisk, E-TOOLS-001/006) |
 | Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
 | VP Registration | VP-2.23.006-A/B/C (unit/integration tests) |
-| Module | ferrochain-tools / tools::search |
+| Module | pregolya-tools / tools::search |
 | Priority | P1 |
 | Wave | 1 |
 | Test Types | unit + integration |

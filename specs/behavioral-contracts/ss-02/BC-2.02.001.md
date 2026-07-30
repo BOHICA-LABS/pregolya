@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P107-01 census, 2026-07-18): E-GRAPH-007 struct expanded from single-field to two-field form. Was: { key } (1 field — missing node_id). Now: { node_id, key } (2 fields, 1:1 with taxonomy message placeholders '<node_id>' and '<key>'). EC-001 and TV-005 updated. Same-class defect as E-GRAPH-011 discovered during message↔struct census rerun (pass-106 sweep wrongly passed this code)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "146707a"
+input-hash: "291e48b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -138,9 +138,9 @@ transitions to `failed`.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/graph/state.rs` — `StateGraph` builder (add_node, add_edge, compile)
-- `ferrochain-graph/src/types.rs` — `CompiledStateGraph`, `Command`, `PregelTask`
-- `ferrochain-graph/src/channels/` — `LastValue`, `BinaryOperatorAggregate`, `BaseChannel` trait
+- `pregolya-graph/src/graph/state.rs` — `StateGraph` builder (add_node, add_edge, compile)
+- `pregolya-graph/src/types.rs` — `CompiledStateGraph`, `Command`, `PregelTask`
+- `pregolya-graph/src/channels/` — `LastValue`, `BinaryOperatorAggregate`, `BaseChannel` trait
 
 ## Story Anchor
 
@@ -161,4 +161,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-graph |
+| Module | pregolya-graph |

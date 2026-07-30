@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-19
 capability: CAP-025
-crate: ferrochain-core
+crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
@@ -29,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "0daa69f"
+input-hash: "dc48c59"
 extracted_from: null
 modified: []
 deprecated: null
@@ -45,7 +45,7 @@ removal_reason: null
 ## Description
 
 The serialization registry is populated at link time via `inventory::submit!` macros, not
-by a hand-maintained list. Core ferrochain types register unconditionally;
+by a hand-maintained list. Core pregolya types register unconditionally;
 partner-crate types (e.g., OpenAI, Anthropic, Ollama adapters) register only when their
 corresponding Cargo feature is enabled (e.g., `feature = "openai"`). At program startup,
 `Reviver::new()` calls `inventory::iter::<LcEntry>()` to collect all registered entries into
@@ -55,7 +55,7 @@ registry — it is never a hand-edited list.
 
 ## Preconditions
 
-1. The `inventory` crate (dtolnay) is a dependency of `ferrochain-core`.
+1. The `inventory` crate (dtolnay) is a dependency of `pregolya-core`.
 2. Each type `T` that must participate in serialization declares its `LcEntry` via
    `inventory::submit! { LcEntry { lc_id: &["..."], constructor: |kwargs| { ... } } }`.
 3. For partner crate entries: the `inventory::submit!` is inside a
@@ -95,7 +95,7 @@ registry — it is never a hand-edited list.
 
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
-| EC-001 | Binary compiled with `--no-default-features` (no partner features) | Registry contains only core ferrochain types; partner type ids are absent; `Reviver::revive()` on a partner type id returns `Err(E-SRLZ-001)` |
+| EC-001 | Binary compiled with `--no-default-features` (no partner features) | Registry contains only core pregolya types; partner type ids are absent; `Reviver::revive()` on a partner type id returns `Err(E-SRLZ-001)` |
 | EC-002 | Binary compiled with `features = ["openai", "anthropic"]` | Registry contains core + OpenAI + Anthropic entries; Ollama entries absent if `"ollama"` feature not enabled |
 | EC-003 | Duplicate `inventory::submit!` for the same `lc_id` | The `inventory` crate collects both entries; HashMap construction silently overwrites the first with the second (last-write-wins). The correct detection strategy is a CI assertion that `registry_size() == EXPECTED_COUNT`; a count mismatch indicates a duplicate or a missing entry |
 | EC-004 | `inventory::iter::<LcEntry>()` called before `Reviver::new()` | Valid — iter is lazy; it does not require Reviver to be initialized |
@@ -127,7 +127,7 @@ registry — it is never a hand-edited list.
 
 - `architecture/module-decomposition.md` — SS-19, `core::serializable::registry` sub-module
 - `architecture/decisions/ADR-016-lc-json-deserialization-safety.md` — Decision 2 (inventory crate choice, feature-gated partner registration, OnceLock initialization)
-- `architecture/purity-boundary-map.md` — `ferrochain-core / core::serializable` Pure Core (initialization is pure; no I/O)
+- `architecture/purity-boundary-map.md` — `pregolya-core / core::serializable` Pure Core (initialization is pure; no I/O)
 
 ## Story Anchor
 
@@ -146,7 +146,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 story]_
 | L2 Domain Invariants | DI-008 (Reviver::new() returns Result; no panic on registry initialization) |
 | Architecture Authority | ADR-016 Decision 2 (inventory crate, feature-gated partner registration, OnceLock initialization) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| Module | ferrochain-core / core::serializable::registry |
+| Module | pregolya-core / core::serializable::registry |
 | Priority | P1 |
 | Wave | 2 |
 | Test Types | unit + integration (feature-flag compilation variants) |

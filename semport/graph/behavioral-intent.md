@@ -1,6 +1,6 @@
 ---
 artifact: semport/graph/behavioral-intent
-project: ferrochain
+project: pregolya
 port_target: langgraph @ 1.2.9
 analyzer_pass: 2
 date: 2026-07-12

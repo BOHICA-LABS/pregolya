@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-memory per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-memory per module-decomposition.md v1.10."
   - "1.2 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
   - "1.3 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-01/02 phases Post-v1→v1 phase — residue from incomplete D23 body sweep (F-P159-01)."
 traces_to:
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/entities-server.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "5dfd892"
+input-hash: "265e51e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -41,7 +41,7 @@ removal_reason: null
 
 ## Description
 
-`ferrochain-memory` provides a long-horizon store that persists key-value entries and
+`pregolya-memory` provides a long-horizon store that persists key-value entries and
 vector embeddings **across threads**, independently of the checkpoint lifecycle. A
 memory entry written in one thread (or session) is readable from any other thread in
 the same scope — not automatically deleted when a checkpoint is rolled back, a thread
@@ -160,10 +160,10 @@ configured"`. This is NOT an error; hybrid search degrades gracefully to keyword
 
 ## Architecture Anchors
 
-- `ferrochain-memory/src/store.rs` — `MemoryStore` trait definition
-- `ferrochain-memory/src/sqlite.rs` — SQLite durable backend implementation
-- `ferrochain-memory/src/in_memory.rs` — ephemeral in-memory backend (test/dev)
-- `ferrochain-memory/src/search.rs` — keyword, vector, and hybrid search implementations
+- `pregolya-memory/src/store.rs` — `MemoryStore` trait definition
+- `pregolya-memory/src/sqlite.rs` — SQLite durable backend implementation
+- `pregolya-memory/src/in_memory.rs` — ephemeral in-memory backend (test/dev)
+- `pregolya-memory/src/search.rs` — keyword, vector, and hybrid search implementations
 
 ## Story Anchor
 
@@ -184,4 +184,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | I (integration) |
-| Module | ferrochain-memory |
+| Module | pregolya-memory |

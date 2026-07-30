@@ -16,7 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.0 (2026-07-13): initial authoring — Greenfield batch 13"
-  - "1.1 (2026-07-14): Architecture Anchor ferrochain-core/src/graph/builder.rs corrected to ferrochain-graph/src/graph/state.rs — StateGraph builder is owned by ferrochain-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42)"
+  - "1.1 (2026-07-14): Architecture Anchor pregolya-core/src/graph/builder.rs corrected to pregolya-graph/src/graph/state.rs — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42)"
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - architecture/decisions/ADR-008-proc-macro-attributes.md
@@ -25,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "f73d909"
+input-hash: "cc914f2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -40,7 +40,7 @@ removal_reason: null
 
 ## Description
 
-The `#[ferrochain::task]` proc-macro attribute marks an async function as a StateGraph task,
+The `#[pregolya::task]` proc-macro attribute marks an async function as a StateGraph task,
 generating the registration boilerplate that wires it as a node into the graph's task
 dispatch table. This eliminates the manual `graph.add_node("node_name", node_fn)` call: the
 macro captures the function name as the canonical task identifier and produces a registration
@@ -51,10 +51,10 @@ registered node function with the same name.
 ## Preconditions
 
 1. The annotated function is an async fn with the StateGraph node signature:
-   `async fn task_name(state: S) -> Result<Update<S>, FerrochainError>` (or equivalent).
+   `async fn task_name(state: S) -> Result<Update<S>, PregolyaError>` (or equivalent).
 2. The function name is a valid Rust identifier and will be used as the node's string
    identifier in the task dispatch table.
-3. `ferrochain-macros` is available (re-exported from `ferrochain-core`).
+3. `pregolya-macros` is available (re-exported from `pregolya-core`).
 
 ## Postconditions
 
@@ -91,7 +91,7 @@ registered node function with the same name.
 not prevent direct use. The token type is simply unused.
 
 ### EC-003: Annotated function has a generic type parameter
-**Scenario:** `#[ferrochain::task] async fn process<T: Runnable<...>>(state: S) -> ...`
+**Scenario:** `#[pregolya::task] async fn process<T: Runnable<...>>(state: S) -> ...`
 **Expected behavior:** Compile-time error from the macro: `#[task] does not support generic
 functions; use add_node directly for generic task registration`.
 
@@ -105,7 +105,7 @@ user-defined node names (they collide with the graph's internal routing symbols)
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `#[ferrochain::task] async fn summarize(state: S) -> ...` + `SummarizeNode::register_into(&mut graph)` | Graph registers node with key `"summarize"` | Happy path |
+| TV-001 | `#[pregolya::task] async fn summarize(state: S) -> ...` + `SummarizeNode::register_into(&mut graph)` | Graph registers node with key `"summarize"` | Happy path |
 | TV-002 | `SummarizeNode::register_into` called twice on same graph | Second call returns `Err(GraphBuildError::DuplicateNode("summarize"))` | Duplicate guard |
 | TV-003 | Graph with `#[task]` registration vs manual `add_node("summarize", summarize)` | Both graphs execute identically for same input | Semantic equivalence |
 | TV-004 | Generic `#[task]` function | Compile-time error from macro | Generics unsupported |
@@ -126,8 +126,8 @@ user-defined node names (they collide with the graph's internal routing symbols)
 
 ## Architecture Anchors
 
-- `ferrochain-macros/src/task.rs` — `#[task]` proc-macro implementation
-- `ferrochain-graph/src/graph/state.rs` — `add_node` API that the generated code calls
+- `pregolya-macros/src/task.rs` — `#[task]` proc-macro implementation
+- `pregolya-graph/src/graph/state.rs` — `add_node` API that the generated code calls
 - `architecture/decisions/ADR-008-proc-macro-attributes.md` — proc-macro design rationale
 
 ## Story Anchor
@@ -151,11 +151,11 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | U (unit) |
-| Module | ferrochain-macros (re-exported ferrochain-core) |
+| Module | pregolya-macros (re-exported pregolya-core) |
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
-| 1.1 | 2026-07-14 | Architecture Anchor `ferrochain-core/src/graph/builder.rs` corrected to `ferrochain-graph/src/graph/state.rs` — StateGraph builder is owned by ferrochain-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42) | F-P42-01 |
+| 1.1 | 2026-07-14 | Architecture Anchor `pregolya-core/src/graph/builder.rs` corrected to `pregolya-graph/src/graph/state.rs` — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42) | F-P42-01 |
 | 1.0 | 2026-07-13 | Initial authoring | Greenfield batch 13 |

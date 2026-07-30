@@ -1,6 +1,6 @@
 ---
 artifact: semport/partners/behavioral-intent
-project: ferrochain
+project: pregolya
 port_target: langchain partner packages + standard-tests
 analyzer_pass: 4
 date: 2026-07-12
@@ -11,7 +11,7 @@ note: analysis only — NO Rust code committed
 
 What each package *promises* to do behind the `BaseChatModel` / `Embeddings` / `VectorStore` /
 `BaseRetriever` / `BaseTool` contracts, and the cross-partner behaviors that become shared
-`ferrochain` partner-infrastructure.
+`pregolya` partner-infrastructure.
 
 ## 0. The universal partner contract
 
@@ -144,9 +144,9 @@ Because ChatOllama needs no cloud credential, it is the natural CI conformance t
 runs without secrets — provided a local Ollama (or a DTU fake of it) is reachable. See
 dependency-disposition §DTU for exactly what a fake must serve.
 
-## 4. Cross-partner shared behaviors → ferrochain partner-infrastructure
+## 4. Cross-partner shared behaviors → pregolya partner-infrastructure
 
-These recur across ≥3 providers and MUST become a shared `ferrochain-partner-core` (name TBD
+These recur across ≥3 providers and MUST become a shared `pregolya-partner-core` (name TBD
 at architecture) rather than being reimplemented per crate:
 
 | Shared behavior | Where seen | Intent |
@@ -220,14 +220,14 @@ provider MUST pass (unit + always-on integration, no capability flag gating them
 **The no-opt-out invariant** (`test_no_overrides_DO_NOT_OVERRIDE`): a subscriber cannot
 delete or silently override a mandatory test — only declare `@pytest.mark.xfail(reason=...)`.
 This is the mechanism that makes the suite a *contract* rather than a menu. **Porting this
-guard is essential** — without it, ferrochain provider crates could quietly weaken conformance.
+guard is essential** — without it, pregolya provider crates could quietly weaken conformance.
 
 Other suite intents (later waves): embeddings (query/documents, sync+async, dimensionality),
 tools (name/input-schema/invoke-matches-schema), vectorstores (idempotent add-by-id, delete
 semantics, get-by-id, sync+async parity), cache (empty→update→hit→clear lifecycle),
 base_store (KV CRUD + yield_keys, Generic over value type), indexer (upsert/delete/get
 semantics), retrievers (k-param constructor + kwarg, returns Documents), sandboxes (deepagents
-file-op/exec conformance — DEFER, deepagents is out of ferrochain v1 scope).
+file-op/exec conformance — DEFER, deepagents is out of pregolya v1 scope).
 
 ## State Checkpoint
 ```yaml

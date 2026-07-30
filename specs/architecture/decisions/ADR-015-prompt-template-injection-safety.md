@@ -18,16 +18,16 @@ subsystems_affected: [SS-18, SS-11]
 changelog:
   - "1.11 (fix-burst-279/gap-corrections/2026-07-28): Three gap corrections to v1.10. (1) Gap 1 (BLOCKING): FewShotPromptTemplate adjudication body added to §Decision 3 Amendment — FewShotPromptTemplate Example Trust Check: pre-expansion trust check over Vec<(TemplateVar,TemplateVar)> examples; FewShotExamples arm in TemplateInput injection guard code sketch; security argument (fail-closed, fires before inner example_template.format()); example trust level convention table. (2) Gap 1 (continued): §Decision 3 Amendment — TemplateInput Enum Concretized added before B201 section; TemplateInput enum definition with Scalar/Messages/FewShotExamples arms; #[non_exhaustive]; format_messages signature declared as HashMap<String, TemplateInput>. (3) Gap 1 (continued): §Decision 3 Amendment — B201 Type-Level Enforcement Assessment added: type-level wrapper feasibility assessed (feasible but API friction disproportionate); prohibition-as-invariant retained for v1; v2 trigger condition documented. v1.10 was missing all three bodies."
   - "1.10 (fix-burst-279/F-P175-B201+F-P175-B202+F-P175-B208+B202-fewshot/2026-07-28): Decision 3 Amendment — four injection-safety gaps closed. (1) B201: PromptTemplate::format explicitly declared unguarded; system-position output from the single-message surface is prohibited; callers MUST use ChatPromptTemplate::format_messages for any system-role content; type-level enforcement assessed and deferred — see §B201 type-level question. (2) B202 MessageListVar: injection check extended to cover MessageListVar.trust_level for MessagesPlaceholder slots in TrustRequired position. (3) B202 FewShot: FewShotPromptTemplate example inputs promoted from Vec<(String,String)> to Vec<(TemplateVar,TemplateVar)>; pre-expansion trust check added for TrustRequired outer slots; inner PromptTemplate::format never called when outer guard fires. (4) B208: TrustLevel severity inversion fixed — add severity() -> u8 (Untrusted=2, UserInput=1, Trusted=0); #[non_exhaustive] added; #[derive(Ord)] explicitly prohibited. format_messages signature corrected to HashMap<String, TemplateInput>; TemplateInput enum concretized. Sweeps: ADR-015 prose at §Iteration determinism invariant and §Security Invariant 1 updated; interface-definitions.md format_messages signature and TemplateInput enum added; VP-006 formal invariant updated."
-  - "1.9 (FIX-BURST-278/Wave-C-S5/2026-07-28): S5 canon — two FerrochainError struct literals in Rust fences converted to FerrochainError::new(component, category, RetryHint::Never, code, message) canonical constructor form per D-42/D-49. (1) Decision 2 from_messages guard: E-TMPL-002 struct literal → FerrochainError::new(Component::Tmpl, Category::Val, RetryHint::Never, ...). (2) Decision 3 injection check: E-TMPL-001 struct literal → FerrochainError::new(Component::Tmpl, Category::Security, RetryHint::Never, ...). RetryHint::Never confirmed for both codes (SECURITY/InjectionAttempt and VAL/SystemSlotPolicy are non-retriable by construction per error-taxonomy)."
+  - "1.9 (FIX-BURST-278/Wave-C-S5/2026-07-28): S5 canon — two PregolyaError struct literals in Rust fences converted to PregolyaError::new(component, category, RetryHint::Never, code, message) canonical constructor form per D-42/D-49. (1) Decision 2 from_messages guard: E-TMPL-002 struct literal → PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, ...). (2) Decision 3 injection check: E-TMPL-001 struct literal → PregolyaError::new(Component::Tmpl, Category::Security, RetryHint::Never, ...). RetryHint::Never confirmed for both codes (SECURITY/InjectionAttempt and VAL/SystemSlotPolicy are non-retriable by construction per error-taxonomy)."
   - "1.8 (FIX-BURST-272/F-P170-18/2026-07-25): Rewrite §PO Handoffs and §BA Handoffs in past-tense RESOLVED form following the burst-238 stale-handoff sweep pattern. All listed changes were applied in burst-226 and subsequent bursts; the future-tense obligation tables were live open instructions in an accepted ADR, a Production-Grade Default violation. Rotted line-number pointers (L1110, L1128-1129, L1155-1156) replaced with section/symbol anchors per TD-VSDD-091."
   - "1.7 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — Decision 2 code sketch: Component::TMPL → Component::Tmpl; Category::VAL → Category::Val; Decision 4 InjectionAttempt code sketch: Component::TMPL → Component::Tmpl; Category::SECURITY → Category::Security per ADR-010 v1.9 Direction B adjudication."
   - "1.6 (FIX-BURST-269/F-P167-01/2026-07-25): Replace all non-canonical Category::VALIDATION residue with Category::VAL at four sites: (1) Decision 2 E-TMPL-002 code sketch (live code body); (2) Decision 4 strict-undefined note '(VALIDATION)' narrative label; (3) Consequences E-TMPL-002 '(VALIDATION/SystemSlotPolicy)' narrative label; (4) Consequences E-TMPL-003 '(VALIDATION/UndefinedVariable)' narrative label. VALIDATION is not a canonical Category variant; canonical abbreviated form per ADR-010 is VAL."
   - "1.5 (burst-249/2026-07-24): F-P148-02 — add Security Invariant 2 labeled subsection to Decision 2 and Security Invariant 1 labeled subsection to Decision 3. Adjudication option (b): stable anchors added to ADR rather than remapping 7+ citation sites across 4 documents. Resolves unresolvable 'ADR-015 Security Invariant N' citations in BC-2.18.004, BC-2.18.005, BC-INDEX Red Gate table, VP-006 changelog, prd.md, test-vectors.md."
   - "1.4 (burst-227/2026-07-21): F-P132-03 (coordinator flag 2) — Add 'MessagesPlaceholder trust derivation' subsection to Decision 3. ADR-015 v1.3 defined `TemplateVar` for scalar substitution but gave no counterpart type or derivation rule for `Vec<Message>` placeholder variables. BC-2.18.003 PC2 cited 'ADR-015 v1.3 semantics' but the rule was unanchored. Fix: introduce `MessageListVar { messages: Vec<Message>, trust_level: Option<TrustLevel> }` and state the uniform derivation rule: each expanded message's `MessageProvenance.highest_trust_level` = `MessageListVar.trust_level`; `None` → `None` (treated as Trusted). API shape (TemplateInput enum) deferred to story implementation."
-  - "1.3 (burst-226/2026-07-21): F-P131-05 (CRITICAL) — ProvenanceTag shape adjudication. `ProvenanceTag` (SS-11 ingress-boundary struct) and template-composition trust level are TWO DISTINCT CONCERNS. Introduce `TrustLevel` enum (Untrusted|UserInput|Trusted) in `ferrochain-prompts: prompts::template` as the SS-18-local trust classifier. `TemplateVar.trust_level: Option<TrustLevel>` replaces the former implicit `Option<ProvenanceTag>` coupling. `MessageProvenance.highest_trust_level: Option<TrustLevel>` replaces `tag: Option<ProvenanceTag>`. Injection check updated: `var.trust_level.is_some_and(|t| t.is_untrusted())`. `ProvenanceTag` remains the SS-11 canonical 3-field struct (boundary_type/ingress_id/sequence_position) — no trust dimension added. BC-2.09.003 `ProvenanceTag::McpToolResult { server_name, tool_name }` is an outdated pre-PASS-58 variant; PO handoff: update PC1 to canonical struct form (`boundary_type: BoundaryType::ToolResult`). F-P131-04 (MED) — strict-undefined is a UNIVERSAL template-engine contract. Both f-string (default) and jinja2 (optional) engines raise E-TMPL-003 for undefined variables. E-TMPL-003 is engine-neutral. Decision 4 updated to state universal obligation."
+  - "1.3 (burst-226/2026-07-21): F-P131-05 (CRITICAL) — ProvenanceTag shape adjudication. `ProvenanceTag` (SS-11 ingress-boundary struct) and template-composition trust level are TWO DISTINCT CONCERNS. Introduce `TrustLevel` enum (Untrusted|UserInput|Trusted) in `pregolya-prompts: prompts::template` as the SS-18-local trust classifier. `TemplateVar.trust_level: Option<TrustLevel>` replaces the former implicit `Option<ProvenanceTag>` coupling. `MessageProvenance.highest_trust_level: Option<TrustLevel>` replaces `tag: Option<ProvenanceTag>`. Injection check updated: `var.trust_level.is_some_and(|t| t.is_untrusted())`. `ProvenanceTag` remains the SS-11 canonical 3-field struct (boundary_type/ingress_id/sequence_position) — no trust dimension added. BC-2.09.003 `ProvenanceTag::McpToolResult { server_name, tool_name }` is an outdated pre-PASS-58 variant; PO handoff: update PC1 to canonical struct form (`boundary_type: BoundaryType::ToolResult`). F-P131-04 (MED) — strict-undefined is a UNIVERSAL template-engine contract. Both f-string (default) and jinja2 (optional) engines raise E-TMPL-003 for undefined variables. E-TMPL-003 is engine-neutral. Decision 4 updated to state universal obligation."
   - "1.2 (burst-224/2026-07-21): F-P129-12 — specify template-source-order iteration for slot.variable_names() per BC-2.18.004 Invariant 5 + EC-007 + TV-005; determinism note added to Decision 3 injection-check prose and code sketch. HashSet/HashMap iteration prohibited for this loop."
   - "1.1 (crates.io/2026-07-20): Drop abandoned `mustache` crate (last release 2018-02, ~8yr stale — production-grade violation). Template engines: f-string (default) + jinja2/minijinja only. Pin: `minijinja = \"2\"` (2.21.0, default-features=false, optional). Add minijinja autoescape + sandboxed/restricted-mode + strict-undefined safety notes."
-  - "1.0 (D21/2026-07-20): Initial ADR — ferrochain-prompts new crate, slot trust model (SystemMessage slots TrustRequired immutable), ProvenanceTag pass-through via PromptValue, f-string always-on + mustache/jinja2 optional features, injection_guard module as pure-core blocker before guardrail boundary."
+  - "1.0 (D21/2026-07-20): Initial ADR — pregolya-prompts new crate, slot trust model (SystemMessage slots TrustRequired immutable), ProvenanceTag pass-through via PromptValue, f-string always-on + mustache/jinja2 optional features, injection_guard module as pure-core blocker before guardrail boundary."
 ---
 
 # ADR-015: Prompt Template Rendering and Injection Safety
@@ -39,7 +39,7 @@ changelog:
 D21 promotes prompt templates (PromptTemplate, ChatPromptTemplate, MessagesPlaceholder,
 FewShot*) to full v1 scope. Templates substitute user-supplied variables into message
 slots before sending to an LLM. This creates a novel security surface not present in
-any existing ferrochain subsystem: **untrusted content substituted into a SystemMessage
+any existing pregolya subsystem: **untrusted content substituted into a SystemMessage
 template slot is a prompt injection vector**.
 
 The existing security model (DI-012 / BC-2.11.001) fires guardrail hooks at ingress
@@ -50,22 +50,22 @@ system-position message. This ADR defines that mechanism.
 
 Four questions must be resolved:
 
-1. **Crate placement:** new `ferrochain-prompts` or fold into ferrochain-core?
+1. **Crate placement:** new `pregolya-prompts` or fold into pregolya-core?
 2. **Trust model:** how does ProvenanceTag interact with template slot rendering?
 3. **Injection prevention:** what blocks untrusted content from reaching SystemMessage slots?
 4. **Template engine selection:** which engines are supported, and which are safe to depend on?
 
-## Decision 1 — Crate Placement: `ferrochain-prompts` (new crate)
+## Decision 1 — Crate Placement: `pregolya-prompts` (new crate)
 
-Prompt templates are not placed in ferrochain-core because:
+Prompt templates are not placed in pregolya-core because:
 - Jinja2 rendering pulls in the `minijinja` crate (2.21.0). This is an optional capability
-  that should not bloat every ferrochain-core user.
+  that should not bloat every pregolya-core user.
 - The f-string engine is small (written in-house, ~100 LOC), but grouping both engines
-  in a dedicated crate is cleaner than a feature-gated blob in ferrochain-core.
+  in a dedicated crate is cleaner than a feature-gated blob in pregolya-core.
 - Template logic is higher-level than the core type primitives; it depends on `core::message`,
   `core::runnable`, and `core::credentials` but adds nothing to the core trait contract.
 
-`ferrochain-prompts` depends on ferrochain-core. It exports:
+`pregolya-prompts` depends on pregolya-core. It exports:
 - `PromptTemplate` — single-message template (f-string default; jinja2 via optional feature)
 - `ChatPromptTemplate` — multi-message template; produces `Vec<Message>`
 - `MessagesPlaceholder` — inserts a `Vec<Message>` variable into a chat template
@@ -83,7 +83,7 @@ pub enum SlotTrustPolicy {
     /// Appropriate for HumanMessage slots receiving user-supplied text.
     TrustAll,
     /// This slot requires trusted input only. Untrusted content triggers
-    /// Err(FerrochainError { code: "E-TMPL-001", .. }).
+    /// Err(PregolyaError { code: "E-TMPL-001", .. }).
     /// SystemMessage slots are ALWAYS TrustRequired — not configurable.
     TrustRequired,
 }
@@ -97,10 +97,10 @@ construction time:
 impl ChatPromptTemplate {
     pub fn from_messages(
         messages: Vec<(MessageRole, &str, SlotTrustPolicy)>,
-    ) -> Result<Self, FerrochainError> {
+    ) -> Result<Self, PregolyaError> {
         for (role, _, policy) in &messages {
             if *role == MessageRole::System && *policy != SlotTrustPolicy::TrustRequired {
-                return Err(FerrochainError::new(
+                return Err(PregolyaError::new(
                     Component::Tmpl,
                     Category::Val,
                     RetryHint::Never,
@@ -124,7 +124,7 @@ them to `TrustRequired` for additional hardening in pipelines that have tighter 
 **The `TrustAll` policy on a SystemMessage slot is rejected at template construction time,
 before any rendering occurs.** Calling `ChatPromptTemplate::from_messages` with a
 `(MessageRole::System, _, SlotTrustPolicy::TrustAll)` tuple immediately returns
-`Err(FerrochainError { code: "E-TMPL-002", .. })`. There is no bypass: no caller-supplied
+`Err(PregolyaError { code: "E-TMPL-002", .. })`. There is no bypass: no caller-supplied
 override, no feature flag, no runtime configuration disables this check. Any
 `ChatPromptTemplate` that successfully constructs has all SystemMessage slots in the
 `TrustRequired` posture — rendering never executes without this guarantee.
@@ -143,13 +143,13 @@ only at tool-result / RAG / memory ingress boundaries. Template variables are a 
 step — there is no ingress event and no sequence position. Forcing full ingress audit fields
 onto a template variable would be semantically incorrect.
 
-`TrustLevel` is introduced in `ferrochain-prompts: prompts::template` as the SS-18-local
+`TrustLevel` is introduced in `pregolya-prompts: prompts::template` as the SS-18-local
 trust classifier, **distinct from and independent of** `ProvenanceTag`.
 
 ### TrustLevel — template-variable trust classifier
 
 ```rust
-// ferrochain-prompts: prompts::template
+// pregolya-prompts: prompts::template
 /// Trust classification for a template variable's value.
 /// Distinct from `core::guardrail::ProvenanceTag` (SS-11 ingress-boundary audit struct).
 /// Used ONLY within the SS-18 template composition layer.
@@ -253,7 +253,7 @@ impl ChatPromptTemplate {
     pub fn format_messages(
         &self,
         vars: HashMap<String, TemplateInput>,
-    ) -> Result<PromptValue, FerrochainError> {
+    ) -> Result<PromptValue, PregolyaError> {
         for slot in &self.slots {
             if slot.policy == SlotTrustPolicy::TrustRequired {
                 // slot.variable_names() returns names in TEMPLATE SOURCE ORDER
@@ -268,7 +268,7 @@ impl ChatPromptTemplate {
                         Some(TemplateInput::Scalar(var)) => {
                             // Scalar TemplateVar — check trust_level directly.
                             if var.trust_level.is_some_and(|t| t.is_untrusted()) {
-                                return Err(FerrochainError::new(
+                                return Err(PregolyaError::new(
                                     Component::Tmpl,
                                     Category::Security,
                                     RetryHint::Never,
@@ -288,7 +288,7 @@ impl ChatPromptTemplate {
                             // inspected MessageListVar.trust_level, leaving MessagesPlaceholder
                             // slots silently unguarded in TrustRequired position.
                             if msg_var.trust_level.is_some_and(|t| t.is_untrusted()) {
-                                return Err(FerrochainError::new(
+                                return Err(PregolyaError::new(
                                     Component::Tmpl,
                                     Category::Security,
                                     RetryHint::Never,
@@ -351,7 +351,7 @@ type. This obscured the MessageListVar arm and prevented the injection guard fro
 it. The concrete unifying enum is established here (previously deferred to story implementation):
 
 ```rust
-// ferrochain-prompts: prompts::template
+// pregolya-prompts: prompts::template
 /// Unified input type for `ChatPromptTemplate::format_messages`.
 /// Replaces the former `HashMap<String, TemplateVar>` parameter type.
 #[non_exhaustive]
@@ -373,7 +373,7 @@ pub enum TemplateInput {
 pub fn format_messages(
     &self,
     vars: HashMap<String, TemplateInput>,
-) -> Result<PromptValue, FerrochainError>
+) -> Result<PromptValue, PregolyaError>
 ```
 
 This is a **breaking change** from the prior sketch form `HashMap<String, TemplateVar>`.
@@ -404,7 +404,7 @@ Some(TemplateInput::FewShotExamples(examples)) => {
     if slot.policy == SlotTrustPolicy::TrustRequired {
         for (input_var, output_var) in examples {
             if input_var.trust_level.is_some_and(|t| t.is_untrusted()) {
-                return Err(FerrochainError::new(
+                return Err(PregolyaError::new(
                     Component::Tmpl, Category::Security, RetryHint::Never,
                     "E-TMPL-001",
                     format!("InjectionAttempt: few-shot example input carries untrusted \
@@ -413,7 +413,7 @@ Some(TemplateInput::FewShotExamples(examples)) => {
                 ));
             }
             if output_var.trust_level.is_some_and(|t| t.is_untrusted()) {
-                return Err(FerrochainError::new(
+                return Err(PregolyaError::new(
                     Component::Tmpl, Category::Security, RetryHint::Never,
                     "E-TMPL-001",
                     format!("InjectionAttempt: few-shot example output carries untrusted \
@@ -594,7 +594,7 @@ resolved during story implementation and does not constrain the decision here.
 
 ## Decision 4 — Template Engine Selection
 
-Three template engines are supported via Cargo features in `ferrochain-prompts`:
+Three template engines are supported via Cargo features in `pregolya-prompts`:
 
 | Engine | Cargo feature | Dependency | Status |
 |--------|--------------|-----------|--------|
@@ -608,11 +608,11 @@ production-grade default. The mustache-syntax use case is fully covered by the j
 
 **minijinja injection safety mechanisms (backing the trust model):** `minijinja` 2.21.0
 provides three mechanisms directly relevant to the slot trust model:
-- **Autoescape**: available and configurable per-template; ferrochain-prompts leaves it
+- **Autoescape**: available and configurable per-template; pregolya-prompts leaves it
   off by default for LLM prompts (not HTML) but exposes it for callers that render into
   web contexts.
 - **Sandboxed mode**: restricts attribute access, method calls, and filter invocations
-  to an explicit allowlist; ferrochain-prompts enables sandboxed mode for all jinja2
+  to an explicit allowlist; pregolya-prompts enables sandboxed mode for all jinja2
   template rendering, preventing template authors from calling arbitrary methods on
   substituted values.
 - **Strict-undefined mode**: raises `E-TMPL-003` (VAL) on any undefined variable
@@ -672,10 +672,10 @@ mismatched crate. Snapshot tests validate parity with the Python reference.
 
 ## Alternatives Considered
 
-### Alt A: Prompt templates in ferrochain-core
+### Alt A: Prompt templates in pregolya-core
 
 Arguments for: no extra crate; templates are primitives.
-Rejected: the minijinja crate would become a transitive dep of all ferrochain-core users
+Rejected: the minijinja crate would become a transitive dep of all pregolya-core users
 even when they don't use templates. Core stays lean; optional capabilities belong in
 dedicated crates.
 
@@ -718,7 +718,7 @@ matters (and prompt injection to system position matters), it must be enforced.
 
 ## Consequences
 
-- `ferrochain-prompts` is the 19th published crate (D21 addition; `ferrochain-vectorstores`
+- `pregolya-prompts` is the 19th published crate (D21 addition; `pregolya-vectorstores`
   is the 20th).
 - `prompts::injection_guard` is a Pure Core module — no async, no I/O, Kani-candidacy
   noted (VP-006: prove that `TrustLevel::Untrusted` in a `TrustRequired` slot always
@@ -726,17 +726,17 @@ matters (and prompt injection to system position matters), it must be enforced.
 - `PromptValue` carries `MessageProvenance` — callers that previously assumed raw `Vec<Message>`
   from a template must unwrap or use the helper `.into_messages()` method.
 - `E-TMPL-001` (SECURITY/InjectionAttempt) and `E-TMPL-002` (VAL/SystemSlotPolicy)
-  are new error codes; they belong in the error taxonomy (ferrochain-core `core::error`).
-- ferrochain-prompts depends on ferrochain-core. No new deps on ferrochain-graph or
-  ferrochain-memory — prompt templates are lower in the dependency graph than execution.
+  are new error codes; they belong in the error taxonomy (pregolya-core `core::error`).
+- pregolya-prompts depends on pregolya-core. No new deps on pregolya-graph or
+  pregolya-memory — prompt templates are lower in the dependency graph than execution.
 - The jinja2 engine has an external dep (`minijinja = "2"`, 2.21.0, `default-features = false`)
-  and is opt-in via `feature = "jinja2"`. Default dependency tree: ferrochain-prompts →
-  ferrochain-core only (no minijinja unless the `jinja2` feature is enabled).
+  and is opt-in via `feature = "jinja2"`. Default dependency tree: pregolya-prompts →
+  pregolya-core only (no minijinja unless the `jinja2` feature is enabled).
 - `E-TMPL-003` (VAL/UndefinedVariable) is engine-neutral — raised by BOTH the
   f-string (default) and jinja2 (optional) engines. The error-taxonomy description MUST NOT
   attribute it to minijinja only (PO handoff; see below).
 - `TrustLevel` enum (`Untrusted | UserInput | Trusted`) is a new type in
-  `ferrochain-prompts: prompts::template`. It is distinct from `core::guardrail::ProvenanceTag`
+  `pregolya-prompts: prompts::template`. It is distinct from `core::guardrail::ProvenanceTag`
   (SS-11). SS-18 BC files and interface-definitions that reference `ProvenanceTag::Untrusted`,
   `::UserInput`, `::Trusted`, or `::Internal` for template trust purposes must be updated to
   use `TrustLevel::*` variants (PO handoff; variant `Internal` does not exist — remove it).

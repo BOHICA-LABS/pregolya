@@ -1,19 +1,19 @@
 ---
 artifact: semport/mcp/rust-translation-strategy
-project: ferrochain
-port_target: langchain-mcp-adapters (0.3.0) → ferrochain-mcp
+project: pregolya
+port_target: langchain-mcp-adapters (0.3.0) → pregolya-mcp
 analyzer_pass: 5
 date: 2026-07-12
 note: strategy only — NO Rust code committed; signatures are illustrative sketches
 substrate: rmcp 2.2.0 (official Rust MCP SDK)
 ---
 
-# langchain-mcp-adapters → Rust (ferrochain-mcp) Translation Strategy
+# langchain-mcp-adapters → Rust (pregolya-mcp) Translation Strategy
 
 Difficulty scale: 🟢 easy · 🟡 moderate · 🟠 hard · 🔴 very hard.
 
-`ferrochain-mcp` is an **adapter crate**: it does NOT reimplement the MCP
-protocol (rmcp owns that); it adapts rmcp client types ⇄ ferrochain-core
+`pregolya-mcp` is an **adapter crate**: it does NOT reimplement the MCP
+protocol (rmcp owns that); it adapts rmcp client types ⇄ pregolya-core
 tool/message/Blob types. Async-first, Tokio, per CLAUDE.md.
 
 ## 1. Connection model — serde-tagged enum 🟢
@@ -54,7 +54,7 @@ pub enum SessionSource {
   Python's `async with`). No cross-call lifetime — clean ownership.
 - **Live session:** wrap the rmcp running service in `Arc` so the generated tool
   closures can share it across calls without lifetime entanglement. The tool is
-  `'static` (holds `Arc`, not a borrow) — this is the ferrochain answer to
+  `'static` (holds `Arc`, not a borrow) — this is the pregolya answer to
   "client lifetimes across tool calls."
 - **No connection pooling in the Python source** — each tool call is a fresh
   session on-demand. Do NOT invent pooling in wave 1 (would be a behavior
@@ -65,26 +65,26 @@ pub enum SessionSource {
   quirk. Verify rmcp propagates errors on disconnect; if it does, the workaround
   is unnecessary in Rust (drop it and document why).
 
-## 3. Tool conversion → ferrochain-core `Tool` 🟠
+## 3. Tool conversion → pregolya-core `Tool` 🟠
 
 ```rust
 pub fn convert_mcp_tool(
     source: SessionSource,
     tool: rmcp::model::Tool,
     opts: &ConvertOpts,      // callbacks, interceptors, server_name, prefix, handle_errors
-) -> Arc<dyn ferrochain_core::Tool>
+) -> Arc<dyn pregolya_core::Tool>
 ```
 - **Schema:** MCP `inputSchema` is a JSON-Schema `Value`; pass through to the
-  ferrochain tool's `args_schema` as `serde_json::Value` (mirrors Python passing
+  pregolya tool's `args_schema` as `serde_json::Value` (mirrors Python passing
   the dict — no model synthesis MCP→core). This aligns with core's schema ADR
   (schemars) only on the reverse direction.
 - **The generated tool is a closure** capturing `Arc`'d session-source,
   callbacks, interceptor chain, and the MCP tool name. Async `run(args)`:
   build `MCPToolCallRequest` → interceptor chain → rmcp `call_tool` → convert
   result.
-- **Result → content_and_artifact:** ferrochain-core needs a tool-output shape
+- **Result → content_and_artifact:** pregolya-core needs a tool-output shape
   that carries both content blocks AND an artifact (`structuredContent`). Verify
-  ferrochain-core's `ToolMessage`/tool-output type supports the
+  pregolya-core's `ToolMessage`/tool-output type supports the
   content+artifact pair (it must, for parity). Artifact = `MCPToolArtifact {
   structured_content: Map<String,Value> }`.
 
@@ -100,7 +100,7 @@ EmbeddedResource blob(image/*) -> Image{base64}; else File{base64}
 AudioContent           -> Err(NotImplemented)   // preserve: audio not supported
 unknown                -> Err(Value/Unsupported)
 ```
-- These map onto ferrochain-core's `ContentBlock` enum (from core semport §2).
+- These map onto pregolya-core's `ContentBlock` enum (from core semport §2).
 - **Error taxonomy:** only the MCP `isError=true` path is a "tool execution
   error" (recoverable → ToolMessage status=error when `handle_tool_errors`);
   content-conversion errors (audio, unknown) and transport failures ALWAYS
@@ -153,10 +153,10 @@ and document.
 ## 8. Prompts / resources — 🟢
 
 - `load_mcp_prompt`: rmcp `get_prompt` → each message: text+user→HumanMessage,
-  text+assistant→AiMessage, else `Err`. Direct map to ferrochain-core messages.
+  text+assistant→AiMessage, else `Err`. Direct map to pregolya-core messages.
 - `load_mcp_resources`: text→Blob(text), blob→base64-decode→Blob(bytes), else
   `Err`; `uris=None` lists all (dynamic resources skipped). `Blob` from
-  ferrochain-core with `{mime_type, metadata: {"uri"}}`. `RuntimeError`-on-fetch
+  pregolya-core with `{mime_type, metadata: {"uri"}}`. `RuntimeError`-on-fetch
   → `McpError` with failing URI.
 
 ## 9. MultiServerMCPClient — 🟡
@@ -178,7 +178,7 @@ pub struct MultiServerMcpClient {
 
 ## 10. to_fastmcp (LC→server) — DEFER 🟠
 
-Requires synthesizing a server tool from a ferrochain tool (pydantic
+Requires synthesizing a server tool from a pregolya tool (pydantic
 `create_model` analog via schemars) and rejects injected args. Server-side
 export; defer to a later wave with rmcp's `#[tool]` server macros.
 
@@ -187,7 +187,7 @@ export; defer to a later wave with rmcp's `#[tool]` server macros.
 | Subsystem | Difficulty | Primary risk |
 |---|---|---|
 | Session lifecycle → ownership | 🟠 | on-demand-per-call vs Arc'd live session; no pooling in v1 |
-| Tool conversion | 🟠 | content+artifact output shape in ferrochain-core; interceptor closures |
+| Tool conversion | 🟠 | content+artifact output shape in pregolya-core; interceptor closures |
 | Content-block translation | 🟡 | exact 6-way mapping; audio=NotImplemented preserved |
 | Error policy | 🟠 | execution-error (gated) vs conversion/transport (always propagate) |
 | Callbacks/elicitation | 🟡 | rmcp elicitation support unverified |
@@ -202,20 +202,20 @@ export; defer to a later wave with rmcp's `#[tool]` server macros.
    feature-gating for websocket + elicitation.
 2. **ADR: session ownership model** — SessionSource enum (OnDemand vs Arc'd
    Live); explicitly NO connection pooling in v1 (perf ADR if added later).
-3. **ADR: tool-output content+artifact shape in ferrochain-core** — ensure core
+3. **ADR: tool-output content+artifact shape in pregolya-core** — ensure core
    tool output carries both blocks and structured artifact (dependency on core).
 4. **ADR: error taxonomy split** — which McpError variants are governed by
    `handle_tool_errors` vs always-propagate (must match Python's ToolException
    discrimination exactly).
 5. **ADR: langgraph `Command` result routing** — feature-gate under a `graph`
-   feature depending on ferrochain-graph.
+   feature depending on pregolya-graph.
 
 ## State Checkpoint
 ```yaml
 pass: 5
 artifact: rust-translation-strategy
 package: langchain-mcp-adapters
-crate: ferrochain-mcp
+crate: pregolya-mcp
 substrate: rmcp 2.2.0
 status: complete
 timestamp: 2026-07-12

@@ -6,11 +6,11 @@ author: devops-engineer
 decisions-traced: D4, D10, D12
 ---
 
-# ferrochain CI/CD Setup
+# Pregolya CI/CD Setup
 
 ## Repository
 
-- **Repo:** BOHICA-LABS/ferrochain (public)
+- **Repo:** BOHICA-LABS/ferrochain (public) — container rename to BOHICA-LABS/pregolya is a pending human action (D-103; not part of burst-284)
 - **Default branch:** main (set manually after initial push)
 - **Factory artifacts:** `.factory/` worktree on `factory-artifacts` orphan branch (pre-existing)
 

@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "4fa1f6b"
+input-hash: "6b5c02b"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04
@@ -24,9 +24,9 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-6): E-category canon — EC-003 and test vector error category corrected from `StateUpdateError` to `VAL, code: E-GRAPH-007` (F-P6-03, status/category canon sweep)."
-  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-003 and the corresponding TV row carried bare `Err(FerrochainError { category: VAL, code: E-GRAPH-007 })` without message; E-GRAPH-007 has <node_id> and <key> placeholders. Added inline message template to EC-003; TV row PASS-ABBREV via EC-003."
-  - "1.3 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/ferrochain-checkpoint.md' to two adjudicated targets: (1) 'architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md §Fork Lineage' for CheckpointMetadata { parent_checkpoint_id } definition; (2) 'architecture/module-decomposition.md §ferrochain-checkpoint' for checkpoint::lineage row. No BC body content changed."
-  - "1.4 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 FerrochainError observations with elided fields: EC-003 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
+  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-003 and the corresponding TV row carried bare `Err(PregolyaError { category: VAL, code: E-GRAPH-007 })` without message; E-GRAPH-007 has <node_id> and <key> placeholders. Added inline message template to EC-003; TV row PASS-ABBREV via EC-003."
+  - "1.3 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/pregolya-checkpoint.md' to two adjudicated targets: (1) 'architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md §Fork Lineage' for CheckpointMetadata { parent_checkpoint_id } definition; (2) 'architecture/module-decomposition.md §pregolya-checkpoint' for checkpoint::lineage row. No BC body content changed."
+  - "1.4 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-003 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -84,7 +84,7 @@ branch lineage entirely and requires full state duplication.
 |----|-------------|-------------------|
 | EC-001 | Two concurrent forks from the same parent `P` (DEC-008) | Both `C_fork1` and `C_fork2` have `parent = P`; their own IDs are distinct monotonic values both > P; no shared-state corruption; each fork is independently resumable |
 | EC-002 | Fork chain depth N = 200 (deep branch history) | Parent chain walk succeeds iteratively (no stack overflow); all 200 ancestors retrievable via `get_state_history` following parent pointers |
-| EC-003 | Fork with `values` update containing an unknown channel key | `Err(FerrochainError { category: VAL, code: E-GRAPH-007, message: "UnknownChannelKey: node '<node_id>' returned write for key '<key>' which is not registered in the state schema", .. })` (where `<node_id>` is the fork call site identifier; `<key>` is the unrecognized channel key; both available at the raise site); no partial checkpoint is written; `C_parent` unchanged |
+| EC-003 | Fork with `values` update containing an unknown channel key | `Err(PregolyaError { category: VAL, code: E-GRAPH-007, message: "UnknownChannelKey: node '<node_id>' returned write for key '<key>' which is not registered in the state schema", .. })` (where `<node_id>` is the fork call site identifier; `<key>` is the unrecognized channel key; both available at the raise site); no partial checkpoint is written; `C_parent` unchanged |
 | EC-004 | Fork from a checkpoint that is itself a fork (chained forks) | Works correctly; grandchild fork's parent chain walks through the intermediate fork to the root |
 
 ## Canonical Test Vectors
@@ -93,7 +93,7 @@ branch lineage entirely and requires full state duplication.
 |-------|----------------|----------|
 | `update_state(config.with_checkpoint_id("cp-5"), {k: v})` on thread `"t1"` | New checkpoint with `parent = "cp-5"`, new `checkpoint_id > "cp-5"`, `source = "update"`; original `"cp-5"` unchanged in storage | happy-path |
 | Two parallel fork calls from `"cp-5"`: `fork_a` and `fork_b` | Both have `parent = "cp-5"`; fork_a.id != fork_b.id; walking from either arrives at `"cp-5"`; no shared mutable state | edge-case |
-| Fork with `values = {nonexistent_channel: 42}` | `Err(FerrochainError { category: VAL, code: E-GRAPH-007, .. })`; storage unchanged (PASS-ABBREV via EC-003) | error |
+| Fork with `values = {nonexistent_channel: 42}` | `Err(PregolyaError { category: VAL, code: E-GRAPH-007, .. })`; storage unchanged (PASS-ABBREV via EC-003) | error |
 | Fork from fork: create `cp-5` → fork to `cp-6` → fork again to `cp-7` | `cp-7.parent = "cp-6"`, `cp-6.parent = "cp-5"`; parent walk from `cp-7` reaches both ancestors | edge-case |
 
 ## Verification Properties
@@ -114,7 +114,7 @@ branch lineage entirely and requires full state duplication.
 | Source Analysis | semport/graph/behavioral-intent.md §2.6 (time-travel and forking; fork via parent pointer); CONFLICT-4 (fork-by-copy in adk-rust is the counter-example: loses branch lineage entirely) |
 | Binding Decisions | D11.3 (all three durability tiers confirmed; per-task writes compound the ordering problem if fork copies state) |
 | Negative evidence | CONFLICT-4: adk-rust creates a new UUID + full state copy on fork; no parent pointer; branch lineage irrecoverably lost |
-| Architecture Module | ferrochain-checkpoint (filled by architect) |
+| Architecture Module | pregolya-checkpoint (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 
 ## Related BCs
@@ -125,7 +125,7 @@ branch lineage entirely and requires full state duplication.
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md §Fork Lineage` — `CheckpointMetadata { parent_checkpoint_id: Option<CheckpointId> }` definition; fork creates new ID via `get_next_version` with `parent_checkpoint_id = Some(source_id)`
-- `architecture/module-decomposition.md §ferrochain-checkpoint` — `checkpoint::lineage` row: fork via `parent_checkpoint_id`; no state copy on fork (SS-04)
+- `architecture/module-decomposition.md §pregolya-checkpoint` — `checkpoint::lineage` row: fork via `parent_checkpoint_id`; no state copy on fork (SS-04)
 
 ## Story Anchor
 

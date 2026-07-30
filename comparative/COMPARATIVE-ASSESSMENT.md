@@ -152,8 +152,8 @@ detailed analysis, see `assessment-parts/part-3-conflicts-negative-evidence.md` 
 | **CONFLICT-2** | Checkpoint durability | YES (binding: D11.3) | Three-tier durability (sync/async/exit) with per-task `put_writes`; sync default; monotonic checkpoint IDs; adk-rust step-boundary-only is counter-example |
 | **CONFLICT-3** | Interrupt/resume (HITL) | YES (binding: D8 Domains A+B) | Full LangGraph HITL contract: per-task scratchpad, FIFO resume-value delivery, node-re-executes-from-start; adk-rust notification-only is counter-example — build from scratch |
 | **CONFLICT-4** | Checkpoint clock/ordering | YES | Monotonic logical clock (not wall-clock) for checkpoint IDs; parent-pointer fork lineage (not copy); adk-rust UUID v4 + wall-clock is counter-example |
-| **CONFLICT-5** | Streaming event taxonomy | YES (wire format ferrochain-native) | Typed per-phase event taxonomy (start/stream/end per operation, run_id correlation, parent_ids); ferrochain-native wire format (not langchain compat); adk-rust flat Event envelope is internal persistence unit only |
-| **CONFLICT-6** | Error taxonomy | adk-rust wins decisively | Adopt adk-rust 2D component×category struct for `FerrochainError`; Python exception hierarchy does not translate to Rust; rename components to ferrochain crate names |
+| **CONFLICT-5** | Streaming event taxonomy | YES (wire format pregolya-native) | Typed per-phase event taxonomy (start/stream/end per operation, run_id correlation, parent_ids); pregolya-native wire format (not langchain compat); adk-rust flat Event envelope is internal persistence unit only |
+| **CONFLICT-6** | Error taxonomy | adk-rust wins decisively | Adopt adk-rust 2D component×category struct for `PregolyaError`; Python exception hierarchy does not translate to Rust; rename components to pregolya crate names |
 | **CONFLICT-7** | Memory service | Both contribute | User/app/session partitioning + GDPR erasure (from adk-rust); global-overlay default INVERTED (user-private must not bleed); explicit opt-in for global tier |
 | **CONFLICT-8** | Agent composition | YES (binding: D7/D11.1) | Agents expressed as StateGraph instances; high-level API (`create_react_agent` analog) for ergonomics; adk-rust composite-tree informs ergonomics only |
 | **CONFLICT-9** | Delta checkpoint granularity | YES | Per-channel delta granularity (LangGraph) over whole-state map (adk-rust); adopt adk-rust's composable DeltaCheckpointer wrapper pattern, adapt granularity |
@@ -163,11 +163,11 @@ detailed analysis, see `assessment-parts/part-3-conflicts-negative-evidence.md` 
 
 ## Section 4: Negative Evidence Catalog — Rollup
 
-Seventeen adk-rust patterns that ferrochain must actively NOT inherit. Each carries a ferrochain
+Seventeen adk-rust patterns that pregolya must actively NOT inherit. Each carries a pregolya
 requirement that becomes a BC candidate, holdout hook, or ADR. For full analysis see
 `assessment-parts/part-3-conflicts-negative-evidence.md` Section B.
 
-| NE | Source | Must-Not-Inherit Description | Ferrochain Requirement |
+| NE | Source | Must-Not-Inherit Description | Pregolya Requirement |
 |----|--------|------------------------------|------------------------|
 | NE-01 | P-61/P-49/P-62 | Default sandbox = no isolation; capability honesty does not force enforcement | Enforcing backend (WASM/container) must be default; process backend is loud opt-in; `Sandbox::execute` on strict policy against non-enforcing backend returns `Err(PolicyNotEnforceable)` |
 | NE-02 | P-65 | String-only workspace path safety; no symlink resolution | All workspace file ops must `canonicalize_beneath_root(base, path)` at access time; VP: no file op can observe outside declared workspace root |
@@ -199,7 +199,7 @@ The four outcomes assessed, scored against four criteria.
 
 ### Outcome (a) — Pure LangChain-semantics port; adk-rust as prior-art reference only
 
-Design ferrochain entirely from the LangChain/LangGraph semport extraction. Treat adk-rust
+Design pregolya entirely from the LangChain/LangGraph semport extraction. Treat adk-rust
 only as a reference for design decisions that have no LangChain analog.
 
 | Criterion | Score | Reasoning |
@@ -220,7 +220,7 @@ counter-example BCs and VPs. The 10 conflicts are resolved per Section 3 recomme
 
 | Criterion | Score | Reasoning |
 |-----------|-------|-----------|
-| Fidelity to LangChain ecosystem semantics | HIGH | API surface preserved; internal implementation is not user-visible. CONFLICT-6 error taxonomy is ferrochain-native anyway (not exposed via LangChain API). |
+| Fidelity to LangChain ecosystem semantics | HIGH | API surface preserved; internal implementation is not user-visible. CONFLICT-6 error taxonomy is pregolya-native anyway (not exposed via LangChain API). |
 | Production-grade merit | HIGH | Best of both corpora: LangGraph's BSP/HITL/durability model for the graph engine (D7/D9/D11 mandated) + adk-rust's error taxonomy, HTTP hygiene, typestate, sandbox, retry combinator, usage normalization. 17 NE requirements become BCs and VPs. |
 | Delivery risk | MEDIUM | More design decisions to resolve at Phase 1 (10 conflict ADRs, 16 ADAPT pattern adaptations); however these decisions must be made under any outcome — the conflicts are inherent to the product scope |
 | Phase-1 spec complexity | MEDIUM-HIGH | Hybrid requires explicit border-drawing between API surface and internal patterns; 9 high-stakes flags become gate questions; but this is exactly the Phase-1 architect + product-owner work the pipeline is designed for |
@@ -229,13 +229,13 @@ counter-example BCs and VPs. The 10 conflicts are resolved per Section 3 recomme
 
 ### Outcome (c) — adk-rust wholesale adoption per subsystem
 
-Build ferrochain by wholesale-adopting adk-rust's design choices subsystem by subsystem,
+Build pregolya by wholesale-adopting adk-rust's design choices subsystem by subsystem,
 adapting only what is necessary for Rust-ecosystem publication.
 
 | Criterion | Score | Reasoning |
 |-----------|-------|-----------|
-| Fidelity to LangChain ecosystem semantics | LOW | adk-rust's graph engine is fundamentally incompatible with LangGraph semantics: CONFLICT-1 (BSP vs edge-walker, nondeterministic writes), CONFLICT-2 (no per-task durability), CONFLICT-3 (no resume-value HITL), CONFLICT-4 (wall-clock ordering). These are the exact capabilities D7 identifies as the market white-space. Wholesale adoption would ship a product that cannot satisfy the LangGraph semantics that distinguish ferrochain. |
-| Production-grade merit | MEDIUM | Strong in error taxonomy, HTTP hygiene, provider layer, sandbox. Weak in graph engine, checkpoint durability, HITL — which are ferrochain's P0 differentiators. The adk-rust graph engine would need to be replaced in a follow-on cycle, creating technical debt before v1. |
+| Fidelity to LangChain ecosystem semantics | LOW | adk-rust's graph engine is fundamentally incompatible with LangGraph semantics: CONFLICT-1 (BSP vs edge-walker, nondeterministic writes), CONFLICT-2 (no per-task durability), CONFLICT-3 (no resume-value HITL), CONFLICT-4 (wall-clock ordering). These are the exact capabilities D7 identifies as the market white-space. Wholesale adoption would ship a product that cannot satisfy the LangGraph semantics that distinguish pregolya. |
+| Production-grade merit | MEDIUM | Strong in error taxonomy, HTTP hygiene, provider layer, sandbox. Weak in graph engine, checkpoint durability, HITL — which are pregolya's P0 differentiators. The adk-rust graph engine would need to be replaced in a follow-on cycle, creating technical debt before v1. |
 | Delivery risk | HIGH | Adopting an incompatible graph engine requires rework before holdout evaluation (Phase 4) can pass — the holdout domains (A/B/C) all require LangGraph HITL or durable multi-step execution semantics. |
 | Phase-1 spec complexity | LOW | Less up-front spec work; but spec complexity is deferred to a rework cycle |
 
@@ -243,7 +243,7 @@ adapting only what is necessary for Rust-ecosystem publication.
 
 ### Outcome (d) — Re-baseline on adk-rust; no LangChain semantics port
 
-Abandon the semport framing and re-baseline ferrochain as an independent Rust agent framework
+Abandon the semport framing and re-baseline pregolya as an independent Rust agent framework
 that builds on adk-rust's design. LangChain/LangGraph becomes inspiration only.
 
 | Criterion | Score | Reasoning |
@@ -262,11 +262,11 @@ guarantees that D9/D11 require: BSP determinism, per-task durability, and resume
 These are not gaps that can be patched onto adk-rust wholesale — they require designing the
 graph engine from scratch using LangGraph's execution model as the reference. This CRITICAL
 finding eliminates Outcomes (c) and (d) as strategic choices: both rely on adk-rust's graph
-engine being usable as-is, which it is not for ferrochain's declared product scope.
+engine being usable as-is, which it is not for pregolya's declared product scope.
 
 The choice between (a) and (b) is a quality question. Outcome (b) is unambiguously stronger:
 it captures 43 proven production patterns from adk-rust without compromising the LangChain API
-surface that is ferrochain's market premise. The additional Phase-1 complexity of Outcome (b)
+surface that is pregolya's market premise. The additional Phase-1 complexity of Outcome (b)
 is the work of resolving 10 conflict ADRs and specifying 16 adaptations — work that produces
 better specs, not less of them.
 
@@ -286,7 +286,7 @@ Phase-1 gate.
 
 | Category | Item | Source |
 |----------|------|--------|
-| Error taxonomy | `FerrochainError` 2D component×category struct, RetryHint, machine code, RFC-7807 emission | CONFLICT-6 (ADOPT adk P-01/P-04) |
+| Error taxonomy | `PregolyaError` 2D component×category struct, RetryHint, machine code, RFC-7807 emission | CONFLICT-6 (ADOPT adk P-01/P-04) |
 | Graph executor — BSP determinism | Writes applied in deterministic task-identity-sorted order; `InvalidUpdateError` on concurrent LastValue writes | CONFLICT-1; NE-17; VP candidate |
 | Graph executor — HITL | Per-task scratchpad, FIFO resume-value delivery, node-re-executes-from-start, `Command(resume=value)` | CONFLICT-3; HS-3 |
 | Checkpoint durability | Three-tier (sync/async/exit), sync default, per-task `put_writes`, monotonic logical-clock IDs, parent-pointer fork | CONFLICT-2; CONFLICT-4; HS-2 |
@@ -326,7 +326,7 @@ Phase-1 gate.
 | Graph execution model: BSP channel-version-triggered implementation | HS-1, HS-2, CONFLICT-1, CONFLICT-2, D9 gate | P0 — human gate required (D9) |
 | Checkpoint IDs and logical clock | CONFLICT-4 | P0 |
 | HITL interrupt/resume contract | HS-3, CONFLICT-3 | P0 |
-| Error taxonomy: `FerrochainError` 2D struct | CONFLICT-6 | P0 |
+| Error taxonomy: `PregolyaError` 2D struct | CONFLICT-6 | P0 |
 | Streaming event taxonomy | CONFLICT-5 | P1 |
 | Partner crate architecture: standalone SDK crate vs embedded adapter | HS-6, P-67 | P1 |
 | Proc-macro design for tool/graph wiring + schemars placement | HS-7, P-72, D5 | P1 |
@@ -348,8 +348,8 @@ certification passes that must route to Phase-4 holdout evaluation:
    `.timeout()` on the client, which NE-04 mandates).
 4. Rate-limit bucket behavior across distinct caller IDs under LRU eviction (NE-08 seam).
 
-Note: ferrochain-server is first-party per D13 and not A2A-protocol-compatible; these obligations
-translate to equivalent ferrochain-server holdout assertions, not A2A wire compliance.
+Note: pregolya-server is first-party per D13 and not A2A-protocol-compatible; these obligations
+translate to equivalent pregolya-server holdout assertions, not A2A wire compliance.
 
 ### 17 Negative-Evidence Requirements (Phase-1 BC / ADR / policy anchoring)
 
@@ -440,11 +440,11 @@ allocate BC capacity for it.
 
 **Q5 — PARTNER ARCHITECTURE (HS-6, shapes workspace beyond D6)**
 
-Does ferrochain adopt the standalone-SDK-crate split for partner crates (adk-rust P-67 pattern:
+Does pregolya adopt the standalone-SDK-crate split for partner crates (adk-rust P-67 pattern:
 independent wire-SDK + thin trait adapter)?
 
 Options:
-- **Yes — standalone SDK split** — `ferrochain-anthropic-sdk` + `ferrochain-anthropic` adapter;
+- **Yes — standalone SDK split** — `pregolya-anthropic-sdk` + `pregolya-anthropic` adapter;
   similarly for OpenAI and Ollama. Wire contract drift is a build error. SDK is independently
   publishable. Adds crates to workspace beyond D6's enumeration.
 - **No — single-crate embedded** — simpler workspace per D4; less reuse surface; partner crates
@@ -457,7 +457,7 @@ correctness property for a partner adapter. Workspace complexity is bounded (D4 
 
 **Q6 — PROC-MACRO SCOPE (HS-7, blocking graph BC authoring)**
 
-Does ferrochain ship `#[tool]` / `#[entrypoint]` / `#[task]` proc-macros in Phase 1/2?
+Does pregolya ship `#[tool]` / `#[entrypoint]` / `#[task]` proc-macros in Phase 1/2?
 
 Options:
 - **Phase 1/2** — zero-boilerplate tool registration and graph wiring; D5 schemars placement
@@ -494,7 +494,7 @@ for the graph engine design. The remaining three can be confirmed by the Phase-1
 
 **Q8 — CONTENT VALIDATION SCOPE (HS-8, Domain A/C forcing function)**
 
-Does ferrochain's Phase-1 spec include a provenance-tag seam and guardrail-on-ingress hook for
+Does pregolya's Phase-1 spec include a provenance-tag seam and guardrail-on-ingress hook for
 tool-result, RAG, and memory content entering the model context (not only user-input + model-output)?
 
 Options:

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-adr-decision-refs.sh — ferrochain factory-artifacts blocking validator (#6)
+# verify-adr-decision-refs.sh — pregolya factory-artifacts blocking validator (#6)
 #
 # PURPOSE
 # ───────

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# verify-module-canonicality.sh — ferrochain factory-artifacts BLOCKING validator
+# verify-module-canonicality.sh — pregolya factory-artifacts BLOCKING validator
 #
 # PURPOSE
 # ───────
 # Verifies that every Module cell in every module-keyed table across four primary
 # documents (plus the VP family and ARCH-INDEX VP section) follows the canonical
 # `crate_component::module_name` form (`^[a-z_]+::[a-z_]+$`) OR is an ARCH-INDEX
-# canonical-roster crate name (for crate-level roll-up rows such as `ferrochain-macros`).
+# canonical-roster crate name (for crate-level roll-up rows such as `pregolya-macros`).
 #
 # Four primary documents for module-census and set-equality:
 #   1. specs/architecture/module-decomposition.md  (canonical reference)
@@ -75,7 +75,7 @@ canonical_crates = set()
 try:
     with open(arch_index_path, 'r', encoding='utf-8') as fh:
         arch_content = fh.read()
-    # Match rows: | N | ferrochain-XXX | Origin | ... or | — | xtask | ...
+    # Match rows: | N | pregolya-XXX | Origin | ... or | — | xtask | ...
     for m in re.finditer(r'^\|\s*(?:\d+|—)\s*\|\s*([a-z][a-zA-Z0-9_-]+)\s*\|', arch_content, re.MULTILINE):
         name = m.group(1).strip()
         if name and not name.startswith('#'):

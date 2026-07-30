@@ -1,6 +1,6 @@
 ---
 artifact: semport/mcp/EXHAUSTIVE-SWEEP
-project: ferrochain
+project: pregolya
 area: mcp
 sweep_type: exhaustive (D14.1)
 reference_tag: langchain-mcp-adapters==0.3.0
@@ -80,7 +80,7 @@ no items required a second pass.
 | # | Severity | File | Original Claim | Actual Behavior | Correction Applied |
 |---|---|---|---|---|---|
 | I-1 | MODERATE | test-inventory.md | `` `test_adapter_bug_still_raises` — bare ToolException (non-execution) re-raises. `` | Test actually verifies that AudioContent raises `NotImplementedError` even when `isError=True` and `handle_tool_errors=True`. This is a content-conversion error path that bypasses `_handle_mcp_tool_error` entirely (not a ToolException subclass). The "bare ToolException re-raise" behavior in `_handle_mcp_tool_error` is real (documented in the function's docstring) but has no dedicated lock test in the Python suite. | Rewrote description to accurately identify the two distinct paths; flagged bare ToolException re-raise as untested. `[validation-exhaustive]` |
-| I-2 | MODERATE | test-inventory.md | test_client.py Client section: "name conflicts, the `__aenter__` NotImplementedError block" | (a) `test_get_tools_with_name_conflict` is in test_tools.py (line 1420), not test_client.py. (b) No test for `MultiServerMCPClient.__aenter__` raising NotImplementedError exists anywhere in the Python test suite. The behavior exists in client.py:267-291 but is untested — this is a coverage gap ferrochain-mcp must fill. | Removed both false claims; documented that `__aenter__` NotImplementedError is a coverage gap; redirected name-conflict attribution to test_tools.py. `[validation-exhaustive]` |
+| I-2 | MODERATE | test-inventory.md | test_client.py Client section: "name conflicts, the `__aenter__` NotImplementedError block" | (a) `test_get_tools_with_name_conflict` is in test_tools.py (line 1420), not test_client.py. (b) No test for `MultiServerMCPClient.__aenter__` raising NotImplementedError exists anywhere in the Python test suite. The behavior exists in `MultiServerMCPClient.__aenter__` but is untested — this is a coverage gap pregolya-mcp must fill. | Removed both false claims; documented that `__aenter__` NotImplementedError is a coverage gap; redirected name-conflict attribution to test_tools.py. `[validation-exhaustive]` |
 | I-3 | LOW | test-inventory.md | test_client.py module table Focus: "MultiServerMCPClient (get_tools, session, name conflicts, parallel)" | test_client.py also contains 5 stdio session env-var expansion tests (`test_stdio_session_*`) that test `_create_stdio_session`/`_expand_env_vars` behavior, not just MultiServerMCPClient. | Added stdio session env-var expansion to Focus column. `[validation-exhaustive]` |
 | I-4 | TRIVIAL | module-inventory.md | `` `to_fastmcp` \| tools.py:638-686 `` | tools.py has 685 lines (wc -l = 685); line 686 does not exist. Function ends at line 685. | Changed to `tools.py:638-685`. `[validation-exhaustive]` |
 | I-5 | TRIVIAL | module-inventory.md | `` `__init__.py` \| 6 \| version marker `` | `__init__.py` content is a 6-line module docstring only — no `__version__` variable or version marker of any kind. Version is declared in pyproject.toml only. | Changed to "package docstring only (no `__version__` variable)". `[validation-exhaustive]` |
@@ -137,13 +137,13 @@ bypass `_handle_mcp_tool_error` entirely. The "bare ToolException re-raise" beha
 real and consequential — an interceptor raising a bare `ToolException` must re-raise rather
 than be silently swallowed — but has NO lock test in the Python suite.
 
-This matters for ferrochain-mcp's Red Gate test design:
+This matters for pregolya-mcp's Red Gate test design:
 1. The content-conversion propagation path (AudioContent → NotImplementedError) is already
    locked by `test_convert_audio_content_raises` and `test_adapter_bug_still_raises`. A
-   ferrochain-mcp Red Gate for this path does not need to duplicate.
+   pregolya-mcp Red Gate for this path does not need to duplicate.
 2. The "bare ToolException from interceptor re-raises" path is UNTESTED in Python and must
-   be explicitly added as a ferrochain-mcp Red Gate test to prevent silent swallowing via
+   be explicitly added as a pregolya-mcp Red Gate test to prevent silent swallowing via
    the `_handle_mcp_tool_error` analogue.
 
-The `__aenter__` NotImplementedError untested gap (I-2) is similarly important: ferrochain
+The `__aenter__` NotImplementedError untested gap (I-2) is similarly important: pregolya
 must add a test that `MultiServerMcpClient` rejects use as an async context manager.

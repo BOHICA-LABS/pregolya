@@ -16,7 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.0 (2026-07-13): initial authoring — Greenfield batch 13"
-  - "1.1 (2026-07-14): Architecture Anchor ferrochain-core/src/graph/builder.rs corrected to ferrochain-graph/src/graph/state.rs — StateGraph builder is owned by ferrochain-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42)"
+  - "1.1 (2026-07-14): Architecture Anchor pregolya-core/src/graph/builder.rs corrected to pregolya-graph/src/graph/state.rs — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42)"
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - architecture/decisions/ADR-008-proc-macro-attributes.md
@@ -25,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "f73d909"
+input-hash: "cc914f2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -40,7 +40,7 @@ removal_reason: null
 
 ## Description
 
-The `#[ferrochain::entrypoint]` proc-macro attribute marks a StateGraph node function as
+The `#[pregolya::entrypoint]` proc-macro attribute marks a StateGraph node function as
 the start node, automatically generating the `StateGraph::add_edge(START, "<node_name>")`
 wiring when the graph is compiled from its builder. This is ergonomic sugar: a graph without
 `#[entrypoint]` is fully valid (the user calls `add_edge(START, ...)` manually). With
@@ -51,11 +51,11 @@ definition; applying it to two nodes in the same graph is a compile-time error.
 ## Preconditions
 
 1. The annotated function is a StateGraph node function with signature
-   `async fn node_name(state: S) -> Result<Update<S>, FerrochainError>` (or equivalent
+   `async fn node_name(state: S) -> Result<Update<S>, PregolyaError>` (or equivalent
    per the node function contract in CAP-004/BC-2.02.001).
 2. The `StateGraph` builder being constructed is the same graph scope where the annotation
    applies. The entrypoint annotation is scoped to the graph builder invocation.
-3. `ferrochain-macros` is available (re-exported from `ferrochain-core`).
+3. `pregolya-macros` is available (re-exported from `pregolya-core`).
 
 ## Postconditions
 
@@ -79,8 +79,8 @@ definition; applying it to two nodes in the same graph is a compile-time error.
 ## Edge Cases
 
 ### EC-001: Two nodes in the same graph annotated with `#[entrypoint]`
-**Scenario:** `#[ferrochain::entrypoint] async fn node_a(...)` and
-`#[ferrochain::entrypoint] async fn node_b(...)` both added to the same graph builder.
+**Scenario:** `#[pregolya::entrypoint] async fn node_a(...)` and
+`#[pregolya::entrypoint] async fn node_b(...)` both added to the same graph builder.
 **Expected behavior:** Compile-time error: `#[entrypoint] may only be applied to one node
 per StateGraph builder`. The error must identify both annotated functions.
 
@@ -98,7 +98,7 @@ references an unregistered node. Error message: `GraphBuildError::UnknownNode("n
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `#[ferrochain::entrypoint] async fn my_node(...)` + single `build()` | Graph builds successfully; START → my_node edge present | Happy path |
+| TV-001 | `#[pregolya::entrypoint] async fn my_node(...)` + single `build()` | Graph builds successfully; START → my_node edge present | Happy path |
 | TV-002 | Two functions in same builder both annotated `#[entrypoint]` | Compile-time error identifying both functions | Exclusive constraint |
 | TV-003 | `#[entrypoint]` node + manual `add_edge(START, ...)` on same node | `GraphBuildError::DuplicateStartEdge` at `build()` | Idempotency guard |
 | TV-004 | Annotated function not registered as a node | `GraphBuildError::UnknownNode` at `build()` | Node existence check |
@@ -119,8 +119,8 @@ references an unregistered node. Error message: `GraphBuildError::UnknownNode("n
 
 ## Architecture Anchors
 
-- `ferrochain-macros/src/entrypoint.rs` — `#[entrypoint]` proc-macro implementation
-- `ferrochain-graph/src/graph/state.rs` — StateGraph builder START edge wiring (add_edge API the macro calls)
+- `pregolya-macros/src/entrypoint.rs` — `#[entrypoint]` proc-macro implementation
+- `pregolya-graph/src/graph/state.rs` — StateGraph builder START edge wiring (add_edge API the macro calls)
 - `architecture/decisions/ADR-008-proc-macro-attributes.md` — proc-macro design rationale
 
 ## Story Anchor
@@ -144,11 +144,11 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | U (unit) |
-| Module | ferrochain-macros (re-exported ferrochain-core) |
+| Module | pregolya-macros (re-exported pregolya-core) |
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
-| 1.1 | 2026-07-14 | Architecture Anchor `ferrochain-core/src/graph/builder.rs` corrected to `ferrochain-graph/src/graph/state.rs` — StateGraph builder is owned by ferrochain-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42) | F-P42-01 |
+| 1.1 | 2026-07-14 | Architecture Anchor `pregolya-core/src/graph/builder.rs` corrected to `pregolya-graph/src/graph/state.rs` — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42) | F-P42-01 |
 | 1.0 | 2026-07-13 | Initial authoring | Greenfield batch 13 |

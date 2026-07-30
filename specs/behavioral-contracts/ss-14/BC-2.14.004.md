@@ -15,10 +15,10 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core (HTTP client factory) / xtask (lint gate) per module-decomposition.md v1.10."
-  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5, EC-003, and TV-004 all carried `Err(FerrochainError { category: TIMEOUT, code: \"E-PROV-002\" })` bare wrappers; E-PROV-002 has `<duration>` placeholder. Added inline `message:` template at all three sites; `<duration>` sourced from the configured HTTP client timeout value at the raise site."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core (HTTP client factory) / xtask (lint gate) per module-decomposition.md v1.10."
+  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5, EC-003, and TV-004 all carried `Err(PregolyaError { category: TIMEOUT, code: \"E-PROV-002\" })` bare wrappers; E-PROV-002 has `<duration>` placeholder. Added inline `message:` template at all three sites; `<duration>` sourced from the configured HTTP client timeout value at the raise site."
   - "1.3 (burst-240/F-P140-02/2026-07-22): E-PROV-002 message generalized — PC5, EC-003, and TV-004 previously used 'ProviderTimeout: stream chunk timeout after <duration>' (stream-specific message); updated to 'ProviderTimeout: request timed out after <duration>' to match taxonomy E-PROV-002 v1.34. This BC covers unary HTTP request timeout (no stream, no chunk); the 'stream chunk' message was semantically wrong for this path. The generalized message is accurate: a unary HTTP client timeout IS a request timeout after the configured duration."
-  - "1.4 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: 5 CLASS3 VIOLATIONS corrected — PC5 multiline span added `, ..` before `}`; EC-003 multiline span added `, ..` before `}`; TV-004 Expected Output added `, ..`; Related BCs `FerrochainError { category: TIMEOUT }` added `, ..`; Traceability `FerrochainError { category: TIMEOUT }` added `, ..`. Xtask rename: 3 occurrences of `cargo xtask lint-no-timeout` → `cargo xtask check-client-timeout` in PC3, VP-DI009-01, Architecture Anchors. No behavioral change."
+  - "1.4 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: 5 CLASS3 VIOLATIONS corrected — PC5 multiline span added `, ..` before `}`; EC-003 multiline span added `, ..` before `}`; TV-004 Expected Output added `, ..`; Related BCs `PregolyaError { category: TIMEOUT }` added `, ..`; Traceability `PregolyaError { category: TIMEOUT }` added `, ..`. Xtask rename: 3 occurrences of `cargo xtask lint-no-timeout` → `cargo xtask check-client-timeout` in PC3, VP-DI009-01, Architecture Anchors. No behavioral change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -28,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "9f4f4d9"
+input-hash: "63d4b18"
 extracted_from: null
 modified: []
 deprecated: null
@@ -43,7 +43,7 @@ removal_reason: null
 
 ## Description
 
-Every outbound HTTP client construction in non-test ferrochain code must call `.timeout(Duration::from_secs(30))`
+Every outbound HTTP client construction in non-test pregolya code must call `.timeout(Duration::from_secs(30))`
 (or a non-zero configured timeout) on the builder before building the client. Zero-argument
 `Client::new()` (which uses no timeout) is prohibited outside test files. A CI lint gate
 enforces this. This contract addresses NE-04 (adk-rust had 8+ sites calling `Client::new()` with
@@ -52,7 +52,7 @@ Connection Timeout) uniformly.
 
 ## Preconditions
 
-1. A ferrochain crate is constructing an outbound HTTP client (via `reqwest`, `hyper`, `async-openai`,
+1. A pregolya crate is constructing an outbound HTTP client (via `reqwest`, `hyper`, `async-openai`,
    or any other HTTP client crate).
 2. The construction is in non-test code (not `#[cfg(test)]` or `tests/` directory).
 3. The HTTP client will be used to make outbound calls to provider APIs, MCP servers, or
@@ -67,10 +67,10 @@ Connection Timeout) uniformly.
 3. Zero-argument `Client::new()` (which bypasses the builder and applies no timeout) is absent
    from non-test library source. CI `cargo xtask check-client-timeout` (or equivalent custom clippy
    lint) causes the build to fail on any `Client::new()` call outside test files.
-4. If the timeout duration is configurable at runtime (e.g. via `FerrochainConfig`), the default
+4. If the timeout duration is configurable at runtime (e.g. via `PregolyaConfig`), the default
    value in the config struct is `Duration::from_secs(30)` — not `Duration::ZERO` or `None`.
-5. When the timeout fires, the HTTP client returns an error that the ferrochain adapter converts
-   to `Err(FerrochainError { category: TIMEOUT, code: "E-PROV-002",
+5. When the timeout fires, the HTTP client returns an error that the pregolya adapter converts
+   to `Err(PregolyaError { category: TIMEOUT, code: "E-PROV-002",
    message: "ProviderTimeout: request timed out after <duration>", .. })`
    (where `<duration>` is the configured HTTP client timeout, e.g., "30s")
    — not a hang, not a panic.
@@ -86,7 +86,7 @@ Connection Timeout) uniformly.
   the prototype for this CI gate.
 - Zero-argument `Client::new()` in test files is explicitly permitted — tests may use default
   clients against local mock servers.
-- A timeout of `None` (unlimited) is never the default in any ferrochain config struct, even
+- A timeout of `None` (unlimited) is never the default in any pregolya config struct, even
   if the HTTP crate supports it.
 
 ## Edge Cases
@@ -107,9 +107,9 @@ fully exempt from the `Client::new()` prohibition.
 ### EC-003: Timeout fires mid-streaming-response
 **Scenario:** A streaming provider response begins but the connection goes silent after 5 chunks
 for longer than the timeout duration.
-**Expected behavior:** The client's timeout mechanism terminates the connection. The ferrochain
+**Expected behavior:** The client's timeout mechanism terminates the connection. The pregolya
 adapter catches the timeout error from the HTTP client and yields
-`Err(FerrochainError { category: TIMEOUT, code: "E-PROV-002",
+`Err(PregolyaError { category: TIMEOUT, code: "E-PROV-002",
 message: "ProviderTimeout: request timed out after <duration>", .. })`
 (where `<duration>` is the configured timeout, e.g., "30s") to the caller.
 No partial output is silently promoted to a successful response.
@@ -117,9 +117,9 @@ No partial output is silently promoted to a successful response.
 
 ### EC-004: Custom HTTP client passed in by the application
 **Scenario:** Application code constructs its own `reqwest::Client` and passes it to a
-ferrochain provider constructor.
-**Expected behavior:** ferrochain accepts externally-provided clients. The CI lint applies only
-to ferrochain-internal client construction; the application is responsible for configuring its
+pregolya provider constructor.
+**Expected behavior:** pregolya accepts externally-provided clients. The CI lint applies only
+to pregolya-internal client construction; the application is responsible for configuring its
 externally-provided client appropriately. A warning is logged if a provided client appears to have
 no timeout (detectable via a wrapper type that tracks timeout configuration).
 
@@ -136,28 +136,28 @@ request. The timeout applies to each individual request, not the client's lifeti
 | TV-001 | `ClientBuilder::new().timeout(Duration::from_secs(30)).build()` in production code | `Ok(Client { ... })` — lint passes | Happy path — correct builder pattern |
 | TV-002 | `Client::new()` in `src/provider/openai.rs` (non-test) | CI lint error: "`Client::new()` in non-test code; use `ClientBuilder::new().timeout(...)` instead" | Lint enforcement |
 | TV-003 | `ClientBuilder::new().build()` (no `.timeout()` call) | CI lint error: missing `.timeout()` call on `ClientBuilder` | Missing timeout |
-| TV-004 | Mock server with 35s response delay; client timeout set to 30s | `Err(FerrochainError { category: TIMEOUT, code: "E-PROV-002", message: "ProviderTimeout: request timed out after 30s", .. })` received before server responds | Timeout fires correctly |
+| TV-004 | Mock server with 35s response delay; client timeout set to 30s | `Err(PregolyaError { category: TIMEOUT, code: "E-PROV-002", message: "ProviderTimeout: request timed out after 30s", .. })` received before server responds | Timeout fires correctly |
 | TV-005 | `Client::new()` inside `#[cfg(test)]` block | CI lint passes — test exemption | Test code exempt |
 
 ## Verification Properties
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-DI009-01 | Zero `Client::new()` occurrences in non-test ferrochain source across all crates | CI `cargo xtask check-client-timeout` | Wave 0 CI |
+| VP-DI009-01 | Zero `Client::new()` occurrences in non-test pregolya source across all crates | CI `cargo xtask check-client-timeout` | Wave 0 CI |
 | VP-DI009-02 | All `ClientBuilder` usages in non-test code have `.timeout(d)` with `d > 0` | CI custom clippy lint | Wave 0 CI |
 
 ## Related BCs
 
-- BC-2.14.001 — FerrochainError 2D struct (depends on: timeout errors propagate as FerrochainError { category: TIMEOUT, .. })
+- BC-2.14.001 — PregolyaError 2D struct (depends on: timeout errors propagate as PregolyaError { category: TIMEOUT, .. })
 - BC-2.14.003 — Constructor Result contract (composes with: HTTP client construction is a fallible operation returning Result)
 - BC-2.08.007 — Provider streaming transport error (composes with: timeout during streaming is surfaced as Err(Timeout))
 - BC-2.09.001 — MCP server tool discovery (composes with: MCP server connections use timeout-enforced clients)
 
 ## Architecture Anchors
 
-- All `ferrochain-*/src/**/*.rs` non-test source files — `Client::new()` prohibition and `.timeout()` enforcement
+- All `pregolya-*/src/**/*.rs` non-test source files — `Client::new()` prohibition and `.timeout()` enforcement
 - CI: `cargo xtask check-client-timeout` target (to be created)
-- `ferrochain-core/src/http.rs` — default HTTP client factory with timeout config (to be created)
+- `pregolya-core/src/http.rs` — default HTTP client factory with timeout config (to be created)
 
 ## Story Anchor
 
@@ -172,10 +172,10 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-016 |
-| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (FerrochainError 2D Struct)") per capabilities-p0.md §CAP-016 — timeout enforcement is a mandatory component of the error taxonomy surface: a `FerrochainError { category: TIMEOUT, .. }` can only be reliably raised if all HTTP clients have non-zero timeouts; the capability's "Overflow §Security-PRD-Carry-Forward" covers NE-04 as a named Wave 0 enforcement item |
+| Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (PregolyaError 2D Struct)") per capabilities-p0.md §CAP-016 — timeout enforcement is a mandatory component of the error taxonomy surface: a `PregolyaError { category: TIMEOUT, .. }` can only be reliably raised if all HTTP clients have non-zero timeouts; the capability's "Overflow §Security-PRD-Carry-Forward" covers NE-04 as a named Wave 0 enforcement item |
 | L2 Domain Invariants | DI-009 (Outbound Connection Timeout (Mandatory)) |
 | NE References | NE-04 (adk-rust 8+ sites with no `.timeout()` are the counter-example) |
 | Priority | P0 |
 | Wave | Wave 0 |
 | Test Types | CI lint, I (integration with mock server) |
-| Module | ferrochain-core (HTTP client factory) / xtask (lint gate) |
+| Module | pregolya-core (HTTP client factory) / xtask (lint gate) |

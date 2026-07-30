@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-standard-tests per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-standard-tests per module-decomposition.md v1.10."
   - "1.2 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'eval.judge_infra_error' to PC3 InfraError WARN emission per observability census (SAP-1). PC3 updated with structured event_type field."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "cc08201"
+input-hash: "a31999d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -39,7 +39,7 @@ removal_reason: null
 
 ## Description
 
-The ferrochain evaluation framework (the component of `ferrochain-standard-tests`
+The pregolya evaluation framework (the component of `pregolya-standard-tests`
 responsible for LLM-as-judge scoring) must aggregate scores using the arithmetic mean
 — not order-dependent merges, exponential moving averages, or other stateful aggregations.
 `JudgeResult` is a three-variant enum with `Pass`, `Fail`, and `InfraError`; `InfraError`
@@ -147,8 +147,8 @@ the conformance suite must enforce sequential execution via a single-task execut
 
 ## Architecture Anchors
 
-- `ferrochain-standard-tests/src/eval/judge.rs` — JudgeResult enum + eval runner (to be created)
-- `ferrochain-standard-tests/src/eval/scoring.rs` — arithmetic mean aggregation (to be created)
+- `pregolya-standard-tests/src/eval/judge.rs` — JudgeResult enum + eval runner (to be created)
+- `pregolya-standard-tests/src/eval/scoring.rs` — arithmetic mean aggregation (to be created)
 
 ## Story Anchor
 
@@ -163,10 +163,10 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-011 |
-| Capability Anchor Justification | CAP-011 ("Provider Conformance Suite (Standard Tests)") per capabilities-p1-p2.md §CAP-011 — this BC specifies the eval scoring correctness requirements of ferrochain-standard-tests, closing the NE-15 (adk-rust P-64) must-not-inherit pattern for order-dependent score merging and missing infra-error distinction |
+| Capability Anchor Justification | CAP-011 ("Provider Conformance Suite (Standard Tests)") per capabilities-p1-p2.md §CAP-011 — this BC specifies the eval scoring correctness requirements of pregolya-standard-tests, closing the NE-15 (adk-rust P-64) must-not-inherit pattern for order-dependent score merging and missing infra-error distinction |
 | L2 Domain Invariants | — |
 | NE References | NE-15 (P-64 counter-example: multi-turn score merge is order-dependent; judge infra failure = quality fail — this BC mandates arithmetic mean + InfraError third outcome) |
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | U (unit — scoring formula, AllCasesInfraError, exhaustive match), CT (compile-time — exhaustive JudgeResult match) |
-| Module | ferrochain-standard-tests |
+| Module | pregolya-standard-tests |

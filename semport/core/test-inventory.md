@@ -1,6 +1,6 @@
 ---
 artifact: semport/core/test-inventory
-project: ferrochain
+project: pregolya
 port_target: langchain-core (P0)
 analyzer_pass: 1
 date: 2026-07-12

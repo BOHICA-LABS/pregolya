@@ -11,12 +11,12 @@ inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/semport/reference-manifest.md
-input-hash: "6e070bb"
+input-hash: "8894007"
 traces_to: L2-INDEX.md
 decisions: [D2, D13, D17]
 changelog:
   - "1.5 (fix-burst-276/F-P173-505/2026-07-27): D-28 banner added to body ## Changelog section, declaring Form A (frontmatter changelog:) authoritative; body table preserved as historical record."
-  - "1.4 (2026-07-21): F-P131-05 adjudication (burst-226) — §ProvenanceTag: disambiguation note added clarifying that ProvenanceTag (SS-11, no trust-level dimension) is distinct from TrustLevel (SS-18, ferrochain-prompts: prompts::template; ADR-015 §Decision 3). Changelog table updated. TD-VSDD-060 sweep: no ProvenanceTag trust-variant residue in this file."
+  - "1.4 (2026-07-21): F-P131-05 adjudication (burst-226) — §ProvenanceTag: disambiguation note added clarifying that ProvenanceTag (SS-11, no trust-level dimension) is distinct from TrustLevel (SS-18, pregolya-prompts: prompts::template; ADR-015 §Decision 3). Changelog table updated. TD-VSDD-060 sweep: no ProvenanceTag trust-variant residue in this file."
   - "1.3 (2026-07-19): F-P117-01 — add summary_halt to Run status lifecycle. Terminal set now: completed | failed | cancelled | summary_halt. summary_halt reached via in_progress to summary_halt on the OnCeiling::Summarize path (BC-2.12.003 PC7/PC8); first-class terminal state per product-owner adjudication. Body changelog table row added. Whole-file sweep: no other terminal-set enumerations found."
   - "1.2 (ADV-P1D-PASS-58): F-P58-03 — update ProvenanceTag and GuardrailHook to BC-authoritative terminology. ProvenanceTag: source_type/tool_name/invocation_id/timestamp to boundary_type (ToolResult|RAGRetrieval|MemoryIngress), ingress_id, sequence_position; removed User/Model per BC-2.11.001 EC-004. GuardrailHook: Accept/Reject/Redact retired to Pass/Fail{reason,severity}/Transform{new_content}; callable signature updated to match interface-definitions.md v2.13."
   - "1.1 (initial active version)."
@@ -32,7 +32,7 @@ changelog:
 ## Server Terms
 
 **Assistant**
-A named agent configuration hosted by ferrochain-server: a compiled graph reference plus
+A named agent configuration hosted by pregolya-server: a compiled graph reference plus
 run configuration. Corresponds to LangGraph Platform's "assistant." No wire compatibility
 with LangGraph Platform (D13).
 
@@ -74,7 +74,7 @@ Authority: entities-server.md §ProvenanceTag.
 **Disambiguation (ADR-015 §Decision 3, burst-226):** `ProvenanceTag` is the SS-11 ingress-boundary
 audit record with three structural fields — it has NO trust-level dimension and carries no variants
 named Untrusted, UserInput, or Trusted. Template-composition trust is handled by `TrustLevel`
-(`ferrochain-prompts: prompts::template`; see ubiquitous-language-core.md §TrustLevel).
+(`pregolya-prompts: prompts::template`; see ubiquitous-language-core.md §TrustLevel).
 The two types serve distinct axes and must not be conflated.
 
 **GuardrailHook**
@@ -107,43 +107,43 @@ root. Symlink traversal that escapes returns `Err(WorkspaceEscape)` (DI-007, NE-
 
 ## Error Terms
 
-**FerrochainError**
-The 2D error type: `component` (which ferrochain crate raised the error) × `category` (what
+**PregolyaError**
+The 2D error type: `component` (which pregolya crate raised the error) × `category` (what
 class of error it is). Not derived from a Python exception hierarchy. Adopted from adk-rust
-P-01/P-04 (CONFLICT-6). Every public ferrochain API returns `Result<T, FerrochainError>`.
+P-01/P-04 (CONFLICT-6). Every public pregolya API returns `Result<T, PregolyaError>`.
 
 **RetryHint**
-A field on FerrochainError indicating whether the caller should retry: `Never`,
+A field on PregolyaError indicating whether the caller should retry: `Never`,
 `Maybe`, or `Later(Duration)`. Allows callers to implement backoff without inspecting
 internal error details.
 
 **InvalidUpdateError**
-The specific FerrochainError raised when two PregelTasks in the same super-step both write
+The specific PregolyaError raised when two PregelTasks in the same super-step both write
 to the same LastValue channel. Surfaced immediately during ReducersApplied; terminates the
 Run with `status: failed`.
 
 **PolicyNotEnforceable**
-The FerrochainError returned by `Sandbox::execute` when a strict BudgetPolicy or sandbox
+The PregolyaError returned by `Sandbox::execute` when a strict BudgetPolicy or sandbox
 policy is applied against a non-enforcing backend. The caller cannot proceed; the error is
 not retriable.
 
 ---
 
-## Term Reconciliation Table (LangChain Python → ferrochain)
+## Term Reconciliation Table (LangChain Python → pregolya)
 
-| LangChain Python term | ferrochain term | Change from Python |
+| LangChain Python term | pregolya term | Change from Python |
 |----------------------|-----------------|-------------------|
 | `Runnable` | Runnable | Identical semantics; Rust async trait |
 | `RunnableSequence` (`A \| B`) | RunnableSequence (via `\|` operator) | Identical composition semantics |
 | `StateGraph` | StateGraph | Identical; BSP execution model from LangGraph |
-| `interrupt()` | `interrupt()` | HITL semantics preserved; FIFO resume is ferrochain-native (CONFLICT-3) |
-| `put_writes` | `put_writes` | Per-task durability; sync-default is ferrochain-native (CONFLICT-2) |
+| `interrupt()` | `interrupt()` | HITL semantics preserved; FIFO resume is pregolya-native (CONFLICT-3) |
+| `put_writes` | `put_writes` | Per-task durability; sync-default is pregolya-native (CONFLICT-2) |
 | `BaseCheckpointSaver` | CheckpointSaver | name preserved from LangGraph BaseCheckpointSaver; same interface |
 | `RunnableConfig` | RunnableConfig | name preserved; no rename |
 | `BaseMessage` | Message | Renamed; ContentBlock replaces raw string content |
 | `HumanMessage`, `AIMessage`, `SystemMessage`, `ToolMessage` | Message enum: Ai(AiMessage) \| Human(HumanMessage) \| System(SystemMessage) \| Tool(ToolMessage) | Variant instead of subclass |
 | `ToolCall` / `ToolMessage` | ContentBlock::ToolCall / ToolMessage | Typed ContentBlock variants; tool-result: ToolMessage per BC-2.09.002 |
-| `BaseException` hierarchy | FerrochainError 2D struct | Different structure; adk-rust P-01/P-04 adopted (CONFLICT-6) |
+| `BaseException` hierarchy | PregolyaError 2D struct | Different structure; adk-rust P-01/P-04 adopted (CONFLICT-6) |
 | Thread (LangGraph Platform) | Thread | Same concept; no wire compat with Platform |
 | Assistant (LangGraph Platform) | Assistant | Same concept; no wire compat with Platform |
 | `BaseStore` (LangGraph) | MemoryStore (long-horizon KV+vector) | Same concept; CAP-017 |
@@ -158,7 +158,7 @@ not retriable.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
-| 1.4 | 2026-07-21 | F-P131-05 (burst-226) — §ProvenanceTag: disambiguation note added. ProvenanceTag (SS-11, 3-field ingress-boundary audit struct) has no trust-level dimension. Template-composition trust is handled by `TrustLevel` (`ferrochain-prompts: prompts::template`; ADR-015 §Decision 3). Two axes must not be conflated. | F-P131-05 |
+| 1.4 | 2026-07-21 | F-P131-05 (burst-226) — §ProvenanceTag: disambiguation note added. ProvenanceTag (SS-11, 3-field ingress-boundary audit struct) has no trust-level dimension. Template-composition trust is handled by `TrustLevel` (`pregolya-prompts: prompts::template`; ADR-015 §Decision 3). Two axes must not be conflated. | F-P131-05 |
 | 1.3 | 2026-07-19 | F-P117-01 — add `summary_halt` to Run status lifecycle. Terminal set: completed \| failed \| cancelled \| summary_halt. `summary_halt` is a first-class terminal state reached via in_progress on the OnCeiling::Summarize path (BC-2.12.003 PC7/PC8). | F-P117-01 |
 | 1.2 | 2026-07-15 | F-P58-03 — §ProvenanceTag and §GuardrailHook updated to BC-authoritative terminology. ProvenanceTag: `source_type`/`tool_name?`/`invocation_id?`/`timestamp` → `boundary_type` (ToolResult\|RAGRetrieval\|MemoryIngress), `ingress_id`, `sequence_position`; User/Model removed per BC-2.11.001 EC-004. GuardrailHook: Accept/Reject/Redact retired → `Pass`/`Fail{reason,severity}`/`Transform{new_content}` with `GuardrailResult`; callable signature updated to match interface-definitions.md v2.13. | F-P58-03 |
-| 1.1 | 2026-07-14 | Reconciliation table line 132: changed ferrochain identifier from `Store` to `MemoryStore` to match canonical Rust trait name per BC-2.15.001 Architecture Anchors and module-decomposition.md:149 (F-P39-01, ADV-P1D-PASS-39) | F-P39-01 |
+| 1.1 | 2026-07-14 | Reconciliation table line 132: changed pregolya identifier from `Store` to `MemoryStore` to match canonical Rust trait name per BC-2.15.001 Architecture Anchors and module-decomposition.md §Server-crate canonical types (F-P39-01, ADV-P1D-PASS-39) | F-P39-01 |

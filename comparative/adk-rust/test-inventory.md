@@ -77,7 +77,7 @@ Judged on whether tests encode behavioral contracts a re-implementer could rely 
 - **GAP — adk-eval** (2 files / 234 LOC) is thinly tested for a component whose job is to test
   other agents; trajectory-scoring correctness is under-verified.
 - **Test-only `unwrap()`/`expect()`** is used liberally inside `#[cfg(test)]` blocks
-  (acceptable under ferrochain's rule, which exempts test code). One production-relevant note:
+  (acceptable under pregolya's rule, which exempts test code). One production-relevant note:
   `Runner` uses `.lock().unwrap_or_else(|e| e.into_inner())` for mutex poisoning recovery
   rather than `.unwrap()` — a deliberate non-panicking choice in non-test code.
 
@@ -144,7 +144,7 @@ typed_reducer.rs attribute-only count 15 (not ~18) -->
   asserts that reducer-apply order is independent of node completion order (it isn't — P-28). The
   Append/Sum reducers are only tested with a single writer or sequentially, never with two
   concurrent writers into the same channel in one super-step. So the suite does not — and cannot —
-  encode the BSP deterministic-merge invariant ferrochain's D9 requires.
+  encode the BSP deterministic-merge invariant pregolya's D9 requires.
 - **GAP — interrupt/resume replay contract UNTESTED because ABSENT (P-30).** There is no test for
   "node re-executes from start on resume; prior interrupt() returns stored value" because there is
   no resume-value mechanism. `checkpoint_tests`/`time_travel` cover restore-and-continue, not
@@ -157,7 +157,7 @@ typed_reducer.rs attribute-only count 15 (not ~18) -->
 
 ## Verdict on the A1 claim
 A1 flagged adk-graph's 14 files / 3,185 LOC as "Strong." CONFIRMED — genuinely strong, property-
-test-dominant. Caveat for ferrochain: the strength is in *storage/routing law* coverage; the
+test-dominant. Caveat for pregolya: the strength is in *storage/routing law* coverage; the
 Pregel invariants adk-graph OMITS (deterministic ordering, replay-with-resume) are, by definition,
 not in the suite. High-fidelity tests of a lower-fidelity engine.
 
@@ -225,7 +225,7 @@ each overcounted by 1; the extra count came from incorrectly including a file th
   extensive CJK/Cyrillic/Japanese/Korean/accented-Latin tokenization tests), injector (top-skill
   prepend). Coordinator `allowed-tools`↔ToolRegistry validation (P-51) — the phantom-tool guard —
   is the load-bearing one; verify it has a negative test (skill requests unavailable tool → handled
-  per ValidationMode) during any ferrochain port.
+  per ValidationMode) during any pregolya port.
 - **adk-plugin (43 markers) <!-- [comparative-cert-1] corrected from "86 markers" per SWEEP-test-deps attribute-only recount -->:** hook result semantics, priority ordering, both managers.
 - **adk-browser (32 markers, unit-only) <!-- [comparative-cert-1] corrected from "64 markers" per SWEEP-test-deps attribute-only recount -->:** `escape_js_string` has a strong adversarial suite
   (injection attempt, `</script>`, quotes/backtick/null/newlines) (P-54). Tool actions are
@@ -279,7 +279,7 @@ D16 Rust-blindness — observe only. Test-as-spec read of the provider/capabilit
 ## Test-as-spec highlights (reusable conformance)
 - **tool_call_parser (P-68):** 22 unit tests, one per text-tag format (Qwen json/function-tag, Llama,
   Mistral Nemo, DeepSeek, Gemma) + text-before + multiple-calls + no-match + streaming emit-immediately.
-  A direct behavioral conformance suite for a ferrochain-ollama text-tool-call parser.
+  A direct behavioral conformance suite for a pregolya-ollama text-tool-call parser.
 - **retry (P-71):** gemini has explicit retryable/non-retryable/disabled-config tests around
   `execute_with_retry`; the combinator's timing test lives in `adk-model::retry` (P-03).
 - **anthropic SDK:** convert round-trips (thinking blocks, usage, cache), SSE decoding, accumulating
@@ -295,11 +295,11 @@ D16 Rust-blindness — observe only. Test-as-spec read of the provider/capabilit
   are effectively untested without live services; only in-memory + chunking are covered. THIN suite for
   a RAG crate.
 - **`#[ignore]` key-gated integration** — `adk-model` interactions_runtime tests require a live key
-  (per SID-1, ferrochain must add key-free unit tests at the boundary instead).
+  (per SID-1, pregolya must add key-free unit tests at the boundary instead).
 - **Timeout behavior (P-77)** — no test asserts that provider clients set/enforce an outbound timeout
   (because most don't).
 - **Credential redaction (P-76)** — no test asserts a key is NOT leaked in Debug (because none is
-  redacted). Ferrochain would add a redaction assertion test per key type.
+  redacted). Pregolya would add a redaction assertion test per key type.
 
 ## State Checkpoint
 ```yaml

@@ -1,6 +1,6 @@
 ---
 artifact: semport/core/dependency-disposition
-project: ferrochain
+project: pregolya
 port_target: langchain-core (P0)
 analyzer_pass: 1
 date: 2026-07-12
@@ -80,7 +80,7 @@ events** (`MessageStartData`, `ContentBlockDeltaData`, `ContentBlockFinishData`,
 `MessageFinishData`, `MessagesData`, etc.), consumed by `chat_model_stream.py` (v3
 stream), `chat_models.py`, and `callbacks/`. Scope: a set of TypedDict/dataclass event
 schemas + finalization helpers. **PORT** as a set of serde-tagged enums in a small
-`ferrochain-protocol`-equivalent module (or fold into the messages crate). Risk: it is
+`pregolya-protocol`-equivalent module (or fold into the messages crate). Risk: it is
 `0.0.x`, actively evolving; ~~the v3 stream has only 2 tests~~ — CORRECTED: v3 streaming has 107 dedicated tests across `test_chat_model_v3_stream.py` (41), `test_chat_model_stream.py` (42), `test_chat_model_streamer.py` (24), + `test_runnable_events_v3.py` (2). `[validation-certification-9]` The protocol version string is still `0.0.x` and the schema is evolving, but the test coverage is substantial. **Gating v3 behind a feature remains a reasonable architecture decision**, but the rationale is version volatility, not lack of tests.
 
 ---
@@ -258,8 +258,8 @@ style *bidirectional* wire protocol for driving/observing a running agent (langg
 
 | Scope | What | Disposition | Target crate |
 |---|---|---|---|
-| **Core needs** | `MessagesData` (6 event types) + `ContentBlock`/`FinalizedContentBlock` + `UsageInfo` + `MessageMetadata` + the `*Delta` types | **PORT** as serde-tagged enums | ferrochain-core (messages module) |
-| **Agent-server protocol** | Commands, subscriptions, state/fork/checkpoints, agent tree, 9-channel events, replay/reconnect | **DEFER / out of core** | a future ferrochain-graph / agent-server crate |
+| **Core needs** | `MessagesData` (6 event types) + `ContentBlock`/`FinalizedContentBlock` + `UsageInfo` + `MessageMetadata` + the `*Delta` types | **PORT** as serde-tagged enums | pregolya-core (messages module) |
+| **Agent-server protocol** | Commands, subscriptions, state/fork/checkpoints, agent tree, 9-channel events, replay/reconnect | **DEFER / out of core** | a future pregolya-graph / agent-server crate |
 
 Core's actual import surface is 7 import statements across 5 files (all `MessagesData`-subset):
 `language_models/chat_models.py` (2 blocks: line 16 runtime + line 101 TYPE_CHECKING),
@@ -271,5 +271,5 @@ So Pass 1's "PORT the whole package as tagged enums (own module), MED risk" over
 core `ContentBlock` enum** (a single Rust type), which eliminates the `_compat_bridge` laundering
 layer entirely. Revised R7 risk for core: **LOW-MED** (small, stable subset), with the
 provisional/churning surface (the command/state protocol) pushed out of core scope. The full
-protocol, if/when ferrochain builds a langgraph-style server, should be generated from the
+protocol, if/when pregolya builds a langgraph-style server, should be generated from the
 upstream CDDL schema rather than hand-transcribed.

@@ -16,7 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P93-04 class-sweep, 2026-07-17): VP ID collision resolved. BC-2.06.001 and BC-2.06.002 both defined VP-STREAM-02 with semantically identical (run_id + parent_ids) descriptions. Resolution per append-only-numbering policy: BC-2.06.001's VP-STREAM-02 (lower ID, canonical) kept; BC-2.06.002's VP-STREAM-02 renumbered → VP-STREAM-04 (next free after VP-STREAM-03 in BC-2.06.003). VP Anchors updated accordingly. Detected by OBS-P93-01 VP uniqueness census."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph / pregolya-server per module-decomposition.md v1.10."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/events.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "cac3220"
+input-hash: "9da7d57"
 extracted_from: null
 modified: []
 deprecated: null
@@ -47,7 +47,7 @@ list of ancestor `run_id`s from the outermost run to the immediate parent). Toge
 fields form a directed correlation tree that allows observers to attribute events to their
 originating run, reconstruct nested call graphs, and route per-step costs to the initiating
 run. The contract follows the astream_events v2 7-key shape (semport/core/behavioral-intent.md
-§D-2) adapted to ferrochain's native types; D13 exempts ferrochain from exact wire compatibility.
+§D-2) adapted to pregolya's native types; D13 exempts pregolya from exact wire compatibility.
 
 ## Preconditions
 
@@ -109,7 +109,7 @@ new `run_id`s.
 deserialized by a remote consumer.
 **Expected behavior:** `run_id` and `parent_ids` are byte-identical across the
 serialization/deserialization round-trip. UUIDs are stored as 16-byte binary or UUID string
-consistently (ferrochain-native format; consistency is the requirement, not the specific
+consistently (pregolya-native format; consistency is the requirement, not the specific
 encoding).
 
 ### EC-004: Very deep nesting (≥ 10 levels of subgraph)
@@ -142,9 +142,9 @@ full ancestry chain is preserved. Performance is O(depth) for `parent_ids` alloc
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/event_emitter.rs` (`graph::event_emitter`) — `StreamEvent` base fields: `run_id: Uuid`, `parent_ids: Vec<Uuid>`
-- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — `ExecutionContext` that propagates `run_id` and `parent_ids` into nested invocations
-- `ferrochain-server/src/run_lifecycle.rs` — `run_id` UUID generation at `Run` creation
+- `pregolya-graph/src/event_emitter.rs` (`graph::event_emitter`) — `StreamEvent` base fields: `run_id: Uuid`, `parent_ids: Vec<Uuid>`
+- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — `ExecutionContext` that propagates `run_id` and `parent_ids` into nested invocations
+- `pregolya-server/src/run_lifecycle.rs` — `run_id` UUID generation at `Run` creation
 
 ## Story Anchor
 
@@ -161,9 +161,9 @@ _[to be filled after story decomposition]_
 | Source L2 Capability | CAP-007 |
 | Capability Anchor Justification | CAP-007 ("Structured Streaming Event Taxonomy") per capabilities-p0.md §CAP-007 — this BC specifies the `run_id` and `parent_ids` correlation tree that is explicitly named in the "each carrying a run_id, parent_ids chain" clause of CAP-007 |
 | L2 Domain Invariants | — |
-| D17 Commitment | CONFLICT-5 (astream_events v2 fixed 7-key shape including `run_id` and `parent_ids` per semport/core/behavioral-intent.md §D-2 is the reference model; ferrochain adopts this correlation design) |
+| D17 Commitment | CONFLICT-5 (astream_events v2 fixed 7-key shape including `run_id` and `parent_ids` per semport/core/behavioral-intent.md §D-2 is the reference model; pregolya adopts this correlation design) |
 | CONFLICT Reference | CONFLICT-5 |
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | I (integration) |
-| Module | ferrochain-graph / ferrochain-server |
+| Module | pregolya-graph / pregolya-server |

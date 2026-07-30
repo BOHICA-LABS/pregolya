@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-06
 capability: CAP-035
-crate: ferrochain-graph
+crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
@@ -30,7 +30,7 @@ traces_to:
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
-input-hash: "e3dce1d"
+input-hash: "52520e2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -149,7 +149,7 @@ host to update context-window visualization without polling.
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-019-rolling-context-compaction.md` — Decision 4 (compaction_event streaming event, payload fields)
-- `architecture/module-decomposition.md` — SS-06, `graph::event_emitter (ferrochain-graph/src/event_emitter.rs)`; SS-10, `ferrochain-graph / budget`
+- `architecture/module-decomposition.md` — SS-06, `graph::event_emitter (pregolya-graph/src/event_emitter.rs)`; SS-10, `pregolya-graph / budget`
 
 ## Story Anchor
 
@@ -170,7 +170,7 @@ _[to be filled after story decomposition — Wave 1 SS-06 extension story]_
 | Architecture Authority | ADR-019 Decision 4 (compaction_event payload definition) |
 | Binding Decisions | D23 (rolling compaction mandate; streaming taxonomy 14→15) |
 | VP Registration | VP-2.06.006-A/B (integration/unit tests) |
-| Module | ferrochain-graph / streaming + budget |
+| Module | pregolya-graph / streaming + budget |
 | Priority | P1 |
 | Wave | 1 |
 | Test Types | unit + integration |

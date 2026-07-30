@@ -1,14 +1,14 @@
 ---
 artifact: semport/splitters/rust-translation-strategy
-project: ferrochain
-port_target: langchain-text-splitters (1.1.2) → ferrochain-splitters
+project: pregolya
+port_target: langchain-text-splitters (1.1.2) → pregolya-splitters
 analyzer_pass: 5
 date: 2026-07-12
 note: strategy only — NO Rust code committed; signatures are illustrative sketches
-crate: ferrochain-splitters (already reserved in CLAUDE.md initial crate family)
+crate: pregolya-splitters (already reserved in CLAUDE.md initial crate family)
 ---
 
-# langchain-text-splitters → Rust (ferrochain-splitters) Translation Strategy
+# langchain-text-splitters → Rust (pregolya-splitters) Translation Strategy
 
 Difficulty scale: 🟢 easy · 🟡 moderate · 🟠 hard · 🔴 very hard.
 
@@ -231,7 +231,7 @@ nltk = [...]   # deferred
 pass: 5
 artifact: rust-translation-strategy
 package: langchain-text-splitters
-crate: ferrochain-splitters
+crate: pregolya-splitters
 status: complete
 timestamp: 2026-07-12
 ```

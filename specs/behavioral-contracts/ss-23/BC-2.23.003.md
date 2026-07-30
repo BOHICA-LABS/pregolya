@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-23
 capability: CAP-036
-crate: ferrochain-tools
+crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
@@ -25,7 +25,7 @@ changelog:
   - "1.3 (burst-247/F-P146-02/2026-07-24): H1 title — append exhaustive raised-code enumeration 'E-TOOLS-001/003/008' per SS-23 title policy. Inline contextual reference 'E-TOOLS-003 on No-Match' is retained (describes trigger condition); trailing exhaustive enumeration is now also present for machine extractability. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-5); Category::VAL → Category::Val (PC-2), Category::TOOL → Category::Tool (PC-5)."
   - "1.5 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check with canonical canonicalize_beneath_root at 1 site: VP-2.23.003-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout."
-  - "1.6 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to FerrochainError::new() form. PC2 E-TOOLS-003 EditOldStringNotFound: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). PC5 E-TOOLS-008 file-not-found: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed (message-embedded placeholders). TD-VSDD-060 sibling sweep: no other struct-literal construction examples found in this BC."
+  - "1.6 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to PregolyaError::new() form. PC2 E-TOOLS-003 EditOldStringNotFound: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). PC5 E-TOOLS-008 file-not-found: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed (message-embedded placeholders). TD-VSDD-060 sibling sweep: no other struct-literal construction examples found in this BC."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -34,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "8f61371"
+input-hash: "b407795"
 extracted_from: null
 modified: []
 deprecated: null
@@ -49,7 +49,7 @@ removal_reason: null
 
 ## Description
 
-`EditFileTool` in `ferrochain-tools::tools::fs` implements the `Tool` trait with
+`EditFileTool` in `pregolya-tools::tools::fs` implements the `Tool` trait with
 `ActionRisk::High`. It applies a string-replace edit to an existing file: it finds the first
 occurrence of `old_string` in the file and replaces it with `new_string`. The default mode is
 exact-match; if `old_string` is not found verbatim, the tool returns
@@ -76,7 +76,7 @@ controls whether all occurrences are replaced (default false — first occurrenc
    `ToolOutput::Text("edited: <path> (<n> replacements)")` when `replace_all: true`.
 2. **Exact-match not found (default mode, `fuzzy_threshold: None`):** `old_string` is not
    present in the file verbatim. The tool returns
-   `Err(FerrochainError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-003",
+   `Err(PregolyaError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-003",
    "EditOldStringNotFound: old_string not found in '<path>'"))`.
    The file is NOT modified.
 3. **Fuzzy fallback (opt-in, `fuzzy_threshold: Some(t)`):** If exact match fails, the tool
@@ -87,7 +87,7 @@ controls whether all occurrences are replaced (default false — first occurrenc
    always tried first.
 4. **Path confinement violation:** Returns `Err(E-TOOLS-001 PathConfinementViolation)`.
    No I/O performed.
-5. **File not found:** Returns `Err(FerrochainError::new(Component::Tools, Category::Tool,
+5. **File not found:** Returns `Err(PregolyaError::new(Component::Tools, Category::Tool,
    RetryHint::Maybe, "E-TOOLS-008", "EditFileTool I/O error on '<path>': <io_kind>"))`.
 6. **Conditional retry safe:** `old_string` not found (E-TOOLS-003) is structurally a no-op
    (the file was not modified). Re-retrying after E-TOOLS-003 is safe without re-approval
@@ -148,7 +148,7 @@ controls whether all occurrences are replaced (default false — first occurrenc
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (EditFileTool contract, `EditConfig::fuzzy_threshold`, `similar = "3"` opt-in), Decision 3 (High ActionRisk), Decision 4 (conditional retry classification), Decision 5 (E-TOOLS-001/003), Decision 7 (`similar` crate pin `"3"` Apache-2.0 MSRV 1.85)
-- `architecture/module-decomposition.md` — SS-23, `tools::fs` module in ferrochain-tools
+- `architecture/module-decomposition.md` — SS-23, `tools::fs` module in pregolya-tools
 
 ## Story Anchor
 
@@ -170,7 +170,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 | Architecture Authority | ADR-020 Decisions 2, 3, 4, 5, and 7 (EditFileTool contract, fuzzy threshold, similar dep pin, retry classification, E-TOOLS-001/003) |
 | Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
 | VP Registration | VP-003 reuse; VP-2.23.003-B/C (unit tests) |
-| Module | ferrochain-tools / tools::fs |
+| Module | pregolya-tools / tools::fs |
 | Priority | P1 |
 | Wave | 1 |
 | Test Types | unit + integration |

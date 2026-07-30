@@ -1,6 +1,6 @@
 ---
 artifact: semport/partners/EXHAUSTIVE-SWEEP
-project: ferrochain
+project: pregolya
 sweep_type: exhaustive-verification
 area: partners
 reference_tag: langchain==1.3.13
@@ -189,7 +189,7 @@ Total discrete claims verified: **147**
 
 The dependency-disposition DTU specification incorrectly required `GET /api/version` to serve `{"version":"x.y.z"}` claiming it "drives `_set_ollama_version`". In reality, `_set_ollama_version` at L926 of `chat_models.py` calls only `self._add_version("langchain-ollama", __version__)` — an in-process metadata operation with no HTTP call. A DTU-validator implementing this endpoint would pass trivially (never called), but a port implementer reading the spec would waste time building an endpoint the code never exercises.
 
-The phantom `test_image_urls` test (HIGH) is equally consequential: it would cause ferrochain-standard-tests to include a test method that has no counterpart in the Python conformance suite, breaking the "mirrors Python suite" invariant. The correct behavior is that `supports_image_urls` gates a branch inside `test_image_inputs`, not a separate test.
+The phantom `test_image_urls` test (HIGH) is equally consequential: it would cause pregolya-standard-tests to include a test method that has no counterpart in the Python conformance suite, breaking the "mirrors Python suite" invariant. The correct behavior is that `supports_image_urls` gates a branch inside `test_image_inputs`, not a separate test.
 
 ---
 

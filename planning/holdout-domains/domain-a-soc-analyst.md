@@ -6,14 +6,14 @@ status: complete
 producer: research-agent
 timestamp: 2026-07-13
 traces_to: D8
-project: ferrochain
+project: pregolya
 purpose: Phase-1 forcing function + Phase-2 holdout authoring input (product-owner authors hidden scenarios; only this domain is public)
 verification: MCP-backed (4x perplexity_research deep + 3x tavily_search cross-validation)
 ---
 
 # Holdout Domain A — Virtual SOC Analyst Agent
 
-> **Scope note.** This brief characterizes the *problem space* and maps it to ferrochain's planned
+> **Scope note.** This brief characterizes the *problem space* and maps it to pregolya's planned
 > primitive surface. It deliberately does NOT author acceptance scenarios — those are written hidden,
 > later, by the product-owner (per D8). Everything here is a forcing function for Phase 1 (PRD/architecture
 > must demonstrate these workloads are supportable) and a fact-base for Phase 2 holdout authoring.
@@ -36,7 +36,7 @@ verification: MCP-backed (4x perplexity_research deep + 3x tavily_search cross-v
 7. The tool surface an agent must integrate with: SIEM (Splunk, Sentinel, Elastic, Chronicle), EDR/XDR (CrowdStrike, SentinelOne, Defender), threat intel (MISP, VirusTotal, OTX, Recorded Future), SOAR/ticketing (ServiceNow, Jira, PagerDuty), identity (Okta, Entra/AD), and network/firewall. [R]
 8. **MCP is being adopted in security tooling for real, right now** — verified official servers include Splunk (Splunkbase app 7931, now GA), Microsoft Sentinel (GA Nov 2025), Okta, ServiceNow; a notable community/vendor-maintained one is CrowdStrike `falcon-mcp` (explicitly *not* an official product); community servers exist for VirusTotal, MISP, OTX. [V]
 9. Trust/safety is non-negotiable: tiered autonomy with **human approval gates before containment**, forensic-grade audit trails / chain-of-custody, verdict explainability with cited evidence, OCSF schema normalization, and compliance (GDPR Art. 33 72-hour breach documentation, NIST SP 800-61r3, SEC disclosure, MITRE ATT&CK mapping). [R][V]
-10. For ferrochain, this domain maps cleanly onto the planned graph-runtime primitives (durable checkpointed runs, HITL interrupts, structured output, parallel fan-out, MCP tools, tracing) but **forces four genuinely new surfaces**: forensic-grade immutable audit/provenance, risk-tiered authorization gating, evidence-cited structured verdicts, and prompt-injection isolation of untrusted tool content.
+10. For pregolya, this domain maps cleanly onto the planned graph-runtime primitives (durable checkpointed runs, HITL interrupts, structured output, parallel fan-out, MCP tools, tracing) but **forces four genuinely new surfaces**: forensic-grade immutable audit/provenance, risk-tiered authorization gating, evidence-cited structured verdicts, and prompt-injection isolation of untrusted tool content.
 
 ---
 
@@ -127,11 +127,11 @@ Cross-validated during this task where marked [V]:
 
 **Could NOT verify** dedicated MCP servers for: Elastic Security, Google Chronicle, SentinelOne, standalone Microsoft Defender (accessed via Sentinel), Recorded Future, PagerDuty, or any network/firewall vendor. Deep research explicitly declined to assert these. [R]
 
-### MCP architecture relevance to ferrochain
-MCP is a Host (runs model + MCP client) / Client (comms + capability discovery) / Server (exposes tools+data) model, standardizing tool calling so one agent can swap models and reuse integrations; supports **runtime capability discovery**. Security governance is layered on top (least privilege, scoped credentials, audit logging) — MCP is *not* itself a security control. This directly validates ferrochain's `ferrochain-mcp` crate (port of langchain-mcp-adapters) as the correct integration surface. [R]
+### MCP architecture relevance to pregolya
+MCP is a Host (runs model + MCP client) / Client (comms + capability discovery) / Server (exposes tools+data) model, standardizing tool calling so one agent can swap models and reuse integrations; supports **runtime capability discovery**. Security governance is layered on top (least privilege, scoped credentials, audit logging) — MCP is *not* itself a security control. This directly validates pregolya's `pregolya-mcp` crate (port of langchain-mcp-adapters) as the correct integration surface. [R]
 
 ### OCSF (Open Cybersecurity Schema Framework)
-An open, vendor-neutral schema normalizing security telemetry across tools; maturing into wide adoption (AWS, Datadog, SentinelOne Purple AI reasons over OCSF-normalized data). For a cross-tool agent, OCSF matters because it lets the agent interpret and correlate events from disparate sources uniformly and map to MITRE ATT&CK — reducing per-tool schema-handling. **This is a normalization layer ferrochain does not currently model.** [R]
+An open, vendor-neutral schema normalizing security telemetry across tools; maturing into wide adoption (AWS, Datadog, SentinelOne Purple AI reasons over OCSF-normalized data). For a cross-tool agent, OCSF matters because it lets the agent interpret and correlate events from disparate sources uniformly and map to MITRE ATT&CK — reducing per-tool schema-handling. **This is a normalization layer pregolya does not currently model.** [R]
 
 ---
 
@@ -165,17 +165,17 @@ Hallucinated verdicts; **prompt injection via malicious log/alert content** (adv
 
 ---
 
-## 5. Framework Demands — Mapping to ferrochain's Planned Surface
+## 5. Framework Demands — Mapping to pregolya's Planned Surface
 
 Legend: **COVERED** = in D8 checklist / D7 / D11 / D13 planned surface. **PARTIAL** = foundation exists, SOC-specific extension needed. **NEW** = not in current planned surface; this domain forces it.
 
-| SOC requirement | ferrochain primitive | Status | Notes |
+| SOC requirement | pregolya primitive | Status | Notes |
 |---|---|---|---|
-| Long-running, multi-stage investigations that survive process restarts | Durable checkpointed graph runs; 3-tier durability, sync crash-safe default (D7, D11.3); ferrochain-server durable runs (D13) | **COVERED** | P0 differentiator. Investigations may span hours→days; checkpoint/resume is exactly the lead feature. |
+| Long-running, multi-stage investigations that survive process restarts | Durable checkpointed graph runs; 3-tier durability, sync crash-safe default (D7, D11.3); pregolya-server durable runs (D13) | **COVERED** | P0 differentiator. Investigations may span hours→days; checkpoint/resume is exactly the lead feature. |
 | Approval gate before containment | HITL interrupt mid-run (D8 checklist) | **PARTIAL → NEW** | A single interrupt exists conceptually, but SOC needs **risk-tiered authorization**: typed action-risk classification (read-only / low / medium / high) routed to different approver roles, with the run durably parked awaiting a specific role's sign-off. Richer than one boolean interrupt. |
 | Structured triage verdict | Structured output (D8 checklist) | **PARTIAL → NEW** | Verdict *shape* is covered; SOC forces **evidence-cited verdicts** — verdict + severity + classification + justification + machine-checkable links to the specific evidence artifacts consulted (provenance). |
 | Parallel enrichment fan-out (SIEM + EDR + intel + identity concurrently) | Parallel execution / fan-out (D8 checklist) | **COVERED** | Classic map-fan-out-join over independent tool calls. Must handle partial failure (one tool errors) gracefully. |
-| Tool calling to security stack | ferrochain-mcp (D1) + MCP tool integration (D8) | **COVERED** | Real MCP servers exist (Splunk, Sentinel, Okta, ServiceNow, falcon-mcp, VT/MISP/OTX). Validates the crate's priority. |
+| Tool calling to security stack | pregolya-mcp (D1) + MCP tool integration (D8) | **COVERED** | Real MCP servers exist (Splunk, Sentinel, Okta, ServiceNow, falcon-mcp, VT/MISP/OTX). Validates the crate's priority. |
 | Audit trail / evidence chain / reproducibility | Tracing + callbacks (ported); checkpoint history | **PARTIAL → NEW** | Ordinary tracing ≠ forensic audit. SOC forces **tamper-evident, immutable, attributable decision log** (which agent, which model, which data, which rationale, when) suitable for chain-of-custody and GDPR Art. 33 verification. Checkpoint history + msgpack wire format (D11.2) is a foundation but not a forensic audit guarantee. |
 | Alert-storm / high-volume concurrency + fairness | Actor-style outer scheduler w/ quotas/fairness (D11.1) | **PARTIAL** | Multi-tenant fairness is designed; must be *proven* at alert-storm scale (thousands of concurrent short triage runs) with backpressure. |
 | Conditional routing (escalate vs. close vs. hunt) | Quality-gate conditional routing (D8) | **COVERED** | Verdict-driven branch is standard graph conditional edges. |

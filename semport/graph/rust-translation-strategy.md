@@ -1,6 +1,6 @@
 ---
 artifact: semport/graph/rust-translation-strategy
-project: ferrochain
+project: pregolya
 port_target: langgraph @ 1.2.9
 analyzer_pass: 2
 date: 2026-07-12
@@ -101,7 +101,7 @@ Alternative-B-style multi-tenant scheduler that owns the global `Semaphore`, fai
 runs, and applies per-tenant quotas — giving A's correctness with B's fairness. The human
 decision in D9 is really: (a) start with A and defer multi-tenancy, or (b) invest in B's
 protocol up front because Platform-scale multi-tenancy is a near-term product goal. This
-should be weighed against whether ferrochain targets an embedded library (favors A) or a
+should be weighed against whether pregolya targets an embedded library (favors A) or a
 hosted server (favors B or hybrid).
 
 ---
@@ -120,7 +120,7 @@ graph engine — but several patterns transfer:
 - **Structural sync/async partition** (ADR-019): sync-group plugins run via
   `spawn_blocking` and participate in gate decisions; async-group plugins are spawned via
   independent `tokio::spawn`, collected over a **channel**, with a **`tokio::select!` drain
-  timer** for cooperative shutdown. This is precisely the pattern ferrochain needs for
+  timer** for cooperative shutdown. This is precisely the pattern pregolya needs for
   (a) isolating blocking node bodies from the async runtime and (b) LangGraph's cooperative
   **drain** at super-step boundaries (`GraphDrained`/SIGTERM). Reuse the drain-timer idiom.
 - **Per-unit `spawn_blocking` isolation** so a heavy/blocking node never stalls the
@@ -133,22 +133,22 @@ graph engine — but several patterns transfer:
 - Workspace conventions: edition 2024, rust 1.95, `tokio`, `thiserror` (lib errors),
   `anyhow` (bins only), `serde`/`serde_json`, feature-gated sink crates — adopt these.
 
-**Where production-best for ferrochain DIVERGES from vsdd-factory:**
+**Where production-best for pregolya DIVERGES from vsdd-factory:**
 - vsdd-factory is **fire-and-forget event dispatch**: plugins are largely independent, one
-  pass, no shared mutable graph state, no durable checkpoint, no replay. ferrochain needs
+  pass, no shared mutable graph state, no durable checkpoint, no replay. pregolya needs
   **stateful, resumable, checkpointed** execution with a strict write-isolation +
   deterministic-merge invariant — a fundamentally heavier correctness contract. Do NOT
   model nodes as independent fire-and-forget plugins.
-- vsdd-factory uses **wasmtime sandboxing**; ferrochain nodes are in-process Rust
+- vsdd-factory uses **wasmtime sandboxing**; pregolya nodes are in-process Rust
   closures / Runnables — no WASM boundary (unless untrusted-node execution becomes a goal;
   that would be a separate, later decision).
-- vsdd-factory's "tiers" are statically ordered; ferrochain's super-steps are
+- vsdd-factory's "tiers" are statically ordered; pregolya's super-steps are
   **dynamically discovered** each step from channel versions + Sends — the scheduler must
   re-plan every step, not run a fixed pipeline.
 - vsdd-factory has no **backpressure/streaming-into-consumer** or **multi-tenant fairness**
-  concerns at the graph level; ferrochain (esp. Alternative B) does.
+  concerns at the graph level; pregolya (esp. Alternative B) does.
 - No **checkpoint atomicity / durability tiers** in vsdd-factory — the hardest part of
-  ferrochain has no analog there.
+  pregolya has no analog there.
 
 Net: vsdd-factory is a useful *idiom library* (tiered-run + channel-collect + drain-timer +
 spawn_blocking isolation + sink fan-out + error taxonomy) but NOT an architectural template
@@ -184,7 +184,7 @@ storage-shape-agnostic (single-blob sqlite vs normalized-blob postgres). Port
 (async-trait / boxed futures).
 
 ### 6.3 Serialization — 🟠 (byte-faithful, golden-tested)
-`rmp-serde` primary + lc-JSON fallback (reuse ferrochain-core reviver). Port the ext-type
+`rmp-serde` primary + lc-JSON fallback (reuse pregolya-core reviver). Port the ext-type
 dispatch (Pydantic v2 models, Pydantic v1 models, Enum, dataclasses, namedtuples,
 datetime/uuid/decimal/set/deque/ip/path/tz/regex/messages/langgraph types, numpy) and the
 `SAFE_MSGPACK_TYPES` allowlist + `LANGGRAPH_STRICT_MSGPACK` security gate. `test_jsonplus.py`
@@ -254,7 +254,7 @@ retry/error reporting.
    same object-safety tension as the pass-1 Runnable ADR; they should be resolved together.
 5. **Durability atomicity contract**: how sync/async/exit modes fence per-task `put_writes`
    against step-boundary `put` — trivial under A, needs explicit protocol under B; and
-   whether `async` mode's "may lose last in-flight persist" is acceptable for ferrochain's
+   whether `async` mode's "may lose last in-flight persist" is acceptable for pregolya's
    production stance (CLAUDE.md production-grade rules were NOT found at repo root — confirm).
 
 ## State checkpoint

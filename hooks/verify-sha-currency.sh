@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-sha-currency.sh — ferrochain factory-artifacts wrap guard
+# verify-sha-currency.sh — pregolya factory-artifacts wrap guard
 #
 # Checks:
 #   (a) The burst SHA cited in STATE.md Session Resume Checkpoint matches

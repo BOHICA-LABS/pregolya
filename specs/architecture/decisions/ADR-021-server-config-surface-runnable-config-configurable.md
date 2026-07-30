@@ -70,13 +70,13 @@ The sample TOML in `interface-definitions.md` must therefore show the `debug_rou
 
 **Chosen:** Add a `configurable: Option<HashMap<String, Value>>` field to `RunnableConfig`.
 
-This is the LangGraph-parity field identified in the semport analysis (semport §RunnableConfig mapping §11). LangGraph's Python `RunnableConfig` carries a `configurable: dict` that graphs inspect at runtime to read model, tool-set, system-prompt, and other graph-specific overrides. Without this field, the ferrochain `RunnableConfig` cannot carry the per-graph runtime configuration that makes the Assistant's "reusable agent persona" concept realizable.
+This is the LangGraph-parity field identified in the semport analysis (semport §RunnableConfig mapping §11). LangGraph's Python `RunnableConfig` carries a `configurable: dict` that graphs inspect at runtime to read model, tool-set, system-prompt, and other graph-specific overrides. Without this field, the pregolya `RunnableConfig` cannot carry the per-graph runtime configuration that makes the Assistant's "reusable agent persona" concept realizable.
 
 ### Rationale
 
 1. **Semport mandate.** The semport `rust-translation-strategy.md §RunnableConfig mapping §11` explicitly includes `configurable: Map<String,Value>` in the proposed `RunnableConfig` struct. This field was omitted from the initial architecture phase without a recorded decision.
-2. **LangGraph parity is the design requirement.** BC-2.12.002 §Description states the Assistant concept is LangGraph-parity (D13). LangGraph `Assistants` store a `configurable` dict keyed to graph-specific parameter names (e.g., `"model"`, `"system_prompt"`, `"tools"`). The graph reads its parameters from `config.configurable` at execution time. Without `configurable`, ferrochain graphs have no standard channel for receiving per-run model or system-prompt overrides that differ from graph to graph.
-3. **Preserves typed-field precedent.** The strongly-typed fields `budget_config` and `context_mutations` cover ferrochain-specific behaviors that require precise type-level enforcement. The `configurable` map covers the "pass-through to graph logic" use case where each graph defines its own parameters — a generic map is correct here because no single graph schema applies across all graphs.
+2. **LangGraph parity is the design requirement.** BC-2.12.002 §Description states the Assistant concept is LangGraph-parity (D13). LangGraph `Assistants` store a `configurable` dict keyed to graph-specific parameter names (e.g., `"model"`, `"system_prompt"`, `"tools"`). The graph reads its parameters from `config.configurable` at execution time. Without `configurable`, pregolya graphs have no standard channel for receiving per-run model or system-prompt overrides that differ from graph to graph.
+3. **Preserves typed-field precedent.** The strongly-typed fields `budget_config` and `context_mutations` cover pregolya-specific behaviors that require precise type-level enforcement. The `configurable` map covers the "pass-through to graph logic" use case where each graph defines its own parameters — a generic map is correct here because no single graph schema applies across all graphs.
 4. **No `#[non_exhaustive]` conflict.** `RunnableConfig` is not currently declared `#[non_exhaustive]` (the struct's internal use makes that impractical; callers construct it). Adding a new `Option<…>` field is a backward-compatible extension — existing construction sites using struct-literal form add the field as `configurable: None`.
 
 ### Type details
@@ -92,7 +92,7 @@ pub configurable: Option<HashMap<String, serde_json::Value>>,
 ### Effect on existing artifacts
 
 - `interface-definitions.md` §RunnableConfig: add `configurable` field with doc comment.
-- `api-surface.md` §ferrochain-core Public Types `RunnableConfig` row: add `configurable` to the field summary.
+- `api-surface.md` §pregolya-core Public Types `RunnableConfig` row: add `configurable` to the field summary.
 - BC-2.12.002 §Description: product-owner must replace the fabricated list with language reflecting what `RunnableConfig.configurable` actually carries (see §Product-Owner Handoff below).
 - BC-2.12.004 §Invariants: product-owner must remove the fabricated field reference `RunnableConfig.missed_fire_policy` (discovered in TD-VSDD-060 sibling sweep; this field does not exist in `RunnableConfig`).
 
@@ -104,8 +104,8 @@ pub configurable: Option<HashMap<String, serde_json::Value>>,
 |-------------|-------------|-----------|
 | Decision 1: Keep `debug_route_key = ""` in TOML; change Rust type to `String` (treat empty = disabled) | **REJECT** | Removes E-SERVER-013 / EC-005 / TV-007 as meaningful; the empty-string-means-disabled sentinel is operationally ambiguous. BC-2.12.005 is the security contract; the TOML representation must conform to the Rust type, not override it. |
 | Decision 1: Keep empty-string default; treat it as `None` in a custom deserializer | **REJECT** | Non-standard serde behavior; the standard `Option<String>` deserialization is unambiguous. Custom deserializers add complexity and maintenance surface for no behavioral gain over the absent-key pattern. |
-| Decision 2: Separate `AssistantConfig` struct (typed fields: `model`, `tools`, `system_prompt`) | **REJECT** | Breaks LangGraph parity: LangGraph's `configurable` map is deliberately untyped because different graphs use different keys. A typed `AssistantConfig` would require every graph to know the ferrochain-server schema, inverting the dependency. The generic map is correct; graph logic owns key validation. |
-| Decision 2: Keep `RunnableConfig` as-is; fix BC-2.12.002 §Description to say "execution parameters only, no model/tools" | **REJECT** | The Assistant's "reusable agent persona" concept has no mechanism without `configurable`. The semport mandate was clear. Accepting the fabrication as a spec correction without adding the missing field leaves ferrochain unable to implement LangGraph-parity Assistants. |
+| Decision 2: Separate `AssistantConfig` struct (typed fields: `model`, `tools`, `system_prompt`) | **REJECT** | Breaks LangGraph parity: LangGraph's `configurable` map is deliberately untyped because different graphs use different keys. A typed `AssistantConfig` would require every graph to know the pregolya-server schema, inverting the dependency. The generic map is correct; graph logic owns key validation. |
+| Decision 2: Keep `RunnableConfig` as-is; fix BC-2.12.002 §Description to say "execution parameters only, no model/tools" | **REJECT** | The Assistant's "reusable agent persona" concept has no mechanism without `configurable`. The semport mandate was clear. Accepting the fabrication as a spec correction without adding the missing field leaves pregolya unable to implement LangGraph-parity Assistants. |
 
 ---
 
@@ -118,7 +118,7 @@ pub configurable: Option<HashMap<String, serde_json::Value>>,
 
 ### api-surface.md changes
 
-- §ferrochain-core Public Types: `RunnableConfig` row description updated to include `configurable`.
+- §pregolya-core Public Types: `RunnableConfig` row description updated to include `configurable`.
 
 ### BC handoff to product-owner (do not edit BC files)
 

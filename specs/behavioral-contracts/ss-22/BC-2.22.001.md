@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-22
 capability: CAP-031
-crate: ferrochain-core
+crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
@@ -24,8 +24,8 @@ changelog:
   - "1.2 (burst-238/sweep/2026-07-23): VP Registration (Traceability) and VP Anchors section updated: stale 'ARCH-INDEX candidate — architect assigns VP-INDEX entry after BC authoring completes' and 'pending VP-008 registration in VP-INDEX.md' replaced with 'assigned in VP-INDEX v1.2 as VP-008' (VP-INDEX v1.2 burst-223 seeded VP-008 proptest P1; VP-008.md exists). Completed-handoff residue removal."
   - "1.3 (FIX-BURST-269/F-P167-01/2026-07-25): Fix Category::VALIDATION → Category::VAL in PC-2 E-EMBED-001 code block. VALIDATION is not in the canonical 12-member Category enum; E-EMBED-001 is VAL per error-taxonomy.md §E-EMBED-001. D23 sibling-sweep (Burst-232 fixed SS-23; this burst fixes SS-22/21/18 stragglers)."
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B): Component::EMBED → Component::Embed, Category::VAL → Category::Val in PC-2 E-EMBED-001 inline code block."
-  - "1.5 (FIX-BURST-280-WAVE-C/F-P175-A25/2026-07-28): Task 1 — PC-2 construction form alignment. Replace struct-literal `FerrochainError { component: Component::Embed, category: Category::Val, code: ..., message: ... }` (missing `retry_hint` and `source`; barred by `#[non_exhaustive]` for external callers) with canonical `FerrochainError::new(Component::Embed, Category::Val, RetryHint::Never, \"E-EMBED-001\", \"EmbeddingDimensionMismatch: embedding batch returned inconsistent vector lengths\")` form. Architect proposal verified: 5-arg order (component, category, retry_hint, code, message) matches ADR-010 §Decision pub fn new signature exactly; message matches error-taxonomy E-EMBED-001 canonical prefix `EmbeddingDimensionMismatch:` (distinct from E-VS-002 prefix `DimensionMismatch:` per v1.29 collision fix). No BC semantic change — PC2/PC3 contract preserved; validate_embedding_batch function spec (interface-definitions §core::embeddings) consistent with dimensionality invariants here."
-  - "1.6 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). One CLASS3_ASCII_ELLIPSIS_VIOLATION corrected: PC2 partial-batch-error sentence `Err(FerrochainError { ... })` — replaced `...` with `..`. No behavioral change."
+  - "1.5 (FIX-BURST-280-WAVE-C/F-P175-A25/2026-07-28): Task 1 — PC-2 construction form alignment. Replace struct-literal `PregolyaError { component: Component::Embed, category: Category::Val, code: ..., message: ... }` (missing `retry_hint` and `source`; barred by `#[non_exhaustive]` for external callers) with canonical `PregolyaError::new(Component::Embed, Category::Val, RetryHint::Never, \"E-EMBED-001\", \"EmbeddingDimensionMismatch: embedding batch returned inconsistent vector lengths\")` form. Architect proposal verified: 5-arg order (component, category, retry_hint, code, message) matches ADR-010 §Decision pub fn new signature exactly; message matches error-taxonomy E-EMBED-001 canonical prefix `EmbeddingDimensionMismatch:` (distinct from E-VS-002 prefix `DimensionMismatch:` per v1.29 collision fix). No BC semantic change — PC2/PC3 contract preserved; validate_embedding_batch function spec (interface-definitions §core::embeddings) consistent with dimensionality invariants here."
+  - "1.6 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). One CLASS3_ASCII_ELLIPSIS_VIOLATION corrected: PC2 partial-batch-error sentence `Err(PregolyaError { ... })` — replaced `...` with `..`. No behavioral change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-031
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -35,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "dc5b1d6"
+input-hash: "f83822c"
 extracted_from: null
 modified: []
 deprecated: null
@@ -50,10 +50,10 @@ removal_reason: null
 
 ## Description
 
-`Embeddings` is a dyn-compatible async trait in `ferrochain-core: core::embeddings` with two
+`Embeddings` is a dyn-compatible async trait in `pregolya-core: core::embeddings` with two
 abstract methods: `async fn embed_documents(&self, texts: Vec<String>) → Result<Vec<Vec<f32>>,
-FerrochainError>` (batch) and `async fn embed_query(&self, text: String) → Result<Vec<f32>,
-FerrochainError>` (single query). All returned embedding vectors must satisfy the dimensionality
+PregolyaError>` (batch) and `async fn embed_query(&self, text: String) → Result<Vec<f32>,
+PregolyaError>` (single query). All returned embedding vectors must satisfy the dimensionality
 contract: one vector per input, all vectors have the same length, and `embed_query` output
 matches `embed_documents` inner vector length. Violations return `Err(E-EMBED-001)`. Batch
 partial failures (e.g., rate limit mid-batch) return `Err` for the whole call — no silent
@@ -62,24 +62,24 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
 
 ## Preconditions
 
-1. `ferrochain-core` has `async-trait` as a dependency.
+1. `pregolya-core` has `async-trait` as a dependency.
 2. A concrete type `T` implements `Embeddings` with `#[async_trait]` and `&self` receivers.
 3. `T` is wrapped as `Arc<dyn Embeddings>` and held by consumers (e.g., `InMemoryVectorStore`).
 
 ## Postconditions
 
 1. `Arc<dyn Embeddings>` compiles without E0038 for any impl with `&self` + `#[async_trait]`.
-2. `embed_documents(&self, texts) → Result<Vec<Vec<f32>>, FerrochainError>`:
+2. `embed_documents(&self, texts) → Result<Vec<Vec<f32>>, PregolyaError>`:
    - `Ok(vecs)` where `vecs.len() == texts.len()` — one embedding vector per input text.
    - All inner `Vec<f32>` have identical length `d` (the model's embedding dimension).
    - If `texts` is empty: `Ok(vec![])` — zero vectors; no error.
    - If the provider returns an inconsistent batch (inner vectors of different lengths):
-     `Err(FerrochainError::new(Component::Embed, Category::Val, RetryHint::Never, "E-EMBED-001",
+     `Err(PregolyaError::new(Component::Embed, Category::Val, RetryHint::Never, "E-EMBED-001",
      "EmbeddingDimensionMismatch: embedding batch returned inconsistent vector lengths"))`.
    - If the provider returns a partial batch error (e.g., rate limit, service error):
-     `Err(FerrochainError { .. })` for the whole call — NO silent truncation to a partial
+     `Err(PregolyaError { .. })` for the whole call — NO silent truncation to a partial
      result set, NO `Vec::new()` fallback (DI-014).
-3. `embed_query(&self, text) → Result<Vec<f32>, FerrochainError>`:
+3. `embed_query(&self, text) → Result<Vec<f32>, PregolyaError>`:
    - `Ok(vec)` where `vec.len() == d` — same dimension as `embed_documents` inner vectors.
    - If the returned vector length differs from the model's declared dimension:
      `Err(E-EMBED-001)`.
@@ -96,7 +96,7 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
 3. **embed_query length == embed_documents inner length** — for the same model and config,
    `embed_query(t).ok().map(|v| v.len()) == embed_documents(vec![t]).ok().map(|vs| vs[0].len())`.
 4. **No `ndarray`** — return type is `Vec<f32>` (standard library). No heavy linear algebra
-   dep is pulled into ferrochain-core.
+   dep is pulled into pregolya-core.
 5. `Embeddings: Send + Sync` — all impls must be thread-safe for use in multi-threaded Tokio tasks.
 
 ## Edge Cases
@@ -135,8 +135,8 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
 
 ## Architecture Anchors
 
-- `architecture/module-decomposition.md` — SS-22, `core::embeddings` module in ferrochain-core
-- `architecture/decisions/ADR-017-embeddings-trait-provider-integration.md` — Decision 1 (trait placement in ferrochain-core), Decision 2 (async dyn-compatible shape, dimensionality contract, batch error semantics)
+- `architecture/module-decomposition.md` — SS-22, `core::embeddings` module in pregolya-core
+- `architecture/decisions/ADR-017-embeddings-trait-provider-integration.md` — Decision 1 (trait placement in pregolya-core), Decision 2 (async dyn-compatible shape, dimensionality contract, batch error semantics)
 - `architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md` — §Object-Safety precedent for `#[async_trait]` + `Arc<dyn Trait>`
 
 ## Story Anchor
@@ -158,8 +158,8 @@ _[to be filled after story decomposition — Wave 2 SS-22 story]_
 | L2 Domain Invariants | DI-008 (embed_documents and embed_query return Result; no .unwrap()), DI-014 (batch partial-failure propagates as Err; no silent truncation or Vec::new() fallback) |
 | Architecture Authority | ADR-017 Decisions 1 and 2 (trait placement, async dyn-compat shape, dimensionality contract, batch error semantics) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| VP Registration | VP-008 (assigned in VP-INDEX v1.2 as VP-008 — proptest P1; ferrochain-core embeddings) |
-| Module | ferrochain-core / core::embeddings |
+| VP Registration | VP-008 (assigned in VP-INDEX v1.2 as VP-008 — proptest P1; pregolya-core embeddings) |
+| Module | pregolya-core / core::embeddings |
 | Priority | P1 |
 | Wave | 2 |
 | Test Types | unit + compile-time (dyn-compat gate) + proptest (VP-008) |

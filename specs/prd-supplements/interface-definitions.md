@@ -8,27 +8,27 @@ timestamp: 2026-07-30T00:00:00Z
 phase: 1d
 changelog:
   - "2.69 (fix-burst-283/F-P175-C101+F-P175-C113/2026-07-30): Two architect adjudications from P1D-175 Slice C1 applied. (1) F-P175-C101 ADR-021 Decision 1: TOML sample config debug_route_key corrected — present-but-empty form 'debug_route_key = \"\"' replaced with commented-absent form. Present-but-empty deserializes via serde to Option::Some(\"\") which BC-2.12.005 EC-005 defines as E-SERVER-013 startup failure; the secure default is absence of the key (None via serde default). BC-2.12.005 body is unchanged — EC-005/TV-007/E-SERVER-013 are correct and remain load-bearing. (2) F-P175-C113 ADR-021 Decision 2: add configurable: Option<HashMap<String, Value>> field to RunnableConfig struct. This is the LangGraph-parity configurable map (semport rust-translation-strategy §RunnableConfig mapping §11); graphs use it to read model, tool-set, and system-prompt overrides at execution time. Enables the Assistant 'reusable agent persona' concept in BC-2.12.002. BC-2.12.002 §Description product-owner handoff: replace fabricated 'model, tools, system prompt overrides, checkpointer config' text; see ADR-021 Decision 2 and fix-burst-283 handoff spec."
-  - "2.68 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Add `validate_embedding_batch` free function spec to §Embeddings Trait (core::embeddings, ferrochain-core). Function is `pub`; cross-crate callers are ferrochain-openai and ferrochain-ollama provider embeddings impls. BC anchors: BC-2.22.001 PC-2 (batch dimensionality contract → E-EMBED-001), INV-2 (consistent inner length), EC-003 (count mismatch), EC-004 (zero-length vector). Error anchor: E-EMBED-001. VP anchor: VP-008 (proptest P1; test harnesses call this function directly per FIX-BURST-280 structural redesign — F-P175-A24 self-proving mock fix). TD-VSDD-060 sibling sweep for unregistered VP-body symbols: see FIX-BURST-280-corr report."
+  - "2.68 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Add `validate_embedding_batch` free function spec to §Embeddings Trait (core::embeddings, pregolya-core). Function is `pub`; cross-crate callers are pregolya-openai and pregolya-ollama provider embeddings impls. BC anchors: BC-2.22.001 PC-2 (batch dimensionality contract → E-EMBED-001), INV-2 (consistent inner length), EC-003 (count mismatch), EC-004 (zero-length vector). Error anchor: E-EMBED-001. VP anchor: VP-008 (proptest P1; test harnesses call this function directly per FIX-BURST-280 structural redesign — F-P175-A24 self-proving mock fix). TD-VSDD-060 sibling sweep for unregistered VP-body symbols: see FIX-BURST-280-corr report."
   - "2.67 (fix-burst-279/gap-2-TemplateInput+format_messages/2026-07-28): Gap 2 (BLOCKING) TD-VSDD-060 sweep — format_messages signature and TemplateInput enum. (1) Added `TemplateInput` enum definition (§Prompt Templates, before SlotTrustPolicy): three arms — Scalar(TemplateVar), Messages(MessageListVar), FewShotExamples(Vec<(TemplateVar, TemplateVar)>); #[non_exhaustive]; replaces former bare HashMap<String, TemplateVar> parameter. (2) `format_messages` signature corrected: parameter type `HashMap<String, TemplateVar>` → `HashMap<String, TemplateInput>` (breaking change per ADR-015 §Decision 3 Amendment — TemplateInput Enum Concretized). This is the architect-owned portion of the TD-VSDD-060 sweep; BC-2.18.002/004 PO routing in wave-b-po-routing-spec-279.md item 6 and item 7."
   - "2.66 (fix-burst-279/F-P175-B101+F-P175-B102+F-P175-B208/2026-07-28): Three architect security adjudications applied. (1) B101/B102: SkillStore scope-encapsulation note added (SkillStore impls bind MemoryScope::App(app_id) at construction; trait methods scopeless; E-MEMORY-004 NoScopeContext on missing app_id). RunContext gains app_id: String field (system-derived, not RunnableConfig-overridable; empty = no-scope sentinel). ContextMutationConfig loading note: spec.namespace is a key-namespace prefix within MemoryScope::App(run_context.app_id), not the tenant app_id; composite key = {namespace}/{key}. (2) B208: TrustLevel updated — add #[non_exhaustive]; add #[cfg_attr(kani, derive(kani::Arbitrary))]; add Copy derive; add severity() -> u8 method (Untrusted=2, UserInput=1, Trusted=0); explicit Ord-derivation prohibition added."
   - "2.65 (FIX-BURST-278/L9b-de-pin/2026-07-28): L9b de-pin: two version-pin-to-section-anchor conversions in the FIX-BURST-277-WAVE-B-errata changelog entry. Both pins cited ADR-005 by version number; replaced with ADR-005 §Adjacent Trait Object-Safety Adjudications in both positions (DynTool promise cross-reference and Wave C migration list cross-reference)."
-  - "2.64 (FIX-BURST-278/Wave-C-S4+S5/2026-07-28): S4 canon — three lines citing Arc<dyn Tool> (non-object-safe E0038) as a migration origin annotated with non-object-safe qualifier to satisfy verify-signature-canon.sh S4 gate exemption. S5 canon — five FerrochainError doc-comment examples in Rust fences collapsed to abbreviated FerrochainError { code: \"E-XXX\", .. } form per D-42/D-49: (1) DynRunnable # Errors E-CORE-004 (Unicode ellipsis → ASCII ..); (2) BaseChatModel bind_tools E-CORE-005 (two-line multifield doc → single-line abbreviated); (3) CheckpointSaver put E-CHKPT-005 (two-field abbreviated → single-field abbreviated with ..); (4) GuardrailHook evaluate E-CORE-007 (unquoted code string quoted, two-field → abbreviated with ..); (5) ProviderFallbackPolicy new E-PROV-011 (two-line multifield doc → single-line abbreviated, unquoted code string quoted)."
-  - "2.63 (FIX-BURST-278/F-P175-D48+D208+D212/2026-07-28): Three findings closed. (1) F-P175-D48 — `as_retriever` receiver corrected to `self: Arc<Self>` (dyn-compatible; see ADR-014 §Decision 2); stale 'Wave C PO correction pending' note removed. (2) F-P175-D208 — add `#[derive(Serialize)]` to `ToolOutput` enum (required for blanket `DynTool` impl to convert `ToolOutput` to `serde_json::Value`); blanket impl comment updated to document that `ToolOutput::Error(String)` maps to `Err(FerrochainError)` — not `Ok(json)` — to prevent silent-error-swallow violation per DI-014 / BC-5.39.001. (3) F-P175-D212 — `core::tools` → `core::tool` (singular) in §Tool subsection module comment per BC-2.08.010 Architecture Anchors canonical form."
-  - "2.62 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Add §DynTool trait definition (ferrochain-core: core::tool) — fulfills ADR-005 §Adjacent Trait Object-Safety Adjudications promise 'DynTool definition added to interface-definitions.md'; omitted from v2.61. DynTool: object-safe façade replacing Arc<dyn Tool> (non-object-safe E0038) dispatch; exposes invoke_dyn + 4 metadata accessors; blanket impl for T: Tool + Send + Sync + 'static; mirrors DynRunnable pattern. Inserted after ToolOutput enum in §Tool subsection. ADR-005 §Adjacent Trait Object-Safety Adjudications carries the corrected Wave C migration list (BC-2.09.001 Description+PC2 + BC-2.09.002 PC1; prior v1.8 list citing BC-2.05.003/BC-2.05.004/BC-2.08.010 was incorrect)."
-  - "2.61 (FIX-BURST-277-WAVE-B/F-P174-constructor+F-P174-retriever-lifetime+F-P174-as-retriever-fallible+F-P174-303/2026-07-27): (1) F-P174-constructor: add §FerrochainError Constructor (before §BaseChatModel) — `FerrochainError::new(component, category, retry_hint, code, message: impl Into<String>) -> Self` and `with_source(self, Arc<dyn Error+Send+Sync>) -> Self` per ADR-010; `#[non_exhaustive]` bars struct-literal from external crates; these are the sole construction paths. (2) F-P174-retriever-lifetime: the lifetime-parameterized `VectorStoreRetriever` (with `'a` parameter) → `VectorStoreRetriever` (no lifetime); `store: &'a dyn VectorStore` → `store: Arc<dyn VectorStore>`; `VectorStoreRetriever` is now `'static` for `Arc<dyn Retriever + 'static>` coercion. (3) F-P174-as-retriever-fallible: `fn as_retriever` (with `&self` receiver, returning the lifetime-parameterized type) → `fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>`; returns `Err(E-VS-003)` on invalid config. Impl Retriever updated accordingly. (4) F-P174-303: purge phantom 2-arg `FerrochainError::new(\"E-VS-005\", \"...\")` call in `similarity_search_with_filter` default — replace with canonical 5-arg constructor `FerrochainError::new(Component::Vs, Category::Val, RetryHint::Never, \"E-VS-005\", \"...\")` per ADR-010."
-  - "2.60 (F-P173-606+F-P173-607+F-P173-608+F-P173-609+F-P173-610+BC-2.08.004-anchor/fix-burst-276/2026-07-27): Six HIGH findings from adversarial pass P1D-173 content wave 3. (1) F-P173-606: §BaseChatModel Gate #31 type note — retired 'corpus-unresolved / implementer defines' for ChatConfig; replaced with spec-anchored partial definition: mandatory field `fallback_policy: Option<ProviderFallbackPolicy>` sourced from BC-2.08.014 Description and BC-2.08.014 PC1; module placement module-decomposition.md §core::config SS-01; provider-specific parameters documented as per-provider extensions. (2) F-P173-607: §ProviderFallbackPolicy — replaced 'UNRESOLVED (implementer-scope) / flagged for architect' notes on ProviderCredential and CredentialRefreshConfig with unconditional DI-010 obligations: both types MUST implement `Debug` rendering only '<redacted>'; canonical impl form documented; per-provider shape acknowledged as implementation-defined but DI-010 is unconditional. (3) F-P173-609: added new §Tool subsection (before §First-Party Tools) declaring `pub trait Tool` in ferrochain-core: core::tools — methods name/description/schema/action_risk from BC-2.08.010 PC1; `ToolInput(serde_json::Value)` struct; `#[non_exhaustive] ToolOutput` enum with Text/Json/Error variants from BC-2.23.001-006 and BC-2.05.007 PC2 (Deny → Error); PathGuard::check phantom NOT reintroduced; ADR-020 Decision 1 source cited. (4) F-P173-608: §First-Party Tools ToolConfig — added private `minimum_risk: ActionRisk` field note as the per-tool identity discriminator that makes VP-013 provable (BashTool sets minimum_risk=Medium at construction; override_risk validates risk >= minimum_risk; exhaustive Kani proof over 4 D-25 variants); doc comment updated from 'Errors (BashTool)' to general 'Errors: when risk < self.minimum_risk'; D-25/D-26/D-27/D-30 all preserved. (5) F-P173-610: §ProviderFallbackPolicy — made `chain` field private (prevents struct-literal bypass of non-empty invariant); added `impl ProviderFallbackPolicy` with `new(chain: Vec<ProviderCredential>) -> Result<Self, FerrochainError>` constructor returning E-PROV-011 when empty (BC-2.08.014 EC-006/TV-007); #[non_exhaustive] added to struct. (6) BC-2.08.004 anchor (routed from content wave 2): replaced cross-check note 'orphaned BC until architect adjudicates' with correct anchoring — `has_tool_calling(&self) -> bool` method added to BaseChatModel trait (BC-2.08.002 EC-005/TV-005 guard); BC-2.08.004 anchored at stream_chat per-method as cross-cutting error-fidelity conformance (all provider HTTP 4xx/5xx must map to typed FerrochainError); trait-level anchor block added documenting cross-cutting scope covering both invoke and stream_chat paths."
-  - "2.59 (F-P173-101+F-P173-102+F-P173-701/fix-burst-276/2026-07-27): Three HIGH source-attribution findings from adversarial pass P1D-173. (1) F-P173-101: §PreToolCallHook Source — added ADR-020 Decision 1 as primary source (ActionRisk relocation to ferrochain-core: core::action_risk; ferrochain-tools cross-crate compile-time consumer motivation; sole authority for ToolCallPreview.action_risk type placement); corrected fail-closed Deny anchor from 'Decision 4' to 'Decision 3 step 4' — ADR-018 Decision 3 step 4 verbatim: Deny { reason } → ToolOutput::Error; tool never invoked; VP-011 Kani P0. (2) F-P173-102: §Compaction Source — corrected CompactionPolicy trait attribution from Decision 2 to Decision 1 (ADR-019 Decision 1 defines all core::budget type definitions: CompactionTrigger, ConversationSnapshot, CompactionSummary, and CompactionPolicy trait; Decision 2 is BudgetConfig extensions: compaction_trigger + compaction_policy fields); corrected mid-run/next-run distinction attribution from Decision 5 to Decision 3 (ADR-019 Decision 3 canonical: 'mid-run state mutation — applies immediately to current run's message window, not next-run'; Decision 5 is CAP-017 Wave Promotion Interaction within-session vs cross-session additive design); BC anchor aligned to ADR-019 Decision 3 canonical language: 'mid-run REPLACEMENT' → 'mid-run state mutation per ADR-019 Decision 3'; BC-2.15.006 NEXT-run description updated with ADR-019 Decision 3 anchor. No phantom on_watermark symbol present or introduced. (3) F-P173-701 (mis-citation class): §VectorStore BC anchor footer — all ADR-014 citations enumerated; per-site corrections: (a) 'Decision 3 (InMemoryVectorStore)' WRONG — ADR-014 Decision 3 is SS-15 Boundary Definition MemoryStore vs VectorStore, zero InMemoryVectorStore content → removed; replaced with ADR-017 Decision 4 (InMemoryVectorStore — Arc<dyn Embeddings> DI + RwLock interior mutability; Arc-DI wiring at construction time; ADR-017 Decision 4 verbatim 'no placeholder construction' invariant); (b) 'Decision 4 (zero-norm guard E-VS-001)' WRONG — ADR-014 Decision 4 is External Adapter Extension Seam via inventory crate → corrected to 'ADR-014 Decision 2 §Hardening note (search-time zero-norm guard E-VS-001)'; (c) 'Decision 5 (write-time zero-norm guard E-VS-004)' CORRECT — kept unchanged. Two correct citations left unchanged: Source line (ADR-014 Decision 2) and similarity_search_with_filter comment (ADR-014 Decision 2 §Metadata filter surface F-P131-07 adjudication). Summary: 2 wrong citations corrected, 1 new ADR-017 Decision 4 citation added, 2 correct citations preserved."
-  - "2.58 (F-P173-601+F-P173-602+F-P173-603+F-P173-604+F-P173-605+F-P173-614/2026-07-27): Five signature findings from adversarial pass P1D-173. (1) F-P173-601 CRITICAL: §First-Party Tools — deleted erroneous PathGuard struct/impl block that declared PathGuard in ferrochain-tools with a non-canonical check() method. Replaced with a consumption note citing the authoritative owner (ferrochain-sandbox, sandbox::path_guard, SS-13, BC-2.13.004, VP-003 Kani P0) and the two confinement entry points (canonicalize_beneath_root_pure/canonicalize_beneath_root); error layer split documented (E-SBXD-001 sandbox layer → E-TOOLS-001 tool layer). BC anchor in §First-Party Tools corrected: 'BC-2.23.001-006 shared PathGuard invariant' → 'consumes BC-2.13.004 PathGuard' per tool; PathGuard ownership row added. (2) F-P173-602 HIGH: §BaseChatModel bind_tools — removed async (construction-time validation, no I/O per BC-2.08.002 EC-005); corrected return type from bare 'impl BaseChatModel' to 'Result<impl BaseChatModel, FerrochainError>'; added # Errors doc block citing Err(E-CORE-005) when has_tool_calling=false (BC-2.08.002 EC-005/TV-005). (3) F-P173-603 HIGH: §BaseChatModel with_structured_output — added required schema: serde_json::Value parameter per BC-2.08.003 PC/EC-002/EC-003; added schemars::JsonSchema bound to T per BC-2.08.009; added per-method anchor citation. (4) F-P173-604 HIGH: §Runnable pipe — corrected return type from opaque 'impl Runnable<Input, NextOutput>' to concrete 'RunnableSequence<Input, NextOutput>' per BC-2.01.004 PC1/PC4/TV-002; added doc comment citing flattening invariant. (5) F-P173-605 HIGH: added new §DynRunnable and RunnableSequence section to §Public Rust Trait Signatures (ferrochain-core: core::runnable) — DynRunnable object-safe trait with async invoke and boxed-stream stream method (ADR-005 dyn-compat pattern; BC-2.01.003 EC-001 + BC-2.01.004 PC5/EC-001/TV-004); RunnableSequence<I,O> struct with first/middle/last/PhantomData fields (BC-2.01.004 PC1/PC4/TV-002). (6) F-P173-614 HIGH: expanded bare BC-ID anchors in §Runnable and §BaseChatModel to per-method precision; per-method cross-check run — §Runnable PASS (all 4 methods anchored, no orphan BCs); §BaseChatModel PASS with one flag: BC-2.08.004 unmapped to a declared method (flagged for architect adjudication in cross-check note). TD-VSDD-060 sibling sweep results: see report in this burst."
-  - "2.57 (F-P171a-02a+F-P171a-02b+F-P171a-03+date-mono/burst-273/2026-07-25): (1) F-P171a-02a Gate #32 carrier-3: Add §ToolConfig subsection to §First-Party Tools — ToolConfig struct in ferrochain-tools::tools::config; override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError> builder-consuming validator; BashTool risk < Medium → Err(E-TOOLS-007); #[non_exhaustive]; distinct from BashConfig (per-tool impl config). (2) F-P171a-02b lifecycle adjudication: §PreToolCallHook ActionRisk doc-comment — 'BashTool construction time' → 'ToolConfig::override_risk call time'; §First-Party Tools BashTool doc-comment updated to same lifecycle language. (3) F-P171a-03: BashTool canonical annotation corrected ActionRisk::Medium → ActionRisk::High (default declared annotation; Medium is the non-lowerable floor, not the default); BC anchor and doc-comment updated to match. (4) Date-monotonicity (Gate #28 Rule 4 TEMPORAL-NEIGHBOR SWEEP): entry 2.49 date 2026-07-22 → 2026-07-23 (burst-240 ran on 2026-07-23)."
-  - "2.56 (sibling-sweep-ADR-016/burst-272/2026-07-25): §LcSerializable and Reviver Surface BC anchor footer — corrected three ADR-016 Decision mis-attributions found during mandatory sibling sweep (TD-VSDD-060). (1) Decision 1 description expanded from bare '(LcSerializable trait)' to '(crate placement — ferrochain-core module, no new crate)'; LcSerializable trait definition is in Decision 2, not Decision 1. (2) Decision 2 description corrected from '(Serialized enum)' to '(LcSerializable trait, Serialized enum, LcEntry; inventory-backed OnceLock type registry)'; Decision 2 is the registry/inventory Decision covering all three types plus OnceLock initialization. (3) Decision 4 description corrected from '(inventory crate 0.3.24, dtolnay; OnceLock initialization)' to '(OLD_CORE_NAMESPACES_MAPPING legacy namespace remapping)'; inventory/OnceLock is Decision 2; version pin '0.3.24' removed (TD-VSDD-091). (4) Decision 5 removed from citation; this section covers crate placement, trait/enum/registry definition, secrets/allowlist safety, and legacy remapping (Decisions 1–4) but contains no Python checkpoint import compatibility surface — Decision 5's domain. (5) Decision 3 description expanded to include Reviver allowlist containment and E-SRLZ-002 per §Security Invariant Properties 1–5, which is the correct Decision for those behaviors (previously mis-attributed to Decision 5)."
-  - "2.55 (F-P170-17+F-P170-propagation/burst-272/2026-07-25): (1) F-P170-17 MED: §Prompt Templates BC anchor footer — split Decision 3 and Decision 4 attributions. Before: 'Decision 3 (injection_guard fail-closed semantics), Decision 4 (TrustLevel enum — engine-neutral; both f-string and jinja2 raise E-TMPL-003 on undefined variable)'. After: 'Decision 3 (injection_guard fail-closed semantics; TrustLevel enum), Decision 4 (engine-neutral E-TMPL-003 — both f-string and jinja2 raise on undefined variable)'. TrustLevel is defined in ADR-015 Decision 3; E-TMPL-003 engine-neutral clause is Decision 4. (2) F-P170-propagation: §PreToolCallHook — ActionRisk enum crate/module corrected to ferrochain-core: core::action_risk per F-P170-06 architect adjudication. Source line updated to cite ferrochain-core (ActionRisk) + ferrochain-graph::hitl (PreToolCallHook + re-export). Code block split: ActionRisk in ferrochain-core block, PreToolCallHook/ToolCallPreview/PreToolDecision in ferrochain-graph block with re-export note."
+  - "2.64 (FIX-BURST-278/Wave-C-S4+S5/2026-07-28): S4 canon — three lines citing Arc<dyn Tool> (non-object-safe E0038) as a migration origin annotated with non-object-safe qualifier to satisfy verify-signature-canon.sh S4 gate exemption. S5 canon — five PregolyaError doc-comment examples in Rust fences collapsed to abbreviated PregolyaError { code: \"E-XXX\", .. } form per D-42/D-49: (1) DynRunnable # Errors E-CORE-004 (Unicode ellipsis → ASCII ..); (2) BaseChatModel bind_tools E-CORE-005 (two-line multifield doc → single-line abbreviated); (3) CheckpointSaver put E-CHKPT-005 (two-field abbreviated → single-field abbreviated with ..); (4) GuardrailHook evaluate E-CORE-007 (unquoted code string quoted, two-field → abbreviated with ..); (5) ProviderFallbackPolicy new E-PROV-011 (two-line multifield doc → single-line abbreviated, unquoted code string quoted)."
+  - "2.63 (FIX-BURST-278/F-P175-D48+D208+D212/2026-07-28): Three findings closed. (1) F-P175-D48 — `as_retriever` receiver corrected to `self: Arc<Self>` (dyn-compatible; see ADR-014 §Decision 2); stale 'Wave C PO correction pending' note removed. (2) F-P175-D208 — add `#[derive(Serialize)]` to `ToolOutput` enum (required for blanket `DynTool` impl to convert `ToolOutput` to `serde_json::Value`); blanket impl comment updated to document that `ToolOutput::Error(String)` maps to `Err(PregolyaError)` — not `Ok(json)` — to prevent silent-error-swallow violation per DI-014 / BC-5.39.001. (3) F-P175-D212 — `core::tools` → `core::tool` (singular) in §Tool subsection module comment per BC-2.08.010 Architecture Anchors canonical form."
+  - "2.62 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Add §DynTool trait definition (pregolya-core: core::tool) — fulfills ADR-005 §Adjacent Trait Object-Safety Adjudications promise 'DynTool definition added to interface-definitions.md'; omitted from v2.61. DynTool: object-safe façade replacing Arc<dyn Tool> (non-object-safe E0038) dispatch; exposes invoke_dyn + 4 metadata accessors; blanket impl for T: Tool + Send + Sync + 'static; mirrors DynRunnable pattern. Inserted after ToolOutput enum in §Tool subsection. ADR-005 §Adjacent Trait Object-Safety Adjudications carries the corrected Wave C migration list (BC-2.09.001 Description+PC2 + BC-2.09.002 PC1; prior v1.8 list citing BC-2.05.003/BC-2.05.004/BC-2.08.010 was incorrect)."
+  - "2.61 (FIX-BURST-277-WAVE-B/F-P174-constructor+F-P174-retriever-lifetime+F-P174-as-retriever-fallible+F-P174-303/2026-07-27): (1) F-P174-constructor: add §PregolyaError Constructor (before §BaseChatModel) — `PregolyaError::new(component, category, retry_hint, code, message: impl Into<String>) -> Self` and `with_source(self, Arc<dyn Error+Send+Sync>) -> Self` per ADR-010; `#[non_exhaustive]` bars struct-literal from external crates; these are the sole construction paths. (2) F-P174-retriever-lifetime: the lifetime-parameterized `VectorStoreRetriever` (with `'a` parameter) → `VectorStoreRetriever` (no lifetime); `store: &'a dyn VectorStore` → `store: Arc<dyn VectorStore>`; `VectorStoreRetriever` is now `'static` for `Arc<dyn Retriever + 'static>` coercion. (3) F-P174-as-retriever-fallible: `fn as_retriever` (with `&self` receiver, returning the lifetime-parameterized type) → `fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>`; returns `Err(E-VS-003)` on invalid config. Impl Retriever updated accordingly. (4) F-P174-303: purge phantom 2-arg `PregolyaError::new(\"E-VS-005\", \"...\")` call in `similarity_search_with_filter` default — replace with canonical 5-arg constructor `PregolyaError::new(Component::Vs, Category::Val, RetryHint::Never, \"E-VS-005\", \"...\")` per ADR-010."
+  - "2.60 (F-P173-606+F-P173-607+F-P173-608+F-P173-609+F-P173-610+BC-2.08.004-anchor/fix-burst-276/2026-07-27): Six HIGH findings from adversarial pass P1D-173 content wave 3. (1) F-P173-606: §BaseChatModel Gate #31 type note — retired 'corpus-unresolved / implementer defines' for ChatConfig; replaced with spec-anchored partial definition: mandatory field `fallback_policy: Option<ProviderFallbackPolicy>` sourced from BC-2.08.014 Description and BC-2.08.014 PC1; module placement module-decomposition.md §core::config SS-01; provider-specific parameters documented as per-provider extensions. (2) F-P173-607: §ProviderFallbackPolicy — replaced 'UNRESOLVED (implementer-scope) / flagged for architect' notes on ProviderCredential and CredentialRefreshConfig with unconditional DI-010 obligations: both types MUST implement `Debug` rendering only '<redacted>'; canonical impl form documented; per-provider shape acknowledged as implementation-defined but DI-010 is unconditional. (3) F-P173-609: added new §Tool subsection (before §First-Party Tools) declaring `pub trait Tool` in pregolya-core: core::tools — methods name/description/schema/action_risk from BC-2.08.010 PC1; `ToolInput(serde_json::Value)` struct; `#[non_exhaustive] ToolOutput` enum with Text/Json/Error variants from BC-2.23.001-006 and BC-2.05.007 PC2 (Deny → Error); PathGuard::check phantom NOT reintroduced; ADR-020 Decision 1 source cited. (4) F-P173-608: §First-Party Tools ToolConfig — added private `minimum_risk: ActionRisk` field note as the per-tool identity discriminator that makes VP-013 provable (BashTool sets minimum_risk=Medium at construction; override_risk validates risk >= minimum_risk; exhaustive Kani proof over 4 D-25 variants); doc comment updated from 'Errors (BashTool)' to general 'Errors: when risk < self.minimum_risk'; D-25/D-26/D-27/D-30 all preserved. (5) F-P173-610: §ProviderFallbackPolicy — made `chain` field private (prevents struct-literal bypass of non-empty invariant); added `impl ProviderFallbackPolicy` with `new(chain: Vec<ProviderCredential>) -> Result<Self, PregolyaError>` constructor returning E-PROV-011 when empty (BC-2.08.014 EC-006/TV-007); #[non_exhaustive] added to struct. (6) BC-2.08.004 anchor (routed from content wave 2): replaced cross-check note 'orphaned BC until architect adjudicates' with correct anchoring — `has_tool_calling(&self) -> bool` method added to BaseChatModel trait (BC-2.08.002 EC-005/TV-005 guard); BC-2.08.004 anchored at stream_chat per-method as cross-cutting error-fidelity conformance (all provider HTTP 4xx/5xx must map to typed PregolyaError); trait-level anchor block added documenting cross-cutting scope covering both invoke and stream_chat paths."
+  - "2.59 (F-P173-101+F-P173-102+F-P173-701/fix-burst-276/2026-07-27): Three HIGH source-attribution findings from adversarial pass P1D-173. (1) F-P173-101: §PreToolCallHook Source — added ADR-020 Decision 1 as primary source (ActionRisk relocation to pregolya-core: core::action_risk; pregolya-tools cross-crate compile-time consumer motivation; sole authority for ToolCallPreview.action_risk type placement); corrected fail-closed Deny anchor from 'Decision 4' to 'Decision 3 step 4' — ADR-018 Decision 3 step 4 verbatim: Deny { reason } → ToolOutput::Error; tool never invoked; VP-011 Kani P0. (2) F-P173-102: §Compaction Source — corrected CompactionPolicy trait attribution from Decision 2 to Decision 1 (ADR-019 Decision 1 defines all core::budget type definitions: CompactionTrigger, ConversationSnapshot, CompactionSummary, and CompactionPolicy trait; Decision 2 is BudgetConfig extensions: compaction_trigger + compaction_policy fields); corrected mid-run/next-run distinction attribution from Decision 5 to Decision 3 (ADR-019 Decision 3 canonical: 'mid-run state mutation — applies immediately to current run's message window, not next-run'; Decision 5 is CAP-017 Wave Promotion Interaction within-session vs cross-session additive design); BC anchor aligned to ADR-019 Decision 3 canonical language: 'mid-run REPLACEMENT' → 'mid-run state mutation per ADR-019 Decision 3'; BC-2.15.006 NEXT-run description updated with ADR-019 Decision 3 anchor. No phantom on_watermark symbol present or introduced. (3) F-P173-701 (mis-citation class): §VectorStore BC anchor footer — all ADR-014 citations enumerated; per-site corrections: (a) 'Decision 3 (InMemoryVectorStore)' WRONG — ADR-014 Decision 3 is SS-15 Boundary Definition MemoryStore vs VectorStore, zero InMemoryVectorStore content → removed; replaced with ADR-017 Decision 4 (InMemoryVectorStore — Arc<dyn Embeddings> DI + RwLock interior mutability; Arc-DI wiring at construction time; ADR-017 Decision 4 verbatim 'no placeholder construction' invariant); (b) 'Decision 4 (zero-norm guard E-VS-001)' WRONG — ADR-014 Decision 4 is External Adapter Extension Seam via inventory crate → corrected to 'ADR-014 Decision 2 §Hardening note (search-time zero-norm guard E-VS-001)'; (c) 'Decision 5 (write-time zero-norm guard E-VS-004)' CORRECT — kept unchanged. Two correct citations left unchanged: Source line (ADR-014 Decision 2) and similarity_search_with_filter comment (ADR-014 Decision 2 §Metadata filter surface F-P131-07 adjudication). Summary: 2 wrong citations corrected, 1 new ADR-017 Decision 4 citation added, 2 correct citations preserved."
+  - "2.58 (F-P173-601+F-P173-602+F-P173-603+F-P173-604+F-P173-605+F-P173-614/2026-07-27): Five signature findings from adversarial pass P1D-173. (1) F-P173-601 CRITICAL: §First-Party Tools — deleted erroneous PathGuard struct/impl block that declared PathGuard in pregolya-tools with a non-canonical check() method. Replaced with a consumption note citing the authoritative owner (pregolya-sandbox, sandbox::path_guard, SS-13, BC-2.13.004, VP-003 Kani P0) and the two confinement entry points (canonicalize_beneath_root_pure/canonicalize_beneath_root); error layer split documented (E-SBXD-001 sandbox layer → E-TOOLS-001 tool layer). BC anchor in §First-Party Tools corrected: 'BC-2.23.001-006 shared PathGuard invariant' → 'consumes BC-2.13.004 PathGuard' per tool; PathGuard ownership row added. (2) F-P173-602 HIGH: §BaseChatModel bind_tools — removed async (construction-time validation, no I/O per BC-2.08.002 EC-005); corrected return type from bare 'impl BaseChatModel' to 'Result<impl BaseChatModel, PregolyaError>'; added # Errors doc block citing Err(E-CORE-005) when has_tool_calling=false (BC-2.08.002 EC-005/TV-005). (3) F-P173-603 HIGH: §BaseChatModel with_structured_output — added required schema: serde_json::Value parameter per BC-2.08.003 PC/EC-002/EC-003; added schemars::JsonSchema bound to T per BC-2.08.009; added per-method anchor citation. (4) F-P173-604 HIGH: §Runnable pipe — corrected return type from opaque 'impl Runnable<Input, NextOutput>' to concrete 'RunnableSequence<Input, NextOutput>' per BC-2.01.004 PC1/PC4/TV-002; added doc comment citing flattening invariant. (5) F-P173-605 HIGH: added new §DynRunnable and RunnableSequence section to §Public Rust Trait Signatures (pregolya-core: core::runnable) — DynRunnable object-safe trait with async invoke and boxed-stream stream method (ADR-005 dyn-compat pattern; BC-2.01.003 EC-001 + BC-2.01.004 PC5/EC-001/TV-004); RunnableSequence<I,O> struct with first/middle/last/PhantomData fields (BC-2.01.004 PC1/PC4/TV-002). (6) F-P173-614 HIGH: expanded bare BC-ID anchors in §Runnable and §BaseChatModel to per-method precision; per-method cross-check run — §Runnable PASS (all 4 methods anchored, no orphan BCs); §BaseChatModel PASS with one flag: BC-2.08.004 unmapped to a declared method (flagged for architect adjudication in cross-check note). TD-VSDD-060 sibling sweep results: see report in this burst."
+  - "2.57 (F-P171a-02a+F-P171a-02b+F-P171a-03+date-mono/burst-273/2026-07-25): (1) F-P171a-02a Gate #32 carrier-3: Add §ToolConfig subsection to §First-Party Tools — ToolConfig struct in pregolya-tools::tools::config; override_risk(self, risk: ActionRisk) -> Result<ToolConfig, PregolyaError> builder-consuming validator; BashTool risk < Medium → Err(E-TOOLS-007); #[non_exhaustive]; distinct from BashConfig (per-tool impl config). (2) F-P171a-02b lifecycle adjudication: §PreToolCallHook ActionRisk doc-comment — 'BashTool construction time' → 'ToolConfig::override_risk call time'; §First-Party Tools BashTool doc-comment updated to same lifecycle language. (3) F-P171a-03: BashTool canonical annotation corrected ActionRisk::Medium → ActionRisk::High (default declared annotation; Medium is the non-lowerable floor, not the default); BC anchor and doc-comment updated to match. (4) Date-monotonicity (Gate #28 Rule 4 TEMPORAL-NEIGHBOR SWEEP): entry 2.49 date 2026-07-22 → 2026-07-23 (burst-240 ran on 2026-07-23)."
+  - "2.56 (sibling-sweep-ADR-016/burst-272/2026-07-25): §LcSerializable and Reviver Surface BC anchor footer — corrected three ADR-016 Decision mis-attributions found during mandatory sibling sweep (TD-VSDD-060). (1) Decision 1 description expanded from bare '(LcSerializable trait)' to '(crate placement — pregolya-core module, no new crate)'; LcSerializable trait definition is in Decision 2, not Decision 1. (2) Decision 2 description corrected from '(Serialized enum)' to '(LcSerializable trait, Serialized enum, LcEntry; inventory-backed OnceLock type registry)'; Decision 2 is the registry/inventory Decision covering all three types plus OnceLock initialization. (3) Decision 4 description corrected from '(inventory crate 0.3.24, dtolnay; OnceLock initialization)' to '(OLD_CORE_NAMESPACES_MAPPING legacy namespace remapping)'; inventory/OnceLock is Decision 2; version pin '0.3.24' removed (TD-VSDD-091). (4) Decision 5 removed from citation; this section covers crate placement, trait/enum/registry definition, secrets/allowlist safety, and legacy remapping (Decisions 1–4) but contains no Python checkpoint import compatibility surface — Decision 5's domain. (5) Decision 3 description expanded to include Reviver allowlist containment and E-SRLZ-002 per §Security Invariant Properties 1–5, which is the correct Decision for those behaviors (previously mis-attributed to Decision 5)."
+  - "2.55 (F-P170-17+F-P170-propagation/burst-272/2026-07-25): (1) F-P170-17 MED: §Prompt Templates BC anchor footer — split Decision 3 and Decision 4 attributions. Before: 'Decision 3 (injection_guard fail-closed semantics), Decision 4 (TrustLevel enum — engine-neutral; both f-string and jinja2 raise E-TMPL-003 on undefined variable)'. After: 'Decision 3 (injection_guard fail-closed semantics; TrustLevel enum), Decision 4 (engine-neutral E-TMPL-003 — both f-string and jinja2 raise on undefined variable)'. TrustLevel is defined in ADR-015 Decision 3; E-TMPL-003 engine-neutral clause is Decision 4. (2) F-P170-propagation: §PreToolCallHook — ActionRisk enum crate/module corrected to pregolya-core: core::action_risk per F-P170-06 architect adjudication. Source line updated to cite pregolya-core (ActionRisk) + pregolya-graph::hitl (PreToolCallHook + re-export). Code block split: ActionRisk in pregolya-core block, PreToolCallHook/ToolCallPreview/PreToolDecision in pregolya-graph block with re-export note."
   - "2.54 (F-P161-01/FIX-BURST-262/2026-07-25): Three BC-2.10.003 version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P161-01). All three sites were NORMATIVE authority citations in §OnCeiling and §BudgetInfo. (1) OnCeiling enum doc comment authority line: 'BC-2.10.003 v1.2 (Halt + Summarize variants for Deny)' → 'BC-2.10.003 (Halt + Summarize variants for Deny)'. (2) BudgetInfo RESOLVED block Authority line: 'BC-2.10.003 v1.2 PC5' → 'BC-2.10.003 PC5'. (3) BC anchor footer BudgetPolicy block: 'BC-2.10.003 v1.2 (OnCeiling Halt + Summarize variants; PC5/INV/TV-007 BudgetInfo shape and arithmetic)' → 'BC-2.10.003 (OnCeiling Halt + Summarize variants; PC5/INV/TV-007 BudgetInfo shape and arithmetic)'."
   - "2.53 (F-P151-01/03/burst-252/2026-07-24): Compaction type canon aligned to ADR-019 v1.4 (adjudicated authority). (1) §Compaction CompactionTrigger enum — F-P151-01: `OnMessageCount { threshold: usize }` → `OnMessageCount { count: usize }` (+doc comment 'reaches or exceeds `count`'); F-P151-01: `OnTokenCount { threshold: u64 }` → `OnTokenCount { tokens: u64 }` (+doc comment). (2) /stream endpoint row — F-P151-03: compaction_event SSE prose 'carries run_id, trigger, compacted_turns, summary_token_count, tokens_remaining_after' → 'carries run_id, trigger, parent_ids, compacted_start, compacted_end, summary_token_count, tokens_remaining_after' (flat wire shape, parent_ids mandatory per BC-2.06.002 Inv-2)."
   - "2.52 (F-P149-02/burst-250/2026-07-24): Two live-body version pins de-pinned (TD-VSDD-091 stable-anchor enforcement, F-P149-02). (1) §GuardedDocuments rag_ingress doc comment: 'ADR-014 v1.5' → 'ADR-014 Decision 6 §GuardedDocuments' (severity-bifurcated Fail behavior is defined in Decision 6 rag_ingress code). (2) similarity_search_with_filter default body comment: 'ADR-014 v1.5 F-P131-07 adjudication' → 'ADR-014 Decision 2 §Metadata filter surface F-P131-07 adjudication' (F-P131-07 adjudication is embedded in Decision 2 §Metadata filter surface subsection)."
-  - "2.51 (F-P145-01+F-P145-04, burst-246, 2026-07-23): (1) F-P145-01: §First-Party Tools BashTool stub — default max_duration corrected 120s→30s to match canon (BC-2.23.005 H1/Description/PC1/EC-002/TV-004/DI-015 chain, ADR-020 Decision 2, ubiquitous-language-core). TD-VSDD-060 sweep: rg 'max_duration|120s|120 s' .factory/specs/ — sole 120s live-body site was this line; all other max_duration references already read 30s/30 seconds; zero further residue. (2) F-P145-04: §First-Party Tools opening sentence — over-generalization 'All tools use PathGuard' reworded to distinguish the five file-access tools (PathGuard-confined) from BashTool (ferrochain-sandbox-confined per BC-2.23.005); 'All tools implement the Tool trait' clause preserved."
+  - "2.51 (F-P145-01+F-P145-04, burst-246, 2026-07-23): (1) F-P145-01: §First-Party Tools BashTool stub — default max_duration corrected 120s→30s to match canon (BC-2.23.005 H1/Description/PC1/EC-002/TV-004/DI-015 chain, ADR-020 Decision 2, ubiquitous-language-core). TD-VSDD-060 sweep: rg 'max_duration|120s|120 s' .factory/specs/ — sole 120s live-body site was this line; all other max_duration references already read 30s/30 seconds; zero further residue. (2) F-P145-04: §First-Party Tools opening sentence — over-generalization 'All tools use PathGuard' reworded to distinguish the five file-access tools (PathGuard-confined) from BashTool (pregolya-sandbox-confined per BC-2.23.005); 'All tools implement the Tool trait' clause preserved."
   - "2.50 (F-P142-01+F-P142-03, burst-242, 2026-07-23): (1) F-P142-01: §First-Party Tools — three CreateFileTool phantom sites replaced with ListDirTool per BC-2.23.004 H1: BC anchor BC-2.23.004 label, PathGuard shared-list doc comment, and tool stub comment+description. (2) F-P142-03: Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form at 6 sites (L835 ToolApprovalResolved emission comment, L881 causal ordering diagram, L921 BC-2.06.005 StreamEvent BC anchor, L931 §PreToolCallHook BC anchor BC-2.05.004 citation, L969 PendingHumanApproval doc comment, L1631 /stream endpoint row). Zero Command:: enum-variant and CreateFileTool residue remains."
-  - "2.49 (burst-240/F-P140-04/2026-07-23): Blanket omission annotation updated — E-MCP-006 McpContentUnsupported (VAL/Never, minted burst-240) added to E-MCP-* namespace (5→6 codes). E-MCP-006 confirmed library-layer only: raised by _convert_mcp_content_to_block in ferrochain-mcp when a CallToolResult contains an unsupported content block type (e.g., AudioContent); surfaces as library Err(FerrochainError) return, never as a direct HTTP terminal response in v1 (propagates embedded in Run.error if it reaches ferrochain-server). Disposition census 107→108: 43 HTTP + 17 individual + 48 blanket. Blanket group breakdown: E-MCP-* 6 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 48."
-  - "2.48 (burst-236/F-P136/2026-07-23): Fix burst 236 placement-marker corrections (five findings + sweep). (1) F-P136-01: §Retriever Trait/GuardedDocuments placement marker `core::guardrail` → `core::retriever` (ADR-014 Decision 6; GuardedDocuments struct and rag_ingress are in core::retriever, not core::guardrail); §-source line drops `, core::guardrail`. (2) F-P136-02: §PreToolCallHook three co-located fixes per ADR-018 Decision 1 + BC-2.05.007: (a) module `graph::approval` → `graph::hitl` in both §-source and code-block marker; (b) trait method `pre_tool_dispatch` → `pre_invoke`; (c) restore dropped second parameter `run_ctx: &RunContext`. (3) F-P136-03: §Compaction type-definition marker `ferrochain-graph: graph::budget` → `ferrochain-core: core::budget` for CompactionTrigger/ConversationSnapshot/CompactionSummary/CompactionPolicy (ADR-019 Decision 1); §-source extended to note execution engine in graph::budget. (4) F-P136-04: StreamEvent::CompactionEvent.tokens_remaining_after type `u64` → `Option<i64>` (source is RunContext.budget_info.tokens_remaining: Option<i64>; three-site reconciliation with BC-2.06.006 v1.2 and BC-2.10.006 v1.3). (5) F-P136-05: §PreToolCallHook BC anchors re-attributed — BC-2.05.004 (Command(resume=value) API) removed from trait/ToolCallPreview/PreToolDecision/fail-closed description; BC-2.05.007 is the authoritative contract; BC-2.05.004 retained only for Command::Resume(PreToolDecision) resume-API role. Sweep also corrects PreToolDecision variant shapes to ADR-018 Decision 1 / BC-2.05.007: Deny { reason: String }, Edit { modified_args: serde_json::Value }, PendingHumanApproval { prompt: Option<String> }."
+  - "2.49 (burst-240/F-P140-04/2026-07-23): Blanket omission annotation updated — E-MCP-006 McpContentUnsupported (VAL/Never, minted burst-240) added to E-MCP-* namespace (5→6 codes). E-MCP-006 confirmed library-layer only: raised by _convert_mcp_content_to_block in pregolya-mcp when a CallToolResult contains an unsupported content block type (e.g., AudioContent); surfaces as library Err(PregolyaError) return, never as a direct HTTP terminal response in v1 (propagates embedded in Run.error if it reaches pregolya-server). Disposition census 107→108: 43 HTTP + 17 individual + 48 blanket. Blanket group breakdown: E-MCP-* 6 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 48."
+  - "2.48 (burst-236/F-P136/2026-07-23): Fix burst 236 placement-marker corrections (five findings + sweep). (1) F-P136-01: §Retriever Trait/GuardedDocuments placement marker `core::guardrail` → `core::retriever` (ADR-014 Decision 6; GuardedDocuments struct and rag_ingress are in core::retriever, not core::guardrail); §-source line drops `, core::guardrail`. (2) F-P136-02: §PreToolCallHook three co-located fixes per ADR-018 Decision 1 + BC-2.05.007: (a) module `graph::approval` → `graph::hitl` in both §-source and code-block marker; (b) trait method `pre_tool_dispatch` → `pre_invoke`; (c) restore dropped second parameter `run_ctx: &RunContext`. (3) F-P136-03: §Compaction type-definition marker `pregolya-graph: graph::budget` → `pregolya-core: core::budget` for CompactionTrigger/ConversationSnapshot/CompactionSummary/CompactionPolicy (ADR-019 Decision 1); §-source extended to note execution engine in graph::budget. (4) F-P136-04: StreamEvent::CompactionEvent.tokens_remaining_after type `u64` → `Option<i64>` (source is RunContext.budget_info.tokens_remaining: Option<i64>; three-site reconciliation with BC-2.06.006 v1.2 and BC-2.10.006 v1.3). (5) F-P136-05: §PreToolCallHook BC anchors re-attributed — BC-2.05.004 (Command(resume=value) API) removed from trait/ToolCallPreview/PreToolDecision/fail-closed description; BC-2.05.007 is the authoritative contract; BC-2.05.004 retained only for Command::Resume(PreToolDecision) resume-API role. Sweep also corrects PreToolDecision variant shapes to ADR-018 Decision 1 / BC-2.05.007: Deny { reason: String }, Edit { modified_args: serde_json::Value }, PendingHumanApproval { prompt: Option<String> }."
   - "2.47 (burst-233/F-P133-03/2026-07-22): E-TOOLS-* blanket annotation updated — 7→9 codes (+E-TOOLS-008 FileIoError TOOL/Maybe, +E-TOOLS-009 InvalidRegexPattern VAL/Never, minted burst-233). Disposition census 105→107 (43 HTTP + 17 individual + 47 blanket). Blanket group breakdown: E-MCP-* 5 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 47."
   - "2.46 (D23/2026-07-22): Add D23 API surfaces. (1) StreamEvent enum 12→15 variants: +ToolApprovalRequest (event 13, PendingHumanApproval interrupt signal per ADR-018 Decision 5), +ToolApprovalResolved (event 14, resume decision applied), +CompactionEvent (event 15, post-compaction durable write per ADR-019 Decision 4) — causal ordering diagram updated. BC-2.06.004/005/006 anchor refs added to §StreamEvent. (2) §PreToolCallHook section added: ActionRisk enum (4 tiers: ReadOnly/Low/Medium/High), ToolCallPreview struct (tool_name, tool_args, action_risk: Option<ActionRisk>), PreToolDecision enum (4 variants: Approve/Deny/Edit/PendingHumanApproval), PreToolCallHook trait; source ADR-018 Decision 2–6. (3) §Compaction section added: CompactionTrigger enum (4 variants: Disabled/OnWatermark/OnMessageCount/OnTokenCount), ConversationSnapshot struct, CompactionSummary struct, CompactionPolicy trait; source ADR-019 Decision 1–5. (4) §First-Party Tools section added: PathGuard struct (E-TOOLS-001 sandbox confinement); ReadFileTool/WriteFileTool/EditFileTool/CreateFileTool/BashTool/GrepTool comment anchors. (5) /stream endpoint row: added tool_approval_request, tool_approval_resolved, compaction_event event mentions (D23/ADR-018/ADR-019). (6) Blanket omission annotation: E-TOOLS-* 7 new codes added; census 98→105 (43 HTTP + 17 individual + 45 blanket)."
   - "2.45 (burst-227/F-P132-02/2026-07-21): §ChatPromptTemplate — complete BC-2.18.x anchor swap from burst-226 partial-propagation. (1) SlotTrustPolicy doc anchor: BC-2.18.003 PC1-PC2 (MessagesPlaceholder!) → BC-2.18.002 PC4 (slot_trust_policy field) + BC-2.18.005 PC1-PC5 (construction-time policy guard). (2) from_messages anchor: BC-2.18.001 PC1 (PromptTemplate construction!) → BC-2.18.002 PC1 (ChatPromptTemplate construction). (3) PromptValue struct anchor: BC-2.18.001 PC3 (input_variables()!) → BC-2.18.002 PC2 (PromptValue.messages). (4) MessageProvenance struct anchor: BC-2.18.003 PC2-PC3 (MessagesPlaceholder!) → BC-2.18.002 PC3-PC4 (highest_trust_level + slot_trust_policy). (5) Footer: BC-2.18.001 description corrected to PromptTemplate F-String scope; BC-2.18.003 description corrected to MessagesPlaceholder/FewShot scope; BC-2.18.005 description corrected to construction guard scope."
@@ -39,13 +39,13 @@ changelog:
   - "2.40 (F-P124-01, fix burst 127, 2026-07-19): §MemoryStore — E-MEMORY-003 ScopeAccessDenied raise-site mis-anchored to memory_get; BC wins (BC-2.15.002 Invariant defines it as a WRITE error; PC1/TV-001 define cross-owner READ as Ok(None) — isolation-by-invisibility). Three changes: (1) memory_set docstring: added E-MEMORY-003 ScopeAccessDenied raise site with full struct form { requested_scope, caller_identity } (BC-2.15.002 Invariant). (2) memory_get docstring: removed E-MEMORY-003 raise site; replaced with BC-true cross-owner read semantics documenting isolation-by-invisibility (cross-owner reads return Ok(None) per BC-2.15.002 PC1/TV-001); E-MEMORY-004 NoScopeContext placement retained (correct per BC-2.15.002 EC-001). (3) BC anchor footer: E-MEMORY-003 re-anchored from memory_get to memory_set. Sweep of E-MEMORY-001/002/004: all PASS (E-MEMORY-001 on vector_search correct per BC-2.15.001 EC-001; E-MEMORY-002 on memory_set correct per BC-2.15.001 EC-004; E-MEMORY-004 on memory_get correct per BC-2.15.002 EC-001)."
   - "2.39 (OBS-P123-b, fix burst 126, 2026-07-19): §Public Rust Trait Signatures — add §MemoryStore block (OBS-P123-b promoted to blocker under production-grade lens). Derived strictly from BC-2.15.001 PC1–PC7 (6-method surface: memory_set/memory_get/memory_delete/memory_search/vector_search/hybrid_search) + BC-2.15.002 MemoryScope tier-isolation semantics (scope parameter on every method; storage-layer WHERE-predicate enforcement). Supporting types: MemoryScope enum (3 variants: User/App/Session) and MemoryEntry struct (scope/key/value/author_id) defined inline. Error raise sites cited per-method: E-MEMORY-001 (vector_search EC-001), E-MEMORY-002 (memory_set EC-004), E-MEMORY-003 (memory_get scope-mismatch per BC-2.15.002 Invariant, opt-in enforcement), E-MEMORY-004 (memory_get BC-2.15.002 EC-001). BC-2.15.003 GDPR erasure confirmed NOT a trait method (standalone admin fn requiring AdminContext); excluded. memory_delete_session (BC-2.15.002 Invariant) confirmed standalone store fn, not a trait method; excluded from the 6-method surface. Gate #31: MemoryScope RESOLVED, MemoryEntry RESOLVED, query_embedding RESOLVED. Cross-check: api-surface.md MemoryStore BC anchor range BC-2.15.001–003 verified accurate (no architect routing required). Ubiquitous-language-server.md MemoryStore entry (line 142) in sync. BC-2.15.006 PC1 method-name drift fixed in this burst (MemoryStore::get → MemoryStore::memory_get; MemoryScope::App scope type made explicit; EC-001 and Architecture Anchors updated; BC-2.15.006 version 1.1 → 1.2)."
   - "2.38 (F-P117-01, fix burst 120, 2026-07-19): summary_halt promoted to first-class terminal Run status throughout (Option 1 adjudication — BC-2.10.003 PC8(d) is authoritative). (1) §Run Object Schema status enum: add 'summary_halt' (in_progress → summary_halt via OnCeiling::Summarize per BC-2.10.003 PC8(d)). (2) status description: state machine enumeration gains '| summary_halt'. (3) completed_at terminal set: add 'summary_halt'. (4) output note: 'present only when status=completed or status=summary_halt; for summary_halt output=summarize model response (BC-2.10.003 PC8(c))'. (5) §Runs HTTP table GET runs filter: add summary_halt to status filter enumeration. (6) §Runs HTTP table DELETE runs description: add summary_halt to deletable terminal states."
-  - "2.37 (F-P116-01, 2026-07-19): §CheckpointSaver — dyn-compatibility fixes per ADR-005 v1.3 §Object-Safety (F-P116-01). (A) `get_next_version` provided-method receiver: `&self` added as first parameter (was receiver-less, causing E0038 on Arc<dyn CheckpointSaver>). Rationale: dyn-compatibility requires a receiver on every non-Sized-bounded method; virtual dispatch of backend overrides through Arc<dyn CheckpointSaver> vtable requires &self; langgraph BaseCheckpointSaver.get_next_version is an instance method — prior 'static method' parity claim corrected (F-P116-01). Default body unchanged — still delegates to MonotonicClock::get_next_version(current, channel), ignoring &self. (B) `list` return type: `Result<impl Stream<Item = Result<CheckpointTuple, FerrochainError>>, FerrochainError>` → `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>`. Rationale: `impl Stream` opaque return is NOT dyn-compatible even with async-trait desugaring (E0038); Pin<Box<dyn Stream<Item = ...> + Send>> is the established dyn-compatible boxed-stream pattern for object-safe async traits. Authority: ADR-005 v1.3 §Object-Safety of the 5-Method CheckpointSaver Trait."
+  - "2.37 (F-P116-01, 2026-07-19): §CheckpointSaver — dyn-compatibility fixes per ADR-005 v1.3 §Object-Safety (F-P116-01). (A) `get_next_version` provided-method receiver: `&self` added as first parameter (was receiver-less, causing E0038 on Arc<dyn CheckpointSaver>). Rationale: dyn-compatibility requires a receiver on every non-Sized-bounded method; virtual dispatch of backend overrides through Arc<dyn CheckpointSaver> vtable requires &self; langgraph BaseCheckpointSaver.get_next_version is an instance method — prior 'static method' parity claim corrected (F-P116-01). Default body unchanged — still delegates to MonotonicClock::get_next_version(current, channel), ignoring &self. (B) `list` return type: `Result<impl Stream<Item = Result<CheckpointTuple, PregolyaError>>, PregolyaError>` → `Pin<Box<dyn Stream<Item = Result<CheckpointTuple, PregolyaError>> + Send>>`. Rationale: `impl Stream` opaque return is NOT dyn-compatible even with async-trait desugaring (E0038); Pin<Box<dyn Stream<Item = ...> + Send>> is the established dyn-compatible boxed-stream pattern for object-safe async traits. Authority: ADR-005 v1.3 §Object-Safety of the 5-Method CheckpointSaver Trait."
   - "2.36 (F-P115-02, 2026-07-19): §CheckpointSaver — add `put` and `get_next_version` methods (trait becomes 5-method). (A) `put` method: persists full checkpoint state blob; called once per run under DurabilityTier::Exit or at run completion (BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003); encrypted when EncryptedSerializer active (BC-2.04.007 PC1); raises E-CHKPT-005 on tenant-context conflict (BC-2.04.006 EC-005). BC anchor annotations: BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003, BC-2.04.006 PC2, BC-2.04.007 PC1+INV-1. (B) `get_next_version` provided method: default impl delegates to MonotonicClock::get_next_version; implementors MAY override; channel param accepted for API compatibility only (BC-2.04.003 PC1/PC5); E-CHKPT-002 on u64 overflow. BC anchor line extended: BC-2.04.001 through BC-2.04.007 with per-method precision. Gate #31 type note extended: Checkpoint and CheckpointMetadata (entities-graph.md §Checkpoint), CheckpointId (ADR-005 / BC-2.04.003 newtype over u64) added. Architect routing: api-surface.md CheckpointSaver row BC range 001–006 is now stale (needs 001–007); flagged for architect."
   - "2.35 (F-P100-02, 2026-07-17): Citation-completeness amendment — no behavioral change. /stream endpoint row BC citation extended from 'BC-2.11.002 PC3/PC4' to 'BC-2.11.002/003/004 PC3/PC4 (per-boundary)'. §StreamEvent BC anchor extended: BC-2.11.003 PC3/PC4 (GuardrailDecision emitted on Fail/Transform for RagChunk boundary) and BC-2.11.004 PC3/PC4 (GuardrailDecision for MemoryItem boundary) added alongside existing BC-2.11.002 PC3/PC4 (ToolResult boundary). GuardrailDecision fires symmetrically at all three ingress boundaries; prior citations listed only the ToolResult boundary BC. ADR-006 rev-4 is co-artifact."
   - "2.34 (F-P99-01, 2026-07-17): Axis (a) Add GuardrailDecision (12th StreamEvent variant) — fires for non-Pass guardrail outcomes (Fail/Transform only; Pass not streamed) at tool-result, RAG, and memory ingress boundaries. Audit-log-only is insufficient for Domain A SOC live-analyst use case (domain-a-soc-analyst.md §5 NEW forcing function); SSE consumer has zero in-band signal otherwise. Axis (b) ToolEnd.data carries POST-guardrail content — raw rejected payloads must not exit the security boundary via any StreamEvent (same isolation as model input buffer, BC-2.11.005 PC1). Axis (c) Ordering: GuardrailDecision fires before ToolEnd within the ToolStart/ToolEnd window (ToolResult boundary); within NodeStart/NodeEnd window before inference (RagChunk/MemoryItem boundaries). Axis (d) StreamEvent variant count 11→12; wire token guardrail_decision; supporting types IngressBoundary/GuardrailDecisionKind/GuardrailSeverityWire. New §StreamEvent section added to Public Rust Trait Signatures; /stream endpoint row updated to reference guardrail_decision events and ToolEnd post-guardrail semantics. ADR-006 rev-3 is co-artifact. Downstream PO amendments required: BC-2.06.001 PC2/PC4/new-EC-006, BC-2.11.002 PC3/PC4, BC-2.11.005 PC1/new-INV-5, BC-2.06.003 new-INV note."
   - "2.33 (F-P93-02, 2026-07-17): Adjudicate contradictory HITL-trigger model (F-P93-02 HIGH). VERDICT: Model A — `PolicyDecision::Escalate` (soft-ceiling) ALWAYS triggers the HITL interrupt unconditionally, independent of `BudgetConfig::on_ceiling`; `PolicyDecision::Deny` (hard-ceiling) branches on `on_ceiling` (Halt | Escalate→HITL | Summarize). BC authority: BC-2.10.001 PC3 — 'Escalate → execution suspends; the run transitions to `interrupted` via the HITL interrupt mechanism (BC-2.10.004)' — no on_ceiling qualification. Changes: (1) §OnCeiling enum docstring updated: field governs `PolicyDecision::Deny` dispatch ONLY; explicit statement that `PolicyDecision::Escalate` routes to HITL unconditionally per BC-2.10.001 PC3 without consulting `on_ceiling`. (2) `OnCeiling::Escalate` variant docstring updated: this variant means 'when `PolicyDecision::Deny` (hard ceiling) is received, redirect to HITL instead of halting'; clarifies both the soft-limit Escalate path and this hard-ceiling Deny→Escalate path use the same `BudgetEscalation` interrupt mechanism. (3) Engine-branching note replaced with a complete PolicyDecision × on_ceiling decision table — zero unspecified cells. Previously the note covered only `PolicyDecision::Deny` dispatch and left `PolicyDecision::Escalate` entirely unspecified. Now all three PolicyDecision variants are fully specified with Engine Action, Run Status, and Resume Mechanism columns. BC anchor updated to cite BC-2.10.001 PC3 as the Escalate-path authority. Sibling architecture docs (api-surface, module-decomposition) do not state the trigger model at decision-table precision — no change required."
   - "2.32 (F-P92-01-sweep, 2026-07-17): §RunnableConfig doc comment — stale verbatim citations to old BC-2.10.003 PC7 and BC-2.10.004 PC6 text updated to match new wording from same burst (F-P92-01/F-P92-02). Old PC7 quote: 'operator supplies a new RunnableConfig with a higher ceiling'. New: 'operator supplies a new RunnableConfig with budget_config: Some(BudgetConfig { hard_limit: Some(higher_ceiling), .. })'. Old PC6 quote: 'new_ceiling replaces the policy\\'s current ceiling in the RunnableConfig for the resumed execution'. New: 'The new_ceiling is applied by patching RunnableConfig::budget_config with BudgetConfig { hard_limit: Some(new_ceiling), ..original } for the resumed execution'. The struct definition itself (pub budget_config: Option<BudgetConfig>) was already correct from v2.31; this entry corrects only the inline authority citations in the doc comment. Exhaust-sweep finding: pattern 'policy\\'s.{0,20}ceiling' matched interface-definitions.md line 155 (prd-supplement, in-scope for fixes per task)."
-  - "2.31 (F-P92-02, 2026-07-17): OPTION A adjudication — add `budget_config: Option<BudgetConfig>` to §RunnableConfig. Authority: BC-2.10.004 PC6 explicitly places new_ceiling 'in the RunnableConfig for the resumed execution'; BC-2.10.003 PC7/TV-004 say 'operator supplies a new RunnableConfig with a higher ceiling'. BudgetResume::Extend { new_ceiling } is processed by the engine, which patches RunnableConfig::budget_config with a cloned BudgetConfig{ hard_limit: Some(new_ceiling), ..original } before resuming — this applies the extended ceiling to only that resumed execution without mutating GraphConfig (which is shared across concurrent runs on the same graph). Formal §RunnableConfig struct block added with all four known fields (recursion_limit, thread_id, budget_config, context_mutations) and per-field BC citations. TOML [budget] comment updated: 'overridable per run' expanded with explicit reference to RunnableConfig::budget_config and BudgetResume::Extend mechanism. Sibling sweep: api-surface.md v1.3→v1.4 (new §ferrochain-core Public Types row for RunnableConfig), module-decomposition.md v1.9→v1.10 (budget definitions note extended). purity-boundary-map unchanged — BudgetConfig already a pure core type; adding Option<BudgetConfig> to RunnableConfig does not change core::config purity classification."
+  - "2.31 (F-P92-02, 2026-07-17): OPTION A adjudication — add `budget_config: Option<BudgetConfig>` to §RunnableConfig. Authority: BC-2.10.004 PC6 explicitly places new_ceiling 'in the RunnableConfig for the resumed execution'; BC-2.10.003 PC7/TV-004 say 'operator supplies a new RunnableConfig with a higher ceiling'. BudgetResume::Extend { new_ceiling } is processed by the engine, which patches RunnableConfig::budget_config with a cloned BudgetConfig{ hard_limit: Some(new_ceiling), ..original } before resuming — this applies the extended ceiling to only that resumed execution without mutating GraphConfig (which is shared across concurrent runs on the same graph). Formal §RunnableConfig struct block added with all four known fields (recursion_limit, thread_id, budget_config, context_mutations) and per-field BC citations. TOML [budget] comment updated: 'overridable per run' expanded with explicit reference to RunnableConfig::budget_config and BudgetResume::Extend mechanism. Sibling sweep: api-surface.md v1.3→v1.4 (new §pregolya-core Public Types row for RunnableConfig), module-decomposition.md v1.9→v1.10 (budget definitions note extended). purity-boundary-map unchanged — BudgetConfig already a pure core type; adding Option<BudgetConfig> to RunnableConfig does not change core::config purity classification."
   - "2.30 (F-P91-04, 2026-07-17): Census update 85→86 — E-MEMORY-008 (MemoryStoreReadFailed, DURABILITY) minted in error-taxonomy.md v1.18 (BC-2.15.004 EC-004/TV-008 anchor). E-MEMORY-008 is covered by the existing E-MEMORY-* blanket annotation (§Library/execution-layer codes blanket omission); category DURABILITY is already in the blanket annotation category list (VAL/POLICY/DURABILITY/SECURITY); no HTTP routing row or blanket annotation body change needed. Updated census: 43 HTTP + 16 individual + 27 blanket = 86 (E-MEMORY-* 7→8 in blanket group; E-MCP-* 5 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 = 27)."
   - "2.29 (F-P91-02/F-P91-03, 2026-07-17): F-P91-02 (MED) — add OnCeiling enum and BudgetConfig struct to §BudgetPolicy; both are SS-10 public API surface items absent from the interface spec, leaving implementers unable to build the halt-vs-summarize branch without them. OnCeiling variants: Halt | Escalate | Summarize { summarize_prompt: String } per BC-2.10.003 v1.2 Architecture Anchors + BC-2.10.004. BudgetConfig fields: soft_limit: Option<u64> (Escalate threshold — BC-2.10.001 TV-002), hard_limit: Option<u64> (Deny threshold — BC-2.10.001 TV-003), on_ceiling: OnCeiling (BC-2.10.003 + BC-2.10.004). Prose paragraph added: engine branches on BudgetConfig::on_ceiling after Deny; BudgetPolicy::evaluate stays pure; ADR-009 Option 3 section anchor. BC anchor updated: BC-2.10.003 + BC-2.10.004 + ADR-009 added; TV citation text updated. F-P91-03 (OBS) — fix TOML default_on_ceiling comment: state that 'summarize' is config-API-only (requires summarize_prompt payload; not expressible as a bare-string default; table form documented). Sibling sweep: module-decomposition.md budget note + purity-boundary-map.md core::budget row updated with OnCeiling and BudgetConfig."
   - "2.28 (F-P88-01, 2026-07-17): Version/changelog/timestamp propagation for pass-87 burst body changes. Pass-87 (bc-authoring-plan v2.21) added §CLI Interface, §Exit Code Semantics, and §JSON Output Schema stubs; renamed §'Flag Interaction Rules' → §'Flag Interactions'; and normalized input-hash from legacy 64-char SHA-256 to 7-char MD5 ('cdce094'). Those body modifications landed without a corresponding version/timestamp bump, leaving the file at v2.27/2026-07-15. Correction applied: version 2.27 → 2.28, timestamp → 2026-07-17. No semantic content changes in this entry."
@@ -85,24 +85,24 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "040727a"
+input-hash: "761ed22"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
-note: "ferrochain is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, ferrochain-server HTTP API, Cargo feature flags, and config schemas."
+note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
 ---
 
-# Interface Definitions: ferrochain
+# Interface Definitions: pregolya
 
 > PRD supplement — extracted from PRD Section 3.
-> ferrochain is a library crate workspace, not a CLI application.
+> pregolya is a library crate workspace, not a CLI application.
 > The public interface is the set of public Rust traits, types, and the
-> ferrochain-server HTTP API.
+> pregolya-server HTTP API.
 
 ## CLI Interface
 
-ferrochain is a Rust library framework — there is no standalone CLI tool. The interface surface consists of: (a) public Rust traits and types (see §Public Rust Trait Signatures below), (b) the embedded `ferrochain-server` HTTP API (see §ferrochain-server HTTP API below), and (c) Cargo feature flags (see §Cargo Feature Flags below). All interface contracts are expressed in Rust types; there are no command-line flags or environment variable arguments.
+pregolya is a Rust library framework — there is no standalone CLI tool. The interface surface consists of: (a) public Rust traits and types (see §Public Rust Trait Signatures below), (b) the embedded `pregolya-server` HTTP API (see §pregolya-server HTTP API below), and (c) Cargo feature flags (see §Cargo Feature Flags below). All interface contracts are expressed in Rust types; there are no command-line flags or environment variable arguments.
 
-## Public Rust Trait Signatures (ferrochain-core)
+## Public Rust Trait Signatures (pregolya-core)
 
 ### Runnable\<Input, Output\>
 
@@ -110,15 +110,15 @@ ferrochain is a Rust library framework — there is no standalone CLI tool. The 
 pub trait Runnable<Input, Output>: Send + Sync {
     /// Invoke the runnable synchronously (blocks async task).
     async fn invoke(&self, input: Input, config: Option<RunnableConfig>)
-        -> Result<Output, FerrochainError>;
+        -> Result<Output, PregolyaError>;
 
     /// Invoke and stream output chunks.
     async fn stream(&self, input: Input, config: Option<RunnableConfig>)
-        -> Result<impl Stream<Item = Result<Output, FerrochainError>>, FerrochainError>;
+        -> Result<impl Stream<Item = Result<Output, PregolyaError>>, PregolyaError>;
 
     /// Invoke in batch; returns results in input order.
     async fn batch(&self, inputs: Vec<Input>, config: Option<RunnableConfig>)
-        -> Result<Vec<Result<Output, FerrochainError>>, FerrochainError>;
+        -> Result<Vec<Result<Output, PregolyaError>>, PregolyaError>;
 
     /// Pipe this runnable into another: self | other.
     ///
@@ -141,10 +141,10 @@ pub trait Runnable<Input, Output>: Send + Sync {
 ### DynRunnable and RunnableSequence
 
 Type-erased composition path and the concrete sequence type returned by `pipe`.
-**Module:** `ferrochain-core: core::runnable`.
+**Module:** `pregolya-core: core::runnable`.
 
 ```rust
-// ferrochain-core: core::runnable
+// pregolya-core: core::runnable
 
 /// Object-safe, type-erased handle for heterogeneous pipeline composition.
 ///
@@ -157,7 +157,7 @@ Type-erased composition path and the concrete sequence type returned by `pipe`.
 /// Trait Object-Safety Adjudications — BC-2.01.003 EC-001, BC-2.01.004 EC-001).
 ///
 /// # Errors
-/// `Err(FerrochainError { code: "E-CORE-004", .. })` when a
+/// `Err(PregolyaError { code: "E-CORE-004", .. })` when a
 /// type boundary mismatch between adjacent stages is detected at the first `invoke`
 /// call (BC-2.01.004 PC5/EC-001/TV-004).
 pub trait DynRunnable: Send + Sync {
@@ -166,7 +166,7 @@ pub trait DynRunnable: Send + Sync {
         &self,
         input: serde_json::Value,
         config: Option<RunnableConfig>,
-    ) -> Result<serde_json::Value, FerrochainError>;
+    ) -> Result<serde_json::Value, PregolyaError>;
 
     /// Stream JSON output chunks. Boxed stream for dyn-compatibility following the
     /// `CheckpointSaver::list` pattern (ADR-005 §Object-Safety).
@@ -174,7 +174,7 @@ pub trait DynRunnable: Send + Sync {
         &self,
         input: serde_json::Value,
         config: Option<RunnableConfig>,
-    ) -> Pin<Box<dyn Stream<Item = Result<serde_json::Value, FerrochainError>> + Send>>;
+    ) -> Pin<Box<dyn Stream<Item = Result<serde_json::Value, PregolyaError>> + Send>>;
 }
 
 /// Concrete return type of `Runnable::pipe`.
@@ -188,7 +188,7 @@ pub trait DynRunnable: Send + Sync {
 ///            middle=[b], last=c`, NOT nested sequences),
 ///            BC-2.01.004 TV-002 (structure must be inspectable: `RunnableSequence
 ///            { first, middle, last }`).
-/// Module: `ferrochain-core/src/runnables/sequence.rs`.
+/// Module: `pregolya-core/src/runnables/sequence.rs`.
 pub struct RunnableSequence<I, O> {
     /// The first stage in the pipeline.
     pub first: Box<dyn DynRunnable>,
@@ -212,8 +212,8 @@ failure scope differ:
 
 | Layer | What is counted | Halt condition | Error | BC authority |
 |-------|----------------|---------------|-------|-------------|
-| **Runnable-layer** (ferrochain-core) | Nested `invoke`/`stream` call depth across chained Runnables (e.g., A pipes into B pipes into C…) | Depth exceeds `recursion_limit` | `Err(FerrochainError { category: INTERNAL, code: "E-CORE-006", message: "RecursionLimitExceeded: recursion limit exceeded at depth <depth>", .. })` | BC-2.01.003 PC5 |
-| **Graph-engine-layer** (ferrochain-graph BSP loop) | Super-steps per invocation segment; `stop = step_at_invoke_start + recursion_limit + 1` | `current_step > stop` before dispatching next super-step | `Err(E-GRAPH-017 GraphRecursionLimitExceeded)` — run transitions to `failed` | BC-2.03.001 PC5-PC6 |
+| **Runnable-layer** (pregolya-core) | Nested `invoke`/`stream` call depth across chained Runnables (e.g., A pipes into B pipes into C…) | Depth exceeds `recursion_limit` | `Err(PregolyaError { category: INTERNAL, code: "E-CORE-006", message: "RecursionLimitExceeded: recursion limit exceeded at depth <depth>", .. })` | BC-2.01.003 PC5 |
+| **Graph-engine-layer** (pregolya-graph BSP loop) | Super-steps per invocation segment; `stop = step_at_invoke_start + recursion_limit + 1` | `current_step > stop` before dispatching next super-step | `Err(E-GRAPH-017 GraphRecursionLimitExceeded)` — run transitions to `failed` | BC-2.03.001 PC5-PC6 |
 
 Upstream parity: LangGraph reuses the same `RunnableConfig.recursion_limit` key for both layers.
 LangGraph's graph-layer default is 10007 (the `DEFAULT_RECURSION_LIMIT` constant in the
@@ -221,7 +221,7 @@ LangGraph's graph-layer default is 10007 (the `DEFAULT_RECURSION_LIMIT` constant
 environment variable with a hardcoded default of 10007 — verified against
 `.reference/langgraph/langgraph/_internal/_config.py` `DEFAULT_RECURSION_LIMIT`
 symbol; distinct from langchain-core's `DEFAULT_RECURSION_LIMIT = 25` in
-`langchain_core.runnables.config` which is the Runnable-layer default); ferrochain
+`langchain_core.runnables.config` which is the Runnable-layer default); pregolya
 aligns both layers at 25 per langchain-core `RunnableConfig` convention. The graph-engine-layer
 halt produces a run-level failure embedded in `Run.error` (see embedded omission note below).
 
@@ -232,7 +232,7 @@ halt produces a run-level failure embedded in `Run.error` (see embedded omission
 /// Carries per-run overrides for runtime parameters; absent/`None` fields inherit
 /// the graph-level or system defaults.
 ///
-/// Module: `ferrochain-core/src/config.rs` (`core::config`), re-exported at crate root.
+/// Module: `pregolya-core/src/config.rs` (`core::config`), re-exported at crate root.
 /// All fields are optional at construction except `recursion_limit` (has a default).
 pub struct RunnableConfig {
     /// Maximum Runnable call depth (Runnable-layer) and graph super-step count
@@ -307,20 +307,20 @@ pub struct RunnableConfig {
 
 **BC anchor:** BC-2.01.003 PC5 (`recursion_limit` Runnable-layer), BC-2.03.001 PC5 (`recursion_limit` graph-layer), BC-2.12.004 PC1 (`thread_id`), BC-2.10.003 PC7/TV-004 (`budget_config` resume path), BC-2.10.004 PC6 (`budget_config` BudgetResume::Extend), BC-2.15.006 PC1 (`context_mutations`)
 
-### FerrochainError Constructor
+### PregolyaError Constructor
 
-**Source:** ADR-010 §Decision (F-P174-constructor). `#[non_exhaustive]` on `FerrochainError` (ADR-010/F-P173-619) bars struct-literal construction from external crates (E0639). The following `impl FerrochainError` block defines the sole sanctioned construction paths.
+**Source:** ADR-010 §Decision (F-P174-constructor). `#[non_exhaustive]` on `PregolyaError` (ADR-010/F-P173-619) bars struct-literal construction from external crates (E0639). The following `impl PregolyaError` block defines the sole sanctioned construction paths.
 
 ```rust
-// ferrochain-core: core::error
-impl FerrochainError {
+// pregolya-core: core::error
+impl PregolyaError {
     /// Primary constructor. `source` defaults to `None`; chain a cause with `.with_source(arc)`.
     ///
-    /// This is the ONLY construction path available to code outside ferrochain-core.
-    /// Direct struct-literal `FerrochainError { component: ..., ... }` is barred by
+    /// This is the ONLY construction path available to code outside pregolya-core.
+    /// Direct struct-literal `PregolyaError { component: ..., ... }` is barred by
     /// `#[non_exhaustive]` on external crates.
     ///
-    /// BC anchor: BC-2.14.001 (FerrochainError 2D model).
+    /// BC anchor: BC-2.14.001 (PregolyaError 2D model).
     pub fn new(
         component: Component,
         category: Category,
@@ -340,7 +340,7 @@ impl FerrochainError {
 }
 ```
 
-**Wave C BC routing note:** BC-2.14.001 must be amended to reflect that `FerrochainError` is `#[non_exhaustive]` and that `new()` + `with_source()` are the sole construction paths. The existing BC body describes the struct fields but not the construction API.
+**Wave C BC routing note:** BC-2.14.001 must be amended to reflect that `PregolyaError` is `#[non_exhaustive]` and that `new()` + `with_source()` are the sole construction paths. The existing BC body describes the struct fields but not the construction API.
 
 ### BaseChatModel
 
@@ -357,19 +357,19 @@ pub trait BaseChatModel: Runnable<Vec<Message>, AiMessage> + Send + Sync {
     /// Stream a chat completion, yielding per-token `AiMessageChunk`s
     /// (BC-2.08.001, BC-2.08.005 TV).
     ///
-    /// Error fidelity: all provider HTTP 4xx/5xx responses MUST map to typed `FerrochainError`
+    /// Error fidelity: all provider HTTP 4xx/5xx responses MUST map to typed `PregolyaError`
     /// with the correct `category` field (BC-2.08.004 cross-cutting conformance).
     async fn stream_chat(&self, messages: Vec<Message>, config: Option<ChatConfig>)
-        -> Result<impl Stream<Item = Result<AiMessageChunk, FerrochainError>>, FerrochainError>;
+        -> Result<impl Stream<Item = Result<AiMessageChunk, PregolyaError>>, PregolyaError>;
 
     /// Bind tools to this model, enabling tool-call generation.
     ///
     /// Construction-time validation only — no I/O performed.
     ///
     /// # Errors
-    /// `Err(FerrochainError { code: "E-CORE-005", .. })`
+    /// `Err(PregolyaError { code: "E-CORE-005", .. })`
     /// when `self.has_tool_calling() == false` (BC-2.08.002 EC-005/TV-005).
-    fn bind_tools(&self, tools: Vec<ToolDefinition>) -> Result<impl BaseChatModel, FerrochainError>;
+    fn bind_tools(&self, tools: Vec<ToolDefinition>) -> Result<impl BaseChatModel, PregolyaError>;
 
     /// Wrap this model to produce structured output deserialized into `T`.
     ///
@@ -387,13 +387,13 @@ pub trait BaseChatModel: Runnable<Vec<Message>, AiMessage> + Send + Sync {
 **BC anchor (per-method):**
 - `model_name`: BC-2.08.001 (model identity)
 - `has_tool_calling`: BC-2.08.002 EC-005/TV-005 (capability guard — `bind_tools` precondition check)
-- `stream_chat`: BC-2.08.001 (streaming completions), BC-2.08.004 (error-type fidelity conformance — all provider HTTP errors must map to typed `FerrochainError`), BC-2.08.005 TV (`AiMessageChunk` shape)
+- `stream_chat`: BC-2.08.001 (streaming completions), BC-2.08.004 (error-type fidelity conformance — all provider HTTP errors must map to typed `PregolyaError`), BC-2.08.005 TV (`AiMessageChunk` shape)
 - `bind_tools`: BC-2.08.002 PC (tool binding), BC-2.08.002 EC-005/TV-005 (`Err(E-CORE-005)` when `has_tool_calling = false`)
 - `with_structured_output`: BC-2.08.003 PC/EC-002/EC-003 (schema-driven structured output), BC-2.08.009 (`schemars::JsonSchema` bound on `T`)
 
-> **BC-2.08.004 anchor (trait-level cross-cutting):** BC-2.08.004 ("Chat Model Error-Type Fidelity Conformance") is a cross-cutting conformance contract: every call path that makes a provider HTTP request — `invoke` (via `Runnable`) and `stream_chat` — MUST map provider HTTP 4xx/5xx responses to typed `FerrochainError` with the correct `category` field. Anchored at `stream_chat` per-method above; also applies to the inherited `Runnable::invoke` path. No `has_tool_calling` method is introduced by BC-2.08.004; `has_tool_calling` is added here from BC-2.08.002 EC-005.
+> **BC-2.08.004 anchor (trait-level cross-cutting):** BC-2.08.004 ("Chat Model Error-Type Fidelity Conformance") is a cross-cutting conformance contract: every call path that makes a provider HTTP request — `invoke` (via `Runnable`) and `stream_chat` — MUST map provider HTTP 4xx/5xx responses to typed `PregolyaError` with the correct `category` field. Anchored at `stream_chat` per-method above; also applies to the inherited `Runnable::invoke` path. No `has_tool_calling` method is introduced by BC-2.08.004; `has_tool_calling` is added here from BC-2.08.002 EC-005.
 
-> **Gate #31 type note — `ChatConfig`, `AiMessageChunk`, `ToolDefinition`:** `ChatConfig` is the per-call provider configuration struct in `ferrochain-core: core::config` (module-decomposition.md §core::config; SS-01 MEDIUM). The spec corpus mandates one field: `fallback_policy: Option<ProviderFallbackPolicy>` — source: BC-2.08.014 Description ("ChatConfig.fallback_policy: Option<ProviderFallbackPolicy>") and BC-2.08.014 PC1 ("ChatConfig is constructed with a non-empty fallback_policy"). Provider-specific per-call parameters (temperature, max_tokens, stop sequences, and other provider extensions) are not enumerated in the spec corpus; implementations add them as additional fields alongside the mandatory field above. The "corpus-unresolved / implementer defines" marker is retired: the mandatory field is spec-anchored. `AiMessageChunk` is the per-token streaming output type; defined via BC-2.08.001 PC1 + BC-2.08.005 TV (streaming completions BC). `ToolDefinition` is the public tool-schema type; defined via BC-2.08.009 (tool schema naming stability BC).
+> **Gate #31 type note — `ChatConfig`, `AiMessageChunk`, `ToolDefinition`:** `ChatConfig` is the per-call provider configuration struct in `pregolya-core: core::config` (module-decomposition.md §core::config; SS-01 MEDIUM). The spec corpus mandates one field: `fallback_policy: Option<ProviderFallbackPolicy>` — source: BC-2.08.014 Description ("ChatConfig.fallback_policy: Option<ProviderFallbackPolicy>") and BC-2.08.014 PC1 ("ChatConfig is constructed with a non-empty fallback_policy"). Provider-specific per-call parameters (temperature, max_tokens, stop sequences, and other provider extensions) are not enumerated in the spec corpus; implementations add them as additional fields alongside the mandatory field above. The "corpus-unresolved / implementer defines" marker is retired: the mandatory field is spec-anchored. `AiMessageChunk` is the per-token streaming output type; defined via BC-2.08.001 PC1 + BC-2.08.005 TV (streaming completions BC). `ToolDefinition` is the public tool-schema type; defined via BC-2.08.009 (tool schema naming stability BC).
 
 ### CheckpointSaver
 
@@ -405,15 +405,15 @@ pub trait CheckpointSaver: Send + Sync {
         config: CheckpointConfig,
         writes: &[(ChannelName, ChannelValue)],
         task_id: TaskId,
-    ) -> Result<(), FerrochainError>;
+    ) -> Result<(), PregolyaError>;
 
     /// Load the most recent checkpoint matching the config.
     async fn get_tuple(&self, config: &CheckpointConfig)
-        -> Result<Option<CheckpointTuple>, FerrochainError>;
+        -> Result<Option<CheckpointTuple>, PregolyaError>;
 
     /// List checkpoints for a thread (newest first).
     async fn list(&self, config: &CheckpointConfig, limit: Option<usize>)
-        -> Pin<Box<dyn Stream<Item = Result<CheckpointTuple, FerrochainError>> + Send>>;
+        -> Pin<Box<dyn Stream<Item = Result<CheckpointTuple, PregolyaError>> + Send>>;
 
     /// Persist a full checkpoint state blob.
     ///
@@ -423,7 +423,7 @@ pub trait CheckpointSaver: Send + Sync {
     /// is active (BC-2.04.007 PC1).
     ///
     /// # Errors
-    /// - `Err(FerrochainError { code: "E-CHKPT-005", .. })` if the composite
+    /// - `Err(PregolyaError { code: "E-CHKPT-005", .. })` if the composite
     ///   triple `(config.thread_id, config.checkpoint_ns, config.checkpoint_id)` already
     ///   exists under a different tenant context (BC-2.04.006 EC-005).
     async fn put(
@@ -431,7 +431,7 @@ pub trait CheckpointSaver: Send + Sync {
         config: CheckpointConfig,
         checkpoint: Checkpoint,
         metadata: CheckpointMetadata,
-    ) -> Result<(), FerrochainError>;
+    ) -> Result<(), PregolyaError>;
 
     /// Compute the next monotonic checkpoint ID for a `(thread_id, checkpoint_ns)` pair.
     ///
@@ -450,7 +450,7 @@ pub trait CheckpointSaver: Send + Sync {
         &self,
         current: Option<CheckpointId>,
         channel: &ChannelName,
-    ) -> Result<CheckpointId, FerrochainError> {
+    ) -> Result<CheckpointId, PregolyaError> {
         MonotonicClock::get_next_version(current, channel)
     }
 }
@@ -478,7 +478,7 @@ pub trait GuardrailHook: Send + Sync {
     ///
     /// # Panic safety
     /// A panic in this method is caught at the ingress boundary and treated as fail-closed:
-    /// the pipeline propagates `Err(FerrochainError { code: "E-CORE-007", .. })`
+    /// the pipeline propagates `Err(PregolyaError { code: "E-CORE-007", .. })`
     /// to the caller; content does not enter model context (BC-2.11.002 EC-001, E-CORE-007).
     async fn evaluate(
         &self,
@@ -659,7 +659,7 @@ pub struct BudgetConfig {
 > overridable via `RunnableConfig`; used as the `app_id` for `MemoryScope::App(app_id)` in
 > all `ContextMutationConfig` reads and `SkillStore` construction; empty string = no-scope
 > sentinel — all `MemoryScope::App` reads return `Ok(None)`).
-> Concrete struct definition lives in `ferrochain-core/src/budget.rs` per ADR-009 Option 3.
+> Concrete struct definition lives in `pregolya-core/src/budget.rs` per ADR-009 Option 3.
 > (gate #31 RESOLVED via BC-2.10.001 precondition 3 — name-equality verified)
 
 > **`BudgetInfo`** — RESOLVED (defined inline). Struct carried in `RunContext.budget_info:
@@ -672,7 +672,7 @@ pub struct BudgetConfig {
 > BC-2.10.003 INV (signed arithmetic rationale for `Option<i64>`),
 > BC-2.10.003 TV-007 (canonical test vector: ceiling=10000, accumulated=3000,
 > recursion_limit=25, step=1 → tokens_remaining=Some(7000), steps_remaining=Some(24)).
-> Module: `ferrochain-core/src/budget.rs` (alongside `RunContext`).
+> Module: `pregolya-core/src/budget.rs` (alongside `RunContext`).
 > (gate #31 RESOLVED — defined inline; added v2.21)
 
 **BC anchor:** BC-2.10.001 precondition 3 (RunContext fields: thread_id, run_id, sub-agent identity),
@@ -690,12 +690,12 @@ ADR-009 Option 3 (BudgetConfig placement in GraphConfig; pure/effectful boundary
 /// Implementations: NativeOpenAiJson (default), NativeAnthropic, HermesChatMlXml.
 ///
 /// Authority: BC-2.08.013 (Pluggable Tool-Call Dialect Seam).
-/// Module: ferrochain-core (trait definition); ferrochain-<provider> (dispatch).
+/// Module: pregolya-core (trait definition); pregolya-<provider> (dispatch).
 pub trait ToolCallDialect: Send + Sync {
     /// Serialize a single ToolCall to the dialect's wire format.
-    fn serialize_tool_call(&self, call: &ToolCall) -> Result<String, FerrochainError>;
+    fn serialize_tool_call(&self, call: &ToolCall) -> Result<String, PregolyaError>;
     /// Deserialize zero or more tool calls from model output content.
-    fn deserialize_tool_calls(&self, content: &str) -> Result<Vec<ToolCall>, FerrochainError>;
+    fn deserialize_tool_calls(&self, content: &str) -> Result<Vec<ToolCall>, PregolyaError>;
     /// Machine-readable dialect identifier (e.g., "openai_json", "anthropic", "hermes_chatml_xml").
     fn dialect_name(&self) -> &str;
 }
@@ -714,7 +714,7 @@ pub trait ToolCallDialect: Send + Sync {
 /// not possible; this enforces the non-empty invariant (BC-2.08.014 Invariant / DI-008).
 ///
 /// Authority: BC-2.08.014 (Provider Failover Chain).
-/// Module: ferrochain-core (struct definition); ferrochain-<provider> (dispatch).
+/// Module: pregolya-core (struct definition); pregolya-<provider> (dispatch).
 #[non_exhaustive]
 pub struct ProviderFallbackPolicy {
     /// Ordered list of provider credentials to try; first entry is primary. PRIVATE — non-empty invariant.
@@ -729,9 +729,9 @@ impl ProviderFallbackPolicy {
     /// Validates that `chain` is non-empty at construction time (DI-008; BC-2.08.014 Invariant).
     ///
     /// # Errors
-    /// `Err(FerrochainError { code: "E-PROV-011", .. })`
+    /// `Err(PregolyaError { code: "E-PROV-011", .. })`
     /// when `chain` is empty (BC-2.08.014 EC-006/TV-007).
-    pub fn new(chain: Vec<ProviderCredential>) -> Result<Self, FerrochainError>;
+    pub fn new(chain: Vec<ProviderCredential>) -> Result<Self, PregolyaError>;
 }
 ```
 
@@ -747,20 +747,20 @@ impl ProviderFallbackPolicy {
 /// Pluggable skill document registry for load-on-demand skill retrieval.
 ///
 /// Authority: BC-2.15.004 (SkillStore Registry — Load-on-Demand Skill Documents).
-/// Module: ferrochain-memory (memory::skills).
+/// Module: pregolya-memory (memory::skills).
 pub trait SkillStore: Send + Sync {
     /// Load a skill document by its registered name.
     /// Returns `Ok(Some(content))` if found; `Ok(None)` if no skill with that name exists.
     /// The name→(namespace, key) storage mapping is impl-internal (BC-2.15.004 Invariant).
-    async fn load_skill(&self, name: &str) -> Result<Option<String>, FerrochainError>;
+    async fn load_skill(&self, name: &str) -> Result<Option<String>, PregolyaError>;
 
     /// List all registered skill descriptors, optionally filtered by tags.
     /// Passing an empty slice returns ALL registered descriptors (BC-2.15.004 PC2).
-    async fn list_skills(&self, tags: &[String]) -> Result<Vec<SkillDescriptor>, FerrochainError>;
+    async fn list_skills(&self, tags: &[String]) -> Result<Vec<SkillDescriptor>, PregolyaError>;
 
     /// Check whether a skill with the given name is registered, without loading its document.
     /// A cheap existence check — does NOT load content (BC-2.15.004 PC3).
-    async fn skill_exists(&self, name: &str) -> Result<bool, FerrochainError>;
+    async fn skill_exists(&self, name: &str) -> Result<bool, PregolyaError>;
 }
 
 /// Metadata descriptor for a registered skill document.
@@ -793,7 +793,7 @@ pub struct SkillDescriptor {
 /// Fail-closed: Deny and Transform decisions block writes; Allow proceeds.
 ///
 /// Authority: BC-2.15.005 (Guarded Memory and Skill Writes).
-/// Module: ferrochain-core (core::write_guard); ferrochain-memory (write_guard dispatch).
+/// Module: pregolya-core (core::write_guard); pregolya-memory (write_guard dispatch).
 pub trait MemoryWriteGuard: Send + Sync {
     /// Validate a proposed write operation. Pure — no I/O, no state mutation.
     fn validate(&self, req: &MemoryWriteRequest) -> WriteGuardDecision;
@@ -845,7 +845,7 @@ the storage layer, not the application layer (BC-2.15.002 PC6).
 /// Authority: BC-2.15.001 (6-method surface + cross-thread durability),
 ///            BC-2.15.002 (MemoryScope tier isolation; scope parameter on every method),
 ///            BC-2.15.003 (GDPR erasure — admin-only standalone fn; NOT a trait method).
-/// Module: ferrochain-memory (memory::store).
+/// Module: pregolya-memory (memory::store).
 pub trait MemoryStore: Send + Sync {
     /// Write a key-value entry to the store under `scope` and `key`.
     ///
@@ -864,7 +864,7 @@ pub trait MemoryStore: Send + Sync {
         scope: MemoryScope,
         key: &str,
         value: Value,
-    ) -> Result<(), FerrochainError>;
+    ) -> Result<(), PregolyaError>;
 
     /// Read a single entry by `(scope, key)`.
     ///
@@ -880,7 +880,7 @@ pub trait MemoryStore: Send + Sync {
         &self,
         scope: MemoryScope,
         key: &str,
-    ) -> Result<Option<Value>, FerrochainError>;
+    ) -> Result<Option<Value>, PregolyaError>;
 
     /// Delete an entry by `(scope, key)`.
     ///
@@ -890,7 +890,7 @@ pub trait MemoryStore: Send + Sync {
         &self,
         scope: MemoryScope,
         key: &str,
-    ) -> Result<(), FerrochainError>;
+    ) -> Result<(), PregolyaError>;
 
     /// Full-text keyword search over entries in `scope`.
     ///
@@ -902,7 +902,7 @@ pub trait MemoryStore: Send + Sync {
         &self,
         scope: MemoryScope,
         query: &str,
-    ) -> Result<Vec<MemoryEntry>, FerrochainError>;
+    ) -> Result<Vec<MemoryEntry>, PregolyaError>;
 
     /// Vector similarity search over entries in `scope` that have stored embeddings.
     ///
@@ -916,7 +916,7 @@ pub trait MemoryStore: Send + Sync {
         scope: MemoryScope,
         query_embedding: Vec<f32>,
         top_k: usize,
-    ) -> Result<Vec<MemoryEntry>, FerrochainError>;
+    ) -> Result<Vec<MemoryEntry>, PregolyaError>;
 
     /// Hybrid search: union of keyword and vector similarity results.
     ///
@@ -929,7 +929,7 @@ pub trait MemoryStore: Send + Sync {
         scope: MemoryScope,
         query: &str,
         top_k: usize,
-    ) -> Result<Vec<MemoryEntry>, FerrochainError>;
+    ) -> Result<Vec<MemoryEntry>, PregolyaError>;
 }
 
 /// Memory scope tier for isolation enforcement (BC-2.15.002).
@@ -978,8 +978,8 @@ pub struct MemoryEntry {
 
 ### StreamEvent
 
-The complete streaming event taxonomy emitted by `ferrochain-graph` during a run and
-serialized to SSE by `ferrochain-server`. **15 variants** (11 execution lifecycle + 1
+The complete streaming event taxonomy emitted by `pregolya-graph` during a run and
+serialized to SSE by `pregolya-server`. **15 variants** (11 execution lifecycle + 1
 guardrail observability + 2 per-tool-call approval [D23/ADR-018] + 1 compaction
 [D23/ADR-019]). All variants carry `run_id` and `parent_ids` (BC-2.06.002).
 
@@ -1146,15 +1146,15 @@ ADR-006 rev-3 (guardrail design authority), ADR-018 (per-tool-call approval hook
 
 ### PreToolCallHook
 
-**Source:** ADR-020 Decision 1 (ActionRisk relocation to ferrochain-core: core::action_risk — defines ToolCallPreview.action_risk type placement; ferrochain-tools as cross-crate compile-time ActionRisk consumer motivates dependency-inversion pattern; sole authority for the ActionRisk element of the trait signature); ADR-018 Decision 2 (trait shape) + Decision 3 (dispatch ordering; step 4 = fail-closed Deny — tool is NEVER invoked on Deny; VP-011 Kani P0) + Decision 5 (streaming events) + Decision 6 (action_risk attribute — ADR-008 Decision 2); ferrochain-core: core::action_risk (ActionRisk enum — F-P170-06 adjudication: relocated from graph::hitl); ferrochain-graph: graph::hitl (PreToolCallHook trait + ToolCallPreview + PreToolDecision — re-exports ActionRisk from ferrochain-core).
+**Source:** ADR-020 Decision 1 (ActionRisk relocation to pregolya-core: core::action_risk — defines ToolCallPreview.action_risk type placement; pregolya-tools as cross-crate compile-time ActionRisk consumer motivates dependency-inversion pattern; sole authority for the ActionRisk element of the trait signature); ADR-018 Decision 2 (trait shape) + Decision 3 (dispatch ordering; step 4 = fail-closed Deny — tool is NEVER invoked on Deny; VP-011 Kani P0) + Decision 5 (streaming events) + Decision 6 (action_risk attribute — ADR-008 Decision 2); pregolya-core: core::action_risk (ActionRisk enum — F-P170-06 adjudication: relocated from graph::hitl); pregolya-graph: graph::hitl (PreToolCallHook trait + ToolCallPreview + PreToolDecision — re-exports ActionRisk from pregolya-core).
 
 BC anchor: BC-2.05.007 (PreToolCallHook trait — pre_invoke contract; ToolCallPreview shape; PreToolDecision variants Approve/Deny/Edit/PendingHumanApproval; AlwaysApprovePolicy default; fail-closed Deny; hook failure = Deny; VP-011 Kani P0 seed), BC-2.05.004 (Command(resume=PreToolDecision) resume-API: delivers PreToolDecision to engine when PendingHumanApproval interrupt is resolved), BC-2.06.004 (ToolApprovalRequest event), BC-2.06.005 (ToolApprovalResolved event), BC-2.08.010 PC1 (action_risk() method on Tool), BC-2.16.001 Invariant (retry-approval dispatch ordering).
 
 ```rust
-// ferrochain-core: core::action_risk
-// NOTE: ActionRisk relocated from ferrochain-graph::hitl to ferrochain-core per F-P170-06
+// pregolya-core: core::action_risk
+// NOTE: ActionRisk relocated from pregolya-graph::hitl to pregolya-core per F-P170-06
 // adjudication (BudgetPolicy/ADR-009, GuardrailHook+BoundaryType/ADR-014, MemoryWriteGuard/ADR-012
-// type-in-core precedent). ferrochain-graph::hitl re-exports ActionRisk for graph-layer consumers.
+// type-in-core precedent). pregolya-graph::hitl re-exports ActionRisk for graph-layer consumers.
 
 /// Risk tier declared by a tool via the `action_risk` attribute.
 /// BashTool enforces a non-lowerable floor of `Medium`; `ReadOnly` and `Low` are
@@ -1167,8 +1167,8 @@ pub enum ActionRisk { ReadOnly, Low, Medium, High }
 ```
 
 ```rust
-// ferrochain-graph: graph::hitl
-// (ActionRisk is defined in ferrochain-core::core::action_risk and re-exported here)
+// pregolya-graph: graph::hitl
+// (ActionRisk is defined in pregolya-core::core::action_risk and re-exported here)
 
 /// The tool call preview presented to the hook before invocation.
 /// BC anchor: BC-2.05.007 PC3 (ToolCallPreview constructed read-only before pre_invoke call; action_risk populated from #[tool(action_risk = ...)] annotation).
@@ -1224,15 +1224,15 @@ pub trait PreToolCallHook: Send + Sync {
 
 ### Compaction
 
-**Source:** ADR-019 Decision 1 (type definitions in core::budget — CompactionTrigger, ConversationSnapshot, CompactionSummary, CompactionPolicy trait; all four types) + Decision 2 (BudgetConfig extensions: compaction_trigger and compaction_policy fields) + Decision 3 (7-step execution sequence in graph::budget; mid-run state mutation — applies immediately to current run's message window, not next-run; contrast: BC-2.15.006 frozen-snapshot = next-run per ADR-019 Decision 3 canonical definition) + Decision 4 (streaming event compaction_event) + Decision 5 (CAP-017 Wave Promotion Interaction — within-session vs cross-session additive design); ferrochain-core: core::budget (type definitions — Decision 1); ferrochain-graph: graph::budget (BudgetEngine execution — Decision 3).
+**Source:** ADR-019 Decision 1 (type definitions in core::budget — CompactionTrigger, ConversationSnapshot, CompactionSummary, CompactionPolicy trait; all four types) + Decision 2 (BudgetConfig extensions: compaction_trigger and compaction_policy fields) + Decision 3 (7-step execution sequence in graph::budget; mid-run state mutation — applies immediately to current run's message window, not next-run; contrast: BC-2.15.006 frozen-snapshot = next-run per ADR-019 Decision 3 canonical definition) + Decision 4 (streaming event compaction_event) + Decision 5 (CAP-017 Wave Promotion Interaction — within-session vs cross-session additive design); pregolya-core: core::budget (type definitions — Decision 1); pregolya-graph: graph::budget (BudgetEngine execution — Decision 3).
 
 BC anchor: BC-2.10.005 (CompactionTrigger evaluation — VP-012 Kani candidate for OnWatermark arithmetic), BC-2.10.006 (compaction execution — 7-step cycle, ConversationSnapshot assembly, mid-run state mutation per ADR-019 Decision 3, EvidenceJournal, streaming event, checkpoint immutability), BC-2.06.006 (CompactionEvent StreamEvent), BC-2.15.006 (frozen-snapshot — NEXT-run context mutation per ADR-019 Decision 3, explicitly distinct from BC-2.10.006 CURRENT-run mid-run state mutation).
 
 ```rust
-// ferrochain-core: core::budget
+// pregolya-core: core::budget
 // NOTE: CompactionTrigger, ConversationSnapshot, CompactionSummary, CompactionPolicy are
-// definitions-only types in ferrochain-core::core::budget (ADR-019 Decision 1 / ADR-009 Option 3).
-// The execution engine (BudgetEngine, EvidenceJournal dispatch) lives in ferrochain-graph::graph::budget.
+// definitions-only types in pregolya-core::core::budget (ADR-019 Decision 1 / ADR-009 Option 3).
+// The execution engine (BudgetEngine, EvidenceJournal dispatch) lives in pregolya-graph::graph::budget.
 // If BudgetConfig gains fields of these types (it does — Decision 2), core→graph dep is avoided because
 // the type definitions live in core::budget, not in graph::budget.
 
@@ -1284,21 +1284,21 @@ pub trait CompactionPolicy: Send + Sync {
         &self,
         snapshot: &ConversationSnapshot,
         run_ctx:  &RunContext,
-    ) -> Result<CompactionSummary, FerrochainError>;
+    ) -> Result<CompactionSummary, PregolyaError>;
 }
 ```
 
 ### Tool
 
-**Source:** ADR-020 Decision 1 dependency graph: `ferrochain-core (Tool trait, ToolOutput, FerrochainError, ActionRisk)` — the `Tool` trait and `ToolOutput` enum are defined in `ferrochain-core`, NOT in `ferrochain-tools`. `ferrochain-tools` depends on `ferrochain-core` for this trait. BC-2.08.010 PC1 specifies the generated method set; BC-2.23.001–BC-2.23.006 are the first-party implementations.
+**Source:** ADR-020 Decision 1 dependency graph: `pregolya-core (Tool trait, ToolOutput, PregolyaError, ActionRisk)` — the `Tool` trait and `ToolOutput` enum are defined in `pregolya-core`, NOT in `pregolya-tools`. `pregolya-tools` depends on `pregolya-core` for this trait. BC-2.08.010 PC1 specifies the generated method set; BC-2.23.001–BC-2.23.006 are the first-party implementations.
 
 **BC anchor:** BC-2.08.010 PC1 (method set: name/description/schema/action_risk/invoke); BC-2.23.001–BC-2.23.006 (first-party `Tool` implementations); BC-2.05.007 PC2 (`ToolOutput::Error` on Deny).
 
 ```rust
-// ferrochain-core: core::tool  (Tool trait, ToolOutput enum, ToolInput struct)
+// pregolya-core: core::tool  (Tool trait, ToolOutput enum, ToolInput struct)
 
 /// Framework contract every tool must satisfy.
-/// Implemented via `#[ferrochain::tool]` proc-macro (BC-2.08.010) or manually.
+/// Implemented via `#[pregolya::tool]` proc-macro (BC-2.08.010) or manually.
 ///
 /// BC anchor: BC-2.08.010 PC1 (generated method set); BC-2.23.001–BC-2.23.006 (first-party impls).
 pub trait Tool: Runnable<ToolInput, ToolOutput> + Send + Sync {
@@ -1313,7 +1313,7 @@ pub trait Tool: Runnable<ToolInput, ToolOutput> + Send + Sync {
     fn schema(&self) -> schemars::Schema;
 
     /// Declared risk tier for HITL approval-hook integration; `None` if `action_risk` not annotated.
-    /// When present, emitted as `::ferrochain_core::action_risk::ActionRisk::<Variant>`
+    /// When present, emitted as `::pregolya_core::action_risk::ActionRisk::<Variant>`
     /// (ADR-008 Decision 2 emitted-path contract — fully-qualified path in proc-macro expansion).
     /// BC anchor: BC-2.08.010 PC1 (action_risk attribute); BC-2.05.007 (ToolCallPreview.action_risk).
     fn action_risk(&self) -> Option<ActionRisk>;
@@ -1326,7 +1326,7 @@ pub struct ToolInput(pub serde_json::Value);
 /// Tool execution result; returned from `Tool::invoke` (via Runnable).
 /// BC anchor: BC-2.23.001–BC-2.23.006 (variant usage per first-party tool); BC-2.05.007 PC2 (Error on Deny).
 /// `#[derive(Serialize)]` is required so the blanket `DynTool` impl can convert `ToolOutput`
-/// to `serde_json::Value`. `ToolOutput::Error(String)` maps to `Err(FerrochainError)` in
+/// to `serde_json::Value`. `ToolOutput::Error(String)` maps to `Err(PregolyaError)` in
 /// the blanket impl — never `Ok(json)` — to prevent silent-error-swallow per DI-014.
 #[non_exhaustive]
 #[derive(Serialize)]
@@ -1354,8 +1354,8 @@ pub enum ToolOutput {
 ///
 /// BC anchor: ADR-005 §Adjacent Trait Object-Safety Adjudications (Tool adjudication —
 /// option b). Wave C PO routing: BC-2.09.001 Description+PC2 and BC-2.09.002 PC1 migrate
-/// `Arc<dyn ferrochain_core::Tool>` (non-object-safe E0038) → `Arc<dyn DynTool>`.
-/// **Module:** `ferrochain-core: core::tool` (alongside `Tool`).
+/// `Arc<dyn pregolya_core::Tool>` (non-object-safe E0038) → `Arc<dyn DynTool>`.
+/// **Module:** `pregolya-core: core::tool` (alongside `Tool`).
 #[async_trait]
 pub trait DynTool: Send + Sync {
     /// Machine-readable tool name (stable public API surface per BC-2.08.009).
@@ -1377,48 +1377,48 @@ pub trait DynTool: Send + Sync {
     async fn invoke_dyn(
         &self,
         input: serde_json::Value,
-    ) -> Result<serde_json::Value, FerrochainError>;
+    ) -> Result<serde_json::Value, PregolyaError>;
 }
 
 // Blanket impl: any T: Tool + Send + Sync + 'static auto-implements DynTool.
 // invoke_dyn maps ToolOutput variants: Text/Json → Ok(serde_json::Value);
-// Error(String) → Err(FerrochainError::new(Component::Tools, Category::Tool,
+// Error(String) → Err(PregolyaError::new(Component::Tools, Category::Tool,
 //   RetryHint::Maybe, error_code, msg)) — never Ok(json) (DI-014 no-silent-empty).
 // impl<T: Tool + Send + Sync + 'static> DynTool for T { ... }
 ```
 
 ### First-Party Tools
 
-**Source:** ADR-020 (ferrochain-tools crate); ferrochain-tools crate. All file-access tools (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, GrepTool) use `PathGuard` for workspace confinement (E-TOOLS-001 on escape); BashTool is confined via the ferrochain-sandbox backend (BC-2.23.005). All tools implement the `Tool` trait via `#[ferrochain::tool]` proc-macro.
+**Source:** ADR-020 (pregolya-tools crate); pregolya-tools crate. All file-access tools (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, GrepTool) use `PathGuard` for workspace confinement (E-TOOLS-001 on escape); BashTool is confined via the pregolya-sandbox backend (BC-2.23.005). All tools implement the `Tool` trait via `#[pregolya::tool]` proc-macro.
 
-BC anchor: BC-2.23.001 (ReadFileTool — consumes BC-2.13.004 PathGuard), BC-2.23.002 (WriteFileTool — consumes BC-2.13.004 PathGuard), BC-2.23.003 (EditFileTool — consumes BC-2.13.004 PathGuard), BC-2.23.004 (ListDirTool — consumes BC-2.13.004 PathGuard), BC-2.23.005 (BashTool — ActionRisk::High default annotation; non-lowerable Medium floor via ToolConfig::override_risk; EC-005 timeout; EC-006 output truncation), BC-2.23.006 (GrepTool — match cap, E-TOOLS-006 capped flag; consumes BC-2.13.004 PathGuard), PathGuard ownership: BC-2.13.004 (ferrochain-sandbox SS-13 VP-003 Kani P0), ToolConfig (BC-2.23.005 PC-3, BC-2.08.010 PC-1).
+BC anchor: BC-2.23.001 (ReadFileTool — consumes BC-2.13.004 PathGuard), BC-2.23.002 (WriteFileTool — consumes BC-2.13.004 PathGuard), BC-2.23.003 (EditFileTool — consumes BC-2.13.004 PathGuard), BC-2.23.004 (ListDirTool — consumes BC-2.13.004 PathGuard), BC-2.23.005 (BashTool — ActionRisk::High default annotation; non-lowerable Medium floor via ToolConfig::override_risk; EC-005 timeout; EC-006 output truncation), BC-2.23.006 (GrepTool — match cap, E-TOOLS-006 capped flag; consumes BC-2.13.004 PathGuard), PathGuard ownership: BC-2.13.004 (pregolya-sandbox SS-13 VP-003 Kani P0), ToolConfig (BC-2.23.005 PC-3, BC-2.08.010 PC-1).
 
 ```rust
-// ferrochain-tools crate
+// pregolya-tools crate
 
-// PathGuard is OWNED BY ferrochain-sandbox (sandbox::path_guard, SS-13, BC-2.13.004,
-// VP-003 Kani P0). It is NOT declared or owned by ferrochain-tools.
+// PathGuard is OWNED BY pregolya-sandbox (sandbox::path_guard, SS-13, BC-2.13.004,
+// VP-003 Kani P0). It is NOT declared or owned by pregolya-tools.
 //
-// ferrochain-tools CONSUMES PathGuard via the ADR-020 Decision 1 dependency edge
-// (ferrochain-tools → ferrochain-sandbox). The five file-access tools call
+// pregolya-tools CONSUMES PathGuard via the ADR-020 Decision 1 dependency edge
+// (pregolya-tools → pregolya-sandbox). The five file-access tools call
 // canonicalize_beneath_root on every path argument at access time (NE-02 invariant).
 //
-// Confinement entry points (ferrochain-sandbox API surface):
+// Confinement entry points (pregolya-sandbox API surface):
 //   /// Pure inner function: no I/O; takes already-resolved base + candidate path.
 //   pub fn canonicalize_beneath_root_pure(base: &Path, path: &Path)
-//       -> Result<PathBuf, FerrochainError>;
+//       -> Result<PathBuf, PregolyaError>;
 //   /// I/O-performing outer function: calls std::fs::canonicalize before delegating.
 //   pub fn canonicalize_beneath_root(base: &Path, path: &Path)
-//       -> Result<PathBuf, FerrochainError>;
+//       -> Result<PathBuf, PregolyaError>;
 //
 // Error layer split:
-//   - Escape detected inside ferrochain-sandbox → Err(E-SBXD-001 PathEscapeViolation)
-//   - ferrochain-tools wraps/surfaces escape as Err(E-TOOLS-001 PathConfinementViolation)
+//   - Escape detected inside pregolya-sandbox → Err(E-SBXD-001 PathEscapeViolation)
+//   - pregolya-tools wraps/surfaces escape as Err(E-TOOLS-001 PathConfinementViolation)
 //
 // BC anchor (owner): BC-2.13.004 (PathGuard invariant, VP-003 Kani P0, SS-13)
 // BC anchor (consumer, these tools): BC-2.23.001–005 share the confinement pre-condition
 
-// ferrochain-tools: tools::config (Gate #32 carrier-3 — crate placement: ADR-020 Decision 3)
+// pregolya-tools: tools::config (Gate #32 carrier-3 — crate placement: ADR-020 Decision 3)
 
 /// Shared per-tool framework configuration.
 /// DISTINCT from per-tool implementation config (e.g., `BashConfig` holds
@@ -1461,49 +1461,49 @@ impl ToolConfig {
     /// any `ToolConfig` constructed by `BashTool`, all `ActionRisk` variants satisfying
     /// `risk < ActionRisk::Medium` produce `Err` with no reachable `Ok` code path.
     /// D-25 (4 variants only: ReadOnly/Low/Medium/High, #[non_exhaustive]) is the variant bound.
-    /// D-26 signature preserved: `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>`.
+    /// D-26 signature preserved: `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, PregolyaError>`.
     ///
     /// BC anchor: BC-2.23.005 PC-3 (risk floor check); VP-013 (Kani P1 seed: exhaustive proof).
-    pub fn override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>;
+    pub fn override_risk(self, risk: ActionRisk) -> Result<ToolConfig, PregolyaError>;
 }
 
 // ReadFileTool — BC-2.23.001
 // Errors: E-TOOLS-001 (path confinement), E-TOOLS-002 (file exceeds max_bytes limit).
-// #[ferrochain::tool(name = "read_file", description = "...")]
+// #[pregolya::tool(name = "read_file", description = "...")]
 
 // WriteFileTool — BC-2.23.002
 // Errors: E-TOOLS-001 (path confinement). Creates parent dirs; overwrites atomically.
-// #[ferrochain::tool(name = "write_file", description = "...")]
+// #[pregolya::tool(name = "write_file", description = "...")]
 
 // EditFileTool — BC-2.23.003
 // Errors: E-TOOLS-001 (path confinement), E-TOOLS-003 (old_string not found).
 // Performs exact-string replacement; requires unique match (fails on 0 or >1 matches).
-// #[ferrochain::tool(name = "edit_file", description = "...")]
+// #[pregolya::tool(name = "edit_file", description = "...")]
 
 // ListDirTool — BC-2.23.004
 // Errors: E-TOOLS-001 (path confinement), E-TOOLS-008 (not a directory, permission denied). Returns directory entries (depth 1) as JSON array of DirEntry objects.
-// #[ferrochain::tool(name = "list_dir", description = "...")]
+// #[pregolya::tool(name = "list_dir", description = "...")]
 
 /// BashTool — BC-2.23.005.
-/// action_risk default annotation: ActionRisk::High (declared via #[ferrochain::tool(action_risk = ActionRisk::High)]).
+/// action_risk default annotation: ActionRisk::High (declared via #[pregolya::tool(action_risk = ActionRisk::High)]).
 /// Non-lowerable floor: ActionRisk::Medium — ToolConfig::override_risk returns Err(E-TOOLS-007)
 /// if risk < Medium is requested at override_risk call time (see ToolConfig above).
 /// Timeout: configurable max_duration (default 30s); E-TOOLS-004 on exceed.
 /// Output cap: stdout+stderr combined truncated to max_output_bytes; BashOutput.truncated = true (E-TOOLS-005 payload field).
-// #[ferrochain::tool(name = "bash", description = "...", action_risk = ActionRisk::High)]
+// #[pregolya::tool(name = "bash", description = "...", action_risk = ActionRisk::High)]
 
 /// GrepTool — BC-2.23.006.
 /// Match cap: max_matches (default 100); GrepResult.capped = true when exceeded (E-TOOLS-006 payload field).
 /// Errors: E-TOOLS-001 (path confinement).
-// #[ferrochain::tool(name = "grep", description = "...")]
+// #[pregolya::tool(name = "grep", description = "...")]
 ```
 
 ### Retriever Trait and GuardedDocuments
 
-**Source:** ADR-014 Decision 2 (trait shape) + Decision 6 (GuardedDocuments); ferrochain-core: core::retriever, core::documents. (Note: core::guardrail provides types referenced by rag_ingress — GuardrailHook, IngressContent, ProvenanceTag — but GuardedDocuments itself is defined in core::retriever per ADR-014 Decision 6.)
+**Source:** ADR-014 Decision 2 (trait shape) + Decision 6 (GuardedDocuments); pregolya-core: core::retriever, core::documents. (Note: core::guardrail provides types referenced by rag_ingress — GuardrailHook, IngressContent, ProvenanceTag — but GuardedDocuments itself is defined in core::retriever per ADR-014 Decision 6.)
 
 ```rust
-// ferrochain-core: core::retriever
+// pregolya-core: core::retriever
 #[async_trait]
 pub trait Retriever: Send + Sync {
     /// Returns documents relevant to `query`, ranked by relevance (implementation-defined).
@@ -1512,10 +1512,10 @@ pub trait Retriever: Send + Sync {
     async fn get_relevant_documents(
         &self,
         query: &str,
-    ) -> Result<Vec<Document>, FerrochainError>;
+    ) -> Result<Vec<Document>, PregolyaError>;
 }
 
-// ferrochain-core: core::documents
+// pregolya-core: core::documents
 /// Pure data carrier for all retrieval output. No methods, no I/O.
 /// BC anchor: BC-2.20.001 PC3 (field semantics: page_content non-empty for content docs,
 /// metadata MAY be empty, id: Option<String>), BC-2.20.001 INV-3 (no methods/I/O/async)
@@ -1530,7 +1530,7 @@ pub struct Document {
     pub id: Option<String>,
 }
 
-// ferrochain-core: core::retriever
+// pregolya-core: core::retriever
 // (GuardedDocuments is in core::retriever — it references types from core::guardrail such as
 // GuardrailHook, IngressContent, and ProvenanceTag, but the struct and rag_ingress constructor
 // are defined in core::retriever per ADR-014 Decision 6.)
@@ -1547,7 +1547,7 @@ impl GuardedDocuments {
     /// - `GuardrailSeverity::Critical` Fail → returns `Err(E-CORE-008 GuardrailCriticalRejection)`;
     ///   entire batch is aborted; no `GuardedDocuments` produced (DI-014 fail-closed).
     /// - Non-Critical Fail (High/Medium/Low) → error-entry Document substituted at the rejected
-    ///   position (`page_content: "[GUARDRAIL BLOCKED: <reason>]"`, `metadata.ferrochain.guardrail_blocked: true`);
+    ///   position (`page_content: "[GUARDRAIL BLOCKED: <reason>]"`, `metadata.pregolya.guardrail_blocked: true`);
     ///   batch continues; `GuardedDocuments` produced with the substitution.
     /// BC anchor: BC-2.20.002 PC2 (severity-bifurcated Fail; Critical → Err(E-CORE-008); non-critical → substitution),
     /// BC-2.20.002 PC3 (guardrail fires BEFORE any doc content is used),
@@ -1555,7 +1555,7 @@ impl GuardedDocuments {
     pub async fn rag_ingress(
         docs: Vec<Document>,
         guardrail: &dyn GuardrailHook,
-    ) -> Result<GuardedDocuments, FerrochainError> { ... }
+    ) -> Result<GuardedDocuments, PregolyaError> { ... }
 
     /// Access the guardrail-cleared documents.
     pub fn documents(&self) -> &[Document] { &self.0 }
@@ -1566,16 +1566,16 @@ impl GuardedDocuments {
 BC-2.20.001 (Retriever trait — async dyn-compat, Document carrier, Arc\<dyn Retriever\> graph seam),
 BC-2.20.002 (DI-012 RAGRetrieval guardrail coverage — GuardedDocuments typed wrapper enforces guardrail boundary at compile time; Red Gate test),
 BC-2.20.003 (VectorStoreRetriever — SearchType/k/fetch_k/lambda_mult; as_retriever() → Retriever).
-ADR-014 Decision 1 (crate placement: Retriever + Document in ferrochain-core), Decision 2 (trait shape, Document struct), Decision 6 (GuardedDocuments typed wrapper, rag_ingress async per-document evaluation).
+ADR-014 Decision 1 (crate placement: Retriever + Document in pregolya-core), Decision 2 (trait shape, Document struct), Decision 6 (GuardedDocuments typed wrapper, rag_ingress async per-document evaluation).
 
 ---
 
 ### VectorStore Trait and VectorStoreFactory
 
-**Source:** ADR-014 Decision 2; ferrochain-vectorstores: vectorstores::store.
+**Source:** ADR-014 Decision 2; pregolya-vectorstores: vectorstores::store.
 
 ```rust
-// ferrochain-vectorstores: vectorstores::store
+// pregolya-vectorstores: vectorstores::store
 #[async_trait]
 pub trait VectorStore: Send + Sync {
     /// Add texts (with optional per-text metadata) to the store. Returns assigned IDs.
@@ -1585,7 +1585,7 @@ pub trait VectorStore: Send + Sync {
         &self,
         texts: Vec<String>,
         metadatas: Option<Vec<serde_json::Map<String, serde_json::Value>>>,
-    ) -> Result<Vec<String>, FerrochainError>;
+    ) -> Result<Vec<String>, PregolyaError>;
 
     /// Return the top-k documents most similar to `query`.
     /// BC anchor: BC-2.21.001 PC2, BC-2.21.002 PC3/PC4 (cosine similarity, RwLock read lock)
@@ -1593,7 +1593,7 @@ pub trait VectorStore: Send + Sync {
         &self,
         query: &str,
         k: usize,
-    ) -> Result<Vec<Document>, FerrochainError>;
+    ) -> Result<Vec<Document>, PregolyaError>;
 
     /// Return the top-k documents with their cosine similarity scores.
     /// BC anchor: BC-2.21.001 PC3
@@ -1601,7 +1601,7 @@ pub trait VectorStore: Send + Sync {
         &self,
         query: &str,
         k: usize,
-    ) -> Result<Vec<(Document, f32)>, FerrochainError>;
+    ) -> Result<Vec<(Document, f32)>, PregolyaError>;
 
     /// Maximal Marginal Relevance search balancing relevance and diversity.
     /// BC anchor: BC-2.21.001 PC4, BC-2.20.003 PC3/INV-3 (SearchType::Mmr dispatch path)
@@ -1611,11 +1611,11 @@ pub trait VectorStore: Send + Sync {
         k: usize,
         fetch_k: usize,
         lambda_mult: f32,
-    ) -> Result<Vec<Document>, FerrochainError>;
+    ) -> Result<Vec<Document>, PregolyaError>;
 
     /// Delete documents by stable ID. Returns Ok(()) even if some IDs do not exist.
     /// BC anchor: BC-2.21.001 PC5
-    async fn delete(&self, ids: &[&str]) -> Result<(), FerrochainError>;
+    async fn delete(&self, ids: &[&str]) -> Result<(), PregolyaError>;
 
     /// Construct a `VectorStoreRetriever` over this store.
     ///
@@ -1631,7 +1631,7 @@ pub trait VectorStore: Send + Sync {
     /// - `fetch_k < k` when `SearchType::Mmr`
     ///
     /// BC anchor: BC-2.20.003 INV-2 (E-VS-003 on invalid config), BC-2.20.003 TV-004/TV-005.
-    fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>;
+    fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>;
 
     /// Metadata-filter similarity search. Default returns `Err(E-VS-005 FilterUnsupported)` when
     /// `filter.filters` is non-empty — fail-safe (not lossy). An empty `MetadataFilter` (vacuously
@@ -1644,11 +1644,11 @@ pub trait VectorStore: Send + Sync {
         query: &str,
         k: usize,
         filter: MetadataFilter,
-    ) -> Result<Vec<Document>, FerrochainError> {
+    ) -> Result<Vec<Document>, PregolyaError> {
         // Default: fail-safe on non-empty filter — returning unfiltered results would be lossy
         // and a potential cross-tenant-exposure hazard (ADR-014 Decision 2 §Metadata filter surface F-P131-07 adjudication).
         if !filter.filters.is_empty() {
-            return Err(FerrochainError::new(
+            return Err(PregolyaError::new(
                 Component::Vs,
                 Category::Val,
                 RetryHint::Never,
@@ -1674,7 +1674,7 @@ pub trait VectorStoreFactory: VectorStore + Sized {
         texts: Vec<String>,
         embedding: Arc<dyn Embeddings>,
         config: Self::Config,
-    ) -> impl std::future::Future<Output = Result<Self, FerrochainError>> + Send;
+    ) -> impl std::future::Future<Output = Result<Self, PregolyaError>> + Send;
 }
 
 /// Adapter returned by `VectorStore::as_retriever()`. Implements `Retriever + 'static`.
@@ -1737,10 +1737,10 @@ ADR-014 Decision 2 (all method signatures, VectorStoreRetriever, SearchType, Met
 
 ### Embeddings Trait
 
-**Source:** ADR-017 Decision 2; ferrochain-core: core::embeddings.
+**Source:** ADR-017 Decision 2; pregolya-core: core::embeddings.
 
 ```rust
-// ferrochain-core: core::embeddings
+// pregolya-core: core::embeddings
 #[async_trait]
 pub trait Embeddings: Send + Sync {
     /// Embed a batch of texts. Output must satisfy: output.len() == texts.len() and all
@@ -1751,7 +1751,7 @@ pub trait Embeddings: Send + Sync {
     async fn embed_documents(
         &self,
         texts: Vec<String>,
-    ) -> Result<Vec<Vec<f32>>, FerrochainError>;
+    ) -> Result<Vec<Vec<f32>>, PregolyaError>;
 
     /// Embed a single query text. Returns one vector of the model's declared dimension.
     /// BC anchor: BC-2.22.001 PC3 (embed_query semantics, dimension consistent with embed_documents),
@@ -1759,12 +1759,12 @@ pub trait Embeddings: Send + Sync {
     async fn embed_query(
         &self,
         text: String,
-    ) -> Result<Vec<f32>, FerrochainError>;
+    ) -> Result<Vec<f32>, PregolyaError>;
 }
 ```
 
 ```rust
-// ferrochain-core: core::embeddings — production free function (NOT test-only)
+// pregolya-core: core::embeddings — production free function (NOT test-only)
 
 /// Validates a batch of embedding vectors against the dimensionality contract.
 /// All `Embeddings` implementations must call this before returning `Ok` from
@@ -1786,7 +1786,7 @@ pub trait Embeddings: Send + Sync {
 pub fn validate_embedding_batch(
     texts: &[String],
     vecs: &[Vec<f32>],
-) -> Result<(), FerrochainError>;
+) -> Result<(), PregolyaError>;
 ```
 
 **BC anchor:**
@@ -1794,16 +1794,16 @@ BC-2.22.001 (Embeddings trait — embed_documents batch, embed_query, dimensiona
 BC-2.22.002 (EmbeddingsOpenAI — text-embedding-3-small/large/ada-002-legacy; OpenAiApiKey DI-010 credential opacity; reqwest/rustls-tls/.timeout(30s); DI-009 per BC-2.14.004),
 BC-2.22.003 (EmbeddingsOllama — no API key; /api/embed preferred; use_legacy_endpoint toggle; 30s unconditional per DI-009 / BC-2.14.004).
 ADR-017 Decision 2 (Embeddings trait surface, dyn-safety via #[async_trait] + &self, dimensionality contract, E-EMBED-001 authority).
-`validate_embedding_batch`: `pub` free function; visibility `pub` because `ferrochain-openai::openai::embeddings` and `ferrochain-ollama::ollama::embeddings` call it cross-crate. `#[non_exhaustive]` does not apply (free function, no associated types). Placement: `ferrochain-core/src/embeddings.rs` (or `ferrochain-core/src/embeddings/mod.rs` if the module splits past 500-line soft target).
+`validate_embedding_batch`: `pub` free function; visibility `pub` because `pregolya-openai::openai::embeddings` and `pregolya-ollama::ollama::embeddings` call it cross-crate. `#[non_exhaustive]` does not apply (free function, no associated types). Placement: `pregolya-core/src/embeddings.rs` (or `pregolya-core/src/embeddings/mod.rs` if the module splits past 500-line soft target).
 
 ---
 
 ### ChatPromptTemplate and PromptValue Surface
 
-**Source:** ADR-015; ferrochain-prompts: prompts::template.
+**Source:** ADR-015; pregolya-prompts: prompts::template.
 
 ```rust
-// ferrochain-prompts: prompts::template
+// pregolya-prompts: prompts::template
 
 /// Trust classification of a template variable at injection time.
 /// Distinct from `ProvenanceTag` (SS-11 ingress boundary struct).
@@ -1907,7 +1907,7 @@ impl ChatPromptTemplate {
     /// BC-2.18.005 PC1 (TrustAll on SystemMessage → E-TMPL-002 at construction time; fail-closed)
     pub fn from_messages(
         messages: Vec<(MessageRole, &str, SlotTrustPolicy)>,
-    ) -> Result<Self, FerrochainError> { ... }
+    ) -> Result<Self, PregolyaError> { ... }
 
     /// Render the template with the provided variable bindings.
     /// Runs injection_guard on each slot. Raises E-TMPL-001 (fail-closed) if an untrusted
@@ -1923,7 +1923,7 @@ impl ChatPromptTemplate {
     pub fn format_messages(
         &self,
         vars: HashMap<String, TemplateInput>,
-    ) -> Result<PromptValue, FerrochainError> { ... }
+    ) -> Result<PromptValue, PregolyaError> { ... }
 }
 
 /// The rendered output of ChatPromptTemplate::format_messages.
@@ -1958,10 +1958,10 @@ ADR-015 Decision 1 (ChatPromptTemplate surface), Decision 2 (SlotTrustPolicy enu
 
 ### LcSerializable and Reviver Surface
 
-**Source:** ADR-016; ferrochain-core: core::serializable.
+**Source:** ADR-016; pregolya-core: core::serializable.
 
 ```rust
-// ferrochain-core: core::serializable
+// pregolya-core: core::serializable
 
 /// Implemented by types that participate in the lc-JSON serialization protocol.
 /// Registration via inventory::submit! at link time (see BC-2.19.003).
@@ -2020,7 +2020,7 @@ pub struct LcEntry {
     /// BC anchor: BC-2.19.005 PC2 (Reviver dispatches to this constructor fn)
     pub constructor: fn(
         serde_json::Map<String, serde_json::Value>,
-    ) -> Result<Box<dyn Any + Send + Sync>, FerrochainError>,
+    ) -> Result<Box<dyn Any + Send + Sync>, PregolyaError>,
 }
 
 inventory::collect!(LcEntry);
@@ -2046,7 +2046,7 @@ impl Reviver {
     pub fn revive(
         &self,
         s: Serialized,
-    ) -> Result<Box<dyn Any + Send + Sync>, FerrochainError> { ... }
+    ) -> Result<Box<dyn Any + Send + Sync>, PregolyaError> { ... }
 
     /// Return the count of registered entries. Used for CI smoke-test assertions.
     /// BC anchor: BC-2.19.003 PC5 (registry_size used in TV-001/TV-002 relational assertions)
@@ -2061,16 +2061,16 @@ BC-2.19.003 (inventory-based type registry — LcEntry, link-time submit!, featu
 BC-2.19.004 (legacy namespace remapping — alias entries added to same registry at startup),
 BC-2.19.005 (Reviver allowlist containment — unregistered id → E-SRLZ-001, fail-closed; VP-010 Kani candidate),
 BC-2.19.006 (langchain-monolith type ids → E-SRLZ-002, structured error — not silent None or E-SRLZ-001).
-ADR-016 Decision 1 (crate placement — ferrochain-core module, no new crate), Decision 2 (LcSerializable trait, Serialized enum, LcEntry; inventory-backed OnceLock type registry), Decision 3 (lc_secrets exclusion, JSON-safe output, Reviver allowlist containment and E-SRLZ-002 — §Security Invariant Properties 1–5), Decision 4 (OLD_CORE_NAMESPACES_MAPPING legacy namespace remapping).
+ADR-016 Decision 1 (crate placement — pregolya-core module, no new crate), Decision 2 (LcSerializable trait, Serialized enum, LcEntry; inventory-backed OnceLock type registry), Decision 3 (lc_secrets exclusion, JSON-safe output, Reviver allowlist containment and E-SRLZ-002 — §Security Invariant Properties 1–5), Decision 4 (OLD_CORE_NAMESPACES_MAPPING legacy namespace remapping).
 
 ---
 
-## ferrochain-server HTTP API
+## pregolya-server HTTP API
 
 ### Base URL
 
 All endpoints are relative to the server's configured base URL.
-Default port: `7437` (configurable via `server.port` in `ferrochain-server.toml`).
+Default port: `7437` (configurable via `server.port` in `pregolya-server.toml`).
 
 ### Canonical Pagination Convention (F-P31-01, ADV-P1D-PASS-31)
 
@@ -2162,7 +2162,7 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 | 201 | Created (new resource; body contains created object) | — |
 | 202 | Accepted (async run created; polling required) | — |
 | 204 | No Content (delete success; no response body) | — |
-| 400 | Validation error | E-CORE-001, E-CORE-002, E-CORE-003, E-CORE-005 (VAL — ferrochain-core input validation), E-CRON-002 (InvalidCronExpression); E-PROV-005 (StructuredOutputParseError, VAL) and E-PROV-006 (ContextLengthExceeded, VAL) — categorical VAL→400; surfaced embedded in Run.error, not as direct HTTP response codes (OBS-3; BC-2.08.003, BC-2.08.004). **Note:** E-CORE-004 (INTERNAL) excluded — see E-CORE-004 omission note below (F-P69-01). |
+| 400 | Validation error | E-CORE-001, E-CORE-002, E-CORE-003, E-CORE-005 (VAL — pregolya-core input validation), E-CRON-002 (InvalidCronExpression); E-PROV-005 (StructuredOutputParseError, VAL) and E-PROV-006 (ContextLengthExceeded, VAL) — categorical VAL→400; surfaced embedded in Run.error, not as direct HTTP response codes (OBS-3; BC-2.08.003, BC-2.08.004). **Note:** E-CORE-004 (INTERNAL) excluded — see E-CORE-004 omission note below (F-P69-01). |
 | 401 | Authentication failure (categorical fallback) | E-PROV-004 (ProviderAuthFailed, AUTH) — categorical fallback only; no v1 server endpoint emits 401 as a direct terminal HTTP status; surfaced embedded in Run.error. Server-side authentication middleware is out of v1 scope (F-P26-05; F-P25-02: E-SERVER-004 recategorized AUTH→POLICY → 403) |
 | 403 | Policy enforcement (debug route, role gate) | E-SERVER-004 (DebugRouteUnauthorized), E-GRAPH-013 (InsufficientApproverRole — SECURITY; direct HTTP 403 on `POST /threads/{thread_id}/runs/{run_id}/resume` when caller role is insufficient for the interrupt's risk tier; BC-2.05.006 PC3-PC4, EC-001; F-P27-04) — **NOTE (F-P66-03, ADV-P1D-PASS-66):** E-SERVER-005 (CorsRejected) REMOVED from this row; CORS denial is silent header-omission per BC-2.12.005 PC2/TV-001 and never produces a direct HTTP 403 error body; code retired unraised. |
 | 404 | Resource not found | E-SERVER-002 (RunNotFound), E-SERVER-003 (ThreadNotFound), E-SERVER-006 (ScheduleNotFound), E-SERVER-009 (AssistantNotFound — direct resource lookup), E-SERVER-010 (AssistantVersionNotFound) |
@@ -2186,31 +2186,31 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 
 > **E-SERVER-013 startup-only omission (F-P55-01, ADV-P1D-PASS-55):** E-SERVER-013 (InvalidDebugRouteKey, VAL — BC-2.12.005 EC-005/TV-007) is raised during server configuration validation at startup (debug_route_key must be non-empty when debug routes are enabled). VAL→400 is the categorical mapping. In v1 this error halts startup before any HTTP listener is bound; it is never surfaced as a terminal HTTP response. Intentionally omitted from the 400 row; same treatment as E-CHKPT-005.
 
-> **E-CORE-004 library-layer omission (F-P69-01, ADV-P1D-PASS-69):** E-CORE-004 (INTERNAL — BC-2.01.004 PC5) is raised when a type-erased `DynRunnable` pipeline detects a type boundary mismatch between adjacent stages at the first `invoke` call. INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError { category: INTERNAL, code: "E-CORE-004", .. })` return from the `RunnableSequence::invoke` call site in library code; it is never emitted as a terminal HTTP response by ferrochain-server (if ever propagated to a server-side run, it would surface embedded in Run.error, not as a direct HTTP 500). Intentionally omitted from the HTTP status table; same treatment as E-CORE-006 and E-CORE-007.
+> **E-CORE-004 library-layer omission (F-P69-01, ADV-P1D-PASS-69):** E-CORE-004 (INTERNAL — BC-2.01.004 PC5) is raised when a type-erased `DynRunnable` pipeline detects a type boundary mismatch between adjacent stages at the first `invoke` call. INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(PregolyaError { category: INTERNAL, code: "E-CORE-004", .. })` return from the `RunnableSequence::invoke` call site in library code; it is never emitted as a terminal HTTP response by pregolya-server (if ever propagated to a server-side run, it would surface embedded in Run.error, not as a direct HTTP 500). Intentionally omitted from the HTTP status table; same treatment as E-CORE-006 and E-CORE-007.
 
-> **E-CORE-006 library-layer omission (F-P56-01, ADV-P1D-PASS-56):** E-CORE-006 (RecursionLimitExceeded, INTERNAL — BC-2.01.003 PC5) is raised by the ferrochain-core Runnable-layer when nested `invoke`/`stream` call depth exceeds `config.recursion_limit` (default 25). INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from the `invoke`/`stream` call site in library code; it is never emitted as a terminal HTTP response by ferrochain-server (if it ever propagates to a server-side run, it would surface embedded in Run.error, not as a direct HTTP 500). Intentionally omitted from the HTTP status table; same treatment as E-MCP-*, E-SPLIT-*, and other library-layer errors.
+> **E-CORE-006 library-layer omission (F-P56-01, ADV-P1D-PASS-56):** E-CORE-006 (RecursionLimitExceeded, INTERNAL — BC-2.01.003 PC5) is raised by the pregolya-core Runnable-layer when nested `invoke`/`stream` call depth exceeds `config.recursion_limit` (default 25). INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(PregolyaError)` return from the `invoke`/`stream` call site in library code; it is never emitted as a terminal HTTP response by pregolya-server (if it ever propagates to a server-side run, it would surface embedded in Run.error, not as a direct HTTP 500). Intentionally omitted from the HTTP status table; same treatment as E-MCP-*, E-SPLIT-*, and other library-layer errors.
 
-> **E-CORE-007 library-layer omission (ADV-P1D-PASS-56-COMPLETION):** E-CORE-007 (GuardrailHookPanic, INTERNAL — BC-2.11.002 / BC-2.11.003 / BC-2.11.004) is raised when a `GuardrailHook::evaluate` call panics at any content-ingress boundary (tool-result, RAG chunk, or memory item). INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from the guardrail ingress pipeline in library code; it is never emitted as a terminal HTTP response by ferrochain-server (if ever propagated to a server-side run, it would surface embedded in Run.error). Fail-closed semantics: content that triggered the panic is treated as rejected and does not enter the model context. Intentionally omitted from the HTTP status table; same treatment as E-CORE-006.
+> **E-CORE-007 library-layer omission (ADV-P1D-PASS-56-COMPLETION):** E-CORE-007 (GuardrailHookPanic, INTERNAL — BC-2.11.002 / BC-2.11.003 / BC-2.11.004) is raised when a `GuardrailHook::evaluate` call panics at any content-ingress boundary (tool-result, RAG chunk, or memory item). INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(PregolyaError)` return from the guardrail ingress pipeline in library code; it is never emitted as a terminal HTTP response by pregolya-server (if ever propagated to a server-side run, it would surface embedded in Run.error). Fail-closed semantics: content that triggered the panic is treated as rejected and does not enter the model context. Intentionally omitted from the HTTP status table; same treatment as E-CORE-006.
 
-> **E-CORE-008 library-layer omission (burst-226/F-P131-01/2026-07-21):** E-CORE-008 (GuardrailCriticalRejection, SECURITY — BC-2.20.002 PC2) is raised by `GuardedDocuments::rag_ingress` when any document receives `GuardrailResult::Fail { severity: GuardrailSeverity::Critical }`. SECURITY→403 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from `GuardedDocuments::rag_ingress` in library code; it is never emitted as a terminal HTTP response by ferrochain-server (if ever propagated to a server-side run, it would surface embedded in Run.error, not as a direct HTTP 403). Fail-closed semantics: the entire batch is aborted; no `GuardedDocuments` is produced. Intentionally omitted from the HTTP status table; same treatment as E-CORE-007.
+> **E-CORE-008 library-layer omission (burst-226/F-P131-01/2026-07-21):** E-CORE-008 (GuardrailCriticalRejection, SECURITY — BC-2.20.002 PC2) is raised by `GuardedDocuments::rag_ingress` when any document receives `GuardrailResult::Fail { severity: GuardrailSeverity::Critical }`. SECURITY→403 is the categorical mapping. In v1 this error surfaces as a direct `Err(PregolyaError)` return from `GuardedDocuments::rag_ingress` in library code; it is never emitted as a terminal HTTP response by pregolya-server (if ever propagated to a server-side run, it would surface embedded in Run.error, not as a direct HTTP 403). Fail-closed semantics: the entire batch is aborted; no `GuardedDocuments` is produced. Intentionally omitted from the HTTP status table; same treatment as E-CORE-007.
 
-> **E-CHKPT-008 library-layer omission (D20 sub-burst 2; raise-timing corrected F-P82-02):** E-CHKPT-008 (FtsLimitZero, VAL) covers two distinct sub-cases with different raise times: **(1) `FtsSearchConfig.limit = 0`** — raised at **`FtsSearchConfig` construction time** (DI-008 construction-result contract; BC-2.04.008 PC6/EC-004); **(2) malformed FTS5 query string** — raised at **`fts_search` call time** when SQLite FTS5 fails to parse the query string passed as the standalone `query: &str` first parameter (SQLite FTS5 parse error propagation; BC-2.04.008 EC-002). Note: `query` is a standalone first parameter to `fts_search`, NOT a field of `FtsSearchConfig`. VAL→400 is the categorical mapping. In v1 both sub-cases surface as a direct `Err(FerrochainError)` return from library code; neither is emitted as a terminal HTTP response by ferrochain-server (no FTS search endpoint in v1; if ever surfaced via server, it would appear embedded in Run.error). Intentionally omitted from the HTTP status table.
+> **E-CHKPT-008 library-layer omission (D20 sub-burst 2; raise-timing corrected F-P82-02):** E-CHKPT-008 (FtsLimitZero, VAL) covers two distinct sub-cases with different raise times: **(1) `FtsSearchConfig.limit = 0`** — raised at **`FtsSearchConfig` construction time** (DI-008 construction-result contract; BC-2.04.008 PC6/EC-004); **(2) malformed FTS5 query string** — raised at **`fts_search` call time** when SQLite FTS5 fails to parse the query string passed as the standalone `query: &str` first parameter (SQLite FTS5 parse error propagation; BC-2.04.008 EC-002). Note: `query` is a standalone first parameter to `fts_search`, NOT a field of `FtsSearchConfig`. VAL→400 is the categorical mapping. In v1 both sub-cases surface as a direct `Err(PregolyaError)` return from library code; neither is emitted as a terminal HTTP response by pregolya-server (no FTS search endpoint in v1; if ever surfaced via server, it would appear embedded in Run.error). Intentionally omitted from the HTTP status table.
 
-> **E-CHKPT-009 library-layer omission (D20 sub-burst 2):** E-CHKPT-009 (Fts5Unavailable, INTERNAL — BC-2.04.008 EC-006) is raised at `CheckpointSaver::new()` construction time when FTS is requested but the SQLite build does not include the FTS5 extension. INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from `CheckpointSaver::new()` in library code; it is never emitted as a terminal HTTP response by ferrochain-server (server startup with a bad FTS5 config fails before any listener is bound). Intentionally omitted from the HTTP status table; same treatment as E-CHKPT-005 and E-SERVER-013 (startup-time library errors).
+> **E-CHKPT-009 library-layer omission (D20 sub-burst 2):** E-CHKPT-009 (Fts5Unavailable, INTERNAL — BC-2.04.008 EC-006) is raised at `CheckpointSaver::new()` construction time when FTS is requested but the SQLite build does not include the FTS5 extension. INTERNAL→500 is the categorical mapping. In v1 this error surfaces as a direct `Err(PregolyaError)` return from `CheckpointSaver::new()` in library code; it is never emitted as a terminal HTTP response by pregolya-server (server startup with a bad FTS5 config fails before any listener is bound). Intentionally omitted from the HTTP status table; same treatment as E-CHKPT-005 and E-SERVER-013 (startup-time library errors).
 
-> **E-PROV-009 library-layer omission (D20 sub-burst 2):** E-PROV-009 (ToolCallDialectParseError, VAL — BC-2.08.013 PC8/PC9/EC-002) is raised when `ToolCallDialect::deserialize_tool_calls` fails to parse model-output content. VAL→400 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from the dialect dispatch layer in library code; it propagates as Run.error on the server side (same treatment as E-PROV-005, E-PROV-006). Never a direct HTTP terminal response. Intentionally omitted from the HTTP status table.
+> **E-PROV-009 library-layer omission (D20 sub-burst 2):** E-PROV-009 (ToolCallDialectParseError, VAL — BC-2.08.013 PC8/PC9/EC-002) is raised when `ToolCallDialect::deserialize_tool_calls` fails to parse model-output content. VAL→400 is the categorical mapping. In v1 this error surfaces as a direct `Err(PregolyaError)` return from the dialect dispatch layer in library code; it propagates as Run.error on the server side (same treatment as E-PROV-005, E-PROV-006). Never a direct HTTP terminal response. Intentionally omitted from the HTTP status table.
 
-> **E-PROV-010 library-layer omission (D20 sub-burst 2):** E-PROV-010 (ProviderChainExhausted, POLICY — BC-2.08.014 PC5/EC-004) is raised when all providers in the `ProviderFallbackPolicy` chain have been tried and all failed. POLICY→403 is the categorical mapping. In v1 this error surfaces as a direct `Err(FerrochainError)` return from the provider dispatch layer in library code; it propagates as Run.error on the server side (same treatment as E-PROV-007 StructuredOutputRefused). Never a direct HTTP terminal response. Intentionally omitted from the HTTP status table.
+> **E-PROV-010 library-layer omission (D20 sub-burst 2):** E-PROV-010 (ProviderChainExhausted, POLICY — BC-2.08.014 PC5/EC-004) is raised when all providers in the `ProviderFallbackPolicy` chain have been tried and all failed. POLICY→403 is the categorical mapping. In v1 this error surfaces as a direct `Err(PregolyaError)` return from the provider dispatch layer in library code; it propagates as Run.error on the server side (same treatment as E-PROV-007 StructuredOutputRefused). Never a direct HTTP terminal response. Intentionally omitted from the HTTP status table.
 
-> **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30; D21/2026-07-20; D23/2026-07-22):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY/SECURITY), E-SPLIT-* (BC-2.07.x, VAL), E-TMPL-* (BC-2.18.x, SECURITY/VAL), E-SRLZ-* (BC-2.19.x, VAL), E-VS-* (BC-2.20.x/BC-2.21.x, VAL), E-EMBED-* (BC-2.22.x, VAL), E-TOOLS-* (BC-2.23.x, SECURITY/VAL/TIMEOUT) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400, TIMEOUT→503) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only. **D21 additions confirmed library-layer only:** E-TMPL-001 (BC-2.18.004 — prompt injection guard, ferrochain-prompts), E-SRLZ-001 (BC-2.19.005 — Reviver allowlist fail-closed, ferrochain-core::serializable), E-VS-001 (BC-2.21.003 — zero-norm cosine guard, ferrochain-vectorstores), E-EMBED-001 (BC-2.22.001 — dimensionality contract, ferrochain-core::embeddings); all library-layer Err returns. **D23 additions confirmed library-layer only:** E-TOOLS-001 (BC-2.23.001–006 — PathGuard confinement SECURITY), E-TOOLS-002/003/007 (VAL construction/call-time), E-TOOLS-004 (BashTool timeout TIMEOUT/Never), E-TOOLS-005/006 (informational payload fields — not raised Err; included for census completeness); all ferrochain-tools library-layer. **burst-233 additions confirmed library-layer only:** E-TOOLS-008 (BC-2.23.001–004/006 — OS-level I/O error TOOL/Maybe, wraps std::io::ErrorKind), E-TOOLS-009 (BC-2.23.006 — invalid regex pattern VAL/Never); both ferrochain-tools library-layer. **burst-240 addition confirmed library-layer only:** E-MCP-006 (BC-2.09.002 — McpContentUnsupported VAL/Never; raised by _convert_mcp_content_to_block for unsupported content block types such as AudioContent; ferrochain-mcp library-layer Err return; never direct HTTP terminal in v1). **Disposition census (burst-240/2026-07-22): 43 HTTP + 17 individual + 48 blanket = 108.** (+1 blanket: E-MCP-* 5→6 codes.) Blanket group breakdown: E-MCP-* 6 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 48.
+> **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30; D21/2026-07-20; D23/2026-07-22):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY/SECURITY), E-SPLIT-* (BC-2.07.x, VAL), E-TMPL-* (BC-2.18.x, SECURITY/VAL), E-SRLZ-* (BC-2.19.x, VAL), E-VS-* (BC-2.20.x/BC-2.21.x, VAL), E-EMBED-* (BC-2.22.x, VAL), E-TOOLS-* (BC-2.23.x, SECURITY/VAL/TIMEOUT) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400, TIMEOUT→503) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only. **D21 additions confirmed library-layer only:** E-TMPL-001 (BC-2.18.004 — prompt injection guard, pregolya-prompts), E-SRLZ-001 (BC-2.19.005 — Reviver allowlist fail-closed, pregolya-core::serializable), E-VS-001 (BC-2.21.003 — zero-norm cosine guard, pregolya-vectorstores), E-EMBED-001 (BC-2.22.001 — dimensionality contract, pregolya-core::embeddings); all library-layer Err returns. **D23 additions confirmed library-layer only:** E-TOOLS-001 (BC-2.23.001–006 — PathGuard confinement SECURITY), E-TOOLS-002/003/007 (VAL construction/call-time), E-TOOLS-004 (BashTool timeout TIMEOUT/Never), E-TOOLS-005/006 (informational payload fields — not raised Err; included for census completeness); all pregolya-tools library-layer. **burst-233 additions confirmed library-layer only:** E-TOOLS-008 (BC-2.23.001–004/006 — OS-level I/O error TOOL/Maybe, wraps std::io::ErrorKind), E-TOOLS-009 (BC-2.23.006 — invalid regex pattern VAL/Never); both pregolya-tools library-layer. **burst-240 addition confirmed library-layer only:** E-MCP-006 (BC-2.09.002 — McpContentUnsupported VAL/Never; raised by _convert_mcp_content_to_block for unsupported content block types such as AudioContent; pregolya-mcp library-layer Err return; never direct HTTP terminal in v1). **Disposition census (burst-240/2026-07-22): 43 HTTP + 17 individual + 48 blanket = 108.** (+1 blanket: E-MCP-* 5→6 codes.) Blanket group breakdown: E-MCP-* 6 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 48.
 
 ## Exit Code Semantics
 
-ferrochain is a library — process exit codes do not apply. The embedded `ferrochain-server` uses standard HTTP status codes; see §HTTP Status Codes in the §ferrochain-server HTTP API section above. Library errors propagate as `FerrochainError` values per the error taxonomy.
+pregolya is a library — process exit codes do not apply. The embedded `pregolya-server` uses standard HTTP status codes; see §HTTP Status Codes in the §pregolya-server HTTP API section above. Library errors propagate as `PregolyaError` values per the error taxonomy.
 
 ## JSON Output Schema
 
-Canonical JSON output shapes for `ferrochain-server` API responses. The primary response objects are defined in the sections below.
+Canonical JSON output shapes for `pregolya-server` API responses. The primary response objects are defined in the sections below.
 
 ## Run Object Schema
 
@@ -2294,10 +2294,10 @@ Canonical JSON output shapes for `ferrochain-server` API responses. The primary 
 
 **BC anchor:** BC-2.05.004
 
-## ferrochain-server Config File Schema
+## pregolya-server Config File Schema
 
 ```toml
-# ferrochain-server.toml
+# pregolya-server.toml
 [server]
 port = 7437                    # default; must be > 1023 for non-root
 host = "127.0.0.1"             # default: loopback only
@@ -2314,7 +2314,7 @@ cors_allow_origins = []        # empty = deny all cross-origin requests (SECURE 
 
 [checkpoint]
 backend = "sqlite"             # "sqlite" | "memory"; postgres = stretch target
-sqlite_path = "./ferrochain.db"
+sqlite_path = "./pregolya.db"
 
 [sandbox]
 backend = "wasm"               # "wasm" (default, enforcing) | "container" | "process"
@@ -2346,8 +2346,8 @@ default_on_ceiling = "halt"    # "halt" | "escalate"
 | `sandbox-wasm` | on | WASM sandbox backend (enforcing; default) | BC-2.13.001 |
 | `sandbox-container` | off | Container sandbox backend | BC-2.13.001 |
 | `sandbox-process` | off | Process backend (NOT enforcing; no filesystem/network/memory isolation); compiles `ProcessBackend` but does NOT make it a default — accessible ONLY via `Sandbox::unsafe_process_no_isolation()`; `SandboxBackend::default()` returns `Err(E-SBXD-003)` when no enforcing backend is compiled (BC-2.13.001 PC3/PC4) | BC-2.13.001, BC-2.13.002 |
-| `server` | off | ferrochain-server HTTP server | BC-2.12.001 |
-| `mcp` | off | ferrochain-mcp adapter | BC-2.09.001 |
+| `server` | off | pregolya-server HTTP server | BC-2.12.001 |
+| `mcp` | off | pregolya-mcp adapter | BC-2.09.001 |
 | `budget` | on | Budget governance policy primitive | BC-2.10.001 |
 | `guardrail` | on | Content provenance + guardrail hook | BC-2.11.001 |
 

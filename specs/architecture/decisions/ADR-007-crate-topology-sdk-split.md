@@ -29,10 +29,10 @@ changelog:
 ## Context
 
 D17-Q5 specifies standalone SDK crate split for partner crates: each provider ships as two
-**separate Cargo crates** — `ferrochain-<provider>-sdk` (standalone typed client, no
-ferrochain-core dep) and `ferrochain-<provider>` (adapter — implements `BaseChatModel`).
+**separate Cargo crates** — `pregolya-<provider>-sdk` (standalone typed client, no
+pregolya-core dep) and `pregolya-<provider>` (adapter — implements `BaseChatModel`).
 BC-2.08.006 is the behavioral contract; it mandates separate Cargo workspace members with
-enforced separation via `cargo check -p ferrochain-<provider>-sdk` (no ferrochain-core in
+enforced separation via `cargo check -p pregolya-<provider>-sdk` (no pregolya-core in
 the dependency graph).
 
 ## Scope
@@ -46,9 +46,9 @@ ARCH-INDEX.md §Canonical Crate Roster as source of truth).
 
 Three forces drive the two-crate SDK split:
 
-1. **BC-2.08.006 enforcement requirement.** The behavioral contract mandates `cargo check -p ferrochain-<provider>-sdk` succeeds without ferrochain-core appearing in the dependency graph. This postcondition cannot be satisfied by module-level feature-flag isolation: `cargo check` on a single crate resolves all features in its Cargo.toml workspace context, so a feature-gated `dep:ferrochain-core` would still appear in the lock file under default workspace resolution. Only a crate boundary creates the hard dependency exclusion that TV-001 requires.
+1. **BC-2.08.006 enforcement requirement.** The behavioral contract mandates `cargo check -p pregolya-<provider>-sdk` succeeds without pregolya-core appearing in the dependency graph. This postcondition cannot be satisfied by module-level feature-flag isolation: `cargo check` on a single crate resolves all features in its Cargo.toml workspace context, so a feature-gated `dep:pregolya-core` would still appear in the lock file under default workspace resolution. Only a crate boundary creates the hard dependency exclusion that TV-001 requires.
 
-2. **Independent publishability and usability.** SDK crates (`ferrochain-openai-sdk`, etc.) are standalone wire clients publishable and usable without any ferrochain runtime. Users who only need a typed OpenAI API client should not pull the ferrochain-core + graph + checkpoint dependency tree.
+2. **Independent publishability and usability.** SDK crates (`pregolya-openai-sdk`, etc.) are standalone wire clients publishable and usable without any pregolya runtime. Users who only need a typed OpenAI API client should not pull the pregolya-core + graph + checkpoint dependency tree.
 
 3. **Clean dependency direction.** The adapter crate (outer layer) depends on the core (inner layer), never the reverse. Embedding SDK code inside a core-dependent crate would invert this relationship and contaminate the standalone client with LangChain semantics.
 
@@ -59,7 +59,7 @@ Each provider is split into two **independent Cargo crates**:
 **Crate pair (example: OpenAI):**
 
 ```
-ferrochain-openai-sdk/        ← standalone wire client (no ferrochain-core dep)
+pregolya-openai-sdk/        ← standalone wire client (no pregolya-core dep)
   Cargo.toml                  ← deps: reqwest, serde, serde_json only
   src/
     lib.rs
@@ -67,26 +67,26 @@ ferrochain-openai-sdk/        ← standalone wire client (no ferrochain-core dep
     types.rs                  ← OpenAI request/response types
     streaming.rs              ← SSE parsing
 
-ferrochain-openai/            ← Runnable adapter (depends on core + sdk)
-  Cargo.toml                  ← deps: ferrochain-core, ferrochain-openai-sdk
+pregolya-openai/            ← Runnable adapter (depends on core + sdk)
+  Cargo.toml                  ← deps: pregolya-core, pregolya-openai-sdk
   src/
     lib.rs
     chat_model.rs             ← impl BaseChatModel for ChatOpenAI
-    translate.rs              ← ferrochain-core types ↔ provider wire format
-    error.rs                  ← SdkError → FerrochainError mapping
+    translate.rs              ← pregolya-core types ↔ provider wire format
+    error.rs                  ← SdkError → PregolyaError mapping
 ```
 
 **Enforced separation:**
 
-- `ferrochain-<provider>-sdk/Cargo.toml` MUST NOT list `ferrochain-core` in `[dependencies]`
-  or `[dev-dependencies]`. CI check: `cargo check -p ferrochain-<provider>-sdk` must
-  succeed without ferrochain-core in Cargo.lock for that package.
-- No feature flag can cause ferrochain-core to appear as a transitive dep of the SDK crate.
-- Translation logic (ferrochain-core types ↔ wire format) lives exclusively in the adapter
+- `pregolya-<provider>-sdk/Cargo.toml` MUST NOT list `pregolya-core` in `[dependencies]`
+  or `[dev-dependencies]`. CI check: `cargo check -p pregolya-<provider>-sdk` must
+  succeed without pregolya-core in Cargo.lock for that package.
+- No feature flag can cause pregolya-core to appear as a transitive dep of the SDK crate.
+- Translation logic (pregolya-core types ↔ wire format) lives exclusively in the adapter
   crate (BC-2.08.006 EC-003).
 
-**Why two crates, not modules:** BC-2.08.006 mandates `cargo check -p ferrochain-<provider>-sdk`
-succeeds without ferrochain-core. This separation cannot be enforced by Cargo at the module
+**Why two crates, not modules:** BC-2.08.006 mandates `cargo check -p pregolya-<provider>-sdk`
+succeeds without pregolya-core. This separation cannot be enforced by Cargo at the module
 level — only the crate boundary creates the required dependency isolation. Module-level
 separation via feature flags cannot satisfy BC-2.08.006 TV-001 (Cargo.lock check). See
 Alternatives Considered below.
@@ -100,41 +100,41 @@ Alternatives Considered below.
 
 | # | Crate | Origin | Description |
 |---|-------|--------|-------------|
-| 1 | ferrochain | D6 | Re-export facade (optional; convenience) |
-| 2 | ferrochain-core | D6 | Core traits, types, error taxonomy |
-| 3 | ferrochain-graph | D6 | StateGraph BSP engine, HITL, budget, provenance |
-| 4 | ferrochain-checkpoint | D6 | Durable checkpointing, monotonic clock |
-| 5 | ferrochain-openai | D6+D17-Q5 | OpenAI adapter crate (`impl BaseChatModel`) |
-| 6 | ferrochain-anthropic | D6+D17-Q5 | Anthropic adapter crate |
-| 7 | ferrochain-ollama | D6+D17-Q5 | Ollama adapter crate |
-| 8 | ferrochain-community | D6 | [post-v1; community integrations; not in-tree at v1] |
-| 9 | ferrochain-splitters | D6 | Unicode text splitting |
-| 10 | ferrochain-mcp | D1 | MCP tool adapter |
-| 11 | ferrochain-standard-tests | D1 | Conformance test suite |
-| 12 | ferrochain-server | D13 | Axum HTTP server (threads/runs/schedules) |
-| 13 | ferrochain-sandbox | P2-05 | WASM/container sandboxed tool execution |
-| 14 | ferrochain-memory | P2-05 | Long-horizon memory (`MemoryStore` trait) |
-| 15 | ferrochain-macros | ADR-008 | Proc-macro crate (#[tool], #[entrypoint], #[task]) |
-| 16 | ferrochain-openai-sdk | D17-Q5 | OpenAI standalone wire client (no ferrochain-core dep) |
-| 17 | ferrochain-anthropic-sdk | D17-Q5 | Anthropic standalone wire client |
-| 18 | ferrochain-ollama-sdk | D17-Q5 | Ollama standalone wire client |
+| 1 | pregolya | D6 | Re-export facade (optional; convenience) |
+| 2 | pregolya-core | D6 | Core traits, types, error taxonomy |
+| 3 | pregolya-graph | D6 | StateGraph BSP engine, HITL, budget, provenance |
+| 4 | pregolya-checkpoint | D6 | Durable checkpointing, monotonic clock |
+| 5 | pregolya-openai | D6+D17-Q5 | OpenAI adapter crate (`impl BaseChatModel`) |
+| 6 | pregolya-anthropic | D6+D17-Q5 | Anthropic adapter crate |
+| 7 | pregolya-ollama | D6+D17-Q5 | Ollama adapter crate |
+| 8 | pregolya-community | D6 | [post-v1; community integrations; not in-tree at v1] |
+| 9 | pregolya-splitters | D6 | Unicode text splitting |
+| 10 | pregolya-mcp | D1 | MCP tool adapter |
+| 11 | pregolya-standard-tests | D1 | Conformance test suite |
+| 12 | pregolya-server | D13 | Axum HTTP server (threads/runs/schedules) |
+| 13 | pregolya-sandbox | P2-05 | WASM/container sandboxed tool execution |
+| 14 | pregolya-memory | P2-05 | Long-horizon memory (`MemoryStore` trait) |
+| 15 | pregolya-macros | ADR-008 | Proc-macro crate (#[tool], #[entrypoint], #[task]) |
+| 16 | pregolya-openai-sdk | D17-Q5 | OpenAI standalone wire client (no pregolya-core dep) |
+| 17 | pregolya-anthropic-sdk | D17-Q5 | Anthropic standalone wire client |
+| 18 | pregolya-ollama-sdk | D17-Q5 | Ollama standalone wire client |
 
-**Not published:** `xtask` (workspace binary), `ferrochain-community` (post-v1, placeholder only).
+**Not published:** `xtask` (workspace binary), `pregolya-community` (post-v1, placeholder only).
 **Total at D7 decision:** 18 published + xtask. **Current total: 21 published + xtask** — see Forward Amendment below and ARCH-INDEX.md §Canonical Crate Roster (source of truth).
 
 > **Forward Amendment (FIX-BURST-265, 2026-07-25):** The 18-crate table above reflects the
 > original D7 decision. The roster has since expanded to **21 published crates** by D21
-> (+ferrochain-prompts [#19], +ferrochain-vectorstores [#20]) and D23 (+ferrochain-tools
+> (+pregolya-prompts [#19], +pregolya-vectorstores [#20]) and D23 (+pregolya-tools
 > [#21]). The derivation formula is now: D6 (9) + D1 + D13 + P2-05 + ADR-008 + D17-Q5
 > (3×-sdk) + D21 (+prompts, +vectorstores) + D23 (+tools) = 21 published.
 > **See ARCH-INDEX.md §Canonical Crate Roster as the authoritative source of truth.**
 
 ## Consequences
 
-- `ferrochain-standard-tests` dev-depends on each adapter crate (ferrochain-openai etc.).
-- `ferrochain-macros` is re-exported from `ferrochain-core` via `pub use ferrochain_macros::*`.
-- The re-export facade `ferrochain` is optional; users can depend on individual crates.
-- Provider SDK crates (`*-sdk`) have no ferrochain-core dep and are standalone usable.
+- `pregolya-standard-tests` dev-depends on each adapter crate (pregolya-openai etc.).
+- `pregolya-macros` is re-exported from `pregolya-core` via `pub use pregolya_macros::*`.
+- The re-export facade `pregolya` is optional; users can depend on individual crates.
+- Provider SDK crates (`*-sdk`) have no pregolya-core dep and are standalone usable.
 - R6 namespace reservation: publish-all.sh must cover all 21 crates. Time-sensitive.
 
 ## Alternatives Considered
@@ -142,14 +142,14 @@ Alternatives Considered below.
 ### Alternative A: Modules-Not-Crates (feature-flag isolation)
 
 Each provider would contain two internal Rust modules (`sdk/` and `adapter/`) within a
-single crate, with a Cargo feature flag `ferrochain-adapter = ["dep:ferrochain-core"]`
-to conditionally compile the ferrochain-core dependency.
+single crate, with a Cargo feature flag `pregolya-adapter = ["dep:pregolya-core"]`
+to conditionally compile the pregolya-core dependency.
 
 **Arguments for:** Zero additional crates.io namespace overhead, no inter-crate local path
 dependency headaches during workspace development, simpler CI matrix (fewer crates to test).
 
-**Rejected because:** BC-2.08.006 requires `cargo check -p ferrochain-<provider>-sdk`
-to succeed without ferrochain-core in the dependency graph (TV-001). Feature-flag
+**Rejected because:** BC-2.08.006 requires `cargo check -p pregolya-<provider>-sdk`
+to succeed without pregolya-core in the dependency graph (TV-001). Feature-flag
 conditional compilation does not satisfy this: `cargo check` on a single crate resolves
 all features declared in that crate's Cargo.toml workspace context. The crate boundary
 is the only Cargo mechanism that enforces hard dependency exclusion. This alternative
@@ -161,8 +161,8 @@ SDK crate, but module colocation makes this harder to enforce).
 | Source | Role |
 |--------|------|
 | D17-Q5 | Stakeholder decision mandating standalone SDK crate split for all provider pairs |
-| BC-2.08.006 | Behavioral contract defining the postcondition (`cargo check -p *-sdk` must succeed without ferrochain-core) and enforcement mechanism (TV-001 Cargo.lock check) |
+| BC-2.08.006 | Behavioral contract defining the postcondition (`cargo check -p *-sdk` must succeed without pregolya-core) and enforcement mechanism (TV-001 Cargo.lock check) |
 | ADV-P1D-PASS-3 F-P3-02 | Adversarial finding that identified the original modules-not-crates approach as insufficient to satisfy BC-2.08.006 TV-001; triggered revision to two-crate architecture |
-| D21 | Ecosystem-parity scope expansion (2026-07-20): added ferrochain-prompts (#19) and ferrochain-vectorstores (#20) to the workspace roster |
-| D23 | Scope expansion (2026-07-22): added ferrochain-tools (#21), promoted ferrochain-memory to Wave 1 |
+| D21 | Ecosystem-parity scope expansion (2026-07-20): added pregolya-prompts (#19) and pregolya-vectorstores (#20) to the workspace roster |
+| D23 | Scope expansion (2026-07-22): added pregolya-tools (#21), promoted pregolya-memory to Wave 1 |
 

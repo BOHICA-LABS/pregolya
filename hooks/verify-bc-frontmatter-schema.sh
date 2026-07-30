@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-bc-frontmatter-schema.sh — ferrochain factory-artifacts BLOCKING validator
+# verify-bc-frontmatter-schema.sh — pregolya factory-artifacts BLOCKING validator
 #
 # PURPOSE
 # ───────

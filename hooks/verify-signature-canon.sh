@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-signature-canon.sh — ferrochain factory-artifacts signature-canon gate
+# verify-signature-canon.sh — pregolya factory-artifacts signature-canon gate
 #
 # PURPOSE
 # ───────
@@ -43,13 +43,13 @@
 # │      │   and pipe (where Self: Sized); dyn Tool is non-object-safe.     │
 # │      │   Canonical replacement: Arc<dyn DynTool> (blanket impl:         │
 # │      │   T: Tool + Send + Sync + 'static auto-implements DynTool).      │
-# │      │   FAIL: Arc<dyn Tool>, dyn ferrochain_core::Tool                 │
+# │      │   FAIL: Arc<dyn Tool>, dyn pregolya_core::Tool                 │
 # │      │   EXEMPT: lines explicitly naming the hazard (containing any of: │
 # │      │           non-object-safe, E0038, not dyn compatible,             │
 # │      │           dyn-incompatible, NOT object-safe, non_exhaustive)      │
 # ├──────┼────────────────────────────────────────────────────────────────────┤
-# │  S5  │ D-42/D-49 — FerrochainError full-form literals IN RUST FENCES   │
-# │      │   D-42 adjudicated FerrochainError::new() as sole public ctor.  │
+# │  S5  │ D-42/D-49 — PregolyaError full-form literals IN RUST FENCES   │
+# │      │   D-42 adjudicated PregolyaError::new() as sole public ctor.  │
 # │      │   D-49 set scope as "full-form named-field literals only."       │
 # │      │                                                                  │
 # │      │   ORCHESTRATOR ADJUDICATION 2026-07-28 (sharpens D-49):         │
@@ -65,7 +65,7 @@
 # │      │   Items (1)–(5) are outside Rust fences and auto-exempt under    │
 # │      │   the fence-membership test.                                     │
 # │      │                                                                  │
-# │      │   FAIL: named-field FerrochainError { } literal that            │
+# │      │   FAIL: named-field PregolyaError { } literal that            │
 # │      │          (a) appears inside a ```rust (or unlabelled-Rust) fence │
 # │      │          (b) lacks any of the 6 required fields                  │
 # │      │          (c) is not an abbreviated designator (..)               │
@@ -79,7 +79,7 @@
 # │      │           invariant notation: literal preceded by '== Err(' or  │
 # │      │           '==' in the same expression — these are ∀-quantified  │
 # │      │           equality assertions (VP notation), not construction    │
-# │      │           sites. Implemented as: prefix before FerrochainError { │
+# │      │           sites. Implemented as: prefix before PregolyaError { │
 # │      │           ends with r'==\s*(?:(?:Ok|Err)\s*\()?\s*$'.           │
 # │      │   Required fields: component, category, retry_hint, code,       │
 # │      │   message, source (6 total; source via with_source() builder).  │
@@ -308,17 +308,17 @@ clean_probe_tmp() {
 
 # ── S5 Python scanner (fence-scoped; shared between check and probe) ─────────
 # Arguments: <scan_dir>
-# Outputs: FAIL <rel> :: FerrochainError — <N> literal(s) missing: <fields>
+# Outputs: FAIL <rel> :: PregolyaError — <N> literal(s) missing: <fields>
 #
-# Scope: scans only FerrochainError { } literals INSIDE Rust fences.
+# Scope: scans only PregolyaError { } literals INSIDE Rust fences.
 #   Rust fence = ```rust (or rust,no_run / rust,ignore etc.) or an unlabelled
 #   fence whose body contains Rust-keyword indicators.
 #   Auto-exempt by being outside a fence: inline backtick spans, table cells,
 #   impl/struct definitions, shell grep examples, changelog prose.
 #   Also exempt inside a fence:
-#     - impl FerrochainError { } and pub struct FerrochainError { }
+#     - impl PregolyaError { } and pub struct PregolyaError { }
 #     - abbreviated designator (.. anywhere inside braces)
-#     - formal-invariant notation: prefix before FerrochainError { ends with
+#     - formal-invariant notation: prefix before PregolyaError { ends with
 #       '== (Ok(|Err()?' — ∀-quantified equality assertions in VP specs are
 #       designators, not construction sites (orchestrator adjudication 2026-07-28).
 #       Implemented as: re.search(r'==\s*(?:(?:Ok|Err)\s*\()?\s*$', prefix).
@@ -343,12 +343,12 @@ NON_RUST_LABELS = {
     'makefile','dockerfile','markdown','md',
 }
 # Rust syntax indicators for unlabelled fence classification
-# '::' catches short Err(FerrochainError { Component::X, ... }) fences that
+# '::' catches short Err(PregolyaError { Component::X, ... }) fences that
 # contain no statement-level keywords but use the Rust path separator.
 RUST_KWS = ['fn ', 'let ', 'impl ', '-> Result', 'Arc<', '&mut ', 'async fn', 'pub fn', '::']
 
-# Formal-invariant exemption: FerrochainError preceded by == (equality comparison)
-# Matches: '... == Err(FerrochainError {', '... == FerrochainError {', etc.
+# Formal-invariant exemption: PregolyaError preceded by == (equality comparison)
+# Matches: '... == Err(PregolyaError {', '... == PregolyaError {', etc.
 # This is an equality assertion in VP formal notation, not a construction site.
 FORMAL_INVARIANT_RE = re.compile(r'==\s*(?:(?:Ok|Err)\s*\()?\s*$')
 
@@ -356,7 +356,7 @@ FORMAL_INVARIANT_RE = re.compile(r'==\s*(?:(?:Ok|Err)\s*\()?\s*$')
 IMPL_STRUCT_RE = re.compile(r'^(?:impl|pub\s+struct|struct)\b')
 
 def fence_is_rust(lang_tag, body):
-    """Return True if this fence should be scanned for Rust FerrochainError patterns."""
+    """Return True if this fence should be scanned for Rust PregolyaError patterns."""
     label = lang_tag.lower().strip().split(',')[0].strip()
     if label == 'rust':
         return True
@@ -372,7 +372,7 @@ for f in files:
             lines = fh.readlines()
     except OSError:
         continue
-    if 'FerrochainError {' not in ''.join(lines):
+    if 'PregolyaError {' not in ''.join(lines):
         continue
 
     rel = f.replace(scan_root.rstrip('/') + '/', '')
@@ -400,7 +400,7 @@ for f in files:
                     rust_fences.append(body_lines)
                 in_fence = False
 
-    # ── Pass 2: scan each Rust fence for FerrochainError violations ─────────
+    # ── Pass 2: scan each Rust fence for PregolyaError violations ─────────
     file_fails = 0
     file_missing = set()
 
@@ -408,12 +408,12 @@ for f in files:
         i2 = 0
         while i2 < len(fence_lines):
             line2 = fence_lines[i2]
-            if 'FerrochainError {' not in line2:
+            if 'PregolyaError {' not in line2:
                 i2 += 1
                 continue
 
-            # Skip impl/struct definitions (check part before 'FerrochainError')
-            prefix_part = line2.split('FerrochainError')[0].strip()
+            # Skip impl/struct definitions (check part before 'PregolyaError')
+            prefix_part = line2.split('PregolyaError')[0].strip()
             # Strip leading Rust doc-comment markers (/// or //!) to get actual content
             prefix_part = re.sub(r'^/{2,3}[/!]?\s*', '', prefix_part).strip()
             if IMPL_STRUCT_RE.match(prefix_part):
@@ -429,22 +429,22 @@ for f in files:
                 depth += fence_lines[j2].count('{') - fence_lines[j2].count('}')
                 j2 += 1
 
-            # Find FerrochainError { within accumulated block
-            ms = block.find('FerrochainError {')
+            # Find PregolyaError { within accumulated block
+            ms = block.find('PregolyaError {')
             if ms < 0:
                 i2 = j2 if j2 > i2 else i2 + 1
                 continue
 
-            # Formal-invariant exemption: check if == precedes FerrochainError {
-            # The prefix is the block content up to (not including) 'FerrochainError {'
+            # Formal-invariant exemption: check if == precedes PregolyaError {
+            # The prefix is the block content up to (not including) 'PregolyaError {'
             blk_prefix = block[:ms]
             if FORMAL_INVARIANT_RE.search(blk_prefix):
                 # Equality comparison: this is a designator, not a construction site
                 i2 = j2 if j2 > i2 else i2 + 1
                 continue
 
-            # Extract inner content of FerrochainError { ... }
-            inner = block[ms + len('FerrochainError {'):]
+            # Extract inner content of PregolyaError { ... }
+            inner = block[ms + len('PregolyaError {'):]
             ep = len(inner)
             d2 = 1
             for k, ch in enumerate(inner):
@@ -471,7 +471,7 @@ for f in files:
 
     if file_fails > 0:
         missing_str = ','.join(sorted(file_missing))
-        print(f"FAIL {rel} :: FerrochainError — {file_fails} literal(s) missing: {missing_str}")
+        print(f"FAIL {rel} :: PregolyaError — {file_fails} literal(s) missing: {missing_str}")
 PYEOF
 }
 
@@ -523,7 +523,7 @@ probe_s1() {
   local out
 
   # S1a fire: illegal &Arc<Self> receiver
-  printf 'fn as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>;\n' \
+  printf 'fn as_retriever(self: &Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>;\n' \
     > "$PROBE_TMP/s1a-fire/probe.md"
   out="$(run_s1_scanner "$HOOKS_DIR" "$PROBE_TMP/s1a-fire")"
   if ! echo "$out" | grep -qF 'S1A'; then
@@ -541,7 +541,7 @@ probe_s1() {
   fi
 
   # S1 non-fire: canonical form must not trigger either pattern
-  printf 'fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>;\n' \
+  printf 'fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>;\n' \
     > "$PROBE_TMP/s1-noop/probe.md"
   out="$(run_s1_scanner "$HOOKS_DIR" "$PROBE_TMP/s1-noop")"
   if echo "$out" | grep -qE '^S1[AB]'; then
@@ -693,7 +693,7 @@ HAZARD_WORDS = [
     'non-object-safe', 'E0038', 'not dyn compatible',
     'dyn-incompatible', 'NOT object-safe', 'non_exhaustive',
 ]
-SEARCH_TOKENS = ['Arc<dyn Tool>', 'dyn ferrochain_core::Tool']
+SEARCH_TOKENS = ['Arc<dyn Tool>', 'dyn pregolya_core::Tool']
 
 for f in files:
     try:
@@ -732,7 +732,7 @@ check_s4() {
   done <<< "$(run_s4_scanner "$HOOKS_DIR" "$SPECS_DIR")"
 
   if [ "$s4_count" -gt 0 ]; then
-    emit FAIL "S4 (D-43): Arc<dyn Tool> / dyn ferrochain_core::Tool — non-object-safe (E0038); canonical: Arc<dyn DynTool>: $s4_count file(s)"
+    emit FAIL "S4 (D-43): Arc<dyn Tool> / dyn pregolya_core::Tool — non-object-safe (E0038); canonical: Arc<dyn DynTool>: $s4_count file(s)"
     for e in "${s4_files[@]}"; do echo "     $e"; done
     echo "  Exempt when line contains: non-object-safe | E0038 | not dyn compatible | dyn-incompatible | NOT object-safe | non_exhaustive"
   else
@@ -846,7 +846,7 @@ PROBEOF
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# RULE S5: FerrochainError full-form literals (D-42/D-49)
+# RULE S5: PregolyaError full-form literals (D-42/D-49)
 # ─────────────────────────────────────────────────────────────────────────────
 
 check_s5() {
@@ -867,16 +867,16 @@ check_s5() {
   done <<< "$(run_s5_scanner "$SPECS_DIR")"
 
   if [ "$s5_file_count" -gt 0 ]; then
-    emit FAIL "S5 (D-42/D-49, fence-scoped): FerrochainError full-form literals in Rust fences missing required fields: $s5_total literal(s) across $s5_file_count file(s)"
+    emit FAIL "S5 (D-42/D-49, fence-scoped): PregolyaError full-form literals in Rust fences missing required fields: $s5_total literal(s) across $s5_file_count file(s)"
     echo "  Scope: Rust fences (rustfence) only — inline spans, tables, impl/struct defns auto-exempt"
     echo "  Required: component, category, retry_hint, code, message, source"
-    echo "  Canonical form: FerrochainError::new(component, category, retry_hint, code, msg)"
+    echo "  Canonical form: PregolyaError::new(component, category, retry_hint, code, msg)"
     echo "                  .with_source(arc_err)  [for source field]"
     echo "  Permitted: abbreviated designator containing '..' inside braces"
     echo "  Affected files (symbol :: missing-fields):"
     for e in "${s5_findings[@]}"; do echo "       $e"; done
   else
-    emit PASS "S5 (D-42/D-49, fence-scoped): FerrochainError — all Rust-fence literals use abbreviated designator (..) or full 6-field form"
+    emit PASS "S5 (D-42/D-49, fence-scoped): PregolyaError — all Rust-fence literals use abbreviated designator (..) or full 6-field form"
   fi
 }
 
@@ -887,8 +887,8 @@ probe_s5() {
   mkdir -p "$PROBE_TMP/p5-fire"
   cat > "$PROBE_TMP/p5-fire/probe.md" <<'PROBEOF'
 ```rust
-fn example() -> Result<(), FerrochainError> {
-    return Err(FerrochainError {
+fn example() -> Result<(), PregolyaError> {
+    return Err(PregolyaError {
         component: Component::Vs,
         code: "E-VS-001",
     });
@@ -906,7 +906,7 @@ PROBEOF
   mkdir -p "$PROBE_TMP/p5-abbrev"
   cat > "$PROBE_TMP/p5-abbrev/probe.md" <<'PROBEOF'
 ```rust
-matches!(err, Err(FerrochainError { code: "E-VS-001", .. }))
+matches!(err, Err(PregolyaError { code: "E-VS-001", .. }))
 ```
 PROBEOF
   out="$(run_s5_scanner "$PROBE_TMP/p5-abbrev")"
@@ -919,7 +919,7 @@ PROBEOF
   # Backtick inline spans in prose are designators, not construction sites.
   # They are auto-exempt because they are not inside any Rust fence.
   mkdir -p "$PROBE_TMP/p5-inline"
-  printf '`Err(FerrochainError { component: MCP, code: "E-MCP-001" })` in prose.\n' \
+  printf '`Err(PregolyaError { component: MCP, code: "E-MCP-001" })` in prose.\n' \
     > "$PROBE_TMP/p5-inline/probe.md"
   out="$(run_s5_scanner "$PROBE_TMP/p5-inline")"
   if [ -n "$out" ]; then
@@ -927,33 +927,33 @@ PROBEOF
     clean_probe_tmp; exit 2
   fi
 
-  # ── S5 PERMIT: impl FerrochainError { } definition in ```rust fence ──────
+  # ── S5 PERMIT: impl PregolyaError { } definition in ```rust fence ──────
   mkdir -p "$PROBE_TMP/p5-impl"
   cat > "$PROBE_TMP/p5-impl/probe.md" <<'PROBEOF'
 ```rust
-impl FerrochainError {
+impl PregolyaError {
     pub fn new() -> Self { todo!() }
 }
 ```
 PROBEOF
   out="$(run_s5_scanner "$PROBE_TMP/p5-impl")"
   if [ -n "$out" ]; then
-    echo "[SELF-PROBE FAIL] S5: impl FerrochainError { } incorrectly flagged as literal."
+    echo "[SELF-PROBE FAIL] S5: impl PregolyaError { } incorrectly flagged as literal."
     clean_probe_tmp; exit 2
   fi
 
   # ── S5 PERMIT: formal-invariant notation in ```rust fence ────────────────
-  # Orchestrator adjudication: == Err(FerrochainError { ... }) is a ∀-quantified
+  # Orchestrator adjudication: == Err(PregolyaError { ... }) is a ∀-quantified
   # equality assertion (VP formal property), not a construction site.
   mkdir -p "$PROBE_TMP/p5-formal"
   cat > "$PROBE_TMP/p5-formal/probe.md" <<'PROBEOF'
 ```rust
-check_risk_floor(r) == Err(FerrochainError { code: "E-TOOLS-007", category: VAL })
+check_risk_floor(r) == Err(PregolyaError { code: "E-TOOLS-007", category: VAL })
 ```
 PROBEOF
   out="$(run_s5_scanner "$PROBE_TMP/p5-formal")"
   if [ -n "$out" ]; then
-    echo "[SELF-PROBE FAIL] S5: formal-invariant notation (== Err(FerrochainError)) incorrectly flagged."
+    echo "[SELF-PROBE FAIL] S5: formal-invariant notation (== Err(PregolyaError)) incorrectly flagged."
     clean_probe_tmp; exit 2
   fi
 
@@ -963,7 +963,7 @@ PROBEOF
   mkdir -p "$PROBE_TMP/p5-unlabelled-rust"
   cat > "$PROBE_TMP/p5-unlabelled-rust/probe.md" <<'PROBEOF'
 ```
-Err(FerrochainError {
+Err(PregolyaError {
     component: Component::Foo,
     code: "E-FOO-001",
 })
@@ -983,9 +983,9 @@ PROBEOF
 # MAIN
 # ─────────────────────────────────────────────────────────────────────────────
 
-echo "verify-signature-canon: ferrochain adjudicated type-signature canon"
+echo "verify-signature-canon: pregolya adjudicated type-signature canon"
 echo "  SPECS_DIR: $SPECS_DIR"
-echo "  Decisions: D-42 FerrochainError ctor | D-43 DynTool | D-45/D-48 as_retriever receiver"
+echo "  Decisions: D-42 PregolyaError ctor | D-43 DynTool | D-45/D-48 as_retriever receiver"
 echo "  D-46 discipline: every rule grounded in a ratified Decision ID"
 echo ""
 
@@ -1020,7 +1020,7 @@ echo "── S4 (D-43): Arc<dyn Tool> non-object-safe ────────�
 check_s4
 
 echo ""
-echo "── S5 (D-42/D-49, fence-scoped): FerrochainError full-form literals in Rust fences ──"
+echo "── S5 (D-42/D-49, fence-scoped): PregolyaError full-form literals in Rust fences ──"
 check_s5
 
 echo ""
@@ -1046,7 +1046,7 @@ if [ "$FAIL" -gt 0 ]; then
   echo "                             or add entry to signature-canon-allowlist.txt"
   echo "  S4 violations → product-owner/architect: replace Arc<dyn Tool> with Arc<dyn DynTool>"
   echo "  S5 violations → product-owner/architect: replace struct literal with"
-  echo "                                            FerrochainError::new(...) constructor"
+  echo "                                            PregolyaError::new(...) constructor"
   exit 1
 else
   echo ""

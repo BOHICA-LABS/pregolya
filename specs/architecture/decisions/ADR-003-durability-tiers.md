@@ -24,7 +24,7 @@ changelog:
 
 LangGraph Python supports three checkpoint durability modes: synchronous (writes before
 next super-step), asynchronous (background writes), and exit-only (write only on clean exit).
-D11.3 adopted all three tiers, with ferrochain defaulting to sync.
+D11.3 adopted all three tiers, with pregolya defaulting to sync.
 
 ## Decision: Three-Tier Model, Sync Default
 

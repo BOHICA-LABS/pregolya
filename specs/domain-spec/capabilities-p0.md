@@ -12,13 +12,13 @@ inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "45121ef"
+input-hash: "0658559"
 traces_to: L2-INDEX.md
 decisions: [D1, D7, D8, D11, D13, D17, D21]
 changelog:
   - "v1.8 (burst-241 OBS-P141-B, 2026-07-23): CAP-007: replace stale '12 variants total' absolute claim with forward-reference note '12-variant base; extended to 15 by D23 (CAP-034 events 13-14 tool-approval, CAP-035 event 15 compaction)'. CAP-007 legitimately defines the 12-variant BASE; a cross-referencing reader consulting the base spec was misled into believing 12 was the final count. TD-VSDD-060 sweep: sole stale absolute '12' streaming count in domain-spec/; all other '12' occurrences are historical changelog entries or already describe the 12-variant base correctly."
-  - "v1.7 (2026-07-20): CAP-002 D21 reversal — PromptTemplate/ChatPromptTemplate flipped from 'post-v1/community' to v1 deliverables (SS-18/ferrochain-prompts, CAP-022/CAP-023); standalone OutputParser remains post-v1; with_structured_output covered by provider conformance (CAP-009), not a separate OutputParser. Prior v1.6 clarification partially superseded by D21 scope expansion (burst 216). D21 added to decisions list."
-  - "v1.6 (2026-07-20): CAP-002 scope clarification added — listed Runnable examples (model call, prompt template, output parser, tool, graph) are user-implementable instances; ferrochain ships the trait and composition machinery in v1 only; PromptTemplate / OutputParser first-party impls are post-v1/community deliverables. Grounded in product-brief v1.3 out-of-scope dispositions and audit Q1 GAP. input-hash updated (drift: 8fe3546→2b2bd5a)."
+  - "v1.7 (2026-07-20): CAP-002 D21 reversal — PromptTemplate/ChatPromptTemplate flipped from 'post-v1/community' to v1 deliverables (SS-18/pregolya-prompts, CAP-022/CAP-023); standalone OutputParser remains post-v1; with_structured_output covered by provider conformance (CAP-009), not a separate OutputParser. Prior v1.6 clarification partially superseded by D21 scope expansion (burst 216). D21 added to decisions list."
+  - "v1.6 (2026-07-20): CAP-002 scope clarification added — listed Runnable examples (model call, prompt template, output parser, tool, graph) are user-implementable instances; pregolya ships the trait and composition machinery in v1 only; PromptTemplate / OutputParser first-party impls are post-v1/community deliverables. Grounded in product-brief v1.3 out-of-scope dispositions and audit Q1 GAP. input-hash updated (drift: 8fe3546→2b2bd5a)."
   - "v1.5 (F-P122-01, fix burst 125, 2026-07-19): CAP-001 illustrative ContentBlock list: replaced 5-token drifted list (text, image_url, tool_use, tool_result, document) with canonical 14-variant enumeration per BC-2.01.001 PC2; added tool results → ToolMessage per BC-2.09.002."
   - "v1.4 (OBS-P121 audit, fix burst 124, 2026-07-19): CAP-007 §StreamEvent variant list: add 12th variant guardrail_decision (F-P99-01, interface-definitions v2.34 §StreamEvent). Prior list of 11 variants was authored before the guardrail observability axis was added. Canon: interface-definitions §StreamEvent 12 variants."
   - "v1.3 (2026-07-17): F-P95-04 fix — CAP-012 on_ceiling enumeration was stale (two-mode: Halt | Escalate only). Expanded to all three canonical variants: Halt | Escalate | Summarize per interface-definitions §OnCeiling, BC-2.10.003 PC8, and D20 addition."
@@ -49,21 +49,21 @@ ServerToolResult, NonStandard — per BC-2.01.001 PC2; tool results are ToolMess
 BC-2.09.002. Guarantee that no caller can observe raw untyped content where a typed variant
 is expected.
 
-**Grounding:** product-brief.md §Scope Wave 0 — `ferrochain-core` typed message/content
+**Grounding:** product-brief.md §Scope Wave 0 — `pregolya-core` typed message/content
 primitives (Runnable, Message, ContentBlock).
 **Anchor justification:** CAP-001 covers typed content construction because the brief mandates
-`ferrochain-core` typed ContentBlock as the API-surface root primitive and market
+`pregolya-core` typed ContentBlock as the API-surface root primitive and market
 differentiator #4 (product-brief §Overflow Competitive Differentiator Traceability).
 
 ### CAP-002: Runnable Trait Abstraction (Compose, Pipe, Chain)
 
 Express any computation — model call, prompt template, output parser, tool, graph — as a
 Runnable that can be invoked, streamed, batched, and composed via `|` pipe into chains.
-The listed examples are all user-implementable instances of the `Runnable` trait — ferrochain
+The listed examples are all user-implementable instances of the `Runnable` trait — pregolya
 ships the trait and composition machinery in v1.
 
 **D21 scope update (v1.7):** `PromptTemplate` and `ChatPromptTemplate` ARE now v1 deliverables
-(SS-18 / ferrochain-prompts, CAP-022 / CAP-023). The prior v1.6 clarification that
+(SS-18 / pregolya-prompts, CAP-022 / CAP-023). The prior v1.6 clarification that
 "PromptTemplate first-party impls are post-v1/community deliverables" is superseded by D21
 (burst 216). Standalone `OutputParser` remains a post-v1/community deliverable — it is not
 part of the D21 expansion. The `with_structured_output` use case is covered in v1 via provider
@@ -73,7 +73,7 @@ flipped and what did not:
 - **Unchanged (post-v1):** standalone OutputParser; `with_structured_output` is provider-
   conformance scope (CAP-009), not a separate OutputParser implementation
 
-Provides the universal composition protocol across all ferrochain crates.
+Provides the universal composition protocol across all pregolya crates.
 
 **Grounding:** product-brief.md §Scope Wave 0 — "Runnable" is the core LangChain v1 semantic
 primitive (reference-manifest.md, semport Corpus 1 langchain==1.3.13). The brief lists
@@ -90,7 +90,7 @@ reducer functions (LastValue, Append, BarrierValue, NamedBarrierValue, Ephemeral
 BinaryOperatorAggregate), typed edges including conditional edges, and Send API for
 dynamic fan-out.
 
-**Grounding:** product-brief.md §Scope Wave 1 — `ferrochain-graph` LangGraph StateGraph engine,
+**Grounding:** product-brief.md §Scope Wave 1 — `pregolya-graph` LangGraph StateGraph engine,
 BSP scheduling, Send API fan-out, conditional edges.
 **Anchor justification:** CAP-003 covers graph definition because the brief names StateGraph and
 the LangGraph port as the P0 lead differentiator (D7).
@@ -102,7 +102,7 @@ all scheduled PregelTasks execute; then all channel reducers apply in determinis
 task-identity-sorted order. Concurrent writes to the same LastValue channel raise
 InvalidUpdateError rather than silently racing.
 
-**Grounding:** product-brief.md §Scope Wave 1 — `ferrochain-graph` BSP scheduling with
+**Grounding:** product-brief.md §Scope Wave 1 — `pregolya-graph` BSP scheduling with
 deterministic reducer order (CONFLICT-1/NE-17/D17); brief §Scope "BSP scheduling with
 deterministic reducer order (CONFLICT-1/NE-17)."
 **Anchor justification:** CAP-004 covers BSP execution because it is the execution model the
@@ -116,7 +116,7 @@ output is stored before the next super-step begins. Checkpoint IDs use a monoton
 clock, not wall-clock. Backends: SQLite (default), in-memory; msgpack wire format [D11.2].
 Postgres stretch target.
 
-**Grounding:** product-brief.md §Scope Wave 1 — `ferrochain-checkpoint` three-tier durable
+**Grounding:** product-brief.md §Scope Wave 1 — `pregolya-checkpoint` three-tier durable
 checkpointing, per-task put_writes (CONFLICT-2/D11.3/D17-Q3), monotonic logical-clock
 checkpoint IDs (CONFLICT-4), msgpack wire format [locked: D11.2], SQLite + in-memory
 backends [locked: D11.3].
@@ -131,7 +131,7 @@ state durably. Accept one or more resume values externally (human decision, appr
 command, or correction). Deliver resume values in strict FIFO order to the interrupted
 node, which re-executes from the start of its super-step with the resume value available.
 
-**Grounding:** product-brief.md §Scope Wave 1 — `ferrochain-graph` full HITL interrupt/resume
+**Grounding:** product-brief.md §Scope Wave 1 — `pregolya-graph` full HITL interrupt/resume
 contract per CONFLICT-3/D17-Q2: "per-task scratchpad, FIFO resume-value delivery,
 node-re-executes-from-start, Command(resume=value) API."
 **Anchor justification:** CAP-006 covers HITL because it is explicitly named as a Phase-1 BC
@@ -148,7 +148,7 @@ interface-definitions §StreamEvent v2.34) — 12-variant base; extended to 15 b
 run_id, parent_ids chain, and phase-specific payload. Streaming and unary runs drive
 the same engine and produce identical final answers.
 
-**Grounding:** product-brief.md §Scope Wave 1 — `ferrochain-server` streaming and unary run
+**Grounding:** product-brief.md §Scope Wave 1 — `pregolya-server` streaming and unary run
 equivalence (NE-13/D17), CONFLICT-5 typed per-phase event taxonomy. Brief §Scope "streaming
 and unary run equivalence (NE-13/D17)."
 **Anchor justification:** CAP-007 covers structured streaming because NE-13 (streaming stub
@@ -161,7 +161,7 @@ code points (not bytes), with configurable overlap. On non-ASCII text, chunk bou
 must be identical to the reference LangChain Python implementation (which also uses
 code-point counts, not byte counts). Provide explicit test vectors for emoji and CJK inputs.
 
-**Grounding:** product-brief.md §Scope Wave 0 — `ferrochain-splitters` with "explicit BC for
+**Grounding:** product-brief.md §Scope Wave 0 — `pregolya-splitters` with "explicit BC for
 code-point vs byte-length boundary parity on non-ASCII input (R8/D17-Q9)."
 **Anchor justification:** CAP-008 covers splitters because the brief names R8 as a High risk
 and D17-Q9 mandates it as a Phase-1 BC backlog item. The code-point/byte-length distinction
@@ -190,7 +190,7 @@ Domain B dark-factory holdout requires it."
 **Anchor justification:** CAP-012 covers budget governance because D17-Q4 explicitly mandates
 it as a Phase-1 BC, and the domain-b-dark-factory holdout cannot evaluate without it.
 **D17-elevation note:** Elevated to P0 by D17-Q4 — constituent BCs P0, wave 1 (SS-10,
-ferrochain-graph). Domain B dark-factory holdout requires this capability for Phase-1
+pregolya-graph). Domain B dark-factory holdout requires this capability for Phase-1
 evaluation; it cannot be deferred to Wave 2.
 
 ### CAP-013: Content Provenance Tagging and Guardrail-on-Ingress
@@ -208,21 +208,21 @@ Domain A SOC analyst holdout."
 Phase-1 BC and domain-a-soc-analyst.md §5 marks prompt-injection isolation as NEW forcing
 function.
 **D17-elevation note:** Elevated to P0 by D17-Q8 — constituent BCs P0, wave 1 (SS-11,
-ferrochain-graph). Domain A SOC analyst holdout requires this capability for Phase-1
+pregolya-graph). Domain A SOC analyst holdout requires this capability for Phase-1
 evaluation; it cannot be deferred to Wave 2.
 
-### CAP-016: Typed Error Taxonomy (FerrochainError 2D Struct)
+### CAP-016: Typed Error Taxonomy (PregolyaError 2D Struct)
 
-Surface errors as a 2D struct with Component dimension (which ferrochain crate) and Category
+Surface errors as a 2D struct with Component dimension (which pregolya crate) and Category
 dimension (auth, validation, timeout, provider, internal, etc.), carrying a RetryHint,
 machine code, and RFC-7807-compatible emission. No `.unwrap()` or `.expect()` in non-test
 code; CI lint gate enforces this. All library constructors return `Result`.
 
-**Grounding:** product-brief.md §Scope Wave 0 — FerrochainError 2D component×category error
+**Grounding:** product-brief.md §Scope Wave 0 — PregolyaError 2D component×category error
 taxonomy (CONFLICT-6/D17); Overflow §Security-PRD-Carry-Forward NE-07.
 **Anchor justification:** CAP-016 covers the error taxonomy because CONFLICT-6 (adopted from
 adk-rust P-01/P-04) is named in the brief's Wave 0 scope and NE-07 is in the security
 carry-forward table.
 **D17-elevation note:** Elevated to P0 by D17 CONFLICT-6/NE-07 — constituent BCs P0, wave 0
-(SS-14, ferrochain-core). All security BCs across every subsystem depend on this error model;
+(SS-14, pregolya-core). All security BCs across every subsystem depend on this error model;
 it is a Wave-0 foundational primitive, not a Wave-2 optional capability.

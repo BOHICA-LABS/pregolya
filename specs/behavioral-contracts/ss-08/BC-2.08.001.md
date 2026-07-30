@@ -15,10 +15,10 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
-  - "1.1 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(FerrochainError { category: TRANSPORT, … })` (Unicode-ellipsis form) without specifying a code in this BC. Added code: E-PROV-003 (StreamInterrupted) explicitly to EC-003 per gate #30 rule: ellipsis forms are exempt only if the BC itself specifies the code for that path. Code confirmed from cross-referenced BC-2.08.007 EC-001/TV-001."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-<provider> / ferrochain-standard-tests per module-decomposition.md v1.10."
-  - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-003 carried `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003, … })` with Unicode-ellipsis abbreviation; cross-BC reference to BC-2.08.007 does not satisfy PASS-ABBREV (same-BC requirement). Expanded `…` to explicit inline message template with `<provider>` and `<tokens>` placeholders; cross-BC reference retained as informational note."
-  - "1.4 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-003: FerrochainError value-observation in prose missing required `..` rest pattern (partial fields: category, code, message; missing component, retry_hint); added `, ..` before closing `}`. All occurrences reconciled: 1 corrected (Class 3), 2 exempt (changelog)."
+  - "1.1 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(PregolyaError { category: TRANSPORT, … })` (Unicode-ellipsis form) without specifying a code in this BC. Added code: E-PROV-003 (StreamInterrupted) explicitly to EC-003 per gate #30 rule: ellipsis forms are exempt only if the BC itself specifies the code for that path. Code confirmed from cross-referenced BC-2.08.007 EC-001/TV-001."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-<provider> / pregolya-standard-tests per module-decomposition.md v1.10."
+  - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-003 carried `Err(PregolyaError { category: TRANSPORT, code: E-PROV-003, … })` with Unicode-ellipsis abbreviation; cross-BC reference to BC-2.08.007 does not satisfy PASS-ABBREV (same-BC requirement). Expanded `…` to explicit inline message template with `<provider>` and `<tokens>` placeholders; cross-BC reference retained as informational note."
+  - "1.4 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-003: PregolyaError value-observation in prose missing required `..` rest pattern (partial fields: category, code, message; missing component, retry_hint); added `, ..` before closing `}`. All occurrences reconciled: 1 corrected (Class 3), 2 exempt (changelog)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -29,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "9867a29"
+input-hash: "37aee5b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -44,7 +44,7 @@ removal_reason: null
 
 ## Description
 
-Every ferrochain provider chat model must pass the `ferrochain-standard-tests`
+Every pregolya provider chat model must pass the `pregolya-standard-tests`
 streaming conformance battery: `test_stream`, `test_astream`, `test_stream_events_v3`,
 and `test_astream_events_v3`. The v3 content-block protocol stream must satisfy the
 `stream_lifecycle` oracle: `message-start` opens the stream, `message-finish` closes
@@ -54,10 +54,10 @@ streamed chunks must produce the same final `AiMessage` as a unary `invoke` call
 
 ## Preconditions
 
-1. A ferrochain provider chat model (one of: `ChatOpenAI`, `ChatAnthropic`,
+1. A pregolya provider chat model (one of: `ChatOpenAI`, `ChatAnthropic`,
    `ChatOllama`, or a conforming third-party adapter) is constructed with valid
    credentials and a model that supports streaming.
-2. `ferrochain-standard-tests` is added as a `[dev-dependency]` in the provider crate's
+2. `pregolya-standard-tests` is added as a `[dev-dependency]` in the provider crate's
    `Cargo.toml`.
 3. The provider crate's integration test wires the standard-tests streaming battery by
    implementing `StandardChatModelTests` and supplying the model fixture.
@@ -113,7 +113,7 @@ contains `[ContentBlock::Text(...), ContentBlock::ToolCall(...)]` in index order
 
 ### EC-003: Stream terminated mid-block (transport error)
 **Scenario:** The SSE stream is closed by the provider mid-delta for block index 0.
-**Expected behavior:** The stream yields `Err(FerrochainError { category: TRANSPORT, code: E-PROV-003,
+**Expected behavior:** The stream yields `Err(PregolyaError { category: TRANSPORT, code: E-PROV-003,
 message: "StreamInterrupted: TCP connection to '<provider>' reset mid-stream after <tokens> tokens", .. })`
 (where `<provider>` is the provider adapter name; `<tokens>` is the approximate token count at reset;
 both available at the raise site). No partial `AiMessage` is returned as a success value. (See also BC-2.08.007 EC-004 for the authoritative full-form site.)
@@ -145,15 +145,15 @@ single-response cassette that bypasses streaming logic.
 ## Related BCs
 
 - BC-2.08.002 — tool-call round-trip (depends on: streaming tool-call chunks follow same v3 protocol)
-- BC-2.08.006 — SDK crate split (depends on: streaming transport lives in `ferrochain-<provider>-sdk`)
+- BC-2.08.006 — SDK crate split (depends on: streaming transport lives in `pregolya-<provider>-sdk`)
 - BC-2.08.007 — transport error on interrupted stream (composes with: EC-003 above)
 - BC-2.12.007 — streaming/unary run equivalence at server level (DI-011 enforced by both)
 
 ## Architecture Anchors
 
-- `ferrochain-<provider>/src/chat_model.rs` — `stream()` + `astream()` implementation (to be created)
-- `ferrochain-standard-tests/src/chat_models/streaming.rs` — streaming conformance battery (to be created)
-- `ferrochain-standard-tests/src/utils/stream_lifecycle.rs` — v3 oracle port (to be created)
+- `pregolya-<provider>/src/chat_model.rs` — `stream()` + `astream()` implementation (to be created)
+- `pregolya-standard-tests/src/chat_models/streaming.rs` — streaming conformance battery (to be created)
+- `pregolya-standard-tests/src/utils/stream_lifecycle.rs` — v3 oracle port (to be created)
 
 ## Story Anchor
 
@@ -168,10 +168,10 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-009, CAP-011 |
-| Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies the streaming conformance gate every provider interface implementation must pass; CAP-011 ("Provider Conformance Suite (Standard Tests)") per capabilities-p1-p2.md §CAP-011 — this BC is the direct behavioral expression of the streaming subset of ferrochain-standard-tests |
+| Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies the streaming conformance gate every provider interface implementation must pass; CAP-011 ("Provider Conformance Suite (Standard Tests)") per capabilities-p1-p2.md §CAP-011 — this BC is the direct behavioral expression of the streaming subset of pregolya-standard-tests |
 | L2 Domain Invariants | DI-011 (Streaming / Unary Run Equivalence) |
 | NE References | — |
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | I (integration, standard-tests streaming battery), PT (property test — block index) |
-| Module | ferrochain-<provider> / ferrochain-standard-tests |
+| Module | pregolya-<provider> / pregolya-standard-tests |

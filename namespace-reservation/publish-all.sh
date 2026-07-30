@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# publish-all.sh — Publish all ferrochain namespace-reservation crates to crates.io
+# publish-all.sh — Publish all pregolya namespace-reservation crates to crates.io
 #
 # HUMAN RUNS THIS — do not automate in CI, do not embed your token here.
 #
@@ -7,7 +7,7 @@
 #   cargo login   # run once; token stored in ~/.cargo/credentials.toml
 #
 # Usage:
-#   cd /Users/jmagady/Dev/ferrochain/.factory/namespace-reservation
+#   cd /Users/jmagady/Dev/pregolya/.factory/namespace-reservation
 #   bash publish-all.sh
 #
 # Self-test (no network contact, no cargo — exercises all four outcomes):
@@ -42,29 +42,29 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Derivation: D6 base (9) + D1 (mcp, standard-tests) + D13 (server)
 #             + P2-05 (sandbox, memory) + ADR-008 (macros) + D17-Q5 (3 x -sdk)
 #             + D21 (prompts, vectorstores) + D23 (tools) = 21.
-# ferrochain-prebuilt is NOT present — pre-D21 residue with no workspace crate.
+# pregolya-prebuilt is NOT present — pre-D21 residue with no workspace crate.
 CRATES=(
-  ferrochain
-  ferrochain-core
-  ferrochain-graph
-  ferrochain-checkpoint
-  ferrochain-openai
-  ferrochain-anthropic
-  ferrochain-ollama
-  ferrochain-community
-  ferrochain-splitters
-  ferrochain-mcp
-  ferrochain-standard-tests
-  ferrochain-server
-  ferrochain-sandbox
-  ferrochain-memory
-  ferrochain-macros
-  ferrochain-openai-sdk
-  ferrochain-anthropic-sdk
-  ferrochain-ollama-sdk
-  ferrochain-prompts
-  ferrochain-vectorstores
-  ferrochain-tools
+  pregolya
+  pregolya-core
+  pregolya-graph
+  pregolya-checkpoint
+  pregolya-openai
+  pregolya-anthropic
+  pregolya-ollama
+  pregolya-community
+  pregolya-splitters
+  pregolya-mcp
+  pregolya-standard-tests
+  pregolya-server
+  pregolya-sandbox
+  pregolya-memory
+  pregolya-macros
+  pregolya-openai-sdk
+  pregolya-anthropic-sdk
+  pregolya-ollama-sdk
+  pregolya-prompts
+  pregolya-vectorstores
+  pregolya-tools
 )
 
 # Guard constant — must equal the number of entries in CRATES above.
@@ -77,7 +77,7 @@ EXPECTED_TOTAL=21
 # Must match your `cargo login` identity exactly (case-sensitive).
 EXPECTED_OWNER="BOHICA-LABS"
 
-UA="BOHICA-LABS/ferrochain namespace-reservation-publish/0.1.0 (github.com/BOHICA-LABS/ferrochain)"
+UA="BOHICA-LABS/pregolya namespace-reservation-publish/0.1.0 (github.com/BOHICA-LABS/pregolya)"
 
 # ---------------------------------------------------------------------------
 # HTTP helper functions — production implementations.
@@ -123,37 +123,37 @@ if [[ "${1:-}" == "--self-test" ]]; then
   echo ""
 
   CRATES=(
-    ferrochain-test-available   # 404         → AVAILABLE: will be published (mocked)
-    ferrochain-test-owned       # 200 + ours  → OWNED: already secured by us
-    ferrochain-test-squatted    # 200 + theirs → SQUATTED: held by a third party
-    ferrochain-test-unknown     # 503         → UNKNOWN: cannot be measured
+    pregolya-test-available   # 404         → AVAILABLE: will be published (mocked)
+    pregolya-test-owned       # 200 + ours  → OWNED: already secured by us
+    pregolya-test-squatted    # 200 + theirs → SQUATTED: held by a third party
+    pregolya-test-unknown     # 503         → UNKNOWN: cannot be measured
   )
   EXPECTED_TOTAL=4
 
   _crate_http_code() {
     case "$1" in
-      ferrochain-test-available)  echo "404" ;;
-      ferrochain-test-owned)      echo "200" ;;
-      ferrochain-test-squatted)   echo "200" ;;
-      ferrochain-test-unknown)    echo "503" ;;
+      pregolya-test-available)  echo "404" ;;
+      pregolya-test-owned)      echo "200" ;;
+      pregolya-test-squatted)   echo "200" ;;
+      pregolya-test-unknown)    echo "503" ;;
       *)                          echo "404" ;;
     esac
   }
 
   _owners_http_code() {
     case "$1" in
-      ferrochain-test-owned)      echo "200" ;;
-      ferrochain-test-squatted)   echo "200" ;;
+      pregolya-test-owned)      echo "200" ;;
+      pregolya-test-squatted)   echo "200" ;;
       *)                          echo "ERR" ;;
     esac
   }
 
   _owners_body() {
     case "$1" in
-      ferrochain-test-owned)
+      pregolya-test-owned)
         echo '{"users":[{"login":"'"${EXPECTED_OWNER}"'","kind":"user","id":1,"avatar":"","url":""}]}'
         ;;
-      ferrochain-test-squatted)
+      pregolya-test-squatted)
         echo '{"users":[{"login":"evil-squatter","kind":"user","id":999,"avatar":"","url":""}]}'
         ;;
       *)
@@ -300,7 +300,7 @@ fi
 
 if [ "${#SQUATTED[@]}" -gt 0 ]; then
   echo "FATAL: ${#SQUATTED[@]} name(s) squatted — ${EXPECTED_OWNER} is not the owner: ${SQUATTED[*]}"
-  echo "       These names cannot be used for ferrochain without resolving third-party ownership."
+  echo "       These names cannot be used for pregolya without resolving third-party ownership."
   FAIL=true
 fi
 
@@ -322,4 +322,4 @@ if [ "$FAIL" = "true" ]; then
   exit 1
 fi
 
-echo "SUCCESS: All ${EXPECTED_TOTAL} ferrochain crate names are secured on crates.io."
+echo "SUCCESS: All ${EXPECTED_TOTAL} pregolya crate names are secured on crates.io."

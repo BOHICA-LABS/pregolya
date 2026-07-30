@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
-  - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: trait/PolicyDecision/TokenUsage/RunContext anchor moved from ferrochain-graph/src/budget/policy.rs to ferrochain-core/src/budget.rs (definitions, per ADR-009 Option 3). Module field resolved from stale placeholder to ferrochain-core (trait + types) / ferrochain-graph (engine). BudgetEngine/EvidenceJournal anchors unchanged (ferrochain-graph)."
+  - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: trait/PolicyDecision/TokenUsage/RunContext anchor moved from pregolya-graph/src/budget/policy.rs to pregolya-core/src/budget.rs (definitions, per ADR-009 Option 3). Module field resolved from stale placeholder to pregolya-core (trait + types) / pregolya-graph (engine). BudgetEngine/EvidenceJournal anchors unchanged (pregolya-graph)."
   - "1.2 (F-P91-01, 2026-07-17): Attribute soft_limit/hard_limit configuration fields to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. PC1: reframed from 'RunnableConfig includes a BudgetPolicy' to 'BudgetConfig configured in GraphConfig.budget_config; engine constructs BudgetPolicy from it'. TV-001: 'BudgetPolicy with soft_limit = ...' → 'BudgetConfig with soft_limit = ...'; TV-002/TV-003: 'Same policy' → 'Same BudgetConfig'. soft_limit and hard_limit are BudgetConfig fields per interface-definitions v2.29; BudgetPolicy::evaluate is pure and data-free."
   - "1.3 (D18-P93-B, 2026-07-17): Cost-ceiling scope adjudication. CAP-012 names 'Cost Metering' but does NOT require a configurable cost-based ceiling in v1. Verdict: metering-via-journal satisfies the cost dimension. `JournalEntry.token_usage.estimated_cost` (BC-2.10.002 PC2) provides cost observability; `BudgetConfig` v1 thresholds (`soft_limit`, `hard_limit`) are token counts (`u64`) only. Cost-based ceiling evaluation would require a `Decimal` or `f64` threshold field — not present in v1 spec. Scope note added to Traceability table. Reported as D18-P93-B for state-manager."
   - "1.4 (F-P94-03, 2026-07-17): Fix Deny characterization to reflect three-way on_ceiling dispatch per interface-definitions v2.33 §PolicyDecision×on_ceiling decision table. (a) Description: 'Deny (halt the run immediately)' → 'Deny (engine dispatches per BudgetConfig::on_ceiling — halt, HITL escalation, or summarize)'. (b) PC3 Deny clause: 'execution halts at the next safe super-step boundary (BC-2.10.003)' → three-way dispatch: Halt→BC-2.10.003; Escalate→BC-2.10.004 PC1b/PC2b; Summarize→BC-2.10.003 PC8. (c) Related BCs: BC-2.10.003 line updated to reflect Halt and Summarize paths; BC-2.10.004 line updated to reflect both soft-ceiling Escalate and hard-ceiling Deny+on_ceiling=Escalate HITL paths. Sweep fix: EC-004 expected-behavior clarified with '(on_ceiling=Halt in this scenario)' to prevent implicit halt assumption."
@@ -30,7 +30,7 @@ inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/comparative/adk-rust/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "15af8a2"
+input-hash: "5075899"
 extracted_from: null
 modified: []
 deprecated: null
@@ -155,9 +155,9 @@ is evaluated independently and may choose to continue, escalate, or deny the par
 
 ## Architecture Anchors
 
-- `ferrochain-core/src/budget.rs` — `BudgetPolicy` trait, `PolicyDecision` enum, `TokenUsage` struct, `RunContext` struct (definitions, per ADR-009 Option 3)
-- `ferrochain-graph/src/budget/composed.rs` — `ComposedBudgetPolicy` with Deny > Escalate > Allow precedence
-- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — evaluation call sites after each LLM call and tool invocation within `tick()`
+- `pregolya-core/src/budget.rs` — `BudgetPolicy` trait, `PolicyDecision` enum, `TokenUsage` struct, `RunContext` struct (definitions, per ADR-009 Option 3)
+- `pregolya-graph/src/budget/composed.rs` — `ComposedBudgetPolicy` with Deny > Escalate > Allow precedence
+- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — evaluation call sites after each LLM call and tool invocation within `tick()`
 
 ## Story Anchor
 
@@ -176,8 +176,8 @@ _[to be filled after story decomposition]_
 | L2 Domain Invariants | — |
 | D17 Commitment | D17-Q4 — budget governance allow/escalate/deny policy trait, composable, append-only evidence journal; Domain B dark-factory holdout requires it |
 | D18-P93-B Cost-Ceiling Scope | Cost-based ceilings (`BudgetConfig` with cost thresholds) are **not v1 scope**. CAP-012 "Cost Metering" is satisfied by `JournalEntry.token_usage.estimated_cost` in the `EvidenceJournal` (BC-2.10.002 PC2) — this provides cost observability and auditability. `BudgetConfig` v1 thresholds (`soft_limit`, `hard_limit`) are token counts (`u64`). A cost-based ceiling would require a `Decimal` or `f64` threshold field — not present in v1 spec; deferred to a future CAP-012 extension if required. (D18-P93-B, adjudicated 2026-07-17) |
-| ADAPT Reference | adk-rust P-73 (adk-payments PaymentPolicyGuardrail: allow/escalate/deny, composable, append-only journal) provides the correct policy SHAPE; P-46 confirms adk-rust has no native token/cost ceiling primitive (gap that ferrochain must close) |
+| ADAPT Reference | adk-rust P-73 (adk-payments PaymentPolicyGuardrail: allow/escalate/deny, composable, append-only journal) provides the correct policy SHAPE; P-46 confirms adk-rust has no native token/cost ceiling primitive (gap that pregolya must close) |
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-core (trait + types) / ferrochain-graph (engine) |
+| Module | pregolya-core (trait + types) / pregolya-graph (engine) |

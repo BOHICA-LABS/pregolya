@@ -16,7 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P91-01, 2026-07-17): EC-005 sweep fix — 'BudgetPolicy with on_ceiling = halt' → 'BudgetConfig with on_ceiling = OnCeiling::Halt'. on_ceiling is a field of BudgetConfig (interface-definitions v2.29 §BudgetConfig); BudgetPolicy::evaluate is pure and data-free. Part of the full SS-10 + corpus sweep for BudgetPolicy::on_ceiling mis-attributions."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server / ferrochain-graph per module-decomposition.md v1.10."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server / pregolya-graph per module-decomposition.md v1.10."
   - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). New invariant added: GuardrailDecision is a stream-observer notification only — not emitted in unary mode; GuardrailHook::evaluate fires on both paths per DI-012; absence from unary output is NOT a DI-011 violation (execution-path vs stream-observer equivalence)."
   - "1.4 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "a5c8ac8"
+input-hash: "26042a6"
 extracted_from: null
 modified: []
 deprecated: null
@@ -46,12 +46,12 @@ A graph executed via the streaming endpoint and the same graph executed via the 
 must produce the same final `GraphState` given identical inputs and starting checkpoint. There
 is no stub streaming path that emits synthetic events without invoking the real execution engine
 (DI-011). NE-13 calls out the adk-rust streaming stub — which emits task-state events without
-running the graph — as the counter-example ferrochain must reject. Every guardrail hook, reducer,
+running the graph — as the counter-example pregolya must reject. Every guardrail hook, reducer,
 and checkpoint write that fires on the unary path must also fire on the streaming path.
 
 ## Preconditions
 
-1. A `StateGraph` is compiled and registered with `ferrochain-server`.
+1. A `StateGraph` is compiled and registered with `pregolya-server`.
 2. Two identically-configured Runs are created: Run A via the streaming endpoint, Run B via
    the unary endpoint, both targeting the same `assistant_id`, `thread_id`, and starting checkpoint.
 3. Any node functions in the graph are deterministic given the same random seed (or the same
@@ -146,14 +146,14 @@ equivalent in both.
 ## Related BCs
 
 - BC-2.06.001 — composes with: event taxonomy is trustworthy only because this BC guarantees the events are emitted by the real engine
-- BC-2.12.007 — related to: the server-level streaming / unary equivalence for ferrochain-server is the server-side analog of this graph-level BC
+- BC-2.12.007 — related to: the server-level streaming / unary equivalence for pregolya-server is the server-side analog of this graph-level BC
 - BC-2.05.001 — related to: interrupt on the streaming path must not produce a different checkpoint than the unary path
 - BC-2.10.003 — related to: budget halt behavior must be the same on both paths (covered by EC-005 above)
 
 ## Architecture Anchors
 
-- `ferrochain-server/src/run_handler.rs` — streaming and unary endpoints must call the same underlying `execute_run(graph, config, checkpoint_saver)` function; no streaming-specific branch in execution logic
-- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — single `Pregel::execute` or equivalent function used by both paths; streaming is a presentation layer concern, not an execution logic difference
+- `pregolya-server/src/run_handler.rs` — streaming and unary endpoints must call the same underlying `execute_run(graph, config, checkpoint_saver)` function; no streaming-specific branch in execution logic
+- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — single `Pregel::execute` or equivalent function used by both paths; streaming is a presentation layer concern, not an execution logic difference
 
 ## Story Anchor
 
@@ -176,4 +176,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | I (integration) |
-| Module | ferrochain-server / ferrochain-graph |
+| Module | pregolya-server / pregolya-graph |

@@ -1,20 +1,20 @@
 ---
 artifact: semport/langchain/rust-translation-strategy
-project: ferrochain
-port_target: langchain (v1) → ferrochain (the crate)
+project: pregolya
+port_target: langchain (v1) → pregolya (the crate)
 analyzer_pass: 3
 date: 2026-07-12
 note: strategy only — NO Rust code committed; signatures are illustrative sketches
 consistency: aligned with .factory/semport/core/rust-translation-strategy.md (async-first,
   dyn+boxed futures at plugin seams, generics on hot paths, serde-tagged enums,
-  tower::Service-shaped Runnable). Depends on ferrochain-graph (separate analyzer).
+  tower::Service-shaped Runnable). Depends on pregolya-graph (separate analyzer).
 ---
 
-# langchain (v1) → ferrochain — Translation Strategy
+# langchain (v1) → pregolya — Translation Strategy
 
 Difficulty scale: 🟢 easy · 🟡 moderate · 🟠 hard · 🔴 very hard / research-grade.
 
-The v1 crate is **an orchestration layer over ferrochain-core + ferrochain-graph**. Its
+The v1 crate is **an orchestration layer over pregolya-core + pregolya-graph**. Its
 own hard problems are: (1) the middleware trait + composition, (2) the create_agent graph
 builder, (3) structured-output schema handling, (4) runtime-synthesized middleware
 decorators. Everything else is thin registry/factory glue.
@@ -63,7 +63,7 @@ trait Middleware<Ctx, Resp>: Send + Sync {
   (inner-first-then-outer, cleared per inner call for retry safety) must be ported exactly —
   it is test-locked in `core/test_wrap_model_call_state_update.py`. 🔴
 - **ExtendedModelResponse.command** applied via graph reducers → depends on
-  ferrochain-graph's `Command`/reducer model. The `goto/resume/graph` rejection is a simple
+  pregolya-graph's `Command`/reducer model. The `goto/resume/graph` rejection is a simple
   guard.
 - **dynamic_prompt** = a thin wrap_model_call that overrides `request.system_message` then
   calls next — trivial once wrap_model_call exists.
@@ -71,15 +71,15 @@ trait Middleware<Ctx, Resp>: Send + Sync {
 **Open design questions:** (a) capability flags vs a registration enum
 (`HookSet` bitflags) to drive node/edge construction; (b) the boxed `next` closure's
 lifetime/`Send` bounds under `async_trait`; (c) how ExtendedModelResponse Commands compose
-with ferrochain-graph reducers.
+with pregolya-graph reducers.
 
 ## 2. create_agent graph builder — 🔴 very hard (but mostly delegation)
 
 `create_agent` is a **graph-construction function**; its difficulty is 90% in the
-ferrochain-graph API it targets, 10% in the wiring logic (which is deterministic and
+pregolya-graph API it targets, 10% in the wiring logic (which is deterministic and
 test-locked in `core/test_framework.py` + `test_react_agent.py`).
 
-- Return type: `CompiledGraph<...>` from ferrochain-graph. The **3 Python overloads** keyed
+- Return type: `CompiledGraph<...>` from pregolya-graph. The **3 Python overloads** keyed
   on `response_format` collapse in Rust to **generics**: `create_agent::<Resp>(...)` with
   `Resp = ()` (no structured output), `serde_json::Value` (raw dict), or a typed `T:
   DeserializeOwned + JsonSchema`. Use a builder (`AgentBuilder`) rather than a 14-param fn
@@ -94,8 +94,8 @@ test-locked in `core/test_framework.py` + `test_react_agent.py`).
 - **RunnableCallable(sync, async)** dual-wrapper → in async-first Rust just an async node fn.
 
 **Open design question:** how much of `create_agent`'s wiring can be generic over the graph
-crate vs. must know concrete ferrochain-graph node/edge types. Recommend create_agent
-depends only on ferrochain-graph's *public* `StateGraph` builder API (behavioral-intent.md
+crate vs. must know concrete pregolya-graph node/edge types. Recommend create_agent
+depends only on pregolya-graph's *public* `StateGraph` builder API (behavioral-intent.md
 §5.1–5.4); it must NOT touch stream internals (§5.5).
 
 ## 3. Structured output — 🟠 hard (schema generation is the crux)
@@ -130,7 +130,7 @@ depends only on ferrochain-graph's *public* `StateGraph` builder API (behavioral
 - **`_ConfigurableModel`** (defers construction, queues declarative ops `bind_tools`/
   `with_structured_output`, replays on `_model(config)`) → a builder capturing
   `default_config` + a `Vec<DeclarativeOp>` (enum) replayed when the concrete model is
-  built. Implements the ferrochain-core `Runnable`/`ChatModel` trait by delegating to the
+  built. Implements the pregolya-core `Runnable`/`ChatModel` trait by delegating to the
   built model. 🟠 — the "configurable at runtime via config keys" feature is niche; consider
   deferring the full Runnable delegation surface (batch/astream_log/astream_events) to a
   later round; v1 needs invoke/stream/bind_tools/with_structured_output.
@@ -152,24 +152,24 @@ mirroring the decorator ergonomics. `iscoroutinefunction` branching disappears (
 
 Each is a self-contained `Middleware` impl. Port priority by value:
 - **P1:** SummarizationMiddleware, ModelFallback, ModelRetry, ToolRetry (common, pure logic).
-- **P2:** HumanInTheLoop (needs ferrochain-graph `interrupt`), ToolCallLimit/ModelCallLimit
+- **P2:** HumanInTheLoop (needs pregolya-graph `interrupt`), ToolCallLimit/ModelCallLimit
   (need state extension), ContextEditing, TodoList, LLMToolSelector.
 - **P3:** PII (878 LOC + stream transformer — needs redaction engine), ShellTool (sandboxes
   — heavy, `_execution.py`), ProviderToolSearch, LLMToolEmulator, FileSearch.
-Shared helpers `_retry.py`/`_redaction.py`/`_execution.py` → ferrochain internal util
-modules. State-adding middleware depend on ferrochain-graph's channel/reducer API.
+Shared helpers `_retry.py`/`_redaction.py`/`_execution.py` → pregolya internal util
+modules. State-adding middleware depend on pregolya-graph's channel/reducer API.
 
 ## 7. Subagent transformer — 🔴 defer (P3)
 `_subagent_transformer.py` couples to **private langgraph stream internals**
 (`langgraph.stream.run_stream`, `.transformers._TasksLifecycleBase`, `._mux`). This is the
-deepest, most fragile coupling. **Recommend excluding from ferrochain v1**; multi-agent
+deepest, most fragile coupling. **Recommend excluding from pregolya v1**; multi-agent
 streaming (`run.subagents`) is an advanced feature. If required later, it forces
-ferrochain-graph to expose stream-transformer internals — a large surface. Flag to the
+pregolya-graph to expose stream-transformer internals — a large surface. Flag to the
 graph analyzer as an explicit v1 non-goal.
 
 ## 8. Re-export modules — 🟢 trivial
 `messages`, `rate_limiters`, `tools` (core parts), `chat_models.BaseChatModel`,
-`embeddings.Embeddings` are pure re-exports of ferrochain-core → Rust `pub use`.
+`embeddings.Embeddings` are pure re-exports of pregolya-core → Rust `pub use`.
 
 ---
 
@@ -178,7 +178,7 @@ graph analyzer as an explicit v1 non-goal.
 | Subsystem | Difficulty | Primary risk |
 |---|---|---|
 | Middleware trait + wrap_* composition | 🔴 | Override-detection→capability model; boxed `next` closure lifetimes; command accumulation exactness |
-| create_agent graph wiring | 🔴 | Entirely gated on ferrochain-graph public API; edge logic must be byte-faithful |
+| create_agent graph wiring | 🔴 | Entirely gated on pregolya-graph public API; edge logic must be byte-faithful |
 | Structured output schema gen | 🟠 | schemars vs pydantic JSON-schema divergence (provider acceptance) |
 | _ConfigurableModel | 🟠 | Deferred declarative-op replay + full Runnable delegation surface |
 | Decorators (runtime class synth) | 🟠 | Redesign to closure-holding generics (macro-generate) |
@@ -189,14 +189,14 @@ graph analyzer as an explicit v1 non-goal.
 
 ## Cross-cutting open design questions (candidate ADRs)
 
-1. **ADR: Middleware capability model** — how does ferrochain detect "this middleware
+1. **ADR: Middleware capability model** — how does pregolya detect "this middleware
    registers before_model" without Python's method-identity trick? Bitflag `HookSet`,
    `provides_*()` methods, or a builder-declared registration? Drives all node/edge
    construction.
 2. **ADR: wrap_model_call onion** — `tower::Layer` vs hand-rolled fold; the `Send`/lifetime
    bounds on the boxed `next` handler under `async_trait`; exact Command-accumulation +
    per-retry-clear semantics (test-locked).
-3. **ADR: ferrochain-graph public API contract** — freeze the minimum surface from
+3. **ADR: pregolya-graph public API contract** — freeze the minimum surface from
    behavioral-intent.md §5.1–5.4 that create_agent targets; declare stream internals
    (§5.5) a v1 non-goal (excludes subagent transformer).
 4. **ADR: state-schema composition** — Python merges TypedDicts via runtime type-hint

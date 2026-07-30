@@ -1,0 +1,9 @@
+[package]
+name = "pregolya-prompts"
+version = "0.0.0"
+edition = "2021"
+description = "Reserved: Rust implementation of the LangChain v1 architecture. Under active development — see github.com/BOHICA-LABS/pregolya"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/BOHICA-LABS/pregolya"
+keywords = ["llm", "langchain", "agents", "ai", "rust"]
+categories = ["api-bindings"]

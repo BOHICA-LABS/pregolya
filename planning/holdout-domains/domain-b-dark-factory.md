@@ -5,7 +5,7 @@ created: 2026-07-13
 domain: "Domain B — Dark factory / autonomous software development orchestrator"
 source_decision: D8 (STATE.md, human directive 2026-07-13)
 purpose:
-  - "Phase 1 design forcing function: PRD/architecture must demonstrate this workload is supportable on ferrochain."
+  - "Phase 1 design forcing function: PRD/architecture must demonstrate this workload is supportable on pregolya."
   - "Phase 2 holdout domain: product-owner authors hidden acceptance scenarios; only the domain (this brief) is public."
 assessor: research-agent (perplexity sonar-deep-research high-effort + WebFetch + Tavily + local file inventory)
 primary_references:
@@ -19,7 +19,7 @@ input-hash: "[pending state-manager]"
 
 > **Scope note.** This is a *domain brief*, not a spec. It characterizes the problem
 > space so (1) Phase 1 can treat "power a dark factory" as a forcing function on the
-> ferrochain-graph + ferrochain-server design, and (2) Phase 2 product-owner can author
+> pregolya-graph + pregolya-server design, and (2) Phase 2 product-owner can author
 > *hidden* holdout scenarios. It intentionally describes **general evaluation shapes**,
 > not concrete holdout scenarios. Per D9, the local vsdd-factory workspace is designated
 > PRIOR ART / EVIDENCE — "most productionally best, not just prior art" — and is
@@ -36,9 +36,9 @@ input-hash: "[pending state-manager]"
 5. The 2026 landscape spans a spectrum: assistive→agentic→dark-factory. Devin, OpenAI Codex cloud, Claude Code fleets, GitHub Copilot coding agent + Agentic Workflows + Agent HQ, and Google Jules occupy the agentic middle (issue→PR with a human merge gate); StrongDM sits at the dark-factory extreme.
 6. **Spec-driven development (SDD)** is the connective tissue: AWS Kiro (requirements→design→tasks→property-tests) and GitHub Spec Kit (`/speckit.constitution → specify → plan → tasks → implement`) make specs executable artifacts that drive multi-agent implementation.
 7. Across all systems the same technical primitives recur: durable sandboxed task execution, multi-agent parallelization, session/context persistence, human-in-the-loop approval gates, hooks for validation/security, spec→plan→task decomposition, and traceable logs/diffs.
-8. This domain is the **most demanding forcing function** for ferrochain-graph + ferrochain-server: it requires multi-day durable runs surviving process restarts, hierarchical sub-agent spawning with isolated contexts, parallel fan-out over stories/waves, conditional gate routing, HITL interrupts mid-run, and token/cost budget metering.
-9. Most of these primitives map cleanly onto ferrochain's planned LangGraph-derived surface (StateGraph/Pregel engine, Send-API fan-out, `interrupt()` HITL, conditional edges, checkpointer, store, subgraphs, server threads/assistants/crons); a smaller set is **NEW** (agent-registry/routing, worktree-style filesystem isolation, per-run/per-agent budget metering, probabilistic "satisfaction" gating, adversarial-convergence as a first-class loop primitive).
-10. Verdict: Domain B is *supportable* on the planned ferrochain surface **and** productively stresses it — it is the domain most likely to surface gaps in durability, sub-agent isolation, and budget governance that Domains A (SOC) and C (personal assistant) do not force as hard.
+8. This domain is the **most demanding forcing function** for pregolya-graph + pregolya-server: it requires multi-day durable runs surviving process restarts, hierarchical sub-agent spawning with isolated contexts, parallel fan-out over stories/waves, conditional gate routing, HITL interrupts mid-run, and token/cost budget metering.
+9. Most of these primitives map cleanly onto pregolya's planned LangGraph-derived surface (StateGraph/Pregel engine, Send-API fan-out, `interrupt()` HITL, conditional edges, checkpointer, store, subgraphs, server threads/assistants/crons); a smaller set is **NEW** (agent-registry/routing, worktree-style filesystem isolation, per-run/per-agent budget metering, probabilistic "satisfaction" gating, adversarial-convergence as a first-class loop primitive).
+10. Verdict: Domain B is *supportable* on the planned pregolya surface **and** productively stresses it — it is the domain most likely to surface gaps in durability, sub-agent isolation, and budget governance that Domains A (SOC) and C (personal assistant) do not force as hard.
 
 ---
 
@@ -80,7 +80,7 @@ An 8-phase greenfield pipeline (`README.md`; `docs/guide/pipeline-paths.md`):
 Phase 0 Brownfield Ingest → 1 Spec Crystallization → 2 Story Decomposition → 3 TDD Implementation → 4 Holdout Evaluation → 5 Adversarial Refinement → 6 Formal Hardening → 7 Convergence & Release. A parallel **feature pipeline** (F1–F7) handles post-v1 deltas, plus maintenance/discovery/multi-repo paths (`docs/guide/pipeline-paths.md`, 14 routing paths). Phases are encoded as **`.lobster` workflow files** (YAML-as-data) that the orchestrator reads to spawn agents in dependency order (`README.md` "Workflows | 16"; `docs/guide/agents-reference.md` "Orchestrator Workflows").
 
 ### 2.2 Agent specialization + dispatch model
-33 specialist agents + an orchestrator (`docs/guide/agents-reference.md`). The **orchestrator does not write files** — it dispatches specialists via an Agent tool with a `subagent_type`, coordinates gates, and validates (ferrochain `CLAUDE.md` "Pipeline Authority"; vsdd `agents-reference.md`). Key dispatch patterns:
+33 specialist agents + an orchestrator (`docs/guide/agents-reference.md`). The **orchestrator does not write files** — it dispatches specialists via an Agent tool with a `subagent_type`, coordinates gates, and validates (pregolya `CLAUDE.md` "Pipeline Authority"; vsdd `agents-reference.md`). Key dispatch patterns:
 - **Fresh context per specialist** — each of the 9 per-story steps is a *separate* subagent to prevent context exhaustion and topic drift ("Single-context delivery is a correctness bug", `docs/guide/phase-3-tdd-delivery.md`).
 - **Context discipline** — each specialist receives only files relevant to its task (per-specialist file table, `phase-3-tdd-delivery.md`).
 - **Information asymmetry** — the adversary runs with `context: fork` and *cannot see prior review passes*; the holdout-evaluator cannot see source/specs/notes (`agents-reference.md`).
@@ -95,16 +95,16 @@ Phase 0 Brownfield Ingest → 1 Spec Crystallization → 2 Story Decomposition �
 - **7-dimensional convergence gate** (Phase 7): spec, tests, implementation, verification, visual, performance, documentation — each with quantitative pass criteria; "not a subjective judgment" (`docs/guide/phase-7-convergence-release.md`).
 
 ### 2.4 Adversarial convergence (definition)
-Convergence is *measured*, not declared. Signals: **novelty decay** (latest adversary novelty < 0.15), median finding severity strictly decreasing for ≥3 passes, and **3-CLEAN** (three consecutive zero-finding passes; any finding resets the streak; the streak only counts against an unchanged HEAD — a new commit resets it) (ferrochain `CLAUDE.md` BC-5.39.001; vsdd `README.md`, `phase-7-convergence-release.md`). "The pipeline terminates when further adversarial review produces only hallucinated findings" (`README.md`).
+Convergence is *measured*, not declared. Signals: **novelty decay** (latest adversary novelty < 0.15), median finding severity strictly decreasing for ≥3 passes, and **3-CLEAN** (three consecutive zero-finding passes; any finding resets the streak; the streak only counts against an unchanged HEAD — a new commit resets it) (pregolya `CLAUDE.md` BC-5.39.001; vsdd `README.md`, `phase-7-convergence-release.md`). "The pipeline terminates when further adversarial review produces only hallucinated findings" (`README.md`).
 
 ### 2.5 State management + session resume
 - Live pipeline state in a single **`STATE.md`** (phase, step, decisions log D1..Dn, risk register, session-resume checkpoint) with an enforced **size budget** (~160 lines) — historical detail is offloaded to per-cycle files (`.factory/STATE.md`; `factory-project-state-template.md`).
 - **`.factory/cycles/<cycle>/`** holds burst logs, convergence trajectories, session checkpoints, lessons.
-- **factory-artifacts orphan branch** mounted at `.factory/` via a worktree; a single agent (state-manager) owns all `.factory/` commits and runs LAST in every burst to avoid version-race regressions (`agents-reference.md` "Why this separation matters"; ferrochain `CLAUDE.md` Git Workflow).
+- **factory-artifacts orphan branch** mounted at `.factory/` via a worktree; a single agent (state-manager) owns all `.factory/` commits and runs LAST in every burst to avoid version-race regressions (`agents-reference.md` "Why this separation matters"; pregolya `CLAUDE.md` Git Workflow).
 - **Single-commit-per-burst** discipline (TD-VSDD-053), enforced by a hook chain.
 
 ### 2.6 Worktree isolation
-Per-story git **worktrees** in `.worktrees/<story-id>/` on `feature/<story-id>` branches from `develop`; created by devops-engineer at step 1, cleaned at step 8 (`phase-3-tdd-delivery.md`; ferrochain `CLAUDE.md` "Worktree pattern"). Enables parallel story work with filesystem isolation. Claude Code's own docs recommend the same pattern for agent fleets (see §4.3).
+Per-story git **worktrees** in `.worktrees/<story-id>/` on `feature/<story-id>` branches from `develop`; created by devops-engineer at step 1, cleaned at step 8 (`phase-3-tdd-delivery.md`; pregolya `CLAUDE.md` "Worktree pattern"). Enables parallel story work with filesystem isolation. Claude Code's own docs recommend the same pattern for agent fleets (see §4.3).
 
 ### 2.7 Human approval gates
 Explicit `human-approval` steps at Phase 1, Phase 2, wave transitions, and pre-release; convergence criteria are *advisory* — the human can override NOT_CONVERGED→ship (recorded risk acceptance) or CONVERGED→continue (`phase-7-convergence-release.md` "Human Override"; `pipeline-paths.md`).
@@ -131,7 +131,7 @@ Source: https://factory.strongdm.ai/ (fetched 2026-07-13) + corroborating writeu
 4. **Satisfaction measurement** — replaces boolean "test suite is green" with a probabilistic metric: "of all the observed trajectories through all the scenarios, what fraction of them likely satisfy the user?"[W1][W6] Scenario holdouts guard against reward hacking.[W6]
 
 ### 3.3 Supporting components (from /products)
-- **Attractor** — non-interactive coding agent = graph of phases (directly analogous to ferrochain-graph + vsdd phases).[W9]
+- **Attractor** — non-interactive coding agent = graph of phases (directly analogous to pregolya-graph + vsdd phases).[W9]
 - **CXDB** — self-hosted context store for agents: "turn DAG, blob deduplication, dynamic types, and visual debugging" (analogous to a checkpoint/state store).[W9]
 - **StrongDM ID** — identity for humans, workloads, and AI agents; every agent has a unique verifiable identity linked to a human sponsor "so organizations always know who authorized every action" (agent identity/provenance = a governance primitive).[W2][W9]
 
@@ -164,11 +164,11 @@ The deep-research synthesis names the common set verbatim:[R1] "durable task exe
 
 ---
 
-## 5. Framework Demands → ferrochain Primitives Mapping
+## 5. Framework Demands → pregolya Primitives Mapping
 
-Domain B is the Phase-1 forcing function that most stresses **ferrochain-graph** (LangGraph-derived StateGraph/Pregel runtime, per D7/D11) and **ferrochain-server** (first-party durable-run server, per D13). The capability list is enumerated in STATE.md D8. Mapping each factory demand to ferrochain's planned surface:
+Domain B is the Phase-1 forcing function that most stresses **pregolya-graph** (LangGraph-derived StateGraph/Pregel runtime, per D7/D11) and **pregolya-server** (first-party durable-run server, per D13). The capability list is enumerated in STATE.md D8. Mapping each factory demand to pregolya's planned surface:
 
-| Factory demand (from refs + landscape) | ferrochain primitive (planned) | Coverage | Source of primitive |
+| Factory demand (from refs + landscape) | pregolya primitive (planned) | Coverage | Source of primitive |
 |---|---|---|---|
 | Multi-day pipeline that survives process restarts | Durable checkpointer + `interrupt`/resume; sync-default durability (crash-safe); msgpack wire format | **PLANNED** | D11.2/D11.3; market-intel §4.1 |
 | Specialist agents with isolated contexts | Subgraphs + sub-agent invocation; per-node isolated state | **PLANNED (partial)** — graph subgraphs exist; a first-class *agent-spawning* API is NEW | market-intel diff #4; landscape §4 (Claude Code threads) |
@@ -177,9 +177,9 @@ Domain B is the Phase-1 forcing function that most stresses **ferrochain-graph**
 | Parallel waves / fan-out over stories | **Send API** (map-style fan-out) | **PLANNED** | LangGraph parity |
 | State / artifacts persisted across sessions | Checkpointer (SQLite/in-memory min, Postgres stretch) + Store (cross-session memory) | **PLANNED** | market-intel §4.1; D8 |
 | Structured outputs (verdicts, findings, satisfaction) | Typed `ContentBlock`/structured-output; tool-schema types | **PLANNED** | market-intel §4 diff |
-| External tool integration (SIEM/Slack/GitHub/DTU) | **ferrochain-mcp** (MCP adapter port) | **PLANNED** | D1; D8 |
-| 24/7 persistent resumable sessions | ferrochain-server threads/assistants | **PLANNED** | D13 |
-| Scheduled / proactive agency (nightly maintenance sweeps, cron) | ferrochain-server crons | **PLANNED** | D13 |
+| External tool integration (SIEM/Slack/GitHub/DTU) | **pregolya-mcp** (MCP adapter port) | **PLANNED** | D1; D8 |
+| 24/7 persistent resumable sessions | pregolya-server threads/assistants | **PLANNED** | D13 |
+| Scheduled / proactive agency (nightly maintenance sweeps, cron) | pregolya-server crons | **PLANNED** | D13 |
 | Streaming progress/logs | Server streaming | **PLANNED** | D13 |
 | **Agent registry + routing table** (vsdd: 33 agents → subagent_type; Agent HQ: heterogeneous engines) | — | **NEW** | vsdd `CLAUDE.md` Agent Routing Table; landscape §4 (Agent HQ) |
 | **Worktree-style filesystem isolation** per parallel unit | — (git worktrees are an app-layer concern, but the runtime must support per-branch isolated execution contexts) | **NEW** | vsdd §2.6; Claude Code / Jules VM isolation |
@@ -187,11 +187,11 @@ Domain B is the Phase-1 forcing function that most stresses **ferrochain-graph**
 | **Adversarial-convergence loop** as a reusable pattern (3-CLEAN, novelty decay) | expressible as a cyclic subgraph, but not a library primitive | **NEW (compositional)** | vsdd §2.4 |
 | **Probabilistic "satisfaction" gating** (LLM-judged, trajectory-based) | expressible as a node, but no eval/scoring primitive | **NEW (compositional)** | StrongDM W1/W6 |
 | **Agent identity / provenance** ("who authorized every action") | — | **NEW** (governance surface; may map to server auth + structured event catalog) | StrongDM ID W2/W9 |
-| Full traceability (intent→artifact) | Structured event catalog + tracing (ferrochain `CLAUDE.md`); checkpoint history | **PLANNED (as observability)** | ferrochain `CLAUDE.md`; vsdd §2.5 |
+| Full traceability (intent→artifact) | Structured event catalog + tracing (pregolya `CLAUDE.md`); checkpoint history | **PLANNED (as observability)** | pregolya `CLAUDE.md`; vsdd §2.5 |
 
 ### 5.1 Net assessment for Phase 1
 - **Covered by planned surface:** durable graph runs + checkpoint/resume, fan-out (Send), conditional routing, HITL interrupts, subgraphs, store/memory, MCP tools, server threads/assistants/crons/streaming, structured outputs, tracing/traceability. Domain B is *supportable*.
-- **NEW capabilities Domain B forces onto the design conversation (D9 gate input):** (1) an **agent-registry/routing** abstraction; (2) **execution-context isolation** semantics (worktree/VM analog) at the runtime boundary; (3) **budget/cost metering + quota governance** per run and per sub-agent; (4) first-class support for **long-cyclic convergence loops** with per-iteration checkpoint atomicity; (5) optionally, **agent identity/provenance** as a governance primitive. These should be explicitly addressed (adopt / defer-with-anchor / out-of-scope) in the ferrochain-graph and ferrochain-server ADRs so the architecture *demonstrably* supports the dark-factory workload rather than assuming it.
+- **NEW capabilities Domain B forces onto the design conversation (D9 gate input):** (1) an **agent-registry/routing** abstraction; (2) **execution-context isolation** semantics (worktree/VM analog) at the runtime boundary; (3) **budget/cost metering + quota governance** per run and per sub-agent; (4) first-class support for **long-cyclic convergence loops** with per-iteration checkpoint atomicity; (5) optionally, **agent identity/provenance** as a governance primitive. These should be explicitly addressed (adopt / defer-with-anchor / out-of-scope) in the pregolya-graph and pregolya-server ADRs so the architecture *demonstrably* supports the dark-factory workload rather than assuming it.
 
 ---
 
@@ -212,28 +212,28 @@ actual scenarios, fixtures, and thresholds must be authored privately and sealed
 
 ## 7. Phase-1-Ready Capability Checklist
 
-The ferrochain PRD/architecture must **demonstrate** (not merely assert) support for each.
+The pregolya PRD/architecture must **demonstrate** (not merely assert) support for each.
 Maps to STATE.md D8. Legend: [P] planned-surface covers it; [N] NEW / gap to resolve in ADR.
 
 - [ ] **[P] Durable graph runs surviving process restart** — checkpoint after each super-step; resume produces identical continuation. (ADR: checkpoint atomicity, single-writer.)
 - [ ] **[P] Checkpoint + external store** — SQLite + in-memory minimum; Postgres stretch; msgpack wire format; one-way Python-checkpoint import. (D11.2)
 - [ ] **[P] Sub-agent invocation with isolated contexts** — subgraph / nested-run with disjoint state; fan-in synthesis. → also see [N] agent-spawning API.
-- [ ] **[P] Parallel fan-out (Send API)** — map over a dynamic collection; partial-failure surfaced via error taxonomy (not silent empty return, per ferrochain `CLAUDE.md`).
+- [ ] **[P] Parallel fan-out (Send API)** — map over a dynamic collection; partial-failure surfaced via error taxonomy (not silent empty return, per pregolya `CLAUDE.md`).
 - [ ] **[P] Conditional routing / quality-gate branching** — conditional edges keyed on structured node output.
 - [ ] **[P] HITL interrupt + resume** — `interrupt()` persists and resumes on external signal, including across process boundaries.
 - [ ] **[P] Structured outputs** — typed verdicts/findings/scores as first-class content, not stringly-typed JSON.
-- [ ] **[P] MCP tool integration** — ferrochain-mcp adapter (D1) for external services (GitHub, CI, chat, digital twins).
-- [ ] **[P] Persistent resumable sessions / threads** — ferrochain-server threads + assistants (D13).
+- [ ] **[P] MCP tool integration** — pregolya-mcp adapter (D1) for external services (GitHub, CI, chat, digital twins).
+- [ ] **[P] Persistent resumable sessions / threads** — pregolya-server threads + assistants (D13).
 - [ ] **[P] Scheduled / proactive agency** — server crons for nightly/maintenance-style runs (D13).
 - [ ] **[P] Streaming + traceability** — token/step streaming; structured event catalog gives intent→artifact audit trail.
-- [ ] **[N] Agent registry + routing** — a dispatch abstraction mapping work-kind → specialist agent config (model/prompt/tools). Resolve in ferrochain-graph or a factory-layer ADR.
+- [ ] **[N] Agent registry + routing** — a dispatch abstraction mapping work-kind → specialist agent config (model/prompt/tools). Resolve in pregolya-graph or a factory-layer ADR.
 - [ ] **[N] Execution-context isolation (worktree/VM analog)** — runtime semantics for per-unit isolated filesystem/workspace. Resolve scope: runtime primitive vs application concern.
-- [ ] **[N] Budget / cost metering + quotas** — per-run and per-sub-agent token/cost accounting with a ceiling that halts/degrades gracefully. Resolve in ferrochain-server + graph ADR.
+- [ ] **[N] Budget / cost metering + quotas** — per-run and per-sub-agent token/cost accounting with a ceiling that halts/degrades gracefully. Resolve in pregolya-server + graph ADR.
 - [ ] **[N] Convergence-loop support** — bounded cyclic execution with per-iteration checkpointing and a first-class convergence/termination condition (3-CLEAN / novelty-decay shape).
 - [ ] **[N] Agent identity / provenance (optional/governance)** — verifiable actor identity per action; may fold into server auth + event catalog. Decide in scope.
 
 **D9 gate note:** items marked [N] are exactly the material for the mandated ≥2-alternatives
-architecture conversation before the ferrochain-graph execution-model ADR is locked.
+architecture conversation before the pregolya-graph execution-model ADR is locked.
 
 ---
 
@@ -241,7 +241,7 @@ architecture conversation before the ferrochain-graph execution-model ADR is loc
 
 - Domain B forces **durability, sub-agent isolation, convergence loops, and budget governance** hardest. (Domain A/SOC forces tool-calling + HITL-before-containment + high-volume triage; Domain C/personal-assistant forces persistent-session + multi-channel ingress + local-first.) Keep holdouts domain-distinct so each exercises its unique primitive.
 - Per D9, do **not** encode vsdd-factory's specific phase names or the 33-agent roster as required outputs — that is prior art, not a conformance target. Test the *capability* (e.g., "orchestrate N specialists through a gated pipeline that resumes after crash"), not the vsdd shape.
-- Per D13, ferrochain-server is first-party with real BCs/holdouts; there is **no** wire-compatibility or conformance obligation to LangGraph Platform or any external factory.
+- Per D13, pregolya-server is first-party with real BCs/holdouts; there is **no** wire-compatibility or conformance obligation to LangGraph Platform or any external factory.
 
 ---
 
@@ -252,17 +252,17 @@ architecture conversation before the ferrochain-graph execution-model ADR is loc
 | **Perplexity perplexity_research (PRIMARY)** | 1 (high effort, strip_thinking) | Deep multi-source landscape of 2026 autonomous SWE + factory-style multi-agent SDLC orchestration (Devin, Codex, Claude Code, Copilot/Agentic Workflows/Agent HQ, Jules, Kiro, Spec Kit, StrongDM) + recurring primitives. Result 95.9k chars; ~67% read directly + targeted grep verification of remainder. |
 | Perplexity perplexity_search | 1 | Ranked URLs + snippets for StrongDM Software Factory talks/writeups (Simon Willison, StrongDM blog, YouTube briefing, Ry Walker research, LinkedIn). |
 | WebFetch | 1 | factory.strongdm.ai home — verbatim characterization of the Software Factory operating model, rules, pipeline, metrics. |
-| Local file reads (Read/Glob) | 8 | vsdd-factory README, pipeline-paths, agents-reference, phase-3-tdd-delivery, phase-7-convergence, factory-project-state-template; ferrochain CLAUDE.md, STATE.md, market-intel. Orchestration-pattern inventory + ferrochain planned-surface + D8 context. |
+| Local file reads (Read/Glob) | 8 | vsdd-factory README, pipeline-paths, agents-reference, phase-3-tdd-delivery, phase-7-convergence, factory-project-state-template; pregolya CLAUDE.md, STATE.md, market-intel. Orchestration-pattern inventory + pregolya planned-surface + D8 context. |
 | Grep | 2 | Locate/verify synthesis sections in the large research result file. |
 
 **Total MCP tool calls:** 3 (1 perplexity_research, 1 perplexity_search, 1 WebFetch is not MCP — MCP total = 2 Perplexity). Tavily not needed — Perplexity + WebFetch + local corpus were sufficient and cross-corroborating (10 independent StrongDM sources agreed).
-**Training data reliance:** low — landscape claims are URL-cited via sonar-deep-research; StrongDM claims corroborated across 10 sources + primary site; vsdd/ferrochain claims are direct local file reads. Internal architectures of closed agents (Devin/Codex/Jules concurrency + resource models) are flagged as vendor-undocumented, not asserted.
+**Training data reliance:** low — landscape claims are URL-cited via sonar-deep-research; StrongDM claims corroborated across 10 sources + primary site; vsdd/pregolya claims are direct local file reads. Internal architectures of closed agents (Devin/Codex/Jules concurrency + resource models) are flagged as vendor-undocumented, not asserted.
 
 ## Sources
 
 **Local (prior art / evidence, read-only):**
 - `/Users/jmagady/Dev/vsdd-factory/README.md`, `docs/guide/pipeline-paths.md`, `docs/guide/agents-reference.md`, `docs/guide/phase-3-tdd-delivery.md`, `docs/guide/phase-7-convergence-release.md`, `plugins/vsdd-factory/templates/factory-project-state-template.md`
-- `/Users/jmagady/Dev/ferrochain/CLAUDE.md`, `.factory/STATE.md` (D7/D8/D9/D11/D13), `.factory/planning/market-intel.md`
+- `/Users/jmagady/Dev/pregolya/CLAUDE.md`, `.factory/STATE.md` (D7/D8/D9/D11/D13), `.factory/planning/market-intel.md`
 
 **Web (StrongDM):**
 - [WF] https://factory.strongdm.ai/ and /products (fetched 2026-07-13)

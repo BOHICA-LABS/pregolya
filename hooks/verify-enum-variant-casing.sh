@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-enum-variant-casing.sh — ferrochain factory-artifacts wrap guard (blocking validator #5)
+# verify-enum-variant-casing.sh — pregolya factory-artifacts wrap guard (blocking validator #5)
 #
 # Detects SCREAMING_CASE enum variant references in spec files under
 # .factory/specs/.  Direction B (ADR-010 v1.9) mandates PascalCase Rust

@@ -1,6 +1,6 @@
 ---
 artifact: semport/platform/behavioral-intent
-project: ferrochain
+project: pregolya
 port_target: langgraph-sdk @ 1.2.9 (libs/sdk-py, 18,728 LOC) + langgraph-cli @ 1.2.9 (libs/cli, 8,383 LOC)
 analyzer_pass: 6
 date: 2026-07-12
@@ -10,7 +10,7 @@ note: analysis only — NO Rust code committed. RemoteGraph lives in langgraph c
       keystone consumer and is analyzed here for the drop-in question.
 consistency: aligns with semport/graph/rust-translation-strategy.md (§7 row "RemotePregel
       + SDK — proprietary Platform protocol — DEFER/maybe DROP") and
-      semport/partners/rust-translation-strategy.md (§1 direct-HTTP + ferrochain-partner-http
+      semport/partners/rust-translation-strategy.md (§1 direct-HTTP + pregolya-partner-http
       pattern applies to the SDK transport too).
 ---
 
@@ -31,7 +31,7 @@ deploy tool**. It is almost entirely **SaaS/Docker/Python-packaging plumbing**: 
 in-memory dev server (delegated to the closed-source `langgraph-api` package), and pushes
 images to the LangSmith host backend. Very little of it is portable engine logic.
 
-The two are joined by one crucial fact for ferrochain: **the SDK's REST/streaming surface
+The two are joined by one crucial fact for pregolya: **the SDK's REST/streaming surface
 IS the de-facto specification of the proprietary LangGraph Platform**. There is no public
 versioned OpenAPI contract we can pin. The SDK's request/response shapes are the closest
 thing to a spec, which is why the D-decision to catalog them (feeding P1-06 DTU clone) is
@@ -53,7 +53,7 @@ sound — but see the API-churn risk in §7 and dependency-disposition §6.
 
 The sync client is a **mechanically-generated mirror** of the async one (`_async/` vs
 `_sync/` directories are near-identical; a code-gen step, see `test_api_parity.py`, keeps
-them in lock-step). This async/sync duality collapses to **async-only** in ferrochain
+them in lock-step). This async/sync duality collapses to **async-only** in pregolya
 (CLAUDE.md Tokio async-first; sync facade only if a port spec demands it).
 
 ### 1.1 Auth model (client side)
@@ -71,8 +71,8 @@ on the client — the server-side `auth/` module (see §5) is a different thing 
 This is how a graph node running *inside* a deployed server calls back into its own API
 (sub-agent pattern). Deferred registration via `_registered_transports` +
 `configure_loopback_transports(app)` handles the case where the client is built before the
-app is initialized. **ferrochain analog:** a "local" client variant that dispatches to an
-in-process server handler rather than reqwest — relevant only if ferrochain ships a hosted
+app is initialized. **pregolya analog:** a "local" client variant that dispatches to an
+in-process server handler rather than reqwest — relevant only if pregolya ships a hosted
 server; DEFER.
 
 ### 1.3 HTTP layer behavior (`_async/http.py`, 312 LOC — the transport crux)
@@ -93,7 +93,7 @@ server; DEFER.
   (httpx.HTTPStatusError, LangGraphError)`. Body best-effort JSON-decoded; message pulled
   from `message`/`detail`/`error` (or nested `error.message`). `x-request-id` captured.
 - **timeout defaults**: `connect=5, read=300, write=300, pool=5` (note the 300s read for
-  long runs — ferrochain's 30s default MUST be overridden here per NFR-catalog).
+  long runs — pregolya's 30s default MUST be overridden here per NFR-catalog).
 - **transport retries**: `httpx.AsyncHTTPTransport(retries=5)` at the connection layer.
 
 ## 2. Resource semantics (behavioral contracts by sub-client)
@@ -237,7 +237,7 @@ Three modules in sdk-py are **server-authoring frameworks**, not client code:
   handler, `@auth.on` authorization rules, `BaseUser`/`Authenticated`/`MinimalUser`
   protocols, exceptions (`HTTPException`), typed `AuthContext`/`BaseAuthContext`. Consumed
   by `langgraph-api` server, not by API callers. **DROP for the client port**; re-scope as a
-  server-auth concern only if ferrochain ships a hosted server.
+  server-auth concern only if pregolya ships a hosted server.
 - `runtime.py` (238 LOC) — `ServerRuntime`/`AccessContext` injected into graph-builder
   factories inside the deployed server (execution vs read vs introspection contexts). Server
   concept. **DROP for client**; relates to semport/graph's `Runtime` injection.
@@ -279,9 +279,9 @@ implements the full local `Pregel` interface against the SDK client:
 - maps SDK `StreamPart`/v3 events → local `StreamMode` output + `GraphInterrupt`/`ParentCommand`;
 - reconstructs a drawable `Graph` (nodes/edges) from `get_graph`.
 
-**ferrochain implication:** if ferrochain wants "call a remote ferrochain-server as if it
-were a local graph," `RemoteGraph` is the pattern — a `ferrochain-graph` type implementing
-the same `Runnable`/graph trait, delegating to a `ferrochain-platform-client` crate. This is
+**pregolya implication:** if pregolya wants "call a remote pregolya-server as if it
+were a local graph," `RemoteGraph` is the pattern — a `pregolya-graph` type implementing
+the same `Runnable`/graph trait, delegating to a `pregolya-platform-client` crate. This is
 the ONLY part of the platform work with a clean parity story to the local engine. Everything
 else (assistants/threads/crons/store CRUD, deploy, CLI) is net-new surface with no local
 analog and no product mandate yet.
@@ -323,8 +323,8 @@ Docker. See dependency-disposition §4 for the portability verdict per command g
 `store` (StoreConfig: index/embed/dims/ttl), `checkpointer` (CheckpointerConfig: ttl/serde),
 `auth` (AuthConfig: path/openapi-security/studio-auth), `encryption`, `http` (HttpConfig:
 per-resource disable flags, cors, configurable headers), `webhooks`, `ui`, `keep_pkg_tools`.
-This schema is the **ferrochain-project-config analog candidate** — the one CLI artifact
-with genuine port value (a `ferrochain.toml`/`ferrochain.json` describing graphs, deps, env,
+This schema is the **pregolya-project-config analog candidate** — the one CLI artifact
+with genuine port value (a `pregolya.toml`/`pregolya.json` describing graphs, deps, env,
 store, checkpointer). See rust-translation-strategy §3.
 
 ## 10. State checkpoint

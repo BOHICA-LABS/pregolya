@@ -1,5 +1,5 @@
 """
-Canonical changelog-region detector for ferrochain factory-artifacts hooks.
+Canonical changelog-region detector for pregolya factory-artifacts hooks.
 
 Single source of truth for "what counts as a changelog region."
 Imported by verify-no-version-pins.sh and verify-signature-canon.sh.
@@ -57,23 +57,23 @@ _SECTION_HEADING_RE   = re.compile(r'^## ')
 _ILLUS_START_RE = re.compile(r'<!--\s*discriminator:illustration-start\s*-->')
 _ILLUS_END_RE   = re.compile(r'<!--\s*discriminator:illustration-end\s*-->')
 
-# ── FerrochainError opener detection ─────────────────────────────────────────
-# Used by find_ferrochain_error_openers() to locate both single-line and
-# split-line FerrochainError { ... } openers.
+# ── PregolyaError opener detection ─────────────────────────────────────────
+# Used by find_pregolya_error_openers() to locate both single-line and
+# split-line PregolyaError { ... } openers.
 #
 # Single-line form: identifier and opening brace on the same line.
-#   e.g. `FerrochainError { code: "E-X", .. }`
+#   e.g. `PregolyaError { code: "E-X", .. }`
 #
 # Split-line form: identifier at end of line N, opening brace at start of N+1.
-#   e.g. line N  → `Err(FerrochainError`
+#   e.g. line N  → `Err(PregolyaError`
 #        line N+1 → `{ category: VAL, .. })`
 #
-# _FERROCHAIN_SPLIT_END_RE matches a line that ends with the FerrochainError
+# _PREGOLYA_SPLIT_END_RE matches a line that ends with the PregolyaError
 # identifier (optional trailing whitespace/backtick/parenthesis but NO `{`).
 # _SPLIT_BRACE_START_RE matches a continuation line whose first non-whitespace
 # character is `{`.
-_FERROCHAIN_SINGLE_LINE_RE = re.compile(r'\bFerrochainError\s+\{')
-_FERROCHAIN_SPLIT_END_RE   = re.compile(r'\bFerrochainError\s*$')
+_PREGOLYA_SINGLE_LINE_RE = re.compile(r'\bPregolyaError\s+\{')
+_PREGOLYA_SPLIT_END_RE   = re.compile(r'\bPregolyaError\s*$')
 _SPLIT_BRACE_START_RE      = re.compile(r'^\s*\{')
 
 
@@ -195,27 +195,27 @@ def illustration_exempt_lines(raw_lines):
     return frozenset(exempt)
 
 
-def find_ferrochain_error_openers(raw_lines):
+def find_pregolya_error_openers(raw_lines):
     """
-    Locate all FerrochainError { opener positions, including split-line forms
+    Locate all PregolyaError { opener positions, including split-line forms
     where the identifier and the opening brace appear on adjacent lines.
 
     Single-line form
     ----------------
-    ``FerrochainError {`` on one line.  opener_line == brace_line.
+    ``PregolyaError {`` on one line.  opener_line == brace_line.
 
     Split-line form (Gap 2 — NOTATION-GAP-FIX)
     -------------------------------------------
-    ``FerrochainError`` at the end of line N (nothing after it on that line
+    ``PregolyaError`` at the end of line N (nothing after it on that line
     except optional whitespace); ``{`` as the first non-whitespace character
     on line N+1.  opener_line = N, brace_line = N+1.
 
     Step 0 EXCLUDED_DECL applies to the OPENER LINE
     -------------------------------------------------
     Callers check whether the line at ``opener_line`` contains
-    ``pub struct FerrochainError`` or ``impl FerrochainError``.  This rule
+    ``pub struct PregolyaError`` or ``impl PregolyaError``.  This rule
     applies equally to single-line and split-line forms — a split-line
-    ``pub struct FerrochainError`` / ``{`` is still EXCLUDED_DECL.
+    ``pub struct PregolyaError`` / ``{`` is still EXCLUDED_DECL.
 
     This function does NOT apply any Step 0 exclusions.  Callers are
     responsible for filtering with ``changelog_exempt_lines()`` and
@@ -230,7 +230,7 @@ def find_ferrochain_error_openers(raw_lines):
     -------
     list[dict]
         Each dict has three keys:
-            ``opener_line`` : int — 0-indexed line where FerrochainError appears
+            ``opener_line`` : int — 0-indexed line where PregolyaError appears
             ``brace_line``  : int — 0-indexed line where { appears
                                     (== opener_line for single-line form;
                                      opener_line + 1 for split-line form)
@@ -240,11 +240,11 @@ def find_ferrochain_error_openers(raw_lines):
     i = 0
     while i < len(raw_lines):
         line = raw_lines[i].rstrip('\n')
-        if _FERROCHAIN_SINGLE_LINE_RE.search(line):
-            # Single-line form: FerrochainError { on the same line.
+        if _PREGOLYA_SINGLE_LINE_RE.search(line):
+            # Single-line form: PregolyaError { on the same line.
             results.append({"opener_line": i, "brace_line": i, "form": "single"})
-        elif _FERROCHAIN_SPLIT_END_RE.search(line):
-            # FerrochainError at end of line — check if the next line opens with {.
+        elif _PREGOLYA_SPLIT_END_RE.search(line):
+            # PregolyaError at end of line — check if the next line opens with {.
             if i + 1 < len(raw_lines):
                 next_line = raw_lines[i + 1].rstrip('\n')
                 if _SPLIT_BRACE_START_RE.match(next_line):

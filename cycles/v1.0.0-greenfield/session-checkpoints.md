@@ -2020,6 +2020,45 @@ Date: 2026-07-29 | Archived at: session-wrap D-88 | STATE.md: 4.41 → 4.42 | re
 
 ---
 
+### Archived Checkpoint — v4.44 (archived at burst-284 state-update, 2026-07-30)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1, greenfield+semport. Streak **0/3 after 176 passes**. burst-283 COMPLETE: ADR-021 minted (RunnableConfig §configurable; closes F-P175-C101 CRIT + C113 HIGH); policies.yaml 45 policies; DEFER-002 CLOSED; TDIV-008 guard INERT confirmed; 4 BC bumps; CRIT **corrected to 0** (~127/189 open; D-96); D-91..D-102; L-143..L-147. **Rename decision D-93 blocks P1D-176** — human selects name → burst-284 rename → P1D-176 on post-rename HEAD. D-32 and D-69 in force.
+
+### NEXT-ACTION
+Human: select rename for `ferrochain` (D-93; `ferroweave` is standby). After name selection: burst-284 rename → P1D-176 FULL-PERIMETER on post-rename factory-artifacts HEAD.
+
+### HEADS
+develop `46725ad` — clean, PUSHED. factory-artifacts — pushed after burst-283 commit. Story worktrees: NONE. Open PRs: NONE.
+
+**Validator baselines (burst-283 final; 12 blocking validators):**
+verify-no-version-pins: PASS=198; records-lint: PASS=5; verify-adr-decision-refs: PASS; verify-changelog-date-monotonicity: PASS=131; verify-changelog-date-validity: PASS (D-92); verify-enum-variant-casing: PASS=198; verify-signature-canon: PASS=5; verify-error-notation-canon: PASS=1 (351 openers; 0 violations); verify-form-a-changelog-direction: PASS=198 WARN=7; verify-arch-anchor-resolution: PASS=129; verify-module-canonicality: PASS=8; verify-bc-frontmatter-schema: PASS=129.
+
+### COVERAGE DEBTS — block any CLEAN claim under D-32 until closed
+- BC-2.18.004: targeted grep only; PC5 added burst-279 — full body read pending.
+- 36 of 37 standing gates: count/continuity only (gate #25 sole body-deep audit).
+- 105 hyphenated-module occurrences + 131 version pins: counted per-file, NOT triaged live-body vs changelog.
+- 129 TV Count cells: never hand-summed.
+- ADR-010 canon-note site: unopened (F-P175-D115 severity contingent).
+- Per-VP frontmatter: `module:` only — `tool`/`priority`/`bc_anchor`/`crate` unverified.
+
+### PENDING HUMAN ACTIONS
+1. **D-93 (BLOCKS P1D-176)** — Select rename for `ferrochain`; `ferroweave` is standby (unregistered). Once selected, burst-284 executes rename; P1D-176 gates on post-rename HEAD.
+2. **R14 (HIGH, irreversible; rename dependency)** — After rename: update `publish-all.sh` for renamed crates → `cargo login` + run. 12 of 21 crates currently unreserved.
+3. B1 — `direnv allow .`
+4. **TDIV-008** — engine `path_allow` fix requires vendor action (out of project scope). No in-project resolution path (D-94).
+
+### RESIDUAL ITEMS (actionable under DIRECTIVE 2)
+- `BC-2.09.007` + `BC-INDEX.md` carry post-boundary version pins → product-owner.
+- `interface-definitions.md` §Authentication cluster grandfathered (pre-2026-07-24) — needs de-pin on next touch.
+- Inert `ferrochain-prebuilt/` orphan pending removal.
+- fix-burst 285: 630 advisories + 14 input-hash mismatches (D-100) — sequenced after burst-284 and P1D-176.
+
+### ARCHIVE METADATA
+Date: 2026-07-30 | Archived at: burst-284 state-update | STATE.md: 4.44 → 4.45 | ferrochain → pregolya rename (D-103); 353 files / ~6,300 identifiers; D-103..D-108; L-148..L-152 | streak 0/3
+
+---
+
 ### Archived Checkpoint — v4.43 (archived at burst-283 state-update, 2026-07-30)
 
 ### RESUME IN ONE BREATH

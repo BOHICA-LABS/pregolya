@@ -1,6 +1,6 @@
 ---
 artifact: semport/partners/dependency-disposition
-project: ferrochain
+project: pregolya
 port_target: langchain partner packages + standard-tests
 analyzer_pass: 4
 date: 2026-07-12
@@ -30,7 +30,7 @@ Three forces push the decision:
 1. **Fidelity thesis of a semantic port.** We must reproduce langchain's exact translation +
    pass the conformance suite. An external Rust SDK imposes its *own* message model, inserting
    a third representation (their DTO ↔ our content block ↔ provider wire). That doubles the
-   translation surface and couples ferrochain to the SDK author's design + release cadence.
+   translation surface and couples pregolya to the SDK author's design + release cadence.
 2. **CLAUDE.md hard mandates.** reqwest MUST be `default-features=false, features=["rustls-tls"]`
    workspace-wide; `native-tls`/`default-tls` are forbidden (macOS Keychain + MITM-proxy risk);
    production clients MUST set a 30s timeout; credentials MUST be redacted newtypes; no
@@ -66,7 +66,7 @@ Three forces push the decision:
 | **anthropic** | **DIRECT-HTTP** | No mature official Rust SDK; must reproduce thinking / `redacted_thinking` / prompt-caching / server-tool fidelity; Messages API is small + stable; Python's own `langchain-mistralai` proves direct-HTTP (httpx) is clean for a provider of this size. reqwest+rustls + `reqwest-eventsource` for SSE. |
 | **ollama** | **DIRECT-HTTP** (lightweight, ~250-350 LOC transport) | Tiny, stable local API; must reproduce `parse_url_with_auth` Basic-auth + `validate_model`; it is the API-key-free CI path (want zero external dep surprises). `ollama-rs` evaluated but rejected for control. |
 
-**Unified consequence:** all provider crates depend on one shared **`ferrochain-partner-http`**
+**Unified consequence:** all provider crates depend on one shared **`pregolya-partner-http`**
 infra crate (name TBD at architecture) owning: the rustls-tls reqwest `Client` builder (30s
 timeout, connection pool), retry/backoff (we **MAP `backon`** — this is the capability we LOSE
 by not using the vendor SDKs, consistent with core strategy's tenacity→backon), SSE streaming
@@ -120,7 +120,7 @@ This fake is small and deterministic → an excellent DTU-clone target validated
 
 | Package | Vendor SDK | Disposition |
 |---|---|---|
-| deepseek, xai | (via `langchain-openai`) | **PORT as thin subclasses** of ferrochain's `BaseChatOpenAI` equivalent; reuse the owned OpenAI-wire transport. No new SDK. |
+| deepseek, xai | (via `langchain-openai`) | **PORT as thin subclasses** of pregolya's `BaseChatOpenAI` equivalent; reuse the owned OpenAI-wire transport. No new SDK. |
 | groq, fireworks, openrouter, perplexity | `groq`, `fireworks-ai`, `openrouter`, `perplexityai` | **DIRECT-HTTP** on the shared OpenAI-shaped wire where applicable; perplexity adds citation/search-result parsing (PORT). Later wave. |
 | mistralai | none (already httpx direct) | **DIRECT-HTTP** — trivial; `tokenizers` → **MAP `tokenizers` (HF Rust crate)**. |
 | huggingface | `huggingface-hub`, `tokenizers` | Endpoint path: **DIRECT-HTTP** (TGI). Local pipeline/sentence-transformers: **DEFER** (pulls torch/transformers — out of v1). `tokenizers` → MAP HF Rust `tokenizers`. |
@@ -138,12 +138,12 @@ manual cosine; **pillow** (nomic) → **MAP `image`**; **aiohttp/requests** (fir
 | Python dep | Disposition | Notes |
 |---|---|---|
 | `pytest` + `pytest-asyncio` | **PORT → Rust test harness** | Rust `#[test]`/`#[tokio::test]` + a trait + declarative macro generating the test matrix (see rust-translation-strategy). |
-| `vcrpy` (+ gzip/YAML cassette serializer) | **MAP → `wiremock` or `rvcr`/`vcr-cassette`** | Record/replay HTTP so conformance runs without provider secrets in CI. **Prerequisite for a useful `ferrochain-standard-tests`.** |
+| `vcrpy` (+ gzip/YAML cassette serializer) | **MAP → `wiremock` or `rvcr`/`vcr-cassette`** | Record/replay HTTP so conformance runs without provider secrets in CI. **Prerequisite for a useful `pregolya-standard-tests`.** |
 | `syrupy` (snapshot) | **MAP → `insta`** | For `test_serdes` golden snapshots (the `.ambr` analog → `.snap`). |
 | `pytest-socket` (network block in unit) | **PORT** | Unit conformance must not touch network — enforce via a no-network client injection or a deny-all reqwest resolver in unit mode. |
 | `pytest-benchmark`/`pytest-codspeed` (`test_init_time`, `test_stream_time`) | **MAP → `criterion`** or a lightweight timing gate | Benchmark conformance is P2. |
 | `numpy` (embeddings/vectorstore assertions) | **MAP → `ndarray`** | |
-| `deepagents` (sandboxes) | **ELIMINATE / DEFER** | Sandbox conformance out of ferrochain v1. |
+| `deepagents` (sandboxes) | **ELIMINATE / DEFER** | Sandbox conformance out of pregolya v1. |
 | `langsmith` (reporting plugin) | **ELIMINATE from core** | Optional exporter, consistent with core disposition. |
 
 ## State Checkpoint
@@ -155,7 +155,7 @@ map_vs_direct_http:
   openai: direct-http
   anthropic: direct-http
   ollama: direct-http
-  shared_infra: ferrochain-partner-http (rustls-tls reqwest + backon retry + SSE/NDJSON + credential newtypes)
+  shared_infra: pregolya-partner-http (rustls-tls reqwest + backon retry + SSE/NDJSON + credential newtypes)
   rejected_dependency: genai (wrong abstraction level for a fidelity port)
 timestamp: 2026-07-12
 ```

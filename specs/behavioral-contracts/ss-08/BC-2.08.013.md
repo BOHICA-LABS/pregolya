@@ -12,7 +12,7 @@ subsystem: SS-08
 capability: CAP-009
 changelog:
   - "1.1 (OBS-P77-B, 2026-07-15): Architecture Anchor corrected — 'built-in enum variants' → 'built-in trait implementations'. ToolCallDialect is an object-safe pluggable trait (per BC body Description and interface-definitions v2.23); NativeOpenAiJson, NativeAnthropic, HermesChatMlXml are concrete struct implementations of that trait, not enum variants."
-  - "1.2 (F-P108-03, 2026-07-18): EC-002 expanded from 2-field catch-all `{ dialect, reason }` to 4-field explicit struct `{ dialect, element, offset, parse_error }`. Adjudication: the taxonomy Message Format for E-PROV-009 has 4 distinct placeholders (`<dialect>`, `<element>`, `<n>`, `<parse_error>`); the `<n>` offset is MID-message (not trailing), making a catch-all `reason` structurally unable to render independent `<element>` and `<n>` values. Expanded variant: `{ dialect: \"HermesChatMlXml\", element: \"<tool_call>\", offset: 2, parse_error: \"key must be a string\" }`. Sibling sweep (all E-PROV-009 sites in this BC): PC8 uses FerrochainError message-template form (correctly shows 4 values in message string); PC9, EC-005, TV-006 use bare form (no struct fields; not subject to parity check). No taxonomy change needed — E-PROV-009 message format already shows 4 placeholders."
+  - "1.2 (F-P108-03, 2026-07-18): EC-002 expanded from 2-field catch-all `{ dialect, reason }` to 4-field explicit struct `{ dialect, element, offset, parse_error }`. Adjudication: the taxonomy Message Format for E-PROV-009 has 4 distinct placeholders (`<dialect>`, `<element>`, `<n>`, `<parse_error>`); the `<n>` offset is MID-message (not trailing), making a catch-all `reason` structurally unable to render independent `<element>` and `<n>` values. Expanded variant: `{ dialect: \"HermesChatMlXml\", element: \"<tool_call>\", offset: 2, parse_error: \"key must be a string\" }`. Sibling sweep (all E-PROV-009 sites in this BC): PC8 uses PregolyaError message-template form (correctly shows 4 values in message string); PC9, EC-005, TV-006 use bare form (no struct fields; not subject to parity check). No taxonomy change needed — E-PROV-009 message format already shows 4 placeholders."
 wave: 2
 phase: 1b
 producer: product-owner
@@ -22,7 +22,7 @@ traces_to:
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "6fd0580"
+input-hash: "5a688d9"
 extracted_from: null
 modified: []
 deprecated: null
@@ -37,7 +37,7 @@ removal_reason: null
 
 ## Description
 
-ferrochain providers translate tool definitions to model-specific wire formats and parse
+pregolya providers translate tool definitions to model-specific wire formats and parse
 tool-call responses back to `ContentBlock::ToolCall` via a pluggable `ToolCallDialect` trait
 defined in `core::runnable`. Three built-in dialects are provided: `NativeOpenAiJson`
 (OpenAI `tool_calls` JSON format), `NativeAnthropic` (Anthropic `tool_use` content blocks),
@@ -85,7 +85,7 @@ when dialect parsing fails.
    `ContentBlock::Text` in the `AiMessage` content list (partial-text + tool-call
    co-occurrence is valid).
 8. `<tool_call>` tag content that is not valid JSON returns
-   `Err(FerrochainError { component: PROV, category: VAL, code: "E-PROV-009",
+   `Err(PregolyaError { component: PROV, category: VAL, code: "E-PROV-009",
    message: "ToolCallDialectParseError: HermesChatMlXml <tool_call> payload is not valid JSON
    at response offset <n>: <parse_error>", retry_hint: Never })`.
 
@@ -108,7 +108,7 @@ when dialect parsing fails.
   the system prompt (never replaces it). If no system instruction is set, the `<tools>`
   block becomes the entire system content.
 - **No implicit dialect fallback:** if the configured dialect fails to parse the response,
-  the error is E-PROV-009. ferrochain does NOT auto-detect an alternative dialect
+  the error is E-PROV-009. pregolya does NOT auto-detect an alternative dialect
   from the response format.
 
 ## Edge Cases
@@ -166,9 +166,9 @@ with the implementor's error message embedded. (DI-014: error not swallowed.)
 
 ## Architecture Anchors
 
-- `ferrochain-core/src/runnable.rs` (or `ferrochain-core/src/tool_dialect.rs`) — `ToolCallDialect` trait definition; `NativeOpenAiJson`, `NativeAnthropic`, `HermesChatMlXml` built-in trait implementations; `ChatConfig.tool_call_dialect: ToolCallDialect` field
-- `ferrochain-<provider>/src/tool_translation.rs` — per-dialect `serialize_tools(tools: &[Tool]) -> ProviderRequest` and `parse_response(raw: ResponseBody) -> Result<AiMessage, FerrochainError>` implementations
-- `ferrochain-openai/src/chat_model.rs`, `ferrochain-anthropic/src/chat_model.rs` — dialect selection at construction time
+- `pregolya-core/src/runnable.rs` (or `pregolya-core/src/tool_dialect.rs`) — `ToolCallDialect` trait definition; `NativeOpenAiJson`, `NativeAnthropic`, `HermesChatMlXml` built-in trait implementations; `ChatConfig.tool_call_dialect: ToolCallDialect` field
+- `pregolya-<provider>/src/tool_translation.rs` — per-dialect `serialize_tools(tools: &[Tool]) -> ProviderRequest` and `parse_response(raw: ResponseBody) -> Result<AiMessage, PregolyaError>` implementations
+- `pregolya-openai/src/chat_model.rs`, `pregolya-anthropic/src/chat_model.rs` — dialect selection at construction time
 
 ## Story Anchor
 
@@ -183,11 +183,11 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-009 |
-| Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies the pluggable tool-call serialization/deserialization seam that conforming providers must implement; the Hermes ChatML XML dialect is a third dialect alongside native OpenAI JSON and native Anthropic tool_use, all covered under the "pass ferrochain-standard-tests for tool calling" requirement of CAP-009 |
+| Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies the pluggable tool-call serialization/deserialization seam that conforming providers must implement; the Hermes ChatML XML dialect is a third dialect alongside native OpenAI JSON and native Anthropic tool_use, all covered under the "pass pregolya-standard-tests for tool calling" requirement of CAP-009 |
 | L2 Domain Invariants | DI-008 (constructors return Result; E-PROV-009 is Err not panic), DI-014 (Error Propagation — dialect parse errors propagate as Err; no silent data loss) |
 | Error Code Minted | E-PROV-009 ToolCallDialectParseError — VAL, broken, Never. PROV namespace had 8 live codes (E-PROV-001 through E-PROV-008); E-PROV-009 is next. Taxonomy row: sub-burst 2. |
 | Domain D Forcing Function | domain-d-hermes-agent.md req 1 — "[PARTIAL CAP-009/BC-2.08.002] … no parser seam for non-native dialects (Hermes `<tool_call>{json}</tool_call>` XML)"; this BC fills that gap |
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-core (ToolCallDialect trait) / ferrochain-<provider> (dialect dispatch) |
+| Module | pregolya-core (ToolCallDialect trait) / pregolya-<provider> (dialect dispatch) |

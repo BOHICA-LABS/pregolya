@@ -17,18 +17,18 @@ superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
   - "1.12 (FIX-BURST-278/F-P175-D48-receiver+D217-SearchType/2026-07-28): D-48 overturn of D-45 (two items). (1) F-P175-D48 — `as_retriever` receiver corrected to `self: Arc<Self>`. The prior reference-to-Arc receiver form is NOT a dyn-compatible receiver (it is not one of the standard vtable-dispatchable receiver types: `self`, `&self`, `&mut self`, `Box<Self>`, `Rc<Self>`, `Arc<Self>`, `Pin<P>`); using a reference-to-Arc receiver makes `VectorStore` non-object-safe under E0038, destroying `Arc<dyn VectorStore>` and blocking the SS-20 RAG seam. `Arc<Self>` IS a dyn-compatible receiver — `Arc<dyn VectorStore>` can dispatch through it. This is the second E0038 object-safety failure in the project (first: `Tool` via `DynTool` in ADR-005). The stale 'Wave C PO correction required' note removed from doc comment (BC-2.20.003 PC-2 amendment is routed to product-owner via FIX-BURST-278 Wave B routing spec). (2) F-P175-D217 — `SearchType` enum missing `#[non_exhaustive]` per BC-2.20.003 INV-1; added. Object-safety comment updated: `as_retriever` uses `Arc<Self>` receiver (dyn-compatible), not `&self`."
-  - "1.11 (FIX-BURST-277-WAVE-B/F-P174-retriever-lifetime+F-P174-303+F-P174-as-retriever-fallible/2026-07-27): Three related fixes. (1) F-P174-retriever-lifetime — the lifetime-parameterized `VectorStoreRetriever` held `store: &'a dyn VectorStore`, making it a non-`'static` type. Coercing it to `Arc<dyn Retriever + 'static>` (required for graph node injection and `tokio::spawn`) fails with a lifetime bound error. Fix: `VectorStoreRetriever` drops the lifetime parameter; `store` field becomes `Arc<dyn VectorStore>` (owned Arc, `'static`). `VectorStoreRetriever` is now `'static` and coerces cleanly to `Arc<dyn Retriever>`. (2) F-P174-as-retriever-fallible — `as_retriever` was infallible (returning the now-removed lifetime-parameterized type via `&self` receiver) but BC-2.20.003 INV-2 and TV-004/TV-005 require `Err(E-VS-003)` on invalid config (lambda_mult outside [0,1], fetch_k < k for MMR). Fix: signature becomes `fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>` (D-48 further corrected the intermediate receiver form in v1.12). The receiver allows the implementation to `Arc::clone` and store the `Arc<dyn VectorStore>` in `VectorStoreRetriever.store`. BC-2.20.003 PC-2 (infallible) is therefore incorrect and requires a Wave C PO correction; the architecture source of truth is this ADR and interface-definitions.md. (3) F-P174-303 — remove phantom `context:` field from Decision 5 write-time zero-norm code sketch; `document_index` is carried in `message` via key=value interpolation per ADR-010 adjudication. Propagate to interface-definitions.md and api-surface.md."
+  - "1.11 (FIX-BURST-277-WAVE-B/F-P174-retriever-lifetime+F-P174-303+F-P174-as-retriever-fallible/2026-07-27): Three related fixes. (1) F-P174-retriever-lifetime — the lifetime-parameterized `VectorStoreRetriever` held `store: &'a dyn VectorStore`, making it a non-`'static` type. Coercing it to `Arc<dyn Retriever + 'static>` (required for graph node injection and `tokio::spawn`) fails with a lifetime bound error. Fix: `VectorStoreRetriever` drops the lifetime parameter; `store` field becomes `Arc<dyn VectorStore>` (owned Arc, `'static`). `VectorStoreRetriever` is now `'static` and coerces cleanly to `Arc<dyn Retriever>`. (2) F-P174-as-retriever-fallible — `as_retriever` was infallible (returning the now-removed lifetime-parameterized type via `&self` receiver) but BC-2.20.003 INV-2 and TV-004/TV-005 require `Err(E-VS-003)` on invalid config (lambda_mult outside [0,1], fetch_k < k for MMR). Fix: signature becomes `fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>` (D-48 further corrected the intermediate receiver form in v1.12). The receiver allows the implementation to `Arc::clone` and store the `Arc<dyn VectorStore>` in `VectorStoreRetriever.store`. BC-2.20.003 PC-2 (infallible) is therefore incorrect and requires a Wave C PO correction; the architecture source of truth is this ADR and interface-definitions.md. (3) F-P174-303 — remove phantom `context:` field from Decision 5 write-time zero-norm code sketch; `document_index` is carried in `message` via key=value interpolation per ADR-010 adjudication. Propagate to interface-definitions.md and api-surface.md."
   - "1.10 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp per ADR decision-date convention (Gate #28 Rule 5): `timestamp: 2026-07-23T00:00:00Z` → `2026-07-21T00:00:00Z`. Date field already correct at 2026-07-21. Timestamp was incorrectly bumped to 2026-07-23 in burst-238/f4819b2."
   - "1.9 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — all Rust code blocks: Component::VS → Component::Vs; Category::VAL → Category::Val; Component::CORE → Component::Core; Category::SECURITY → Category::Security per ADR-010 v1.9 Direction B adjudication."
   - "1.8 (FIX-BURST-267/F-P165-stale-prose/2026-07-25): De-label §PO Obligations heading '### E-VS-004 (carried from v1.3)' → '### E-VS-004 (carried from Decision 5)' — Decision 5 (v1.2/F-P129-08) is the behavioral anchor that introduced the write-time zero-norm rejection obligation; v1.3 only corrected the error code number from E-VS-003 → E-VS-004. The version pin 'v1.3' decays with revision history; 'Decision 5' is stable and directly identifies the design decision this obligation traces to."
   - "1.7 (burst-238/2026-07-23): Stale-handoff sweep (continuation) — rewrite five 'Error taxonomy must mint' future-tense obligations to past-tense facts: (1) Consequences §E-VS-004 line: 'must mint' → 'minted'; (2) §PO Obligations E-VS-004 header: 'Error taxonomy must mint E-VS-004' → 'E-VS-004 minted (error-taxonomy v1.27/D21)'; (3) §PO Obligations E-CORE-008 header: 'Error taxonomy must mint E-CORE-008' → 'E-CORE-008 minted (error-taxonomy v1.30/burst-226)'; (4) §PO Obligations E-VS-005 header: 'Error taxonomy must mint E-VS-005' → 'E-VS-005 minted (error-taxonomy v1.30/burst-226)'."
   - "1.6 (burst-238/2026-07-23): Stale-handoff sweep — rewrite three 'PO must' future-tense obligations in §PO Obligations to past-tense facts: (1) BC-2.20.002 anchor corrections → 'BC-2.20.002 v1.2 applied'; (2) BC-2.20.002 PC2 severity-bifurcation update → 'BC-2.20.002 v1.3 updated PC2'; (3) BC-2.21.004 INV-3 fail-safe update → 'BC-2.21.004 v1.2 updated INV-3'."
   - "1.5 (burst-226/2026-07-21): F-P131-01 (HIGH) — GuardedDocuments::rag_ingress Fail arm severity-bifurcated per BC-2.11.005 PC4/PC5. Critical Fail → Err(E-CORE-008, GuardrailCriticalRejection, SECURITY) — batch aborts. Non-Critical Fail → error-entry Document substituted at position i, batch continues. Docstring updated. Consequences bullet updated (Fail arm description). PO Obligations: E-CORE-008 mint obligation added; BC-2.20.002 PC2 update obligation added. F-P131-07 (MED) — similarity_search_with_filter default implementation changed from lossy-fallback to fail-safe: non-empty filter on an adapter that has not overridden this method returns Err(E-VS-005, FilterUnsupported, VAL). Empty filter (vacuously true) still delegates to similarity_search. PO Obligations: E-VS-005 mint obligation added; BC-2.21.004 INV-3 update obligation added."
-  - "1.4 (burst-225/2026-07-21): F-P130-01 (CRITICAL) — Decision 6 GuardrailHook re-definition removed; replaced with canonical `async fn evaluate` signature from interface-definitions.md §GuardrailHook (authority-deference: BC-2.11.001..006 supersede on contract semantics). GuardedDocuments::rag_ingress made async; mechanism corrected to per-document evaluate calls with IngressContent::RagChunk per BC-2.11.003 PC1/PC5; all three GuardrailResult arms (Pass/Fail/Transform) honoured. BoundaryType re-definition in Decision 6 body removed — BoundaryType is defined in core::guardrail per BC-2.11.001 canonical precedent; only referenced here via ProvenanceTag. Purity classification note updated: rag_ingress is async → Boundary Module classification confirmed unchanged. Consequences bullets updated accordingly. Sibling sweep: purity-boundary-map.md v1.8 (core::guardrail + core::retriever rows), module-decomposition.md v1.13 (guardrail comment block). PO handoff text for BC-2.20.002 ferrochain-guardrail→ferrochain-core anchor corrections (F-P130-02) recorded in §PO Obligations."
+  - "1.4 (burst-225/2026-07-21): F-P130-01 (CRITICAL) — Decision 6 GuardrailHook re-definition removed; replaced with canonical `async fn evaluate` signature from interface-definitions.md §GuardrailHook (authority-deference: BC-2.11.001..006 supersede on contract semantics). GuardedDocuments::rag_ingress made async; mechanism corrected to per-document evaluate calls with IngressContent::RagChunk per BC-2.11.003 PC1/PC5; all three GuardrailResult arms (Pass/Fail/Transform) honoured. BoundaryType re-definition in Decision 6 body removed — BoundaryType is defined in core::guardrail per BC-2.11.001 canonical precedent; only referenced here via ProvenanceTag. Purity classification note updated: rag_ingress is async → Boundary Module classification confirmed unchanged. Consequences bullets updated accordingly. Sibling sweep: purity-boundary-map.md v1.8 (core::guardrail + core::retriever rows), module-decomposition.md v1.13 (guardrail comment block). PO handoff text for BC-2.20.002 pregolya-guardrail→pregolya-core anchor corrections (F-P130-02) recorded in §PO Obligations."
   - "1.3 (burst-224/2026-07-21): Collision correction — error-taxonomy.md line 288 already defines E-VS-003 (VectorStoreRetriever config validation, VAL, BC-2.20.003). Write-time zero-norm rejection code corrected from E-VS-003 → E-VS-004 throughout Decision 5 heading, table, code sketches, and Consequences section. PO handoff updated to mint E-VS-004."
   - "1.2 (burst-224/2026-07-21): F-P129-05 — fix Hardening Note: VP-009 is Zero-Norm Cosine Guard (Kani P0), not MMR proptest; reference VP-2.21.003-C for MMR proptest sub-property. F-P129-11 — update cosine primitive location: vectorstores::mmr → vectorstores::similarity. F-P129-08 — add Decision 5: write-time zero-norm rejection (E-VS-004, corrected in v1.3) at add_texts/from_texts_sync; search-time E-VS-001 (VP-009) remains as defense-in-depth. F-P129-09 — add Decision 6: GuardedDocuments newtype (no public constructor; sole constructor rag_ingress); GuardrailHook promoted to core::guardrail (pure-core, trait-in-core precedent); core::retriever reclassified Boundary; DI-012 becomes compile-time type-error enforcement. Add Consequences bullets for E-VS-004 (corrected in v1.3), GuardedDocuments, and core::guardrail."
   - "1.1 (crates.io/2026-07-20): Add zero-norm vector guard hardening note for cosine similarity (NaN prevention, 2-line check, no new dep)."
-  - "1.0 (D21/2026-07-20): Initial ADR — crate placement (ferrochain-vectorstores new crate; Retriever + Document in ferrochain-core), async dyn-compatible trait shapes, VectorStoreFactory pattern, MMR surface, SS-15 MemoryStore boundary definition, inventory extension seam."
+  - "1.0 (D21/2026-07-20): Initial ADR — crate placement (pregolya-vectorstores new crate; Retriever + Document in pregolya-core), async dyn-compatible trait shapes, VectorStoreFactory pattern, MMR surface, SS-15 MemoryStore boundary definition, inventory extension seam."
 ---
 
 # ADR-014: VectorStore + Retriever Abstraction
@@ -45,8 +45,8 @@ object-safety precedent), and non-overlapping with SS-15's MemoryStore.
 
 Three design questions must be resolved:
 
-1. **Crate placement:** new `ferrochain-vectorstores` vs fold into ferrochain-core or
-   ferrochain-memory.
+1. **Crate placement:** new `pregolya-vectorstores` vs fold into pregolya-core or
+   pregolya-memory.
 2. **Trait shapes:** how to achieve dyn-compatibility for `from_texts` (a constructor,
    not an instance method) and for stream-returning methods.
 3. **Boundary with SS-15 (MemoryStore / long-horizon memory):** the new standalone
@@ -54,43 +54,43 @@ Three design questions must be resolved:
 
 ## Decision 1 — Crate Placement
 
-**Retriever trait → ferrochain-core** (module `core::retriever`)
-**Document type → ferrochain-core** (module `core::documents`)
-**VectorStore trait + in-memory impl + MMR + VectorStoreRetriever → new `ferrochain-vectorstores` crate**
+**Retriever trait → pregolya-core** (module `core::retriever`)
+**Document type → pregolya-core** (module `core::documents`)
+**VectorStore trait + in-memory impl + MMR + VectorStoreRetriever → new `pregolya-vectorstores` crate**
 
 Rationale:
 
 `Retriever` is as foundational as `BaseChatModel` and `Runnable`: graph nodes that perform
 RAG operations need `Arc<dyn Retriever>` without pulling in a heavier crate. Placing it in
-ferrochain-core preserves the same gravity as the other top-level trait abstractions.
+pregolya-core preserves the same gravity as the other top-level trait abstractions.
 `Document { page_content, metadata, id }` is the carrier type for all retrieval output
-and must be accessible from both ferrochain-core and ferrochain-vectorstores.
+and must be accessible from both pregolya-core and pregolya-vectorstores.
 
 `VectorStore` is heavier: it owns a document index, performs embedding-driven search,
 implements MMR, and exposes an in-memory backend with `Vec<f32>` cosine math. These
-concerns justify their own crate. An in-memory impl in ferrochain-core would pull
-vector arithmetic into the core dependency. A new `ferrochain-vectorstores` crate
-(depending on ferrochain-core) keeps core lean and matches the pattern of
-`ferrochain-memory` (its own crate) and `ferrochain-splitters` (its own crate).
+concerns justify their own crate. An in-memory impl in pregolya-core would pull
+vector arithmetic into the core dependency. A new `pregolya-vectorstores` crate
+(depending on pregolya-core) keeps core lean and matches the pattern of
+`pregolya-memory` (its own crate) and `pregolya-splitters` (its own crate).
 
 External community adapters (Chroma, Qdrant, pgvector, Weaviate, etc.) live in
-`ferrochain-community` (post-v1), consistent with the ~89 vectorstore and ~43 retriever
+`pregolya-community` (post-v1), consistent with the ~89 vectorstore and ~43 retriever
 community implementations in the Python reference corpus.
 
 **Rejected alternatives:**
-- **Fold into ferrochain-core:** Pulls vector arithmetic and optional embedding deps into
-  every downstream user of ferrochain-core. REJECT.
-- **Fold into ferrochain-memory:** MemoryStore and VectorStore are semantically distinct
+- **Fold into pregolya-core:** Pulls vector arithmetic and optional embedding deps into
+  every downstream user of pregolya-core. REJECT.
+- **Fold into pregolya-memory:** MemoryStore and VectorStore are semantically distinct
   (see Decision 3). Colocation creates confusion and couples unrelated subsystems. REJECT.
-- **Fold Retriever into ferrochain-vectorstores:** Requires graph nodes to depend on
-  ferrochain-vectorstores just to hold `Arc<dyn Retriever>`. REJECT.
+- **Fold Retriever into pregolya-vectorstores:** Requires graph nodes to depend on
+  pregolya-vectorstores just to hold `Arc<dyn Retriever>`. REJECT.
 
 ## Decision 2 — Async Dyn-Compatible Trait Shapes
 
 ### Document type
 
 ```rust
-// ferrochain-core: core::documents
+// pregolya-core: core::documents
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 #[non_exhaustive]
 pub struct Document {
@@ -102,10 +102,10 @@ pub struct Document {
 
 No I/O. Pure data carrier. Pure Core classification.
 
-### Retriever trait (ferrochain-core)
+### Retriever trait (pregolya-core)
 
 ```rust
-// ferrochain-core: core::retriever
+// pregolya-core: core::retriever
 #[async_trait]
 pub trait Retriever: Send + Sync {
     /// Retrieve documents relevant to `query`.
@@ -115,7 +115,7 @@ pub trait Retriever: Send + Sync {
     async fn get_relevant_documents(
         &self,
         query: &str,
-    ) -> Result<Vec<Document>, FerrochainError>;
+    ) -> Result<Vec<Document>, PregolyaError>;
 }
 ```
 
@@ -123,7 +123,7 @@ Object-safety: `&self` receiver, no generic type params, no `impl Trait` return 
 by `#[async_trait]` to `Pin<Box<dyn Future<Output = ...> + Send + '_>>`). `Arc<dyn Retriever>`
 compiles without E0038. Consistent with ADR-005 §Object-Safety.
 
-### VectorStore trait (ferrochain-vectorstores)
+### VectorStore trait (pregolya-vectorstores)
 
 `from_texts` is a static constructor that creates a new store. Static methods are NOT
 dyn-compatible (no vtable dispatch without a receiver). Resolution: `from_texts` is
@@ -131,7 +131,7 @@ defined as an associated method on a separate `VectorStoreFactory` trait, NOT on
 `VectorStore` trait itself. The main `VectorStore` trait contains only instance methods.
 
 ```rust
-// ferrochain-vectorstores: vectorstores::store
+// pregolya-vectorstores: vectorstores::store
 #[async_trait]
 pub trait VectorStore: Send + Sync {
     /// Add texts (and optional metadata) to the store. Returns document IDs.
@@ -139,21 +139,21 @@ pub trait VectorStore: Send + Sync {
         &self,
         texts: Vec<String>,
         metadatas: Option<Vec<serde_json::Map<String, serde_json::Value>>>,
-    ) -> Result<Vec<String>, FerrochainError>;
+    ) -> Result<Vec<String>, PregolyaError>;
 
     /// Standard k-nearest-neighbor similarity search.
     async fn similarity_search(
         &self,
         query: &str,
         k: usize,
-    ) -> Result<Vec<Document>, FerrochainError>;
+    ) -> Result<Vec<Document>, PregolyaError>;
 
     /// Similarity search with relevance scores in [0.0, 1.0].
     async fn similarity_search_with_score(
         &self,
         query: &str,
         k: usize,
-    ) -> Result<Vec<(Document, f32)>, FerrochainError>;
+    ) -> Result<Vec<(Document, f32)>, PregolyaError>;
 
     /// Maximal Marginal Relevance search.
     ///
@@ -166,10 +166,10 @@ pub trait VectorStore: Send + Sync {
         k: usize,
         fetch_k: usize,
         lambda_mult: f32,
-    ) -> Result<Vec<Document>, FerrochainError>;
+    ) -> Result<Vec<Document>, PregolyaError>;
 
     /// Delete documents by ID.
-    async fn delete(&self, ids: &[&str]) -> Result<(), FerrochainError>;
+    async fn delete(&self, ids: &[&str]) -> Result<(), PregolyaError>;
 
     /// Construct a `VectorStoreRetriever` over this store.
     ///
@@ -187,7 +187,7 @@ pub trait VectorStore: Send + Sync {
     /// - `fetch_k < k` when `SearchType::Mmr`
     ///
     /// BC anchor: BC-2.20.003 INV-2 (E-VS-003 on invalid config), BC-2.20.003 TV-004/TV-005.
-    fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>;
+    fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>;
 }
 
 /// Factory trait: static constructors for VectorStore implementors. NOT part of the
@@ -200,7 +200,7 @@ pub trait VectorStoreFactory: VectorStore + Sized {
         texts: Vec<String>,
         embedding: Arc<dyn Embeddings>,
         config: Self::Config,
-    ) -> impl std::future::Future<Output = Result<Self, FerrochainError>> + Send;
+    ) -> impl std::future::Future<Output = Result<Self, PregolyaError>> + Send;
 }
 
 /// Concrete retriever wrapper over any VectorStore.
@@ -231,7 +231,7 @@ impl Retriever for VectorStoreRetriever {
     async fn get_relevant_documents(
         &self,
         query: &str,
-    ) -> Result<Vec<Document>, FerrochainError> { /* dispatch to store via Arc */ }
+    ) -> Result<Vec<Document>, PregolyaError> { /* dispatch to store via Arc */ }
 }
 ```
 
@@ -279,11 +279,11 @@ async fn similarity_search_with_filter(
     query: &str,
     k: usize,
     filter: MetadataFilter,
-) -> Result<Vec<Document>, FerrochainError> {
+) -> Result<Vec<Document>, PregolyaError> {
     if !filter.filters.is_empty() {
         // Non-empty filter on an adapter that has not overridden this method.
         // Returning silently-unfiltered results would expose cross-tenant data.
-        return Err(FerrochainError::new(
+        return Err(PregolyaError::new(
             Component::Vs,
             Category::Val,
             RetryHint::Never,
@@ -312,7 +312,7 @@ two lines and requires no new dependency:
 ```rust
 let norm = v.iter().map(|x| x * x).sum::<f32>().sqrt();
 if norm == 0.0 {
-    return Err(FerrochainError::new(
+    return Err(PregolyaError::new(
         Component::Vs, Category::Val, RetryHint::Never, "E-VS-001",
         "ZeroNormVector: zero L2 norm embedding; cosine similarity undefined",
     ));
@@ -334,7 +334,7 @@ is a separate, complementary sub-property anchored to BC-2.21.003 as **VP-2.21.0
 
 ## Decision 3 — SS-15 (MemoryStore) Boundary Definition
 
-`MemoryStore` (SS-15, ferrochain-memory) and `VectorStore` (SS-21, ferrochain-vectorstores)
+`MemoryStore` (SS-15, pregolya-memory) and `VectorStore` (SS-21, pregolya-vectorstores)
 are parallel but NON-OVERLAPPING abstractions with distinct purposes:
 
 | Dimension | MemoryStore (SS-15) | VectorStore (SS-21) |
@@ -353,7 +353,7 @@ external documents for RAG uses `VectorStore` (via `Retriever`). They may share 
 backend technology internally (e.g., both could use SQLite-vec under the hood) but they are
 exposed through independent trait seams.
 
-`memory::search` in ferrochain-memory is NOT removed or reimplemented — it continues to
+`memory::search` in pregolya-memory is NOT removed or reimplemented — it continues to
 serve CAP-017 via MemoryStore. The new `VectorStore` abstraction serves the separate
 retrieval pipeline use case.
 
@@ -365,7 +365,7 @@ Community VectorStore adapters (post-v1) register via the `inventory` crate with
 - Feature-gated inclusion (adapter only links when its Cargo feature is enabled)
 - Zero reflection or dynamic plugin loading
 
-The `ferrochain-vectorstores` crate exports the `VectorStore` + `VectorStoreFactory` traits
+The `pregolya-vectorstores` crate exports the `VectorStore` + `VectorStoreFactory` traits
 and the `inventory` submit macro re-export. Community adapters implement `VectorStoreFactory`
 and call `inventory::submit! { VectorStoreFactoryDescriptor { name: "chroma", ... } }`.
 
@@ -390,12 +390,12 @@ L2 norm == 0.0 at write time, before the document is persisted to the index.
 | `E-VS-001` | Search-time cosine guard; zero-norm query or stored embedding encountered during similarity computation | — |
 | `E-VS-004` | Write-time zero-norm rejection; embedding rejected before storage | `document_index` in `message` (key=value interpolation) |
 
-Both codes are in the `VS` namespace (`ferrochain-vectorstores`). `E-VS-004` minted in
+Both codes are in the `VS` namespace (`pregolya-vectorstores`). `E-VS-004` minted in
 error-taxonomy v1.27/D21 (see §PO Obligations for mint record).
 
 **`document_index` placement:** interpolated into the `message` field via key=value format
-per ADR-010 §impl FerrochainError adjudication (F-P174-303 — `context` field rejected; no `serde_json::Map`
-added to `FerrochainError`). The `message` string carries all structured diagnostics.
+per ADR-010 §impl PregolyaError adjudication (F-P174-303 — `context` field rejected; no `serde_json::Map`
+added to `PregolyaError`). The `message` string carries all structured diagnostics.
 
 ### Write-time check sketch
 
@@ -404,7 +404,7 @@ added to `FerrochainError`). The `message` string carries all structured diagnos
 for (i, embedding) in embeddings.iter().enumerate() {
     let norm = embedding.iter().map(|x| x * x).sum::<f32>().sqrt();
     if norm == 0.0 {
-        return Err(FerrochainError::new(
+        return Err(PregolyaError::new(
             Component::Vs,
             Category::Val,
             RetryHint::Never,
@@ -422,7 +422,7 @@ remains active alongside the write-time guard. Both guards are required:
 
 - **Write-time E-VS-004** — primary gate; prevents bad data from entering the index
 - **Search-time E-VS-001** — defense-in-depth; handles embeddings loaded from external
-  stores that bypassed ferrochain's write path, or future index migration scenarios
+  stores that bypassed pregolya's write path, or future index migration scenarios
 
 ## Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)
 
@@ -440,7 +440,7 @@ Introduce `GuardedDocuments` — a newtype in `core::retriever` that is a type-l
 proof that the RAG guardrail has been applied. There is no public struct constructor;
 `GuardedDocuments::rag_ingress` is the sole public constructor.
 
-**Newtype shape (ferrochain-core / core::retriever):**
+**Newtype shape (pregolya-core / core::retriever):**
 
 ```rust
 // No `pub` on the inner field; construction is gated entirely through rag_ingress.
@@ -468,7 +468,7 @@ impl GuardedDocuments {
     pub async fn rag_ingress(
         docs: Vec<Document>,
         guardrail: &dyn GuardrailHook,
-    ) -> Result<GuardedDocuments, FerrochainError> {
+    ) -> Result<GuardedDocuments, PregolyaError> {
         let ingress_id = Uuid::new_v4();
         let mut guarded = Vec::with_capacity(docs.len());
         for (i, doc) in docs.into_iter().enumerate() {
@@ -484,7 +484,7 @@ impl GuardedDocuments {
                     match severity {
                         GuardrailSeverity::Critical => {
                             // Critical rejection: abort the entire batch (BC-2.11.005 PC4).
-                            return Err(FerrochainError::new(
+                            return Err(PregolyaError::new(
                                 Component::Core,
                                 Category::Security,
                                 RetryHint::Never,
@@ -502,9 +502,9 @@ impl GuardedDocuments {
                             guarded.push(Document {
                                 page_content: format!("[GUARDRAIL BLOCKED: {}]", reason),
                                 metadata: serde_json::json!({
-                                    "ferrochain.guardrail_blocked": true,
-                                    "ferrochain.guardrail_reason": reason,
-                                    "ferrochain.sequence_position": i,
+                                    "pregolya.guardrail_blocked": true,
+                                    "pregolya.guardrail_reason": reason,
+                                    "pregolya.sequence_position": i,
                                 }),
                                 id: None,
                             });
@@ -528,16 +528,16 @@ impl GuardedDocuments {
 }
 ```
 
-**GuardrailHook trait** is defined in `core::guardrail` (ferrochain-core)
+**GuardrailHook trait** is defined in `core::guardrail` (pregolya-core)
 — promoted from per-subsystem dispatch modules (graph::provenance, mcp::ingress) to
-ferrochain-core, consistent with the trait-in-core precedent established for
+pregolya-core, consistent with the trait-in-core precedent established for
 `BudgetPolicy` → `core::budget` (ADR-009) and `MemoryWriteGuard` → `core::write_guard`
-(ADR-012). Existing per-subsystem dispatch modules import from ferrochain-core.
+(ADR-012). Existing per-subsystem dispatch modules import from pregolya-core.
 
 **Canonical trait (interface-definitions.md §GuardrailHook — authoritative; not re-minted here):**
 
 ```rust
-// ferrochain-core: core::guardrail — definitions-only (trait + supporting enums; no execution logic)
+// pregolya-core: core::guardrail — definitions-only (trait + supporting enums; no execution logic)
 #[async_trait]
 pub trait GuardrailHook: Send + Sync {
     async fn evaluate(
@@ -596,15 +596,15 @@ error — `Vec<Document>` does not coerce to `GuardedDocuments`.
 
 ## Rationale
 
-`Retriever` in ferrochain-core follows the same gravity principle as `Runnable` and
+`Retriever` in pregolya-core follows the same gravity principle as `Runnable` and
 `BaseChatModel`: graph nodes that fan out to external document sources need to hold
 `Arc<dyn Retriever>` without pulling in a heavier crate. Placing it in core satisfies
 the DRY-dependency principle — core is the stable foundation everything else builds on.
 
-`VectorStore` in its own crate avoids bloating ferrochain-core with vector arithmetic
+`VectorStore` in its own crate avoids bloating pregolya-core with vector arithmetic
 (`Vec<f32>` cosine, MMR selection), the `RwLock`-backed in-memory backend, and the
-`inventory`-based adapter seam. The pattern matches `ferrochain-memory` (its own crate
-for stateful, I/O-bound concerns) and `ferrochain-splitters`.
+`inventory`-based adapter seam. The pattern matches `pregolya-memory` (its own crate
+for stateful, I/O-bound concerns) and `pregolya-splitters`.
 
 The `VectorStoreFactory` split (constructor-on-separate-trait vs constructor-on-main-trait)
 is required by Rust's dyn-compatibility rules: a `fn new()` associated function is not
@@ -620,16 +620,16 @@ index abstraction — a category error.
 
 ## Alternatives Considered
 
-### Alt A: VectorStore trait in ferrochain-core (alongside Retriever)
+### Alt A: VectorStore trait in pregolya-core (alongside Retriever)
 
 Arguments for: single crate for all retrieval abstractions; no extra dep for graph nodes.
 Rejected: pulls `Vec<f32>` cosine math, `RwLock`-backed in-memory backend, and the
-`inventory` extension seam into every ferrochain-core user. Core stays lean.
+`inventory` extension seam into every pregolya-core user. Core stays lean.
 
-### Alt B: VectorStore and Retriever both in ferrochain-vectorstores
+### Alt B: VectorStore and Retriever both in pregolya-vectorstores
 
 Arguments for: all retrieval in one crate. Rejected: forces graph nodes to depend on
-ferrochain-vectorstores just to hold `Arc<dyn Retriever>` — a violation of the
+pregolya-vectorstores just to hold `Arc<dyn Retriever>` — a violation of the
 "core for shared primitives" principle. Every RAG-capable graph would grow an
 unnecessary heavy dependency.
 
@@ -640,7 +640,7 @@ excludes the method from the vtable (E0038 workaround), but still burdens the tr
 a Sized-bounded method users of `dyn VectorStore` cannot call. Explicit `VectorStoreFactory`
 trait is cleaner API design and a clearer signal to implementors.
 
-### Alt D: Fold into ferrochain-memory
+### Alt D: Fold into pregolya-memory
 
 Rejected: MemoryStore and VectorStore are semantically orthogonal (see Decision 3 table).
 Coupling them creates confusion about GDPR erasure, session scoping, and write-guard
@@ -662,15 +662,15 @@ applicability. Two separate crates with a clear boundary is correct.
 
 ## Consequences
 
-- ferrochain-vectorstores is a new crate (20th published crate in the roster, alongside
-  `ferrochain-prompts` = 19th, both added in D21).
-- `core::documents` and `core::retriever` are new modules in ferrochain-core. ferrochain-core
+- pregolya-vectorstores is a new crate (20th published crate in the roster, alongside
+  `pregolya-prompts` = 19th, both added in D21).
+- `core::documents` and `core::retriever` are new modules in pregolya-core. pregolya-core
   gains `Document` and `Retriever` as first-class public types.
-- ferrochain-vectorstores depends on ferrochain-core (for `Document`, `Retriever`,
-  `Embeddings`, `FerrochainError`).
+- pregolya-vectorstores depends on pregolya-core (for `Document`, `Retriever`,
+  `Embeddings`, `PregolyaError`).
 - `VectorStoreRetriever` implements `Retriever` — graph nodes accepting `Arc<dyn Retriever>`
   can transparently use any VectorStore backend.
-- The `inventory` crate becomes a dependency of ferrochain-vectorstores (and ferrochain-core,
+- The `inventory` crate becomes a dependency of pregolya-vectorstores (and pregolya-core,
   for the lc-JSON registry — see ADR-016).
 - reqwest in any community VectorStore adapter: rustls-tls mandatory per workspace convention.
 - DI-012 guardrail: documents returned by `Retriever::get_relevant_documents` enter the
@@ -690,14 +690,14 @@ applicability. Two separate crates with a clear boundary is correct.
   BC-2.11.005 PC5; Transform → include deserialized replacement Document).
   Graph nodes consuming RAG output accept `&GuardedDocuments`,
   making DI-012 guardrail bypass a compile-time type error (compile_fail Red Gate / VP-2.20.002-A).
-- **core::guardrail** (Decision 6): new Pure Core definitions module in ferrochain-core hosting
+- **core::guardrail** (Decision 6): new Pure Core definitions module in pregolya-core hosting
   the canonical `GuardrailHook` trait (`async fn evaluate` per interface-definitions.md §GuardrailHook),
   `GuardrailResult`, `IngressContent`, `GuardrailSeverity`, and `BoundaryType`; promotes from
   per-subsystem modules consistent with ADR-009 + ADR-012 trait-in-core pattern.
   `core::retriever` reclassified from Pure Core to Boundary Module (async `rag_ingress`
   routes through effectful `&dyn GuardrailHook`).
 - **vectorstores::similarity** (Decision 2 + F-P129-11): new Pure Core module in
-  ferrochain-vectorstores hosting the shared `cosine_similarity` primitive (called by
+  pregolya-vectorstores hosting the shared `cosine_similarity` primitive (called by
   `vectorstores::memory`, `vectorstores::mmr`, and future backends); VP-009 Kani P0 target.
   `vectorstores::mmr` retains Pure Core classification but no longer hosts `cosine_similarity`.
 
@@ -706,35 +706,35 @@ applicability. Two separate crates with a clear boundary is correct.
 ### E-VS-004 (carried from Decision 5)
 
 `E-VS-004` minted (error-taxonomy v1.27/D21) — write-time zero-norm rejection in the `VS` namespace
-(`ferrochain-vectorstores`); `add_texts` and `from_texts_sync` reject documents whose
+(`pregolya-vectorstores`); `add_texts` and `from_texts_sync` reject documents whose
 embedding has L2 norm == 0.0 before persistence; `document_index` carried as structured
 context field (gate #33 Form 3 convention). BC-2.21.002 write-time contract row authority.
 
 ### BC-2.20.002 Anchor Corrections (F-P130-02 — burst-225)
 
-BC-2.20.002 contains three occurrences of `ferrochain-guardrail` that reference a
+BC-2.20.002 contains three occurrences of `pregolya-guardrail` that reference a
 nonexistent crate. This crate does not exist; the guardrail trait and BoundaryType enum
-live in `ferrochain-core: core::guardrail` (Decision 6 of this ADR; trait-in-core
+live in `pregolya-core: core::guardrail` (Decision 6 of this ADR; trait-in-core
 precedent per ADR-009/ADR-012).
 
 **BC-2.20.002 v1.2 applied the following three textual corrections:**
 
-1. **Description paragraph** (currently: "…variant in `ferrochain-guardrail` already covers
+1. **Description paragraph** (currently: "…variant in `pregolya-guardrail` already covers
    this seam — no new variant, trait, or guardrail is introduced by this BC.")
-   → Replace `` `ferrochain-guardrail` `` with `` `ferrochain-core: core::guardrail` ``.
+   → Replace `` `pregolya-guardrail` `` with `` `pregolya-core: core::guardrail` ``.
 
 2. **Precondition 1** (currently: "`BoundaryType::RAGRetrieval` exists in
-   `ferrochain-guardrail: guardrail::boundary` (defined in BC-2.11.001).")
-   → Replace `` `ferrochain-guardrail: guardrail::boundary` `` with
-   `` `ferrochain-core: core::guardrail` ``.
+   `pregolya-guardrail: guardrail::boundary` (defined in BC-2.11.001).")
+   → Replace `` `pregolya-guardrail: guardrail::boundary` `` with
+   `` `pregolya-core: core::guardrail` ``.
 
 3. **Architecture Anchors** (currently: "`architecture/purity-boundary-map.md` —
-   `ferrochain-guardrail` guardrail boundary enforcement")
-   → Replace `` `ferrochain-guardrail` guardrail boundary enforcement `` with
-   `` `ferrochain-core: core::guardrail` guardrail boundary enforcement ``.
+   `pregolya-guardrail` guardrail boundary enforcement")
+   → Replace `` `pregolya-guardrail` guardrail boundary enforcement `` with
+   `` `pregolya-core: core::guardrail` guardrail boundary enforcement ``.
 
 Additionally, **VP-2.20.002-A** references the compile_fail Red Gate mechanism —
-the type it calls is `GuardedDocuments::rag_ingress` in `ferrochain-core: core::retriever`.
+the type it calls is `GuardedDocuments::rag_ingress` in `pregolya-core: core::retriever`.
 The compile_fail test verifies that a graph node accepting `Vec<Document>` directly
 does not satisfy the required `&GuardedDocuments` parameter — unchanged by this correction.
 
@@ -752,7 +752,7 @@ unchanged; only the crate anchor in three prose locations is wrong.
 | Field | Value |
 |-------|-------|
 | Code | E-CORE-008 |
-| Namespace | CORE (ferrochain-core) |
+| Namespace | CORE (pregolya-core) |
 | Category | SECURITY |
 | Mnemonic | GuardrailCriticalRejection |
 | Anchor BC | BC-2.20.002 (Guardrail Coverage at RAG Ingress) |
@@ -773,7 +773,7 @@ BC-2.20.002 v1.3 updated PC2 to reflect severity bifurcation:
 | Field | Value |
 |-------|-------|
 | Code | E-VS-005 |
-| Namespace | VS (ferrochain-vectorstores) |
+| Namespace | VS (pregolya-vectorstores) |
 | Category | VAL |
 | Mnemonic | FilterUnsupported |
 | Anchor BC | BC-2.21.004 (VectorStore metadata filter contract) |

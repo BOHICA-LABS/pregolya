@@ -24,11 +24,11 @@ inputs:
   - .factory/specs/domain-spec/events.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "e3ea2ce"
+input-hash: "f430077"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-46): F-P46-01 adjudication — add EC-005 (failed-run stream termination). BC-2.06.001 PC2 states RunEnd emits 'once at run completion' (completion-only contract) but had no explicit edge case for failed runs. EC-005 makes the authority explicit: stream closes after error SSE event; no RunEnd emitted on failure. This resolves EC-001 hedge in BC-2.12.007 and establishes the source-of-truth for failure-termination across the streaming surface."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph / pregolya-server per module-decomposition.md v1.10."
   - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). (a) PC2 — added GuardrailDecision bullet (12th variant) after ToolEnd; updated ToolEnd bullet to reference post-guardrail content semantics per interface-definitions §StreamEvent. (b) PC4 causal ordering updated with GuardrailDecision[RagChunk|MemoryItem]* and GuardrailDecision[ToolResult]* positions. (c) New EC-006: N ContentBlocks K rejected → K GuardrailDecision events in evaluation order before ONE ToolEnd with post-guardrail output. H1 title updated to include guardrail_decision."
   - "1.4 (F-P117-01, fix burst 120, 2026-07-19): EC-005 — clarify summary_halt (budget OnCeiling::Summarize terminal state) DOES emit RunEnd with the summarize model response as output (like completed, not like failed). Updated EC-005 final rule sentence to enumerate output-producing states (completed + summary_halt → RunEnd emitted) vs. non-output terminal states (failed, cancelled) and paused state (interrupted) → stream ends without RunEnd."
   - "1.5 (D23/2026-07-22): StreamEvent taxonomy 12→15 variants (+tool_approval_request event 13 per ADR-018, +tool_approval_resolved event 14 per ADR-018, +compaction_event event 15 per ADR-019). H1 title updated. PC2 extended with three new variant bullets. Related BCs: forward refs BC-2.06.004/005/006 added."
@@ -57,7 +57,7 @@ End only (no Stream variant, as super-steps aggregate node/tool activity rather 
 chunk-level output). Each variant carries phase-specific typed payloads. CONFLICT-5
 mandates this typed taxonomy; the adk-rust flat `Event` envelope (agent-turn lifecycle only,
 no `run_id` correlation tree, no per-phase Start/End pairs) is the rejected counter-example.
-Wire format is ferrochain-native (not LangChain astream_events v2 wire compat) per D13.
+Wire format is pregolya-native (not LangChain astream_events v2 wire compat) per D13.
 
 ## Preconditions
 
@@ -146,9 +146,9 @@ in `parent_ids`. No subgraph event is swallowed; consumers reconstruct the neste
 by traversing `parent_ids` (see BC-2.06.002).
 
 ### EC-005: Node raises error mid-run (failed-run stream termination — adjudicated from PC2)
-**Scenario:** A node function returns `Err(FerrochainError)` during execution.
+**Scenario:** A node function returns `Err(PregolyaError)` during execution.
 **Expected behavior:** The execution engine emits an `error` SSE event carrying the
-`FerrochainError` payload; the event stream then closes. `RunEnd` is NOT emitted for
+`PregolyaError` payload; the event stream then closes. `RunEnd` is NOT emitted for
 a failed run — `RunEnd` is reserved for the completion path (PC2: "once at run completion").
 The run record transitions to `failed` status, queryable via `GET /threads/{thread_id}/runs/{run_id}`.
 No partial or ghost `RunEnd` event with `status: "failed"` is emitted.
@@ -205,9 +205,9 @@ the zero-bytes guarantee on all emitted events.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/event_emitter.rs` (`graph::event_emitter`) — `StreamEvent` enum definition with all phase variants
-- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — emission points inside `tick()` (NodeStart/End, ToolStart/End) and `after_tick()` (StepEnd)
-- `ferrochain-server/src/streaming.rs` — SSE / streaming endpoint that yields `StreamEvent` to callers
+- `pregolya-graph/src/event_emitter.rs` (`graph::event_emitter`) — `StreamEvent` enum definition with all phase variants
+- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — emission points inside `tick()` (NodeStart/End, ToolStart/End) and `after_tick()` (StepEnd)
+- `pregolya-server/src/streaming.rs` — SSE / streaming endpoint that yields `StreamEvent` to callers
 
 ## Story Anchor
 
@@ -230,4 +230,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit / property), I (integration) |
-| Module | ferrochain-graph / ferrochain-server |
+| Module | pregolya-graph / pregolya-server |

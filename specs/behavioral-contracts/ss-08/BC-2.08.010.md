@@ -26,12 +26,12 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
-input-hash: "c37b8aa"
+input-hash: "a0214a6"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (D23/2026-07-22): Add optional `action_risk` attribute parameter (`action_risk = ActionRisk::High`) per ADR-018 Decision 6. PC3 updated to document optional attribute; PC1 extended with `action_risk()` method on generated struct; `ToolCallPreview.action_risk` carries the value when `pre_tool_dispatch` hook is called. New EC-005: omitting `action_risk` defaults to `None` (no risk tier constraint). Related BCs: BC-2.05.004 and BC-2.23.005 forward refs added."
   - "1.2 (burst-234/F-P134-03/2026-07-22): Fix mis-anchor — replace both BC-2.05.004 references with BC-2.05.007. PC-1 body and Related BCs both cited BC-2.05.004 (Command-resume API) for the PreToolCallHook / ToolCallPreview / pre_tool_dispatch contract; that contract lives in BC-2.05.007 (PreToolCallHook Dispatch). BC-2.05.004 is the Command(resume=value) programmatic-resume API — unrelated to pre_tool_dispatch. Verified: BC-2.05.007 §Preconditions PC-3 explicitly defines ToolCallPreview construction and §Invariants Retry-ordering clause confirms pre_tool_dispatch dispatch. Reciprocal link added to BC-2.05.007 Related BCs. TD-VSDD-060 sibling sweep: one PC-1 site + one Related BCs site — both corrected in this burst."
-  - "1.3 (F-P171a-09+F-P171a-03sibling/burst-273/2026-07-25): (1) F-P171a-09: PC-1 action_risk() bullet extended with ADR-008 Decision 2 emitted-path contract: macro expansion emits ::ferrochain_core::action_risk::ActionRisk::<Variant> (fully-qualified path); MUST NOT assume ActionRisk in annotated crate scope; omitting action_risk → ToolCallPreview.action_risk = None with no default variant applied by framework. (2) F-P171a-03 sibling: Related BCs BC-2.23.005 annotation corrected — 'BashTool sets action_risk = ActionRisk::Medium as a risk floor' was wrong on two counts: default annotation is ActionRisk::High (not Medium); Medium is the non-lowerable floor. Fixed to 'BashTool declares action_risk = ActionRisk::High and enforces a non-lowerable Medium floor'."
+  - "1.3 (F-P171a-09+F-P171a-03sibling/burst-273/2026-07-25): (1) F-P171a-09: PC-1 action_risk() bullet extended with ADR-008 Decision 2 emitted-path contract: macro expansion emits ::pregolya_core::action_risk::ActionRisk::<Variant> (fully-qualified path); MUST NOT assume ActionRisk in annotated crate scope; omitting action_risk → ToolCallPreview.action_risk = None with no default variant applied by framework. (2) F-P171a-03 sibling: Related BCs BC-2.23.005 annotation corrected — 'BashTool sets action_risk = ActionRisk::Medium as a risk floor' was wrong on two counts: default annotation is ActionRisk::High (not Medium); Medium is the non-lowerable floor. Fixed to 'BashTool declares action_risk = ActionRisk::High and enforces a non-lowerable Medium floor'."
 extracted_from: null
 modified: []
 deprecated: null
@@ -46,7 +46,7 @@ removal_reason: null
 
 ## Description
 
-The `#[ferrochain::tool]` proc-macro attribute converts an annotated async function into a
+The `#[pregolya::tool]` proc-macro attribute converts an annotated async function into a
 struct that implements the `Tool` trait (including `Runnable<ToolInput, ToolOutput>`). The
 macro derives `schemars::JsonSchema` on the generated argument struct, wires the function
 body as the `invoke` implementation, and registers the tool name and description as static
@@ -55,15 +55,15 @@ type MUST have a committed snapshot test per BC-2.08.009 (schema naming stabilit
 
 ## Preconditions
 
-1. The annotated function is `async fn` returning `Result<T, FerrochainError>` where `T: serde::Serialize`.
+1. The annotated function is `async fn` returning `Result<T, PregolyaError>` where `T: serde::Serialize`.
 2. All parameter types implement `schemars::JsonSchema + serde::DeserializeOwned`.
-3. The `#[ferrochain::tool(name = "...", description = "...")]` attribute is present with both
+3. The `#[pregolya::tool(name = "...", description = "...")]` attribute is present with both
    `name` and `description` specified. An optional `action_risk` attribute key (e.g.,
    `action_risk = ActionRisk::High`) may be included to declare the tool's risk tier; if
    omitted, the generated struct's `action_risk()` returns `None` and `ToolCallPreview.action_risk`
    is `None` when the `pre_tool_dispatch` hook is called.
-4. `ferrochain-macros` is available as a direct or transitive dependency (re-exported from
-   `ferrochain-core`).
+4. `pregolya-macros` is available as a direct or transitive dependency (re-exported from
+   `pregolya-core`).
 
 ## Postconditions
 
@@ -76,7 +76,7 @@ type MUST have a committed snapshot test per BC-2.08.009 (schema naming stabilit
      `action_risk` attribute is present; `None` when omitted. This value is carried into
      `ToolCallPreview.action_risk` when the `pre_tool_dispatch` hook is invoked (BC-2.05.007).
      **ADR-008 Decision 2 emitted-path contract:** The macro expansion emits the value as the
-     fully-qualified path `::ferrochain_core::action_risk::ActionRisk::<Variant>` — it MUST NOT
+     fully-qualified path `::pregolya_core::action_risk::ActionRisk::<Variant>` — it MUST NOT
      assume `ActionRisk` is in scope in the annotated crate. When `action_risk` is omitted from
      the attribute, `ToolCallPreview.action_risk` is `None`; no default variant is applied by
      the framework on the caller's behalf.
@@ -85,14 +85,14 @@ type MUST have a committed snapshot test per BC-2.08.009 (schema naming stabilit
    the struct derives `serde::Deserialize + schemars::JsonSchema`.
 3. The generated `<PascalCaseName>Tool` struct is `Send + Sync` (Rust async tool requirement).
 4. The macro enforces DI-008 at the call site: the annotated function must return
-   `Result<T, FerrochainError>` (see EC-003 for compile-time rejection). No generated code
+   `Result<T, PregolyaError>` (see EC-003 for compile-time rejection). No generated code
    uses `.unwrap()` or `.expect()` in non-test contexts.
 5. The expansion compiles without any `#[allow(unused)]` suppressions in non-test code.
 
 ## Invariants
 
 - DI-008 (Library Constructor Result Contract): The generated `invoke` delegates to the
-  annotated function, which must return `Result<T, FerrochainError>`. Macro expansion does
+  annotated function, which must return `Result<T, PregolyaError>`. Macro expansion does
   not use `.expect()` or `.unwrap()` in generated non-test code. EC-003 enforces this at
   compile time.
 - The macro is additive; it does not modify the annotated function's signature or behavior.
@@ -106,30 +106,30 @@ type MUST have a committed snapshot test per BC-2.08.009 (schema naming stabilit
 ## Edge Cases
 
 ### EC-001: Parameter type does not implement schemars::JsonSchema
-**Scenario:** `#[ferrochain::tool] async fn search(query: MyCustomType) -> ...` where
+**Scenario:** `#[pregolya::tool] async fn search(query: MyCustomType) -> ...` where
 `MyCustomType` does not derive `schemars::JsonSchema`.
 **Expected behavior:** Compile-time error from schemars bounds check. Error message cites
 the missing `JsonSchema` impl on `MyCustomType`. No runtime failure.
 
 ### EC-002: Duplicate tool name in the same crate
-**Scenario:** Two `#[ferrochain::tool(name = "search_web")]` annotations in the same module.
+**Scenario:** Two `#[pregolya::tool(name = "search_web")]` annotations in the same module.
 **Expected behavior:** The generated struct names differ (based on function names), but the
 runtime `name()` string is duplicated. Duplicate tool names in a single `MultiServerMcpClient`
 config produce an `Err(ToolRegistrationError::DuplicateName)` at registration time, not at
 compile time.
 
-### EC-003: Function returns non-FerrochainError error type
-**Scenario:** `#[ferrochain::tool] async fn op() -> Result<String, std::io::Error>`
-**Expected behavior:** Compile-time error: the macro requires `Result<T, FerrochainError>`.
-Error message must guide the user to wrap with `FerrochainError`.
+### EC-003: Function returns non-PregolyaError error type
+**Scenario:** `#[pregolya::tool] async fn op() -> Result<String, std::io::Error>`
+**Expected behavior:** Compile-time error: the macro requires `Result<T, PregolyaError>`.
+Error message must guide the user to wrap with `PregolyaError`.
 
 ### EC-004: Missing name or description attribute
-**Scenario:** `#[ferrochain::tool]` with no arguments (no `name`, no `description`).
+**Scenario:** `#[pregolya::tool]` with no arguments (no `name`, no `description`).
 **Expected behavior:** Compile-time error specifying both fields are required. The macro
 MUST NOT fall back to using the function name as the tool name silently (explicit contract).
 
 ### EC-005: `action_risk` omitted from attribute
-**Scenario:** `#[ferrochain::tool(name = "search_web", description = "Searches the web")]` with no `action_risk` key.
+**Scenario:** `#[pregolya::tool(name = "search_web", description = "Searches the web")]` with no `action_risk` key.
 **Expected behavior:** Compiles successfully. `SearchWebTool::default().action_risk()` returns `None`.
 When the `pre_tool_dispatch` hook is called, `ToolCallPreview.action_risk` is `None`. The hook
 retains full discretion to approve, deny, or edit — no risk tier constraint is applied by the framework
@@ -139,11 +139,11 @@ on the caller's behalf.
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `#[ferrochain::tool(name="search_web", description="Searches")]` on valid `async fn` | Compiles; `SearchWebTool::default().name() == "search_web"` | Happy path |
+| TV-001 | `#[pregolya::tool(name="search_web", description="Searches")]` on valid `async fn` | Compiles; `SearchWebTool::default().name() == "search_web"` | Happy path |
 | TV-002 | `SearchWebTool::default().schema()` | Returns `schemars::Schema` matching `schema_for!(SearchWebArgs)` | Schema is schemars-derived |
 | TV-003 | Annotated function body invoked via `tool.invoke(args)` | Async result from original function body returned unchanged | Runnable delegation |
 | TV-004 | Missing `schemars::JsonSchema` on parameter type | Compile error with descriptive message | Bound check |
-| TV-005 | `#[ferrochain::tool]` with no `name` attribute | Compile error: "name is required" | Explicit contract |
+| TV-005 | `#[pregolya::tool]` with no `name` attribute | Compile error: "name is required" | Explicit contract |
 
 ## Verification Properties
 
@@ -162,8 +162,8 @@ on the caller's behalf.
 
 ## Architecture Anchors
 
-- `ferrochain-macros/src/tool.rs` — `#[tool]` proc-macro implementation
-- `ferrochain-core/src/tool.rs` — `Tool` trait definition re-exporting from `ferrochain-macros`
+- `pregolya-macros/src/tool.rs` — `#[tool]` proc-macro implementation
+- `pregolya-core/src/tool.rs` — `Tool` trait definition re-exporting from `pregolya-macros`
 - `architecture/decisions/ADR-004-serde-schemars-schema-generation.md` — schemars 1.x pin
 - `architecture/decisions/ADR-008-proc-macro-attributes.md` — proc-macro design rationale
 
@@ -181,11 +181,11 @@ _[to be filled after story decomposition]_
 |-------|-------|
 | Source L2 Capability | CAP-002 |
 | Capability Anchor Justification | CAP-002 ("Runnable Trait Abstraction (Compose, Pipe, Chain)") per capabilities-p0.md §CAP-002 — the `#[tool]` macro creates a `Runnable`-compatible `Tool` implementor, directly realizing the universal composition protocol that CAP-002 defines; this is the macro ergonomics layer on top of the `Runnable` trait |
-| L2 Domain Invariants | DI-008 (Library Constructor Result Contract — macro-generated `invoke` wraps the annotated function, which must return `Result<T, FerrochainError>`; EC-003 enforces this at compile time) |
+| L2 Domain Invariants | DI-008 (Library Constructor Result Contract — macro-generated `invoke` wraps the annotated function, which must return `Result<T, PregolyaError>`; EC-003 enforces this at compile time) |
 | DEC Reference | — |
 | Risk Source | ADR-004 acceptance (D5 gate resolved); ADR-008 proc-macro design |
 | D17 Commitment | D17-Q6 — proc-macro BCs gated on D5 ADR; ADR-004 accepted unblocks this BC |
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | U (unit), snapshot |
-| Module | ferrochain-macros (re-exported ferrochain-core) |
+| Module | pregolya-macros (re-exported pregolya-core) |

@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "b1cbefd"
+input-hash: "af2d76a"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -42,13 +42,13 @@ wave: 1
 `SandboxBackend::default()` must return an enforcing isolation backend (WASM or container), not
 the process backend. The adk-rust counter-example (P-61) makes `ProcessBackend` — which applies
 only `env_clear()` and a wall-clock timeout, with no filesystem, network, or memory isolation —
-the Cargo default feature. ferrochain inverts this: the `sandbox-wasm` feature is the default
+the Cargo default feature. pregolya inverts this: the `sandbox-wasm` feature is the default
 Cargo feature, and any runtime path that cannot produce an enforcing backend must return
 `Err(E-SBXD-003: SandboxInitFailed)` rather than silently falling back to the process backend.
 
 ## Preconditions
 
-1. `ferrochain-sandbox` is compiled with default Cargo features (i.e., `sandbox-wasm` is active)
+1. `pregolya-sandbox` is compiled with default Cargo features (i.e., `sandbox-wasm` is active)
 2. No `SandboxBackend` instance has been explicitly constructed by the caller
 3. The caller invokes `SandboxBackend::default()` or `SandboxExecutor::new_default()`
 
@@ -64,7 +64,7 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
 4. If only the `sandbox-process` feature is compiled (no `sandbox-wasm`, no
    `sandbox-container`), `SandboxBackend::default()` returns
    `Err(E-SBXD-003: SandboxInitFailed)` with reason `"no enforcing backend compiled in"`
-   and the Cargo build emits a compile-time warning: `"WARNING: ferrochain-sandbox compiled
+   and the Cargo build emits a compile-time warning: `"WARNING: pregolya-sandbox compiled
    without an enforcing backend feature; all executions will fail at runtime unless an explicit
    process backend is constructed via unsafe_process_no_isolation()"`
 
@@ -78,7 +78,7 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
    constructor — both "unsafe" and "no_isolation" tokens must be present to surface the
    security posture at call sites
 4. adk-rust reference sparsity: upstream has no enforcing-default design; this invariant is
-   purely ferrochain-greenfield, derived from NE-01 (P-61 counter-example) and DI-006
+   purely pregolya-greenfield, derived from NE-01 (P-61 counter-example) and DI-006
 
 ## Edge Cases
 
@@ -104,7 +104,7 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
 |-------|----------|--------------|
 | VP-2.13.001-A | `SandboxBackend::default()` never returns a `ProcessBackend` in any reachable code path when at least one enforcing backend feature is compiled | unit test — inspect returned variant |
 | VP-2.13.001-B | `BackendCapabilities::enforcing()` is `true` for all backends returned from `default()` | unit test — `assert!(caps.enforcing())` |
-| VP-2.13.001-C | No public API surface of `ferrochain-sandbox` has a method that returns `ProcessBackend` without the tokens "unsafe" and "no_isolation" in its name | structural test — API surface scan |
+| VP-2.13.001-C | No public API surface of `pregolya-sandbox` has a method that returns `ProcessBackend` without the tokens "unsafe" and "no_isolation" in its name | structural test — API surface scan |
 
 ## Traceability
 
@@ -114,10 +114,10 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
 | Capability Anchor Justification | CAP-015 ("Sandboxed Tool Execution (Enforcing Backend Default)") per capabilities-p1-p2.md §CAP-015 |
 | L2 Domain Invariants | DI-006 (Enforcing Sandbox Backend is Default) |
 | Source Analysis | P-61 NOT-APPLICABLE (adk-rust default ProcessBackend = must-not-inherit); P-62 NOT-APPLICABLE (policy strictness decoupled from enforcement = must-not-inherit); P-49 ADOPT (truthful BackendCapabilities); NE-01 (adk-rust default no-isolation is counter-example); assessment-parts/part-2 §6 Sandbox Cluster; assessment-parts/part-3 §NE-01 |
-| Reference Evidence | Upstream adk-rust: ProcessBackend is default feature (P-61); ferrochain INVERTS this. No LangChain equivalent — greenfield design derived from NE-01 counter-example. P-48 ADOPT (bubblewrap deny-by-default) confirms enforcing-backend posture is correct for Linux; WASM analog for cross-platform. |
+| Reference Evidence | Upstream adk-rust: ProcessBackend is default feature (P-61); pregolya INVERTS this. No LangChain equivalent — greenfield design derived from NE-01 counter-example. P-48 ADOPT (bubblewrap deny-by-default) confirms enforcing-backend posture is correct for Linux; WASM analog for cross-platform. |
 | Binding Decisions | NE-01, DI-006 |
 | Forcing Functions | Domain C OpenClaw §4 (tool-execution sandboxing: "recommend default-on isolation"); product-brief.md §NE catalog NE-01 |
-| Architecture Module | ferrochain-sandbox (filled by architect) |
+| Architecture Module | pregolya-sandbox (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 
 ## Related BCs
@@ -128,7 +128,7 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
 
 ## Architecture Anchors
 
-- `architecture/module-decomposition.md §ferrochain-sandbox` — `sandbox::wasm` row (default `sandbox-wasm` Cargo feature, MEDIUM, SS-13); `sandbox::container` row (`sandbox-container` feature, MEDIUM, SS-13); `sandbox::process` row accessible only via `Sandbox::unsafe_process_no_isolation()`, never default (NE-01 / DI-006 enforcing-default posture)
+- `architecture/module-decomposition.md §pregolya-sandbox` — `sandbox::wasm` row (default `sandbox-wasm` Cargo feature, MEDIUM, SS-13); `sandbox::container` row (`sandbox-container` feature, MEDIUM, SS-13); `sandbox::process` row accessible only via `Sandbox::unsafe_process_no_isolation()`, never default (NE-01 / DI-006 enforcing-default posture)
 - `architecture/purity-boundary-map.md §Boundary Modules` — `sandbox::policy` row: pure compatibility check vs `BackendCapabilities`; `enforcing()` `true` for WASM/container backends, `false` for `ProcessBackend`
 
 ## Story Anchor

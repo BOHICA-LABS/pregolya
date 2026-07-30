@@ -9,10 +9,10 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.1 (ADV-P1D-PASS-27): F-P27-06 Architecture Anchor renamed risk_tier.rs → action_risk.rs for consistency with the action_risk wire-field canon (retired-identifier gate #19)."
   - "1.2 (pass-45): F-P45-02 — corrected BC-2.10.004 relationship in Related BCs: budget escalation reuses base interrupt mechanism (BC-2.05.001) with BudgetEscalation payload and BudgetResume::Extend|Halt resume; it is NOT a risk-tiered High interrupt and is NOT subject to RiskGatePolicy or High-tier approver gating."
-  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
+  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph / pregolya-server per module-decomposition.md v1.10."
   - "1.4 (F-P110-CENSUS, 2026-07-18): Fix EC-005 E-GRAPH-014 InterruptApprovalTimeout struct — 2-field form `{ tier, deadline_utc }` missing `run_id`. Taxonomy message format `interrupt for run '<run_id>' (tier '<tier>') expired at deadline '<deadline_utc>'` has 3 distinct placeholders; struct must be a SUPERSET of all taxonomy placeholders (gate #33 Step B check 2). Added `run_id: \"<run_id>\"` as first field. TD-VSDD-060 sweep: only one E-GRAPH-014 struct site in this file (EC-005 line ~148); TV-006 uses bare-variant form (no struct fields — not subject to parity check)."
-  - "1.5 (F-P170-propagation/burst-272/2026-07-25): Architecture Anchors update — ActionRisk enum source path corrected from ferrochain-graph/src/hitl/action_risk.rs to ferrochain-core/src/action_risk.rs per F-P170-06 architect adjudication (ActionRisk relocates to ferrochain-core as core::action_risk; ferrochain-graph::hitl re-exports it). PreToolCallHook itself stays in ferrochain-graph::hitl per ADR-018 Decision 1."
-  - "1.6 (F-P171a-04+F-P171a-13/burst-273/2026-07-25): (1) F-P171a-04: ActionRisk is #[non_exhaustive]; §Preconditions-3, §Invariants 'closed exhaustive' claim, and VP-HITL-13 all incorrectly stated no-wildcard-arm requirement. CLAUDE.md mandates wildcard arm for all cross-crate #[non_exhaustive] matches. Fixed: PC-3 updated to note #[non_exhaustive] + cross-crate wildcard arm requirement; Invariants updated to #[non_exhaustive] framing + wildcard-arm-fails-closed-to-High policy; VP-HITL-13 updated to verify wildcard arm IS present (compile check). (2) F-P171a-13: Module Traceability row missing ferrochain-core (ActionRisk source per F-P170-06 adjudication). Added: 'ferrochain-core (ActionRisk enum) / ferrochain-graph (RiskGatePolicy, policy eval) / ferrochain-server (resume endpoint)'."
+  - "1.5 (F-P170-propagation/burst-272/2026-07-25): Architecture Anchors update — ActionRisk enum source path corrected from pregolya-graph/src/hitl/action_risk.rs to pregolya-core/src/action_risk.rs per F-P170-06 architect adjudication (ActionRisk relocates to pregolya-core as core::action_risk; pregolya-graph::hitl re-exports it). PreToolCallHook itself stays in pregolya-graph::hitl per ADR-018 Decision 1."
+  - "1.6 (F-P171a-04+F-P171a-13/burst-273/2026-07-25): (1) F-P171a-04: ActionRisk is #[non_exhaustive]; §Preconditions-3, §Invariants 'closed exhaustive' claim, and VP-HITL-13 all incorrectly stated no-wildcard-arm requirement. CLAUDE.md mandates wildcard arm for all cross-crate #[non_exhaustive] matches. Fixed: PC-3 updated to note #[non_exhaustive] + cross-crate wildcard arm requirement; Invariants updated to #[non_exhaustive] framing + wildcard-arm-fails-closed-to-High policy; VP-HITL-13 updated to verify wildcard arm IS present (compile check). (2) F-P171a-13: Module Traceability row missing pregolya-core (ActionRisk source per F-P170-06 adjudication). Added: 'pregolya-core (ActionRisk enum) / pregolya-graph (RiskGatePolicy, policy eval) / pregolya-server (resume endpoint)'."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -33,7 +33,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "77d7827"
+input-hash: "c112212"
 extracted_from: null
 modified: []
 deprecated: null
@@ -64,8 +64,8 @@ SOC analyst forcing function: tiered autonomy with human approval before contain
    context: Option<Value> }` and passes it to `interrupt(payload)`.
 2. The graph run has a `CheckpointSaver` attached (BC-2.05.001 precondition).
 3. The `ActionRisk` value is one of the four defined tiers: `ReadOnly`, `Low`, `Medium`,
-   `High`. `ActionRisk` is `#[non_exhaustive]` — code in `ferrochain-core` (the defining
-   crate) may match it exhaustively, but cross-crate code (e.g., `ferrochain-graph`) MUST
+   `High`. `ActionRisk` is `#[non_exhaustive]` — code in `pregolya-core` (the defining
+   crate) may match it exhaustively, but cross-crate code (e.g., `pregolya-graph`) MUST
    include a `_ => {}` wildcard arm; the compiler enforces this at compile time
    (CLAUDE.md non-exhaustive mandate). The wildcard arm should fail-closed to `High`-tier
    authorization when an unknown future variant is encountered.
@@ -104,7 +104,7 @@ SOC analyst forcing function: tiered autonomy with human approval before contain
   change delivery order; it only governs who is authorized to deliver the resume value.
 - `ActionRisk` is `#[non_exhaustive]`; at v1 authoring it has four defined variants
   (`ReadOnly`, `Low`, `Medium`, `High`). No runtime tier value outside these four variants is
-  possible in the v1 build. Cross-crate matches (e.g., in `ferrochain-graph`) MUST carry a
+  possible in the v1 build. Cross-crate matches (e.g., in `pregolya-graph`) MUST carry a
   `_ => {}` wildcard arm (CLAUDE.md non-exhaustive mandate); the wildcard should fail-closed
   to `High`-tier authorization — treating an unknown future variant as requiring the highest
   approval level is the safe default.
@@ -165,8 +165,8 @@ record (written to the checkpoint alongside the interrupt payload). Deadline eva
 (`GET /threads/{thread_id}/runs/{run_id}`), not via a background timer. This design ensures the timeout survives
 process restarts without requiring external schedulers.
 
-**Clock-skew posture:** The deadline is set by the process clock of the ferrochain-server
-instance that created the interrupt. ferrochain makes no NTP/cluster-clock guarantees.
+**Clock-skew posture:** The deadline is set by the process clock of the pregolya-server
+instance that created the interrupt. pregolya makes no NTP/cluster-clock guarantees.
 Operators requiring strict SLA enforcement (e.g., ±1s across nodes) must configure a
 distributed clock source or accept ±process-clock-drift tolerances in the timeout window.
 
@@ -187,7 +187,7 @@ distributed clock source or accept ±process-clock-drift tolerances in the timeo
 |-------|-------------|--------|-------|
 | VP-HITL-11 | High-tier interrupt is never auto-approved regardless of RiskGatePolicy config | Unit test (assert Err(InsufficientApproverRole) when policy attempts auto-approve for High) | Phase 1 |
 | VP-HITL-12 | ReadOnly interrupt with AutoApprove policy does not surface to external caller | Integration test (assert no `__interrupt__` emitted in stream) | Phase 1 |
-| VP-HITL-13 | Cross-crate `ActionRisk` matches in `ferrochain-graph` carry `_ => {}` wildcard arm per CLAUDE.md non-exhaustive mandate; wildcard fails closed to `High`-tier authorization | Cargo check (cross-crate match on `ActionRisk` must have wildcard arm — compiler error if absent because `ActionRisk` is `#[non_exhaustive]`; test asserts wildcard arm routes to `High` tier) | Wave 1 CI |
+| VP-HITL-13 | Cross-crate `ActionRisk` matches in `pregolya-graph` carry `_ => {}` wildcard arm per CLAUDE.md non-exhaustive mandate; wildcard fails closed to `High`-tier authorization | Cargo check (cross-crate match on `ActionRisk` must have wildcard arm — compiler error if absent because `ActionRisk` is `#[non_exhaustive]`; test asserts wildcard arm routes to `High` tier) | Wave 1 CI |
 
 ## Related BCs
 
@@ -200,9 +200,9 @@ distributed clock source or accept ±process-clock-drift tolerances in the timeo
 
 ## Architecture Anchors
 
-- `ferrochain-core/src/action_risk.rs` — `ActionRisk` enum (F-P170-06 adjudication: relocated from ferrochain-graph::hitl to ferrochain-core as core::action_risk; ferrochain-graph::hitl re-exports it. File formerly known as `ferrochain-graph/src/hitl/action_risk.rs` — renamed F-P27-06 from `risk_tier.rs`; now in ferrochain-core.)
-- `ferrochain-graph/src/hitl/policy.rs` — `ApproverRole`, `RiskGatePolicy`, `HitlInterruptPayload`, role-check logic, auto-approve evaluation
-- `ferrochain-server/src/routes/runs.rs` — `POST /threads/{thread_id}/runs/{run_id}/resume` with role-credential validation
+- `pregolya-core/src/action_risk.rs` — `ActionRisk` enum (F-P170-06 adjudication: relocated from pregolya-graph::hitl to pregolya-core as core::action_risk; pregolya-graph::hitl re-exports it. File formerly known as `pregolya-graph/src/hitl/action_risk.rs` — renamed F-P27-06 from `risk_tier.rs`; now in pregolya-core.)
+- `pregolya-graph/src/hitl/policy.rs` — `ApproverRole`, `RiskGatePolicy`, `HitlInterruptPayload`, role-check logic, auto-approve evaluation
+- `pregolya-server/src/routes/runs.rs` — `POST /threads/{thread_id}/runs/{run_id}/resume` with role-credential validation
 
 ## Story Anchor
 
@@ -227,4 +227,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-core (ActionRisk enum — core::action_risk) / ferrochain-graph (RiskGatePolicy, HitlInterruptPayload, policy eval — graph::hitl) / ferrochain-server (POST .../resume endpoint) |
+| Module | pregolya-core (ActionRisk enum — core::action_risk) / pregolya-graph (RiskGatePolicy, HitlInterruptPayload, policy eval — graph::hitl) / pregolya-server (POST .../resume endpoint) |

@@ -19,7 +19,7 @@ changelog:
   - "1.10 (fix-burst-279/gap-3-B101-empty-app_id/2026-07-28): Correct B101 empty-app_id failure mode: `run_context.app_id` empty MUST return `Err(E-MEMORY-004 NoScopeContext)` — NOT `Ok(None)`. v1.9 incorrectly stated the empty-app_id case silently returns `Ok(None)`. Changed §Decision 1 Amendment F-P175-B101 §Security argument and RunContext `app_id` doc-comment. Fail-loud policy is now symmetric with B102 (SkillStore construction fail-loud). NO-SILENT-EMPTY enforced on both B101 and B102 paths."
   - "1.9 (fix-burst-279/F-P175-B101+F-P175-B102/2026-07-28): Decision 1 Amendment — ContextMutationConfig scope bridge and SkillStore scope encapsulation. B101: `spec.namespace` is a key-namespace prefix, NOT the tenant `app_id`; loading uses `MemoryScope::App(run_context.app_id)` with composite key `{namespace}/{key}` (system-derived tenant identity, not caller-supplied). B102: SkillStore binds `MemoryScope::App(app_id)` at construction time; trait methods remain scopeless; E-MEMORY-004 NoScopeContext raised when no app_id derivable. RunContext gains `app_id: String` field (system-derived, set before first super-step, not overridable via RunnableConfig). E-MEMORY-004 NoScopeContext minted by PO — see routing spec burst-279."
   - "1.8 (fix-burst-276/F-P173-505/2026-07-27): Records hygiene — remove bare commit SHA from v1.6 changelog entry; burst-238 alone is the stable citable anchor (TD-VSDD-091). No semantic change."
-  - "1.7 (FIX-BURST-276/F-P173-706/2026-07-27): Forward-amend all three 18-crate roster references to 21-crate: (1) Alternatives Considered Decision 1 table rationale; (2) Decision 4 crate roster count; (3) Rationale closing parenthetical. Add forward-amendment blockquote after Decision 4 crate roster statement. The \"no new crate\" decision holds unchanged under the 21-crate roster; ADR-012 adds no new crate. Roster expanded from 18 to 21 by D21 (+ferrochain-prompts, +ferrochain-vectorstores) and D23 (+ferrochain-tools) — see ARCH-INDEX.md §Canonical Crate Roster."
+  - "1.7 (FIX-BURST-276/F-P173-706/2026-07-27): Forward-amend all three 18-crate roster references to 21-crate: (1) Alternatives Considered Decision 1 table rationale; (2) Decision 4 crate roster count; (3) Rationale closing parenthetical. Add forward-amendment blockquote after Decision 4 crate roster statement. The \"no new crate\" decision holds unchanged under the 21-crate roster; ADR-012 adds no new crate. Roster expanded from 18 to 21 by D21 (+pregolya-prompts, +pregolya-vectorstores) and D23 (+pregolya-tools) — see ARCH-INDEX.md §Canonical Crate Roster."
   - "1.6 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp per ADR decision-date convention (Gate #28 Rule 5): `timestamp: 2026-07-23T00:00:00Z` → `2026-07-15T00:00:00Z`. Date field already correct at 2026-07-15 (original ADR-012 acceptance date, D20). Timestamp was incorrectly bumped to 2026-07-23 in burst-238."
   - "1.5 (FIX-BURST-268/OBS-P166-A/2026-07-25): De-pin live-body version pin per TD-VSDD-091: Decision 1 body 'bc-authoring-plan.md v2.10' → 'bc-authoring-plan.md §Gate #27 §Key ownership rules' (stable section anchor; guardrail placement canon resides in Gate #27 Key ownership rules table)."
   - "1.4 (burst-238/2026-07-23): Stale-handoff sweep — consolidate Error Codes section: remove stale 'PO must mint E-MEM-NNN' obligation and advisory correction blockquote; rewrite as single past-tense statement (E-MEMORY-007 MemoryWriteGuardDenied already minted per F-P72-02 OBS)."
@@ -58,15 +58,15 @@ This ADR decides four questions:
 
 ## Decision 1 — Placement
 
-**Chosen:** Definitions in ferrochain-core / routing + enforcement in ferrochain-memory.
+**Chosen:** Definitions in pregolya-core / routing + enforcement in pregolya-memory.
 Follows the ADR-009 Option 3 split (BudgetPolicy trait in core, BudgetEngine in graph)
-and the guardrail placement canon (GuardrailHook trait in ferrochain-core, invocation
-pipeline in ferrochain-graph per bc-authoring-plan.md §Gate #27 §Key ownership rules).
+and the guardrail placement canon (GuardrailHook trait in pregolya-core, invocation
+pipeline in pregolya-graph per bc-authoring-plan.md §Gate #27 §Key ownership rules).
 
 ### Primitive A — Skill Registry
 
-**ferrochain-memory** gains a new module `memory::skills`
-(`ferrochain-memory/src/skills.rs`):
+**pregolya-memory** gains a new module `memory::skills`
+(`pregolya-memory/src/skills.rs`):
 
 ```rust
 pub struct SkillDescriptor {
@@ -77,9 +77,9 @@ pub struct SkillDescriptor {
 }
 
 pub trait SkillStore: Send + Sync {
-    async fn load_skill(&self, name: &str) -> Result<Option<String>, FerrochainError>;
-    async fn list_skills(&self, tags: &[String]) -> Result<Vec<SkillDescriptor>, FerrochainError>;
-    async fn skill_exists(&self, name: &str) -> Result<bool, FerrochainError>;
+    async fn load_skill(&self, name: &str) -> Result<Option<String>, PregolyaError>;
+    async fn list_skills(&self, tags: &[String]) -> Result<Vec<SkillDescriptor>, PregolyaError>;
+    async fn skill_exists(&self, name: &str) -> Result<bool, PregolyaError>;
 }
 ```
 
@@ -88,16 +88,16 @@ ordinary KV entries in `MemoryStore`; `SkillStore` adds naming, tagging, and loa
 semantics. Write path for skill documents is governed by the guarded write primitives
 (Primitive C). `SkillStore` reads are read-only and not subject to the write guard.
 
-Rationale for ferrochain-memory (not ferrochain-core): `SkillStore` is a storage trait
+Rationale for pregolya-memory (not pregolya-core): `SkillStore` is a storage trait
 (async, I/O-bound) — the same category as `MemoryStore` and `CheckpointSaver`. Storage
-traits live with their backing layer. Placing a storage trait in ferrochain-core would
-contradict the pattern established by MemoryStore (ferrochain-memory) and CheckpointSaver
-(ferrochain-checkpoint).
+traits live with their backing layer. Placing a storage trait in pregolya-core would
+contradict the pattern established by MemoryStore (pregolya-memory) and CheckpointSaver
+(pregolya-checkpoint).
 
 ### Primitive B — Runtime Context Mutation
 
-**ferrochain-core** gains a new definitions module `core::context_mutation`
-(`ferrochain-core/src/context_mutation.rs`):
+**pregolya-core** gains a new definitions module `core::context_mutation`
+(`pregolya-core/src/context_mutation.rs`):
 
 ```rust
 /// Specifies one memory item to inject into the system-prompt context at run start.
@@ -113,7 +113,7 @@ pub struct ContextMutationConfig {
 }
 ```
 
-`RunnableConfig` (ferrochain-core::config) gains:
+`RunnableConfig` (pregolya-core::config) gains:
 ```rust
 pub context_mutations: Option<ContextMutationConfig>,
 ```
@@ -131,8 +131,8 @@ added to the orchestrator in ADR-001 rev-1 without a new module row).
 
 **Two-layer split** following ADR-009 Option 3 precedent:
 
-**ferrochain-core** gains a new definitions module `core::write_guard`
-(`ferrochain-core/src/write_guard.rs`):
+**pregolya-core** gains a new definitions module `core::write_guard`
+(`pregolya-core/src/write_guard.rs`):
 
 ```rust
 pub enum MemoryWriteRequest {
@@ -153,31 +153,31 @@ pub trait MemoryWriteGuard: Send + Sync {
 }
 ```
 
-**ferrochain-memory** gains a new enforcement module `memory::write_guard`
-(`ferrochain-memory/src/write_guard.rs`):
+**pregolya-memory** gains a new enforcement module `memory::write_guard`
+(`pregolya-memory/src/write_guard.rs`):
 
 This is the **execution module**: receives every attempted write to a guarded memory
 namespace, calls `MemoryWriteGuard::validate()`, and either commits the write, blocks it
 with an error, or commits the sanitized payload from `Transform`. Injection scanning
 implementations (`MemoryWriteGuard` implementors) are provided by the operator or by
-ferrochain-memory's built-in scanner.
+pregolya-memory's built-in scanner.
 
 ### Placement Summary
 
 | Primitive | Pure types/trait | Enforcement/routing |
 |-----------|-----------------|---------------------|
-| Skill registry | — (storage trait → memory directly) | `memory::skills` (ferrochain-memory) |
-| Context mutation | `core::context_mutation` (ferrochain-core) | `graph::scheduler` (existing module, new behavior) |
-| Write guard | `core::write_guard` (ferrochain-core) | `memory::write_guard` (ferrochain-memory, NEW execution module) |
+| Skill registry | — (storage trait → memory directly) | `memory::skills` (pregolya-memory) |
+| Context mutation | `core::context_mutation` (pregolya-core) | `graph::scheduler` (existing module, new behavior) |
+| Write guard | `core::write_guard` (pregolya-core) | `memory::write_guard` (pregolya-memory, NEW execution module) |
 
 ### Alternatives Considered (Decision 1)
 
 | Alternative | Disposition | Rationale |
 |-------------|-------------|-----------|
 | New crate for self-improvement primitives | REJECT | 21-crate roster is current (ARCH-INDEX canonical roster, ADR-007; expanded from 18 to 21 by D21+D23 — see forward-amendment note in Decision 4). No cross-cutting concern warrants a new crate. |
-| All primitive types in ferrochain-core (incl. SkillStore) | REJECT | SkillStore is a storage trait (async, I/O-bound, backed by MemoryStore). Storage traits live with their backing layer (MemoryStore → ferrochain-memory, CheckpointSaver → ferrochain-checkpoint). |
-| All primitive traits/types in ferrochain-memory | REJECT | MemoryWriteGuard is a pure validation trait. Following guardrail placement canon (GuardrailHook → ferrochain-core), pure validation contracts belong in ferrochain-core so non-memory consumers can wire guards without a ferrochain-memory dep. |
-| Definitions in ferrochain-core / routing + enforcement in ferrochain-memory | **ADOPT** | Consistent with ADR-009 Option 3 and GuardrailHook placement canon. |
+| All primitive types in pregolya-core (incl. SkillStore) | REJECT | SkillStore is a storage trait (async, I/O-bound, backed by MemoryStore). Storage traits live with their backing layer (MemoryStore → pregolya-memory, CheckpointSaver → pregolya-checkpoint). |
+| All primitive traits/types in pregolya-memory | REJECT | MemoryWriteGuard is a pure validation trait. Following guardrail placement canon (GuardrailHook → pregolya-core), pure validation contracts belong in pregolya-core so non-memory consumers can wire guards without a pregolya-memory dep. |
+| Definitions in pregolya-core / routing + enforcement in pregolya-memory | **ADOPT** | Consistent with ADR-009 Option 3 and GuardrailHook placement canon. |
 
 ### Decision 1 Amendment — ContextMutationConfig Scope Bridge and SkillStore Scope Encapsulation (fix-burst-279)
 
@@ -256,7 +256,7 @@ threaded through the construction path — not exposed in the method surface.
 **Corrected SkillStore scope contract:**
 
 ```
-SkillStore::new(store: Arc<dyn MemoryStore>, app_id: String) -> Result<Self, FerrochainError>
+SkillStore::new(store: Arc<dyn MemoryStore>, app_id: String) -> Result<Self, PregolyaError>
 ```
 
 If `app_id` is empty or the implementation cannot derive an application scope, it returns
@@ -276,7 +276,7 @@ or load time respectively. See routing spec burst-279 for the PO mint obligation
 
 ## Decision 2 — Injection-Scanning Guard Seam
 
-**Chosen:** New `MemoryWriteGuard` trait in ferrochain-core — separate seam from GuardrailHook
+**Chosen:** New `MemoryWriteGuard` trait in pregolya-core — separate seam from GuardrailHook
 and BoundaryType. BoundaryType stays exactly 3 variants (ToolResult | RAGRetrieval |
 MemoryIngress). **No canon amendment to PASS-58 is required.**
 
@@ -304,7 +304,7 @@ Extending BoundaryType to include a MemoryWrite variant would:
 | Extend BoundaryType with `MemoryWrite` variant (4 variants) | REJECT | Requires explicit PASS-58 canon amendment; conflates ingress-path and write-path safety; BoundaryType is scoped to `ProvenanceTag` fields that tag ingress events, not write operations. |
 | Reuse GuardrailHook at a new MemoryWrite boundary (BoundaryType extension) | REJECT | Shares REJECT above; additionally, GuardrailHook::evaluate takes IngressContent — incompatible with write-operation semantics (Add/Replace/Remove). Forcing MemoryWriteRequest into IngressContent would require type erasure or a new variant (triggering BoundaryType + IngressContent amendments simultaneously). |
 | Write-path validation inline in `MemoryStore::put` (no injection point) | REJECT | Embeds security policy in the storage layer; untestable and non-extensible; operators cannot register custom injection scanners without forking MemoryStore. |
-| New `MemoryWriteGuard` trait in ferrochain-core, enforcement in ferrochain-memory | **ADOPT** | Clean write-path analog. Pure synchronous validation (no async). Operators inject custom scanners. No BoundaryType amendment. |
+| New `MemoryWriteGuard` trait in pregolya-core, enforcement in pregolya-memory | **ADOPT** | Clean write-path analog. Pure synchronous validation (no async). Operators inject custom scanners. No BoundaryType amendment. |
 
 ---
 
@@ -356,7 +356,7 @@ adds `mcp::server` MEDIUM (+1 execution row); see ADR-013-mcp-server-module-plac
 |----------|------|-------------|-----------|
 | `core::context_mutation` | Pure types (definitions-only) | **No new row** | ContextSourceSpec + ContextMutationConfig are pure structs. Precedent: `core::budget` (BudgetPolicy/TokenUsage/RunContext) is definitions-only with no row (ADR-009 Option 3, D18-P61-C). |
 | `core::write_guard` | Pure types + pure trait (definitions-only) | **No new row** | MemoryWriteGuard/MemoryWriteRequest/WriteGuardDecision are pure types/trait. Same precedent as `core::budget`. |
-| `memory::skills` | SkillStore trait + routing (storage trait) | **No new criticality row** (structural module-decomposition row added; see Consequences) | Thin routing overlay over MemoryStore reads. Subsumed into `memory::store` note (analogous to `core::budget` definitions note in ferrochain-core). No independent execution logic beyond storage delegation. |
+| `memory::skills` | SkillStore trait + routing (storage trait) | **No new criticality row** (structural module-decomposition row added; see Consequences) | Thin routing overlay over MemoryStore reads. Subsumed into `memory::store` note (analogous to `core::budget` definitions note in pregolya-core). No independent execution logic beyond storage delegation. |
 | `memory::write_guard` | Execution enforcement (effectful dispatch) | **NEW HIGH row** | Calls `MemoryWriteGuard::validate()` on every write, applies injection scanning, conditionally aborts or sanitizes writes. Security-sensitive write-path enforcement — analogous to `graph::provenance` (HIGH tier, guardrail dispatch) and `sandbox::policy` (MEDIUM tier, sandbox policy enforcement). Security significance of write-path injection prevention warrants HIGH tier. |
 | Context loading in `graph::scheduler` | New behavior of existing module | **No new row** | Added behavior to existing `graph::scheduler` module (run-start hook). No new module created. |
 
@@ -366,11 +366,11 @@ adds `mcp::server` MEDIUM (+1 execution row); see ADR-013-mcp-server-module-plac
 attributed to ADR-013-mcp-server-module-placement.md.
 
 **Crate roster:** 21 published crates — **unchanged by ADR-012**. All D20 primitives
-reside in existing crates (ferrochain-core, ferrochain-memory). No new crate.
+reside in existing crates (pregolya-core, pregolya-memory). No new crate.
 
 > **Forward Amendment (FIX-BURST-276, 2026-07-27):** The roster at ADR-012 acceptance
 > time was 18 published crates. The roster has since expanded to **21 published crates**
-> by D21 (+ferrochain-prompts, +ferrochain-vectorstores) and D23 (+ferrochain-tools). The
+> by D21 (+pregolya-prompts, +pregolya-vectorstores) and D23 (+pregolya-tools). The
 > "no new crate" decision holds under the current 21-crate roster — ADR-012 adds no new
 > crate regardless of the roster count. **See ARCH-INDEX.md §Canonical Crate Roster as
 > the authoritative source of truth.**
@@ -387,7 +387,7 @@ reside in existing crates (ferrochain-core, ferrochain-memory). No new crate.
 
 ## Rationale
 
-D20 promotes self-improvement primitives to framework scope. The ADR-009 Option 3 split pattern (pure-trait definitions in ferrochain-core, effectful engine in the domain crate) is applied consistently: context-mutation types and write-guard types are pure-core, while enforcement and routing live in ferrochain-memory. The frozen-snapshot semantics for ContextMutationConfig preserve provider prompt-prefix caching (ADR-011 cache-key contract) and are consistent with Hermes MEMORY.md stable-tier semantics. The new `MemoryWriteGuard` seam is architecturally separate from `GuardrailHook`/`BoundaryType` to avoid conflating ingress-path safety with write-path safety. Module-criticality growth is minimal: only `memory::write_guard` earns a new HIGH row; definition-only modules follow the `core::budget` precedent.
+D20 promotes self-improvement primitives to framework scope. The ADR-009 Option 3 split pattern (pure-trait definitions in pregolya-core, effectful engine in the domain crate) is applied consistently: context-mutation types and write-guard types are pure-core, while enforcement and routing live in pregolya-memory. The frozen-snapshot semantics for ContextMutationConfig preserve provider prompt-prefix caching (ADR-011 cache-key contract) and are consistent with Hermes MEMORY.md stable-tier semantics. The new `MemoryWriteGuard` seam is architecturally separate from `GuardrailHook`/`BoundaryType` to avoid conflating ingress-path safety with write-path safety. Module-criticality growth is minimal: only `memory::write_guard` earns a new HIGH row; definition-only modules follow the `core::budget` precedent.
 
 ## Alternatives Considered
 
@@ -397,10 +397,10 @@ See `### Alternatives Considered (Decision N)` subsections in each Decision sect
 
 ### Module-Decomposition Changes
 
-1. ferrochain-core gains a **self-improvement definitions note** (no new table rows):
-   - `core::context_mutation` (`ferrochain-core/src/context_mutation.rs`): ContextSourceSpec, ContextMutationConfig
-   - `core::write_guard` (`ferrochain-core/src/write_guard.rs`): MemoryWriteRequest, MemoryWriteGuard trait, WriteGuardDecision
-2. ferrochain-memory gains two new **structural** module rows in module-decomposition.md
+1. pregolya-core gains a **self-improvement definitions note** (no new table rows):
+   - `core::context_mutation` (`pregolya-core/src/context_mutation.rs`): ContextSourceSpec, ContextMutationConfig
+   - `core::write_guard` (`pregolya-core/src/write_guard.rs`): MemoryWriteRequest, MemoryWriteGuard trait, WriteGuardDecision
+2. pregolya-memory gains two new **structural** module rows in module-decomposition.md
    (`memory::skills` does NOT earn a criticality-counted row per Decision 4 table above;
    only `memory::write_guard` earns a criticality row):
    - `memory::skills` (structural decomposition row, MEDIUM tier classification, SS-15): SkillStore trait + SkillDescriptor, skill load-on-demand routing
@@ -410,10 +410,10 @@ See `### Alternatives Considered (Decision N)` subsections in each Decision sect
 
 | Primitive | Crate | Module path | Trait/types | SS |
 |-----------|-------|-------------|------------|-----|
-| Skill registry | ferrochain-memory | `ferrochain-memory/src/skills.rs` (`memory::skills`) | `SkillStore`, `SkillDescriptor` | SS-15 |
-| Context mutation | ferrochain-core | `ferrochain-core/src/context_mutation.rs` (`core::context_mutation`) | `ContextSourceSpec`, `ContextMutationConfig`; `RunnableConfig.context_mutations: Option<ContextMutationConfig>` | SS-01 (config seam) + SS-15 (memory source) |
-| Write guard (types/trait) | ferrochain-core | `ferrochain-core/src/write_guard.rs` (`core::write_guard`) | `MemoryWriteGuard`, `MemoryWriteRequest`, `WriteGuardDecision` | SS-15 |
-| Write guard (enforcement) | ferrochain-memory | `ferrochain-memory/src/write_guard.rs` (`memory::write_guard`) | guarded write engine | SS-15 |
+| Skill registry | pregolya-memory | `pregolya-memory/src/skills.rs` (`memory::skills`) | `SkillStore`, `SkillDescriptor` | SS-15 |
+| Context mutation | pregolya-core | `pregolya-core/src/context_mutation.rs` (`core::context_mutation`) | `ContextSourceSpec`, `ContextMutationConfig`; `RunnableConfig.context_mutations: Option<ContextMutationConfig>` | SS-01 (config seam) + SS-15 (memory source) |
+| Write guard (types/trait) | pregolya-core | `pregolya-core/src/write_guard.rs` (`core::write_guard`) | `MemoryWriteGuard`, `MemoryWriteRequest`, `WriteGuardDecision` | SS-15 |
+| Write guard (enforcement) | pregolya-memory | `pregolya-memory/src/write_guard.rs` (`memory::write_guard`) | guarded write engine | SS-15 |
 
 ### Error Codes
 

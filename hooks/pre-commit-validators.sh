@@ -24,10 +24,10 @@
 #       newest changelog entry date.
 #   verify-enum-variant-casing.sh          — (CLEAN) non-canonical enum casing block
 #   verify-signature-canon.sh             — (FAILING) adjudicated type-signature canon
-#       D-42 FerrochainError ctor | D-43 DynTool | D-45/D-48 as_retriever receiver
+#       D-42 PregolyaError ctor | D-43 DynTool | D-45/D-48 as_retriever receiver
 #       Pre-existing violations: S1b (capabilities-p1-p2.md as_retriever(&self)),
 #       S2 (capabilities-p1-p2.md VectorStoreRetriever<), S4 (4 files Arc<dyn Tool>),
-#       S5 (80 files FerrochainError full-form literals). In-flight: architect fix-burst
+#       S5 (80 files PregolyaError full-form literals). In-flight: architect fix-burst
 #       closes S1/S2/S3; product-owner fix-burst closes S4/S5. Wire date: 2026-07-28.
 #   verify-error-notation-canon.sh        — (FAILING) ADR-010 error-construction notation
 #       D-72 error-construction notation canon | 5 violations in prd-supplements/bc-authoring-plan.md

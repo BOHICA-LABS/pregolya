@@ -104,7 +104,7 @@ pub trait CompactionPolicy: Send + Sync {
         &self,
         snapshot: &ConversationSnapshot,
         run_ctx: &RunContext,
-    ) -> Result<CompactionSummary, FerrochainError>;
+    ) -> Result<CompactionSummary, PregolyaError>;
 }
 ```
 

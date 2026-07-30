@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-no-version-pins.sh — ferrochain factory-artifacts wrap guard
+# verify-no-version-pins.sh — pregolya factory-artifacts wrap guard
 #
 # Scans all .md files under .factory/specs/ for LIVE-BODY volatile version
 # pins of the following forms:

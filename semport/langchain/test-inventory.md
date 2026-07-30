@@ -1,6 +1,6 @@
 ---
 artifact: semport/langchain/test-inventory
-project: ferrochain
+project: pregolya
 port_target: langchain (v1)
 analyzer_pass: 3
 date: 2026-07-12
@@ -79,7 +79,7 @@ Each built-in middleware has a dedicated test file; the largest are behavioral g
 | `test_structured_output_retry.py` | 369 | SO retry via ToolStrategy handle_errors |
 | `test_model_call_limit.py` | 233 | Model-call cap |
 
-## 5. Fixtures & harness (reusable for ferrochain conformance)
+## 5. Fixtures & harness (reusable for pregolya conformance)
 - `unit_tests/agents/model.py` — a fake/generic chat model driving deterministic loops.
 - `unit_tests/agents/messages.py`, `any_str.py`, `utils.py` — message builders + matchers.
 - `unit_tests/agents/conftest.py`, `conftest_checkpointer.py`, `conftest_store.py`,
@@ -87,7 +87,7 @@ Each built-in middleware has a dedicated test file; the largest are behavioral g
 - `integration_tests/cache/fake_embeddings.py`, `conftest.py`.
 
 **Port recommendation:** the fake model + `messages.py`/`any_str.py` matcher pattern
-should be ported to ferrochain as the agent-loop conformance harness. Golden behavior of
+should be ported to pregolya as the agent-loop conformance harness. Golden behavior of
 `test_react_agent.py`, `test_response_format.py`, and `core/test_wrap_model_call.py`
 defines "the agent works."
 

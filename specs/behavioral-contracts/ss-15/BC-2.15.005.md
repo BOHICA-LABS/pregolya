@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "870127a"
+input-hash: "d42a460"
 extracted_from: null
 modified: []
 deprecated: null
@@ -37,7 +37,7 @@ removal_reason: null
 ## Description
 
 Every write to a guarded memory namespace is intercepted by `memory::write_guard`
-(ferrochain-memory) before being committed to `MemoryStore`. The enforcement module calls
+(pregolya-memory) before being committed to `MemoryStore`. The enforcement module calls
 `MemoryWriteGuard::validate(req: &MemoryWriteRequest) -> WriteGuardDecision` synchronously;
 the validator returns one of three decisions: `Allow` (write proceeds unchanged), `Deny {
 reason }` (write rejected with `E-MEMORY-007 MemoryWriteGuardDenied`), or `Transform {
@@ -67,7 +67,7 @@ custom `MemoryWriteGuard` implementations.
    `Ok(())` on success.
 2. **Deny path:** `validate(req)` returns `WriteGuardDecision::Deny { reason }`.
    The write is NOT forwarded to `MemoryStore`. The caller receives:
-   `Err(FerrochainError { component: MEMORY, category: SECURITY, code: "E-MEMORY-007",
+   `Err(PregolyaError { component: MEMORY, category: SECURITY, code: "E-MEMORY-007",
    message: "MemoryWriteGuardDenied: write to namespace '<ns>' key '<key>' denied — <reason>",
    retry_hint: Never })`.
    No partial state is written. (DI-008: no panic; error propagates as Err.)
@@ -92,8 +92,8 @@ custom `MemoryWriteGuard` implementations.
 - The guard is scoped to **guarded namespaces**: unguarded namespaces bypass the guard
   entirely. The set of guarded namespaces is configured at `MemoryStore` construction time.
 - `MemoryWriteRequest` types and `WriteGuardDecision` types live in
-  `ferrochain-core/src/write_guard.rs` (`core::write_guard`) — the enforcement lives in
-  `ferrochain-memory/src/write_guard.rs` (`memory::write_guard`). This split follows
+  `pregolya-core/src/write_guard.rs` (`core::write_guard`) — the enforcement lives in
+  `pregolya-memory/src/write_guard.rs` (`memory::write_guard`). This split follows
   ADR-012 Decision 1 / ADR-009 Option 3 precedent.
 - BoundaryType (PASS-58) is UNCHANGED: the write guard is a separate write-path seam and
   does NOT interact with `ProvenanceTag`, `GuardrailHook`, or `BoundaryType`
@@ -169,8 +169,8 @@ namespaces.
 
 ## Architecture Anchors
 
-- `ferrochain-core/src/write_guard.rs` (`core::write_guard`) — `MemoryWriteRequest` enum (`Add|Replace|Remove`), `WriteGuardDecision` enum (`Allow|Deny{reason}|Transform{sanitized}`), `MemoryWriteGuard` pure synchronous trait (per ADR-012 Decision 1, Primitive C — type definitions in ferrochain-core)
-- `ferrochain-memory/src/write_guard.rs` (`memory::write_guard`) — enforcement engine: intercepts all writes to guarded namespaces, calls `MemoryWriteGuard::validate`, routes to Allow/Deny/Transform; built-in injection scanner implementation (per ADR-012 Decision 1, Primitive C — enforcement in ferrochain-memory; HIGH criticality module per gate #25, ADR-012 Decision 4)
+- `pregolya-core/src/write_guard.rs` (`core::write_guard`) — `MemoryWriteRequest` enum (`Add|Replace|Remove`), `WriteGuardDecision` enum (`Allow|Deny{reason}|Transform{sanitized}`), `MemoryWriteGuard` pure synchronous trait (per ADR-012 Decision 1, Primitive C — type definitions in pregolya-core)
+- `pregolya-memory/src/write_guard.rs` (`memory::write_guard`) — enforcement engine: intercepts all writes to guarded namespaces, calls `MemoryWriteGuard::validate`, routes to Allow/Deny/Transform; built-in injection scanner implementation (per ADR-012 Decision 1, Primitive C — enforcement in pregolya-memory; HIGH criticality module per gate #25, ADR-012 Decision 4)
 - ADR-012 §Decision 2 — confirms MemoryWriteGuard is a NEW seam separate from GuardrailHook/BoundaryType; BoundaryType = `ToolResult|RAGRetrieval|MemoryIngress` is UNCHANGED (PASS-58)
 
 ## Story Anchor
@@ -194,4 +194,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-core (`core::write_guard` — types) / ferrochain-memory (`memory::write_guard` — enforcement) |
+| Module | pregolya-core (`core::write_guard` — types) / pregolya-memory (`memory::write_guard` — enforcement) |

@@ -1,6 +1,6 @@
 ---
 artifact: semport/splitters/test-inventory
-project: ferrochain
+project: pregolya
 port_target: langchain-text-splitters (1.1.2)
 analyzer_pass: 5
 date: 2026-07-12
@@ -25,7 +25,7 @@ protocol treats tests as first-class behavioral contracts).
 
 ## Boundary / off-by-one LOCKING tests (highest port priority → Red-Gate vectors)
 
-These pin the exact behaviors flagged as PORT risk. Each becomes a ferrochain
+These pin the exact behaviors flagged as PORT risk. Each becomes a pregolya
 test vector with the SAME input and SAME expected output.
 
 ### `_merge_splits` overlap arithmetic
@@ -120,7 +120,7 @@ test vector with the SAME input and SAME expected output.
 
 ## Coverage gaps (behaviors with weak/no test lock)
 - **No explicit multi-byte / non-ASCII `len` test.** The code-point-vs-byte
-  hazard is NOT directly locked by an existing test. **ferrochain must ADD**
+  hazard is NOT directly locked by an existing test. **pregolya must ADD**
   non-ASCII vectors for `_merge_splits`, `add_start_index`, and the `""`
   separator (char split) — this is the top production-grade gap to close in the
   port (do NOT defer; per CLAUDE.md write the edge-case test now).

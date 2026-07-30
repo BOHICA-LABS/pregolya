@@ -17,7 +17,7 @@ red_gate_source: R10
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "146707a"
+input-hash: "291e48b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -138,9 +138,9 @@ Restoring from this checkpoint in a fresh process yields the ephemeral channel a
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/channels/ephemeral.rs` — `EphemeralValue<T>` channel type
-- `ferrochain-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — `finish()` call on all channels at step end (triggers ephemeral clear)
-- `ferrochain-checkpoint/src/base.rs` — `UntrackedValue` / exclusion from checkpoint serialization
+- `pregolya-graph/src/channels/ephemeral.rs` — `EphemeralValue<T>` channel type
+- `pregolya-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — `finish()` call on all channels at step end (triggers ephemeral clear)
+- `pregolya-checkpoint/src/base.rs` — `UntrackedValue` / exclusion from checkpoint serialization
 
 ## Story Anchor
 
@@ -163,4 +163,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), Red Gate |
-| Module | ferrochain-graph |
+| Module | pregolya-graph |

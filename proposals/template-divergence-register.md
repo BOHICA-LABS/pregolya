@@ -21,7 +21,7 @@ changelog:
 
 ## Purpose
 
-This register records every place where a ferrochain spec artifact deliberately diverges from
+This register records every place where a pregolya spec artifact deliberately diverges from
 its upstream vsdd-factory template. All entries are either **AUTHORIZED-DOCUMENTED** (this
 register) or pending authorization. The register exists so that future calls to
 `/vsdd-factory:validate-template-compliance` can distinguish intentional divergences from
@@ -96,7 +96,7 @@ MUST register the divergence at creation time, not retroactively.
 |-------|-------|
 | Artifacts | All versioned spec artifacts: BC files, VP files, ADR files, L2-INDEX.md, ARCH-INDEX.md, BC-INDEX.md, VP-INDEX.md, prd.md, product-brief.md, all prd-supplements |
 | Upstream template | All spec templates (none include `changelog:` in frontmatter) |
-| Divergence | Templates do not define a frontmatter `changelog:` field. Ferrochain standardizes on Form-A changelogs — a YAML list under `changelog:` in frontmatter — for all versioned spec artifacts. Templates support Form B (a `## Changelog` body section) but do not prescribe Form A. The `records-lint.sh §L1` gate enforces Form-A-or-Form-B changelog presence when `version > "1.0"`. |
+| Divergence | Templates do not define a frontmatter `changelog:` field. Pregolya standardizes on Form-A changelogs — a YAML list under `changelog:` in frontmatter — for all versioned spec artifacts. Templates support Form B (a `## Changelog` body section) but do not prescribe Form A. The `records-lint.sh §L1` gate enforces Form-A-or-Form-B changelog presence when `version > "1.0"`. |
 | Classification | AUTHORIZED-UNDOCUMENTED (project-wide convention; now documented) |
 | Authorizing decision | Project-wide gate `records-lint.sh §L1` (lesson L-010 / Gate #28) codifies Form A as the preferred form. The gate was established during adversarial convergence in the v1.0.0-greenfield cycle. |
 | Rationale | Form A (frontmatter) is machine-parseable without body-section regex parsing. Agents reading spec metadata can infer version history from frontmatter alone, without loading the full document body. |
@@ -108,7 +108,7 @@ MUST register the divergence at creation time, not retroactively.
 |-------|-------|
 | Artifacts | All VP files: `.factory/specs/verification-properties/VP-*.md` |
 | Upstream template | `L4-verification-property-template.md` |
-| Divergence | Template frontmatter defines a base set of VP fields. Ferrochain VP files add the following beyond template minimum: `vp_id` (VP identifier), `title` (human-readable title), `bc_anchor` (primary BC linkage shorthand), `di_anchor` (domain invariant anchor), `crate` (implementing crate name), `tool` (proof tool shorthand), `proof_phase` (pipeline phase), `priority` (P0/P1 verification priority), `red_gate` (boolean), `red_gate_source` (architecture anchor for red-gate justification). |
+| Divergence | Template frontmatter defines a base set of VP fields. Pregolya VP files add the following beyond template minimum: `vp_id` (VP identifier), `title` (human-readable title), `bc_anchor` (primary BC linkage shorthand), `di_anchor` (domain invariant anchor), `crate` (implementing crate name), `tool` (proof tool shorthand), `proof_phase` (pipeline phase), `priority` (P0/P1 verification priority), `red_gate` (boolean), `red_gate_source` (architecture anchor for red-gate justification). |
 | Classification | AUTHORIZED-UNDOCUMENTED (now documented) |
 | Authorizing decision | Architect, v1.0.0-greenfield cycle. Fields added incrementally as traceability requirements emerged. |
 | Rationale | The additional fields enable machine-extractable cross-references without loading full VP body content. The `validate-vp-consistency.sh` gate reads several of these fields programmatically. |
@@ -120,8 +120,8 @@ MUST register the divergence at creation time, not retroactively.
 |-------|-------|
 | Artifacts | All ADR files: `.factory/specs/architecture/decisions/ADR-*.md` |
 | Upstream template | `adr-template.md` |
-| Divergence (a) | Template frontmatter defines: `document_type`, `adr_id`, `status`, `date`, `subsystems_affected`, `supersedes`, `superseded_by`. Ferrochain ADR files add: `level`, `slug`, `title`, `gate`, `gate_note`, `producer`, `timestamp`, `version`, `phase`, `traces_to`, `decisions`, `changelog`. |
-| Divergence (b) | Template format for `adr_id` is `ADR-NNN` (with prefix). Ferrochain stores only the numeric part as a quoted string (e.g., `"001"`) — the `ADR-` prefix is implied by the filename. |
+| Divergence (a) | Template frontmatter defines: `document_type`, `adr_id`, `status`, `date`, `subsystems_affected`, `supersedes`, `superseded_by`. Pregolya ADR files add: `level`, `slug`, `title`, `gate`, `gate_note`, `producer`, `timestamp`, `version`, `phase`, `traces_to`, `decisions`, `changelog`. |
+| Divergence (b) | Template format for `adr_id` is `ADR-NNN` (with prefix). Pregolya stores only the numeric part as a quoted string (e.g., `"001"`) — the `ADR-` prefix is implied by the filename. |
 | Classification | AUTHORIZED-UNDOCUMENTED (now documented) |
 | Authorizing decision | Architect, v1.0.0-greenfield cycle. Richer frontmatter supports the `verify-adr-decision-refs.sh` gate and the phase-gate tracking model. |
 | Rationale | The gate and trace fields support the pipeline's D-series decision-gate system. The `adr_id` numeric format keeps the identifier short in frontmatter while retaining prefix-searchability via filename convention. |
@@ -133,8 +133,8 @@ MUST register the divergence at creation time, not retroactively.
 |-------|-------|
 | Artifacts | All BC files: `.factory/specs/behavioral-contracts/ss-NN/BC-*.md` |
 | Upstream template | `behavioral-contract-template.md` |
-| Divergence (a) | Template does not define `bc_id`, `priority`, or `wave` in frontmatter. Ferrochain adds all three. `bc_id` stores the full identifier (e.g., `BC-2.01.001`) for machine extraction. `priority` stores P0/P1/P2. `wave` stores the implementation wave integer. |
-| Divergence (b) | Template defines `traces_to` as a single string (`domain-spec/L2-INDEX.md`). Ferrochain uses `traces_to` as a YAML list allowing multiple specific section anchors (e.g., `domain-spec/capabilities-p0.md#CAP-001` and `domain-spec/invariants.md#DI-008`). |
+| Divergence (a) | Template does not define `bc_id`, `priority`, or `wave` in frontmatter. Pregolya adds all three. `bc_id` stores the full identifier (e.g., `BC-2.01.001`) for machine extraction. `priority` stores P0/P1/P2. `wave` stores the implementation wave integer. |
+| Divergence (b) | Template defines `traces_to` as a single string (`domain-spec/L2-INDEX.md`). Pregolya uses `traces_to` as a YAML list allowing multiple specific section anchors (e.g., `domain-spec/capabilities-p0.md#CAP-001` and `domain-spec/invariants.md#DI-008`). |
 | Classification | AUTHORIZED-UNDOCUMENTED (now documented) |
 | Authorizing decision | Product-owner, v1.0.0-greenfield cycle. The extra fields are consumed by validation hooks (`anchor-resolution-validator.sh`, `verify-bc-priority-counts.sh`). |
 | Rationale | Multi-anchor `traces_to` provides per-BC granular traceability to specific L2 capabilities and invariants, which is more precise than a single index-level pointer. |
@@ -146,7 +146,7 @@ MUST register the divergence at creation time, not retroactively.
 |-------|-------|
 | Artifacts | `.factory/specs/prd-supplements/*.md` (error-taxonomy, nfr-catalog, interface-definitions, test-vectors, observability, module-criticality, bc-authoring-plan) |
 | Upstream template | `prd-supplement-*-template.md` files — all include `traces_to: prd.md` |
-| Divergence | Templates prescribe `traces_to: prd.md` as a required frontmatter field for all PRD supplements. Ferrochain prd-supplement files omit this field. The traceability relationship (supplements trace to PRD) is implied by the `document_type: prd-supplement-*` convention. |
+| Divergence | Templates prescribe `traces_to: prd.md` as a required frontmatter field for all PRD supplements. Pregolya prd-supplement files omit this field. The traceability relationship (supplements trace to PRD) is implied by the `document_type: prd-supplement-*` convention. |
 | Classification | AUTHORIZED-UNDOCUMENTED (likely intentional omission; now documented for confirmation) |
 | Routing | `vsdd-factory:product-owner` — confirm whether omission is intentional or an oversight. If intentional, update this entry to AUTHORIZED-DOCUMENTED. If unintentional, add `traces_to: .factory/specs/prd.md` to all prd-supplement frontmatter. |
 | Date | 2026-07-28 |

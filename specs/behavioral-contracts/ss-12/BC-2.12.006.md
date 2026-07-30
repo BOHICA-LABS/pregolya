@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-21T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.2 (F-P117-01, fix burst 120, 2026-07-19): PC7 — add summary_halt to the enumerated transition set (RunStore must persist all lifecycle transitions including the budget-summarize terminal state per BC-2.10.003 PC8(d) and BC-2.12.003 PC8 post-fix)."
   - "1.3 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'server.rate_limit_store_in_memory' to EC-005 startup WARN emission per observability census (SAP-1). EC-005 and Invariants updated."
 traces_to:
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "4f9075d"
+input-hash: "bcdef3d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -42,7 +42,7 @@ removal_reason: null
 
 ## Description
 
-`ferrochain-server` must not hard-wire in-memory data structures for idempotency,
+`pregolya-server` must not hard-wire in-memory data structures for idempotency,
 rate limiting, or run state storage. These three concerns are exposed as traits
 (`IdempotencyStore`, `RateLimitStore`, `RunStore`) with a pluggable backend seam.
 The default in-memory implementation uses LRU eviction with TTL for idempotency and
@@ -54,7 +54,7 @@ eviction.
 
 ## Preconditions
 
-1. `ferrochain-server` is initialized with an explicit or default store configuration.
+1. `pregolya-server` is initialized with an explicit or default store configuration.
 2. For idempotency: an HTTP request includes `Idempotency-Key: <key>` in headers.
 3. For rate limiting: an HTTP request arrives from a caller with a known `caller_id`.
 4. For run state: a `Run` is created and its lifecycle state transitions are stored.
@@ -91,7 +91,7 @@ eviction.
 **Trait seam:**
 10. All three stores are accessed only through their trait interfaces (`IdempotencyStore`,
     `RateLimitStore`, `RunStore`). No route handler references a concrete store type.
-    This is verifiable by the absence of any concrete store type in `ferrochain-server`
+    This is verifiable by the absence of any concrete store type in `pregolya-server`
     route handler modules.
 
 ## Invariants
@@ -147,7 +147,7 @@ a `500 Internal Server Error`. The Run is not silently left in `in_progress` sta
 the error is surfaced.
 
 ### EC-005: Rate limit across multiple server instances with in-memory backend
-**Scenario:** Two `ferrochain-server` instances share no state; both have in-memory
+**Scenario:** Two `pregolya-server` instances share no state; both have in-memory
 `RateLimitStore`; a caller sends requests to both.
 **Expected behavior:** Each instance enforces the rate limit independently. The
 in-memory default is documented as not suitable for multi-instance rate limiting.
@@ -179,10 +179,10 @@ A `WARN` log is emitted at startup if no distributed `RateLimitStore` is configu
 
 ## Architecture Anchors
 
-- `ferrochain-server/src/store/idempotency_store.rs` — `IdempotencyStore` trait and in-memory LRU implementation
-- `ferrochain-server/src/store/rate_limit_store.rs` — `RateLimitStore` trait and in-memory token-bucket implementation
-- `ferrochain-server/src/store/run_store.rs` — `RunStore` trait and SQLite / in-memory implementations
-- `ferrochain-server/src/routes/` — route handlers using only trait references (no concrete store imports)
+- `pregolya-server/src/store/idempotency_store.rs` — `IdempotencyStore` trait and in-memory LRU implementation
+- `pregolya-server/src/store/rate_limit_store.rs` — `RateLimitStore` trait and in-memory token-bucket implementation
+- `pregolya-server/src/store/run_store.rs` — `RunStore` trait and SQLite / in-memory implementations
+- `pregolya-server/src/routes/` — route handlers using only trait references (no concrete store imports)
 
 ## Story Anchor
 
@@ -203,4 +203,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-server |
+| Module | pregolya-server |

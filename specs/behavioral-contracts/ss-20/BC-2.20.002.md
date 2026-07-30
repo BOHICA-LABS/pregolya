@@ -10,7 +10,7 @@ origin: greenfield
 priority: P0
 subsystem: SS-20
 capability: CAP-026
-crate: ferrochain-core
+crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
@@ -21,7 +21,7 @@ red_gate_source: "ADR-014 Decision 2 Consequences §DI-012 — 'documents return
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-20 Document Retrieval; SECURITY MANDATORY per architect handoff"
   - "1.1 (F-P224/H-3/2026-07-21): VP-2.20.002-A replaced with typed-wrapper specification per architect handoff (H-5 from F-P129-08). Old VP was non-mechanizable ('code review + unit test per graph node'). New VP: graph nodes accept `&GuardedDocuments`; passing `Vec<Document>` directly is a compile-time type error enforced by the type system (ADR-014 Decision 6 / purity-boundary-map). Red Gate = compile_fail test."
-  - "1.2 (F-P130-02/F-P130-04/2026-07-21): (1) Replace 3 nonexistent `ferrochain-guardrail` crate references with canonical `ferrochain-core: core::guardrail` per ADR-014 v1.4 PO Obligations. (2) Add DI-014 to di_anchors — PC2/PC4 and EC-002 already cite DI-014 in body; frontmatter was missing the anchor."
+  - "1.2 (F-P130-02/F-P130-04/2026-07-21): (1) Replace 3 nonexistent `pregolya-guardrail` crate references with canonical `pregolya-core: core::guardrail` per ADR-014 v1.4 PO Obligations. (2) Add DI-014 to di_anchors — PC2/PC4 and EC-002 already cite DI-014 in body; frontmatter was missing the anchor."
   - "1.3 (burst-226/F-P131-01/2026-07-21): PC2 updated per ADR-014 v1.5 severity-bifurcated Fail semantics: Critical Fail → Err(E-CORE-008) propagated, run failed; Non-Critical Fail → error-entry Document substituted at position, batch continues. VP-2.20.002-B scope narrowed to Critical path only. EC-002 updated to reflect Critical-only abort semantics."
   - "1.4 (F-P149-02/burst-250/2026-07-24): PC2 version pin de-pinned: 'ADR-014 v1.5' → 'ADR-014 Decision 6 §GuardedDocuments' (TD-VSDD-091 stable-anchor enforcement, F-P149-02). input-hash updated to 1b115d2 (drift from burst-226 ADR-014 content changes)."
 traces_to:
@@ -33,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "89fca2d"
+input-hash: "d4c75fa"
 extracted_from: null
 modified: []
 deprecated: null
@@ -60,7 +60,7 @@ When a graph node calls `Retriever::get_relevant_documents` and uses the returne
 `Vec<Document>` as graph context (e.g., constructs an `HumanMessage` from page content,
 appends to a conversation window, or feeds into an LLM chain), each document crosses
 the `BoundaryType::RAGRetrieval` ingress boundary defined in BC-2.11.001. The existing
-`BoundaryType::RAGRetrieval` variant in `ferrochain-core: core::guardrail` already covers this seam
+`BoundaryType::RAGRetrieval` variant in `pregolya-core: core::guardrail` already covers this seam
 — no new variant, trait, or guardrail is introduced by this BC. This BC asserts that the
 implementation of every graph node that injects retrieved documents into the prompt or
 context MUST pass those documents through the guardrail before use. The DI-012 invariant
@@ -68,7 +68,7 @@ context MUST pass those documents through the guardrail before use. The DI-012 i
 
 ## Preconditions
 
-1. `BoundaryType::RAGRetrieval` exists in `ferrochain-core: core::guardrail`
+1. `BoundaryType::RAGRetrieval` exists in `pregolya-core: core::guardrail`
    (defined in BC-2.11.001).
 2. A graph node holds `Arc<dyn Retriever>` and calls `get_relevant_documents`.
 3. The `Ok(docs)` result is about to be consumed as prompt content, context, or any
@@ -81,7 +81,7 @@ context MUST pass those documents through the guardrail before use. The DI-012 i
    the guardrail with `boundary_type: BoundaryType::RAGRetrieval`.
 2. The guardrail Fail arm is severity-bifurcated (ADR-014 Decision 6 §GuardedDocuments):
    - `GuardrailSeverity::Critical` Fail → `GuardedDocuments::rag_ingress` returns `Err(E-CORE-008 GuardrailCriticalRejection)`. The graph node propagates the error via `?`; no `GuardedDocuments` is produced; the run transitions to `failed` state.
-   - Non-Critical Fail (High/Medium/Low) → error-entry Document substituted at the rejected document's position (with `page_content: "[GUARDRAIL BLOCKED: <reason>]"`, `metadata.ferrochain.guardrail_blocked: true`); batch continues; `GuardedDocuments` is eventually produced containing the error-entry substitution.
+   - Non-Critical Fail (High/Medium/Low) → error-entry Document substituted at the rejected document's position (with `page_content: "[GUARDRAIL BLOCKED: <reason>]"`, `metadata.pregolya.guardrail_blocked: true`); batch continues; `GuardedDocuments` is eventually produced containing the error-entry substitution.
    DI-014 applies to the Critical path only — non-critical continuation is explicit batch behavior, not silent error swallowing.
 3. The guardrail call occurs BEFORE the document content is used for any purpose in the
    graph context. There is no deferred check or "check at final boundary" alternative
@@ -136,7 +136,7 @@ context MUST pass those documents through the guardrail before use. The DI-012 i
 
 - `architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md` — Decision 2 Consequences §DI-012 (RAGRetrieval guardrail coverage confirmation)
 - `architecture/decisions/ADR-012-self-improvement-primitives.md` / BC-2.11.001 — BoundaryType::RAGRetrieval origin and definition (DO NOT modify)
-- `architecture/purity-boundary-map.md` — `ferrochain-core: core::guardrail` guardrail boundary enforcement
+- `architecture/purity-boundary-map.md` — `pregolya-core: core::guardrail` guardrail boundary enforcement
 
 ## Story Anchor
 
@@ -156,7 +156,7 @@ _[to be filled after story decomposition — Wave 2 SS-20 security story]_
 | Architecture Authority | ADR-014 Decision 2 Consequences §DI-012 |
 | Cross-Reference | BC-2.11.001 (authority for BoundaryType::RAGRetrieval definition — this BC references, does not redefine) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| Module | ferrochain-core / core::retriever (trait); ferrochain-graph / graph-nodes (obligation falls on callers) |
+| Module | pregolya-core / core::retriever (trait); pregolya-graph / graph-nodes (obligation falls on callers) |
 | Priority | P0 |
 | Wave | 2 |
 | Test Types | unit (Red Gate — guardrail-presence test per graph node) |

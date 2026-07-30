@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-23
 capability: CAP-036
-crate: ferrochain-tools
+crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
@@ -24,7 +24,7 @@ changelog:
   - "1.2 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded); reorder trailing section to 'E-TOOLS-001/008; DirEntry Struct' (DirEntry Struct is not an error code and is retained as a structural descriptor after the slash-separated error block). Before: 'E-TOOLS-001; DirEntry Struct'. After: 'E-TOOLS-001/008; DirEntry Struct'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-3 + PC-5); Category::SECURITY → Category::Security (PC-2), Category::TOOL → Category::Tool (PC-3 + PC-5)."
   - "1.4 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check(path) with canonical canonicalize_beneath_root at 3 sites: PC-1 happy-path ('passes' to 'succeeds'), Invariants call-obligation bullet, VP-2.23.004-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout."
-  - "1.5 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to FerrochainError::new() form. PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC3 E-TOOLS-008 NotADirectory: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed. PC5 E-TOOLS-008 generic I/O: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); same phantom-field removal. TD-VSDD-060 sibling sweep: EC-002/EC-005/TV-004 JSON-like notation classified (c) message-component descriptions; left as-is."
+  - "1.5 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to PregolyaError::new() form. PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC3 E-TOOLS-008 NotADirectory: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed. PC5 E-TOOLS-008 generic I/O: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); same phantom-field removal. TD-VSDD-060 sibling sweep: EC-002/EC-005/TV-004 JSON-like notation classified (c) message-component descriptions; left as-is."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -33,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "8f61371"
+input-hash: "b407795"
 extracted_from: null
 modified: []
 deprecated: null
@@ -48,7 +48,7 @@ removal_reason: null
 
 ## Description
 
-`ListDirTool` in `ferrochain-tools::tools::fs` implements the `Tool` trait with
+`ListDirTool` in `pregolya-tools::tools::fs` implements the `Tool` trait with
 `ActionRisk::ReadOnly`. It returns the entries of a directory at a caller-supplied path
 as a JSON array of `DirEntry` objects, each containing `name`, `kind` (File, Dir, or
 Symlink), and `size_bytes` (for files; `null` for directories and symlinks). Before any
@@ -79,14 +79,14 @@ filter at the application layer.
    Entries are sorted lexicographically by `name`. Hidden files (names starting with `.`)
    are included unless excluded by `PathGuard` policy.
 2. **Path confinement violation:** Returns
-   `Err(FerrochainError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
+   `Err(PregolyaError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
    "PathConfinementViolation: path '<path>' is outside the configured PathGuard scope"))`.
 3. **Path is a file, not a directory:** Returns
-   `Err(FerrochainError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
+   `Err(PregolyaError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
    "ListDirTool I/O error on '<path>': NotADirectory"))`.
 4. **Empty directory:** Returns `ToolOutput::Json([])` — zero entries, not an error.
 5. **Permission denied or not found:** Returns
-   `Err(FerrochainError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
+   `Err(PregolyaError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
    "ListDirTool I/O error on '<path>': <io_kind>"))`.
 
 ## Invariants
@@ -98,7 +98,7 @@ filter at the application layer.
   It is NOT read into memory; only stat is called.
 - `ActionRisk::ReadOnly` — `RiskGatePolicy` auto-approve semantics apply (BC-2.05.006).
 - **DI-014 (No Silent Swallowing):** Path violations, permission errors, and not-a-directory
-  errors propagate as `Err(FerrochainError)`. Empty directories return `Ok([])` — not an error.
+  errors propagate as `Err(PregolyaError)`. Empty directories return `Ok([])` — not an error.
 
 ## Edge Cases
 
@@ -137,7 +137,7 @@ filter at the application layer.
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (ListDirTool, stdlib only, no external dep), Decision 3 (ReadOnly ActionRisk), Decision 5 (E-TOOLS-001)
-- `architecture/module-decomposition.md` — SS-23, `tools::fs` module in ferrochain-tools
+- `architecture/module-decomposition.md` — SS-23, `tools::fs` module in pregolya-tools
 
 ## Story Anchor
 
@@ -159,7 +159,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 | Architecture Authority | ADR-020 Decisions 2, 3, and 5 (ListDirTool contract, stdlib-only, ReadOnly ActionRisk, E-TOOLS-001) |
 | Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
 | VP Registration | VP-003 reuse; VP-2.23.004-B/C (unit tests) |
-| Module | ferrochain-tools / tools::fs |
+| Module | pregolya-tools / tools::fs |
 | Priority | P1 |
 | Wave | 1 |
 | Test Types | unit + integration |

@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.3 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). TV-001 table-cell span (E-GRAPH-001) corrected: has code/category/message but lacks component and retry_hint; added `, ..`. PC3 span (E-GRAPH-001) already carries all five non-source fields (component/category/code/retry_hint/message) — CLASS3_VALID_COMPLETE, no change."
 traces_to:
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
-input-hash: "de561d9"
+input-hash: "9f8dd5b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -57,7 +57,7 @@ This is the enforcement mechanism for DI-001's concurrent-write prohibition.
 
 1. The run does NOT commit a final channel value for the contested `LastValue` channel.
 2. The run transitions to `failed` state.
-3. `Err(FerrochainError { component: GRAPH, category: CONCURRENCY, code: E-GRAPH-001, retry_hint: Never, message: "InvalidUpdateError: concurrent writes to LastValue channel '<channel>' from tasks [<task_ids>] in super-step <n>" })` is returned to the run caller.
+3. `Err(PregolyaError { component: GRAPH, category: CONCURRENCY, code: E-GRAPH-001, retry_hint: Never, message: "InvalidUpdateError: concurrent writes to LastValue channel '<channel>' from tasks [<task_ids>] in super-step <n>" })` is returned to the run caller.
 4. The error's `message` field includes:
    - The channel name
    - All task IDs that attempted to write (sorted for determinism)
@@ -109,7 +109,7 @@ This is the enforcement mechanism for DI-001's concurrent-write prohibition.
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | Graph: 2 nodes, both write `state.x = "value"` to same `LastValue` channel in same super-step | `Err(FerrochainError { code: E-GRAPH-001, category: CONCURRENCY, message: "InvalidUpdateError: concurrent writes to LastValue channel 'x' from tasks [node_a, node_b] in super-step 1", .. })` | Happy-path for error case |
+| TV-001 | Graph: 2 nodes, both write `state.x = "value"` to same `LastValue` channel in same super-step | `Err(PregolyaError { code: E-GRAPH-001, category: CONCURRENCY, message: "InvalidUpdateError: concurrent writes to LastValue channel 'x' from tasks [node_a, node_b] in super-step 1", .. })` | Happy-path for error case |
 | TV-002 | Graph: 2 nodes, node_a writes `state.x`, node_b writes `state.y` (different channels) | `Ok(GraphState { x: node_a_value, y: node_b_value })` | No conflict — different channels |
 | TV-003 | Graph: 1 node writes `state.x` once | `Ok(GraphState { x: node_value })` | Single writer — no conflict |
 | TV-004 | Graph: 2 nodes both append to `Append` channel | `Ok(GraphState { items: [node_a_item, node_b_item] })` | Append channels allow concurrent writes |
@@ -130,8 +130,8 @@ This is the enforcement mechanism for DI-001's concurrent-write prohibition.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — concurrent write detection
-- `ferrochain-core/src/errors.rs` — `E-GRAPH-001` definition
+- `pregolya-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — concurrent write detection
+- `pregolya-core/src/errors.rs` — `E-GRAPH-001` definition
 
 ## Story Anchor
 
@@ -152,4 +152,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), P (property) |
-| Module | ferrochain-graph |
+| Module | pregolya-graph |

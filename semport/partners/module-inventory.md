@@ -1,6 +1,6 @@
 ---
 artifact: semport/partners/module-inventory
-project: ferrochain
+project: pregolya
 port_target: langchain partner packages (15) + langchain-tests (standard-tests)
 analyzer_pass: 4
 date: 2026-07-12
@@ -15,7 +15,7 @@ standard_tests_placement: dedicated section in each of the five partners/ files
 # Partner Packages + standard-tests — Module Inventory
 
 Depth per D3: DEEP for **openai, anthropic, ollama**; INVENTORY for the other 12 partners;
-DEEP for **standard-tests** (becomes `ferrochain-standard-tests`, a P0-adjacent
+DEEP for **standard-tests** (becomes `pregolya-standard-tests`, a P0-adjacent
 differentiator per market-intel — it is the conformance gate every provider crate binds to).
 
 LOC counts are non-test source only (excludes `tests/` and `scripts/`), measured on the
@@ -53,7 +53,7 @@ Total partner src ≈ **52,193 LOC** across 15 packages; standard-tests adds **9
    and fireworks/openrouter (OpenAI-shaped wire, own base). These inherit ~all behavior
    from `ChatOpenAI` and override only model list, base_url, and a few param quirks.
    **This is the single most leverage-heavy pattern in the whole partner set**: once
-   `ferrochain-openai`'s `BaseChatOpenAI` equivalent exists, deepseek+xai are <700 LOC each.
+   `pregolya-openai`'s `BaseChatOpenAI` equivalent exists, deepseek+xai are <700 LOC each.
 3. **Embeddings-only / embeddings-primary** — nomic; plus the embeddings classes inside
    openai/ollama/huggingface/mistralai/fireworks/perplexity.
 4. **Vector stores** — chroma, qdrant. These target the `VectorStore` contract (a
@@ -155,7 +155,7 @@ Total partner src ≈ **52,193 LOC** across 15 packages; standard-tests adds **9
 
 ### Notable behaviors (ollama)
 - **Local inference, no API key.** Talks to the `ollama` python client (which wraps the
-  local HTTP server, default `http://localhost:11434`). This is ferrochain's **API-key-free
+  local HTTP server, default `http://localhost:11434`). This is pregolya's **API-key-free
   CI/test path** — see dependency-disposition for the DTU-fake requirements.
 - **Model presence validation (opt-in)**: `validate_model` calls `client.list()` and errors if the named model isn't pulled — a UX affordance absent from cloud providers. **Gated by `validate_model_on_init: bool = False`** (default off); validation only runs when `validate_model_on_init=True`. <!-- [validation-certification-5]: added opt-in note; default is False per chat_models.py:548 -->
 - **URL auth extraction**: `parse_url_with_auth` supports `https://user:pass@host:port` and
@@ -181,7 +181,7 @@ Total partner src ≈ **52,193 LOC** across 15 packages; standard-tests adds **9
 Thin subclass of `langchain-openai`'s `BaseChatOpenAI`. Overrides base_url (`DEEPSEEK_API_BASE`),
 API key env (`DEEPSEEK_API_KEY`), and a `_set_deepseek_version` (renamed to avoid
 shadowing base). Handles the `reasoning_content` field DeepSeek adds. No vendor SDK — rides
-the `openai` SDK via the parent. **Depends entirely on ferrochain-openai's base existing.**
+the `openai` SDK via the parent. **Depends entirely on pregolya-openai's base existing.**
 <!-- [validation-exhaustive]: `_set_deepseek_chat_version` was inaccurate; actual function name is `_set_deepseek_version` (confirmed at L229 of langchain_deepseek/chat_models.py) -->
 
 ### xai (1,015 LOC) — `ChatXAI(BaseChatOpenAI)`
@@ -213,14 +213,14 @@ reasoning before parsing; `WebSearchOptions`/`UserLocation`/`MediaResponse` type
 ### mistralai (2,499 LOC) — `ChatMistralAI` + `MistralAIEmbeddings`
 **No vendor SDK** — direct HTTP via `httpx` + `httpx-sse` (SSE streaming). Uses `tokenizers`
 for token counting (`DummyTokenizer` fallback). This is the cleanest "direct-HTTP" reference
-in the partner set — a useful template for ferrochain's direct-HTTP providers.
+in the partner set — a useful template for pregolya's direct-HTTP providers.
 
 ### huggingface (3,802 LOC) — chat + endpoint LLM + pipeline LLM + 2 embeddings
 `ChatHuggingFace` wraps a TGI (text-generation-inference) endpoint or a local pipeline;
 `HuggingFaceEndpoint`/`HuggingFacePipeline` LLMs; `HuggingFaceEmbeddings` (local
 sentence-transformers — heavy, torch) + `HuggingFaceEndpointEmbeddings` (remote). The local
 pipeline/embeddings paths pull the ML stack (torch/transformers) — **large port surface;
-recommend endpoint-only in ferrochain v1, defer local inference.**
+recommend endpoint-only in pregolya v1, defer local inference.**
 
 ### chroma (1,471 LOC) — `Chroma(VectorStore)`
 Wraps `chromadb`. Add/query/delete/get-by-id, metadata filtering, MMR. numpy for vector math.
@@ -241,7 +241,7 @@ Pure search integration; no model inference.
 
 ## DEEP: standard-tests (`langchain_tests`, 9,820 LOC / 21 files)
 
-Becomes **`ferrochain-standard-tests`** — the conformance suite that every provider crate
+Becomes **`pregolya-standard-tests`** — the conformance suite that every provider crate
 subscribes to. This is the P0-adjacent differentiator: a Rust port that ships a real
 conformance matrix (not ad-hoc per-crate tests) is a market signal of production seriousness.
 

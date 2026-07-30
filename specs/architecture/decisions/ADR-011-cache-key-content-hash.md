@@ -40,22 +40,22 @@ This proxy approach creates two classes of correctness risk:
    receive cache hits scoped to the old tool set. An LLM may reference a tool that no
    longer exists or omit a newly registered tool.
 
-The counter-example principle stated in NE-05: ferrochain prompt-caching MUST key on
+The counter-example principle stated in NE-05: pregolya prompt-caching MUST key on
 a content hash of the fully resolved (instruction bytes, sorted tool declarations) —
 never on a description proxy or on a partial subset of the content.
 
-## Caching Surfaces in ferrochain
+## Caching Surfaces in pregolya
 
 The following surfaces in the architecture involve cache-key computation and are
 governed by this ADR:
 
 | Surface | Crate | Cache-Key Input |
 |---------|-------|-----------------|
-| LLM provider response caching (prompt cache) | ferrochain-core / ferrochain-openai / ferrochain-anthropic / ferrochain-ollama | Content hash of: resolved system instruction bytes + sorted tool declaration bytes |
-| Tool schema lookup / memoization | ferrochain-core / ferrochain-mcp | Content hash of: full serialized tool schema (name + description + input_schema) |
-| Skill / compiled graph lookup (future) | ferrochain-graph | Content hash of: graph definition bytes |
+| LLM provider response caching (prompt cache) | pregolya-core / pregolya-openai / pregolya-anthropic / pregolya-ollama | Content hash of: resolved system instruction bytes + sorted tool declaration bytes |
+| Tool schema lookup / memoization | pregolya-core / pregolya-mcp | Content hash of: full serialized tool schema (name + description + input_schema) |
+| Skill / compiled graph lookup (future) | pregolya-graph | Content hash of: graph definition bytes |
 
-If a new caching surface is introduced in any ferrochain crate, the implementer MUST
+If a new caching surface is introduced in any pregolya crate, the implementer MUST
 apply the hash-input contract defined in the Decision section and add a corresponding
 CI lint exemption acknowledgment comment.
 
@@ -88,7 +88,7 @@ Where `canonical_content_bytes` is the deterministic concatenation of:
 
 ### Implementation Note
 
-The `sha2` crate (already in the ferrochain dependency graph via adk-rust's
+The `sha2` crate (already in the pregolya dependency graph via adk-rust's
 `content-addressed skill IDs` pattern, see `dependency-disposition.md` `sha2` row)
 provides `Sha256`. Use `sha2::Sha256::digest(bytes)` and encode the result as a
 lowercase hex string.
@@ -109,7 +109,7 @@ The lint gate implementation requirement:
 
 - **Gate:** `cargo xtask deny-description-cache-key` (Semgrep rule or AST scan)
 - **What it scans:** All `cache_key` / `CacheKey` / `cache_key_for` call sites in
-  `ferrochain-*` library crates
+  `pregolya-*` library crates
 - **Failure condition:** Any call site passes a description string, agent name, or
   other non-hash proxy as a cache key without a `#[allow(description_cache_key)]`
   suppression comment approved by an architect ADR review
@@ -133,10 +133,10 @@ specification for the lint gate's semantic contract.
 
 ## Consequences
 
-- All LLM provider caching implementations in ferrochain MUST compute cache keys per
+- All LLM provider caching implementations in pregolya MUST compute cache keys per
   the hash-input contract above before any response is stored or retrieved.
 - Tool schema memoization MUST include the full serialized schema in the hash input.
-- The `sha2` crate becomes a direct (non-dev) dependency of `ferrochain-core`.
+- The `sha2` crate becomes a direct (non-dev) dependency of `pregolya-core`.
 - Story-writer will anchor the cache-key lint gate story to this ADR (ADR-011) and to
   PRD §9 NE-05 row.
 - Two agents with identical descriptions but different resolved instructions MUST produce

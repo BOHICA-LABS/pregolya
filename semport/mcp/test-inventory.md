@@ -1,10 +1,10 @@
 ---
 artifact: semport/mcp/test-inventory
-project: ferrochain
+project: pregolya
 port_target: langchain-mcp-adapters (0.3.0)
 analyzer_pass: 5
 date: 2026-07-12
-purpose: identify tests that LOCK the adapter's behavioral contracts → Red-Gate vectors for ferrochain-mcp
+purpose: identify tests that LOCK the adapter's behavioral contracts → Red-Gate vectors for pregolya-mcp
 ---
 
 # langchain-mcp-adapters — Test Inventory
@@ -25,9 +25,9 @@ purpose: identify tests that LOCK the adapter's behavioral contracts → Red-Gat
 | `tests/conftest.py`, `tests/utils.py` | 168 | fixtures |
 
 Total test LOC **3,056** (1.6× production). Tests use real in-process FastMCP
-servers over stdio/http → ferrochain should build equivalent rmcp test servers.
+servers over stdio/http → pregolya should build equivalent rmcp test servers.
 
-## Contract-LOCKING tests (Red-Gate vectors for ferrochain-mcp)
+## Contract-LOCKING tests (Red-Gate vectors for pregolya-mcp)
 
 ### Content-block translation (the 6-way mapping — port exactly)
 - `test_convert_empty_text_content`, `test_convert_single_text_content`,
@@ -39,7 +39,7 @@ servers over stdio/http → ferrochain should build equivalent rmcp test servers
 - `test_convert_embedded_resource_blob_image` / `_blob_file` — embedded blob →
   image vs file by mime prefix.
 - `test_convert_audio_content_raises` — **AudioContent → NotImplementedError**
-  (lock the "not supported" contract; ferrochain must raise, not silently drop).
+  (lock the "not supported" contract; pregolya must raise, not silently drop).
 - `test_convert_with_structured_content` / `test_convert_mixed_content_with_
   structured_content` — artifact extraction alongside content.
 
@@ -75,14 +75,14 @@ servers over stdio/http → ferrochain should build equivalent rmcp test servers
 - `test_load_mcp_tools_with_http_variations` (parametrized transport) — http /
   streamable-http / sse aliases all work.
 - `test_load_mcp_tools_with_custom_httpx_client_factory` / `_sse` — the
-  `McpHttpClientFactory` protocol → ferrochain reqwest-factory (rustls-tls).
+  `McpHttpClientFactory` protocol → pregolya reqwest-factory (rustls-tls).
 - `test_parallel_tool_invocation_across_multiple_servers` — asyncio.gather
   fan-out → Rust JoinSet/try_join_all parity.
 
 ### Interceptors (test_interceptors.py + test_tools.py)
 - `test_mcp_tools_with_agent_and_command_interceptor` — interceptor returning a
   langgraph `Command`; onion composition; header mutation. Route Command to
-  ferrochain-graph.
+  pregolya-graph.
 - test_interceptors.py (323 LOC): override immutability, multi-call (retry),
   skip (short-circuit/cache), first=outermost ordering.
 
@@ -99,8 +99,8 @@ servers over stdio/http → ferrochain should build equivalent rmcp test servers
   in test_client.py, NOT in a dedicated sessions test file.
 - **`test_get_tools_with_name_conflict`** is in `test_tools.py`, not here.
 - **`MultiServerMCPClient.__aenter__` NotImplementedError has NO lock test
-  anywhere in the Python suite** (the behavior exists in client.py:267-291
-  but is untested). ferrochain-mcp must add this test. [validation-exhaustive]
+  anywhere in the Python suite** (the behavior exists in `MultiServerMCPClient.__aenter__`
+  but is untested). pregolya-mcp must add this test. [validation-exhaustive]
 
 ### Prompts (test_prompts.py)
 - user→Human, assistant→AI, unsupported role/content → ValueError.
@@ -118,10 +118,10 @@ servers over stdio/http → ferrochain should build equivalent rmcp test servers
   (server_name/tool_name).
 
 ## Coverage / parity notes
-- Tests rely on live FastMCP servers → ferrochain needs equivalent **rmcp-based
+- Tests rely on live FastMCP servers → pregolya needs equivalent **rmcp-based
   test servers** (math/weather/time) as fixtures; the assertions (tool outputs,
   error shapes) become the parity oracle.
-- `pytest-socket` gates network; ferrochain uses `#[ignore]` + in-process rmcp
+- `pytest-socket` gates network; pregolya uses `#[ignore]` + in-process rmcp
   servers per SID-1 (drive behavior without external network).
 - **Gap:** websocket transport has no substantive behavioral test (matches its
   optional-extra status) → DEFER websocket with a documented dependency.
@@ -131,7 +131,7 @@ servers over stdio/http → ferrochain should build equivalent rmcp test servers
 pass: 5
 artifact: test-inventory
 package: langchain-mcp-adapters
-crate: ferrochain-mcp
+crate: pregolya-mcp
 test_loc: 3056
 red_gate_vector_families: 10
 gates_on_rmcp: [elicitation]

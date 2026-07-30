@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-22
 capability: CAP-033
-crate: ferrochain-ollama
+crate: pregolya-ollama
 wave: 2
 phase: 1b
 producer: product-owner
@@ -19,7 +19,7 @@ di_anchors: [DI-008, DI-009, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-22 Embeddings"
   - "1.1 (F-P130-09/2026-07-21): Add DI-009 to di_anchors — PC4/INV-2 specify the mandatory 30s timeout (including localhost) but did not cite DI-009; add BC-2.14.004 cross-reference in PC4 and INV-2 prose."
-  - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). 9 CLASS3_ASCII_ELLIPSIS_VIOLATION corrected — PC2, PC5, EC-001, EC-002, EC-003, EC-004, EC-005, TV-004, TV-005 each had `Err(FerrochainError { ... })` — replaced `...` with `..` in all nine. No behavioral change."
+  - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). 9 CLASS3_ASCII_ELLIPSIS_VIOLATION corrected — PC2, PC5, EC-001, EC-002, EC-003, EC-004, EC-005, TV-004, TV-005 each had `Err(PregolyaError { ... })` — replaced `...` with `..` in all nine. No behavioral change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-033
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -30,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "dc5b1d6"
+input-hash: "f83822c"
 extracted_from: null
 modified: []
 deprecated: null
@@ -45,7 +45,7 @@ removal_reason: null
 
 ## Description
 
-`EmbeddingsOllama` is a first-party `Embeddings` implementation in `ferrochain-ollama:
+`EmbeddingsOllama` is a first-party `Embeddings` implementation in `pregolya-ollama:
 ollama::embeddings` for local Ollama deployments. The model name is fully configurable
 with no default (callers must specify the locally-pulled model, e.g., `"nomic-embed-text"`
 or `"mxbai-embed-large"`). No API key is required — Ollama is a local service authenticated
@@ -75,7 +75,7 @@ unconditional and applies even for `localhost` targets.
    - `embed_documents(texts)`: sends one `POST <base_url>/api/embeddings` request per text
      (serial), with body `{ "model": "<model>", "prompt": "<text>" }`. Returns `Ok(vecs)` with
      one vector per text. If any single-text call fails, the whole `embed_documents` call
-     returns `Err(FerrochainError { .. })` — no partial result (DI-014).
+     returns `Err(PregolyaError { .. })` — no partial result (DI-014).
    - `embed_query(text)`: sends `POST <base_url>/api/embeddings` with
      `{ "model": "<model>", "prompt": "<text>" }`. Returns `Ok(vec)`.
 3. **No API key:** `EmbeddingsOllama` has no `api_key` field. No `Authorization` header is set.
@@ -84,7 +84,7 @@ unconditional and applies even for `localhost` targets.
    see BC-2.14.004). This applies for `localhost` targets — the timeout is unconditional and
    not disabled for local connections.
 5. **Model validation:** not enforced at construction — invalid or unpulled model names fail
-   at the first API call with `Err(FerrochainError { .. })` from the HTTP response body.
+   at the first API call with `Err(PregolyaError { .. })` from the HTTP response body.
 
 ## Invariants
 
@@ -109,11 +109,11 @@ unconditional and applies even for `localhost` targets.
 
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
-| EC-001 | `use_legacy_endpoint: false`, Ollama binary predates `/api/embed` (returns 404) | `Err(FerrochainError { .. })` — 404 propagates; no silent fallback to `/api/embeddings` |
-| EC-002 | `use_legacy_endpoint: true`, batch of 5 texts; 3rd request returns 500 | `Err(FerrochainError { .. })` — first 2 embeddings discarded; Err for whole call |
-| EC-003 | Ollama process not running (connection refused) | `Err(FerrochainError { .. })` wrapping the reqwest connection error; no retry |
-| EC-004 | Model not pulled locally (Ollama returns 404 with body `"model not found"`) | `Err(FerrochainError { .. })` — error message includes model name if safe to include |
-| EC-005 | Request takes > 30 seconds (slow local model) | `Err(FerrochainError { .. })` wrapping the reqwest timeout; 30s applies even for localhost |
+| EC-001 | `use_legacy_endpoint: false`, Ollama binary predates `/api/embed` (returns 404) | `Err(PregolyaError { .. })` — 404 propagates; no silent fallback to `/api/embeddings` |
+| EC-002 | `use_legacy_endpoint: true`, batch of 5 texts; 3rd request returns 500 | `Err(PregolyaError { .. })` — first 2 embeddings discarded; Err for whole call |
+| EC-003 | Ollama process not running (connection refused) | `Err(PregolyaError { .. })` wrapping the reqwest connection error; no retry |
+| EC-004 | Model not pulled locally (Ollama returns 404 with body `"model not found"`) | `Err(PregolyaError { .. })` — error message includes model name if safe to include |
+| EC-005 | Request takes > 30 seconds (slow local model) | `Err(PregolyaError { .. })` wrapping the reqwest timeout; 30s applies even for localhost |
 | EC-006 | `embed_documents(vec![])` with legacy endpoint | `Ok(vec![])` — zero requests sent; not an error |
 
 ## Canonical Test Vectors
@@ -123,8 +123,8 @@ unconditional and applies even for `localhost` targets.
 | TV-001 | `embed_documents(vec!["hello"])` with `use_legacy_endpoint: false`, mock `/api/embed` returning 768-dim vector | `Ok(vec![[f32; 768]])` | happy-path (default endpoint) |
 | TV-002 | `embed_query("hello")` with `use_legacy_endpoint: false` | `Ok([f32; 768])` | happy-path (default endpoint, single query) |
 | TV-003 | `embed_documents(vec!["hello"])` with `use_legacy_endpoint: true`, mock `/api/embeddings` | `Ok(vec![[f32; 768]])` | happy-path (legacy endpoint) |
-| TV-004 | `use_legacy_endpoint: false`; Ollama returns 404 for `/api/embed` | `Err(FerrochainError { .. })` — no fallback to `/api/embeddings` | error-case (no auto-fallback) |
-| TV-005 | `use_legacy_endpoint: true`; 2-text batch; second request returns 500 | `Err(FerrochainError { .. })` — first embedding discarded | error-case (DI-014 partial-failure) |
+| TV-004 | `use_legacy_endpoint: false`; Ollama returns 404 for `/api/embed` | `Err(PregolyaError { .. })` — no fallback to `/api/embeddings` | error-case (no auto-fallback) |
+| TV-005 | `use_legacy_endpoint: true`; 2-text batch; second request returns 500 | `Err(PregolyaError { .. })` — first embedding discarded | error-case (DI-014 partial-failure) |
 
 ## Verification Properties
 
@@ -140,8 +140,8 @@ unconditional and applies even for `localhost` targets.
 
 ## Architecture Anchors
 
-- `architecture/module-decomposition.md` — SS-22, `ollama::embeddings` module in ferrochain-ollama
-- `architecture/decisions/ADR-017-embeddings-trait-provider-integration.md` — Decision 3 (ferrochain-ollama gains embeddings, no API key, `/api/embed` preferred, `use_legacy_endpoint` toggle for `/api/embeddings`, reqwest constraints) and v1.1 (endpoint preference and toggle details)
+- `architecture/module-decomposition.md` — SS-22, `ollama::embeddings` module in pregolya-ollama
+- `architecture/decisions/ADR-017-embeddings-trait-provider-integration.md` — Decision 3 (pregolya-ollama gains embeddings, no API key, `/api/embed` preferred, `use_legacy_endpoint` toggle for `/api/embeddings`, reqwest constraints) and v1.1 (endpoint preference and toggle details)
 - `CLAUDE.md` §Code Conventions — `reqwest TLS backend — rustls-tls mandatory`, `HTTP client timeout`
 
 ## Story Anchor
@@ -159,9 +159,9 @@ _[to be filled after story decomposition — Wave 2 SS-22 story]_
 | Source L2 Capability | CAP-033 |
 | Capability Anchor Justification | CAP-033 ("EmbeddingsOllama — Model-Configurable; /api/embed (Default); use_legacy_endpoint Toggle; No API Key") per capabilities-p1-p2.md §CAP-033 — this BC specifies the EmbeddingsOllama implementation with no-API-key local deployment, POST /api/embed preferred endpoint with use_legacy_endpoint toggle for /api/embeddings, reqwest/rustls-tls/30s unconditional (including localhost), and DI-014 batch partial-failure semantics that CAP-033 defines as a BC surface distinct from EmbeddingsOpenAI |
 | L2 Domain Invariants | DI-008 (embed_documents/embed_query return Result; no .unwrap()), DI-009 (reqwest client built with .timeout(Duration::from_secs(30)) — unconditional including localhost; per BC-2.14.004), DI-014 (legacy endpoint batch partial-failure propagates as Err for entire call; already-received embeddings are NOT returned as partial list) |
-| Architecture Authority | ADR-017 Decision 3 and v1.1 (ferrochain-ollama scope, /api/embed preferred, use_legacy_endpoint, no API key, reqwest constraints) |
+| Architecture Authority | ADR-017 Decision 3 and v1.1 (pregolya-ollama scope, /api/embed preferred, use_legacy_endpoint, no API key, reqwest constraints) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| Module | ferrochain-ollama / ollama::embeddings |
+| Module | pregolya-ollama / ollama::embeddings |
 | Priority | P1 |
 | Wave | 2 |
 | Test Types | unit (mock HTTP server — endpoint selection, batch serialization, no auto-fallback) |

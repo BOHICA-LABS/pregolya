@@ -1,7 +1,7 @@
 ---
 artifact: semport/partners/rust-translation-strategy
-project: ferrochain
-port_target: langchain partner packages + standard-tests → ferrochain-{openai,anthropic,ollama,...} + ferrochain-standard-tests
+project: pregolya
+port_target: langchain partner packages + standard-tests → pregolya-{openai,anthropic,ollama,...} + pregolya-standard-tests
 analyzer_pass: 4
 date: 2026-07-12
 note: strategy only — NO Rust code committed; signatures are illustrative sketches
@@ -15,14 +15,14 @@ consistency: aligned with semport/core/rust-translation-strategy.md (async-first
 
 Difficulty scale: 🟢 easy · 🟡 moderate · 🟠 hard · 🔴 very hard / research-grade.
 
-The provider crates are **translation layers over `ferrochain-core`'s `ChatModel: Runnable`
+The provider crates are **translation layers over `pregolya-core`'s `ChatModel: Runnable`
 trait**. Their hard problems are: (1) faithful content-block ↔ wire translation, (2) streaming
 event decode with correct chunk-merge, (3) the shared HTTP infrastructure, and (4) the
 conformance-suite crate. Everything else is registry/config glue.
 
 ## 1. Shared partner infrastructure — 🟠 (build FIRST)
 
-A `ferrochain-partner-http` crate (name TBD at architecture) that every provider crate depends
+A `pregolya-partner-http` crate (name TBD at architecture) that every provider crate depends
 on. This is where the vendor-SDK-equivalent transport lives, since we chose direct-HTTP:
 
 ```rust
@@ -50,7 +50,7 @@ Owns, per CLAUDE.md:
   `secret_from_env`/`from_env` precedence (explicit param → env var → default/error) and the
   base_url precedence chain (openai: `base_url` → `OPENAI_API_BASE` → `OPENAI_BASE_URL`).
 - **typed error mapping** incl. per-provider `ContextOverflowError` (thiserror enum in the
-  ferrochain error taxonomy).
+  pregolya error taxonomy).
 - **per-chunk stream timeout** → `tokio::time::timeout` wrapping each stream item future,
   yielding a `StreamChunkTimeoutError` variant.
 
@@ -58,7 +58,7 @@ Open question: whether `tower` middleware (retry/timeout `Layer`s) is used here 
 consistent with core's `Runnable`≈`tower::Service` direction. Recommend yes — retry/timeout as
 tower layers composes with the core Runnable stack.
 
-## 2. openai → ferrochain-openai — 🔴 (largest, highest leverage)
+## 2. openai → pregolya-openai — 🔴 (largest, highest leverage)
 
 The keystone provider crate because 5 other providers ride its wire. Structure:
 
@@ -87,7 +87,7 @@ The keystone provider crate because 5 other providers ride its wire. Structure:
 
 `#[non_exhaustive]` on all public config/message/error types per CLAUDE.md.
 
-## 3. anthropic → ferrochain-anthropic — 🟠
+## 3. anthropic → pregolya-anthropic — 🟠
 
 - **message translation** — `_format_messages` + `_merge_messages` (consecutive same-role
   merge) are the crux; must be byte-faithful (conformance `test_double_messages_conversation`
@@ -99,13 +99,13 @@ The keystone provider crate because 5 other providers ride its wire. Structure:
   streaming assembles `thinking_delta`+`signature_delta`; structured-output-with-thinking →
   clone model with thinking off (`_get_llm_for_structured_output_when_thinking_is_enabled`). 🟠
 - **prompt caching** — `cache_control` data struct + a `PromptCachingMiddleware` (ties to
-  ferrochain's middleware trait from semport/langchain §1/§6); tag last block / last tool /
+  pregolya's middleware trait from semport/langchain §1/§6); tag last block / last tool /
   model_settings; surface cache tokens in usage metadata. 🟡
 - **streaming decode** — `_make_message_chunk_from_anthropic_event` → a `match` over the
   Anthropic SSE event enum. 🟠
 - **server tools** (bash/file-search/code-exec) → middleware impls; P2/P3. 🟠
 
-## 4. ollama → ferrochain-ollama — 🟡 (also the DTU + CI path)
+## 4. ollama → pregolya-ollama — 🟡 (also the DTU + CI path)
 
 - **transport**: direct-HTTP NDJSON streaming (not SSE) via `post_ndjson`. 🟡
 - **`parse_url_with_auth`** → PORT exactly (IPv6-safe, percent-decode, Basic-auth header);
@@ -122,7 +122,7 @@ citations/reasoning parsers). mistralai: direct-HTTP + HF `tokenizers`. huggingf
 endpoint-only in v1 (defer local torch). chroma/qdrant: vectorstore crates, later wave (qdrant
 MAP official Rust client). nomic/exa: trivial direct-HTTP. All bind the shared infra crate.
 
-## 6. standard-tests → ferrochain-standard-tests — 🟠 (P0-adjacent; the differentiator)
+## 6. standard-tests → pregolya-standard-tests — 🟠 (P0-adjacent; the differentiator)
 
 This is the marquee mapping. Goal: a Rust crate that, like `langchain-tests`, lets a provider
 crate subscribe to a conformance matrix and be forced to pass mandatory behaviors.
@@ -206,7 +206,7 @@ provider secrets in CI (see dependency-disposition §5). Snapshot serdes tests �
 
 ### 6f. Async duality
 Python has mirrored sync+async conformance (`test_invoke`/`test_ainvoke`, sync+async vectorstore
-suites). Ferrochain is async-first (CLAUDE.md), so the async variant IS the primary; the sync
+suites). Pregolya is async-first (CLAUDE.md), so the async variant IS the primary; the sync
 "a"-less tests collapse to the same async test (or a thin `block_on` wrapper test if a sync
 facade exists). This halves the vectorstore/cache/base_store/indexer suite sizes. 🟢
 
@@ -214,11 +214,11 @@ facade exists). This halves the vectorstore/cache/base_store/indexer suite sizes
 
 | Subsystem | Difficulty | Primary risk |
 |---|---|---|
-| ferrochain-partner-http (shared) | 🟠 | rustls-tls + timeout + backon retry parity with vendor SDK behavior; SSE + NDJSON streaming; credential newtypes incl. Ollama URL-embedded auth |
+| pregolya-partner-http (shared) | 🟠 | rustls-tls + timeout + backon retry parity with vendor SDK behavior; SSE + NDJSON streaming; credential newtypes incl. Ollama URL-embedded auth |
 | openai (dual API + Responses stream cursor) | 🔴 | stateful Responses stream decoder; schemars vs OpenAI json_schema acceptance; tiktoken image-token formula parity |
 | anthropic (merge + thinking + caching) | 🟠 | `_merge_messages` byte-fidelity (conformance-locked); thinking↔structured-output interaction |
 | ollama + DTU fake | 🟡 | NDJSON streaming; URL-auth parsing; DTU-fake surface completeness |
-| ferrochain-standard-tests | 🟠 | macro-generated matrix + no-opt-out guard + VCR record/replay; the differentiator |
+| pregolya-standard-tests | 🟠 | macro-generated matrix + no-opt-out guard + VCR record/replay; the differentiator |
 | thin subclasses (deepseek/xai) | 🟢 | gated on openai base existing |
 | vectorstores (chroma/qdrant) | 🟡 | later wave; idempotency/ordering invariants |
 
@@ -232,7 +232,7 @@ facade exists). This halves the vectorstore/cache/base_store/indexer suite sizes
    Blocks openai json_schema + anthropic tool schema + ollama format.
 3. **ADR: conformance-suite shape** — macro-generated test matrix + capability trait + no-opt-out
    guard + VCR layer. Freeze the macro API before the first provider crate subscribes.
-4. **ADR: ferrochain-partner-http surface** — retry (backon) semantics, per-chunk stream timeout,
+4. **ADR: pregolya-partner-http surface** — retry (backon) semantics, per-chunk stream timeout,
    credential newtype set, base_url/proxy precedence; whether retry/timeout are `tower` layers.
 5. **ADR: OpenAI-wire reuse** — one shared `openai-wire` module serving openai + deepseek + xai
    (+ groq/fireworks/openrouter where shaped) vs per-crate duplication.

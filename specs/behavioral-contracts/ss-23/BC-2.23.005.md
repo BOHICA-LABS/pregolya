@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-23
 capability: CAP-037
-crate: ferrochain-tools
+crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
@@ -24,12 +24,12 @@ changelog:
   - "1.1 (Burst-232/2026-07-22): Fix Category::CONFIGURATION → Category::VAL in PC-4 (E-TOOLS-007 BashRiskTierViolation). CONFIGURATION is not in the canonical 12-member Category enum; E-TOOLS-007 is VAL per error-taxonomy v1.31. Gate #33 reverse-verify E-TOOLS-007 ↔ BC-2.23.005: taxonomy VAL ↔ BC PC-4 VAL — PASS."
   - "1.2 (F-P134-06/2026-07-22): Re-anchor DI-009 (HTTP connection timeout) → DI-015 (Subprocess Execution Timeout) per architect adjudication of finding F-P134-06. di_anchors [DI-009,DI-014]→[DI-014,DI-015]; traces_to DI-009→DI-015; Description, PC-3, Invariants DI-009 analog bullet, and Traceability L2 Invariants row updated. Gate #28 F-P134-06 close. input-hash refreshed to 835edd0 (invariants.md updated by BA to mint DI-015; final stable hash after BA writes settled)."
   - "1.3 (burst-235/F-P135-05/2026-07-22): Fix four occurrences of wrong implementation phrasing 'tokio::time::timeout over/wrapping tokio::process::Command' (Description, PC-3, Invariants DI-015 bullet, Traceability) — implied BashTool calls tokio::process::Command directly, contradicting the sandbox-mandatory Invariant. Correct: tokio::time::timeout wraps the sandbox backend execute() call; tokio::process::Command is managed by sandbox::process internally. Architect adjudication F-P135-05."
-  - "1.4 (burst-238/F-P138-03/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-013' (VP-INDEX v1.5 burst-232 seeded VP-013 Kani P1; ferrochain-tools risk_floor_rejects_below_medium). Both sites updated (VP Anchors section + Traceability VP Registration row). Gate #28 close F-P138-03."
+  - "1.4 (burst-238/F-P138-03/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-013' (VP-INDEX v1.5 burst-232 seeded VP-013 Kani P1; pregolya-tools risk_floor_rejects_below_medium). Both sites updated (VP Anchors section + Traceability VP Registration row). Gate #28 close F-P138-03."
   - "1.5 (burst-247/F-P146-02+OBS-naming/2026-07-24): (1) H1 title — remove payload flag E-TOOLS-005 from title error-code enumeration per SS-23 title policy (Ok-path payload flags excluded from raised-code enumeration). Before: 'E-TOOLS-004/005/007'. After: 'E-TOOLS-004/007'. E-TOOLS-005 is retained in the body as a payload annotation (BashOutput.truncated) — it is not removed from the contract, only from the raised-code title list. (2) PC-2 body — align truncation flag name from informal 'BashOutputTruncated'-style to canonical field-path notation 'BashOutput.truncated' per OBS naming-anchor (error-taxonomy v1.37 adds explicit canonical-field-path marker for E-TOOLS-005). TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
   - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-3 + PC-4); Category::TIMEOUT → Category::Timeout (PC-3), Category::VAL → Category::Val (PC-4)."
   - "1.7 (F-P170-16/burst-272/2026-07-25): Adjudication — canonical method name is ToolConfig::override_risk (ADR-020 Decision 3 introduction form; majority usage in PC3/ECs/TVs; VP-013 capabilities-p1-p2.md). Fix three set_risk sites: (1) §Invariants 'Risk floor' paragraph — two occurrences BashTool::set_risk(ReadOnly) and BashTool::set_risk(Low) → ToolConfig::override_risk(ActionRisk::ReadOnly) and ToolConfig::override_risk(ActionRisk::Low). (2) §Verification Properties VP-013 row — same fix. set_risk appeared only in prose/invariant/anchor sentences; ToolConfig::override_risk is the architectural name per ADR-020 Decision 3."
-  - "1.8 (F-P171a-02b/burst-273/2026-07-25): Lifecycle adjudication — ToolConfig::override_risk is a builder-consuming validator (signature: override_risk(self, risk: ActionRisk) -> Result<ToolConfig, FerrochainError>); it returns Err immediately at call time; the registry never receives an invalid ToolConfig. Deliberate spec amendment per CLAUDE.md precedence rule 1 (BC supersedes for contract semantics). (1) PC-4 header: 'Risk floor violation at startup' → 'Risk floor violation at ToolConfig::override_risk call time'. (2) PC-4 body: 'At ToolRegistry::register time' → 'At ToolConfig::override_risk call time'. (3) EC-004 Description: 'at registry time' → 'at ToolConfig::override_risk call time'. TD-VSDD-060 sibling sweep: VP-013.md §BC Traceability EC-004/EC-005 and §Proof Harness cite 'registry time' and 'registration logic' — routed to architect for VP-013 body update (architect scope)."
-  - "1.9 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to FerrochainError::new() form. PC3 E-TOOLS-004 BashTimeout: ::new(Component::Tools, Category::Timeout, RetryHint::Never, ...). PC4 E-TOOLS-007 BashRiskTierViolation: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). TD-VSDD-060 sibling sweep: no other struct-literal construction examples found in this BC."
+  - "1.8 (F-P171a-02b/burst-273/2026-07-25): Lifecycle adjudication — ToolConfig::override_risk is a builder-consuming validator (signature: override_risk(self, risk: ActionRisk) -> Result<ToolConfig, PregolyaError>); it returns Err immediately at call time; the registry never receives an invalid ToolConfig. Deliberate spec amendment per CLAUDE.md precedence rule 1 (BC supersedes for contract semantics). (1) PC-4 header: 'Risk floor violation at startup' → 'Risk floor violation at ToolConfig::override_risk call time'. (2) PC-4 body: 'At ToolRegistry::register time' → 'At ToolConfig::override_risk call time'. (3) EC-004 Description: 'at registry time' → 'at ToolConfig::override_risk call time'. TD-VSDD-060 sibling sweep: VP-013.md §BC Traceability EC-004/EC-005 and §Proof Harness cite 'registry time' and 'registration logic' — routed to architect for VP-013 body update (architect scope)."
+  - "1.9 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to PregolyaError::new() form. PC3 E-TOOLS-004 BashTimeout: ::new(Component::Tools, Category::Timeout, RetryHint::Never, ...). PC4 E-TOOLS-007 BashRiskTierViolation: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). TD-VSDD-060 sibling sweep: no other struct-literal construction examples found in this BC."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-037
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -39,7 +39,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "8f61371"
+input-hash: "b407795"
 extracted_from: null
 modified: []
 deprecated: null
@@ -54,8 +54,8 @@ removal_reason: null
 
 ## Description
 
-`BashTool` in `ferrochain-tools::tools::shell` implements the `Tool` trait with default
-`ActionRisk::High`. It executes a shell command via the ferrochain-sandbox WASM/container
+`BashTool` in `pregolya-tools::tools::shell` implements the `Tool` trait with default
+`ActionRisk::High`. It executes a shell command via the pregolya-sandbox WASM/container
 backend (BC-2.13.001–003); direct OS process execution outside the sandbox policy is
 prohibited. Output is captured in a `BashOutput { stdout: String, stderr: String,
 exit_code: i32, truncated: bool }` struct. A `max_output_bytes` limit (default 256 KiB)
@@ -68,7 +68,7 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 
 ## Preconditions
 
-1. `BashTool` is constructed with a sandbox policy reference (ferrochain-sandbox, BC-2.13.001)
+1. `BashTool` is constructed with a sandbox policy reference (pregolya-sandbox, BC-2.13.001)
    and optional `BashConfig { max_output_bytes: u64 (default 262,144), max_duration: Duration (default 30s) }`.
 2. The caller invokes the tool with JSON args `{ "command": "<shell-command-string>" }`.
 3. `ActionRisk::High` is the default annotated risk tier; application may lower to `Medium`
@@ -97,19 +97,19 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
    wrapping the sandbox backend `execute()` call fires; the sandbox kills the subprocess
    (ProcessBackend via `.kill_on_drop(true)` async drop; WASM/container backends via runtime-level
    process termination). The tool returns
-   `Err(FerrochainError::new(Component::Tools, Category::Timeout, RetryHint::Never, "E-TOOLS-004",
+   `Err(PregolyaError::new(Component::Tools, Category::Timeout, RetryHint::Never, "E-TOOLS-004",
    "BashTimeout: command exceeded max_duration of <seconds>s"))`. This raise-condition
    directly enacts DI-015 (Subprocess Execution Timeout): exceed `max_duration` → terminate
    process → structured `E-TOOLS-004` error.
 4. **Risk floor violation at `ToolConfig::override_risk` call time:** `ToolConfig::override_risk(ActionRisk::ReadOnly)` or
    `override_risk(ActionRisk::Low)` called on a `BashTool` instance. At `ToolConfig::override_risk`
    call time the builder-consuming validator returns
-   `Err(FerrochainError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-007",
+   `Err(PregolyaError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-007",
    "BashRiskTierViolation: BashTool risk tier cannot be lowered below Medium; attempted: '<tier>'"))`.
    The registry never receives an invalid ToolConfig; the graph does not start.
 5. **Sandbox policy violation:** The command attempts an operation disallowed by the sandbox
-   policy (ferrochain-sandbox BC-2.13.002). The sandbox returns an error before the command
-   executes; this propagates as `Err(FerrochainError)` from the sandbox namespace.
+   policy (pregolya-sandbox BC-2.13.002). The sandbox returns an error before the command
+   executes; this propagates as `Err(PregolyaError)` from the sandbox namespace.
 
 ## Invariants
 
@@ -117,7 +117,7 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
   `ToolConfig::override_risk(ActionRisk::Low)` on a `BashTool` instance ALWAYS return `Err(E-TOOLS-007)`. No code path allows these
   tiers on BashTool. This is a framework safety invariant provable by Kani: the risk floor
   check is a pure enum comparison (`risk < ActionRisk::Medium` → error) with no side effects.
-- All sandbox execution is via ferrochain-sandbox (BC-2.13.001–003). There is no fallback
+- All sandbox execution is via pregolya-sandbox (BC-2.13.001–003). There is no fallback
   direct OS execution path.
 - `max_output_bytes` truncation is applied BEFORE returning to the caller; the sandbox
   buffer is bounded and does not grow unboundedly.
@@ -125,7 +125,7 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
   governing subprocess wall-clock timeout, enforced via `tokio::time::timeout` wrapping the
   sandbox backend `execute()` call; `tokio::process::Command` is managed by `sandbox::process`
   (ProcessBackend) internally — BashTool does NOT call `tokio::process::Command` directly
-  (doing so would violate the Invariant above: "All sandbox execution is via ferrochain-sandbox").
+  (doing so would violate the Invariant above: "All sandbox execution is via pregolya-sandbox").
   When a command exceeds `max_duration` the sandbox terminates
   the process and the tool returns `Err(E-TOOLS-004 BashTimeout)`. Production graphs that
   need a different default must set `BashConfig::max_duration` explicitly; zero-duration is
@@ -147,7 +147,7 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 | EC-004 | `ToolConfig::override_risk(ActionRisk::ReadOnly)` on BashTool at `ToolConfig::override_risk` call time | `Err(E-TOOLS-007 BashRiskTierViolation: attempted: 'ReadOnly')` — registry never sees the invalid config; graph does not start |
 | EC-005 | `ToolConfig::override_risk(ActionRisk::Medium)` on BashTool | Accepted — Medium is the floor; graph starts normally |
 | EC-006 | Command output is exactly 262,144 bytes | `ToolOutput::Json({ ..., "truncated": false })` — at limit, not over; no truncation |
-| EC-007 | Sandbox policy blocks the command before execution | `Err(FerrochainError)` — sandbox namespace error, NOT E-TOOLS-004 or E-TOOLS-005 |
+| EC-007 | Sandbox policy blocks the command before execution | `Err(PregolyaError)` — sandbox namespace error, NOT E-TOOLS-004 or E-TOOLS-005 |
 
 ## Canonical Test Vectors
 
@@ -181,7 +181,7 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 
 - `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (BashTool, BashOutput struct, max_output_bytes 256 KiB, 30s timeout), Decision 3 (non-lowerable Medium floor), Decision 4 (retry enrollment per BC-2.16.001), Decision 5 (E-TOOLS-004/005/007)
 - `architecture/decisions/ADR-018-per-tool-call-approval-hook.md` — Decision 6 (retry-through-hook ordering: circuit_breaker → pre_tool_dispatch → invoke → retry_policy.record)
-- `architecture/module-decomposition.md` — SS-23, `tools::shell` module in ferrochain-tools
+- `architecture/module-decomposition.md` — SS-23, `tools::shell` module in pregolya-tools
 
 ## Story Anchor
 
@@ -189,7 +189,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 
 ## VP Anchors
 
-- VP-013 (assigned in VP-INDEX v1.5 as VP-013 — Kani P1; ferrochain-tools risk_floor_rejects_below_medium)
+- VP-013 (assigned in VP-INDEX v1.5 as VP-013 — Kani P1; pregolya-tools risk_floor_rejects_below_medium)
 - VP-2.23.005-B
 - VP-2.23.005-C
 
@@ -202,8 +202,8 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 | L2 Domain Invariants | DI-014 (Error Propagation — timeout and sandbox errors propagate as Err; non-zero exit code surfaced in BashOutput, never swallowed), DI-015 (Subprocess Execution Timeout — max_duration wall-clock timeout enforced by BashTool via tokio::time::timeout wrapping sandbox execute() call; exceed → terminate subprocess via sandbox → Err(E-TOOLS-004 BashTimeout)) |
 | Architecture Authority | ADR-020 Decisions 2, 3, 4, and 5; ADR-018 Decision 6 (retry-through-hook ordering) |
 | Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
-| VP Registration | VP-013 (assigned in VP-INDEX v1.5 as VP-013 — Kani P1; ferrochain-tools risk_floor_rejects_below_medium) |
-| Module | ferrochain-tools / tools::shell |
+| VP Registration | VP-013 (assigned in VP-INDEX v1.5 as VP-013 — Kani P1; pregolya-tools risk_floor_rejects_below_medium) |
+| Module | pregolya-tools / tools::shell |
 | Priority | P1 |
 | Wave | 1 |
 | Test Types | unit + integration + Kani (VP-013) |

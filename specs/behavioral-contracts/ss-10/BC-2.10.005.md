@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-10
 capability: CAP-035
-crate: ferrochain-core
+crate: pregolya-core
 wave: 1
 phase: 1b
 producer: product-owner
@@ -31,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "496c2a2"
+input-hash: "985b0ba"
 extracted_from: null
 modified: []
 deprecated: null
@@ -46,7 +46,7 @@ removal_reason: null
 
 ## Description
 
-`CompactionTrigger` is a `#[non_exhaustive]` enum added to `ferrochain-core::core::budget`
+`CompactionTrigger` is a `#[non_exhaustive]` enum added to `pregolya-core::core::budget`
 (definitions-only module, ADR-009 Option 3). It extends `BudgetConfig` with two new fields:
 `compaction_trigger: CompactionTrigger` (default `Disabled`) and
 `compaction_policy: Option<Arc<dyn CompactionPolicy>>` (default `None` → `DefaultSummarizationPolicy`).
@@ -109,8 +109,8 @@ as `OnCeiling::Summarize`.
 - Only one trigger variant fires per evaluation cycle. `BudgetEngine` uses the configured
   variant; there is no "first-matching" logic across multiple configured triggers.
 - `BudgetConfig.compaction_trigger` and `BudgetConfig.compaction_policy` reside in
-  `ferrochain-core::core::budget` (definitions-only) following ADR-009 Option 3. Execution
-  logic is in `ferrochain-graph::graph::budget`.
+  `pregolya-core::core::budget` (definitions-only) following ADR-009 Option 3. Execution
+  logic is in `pregolya-graph::graph::budget`.
 - **DI-014 (No Silent Swallowing):** Configuration errors (fraction=0.0, count=0, tokens=0)
   propagate as `Err` at construction time; they are not silently treated as `Disabled`.
 
@@ -154,7 +154,7 @@ as `OnCeiling::Summarize`.
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-019-rolling-context-compaction.md` — Decision 1 (CompactionTrigger enum, CompactionPolicy trait, ConversationSnapshot, CompactionSummary types in core::budget), Decision 2 (BudgetConfig extensions)
-- `architecture/module-decomposition.md` — SS-10, `ferrochain-core / core::budget` (definitions); `ferrochain-graph / graph::budget` (engine)
+- `architecture/module-decomposition.md` — SS-10, `pregolya-core / core::budget` (definitions); `pregolya-graph / graph::budget` (engine)
 - `architecture/verification-architecture.md` — VP-012 (D23 candidate)
 
 ## Story Anchor
@@ -163,7 +163,7 @@ _[to be filled after story decomposition — Wave 1 SS-10 extension story]_
 
 ## VP Anchors
 
-- VP-012 (assigned in VP-INDEX v1.5 as VP-012 — Kani P1; ferrochain-core `watermark_arithmetic_harness`)
+- VP-012 (assigned in VP-INDEX v1.5 as VP-012 — Kani P1; pregolya-core `watermark_arithmetic_harness`)
 - VP-2.10.005-B
 - VP-2.10.005-C
 
@@ -176,8 +176,8 @@ _[to be filled after story decomposition — Wave 1 SS-10 extension story]_
 | L2 Domain Invariants | DI-014 (Error Propagation — invalid configuration values propagate as Err; not silently treated as Disabled) |
 | Architecture Authority | ADR-019 Decisions 1 and 2 (CompactionTrigger types in core::budget, BudgetConfig fields) |
 | Binding Decisions | D23 (rolling compaction mandate, SS-10 extension) |
-| VP Registration | VP-012 (assigned in VP-INDEX v1.5 as VP-012 — Kani P1; ferrochain-core `watermark_arithmetic_harness`) |
-| Module | ferrochain-core / core::budget (definitions) |
+| VP Registration | VP-012 (assigned in VP-INDEX v1.5 as VP-012 — Kani P1; pregolya-core `watermark_arithmetic_harness`) |
+| Module | pregolya-core / core::budget (definitions) |
 | Priority | P1 |
 | Wave | 1 |
 | Test Types | unit + Kani (VP-012) |

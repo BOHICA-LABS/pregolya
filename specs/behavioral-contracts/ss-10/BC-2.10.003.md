@@ -15,7 +15,7 @@ phase: 1b
 producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
-  - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: BudgetPolicy::on_ceiling anchor moved from ferrochain-graph/src/budget/policy.rs to ferrochain-core/src/budget.rs (OnCeiling type is a policy definition, per ADR-009 Option 3). Module field resolved: ferrochain-core (BudgetPolicy + OnCeiling types) / ferrochain-graph (halt path in pregel loop)."
+  - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: BudgetPolicy::on_ceiling anchor moved from pregolya-graph/src/budget/policy.rs to pregolya-core/src/budget.rs (OnCeiling type is a policy definition, per ADR-009 Option 3). Module field resolved: pregolya-core (BudgetPolicy + OnCeiling types) / pregolya-graph (halt path in pregel loop)."
   - "1.2 (D20 sub-burst 1, 2026-07-15): Add OnCeiling::Summarize variant behavior (PCs 4+8, EC-005, TV-006) and remaining-budget exposure via RunContext.budget_info (PC5, TV-007) per D20 orchestrator adjudication items (2) stop-and-summarize and (2) remaining-budget exposure."
   - "1.3 (pass-72 fix, 2026-07-15): F-P72-05 — VP Anchors section missing VP-BUDGET-05 and VP-BUDGET-06 (both added in v1.2 Verification Properties table but not propagated to VP Anchors). Added VP-BUDGET-05 and VP-BUDGET-06 to VP Anchors section."
   - "1.4 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-BUDGET-001 message-prefix correction. PC5: added 'BudgetCeilingReached:' prefix to message string (was 'run halted: budget ceiling reached'; now 'BudgetCeilingReached: run halted: budget ceiling reached'). Taxonomy E-BUDGET-001 corrected from elaborate 'run <run_id> halted; token budget of <limit> exceeded at <actual> tokens' to 'BudgetCeilingReached: run halted: budget ceiling reached' (BC wins on content)."
@@ -24,14 +24,14 @@ changelog:
   - "1.7 (F-P93-04, 2026-07-17): VP ID collision resolved. BC-2.10.003 and BC-2.10.004 both defined VP-BUDGET-05 with different semantics. Resolution per append-only-numbering policy: BC-2.10.004's VP-BUDGET-05 (Phase 1, older) is canonical; BC-2.10.003's Summarize-path VP-BUDGET-05 renumbered → VP-BUDGET-07 (next free after VP-BUDGET-06). VP Anchors updated: VP-BUDGET-04, VP-BUDGET-05, VP-BUDGET-06 → VP-BUDGET-04, VP-BUDGET-06, VP-BUDGET-07. Zero VP-BUDGET-NN collisions across SS-10 after this change."
   - "1.8 (F-P97-05, 2026-07-17): VP table Phase-column axis normalized. VP-BUDGET-06 and VP-BUDGET-07 'Wave 1' corrected to 'Phase 1' to match the SS-10 convention established by VP-BUDGET-01/02/04/05 (all Phase 1). The v1.2 additions used the wave axis; the column carries the VSDD pipeline phase, not the wave. No behavioral change."
   - "1.9 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
-  - "1.10 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — Description: `FerrochainError { component: BUDGET, category: POLICY, code: \"E-BUDGET-001\" }` had 3/5 fields (missing retry_hint, message); added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3. PC5 full-field observation (all 5 fields present) already valid — no change."
+  - "1.10 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — Description: `PregolyaError { component: BUDGET, category: POLICY, code: \"E-BUDGET-001\" }` had 3/5 fields (missing retry_hint, message); added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3. PC5 full-field observation (all 5 fields present) already valid — no change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "4b43d14"
+input-hash: "29f431a"
 extracted_from: null
 modified: []
 deprecated: null
@@ -50,7 +50,7 @@ When a `BudgetPolicy::evaluate` call returns `PolicyDecision::Deny` and the conf
 `BudgetConfig::on_ceiling` is `OnCeiling::Halt`, the execution engine completes all in-flight
 tasks for the current super-step, writes their outputs to the checkpoint via `put_writes`, then stops
 the run — making no further LLM calls or tool invocations. The run transitions to `failed`
-with a structured `FerrochainError { component: BUDGET, category: POLICY, code: "E-BUDGET-001", .. }`.
+with a structured `PregolyaError { component: BUDGET, category: POLICY, code: "E-BUDGET-001", .. }`.
 The checkpoint at the last completed super-step is preserved and retrievable. The Domain B
 dark-factory holdout evaluation shape 6 ("budget-bounded run") directly exercises this BC.
 
@@ -82,7 +82,7 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
 4. A `JournalEntry` with `decision: Deny` is written to the `EvidenceJournal` before the
    run transitions to `failed` (BC-2.10.002).
 5. The run transitions to status `failed` with error:
-   `FerrochainError { component: BUDGET, category: POLICY, code: "E-BUDGET-001",
+   `PregolyaError { component: BUDGET, category: POLICY, code: "E-BUDGET-001",
    message: "BudgetCeilingReached: run halted: budget ceiling reached", retry_hint: Never }`.
 6. The caller (`invoke` or `stream`) receives `Err(E-BUDGET-001 BudgetCeilingReached)` with
    the `current_usage: TokenUsage` and `policy_name` fields in the error context.
@@ -108,7 +108,7 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
 ## Invariants
 
 - Graceful, not panic: the halt path must NOT call `.unwrap()`, `.expect()`, or `panic!()`.
-  All errors propagate via `Result<_, FerrochainError>` (DI-008).
+  All errors propagate via `Result<_, PregolyaError>` (DI-008).
 - No new LLM calls or tool invocations after a `Deny` decision — no "one more call"
   exceptions or continuation-on-error fallbacks.
 - The checkpoint preserved at halt time must be consistent: it reflects exactly the state
@@ -193,9 +193,9 @@ the sub-agent's halt.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — halt path in `tick()`: after `Deny` decision, no new task scheduling; allow in-flight tasks to settle; call `put_writes`; transition run to `failed`; Summarize path: inject `HumanMessage(summarize_prompt)`, issue one final LLM call, return `summary_halt` result; budget_info population at each super-step boundary
-- `ferrochain-graph/src/budget.rs` (`graph::budget`) — `FerrochainError` variant for `E-BUDGET-001 BudgetCeilingReached`
-- `ferrochain-core/src/budget.rs` — `BudgetConfig::on_ceiling` field: `OnCeiling::Halt | OnCeiling::Escalate | OnCeiling::Summarize { summarize_prompt: String }` (per ADR-009 Option 3 and interface-definitions v2.29 §BudgetConfig); `BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<u32> }` struct; `RunContext.budget_info: BudgetInfo` field (v1.2 addition)
+- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — halt path in `tick()`: after `Deny` decision, no new task scheduling; allow in-flight tasks to settle; call `put_writes`; transition run to `failed`; Summarize path: inject `HumanMessage(summarize_prompt)`, issue one final LLM call, return `summary_halt` result; budget_info population at each super-step boundary
+- `pregolya-graph/src/budget.rs` (`graph::budget`) — `PregolyaError` variant for `E-BUDGET-001 BudgetCeilingReached`
+- `pregolya-core/src/budget.rs` — `BudgetConfig::on_ceiling` field: `OnCeiling::Halt | OnCeiling::Escalate | OnCeiling::Summarize { summarize_prompt: String }` (per ADR-009 Option 3 and interface-definitions v2.29 §BudgetConfig); `BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<u32> }` struct; `RunContext.budget_info: BudgetInfo` field (v1.2 addition)
 
 ## Story Anchor
 
@@ -218,4 +218,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-core (BudgetPolicy + OnCeiling types) / ferrochain-graph (halt path in graph::scheduler / graph::budget) |
+| Module | pregolya-core (BudgetPolicy + OnCeiling types) / pregolya-graph (halt path in graph::scheduler / graph::budget) |

@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-18
 capability: CAP-022
-crate: ferrochain-prompts
+crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
@@ -23,7 +23,7 @@ changelog:
   - "1.1 (F-P148-03/burst-249/2026-07-24): red_gate_source and Red Gate body callout updated: 'ADR-015 Security Invariant 2' → 'ADR-015 Decision 2 §Security Invariant 2' per ADR-015 v1.5 labeled anchor. input-hash updated to fa92953 (ADR-015 v1.5 adds labeled anchors)."
   - "1.2 (FIX-BURST-269/F-P167-01/2026-07-25): Fix Category::VALIDATION → Category::VAL at two sites: PC-1 code block (E-TMPL-002 Err struct) and INV-3 prose. VALIDATION is not in the canonical 12-member Category enum; E-TMPL-002 is VAL per error-taxonomy.md §E-TMPL-002. D23 sibling-sweep."
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::TMPL → Component::Tmpl (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + Invariant 3 prose)."
-  - "1.4 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: FerrochainError struct literal (missing retry_hint, source fields) → FerrochainError::new(Component::Tmpl, Category::Val, RetryHint::Never, \"E-TMPL-002\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-TMPL-002. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-18/BC-2.18.005.md returns zero fence-scoped literal occurrences after this edit."
+  - "1.4 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: PregolyaError struct literal (missing retry_hint, source fields) → PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, \"E-TMPL-002\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-TMPL-002. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-18/BC-2.18.005.md returns zero fence-scoped literal occurrences after this edit."
   - "1.5 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 2 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-TMPL-002 inline cite: add `, ..` field-elision marker. (2) TV-001 expected-output cell: add `, ..` field-elision marker. No security semantics, Red Gate invariants, or VP anchors altered."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
@@ -34,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "352f3dd"
+input-hash: "5af97cb"
 extracted_from: null
 modified: []
 deprecated: null
@@ -54,7 +54,7 @@ removal_reason: null
 
 `ChatPromptTemplate::from_messages` validates slot policies at construction time. Any
 attempt to declare a `SystemMessage` slot with `SlotTrustPolicy::TrustAll` is rejected with
-`Err(FerrochainError { code: "E-TMPL-002", .. })` — the template is never created. This is a
+`Err(PregolyaError { code: "E-TMPL-002", .. })` — the template is never created. This is a
 **compile-time architectural invariant enforced at construction** (ADR-015 Decision 2): there
 is no method, configuration flag, or runtime override that permits `TrustAll` on a
 SystemMessage slot. The rationale is that "warn-but-allow" is a deferred-security anti-pattern
@@ -72,7 +72,7 @@ so the error is detected as early as possible regardless of whether the template
 
 1. `ChatPromptTemplate::from_messages` returns:
    ```
-   Err(FerrochainError::new(
+   Err(PregolyaError::new(
        Component::Tmpl,
        Category::Val,
        RetryHint::Never,
@@ -111,7 +111,7 @@ so the error is detected as early as possible regardless of whether the template
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 (Red Gate) | `ChatPromptTemplate::from_messages(vec![(MessageRole::System, "You are {role}.", SlotTrustPolicy::TrustAll)])` | `Err(FerrochainError { code: "E-TMPL-002", message: "SystemMessage slots must use TrustRequired policy; TrustAll is disallowed for system-position message slots", .. })` | error-case (policy violation) |
+| TV-001 (Red Gate) | `ChatPromptTemplate::from_messages(vec![(MessageRole::System, "You are {role}.", SlotTrustPolicy::TrustAll)])` | `Err(PregolyaError { code: "E-TMPL-002", message: "SystemMessage slots must use TrustRequired policy; TrustAll is disallowed for system-position message slots", .. })` | error-case (policy violation) |
 | TV-002 | `ChatPromptTemplate::from_messages(vec![(MessageRole::System, "You are helpful.", SlotTrustPolicy::TrustRequired), (MessageRole::Human, "{question}", SlotTrustPolicy::TrustAll)])` | `Ok(ChatPromptTemplate { ... })` | happy-path (correct policies) |
 | TV-003 | `ChatPromptTemplate::from_messages(vec![(MessageRole::Human, "{q}", SlotTrustPolicy::TrustAll)])` | `Ok(ChatPromptTemplate { ... })` — only Human slot, no System slot | happy-path (no System slot) |
 | TV-004 | Template with two System slots: first TrustRequired, second TrustAll | `Err(E-TMPL-002)` — second slot triggers the error | error-case (second System slot fails) |
@@ -132,7 +132,7 @@ so the error is detected as early as possible regardless of whether the template
 
 - `architecture/module-decomposition.md` — SS-18, `prompts::chat_template` (from_messages validation)
 - `architecture/decisions/ADR-015-prompt-template-injection-safety.md` — Decision 2 (SlotTrustPolicy enum, SystemMessage hard-coded TrustRequired, from_messages validation code sketch, E-TMPL-002 specification)
-- `architecture/purity-boundary-map.md` — `ferrochain-prompts / prompts::chat_template` Pure Core
+- `architecture/purity-boundary-map.md` — `pregolya-prompts / prompts::chat_template` Pure Core
 
 ## Story Anchor
 
@@ -151,7 +151,7 @@ _[to be filled after story decomposition — Wave 2 SS-18 security story]_
 | L2 Domain Invariants | DI-008 (construction returns Result; no panic path), DI-014 (E-TMPL-002 propagates as Err; no warn-and-allow degradation) |
 | Architecture Authority | ADR-015 Decision 2 (SlotTrustPolicy, SystemMessage hard-coded TrustRequired, from_messages rejection logic) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion), R12 (prompt injection risk from D21 scope) |
-| Module | ferrochain-prompts / prompts::chat_template |
+| Module | pregolya-prompts / prompts::chat_template |
 | Priority | P1 |
 | Wave | 2 |
 | Test Types | unit (construction-time, pure-core) |

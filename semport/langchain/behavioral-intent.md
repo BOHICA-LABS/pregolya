@@ -1,6 +1,6 @@
 ---
 artifact: semport/langchain/behavioral-intent
-project: ferrochain
+project: pregolya
 port_target: langchain (v1)
 analyzer_pass: 3
 date: 2026-07-12
@@ -346,7 +346,7 @@ declarative-op replay. In Rust this is a builder that captures a
 
 ## 5. THE langgraph API surface consumed (KEY ARCHITECTURE INPUT)
 
-This is the **minimum ferrochain-graph public API** that the v1 `langchain` crate needs.
+This is the **minimum pregolya-graph public API** that the v1 `langchain` crate needs.
 Extracted from all `from langgraph…` imports in `langchain/` (non-test).
 
 ### 5.1 Graph construction & compilation
@@ -408,14 +408,14 @@ Extracted from all `from langgraph…` imports in `langchain/` (non-test).
 | `BaseStore` | `langgraph.store.base` | Cross-thread store param |
 | `BaseCache` | `langgraph.cache.base` | Execution cache param |
 
-**Architecture takeaway:** ferrochain-graph MUST expose, at minimum: `StateGraph`
+**Architecture takeaway:** pregolya-graph MUST expose, at minimum: `StateGraph`
 (add_node/add_edge/add_conditional_edges/compile/with_config), `CompiledStateGraph`,
 START/END, `Command`+`Send`, `Runtime`, `add_messages` + channel types
 (Ephemeral/Untracked), `interrupt`+`get_config`, `Checkpointer`/`BaseStore`/`BaseCache`
 handles, `RunnableCallable`, and the `ToolNode` prebuilt with a wrap_tool_call seam. The
 **stream-transformer internals (§5.5) are the riskiest surface** — they are private
 (`_mux`, `_internal`, `_types`) langgraph APIs. Recommend the graph analyzer treat these
-as the boundary; `_subagent_transformer.py` can be deferred (P3) so ferrochain-graph need
+as the boundary; `_subagent_transformer.py` can be deferred (P3) so pregolya-graph need
 not expose stream internals in v1.
 
 ## State Checkpoint

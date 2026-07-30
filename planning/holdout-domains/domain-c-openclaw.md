@@ -5,7 +5,7 @@ domain_name: "OpenClaw-like personal AI assistant"
 producer: research-agent
 timestamp: 2026-07-13
 traces_to: "D8 (amended 2026-07-13)"
-project: ferrochain
+project: pregolya
 verification: primary-source (github.com/openclaw/openclaw README + docs, openclaw.ai, npm) cross-checked with web research
 status: complete
 confidence: high (identity/architecture verified from primary repo docs); medium (scale numbers — sources conflict, see §6)
@@ -14,7 +14,7 @@ confidence: high (identity/architecture verified from primary repo docs); medium
 # Holdout Domain C — OpenClaw-like Personal AI Assistant
 
 > **Purpose (per D8-amended):** Domain C is both a **Phase-1 design forcing function** (the PRD/architecture
-> must demonstrate ferrochain can support this workload) and a **Phase-2 holdout scenario domain**
+> must demonstrate pregolya can support this workload) and a **Phase-2 holdout scenario domain**
 > (product-owner authors hidden acceptance scenarios; only the domain is public). This brief describes
 > what OpenClaw **actually is**, verified from primary sources — not what a clone is assumed to be.
 
@@ -199,7 +199,7 @@ BYO keys or fully local models. Can be deployed to a VPS for 24/7 availability; 
 
 ## 4. Security Posture & Known Criticisms
 
-Verified from `SECURITY.md` (fetched) and README security section. **A ferrochain-based clone must learn from these.**
+Verified from `SECURITY.md` (fetched) and README security section. **A pregolya-based clone must learn from these.**
 
 - **Threat model = single trusted operator, NOT multi-tenant.** "OpenClaw does **not** model one gateway as
   a multi-tenant, adversarial user boundary." Authenticated callers (shared-secret bearer) get **full operator
@@ -227,7 +227,7 @@ Verified from `SECURITY.md` (fetched) and README security section. **A ferrochai
   hardened image; NVIDIA NemoClaw / NanoClaw / ZeroClaw enterprise forks; the `composio-community/secure-openclaw`
   reference). [digitalocean.com](https://www.digitalocean.com/resources/articles/what-is-openclaw), [masterconcept.ai](https://masterconcept.ai/blog/what-is-openclaw-and-why-is-it-trending), [github.com/composio-community/secure-openclaw](https://github.com/composiohq/secure-openclaw)
 
-**Design lesson for ferrochain:** treat all channel ingress as untrusted; make tool/exec policy and sandboxing
+**Design lesson for pregolya:** treat all channel ingress as untrusted; make tool/exec policy and sandboxing
 **default-on** for non-owner sessions; model session identity as auth, not just routing; and provide a
 first-class isolation story (the opposite of OpenClaw's host-first default).
 
@@ -235,29 +235,29 @@ first-class isolation story (the opposite of OpenClaw's host-first default).
 
 ## 5. What an OpenClaw-like Clone Demands From an Agent Framework
 
-Capability → framework-primitive mapping, then coverage against ferrochain's **planned** surface
-(langgraph runtime `ferrochain-graph` + langchain agents `ferrochain-core` + `ferrochain-mcp` + `ferrochain-server`,
+Capability → framework-primitive mapping, then coverage against pregolya's **planned** surface
+(langgraph runtime `pregolya-graph` + langchain agents `pregolya-core` + `pregolya-mcp` + `pregolya-server`,
 per D7/D11/D13). Legend: **[COVERED]** planned surface plausibly satisfies it · **[PARTIAL]** foundation exists,
 gap remains · **[NEW]** net-new surface not in current plan.
 
-| # | OpenClaw capability | Framework primitive demanded | ferrochain coverage |
+| # | OpenClaw capability | Framework primitive demanded | pregolya coverage |
 |---|---------------------|------------------------------|---------------------|
-| 1 | Persistent, resumable, multi-day sessions | Durable checkpointing + resume across process restarts | **[COVERED]** — `ferrochain-graph` durable checkpointing (D7 P0), msgpack checkpoints + sync-default durability (D11.2/D11.3); `ferrochain-server` threads/runs (D13) |
-| 2 | Cross-session long-horizon personal memory | Long-horizon store (KV + vector) separate from checkpoints | **[PARTIAL]** — `ferrochain-server` has a `store` (D13) analogous to LangGraph Store; but OpenClaw's **Markdown-file + SQLite + hybrid vector/keyword** memory model and MEMORY.md distillation loop are **[NEW]** application-layer surface |
-| 3 | Multi-channel ingress (WhatsApp/TG/Discord/iMessage/…) | Pluggable **ingress/channel adapters** + normalized inbound event model | **[NEW]** — no channel-adapter layer in the langchain/langgraph corpus; entirely new surface a clone must build atop ferrochain |
-| 4 | Proactive cron + webhook agency | **Scheduler** (cron) firing fresh runs + webhook ingress → run trigger | **[PARTIAL]** — `ferrochain-server` includes **crons** (D13) and streaming runs; "fresh session per cron run / per webhook" semantics + heartbeat model are design details to specify. Webhook→run ingress is largely **[NEW]** |
-| 5 | Skills / plugins / MCP tool ecosystem | **Tool/plugin registry** + dynamic discovery + MCP client | **[PARTIAL]** — `ferrochain-mcp` (D1) covers MCP tools; langchain tool abstractions cover tool calling; but `SKILL.md`-style markdown skills, 6-source precedence loading, and a **ClawHub-like registry + security scan** are **[NEW]** |
-| 6 | Multi-agent routing / sub-agent spawning | Hierarchical/graph orchestration + sub-graph/session spawn | **[COVERED]** — langgraph subgraphs + `sessions_spawn`-equivalent map cleanly onto `ferrochain-graph`; D8 already lists hierarchical delegation + parallel fan-out |
+| 1 | Persistent, resumable, multi-day sessions | Durable checkpointing + resume across process restarts | **[COVERED]** — `pregolya-graph` durable checkpointing (D7 P0), msgpack checkpoints + sync-default durability (D11.2/D11.3); `pregolya-server` threads/runs (D13) |
+| 2 | Cross-session long-horizon personal memory | Long-horizon store (KV + vector) separate from checkpoints | **[PARTIAL]** — `pregolya-server` has a `store` (D13) analogous to LangGraph Store; but OpenClaw's **Markdown-file + SQLite + hybrid vector/keyword** memory model and MEMORY.md distillation loop are **[NEW]** application-layer surface |
+| 3 | Multi-channel ingress (WhatsApp/TG/Discord/iMessage/…) | Pluggable **ingress/channel adapters** + normalized inbound event model | **[NEW]** — no channel-adapter layer in the langchain/langgraph corpus; entirely new surface a clone must build atop pregolya |
+| 4 | Proactive cron + webhook agency | **Scheduler** (cron) firing fresh runs + webhook ingress → run trigger | **[PARTIAL]** — `pregolya-server` includes **crons** (D13) and streaming runs; "fresh session per cron run / per webhook" semantics + heartbeat model are design details to specify. Webhook→run ingress is largely **[NEW]** |
+| 5 | Skills / plugins / MCP tool ecosystem | **Tool/plugin registry** + dynamic discovery + MCP client | **[PARTIAL]** — `pregolya-mcp` (D1) covers MCP tools; langchain tool abstractions cover tool calling; but `SKILL.md`-style markdown skills, 6-source precedence loading, and a **ClawHub-like registry + security scan** are **[NEW]** |
+| 6 | Multi-agent routing / sub-agent spawning | Hierarchical/graph orchestration + sub-graph/session spawn | **[COVERED]** — langgraph subgraphs + `sessions_spawn`-equivalent map cleanly onto `pregolya-graph`; D8 already lists hierarchical delegation + parallel fan-out |
 | 7 | Human-approval interrupts (exec approvals, pairing) | **Interrupt / human-in-the-loop** mid-run + resume | **[COVERED]** — langgraph `interrupt` + checkpoint/resume (D8 lists human-approval interrupts explicitly) |
-| 8 | Model-agnostic provider abstraction + failover | Provider registry, auth-profile rotation, fallback | **[COVERED]** — `ferrochain-openai`/`-anthropic`/`-ollama` (D3) + chat-model abstraction; failover/rotation is a thin layer to add |
-| 9 | Tool-execution sandboxing (Docker/SSH/OpenShell) | Sandboxed tool-exec backends + tool policy engine | **[NEW]** — langchain has no exec-sandbox layer; ferrochain must decide policy (recommend default-on isolation, §4 lesson) |
-| 10 | Local-first single-binary deployment | Self-contained runtime, embedded persistence, daemon mode | **[PARTIAL→ADVANTAGE]** — Rust single-binary + embedded store is a **natural ferrochain strength** vs OpenClaw's Node+pnpm footprint; but a "one binary that is the whole gateway" packaging target is **[NEW]** product surface |
-| 11 | Streaming (assistant/tool deltas, compaction, usage) | Streaming runtime + token/usage accounting | **[COVERED]** — `ferrochain-server` streaming (D13) + langgraph stream modes |
+| 8 | Model-agnostic provider abstraction + failover | Provider registry, auth-profile rotation, fallback | **[COVERED]** — `pregolya-openai`/`-anthropic`/`-ollama` (D3) + chat-model abstraction; failover/rotation is a thin layer to add |
+| 9 | Tool-execution sandboxing (Docker/SSH/OpenShell) | Sandboxed tool-exec backends + tool policy engine | **[NEW]** — langchain has no exec-sandbox layer; pregolya must decide policy (recommend default-on isolation, §4 lesson) |
+| 10 | Local-first single-binary deployment | Self-contained runtime, embedded persistence, daemon mode | **[PARTIAL→ADVANTAGE]** — Rust single-binary + embedded store is a **natural pregolya strength** vs OpenClaw's Node+pnpm footprint; but a "one binary that is the whole gateway" packaging target is **[NEW]** product surface |
+| 11 | Streaming (assistant/tool deltas, compaction, usage) | Streaming runtime + token/usage accounting | **[COVERED]** — `pregolya-server` streaming (D13) + langgraph stream modes |
 | 12 | Voice + Canvas + device nodes | Real-time audio I/O, A2UI surface, device bridge protocol | **[NEW]** — entirely outside the langchain/langgraph corpus; net-new if a clone targets parity |
 | 13 | Structured triage/verdict outputs | Structured output / schema-constrained generation | **[COVERED]** — langchain structured output (also demanded by Domains A/B) |
 
 **Net:** the **durable-run + graph + interrupt + streaming + MCP + structured-output** core is **covered** by
-ferrochain's planned surface (and is precisely the P0 differentiator per D7). The **new surface** Domain C
+pregolya's planned surface (and is precisely the P0 differentiator per D7). The **new surface** Domain C
 uniquely forces — not surfaced by Domains A (SOC analyst) or B (dark factory) — is: **(a)** channel/ingress
 adapters, **(b)** webhook→run + proactive scheduling ergonomics, **(c)** a file+vector long-horizon personal
 memory model with distillation, **(d)** a skill/plugin registry with markdown skills + security scanning,
@@ -291,7 +291,7 @@ primary counter.
 
 ## 7. Capability Checklist — Phase-1 Forcing-Function Input
 
-> One-page, drop-in checklist. Each item is a workload the ferrochain PRD/architecture must demonstrate is
+> One-page, drop-in checklist. Each item is a workload the pregolya PRD/architecture must demonstrate is
 > supportable. **[CORE]** = covered by planned surface; **[NEW]** = net-new surface Domain C forces;
 > **[SEC]** = security requirement derived from OpenClaw's documented posture.
 
@@ -330,7 +330,7 @@ primary counter.
 - [ ] **[PARTIAL/NEW]** Local-first single-binary/daemon deployment; embedded persistence; runs on Mac/Win/Linux + VPS.
 - [ ] **[NEW]** Tool-execution sandboxing backends (container/remote) with per-session sandbox policy.
 
-**Security (derived from OpenClaw's documented gaps — ferrochain should exceed, not copy, its defaults)**
+**Security (derived from OpenClaw's documented gaps — pregolya should exceed, not copy, its defaults)**
 - [ ] **[SEC]** Treat all channel ingress as untrusted input; unknown-sender gating/pairing before processing.
 - [ ] **[SEC]** Session identity as an **authorization** boundary (not merely routing) for multi-user gateways.
 - [ ] **[SEC]** Default-on isolation/tool-policy for non-owner sessions (opposite of OpenClaw's host-first default).
@@ -359,11 +359,11 @@ primary counter.
 | Tavily tavily_map | 3 | Map docs/, docs/concepts/, docs/tools/ to find real doc filenames (initial guessed paths 404'd) |
 | WebFetch | 4 | Fetch raw SECURITY.md, agent-loop.md, memory.md, skills.md (primary-source security + subsystem detail) |
 | WebSearch | 1 | Corroborate identity + gather GitHub/related-repo URLs |
-| Training data | 1 area | ferrochain planned-surface mapping (§5) uses knowledge of langgraph/langchain primitives; grounded in project's own D7/D8/D11/D13 decisions read from .factory/STATE.md |
+| Training data | 1 area | pregolya planned-surface mapping (§5) uses knowledge of langgraph/langchain primitives; grounded in project's own D7/D8/D11/D13 decisions read from .factory/STATE.md |
 
 **Total MCP tool calls:** 13 (2 Perplexity + 7 Tavily + also 4 WebFetch/1 WebSearch native tools)
 **Training data reliance:** low — every factual claim about OpenClaw is sourced to the primary repo/docs or a
 cited secondary source. The only training-data input is general knowledge of langgraph/langchain primitives used
-to map capabilities, and that mapping is anchored to ferrochain's own decision log (D7/D8/D11/D13). Scale numbers
+to map capabilities, and that mapping is anchored to pregolya's own decision log (D7/D8/D11/D13). Scale numbers
 (§6) are flagged medium/low confidence due to conflicting secondary sources; the primary GitHub repo-panel figures
 (languages, contributor count) and npm version are highest confidence.

@@ -19,8 +19,8 @@ changelog:
   - "rev-5 (FIX-BURST-269/F-P167-03/2026-07-25): Variant-count forward-amendment. The rev-4 'Status' section stated 'The 12-variant StreamEvent enum' reflecting the original D17+rev-3 count. D23 grew the enum to 15 via ADR-018 (+ToolApprovalRequest #13, +ToolApprovalResolved #14) and ADR-019 (+CompactionEvent #15). Add forward-amendment blockquote to Status section; BC-2.06.001 is the canonical enumeration per its existing authority statement. Add D23 to decisions frontmatter."
   - "rev-4 (F-P100-02, 2026-07-17): Citation-completeness amendment — no behavioral change. Downstream-amendments scope note (body §Status + Source/Origin emission citation) extended to include BC-2.11.003 PC3/PC4 (RagChunk boundary) and BC-2.11.004 PC3/PC4 (MemoryItem boundary). Rev-3 correctly added GuardrailDecision for all three ingress boundaries but listed only BC-2.11.002 PC3/PC4 (ToolResult) in the amendment scope; the RagChunk and MemoryItem boundary BCs carry symmetric GuardrailDecision emission postconditions. Sibling fix: BC-2.11.002/003/004 PC3/PC4 alignment propagated to interface-definitions.md v2.34→v2.35 /stream row and §StreamEvent BC anchor."
   - "rev-3 (F-P99-01, 2026-07-17): Axis (a) Add GuardrailDecision (12th variant). Fires for non-Pass guardrail outcomes (Fail/Transform only; Pass not streamed) at tool-result, RAG, and memory ingress boundaries. Rationale: audit-log-only is insufficient for Domain A SOC live-analyst use case (domain-a-soc-analyst.md §5 — 'Prompt-injection isolation of untrusted tool output' NEW); SSE consumer has no in-band signal of rejected/rewritten content without this variant. Axis (b) ToolEnd carries POST-guardrail content — raw rejected payloads must not exit the security boundary via the stream (same isolation guarantee as model input buffer per BC-2.11.005 PC1; streaming a blocked prompt-injection payload to UI/analytics consumers defeats the guardrail). Axis (c) Ordering: GuardrailDecision fires BEFORE ToolEnd within the ToolStart/ToolEnd window for ToolResult boundary; within NodeStart/NodeEnd window for RagChunk/MemoryItem boundaries. Axis (d) StreamEvent variant count 11→12; wire token guardrail_decision added; supporting types IngressBoundary/GuardrailDecisionKind/GuardrailSeverityWire defined. GuardrailDecision events are stream-observer notifications only — not emitted in unary mode; underlying GuardrailHook::evaluate fires on both paths per DI-012. Downstream BC amendments required: BC-2.06.001 PC2/PC4/new-EC-006, BC-2.11.002 PC3/PC4, BC-2.11.005 PC1/new-INV-5, BC-2.06.003 new-INV note."
-  - "rev-2 (ADV-P1D-PASS-36): F-P36-01 fix Decision heading — retired residual 'LangGraph format' claim. Heading now reads 'ferrochain-native wire format over HTTP', consistent with body (lines 59, 67-71), changelog rev-1 (F-P29-05), and D13 canon. No other live LangGraph-format wire claims found in architecture/ tree."
-  - "rev-1 (ADV-P1D-PASS-29): F-P29-04 rewrite StreamEvent enum to 11 imperative variants (RunStart/Stream/End, StepStart/End, NodeStart/Stream/End, ToolStart/Stream/End) matching BC-2.06.001 lines ~55-65; add NodeStream and ToolStream variants that were missing from rev-0. Wire tokens corrected to snake_case imperative (run_start not run_started). F-P29-05 remove LangChain astream_events v2 wire-compat claim — wire format is ferrochain-native per D13 (consistent with BC-2.06.001 line ~39 and BC-2.12.003 line ~37). Past-tense variant names (RunStarted, NodeStarted, etc.) added to retired-identifier registry."
+  - "rev-2 (ADV-P1D-PASS-36): F-P36-01 fix Decision heading — retired residual 'LangGraph format' claim. Heading now reads 'pregolya-native wire format over HTTP', consistent with body (lines 59, 67-71), changelog rev-1 (F-P29-05), and D13 canon. No other live LangGraph-format wire claims found in architecture/ tree."
+  - "rev-1 (ADV-P1D-PASS-29): F-P29-04 rewrite StreamEvent enum to 11 imperative variants (RunStart/Stream/End, StepStart/End, NodeStart/Stream/End, ToolStart/Stream/End) matching BC-2.06.001 lines ~55-65; add NodeStream and ToolStream variants that were missing from rev-0. Wire tokens corrected to snake_case imperative (run_start not run_started). F-P29-05 remove LangChain astream_events v2 wire-compat claim — wire format is pregolya-native per D13 (consistent with BC-2.06.001 line ~39 and BC-2.12.003 line ~37). Past-tense variant names (RunStarted, NodeStarted, etc.) added to retired-identifier registry."
 ---
 
 # ADR-006: Streaming Event Taxonomy
@@ -33,12 +33,12 @@ CONFLICT-5: LangGraph Python emits streaming events as untyped string dictionari
 (`{"event": "on_chain_start", "data": {...}}`). adk-rust emits typed enums per event
 category. D17 HYBRID mandate: LangGraph API surface + adk-rust internal quality patterns.
 
-The question is how to represent streaming events in ferrochain's public API:
+The question is how to represent streaming events in pregolya's public API:
 typed Rust enum (adk-rust pattern) or stringly-typed map (LangGraph Python pattern).
 
-## Decision: Typed Enum in Rust API; JSON-serialized to ferrochain-native wire format over HTTP
+## Decision: Typed Enum in Rust API; JSON-serialized to pregolya-native wire format over HTTP
 
-**Internal representation (ferrochain-core):**
+**Internal representation (pregolya-core):**
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -121,8 +121,8 @@ RunStart
 
 `GuardrailDecision*` = zero or more per boundary phase — one per non-Pass ContentBlock/chunk/item. A single tool invocation with N ContentBlocks where K fail produces K `GuardrailDecision` events before `ToolEnd`. `ToolEnd` is always the final event in its window.
 
-**Over HTTP (ferrochain-server SSE):** Events serialize to JSON with `#[serde(tag = "event")]`,
-producing ferrochain-native wire format `{"event": "run_start", "data": {...}}` (BC-2.06.001). Wire format is **ferrochain-native per D13** — LangChain Python `.astream_events()` v2 wire compatibility is NOT claimed or guaranteed. (F-P29-05: removed prior LangGraph-compat claim that contradicted D13.)
+**Over HTTP (pregolya-server SSE):** Events serialize to JSON with `#[serde(tag = "event")]`,
+producing pregolya-native wire format `{"event": "run_start", "data": {...}}` (BC-2.06.001). Wire format is **pregolya-native per D13** — LangChain Python `.astream_events()` v2 wire compatibility is NOT claimed or guaranteed. (F-P29-05: removed prior LangGraph-compat claim that contradicted D13.)
 
 **Why typed enum:**
 - Compile-time exhaustiveness: adding a new event variant forces handling in all match sites.
@@ -131,24 +131,24 @@ producing ferrochain-native wire format `{"event": "run_start", "data": {...}}` 
 - Pattern matching in user code is idiomatic Rust.
 
 **Wire format posture (D13):** The `serde(tag = "event", rename_all = "snake_case")`
-derives produce a ferrochain-native JSON wire format. This is NOT the same as
-LangChain Python's `.astream_events()` v2 output. D13 mandates ferrochain-native wire format;
-LangGraph Platform wire compatibility is out of scope for ferrochain v1.
+derives produce a pregolya-native JSON wire format. This is NOT the same as
+LangChain Python's `.astream_events()` v2 output. D13 mandates pregolya-native wire format;
+LangGraph Platform wire compatibility is out of scope for pregolya v1.
 See `architecture/system-overview.md` line ~36: "No wire-compatibility with LangGraph Platform."
 
 ## Rationale
 
-The typed Rust enum was chosen over stringly-typed maps because ferrochain targets Rust library consumers who need compile-time safety. CONFLICT-5 makes the tradeoff explicit: LangGraph Python's `{"event": "on_chain_start"}` approach is convenient in Python where dynamic dispatch is idiomatic but produces no compile-time signal when a new event type is added. In Rust, an exhaustive `match` on a stringly-typed map key is impossible — the compiler cannot verify coverage. adk-rust demonstrated the correct pattern (typed enums per event category) and that pattern is adopted here.
+The typed Rust enum was chosen over stringly-typed maps because pregolya targets Rust library consumers who need compile-time safety. CONFLICT-5 makes the tradeoff explicit: LangGraph Python's `{"event": "on_chain_start"}` approach is convenient in Python where dynamic dispatch is idiomatic but produces no compile-time signal when a new event type is added. In Rust, an exhaustive `match` on a stringly-typed map key is impossible — the compiler cannot verify coverage. adk-rust demonstrated the correct pattern (typed enums per event category) and that pattern is adopted here.
 
-D17 HYBRID mandate reinforces this: ferrochain takes LangGraph's API surface semantics (run/step/node/tool phase model) but applies adk-rust's internal quality patterns (typed enums, structured data). The two are not in tension here — ferrochain serializes its typed enum to ferrochain-native JSON over HTTP, so external callers get a structured wire format without ferrochain internalizing Python's stringly-typed representation.
+D17 HYBRID mandate reinforces this: pregolya takes LangGraph's API surface semantics (run/step/node/tool phase model) but applies adk-rust's internal quality patterns (typed enums, structured data). The two are not in tension here — pregolya serializes its typed enum to pregolya-native JSON over HTTP, so external callers get a structured wire format without pregolya internalizing Python's stringly-typed representation.
 
 DI-011 (Streaming/Unary Run Equivalence) further constrains the design: a stringly-typed event map would allow a stub implementation to emit synthetic `"event": "run_end"` strings without executing the graph engine. A typed enum carrying actual `RunEndData` forces the emission point to be the real engine path — it is structurally impossible to emit a `StreamEvent::RunEnd { final_output: ... }` without having computed `final_output`.
 
 ## Consequences
 
-- `StreamEvent` is a public type in `ferrochain-core`.
-- Adding new event types requires updating `StreamEvent` enum in ferrochain-core (breaking change for downstream enum matches; documented in CHANGELOG).
-- `ferrochain-server` SSE endpoint serializes `StreamEvent` values to `data: <json>\n\n`.
+- `StreamEvent` is a public type in `pregolya-core`.
+- Adding new event types requires updating `StreamEvent` enum in pregolya-core (breaking change for downstream enum matches; documented in CHANGELOG).
+- `pregolya-server` SSE endpoint serializes `StreamEvent` values to `data: <json>\n\n`.
 - BC-2.06.003 (streaming/unary equivalence) enforced: the unary endpoint collects `Vec<StreamEvent>` and returns the final `RunEnd` data payload; same engine path.
 
 ### Positive
@@ -179,6 +179,6 @@ Decision is accepted. The `StreamEvent` enum and the rev-3 additions (`Guardrail
 ## Source / Origin
 
 - **Master design conflicts:** `semport/core/behavioral-intent.md §D-2` (CONFLICT-5 — astream_events v2 typed taxonomy vs. adk-rust flat Event envelope); `comparative/assessment-parts/part-3-conflicts-negative-evidence.md CONFLICT-5`.
-- **PRD binding decision:** D17 (HYBRID mandate: LangGraph API surface + adk-rust quality patterns); D13 (ferrochain-native wire format — no LangGraph Platform wire compat).
+- **PRD binding decision:** D17 (HYBRID mandate: LangGraph API surface + adk-rust quality patterns); D13 (pregolya-native wire format — no LangGraph Platform wire compat).
 - **Behavioral contracts:** BC-2.06.001 (canonical variant authority), BC-2.06.002 (run_id + parent_ids on every event), BC-2.06.003 (streaming/unary equivalence), BC-2.11.002/003/004 PC3/PC4 (GuardrailDecision emission on Fail/Transform per boundary — rev-3/rev-4), BC-2.11.005 PC1 (ToolEnd post-guardrail content — rev-3).
 - **Domain forcing function (rev-3):** `planning/holdout-domains/domain-a-soc-analyst.md §5` — "Prompt-injection isolation of untrusted tool output" marked NEW; §6 "Adversarial tool-content resistance" evaluation scenario.

@@ -20,7 +20,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "920306b"
+input-hash: "038aa93"
 extracted_from: null
 modified: []
 deprecated: null
@@ -77,7 +77,7 @@ allowlisted them.
    `N + M` equal to the total number of variables present in the parent environment.
 5. If any entry in `env_allowlist` contains the characters `*` or `?` (glob wildcards),
    `SandboxConfig::new(…)` returns:
-   `Err(FerrochainError { component: SBXD, category: VAL, code: "E-SBXD-006",
+   `Err(PregolyaError { component: SBXD, category: VAL, code: "E-SBXD-006",
    message: "InvalidEnvAllowlistPattern: entry '<pattern>' contains wildcard characters — only
    exact variable names are supported in v1", retry_hint: Never })`.
    Construction fails before any execution. (DI-008.)
@@ -109,7 +109,7 @@ variables"`.
 **Scenario:** Operator sets `env_allowlist = ["OPENAI_API_KEY"]` intentionally (e.g., tool
 needs API access from inside the sandbox).
 **Expected behavior:** `OPENAI_API_KEY` is forwarded to the sandbox. This is a deliberate
-operator opt-in; ferrochain does not block it. No warning emitted (warning would be noise
+operator opt-in; pregolya does not block it. No warning emitted (warning would be noise
 for valid operator-approved use cases).
 
 ### EC-003: env_allowlist contains a glob pattern
@@ -157,8 +157,8 @@ misconfigured allowlist.)
 
 ## Architecture Anchors
 
-- `ferrochain-sandbox/src/executor.rs` — `SandboxExecutor::prepare_environment(config: &SandboxConfig) -> HashMap<String, String>`; applies allowlist filter before passing environment to backend
-- `ferrochain-sandbox/src/config.rs` — `SandboxConfig.env_allowlist: Vec<String>`; construction-time validation of allowlist entries (E-SBXD-006 on wildcard patterns)
+- `pregolya-sandbox/src/executor.rs` — `SandboxExecutor::prepare_environment(config: &SandboxConfig) -> HashMap<String, String>`; applies allowlist filter before passing environment to backend
+- `pregolya-sandbox/src/config.rs` — `SandboxConfig.env_allowlist: Vec<String>`; construction-time validation of allowlist entries (E-SBXD-006 on wildcard patterns)
 
 ## Story Anchor
 
@@ -180,4 +180,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-sandbox |
+| Module | pregolya-sandbox |

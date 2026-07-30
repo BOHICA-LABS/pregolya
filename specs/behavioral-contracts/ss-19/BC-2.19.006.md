@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-19
 capability: CAP-025
-crate: ferrochain-core
+crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
@@ -22,8 +22,8 @@ changelog:
   - "1.2 (FIX-BURST-268/F-P166-01/2026-07-25): (1) TD-VSDD-091 de-pin — PC5 cited 'error-taxonomy.md v1.27 E-SRLZ-002 row' as live normative authority; version pin violates TD-VSDD-091 (narrative body must not cite vN.N numbers that decay on subsequent taxonomy diffs). Adjudication: live normative citation, not historical record. De-pinned to stable section anchor: 'error-taxonomy.md §E-SRLZ-002 (row: VAL)'. (2) COMPATIBILITY residue purge — Architecture Anchors and Traceability Architecture Authority both read 'E-SRLZ-002 category COMPATIBILITY' despite PC5 being corrected to VAL at v1.1; both are live authority claims contradicting the BC's own postconditions. Corrected both to 'category VAL' to match PC5 and ADR-010 adjudication."
   - "1.3 (FIX-BURST-269/F-P167-02/2026-07-25): Fix dangling 'ADR-016 Decision 7' anchor at two sites (Architecture Anchors and Traceability Architecture Authority). ADR-016 has only Decisions 1–5; Decision 7 is nonexistent. Corrected to 'ADR-016 Decision 3 Property 4' — LANGCHAIN_MONOLITH_TYPES set, E-SRLZ-002 category VAL, and the deliberate-unregistered pattern are all specified in Decision 3 Property 4. Same anchor class as BC-2.19.005 F-P148-01 fix ('Decision 6' → 'Decision 3 §Security Invariant')."
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::SRLZ → Component::Srlz (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + PC-5 prose backtick span)."
-  - "1.5 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: FerrochainError struct literal (missing retry_hint, source fields) → FerrochainError::new(Component::Srlz, Category::Val, RetryHint::Never, \"E-SRLZ-002\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-SRLZ-002. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-19/BC-2.19.006.md returns zero fence-scoped literal occurrences after this edit."
-  - "1.6 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 1 CLASS3_MISSING_DOTDOT violation corrected. TV-001 expected-output cell: `FerrochainError { code: \"E-SRLZ-002\", message: \"...\" }` → add `, ..` field-elision marker. No security semantics or VP anchors altered."
+  - "1.5 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: PregolyaError struct literal (missing retry_hint, source fields) → PregolyaError::new(Component::Srlz, Category::Val, RetryHint::Never, \"E-SRLZ-002\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-SRLZ-002. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-19/BC-2.19.006.md returns zero fence-scoped literal occurrences after this edit."
+  - "1.6 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 1 CLASS3_MISSING_DOTDOT violation corrected. TV-001 expected-output cell: `PregolyaError { code: \"E-SRLZ-002\", message: \"...\" }` → add `, ..` field-elision marker. No security semantics or VP anchors altered."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -33,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "0daa69f"
+input-hash: "dc48c59"
 extracted_from: null
 modified: []
 deprecated: null
@@ -50,32 +50,32 @@ removal_reason: null
 
 Serialized JSON artifacts produced by `langchain` (the Python monolith package, as opposed
 to `langchain_core`) contain `id` paths starting with `["langchain", ...]` that refer to
-types that were never ported to `langchain_core` — and therefore never ported to ferrochain.
+types that were never ported to `langchain_core` — and therefore never ported to pregolya.
 These are distinct from unknown arbitrary ids: they are known-langchain-monolith types whose
-absence from ferrochain is intentional. `Reviver` maintains a static
+absence from pregolya is intentional. `Reviver` maintains a static
 `LANGCHAIN_MONOLITH_TYPES` set; when `revive()` encounters an id in this set, it returns
 `Err(E-SRLZ-002)` instead of `Err(E-SRLZ-001)`, allowing callers to distinguish "I've never
 heard of this type" from "I know this type but it's from the langchain monolith and not
-available in ferrochain." The error is propagated as `Err`; it is never a silent `None` (DI-014).
+available in pregolya." The error is propagated as `Err`; it is never a silent `None` (DI-014).
 
 ## Preconditions
 
 1. `Reviver` has been initialized (BC-2.19.003).
 2. The `id` field of the `Serialized::Constructor` matches an entry in `LANGCHAIN_MONOLITH_TYPES`
    (after legacy remap; BC-2.19.004).
-3. The `id` does NOT match any registered ferrochain type (precondition for E-SRLZ-002
+3. The `id` does NOT match any registered pregolya type (precondition for E-SRLZ-002
    vs. a successful revive).
 
 ## Postconditions
 
 1. `Reviver::revive(serialized)` returns:
    ```
-   Err(FerrochainError::new(
+   Err(PregolyaError::new(
        Component::Srlz,
        Category::Val,
        RetryHint::Never,
        "E-SRLZ-002",
-       "unsupported-serializable: langchain-monolith type not ported to ferrochain",
+       "unsupported-serializable: langchain-monolith type not ported to pregolya",
    ))
    ```
 2. No constructor is called; no kwargs is parsed.
@@ -88,7 +88,7 @@ available in ferrochain." The error is propagated as `Err`; it is never a silent
    d. Default fallthrough: return E-SRLZ-001.
 5. `category: Category::Val` — a monolith type id in a serialized envelope is a validation
    failure: the type path is recognized as a known langchain-monolith namespace but is not
-   supported in ferrochain. ADR-010 adjudicates E-SRLZ-002 as VAL (recorded in
+   supported in pregolya. ADR-010 adjudicates E-SRLZ-002 as VAL (recorded in
    error-taxonomy.md §E-SRLZ-002 (row: VAL)). `COMPATIBILITY` is not a canonical member of
    the 12-member category enum; it was never a valid assignment.
 
@@ -98,9 +98,9 @@ available in ferrochain." The error is propagated as `Err`; it is never a silent
 2. The diagnostic error code (`E-SRLZ-002`) is always returned for monolith types —
    regardless of kwargs content. The type-not-ported error supersedes any kwargs validation.
 3. The message text is fixed (`"unsupported-serializable: langchain-monolith type not ported to
-   ferrochain"`) — it does NOT interpolate the type id (consistent with gate #33
+   pregolya"`) — it does NOT interpolate the type id (consistent with gate #33
    STRUCT-PLACEHOLDER PARITY and DI-010 discipline).
-4. If a monolith type is later ported to ferrochain (future work), it is added to the registry
+4. If a monolith type is later ported to pregolya (future work), it is added to the registry
    and removed from `LANGCHAIN_MONOLITH_TYPES` simultaneously — the two sets must be disjoint.
 
 ## Edge Cases
@@ -116,7 +116,7 @@ available in ferrochain." The error is propagated as `Err`; it is never a silent
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 | `Reviver::revive(Serialized::Constructor { id: ["langchain", "chains", "llm", "LLMChain"], kwargs: {} })` | `Err(FerrochainError { code: "E-SRLZ-002", message: "unsupported-serializable: langchain-monolith type not ported to ferrochain", .. })` | error-case (monolith type) |
+| TV-001 | `Reviver::revive(Serialized::Constructor { id: ["langchain", "chains", "llm", "LLMChain"], kwargs: {} })` | `Err(PregolyaError { code: "E-SRLZ-002", message: "unsupported-serializable: langchain-monolith type not ported to pregolya", .. })` | error-case (monolith type) |
 | TV-002 | `Reviver::revive(Serialized::Constructor { id: ["langchain", "agents", "mrkl", "ZeroShotAgent"], kwargs: {} })` | `Err(E-SRLZ-002)` — another monolith type | error-case (monolith type) |
 | TV-003 | `Reviver::revive(Serialized::Constructor { id: ["completely_unknown", "Type"], kwargs: {} })` | `Err(E-SRLZ-001)` — not in monolith set, not in registry | error-case (generic unknown) |
 | TV-004 | `Reviver::revive(Serialized::Constructor { id: ["langchain_core", "prompts", "prompt", "PromptTemplate"], kwargs: {"template": "Hi"} })` | `Ok(PromptTemplate { ... })` — langchain_core type (registered; not monolith) | happy-path |
@@ -155,7 +155,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 story]_
 | L2 Domain Invariants | DI-008 (revive returns Result; no panic or silent unwrap), DI-014 (E-SRLZ-002 propagates as Err; no silent None or default object construction for a monolith type) |
 | Architecture Authority | ADR-016 Decision 3 Property 4 (LANGCHAIN_MONOLITH_TYPES set, E-SRLZ-002, category VAL, disjoint-set invariant, check ordering within revive) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| Module | ferrochain-core / core::serializable::reviver |
+| Module | pregolya-core / core::serializable::reviver |
 | Priority | P1 |
 | Wave | 2 |
 | Test Types | unit (pure-core, no I/O) |

@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-18
 capability: CAP-023
-crate: ferrochain-prompts
+crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
@@ -29,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "352f3dd"
+input-hash: "5af97cb"
 extracted_from: null
 modified: []
 deprecated: null
@@ -63,7 +63,7 @@ their outputs composable with the injection_guard (BC-2.18.004) and guardrail pi
    check example component trust levels before calling the inner `example_template.format()`.
    (Prior form `Vec<(String, String)>` had no trust classification — this type change
    closes the FewShot injection path per ADR-015 Decision 3 Amendment.)
-3. Both types are constructed via fallible constructors returning `Result<Self, FerrochainError>`
+3. Both types are constructed via fallible constructors returning `Result<Self, PregolyaError>`
    per DI-008.
 
 ## Postconditions
@@ -104,7 +104,7 @@ their outputs composable with the injection_guard (BC-2.18.004) and guardrail pi
 7. If the example list is empty, the template renders with no few-shot pairs (zero messages
    at the few-shot position) — not an error.
 8. Example rendering errors (e.g., missing variable in the example template) propagate as
-   `Err(FerrochainError)` — they do not silently skip the failing example.
+   `Err(PregolyaError)` — they do not silently skip the failing example.
 
 ## Invariants
 
@@ -149,7 +149,7 @@ their outputs composable with the injection_guard (BC-2.18.004) and guardrail pi
 ## Architecture Anchors
 
 - `architecture/module-decomposition.md` — SS-18, `prompts::messages_placeholder`, `prompts::few_shot`
-- `architecture/decisions/ADR-015-prompt-template-injection-safety.md` — Decision 1 (FewShot and MessagesPlaceholder listed as ferrochain-prompts exports)
+- `architecture/decisions/ADR-015-prompt-template-injection-safety.md` — Decision 1 (FewShot and MessagesPlaceholder listed as pregolya-prompts exports)
 - `architecture/purity-boundary-map.md` — Pure Core classification
 
 ## Story Anchor
@@ -167,9 +167,9 @@ _[to be filled after story decomposition — Wave 2 SS-18 story]_
 | Source L2 Capability | CAP-023 |
 | Capability Anchor Justification | CAP-023 ("MessagesPlaceholder and FewShotPromptTemplate — Message-List and Few-Shot Composition") per capabilities-p1-p2.md §CAP-023 — this BC specifies MessagesPlaceholder in-place expansion and FewShotPromptTemplate few-shot sequence composition, which CAP-023 identifies as the message-list and few-shot composition surface operating at message-list granularity distinct from scalar rendering |
 | L2 Domain Invariants | DI-008 (construction returns Result; no unwrap in non-test code) |
-| Architecture Authority | ADR-015 Decision 1 (ferrochain-prompts exports: MessagesPlaceholder, FewShotPromptTemplate, PromptValue) |
+| Architecture Authority | ADR-015 Decision 1 (pregolya-prompts exports: MessagesPlaceholder, FewShotPromptTemplate, PromptValue) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| Module | ferrochain-prompts / prompts::messages_placeholder, prompts::few_shot |
+| Module | pregolya-prompts / prompts::messages_placeholder, prompts::few_shot |
 | Priority | P1 |
 | Wave | 2 |
 | Test Types | unit (pure-core, no I/O) |

@@ -1,13 +1,13 @@
 ---
 artifact: semport/core/rust-translation-strategy
-project: ferrochain
+project: pregolya
 port_target: langchain-core (P0)
 analyzer_pass: 1
 date: 2026-07-12
 note: strategy only — NO Rust code committed; signatures are illustrative sketches
 ---
 
-# langchain-core → Rust (ferrochain-core) Translation Strategy
+# langchain-core → Rust (pregolya-core) Translation Strategy
 
 Guiding decisions (from `langchain-research.md` §6 and confirmed by this analysis):
 **async-first**, `dyn` + boxed futures at plugin seams, generics on hot paths,
@@ -445,7 +445,7 @@ Confirmed core uses only: `MessageStartData`, `ContentBlockStartData/DeltaData/F
 `MessageMetadata`, and the `*Delta` types. Model these as serde-tagged enums UNIFIED with the
 core content-block types (D-5). The full agent-server protocol (commands, subscriptions,
 state/checkpoint/fork, 9-channel events, reconnection) is **out of core scope** → future
-ferrochain-graph/server crate, ideally generated from the upstream CDDL schema (the Python is
+pregolya-graph/server crate, ideally generated from the upstream CDDL schema (the Python is
 itself `cddl2py`-generated). **Fetch the exact 0.0.17 schema** before finalizing (only 0.0.15
 was locally inspectable).
 
@@ -623,57 +623,57 @@ core-mode filter `value[0] != "langchain_core"` at `:206`).
   the JS keys `("langchain","chat_models","bedrock","ChatBedrock")` and `(...,"BedrockChat")`
   override the `SERIALIZABLE_MAPPING` values (JS 3-tuple `langchain_aws.chat_models.ChatBedrock`
   wins over the 4-tuple `...bedrock.ChatBedrock`). **178 = sum of dicts; 176 = the registry.**
-- Resolution buckets (by target `value[0]`): **langchain_core = 141** (own via ferrochain-core),
+- Resolution buckets (by target `value[0]`): **langchain_core = 141** (own via pregolya-core),
   **`langchain` monolith = 12**, **partner packages = 23 unique keys / 12 packages**.
 
-### The 12 `langchain`-monolith entries — NO ferrochain owner
+### The 12 `langchain`-monolith entries — NO pregolya owner
 `LLMChain`, `ToolAgentAction`, `OutputFixingParser`, `RegexParser`, `ChatGooglePalm`, `BaseOpenAI`,
 `GooglePalm`, `Replicate`, `CombiningOutputParser`, `HubRunnable`, `OpenAIFunctionsRouter`,
-`OpenAIToolAgentAction`. These resolve to the `langchain` aggregation package, which ferrochain
-does **not** port (ferrochain ports core/graph/mcp-adapters + provider partners). `langchain` is in
+`OpenAIToolAgentAction`. These resolve to the `langchain` aggregation package, which pregolya
+does **not** port (pregolya ports core/graph/mcp-adapters + provider partners). `langchain` is in
 `DISALLOW_LOAD_FROM_PATH` (`load.py:152`) → loadable only via the mapping, never by path. **In
-ferrochain these are UNREGISTERED**: a load of one of these lc-ids must return a structured
+pregolya these are UNREGISTERED**: a load of one of these lc-ids must return a structured
 "unsupported serializable (upstream-monolith)" error — NOT a silent `None`/`Vec::new()` (Code
 Conventions: no silent empty returns).
 
-### The 23 partner entries → ferrochain crate owner (feature-gated registration)
+### The 23 partner entries → pregolya crate owner (feature-gated registration)
 Key = the **serialized lc-id** (the tuple KEY, i.e. what is on the wire); registration is keyed on
 this, so partner crates must register the canonical id **plus all legacy aliases** for their class.
-`ferrochain-core` initial crate family (per CLAUDE.md) has dedicated crates only for `openai` and
-`anthropic`; the rest land in `ferrochain-community` initially, or in a per-provider crate when one
+`pregolya-core` initial crate family (per CLAUDE.md) has dedicated crates only for `openai` and
+`anthropic`; the rest land in `pregolya-community` initially, or in a per-provider crate when one
 is added (final crate names are set at the Phase-1 architecture ADR).
 
-| lc-namespace key (on-the-wire id) | target class | upstream partner pkg | ferrochain crate owner (feature) |
+| lc-namespace key (on-the-wire id) | target class | upstream partner pkg | pregolya crate owner (feature) |
 |---|---|---|---|
-| `langchain.llms.openai.OpenAI` | OpenAI | langchain_openai | **ferrochain-openai** |
-| `langchain.chat_models.openai.ChatOpenAI` | ChatOpenAI | langchain_openai | **ferrochain-openai** |
-| `langchain.chat_models.azure_openai.AzureChatOpenAI` | AzureChatOpenAI | langchain_openai | **ferrochain-openai** |
-| `langchain.llms.openai.AzureOpenAI` | AzureOpenAI | langchain_openai | **ferrochain-openai** |
-| `langchain.chat_models.anthropic.ChatAnthropic` | ChatAnthropic | langchain_anthropic | **ferrochain-anthropic** |
-| `langchain.chat_models.bedrock.ChatBedrock` | ChatBedrock | langchain_aws | ferrochain-community / future ferrochain-aws |
-| `langchain.chat_models.bedrock.BedrockChat` | ChatBedrock (alias) | langchain_aws | ferrochain-community / future ferrochain-aws |
-| `langchain.chat_models.anthropic_bedrock.ChatAnthropicBedrock` | ChatAnthropicBedrock | langchain_aws | ferrochain-community / future ferrochain-aws |
-| `langchain_aws.chat_models.ChatBedrockConverse` | ChatBedrockConverse | langchain_aws | ferrochain-community / future ferrochain-aws |
-| `langchain.llms.bedrock.Bedrock` | BedrockLLM (alias) | langchain_aws | ferrochain-community / future ferrochain-aws |
-| `langchain.llms.bedrock.BedrockLLM` | BedrockLLM | langchain_aws | ferrochain-community / future ferrochain-aws |
-| `langchain_groq.chat_models.ChatGroq` | ChatGroq | langchain_groq | ferrochain-community / future ferrochain-groq |
-| `langchain.chat_models.groq.ChatGroq` | ChatGroq (alias) | langchain_groq | ferrochain-community / future ferrochain-groq |
-| `langchain_google_genai.chat_models.ChatGoogleGenerativeAI` | ChatGoogleGenerativeAI | langchain_google_genai | ferrochain-community / future ferrochain-google |
-| `langchain.chat_models.google_genai.ChatGoogleGenerativeAI` | ChatGoogleGenerativeAI (alias) | langchain_google_genai | ferrochain-community / future ferrochain-google |
-| `langchain.chat_models.vertexai.ChatVertexAI` | ChatVertexAI | langchain_google_vertexai | ferrochain-community / future ferrochain-google |
-| `langchain.chat_models.mistralai.ChatMistralAI` | ChatMistralAI | langchain_mistralai | ferrochain-community / future ferrochain-mistral |
-| `langchain.chat_models.fireworks.ChatFireworks` | ChatFireworks | langchain_fireworks | ferrochain-community / future ferrochain-fireworks |
-| `langchain.llms.fireworks.Fireworks` | Fireworks | langchain_fireworks | ferrochain-community / future ferrochain-fireworks |
-| `langchain_xai.chat_models.ChatXAI` | ChatXAI | langchain_xai | ferrochain-community / future ferrochain-xai |
-| `langchain_openrouter.chat_models.ChatOpenRouter` | ChatOpenRouter | langchain_openrouter | ferrochain-community / future (⚠ namespace not in allowlist) |
-| `langchain_baseten.chat_models.ChatBaseten` | ChatBaseten | langchain_baseten | ferrochain-community / future (⚠ namespace not in allowlist) |
+| `langchain.llms.openai.OpenAI` | OpenAI | langchain_openai | **pregolya-openai** |
+| `langchain.chat_models.openai.ChatOpenAI` | ChatOpenAI | langchain_openai | **pregolya-openai** |
+| `langchain.chat_models.azure_openai.AzureChatOpenAI` | AzureChatOpenAI | langchain_openai | **pregolya-openai** |
+| `langchain.llms.openai.AzureOpenAI` | AzureOpenAI | langchain_openai | **pregolya-openai** |
+| `langchain.chat_models.anthropic.ChatAnthropic` | ChatAnthropic | langchain_anthropic | **pregolya-anthropic** |
+| `langchain.chat_models.bedrock.ChatBedrock` | ChatBedrock | langchain_aws | pregolya-community / future pregolya-aws |
+| `langchain.chat_models.bedrock.BedrockChat` | ChatBedrock (alias) | langchain_aws | pregolya-community / future pregolya-aws |
+| `langchain.chat_models.anthropic_bedrock.ChatAnthropicBedrock` | ChatAnthropicBedrock | langchain_aws | pregolya-community / future pregolya-aws |
+| `langchain_aws.chat_models.ChatBedrockConverse` | ChatBedrockConverse | langchain_aws | pregolya-community / future pregolya-aws |
+| `langchain.llms.bedrock.Bedrock` | BedrockLLM (alias) | langchain_aws | pregolya-community / future pregolya-aws |
+| `langchain.llms.bedrock.BedrockLLM` | BedrockLLM | langchain_aws | pregolya-community / future pregolya-aws |
+| `langchain_groq.chat_models.ChatGroq` | ChatGroq | langchain_groq | pregolya-community / future pregolya-groq |
+| `langchain.chat_models.groq.ChatGroq` | ChatGroq (alias) | langchain_groq | pregolya-community / future pregolya-groq |
+| `langchain_google_genai.chat_models.ChatGoogleGenerativeAI` | ChatGoogleGenerativeAI | langchain_google_genai | pregolya-community / future pregolya-google |
+| `langchain.chat_models.google_genai.ChatGoogleGenerativeAI` | ChatGoogleGenerativeAI (alias) | langchain_google_genai | pregolya-community / future pregolya-google |
+| `langchain.chat_models.vertexai.ChatVertexAI` | ChatVertexAI | langchain_google_vertexai | pregolya-community / future pregolya-google |
+| `langchain.chat_models.mistralai.ChatMistralAI` | ChatMistralAI | langchain_mistralai | pregolya-community / future pregolya-mistral |
+| `langchain.chat_models.fireworks.ChatFireworks` | ChatFireworks | langchain_fireworks | pregolya-community / future pregolya-fireworks |
+| `langchain.llms.fireworks.Fireworks` | Fireworks | langchain_fireworks | pregolya-community / future pregolya-fireworks |
+| `langchain_xai.chat_models.ChatXAI` | ChatXAI | langchain_xai | pregolya-community / future pregolya-xai |
+| `langchain_openrouter.chat_models.ChatOpenRouter` | ChatOpenRouter | langchain_openrouter | pregolya-community / future (⚠ namespace not in allowlist) |
+| `langchain_baseten.chat_models.ChatBaseten` | ChatBaseten | langchain_baseten | pregolya-community / future (⚠ namespace not in allowlist) |
 | `langchain.llms.vertexai.VertexAI` | VertexAI | langchain_vertexai | ⚠ DEAD upstream — see below |
 
 Alias multiplicity to preserve on registration: **ChatBedrock** (3 keys), **BedrockLLM** (2),
 **ChatGroq** (2), **ChatGoogleGenerativeAI** (2) — partner registration must map every legacy key
 to the one class.
 
-### Upstream security-allowlist drift (constrains the ferrochain reviver design)
+### Upstream security-allowlist drift (constrains the pregolya reviver design)
 `DEFAULT_NAMESPACES` (`load.py:134`) = {langchain, langchain_core, langchain_community,
 langchain_anthropic, langchain_groq, langchain_google_genai, langchain_aws, langchain_openai,
 langchain_google_vertexai, langchain_mistralai, langchain_fireworks, langchain_xai,
@@ -684,19 +684,19 @@ langchain_sambanova, langchain_perplexity}. Drift found:
   a dead entry (its sibling `ChatVertexAI` correctly targets the allowlisted
   `langchain_google_vertexai`; the LLM targets the non-allowlisted `langchain_vertexai`).
 - `langchain_sambanova`, `langchain_perplexity` are allowlisted but have **NO mapping entries**.
-- **Design implication for ADR-3**: ferrochain must NOT port a hand-maintained parallel allowlist
+- **Design implication for ADR-3**: pregolya must NOT port a hand-maintained parallel allowlist
   (it drifts, as shown). Derive the valid-namespace allowlist **from the registered set** — the
   registry (core-internal registrations + feature-gated partner registrations) is the single source
   of truth; a type is loadable iff it is registered. This eliminates the drift class entirely and
   makes the security allowlist a consequence of Cargo feature selection.
 
 ### Registration architecture (ADR-3 concrete shape confirmed)
-- **ferrochain-core** ships: the `Reviver` + the registry mechanism (`inventory`/`linkme`
+- **pregolya-core** ships: the `Reviver` + the registry mechanism (`inventory`/`linkme`
   auto-registration or explicit `OnceLock` seeded at init), the **141 core-internal registrations**,
   and the **legacy-alias remap** (OLD_CORE / JS / OG keys all fold onto the same core targets).
 - **Partner crates** register their own serializable types via the plugin seam, **feature-gated**.
-  Today only `ferrochain-openai` (4 ids) and `ferrochain-anthropic` (1 id) exist → they own 5 of 23;
-  the other 18 belong to crates not yet in the workspace and initially land in `ferrochain-community`.
+  Today only `pregolya-openai` (4 ids) and `pregolya-anthropic` (1 id) exist → they own 5 of 23;
+  the other 18 belong to crates not yet in the workspace and initially land in `pregolya-community`.
 - Registration is keyed on the **serialized id**, alias-aware (see multiplicity above).
 - `langchain`-monolith ids (12) and non-allowlisted/dead ids → deliberately unregistered; loads
   return a structured `Serialization`/`unsupported-serializable` error variant.
@@ -706,5 +706,5 @@ langchain_sambanova, langchain_perplexity}. Drift found:
   (langchain_aws/langchain)". Pass 8 sharpens: 178 is the sum of the 4 source dicts; the **merged
   registry is 176** (2 JS↔SERIALIZABLE collisions). Partner-resolving = **23 unique keys / 12
   packages**; the 12 `langchain`-monolith entries are **not** partner crates and have **no**
-  ferrochain owner (Pass 7 conflated "langchain" with partner packages). Refinement + one small
+  pregolya owner (Pass 7 conflated "langchain" with partner packages). Refinement + one small
   count correction, not a semantic reversal.

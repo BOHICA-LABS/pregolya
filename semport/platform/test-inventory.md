@@ -1,6 +1,6 @@
 ---
 artifact: semport/platform/test-inventory
-project: ferrochain
+project: pregolya
 port_target: langgraph-sdk @ 1.2.9 + langgraph-cli @ 1.2.9
 analyzer_pass: 6
 date: 2026-07-12
@@ -31,7 +31,7 @@ contract source after the SDK source itself.
 | `test_crons_client.py` | crons create/update/search shapes |
 | `test_client_stream.py` | run stream v1/v2 wrapping (`_sse_to_v2_dict`) |
 | `test_client_exports.py` | public surface / re-export stability (parity of `__all__`) |
-| `test_api_parity.py` | **async↔sync mirror parity** — proves the two trees are lock-step; in ferrochain this collapses (async-only) |
+| `test_api_parity.py` | **async↔sync mirror parity** — proves the two trees are lock-step; in pregolya this collapses (async-only) |
 | `test_serde.py`, `test_serde_schema.py` | orjson encode/decode incl. pydantic model_dump, sets, non-str keys — PORT as serde golden tests |
 | `test_errors.py` | status→typed-error mapping — PORT as error-taxonomy tests |
 | `test_path_encoding.py` | `_quote_path_param` incl. dot-segment escaping — PORT (security) |
@@ -54,7 +54,7 @@ contract source after the SDK source itself.
 | `test_transport_path_encoding.py` | v3 path encoding |
 | `test_*_projection.py` (values/messages/tool_calls/extensions) | high-level projection APIs |
 | `test_shared_stream.py`, `test_thread_stream.py`, `test_scoped_handles.py`, `test_lifecycle_watcher.py`, `test_output.py` | AsyncThreadStream integration |
-| `test_sync_*` (7 files) | sync mirrors (collapse in ferrochain) |
+| `test_sync_*` (7 files) | sync mirrors (collapse in pregolya) |
 
 **All v3 streaming tests are DEFER-scope** (rust-translation-strategy §1.6). They become the
 acceptance suite IF v3 is built.
@@ -73,8 +73,8 @@ scenarios for P1-06.
 Its existence is strong evidence that **a DTU clone is feasible** — LangGraph already ships
 a testable fake for the streaming surface. For P1-06:
 - Extend the fake's *conceptual* model (thread rows, run lifecycle, event emission) into a
-  Rust `ferrochain-platform-dtu` stateful fake covering REST + v1/v2 SSE.
-- Seed run/thread/checkpoint state from the local ferrochain engine (so lifecycles are
+  Rust `pregolya-platform-dtu` stateful fake covering REST + v1/v2 SSE.
+- Seed run/thread/checkpoint state from the local pregolya engine (so lifecycles are
   realistic), NOT a request-echo — per dependency-disposition §6 recommendation.
 - Use `_events.py` fixtures as the event-grammar golden set (DEFER v3 portion).
 
@@ -94,7 +94,7 @@ a testable fake for the streaming surface. For P1-06:
 Only `test_config.py` (schema validation) maps to the portable CLI slice. The rest tests
 Docker/packaging/SaaS behavior with no port target.
 
-## 5. Golden-test priorities for the ferrochain port (if built)
+## 5. Golden-test priorities for the pregolya port (if built)
 
 1. **Request-body fidelity** — sparse payloads (skip-None), path encoding, header
    side-channels. Golden fixtures from `test_*_client.py`. HIGH.

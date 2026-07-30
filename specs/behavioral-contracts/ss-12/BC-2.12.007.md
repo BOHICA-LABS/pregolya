@@ -24,12 +24,12 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "d7cbe50"
+input-hash: "04ee6f1"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-29): F-P29-03 — replace non-canonical `node_delta` with canonical `node_stream` at PC2, EC-004, and TV-002. BC-2.06.001 is the streaming taxonomy authority; `node_delta` was never a valid variant. Added to retired-identifier registry (bc-authoring-plan.md gate #19)."
   - "1.2 (ADV-P1D-PASS-46): F-P46-01 — fix streaming × interrupt seam contradiction with BC-2.06.001 (the declared streaming taxonomy authority). TV-005: remove `run_end.status = interrupted`; interrupt envelope is the terminal SSE frame, no run_end emitted. EC-003: fix 'stream ends with status: interrupted' → stream truncates after interrupt envelope; run status queryable via REST only. EC-001: resolve hedge '(or a run_end with status: failed)' — definitive: stream closes with no run_end on failure; authority is BC-2.06.001 EC-005 (completion-only RunEnd contract)."
-  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server / ferrochain-graph per module-decomposition.md v1.10."
+  - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server / pregolya-graph per module-decomposition.md v1.10."
   - "1.4 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 extracted_from: null
 modified: []
@@ -45,7 +45,7 @@ removal_reason: null
 
 ## Description
 
-`ferrochain-server` exposes two run execution surfaces: `GET /threads/{thread_id}/runs/{run_id}/stream`
+`pregolya-server` exposes two run execution surfaces: `GET /threads/{thread_id}/runs/{run_id}/stream`
 (server-sent events) and `GET /threads/{thread_id}/runs/{run_id}` (unary polling response
 after a Run reaches `completed` status). Both surfaces must be driven by the
 **same `CompiledGraph` execution engine** for the same inputs and produce
@@ -92,12 +92,12 @@ graph engine, producing output that could diverge from the unary path.
   `409 Conflict` with `E-SERVER-015 RunAlreadyExecuting { run_id }`.
 - If the graph raises an error mid-execution, both the streaming endpoint (as an
   `error` SSE event) and the unary endpoint (as a non-2xx response body) surface the
-  same `FerrochainError` cause.
+  same `PregolyaError` cause.
 
 ## Edge Cases
 
 ### EC-001: Graph raises error in first node
-**Scenario:** A node raises `Err(FerrochainError)` in the first executed node.
+**Scenario:** A node raises `Err(PregolyaError)` in the first executed node.
 **Expected behavior:**
 - Streaming: `run_start` emitted; `node_start` for the failing node emitted; then an
   `error` SSE event with the error payload; the stream closes with **no `run_end` event**.
@@ -105,7 +105,7 @@ graph engine, producing output that could diverge from the unary path.
   completion-only `RunEnd` contract). Run status queryable via
   `GET /threads/{thread_id}/runs/{run_id}` = `failed`.
 - Unary: `422 Unprocessable Entity` (or `500`, depending on error category) with the
-  same `FerrochainError` payload.
+  same `PregolyaError` payload.
 
 ### EC-002: Streaming client disconnects mid-run
 **Scenario:** An HTTP client opens the SSE stream but closes the connection mid-execution.
@@ -145,8 +145,8 @@ normally.
 |---|-------|-----------------|-------|
 | TV-001 | Same graph + same fresh thread; execute via streaming; collect `run_end.output`; execute via unary on identical fresh thread; compare `output` | `run_end.output == unary.output` (byte-for-byte JSON equality) | Core DI-011 verification |
 | TV-002 | Streaming run on 3-node graph (streaming LLM nodes) | SSE stream contains: `run_start`, (`node_start` → `node_stream`×N → `node_end`)×3, `run_end`; `node_stream` events present for each streaming token per node | Event taxonomy: DI-011 streaming surface; canonical streaming-node token is `node_stream` per BC-2.06.001 |
-| TV-003 | Graph with error in node 2; streaming | SSE: `run_start`, `node_start` (node1), `node_end` (node1), `node_start` (node2), then `error` event with `FerrochainError`; stream closes | Error propagation via streaming |
-| TV-004 | Graph with error in node 2; unary | `4xx/5xx` response with same `FerrochainError` as TV-003 | Error equivalence: streaming = unary |
+| TV-003 | Graph with error in node 2; streaming | SSE: `run_start`, `node_start` (node1), `node_end` (node1), `node_start` (node2), then `error` event with `PregolyaError`; stream closes | Error propagation via streaming |
+| TV-004 | Graph with error in node 2; unary | `4xx/5xx` response with same `PregolyaError` as TV-003 | Error equivalence: streaming = unary |
 | TV-005 | Graph with `interrupt()` call; streaming | SSE emits `{"__interrupt__": [...]}` as the terminal frame; stream truncates; **no `run_end` event emitted**; run status = `interrupted` queryable via `GET /threads/{thread_id}/runs/{run_id}` | Interrupt via streaming surface; BC-2.06.001 TV-004 authority — completion-only RunEnd |
 | TV-006 | Concurrent `GET /threads/t1/runs/r1/stream` (streaming) and a second `GET /threads/t1/runs/r1/stream`; second arrives 10ms later | Second returns `409 Conflict`, `E-SERVER-015 RunAlreadyExecuting` | Concurrent execution guard |
 
@@ -165,9 +165,9 @@ normally.
 
 ## Architecture Anchors
 
-- `ferrochain-server/src/routes/runs.rs` — both streaming and unary handlers call shared `execute_run(graph, input, config)` fn
-- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — single `CompiledGraph` execution path shared by both handlers
-- `ferrochain-server/src/sse.rs` — SSE adapter wraps `CompiledGraph` stream output for HTTP transport
+- `pregolya-server/src/routes/runs.rs` — both streaming and unary handlers call shared `execute_run(graph, input, config)` fn
+- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — single `CompiledGraph` execution path shared by both handlers
+- `pregolya-server/src/sse.rs` — SSE adapter wraps `CompiledGraph` stream output for HTTP transport
 
 ## Story Anchor
 
@@ -189,4 +189,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | I (integration), S (static analysis) |
-| Module | ferrochain-server / ferrochain-graph |
+| Module | pregolya-server / pregolya-graph |

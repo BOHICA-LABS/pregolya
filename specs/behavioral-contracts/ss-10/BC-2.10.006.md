@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-10
 capability: CAP-035
-crate: ferrochain-graph
+crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
@@ -35,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "496c2a2"
+input-hash: "985b0ba"
 extracted_from: null
 modified: []
 deprecated: null
@@ -84,7 +84,7 @@ the engine selects the oldest turns not yet compacted, up to a token budget ceil
 `compaction_policy.compact(&snapshot, &run_ctx).await` is called. On success: `CompactionSummary
 { summary_text: String, compacted_start: usize, compacted_end: usize }` is returned (flat
 inclusive bounds per ADR-019 Decision 1 / interface-definitions.md §Compaction). On error:
-`Err(FerrochainError)` — cycle aborted, no mutation, error logged, run continues.
+`Err(PregolyaError)` — cycle aborted, no mutation, error logged, run continues.
 
 **Step 3 — Mid-run window replacement:**
 `messages[compacted_start..=compacted_end]` in the ACTIVE conversation window is replaced by a single
@@ -192,7 +192,7 @@ The run proceeds from the next super-step with the compacted context window acti
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-019-rolling-context-compaction.md` — Decision 3 (7-step compaction execution sequence in graph::budget), Decision 5 (mid-run vs next-run distinction, additive CAP-017 path)
-- `architecture/module-decomposition.md` — SS-10, `ferrochain-graph / graph::budget` (BudgetEngine, EvidenceJournal)
+- `architecture/module-decomposition.md` — SS-10, `pregolya-graph / graph::budget` (BudgetEngine, EvidenceJournal)
 
 ## Story Anchor
 
@@ -214,7 +214,7 @@ _[to be filled after story decomposition — Wave 1 SS-10 extension story]_
 | Architecture Authority | ADR-019 Decision 3 (7-step execution sequence, mid-run mutation, abort-on-error semantics) |
 | Binding Decisions | D23 (rolling compaction mandate, SS-10 extension) |
 | VP Registration | VP-2.10.006-A/B/C (integration/unit tests) |
-| Module | ferrochain-graph / graph::budget |
+| Module | pregolya-graph / graph::budget |
 | Priority | P1 |
 | Wave | 1 |
 | Test Types | unit + integration |

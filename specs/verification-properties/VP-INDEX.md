@@ -18,7 +18,7 @@ changelog:
   - "1.0 (initial): VP catalog authored with 5 VPs (3 Kani P0 + 2 integration P1)."
 ---
 
-# VP-INDEX: ferrochain Verification Properties
+# VP-INDEX: pregolya Verification Properties
 
 > **Source of truth** for VP IDs, modules, tools, phases, and counts.
 > All changes to VP-INDEX MUST propagate to `verification-architecture.md`
@@ -60,16 +60,16 @@ changelog:
 
 | VP | BC Anchor | Module | Tool | Phase | Priority | Status | DI | Crate | harness_fn | File |
 |----|-----------|--------|------|-------|----------|--------|----|-------|------------|------|
-| VP-001 | BC-2.03.001 | graph::bsp_engine | Kani | 6 | P0 | draft | DI-001 | ferrochain-graph | `bsp_determinism_harness` | VP-001.md |
-| VP-002 | BC-2.04.006 | checkpoint::session_index | Kani | 6 | P0 | draft | DI-005 | ferrochain-checkpoint | `session_tenancy_harness` | VP-002.md |
-| VP-003 | BC-2.13.004 | sandbox::path_guard | Kani | 6 | P0 | draft | DI-007 | ferrochain-sandbox | `workspace_confinement_harness` | VP-003.md |
-| VP-004 | BC-2.09.004 | mcp::adapter | integration | 3 | P1 | draft | DI-014 | ferrochain-mcp | n/a (integration test) | VP-004.md |
-| VP-005 | BC-2.09.005 | mcp::client | integration | 3 | P1 | draft | DI-014 | ferrochain-mcp | n/a (integration test) | VP-005.md |
-| VP-006 | BC-2.18.004 | prompts::injection_guard | Kani | 6 | P1 | draft | DI-014 | ferrochain-prompts | `injection_guard_fail_closed` | VP-006.md |
-| VP-007 | BC-2.19.001 | core::serializable | proptest | 3 | P1 | draft | DI-008 | ferrochain-core | n/a (proptest) | VP-007.md |
-| VP-008 | BC-2.22.001 | core::embeddings | proptest | 3 | P1 | draft | DI-014 | ferrochain-core | n/a (proptest) | VP-008.md |
-| VP-009 | BC-2.21.003 | vectorstores::similarity | Kani | 6 | P0 | draft | DI-014 | ferrochain-vectorstores | `zero_norm_guard_fail_closed` | VP-009.md |
-| VP-010 | BC-2.19.005 | core::serializable | Kani | 6 | P0 | draft | DI-014 | ferrochain-core | `allowlist_rejects_unregistered_id` | VP-010.md |
-| VP-011 | BC-2.05.007 | graph::hitl | Kani | 6 | P0 | draft | DI-014 | ferrochain-graph | `deny_excludes_tool_invocation` | VP-011.md |
-| VP-012 | BC-2.10.005 | core::budget | Kani | 6 | P1 | draft | DI-014 | ferrochain-core | `watermark_arithmetic_harness` | VP-012.md |
-| VP-013 | BC-2.23.005 | tools::shell | Kani | 6 | P1 | draft | DI-014 | ferrochain-tools | `risk_floor_rejects_below_medium` | VP-013.md |
+| VP-001 | BC-2.03.001 | graph::bsp_engine | Kani | 6 | P0 | draft | DI-001 | pregolya-graph | `bsp_determinism_harness` | VP-001.md |
+| VP-002 | BC-2.04.006 | checkpoint::session_index | Kani | 6 | P0 | draft | DI-005 | pregolya-checkpoint | `session_tenancy_harness` | VP-002.md |
+| VP-003 | BC-2.13.004 | sandbox::path_guard | Kani | 6 | P0 | draft | DI-007 | pregolya-sandbox | `workspace_confinement_harness` | VP-003.md |
+| VP-004 | BC-2.09.004 | mcp::adapter | integration | 3 | P1 | draft | DI-014 | pregolya-mcp | n/a (integration test) | VP-004.md |
+| VP-005 | BC-2.09.005 | mcp::client | integration | 3 | P1 | draft | DI-014 | pregolya-mcp | n/a (integration test) | VP-005.md |
+| VP-006 | BC-2.18.004 | prompts::injection_guard | Kani | 6 | P1 | draft | DI-014 | pregolya-prompts | `injection_guard_fail_closed` | VP-006.md |
+| VP-007 | BC-2.19.001 | core::serializable | proptest | 3 | P1 | draft | DI-008 | pregolya-core | n/a (proptest) | VP-007.md |
+| VP-008 | BC-2.22.001 | core::embeddings | proptest | 3 | P1 | draft | DI-014 | pregolya-core | n/a (proptest) | VP-008.md |
+| VP-009 | BC-2.21.003 | vectorstores::similarity | Kani | 6 | P0 | draft | DI-014 | pregolya-vectorstores | `zero_norm_guard_fail_closed` | VP-009.md |
+| VP-010 | BC-2.19.005 | core::serializable | Kani | 6 | P0 | draft | DI-014 | pregolya-core | `allowlist_rejects_unregistered_id` | VP-010.md |
+| VP-011 | BC-2.05.007 | graph::hitl | Kani | 6 | P0 | draft | DI-014 | pregolya-graph | `deny_excludes_tool_invocation` | VP-011.md |
+| VP-012 | BC-2.10.005 | core::budget | Kani | 6 | P1 | draft | DI-014 | pregolya-core | `watermark_arithmetic_harness` | VP-012.md |
+| VP-013 | BC-2.23.005 | tools::shell | Kani | 6 | P1 | draft | DI-014 | pregolya-tools | `risk_floor_rejects_below_medium` | VP-013.md |

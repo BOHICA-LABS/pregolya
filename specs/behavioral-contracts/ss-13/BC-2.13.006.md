@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "b1cbefd"
+input-hash: "af2d76a"
 extracted_from: null
 modified: []
 deprecated: null
@@ -48,14 +48,14 @@ wave: 1
 
 ## Description
 
-When ferrochain-sandbox generates a macOS Seatbelt (`sandbox_init`) profile for tool
+When pregolya-sandbox generates a macOS Seatbelt (`sandbox_init`) profile for tool
 execution, the profile must use `(deny default)` as its base policy and enumerate explicit
 `(allow ...)` rules for each permitted operation. The adk-rust counter-example (P-60) uses
 `(allow default)` then selectively denies `network*`, `file-write*`, and `process-fork` — but
 never denies `file-read*`. Sandboxed code running under that profile can read any file the
-process user can access: SSH keys, `~/.aws/credentials`, browser cookies, `/etc/hosts`. ferrochain
+process user can access: SSH keys, `~/.aws/credentials`, browser cookies, `/etc/hosts`. pregolya
 inverts this: start from deny-everything and allow only what is explicitly needed. If a deny-by-default
-allow-list is impractical for a given macOS environment, ferrochain documents macOS as a
+allow-list is impractical for a given macOS environment, pregolya documents macOS as a
 "no-isolation" platform for that tool and requires `--allow-no-sandbox` explicit opt-in rather
 than silently running unsandboxed.
 
@@ -83,13 +83,13 @@ than silently running unsandboxed.
 
 ## Invariants
 
-1. The literal string `(allow default)` must NOT appear in any ferrochain-generated Seatbelt
+1. The literal string `(allow default)` must NOT appear in any pregolya-generated Seatbelt
    profile — not as a rule, not as a comment, not as a fallback
 2. `(deny default)` must be present as the base policy before any `(allow ...)` rules
 3. The allow-list is bounded and explicit: each allowed path or operation is named; wildcards
    are used only for subtree scoping (`(allow file-read* (subpath X))`) not for global scope
 4. The asymmetry between Linux (deny-by-default reads via bubblewrap) and macOS (P-60 
-   allow-all-reads) must not exist silently in any ferrochain build; if macOS cannot enforce
+   allow-all-reads) must not exist silently in any pregolya build; if macOS cannot enforce
    deny-by-default, the backend must report `PlatformNoEnforcement` and refuse to execute
    unless explicitly opted in
 5. adk-rust reference sparsity: P-60 is the counter-example; no positive upstream reference
@@ -119,8 +119,8 @@ than silently running unsandboxed.
 
 | VP-ID | Property | Proof Method |
 |-------|----------|--------------|
-| VP-2.13.006-A | No ferrochain-generated Seatbelt profile contains the literal string `(allow default)` | unit test — generate profile; assert string is absent |
-| VP-2.13.006-B | Every ferrochain-generated Seatbelt profile contains `(deny default)` as the first rule | unit test — profile string prefix assertion |
+| VP-2.13.006-A | No pregolya-generated Seatbelt profile contains the literal string `(allow default)` | unit test — generate profile; assert string is absent |
+| VP-2.13.006-B | Every pregolya-generated Seatbelt profile contains `(deny default)` as the first rule | unit test — profile string prefix assertion |
 | VP-2.13.006-C | macOS Seatbelt profile denies file reads to paths outside the workspace (e.g., SSH keys, AWS credentials, `/etc/passwd`) | macOS integration test — run sandboxed code that attempts to read `~/.aws/credentials`; assert read is denied |
 
 ## Traceability
@@ -130,11 +130,11 @@ than silently running unsandboxed.
 | L2 Capability | CAP-015 |
 | Capability Anchor Justification | CAP-015 ("Sandboxed Tool Execution (Enforcing Backend Default)") per capabilities-p1-p2.md §CAP-015 |
 | L2 Domain Invariants | DI-006 (Enforcing Sandbox Backend is Default) |
-| Source Analysis | P-60 NOT-APPLICABLE (must-not-inherit: `(allow default)` then selective deny = allow-all-reads; credential exfiltration surface); NE-16 (ferrochain requirement: deny-by-default with explicit allow rules); P-48 ADOPT (Linux bubblewrap deny-by-default is the positive reference model — macOS Seatbelt must match this posture); assessment-parts/part-3 §NE-16 |
-| Reference Evidence | adk-rust P-60: macOS Seatbelt profile uses `(allow default)` as base — sandboxed code can read SSH keys, AWS credentials, browser cookies. ferrochain INVERTS this. P-48 (Linux bubblewrap deny-by-default via `--unshare-*`) is the positive model that macOS must match. No upstream positive Seatbelt reference — greenfield. |
+| Source Analysis | P-60 NOT-APPLICABLE (must-not-inherit: `(allow default)` then selective deny = allow-all-reads; credential exfiltration surface); NE-16 (pregolya requirement: deny-by-default with explicit allow rules); P-48 ADOPT (Linux bubblewrap deny-by-default is the positive reference model — macOS Seatbelt must match this posture); assessment-parts/part-3 §NE-16 |
+| Reference Evidence | adk-rust P-60: macOS Seatbelt profile uses `(allow default)` as base — sandboxed code can read SSH keys, AWS credentials, browser cookies. pregolya INVERTS this. P-48 (Linux bubblewrap deny-by-default via `--unshare-*`) is the positive model that macOS must match. No upstream positive Seatbelt reference — greenfield. |
 | Binding Decisions | NE-16, DI-006 |
 | Forcing Functions | product-brief.md §NE catalog NE-16 (implied by NE-01 enforcing-default posture applied to macOS platform); assessment-parts/part-3 §NE-16 ("asymmetry must not exist silently") |
-| Architecture Module | ferrochain-sandbox / macOS Seatbelt backend (filled by architect) |
+| Architecture Module | pregolya-sandbox / macOS Seatbelt backend (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 
 ## Related BCs
@@ -144,7 +144,7 @@ than silently running unsandboxed.
 
 ## Architecture Anchors
 
-- `architecture/module-decomposition.md §ferrochain-sandbox` — `sandbox::seatbelt` row: macOS Seatbelt deny-by-default profile (NE-16); profile generation for Darwin (MEDIUM, SS-13)
+- `architecture/module-decomposition.md §pregolya-sandbox` — `sandbox::seatbelt` row: macOS Seatbelt deny-by-default profile (NE-16); profile generation for Darwin (MEDIUM, SS-13)
 - `architecture/purity-boundary-map.md §Effectful Shell` — `sandbox::seatbelt` row: macOS Seatbelt syscall OS integration; integration test strategy
 
 ## Story Anchor

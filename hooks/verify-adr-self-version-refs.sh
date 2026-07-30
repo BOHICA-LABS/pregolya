@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-adr-self-version-refs.sh — ferrochain factory-artifacts advisory validator (#5)
+# verify-adr-self-version-refs.sh — pregolya factory-artifacts advisory validator (#5)
 #
 # PURPOSE:
 #   For each ADR file under specs/architecture/decisions/, extracts the set of

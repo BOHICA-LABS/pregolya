@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "83449f0"
+input-hash: "2616796"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D19, D20, D21, D22, D23]
 supplements:
@@ -29,7 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
-  - "v1.21 (wave-b-tail/D-35-xtask-rename/2026-07-29): §9 NE rollup table xtask name corrections (D-80 residue). (1) NE-04 Anchor column: 'cargo xtask deny-client-new' → 'cargo xtask check-client-timeout' (canonical check-<subject> form; NE-04/DI-009 gate). (2) NE-07 Anchor column: 'deny-expect-in-lib lint' → 'check-no-panic lint' (NE-07/check-no-panic gate). TD-VSDD-060 sweep: zero additional superseded names (lint-no-timeout, lint-no-panic, deny-expect-in-lib, deny-client-new) found in live body text. Error-construction notation: sole FerrochainError { in body text (§3 Interface Definition) is CLASS0_EXEMPT (Type Schema Form — component: Component field-type listing) per ADR-010 §Error-Construction Notation Canon; zero notation violations."
+  - "v1.21 (wave-b-tail/D-35-xtask-rename/2026-07-29): §9 NE rollup table xtask name corrections (D-80 residue). (1) NE-04 Anchor column: 'cargo xtask deny-client-new' → 'cargo xtask check-client-timeout' (canonical check-<subject> form; NE-04/DI-009 gate). (2) NE-07 Anchor column: 'deny-expect-in-lib lint' → 'check-no-panic lint' (NE-07/check-no-panic gate). TD-VSDD-060 sweep: zero additional superseded names (lint-no-timeout, lint-no-panic, deny-expect-in-lib, deny-client-new) found in live body text. Error-construction notation: sole PregolyaError { in body text (§3 Interface Definition) is CLASS0_EXEMPT (Type Schema Form — component: Component field-type listing) per ADR-010 §Error-Construction Notation Canon; zero notation violations."
   - "v1.20 (fix-burst-280-corr/F-P175-C207-prd/F-P175-C208/2026-07-28): C207 prd-side and C208 residue cleared. (1) C207: §1.5 Python runtime bullet corrected — 'one-way Python-checkpoint import tool is in scope' removed; disposition is out of v1 scope per ADR-002 (post-v1 stretch; no roster slot, no SS, no capability in closed Phase 1b architecture). (2) C208: §1.5 OCSF telemetry normalization and SEC/SOC 2 compliance semantics pending-qualifier language removed; both are definitively out of v1 scope (no SS, ADR, or capability in closed Phase 1b architecture; OCSF rationale anchored to domain-a §5 and SS-06/CAP-007 astream_events v2 taxonomy; SEC/SOC 2 rationale anchored to domain-a §4)."
   - "v1.19 (fix-burst-280/F-P175-C201/C202/2026-07-28): Sibling sweep from product-brief.md fixes. (1) C202 §1.2 Solution Vision: 'Three design-forcing holdout domains' → 'Five design-forcing holdout domains'; Domain D (Hermes Agent, CAP-020/CAP-021) and Domain E (Agentic Coding CLI, CAP-017/CAP-018/CAP-034..038) bullets added. (2) §1.4 Target Users: Domain D and Domain E persona rows added. (3) Frontmatter `decisions:` extended with D19/D20/D22 (previously absent; L2-INDEX decisions had included them since D19/D20 authoring)."
   - "v1.18 (F-P172b-11/burst-275/2026-07-26): Two stale count pins corrected. (1) F-P172b-11 MED: §10 Module Criticality supplement pointer '(authoritative, 43-module Phase 1b registry)' → '(authoritative, Phase 1b registry — see §Classification Summary for current tier counts)'; registry has grown past 43 and the count was stale. (2) §11 Observability active count '6' → '11' and date '2026-07-21' → '2026-07-26'; count was not updated when observability.md v1.2 (burst-258) added 5 new entries to reach 11 active event_type values."
@@ -39,14 +39,14 @@ changelog:
   - "v1.14 (burst-241/Wave-2/F-P141-02/2026-07-23): VP-gate expansion — 6 P0 Kani proof obligations. §4 NFR-003 target updated '3 committed VP' → '6 P0 Kani VP obligations pass before v1 convergence'. §2.17 OQR-3 note expanded: invariants +DI-014; enforcing BCs +BC-2.21.003/2.19.005/2.05.007; plural 'harnesses'/'are Phase-6 artifacts'. BC-2.17.001 row retitled to '6 P0 VP obligations (VP-001/002/003/009/010/011) + 3 P1 VP obligations (VP-006/012/013)', DI column +DI-014. §6.3 KD-003 table: BC-2.03.001/2.04.006/2.13.004 retitled with VP-00N Kani P0 harness target label; +BC-2.21.003 (VP-009)/BC-2.19.005 (VP-010)/BC-2.05.007 (VP-011) Kani P0 rows; BC-2.17.001 updated to '6 P0 + 3 P1'."
   - "v1.13 (burst-241/F-P141-03/F-P141-04/2026-07-22): §5 error taxonomy summary table label corrections — alignment to error-taxonomy.md source of truth (gate #33 reverse, TD-VSDD-060 sibling sweep). (1) F-P141-03 (MED): E-CORE-002 label corrected — was 'RunnableCompositionError' (wrong: pipe composition is E-CORE-004); corrected to 'MessageRoleUnrecognized' (BC-2.01.002, message role validation — taxonomy message: 'Message role <role> is not a recognized message type'); E-CORE-004 PipeCompositionFailed added to CORE examples to explicitly represent the composition error. (2) F-P141-04 (LOW): E-TOOLS-006 label corrected — was 'BashGrepResultsTruncated' (wrong: 'Bash' prefix misattributes GrepTool informational payload field to BashTool); corrected to 'GrepResultsCapped' (taxonomy: GrepResult.capped payload field, BC-2.23.006 PC-2). (3) TD-VSDD-060 sibling sweep of all §5 TOOLS examples — three additional label mismatches found and fixed: E-TOOLS-001 'PathEscape' → 'PathConfinementViolation' (taxonomy message prefix 'PathConfinementViolation:', BC-2.23.001); E-TOOLS-002 'FileSizeExceeded' → 'FileReadExceedsLimit' (taxonomy message prefix 'FileReadExceedsLimit:', BC-2.23.001); E-TOOLS-003 'ExactMatchNotFound' → 'EditOldStringNotFound' (taxonomy message prefix 'EditOldStringNotFound:', BC-2.23.003). All five corrected labels now match error-taxonomy.md v1.34 message prefixes exactly. error-taxonomy.md not modified — all defects were PRD-side labels."
   - "v1.12 (burst-237/F-P137-01/2026-07-22): BC-2.13.002 DI column DI-006 → DI-006, DI-015 in §2.13 body table and §7 RTM. Propagates burst-235 F-P135-05 di_anchors co-enforcement (DI-015 Subprocess Execution Timeout) to prd.md — BC file frontmatter was correct since burst-235 but prd.md DI columns were not swept."
-  - "v1.11 (burst-235/F-P135/2026-07-22): RTM and §2 reconciliation — 13 D23 BC rows propagated from BC frontmatter source-of-truth. Gate #28 close. (1) F-P135-01: §7 RTM Source(L2) CAP column fixed for all 13 D23 rows (CAP-006/007/012/034–038 placeholder → authoritative CAP-034/035/036/037/038 per BC frontmatter); BC-2.10.005 Module corrected ferrochain-graph → ferrochain-core (VP-012 core-budget crate: ferrochain-core confirmed). (2) F-P135-02: §2.05 DI DI-003→DI-014 (BC-2.05.007/008); §2.06 DI DI-011→DI-014 (BC-2.06.004/005/006); §2.10 DI —→DI-014 (BC-2.10.005) and DI-002→DI-014 (BC-2.10.006); §2.23 DI DI-008→DI-014 (BC-2.23.001–004,006) and DI-008→DI-014,DI-015 (BC-2.23.005); §7 RTM DI column corrected to match. DI-008 citation removed from all SS-23 RTM rows — no SS-23 BC anchors DI-008 per frontmatter (adjudicated unbacked; PRD-only citation removed). (3) F-P135-04: §2.15 header P1/P2→P1; BC-2.15.001/002/003 rows P2→P1 (D23 CAP-017 promotion swept §7 RTM + BC-INDEX but not §2.15 body — now reconciled). Note: F-P135-03 (BC-INDEX BC-2.23.005 DI-009,DI-014→DI-014,DI-015) applied to BC-INDEX.md v2.2→v2.3 in same burst."
+  - "v1.11 (burst-235/F-P135/2026-07-22): RTM and §2 reconciliation — 13 D23 BC rows propagated from BC frontmatter source-of-truth. Gate #28 close. (1) F-P135-01: §7 RTM Source(L2) CAP column fixed for all 13 D23 rows (CAP-006/007/012/034–038 placeholder → authoritative CAP-034/035/036/037/038 per BC frontmatter); BC-2.10.005 Module corrected pregolya-graph → pregolya-core (VP-012 core-budget crate: pregolya-core confirmed). (2) F-P135-02: §2.05 DI DI-003→DI-014 (BC-2.05.007/008); §2.06 DI DI-011→DI-014 (BC-2.06.004/005/006); §2.10 DI —→DI-014 (BC-2.10.005) and DI-002→DI-014 (BC-2.10.006); §2.23 DI DI-008→DI-014 (BC-2.23.001–004,006) and DI-008→DI-014,DI-015 (BC-2.23.005); §7 RTM DI column corrected to match. DI-008 citation removed from all SS-23 RTM rows — no SS-23 BC anchors DI-008 per frontmatter (adjudicated unbacked; PRD-only citation removed). (3) F-P135-04: §2.15 header P1/P2→P1; BC-2.15.001/002/003 rows P2→P1 (D23 CAP-017 promotion swept §7 RTM + BC-INDEX but not §2.15 body — now reconciled). Note: F-P135-03 (BC-INDEX BC-2.23.005 DI-009,DI-014→DI-014,DI-015) applied to BC-INDEX.md v2.2→v2.3 in same burst."
   - "v1.10 (burst-233/F-P133-02/2026-07-22): BC-2.16.001/002/003 Wave-1 promotion per D23 — §2.16 header P2→P1; BC table rows P2→P1; §7 RTM rows P2→P1; §7 totals 72 P1/6 P2 → 75 P1/3 P2. §5 TOOLS component range row updated to list E-TOOLS-008 (FileIoError) and E-TOOLS-009 (InvalidRegexPattern). VP-013 Security Anchor corrected: ADR-018 Decision 6 → ADR-020 Decision 3."
   - "v1.9 (D23/2026-07-22): D23 First-Party Tools + Per-Tool Approval + Rolling Compaction expansion. (1) §2: BC-2.05.007/008 added to §2.05 (PreToolCallHook dispatch + skip-hook-on-resume); BC-2.06.004/005/006 added to §2.06 (StreamEvents 13/14/15); BC-2.10.005/006 added to §2.10 (CompactionTrigger config, compaction execution); §2.23 added (SS-23 First-Party Tool Library — 6 tool BCs). (2) §3: PreToolCallHook + CompactionPolicy traits added; first-party tools bullet. (3) §5: E-TOOLS-001–099 range row added (TOOLS component). (4) §5b: BC file count 116→129. (5) §7 RTM: BC-2.15.001/002/003 P2→P1 (CAP-017 wave promotion); +13 rows; totals updated to 129 (51 P0 / 72 P1 / 6 P2). D23 added to decisions list."
-  - "v1.8 (burst-227/F-P132-01/2026-07-21): §11 Observability emission census: convert from stale duplicate table (2 entries, retired ferrochain.mcp.guardrail.unregistered listed as active) to pointer+count form citing observability.md as the sole catalog authority. Active count updated to 6 (per observability.md v1.1). Prevents future dual-maintenance drift."
+  - "v1.8 (burst-227/F-P132-01/2026-07-21): §11 Observability emission census: convert from stale duplicate table (2 entries, retired pregolya.mcp.guardrail.unregistered listed as active) to pointer+count form citing observability.md as the sole catalog authority. Active count updated to 6 (per observability.md v1.1). Prevents future dual-maintenance drift."
   - "v1.7 (burst-226/F-P131-01+F-P131-07/2026-07-21): §5 error taxonomy ranges updated: CORE 007→008 (E-CORE-008 GuardrailCriticalRejection), VS 004→005 (E-VS-005 FilterUnsupported). Census: 96→98."
-  - "v1.6 (F-P130/2026-07-21): Fix burst 225 — 7 adversarial pass P1D-130 findings closed. (1) F-P130-02: BC-2.20.002 v1.1→v1.2 — 3 nonexistent `ferrochain-guardrail` crate references replaced with canonical `ferrochain-core: core::guardrail` per ADR-014 v1.4 PO Obligations. (2) F-P130-03: interface-definitions.md v2.42→v2.43 — 5 missing D21 trait sections added (Retriever+GuardedDocuments, VectorStore+VectorStoreFactory, Embeddings, ChatPromptTemplate/PromptValue, LcSerializable/Reviver) with verbatim ADR signatures and per-method BC anchors. (3) F-P130-04: DI-014 added to di_anchors of BC-2.20.001 v1.0→v1.1, BC-2.20.002 v1.1→v1.2, BC-2.21.004 v1.0→v1.1; propagated to BC-INDEX + prd.md §2 + §7 RTM. (4) F-P130-06: observability.md v1.0 created — Canonical Structured Event Catalog with 2 confirmed event_type emissions; SAP-1 policy stated; registered in supplements list. (5) F-P130-07: E-EMBED-001 prefix `DimensionMismatch:` → `EmbeddingDimensionMismatch:` in error-taxonomy.md v1.28→v1.29 and BC-2.22.001 v1.0→v1.1; E-VS-002 unchanged; gate #33 forward+reverse clean. (6) F-P130-08: BC-2.19.003 v1.0→v1.1 TV-001/TV-002 made falsifiable — relational assertions against LANGCHAIN_CORE_REGISTRY.len() and feature-gated delta >= 1. (7) F-P130-09: DI-009 added to di_anchors of BC-2.22.002 v1.0→v1.1 and BC-2.22.003 v1.0→v1.1; BC-2.14.004 cross-reference added in PC2/INV-5 and PC4/INV-2 prose; propagated to BC-INDEX + §2 + §7 RTM."
+  - "v1.6 (F-P130/2026-07-21): Fix burst 225 — 7 adversarial pass P1D-130 findings closed. (1) F-P130-02: BC-2.20.002 v1.1→v1.2 — 3 nonexistent `pregolya-guardrail` crate references replaced with canonical `pregolya-core: core::guardrail` per ADR-014 v1.4 PO Obligations. (2) F-P130-03: interface-definitions.md v2.42→v2.43 — 5 missing D21 trait sections added (Retriever+GuardedDocuments, VectorStore+VectorStoreFactory, Embeddings, ChatPromptTemplate/PromptValue, LcSerializable/Reviver) with verbatim ADR signatures and per-method BC anchors. (3) F-P130-04: DI-014 added to di_anchors of BC-2.20.001 v1.0→v1.1, BC-2.20.002 v1.1→v1.2, BC-2.21.004 v1.0→v1.1; propagated to BC-INDEX + prd.md §2 + §7 RTM. (4) F-P130-06: observability.md v1.0 created — Canonical Structured Event Catalog with 2 confirmed event_type emissions; SAP-1 policy stated; registered in supplements list. (5) F-P130-07: E-EMBED-001 prefix `DimensionMismatch:` → `EmbeddingDimensionMismatch:` in error-taxonomy.md v1.28→v1.29 and BC-2.22.001 v1.0→v1.1; E-VS-002 unchanged; gate #33 forward+reverse clean. (6) F-P130-08: BC-2.19.003 v1.0→v1.1 TV-001/TV-002 made falsifiable — relational assertions against LANGCHAIN_CORE_REGISTRY.len() and feature-gated delta >= 1. (7) F-P130-09: DI-009 added to di_anchors of BC-2.22.002 v1.0→v1.1 and BC-2.22.003 v1.0→v1.1; BC-2.14.004 cross-reference added in PC2/INV-5 and PC4/INV-2 prose; propagated to BC-INDEX + §2 + §7 RTM."
   - "v1.5 (F-P224/2026-07-21): §5 E-VS range row updated — E-VS-004 ZeroNormWriteTime (STATIC) added to examples column (write-time zero-norm guard on add_texts/from_texts_sync; minted in error-taxonomy.md v1.28; BC-2.21.002 v1.1 anchor)."
-  - "v1.4 (2026-07-20): D21 ecosystem-parity expansion (burst 216) — 21 new BCs across 5 subsystems SS-18..22 (ferrochain-prompts/core-serializable/vectorstores/embeddings); BC total 95→116, P0 48→51, P1 39→56, P2 8→9; §2 adds subsections 2.18–2.22; §3 public-traits list extended with Retriever/VectorStore/VectorStoreFactory/Embeddings; §5 error taxonomy adds E-TMPL/E-SRLZ/E-VS/E-EMBED components; §5b count 95→116 BC files; §7 RTM +21 rows."
+  - "v1.4 (2026-07-20): D21 ecosystem-parity expansion (burst 216) — 21 new BCs across 5 subsystems SS-18..22 (pregolya-prompts/core-serializable/vectorstores/embeddings); BC total 95→116, P0 48→51, P1 39→56, P2 8→9; §2 adds subsections 2.18–2.22; §3 public-traits list extended with Retriever/VectorStore/VectorStoreFactory/Embeddings; §5 error taxonomy adds E-TMPL/E-SRLZ/E-VS/E-EMBED components; §5b count 95→116 BC files; §7 RTM +21 rows."
   - "v1.3 (F-P97-02, 2026-07-17): §10 Module Criticality — deleted stale deferral parenthetical '(architect to confirm crate→subsystem mapping in Phase 1b)'. Mapping fully resolved at Phase 1b (2026-07-14); parenthetical survived sweep. Input-hash updated."
   - "v1.2 (2026-07-17): Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file with no spec-content signal for the PRD. All genuine derivation sources (product-brief, domain-spec files, COMPARATIVE-ASSESSMENT) are already listed. D-NNN decision references in the PRD body are stable baked-in facts. Input-hash recomputed."
   - "v1.1 F-P73 (2026-07-15): F-P73-02: stale '86' references updated to 95 (§5b test-vector note, OQR-4 historical annotation); OBS-P73-A: §2.10 BC-2.10.003 summary corrected '(on_ceiling = halt)' → '(on_ceiling = halt | summarize)' for 3-way H1/PRD/BC-INDEX sync; OBS-P73-C: §3 public-trait list extended with 4 D20 first-class traits (SkillStore, MemoryWriteGuard, ToolCallDialect, ProviderFallbackPolicy)."
@@ -59,7 +59,7 @@ open_question_resolutions:
   - OQR-5: DI-012 default hook behavior — default-permit with WARNING LOG
 ---
 
-# Product Requirements Document: ferrochain
+# Product Requirements Document: pregolya
 
 > **BC Index Model:** This PRD is an index document. Each BC lives in its own file under
 > `behavioral-contracts/ss-NN/`. Section 2 tables provide one-line summaries linking to
@@ -93,7 +93,7 @@ suite + formal verification) is confirmed unoccupied white space (ASM-003).
 
 ### 1.2 Solution Vision
 
-ferrochain is a Rust implementation of the LangChain v1 architecture: a Cargo workspace of
+pregolya is a Rust implementation of the LangChain v1 architecture: a Cargo workspace of
 independently-publishable crates that gives Rust developers the LangGraph StateGraph
 execution model (BSP scheduling, durable per-task checkpointing, HITL interrupt/resume),
 provider conformance testing, and a formally-verified core — without the Python runtime.
@@ -136,7 +136,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | Autonomous agent builder (Hermes-like) | Exposing registered tools as an inbound MCP server endpoint; self-improvement via SkillStore; consuming remote MCP tool results | High | Domain D |
 | Agentic coding CLI / IDE extension builder | Needs fine-grained per-tool-call HITL, rolling context compaction, multi-session project memory, first-party file/bash/search tools (D22/D23) | High | Domain E |
 | Rust developer (LLM applications) | Needs LangChain/LangGraph semantics without Python; cobbling together 3+ crates today | High | General |
-| Provider / tool vendor | Wants conformance-tested integrations via ferrochain-standard-tests | Medium | Secondary |
+| Provider / tool vendor | Wants conformance-tested integrations via pregolya-standard-tests | Medium | Secondary |
 
 ### 1.5 Out of Scope
 
@@ -151,7 +151,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 - Managed hosting / LangGraph Platform-equivalent SaaS
 - OCSF-style telemetry normalization at core layer (integration-layer concern per
   domain-a §5; definitively out of v1 scope — no SS, ADR, or capability in closed Phase
-  1b architecture; ferrochain event surface is typed astream_events v2 taxonomy per
+  1b architecture; pregolya event surface is typed astream_events v2 taxonomy per
   SS-06/CAP-007)
 - SEC disclosure / SOC 2 compliance semantics as in-product features (definitively out of
   v1 scope per domain-a §4; compliance reporting is operator-layer concern; no SS, ADR,
@@ -257,7 +257,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.08.003 | Chat model structured output conformance | P1 | — | ss-08/BC-2.08.003.md |
 | BC-2.08.004 | Chat model error-type fidelity conformance | P1 | DI-014 | ss-08/BC-2.08.004.md |
 | BC-2.08.005 | Chat model token-usage accounting conformance | P1 | — | ss-08/BC-2.08.005.md |
-| BC-2.08.006 | Standalone SDK crate split architecture (ferrochain-\<provider\>-sdk + adapter) | P1 | DI-008 | ss-08/BC-2.08.006.md |
+| BC-2.08.006 | Standalone SDK crate split architecture (pregolya-\<provider\>-sdk + adapter) | P1 | DI-008 | ss-08/BC-2.08.006.md |
 | BC-2.08.007 | Provider streaming interrupted by transport error surfaces Err(Timeout) or Err(Transport), not truncated success | P1 | DI-009, DI-014 | ss-08/BC-2.08.007.md |
 | BC-2.08.008 | Eval score aggregation: arithmetic mean + JudgeResult::InfraError third outcome (NE-15) | P1 | — | ss-08/BC-2.08.008.md |
 | BC-2.08.009 | Tool schema naming stability (snapshot test anchor) — semver-major required on any schema change to a public tool type | P1 | — | ss-08/BC-2.08.009.md |
@@ -331,16 +331,16 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.13.006 | macOS Seatbelt profile is deny-by-default with explicit allow rules | P1 | DI-006 | ss-13/BC-2.13.006.md |
 | BC-2.13.007 | Environment variable sanitization at sandbox execution boundary | P1 | DI-006, DI-008, DI-010 | ss-13/BC-2.13.007.md |
 
-### 2.14 Typed Error Taxonomy — FerrochainError (CAP-016) — P0
+### 2.14 Typed Error Taxonomy — PregolyaError (CAP-016) — P0
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
-| BC-2.14.001 | FerrochainError 2D component × category struct with RetryHint and machine code | P0 | DI-008, DI-014 | ss-14/BC-2.14.001.md |
-| BC-2.14.002 | RFC-7807 compatible problem emission from FerrochainError | P0 | — | ss-14/BC-2.14.002.md |
+| BC-2.14.001 | PregolyaError 2D component × category struct with RetryHint and machine code | P0 | DI-008, DI-014 | ss-14/BC-2.14.001.md |
+| BC-2.14.002 | RFC-7807 compatible problem emission from PregolyaError | P0 | — | ss-14/BC-2.14.002.md |
 | BC-2.14.003 | All library constructors return Result; no .unwrap()/.expect()/assert! in non-test code (NE-07) | P0 | DI-008 | ss-14/BC-2.14.003.md |
 | BC-2.14.004 | Every outbound HTTP ClientBuilder must set .timeout(30s); zero Client::new() outside tests (NE-04) | P0 | DI-009 | ss-14/BC-2.14.004.md |
 | BC-2.14.005 | Every API key type: newtype + Debug→"<redacted>"; no #[derive(Serialize)]; no Deref<Target=str> (NE-10) | P0 | DI-010 | ss-14/BC-2.14.005.md |
-| BC-2.14.006 | Validation failures propagate Err(FerrochainError); no public API returns None for validation failure (NE-03) | P0 | DI-014 | ss-14/BC-2.14.006.md |
+| BC-2.14.006 | Validation failures propagate Err(PregolyaError); no public API returns None for validation failure (NE-03) | P0 | DI-014 | ss-14/BC-2.14.006.md |
 
 ### 2.15 Long-Horizon Cross-Session Memory Store + Self-Improvement Primitives (CAP-017, CAP-020) — P1
 
@@ -375,7 +375,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 ### 2.18 Prompt Templates (CAP-022, CAP-023) — P1
 
-> **D21 ecosystem-parity expansion.** ferrochain-prompts crate; wave 2.
+> **D21 ecosystem-parity expansion.** pregolya-prompts crate; wave 2.
 > ADR-015 injection-safety constraints mandate BC-2.18.004 and BC-2.18.005 as Red Gate
 > tests (ADR-015 Decision 3 §Security Invariant 1 and Decision 2 §Security Invariant 2). BC-2.18.004 is also VP-006 Kani candidate.
 
@@ -389,7 +389,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 ### 2.19 LC Serialization (CAP-024, CAP-025) — P0/P1/P2
 
-> **D21 ecosystem-parity expansion.** ferrochain-core (core::serializable); wave 2.
+> **D21 ecosystem-parity expansion.** pregolya-core (core::serializable); wave 2.
 > ADR-016 security invariant mandates BC-2.19.005 as Red Gate test + VP-010 Kani candidate.
 > BC-2.19.001 is VP-007 proptest seed (round-trip serialize→Serialized→deserialize→equivalent).
 
@@ -404,7 +404,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 ### 2.20 Document Retrieval (CAP-026, CAP-027) — P0/P1
 
-> **D21 ecosystem-parity expansion.** ferrochain-core (Retriever trait) + ferrochain-vectorstores
+> **D21 ecosystem-parity expansion.** pregolya-core (Retriever trait) + pregolya-vectorstores
 > (VectorStoreRetriever); wave 2. BC-2.20.002 is a Red Gate test enforcing DI-012 RAG-guardrail
 > coverage obligation — required before any graph node wires Arc\<dyn Retriever\>.
 
@@ -416,7 +416,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 ### 2.21 VectorStore Abstraction (CAP-028, CAP-029, CAP-030) — P0/P1
 
-> **D21 ecosystem-parity expansion.** ferrochain-vectorstores crate; wave 2.
+> **D21 ecosystem-parity expansion.** pregolya-vectorstores crate; wave 2.
 > BC-2.21.003 is a Red Gate test + VP-009 Kani candidate: zero-norm vector guard prevents
 > NaN corruption in cosine similarity ranking.
 
@@ -429,8 +429,8 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 ### 2.22 Embeddings (CAP-031, CAP-032, CAP-033) — P1
 
-> **D21 ecosystem-parity expansion.** ferrochain-core (Embeddings trait) + ferrochain-openai
-> + ferrochain-ollama; wave 2. BC-2.22.001 is VP-008 proptest seed (dimensionality invariant).
+> **D21 ecosystem-parity expansion.** pregolya-core (Embeddings trait) + pregolya-openai
+> + pregolya-ollama; wave 2. BC-2.22.001 is VP-008 proptest seed (dimensionality invariant).
 > BC-2.22.002 is a Red Gate test for DI-010 OpenAiApiKey credential opacity.
 
 | BC ID | Title | Priority | DI | File |
@@ -441,7 +441,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 
 ### 2.23 First-Party Tool Library (CAP-034, CAP-035, CAP-036, CAP-037, CAP-038) — P1
 
-> **D23 expansion.** ferrochain-tools crate; Wave 1. PathGuard (workspace-confinement struct)
+> **D23 expansion.** pregolya-tools crate; Wave 1. PathGuard (workspace-confinement struct)
 > is the shared safety primitive for all file I/O tools. BashTool enforces a non-lowerable
 > Medium ActionRisk floor — the `action_risk` attribute cannot lower it below Medium
 > (E-TOOLS-007). BC-2.23.005 is VP-013 Kani seed (risk-floor invariant).
@@ -462,7 +462,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 > **Supplement:** Full interface definitions are in `prd-supplements/interface-definitions.md`.
 > Primary consumers: implementer, test-writer.
 
-ferrochain is a Rust library framework, not a CLI tool. The public interface surface is:
+pregolya is a Rust library framework, not a CLI tool. The public interface surface is:
 
 - **Public Rust traits:** `Runnable<Input, Output>`, `CheckpointSaver`, `GuardrailHook`,
   `BudgetPolicy`, `BaseChatModel`, `Tool`, `MemoryStore`, `SkillStore`, `MemoryWriteGuard`,
@@ -472,11 +472,11 @@ ferrochain is a Rust library framework, not a CLI tool. The public interface sur
   `§VectorStore`, `§VectorStoreFactory`, `§Embeddings`)_;
   `PreToolCallHook`, `CompactionPolicy`
   _(added D23 — see `prd-supplements/interface-definitions.md §PreToolCallHook`, `§Compaction`)_
-- **First-party tools (ferrochain-tools):** `ReadFileTool`, `WriteFileTool`, `EditFileTool`,
+- **First-party tools (pregolya-tools):** `ReadFileTool`, `WriteFileTool`, `EditFileTool`,
   `ListDirTool`, `BashTool`, `GrepTool` — all PathGuard-confined; `ActionRisk` enum;
   _(added D23 — see `prd-supplements/interface-definitions.md §First-Party Tools`)_
-- **Error type:** `FerrochainError { component: Component, category: Category, retry_hint, code }`
-- **ferrochain-server:** First-party HTTP server with `/threads`, `/assistants`,
+- **Error type:** `PregolyaError { component: Component, category: Category, retry_hint, code }`
+- **pregolya-server:** First-party HTTP server with `/threads`, `/assistants`,
   `/threads/{id}/runs` (thread-nested; includes `…/stream`, `…/resume`, `…/cancel`),
   `/schedules` (flat; cron schedule CRUD + `PATCH` enable/disable) endpoints;
   `GET /runs?schedule_id=` cross-thread aggregate query (F-P23-01)
@@ -502,12 +502,12 @@ Summary table:
 | NFR-002 | Reliability | Zero tasks lost on process crash during sync-tier checkpoint | P0 |
 | NFR-003 | Formal Verification | All 6 P0 Kani VP obligations pass before v1 convergence | P0 |
 | NFR-004 | Maintainability | Production crate: ≤500 lines soft / ≤750 hard; CI gate | P0 |
-| NFR-005 | Security | FerrochainError Debug impl never emits secret material | P0 |
-| NFR-006 | Conformance | ferrochain-standard-tests: 100% pass for all Wave 2 providers | P1 |
-| NFR-007 | Performance | ferrochain-graph: ≥100 nodes/second throughput on M1 | P1 |
+| NFR-005 | Security | PregolyaError Debug impl never emits secret material | P0 |
+| NFR-006 | Conformance | pregolya-standard-tests: 100% pass for all Wave 2 providers | P1 |
+| NFR-007 | Performance | pregolya-graph: ≥100 nodes/second throughput on M1 | P1 |
 | NFR-008 | Reliability | HITL interrupt state survives process restart without loss | P0 |
 | NFR-009 | Security | No outbound HTTP call may hang indefinitely; 30s timeout CI-enforced | P0 |
-| NFR-010 | Adoptability | ferrochain-core ≥ 4,000 downloads/month within 12 months of release | P1 |
+| NFR-010 | Adoptability | pregolya-core ≥ 4,000 downloads/month within 12 months of release | P1 |
 | NFR-011 | Correctness | BSP identical graph inputs → identical outputs (Kani VP) | P0 |
 
 See `prd-supplements/nfr-catalog.md` for full NFR table with validation methods and risk sources.
@@ -522,30 +522,30 @@ See `prd-supplements/nfr-catalog.md` for full NFR table with validation methods 
 Error codes follow the convention `E-<component>-<NNN>` where component is the crate
 abbreviation for crate-level components (CORE, GRAPH, CHKPT, SERVER, PROV, MCP, SPLIT, SBXD,
 MEMORY) or the intra-crate subsystem abbreviation for RETRY, CRON, BUDGET (which are
-subsystems within ferrochain-core, ferrochain-server, and ferrochain-graph respectively —
+subsystems within pregolya-core, pregolya-server, and pregolya-graph respectively —
 following the same pattern as the error-taxonomy.md RETRY/CRON/BUDGET component sections).
 
 Summary:
 
 | Range | Component | Level | Examples |
 |-------|-----------|-------|---------|
-| E-CORE-001–099 | ferrochain-core | crate | E-CORE-001 InvalidContentBlock, E-CORE-002 MessageRoleUnrecognized, E-CORE-004 PipeCompositionFailed, E-CORE-008 GuardrailCriticalRejection |
-| E-GRAPH-001–099 | ferrochain-graph | crate | E-GRAPH-001 InvalidUpdateError, E-GRAPH-002 NoActiveInterrupt |
-| E-CHKPT-001–099 | ferrochain-checkpoint | crate | E-CHKPT-001 CheckpointWriteFailed, E-CHKPT-002 MonotonicClockRegression |
-| E-SERVER-001–099 | ferrochain-server | crate | ~~E-SERVER-001 PolicyNotEnforceable~~ (retired — duplicate of E-SBXD-002; see error-taxonomy.md tombstone), E-SERVER-002 RunNotFound |
-| E-PROV-001–099 | ferrochain-\<provider\> | crate | E-PROV-001 RateLimited, E-PROV-002 Timeout |
-| E-MCP-001–099 | ferrochain-mcp | crate | E-MCP-001 ToolException, E-MCP-002 TransportError |
-| E-SPLIT-001–099 | ferrochain-splitters | crate | E-SPLIT-001 ZeroChunkSize |
-| E-SBXD-001–099 | ferrochain-sandbox | crate | E-SBXD-001 WorkspaceEscape, E-SBXD-002 PolicyNotEnforceable |
-| E-MEMORY-001–099 | ferrochain-memory | crate | E-MEMORY-001 EmbeddingBackendNotConfigured, E-MEMORY-003 ScopeAccessDenied |
-| E-RETRY-001–099 | ferrochain-core retry combinator | intra-crate | E-RETRY-001 RetryExhausted, E-RETRY-003 CircuitBreakerOpen |
-| E-CRON-001–099 | ferrochain-server scheduler | intra-crate | E-CRON-001 AssistantNotFoundAtFiring, E-CRON-002 InvalidCronExpression |
-| E-BUDGET-001–099 | ferrochain-graph budget subsystem | intra-crate | E-BUDGET-001 BudgetCeilingReached, E-BUDGET-002 JournalWriteFailed |
-| E-TMPL-001–099 | ferrochain-prompts | crate | E-TMPL-001 InjectionAttempt (SECURITY), E-TMPL-002 SystemSlotTrustAllRejected, E-TMPL-003 UndefinedVariable |
-| E-SRLZ-001–099 | ferrochain-core (lc-serializable) | intra-crate | E-SRLZ-001 UnknownSerializableType (STATIC — type id not echoed), E-SRLZ-002 UnsupportedMonolithType |
-| E-VS-001–099 | ferrochain-vectorstores | crate | E-VS-001 ZeroNormVector (STATIC), E-VS-002 DimensionMismatch (STATIC), E-VS-003 RetrieverConfigInvalid, E-VS-004 ZeroNormWriteTime (STATIC), E-VS-005 FilterUnsupported |
-| E-EMBED-001–099 | ferrochain-core (embeddings) | intra-crate | E-EMBED-001 EmbeddingDimensionMismatch (STATIC) |
-| E-TOOLS-001–099 | ferrochain-tools | crate | E-TOOLS-001 PathConfinementViolation (SECURITY), E-TOOLS-002 FileReadExceedsLimit, E-TOOLS-003 EditOldStringNotFound, E-TOOLS-004 BashTimeout, E-TOOLS-005 BashOutputTruncated, E-TOOLS-006 GrepResultsCapped, E-TOOLS-007 BashRiskTierViolation, E-TOOLS-008 FileIoError (TOOL/Maybe), E-TOOLS-009 InvalidRegexPattern (VAL/Never) |
+| E-CORE-001–099 | pregolya-core | crate | E-CORE-001 InvalidContentBlock, E-CORE-002 MessageRoleUnrecognized, E-CORE-004 PipeCompositionFailed, E-CORE-008 GuardrailCriticalRejection |
+| E-GRAPH-001–099 | pregolya-graph | crate | E-GRAPH-001 InvalidUpdateError, E-GRAPH-002 NoActiveInterrupt |
+| E-CHKPT-001–099 | pregolya-checkpoint | crate | E-CHKPT-001 CheckpointWriteFailed, E-CHKPT-002 MonotonicClockRegression |
+| E-SERVER-001–099 | pregolya-server | crate | ~~E-SERVER-001 PolicyNotEnforceable~~ (retired — duplicate of E-SBXD-002; see error-taxonomy.md tombstone), E-SERVER-002 RunNotFound |
+| E-PROV-001–099 | pregolya-\<provider\> | crate | E-PROV-001 RateLimited, E-PROV-002 Timeout |
+| E-MCP-001–099 | pregolya-mcp | crate | E-MCP-001 ToolException, E-MCP-002 TransportError |
+| E-SPLIT-001–099 | pregolya-splitters | crate | E-SPLIT-001 ZeroChunkSize |
+| E-SBXD-001–099 | pregolya-sandbox | crate | E-SBXD-001 WorkspaceEscape, E-SBXD-002 PolicyNotEnforceable |
+| E-MEMORY-001–099 | pregolya-memory | crate | E-MEMORY-001 EmbeddingBackendNotConfigured, E-MEMORY-003 ScopeAccessDenied |
+| E-RETRY-001–099 | pregolya-core retry combinator | intra-crate | E-RETRY-001 RetryExhausted, E-RETRY-003 CircuitBreakerOpen |
+| E-CRON-001–099 | pregolya-server scheduler | intra-crate | E-CRON-001 AssistantNotFoundAtFiring, E-CRON-002 InvalidCronExpression |
+| E-BUDGET-001–099 | pregolya-graph budget subsystem | intra-crate | E-BUDGET-001 BudgetCeilingReached, E-BUDGET-002 JournalWriteFailed |
+| E-TMPL-001–099 | pregolya-prompts | crate | E-TMPL-001 InjectionAttempt (SECURITY), E-TMPL-002 SystemSlotTrustAllRejected, E-TMPL-003 UndefinedVariable |
+| E-SRLZ-001–099 | pregolya-core (lc-serializable) | intra-crate | E-SRLZ-001 UnknownSerializableType (STATIC — type id not echoed), E-SRLZ-002 UnsupportedMonolithType |
+| E-VS-001–099 | pregolya-vectorstores | crate | E-VS-001 ZeroNormVector (STATIC), E-VS-002 DimensionMismatch (STATIC), E-VS-003 RetrieverConfigInvalid, E-VS-004 ZeroNormWriteTime (STATIC), E-VS-005 FilterUnsupported |
+| E-EMBED-001–099 | pregolya-core (embeddings) | intra-crate | E-EMBED-001 EmbeddingDimensionMismatch (STATIC) |
+| E-TOOLS-001–099 | pregolya-tools | crate | E-TOOLS-001 PathConfinementViolation (SECURITY), E-TOOLS-002 FileReadExceedsLimit, E-TOOLS-003 EditOldStringNotFound, E-TOOLS-004 BashTimeout, E-TOOLS-005 BashOutputTruncated, E-TOOLS-006 GrepResultsCapped, E-TOOLS-007 BashRiskTierViolation, E-TOOLS-008 FileIoError (TOOL/Maybe), E-TOOLS-009 InvalidRegexPattern (VAL/Never) |
 
 See `prd-supplements/error-taxonomy.md` for the complete catalog.
 
@@ -577,7 +577,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 
 | BC ID | Contribution |
 |-------|-------------|
-| BC-2.08.001–008 | Provider trait contracts that ferrochain-standard-tests verifies |
+| BC-2.08.001–008 | Provider trait contracts that pregolya-standard-tests verifies |
 
 ### 6.3 KD-003 — Formally-Verified Core
 
@@ -598,7 +598,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 |-------|-------------|
 | BC-2.01.001 | Typed ContentBlock — no raw content where typed variant expected |
 | BC-2.01.003 | Runnable universal composition protocol |
-| BC-2.14.001 | FerrochainError 2D struct with RetryHint |
+| BC-2.14.001 | PregolyaError 2D struct with RetryHint |
 | BC-2.14.003 | Constructor Result contract — no panics in library code |
 | BC-2.14.005 | Credential opacity newtypes — secrets never in debug output |
 
@@ -618,135 +618,135 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 
 | BC ID | Source (L2) | Module | Priority | Test Types |
 |-------|-------------|--------|----------|-----------|
-| BC-2.01.001 | CAP-001 | ferrochain-core | P0 | U, P |
-| BC-2.01.002 | CAP-001 | ferrochain-core | P0 | U |
-| BC-2.01.003 | CAP-002 | ferrochain-core | P0 | U, I |
-| BC-2.01.004 | CAP-002 | ferrochain-core | P0 | U |
-| BC-2.02.001 | CAP-003 | ferrochain-graph | P0 | U |
-| BC-2.02.002 | CAP-003 | ferrochain-graph | P0 | U, P |
-| BC-2.02.003 | CAP-003, R-005 | ferrochain-graph | P0 | U, P |
-| BC-2.02.004 | CAP-003, R-005 | ferrochain-graph | P0 | U |
-| BC-2.02.005 | CAP-003 | ferrochain-graph | P0 | U, I |
-| BC-2.02.006 | CAP-003 | ferrochain-graph | P0 | I |
-| BC-2.03.001 | CAP-004, NE-17 | ferrochain-graph | P0 | P, K |
-| BC-2.03.002 | CAP-004, DI-001 | ferrochain-graph | P0 | U, P |
-| BC-2.03.003 | CAP-004, DI-001, NE-17 | ferrochain-graph | P0 | P, K |
-| BC-2.04.001 | CAP-005, DI-002 | ferrochain-checkpoint | P0 | U, I, S |
-| BC-2.04.002 | CAP-005, DI-002 | ferrochain-checkpoint | P0 | U, I |
-| BC-2.04.003 | CAP-005, DI-004 | ferrochain-checkpoint | P0 | U, P |
-| BC-2.04.004 | CAP-005, DI-004 | ferrochain-checkpoint | P0 | U, I |
-| BC-2.04.005 | CAP-005, DI-002 | ferrochain-checkpoint | P0 | I, S |
-| BC-2.04.006 | CAP-005, DI-005, NE-12 | ferrochain-checkpoint | P0 | P, K |
-| BC-2.04.007 | CAP-005, NE-11 | ferrochain-checkpoint | P0 | U, I |
-| BC-2.05.001 | CAP-006, DI-003 | ferrochain-graph | P0 | I |
-| BC-2.05.002 | CAP-006, DI-003 | ferrochain-graph | P0 | U, I |
-| BC-2.05.003 | CAP-006, DI-003 | ferrochain-graph | P0 | I |
-| BC-2.05.004 | CAP-006, DI-003 | ferrochain-graph | P0 | U, I |
-| BC-2.05.005 | CAP-006, DI-003 | ferrochain-graph | P0 | U |
-| BC-2.05.006 | CAP-006, DI-003, ASM-008 | ferrochain-graph | P0 | U, I |
-| BC-2.06.001 | CAP-007, DI-011 | ferrochain-graph | P0 | U, I |
-| BC-2.06.002 | CAP-007 | ferrochain-graph | P0 | U, I |
-| BC-2.06.003 | CAP-007, DI-011, NE-13 | ferrochain-graph | P0 | I, S |
-| BC-2.07.001 | CAP-008, R-004 | ferrochain-splitters | P0 | U |
-| BC-2.07.002 | CAP-008, R-004 | ferrochain-splitters | P0 | U (golden vectors) |
-| BC-2.07.003 | CAP-008 | ferrochain-splitters | P0 | U |
-| BC-2.08.001 | CAP-009, CAP-011, DI-011 | ferrochain-standard-tests | P1 | I |
-| BC-2.08.002 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
-| BC-2.08.003 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
-| BC-2.08.004 | CAP-009, CAP-011, DI-014 | ferrochain-standard-tests | P1 | I |
-| BC-2.08.005 | CAP-009, CAP-011 | ferrochain-standard-tests | P1 | I |
-| BC-2.08.006 | CAP-009, DI-008 | ferrochain-openai, ferrochain-anthropic, ferrochain-ollama | P1 | U |
-| BC-2.08.007 | CAP-009, DI-009, DI-014 | ferrochain-standard-tests | P1 | I |
-| BC-2.08.008 | CAP-011, NE-15 | ferrochain-standard-tests | P1 | U, I |
-| BC-2.08.009 | CAP-009, ADR-004 | ferrochain-standard-tests | P1 | U (snapshot) |
-| BC-2.09.001 | CAP-010 | ferrochain-mcp | P1 | I |
-| BC-2.09.002 | CAP-010 | ferrochain-mcp | P1 | I |
-| BC-2.09.003 | CAP-010, DI-012 | ferrochain-mcp | P1 | I |
-| BC-2.09.004 | CAP-010, DI-014, R-006 | ferrochain-mcp | P1 | U |
-| BC-2.09.005 | CAP-010, DI-014, R-006 | ferrochain-mcp | P1 | U |
-| BC-2.10.001 | CAP-012, D17-Q4 | ferrochain-graph | P0 | U, I |
-| BC-2.10.002 | CAP-012, D17-Q4 | ferrochain-graph | P0 | U, P |
-| BC-2.10.003 | CAP-012, D17-Q4 | ferrochain-graph | P0 | U, I |
-| BC-2.10.004 | CAP-012, CAP-006, DI-003 | ferrochain-graph | P0 | I |
-| BC-2.11.001 | CAP-013, DI-012 | ferrochain-graph | P0 | U, I |
-| BC-2.11.002 | CAP-013, DI-012, NE-06 | ferrochain-graph | P0 | U, I |
-| BC-2.11.003 | CAP-013, DI-012, NE-06 | ferrochain-graph | P0 | I |
-| BC-2.11.004 | CAP-013, DI-012, NE-06 | ferrochain-graph | P0 | I |
-| BC-2.11.005 | CAP-013, DI-012 | ferrochain-graph | P0 | U, I |
-| BC-2.11.006 | CAP-013, DI-012 | ferrochain-graph | P0 | U |
-| BC-2.12.001 | CAP-014 | ferrochain-server | P1 | I |
-| BC-2.12.002 | CAP-014 | ferrochain-server | P1 | I |
-| BC-2.12.003 | CAP-014 | ferrochain-server | P1 | I |
-| BC-2.12.004 | CAP-014 | ferrochain-server | P1 | I |
-| BC-2.12.005 | CAP-014, DI-013, NE-14 | ferrochain-server | P1 | U, I |
-| BC-2.12.006 | CAP-014, NE-08 | ferrochain-server | P1 | U, I |
-| BC-2.12.007 | CAP-014, DI-011, NE-13 | ferrochain-server | P1 | I, S |
-| BC-2.13.001 | CAP-015, DI-006, NE-01 | ferrochain-sandbox | P1 | U, I |
-| BC-2.13.002 | CAP-015, DI-006, DI-015 | ferrochain-sandbox | P1 | U |
-| BC-2.13.003 | CAP-015, DI-006 | ferrochain-sandbox | P1 | U |
-| BC-2.13.004 | CAP-015, DI-007, NE-02 | ferrochain-sandbox | P1 | U, P, K |
-| BC-2.13.005 | CAP-015, DI-007, NE-02 | ferrochain-sandbox | P1 | U |
-| BC-2.13.006 | CAP-015, DI-006, NE-16 | ferrochain-sandbox | P1 | U |
-| BC-2.14.001 | CAP-016, DI-008, DI-014 | ferrochain-core | P0 | U |
-| BC-2.14.002 | CAP-016 | ferrochain-core | P0 | U |
-| BC-2.14.003 | CAP-016, DI-008, NE-07 | ferrochain-core | P0 | U (CI lint) |
-| BC-2.14.004 | CAP-016, DI-009, NE-04 | ferrochain-core | P0 | U (CI lint) |
-| BC-2.14.005 | CAP-016, DI-010, NE-10 | ferrochain-core | P0 | U (CI lint) |
-| BC-2.14.006 | CAP-016, DI-014, NE-03 | ferrochain-core | P0 | U |
-| BC-2.15.001 | CAP-017 | ferrochain-memory | P1 | I |
-| BC-2.15.002 | CAP-017 | ferrochain-memory | P1 | I, P |
-| BC-2.15.003 | CAP-017 | ferrochain-memory | P1 | I |
-| BC-2.16.001 | CAP-018, NE-09 | ferrochain-core | P1 | U, I |
-| BC-2.16.002 | CAP-018, NE-09 | ferrochain-core | P1 | U |
-| BC-2.16.003 | CAP-018, NE-09 | ferrochain-core | P1 | U, I |
-| BC-2.17.001 | CAP-019, DI-001, DI-005, DI-007, DI-014 | ferrochain-graph, ferrochain-checkpoint, ferrochain-sandbox, ferrochain-vectorstores, ferrochain-core | P2 | K |
-| BC-2.17.002 | CAP-019 | ferrochain-graph, ferrochain-checkpoint | P2 | F |
-| BC-2.08.010 | CAP-002, DI-008, ADR-004, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
-| BC-2.08.011 | CAP-003, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
-| BC-2.08.012 | CAP-003, ADR-008 | ferrochain-macros (re-exported ferrochain-core) | P1 | U |
-| BC-2.04.008 | CAP-005, DI-002, DI-008, DI-014 | ferrochain-checkpoint | P1 | I |
-| BC-2.08.013 | CAP-009, DI-008, DI-014 | ferrochain-core (trait), ferrochain-\<provider\> (dispatch) | P1 | U, I |
-| BC-2.08.014 | CAP-009, DI-008, DI-009, DI-010, DI-014 | ferrochain-core (types), ferrochain-\<provider\> (dispatch) | P1 | U, I |
-| BC-2.09.006 | CAP-021, DI-008, DI-014 | ferrochain-mcp | P1 | I |
-| BC-2.09.007 | CAP-021, DI-008, DI-010, DI-014 | ferrochain-mcp | P1 | I |
-| BC-2.13.007 | CAP-015, DI-006, DI-008, DI-010 | ferrochain-sandbox | P1 | U, I |
-| BC-2.15.004 | CAP-020, DI-008, DI-014 | ferrochain-memory (memory::skills) | P1 | U, I |
-| BC-2.15.005 | CAP-020, DI-008, DI-012, DI-014 | ferrochain-core (core::write\_guard), ferrochain-memory | P1 | U, I |
-| BC-2.15.006 | CAP-020, DI-002, DI-008, DI-014 | ferrochain-core (core::context\_mutation), ferrochain-graph | P1 | I |
-| BC-2.18.001 | CAP-022, DI-008, DI-014 | ferrochain-prompts | P1 | U |
-| BC-2.18.002 | CAP-022, DI-008 | ferrochain-prompts | P1 | U |
-| BC-2.18.003 | CAP-023, DI-008 | ferrochain-prompts | P1 | U |
-| BC-2.18.004 | CAP-022, DI-008, DI-014 | ferrochain-prompts | P1 | U, K |
-| BC-2.18.005 | CAP-022, DI-008, DI-014 | ferrochain-prompts | P1 | U |
-| BC-2.19.001 | CAP-024, DI-008 | ferrochain-core (core::serializable) | P1 | U, P |
-| BC-2.19.002 | CAP-024, DI-008, DI-010 | ferrochain-core (core::serializable) | P1 | U |
-| BC-2.19.003 | CAP-025, DI-008 | ferrochain-core (core::serializable) | P1 | U |
-| BC-2.19.004 | CAP-025, DI-008 | ferrochain-core (core::serializable) | P2 | U |
-| BC-2.19.005 | CAP-025, DI-008, DI-014 | ferrochain-core (core::serializable) | P0 | U, K |
-| BC-2.19.006 | CAP-025, DI-008, DI-014 | ferrochain-core (core::serializable) | P1 | U |
-| BC-2.20.001 | CAP-026, DI-008, DI-012, DI-014 | ferrochain-core (core::retriever) | P1 | U, I |
-| BC-2.20.002 | CAP-026, DI-012, DI-014 | ferrochain-core (core::retriever) | P0 | U, I |
-| BC-2.20.003 | CAP-027, DI-008 | ferrochain-vectorstores | P1 | U |
-| BC-2.21.001 | CAP-028, DI-008 | ferrochain-vectorstores | P1 | U |
-| BC-2.21.002 | CAP-029, DI-008 | ferrochain-vectorstores | P1 | U, I |
-| BC-2.21.003 | CAP-029, DI-008, DI-014 | ferrochain-vectorstores | P0 | U, K |
-| BC-2.21.004 | CAP-030, DI-008, DI-014 | ferrochain-vectorstores | P1 | U |
-| BC-2.22.001 | CAP-031, DI-008, DI-014 | ferrochain-core (core::embeddings) | P1 | U, P |
-| BC-2.22.002 | CAP-032, DI-008, DI-009, DI-010, DI-014 | ferrochain-openai | P1 | U, I |
-| BC-2.22.003 | CAP-033, DI-008, DI-009, DI-014 | ferrochain-ollama | P1 | U, I |
-| BC-2.05.007 | CAP-034, DI-014 | ferrochain-graph | P1 | U, K |
-| BC-2.05.008 | CAP-034, DI-014 | ferrochain-graph | P1 | U, I |
-| BC-2.06.004 | CAP-034, DI-014 | ferrochain-graph | P1 | U, I |
-| BC-2.06.005 | CAP-034, DI-014 | ferrochain-graph | P1 | U, I |
-| BC-2.06.006 | CAP-035, DI-014 | ferrochain-graph | P1 | U |
-| BC-2.10.005 | CAP-035, DI-014 | ferrochain-core | P1 | U, K |
-| BC-2.10.006 | CAP-035, DI-014 | ferrochain-graph | P1 | U, I |
-| BC-2.23.001 | CAP-036, DI-014 | ferrochain-tools | P1 | U, I |
-| BC-2.23.002 | CAP-036, DI-014 | ferrochain-tools | P1 | U, I |
-| BC-2.23.003 | CAP-036, DI-014 | ferrochain-tools | P1 | U, I |
-| BC-2.23.004 | CAP-036, DI-014 | ferrochain-tools | P1 | U |
-| BC-2.23.005 | CAP-037, DI-014, DI-015 | ferrochain-tools | P1 | U, K |
-| BC-2.23.006 | CAP-038, DI-014 | ferrochain-tools | P1 | U |
+| BC-2.01.001 | CAP-001 | pregolya-core | P0 | U, P |
+| BC-2.01.002 | CAP-001 | pregolya-core | P0 | U |
+| BC-2.01.003 | CAP-002 | pregolya-core | P0 | U, I |
+| BC-2.01.004 | CAP-002 | pregolya-core | P0 | U |
+| BC-2.02.001 | CAP-003 | pregolya-graph | P0 | U |
+| BC-2.02.002 | CAP-003 | pregolya-graph | P0 | U, P |
+| BC-2.02.003 | CAP-003, R-005 | pregolya-graph | P0 | U, P |
+| BC-2.02.004 | CAP-003, R-005 | pregolya-graph | P0 | U |
+| BC-2.02.005 | CAP-003 | pregolya-graph | P0 | U, I |
+| BC-2.02.006 | CAP-003 | pregolya-graph | P0 | I |
+| BC-2.03.001 | CAP-004, NE-17 | pregolya-graph | P0 | P, K |
+| BC-2.03.002 | CAP-004, DI-001 | pregolya-graph | P0 | U, P |
+| BC-2.03.003 | CAP-004, DI-001, NE-17 | pregolya-graph | P0 | P, K |
+| BC-2.04.001 | CAP-005, DI-002 | pregolya-checkpoint | P0 | U, I, S |
+| BC-2.04.002 | CAP-005, DI-002 | pregolya-checkpoint | P0 | U, I |
+| BC-2.04.003 | CAP-005, DI-004 | pregolya-checkpoint | P0 | U, P |
+| BC-2.04.004 | CAP-005, DI-004 | pregolya-checkpoint | P0 | U, I |
+| BC-2.04.005 | CAP-005, DI-002 | pregolya-checkpoint | P0 | I, S |
+| BC-2.04.006 | CAP-005, DI-005, NE-12 | pregolya-checkpoint | P0 | P, K |
+| BC-2.04.007 | CAP-005, NE-11 | pregolya-checkpoint | P0 | U, I |
+| BC-2.05.001 | CAP-006, DI-003 | pregolya-graph | P0 | I |
+| BC-2.05.002 | CAP-006, DI-003 | pregolya-graph | P0 | U, I |
+| BC-2.05.003 | CAP-006, DI-003 | pregolya-graph | P0 | I |
+| BC-2.05.004 | CAP-006, DI-003 | pregolya-graph | P0 | U, I |
+| BC-2.05.005 | CAP-006, DI-003 | pregolya-graph | P0 | U |
+| BC-2.05.006 | CAP-006, DI-003, ASM-008 | pregolya-graph | P0 | U, I |
+| BC-2.06.001 | CAP-007, DI-011 | pregolya-graph | P0 | U, I |
+| BC-2.06.002 | CAP-007 | pregolya-graph | P0 | U, I |
+| BC-2.06.003 | CAP-007, DI-011, NE-13 | pregolya-graph | P0 | I, S |
+| BC-2.07.001 | CAP-008, R-004 | pregolya-splitters | P0 | U |
+| BC-2.07.002 | CAP-008, R-004 | pregolya-splitters | P0 | U (golden vectors) |
+| BC-2.07.003 | CAP-008 | pregolya-splitters | P0 | U |
+| BC-2.08.001 | CAP-009, CAP-011, DI-011 | pregolya-standard-tests | P1 | I |
+| BC-2.08.002 | CAP-009, CAP-011 | pregolya-standard-tests | P1 | I |
+| BC-2.08.003 | CAP-009, CAP-011 | pregolya-standard-tests | P1 | I |
+| BC-2.08.004 | CAP-009, CAP-011, DI-014 | pregolya-standard-tests | P1 | I |
+| BC-2.08.005 | CAP-009, CAP-011 | pregolya-standard-tests | P1 | I |
+| BC-2.08.006 | CAP-009, DI-008 | pregolya-openai, pregolya-anthropic, pregolya-ollama | P1 | U |
+| BC-2.08.007 | CAP-009, DI-009, DI-014 | pregolya-standard-tests | P1 | I |
+| BC-2.08.008 | CAP-011, NE-15 | pregolya-standard-tests | P1 | U, I |
+| BC-2.08.009 | CAP-009, ADR-004 | pregolya-standard-tests | P1 | U (snapshot) |
+| BC-2.09.001 | CAP-010 | pregolya-mcp | P1 | I |
+| BC-2.09.002 | CAP-010 | pregolya-mcp | P1 | I |
+| BC-2.09.003 | CAP-010, DI-012 | pregolya-mcp | P1 | I |
+| BC-2.09.004 | CAP-010, DI-014, R-006 | pregolya-mcp | P1 | U |
+| BC-2.09.005 | CAP-010, DI-014, R-006 | pregolya-mcp | P1 | U |
+| BC-2.10.001 | CAP-012, D17-Q4 | pregolya-graph | P0 | U, I |
+| BC-2.10.002 | CAP-012, D17-Q4 | pregolya-graph | P0 | U, P |
+| BC-2.10.003 | CAP-012, D17-Q4 | pregolya-graph | P0 | U, I |
+| BC-2.10.004 | CAP-012, CAP-006, DI-003 | pregolya-graph | P0 | I |
+| BC-2.11.001 | CAP-013, DI-012 | pregolya-graph | P0 | U, I |
+| BC-2.11.002 | CAP-013, DI-012, NE-06 | pregolya-graph | P0 | U, I |
+| BC-2.11.003 | CAP-013, DI-012, NE-06 | pregolya-graph | P0 | I |
+| BC-2.11.004 | CAP-013, DI-012, NE-06 | pregolya-graph | P0 | I |
+| BC-2.11.005 | CAP-013, DI-012 | pregolya-graph | P0 | U, I |
+| BC-2.11.006 | CAP-013, DI-012 | pregolya-graph | P0 | U |
+| BC-2.12.001 | CAP-014 | pregolya-server | P1 | I |
+| BC-2.12.002 | CAP-014 | pregolya-server | P1 | I |
+| BC-2.12.003 | CAP-014 | pregolya-server | P1 | I |
+| BC-2.12.004 | CAP-014 | pregolya-server | P1 | I |
+| BC-2.12.005 | CAP-014, DI-013, NE-14 | pregolya-server | P1 | U, I |
+| BC-2.12.006 | CAP-014, NE-08 | pregolya-server | P1 | U, I |
+| BC-2.12.007 | CAP-014, DI-011, NE-13 | pregolya-server | P1 | I, S |
+| BC-2.13.001 | CAP-015, DI-006, NE-01 | pregolya-sandbox | P1 | U, I |
+| BC-2.13.002 | CAP-015, DI-006, DI-015 | pregolya-sandbox | P1 | U |
+| BC-2.13.003 | CAP-015, DI-006 | pregolya-sandbox | P1 | U |
+| BC-2.13.004 | CAP-015, DI-007, NE-02 | pregolya-sandbox | P1 | U, P, K |
+| BC-2.13.005 | CAP-015, DI-007, NE-02 | pregolya-sandbox | P1 | U |
+| BC-2.13.006 | CAP-015, DI-006, NE-16 | pregolya-sandbox | P1 | U |
+| BC-2.14.001 | CAP-016, DI-008, DI-014 | pregolya-core | P0 | U |
+| BC-2.14.002 | CAP-016 | pregolya-core | P0 | U |
+| BC-2.14.003 | CAP-016, DI-008, NE-07 | pregolya-core | P0 | U (CI lint) |
+| BC-2.14.004 | CAP-016, DI-009, NE-04 | pregolya-core | P0 | U (CI lint) |
+| BC-2.14.005 | CAP-016, DI-010, NE-10 | pregolya-core | P0 | U (CI lint) |
+| BC-2.14.006 | CAP-016, DI-014, NE-03 | pregolya-core | P0 | U |
+| BC-2.15.001 | CAP-017 | pregolya-memory | P1 | I |
+| BC-2.15.002 | CAP-017 | pregolya-memory | P1 | I, P |
+| BC-2.15.003 | CAP-017 | pregolya-memory | P1 | I |
+| BC-2.16.001 | CAP-018, NE-09 | pregolya-core | P1 | U, I |
+| BC-2.16.002 | CAP-018, NE-09 | pregolya-core | P1 | U |
+| BC-2.16.003 | CAP-018, NE-09 | pregolya-core | P1 | U, I |
+| BC-2.17.001 | CAP-019, DI-001, DI-005, DI-007, DI-014 | pregolya-graph, pregolya-checkpoint, pregolya-sandbox, pregolya-vectorstores, pregolya-core | P2 | K |
+| BC-2.17.002 | CAP-019 | pregolya-graph, pregolya-checkpoint | P2 | F |
+| BC-2.08.010 | CAP-002, DI-008, ADR-004, ADR-008 | pregolya-macros (re-exported pregolya-core) | P1 | U |
+| BC-2.08.011 | CAP-003, ADR-008 | pregolya-macros (re-exported pregolya-core) | P1 | U |
+| BC-2.08.012 | CAP-003, ADR-008 | pregolya-macros (re-exported pregolya-core) | P1 | U |
+| BC-2.04.008 | CAP-005, DI-002, DI-008, DI-014 | pregolya-checkpoint | P1 | I |
+| BC-2.08.013 | CAP-009, DI-008, DI-014 | pregolya-core (trait), pregolya-\<provider\> (dispatch) | P1 | U, I |
+| BC-2.08.014 | CAP-009, DI-008, DI-009, DI-010, DI-014 | pregolya-core (types), pregolya-\<provider\> (dispatch) | P1 | U, I |
+| BC-2.09.006 | CAP-021, DI-008, DI-014 | pregolya-mcp | P1 | I |
+| BC-2.09.007 | CAP-021, DI-008, DI-010, DI-014 | pregolya-mcp | P1 | I |
+| BC-2.13.007 | CAP-015, DI-006, DI-008, DI-010 | pregolya-sandbox | P1 | U, I |
+| BC-2.15.004 | CAP-020, DI-008, DI-014 | pregolya-memory (memory::skills) | P1 | U, I |
+| BC-2.15.005 | CAP-020, DI-008, DI-012, DI-014 | pregolya-core (core::write\_guard), pregolya-memory | P1 | U, I |
+| BC-2.15.006 | CAP-020, DI-002, DI-008, DI-014 | pregolya-core (core::context\_mutation), pregolya-graph | P1 | I |
+| BC-2.18.001 | CAP-022, DI-008, DI-014 | pregolya-prompts | P1 | U |
+| BC-2.18.002 | CAP-022, DI-008 | pregolya-prompts | P1 | U |
+| BC-2.18.003 | CAP-023, DI-008 | pregolya-prompts | P1 | U |
+| BC-2.18.004 | CAP-022, DI-008, DI-014 | pregolya-prompts | P1 | U, K |
+| BC-2.18.005 | CAP-022, DI-008, DI-014 | pregolya-prompts | P1 | U |
+| BC-2.19.001 | CAP-024, DI-008 | pregolya-core (core::serializable) | P1 | U, P |
+| BC-2.19.002 | CAP-024, DI-008, DI-010 | pregolya-core (core::serializable) | P1 | U |
+| BC-2.19.003 | CAP-025, DI-008 | pregolya-core (core::serializable) | P1 | U |
+| BC-2.19.004 | CAP-025, DI-008 | pregolya-core (core::serializable) | P2 | U |
+| BC-2.19.005 | CAP-025, DI-008, DI-014 | pregolya-core (core::serializable) | P0 | U, K |
+| BC-2.19.006 | CAP-025, DI-008, DI-014 | pregolya-core (core::serializable) | P1 | U |
+| BC-2.20.001 | CAP-026, DI-008, DI-012, DI-014 | pregolya-core (core::retriever) | P1 | U, I |
+| BC-2.20.002 | CAP-026, DI-012, DI-014 | pregolya-core (core::retriever) | P0 | U, I |
+| BC-2.20.003 | CAP-027, DI-008 | pregolya-vectorstores | P1 | U |
+| BC-2.21.001 | CAP-028, DI-008 | pregolya-vectorstores | P1 | U |
+| BC-2.21.002 | CAP-029, DI-008 | pregolya-vectorstores | P1 | U, I |
+| BC-2.21.003 | CAP-029, DI-008, DI-014 | pregolya-vectorstores | P0 | U, K |
+| BC-2.21.004 | CAP-030, DI-008, DI-014 | pregolya-vectorstores | P1 | U |
+| BC-2.22.001 | CAP-031, DI-008, DI-014 | pregolya-core (core::embeddings) | P1 | U, P |
+| BC-2.22.002 | CAP-032, DI-008, DI-009, DI-010, DI-014 | pregolya-openai | P1 | U, I |
+| BC-2.22.003 | CAP-033, DI-008, DI-009, DI-014 | pregolya-ollama | P1 | U, I |
+| BC-2.05.007 | CAP-034, DI-014 | pregolya-graph | P1 | U, K |
+| BC-2.05.008 | CAP-034, DI-014 | pregolya-graph | P1 | U, I |
+| BC-2.06.004 | CAP-034, DI-014 | pregolya-graph | P1 | U, I |
+| BC-2.06.005 | CAP-034, DI-014 | pregolya-graph | P1 | U, I |
+| BC-2.06.006 | CAP-035, DI-014 | pregolya-graph | P1 | U |
+| BC-2.10.005 | CAP-035, DI-014 | pregolya-core | P1 | U, K |
+| BC-2.10.006 | CAP-035, DI-014 | pregolya-graph | P1 | U, I |
+| BC-2.23.001 | CAP-036, DI-014 | pregolya-tools | P1 | U, I |
+| BC-2.23.002 | CAP-036, DI-014 | pregolya-tools | P1 | U, I |
+| BC-2.23.003 | CAP-036, DI-014 | pregolya-tools | P1 | U, I |
+| BC-2.23.004 | CAP-036, DI-014 | pregolya-tools | P1 | U |
+| BC-2.23.005 | CAP-037, DI-014, DI-015 | pregolya-tools | P1 | U, K |
+| BC-2.23.006 | CAP-038, DI-014 | pregolya-tools | P1 | U |
 
 **Totals:** 129 BCs — 51 P0 / 75 P1 / 3 P2
 
@@ -760,7 +760,7 @@ All are resolved here. Flagged-for-human column indicates whether human gate rev
 | # | Question | Resolution | Rationale | Flagged? |
 |---|----------|-----------|-----------|---------|
 | OQR-1 | HITL risk tiers — extend CAP-006 or new capability? | Extension of CAP-006. BC-2.05.006 adds typed action-risk levels within the HITL interrupt model. No new CAP. | The interrupt mechanism is unchanged; risk tiers are a BC-level typing of interrupt types within the same subsystem. ASM-008 confirms the capability is HITL, just richer. | No |
-| OQR-2 | Agent registry — first-class vs application-layer vs deferred? | Application-layer concern. CAP-014 Assistant concept (named agent config) in ferrochain-server covers named agent registration at the server level. No separate "agent registry" primitive is in scope for v1. | LangChain v1 has no first-class agent registry; adk-rust's agent registry is REJECT (P-17). The Assistant concept in LangGraph Platform (the server's domain) is the right analog. | No |
+| OQR-2 | Agent registry — first-class vs application-layer vs deferred? | Application-layer concern. CAP-014 Assistant concept (named agent config) in pregolya-server covers named agent registration at the server level. No separate "agent registry" primitive is in scope for v1. | LangChain v1 has no first-class agent registry; adk-rust's agent registry is REJECT (P-17). The Assistant concept in LangGraph Platform (the server's domain) is the right analog. | No |
 | OQR-3 | CAP-019 phase anchoring — behavioral invariants Phase-1 vs proof deliverables Phase-6? | Behavioral invariants (DI-001, DI-005, DI-007, DI-014) get Phase-1 BCs (BC-2.03.001, BC-2.04.006, BC-2.13.004, BC-2.21.003, BC-2.19.005, BC-2.05.007). Kani proof deliverables belong to Phase 6. BC-2.17.001 specifies the VP scope (6 P0 + 3 P1); the harnesses that prove them are Phase-6 work. | This is already stated explicitly in CAP-019's domain-spec entry. Expanded from 3 to 9 VPs (6 P0 + 3 P1) per D21+D23 (burst-241). | No |
 | OQR-4 | D5 proc-macro BC dependency — note gating ADR? | BCs for #[tool], #[entrypoint], #[task] proc-macro attributes are GATED on D5 ADR. They are not in the 83-BC plan. A placeholder note is in each affected subsection's BC index. D17-Q6 accepted D5 gate. | D5 ADR (schemars/proc-macro decision) must precede proc-macro BCs per D17-Q6. The 83-BC base plan contained no proc-macro BCs; 3 were added as Phase-1b amendments (BC-2.08.010–012, Batch 13) after ADR-004 and ADR-008 acceptance (total at Batch 13: 86 BCs; later grown to 95 via D20). If D5 ADR produces an ADOPT disposition, proc-macro BCs become a Phase-1b addition via the BC authoring plan. | No (D5 ADR is the gate, not human) |
 | OQR-5 | DI-012 default hook behavior — default-permit or default-deny? | Default-permit with WARNING LOG at WARN level when no GuardrailHook is registered. Graph does not fail. Operator sees a warning. _(Changelog: updated INFO→WARN 2026-07-13 to match BC-2.11.006 and BC-2.09.003 which both emit `WARN`-level; INFO is insufficient for an operator-actionable security alert.)_ | Security posture (NE-01, NE-14) is about enforcing defaults for sandbox and server config — not about blocking all content when no guardrail is configured. A missing guardrail is valid for most non-SOC use cases. Domain A users must explicitly register a GuardrailHook. default-deny would break every RAG and MCP use case that doesn't need content filtering. BC-2.11.006 specifies this contract. | No |
@@ -804,15 +804,15 @@ Summary:
 
 | Crate | Criticality | Rationale |
 |-------|-------------|-----------|
-| ferrochain-core | CRITICAL | Security boundaries (credential opacity, constructor Result), universal composition primitive |
-| ferrochain-graph | CRITICAL | BSP determinism, HITL, session tenancy — formal verification targets |
-| ferrochain-checkpoint | CRITICAL | Per-task durability, monotonic clock, crash recovery, encryption at rest |
-| ferrochain-server | HIGH | Secure defaults, streaming/unary equivalence, CRUD resources |
-| ferrochain-mcp | HIGH | Untrusted ingress routing, tool-exception fidelity |
-| ferrochain-\<provider\> | HIGH | Conformance contract, error-type fidelity |
-| ferrochain-splitters | MEDIUM | Correctness-critical (code-point parity) but isolated |
-| ferrochain-standard-tests | MEDIUM | Test infrastructure — quality signal, not production gate |
-| ferrochain-community | LOW | Third-party contributed; not in-tree at v1 |
+| pregolya-core | CRITICAL | Security boundaries (credential opacity, constructor Result), universal composition primitive |
+| pregolya-graph | CRITICAL | BSP determinism, HITL, session tenancy — formal verification targets |
+| pregolya-checkpoint | CRITICAL | Per-task durability, monotonic clock, crash recovery, encryption at rest |
+| pregolya-server | HIGH | Secure defaults, streaming/unary equivalence, CRUD resources |
+| pregolya-mcp | HIGH | Untrusted ingress routing, tool-exception fidelity |
+| pregolya-\<provider\> | HIGH | Conformance contract, error-type fidelity |
+| pregolya-splitters | MEDIUM | Correctness-critical (code-point parity) but isolated |
+| pregolya-standard-tests | MEDIUM | Test infrastructure — quality signal, not production gate |
+| pregolya-community | LOW | Third-party contributed; not in-tree at v1 |
 
 ---
 

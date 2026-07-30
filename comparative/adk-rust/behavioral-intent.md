@@ -135,7 +135,7 @@ Behavioral contracts:
 ## 4. adk-agent — agent implementations (9.4k LOC)
 
 - **`LlmAgent`** (`llm_agent.rs`, 2,712 lines — the largest single file; would exceed
-  ferrochain's 750-line hard gate) is the flagship agent: owns the LLM turn loop, tool
+  pregolya's 750-line hard gate) is the flagship agent: owns the LLM turn loop, tool
   dispatch, transfer logic, output_key → state_delta emission, guardrails, compaction hooks,
   and the `transfer_to_agent` tool injection with `disallow_transfer_to_parent/peers` policy.
 - **Workflow agents** (`workflow/`): `SequentialAgent`, `ParallelAgent` (with
@@ -325,7 +325,7 @@ HIGH (code).
 - **Domain C mapping:** OpenClaw personal memory wants *per-user, durable, private* recall.
   adk gives firm user partitioning (good) and cross-project isolation (good), but its "global tier
   bleeds into every project view" default is the opposite of "strictly personal." For Domain C,
-  ferrochain would either disable the global tier or model personal memory as a user-private scope
+  pregolya would either disable the global tier or model personal memory as a user-private scope
   with NO global overlay. GDPR erasure (`delete_user`) is a first-class method — aligned with a
   personal-memory right-to-be-forgotten requirement. `MemoryServiceAdapter` binds
   `(app_name,user_id,project_id?)` at construction to satisfy `adk_core::Memory::search(&str)` —
@@ -362,7 +362,7 @@ HIGH (code).
 - **New open items (A2):** (a) does adk-graph's checkpointer ever integrate with adk-session, or
   are they permanently disjoint (P-27)? — confirmed disjoint at v1.0.0. (b) `replay()` doc/impl
   mismatch (claims re-execution, filters stored states) — flag for their maintainers, informative
-  for ferrochain. (c) postgres/redis/etc rewind unimplemented — is rewind a first-class contract or
+  for pregolya. (c) postgres/redis/etc rewind unimplemented — is rewind a first-class contract or
   sqlite-only convenience? Their default-error says "not a universal contract."
 
 ## State Checkpoint
@@ -460,7 +460,7 @@ global-bucket, burst=0. Confidence HIGH. **Concern:** `buckets` map is in-memory
   `*-secrets`, `*-audit`). Confidence HIGH (module surface).
 - **BC: SecretProvider returns a bare `String`.** `SecretProvider::get_secret(name) -> Result<String,
   AdkError>` and `SecretServiceAdapter` → `adk_core::SecretService` both surface the secret VALUE as
-  a plain `String` (the trait doc even `println!`s its length). **Divergence from ferrochain's
+  a plain `String` (the trait doc even `println!`s its length). **Divergence from pregolya's
   newtype+redacted-Debug credential rule** (patterns P-44): a `String` secret has default
   `Debug`/`Display` and is leak-prone in logs/spans/errors. Confidence HIGH (signature).
 - **BC: A2A push auth** — `TaskPushNotificationConfig` carries Bearer `credentials` + a
@@ -488,7 +488,7 @@ global-bucket, burst=0. Confidence HIGH. **Concern:** `buckets` map is in-memory
 - **Domain-B mapping:** this is exactly the budget-governance gap Domain B flagged as NEW
   (`domain-b-dark-factory.md` items §186/§231/§208 — "checkpointer stores usage but no
   budget-governance primitive planned"). adk-rust does NOT close it; it stops at accounting +
-  rate-limiting. A ferrochain budget primitive (per-run/per-agent token+cost ceiling with
+  rate-limiting. A pregolya budget primitive (per-run/per-agent token+cost ceiling with
   halt-or-degrade) is genuine net-new design with no reference prior art, but `UsageReport`/
   `SessionUsageTracker` is a clean accounting substrate to build ON.
 
@@ -511,15 +511,15 @@ global-bucket, burst=0. Confidence HIGH. **Concern:** `buckets` map is in-memory
   appears in ZERO source files of `adk-server`/`adk-auth`/`adk-awp`/`adk-acp`/`awp-types`/
   `adk-telemetry`/`adk-managed`/`adk-enterprise`. It is declared in `adk-server/Cargo.toml` and
   `adk-deploy/Cargo.toml` but not used in their `src/`; it is USED only in `adk-cli` and `cargo-adk`
-  (binaries) — precisely the "confined to binaries/tests" carve-out ferrochain permits. **No anyhow
+  (binaries) — precisely the "confined to binaries/tests" carve-out pregolya permits. **No anyhow
   in any library public signature in this cluster.** Combined with A2's finding (state cluster also
   clean), the only remaining anyhow check is the core-crate grep (out of this cluster's scope).
 - **reqwest timeout construction sites — RESOLVED (as a GAP).** Every outbound client is
   `reqwest::Client::new()` with NO `.timeout()`: `a2a/client.rs` (×5), `a2a/v1/push.rs`,
   `adk-auth::sso::jwks`, `adk-auth::sso::providers::oidc`. Cluster-wide grep for `.timeout(` = 0
   hits. The inbound axum `TimeoutLayer` (default 30s) is a server-request timeout, unrelated to the
-  outbound clients. This is a divergence from ferrochain's mandatory-30s rule (patterns P-42);
-  ferrochain must set `.timeout()` on ALL outbound clients incl. server-side push/JWKS/remote-agent.
+  outbound clients. This is a divergence from pregolya's mandatory-30s rule (patterns P-42);
+  pregolya must set `.timeout()` on ALL outbound clients incl. server-side push/JWKS/remote-agent.
 - **New open items (A3):** (a) does any durable `TaskStore`/`RunStore` impl ship, or only in-memory?
   — only in-memory ships at v1.0.0; the traits exist for external durable impls. (b) `message_stream`
   and `background`-run execution are both placeholders — are they wired in a later ADK version? (out
@@ -545,7 +545,7 @@ timestamp: 2026-07-13
 (adk-guardrail, adk-sandbox, adk-eval, adk-retry-reflect, adk-skill, adk-plugin, adk-code, adk-browser)
 
 D16 Rust-blindness holds. This section records the *intended behavior* of each subsystem and maps
-it to ferrochain's holdout domains. Cross-refs to patterns P-47..P-66.
+it to pregolya's holdout domains. Cross-refs to patterns P-47..P-66.
 
 ## 1. Guardrail subsystem — what is actually enforced, where it hooks (Q1)
 **Intent:** validate/transform agent input and output. **Reality:** four built-in checks —
@@ -612,7 +612,7 @@ tokenizer), LLM-judge semantic match, rubric-weighted quality, safety, hallucina
 with Wilcoxon (feature `statistics`), baseline/regression store.
 **Weaknesses (P-64):** order-dependent multi-turn score merge `(a+b)/2`; judge infra-failure → score
 0.0 (conflated with quality-fail); optional agent double-run when cost/trace configured.
-**Map:** DIRECT to ferrochain holdout-evaluation + Domain-B quality gates. Reusable core = declarative
+**Map:** DIRECT to pregolya holdout-evaluation + Domain-B quality gates. Reusable core = declarative
 datasets + deterministic non-LLM scorers; LLM-judge aggregation/fallback needs hardening.
 
 ## 4. retry-reflect — self-reflection loop semantics, termination, hook (Q4)
@@ -624,7 +624,7 @@ so the agent self-corrects next turn (P-50). **Termination:** per-tool limit (de
 the real error is passed through (no swallow). **Termination hole (P-63):** the per-tool counter is
 keyed by args-hash, so an agent that changes args each attempt (as the reflection asks) resets the
 counter — the per-tool bound is effectively unbounded unless the opt-in global bound/circuit-breaker
-is on. **Map:** ferrochain must key the bound on tool identity, not argument content, and default to a
+is on. **Map:** pregolya must key the bound on tool identity, not argument content, and default to a
 finite global bound.
 
 ## 5. Skills / plugins vs SKILL.md / MCP (Q5)
@@ -644,7 +644,7 @@ them. **Plugin model:** two parallel systems — closure `Plugin`/`PluginManager
 injector) and trait `EnhancedPlugin`/`EnhancedPluginManager` (retry-reflect); priority-ordered
 before/after hooks with Continue/ShortCircuit + documented priority bands (P-52); duplication is a
 drift surface (P-58). **vs OpenClaw SKILL.md:** the `.skills/` + `.claude/skills/` + convention-file
-scan closely parallels OpenClaw; ferrochain would need to add the body-content security scanning
+scan closely parallels OpenClaw; pregolya would need to add the body-content security scanning
 adk-rust omits.
 
 ## 6. In-cluster open items resolved (Q6)
@@ -687,7 +687,7 @@ and the deep-scope capability crates, plus resolution of A1 open item P-16.
   P-04 carried through). Behavioral gaps: <!-- [comparative-cert-1] corrected from "all providers" + "only ollama" exception; certification verified 3 non-wired providers via grep --> ollama (external ollama-rs) does not participate; bedrock/client stores RetryConfig but delegates retry to `aws-sdk-bedrockruntime`; openai/ws_transport stores RetryConfig but implements a manual retry loop (lines 160-201). And outbound timeouts are non-uniform (P-77).
 - **Tool-call robustness across serving backends:** `tool_call_parser` (P-68) makes the tool loop work
   even when a backend emits tool calls as TEXT (Qwen/Llama/Mistral/DeepSeek/Gemma). The promise: an
-  agent's tool contract is backend-encoding-agnostic — directly the property ferrochain-ollama needs.
+  agent's tool contract is backend-encoding-agnostic — directly the property pregolya-ollama needs.
 - **Streaming that also yields a final message:** the anthropic SDK's `AccumulatingStream` (P-70) +
   DoS-hardened SSE decoder (P-69) deliver live deltas AND a fully-assembled `Message` (for the event
   log / turn completion) without double-buffering, with idle-chunk timeout + TTFB metering.
@@ -706,7 +706,7 @@ Full evidence: patterns-observed A5 headline. Same shape for gemini (adapter ove
 ## Local-LLM behavioral story (Q4)
 - **Ollama** (`ollama-rs` adapter): behaviorally an HTTP client to a local daemon; keyless; the daemon
   owns inference. Text-tag tool-call parsing (P-68) covers Ollama models without native tool-calling.
-  Keyless-CI-friendly (mock the HTTP boundary). This is the ferrochain-ollama behavioral target.
+  Keyless-CI-friendly (mock the HTTP boundary). This is the pregolya-ollama behavioral target.
 - **mistral.rs** (`adk-mistralrs`): behaviorally IN-PROCESS inference (text+vision+speech+diffusion+
   embedding) over candle; keyless but weight-download-dependent (hf-hub → native-tls, P-79), heavy
   build. `MistralRsError` gives actionable variants (ModelLoad/ModelNotFound with `suggestion`) —
@@ -723,7 +723,7 @@ hard `hard_limit_minor` on integer-minor-unit `Money`. Every step is written to 
 AP2 baselines (feature-gated). Behaviorally this is the closest thing in adk-rust to a
 budget-governance engine — but for COMMERCE dollars, not LLM token/cost. It CONFIRMS the Domain-B
 budget-governance gap (P-46) is real (no token/cost ceiling exists) while providing the exact policy
-SHAPE (allow/escalate/deny + severity + journal) a ferrochain token-budget primitive would want.
+SHAPE (allow/escalate/deny + severity + journal) a pregolya token-budget primitive would want.
 
 ## New open items (A5) / carried
 - The SDK+adapter split (P-16) is behaviorally sound but **undocumented at the workspace level** —
@@ -741,6 +741,6 @@ subsystems: [model-adapters, retry, tool-call-parser, streaming(sse/accumulate),
              gemini-sdk, mistralrs-local, payments-commerce, realtime(dep-depth)]
 a1_open_items_resolved:
   - P-16 — SDK+adapter layering (one wire behavior per vendor; adapter delegates); drift LOW
-mappings: [ferrochain-ollama (P-68 tool-parse + keyless-CI), Domain-B budget (P-73 shape vs P-46 gap)]
+mappings: [pregolya-ollama (P-68 tool-parse + keyless-CI), Domain-B budget (P-73 shape vs P-46 gap)]
 timestamp: 2026-07-13
 ```

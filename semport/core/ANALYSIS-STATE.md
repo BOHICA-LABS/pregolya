@@ -1,6 +1,6 @@
 ---
 artifact: semport/core/analysis-state
-project: ferrochain
+project: pregolya
 pass: 8
 status: pass-8-narrow-complete
 deepening_run: true
@@ -173,9 +173,9 @@ pass_8_narrow:
       note: >
         Merged ALL_SERIALIZABLE_MAPPINGS = 176 unique keys (NOT 178; 178 = sum of 4 dicts, 2 JS
         collisions override SERIALIZABLE). Buckets: 141 core-internal, 12 langchain-monolith
-        (NO ferrochain owner -> unregistered/structured-error), 23 partner keys / 12 packages.
-        Only ferrochain-openai (4) + ferrochain-anthropic (1) own dedicated crates today; other 18
-        -> ferrochain-community / future per-provider crates. Alias multiplicity: ChatBedrock(3),
+        (NO pregolya owner -> unregistered/structured-error), 23 partner keys / 12 packages.
+        Only pregolya-openai (4) + pregolya-anthropic (1) own dedicated crates today; other 18
+        -> pregolya-community / future per-provider crates. Alias multiplicity: ChatBedrock(3),
         BedrockLLM(2), ChatGroq(2), ChatGoogleGenerativeAI(2). Upstream allowlist drift found:
         langchain_openrouter/baseten/vertexai are mapping VALUES not in DEFAULT_NAMESPACES (dead);
         sambanova/perplexity allowlisted with no mapping. Design ruling: derive allowlist FROM the
@@ -184,7 +184,7 @@ pass_8_narrow:
     - id: C-7
       severity: LOW
       claim: "Pass 7: 178 SERIALIZABLE_MAPPING entries; values point to partner pkgs (langchain_aws/langchain)"
-      reality: "176 merged unique keys (178 = sum of dicts, 2 collisions); partner = 23 keys/12 pkgs; the 12 langchain-monolith entries are NOT partner crates and have no ferrochain owner"
+      reality: "176 merged unique keys (178 = sum of dicts, 2 collisions); partner = 23 keys/12 pkgs; the 12 langchain-monolith entries are NOT partner crates and have no pregolya owner"
     - id: item1
       severity: NONE
       claim: "§1(c)/Pass7 D-1: 'is transform the primitive?' left OPEN"
@@ -204,7 +204,7 @@ pass_8_narrow:
     the model, they do not change how core would be spec'd (NITPICK-adjacent; the one MED is a
     resolution of a pre-existing open question, not a new expansion). The single remaining residual
     (langchain-protocol 0.0.17 CDDL fetch) is (a) delegated to research-agent in parallel and
-    (b) scoped OUT of ferrochain-core by ADR-6 (protocol split -> graph/server crate). Core's port
+    (b) scoped OUT of pregolya-core by ADR-6 (protocol split -> graph/server crate). Core's port
     surface is fully characterized for Phase-1 spec crystallization. Downstream ADR write-ups
     (ADR-3..ADR-8) are architect work (Phase 1), not further analysis.
 overall_convergence:

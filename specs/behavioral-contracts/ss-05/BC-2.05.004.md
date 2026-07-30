@@ -11,7 +11,7 @@ priority: P0
 subsystem: SS-05
 changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-05 PC4 'id field'→'interrupt_id field' with authority citations."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.3 (F-P118-02, fix burst 121, 2026-07-19): Invariant non-interrupted status list gains summary_halt: '(status queued, in_progress, completed, failed, cancelled, or summary_halt) returns Err(E-GRAPH-002 NoActiveInterrupt)'. TD-VSDD-060 file-wide sweep: line 87 'completed / interrupted / failed' describes specific re-execution outcomes (not a terminal-set enumeration; cancelled/summary_halt absent by design as it covers the resumed-execution state machine); exempt. Only line 99-100 enumerates the full non-interrupted guard set."
   - "1.4 (OBS-1 adjudication, fix burst 122, 2026-07-19): No normative text change — Invariants §4 (lines 99-101) already correctly delegated all six non-interrupted run_status values (queued, in_progress, completed, failed, cancelled, summary_halt) to BC-2.05.005. OBS-1 adjudication chose production-grade totality: BC-2.05.005 was updated to enumerate all six statuses plus the interrupted-slots-consumed scenario; delegation is now coherent in both directions. TD-VSDD-060 sweep: PC7 status transition description (line 87) — 'interrupted→in_progress→completed/interrupted/failed' describes re-execution path outcomes, not the terminal set; cancelled/summary_halt absent by design; exempt. Invariants non-interrupted guard (lines 99-101) — already exhaustive over all six statuses; unchanged."
   - "1.5 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
@@ -29,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "510c26c"
+input-hash: "cc7bfdc"
 extracted_from: null
 modified: []
 deprecated: null
@@ -160,8 +160,8 @@ modified (see BC-2.05.005).
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/types.rs` — `Command { resume, update, goto, graph }` struct + `Command.PARENT` constant
-- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — `_suppress_interrupt` path that consumes Command fields
+- `pregolya-graph/src/types.rs` — `Command { resume, update, goto, graph }` struct + `Command.PARENT` constant
+- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — `_suppress_interrupt` path that consumes Command fields
 
 ## Story Anchor
 
@@ -179,8 +179,8 @@ _[to be filled after story decomposition]_
 | Capability Anchor Justification | CAP-006 ("HITL Interrupt / Resume with FIFO Resume-Value Delivery") per capabilities-p0.md §CAP-006 — the capability grounding explicitly names "Command(resume=value) API" as one of the four HITL primitives mandated by CONFLICT-3/D17-Q2 |
 | L2 Domain Invariants | DI-003 (HITL FIFO Resume-Value Delivery) |
 | D17 Commitment | D17-Q2 — HITL contract as Phase-1 BC |
-| CONFLICT Reference | CONFLICT-3 (adk-rust has no Command type and no resume-value injection path; Command is a ferrochain-original implementation of the LangGraph contract) |
+| CONFLICT Reference | CONFLICT-3 (adk-rust has no Command type and no resume-value injection path; Command is a pregolya-original implementation of the LangGraph contract) |
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-graph |
+| Module | pregolya-graph |

@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-memory per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-memory per module-decomposition.md v1.10."
   - "1.2 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'memory.gdpr_unattributed_session_entries' to EC-004 WARN emission per observability census (SAP-1). EC-004 updated with structured event_type and fields."
   - "1.3 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
   - "1.4 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-05/06 phases Post-v1→v1 phase — residue from incomplete D23 body sweep (F-P159-01)."
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/entities-server.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "5dfd892"
+input-hash: "265e51e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -42,7 +42,7 @@ removal_reason: null
 
 ## Description
 
-When a GDPR erasure request is submitted for a `user_id`, `ferrochain-memory` must
+When a GDPR erasure request is submitted for a `user_id`, `pregolya-memory` must
 delete **all memory entries in all three tiers** (user-scoped, app-scoped authored-by,
 and session-scoped belonging to the user's sessions) that are attributable to that
 user. The erasure is **atomically all-or-nothing**: if any tier fails mid-erasure, the
@@ -156,9 +156,9 @@ required: "AdminContext" })` before any deletion occurs.
 
 ## Architecture Anchors
 
-- `ferrochain-memory/src/gdpr.rs` — `gdpr_erasure(user_id: UserId, ctx: AdminContext)` entry point
-- `ferrochain-memory/src/sqlite.rs` — transactional multi-table DELETE for three tiers
-- `ferrochain-memory/src/audit_log.rs` — compliance audit log writing `GdprErasureReceipt` without deleting the log itself
+- `pregolya-memory/src/gdpr.rs` — `gdpr_erasure(user_id: UserId, ctx: AdminContext)` entry point
+- `pregolya-memory/src/sqlite.rs` — transactional multi-table DELETE for three tiers
+- `pregolya-memory/src/audit_log.rs` — compliance audit log writing `GdprErasureReceipt` without deleting the log itself
 
 ## Story Anchor
 
@@ -176,8 +176,8 @@ _[to be filled after story decomposition]_
 | Capability Anchor Justification | CAP-017 ("Long-Horizon Cross-Session Memory Store (KV + Vector)") per capabilities-p1-p2.md §CAP-017 — "GDPR erasure must remove all traces from all tiers" is verbatim text in the CAP-017 description |
 | L2 Domain Invariants | — (no DI directly applies; CONFLICT-7 memory scope model and GDPR requirement are the primary references) |
 | CONFLICT Reference | CONFLICT-7 — memory scope: user/app/session partitioning + GDPR erasure; erasure must cover all three tiers |
-| Domain C Forcing Function | domain-c-openclaw.md §2.6 — memory is per-agent; domain-c §4 — credential / data handling as operator responsibility; the absence of GDPR tooling in OpenClaw is a gap ferrochain addresses |
+| Domain C Forcing Function | domain-c-openclaw.md §2.6 — memory is per-agent; domain-c §4 — credential / data handling as operator responsibility; the absence of GDPR tooling in OpenClaw is a gap pregolya addresses |
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | I (integration) |
-| Module | ferrochain-memory |
+| Module | pregolya-memory |

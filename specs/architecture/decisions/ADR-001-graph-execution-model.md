@@ -28,7 +28,7 @@ changelog:
 
 ## Context
 
-**Context:** ferrochain-graph is the highest-complexity, highest-risk crate in the workspace.
+**Context:** pregolya-graph is the highest-complexity, highest-risk crate in the workspace.
 D9 mandated ≥2 alternatives presented to human before ADR lock. Human selected Alternative B
 per D11.1 steering (orchestrator-loop + actor-scheduler synthesis). Alternative A is retained
 below as the rejected alternative with rationale.

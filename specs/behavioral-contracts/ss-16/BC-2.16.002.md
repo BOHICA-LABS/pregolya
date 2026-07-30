@@ -15,8 +15,8 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
-  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5 had `Err(FerrochainError { component: RETRY, category: POLICY, code: E-RETRY-002, retry_hint: Never })` — bare wrapper missing message field for E-RETRY-002 which has `<global_limit>` placeholder. Added `message:` template inline; `<global_limit>` sourced from `RetryPolicy.global_limit` (type `NonZeroU32`, deterministically available at raise site). Pattern matches BC-2.16.003 PC2 (CircuitBreakerOpen inline message precedent)."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
+  - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5 had `Err(PregolyaError { component: RETRY, category: POLICY, code: E-RETRY-002, retry_hint: Never })` — bare wrapper missing message field for E-RETRY-002 which has `<global_limit>` placeholder. Added `message:` template inline; `<global_limit>` sourced from `RetryPolicy.global_limit` (type `NonZeroU32`, deterministically available at raise site). Pattern matches BC-2.16.003 PC2 (CircuitBreakerOpen inline message precedent)."
   - "1.3 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
   - "1.4 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'retry.unlimited_policy_constructed' to the mandated WARN-level construction warning per observability census (SAP-1). PC4 and EC-003 updated with structured event_type field."
 traces_to:
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "ea7109a"
+input-hash: "cc3b6ec"
 extracted_from: null
 modified: []
 deprecated: null
@@ -41,7 +41,7 @@ removal_reason: null
 
 ## Description
 
-Every `RetryPolicy` constructed in ferrochain — whether per-tool or global — must carry a
+Every `RetryPolicy` constructed in pregolya — whether per-tool or global — must carry a
 finite, non-zero `global_limit`. The adk-rust P-63 pattern of defaulting `global_limit` to
 `None` (unlimited) is REJECTed per NE-09 because an unlimited global limit provides no
 termination guarantee regardless of per-tool limits. The default constructor must produce a
@@ -52,7 +52,7 @@ an explicit `RetryPolicy::unlimited()` method that emits a diagnostic warning.
 
 1. A `RetryPolicy` or `ToolRetryPolicy` is being constructed (via `Default`, builder, or
    explicit constructor).
-2. The ferrochain-core retry combinator crate is in scope.
+2. The pregolya-core retry combinator crate is in scope.
 
 ## Postconditions
 
@@ -67,7 +67,7 @@ an explicit `RetryPolicy::unlimited()` method that emits a diagnostic warning.
    It emits a `tracing::warn!(event_type = "retry.unlimited_policy_constructed")` at construction time with the message:
    `"RetryPolicy::unlimited() constructed — no global retry bound; only use in tests or controlled environments"`.
 5. When the global limit across all tool calls in a single run is exhausted,
-   the combinator returns `Err(FerrochainError { component: RETRY, category: POLICY,
+   the combinator returns `Err(PregolyaError { component: RETRY, category: POLICY,
    code: E-RETRY-002, retry_hint: Never,
    message: "GlobalLimitExhausted: global retry budget of <global_limit> exhausted across all tools in this run" })`
    (where `<global_limit>` is `RetryPolicy.global_limit: NonZeroU32`, available at raise site)
@@ -136,8 +136,8 @@ overridden cleanly. No warning is emitted (3 is a finite value).
 
 ## Architecture Anchors
 
-- `ferrochain-core/src/retry/policy.rs` — `RetryPolicy` struct with `global_limit: Option<NonZeroU32>` field (to be created)
-- `ferrochain-core/src/retry/combinator.rs` — global limit counter logic (to be created)
+- `pregolya-core/src/retry/policy.rs` — `RetryPolicy` struct with `global_limit: Option<NonZeroU32>` field (to be created)
+- `pregolya-core/src/retry/combinator.rs` — global limit counter logic (to be created)
 
 ## Story Anchor
 
@@ -159,4 +159,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-core |
+| Module | pregolya-core |

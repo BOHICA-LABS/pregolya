@@ -1,4 +1,4 @@
-# version-pin-allowlist.txt — ferrochain factory-artifacts
+# version-pin-allowlist.txt — pregolya factory-artifacts
 #
 # Per-match exemptions for verify-no-version-pins.sh
 #
@@ -151,7 +151,7 @@ architecture/decisions/ADR-013-mcp-server-module-placement.md :: BC-2.09.006 v1.
 
 # Reason: HISTORICAL-RECORD — ADR-014 §Propagation record (burst-226); records
 # that BC-2.20.002 v1.2 applied three specific textual corrections replacing
-# ferrochain-guardrail crate references with the canonical ferrochain-core
+# pregolya-guardrail crate references with the canonical pregolya-core
 # core::guardrail location.
 architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md :: BC-2.20.002 v1.2
 

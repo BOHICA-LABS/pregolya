@@ -1,6 +1,6 @@
 ---
 artifact: semport/graph/module-inventory
-project: ferrochain
+project: pregolya
 port_target: langgraph (P0 lead differentiator per D7)
 analyzer_pass: 2
 source_ref: .reference/langgraph @ tag 1.2.9 (commit 95af6a0)
@@ -10,7 +10,7 @@ scope: DEEP = libs/langgraph, libs/checkpoint (+postgres/+sqlite); libs/prebuilt
 note: analysis only — NO Rust code written.
 ---
 
-# LangGraph → Rust (ferrochain-graph) Module Inventory
+# LangGraph → Rust (pregolya-graph) Module Inventory
 
 ## 0. Scale summary
 
@@ -177,7 +177,7 @@ graph TD
 Hard external coupling: **`langchain-core`** (`Runnable`, `RunnableConfig`, `messages`,
 `callbacks`) is pervasive — every node is wrapped as a `Runnable`, config threads through
 everything, and `add_messages`/message-stream lean on `langchain_core.messages`. The
-ferrochain-core (pass 1) crate is a hard prerequisite. `ormsgpack` + `xxhash` +
+pregolya-core (pass 1) crate is a hard prerequisite. `ormsgpack` + `xxhash` +
 `langchain_core.load.Reviver` are the other load-bearing third-party deps.
 
 ## Entry points

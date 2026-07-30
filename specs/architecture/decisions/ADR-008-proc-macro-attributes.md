@@ -15,7 +15,7 @@ decisions: [D5, D17]
 supersedes: []
 version: "1.1"
 changelog:
-  - "1.1 (FIX-BURST-273/F-P171a-09/2026-07-25): Add Decision 2 — `action_risk` attribute parameter, emitted absolute path, and proc-macro hygiene rule. At original authoring, no `action_risk` attribute existed; ADR-018 Decision 6 and ADR-020 Decision 3 subsequently introduced the attribute (D23). Decision 2 records the emitted-path contract (::ferrochain_core::action_risk::ActionRisk) so Phase 3 implementers do not re-derive it. Also introduce version/changelog frontmatter fields absent at original authoring."
+  - "1.1 (FIX-BURST-273/F-P171a-09/2026-07-25): Add Decision 2 — `action_risk` attribute parameter, emitted absolute path, and proc-macro hygiene rule. At original authoring, no `action_risk` attribute existed; ADR-018 Decision 6 and ADR-020 Decision 3 subsequently introduced the attribute (D23). Decision 2 records the emitted-path contract (::pregolya_core::action_risk::ActionRisk) so Phase 3 implementers do not re-derive it. Also introduce version/changelog frontmatter fields absent at original authoring."
   - "1.0 (D17-Q6/2026-07-14): Initial ADR — proc-macro attributes adopted; gate: ADR-004 accepted."
 ---
 
@@ -49,8 +49,8 @@ derives JSON Schema from parameter types via schemars.
 **`#[tool]` example:**
 
 ```rust
-#[ferrochain::tool(name = "search_web", description = "Searches the web")]
-async fn search_web(query: String, max_results: u32) -> Result<String, FerrochainError> {
+#[pregolya::tool(name = "search_web", description = "Searches the web")]
+async fn search_web(query: String, max_results: u32) -> Result<String, PregolyaError> {
     // implementation
 }
 // expands to: impl Tool for SearchWebTool { ... derive JsonSchema for args ... }
@@ -61,7 +61,7 @@ Requires: `schemars::JsonSchema` bound on all parameter types (ADR-004).
 ## Decision: Adopt proc-macro crate (ADR-004 accepted — gate satisfied)
 
 ADR-004 accepted schemars (D5 gate resolved). Proceed with proc-macro crate:
-- New crate: `ferrochain-macros` (proc-macro crate; not user-facing; re-exported from ferrochain-core)
+- New crate: `pregolya-macros` (proc-macro crate; not user-facing; re-exported from pregolya-core)
 - Phase: late Phase 1 or Phase 2 depending on BC authoring plan backlog
 
 Manual `impl Tool` pattern remains valid for users who do not want the proc-macro
@@ -73,21 +73,21 @@ The `#[tool]` proc-macro gains an optional `action_risk` attribute parameter int
 ADR-018 Decision 6 and ADR-020 Decision 3 (D23):
 
 ```rust
-#[ferrochain::tool(name = "bash", action_risk = ActionRisk::High, description = "...")]
+#[pregolya::tool(name = "bash", action_risk = ActionRisk::High, description = "...")]
 async fn bash(...) -> ...
 ```
 
 **Emitted absolute path:** The macro expansion MUST use the fully-qualified path
-`::ferrochain_core::action_risk::ActionRisk` when emitting `action_risk` values into the
+`::pregolya_core::action_risk::ActionRisk` when emitting `action_risk` values into the
 annotated crate's token stream. The expansion must NOT assume that `ActionRisk` is in scope
 in the annotated crate — proc-macro expansions inject into the caller's scope, not the
 macro crate's scope. The caller may not have `ActionRisk` in its use declarations.
 
 **Hygiene rule:** All emitted variant references take the form
-`::ferrochain_core::action_risk::ActionRisk::<Variant>` (e.g.,
-`::ferrochain_core::action_risk::ActionRisk::High`). This is safe because every crate that
-can use `#[tool]` must already depend on `ferrochain-core` (which provides the `Tool` trait
-and `FerrochainError`); the absolute path is always resolvable.
+`::pregolya_core::action_risk::ActionRisk::<Variant>` (e.g.,
+`::pregolya_core::action_risk::ActionRisk::High`). This is safe because every crate that
+can use `#[tool]` must already depend on `pregolya-core` (which provides the `Tool` trait
+and `PregolyaError`); the absolute path is always resolvable.
 
 **Absent attribute:** If `action_risk = ...` is omitted from `#[tool(…)]`, the expansion
 populates `ToolCallPreview.action_risk` as `None` at dispatch time (ADR-018 Decision 6).
@@ -100,7 +100,7 @@ burst-229). The postcondition that the `action_risk` field is correctly populate
 
 ## Consequences
 
-- `ferrochain-macros` proc-macro crate added to workspace if ADR-004 accepted.
+- `pregolya-macros` proc-macro crate added to workspace if ADR-004 accepted.
 - Phase-1b BC additions for `#[tool]`, `#[entrypoint]`, `#[task]` routed through product-owner after this ADR finalizes.
 - xtask linting may need updating to recognize proc-macro-expanded code.
-- Decision 2 (D23): `#[tool]` macro implementer must use `::ferrochain_core::action_risk::ActionRisk::<Variant>` in all emitted tokens for `action_risk`; no bare `ActionRisk::High` in the expansion output.
+- Decision 2 (D23): `#[tool]` macro implementer must use `::pregolya_core::action_risk::ActionRisk::<Variant>` in all emitted tokens for `action_risk`; no bare `ActionRisk::High` in the expansion output.

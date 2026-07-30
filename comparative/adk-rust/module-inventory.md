@@ -152,7 +152,7 @@ routing (dynamic `route` field on `EventActions`), typed state with reducers (ov
 append/sum/custom), per-step checkpointing, human-in-the-loop interrupts (before/after node
 + dynamic), and multiple stream modes (values/updates/messages/debug). A `functional` feature
 adds `#[entrypoint]`/`#[task]` macros with automatic checkpointing and typed state reducers
-(ReducedValue, UntrackedValue, MessagesValue). Directly maps to ferrochain-graph concern
+(ReducedValue, UntrackedValue, MessagesValue). Directly maps to pregolya-graph concern
 (semport/graph). 14 integration-test files (3,185 LOC).
 
 **adk-memory** — Semantic long-term memory with an in-memory service and a `MemoryService`
@@ -171,7 +171,7 @@ streaming. Uses external `a2a-protocol-types` for wire types. 13 test files (4,9
 Ships `ContentFilter` (harmful/off-topic blocking), `PiiRedactor` (emails/phones/SSNs),
 optional `SchemaValidator` (feature `schema`), a `GuardrailSet`/`GuardrailExecutor` composition
 model, and a `Severity` enum. Notably has **zero integration-test files** (unit tests only) —
-flagged for deep pass. Maps to ferrochain safety/NFR concern.
+flagged for deep pass. Maps to pregolya safety/NFR concern.
 
 **adk-sandbox** — Isolated code execution behind a `SandboxBackend` trait with two impls:
 `ProcessBackend` (default; `tokio::process::Command`, timeout + env isolation, but explicitly
@@ -215,7 +215,7 @@ reflection prompts (error details + original args + guidance) as modified tool r
 agent self-corrects on the next turn, rather than propagating the error. Per-tool + global
 retry limits, configurable backoff (none/fixed/exponential-with-ceiling), allowlist/denylist
 eligibility, customizable templates, global failure tracking for circuit-breaking. Closest
-LangGraph analog is retry edges. Potentially ferrochain-relevant reliability pattern.
+LangGraph analog is retry edges. Potentially pregolya-relevant reliability pattern.
 
 ---
 
@@ -225,16 +225,16 @@ Deep structural read of the STATE/PERSISTENCE/ORCHESTRATION cluster. File-level 
 behavioral role of each module.
 
 ## adk-graph (10,709 LOC, 55 files) — module roles
-| Module | Role | Notes for ferrochain-graph |
+| Module | Role | Notes for pregolya-graph |
 |--------|------|----------------------------|
-| `executor.rs` | Pregel-named executor: `PregelExecutor::{run, run_stream, execute_super_step, filter_deferred_nodes, try_resume_from_checkpoint, save_checkpoint}` | The behavioral spine. Edge-following + per-step isolated apply. `run_stream` re-implements the loop per StreamMode (Values/Updates/Debug/Custom/Messages) — some duplication with `run`. ~730 LOC (near ferrochain's 750 gate). |
+| `executor.rs` | Pregel-named executor: `PregelExecutor::{run, run_stream, execute_super_step, filter_deferred_nodes, try_resume_from_checkpoint, save_checkpoint}` | The behavioral spine. Edge-following + per-step isolated apply. `run_stream` re-implements the loop per StreamMode (Values/Updates/Debug/Custom/Messages) — some duplication with `run`. ~730 LOC (near pregolya's 750 gate). |
 | `state.rs` | `State = HashMap<String,Value>`, `Reducer{Overwrite,Append,Sum,Custom}`, `StateSchema`, `Checkpoint` struct | Reducers are value-level, not channel-typed. `Checkpoint` = state+step+pending_nodes+metadata+created_at. |
 | `checkpoint.rs` | `Checkpointer` trait (save/load/load_by_id/list/delete) + `MemoryCheckpointer` + `SqliteCheckpointer` | No `put_writes`; UUIDv4 ids; `created_at DESC` for latest. |
 | `delta.rs` | `Diff` trait + `Vec/HashMap/String` impls + `DeltaCheckpointer` wrapper + `DeltaConfig` | Whole-state MapDelta compression; ~40 tests. `String` Diff behind `delta-checkpoint` feature (uses `similar`). |
 | `interrupt.rs` | `Interrupt{Before,After,Dynamic{message,data}}` + `interrupt()`/`interrupt_with_data()` | 41 LOC — notification-only; no resume-value type. |
 | `time_travel.rs` | `TimeTravelHandle::{steps, resume_from, fork_at, replay}` | fork-by-copy (new thread_id); `replay` filters stored states (doc says re-executes — mismatch). |
 | `functional/` | `#[entrypoint]`/`#[task]` API: `context, reducers, typed_reducer, messages, schema, execution_log, error` | `TypedReducer{Replace,Append,Merge}` — the closer LangGraph-channel analog; `unsafe impl Send/Sync` smell (P-33). |
-| `action/` (16 files) | Prebuilt action nodes: http, database, email, file, code, transform, switch, merge, wait, rss, notification, set, loop_node, trigger[_runtime] | A batteries-included node library — no LangChain/LangGraph analog; scope beyond ferrochain-graph core. |
+| `action/` (16 files) | Prebuilt action nodes: http, database, email, file, code, transform, switch, merge, wait, rss, notification, set, loop_node, trigger[_runtime] | A batteries-included node library — no LangChain/LangGraph analog; scope beyond pregolya-graph core. |
 | `node.rs`, `edge.rs`, `graph.rs` | `Node`/`NodeOutput{updates,interrupt,events}`, `Edge`, `StateGraph`/`CompiledGraph` builder | `NodeOutput.interrupt` is how dynamic interrupts surface. |
 | `cache.rs`, `deferred.rs`, `timeout.rs`, `agent.rs`, `workflow.rs`, `stream.rs`, `error.rs` | node-cache (feature), `FanInTracker`, timeout+`ProgressHandle`, agent-as-node, workflow sugar, `StreamEvent`/`StreamMode`, `GraphError` | `FanInTracker` = the join/barrier primitive; timeout has idle-timeout via progress handle. |
 
@@ -265,7 +265,7 @@ simplest crate — versioned blob store; auto-increment version is the notable c
 Two independent persistence trait hierarchies (`adk-graph::Checkpointer` vs
 `adk-session::SessionService`) with disjoint backends and divergent durability guarantees
 (patterns-observed P-27). The graph `action/` subtree (16 prebuilt node types) and adk-session's
-8 backends are the bulk of the cluster's LOC and are largely scope-beyond-core for ferrochain-graph.
+8 backends are the bulk of the cluster's LOC and are largely scope-beyond-core for pregolya-graph.
 
 ## State Checkpoint
 ```yaml
@@ -357,7 +357,7 @@ with A2A as its inter-agent protocol**; LangGraph platform is a **resource-orien
 modes, resumable/reconnectable streams). Different *shapes* of "serve an agent over HTTP": adk
 optimizes "invoke this app for this user's session, stream events, and expose the agent to peer
 agents"; LangGraph optimizes "manage versioned assistants running durable, reconnectable,
-schedulable runs against persistent threads with a shared KV store." Under D13 ferrochain-server
+schedulable runs against persistent threads with a shared KV store." Under D13 pregolya-server
 owes fidelity to NEITHER wire contract — but the LangGraph run-lifecycle vocabulary (durability
 modes, multitask strategy, resumable streams, run/thread/assistant separation) is the richer
 design reference for the Domain-B durable-run workload, while adk's A2A-native posture and
@@ -365,18 +365,18 @@ session-triple addressing are references for inter-agent delegation and multi-te
 
 ## Protocol landscape: AWP / ACP / A2A / MCP relationships (question 2 — OBSERVE only)
 
-adk-rust hosts FOUR distinct agent protocols with orthogonal roles. Mapping vs ferrochain's
-declared posture (D1: `ferrochain-mcp` is the live integration surface). The "ADR-6
+adk-rust hosts FOUR distinct agent protocols with orthogonal roles. Mapping vs pregolya's
+declared posture (D1: `pregolya-mcp` is the live integration surface). The "ADR-6
 protocol-scope-split" named in the task is **not yet materialized as a file** at pre-Phase-1
 (searched `.factory/` — present only in planning/cycle narrative), so this maps to the *known*
 posture, not a written ADR.
 
-| Protocol | Crate(s) | Role / direction | External spec dep | ferrochain analog |
+| Protocol | Crate(s) | Role / direction | External spec dep | pregolya analog |
 |----------|----------|------------------|-------------------|-------------------|
-| **MCP** (Model Context Protocol) | `adk-tool::mcp` (A1) | agent → tool/resource server (CONSUME tools) | rmcp-style client | `ferrochain-mcp` (D1) — **the one ferrochain has declared** |
-| **A2A** (Agent-to-Agent) | `adk-server::a2a` + `a2a-protocol-types` | agent ↔ agent RPC (DELEGATE tasks) — task/context/artifact, 11 JSON-RPC ops, SSE | `a2a-protocol-types` crate | none in ferrochain scope |
-| **ACP** (Agent Client Protocol) | `adk-acp` + `agent_client_protocol` | IDE/editor ↔ coding-agent (Claude Code/Codex) — wrap external ACP agents as tools, or expose ADK as ACP | `agent_client_protocol` crate | none in ferrochain scope |
-| **AWP** (Agentic Web Protocol) | `adk-awp` + `awp-types` | web/business → agent — public discovery (`.well-known`), JSON-LD capability manifests, trust tiers, human-vs-agent detection, consent, per-trust rate-limit, HMAC webhooks, commerce | own (`awp-types`) | none in ferrochain scope |
+| **MCP** (Model Context Protocol) | `adk-tool::mcp` (A1) | agent → tool/resource server (CONSUME tools) | rmcp-style client | `pregolya-mcp` (D1) — **the one pregolya has declared** |
+| **A2A** (Agent-to-Agent) | `adk-server::a2a` + `a2a-protocol-types` | agent ↔ agent RPC (DELEGATE tasks) — task/context/artifact, 11 JSON-RPC ops, SSE | `a2a-protocol-types` crate | none in pregolya scope |
+| **ACP** (Agent Client Protocol) | `adk-acp` + `agent_client_protocol` | IDE/editor ↔ coding-agent (Claude Code/Codex) — wrap external ACP agents as tools, or expose ADK as ACP | `agent_client_protocol` crate | none in pregolya scope |
+| **AWP** (Agentic Web Protocol) | `adk-awp` + `awp-types` | web/business → agent — public discovery (`.well-known`), JSON-LD capability manifests, trust tiers, human-vs-agent detection, consent, per-trust rate-limit, HMAC webhooks, commerce | own (`awp-types`) | none in pregolya scope |
 
 **How they relate (evidence-grounded):**
 - **AWP is the outer web/trust/commerce envelope; A2A is the inner agent-RPC.** `awp-types` has an
@@ -393,9 +393,9 @@ posture, not a written ADR.
   A2A v1.0.0 is the server's first-class inter-agent protocol (feature `a2a-v1`), with the runner
   wired in for real generation on `message_send`.
 
-**Mapping to ferrochain protocol-scope:** ferrochain has declared exactly ONE of the four (MCP,
-via `ferrochain-mcp`, D1). A2A/ACP/AWP are out of currently-declared ferrochain scope. The adk-rust
-evidence is a useful *landscape map* for a future ferrochain protocol-scope ADR: the four lanes are
+**Mapping to pregolya protocol-scope:** pregolya has declared exactly ONE of the four (MCP,
+via `pregolya-mcp`, D1). A2A/ACP/AWP are out of currently-declared pregolya scope. The adk-rust
+evidence is a useful *landscape map* for a future pregolya protocol-scope ADR: the four lanes are
 genuinely distinct (consume-tools / delegate-to-peer / IDE-integration / web-storefront), and a
 server can be A2A-native without touching AWP/ACP. Observe only — no recommendation on adoption.
 
@@ -532,7 +532,7 @@ The 27,913-LOC `adk-model` is mostly adapters + shared infra (retry, tool_call_p
 duplicated transports. See patterns-observed A5 headline for the full evidence.
 
 ## adk-model (27,913 LOC, 100 files) — module roles
-| Module | Role | Notes for ferrochain |
+| Module | Role | Notes for pregolya |
 |--------|------|----------------------|
 | `retry.rs` (14 KB) | `RetryConfig`, `execute_with_retry`, `is_retryable_model_error`, `ServerRetryHint`, `is_retryable_status_code` | The P-03 combinator; wired into ALL providers (P-71). Layered delay precedence + HTTP 529. |
 | `tool_call_parser.rs` (29 KB) | Text-tag tool-call parsing for tool-callingless backends (Qwen/Llama/Mistral/DeepSeek/Gemma) | P-68 — Ollama-relevant; 22 tests. |

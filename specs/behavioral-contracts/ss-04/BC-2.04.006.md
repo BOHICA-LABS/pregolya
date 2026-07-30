@@ -10,17 +10,17 @@ phase: 1a
 changelog:
   - "1.1 (initial): base BC authored."
   - "1.2 (ADV-P1D-PASS-28): OBS-P28-2 added EC-005 (SessionAddressCollision raise-condition) — E-CHKPT-005 had no behavioral home specifying when it is raised; EC-005 derives the raise-condition from Invariant 1 (composite-PK uniqueness guard at the tenancy boundary)."
-  - "1.3 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(FerrochainError { category: VAL })` with no code for the case where both `checkpoint_ns` and `thread_id` are missing. Added code: E-CORE-005 (ValidationFailed) — missing required field `thread_id` is a VAL construction-time validation failure."
-  - "1.4 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. (1) EC-003 had bare `Err(FerrochainError { category: VAL, code: E-CORE-005 })` without message; E-CORE-005 has <field> and <detail> placeholders. Added inline message template for the missing thread_id case. (2) EC-005 had `Err(FerrochainError { category: TENANCY, code: \"E-CHKPT-005\" })` without message; E-CHKPT-005 has <t> (thread_id) and <ns> (checkpoint_ns) placeholders. Added inline message template; both are available from config at raise site."
-  - "1.5 (2026-07-19, F-P114-01 fix burst 117): Anchor correction — Architecture Anchors updated from single nonexistent 'architecture/ferrochain-checkpoint.md' to two adjudicated targets: (1) 'prd-supplements/interface-definitions.md §CheckpointSaver' for trait signatures; (2) 'architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md §Consequences' for composite PK cross-restart uniqueness guarantee. Per architect adjudication (burst 117). No BC body content changed."
+  - "1.3 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(PregolyaError { category: VAL })` with no code for the case where both `checkpoint_ns` and `thread_id` are missing. Added code: E-CORE-005 (ValidationFailed) — missing required field `thread_id` is a VAL construction-time validation failure."
+  - "1.4 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. (1) EC-003 had bare `Err(PregolyaError { category: VAL, code: E-CORE-005 })` without message; E-CORE-005 has <field> and <detail> placeholders. Added inline message template for the missing thread_id case. (2) EC-005 had `Err(PregolyaError { category: TENANCY, code: \"E-CHKPT-005\" })` without message; E-CHKPT-005 has <t> (thread_id) and <ns> (checkpoint_ns) placeholders. Added inline message template; both are available from config at raise site."
+  - "1.5 (2026-07-19, F-P114-01 fix burst 117): Anchor correction — Architecture Anchors updated from single nonexistent 'architecture/pregolya-checkpoint.md' to two adjudicated targets: (1) 'prd-supplements/interface-definitions.md §CheckpointSaver' for trait signatures; (2) 'architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md §Consequences' for composite PK cross-restart uniqueness guarantee. Per architect adjudication (burst 117). No BC body content changed."
   - "1.6 (F-P160-02, 2026-07-25): Fix burst 261 — add reciprocal Related BCs entry for BC-2.15.002; BC-2.15.002 already cites this BC in its Related BCs as the NE-12 tenancy partition principle counterpart in the checkpoint subsystem, but this BC did not reciprocate. Bidirectional advisory links are the default convention per corpus navigability policy; no documented unidirectional-only exception applies to cross-subsystem principle links."
-  - "1.7 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 FerrochainError observations with elided fields: EC-003 Expected Behavior cell and EC-005 Expected Behavior cell (both have 3 of 5 fields; ADR-010 §Error-Construction Notation Canon, Class 3)."
+  - "1.7 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-003 Expected Behavior cell and EC-005 Expected Behavior cell (both have 3 of 5 fields; ADR-010 §Error-Construction Notation Canon, Class 3)."
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "2983b1d"
+input-hash: "eb78dac"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04
@@ -91,9 +91,9 @@ the adk-rust identity-triple collapse is the explicit counter-example.
 |----|-------------|-------------------|
 | EC-001 | Two threads `A` and `B` share the same `checkpoint_ns` and `checkpoint_id` | `get_tuple({A, ns, id})` and `get_tuple({B, ns, id})` return independent results; no cross-contamination |
 | EC-002 | Root namespace `checkpoint_ns = ""` and subgraph namespace `checkpoint_ns = "sub"` on the same thread | They are independent namespaces; writes to one never appear in the other; both present in `list` scoped to `thread_id` |
-| EC-003 | `get_tuple` called with `RunnableConfig` missing `checkpoint_ns` field | `checkpoint_ns` defaults to `""`; the root namespace is queried; no error if the root namespace exists; `Err(FerrochainError { category: VAL, code: E-CORE-005, message: "Validation failed for 'thread_id': value is required", .. })` if `thread_id` is also missing |
+| EC-003 | `get_tuple` called with `RunnableConfig` missing `checkpoint_ns` field | `checkpoint_ns` defaults to `""`; the root namespace is queried; no error if the root namespace exists; `Err(PregolyaError { category: VAL, code: E-CORE-005, message: "Validation failed for 'thread_id': value is required", .. })` if `thread_id` is also missing |
 | EC-004 | Concurrent writes from the same `thread_id` to different `checkpoint_ns` values | Each namespace is independent; no locking across namespaces required; both writes succeed |
-| EC-005 | A `put(config, checkpoint, ...)` or `put_writes(config, writes, task_id)` call where the composite triple `(config.thread_id, config.checkpoint_ns, config.checkpoint_id)` already exists in storage under a session belonging to a different tenant context — i.e., the composite-PK uniqueness constraint (Invariant 1) is violated at the tenancy boundary | `Err(FerrochainError { category: TENANCY, code: "E-CHKPT-005", message: "SessionAddressCollision: operation with (thread_id='<t>', ns='<ns>') conflicts with existing session — triple must be unique", .. })` (where `<t>` = `config.thread_id`, `<ns>` = `config.checkpoint_ns`, both available at raise site); write rejected atomically, no partial mutation. This is the raise-condition for E-CHKPT-005: the composite primary key collision surfaces as a tenancy boundary violation when two distinct tenant contexts attempt to own the same session address triple. In v1 this error surfaces embedded in Run.error. (OBS-P28-2, ADV-P1D-PASS-28.) |
+| EC-005 | A `put(config, checkpoint, ...)` or `put_writes(config, writes, task_id)` call where the composite triple `(config.thread_id, config.checkpoint_ns, config.checkpoint_id)` already exists in storage under a session belonging to a different tenant context — i.e., the composite-PK uniqueness constraint (Invariant 1) is violated at the tenancy boundary | `Err(PregolyaError { category: TENANCY, code: "E-CHKPT-005", message: "SessionAddressCollision: operation with (thread_id='<t>', ns='<ns>') conflicts with existing session — triple must be unique", .. })` (where `<t>` = `config.thread_id`, `<ns>` = `config.checkpoint_ns`, both available at raise site); write rejected atomically, no partial mutation. This is the raise-condition for E-CHKPT-005: the composite primary key collision surfaces as a tenancy boundary violation when two distinct tenant contexts attempt to own the same session address triple. In v1 this error surfaces embedded in Run.error. (OBS-P28-2, ADV-P1D-PASS-28.) |
 
 ## Canonical Test Vectors
 
@@ -122,7 +122,7 @@ the adk-rust identity-triple collapse is the explicit counter-example.
 | Source Analysis | semport/graph/behavioral-intent.md §2.5 (thread / checkpoint namespacing: thread_id, checkpoint_ns, checkpoint_id) |
 | NE anchor | NE-12: adk-rust identity-triple collapse — bare thread_id used in some lookup paths — is the explicit counter-example |
 | Binding Decisions | D17-Q7 (Kani VP seed obligation for session tenancy partition) |
-| Architecture Module | ferrochain-checkpoint (filled by architect) |
+| Architecture Module | pregolya-checkpoint (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 
 ## Related BCs

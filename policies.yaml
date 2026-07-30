@@ -294,7 +294,7 @@ policies:
 
   - id: 17
     name: error_notation_canon
-    description: "FerrochainError construction in spec pseudocode must follow ADR-010 §Error-Construction Notation Canon. Required forms: ::new() constructor (Class 3 valid) or complete field set with rest-pattern '..' (Class 3 valid-complete). Forbidden: ASCII-ellipsis '...' (CLASS1 violation) and missing rest-pattern on partial field sets (CLASS2 violation). Enforced by verify-error-notation-canon.sh."
+    description: "PregolyaError construction in spec pseudocode must follow ADR-010 §Error-Construction Notation Canon. Required forms: ::new() constructor (Class 3 valid) or complete field set with rest-pattern '..' (Class 3 valid-complete). Forbidden: ASCII-ellipsis '...' (CLASS1 violation) and missing rest-pattern on partial field sets (CLASS2 violation). Enforced by verify-error-notation-canon.sh."
     adopted: "ADR-010 §Error-Construction Notation Canon, D-82, D-83"
     severity: HIGH
     enforced_by: [hooks/verify-error-notation-canon.sh, adversary-prompt]
@@ -302,13 +302,13 @@ policies:
     lint_hook: null
     verification_steps:
       - "Run hooks/verify-error-notation-canon.sh: verify FAIL=0 (CLASS1_VIOLATIONS=0, CLASS2_VIOLATIONS=0)"
-      - "For each FerrochainError literal in BC pseudocode: verify it uses ::new() constructor or includes '..' rest-pattern"
-      - "Flag '...' (three ASCII dots) in FerrochainError struct literals — that is the forbidden form"
+      - "For each PregolyaError literal in BC pseudocode: verify it uses ::new() constructor or includes '..' rest-pattern"
+      - "Flag '...' (three ASCII dots) in PregolyaError struct literals — that is the forbidden form"
       - "Verify bucket sum in validator output equals the total opener count (guards against narrowed-scope false-pass per D-57)"
 
   - id: 18
     name: type_signature_canon
-    description: "Type signatures in spec pseudocode must follow canonical forms established in ADR-010 §Type Signature Canon: D-42 FerrochainError constructor form, D-43 DynTool, D-45/D-48 as_retriever receiver and return type. Enforced by verify-signature-canon.sh rules S1–S5."
+    description: "Type signatures in spec pseudocode must follow canonical forms established in ADR-010 §Type Signature Canon: D-42 PregolyaError constructor form, D-43 DynTool, D-45/D-48 as_retriever receiver and return type. Enforced by verify-signature-canon.sh rules S1–S5."
     adopted: "ADR-010 §Type Signature Canon, D-42, D-43, D-45, D-48"
     severity: HIGH
     enforced_by: [hooks/verify-signature-canon.sh, adversary-prompt]
@@ -316,7 +316,7 @@ policies:
     lint_hook: null
     verification_steps:
       - "Run hooks/verify-signature-canon.sh: verify FAIL=0 across all rule classes (S1–S5)"
-      - "Verify FerrochainError construction sites use the ::new() constructor form (rule S1b)"
+      - "Verify PregolyaError construction sites use the ::new() constructor form (rule S1b)"
       - "Verify DynTool and VectorStoreRetriever type parameters match ADR-010 §Type Signature Canon (rule S2)"
       - "Verify as_retriever receiver and return type matches the canonical form from D-45/D-48 (rules S3, S4)"
       - "Any violation not in signature-canon-allowlist.txt is a blocker; allowlist entries must have justification and fix-burst anchor"
@@ -527,7 +527,7 @@ policies:
 
   - id: 33
     name: dtu_schema_parity
-    description: "(PHASE-3-BINDING) Each DTU clone crate (ferrochain-openai, ferrochain-anthropic, ferrochain-ollama) must have field-by-field parity with its schema specification. Every column in the spec must have a matching Rust field; every Rust field must appear in the spec. (SAP-2)"
+    description: "(PHASE-3-BINDING) Each DTU clone crate (pregolya-openai, pregolya-anthropic, pregolya-ollama) must have field-by-field parity with its schema specification. Every column in the spec must have a matching Rust field; every Rust field must appear in the spec. (SAP-2)"
     adopted: "CLAUDE.md §Standing Adversary Probes SAP-2"
     severity: HIGH
     enforced_by: [adversary-prompt, dtu-validator]

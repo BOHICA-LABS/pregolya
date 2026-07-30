@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-22T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-memory per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-memory per module-decomposition.md v1.10."
   - "1.2 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
   - "1.3 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-03/04 phases Post-v1→v1 phase (OBS-P159-A adjudication: tenant isolation is Wave-1 security-critical behavior; Post-v1 VP deferral contradicts promotion) — F-P159-01 post-promotion body sweep."
 traces_to:
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "9eb4273"
+input-hash: "63e3196"
 extracted_from: null
 modified: []
 deprecated: null
@@ -42,7 +42,7 @@ removal_reason: null
 
 ## Description
 
-`ferrochain-memory` organizes memory entries into three isolation tiers: **user-scoped**
+`pregolya-memory` organizes memory entries into three isolation tiers: **user-scoped**
 (private to a single user identity), **app-scoped** (shared across all users within an
 application deployment), and **session-scoped** (private to a single session and
 discarded when the session ends or is reset). This contract specifies the isolation
@@ -163,9 +163,9 @@ operator's explicit privilege level.
 
 ## Architecture Anchors
 
-- `ferrochain-memory/src/store.rs` — `MemoryScope` enum and trait method signatures carrying scope parameter
-- `ferrochain-memory/src/sqlite.rs` — SQL query builder ensuring `WHERE scope_key = ?` predicate on every read
-- `ferrochain-memory/src/admin.rs` — privileged admin API requiring explicit `AdminContext`
+- `pregolya-memory/src/store.rs` — `MemoryScope` enum and trait method signatures carrying scope parameter
+- `pregolya-memory/src/sqlite.rs` — SQL query builder ensuring `WHERE scope_key = ?` predicate on every read
+- `pregolya-memory/src/admin.rs` — privileged admin API requiring explicit `AdminContext`
 
 ## Story Anchor
 
@@ -187,4 +187,4 @@ _[to be filled after story decomposition]_
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | I (integration), U (unit/SQL assertion) |
-| Module | ferrochain-memory |
+| Module | pregolya-memory |

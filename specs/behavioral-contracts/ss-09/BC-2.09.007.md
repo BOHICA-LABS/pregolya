@@ -17,13 +17,13 @@ timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.0 (2026-07-15, initial): base BC authored — MCP server tool call dispatch via ToolRegistry."
   - "1.1 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Architecture Anchors — ToolRegistry type corrected: `Option<Arc<dyn Tool>>` → `Option<Arc<dyn DynTool>>` (architect scope — planned implementation signature; dyn Tool is non-object-safe per ADR-005 §Adjacent Trait Object-Safety Adjudications; ToolRegistry must use DynTool for vtable dispatch)."
-  - "1.2 (WAVE-B-NOTATION-SWEEP/2026-07-29): (1) EC-002 §Scenario: CLASS3_UNICODE_ELLIPSIS_VIOLATION — `FerrochainError { … }` corrected to `FerrochainError { .. }` per ADR-010 §Error-Construction Notation Canon Class 3 (discriminator sub-class CLASS3_UNICODE_ELLIPSIS_VIOLATION: U+2026 in brace-whitespace field-elision position). (2) v1.1 frontmatter entry: de-pinned volatile ADR-005 version pin to section anchor `ADR-005 §Adjacent Trait Object-Safety Adjudications` per TD-VSDD-091."
+  - "1.2 (WAVE-B-NOTATION-SWEEP/2026-07-29): (1) EC-002 §Scenario: CLASS3_UNICODE_ELLIPSIS_VIOLATION — `PregolyaError { … }` corrected to `PregolyaError { .. }` per ADR-010 §Error-Construction Notation Canon Class 3 (discriminator sub-class CLASS3_UNICODE_ELLIPSIS_VIOLATION: U+2026 in brace-whitespace field-elision position). (2) v1.1 frontmatter entry: de-pinned volatile ADR-005 version pin to section anchor `ADR-005 §Adjacent Trait Object-Safety Adjudications` per TD-VSDD-091."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "6fd0580"
+input-hash: "5a688d9"
 extracted_from: null
 modified: []
 deprecated: null
@@ -38,8 +38,8 @@ removal_reason: null
 
 ## Description
 
-When an external MCP client sends a `tools/call` JSON-RPC request to the ferrochain MCP
-server, the server routes the call to the registered ferrochain `Tool` matching the requested
+When an external MCP client sends a `tools/call` JSON-RPC request to the pregolya MCP
+server, the server routes the call to the registered pregolya `Tool` matching the requested
 tool name, executes it with the provided arguments, and returns the result as an MCP
 `CallToolResult` response. This BC covers the full invocation path: request parsing, tool
 lookup, execution dispatch, result serialization, and error response formatting. The server
@@ -61,7 +61,7 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
 2. On **successful execution:** the server responds with:
    `{ "content": [{ "type": "text", "text": "<result_text>" }], "isError": false }`.
    The `result_text` is the tool's `ToolOutput` serialized as a JSON string or plain text.
-3. On **tool execution error** (the ferrochain `Tool::invoke` returns `Err`): the server
+3. On **tool execution error** (the pregolya `Tool::invoke` returns `Err`): the server
    responds with:
    `{ "content": [{ "type": "text", "text": "<error_message>" }], "isError": true }`.
    The `isError: true` flag is the MCP protocol signal for tool-level failures. The response
@@ -102,10 +102,10 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
 found: nonexistent_tool" }`. No tool execution attempted.
 
 ### EC-002: Tool returns an error (Err result)
-**Scenario:** The ferrochain `Tool::invoke` returns `Err(FerrochainError { .. })` (e.g., the
+**Scenario:** The pregolya `Tool::invoke` returns `Err(PregolyaError { .. })` (e.g., the
 tool made a failing HTTP request).
 **Expected behavior:** MCP response: `{ "content": [{ "type": "text", "text":
-"<FerrochainError message>" }], "isError": true }`. JSON-RPC result is a success (the MCP
+"<PregolyaError message>" }], "isError": true }`. JSON-RPC result is a success (the MCP
 transaction succeeded); the tool result carries `isError: true`.
 
 ### EC-003: Arguments fail schema validation
@@ -147,7 +147,7 @@ semantics as BC-2.09.006 PC-3 for `tools/list`).
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-MCPCALL-01 | External MCP client can successfully invoke a registered ferrochain tool via tools/call and receive the correct result | Integration test: start server; connect MCP client library; invoke tool; assert result content | Wave 2 |
+| VP-MCPCALL-01 | External MCP client can successfully invoke a registered pregolya tool via tools/call and receive the correct result | Integration test: start server; connect MCP client library; invoke tool; assert result content | Wave 2 |
 | VP-MCPCALL-02 | Tool execution error surfaces as `isError: true` in MCP response (not as a JSON-RPC protocol error) | Unit test: mock tool returning Err; assert response has isError: true and result-layer success | Wave 2 |
 
 ## Related BCs
@@ -158,8 +158,8 @@ semantics as BC-2.09.006 PC-3 for `tools/list`).
 
 ## Architecture Anchors
 
-- `ferrochain-mcp/src/server.rs` (`mcp::server`) — `tools/call` request handler: parse arguments, look up tool in `ToolRegistry`, call `Tool::invoke`, serialize `ToolOutput` to `CallToolResult`, format JSON-RPC responses for success / tool-error / protocol-error cases
-- `ferrochain-mcp/src/registry.rs` — `ToolRegistry::get(name: &str) -> Option<Arc<dyn DynTool>>` used by the invocation handler (DynTool is the object-safe dispatch seam; ADR-005 §Adjacent Trait Object-Safety Adjudications)
+- `pregolya-mcp/src/server.rs` (`mcp::server`) — `tools/call` request handler: parse arguments, look up tool in `ToolRegistry`, call `Tool::invoke`, serialize `ToolOutput` to `CallToolResult`, format JSON-RPC responses for success / tool-error / protocol-error cases
+- `pregolya-mcp/src/registry.rs` — `ToolRegistry::get(name: &str) -> Option<Arc<dyn DynTool>>` used by the invocation handler (DynTool is the object-safe dispatch seam; ADR-005 §Adjacent Trait Object-Safety Adjudications)
 
 ## Story Anchor
 
@@ -174,10 +174,10 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-021 |
-| Capability Anchor Justification | CAP-021 ("MCP Server Role (Expose Registered Tools as MCP Server Endpoint)") per capabilities-p1-p2.md §CAP-021 — this BC specifies the `tools/call` invocation path: routing an external MCP client's tool-call request to the registered ferrochain Tool and returning the result, which is the core "invoke ferrochain tools via MCP protocol" behavior CAP-021 defines |
+| Capability Anchor Justification | CAP-021 ("MCP Server Role (Expose Registered Tools as MCP Server Endpoint)") per capabilities-p1-p2.md §CAP-021 — this BC specifies the `tools/call` invocation path: routing an external MCP client's tool-call request to the registered pregolya Tool and returning the result, which is the core "invoke pregolya tools via MCP protocol" behavior CAP-021 defines |
 | L2 Domain Invariants | DI-008 (Library Constructor Result Contract — parse failures and tool-not-found return JSON-RPC error responses, not panics), DI-010 (Credential Opacity — error messages must not embed credential values), DI-014 (Error Propagation — tool execution errors surface as isError: true; protocol errors surface as JSON-RPC error; no silent swallowing) |
-| Domain D Forcing Function | domain-d-hermes-agent.md req 11 — "ferrochain exposes its own tools and resources via the MCP protocol so that other LLM applications can connect as clients"; `tools/call` is the execution surface that makes this useful |
+| Domain D Forcing Function | domain-d-hermes-agent.md req 11 — "pregolya exposes its own tools and resources via the MCP protocol so that other LLM applications can connect as clients"; `tools/call` is the execution surface that makes this useful |
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | I (integration) |
-| Module | ferrochain-mcp (`mcp::server`) |
+| Module | pregolya-mcp (`mcp::server`) |

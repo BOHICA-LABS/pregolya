@@ -7,13 +7,13 @@ status: active
 producer: business-analyst
 timestamp: 2026-07-30T00:00:00Z
 changelog:
-  - "1.11 (F-P175-D101/fix-burst-283/2026-07-30): TD-VSDD-060 sibling sweep — as_retriever fallibility corrected at two term entries. (1) VectorStoreRetriever term: 'via VectorStore::as_retriever(self: Arc<Self>)' extended to show Result<VectorStoreRetriever, FerrochainError> fallible return and Err(E-VS-003 InvalidConfig) on invalid config. (2) VectorStore term: 'returns VectorStoreRetriever' corrected to 'returns Result<VectorStoreRetriever, FerrochainError>'; Err(E-VS-003 InvalidConfig) note added. Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 Decision 2."
+  - "1.11 (F-P175-D101/fix-burst-283/2026-07-30): TD-VSDD-060 sibling sweep — as_retriever fallibility corrected at two term entries. (1) VectorStoreRetriever term: 'via VectorStore::as_retriever(self: Arc<Self>)' extended to show Result<VectorStoreRetriever, PregolyaError> fallible return and Err(E-VS-003 InvalidConfig) on invalid config. (2) VectorStore term: 'returns VectorStoreRetriever' corrected to 'returns Result<VectorStoreRetriever, PregolyaError>'; Err(E-VS-003 InvalidConfig) note added. Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 Decision 2."
   - "1.10 (fix-burst-278/wave-b/2026-07-28): TD-VSDD-060 sibling sweep — two borrow-based forms corrected in VectorStoreRetriever and VectorStore term definitions. (1) VectorStoreRetriever term: backing-store form corrected from borrow-ref to Arc<dyn VectorStore> (verifiable: borrow-backed VectorStoreRetriever form absent from this file). (2) VectorStore term: as_retriever updated to show self: Arc<Self> receiver; 'All instance methods use &self' corrected to 'Other instance methods use &self; as_retriever takes Arc<Self>' (verifiable: verify-signature-canon S1b returns zero hits for this file). Both ground in D-48."
   - "1.9 (FC-4/burst-277/2026-07-28): Sibling-sweep fix — same 'PO BC obligations' stale-completed-delegation class as capabilities-p1-p2.md v1.18. §PreToolDecision definition: '\"skip-hook-on-resume\" invariant, PO BC obligation)' → '\"skip-hook-on-resume\" invariant, BC-2.05.008)'. BC-2.05.008 covers the invariant. TD-VSDD-060 sweep: sole 'PO BC obligation' occurrence in this file (grep 'PO BC obligation' ubiquitous-language-core.md returns zero hits after this fix)."
   - "1.8 (2026-07-24): Fix burst 252 BA — ADR-019 v1.4 compaction type canon applied. CompactionTrigger: `OnWatermark { fraction: f32 }` → `f64`; predicate `<` → `<=` (non-strict; strict < cannot fire at fraction=1.0); added f64-arithmetic and non-strict rationale. CompactionSummary fields: `compacted_range: RangeInclusive<usize>` → flat `compacted_start: usize, compacted_end: usize`; slice form `messages[compacted_start..=compacted_end]`; CompactionEvent reference updated to flat fields. TD-VSDD-060 sweep: zero compacted_range / RangeInclusive / fraction: f32 occurrences remain in this file's body text (changelog exempt)."
   - "1.7 (2026-07-22): Fix burst 242 BA residual sweep — Command notation: 1 enum-variant form occurrence of `Command::Resume(PreToolDecision)` corrected to struct kwarg form `Command(resume=PreToolDecision)` per BC-2.05.004/F-P120-01 adjudication. Site: §PreToolDecision definition block. TD-VSDD-060 sweep: zero Command:: enum-form occurrences remain in this file's body text (changelog history exempt)."
   - "1.6 (2026-07-22): D23 ubiquitous-language additions (burst-230) — new section 'D23 Additions (HITL Approval Hook, Context Compaction, and First-Party Tools)': PreToolCallHook, PreToolDecision, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary (ADR-018/ADR-019); ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, BashTool, BashOutput, GrepTool (ADR-020 / SS-23). 13 new terms; total D23 + prior: 16 (D21) + 13 (D23) = 29 terms in this file. D23 added to decisions list."
-  - "1.5 (2026-07-21): F-P131-05 adjudication (burst-226) — TrustLevel term added to D21 section (ferrochain-prompts: prompts::template; 3 variants: Untrusted | UserInput | Trusted; severity ordering Untrusted > UserInput > Trusted; distinct from ProvenanceTag; authority ADR-015 §Decision 3). D21 total terms: 15 → 16."
+  - "1.5 (2026-07-21): F-P131-05 adjudication (burst-226) — TrustLevel term added to D21 section (pregolya-prompts: prompts::template; 3 variants: Untrusted | UserInput | Trusted; severity ordering Untrusted > UserInput > Trusted; distinct from ProvenanceTag; authority ADR-015 §Decision 3). D21 total terms: 15 → 16."
   - "1.4 (2026-07-20): D21 second-half ubiquitous-language additions — 6 new terms: VectorStore, InMemoryVectorStore, MetadataFilter, Embeddings, EmbeddingsOpenAI, EmbeddingsOllama. Appended to D21 section. Total D21 terms: 15."
   - "1.3 (2026-07-20): D21 ubiquitous-language additions — 9 new terms: PromptTemplate, ChatPromptTemplate, MessagesPlaceholder, FewShotPromptTemplate, LcSerializable, Reviver, Retriever, Document, VectorStoreRetriever. New section '## Prompts, Serialization, and Retrieval Terms (D21 Additions)' appended. D21 added to decisions list."
   - "1.2 (F-P121-01/02, fix burst 124, 2026-07-19): §Message: 'The four roles are: Human/AI/System/Tool' expanded to note 4 primary + legacy Function (BC-2.01.002 PC7), Chat arbitrary-role discriminant, Remove history-control token (BC-2.01.002 EC-005). §ContentBlock: replaced 5-variant drifted list (Text/ImageUrl/ToolUse/ToolResult/Document with wrong fields) with canonical 14-variant reference per BC-2.01.001 PC2; ToolCall fields {id,name,args} per BC-2.08.002/013; NonStandard DI-008 passthrough; tool results → ToolMessage per BC-2.09.002. TD-VSDD-060 sweep: only Message and ContentBlock depiction sites in this file; both fixed."
@@ -23,7 +23,7 @@ inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/semport/reference-manifest.md
-input-hash: "6e070bb"
+input-hash: "8894007"
 traces_to: L2-INDEX.md
 decisions: [D2, D17, D21, D23]
 ---
@@ -34,7 +34,7 @@ decisions: [D2, D17, D21, D23]
 > Server, Policy/Safety, Error terms and Reconciliation Table are in
 > `ubiquitous-language-server.md`.
 
-The ferrochain vocabulary for all agents. LangChain semantics are the API-surface authority
+The pregolya vocabulary for all agents. LangChain semantics are the API-surface authority
 (D17 HYBRID outcome). This file covers Core and Graph terms.
 
 ---
@@ -44,12 +44,12 @@ The ferrochain vocabulary for all agents. LangChain semantics are the API-surfac
 **Runnable**
 The universal composition interface. Any unit of computation — a model call, a prompt,
 a parser, a tool, a chain, or a compiled graph — is a Runnable. Supports `invoke`,
-`stream`, and `batch`. In ferrochain, this becomes a Rust async trait. Corresponds to
+`stream`, and `batch`. In pregolya, this becomes a Rust async trait. Corresponds to
 `Runnable` in LangChain v1 (langchain==1.3.13 semport, Corpus 1).
 
 **Chain**
 A sequence of Runnables composed via the pipe operator (`|`). `A | B | C` passes A's output
-to B, then B's output to C. In ferrochain, `|` on Runnables produces a RunnableSequence
+to B, then B's output to C. In pregolya, `|` on Runnables produces a RunnableSequence
 (itself a Runnable). No separate struct; composition is the primitive. Corresponds to
 `RunnableSequence` in LangChain v1.
 
@@ -167,7 +167,7 @@ node re-executes from start with that value available.
 **Risk-tiered authorization** (Domain A extension)
 An application-layer pattern for SOC-analyst-style approval gates: action-risk levels
 (read-only, low, medium, high) that route Interrupt delivery to different approver roles.
-Not a core LangGraph primitive — built as a graph pattern on top of ferrochain's HITL
+Not a core LangGraph primitive — built as a graph pattern on top of pregolya's HITL
 contract. See domain-a-soc-analyst.md §5.
 
 ---
@@ -183,14 +183,14 @@ A single-message template that substitutes named variables into a string to prod
 formatted prompt. Variables are declared at construction time; required variables not supplied
 at render time produce E-TMPL-003 (strict-undefined). Renders to a `PromptValue`. Implements
 `Runnable`. Corresponds to `PromptTemplate` in LangChain v1 (`langchain_core.prompts.prompt`).
-In ferrochain: `ferrochain-prompts::PromptTemplate`, f-string engine by default.
+In pregolya: `pregolya-prompts::PromptTemplate`, f-string engine by default.
 
 **ChatPromptTemplate**
 A multi-message template that produces a `Vec<Message>` (wrapped as `PromptValue`) from a
 sequence of role-labelled message slots, each with its own `SlotTrustPolicy`. SystemMessage
 slots are hard-coded `TrustRequired` — this constraint is architectural, not configurable.
 Implements `Runnable`. Corresponds to `ChatPromptTemplate` in LangChain v1
-(`langchain_core.prompts.chat`). In ferrochain: `ferrochain-prompts::ChatPromptTemplate`.
+(`langchain_core.prompts.chat`). In pregolya: `pregolya-prompts::ChatPromptTemplate`.
 
 **MessagesPlaceholder**
 A chat template slot that expands a `Vec<Message>` variable in-place (rather than substituting
@@ -218,39 +218,39 @@ the `inventory`-based static type registry. The Reviver looks up the `id` in the
 `LcEntry` set — unknown types produce E-SRLZ-001; langchain-monolith types produce E-SRLZ-002;
 legacy namespace aliases are remapped transparently. No path-based loading exists. Corresponds
 to the `Reviver` function / `loads()` entrypoint in LangChain v1
-(`langchain_core.load.load`). In ferrochain: `ferrochain_core::serializable::Reviver`.
+(`langchain_core.load.load`). In pregolya: `pregolya_core::serializable::Reviver`.
 
 **Retriever**
 The dyn-compatible async trait for document retrieval: given a query string, returns a ranked
 `Vec<Document>`. Held as `Arc<dyn Retriever>` in graph nodes. Object-safe via `&self` receiver
 and `#[async_trait]` desugaring (no generic type params). All documents returned by any
 Retriever and entering graph context pass `BoundaryType::RAGRetrieval` guardrail (DI-012).
-Corresponds to `BaseRetriever` in LangChain v1 (`langchain_core.retrievers`). In ferrochain:
-`ferrochain_core::retriever::Retriever`.
+Corresponds to `BaseRetriever` in LangChain v1 (`langchain_core.retrievers`). In pregolya:
+`pregolya_core::retriever::Retriever`.
 
 **Document**
 A pure data carrier returned by Retriever implementations: `page_content: String` (the text),
 `metadata: Map<String, Value>` (annotations), `id: Option<String>` (VectorStore-assigned ID).
 RAG pipeline output. All Documents entering graph context pass the DI-012 guardrail at
 `BoundaryType::RAGRetrieval`. Corresponds to `Document` in LangChain v1
-(`langchain_core.documents.base`). In ferrochain: `ferrochain_core::documents::Document`.
+(`langchain_core.documents.base`). In pregolya: `pregolya_core::documents::Document`.
 
 **VectorStoreRetriever**
 A concrete `Retriever` backed by `Arc<dyn VectorStore>`, configured with a `SearchType`
 (Similarity | SimilarityScoreThreshold | Mmr), `k` (final document count), `fetch_k`
 (MMR candidate pool), and `lambda_mult` (MMR diversity parameter, 0.0–1.0). Constructed
-via `VectorStore::as_retriever(self: Arc<Self>) → Result<VectorStoreRetriever, FerrochainError>`; returns `Err(E-VS-003 InvalidConfig)` on invalid config. Can be type-erased to `Arc<dyn Retriever>`. Corresponds
+via `VectorStore::as_retriever(self: Arc<Self>) → Result<VectorStoreRetriever, PregolyaError>`; returns `Err(E-VS-003 InvalidConfig)` on invalid config. Can be type-erased to `Arc<dyn Retriever>`. Corresponds
 to `VectorStoreRetriever` in LangChain v1 (`langchain_core.vectorstores.base`). In
-ferrochain: `ferrochain_vectorstores::retriever::VectorStoreRetriever`.
+pregolya: `pregolya_vectorstores::retriever::VectorStoreRetriever`.
 
 **VectorStore**
 The abstract document-index trait: a content store that can be queried by vector similarity.
 Core operations: add texts (returns document IDs), k-nearest similarity search, MMR search,
-delete by ID, and `as_retriever(self: Arc<Self>)` (returns `Result<VectorStoreRetriever, FerrochainError>`; `Err(E-VS-003 InvalidConfig)` on invalid config; `Arc<Self>` receiver is dyn-compatible). Other instance
+delete by ID, and `as_retriever(self: Arc<Self>)` (returns `Result<VectorStoreRetriever, PregolyaError>`; `Err(E-VS-003 InvalidConfig)` on invalid config; `Arc<Self>` receiver is dyn-compatible). Other instance
 methods use `&self`; static constructors live on the separate
 `VectorStoreFactory` trait (E0038-safe). `Arc<dyn VectorStore>` is the seam for community
 adapters (Qdrant, Chroma, pgvector, etc.). Corresponds to `VectorStore` abstract base class
-in LangChain v1 (`langchain_core.vectorstores.base`). In ferrochain: ferrochain-vectorstores,
+in LangChain v1 (`langchain_core.vectorstores.base`). In pregolya: pregolya-vectorstores,
 `vectorstores::store::VectorStore`.
 
 **InMemoryVectorStore**
@@ -261,7 +261,7 @@ at query time. Enforces the zero-norm guard (E-VS-001) before any cosine divisio
 score corruption. Suitable for testing, small corpora, and unit tests of graph nodes that
 perform RAG. Not persistence-backed. Corresponds roughly to
 `InMemoryVectorStore` in LangChain v1 (`langchain_core.vectorstores.in_memory`). In
-ferrochain: `ferrochain_vectorstores::memory::InMemoryVectorStore`.
+pregolya: `pregolya_vectorstores::memory::InMemoryVectorStore`.
 
 **MetadataFilter**
 An optional filter applied to VectorStore similarity searches based on Document metadata field
@@ -269,8 +269,8 @@ values. Expressed as a list of `FilterClause` predicates: `Eq` (field equals val
 (not equal), `In` (field in a set of values). Community adapters may push MetadataFilter to
 the backend as a server-side pre-filter; InMemoryVectorStore applies it as a post-filter.
 Both `MetadataFilter` and `FilterClause` are `#[non_exhaustive]` for forward extensibility.
-No direct LangChain v1 equivalent as a named type; ferrochain promotes it to a first-class
-domain type. In ferrochain: `ferrochain_vectorstores::filter::MetadataFilter`.
+No direct LangChain v1 equivalent as a named type; pregolya promotes it to a first-class
+domain type. In pregolya: `pregolya_vectorstores::filter::MetadataFilter`.
 
 **Embeddings**
 The abstract text-to-vector conversion trait: given one or more text strings, returns
@@ -278,30 +278,30 @@ The abstract text-to-vector conversion trait: given one or more text strings, re
 (batch — one vector per input text) and `embed_query` (single query). The dimensionality
 contract guarantees all returned vectors have the same length and batch.len() == texts.len();
 violations return E-EMBED-001. Batch failures return `Err` — no silent partial results
-(DI-014). Held as `Arc<dyn Embeddings>` by VectorStore backends and ferrochain-memory.
+(DI-014). Held as `Arc<dyn Embeddings>` by VectorStore backends and pregolya-memory.
 Corresponds to `Embeddings` abstract base class in LangChain v1
-(`langchain_core.embeddings.base`). In ferrochain: `ferrochain_core::embeddings::Embeddings`.
+(`langchain_core.embeddings.base`). In pregolya: `pregolya_core::embeddings::Embeddings`.
 
 **EmbeddingsOpenAI**
 The first-party OpenAI embedding implementation. Default model: `text-embedding-3-small`;
 also supports `text-embedding-3-large` and legacy `text-embedding-ada-002`. API key accepted
 as `OpenAiApiKey` newtype with redacted Debug (DI-010). Batch failure returns `Err` (DI-014).
 reqwest/rustls-tls mandatory; 30-second timeout (DI-009). Corresponds to
-`OpenAIEmbeddings` in LangChain v1 (`langchain_openai`). In ferrochain:
-`ferrochain_openai::embeddings::EmbeddingsOpenAI`.
+`OpenAIEmbeddings` in LangChain v1 (`langchain_openai`). In pregolya:
+`pregolya_openai::embeddings::EmbeddingsOpenAI`.
 
 **EmbeddingsOllama**
 The first-party Ollama local-embedding implementation. No default model (caller provides a
 locally-pulled model name). No API key required. Default endpoint: `POST /api/embed`
 (`input` field); `use_legacy_endpoint: bool` opt-in for `POST /api/embeddings` (`prompt`
 field) for older Ollama deployments. reqwest/rustls-tls; 30-second timeout (DI-009) even for
-localhost. ferrochain-anthropic has NO `Embeddings` impl (Anthropic provides no public
+localhost. pregolya-anthropic has NO `Embeddings` impl (Anthropic provides no public
 embedding API). Corresponds to `OllamaEmbeddings` in LangChain v1 (`langchain_ollama`). In
-ferrochain: `ferrochain_ollama::embeddings::EmbeddingsOllama`.
+pregolya: `pregolya_ollama::embeddings::EmbeddingsOllama`.
 
 **TrustLevel**
 Template-variable trust classifier for the SS-18 template composition layer
-(`ferrochain-prompts: prompts::template`). **Distinct from and independent of `ProvenanceTag`**
+(`pregolya-prompts: prompts::template`). **Distinct from and independent of `ProvenanceTag`**
 (SS-11 ingress-boundary audit struct — see ubiquitous-language-server.md §ProvenanceTag and
 entities-server.md §ProvenanceTag). Three variants with severity ordering
 `Untrusted > UserInput > Trusted`:
@@ -336,7 +336,7 @@ An async hook registered in `GraphConfig.pre_tool_hook: Option<Arc<dyn PreToolCa
 invoked by the graph engine immediately before every tool dispatch. Returns a `PreToolDecision`
 determining whether the tool proceeds, is denied, has its arguments edited, or is held pending
 human approval. Default implementation: `AlwaysApprovePolicy` (always approves; no I/O;
-backward compatible). Crate: ferrochain-graph, `graph::hitl`. Authority: ADR-018 / CAP-034.
+backward compatible). Crate: pregolya-graph, `graph::hitl`. Authority: ADR-018 / CAP-034.
 
 **PreToolDecision**
 The four-variant decision type returned by `PreToolCallHook::pre_invoke` (`#[non_exhaustive]`):
@@ -344,7 +344,7 @@ The four-variant decision type returned by `PreToolCallHook::pre_invoke` (`#[non
 Kani candidate), `Edit { modified_args }` (proceed with modified arguments), and
 `PendingHumanApproval { prompt }` (suspend via `interrupt()`, reusing BC-2.05.001 machinery;
 resumed via `Command(resume=PreToolDecision)`; hook NOT re-called on resume —
-"skip-hook-on-resume" invariant, BC-2.05.008). Crate: ferrochain-graph, `graph::hitl`.
+"skip-hook-on-resume" invariant, BC-2.05.008). Crate: pregolya-graph, `graph::hitl`.
 Authority: ADR-018 / CAP-034.
 
 **CompactionTrigger**
@@ -353,7 +353,7 @@ when the BudgetEngine initiates proactive context compaction. Variants: `Disable
 backward compatible), `OnWatermark { fraction: f64 }` (fires when `tokens_remaining / ceiling
 <= (1.0 - fraction)`; non-strict `<=` — strict `<` cannot fire at fraction=1.0; f64 arithmetic;
 VP-012 Kani candidate — pure arithmetic), `OnMessageCount { count }`,
-`OnTokenCount { tokens }`. Crate: ferrochain-core, `core::budget`. Authority: ADR-019 / CAP-035.
+`OnTokenCount { tokens }`. Crate: pregolya-core, `core::budget`. Authority: ADR-019 / CAP-035.
 
 **CompactionPolicy**
 An async trait whose single method `compact(&self, snapshot: &ConversationSnapshot, run_ctx)
@@ -362,13 +362,13 @@ Default impl: `DefaultSummarizationPolicy` (prompts the model; same mechanism as
 `OnCeiling::Summarize`). Registered as `BudgetConfig.compaction_policy: Option<Arc<dyn
 CompactionPolicy>>`. Custom impls MAY additionally write the summary to MemoryStore (CAP-017)
 as project knowledge — framework imposes no constraint beyond returning `CompactionSummary`
-(ADR-019 Decision 5). Crate: ferrochain-core, `core::budget`. Authority: ADR-019 / CAP-035.
+(ADR-019 Decision 5). Crate: pregolya-core, `core::budget`. Authority: ADR-019 / CAP-035.
 
 **ConversationSnapshot**
 A read-only ordered slice of recent conversation history assembled by the BudgetEngine from
 checkpoint FTS (BC-2.04.008) when a CompactionTrigger fires. Fields: `turns: Vec<(usize,
 Message)>` (turn-index / Message pairs) + `token_estimate: u64`. Passed to
-`CompactionPolicy::compact()` as the compaction input. Crate: ferrochain-core, `core::budget`.
+`CompactionPolicy::compact()` as the compaction input. Crate: pregolya-core, `core::budget`.
 Authority: ADR-019 / CAP-035.
 
 **CompactionSummary**
@@ -379,32 +379,32 @@ The output of a `CompactionPolicy::compact()` invocation. Fields: `summary_text:
 `frozen-snapshot`, which takes effect on the NEXT run). Original checkpoint records are NOT
 deleted (BC-2.04.001 immutability). Triggers a `compaction_event` streaming event (15th
 variant) and appends a `CompactionEvent { compacted_start, compacted_end, … }` to `EvidenceJournal`.
-Crate: ferrochain-core, `core::budget`. Authority: ADR-019 / CAP-035.
+Crate: pregolya-core, `core::budget`. Authority: ADR-019 / CAP-035.
 
 **ReadFileTool**
-First-party `Tool` in `ferrochain-tools::tools::fs` (SS-23, crate #21). Reads file contents
+First-party `Tool` in `pregolya-tools::tools::fs` (SS-23, crate #21). Reads file contents
 at a PathGuard-confined path. `ActionRisk::ReadOnly`. Enforces a `max_bytes` limit (default
 1 MiB; E-TOOLS-002 on excess). VP-003 path-confinement coverage applies. Authority: ADR-020 / CAP-036.
 
 **WriteFileTool**
-First-party `Tool` in `ferrochain-tools::tools::fs` (SS-23). Creates or overwrites a file at a
+First-party `Tool` in `pregolya-tools::tools::fs` (SS-23). Creates or overwrites a file at a
 PathGuard-confined path. `ActionRisk::High`. Non-idempotent; no auto-retry. E-TOOLS-001 on
 out-of-guard path. Requires re-approval before retry via PreToolCallHook. Authority: ADR-020 / CAP-036.
 
 **EditFileTool**
-First-party `Tool` in `ferrochain-tools::tools::fs` (SS-23). Applies an exact-string replacement
+First-party `Tool` in `pregolya-tools::tools::fs` (SS-23). Applies an exact-string replacement
 (`old_string → new_string`) to an existing file. `ActionRisk::High`. E-TOOLS-003 if `old_string`
 is not found. Opt-in fuzzy-match fallback via `EditConfig::fuzzy_threshold` (`similar` crate).
 Conditional retry is safe when E-TOOLS-003 fires (old_string mismatch is a structural no-op).
 Authority: ADR-020 / CAP-036.
 
 **ListDirTool**
-First-party `Tool` in `ferrochain-tools::tools::fs` (SS-23). Lists directory entries at a
+First-party `Tool` in `pregolya-tools::tools::fs` (SS-23). Lists directory entries at a
 PathGuard-confined path. `ActionRisk::ReadOnly`. No size limit. Authority: ADR-020 / CAP-036.
 
 **BashTool**
-First-party `Tool` in `ferrochain-tools::tools::shell` (SS-23). Executes arbitrary shell
-commands via the ferrochain-sandbox WASM/container backend (BC-2.13.001–003; enforcing sandbox
+First-party `Tool` in `pregolya-tools::tools::shell` (SS-23). Executes arbitrary shell
+commands via the pregolya-sandbox WASM/container backend (BC-2.13.001–003; enforcing sandbox
 mandatory). `ActionRisk::High` (default). Risk tier CANNOT be lowered below `ActionRisk::Medium`
 — a framework safety invariant, not an application convention (VP-013 Kani candidate). Retry must
 be explicitly enrolled per-`tool_name` (BC-2.16.001); each retry flows through PreToolCallHook
@@ -417,7 +417,7 @@ returns first 256 KiB with `truncated = true` (E-TOOLS-005 informational; non-fa
 `max_duration` timeout (default 30s; E-TOOLS-004 on breach). Authority: ADR-020 / CAP-037.
 
 **GrepTool**
-First-party `Tool` in `ferrochain-tools::tools::search` (SS-23). In-process regex pattern
+First-party `Tool` in `pregolya-tools::tools::search` (SS-23). In-process regex pattern
 matching using the `regex` crate (NOT shelling out to system grep — hermetic; unit-testable
 without system tool availability). `ActionRisk::ReadOnly`. `max_results` cap (default 100;
 E-TOOLS-006 `SearchResultsCapped` informational). Returns matches with file path and line number.

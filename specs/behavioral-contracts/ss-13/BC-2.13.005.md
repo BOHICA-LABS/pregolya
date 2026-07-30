@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "b1cbefd"
+input-hash: "af2d76a"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -45,7 +45,7 @@ outside the workspace root must return `Err(E-SBXD-001: WorkspaceEscape)` when a
 through any workspace file operation. This is the specific attack vector that adk-rust P-65's
 string-only `validate_relative_path` fails to detect — the path `/workspace/escape_link`
 passes string-depth validation because it contains no `..` segments, yet following the symlink
-reveals `/etc/passwd`. ferrochain's `canonicalize_beneath_root` (BC-2.13.004) catches this by
+reveals `/etc/passwd`. pregolya's `canonicalize_beneath_root` (BC-2.13.004) catches this by
 calling `std::fs::canonicalize()` which follows symlinks at the OS level before the prefix check.
 This BC directly covers domain edge case DEC-011.
 
@@ -118,11 +118,11 @@ This BC directly covers domain edge case DEC-011.
 | L2 Capability | CAP-015 |
 | Capability Anchor Justification | CAP-015 ("Sandboxed Tool Execution (Enforcing Backend Default)") per capabilities-p1-p2.md §CAP-015 |
 | L2 Domain Invariants | DI-007 (Workspace Path Confinement) |
-| Source Analysis | P-65 NOT-APPLICABLE (must-not-inherit: `validate_relative_path` string-only — permits symlink escapes); NE-02 (ferrochain requirement: canonical real-path check); DEC-011 (domain edge case: Workspace Symlink Escape); assessment-parts/part-3 §NE-02 |
-| Reference Evidence | adk-rust P-65: `validate_relative_path` never calls `canonicalize`, never resolves symlinks — ferrochain INVERTS this. DEC-011 in edge-cases.md documents this exact scenario. No positive upstream reference — greenfield. |
+| Source Analysis | P-65 NOT-APPLICABLE (must-not-inherit: `validate_relative_path` string-only — permits symlink escapes); NE-02 (pregolya requirement: canonical real-path check); DEC-011 (domain edge case: Workspace Symlink Escape); assessment-parts/part-3 §NE-02 |
+| Reference Evidence | adk-rust P-65: `validate_relative_path` never calls `canonicalize`, never resolves symlinks — pregolya INVERTS this. DEC-011 in edge-cases.md documents this exact scenario. No positive upstream reference — greenfield. |
 | Binding Decisions | NE-02, DI-007 |
 | Forcing Functions | DEC-011 ("Workspace Symlink Escape" domain edge case); product-brief.md §NE catalog NE-02 |
-| Architecture Module | ferrochain-sandbox / WorkspaceFs facade (filled by architect) |
+| Architecture Module | pregolya-sandbox / WorkspaceFs facade (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 
 ## Related BCs
@@ -132,7 +132,7 @@ This BC directly covers domain edge case DEC-011.
 
 ## Architecture Anchors
 
-- `architecture/module-decomposition.md §ferrochain-sandbox` — `sandbox::path_guard` row: `std::fs::canonicalize()` follows symlinks before prefix check; `Err E-SBXD-001`; symlink-escape detection as consequence of access-time canonicalization (CRITICAL, SS-13)
+- `architecture/module-decomposition.md §pregolya-sandbox` — `sandbox::path_guard` row: `std::fs::canonicalize()` follows symlinks before prefix check; `Err E-SBXD-001`; symlink-escape detection as consequence of access-time canonicalization (CRITICAL, SS-13)
 
 ## Story Anchor
 

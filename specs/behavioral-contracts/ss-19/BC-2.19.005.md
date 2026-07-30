@@ -10,7 +10,7 @@ origin: greenfield
 priority: P0
 subsystem: SS-19
 capability: CAP-025
-crate: ferrochain-core
+crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
@@ -27,7 +27,7 @@ changelog:
   - "1.3 (F-P148-01/burst-249/2026-07-24): Architecture anchor de-pinned from 'Decision 6' to 'Decision 3 §Security Invariant' per ADR-016 v1.4 labeled anchor. Traceability Architecture Authority row: 'E-SRLZ-001 category SECURITY' corrected to 'E-SRLZ-001 category VAL' (already correct in Postconditions PC-1 and Invariant 3; Traceability row was the sole remaining SECURITY residue). red_gate_source and Red Gate body callout updated to Decision 3 §Security Invariant anchor form. input-hash updated to 5b4fe5e (ADR-016 v1.4 adds labeled anchors)."
   - "1.4 (FIX-BURST-268/F-P166-01/2026-07-25): TD-VSDD-091 de-pin — Invariant 3 cited 'error-taxonomy.md v1.28 (E-SRLZ-001 row: VAL)' as live normative authority; version pin violates TD-VSDD-091 (narrative body must not cite vN.N numbers that decay on subsequent taxonomy diffs). Adjudication: live normative citation, not historical record. De-pinned to stable section anchor: 'error-taxonomy.md §E-SRLZ-001 (row: VAL)'."
   - "1.5 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::SRLZ → Component::Srlz (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + Invariant 3 prose backtick span)."
-  - "1.6 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: FerrochainError struct literal (missing retry_hint, source fields) → FerrochainError::new(Component::Srlz, Category::Val, RetryHint::Never, \"E-SRLZ-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-SRLZ-001. Verifiable: grep 'FerrochainError {' specs/behavioral-contracts/ss-19/BC-2.19.005.md returns zero fence-scoped literal occurrences after this edit."
+  - "1.6 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: PregolyaError struct literal (missing retry_hint, source fields) → PregolyaError::new(Component::Srlz, Category::Val, RetryHint::Never, \"E-SRLZ-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-SRLZ-001. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-19/BC-2.19.005.md returns zero fence-scoped literal occurrences after this edit."
   - "1.7 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 2 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-SRLZ-001 allowlist cite: add `, ..` field-elision marker. (2) TV-001 expected-output cell: add `, ..` field-elision marker. No security semantics, VP anchors, or Red Gate invariants altered."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
@@ -38,7 +38,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "0daa69f"
+input-hash: "dc48c59"
 extracted_from: null
 modified: []
 deprecated: null
@@ -63,7 +63,7 @@ removal_reason: null
 before any constructor dispatch, kwargs parsing, or type coercion. If the `id` field of
 the `Serialized::Constructor` does not appear in the registry (after legacy-namespace remap
 per BC-2.19.004), `revive()` immediately returns
-`Err(FerrochainError { code: "E-SRLZ-001", .. })`. There is no fallback, no partial construction,
+`Err(PregolyaError { code: "E-SRLZ-001", .. })`. There is no fallback, no partial construction,
 and no type coercion that can bypass this check. This is the primary defense against
 deserialization of arbitrary user-controlled type ids. The property is Kani-verifiable
 because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is a
@@ -81,7 +81,7 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
 
 1. `Reviver::revive(serialized)` returns:
    ```
-   Err(FerrochainError::new(
+   Err(PregolyaError::new(
        Component::Srlz,
        Category::Val,
        RetryHint::Never,
@@ -132,7 +132,7 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 (Red Gate) | `Reviver::revive(Serialized::Constructor { id: ["attacker_custom", "Exploit"], kwargs: {"cmd": "rm -rf /"} })` | `Err(FerrochainError { code: "E-SRLZ-001", message: "unknown-serializable: type id not in registry", .. })` | error-case (unknown id) |
+| TV-001 (Red Gate) | `Reviver::revive(Serialized::Constructor { id: ["attacker_custom", "Exploit"], kwargs: {"cmd": "rm -rf /"} })` | `Err(PregolyaError { code: "E-SRLZ-001", message: "unknown-serializable: type id not in registry", .. })` | error-case (unknown id) |
 | TV-002 (Red Gate) | `Reviver::revive(Serialized::Constructor { id: [], kwargs: {} })` | `Err(E-SRLZ-001)` — empty id | error-case (empty id) |
 | TV-003 | `Reviver::revive(Serialized::Constructor { id: ["langchain_core", "prompts", "prompt", "PromptTemplate"], kwargs: {"template": "Hi"} })` | `Ok(PromptTemplate { ... })` — registered type | happy-path (registered type passes) |
 | TV-004 | `Reviver::revive(Serialized::NotImplemented { id: ["unknown", "Type"] })` | `Err(E-SRLZ-001)` — NotImplemented variant also gated | error-case (NotImplemented with unknown id) |
@@ -155,7 +155,7 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
 
 - `architecture/module-decomposition.md` — SS-19, `core::serializable::reviver` (pure-core revive fn)
 - `architecture/decisions/ADR-016-lc-json-deserialization-safety.md` — Decision 3 §Security Invariant (allowlist-first revive; E-SRLZ-001; no id interpolation in error message; VP-010 Kani candidacy; formal property: Decision 3 Property 1)
-- `architecture/purity-boundary-map.md` — `ferrochain-core / core::serializable` Pure Core; Kani VP-010 candidacy noted
+- `architecture/purity-boundary-map.md` — `pregolya-core / core::serializable` Pure Core; Kani VP-010 candidacy noted
 
 ## Story Anchor
 
@@ -175,8 +175,8 @@ _[to be filled after story decomposition — Wave 2 SS-19 security story]_
 | L2 Domain Invariants | DI-008 (revive returns Result; no panic or unsafe unwrap), DI-014 (E-SRLZ-001 propagates as Err; no silent fallthrough, no default-constructed value returned) |
 | Architecture Authority | ADR-016 Decision 3 §Security Invariant (allowlist-first check; E-SRLZ-001 category VAL — registry containment is input validation not a boundary-crossing attack-vector per ADR-010; no id in error message; VP-010 Kani candidacy) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| VP Registration | VP-010 (assigned in VP-INDEX v1.2 as VP-010 — Kani P0; ferrochain-core allowlist_rejects_unregistered_id) |
-| Module | ferrochain-core / core::serializable::reviver |
+| VP Registration | VP-010 (assigned in VP-INDEX v1.2 as VP-010 — Kani P0; pregolya-core allowlist_rejects_unregistered_id) |
+| Module | pregolya-core / core::serializable::reviver |
 | Priority | P0 |
 | Wave | 2 |
 | Test Types | unit (pure-core) + Kani (VP-010 candidate) |

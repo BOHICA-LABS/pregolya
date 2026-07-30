@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-arch-anchor-resolution.sh — ferrochain factory-artifacts wrap guard
+# verify-arch-anchor-resolution.sh — pregolya factory-artifacts wrap guard
 #
 # Validates Architecture-Anchor file citations in BC files:
 # (.factory/specs/behavioral-contracts/ss-*/BC-*.md)
@@ -26,8 +26,8 @@
 # Expected failures (worklist as of fix-burst-277):
 #   12 SS-11/SS-13 BCs — BC-2.11.001 through BC-2.11.006 and
 #   BC-2.13.001 through BC-2.13.006.  These carry nonexistent citations
-#   (architecture/ferrochain-core.md, architecture/ferrochain-graph.md,
-#   architecture/ferrochain-memory.md, architecture/ferrochain-sandbox.md,
+#   (architecture/pregolya-core.md, architecture/pregolya-graph.md,
+#   architecture/pregolya-memory.md, architecture/pregolya-sandbox.md,
 #   architecture/cargo-features.md, architecture/verification-properties.md)
 #   and "(filled by architect)" placeholder text.
 #   4 glob-wildcard citations — BC-2.20.001, BC-2.22.001, BC-2.20.002,

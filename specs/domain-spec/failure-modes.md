@@ -10,7 +10,7 @@ phase: 1a
 inputs:
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/specs/product-brief.md
-input-hash: "33063e5"
+input-hash: "0adc9d8"
 traces_to: L2-INDEX.md
 decisions: [D17, D20, D21, D23]
 changelog:
@@ -77,7 +77,7 @@ human-in-the-loop governance of high-risk tools (BashTool, WriteFileTool, EditFi
 the tool invocation branch regardless; or a race condition where the Deny check and the
 dispatch branch are not atomically coupled.
 **Counter-example source:** D23 security requirement (ADR-018 Decision 4, BC-2.05.007 fail-closed
-invariant). No adk-rust counter-example — this is a ferrochain-first HITL capability.
+invariant). No adk-rust counter-example — this is a pregolya-first HITL capability.
 **Detection:** VP-011 Kani proof (BC-2.05.007 fail-closed VP candidate — exhaustive property:
 `Deny` return NEVER leads to tool invocation, regardless of execution path). Integration test:
 mock hook returning Deny for all inputs; assert tool fn body is never called.
@@ -121,7 +121,7 @@ leaking graph config, state, or internal metrics.
 
 ### FM-009: CORS Wildcard Default
 **What goes wrong:** `SecurityConfig::default()` emits CORS `Access-Control-Allow-Origin: *`,
-making the ferrochain-server exploitable via CSRF from any origin.
+making the pregolya-server exploitable via CSRF from any origin.
 **Trigger:** Default security config copied from OpenClaw-style permissive defaults.
 **Counter-example source:** NE-14.
 **Detection:** Integration test — assert CORS denied on default config.
@@ -162,7 +162,7 @@ model context.
 **Trigger:** No zero-norm guard in the embedding normalization path; provider returns all-zero
 vector without error; downstream similarity comparison proceeds without checking for NaN.
 **Counter-example source:** D21 embeddings addition (ADR-017). No adk-rust counter-example —
-ferrochain-first capability.
+pregolya-first capability.
 **Detection:** VP-009 Kani proof (pure arithmetic property: zero-norm input must return
 `Err(E-VS-001)` before similarity computation proceeds; NaN must never enter the result
 set). Unit test: embed_documents with zero-magnitude vector; assert E-VS-001 returned,
@@ -176,7 +176,7 @@ accesses or overwrites files outside the intended scope with the host process's 
 **Trigger:** Path not canonicalized against an allowed-root anchor before filesystem access;
 or allowed-root check applied before symlink resolution (TOCTOU).
 **Counter-example source:** D23 first-party tools (ADR-020/SS-23). No adk-rust counter-example —
-ferrochain-first capability.
+pregolya-first capability.
 **Detection:** E-TOOLS-001 path validation error (must be returned for any path resolving outside
 allowed root); security integration test: supply `../` traversal paths and assert
 `Err(E-TOOLS-001)` returned before any I/O occurs. High action_risk annotation on
@@ -211,7 +211,7 @@ delegates to a fallible constructor path.
 the constructor signature returns the initialized type directly, not `Result<T, _>`.
 **Detection:** DI-008 CI lint gate — deny `.expect()` / `.unwrap()` / `assert!` in non-test
 library code; proptest boundary: constructor called with adversarial inputs must yield
-`Err(FerrochainError)`, never panic.
+`Err(PregolyaError)`, never panic.
 
 ### FM-016: Injection-Guard Bypass at Template Render (SECURITY-CRITICAL)
 **What goes wrong:** A `TrustLevel::Untrusted` variable is substituted into a `TrustRequired`
@@ -222,7 +222,7 @@ attacks (ADR-015 §Decision 3, CAP-022/023).
 **Trigger:** Trust-level/slot-policy check omitted from a code path in `format_messages()`; or
 conditional branching that skips the check for a subset of message variants.
 **Counter-example source:** D21 injection-guard requirement (ADR-015, CAP-022/CAP-023). No
-adk-rust counter-example — ferrochain-first template security capability.
+adk-rust counter-example — pregolya-first template security capability.
 **Detection:** VP-006 Kani proof (exhaustive property: Untrusted variable in TrustRequired slot
 ALWAYS raises E-TMPL-001 before PromptValue is produced — no PromptValue with
 TrustRequired/Untrusted combination ever exists). Unit test: render template with Untrusted
@@ -237,7 +237,7 @@ deserialization gadget chains and arbitrary type instantiation risks.
 **Trigger:** Allowlist lookup returns `None` but deserialization proceeds instead of returning
 `Err(E-SRLZ-001 UnknownType)`.
 **Counter-example source:** D21 serialization addition (ADR-016). No adk-rust counter-example —
-ferrochain-first capability.
+pregolya-first capability.
 **Detection:** VP-010 Kani proof (property: `Constructor` with any `id` not in the registered
 `LcEntry` inventory ALWAYS returns `Err(E-SRLZ-001)` — no type instantiation occurs for
 unknown ids). Integration test: present crafted Constructor payloads with unknown id vectors;

@@ -18,14 +18,14 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
-input-hash: "f47dce9"
+input-hash: "b85a28e"
 changelog:
   - "1.2.0 (crates.io/2026-07-21): Add §7 D23 ADR-020 dependency validation — `similar` 3.1.1 GREEN (pin `\"3\"`, owner mitsuhiko not dtolnay, Apache-2.0 single, MSRV 1.85, TextDiff::ratio() confirmed); `regex` 1.13.1 GREEN (pin `\"1\"`, MIT OR Apache-2.0, MSRV 1.65, linear-time guarantee, net-new workspace dep); fuzzy-matcher REJECTED (stale 2020); strsim deferred."
   - "1.1.0 (crates.io/2026-07-20): Add §6 D21 ADR technology validation — inventory 0.3.24 GREEN, minijinja 2.21.0 GREEN, mustache REJECTED (abandoned 2018-02), embeddings no-crate GREEN, vector-math no-crate GREEN."
   - "1.0.0 (2026-07-13): Initial validation covering ADR-002/003/004/008 — schemars, rmp-serde, verification toolchain, provider APIs, competitive watch."
 ---
 
-# ADR Technology Validation — ferrochain Phase-1
+# ADR Technology Validation — pregolya Phase-1
 
 **Validation date:** 2026-07-13. All version numbers verified against the live crates.io API
 on this date (not from model training data). Provider-API and competitive findings verified
@@ -37,7 +37,7 @@ against Perplexity `sonar-deep-research` (web-grounded) plus direct registry/doc
 2. **msgpack / rmp-serde (ADR-002):** VALID — `rmp-serde` **1.3.1** (2025-12-23), actively maintained, self-describing (correct rationale). Add one alternatives-paragraph: **postcard 1.1.3** and **bincode 2.0.1/3.0.0** now both exist and are worth a one-line mention (both still non-self-describing — ADR's core reasoning unchanged). Minor STALE nuance: ADR speaks of bincode pre-2.0; bincode 2.x stabilized Mar 2025.
 3. **Verification toolchain (SS-17):** VALID with one important caveat — Kani **0.67.0** (2026-01-16), cargo-fuzz **0.13.2** (2026-06-09), cargo-mutants **27.1.0** (2026-06-02) all current & maintained. **CAVEAT/BLOCKER for harness authoring: Kani still has no native async/`.await` support** — tokio proof harnesses must drive futures via a manual executor/`block_on`, not verify real async scheduling. SS-17 should state this explicitly.
 4. **Provider APIs (DTU):** VALID — OpenAI official OpenAPI spec still published (`github.com/openai/openai-openapi`); Anthropic version header still **`2023-06-01`** (no official OpenAPI spec, community spec only); Ollama API docs now at `docs.ollama.com/api` (unversioned, stable). **One breaking-change flag:** OpenAI is deprecating older surfaces (Realtime API beta removed; Assistants API sunset; migration to Responses API) — Anthropic & Ollama: no breaking changes in last 6 mo.
-5. **Competitive watch (R4 / SC-2):** **BLOCKER-FLAG** — the `langgraph` crate on crates.io (**0.2.5**, 2026-07-01) now ships `PostgresSaver`/`SqliteSaver` durable checkpointing with pause/resume + time-travel. NOT yet 1.0/GA (~50% docs, pre-1.0), but it directly targets ferrochain's differentiator. `rig-core` **0.40.0** (2026-07-11) has serializable `AgentRun` (persist-intent) but no GA durable checkpointer; swiftide/kalosm: none.
+5. **Competitive watch (R4 / SC-2):** **BLOCKER-FLAG** — the `langgraph` crate on crates.io (**0.2.5**, 2026-07-01) now ships `PostgresSaver`/`SqliteSaver` durable checkpointing with pause/resume + time-travel. NOT yet 1.0/GA (~50% docs, pre-1.0), but it directly targets pregolya's differentiator. `rig-core` **0.40.0** (2026-07-11) has serializable `AgentRun` (persist-intent) but no GA durable checkpointer; swiftide/kalosm: none.
 6. **D21 ADRs (ADR-014 through ADR-017, crates.io/2026-07-20):** VALID — `inventory = "0.3"` (0.3.24) GREEN; `minijinja = "2"` (2.21.0) GREEN; `mustache` crate REJECTED (abandoned, last release 2018-02); embeddings approach (no separate crate — OpenAI+Ollama HTTP direct) GREEN; vector-math approach (no crate — `Vec<f32>` cosine) GREEN.
 7. **D23 ADR-020 deps (crates.io/2026-07-21):** VALID with attribution fix — `similar = "3"` (3.1.1) GREEN, owner corrected to mitsuhiko (NOT dtolnay), Apache-2.0 single-licensed (cargo-deny allowlist required), MSRV 1.85; `regex = "1"` (1.13.1) GREEN, MIT OR Apache-2.0, MSRV 1.65, linear-time guarantee; fuzzy-matcher REJECTED (stale 2020, wrong shape); both deps net-new workspace entries (workspace uninitialized).
 
@@ -60,7 +60,7 @@ changed the generated-schema type model (the old monolithic `RootSchema` gave wa
 `schema::RootSchema` module path is a 0.8-era shape. In 1.x the idiomatic type is
 `schemars::Schema` (a transparent JSON wrapper). Additionally, schema *naming* stability
 (enum ref-variant names, `$ref` naming) is an area still under active discussion upstream —
-relevant because tool-arg schemas are part of ferrochain's **public** API surface and schema
+relevant because tool-arg schemas are part of pregolya's **public** API surface and schema
 churn between schemars versions could be observable to API consumers. Recommendation: pin schemars
 with a caret on 1.x and add a conformance snapshot test on generated tool schemas.
 
@@ -104,7 +104,7 @@ for 2.x/3.0, so this is cosmetic. No decision change.
 not natively model async/`.await` scheduling.** Proof harnesses over async code must drive futures
 manually (poll/`block_on` via a minimal executor) — Kani verifies the state-machine logic of the
 future, not real tokio scheduling/concurrency interleavings. This is the single most consequential
-finding for SS-17: **proof harnesses for ferrochain's async graph-execution / checkpoint paths must
+finding for SS-17: **proof harnesses for pregolya's async graph-execution / checkpoint paths must
 be authored against synchronous cores or manually-driven futures.** cargo-fuzz and cargo-mutants,
 by contrast, handle async/tokio via standard `block_on` wrapping patterns.
 
@@ -124,7 +124,7 @@ exact nightly; low-confidence on that sub-fact — verify at toolchain install).
 
 **Breaking-change flag:** Only **OpenAI** has shipped breaking deprecations in the window
 (Jan–Jul 2026) — principally the push to the Responses API and removal of the Realtime API beta.
-ferrochain's OpenAI provider should target Chat Completions (stable) and note Responses API as a
+pregolya's OpenAI provider should target Chat Completions (stable) and note Responses API as a
 forward-looking surface. Anthropic & Ollama: stable, no action. Absence of official OpenAPI specs
 for Anthropic/Ollama means the DTU cannot fully machine-verify those surfaces — hand-maintained
 client types remain necessary (unchanged from prior assessment).
@@ -139,13 +139,13 @@ client types remain necessary (unchanged from prior assessment).
 | kalosm | (not version-pinned here) | No durable agent-state checkpoint facility (uses Floneum for workflow graphs). |
 
 **Assessment:** No Rust framework has an unambiguously **GA (1.0, fully-documented, widely-adopted)**
-durable checkpointer equivalent to Python LangGraph — ferrochain's differentiation thesis (SC-2)
+durable checkpointer equivalent to Python LangGraph — pregolya's differentiation thesis (SC-2)
 **still holds at the GA/maturity bar.** HOWEVER, the `langgraph` crate at 0.2.5 is a direct,
-fast-moving competitor now claiming exactly ferrochain's headline feature (SQLite+Postgres durable
+fast-moving competitor now claiming exactly pregolya's headline feature (SQLite+Postgres durable
 checkpointing with time-travel). This is a **material change since prior market-intel** and should
 be escalated: (a) the "no Rust competitor" framing in R4 is now too strong — reframe to "no *GA/
 mature* competitor"; (b) monitor the `langgraph` crate's release cadence (0.1.0→0.2.5 shows active
-development); (c) ferrochain's edge must be articulated as maturity/verification/durability-tier
+development); (c) pregolya's edge must be articulated as maturity/verification/durability-tier
 rigor (ADR-003, SS-17 proofs), not merely "first to have checkpointing in Rust."
 
 ## 6. D21 ADR Technology Validation (ADR-014 through ADR-017) — VALID
@@ -158,7 +158,7 @@ rigor (ADR-003, SS-17 proofs), not merely "first to have checkpointing in Rust."
 | `minijinja = "2"` | ADR-015 jinja2 template engine | Current: 2.21.0. Autoescape, sandboxed mode, strict-undefined all present in 2.x API. Active maintenance (2024-present). MIT licensed. | GREEN — pin as `"2"` (default-features=false) |
 | `mustache` crate | ADR-015 mustache engine | Last release: 2018-02-21 (0.9.0). No commit activity since 2018. Predates Rust 2018 edition. Cannot be a v1 dependency. | REJECTED — abandoned |
 | Embeddings: no separate crate | ADR-017 | No embedding-specific Rust crate needed. OpenAI `/v1/embeddings` and Ollama `/api/embed` are direct HTTP calls via `reqwest`. `Vec<f32>` output is sufficient. | GREEN — HTTP direct, no new dep |
-| Vector math: `Vec<f32>` only | ADR-014 | `ndarray` explicitly rejected (heavy transitive dep for ferrochain-core). `Vec<f32>` cosine + zero-norm guard is correct and dep-free for the in-memory backend. | GREEN — no ndarray |
+| Vector math: `Vec<f32>` only | ADR-014 | `ndarray` explicitly rejected (heavy transitive dep for pregolya-core). `Vec<f32>` cosine + zero-norm guard is correct and dep-free for the in-memory backend. | GREEN — no ndarray |
 | `ramhorns = "1"` | ADR-015 mustache fallback | Evaluated as fallback only. Current: 1.0.0 (experimental, sparse maintenance). Not needed — minijinja covers the mustache-syntax use case as a superset. | NOT NEEDED — not used |
 
 ### Notes
@@ -166,7 +166,7 @@ rigor (ADR-003, SS-17 proofs), not merely "first to have checkpointing in Rust."
 - **inventory pin maintenance:** `inventory` and similar constructor-section crates (`linkme`) track
   Rust compiler internals. Keep the pin at `"0.3"` (caret) and re-verify when upgrading the pinned
   Rust toolchain channel in `rust-toolchain.toml`.
-- **minijinja sandboxed mode:** ADR-015 Decision 4 specifies that ferrochain-prompts enables sandboxed
+- **minijinja sandboxed mode:** ADR-015 Decision 4 specifies that pregolya-prompts enables sandboxed
   mode for all jinja2 rendering. This is backed by minijinja 2.x's `Environment::set_sandboxed(true)`
   API (verified present in 2.21.0 docs).
 - **Ollama endpoint split:** `/api/embed` (newer, `input` field) vs `/api/embeddings` (legacy, `prompt`
@@ -191,7 +191,7 @@ rigor (ADR-003, SS-17 proofs), not merely "first to have checkpointing in Rust."
 
 - **`similar` cargo-deny obligation:** Apache-2.0 single-licensed. `cargo-deny` `[licenses.allow]` list must include `"Apache-2.0"` explicitly at workspace initialization. `inventory` (0.3.24, ADR-016) is also Apache-2.0 only (confirmed in §6) — this obligation already existed. One `[licenses.allow]` entry covers both.
 - **MSRV floor impact:** `similar = "3"` (MSRV 1.85) is now the highest MSRV across all workspace deps validated to date. The pinned stable channel in `rust-toolchain.toml` must be ≥ 1.85. This supersedes the `inventory` 1.62 and `regex` 1.65 floors. Devops-engineer must verify at workspace init.
-- **Both deps are net-new:** Neither `similar` nor `regex` exist in the workspace today (root `Cargo.toml` not yet initialized). Both will be added as `[workspace.dependencies]` entries during devops-engineer workspace init. `ferrochain-tools` `Cargo.toml` will reference both via `similar.workspace = true` and `regex.workspace = true`.
+- **Both deps are net-new:** Neither `similar` nor `regex` exist in the workspace today (root `Cargo.toml` not yet initialized). Both will be added as `[workspace.dependencies]` entries during devops-engineer workspace init. `pregolya-tools` `Cargo.toml` will reference both via `similar.workspace = true` and `regex.workspace = true`.
 - **`similar` default-features:** `similar` 3.x exposes `inline`, `unicode`, and `bytes` features. For `EditFileTool`, only text-diff is needed; pin with `default-features = true` (includes `unicode` support, needed for multi-byte edits) or `features = ["text"]` if size-sensitive. Research-agent recommendation: keep defaults unless binary size audit demands trimming.
 
 ---

@@ -223,9 +223,9 @@ All three chains claimed in dep-disposition A5 are CONFIRMED via Cargo.lock tran
 - Lock resolution: hf-hub 0.5.0
 - hf-hub 0.5.0 Cargo.lock entry: directly lists `native-tls` in dependency array. CONFIRMED.
 
-### Disposition note for ferrochain
+### Disposition note for pregolya
 All three chains are feature-gated (optional = true or behind feature flags). Default builds
-(no LiveKit, no mistral.rs, no hf-hub audio) avoid native-tls entirely. Ferrochain must
+(no LiveKit, no mistral.rs, no hf-hub audio) avoid native-tls entirely. Pregolya must
 resolve the native-tls conflict if it ever ports livekit voice, local LLM inference, or
 audio-ML download features.
 

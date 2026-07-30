@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-21
 capability: CAP-028
-crate: ferrochain-vectorstores
+crate: pregolya-vectorstores
 wave: 2
 phase: 1b
 producer: product-owner
@@ -18,9 +18,9 @@ timestamp: 2026-07-20T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction"
-  - "1.1 (FIX-BURST-277-WAVE-C/ADR-014-Decision-2-infallibility/2026-07-28): as_retriever infallibility contradiction resolved. PC-2 contradicted BC-2.20.003 Inv-2, TV-004/TV-005, and DI-008 by declaring as_retriever infallible. ADR-014 Decision 2 is authority: fallible signature with no lifetime parameter. Changes: (1) Description: prior `&self`-receiver infallible form -> `as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>`; VectorStoreRetriever owns Arc<dyn VectorStore>. (2) PC2 method entry: updated to fallible Arc<Self>-receiver signature. (3) Invariant 4: lifetime-bound type and borrowed `&'_ dyn VectorStore` -> Ok(VectorStoreRetriever) owns Arc<dyn VectorStore>; Result return noted. (4) EC-005: borrowed store receiver -> Arc<dyn VectorStore>; non-static VectorStoreRetriever -> Ok(VectorStoreRetriever). (5) Related BCs: VectorStoreRetriever wraps &dyn VectorStore -> owns Arc<dyn VectorStore>."
+  - "1.1 (FIX-BURST-277-WAVE-C/ADR-014-Decision-2-infallibility/2026-07-28): as_retriever infallibility contradiction resolved. PC-2 contradicted BC-2.20.003 Inv-2, TV-004/TV-005, and DI-008 by declaring as_retriever infallible. ADR-014 Decision 2 is authority: fallible signature with no lifetime parameter. Changes: (1) Description: prior `&self`-receiver infallible form -> `as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>`; VectorStoreRetriever owns Arc<dyn VectorStore>. (2) PC2 method entry: updated to fallible Arc<Self>-receiver signature. (3) Invariant 4: lifetime-bound type and borrowed `&'_ dyn VectorStore` -> Ok(VectorStoreRetriever) owns Arc<dyn VectorStore>; Result return noted. (4) EC-005: borrowed store receiver -> Arc<dyn VectorStore>; non-static VectorStoreRetriever -> Ok(VectorStoreRetriever). (5) Related BCs: VectorStoreRetriever wraps &dyn VectorStore -> owns Arc<dyn VectorStore>."
   - "1.2 (FIX-BURST-278-WAVE-B/D-48-receiver-sweep/2026-07-28): D-48 receiver sweep — all non-dyn-compatible receiver forms corrected to `Arc<Self>` in Description, Postcondition PC-2 method entry, and Edge Case EC-005. See wave-b-po-routing-spec.md Routing Item 7."
-  - "1.3 (FIX-BURST-278-WAVE-C/D-48-ratification/2026-07-28): PO ratification of D-48 receiver sweep (wave-b-po-routing-spec.md Routing Items 7a–7c). Substantive verification: (1) PC-2 method list reads 'as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>' — correct fallible Arc<Self>-receiver form per D-48; CORRECT. (2) Inv-4 states 'constructs Ok(VectorStoreRetriever) that owns an Arc<dyn VectorStore> clone, or returns Err(E-VS-003) on invalid config' — consistent with BC-2.20.003 Inv-2 and error-taxonomy.md §E-VS-003; COHERENT. (3) EC-005 reads 'as_retriever(self: Arc<Self>) called via Arc<dyn VectorStore> with valid config' — correct; CORRECT. (4) No non-dyn-compatible borrowed-Arc receiver residue: file confirmed zero occurrences. Ratification: COHERENT."
+  - "1.3 (FIX-BURST-278-WAVE-C/D-48-ratification/2026-07-28): PO ratification of D-48 receiver sweep (wave-b-po-routing-spec.md Routing Items 7a–7c). Substantive verification: (1) PC-2 method list reads 'as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>' — correct fallible Arc<Self>-receiver form per D-48; CORRECT. (2) Inv-4 states 'constructs Ok(VectorStoreRetriever) that owns an Arc<dyn VectorStore> clone, or returns Err(E-VS-003) on invalid config' — consistent with BC-2.20.003 Inv-2 and error-taxonomy.md §E-VS-003; COHERENT. (3) EC-005 reads 'as_retriever(self: Arc<Self>) called via Arc<dyn VectorStore> with valid config' — correct; CORRECT. (4) No non-dyn-compatible borrowed-Arc receiver residue: file confirmed zero occurrences. Ratification: COHERENT."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-028
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -29,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "89fca2d"
+input-hash: "d4c75fa"
 extracted_from: null
 modified: []
 deprecated: null
@@ -44,19 +44,19 @@ removal_reason: null
 
 ## Description
 
-`VectorStore` is a dyn-compatible async trait in `ferrochain-vectorstores: vectorstores::store`
+`VectorStore` is a dyn-compatible async trait in `pregolya-vectorstores: vectorstores::store`
 providing the document-index contract. All instance methods use `&self` receivers (not `&mut self`)
 and are desugared by `#[async_trait]` to `Pin<Box<dyn Future>>` for dyn-compatibility. Static
 constructors (`from_texts_sync`) are placed on a separate `VectorStoreFactory` trait with a
 `Sized` bound — E0038-safe split required by Rust's dyn-compatibility rules. `Arc<dyn VectorStore>`
-compiles without E0038. The `as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>`
+compiles without E0038. The `as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>`
 method returns a concrete (non-opaque) fallible result, validating configuration before constructing;
 `VectorStoreRetriever` has no lifetime parameter and owns `Arc<dyn VectorStore>` internally
 (ADR-014 Decision 2).
 
 ## Preconditions
 
-1. `ferrochain-vectorstores` has `async-trait` as a dependency.
+1. `pregolya-vectorstores` has `async-trait` as a dependency.
 2. A concrete type `T` implements `VectorStore` with all required instance methods using
    `&self` receivers and `#[async_trait]`.
 3. Static construction goes through `VectorStoreFactory::from_texts_sync`, NOT through a
@@ -67,18 +67,18 @@ method returns a concrete (non-opaque) fallible result, validating configuration
 1. `Arc<dyn VectorStore>` compiles without E0038 — confirmed by a compile-time test in
    `tests/external/vectorstore-dyn-compat/`.
 2. `VectorStore` trait instance methods:
-   - `add_texts(&self, texts, metadatas) → Result<Vec<String>, FerrochainError>` — ingests
+   - `add_texts(&self, texts, metadatas) → Result<Vec<String>, PregolyaError>` — ingests
      texts, returns assigned document IDs.
-   - `similarity_search(&self, query, k) → Result<Vec<Document>, FerrochainError>` — returns
+   - `similarity_search(&self, query, k) → Result<Vec<Document>, PregolyaError>` — returns
      the top-k documents.
-   - `similarity_search_with_score(&self, query, k) → Result<Vec<(Document, f32)>, FerrochainError>`
+   - `similarity_search_with_score(&self, query, k) → Result<Vec<(Document, f32)>, PregolyaError>`
      — returns top-k with scores ∈ [0.0, 1.0].
-   - `max_marginal_relevance_search(&self, query, k, fetch_k, lambda_mult) → Result<Vec<Document>, FerrochainError>`
+   - `max_marginal_relevance_search(&self, query, k, fetch_k, lambda_mult) → Result<Vec<Document>, PregolyaError>`
      — MMR retrieval.
-   - `delete(&self, ids: &[&str]) → Result<(), FerrochainError>` — removes documents by ID.
-   - `as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, FerrochainError>` — concrete (non-opaque) fallible return (BC-2.20.003); validates config before constructing; `VectorStoreRetriever` owns `Arc<dyn VectorStore>`, no lifetime parameter.
+   - `delete(&self, ids: &[&str]) → Result<(), PregolyaError>` — removes documents by ID.
+   - `as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>` — concrete (non-opaque) fallible return (BC-2.20.003); validates config before constructing; `VectorStoreRetriever` owns `Arc<dyn VectorStore>`, no lifetime parameter.
 3. `VectorStoreFactory` trait (separate, `Sized`-bounded):
-   - `from_texts_sync(texts, embedding: Arc<dyn Embeddings>, config: Self::Config) → impl Future<Output = Result<Self, FerrochainError>> + Send`
+   - `from_texts_sync(texts, embedding: Arc<dyn Embeddings>, config: Self::Config) → impl Future<Output = Result<Self, PregolyaError>> + Send`
    - Can only be called on a concrete type (not through `dyn VectorStore`).
 4. `add_texts` uses `&self` (interior mutability via `RwLock` in concrete impls). External
    vectorstore backends are stateless from the client's perspective.
@@ -152,7 +152,7 @@ _[to be filled after story decomposition — Wave 2 SS-21 story]_
 | L2 Domain Invariants | DI-008 (all VectorStore methods return Result; no .unwrap() on search or mutation results) |
 | Architecture Authority | ADR-014 Decision 2 (VectorStore trait, VectorStoreFactory separation, as_retriever concrete return, &self rationale) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| Module | ferrochain-vectorstores / vectorstores::store |
+| Module | pregolya-vectorstores / vectorstores::store |
 | Priority | P1 |
 | Wave | 2 |
 | Test Types | unit + compile-time (E0038 gate, factory Sized-bound gate) + compile-fail |

@@ -1,4 +1,4 @@
-# signature-canon-allowlist.txt — ferrochain factory-artifacts
+# signature-canon-allowlist.txt — pregolya factory-artifacts
 #
 # Per-match exemptions for verify-signature-canon.sh rule S3 (&Arc<Self>).
 #

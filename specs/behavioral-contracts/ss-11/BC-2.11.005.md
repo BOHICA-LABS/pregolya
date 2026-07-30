@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "5237b7c"
+input-hash: "0e57127"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-11
@@ -128,10 +128,10 @@ single synchronous operation in the current super-step.
 | Capability Anchor Justification | CAP-013 ("Content Provenance Tagging and Guardrail-on-Ingress") per capabilities-p0.md §CAP-013 |
 | L2 Domain Invariants | DI-012 (Guardrail Coverage at Ingress Boundaries — "Content that fails a guardrail does not enter the model context under any code path") |
 | Source Analysis | P-59 REJECT (the entire attack surface is adk-rust's unguarded tool/RAG/memory ingress); P-55 ADAPT (trait shape provides Fail variant with reason + severity); assessment-parts/part-2-dispositions-p51-p97.md §H4 |
-| Reference Evidence | Greenfield. DI-012 contains the verbatim requirement text "does not enter the model context under any code path" — this BC specifies the enforcement mechanism. No upstream reference implementation. The atomicity guarantee (no race between rejection and forwarding) is ferrochain-original design. |
+| Reference Evidence | Greenfield. DI-012 contains the verbatim requirement text "does not enter the model context under any code path" — this BC specifies the enforcement mechanism. No upstream reference implementation. The atomicity guarantee (no race between rejection and forwarding) is pregolya-original design. |
 | Binding Decisions | D17-Q8 (content provenance/guardrail-on-ingress is Phase-1 BC); DI-012 invariant text |
 | Forcing Functions | Domain A SOC analyst §4 "LLM-specific security risks — prompt injection via malicious log/alert content (adversary-controlled text entering the reasoning loop through tool output)"; Domain A §6 "Adversarial tool-content resistance" scenario |
-| Architecture Module | ferrochain-core / ferrochain-graph (model input buffer construction; filled by architect) |
+| Architecture Module | pregolya-core / pregolya-graph (model input buffer construction; filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 
 ## Related BCs
@@ -145,7 +145,7 @@ single synchronous operation in the current super-step.
 ## Architecture Anchors
 
 - `prd-supplements/interface-definitions.md §GuardrailHook` — `GuardrailResult::Fail{reason,severity}`; `GuardrailSeverity::Critical` triggers run-halt (PC4); non-Critical severity triggers error-block substitution and run continuation (PC5)
-- `architecture/module-decomposition.md §ferrochain-graph` — `graph::provenance` row: atomic rejection enforcement (HIGH, SS-11); `graph::scheduler` row: `CompiledGraph::run()` pre-inference buffer finalization (CRITICAL, SS-03)
+- `architecture/module-decomposition.md §pregolya-graph` — `graph::provenance` row: atomic rejection enforcement (HIGH, SS-11); `graph::scheduler` row: `CompiledGraph::run()` pre-inference buffer finalization (CRITICAL, SS-03)
 - `architecture/purity-boundary-map.md §Boundary Modules` — `graph::provenance` row: pure route decision / effectful `GuardrailHook` dispatch; rejection atomicity enforced via causal ordering before inference
 
 ## Story Anchor

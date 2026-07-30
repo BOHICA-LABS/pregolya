@@ -13,22 +13,22 @@ changelog:
   - "1.6 (FIX-BURST-268/F-P166-01/2026-07-25): TD-VSDD-091 compliance — removed stale version pin from SUPERSEDED banner. Banner line previously read '.factory/specs/module-criticality.md (v1.6, 43 modules, Phase 1b)'; vN.N pin violates TD-VSDD-091 (narrative body must not cite version numbers that decay on subsequent diffs). Fixed to '(43 modules, Phase 1b)'. Full body scan confirmed no other <file>.md (vN.N instances."
   - "1.5 (FIX-BURST-267/F-P165-06/2026-07-25): Adjudication — option (a) applied per single-source-of-truth discipline. This PO-draft (22 modules, pre-D21/D23) is superseded by the arch-view at .factory/specs/module-criticality.md (43 modules, v1.6, authoritative post-Phase 1b). Added STALE/SUPERSEDED banner at top of body. No content rows added — option (b) sync to 43 would duplicate authority. Downstream consumers (architect, test-writer, formal-verifier) must read .factory/specs/module-criticality.md. Status changed active→superseded."
   - "1.4 (2026-07-17): Provenance-integrity fix — removed .factory/STATE.md from inputs: list. STATE.md is a live pipeline-state file; input-hash drifts on every state write with zero spec-content signal for this supplement. Added three ADR files as genuine derivation inputs: ADR-008 (proc-macro #[tool]/#[entrypoint] tier-HIGH justification), ADR-012 (memory::write_guard tier-HIGH decision), ADR-013 (mcp::server tier-MEDIUM decision). D20/D17 decision references cited inline are stable baked-in facts, not live dependencies. Input-hash recomputed."
-  - "1.3 (pass-72 fix, 2026-07-15): F-P72-03 — add D20 modules per gate #32 PO-registry carrier obligation. (1) memory::write_guard (ferrochain-memory, HIGH) — ADR-012 Decision 4: calls validate() on every write; injection scanning dispatch; security-sensitive execution path. ADR-012 Decision 4 explicitly excludes memory::skills ('no independent execution logic beyond storage delegation') — no new row for skills module. (2) mcp::server (ferrochain-mcp, MEDIUM) — pending ADR-013: MCP server tool advertisement and invocation; external client interface. ferrochain-memory crate added to Module Inventory. Classification Summary updated: HIGH 8→9, MEDIUM 4→5, Total 20→22. Gate #25 Part B/C: tier and crate must agree with arch-registry module-criticality.md when that view is updated by architect this burst."
+  - "1.3 (pass-72 fix, 2026-07-15): F-P72-03 — add D20 modules per gate #32 PO-registry carrier obligation. (1) memory::write_guard (pregolya-memory, HIGH) — ADR-012 Decision 4: calls validate() on every write; injection scanning dispatch; security-sensitive execution path. ADR-012 Decision 4 explicitly excludes memory::skills ('no independent execution logic beyond storage delegation') — no new row for skills module. (2) mcp::server (pregolya-mcp, MEDIUM) — pending ADR-013: MCP server tool advertisement and invocation; external client interface. pregolya-memory crate added to Module Inventory. Classification Summary updated: HIGH 8→9, MEDIUM 4→5, Total 20→22. Gate #25 Part B/C: tier and crate must agree with arch-registry module-criticality.md when that view is updated by architect this burst."
   - "1.2 (ADV-P1D-PASS-32): F-P32-02 fix Classification Summary MEDIUM cell: was 5 (wrong), actual MEDIUM rows = 4; corrected to 4, percentage updated 25%→20%; self-sum now 6+8+4+2=20 reconciles with stated total."
-  - "1.1 (ADV-P1D-PASS-31): OBS-P31-1 add exclusion-criteria note (facade/re-export crates #1/#16/#17/#18 excluded; xtask classified as dev-tooling for CI gate); ferrochain-macros (#15) DECISION — receives HIGH-tier row (not excluded) because #[tool]/#[entrypoint] proc-macros affect P0 tool-calling and graph-composition paths per ADR-008; add ferrochain-macros to Module Inventory + HIGH row to classification table; update Classification Summary counts (HIGH 7→8, Total 19→20)."
+  - "1.1 (ADV-P1D-PASS-31): OBS-P31-1 add exclusion-criteria note (facade/re-export crates #1/#16/#17/#18 excluded; xtask classified as dev-tooling for CI gate); pregolya-macros (#15) DECISION — receives HIGH-tier row (not excluded) because #[tool]/#[entrypoint] proc-macros affect P0 tool-calling and graph-composition paths per ADR-008; add pregolya-macros to Module Inventory + HIGH row to classification table; update Classification Summary counts (HIGH 7→8, Total 19→20)."
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/specs/architecture/decisions/ADR-013-mcp-server-module-placement.md
-input-hash: "f43e67a"
+input-hash: "a1dfec3"
 traces_to: prd.md
 primary_consumers: [architect, test-writer, formal-verifier]
 architect_note: "Obligation discharged — ARCH-INDEX.md produced 2026-07-13 at Phase 1b; crate-to-subsystem mapping and Architecture Module column populated by architect in authoritative file .factory/specs/module-criticality.md. This PO-draft is superseded and frozen."
 ---
 
-# Module Criticality Classification: ferrochain
+# Module Criticality Classification: pregolya
 
 > **SUPERSEDED — DO NOT USE FOR IMPLEMENTATION DECISIONS**
 >
@@ -56,64 +56,64 @@ architect_note: "Obligation discharged — ARCH-INDEX.md produced 2026-07-13 at 
 
 ## Module Inventory
 
-- **ferrochain-core** — typed message/content primitives (Runnable, Message, ContentBlock), FerrochainError 2D struct, credential newtypes, CI lint targets
-- **ferrochain-graph** — StateGraph BSP execution engine, HITL interrupt/resume, channel reducers, budget governance, content provenance/guardrail seams
-- **ferrochain-checkpoint** — three-tier durable checkpointing, per-task put_writes, monotonic clock, checkpoint fork lineage, encryption at rest
-- **ferrochain-server** — HTTP server for threads/assistants/runs/crons, SecurityConfig, IdempotencyStore/RateLimitStore/RunStore traits
-- **ferrochain-mcp** — MCP tool adapter, tool discovery, ToolException fidelity, untrusted-ingress routing; MCP server role (`mcp::server` — tool advertisement via `tools/list`, invocation via `tools/call`; ADR-013)
-- **ferrochain-memory** — skill document registry (`memory::skills`), guarded memory/skill writes (`memory::write_guard`; injection scanning dispatch per ADR-012 Decision 4)
-- **ferrochain-openai** — OpenAI chat model implementation, streaming, tool-call, structured output
-- **ferrochain-anthropic** — Anthropic chat model implementation, streaming, tool-call
-- **ferrochain-ollama** — Ollama chat model implementation
-- **ferrochain-macros** — proc-macro crate providing `#[tool]` and `#[entrypoint]` procedural macros for tool registration and graph entry-point declaration (ADR-008)
-- **ferrochain-standard-tests** — conformance test suite crate (consumers: all provider crates)
-- **ferrochain-splitters** — text splitting with code-point boundary correctness
-- **ferrochain-sandbox** — WASM/container tool execution backend, workspace path confinement, macOS Seatbelt
-- **ferrochain-community** — demand-ranked integration crates (post-v1; third-party)
+- **pregolya-core** — typed message/content primitives (Runnable, Message, ContentBlock), PregolyaError 2D struct, credential newtypes, CI lint targets
+- **pregolya-graph** — StateGraph BSP execution engine, HITL interrupt/resume, channel reducers, budget governance, content provenance/guardrail seams
+- **pregolya-checkpoint** — three-tier durable checkpointing, per-task put_writes, monotonic clock, checkpoint fork lineage, encryption at rest
+- **pregolya-server** — HTTP server for threads/assistants/runs/crons, SecurityConfig, IdempotencyStore/RateLimitStore/RunStore traits
+- **pregolya-mcp** — MCP tool adapter, tool discovery, ToolException fidelity, untrusted-ingress routing; MCP server role (`mcp::server` — tool advertisement via `tools/list`, invocation via `tools/call`; ADR-013)
+- **pregolya-memory** — skill document registry (`memory::skills`), guarded memory/skill writes (`memory::write_guard`; injection scanning dispatch per ADR-012 Decision 4)
+- **pregolya-openai** — OpenAI chat model implementation, streaming, tool-call, structured output
+- **pregolya-anthropic** — Anthropic chat model implementation, streaming, tool-call
+- **pregolya-ollama** — Ollama chat model implementation
+- **pregolya-macros** — proc-macro crate providing `#[tool]` and `#[entrypoint]` procedural macros for tool registration and graph entry-point declaration (ADR-008)
+- **pregolya-standard-tests** — conformance test suite crate (consumers: all provider crates)
+- **pregolya-splitters** — text splitting with code-point boundary correctness
+- **pregolya-sandbox** — WASM/container tool execution backend, workspace path confinement, macOS Seatbelt
+- **pregolya-community** — demand-ranked integration crates (post-v1; third-party)
 - **xtask** — cargo xtask workspace tooling (file-size gate, client-timeout lint, namespace reservation)
 
 > **Exclusion criteria (OBS-P31-1, ADV-P1D-PASS-31):** Facade/re-export and codegen-thin
-> crates (`ferrochain` #1, `ferrochain-openai-sdk` #16, `ferrochain-anthropic-sdk` #17,
-> `ferrochain-ollama-sdk` #18) carry no criticality-bearing modules of their own and are
+> crates (`pregolya` #1, `pregolya-openai-sdk` #16, `pregolya-anthropic-sdk` #17,
+> `pregolya-ollama-sdk` #18) carry no criticality-bearing modules of their own and are
 > intentionally excluded from the Module Classification table — they re-export from the
 > implementation crates listed above and contain no independent logic paths. `xtask` is
 > dev-tooling (not a published library crate) but is classified because its file-size-check
 > logic gates CI — a failing xtask gate blocks all merges.
 >
-> **ferrochain-macros (#15) — row vs. exclusion DECISION (OBS-P31-1):** Although
-> `ferrochain-macros` is codegen infrastructure, it carries real proc-macro logic
+> **pregolya-macros (#15) — row vs. exclusion DECISION (OBS-P31-1):** Although
+> `pregolya-macros` is codegen infrastructure, it carries real proc-macro logic
 > (`#[tool]`, `#[entrypoint]`) per ADR-008. Because `#[tool]` generates the ToolDefinition
 > plumbing consumed by all P0 tool-calling paths (BC-2.09.001, BC-2.09.002) and
 > `#[entrypoint]` gates graph composition entry points, incorrect macro expansion silently
-> corrupts P0 execution without a clear runtime error. DECISION: `ferrochain-macros`
+> corrupts P0 execution without a clear runtime error. DECISION: `pregolya-macros`
 > receives a **HIGH**-tier criticality row; it is NOT excluded as a facade crate.
 
 ## Module Classification
 
 | Module | Crate | Tier | Rationale | Kill Rate Target | VP Count |
 |--------|-------|------|-----------|-----------------|---------|
-| BSP execution engine | ferrochain-graph | CRITICAL | DI-001 formal verification target; nondeterminism is a silent defect; CONFLICT-1 critical finding | ≥ 95% | 1 (VP-001) |
-| HITL interrupt/resume | ferrochain-graph | CRITICAL | D17-Q2 Phase-1 BC; cannot be retrofitted; Domain A+B holdout depends on correctness | ≥ 95% | 0 |
-| Per-task checkpoint store | ferrochain-checkpoint | CRITICAL | DI-002 durability invariant; Domain B multi-day run depends on crash recovery | ≥ 95% | 0 |
-| Session tenancy layer | ferrochain-checkpoint | CRITICAL | DI-005 Kani VP target; NE-12 cross-tenant isolation | ≥ 95% | 1 (VP-002) |
-| FerrochainError + credential newtypes | ferrochain-core | CRITICAL | NE-10 security boundary; DI-008 API contract; DI-010 credential opacity | ≥ 95% | 0 |
-| Workspace path confinement | ferrochain-sandbox | CRITICAL | DI-007 Kani VP target; NE-02 symlink escape; Domain C forcing function | ≥ 95% | 1 (VP-003) |
-| Budget governance | ferrochain-graph | HIGH | D17-Q4 Phase-1 BC; Domain B holdout; append-only journal integrity | ≥ 90% | 0 |
-| Content provenance/guardrail | ferrochain-graph | HIGH | D17-Q8 Phase-1 BC; Domain A holdout; DI-012 ingress coverage | ≥ 90% | 0 |
-| Runnable trait dispatch | ferrochain-core | HIGH | Universal composition primitive; type boundary enforcement | ≥ 90% | 0 |
-| ferrochain-server HTTP handlers | ferrochain-server | HIGH | CRUD lifecycle correctness; SecurityConfig defaults (DI-013); streaming/unary equivalence | ≥ 90% | 0 |
-| ferrochain-openai | ferrochain-openai | HIGH | Conformance contract; error-type fidelity; token-usage accounting | ≥ 90% | 0 |
-| ferrochain-anthropic | ferrochain-anthropic | HIGH | Conformance contract; streaming correctness | ≥ 90% | 0 |
-| ferrochain-ollama | ferrochain-ollama | HIGH | Conformance contract; local-first deployment | ≥ 90% | 0 |
-| Proc-macro suite (#[tool], #[entrypoint]) | ferrochain-macros | HIGH | ADR-008; `#[tool]` generates ToolDefinition plumbing for P0 tool-calling paths (BC-2.09.001, BC-2.09.002); `#[entrypoint]` gates graph composition; incorrect macro expansion silently corrupts P0 execution (OBS-P31-1) | ≥ 90% | 0 |
-| MCP tool adapter (`mcp::client`) | ferrochain-mcp | MEDIUM | ToolException fidelity (R11); untrusted ingress; correctness but not formal target | ≥ 80% | 0 |
-| MCP server (`mcp::server`) | ferrochain-mcp | MEDIUM | ADR-013 — tool advertisement (tools/list) + invocation (tools/call); external client interface; correctness but not formal target (BC-2.09.006, BC-2.09.007) | ≥ 80% | 0 |
-| Write guard (`memory::write_guard`) | ferrochain-memory | HIGH | ADR-012 Decision 4 — calls `validate()` on every memory/skill write; prompt-injection and invisible-Unicode scanning dispatch; security-sensitive execution path (BC-2.15.005) | ≥ 90% | 0 |
-| ferrochain-splitters | ferrochain-splitters | MEDIUM | Code-point parity correctness (R8); isolated from graph runtime | ≥ 80% | 0 |
-| Sandbox WASM/container backend | ferrochain-sandbox | MEDIUM | Execution isolation important but DI-006 behavioral test covers the main case | ≥ 80% | 0 |
-| ferrochain-standard-tests | ferrochain-standard-tests | MEDIUM | Test infrastructure; quality signal not production runtime | ≥ 80% | 0 |
+| BSP execution engine | pregolya-graph | CRITICAL | DI-001 formal verification target; nondeterminism is a silent defect; CONFLICT-1 critical finding | ≥ 95% | 1 (VP-001) |
+| HITL interrupt/resume | pregolya-graph | CRITICAL | D17-Q2 Phase-1 BC; cannot be retrofitted; Domain A+B holdout depends on correctness | ≥ 95% | 0 |
+| Per-task checkpoint store | pregolya-checkpoint | CRITICAL | DI-002 durability invariant; Domain B multi-day run depends on crash recovery | ≥ 95% | 0 |
+| Session tenancy layer | pregolya-checkpoint | CRITICAL | DI-005 Kani VP target; NE-12 cross-tenant isolation | ≥ 95% | 1 (VP-002) |
+| PregolyaError + credential newtypes | pregolya-core | CRITICAL | NE-10 security boundary; DI-008 API contract; DI-010 credential opacity | ≥ 95% | 0 |
+| Workspace path confinement | pregolya-sandbox | CRITICAL | DI-007 Kani VP target; NE-02 symlink escape; Domain C forcing function | ≥ 95% | 1 (VP-003) |
+| Budget governance | pregolya-graph | HIGH | D17-Q4 Phase-1 BC; Domain B holdout; append-only journal integrity | ≥ 90% | 0 |
+| Content provenance/guardrail | pregolya-graph | HIGH | D17-Q8 Phase-1 BC; Domain A holdout; DI-012 ingress coverage | ≥ 90% | 0 |
+| Runnable trait dispatch | pregolya-core | HIGH | Universal composition primitive; type boundary enforcement | ≥ 90% | 0 |
+| pregolya-server HTTP handlers | pregolya-server | HIGH | CRUD lifecycle correctness; SecurityConfig defaults (DI-013); streaming/unary equivalence | ≥ 90% | 0 |
+| pregolya-openai | pregolya-openai | HIGH | Conformance contract; error-type fidelity; token-usage accounting | ≥ 90% | 0 |
+| pregolya-anthropic | pregolya-anthropic | HIGH | Conformance contract; streaming correctness | ≥ 90% | 0 |
+| pregolya-ollama | pregolya-ollama | HIGH | Conformance contract; local-first deployment | ≥ 90% | 0 |
+| Proc-macro suite (#[tool], #[entrypoint]) | pregolya-macros | HIGH | ADR-008; `#[tool]` generates ToolDefinition plumbing for P0 tool-calling paths (BC-2.09.001, BC-2.09.002); `#[entrypoint]` gates graph composition; incorrect macro expansion silently corrupts P0 execution (OBS-P31-1) | ≥ 90% | 0 |
+| MCP tool adapter (`mcp::client`) | pregolya-mcp | MEDIUM | ToolException fidelity (R11); untrusted ingress; correctness but not formal target | ≥ 80% | 0 |
+| MCP server (`mcp::server`) | pregolya-mcp | MEDIUM | ADR-013 — tool advertisement (tools/list) + invocation (tools/call); external client interface; correctness but not formal target (BC-2.09.006, BC-2.09.007) | ≥ 80% | 0 |
+| Write guard (`memory::write_guard`) | pregolya-memory | HIGH | ADR-012 Decision 4 — calls `validate()` on every memory/skill write; prompt-injection and invisible-Unicode scanning dispatch; security-sensitive execution path (BC-2.15.005) | ≥ 90% | 0 |
+| pregolya-splitters | pregolya-splitters | MEDIUM | Code-point parity correctness (R8); isolated from graph runtime | ≥ 80% | 0 |
+| Sandbox WASM/container backend | pregolya-sandbox | MEDIUM | Execution isolation important but DI-006 behavioral test covers the main case | ≥ 80% | 0 |
+| pregolya-standard-tests | pregolya-standard-tests | MEDIUM | Test infrastructure; quality signal not production runtime | ≥ 80% | 0 |
 | xtask tooling | xtask | LOW | Build tooling; correctness checked by CI itself | ≥ 70% | 0 |
-| ferrochain-community | ferrochain-community | LOW | Third-party contributed post-v1; not in-tree at v1 | ≥ 70% | 0 |
+| pregolya-community | pregolya-community | LOW | Third-party contributed post-v1; not in-tree at v1 | ≥ 70% | 0 |
 
 ## Per-Module Risk Assessment
 
@@ -123,7 +123,7 @@ architect_note: "Obligation discharged — ARCH-INDEX.md produced 2026-07-13 at 
 | HITL interrupt/resume | CRITICAL | high — all HITL scenarios | medium (authorization gates in Domain A) | high | P0 |
 | Per-task checkpoint store | CRITICAL | high — all durable runs | medium (encryption at rest) | high | P0 |
 | Session tenancy layer | CRITICAL | high — multi-tenant isolation | high (cross-tenant data leak) | medium | P0 |
-| FerrochainError + credentials | CRITICAL | medium — error observability | high (credential leak) | low | P0 |
+| PregolyaError + credentials | CRITICAL | medium — error observability | high (credential leak) | low | P0 |
 | Workspace path confinement | CRITICAL | medium — tool execution | high (path traversal) | medium | P0 |
 | Budget governance | HIGH | medium — Domain B runs | low | medium | P0 |
 | Content provenance/guardrail | HIGH | high — Domain A safety | high (prompt injection) | medium | P0 |
@@ -145,42 +145,42 @@ architect_note: "Obligation discharged — ARCH-INDEX.md produced 2026-07-13 at 
 | LOW | 2 | 9% |
 | **Total** | **22** | ~100% |
 
-*Note: Community crate and xtask excluded from active-development count; counted here for completeness. ferrochain-macros added as HIGH row (OBS-P31-1). Facade/re-export crates (#1/#16/#17/#18) excluded per exclusion-criteria note above. v1.3 addition: memory::write_guard (HIGH, ferrochain-memory) + mcp::server (MEDIUM, ferrochain-mcp) per ADR-012/ADR-013 gate #32 PO-registry obligation.*
+*Note: Community crate and xtask excluded from active-development count; counted here for completeness. pregolya-macros added as HIGH row (OBS-P31-1). Facade/re-export crates (#1/#16/#17/#18) excluded per exclusion-criteria note above. v1.3 addition: memory::write_guard (HIGH, pregolya-memory) + mcp::server (MEDIUM, pregolya-mcp) per ADR-012/ADR-013 gate #32 PO-registry obligation.*
 
 ## Dependency Graph — Build Order
 
 ```
-ferrochain-core (foundation — no internal deps)
-  └── ferrochain-graph (depends on core)
-  │   └── ferrochain-checkpoint (depends on core; graph checkpoints)
-  │       └── ferrochain-server (depends on graph, checkpoint)
-  └── ferrochain-splitters (depends on core; isolated)
-  └── ferrochain-sandbox (depends on core)
-  │   └── (ferrochain-graph uses sandbox for tool execution)
-  └── ferrochain-<provider> (depends on core; standalone)
-  │   └── ferrochain-standard-tests (tests providers; depends on core + each provider)
-  └── ferrochain-mcp (depends on core; optional dep on providers)
+pregolya-core (foundation — no internal deps)
+  └── pregolya-graph (depends on core)
+  │   └── pregolya-checkpoint (depends on core; graph checkpoints)
+  │       └── pregolya-server (depends on graph, checkpoint)
+  └── pregolya-splitters (depends on core; isolated)
+  └── pregolya-sandbox (depends on core)
+  │   └── (pregolya-graph uses sandbox for tool execution)
+  └── pregolya-<provider> (depends on core; standalone)
+  │   └── pregolya-standard-tests (tests providers; depends on core + each provider)
+  └── pregolya-mcp (depends on core; optional dep on providers)
 ```
 
 ## Implementation Priority Order
 
-1. **ferrochain-core** — all primitives (Runnable, Message, ContentBlock, FerrochainError); prerequisite for everything
-2. **ferrochain-splitters** — isolated; provides early Red Gate test coverage for R8
-3. **ferrochain-checkpoint** — per-task durability; prerequisite for ferrochain-graph HITL
-4. **ferrochain-graph** — BSP engine, HITL, budget governance, content provenance
-5. **ferrochain-server** — HTTP layer; depends on graph + checkpoint
-6. **ferrochain-sandbox** — WASM/container backends; ferrochain-graph depends on this for tool execution
-7. **ferrochain-openai** — first provider crate (D3 early integration priority)
-8. **ferrochain-anthropic** — second provider crate
-9. **ferrochain-ollama** — third provider crate
-10. **ferrochain-standard-tests** — conformance suite; requires provider crates
-11. **ferrochain-mcp** — MCP adapter; Wave 2; depends on core + providers
+1. **pregolya-core** — all primitives (Runnable, Message, ContentBlock, PregolyaError); prerequisite for everything
+2. **pregolya-splitters** — isolated; provides early Red Gate test coverage for R8
+3. **pregolya-checkpoint** — per-task durability; prerequisite for pregolya-graph HITL
+4. **pregolya-graph** — BSP engine, HITL, budget governance, content provenance
+5. **pregolya-server** — HTTP layer; depends on graph + checkpoint
+6. **pregolya-sandbox** — WASM/container backends; pregolya-graph depends on this for tool execution
+7. **pregolya-openai** — first provider crate (D3 early integration priority)
+8. **pregolya-anthropic** — second provider crate
+9. **pregolya-ollama** — third provider crate
+10. **pregolya-standard-tests** — conformance suite; requires provider crates
+11. **pregolya-mcp** — MCP adapter; Wave 2; depends on core + providers
 
 ## Cross-Cutting Concerns by Tier
 
 | Concern | CRITICAL modules | HIGH modules | MEDIUM/LOW modules |
 |---------|-----------------|-------------|-------------------|
-| Error handling | `FerrochainError` only; no `.unwrap()`/`.expect()` in lib code; all paths return `Result` | `FerrochainError` propagation; no silent errors | `FerrochainError` propagation acceptable |
+| Error handling | `PregolyaError` only; no `.unwrap()`/`.expect()` in lib code; all paths return `Result` | `PregolyaError` propagation; no silent errors | `PregolyaError` propagation acceptable |
 | Credential handling | Newtype wrapper mandatory; `Debug → "<redacted>"`; no `Serialize`; no `Deref<Target=str>` | Newtype wrapper mandatory | Newtype if API key present |
 | HTTP timeouts | Mandatory `.timeout(30s)` on all `ClientBuilder` | Mandatory `.timeout(30s)` | Strongly recommended |
 | Test coverage | Kani proofs where VP seed; proptest for invariants; ≥ 95% mutation kill rate | Property tests for invariants; ≥ 90% mutation kill rate | Unit tests sufficient |

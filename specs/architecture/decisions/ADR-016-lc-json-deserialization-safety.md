@@ -17,13 +17,13 @@ superseded_by: null
 subsystems_affected: [SS-19]
 changelog:
   - "1.7 (FIX-BURST-280-corr/F-P175-C207/2026-07-28): Correct §Decision 5 phantom-existence claim (F-P175-C207). 'The existing one-way Python-checkpoint import tool...' — the tool does not exist; no v1 roster slot, no SS, no capability in the closed Phase 1b architecture; ADR-002 §Consequences correctly says 'post-v1 stretch'. Reworded §Decision 5 and §Consequences bullet to describe the DESIGN INTENT for a future post-v1 tool, not an existing deliverable. ADR-002 Rationale corrected in the same burst (removes 'in scope' qualifier)."
-  - "1.6 (FIX-BURST-278/Wave-C-S5/2026-07-28): S5 canon — two FerrochainError struct literals in unlabelled Rust fences converted to FerrochainError::new(component, category, RetryHint::Never, code, message) canonical constructor form per D-42/D-49. (1) Decision 3 Property 1 Reviver unknown-type error: E-SRLZ-001 struct literal → FerrochainError::new(Component::Srlz, Category::Val, RetryHint::Never, ...). (2) Decision 3 Property 4 monolith-unregistered error: E-SRLZ-002 struct literal → FerrochainError::new(Component::Srlz, Category::Val, RetryHint::Never, ...). RetryHint::Never confirmed for both codes (VAL/broken subcategory; deserialization errors are non-retriable by construction)."
+  - "1.6 (FIX-BURST-278/Wave-C-S5/2026-07-28): S5 canon — two PregolyaError struct literals in unlabelled Rust fences converted to PregolyaError::new(component, category, RetryHint::Never, code, message) canonical constructor form per D-42/D-49. (1) Decision 3 Property 1 Reviver unknown-type error: E-SRLZ-001 struct literal → PregolyaError::new(Component::Srlz, Category::Val, RetryHint::Never, ...). (2) Decision 3 Property 4 monolith-unregistered error: E-SRLZ-002 struct literal → PregolyaError::new(Component::Srlz, Category::Val, RetryHint::Never, ...). RetryHint::Never confirmed for both codes (VAL/broken subcategory; deserialization errors are non-retriable by construction)."
   - "1.5 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — Decision 3 Property 1 and Property 4 code sketches: Component::SRLZ → Component::Srlz; Category::VAL → Category::Val per ADR-010 v1.9 Direction B adjudication."
   - "1.4 (burst-249/2026-07-24): F-P148-02 — add Security Invariant labeled subsection to Decision 3. Adjudication option (b): stable anchor added to ADR rather than remapping citation sites. Resolves unresolvable 'ADR-016 Security Invariant' citations in BC-2.19.005, BC-INDEX Red Gate table, VP-010.md. F-P148-01 context: BC-2.19.005 Architecture Authority cites 'ADR-016 Decision 6' (nonexistent; ADR-016 has only Decisions 1–5) — PO handoff to fix to 'ADR-016 Decision 3 Property 1'."
   - "1.3 (burst-238/2026-07-23): Stale-handoff sweep — remove stale 'VP-010 candidate' label in §Consequences bullets. VP-010 was seeded in burst-223 (D21, VP-INDEX v1.2, Kani P0). Replace with 'VP-010 (Kani P0, seeded burst-223)'."
   - "1.2 (burst-224/2026-07-21): F-P129-06 — fix Decision 3 Property 1 and Property 4 code sketches: replace non-canonical `category: Serialization` with `component: Component::SRLZ, category: Category::VAL` per ADR-010 adjudication (Serialization is not a canonical Category variant)."
   - "1.1 (crates.io/2026-07-20): Record validated pin `inventory = \"0.3\"` (0.3.24, dtolnay, MSRV 1.62, WASM-safe); add keep-pin-fresh note re: compiler-internal tracking."
-  - "1.0 (D21/2026-07-20): Initial ADR — core::serializable in ferrochain-core, inventory-crate static registry, 141 core-internal entries, feature-gated partner registration, untrusted-deserialization safety (allowlist = registered set, no path loading, secret stripping), 12 langchain-monolith entries unregistered, one-way Python checkpoint import compatibility."
+  - "1.0 (D21/2026-07-20): Initial ADR — core::serializable in pregolya-core, inventory-crate static registry, 141 core-internal entries, feature-gated partner registration, untrusted-deserialization safety (allowlist = registered set, no path loading, secret stripping), 12 langchain-monolith entries unregistered, one-way Python checkpoint import compatibility."
 ---
 
 # ADR-016: lc-JSON Round-Trip and Deserialization Safety
@@ -38,7 +38,7 @@ D21 promotes LC serialization/load (lc-JSON) to full v1 scope. The Python refere
 - `Reviver`: deserializes lc-JSON back to typed objects using a type registry
 - `SERIALIZABLE_MAPPING`: 178 raw registry entries (176 unique after collision resolution);
   141 resolve to `langchain_core` types; 23 to partner packages; 12 to the `langchain`
-  aggregation package (no ferrochain owner)
+  aggregation package (no pregolya owner)
 
 Two security problems in the Python implementation must be solved by construction in Rust:
 1. **Arbitrary-type instantiation**: the Python Reviver can instantiate any registered type
@@ -49,20 +49,20 @@ Two security problems in the Python implementation must be solved by constructio
    allowlisted; two namespaces allowlisted but with no registered entries).
 
 Semport analysis (Pass 8 ADR-3 / rust-translation-strategy.md §9) has fully characterized
-the registry contents and confirmed the design implication: ferrochain must derive the valid
+the registry contents and confirmed the design implication: pregolya must derive the valid
 allowlist FROM the registered set, not maintain a parallel hand-written list.
 
-## Decision 1 — Crate Placement: `core::serializable` in ferrochain-core
+## Decision 1 — Crate Placement: `core::serializable` in pregolya-core
 
 The 141 core-internal registrations are all core types (`PromptTemplate`, `ChatPromptTemplate`,
 `SystemMessage`, `HumanMessage`, `AiMessage`, etc.). The `LcSerializable` trait and the
-`Reviver` are foundational primitives analogous to `Runnable` — they belong in ferrochain-core.
+`Reviver` are foundational primitives analogous to `Runnable` — they belong in pregolya-core.
 
-Module path: `ferrochain_core::serializable` (file: `ferrochain-core/src/serializable.rs`,
-split into `ferrochain-core/src/serializable/` if it exceeds the 500-line soft target).
+Module path: `pregolya_core::serializable` (file: `pregolya-core/src/serializable.rs`,
+split into `pregolya-core/src/serializable/` if it exceeds the 500-line soft target).
 
 Partner crates register their entries via the same `inventory`-based plugin seam (Decision 2).
-No new crate is created for lc-JSON — it is a ferrochain-core module.
+No new crate is created for lc-JSON — it is a pregolya-core module.
 
 ## Decision 2 — Registry Mechanism: `inventory` Crate (Static Link-Time Registration)
 
@@ -77,7 +77,7 @@ to collect `submit!`-registered values into a static iterable at program startup
   add new registry entries post-load.
 - **No reflection, no dynamic plugin loading**: registered types are statically known
   at link time.
-- **Feature-gated partner registration**: `ferrochain-openai` calls `inventory::submit!`
+- **Feature-gated partner registration**: `pregolya-openai` calls `inventory::submit!`
   for its 4 lc-ids only when `features = ["lc-serializable"]` is enabled. Enabling that
   feature in `Cargo.toml` is the only way to make those types loadable.
 
@@ -96,7 +96,7 @@ identified in Pass 8: deriving the allowlist from the registry eliminates the dr
 ### `LcSerializable` trait
 
 ```rust
-// ferrochain-core: core::serializable
+// pregolya-core: core::serializable
 pub trait LcSerializable: Send + Sync {
     /// Fully-qualified type ID as a namespace path.
     /// Example: ["langchain_core", "prompts", "prompt", "PromptTemplate"]
@@ -147,7 +147,7 @@ pub struct LcEntry {
     /// Constructor: takes kwargs (pre-validated Map) → Result<Box<dyn Any + Send + Sync>>
     pub constructor: fn(
         serde_json::Map<String, serde_json::Value>,
-    ) -> Result<Box<dyn Any + Send + Sync>, FerrochainError>,
+    ) -> Result<Box<dyn Any + Send + Sync>, PregolyaError>,
 }
 inventory::collect!(LcEntry);
 ```
@@ -164,7 +164,7 @@ Five safety properties, each enforced by construction:
 The `Reviver` checks `inventory::iter::<LcEntry>()` at startup and builds a `HashMap<Vec<String>, &LcEntry>`.
 Any `id` NOT in this map returns:
 ```
-Err(FerrochainError::new(
+Err(PregolyaError::new(
     Component::Srlz,
     Category::Val,
     RetryHint::Never,
@@ -180,7 +180,7 @@ Python's `load_from_path` allows loading a type by Python module path string if
 `DISALLOW_LOAD_FROM_PATH` does not contain it. This mechanism allows loading arbitrary
 classes from installed packages given a valid dotted path.
 
-**ferrochain has no path-based loading.** There is no `load_from_path` API. The registry
+**pregolya has no path-based loading.** There is no `load_from_path` API. The registry
 is the ONLY deserialization path. This eliminates the path-traversal attack class entirely.
 
 ### Property 3: Secret fields stripped from kwargs before constructor dispatch
@@ -202,14 +202,14 @@ via the `kwargs` map. Constructors that need credentials receive them via normal
 ### Property 4: 12 `langchain`-monolith entries are deliberately unregistered
 
 `LLMChain`, `ToolAgentAction`, `OutputFixingParser`, and the other 9 entries that resolve
-to the `langchain` aggregation package (which ferrochain does not port) return:
+to the `langchain` aggregation package (which pregolya does not port) return:
 ```
-Err(FerrochainError::new(
+Err(PregolyaError::new(
     Component::Srlz,
     Category::Val,
     RetryHint::Never,
     "E-SRLZ-002",
-    "unsupported-serializable: langchain-monolith type not ported to ferrochain",
+    "unsupported-serializable: langchain-monolith type not ported to pregolya",
 ))
 ```
 This is a structured error with a clear message — not a panic, not a silent `None`.
@@ -241,7 +241,7 @@ formally: for all symbolic type-id inputs not in the registry (and not in
 The Python reference corpus has 178 raw entries across 4 source dictionaries, collapsing
 to 176 unique keys after JS↔SERIALIZABLE collisions. Legacy aliases (e.g., `ChatBedrock`
 has 3 lc-ids pointing to the same class) are handled by registering MULTIPLE `LcEntry`
-instances with the same constructor but different `lc_id` values. The ferrochain core
+instances with the same constructor but different `lc_id` values. The pregolya core
 crate ships a legacy remap for `OLD_CORE_NAMESPACES_MAPPING` (58 entries) and the JS /
 OG remaps — all pointing to the same constructors as the canonical IDs.
 
@@ -253,7 +253,7 @@ version serialized the blob.
 
 A future one-way Python-checkpoint import tool (post-v1 scope; no v1 roster slot, no SS,
 no capability in the closed Phase 1b architecture — see ADR-002 §Consequences) would read
-Python-serialized checkpoints and convert them to ferrochain format. By design, it would use
+Python-serialized checkpoints and convert them to pregolya format. By design, it would use
 the `Reviver` to deserialize checkpoint payloads with the same allowlist and the same safety
 properties enforced by Decisions 1–4. The import tool would NOT bypass the registry.
 
@@ -268,7 +268,7 @@ tool. No implementation of this tool exists in v1.
 
 **`inventory` vs `OnceLock<HashMap>` (explicit runtime registration):** The `OnceLock`
 approach requires each partner crate to call a registration function at startup
-(e.g., `ferrochain_openai::register_lc_types()`). This is error-prone: a crate that
+(e.g., `pregolya_openai::register_lc_types()`). This is error-prone: a crate that
 is compiled in but whose registration function is never called leaves its types
 unloadable with no compile-time warning. `inventory` uses linker constructors —
 types are registered the moment the binary links them in, with no caller ceremony.
@@ -299,7 +299,7 @@ registration on link.
 
 Arguments for: zero runtime overhead; fully static.
 Rejected: 141+ entries with legacy aliases is unmaintainable as a match statement.
-Partner crates cannot contribute to a match in ferrochain-core without forking the crate.
+Partner crates cannot contribute to a match in pregolya-core without forking the crate.
 Not extensible.
 
 ### Alt C: serde untagged enum with Box<dyn Any>
@@ -312,7 +312,7 @@ messages.
 ### Alt D: Port DISALLOW_LOAD_FROM_PATH to control path loading
 
 Arguments for: parity with Python implementation.
-Rejected: ferrochain eliminates path-based loading entirely. There is no scenario where
+Rejected: pregolya eliminates path-based loading entirely. There is no scenario where
 arbitrary `module.path.ClassName` loading from deserialized data is safe. The parity
 objective is behavioral fidelity in round-trip results, not API surface parity — the
 security posture is strictly better than the reference.
@@ -332,11 +332,11 @@ security posture is strictly better than the reference.
 
 ## Consequences
 
-- `core::serializable` is a new module in ferrochain-core. `LcSerializable`, `Serialized`,
-  `LcEntry`, and `Reviver` are new public types in ferrochain-core.
-- `inventory` crate becomes a dependency of ferrochain-core (also used by
-  ferrochain-vectorstores for the adapter extension seam per ADR-014).
-- Partner crates (ferrochain-openai, ferrochain-anthropic, ferrochain-ollama) gain an
+- `core::serializable` is a new module in pregolya-core. `LcSerializable`, `Serialized`,
+  `LcEntry`, and `Reviver` are new public types in pregolya-core.
+- `inventory` crate becomes a dependency of pregolya-core (also used by
+  pregolya-vectorstores for the adapter extension seam per ADR-014).
+- Partner crates (pregolya-openai, pregolya-anthropic, pregolya-ollama) gain an
   optional `lc-serializable` Cargo feature that activates their `inventory::submit!` calls.
 - The valid-namespace `HashSet<String>` is computed once at startup in a `OnceLock`
   populated from `inventory::iter::<LcEntry>()`. This adds ~1ms to binary startup.

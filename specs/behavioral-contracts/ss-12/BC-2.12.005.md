@@ -24,12 +24,12 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "b5e3c44"
+input-hash: "44e27de"
 changelog:
   - "1.1 (ADV-P1D-PASS-26): F-P26-04 removed debug_route_path reference from invariant — debug route is fixed at /_debug (minimal config surface decision; TVs do not depend on a configurable path)."
   - "1.2 (ADV-P1D-PASS-27): F-P27-05 removed stale '(or the configured debug route path)' parenthetical from PC4 — residue of the pre-P26-04 configurable-path design; path is fixed at /_debug."
   - "1.3 (ADV-P1D-PASS-28): OBS-P28-1 removed inline fix-annotation residue from PC4 body — the F-P27-05 inline parenthetical '(F-P27-05: removed ...) was annotation residue in the postcondition text; correction is preserved only in the changelog."
-  - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
+  - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.5 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'server.security_config_cors_wildcard' to EC-003 and Invariants WARN emission per observability census (SAP-1)."
 extracted_from: null
 modified: []
@@ -45,7 +45,7 @@ removal_reason: null
 
 ## Description
 
-`SecurityConfig::default()` in `ferrochain-server` must be **secure by default**: no
+`SecurityConfig::default()` in `pregolya-server` must be **secure by default**: no
 CORS wildcard is emitted, and the debug/introspection route (`/_debug` or equivalent)
 is inaccessible without an explicit opt-in key in the server configuration. This
 contract is the direct correction of the adk-rust counter-example (P-45), where
@@ -55,7 +55,7 @@ route. Any request to the debug route without a configured key returns `403 Forb
 
 ## Preconditions
 
-1. `ferrochain-server` is started with `SecurityConfig::default()` (no custom config
+1. `pregolya-server` is started with `SecurityConfig::default()` (no custom config
    provided).
 2. An HTTP client sends a cross-origin request with an `Origin` header.
 3. An HTTP client sends a request to the debug/introspection route (`/_debug`).
@@ -156,9 +156,9 @@ would effectively disable the gate — this must not be permitted.
 
 ## Architecture Anchors
 
-- `ferrochain-server/src/security.rs` — `SecurityConfig` struct and `Default` implementation
-- `ferrochain-server/src/middleware/cors.rs` — CORS middleware consuming `SecurityConfig.allowed_origins`
-- `ferrochain-server/src/routes/debug.rs` — `/_debug` route handler with `debug_route_key` gate
+- `pregolya-server/src/security.rs` — `SecurityConfig` struct and `Default` implementation
+- `pregolya-server/src/middleware/cors.rs` — CORS middleware consuming `SecurityConfig.allowed_origins`
+- `pregolya-server/src/routes/debug.rs` — `/_debug` route handler with `debug_route_key` gate
 
 ## Story Anchor
 
@@ -173,11 +173,11 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-014 |
-| Capability Anchor Justification | CAP-014 ("Durable-Run HTTP Server (Threads, Assistants, Runs, Crons)") per capabilities-p1-p2.md §CAP-014 — ferrochain-server's security posture is a first-class property of the server itself; `SecurityConfig` is a server-level config struct named within the CAP-014 design scope |
+| Capability Anchor Justification | CAP-014 ("Durable-Run HTTP Server (Threads, Assistants, Runs, Crons)") per capabilities-p1-p2.md §CAP-014 — pregolya-server's security posture is a first-class property of the server itself; `SecurityConfig` is a server-level config struct named within the CAP-014 design scope |
 | L2 Domain Invariants | DI-013 (Secure Server Defaults) |
 | NE Reference | NE-14 — P-45 REJECT: `SecurityConfig::default()` → CORS wildcard + unauthenticated debug route is the adk-rust counter-example |
-| CONFLICT Reference | P-36 ADOPT: ferrochain adopts the defence-in-depth default middleware stack and overrides the P-45 CORS-open default with deny-unless-configured posture |
+| CONFLICT Reference | P-36 ADOPT: pregolya adopts the defence-in-depth default middleware stack and overrides the P-45 CORS-open default with deny-unless-configured posture |
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | U (unit), I (integration) |
-| Module | ferrochain-server |
+| Module | pregolya-server |

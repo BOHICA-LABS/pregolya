@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-changelog-claim-applied.sh — ferrochain factory-artifacts ADVISORY validator
+# verify-changelog-claim-applied.sh — pregolya factory-artifacts ADVISORY validator
 #
 # PURPOSE
 # ───────

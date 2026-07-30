@@ -1,6 +1,6 @@
 ---
 artifact: semport/splitters/behavioral-intent
-project: ferrochain
+project: pregolya
 port_target: langchain-text-splitters (1.1.2, shipped in langchain==1.3.13 corpus)
 analyzer_pass: 5
 date: 2026-07-12
@@ -16,7 +16,7 @@ Split large text (and structured text: code, markdown, HTML, JSON) into
 bounded-size chunks suitable for embedding / retrieval / LLM context packing.
 The **entire value** is deterministic, reproducible chunk boundaries: a
 downstream vector store indexes these chunks, and retrieval parity with an
-existing LangChain-Python corpus requires that ferrochain produce **identical
+existing LangChain-Python corpus requires that pregolya produce **identical
 chunk strings and identical `start_index` metadata** for the same input and
 config. This is why D5 marks it PORT, not MAP: a Rust chunking crate (e.g.
 `text-splitter`) with "similar" behavior silently corrupts retrieval parity.
@@ -129,7 +129,7 @@ sentences via the respective NLP lib, then `_merge_splits`. These are the
 
 ## The byte-for-byte parity contract (why this is PORT class)
 
-Retrieval parity requires that, for identical `(text, config)`, ferrochain
+Retrieval parity requires that, for identical `(text, config)`, pregolya
 emits: (a) the same ordered list of chunk strings, and (b) the same
 `start_index` values. The three highest-risk fidelity hazards are:
 

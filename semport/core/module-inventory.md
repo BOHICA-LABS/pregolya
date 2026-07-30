@@ -1,6 +1,6 @@
 ---
 artifact: semport/core/module-inventory
-project: ferrochain
+project: pregolya
 port_target: langchain-core (P0)
 source: .reference/langchain/libs/core/langchain_core
 source_pin: langchain==1.3.13 (langchain-core version 1.4.9)
@@ -14,7 +14,7 @@ Package: `langchain_core`, version **1.4.9** (shipped in the `langchain==1.3.13`
 License MIT. `requires-python >=3.10,<4.0`. Build backend hatchling.
 
 Measured with `tokei` + `find | wc -l` against
-`/Users/jmagady/Dev/ferrochain/.reference/langchain/libs/core/langchain_core`.
+`/Users/jmagady/Dev/pregolya/.reference/langchain/libs/core/langchain_core`.
 
 ## Scale Table
 

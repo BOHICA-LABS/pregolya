@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P107-01, 2026-07-18): E-GRAPH-011 ConditionalEdgePanic struct corrected from single-field to two-field form. Was: { source: 'source_node' } (1 field — wrong field name, missing panic message). Now: { source_node: <edge source node name>, message: <captured panic text> } (2 fields, 1:1 with taxonomy placeholders '<source_node>' and '<message>'). Root cause: EC-003 prose 'preserving the panic message as the error source' was ambiguous — 'source' was used as the error source (i.e., a catch-all field), conflating node name and panic text. Fix: PC5 struct updated; EC-003 struct updated and ambiguous 'error source' prose clarified; TV-005 struct updated. Three-site sibling sweep within file (TD-VSDD-060) — all uses updated."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
 traces_to:
@@ -25,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "146707a"
+input-hash: "291e48b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -145,9 +145,9 @@ from the run; the graph fails. Missing path_map entries are not silently ignored
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/graph/state.rs` — `add_conditional_edges`, `path_map` compilation
-- `ferrochain-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — `prepare_next_tasks`, routing function evaluation
-- `ferrochain-graph/src/types.rs` — `RouteResult` enum (NodeName, NodeNames, End, Send)
+- `pregolya-graph/src/graph/state.rs` — `add_conditional_edges`, `path_map` compilation
+- `pregolya-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — `prepare_next_tasks`, routing function evaluation
+- `pregolya-graph/src/types.rs` — `RouteResult` enum (NodeName, NodeNames, End, Send)
 
 ## Story Anchor
 
@@ -168,4 +168,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit) |
-| Module | ferrochain-graph |
+| Module | pregolya-graph |

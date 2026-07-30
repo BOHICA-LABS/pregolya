@@ -5,7 +5,7 @@ constraint: >
   D16 Rust-blindness. Quality tags (STRONG/NEUTRAL/WEAK) judge each pattern on
   production-grade architectural merit ONLY — not on the fact that it is idiomatic Rust,
   compiles, or would save porting effort. This pass OBSERVES; it does not conclude that
-  ferrochain should adopt or reject anything. The comparative assessment comes after this
+  pregolya should adopt or reject anything. The comparative assessment comes after this
   corpus passes its own validation cascade.
 created: 2026-07-13
 status: observe-only
@@ -14,7 +14,7 @@ status: observe-only
 # adk-rust — Distinctive Design Patterns Observed (Pass A1)
 
 Each pattern: description, evidence (function/type + behavioral anchor), preliminary quality
-tag with one-line rationale, and the ferrochain concern it maps to (citing our semport docs
+tag with one-line rationale, and the pregolya concern it maps to (citing our semport docs
 where the same concern exists).
 
 ---
@@ -30,7 +30,7 @@ category→HTTP-status are total, tested mappings.
   ~35 tests incl. all-category truth tables.
 - Quality: **STRONG** — the retry hint and HTTP mapping are derived once from category and
   exhaustively tested, so error handling is data-driven rather than ad-hoc per call site.
-- Ferrochain concern: error-taxonomy (`.factory/specs/prd-supplements/error-taxonomy.md`, Phase 1;
+- Pregolya concern: error-taxonomy (`.factory/specs/prd-supplements/error-taxonomy.md`, Phase 1;
   CLAUDE.md "Error handling" + "No silent empty returns"). Also parallels langchain-core's need
   for structured errors across subsystems.
 
@@ -41,8 +41,8 @@ accessors (`try_identity`, `try_execution_identity`) live at the readonly base.
 - Evidence: `adk-core::context` — the four traits + `ToolCallbackContext` delegating wrapper.
 - Quality: **STRONG** — encodes least-privilege at the type level; a memory-search helper cannot
   accidentally end the invocation because it only holds `ToolContext`, not `InvocationContext`.
-- Ferrochain concern: Runnables/config propagation (semport/core §1 Runnables — RunnableConfig
-  threading), Callbacks (semport/core §7). Ferrochain's `RunConfig`/callback context design.
+- Pregolya concern: Runnables/config propagation (semport/core §1 Runnables — RunnableConfig
+  threading), Callbacks (semport/core §7). Pregolya's `RunConfig`/callback context design.
 
 ### P-03 — Retry as a generic combinator with layered delay precedence
 `execute_with_retry_hint` is generic over any `FnMut() -> Future<Result<T>>` + injected
@@ -53,8 +53,8 @@ Includes HTTP 529 (overloaded) and a timing-verified backoff test.
   `exponential_backoff_without_retry_after` (measures inter-attempt gaps).
 - Quality: **STRONG** — separates policy (config), classification (predicate), and mechanism
   (combinator); respects server timing over local guessing; genuinely tested for timing.
-- Ferrochain concern: Rate limiters (semport/core §9), reliability/NFR (retry logic). Also
-  informs the ferrochain-graph retry-edge / partner-crate provider-call story.
+- Pregolya concern: Rate limiters (semport/core §9), reliability/NFR (retry logic). Also
+  informs the pregolya-graph retry-edge / partner-crate provider-call story.
 
 ### P-04 — Structured retry hint co-located with the error (single source of truth)
 Retryability travels *with* the error value (`AdkError.retry.should_retry` + `retry_after_ms`),
@@ -64,7 +64,7 @@ errors fall back to message-substring scanning during migration only.
   for `.legacy` codes.
 - Quality: **STRONG** — eliminates the classic "re-parse the error string to decide retry"
   anti-pattern; the migration fallback is explicitly scoped and time-bounded.
-- Ferrochain concern: error-taxonomy + rate limiters. Reinforces P-01.
+- Pregolya concern: error-taxonomy + rate limiters. Reinforces P-01.
 
 ### P-05 — `is_final_response()` as an explicit, fully-tested turn-completion predicate
 Instead of scattering "is the agent done?" logic, one predicate combines skip_summarization,
@@ -73,7 +73,7 @@ code-exec result — with a 9-case test truth table. <!-- [comparative-cert-5] C
 - Evidence: `adk-core::event::Event::is_final_response` + 9-test suite. <!-- [comparative-sweep] CORRECTION: "11-case test truth table" → 9 distinct fn test_is_final_response_* functions (grep -c "fn test_is_final_response" adk-core/src/event.rs = 9). Quality tag unaffected. -->
 - Quality: **STRONG** — turn-boundary detection is the crux of any agent loop; centralizing and
   exhaustively testing it prevents subtle streaming/tool-loop bugs.
-- Ferrochain concern: message/content-block semantics (semport/core §2), agent loop / graph
+- Pregolya concern: message/content-block semantics (semport/core §2), agent loop / graph
   node completion (semport/graph). langchain's AIMessage tool_calls detection is the analog.
 
 ### P-06 — Typed-identity newtypes with validation + typed addressing
@@ -83,7 +83,7 @@ full triple to eliminate bare-session-id ambiguity.
 - Evidence: `adk-core::identity`, `adk-session::service` (`get_for_identity`, `AppendEventRequest`).
 - Quality: **STRONG** — parse-don't-validate; the triple prevents cross-tenant session collisions
   that a bare string key invites.
-- Ferrochain concern: domain-spec entities/invariants (Phase 1 L2 domain spec). Session/thread
+- Pregolya concern: domain-spec entities/invariants (Phase 1 L2 domain spec). Session/thread
   identity in langgraph checkpoint (semport/graph checkpoint namespace = thread_id + checkpoint_ns).
 
 ### P-07 — Cooperative cancellation + interrupt API with Drop-guaranteed cleanup
@@ -95,7 +95,7 @@ returns.
   `active_session_ids`.
 - Quality: **STRONG** — the Drop guard makes cleanup exception-safe across the streaming state
   machine; combining tokens gives both global shutdown and targeted interrupt.
-- Ferrochain concern: reliability/NFR (graceful shutdown, cancellation), streaming (semport/core
+- Pregolya concern: reliability/NFR (graceful shutdown, cancellation), streaming (semport/core
   §1 astream). langgraph interrupt/resume (semport/graph HITL) is the closest analog.
 
 ### P-08 — Non-fatal degradation that is surfaced, not swallowed
@@ -106,8 +106,8 @@ Persistence and agent-run errors are propagated via `yield Err(e)` through the `
   session-append (`yield Err`).
 - Quality: **STRONG** — the distinction between "optimization failed, degrade + log" and
   "correctness failed, propagate" is drawn deliberately and consistently.
-- Ferrochain concern: CLAUDE.md "No silent empty returns where partial-failure should propagate";
-  logging discipline. Directly aligned with a ferrochain production-grade rule.
+- Pregolya concern: CLAUDE.md "No silent empty returns where partial-failure should propagate";
+  logging discipline. Directly aligned with a pregolya production-grade rule.
 
 ### P-09 — Typestate builder enforcing required construction fields at compile time
 `Runner::builder()` returns a builder parameterized on `NoAppName/NoAgent/NoSessionService`
@@ -115,7 +115,7 @@ phantom states; `build()` is only in scope once all three transition to their "s
 - Evidence: `adk-runner::runner::Runner::builder` signature + `adk-runner::builder`.
 - Quality: **STRONG** — makes "constructed a Runner without a session service" unrepresentable,
   the correct production-grade guarantee (vs a runtime `Result` from `build()`).
-- Ferrochain concern: interface-definitions (Phase 1); Arc-DI wiring convention (CLAUDE.md).
+- Pregolya concern: interface-definitions (Phase 1); Arc-DI wiring convention (CLAUDE.md).
 
 ### P-10 — Provider-aware schema normalization boundary (SchemaAdapter)
 MCP toolsets return raw JSON Schema verbatim; each `Llm` exposes a `schema_adapter()` that
@@ -126,7 +126,7 @@ truncation at a UTF-8 boundary for 64-byte limits is a default method.
 - Quality: **STRONG** — keeps tool discovery provider-agnostic and localizes each provider's
   schema quirks; the capability is discovered through the trait rather than branched on a
   provider enum at call sites.
-- Ferrochain concern: Tools (semport/core §6 tool schema generation), MCP adapters (semport/mcp).
+- Pregolya concern: Tools (semport/core §6 tool schema generation), MCP adapters (semport/mcp).
   langchain-mcp-adapters' schema conversion is the direct analog.
 
 ---
@@ -139,7 +139,7 @@ Event carries the LLM response fields flattened into its own JSON, mirroring adk
 - Quality: **NEUTRAL** — convenient wire compatibility, but flatten couples Event's schema to
   LlmResponse's and can cause field-collision surprises; parity with adk-go is a compatibility
   goal, not an architectural virtue on its own merit.
-- Ferrochain concern: message/content-block modeling (semport/core §2). Ferrochain should decide
+- Pregolya concern: message/content-block modeling (semport/core §2). Pregolya should decide
   composition vs flatten independently.
 
 ### P-12 — Capability discovery via defaulted trait methods returning `false`/`None`
@@ -150,8 +150,8 @@ Event carries the LLM response fields flattened into its own JSON, mirroring adk
   can silently hide an unimplemented capability (e.g. a memory backend that "works" but never
   persists). Mitigated where the default returns a structured error (session `rewind`, memory
   `add`) rather than a benign value.
-- Ferrochain concern: capability gating (CLAUDE.md "Doc comment claiming capability X with no
-  capability check"). Ferrochain should prefer default-errors over default-false for
+- Pregolya concern: capability gating (CLAUDE.md "Doc comment claiming capability X with no
+  capability check"). Pregolya should prefer default-errors over default-false for
   correctness-bearing capabilities.
 
 ### P-13 — `serde_json::Value` as the universal tool arg/result and state value type
@@ -160,7 +160,7 @@ Tool `execute(args: Value) -> Result<Value>`, `State::get/set` on `Value`, `exte
 - Quality: **NEUTRAL** — maximal flexibility and provider-neutrality, but pushes schema
   enforcement to runtime (SchemaAdapter/guardrail) rather than the type system. Reasonable for
   an LLM tool boundary; not a type-safety win.
-- Ferrochain concern: Tools (semport/core §6), D5 pydantic→serde/schemars ADR.
+- Pregolya concern: Tools (semport/core §6), D5 pydantic→serde/schemars ADR.
 
 ### P-14 — Feature-flag-gated optional subsystems in the composition root
 Runner fields for artifacts/plugins/skills/context-compaction are `#[cfg(feature=…)]`, producing
@@ -169,7 +169,7 @@ different struct shapes per feature set.
 - Quality: **NEUTRAL** — good for binary size / opt-in cost, but heavy `#[cfg]` interleaving in a
   single 800-line `run` method raises the cost of reasoning about any single build's behavior and
   complicates test-matrix coverage.
-- Ferrochain concern: NFR (build/feature composition), file-size & cohesion convention.
+- Pregolya concern: NFR (build/feature composition), file-size & cohesion convention.
 
 ---
 
@@ -179,13 +179,13 @@ different struct shapes per feature set.
 `adk-agent/src/llm_agent.rs` is 2,712 lines; `Runner::run` is one ~800-line `async_stream::stream!`
 block with deeply nested cfg-gated error paths.
 - Evidence: `wc -l adk-agent/src/llm_agent.rs`; `adk-runner::runner::run`.
-- Quality: **WEAK** — both would blow ferrochain's 750-line production hard gate and
+- Quality: **WEAK** — both would blow pregolya's 750-line production hard gate and
   `clippy::too_many_lines`. The runner's single-function turn+transfer+cache+compaction+plugin
   state machine is hard to unit-test in isolation; each concern (cache lifecycle, transfer loop,
   compaction) is inlined rather than extracted behind a testable seam. Cohesion is real but the
   size signals under-decomposition of independently-verifiable behaviors.
-- Ferrochain concern: file-size & module-splitting convention (CLAUDE.md; file-size-standard-study).
-  A ferrochain port must decompose these into seams (turn-executor, transfer-resolver,
+- Pregolya concern: file-size & module-splitting convention (CLAUDE.md; file-size-standard-study).
+  A pregolya port must decompose these into seams (turn-executor, transfer-resolver,
   cache-lifecycle) to satisfy the gate AND to make the contracts individually testable.
 
 ### P-16 — Duplicated provider surfaces (in-tree adk-model modules vs standalone provider crates)
@@ -196,7 +196,7 @@ Anthropic and Gemini exist both as `adk-model::{anthropic,gemini}` modules AND a
   reach the other) and ambiguous "which do I use?" ergonomics. The relationship/layering is
   undocumented at the workspace level. Deep pass must determine if one wraps the other or they
   diverge.
-- Ferrochain concern: partners (semport/partners) — ferrochain should have ONE provider surface
+- Pregolya concern: partners (semport/partners) — pregolya should have ONE provider surface
   per vendor. This is a defer-pattern smell if the duplication is "we'll consolidate later."
 
 ### P-17 — Cache-key proxy uses agent description, acknowledged as imperfect
@@ -209,7 +209,7 @@ instruction (which is actually resolved deeper inside the agent), and caches wit
   resolved instructions/tools could collide, or a changed instruction under a stable description
   could serve a stale cache. The empty-tools map means tool definitions are not part of the cache
   identity at all.
-- Ferrochain concern: correctness of prompt-caching NFR. A ferrochain design should key caches on
+- Pregolya concern: correctness of prompt-caching NFR. A pregolya design should key caches on
   the resolved (instruction, tools) content hash, not a description proxy.
 
 ### P-18 — `anyhow` available workspace-wide alongside the structured `AdkError`
@@ -218,7 +218,7 @@ instruction (which is actually resolved deeper inside the agent), and caches wit
 - Quality: **WEAK (pending verification)** — if `anyhow::Error` appears in any *library* public
   signature it undercuts the whole structured-error investment (P-01) by erasing component/category
   at the boundary. Acceptable only if confined to binaries (cli, cargo-adk) and tests.
-- Ferrochain concern: CLAUDE.md structured-error discipline; ferrochain forbids this leakage. Deep
+- Pregolya concern: CLAUDE.md structured-error discipline; pregolya forbids this leakage. Deep
   pass must grep public signatures for `anyhow::`.
 
 ### P-19 — Capability defaults that can mask missing behavior (correctness-bearing subset)
@@ -230,16 +230,16 @@ A parallel-agent tool relying on shared state gets `None` silently if wiring is 
 - Quality: **WEAK** — silent `None`/global-fallback for coordination/isolation primitives can
   produce correct-looking but semantically wrong behavior (cross-project memory bleed if a backend
   forgets to override `search_in_project`).
-- Ferrochain concern: memory project-scope isolation (a security/tenancy invariant); parallel-agent
-  coordination. Ferrochain should make isolation-bearing methods required, not defaulted.
+- Pregolya concern: memory project-scope isolation (a security/tenancy invariant); parallel-agent
+  coordination. Pregolya should make isolation-bearing methods required, not defaulted.
 
 ---
 
 ## Cross-cutting note (informative, not a conclusion)
 adk-rust's strongest work is concentrated in the error/retry/turn-completion/identity core —
-exactly the behavioral-contract surface ferrochain cares most about — while its weaknesses are
+exactly the behavioral-contract surface pregolya cares most about — while its weaknesses are
 structural (file size, provider duplication) and a few correctness-risk defaults (cache-key proxy,
-silent capability fallbacks). Whether any of these patterns should influence ferrochain is
+silent capability fallbacks). Whether any of these patterns should influence pregolya is
 explicitly deferred to the post-validation comparative assessment per D16.
 
 ---
@@ -263,8 +263,8 @@ before persistence (`state_delta.retain(|k,_| !k.starts_with(KEY_PREFIX_TEMP))`)
   same shape in `sqlite`, `mongodb`, `neo4j`, `redis`, `firestore`.
 - Quality: **STRONG** — an appended event and its induced state delta commit or roll back
   together, so a crash can never leave state advanced past the event that produced it. This is
-  the atomicity guarantee ferrochain's D11 checkpoint-atomicity concern asks for.
-- Ferrochain concern: durability/checkpoint atomicity (semport/graph §2, §5.1; D11). Contrast:
+  the atomicity guarantee pregolya's D11 checkpoint-atomicity concern asks for.
+- Pregolya concern: durability/checkpoint atomicity (semport/graph §2, §5.1; D11). Contrast:
   adk-**graph**'s checkpointer does NOT have this two-phase discipline (see P-29).
 
 ### P-21 — AEAD envelope encryption wrapper with key rotation
@@ -278,7 +278,7 @@ lazily re-encrypts with the current key (`decrypt_state_with_rotation` → `need
   per-write nonce is correct; wrap-any-backend composition and staged key rotation are the right
   shape for at-rest encryption with rolling keys. (Two real gaps demote the *completeness* — see
   P-32 — but the primitive and rotation design are sound.)
-- Ferrochain concern: encryption-at-rest NFR (Phase 1 nfr-catalog); credential/PII safety.
+- Pregolya concern: encryption-at-rest NFR (Phase 1 nfr-catalog); credential/PII safety.
   LangGraph's `EncryptedSerializer` (semport/graph §2.3) is the direct analog.
 
 ### P-22 — DeltaCheckpointer as a composable storage-compression wrapper
@@ -292,7 +292,7 @@ round-trip contract (`apply(s1, diff(s1,s2)) == s2`) exercised by property tests
 - Quality: **STRONG (as storage compression)** — turns O(steps × state) growth into O(state +
   Σdeltas) with a snapshot-bounded replay; drop-in via the same trait; the round-trip invariant
   is stated and tested. Distinct in shape from LangGraph's per-channel `DeltaChannel` (P-25).
-- Ferrochain concern: checkpoint storage-shape polymorphism + snapshot/prune (semport/graph §1.4
+- Pregolya concern: checkpoint storage-shape polymorphism + snapshot/prune (semport/graph §1.4
   DeltaChannel, §2.1 prune). A cleaner *layering* than LangGraph's channel-level deltas, but
   coarser granularity (P-25).
 
@@ -306,7 +306,7 @@ observe each other's writes mid-step.
 - Quality: **STRONG (the core BSP invariant)** — this is exactly LangGraph's write-isolation
   guarantee (semport/graph §1.1 step 3): effects isolated until an apply phase. The isolation
   half is right. (The *ordering* half of the invariant is not — see P-28.)
-- Ferrochain concern: BSP isolation invariant (semport/graph §1.1, cross-cutting note 1; D9).
+- Pregolya concern: BSP isolation invariant (semport/graph §1.1, cross-cutting note 1; D9).
 
 ### P-24 — Property-based test suite over the graph runtime (proptest-driven, not smoke)
 The graph crate's 14 integration files are dominated by property tests: `action_switch`,
@@ -318,7 +318,7 @@ switch routing, deferred fan-in, and timeout laws are checked over generated inp
 - Quality: **STRONG** — property tests over a state-machine runtime encode invariants
   (round-trip, routing totality, fan-in completeness) a re-implementer can lift as a conformance
   suite. This is the highest-value test-as-spec form for an execution engine. <!-- [comparative-sweep] CORRECTION: "208 test fns crate-wide" → actual `fn test_*` count = 197 (grep -rn "fn test_" adk-graph/ --include="*.rs" | wc -l); proptest fns (fn prop_*) bring the all-function total to 223; 208 matches neither. Quality tag unaffected. -->
-- Ferrochain concern: test-as-spec / verification-properties (Phase 6 VP files); D9/D11 invariants
+- Pregolya concern: test-as-spec / verification-properties (Phase 6 VP files); D9/D11 invariants
   are exactly the kind that want property + Kani coverage.
 
 ## NEUTRAL patterns
@@ -332,7 +332,7 @@ own snapshot cadence and parent-chain walk.
 - Quality: **NEUTRAL** — map-level diff is simpler and backend-agnostic, but it recomputes the
   whole-state diff each step and cannot express channel-local semantics (e.g. an append-only
   channel's deltas independent of unrelated keys). Adequate; not a fidelity match.
-- Ferrochain concern: checkpoint delta strategy (semport/graph §1.4). Ferrochain must decide
+- Pregolya concern: checkpoint delta strategy (semport/graph §1.4). Pregolya must decide
   channel-level vs state-level delta explicitly.
 
 ### P-26 — Memory visibility = global ∪ project overlay (additive project scope)
@@ -346,7 +346,7 @@ that one project. `user_id`/`app_name` always partition; `validate_project_id` b
   user partitioning, but global entries deliberately bleed into every project view. Correct for a
   "shared org memory + project overlay" model; a "strictly personal, never-shared" memory needs
   the global tier disabled or a user-private scope.
-- Ferrochain concern: Domain C (OpenClaw) personal memory — see the dedicated behavioral-intent
+- Pregolya concern: Domain C (OpenClaw) personal memory — see the dedicated behavioral-intent
   A2 mapping. The additive-global default is the key decision point.
 
 ### P-27 — Graph checkpointing and session persistence are two unrelated subsystems
@@ -358,8 +358,8 @@ No bridge type couples a graph thread to a session.
 - Quality: **NEUTRAL** — clean separation of "agent conversation persistence" from "graph
   execution persistence," but it means two durability stories with divergent guarantees (session
   = transactional multi-table; graph = single-blob step-boundary) coexist in one framework.
-- Ferrochain concern: architecture layering (semport/graph vs a future session/thread store).
-  Ferrochain should decide whether graph checkpoints and conversation threads share one store.
+- Pregolya concern: architecture layering (semport/graph vs a future session/thread store).
+  Pregolya should decide whether graph checkpoints and conversation threads share one store.
 
 ## WEAK / concerning observations
 
@@ -376,9 +376,9 @@ finish timing. There is no task-path sort (contrast LangGraph's `apply_writes` d
 - Quality: **WEAK (correctness)** — directly contradicts the D9 cross-cutting invariant
   "preserve deterministic merge order regardless of execution shape." Two runs of the same graph
   with an Append channel and two concurrent writers can produce different list orders; replay is
-  not bit-reproducible. A ferrochain port must impose a deterministic write order (sort by node
+  not bit-reproducible. A pregolya port must impose a deterministic write order (sort by node
   identity/path) and add concurrent-write detection for last-value channels.
-- Ferrochain concern: determinism/replay (semport/graph §1.2, §1.4, cross-cutting note 1; D9).
+- Pregolya concern: determinism/replay (semport/graph §1.2, §1.4, cross-cutting note 1; D9).
 
 ### P-29 — Step-boundary-only durability: no per-task pending writes, no durability modes
 `save_checkpoint` persists the WHOLE state + `pending_nodes` + `step` AFTER each super-step. There
@@ -393,8 +393,8 @@ whole step, with zero per-task credit.
   Acceptable for cheap nodes; wasteful/incorrect-under-side-effects for expensive or non-idempotent
   nodes, since all in-flight work of a partially-completed step re-executes. No knob to trade
   latency for durability.
-- Ferrochain concern: durability modes + pending-writes crash-safety (semport/graph §2.4, §5.1–§5.3,
-  cross-cutting notes 3 & 5; D11). A ferrochain port needs the per-task write channel.
+- Pregolya concern: durability modes + pending-writes crash-safety (semport/graph §2.4, §5.1–§5.3,
+  cross-cutting notes 3 & 5; D11). A pregolya port needs the per-task write channel.
 
 ### P-30 — Impoverished interrupt/resume: no resume-value injection, no re-execute-from-start contract
 `Interrupt` is `Before(node) | After(node) | Dynamic { message, data }`. On interrupt the executor
@@ -408,9 +408,9 @@ contract — the single most surprising, load-bearing LangGraph HITL semantic (s
   LangGraph semport/graph §3.1–§3.5.
 - Quality: **WEAK (behavioral fidelity)** — the HITL surface is a notification ("we stopped, here's
   a message") not a resumable dialogue ("inject this human decision, continue the node"). Dynamic
-  interrupts cannot carry a human's answer back into the interrupted node. A ferrochain port
+  interrupts cannot carry a human's answer back into the interrupted node. A pregolya port
   targeting LangGraph parity must build the resume-value scratchpad + replay contract from scratch.
-- Ferrochain concern: interrupts & HITL (semport/graph §3, cross-cutting note 2; D9). Also relates
+- Pregolya concern: interrupts & HITL (semport/graph §3, cross-cutting note 2; D9). Also relates
   to P-07 (adk-runner cancellation) — different subsystem, different depth.
 
 ### P-31 — Wall-clock ordering for "latest" and for rewind (no monotonic logical clock)
@@ -425,8 +425,8 @@ sequence/version.
 - Quality: **WEAK (correctness under concurrency/skew)** — two checkpoints or events in the same
   clock tick have ambiguous order; a clock adjustment can reorder history; rewind's same-timestamp
   tie-break by id is arbitrary. LangGraph deliberately uses monotonic logical IDs to avoid exactly
-  this. A ferrochain port should use a monotonic per-thread sequence, not wall-clock.
-- Ferrochain concern: determinism, time-travel/fork, rewind correctness (semport/graph §1.2, §2.6,
+  this. A pregolya port should use a monotonic per-thread sequence, not wall-clock.
+- Pregolya concern: determinism, time-travel/fork, rewind correctness (semport/graph §1.2, §2.6,
   §5; D11).
 
 ### P-32 — Encryption covers only session STATE, not event content; re-encrypt is best-effort/swallowed
@@ -438,9 +438,9 @@ discarded — and reuses `create()` as an upsert (dubious semantics).
   get (best-effort `let _ =` re-encrypt)}`; only `create`/`get` touch `encrypt_state`.
 - Quality: **WEAK** — "encryption at rest" that leaves message bodies in cleartext is a partial
   guarantee likely to surprise; and the swallowed re-encryption error violates the no-silent-failure
-  rule (CLAUDE.md "No silent empty returns / surface partial failures"). A ferrochain design must
+  rule (CLAUDE.md "No silent empty returns / surface partial failures"). A pregolya design must
   encrypt event payloads too (or document the boundary explicitly) and propagate rotation failures.
-- Ferrochain concern: encryption-at-rest completeness + no-silent-swallow discipline (CLAUDE.md;
+- Pregolya concern: encryption-at-rest completeness + no-silent-swallow discipline (CLAUDE.md;
   Phase 1 nfr-catalog / error-taxonomy).
 
 ### P-33 — Hand-written `unsafe impl Send/Sync` on PhantomData reducers where a safe form exists
@@ -449,9 +449,9 @@ unconditionally, despite the `TypedReducer` impls already bounding `T: Send + Sy
 - Evidence: `adk-graph::functional::typed_reducer` (`unsafe impl<T> Send for ReplaceReducer<T>` etc).
 - Quality: **WEAK (unnecessary unsafe)** — `PhantomData<fn() -> T>` (or deriving from bounded T)
   yields unconditional `Send+Sync` with zero `unsafe`. Reaching for `unsafe` to paper over a
-  variance/marker choice is a code smell in an otherwise safe crate; ferrochain forbids gratuitous
+  variance/marker choice is a code smell in an otherwise safe crate; pregolya forbids gratuitous
   `unsafe` without a soundness note.
-- Ferrochain concern: unsafe-code discipline / production-grade default (CLAUDE.md).
+- Pregolya concern: unsafe-code discipline / production-grade default (CLAUDE.md).
 
 ### P-34 — `append_event_for_identity` default collapses the identity triple to bare session_id
 The typed-identity append default is `self.append_event(req.identity.session_id.as_ref(), req.event)`
@@ -463,8 +463,8 @@ guarded only by an "ambiguous session_id" runtime error.
 - Quality: **WEAK (tenancy)** — the P-06 typed-identity investment (STRONG) is undercut at the
   append boundary unless every backend overrides; the default silently narrows a cross-tenant-safe
   triple to a globally-non-unique key and leans on a runtime ambiguity check instead of the type.
-- Ferrochain concern: session/thread identity + multi-tenancy isolation (semport/graph §2.5 thread
-  namespacing; parallels P-06). Ferrochain should make triple-addressed append the ONLY path.
+- Pregolya concern: session/thread identity + multi-tenancy isolation (semport/graph §2.5 thread
+  namespacing; parallels P-06). Pregolya should make triple-addressed append the ONLY path.
 
 ## Cross-cutting note (informative, not a conclusion) — Pass A2
 The cluster's strengths are in *storage discipline* — transactional session writes (P-20), AEAD
@@ -475,7 +475,7 @@ step-boundary-only durability with no per-task writes or durability modes (P-29)
 only interrupt model lacking the resume-value/replay contract (P-30), and wall-clock rather than
 logical-clock ordering (P-31). Net: adk-graph is a competent edge-following graph runner dressed in
 Pregel vocabulary, not a Pregel/BSP engine with LangGraph's determinism-and-replay guarantees. Any
-influence on ferrochain is deferred to the post-validation comparative assessment per D16.
+influence on pregolya is deferred to the post-validation comparative assessment per D16.
 
 ## State Checkpoint
 ```yaml
@@ -510,7 +510,7 @@ attempt, and a terminal `A2aError::PushDeliveryFailed` (no silent success).
 - Quality: **STRONG** — server-initiated HTTP to a user-supplied URL is a classic SSRF sink;
   validating the destination up front is the correct production-grade default, and delivery
   failure is surfaced rather than swallowed.
-- Ferrochain concern: any ferrochain-server webhook/push surface (Domain-B run-completion
+- Pregolya concern: any pregolya-server webhook/push surface (Domain-B run-completion
   callbacks; LangGraph `webhook`/`on_run_completed` run fields, platform §2.6) must carry the
   same SSRF gate. Maps to security-review. NOTE: the delivery client has NO reqwest timeout (P-42).
 
@@ -526,7 +526,7 @@ XSS block).
 - Quality: **STRONG** — secure defaults applied by construction, not opt-in; request-id
   correlation is wired into tracing spans. Production-grade HTTP posture. (CAVEAT: CORS falls
   back to `AllowOrigin::any()` when `allowed_origins` is empty — see P-45.)
-- Ferrochain concern: ferrochain-server inbound middleware + observability spec (Phase 1). The
+- Pregolya concern: pregolya-server inbound middleware + observability spec (Phase 1). The
   request-id-into-span pattern aligns with the Canonical Structured Event Catalog discipline.
 
 ### P-37 — Exhaustive A2A input validation with explicit size bounds
@@ -539,7 +539,7 @@ INPUT_REQUIRED multi-turn resume: a follow-up whose `contextId` maps to a non-te
 - Quality: **STRONG** — untrusted protocol input bounded at the boundary with individually-tested
   limits (the 64 KB metadata cap blocks an unbounded-allocation vector); the resume contract is a
   clean, tested state-machine transition.
-- Ferrochain concern: ferrochain-server request-DTO validation + error taxonomy (Phase 1), and
+- Pregolya concern: pregolya-server request-DTO validation + error taxonomy (Phase 1), and
   the run/thread resume design (platform §2.3 runs, §2.2 thread state). A holdout should assert
   size-bound rejections and context-resume idempotency.
 
@@ -556,7 +556,7 @@ Google/generic OIDC via JWKS with rotation).
   `rest::auth_middleware`, `adk-auth::{AccessControl, ScopeGuard, sso, auth_bridge}`.
 - Quality: **STRONG** (as a seam) — cleanly separates transport (extract identity) from policy
   (RBAC/scope); the RBAC/audit/SSO surface is enterprise-grade and feature-gated.
-- Ferrochain concern: ferrochain-server auth model + Domain-B "agent identity/provenance"
+- Pregolya concern: pregolya-server auth model + Domain-B "agent identity/provenance"
   governance primitive. The extractor-trait + scope-into-context flow is a strong reference for
   how authenticated identity should reach tool execution. See P-44 for the `get_secret -> String`
   credential-type concern.
@@ -574,7 +574,7 @@ provider omits it, and `SessionUsageTracker::record_turn` accumulates cumulative
 - Quality: **NEUTRAL** — clean, well-tested accounting, but *measurement only*: no dollar cost
   here (cost lives on `adk-core::UsageMetadata`), no ceiling, and nothing reads the tracker to
   gate execution. See P-46 (budget gap).
-- Ferrochain concern: Domain-B budget metering. This is the accounting substrate a ferrochain
+- Pregolya concern: Domain-B budget metering. This is the accounting substrate a pregolya
   budget-governance primitive would sit ON TOP of — not the primitive itself.
 
 ### P-40 — `awp-types`: zero-adk-dependency pure-wire-types crate
@@ -586,9 +586,9 @@ carries A2A messages as one payload type (AWP is the outer web/trust/consent lay
 inner agent-RPC).
 - Evidence: `awp-types::lib` re-export surface; `awp-types::a2a::{A2aMessage, A2aMessageType}`.
 - Quality: **NEUTRAL** — good layering (wire-types crate separate from server impl `adk-awp`),
-  but AWP itself is outside ferrochain's declared protocol scope; the transferable idea is
+  but AWP itself is outside pregolya's declared protocol scope; the transferable idea is
   "split wire types from transport," not AWP.
-- Ferrochain concern: if ferrochain ever exposes a public wire contract, a dep-light types crate
+- Pregolya concern: if pregolya ever exposes a public wire contract, a dep-light types crate
   mirrors this. Otherwise informational. See protocol-landscape finding.
 
 ## WEAK / concerning observations
@@ -602,7 +602,7 @@ Runner streaming integration comes later." The streaming transport yields NO mod
 - Quality: **WEAK** — the two transports for the same operation diverge behaviorally; the
   streaming path is a defer-pattern ("later"). Under the production-grade default this is the
   "ship partial now, wire later" smell.
-- Ferrochain concern: ferrochain-server SSE/streaming run contract (platform §2.3 `/runs/stream`)
+- Pregolya concern: pregolya-server SSE/streaming run contract (platform §2.3 `/runs/stream`)
   MUST make streaming and unary runs behaviorally equivalent (both drive the engine). A holdout
   should assert the streaming path produces real output, not just status transitions.
 
@@ -616,8 +616,8 @@ axum `TimeoutLayer` in P-36 is a server-side *request* timeout, unrelated to the
   across `adk-server/src`, `adk-auth/src`, `adk-awp/src`, `adk-acp/src`, `adk-managed/src`.
 - Quality: **WEAK** — a hung webhook receiver, JWKS endpoint, or remote A2A agent blocks the
   delivery/validation task indefinitely (bounded only by OS TCP timeouts). Exactly the failure
-  ferrochain's mandatory-30s-timeout convention prevents.
-- Ferrochain concern: RESOLVES A1 open item (reqwest timeout sites). Every ferrochain outbound
+  pregolya's mandatory-30s-timeout convention prevents.
+- Pregolya concern: RESOLVES A1 open item (reqwest timeout sites). Every pregolya outbound
   client — provider calls AND server-side push/JWKS/remote-agent — must set
   `.timeout(Duration::from_secs(30))` (or NFR override). adk-rust is a counter-example here,
   not a template.
@@ -634,7 +634,7 @@ idempotency map and rate-limit buckets are hard-wired in-memory with NO trait se
 - Quality: **WEAK** — Domain B needs "multi-day durable runs surviving process restarts"; the
   idempotency + rate-limit state have no durability seam at all, and unbounded maps are a slow
   memory leak under many distinct caller/message IDs.
-- Ferrochain concern: ferrochain-server idempotency + rate-limit + run/task state need a
+- Pregolya concern: pregolya-server idempotency + rate-limit + run/task state need a
   persistence seam from v1 (checkpointer/store-backed), not an in-memory afterthought. Relates to
   A2's P-29 (graph step-boundary durability).
 
@@ -646,8 +646,8 @@ retrieved secret.
 - Evidence: `adk-auth::secrets::provider::{SecretProvider, SecretServiceAdapter}`.
 - Quality: **WEAK** — a `String` secret has default `Debug`/`Display` and can be logged or
   captured in a span/error verbatim; nothing at the type level prevents leakage.
-- Ferrochain concern: DIRECT divergence from CLAUDE.md "Newtype + redacted Debug for
-  credentials." Ferrochain's `SecretService`-analog must return a redacted newtype
+- Pregolya concern: DIRECT divergence from CLAUDE.md "Newtype + redacted Debug for
+  credentials." Pregolya's `SecretService`-analog must return a redacted newtype
   (`impl Debug` → `<redacted>`), not `String`.
 
 ### P-45 — Permissive-by-default posture toggles
@@ -659,7 +659,7 @@ retrieved secret.
   `expose_admin_debug` gate on the debug router.
 - Quality: **WEAK** — secure-by-default is the production-grade posture; a `default()` that is
   CORS-open and (when auth is absent) debug-trace-exposed inverts it.
-- Ferrochain concern: ferrochain-server config should be secure-by-default (deny CORS unless
+- Pregolya concern: pregolya-server config should be secure-by-default (deny CORS unless
   configured; never expose trace/debug without explicit opt-in). Maps to security-review.
 
 ### P-46 — No budget/cost-ceiling enforcement anywhere in the cluster (Domain-B gap)
@@ -671,10 +671,10 @@ per-run or per-sub-agent ceiling, or (c) halts/degrades a run at a ceiling. `Run
 read to gate execution.
 - Evidence: absence — `adk-managed::usage` (measure only), `a2a::rate_limit` (request-rate only),
   `adk-payments::guardrail::amount_policy` (commerce), no budget field on `adk-core::RunConfig`.
-- Quality: **WEAK** (gap, not a defect) — the same budget-governance gap ferrochain's Domain B
+- Quality: **WEAK** (gap, not a defect) — the same budget-governance gap pregolya's Domain B
   flagged as NEW. adk-rust does NOT close it; it stops at accounting + rate-limiting.
-- Ferrochain concern: confirms the Domain-B budget-metering capability is genuinely novel — no
-  reference-corpus prior art. A ferrochain budget-governance primitive (per-run/per-agent
+- Pregolya concern: confirms the Domain-B budget-metering capability is genuinely novel — no
+  reference-corpus prior art. A pregolya budget-governance primitive (per-run/per-agent
   token+cost ceiling with halt-or-degrade) must be designed, layered on a `UsageReport`-style
   accounting substrate, and made a first-class run-config + engine gate.
 
@@ -683,9 +683,9 @@ The server cluster's strengths are HTTP-boundary hygiene (SSRF gate P-35, securi
 P-36, exhaustive A2A input validation P-37, auth-as-injected-trait P-38) and enterprise auth/
 audit depth. Its weaknesses cluster around *unfinished execution seams* (streaming stub P-41,
 background-run placeholder — see module-inventory A3), *non-durable in-memory request-path state*
-(P-43), and *credential/CORS posture defaults* (P-44, P-45) that diverge from ferrochain
+(P-43), and *credential/CORS posture defaults* (P-44, P-45) that diverge from pregolya
 conventions — plus the cluster-wide missing outbound reqwest timeout (P-42). Budget governance is
-absent (P-46), confirming Domain B's gap is real. Any influence on ferrochain is deferred to the
+absent (P-46), confirming Domain B's gap is real. Any influence on pregolya is deferred to the
 post-validation comparative assessment per D16.
 
 ## State Checkpoint
@@ -727,8 +727,8 @@ all `true` — and this is the ONE backend where all five are honestly `true`.
 - Quality: **STRONG** — this is genuine capability-based isolation (deny-by-default: the guest
   can only touch what WASI is linked to, and only stdin/stdout/stderr are linked). Timeout via
   epoch interruption is the correct wasmtime idiom.
-- Ferrochain concern: Domain C sandboxing (untrusted code execution). WASM is the strongest
-  isolation primitive in the corpus; a ferrochain code-exec story should treat WASM (or a
+- Pregolya concern: Domain C sandboxing (untrusted code execution). WASM is the strongest
+  isolation primitive in the corpus; a pregolya code-exec story should treat WASM (or a
   container) as the default enforcing backend, not the process backend (P-61). See P-66 for the
   `.expect()` panic-on-init nit.
 
@@ -743,7 +743,7 @@ namespaces actually work. Policy paths are `canonicalize`d (symlink warn) before
 - Quality: **STRONG** — bubblewrap gives real kernel-enforced filesystem/network/pid isolation
   with a nothing-visible-unless-bound default, without root. This is the correct shape for a
   Linux code sandbox.
-- Ferrochain concern: Domain C sandboxing on Linux. Contrast the macOS enforcer, which is
+- Pregolya concern: Domain C sandboxing on Linux. Contrast the macOS enforcer, which is
   allow-by-default (P-60) — the two platforms give materially different guarantees under the
   same `SandboxPolicy`.
 
@@ -759,7 +759,7 @@ pattern with `BackendCapabilities.enforce_filesystem_policy`.
   guarantees is worse than one that is honest; exposing enforced-vs-declared lets a caller refuse
   a non-enforcing backend. NOTE the double edge: honesty does not *force* enforcement — nothing
   stops a caller from running untrusted code on a backend whose limits are all `false` (P-61/P-62).
-- Ferrochain concern: Domain C. A ferrochain sandbox trait should carry this truthful-capability
+- Pregolya concern: Domain C. A pregolya sandbox trait should carry this truthful-capability
   descriptor AND a policy gate that refuses to run untrusted code on a backend that cannot enforce
   the requested isolation (turn honesty into a hard precondition).
 
@@ -777,8 +777,8 @@ per-tool `effective_limit`, invocation-wide `global_limit`, and a cross-invocati
   blind retry (the model gets structured error+args+guidance and can change its approach); backoff
   uses saturating arithmetic (no overflow); exhaustion surfaces the real error rather than swallowing.
   The per-tool *bound* has a hole — see P-63.
-- Ferrochain concern: reliability/self-correction; the tool-failure analog of adk-model's
-  transport retry (P-03). A ferrochain tool-retry story should hook at the equivalent
+- Pregolya concern: reliability/self-correction; the tool-failure analog of adk-model's
+  transport retry (P-03). A pregolya tool-retry story should hook at the equivalent
   after-tool-call seam and keep the "surface real error on exhaustion" discipline.
 
 ### P-51 — Skill ContextCoordinator: phantom-tool prevention as an atomic instruction+tools unit
@@ -792,7 +792,7 @@ delivers the system instruction and the resolved `Vec<Arc<dyn Tool>>` as ONE ato
 - Quality: **STRONG** — binding the cognitive frame (prompt) and the physical capability (tools)
   atomically is the correct way to keep skill instructions and tool availability in sync; the
   named-failure-mode-driven design is disciplined.
-- Ferrochain concern: skill/capability model. If ferrochain adopts a SKILL.md-style model, this
+- Pregolya concern: skill/capability model. If pregolya adopts a SKILL.md-style model, this
   instruction↔tool-binding validation is the load-bearing safety property. NOTE: this validates
   capability wiring, NOT skill content — there is no scan of the skill body for injected/malicious
   instructions (skills are trusted markdown; see cross-cutting note).
@@ -809,8 +809,8 @@ propagates; `ShortCircuit` skips the underlying op and halts the chain.
 - Quality: **STRONG** — a clean, composable extension seam with explicit ordering and
   well-defined short-circuit vs continue vs error semantics; the priority bands make security
   plugins run first by convention.
-- Ferrochain concern: cross-cutting extensibility (callbacks/middleware). The before/after +
-  short-circuit + priority model is a solid reference for a ferrochain plugin/middleware seam,
+- Pregolya concern: cross-cutting extensibility (callbacks/middleware). The before/after +
+  short-circuit + priority model is a solid reference for a pregolya plugin/middleware seam,
   including where guardrails and budget-gates (Domain B) would hook. See P-58 for the two-model
   duplication concern.
 
@@ -831,7 +831,7 @@ temperature 0.0 for determinism.
   trajectory/similarity scorers are deterministic and unit-tested, which makes them liftable as a
   conformance suite. (Two scoring-correctness bugs demote *rigor* — see P-64 — but the criterion
   coverage is real and each criterion is actually invoked, verified against the source.)
-- Ferrochain concern: DIRECT map to holdout-evaluation machinery + Domain-B quality gates. The
+- Pregolya concern: DIRECT map to holdout-evaluation machinery + Domain-B quality gates. The
   declarative dataset shape and the deterministic (non-LLM) scorers are the reusable core; the
   LLM-judge pieces need the P-65 infra-failure-vs-quality-failure fix.
 
@@ -845,7 +845,7 @@ attempt (`'); document.cookie='stolen'; ('`).
 - Quality: **STRONG (small but correct)** — treating LLM/user-derived selectors as untrusted
   before splicing them into an eval'd JS string is exactly the right defense-in-depth for a
   browser-automation tool surface.
-- Ferrochain concern: any ferrochain tool that interpolates model/user text into an executable
+- Pregolya concern: any pregolya tool that interpolates model/user text into an executable
   substrate (JS, shell, SQL) must escape at the boundary. Contrast the sandbox `Language::Command`
   path (P-61) which splices code straight into `sh -c` with no escaping (different trust model,
   but the asymmetry is worth noting).
@@ -862,7 +862,7 @@ computes `passed = failures.empty() || all-Low`. `Severity` = Low/Medium/High/Cr
 - Quality: **NEUTRAL** — the trait shape (three-way result, parallel/sequential split, severity
   ladder) is clean and composable; but the built-in filters are naive (P-59) and enforcement is
   opt-in + caller-dependent (P-59 evidence). The *framework* is fine; the *policy* is thin.
-- Ferrochain concern: Domain A/C content-validation seam. The Pass/Fail/Transform + severity model
+- Pregolya concern: Domain A/C content-validation seam. The Pass/Fail/Transform + severity model
   is worth mirroring; the built-in checks are not.
 
 ### P-56 — Content-addressed skill identity + layered discovery with precedence
@@ -876,7 +876,7 @@ overlap (name +4.0, desc +2.5, tag +2.0, body +1.0, normalized by √body-tokens
 - Quality: **NEUTRAL** — content-addressed IDs (change detection, dedupe) and layered precedence
   are sound; lexical-overlap selection is a reasonable no-embeddings default but is keyword-bag
   matching, not semantic (an embedding scorer exists elsewhere in the corpus but isn't wired here).
-- Ferrochain concern: skill discovery/precedence if ferrochain adopts a SKILL.md model. The
+- Pregolya concern: skill discovery/precedence if pregolya adopts a SKILL.md model. The
   `.skills/` + `.claude/skills/` + convention-file scan closely parallels OpenClaw's model.
 
 ### P-57 — adk-code declarative SandboxPolicy: strict-by-default with truthful capability flags
@@ -889,7 +889,7 @@ tells a caller whether the chosen backend honors the policy. <!-- [comparative-c
 - Quality: **NEUTRAL** — the DEFAULT policy is correctly deny-all and the capability flag is
   honest; but the flagship backend does not enforce it (P-62), so a safe-looking `default()` +
   default executor combination is not actually isolated.
-- Ferrochain concern: Domain C. Strict-by-default policy is the right instinct; the gap is that
+- Pregolya concern: Domain C. Strict-by-default policy is the right instinct; the gap is that
   policy strictness and backend enforcement are decoupled with no gate binding them.
 
 ### P-58 — Two parallel plugin models and two parallel SandboxPolicy types (drift surface)
@@ -902,7 +902,7 @@ tells a caller whether the chosen backend honors the policy. <!-- [comparative-c
 - Quality: **NEUTRAL (leaning WEAK)** — two extension models and two policy types invite drift and
   "which do I use?" ambiguity (same shape as A1's P-16 provider duplication). Justifiable as a
   migration (closure→trait) but undocumented as such.
-- Ferrochain concern: ferrochain should pick ONE plugin/middleware model and ONE sandbox-policy
+- Pregolya concern: pregolya should pick ONE plugin/middleware model and ONE sandbox-policy
   type. This is a defer-pattern smell if the duplication is "consolidate later."
 
 ## WEAK / concerning observations
@@ -925,8 +925,8 @@ inspecting `ExecutionResult.passed`.
   that ENTERS the context from tools/retrieval/memory (the classic indirect-prompt-injection
   vector), and that surface is entirely unguarded here. The harmful-content list is trivially
   bypassed (obfuscation, translation, encoding, synonyms). This is a filter, not a defense.
-- Ferrochain concern: Domain A untrusted-content-isolation + Domain C inverted-security-posture.
-  A ferrochain design must (a) tag/isolate untrusted content by provenance, (b) run
+- Pregolya concern: Domain A untrusted-content-isolation + Domain C inverted-security-posture.
+  A pregolya design must (a) tag/isolate untrusted content by provenance, (b) run
   validation on the INGRESS of tool/RAG/memory content, not just user input + final output, and
   (c) not rely on keyword blocklists as the primary defense. adk-rust is a counter-example here.
 
@@ -944,7 +944,7 @@ Consequence: sandboxed untrusted code on macOS can READ any file the user can �
   half that matters most for credential/secret exfiltration. The same `SandboxPolicy` yields
   deny-by-default reads on Linux (P-48) but allow-all reads on macOS — a silent per-platform
   security asymmetry.
-- Ferrochain concern: Domain C sandboxing. A ferrochain macOS sandbox must be deny-by-default for
+- Pregolya concern: Domain C sandboxing. A pregolya macOS sandbox must be deny-by-default for
   reads too (enumerate allowed read subpaths under `(deny default)`), accepting the syscall-
   enumeration cost, OR document macOS as a non-isolating platform and refuse untrusted exec there.
 
@@ -961,7 +961,7 @@ and (for OS enforcers) require external binaries present at runtime.
 - Quality: **WEAK (default posture)** — the out-of-the-box "sandbox" is not a sandbox: it is a
   child process with a cleared env and a timeout, able to open sockets, read/write the whole
   filesystem, and (via `Command`) run arbitrary shell. Secure isolation is strictly opt-in.
-- Ferrochain concern: Domain C. Secure-by-default is the production-grade posture; a ferrochain
+- Pregolya concern: Domain C. Secure-by-default is the production-grade posture; a pregolya
   code-exec surface should default to an ENFORCING backend (WASM/container) and make the
   no-isolation process backend an explicit, loud opt-in. Parallels A3's P-45 permissive defaults.
 
@@ -977,8 +977,8 @@ by this backend. Only the container backend (bollard/Docker, opt-in) or the WASM
 - Quality: **WEAK (policy/enforcement decoupling)** — a caller who builds `strict_rust()` and runs
   it on the default Rust executor gets a policy object that promises isolation the backend does not
   deliver, with only a capability flag (that nothing forces them to check) as the tell.
-- Ferrochain concern: Domain C. Same root issue as P-49/P-57: policy strictness must be bound to
-  backend enforcement by a hard precondition, or "strict" is theater. A ferrochain executor must
+- Pregolya concern: Domain C. Same root issue as P-49/P-57: policy strictness must be bound to
+  backend enforcement by a hard precondition, or "strict" is theater. A pregolya executor must
   refuse to run under a strict policy on a backend whose `enforce_*` flags are false.
 
 ### P-63 — retry-reflect per-tool limit is keyed by args-hash → an arg-changing agent bypasses it
@@ -994,7 +994,7 @@ unlimited) and the opt-in global circuit-breaker (`global_tracking=false` by def
 - Quality: **WEAK (termination guarantee)** — the headline "per-tool retry limit" does not bound
   the loop under the plugin's own intended usage; runaway protection requires explicitly enabling
   a global limit or circuit-breaker, neither of which is on by default.
-- Ferrochain concern: reliability/termination. A ferrochain retry primitive must key its bound on
+- Pregolya concern: reliability/termination. A pregolya retry primitive must key its bound on
   `(tool)` or `(tool, call-site)` — NOT on argument content — and default to a finite global bound.
 
 ### P-64 — Eval multi-turn score merge is order-dependent; judge failure conflates with quality
@@ -1011,7 +1011,7 @@ execution) beyond the per-turn runs.
 - Quality: **WEAK (scoring rigor)** — an evaluation harness whose aggregate score is order-dependent
   and whose "fail" can be a masked infra error is unreliable as a quality gate; the extra agent
   run adds nondeterminism and cost.
-- Ferrochain concern: holdout-evaluation + Domain-B quality gates. A ferrochain harness must (a)
+- Pregolya concern: holdout-evaluation + Domain-B quality gates. A pregolya harness must (a)
   aggregate turn scores with a defined, order-independent reduction, (b) distinguish
   judge-infrastructure-error from quality-fail (a third outcome, not score 0.0), and (c) run the
   agent once per case and reuse the event stream.
@@ -1028,7 +1028,7 @@ allowlist, not a runtime check of the path a workspace file operation resolves t
 - Quality: **WEAK (symlink-escape / TOCTOU)** — string-level traversal defense is necessary but
   insufficient; without resolving symlinks (or opening with `O_NOFOLLOW`/`openat2(RESOLVE_BENEATH)`)
   a workspace client that follows symlinks can read/write outside the root.
-- Ferrochain concern: Domain C workspace/file-tool isolation. A ferrochain workspace boundary must
+- Pregolya concern: Domain C workspace/file-tool isolation. A pregolya workspace boundary must
   resolve+verify the real path is beneath root at access time (canonicalize under the root, or use
   a beneath-root open), not only string-validate the requested path.
 
@@ -1037,10 +1037,10 @@ allowlist, not a runtime check of the path a workspace file operation resolves t
 is invoked by `Default`. Engine construction failure (e.g. bad config on a platform) panics rather
 than returning a `Result`.
 - Evidence: `adk-sandbox::wasm::WasmBackend::new`.
-- Quality: **WEAK (minor)** — a panic path in a library constructor; diverges from ferrochain's
+- Quality: **WEAK (minor)** — a panic path in a library constructor; diverges from pregolya's
   "no unwrap/expect in non-test code" rule. Low likelihood, but a sandbox is exactly where you do
   not want an unhandled panic on init.
-- Ferrochain concern: CLAUDE.md no-unwrap/expect discipline. A ferrochain WASM backend constructor
+- Pregolya concern: CLAUDE.md no-unwrap/expect discipline. A pregolya WASM backend constructor
   must return `Result` and propagate engine-init failure via the error taxonomy.
 
 ## Pass A4 cross-cutting note (informative, not a conclusion)
@@ -1048,7 +1048,7 @@ The cluster's strongest work is the WASM/bubblewrap isolation primitives (P-47, 
 truthful-capability principle (P-49), the reflection-injection recovery loop (P-50), the
 phantom-tool-preventing skill coordinator (P-51), the priority-ordered plugin seam (P-52), the
 broad evaluation harness (P-53), and small correct defenses like JS-escaping (P-54). Its
-weaknesses cluster in exactly the two places ferrochain's holdout domains probe hardest:
+weaknesses cluster in exactly the two places pregolya's holdout domains probe hardest:
 (1) **untrusted-content isolation is essentially absent** — guardrails are keyword/regex filters
 that only see user input + final output and never the tool/RAG/memory content that carries
 indirect prompt injection (P-59); and (2) **the DEFAULT sandbox posture does not isolate** — the
@@ -1056,7 +1056,7 @@ default process backend has no fs/net/memory isolation and runs raw `sh -c` (P-6
 allow-by-default for reads (P-60), the flagship Rust executor is unenforced host-local (P-62), and
 workspace path safety is symlink-blind (P-65). Enforcement is consistently opt-in and decoupled
 from policy strictness. Budget/cost governance remains absent here too (consistent with A3's P-46).
-Any influence on ferrochain is deferred to the post-validation comparative assessment per D16.
+Any influence on pregolya is deferred to the post-validation comparative assessment per D16.
 
 ## State Checkpoint
 ```yaml
@@ -1119,7 +1119,7 @@ the same. Git per-file history is unavailable (the pinned `.reference` is a sing
 the workspace level** — nothing tells a consumer "use `adk-model`'s `AnthropicClient` for agents,
 `adk-anthropic` directly for raw API access" (ergonomics ambiguity, not drift); (b) the adapter
 `client.rs` files are large (anthropic 64 KB, gemini 94 KB + `interactions_convert.rs` 85 KB) —
-would blow ferrochain's 750-line gate; the bulk is conversion + streaming-accumulation + tests, not
+would blow pregolya's 750-line gate; the bulk is conversion + streaming-accumulation + tests, not
 duplicated transport. **Net: P-16 downgraded from WEAK "drift risk" to a documentation/file-size
 observation.** The wider provider architecture is intentionally MIXED (see module-inventory A5):
 first-party SDK+adapter (anthropic, gemini), external-SDK+adapter (openai→`async-openai`,
@@ -1138,7 +1138,7 @@ streaming — zero framework deps, independently publishable) and a small `Llm`-
   non-ADK consumer can depend on the SDK alone. This is a cleaner layering than a single monolithic
   provider module. (The file-size of the adapters and the missing "which do I use" doc are the only
   demerits — both structural, not correctness.)
-- Ferrochain concern: partner-crate architecture (semport/partners). A ferrochain `ferrochain-anthropic`
+- Pregolya concern: partner-crate architecture (semport/partners). A pregolya `pregolya-anthropic`
   could mirror this (a wire-SDK core + a trait-adapter) to keep the provider surface reusable and to
   satisfy the file-size gate by construction. Directly informs the "ONE provider surface per vendor"
   goal — here it IS one implementation, layered, not two.
@@ -1157,7 +1157,7 @@ work; format parsers are tried in order and preserve surrounding `Part::Text`.
 - Quality: **STRONG** — a genuinely production-grade compatibility layer that makes the agent tool
   loop work across serving backends that differ in tool-call encoding; each format is a tested
   contract (test-as-spec).
-- Ferrochain concern: DIRECTLY relevant to `ferrochain-ollama` (our Ollama-analog) and any
+- Pregolya concern: DIRECTLY relevant to `pregolya-ollama` (our Ollama-analog) and any
   local/OSS-model path — Ollama-served models frequently emit text-tag tool calls. This parser's
   format table + test suite is a reusable behavioral reference. Maps to Tools (semport/core §6).
 
@@ -1171,7 +1171,7 @@ observability counters (`STREAM_BYTES/EVENTS/ERRORS/DURATION/TTFB`, incl. time-t
 - Quality: **STRONG** — streaming decoders are a classic unbounded-allocation and hang sink; capping
   buffer/event size and enforcing an idle timeout up front is the correct production default, and
   TTFB metering is exactly the streaming NFR signal a provider layer should emit.
-- Ferrochain concern: partner streaming decoders (`ferrochain-anthropic`/`-openai`/`-ollama` SSE) —
+- Pregolya concern: partner streaming decoders (`pregolya-anthropic`/`-openai`/`-ollama` SSE) —
   the buffer/event caps + idle-chunk timeout + TTFB metric are a strong reference. Note the CONTRAST
   with the adapter-layer timeout gap (P-77): the SDK stream decoder is hardened even though the
   adapter-layer HTTP clients often are not.
@@ -1186,8 +1186,8 @@ via a `tokio::oneshot`. The caller gets live tokens AND the final message with n
 - Quality: **STRONG** — solves the common "I want to stream to the user but also need the final
   aggregated message (for persistence / turn-completion)" problem without buffering the stream
   twice; the oneshot cleanly signals completion.
-- Ferrochain concern: streaming aggregation (semport/core §1 astream + message accumulation). A
-  ferrochain streaming provider needs exactly this dual role (yield deltas to the caller; hand the
+- Pregolya concern: streaming aggregation (semport/core §1 astream + message accumulation). A
+  pregolya streaming provider needs exactly this dual role (yield deltas to the caller; hand the
   runner the final assembled message for the event log). Reference shape.
 
 ### P-71 — Shared retry combinator integrated across 9 of 12 providers; 3 documented exceptions
@@ -1199,8 +1199,8 @@ provider path: each wired provider holds a `retry_config: RetryConfig` (with `wi
   openai/client, openai/responses_client, groq/client, deepseek/client,
   azure_ai/client, openrouter/adapter, openai_compatible}` (9 providers); `RetryConfig` stored (not combinator called) in `openai/ws_transport` (implements its own manual retry loop, lines 160-201) and `bedrock/client` (stores RetryConfig but delegates retry to `aws-sdk-bedrockruntime`); `ollama` delegates entirely to `ollama-rs` which owns its retry. Gemini carries its own retry tests (retryable/non-retryable/disabled).
 - Quality: **STRONG** — [comparative-cert-1 TAG-REVIEW RULING: STRONG STANDS with corrected scope. 9 of 12 providers share one combinator. The 3 exceptions each have architectural grounding: bedrock's AWS SDK owns retry internally (external SDK ownership — arguably better than re-implementing it); ws_transport uses a manual loop for WebSocket semantics (different concurrency model); ollama delegates to ollama-rs (external library ownership). The core merit claim — "a centralized retry combinator is the dominant pattern enabling uniform policy tuning" — is substantiated by 9/12. The original "every provider" framing was overstated but the pattern's production-grade value is undiminished. NEUTRAL would require the combinator to be fragile or the exceptions to be ad-hoc; neither is the case.] A single classification+backoff policy shared across 9 providers means retry behavior is centrally-tunable for the majority path rather than re-invented per provider. The 3 exceptions are architecturally justified (see above).
-- Ferrochain concern: reliability/NFR (retry) + rate limiters (semport/core §9). The
-  "dominant providers share ONE retry combinator" discipline is the reference; ferrochain's partner
+- Pregolya concern: reliability/NFR (retry) + rate limiters (semport/core §9). The
+  "dominant providers share ONE retry combinator" discipline is the reference; pregolya's partner
   crates should likewise route through one retry policy, not per-crate ad-hoc loops.
 
 ### P-72 — `#[tool]` / `#[entrypoint]` / `#[task]` proc-macros for zero-boilerplate wiring
@@ -1219,7 +1219,7 @@ functional-graph API — `#[entrypoint]` generates a wrapper with
   keeping the schema derivation honest (schemars from the real arg type), and the capability attrs
   give a typed, discoverable way to override the P-12 defaults. The functional-graph macros are a
   clean LangGraph-`@task`/`@entrypoint` analog with checkpointing baked in.
-- Ferrochain concern: Tools ergonomics (semport/core §6) + a possible ferrochain functional-graph
+- Pregolya concern: Tools ergonomics (semport/core §6) + a possible pregolya functional-graph
   surface. ALSO a D5 data point (see P-75): the macro path uses schemars for tool-arg schema even
   though the provider layer hand-rolls JSON Schema — so schemars IS in play for the tool surface.
 
@@ -1240,12 +1240,12 @@ command/correlator/service processing core. Protocol-neutral: ACP + AP2 baseline
 - Quality: **STRONG (as a governance-engine reference)** — the allow/escalate/deny + severity +
   findings decision shape, the composable-policy trait, the integer-money discipline, and the
   append-only evidence journal are all production-grade governance primitives. (Payments itself is a
-  scope anomaly for ferrochain — no LangChain/LangGraph analog — so this is a *pattern* reference,
+  scope anomaly for pregolya — no LangChain/LangGraph analog — so this is a *pattern* reference,
   not a scope endorsement.)
-- Ferrochain concern: the Domain-B **budget-governance gap (P-46)**. adk-rust has NO token/cost
+- Pregolya concern: the Domain-B **budget-governance gap (P-46)**. adk-rust has NO token/cost
   budget gate, but its PAYMENT guardrail is exactly the *shape* a token/cost ceiling wants:
   a composable policy trait returning allow/escalate/deny with severity, backed by an append-only
-  journal. A ferrochain budget-governance primitive could adopt this three-state policy architecture
+  journal. A pregolya budget-governance primitive could adopt this three-state policy architecture
   (different domain: LLM token-$ vs commerce-$).
 
 ## NEUTRAL patterns
@@ -1262,7 +1262,7 @@ enables.
   P-14) a large feature matrix multiplies the build/test-coverage combinations and makes "what does
   build X actually contain" a compile-time variable. Also the vehicle for the native-tls / hf-hub
   ingress (P-79).
-- Ferrochain concern: partner/backend composition + NFR (feature matrix, file-size). Ferrochain
+- Pregolya concern: partner/backend composition + NFR (feature matrix, file-size). Pregolya
   should decide which backends are core vs feature-gated and bound the test matrix.
 
 ### P-75 — schemars in the tool macro vs hand-rolled JSON Schema in providers (internal inconsistency)
@@ -1276,9 +1276,9 @@ and used by the macro crate). So the codebase uses two schema strategies for two
 - Quality: **NEUTRAL/observational** — defensible (tool-arg schema is developer-authored Rust types
   → schemars is ergonomic; provider wire schema is externally-fixed → hand-rolling gives control),
   but it IS an internal inconsistency worth naming.
-- Ferrochain concern: D5 (pydantic→serde/schemars ADR). Concrete data point: adk uses schemars where
+- Pregolya concern: D5 (pydantic→serde/schemars ADR). Concrete data point: adk uses schemars where
   the schema derives from owned Rust types (tools) and hand-rolls where it mirrors an external wire
-  contract (providers). Informs *where* ferrochain should mandate schemars vs hand-authored schema.
+  contract (providers). Informs *where* pregolya should mandate schemars vs hand-authored schema.
 
 ## WEAK / concerning observations
 
@@ -1294,10 +1294,10 @@ same with a private-but-Debug-derived field.
   anywhere in `adk-model/src`.
 - Quality: **WEAK** — `#[derive(Debug)]` prints the key (private fields included) in any
   `{:?}`/span/error capture; several configs also `Serialize` the key to JSON. This is precisely the
-  leak ferrochain's newtype+redacted-Debug rule prevents, and it is WORKSPACE-WIDE (configs + SDKs),
+  leak pregolya's newtype+redacted-Debug rule prevents, and it is WORKSPACE-WIDE (configs + SDKs),
   not a single site. Extends and generalizes A3 P-44 from `adk-auth` to the entire provider stack.
-- Ferrochain concern: DIRECT divergence from CLAUDE.md "Newtype + redacted Debug for credentials."
-  Every ferrochain provider key type (`OpenAiApiKey`, `AnthropicApiKey`, …) must be a redacted
+- Pregolya concern: DIRECT divergence from CLAUDE.md "Newtype + redacted Debug for credentials."
+  Every pregolya provider key type (`OpenAiApiKey`, `AnthropicApiKey`, …) must be a redacted
   newtype; adk-rust is a workspace-wide counter-example here, not a template.
 
 ### P-77 — Inconsistent outbound-timeout discipline across the provider stack
@@ -1318,7 +1318,7 @@ builds via `ClientBuilder` but sets only default headers, no timeout. (ollama de
   timeout-less clients (bounded only by OS TCP). The one crate that does it right (anthropic main
   client) proves the team knows the pattern; it is just not applied uniformly. Extends A3 P-42
   (server cluster) into the PROVIDER cluster.
-- Ferrochain concern: CLAUDE.md mandatory 30 s outbound timeout. Every ferrochain provider client
+- Pregolya concern: CLAUDE.md mandatory 30 s outbound timeout. Every pregolya provider client
   must set `.timeout()`; adk's anthropic main client (timeout + pooling + keepalive) is the positive
   reference, the rest are counter-examples.
 
@@ -1335,8 +1335,8 @@ in Cargo.toml but never references it in `src` (a dead dependency).
   variant on an otherwise well-structured `thiserror` enum (with `ModelLoad{model_id,reason,
   suggestion}`, `ModelNotFound{path,suggestion}` — good actionable variants), in ONE local-inference
   crate. See dependency-disposition A5 for the full workspace verdict.
-- Ferrochain concern: CLAUDE.md structured-error discipline forbids an `anyhow` escape variant on a
-  public error enum. A ferrochain local-inference crate must give every failure mode a structured
+- Pregolya concern: CLAUDE.md structured-error discipline forbids an `anyhow` escape variant on a
+  public error enum. A pregolya local-inference crate must give every failure mode a structured
   variant, no `Other(anyhow)` catch-all.
 
 ### P-79 — Multiple native-tls ingress chains via optional model/voice features (rustls-rule conflict)
@@ -1352,9 +1352,9 @@ and adk-mistralrs/adk-audio do NOT necessarily pull it — it rides the optional
   `adk-mistralrs` `mistralrs = "0.8"`; `adk-audio` `onnx/mlx/qwen3-tts = [… "dep:hf-hub"]`.
 - Quality: **WEAK** — the rustls-only rule (macOS Keychain cost + MITM interception path) conflicts
   with the local-model-download (`hf-hub`) and LiveKit transports. It is contained to optional
-  features, but any ferrochain port of local inference (mistralrs-style) or LiveKit voice inherits
+  features, but any pregolya port of local inference (mistralrs-style) or LiveKit voice inherits
   the conflict. NEW beyond A1 (which saw only livekit).
-- Ferrochain concern: CLAUDE.md rustls-only. If ferrochain adopts local-model inference, the
+- Pregolya concern: CLAUDE.md rustls-only. If pregolya adopts local-model inference, the
   `hf-hub`→native-tls chain must be resolved (hf-hub rustls feature, or a rustls model downloader).
   This is a keyless-CI-adjacent concern too: local inference drags a heavy, native-tls-tainted
   dependency tree that a lightweight HTTP-daemon Ollama-analog avoids.
@@ -1370,7 +1370,7 @@ budget gap). Its weaknesses are **credential and dependency hygiene**: workspace
 Debug-derived API keys (P-76), uneven outbound-timeout discipline (P-77, the anthropic main client
 being the lone exemplar), one localized `anyhow` leak in the local-inference crate (P-78), and
 multiple optional native-tls ingress chains via model-download/voice features (P-79). Whether any
-of these influences ferrochain is deferred to the post-validation comparative assessment per D16.
+of these influences pregolya is deferred to the post-validation comparative assessment per D16.
 
 ## State Checkpoint
 ```yaml
@@ -1420,7 +1420,7 @@ timestamp: 2026-07-13
 - **Quality:** **STRONG** — a genuinely production-grade abstraction over two structurally
   different provider models (native mutability vs static-config-with-resumption), with explicit
   teardown-safety gating, bounded retries, and fail-open event-loop survival. Domain C (voice)
-  directly relevant: this is the shape a ferrochain realtime layer would need if it targets both
+  directly relevant: this is the shape a pregolya realtime layer would need if it targets both
   an OpenAI-style and a Gemini-style live backend.
 - **NEW vs A5** (A5 was surface-only on adk-realtime).
 
@@ -1443,7 +1443,7 @@ timestamp: 2026-07-13
   framework provides no built-in client-side barge-in state machine; an embedder wanting
   deterministic local barge-in (e.g., push-to-talk cancel) must wire `interrupt()` themselves, and
   the two providers disagree on whether manual cancel is even honored. Domain C observation: a
-  ferrochain voice layer must decide whether barge-in is a framework guarantee or an
+  pregolya voice layer must decide whether barge-in is a framework guarantee or an
   embedder responsibility — adk-rust chose the latter.
 - **NEW.**
 
@@ -1464,7 +1464,7 @@ timestamp: 2026-07-13
   `--die-with-parent`/`--unshare-pid`/`--unshare-net`/`--ro-bind`/`--bind`) and macOS
   (seatbelt, real) enforcers, which are implemented.
 - **Quality:** **WEAK** — a production-grade sandbox story that silently excludes an entire OS.
-  Domain A/C: a ferrochain analyst/factory sandbox targeting Windows agents would inherit a
+  Domain A/C: a pregolya analyst/factory sandbox targeting Windows agents would inherit a
   no-op-or-error posture. Note it is at least fail-closed (no false sense of enforcement) rather
   than fail-open-silent.
 - **NEW** (A4 covered macOS/default posture; Windows was unverified at depth).
@@ -1537,7 +1537,7 @@ timestamp: 2026-07-13
   `Err`-abort a parent orchestration), but it collapses the error channel into the content channel:
   callers cannot pattern-match on `Result::Err` and must inspect `error_message`, and a partial
   remote failure looks identical to a normal terminal turn. Domain A/B multi-agent relevance: error
-  propagation semantics for remote sub-agents are a deliberate design choice a ferrochain port must
+  propagation semantics for remote sub-agents are a deliberate design choice a pregolya port must
   make explicitly.
 - **UPGRADES A3** (which read the a2a client at signature-depth only).
 
@@ -1562,7 +1562,7 @@ timestamp: 2026-07-13
   `a2a_live_integration_test.rs`).
 - **Quality:** **WEAK** — dual-maintenance + duplicated SSE parsing = drift surface <!-- [comparative-cert-3] CORRECTION: "triplicated" → "duplicated": source confirms only TWO SSE parse implementations exist — (1) legacy A2aClient::send_streaming_message inline loop + parse_sse_data (client.rs:186); (2) v1_remote::run inline loop + parse_sse_data_line (remote_agent.rs:699). The legacy RemoteA2aAgent::run delegates entirely to A2aClient::send_streaming_message, receiving a typed event stream — it has NO separate SSE parse loop and is NOT a third copy. -->; the v1 client
   is clearly the production-grade one (retry, version negotiation, caching) while legacy lags. A
-  ferrochain port would consolidate on one client with the v1 feature set.
+  pregolya port would consolidate on one client with the v1 feature set.
 - **UPGRADES A3.**
 
 ## P-87 — Skill ContextCoordinator: phantom-tool prevention is real, but strict-mode errors are swallowed — NEUTRAL
@@ -1584,7 +1584,7 @@ timestamp: 2026-07-13
   `no_tools_skill_returns_empty_active_tools`, `resolve_cascades_through_strategies`).
 - **Quality:** **NEUTRAL** — the phantom-tool guarantee is genuine and well-tested (a STRONG core
   idea), but the strict-mode error-swallowing costs diagnosability, and permissive-mode's silent
-  degradation shifts a safety obligation onto the embedder. Domain B/skill relevance: a ferrochain
+  degradation shifts a safety obligation onto the embedder. Domain B/skill relevance: a pregolya
   skill layer should preserve the atomic instruction+tools unit while surfacing *why* a skill was
   rejected.
 - **CLOSES the item as verified** (strict + permissive both source- and test-confirmed).
@@ -1610,7 +1610,7 @@ Workspace-wide counts over `adk-*/**/*.rs` (attribute lines, not resolved test b
   OpenRouter keys, Vertex ADC), **model downloads** (HuggingFace auth, ~3GB weights — adk-mistralrs),
   and **external tooling** (npx/Node for MCP lifecycle — adk-tool; live Vertex session service).
   Most ignored tests carry an explicit reason string or comment citing the blocking dependency —
-  consistent with (though not identical to) ferrochain SID-1's citation discipline.
+  consistent with (though not identical to) pregolya SID-1's citation discipline.
 - **Interpretation:** the ignored set is dominated by genuinely-external dependencies (keys, weights,
   daemons), not by disabled-because-broken tests. The high-rigor in-process suites (proptest across
   sandbox/code/mistralrs/audio; SDK wire round-trips in anthropic) run in CI without opt-in.
@@ -1623,7 +1623,7 @@ Domain-C reference) and a cluster of **enforcement-vs-advertisement gaps** on th
 Windows sandbox is non-functional (P-82), the adk-code Docker backend ignores the per-request policy
 it advertises and ships no resource caps (P-83), barge-in is an embedder responsibility rather than a
 framework guarantee (P-81), and the default in-memory vector store silently ignores dimensions
-(P-84). None of these is a conclusion about ferrochain; per D16 the adoption question is deferred to
+(P-84). None of these is a conclusion about pregolya; per D16 the adoption question is deferred to
 post-validation comparative assessment.
 
 ## State Checkpoint
@@ -1672,7 +1672,7 @@ in-flight buffered audio.** *(NEUTRAL)*
   for PCM16/16 kHz), corrected from a hardcoded-16k assumption.
 - **Quality:** **NEUTRAL** — the teardown ordering + token threading is a genuinely careful mechanism
   (deterministic close, lock-discipline around `.await`); the un-flushed-audio-on-teardown is a small
-  correctness edge a ferrochain realtime port should decide explicitly (flush-before-close vs
+  correctness edge a pregolya realtime port should decide explicitly (flush-before-close vs
   discard).
 
 **P-89 — Gemini event translation is best-effort and lossy on three axes.** *(NEUTRAL)*
@@ -1706,7 +1706,7 @@ fail-closed.** *(NEUTRAL)*
   `send_audio` is a **no-op** (D-ID renders from its own TTS) and `keep_alive` is a **no-op** (WebRTC
   manages timeout). So `send_audio`/`keep_alive` semantics are provider-defined, not trait-guaranteed.
 - **Quality:** **NEUTRAL** — a clean pluggable abstraction, but the trait promises (`send_audio`,
-  `keep_alive`) are honored very differently per provider; a ferrochain avatar port must not assume
+  `keep_alive`) are honored very differently per provider; a pregolya avatar port must not assume
   `send_audio` actually transports audio.
 
 **P-91 — Avatar provider HTTP clients are timeout-less and constructors panic on non-HTTPS.**
@@ -1719,7 +1719,7 @@ fail-closed.** *(NEUTRAL)*
   fields, redacted `Debug` (`"[REDACTED]"`/`<locked>`), `ExposeSecret` only at the header-set call
   site. Auth-failure mapping is explicit (401/403 → `AuthError`).
 - **Quality:** **WEAK** — mixed posture: good secret hygiene, but library-constructor panics and
-  timeout-less clients both conflict with ferrochain rules (no-panic-in-lib, mandatory timeout).
+  timeout-less clients both conflict with pregolya rules (no-panic-in-lib, mandatory timeout).
 
 ### Thread 3 — LiveKit bridge (sole native-tls ingress)
 
@@ -1741,7 +1741,7 @@ a typestate builder.** *(NEUTRAL)*
 - **Isolation:** delegation is **proptest-covered** (`livekit_delegation_tests.rs`, 6 property tests <!-- [comparative-cert-2] CORRECTION: "7 property tests" → grep confirms 6 fn prop_* functions in livekit_delegation_tests.rs (prop_on_text, prop_on_transcript, prop_on_speech_started, prop_on_speech_stopped, prop_on_response_done, prop_on_error); matches the 6 non-audio callbacks in the EventHandler trait; "7" was off-by-one -->
   on the non-audio callbacks), but the actual WebRTC FFI audio path and `Room::connect` live in
   `#[ignore]`-gated integration tests requiring `LIVEKIT_URL`/`LIVEKIT_API_KEY`/`LIVEKIT_API_SECRET`.
-- **Quality:** **NEUTRAL** — a clean, contained bridge; the only ferrochain-relevant friction is the
+- **Quality:** **NEUTRAL** — a clean, contained bridge; the only pregolya-relevant friction is the
   native-tls transport it pulls (see P-93) and the untested live FFI path.
 
 **P-93 — native-tls ingress reconciliation: livekit is the sole *first-party explicit* opt-in.**
@@ -1761,7 +1761,7 @@ a typestate builder.** *(NEUTRAL)*
   adk-realtime defaults to rustls (`rustls` w/ aws-lc-rs; `google-cloud-auth` default-rustls-provider;
   WS transports over tokio-tungstenite+rustls); native-tls rides only the optional `livekit` feature.
 - **Quality:** **WEAK / informative** — the feature isolation is genuine and the ingress is a single,
-  optional, first-party toggle; a ferrochain realtime-analog can adopt the LiveKit topology while
+  optional, first-party toggle; a pregolya realtime-analog can adopt the LiveKit topology while
   substituting a rustls transport, since native-tls here is livekit-the-crate's own default, not an
   adk design requirement.
 
@@ -1787,7 +1787,7 @@ over helper functions; the wire round-trips are untested.
   `is_timeout()` is essentially only reachable via connect-level timeouts — the timeout-retry branch
   is structurally near-dormant; in practice retry covers 429/5xx only.
 - **Quality:** **WEAK** — the retry is real and unit-covered for config storage, but its scope
-  asymmetry (unary-only) and the dormant timeout branch are spec-relevant if a ferrochain a2a-analog
+  asymmetry (unary-only) and the dormant timeout branch are spec-relevant if a pregolya a2a-analog
   wants uniform retry across bindings.
 
 **P-95 — a2a-v1 "card caching" is conditional-revalidation, not a value cache; the stored card body
@@ -1805,7 +1805,7 @@ is write-only.** *(WEAK — refines P-86)*
   handles quoted/unquoted/`*` wildcard; `modified_since` is strict `>`. Both sides are unit-tested
   (server: 13 tests; client: `cached_card_starts_empty` only).
 - **Quality:** **WEAK** — the conditional-request logic is correct and cross-consistent between
-  client and server, but "caching" oversells it; a ferrochain port wanting a true card cache must add
+  client and server, but "caching" oversells it; a pregolya port wanting a true card cache must add
   the cache-hit read path.
 
 **P-96 — Two divergent retry implementations coexist in a2a-v1; the server push path adds SSRF
@@ -1821,7 +1821,7 @@ defense.** *(NEUTRAL — NEW)*
   the same protocol family.
 - **Quality:** **NEUTRAL** — the SSRF guard on outbound push is a genuine security control worth
   mirroring; the policy divergence between the two senders is an internal inconsistency a unified
-  ferrochain a2a-analog would want to reconcile.
+  pregolya a2a-analog would want to reconcile.
 
 **Version negotiation (SOURCE-CONFIRMED, no new pattern):** server `v1/version.rs::negotiate_version`
 — `SUPPORTED_VERSIONS = ["0.3","1.0"]`; `None`/empty → default `"0.3"`; unsupported →

@@ -7,11 +7,11 @@ status: active
 producer: business-analyst
 timestamp: 2026-07-27T00:00:00Z
 changelog:
-  - "1.16 (2026-07-29): Error-construction notation correction per ADR-010 §Error-Construction Notation Canon. 1 CLASS3_UNICODE_ELLIPSIS_VIOLATION corrected: replaced `…` (U+2026) in field-elision position with `..` in FerrochainError { category: TOOL, … } (MCPTool §Error, DEC-012 reference). The `…` appeared after `, ` (comma-whitespace), placing it in field-elision position per the discriminator."
-  - "1.15 (2026-07-27): F-P173-211 — source field corrected from Box<dyn StdError> to Arc<dyn std::error::Error + Send + Sync> (Box does not implement Clone, causing E0277 on #[derive(Clone)] in ferrochain-core error type; Arc refcount-clone resolves this without requiring inner error to be Clone). message constraint added: MUST NOT contain credentials (DI-010). source constraint added: MUST NOT be exposed in HTTP responses. Naming adjudications: (1) component field retains L2 domain name FerrochainComponent with explicit Rust cross-ref to Component; (2) category variants aligned from PascalCase English (third-rendering) to taxonomy codes per casing canon, type name corrected from ErrorCategory to Category."
+  - "1.16 (2026-07-29): Error-construction notation correction per ADR-010 §Error-Construction Notation Canon. 1 CLASS3_UNICODE_ELLIPSIS_VIOLATION corrected: replaced `…` (U+2026) in field-elision position with `..` in PregolyaError { category: TOOL, … } (MCPTool §Error, DEC-012 reference). The `…` appeared after `, ` (comma-whitespace), placing it in field-elision position per the discriminator."
+  - "1.15 (2026-07-27): F-P173-211 — source field corrected from Box<dyn StdError> to Arc<dyn std::error::Error + Send + Sync> (Box does not implement Clone, causing E0277 on #[derive(Clone)] in pregolya-core error type; Arc refcount-clone resolves this without requiring inner error to be Clone). message constraint added: MUST NOT contain credentials (DI-010). source constraint added: MUST NOT be exposed in HTTP responses. Naming adjudications: (1) component field retains L2 domain name PregolyaComponent with explicit Rust cross-ref to Component; (2) category variants aligned from PascalCase English (third-rendering) to taxonomy codes per casing canon, type name corrected from ErrorCategory to Category."
   - "1.14 (2026-07-25): TD-VSDD-091 BC-pin sweep — de-pin live normative prose: OnCeiling variants annotation 'BC-2.10.003 v1.2 + BC-2.10.004' → 'BC-2.10.003 + BC-2.10.004'. Version pins belong in changelog entries only; live body cites bare BC IDs."
-  - "1.13 (burst-241 F-P141-05, 2026-07-23): Run entity: add error: Option<FerrochainError> field (BC-2.12.003 PC13/PC16 + invariant 'Run error populated ONLY when status=failed'). The field was absent despite being a first-class Read-Run response field per PC13 and PC16. output/error symmetry documented: output is Some when status∈{completed, summary_halt}; error is Some when status=failed; all other states both are None. Wire representation of error exposes {code, message, component, category} subset of FerrochainError (RFC-7807 compatible, PC16)."
-  - "1.12 (burst-226, 2026-07-21): F-P131-05 adjudication — §ProvenanceTag: disambiguation note added clarifying that ProvenanceTag (SS-11, 3-field ingress-boundary audit struct) has no trust-level dimension, and that template-composition trust is handled by TrustLevel in ferrochain-prompts: prompts::template (entities-graph.md §TrustLevel). The two axes must not be conflated (ADR-015 §Decision 3). TD-VSDD-060 sweep: no ProvenanceTag trust-variant residue in this file."
+  - "1.13 (burst-241 F-P141-05, 2026-07-23): Run entity: add error: Option<PregolyaError> field (BC-2.12.003 PC13/PC16 + invariant 'Run error populated ONLY when status=failed'). The field was absent despite being a first-class Read-Run response field per PC13 and PC16. output/error symmetry documented: output is Some when status∈{completed, summary_halt}; error is Some when status=failed; all other states both are None. Wire representation of error exposes {code, message, component, category} subset of PregolyaError (RFC-7807 compatible, PC16)."
+  - "1.12 (burst-226, 2026-07-21): F-P131-05 adjudication — §ProvenanceTag: disambiguation note added clarifying that ProvenanceTag (SS-11, 3-field ingress-boundary audit struct) has no trust-level dimension, and that template-composition trust is handled by TrustLevel in pregolya-prompts: prompts::template (entities-graph.md §TrustLevel). The two axes must not be conflated (ADR-015 §Decision 3). TD-VSDD-060 sweep: no ProvenanceTag trust-variant residue in this file."
   - "1.11 (F-P121-01, fix burst 124, 2026-07-19): §Cross-Section Relationships: 'produces ToolResult → GuardrailHook fires → content enters Message' → 'produces ToolMessage (BC-2.09.002) → GuardrailHook fires on content as IngressContent::ToolResult → filtered content enters model context'. TD-VSDD-060 sweep: this was the only ToolResult-as-ContentBlock site in this file; fixed."
   - "1.10 (F-P120-01, fix burst 123, 2026-07-19): Correct Command depiction in §ResumeValue from 2-variant enum (Command::Resume/Command::Goto) to struct-with-optional-fields form matching BC-2.05.004. Command { resume, update, goto, graph } with independently-settable combinable fields and Command.PARENT subgraph-escape semantics documented. TD-VSDD-060 sweep: capabilities-p0.md:113 'Command(resume=value)' is API-call notation (not enum variant syntax), already-consistent with BC-2.05.004 struct form; exempt. ubiquitous-language-core.md:142 drifted; fixed in same burst (file bumped to v1.1). No other drifted Command-depiction sites found in domain-spec shards."
   - "1.9 (2026-07-19): F-P118-03 — fix wrong BC citation on completed_at semantics line. Changed Source from 'F-P24-01, BC-2.12.003 PC8(c)(d)' to 'F-P24-01, BC-2.12.003 PC13, BC-2.10.003 PC8(c)(d)'. PC13 is the correct BC-2.12.003 clause governing completed_at (matches updated_at's PC13 citation on the adjacent line and interface-definitions:867). PC8(c)(d) belongs to BC-2.10.003 (OnCeiling::Summarize → summary_halt path), retained as a separate correctly-attributed reference. TD-VSDD-060 sweep: line 58 BC-2.10.003 PC8(c)(d) was already correct; frontmatter v1.8 entry references BC-2.12.003 PC7/PC8 (no lettered subparts) which is correct for the lifecycle state-machine; no other BC-2.12.003 PC8(c)(d) conflations found."
@@ -22,12 +22,12 @@ changelog:
   - "1.4 (ADV-P1D-PASS-59): F-P59-02 — add Transform same-boundary rule to §GuardrailHook: new_content must be the same IngressContent variant as the evaluated content (ToolResult stays ToolResult, RagChunk stays RagChunk, MemoryItem stays MemoryItem); inner payload may change freely per BC-2.11.002 EC-003."
   - "1.3 (ADV-P1D-PASS-58): F-P58-03 — rewrite §ProvenanceTag and §GuardrailHook to BC-authoritative shapes. ProvenanceTag: source_type/IngressSource/tool_name/invocation_id/timestamp retired → boundary_type: BoundaryType (ToolResult|RAGRetrieval|MemoryIngress), ingress_id: Uuid, sequence_position: usize (BC-2.11.001 PC1–PC3); User/Model variants removed per BC-2.11.001 EC-004. GuardrailHook: action_fn/GuardrailAction/Accept/Reject/Redact retired → evaluate(content: IngressContent, provenance_tag: ProvenanceTag) → GuardrailResult (Pass/Fail{reason,severity: GuardrailSeverity}/Transform{new_content}); authority interface-definitions.md v2.13 §GuardrailHook, BC-2.11.002 PC1–PC4."
   - "1.2 (ADV-P1D-PASS-30): OBS-P30-1 add Timestamp UTC canon under Server Domain — all Timestamp values RFC 3339 UTC at construction; wire serialization preserves UTC form."
-  - "1.1 (ADV-P1D-PASS-25): F-P25-03 FerrochainError.code changed from u32 to String."
+  - "1.1 (ADV-P1D-PASS-25): F-P25-03 PregolyaError.code changed from u32 to String."
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "148b6a2"
+input-hash: "eb2c18b"
 traces_to: L2-INDEX.md
 decisions: [D11, D13, D17]
 ---
@@ -51,16 +51,16 @@ A named, durable sequence of checkpoints representing one conversation or pipeli
 - **Note:** Corresponds to LangGraph Platform "thread." All Runs sharing a Thread share a checkpoint history.
 
 ### Assistant
-A named agent configuration hosted by ferrochain-server.
+A named agent configuration hosted by pregolya-server.
 - **Fields:** assistant_id: Uuid, graph_id: GraphId (references a registered CompiledGraph), config: RunnableConfig, context: Option<Value>, metadata: Map<String, Value>, name: Option<String>, description: Option<String>, version: u32, created_at: Timestamp
 - **version semantics:** Starts at 1. Each `PATCH` creates a new immutable version snapshot (N+1); the `latest` pointer is mutable. Source: BC-2.12.002 PC3/PC10.
 - **Relationships:** Assistant 1→N Run.
-- **Note:** No wire compatibility with LangGraph Platform (D13). ferrochain-server is first-party.
+- **Note:** No wire compatibility with LangGraph Platform (D13). pregolya-server is first-party.
 
 ### Run
 A single execution of an Assistant with a Thread.
-- **Fields:** run_id: Uuid, thread_id: Uuid, assistant_id: Uuid, status: RunStatus, config: RunnableConfig, created_at: Timestamp, updated_at: Timestamp, completed_at: Option<Timestamp>, output: Option<Value>, error: Option<FerrochainError>
-- **output/error symmetry (BC-2.12.003 PC15/PC16 + invariants):** `output` is `Some(GraphOutput)` when `status ∈ {completed, summary_halt}` (for `summary_halt`, output carries the summarize model response per BC-2.10.003 PC8(c)); `None` in all other states. `error` is `Some(FerrochainError)` ONLY when `status = failed`; carries `{code, message, component, category}` from the propagated `FerrochainError` (BC-2.12.003 PC16); `None` in all other states. The two fields are mutually exclusive — a Run is never both `output`-populated and `error`-populated.
+- **Fields:** run_id: Uuid, thread_id: Uuid, assistant_id: Uuid, status: RunStatus, config: RunnableConfig, created_at: Timestamp, updated_at: Timestamp, completed_at: Option<Timestamp>, output: Option<Value>, error: Option<PregolyaError>
+- **output/error symmetry (BC-2.12.003 PC15/PC16 + invariants):** `output` is `Some(GraphOutput)` when `status ∈ {completed, summary_halt}` (for `summary_halt`, output carries the summarize model response per BC-2.10.003 PC8(c)); `None` in all other states. `error` is `Some(PregolyaError)` ONLY when `status = failed`; carries `{code, message, component, category}` from the propagated `PregolyaError` (BC-2.12.003 PC16); `None` in all other states. The two fields are mutually exclusive — a Run is never both `output`-populated and `error`-populated.
 - **updated_at semantics:** Set on every state mutation (status transition, output/error write). Always present. Source: BC-2.12.003 PC13.
 - **completed_at semantics:** Set only on terminal transition (to `completed`, `failed`, `cancelled`, or `summary_halt`); `None` in non-terminal states (`queued`, `in_progress`, `interrupted`). Operationally distinct from updated_at — provides a clean terminal-timestamp without noise from intermediate mutations. Source: F-P24-01, BC-2.12.003 PC13, BC-2.10.003 PC8(c)(d).
 - **RunStatus lifecycle:** queued → in_progress → completed | failed | cancelled | summary_halt; in_progress ⇄ interrupted (resume via POST .../resume)
@@ -139,7 +139,7 @@ Metadata attached to content at an ingress boundary, recording its origin.
   `sequence_position`). It has NO trust-level dimension and carries no variants named Untrusted,
   UserInput, or Trusted. Template-composition trust is a separate concern handled by `TrustLevel`
   (enum: Untrusted | UserInput | Trusted; severity ordering Untrusted > UserInput > Trusted;
-  located in `ferrochain-prompts: prompts::template` — see entities-graph.md §TrustLevel).
+  located in `pregolya-prompts: prompts::template` — see entities-graph.md §TrustLevel).
   When ingress content is later used as a template variable, developers translate the ingress
   provenance into a `TrustLevel` for the composition step. The two types serve distinct axes
   and must never be conflated.
@@ -159,20 +159,20 @@ A registered callable that validates content at an ingress boundary before model
 ### ProviderClient
 A connection to a model provider implementing the ChatModel Runnable interface.
 - **Fields:** provider: ProviderId (openai | anthropic | ollama | …), model_id: String, credentials: ApiKey (newtype), config: ProviderConfig
-- **Architecture:** Standalone SDK crate split (HS-6/D17-Q5): `ferrochain-<provider>-sdk` owns the wire client; `ferrochain-<provider>` is the Runnable adapter.
+- **Architecture:** Standalone SDK crate split (HS-6/D17-Q5): `pregolya-<provider>-sdk` owns the wire client; `pregolya-<provider>` is the Runnable adapter.
 - **Invariant (DI-010):** ApiKey implements `Debug` → `"<redacted>"`. No `#[derive(Serialize)]`. No `Deref<Target = str>`.
 
-### FerrochainError
-The 2D error type for all ferrochain crates.
-- **Fields:** component: FerrochainComponent (L2 domain name; Rust: `Component` — enum covering all ferrochain crate names, 17 variants as of D23), category: Category (taxonomy codes: VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY), retry_hint: RetryHint (Never | Maybe | Later(Duration)), code: String (wire representation; Rust: `&'static str` per api-surface.md — e.g. `"E-CORE-001"`; fixed F-P25-03 from incorrect `u32`), message: String (MUST NOT contain credentials — DI-010), source: Option<Arc<dyn std::error::Error + Send + Sync>> (causal error chain; MUST NOT be exposed in HTTP responses; Arc preserves Clone — fixed F-P173-211 from non-cloneable `Box<dyn StdError>`)
+### PregolyaError
+The 2D error type for all pregolya crates.
+- **Fields:** component: PregolyaComponent (L2 domain name; Rust: `Component` — enum covering all pregolya crate names, 17 variants as of D23), category: Category (taxonomy codes: VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY), retry_hint: RetryHint (Never | Maybe | Later(Duration)), code: String (wire representation; Rust: `&'static str` per api-surface.md — e.g. `"E-CORE-001"`; fixed F-P25-03 from incorrect `u32`), message: String (MUST NOT contain credentials — DI-010), source: Option<Arc<dyn std::error::Error + Send + Sync>> (causal error chain; MUST NOT be exposed in HTTP responses; Arc preserves Clone — fixed F-P173-211 from non-cloneable `Box<dyn StdError>`)
 - **Source:** CONFLICT-6 — adk-rust P-01/P-04 adopted; Python exception hierarchy does not translate to Rust.
-- **RFC-7807:** FerrochainError supports serialization to RFC-7807 Problem Details JSON for HTTP error responses.
+- **RFC-7807:** PregolyaError supports serialization to RFC-7807 Problem Details JSON for HTTP error responses.
 
 ### MCPTool
 A Tool whose schema and invocation semantics are discovered from an external MCP server.
 - **Fields:** server_id: String, tool_name: String, description: String, input_schema: JsonSchema, transport: MCPTransport (Stdio | HTTP | WebSocket)
 - **Behavior:** MCPTool implements the Tool Runnable interface. ToolResult produced by MCPTool is always tagged as untrusted ingress.
-- **Error:** Bare ToolException from MCP server must be preserved and wrapped as `FerrochainError { category: TOOL, .. }` (DEC-012).
+- **Error:** Bare ToolException from MCP server must be preserved and wrapped as `PregolyaError { category: TOOL, .. }` (DEC-012).
 
 ---
 
@@ -192,7 +192,7 @@ BudgetConfig optionally set in RunnableConfig::budget_config (0——1, per-run 
 GuardrailHook 0——N registered on IngressBoundary
 ProviderClient implements ChatModel (Runnable)
 MCPTool implements Tool (Runnable)
-FerrochainError emitted by all ferrochain crates
+PregolyaError emitted by all pregolya crates
 ```
 
 ## Cross-Section Relationships

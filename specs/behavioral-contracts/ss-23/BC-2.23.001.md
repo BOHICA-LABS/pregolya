@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-23
 capability: CAP-036
-crate: ferrochain-tools
+crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
@@ -25,7 +25,7 @@ changelog:
   - "1.3 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded); normalize separator from ' / ' to '/'. Before: 'E-TOOLS-001 / E-TOOLS-002'. After: 'E-TOOLS-001/002/008'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX)."
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: component: \"TOOLS\" string literal → component: Component::Tools (Rust struct-literal sketches in PC-2/PC-3/PC-4); Category::SECURITY → Category::Security (PC-2), Category::VAL → Category::Val (PC-3), Category::TOOL → Category::Tool (PC-4)."
   - "1.5 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check(path) with canonical entry point canonicalize_beneath_root at 4 sites: PC-2 raise condition (returns Err not false), EC-002 symlink-target note (canonicalize_beneath_root resolves symlinks before confinement check), Invariants call-obligation bullet, VP-2.23.001-A property description. VP annotation updated: '(PathGuard type is unchanged)' to '(canonicalize_beneath_root_pure is the proof target)'. No error-layer-split issues — E-TOOLS-001 correctly used as tool-layer code throughout; E-SBXD-001 not conflated."
-  - "1.6 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to FerrochainError::new() form (#[non_exhaustive] bars external callers from struct literals). PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC3 E-TOOLS-002 FileReadExceedsLimit: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). PC4 E-TOOLS-008 I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed (these are message-embedded placeholders, not struct fields). TD-VSDD-060 sibling sweep: EC-005/TV-004 use JSON-like {tool_type, path, io_kind} notation — classified (c) message-component descriptions, not construction examples; left as-is."
+  - "1.6 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to PregolyaError::new() form (#[non_exhaustive] bars external callers from struct literals). PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC3 E-TOOLS-002 FileReadExceedsLimit: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). PC4 E-TOOLS-008 I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed (these are message-embedded placeholders, not struct fields). TD-VSDD-060 sibling sweep: EC-005/TV-004 use JSON-like {tool_type, path, io_kind} notation — classified (c) message-component descriptions, not construction examples; left as-is."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -34,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "8f61371"
+input-hash: "b407795"
 extracted_from: null
 modified: []
 deprecated: null
@@ -49,10 +49,10 @@ removal_reason: null
 
 ## Description
 
-`ReadFileTool` in `ferrochain-tools::tools::fs` implements the `Tool` trait with
+`ReadFileTool` in `pregolya-tools::tools::fs` implements the `Tool` trait with
 `ActionRisk::ReadOnly`. It reads a file at a caller-supplied path and returns its contents as
 a UTF-8 string (or raw bytes for binary files). Before any I/O, the path argument is validated
-against the configured `PathGuard` (ferrochain-sandbox); paths outside the guard scope return
+against the configured `PathGuard` (pregolya-sandbox); paths outside the guard scope return
 `Err(E-TOOLS-001 PathConfinementViolation)`. A configurable `max_bytes: u64` limit (default
 1,048,576 — 1 MiB) prevents accidental large-file ingestion into model context; exceeding it
 returns `Err(E-TOOLS-002 FileReadExceedsLimit)` with both the file size and the configured
@@ -64,7 +64,7 @@ limit.
    configuration (`ReadFileConfig::max_bytes: u64`, default 1,048,576).
 2. The caller invokes the tool with JSON args `{ "path": "<path-string>" }` where `path` is a
    non-empty string.
-3. The `PathGuard` encodes at least one allowed root scope (ferrochain-sandbox
+3. The `PathGuard` encodes at least one allowed root scope (pregolya-sandbox
    `BC-2.13.004` workspace-confinement invariant applies).
 
 ## Postconditions
@@ -77,17 +77,17 @@ limit.
 2. **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns `Err` for any reason
    (path is outside scope, is a symlink escaping scope, is an absolute path not under the
    guard root). The tool returns
-   `Err(FerrochainError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
+   `Err(PregolyaError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
    "PathConfinementViolation: path '<path>' is outside the configured PathGuard scope"))`.
    No I/O is performed; no side effect occurs.
 3. **File size exceeds limit:** `PathGuard` passes but the file's metadata size exceeds
    `max_bytes`. The tool returns
-   `Err(FerrochainError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-002",
+   `Err(PregolyaError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-002",
    "FileReadExceedsLimit: file '<path>' is <actual_bytes> bytes, exceeds configured limit of <max_bytes> bytes"))`.
    The file is NOT read into memory before this check; the implementation uses
    `std::fs::metadata()` to obtain the size before opening the file.
 4. **File not found or permission denied:** The tool propagates the OS I/O error as
-   `Err(FerrochainError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
+   `Err(PregolyaError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
    "ReadFileTool I/O error on '<path>': <io_kind>"))`.
    This is not a path-confinement violation; it is a runtime filesystem error.
 5. VP-003 (workspace confinement Kani proof) coverage extends to `ReadFileTool` without
@@ -102,7 +102,7 @@ limit.
 - `ReadFileTool` does not retain any file handle or content reference between tool calls.
   Each invocation is stateless.
 - **DI-014 (No Silent Swallowing):** validation failures (path confinement, size limit, I/O
-  error) propagate as `Err(FerrochainError)`. The tool never returns an empty `ToolOutput` or
+  error) propagate as `Err(PregolyaError)`. The tool never returns an empty `ToolOutput` or
   `None` to represent a failure.
 - `ActionRisk::ReadOnly` is the annotated risk tier; this tier cannot be raised by application
   configuration (only lowered, but ReadOnly is already the floor). `RiskGatePolicy` auto-approve
@@ -149,7 +149,7 @@ limit.
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (tools::fs module), Decision 3 (ActionRisk defaults), Decision 5 (E-TOOLS-001/002 error namespace)
-- `architecture/module-decomposition.md` — SS-23, `tools::fs` module in ferrochain-tools
+- `architecture/module-decomposition.md` — SS-23, `tools::fs` module in pregolya-tools
 - `architecture/purity-boundary-map.md` — SS-23 Effectful Shell classification
 
 ## Story Anchor
@@ -172,7 +172,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 | Architecture Authority | ADR-020 Decisions 2, 3, and 5 (tools::fs module, ActionRisk defaults, E-TOOLS-001/002 namespace) |
 | Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
 | VP Registration | VP-003 reuse (no new VP-INDEX entry); VP-2.23.001-B/C (unit tests) |
-| Module | ferrochain-tools / tools::fs |
+| Module | pregolya-tools / tools::fs |
 | Priority | P1 |
 | Wave | 1 |
 | Test Types | unit + integration |

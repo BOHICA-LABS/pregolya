@@ -10,7 +10,7 @@ origin: greenfield
 priority: P1
 subsystem: SS-19
 capability: CAP-024
-crate: ferrochain-core
+crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
@@ -28,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "0daa69f"
+input-hash: "dc48c59"
 extracted_from: null
 modified: []
 deprecated: null
@@ -126,7 +126,7 @@ no configuration knob overrides it (DI-010).
 
 - `architecture/module-decomposition.md` — SS-19, `core::serializable` module
 - `architecture/decisions/ADR-016-lc-json-deserialization-safety.md` — Decision 3 (credential stripping obligation, lc_secrets() contract, constructor convention for credential fields)
-- `architecture/purity-boundary-map.md` — `ferrochain-core / core::serializable` Pure Core
+- `architecture/purity-boundary-map.md` — `pregolya-core / core::serializable` Pure Core
 
 ## Story Anchor
 
@@ -145,7 +145,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 story]_
 | L2 Domain Invariants | DI-008 (serialize/revive return Result; no unwrap), DI-010 (credential opacity — credential values never transit AI context or serialized form; lc_secrets() stripping is the mechanism) |
 | Architecture Authority | ADR-016 Decision 3 (lc_secrets() stripping obligation, constructor convention for credential injection) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| Module | ferrochain-core / core::serializable |
+| Module | pregolya-core / core::serializable |
 | Priority | P1 |
 | Wave | 2 |
 | Test Types | unit (pure-core, no I/O) |

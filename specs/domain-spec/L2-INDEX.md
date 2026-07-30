@@ -1,7 +1,7 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.25"
+version: "1.26"
 status: active
 producer: business-analyst
 timestamp: 2026-07-30T00:00:00Z
@@ -33,7 +33,8 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
-  - "v1.25 (F-P175-D101/fix-burst-283/2026-07-30): as_retriever fallibility correction across three shards (F-P175-D101 CRIT close). capabilities-p1-p2.md (CAP-027 receiver+Result return added; CAP-028 non-fallible form corrected to Result<VectorStoreRetriever, FerrochainError>). entities-graph.md (§VectorStore §Instance methods non-fallible form corrected). ubiquitous-language-core.md (§VectorStoreRetriever and §VectorStore term entries corrected to show Result return and Err(E-VS-003 InvalidConfig)). Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 §Decision 2."
+  - "v1.26 (burst-284/2026-07-30): Paper-fix repair — fabricated section anchors in two section shards repaired per TD-VSDD-059. entities-graph.md (burst-273 changelog entry: 'api-surface.md §burst-242/2026-07-23' → 'api-surface.md changelog entry burst-242/2026-07-23'; §burst-242/2026-07-23 resolves to 0 headings in api-surface.md; burst-242 identifier is the stable form). risks.md (R-003 mitigation: 'reference-manifest.md §langchain-pin' → 'reference-manifest.md §langchain — Package Layout'; §langchain-pin resolves to 0 headings; §langchain — Package Layout is a real heading at line 36 of reference-manifest.md). L2-INDEX.md burst-276 changelog entry verified semantically complete after version-pin removal: bounded-contexts.md and capabilities-p1-p2.md changes remain described by finding IDs F-P173-104/F-P173-106/F-P173-702."
+  - "v1.25 (F-P175-D101/fix-burst-283/2026-07-30): as_retriever fallibility correction across three shards (F-P175-D101 CRIT close). capabilities-p1-p2.md (CAP-027 receiver+Result return added; CAP-028 non-fallible form corrected to Result<VectorStoreRetriever, PregolyaError>). entities-graph.md (§VectorStore §Instance methods non-fallible form corrected). ubiquitous-language-core.md (§VectorStoreRetriever and §VectorStore term entries corrected to show Result return and Err(E-VS-003 InvalidConfig)). Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 §Decision 2."
   - "v1.24 (fix-burst-280/wave-c/2026-07-28): Document Map Lines→Size column replacement. Rationale: a precise numeric line-count estimate held in a separate index file decays silently on every shard edit — no gate detects the drift; this burst found four cells stale by +64 to +174 lines (capabilities-p0.md, entities-server.md, ubiquitous-language-server.md, bounded-contexts.md). This is the same structural-decay class TD-VSDD-091 addresses for file:NNN citations — not a pinned cite, but the same unbounded-drift property with no detection gate. S/M/L/XL bands update only when a shard crosses a tier boundary, which coincides with the DF-021 split review; maintenance cost is already paid at that trigger. Column name diverges from the upstream template's Tokens column by orchestrator authorization (Path 2, fix-burst-280); spec-steward holds the governance record — this divergence is intentional, not accidental drift. Band assignments (all 14 rows): XL: capabilities-p1-p2.md; L: entities-graph.md, ubiquitous-language-core.md, bounded-contexts.md; S: assumptions.md, risks.md, differentiators.md; M: all remaining."
   - "v1.23 (fix-burst-280/wave-c/2026-07-28): Document Map full line-count correction — all 14 rows verified against source shards. Four stale entries corrected: capabilities-p0.md ~140→~228, entities-server.md ~95→~201, ubiquitous-language-server.md ~100→~164, bounded-contexts.md ~155→~329."
   - "v1.22 (fix-burst-280/wave-c/2026-07-28): Count-desync correction — Document Map risks.md row: (8 risks)→(9 risks) and line estimate ~51→~79; assumptions.md line estimate ~48→~54. Full ID count sweep: CAP 38, DI 15, DEC 13, ASM 9, R 9, FM 19 all verified correct against source shards."
@@ -41,7 +42,7 @@ changelog:
   - "v1.20 (fix-burst-280/wave-c/2026-07-28): assumptions.md — ASM-007 impact re-derivation (F-P175-C207). Impact if Wrong corrected Low→Medium; stale 'import tool in scope' citation replaced with ADR-002 §Consequences anchor; ASM-007 added to Assumption Dependency Map tracing to CAP-005."
   - "v1.19 (fix-burst-278/wave-b/2026-07-28): VectorStore retriever seam — three shards updated per D-48/D-44/D-45. capabilities-p1-p2.md §CAP-027/§CAP-028: VectorStoreRetriever lifetime annotation removed (verify-signature-canon S2 zero hits), as_retriever receiver corrected to self: Arc<Self> (S1b zero hits), backing-store borrow form corrected to Arc<dyn VectorStore>, k/fetch_k/lambda_mult rejection semantics added per D-44. entities-graph.md §VectorStore/§Relationships-Summary: VectorStore entity as_retriever receiver and Relationships Summary borrow-backed form corrected. ubiquitous-language-core.md §VectorStoreRetriever/§VectorStore: term borrow-based forms corrected. Post-fix: verify-signature-canon S1b=0, S2=0; borrow-backed VectorStoreRetriever form absent from all domain-spec shards."
   - "v1.18 (FC-4/burst-277/2026-07-28): False-closure FC-4 correction — 'PO BC obligations' stale-completed-delegation residue removed from 3 shards. capabilities-p1-p2.md v1.17→v1.18 (3 instances at CAP-034 x2, CAP-035 x1; all converted to past-tense 'Authored BCs' citations). entities-graph.md v1.12→v1.13 (1 instance: §PreToolDecision PendingHumanApproval). ubiquitous-language-core.md v1.8→v1.9 (1 instance: §PreToolDecision definition). All 5 instances confirmed stale-completed: BC-2.05.008, BC-2.06.004, BC-2.06.005, BC-2.08.010, BC-2.10.005, BC-2.10.006, BC-2.06.006 all exist. The v1.14 '4 verified structural/legitimate' count was inaccurate — those hits included these now-corrected stale-delegation instances."
-  - "v1.17 (F-P173-104/F-P173-106/F-P173-702/burst-276/2026-07-27): bounded-contexts.md v1.4→v1.5 (F-P173-104: remove ferrochain-graph from ferrochain-tools dep list per ADR-020 Decision 1; inline note added citing D-24 ActionRisk-from-core rationale); capabilities-p1-p2.md v1.16→v1.17 (F-P173-106: CAP-038 regex dependency confirmed net-new per ADR-020 Decision 7, stale confirm-instruction removed; F-P173-702: CAP-029 ADR-014 Decision 4 → ADR-017 Decision 4 for InMemoryVectorStore/Arc-DI)."
+  - "v1.17 (F-P173-104/F-P173-106/F-P173-702/burst-276/2026-07-27): bounded-contexts.md (F-P173-104: remove pregolya-graph from pregolya-tools dep list per ADR-020 Decision 1; inline note added citing D-24 ActionRisk-from-core rationale); capabilities-p1-p2.md (F-P173-106: CAP-038 regex dependency confirmed net-new per ADR-020 Decision 7, stale confirm-instruction removed; F-P173-702: CAP-029 ADR-014 Decision 4 → ADR-017 Decision 4 for InMemoryVectorStore/Arc-DI)."
   - "v1.16 (2026-07-25): Burst-262 F-P161-01 BC-pin de-pin sweep — entities-server v1.13→v1.14 (live-body BC-NNN vN.N version pins removed per D18-P84-A); events.md v1.10→v1.11 (live-body BC-NNN vN.N version pins removed per D18-P84-A)."
   - "v1.15 (2026-07-24): Burst 252 F-P151-01..07 ADR-019 compaction type canon — capabilities-p1-p2 v1.13→v1.14 (CompactionTrigger count/tokens field names, OnWatermark non-strict <= predicate, f64 fraction/budget_tokens_used); entities-graph v1.9→v1.10 (CompactionTrigger/CompactionSummary entity type canon: flat compacted_start/end fields, f64, put mechanism); events v1.9→v1.10 (compaction_event wire payload flat fields per ADR-019 Decision 4; mandatory parent_ids per BC-2.06.002 Inv-2); ubiquitous-language-core v1.7→v1.8 (CompactionTrigger term: count/tokens variant fields, f64 fraction; CompactionSummary term: flat compacted_start/end, no RangeInclusive). Document Map line counts updated: capabilities-p1-p2 ~530→~750, entities-graph ~315→~390, ubiquitous-language-core ~330→~420."
   - "v1.14 (2026-07-24): Burst 251 F-P150-02 (MED) — capabilities-p1-p2 v1.12→v1.13 stale-delegation residue removed at CAP-029 (§Zero-norm guard) and CAP-031 (§Dimensionality contract); both 'PO to formalize in error taxonomy' imperatives replaced with past-tense factual citations (E-VS-001 and E-EMBED-001 registered since error-taxonomy v1.27). L-026 sweep: 6 hits in domain-spec, 2 fixed, 4 verified structural/legitimate (BC-to-CAP traceability fields)."
@@ -60,7 +61,7 @@ changelog:
   - "v1.1: Split capabilities.md → capabilities-p0.md + capabilities-p1-p2.md; entities.md → entities-graph.md + entities-server.md; ubiquitous-language.md → ubiquitous-language-core.md + ubiquitous-language-server.md (all three were over 1,500-token threshold per DF-021)"
 ---
 
-# L2 Domain Specification: ferrochain
+# L2 Domain Specification: pregolya
 
 > **Sharded artifact (DF-021).** This index provides navigation and summary.
 > Detail lives in per-section files listed below. Each section targets
@@ -68,7 +69,7 @@ changelog:
 
 ## Domain Summary
 
-ferrochain occupies the agent-orchestration domain: composing AI model calls, tool
+pregolya occupies the agent-orchestration domain: composing AI model calls, tool
 invocations, and durable state transitions into resumable graphs with human-in-the-loop
 interrupts, structured checkpointing, typed error propagation, and provider conformance —
 expressed as a Rust async-native port of the LangChain v1 semantic surface.
@@ -161,7 +162,7 @@ Five holdout domains constrain the domain model as Phase-1 forcing functions:
 | CONFLICT-2, D11.3 | Per-task durability → DI-002; FM-002 |
 | CONFLICT-3 | HITL FIFO resume → DI-003; FM-003 |
 | CONFLICT-4 | Monotonic checkpoint clock → DI-004 |
-| CONFLICT-6 | FerrochainError 2D struct → entities-server.md, CAP-016 |
+| CONFLICT-6 | PregolyaError 2D struct → entities-server.md, CAP-016 |
 | NE-01 | Enforcing sandbox default → DI-006; FM-013 |
 | NE-02 | Workspace confinement → DI-007; DEC-011 |
 | NE-04 | Outbound timeout → DI-009; FM-011 |

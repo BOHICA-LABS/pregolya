@@ -15,7 +15,7 @@ phase: 1a
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
-  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-core per module-decomposition.md v1.10."
+  - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Three sites corrected: PC5 single-line (E-CORE-004, `, ..` added); EC-001 3-line multiline span closure (E-CORE-004, `, ..` added before closing `})`); TV-004 table-cell (E-CORE-004, `, ..` added). All spans have category/code/message but lack component and retry_hint."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
@@ -25,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "1bf3881"
+input-hash: "2912cbf"
 extracted_from: null
 modified: []
 deprecated: null
@@ -40,7 +40,7 @@ removal_reason: null
 
 ## Description
 
-ferrochain-core's `Runnable` trait exposes a `.pipe(other)` builder method (the Rust equivalent
+pregolya-core's `Runnable` trait exposes a `.pipe(other)` builder method (the Rust equivalent
 of Python's `|` operator) that composes two Runnables into a `RunnableSequence`. The sequence
 feeds the output of the first Runnable as the input to the second. A heterogeneous pipeline
 assembled via `.pipe()` satisfies the full `Runnable` surface itself, enabling further chaining.
@@ -65,7 +65,7 @@ assembled via `.pipe()` satisfies the full `Runnable` surface itself, enabling f
 4. Sequence flattening: `a.pipe(b).pipe(c)` produces one `RunnableSequence` with
    `first=a, middle=[b], last=c` — NOT `RunnableSequence { first: RunnableSequence{a,b}, last: c }`.
 5. A type-boundary mismatch in a type-erased `DynRunnable` pipeline is detected at the sequence's
-   first `invoke` call and returns `Err(FerrochainError { category: INTERNAL, code: E-CORE-004, .. })`.
+   first `invoke` call and returns `Err(PregolyaError { category: INTERNAL, code: E-CORE-004, .. })`.
 6. The composed sequence inherits config (tags, metadata, callbacks) from the caller's
    `RunnableConfig`; each step receives a child config tagged with its sequential position
    (`seq:step:1`, `seq:step:2`, etc.).
@@ -74,7 +74,7 @@ assembled via `.pipe()` satisfies the full `Runnable` surface itself, enabling f
 
 - **Composition is left-associative:** `a.pipe(b).pipe(c)` ≡ `(a.pipe(b)).pipe(c)`.
 - **Type check at call time (DynRunnable path):** A type mismatch between stages in a type-erased
-  pipeline is NOT a compile-time error but produces a well-typed `FerrochainError`, not a panic.
+  pipeline is NOT a compile-time error but produces a well-typed `PregolyaError`, not a panic.
 - **Streaming through sequences:** Token streaming is preserved end-to-end when every step is
   `transform`-capable (see rust-translation-strategy.md `RunnableSequence`). A buffering step
   (e.g. `RunnableLambda`) acts as a natural barrier; downstream steps begin only after the
@@ -87,7 +87,7 @@ assembled via `.pipe()` satisfies the full `Runnable` surface itself, enabling f
 ### EC-001: Type mismatch in type-erased pipeline (DynRunnable path)
 **Scenario:** `dyn_runnable_a.pipe(dyn_runnable_b)` where `a` outputs `serde_json::Value::Bool`
 but `b` expects `serde_json::Value::String`. Detected only at invocation.
-**Expected behavior:** `seq.invoke(input).await` returns `Err(FerrochainError { category: INTERNAL,
+**Expected behavior:** `seq.invoke(input).await` returns `Err(PregolyaError { category: INTERNAL,
 code: E-CORE-004, message: "Pipe composition failed: type boundary mismatch between stage 1 output
 and stage 2 input", .. })`. No panic, no silent wrong-type coercion.
 **Reference:** error-taxonomy.md E-CORE-004.
@@ -124,7 +124,7 @@ No error unless the output type of `a` does not match the input type of `a`.
 | TV-001 | `to_upper.pipe(add_exclamation).invoke("hello", &cfg)` | `Ok("HELLO!")` | Happy path — two-stage typed pipeline |
 | TV-002 | `a.pipe(b).pipe(c)` — check structure | `RunnableSequence { first: a, middle: [b], last: c }` — flattened | Sequence flattening |
 | TV-003 | Streaming chain: `a.pipe(b).stream("input")` where both are streaming-native | Emits chunks incrementally, not one final chunk | Token streaming through sequence |
-| TV-004 | Type-erased `a.pipe(b)` with type mismatch, `invoke` | `Err(FerrochainError { category: INTERNAL, code: E-CORE-004, .. })` | DynRunnable type mismatch |
+| TV-004 | Type-erased `a.pipe(b)` with type mismatch, `invoke` | `Err(PregolyaError { category: INTERNAL, code: E-CORE-004, .. })` | DynRunnable type mismatch |
 | TV-005 | `seq.batch(vec!["x","y","z"], &cfg)` on a two-stage pipeline | `[Ok("X!"), Ok("Y!"), Ok("Z!")]` in input order | Batch through sequence respects order |
 
 ## Verification Properties
@@ -138,12 +138,12 @@ No error unless the output type of `a` does not match the input type of `a`.
 
 - BC-2.01.003 — Runnable trait invocation (depends on: the composed sequence delegates to invoke/stream via the Runnable trait)
 - BC-2.06.001 — Streaming event taxonomy (composes with: each stage in a sequence emits run/step events tagged seq:step:N)
-- BC-2.14.001 — FerrochainError 2D struct (depends on: type-mismatch errors propagate via FerrochainError)
+- BC-2.14.001 — PregolyaError 2D struct (depends on: type-mismatch errors propagate via PregolyaError)
 
 ## Architecture Anchors
 
-- `ferrochain-core/src/runnables/sequence.rs` — `RunnableSequence` struct with `first`, `middle`, `last` and `pipe()` method (to be created)
-- `ferrochain-core/src/runnables/base.rs` — `Runnable::pipe()` default method implementation (to be created)
+- `pregolya-core/src/runnables/sequence.rs` — `RunnableSequence` struct with `first`, `middle`, `last` and `pipe()` method (to be created)
+- `pregolya-core/src/runnables/base.rs` — `Runnable::pipe()` default method implementation (to be created)
 
 ## Story Anchor
 
@@ -164,4 +164,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 0 |
 | Test Types | U (unit), I (integration), ST (streaming) |
-| Module | ferrochain-core |
+| Module | pregolya-core |

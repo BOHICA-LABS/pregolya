@@ -8,7 +8,7 @@ lifecycle_status: active
 introduced: v1.0.0-greenfield
 changelog:
   - "1.1 (ADV-P1D-PASS-27): F-P27-01 replace retired E-GRAPH-* wildcard citation in EC-001 and TV-003 with concrete E-GRAPH-002 POLICY→422 per-endpoint override citation (BC-2.14.002 PC3 9th override); wildcard was retired by OBS-1 narrowing in P26."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-graph / ferrochain-server per module-decomposition.md v1.10."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph / pregolya-server per module-decomposition.md v1.10."
   - "1.3 (F-P109-01, 2026-07-18): Add thread_id to all E-GRAPH-002 struct/variant sites — 9 sites (EC-001/002/003/004, TV-001/002/003/004/005). Canonical form { thread_id, run_status } per PC1/PC3. EC-002 and TV-002 were bare-variant forms (no struct braces); expanded to full struct with run_status: 'completed'. TD-VSDD-060 file-wide sweep: all 10 E-GRAPH-002 occurrences (including PC1 which was already correct) now uniformly carry both fields. Alias: thread_id <-> <run_id> (interrupt context — registered in gate #33 v2.36)."
   - "1.4 (F-P118-02, fix burst 121, 2026-07-19): Related BCs §BC-2.12.003 run lifecycle state list: add summary_halt — '(queued/in_progress/completed/failed/interrupted/cancelled/summary_halt)'. VP-HITL-10: 'four non-interrupted states' → 'five non-interrupted terminal/running states'; parameterized list adds summary_halt. TD-VSDD-060 file-wide sweep: these two sites are the only status enumerations not already exhaustive; all E-GRAPH-002 { run_status } struct sites enumerate specific concrete values (not the full set) and are exempt."
   - "1.5 (F-P119-01 + OBS-1 + OBS-2, fix burst 122, 2026-07-19): F-P119-01: Description updated to enumerate all non-interrupted statuses including summary_halt; Preconditions §2 adds clause (e) summary_halt (run terminated via OnCeiling::Summarize; BC-2.10.003 PC8(d) + BC-2.12.003 PC8); Canonical Test Vectors adds TV-006 (summary_halt guard). OBS-1 adjudication — production-grade totality chosen over delegation narrowing: BC-2.05.005 guard must be total over ALL non-interrupted run_status values because queued (never-started run has no interrupt slot before first node executes) and cancelled (in-flight slots discarded at cancellation) are equally unable to have an active interrupt; Preconditions §2 adds clauses (f) queued and (g) cancelled; TVs add TV-007 (queued guard) and TV-008 (cancelled guard); BC-2.05.004 Invariants already correctly enumerated all six statuses — both BCs now coherent. OBS-2: VP-HITL-10 rewritten precisely — 'six non-interrupted run_status values (completed, failed, in_progress, summary_halt, queued, cancelled) plus the interrupted-slots-consumed scenario (PC2(d)/TV-002) — 7 total parameterized test cases'. TD-VSDD-060 sweep: Preconditions §2 normative guard list (clauses a-g): now total over all 7 guard cases; VP-HITL-10 parameterized count: rewritten with derivable 7-case enumeration; Related BCs lifecycle list (~line 138, BC-2.12.003 lifecycle reference): not a guard enumeration, already exhaustive, exempt; all E-GRAPH-002 {run_status} struct sites (EC-001/002/003/004, TV-001 through TV-008): specific concrete values, correctly exempt."
@@ -31,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "087ac77"
+input-hash: "95933c4"
 extracted_from: null
 modified: []
 deprecated: null
@@ -152,9 +152,9 @@ The engine does not buffer the preemptive resume value for a future interrupt.
 
 ## Architecture Anchors
 
-- `ferrochain-graph/src/scheduler.rs` (`graph::scheduler`) — resume path: check INTERRUPT marker before applying Command
-- `ferrochain-graph/src/error.rs` — `E-GRAPH-002 NoActiveInterrupt` error variant definition
-- `ferrochain-server/src/routes/runs.rs` — `POST /threads/{thread_id}/runs/{run_id}/resume` endpoint guard
+- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — resume path: check INTERRUPT marker before applying Command
+- `pregolya-graph/src/error.rs` — `E-GRAPH-002 NoActiveInterrupt` error variant definition
+- `pregolya-server/src/routes/runs.rs` — `POST /threads/{thread_id}/runs/{run_id}/resume` endpoint guard
 
 ## Story Anchor
 
@@ -176,4 +176,4 @@ _[to be filled after story decomposition]_
 | Priority | P0 |
 | Wave | Wave 1 |
 | Test Types | U (unit) |
-| Module | ferrochain-graph / ferrochain-server |
+| Module | pregolya-graph / pregolya-server |

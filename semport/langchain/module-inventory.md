@@ -1,6 +1,6 @@
 ---
 artifact: semport/langchain/module-inventory
-project: ferrochain
+project: pregolya
 port_target: langchain (v1 package, PyPI `langchain` 1.3.13)
 source: .reference/langchain/libs/langchain_v1  (v1 ONLY — NOT libs/langchain / classic, per D1)
 analyzer_pass: 3
@@ -83,8 +83,8 @@ langchain/
 | `langchain.tools` | `BaseTool`, `tool`, `InjectedToolArg`, `InjectedToolCallId`, `ToolException` (core) + `InjectedState`, `InjectedStore`, `ToolRuntime` (langgraph) | re-export core + langgraph |
 | `langchain.rate_limiters` | `BaseRateLimiter`, `InMemoryRateLimiter` | **pure re-export of `langchain_core.rate_limiters`** |
 
-**Implication for ferrochain:** `messages`, `rate_limiters`, most of `tools`, and the
-`BaseChatModel`/`Embeddings` re-exports are satisfied entirely by **ferrochain-core**.
+**Implication for pregolya:** `messages`, `rate_limiters`, most of `tools`, and the
+`BaseChatModel`/`Embeddings` re-exports are satisfied entirely by **pregolya-core**.
 The v1 `langchain` crate's *net-new* surface is: `create_agent`, the middleware system,
 `init_chat_model`/`init_embeddings`, and `structured_output`.
 
