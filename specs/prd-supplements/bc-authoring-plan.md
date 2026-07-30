@@ -5,7 +5,7 @@ version: "2.61"
 status: active
 producer: product-owner
 total_standing_gates: 37
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-07-29T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md

@@ -2,9 +2,12 @@
 document_type: po-routing-spec
 burst: "279"
 wave: B
-status: open
+status: applied
 producer: architect
 timestamp: 2026-07-28T00:00:00Z
+applied_burst: "279"
+applied_date: 2026-07-28
+sweep_manifest_note: "burst-279-sweep-manifest.md omitted the BC files changed by this routing spec (BC-2.15.004, BC-2.15.006, BC-2.18.001, BC-2.18.002, BC-2.18.003, BC-2.18.004); false-open status persisted until burst-283 reconciliation (D-98)."
 findings_addressed: [F-P175-B101, F-P175-B102, F-P175-B201, F-P175-B202]
 routes_to: product-owner
 ---

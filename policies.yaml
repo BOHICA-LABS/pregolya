@@ -1,0 +1,708 @@
+# .factory/policies.yaml — Declarative governance policy registry
+#
+# Each project maintains its own policy list. The adversarial-review skill
+# auto-loads this file into the adversary's dispatch rubric. Lint hooks
+# read this file to determine which validators to run.
+#
+# Initialize with: /vsdd-factory:policy-registry init
+# Add policies with: /vsdd-factory:policy-add <name>
+# Validate with: /vsdd-factory:policy-registry validate
+#
+# Schema per entry:
+#   id: <integer>              # Sequential policy number
+#   name: <string>             # snake_case policy flag name
+#   description: <string>      # One-line human-readable description
+#   adopted: <string>          # Context where adopted (burst, pass, or date)
+#   severity: <HIGH|MEDIUM>    # Severity floor for violations
+#   enforced_by: [<string>]    # Enforcement mechanisms
+#   scope: [<string>]          # Artifact types this policy covers
+#   lint_hook: <string|null>   # Path to automated hook (relative to plugin root)
+#   verification_steps: [<string>]  # Step-by-step check procedure for the adversary
+#                                   # Baseline policies (1-9) have steps baked into agent
+#                                   # prompts. Custom policies (10+) MUST include steps
+#                                   # here so the adversary knows HOW to verify them.
+#
+# NOTES ON LINT_HOOK FIELD
+# ────────────────────────
+# lint_hook points to plugin-bundled scripts only (relative to plugin root).
+# Project-local validators in .factory/hooks/ are referenced in enforced_by
+# only; lint_hook remains null for project-specific policies. This prevents
+# false validation failures from the /vsdd-factory:policy-registry validate
+# procedure, which resolves lint_hook paths relative to the plugin root.
+#
+# PHASE ACTIVATION
+# ────────────────
+# Phase-1-active (current): POL-1..POL-31
+# Phase-3-binding (code):   POL-32..POL-45 (bind on first commit to crates/)
+#
+# MACHINE GATE COVERAGE
+# ─────────────────────
+# BLOCKING gate today: POL-12 (records-lint + verify-no-version-pins), POL-13 (records-lint),
+#   POL-15 (verify-changelog-date-monotonicity), POL-16 (verify-enum-variant-casing),
+#   POL-17 (verify-error-notation-canon), POL-18 (verify-signature-canon),
+#   POL-19 (verify-adr-decision-refs + verify-adr-self-version-refs).
+# ADVISORY gate today: POL-6 (verify-arch-anchor-resolution, verify-module-canonicality),
+#   POL-14 (verify-form-a-changelog-direction), POL-20 (verify-bc-frontmatter-schema),
+#   POL-21 (verify-changelog-claim-applied).
+# MANUAL-ONLY: POL-3, POL-22..POL-45.
+#
+# CHANGELOG
+# ─────────
+# 1.0 (2026-07-30): Initial project registry. POL-1..POL-11 from plugin baseline
+#   template. POL-12..POL-45 derived from CLAUDE.md §Code Conventions,
+#   §Operational Discipline TDs, §Standing Adversary Probes, §CANONICAL PRINCIPLE,
+#   and STATE.md Decisions Log D-56, D-57, D-85, D-89. Created fix-burst-283.
+#   Previously absent — all 176 adversarial passes ran without project-policy rubric
+#   injection (STATE.md D-78). Enforcement-coverage gap now visible per policy.
+
+metadata:
+  version: "1.0"
+  last_updated: "2026-07-30"
+
+policies:
+
+  # ── BASELINE POLICIES (POL-1..POL-11) ──────────────────────────────────────
+  # Sourced from plugin template. Verification steps for POL-1..9 are baked
+  # into the adversary agent prompt and reproduced here for rubric completeness.
+
+  - id: 1
+    name: append_only_numbering
+    description: "All VSDD identifiers (BC, CAP, VP, EC, DI, ASM, R, FM, STORY, HS) are never renumbered or reused. Retired IDs stay in indexes. Filename slugs are immutable even when titles change."
+    adopted: baseline
+    severity: HIGH
+    enforced_by: [adversary-prompt, consistency-validator]
+    scope: [bc, vp, di, cap, story, hs]
+    lint_hook: null
+    verification_steps:
+      - "Scan all index files for retired/removed IDs — verify no active artifact reuses a retired ID"
+      - "Verify retired entries have replaced_by or removal justification fields"
+      - "Check that filename slugs match original creation (compare git log if available)"
+
+  - id: 2
+    name: lift_invariants_to_bcs
+    description: "Every domain invariant (DI-NNN) must be cited by at least one BC's Traceability L2 Invariants field. Orphan invariants are spec drift."
+    adopted: baseline
+    severity: MEDIUM
+    enforced_by: [adversary-prompt, consistency-validator]
+    scope: [di, bc]
+    lint_hook: null
+    verification_steps:
+      - "Read domain-spec/invariants.md — extract all DI-NNN IDs"
+      - "For each DI-NNN, search BC files for citations in Traceability / L2 Invariants fields"
+      - "Report orphan invariants (DI declared but no BC enforces it)"
+      - "Verify invariant Scope/enforcer column names BCs that cite it back (bidirectional)"
+
+  - id: 3
+    name: state_manager_runs_last
+    description: "State-manager agent must be the last to commit in every burst, preventing version-race regressions where index files cite stale artifact versions."
+    adopted: baseline
+    severity: HIGH
+    enforced_by: [orchestrator-rule]
+    scope: [story, bc, vp, architecture]
+    lint_hook: null
+    verification_steps:
+      - "Review burst commit history — state-manager commits must come after all other specialist agent commits"
+      - "Check for citation staleness — STORY-INDEX/BC-INDEX versions must match the latest story-writer/PO output"
+
+  - id: 4
+    name: semantic_anchoring_integrity
+    description: "Every anchor claim must be semantically correct, not just syntactically valid. Mis-anchoring always blocks convergence."
+    adopted: baseline
+    severity: MEDIUM
+    enforced_by: [adversary-prompt, consistency-validator]
+    scope: [bc, vp, story, architecture]
+    lint_hook: null
+    verification_steps:
+      - "For each BC, verify the declared capability actually describes the BC's purpose per capabilities.md"
+      - "For each story, verify subsystems: field references subsystems that own the story's scope per ARCH-INDEX"
+      - "For each VP, verify anchor_story builds the test vehicle (not an architectural ancestor)"
+      - "For traceability table rows, verify descriptions match the target artifact's actual H1 title"
+
+  - id: 5
+    name: creators_justify_anchors
+    description: "Agents creating anchors must justify each choice against the source-of-truth artifact. Stop and ask rather than guess."
+    adopted: baseline
+    severity: MEDIUM
+    enforced_by: [adversary-prompt]
+    scope: [bc, vp, story, cap, architecture]
+    lint_hook: null
+    verification_steps:
+      - "Check that BC→CAP anchors include justification citing capabilities.md capability description"
+      - "Check that story→subsystem anchors include justification citing ARCH-INDEX Subsystem Registry"
+      - "Check that VP→anchor_story assignments justify why that story builds the test vehicle"
+      - "Flag mechanical citations without body substantiation"
+
+  - id: 6
+    name: architecture_is_subsystem_name_source_of_truth
+    description: "ARCH-INDEX Subsystem Registry is the canonical source for subsystem names. All references must match verbatim."
+    adopted: baseline
+    severity: HIGH
+    enforced_by: [adversary-prompt, consistency-validator, hooks/verify-arch-anchor-resolution.sh, hooks/verify-module-canonicality.sh]
+    scope: [bc, story, prd, architecture]
+    lint_hook: null
+    verification_steps:
+      - "Read ARCH-INDEX Subsystem Registry for canonical subsystem names"
+      - "For sampled BCs, verify subsystem: frontmatter matches registry exactly (no casing or spacing variants)"
+      - "For sampled stories, verify subsystems: field uses registry-exact names"
+      - "Check BC-INDEX subsystem column matches ARCH-INDEX"
+      - "Run hooks/verify-arch-anchor-resolution.sh: check FAIL=0 (currently advisory — promotion when FAIL=0)"
+      - "Run hooks/verify-module-canonicality.sh: check FAIL=0 (currently advisory)"
+
+  - id: 7
+    name: bc_h1_is_title_source_of_truth
+    description: "BC file H1 heading is the authoritative BC title. All downstream references (BC-INDEX, story traces, VP anchors) must match. Enrichment goes INTO the H1."
+    adopted: baseline
+    severity: HIGH
+    enforced_by: [adversary-prompt, consistency-validator]
+    scope: [bc, story, prd]
+    lint_hook: null
+    verification_steps:
+      - "Sample 10+ BCs — read H1 heading and compare to BC-INDEX title column"
+      - "Check for downstream-only enrichment not present in H1"
+      - "Verify H1 accurately describes what the BC's postconditions actually specify"
+
+  - id: 8
+    name: bc_array_changes_propagate_to_body_and_acs
+    description: "When a story bcs: frontmatter changes, the same commit must update body BC table, ACs, and Token Budget count."
+    adopted: baseline
+    severity: HIGH
+    enforced_by: [adversary-prompt, consistency-validator]
+    scope: [story, bc]
+    lint_hook: null
+    verification_steps:
+      - "Sample 5+ stories — for each BC in bcs: frontmatter, verify it appears in body BC table"
+      - "For each BC in bcs: frontmatter, verify at least one AC traces to it"
+      - "For each BC in body BC table or AC traces, verify it appears in bcs: frontmatter"
+      - "Verify Token Budget BC count matches len(bcs)"
+
+  - id: 9
+    name: vp_index_is_vp_catalog_source_of_truth
+    description: "VP-INDEX.md is authoritative. Changes must propagate same-burst to verification-architecture.md and verification-coverage-matrix.md."
+    adopted: baseline
+    severity: HIGH
+    enforced_by: [adversary-prompt, lint-hook, consistency-validator]
+    scope: [vp, architecture]
+    lint_hook: hooks/validate-vp-consistency.sh
+    verification_steps:
+      - "Verify VP-INDEX arithmetic: total = sum of per-tool counts = row count"
+      - "For each VP in VP-INDEX, verify it appears in verification-architecture.md Provable Properties Catalog"
+      - "For each VP in VP-INDEX, verify it appears in verification-coverage-matrix.md VP-to-Module table"
+      - "Sum coverage matrix per-tool columns — must equal VP-INDEX per-tool totals"
+      - "Reverse check: every VP in arch docs must exist in VP-INDEX"
+
+  - id: 10
+    name: demo_evidence_story_scoped
+    description: "All demo-recorder output MUST live under docs/demo-evidence/<STORY-ID>/. No flat files at docs/demo-evidence/ root level."
+    adopted: baseline
+    severity: HIGH
+    enforced_by: [adversary-prompt, consistency-validator, pr-reviewer, lint-hook]
+    scope: [story, demo-evidence, pr]
+    lint_hook: hooks/validate-demo-evidence-story-scoped.sh
+    verification_steps:
+      - "For each story's feature branch, verify docs/demo-evidence/<STORY-ID>/ directory exists"
+      - "Verify NO .md files exist directly under docs/demo-evidence/ — only subfolders"
+      - "Cross-check: subfolder name matches the story's frontmatter story_id"
+
+  - id: 11
+    name: ci_positive_coverage_assertion
+    description: "Security-critical CI jobs (regression detectors) MUST emit a positive-coverage assertion in their log on every successful run — exit-0-without-assertion is a false-green signal."
+    adopted: "2026-05-06"
+    severity: MEDIUM
+    enforced_by: [adversary-prompt, ci-author-review]
+    scope: [ci-workflow]
+    lint_hook: null
+    verification_steps:
+      - "Identify CI jobs whose value is regression detection (compile-fail, lint-as-test, fuzz-smoke, perimeter-violation, schema-drift)"
+      - "For each: verify the job log contains a positive-coverage assertion of the form 'Check passed: N items validated'"
+      - "Verify the count N is computed at runtime, not hardcoded"
+      - "If the job uses text-parsing (regex extraction), verify the parsing is exercised by non-empty inputs"
+      - "Reject CI jobs whose only success indicator is exit-0 with a green checkmark"
+
+  # ── PROJECT-SPECIFIC POLICIES — RECORDS AND SPEC DISCIPLINE ────────────────
+  # Phase-1-active. Enforced on every factory-artifacts commit and adversary pass.
+  # Source: CLAUDE.md §Operational Discipline TDs and project hook suite.
+
+  - id: 12
+    name: anti_volatile_pin
+    description: "Records, specs, and changelog entries must cite symbol names and section anchors only. Forbidden in newly-authored content: (a) file.ext:NNN line-number citations (TD-VSDD-091 L9a); (b) doc-name vN.N version pins in normative prose (TD-VSDD-091 / D-50, records-lint L9b). Grandfathering: pre-2026-07-24 dated lines are exempt via date-boundary check."
+    adopted: "CLAUDE.md §Operational Discipline TDs, D-50"
+    severity: HIGH
+    enforced_by: [hooks/records-lint.sh, hooks/verify-no-version-pins.sh, adversary-prompt]
+    scope: [bc, vp, di, cap, story, hs, architecture, prd, nfr]
+    lint_hook: null
+    verification_steps:
+      - "Run hooks/records-lint.sh: verify exit 0 and FAIL=0 — any L9a or L9b finding is a policy violation"
+      - "Run hooks/verify-no-version-pins.sh: verify FAIL=0 for the full-corpus scan"
+      - "For newly-reviewed content: flag any 'word.ext:digits' pattern (file:NNN form)"
+      - "For newly-reviewed content: flag any '<doc-name> vN.N' pattern in normative prose positions"
+      - "SHA citations are only sanctioned in YAML hash-field assignments or frozen_head lines covered by verify-sha-currency.sh — flag any SHA in body prose"
+
+  - id: 13
+    name: hash_digest_ban
+    description: "Newly-authored record and changelog prose must not contain standalone 8+ character lowercase hex digest literals (SHA-1, SHA-256, MD5 partials). These are volatile pins that decay when the input changes. Existing HEAD text is grandfathered. Exceptions: YAML hash-field assignments (input-hash:, develop_head:, frozen_head:) and frozen-head citation lines validated by verify-sha-currency.sh."
+    adopted: "CLAUDE.md §Operational Discipline TDs, fix-burst-276 Wave B"
+    severity: HIGH
+    enforced_by: [hooks/records-lint.sh, adversary-prompt]
+    scope: [bc, vp, architecture, prd, nfr]
+    lint_hook: null
+    verification_steps:
+      - "Run hooks/records-lint.sh: check L11 (content-hash digest ban) — any standalone 8+ char hex digest in new + lines is a violation"
+      - "Verify any SHA reference that IS present qualifies for one of the CE1–CE4 exclusions defined in records-lint.sh"
+      - "Compliant form: cite artifact and section anchor, not the raw digest (e.g. 'ADR-014 §Decision 2 edited' not the hash value)"
+
+  - id: 14
+    name: class_dependent_changelog_direction
+    description: "Changelog entry ordering is class-dependent. BC files: ASCENDING order (newest last; frontmatter version: equals last entry). ADRs, prd.md, domain-spec shards, prd-supplements: DESCENDING order (newest first). Enforced by verify-form-a-changelog-direction.sh. (STATE.md D-85)"
+    adopted: "STATE.md D-85"
+    severity: HIGH
+    enforced_by: [hooks/verify-form-a-changelog-direction.sh, adversary-prompt]
+    scope: [bc, architecture, prd, nfr]
+    lint_hook: null
+    verification_steps:
+      - "Run hooks/verify-form-a-changelog-direction.sh: check FAIL=0 and BC_UNVERIFIED=0 (currently advisory — promote when both are 0)"
+      - "For BC files: verify the newest (highest) version entry is the LAST item in the changelog"
+      - "For ADR/prd/domain-spec/prd-supplements: verify the newest entry is the FIRST item"
+      - "Verify BC frontmatter version: field equals the last BC changelog entry (ascending rule)"
+      - "Flag any file with changelog ordering opposite to its class rule"
+
+  - id: 15
+    name: changelog_date_monotonicity
+    description: "Changelog date values must be non-decreasing for ascending-class files (BC) and non-increasing for descending-class files (ADR, prd). A version found after a date that violates monotonicity blocks commits."
+    adopted: "hooks/verify-changelog-date-monotonicity.sh creation"
+    severity: MEDIUM
+    enforced_by: [hooks/verify-changelog-date-monotonicity.sh]
+    scope: [bc, vp, architecture, prd, nfr]
+    lint_hook: null
+    verification_steps:
+      - "Run hooks/verify-changelog-date-monotonicity.sh: verify FAIL=0"
+      - "For BC files (ascending): each date must be >= the previous date"
+      - "For ADR/prd/supplements (descending): each date must be <= the previous date"
+      - "Flag any changelog with a date that violates monotonicity for its class"
+
+  - id: 16
+    name: enum_variant_casing_canon
+    description: "Enum variant identifiers in spec pseudocode and BC postcondition tables must follow ADR-010 §Enum Variant Casing. PascalCase for all data-bearing and unit variants. SCREAMING_CASE is retracted (Direction B retracted; F-P168-01). Enforced by verify-enum-variant-casing.sh."
+    adopted: "ADR-010 §Enum Variant Casing, F-P168-01"
+    severity: HIGH
+    enforced_by: [hooks/verify-enum-variant-casing.sh, adversary-prompt]
+    scope: [bc, architecture]
+    lint_hook: null
+    verification_steps:
+      - "Run hooks/verify-enum-variant-casing.sh: verify FAIL=0"
+      - "Scan BC postcondition tables for SCREAMING_CASE enum forms — flag as violation"
+      - "Verify Category:: enum citations use PascalCase as specified in ADR-010 §Enum Variant Casing"
+
+  - id: 17
+    name: error_notation_canon
+    description: "FerrochainError construction in spec pseudocode must follow ADR-010 §Error-Construction Notation Canon. Required forms: ::new() constructor (Class 3 valid) or complete field set with rest-pattern '..' (Class 3 valid-complete). Forbidden: ASCII-ellipsis '...' (CLASS1 violation) and missing rest-pattern on partial field sets (CLASS2 violation). Enforced by verify-error-notation-canon.sh."
+    adopted: "ADR-010 §Error-Construction Notation Canon, D-82, D-83"
+    severity: HIGH
+    enforced_by: [hooks/verify-error-notation-canon.sh, adversary-prompt]
+    scope: [bc, architecture, prd]
+    lint_hook: null
+    verification_steps:
+      - "Run hooks/verify-error-notation-canon.sh: verify FAIL=0 (CLASS1_VIOLATIONS=0, CLASS2_VIOLATIONS=0)"
+      - "For each FerrochainError literal in BC pseudocode: verify it uses ::new() constructor or includes '..' rest-pattern"
+      - "Flag '...' (three ASCII dots) in FerrochainError struct literals — that is the forbidden form"
+      - "Verify bucket sum in validator output equals the total opener count (guards against narrowed-scope false-pass per D-57)"
+
+  - id: 18
+    name: type_signature_canon
+    description: "Type signatures in spec pseudocode must follow canonical forms established in ADR-010 §Type Signature Canon: D-42 FerrochainError constructor form, D-43 DynTool, D-45/D-48 as_retriever receiver and return type. Enforced by verify-signature-canon.sh rules S1–S5."
+    adopted: "ADR-010 §Type Signature Canon, D-42, D-43, D-45, D-48"
+    severity: HIGH
+    enforced_by: [hooks/verify-signature-canon.sh, adversary-prompt]
+    scope: [bc, architecture, prd]
+    lint_hook: null
+    verification_steps:
+      - "Run hooks/verify-signature-canon.sh: verify FAIL=0 across all rule classes (S1–S5)"
+      - "Verify FerrochainError construction sites use the ::new() constructor form (rule S1b)"
+      - "Verify DynTool and VectorStoreRetriever type parameters match ADR-010 §Type Signature Canon (rule S2)"
+      - "Verify as_retriever receiver and return type matches the canonical form from D-45/D-48 (rules S3, S4)"
+      - "Any violation not in signature-canon-allowlist.txt is a blocker; allowlist entries must have justification and fix-burst anchor"
+
+  - id: 19
+    name: adr_decision_reference_integrity
+    description: "All cross-references from BC/story/spec files to ADR decision anchors must resolve to real sections in the cited ADR file. Phantom ADR citations (fabricated ADR numbers or non-existent section names) block convergence."
+    adopted: "hooks/verify-adr-decision-refs.sh creation"
+    severity: HIGH
+    enforced_by: [hooks/verify-adr-decision-refs.sh, hooks/verify-adr-self-version-refs.sh, adversary-prompt]
+    scope: [bc, vp, architecture, prd]
+    lint_hook: null
+    verification_steps:
+      - "Run hooks/verify-adr-decision-refs.sh: verify exit 0 with no FAIL lines"
+      - "Run hooks/verify-adr-self-version-refs.sh: verify exit 0 with no FAIL lines"
+      - "For any BC citing an ADR: open that ADR file and confirm the cited section anchor exists verbatim"
+      - "For VP files citing an ADR decision: confirm the decision text supports the verification property's rationale"
+      - "Flag fabricated ADR citations (ADR number exists but cited section does not match real ADR content)"
+
+  - id: 20
+    name: bc_frontmatter_schema_compliance
+    description: "BC files must conform to the canonical frontmatter schema from bc-authoring-plan.md §Frontmatter Schema. All required fields must be present and non-empty; scope, phase, wave, subsystem, and lifecycle_status values must match their registries."
+    adopted: "bc-authoring-plan.md §Frontmatter Schema"
+    severity: MEDIUM
+    enforced_by: [hooks/verify-bc-frontmatter-schema.sh, adversary-prompt, consistency-validator]
+    scope: [bc]
+    lint_hook: null
+    verification_steps:
+      - "Run hooks/verify-bc-frontmatter-schema.sh: verify PASS count and FAIL=0 (currently advisory)"
+      - "For sampled BC files: verify required frontmatter fields present (subsystem, scope, phase, wave, lifecycle_status, behavioral_contracts)"
+      - "Verify subsystem values match ARCH-INDEX Subsystem Registry verbatim (POL-6)"
+      - "Verify wave values are consistent with the wave schedule in STORY-INDEX"
+
+  - id: 21
+    name: changelog_claim_applied
+    description: "Changelog entries claiming a fix or addition must correspond to an actual diff in the document body within the same commit. A changelog entry is not self-evidencing."
+    adopted: "hooks/verify-changelog-claim-applied.sh creation, TD-VSDD-059"
+    severity: HIGH
+    enforced_by: [hooks/verify-changelog-claim-applied.sh, adversary-prompt]
+    scope: [bc, vp, architecture, prd, nfr]
+    lint_hook: null
+    verification_steps:
+      - "Run hooks/verify-changelog-claim-applied.sh: verify exit 0 with no false-closure candidates flagged (currently advisory)"
+      - "For any changelog entry claiming a specific field or section was updated: verify the update exists in the file body"
+      - "Flag version bumps where only changelog text changed and no normative content was modified (these require explicit justification)"
+
+  # ── PROJECT-SPECIFIC POLICIES — OPERATIONAL DISCIPLINE TDs ──────────────────
+  # Phase-1-active. Factory workflow integrity.
+  # Source: CLAUDE.md §Operational Discipline TDs.
+
+  - id: 22
+    name: single_commit_per_burst
+    description: "Each logical burst must produce exactly ONE commit to the factory-artifacts branch. Multi-commit chains — two consecutive commits where both subjects contain 'backfill', 'Stage 1', or 'Stage 2' — are blocked by the factory-dispatcher hook. Recovery: git reset --soft HEAD~N then re-author as one combined commit. (TD-VSDD-053)"
+    adopted: "CLAUDE.md §Operational Discipline TDs, TD-VSDD-053"
+    severity: HIGH
+    enforced_by: [factory-dispatcher-hook, hooks/verify-sha-currency.sh, orchestrator-rule]
+    scope: [bc, vp, story, architecture]
+    lint_hook: null
+    verification_steps:
+      - "Check git log of factory-artifacts branch: two consecutive commits must not both contain 'backfill', 'Stage 1', or 'Stage 2' in their subject lines"
+      - "Verify all files changed in a logical burst are staged in a single commit, not split across sequential commits"
+      - "Run hooks/verify-sha-currency.sh after any factory-artifacts commit: verify STATE.md frozen_head and develop_head match current branch HEADs"
+      - "Factory-dispatcher hook fires MULTI_COMMIT_CHAIN_NOT_ALLOWED on detection — check .factory/logs/dispatcher-internal-YYYY-MM-DD.jsonl for block reason"
+
+  - id: 23
+    name: paper_fix_detection
+    description: "Every claimed closure must have a load-bearing test, assertion, or structural change. Closures evidenced only by doc-comment edits, renames, or assert!-only additions where the assertion cannot fail under the bug condition are paper fixes. Implementer self-disclosure of risk severity is NOT authoritative — adversary independently verifies. (TD-VSDD-059)"
+    adopted: "CLAUDE.md §Operational Discipline TDs, TD-VSDD-059"
+    severity: HIGH
+    enforced_by: [adversary-prompt, hooks/verify-changelog-claim-applied.sh]
+    scope: [bc, vp, story, architecture]
+    lint_hook: null
+    verification_steps:
+      - "For each closure claim in a fix-burst: read the diff and verify the change is load-bearing (modifies behavior, not only comments or labels)"
+      - "Flag doc-comment-only fixes, rename-only fixes, or assert!-only additions where the assert cannot fail under the reported bug condition"
+      - "Verify BC/VP postcondition changes are reflected in corresponding test vectors or proof harness bounds"
+      - "Check that 'RESOLVED' status in adversary reports maps to actual diff content in the cited burst"
+
+  - id: 24
+    name: sibling_site_sweep
+    description: "When changing a function signature, constant, or canonical identifier, the agent must grep all callsites in the same crate (and adjacent pub-exported crates) before committing. Silent omission of sibling sites is a P1 finding. (TD-VSDD-060)"
+    adopted: "CLAUDE.md §Operational Discipline TDs, TD-VSDD-060"
+    severity: HIGH
+    enforced_by: [adversary-prompt, implementer-discipline]
+    scope: [bc, architecture, story, crates]
+    lint_hook: null
+    verification_steps:
+      - "When a BC postcondition, type signature, or canonical identifier changes: grep the entire .factory/specs/ tree for all references to the changed form"
+      - "Verify all reference sites are updated in the same commit (or explicitly justified as excluded with rationale)"
+      - "For code changes (Phase 3): grep crates/ for all callsites of the changed function signatures before committing"
+      - "Flag any commit that modifies a canonical form in one location while leaving identical forms unchanged in sibling files"
+
+  - id: 25
+    name: records_micro_burst_ceremony
+    description: "When an adversarial pass returns exclusively records-tier findings (LOW or OBS only — zero CRIT, HIGH, or MED), use the 2-step micro-burst ceremony: (1) ownership-routed specialist fixes findings (records-lint.sh must exit 0 before done); (2) state-manager single-commit per TD-VSDD-053. The BC-5.39.001 3-CLEAN streak is NOT reset by a records-only micro-burst. (TD-RECORDS-MICRO-BURST-001)"
+    adopted: "CLAUDE.md §Operational Discipline TDs, TD-RECORDS-MICRO-BURST-001"
+    severity: MEDIUM
+    enforced_by: [orchestrator-rule, hooks/records-lint.sh, adversary-prompt]
+    scope: [bc, vp, architecture, prd, nfr]
+    lint_hook: null
+    verification_steps:
+      - "Confirm ALL adversary findings are LOW or OBS — any MED/HIGH/CRIT finding requires the full cascade ceremony, not micro-burst"
+      - "Verify hooks/records-lint.sh exits 0 before the specialist declares the micro-burst complete"
+      - "Verify state-manager produces a single commit (TD-VSDD-053 applies to micro-bursts)"
+      - "Verify the convergence trajectory records the pass as 'RECORDS-ONLY' and does NOT advance the 3-CLEAN streak counter"
+
+  - id: 26
+    name: factory_hook_no_bypass
+    description: "All .factory/ mutations must use Write or Edit tools only. Python/sed/echo/awk redirections to .factory/ artifacts are forbidden. (TD-FACTORY-HOOK-BYPASS-001 P0)"
+    adopted: "CLAUDE.md §Operational Discipline TDs, TD-FACTORY-HOOK-BYPASS-001"
+    severity: HIGH
+    enforced_by: [adversary-prompt, orchestrator-rule]
+    scope: [bc, vp, story, architecture, prd, nfr]
+    lint_hook: null
+    verification_steps:
+      - "Verify all .factory/ file writes in session transcripts used Edit or Write tools, not Bash tool redirections"
+      - "Flag any session step using 'echo > .factory/...' or 'python -c ... > .factory/...' or 'sed -i ... .factory/...' patterns"
+      - "Verify the pre-commit hook chain (pre-commit-validators.sh) ran before each factory-artifacts commit"
+
+  - id: 27
+    name: bc_auto_promotion_at_merge
+    description: "When a story PR merges to develop, all BCs listed in the story's behavioral_contracts frontmatter field must auto-promote from lifecycle_status: draft to lifecycle_status: active in the state-manager post-merge burst. (POL-14)"
+    adopted: "CLAUDE.md §Operational Discipline TDs, POL-14"
+    severity: HIGH
+    enforced_by: [state-manager, adversary-prompt]
+    scope: [bc, story]
+    lint_hook: null
+    verification_steps:
+      - "After any story PR merge: read the merged story's behavioral_contracts frontmatter field"
+      - "For each listed BC ID: verify the BC file's lifecycle_status changed to active in the post-merge factory-artifacts commit"
+      - "Verify state-manager's post-merge commit message records the BC promotions"
+      - "Flag any merged story whose BCs remain in draft status after the post-merge burst"
+
+  - id: 28
+    name: three_clean_convergence
+    description: "Adversarial cascades require three consecutive CLEAN(strict) passes for convergence. CLEAN(strict) = zero findings of ANY severity (CRIT+HIGH+MED+LOW+OBS+PROCESS-GAP). CLEAN(PR-merge) = zero CRIT+HIGH+MED only — does NOT advance the streak. Frozen-HEAD rule: all three streak passes must be against the same unchanged HEAD commit; any push resets to 0/3. (BC-5.39.001)"
+    adopted: "CLAUDE.md §Operational Discipline TDs, BC-5.39.001"
+    severity: HIGH
+    enforced_by: [orchestrator-rule, adversary-prompt]
+    scope: [bc, vp, story, architecture]
+    lint_hook: null
+    verification_steps:
+      - "Every adversary CLEAN report MUST specify both: 'CLEAN (strict): yes/no' AND 'CLEAN (PR-merge): yes/no'"
+      - "Verify streak advancement used CLEAN(strict) criterion only — CLEAN(PR-merge) does not advance the streak"
+      - "Verify all three streak passes were against the SAME frozen HEAD commit (check git SHA citations in pass reports)"
+      - "Verify no commit was pushed to the branch between streak pass 1 and streak pass 3 (frozen-HEAD rule)"
+      - "Verify records-only micro-burst passes (TD-RECORDS-MICRO-BURST-001) are recorded as 'RECORDS-ONLY' and do NOT advance the streak"
+
+  - id: 29
+    name: fix_in_scope_default
+    description: "Fix-in-scope is the default posture for all agents. Deferral of a discovered defect requires ALL THREE: explicit human permission, a concrete future dependency, AND a specific future story/wave anchor. AI agents may NOT self-authorize deferrals. Orchestrator may PROPOSE deferrals but the default action is to fix. (CLAUDE.md §CANONICAL PRINCIPLE Rule 3, STATE.md D-89 / DIRECTIVE 2)"
+    adopted: "CLAUDE.md §CANONICAL PRINCIPLE, STATE.md D-89"
+    severity: HIGH
+    enforced_by: [adversary-prompt, orchestrator-rule]
+    scope: [bc, vp, story, architecture, prd, nfr]
+    lint_hook: null
+    verification_steps:
+      - "Scan session artifacts for tech-debt-register entries added without all three required justifications: human direction + concrete future dependency + specific future story anchor"
+      - "Flag any finding surfaced as 'advisory' or 'PENDING ARCHITECT REVIEW' for a question that was answerable in scope"
+      - "Verify Drift/Deferrals table entries have explicit human re-authorization under DIRECTIVE 2 (D-89)"
+      - "Flag any agent self-labeling work as 'MVP scope' or 'deferred to follow-up' without human direction — classify as POL-29 violation"
+
+  - id: 30
+    name: gate_self_scope_exclusion
+    description: "Any lint whose corpus includes its own test fixtures, documentation, or remediation records must have an explicit self-scope exclusion. Gate scripts must not flag their own probe examples as violations. (STATE.md D-56)"
+    adopted: "STATE.md D-56"
+    severity: MEDIUM
+    enforced_by: [adversary-prompt, devops-engineer-review]
+    scope: [architecture]
+    lint_hook: null
+    verification_steps:
+      - "For each validator in .factory/hooks/: verify it has an explicit self-exclusion for its own file path or a 'hooks/**' pathspec exclusion"
+      - "Verify each exemption has a narrow proof showing the pattern fires in normative position but NOT in the exempt position"
+      - "Flag any hook that fires on its own fixture comments, probe examples, or inline test patterns"
+
+  - id: 31
+    name: gate_change_acceptance_catches_live_violation
+    description: "When a validator changes, acceptance requires the modified validator still catches a known-live violation — not merely that the test suite is green. Every exemption must ship with a proof showing the pattern fires normatively and does NOT fire in the exempt position. (STATE.md D-57)"
+    adopted: "STATE.md D-57"
+    severity: HIGH
+    enforced_by: [adversary-prompt, devops-engineer-review]
+    scope: [architecture]
+    lint_hook: null
+    verification_steps:
+      - "For every validator change: identify a known-live violation (or a fixture that represents one)"
+      - "Verify the modified validator still catches that known-live violation after the change"
+      - "Verify the modified validator does NOT fire on the newly-exempted pattern"
+      - "Flag any gate change where the only evidence of correctness is 'all tests green' without a live-violation check"
+
+  # ── PROJECT-SPECIFIC POLICIES — STANDING ADVERSARY PROBES AND DELIVERY DISCIPLINE
+  # PHASE-3-BINDING: become active on the first commit to crates/.
+  # Source: CLAUDE.md §Standing Adversary Probes.
+
+  - id: 32
+    name: tracing_emission_catalog_completeness
+    description: "(PHASE-3-BINDING) Every tracing::*!(event_type = ...) site in crates/ must have a corresponding row in the Canonical Structured Event Catalog with full field schema, audit role, and recurrence policy. New emission sites require a same-commit catalog row. Removing an emission does NOT require a new catalog row. (SAP-1)"
+    adopted: "CLAUDE.md §Standing Adversary Probes SAP-1"
+    severity: HIGH
+    enforced_by: [adversary-prompt, pr-reviewer]
+    scope: [crates]
+    lint_hook: null
+    verification_steps:
+      - "Run: rg 'event_type\\s*=' crates/ --type rust — collect all event_type values in the workspace"
+      - "For each event_type value: verify a matching row exists in the Canonical Structured Event Catalog (expected in .factory/specs/prd-supplements/observability.md §Catalog)"
+      - "Verify each catalog row has: event_type value, field schema, audit role, and recurrence policy columns"
+      - "Flag any event_type without a catalog row — P1 finding, no exceptions"
+      - "Verify new emission sites added in the PR diff have same-commit catalog rows"
+
+  - id: 33
+    name: dtu_schema_parity
+    description: "(PHASE-3-BINDING) Each DTU clone crate (ferrochain-openai, ferrochain-anthropic, ferrochain-ollama) must have field-by-field parity with its schema specification. Every column in the spec must have a matching Rust field; every Rust field must appear in the spec. (SAP-2)"
+    adopted: "CLAUDE.md §Standing Adversary Probes SAP-2"
+    severity: HIGH
+    enforced_by: [adversary-prompt, dtu-validator]
+    scope: [crates]
+    lint_hook: null
+    verification_steps:
+      - "For each DTU clone crate: locate its schema spec in .factory/specs/"
+      - "For each column/field in the schema spec: verify a corresponding Rust struct field exists in the DTU type"
+      - "For each Rust field in the DTU type: verify it appears in the schema spec (reverse parity check)"
+      - "Flag any field present in spec but absent in Rust type, or in Rust type but absent in spec"
+
+  - id: 34
+    name: no_ignored_test_rationalization
+    description: "(PHASE-3-BINDING) Integration tests marked #[ignore] (e.g., requires live API key) do NOT justify deferring the production behavior. A unit test in the production module's #[cfg(test)] block that exercises the behavior without the external dependency is mandatory. Each #[ignore]'d test must cite the blocking dependency with a EXT-NNN code comment. (SID-1)"
+    adopted: "CLAUDE.md §Standing Adversary Probes SID-1"
+    severity: HIGH
+    enforced_by: [adversary-prompt, test-writer]
+    scope: [crates, story]
+    lint_hook: null
+    verification_steps:
+      - "For each #[ignore]'d integration test: verify a corresponding non-ignored unit test exists that covers the same behavior via mock/stub at the dependency boundary"
+      - "Verify each #[ignore]'d test has a code comment citing the blocking dependency (e.g., '// EXT-001: requires live OpenAI API key; ungated in CI after key provisioning')"
+      - "If a deferral is claimed based on an #[ignore]'d test: verify a specific story ID and specific test name are cited in the deferral"
+      - "Flag any production code path covered ONLY by #[ignore]'d tests with no in-process unit test"
+
+  # ── PROJECT-SPECIFIC POLICIES — PRODUCTION-GRADE CODE CONVENTIONS ──────────
+  # PHASE-3-BINDING: active on the first line of production code in crates/.
+  # Source: CLAUDE.md §Code Conventions and §CANONICAL PRINCIPLE.
+
+  - id: 35
+    name: production_grade_default
+    description: "(PHASE-3-BINDING) Default behavior is enterprise/production-grade correctness. Speed lives in feature ordering, not feature completeness. Six binding rules: (1) No MVP-driven deferrals. (2) Feature order is the only acceptable speed lever. (3) Tech-debt register requires human direction + future dependency + story anchor. (4) AI-built defects are the AI's responsibility to fix in scope. (5) Agent may suggest cheaper path but default action is the correct path. (6) No 'pending architect review' placeholders for mechanically answerable questions. (CLAUDE.md §CANONICAL PRINCIPLE)"
+    adopted: "CLAUDE.md §CANONICAL PRINCIPLE"
+    severity: HIGH
+    enforced_by: [adversary-prompt, orchestrator-rule]
+    scope: [bc, vp, story, architecture, crates]
+    lint_hook: null
+    verification_steps:
+      - "Scan all agent outputs for rationalization phrases: 'MVP', 'for now', 'good enough', 'we can fix later', 'minimum viable' — each is a defect signal"
+      - "Scan tech-debt-register.md for entries lacking all three required justifications (human direction + future dependency + story anchor)"
+      - "Scan spec artifacts for 'pending architect review' or 'TODO for architect' on questions answerable in current scope"
+      - "Verify agents finding defects in other agents' output fixed those defects in scope rather than surfacing as advisories"
+      - "Run the Self-Audit Checklist from CLAUDE.md §CANONICAL PRINCIPLE on delivered work before declaring done"
+
+  - id: 36
+    name: rustls_tls_mandatory
+    description: "(PHASE-3-BINDING) Every reqwest dependency in the workspace (dependencies, dev-dependencies, feature-gated) must declare 'default-features = false, features = [\"rustls-tls\"]'. The features native-tls, default-tls, native-tls-alpn, and native-tls-vendored are forbidden workspace-wide. Omitting default-features = false silently enables native-tls, causing ~65s macOS Keychain init overhead and MITM proxy exposure for provider API credentials."
+    adopted: "CLAUDE.md §Code Conventions §reqwest TLS backend"
+    severity: HIGH
+    enforced_by: [adversary-prompt, code-reviewer, pr-reviewer]
+    scope: [crates]
+    lint_hook: null
+    verification_steps:
+      - "grep -r 'reqwest' crates/ --include='*.toml': for each entry verify 'default-features = false' and features list includes 'rustls-tls'"
+      - "Flag any reqwest entry missing 'default-features = false'"
+      - "Flag any reqwest entry with native-tls, default-tls, native-tls-alpn, or native-tls-vendored in its features"
+      - "P1 finding — no acceptable exception; fix before merge"
+
+  - id: 37
+    name: reqwest_timeout_mandatory
+    description: "(PHASE-3-BINDING) Production reqwest::Client instances must call .timeout(Duration::from_secs(30)) before .build(). The 30-second default applies until the NFR catalog (nfr-catalog.md) overrides it per-provider. Clients without an explicit timeout are a P1 finding."
+    adopted: "CLAUDE.md §Code Conventions §HTTP client timeout"
+    severity: HIGH
+    enforced_by: [adversary-prompt, code-reviewer, pr-reviewer]
+    scope: [crates]
+    lint_hook: null
+    verification_steps:
+      - "grep -r 'reqwest::Client' crates/ --include='*.rs': for each Client construction site, verify .timeout() is chained before .build()"
+      - "Verify the timeout value is Duration::from_secs(30) unless nfr-catalog.md has an explicit per-provider override"
+      - "Flag any reqwest::Client::new() call without .timeout() — P1 finding"
+
+  - id: 38
+    name: credential_newtype_redacted_debug
+    description: "(PHASE-3-BINDING) All credential and API key types (OpenAiApiKey, AnthropicApiKey, OllamaBaseUrl when auth-bearing, and partner-crate equivalents) must be newtypes with redacted Debug implementations. 'impl fmt::Debug for T { fn fmt(&self, f) { f.write_str(\"<redacted>\") } }' is the canonical form. #[derive(Debug)] is forbidden on credential types."
+    adopted: "CLAUDE.md §Code Conventions §Newtype + redacted Debug for credentials"
+    severity: HIGH
+    enforced_by: [adversary-prompt, code-reviewer, pr-reviewer]
+    scope: [crates]
+    lint_hook: null
+    verification_steps:
+      - "For every type wrapping an API key or credential: verify it is a newtype struct, not a plain type alias"
+      - "Verify each credential newtype has an explicit impl fmt::Debug that writes only the string literal '<redacted>'"
+      - "grep -r '#\\[derive(Debug)\\]' crates/ --include='*.rs': cross-check against credential type names — flag any overlap"
+      - "Verify no Debug or Display impl for credential types references or formats the inner field value"
+
+  - id: 39
+    name: no_unwrap_in_production
+    description: "(PHASE-3-BINDING) unwrap() and expect() on Result or Option are forbidden in all code paths outside #[cfg(test)] blocks. Use '?' propagation with structured error variants from the error taxonomy."
+    adopted: "CLAUDE.md §Code Conventions §No unwrap / expect in non-test code"
+    severity: HIGH
+    enforced_by: [adversary-prompt, code-reviewer, pr-reviewer]
+    scope: [crates]
+    lint_hook: null
+    verification_steps:
+      - "grep -rn '\\.unwrap()\\|\\.expect(' crates/ --include='*.rs': flag any occurrence outside a '#[cfg(test)]' block"
+      - "Verify each flagged site has a justification comment if the value is proven infallible (prefer explicit Result propagation regardless)"
+      - "P1 finding — no acceptable exception in production paths; use '?' with a structured error variant"
+
+  - id: 40
+    name: no_silent_empty_return_on_partial_failure
+    description: "(PHASE-3-BINDING) Returning Vec::new(), None, or a zero/default value where a partial failure occurred is forbidden. Batch, streaming, and fan-out operations must surface partial failures via structured error variants from the error taxonomy."
+    adopted: "CLAUDE.md §Code Conventions §No silent empty returns"
+    severity: HIGH
+    enforced_by: [adversary-prompt, code-reviewer, pr-reviewer]
+    scope: [crates]
+    lint_hook: null
+    verification_steps:
+      - "For LLM message generation, tool call dispatch, and graph node execution paths: verify partial failures propagate via error variants, not silent Vec::new() or Ok(vec![])"
+      - "For batch/fan-out operations returning collections: verify failure cases return Err(...) with a structured variant"
+      - "Check all public API surface functions returning collection types for silent-failure code paths"
+
+  - id: 41
+    name: no_println_in_library_crates
+    description: "(PHASE-3-BINDING) println! and eprintln! are forbidden in every crate except binary crates' CLI output helpers. Use tracing::info!/warn!/error!/debug! with structured field syntax. Canonical form: tracing::info!(event_type = \"...\", field = %value, \"message\")."
+    adopted: "CLAUDE.md §Code Conventions §No println! in library crates"
+    severity: MEDIUM
+    enforced_by: [adversary-prompt, code-reviewer, pr-reviewer]
+    scope: [crates]
+    lint_hook: null
+    verification_steps:
+      - "grep -r 'println!\\|eprintln!' crates/ --include='*.rs': flag any occurrence in non-binary crates"
+      - "Verify the replacement uses tracing::info!/warn!/error!/debug! with structured key=value field syntax"
+      - "For binary crates: verify println! is restricted to CLI output formatting helpers only, not library logic"
+
+  - id: 42
+    name: non_exhaustive_on_public_api_types
+    description: "(PHASE-3-BINDING) All public types in the API surface — message types, content block variants, error types, provider config structs, graph node types, tool call shapes — require #[non_exhaustive]. External match arms must include a wildcard '_ => {}' arm. Compile-fail gates in tests/external/<gate-name>/ enforce this mechanically."
+    adopted: "CLAUDE.md §Code Conventions §non_exhaustive on public API surface types"
+    severity: HIGH
+    enforced_by: [adversary-prompt, code-reviewer, pr-reviewer]
+    scope: [crates]
+    lint_hook: null
+    verification_steps:
+      - "For every public enum and struct in the API surface: verify #[non_exhaustive] attribute is present"
+      - "Verify tests/external/ compile-fail gates exist and cover all non_exhaustive public types"
+      - "When a new public type is added: verify both the #[non_exhaustive] attribute AND a new gate entry appear in the same commit"
+      - "Verify the gate expected-count constant and expected-symbol list are updated when a new type is added"
+
+  - id: 43
+    name: arc_di_wiring_no_placeholder_construct
+    description: "(PHASE-3-BINDING) Production runtime must wire dependencies via Arc<dyn Trait> constructors. The placeholder-construct anti-pattern — constructing a type without wiring real Arc dependencies 'for now' — is explicitly forbidden. Adding Arc<dyn Foo> to a constructor that previously lacked it is 'wiring, not redesign' and must be done in scope."
+    adopted: "CLAUDE.md §Code Conventions §Arc-DI wiring per constructor"
+    severity: HIGH
+    enforced_by: [adversary-prompt, code-reviewer, pr-reviewer]
+    scope: [crates]
+    lint_hook: null
+    verification_steps:
+      - "grep -r 'placeholder()\\|::placeholder' crates/ --include='*.rs': flag any placeholder constructor call in production boot paths"
+      - "For production constructors taking Arc<dyn T> parameters: verify real implementations are wired, not placeholder stubs"
+      - "Verify no production boot path constructs a type with a placeholder that defers real dependency wiring to a later step"
+
+  - id: 44
+    name: file_size_hard_gate
+    description: "(PHASE-3-BINDING) Production files: 500 code-lines soft target (warn during authoring), 750 code-lines hard gate (CI fails). Test files: 1000 soft / 1500 hard. Measured by tokei Code metric (blanks, comments, and #[cfg(test)] blocks excluded). Exceptions only via xtask/file-size-allowlist.toml with path + reason + approver + date. Inline opt-out comments are forbidden. CI job: 'cargo xtask check-file-size'."
+    adopted: "CLAUDE.md §Code Conventions §File size & module splitting"
+    severity: MEDIUM
+    enforced_by: [cargo-xtask-check-file-size, adversary-prompt, code-reviewer]
+    scope: [crates]
+    lint_hook: null
+    verification_steps:
+      - "Run: cargo xtask check-file-size — CI gate; must exit 0"
+      - "For any new file: verify tokei Code metric is below 500 (warn) / 750 (hard fail) for production files"
+      - "For any file approaching the soft limit: verify a concern-boundary split is not viable before requesting an allowlist entry"
+      - "If an allowlist entry exists: verify path + reason + approver + date are all present and non-empty"
+
+  - id: 45
+    name: mod_rs_reexport_only
+    description: "(PHASE-3-BINDING) mod.rs files must be re-export-only surfaces. Permitted content: pub use declarations, pub mod declarations, use imports, doc comments. Forbidden: impl blocks, fn definitions, struct/enum/type definitions. Logic belongs in the named module file, not mod.rs."
+    adopted: "CLAUDE.md §Code Conventions §File size & module splitting"
+    severity: MEDIUM
+    enforced_by: [adversary-prompt, code-reviewer, pr-reviewer]
+    scope: [crates]
+    lint_hook: null
+    verification_steps:
+      - "Find all mod.rs files: find crates/ -name 'mod.rs'"
+      - "For each mod.rs: verify no 'impl ', 'fn ', 'struct ', 'enum ', or 'type ' declaration appears in the file body"
+      - "Verify mod.rs files contain only pub use, pub mod, use, and optionally doc comments"
+      - "Flag any mod.rs file with logic (type definitions, function bodies, impl blocks)"

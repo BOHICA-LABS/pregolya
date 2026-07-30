@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.20"
+version: "1.21"
 status: active
 producer: business-analyst
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-07-30T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/product-brief.md
@@ -17,6 +17,7 @@ input-hash: "b40ee23"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.21 (F-P175-D101/fix-burst-283/2026-07-30): Close F-P175-D101 (CRIT) — as_retriever fallibility and receiver form omitted from two CAP bodies. (1) CAP-027: 'Constructed via VectorStore::as_retriever()' corrected to show self: Arc<Self> receiver and Result<VectorStoreRetriever, FerrochainError> fallible return with Err(E-VS-003 InvalidConfig) on invalid config. (2) CAP-028: 'as_retriever(self: Arc<Self>) → VectorStoreRetriever' corrected to '→ Result<VectorStoreRetriever, FerrochainError>'; fallibility note added (Err(E-VS-003 InvalidConfig) on invalid config). Grounds: interface-definitions.md §VectorStore Trait (as_retriever fallible return, F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 §Decision 2. TD-VSDD-060 sibling sweep: entities-graph.md §VectorStore §Instance methods and ubiquitous-language-core.md §VectorStore/§VectorStoreRetriever terms corrected in this burst."
   - "1.20 (wave-b-tail/D-35-xtask-rename-notation/2026-07-29): Two Class 3 notation violations and one xtask rename. (1) CAP-029 zero-norm guard prose: FerrochainError { code: \"E-VS-001\" } → FerrochainError { code: \"E-VS-001\", .. } — Class 3 VIOLATION (partial fields, missing ..) per ADR-010 §Error-Construction Notation Canon. (2) CAP-031 dimensionality contract prose: FerrochainError { code: \"E-EMBED-001\" } → FerrochainError { code: \"E-EMBED-001\", .. } — Class 3 VIOLATION (same class). (3) CAP-032 DI-009 CI-gate prose: workspace CI gate `deny-client-new` → `check-client-timeout` (D-80 canonical check-<subject> form). TD-VSDD-060 sweep: zero additional superseded names (lint-no-timeout, lint-no-panic, deny-expect-in-lib) found in live body text."
   - "1.19 (fix-burst-278/wave-b/2026-07-28): Sites 8a and 8b per wave-b-po-routing-spec §Item-8. (1) CAP-027 Site 8a: VectorStoreRetriever lifetime annotation removed — type is 'static, owns Arc<dyn VectorStore>; verifiable: verify-signature-canon S2 returns zero hits. (2) CAP-027 adjacent to Site 8a: backing-store form corrected from borrow-ref to Arc<dyn VectorStore> (same paragraph); verifiable: borrow-backed VectorStoreRetriever form absent from this file. (3) CAP-028 Site 8b: as_retriever receiver corrected from bare self-ref to self: Arc<Self>; return-type lifetime annotation removed; verifiable: verify-signature-canon S1b returns zero hits. (4) CAP-027 config bullets k, fetch_k, lambda_mult: Err(E-VS-003 InvalidConfig) rejection semantics added per D-44 — rejected not clamped (verifiable: grep 'E-VS-003 InvalidConfig' capabilities-p1-p2.md returns three hits, one per config bullet). TD-VSDD-060 sibling sweep: same borrow-backed class found and corrected in entities-graph.md §VectorStore/§Relationships-Summary and ubiquitous-language-core.md §VectorStoreRetriever/§VectorStore this burst."
   - "1.18 (FC-4/burst-277/2026-07-28): False-closure FC-4 correction — v1.13 claim 'L-026 stale-delegation sweep: zero additional hits' was false. Sweep term: 'PO BC obligations' (verifiable: grep 'PO BC obligations' capabilities-p1-p2.md returns zero hits after this fix). Three surviving stale-completed-delegation instances corrected: (1) CAP-034 §PendingHumanApproval: '(PO BC obligation, SS-05 extension)' → '(BC-2.05.008)' — BC-2.05.008 exists, covers skip-hook-on-resume invariant. (2) CAP-034 §streaming events: '**PO BC obligations:** BC-2.06.004 / BC-2.06.005 (SS-06); amend BC-2.08.010 ...' → '**Authored BCs:** BC-2.06.004 / BC-2.06.005 (SS-06); BC-2.08.010 amended ...' — all three BCs exist. (3) CAP-035 §PO BC obligations: '**PO BC obligations:** new BCs for SS-10 ...; amend BC-2.06.001 or author BC-2.06.006 ...' → '**Authored BCs:** BC-2.10.005 / BC-2.10.006 (SS-10); BC-2.06.006 authored ...' — BC-2.10.005, BC-2.10.006, BC-2.06.006 all exist. TD-VSDD-060 sibling sweep: same 'PO BC obligations' class also found and fixed in entities-graph.md (v1.12→v1.13) and ubiquitous-language-core.md (v1.8→v1.9) this burst."
@@ -319,8 +320,7 @@ configurable via:
 - **fetch_k:** candidate pool size fetched before MMR re-ranking (applicable to SearchType::Mmr only); `fetch_k < k` returns `Err(E-VS-003 InvalidConfig)` — rejected, not clamped (D-44)
 - **lambda_mult ∈ [0.0, 1.0]:** MMR diversity parameter (0.0 = maximum diversity, 1.0 = pure relevance); values outside [0.0, 1.0] return `Err(E-VS-003 InvalidConfig)` — rejected, not clamped (D-44)
 
-Constructed via `VectorStore::as_retriever()` — a concrete (non-opaque) return type that
-preserves VectorStore dyn-compatibility (ADR-014 Decision 2 §Object-safety). Implements
+Constructed via `VectorStore::as_retriever(self: Arc<Self>) → Result<VectorStoreRetriever, FerrochainError>` — a concrete (non-opaque) fallible constructor: returns `Err(E-VS-003 InvalidConfig)` when config is invalid (lambda_mult outside [0.0, 1.0]; fetch_k < k for SearchType::Mmr). Preserves VectorStore dyn-compatibility (ADR-014 Decision 2 §Object-safety). Implements
 `Retriever` and can be type-erased to `Arc<dyn Retriever>` for use in graph nodes via the
 CAP-026 seam. DI-012 RAGRetrieval guardrail applies to all returned Documents via CAP-026.
 
@@ -352,8 +352,7 @@ instance methods only — all `&self` receivers, dyn-compatible via `#[async_tra
 `similarity_search(query, k)` (k-nearest documents),
 `similarity_search_with_score(query, k)` (returns Vec<(Document, f32)> with scores ∈ [0.0, 1.0]),
 `max_marginal_relevance_search(query, k, fetch_k, lambda_mult)` (diversity-aware MMR retrieval),
-`delete(ids)`, and `as_retriever(self: Arc<Self>) → VectorStoreRetriever` (concrete, non-opaque return
-type — required to preserve VectorStore dyn-compatibility, ADR-014 Decision 2 §Object-safety).
+`delete(ids)`, and `as_retriever(self: Arc<Self>) → Result<VectorStoreRetriever, FerrochainError>` (concrete, non-opaque fallible return — `Err(E-VS-003 InvalidConfig)` on invalid config; required to preserve VectorStore dyn-compatibility, ADR-014 Decision 2 §Object-safety).
 Static constructors (`from_texts`) live on the separate `VectorStoreFactory` trait (Sized-bounded,
 NOT on the VectorStore vtable) — this split is required for E0038-safe `Arc<dyn VectorStore>`.
 `add_texts` uses `&self` (not `&mut self`) because external backends are stateless from the

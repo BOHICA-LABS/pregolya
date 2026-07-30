@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: entities-graph
-version: "1.14"
+version: "1.15"
 status: active
 producer: business-analyst
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-07-30T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -14,6 +14,7 @@ input-hash: "148b6a2"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D21, D23]
 changelog:
+  - "v1.15 (F-P175-D101/fix-burst-283/2026-07-30): TD-VSDD-060 sibling sweep — as_retriever fallibility corrected. §VectorStore §Instance methods: 'as_retriever(self: Arc<Self>) → VectorStoreRetriever' corrected to '→ Result<VectorStoreRetriever, FerrochainError>'; fallibility note added (Err(E-VS-003 InvalidConfig) on invalid config). Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 Decision 2."
   - "v1.14 (fix-burst-278/wave-b/2026-07-28): TD-VSDD-060 sibling sweep — two borrow-based stale forms corrected. (1) VectorStore entity §Instance methods: receiver qualifier corrected from 'all-&self, dyn-compatible' to '&self-unless-noted, all dyn-compatible'; as_retriever method updated to show self: Arc<Self> receiver (verifiable: verify-signature-canon S1b returns zero hits for this file). (2) Relationships Summary: VectorStoreRetriever backed-by form corrected from borrow-ref to Arc-ownership (verifiable: borrow-backed VectorStoreRetriever form absent from this file). Both ground in D-48: VectorStoreRetriever owns Arc<dyn VectorStore>; Arc<Self> receiver is dyn-compatible."
   - "v1.13 (FC-4/burst-277/2026-07-28): Sibling-sweep fix — same 'PO BC obligations' stale-completed-delegation class as capabilities-p1-p2.md v1.18. §PreToolDecision PendingHumanApproval bullet: 'PO BC obligation for SS-05 extension' → 'BC-2.05.008'. BC-2.05.008 exists and covers the skip-hook-on-resume invariant. TD-VSDD-060 sweep: sole 'PO BC obligation' occurrence in this file (grep 'PO BC obligation' entities-graph.md returns zero hits after this fix)."
   - "v1.12 (F-P171a-14/burst-273/2026-07-25): Fix HITL Approval Hook Domain intro — dependency-kind word corrected 'runtime' → 'compile-time' (corroborating carriers: ADR-018 §Decision 1 'cross-crate compile-time consumer', ADR-020 §Decision 1 'does NOT depend on ferrochain-graph at compile time', dependency-graph.md crate-DAG annotation 'no ferrochain-graph compile-time dep'). Date-monotonicity repair: v1.9 changelog date 2026-07-22 → 2026-07-23 (burst-242; corroborating carrier: api-surface.md v1.9 burst-242/2026-07-23). TD-VSDD-060 temporal-neighbor sweep: no additional inversions found in this file."
@@ -225,8 +226,8 @@ The abstract document-index trait; the dyn-compatible contract for all embedding
 document stores (ADR-014 Decision 2).
 - **Instance methods (`&self` unless noted, all dyn-compatible):** add_texts (returns Vec<String> IDs),
   similarity_search(query, k), similarity_search_with_score(query, k), max_marginal_relevance_search
-  (query, k, fetch_k, lambda_mult), delete(ids), as_retriever(self: Arc<Self>) → VectorStoreRetriever (concrete,
-  non-opaque return — required for VectorStore dyn-compat; `Arc<Self>` receiver is dyn-compatible)
+  (query, k, fetch_k, lambda_mult), delete(ids), as_retriever(self: Arc<Self>) → Result<VectorStoreRetriever, FerrochainError> (concrete,
+  non-opaque fallible return — `Err(E-VS-003 InvalidConfig)` on invalid config; `Arc<Self>` receiver is dyn-compatible)
 - **Static constructors:** NOT on VectorStore trait. Live on `VectorStoreFactory` (separate
   Sized-bounded trait) to preserve E0038-safe `Arc<dyn VectorStore>`.
 - **Crate:** ferrochain-vectorstores, module `vectorstores::store`

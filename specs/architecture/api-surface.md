@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.21"
+version: "1.22"
 status: active
 producer: architect
-timestamp: 2026-07-28T00:00:00Z
+timestamp: 2026-07-30T00:00:00Z
 changelog:
+  - "1.22 (fix-burst-283/F-P175-C113/ADR-021-Decision-2/2026-07-30): RunnableConfig row updated — add configurable: Option<HashMap<String, Value>> field. LangGraph-parity configurable map (semport §RunnableConfig mapping §11); enables Assistant 'reusable agent persona' design in BC-2.12.002. Graphs read model, tool-set, system-prompt overrides from this map at execution time. BC anchor: BC-2.12.002, ADR-021 Decision 2."
   - "1.21 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Add §Public Functions (ferrochain-core) section registering `validate_embedding_batch` as a `pub` free function in `core::embeddings`. Visibility `pub` — cross-crate callers are ferrochain-openai and ferrochain-ollama provider embeddings impls. BC anchors: BC-2.22.001 PC-2, INV-2, EC-003, EC-004. Error anchor: E-EMBED-001. VP anchor: VP-008 (proptest P1). Resolves F-P175-A24-followup: the function was introduced by VP-008 redesign in FIX-BURST-280 but was absent from api-surface.md, making a VP body its sole signature authority (the F-P175-B117 phantom-signature defect class). TD-VSDD-060 sibling sweep included in burst report."
   - "1.20 (FIX-BURST-278/L9b-de-pin/2026-07-28): L9b de-pin: one version-pin-to-section-anchor conversion in the FIX-BURST-277-WAVE-B-errata changelog entry. ADR-005 version pin replaced with ADR-005 §Adjacent Trait Object-Safety Adjudications (Wave C migration list cross-reference)."
   - "1.19 (FIX-BURST-278/Wave-C-S4/2026-07-28): S4 canon — three changelog/body lines citing Arc<dyn ferrochain_core::Tool> or Arc<dyn Tool> as migration origins annotated with non-object-safe (E0038) qualifier to satisfy verify-signature-canon.sh S4 gate exemption. All three sites are classification (b): hazard-describing prose and migration routing notes, not live signatures requiring DynTool conversion. The live DynTool migration blockquote already reads DynTool in the canonical final form; the non-object-safe annotations clarify the prohibited origin type in context."
@@ -81,7 +82,7 @@ This file documents ferrochain's public API surface: the public Rust traits by c
 
 | Type | Role | SS | BC Anchors |
 |------|------|----|-----------|
-| `RunnableConfig` | Per-invocation config: `recursion_limit` (default 25), `thread_id`, `budget_config: Option<BudgetConfig>` (per-run budget override — `None` inherits `GraphConfig::budget_config`; `Some` overrides for that run; used by `BudgetResume::Extend`), `context_mutations: Option<ContextMutationConfig>` | SS-01 | BC-2.01.003 PC5, BC-2.10.003 PC7/TV-004, BC-2.10.004 PC6, BC-2.15.006 PC1 |
+| `RunnableConfig` | Per-invocation config: `recursion_limit` (default 25), `thread_id`, `budget_config: Option<BudgetConfig>` (per-run budget override — `None` inherits `GraphConfig::budget_config`; `Some` overrides for that run; used by `BudgetResume::Extend`), `context_mutations: Option<ContextMutationConfig>`, `configurable: Option<HashMap<String, Value>>` (graph-specific key-value overrides — model, tools, system_prompt; LangGraph-parity field; graphs read their parameters at execution time via this map; merge semantics: run-level keys win over Assistant-stored keys per BC-2.12.003 §Run-Config Merge Precedence Invariant; ADR-021 Decision 2) | SS-01 | BC-2.01.003 PC5, BC-2.10.003 PC7/TV-004, BC-2.10.004 PC6, BC-2.15.006 PC1, BC-2.12.002 |
 | `ActionRisk` | Risk classification enum for tool dispatch; 4 variants: `ReadOnly`/`Low`/`Medium`/`High` (`#[non_exhaustive]`); relocated from `ferrochain-graph::hitl` to `ferrochain-core` (`core::action_risk`) per dependency-inversion precedent — `ferrochain-tools` consumes it at compile time without a `ferrochain-graph` dep (F-P170-06/ADR-020 adjudication) | SS-05 | BC-2.05.006, BC-2.23.005 |
 | `BudgetConfig` | Budget ceiling + on_ceiling policy; embedded in `RunnableConfig.budget_config` (per-run override) and `GraphConfig.budget_config` (graph-level default); defined in `core::budget` (ferrochain-core — ADR-009 Option 3) | SS-10 | BC-2.10.001 |
 | `CompactionTrigger` | `Disabled \| OnWatermark{fraction: f64} \| OnMessageCount{count: usize} \| OnTokenCount{tokens: u64}`; field in `BudgetConfig.compaction_trigger`; defined in `core::budget` (ferrochain-core — ADR-019 Decision 1) | SS-10 | BC-2.10.005 |

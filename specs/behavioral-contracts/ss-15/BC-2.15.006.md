@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.006
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ changelog:
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (fix-burst-279/F-P175-B101/ADR-012-D1-Amendment/2026-07-28): PC1 scope bridge corrected per architect ADR-012 Decision 1 Amendment (B101 CRIT). ContextSourceSpec.namespace is a key-namespace PREFIX within the tenant partition, NOT the app_id. Corrected call uses MemoryScope::App(run_context.app_id) with composite key format!(\"{}/{}\", spec.namespace, spec.key). run_context.app_id is the system-derived tenant identity (set by execution engine before first super-step; NOT overridable via RunnableConfig caller input). Empty app_id fails loud: all reads return Err(E-MEMORY-004 NoScopeContext) — no silent empty return. EC-006 added for empty app_id at run start. Architecture Anchors scheduler call updated to reflect corrected signature."
   - "1.5 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep — 3 corrections. (1) EC-003 Scenario: `FerrochainError { ... }` → `FerrochainError { .. }` (CLASS3_ASCII_ELLIPSIS_VIOLATION). (2) EC-003 Expected: `FerrochainError { category: DURABILITY, ... }` → `FerrochainError { category: DURABILITY, .. }` (CLASS3_ASCII_ELLIPSIS_VIOLATION). (3) TV-006: `FerrochainError { category: DURABILITY }` → `FerrochainError { category: DURABILITY, .. }` (Class 3 VIOLATION — no elision marker). All three per ADR-010 §Error-Construction Notation Canon."
+  - "1.6 (fix-burst-283/TV-gap-EC-006/2026-07-30): TV-007 added for EC-006 (empty app_id at run start → E-MEMORY-004 NoScopeContext fail-loud). EC-006 was introduced in v1.4 but had no corresponding test vector; a decision with no vector is unenforceable per project discipline. TV-007 exercises the `run_context.app_id` empty path and verifies `Err(E-MEMORY-004)` with `category: SECURITY` — fail-closed per ADR-012 Decision 1 Amendment §Gap 3 correction."
 wave: 2
 phase: 1b
 producer: product-owner
@@ -170,6 +171,7 @@ correction — NO-SILENT-EMPTY enforced on both B101 and B102 paths.
 | TV-004 | Run 1 writes "Fact B" to MEMORY.md; Run 2 starts with same config | Run 2 context prepend includes "Fact B" | Next-run visibility |
 | TV-005 | `context_mutations = None` | No prepend; run executes as before | Opt-out path |
 | TV-006 | Storage I/O error during pre-run load | `Err(FerrochainError { category: DURABILITY, .. })` from `invoke`; run does not start | Storage failure halts run before first super-step |
+| TV-007 | `ContextMutationConfig { sources: [{ ns: "agent", key: "SOUL.md" }] }`; `run_context.app_id` is `""` (empty string) when the execution engine triggers the pre-first-super-step load | `Err(FerrochainError { category: SECURITY, code: "E-MEMORY-004", message: "NoScopeContext: application tenant identity (app_id) is empty; ContextMutationConfig load requires a valid app_id", .. })` from `invoke`; run does NOT start; does NOT silently return `Ok(None)` or proceed with empty context | EC-006 — empty `app_id` fail-loud; ADR-012 Decision 1 Amendment §Gap 3 correction |
 
 ## Verification Properties
 

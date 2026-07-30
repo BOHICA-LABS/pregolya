@@ -5909,6 +5909,14 @@ One row archived from STATE.md v4.39 Current Phase Steps table.
 - `hooks/spec_region_utils.py`: `find_ferrochain_error_openers()` added; `illustration_exempt_lines()` frontmatter-skip and same-line-marker bugs fixed (from burst-281 Wave A-corr partial).
 - `specs/behavioral-contracts/BC-INDEX.md`: v3.27 — 51 BC version rows synced (frontmatter changelog entry + body table row added).
 
+---
+
+### Archived Phase Step — fix-burst 280 COMPLETE (archived at burst-283 state-update)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| fix-burst 280 COMPLETE — 2C+11H closed (C201/C202 product-brief/holdout; C203-C209 prd/architecture; A10/A17/A24/A26 VP harnesses); A25 PARTIAL (VP-body done, BC-body blocked on ADR-010 adjudication; 158 sites/53 files); D-71..D-74 recorded; L-123..L-130 minted; TDIV-008 blocking issue registered; R-009 risk registered; D-50 discharged; D-52 closed; prior checkpoint archived; factory-artifacts pushed. | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
+
 **Self-attributed orchestrator defects (4; D-87):**
 1. Instructed architect to write ADR changelogs ascending — wrong; ADRs are descending; architect correctly trusted the file (recurrence of L-135).
 2. Instructed B1 that BC changelogs were descending — wrong; broke verify-form-a-changelog-direction to FAIL=7 across 7 files; repaired pre-commit.

@@ -1,10 +1,10 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.24"
+version: "1.25"
 status: active
 producer: business-analyst
-timestamp: 2026-07-28T00:00:00Z
+timestamp: 2026-07-30T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -33,6 +33,7 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "v1.25 (F-P175-D101/fix-burst-283/2026-07-30): as_retriever fallibility correction across three shards (F-P175-D101 CRIT close). capabilities-p1-p2.md (CAP-027 receiver+Result return added; CAP-028 non-fallible form corrected to Result<VectorStoreRetriever, FerrochainError>). entities-graph.md (§VectorStore §Instance methods non-fallible form corrected). ubiquitous-language-core.md (§VectorStoreRetriever and §VectorStore term entries corrected to show Result return and Err(E-VS-003 InvalidConfig)). Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 §Decision 2."
   - "v1.24 (fix-burst-280/wave-c/2026-07-28): Document Map Lines→Size column replacement. Rationale: a precise numeric line-count estimate held in a separate index file decays silently on every shard edit — no gate detects the drift; this burst found four cells stale by +64 to +174 lines (capabilities-p0.md, entities-server.md, ubiquitous-language-server.md, bounded-contexts.md). This is the same structural-decay class TD-VSDD-091 addresses for file:NNN citations — not a pinned cite, but the same unbounded-drift property with no detection gate. S/M/L/XL bands update only when a shard crosses a tier boundary, which coincides with the DF-021 split review; maintenance cost is already paid at that trigger. Column name diverges from the upstream template's Tokens column by orchestrator authorization (Path 2, fix-burst-280); spec-steward holds the governance record — this divergence is intentional, not accidental drift. Band assignments (all 14 rows): XL: capabilities-p1-p2.md; L: entities-graph.md, ubiquitous-language-core.md, bounded-contexts.md; S: assumptions.md, risks.md, differentiators.md; M: all remaining."
   - "v1.23 (fix-burst-280/wave-c/2026-07-28): Document Map full line-count correction — all 14 rows verified against source shards. Four stale entries corrected: capabilities-p0.md ~140→~228, entities-server.md ~95→~201, ubiquitous-language-server.md ~100→~164, bounded-contexts.md ~155→~329."
   - "v1.22 (fix-burst-280/wave-c/2026-07-28): Count-desync correction — Document Map risks.md row: (8 risks)→(9 risks) and line estimate ~51→~79; assumptions.md line estimate ~48→~54. Full ID count sweep: CAP 38, DI 15, DEC 13, ASM 9, R 9, FM 19 all verified correct against source shards."

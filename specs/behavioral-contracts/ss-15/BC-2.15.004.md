@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.004
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-004 carried bare `Err(FerrochainError { category: DURABILITY, code: E-MEMORY-008 MemoryStoreReadFailed })` without message; E-MEMORY-008 taxonomy has <backend_error> placeholder (SQLite I/O error detail, available at raise site). Added inline message template to EC-004."
   - "1.3 (fix-burst-279/F-P175-B102/ADR-012-D1-Amendment/2026-07-28): PC3 updated with SCOPE NOTE — SkillStore implementations bind MemoryScope::App(app_id) at construction time per ADR-012 Decision 1 Amendment. Callers do not supply scope at call time; app_id comes from RunContext.app_id (system-derived, same source as ContextMutationConfig loading in BC-2.15.006). If the SkillStore was constructed without a valid app_id, all load_skill/list_skills/skill_exists calls return Err(E-MEMORY-004 NoScopeContext). EC-006 added for the empty-app_id construction case (unenumerated in prior versions; finding B102 noted this gap)."
   - "1.4 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-004: added `, ..` before closing brace in partial FerrochainError observation `FerrochainError { category: DURABILITY, code: E-MEMORY-008, message: \"...\" }` — Class 3 VIOLATION (component and retry_hint fields omitted with no elision marker; canonical form requires `..` per ADR-010 §Error-Construction Notation Canon)."
+  - "1.5 (fix-burst-283/TV-gap-EC-006/2026-07-30): TV-009 added for EC-006 (SkillStore constructed with empty app_id → E-MEMORY-004 NoScopeContext fail-closed). EC-006 was introduced in v1.3 but had no corresponding test vector; a decision with no vector is unenforceable per project discipline. TV-009 exercises `SkillStore::new(store, \"\")` and verifies all three trait methods (`load_skill`, `list_skills`, `skill_exists`) return `Err(E-MEMORY-004)` with `category: SECURITY` — fail-closed per ADR-012 Decision 1 Amendment."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -152,6 +153,7 @@ at service boundary; B102 CRIT correction).
 | TV-006 | `skill_exists("nope")` with no such skill | `Ok(false)` | Existence check absent |
 | TV-007 | Overwrite skill "py_helpers" via guarded write; `load_skill("py_helpers")` | Returns updated content | Load-on-demand; no stale cache |
 | TV-008 | Backend `MemoryStore` returns an I/O error during `load_skill("py_helpers")` (e.g., SQLite file read failure) | `Err(E-MEMORY-008 MemoryStoreReadFailed)`; does not panic; does not return `Ok(None)` | EC-004 — read I/O failure propagates as structured error (DI-014) |
+| TV-009 | `SkillStore::new(store, "")` constructed with empty `app_id`; caller invokes `load_skill("py_helpers")` | `Err(FerrochainError { category: SECURITY, code: "E-MEMORY-004", message: "NoScopeContext: SkillStore requires a valid app_id at construction; app_id is empty — cannot derive tenant scope", .. })`; does NOT return `Ok(None)` or panic; same error is returned by all three methods (`load_skill`, `list_skills`, `skill_exists`) | EC-006 — SkillStore empty-app_id fail-closed; ADR-012 Decision 1 Amendment |
 
 ## Verification Properties
 

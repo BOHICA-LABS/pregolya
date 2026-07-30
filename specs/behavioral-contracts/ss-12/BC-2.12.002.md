@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.002
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-32): F-P32-03 add PC20 — GET /assistants/{id}/versions pagination (limit default 10 max 100 clamped / offset 0 / ordering exemption: version ASC) matching interface-definitions.md §Assistants /versions row."
   - "1.2 (ADV-P1D-PASS-33): F-P33-01 add PC21-PC23 — GET /assistants list-collection postcondition block (response shape { assistants: [Assistant], total_count: u64 }, limit default 10 max 100 clamped / offset 0 / created_at DESC); interface-definitions.md §Canonical Pagination Convention BC anchors updated. F-P33-02 add cross-reference to run-config merge precedence canon in Description."
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to ferrochain-server per module-decomposition.md v1.10."
+  - "1.4 (fix-burst-283/F-P175-C113/2026-07-30): §Description corrected — replace fabricated 'model, tools, system prompt overrides, checkpointer config' clause with accurate RunnableConfig field inventory per ADR-021 Decision 2 (configurable map added; LangGraph parity). Add EC-006 and TV-008 for configurable-key collision merge precedence (run-level key wins per BC-2.12.003 §Run-Config Merge Precedence Invariant and interface-definitions.md §RunnableConfig configurable field doc)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -41,8 +42,7 @@ removal_reason: null
 ## Description
 
 An Assistant is a named, versioned configuration record that binds a `graph_id` to
-a specific runtime config (model, tools, system prompt overrides, checkpointer config)
-and optional context. It serves as a reusable "agent persona": callers create a Run
+a `RunnableConfig` carrying execution parameters (`recursion_limit`, `thread_id`, `budget_config`) plus a `configurable` map for graph-specific overrides (e.g., model selection, tool-set, system-prompt), and optional context. Graphs read their per-run parameters from `config.configurable` at execution time using graph-defined key names. It serves as a reusable "agent persona": callers create a Run
 by referencing an Assistant, and the Run inherits the Assistant's config; run-supplied
 `config`, `metadata`, and `context` are deep-merged over the Assistant's stored values
 with run-level keys winning at the leaf level (merge precedence canon — see BC-2.12.003
@@ -143,6 +143,10 @@ callers must use the versions list.
 **Scenario:** `POST /assistants { graph_id: "phantom-graph", ... }`.
 **Expected behavior:** HTTP 422 `{ code: "E-SERVER-011", message: "GraphNotFound: graph 'phantom-graph' is not registered with this server instance" }`. The assistant is NOT created.
 
+### EC-006: Configurable-key collision between assistant-stored and run-supplied config
+**Scenario:** Assistant "a1" is stored with `config.configurable = { "model": "gpt-4o", "temperature": 0.7 }`. A `POST /threads/t1/runs { assistant_id: "a1", config: { configurable: { "model": "claude-opus-4-5" } } }` arrives with a run-level `configurable` that carries only `"model"`.
+**Expected behavior:** The effective `configurable` used by the executor is `{ "model": "claude-opus-4-5", "temperature": 0.7 }`. Run-level key `"model"` wins over the assistant-stored value; key `"temperature"` is absent from the run-level map so the assistant-stored value is retained. Merge is at the top-level key of the `configurable` map (not a recursive deep-merge of values). Authority: BC-2.12.003 §Run-Config Merge Precedence Invariant and interface-definitions.md §RunnableConfig `configurable` field doc.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -154,6 +158,7 @@ callers must use the versions list.
 | TV-005 | `DELETE /assistants/<id>` | HTTP 204; `GET` returns 404 | Delete + verification |
 | TV-006 | `GET /assistants/<id>/versions` after 2 patches | `[version1, version2, version3]` | Version history |
 | TV-007 | `POST /assistants/<id>/set_latest { version: 1 }` | HTTP 200, assistant resolves to version 1 config | Rollback via set_latest |
+| TV-008 | Assistant stored with `config.configurable = {"model":"gpt-4o","temperature":0.7}`; run created with `config: { configurable: {"model":"claude-opus-4-5"} }` | Executor receives effective `configurable = {"model":"claude-opus-4-5","temperature":0.7}` | configurable key collision — run key wins, absent keys retained from assistant |
 
 ## Verification Properties
 

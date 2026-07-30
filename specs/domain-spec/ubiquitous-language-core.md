@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.10"
+version: "1.11"
 status: active
 producer: business-analyst
-timestamp: 2026-07-24T00:00:00Z
+timestamp: 2026-07-30T00:00:00Z
 changelog:
+  - "1.11 (F-P175-D101/fix-burst-283/2026-07-30): TD-VSDD-060 sibling sweep — as_retriever fallibility corrected at two term entries. (1) VectorStoreRetriever term: 'via VectorStore::as_retriever(self: Arc<Self>)' extended to show Result<VectorStoreRetriever, FerrochainError> fallible return and Err(E-VS-003 InvalidConfig) on invalid config. (2) VectorStore term: 'returns VectorStoreRetriever' corrected to 'returns Result<VectorStoreRetriever, FerrochainError>'; Err(E-VS-003 InvalidConfig) note added. Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 Decision 2."
   - "1.10 (fix-burst-278/wave-b/2026-07-28): TD-VSDD-060 sibling sweep — two borrow-based forms corrected in VectorStoreRetriever and VectorStore term definitions. (1) VectorStoreRetriever term: backing-store form corrected from borrow-ref to Arc<dyn VectorStore> (verifiable: borrow-backed VectorStoreRetriever form absent from this file). (2) VectorStore term: as_retriever updated to show self: Arc<Self> receiver; 'All instance methods use &self' corrected to 'Other instance methods use &self; as_retriever takes Arc<Self>' (verifiable: verify-signature-canon S1b returns zero hits for this file). Both ground in D-48."
   - "1.9 (FC-4/burst-277/2026-07-28): Sibling-sweep fix — same 'PO BC obligations' stale-completed-delegation class as capabilities-p1-p2.md v1.18. §PreToolDecision definition: '\"skip-hook-on-resume\" invariant, PO BC obligation)' → '\"skip-hook-on-resume\" invariant, BC-2.05.008)'. BC-2.05.008 covers the invariant. TD-VSDD-060 sweep: sole 'PO BC obligation' occurrence in this file (grep 'PO BC obligation' ubiquitous-language-core.md returns zero hits after this fix)."
   - "1.8 (2026-07-24): Fix burst 252 BA — ADR-019 v1.4 compaction type canon applied. CompactionTrigger: `OnWatermark { fraction: f32 }` → `f64`; predicate `<` → `<=` (non-strict; strict < cannot fire at fraction=1.0); added f64-arithmetic and non-strict rationale. CompactionSummary fields: `compacted_range: RangeInclusive<usize>` → flat `compacted_start: usize, compacted_end: usize`; slice form `messages[compacted_start..=compacted_end]`; CompactionEvent reference updated to flat fields. TD-VSDD-060 sweep: zero compacted_range / RangeInclusive / fraction: f32 occurrences remain in this file's body text (changelog exempt)."
@@ -238,14 +239,14 @@ RAG pipeline output. All Documents entering graph context pass the DI-012 guardr
 A concrete `Retriever` backed by `Arc<dyn VectorStore>`, configured with a `SearchType`
 (Similarity | SimilarityScoreThreshold | Mmr), `k` (final document count), `fetch_k`
 (MMR candidate pool), and `lambda_mult` (MMR diversity parameter, 0.0–1.0). Constructed
-via `VectorStore::as_retriever(self: Arc<Self>)`. Can be type-erased to `Arc<dyn Retriever>`. Corresponds
+via `VectorStore::as_retriever(self: Arc<Self>) → Result<VectorStoreRetriever, FerrochainError>`; returns `Err(E-VS-003 InvalidConfig)` on invalid config. Can be type-erased to `Arc<dyn Retriever>`. Corresponds
 to `VectorStoreRetriever` in LangChain v1 (`langchain_core.vectorstores.base`). In
 ferrochain: `ferrochain_vectorstores::retriever::VectorStoreRetriever`.
 
 **VectorStore**
 The abstract document-index trait: a content store that can be queried by vector similarity.
 Core operations: add texts (returns document IDs), k-nearest similarity search, MMR search,
-delete by ID, and `as_retriever(self: Arc<Self>)` (returns `VectorStoreRetriever`; `Arc<Self>` receiver is dyn-compatible). Other instance
+delete by ID, and `as_retriever(self: Arc<Self>)` (returns `Result<VectorStoreRetriever, FerrochainError>`; `Err(E-VS-003 InvalidConfig)` on invalid config; `Arc<Self>` receiver is dyn-compatible). Other instance
 methods use `&self`; static constructors live on the separate
 `VectorStoreFactory` trait (E0038-safe). `Arc<dyn VectorStore>` is the seam for community
 adapters (Qdrant, Chroma, pgvector, etc.). Corresponds to `VectorStore` abstract base class

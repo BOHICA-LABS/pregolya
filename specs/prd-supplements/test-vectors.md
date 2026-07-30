@@ -4,7 +4,7 @@ level: L3
 version: "2.9"
 status: active
 producer: product-owner
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-07-28T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md

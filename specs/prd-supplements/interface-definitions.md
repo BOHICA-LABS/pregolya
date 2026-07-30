@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.68"
+version: "2.69"
 status: active
 producer: product-owner
-timestamp: 2026-07-28T00:00:00Z
+timestamp: 2026-07-30T00:00:00Z
 phase: 1d
 changelog:
+  - "2.69 (fix-burst-283/F-P175-C101+F-P175-C113/2026-07-30): Two architect adjudications from P1D-175 Slice C1 applied. (1) F-P175-C101 ADR-021 Decision 1: TOML sample config debug_route_key corrected — present-but-empty form 'debug_route_key = \"\"' replaced with commented-absent form. Present-but-empty deserializes via serde to Option::Some(\"\") which BC-2.12.005 EC-005 defines as E-SERVER-013 startup failure; the secure default is absence of the key (None via serde default). BC-2.12.005 body is unchanged — EC-005/TV-007/E-SERVER-013 are correct and remain load-bearing. (2) F-P175-C113 ADR-021 Decision 2: add configurable: Option<HashMap<String, Value>> field to RunnableConfig struct. This is the LangGraph-parity configurable map (semport rust-translation-strategy §RunnableConfig mapping §11); graphs use it to read model, tool-set, and system-prompt overrides at execution time. Enables the Assistant 'reusable agent persona' concept in BC-2.12.002. BC-2.12.002 §Description product-owner handoff: replace fabricated 'model, tools, system prompt overrides, checkpointer config' text; see ADR-021 Decision 2 and fix-burst-283 handoff spec."
   - "2.68 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Add `validate_embedding_batch` free function spec to §Embeddings Trait (core::embeddings, ferrochain-core). Function is `pub`; cross-crate callers are ferrochain-openai and ferrochain-ollama provider embeddings impls. BC anchors: BC-2.22.001 PC-2 (batch dimensionality contract → E-EMBED-001), INV-2 (consistent inner length), EC-003 (count mismatch), EC-004 (zero-length vector). Error anchor: E-EMBED-001. VP anchor: VP-008 (proptest P1; test harnesses call this function directly per FIX-BURST-280 structural redesign — F-P175-A24 self-proving mock fix). TD-VSDD-060 sibling sweep for unregistered VP-body symbols: see FIX-BURST-280-corr report."
   - "2.67 (fix-burst-279/gap-2-TemplateInput+format_messages/2026-07-28): Gap 2 (BLOCKING) TD-VSDD-060 sweep — format_messages signature and TemplateInput enum. (1) Added `TemplateInput` enum definition (§Prompt Templates, before SlotTrustPolicy): three arms — Scalar(TemplateVar), Messages(MessageListVar), FewShotExamples(Vec<(TemplateVar, TemplateVar)>); #[non_exhaustive]; replaces former bare HashMap<String, TemplateVar> parameter. (2) `format_messages` signature corrected: parameter type `HashMap<String, TemplateVar>` → `HashMap<String, TemplateInput>` (breaking change per ADR-015 §Decision 3 Amendment — TemplateInput Enum Concretized). This is the architect-owned portion of the TD-VSDD-060 sweep; BC-2.18.002/004 PO routing in wave-b-po-routing-spec-279.md item 6 and item 7."
   - "2.66 (fix-burst-279/F-P175-B101+F-P175-B102+F-P175-B208/2026-07-28): Three architect security adjudications applied. (1) B101/B102: SkillStore scope-encapsulation note added (SkillStore impls bind MemoryScope::App(app_id) at construction; trait methods scopeless; E-MEMORY-004 NoScopeContext on missing app_id). RunContext gains app_id: String field (system-derived, not RunnableConfig-overridable; empty = no-scope sentinel). ContextMutationConfig loading note: spec.namespace is a key-namespace prefix within MemoryScope::App(run_context.app_id), not the tenant app_id; composite key = {namespace}/{key}. (2) B208: TrustLevel updated — add #[non_exhaustive]; add #[cfg_attr(kani, derive(kani::Arbitrary))]; add Copy derive; add severity() -> u8 method (Untrusted=2, UserInput=1, Trusted=0); explicit Ord-derivation prohibition added."
@@ -281,6 +282,26 @@ pub struct RunnableConfig {
     /// Authority: BC-2.15.006 PC1 (frozen-snapshot context mutation at run start),
     /// ADR-012 Decision 1 Primitive B and Decision 1 Amendment.
     pub context_mutations: Option<ContextMutationConfig>,
+
+    /// Graph-specific runtime overrides: an untyped key-value map that graphs inspect
+    /// at execution time. Key names are graph-defined; the framework performs no
+    /// validation at `RunnableConfig` construction time — each graph validates the keys
+    /// it expects. Typical uses: model selection (`"model": "gpt-4o"`), system prompt
+    /// override (`"system_prompt": "You are a helpful assistant."`), tool-set selection.
+    ///
+    /// - `None` (default): no graph-specific overrides; graph uses its built-in defaults.
+    /// - `Some(map)`: graph reads its parameters from the map via
+    ///   `config.configurable.as_ref().and_then(|m| m.get("key"))`.
+    ///
+    /// **Merge semantics (BC-2.12.003 §Run-Config Merge Precedence Invariant):** when a
+    /// Run request supplies `config.configurable`, it is merged over the Assistant's
+    /// stored `configurable` map at the key level; run-level keys win on collision.
+    /// Merge is applied at run-creation time before dispatch to the executor.
+    ///
+    /// Port authority: langchain-core `RunnableConfig.configurable` dict
+    /// (semport §RunnableConfig mapping §11).
+    /// Authority: BC-2.12.002 (Assistant config field), ADR-021 Decision 2.
+    pub configurable: Option<HashMap<String, serde_json::Value>>,
 }
 ```
 
@@ -2285,9 +2306,11 @@ workers = 4                    # Tokio worker threads; default: num_cpus
 [security]
 # SecurityConfig::default() denies CORS and gates debug routes (NE-14, BC-2.12.005)
 cors_allow_origins = []        # empty = deny all cross-origin requests (SECURE DEFAULT)
-debug_route_key = ""           # empty string = debug routes disabled (SECURE DEFAULT)
-                               # non-empty = enables /_debug route; gate requires
-                               # Authorization: Bearer <key> (F-P26-04; BC-2.12.005 authoritative)
+# debug_route_key = "your-secret-here"  # absent = debug routes disabled (SECURE DEFAULT)
+                                        # non-empty string enables /_debug; gate requires
+                                        # Authorization: Bearer <key> (F-P26-04; BC-2.12.005 authoritative)
+                                        # IMPORTANT: present-but-empty ("") = E-SERVER-013 startup failure
+                                        # (ADR-021 Decision 1; BC-2.12.005 EC-005/TV-007)
 
 [checkpoint]
 backend = "sqlite"             # "sqlite" | "memory"; postgres = stretch target

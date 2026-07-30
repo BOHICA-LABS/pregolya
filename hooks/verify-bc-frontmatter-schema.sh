@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-bc-frontmatter-schema.sh — ferrochain factory-artifacts ADVISORY validator
+# verify-bc-frontmatter-schema.sh — ferrochain factory-artifacts BLOCKING validator
 #
 # PURPOSE
 # ───────
@@ -55,17 +55,16 @@
 # BC-INDEX.md is EXCLUDED — it is a catalog file, not a behavioral contract
 # (analogous to VP-INDEX.md exclusion in gate #36 step 2).
 #
-# ADVISORY STATUS
-# ───────────────
-# All findings are WARN (non-blocking). This validator will be promoted to
-# blocking after a corpus-wide sweep confirms zero false-positives.
-#
 # EXIT CONTRACT
 # ─────────────
-# Always exits 0 (advisory — non-blocking).
+# Exits 0 if no FAIL lines (all BCs pass schema checks).
+# Exits 1 if any FAIL lines (one or more BCs have schema violations).
+#
+# Promoted from advisory (always exits 0) to blocking at fix-burst-283.
+# Corpus-wide baseline at promotion: PASS=129 FAIL=0 — zero violations confirmed.
 #
 # Usage:  bash .factory/hooks/verify-bc-frontmatter-schema.sh
-# Exit:   0 always (advisory)
+# Exit:   0 if FAIL == 0; 1 if FAIL > 0
 
 set -euo pipefail
 
@@ -210,13 +209,13 @@ def check_bc(filepath):
                 f"typo'd key '{key}': use '{TYPO_KEYS[key]}' instead — "
                 f"misspelling bypasses gate-integrity checks")
 
-    return ('WARN', findings) if findings else ('PASS', [])
+    return ('FAIL', findings) if findings else ('PASS', [])
 
 for filepath in files:
     status, findings = check_bc(filepath)
     short = filepath.split('/specs/')[-1] if '/specs/' in filepath else filepath
     if findings:
-        print(f"WARN {short} findings={len(findings)}")
+        print(f"FAIL {short} findings={len(findings)}")
         for f in findings:
             print(f"  DETAIL: {f.replace(chr(10), ' ')}")
     else:
@@ -227,7 +226,7 @@ PYEOF
 
 # ── Process Python3 output ────────────────────────────────────────────────────
 
-FILE_WARN=0
+FILE_FAIL=0
 
 while IFS= read -r line; do
   tag="${line%% *}"
@@ -237,11 +236,11 @@ while IFS= read -r line; do
     PASS)
       emit PASS "$rest"
       ;;
-    WARN)
+    FAIL)
       short="$(echo "$rest" | awk -F' findings=' '{print $1}')"
       count="$(echo "$rest" | grep -oE 'findings=[0-9]+' | cut -d= -f2)"
-      emit WARN "[ADVISORY] schema findings in $short ($count issue(s))"
-      FILE_WARN=$((FILE_WARN + 1))
+      emit FAIL "schema violations in $short ($count issue(s))"
+      FILE_FAIL=$((FILE_FAIL + 1))
       ;;
     *)
       # DETAIL lines start with two spaces — tag extraction strips leading spaces
@@ -258,9 +257,9 @@ done <<< "$PYTHON_OUTPUT"
 
 echo ""
 echo "verify-bc-frontmatter-schema: PASS=$PASS WARN=$WARN FAIL=$FAIL"
-echo "  Files with schema advisory findings: $FILE_WARN"
+echo "  Files with schema violations: $FILE_FAIL"
 echo ""
-echo "Advisory checks (all non-blocking, each grounded in a ratified rule):"
+echo "Checks (all grounded in a ratified rule from bc-authoring-plan.md):"
 echo "  CHECK 1: bc_id: present AND value == file stem"
 echo "           Rule: bc-authoring-plan §Authoring Guidelines item 10, §version-bump rules"
 echo "  CHECK 2: changelog: for version > 1.0 (Form A OR Form B)"
@@ -272,6 +271,10 @@ echo "           Rule: bc-authoring-plan §VP-NNN candidate label policy"
 echo "  TYPO:    redgate/red-gate/vp-seed/vpseed key-name detection"
 echo "           Rule: gate-critical canonical names from gate #36 and §VP-NNN candidate policy"
 echo ""
-echo "RESULT: PASS (advisory — non-blocking)"
-# Always exit 0 — advisory check
-exit 0
+if [ "$FAIL" -gt 0 ]; then
+  echo "RESULT: FAIL"
+  exit 1
+else
+  echo "RESULT: PASS"
+  exit 0
+fi

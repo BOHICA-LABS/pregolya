@@ -93,3 +93,28 @@ artifact_types:
     description: "Module criticality assessment (standalone architect artifact)"
     pattern: ".factory/specs/module-criticality.md"
     singleton: true
+
+  - artifact_type: spec-version-registry
+    description: "Spec version registry tracking current version and last-updated date for every artifact"
+    pattern: ".factory/spec-versions.md"
+    singleton: true
+
+  - artifact_type: traceability-matrix
+    description: "Cross-artifact traceability chain from requirements through proofs (FR → BC → VP → story → test)"
+    pattern: ".factory/traceability-matrix.md"
+    singleton: true
+
+  - artifact_type: spec-changelog
+    description: "Aggregated spec changelog: every versioned spec change with Added/Changed/Impact sections"
+    pattern: ".factory/spec-changelog.md"
+    singleton: true
+
+  - artifact_type: drift-report
+    description: "Spec-vs-implementation drift detection reports (one file per detection run)"
+    pattern: ".factory/drift-reports/{report}.md"
+    singleton: false
+
+  - artifact_type: policy-registry
+    description: "Project governance policy registry (policies.yaml) — managed by policy-add skill"
+    pattern: ".factory/policies.yaml"
+    singleton: true

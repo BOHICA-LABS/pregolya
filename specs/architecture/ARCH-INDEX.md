@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.22"
+version: "1.23"
 status: active
 producer: architect
-timestamp: 2026-07-28T00:00:00Z
+timestamp: 2026-07-30T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.23 (fix-burst-283/F-P175-C101+F-P175-C113/2026-07-30): ADR-021 minted — SecurityConfig TOML representation (Decision 1) and RunnableConfig.configurable field (Decision 2). Resolves mutual unbootability between BC-2.12.005 EC-005 and interface-definitions.md TOML template (C101); resolves fabricated-capability finding for BC-2.12.002 §Description (C113 mislabeled as BC-2.12.005). ADR count 20→21. Document Map unchanged; no new section files."
   - "1.22 (fix-burst-279/gap-corrections/2026-07-28): Gap-fix wave (three corrections to initial wave). (1) ADR-012 §Decision 1 Amendment — Gap 3: empty app_id B101 path corrected from Ok(None) to Err(E-MEMORY-004 NoScopeContext); fail-loud symmetric with B102 (SkillStore). (2) ADR-015 §Decision 3 Amendment — Gap 1: FewShotPromptTemplate adjudication body added (pre-expansion trust check; examples typed as Vec<(TemplateVar, TemplateVar)>); TemplateInput enum concretized (Scalar/Messages/FewShotExamples arms); B201 type-level enforcement design question answered (prohibition retained for v1; API friction outweighs benefit; v2 trigger condition documented). (3) interface-definitions.md §Prompt Templates — Gap 2 (TD-VSDD-060 sweep): TemplateInput enum defined; format_messages signature corrected to HashMap<String, TemplateInput>. (4) VP-006 §Formal invariant + §Kani harness — formal invariant updated to HashMap<String, TemplateInput>; harness extended to cover Scalar, Messages, and FewShotExamples arms."
   - "1.21 (fix-burst-279/F-P175-B101+B102+B201+B202+B208/2026-07-28): Architect security adjudication wave — three architecture files bumped. ADR-012 §Decision 1 Amendment: ContextMutationConfig scope bridge (B101: spec.namespace is key-prefix not app_id; loading uses RunContext.app_id) and SkillStore scope encapsulation (B102: bind MemoryScope::App(app_id) at construction; E-MEMORY-004 on missing app_id). ADR-015 §Decision 3 Amendment: PromptTemplate::format explicitly unguarded (B201); MessageListVar guard added to injection check (B202); TrustLevel severity inversion fixed with severity() method + #[non_exhaustive] + Ord prohibition (B208). interface-definitions.md §Prompt Templates + §RunContext + §SkillStore: TrustLevel enum updated (Copy+non_exhaustive+kani::Arbitrary+severity()); RunContext.app_id field added; SkillStore scope note added; context_mutations doc updated with scope bridge."
   - "1.20 (FIX-BURST-278/L9b-de-pin/2026-07-28): L9b de-pin: api-surface.md §FIX-BURST-277-WAVE-B-errata changelog entry and interface-definitions.md §FIX-BURST-277-WAVE-B-errata changelog entry — ADR-005 version pins replaced with ADR-005 §Adjacent Trait Object-Safety Adjudications section anchors. records-lint FAIL=0 achieved. api-surface.md bumped to v1.20; interface-definitions.md bumped to v2.65."
@@ -60,7 +61,7 @@ changelog:
 | Tooling Selection | tooling-selection.md | formal-verifier | Kani, cargo-fuzz, cargo-mutants, proptest versions + config |
 | Verification Coverage Matrix | verification-coverage-matrix.md | consistency-validator | VP-to-module coverage status |
 
-**ADRs:** `.factory/specs/architecture/decisions/` — 20 files (ADR-001 to ADR-020)
+**ADRs:** `.factory/specs/architecture/decisions/` — 21 files (ADR-001 to ADR-021)
 
 **Module Criticality:** `.factory/specs/module-criticality.md`
 
@@ -169,6 +170,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | ADR-018 | Per-Tool-Call Approval Hook (D23) | accepted — D23 authority | — |
 | ADR-019 | Rolling Context Compaction Primitive (D23) | accepted — D23 authority | — |
 | ADR-020 | First-Party Tool Library (D23) | accepted — D23 authority | — |
+| ADR-021 | SecurityConfig TOML Representation and RunnableConfig.configurable Field (fix-burst-283) | accepted — architect adjudication F-P175-C101+C113 | — |
 
 ## Verification Properties (VP-INDEX)
 

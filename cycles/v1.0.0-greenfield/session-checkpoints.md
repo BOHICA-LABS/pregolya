@@ -2017,3 +2017,45 @@ verify-no-version-pins: PASS=198 FAIL=0; records-lint: PASS=5 FAIL=0; verify-sig
 
 ### ARCHIVE METADATA
 Date: 2026-07-29 | Archived at: session-wrap D-88 | STATE.md: 4.41 → 4.42 | records-only micro-burst D-83 count corrected (8→7 blocking validators); Wave B notation sweep COMPLETE (ADR-010 §Error-Construction Notation Canon corpus-wide; 0 violations) | streak 0/3
+
+---
+
+### Archived Checkpoint — v4.43 (archived at burst-283 state-update, 2026-07-30)
+
+### RESUME IN ONE BREATH
+ferrochain Phase 1, greenfield+semport. Streak **0/3 after 176 passes**. Session-wrap D-88 COMPLETE: D18-P99-A..D-55 compressed; §BACKLOG minted; TDIV-008 reclassified actionable-pending-verification (D-90); DIRECTIVE 2 codified (D-89); DEFER-002 surfaced for human decision. Wave B COMPLETE: ADR-010 §Error-Construction Notation Canon corpus-wide; 0 violations (351 openers); D-35 CLOSED 26/26. **~35-40 P1D-175 findings estimated open (ESTIMATE; D-69 gate pending); CRIT 0; HIGH materially drained.** D-69 gate: assess before P1D-176. D-32 and D-69 in force.
+
+### WORKSTREAM 1 — P1D-176 path (backlog order)
+1. Verify TDIV-008 (D-90): confirm guard reads project-local registry → route to devops-engineer.
+2. DEFER-002 human decision: fix-now routing or explicit re-authorization to defer.
+3. Assess D-69 gate: verify remaining CRIT/HIGH count vs threshold.
+4. If D-69 passes: batch TDIV-002..TDIV-007 through SINGLE spec-steward dispatch, then dispatch P1D-176 FULL-PERIMETER on then-current factory-artifacts HEAD. Do NOT dispatch P1D-176 without D-69 assessment.
+
+### P1D-176 FROZEN-HEAD WARNING
+P1D-175's frozen HEAD was `2d36282`. Session-wrap D-88 lands after it. P1D-176 MUST gate on the then-current factory-artifacts HEAD (`git -C .factory log -1 --format=%h`). D-32 (FULL-PERIMETER only) and D-69 in force. Streak 0/3.
+
+### HEADS
+develop `46725ad` — clean, PUSHED. factory-artifacts — clean, PUSHED (run `git -C .factory log -1 --format=%h`). Story worktrees: NONE. Open PRs: NONE.
+
+### NEXT-ACTION
+Verify TDIV-008 registry (D-90). Then DEFER-002 human decision. Then assess D-69 gate.
+
+**Validator baselines (orchestrator-verified — burst-282 Wave B final):**
+verify-no-version-pins: PASS=198 FAIL=0; records-lint: PASS=5 FAIL=0; verify-signature-canon: PASS=5 FAIL=0; verify-form-a-changelog-direction: PASS=198 WARN=7 FAIL=0 BC_UNVERIFIED=0; verify-arch-anchor-resolution: PASS=129 FAIL=0; verify-enum-variant-casing: PASS=198 FAIL=0; verify-module-canonicality: PASS=8 FAIL=0; verify-changelog-date-monotonicity: PASS=131 FAIL=0; verify-bc-frontmatter-schema: PASS=129 FAIL=0; verify-error-notation-canon: PASS=1 FAIL=0 (351 openers; 0 violations; bucket sum 351).
+
+### COVERAGE DEBTS — block any CLEAN claim under D-32 until closed
+- BC-2.18.004: targeted grep only; PC5 added burst-279 — full body read pending.
+- 36 of 37 standing gates: count/continuity only (gate #25 sole body-deep audit).
+- 105 hyphenated-module occurrences + 131 version pins: counted per-file, NOT triaged live-body vs changelog.
+- 129 TV Count cells: never hand-summed.
+- ADR-010 canon-note site: unopened (F-P175-D115 severity contingent).
+- Per-VP frontmatter: `module:` only — `tool`/`priority`/`bc_anchor`/`crate` unverified.
+
+### PENDING HUMAN ACTIONS
+1. **R14 (HIGH, irreversible)** — `cargo login` then `cd .factory/namespace-reservation && bash publish-all.sh`. 12 of 21 roster crates currently unreserved.
+2. B1 — `direnv allow .`
+3. **TDIV-008 / D-90** — confirm artifact-path-registry guard reads project-local file; devops-engineer registers spec-steward paths once confirmed.
+4. **DEFER-002 decision** — authorize continued deferral OR route to devops-engineer to fix-in-scope now (D-89 default is fix-now).
+
+### ARCHIVE METADATA
+Date: 2026-07-29 | Archived at: burst-283 state-update | STATE.md: 4.43 → 4.44 | burst-283 COMPLETE: ADR-021 minted; 4 BC bumps (BC-2.12.002/004, BC-2.15.004/006); policies.yaml 45 policies; blocking validators 8→12; D-91..D-102 allocated; L-143..L-147 minted; rename decision D-93; DEFER-002 CLOSED D-92; open CRIT corrected 0; streak 0/3
