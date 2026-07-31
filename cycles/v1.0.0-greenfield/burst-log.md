@@ -5959,3 +5959,11 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | Session wrap D-70 — RESUME SNAPSHOT written; v4.35 checkpoint archived to session-checkpoints.md; fix-burst-277-wave-D step archived to burst-log.md; L-122 minted; D-70 recorded; factory-artifacts pushed; develop unchanged at `46725ad`; streak stays 0/3. Scope: no decision-row compression (durability-over-tidiness; defer to dedicated burst). Three orchestrator self-attributed defects recorded: (1) P1D-176 premature scheduling corrected in D-69; (2) validator suite green declared before discovering 10th validator PASS came from narrowed rule scope; (3) changelog entry misattributed to interface-definitions.md when correct file is prd-supplements/api-surface.md. | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
+
+---
+
+### Archived Phase Step — Burst-282 Wave B COMPLETE (archived at burst-285)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Burst-282 Wave B COMPLETE — 180 notation corrections across 51 BC files (B1–B7 batches) + 5 domain-spec/prd sites + 14 D-35 xtask sites; ADR-010 §Error-Construction Notation Canon adopted corpus-wide (D-77 reframe: baseline authoring event); verify-error-notation-canon.sh blocking validator minted; D-35 CLOSED 26/26 (D-84); BC-INDEX v3.27; D-82..D-87 allocated; L-136..L-141 minted; prior checkpoint archived; factory-artifacts pushed. | state-manager | COMPLETE | 176 passes total. Streak 0/3. |

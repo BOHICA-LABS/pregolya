@@ -2122,3 +2122,35 @@ verify-no-version-pins: PASS=198 FAIL=0; records-lint: PASS=5 FAIL=0; verify-sig
 
 ### ARCHIVE METADATA
 Date: 2026-07-29 | Archived at: burst-283 state-update | STATE.md: 4.43 → 4.44 | burst-283 COMPLETE: ADR-021 minted; 4 BC bumps (BC-2.12.002/004, BC-2.15.004/006); policies.yaml 45 policies; blocking validators 8→12; D-91..D-102 allocated; L-143..L-147 minted; rename decision D-93; DEFER-002 CLOSED D-92; open CRIT corrected 0; streak 0/3
+
+---
+
+### Archived Checkpoint — STATE.md v4.46 (archived at v4.47 — burst-285 container rename state record)
+
+*From STATE.md v4.46 — P1D-176 persisted (2026-07-30). Superseded by v4.47 upon burst-285 state record.*
+
+**Pregolya** Phase 1, greenfield+semport. Working dir (at time of archive): `/Users/jmagady/Dev/ferrochain` (rename PENDING). Streak **0/3 after 177 passes**. P1D-176 COMPLETE (2026-07-30): 160 findings (5C/45H/80M/30L-OBS); frozen HEAD `9a62edc` (burst-284 post-rename). 5 CRITs: C001/C002 (WriteFileTool error routing + unreachable create path), D001 (TV registry 12 behind ground truth), D002 (SS-22 wrong crate in bc-authoring-plan), E001 (POL-19 §anchor gate phantom). 5 convergent mechanisms identified (D-110..D-114). 2 new blockers for crates.io reservation (E011/E012; GitHub rename must precede publish-all.sh). NEXT: fix-burst 285 — mechanism fixes first (M1: §-anchor convention restriction; M2: note-closure gate promotion; M3: ground-truth checks; M4: governing #[non_exhaustive] ADR; M5: POL-17/error-notation-canon fix), then 5 CRITs.
+
+### NEXT-ACTION (at time of archive)
+fix-burst 285: orchestrator routes mechanism fixes to architect (M1/M4), spec-steward (M1/M5), devops-engineer (M1/M2/M3/M5), product-owner (5 CRITs + M3 D001/D002), business-analyst (D-108 D021). Mechanism fixes first — they prevent regeneration and close many findings at once.
+
+### HEADS (at time of archive)
+develop `46725ad` — clean, PUSHED. factory-artifacts — pushed after burst-284 commit. Story worktrees: NONE. Open PRs: NONE.
+
+**Validator baselines (burst-284 final; 12 blocking validators):**
+verify-no-version-pins: PASS=198; records-lint: PASS=5; verify-adr-decision-refs: PASS; verify-changelog-date-monotonicity: PASS=131; verify-changelog-date-validity: PASS; verify-enum-variant-casing: PASS=198; verify-signature-canon: PASS=5; verify-error-notation-canon: PASS=1 (353 openers; 0 violations); verify-form-a-changelog-direction: PASS=198 WARN=7; verify-arch-anchor-resolution: PASS=129; verify-module-canonicality: PASS=8; verify-bc-frontmatter-schema: PASS=129.
+
+### PENDING HUMAN ACTIONS (at time of archive)
+1. **E012 (HIGH, irreversible)** — GitHub repo rename MUST precede publish-all.sh; bakes dead URLs into 21 immutable crate versions if skipped.
+2. **R14/R6 (HIGH, irreversible; after E012)** — `cargo login` → fix publish-all.sh §cd path (E011) → `bash publish-all.sh`. EXPECTED_OWNER must match crates.io identity exactly.
+3. **Container rename** — Working dir, GitHub repo, and git remotes retained old name at archival time.
+4. B1 — `direnv allow .`
+5. **TDIV-008** — engine path_allow fix requires vendor action.
+
+### RESIDUAL ITEMS (at time of archive)
+- `BC-2.09.007` + `BC-INDEX.md` carry post-boundary version pins → product-owner.
+- `interface-definitions.md` §Authentication cluster grandfathered — needs de-pin on next touch.
+- fix-burst 285: 631 advisories (14 input-hash mismatches → product-owner) + D-107 hash-cycle scheme fix.
+
+### ARCHIVE METADATA
+Date: 2026-07-30 | Archived at: burst-285 state record (2026-07-31) | STATE.md: 4.46 → 4.47 | burst-284 COMPLETE (ferrochain → pregolya rename); P1D-176 COMPLETE (160 findings); D-103..D-115 allocated; L-148..L-155 minted; E011/E012 added as blockers; develop `46725ad`; streak 0/3
