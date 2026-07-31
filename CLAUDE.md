@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **Toolchain:** Rust stable (pinned via `rust-toolchain.toml`, created at workspace init), edition 2024, resolver 2. Single Cargo workspace — root `Cargo.toml` `members` list is the authoritative source of truth for the crate list once the workspace is initialized. Initial crate family: `ferrochain`, `ferrochain-core`, `ferrochain-graph`, `ferrochain-checkpoint`, `ferrochain-openai`, `ferrochain-anthropic`, `ferrochain-ollama`, `ferrochain-community`, `ferrochain-splitters`; final crate names are established in the architecture ADR at Phase 1.
+> **Toolchain:** Rust stable (pinned via `rust-toolchain.toml`, created at workspace init), edition 2024, resolver 2. Single Cargo workspace — root `Cargo.toml` `members` list is the authoritative source of truth for the crate list once the workspace is initialized. Initial crate family: `pregolya`, `pregolya-core`, `pregolya-graph`, `pregolya-checkpoint`, `pregolya-openai`, `pregolya-anthropic`, `pregolya-ollama`, `pregolya-community`, `pregolya-splitters`; final crate names are established in the architecture ADR at Phase 1.
 
 ---
 
@@ -21,7 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `.factory/specs/verification-properties/` | VP files + VP-INDEX.md — Kani proofs + fuzz targets (populated at Phase 6) |
 | `.factory/stories/` | Per-story implementation specs + STORY-INDEX.md (populated at Phase 2) |
 | `.factory/holdout-scenarios/` | Hidden acceptance scenarios — Domain A (Virtual SOC analyst) + Domain B (Dark factory); sealed until Phase 4 evaluation |
-| `.factory/namespace-reservation/` | Placeholder Cargo.toml stubs for crates.io name reservation; `publish-all.sh` reserves all `ferrochain-*` names |
+| `.factory/namespace-reservation/` | Placeholder Cargo.toml stubs for crates.io name reservation; `publish-all.sh` reserves all `pregolya-*` names |
 | `.factory/cycles/` | Per-cycle burst logs, convergence trajectories, session checkpoints, lessons learned |
 | `.factory/policies.yaml` | Project governance policy registry (created when policy management starts) |
 | `.reference/` | 4 pinned reference corpora — gitignored, read-only; do not modify |
@@ -29,7 +29,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `lefthook.yml` | Pre-commit/push/tag git hook config — created at workspace init |
 | `rust-toolchain.toml` | Pinned Rust toolchain channel + components + targets — created at workspace init |
 | `Cargo.toml` | Workspace root — created at workspace init; `members` is source of truth for crate list |
-| `crates/` | Ferrochain workspace crates — populated during Phase 3 TDD |
+| `crates/` | Pregolya workspace crates — populated during Phase 3 TDD |
 
 ---
 
@@ -53,12 +53,12 @@ If two artifacts are at the same precedence level and disagree, surface to the o
 
 The orchestrator (`vsdd-factory:orchestrator` agent) coordinates all phases. Specialist agents do the writing. **The orchestrator does NOT write files itself** — it delegates via the `Agent` tool with `subagent_type` set to the specialist (see Agent Routing Table in the Companion Principle section below). The single permitted exception is direct human-mandated edits to this CLAUDE.md or other project-root meta-docs.
 
-Phase sequence for ferrochain (greenfield + semport mode):
+Phase sequence for pregolya (greenfield + semport mode):
 
 - **pre-1: Semport Analysis** (IN PROGRESS) — semantic port of langchain-core, langgraph, langchain-mcp-adapters; outputs: behavioral-intent, module-inventory, dependency-disposition, rust-translation-strategy per package
 - Phase 1: Spec Crystallization — domain spec / PRD / architecture / adversarial review; pydantic→serde/schemars ADR required before BCs (D5)
 - Phase 2: Story Decomposition — per-story specs, dependency graph, wave schedule; holdout scenarios authored (Domains A + B from D8)
-- Phase 3: TDD Implementation — wave-by-wave delivery; wave priority: ferrochain-core → ferrochain-graph → partners (D7)
+- Phase 3: TDD Implementation — wave-by-wave delivery; wave priority: pregolya-core → pregolya-graph → partners (D7)
 - Phase 4: Holdout Evaluation (gated on per-wave readiness; strict information asymmetry)
 - Phase 5: Adversarial Refinement (post-implementation cascade)
 - Phase 6: Formal Hardening (Kani + cargo-fuzz + cargo-mutants + semgrep)
@@ -220,7 +220,7 @@ If a defect doesn't obviously map to a specialist:
 
 ### Conflict with upstream
 
-If a vsdd-factory agent prompt or skill defines a different routing than the table above, this table wins for ferrochain.
+If a vsdd-factory agent prompt or skill defines a different routing than the table above, this table wins for pregolya.
 
 ---
 
@@ -261,7 +261,7 @@ These project-specific operational rules layer onto the canonical principle and 
 
 ## Code Conventions
 
-Ferrochain-specific coding patterns enforced by CI and/or adversarial review. These are non-negotiable under the production-grade default — violations are bugs, not style preferences.
+Pregolya-specific coding patterns enforced by CI and/or adversarial review. These are non-negotiable under the production-grade default — violations are bugs, not style preferences.
 
 ### reqwest TLS backend — rustls-tls mandatory
 
@@ -269,7 +269,7 @@ Every `reqwest` dependency entry in the workspace — `[dependencies]`, `[dev-de
 
 ### HTTP client timeout
 
-Production `reqwest::Client` instances must use `.timeout(Duration::from_secs(30))`. The 30-second default applies until ferrochain's NFR catalog (`.factory/specs/prd-supplements/nfr-catalog.md`, created at Phase 1) overrides it per-provider. New clients without an explicit timeout are a P1 finding in adversarial review.
+Production `reqwest::Client` instances must use `.timeout(Duration::from_secs(30))`. The 30-second default applies until pregolya's NFR catalog (`.factory/specs/prd-supplements/nfr-catalog.md`, created at Phase 1) overrides it per-provider. New clients without an explicit timeout are a P1 finding in adversarial review.
 
 ### Newtype + redacted Debug for credentials
 
@@ -277,7 +277,7 @@ All credential and API key types (`OpenAiApiKey`, `AnthropicApiKey`, `OllamaBase
 
 ### No unwrap / expect in non-test code
 
-`unwrap()` and `expect()` on `Result` or `Option` are forbidden in all code paths outside `#[cfg(test)]` blocks. Use `?` propagation with structured error variants. The error-code namespaces for ferrochain are defined in `.factory/specs/prd-supplements/error-taxonomy.md` at Phase 1; the no-unwrap rule binds from the first line of production code.
+`unwrap()` and `expect()` on `Result` or `Option` are forbidden in all code paths outside `#[cfg(test)]` blocks. Use `?` propagation with structured error variants. The error-code namespaces for pregolya are defined in `.factory/specs/prd-supplements/error-taxonomy.md` at Phase 1; the no-unwrap rule binds from the first line of production code.
 
 ### No silent empty returns where partial-failure should propagate
 
@@ -297,7 +297,7 @@ Toolchain is pinned via `rust-toolchain.toml` (created at workspace init). No pe
 
 ### Tokio multi-threaded runtime, async-first
 
-The Tokio multi-threaded runtime is the execution environment (AD-013 equivalent for ferrochain, established at architecture phase). All I/O-bound operations — LLM calls, tool invocations, graph node execution, checkpoint reads/writes — are async. Do not block the Tokio thread pool with synchronous I/O. Sync facades are permitted only where the port spec explicitly requires a synchronous API surface.
+The Tokio multi-threaded runtime is the execution environment (AD-013 equivalent for pregolya, established at architecture phase). All I/O-bound operations — LLM calls, tool invocations, graph node execution, checkpoint reads/writes — are async. Do not block the Tokio thread pool with synchronous I/O. Sync facades are permitted only where the port spec explicitly requires a synchronous API surface.
 
 ### Arc-DI wiring per constructor
 
@@ -360,7 +360,7 @@ Rationale: `.factory/planning/file-size-standard-study.md`.
 
 ### Conflict resolution
 
-If this principle conflicts with a vsdd-factory agent prompt, skill, or rule, this principle wins for ferrochain.
+If this principle conflicts with a vsdd-factory agent prompt, skill, or rule, this principle wins for pregolya.
 
 ---
 
@@ -378,7 +378,7 @@ For EVERY adversarial pass on stories or PRs touching `crates/**/*.rs`:
 
 ### SAP-2 — DTU schema parity (partner crate stories) — pattern adoption note
 
-The DTU↔schema parity probe pattern from the VSDD framework (verify every column in a schema spec matches the corresponding Rust type in the DTU clone) is adopted for ferrochain. The full probe applies to ferrochain partner crates that implement DTU clones (e.g., `ferrochain-openai` against the OpenAI API contract). The probe is operationalized at Phase 3 when the first partner DTU crates are implemented; the standing rule is established now.
+The DTU↔schema parity probe pattern from the VSDD framework (verify every column in a schema spec matches the corresponding Rust type in the DTU clone) is adopted for pregolya. The full probe applies to pregolya partner crates that implement DTU clones (e.g., `pregolya-openai` against the OpenAI API contract). The probe is operationalized at Phase 3 when the first partner DTU crates are implemented; the standing rule is established now.
 
 ### SID-1 — Implementer discipline: no-ignored-test rationalization prohibition
 
@@ -393,7 +393,7 @@ When no failing test drives a spec-required behavior because integration tests a
 
 ### Conflict with upstream agent prompts
 
-If the upstream vsdd-factory adversary or implementer agent prompt defines a probe / discipline that contradicts SAP-1, SAP-2, or SID-1, the project-local rule wins for ferrochain.
+If the upstream vsdd-factory adversary or implementer agent prompt defines a probe / discipline that contradicts SAP-1, SAP-2, or SID-1, the project-local rule wins for pregolya.
 
 ---
 
@@ -405,8 +405,8 @@ The Justfile and lefthook hooks are created at workspace init (Phase 3 prerequis
 # TDD inner loop — single crate, fast iteration (~10-30 sec warm)
 just iter <crate> [test_filter]
 # Examples:
-just iter ferrochain-core
-just iter ferrochain-graph test_BC_2_01
+just iter pregolya-core
+just iter pregolya-graph test_BC_2_01
 
 # Pre-push gate — full strict workspace check
 just check          # fmt + clippy + nextest + doctests + crate-layout
@@ -491,7 +491,7 @@ VP coverage layers:
 ### Non-negotiable git rules
 
 - **NEVER skip hooks** (`--no-verify`, `--no-gpg-sign`). If a hook fails, investigate and fix the underlying issue. Bypassing is a TD-FACTORY-HOOK-BYPASS-001 P0 violation.
-- **NEVER add AI attribution to commits** — no `Co-Authored-By: Claude`, no robot emoji. This is a standing human directive for ferrochain.
+- **NEVER add AI attribution to commits** — no `Co-Authored-By: Claude`, no robot emoji. This is a standing human directive for pregolya.
 - **NEVER force-push to `main`.** Force-push to `develop` requires explicit human approval. Force-push to feature/maintenance branches is acceptable when the work is local-only (no collaborators); `--force-with-lease` preferred over raw `--force`.
 - **NEVER use destructive operations as a first-line response.** `git reset --hard`, `git clean -f`, `git checkout --` should be the last option after exhausting safer alternatives (`git stash`, `git reset --soft`, worktree-based isolation).
 

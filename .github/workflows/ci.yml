@@ -1,4 +1,4 @@
-# ferrochain CI pipeline
+# pregolya CI pipeline
 #
 # Tolerant of pre-workspace state: every Rust job is guarded by
 #   `if: hashFiles('Cargo.toml') != ''`
