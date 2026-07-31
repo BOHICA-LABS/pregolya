@@ -2128,3 +2128,105 @@ Wave A-corr (committed this burst, 2026-07-29): ADR-010 §Mechanical Discriminat
 ### Next Gate
 
 Wave B — product-owner sweeps 170 violations + 5 domain-spec/prd residue + 14 D-35 residue, then P1D-176 FULL-PERIMETER when backlog is materially drained.
+
+---
+
+## P1D-175 FULL-PERIMETER — 2026-07-28 (Closure Record)
+
+**Pass:** P1D-175 FULL-PERIMETER | **Frozen HEAD:** `2d36282` | **Date:** 2026-07-28
+**Method:** 7 slices (A+B1+B2+C1+C2+D1+D2). NOT convergence evidence — debt-first perimeter: 6 coverage debts discharged. 3 slices re-run split from transient Connection-closed per D-40.
+
+### Finding Counts
+
+| Severity | Count |
+|----------|-------|
+| CRIT | 10 |
+| HIGH | ~69 |
+| MED | ~76 |
+| LOW/OBS | remainder |
+| **TOTAL** | **~189** |
+
+### Verdict
+
+CLEAN (strict): **NO** | CLEAN (PR-merge): **NO** | Streak: **0/3 unchanged**
+
+### Trajectory Explanation: 256 → 189
+
+The 256→189 decay reflects fix-bursts 277–280 closing approximately 67 findings: burst-278 (~30), burst-279 (~40), burst-280 (~54; 2C+11H). The debt-first structure (Wave A ADR-010 notation sweep + Wave B BC notation sweep = 180 corrections) addressed the structural causes that were generating repeat findings, but the HIGH/MED tail from P1D-174 carried substantial forward volume. Post-burst-284 (rename) the CRIT count was confirmed at 0 (D-96 per-ID reconciliation).
+
+### Trajectory Row
+
+| Pass | Findings | Delta | Streak | Note |
+|------|----------|-------|--------|------|
+| P1D-175 | 189 | -67 | 0/3 | Debt-first perimeter; 6 coverage debts discharged; burst-282 Wave B COMPLETE |
+
+**Trajectory tail at P1D-175:** →20→130→256→189
+
+---
+
+## P1D-176 FULL-PERIMETER — 2026-07-30
+
+**Pass:** P1D-176 FULL-PERIMETER | **Frozen HEAD:** `9a62edc` | **Date:** 2026-07-30
+**Method:** 5 slices (A/B/C/D/E). First pass with policies.yaml rubric POL-1..POL-31 injected; POL-32..POL-45 excluded (PHASE-3-BINDING; crates/ absent). 0 orchestrator adjudications required. All 5 slices completed without connection failures.
+**Scope:** A: ARCH-INDEX, 21 ADRs, 8 architecture sections, 13 VPs. B: BCs SS-01..SS-12 + BC-INDEX. C: BCs SS-13..SS-23. D: PRD, 10 prd-supplements, 15 domain-spec shards, product-brief. E: policies.yaml, hooks, planning, comparative, semport, CI, namespace-reservation.
+
+### Finding Counts
+
+| Slice | Total | CRIT | HIGH | MED | LOW/OBS |
+|-------|-------|------|------|-----|---------|
+| A | 40 | 0 | 10 | 23 | 7 |
+| B | 31 | 0 | 8 | 17 | 6 |
+| C | 35 | 2 | 8 | 19 | 6 |
+| D | 26 | 2 | 7 | 11 | 6 |
+| E | 28 | 1 | 12 | 10 | 5 |
+| **Total** | **160** | **5** | **45** | **80** | **30** |
+
+### Verdict
+
+CLEAN (strict): **NO** | CLEAN (PR-merge): **NO** | Streak: **0/3 unchanged**
+
+### Five CRITs
+
+1. **F-P176-C001** — BC-2.23.001/BC-2.23.002 §PC-2 error routing: all `canonicalize_beneath_root` failures mapped to `E-TOOLS-001 PathConfinementViolation` (SECURITY/Never); BC-2.23.006 §PC-6 carries the correct discrimination rule; a sweep that touched five siblings missed two.
+2. **F-P176-C002** — WriteFileTool create-new-file path structurally unreachable: `canonicalize` fails on nonexistent paths; TV-001/TV-005 can never pass; BC-2.13.004 §PC-5 parent-canonicalization protocol exists but no WriteFileTool entry point routes through it.
+3. **F-P176-D001** — test-vectors.md grand total 675 vs ground truth 687; 8 stale registry rows; internal arithmetic is self-consistent at each step (arithmetic identity without ground truth — Mechanism 3).
+4. **F-P176-D002** — bc-authoring-plan.md §Subsystem → CAP Mapping assigns SS-22 to `pregolya-community` (post-v1, not-in-tree); every other artifact assigns SS-22 to `pregolya-core` + provider crates.
+5. **F-P176-E001** — POL-19 asserts blocking enforcement of §Named-Section ADR anchors; zero machine coverage exists; 170 `ADR-NNN §Named-Section` citations across 85 files ungated; both validator scripts gate different things than claimed by POL-19 (Mechanism 1 CRIT).
+
+### Five Convergent Mechanisms (Root Causes)
+
+1. **§-anchor unverifiability** (E001/A007/A018/A039/D005/D026): convention covers 3 structurally different targets; gate prerequisite is convention restriction to real headings only; anti-volatile-pin policy actively fabricates pseudo-anchors.
+2. **Note-closure without body-closure** (~25 sites; A005/A008/A010/D003/D004/D008/D013): changelog entry asserts propagation that was never performed; `verify-changelog-claim-applied.sh` advisory (631 findings) covers most; needs promotion to blocking for the false-closure subclass.
+3. **Arithmetic identity without ground truth** (D001/A009/E023): internal consistency does not imply correctness; each gate passes because it checks its own derivative, not the source.
+4. **`#[non_exhaustive]` ad hoc** (A028/A029/D009/B026/C028): no ADR states the rule, exception criteria, or exempt inventory; one decision record closes all instances.
+5. **Gate-shaped fixes creating canon violations** (C008/E009/E003): prior bursts optimized for `grep exit-0` rather than behavioral correctness; POL-17 now contradicts ADR-010 §Class-3-Canon.
+
+### Trajectory Explanation: 189 → 160
+
+The 189→160 decay of 29 findings reflects: burst-283 closing F-P175-C101 (CRIT) + F-P175-C113 (HIGH) via ADR-021 + 4 BC bumps; burst-282 Wave B closing the notation sweep (~35-40 P1D-175 findings); burst-284 (rename) resolving rename-related findings. However, **findings are not decaying toward zero**: four consecutive full-perimeter passes at 130–256–189–160, each pass finding defects created by the prior pass's fixes. Mechanism-level fixes in burst-285 will produce larger per-finding closure rates than severity-routing.
+
+### Trajectory Row
+
+| Pass | Findings | Delta | Streak | Note |
+|------|----------|-------|--------|------|
+| P1D-176 | 160 | -29 | 0/3 | First pass with policies.yaml rubric; 5 CRITs; 5 convergent mechanisms; NOT CLEAN strict/PR-merge |
+
+### Cumulative Trajectory (P1D-173 onward)
+
+| Pass | Findings | Delta | Streak | Note |
+|------|----------|-------|--------|------|
+| P1D-173 | 130 | +110 | 0/3 | Coverage expansion: api-surface.md + interface-definitions.md + 13 VP bodies first audit |
+| P1D-174 | 256 | +126 | 0/3 | Coverage depth: first BC-body line-by-line at low versions + first type-coherence audit |
+| P1D-175 | 189 | -67 | 0/3 | Debt-first perimeter; 6 coverage debts discharged; Wave B notation sweep complete |
+| P1D-176 | 160 | -29 | 0/3 | First pass with policies.yaml rubric; 5 CRITs; 5 convergent mechanisms |
+
+**Trajectory tail at P1D-176:** →130→256→189→160
+
+**Total passes to date: 177.**
+
+### Convergence Assessment
+
+Findings are NOT decaying toward zero. Four consecutive full-perimeter passes at 130–256–189–160. Each pass finds defects created by the prior pass's fixes (B002/B004/A002 are confirmed fix-burst-283 regressions found in P1D-176; D-106 fabricated anchors from burst-284 appeared as findings D026/B008/C009/C018/D016). The five convergent mechanisms provide the routing map for burst-285 to close the high-leverage CRITs and prevent regeneration.
+
+**Convergence dim-5:** Counter 0/3 (unchanged — pass found findings). Next: fix-burst 285 (mechanism fixes + 5 CRITs) then P1D-177 FULL-PERIMETER.
+**Convergence dim-7:** Trajectory tail →130→256→189→160. Lessons L-153..L-155 minted. D-109..D-115 added.

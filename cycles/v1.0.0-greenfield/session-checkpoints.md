@@ -15,6 +15,30 @@ traces_to: STATE.md
 
 ---
 
+### Archived Checkpoint — STATE.md v4.45 (archived at v4.46 — burst-285 burst init)
+
+*From STATE.md v4.45, burst-284 COMPLETE. Superseded by v4.46 upon P1D-176 persistence.*
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport (renamed from ferrochain; D-103). Streak **0/3 after 176 passes**. burst-284 COMPLETE: ferrochain → pregolya rename; 353 files / ~6,300 identifiers; 5 agents; 12 blocking validators PASS; CRIT=0 (D-96); ~127/189 P1D-175 findings open; D-103..D-108; L-148..L-152. **P1D-176 dispatch now UNBLOCKED** — D-93 satisfied. Gate on post-rename factory-artifacts HEAD (frozen-HEAD rule); D-32 and D-69 in force.
+
+#### NEXT-ACTION (at time of archival)
+P1D-176 FULL-PERIMETER adversary pass on the post-rename factory-artifacts HEAD. Then fix-burst 285 (631 advisory triage: product-owner 14 hash-mismatches; architect ADR-file rule-scoping). Then D-107 hash-cycle scheme fix.
+
+#### HEADS (at time of archival)
+develop `46725ad` — clean, PUSHED. factory-artifacts — pushed after burst-284 commit. Story worktrees: NONE. Open PRs: NONE.
+
+#### VALIDATOR BASELINES (burst-284 final)
+verify-no-version-pins: PASS=198; records-lint: PASS=5; verify-adr-decision-refs: PASS; verify-changelog-date-monotonicity: PASS=131; verify-changelog-date-validity: PASS; verify-enum-variant-casing: PASS=198; verify-signature-canon: PASS=5; verify-error-notation-canon: PASS=1 (353 openers; 0 violations); verify-form-a-changelog-direction: PASS=198 WARN=7; verify-arch-anchor-resolution: PASS=129; verify-module-canonicality: PASS=8; verify-bc-frontmatter-schema: PASS=129. Advisory: 631 findings + 3 rename-claim advisories (LOW/OBS only; 0 CRIT/HIGH/MED).
+
+#### COVERAGE DEBTS (at time of archival, blocking CLEAN under D-32)
+BC-2.18.004 targeted grep only; 36/37 standing gates count/continuity only; 105 hyphenated-module occurrences + 131 version pins counted not triaged; 129 TV Count cells never hand-summed; ADR-010 canon-note site unopened; Per-VP frontmatter module: only.
+
+#### PENDING HUMAN ACTIONS (at time of archival)
+R14/R6: cargo login + publish-all.sh (21 pregolya-* crates unreserved); Container rename (ferrochain→pregolya working dir/GitHub/remotes); B1: direnv allow .; TDIV-008 vendor action.
+
+---
+
 ### Archived Checkpoint — Burst 255 (archived at burst-256)
 
 ### RESUME IN ONE BREATH
