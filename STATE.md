@@ -140,7 +140,7 @@ Counter: **0/3 — 177 adversary passes total.** P1D-176 COMPLETE: 160 findings 
 fix-burst 286: orchestrator routes mechanism fixes to architect (M1/M4), spec-steward (M1/M5), devops-engineer (M1/M2/M3/M5), product-owner (5 CRITs + M3 D001/D002), business-analyst (D-108 D021). Mechanism fixes first — they prevent regeneration and close many findings at once.
 
 ### HEADS
-develop `f1b8cbf` — clean, PUSHED. factory-artifacts `a192f18` — PUSHED (burst-285 state record; this wrap is burst-286). Story worktrees: NONE. Open PRs: NONE.
+develop `f1b8cbf` — clean, PUSHED. factory-artifacts `7ea92d0` — PUSHED (residual-sweep: 4 forward-routing citations burst-285→286). Story worktrees: NONE. Open PRs: NONE.
 
 **Validator baselines (burst-285 state record final; 12 blocking validators):**
 records-lint: PASS=2 WARN=0 FAIL=0 UNVERIFIED=3 on clean tree (L9/L10/L11 are diff-scoped; UNVERIFIED means those checks examined nothing — F-P176-E007; a clean-tree PASS does NOT verify them; diff-state measured PASS=5). All other 11 validators unchanged from burst-284: verify-no-version-pins: PASS=198; verify-adr-decision-refs: PASS; verify-changelog-date-monotonicity: PASS=131; verify-changelog-date-validity: PASS; verify-enum-variant-casing: PASS=198; verify-signature-canon: PASS=5; verify-error-notation-canon: PASS=1 (353 openers; 0 violations); verify-form-a-changelog-direction: PASS=198 WARN=7; verify-arch-anchor-resolution: PASS=129; verify-module-canonicality: PASS=8; verify-bc-frontmatter-schema: PASS=129.
