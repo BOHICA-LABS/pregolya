@@ -45,14 +45,25 @@ emit() {
 HEAD_SHORT="$(git -C "$FACTORY_DIR" rev-parse --short HEAD 2>/dev/null || echo "UNKNOWN")"
 HEAD1_SHORT="$(git -C "$FACTORY_DIR" rev-parse --short HEAD~1 2>/dev/null || echo "UNKNOWN")"
 
-# Extract the first 7+ hex string that looks like a commit SHA from the
-# Session Resume Checkpoint section of STATE.md.
-CITED_SHA="$(awk '/## Session Resume Checkpoint/,/^## [A-Z]/' "$STATE_MD" \
-  | grep -oE '\b[0-9a-f]{7,40}\b' \
+# Extract the factory-artifacts SHA cited in the HEADS line of the
+# Session Resume Checkpoint section.  Uses flag-based awk to handle the
+# macOS BSD awk edge case where '## Session Resume Checkpoint' matches
+# both the start-range and end-range pattern '^## [A-Z]', causing the
+# classic range form to capture only one line.
+# Extracts the backtick-delimited SHA from the specific pattern:
+#   factory-artifacts `<sha>` — PUSHED
+# This avoids false-matching "default_branch is `factory-artifacts`"
+# in the RESUME paragraph.
+CITED_SHA="$(awk '
+  /^## Session Resume Checkpoint/ { in_sec=1; next }
+  in_sec && /^## [A-Z]/ { in_sec=0 }
+  in_sec
+' "$STATE_MD" \
+  | sed -n 's/.*factory-artifacts[[:space:]]*`\([0-9a-f][0-9a-f]*\)`.*/\1/p' \
   | head -1 || echo "")"
 
 if [ -z "$CITED_SHA" ]; then
-  emit WARN "STATE.md Session Resume Checkpoint: no SHA citation found (wrap commit not yet recorded — acceptable during active wrap)"
+  emit WARN "STATE.md Session Resume Checkpoint: no factory-artifacts SHA found in HEADS (write 'factory-artifacts \`SHA\` — PUSHED' to resolve; acceptable during active wrap)"
 elif [ "$CITED_SHA" = "$HEAD_SHORT" ] || [ "$CITED_SHA" = "$(git -C "$FACTORY_DIR" rev-parse --short HEAD 2>/dev/null | cut -c1-${#CITED_SHA})" ]; then
   emit PASS "SHA citation matches HEAD ($CITED_SHA == $HEAD_SHORT)"
 elif [ "$CITED_SHA" = "$HEAD1_SHORT" ] || [ "$CITED_SHA" = "$(git -C "$FACTORY_DIR" rev-parse --short HEAD~1 2>/dev/null | cut -c1-${#CITED_SHA})" ]; then

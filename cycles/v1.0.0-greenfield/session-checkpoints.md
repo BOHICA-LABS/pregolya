@@ -2154,3 +2154,35 @@ verify-no-version-pins: PASS=198; records-lint: PASS=5; verify-adr-decision-refs
 
 ### ARCHIVE METADATA
 Date: 2026-07-30 | Archived at: burst-285 state record (2026-07-31) | STATE.md: 4.46 → 4.47 | burst-284 COMPLETE (ferrochain → pregolya rename); P1D-176 COMPLETE (160 findings); D-103..D-115 allocated; L-148..L-155 minted; E011/E012 added as blockers; develop `46725ad`; streak 0/3
+
+---
+
+### Archived Checkpoint — STATE.md v4.47 (archived at v4.48 — burst-286 session wrap)
+
+*From STATE.md v4.47 — burst-285 state record (2026-07-31). Superseded by v4.48 upon burst-286 session wrap. Three defects corrected in v4.48: (1) burst-285 number collision corrected to 286; (2) factory-artifacts SHA deferred by run-instruction → literal; (3) workspace-init incompleteness documented.*
+
+### RESUME IN ONE BREATH (at time of archive)
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). Streak **0/3 after 177 passes**. P1D-176 COMPLETE (2026-07-30): 160 findings (5C/45H/80M/30L-OBS); frozen HEAD `9a62edc`. 5 CRITs: C001/C002 (WriteFileTool error routing + unreachable create path), D001 (TV registry 12 behind ground truth), D002 (SS-22 wrong crate in bc-authoring-plan), E001 (POL-19 §anchor gate phantom). 5 convergent mechanisms (D-110..D-114). E013 OPEN: default_branch is `factory-artifacts` (must be `main`; human auth required). **NEXT: fix-burst 285 — mechanism fixes first (M1: §-anchor convention restriction; M2: note-closure gate promotion; M3: ground-truth checks; M4: governing #[non_exhaustive] ADR; M5: POL-17/error-notation-canon fix), then 5 CRITs.** [NOTE: burst number was 285 collision; corrected to 286 in v4.48]
+
+### NEXT-ACTION (at time of archive)
+fix-burst 285 [corrected to 286 in v4.48]: orchestrator routes mechanism fixes to architect (M1/M4), spec-steward (M1/M5), devops-engineer (M1/M2/M3/M5), product-owner (5 CRITs + M3 D001/D002), business-analyst (D-108 D021). Mechanism fixes first — they prevent regeneration and close many findings at once.
+
+### HEADS (at time of archive)
+develop `f1b8cbf` — clean, PUSHED. factory-artifacts — pushed after burst-285 commit (run `git -C /Users/jmagady/Dev/pregolya/.factory log -1 --format=%h`). [NOTE: deferred SHA defect — literal value `a192f18` recorded in v4.48] Story worktrees: NONE. Open PRs: NONE.
+
+**Validator baselines (at time of archive; burst-284 final; 12 blocking validators):**
+verify-no-version-pins: PASS=198; records-lint: PASS=5 (diff-state; clean-tree returns PASS=2 UNVERIFIED=3 per F-P176-E007); verify-adr-decision-refs: PASS; verify-changelog-date-monotonicity: PASS=131; verify-changelog-date-validity: PASS; verify-enum-variant-casing: PASS=198; verify-signature-canon: PASS=5; verify-error-notation-canon: PASS=1 (353 openers; 0 violations); verify-form-a-changelog-direction: PASS=198 WARN=7; verify-arch-anchor-resolution: PASS=129; verify-module-canonicality: PASS=8; verify-bc-frontmatter-schema: PASS=129.
+
+### PENDING HUMAN ACTIONS (at time of archive)
+1. **E013 (Medium)** — Set repository `default_branch` to `main` (D-118).
+2. **R14/R6 (HIGH, irreversible)** — `cargo login` → `cd .factory/namespace-reservation && bash publish-all.sh`.
+3. B1 — `direnv allow .`
+4. **TDIV-008** — engine `path_allow` fix requires vendor action.
+
+### RESIDUAL ITEMS (at time of archive)
+- `BC-2.09.007` + `BC-INDEX.md` carry post-boundary version pins → product-owner.
+- `interface-definitions.md` §Authentication cluster grandfathered — needs de-pin on next touch.
+- fix-burst 285 [corrected to 286 in v4.48]: 631 advisories (14 input-hash mismatches → product-owner) + D-107 hash-cycle scheme fix.
+
+### ARCHIVE METADATA
+Date: 2026-07-31 | Archived at: burst-286 session wrap (2026-07-31) | STATE.md: 4.47 → 4.48 | burst-285 COMPLETE: container rename COMPLETE (D-116); E011/E012 CLOSED; E013 registered (default_branch = factory-artifacts); D-116..D-119 allocated; L-156..L-158 minted; develop `f1b8cbf`; streak 0/3
